@@ -10,8 +10,9 @@ export interface WeeklyDraftPage {draft:WeeklyDraft|null;lessons:WeeklyLesson[]}
 @Injectable({providedIn:'root'})
 export class CoachingWeeklyDraftService {
   private readonly http=inject(HttpClient);private readonly url=`${environment.apiUrl}/coaching/study-planning/weekly-draft`;
-  get(){return this.http.get<{data:WeeklyDraftPage}>(this.url).pipe(map(r=>r.data));}
-  save(expectedVersion:number|null,timeZoneId:string,slots:WeeklySlot[]){
-    return this.http.put<{data:WeeklyDraft}>(this.url,{expectedVersion,timeZoneId,slots:slots.map(({id,lessonId,day,startMinute,durationMinutes})=>({id,lessonId,day,startMinute,durationMinutes}))}).pipe(map(r=>r.data));
+  private scopedUrl(studentId?:string){return studentId?`${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study/weekly-draft`:this.url;}
+  get(studentId?:string){return this.http.get<{data:WeeklyDraftPage}>(this.scopedUrl(studentId)).pipe(map(r=>r.data));}
+  save(expectedVersion:number|null,timeZoneId:string,slots:WeeklySlot[],studentId?:string){
+    return this.http.put<{data:WeeklyDraft}>(this.scopedUrl(studentId),{expectedVersion,timeZoneId,slots:slots.map(({id,lessonId,day,startMinute,durationMinutes})=>({id,lessonId,day,startMinute,durationMinutes}))}).pipe(map(r=>r.data));
   }
 }

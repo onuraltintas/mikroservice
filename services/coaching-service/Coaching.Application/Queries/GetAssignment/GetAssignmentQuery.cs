@@ -38,8 +38,18 @@ public record AssignmentResponse(
     decimal? PassingScore,
     string Status,
     List<AssignedStudentDto> AssignedStudents,
+    IReadOnlyList<AssignmentInstructionAttachmentDto> InstructionAttachments,
     DateTime CreatedAt
 );
+
+public record AssignmentInstructionAttachmentDto(
+    Guid Id,
+    string OriginalFileName,
+    string ContentType,
+    long SizeBytes,
+    string Status,
+    DateTime UploadedAt,
+    DateTime ScannedAt);
 
 public record AssignedStudentDto(
     Guid StudentId,

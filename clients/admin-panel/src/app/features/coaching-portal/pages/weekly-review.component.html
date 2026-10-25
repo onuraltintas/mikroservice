@@ -1,0 +1,98 @@
+<section class="weekly-review" aria-labelledby="weekly-review-title">
+  <header><div><p class="eyebrow">HAFTAYI GÖZDEN GEÇİR</p><h2 id="weekly-review-title">Haftalık değerlendirme ve kararlar</h2><p>Değerlendirme ve kararlar öğrenci ile yetkili öğretmenleri arasında görünür. Plan ve ödevler otomatik değişmez.</p></div></header>
+  <div class="week-picker"><button type="button" (click)="changeWeek(shift(week,-7))" [disabled]="saving()">Önceki hafta</button><label>Hafta seç<input #weekInput type="date" [value]="week" (change)="changeWeek(weekInput.value); weekInput.value = week" [max]="data()?.today ?? ''" [disabled]="saving()"></label><button type="button" (click)="changeWeek(shift(week,7))" [disabled]="saving() || !data() || shift(week,7) > data()!.today">Sonraki hafta</button><button type="button" (click)="refresh()" [disabled]="saving() || loading()">Haftayı yenile</button></div>
+  <p class="muted">Haftalar pazartesi–pazar olarak seçilir. Bu bölümün hafta seçimi genel rapor tarih aralığından bağımsızdır.</p>
+  @if (error()) { <p class="error" role="alert">{{error()}}</p>@if (!saving()) { <button type="button" (click)="refresh()">{{ stale() ? 'Güncel kaydı yükle' : 'Tekrar yükle' }}</button> } }
+  @if (success()) { <p role="status">{{success()}}</p> }
+  @if (loading()) { <p role="status">Haftalık bilgiler yükleniyor…</p> }
+  @if (data(); as view) {
+    <h3>{{ week | date:'dd.MM.yyyy' }} – {{ shift(week,6) | date:'dd.MM.yyyy' }}</h3>
+    @if (shift(week,6) >= view.today) { <p class="muted">Bu hafta henüz tamamlanmadı; rapor ve değerlendirmen şu ana kadarki durumu gösterir.</p> }
+    <dl class="summary"><div><dt>Planlanan / tamamlanan</dt><dd>{{view.summary.scheduledTasks}} / {{view.summary.completedTasks}} çalışma</dd></div><div><dt>Planlanan süre</dt><dd>{{view.summary.plannedMinutes}} dk</dd></div><div><dt>Kaydedilen süre</dt><dd>{{view.summary.actualMinutes === null ? 'Kayıt yok' : view.summary.actualMinutes + ' dk'}}</dd></div></dl>
+    @if(view.results;as results){
+      <section aria-label="Önceki kararlar ve haftanın sonuçları"><h3>Önceki kararlar ve bu haftanın çalışmaları</h3>
+        <p>Önceki haftanın kapanmış kararları ile bu hafta son tarihi gelen veya tamamlanan eski kararlar burada yer alır. Sonuçlar güncel kayıtlardır; değerlendirmeyi kaydettiğinde o anki hali korunur.</p>
+        <app-weekly-results [snapshot]="results" [canFollowUp]="!!view.reflection && view.canDecide && !readOnly && !saving() && !loading()" (followUp)="newDecision($event)" />
+      </section>
+    }
+    @if(view.reflection;as reflection){
+      @if(reflection.results;as saved){<details open><summary>Değerlendirmenin kaydedildiği andaki sonuçlar</summary><app-weekly-results [snapshot]="saved" /></details>}
+      @else{<p>Bu eski değerlendirmeye kayıt anında sonuç görüntüsü bağlanmamış. Yukarıdaki sonuçlar güncel kayıtlardır.</p>}
+      @if(reflection.history?.length){<details><summary>Önceki değerlendirme sürümleri</summary>
+        @for(old of reflection.history;track $index){<article><h4>Sürüm {{old.version}} · {{old.savedAt | date:'dd.MM.yyyy HH:mm':'+0300'}}</h4><p>{{old.successes}}</p><p>{{old.obstacles}}</p><p>Sonraki odak: {{old.nextFocus}}</p><p>Puan: {{old.rating ?? 'Belirtilmedi'}}</p>@if(old.results;as results){<app-weekly-results [snapshot]="results" />}</article>}
+      </details>}
+    }
+    @if (view.canReflect && !readOnly) {
+      <form #reflectionForm="ngForm" (ngSubmit)="saveReflection()"><fieldset [disabled]="saving() || loading()"><legend>Haftanı değerlendir</legend>
+        <label>Bu hafta neler iyi gitti?<textarea name="successes" [(ngModel)]="reflection.successes" (ngModelChange)="dirty=true" required maxlength="2000" rows="3"></textarea></label>
+        <label>Nerelerde zorlandın? (isteğe bağlı)<textarea name="obstacles" [(ngModel)]="reflection.obstacles" (ngModelChange)="dirty=true" maxlength="2000" rows="3"></textarea></label>
+        <label>Gelecek hafta odağın ne olacak?<textarea name="nextFocus" [(ngModel)]="reflection.nextFocus" (ngModelChange)="dirty=true" required maxlength="2000" rows="3"></textarea></label>
+        <label>Çalışma düzenini nasıl değerlendirirsin? (isteğe bağlı)<select name="rating" [(ngModel)]="reflection.rating" (ngModelChange)="dirty=true"><option [ngValue]="null">Seçilmedi</option><option [ngValue]="1">1 · Düşük</option><option [ngValue]="2">2</option><option [ngValue]="3">3</option><option [ngValue]="4">4</option><option [ngValue]="5">5 · Yüksek</option></select></label>
+        @if(view.results?.decisions?.length){<fieldset><legend>Önceki kararların etkisi</legend><p>Etki alanı senin değerlendirmen; gerekçen sonraki karara yol gösterecek. Sonuç belirtmek isteğe bağlıdır.</p>
+          @for(row of view.results!.decisions;track row.decisionId){@if(decisionEffects[row.decisionId];as effect){<div>
+            <label>{{row.title}}<select [name]="'effect-'+row.decisionId" [(ngModel)]="effect.effect" (ngModelChange)="dirty=true"><option value="">Henüz değerlendirmedim</option>@for(option of effectOptions;track option.value){<option [value]="option.value">{{option.label}}</option>}</select></label>
+            @if(effect.effect){<label>Sonuç ve gerekçe<textarea [name]="'effect-note-'+row.decisionId" [(ngModel)]="effect.note" (ngModelChange)="dirty=true" required minlength="5" maxlength="1000"></textarea></label>}
+          </div>}}
+        </fieldset>}
+        <button type="submit" [disabled]="reflectionForm.invalid || stale()">Değerlendirmeyi kaydet</button>
+      </fieldset></form>
+    } @else if (view.reflection; as reflection) {
+      <article><h3>Öğrencinin haftalık değerlendirmesi</h3><dl><dt>İyi gidenler</dt><dd class="prose">{{reflection.successes}}</dd><dt>Zorlanılan noktalar</dt><dd class="prose">{{reflection.obstacles || 'Belirtilmedi'}}</dd><dt>Gelecek hafta odağı</dt><dd class="prose">{{reflection.nextFocus}}</dd><dt>Çalışma düzeni (öğrenci beyanı)</dt><dd>{{reflection.rating === null ? 'Belirtilmedi' : reflection.rating + ' / 5'}}</dd></dl><small>Son kayıt: {{reflection.savedAt | date:'dd.MM.yyyy HH:mm':'+0300'}}</small></article>
+    } @else { <p>Öğrenci bu hafta için henüz değerlendirme kaydetmedi.</p> }
+    @if(view.reflection && view.canDecide && !readOnly){
+      @if(view.needsTeacherReview){<form #reviewForm="ngForm" (ngSubmit)="acknowledgeReflection()"><fieldset [disabled]="saving() || loading()"><legend>Öğretmen incelemesi</legend>
+        @if(view.reviewReason==='ResultsChanged'){<p role="status">İnceleme sonrasında sonuçlar değişti. Eski inceleme korunuyor; güncel sonuçları yeniden incele.</p>}
+        @if(view.reviewReason==='LegacyEvidenceMissing'){<p>Eski incelemede güncel sonuç görüntüsü saklanmamış. Sonuçları bir kez doğrulayıp yeni inceleme kaydı oluştur.</p>}
+        <p>Değerlendirmeyi inceleyip takip notunu yaz. Yeni karar gerekiyorsa aşağıdan ekleyebilirsin. Öğrenci değerlendirmesi veya incelediğin çalışma/ödev sonuçları değişirse yeniden inceleme gerekir.</p>
+        <label>İnceleme / takip notu<textarea name="reviewNote" [(ngModel)]="reviewNote" (ngModelChange)="dirty=true" required minlength="5" maxlength="2000"></textarea></label>
+        <button type="submit" [disabled]="reviewForm.invalid || reviewNote.trim().length<5 || stale() || !!editor || !!postponement || !!workDecision()">İnceledim, kuyruğu kapat</button>
+      </fieldset></form>}@else{<p>Bu değerlendirme sürümünü incelediniz.</p>}
+    }
+    @if(view.reviews?.length){<details><summary>Öğretmen inceleme geçmişi</summary>
+      @for(review of view.reviews;track $index){<p>{{review.reviewedAt | date:'dd.MM.yyyy HH:mm':'+0300'}} · Değerlendirme sürümü {{review.reflectionVersion}} · {{review.note}}</p>@if(review.results;as evidence){<details><summary>Bu incelemede görülen sonuçlar</summary><app-weekly-results [snapshot]="evidence" /></details>}}
+    </details>}
+    <div class="decision-heading"><div><h3>Değerlendirmeden alınan kararlar</h3><p>Yeni kararlar için son tarihi {{newDecisionMinDate(week) | date:'dd.MM.yyyy'}} veya sonrasına seçebilirsiniz. Kararın kaynak değerlendirme haftası korunur. Önceki haftalardan açık ve gerekçeyle ertelenmiş kararlar da listelenir.</p></div>@if (view.canDecide && !readOnly) { <button type="button" (click)="newDecision()" [disabled]="saving() || loading()">Karar ekle</button> }</div>
+    @if (editor; as edit) {
+      <form #decisionForm="ngForm" (ngSubmit)="saveDecision()"><fieldset [disabled]="saving() || loading()"><legend>{{edit.body.expectedVersion === null ? 'Yeni karar' : 'Kararı düzenle'}}</legend>
+        @if(edit.body.expectedVersion === null && edit.body.sourceReflectionVersion != null){<p>Kaynak değerlendirme sürümü: {{edit.body.sourceReflectionVersion}}. Kayıt anındaki değerlendirme korunacak.</p><label>Önceki karar (isteğe bağlı)<select name="previousDecisionId" [(ngModel)]="edit.body.previousDecisionId" (ngModelChange)="dirty=true"><option [ngValue]="null">Bağımsız yeni karar</option>@for(row of previousDecisionOptions();track row.decisionId){<option [value]="row.decisionId">{{row.title}}</option>}</select></label>}
+        <label>Karar başlığı<input name="decisionTitle" [(ngModel)]="edit.body.title" (ngModelChange)="dirty=true" required maxlength="200"></label>
+        <label>Açıklama / takip notu<textarea name="decisionNote" [(ngModel)]="edit.body.note" (ngModelChange)="dirty=true" maxlength="2000" rows="3"></textarea></label>
+        <label>Son tarih<input name="dueOn" type="date" [(ngModel)]="edit.body.dueOn" (ngModelChange)="dirty=true" [min]="edit.body.expectedVersion === null ? newDecisionMinDate(edit.week) : !edit.dateLocked ? shift(edit.week,7) : ''" [max]="edit.body.expectedVersion !== null && !edit.dateLocked ? shift(edit.week,13) : ''" [readOnly]="!!edit.dateLocked" required></label>
+        @if(edit.dateLocked){<p>Son tarih değişikliği için karardaki gerekçeli tarih değişikliği işlemini kullanın.</p>}
+        @if (edit.body.expectedVersion !== null) { <label>Karar durumu<select name="decisionStatus" [(ngModel)]="edit.body.status" (ngModelChange)="dirty=true">@for (state of statuses; track state.code) { <option [value]="state.code">{{state.name}}</option> }</select></label> }
+        <div class="actions"><button type="submit" [disabled]="decisionForm.invalid || stale()">Kararı kaydet</button><button type="button" (click)="cancelEdit()">Düzenlemeyi kapat</button></div>
+      </fieldset></form>
+    }
+    @if (postponement; as form) {
+      <form #postponeForm="ngForm" (ngSubmit)="savePostponement()"><fieldset [disabled]="saving() || loading()"><legend>Kararın son tarihini gerekçeyle değiştir</legend>
+        <p>{{form.row.title}} · Önceki son tarih: {{form.row.dueOn | date:'dd.MM.yyyy'}}</p>
+        <p>Yalnız kararın takip tarihi değişir. Bağlı çalışma ve ödevlerin tarihlerini ayrıca inceleyebilirsin.</p>
+        <label>Yeni son tarih<input name="postponeDueOn" type="date" [(ngModel)]="form.dueOn" (ngModelChange)="dirty=true" [min]="deadlineMinDate(form.row)" required></label>
+        <label>Tarih değişikliği gerekçesi<textarea name="postponeReason" [(ngModel)]="form.reason" (ngModelChange)="dirty=true" required minlength="5" maxlength="1000" rows="3"></textarea></label>
+        <button type="submit" [disabled]="postponeForm.invalid || form.reason.trim().length < 5 || stale()">Gerekçeyle değiştir</button>
+        <button type="button" (click)="cancelEdit()">Vazgeç</button>
+      </fieldset></form>
+    }
+    @if (workDecision();as row) {
+      @defer (when workDecision()) { <app-weekly-decision-work #workEditor [studentId]="staffStudentId!" [decision]="row" (saved)="closeWork()" (close)="closeWork()" /> }
+    }
+    @if (!view.decisions.length) { <p>Bu görünümde karar bulunmuyor.</p> }
+    @for (decision of view.decisions; track decision.id) {
+      <article class="decision" [class.focused-decision]="focusedDecision() === decision.id"><header><h4>{{decision.title}}</h4><span class="badge">{{status(decision.status)}}</span></header>@if (focusedDecision() === decision.id) { <p role="status">Bağlantıdan açılan karar</p> }<p class="prose">{{decision.note}}</p><p>Son tarih: {{decision.dueOn | date:'dd.MM.yyyy'}} @if (decision.isOverdue) { <strong class="error"> · Tarihi geçti</strong> } @if (decision.reviewWeekStart < week) { <span> · Önceki haftadan açık karar</span> }</p>
+        @if (decision.initialDueOn && decision.initialDueOn !== decision.dueOn) { <p>İlk son tarih: {{decision.initialDueOn | date:'dd.MM.yyyy'}}</p> }
+        @if (decision.canEdit && (decision.status === 'Planned' || decision.status === 'InProgress') && !readOnly) { <button type="button" (click)="startPostponement(decision)" [disabled]="saving() || loading()">Gerekçeyle değiştir</button> }
+        @if (decision.completedAt) { <p>Tamamlandı: {{decision.completedAt | date:'dd.MM.yyyy HH:mm':'+0300'}}</p> }
+        @if(decision.work;as work){
+          @if(work.study;as study){<div class="linked-work"><strong>Bağlı çalışma: {{study.title}}</strong><p>{{workStatus(study.status)}} @if(study.isOverdue){ · Tarihi geçti } @if(study.date){ · {{study.date | date:'dd.MM.yyyy'}} } @if(study.minutes){ · {{study.minutes}} dk planlandı } @if(study.actualMinutes!=null){ · {{study.actualMinutes}} dk kaydedildi }</p>@if(!staffStudentId && study.canOpen){<a routerLink="/coaching-portal/study-plans" [queryParams]="{plan:study.planId,task:study.id}">İlgili çalışmayı aç</a>}</div>}
+          @if(work.assignment;as assignment){<div class="linked-work"><strong>Bağlı ödev: {{assignment.title}}</strong><p>{{workStatus(assignment.status)}} @if(assignment.isOverdue){ · Teslim tarihi geçti } @if(assignment.score!=null){ · Puan: {{assignment.score}} }</p>@if(!staffStudentId && assignment.canOpen){<a [routerLink]="['/coaching-portal/assignments',assignment.id]">İlgili ödevi aç</a>}</div>}
+        }
+        @if(decision.canEdit && !readOnly){<button type="button" (click)="openWork(decision)" [disabled]="saving() || loading()">Çalışma ve ödevleri bağla / takip et</button>}
+        @if (decision.canEdit && !readOnly) { <button type="button" (click)="editDecision(decision)" [disabled]="saving() || loading()">Kararı düzenle / durumunu güncelle</button> }
+        @if(decision.sourceReflection;as source){<details><summary>Kararın kaynak değerlendirmesi · {{source.weekStart | date:'dd.MM.yyyy'}} · sürüm {{source.reflectionVersion}}</summary><p>{{source.successes}}</p><p>{{source.obstacles}}</p><p>Odak: {{source.nextFocus}}</p>@if(source.results;as evidence){<h4>Değerlendirme kaydındaki sonuçlar</h4><app-weekly-results [snapshot]="evidence" />}@if(source.currentResults;as evidence){<h4>Karar alınırken görülen güncel sonuçlar</h4><app-weekly-results [snapshot]="evidence" />}</details>}
+        @if(decision.previousDecision;as previous){<p>Önceki karar: {{previous.title}} · Kaynak andaki durumu: {{status(previous.status)}} @if(previous.effectNote){ · {{previous.effectNote}} }</p>}
+        <details><summary>Karar geçmişi</summary>@for (change of decision.history; track $index) { <p>{{change.at | date:'dd.MM.yyyy HH:mm':'+0300'}} · {{status(change.status)}} · {{change.title}} · Son tarih {{change.dueOn | date:'dd.MM.yyyy'}} @if(change.action==='WorkContinuation'){ · Çalışma bağlantısı yeni planın devam görevine aktarıldı } @if(change.action==='WorkLinks'){ · İş bağlantıları güncellendi } @if(change.action==='Calendar'){ · Bağlı çalışma taşındı } @if(change.action==='ResponsibilityTransfer'){ · Açık karar yeni öğretmenin sorumluluğuna devredildi } @if(change.action==='Postponement' || change.action==='DeadlineChange'){ · Son tarih {{change.previousDueOn | date:'dd.MM.yyyy'}} → {{change.dueOn | date:'dd.MM.yyyy'}} }</p>@if (change.note) { <p class="prose">{{change.note}}</p> } @if (change.reason) { <p class="prose">Gerekçe: {{change.reason}}</p> } }</details>
+      </article>
+    }
+    <nav class="actions" aria-label="Haftalık karar sayfaları"><button type="button" (click)="page(view.decisionPage-1)" [disabled]="saving() || loading() || view.decisionPage <= 1">Önceki kararlar</button><span>{{view.decisionPage}}. sayfa · {{view.totalDecisions}} karar</span><button type="button" (click)="page(view.decisionPage+1)" [disabled]="saving() || loading() || view.decisionPage*20 >= view.totalDecisions">Sonraki kararlar</button></nav>
+  }
+</section>

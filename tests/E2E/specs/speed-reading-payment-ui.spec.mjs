@@ -30,7 +30,8 @@ async function mockPaymentApi(page, authenticated) {
 test('anonymous EFT link requires login and retains the selected plan', async ({ page }) => {
   const { banks, writes } = await mockPaymentApi(page, false);
   await page.goto('/odeme?plan=plan-1');
-  await expect(page.getByRole('heading', { name: 'Giriş yapın', exact: true })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'E-posta', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Giriş Yap', exact: true })).toBeVisible();
   const url = new URL(page.url());
   expect(url.pathname).toBe('/auth/login');
   expect(url.searchParams.get('returnUrl')).toBe('/odeme?plan=plan-1');

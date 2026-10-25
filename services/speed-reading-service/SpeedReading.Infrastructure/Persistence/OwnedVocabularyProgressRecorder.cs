@@ -44,8 +44,8 @@ internal static class OwnedVocabularyProgressRecorder
         if (!awardVerifiedGamification)
             return new OwnedVocabularyReviewResult(true, outcome.CurrentBox, outcome.IsNewMastery);
 
-        var stats = await db.UserGamifications
-            .SingleOrDefaultAsync(value => value.UserId == userId && !value.IsDeleted, cancellationToken);
+        var stats = db.UserGamifications.Local.SingleOrDefault(value => value.UserId == userId && !value.IsDeleted)
+            ?? await db.UserGamifications.SingleOrDefaultAsync(value => value.UserId == userId && !value.IsDeleted, cancellationToken);
         if (stats is null)
         {
             stats = UserGamification.CreateDefault(Guid.NewGuid(), userId, reviewedAt, userId.ToString());

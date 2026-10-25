@@ -11,6 +11,14 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingGoalTargetApiTests
 {
     [Fact]
+    public async Task NetTargetApiReturnsValidationFailureAndSuccessfulSave()
+    {
+        var stub=new Stub();var api=new GoalTargetController(stub);
+        Assert.IsType<OkObjectResult>(await api.ReplaceNet(Guid.NewGuid(),new(0,"LGS",75)));
+        var invalid=new GoalTargetController(new Stub{Failure=new ArgumentException("Invalid scope")});
+        Assert.IsType<BadRequestObjectResult>(await invalid.ReplaceNet(Guid.NewGuid(),new(0,"LGS",91)));
+    }
+    [Fact]
     public async Task ScoreApi_RequiresExplicitFieldsAndUsesWriteProtections()
     {
         var method = typeof(GoalTargetController).GetMethod(nameof(GoalTargetController.ReplaceScore))!;
@@ -87,6 +95,9 @@ public sealed class CoachingGoalTargetApiTests
 
     private sealed class Stub : IGoalTargetService
     {
+        public Task<GoalTargetView> ReplaceNetAsync(Guid goalId, GoalNetTargetUpdate request, CancellationToken ct = default)
+            => Failure is null ? Task.FromResult(new GoalTargetView(goalId, request.ExpectedVersion + 1, null, null, true,
+                NetTarget: new(request.ExamCode, request.TargetNet))) : Task.FromException<GoalTargetView>(Failure);
         public bool Missing { get; init; }
         public Exception? Failure { get; init; }
         public (Guid, GoalTargetUpdate) Request;

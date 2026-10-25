@@ -24,10 +24,11 @@ public sealed class CoachingStudyAvailabilityService(CoachingDbContext db, ICoac
         if (request.Windows is null || request.Windows.Count > 42 || request.Windows.Any(x => x is null))
             throw new ArgumentException("Haftalık çalışma saatleri geçersiz; en fazla 42 aralık girilebilir.");
         // Fully validate new values before modifying the tracked preferences.
-        var validated = StudyAvailability.Create(studentId, request.TimeZoneId);
+        var preferences = await db.StudyAvailability.SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
+        var zone = preferences?.TimeZoneId ?? request.TimeZoneId;
+        var validated = StudyAvailability.Create(studentId, zone);
         var windows = request.Windows.Select(x => new StudyAvailabilityWindow(x.Day, x.StartMinute, x.EndMinute)).ToArray();
         validated.ReplaceWindows(windows);
-        var preferences = await db.StudyAvailability.SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         if (preferences is null)
         {
             if (request.ExpectedVersion.HasValue) throw Conflict();
@@ -37,7 +38,7 @@ public sealed class CoachingStudyAvailabilityService(CoachingDbContext db, ICoac
         else
         {
             if (request.ExpectedVersion != preferences.Version) throw Conflict();
-            preferences.ReplacePreferences(request.TimeZoneId, windows);
+            preferences.ReplacePreferences(zone, windows);
         }
         try { await db.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" }) { throw Conflict(); }

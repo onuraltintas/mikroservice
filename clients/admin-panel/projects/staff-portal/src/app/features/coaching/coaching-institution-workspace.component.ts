@@ -1,5 +1,6 @@
+import { coachingToaster } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -27,6 +28,7 @@ type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | '
   styleUrl: './coaching-institution-workspace.component.scss'
 })
 export class CoachingInstitutionWorkspaceComponent implements OnInit {
+  private readonly toaster = coachingToaster();
   @ViewChild(CoachingInstitutionSubscriptionComponent) subscriptionPanel?: Pick<CoachingInstitutionSubscriptionComponent, 'canLeavePage'>;
   @ViewChild(CoachingInstitutionStudentReportComponent) studentReportPanel?: Pick<CoachingInstitutionStudentReportComponent, 'canLeavePage'>;
   @ViewChild(CoachingFinanceComponent) financePanel?: Pick<CoachingFinanceComponent, 'canLeavePage'>;
@@ -40,18 +42,14 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   editStudentTeacherId = '';
   membershipDirty = false;
 
-  canLeavePage(): boolean {
-    if (!(this.studentReportPanel?.canLeavePage() ?? true) || !(this.financePanel?.canLeavePage() ?? true)) return false;
-    if (!(this.subscriptionPanel?.canLeavePage() ?? true)) return false;
+  async canLeavePage(): Promise<boolean> {
+    if (!(await this.studentReportPanel?.canLeavePage() ?? true) || !(await this.financePanel?.canLeavePage() ?? true)) return false;
+    if (!(await this.subscriptionPanel?.canLeavePage() ?? true)) return false;
     if (this.isMembershipSaving()) { this.membershipError.set('Üye işlemi sürüyor. Tamamlanmasını bekleyin.'); return false; }
-    return !this.membershipDirty || window.confirm('Kaydedilmemiş öğrenci değişikliklerinden vazgeçerek ayrılmak istiyor musunuz?');
+    return !this.membershipDirty || await this.toaster.confirm('Kaydedilmemiş öğrenci değişikliklerinden vazgeçerek ayrılmak istiyor musunuz?');
   }
-  @HostListener('window:beforeunload', ['$event'])
-  beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.isMembershipSaving() || this.membershipDirty) { event.preventDefault(); event.returnValue = ''; }
-  }
-  startStudentEdit(student: CoachingInstitutionStudent): void {
-    if (!this.students().some(item => item.userId === student.userId) || !this.canLeavePage()) return;
+  async startStudentEdit(student: CoachingInstitutionStudent): Promise<void> {
+    if (!this.students().some(item => item.userId === student.userId) || !await this.canLeavePage()) return;
     this.editingStudentId.set(student.userId); this.editStudentGrade = student.gradeLevel ?? null;
     this.editStudentTeacherId = student.teacherUserId ?? ''; this.membershipDirty = false; this.membershipError.set(null);
   }
@@ -70,25 +68,25 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
       && !this.teacherFilterOptions().some(teacher => teacher.userId === this.editStudentTeacherId)) {
       this.membershipError.set('Kurum öğretmenlerinden birini seçin.'); return;
     }
-    this.changeMembership(this.institutionService.updateStudent(id, grade, this.editStudentTeacherId || null), 'Öğrenci sınıfı ve öğretmen ataması güncellendi.', () => {
-      this.cancelStudentEdit(); this.loadStudents();
+    this.changeMembership(this.institutionService.updateStudent(id, grade, this.editStudentTeacherId || null), 'Öğrenci sınıfı ve öğretmen ataması güncellendi.', async () => {
+      this.cancelStudentEdit(); await this.loadStudents();
     });
   }
-  removeStudent(student: CoachingInstitutionStudent): void {
+  async removeStudent(student: CoachingInstitutionStudent): Promise<void> {
     if (this.isMembershipSaving() || this.editingStudentId() || !this.students().some(item => item.userId === student.userId)) return;
-    if (!window.confirm(`${student.firstName} ${student.lastName} kurumdan çıkarılsın mı? Kurum ve öğretmen erişimi sona erer; geçmiş koçluk kayıtları silinmez.`)) return;
-    this.changeMembership(this.institutionService.removeStudent(student.userId), 'Öğrencinin kurum ilişkisi sona erdi.', () => this.loadStudents());
+    if (!await this.toaster.confirm(`${student.firstName} ${student.lastName} kurumdan çıkarılsın mı? Kurum ve öğretmen erişimi sona erer; geçmiş koçluk kayıtları silinmez.`)) return;
+    this.changeMembership(this.institutionService.removeStudent(student.userId), 'Öğrencinin kurum ilişkisi sona erdi.', async () => await this.loadStudents());
   }
-  removeTeacher(teacher: CoachingInstitutionTeacher): void {
+  async removeTeacher(teacher: CoachingInstitutionTeacher): Promise<void> {
     if (this.isMembershipSaving() || this.editingStudentId() || !this.teachers().some(item => item.userId === teacher.userId)) return;
-    if (!window.confirm(`${teacher.firstName} ${teacher.lastName} kurumdan çıkarılsın mı? Bu kurumdaki öğrenci atamaları sona erer; geçmiş koçluk kayıtları silinmez.`)) return;
-    this.changeMembership(this.institutionService.removeTeacher(teacher.userId), 'Öğretmenin kurum ilişkisi sona erdi.', () => {
+    if (!await this.toaster.confirm(`${teacher.firstName} ${teacher.lastName} kurumdan çıkarılsın mı? Bu kurumdaki öğrenci atamaları sona erer; geçmiş koçluk kayıtları silinmez.`)) return;
+    this.changeMembership(this.institutionService.removeTeacher(teacher.userId), 'Öğretmenin kurum ilişkisi sona erdi.', async () => {
       this.teachers.update(current => current.filter(item => item.userId !== teacher.userId));
       this.teacherFilterOptions.update(current => current.filter(item => item.userId !== teacher.userId));
       if (this.studentTeacherFilter() === teacher.userId) this.studentTeacherFilter.set('');
       if (this.studentInviteTeacherUserId === teacher.userId) this.studentInviteTeacherUserId = '';
-      this.loadTeachers(); this.loadTeacherFilterOptions();
-      if (this.students().length) this.loadStudents();
+      await this.loadTeachers(); this.loadTeacherFilterOptions();
+      if (this.students().length) await this.loadStudents();
     });
   }
   private changeMembership(operation: Observable<void>, message: string, refresh: () => void): void {
@@ -98,8 +96,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
       error: error => this.membershipError.set(error.status === 403 ? 'Kurum yetkiniz doğrulanamadı. Oturumunuzu yenileyin.' : 'Üye işlemi kaydedilemedi. Kurum ilişkisini ve alanları kontrol edip yeniden deneyin.')
     });
   }
-  private prepareMemberNavigation(): boolean {
-    if (!this.canLeavePage()) return false;
+  private async prepareMemberNavigation(): Promise<boolean> {
+    if (!await this.canLeavePage()) return false;
     this.cancelStudentEdit(); return true;
   }
   hasTeacherOption(id: string): boolean { return this.teacherFilterOptions().some(teacher => teacher.userId === id); }
@@ -150,8 +148,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     this.loadScope();
   }
 
-  selectSection(section: InstitutionSection): void {
-    if (!this.canLeavePage()) return;
+  async selectSection(section: InstitutionSection): Promise<void> {
+    if (!await this.canLeavePage()) return;
     this.cancelStudentEdit();
     this.activeSection.set(section);
     this.selectedStudent.set(null);
@@ -159,26 +157,26 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     this.teacherInvitationError.set(null);
     this.studentInvitationError.set(null);
     if (section === 'students' && this.studentPageNumber() === 1 && this.students().length === 0) {
-      this.loadStudents();
+      await this.loadStudents();
       this.loadTeacherFilterOptions();
     } else if (section === 'teachers' && this.teacherPageNumber() === 1 && this.teachers().length === 0) {
-      this.loadTeachers();
+      await this.loadTeachers();
     }
   }
 
-  openStudentReport(student: CoachingInstitutionStudent): void {
-    if (!this.canLeavePage()) return;
+  async openStudentReport(student: CoachingInstitutionStudent): Promise<void> {
+    if (!await this.canLeavePage()) return;
     this.cancelStudentEdit();
     this.selectedStudent.set(student);
   }
 
-  closeStudentReport(): void {
-    if (!this.canLeavePage()) return;
+  async closeStudentReport(): Promise<void> {
+    if (!await this.canLeavePage()) return;
     this.selectedStudent.set(null);
   }
 
-  openTeacherReport(teacher: CoachingInstitutionTeacher): void {
-    if (!this.canLeavePage()) return;
+  async openTeacherReport(teacher: CoachingInstitutionTeacher): Promise<void> {
+    if (!await this.canLeavePage()) return;
     this.cancelStudentEdit();
     this.selectedTeacher.set(teacher);
   }
@@ -213,8 +211,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     });
   }
 
-  loadStudents(append = false): void {
-    if (!this.prepareMemberNavigation()) return;
+  async loadStudents(append = false): Promise<void> {
+    if (!await this.prepareMemberNavigation()) return;
     const institutionId = this.institutionId();
     if (!institutionId) return;
     const requestId = ++this.studentRequestId;
@@ -245,35 +243,35 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     });
   }
 
-  searchStudents(value: string): void {
-    if (!this.prepareMemberNavigation()) return;
+  async searchStudents(value: string): Promise<void> {
+    if (!await this.prepareMemberNavigation()) return;
     this.studentSearchTerm.set(value.trim());
     this.studentPageNumber.set(1);
-    this.loadStudents();
+    await this.loadStudents();
   }
 
-  setTeacherFilter(value: string): void {
-    if (!this.prepareMemberNavigation()) return;
+  async setTeacherFilter(value: string): Promise<void> {
+    if (!await this.prepareMemberNavigation()) return;
     this.studentTeacherFilter.set(value);
     this.studentPageNumber.set(1);
-    this.loadStudents();
+    await this.loadStudents();
   }
 
-  setGradeFilter(value: string): void {
-    if (!this.prepareMemberNavigation()) return;
+  async setGradeFilter(value: string): Promise<void> {
+    if (!await this.prepareMemberNavigation()) return;
     const grade = value ? Number(value) : null;
     this.studentGradeFilter.set(grade !== null && Number.isInteger(grade) && grade >= 1 && grade <= 12 ? grade : null);
     this.studentPageNumber.set(1);
-    this.loadStudents();
+    await this.loadStudents();
   }
 
-  loadMoreStudents(): void {
+  async loadMoreStudents(): Promise<void> {
     if (!this.isLoadingStudents() && !this.loadingMoreStudents()
-      && this.studentPageNumber() < this.studentTotalPages()) this.loadStudents(true);
+      && this.studentPageNumber() < this.studentTotalPages()) await this.loadStudents(true);
   }
 
-  loadTeachers(append = false): void {
-    if (!this.prepareMemberNavigation()) return;
+  async loadTeachers(append = false): Promise<void> {
+    if (!await this.prepareMemberNavigation()) return;
     const institutionId = this.institutionId();
     if (!institutionId) return;
     const requestId = ++this.teacherRequestId;
@@ -300,16 +298,16 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     });
   }
 
-  searchTeachers(value: string): void {
-    if (!this.prepareMemberNavigation()) return;
+  async searchTeachers(value: string): Promise<void> {
+    if (!await this.prepareMemberNavigation()) return;
     this.teacherSearchTerm.set(value.trim());
     this.teacherPageNumber.set(1);
-    this.loadTeachers();
+    await this.loadTeachers();
   }
 
-  loadMoreTeachers(): void {
+  async loadMoreTeachers(): Promise<void> {
     if (!this.isLoadingTeachers() && !this.loadingMoreTeachers()
-      && this.teacherPageNumber() < this.teacherTotalPages()) this.loadTeachers(true);
+      && this.teacherPageNumber() < this.teacherTotalPages()) await this.loadTeachers(true);
   }
 
   loadMoreTeacherFilterOptions(): void {
@@ -362,10 +360,10 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     });
   }
 
-  retry(): void {
+  async retry(): Promise<void> {
     if (!this.institutionId()) this.loadScope();
-    else if (this.activeSection() === 'students') this.loadStudents();
-    else if (this.activeSection() === 'teachers') this.loadTeachers();
+    else if (this.activeSection() === 'students') await this.loadStudents();
+    else if (this.activeSection() === 'teachers') await this.loadTeachers();
     else this.loadOverview();
   }
 

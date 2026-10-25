@@ -16,4 +16,7 @@ public interface IWeeklyOutcomePlanService
     Task<WeeklyOutcomePlanOptions> OptionsAsync(CancellationToken ct);
     Task<WeeklyOutcomePlanPreview> PreviewAsync(WeeklyOutcomePlanRequest request,CancellationToken ct);
     Task<WeeklyOutcomePlanCreated> CreateAsync(WeeklyOutcomePlanSave request,CancellationToken ct);
+    Task<WeeklyOutcomePlanOptions> OptionsForStudentAsync(Guid studentId,CancellationToken ct);
+    Task<WeeklyOutcomePlanPreview> PreviewForStudentAsync(Guid studentId,WeeklyOutcomePlanRequest request,CancellationToken ct);
+    Task<WeeklyOutcomePlanCreated> CreateForStudentAsync(Guid studentId,WeeklyOutcomePlanSave request,CancellationToken ct);
 }

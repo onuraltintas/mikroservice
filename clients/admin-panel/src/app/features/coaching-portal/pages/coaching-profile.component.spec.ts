@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -6,7 +7,7 @@ import { vi } from 'vitest';
 
 describe('Coaching owned profile', () => {
   it('lets a student fill education fields and save them through the rendered form', async () => {
-    const { fixture, component, http } = setup();
+    const { fixture, component, http } = await setup();
     const student = { version: 1, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true };
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
     fixture.detectChanges(); await fixture.whenStable();
@@ -16,44 +17,44 @@ describe('Coaching owned profile', () => {
       input.value = value; input.dispatchEvent(new Event('input'));
     }
     (fixture.nativeElement.querySelector('[name="shareProgress"]') as HTMLInputElement).click();
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     expect(component.dirty).toBe(true);
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.body.schoolName).toBe('Örnek Lise'); expect(request.request.body.schoolDistrict).toBe('Çankaya');
     expect(request.request.body.gradeLevel).toBe(11); expect(request.request.body.birthDate).toBe('2008-01-02');
     expect(request.request.body.shareProgressWithTeachers).toBe(false);
-    request.flush({ data: { ...student, ...request.request.body, version: 2 } }); fixture.detectChanges();
+    request.flush({ data: { ...student, ...request.request.body, version: 2 } }); fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Koçluk profiliniz kaydedildi.'); http.verify();
   });
-  function setup(role: 'Student' | 'Teacher' = 'Student', invitations: object[] = []) {
+  async function setup(role: 'Student' | 'Teacher' = 'Student', invitations: object[] = []) {
     TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
     const fixture = TestBed.createComponent(CoachingProfileComponent);
     fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', role);
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     const http = TestBed.inject(HttpTestingController);
     http.expectOne('/api/coaching/invitations/my-invitations').flush(invitations);
     return { fixture, component: fixture.componentInstance, http };
   }
 
-  it('reads without creating a profile and provisions explicitly with a product role', () => {
-    const { fixture, component, http } = setup();
+  it('reads without creating a profile and provisions explicitly with a product role', async () => {
+    const { fixture, component, http } = await setup();
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: null, teacher: null, memberships: [] } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     http.expectNone('/api/coaching/profiles/me/provision');
     component.provision();
     const request = http.expectOne('/api/coaching/profiles/me/provision');
     expect(request.request.body).toEqual({ role: 'Student' });
     request.flush({ data: { userId: 'same-account' } });
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: null, teacher: null, memberships: [] } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     http.verify();
   });
 
-  it('saves graduate education in Coaching with version protection and no account fields', () => {
-    const { fixture, component, http } = setup();
+  it('saves graduate education in Coaching with version protection and no account fields', async () => {
+    const { fixture, component, http } = await setup();
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 3, educationStatus: 'student', gradeLevel: 12, shareProgressWithTeachers: true, isActive: true } } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     component.student!.educationStatus = 'graduate'; component.dirty = true;
     component.save();
     const request = http.expectOne('/api/coaching/profiles/me/student');
@@ -66,21 +67,21 @@ describe('Coaching owned profile', () => {
     expect(component.dirty).toBe(false); http.verify();
   });
 
-  it('keeps unsaved education after a version conflict', () => {
-    const { fixture, component, http } = setup();
+  it('keeps unsaved education after a version conflict', async () => {
+    const { fixture, component, http } = await setup();
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true } } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     component.student!.gradeLevel = 11; component.dirty = true; component.save();
     http.expectOne('/api/coaching/profiles/me/student').flush({ message: 'Profil değişti. Yeniden yükleyin.' }, { status: 409, statusText: 'Conflict' });
     expect(component.student!.gradeLevel).toBe(11); expect(component.dirty).toBe(true);
     expect(component.error()).toContain('Profil değişti'); http.verify();
   });
 
-  it('saves teacher expertise in its own product profile without changing education or account roles', () => {
-    const { fixture, component, http } = setup('Teacher');
+  it('saves teacher expertise in its own product profile without changing education or account roles', async () => {
+    const { fixture, component, http } = await setup('Teacher');
     const teacher = { version: 2, subjects: ['Matematik'], title: 'Koç', isActive: true };
     http.expectOne('/api/coaching/profiles/me').flush({ data: { teacher, student: null } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     component.subjects = 'Matematik, Fen'; component.dirty = true; component.save();
     const request = http.expectOne('/api/coaching/profiles/me/teacher');
     expect(request.request.body.subjects).toEqual(['Matematik', 'Fen']);
@@ -90,39 +91,39 @@ describe('Coaching owned profile', () => {
     expect(component.subjects).toBe('Matematik, Fen'); expect(component.dirty).toBe(false); http.verify();
   });
 
-  it('accepts a product invitation then reloads membership without writing an Identity profile', () => {
+  it('accepts a product invitation then reloads membership without writing an Identity profile', async () => {
     const invite = { id: 'invite-1', inviterEmail: 'coach@example.test', type: 'StudentToTeacher', expiresAt: '2026-10-20' };
-    const { fixture, component, http } = setup('Student', [invite]);
+    const { fixture, component, http } = await setup('Student', [invite]);
     const student = { version: 1, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true };
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     component.respond(invite.id, 'accept');
     expect(component.working()).toBe(true);
     http.expectOne('/api/coaching/invitations/invite-1/accept').flush(null);
     http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student, memberships: [] } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     expect(component.invitations()).toEqual([]); expect(component.working()).toBe(false); http.verify();
   });
 
-  it('does not discard a dirty form when accepting an invitation or leaving the profile', () => {
-    const { fixture, component, http } = setup();
+  it('does not discard a dirty form when accepting an invitation or leaving the profile', async () => {
+    const { fixture, component, http } = await setup();
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'student', gradeLevel: 10, isActive: true } } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     component.dirty = true; component.respond('invite-1', 'accept');
     expect(component.invitationError()).toContain('profil değişikliklerini kaydedin');
     http.expectNone('/api/coaching/invitations/invite-1/accept');
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
-    expect(component.canLeavePage()).toBe(false); component.reload();
+    const confirm = vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
+    expect(await component.canLeavePage()).toBe(false); await component.reload();
     http.expectNone('/api/coaching/profiles/me'); confirm.mockRestore();
     const unload = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
-    component.beforeUnload(unload); expect(unload.defaultPrevented).toBe(true); http.verify();
+    window.dispatchEvent(unload); expect(unload.defaultPrevented).toBe(false); http.verify();
   });
 
-  it('keeps missing profile creation retryable after access failure and reports invitation loading errors', () => {
-    const { fixture, component, http } = setup();
+  it('keeps missing profile creation retryable after access failure and reports invitation loading errors', async () => {
+    const { fixture, component, http } = await setup();
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: null, teacher: null } });
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     component.provision();
     http.expectOne('/api/coaching/profiles/me/provision').flush({ message: 'Rol doğrulanamadı.' }, { status: 403, statusText: 'Forbidden' });
     expect(component.ready()).toBe(true); expect(component.working()).toBe(false); expect(component.error()).toContain('Rol doğrulanamadı');
@@ -131,3 +132,5 @@ describe('Coaching owned profile', () => {
     expect(component.invitationError()).toContain('Davetler yüklenemedi'); http.verify();
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

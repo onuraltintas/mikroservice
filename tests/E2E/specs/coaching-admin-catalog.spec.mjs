@@ -9,7 +9,6 @@ const files = {
   'units-derived.json': '[{"id":"u","name":"Unit","lessonId":"l","displayOrder":null}]',
   'upper-subjects.json': '[{"id":"p","name":"Parent","unitId":"u","lessonId":"l","rank":1}]',
   'subjects.json': '[{"id":"t","name":"Topic","unitId":"u","upperSubjectId":"p","rank":2}]',
-  'university-programs.json': '[{"id":"p1","university":"University","programName":"Program","programCode":"123","scoreType":"SAY","minScore":400,"scoreYear":2025}]',
   'lgs-programs.json': '[{"id":"s1","schoolName":"School","city":"City","town":"District","minScore":350}]'
 };
 async function session(page, token) {
@@ -25,7 +24,7 @@ test('real admin APIs reject anonymous/student access and stale preview', async 
   const reviewed = await request.post(url, { data, headers });
   expect(reviewed.ok(), await reviewed.text()).toBeTruthy();
   const review = (await reviewed.json()).data;
-  expect(review.newRecords).toBe(6);
+  expect(review.newRecords).toBe(5);
   const approved = await request.post(`${api}/coaching-admin/catalog-imports/approve`, { headers, data: { ...data, fingerprint: review.fingerprint, reason: 'Browser test approval' } });
   expect(approved.ok(), await approved.text()).toBeTruthy();
   const stale = await request.post(`${api}/coaching-admin/catalog-imports/publish`, { headers, data: { ...data, fingerprint: review.fingerprint, reason: 'Stale preview must fail' } });
@@ -46,14 +45,14 @@ test('admin browser previews, imports inactive, reviews again and publishes', as
   await form.getByLabel('Kaynak adı').fill(`browser-ui-${randomUUID()}`);
   await form.locator('input[type=file]').setInputFiles(Object.entries(files).map(([name, value]) => ({ name, mimeType: 'application/json', buffer: Buffer.from(value) })));
   await form.getByRole('button', { name: 'Önizle ve doğrula' }).click();
-  await expect(form.getByText(/6 yeni, 0 mevcut/)).toBeVisible();
+  await expect(form.getByText(/5 yeni, 0 mevcut/)).toBeVisible();
   await expect(form.getByRole('button', { name: 'Doğrulanmış kaynağı yayınla' })).toBeDisabled();
   await form.getByLabel('İşlem gerekçesi').fill('Tarayıcı pasif aktarım testi');
   await form.getByRole('button', { name: 'Yeni kayıtları pasif aktar' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Onayla', exact: true }).click();
   await expect(form.getByLabel('İşlem gerekçesi')).toHaveCount(0);
   await form.getByRole('button', { name: 'Önizle ve doğrula' }).click();
-  await expect(form.getByText(/0 yeni, 6 mevcut/)).toBeVisible();
+  await expect(form.getByText(/0 yeni, 5 mevcut/)).toBeVisible();
   await form.getByLabel('İşlem gerekçesi').fill('Tarayıcı ayrı yayın onayı');
   await form.getByRole('button', { name: 'Doğrulanmış kaynağı yayınla' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Onayla', exact: true }).click();

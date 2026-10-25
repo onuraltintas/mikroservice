@@ -54,7 +54,7 @@ function token(config, userId, role, admin = false) {
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const unsigned = `${encode({ alg: 'HS256', typ: 'JWT', kid: config.JWT_KEY_ID })}.${encode({
     sub: userId, iss: config.JWT_ISSUER, aud: config.JWT_AUDIENCE,
-    iat: now, nbf: now, exp: now + 300, [roleClaim]: role,
+    iat: now, nbf: now, exp: now + 300, [roleClaim]: role, platform_product: 'coaching',
     ...(admin ? { permission: 'Permissions.Coaching.View', amr: 'mfa' } : {}),
   })}`;
   return `${unsigned}.${createHmac('sha256', config.JWT_SECRET).update(unsigned).digest('base64url')}`;
@@ -183,9 +183,9 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
       VALUES (gen_random_uuid(), '${id.examA}', '${id.studentA}', 80, '${now}'),
         (gen_random_uuid(), '${id.examB}', '${id.studentB}', 60, '${now}');
       INSERT INTO coaching.academic_goals
-        (id, student_id, title, category, current_progress, is_completed, created_at, "Version")
-      VALUES ('${id.goalA}', '${id.studentA}', 'Goal A only', 'Other', 0, false, '${now}', 0),
-        ('${id.goalB}', '${id.studentB}', 'Goal B only', 'Other', 0, false, '${now}', 0);
+        (id, student_id, institution_id, title, category, current_progress, is_completed, created_at, "Version")
+      VALUES ('${id.goalA}', '${id.studentA}', '${id.institutionA}', 'Goal A only', 'Other', 0, false, '${now}', 0),
+        ('${id.goalB}', '${id.studentB}', '${id.institutionB}', 'Goal B only', 'Other', 0, false, '${now}', 0);
       COMMIT;`);
 
     const adminA = token(config, id.adminA, 'InstitutionAdmin', true);
@@ -194,6 +194,9 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
     const teacherB = token(config, id.teacherB, 'Teacher');
     await expectStatus(await get('/api/coaching-admin/assignments'), 401);
     await expectStatus(await get('/api/coaching-admin/assignments', teacherA), 403);
+    const scopeA = await get('/api/coaching-admin/scope', adminA);
+    await expectStatus(scopeA, 200);
+    assert.equal((await scopeA.json()).institutionId.toLowerCase(), id.institutionA);
     const listA = await get('/api/coaching-admin/assignments', adminA);
     await expectStatus(listA, 200);
     assert.deepEqual((await listA.json()).items.map(item => item.id.toLowerCase()), [id.assignmentA]);
@@ -211,10 +214,12 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
     ]) {
       const a = await get(`/api/coaching-admin/${resource}`, adminA);
       await expectStatus(a, 200);
-      assert.deepEqual((await a.json()).items.map(item => item.id.toLowerCase()), [ownA]);
+      assert.deepEqual((await a.json()).items.map(item => item.id.toLowerCase()), [ownA],
+        `${resource} must list only Institution A records`);
       const b = await get(`/api/coaching-admin/${resource}`, adminB);
       await expectStatus(b, 200);
-      assert.deepEqual((await b.json()).items.map(item => item.id.toLowerCase()), [ownB]);
+      assert.deepEqual((await b.json()).items.map(item => item.id.toLowerCase()), [ownB],
+        `${resource} must list only Institution B records`);
       await expectStatus(await get(`/api/coaching-admin/${resource}/${ownA}`, adminA), 200);
       await expectStatus(await get(`/api/coaching-admin/${resource}/${ownB}`, adminA), 404);
       await expectStatus(await get(`/api/coaching-admin/${resource}/${ownB}`, adminB), 200);

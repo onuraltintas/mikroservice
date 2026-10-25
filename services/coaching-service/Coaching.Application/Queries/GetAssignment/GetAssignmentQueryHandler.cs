@@ -91,6 +91,14 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
                     attachment.ScannedAt)).ToList(),
                 StudentNote: s.StudentNote
             )).ToList(),
+            InstructionAttachments: assignment.InstructionAttachments.Select(attachment => new AssignmentInstructionAttachmentDto(
+                attachment.Id,
+                attachment.OriginalFileName,
+                attachment.ContentType,
+                attachment.SizeBytes,
+                attachment.Status.ToString(),
+                attachment.UploadedAt,
+                attachment.ScannedAt)).ToList(),
             CreatedAt: assignment.CreatedAt
         );
     }

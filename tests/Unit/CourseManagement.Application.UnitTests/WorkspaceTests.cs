@@ -16,6 +16,29 @@ public sealed class WorkspaceTests
         Assert.Equal(type, workspace.Type);
     }
 
+    [Fact]
+    public void ImportedInstitutionProfileUpdatesOnlyTheSelectedFields()
+    {
+        var workspace = Workspace.Create(Guid.NewGuid(), Guid.NewGuid(), "Başlangıç adı", WorkspaceType.Institution);
+
+        workspace.ImportInstitutionProfile("  Yeni kurum  ", InstitutionCategory.PrivateCourse);
+
+        Assert.Equal("Yeni kurum", workspace.Name);
+        Assert.Equal(WorkspaceType.Institution, workspace.Type);
+        Assert.Equal(InstitutionCategory.PrivateCourse, workspace.InstitutionCategory);
+        workspace.ImportInstitutionProfile("Güncel ad", null);
+        Assert.Equal("Güncel ad", workspace.Name);
+        Assert.Equal(InstitutionCategory.PrivateCourse, workspace.InstitutionCategory);
+    }
+
+    [Fact]
+    public void ImportedInstitutionProfileRejectsIndependentTeacherWorkspace()
+    {
+        var workspace = Workspace.Create(Guid.NewGuid(), Guid.NewGuid(), "Özel ders", WorkspaceType.IndependentTeacher);
+
+        Assert.Throws<InvalidOperationException>(() => workspace.ImportInstitutionProfile("Kurum", InstitutionCategory.School));
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData(" ")]

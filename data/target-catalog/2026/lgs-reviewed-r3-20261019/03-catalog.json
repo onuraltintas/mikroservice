@@ -1,0 +1,29 @@
+{
+  "examCode": "LGS",
+  "year": 2026,
+  "stage": "Catalog",
+  "sourceUrl": "https://haydarfadimkocaerfenlisesi.meb.k12.tr/tema/okulumuz_hakkinda.html",
+  "documentHash": "ab3b4d5e413075f8003de32e81f2cc70412028c4f544e7f8bfd1a24e61e0c6ce",
+  "rows": [
+    {
+      "institution": "Haydar-Fadim Kocaer Fen Lisesi",
+      "name": "Haydar-Fadim Kocaer Fen Lisesi / İngilizce",
+      "scoreType": "LGS",
+      "city": "KONYA",
+      "district": "ÇUMRA",
+      "institutionType": "Fen Lisesi",
+      "degree": null,
+      "language": "İngilizce",
+      "scholarship": null,
+      "educationType": null,
+      "field": null,
+      "quota": 60,
+      "placed": null,
+      "minimumScore": null,
+      "maximumScore": null,
+      "rank": null,
+      "percentile": null,
+      "externalCode": "reviewed-lgs2026:9fd5768898f539e3f4fd00b7e1c52818"
+    }
+  ]
+}

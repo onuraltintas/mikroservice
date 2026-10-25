@@ -111,6 +111,34 @@
         </label>
       </div>
 
+      <section class="editor-full" aria-labelledby="assignment-files-title">
+        <div class="editor-section-heading">
+          <h3 id="assignment-files-title">Ödev dosyaları</h3>
+          <p>JPEG, PNG, WebP, PDF, Word (.doc/.docx) ve Markdown (.md) dosyaları · dosya başına en fazla 10 MB. Dosyalar tarama tamamlanınca öğrenciye açılır.</p>
+        </div>
+        @if (existingAttachments().length > 0) {
+          <ul class="attachment-list" aria-label="Mevcut ödev dosyaları">
+            @for (attachment of existingAttachments(); track attachment.id) {
+              <li><span>{{ attachment.originalFileName }} · {{ attachment.status }}</span>
+                <button type="button" class="secondary-button" (click)="downloadInstructionAttachment(attachment)" [disabled]="attachment.status !== 'Clean'">İndir</button>
+              </li>
+            }
+          </ul>
+        }
+        <label class="editor-file-picker" for="assignment-files">Dosya seç
+          <input id="assignment-files" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.md" (change)="onAssignmentFilesSelected($event)" [disabled]="isSaving()">
+        </label>
+        @if (selectedAttachments().length > 0) {
+          <ul class="attachment-list" aria-label="Yüklenecek ödev dosyaları">
+            @for (file of selectedAttachments(); track file.name + file.lastModified) {
+              <li><span>{{ file.name }} · {{ (file.size / 1024 / 1024) | number:'1.1-1' }} MB</span>
+                <button type="button" class="secondary-button" (click)="removeSelectedAttachment(file)" [disabled]="isSaving()">Kaldır</button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
       <fieldset class="student-picker">
         <legend>Aktif öğrenciler <span aria-hidden="true">*</span></legend>
         <p>Bu ödev en fazla 100 öğrenciye atanabilir. Seçimleriniz arama ve sayfalar arasında korunur.</p>

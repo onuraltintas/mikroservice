@@ -66,8 +66,7 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                 // Share the deletion writer's table locks before reading its committed tombstones.
                 await db.Database.ExecuteSqlRawAsync("""
                     LOCK TABLE coaching.study_catalog_lessons, coaching.study_catalog_topics,
-                        coaching.study_catalog_units, coaching.target_schools,
-                        coaching.target_university_programs IN SHARE ROW EXCLUSIVE MODE
+                        coaching.study_catalog_units, coaching.target_catalog IN SHARE ROW EXCLUSIVE MODE
                     """, cancellationToken);
                 var deletions = await db.AdminAuditRecords.AsNoTracking()
                     .Where(x => x.ServiceName == "Coaching" && x.Action == "CatalogPermanentDelete")
@@ -78,8 +77,7 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                     ["Units"] = rows["units-derived.json"].Select(x => Text(x, "id")).ToHashSet(),
                     ["Topics"] = rows["upper-subjects.json"].Select(x => "upper:" + Text(x, "id"))
                         .Concat(rows["subjects.json"].Select(x => "topic:" + Text(x, "id"))).ToHashSet(),
-                    ["Schools"] = rows["lgs-programs.json"].Select(x => Text(x, "id")).ToHashSet(),
-                    ["UniversityPrograms"] = rows["university-programs.json"].Select(x => Text(x, "id")).ToHashSet()
+                    ["Schools"] = rows["lgs-programs.json"].Select(x => Text(x, "id")).ToHashSet()
                 };
                 foreach (var deletion in deletions)
                 {
@@ -92,16 +90,14 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                 var lessons = await db.StudyCatalogLessons.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var units = await db.StudyCatalogUnits.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var topics = await db.StudyCatalogTopics.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
-                var programs = await db.TargetUniversityPrograms.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var schools = await db.TargetSchools.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
-                if (publish && (report.Counts.Values.Sum() == 0 || lessons.Count + units.Count + topics.Count + programs.Count + schools.Count != report.Counts.Values.Sum()))
+                if (publish && (report.Counts.Values.Sum() == 0 || lessons.Count + units.Count + topics.Count + schools.Count != report.Counts.Values.Sum()))
                     throw new InvalidOperationException("Publication requires the complete reviewed source and no extra stored records.");
                 var snapshot = JsonSerializer.Serialize(new { source,
                     files = files.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
                     lessons = lessons.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
                     units = units.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
                     topics = topics.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
-                    programs = programs.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
                     schools = schools.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray() });
                 var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(snapshot)));
                 capture?.Invoke(fingerprint);
@@ -125,14 +121,12 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                     var parent = topics["upper:" + Text(row, "upperSubjectId")];
                     added += Stage(topics, "topic:" + Text(row, "id"), () => StudyCatalogTopic.Create(source, "topic:" + Text(row, "id"), parent.LessonId, parent.UnitId, Text(row, "name"), parent.Id, Number(row, "rank")));
                 }
-                foreach (var row in rows["university-programs.json"])
-                    added += Stage(programs, Text(row, "id"), () => TargetUniversityProgram.Create(source, Text(row, "id"), Text(row, "university"), Text(row, "programName"), Text(row, "programCode"), Text(row, "scoreType"), Score(row), Number(row, "scoreYear")));
                 foreach (var row in rows["lgs-programs.json"])
                     added += Stage(schools, Text(row, "id"), () => TargetSchool.Create(source, Text(row, "id"), Text(row, "schoolName"), Text(row, "city"), Text(row, "town"), Score(row), Number(row, "scoreYear")));
                 if (verifyOnly && added != 0) throw new InvalidOperationException("Reviewed catalog contains records missing from storage.");
                 if (publish)
                 {
-                    var entities = lessons.Values.Cast<object>().Concat(units.Values).Concat(topics.Values).Concat(programs.Values).Concat(schools.Values);
+                    var entities = lessons.Values.Cast<object>().Concat(units.Values).Concat(topics.Values).Concat(schools.Values);
                     foreach (var entity in entities)
                     {
                         var active = (bool)entity.GetType().GetProperty("IsActive")!.GetValue(entity)!;

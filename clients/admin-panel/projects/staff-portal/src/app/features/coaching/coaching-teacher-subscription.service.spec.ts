@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -59,3 +60,5 @@ describe('CoachingTeacherSubscriptionService', () => {
     remove.flush({ success: true });
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

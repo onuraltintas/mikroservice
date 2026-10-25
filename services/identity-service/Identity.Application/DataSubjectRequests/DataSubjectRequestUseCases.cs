@@ -4,6 +4,7 @@ using Identity.Domain.Enums;
 using MediatR;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Contracts.Events.Privacy;
+using EduPlatform.Shared.Contracts.Privacy;
 
 namespace Identity.Application.DataSubjectRequests;
 
@@ -49,6 +50,8 @@ public sealed record SubmitDataSubjectRequestCommand(
 public sealed record GetMyDataSubjectRequestsQuery : IRequest<IReadOnlyList<DataSubjectRequestDto>>;
 public sealed record GetDataSubjectRequestReviewDetailQuery(Guid RequestId)
     : IRequest<DataSubjectRequestReviewDetailDto>;
+public sealed record GetDataSubjectRequestErasureReadinessQuery(Guid RequestId)
+    : IRequest<DataSubjectRequestErasureReadinessV1>;
 public sealed record GetDataSubjectRequestsForReviewQuery(
     DataSubjectRequestStatus? Status,
     int PageNumber = 1,
@@ -71,7 +74,7 @@ public static class DataErasureAssessmentScopePolicy
 {
     public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope) => scope switch
     {
-        PersonalDataScope.Account => ["Coaching", "Notification", "SpeedReading"],
+        PersonalDataScope.Account => ["Coaching", "Notification", "SpeedReading", "CourseManagement"],
         PersonalDataScope.Coaching => ["Coaching"],
         PersonalDataScope.SpeedReading => ["SpeedReading"],
         _ => throw new ArgumentOutOfRangeException(nameof(scope))
@@ -239,6 +242,34 @@ public sealed class GetDataSubjectRequestReviewDetailQueryHandler(
             DataSubjectRequestAssessmentSummaryDto.Create(
                 DataErasureAssessmentScopePolicy.RequiredServices(request.Scope),
                 assessments));
+    }
+}
+
+public sealed class GetDataSubjectRequestErasureReadinessQueryHandler(
+    IDataSubjectRequestRepository requestRepository,
+    IDataSubjectRequestAssessmentRepository assessmentRepository)
+    : IRequestHandler<GetDataSubjectRequestErasureReadinessQuery, DataSubjectRequestErasureReadinessV1>
+{
+    public async Task<DataSubjectRequestErasureReadinessV1> Handle(
+        GetDataSubjectRequestErasureReadinessQuery query,
+        CancellationToken cancellationToken)
+    {
+        var request = await requestRepository.GetByIdAsync(query.RequestId, cancellationToken)
+            ?? throw new NotFoundException(nameof(DataSubjectRequest), query.RequestId);
+        var assessments = await assessmentRepository.GetByRequestIdAsync(query.RequestId, cancellationToken);
+        var summary = DataSubjectRequestAssessmentSummaryDto.Create(
+            DataErasureAssessmentScopePolicy.RequiredServices(request.Scope),
+            assessments);
+
+        return new DataSubjectRequestErasureReadinessV1(
+            request.Id,
+            request.RequesterUserId,
+            request.RequestType.ToString(),
+            request.Scope.ToString(),
+            request.Status.ToString(),
+            summary.IsComplete,
+            summary.HasBlockingLegalHold,
+            summary.IsReadyForErasure);
     }
 }
 

@@ -10,6 +10,8 @@
 .tmp
 .codex-staging-*
 .tmp-*
+.ollama-models
+artifacts
 *.tar
 *.tar.gz
 coaching-migration-reconcile-20260925.sql

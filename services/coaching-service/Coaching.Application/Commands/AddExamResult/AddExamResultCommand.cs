@@ -13,7 +13,8 @@ public record AddExamResultCommand(
     Dictionary<string, decimal>? SubjectScores,
     string? Notes,
     string? IdempotencyKey = null,
-    int? Ranking = null
+    int? Ranking = null,
+    Coaching.Domain.Entities.PracticeExamInput? PracticeExam = null
 ) : IRequest
 {
     [JsonIgnore]

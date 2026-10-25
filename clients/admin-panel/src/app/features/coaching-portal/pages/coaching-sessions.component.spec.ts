@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
@@ -9,7 +10,7 @@ import { CoachingSessionsComponent } from './coaching-sessions.component';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 
 describe('CoachingSessionsComponent', () => {
-  it('loads own sessions rather than teacher sessions in the selected student view', () => {
+  it('loads own sessions rather than teacher sessions in the selected student view', async () => {
     const profile = signal<UserProfile | null>({ ...user('Teacher'), roles: ['Teacher', 'Student'] });
     const service = {
       getStudentSessions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 })),
@@ -22,11 +23,11 @@ describe('CoachingSessionsComponent', () => {
     ] });
     TestBed.inject(CoachingPortalViewService).select('Student');
     const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
-    component.ngOnInit();
+    await component.ngOnInit();
     expect(service.getStudentSessions).toHaveBeenCalledWith('user-1', 1, 25);
     expect(service.getTeacherSessions).not.toHaveBeenCalled();
   });
-  it('loads a student session and saves the student reflection', () => {
+  it('loads a student session and saves the student reflection', async () => {
     const profile = signal<UserProfile | null>(user('Student'));
     const session: CoachingSession = {
       id: 'session-1',
@@ -56,8 +57,8 @@ describe('CoachingSessionsComponent', () => {
     });
     const fixture = TestBed.createComponent(CoachingSessionsComponent);
     const component = fixture.componentInstance;
-    component.ngOnInit();
-    fixture.detectChanges();
+    await component.ngOnInit();
+    fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Seninle paylaşılan koç notu');
     expect(fixture.nativeElement.textContent).toContain('Bu hafta çalışma planını ailene göster.');
     component.setNote('session-1', 'Bugün hedefimi netleştirdim.');
@@ -71,7 +72,7 @@ describe('CoachingSessionsComponent', () => {
     );
   });
 
-  it('loads student reflections for a teacher session without enabling student editing', () => {
+  it('loads student reflections for a teacher session without enabling student editing', async () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const session: CoachingSession = {
       id: 'session-2',
@@ -106,7 +107,7 @@ describe('CoachingSessionsComponent', () => {
       ]
     });
     const fixture = TestBed.createComponent(CoachingSessionsComponent);
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
 
     expect(fixture.nativeElement.textContent).toContain('Öğrenci yansımaları');
     expect(fixture.nativeElement.textContent).toContain('Ada Yılmaz');
@@ -114,7 +115,7 @@ describe('CoachingSessionsComponent', () => {
     expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
   });
 
-  it('exposes a teacher iCalendar export link', () => {
+  it('exposes a teacher iCalendar export link', async () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const service = {
       getTeacherSessions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
@@ -130,7 +131,7 @@ describe('CoachingSessionsComponent', () => {
       ]
     });
     const fixture = TestBed.createComponent(CoachingSessionsComponent);
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
 
     const button = fixture.nativeElement.querySelector('[data-testid="calendar-export"]') as HTMLButtonElement;
     expect(button).not.toBeNull();
@@ -138,7 +139,7 @@ describe('CoachingSessionsComponent', () => {
     expect(service.downloadCalendarFeed).toHaveBeenCalledWith('teacher');
   });
 
-  it('lets a teacher update attendance for an assigned session student', () => {
+  it('lets a teacher update attendance for an assigned session student', async () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const reflection = {
       studentId: 'student-1',
@@ -171,14 +172,14 @@ describe('CoachingSessionsComponent', () => {
       ]
     });
     const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
-    component.ngOnInit();
+    await component.ngOnInit();
     component.saveAttendance(session, reflection, false);
 
     expect(service.updateSessionAttendance).toHaveBeenCalledWith('session-3', 'student-1', false);
     expect(session.studentReflections?.[0].attendanceStatus).toBe('Absent');
   });
 
-  it('shows attendance controls even when the student has not submitted a reflection', () => {
+  it('shows attendance controls even when the student has not submitted a reflection', async () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const session: CoachingSession = {
       id: 'session-no-note', studentId: 'student-no-note', startTime: '2030-01-01T10:00:00Z',
@@ -204,7 +205,7 @@ describe('CoachingSessionsComponent', () => {
       ]
     });
     const fixture = TestBed.createComponent(CoachingSessionsComponent);
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
 
     expect(fixture.nativeElement.textContent).toContain('Deniz Öğrenci');
     expect(fixture.nativeElement.textContent).toContain('Henüz yansıma paylaşılmadı');
@@ -212,7 +213,7 @@ describe('CoachingSessionsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Katılmadı');
   });
 
-  it('lets a teacher cancel a scheduled session and updates the local status', () => {
+  it('lets a teacher cancel a scheduled session and updates the local status', async () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const session: CoachingSession = {
       id: 'session-4',
@@ -239,14 +240,14 @@ describe('CoachingSessionsComponent', () => {
       ]
     });
     const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
-    component.ngOnInit();
+    await component.ngOnInit();
     component.cancelSession(session);
 
     expect(service.cancelTeacherSession).toHaveBeenCalledWith('session-4');
     expect(component.sessions()[0].status).toBe('Cancelled');
   });
 
-  it('clears the cancellation busy state when the API rejects the request', () => {
+  it('clears the cancellation busy state when the API rejects the request', async () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const session: CoachingSession = {
       id: 'session-5',
@@ -273,14 +274,14 @@ describe('CoachingSessionsComponent', () => {
       ]
     });
     const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
-    component.ngOnInit();
+    await component.ngOnInit();
     component.cancelSession(session);
 
     expect(component.savingCancellationId()).toBeNull();
     expect(component.errorMessage()).toBe('Seans iptal edilemedi.');
   });
 
-  it('loads additional session pages without replacing the first page', () => {
+  it('loads additional session pages without replacing the first page', async () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const firstSession = { ...sessionFor('session-page-1'), subject: 'Matematik' };
     const secondSession = { ...sessionFor('session-page-2'), subject: 'Fizik' };
@@ -300,7 +301,7 @@ describe('CoachingSessionsComponent', () => {
       ]
     });
     const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
-    component.ngOnInit();
+    await component.ngOnInit();
     component.loadMore();
 
     expect(service.getTeacherSessions).toHaveBeenNthCalledWith(2, 'user-1', 2, 25);
@@ -335,3 +336,5 @@ function user(role: string): UserProfile {
     permissions: []
   };
 }
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

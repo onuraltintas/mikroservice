@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -5,7 +6,7 @@ import { CoachingStudyPlanningService } from '../../../core/services/coaching-st
 import { StudentStudyTodayComponent } from './student-study-today.component';
 
 describe('StudentStudyTodayComponent', () => {
-  function setup(empty = false, failure = false) {
+  async function setup(empty = false, failure = false) {
     const service = { list: vi.fn(() => failure ? throwError(() => new Error('offline')) : of({ items: empty ? [] : [{ id: 'plan' }] })),
       getAvailability: vi.fn(() => of({ timeZoneId: 'Europe/Istanbul' })),
       get: vi.fn(() => of({ title: 'My plan', tasks: [
@@ -16,12 +17,12 @@ describe('StudentStudyTodayComponent', () => {
     TestBed.configureTestingModule({ imports: [StudentStudyTodayComponent], providers: [provideRouter([]), { provide: CoachingStudyPlanningService, useValue: service }] });
     const fixture = TestBed.createComponent(StudentStudyTodayComponent);
     vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-02T10:00:00Z'));
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     return { fixture, service, component: fixture.componentInstance };
   }
   afterEach(() => vi.restoreAllMocks());
-  it('uses active plan and preference timezone and shows today and overdue separately', () => {
-    const { fixture, service } = setup();
+  it('uses active plan and preference timezone and shows today and overdue separately', async () => {
+    const { fixture, service } = await setup();
     expect(service.list).toHaveBeenCalledWith(1, 'Active');
     expect(service.get).toHaveBeenCalledTimes(1);
     expect(fixture.nativeElement.textContent).toContain('Today work');
@@ -31,34 +32,34 @@ describe('StudentStudyTodayComponent', () => {
     expect(fixture.nativeElement.querySelector('.today-date').textContent).toContain('02.10.2026');
     expect(fixture.nativeElement.querySelector('.today-catch-up').textContent).toContain('01.10.2026');
   });
-  it('distinguishes no active plan from a failed request', () => {
-    const { fixture, service } = setup(true);
+  it('distinguishes no active plan from a failed request', async () => {
+    const { fixture, service } = await setup(true);
     expect(fixture.nativeElement.textContent).toContain('Henüz aktif çalışma planın yok');
     expect(service.get).not.toHaveBeenCalled();
   });
-  it('offers retry after loading failure without pretending there is no plan', () => {
-    const { fixture, component } = setup(false, true);
+  it('offers retry after loading failure without pretending there is no plan', async () => {
+    const { fixture, component } = await setup(false, true);
     expect(component.error()).toBeTruthy();
     expect(fixture.nativeElement.textContent).not.toContain('Henüz aktif çalışma planın yok');
   });
-  it('does not require saved availability preferences to show a manual plan', () => {
-    const { fixture, component, service } = setup();
+  it('does not require saved availability preferences to show a manual plan', async () => {
+    const { fixture, component, service } = await setup();
     service.getAvailability.mockReturnValueOnce(throwError(() => ({ status: 404 })) as any);
-    component.load(); fixture.detectChanges();
+    await component.load(); fixture.detectChanges(); await fixture.whenStable();
     expect(component.error()).toBeNull();
     expect(component.title()).toBe('My plan');
     expect(service.get).toHaveBeenCalledTimes(2);
   });
-  it('shows the manual plan when availability returns an explicit null', () => {
-    const { component, service } = setup();
+  it('shows the manual plan when availability returns an explicit null', async () => {
+    const { component, service } = await setup();
     service.getAvailability.mockReturnValueOnce(of(null) as any);
-    component.load();
+    await component.load();
     expect(component.error()).toBeNull();
     expect(component.title()).toBe('My plan');
     expect(component.timeZone()).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
   });
-  it('derives daily progress only from scheduled tasks, with no invented duration', () => {
-    const { fixture, component } = setup();
+  it('derives daily progress only from scheduled tasks, with no invented duration', async () => {
+    const { fixture, component } = await setup();
     expect(component.scheduledToday()).toBe(2);
     expect(component.completedToday()).toBe(1);
     expect(component.dailyPercentage()).toBe(50);
@@ -66,18 +67,20 @@ describe('StudentStudyTodayComponent', () => {
     expect(component.recordedMinutes()).toBeNull();
     expect(fixture.nativeElement.querySelector('[role="progressbar"]').getAttribute('aria-valuenow')).toBe('50');
   });
-  it('does not present an empty day or failed load as 100% complete', () => {
-    const { fixture, component, service } = setup();
+  it('does not present an empty day or failed load as 100% complete', async () => {
+    const { fixture, component, service } = await setup();
     service.get.mockReturnValueOnce(of({ title: 'Tomorrow', tasks: [] }));
-    component.load(); fixture.detectChanges();
+    await component.load(); fixture.detectChanges(); await fixture.whenStable();
     expect(component.dailyPercentage()).toBeNull();
     expect(fixture.nativeElement.querySelector('[role="progressbar"]')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Bugüne planlanmış çalışma yok');
     service.list.mockReturnValueOnce(throwError(() => new Error('offline')));
-    component.load(); fixture.detectChanges();
+    await component.load(); fixture.detectChanges(); await fixture.whenStable();
     expect(component.error()).toBeTruthy();
     expect(component.completedToday()).toBe(0);
     expect(component.dailyPercentage()).toBeNull();
     expect(fixture.nativeElement.querySelector('[role="progressbar"]')).toBeNull();
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

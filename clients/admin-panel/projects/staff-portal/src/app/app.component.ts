@@ -1,4 +1,7 @@
-import { ChangeDetectorRef, Component, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
+import { DarkModeService } from '../../../../src/app/core/services/dark-mode.service';
+import { CoachingIconComponent } from '../../../../src/app/features/coaching-portal/coaching-icon.component';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -10,6 +13,7 @@ import { SpeedReadingTeacherWorkspaceComponent } from './features/speed-reading/
 import { SpeedReadingInstitutionWorkspaceComponent } from './features/speed-reading/speed-reading-institution-workspace.component';
 import { StaffAccountSettingsComponent } from './account/staff-account-settings.component';
 import { StaffNotificationCenterComponent } from './notifications/staff-notification-center.component';
+import type { WeeklyDestination } from '../../../../shared/coaching-notification-target';
 import { CourseManagementWorkspaceComponent } from './features/course-management/course-management-workspace.component';
 import { CourseManagementEnrollmentComponent } from './features/course-management/course-management-enrollment.component';
 
@@ -18,17 +22,23 @@ type StaffWorkspaceRole = 'teacher' | 'institution';
 @Component({
   selector: 'staff-root',
   standalone: true,
-  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent, CourseManagementWorkspaceComponent, CourseManagementEnrollmentComponent],
+  imports: [FormsModule, CdkTrapFocus, CoachingIconComponent, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent, CourseManagementWorkspaceComponent, CourseManagementEnrollmentComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  @ViewChild(CoachingTeacherWorkspaceComponent) coachingTeacherWorkspace?: CoachingTeacherWorkspaceComponent;
+  @ViewChild('coachingTeacherWorkspace') coachingTeacherWorkspace?: CoachingTeacherWorkspaceComponent;
   @ViewChild(CoachingInstitutionWorkspaceComponent) coachingInstitutionWorkspace?: Pick<CoachingInstitutionWorkspaceComponent, 'canLeavePage'>;
-  private canLeaveCoachingWorkspace(): boolean {
-    return (this.coachingTeacherWorkspace?.canLeavePage() ?? true) && (this.coachingInstitutionWorkspace?.canLeavePage() ?? true);
+  private async canLeaveCoachingWorkspace(): Promise<boolean> {
+    return (await this.coachingTeacherWorkspace?.canLeavePage() ?? true) && (await this.coachingInstitutionWorkspace?.canLeavePage() ?? true);
   }
   readonly auth = inject(StaffAuthService);
+  readonly theme = inject(DarkModeService);
+  readonly menuOpen = signal(false);
+  @ViewChild('teacherMenuToggle') private teacherMenuToggle?: ElementRef<HTMLButtonElement>;
+  closeTeacherMenu(): void { this.menuOpen.set(false); this.teacherMenuToggle?.nativeElement.focus(); }
+  @HostListener('document:keydown.escape') closeTeacherMenuOnEscape(): void { if (this.menuOpen()) this.closeTeacherMenu(); }
+  async chooseProductFromMenu(product: StaffProduct): Promise<void> { this.closeTeacherMenu(); await this.switchProduct(product); }
   private readonly document = inject(DOCUMENT);
   private readonly changeDetector = inject(ChangeDetectorRef);
   readonly currentYear = new Date().getFullYear();
@@ -53,6 +63,14 @@ export class AppComponent {
   isSubmitting = false;
   accountSettingsVisible = false;
   notificationsVisible = false;
+  async openCoachingAssignment(id: string): Promise<void> {
+    if (this.isTeacherWorkspaceSelected && await this.coachingTeacherWorkspace?.openAssignmentFromNotification(id)) {
+      this.notificationsVisible = false;
+    }
+  }
+  async openCoachingWeekly(target: WeeklyDestination): Promise<void> {
+    if (this.isTeacherWorkspaceSelected && await this.coachingTeacherWorkspace?.openWeeklyFromNotification(target)) this.notificationsVisible = false;
+  }
   errorMessage = '';
   switchError = '';
   private readonly selectedWorkspaceRoles: Partial<Record<StaffProduct, StaffWorkspaceRole>> = {};
@@ -100,10 +118,10 @@ export class AppComponent {
     return this.auth.activeProduct() === 'speed-reading' && this.activeWorkspaceRole === 'institution';
   }
 
-  selectWorkspaceRole(role: StaffWorkspaceRole): void {
+  async selectWorkspaceRole(role: StaffWorkspaceRole): Promise<void> {
     if (role === 'teacher' && !this.hasTeacherRole) return;
     if (role === 'institution' && !this.isInstitutionManager) return;
-    if (role !== this.activeWorkspaceRole && !this.canLeaveCoachingWorkspace()) return;
+    if (role !== this.activeWorkspaceRole && !await this.canLeaveCoachingWorkspace()) return;
     const product = this.auth.activeProduct();
     if (product) this.selectedWorkspaceRoles[product] = role;
   }
@@ -218,7 +236,7 @@ export class AppComponent {
 
   async switchProduct(product: StaffProduct): Promise<void> {
     if (product === this.auth.activeProduct()) return;
-    if (!this.canLeaveCoachingWorkspace()) return;
+    if (!await this.canLeaveCoachingWorkspace()) return;
     this.switchError = '';
     try {
       await this.auth.switchProduct(product);
@@ -235,7 +253,7 @@ export class AppComponent {
   }
 
   async logout(): Promise<void> {
-    if (!this.canLeaveCoachingWorkspace()) return;
+    if (!await this.canLeaveCoachingWorkspace()) return;
     await this.auth.logout();
     this.accountSettingsVisible = false;
     this.notificationsVisible = false;

@@ -44,7 +44,7 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
             await db.Database.ExecuteSqlRawAsync("""
                 LOCK TABLE coaching.academic_goals, coaching.exam_results,
                     coaching.study_catalog_lessons, coaching.study_catalog_topics, coaching.study_catalog_units,
-                    coaching.study_plan_tasks, coaching.target_schools, coaching.target_university_programs,
+                    coaching.study_plan_tasks, coaching.target_catalog,
                     coaching.student_course_preferences, coaching.student_topic_states, coaching.study_catalog_topic_outcomes
                 IN SHARE ROW EXCLUSIVE MODE
                 """, cancellationToken);
@@ -89,7 +89,6 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
             CatalogKind.Units => await db.StudyCatalogUnits.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken),
             CatalogKind.Topics => await db.StudyCatalogTopics.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken),
             CatalogKind.Schools => await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken),
-            CatalogKind.UniversityPrograms => await db.TargetUniversityPrograms.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken),
             _ => throw new ArgumentException("Geçerli bir katalog türü seçin.")
         };
         return entity ?? throw new BusinessRuleException("Catalog.NotFound", "Katalog kaydı bulunamadı.");
@@ -117,7 +116,6 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
         var goals = kind switch
         {
             CatalogKind.Schools => await db.AcademicGoals.CountAsync(x => x.TargetSchoolId == id, cancellationToken),
-            CatalogKind.UniversityPrograms => await db.AcademicGoals.CountAsync(x => x.TargetUniversityProgramId == id, cancellationToken),
             _ => 0
         };
         // Compare UUID values, not serialized spelling (PostgreSQL accepts compact UUID strings).

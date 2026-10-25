@@ -79,8 +79,12 @@ public sealed class CoachingAutomaticDraftTests(PostgresFixture postgres)
                 selections.Add(new(extra.Id, 1));
             }
             await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            // Give every protected continuation a valid slot so this assertion exercises
+            // the 500-task limit rather than failing earlier on unavailable capacity.
+            var ampleHours=await db.StudyAvailability.SingleAsync();
+            ampleHours.ReplaceWindows([new(DayOfWeek.Monday,0,1440)]);await db.SaveChangesAsync();
             await Assert.ThrowsAsync<ArgumentException>(() => new CoachingAutomaticStudyPlanPreviewService(db, access)
-                .PreviewAsync(new(date, 1, hours.Version, selections)));
+                .PreviewAsync(new(date, 1, ampleHours.Version, selections)));
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }

@@ -15,7 +15,7 @@ public sealed class WeeklyOutcomePlanTests
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var service=await Seed(f);
         var math=await f.Db.StudyCatalogLessons.SingleAsync();var mathOutcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
-        var mathEstimate=OutcomeDurationEstimate.Create(mathOutcome.Id,2,30,30,30,"ReviewedStudy","Medium","Aktarım test süresi",f.User.UserId);mathEstimate.Publish();
+        var mathEstimate=OutcomeDurationEstimate.Create(mathOutcome.Id,2,40,40,40,"ReviewedStudy","Medium","Aktarım test süresi",f.User.UserId);mathEstimate.Publish();
         var lesson=StudyCatalogLesson.Create("test","turkish-reuse","Türkçe",8,"LGS");lesson.SetActive(true);
         var unit=StudyCatalogUnit.Create("test","turkish-unit",lesson.Id,"Türkçe",1);unit.SetActive(true);
         var topic=StudyCatalogTopic.Create("test","turkish-topic",lesson.Id,unit.Id,"Test konusu",null,1);topic.SetActive(true);
@@ -85,16 +85,41 @@ public sealed class WeeklyOutcomePlanTests
     {
         await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);
         var before=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());var preview=await service.PreviewAsync(Input,default);
-        Assert.True(preview.CanCreate);Assert.Equal(2,preview.Schedule.Tasks.Count);Assert.Equal(new DateOnly(2027,5,31),preview.Schedule.Lessons[0].FinishDate);
+        Assert.True(preview.CanCreate);Assert.Equal(1,preview.Schedule.Tasks.Count);Assert.Equal(new DateOnly(2027,5,24),preview.Schedule.Lessons[0].FinishDate);
         Assert.Single(await f.Db.StudyPlanRevisions.ToArrayAsync());
         var created=await service.CreateAsync(new("Yıllık plan",Input,preview.Fingerprint),default);
         var revision=await f.Db.StudyPlanRevisions.SingleAsync(x=>x.Id==created.Id);Assert.Equal(StudyPlanStatus.Draft,revision.Status);Assert.NotNull(revision.WeeklySource);
         var tasks=await f.Db.StudyPlanTasks.Where(x=>x.RevisionId==created.Id).ToArrayAsync();Assert.All(tasks,x=>Assert.Equal(1080,x.PlannedStartMinute));
-        Assert.Equal(60,tasks.Sum(x=>x.PlannedMinutes));Assert.Equal(2,await f.Db.Set<StudyPlanTaskOutcome>().CountAsync(x=>tasks.Select(t=>t.Id).Contains(x.TaskId)));
+        Assert.Equal(30,tasks.Sum(x=>x.PlannedMinutes));Assert.Equal(1,await f.Db.Set<StudyPlanTaskOutcome>().CountAsync(x=>tasks.Select(t=>t.Id).Contains(x.TaskId)));
         Assert.Equal(before,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().Where(x=>x.RevisionId!=created.Id).ToArrayAsync()));
         Assert.Single(await f.Db.StudyPlanRevisions.Where(x=>x.IsActive).ToArrayAsync());
         var export=await new Coaching.Infrastructure.Repositories.CoachingDataExportRepository(f.Db).ExportStudentDataAsync(f.User.UserId!.Value,DateTimeOffset.UtcNow,default);
         var exported=export.StudyPlans!.Single(x=>x.Id==created.Id);Assert.NotNull(exported.WeeklySource);Assert.All(exported.Tasks,x=>Assert.Equal(1080,x.PlannedStartMinute));
+    }
+    [Fact]
+    public async Task CompletedTopicsAreExcludedFromNewPreviewButNeedsReviewTopicsRemain()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);
+        var existingTasks=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());
+        var completedTopic=await f.Db.StudyCatalogTopics.SingleAsync();var existing=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        var pendingTopic=StudyCatalogTopic.Create("test","pending-topic",completedTopic.LessonId,completedTopic.UnitId,"Tekrar konusu",null,2);pendingTopic.SetActive(true);
+        var pendingOutcome=StudyCatalogOutcome.Create(existing.EditionId,existing.OfficialTopicId,"M.TEST.PENDING","Tekrar kazanımı","",73,3);
+        var estimate=OutcomeDurationEstimate.Create(pendingOutcome.Id,1,15,10,5,"ReviewedStudy","Medium","Test doğrulanmış çalışma süresi",f.User.UserId);estimate.Publish();
+        var mapping=StudyCatalogTopicOutcome.Create(pendingTopic.Id,pendingOutcome.Id,"Tekrar konusu eşleştirmesi");mapping.Review(true,"Test eşleştirmesi",f.User.UserId!.Value);
+        f.Db.AddRange(pendingTopic,pendingOutcome,estimate,mapping);var context=await f.Db.StudentLearningContexts.SingleAsync();
+        context.ReplaceSelections(context.CoursePreferences,
+        [StudentTopicState.Create(context.Id,completedTopic.Id,DeclaredTopicStatus.Studied,f.User.UserId.Value),
+         StudentTopicState.Create(context.Id,pendingTopic.Id,DeclaredTopicStatus.NeedsReview,f.User.UserId.Value)],true);
+        await f.Db.SaveChangesAsync();var preview=await service.PreviewAsync(Input,default);
+        Assert.True(preview.CanCreate);Assert.All(preview.Schedule.Tasks,x=>Assert.Equal(pendingTopic.Id,x.Outcome.TopicId));
+        Assert.DoesNotContain(preview.Schedule.Tasks,x=>x.Outcome.OutcomeId==existing.Id);
+        Assert.Single(await f.Db.StudyPlanRevisions.Where(x=>x.IsActive).ToArrayAsync());
+        Assert.Equal(existingTasks,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync()));
+        context.ReplaceSelections(context.CoursePreferences,
+        [StudentTopicState.Create(context.Id,completedTopic.Id,DeclaredTopicStatus.Studied,f.User.UserId.Value),
+         StudentTopicState.Create(context.Id,pendingTopic.Id,DeclaredTopicStatus.Studied,f.User.UserId.Value)],true);
+        await f.Db.SaveChangesAsync();var allDone=await service.PreviewAsync(Input,default);
+        Assert.False(allDone.CanCreate);Assert.Empty(allDone.Issues);
     }
     [Fact]
     public async Task ChangedWeeklyDraftOrEstimateRejectsOldPreview_AndIncompleteCurriculumBlocksSaving()
@@ -110,7 +135,7 @@ public sealed class WeeklyOutcomePlanTests
     [Fact]
     public async Task CapacityShortfallRequiresChangedDatesOrHours_NotSilentPartialPlan()
     {
-        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var shortRequest=Input with {EndDate=Input.StartDate};
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var outcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();var estimate=OutcomeDurationEstimate.Create(outcome.Id,2,30,30,30,"ReviewedStudy","Medium","Kapasite testi",f.User.UserId);estimate.Publish();f.Db.Add(estimate);await f.Db.SaveChangesAsync();var shortRequest=Input with {EndDate=Input.StartDate};
         var preview=await service.PreviewAsync(shortRequest,default);Assert.False(preview.CanCreate);Assert.Equal(30,preview.Schedule.Lessons[0].RemainingMinutes);
         await Assert.ThrowsAsync<ArgumentException>(()=>service.CreateAsync(new("Eksik plan",shortRequest,preview.Fingerprint),default));
         var extended=await service.PreviewAsync(shortRequest with {EndDate=preview.Schedule.RecommendedEndDate!.Value},default);Assert.True(extended.CanCreate);
@@ -151,9 +176,9 @@ public sealed class WeeklyOutcomePlanTests
         await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var old=await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive);
         var outcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();var estimate=await f.Db.Set<OutcomeDurationEstimate>().SingleAsync();var topic=await f.Db.StudyCatalogTopics.SingleAsync();
         var pinned=StudyPlanTask.Create(old,Input.StartDate,"Sabit kazanım",15,topic.Id,true);pinned.SetWeeklyPlacement(topic.LessonId,"Matematik",1080);f.Db.Add(pinned);f.Db.Add(StudyPlanTaskOutcome.Create(pinned.Id,outcome.Id,estimate.Id,15,"Catalog"));await f.Db.SaveChangesAsync();
-        var preview=await service.PreviewAsync(Input,default);Assert.True(preview.CanCreate);Assert.Equal(45,preview.Schedule.Tasks.Sum(x=>x.Minutes));Assert.Equal(60,preview.Schedule.Lessons[0].ScheduledMinutes);
+        var preview=await service.PreviewAsync(Input,default);Assert.True(preview.CanCreate);Assert.Equal(15,preview.Schedule.Tasks.Sum(x=>x.Minutes));Assert.Equal(30,preview.Schedule.Lessons[0].ScheduledMinutes);
         var created=await service.CreateAsync(new("Tekrarsız plan",Input,preview.Fingerprint),default);var ids=await f.Db.StudyPlanTasks.Where(x=>x.RevisionId==created.Id).Select(x=>x.Id).ToArrayAsync();
-        Assert.Equal(60,await f.Db.Set<StudyPlanTaskOutcome>().Where(x=>Enumerable.Contains(ids,x.TaskId)).SumAsync(x=>x.AllocatedMinutes));
+        Assert.Equal(30,await f.Db.Set<StudyPlanTaskOutcome>().Where(x=>Enumerable.Contains(ids,x.TaskId)).SumAsync(x=>x.AllocatedMinutes));
     }
     [Fact]
     public async Task SavedPlanKeepsItsTimezoneEvenIfTheWeeklyDraftLaterChanges()

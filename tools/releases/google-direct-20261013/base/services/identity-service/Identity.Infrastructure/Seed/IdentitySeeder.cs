@@ -1,0 +1,559 @@
+using Identity.Application.Interfaces;
+using Identity.Domain.Entities;
+using Identity.Domain.Enums;
+using Identity.Infrastructure.Persistence;
+using EduPlatform.Shared.Security.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+namespace Identity.Infrastructure.Seed;
+
+public static class IdentitySeeder
+{
+    public static async Task SeedAsync(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<IdentityDbContext>>();
+
+        var context = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<EduPlatform.Shared.Security.Interfaces.IPasswordHasher>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var hostEnvironment = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
+        var connectionOpened = false;
+
+        try
+        {
+            // Keep the connection open while seeding so the session-level advisory
+            // lock prevents duplicate bootstrap users when multiple replicas start.
+            await context.Database.OpenConnectionAsync();
+            connectionOpened = true;
+            await using (var lockCommand = context.Database.GetDbConnection().CreateCommand())
+            {
+                lockCommand.CommandText = "SELECT pg_advisory_lock(hashtext('eduplatform.identity.seed.v1')::bigint);";
+                await lockCommand.ExecuteNonQueryAsync();
+            }
+
+            logger.LogInformation("🌱 Seeding Starting...");
+
+            await EnsureTurkeyLocationsAsync(context, logger);
+
+            // 1. Seed Roles (Dynamic Update)
+            logger.LogInformation("Checking for new roles...");
+            var existingRoles = await context.Roles.ToDictionaryAsync(r => r.Name);
+            var enumRoles = Enum.GetValues<Identity.Domain.Enums.UserRole>();
+            var newRolesAdded = false;
+
+            foreach (var r in enumRoles)
+            {
+                var roleName = r.ToString();
+                if (!existingRoles.ContainsKey(roleName))
+                {
+                    logger.LogInformation($"Adding new role: {roleName}");
+                    var newRole = Role.Create(roleName, $"Default role for {roleName}", isSystemRole: true);
+                    await context.Roles.AddAsync(newRole);
+                    newRolesAdded = true;
+                }
+            }
+
+            if (newRolesAdded)
+            {
+                await context.SaveChangesAsync();
+                logger.LogInformation("✅ New roles added.");
+            }
+            
+            // Re-fetch roles to get Ids
+            var dbRoles = await context.Roles.ToListAsync();
+
+            // 1.1 Seed Permissions Table
+            var allPermissions = Identity.Domain.Constants.Permissions.GetAll();
+            var existingDbPermissions = await context.Permissions.Select(p => p.Key).ToListAsync();
+            var newDbPermissions = allPermissions.Except(existingDbPermissions).ToList();
+
+            if (newDbPermissions.Any())
+            {
+                logger.LogInformation($"Seeding {newDbPermissions.Count} new permissions into Permissions table...");
+                foreach (var permKey in newDbPermissions)
+                {
+                    // Parse Group from Key (e.g. Permissions.Users.View -> Group: Users)
+                    var parts = permKey.Split('.');
+                    var group = parts.Length > 2 ? parts[1] : "General";
+                    var description = $"System permission for {permKey}";
+
+                    var newPerm = Permission.Create(permKey, description, group, isSystem: true);
+                    context.Permissions.Add(newPerm);
+                }
+                await context.SaveChangesAsync();
+                logger.LogInformation("✅ Permissions table seeded.");
+            }
+
+            // 1.2 Seed Role Permissions
+            var institutionPermissions = new List<string> 
+            { 
+                Identity.Domain.Constants.Permissions.Users.View,
+                Identity.Domain.Constants.Permissions.Institutions.View,
+                Identity.Domain.Constants.Permissions.Institutions.Manage,
+                Identity.Domain.Constants.Permissions.Coaching.View,
+                Identity.Domain.Constants.Permissions.Coaching.Manage,
+                Identity.Domain.Constants.Permissions.SpeedReading.View,
+                Identity.Domain.Constants.Permissions.SpeedReading.ProgressView,
+                Identity.Domain.Constants.Permissions.SpeedReading.ReportView,
+                Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView
+            };
+
+            var learnerLeaderboardPermissions = new List<string>
+            {
+                Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView
+            };
+
+            var teacherPermissions = new List<string>
+            {
+                Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView,
+                Identity.Domain.Constants.Permissions.SpeedReading.ReportView
+            };
+
+            // Coaching admin access is tenant-scoped by the Coaching API and
+            // Identity membership checks. System-wide operations remain SystemAdmin-only.
+            var institutionRolePermissionsToRemove = new HashSet<string>(StringComparer.Ordinal)
+            {
+                Identity.Domain.Constants.Permissions.Users.Create,
+                Identity.Domain.Constants.Permissions.Users.Edit,
+                Identity.Domain.Constants.Permissions.Users.Delete,
+                Identity.Domain.Constants.Permissions.Users.ChangePassword,
+                Identity.Domain.Constants.Permissions.Users.Activate,
+                Identity.Domain.Constants.Permissions.Users.ConfirmEmail,
+                Identity.Domain.Constants.Permissions.SpeedReading.PlatformAnalyticsView
+            };
+            
+            var rolePermissionsMap = new Dictionary<string, List<string>>
+            {
+                { Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), allPermissions },
+                { Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), institutionPermissions },
+                { Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), institutionPermissions }, // Simplify: same for now
+                { Identity.Domain.Enums.UserRole.Student.ToString(), learnerLeaderboardPermissions },
+                { Identity.Domain.Enums.UserRole.Teacher.ToString(), teacherPermissions },
+                { Identity.Domain.Enums.UserRole.Parent.ToString(), learnerLeaderboardPermissions }
+            };
+
+            foreach (var roleName in rolePermissionsMap.Keys)
+            {
+                var role = dbRoles.FirstOrDefault(r => r.Name == roleName);
+                if (role != null)
+                {
+                    var permsToAssign = rolePermissionsMap[roleName];
+                    var existingPerms = await context.RolePermissions
+                        .Where(p => p.RoleId == role.Id)
+                        .Select(p => p.Permission)
+                        .ToListAsync();
+
+                    var newPerms = permsToAssign.Except(existingPerms).ToList();
+                    
+                    if (newPerms.Any())
+                    {
+                        logger.LogInformation($"Adding {newPerms.Count} permissions to {roleName}...");
+                        foreach (var p in newPerms)
+                        {
+                            context.RolePermissions.Add(new RolePermission(role.Id, p));
+                        }
+                    }
+
+                    if (roleName != Identity.Domain.Enums.UserRole.SystemAdmin.ToString())
+                    {
+                        var stalePermissions = await context.RolePermissions
+                            .Where(permission => permission.RoleId == role.Id
+                                && institutionRolePermissionsToRemove.Contains(permission.Permission))
+                            .ToListAsync();
+                        context.RolePermissions.RemoveRange(stalePermissions);
+                    }
+                }
+            }
+            await context.SaveChangesAsync();
+            logger.LogInformation("✅ Permissions seeded for SystemAdmin/Institution roles.");
+
+            // 1.3 Seed System Configurations (UPSERT LOGIC)
+            var defaultConfigs = new List<SystemConfiguration>
+            {
+                SystemConfiguration.Create("system.maintenancemode", "false", "Sistemi GENEL bakım moduna alır. Aktifken hiçbir servis çalışmaz.", Identity.Domain.Enums.ConfigurationDataType.Boolean, "System", true),
+                SystemConfiguration.Create("auth.tokenlifetime", "60", "Access token ömrü (Dakika).", Identity.Domain.Enums.ConfigurationDataType.Number, "Auth", false),
+                SystemConfiguration.Create("auth.allowregistration", "true", "Yeni kullanıcı kaydına izin verilsin mi?", Identity.Domain.Enums.ConfigurationDataType.Boolean, "Auth", true),
+                SystemConfiguration.Create("notification.emailenabled", "true", "E-posta bildirimlerini aktif/pasif yapar.", Identity.Domain.Enums.ConfigurationDataType.Boolean, "Notification", true)
+            };
+
+            var mfaCategoryDescriptions = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [MfaOperationCategories.Users] = "Kullanıcı yönetimi işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.RolesPermissions] = "Rol ve izin yönetimi işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.Institutions] = "Kurum ve kurum yöneticisi işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.System] = "Sistem ayarları ve operasyon kayıtlarında MFA kapsamı.",
+                [MfaOperationCategories.SpeedReading] = "Hızlı okuma yönetim işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.Coaching] = "Koçluk yönetim işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.Cms] = "CMS ve iletişim yönetim işlemlerinde MFA kapsamı."
+            };
+
+            foreach (var (category, description) in mfaCategoryDescriptions)
+            {
+                defaultConfigs.Add(SystemConfiguration.Create(
+                    MfaOperationCategories.ConfigurationKey(category),
+                    MfaPolicyModes.MutationsOnly,
+                    description,
+                    Identity.Domain.Enums.ConfigurationDataType.String,
+                    "Security",
+                    false));
+            }
+
+            // Per-Service Maintenance Modes (Automated for core services)
+            var serviceNames = new[] { "identity", "blog", "exam", "coaching", "content", "search", "student", "notification" };
+            foreach (var service in serviceNames)
+            {
+                var key = $"maintenance.{service}";
+                defaultConfigs.Add(SystemConfiguration.Create(
+                    key, 
+                    "false", 
+                    $"{service.ToUpper()} servisini bakım moduna alır.", 
+                    Identity.Domain.Enums.ConfigurationDataType.Boolean, 
+                    "Maintenance", 
+                    true));
+            }
+
+            foreach (var config in defaultConfigs)
+            {
+                var existingConfig = await context.Configurations
+                    .FirstOrDefaultAsync(c => c.Key.ToLower() == config.Key.ToLower());
+
+                if (existingConfig == null)
+                {
+                    await context.Configurations.AddAsync(config);
+                    logger.LogInformation("➕ Seeding NEW configuration: {Key}", config.Key);
+                }
+                else
+                {
+                    // SYNC METADATA: Update metadata to match defined default.
+                    // This fixes issues where config exists but has wrong Group or Description.
+                    existingConfig.UpdateMetadata(config.Description, config.Group, config.DataType);
+                    // Ensure IsPublic is correct too
+                    existingConfig.UpdateValue(existingConfig.Value, config.IsPublic); // Value stays same, IsPublic synced
+                    
+                    logger.LogInformation("🔄 Synced metadata for configuration: {Key}", config.Key);
+                }
+            }
+            await context.SaveChangesAsync();
+            logger.LogInformation("✅ System and Service-specific configurations seeded & synced.");
+
+            // Warm the shared Redis cache so every API can enforce the same MFA
+            // category mode immediately after a deployment or a cache restart.
+            try
+            {
+                await scope.ServiceProvider
+                    .GetRequiredService<IConfigurationService>()
+                    .RefreshCacheAsync(CancellationToken.None);
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(exception, "MFA and system configuration cache could not be warmed; APIs will use fail-closed defaults.");
+            }
+
+
+            // 2. Optional bootstrap SystemAdmin. This is intentionally controlled by
+            // explicit environment variables so production never receives a hardcoded
+            // credential. Clear BOOTSTRAP_ADMIN_PASSWORD after the first successful run.
+            var bootstrapAdminEmail = GetSetting(configuration, "BOOTSTRAP_ADMIN_EMAIL")?.Trim();
+            var bootstrapAdminPassword = GetSetting(configuration, "BOOTSTRAP_ADMIN_PASSWORD");
+
+            if (!string.IsNullOrWhiteSpace(bootstrapAdminEmail)
+                && !string.IsNullOrWhiteSpace(bootstrapAdminPassword))
+            {
+                await EnsureBootstrapAdminAsync(
+                    bootstrapAdminEmail,
+                    bootstrapAdminPassword,
+                    dbRoles,
+                    userRepository,
+                    unitOfWork,
+                    passwordHasher,
+                    logger);
+            }
+            else if (hostEnvironment.IsProduction())
+            {
+                var hasSystemAdmin = await context.UserRoles
+                    .AnyAsync(userRole => userRole.Role.Name == Identity.Domain.Enums.UserRole.SystemAdmin.ToString());
+                if (!hasSystemAdmin)
+                {
+                    throw new InvalidOperationException(
+                        "No SystemAdmin exists and BOOTSTRAP_ADMIN_EMAIL/BOOTSTRAP_ADMIN_PASSWORD are not configured.");
+                }
+
+                logger.LogInformation(
+                    "Bootstrap credentials are not configured; an existing production SystemAdmin was preserved.");
+            }
+
+            // Demo users are development-only and remain opt-in. Never create them in
+            // staging/production just because a shared database is empty.
+            if (!hostEnvironment.IsDevelopment())
+            {
+                logger.LogInformation("Non-development environment detected; demo user seeding is skipped.");
+                return;
+            }
+
+            var demoAdminEmail = "admin@edu.com";
+            var existingDemoAdmin = await userRepository.GetByEmailAsync(demoAdminEmail, CancellationToken.None);
+
+            if (existingDemoAdmin != null)
+            {
+                logger.LogInformation("✅ Development demo users already seeded.");
+                return;
+            }
+
+            // Get development-only demo passwords from env (never use these in production).
+            var adminPass = GetSetting(configuration, "TEST_ADMIN_PASSWORD");
+            var defaultPass = GetSetting(configuration, "TEST_DEFAULT_PASSWORD");
+
+            if (string.IsNullOrEmpty(adminPass) || string.IsNullOrEmpty(defaultPass))
+            {
+                logger.LogInformation("TEST_ADMIN_PASSWORD and TEST_DEFAULT_PASSWORD are not configured; demo user seeding is skipped.");
+                return;
+            }
+
+            // 3. Define Users to Seed
+            var usersToSeed = new[]
+            {
+                new { Email = "admin@edu.com", Pass = adminPass, First = "System", Last = "Admin", RoleName = Identity.Domain.Enums.UserRole.SystemAdmin.ToString() },
+                new { Email = "teacher@edu.com", Pass = defaultPass, First = "Demo", Last = "Teacher", RoleName = Identity.Domain.Enums.UserRole.Teacher.ToString() },
+                new { Email = "student@edu.com", Pass = defaultPass, First = "Demo", Last = "Student", RoleName = Identity.Domain.Enums.UserRole.Student.ToString() },
+                new { Email = "institution@edu.com", Pass = defaultPass, First = "Kurum", Last = "Yöneticisi", RoleName = Identity.Domain.Enums.UserRole.InstitutionOwner.ToString() },
+                new { Email = "parent@edu.com", Pass = defaultPass, First = "Demo", Last = "Parent", RoleName = Identity.Domain.Enums.UserRole.Parent.ToString() },
+                new { Email = "manager@edu.com", Pass = defaultPass, First = "Kurum", Last = "Müdürü", RoleName = Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString() }
+            };
+
+            foreach (var userData in usersToSeed)
+            {
+                try
+                {
+                    logger.LogInformation($"Creating user: {userData.Email}...");
+                    
+                    var userId = Guid.NewGuid();
+
+                    var newUser = User.Create(
+                        userId,
+                        userData.Email,
+                        userData.First,
+                        userData.Last
+                    );
+
+                    passwordHasher.CreatePasswordHash(userData.Pass, out byte[] passwordHash, out byte[] passwordSalt);
+                    newUser.SetPassword(passwordHash, passwordSalt);
+
+                    // Find Role ID
+                    var roleEntity = dbRoles.FirstOrDefault(r => r.Name == userData.RoleName);
+                    if (roleEntity == null) throw new Exception($"Role {userData.RoleName} not found in DB.");
+
+                    PlatformProduct? product = string.Equals(
+                        userData.RoleName,
+                        Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                        StringComparison.OrdinalIgnoreCase)
+                            ? null
+                            : PlatformProduct.Coaching;
+                    newUser.AddRole(new Identity.Domain.Entities.UserRole(newUser.Id, roleEntity.Id, product));
+                    if (product is { } seededProduct)
+                    {
+                        newUser.GrantProductAccess(
+                            seededProduct,
+                            UserProductAccessSource.Migration,
+                            grantedByUserId: null,
+                            DateTimeOffset.UtcNow);
+                    }
+
+                    // If Institution Owner, create Institution
+                    if (userData.RoleName == Identity.Domain.Enums.UserRole.InstitutionOwner.ToString())
+                    {
+                         var institution = Institution.Create(
+                             "Atlas Okulları",
+                             Identity.Domain.Enums.InstitutionType.School 
+                         );
+                         
+                         var instRepo = scope.ServiceProvider.GetRequiredService<IInstitutionRepository>();
+                         await instRepo.AddAsync(institution, CancellationToken.None);
+                         
+                         var adminRel = InstitutionAdmin.Create(
+                             newUser.Id,
+                             institution.Id,
+                             Identity.Domain.Enums.InstitutionAdminRole.Admin,
+                             PlatformProduct.Coaching
+                         );
+                         await instRepo.AddAdminAsync(adminRel, CancellationToken.None);
+                    }
+
+                    await userRepository.AddAsync(newUser, CancellationToken.None);
+                    await unitOfWork.SaveChangesAsync(CancellationToken.None);
+                    
+                    logger.LogInformation($"  -> Local DB user created.");
+
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, $"Error seeding user {userData.Email}");
+                }
+            }
+
+            logger.LogInformation("✅ Seeding Completed.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "❌ Seeding Failed.");
+            if (hostEnvironment.IsProduction())
+            {
+                throw;
+            }
+        }
+        finally
+        {
+            if (connectionOpened)
+            {
+                await context.Database.CloseConnectionAsync();
+            }
+        }
+    }
+
+    private static string? GetSetting(IConfiguration configuration, string key) =>
+        Environment.GetEnvironmentVariable(key) ?? configuration[key];
+
+    private static async Task EnsureTurkeyLocationsAsync(
+        IdentityDbContext context,
+        ILogger logger)
+    {
+        var existingProvinceIds = await context.Provinces
+            .Select(province => province.Id)
+            .ToHashSetAsync();
+        var provinces = TurkeyLocationSeedData.Provinces
+            .Where(province => !existingProvinceIds.Contains(province.Id))
+            .Select(province => Province.Create(province.Id, province.Name))
+            .ToList();
+
+        if (provinces.Count > 0)
+        {
+            await context.Provinces.AddRangeAsync(provinces);
+            await context.SaveChangesAsync();
+        }
+
+        var existingDistrictIds = await context.Districts
+            .Select(district => district.Id)
+            .ToHashSetAsync();
+        var districts = TurkeyLocationSeedData.Districts
+            .Where(district => !existingDistrictIds.Contains(district.Id))
+            .Select(district => District.Create(district.Id, district.ProvinceId, district.Name))
+            .ToList();
+
+        if (districts.Count > 0)
+        {
+            await context.Districts.AddRangeAsync(districts);
+            await context.SaveChangesAsync();
+        }
+
+        var unlinkedInstitutions = await context.Institutions
+            .Where(institution => institution.ProvinceId == null && institution.City != null)
+            .ToListAsync();
+        var provincesByName = TurkeyLocationSeedData.Provinces.ToDictionary(
+            province => province.Name,
+            StringComparer.OrdinalIgnoreCase);
+        var districtsByProvinceAndName = TurkeyLocationSeedData.Districts.ToDictionary(
+            district => (district.ProvinceId, district.Name),
+            EqualityComparer<(string ProvinceId, string Name)>.Default);
+        var linkedInstitutionCount = 0;
+
+        foreach (var institution in unlinkedInstitutions)
+        {
+            var city = institution.City!.Trim();
+            var district = institution.District?.Trim();
+            if (string.IsNullOrEmpty(district) && city.Contains(',', StringComparison.Ordinal))
+            {
+                var parts = city.Split(',', 2, StringSplitOptions.TrimEntries);
+                city = parts[0];
+                district = parts.ElementAtOrDefault(1);
+            }
+
+            if (string.IsNullOrWhiteSpace(district)
+                || !provincesByName.TryGetValue(city, out var provinceSeed)
+                || !districtsByProvinceAndName.TryGetValue((provinceSeed.Id, district), out var districtSeed))
+            {
+                continue;
+            }
+
+            var province = await context.Provinces.FindAsync([provinceSeed.Id]);
+            var districtReference = await context.Districts.FindAsync([districtSeed.Id]);
+            if (province is null || districtReference is null) continue;
+
+            institution.SetLocation(province, districtReference);
+            linkedInstitutionCount++;
+        }
+
+        if (linkedInstitutionCount > 0)
+        {
+            await context.SaveChangesAsync();
+        }
+
+        logger.LogInformation(
+            "Türkiye konum referans verisi hazır: {ProvinceCount} il, {DistrictCount} ilçe, {LinkedInstitutionCount} kurum eşleştirildi.",
+            TurkeyLocationSeedData.Provinces.Count,
+            TurkeyLocationSeedData.Districts.Count,
+            linkedInstitutionCount);
+    }
+
+    private static async Task EnsureBootstrapAdminAsync(
+        string email,
+        string password,
+        IReadOnlyCollection<Role> roles,
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
+        EduPlatform.Shared.Security.Interfaces.IPasswordHasher passwordHasher,
+        ILogger logger)
+    {
+        if (password.Length < 12)
+        {
+            throw new InvalidOperationException("BOOTSTRAP_ADMIN_PASSWORD must be at least 12 characters long.");
+        }
+
+        var existingUser = await userRepository.GetByEmailAsync(email, CancellationToken.None);
+        if (existingUser != null)
+        {
+            var isSystemAdmin = existingUser.Roles.Any(userRole =>
+                string.Equals(
+                    userRole.Role.Name,
+                    Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                    StringComparison.OrdinalIgnoreCase));
+
+            if (!isSystemAdmin)
+            {
+                throw new InvalidOperationException(
+                    $"Bootstrap admin email {email} already belongs to a non-SystemAdmin user; no role escalation was performed.");
+            }
+            else
+            {
+                logger.LogInformation("✅ Bootstrap SystemAdmin already exists: {Email}", email);
+            }
+
+            return;
+        }
+
+        var systemAdminRole = roles.FirstOrDefault(role =>
+            string.Equals(
+                role.Name,
+                Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                StringComparison.OrdinalIgnoreCase));
+        if (systemAdminRole is null)
+        {
+            throw new InvalidOperationException("SystemAdmin role was not available during bootstrap seeding.");
+        }
+
+        var user = User.Create(Guid.NewGuid(), email, "System", "Admin");
+        user.ConfirmEmail();
+        passwordHasher.CreatePasswordHash(password, out var passwordHash, out var passwordSalt);
+        user.SetPassword(passwordHash, passwordSalt);
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, systemAdminRole.Id));
+
+        await userRepository.AddAsync(user, CancellationToken.None);
+        await unitOfWork.SaveChangesAsync(CancellationToken.None);
+        logger.LogInformation("✅ Bootstrap SystemAdmin created: {Email}", email);
+    }
+}

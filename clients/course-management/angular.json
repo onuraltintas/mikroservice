@@ -25,7 +25,7 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": { "buildTarget": "course-management-student:build:development" }
+          "options": { "buildTarget": "course-management-student:build:development", "proxyConfig": "proxy.conf.json" }
         }
       }
     }

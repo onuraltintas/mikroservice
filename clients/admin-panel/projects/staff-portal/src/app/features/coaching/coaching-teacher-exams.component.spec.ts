@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -7,6 +8,22 @@ import { CoachingTeacherExam, CoachingTeacherExamDetail, CoachingTeacherExamsSer
 import { CoachingTeacherExamsComponent } from './coaching-teacher-exams.component';
 
 describe('CoachingTeacherExamsComponent', () => {
+  it('submits calculated lesson totals, preserves the saved profile during correction and rejects invalid totals', async () => {
+    const exams = examsService([exam('exam-1')]);
+    const fixture = createFixture(exams); fixture.detectChanges(); const component = fixture.componentInstance;
+    component.profiles.set([{ code: 'LGS', name: 'LGS', wrongAnswerDivisor: 3, sections: [{ code: 'TUR', name: 'Türkçe', questionCount: 20 }] }]);
+    component.openResults({...exam('exam-1'),examType:'LGS'});
+    component.resultForm.studentId = 'student-1'; component.resultForm.score = 80;
+    const practice = { examCode: 'LGS', sections: [{ sectionCode: 'TUR', correct: 15, wrong: 3, empty: 2 }] };
+    component.resultForm.practiceExam = practice; component.saveExamResult();
+    expect(exams.addExamResult).toHaveBeenCalledWith('exam-1', expect.objectContaining({ practiceExam: practice, correctAnswers: 15, wrongAnswers: 3, emptyAnswers: 2 }), expect.any(String));
+    component.editExamResult({ ...result('result-1'), practiceExam: practice }); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(component.resultForm.practiceExam).toEqual(practice);
+    expect(fixture.nativeElement.querySelector('app-practice-exam-editor select').disabled).toBe(true);
+    component.resultForm.practiceExam!.sections[0].correct = 16; component.saveExamResult();
+    expect(exams.updateExamResult).not.toHaveBeenCalled();
+    expect(component.errorMessage()).toContain('doğru/yanlış/boş');
+  });
   it('loads only the authenticated teacher exams and active student roster', () => {
     const exams = examsService([exam('exam-1')]);
     const students = studentService();
@@ -15,7 +32,7 @@ describe('CoachingTeacherExamsComponent', () => {
 
     expect(exams.getTeacherExams).toHaveBeenCalledWith('teacher-1', 1, 25);
     expect(students.getMyStudents).toHaveBeenCalledWith(1, 100, undefined);
-    expect(fixture.nativeElement.textContent).toContain('LGS Denemesi');
+    expect(fixture.nativeElement.textContent).toContain('Sınıf denemesi');
     expect(fixture.componentInstance.studentNames()['student-1']).toBe('Ada Yılmaz');
   });
 
@@ -48,8 +65,14 @@ describe('CoachingTeacherExamsComponent', () => {
     expect(key).toEqual(expect.any(String));
     expect(component.successMessage()).toBe('Sınav oluşturuldu.');
   });
+  it('allows registering a past exam for subsequent result entry', () => {
+    const exams = examsService([]); const fixture = createFixture(exams); fixture.detectChanges();
+    const component = fixture.componentInstance; component.createExam(); component.form.title = 'Geçmiş deneme';
+    component.form.examDate = '2026-09-01T10:00'; component.saveExam();
+    expect(exams.createExam).toHaveBeenCalledOnce();
+  });
 
-  it('rejects invalid exam title, past date, type, and score before calling the API', () => {
+  it('rejects invalid exam title, date, type, and score before calling the API', () => {
     const exams = examsService([]);
     const fixture = createFixture(exams);
     fixture.detectChanges();
@@ -58,9 +81,9 @@ describe('CoachingTeacherExamsComponent', () => {
     component.saveExam();
     expect(component.errorMessage()).toContain('zorunludur');
     component.form.title = 'Sınav';
-    component.form.examDate = '2020-01-01T10:00';
+    component.form.examDate = 'invalid-date';
     component.saveExam();
-    expect(component.errorMessage()).toContain('gelecekte');
+    expect(component.errorMessage()).toContain('Geçerli');
     component.form.examDate = '2030-01-01T10:00';
     component.form.type = 999;
     component.saveExam();
@@ -216,7 +239,7 @@ function createFixture(exams = examsService([]), students = studentService(), te
 
 function exam(id: string): CoachingTeacherExam {
   return {
-    id, title: 'LGS Denemesi', examType: 'LGS', examDate: '2030-01-05T10:00:00Z',
+    id, title: 'Sınıf denemesi', examType: 'Mock', examDate: '2030-01-05T10:00:00Z',
     maxScore: 100, subject: 'Genel', resultCount: 1, description: 'Deneme açıklaması',
     durationMinutes: 90, targetGradeLevel: 8
   };
@@ -239,6 +262,7 @@ function page<T>(items: T[], pageNumber: number, totalPages = 1) {
 
 function examsService(items: CoachingTeacherExam[]) {
   return {
+    profiles: vi.fn(() => of([])),
     getTeacherExams: vi.fn(() => of(page(items, 1))),
     createExam: vi.fn(() => of({ examId: 'exam-new' })),
     updateExam: vi.fn(() => of({ examId: 'exam-1', examDate: '2030-01-05T10:00:00Z', maxScore: 100 })),
@@ -256,3 +280,5 @@ function studentService() {
     }))
   };
 }
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

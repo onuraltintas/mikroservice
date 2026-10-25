@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -29,6 +30,13 @@ describe('StudentAssignmentDetailComponent navigation', () => {
     const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
 
     expect(component.backRoute()).toBe('/coaching-portal/assignments');
+  });
+
+  it('labels submission states in Turkish', () => {
+    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
+    expect(component.assignmentStatusLabel('Assigned')).toBe('Çalışmanı bekliyor');
+    expect(component.assignmentStatusLabel('Submitted')).toBe('Teslim edildi');
+    expect(component.assignmentStatusLabel('Graded')).toBe('Değerlendirildi');
   });
 
   it('returns the teacher assignment list for a teacher', () => {
@@ -67,7 +75,7 @@ describe('StudentAssignmentDetailComponent navigation', () => {
 });
 
 describe('StudentAssignmentDetailComponent teacher attachments', () => {
-  it('downloads a clean attachment for its assigned student and ignores unscanned attachments', () => {
+  it('downloads a clean attachment for its assigned student and ignores unscanned attachments', async () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const attachment = {
       id: 'attachment-1', originalFileName: 'homework.jpg', contentType: 'image/jpeg',
@@ -92,7 +100,7 @@ describe('StudentAssignmentDetailComponent teacher attachments', () => {
       ]
     });
     const fixture = TestBed.createComponent(StudentAssignmentDetailComponent);
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     const component = fixture.componentInstance;
 
     component.downloadTeacherAttachment('student-1', attachment);
@@ -100,6 +108,33 @@ describe('StudentAssignmentDetailComponent teacher attachments', () => {
 
     expect(service.downloadAttachment).toHaveBeenCalledTimes(1);
     expect(service.downloadAttachment).toHaveBeenCalledWith('assignment-1', 'student-1', 'attachment-1');
+  });
+
+  it('lets the student upload a Markdown document with an empty browser MIME type', async () => {
+    const profile = signal<UserProfile | null>(user('Student'));
+    const service = {
+      calculateSha256: vi.fn(async () => 'hash'),
+      createAttachment: vi.fn(() => of({ attachmentId: 'attachment-1' })),
+      uploadAttachment: vi.fn(() => of({ status: 'Clean' })),
+      getAssignment: vi.fn(() => of({ id: 'assignment-1', status: 'Active', assignedStudents: [] }))
+    };
+    TestBed.configureTestingModule({
+      imports: [StudentAssignmentDetailComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'assignment-1' } } } }
+      ]
+    });
+    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
+    component.assignment.set({ id: 'assignment-1', status: 'Active', assignedStudents: [{ studentId: 'user-1', status: 'Assigned' }] } as AssignmentDetail);
+    const file = new File(['# My work'], 'work.md', { type: '' });
+    const input = { files: [file], value: 'selected' } as unknown as HTMLInputElement;
+
+    await component.onFileSelected({ target: input } as unknown as Event);
+
+    expect(service.createAttachment).toHaveBeenCalledWith('assignment-1', 'user-1', expect.objectContaining({ type: 'text/markdown' }), 'hash');
+    expect(service.uploadAttachment).toHaveBeenCalledWith('assignment-1', 'user-1', 'attachment-1', expect.objectContaining({ type: 'text/markdown' }), 'hash');
   });
 });
 
@@ -133,6 +168,34 @@ describe('StudentAssignmentDetailComponent cancelled assignment', () => {
   });
 });
 
+describe('StudentAssignmentDetailComponent grading', () => {
+  it('shows a saved score and teacher feedback for the student', async () => {
+    const profile = signal<UserProfile | null>(user('Student'));
+    const service = {
+      getAssignment: vi.fn(() => of({
+        id: 'assignment-1', title: 'deneme', subject: 'Matematik', source: 'Digital',
+        status: 'Active', dueDate: '2030-01-02T10:00:00Z', maxScore: 100,
+        assignedStudents: [{studentId: 'user-1', status: 'Graded', score: 95,
+          teacherFeedback: 'Çözümün düzenli ve anlaşılır; bu çalışma biçimini sürdür.'}]
+      } as AssignmentDetail))
+    };
+    TestBed.configureTestingModule({
+      imports: [StudentAssignmentDetailComponent],
+      providers: [
+        {provide: AuthService, useValue: {userProfile: profile}},
+        {provide: CoachingPortalService, useValue: service},
+        {provide: ActivatedRoute, useValue: {snapshot: {paramMap: {get: () => 'assignment-1'}}}}
+      ]
+    });
+    const fixture = TestBed.createComponent(StudentAssignmentDetailComponent);
+    fixture.detectChanges(); await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('95');
+    expect(fixture.nativeElement.textContent).toContain('/ 100');
+    expect(fixture.nativeElement.textContent).toContain('Çözümün düzenli ve anlaşılır; bu çalışma biçimini sürdür.');
+  });
+});
+
 function user(role: string): UserProfile {
   return {
     id: 'user-1',
@@ -146,3 +209,5 @@ function user(role: string): UserProfile {
     permissions: []
   };
 }
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

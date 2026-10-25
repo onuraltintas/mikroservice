@@ -1,6 +1,7 @@
+import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, HostListener, Input, OnChanges, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subscription, finalize } from 'rxjs';
 import { CoachingCashStatement, CoachingFee, CoachingFeeAccount, CoachingFeeCancelInput, CoachingFeeCreateInput, CoachingFeePayment, CoachingFeePaymentInput, CoachingFeeReverseInput, CoachingFinanceMode, CoachingFinanceService, CoachingPaymentMethod, CoachingPaymentPage, CoachingReceivables } from '../../../core/services/coaching-finance.service';
@@ -13,6 +14,7 @@ type FinanceInput = CoachingFeeCreateInput | CoachingFeePaymentInput | CoachingF
   templateUrl: './coaching-finance.component.html', styleUrl: './coaching-finance.component.scss'
 })
 export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
+  private readonly toaster = coachingToaster();
   private readonly api = inject(CoachingFinanceService);
   @Input() mode: CoachingFinanceMode = 'student';
   @Input() studentId = '';
@@ -65,21 +67,19 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
     this.pending.set(false); this.loading.set(false); this.historyLoading.set(false);
     this.account.set(null); this.cash.set(null); this.receivables.set(null); this.receivablesError.set(null); this.history.set(null); this.historyFee.set(null); this.cashStudentId = '';
     this.resetForm(); this.error.set(null); this.notice.set(null); this.historyError.set(null);
-    if (this.cashView && this.mode !== 'student') { this.loadCash(); this.loadReceivables(); }
-    else if (this.mode === 'student' || this.studentId) this.loadAccount();
+    if (this.cashView && this.mode !== 'student') { void this.loadCash(); this.loadReceivables(); }
+    else if (this.mode === 'student' || this.studentId) void this.loadAccount();
   }
   ngOnDestroy(): void { ++this.generation; this.reads.unsubscribe(); this.historyRead?.unsubscribe(); this.receivablesRead?.unsubscribe(); this.write?.unsubscribe(); }
   private subjectId(): string { return this.cashStudentId || this.studentId; }
-  canLeavePage(): boolean {
+  async canLeavePage(): Promise<boolean> {
     if (this.pending()) { this.error.set('İşlem sürüyor. Tamamlanmasını bekleyin.'); return false; }
-    return !this.form() || window.confirm('Kaydedilmemiş ücret işleminden ayrılmak istiyor musunuz?');
+    return !this.form() || await this.toaster.confirm('Kaydedilmemiş ücret işleminden ayrılmak istiyor musunuz?');
   }
-  @HostListener('window:beforeunload', ['$event'])
-  beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.pending() || this.form()) { event.preventDefault(); event.returnValue = ''; }
-  }
-  loadAccount(page = 1, preserveForm = false): void {
-    if (this.pending() || (!preserveForm && !this.canLeavePage())) return;
+  async loadAccount(page = 1, preserveForm = false): Promise<void> {
+    const scope = this.generation;
+    if (this.pending() || (!preserveForm && !await this.canLeavePage())) return;
+    if (scope !== this.generation || this.pending()) return;
     if (!preserveForm) this.resetForm();
     const generation = this.generation; this.loading.set(true); this.error.set(null);
     this.reads.add(this.api.account(this.mode, this.subjectId(), page).pipe(finalize(() => {
@@ -95,8 +95,10 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
       }
     }, error: error => { if (generation === this.generation) this.fail(error); } }));
   }
-  loadCash(page = 1): void {
-    if (this.mode === 'student' || this.pending() || !this.canLeavePage()) return;
+  async loadCash(page = 1): Promise<void> {
+    const scope = this.generation;
+    if (this.mode === 'student' || this.pending() || !await this.canLeavePage()) return;
+    if (scope !== this.generation || this.pending()) return;
     const from = Date.parse(this.fromDate), to = Date.parse(this.toDate);
     if (!this.validDate(this.fromDate) || !this.validDate(this.toDate) || to < from || (to - from) / 86400000 > 366) {
       this.error.set('Geçerli bir tarih aralığı seçin (en fazla 367 gün).'); return;
@@ -107,15 +109,15 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
     })).subscribe({ next: value => { if (generation === this.generation) this.cash.set(value); },
       error: error => { if (generation === this.generation) { this.cash.set(null); this.fail(error); } } }));
   }
-  openCashAccount(payment: CoachingFeePayment): void {
-    this.openAccount(payment.studentId);
+  async openCashAccount(payment: CoachingFeePayment): Promise<void> {
+    await this.openAccount(payment.studentId);
   }
-  openAccount(studentId: string): void {
-    if (!this.canLeavePage()) return;
+  async openAccount(studentId: string): Promise<void> {
+    if (!await this.canLeavePage()) return;
     this.reads.unsubscribe(); this.reads = new Subscription(); this.historyRead?.unsubscribe();
     this.loading.set(false); this.historyLoading.set(false); this.resetForm(); this.account.set(null);
     this.history.set(null); this.historyFee.set(null); this.historyError.set(null); this.notice.set(null);
-    this.cashStudentId = studentId; this.loadAccount();
+    this.cashStudentId = studentId; await this.loadAccount();
   }
   loadReceivables(page = 1): void {
     if (this.mode === 'student' || this.pending()) return;
@@ -135,17 +137,17 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
     })).subscribe({ next: value => { if (generation === this.generation) this.history.set(value); },
       error: error => { if (generation === this.generation) { this.historyError.set('Tahsilat geçmişi yüklenemedi. Yeniden deneyin.'); if (error instanceof HttpErrorResponse && error.status === 403) this.fail(error); } } });
   }
-  openCreate(): void { if (this.canCreate() && this.startForm('create')) this.installments = [{ dueOn: this.today(), amount: null }]; }
-  openPayment(fee: CoachingFee): void { if (this.canManage() && !fee.isCancelled && fee.balance > 0 && this.startForm('payment', fee)) this.amount = fee.balance; }
-  openReverse(fee: CoachingFee, payment: CoachingFeePayment): void {
-    if (this.canManage() && !fee.isCancelled && payment.amount > 0 && !payment.reversalOfPaymentId && this.startForm('reverse', fee)) this.paymentId = payment.id;
+  async openCreate(): Promise<void> { if (this.canCreate() && await this.startForm('create')) this.installments = [{ dueOn: this.today(), amount: null }]; }
+  async openPayment(fee: CoachingFee): Promise<void> { if (this.canManage() && !fee.isCancelled && fee.balance > 0 && await this.startForm('payment', fee)) this.amount = fee.balance; }
+  async openReverse(fee: CoachingFee, payment: CoachingFeePayment): Promise<void> {
+    if (this.canManage() && !fee.isCancelled && payment.amount > 0 && !payment.reversalOfPaymentId && await this.startForm('reverse', fee)) this.paymentId = payment.id;
   }
-  openCancel(fee: CoachingFee): void { if (this.canManage() && !fee.isCancelled && fee.paidAmount === 0) this.startForm('cancel', fee); }
-  private startForm(kind: FinanceForm, fee?: CoachingFee): boolean {
-    if (this.pending() || !this.canLeavePage()) return false;
+  async openCancel(fee: CoachingFee): Promise<void> { if (this.canManage() && !fee.isCancelled && fee.paidAmount === 0) await this.startForm('cancel', fee); }
+  private async startForm(kind: FinanceForm, fee?: CoachingFee): Promise<boolean> {
+    if (this.pending() || !await this.canLeavePage()) return false;
     this.resetForm(); this.fee = fee; this.requestId = crypto.randomUUID(); this.form.set(kind); this.error.set(null); this.notice.set(null); return true;
   }
-  closeForm(): void { if (this.canLeavePage()) { this.resetForm(); this.error.set(null); } }
+  async closeForm(): Promise<void> { if (await this.canLeavePage()) { this.resetForm(); this.error.set(null); } }
   private resetForm(): void {
     this.form.set(null); this.conflict.set(false); this.attempted.set(false); this.retryInput = null; this.fee = undefined;
     this.title = ''; this.amount = null; this.reference = ''; this.reason = ''; this.method = 'Cash'; this.receivedOn = this.today();
@@ -153,7 +155,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
   }
   addInstallment(): void { if (!this.attempted() && this.installments.length < 24) this.installments.push({ dueOn: this.today(), amount: null }); }
   removeInstallment(index: number): void { if (!this.attempted() && this.installments.length > 1) this.installments.splice(index, 1); }
-  reloadConflict(): void { if (this.conflict() && !this.pending()) this.loadAccount(this.account()?.pageNumber ?? 1, true); }
+  async reloadConflict(): Promise<void> { if (this.conflict() && !this.pending()) await this.loadAccount(this.account()?.pageNumber ?? 1, true); }
   submit(): void {
     const kind = this.form(); if (!kind || this.pending() || this.conflict() || this.loading() || !this.canManage() || (kind === 'create' && !this.canCreate())) return;
     const input = this.retryInput ?? this.input(kind); if (!input) return;
@@ -165,12 +167,12 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
     else if (kind === 'reverse') operation = this.api.reverse(studentId, selectedFee!.id, this.paymentId, input as CoachingFeeReverseInput);
     else operation = this.api.cancel(studentId, selectedFee!.id, input as CoachingFeeCancelInput);
     this.write = operation.pipe(finalize(() => { if (generation === this.generation) this.pending.set(false); })).subscribe({
-      next: result => {
+      next: async result => {
         if (generation !== this.generation) return;
         this.pending.set(false); this.resetForm(); this.notice.set('Manuel ücret işlemi kaydedildi.');
-        this.loadAccount(this.account()?.pageNumber ?? 1);
+        await this.loadAccount(this.account()?.pageNumber ?? 1);
         if (this.historyFee()?.id === result.id) this.loadHistory(result);
-        if (this.cashView) { this.loadCash(this.cash()?.pageNumber ?? 1); this.loadReceivables(this.receivables()?.pageNumber ?? 1); }
+        if (this.cashView) { await this.loadCash(this.cash()?.pageNumber ?? 1); this.loadReceivables(this.receivables()?.pageNumber ?? 1); }
       }, error: error => { if (generation === this.generation) this.fail(error); }
     });
   }
@@ -213,4 +215,5 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
   today(): string { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
   currency(value: number): string { return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value); }
   paymentMethod(value: CoachingPaymentMethod): string { return value === 'Cash' ? 'Nakit' : 'Banka havalesi'; }
+  private readonly feedback = coachingFeedback(this.notice, this.error);
 }

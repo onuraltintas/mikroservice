@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
@@ -35,3 +36,5 @@ describe('StudentAssignmentsComponent cancelled assignments', () => {
     expect(component.assignmentStatusLabel(component.assignments()[2])).toBe('İptal edildi');
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

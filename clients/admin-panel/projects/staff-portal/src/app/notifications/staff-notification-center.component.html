@@ -1,7 +1,7 @@
 <section class="notification-center" aria-labelledby="notification-title">
   <div class="section-heading">
     <div>
-      <p class="eyebrow">{{ product === 'speed-reading' ? 'HIZLI OKUMA' : 'KOÇLUK' }} · BİLDİRİMLER</p>
+      <p class="eyebrow">{{ product === 'speed-reading' ? 'HIZLI OKUMA' : product === 'course-management' ? 'KURS YÖNETİMİ' : 'KOÇLUK' }} · BİLDİRİMLER</p>
       <h2 id="notification-title">Bildirim merkezi</h2>
       <p>Okunmamış {{ unreadCount }} bildiriminiz var.</p>
     </div>
@@ -55,9 +55,13 @@
           <div class="notification-copy">
             <div class="notification-title-row"><h3>{{ notification.title }}</h3>@if (!notification.isRead) { <span class="unread-badge">Yeni</span> }</div>
             <p>{{ notification.message }}</p>
+            @if (notification.type !== undefined) { <small>{{typeLabel(notification.type)}}</small> }
             @if (notification.createdAt) { <time>{{ notification.createdAt | date:'medium' }}</time> }
           </div>
           <div class="notification-actions">
+            @if (target(notification); as destination) {
+              <button type="button" class="primary-button" (click)="openTarget(destination)">{{destination.label}}</button>
+            }
             @if (!notification.isRead) { <button type="button" class="text-button" [disabled]="isUpdating()" (click)="markAsRead(notification)">Okundu işaretle</button> }
             @if (pendingDeleteId() === notification.id) {
               <span class="delete-confirm">Silinsin mi?</span>

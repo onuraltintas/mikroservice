@@ -15,4 +15,9 @@ describe('getErrorMessage', () => {
     expect(getErrorMessage({ message: 'Geçersiz ilçe.' }, 'fallback'))
       .toBe('Geçersiz ilçe.');
   });
+
+  it('turns request timeouts into a clear localized message', () => {
+    expect(getErrorMessage({ name: 'TimeoutError', message: 'Timeout has occurred' }, 'fallback'))
+      .toBe('İstek zaman aşımına uğradı. Bağlantınızı kontrol edip tekrar deneyin.');
+  });
 });

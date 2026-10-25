@@ -1,3 +1,4 @@
+import { ToasterService } from '../../core/services/toaster.service';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from '../../core/auth/auth.service';
@@ -53,3 +54,5 @@ describe('CoachingPortalViewService', () => {
     expect(view.current()).toBe('Student');
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

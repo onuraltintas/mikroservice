@@ -1,9 +1,12 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin, map } from 'rxjs';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
+import { PracticeExamInput, PracticeExamProfile, practiceTotals } from '../../../../../../src/app/core/models/practice-exam';
+import { PracticeExamEditorComponent } from '../../../../../../src/app/features/coaching-portal/pages/practice-exam-editor.component';
 import {
   CoachingTeacherExam,
   CoachingTeacherExamDetail,
@@ -34,12 +37,13 @@ interface ExamResultForm {
   ranking: number | undefined;
   notes: string;
   subjectScores: { subject: string; score: number | null }[];
+  practiceExam: PracticeExamInput | null;
 }
 
 @Component({
   selector: 'staff-coaching-teacher-exams',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PracticeExamEditorComponent],
   templateUrl: './coaching-teacher-exams.component.html',
   styleUrl: './coaching-teacher-exams.component.scss'
 })
@@ -51,6 +55,8 @@ export class CoachingTeacherExamsComponent implements OnInit {
   private resultsRequestId = 0;
 
   readonly exams = signal<CoachingTeacherExam[]>([]);
+  readonly profiles = signal<PracticeExamProfile[]>([]);
+  readonly practiceExamLocked = signal(false);
   readonly students = signal<CoachingTeacherStudent[]>([]);
   readonly studentNames = signal<Record<string, string>>({});
   readonly studentNameLookupFailed = signal(false);
@@ -99,6 +105,8 @@ export class CoachingTeacherExamsComponent implements OnInit {
     }
     this.loadExams();
     this.loadStudents();
+    this.examsService.profiles().subscribe({ next: profiles => this.profiles.set(profiles),
+      error: () => this.errorMessage.set('Deneme kapsamları yüklenemedi. Sayfayı yenileyip tekrar deneyin.') });
   }
 
   loadExams(append = false): void {
@@ -187,8 +195,8 @@ export class CoachingTeacherExamsComponent implements OnInit {
       return;
     }
     const examId = this.editingExamId();
-    if (Number.isNaN(examDate.getTime()) || (!examId && examDate <= new Date())) {
-      this.errorMessage.set('Sınav tarihi gelecekte olmalıdır.');
+    if (Number.isNaN(examDate.getTime())) {
+      this.errorMessage.set('Geçerli bir sınav tarihi girin.');
       return;
     }
     if (!Number.isFinite(this.form.maxScore) || this.form.maxScore < 0.01 || this.form.maxScore > 999.99) {
@@ -306,27 +314,34 @@ export class CoachingTeacherExamsComponent implements OnInit {
       emptyAnswers: result.emptyAnswers ?? 0,
       ranking: result.ranking ?? undefined,
       notes: result.teacherNotes ?? '',
+      practiceExam: result.practiceExam ? structuredClone(result.practiceExam) : null,
       subjectScores: Object.entries(result.subjectScores ?? {}).map(([subject, score]) => ({ subject, score }))
     };
+    this.practiceExamLocked.set(!!result.practiceExam);
   }
 
   cancelExamResultEdit(): void {
     this.editingResultId.set(null);
     this.resultForm = this.emptyResultForm();
+    this.practiceExamLocked.set(false);
   }
 
   saveExamResult(): void {
+    if (this.isSavingResult()) return;
     const exam = this.selectedExam();
     const resultId = this.editingResultId();
     if (!exam || (!resultId && !this.resultForm.studentId)) {
       this.errorMessage.set('Yeni sonuç için aktif öğrencilerinizden birini seçin.');
       return;
     }
+    if (['LGS','YKS'].includes(exam.examType) && !this.resultForm.practiceExam) { this.errorMessage.set('Deneme kapsamını ve ders cevaplarını girin.'); return; }
     if (!Number.isFinite(this.resultForm.score) || this.resultForm.score < 0 || this.resultForm.score > exam.maxScore) {
       this.errorMessage.set(`Puan 0 ile ${exam.maxScore} arasında olmalıdır.`);
       return;
     }
-    const answers = [this.resultForm.correctAnswers, this.resultForm.wrongAnswers, this.resultForm.emptyAnswers];
+    const totals = practiceTotals(this.resultForm.practiceExam, this.profiles());
+    if (this.resultForm.practiceExam && !totals) { this.errorMessage.set('Deneme derslerinin doğru/yanlış/boş sayılarını kontrol edin.'); return; }
+    const answers = totals ? [totals.correct, totals.wrong, totals.empty] : [this.resultForm.correctAnswers, this.resultForm.wrongAnswers, this.resultForm.emptyAnswers];
     if (answers.some(value => !Number.isInteger(value) || value < 0)) {
       this.errorMessage.set('Doğru, yanlış ve boş cevap sayıları negatif olmayan tam sayı olmalıdır.');
       return;
@@ -347,9 +362,10 @@ export class CoachingTeacherExamsComponent implements OnInit {
       examId: exam.id,
       ...(resultId ? { resultId } : { studentId: this.resultForm.studentId }),
       score: this.resultForm.score,
-      correctAnswers: this.resultForm.correctAnswers,
-      wrongAnswers: this.resultForm.wrongAnswers,
-      emptyAnswers: this.resultForm.emptyAnswers,
+      correctAnswers: answers[0],
+      wrongAnswers: answers[1],
+      emptyAnswers: answers[2],
+      practiceExam: this.resultForm.practiceExam,
       subjectScores,
       ranking: this.resultForm.ranking ?? null,
       notes: this.resultForm.notes.trim() || null
@@ -483,12 +499,12 @@ export class CoachingTeacherExamsComponent implements OnInit {
   private emptyResultForm(): ExamResultForm {
     return {
       studentId: '', score: 0, correctAnswers: 0, wrongAnswers: 0,
-      emptyAnswers: 0, ranking: undefined, notes: '', subjectScores: []
+      emptyAnswers: 0, ranking: undefined, notes: '', subjectScores: [], practiceExam: null
     };
   }
 
   private defaultDate(): string {
-    const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const date = new Date();
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
   }
@@ -502,4 +518,7 @@ export class CoachingTeacherExamsComponent implements OnInit {
   private idempotencyKey(scope: string): string {
     return globalThis.crypto?.randomUUID?.() ?? `teacher-${scope}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
+
+  private readonly errorMessageFeedback = coachingFeedback(undefined, this.errorMessage);
+  private readonly successMessageFeedback = coachingFeedback(this.successMessage);
 }

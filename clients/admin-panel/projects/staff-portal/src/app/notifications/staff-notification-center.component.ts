@@ -1,9 +1,11 @@
+import { coachingFeedback } from '../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges, OnInit, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { StaffProduct } from '../auth/staff-auth.models';
 import { SpeedReadingNotificationPreference, StaffNotification, StaffNotificationsService } from './staff-notifications.service';
+import { coachingNotificationLabel, coachingNotificationTarget, CoachingNotificationTarget, WeeklyDestination } from '../../../../../shared/coaching-notification-target';
 
 type NotificationFilter = 'all' | 'unread' | 'read';
 
@@ -16,6 +18,16 @@ type NotificationFilter = 'all' | 'unread' | 'read';
 })
 export class StaffNotificationCenterComponent implements OnChanges, OnInit {
   @Input({ required: true }) product: StaffProduct = 'coaching';
+  @Input() canOpenCoachingAssignments = false;
+  @Output() readonly openCoachingAssignment = new EventEmitter<string>();
+  @Output() readonly openCoachingWeekly = new EventEmitter<WeeklyDestination>();
+  openTarget(target: CoachingNotificationTarget) {
+    if (target.kind === 'weekly') this.openCoachingWeekly.emit(target);
+    else if (target.kind === 'assignment') this.openCoachingAssignment.emit(target.id);
+  }
+  target(notification: StaffNotification) {
+    return this.product === 'coaching' && this.canOpenCoachingAssignments ? coachingNotificationTarget(notification, 'teacher') : null;
+  }
 
   private readonly service = inject(StaffNotificationsService);
   readonly notifications = signal<StaffNotification[]>([]);
@@ -125,7 +137,19 @@ export class StaffNotificationCenterComponent implements OnChanges, OnInit {
     this.preferences.update(items => items.map(item => ({ ...item, enableEmail: enabled })));
   }
 
-  typeLabel(type: number): string {
+  typeLabel(type: number | string): string {
+    if (typeof type === 'string') {
+      const courseLabels: Record<string, string> = {
+        'CourseManagement.LessonScheduled': 'Yeni ders',
+        'CourseManagement.LessonRescheduled': 'Ders saati değişti',
+        'CourseManagement.LessonCancelled': 'Ders iptal edildi',
+        'CourseManagement.AssignmentPublished': 'Yeni ödev',
+        'CourseManagement.AssignmentSubmitted': 'Ödev teslim edildi',
+        'CourseManagement.AssignmentReviewed': 'Ödev değerlendirildi',
+        'CourseManagement.PaymentRecorded': 'Finans özeti güncellendi'
+      };
+      return courseLabels[type] ?? coachingNotificationLabel(type);
+    }
     const labels: Record<number, string> = {
       1: 'Yeni ödev', 2: 'Yaklaşan ödev', 3: 'Gecikmiş ödev', 4: 'Egzersiz tamamlandı',
       5: 'Kilometre taşı', 6: 'Haftalık ilerleme', 7: 'Aylık ilerleme', 8: 'Günlük hatırlatma',
@@ -147,4 +171,7 @@ export class StaffNotificationCenterComponent implements OnChanges, OnInit {
       error: () => this.errorMessage.set('İşlem tamamlanamadı. Lütfen yeniden deneyin.')
     });
   }
+
+ private readonly errorMessageFeedback=coachingFeedback(undefined,this.errorMessage);
+ private readonly successMessageFeedback=coachingFeedback(this.successMessage);
 }

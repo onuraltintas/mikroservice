@@ -9,6 +9,13 @@ public static class RegistrationLegalConsentPolicy
 {
     private static readonly string[] SharedRequiredSlugs = ["privacy", "kvkk"];
 
+    public static bool GoogleRequiresAcceptance(PlatformProduct product) => product switch
+    {
+        PlatformProduct.Coaching => true,
+        PlatformProduct.SpeedReading => false,
+        _ => throw new ArgumentOutOfRangeException(nameof(product), product, "Unsupported platform product.")
+    };
+
     public static IReadOnlyList<string> RequiredSlugs(PlatformProduct product) => product switch
     {
         PlatformProduct.Coaching => [.. SharedRequiredSlugs, "coaching-terms"],

@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -208,4 +209,5 @@ export class CoachingSessionsComponent implements OnInit {
   attendanceKey(sessionId: string, studentId: string) {
     return `${sessionId}:${studentId}`;
   }
+  private readonly feedback = coachingFeedback(undefined, this.errorMessage);
 }

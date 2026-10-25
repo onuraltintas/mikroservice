@@ -4,6 +4,28 @@ import { StaffNotificationsService } from './staff-notifications.service';
 import { StaffNotificationCenterComponent } from './staff-notification-center.component';
 
 describe('StaffNotificationCenterComponent', () => {
+  it('emits the weekly destination without treating it as an assignment',()=>{
+    const student='473bd2d6-e3db-47c4-be56-eeedec0022ed';
+    const{fixture,component}=createComponent({getNotifications:vi.fn(()=>of([{id:'weekly',title:'Hafta',message:'Yeni',isRead:false,type:'WeeklyReflectionSaved',relatedEntityId:`weekly:${student}:2026-10-12`}]))});
+    fixture.componentRef.setInput('canOpenCoachingAssignments',true);fixture.detectChanges();const emit=vi.spyOn(component.openCoachingWeekly,'emit');const assignment=vi.spyOn(component.openCoachingAssignment,'emit');
+    const button=Array.from(fixture.nativeElement.querySelectorAll('button')).find((button:any)=>button.textContent.includes('Haftalık değerlendirmeyi aç'))as HTMLButtonElement;button.click();
+    expect(emit).toHaveBeenCalledWith(expect.objectContaining({studentId:student,weekStart:'2026-10-12',decisionId:null}));expect(assignment).not.toHaveBeenCalled();
+  });
+  it('emits the exact submitted assignment only for the Coaching teacher workspace',()=>{
+    const id='c260e5c4-facd-42cd-af3a-69aa0b9cc67f';
+    const {component,fixture}=createComponent({getNotifications:vi.fn(()=>of([
+      {id:'submitted',title:'Teslim',message:'Ödev hazır',isRead:false,type:'AssignmentSubmitted',relatedEntityId:id},
+      {id:'legacy',title:'Eski teslim',message:'Kimlik yok',isRead:false,type:'AssignmentSubmitted'}
+    ]))});
+    const emit=vi.spyOn(component.openCoachingAssignment,'emit');
+    expect(fixture.nativeElement.textContent).not.toContain('Teslimleri incele');
+    fixture.componentRef.setInput('canOpenCoachingAssignments',true);fixture.detectChanges();
+    const button=Array.from(fixture.nativeElement.querySelectorAll('button')).find((button:any)=>button.textContent.includes('Teslimleri incele')) as HTMLButtonElement;
+    button.click();expect(emit).toHaveBeenCalledExactlyOnceWith(id);
+    expect(component.target(component.notifications()[1])).toBeNull();
+    fixture.componentRef.setInput('product','speed-reading');fixture.detectChanges();
+    expect(component.target(component.notifications()[0])).toBeNull();
+  });
   const coachingNotification = { id: 'c-1', title: 'Seans', message: 'Yarın', isRead: false };
   const speedReadingNotification = { id: 's-1', title: 'Ödev', message: 'Yeni ödev', isRead: false };
 

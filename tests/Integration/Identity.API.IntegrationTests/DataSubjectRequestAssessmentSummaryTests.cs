@@ -10,12 +10,12 @@ public sealed class DataSubjectRequestAssessmentSummaryTests
     public void Create_ShouldReportMissingRequiredServices()
     {
         var summary = DataSubjectRequestAssessmentSummaryDto.Create(
-            ["Coaching", "Notification"],
+            ["Coaching", "Notification", "SpeedReading", "CourseManagement"],
             [Result("Coaching", canProceed: true, hasHold: false)]);
 
         summary.IsComplete.Should().BeFalse();
         summary.IsReadyForErasure.Should().BeFalse();
-        summary.MissingServices.Should().Equal("Notification");
+        summary.MissingServices.Should().Equal("CourseManagement", "Notification", "SpeedReading");
     }
 
     [Fact]

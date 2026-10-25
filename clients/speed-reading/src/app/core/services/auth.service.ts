@@ -132,6 +132,7 @@ export class AuthService {
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/login`, credentials, { withCredentials: true }).pipe(
+      timeout({ first: 15_000 }),
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => this.persistAndHydrateProfile(response))
     );
@@ -139,21 +140,27 @@ export class AuthService {
 
   /** Registers an independent student. Registration requires a later login. */
   register(data: RegisterRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/student`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/student`, data, { withCredentials: true }).pipe(
+      timeout({ first: 15_000 })
+    );
   }
 
   /**
    * Register new institution
    */
   registerInstitution(data: RegisterInstitutionRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/institution`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/institution`, data, { withCredentials: true }).pipe(
+      timeout({ first: 15_000 })
+    );
   }
 
   /**
    * Register new teacher
    */
   registerTeacher(data: RegisterTeacherRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/teacher`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/teacher`, data, { withCredentials: true }).pipe(
+      timeout({ first: 15_000 })
+    );
   }
 
   registerCoach(data: any): Observable<void> {
@@ -246,6 +253,7 @@ export class AuthService {
     }
     payload.legalAcceptances = legalAcceptances;
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/google-login`, payload, { withCredentials: true }).pipe(
+      timeout({ first: 15_000 }),
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => this.persistAndHydrateProfile(response))
     );
@@ -259,6 +267,7 @@ export class AuthService {
   completeGoogleRegistration(registrationToken: string, legalAcceptances: RegistrationLegalAcceptance[]): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/google-register-complete`,
       { registrationToken, legalAcceptances }, { withCredentials: true }).pipe(
+      timeout({ first: 15_000 }),
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => this.persistAndHydrateProfile(response))
     );
@@ -363,6 +372,7 @@ export class AuthService {
       headers: { 'X-Skip-Error-Toast': 'true' },
       context: new HttpContext().set(SKIP_AUTH_REFRESH, true)
     }).pipe(
+      timeout({ first: 5_000 }),
       map(profileResponse => this.mergeProfileIntoAuthResponse(
         response,
         profileResponse?.data ?? profileResponse)),
@@ -400,6 +410,7 @@ export class AuthService {
       headers: { 'X-Skip-Error-Toast': 'true' },
       context: new HttpContext().set(SKIP_AUTH_REFRESH, true)
     }).pipe(
+      timeout({ first: 5_000 }),
       map(settings => ({
         ...response,
         dateOfBirth: settings.dateOfBirth ?? null,

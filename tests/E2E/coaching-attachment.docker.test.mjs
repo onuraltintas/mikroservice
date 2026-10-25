@@ -60,7 +60,7 @@ function token(config, userId, role) {
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const unsigned = `${encode({ alg: 'HS256', typ: 'JWT', kid: config.JWT_KEY_ID })}.${encode({
     sub: userId, iss: config.JWT_ISSUER, aud: config.JWT_AUDIENCE,
-    iat: now, nbf: now, exp: now + 300, [roleClaim]: role,
+    iat: now, nbf: now, exp: now + 300, [roleClaim]: role, platform_product: 'coaching',
   })}`;
   return `${unsigned}.${createHmac('sha256', config.JWT_SECRET).update(unsigned).digest('base64url')}`;
 }

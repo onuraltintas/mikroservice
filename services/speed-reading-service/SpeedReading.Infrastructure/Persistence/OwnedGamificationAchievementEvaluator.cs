@@ -17,6 +17,9 @@ internal static class OwnedGamificationAchievementEvaluator
             .Where(item => item.UserId == userId && !item.IsDeleted)
             .Select(item => item.AchievementId)
             .ToListAsync(cancellationToken);
+        unlockedIds.AddRange(db.UserAchievements.Local
+            .Where(item => item.UserId == userId && !item.IsDeleted)
+            .Select(item => item.AchievementId));
         var achievements = await db.Achievements
             .Where(item => item.IsActive && !item.IsDeleted && !unlockedIds.Contains(item.Id))
             .OrderBy(item => item.SortOrder)

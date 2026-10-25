@@ -76,9 +76,6 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
             Assert.Equal("2", updated.Data.GetProperty("DistrictId").GetString());
             Assert.Equal("Yozgat", updated.Data.GetProperty("City").GetString());
             Assert.Equal("Merkez", updated.Data.GetProperty("District").GetString());
-            var program = await service.CreateAsync(CatalogKind.UniversityPrograms, new("Program", "Test kaydı", UniversityName: "University", MinimumScore: 999999.9999m), default);
-            var fetched = await service.GetAsync(CatalogKind.UniversityPrograms, program.Data.GetProperty("Id").GetGuid(), default);
-            Assert.Equal(program.Fingerprint, fetched.Fingerprint);
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
@@ -94,10 +91,10 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
         {
             await db.Database.EnsureCreatedAsync();
             var score = decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-            await Assert.ThrowsAsync<ArgumentException>(() => Service(db).CreateAsync(CatalogKind.UniversityPrograms,
-                new("Program", "Test kaydı", UniversityName: "University", MinimumScore: score), default));
+            await Assert.ThrowsAsync<ArgumentException>(() => Service(db).CreateAsync(CatalogKind.Schools,
+                new("School", "Test kaydı", ProvinceId: "66", DistrictId: "1", MinimumScore: score), default));
             Assert.False(await db.AdminAuditRecords.AnyAsync());
-            Assert.False(await db.TargetUniversityPrograms.AnyAsync());
+            Assert.False(await db.TargetSchools.AnyAsync());
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
@@ -107,7 +104,6 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
     [InlineData(CatalogKind.Units)]
     [InlineData(CatalogKind.Topics)]
     [InlineData(CatalogKind.Schools)]
-    [InlineData(CatalogKind.UniversityPrograms)]
     public async Task CreatesInactiveThenEditsAndPublishesWithAudit(CatalogKind kind)
     {
         await using var db = Database();
@@ -129,7 +125,7 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
                 CatalogKind.Units => new CatalogSaveRequest("Ünite", "Yeni kayıt", LessonId: lesson.Id, DisplayOrder: 1),
                 CatalogKind.Topics => new CatalogSaveRequest("Konu", "Yeni kayıt", LessonId: lesson.Id, UnitId: unit.Id, EstimatedMinutes: 30),
                 CatalogKind.Schools => new CatalogSaveRequest("Okul", "Yeni kayıt", ProvinceId: "66", DistrictId: "1", MinimumScore: 400, ScoreYear: 2026),
-                _ => new CatalogSaveRequest("Program", "Yeni kayıt", UniversityName: "Üniversite", MinimumScore: 400, ScoreYear: 2026)
+                _ => new CatalogSaveRequest("Okul", "Yeni kayıt", ProvinceId: "66", DistrictId: "1", MinimumScore: 400, ScoreYear: 2026)
             };
             var created = await service.CreateAsync(kind, request, default);
             Assert.False(created.Data.GetProperty("IsActive").GetBoolean());
@@ -176,7 +172,7 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
             await db.Database.EnsureCreatedAsync();
             var service = Service(db);
             await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(CatalogKind.Schools, new("School", "Test kaydı", ProvinceId: "66", DistrictId: "wrong"), default));
-            await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(CatalogKind.Lessons, new("Math", "Test kaydı", UniversityName: "Wrong kind"), default));
+            await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(CatalogKind.Lessons, new("Math", "Test kaydı", MinimumScore: 10), default));
             await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(CatalogKind.Lessons, new("Math", ""), default));
             var school = await service.CreateAsync(CatalogKind.Schools, new("School", "Test kaydı", ProvinceId: "66", DistrictId: "1"), default);
             Assert.Equal("Yozgat", school.Data.GetProperty("City").GetString());

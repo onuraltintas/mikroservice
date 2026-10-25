@@ -1,0 +1,32 @@
+[
+  {
+    "file": "eskisehir.html",
+    "url": "https://bif.meb.k12.tr/tema/okulumuz_hakkinda.html",
+    "sha256": "ad9058a7ba934a4a878e4b56a49fee78a9a503e7dc2a69213385c0f62e4718b3"
+  },
+  {
+    "file": "ankara.html",
+    "url": "https://hcesb.meb.k12.tr/tema/okulumuz_hakkinda.php",
+    "sha256": "c1741e9f14b36141d0db0d3ff39de7acbdcc0975cd6b44620637d93d66a21025"
+  },
+  {
+    "file": "mehmet-altun.html",
+    "url": "https://kayserihavacilikuzaymtal.meb.k12.tr/",
+    "sha256": "d5c154d4f5e2c19ccb5f12f82f18b9ed1eba9b0cbd60ca2c7636c9c2c3b89444"
+  },
+  {
+    "file": "sile-correct.html",
+    "url": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=768129&p=kurum",
+    "sha256": "bfa06b02e1a66d416e4db5ae984b3b2c751dca2f6df82c576007187ea68bb637"
+  },
+  {
+    "file": "sile-wrong.html",
+    "url": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=751600&p=kurum",
+    "sha256": "51a59bcae3d3fcc1cf696846b0b0b24dda09d74c1ada6281c7f5a52062e9f07b"
+  },
+  {
+    "file": "konya.html",
+    "url": "https://haydarfadimkocaerfenlisesi.meb.k12.tr/tema/okulumuz_hakkinda.html",
+    "sha256": "ab3b4d5e413075f8003de32e81f2cc70412028c4f544e7f8bfd1a24e61e0c6ce"
+  }
+]

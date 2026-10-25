@@ -40,6 +40,8 @@ public sealed class DataSubjectRequestErasureCompletionTests
         await handler.HandleAsync(Completed(request.Id, "Notification"), CancellationToken.None);
         request.Status.Should().Be(DataSubjectRequestStatus.Processing);
         await handler.HandleAsync(Completed(request.Id, "SpeedReading"), CancellationToken.None);
+        request.Status.Should().Be(DataSubjectRequestStatus.Processing);
+        await handler.HandleAsync(Completed(request.Id, "CourseManagement"), CancellationToken.None);
 
         request.Status.Should().Be(DataSubjectRequestStatus.Completed);
     }
@@ -74,6 +76,7 @@ public sealed class DataSubjectRequestErasureCompletionTests
         await handler.HandleAsync(Completed(request.Id, "Coaching"), CancellationToken.None);
         await handler.HandleAsync(Completed(request.Id, "Notification"), CancellationToken.None);
         await handler.HandleAsync(Completed(request.Id, "SpeedReading"), CancellationToken.None);
+        await handler.HandleAsync(Completed(request.Id, "CourseManagement"), CancellationToken.None);
 
         erasureService.Subjects.Should().ContainSingle().Which.Should().Be(request.RequesterUserId);
         request.Status.Should().Be(DataSubjectRequestStatus.Completed);

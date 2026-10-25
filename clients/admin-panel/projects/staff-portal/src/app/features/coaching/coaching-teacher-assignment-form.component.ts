@@ -1,12 +1,14 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { concatMap, finalize, from, tap, toArray } from 'rxjs';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import {
   CoachingAssignmentCreateRequest,
   CoachingAssignmentDetail,
   CoachingAssignmentUpdateRequest,
+  CoachingAssignmentInstructionAttachment,
   CoachingTeacherAssignmentsService
 } from './coaching-teacher-assignments.service';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
@@ -43,6 +45,8 @@ export class CoachingTeacherAssignmentFormComponent implements OnInit {
   readonly inactiveAssignedStudentIds = signal<string[]>([]);
   readonly isValidatingStudents = signal(false);
   readonly studentValidationFailed = signal(false);
+  readonly selectedAttachments = signal<File[]>([]);
+  readonly existingAttachments = signal<CoachingAssignmentInstructionAttachment[]>([]);
   readonly selectedStudentIds = new Set<string>();
   studentSearchInput = '';
 
@@ -238,11 +242,12 @@ export class CoachingTeacherAssignmentFormComponent implements OnInit {
     this.isSaving.set(true);
     if (this.assignmentId) {
       const request: CoachingAssignmentUpdateRequest = { ...fields, assignmentId: this.assignmentId };
-      this.assignmentsService.updateAssignment(this.assignmentId, request).pipe(
-        finalize(() => this.isSaving.set(false))
-      ).subscribe({
-        next: () => this.saved.emit('updated'),
-        error: () => this.errorMessage.set('Ödev güncellenemedi. Alanları ve öğrenci bağlantılarını kontrol edip tekrar deneyin.')
+      this.assignmentsService.updateAssignment(this.assignmentId, request).subscribe({
+        next: () => this.uploadSelectedAttachments(this.assignmentId!, 'updated'),
+        error: () => {
+          this.isSaving.set(false);
+          this.errorMessage.set('Ödev güncellenemedi. Alanları ve öğrenci bağlantılarını kontrol edip tekrar deneyin.');
+        }
       });
       return;
     }
@@ -252,12 +257,87 @@ export class CoachingTeacherAssignmentFormComponent implements OnInit {
       teacherId,
       assignmentType: this.form.assignmentType
     };
-    this.assignmentsService.createAssignment(request, this.createIdempotencyKey()).pipe(
+    this.assignmentsService.createAssignment(request, this.createIdempotencyKey()).subscribe({
+      next: created => {
+        this.assignmentId = created.assignmentId;
+        this.uploadSelectedAttachments(created.assignmentId, 'created');
+      },
+      error: () => {
+        this.isSaving.set(false);
+        this.errorMessage.set('Ödev oluşturulamadı. Alanları ve öğrenci bağlantılarını kontrol edip tekrar deneyin.');
+      }
+    });
+  }
+
+  onAssignmentFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    for (const file of files) {
+      if (!this.isSupportedAttachment(file)) {
+        this.errorMessage.set(`${file.name}: JPEG, PNG, WebP, PDF, Word veya Markdown dosyası seçin.`);
+        return;
+      }
+      if (file.size < 1 || file.size > 10 * 1024 * 1024) {
+        this.errorMessage.set(`${file.name}: Dosya 10 MB sınırını aşmamalıdır.`);
+        return;
+      }
+    }
+    this.errorMessage.set(null);
+    this.selectedAttachments.update(current => [...current, ...files]);
+  }
+
+  removeSelectedAttachment(file: File): void {
+    this.selectedAttachments.update(files => files.filter(item => item !== file));
+  }
+
+  downloadInstructionAttachment(attachment: CoachingAssignmentInstructionAttachment): void {
+    if (!this.assignmentId || attachment.status !== 'Clean') return;
+    this.assignmentsService.downloadInstructionAttachment(this.assignmentId, attachment.id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = attachment.originalFileName;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set('Dosya indirilemedi.')
+    });
+  }
+
+  private uploadSelectedAttachments(assignmentId: string, result: 'created' | 'updated'): void {
+    const files = [...this.selectedAttachments()];
+    if (files.length === 0) {
+      this.isSaving.set(false);
+      this.saved.emit(result);
+      return;
+    }
+
+    from(files).pipe(
+      concatMap(file => this.assignmentsService.uploadInstructionAttachment(assignmentId, file).pipe(
+        tap(() => this.selectedAttachments.update(current => current.filter(item => item !== file)))
+      )),
+      toArray(),
       finalize(() => this.isSaving.set(false))
     ).subscribe({
-      next: () => this.saved.emit('created'),
-      error: () => this.errorMessage.set('Ödev oluşturulamadı. Alanları ve öğrenci bağlantılarını kontrol edip tekrar deneyin.')
+      next: () => this.saved.emit(result),
+      error: () => this.errorMessage.set('Ödev kaydedildi ancak bazı dosyalar eklenemedi. Kalan dosyaları tekrar deneyin.')
     });
+  }
+
+  private isSupportedAttachment(file: File): boolean {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const expectedTypes: Record<string, string[]> = {
+      jpg: ['image/jpeg'], jpeg: ['image/jpeg'], png: ['image/png'], webp: ['image/webp'],
+      pdf: ['application/pdf'], doc: ['application/msword'],
+      docx: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+      md: ['text/markdown', 'text/plain', 'text/x-markdown', 'application/octet-stream', '']
+    };
+    if (!extension || !expectedTypes[extension]) return false;
+    return !file.type
+      || file.type === 'application/octet-stream'
+      || expectedTypes[extension].includes(file.type);
   }
 
   private loadAssignment(assignmentId: string): void {
@@ -265,6 +345,7 @@ export class CoachingTeacherAssignmentFormComponent implements OnInit {
     this.assignmentsService.getAssignment(assignmentId).subscribe({
       next: assignment => {
         this.fillForm(assignment);
+        this.existingAttachments.set(assignment.instructionAttachments ?? []);
         const assignedStudentIds = assignment.assignedStudents.map(student => student.studentId);
         this.assignedStudentIds.set(assignedStudentIds);
         assignedStudentIds.forEach(studentId => this.selectedStudentIds.add(studentId));
@@ -377,4 +458,7 @@ export class CoachingTeacherAssignmentFormComponent implements OnInit {
     return globalThis.crypto?.randomUUID?.()
       ?? `teacher-assignment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
+
+  private readonly errorMessageFeedback = coachingFeedback(undefined, this.errorMessage);
+  private readonly studentErrorMessageFeedback = coachingFeedback(undefined, this.studentErrorMessage);
 }

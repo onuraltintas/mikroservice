@@ -4,6 +4,7 @@ using Coaching.Domain.Profiles;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Contracts.Events.Identity;
 using Microsoft.EntityFrameworkCore;
+using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.Extensions.Configuration;
 
 namespace Coaching.Infrastructure.Profiles;
@@ -56,8 +57,20 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
             await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
                 await using var transaction = await db.Database.BeginTransactionAsync(ct);
-                await AcceptCore(actor, invitationId, ct);
-                await transaction.CommitAsync(ct);
+                var states=db.ChangeTracker.Entries<OutboxState>().ToDictionary(x=>x.Entity.OutboxId,x=>x.State);
+                try
+                {
+                    await AcceptCore(actor, invitationId, ct);
+                    await transaction.CommitAsync(ct);
+                }
+                catch
+                {
+                    foreach(var entry in db.ChangeTracker.Entries().Where(x=>x.Entity is CoachingInvitation or CoachingStudentProfile
+                        or CoachingTeacherProfile or CoachingInstitutionMembership or CoachingTeacherStudentAssignment
+                        or Coaching.Domain.Entities.WeeklyDecision or OutboxMessage).ToArray()) entry.State=EntityState.Detached;
+                    foreach(var entry in db.ChangeTracker.Entries<OutboxState>().ToArray()) entry.State=states.GetValueOrDefault(entry.Entity.OutboxId,EntityState.Added);
+                    throw;
+                }
             });
         }
         else await AcceptCore(actor, invitationId, ct);

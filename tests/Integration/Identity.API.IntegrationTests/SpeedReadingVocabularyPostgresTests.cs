@@ -29,6 +29,9 @@ public sealed class SpeedReadingVocabularyPostgresTests(PostgresFixture postgres
                 engineType = "vocabulary_builder", engineConfig = new { mode, learnThenQuiz, vocabulary = new { count = 4, difficultyLevel = 2, requireFullPool = true } }
             }), 2, student, type.Id);
             db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+            db.Achievements.Add(SpeedReading.Domain.Gamification.Achievement.Create(
+                Guid.NewGuid(), "Kelime kutusu", "İkinci kutuya ulaş", "vocabulary", "bronze", null, "",
+                "vocabulary_box", """{"box":2}""", null, null, false, 25, true, 0, student, DateTime.UtcNow));
             for (var i = 0; i < 4; i++) {
                 var word = VocabularyItem.Create(Guid.NewGuid(), "Kelime" + i, "Anlam" + i, null, null, null, "Genel", 2, null, student, DateTime.UtcNow);
                 db.VocabularyItems.Add(word);
@@ -71,6 +74,19 @@ public sealed class SpeedReadingVocabularyPostgresTests(PostgresFixture postgres
             Assert.All(await db.UserVocabularyProgresses.ToListAsync(), p => { Assert.Equal(2, p.Box); Assert.True(p.NextReviewDate > DateTime.UtcNow.AddDays(2)); });
             Assert.Null((await service.CompleteAsync(student, started.SessionId, new())).RawWPM);
             Assert.Equal(1, await db.ExerciseSessionResults.CountAsync());
+            if (mode == "quiz" || learnThenQuiz)
+            {
+                var stats = Assert.Single(await db.UserGamifications.ToListAsync());
+                Assert.Equal(4, stats.TotalVocabularyQuestionsAnswered);
+                Assert.Equal(25L + result.XpGained, stats.TotalXP);
+                Assert.Equal(1, stats.TotalExercisesCompleted);
+                Assert.Single(await db.UserAchievements.ToListAsync());
+            }
+            else
+            {
+                Assert.Empty(await db.UserGamifications.ToListAsync());
+                Assert.Empty(await db.UserAchievements.ToListAsync());
+            }
         } finally { await db.Database.EnsureDeletedAsync(); }
     }
 }

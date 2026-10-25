@@ -18,8 +18,8 @@ public sealed class CurriculumPostgresTests
     [LocalPostgresFact]
     public async Task ExamDateMigrationAndRoundTripPreserveExistingCatalogAndWork()
     {
-        await using var f=await Pg.Create();await f.Data.Seed();
-        var taskBefore=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync());
+        await using var f=await Pg.Create("20261020065330_MebiLgsProgramCatalog");await f.Data.Seed(legacyPlanSchema: true);
+        var taskBefore=JsonSerializer.Serialize(await CurriculumManagementTests.LegacyStudyTasks(f.Db).AsNoTracking().SingleAsync());
         await f.Db.GetService<IMigrator>().MigrateAsync("20261016201006_GradeIndependentCurriculum");
         await f.Db.Database.MigrateAsync();await f.Db.Database.MigrateAsync();f.Db.ChangeTracker.Clear();
         Assert.All(await f.Db.Set<StudyCatalogExam>().ToArrayAsync(),x=>Assert.Null(x.ExamDate));
@@ -39,8 +39,8 @@ public sealed class CurriculumPostgresTests
     [LocalPostgresFact]
     public async Task MigrationBackfillsOriginalText_AndRenamesMovesAndDurationUpdatesPreserveCompletedPlan()
     {
-        await using var f = await Pg.Create(); var topic = await f.Data.Seed();
-        var taskBefore = JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync());
+        await using var f = await Pg.Create("20261020065330_MebiLgsProgramCatalog"); var topic = await f.Data.Seed(legacyPlanSchema: true);
+        var taskBefore = JsonSerializer.Serialize(await CurriculumManagementTests.LegacyStudyTasks(f.Db).AsNoTracking().SingleAsync());
         await f.Db.GetService<IMigrator>().MigrateAsync("20261016180740_StudyCatalogOutcomes");
         await f.Db.Database.MigrateAsync(); await f.Db.Database.MigrateAsync(); f.Db.ChangeTracker.Clear();
         var snapshot = await f.Db.Set<StudyPlanTaskOutcome>().SingleAsync();
@@ -144,7 +144,7 @@ public sealed class CurriculumPostgresTests
         public CoachingCurriculumManagementService Service => Data.Service;
         private Pg(NpgsqlConnection admin,string database,DbContextOptions<CoachingDbContext> options)
         { this.admin=admin;this.database=database;Options=options;Db=new(options);Data=new(Db); }
-        public static async Task<Pg> Create()
+        public static async Task<Pg> Create(string? targetMigration = null)
         {
             var connection = new NpgsqlConnectionStringBuilder(Environment.GetEnvironmentVariable("COACHING_CURRICULUM_TEST_POSTGRES")) { Pooling=false };
             Assert.Contains(connection.Host,new[]{"127.0.0.1","localhost"});
@@ -153,7 +153,9 @@ public sealed class CurriculumPostgresTests
             await using(var cmd=new NpgsqlCommand($"CREATE DATABASE \"{database}\"",admin)) await cmd.ExecuteNonQueryAsync();
             connection.Database=database;
             var f=new Pg(admin,database,new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(connection.ConnectionString,x => x.MigrationsHistoryTable("__ef_migrations_history","coaching")).Options);
-            await f.Db.Database.MigrateAsync(); return f;
+            if (targetMigration is null) await f.Db.Database.MigrateAsync();
+            else await f.Db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>().MigrateAsync(targetMigration);
+            return f;
         }
         public async ValueTask DisposeAsync()
         { await Db.DisposeAsync(); await using(var cmd=new NpgsqlCommand($"DROP DATABASE \"{database}\" WITH (FORCE)",admin)) await cmd.ExecuteNonQueryAsync();await admin.DisposeAsync(); }

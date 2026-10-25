@@ -64,7 +64,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
   shortDay(day:Date){return day.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',weekday:'short'});}
   columns(){return `44px repeat(${this.days().length},minmax(${this.view()==='week'?150:240}px,1fr))`;}
   done(block:PlanCalendarBlock){return block.tasks.filter(t=>t.isCompleted).length;}
-  status(block:PlanCalendarBlock){const done=this.done(block);if(done===block.tasks.length)return 'Tamamlandı';const overdue=block.tasks.some(task=>calendarTaskOverdue(task,this.zone));if(done)return `Kısmen tamamlandı · ${done}/${block.tasks.length}${overdue?' · gecikti':''}`;return overdue?'Gecikti · tamamlanmadı':'Bekliyor';}
+  status(block:PlanCalendarBlock){const done=this.done(block);if(done===block.tasks.length)return 'Tamamlandı';const overdue=block.tasks.some(task=>calendarTaskOverdue(task,this.zone));if(done)return `Kısmen tamamlandı · ${done}/${block.tasks.length}${overdue?' · gecikti':''}`;const minutes=block.tasks.reduce((sum,t)=>sum+(t.actualMinutes??0),0);if(minutes)return `Kısmi çalışma · ${minutes} dk${overdue?' · gecikti':''}`;return overdue?'Gecikti · tamamlanmadı':'Bekliyor';}
   statusClass(block:PlanCalendarBlock){const done=this.done(block);return done===block.tasks.length?'ui-status--success':done?'ui-status--info':block.tasks.some(task=>calendarTaskOverdue(task,this.zone))?'ui-status--danger':'ui-status--warning';}
   color(block:PlanCalendarBlock){return this.colors.get(block.lessonKey)??'hsl(160 62% 44%)';}
   writable(){return this.editable&&!this.disabled&&this.plan.status!=='Archived';}

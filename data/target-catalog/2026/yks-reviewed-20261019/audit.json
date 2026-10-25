@@ -1,0 +1,21 @@
+{
+  "scoreCounts": {
+    "TYT": 9254,
+    "EA": 3900,
+    "SAY": 5744,
+    "SOZ": 1914
+  },
+  "issues": {
+    "409610874": "Program identity requires review: legacy Economics (25% discount) versus official 2026 Gastronomy (paid). Same code and score type are insufficient; existing legacy goals preserved."
+  },
+  "exactLegacyMatches": 19229,
+  "newPrograms": 1582,
+  "legacyConflicts": [
+    "409610874"
+  ],
+  "legacyAmbiguous": [],
+  "officialEvidenceHash": "c2be63ffdc5ed113a31035c05ae5389b9987ddce07edb4f858cb7360ad730832",
+  "packageHash": "3ff87dd3d41fd8a74fa44c8685b86da0f09fe5ba5faea97dbfc47cd90b30bd37",
+  "year": 2026,
+  "stage": "Main"
+}

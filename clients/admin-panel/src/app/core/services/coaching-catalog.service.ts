@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-export type CoachingCatalogKind = 'lessons' | 'units' | 'topics' | 'schools' | 'universityPrograms';
+export type CoachingCatalogKind = 'lessons' | 'units' | 'topics' | 'schools';
 export interface CoachingCatalogRow {
   curriculumVersionId?: string | null;
   id: string;
@@ -18,9 +18,6 @@ export interface CoachingCatalogRow {
   parentId?: string | null;
   displayOrder?: number | null;
   estimatedMinutes?: number | null;
-  universityName?: string | null;
-  programCode?: string | null;
-  scoreType?: string | null;
   minimumScore?: number | null;
   scoreYear?: number | null;
   city?: string | null;
@@ -42,7 +39,6 @@ export interface CoachingCatalogFilter {
   isActive?: boolean;
   gradeNumber?: number;
   examCode?: string;
-  scoreType?: string;
   scoreYear?: number;
   lessonId?: string;
   unitId?: string;
@@ -52,7 +48,7 @@ export interface CoachingCatalogFilter {
   districtId?: string;
 }
 
-export type CoachingCatalogSaveRequest = Partial<Pick<CoachingCatalogRow, 'gradeNumber' | 'examCode' | 'lessonId' | 'unitId' | 'parentId' | 'displayOrder' | 'estimatedMinutes' | 'universityName' | 'programCode' | 'scoreType' | 'minimumScore' | 'scoreYear' | 'provinceId' | 'districtId'>> & { name: string; reason: string; fingerprint?: string };
+export type CoachingCatalogSaveRequest = Partial<Pick<CoachingCatalogRow, 'gradeNumber' | 'examCode' | 'lessonId' | 'unitId' | 'parentId' | 'displayOrder' | 'estimatedMinutes' | 'minimumScore' | 'scoreYear' | 'provinceId' | 'districtId'>> & { name: string; reason: string; fingerprint?: string };
 export interface CoachingCatalogEditDocument { fingerprint: string; data: CoachingCatalogRow; }
 export interface CoachingCatalogImportRequest { source: string; files: Record<string, string>; fingerprint?: string; reason?: string; }
 export interface CoachingCatalogImportReview { fingerprint: string; counts: Record<string, number>; newRecords: number; }

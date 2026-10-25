@@ -93,13 +93,19 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                  return Result.Failure<LoginResponse>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları kapalıdır. Mevcut bir hesabınız yoksa giriş yapamazsınız."));
             }
 
-            var legalValidation = await _registrationLegalConsentService.ValidateAsync(
-                request.Product!.Value,
-                request.LegalAcceptances,
-                cancellationToken);
-            if (legalValidation.IsFailure)
-                return Result.Failure<LoginResponse>(legalValidation.Error);
-            var acceptedLegalPages = legalValidation.Value;
+            IReadOnlyList<PlatformLegalPageDto> acceptedLegalPages = [];
+            var requiresLegalAcceptance = RegistrationLegalConsentPolicy.GoogleRequiresAcceptance(request.Product!.Value);
+            if (requiresLegalAcceptance || request.LegalAcceptances is { Count: > 0 })
+            {
+                var legalValidation = await _registrationLegalConsentService.ValidateAsync(
+                    request.Product.Value,
+                    request.LegalAcceptances,
+                    cancellationToken);
+                if (legalValidation.IsFailure && requiresLegalAcceptance)
+                    return Result.Failure<LoginResponse>(legalValidation.Error);
+                if (legalValidation.IsSuccess)
+                    acceptedLegalPages = legalValidation.Value;
+            }
 
             // 2b. Auto-Register User
             _logger.LogInformation("Google login is registering a new user.");
@@ -147,7 +153,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                createdNewUser = true;
                // Reload user to get fresh entity
                user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-               if (user is not null)
+               if (user is not null && acceptedLegalPages.Count > 0)
                {
                    _registrationLegalConsentService.TrackAcceptedDocuments(
                        userId,

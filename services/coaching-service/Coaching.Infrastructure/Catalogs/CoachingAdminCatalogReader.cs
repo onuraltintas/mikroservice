@@ -31,9 +31,6 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
             CatalogKind.Schools => db.TargetSchools.AsNoTracking().Select(x => new AdminCatalogRow
             { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive, City = x.City,
                 District = x.District, ProvinceId = x.ProvinceId, DistrictId = x.DistrictId, MinimumScore = x.MinimumScore, ScoreYear = x.ScoreYear }),
-            CatalogKind.UniversityPrograms => db.TargetUniversityPrograms.AsNoTracking().Select(x => new AdminCatalogRow
-            { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive,
-                UniversityName = x.UniversityName, ProgramCode = x.ProgramCode, ScoreType = x.ScoreType, MinimumScore = x.MinimumScore, ScoreYear = x.ScoreYear }),
             _ => throw new ArgumentException("Geçersiz katalog türü.")
         };
         if (filter.IsActive.HasValue) query = query.Where(x => x.IsActive == filter.IsActive);
@@ -46,17 +43,12 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
         if (filter.HasParent.HasValue) query = query.Where(x => (x.ParentId != null) == filter.HasParent.Value);
         if (!string.IsNullOrWhiteSpace(filter.ProvinceId)) query = query.Where(x => x.ProvinceId == filter.ProvinceId.Trim());
         if (!string.IsNullOrWhiteSpace(filter.DistrictId)) query = query.Where(x => x.DistrictId == filter.DistrictId.Trim());
-        if (!string.IsNullOrWhiteSpace(filter.ScoreType)) query = query.Where(x => x.ScoreType == filter.ScoreType.Trim());
         if (filter.ScoreYear.HasValue) query = query.Where(x => x.ScoreYear == filter.ScoreYear);
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var term = filter.Search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
             var pattern = "%" + term + "%";
-            query = kind == CatalogKind.UniversityPrograms
-                ? query.Where(x => EF.Functions.ILike(x.Name, pattern, "\\")
-                    || EF.Functions.ILike(x.UniversityName!, pattern, "\\")
-                    || EF.Functions.ILike(x.ProgramCode!, pattern, "\\"))
-                : query.Where(x => EF.Functions.ILike(x.Name, pattern, "\\"));
+            query = query.Where(x => EF.Functions.ILike(x.Name, pattern, "\\"));
         }
         var count = await query.CountAsync(cancellationToken);
         var rows = await query.OrderBy(x => x.Name).ThenBy(x => x.Id)
@@ -69,18 +61,16 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
         var lessons = kind == CatalogKind.Lessons;
         var topics = kind == CatalogKind.Topics;
         var schools = kind == CatalogKind.Schools;
-        var universities = kind == CatalogKind.UniversityPrograms;
         if (filter.GradeNumber is < 1 or > 12 || filter.ScoreYear is < 1900 or > 2200
             || filter.LessonId == Guid.Empty || filter.UnitId == Guid.Empty || filter.ParentId == Guid.Empty
-            || filter.ExamCode?.Length > 30 || filter.ScoreType?.Length > 30
+            || filter.ExamCode?.Length > 30
             || filter.ProvinceId?.Length > 20 || filter.DistrictId?.Length > 20
             || (!lessons && (filter.GradeNumber.HasValue || filter.ExamCode is not null))
             || (kind is not (CatalogKind.Units or CatalogKind.Topics) && filter.LessonId.HasValue)
             || (!topics && (filter.UnitId.HasValue || filter.ParentId.HasValue || filter.HasParent.HasValue))
             || (!schools && (filter.ProvinceId is not null || filter.DistrictId is not null))
             || (filter.DistrictId is not null && string.IsNullOrWhiteSpace(filter.ProvinceId))
-            || (!universities && filter.ScoreType is not null)
-            || (!(schools || universities) && filter.ScoreYear.HasValue))
+            || (!schools && filter.ScoreYear.HasValue))
             throw new ArgumentException("Seçilen katalog için filtre değerlerini kontrol edin.");
     }
 }

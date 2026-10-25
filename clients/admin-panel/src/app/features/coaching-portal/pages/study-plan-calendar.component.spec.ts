@@ -10,6 +10,11 @@ describe('saved study plan calendar',()=>{
   async function setup(value=plan){TestBed.configureTestingModule({imports:[StudyPlanCalendarComponent]});const f=TestBed.createComponent(StudyPlanCalendarComponent);f.componentRef.setInput('plan',value);f.detectChanges(); await f.whenStable();return{f,c:f.componentInstance};}
   beforeEach(()=>{vi.useFakeTimers({toFake:['Date']});vi.setSystemTime(new Date('2026-10-17T12:00:00Z'));});
   afterEach(()=>vi.useRealTimers());
+  it('shows partial effort without marking the calendar task completed',async()=>{
+    const {f}=await setup({...plan,status:'Active',tasks:[{...task('partial'),actualMinutes:12,actualQuestions:4}]});
+    expect(f.nativeElement.textContent).toContain('Kısmi çalışma · 12 dk');
+    expect(f.nativeElement.querySelector('.timed-block.completed')).toBeNull();
+  });
   it('opens the next occupied week and its evening hours, merges adjacent outcome pieces and emits their IDs',async()=>{
     const {f,c}=await setup();expect(c.dateKey(c.anchor())).toBe('2027-01-04');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(2100);
     expect(f.nativeElement.querySelectorAll('.timed-block')).toHaveLength(1);const emit=vi.spyOn(c.taskSelected,'emit');

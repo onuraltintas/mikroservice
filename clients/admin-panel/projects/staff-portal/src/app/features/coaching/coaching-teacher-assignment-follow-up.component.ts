@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import {CommonModule} from '@angular/common';
 import {Component,DestroyRef,EventEmitter,OnInit,Output,inject,signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
@@ -23,4 +24,6 @@ export class CoachingTeacherAssignmentFollowUpComponent implements OnInit {
  previousPage(){if(this.page()>1&&!this.loading()){this.page.update(p=>p-1);this.load();}}
  nextPage(){if(this.page()*25<this.total()&&!this.loading()){this.page.update(p=>p+1);this.load();}}
  delay(minutes:number){if(minutes<1)return '1 dk’dan az';const days=Math.floor(minutes/1440),hours=Math.floor(minutes%1440/60),remaining=minutes%60;return [days?`${days} gün`:'',hours?`${hours} sa`:'',remaining?`${remaining} dk`:''].filter(Boolean).join(' ');}
+
+  private readonly errorFeedback = coachingFeedback(undefined, this.error);
 }

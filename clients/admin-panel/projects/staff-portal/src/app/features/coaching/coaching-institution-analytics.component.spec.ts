@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, Subject, throwError } from 'rxjs';
@@ -6,12 +7,12 @@ import { CoachingAdminService } from '../../../../../../src/app/core/services/co
 import { CoachingInstitutionAnalyticsComponent } from './coaching-institution-analytics.component';
 
 describe('institution coaching analytics', () => {
-  it('clears old results and cancels pending requests when filters change', () => {
+  it('clears old results and cancels pending requests when filters change', async () => {
     const { component, service, comparison } = setup();
     const pending = new Subject<typeof comparison>(); service.getInstitutionComparison.mockReturnValueOnce(pending);
-    component.load(2); component.fromDate = '2026-10-02'; component.filtersChanged();
+    (await component.load(2)); component.fromDate = '2026-10-02'; component.filtersChanged();
     expect(pending.observed).toBe(false); expect(component.comparison()).toBeNull(); expect(component.warnings()).toBeNull();
-    component.load();
+    (await component.load());
     expect(service.getInstitutionEarlyWarnings).toHaveBeenLastCalledWith('institution', expect.objectContaining({ pageNumber: 1 }));
   });
   function setup() {
@@ -30,39 +31,41 @@ describe('institution coaching analytics', () => {
     return { fixture, component: fixture.componentInstance, service, comparison, warning };
   }
 
-  it('uses the verified institution and local date bounds for comparison and paged warnings', () => {
+  it('uses the verified institution and local date bounds for comparison and paged warnings', async () => {
     const { component, fixture, service } = setup();
     const dates = { fromDate: new Date(2026, 9, 1).toISOString(), toDate: new Date(new Date(2026, 9, 14).getTime() - 1).toISOString() };
     expect(service.getInstitutionComparison).toHaveBeenCalledWith('institution', dates);
     expect(service.getInstitutionEarlyWarnings).toHaveBeenCalledWith('institution', { ...dates, pageNumber: 1, pageSize: 25 });
     expect(fixture.nativeElement.textContent).toContain('Ada Test');
-    component.load(2);
+    (await component.load(2));
     expect(service.getInstitutionEarlyWarnings).toHaveBeenLastCalledWith('institution', { ...dates, pageNumber: 2, pageSize: 25 });
   });
 
-  it('rejects reversed or oversized ranges without requesting data', () => {
+  it('rejects reversed or oversized ranges without requesting data', async () => {
     const { component, service } = setup();
-    component.fromDate = '2026-10-14'; component.toDate = '2026-10-13'; component.load();
+    component.fromDate = '2026-10-14'; component.toDate = '2026-10-13'; (await component.load());
     expect(component.error()).toBeTruthy();
-    component.fromDate = '2024-01-01'; component.toDate = '2026-10-13'; component.load();
+    component.fromDate = '2024-01-01'; component.toDate = '2026-10-13'; (await component.load());
     expect(service.getInstitutionComparison).toHaveBeenCalledTimes(1);
   });
 
-  it('clears results on authorization loss and allows a retry', () => {
+  it('clears results on authorization loss and allows a retry', async () => {
     const { component, service } = setup();
     service.getInstitutionComparison.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 403 })));
-    component.load();
+    (await component.load());
     expect(component.comparison()).toBeNull(); expect(component.warnings()).toBeNull(); expect(component.error()).toContain('yetki');
-    component.load(); expect(component.comparison()).not.toBeNull();
+    (await component.load()); expect(component.comparison()).not.toBeNull();
   });
 
-  it('cancels old requests when institution scope changes and opens warning student reports', () => {
+  it('cancels old requests when institution scope changes and opens warning student reports', async () => {
     const { component, fixture, service, warning, comparison } = setup();
     const pending = new Subject<typeof comparison>(); service.getInstitutionComparison.mockReturnValueOnce(pending);
-    component.load(); fixture.componentRef.setInput('institutionId', 'new-institution'); fixture.detectChanges();
+    (await component.load()); fixture.componentRef.setInput('institutionId', 'new-institution'); fixture.detectChanges();
     expect(pending.observed).toBe(false);
     expect(service.getInstitutionComparison).toHaveBeenLastCalledWith('new-institution', expect.any(Object));
     const selected = vi.fn(); component.studentSelected.subscribe(selected); component.openStudent(warning);
     expect(selected).toHaveBeenCalledWith(expect.objectContaining({ userId: 'student', firstName: 'Ada Test', gradeLevel: 8 }));
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

@@ -1,0 +1,4 @@
+FROM eduivme/speed-reading-frontend:auth-timeout-20261013-319b250c
+COPY web/browser/ /usr/share/nginx/html/
+RUN printf '\n// google-direct-20261013\n' >> /usr/share/nginx/html/ngsw-worker.js
+LABEL org.opencontainers.image.release="google-direct-20261013"

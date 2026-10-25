@@ -1,0 +1,104 @@
+@if (annualReview()) {
+  <div class="assistant-page"><button type="button" class="secondary" (click)="annualReview.set(false)">← Haftalık düzene dön</button></div>
+  <app-student-weekly-outcome-plan [studentId]="staffStudentId ?? undefined" (planCreated)="onPlanCreated($event)" />
+} @else {
+<section class="study-plans assistant-page" aria-labelledby="assistant-title">
+  <header class="page-heading">
+    <div><p class="eyebrow">{{ staffStudentId ? 'ÖĞRENCİ İÇİN ÇALIŞMA SİHİRBAZI' : 'KİŞİSEL ÇALIŞMA SİHİRBAZI' }}</p><h1 id="assistant-title">{{ staffStudentId ? 'Öğrenci için plan hazırla' : 'Planını adım adım hazırla' }}</h1>
+      <p>{{ staffStudentId ? 'Öğrencinin eğitim bağlamını, kazanımlarını ve haftalık taslağını kullanarak plan önerisi hazırla.' : 'Uygun günlerini ve süreni seç; haftalık ders düzenini önizleyip kendin onayla.' }}</p></div>
+    @if (!staffStudentId) { <a routerLink="/coaching-portal/weekly-plan">Takvimde kendim düzenle ↗</a> }
+  </header>
+  <div class="assistant-layout">
+    <section class="panel conversation" aria-label="Çalışma planı sihirbazı">
+      <div class="privacy-note">Seçimlerin bu tarayıcıda kurallı olarak değerlendirilir. Yapay zekâ servisine veya sohbet sağlayıcısına veri gönderilmez.</div>
+      <div class="messages" aria-live="polite" aria-relevant="additions">
+        @for (item of messages(); track $index) {
+          <article class="chat-message assistant-message">
+            <strong>Çalışma sihirbazı</strong><p>{{ item.content }}</p>
+          </article>
+        }
+      </div>
+      @if (error()) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a href="/coaching-portal/setup">Çalışma düzenini tamamla →</a> }</p> }
+      @if (saved()) { <p class="notice success" role="status">Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }
+      <div class="composer wizard-form">
+        <fieldset [disabled]="busy() || !lessons().length">
+          <legend>1. Hangi günler çalışabilirsin?</legend>
+          <div class="day-options">
+            @for (day of weekDays; track day.value) {
+              <button type="button" class="secondary" [attr.aria-pressed]="selectedDays().includes(day.value)" [class.selected]="selectedDays().includes(day.value)" (click)="toggleDay(day.value)">{{ day.label }}</button>
+            }
+          </div>
+          <label for="wizard-start-time">2. Başlangıç saati</label>
+          <input id="wizard-start-time" type="time" step="1800" [ngModel]="startTime()" (ngModelChange)="startTime.set($event)" />
+          <label for="wizard-daily-minutes">3. Her seçili günde ayıracağın süre</label>
+          <select id="wizard-daily-minutes" [ngModel]="minutesPerDay()" (ngModelChange)="setMinutesPerDay(+$event)">
+            <option [ngValue]="30">30 dakika</option><option [ngValue]="60">1 saat</option>
+            <option [ngValue]="90">1,5 saat</option><option [ngValue]="120">2 saat</option>
+          </select>
+          @if (topicDirty()) { <p class="muted">Öneri oluşturmadan önce konu durumlarını kaydet.</p> }
+          <button type="button" (click)="createProposal()" [disabled]="busy() || !selectedDays().length || !lessons().length || topicDirty()">Haftalık öneri oluştur</button>
+        </fieldset>
+      </div>
+    </section>
+
+    <aside class="panel review-panel" aria-label="Haftalık taslak ve sihirbaz önerisi">
+      <section class="topic-statuses" aria-labelledby="topic-status-title">
+        <h2 id="topic-status-title">Daha önce çalıştığın konular</h2>
+        @if (!learningContext()) {
+          @if(staffStudentId){<p class="muted">Öğrencinin eğitim bağlamını tamamlaması gerekiyor.</p>}@else{<p class="muted">Derslerini seçmek için önce <a routerLink="/coaching-portal/setup">çalışma düzenini tamamla</a>.</p>}
+        } @else {
+          <p class="muted">“Çalıştım” seçtiklerin yeni yıllık plan önizlemesinden çıkar. “Tekrar etmek istiyorum” ve boş bıraktıkların plana dahil kalır. Bu işlem mevcut planları değiştirmez.</p>
+          <label for="topic-lesson">Ders</label>
+          <select id="topic-lesson" [ngModel]="topicLessonId()" (ngModelChange)="selectTopicLesson($event)" [disabled]="topicLoading() || topicSaving()">
+            @for (lesson of availableTopicLessons(); track lesson.id) { <option [value]="lesson.id">{{ lesson.name }}</option> }
+          </select>
+          @if (topicLoading()) { <p role="status" class="muted">Konular yükleniyor…</p> }
+          @if (catalog(); as topicsPage) {
+            <div class="topic-list">
+              @for (topic of topicsPage.topics.items; track topic.id) {
+                <div class="topic-row">
+                  <div><strong>{{ topic.name }}</strong><small>{{ topic.unitName }}</small></div>
+                  <label class="sr-only" [for]="'topic-status-' + topic.id">{{ topic.name }} durumu</label>
+                  <select [id]="'topic-status-' + topic.id" [ngModel]="topicStatus(topic.id)" (ngModelChange)="setTopicStatus(topic.id, $event)" [disabled]="topicSaving() || !!staffStudentId">
+                    <option value="">Belirtmedim</option><option value="NotStudied">Henüz çalışmadım</option>
+                    <option value="Studied">Çalıştım</option><option value="NeedsReview">Tekrar etmek istiyorum</option>
+                  </select>
+                </div>
+              } @empty { <p class="muted">Bu ders için gösterilecek aktif konu yok.</p> }
+            </div>
+            @if (topicsPage.topics.totalCount > topicsPage.topics.pageSize) {
+              <div class="topic-pages"><button type="button" class="secondary" (click)="loadTopicCatalog(topicPage() - 1)" [disabled]="topicPage() <= 1 || topicLoading()">Önceki</button>
+                <span>{{ topicPage() }} / {{ ceil(topicsPage.topics.totalCount / topicsPage.topics.pageSize) }}</span>
+                <button type="button" class="secondary" (click)="loadTopicCatalog(topicPage() + 1)" [disabled]="topicPage() * topicsPage.topics.pageSize >= topicsPage.topics.totalCount || topicLoading()">Sonraki</button></div>
+            }
+            @if (!staffStudentId) { <button type="button" (click)="saveTopicStatuses()" [disabled]="topicSaving()">{{ topicSaving() ? 'Kaydediliyor…' : 'Konu durumlarını kaydet' }}</button> }
+          }
+          @if (topicError()) { <p class="notice error" role="alert">{{ topicError() }}</p> }
+          @if (topicSaved()) { <p class="notice success" role="status">Konu durumların kaydedildi. İstersen bir konuyu tekrar planına almak için durumunu değiştirebilirsin.</p> }
+        }
+      </section>
+      <h2>Haftalık düzen</h2>
+      @if (busy()) { <p role="status">Mevcut düzen yükleniyor…</p> }
+      @else {
+        <p class="muted">Kaydedilmiş saatlerin korunur. Önerileri ancak sen uygularsan taslağa ekleriz.</p>
+        @if (slots().length) {
+          <h3>Mevcut taslak · {{ slots().length }} ders saati</h3>
+          @for (slot of slots(); track slot.id) { <p class="slot-line">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
+        } @else { <p class="muted">Henüz kaydedilmiş haftalık düzen yok.</p> }
+        @if (proposal().length) {
+          <h3>Öneriyi incele</h3>
+          @for (slot of proposal(); track slot.id) { <p class="slot-line proposed">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
+          <button type="button" (click)="applyProposal()" [disabled]="busy()">Bu saatleri taslağa ekle</button>
+          <button type="button" class="secondary" (click)="proposal.set([])" [disabled]="busy()">Öneriyi kaldır</button>
+        }
+        @if (slots().length) {
+          @if (topicDirty()) { <p class="muted">Önce konu durumlarını kaydet, sonra yıllık plan önizlemesine geç.</p> }
+          <button type="button" (click)="continueToAnnualReview()" [disabled]="busy() || topicDirty() || proposal().length > 0">Yıllık plan önizlemesine geç →</button>
+        }
+        @if (saved() && !staffStudentId) { <a class="calendar-link" routerLink="/coaching-portal/weekly-plan">Haftalık takvimi aç →</a> }
+      }
+    </aside>
+  </div>
+  <p class="muted plan-safety">Bu adım yalnızca haftalık taslağı düzenler. Kazanımlara göre yıllık planı ayrıca önizlersin; yayımlama ayrı bir onaydır.</p>
+</section>
+}

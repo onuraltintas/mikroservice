@@ -46,7 +46,9 @@ public sealed record TeacherExamResultDto(
     int? EmptyAnswers,
     Dictionary<string, decimal>? SubjectScores,
     int? Ranking,
-    string? TeacherNotes);
+    string? TeacherNotes,
+    Coaching.Domain.Entities.PracticeExamInput? PracticeExam = null,
+    Coaching.Domain.Entities.PracticeExamSummary? NetSummary = null);
 
 public sealed class GetTeacherExamDetailQueryHandler
     : IRequestHandler<GetTeacherExamDetailQuery, TeacherExamDetailDto?>
@@ -112,7 +114,9 @@ public sealed class GetTeacherExamDetailQueryHandler
                     result.EmptyAnswers,
                     result.GetSubjectScores(),
                     result.Ranking,
-                    result.TeacherNotes))
+                    result.TeacherNotes,
+                    result.GetPracticeExam(),
+                    result.GetPracticeExam() is { } practice ? Coaching.Domain.Entities.PracticeExamRules.Summarize(practice) : null))
                 .ToArray());
     }
 }

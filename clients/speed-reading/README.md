@@ -1,683 +1,101 @@
-# Eduİvme Hızlı Okuma — bağımsız frontend
+# Master Hızlı Okuma — öğrenci ve tanıtım uygulaması
 
-Bu Angular uygulaması `HizliOkuma` deposundaki mevcut öğrenci ve öğretmen
-deneyiminin EduPlatform monoreposuna taşınmış halidir. Yönetim işlemleri
-`clients/admin-panel` içindeki merkezi eduivme panelinden yürütülür. Uygulama iki
-çalışma biçimini destekler:
+Angular 21 ve Angular Material 21 tabanlı bağımsız istemci. Öğrenci çalışma alanı, egzersiz motorları, seviye tespiti, içerik sayfaları ve giriş/kayıt burada bulunur. Öğretmen ve kurum çalışma alanları `../admin-panel/projects/staff-portal`, merkezi yönetim `../admin-panel` içindedir.
 
-- **Bağımsız ürün:** `/api/speed-reading` üzerinden hızlı okuma servisine
-  bağlanır.
-- **Platform istemcisi:** kimlik, koçluk ve ortak modüller için Gateway'in
-  `/api` yollarını kullanır.
+Hızlı Okuma verisi frontend'e bağlanmaz; istemci Gateway üzerinden `/api/speed-reading` API'sini kullanır. Kimlik ve servis erişimi ortak Identity altyapısındadır; Koçluk ve Hızlı Okuma rolleri/abonelikleri ayrı değerlendirilir.
 
-Hızlı okuma veritabanı frontend'e bağlanmaz; bağlantı yalnızca
-`SpeedReading.API` servisindedir. Böylece mevcut veritabanı şeması ve
-kullanıcı verileri korunur.
+## Gereksinimler ve çalıştırma
 
-Modern, responsive web application for speed reading training and comprehension improvement.
+- Node.js 22.12 veya üzeri bir 22.x sürümü (CI: 22.x), npm ve kilitli `package-lock.json`.
+- Backend'i yerel çalıştırmak için .NET 10; PostgreSQL entegrasyon testleri için çalışan Docker motoru.
+- Öğrenci birim testleri için Chrome/Chromium; tarayıcı E2E testleri için `tests/E2E` bağımlılıkları ve ilgili tarayıcı.
 
-## 📖 Overview
+Bu klasörden:
 
-The Speed Reading Platform frontend is built with **Angular 21** and **Angular Material 21**, providing an interface for students to improve reading fluency and comprehension and for teachers to manage assignments. Platform administration is centralized in the eduivme admin application.
-
-### Key Features
-
-- **Student Dashboard**: Track reading progress, complete exercises, view achievements
-- **Teacher Portal**: Create assignments, monitor student progress, generate reports
-- **Central Admin**: User management, content, reporting, communications and platform settings live in the eduivme admin application
-- **Multiple Exercise Engines**: Including Schulte Table, RSVP, Visual Expansion, comprehension, focus and vocabulary engines
-- **Gamification**: XP points, badges, daily streaks, leaderboards
-- **Reading Comprehension**: Admin-managed texts with Bloom's Taxonomy questions; the live count depends on the configured database
-- **Responsive Design**: Mobile-friendly interface with Angular Material
-- **Real-time Updates**: Progress tracking, notifications, announcements
-
----
-
-## 🏗️ Project Structure
-
-```
-src/
-├── app/
-│   ├── core/                    # Singleton services, guards, interceptors
-│   │   ├── guards/              # Authentication and authorization guards
-│   │   │   └── auth.guard.ts    # JWT-based route protection
-│   │   ├── interceptors/        # HTTP interceptors
-│   │   │   └── error.interceptor.ts  # Global error handling
-│   │   ├── models/              # TypeScript interfaces and types
-│   │   │   ├── user.model.ts
-│   │   │   ├── student.model.ts
-│   │   │   ├── exercise.model.ts
-│   │   │   └── assignment.model.ts
-│   │   └── services/            # Core application services
-│   │       ├── auth.service.ts  # Authentication (login, register, JWT)
-│   │       ├── students.service.ts
-│   │       ├── exercises.service.ts
-│   │       └── toaster.service.ts
-│   │
-│   ├── features/                # Feature modules (lazy-loaded)
-│   │   ├── student/             # Student learning interface
-│   │   │   ├── dashboard/       # Progress overview, daily goals
-│   │   │   ├── exercises/       # Universal exercise engines
-│   │   │   │   ├── schulte-table/
-│   │   │   │   ├── tachistoscope/
-│   │   │   │   ├── visual-expansion/
-│   │   │   │   ├── saccade-exercise/
-│   │   │   │   ├── fixation-exercise/
-│   │   │   │   ├── speed-reading/
-│   │   │   │   └── vocabulary-builder/
-│   │   │   ├── reading/         # Reading comprehension
-│   │   │   │   ├── reading-selection.component.ts
-│   │   │   │   ├── reading-questions.component.ts
-│   │   │   │   └── reading-result.component.ts
-│   │   │   ├── rsvp-reader/     # Rapid Serial Visual Presentation
-│   │   │   └── reports/         # Student progress reports
-│   │   │
-│   │   ├── teacher/             # Teacher management portal
-│   │   │   ├── dashboard/       # Class overview, recent activity
-│   │   │   ├── assignments/     # Create and manage assignments
-│   │   │   │   ├── assignments-list.component.ts
-│   │   │   │   ├── create-assignment-dialog.component.ts
-│   │   │   │   └── assignment-detail.component.ts
-│   │   │   ├── students/        # Student management
-│   │   │   └── reports/         # Student analytics and reports
-│   │   │       ├── reports.component.ts
-│   │   │       ├── teacher-student-detail-report.component.ts
-│   │   │       └── teacher-assignment-report.component.ts
-│   │   │
-│   │   ├── auth/                # Authentication pages
-│   │   │   ├── login/           # Login with Google OAuth
-│   │   │   └── register/        # User registration
-│   │   │
-│   │   ├── error/               # Error pages
-│   │   │   ├── not-found.component.ts        # 404
-│   │   │   ├── forbidden.component.ts        # 403
-│   │   │   └── server-error.component.ts     # 500
-│   │   │
-│   │   ├── legal/               # Legal pages
-│   │   │   ├── terms/           # Terms of Service
-│   │   │   ├── privacy/         # Privacy Policy
-│   │   │   └── kvkk/            # GDPR Compliance (KVKK)
-│   │   │
-│   │   ├── notifications/       # Notification preferences
-│   │   │   └── notification-preferences.component.ts
-│   │   │
-│   │   └── gamification/        # Achievements and badges
-│   │       └── badges.component.ts
-│   │
-│   └── shared/                  # Reusable components, pipes, directives
-│       ├── components/          # Shared UI components
-│       │   └── announcement-banner/
-│       ├── layouts/             # Layout components
-│       │   └── base-layout.component.ts
-│       ├── pipes/               # Custom pipes
-│       └── directives/          # Custom directives
-│
-├── assets/                      # Static assets
-│   ├── images/
-│   ├── icons/
-│   └── i18n/                    # Internationalization files
-│
-└── environments/                # Environment configurations
-    ├── environment.ts           # Development
-    └── environment.prod.ts      # Production
+```powershell
+npm ci --ignore-scripts
+npm start
 ```
 
----
+Uygulama varsayılan olarak `http://localhost:4200` üzerinde açılır. `proxy.conf.json`, `/api` isteklerini `http://localhost:5000` Gateway adresine iletir. Üretimde API aynı origin arkasındaki edge üzerinden sunulur. Gizli anahtar veya veritabanı bağlantısı frontend environment dosyalarına konmaz.
 
-## 🚀 Getting Started
+## Kaynak yapısı
 
-### Prerequisites
-
-- **Node.js**: 18.x or higher
-- **npm**: 9.x or higher
-- **Angular CLI**: 21.x
-- **Backend API**: Running on `https://localhost:7264`
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd speed-reading-frontend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment**
-
-   Create/edit `src/environments/environment.ts`:
-   ```typescript
-   export const environment = {
-     production: false,
-     apiUrl: '/api',
-     speedReadingApiUrl: '/api/speed-reading',
-     googleClientId: 'YOUR_GOOGLE_CLIENT_ID'
-   };
-   ```
-
-4. **Start development server**
-   ```bash
-   npm start
-   # or
-   ng serve
-   ```
-
-5. **Open browser**
-   ```
-   Navigate to http://localhost:4200
-   ```
-
-### Development Proxy
-
-The application uses a proxy to avoid CORS issues during development. The
-configuration in `proxy.conf.json` forwards both `/api` and
-`/api/speed-reading` to the local Gateway:
-
-```json
-{
-  "/api": {
-    "target": "https://localhost:7264",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-}
+```text
+src/app/
+  core/                  # Kimlik, yetki, API servisleri, modeller, guard ve interceptor'lar
+  features/auth/         # Öğrenci, öğretmen, kurum kayıt ve giriş ekranları
+  features/public/       # Tanıtım, CMS, blog, fiyatlandırma ve ödeme ekranları
+  features/student/      # Profil kurulumu, assessment, program, ödev, rapor ve egzersizler
+    exercises/universal-player/
+      engines/           # Egzersiz motorları
+  features/coaching/     # Merkezi koçluk paneline uyumluluk yönlendirmesi
+  shared/                # Kullanılan ortak istemci bileşenleri
+public/                  # Build'e kopyalanan görsel, favicon ve statik dosyalar
+../shared/               # Admin/staff ile ortak stiller ve tipler
 ```
 
----
+Öğrenci route'ları `features/student/student.routes.ts`, public route'lar `features/public/public.routes.ts`, uygulama girişleri `app.routes.ts` içindedir. Eski `/teacher`, `/admin` ve koçluk adresleri güncel merkezi panellere yönlendirilir; bu yönlendirmeler uyumluluk için korunur.
 
-## 📦 Module Overview
+## Akış ve veri sınırları
 
-### Central administration
+- Profil kurulumu ve ilk seviye tespiti, öğrencinin programa hazırlanmasını sağlar. İlk assessment abonelik gerektirmez; normal çalışma alanlarında abonelik ve servis erişimi kontrol edilir.
+- Sunucuya bağlı egzersizlerde oturum/yanıt ve sonuç doğrulaması backend'dedir. Önizleme sonuçları öğrenci ilerlemesi olarak kaydedilmez.
+- Normal görsel genişlemede her doğru cevapta uzaklık bir birim artar; yanlışta aynı kalır. Seviye tespitinin sürümlenmiş protokolü ayrıdır.
+- Takistoskop özel önizlemesinde basamak sayısı sabittir ve minimum gösterim süresi 75 ms'dir. Öğrenciye atanmış egzersizlerin ayarları ayrı kalır.
+- Saccade/takip gibi göz hareketlerini ölçmeyen egzersizlerde gösterim temposu, süre veya geçiş sayısı gerçek okuma hızı olarak sunulmaz.
 
-The Master application does not expose an admin module. Requests to legacy
-`/admin/...` URLs are forwarded to the matching workspace under
-`https://eduivme.com/dashboard`; the redirect exists only for old bookmarks and
-does not render or own any management screen.
+## Test komutları
 
-When an administrator signs in through this client, a revoke request is sent and
-the local session is cleared before the user is sent to
-`https://eduivme.com/auth/login` for a fresh central login. Access tokens are
-never placed in the redirect URL.
+Bu klasörden öğrenci birim testleri ve şablon/backend sözleşmeleri:
 
----
-
-### Student Module
-
-**Route**: `/student`
-**Guard**: `authGuard` (role: Student)
-
-**Features**:
-- **Dashboard**: Personal progress (WPM, comprehension, XP, streak)
-- **Exercises**: Universal exercise engines for speed, attention, visual span and comprehension
-- **Reading Comprehension**: Admin-managed texts with Bloom's Taxonomy questions
-- **RSVP Reader**: Rapid Serial Visual Presentation reader
-- **Progress Reports**: Personal analytics and growth charts
-
-**Exercise Types**:
-1. **Schulte Table** - Visual field expansion
-2. **Tachistoscope** - Word recognition speed
-3. **Visual Expansion** - Peripheral vision training
-4. **Saccade Exercise** - Eye movement optimization
-5. **Fixation Exercise** - Reduce subvocalization
-6. **Speed Reading** - Timed reading practice
-7. **Vocabulary Builder** - Word knowledge expansion
-8. **Comprehension Quiz** - Understanding assessment
-9. **Scanning Exercise** - Quick information retrieval
-10. **Skimming Exercise** - Main idea extraction
-11. **Chunking Exercise** - Word grouping
-12. **Elimination Exercise** - Remove bad habits
-13. **Pacing Exercise** - Consistent speed training
-14. **Eye Span Exercise** - Widen visual span
-15. **Regression Elimination** - Stop backtracking
-
-**Key Components**:
-- `StudentDashboardComponent` - Progress overview
-- `SchulteTableComponent` - 5x5 number grid exercise
-- `TachistoscopeComponent` - Flash word display
-- `ReadingSelectionComponent` - Browse reading texts
-- `ReadingQuestionsComponent` - Answer comprehension questions
-- `RsvpReaderComponent` - RSVP reading mode
-
----
-
-### Teacher Module
-
-**Route**: `/teacher`
-**Guard**: `authGuard` (role: Teacher)
-
-**Features**:
-- **Dashboard**: Class overview, student progress summary
-- **Assignments**: Create and assign exercises/readings to students
-- **Student Management**: View student profiles and progress
-- **Reports**: Class analytics, individual student reports
-
-**Key Components**:
-- `TeacherDashboardComponent` - Class overview
-- `AssignmentsListComponent` - Assignment list
-- `CreateAssignmentDialogComponent` - Assignment creation dialog
-- `AssignmentDetailComponent` - Assignment details and submissions
-- `TeacherStudentDetailReportComponent` - Individual student analytics
-- `TeacherAssignmentReportComponent` - Assignment completion stats
-
----
-
-### Authentication Module
-
-**Route**: `/auth`
-**Guard**: None (public)
-
-**Features**:
-- **Login**: Email/password or Google OAuth
-- **Register**: New user registration with email confirmation
-- **JWT Token**: Access token + refresh token mechanism
-
-**Key Components**:
-- `LoginComponent` - Login form with Google Sign-In
-- `RegisterComponent` - Registration form with validation
-
-**Authentication Flow**:
-1. User enters credentials
-2. Backend validates and returns JWT tokens
-3. Tokens stored in `localStorage`
-4. `authGuard` checks token on route navigation
-5. `authInterceptor` adds `Authorization` header to API calls
-6. Token refresh on expiration
-
----
-
-## 🛡️ Authentication & Authorization
-
-### JWT-Based Authentication
-
-**Token Storage**:
-```typescript
-// After successful login
-localStorage.setItem('access_token', response.accessToken);
-localStorage.setItem('refresh_token', response.refreshToken);
-localStorage.setItem('user', JSON.stringify(response.user));
+```powershell
+npm test -- --watch=false --browsers=ChromeHeadless --progress=false
+npm test -- --watch=false --browsers=ChromeHeadless --progress=false --code-coverage
+npm run test:contracts
 ```
 
-**Auth Guard**:
-```typescript
-export const authGuard: CanActivateFn = (route, state) => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
+Chrome otomatik bulunamazsa `CHROME_BIN` ortam değişkenine kurulu tarayıcının yolunu verin. `test:contracts`, `template-contracts` ve backend altındaki `.test.mjs` dosyalarını birlikte çalıştırır; API veya gerçek veritabanı başlatmaz. CI öğrenci testleri, sözleşme testleri ve production build'i çalıştırır.
 
-  if (!authService.isAuthenticated()) {
-    router.navigate(['/auth/login']);
-    return false;
-  }
+Depo kökünden backend testleri:
 
-  const requiredRole = route.data['role'];
-  if (requiredRole && !authService.hasRole(requiredRole)) {
-    router.navigate(['/error/403']);
-    return false;
-  }
-
-  return true;
-};
+```powershell
+dotnet test tests/Unit/SpeedReading.Application.UnitTests/SpeedReading.Application.UnitTests.csproj
+dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj --filter "FullyQualifiedName~SpeedReading"
 ```
 
-**Role-Based Routing**:
-```typescript
-{
-  path: 'student',
-  canActivate: [authGuard],
-  data: { role: 'Student' },
-  loadChildren: () => import('./features/student/student.routes')
-}
+İkinci komut ortak entegrasyon projesindeki Hızlı Okuma testlerini seçer. PostgreSQL testleri Testcontainers ile geçici veritabanı açar ve temizler; canlı bağlantı bilgileri kullanılmaz. Unit projesi API/Infrastructure testleri de içerir; PostgreSQL kalıcılığının yerine geçmez.
+
+Tarayıcı testleri Cypress yerine Playwright kullanır. `tests/E2E` bağımlılıklarını kurduktan sonra depo kökünden örnekler:
+
+```powershell
+npm ci --prefix tests/E2E
+node tests/E2E/node_modules/@playwright/test/cli.js test --config tests/E2E/speed-reading-visual-expansion.config.mjs
+node tests/E2E/node_modules/@playwright/test/cli.js test --config tests/E2E/speed-reading-tachistoscope.config.mjs
 ```
 
----
+Bu özel config'ler varsayılan yerel uygulamayı başlatır; ilgili spec'lerde API yanıtları fixture ile taklit edilir. Ortam değişkenleriyle tanımlanan base URL'leri kontrol edin. `npm run test:speed-reading --prefix tests/E2E` ise yalnız Gateway assessment API projesini çalıştırır; bütün egzersiz UI testlerini çalıştırmaz. Gerçek kayıt/ödeme/yazma akışları yalnız silinebilir test ortamında doğrulanır.
 
-## 🌐 API Integration
+## Build ve yayın
 
-### Base Service Pattern
-
-```typescript
-@Injectable({ providedIn: 'root' })
-export class StudentsService {
-  private apiUrl = `${environment.apiUrl}/students`;
-  private http = inject(HttpClient);
-
-  getCurrentStudent(): Observable<Student> {
-    return this.http.get<Student>(`${this.apiUrl}/current`);
-  }
-
-  getStudentStatistics(): Observable<StudentStats> {
-    return this.http.get<StudentStats>(`${this.apiUrl}/current/statistics`);
-  }
-
-  updateProgress(data: ProgressUpdate): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/current/progress`, data);
-  }
-}
+```powershell
+npm run build -- --configuration development
+npm run build -- --configuration production
 ```
 
-### HTTP Interceptors
+Çıktı `dist/speed-reading-frontend/browser` altındadır. Tanımlı yapılandırmalar development/production'dır; `staging` adlı Angular build yapılandırması yoktur. Üretim build'i environment değişimi, minification, hash'li asset ve service worker kullanır. Başlangıç bütçesi 3 MB uyarı / 5 MB hata; component CSS bütçesi 120 kB uyarı / 200 kB hatadır.
 
-**Auth Interceptor**: Adds JWT token to requests
-```typescript
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('access_token');
+Frontend Dockerfile'ın build context'i `clients/` klasörüdür; `../shared` de image build'ine girer. `build-release.txt`, Dockerfile'da service worker sürüm işaretinde kullanılır. Yayın, API migration ve rollback işlemleri [servis belgesi](../../docs/SPEED_READING_SERVICE.md) ve [operasyon runbook'u](../../docs/OPERATIONS_RUNBOOK.md) üzerinden yürütülür.
 
-  if (token) {
-    req = req.clone({
-      setHeaders: { Authorization: `Bearer ${token}` }
-    });
-  }
+## İlgili belgeler
 
-  return next(req);
-};
-```
+- [Servis mimarisi, veri sınırı ve API](../../docs/SPEED_READING_SERVICE.md)
+- [Araştırma/ölçüm protokolü](../../docs/SPEED_READING_RESEARCH_PROTOCOL.md)
+- [Özel önizleme](../../docs/SPEED_READING_CUSTOM_PREVIEW.md)
+- [Öğretmen eğitimi](../../docs/SPEED_READING_STAFF_TRAINING.md)
+- [API sözleşmeleri](../../docs/API_CONTRACTS.md)
+- [Playwright ve Gateway doğrulaması](../../docs/E2E_TESTING.md)
+- [Sitemap sahipliği](sitemap-README.md)
+- [Üçüncü taraf bildirimleri](../../THIRD_PARTY_NOTICES.md)
 
-**Error Interceptor**: Global error handling
-```typescript
-export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const toaster = inject(ToasterService);
-  const router = inject(Router);
-
-  return next(req).pipe(
-    catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
-        router.navigate(['/auth/login']);
-      } else if (error.status === 403) {
-        router.navigate(['/error/403']);
-      } else if (error.status === 500) {
-        toaster.alert('Server error occurred');
-      }
-
-      return throwError(() => error);
-    })
-  );
-};
-```
-
----
-
-## 📊 State Management
-
-### Service-Based State with BehaviorSubject
-
-No external state management library (NgRx, Akita) is used. State is managed through services with RxJS `BehaviorSubject`.
-
-**Example: Auth Service**:
-```typescript
-@Injectable({ providedIn: 'root' })
-export class AuthService {
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
-
-  login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>('/auth/login', credentials).pipe(
-      tap(response => {
-        localStorage.setItem('access_token', response.accessToken);
-        this.currentUserSubject.next(response.user);
-      })
-    );
-  }
-
-  logout(): void {
-    localStorage.removeItem('access_token');
-    this.currentUserSubject.next(null);
-  }
-
-  isAuthenticated(): boolean {
-    return !!localStorage.getItem('access_token');
-  }
-}
-```
-
-**Component Usage**:
-```typescript
-export class DashboardComponent {
-  private authService = inject(AuthService);
-
-  // Subscribe to user state
-  user$ = this.authService.currentUser$;
-}
-```
-
-**Template (async pipe)**:
-```html
-<div *ngIf="user$ | async as user">
-  Welcome, {{ user.firstName }}!
-</div>
-```
-
----
-
-## 🎨 UI/UX
-
-### Angular Material 20
-
-**Installed Modules**:
-- MatCardModule
-- MatButtonModule
-- MatInputModule
-- MatFormFieldModule
-- MatTableModule
-- MatPaginatorModule
-- MatSortModule
-- MatDialogModule
-- MatSnackBarModule
-- MatIconModule
-- MatToolbarModule
-- MatSidenavModule
-- MatListModule
-- MatTabsModule
-- MatSelectModule
-- MatCheckboxModule
-- MatRadioModule
-- MatProgressSpinnerModule
-
-### Responsive Design
-
-- **Mobile-first**: Optimized for mobile devices
-- **Breakpoints**:
-  - Mobile: < 600px
-  - Tablet: 600px - 1024px
-  - Desktop: > 1024px
-
----
-
-## 🧪 Testing
-
-### Unit Tests
-
-```bash
-# Run all tests
-ng test
-
-# Run with coverage
-ng test --code-coverage
-
-# Watch mode
-ng test --watch
-```
-
-### E2E Tests (Planned)
-
-```bash
-# Install Cypress
-npm install cypress --save-dev
-
-# Run E2E tests
-npm run e2e
-```
-
----
-
-## 🚢 Build & Deployment
-
-### Development Build
-
-```bash
-ng build
-```
-
-Output: `dist/speed-reading-frontend/`
-
-### Production Build
-
-```bash
-ng build --configuration production
-```
-
-**Production Optimizations**:
-- AOT compilation
-- Tree-shaking
-- Minification
-- Source maps disabled
-- Environment variables (production API URL)
-
-### Environment-Specific Builds
-
-```bash
-# Development
-ng build --configuration development
-
-# Staging
-ng build --configuration staging
-
-# Production
-ng build --configuration production
-```
-
----
-
-## 📚 Code Conventions
-
-### File Naming
-
-- **Components**: `kebab-case.component.ts` (e.g., `student-dashboard.component.ts`)
-- **Services**: `kebab-case.service.ts` (e.g., `auth.service.ts`)
-- **Models**: `kebab-case.model.ts` (e.g., `student.model.ts`)
-- **Guards**: `kebab-case.guard.ts` (e.g., `auth.guard.ts`)
-
-### Component Structure
-
-```typescript
-import { Component, OnInit, inject } from '@angular/core';
-
-@Component({
-  selector: 'app-component-name',
-  standalone: true,
-  imports: [CommonModule, ...],
-  templateUrl: './component-name.component.html',
-  styleUrls: ['./component-name.component.scss']
-})
-export class ComponentNameComponent implements OnInit {
-  // 1. Services (inject)
-  private service = inject(SomeService);
-
-  // 2. Observables
-  data$ = this.service.getData();
-
-  // 3. Properties
-  loading = false;
-
-  // 4. Lifecycle hooks
-  ngOnInit(): void {
-    this.loadData();
-  }
-
-  // 5. Public methods
-  public handleAction(): void { }
-
-  // 6. Private methods
-  private loadData(): void { }
-}
-```
-
-### TypeScript Style
-
-- **2 spaces** indentation
-- **Single quotes** for strings
-- **Semicolons** required
-- **Trailing commas** in multi-line objects/arrays
-
----
-
-## 🔧 Configuration
-
-### Angular CLI Configuration (`angular.json`)
-
-Key configurations:
-- **Budget**: Warning at 500kb, error at 1mb
-- **Styles**: Global styles in `src/styles.scss`
-- **Assets**: Images, fonts in `src/assets/`
-- **Proxy**: `proxy.conf.json` for development
-
-### TSConfig
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "strict": true,
-    "esModuleInterop": true
-  }
-}
-```
-
----
-
-## 🌍 Internationalization (i18n)
-
-Planned support for:
-- Turkish (tr-TR)
-- English (en-US)
-
----
-
-## 📖 Additional Documentation
-
-- [Component Architecture Guide](../../docs/frontend/COMPONENT_ARCHITECTURE.md)
-- [State Management Guide](../../docs/frontend/STATE_MANAGEMENT.md)
-- [API Integration Guide](../../docs/frontend/API_INTEGRATION.md)
-- [Main README](../../README.md)
-
----
-
-## 🤝 Contributing
-
-Please read [CONTRIBUTING.md](../../CONTRIBUTING.md) for development guidelines.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](../../LICENSE) file for details.
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Issue**: CORS error when calling API
-**Solution**: Ensure proxy configuration is correct in `proxy.conf.json`
-
-**Issue**: 401 Unauthorized on API calls
-**Solution**: Check if JWT token is stored in localStorage and not expired
-
-**Issue**: Routing doesn't work after refresh
-**Solution**: Configure server to redirect all routes to `index.html`
-
----
-
-## 📞 Support
-
-- Email: support@speedreading.com
-- Documentation: https://docs.speedreading.com
-- Issues: https://github.com/your-org/speed-reading-platform/issues
-
----
-
-**Built with ❤️ using Angular 21 and Angular Material 21**
+Tarihli audit/release raporları ilgili sürümün kanıtıdır; güncel çalışma rehberinin yerine kullanılmaz. Cache, build ve eski release klasörleri kaynak modül değildir; rollback/kanıt gereksinimi kontrol edilmeden topluca silinmez.

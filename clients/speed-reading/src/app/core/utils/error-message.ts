@@ -6,6 +6,10 @@ const duplicateAccountMessage =
  * identity service into a message that can be shown to a user.
  */
 export function getErrorMessage(error: any, fallback: string): string {
+  if (error?.name === 'TimeoutError') {
+    return 'İstek zaman aşımına uğradı. Bağlantınızı kontrol edip tekrar deneyin.';
+  }
+
   const body = error?.error ?? error;
   const code = body?.code ?? body?.Code;
 

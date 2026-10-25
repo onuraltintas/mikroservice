@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
@@ -129,6 +130,29 @@ describe('CoachingTeacherAssignmentFormComponent', () => {
 
     expect(students.getMyStudents).toHaveBeenLastCalledWith(2, 100, 'Zeynep');
   });
+
+  it.each([
+    ['PDF', 'material.pdf', 'application/pdf'],
+    ['Word', 'material.doc', 'application/msword'],
+    ['Word', 'material.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    ['Markdown', 'material.md', 'text/markdown']
+  ])('accepts and uploads %s assignment attachments', (_label, name, type) => {
+    const assignments = assignmentService();
+    const fixture = createFixture(assignments);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.form.title = 'Haftalık tekrar';
+    component.form.dueDate = '2030-01-02T10:00';
+    component.toggleStudent('student-1');
+    const file = new File(['content'], name, { type });
+    const input = { files: [file], value: 'selected' } as unknown as HTMLInputElement;
+
+    component.onAssignmentFilesSelected({ target: input } as unknown as Event);
+    component.submit();
+
+    expect(component.selectedAttachments()).toEqual([]);
+    expect(assignments.uploadInstructionAttachment).toHaveBeenCalledWith('assignment-new', file);
+  });
 });
 
 function createFixture(
@@ -166,7 +190,11 @@ function assignmentService(detail: { assignedStudents?: Array<{ studentId: strin
     createAssignment: vi.fn((_request: CoachingAssignmentCreateRequest, _idempotencyKey: string) =>
       of({ assignmentId: 'assignment-new', title: 'Ödev', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 })),
     updateAssignment: vi.fn((_assignmentId: string, _request: CoachingAssignmentUpdateRequest) =>
-      of({ assignmentId: 'assignment-1', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 }))
+      of({ assignmentId: 'assignment-1', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 })),
+    uploadInstructionAttachment: vi.fn((_assignmentId: string, _file: File) => of({
+      id: 'attachment-1', originalFileName: 'material.pdf', contentType: 'application/pdf',
+      sizeBytes: 10, status: 'Clean', uploadedAt: '', scannedAt: ''
+    }))
   };
 }
 
@@ -185,3 +213,5 @@ function studentService(activeStudentIds: string[] = []) {
     getStudentHistory: vi.fn()
   };
 }
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

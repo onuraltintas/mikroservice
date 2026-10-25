@@ -53,6 +53,37 @@ istemcisine ulaşması `coaching-disposable` projesinde doğrulanır. RabbitMQ
 tüketimi, PostgreSQL bildirimi ve duplicate delivery için aynı disposable koşu
 CI'de çalıştırılmalı; ortak production verisine bağlanılmamalıdır.
 
+## Hızlı Okuma egzersiz UI testleri
+
+`test:speed-reading` yalnız Gateway assessment API projesini seçer. Egzersizlerin
+tarayıcı testleri `tests/E2E/speed-reading-*.config.mjs` dosyalarıyla ayrı çalışır;
+bu komutun geçmesi bütün egzersiz UI testlerinin geçtiği anlamına gelmez.
+
+Depo kökünden örnekler:
+
+```powershell
+npm ci --prefix tests/E2E
+node tests/E2E/node_modules/@playwright/test/cli.js test --config tests/E2E/speed-reading-visual-expansion.config.mjs
+node tests/E2E/node_modules/@playwright/test/cli.js test --config tests/E2E/speed-reading-tachistoscope.config.mjs
+```
+
+Bu iki config varsayılan olarak yerel dev server açar; ilgili spec'ler API/Identity
+yanıtlarını fixture ile taklit eder. Gerçek kullanıcı girişi veya PostgreSQL
+kalıcılığı bu testlerle doğrulanmış sayılmaz. Config'te tanımlanan tarayıcının
+kurulu olması gerekir; base URL ortam değişkeni verilmişse hedefi ayrıca kontrol
+edin. Gerçek API'ye yazan senaryolar yalnız silinebilir test ortamında çalıştırılır.
+
+Şablon ve backend kaynak sözleşmeleri tek komutla çalışır:
+
+```powershell
+npm run test:contracts --prefix clients/speed-reading
+```
+
+Bu komut API/veritabanı başlatmaz ve Speed Reading frontend CI işine bağlıdır.
+Backend birim ve Testcontainers komutları [istemci rehberinde](../clients/speed-reading/README.md)
+yer alır. Tarihli raporlar o anki sürümün kanıtıdır; güncel çalıştırma komutları
+için bu rehber ve istemci README'si kullanılmalıdır.
+
 ## Lokal çalıştırma
 
 Önkoşul: `docker compose --env-file .env up -d` ile Gateway ve bağımlı servisler

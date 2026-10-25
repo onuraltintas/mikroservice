@@ -1,5 +1,6 @@
+import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, inject, signal, output } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -15,6 +16,7 @@ interface AvailabilityRow { day: StudyDay; start: string; end: string; endOfDay:
   styleUrl: './student-study-plans.component.scss'
 })
 export class StudentStudyAvailabilityComponent implements OnInit {
+  private readonly toaster = coachingToaster();
   readonly saved = output<void>();
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
@@ -101,14 +103,9 @@ export class StudentStudyAvailabilityComponent implements OnInit {
         error: error => this.showError(error, 'Çalışma saatleri kaydedilemedi. Değişikliklerin ekranda korundu.') });
   }
 
-  canLeavePage() {
+  async canLeavePage() {
     if (this.saving()) { this.error.set('Kaydetme işleminin tamamlanmasını bekleyin.'); return false; }
-    return !this.dirty || (typeof window !== 'undefined' && window.confirm('Kaydedilmemiş çalışma saatleriniz var. Değişikliklerden vazgeçerek ayrılmak istiyor musunuz?'));
-  }
-
-  @HostListener('window:beforeunload', ['$event'])
-  beforeUnload(event: BeforeUnloadEvent) {
-    if (this.dirty || this.saving()) { event.preventDefault(); event.returnValue = ''; }
+    return !this.dirty || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş çalışma saatleriniz var. Değişikliklerden vazgeçerek ayrılmak istiyor musunuz?'));
   }
 
   private validatedWindows(): StudyWindow[] {
@@ -149,4 +146,5 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     this.error.set(typeof message === 'string' ? message : fallback);
     if (response?.status === 409) this.error.update(value => `${value} Değişikliklerin korundu; güncel kaydı yüklemek için önce değişikliklerden vazgeçip yeniden yükle.`);
   }
+  private readonly feedback = coachingFeedback(this.success, this.error);
 }

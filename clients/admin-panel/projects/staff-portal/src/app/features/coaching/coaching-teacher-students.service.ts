@@ -42,6 +42,8 @@ export interface CoachingStudentProgressSummary {
 export type CoachingStudentHistoryType = 'Assignments' | 'Exams' | 'Sessions' | 'Goals';
 
 export interface CoachingStudentHistoryItem {
+  netSummary?: import('../../../../../../src/app/core/models/practice-exam').PracticeExamSummary | null;
+  source?: 'StudentReported' | 'TeacherRecorded' | null;
   id: string;
   type: CoachingStudentHistoryType;
   title: string;

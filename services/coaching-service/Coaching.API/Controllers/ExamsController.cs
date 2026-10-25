@@ -33,6 +33,9 @@ public class ExamsController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("profiles")]
+    public IActionResult Profiles() => Ok(Coaching.Domain.Entities.PracticeExamRules.Profiles);
+
     /// <summary>
     /// Create a new exam definition
     /// </summary>
@@ -163,6 +166,10 @@ public class ExamsController : ControllerBase
         catch (EduPlatform.Shared.Kernel.Exceptions.ValidationException ex)
         {
             return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {

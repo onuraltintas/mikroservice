@@ -1,0 +1,2362 @@
+[
+  {
+    "id": "76bc9498-558d-55c9-8319-91a12cb13bdd",
+    "name": "Genç Yetişkin — Seviye 1 — 4 Haftalık Okuma Programı",
+    "description": "17–21 yaş. 28 gün, 80 görev. İlk iki hafta seviye 1; son iki hafta seviye 2. Günlük hedef 15–20 dakika; uzun metin ve soru günleri 20–25 dakikaya çıkabilir. Süre öğrencinin okuma hızına göre değişir.",
+    "age": "10000000-0000-0000-0000-000000000004",
+    "start": 1,
+    "max": 2,
+    "plan": {
+      "placementLevel": 1,
+      "week1": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day2": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 1
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day2": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 1
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 1
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 1
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day2": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 2
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day2": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 2
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "02c04d07-0489-5458-a504-ac4e3e747395",
+    "name": "Genç Yetişkin — Seviye 2 — 4 Haftalık Okuma Programı",
+    "description": "17–21 yaş. 28 gün, 80 görev. İlk iki hafta seviye 2; son iki hafta seviye 3. Günlük hedef 15–20 dakika; uzun metin ve soru günleri 20–25 dakikaya çıkabilir. Süre öğrencinin okuma hızına göre değişir.",
+    "age": "10000000-0000-0000-0000-000000000004",
+    "start": 2,
+    "max": 3,
+    "plan": {
+      "placementLevel": 2,
+      "week1": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day2": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 2
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day2": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 2
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 2
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 2
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day2": [
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 3
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day2": [
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 3
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "1f884bac-73e4-5aa8-b34a-6c431c47a707",
+    "name": "Genç Yetişkin — Seviye 3 — 4 Haftalık Okuma Programı",
+    "description": "17–21 yaş. 28 gün, 80 görev. İlk iki hafta seviye 3; son iki hafta seviye 4. Günlük hedef 15–20 dakika; uzun metin ve soru günleri 20–25 dakikaya çıkabilir. Süre öğrencinin okuma hızına göre değişir.",
+    "age": "10000000-0000-0000-0000-000000000004",
+    "start": 3,
+    "max": 4,
+    "plan": {
+      "placementLevel": 3,
+      "week1": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day2": [
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 3
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day2": [
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day4": [
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 3
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 3
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 3
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day2": [
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "RegressionReduction",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 4
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day2": [
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SubvocalizationReduction",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 4
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "d1b72e96-f8d6-5bdb-a61d-d30f9a0edf99",
+    "name": "Genç Yetişkin — Seviye 4 — 4 Haftalık Okuma Programı",
+    "description": "17–21 yaş. 28 gün, 79 görev. İlk iki hafta seviye 4; son iki hafta seviye 5. Günlük hedef 15–20 dakika; uzun metin ve soru günleri 20–25 dakikaya çıkabilir. Süre öğrencinin okuma hızına göre değişir.",
+    "age": "10000000-0000-0000-0000-000000000004",
+    "start": 4,
+    "max": 5,
+    "plan": {
+      "placementLevel": 4,
+      "week1": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day2": [
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "RegressionReduction",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 4
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day2": [
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SubvocalizationReduction",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 4
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 4
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "RegressionReduction",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SubvocalizationReduction",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "00f77937-72fe-520b-b509-88f1e4dfd5cc",
+    "name": "Genç Yetişkin — Seviye 5 — 4 Haftalık Okuma Programı",
+    "description": "17–21 yaş. 28 gün, 78 görev. İlk iki hafta seviye 5; son iki hafta seviye 5. Günlük hedef 15–20 dakika; uzun metin ve soru günleri 20–25 dakikaya çıkabilir. Süre öğrencinin okuma hızına göre değişir.",
+    "age": "10000000-0000-0000-0000-000000000004",
+    "start": 5,
+    "max": 5,
+    "plan": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "RegressionReduction",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SubvocalizationReduction",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "RegressionReduction",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SubvocalizationReduction",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Visualization",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    }
+  }
+]

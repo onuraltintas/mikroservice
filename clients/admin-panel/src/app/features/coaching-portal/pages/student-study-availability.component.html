@@ -8,9 +8,6 @@
   <div class="panel">
     <form #availabilityForm="ngForm" (ngSubmit)="save()">
       <fieldset [disabled]="!ready() || loading() || saving()">
-        <label for="time-zone">Saat dilimi</label>
-        <input id="time-zone" name="timeZone" [(ngModel)]="timeZoneId" (ngModelChange)="dirty = true" required maxlength="100" aria-describedby="timezone-help">
-        <p id="timezone-help" class="muted">Türkiye için Europe/Istanbul kullanılır. Başka bir ülkedeysen geçerli bölge/şehir saat dilimini gir.</p>
         @if (!rows.length) { <p class="muted">Henüz saat aralığı eklenmedi. Boş kaydetmek, haftalık müsaitlik belirtmediğin anlamına gelir.</p> }
         @for (row of rows; track $index; let i = $index) {
           <div class="draft-task">

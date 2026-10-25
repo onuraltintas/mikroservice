@@ -6,7 +6,7 @@ namespace Coaching.Application.StudyPlanning;
 public sealed record AutomaticStudyDraftRequest([Required] string Title,
     [Required] AutomaticStudyPreviewRequest Preview,
     [property: JsonRequired] Guid? ExpectedActiveRevisionId,
-    [property: JsonRequired] int? ExpectedActiveRevisionVersion);
+    [property: JsonRequired] int? ExpectedActiveRevisionVersion,string? ExpectedEvidenceFingerprint = null);
 
 public interface IAutomaticStudyPlanDraftService
 {

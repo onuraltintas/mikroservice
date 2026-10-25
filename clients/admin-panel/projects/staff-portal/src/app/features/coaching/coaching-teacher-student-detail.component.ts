@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
@@ -43,20 +44,20 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   readonly financeVisible = signal(false);
   @ViewChild(CoachingTeacherStudentProfileComponent) private profile?:CoachingTeacherStudentProfileComponent;
   readonly profileVisible=signal(false);
-  toggleProfile(){if(this.profileVisible()&&!(this.profile?.canLeavePage()??true))return;this.profileVisible.update(v=>!v);}
-  canLeavePage(): boolean { return (this.profile?.canLeavePage()??true) && (this.financePanel?.canLeavePage() ?? true) && (this.study?.canLeavePage() ?? true); }
-  toggleFinance(): void {
-    if (this.financeVisible() && !(this.financePanel?.canLeavePage() ?? true)) return;
+  async toggleProfile(){if(this.profileVisible()&&!(await this.profile?.canLeavePage()??true))return;this.profileVisible.update(v=>!v);}
+  async canLeavePage(): Promise<boolean> { return (await this.profile?.canLeavePage()??true) && (await this.financePanel?.canLeavePage() ?? true) && (await this.study?.canLeavePage() ?? true); }
+  async toggleFinance(): Promise<void> {
+    if (this.financeVisible() && !(await this.financePanel?.canLeavePage() ?? true)) return;
     this.financeVisible.set(!this.financeVisible());
   }
-  goBack(): void { if (this.canLeavePage()) this.back.emit(); }
-  toggleStudy(): void {
-    if (this.studyVisible() && !this.canLeavePage()) return;
+  async goBack(): Promise<void> { if (await this.canLeavePage()) this.back.emit(); }
+  async toggleStudy(): Promise<void> {
+    if (this.studyVisible() && !await this.canLeavePage()) return;
     if (this.briefMode()) { this.briefMode.set(false); this.studyVisible.set(true); }
     else this.studyVisible.set(!this.studyVisible());
   }
-  openSessionBrief(): void {
-    if (!this.canLeavePage()) return;
+  async openSessionBrief(): Promise<void> {
+    if (!await this.canLeavePage()) return;
     if (this.briefMode()) this.study?.refreshBrief();
     this.briefMode.set(true); this.studyVisible.set(true); this.loadProgress();
   }
@@ -268,4 +269,7 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
     }
     return fallback;
   }
+
+  private readonly progressErrorFeedback = coachingFeedback(undefined, this.progressError);
+  private readonly historyErrorFeedback = coachingFeedback(undefined, this.historyError);
 }

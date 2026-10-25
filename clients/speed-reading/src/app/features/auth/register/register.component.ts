@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
+import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 import {
@@ -114,14 +115,12 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
 
   private handleGoogleResponse(response: any): void {
     if (this.loading) return;
-    if (!this.hasRequiredLegalAcceptances) {
-      this.error = 'Önce güncel yasal metinleri inceleyip onaylayın, ardından Google ile kayıt düğmesine tekrar basın.';
-      return;
-    }
     this.loading = true;
     this.error = '';
 
-    this.authService.googleAuth(response.credential, undefined, this.legalAcceptances).subscribe({
+    this.authService.googleAuth(response.credential).pipe(
+      finalize(() => this.loading = false)
+    ).subscribe({
       next: (authResponse) => {
         const invitationReturnUrl = this.getInvitationReturnUrl();
         if (invitationReturnUrl) {
@@ -164,7 +163,9 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
     this.loading = true;
     this.error = '';
 
-    this.authService.register({ ...this.registerForm.value, legalAcceptances: this.legalAcceptances }).subscribe({
+    this.authService.register({ ...this.registerForm.value, legalAcceptances: this.legalAcceptances }).pipe(
+      finalize(() => this.loading = false)
+    ).subscribe({
       next: (response) => {
         // Kayıt başarılı, login sayfasına yönlendir
         this.router.navigate(['/auth/login'], {

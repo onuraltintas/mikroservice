@@ -35,6 +35,112 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     public Task<ManualStudyPlanView> RescheduleForStudentAsync(Guid student, Guid id, Guid task, int version, DateOnly date, CancellationToken ct = default) => RescheduleCoreAsync(id, task, version, date, ct, student);
     public Task<ManualStudyPlanView> MoveTasksAsync(Guid id, StudyTasksMoveInput request, CancellationToken ct = default) => MoveCoreAsync(id, request, ct);
     public Task<ManualStudyPlanView> MoveForStudentAsync(Guid student, Guid id, StudyTasksMoveInput request, CancellationToken ct = default) => MoveCoreAsync(id, request, ct, student);
+    public Task<ManualStudyPlanView> SaveCalendarTaskAsync(Guid id,Guid? taskId,CalendarTaskSaveInput request,CancellationToken ct=default)
+        => SaveCalendarCoreAsync(id,taskId,request,ct);
+    public Task<ManualStudyPlanView> SaveCalendarForStudentAsync(Guid student,Guid id,Guid? taskId,CalendarTaskSaveInput request,CancellationToken ct=default)
+        => SaveCalendarCoreAsync(id,taskId,request,ct,student);
+    public Task<ManualStudyPlanView> DeleteCalendarTaskAsync(Guid id,Guid taskId,int expectedVersion,CancellationToken ct=default)
+        => DeleteCalendarCoreAsync(id,taskId,expectedVersion,ct);
+    public Task<ManualStudyPlanView> DeleteCalendarForStudentAsync(Guid student,Guid id,Guid taskId,int expectedVersion,CancellationToken ct=default)
+        => DeleteCalendarCoreAsync(id,taskId,expectedVersion,ct,student);
+
+    private Task<ManualStudyPlanView> SaveCalendarCoreAsync(Guid id,Guid? taskId,CalendarTaskSaveInput request,CancellationToken ct,Guid? targetStudent=null)
+        => LockedAsync(async student=>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            var revision=await OwnedAsync(id,student,request.ExpectedVersion,ct);
+            if(revision.Status==StudyPlanStatus.Archived)throw Conflict("Geçmiş plan değiştirilemez.");
+            if(string.IsNullOrWhiteSpace(request.Title)||request.Title.Trim().Length>200||request.PlannedDate==default||request.StartMinute<0||request.PlannedMinutes<1||request.StartMinute+request.PlannedMinutes>1440)
+                throw new ArgumentException("Başlık, tarih ve süreyi kontrol edin.");
+            var task=taskId.HasValue?await db.StudyPlanTasks.SingleOrDefaultAsync(x=>x.Id==taskId&&x.RevisionId==id&&x.StudentId==student,ct):null;
+            if(taskId.HasValue&&task is null)throw new BusinessRuleException("StudyPlanning.NotFound","Çalışma bulunamadı.");
+            if(task?.IsCompleted==true)throw Conflict("Tamamlanan çalışma değiştirilemez.");
+            // Outcome allocations and their duration snapshots must remain consistent.
+            if(task is not null&&task.PlannedMinutes!=request.PlannedMinutes&&await db.Set<StudyPlanTaskOutcome>().AnyAsync(x=>x.TaskId==task.Id,ct))
+                throw Conflict("Kazanıma bağlı çalışmanın süresi korunur. Ek çalışma için yeni kart ekleyin.");
+            if(task is not null&&request.LessonId!=task.WeeklyLessonId)throw Conflict("Mevcut çalışmanın ders ve kazanım bağlantıları değiştirilemez.");
+            StudyCatalogLesson? lesson=null;
+            if(task is null){
+                if(!request.LessonId.HasValue||request.LessonId==Guid.Empty)throw new ArgumentException("Ders seçin.");
+                lesson=await db.StudyCatalogLessons.SingleOrDefaultAsync(x=>x.Id==request.LessonId&&x.IsActive,ct)
+                    ??throw new ArgumentException("Ders kullanılamıyor.");
+                if(await db.StudyPlanTasks.CountAsync(x=>x.RevisionId==id,ct)>=10000)throw Conflict("Planın çalışma sınırına ulaşıldı.");
+            }
+            var others=db.StudyPlanTasks.Where(x=>x.RevisionId==id&&x.StudentId==student&&(!taskId.HasValue||x.Id!=taskId.Value)&&x.PlannedDate==request.PlannedDate);
+            if(await others.AnyAsync(x=>x.PlannedStartMinute<request.StartMinute+request.PlannedMinutes&&x.PlannedStartMinute+x.PlannedMinutes>request.StartMinute,ct))
+                throw Conflict("Bu saat başka bir çalışmayla çakışıyor. Boş bir saat seçin.");
+            if(await others.SumAsync(x=>x.PlannedMinutes,ct)+request.PlannedMinutes>1440)throw Conflict("Bir güne 24 saatten fazla çalışma eklenemez.");
+            if(task is null){
+                task=StudyPlanTask.Create(revision,request.PlannedDate,request.Title,request.PlannedMinutes);
+                task.SetWeeklyPlacement(lesson!.Id,lesson.Name,request.StartMinute);db.StudyPlanTasks.Add(task);
+            }else{
+                // Clear the old time before validating a changed duration against the new time.
+                task.Schedule(request.PlannedDate,null);
+                task.CorrectPlanning(request.Title,request.PlannedDate,request.PlannedMinutes);
+                task.Schedule(request.PlannedDate,request.StartMinute);
+            }
+            revision.RecordScheduleChange();
+            if(targetStudent.HasValue&&revision.Status==StudyPlanStatus.Active)await NotifyPlanChangedAsync(revision,$"{task.Title}: çalışma takvimde {(taskId.HasValue?"düzenlendi":"eklendi")}.",ct);
+            await db.SaveChangesAsync(ct);return await ViewAsync(revision,ct);
+        },ct,targetStudent,true);
+
+    private Task<ManualStudyPlanView> DeleteCalendarCoreAsync(Guid id,Guid taskId,int expectedVersion,CancellationToken ct,Guid? targetStudent=null)
+        => LockedAsync(async student=>
+        {
+            var revision=await OwnedAsync(id,student,expectedVersion,ct);
+            if(revision.Status==StudyPlanStatus.Archived)throw Conflict("Geçmiş plan değiştirilemez.");
+            var task=await db.StudyPlanTasks.SingleOrDefaultAsync(x=>x.Id==taskId&&x.RevisionId==id&&x.StudentId==student,ct)
+                ??throw new BusinessRuleException("StudyPlanning.NotFound","Çalışma bulunamadı.");
+            if(task.IsCompleted || task.ActualMinutes.HasValue || task.RealizationHistoryJson != "[]" || task.PredecessorTaskId.HasValue)throw Conflict("Gerçekleşme kaydı bulunan çalışma silinemez.");
+            if(await db.Set<WeeklyDecision>().AnyAsync(x=>x.StudyTaskId==taskId,ct))throw Conflict("Bu çalışma bir karara bağlı. Önce öğretmen karar bağlantısını kaldırmalı.");
+            db.RemoveRange(await db.Set<StudyPlanTaskOutcome>().Where(x=>x.TaskId==taskId).ToArrayAsync(ct));
+            db.StudyPlanTasks.Remove(task);revision.RecordScheduleChange();
+            if(targetStudent.HasValue&&revision.Status==StudyPlanStatus.Active)await NotifyPlanChangedAsync(revision,$"{task.Title}: bekleyen çalışma takvimden kaldırıldı.",ct);
+            await db.SaveChangesAsync(ct);return await ViewAsync(revision,ct);
+        },ct,targetStudent,true);
+
+    public Task<ManualStudyPlanView> ApplyPracticeAsync(PracticeAdjustmentApply request,
+        CoachingPracticeAdaptationService adaptation, Guid? targetStudent, CancellationToken ct)
+        => LockedAsync(async student =>
+        {
+            if (!request.Confirmed || request.Fingerprint?.Length != 64) throw new ArgumentException("Önizlemeyi açıkça onaylayın.");
+            var scope = "coaching.practice-review.apply";
+            var key = student + ":" + request.Fingerprint;
+            var requestHash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(request.Preview)));
+            var prior = await db.Set<IdempotencyRecord>().AsNoTracking().SingleOrDefaultAsync(x => x.Scope == scope && x.Key == key, ct);
+            if (prior is not null)
+            {
+                if (!prior.Matches(requestHash)) throw Conflict("Onay içeriği değişti. Yeniden önizleyin.");
+                var applied = await db.StudyPlanRevisions.AsNoTracking().SingleAsync(x => x.Id == prior.ResourceId && x.StudentId == student, ct);
+                if (applied.CreatedByTeacherId.HasValue && !targetStudent.HasValue)
+                    throw new BusinessRuleException("Authorization.Forbidden", "Bu plan değişikliği öğretmen onayı gerektirir.");
+                return await ViewAsync(applied, ct);
+            }
+            await adaptation.LockInputsAsync(student, ct);
+            var preview = await adaptation.PrepareAsync(student, request.Preview, ct);
+            if (preview.Fingerprint != request.Fingerprint) throw Conflict("Önizleme güncelliğini kaybetti. Yeniden önizleyin.");
+            if (!preview.CanApply) throw Conflict(preview.Message);
+            var revision = await OwnedAsync(preview.PlanId, student, preview.ExpectedVersion, ct);
+            if (revision.Status != StudyPlanStatus.Active) throw Conflict("Yalnız aktif plan güncellenebilir.");
+            if (revision.CreatedByTeacherId.HasValue && !targetStudent.HasValue)
+                throw new BusinessRuleException("Authorization.Forbidden", "Öğretmen planını öğretmenin onaylamalı.");
+            foreach (var slot in preview.Slots)
+            {
+                var title = "Tekrar · " + slot.TopicName;
+                var task = StudyPlanTask.Create(revision, slot.Date, title.Length > 200 ? title[..200] : title,
+                    slot.Minutes, slot.TopicId, sourceName: slot.EvidenceKey);
+                task.SetWeeklyPlacement(slot.LessonId, slot.LessonName, slot.StartMinute);
+                db.StudyPlanTasks.Add(task);
+            }
+            if (request.Preview.AllowDeadlineExtension && revision.WeeklySource is {} source && preview.ProposedDeadline > source.EndDate)
+                revision.ExtendDeadline(preview.ProposedDeadline);
+            revision.RecordTaskChange();
+            db.Add(IdempotencyRecord.Create(scope, key, requestHash, revision.Id));
+            if (targetStudent.HasValue)
+                await NotifyPlanChangedAsync(revision, $"Son üç deneme analizine göre {preview.Slots.Count} tekrar çalışması eklendi; toplam {preview.Slots.Sum(x => x.Minutes)} dakika. Mevcut çalışmalar korundu.", ct);
+            await db.SaveChangesAsync(ct);
+            return await ViewAsync(revision, ct);
+        }, ct, targetStudent, true);
     public Task<ManualStudyPlanView> CorrectTitleForStudentAsync(Guid student,Guid id,Guid taskId,int version,string title,CancellationToken ct=default)
         => LockedAsync(async owner=>
         {
@@ -95,6 +201,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if (request.ExpectedActiveRevisionId != preview.ActiveRevisionId
                 || request.ExpectedActiveRevisionVersion != preview.ActiveRevisionVersion)
                 throw Conflict("Aktif plan değişti. Yeniden önizleyin.");
+            if(request.ExpectedEvidenceFingerprint is not null&&request.ExpectedEvidenceFingerprint!=preview.EvidenceFingerprint)
+                throw Conflict("Tamamlanan kazanım kayıtları değişti. Kalan yükü yeniden önizleyin.");
             if (await db.StudyPlanRevisions.AnyAsync(x => x.StudentId == student && x.Status == StudyPlanStatus.Draft, cancellationToken))
                 throw Conflict("Önce mevcut taslağınızı düzenleyin veya yayımlayın.");
             var ids = preview.Schedule.Tasks.Select(x => x.TopicId).Distinct().ToArray();
@@ -103,27 +211,17 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             var tasks = preview.Schedule.Tasks.Select(x => StudyPlanTask.Create(revision, x.PlannedDate,
                 names[x.TopicId], x.PlannedMinutes, x.TopicId)).ToList();
             db.AddRange(StudyOutcomeAllocation.Allocate(tasks, preview.Outcomes ?? []));
-            // Preserve pending pinned work, including work outside the generated horizon.
-            // Completed work remains in its original revision; actual results are never duplicated.
-            if (preview.ActiveRevisionId is { } activeId)
+            foreach(var continuation in preview.Continuations ?? [])
             {
-                var pinned = await db.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == student
-                    && x.RevisionId == activeId && x.IsPinned && !x.IsCompleted).ToListAsync(cancellationToken);
-                var pinnedIds = pinned.Select(x => x.Id).ToArray();
-                var links = await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x => Enumerable.Contains(pinnedIds, x.TaskId)).ToArrayAsync(cancellationToken);
-                foreach (var prior in pinned)
-                {
-                    var copied = StudyPlanTask.Create(revision, prior.PlannedDate, prior.Title, prior.PlannedMinutes, prior.TopicId, true, prior.SourceName, prior.PlannedQuestions);
-                    tasks.Add(copied);
-                    db.AddRange(links.Where(x => x.TaskId == prior.Id).Select(x => {
-                        var link = StudyPlanTaskOutcome.Create(copied.Id, x.OutcomeId, x.EstimateId, x.AllocatedMinutes, x.Origin);
-                        if (x.CodeSnapshot is not null && x.NameSnapshot is not null) link.CaptureText(x.CodeSnapshot, x.NameSnapshot);
-                        return link;
-                    }));
-                }
+                var prior=await db.StudyPlanTasks.AsNoTracking().SingleAsync(x=>x.Id==continuation.TaskId&&x.StudentId==student,cancellationToken);
+                var copy=CoachingStudyContinuation.Copy(revision,new(prior,continuation.PlannedDate,continuation.StartMinute,continuation.Minutes));tasks.Add(copy);
+                var links=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>x.TaskId==prior.Id).ToArrayAsync(cancellationToken);
+                db.AddRange(links.Select(x=>CoachingStudyContinuation.CopyLink(copy,x)));
             }
             if (tasks.Count is < 1 or > 500) throw new ArgumentException("Taslak 1-500 çalışma içermelidir; konuları azaltın veya süreyi değiştirin.");
             revision.SetAutomaticSource(preview.AvailabilityVersion, preview.ActiveRevisionId, preview.ActiveRevisionVersion);
+            if(preview.EvidenceFingerprint is {} evidence)revision.SetAutomaticOutcomeEvidence(
+                request.Preview.Topics.SelectMany(x=>x.Outcomes??[]).Select(x=>x.OutcomeId).ToArray(),evidence);
             db.StudyPlanRevisions.Add(revision); db.StudyPlanTasks.AddRange(tasks);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
@@ -153,8 +251,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         => LockedAsync(async student =>
         {
             ArgumentNullException.ThrowIfNull(request);
-            var revision = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, request.Title);
-            var tasks = await ValidateTasksAsync(revision, request, cancellationToken);
+            var revision = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, request.Title, targetStudent.HasValue ? access.CurrentUserId : null);
+            var tasks = await AddManualContinuationsAsync(revision,await ValidateTasksAsync(revision, request, cancellationToken),cancellationToken);
             if (await db.StudyPlanRevisions.AnyAsync(x => x.StudentId == student && x.Status == StudyPlanStatus.Draft, cancellationToken))
                 throw Conflict("Önce mevcut taslağınızı düzenleyin veya yayımlayın.");
             db.StudyPlanRevisions.Add(revision);
@@ -172,10 +270,12 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if(revision.WeeklySource is not null)throw Conflict("Bu plan haftalık takvimden üretildi. Saat ve kazanımları korumak için taslağı arşivleyip önizlemeden yeniden oluşturun.");
             // Validate all replacements before changing any persisted task or title.
             _ = StudyPlanRevision.Create(student, revision.PlanId, revision.RevisionNumber, request.Title);
-            var tasks = await ValidateTasksAsync(revision, request, cancellationToken);
+            var tasks = await AddManualContinuationsAsync(revision,await ValidateTasksAsync(revision, request, cancellationToken),cancellationToken);
             var oldTasks = await db.StudyPlanTasks.Where(x => x.RevisionId == id && x.StudentId == student).ToListAsync(cancellationToken);
             if (oldTasks.Any(x => x.IsCompleted)) throw Conflict("Tamamlanmış çalışmaları içeren taslak değiştirilemez.");
             revision.RenameDraft(request.Title);
+            var oldIds=oldTasks.Select(x=>x.Id).ToArray();
+            db.RemoveRange(await db.Set<StudyPlanTaskOutcome>().Where(x=>Enumerable.Contains(oldIds,x.TaskId)).ToArrayAsync(cancellationToken));
             db.StudyPlanTasks.RemoveRange(oldTasks);
             db.StudyPlanTasks.AddRange(tasks);
             await db.SaveChangesAsync(cancellationToken);
@@ -205,7 +305,15 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 if (hours?.Version != availabilityVersion || previous?.Id != revision.AutomaticSourceRevisionId
                     || previous?.Version != revision.AutomaticSourceRevisionVersion)
                     throw Conflict("Plan veya çalışma saatleri değişti. Otomatik taslağı güncel verilerle yeniden hazırlayın.");
+                var evidence=revision.AutomaticOutcomeEvidence;
+                var outcomeIds=evidence?.OutcomeIds??await (from task in db.StudyPlanTasks join link in db.Set<StudyPlanTaskOutcome>() on task.Id equals link.TaskId
+                    where task.RevisionId==id&&task.StudentId==student select link.OutcomeId).Distinct().ToArrayAsync(cancellationToken);
+                var credits=await CoachingCompletedOutcomeCredits.ReadAsync(db,student,outcomeIds,cancellationToken);
+                if(evidence is null?credits.Length>0:evidence.Fingerprint!=CoachingCompletedOutcomeCredits.Fingerprint(credits))
+                    throw Conflict("Tamamlanan kazanım kayıtları değişti veya eski taslakta kazanım kanıtı yok. Taslağı güncel önizlemeden yeniden hazırlayın.");
             }
+            foreach(var decision in await CoachingStudyContinuation.RebindAsync(db,revision,access.CurrentUserId!.Value,cancellationToken))
+                await events.PublishAsync(new WeeklyDecisionChangedEvent(decision.Id,student,decision.ResponsibleTeacherId,decision.ReviewWeekStart,false),cancellationToken);
             if (previous is not null)
             {
                 previous.Archive();
@@ -229,6 +337,9 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if(!await db.StudyPlanTasks.AnyAsync(x=>x.RevisionId==id&&x.StudentId==student,ct))throw Conflict("Boş plan etkinleştirilemez.");
             var active=await db.StudyPlanRevisions.SingleOrDefaultAsync(x=>x.StudentId==student&&x.IsActive,ct);
             if(active?.Id!=request.ExpectedActiveRevisionId||active?.Version!=request.ExpectedActiveRevisionVersion)throw Conflict("Aktif plan değişti. Sayfayı yenileyip tekrar deneyin.");
+            await CoachingStudyProgressReconciliation.RestoreAsync(db,revision,access.CurrentUserId!.Value,ct);
+            foreach(var decision in await CoachingStudyContinuation.RebindAsync(db,revision,access.CurrentUserId!.Value,ct))
+                await events.PublishAsync(new WeeklyDecisionChangedEvent(decision.Id,student,decision.ResponsibleTeacherId,decision.ReviewWeekStart,false),ct);
             if(active is not null){active.Archive();await db.SaveChangesAsync(ct);}
             revision.RestoreArchived();await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id,student),ct);
             await db.SaveChangesAsync(ct);return await ViewAsync(revision,ct);
@@ -251,6 +362,55 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken, targetStudent, true);
+
+    public Task<ManualStudyPlanView> SetRemainingScopeAsync(Guid id, Guid taskId, StudyRemainingScopeInput request, CancellationToken ct = default)
+        => ScopeCoreAsync(id,taskId,request,ct);
+    public Task<ManualStudyPlanView> SetRemainingScopeForStudentAsync(Guid student, Guid id, Guid taskId, StudyRemainingScopeInput request, CancellationToken ct = default)
+        => ScopeCoreAsync(id,taskId,request,ct,student);
+    private Task<ManualStudyPlanView> ScopeCoreAsync(Guid id, Guid taskId, StudyRemainingScopeInput request, CancellationToken ct, Guid? targetStudent = null)
+        => LockedAsync(async student=> {
+            var plan=await OwnedAsync(id,student,request.ExpectedVersion,ct);
+            if(plan.Status==StudyPlanStatus.Draft || plan.Status==StudyPlanStatus.Archived&&!plan.WasPublished)throw Conflict("Kalan kapsam yayımlanmış çalışma üzerinde belirtilmelidir.");
+            var task=await db.StudyPlanTasks.SingleOrDefaultAsync(x=>x.StudentId==student&&x.RevisionId==id&&x.Id==taskId,ct)
+                ??throw new BusinessRuleException("StudyPlanning.NotFound","Çalışma bulunamadı.");
+            var root=task.OriginalTaskId ?? task.Id;
+            if(plan.Status==StudyPlanStatus.Archived && await (from other in db.StudyPlanTasks join active in db.StudyPlanRevisions on other.RevisionId equals active.Id
+                where other.StudentId==student&&active.StudentId==student&&active.IsActive&&(other.OriginalTaskId ?? other.Id)==root select other.Id).AnyAsync(ct))
+                throw Conflict("Bu çalışmanın aktif devamı var. Kalan kapsamı aktif devam görevinde belirtin.");
+            var before=task.RealizationHistoryJson;task.DeclareRemainingScope(request.RemainingMinutes,request.RemainingQuestions,access.CurrentUserId!.Value);
+            if(before!=task.RealizationHistoryJson){plan.RecordRealizationChange();await db.SaveChangesAsync(ct);}
+            return await ViewAsync(plan,ct);
+        },ct,targetStudent,true);
+
+    public Task<ManualStudyPlanView> RecordRealizationAsync(Guid id, Guid taskId, StudyRealizationInput request, bool correction, CancellationToken ct = default)
+        => LockedAsync(async student => {
+            var revision = await OwnedAsync(id, student, request.ExpectedVersion, ct);
+            if (revision.Status == StudyPlanStatus.Draft || !correction && revision.Status != StudyPlanStatus.Active)
+                throw Conflict("Çalışma kaydı yalnız aktif planda; gerekçeli düzeltme yayımlanmış geçmiş planda da yapılabilir.");
+            if (revision.Status == StudyPlanStatus.Archived && !revision.WasPublished) throw Conflict("Yayımlanmamış planın gerçekleşmesi değiştirilemez.");
+            var task = await db.StudyPlanTasks.SingleOrDefaultAsync(x => x.Id == taskId && x.RevisionId == id && x.StudentId == student, ct)
+                ?? throw new BusinessRuleException("StudyPlanning.NotFound", "Çalışma bulunamadı.");
+            if (correction && !task.ActualMinutes.HasValue && task.RealizationHistoryJson == "[]") throw new ArgumentException("Önce bir çalışma kaydı girin.");
+            if (correction && string.IsNullOrWhiteSpace(request.Reason) || !correction && request.Reason is not null)
+                throw new ArgumentException("Düzeltme için gerekçe girin.");
+            var historyBefore = task.RealizationHistoryJson;
+            var previousScope=(task.IsCompleted,task.RemainingMinutes,task.RemainingQuestions);
+            if(!correction&&request.ContinuationScope is not null)throw new ArgumentException("Devam kapsamı yalnız gerekçeli geçmiş düzeltmesiyle uzlaştırılabilir.");
+            task.RecordRealization(request.ActualMinutes, request.ActualQuestions, request.IsCompleted, student, correction ? request.Reason : null, request.RemainingMinutes, request.RemainingQuestions, request.WorkedOn, request.ReassignFromDate);
+            if (historyBefore == task.RealizationHistoryJson&&!correction) return await ViewAsync(revision, ct);
+            var reconciled=false;
+            if(correction)
+            {
+                // Persist the corrected task version inside this transaction before recording
+                // which source version reconciled the continuation. Any later conflict rolls it back.
+                await db.SaveChangesAsync(ct);
+                reconciled=await CoachingStudyProgressReconciliation.CorrectAsync(db,task,previousScope!=(task.IsCompleted,task.RemainingMinutes,task.RemainingQuestions),request.ContinuationScope,student,request.Reason!.Trim(),ct);
+            }
+            if(historyBefore==task.RealizationHistoryJson&&!reconciled)return await ViewAsync(revision,ct);
+            // Published archives retain their schedule and publication state.
+            revision.RecordRealizationChange();
+            await db.SaveChangesAsync(ct); return await ViewAsync(revision, ct);
+        }, ct);
 
     public Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default)
         => CompleteTaskAsync(id, taskId, expectedVersion, actualMinutes, null, cancellationToken);
@@ -307,6 +467,23 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             ?? throw new BusinessRuleException("StudyPlanning.NotFound", "Çalışma bulunamadı.");
     }
 
+    private async Task<StudyPlanTask[]> AddManualContinuationsAsync(StudyPlanRevision plan, StudyPlanTask[] tasks, CancellationToken ct)
+    {
+        var sources=await CoachingStudyContinuation.SourcesAsync(db,plan.StudentId,ct);
+        if(sources.Length==0)return tasks;
+        var start=tasks.Length>0?tasks.Min(x=>x.PlannedDate):sources.Min(x=>x.PlannedDate);
+        var end=start.AddDays(365);
+        var placements=CoachingStudyContinuation.Place(sources,start,end,
+            Enum.GetValues<DayOfWeek>().Select(day=>(day,0,1440,(Guid?)null)).ToArray(),
+            tasks.Select(x=>new CoachingStudyContinuation.Placement(x,x.PlannedDate,x.PlannedStartMinute ?? 0,x.PlannedMinutes)).ToArray());
+        var result=tasks.ToList();var ids=sources.Select(x=>x.Id).ToArray();
+        var links=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(ids,x.TaskId)).ToArrayAsync(ct);
+        foreach(var placement in placements) {var copy=CoachingStudyContinuation.Copy(plan,placement);result.Add(copy);
+            db.AddRange(links.Where(x=>x.TaskId==placement.Source.Id).Select(x=>CoachingStudyContinuation.CopyLink(copy,x)));}
+        if(result.Count>500)throw Conflict("Devam çalışmaları dahil plan en fazla 500 çalışma içerebilir.");
+        return result.ToArray();
+    }
+
     private async Task<StudyPlanTask[]> ValidateTasksAsync(StudyPlanRevision revision, ManualStudyPlanInput request, CancellationToken cancellationToken)
     {
         if (request.Tasks is null || request.Tasks.Count > 500 || request.Tasks.Any(x => x is null))
@@ -331,8 +508,24 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     {
         var tasks = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == revision.Id && x.StudentId == revision.StudentId)
             .OrderBy(x => x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x => x.Id)
-            .Select(x => new ManualStudyTaskView(x.Id, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.IsCompleted, x.ActualMinutes, x.CompletedAt, x.SourceName, x.PlannedQuestions, x.ActualQuestions,null,x.PlannedStartMinute,x.WeeklyLessonId,x.LessonNameSnapshot))
+            .Select(x => new ManualStudyTaskView(x.Id, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.IsCompleted, x.ActualMinutes, x.CompletedAt, x.SourceName, x.PlannedQuestions, x.ActualQuestions,null,x.PlannedStartMinute,x.WeeklyLessonId,x.LessonNameSnapshot,null,x.RemainingMinutes,x.RemainingQuestions,x.OriginalTaskId,x.PredecessorTaskId))
             .ToListAsync(cancellationToken);
+        var history = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == revision.Id && x.StudentId == revision.StudentId)
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+        tasks = tasks.Select(x => x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId }).ToList();
+        if(revision.Status==StudyPlanStatus.Archived&&revision.WasPublished)
+        {
+            var roots=history.Values.Select(x=>x.OriginalTaskId??x.Id).ToArray();
+            var continuations=await (from task in db.StudyPlanTasks.AsNoTracking() join plan in db.StudyPlanRevisions.AsNoTracking() on task.RevisionId equals plan.Id
+                where task.StudentId==revision.StudentId&&plan.StudentId==revision.StudentId&&plan.IsActive&&Enumerable.Contains(roots,task.OriginalTaskId??task.Id)
+                select new {Task=task,Plan=plan}).ToArrayAsync(cancellationToken);
+            tasks=tasks.Select(x=> {
+                var active=continuations.SingleOrDefault(c=>(c.Task.OriginalTaskId??c.Task.Id)==(x.OriginalTaskId??x.Id));
+                return active is null?x:x with {Continuation=new(active.Plan.Id,active.Plan.Version,active.Task.Id,active.Task.IsCompleted,active.Task.IsCompleted&&active.Task.CompletionSourceTaskId is null,
+                    active.Task.IsCompleted?null:active.Task.RemainingMinutes??active.Task.PlannedMinutes,active.Task.IsCompleted?null:active.Task.RemainingMinutes.HasValue?active.Task.RemainingQuestions:active.Task.PlannedQuestions,
+                    CoachingStudyProgressReconciliation.RequiresExplicitScope(active.Task))};
+            }).ToList();
+        }
         var outcomes = await StudyPlanOutcomeReader.ReadAsync(db, tasks.Select(x => x.Id).ToArray(), cancellationToken);
         return new(revision.Id, revision.Version, revision.Title, revision.Status, tasks.Select(x => x with { Outcomes = outcomes[x.Id].ToArray() }).ToArray(),revision.WeeklySource);
     }
@@ -372,7 +565,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             finally
             {
                 // Rolled-back versions/tasks must not survive a retry or another call in this scope.
-                foreach (var entry in db.ChangeTracker.Entries().Where(x => x.Entity is StudyPlanRevision or StudyPlanTask or StudyPlanTaskOutcome).ToArray())
+                foreach (var entry in db.ChangeTracker.Entries().Where(x => x.Entity is WeeklyDecision or StudyPlanRevision or StudyPlanTask or StudyPlanTaskOutcome
+                    || x.Entity is IdempotencyRecord record && record.Scope == "coaching.practice-review.apply").ToArray())
                     entry.State = EntityState.Detached;
                 if (!transactionCommitted)
                 {

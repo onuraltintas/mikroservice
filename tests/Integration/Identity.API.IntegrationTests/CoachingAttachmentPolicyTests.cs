@@ -18,6 +18,30 @@ public sealed class CoachingAttachmentPolicyTests
     }
 
     [Theory]
+    [InlineData("answer.pdf", "application/pdf")]
+    [InlineData("answer.doc", "application/msword")]
+    [InlineData("answer.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")]
+    [InlineData("answer.md", "text/markdown")]
+    public void ValidateMetadata_AllowsDocuments(string fileName, string contentType)
+    {
+        var act = () => AssignmentAttachmentPolicy.ValidateMetadata(fileName, contentType, 1024);
+
+        act.Should().NotThrow();
+    }
+
+    [Theory]
+    [InlineData("answer.pdf", "image/jpeg")]
+    [InlineData("answer.doc", "application/pdf")]
+    [InlineData("answer.docx", "application/msword")]
+    [InlineData("answer.md", "application/octet-stream")]
+    public void ValidateMetadata_RejectsMismatchedDocumentTypes(string fileName, string contentType)
+    {
+        var act = () => AssignmentAttachmentPolicy.ValidateMetadata(fileName, contentType, 1024);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
     [InlineData("payload.exe", "application/octet-stream", 1024)]
     [InlineData("../../escape.jpg", "image/jpeg", 1024)]
     [InlineData("solution\r\n.jpg", "image/jpeg", 1024)]

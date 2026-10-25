@@ -7,11 +7,13 @@ import { AgendaMode, CoachingDailyAgendaService, DailyAgendaPage } from '../../.
 import { CoachingIconComponent } from '../coaching-icon.component';
 import { coachingFeedback } from '../coaching-feedback';
 import { clock } from './weekly-calendar';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 @Component({ selector: 'app-student-daily-agenda', standalone: true,
   imports: [CommonModule, RouterLink, CoachingIconComponent],
   templateUrl: './student-daily-agenda.component.html', styleUrl: './student-daily-agenda.component.scss' })
 export class StudentDailyAgendaComponent {
+  readonly navigation = inject(CoachingStudentNavigationService);
   private readonly api = inject(CoachingDailyAgendaService);
   private readonly destroyRef = inject(DestroyRef);
   private request?: Subscription;

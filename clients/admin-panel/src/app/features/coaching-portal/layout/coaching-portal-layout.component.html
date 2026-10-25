@@ -7,7 +7,7 @@
     </a>
     <button class="coaching-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"><app-coaching-icon name="close" /></button>
     <nav aria-label="Koçluk menüsü" class="coaching-navigation" *ngIf="isStudent()">
-      <section *ngFor="let group of navigation" class="coaching-nav-group">
+      <section *ngFor="let group of navigation()" class="coaching-nav-group">
         <h2>{{ group.label }}</h2>
         <a *ngFor="let link of group.links" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" (click)="closeMenu()">
           <app-coaching-icon [name]="link.icon" /><span>{{ link.label }}</span>
@@ -21,12 +21,12 @@
     <header class="coaching-topbar">
       <button #menuToggle class="coaching-menu-toggle" type="button" [attr.aria-expanded]="menuOpen()" aria-controls="coaching-navigation" aria-label="Koçluk menüsünü aç" (click)="menuOpen() ? closeMenu() : menuOpen.set(true)"><app-coaching-icon name="menu" /></button>
       <div class="coaching-breadcrumb"><span>Çalışma alanım</span><span aria-hidden="true">/</span><strong>{{ pageLabel() }}</strong></div>
-      <div class="coaching-topbar-actions"><span class="coaching-product-label">Kendi hızında, kendi yolunda.</span><a routerLink="/coaching-portal/notifications" class="coaching-icon-button" aria-label="Bildirimlerimi aç"><app-coaching-icon name="bell" /></a><span class="coaching-avatar compact" aria-label="Öğrenci hesabı">{{ initials() }}</span></div>
+      <div class="coaching-topbar-actions"><span class="coaching-product-label">Kendi hızında, kendi yolunda.</span><button type="button" class="coaching-icon-button coaching-theme-toggle" (click)="theme.toggle()" [attr.aria-label]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" [attr.title]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'"><app-coaching-icon [name]="theme.isDarkMode() ? 'sun' : 'moon'" /></button><a routerLink="/coaching-portal/notifications" class="coaching-icon-button" aria-label="Bildirimlerimi aç"><app-coaching-icon name="bell" /></a><span class="coaching-avatar compact" aria-label="Öğrenci hesabı">{{ initials() }}</span></div>
     </header>
     <main id="coaching-main" class="coaching-content" tabindex="-1"><router-outlet /></main>
     <footer class="coaching-footer"><span>Eduİvme · Öğrenci Koçluğu</span><span>Bugünkü emeğin, yarının temeli.</span></footer>
   </div>
   <nav *ngIf="isStudent()" class="coaching-mobile-nav" aria-label="Hızlı erişim">
-    <a *ngFor="let link of mobileLinks; let i = index" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" [attr.aria-label]="link.label"><app-coaching-icon [name]="link.icon" /><span>{{ ['Bugün', 'Planım', 'Ödevler', 'Gelişim'][i] }}</span></a>
+    <a *ngFor="let link of mobileLinks(); let i = index" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" [attr.aria-label]="link.label"><app-coaching-icon [name]="link.icon" /><span>{{ ['Bugün', 'Planım', 'Hedefim'][i] }}</span></a>
   </nav>
 </div>

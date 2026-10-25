@@ -41,6 +41,9 @@ public class Assignment : AggregateRoot
     private readonly List<AssignmentStudent> _assignedStudents = new();
     public IReadOnlyCollection<AssignmentStudent> AssignedStudents => _assignedStudents.AsReadOnly();
 
+    private readonly List<AssignmentInstructionAttachment> _instructionAttachments = new();
+    public IReadOnlyCollection<AssignmentInstructionAttachment> InstructionAttachments => _instructionAttachments.AsReadOnly();
+
     private Assignment() { } // EF Core
 
     public static Assignment Create(
@@ -216,6 +219,21 @@ public class Assignment : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public AssignmentInstructionAttachment AddInstructionAttachment(
+        string storageKey,
+        string fileName,
+        string contentType,
+        long sizeBytes,
+        string sha256,
+        DateTime uploadedAt)
+    {
+        var attachment = AssignmentInstructionAttachment.CreateClean(
+            Id, storageKey, fileName, contentType, sizeBytes, sha256, uploadedAt);
+        _instructionAttachments.Add(attachment);
+        UpdatedAt = uploadedAt;
+        return attachment;
+    }
+
     public void AssignToStudents(IEnumerable<Guid> studentIds)
     {
         foreach (var studentId in studentIds)
@@ -326,6 +344,7 @@ public class AssignmentStudent : Entity
 
     public DateTime? SubmittedAt { get; private set; }
     public decimal? Score { get; private set; }
+    public long? GradeRevision { get; private set; }
     public string? TeacherFeedback { get; private set; }
     public string? StudentNote { get; private set; }
 
@@ -390,6 +409,8 @@ public class AssignmentStudent : Entity
 
     public void Grade(decimal score, string? feedback = null)
     {
+        if(Status==StudentAssignmentStatus.Graded && Score==score && TeacherFeedback==feedback)return;
+        GradeRevision=checked((GradeRevision??0)+1);
         Score = score;
         TeacherFeedback = feedback;
         Status = StudentAssignmentStatus.Graded;

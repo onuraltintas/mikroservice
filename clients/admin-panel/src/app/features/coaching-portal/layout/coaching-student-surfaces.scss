@@ -2,7 +2,7 @@
 @media (max-width: 800px) {
   body:has(.coaching-shell) .grecaptcha-badge { bottom: calc(86px + env(safe-area-inset-bottom)) !important; }
 }
-.coaching-shell .coaching-content {
+.coaching-shell .coaching-body .coaching-content {
   > :not(router-outlet) { display: block; min-width: 0; }
   h1 { font-size: clamp(1.65rem, 2.5vw, 2.15rem); font-weight: 750; letter-spacing: -.7px; line-height: 1.25; }
   h2 { letter-spacing: -.3px; } :is(p, h1, h2, h3, strong, td) { overflow-wrap: anywhere; }
@@ -22,9 +22,10 @@
   table { border-collapse: collapse; th, td { padding: 12px; border-bottom: 1px solid var(--ui-border); } th { color: var(--ui-text-muted); font-weight: 600; } }
   .coaching-page-heading { margin-bottom: 24px; > p:first-child { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 1.4px; color: var(--ui-success); } h1 { margin: 6px 0 10px; } > p:last-child { max-width: 65ch; color: var(--ui-text-muted); font-size: 14px; } }
   .study-plans {
+    aside.panel { align-self: start; max-height: calc(100dvh - 130px); overflow: auto; scrollbar-gutter: stable; }
     .eyebrow { color: var(--ui-success); letter-spacing: 1.2px; font-size: 11px; }
     .page-heading > div > p:last-child { color: var(--ui-text-muted); max-width: 65ch; }
-    button:not(.secondary):not(.plan-row) { background: var(--ui-brand); color: white; }
+    button:not(.secondary):not(.plan-row):not(:where(.plan-calendar *)) { background: var(--ui-brand); color: white; }
     .plan-row { padding: 16px; border-radius: 13px; margin-top: 10px; .badge { font-size: 10px; } &.selected { border-color: var(--ui-brand); background: var(--ui-brand-soft); box-shadow: inset 3px 0 var(--ui-brand); } }
     .task { border: 1px solid var(--ui-border); border-radius: 16px; padding: 22px; margin-top: 16px; > h3 { font-size: 17px; margin-bottom: 8px; } > p { margin-top: 6px; opacity: 1; color: var(--ui-text-muted); } &.completed { background: var(--ui-brand-soft); border-left: 4px solid var(--ui-brand); } .completion { color: var(--ui-success); font-weight: 650; } }
     .fields { margin-top: 18px; } .publish-box { border-color: var(--ui-brand); border-radius: 0 16px 16px 0; }
@@ -33,4 +34,111 @@
   app-student-study-report { display: block; margin: 24px 0; button { border-radius: 10px; padding: 10px 16px; border: 1px solid var(--ui-border); } }
   app-coaching-finance { color: var(--ui-text); .finance { padding: 24px; border-color: var(--ui-border); } }
 }
-@media (max-width: 600px) { .coaching-shell .coaching-content { .study-plans .task, .study-plans .draft-task, app-coaching-finance .finance { padding: 16px; } .study-plans .fields { gap: 10px; > label { flex-basis: 100%; } > button { width: 100%; } } table { font-size: 13px; th, td { padding: 10px; } } } }
+@media (max-width: 600px) { .coaching-shell .coaching-body .coaching-content { .study-plans .task, .study-plans .draft-task, app-coaching-finance .finance { padding: 16px; } .study-plans .fields { gap: 10px; > label { flex-basis: 100%; } > button { width: 100%; } } table { font-size: 13px; th, td { padding: 10px; } } } }
+
+// One set of surfaces, typography and state colours across the learning workspace.
+.coaching-shell .coaching-body .coaching-content {
+  font-size: 15px;
+  :is(.text-xs, small, .muted, .calendar-note, .home-muted) { font-size: 13px; line-height: 1.65; }
+  :is(small, .muted) { color: var(--ui-text-muted); opacity: 1; }
+  :is(.text-sm, label, .home-welcome > div > p, .home-next-steps strong, .assignment-copy strong) { font-size: 15px; }
+  :is(h2, h3) { font-family: inherit; font-weight: 700; line-height: 1.4; }
+  :is(.weekly-review, .profile-card, .panel, .assistant-page, .weekly-page, .plan-calendar) { color: var(--ui-text); }
+  :is(.weekly-review, .profile-card, .panel, .slot-dialog, .context-menu, .time-scroller, .month-grid, .month-day) { background: var(--ui-surface); border-color: var(--ui-border); }
+  :is(.weekly-review, .profile-card, .panel) { border-radius: 18px; }
+  .weekly-review h2 { font-size: 23px; }
+  :is(.eyebrow, .home-eyebrow, .today-eyebrow) { color: var(--ui-success); font-size: 12px; }
+  app-student-weekly-home section { background: var(--ui-surface); color: var(--ui-text); border-color: var(--ui-border); border-radius: 18px; }
+  app-student-weekly-home h2 { font-size: 23px; }
+  app-student-weekly-home :is(article, button, a) { border-color: var(--ui-border); }
+  app-practice-progress :is(section, article, .points > div, .development-tabs) { border-color: var(--ui-border); }
+  app-practice-progress .summary { background: var(--ui-brand-soft); color: var(--ui-text); }
+  :is(.weekly-review dt, .weekly-review small, .weekly-review .muted, .calendar-help, .calendar-note, .context-menu small, .move-tools span) { color: var(--ui-text-muted); }
+  :is(.weekly-review .summary, .draft-strip, .view-switch, .time-heading, .day-heading, .day-headers, .time-labels, .time-axis, .month-heading, .untimed-grid, .other-month, .privacy-note, .slot-line, .topic-row, .assistant-message, .student-message) { background: var(--ui-surface-muted); color: var(--ui-text); border-color: var(--ui-border); }
+  :is(.weekly-review button, .profile-card button, .weekly-page button, .plan-calendar button) { background: var(--ui-surface); color: var(--ui-text); border-color: var(--ui-border); min-height: 44px; }
+  :is(.weekly-review button, .profile-card button, .weekly-page button, .plan-calendar button):hover:not(:disabled) { background: var(--ui-brand-soft); }
+  :is(.weekly-review fieldset, .weekly-review article, .weekly-review .linked-work, .profile-card article, .month-day, .month-grid, .day-track, .day-headers, .day-heading, .time-heading) { border-color: var(--ui-border); }
+  :is(.weekly-review a, .assistant-page a, .weekly-page a, .profile-card a) { color: var(--ui-success); }
+  :is(.weekly-review .badge, .draft-badge, .success, .gesture-status) { background: var(--ui-brand-soft); color: var(--ui-success); }
+  :is(.error, .text-red-600, .text-red-700, .move-error, .home-error) { color: var(--ui-danger); }
+  :is(.notice.error, .move-error, .home-error) { background: var(--coaching-danger-soft); border-color: var(--ui-danger); }
+  :is(.assignment-status:not(.is-done):not(.is-overdue)) { color: var(--coaching-warning); }
+  :is(.assignment-status.is-overdue) { background: var(--coaching-danger-soft); color: var(--ui-danger); }
+  :is(.weekly-page .primary, .plan-calendar .view-switch button[aria-pressed=true], .development-tabs button[aria-selected=true]) { background: var(--ui-brand); color: #fff; border-color: var(--ui-brand); }
+  .time-cell { background: var(--ui-surface); border-color: var(--ui-border); }
+  .time-cell:hover { background: var(--ui-brand-soft); }
+  .day-track { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 29px, var(--ui-border) 29px, var(--ui-border) 30px); }
+  :is(.time-labels > div, .time-axis span) { color: var(--ui-text-muted); }
+  .plan-calendar :is(.time-axis, .day-headers > span, .untimed-grid > span) { background: var(--ui-surface-muted); }
+  @for $i from 0 through 4 {
+    :is(.weekly-page, .plan-calendar) .color-#{$i} { background: var(--coaching-lesson-#{$i}); color: var(--coaching-lesson-text-#{$i}); }
+  }
+  // Calendar events use their allocated space; global touch targets apply to controls.
+  :is(.weekly-page .time-cell, .weekly-page .slot-content, .weekly-page .resize, .weekly-page .month-slot, .plan-calendar .timed-block, .plan-calendar .month-block, .plan-calendar .month-date) { min-height: 0; }
+  :is(.time-scroller, .table, .overflow-x-auto) { scrollbar-color: var(--ui-border) var(--ui-surface); }
+  :is(.assistant-page, .weekly-page) { padding: 0; }
+  .home-next-steps :is(strong, small), .assignment-copy :is(strong, small) { line-height: 1.65; }
+  .home-next-steps small, .assignment-copy small, .home-gentle-note p { font-size: 13px; }
+  .development-tabs { gap: 8px; border-color: var(--ui-border); }
+  .development-tabs button { font-size: 14px; border-radius: 10px; }
+  .profile-card fieldset { align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+  .assignment-heading { background: var(--ui-surface); color: var(--ui-text); border: 1px solid var(--ui-border); border-left: 4px solid var(--ui-brand); }
+  .assignment-heading :is(p, span) { color: var(--ui-text-muted); }
+  .assignment-heading h1 { color: var(--ui-text); }
+  .setup-entry { background: var(--ui-brand-soft); color: var(--ui-text); border-color: var(--ui-border); }
+  .setup-entry :is(a, button) { color: var(--ui-success); }
+  .assistant-page button:not(.secondary), .outcome-page button:not(.secondary) { background: var(--ui-brand); color: #fff; }
+  :is(.assistant-page, .outcome-page) .secondary { background: var(--ui-surface); color: var(--ui-text); border-color: var(--ui-border); }
+  .assistant-page .day-options .selected { background: var(--ui-brand); color: #fff; }
+  .outcome-page { color: var(--ui-text); padding: 0; }
+  .outcome-page :is(.totals > div, thead, .notice, .decisions, .late) { background: var(--ui-surface-muted); color: var(--ui-text); }
+  .outcome-page :is(.totals span, .exam, small, .confirm p) { color: var(--ui-text-muted); }
+  .outcome-page :is(.issues, .error), .today-error { background: var(--coaching-danger-soft); color: var(--ui-danger); border-color: var(--ui-danger); }
+  .outcome-page :is(a, .transfer) { color: var(--ui-success); }
+  .outcome-page :is(table, thead) { font-size: 13px; }
+  .outcome-page .totals span { font-size: 12px; }
+  :is(input, textarea)::placeholder { color: var(--ui-text-muted); opacity: 1; }
+}
+@media (max-width: 1100px) {
+  .coaching-shell .coaching-body .coaching-content {
+    .assistant-layout { grid-template-columns: minmax(0, 1fr); }
+    .topic-row { flex-wrap: wrap; }
+    .topic-row select { width: 100%; min-width: 0; }
+  }
+}
+@media (max-width: 600px) {
+  .coaching-shell .coaching-body .coaching-content {
+    .study-plans aside.panel { max-height: 42dvh; }
+    :is(.weekly-review, .profile-card) { padding: 16px; }
+    :is(.actions, .filters, .form-grid, .composer) { min-width: 0; }
+    .form-grid, .composer { grid-template-columns: minmax(0, 1fr); }
+    .topic-row { flex-wrap: wrap; }
+    .topic-row select { width: 100%; min-width: 0; }
+    :is(.week-picker, .development-tabs) { gap: 8px; }
+    .development-tabs button { flex: 1 1 auto; }
+    .dialog-backdrop { padding: 12px; }
+    .slot-dialog { width: 100%; max-width: 420px; max-height: calc(100dvh - 24px); }
+  }
+  body:has(.coaching-shell) .ui-toast { max-width: calc(100vw - 24px); }
+}
+
+.coaching-shell .coaching-body .coaching-content .profile-card button[type=submit] { background: var(--ui-brand); color: #fff; border-color: var(--ui-brand); }
+
+// Recorded-plan cards and controls carry their own semantic lesson palette.
+.coaching-shell .coaching-body .coaching-content .plan-calendar {
+  :is(.timed-block,.month-block,.untimed-block){background:color-mix(in srgb,var(--lesson-color) 17%,var(--ui-surface));color:var(--ui-text);border-color:color-mix(in srgb,var(--lesson-color) 40%,var(--ui-border));border-left-color:var(--lesson-color)}
+  :is(.timed-block,.month-block,.untimed-block):hover:not(:disabled){background:color-mix(in srgb,var(--lesson-color) 25%,var(--ui-surface))}
+  .day-track{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 59px,var(--ui-border) 59px,var(--ui-border) 60px)}
+  :is(.date-tools,.move-tools,.period-controls)>button{background:color-mix(in srgb,var(--ui-brand) 13%,var(--ui-surface));border-color:color-mix(in srgb,var(--ui-brand) 35%,var(--ui-border));box-shadow:var(--coaching-action-shadow)}
+  .move-tools>button.add-study,button.day-detail{background:var(--ui-brand);color:white;border-color:var(--ui-brand);box-shadow:var(--coaching-action-shadow)}
+  .calendar-context-menu button{background:transparent;min-height:42px}
+}
+
+.coaching-shell .coaching-body .coaching-content app-study-plan-calendar {
+.calendar-context-menu{position:fixed;z-index:800;width:248px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;box-sizing:border-box;background:var(--ui-surface,white);color:var(--ui-text,#233c35);border:1px solid var(--ui-border,#d8e3df);border-radius:14px;padding:8px;box-shadow:0 14px 45px #102d3a35}
+.calendar-context-menu p{margin:4px 8px 8px;font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.calendar-context-menu small{display:block;font-size:11px;font-weight:400;padding:5px 0;color:var(--ui-text-muted,#64756d)}
+.plan-calendar .calendar-context-menu button{display:block;width:100%;min-height:42px;text-align:left;border:0;background:transparent;border-radius:8px;box-shadow:none}
+.plan-calendar .calendar-context-menu button:hover:not(:disabled){background:var(--ui-brand-soft,#e6f3ed)}
+.plan-calendar .calendar-context-menu .danger{color:var(--ui-danger,#b53140)}
+}

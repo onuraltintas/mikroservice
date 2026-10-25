@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
@@ -106,33 +107,33 @@ import {
     </section>
   `,
   styles: [`
-    .teacher-plan { display: grid; gap: 1rem; margin-top: 1rem; color: #243b36; }
+    .teacher-plan { display: grid; gap: 1rem; margin-top: 1rem; color: var(--ui-text); }
     .plan-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-    .plan-heading h2 { margin: 0; font: 400 1.55rem Georgia, 'Times New Roman', serif; }
-    .plan-heading p:not(.eyebrow), .muted { color: #687872; font-size: .875rem; line-height: 1.55; }
-    .eyebrow { margin: 0 0 .4rem; color: #64876e; font-size: .7rem; font-weight: 800; letter-spacing: .12em; }
-    .card { padding: 1rem; border: 1px solid #e0e5db; border-radius: .8rem; background: #fffefa; }
+    .plan-heading h2 { margin: 0; font: 400 1.55rem var(--ui-font-body); }
+    .plan-heading p:not(.eyebrow), .muted { color: var(--ui-text-muted); font-size: .875rem; line-height: 1.55; }
+    .eyebrow { margin: 0 0 .4rem; color: var(--ui-text-muted); font-size: .7rem; font-weight: 800; letter-spacing: .12em; }
+    .card { padding: 1rem; border: 1px solid var(--ui-border); border-radius: .8rem; background: var(--ui-surface); }
     .card h3 { margin: 0 0 .8rem; font-size: 1rem; }
-    .capacity { color: #52645e; font-size: .9rem; }
+    .capacity { color: var(--ui-text); font-size: .9rem; }
     .student-list, .plans { display: grid; gap: .5rem; padding: 0; list-style: none; }
-    .student-list li, .request-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .7rem 0; border-top: 1px solid #e8ece5; }
-    small { display: block; margin-top: .2rem; color: #718079; font-size: .78rem; }
-    .plans li { padding: .75rem; border: 1px solid #e0e5db; border-radius: .6rem; }
-    .plans li.selected { border-color: #64876e; background: #f3f7f1; }
+    .student-list li, .request-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .7rem 0; border-top: 1px solid var(--ui-border); }
+    small { display: block; margin-top: .2rem; color: var(--ui-text-muted); font-size: .78rem; }
+    .plans li { padding: .75rem; border: 1px solid var(--ui-border); border-radius: .6rem; }
+    .plans li.selected { border-color: var(--ui-border); background: var(--ui-surface-muted); }
     .plans label { display: flex; align-items: flex-start; gap: .65rem; cursor: pointer; }
-    .bank-details { margin-top: 1rem; padding: .8rem; border-radius: .6rem; background: #f3f4ed; }
+    .bank-details { margin-top: 1rem; padding: .8rem; border-radius: .6rem; background: var(--ui-surface); }
     .bank-details h4 { margin: 0 0 .4rem; }
-    .iban { font-family: monospace; font-size: 1rem; letter-spacing: .03em; }
+    .iban { font-family: inherit; font-size: 1rem; letter-spacing: .03em; }
     .payment-form { display: grid; gap: .7rem; margin-top: 1rem; }
     .payment-form label { display: grid; gap: .25rem; font-size: .85rem; }
-    input:not([type=radio]), textarea { width: 100%; border: 1px solid #cbd5cd; border-radius: .45rem; padding: .55rem .7rem; font: inherit; }
-    button { min-height: 2.4rem; border: 1px solid #9aa99b; border-radius: .5rem; background: #fffefa; padding: .35rem .7rem; color: #29473b; cursor: pointer; font: inherit; font-size: .83rem; font-weight: 650; }
+    input:not([type=radio]), textarea { width: 100%; border: 1px solid var(--ui-border); border-radius: .45rem; padding: .55rem .7rem; font: inherit; }
+    button { min-height: 2.4rem; border: 1px solid var(--ui-border); border-radius: .5rem; background: var(--ui-surface); padding: .35rem .7rem; color: var(--ui-text); cursor: pointer; font: inherit; font-size: .83rem; font-weight: 650; }
     button:disabled { cursor: not-allowed; opacity: .55; }
-    .payment-form button { justify-self: start; border-color: #29473b; background: #29473b; color: white; }
-    .pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin-top: .75rem; color: #687872; font-size: .8rem; }
-    .message { padding: .75rem; border-radius: .5rem; background: #f3f4ed; font-size: .85rem; }
-    .error { border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; }
-    .success { border: 1px solid #bbf7d0; background: #f0fdf4; color: #166534; }
+    .payment-form button { justify-self: start; border-color: var(--ui-border); background: var(--ui-brand); color: white; }
+    .pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin-top: .75rem; color: var(--ui-text); font-size: .8rem; }
+    .message { padding: .75rem; border-radius: .5rem; background: var(--ui-surface); font-size: .85rem; }
+    .error { border: 1px solid var(--ui-border); background: var(--coaching-danger-soft); color: var(--ui-danger); }
+    .success { border: 1px solid var(--ui-border); background: var(--ui-brand-soft); color: var(--ui-success); }
     @media (max-width: 640px) { .plan-heading, .student-list li, .request-row { align-items: stretch; flex-direction: column; } }
   `]
 })
@@ -283,4 +284,7 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
     const body = error.error as { message?: unknown };
     return typeof body.message === 'string' && body.message.trim() ? body.message : fallback;
   }
+
+  private readonly errorFeedback = coachingFeedback(undefined, this.error);
+  private readonly successFeedback = coachingFeedback(this.success);
 }

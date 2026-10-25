@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
@@ -15,7 +16,7 @@ import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.c
 })
 export class CoachingTeacherStudentsComponent implements OnInit {
   @ViewChild(CoachingTeacherStudentDetailComponent) private detail?: CoachingTeacherStudentDetailComponent;
-  canLeavePage(): boolean { return this.detail?.canLeavePage() ?? true; }
+  async canLeavePage(): Promise<boolean> { return await this.detail?.canLeavePage() ?? true; }
   private readonly studentsService = inject(CoachingTeacherStudentsService);
   private requestVersion = 0;
 
@@ -162,4 +163,8 @@ export class CoachingTeacherStudentsComponent implements OnInit {
     }
     return fallback;
   }
+
+  private readonly errorMessageFeedback = coachingFeedback(undefined, this.errorMessage);
+  private readonly invitationErrorMessageFeedback = coachingFeedback(undefined, this.invitationErrorMessage);
+  private readonly invitationSuccessMessageFeedback = coachingFeedback(this.invitationSuccessMessage);
 }

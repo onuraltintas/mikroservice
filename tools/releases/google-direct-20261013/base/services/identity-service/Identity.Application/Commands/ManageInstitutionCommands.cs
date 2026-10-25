@@ -1,0 +1,521 @@
+using EduPlatform.Shared.Kernel.Results;
+using Identity.Application.DTOs.Institutions;
+using Identity.Application.Authorization;
+using Identity.Application.Interfaces;
+using Identity.Application.Exceptions;
+using Identity.Domain.Entities;
+using Identity.Domain.Enums;
+using FluentValidation;
+using MediatR;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace Identity.Application.Commands.ManageInstitutions;
+
+public sealed record CreateInstitutionCommand(
+    string Name,
+    InstitutionType Type,
+    string? ProvinceId,
+    string? DistrictId,
+    string? Email,
+    string? IdempotencyKey = null) : IRequest<Result<Guid>>;
+
+public sealed class CreateInstitutionCommandValidator : AbstractValidator<CreateInstitutionCommand>
+{
+    public CreateInstitutionCommandValidator()
+    {
+        RuleFor(command => command.Name).NotEmpty().MaximumLength(200);
+        RuleFor(command => command.ProvinceId).NotEmpty().MaximumLength(12);
+        RuleFor(command => command.DistrictId).NotEmpty().MaximumLength(16);
+        RuleFor(command => command.Email).EmailAddress().MaximumLength(255)
+            .When(command => !string.IsNullOrWhiteSpace(command.Email));
+        RuleFor(command => command.Type).IsInEnum();
+        RuleFor(command => command.IdempotencyKey)
+            .NotEmpty()
+            .Matches("^[A-Za-z0-9._~-]{16,128}$")
+            .WithMessage("Idempotency-Key 16-128 güvenli karakterden oluşmalıdır.");
+    }
+}
+
+public sealed record UpdateInstitutionCommand(
+    Guid Id,
+    string? Name,
+    string? Address,
+    string? ProvinceId,
+    string? DistrictId,
+    string? Phone,
+    string? Email,
+    string? Website,
+    LicenseType? LicenseType,
+    int? MaxStudents,
+    int? MaxTeachers,
+    DateTime? SubscriptionEndDate) : IRequest<Result>;
+
+public sealed class UpdateInstitutionCommandValidator : AbstractValidator<UpdateInstitutionCommand>
+{
+    public UpdateInstitutionCommandValidator()
+    {
+        RuleFor(command => command.Id).NotEmpty();
+        RuleFor(command => command.Name).MaximumLength(200).When(command => command.Name is not null);
+        RuleFor(command => command.Address).MaximumLength(500).When(command => command.Address is not null);
+        RuleFor(command => command.ProvinceId).MaximumLength(12).When(command => command.ProvinceId is not null);
+        RuleFor(command => command.DistrictId).MaximumLength(16).When(command => command.DistrictId is not null);
+        RuleFor(command => command.DistrictId).NotEmpty().When(command => command.ProvinceId is not null);
+        RuleFor(command => command.ProvinceId).NotEmpty().When(command => command.DistrictId is not null);
+        RuleFor(command => command.Phone).MaximumLength(50).When(command => command.Phone is not null);
+        RuleFor(command => command.Email).EmailAddress().MaximumLength(255)
+            .When(command => !string.IsNullOrWhiteSpace(command.Email));
+        RuleFor(command => command.Website).MaximumLength(500).When(command => command.Website is not null);
+        RuleFor(command => command.LicenseType).IsInEnum().When(command => command.LicenseType.HasValue);
+        RuleFor(command => command.MaxStudents).InclusiveBetween(1, 10_000).When(command => command.MaxStudents.HasValue);
+        RuleFor(command => command.MaxTeachers).InclusiveBetween(1, 1_000).When(command => command.MaxTeachers.HasValue);
+    }
+}
+
+public sealed record SetInstitutionActiveCommand(Guid Id, bool IsActive) : IRequest<Result>;
+
+public sealed record AssignInstitutionAdminCommand(
+    Guid InstitutionId,
+    Guid UserId,
+    InstitutionAdminRole Role,
+    PlatformProduct? Product = null) : IRequest<Result>;
+
+public sealed class AssignInstitutionAdminCommandValidator : AbstractValidator<AssignInstitutionAdminCommand>
+{
+    public AssignInstitutionAdminCommandValidator()
+    {
+        RuleFor(command => command.InstitutionId).NotEmpty();
+        RuleFor(command => command.UserId).NotEmpty();
+        RuleFor(command => command.Role).IsInEnum();
+        RuleFor(command => command.Product)
+            .NotNull()
+            .Must(product => product.HasValue && Enum.IsDefined(product.Value))
+            .WithMessage("Ürün kapsamı zorunludur ve geçerli olmalıdır.");
+    }
+}
+
+public sealed record SetInstitutionAdminActiveCommand(
+    Guid InstitutionId,
+    Guid UserId,
+    bool IsActive,
+    PlatformProduct? Product = null) : IRequest<Result>;
+
+public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInstitutionCommand, Result<Guid>>
+{
+    private readonly IInstitutionRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly InstitutionManagementAuthorization _authorization;
+    private readonly IIdempotencyRepository _idempotencyRepository;
+    private readonly ILocationRepository _locationRepository;
+
+    public CreateInstitutionCommandHandler(
+        IInstitutionRepository repository,
+        IUnitOfWork unitOfWork,
+        InstitutionManagementAuthorization authorization,
+        IIdempotencyRepository idempotencyRepository,
+        ILocationRepository locationRepository)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _authorization = authorization;
+        _idempotencyRepository = idempotencyRepository;
+        _locationRepository = locationRepository;
+    }
+
+    public async Task<Result<Guid>> Handle(CreateInstitutionCommand request, CancellationToken cancellationToken)
+    {
+        var access = _authorization.EnsureSystemAdministrator();
+        if (access.IsFailure)
+        {
+            return Result.Failure<Guid>(access.Error);
+        }
+
+        var key = request.IdempotencyKey?.Trim();
+        var normalizedName = request.Name.Trim();
+        var normalizedProvinceId = request.ProvinceId?.Trim();
+        var normalizedDistrictId = request.DistrictId?.Trim();
+        var normalizedEmail = request.Email?.Trim();
+        var requestHash = CreateRequestHash(normalizedName, request.Type, normalizedProvinceId, normalizedDistrictId, normalizedEmail);
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return Result.Failure<Guid>(new Error(
+                "Idempotency.Required",
+                "Kurum oluşturma isteği için Idempotency-Key zorunludur."));
+        }
+
+        var existing = await _idempotencyRepository.GetAsync(
+            "identity.institutions.create",
+            key,
+            cancellationToken);
+        if (existing is not null)
+        {
+            return existing.Matches(requestHash)
+                ? Result.Success(existing.ResourceId)
+                : Result.Failure<Guid>(new Error(
+                    "Idempotency.Conflict",
+                    "Aynı Idempotency-Key farklı bir istek gövdesiyle tekrar kullanılamaz."));
+        }
+
+        var institution = Institution.Create(normalizedName, request.Type, email: normalizedEmail);
+        if (normalizedProvinceId is not null && normalizedDistrictId is not null)
+        {
+            var location = await _locationRepository.GetLocationAsync(
+                normalizedProvinceId,
+                normalizedDistrictId,
+                cancellationToken);
+            if (location is null)
+            {
+                return Result.Failure<Guid>(new Error(
+                    "Institution.InvalidLocation",
+                    "Seçilen il ve ilçe eşleşmiyor."));
+            }
+
+            institution.SetLocation(location.Value.Province, location.Value.District);
+        }
+        await _repository.AddAsync(institution, cancellationToken);
+
+        await _idempotencyRepository.AddAsync(
+            IdempotencyRecord.Create(
+                "identity.institutions.create",
+                key,
+                requestHash,
+                institution.Id),
+            cancellationToken);
+
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (IdempotencyConflictException)
+        {
+            var concurrent = await _idempotencyRepository.GetAsync(
+                "identity.institutions.create",
+                key,
+                cancellationToken);
+            if (concurrent is not null && concurrent.Matches(requestHash))
+            {
+                return Result.Success(concurrent.ResourceId);
+            }
+
+            throw;
+        }
+
+        return Result.Success(institution.Id);
+    }
+
+    private static string CreateRequestHash(
+        string name,
+        InstitutionType type,
+        string? provinceId,
+        string? districtId,
+        string? email)
+    {
+        var canonical = string.Join(
+            "|",
+            name.Length,
+            name,
+            (int)type,
+            provinceId?.Length ?? 0,
+            provinceId ?? string.Empty,
+            districtId?.Length ?? 0,
+            districtId ?? string.Empty,
+            email?.ToLowerInvariant().Length ?? 0,
+            email?.ToLowerInvariant() ?? string.Empty);
+
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
+    }
+}
+
+public sealed class UpdateInstitutionCommandHandler : IRequestHandler<UpdateInstitutionCommand, Result>
+{
+    private readonly IInstitutionRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly InstitutionManagementAuthorization _authorization;
+    private readonly ILocationRepository _locationRepository;
+
+    public UpdateInstitutionCommandHandler(
+        IInstitutionRepository repository,
+        IUnitOfWork unitOfWork,
+        InstitutionManagementAuthorization authorization,
+        ILocationRepository locationRepository)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _authorization = authorization;
+        _locationRepository = locationRepository;
+    }
+
+    public async Task<Result> Handle(UpdateInstitutionCommand request, CancellationToken cancellationToken)
+    {
+        var access = await _authorization.EnsureInstitutionAccessAsync(request.Id, cancellationToken);
+        if (access.IsFailure)
+        {
+            return access;
+        }
+
+        if (!_authorization.IsSystemAdministrator
+            && (request.LicenseType.HasValue
+                || request.MaxStudents.HasValue
+                || request.MaxTeachers.HasValue
+                || request.SubscriptionEndDate.HasValue))
+        {
+            return Result.Failure(Error.Forbidden("Lisans ve kapasite ayarlarını yalnızca sistem yöneticisi değiştirebilir."));
+        }
+
+        var institution = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (institution is null)
+        {
+            return Result.Failure(new Error("Institution.NotFound", "Kurum bulunamadı."));
+        }
+
+        if (request.ProvinceId is not null || request.DistrictId is not null)
+        {
+            var location = await _locationRepository.GetLocationAsync(
+                request.ProvinceId!,
+                request.DistrictId!,
+                cancellationToken);
+            if (location is null)
+            {
+                return Result.Failure(new Error(
+                    "Institution.InvalidLocation",
+                    "Seçilen il ve ilçe eşleşmiyor."));
+            }
+
+            institution.SetLocation(location.Value.Province, location.Value.District);
+        }
+
+        institution.UpdateInfo(request.Name?.Trim(), request.Address?.Trim(), null,
+            null, request.Phone?.Trim(), request.Email?.Trim(), request.Website?.Trim());
+
+        if (request.LicenseType.HasValue || request.MaxStudents.HasValue || request.MaxTeachers.HasValue || request.SubscriptionEndDate.HasValue)
+        {
+            institution.UpgradeLicense(
+                request.LicenseType ?? institution.LicenseType,
+                request.MaxStudents ?? institution.MaxStudents,
+                request.MaxTeachers ?? institution.MaxTeachers,
+                request.SubscriptionEndDate ?? institution.SubscriptionEndDate ?? DateTime.UtcNow.AddDays(14));
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+}
+
+public sealed class SetInstitutionActiveCommandHandler : IRequestHandler<SetInstitutionActiveCommand, Result>
+{
+    private readonly IInstitutionRepository _repository;
+    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly InstitutionManagementAuthorization _authorization;
+
+    public SetInstitutionActiveCommandHandler(
+        IInstitutionRepository repository,
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
+        InstitutionManagementAuthorization authorization)
+    {
+        _repository = repository;
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+        _authorization = authorization;
+    }
+
+    public async Task<Result> Handle(SetInstitutionActiveCommand request, CancellationToken cancellationToken)
+    {
+        var access = _authorization.EnsureSystemAdministrator();
+        if (access.IsFailure)
+        {
+            return access;
+        }
+
+        var institution = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (institution is null)
+        {
+            return Result.Failure(new Error("Institution.NotFound", "Kurum bulunamadı."));
+        }
+
+        if (request.IsActive) institution.Activate();
+        else
+        {
+            institution.Deactivate();
+            await _userRepository.RevokeActiveRefreshTokensForInstitutionAsync(
+                request.Id,
+                "security-sensitive institution deactivation",
+                cancellationToken);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+}
+
+public sealed class AssignInstitutionAdminCommandHandler : IRequestHandler<AssignInstitutionAdminCommand, Result>
+{
+    private readonly IInstitutionRepository _repository;
+    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly InstitutionManagementAuthorization _authorization;
+
+    public AssignInstitutionAdminCommandHandler(
+        IInstitutionRepository repository,
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
+        InstitutionManagementAuthorization authorization)
+    {
+        _repository = repository;
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+        _authorization = authorization;
+    }
+
+    public async Task<Result> Handle(AssignInstitutionAdminCommand request, CancellationToken cancellationToken)
+    {
+        if (request.Product is not { } product || !Enum.IsDefined(product))
+        {
+            return Result.Failure(new Error("InstitutionAdmin.ProductRequired", "Kurum yöneticisi için ürün kapsamı zorunludur."));
+        }
+
+        if (!_authorization.IsSystemAdministrator && _authorization.CurrentProduct != product)
+        {
+            return Result.Failure(Error.Forbidden("Kurum yöneticisi yalnızca etkin ürün kapsamında atanabilir."));
+        }
+
+        var access = await _authorization.EnsureInstitutionAccessAsync(request.InstitutionId, cancellationToken);
+        if (access.IsFailure)
+        {
+            return access;
+        }
+
+        var institution = await _repository.GetByIdAsync(request.InstitutionId, cancellationToken);
+        if (institution is null || !institution.IsActive)
+        {
+            return Result.Failure(new Error("Institution.NotFound", "Aktif kurum bulunamadı."));
+        }
+
+        var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user is null || !user.IsActive)
+        {
+            return Result.Failure(new Error("User.NotFound", "Aktif kullanıcı bulunamadı."));
+        }
+
+        if (!_authorization.IsSystemAdministrator)
+        {
+            var userAccess = await _authorization.EnsureUserInCurrentInstitutionAsync(
+                request.UserId,
+                cancellationToken);
+            if (userAccess.IsFailure)
+            {
+                return userAccess;
+            }
+        }
+
+        var canManageInstitution = user.Roles.Any(role =>
+            role.Product == product
+            && (string.Equals(role.Role?.Name, Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role.Role?.Name, Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), StringComparison.OrdinalIgnoreCase)));
+        if (!canManageInstitution)
+        {
+            return Result.Failure(new Error(
+                "User.InvalidRole",
+                "Kurum yöneticisi atanacak kullanıcı InstitutionAdmin veya InstitutionOwner rolüne sahip olmalıdır."));
+        }
+
+        if (!user.HasProductAccess(product))
+        {
+            return Result.Failure(new Error(
+                "User.ProductAccessRequired",
+                "Kullanıcının seçilen ürüne erişimi bulunmuyor."));
+        }
+
+        var existingAdmin = await _repository.GetAdminAsync(
+            request.InstitutionId,
+            request.UserId,
+            product,
+            cancellationToken);
+        if (existingAdmin?.IsActive == true)
+        {
+            return Result.Failure(new Error("InstitutionAdmin.Exists", "Kullanıcı zaten bu kurumun yöneticisi."));
+        }
+
+        if (existingAdmin is not null)
+        {
+            existingAdmin.ChangeRole(request.Role);
+            existingAdmin.Activate();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }
+
+        await _repository.AddAdminAsync(
+            InstitutionAdmin.Create(request.UserId, request.InstitutionId, request.Role, product),
+            cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+}
+
+public sealed class SetInstitutionAdminActiveCommandHandler
+    : IRequestHandler<SetInstitutionAdminActiveCommand, Result>
+{
+    private readonly IInstitutionRepository _repository;
+    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly InstitutionManagementAuthorization _authorization;
+
+    public SetInstitutionAdminActiveCommandHandler(
+        IInstitutionRepository repository,
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
+        InstitutionManagementAuthorization authorization)
+    {
+        _repository = repository;
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+        _authorization = authorization;
+    }
+
+    public async Task<Result> Handle(
+        SetInstitutionAdminActiveCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Product is not { } product || !Enum.IsDefined(product))
+        {
+            return Result.Failure(new Error("InstitutionAdmin.ProductRequired", "Kurum yöneticisi için ürün kapsamı zorunludur."));
+        }
+
+        if (!_authorization.IsSystemAdministrator && _authorization.CurrentProduct != product)
+        {
+            return Result.Failure(Error.Forbidden("Kurum yöneticisi yalnızca etkin ürün kapsamında değiştirilebilir."));
+        }
+
+        var access = await _authorization.EnsureInstitutionAccessAsync(request.InstitutionId, cancellationToken);
+        if (access.IsFailure)
+        {
+            return access;
+        }
+
+        var admin = await _repository.GetAdminAsync(
+            request.InstitutionId,
+            request.UserId,
+            product,
+            cancellationToken);
+        if (admin is null)
+        {
+            return Result.Failure(new Error("InstitutionAdmin.NotFound", "Kurum yöneticisi bulunamadı."));
+        }
+
+        if (request.IsActive) admin.Activate();
+        else
+        {
+            admin.Deactivate();
+            await _userRepository.RevokeActiveRefreshTokensForProductAsync(
+                request.UserId,
+                product,
+                "security-sensitive institution membership change",
+                cancellationToken);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+}

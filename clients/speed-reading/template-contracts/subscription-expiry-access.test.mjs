@@ -13,7 +13,9 @@ test('subscription lookup failures deny entry instead of allowing it', () => {
 
 test('direct exercise routes check paid access while initial assessment stays free', () => {
   assert.match(routes, /path: 'exercises\/universal-player\/:exerciseId',[\s\S]*?canActivate: \[authGuard, subscriptionGuard\]/);
-  assert.match(routes, /path: 'assessment',[\s\S]*?canActivate: \[authGuard, profileSetupGuard\]/);
+  const assessmentRoute = routes.split("path: 'assessment',")[1]?.split('loadComponent:')[0] ?? '';
+  assert.match(assessmentRoute, /canActivate: \[authGuard, staffOnboardingGuard, profileSetupGuard, assessmentEntryGuard\]/);
+  assert.doesNotMatch(assessmentRoute, /subscriptionGuard/);
   assert.match(guard, /queryParamMap\.get\('assessmentMode'\)/);
   assert.match(guard, /queryParamMap\.get\('assessmentAttemptId'\)/);
 });

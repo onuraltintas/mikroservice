@@ -51,17 +51,12 @@ type RelationKind = 'lessons' | 'units' | 'topics';
               <div><label for="catalog-edit-order" class="block text-sm font-medium">Sıralama (isteğe bağlı)</label><input id="catalog-edit-order" name="order" type="number" min="0" step="1" [(ngModel)]="form.displayOrder" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
             }
             @if (kind === 'topics') { <div><label for="catalog-edit-minutes" class="block text-sm font-medium">Tahmini süre (dakika)</label><input id="catalog-edit-minutes" name="minutes" type="number" min="1" step="1" [(ngModel)]="form.estimatedMinutes" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div> }
-            @if (kind === 'universityPrograms') {
-              <div><label for="catalog-edit-university" class="block text-sm font-medium">Üniversite</label><input id="catalog-edit-university" name="university" [(ngModel)]="form.universityName" required maxlength="300" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-              <div><label for="catalog-edit-code" class="block text-sm font-medium">Program kodu</label><input id="catalog-edit-code" name="programCode" [(ngModel)]="form.programCode" maxlength="50" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-              <div><label for="catalog-edit-score-type" class="block text-sm font-medium">Puan türü</label><input id="catalog-edit-score-type" name="scoreType" [(ngModel)]="form.scoreType" maxlength="30" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-            }
             @if (kind === 'schools') {
               @if (document(); as current) { <p class="text-sm text-gray-500 sm:col-span-2">Kaynak konum (korunur): {{ current.data.city }} / {{ current.data.district }}. Aşağıdaki seçim ortak dizin eşleştirmesidir.</p> }
               <div><label for="catalog-edit-province" class="block text-sm font-medium">Doğrulanmış şehir</label><select id="catalog-edit-province" name="province" [(ngModel)]="form.provinceId" (ngModelChange)="provinceChanged()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option [ngValue]="null">Seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select></div>
               <div><label for="catalog-edit-district" class="block text-sm font-medium">Doğrulanmış ilçe</label><select id="catalog-edit-district" name="district" [(ngModel)]="form.districtId" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option [ngValue]="null">Seçin</option>@for (district of districts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select></div>
             }
-            @if (kind === 'schools' || kind === 'universityPrograms') {
+            @if (kind === 'schools') {
               <div><label for="catalog-edit-score" class="block text-sm font-medium">Referans puan (isteğe bağlı)</label><input id="catalog-edit-score" name="score" type="number" min="0" [max]="kind === 'schools' ? 500 : 999999.9999" step="0.0001" [(ngModel)]="form.minimumScore" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
               <div><label for="catalog-edit-year" class="block text-sm font-medium">Puan yılı (isteğe bağlı)</label><input id="catalog-edit-year" name="year" type="number" min="1900" max="2200" step="1" [(ngModel)]="form.scoreYear" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
             }
@@ -133,7 +128,6 @@ export class CoachingCatalogEditorComponent implements OnInit {
       case 'units': return { ...common, lessonId: f.lessonId ?? null, displayOrder: f.displayOrder ?? null };
       case 'topics': return { ...common, lessonId: f.lessonId ?? null, unitId: f.unitId ?? null, parentId: f.parentId ?? null, displayOrder: f.displayOrder ?? null, estimatedMinutes: f.estimatedMinutes ?? null };
       case 'schools': return { ...common, provinceId: f.provinceId ?? null, districtId: f.districtId ?? null, minimumScore: f.minimumScore ?? null, scoreYear: f.scoreYear ?? null };
-      case 'universityPrograms': return { ...common, universityName: f.universityName?.trim() || '', programCode: f.programCode?.trim() || null, scoreType: f.scoreType?.trim() || null, minimumScore: f.minimumScore ?? null, scoreYear: f.scoreYear ?? null };
     }
   }
   hasUnsavedChanges() { return !!this.document() && JSON.stringify(this.fields()) !== this.initialFields; }
@@ -148,11 +142,11 @@ export class CoachingCatalogEditorComponent implements OnInit {
   private valid(r: CoachingCatalogSaveRequest) {
     const integer = (value: number | null | undefined, min: number, max = 2147483647) => value == null || (Number.isInteger(value) && value >= min && value <= max);
     if (!r.name || r.name.length > 300 || r.reason.length < 5 || r.reason.length > 500 || !integer(r.gradeNumber, 1, 12) || !integer(r.displayOrder, 0) || !integer(r.estimatedMinutes, 1) || !integer(r.scoreYear, 1900, 2200)) return false;
-    if (r.minimumScore != null && (!Number.isFinite(r.minimumScore) || r.minimumScore < 0 || r.minimumScore > (this.kind === 'schools' ? 500 : 999999.9999) || Math.abs(r.minimumScore * 10000 - Math.round(r.minimumScore * 10000)) > 0.000001)) return false;
+    if (r.minimumScore != null && (!Number.isFinite(r.minimumScore) || r.minimumScore < 0 || r.minimumScore > 500 || Math.abs(r.minimumScore * 10000 - Math.round(r.minimumScore * 10000)) > 0.000001)) return false;
     if ((this.kind === 'units' || this.kind === 'topics') && !r.lessonId) return false;
     if (this.kind === 'topics' && !r.unitId) return false;
     if (this.kind === 'schools' && ((!this.recordId && (!r.provinceId || !r.districtId)) || (!!r.provinceId !== !!r.districtId))) return false;
-    return this.kind !== 'universityPrograms' || (!!r.universityName && r.universityName.length <= 300 && (r.programCode?.length ?? 0) <= 50 && (r.scoreType?.length ?? 0) <= 30);
+    return true;
   }
   async changeStatus() {
     const current = this.document();

@@ -7,6 +7,8 @@ RUN dotnet publish services/course-management-service/CourseManagement.API/Cours
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
+RUN mkdir -p /var/lib/course-management/attachments \
+    && chown -R app:app /var/lib/course-management
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 USER app

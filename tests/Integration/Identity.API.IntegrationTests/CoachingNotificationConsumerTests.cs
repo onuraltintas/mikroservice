@@ -170,6 +170,13 @@ public sealed class CoachingNotificationConsumerTests
             foreach(var type in new[]{"WeeklyDecisionCreated","WeeklyDecisionUpdated"}) {
                 var call=dispatcher.Calls.Single(x=>x.Type==type);call.RecipientIds.Should().Equal(student);call.RelatedEntityId.Should().Be($"weekly:{student:D}:2026-10-12:{decision:D}");
             }
+            var transferId=Guid.NewGuid();
+            await harness.Bus.Publish(new WeeklyDecisionChangedEvent(decision,student,teacher,new(2026,10,12),false,true),x=>x.MessageId=transferId);
+            for(var i=0;i<50 && dispatcher.Calls.Count<4;i++) await Task.Delay(20);
+            var transfer=dispatcher.Calls.Single(x=>x.EventMessageId==transferId);
+            transfer.RecipientIds.Should().Equal(student,teacher);transfer.Type.Should().Be("WeeklyDecisionUpdated");
+            transfer.RelatedEntityId.Should().Be($"weekly:{student:D}:2026-10-12:{decision:D}");
+            transfer.Title.Should().Contain("devredildi");
         } finally { await harness.Stop(); }
     }
 

@@ -8,7 +8,7 @@ public sealed record CatalogPreflightReport(IReadOnlyDictionary<string, int> Cou
 public static class CatalogPreflight
 {
     private static readonly string[] FileNames = ["lessons.json", "units-derived.json", "upper-subjects.json",
-        "subjects.json", "university-programs.json", "lgs-programs.json"];
+        "subjects.json", "lgs-programs.json"];
 
     public static async Task<CatalogPreflightReport> ReadAsync(string directory, CancellationToken cancellationToken = default)
         => Validate(await ReadFilesAsync(directory, cancellationToken));
@@ -32,7 +32,7 @@ public static class CatalogPreflight
     public static CatalogPreflightReport Validate(IReadOnlyDictionary<string, string> files)
     {
         if (files.Count != FileNames.Length || files.Keys.Any(x => !FileNames.Contains(x, StringComparer.Ordinal)))
-            throw new ArgumentException("Only the six approved catalog files are accepted.");
+            throw new ArgumentException("Only the five approved catalog files are accepted.");
         var counts = new Dictionary<string, int>();
         var errors = new List<string>();
         var rows = new Dictionary<string, Dictionary<string, JsonElement>>();
@@ -48,7 +48,7 @@ public static class CatalogPreflight
                 var id = Text(row, "id");
                 if (string.IsNullOrWhiteSpace(id)) { errors.Add($"{name}: missing id"); continue; }
                 if (!indexed.TryAdd(id, row.Clone())) errors.Add($"{name}: duplicate id {id}");
-                var nameField = name == "university-programs.json" ? "programName" : name == "lgs-programs.json" ? "schoolName" : "name";
+            var nameField = name == "lgs-programs.json" ? "schoolName" : "name";
                 if (string.IsNullOrWhiteSpace(Text(row, nameField))) errors.Add($"{name}: {id} missing {nameField}");
             }
             rows[name] = indexed;

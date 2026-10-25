@@ -41,7 +41,6 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
                 CatalogKind.Units => StudyCatalogUnit.Create("admin-manual", sourceId, request.LessonId!.Value, request.Name, request.DisplayOrder),
                 CatalogKind.Topics => StudyCatalogTopic.Create("admin-manual", sourceId, request.LessonId!.Value, request.UnitId!.Value, request.Name, request.ParentId, request.DisplayOrder, request.EstimatedMinutes),
                 CatalogKind.Schools => CreateSchool(sourceId, request, location!),
-                CatalogKind.UniversityPrograms => TargetUniversityProgram.Create("admin-manual", sourceId, request.UniversityName!, request.Name, request.ProgramCode, request.ScoreType, request.MinimumScore, request.ScoreYear),
                 _ => throw new ArgumentException("Geçerli bir katalog türü seçin.")
             };
         }, ct);
@@ -72,8 +71,6 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
                     school.Edit(request.Name, request.MinimumScore, request.ScoreYear);
                     if (location is not null) school.SetVerifiedLocation(location.Province.Id, location.District.Id);
                     break;
-                case TargetUniversityProgram program:
-                    program.Edit(request.UniversityName!, request.Name, request.ProgramCode, request.ScoreType, request.MinimumScore, request.ScoreYear); break;
             }
             return entity;
         }, ct);
@@ -92,7 +89,6 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
                 case StudyCatalogUnit unit: unit.SetActive(request.IsActive); break;
                 case StudyCatalogTopic topic: topic.SetActive(request.IsActive); break;
                 case TargetSchool school: school.SetActive(request.IsActive); break;
-                case TargetUniversityProgram program: program.SetActive(request.IsActive); break;
             }
             return entity;
         }, ct);
@@ -116,7 +112,7 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
                 await db.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '3s'", ct);
                 await db.Database.ExecuteSqlRawAsync("""
                     LOCK TABLE coaching.study_catalog_lessons, coaching.study_catalog_topics,
-                        coaching.study_catalog_units, coaching.target_schools, coaching.target_university_programs
+                        coaching.study_catalog_units, coaching.target_catalog
                     IN SHARE ROW EXCLUSIVE MODE
                     """, ct);
                 CatalogEditDocument? before = null;
@@ -165,7 +161,6 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
             CatalogKind.Units => await db.StudyCatalogUnits.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct),
             CatalogKind.Topics => await db.StudyCatalogTopics.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct),
             CatalogKind.Schools => await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct),
-            CatalogKind.UniversityPrograms => await db.TargetUniversityPrograms.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct),
             _ => throw new ArgumentException("Geçerli bir katalog türü seçin.")
         };
         return entity ?? throw new BusinessRuleException("Catalog.NotFound", "Katalog kaydı bulunamadı.");
@@ -196,7 +191,6 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
         ValidateReason(r.Reason);
         var lesson = kind == CatalogKind.Lessons;
         var topic = kind == CatalogKind.Topics;
-        var university = kind == CatalogKind.UniversityPrograms;
         var school = kind == CatalogKind.Schools;
         if (!Enum.IsDefined(kind) || r.ScoreYear is < 1900 or > 2200
             || (r.MinimumScore.HasValue && (r.MinimumScore < 0 || r.MinimumScore > 999999.9999m || decimal.Round(r.MinimumScore.Value, 4) != r.MinimumScore))
@@ -204,8 +198,7 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
             || (!lesson && (r.GradeNumber.HasValue || r.ExamCode is not null))
             || (kind is not (CatalogKind.Units or CatalogKind.Topics) && (r.LessonId.HasValue || r.DisplayOrder.HasValue))
             || (!topic && (r.UnitId.HasValue || r.ParentId.HasValue || r.EstimatedMinutes.HasValue))
-            || (!university && (r.UniversityName is not null || r.ProgramCode is not null || r.ScoreType is not null))
-            || (!(school || university) && (r.MinimumScore.HasValue || r.ScoreYear.HasValue))
+            || (!school && (r.MinimumScore.HasValue || r.ScoreYear.HasValue))
             || (!school && (r.ProvinceId is not null || r.DistrictId is not null)))
             throw new ArgumentException("Seçilen katalog için alan değerlerini kontrol edin.");
     }
@@ -215,7 +208,7 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
         if (kind == CatalogKind.Lessons && r.ExamCode != null
             && !await db.Set<StudyCatalogExam>().AnyAsync(x => x.Code == r.ExamCode.Trim().ToUpperInvariant(), ct))
             throw new ArgumentException("Kayıtlı bir sınav türü seçin.");
-        if (kind is CatalogKind.Units or CatalogKind.Topics && (!r.LessonId.HasValue || !await db.StudyCatalogLessons.AnyAsync(x => x.Id == r.LessonId, ct)))
+        if ((kind is CatalogKind.Units or CatalogKind.Topics) && (!r.LessonId.HasValue || !await db.StudyCatalogLessons.AnyAsync(x => x.Id == r.LessonId, ct)))
             throw new ArgumentException("Geçerli bir ders seçin.");
         if (kind == CatalogKind.Topics && (!r.UnitId.HasValue || !await db.StudyCatalogUnits.AnyAsync(x => x.Id == r.UnitId && x.LessonId == r.LessonId, ct)
             || (r.ParentId.HasValue && !await db.StudyCatalogTopics.AnyAsync(x => x.Id == r.ParentId && x.UnitId == r.UnitId && x.LessonId == r.LessonId && x.ParentId == null, ct))))

@@ -1,3 +1,15 @@
+@use '@angular/material' as mat;
+@use '../../../../shared/styles/platform-tokens';
+@use '../../../../shared/styles/platform-components';
+@use '../../../src/app/features/coaching-portal/layout/coaching-student-tokens';
+@use '../../../src/app/features/coaching-portal/layout/coaching-student-surfaces';
+@use './app/coaching-teacher-theme';
+@use '../../../src/app/features/coaching-portal/layout/coaching-workspace-depth';
+
+body:has(.coaching-staff-shell) {
+  @include mat.theme((color: (primary: mat.$azure-palette, tertiary: mat.$blue-palette), typography: Inter, density: 0));
+}
+
 :root {
   color-scheme: light;
   font-family: Inter, "Segoe UI", sans-serif;

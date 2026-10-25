@@ -1,0 +1,60 @@
+using EduPlatform.Shared.Kernel.Results;
+using Identity.Domain.Enums;
+using MediatR;
+
+namespace Identity.Application.Queries.GetUserProfile;
+
+public class UserProfileDto
+{
+    public Guid UserId { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+    public bool EmailConfirmed { get; set; }
+    public bool MfaEnabled { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public int? StudentCount { get; set; }
+    
+    // Common fields
+    public string? AvatarUrl { get; set; }
+    public string? PhoneNumber { get; set; }
+    public List<string> Roles { get; set; } = new();
+    public List<string> Permissions { get; set; } = new();
+    public List<UserProductAccessDto> ProductAccesses { get; set; } = new();
+    public List<UserProductRoleDto> ProductRoles { get; set; } = new();
+
+    // Conditional fields based on role
+    public TeacherDetailsDto? TeacherDetails { get; set; }
+    public StudentDetailsDto? StudentDetails { get; set; }
+}
+
+public class TeacherDetailsDto
+{
+    public string? Title { get; set; }
+    public string[] Subjects { get; set; } = Array.Empty<string>();
+    public int? ExperienceYears { get; set; }
+    public string? Bio { get; set; }
+    public Guid? InstitutionId { get; set; }
+    public string? InstitutionName { get; set; }
+}
+
+public class StudentDetailsDto
+{
+    public int? GradeLevel { get; set; }
+    public string? StudentNumber { get; set; }
+    public string? Bio { get; set; }
+    public Guid? InstitutionId { get; set; }
+    public string? InstitutionName { get; set; }
+    public DateTime? BirthDate { get; set; }
+    public string? LearningStyle { get; set; }
+    public bool ShareProgressWithTeachers { get; set; } = true;
+}
+
+public record UserProductAccessDto(string Product, bool IsActive);
+public record UserProductRoleDto(string Role, string? Product);
+
+public record GetUserProfileQuery(Guid UserId, PlatformProduct? Product = null) : IRequest<Result<UserProfileDto>>;

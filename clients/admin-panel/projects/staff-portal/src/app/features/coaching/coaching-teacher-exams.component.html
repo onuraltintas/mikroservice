@@ -102,7 +102,7 @@
                 <span class="type-badge">{{ examTypeLabel(exam.examType) }}</span>
               </div>
               <p class="exam-meta">
-                {{ exam.examDate | date:'d MMM y, HH:mm' }}
+                {{ exam.examDate | date:'dd.MM.yyyy HH:mm' }}
                 <span>·</span> Maks. {{ exam.maxScore }} puan
                 @if (exam.subject) { <span>·</span> {{ exam.subject }} }
               </p>
@@ -161,18 +161,23 @@
             <span>Sıralama</span>
             <input [(ngModel)]="resultForm.ranking" name="resultRanking" type="number" min="1" step="1" />
           </label>
-          <label class="field">
+          @if (!resultForm.practiceExam) { <label class="field">
             <span>Doğru</span>
-            <input [(ngModel)]="resultForm.correctAnswers" name="resultCorrect" type="number" min="0" step="1" />
+            <input [(ngModel)]="resultForm.correctAnswers" name="resultCorrect" type="number" min="0" step="1" [disabled]="!!resultForm.practiceExam" />
           </label>
           <label class="field">
             <span>Yanlış</span>
-            <input [(ngModel)]="resultForm.wrongAnswers" name="resultWrong" type="number" min="0" step="1" />
+            <input [(ngModel)]="resultForm.wrongAnswers" name="resultWrong" type="number" min="0" step="1" [disabled]="!!resultForm.practiceExam" />
           </label>
           <label class="field">
             <span>Boş</span>
-            <input [(ngModel)]="resultForm.emptyAnswers" name="resultEmpty" type="number" min="0" step="1" />
-          </label>
+            <input [(ngModel)]="resultForm.emptyAnswers" name="resultEmpty" type="number" min="0" step="1" [disabled]="!!resultForm.practiceExam" />
+          </label> }
+          <div class="span-two"><app-practice-exam-editor [profiles]="profiles()" [value]="resultForm.practiceExam"
+            (valueChange)="resultForm.practiceExam = $event" [examType]="exam.examType" [disabled]="isSavingResult()"
+            [locked]="practiceExamLocked()"></app-practice-exam-editor>
+            @if (resultForm.practiceExam) { <p>Genel doğru/yanlış/boş toplamları ders satırlarından hesaplanarak kaydedilir.</p> }
+          </div>
           <fieldset class="span-two">
             <legend>Ders puanları (opsiyonel)</legend>
             @for (row of resultForm.subjectScores; track row; let index = $index) {
@@ -216,7 +221,10 @@
                   <tr>
                     <td class="student-name">{{ studentLabel(result.studentId) }}</td>
                     <td>{{ result.score }} / {{ detail.maxScore }}</td>
-                    <td>{{ result.correctAnswers ?? 0 }} / {{ result.wrongAnswers ?? 0 }} / {{ result.emptyAnswers ?? 0 }}</td>
+                    <td>{{ result.correctAnswers ?? 0 }} / {{ result.wrongAnswers ?? 0 }} / {{ result.emptyAnswers ?? 0 }}
+                      @if (result.netSummary) { <p>{{result.netSummary.name}} · <strong>{{result.netSummary.net | number:'1.2-2'}} net</strong></p>
+                        <details><summary>Ders netleri</summary>@for (section of result.netSummary.sections; track section.sectionCode) { <p>{{section.name}}: {{section.net | number:'1.2-2'}} net ({{section.correct}} / {{section.wrong}} / {{section.empty}})</p> }</details> }
+                    </td>
                     <td>{{ result.ranking ?? '—' }}</td>
                     <td class="result-note">{{ result.teacherNotes || '—' }}</td>
                     <td><button type="button" class="text-button" (click)="editExamResult(result)">Düzelt</button></td>

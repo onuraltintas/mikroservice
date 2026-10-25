@@ -1,0 +1,153 @@
+using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Security.Interfaces;
+using Identity.Application.Interfaces;
+using Identity.Domain.Entities;
+using Identity.Domain.Enums;
+using MediatR;
+
+using MassTransit;
+using Microsoft.Extensions.Logging;
+
+namespace Identity.Application.Commands.CreateStudent;
+
+public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand, Result<CreateStudentResult>>
+{
+    private readonly IIdentityService _identityService;
+    private readonly IUserRepository _userRepository;
+    private readonly IStudentRepository _studentRepository;
+    private readonly ITeacherRepository _teacherRepository;
+    private readonly IInstitutionRepository _institutionRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<CreateStudentCommandHandler> _logger;
+
+    public CreateStudentCommandHandler(
+        IIdentityService identityService,
+        IUserRepository userRepository,
+        IStudentRepository studentRepository,
+        ITeacherRepository teacherRepository,
+        IInstitutionRepository institutionRepository,
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService,
+        IPublishEndpoint publishEndpoint,
+        ILogger<CreateStudentCommandHandler> logger)
+    {
+        _identityService = identityService;
+        _userRepository = userRepository;
+        _studentRepository = studentRepository;
+        _teacherRepository = teacherRepository;
+        _institutionRepository = institutionRepository;
+        _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
+        _publishEndpoint = publishEndpoint;
+        _logger = logger;
+    }
+
+    public async Task<Result<CreateStudentResult>> Handle(CreateStudentCommand request, CancellationToken cancellationToken)
+    {
+        // 1. Validate: Current user must be logged in
+        if (_currentUserService.UserId == null)
+        {
+            return Result.Failure<CreateStudentResult>(new Error("Auth.Unauthorized", "User is not authenticated"));
+        }
+
+        var adminUserId = _currentUserService.UserId.Value;
+
+        // 2. Find Institution for this admin
+        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(
+            adminUserId,
+            Identity.Domain.Enums.PlatformProduct.Coaching,
+            cancellationToken);
+        if (institutionId == null)
+        {
+             return Result.Failure<CreateStudentResult>(new Error("CreateStudent.Forbidden", "You are not an admin of any institution."));
+        }
+
+        // 3. Create user with a one-time password setup token.
+        var identityResult = await _identityService.RegisterUserWithPasswordSetupAsync(
+            request.Email,
+            request.FirstName,
+            request.LastName,
+            cancellationToken);
+
+        if (identityResult.IsFailure) return Result.Failure<CreateStudentResult>(identityResult.Error);
+        
+        var provisionedUser = identityResult.Value;
+        var studentUserId = provisionedUser.UserId;
+
+        // Assign Role
+        var roleResult = await _identityService.AssignRoleForProductAsync(
+            studentUserId,
+            Identity.Domain.Enums.UserRole.Student.ToString(),
+            PlatformProduct.Coaching,
+            cancellationToken);
+        if (roleResult.IsFailure)
+        {
+             await _identityService.DeleteUserAsync(studentUserId, cancellationToken);
+             return Result.Failure<CreateStudentResult>(roleResult.Error);
+        }
+
+        // Create Student Profile attached to institution
+        var student = StudentProfile.Create(
+            studentUserId, 
+            request.FirstName, 
+            request.LastName, 
+            institutionId.Value
+        );
+        
+        student.UpdateEducationInfo(gradeLevel: request.GradeLevel);
+
+        TeacherProfile? teacher = null;
+        if (request.TeacherUserId is { } teacherUserId)
+        {
+            teacher = await _teacherRepository.GetByUserIdAsync(teacherUserId, institutionId.Value, cancellationToken);
+            if (teacher is null)
+            {
+                await _identityService.DeleteUserAsync(studentUserId, cancellationToken);
+                return Result.Failure<CreateStudentResult>(new Error("CreateStudent.TeacherNotFound", "Selected teacher does not belong to this institution."));
+            }
+        }
+
+        try
+        {
+            // await _userRepository.AddAsync(user, cancellationToken); // REMOVED
+            await _studentRepository.AddAsync(student, cancellationToken);
+            if (teacher is not null)
+            {
+                await _teacherRepository.AddStudentAssignmentAsync(
+                    TeacherStudentAssignment.Create(
+                        teacher.Id,
+                        student.Id,
+                        institutionId,
+                        createdByUserId: adminUserId),
+                    cancellationToken);
+            }
+            
+            // Publish UserCreated Event
+            var eventMessage = new EduPlatform.Shared.Contracts.Events.Identity.UserCreatedEvent(
+                UserId: studentUserId,
+                Email: request.Email,
+                FirstName: request.FirstName,
+                LastName: request.LastName,
+                Role: "Student",
+                PasswordSetupToken: provisionedUser.PasswordSetupToken,
+                PasswordSetupTokenExpiresAt: provisionedUser.PasswordSetupTokenExpiresAt,
+                CreatedAt: DateTime.UtcNow
+            );
+
+            await _publishEndpoint.Publish(eventMessage, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Coaching uses the Identity user id as StudentId. Keep the profile id
+            // explicit for Identity-owned student-profile operations.
+            return Result.Success(new CreateStudentResult(studentUserId, student.Id));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Student profile provisioning failed for {UserId}.", studentUserId);
+            await _identityService.DeleteUserAsync(studentUserId, cancellationToken);
+            return Result.Failure<CreateStudentResult>(new Error("CreateStudent.Failed", "Öğrenci oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
+        }
+    }
+}

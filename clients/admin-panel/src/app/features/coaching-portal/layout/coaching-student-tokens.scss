@@ -1,0 +1,21 @@
+body:has(.coaching-shell), .coaching-shell {
+  --ui-page: #f4f7f6; --ui-surface: #fff; --ui-surface-muted: #edf3f1; --ui-border: #cbdad4; --ui-text: #19332f; --ui-text-muted: #506860; --ui-text-subtle: #506860;
+  --ui-brand: #08766b; --ui-brand-strong: #055c54; --ui-brand-hover: #055c54; --ui-brand-soft: #e4f3ed; --ui-success: #126748;
+  --ui-danger: #a02d31; --coaching-danger-soft: #fff0ef; --coaching-warning: #7b530d; --coaching-warm: #fff2d8; --coaching-focus: #008577;
+  --coaching-lesson-0: #e5eedc; --coaching-lesson-1: #e3eff9; --coaching-lesson-2: #fbecd9; --coaching-lesson-3: #eee7f7; --coaching-lesson-4: #def0e9;
+  --coaching-lesson-text-0: #365225; --coaching-lesson-text-1: #264f70; --coaching-lesson-text-2: #785423; --coaching-lesson-text-3: #60447c; --coaching-lesson-text-4: #275c49;
+  --text-primary: var(--ui-text); --text-secondary: var(--ui-text-muted); --bg-card: var(--ui-surface); --bg-secondary: var(--ui-surface-muted); --border-color: var(--ui-border);
+}
+.dark body:has(.coaching-shell), .dark .coaching-shell {
+  --ui-page: #101c1b; --ui-surface: #192a27; --ui-surface-muted: #223731; --ui-border: #425b52; --ui-text: #edf5f1; --ui-text-muted: #bdcfc6; --ui-text-subtle: #bdcfc6;
+  --ui-brand: #157c6e; --ui-brand-strong: #116b5f; --ui-brand-hover: #116b5f; --ui-brand-soft: #21473c; --ui-success: #98e0be;
+  --ui-danger: #ffb5b5; --coaching-danger-soft: #442a2c; --coaching-warning: #f1ce8c; --coaching-warm: #423a28; --coaching-focus: #85e3c4;
+  --coaching-lesson-0: #30422b; --coaching-lesson-1: #263f52; --coaching-lesson-2: #473a29; --coaching-lesson-3: #3c314d; --coaching-lesson-4: #28453b;
+  --coaching-lesson-text-0: #d2e6c2; --coaching-lesson-text-1: #cce5fa; --coaching-lesson-text-2: #f3d9b5; --coaching-lesson-text-3: #e2d0f5; --coaching-lesson-text-4: #c6eadb;
+}
+
+body:has(.coaching-shell) .ui-toast { margin-top: 12px; }
+body:has(.coaching-shell) .ui-confirm-dialog :is(button, a):focus-visible { outline: 3px solid var(--coaching-focus); outline-offset: 3px; }
+body:has(.coaching-shell) .ui-confirm-dialog button { font-family: var(--ui-font-body); font-size: 15px; border-radius: 10px; }
+body:has(.coaching-shell) .ui-confirm-dialog .confirm-btn { background: var(--ui-brand); color: #fff; }
+body:has(.coaching-shell) .ui-confirm-dialog .cancel-btn { background: var(--ui-surface-muted); color: var(--ui-text); border-color: var(--ui-border); }

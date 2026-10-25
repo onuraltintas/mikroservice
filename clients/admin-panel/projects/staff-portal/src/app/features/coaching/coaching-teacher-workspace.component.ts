@@ -10,28 +10,53 @@ import { CoachingProfileComponent } from '../../../../../../shared/coaching-prof
 import { environment } from '../../../environments/environment';
 import {CoachingTeacherStudyOverviewComponent} from './coaching-teacher-study-overview.component';
 
-type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' | 'exams' | 'subscription' | 'finance' | 'profile' | 'study';
+import { CoachingTeacherTrackingComponent } from './coaching-teacher-tracking.component';
+import { CoachingTeacherTrackingContext } from './coaching-teacher-tracking.service';
+import type { WeeklyDestination } from '../../../../../../shared/coaching-notification-target';
+
+type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' | 'exams' | 'subscription' | 'finance' | 'profile' | 'study' | 'tracking';
 
 @Component({
   selector: 'staff-coaching-teacher-workspace',
   standalone: true,
-  imports: [CoachingTeacherStudentsComponent, CoachingTeacherAssignmentsComponent, CoachingTeacherSessionsComponent, CoachingTeacherGoalsComponent, CoachingTeacherExamsComponent, CoachingTeacherSubscriptionComponent, CoachingFinanceComponent, CoachingProfileComponent,CoachingTeacherStudyOverviewComponent],
+  providers: [CoachingTeacherTrackingContext],
+  imports: [CoachingTeacherStudentsComponent, CoachingTeacherAssignmentsComponent, CoachingTeacherSessionsComponent, CoachingTeacherGoalsComponent, CoachingTeacherExamsComponent, CoachingTeacherSubscriptionComponent, CoachingFinanceComponent, CoachingProfileComponent,CoachingTeacherStudyOverviewComponent, CoachingTeacherTrackingComponent],
   templateUrl: './coaching-teacher-workspace.component.html',
   styleUrl: './coaching-teacher-workspace.component.scss'
 })
 export class CoachingTeacherWorkspaceComponent {
   readonly apiUrl = environment.apiUrl;
   @ViewChild(CoachingProfileComponent) private profile?: CoachingProfileComponent;
+  @ViewChild('trackingPanel') private tracking?: Pick<CoachingTeacherTrackingComponent, 'canLeavePage' | 'openWeekly'>;
   @ViewChild(CoachingTeacherStudyOverviewComponent) private study?:CoachingTeacherStudyOverviewComponent;
   @ViewChild(CoachingTeacherStudentsComponent) private students?: CoachingTeacherStudentsComponent;
   @ViewChild(CoachingTeacherGoalsComponent) private goals?: CoachingTeacherGoalsComponent;
+  @ViewChild(CoachingTeacherAssignmentsComponent) private assignments?: CoachingTeacherAssignmentsComponent;
+  readonly notificationAssignmentId = signal<string | null>(null);
+  readonly notificationWeeklyTarget = signal<WeeklyDestination | null>(null);
+  async openWeeklyFromNotification(target: WeeklyDestination): Promise<boolean> {
+    if (this.activeSection() === 'tracking' && this.tracking) return this.tracking.openWeekly(target);
+    if (!await this.canLeavePage()) return false;
+    this.notificationWeeklyTarget.set(target); this.activeSection.set('tracking');
+    return true;
+  }
+  async openAssignmentFromNotification(id: string): Promise<boolean> {
+    if (this.assignments) return this.assignments.reviewAssignment(id);
+    if (!await this.canLeavePage()) return false;
+    this.notificationAssignmentId.set(id);
+    this.activeSection.set('assignments');
+    return true;
+  }
   @ViewChild(CoachingFinanceComponent) financePanel?: Pick<CoachingFinanceComponent, 'canLeavePage'>;
-  canLeavePage(): boolean { return (this.study?.canLeavePage()??true) && (this.profile?.canLeavePage() ?? true) && (this.financePanel?.canLeavePage() ?? true) && (this.students?.canLeavePage() ?? true) && (this.goals?.canLeavePage() ?? true); }
+  async canLeavePage(): Promise<boolean> { return (await this.tracking?.canLeavePage() ?? true) && (await this.study?.canLeavePage()??true) && (await this.profile?.canLeavePage() ?? true) && (await this.financePanel?.canLeavePage() ?? true) && (await this.students?.canLeavePage() ?? true) && (await this.goals?.canLeavePage() ?? true) && (await this.assignments?.canLeavePage() ?? true); }
   readonly activeSection = signal<CoachingTeacherSection>('students');
 
-  selectSection(section: CoachingTeacherSection): void {
+  async selectSection(section: CoachingTeacherSection): Promise<void> {
     if (section === this.activeSection()) return;
-    if (!this.canLeavePage()) return;
+    if (!await this.canLeavePage()) return;
+    this.notificationAssignmentId.set(null);
+    this.notificationWeeklyTarget.set(null);
     this.activeSection.set(section);
   }
+
 }

@@ -18,8 +18,8 @@ test('tachistoscope pause, exit cancellation and restored paused sessions synchr
 });
 
 test('tachistoscope displays stimulus duration and response latency instead of reading speed', () => {
-  assert.match(html, /isTachistoscopeMode\(\) \? 'Gösterim süresi' : 'Hız'/);
-  assert.match(html, /isTachistoscopeMode\(\) \? 'ms' : 'WPM'/);
+  assert.match(html, /isTachistoscopeMode\(\) \? 'Gösterim süresi' : 'Gösterim temposu'/);
+  assert.match(html, /isTachistoscopeMode\(\) \? 'ms' : 'kelime\/dk'/);
   assert.match(html, /Ortalama cevap süresi/);
   assert.match(html, /initialDurationMs[\s\S]*?finalDurationMs/);
 });

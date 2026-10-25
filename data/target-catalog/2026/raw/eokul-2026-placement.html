@@ -1,0 +1,526 @@
+
+
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" /><meta name="google-site-verification" content="DvYvopKyy2XeM3XeGHSq0Vq5byC57qVXIRT7ggK1tsw" />
+    <!-- Bootstrap CSS -->
+    <link href="theme/able/assets/css/bootstrap.min.css" rel="stylesheet" /><link href="theme/able/assets/css/loginstyle.css?v=1.6" rel="stylesheet" /><title>
+	e-Okul Yönetim Bilgi Sistemi
+</title>
+    <script src="theme/able/assets/js/jquery.min.js"></script>
+    <script src="theme/able/assets/js/popper.js"></script>
+    <script src="theme/able/assets/js/bootstrap.min.js"></script>
+    <script src="theme/CommonJsCss/Js/eokullib.js"></script>
+    <link rel="icon" href="favicon.ico" />
+    <script language="javascript">
+        function generateCaptcha(result) {
+            document.getElementById('imgvbs').src = result;
+            document.getElementById('image1').src = result;
+        }
+
+    </script>
+</head>
+<body>
+    <form method="post" action="./logineOkul.aspx" id="form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATEFIELDCOUNT" id="__VIEWSTATEFIELDCOUNT" value="4" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKLTk5ODgzOTkz" />
+<input type="hidden" name="__VIEWSTATE1" id="__VIEWSTATE1" value="OWRklJj/dVBz7uc4WoQY" />
+<input type="hidden" name="__VIEWSTATE2" id="__VIEWSTATE2" value="Wwvf+LoFnHTjrTcXf9IA" />
+<input type="hidden" name="__VIEWSTATE3" id="__VIEWSTATE3" value="U23GBhA=" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="6FD7EF6D" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAKfa/gbUYdHO+ZVoVoqGxF8zshiej1AotHM0e0oPaRhX4JJMS+NdYiV2N0+2Nj61quFvprbfdrMYsI/l2Rrfn0M" />
+</div>
+        <header class="container" id="header">
+            <div class="row">
+
+                <div class="col-lg-4">
+                    <a href="https://www.meb.gov.tr" target="_blank" class="logo">
+                        <img src="theme/able/assets/images/eokullogo.png" alt="" class="img-fluid">
+                    </a>
+                    <button class="navbar-toggler float-right d-sm-block d-lg-none" type="button" data-toggle="collapse" data-target="#MenuNav"
+                        aria-controls="MenuNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <img src="theme/able/assets/images/nav.png" alt="">
+                    </button>
+                </div>
+
+                <div class="col-lg-8 collapse d-lg-block" id="MenuNav">
+                    <ul class="menu">
+                        <li><a href="/IlkOgretim/MEM/IOM00010.aspx">Diploma Doğrulama</a></li>
+                        <li><a href="sifrehatirlat.aspx">Şifremi Unuttum</a></li>
+                        <li><a href="https://yardimmasasi.meb.gov.tr" target="_blank" rel="noopener noreferrer">Yardım Masası</a></li>
+                        
+                    </ul>
+
+                </div>
+            </div>
+
+
+        </header>
+        <section class="container" id="information">
+            <div class="row">
+
+                <div class="info col-lg-12 text-center">
+                    <a href="#" class="btn-yg" data-toggle="modal" data-target="#LoginModalKurum">
+                        <img
+                            src="theme/able/assets/images/butonsol.png" alt="e-Okul Yönetimi Bilgi Sistemi Girişi" /></a>
+                    <a href="https://www.turkiye.gov.tr/ogrenci-bilgi-sistemi" class="btn-vg">
+                        <img
+                            src="theme/able/assets/images/butonsag.png" alt="Veli Bilgilendirme Sistemi Girişi" /></a>
+                </div>
+
+
+            </div>
+        </section>
+        <section class="container content" id="haberler">
+            <div class="row">
+                <!--Haberler/Duyurular-->
+                <div class="col-lg-6 order-1 order-sm-0">
+                    <a href="#" class="btn-baslik">Haberler/Duyurular</a>
+                    <div class="row">
+                        
+
+                        
+                        <div class="col-lg-12">
+                            <div class="card" style="background: linear-gradient(90deg,rgba(255, 255, 255, 1) 0%, rgba(240, 240, 240, 1) 100%);">
+                                <div class="ribbon ribbon-top-left"><span>Yeni</span></div>
+                                <div class="card-body">
+                                    <img src="theme/able/assets/images/icon-haber.png" alt="">
+                                    <h5 class="card-title">Okul Randevu Sistemi</h5>
+                                    <p class="card-text">
+                                        Okul Randevu Sistemi üzerinden öğrencinizin bulunduğu okula randevu almak için <a href="https://okulrandevu.meb.gov.tr/Account/EdevletInit">tıklayınız</a>
+                                    </p>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="ribbon ribbon-top-left "><span class="blinker">Yeni</span></div>
+                                <div class="card-body">
+                                    <img src="theme/able/assets/images/icon-haber.png" alt="">
+                                    <h5 class="card-title">e-Kayıt İşlemleri</h5>
+                                    <p class="card-text">
+                                        2026-2027 öğretim yılı e-Kayıt uygulaması sonucu adres bilginize göre Anasınıfı, İlkokul 1. sınıf veya Ortaokul 5. sınıfa kayıt yaptırmanız gereken okulu görmek için
+                                    <a href="https://www.turkiye.gov.tr/milli-egitim-ilkogretim-okullari-adrese-gore-kayit-okulu-sorgulama-e-kayit" target="_blank" rel="noopener noreferrer">Tıklayınız &rarr;</a>
+                                    </p>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="ribbon ribbon-top-left" style="display: none"><span>Yeni</span></div>
+                                <div class="card-body">
+                                    <img src="theme/able/assets/images/icon-haber.png" alt="">
+                                    <h5 class="card-title">Anadolu Meslek Programlarına Geçiş İşlemleri</h5>
+                                    <p class="card-text">
+                                        MESLEKİ VE TEKNİK ORTAÖĞRETİM KURUMLARINDA AMP 9 UNCU SINIFA YEREL YERLEŞTİRME İLE KAYIT OLAN ÖĞRENCİLERİN  MESLEK ALANLARINA GEÇİŞ  SONUÇLARINI  VELİ BİLGİLERİNDİRME SİSTEMİNE GİRİŞ YAPARAK ÖĞRENEBİLİRSİNİZ.<br />
+
+                                    </p>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        
+
+                    </div>
+                </div>
+                <!--Haberler/Duyurular son-->
+
+                <!--Sınav ve Nakil İşlemleri-->
+                <div class="col-lg-6 order-0 order-sm-1 mb-sm-0 mb-4">
+                    <a href="#" class="btn-baslik">Sınav ve Nakil İşlemleri</a>
+                    <div class="row">
+                        
+
+                        
+                        
+                        
+
+                        
+                        
+                        
+
+                        
+                        
+
+                        
+
+                        
+
+                        
+                        
+                        
+
+
+                        
+                        
+
+
+
+
+
+                        
+
+                        
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="ribbon ribbon-top-left" style="display: none"><span>Yeni</span></div>
+                                <div class="card-body">
+                                    <img src="theme/able/assets/images/icon-sinavnakil.png" alt="">
+                                    <h5 class="card-title">Sınav İtirazları Giriş Ekranı</h5>
+                                    <p class="card-text">
+                                        T.C. Milli Eğitim Bakanlığı Ölçme, Değerlendirme ve Sınav Hizmetleri Genel Müdürlüğü Sınav İtirazları Giriş Ekranı için <a href="https://eitiraz.meb.gov.tr" target="_blank" rel="noopener noreferrer" class="habermenu">Tıklayınız</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="pnlNakilKontenjan" class="col-lg-12">
+                            <div class="card">
+                                <div class="ribbon ribbon-top-left" style="display: none"><span>Yeni</span></div>
+                                <div class="card-body">
+                                    <img src="theme/able/assets/images/icon-sinavnakil.png" alt="">
+                                    <h5 class="card-title">Okul Nakil Boş Kontenjan ve Taban Puan Bilgileri</h5>
+                                    <p class="card-text">
+                                        SINAVLA öğrenci alan ortaöğretim kurumlarında NAKİL işlemleri boş kontenjan ve sınavlı okul taban puan bilgileri için <a href="https://e-okul.meb.gov.tr/OrtaOgretim/OKL/OOK06006.aspx" class="habermenu" target="_blank" rel="noopener noreferrer">Tıklayınız</a>
+                                    </p>
+                                    <p class="card-text">
+                                        SINAVSIZ öğrenci alan ortaöğretim kurumlarında NAKİL işlemleri boş kontenjan bilgileri için <a href="https://e-okul.meb.gov.tr/OrtaOgretim/OKL/OOK06011.aspx" class="habermenu" target="_blank" rel="noopener noreferrer">Tıklayınız</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--Sınav ve Nakil İşlemleri son-->
+            </div>
+        </section>
+        <!-- Login Modal Kurum Girişi  -->
+        <div class="modal fade LoginModal" id="LoginModalKurum" tabindex="-1" role="dialog"
+            aria-labelledby="LoginModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <div class="row">
+                            <div class="col-lg-4 login-title">
+                                <div class="title float-left">
+                                    <h5>e-Okul</h5>
+                                    <span>Giriş</span>
+                                </div>
+                                <img src="theme/able/assets/images/yonetici.png" alt="" class="img-fluid float-left">
+                            </div>
+                            <div class="col-lg-8 login-form">
+                                <div class="form-group">
+
+                                    <div class="col-md-12">
+                                        <img id="image1" title="Yenilemek için tıklayınız" class="guvenlikkod" onclick="yenileRESIM()" src="data:image/png;base64,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" />
+                                        
+<img src="/images/giriskod.jpg"  onclick="ses();" alt="Rakamları Dinlemek İçin Tıklayınız..." tabIndex="4" onkeypress="return runScript(event)"/>
+<div id="sesler" style="visibility:hidden">
+<audio id='aPlayer' controls hidden>
+    <source src='common/soundogg.aspx?dc=866' type='audio/ogg'> 
+    <source src='common/soundmp3.aspx?dc=866' type='audio/mpeg'></audio>
+<script>
+    function ses() {
+        var aPlayer0 = document.getElementById('aPlayer');
+        aPlayer.load();
+        aPlayer.play();
+    }
+
+    function runScript(e) {
+        if (e.keyCode == 13) {
+            ses();
+            return false;
+        }
+    }
+</script>
+</div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" for="textinput">Resimdeki Rakamlar</label>
+                                    <div class="col-md-12">
+                                        <input id="guvenlikKontrol" name="guvenlikKontrol" type="number" maxlength="4"
+                                            placeholder="Lütfen Resimdeki Rakamları Giriniz" tabindex="0"
+                                            class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-12 control-label" for="textinput2">Kullanıcı Adınız</label>
+                                    <div class="col-md-12">
+                                        <input id="txtKullaniciAd" name="txtKullaniciAd" type="text"
+                                            placeholder="Lütfen Kullanıcı Adınızı Giriniz"
+                                            class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-12 control-label" for="textinput3">Şifre</label>
+                                    <div class="col-md-12">
+                                        <input id="txtSifre" name="txtSifre" type="password" maxlength="10"
+                                            placeholder="Şifre Giriniz"
+                                            class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row m-0">
+                                        <div class="col-md-6 order-1 order-md-0">
+                                            <button onclick="__doPostBack('btnEdevletGiris','')" id="btnEdevletGiris" type="button" class="btn btn-danger btn-block btn-edevlet">
+                                                <img src="theme/able/assets/images/edevlet-icon.png" class="img-responsive" style="float: left; padding-right: 5px;" />e-Devlet 
+                                        Girişi</button>
+
+                                        </div>
+                                        <div class="col-md-6 order-0 order-md-1">
+                                            <button type="button" class="btn btn-mavi btn-block" id="btnEokulGiris" onclick="return EokulGiris('eokul')">Giriş</button>
+                                        </div>
+                                        <div class="col-12 mt-2  order-3 order-md-2">
+                                            <span class="info-txt">* Sadece Öğretmen Kullanıcıları Tarafından e-Devlet Girişi Yapılabilir.</span>
+                                        </div>
+                                        <div class="col-12 mt-2  order-3 order-md-2">
+                                            <span class="info-txt" style="color: red">* Tüm özel okul kullanıcılarından Sisteme Giriş yapamayan kullanıcının tanımlı olduğu T.C. Kimlik numarasının 
+                                                "MEBBİS Özel Öğretim Kurumları Modülü / Personel Arama" ekranı üzerinden 
+                                                Çalışma izninin kontrol edilmesi gerekmektedir.
+                                                <br />
+                                                Özel Okul Kurum kodlu kullanıcıların tanımlı olduğu T.C. Kimlik numarası değişecek ise İl/İlçe Mebbis Sorumlunuza başvurunuz.<br />
+                                                Çalışma izni biten Özel Okul kullanıcıları sisteme giriş yapamazlar</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-12 mt-2  order-3 order-md-2">
+                                        MEB Ajandayı İndirmek için
+                                        <br />
+                                    </div>
+
+                                    <div class="row m-0">
+                                        <div class="col-md-6 order-1 order-md-0">
+                                            <a href="https://play.google.com/store/apps/developer?id=T.C.+Milli+E%C4%9Fitim+Bakanl%C4%B1%C4%9F%C4%B1" target="_blank">
+                                                <img src="images/toolimages/gp.png" /></a>
+                                        </div>
+                                        <div class="col-md-6 order-0 order-md-1">
+                                            <a href="https://play.google.com/store/apps/developer?id=T.C.+Milli+E%C4%9Fitim+Bakanl%C4%B1%C4%9F%C4%B1" target="_blank">
+
+                                                <img src="images/toolimages/ios.png" /></a>
+                                        </div>
+
+
+                                    </div>
+                                    <div class="col-12 mt-2  order-3 order-md-2">
+                                        <span class="info-txt"><a href="Dokumanlar/mebajandakilavuz.pdf">MEB AJANDA Kurulum kılavuzu için tıklayınız</a></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Login Modal vbs Girişi  -->
+        <div class="modal fade LoginModal" id="LoginModalVBS" tabindex="-1" role="dialog"
+            aria-labelledby="LoginModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <div class="row">
+                            <div class="col-lg-4 login-title">
+                                <div class="title float-left">
+                                    <h5>e-Okul</h5>
+                                    <span>Veli Bilgilendirme Sistemi</span>
+                                </div>
+                                <img src="theme/able/assets/images/icon-eokullogin.png" alt="" class="img-fluid float-left">
+                            </div>
+                            <div class="col-lg-8 login-form">
+                                <div class="form-group">
+
+                                    <div class="col-md-12">
+                                        <img id="imgvbs" title="Yenilemek için tıklayınız" class="guvenlikkod" onclick="yenileRESIM()" src="data:image/png;base64,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" />
+                                        
+<img src="/images/giriskod.jpg"  onclick="ses();" alt="Rakamları Dinlemek İçin Tıklayınız..." tabIndex="4" onkeypress="return runScript(event)"/>
+<div id="sesler" style="visibility:hidden">
+<audio id='aPlayerVBS' controls hidden>
+    <source src='common/soundogg.aspx?dc=866' type='audio/ogg'> 
+    <source src='common/soundmp3.aspx?dc=866' type='audio/mpeg'></audio>
+<script>
+    function ses() {
+        var aPlayer1 = document.getElementById('aPlayerVBS');
+        aPlayer1.load();
+        aPlayer1.play();
+    }
+
+    function runScript(e) {
+        if (e.keyCode == 13) {
+            ses();
+            return false;
+        }
+    }
+</script>
+</div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" for="textinput">Resimdeki Rakamlar</label>
+                                    <div class="col-md-12">
+                                        <input id="txtVBSImage" name="textinput" type="text"
+                                            placeholder="Lütfen Resimdeki Rakamları Giriniz"
+                                            class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-12 control-label" for="textinput2">Öğrenci T.C. Kimlik Numarası</label>
+                                    <div class="col-md-12">
+                                        <input id="VBSKullanici" name="textinput2" type="text"
+                                            placeholder="Lütfen T.C. Kimlik Numaranızı Giriniz"
+                                            class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-12 control-label" for="textinput3">Öğrenci Okul Numarası</label>
+                                    <div class="col-md-12">
+                                        <input id="VBSpassword" name="textinput3" type="text"
+                                            placeholder="Lütfen Okul Numarasını Giriniz"
+                                            class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row m-0">
+                                        <div class="col-md-6 order-0 order-md-1">
+                                            <button type="button" class="btn btn-mavi btn-block" id="btnVBSGiris" onclick="return EokulGiris('VBS')">Giriş</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Mebanahtar  -->
+        <div class="modal fade LoginModal" id="LoginMebanahtar" tabindex="-1" role="dialog"
+            aria-labelledby="LoginModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <div class="row">
+                            <div class="col-lg-4 login-title">
+                                <div class="title float-left">
+                                    <h5>e-Okul</h5>
+                                    <span>MEB AJANDA KODU</span>
+                                </div>
+                                <img src="theme/able/assets/images/mebanahtar.png" alt="" class="img-fluid float-left">
+                            </div>
+                            <div class="col-lg-8 login-form">
+                                <div class="form-group">
+                                    <div class="alert alert-danger" style="font-size: .95em; margin-right: 10px">
+                                        Giriş Yapabilmek için <b>MEB Ajanda</b> uygulamasındaki 6 haneli doğrulama kodunu aşağıdaki metin kutusuna giriniz ve <b>Doğrula</b> düğmesine tıklayınız.
+                                    
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-12 control-label" for="textinput2">MEB Ajanda Kodunuz</label>
+                                    <div class="col-md-12">
+                                        <input id="txtMebAnahtar" autocomplete="off" style="font-size: 2em; font-weight: bold;" name="textinput2" type="text" maxlength="6" placeholder="_ _ _ _ _ _" class="form-control">
+                                    </div>
+                                    <br />
+                                    
+                                </div>
+                                <div class="form-group ">
+                                    <div class="row m-0">
+                                        <div class="col-md-6 order-0 order-md-1">
+                                            <button type="button" class="btn btn-mavi btn-block" id="btnDogrula" onclick="return Dogrula()">Doğrula</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-12 mt-2  order-3 order-md-2">
+                                        MEB Ajandayı İndirmek için
+                                        <br />
+                                    </div>
+
+                                    <div class="row m-0">
+                                        <div class="col-md-6 order-1 order-md-0">
+                                            <a href="https://play.google.com/store/apps/developer?id=T.C.+Milli+E%C4%9Fitim+Bakanl%C4%B1%C4%9F%C4%B1" target="_blank">
+                                                <img src="images/toolimages/gp.png" /></a>
+                                        </div>
+                                        <div class="col-md-6 order-0 order-md-1">
+                                            <a href="https://play.google.com/store/apps/developer?id=T.C.+Milli+E%C4%9Fitim+Bakanl%C4%B1%C4%9F%C4%B1" target="_blank">
+
+                                                <img src="images/toolimages/ios.png" /></a>
+                                        </div>
+
+
+                                    </div>
+                                    <div class="col-12 mt-2  order-3 order-md-2">
+                                        <span class="info-txt"><a href="Dokumanlar/mebajandakilavuz.pdf">MEB AJANDA Kurulum kılavuzu için tıklayınız</a></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer style="margin-top: 68px;">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <a href="http://www.meb.gov.tr">MEB</a> © Tüm Hakları Saklıdır.
+                Gizlilik, Kullanım ve Telif Hakları bildiriminde belirtilen kurallar çerçevesinde hizmet sunulmaktadır.
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <script src="Scripts/AlanKontrol.js?v=1.3"></script>
+        <script src="Scripts/logineokul.js?v=1.9"></script>
+        <script src="theme/able/assets/js/plugins/sweetalert.min.js"></script>
+        <script src="theme/CommonJsCss/Js/eokullib.js?v=1.2"></script>
+        
+    </form>
+</body>
+</html>

@@ -16,6 +16,7 @@
         X-Frame-Options "SAMEORIGIN"
         Referrer-Policy "strict-origin-when-cross-origin"
         Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Cross-Origin-Opener-Policy "same-origin-allow-popups"
     }
 
     # The standalone application needs its own bounded-context API plus the

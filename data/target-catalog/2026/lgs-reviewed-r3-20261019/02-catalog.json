@@ -1,0 +1,29 @@
+{
+  "examCode": "LGS",
+  "year": 2026,
+  "stage": "Catalog",
+  "sourceUrl": "https://hcesb.meb.k12.tr/tema/okulumuz_hakkinda.php",
+  "documentHash": "c1741e9f14b36141d0db0d3ff39de7acbdcc0975cd6b44620637d93d66a21025",
+  "rows": [
+    {
+      "institution": "Hatice-Cemil Ercan Fen Lisesi",
+      "name": "Hatice-Cemil Ercan Fen Lisesi / İngilizce",
+      "scoreType": "LGS",
+      "city": "ANKARA",
+      "district": "BEYPAZARI",
+      "institutionType": "Fen Lisesi",
+      "degree": null,
+      "language": "İngilizce",
+      "scholarship": null,
+      "educationType": null,
+      "field": null,
+      "quota": 90,
+      "placed": null,
+      "minimumScore": null,
+      "maximumScore": null,
+      "rank": null,
+      "percentile": null,
+      "externalCode": "reviewed-lgs2026:034651a2c8530583962aa762045aeac4"
+    }
+  ]
+}

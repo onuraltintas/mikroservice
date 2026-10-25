@@ -88,6 +88,30 @@ describe('LoginComponent', () => {
     expect(component.loading).toBe(false);
   });
 
+  it('uses a normal Google response directly without opening legal acceptance', () => {
+    const response = {
+      token: 'access-token',
+      refreshToken: 'refresh-token',
+      email: 'student@example.com',
+      roles: ['Student']
+    } as any;
+    authService.googleAuth.and.returnValue(of(response));
+
+    (component as any).handleGoogleResponse({ credential: 'google-id-token' });
+
+    expect(component.googleRegistrationToken).toBe('');
+    expect((component as any).handleAuthenticatedResponse).toHaveBeenCalledWith(response);
+  });
+
+  it('shows a clear message and clears the spinner when Google login times out', () => {
+    authService.googleAuth.and.returnValue(throwError(() => ({ name: 'TimeoutError' })));
+
+    (component as any).handleGoogleResponse({ credential: 'google-id-token' });
+
+    expect(component.loading).toBeFalse();
+    expect(component.error).toContain('zaman aşımına uğradı');
+  });
+
   it('completes registration with the pending ticket and accepted versions', () => {
     component.googleRegistrationToken = 'ticket';
     authService.completeGoogleRegistration.and.returnValue(of({ token: 'access' } as any));
@@ -148,6 +172,29 @@ describe('LoginComponent', () => {
 
     expect(toaster.error).toHaveBeenCalledWith('E-posta veya şifre hatalı.', jasmine.any(Number));
     expect(component.error).toBe('');
+  });
+
+  it('does not mistake a CAPTCHA rejection for an unverified email', () => {
+    const toaster = TestBed.inject(ToasterService) as jasmine.SpyObj<ToasterService>;
+    const message = 'Güvenlik doğrulaması tamamlanamadı. Lütfen tekrar deneyin.';
+    authService.login.and.returnValue(throwError(() => ({ status: 403, error: { code: 'Auth.CaptchaFailed', message } })));
+    component.loginForm.setValue({ email: 'student@example.com', password: 'Password1!', rememberMe: false });
+
+    component.onSubmit();
+
+    expect(component.showEmailVerificationWarning).toBeFalse();
+    expect(component.loading).toBeFalse();
+    expect(toaster.error).toHaveBeenCalledWith(message, jasmine.any(Number));
+  });
+
+  it('recognizes the email confirmation error code without relying on translated wording', () => {
+    authService.login.and.returnValue(throwError(() => ({ error: { code: 'Auth.EmailNotConfirmed', description: 'Email confirmation required.' } })));
+    component.loginForm.setValue({ email: 'student@example.com', password: 'Password1!', rememberMe: false });
+
+    component.onSubmit();
+
+    expect(component.showEmailVerificationWarning).toBeTrue();
+    expect(component.unverifiedEmail).toBe('student@example.com');
   });
 
   it('keeps admin preview users on Master when a legacy admin return URL is present', () => {

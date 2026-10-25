@@ -1,7 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 
 export interface ConfirmationDialogData {
     title: string;
@@ -13,11 +12,11 @@ export interface ConfirmationDialogData {
 @Component({
     selector: 'app-confirmation-dialog',
     standalone: true,
-    imports: [MatDialogModule, MatButtonModule, MatIconModule],
+    imports: [MatDialogModule, MatButtonModule],
     template: `
         <div class="confirmation-dialog">
             <div class="dialog-header">
-                <mat-icon class="dialog-icon" aria-hidden="true">help_outline</mat-icon>
+                <svg class="dialog-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .6-1.5 1-1.5 2.5M12 16v1"/></svg>
                 <h2 class="dialog-title">{{ data.title }}</h2>
             </div>
 

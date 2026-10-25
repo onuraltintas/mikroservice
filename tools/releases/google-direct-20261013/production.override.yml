@@ -1,0 +1,7 @@
+services:
+  identity-service:
+    image: eduivme/identity-service:google-direct-20261013
+    pull_policy: never
+  speed-reading-frontend:
+    image: eduivme/speed-reading-frontend:google-direct-20261013
+    pull_policy: never

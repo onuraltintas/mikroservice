@@ -1,6 +1,7 @@
+import { coachingFeedback, coachingToaster } from '../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, DestroyRef, HostListener, Input, OnInit, inject, signal, output } from '@angular/core';
+import { Component, DestroyRef, Input, OnInit, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -83,6 +84,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
   styles: [`:host{display:block;color:inherit}.profile-card{padding:1.5rem;margin-bottom:1rem;border:1px solid #d6deea;border-radius:1rem;background:var(--surface,#fff);color:#16243c}h2{margin-top:0}fieldset{border:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}label{display:grid;gap:.4rem}input,textarea,select,button{font:inherit;padding:.6rem;border:1px solid #bcc8da;border-radius:.5rem;max-width:100%;box-sizing:border-box}button{cursor:pointer;background:#edf3fb;margin:.4rem .4rem .4rem 0}button:disabled{opacity:.55;cursor:default}.check{display:flex;align-items:center}.error{color:#a21825}article{border-top:1px solid #d6deea;padding-top:1rem}input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #3972c6;outline-offset:2px}`]
 })
 export class CoachingProfileComponent implements OnInit {
+  private readonly toaster = coachingToaster();
   @Input({ required: true }) apiUrl = '';
   @Input() role: 'Student' | 'Teacher' = 'Student';
   @Input() setupMode = false;
@@ -106,7 +108,7 @@ export class CoachingProfileComponent implements OnInit {
     this.student = profile.student ? { ...profile.student, educationStatus: profile.student.educationStatus.toLowerCase() } : null;
     this.teacher = profile.teacher ? { ...profile.teacher } : null; this.subjects = this.teacher?.subjects?.join(', ') ?? ''; this.dirty = false;
   }
-  reload() { if (this.dirty && !window.confirm('Kaydedilmemiş profil değişikliklerinden vazgeçilsin mi?')) return; this.loadProfile(); }
+  async reload() { if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş profil değişikliklerinden vazgeçilsin mi?')) return; this.loadProfile(); }
   provision() {
     if (this.working() || !this.ready()) return;
     this.working.set(true); this.error.set(null);
@@ -147,9 +149,9 @@ export class CoachingProfileComponent implements OnInit {
     this.http.post(`${this.base}/invitations/${encodeURIComponent(id)}/${action}`, {}).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false)))
       .subscribe({ next: () => { this.loadInvitations(); if (action === 'accept') this.loadProfile(); }, error: e => this.invitationError.set(this.message(e, 'Davet işlenemedi. Koçluk rolünüzü ve davetin geçerliliğini kontrol edin.')) });
   }
-  canLeavePage() { return !this.working() && (!this.dirty || window.confirm('Kaydedilmemiş Koçluk profil değişikliklerinden vazgeçilsin mi?')); }
-  @HostListener('window:beforeunload', ['$event']) beforeUnload(event: BeforeUnloadEvent) { if (this.dirty || this.working()) { event.preventDefault(); event.returnValue = ''; } }
+  async canLeavePage() { return !this.working() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş Koçluk profil değişikliklerinden vazgeçilsin mi?')); }
   private message(e: { error?: { message?: unknown; detail?: unknown } }, fallback: string) {
     const text = e.error?.message ?? e.error?.detail; return typeof text === 'string' ? text : fallback;
   }
+  private readonly feedback = coachingFeedback(this.success, this.error);
 }

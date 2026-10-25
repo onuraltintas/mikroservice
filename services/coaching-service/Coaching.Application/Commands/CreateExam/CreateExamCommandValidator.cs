@@ -17,8 +17,8 @@ public sealed class CreateExamCommandValidator : AbstractValidator<CreateExamCom
             .MaximumLength(200);
 
         RuleFor(command => command.ExamDate)
-            .GreaterThan(DateTime.UtcNow)
-            .WithMessage("Exam date must be in the future.");
+            .NotEqual(DateTime.MinValue)
+            .WithMessage("Geçerli bir sınav tarihi girin.");
 
         RuleFor(command => command.MaxScore)
             .GreaterThan(0)

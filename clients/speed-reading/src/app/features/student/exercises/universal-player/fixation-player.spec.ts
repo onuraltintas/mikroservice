@@ -35,6 +35,7 @@ describe('fixation owned session pause', () => {
   });
   it('synchronizes pause and exit cancellation with its owned server session', async () => {
     const value = Object.create(ExercisePlayerComponent.prototype) as any;
+    value.authService = { canPreviewExercises: () => false, hasRole: (role: string) => role === 'Student' };
     value.sessionId = 'session'; value.actionQueue = Promise.resolve();
     value.engineState = { isPaused: false, isRunning: true, isCompleted: false };
     value.engine = { engineType: 'motion_path', getMode: () => 'fixation',
@@ -46,7 +47,11 @@ describe('fixation owned session pause', () => {
       resumeSession: jasmine.createSpy('resume').and.returnValue(of({})) };
     await value.goBack();
     expect(value.sessionService.pauseSession).toHaveBeenCalledWith('session');
+    expect(value.engineState.isPaused).toBeTrue();
+    expect(value.showExitConfirm).toBeTrue();
     await value.cancelExit();
     expect(value.sessionService.resumeSession).toHaveBeenCalledWith('session');
+    expect(value.engineState.isPaused).toBeFalse();
+    expect(value.showExitConfirm).toBeFalse();
   });
 });

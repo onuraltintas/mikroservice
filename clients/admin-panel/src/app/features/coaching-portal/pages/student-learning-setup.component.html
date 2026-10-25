@@ -1,7 +1,7 @@
 <section class="study-plans" aria-labelledby="setup-title">
-  <header class="page-heading"><div><p class="eyebrow">Kendi ritmine göre</p><h1 id="setup-title">Çalışma düzenimi kur</h1>
+  <header class="page-heading"><div><p class="eyebrow">Kendi ritmine göre</p><h1 id="setup-title">Profil ve tercihlerim</h1>
     <p>Bilgilerini adım adım kaydet. İstediğin zaman ayrılıp başka cihazda kaldığın yerden devam edebilirsin.</p></div></header>
-  <nav class="actions" aria-label="Mevcut çalışmalar"><a routerLink="/coaching-portal/study-plans">Mevcut planlarım</a><a routerLink="/coaching-portal/assignments">Ödevlerim</a><a routerLink="/coaching-portal">Daha sonra devam et</a></nav>
+  <nav class="actions" aria-label="Profil ve çalışma düzeni"><a routerLink="/coaching-portal/profile">Profil ayrıntılarını düzenle</a><a routerLink="/coaching-portal/weekly-plan">Haftalık düzenime geç</a><a routerLink="/coaching-portal/study-plans">Mevcut planım</a></nav>
   @if (loading()) { <p role="status">Kurulum yükleniyor…</p> }
   @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
   <button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving()">Bilgileri yeniden yükle</button>

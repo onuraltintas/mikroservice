@@ -1,6 +1,8 @@
+import { ToasterService } from '../../../../src/app/core/services/toaster.service';
 import { ChangeDetectorRef, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockBehavior, TestBed } from '@angular/core/testing';
+import { DarkModeService } from '../../../../src/app/core/services/dark-mode.service';
 import { vi } from 'vitest';
 import { StaffAuthService } from './auth/staff-auth.service';
 import { StaffProductAccess } from './auth/staff-auth.models';
@@ -103,9 +105,9 @@ describe('Staff portal workspace role selection', () => {
     const auth = { products: signal<StaffProductAccess[]>([{ product: 'coaching', roles: ['Teacher', 'InstitutionAdmin'] }]),
       activeProduct: signal<'coaching'>('coaching'), switchProduct: vi.fn().mockResolvedValue(undefined), logout: vi.fn().mockResolvedValue(undefined) };
     const component = createComponent(auth);
-    component.selectWorkspaceRole('teacher');
+    (await component.selectWorkspaceRole('teacher'));
     component.coachingTeacherWorkspace = { canLeavePage: () => false } as any;
-    if (transition === 'role') component.selectWorkspaceRole('institution');
+    if (transition === 'role') (await component.selectWorkspaceRole('institution'));
     else if (transition === 'product') await component.switchProduct('speed-reading');
     else await component.logout();
     expect(component.activeWorkspaceRole).toBe('teacher');
@@ -121,17 +123,17 @@ describe('Staff portal workspace role selection', () => {
     expect(component.isTeacherWorkspaceSelected).toBe(false);
   });
 
-  it('switches to the teacher workspace when the user selects it', () => {
+  it('switches to the teacher workspace when the user selects it', async () => {
     const component = createWorkspaceComponent();
 
-    component.selectWorkspaceRole('teacher');
+    (await component.selectWorkspaceRole('teacher'));
 
     expect(component.activeWorkspaceRole).toBe('teacher');
     expect(component.isTeacherWorkspaceSelected).toBe(true);
     expect(component.isInstitutionWorkspaceSelected).toBe(false);
   });
 
-  it('uses only roles granted for the currently active product', () => {
+  it('uses only roles granted for the currently active product', async () => {
     const activeProduct = signal<'coaching' | 'speed-reading'>('coaching');
     const component = createComponent({
       products: signal<StaffProductAccess[]>([
@@ -141,19 +143,19 @@ describe('Staff portal workspace role selection', () => {
       activeProduct
     });
 
-    component.selectWorkspaceRole('teacher');
+    (await component.selectWorkspaceRole('teacher'));
     activeProduct.set('speed-reading');
     expect(component.activeWorkspaceRole).toBe('teacher');
     expect(component.isSpeedReadingTeacherWorkspaceSelected).toBe(true);
     expect(component.canSwitchWorkspaceRole).toBe(false);
-    component.selectWorkspaceRole('institution');
+    (await component.selectWorkspaceRole('institution'));
     expect(component.activeWorkspaceRole).toBe('teacher');
 
     activeProduct.set('coaching');
     expect(component.activeWorkspaceRole).toBe('teacher');
   });
 
-  it('selects the Speed Reading institution workspace for that product role only', () => {
+  it('selects the Speed Reading institution workspace for that product role only', async () => {
     const component = createComponent({
       products: signal<StaffProductAccess[]>([
         { product: 'coaching', roles: ['Teacher'] },
@@ -164,19 +166,33 @@ describe('Staff portal workspace role selection', () => {
 
     expect(component.activeWorkspaceRole).toBe('institution');
     expect(component.isSpeedReadingInstitutionWorkspaceSelected).toBe(true);
-    component.selectWorkspaceRole('teacher');
+    (await component.selectWorkspaceRole('teacher'));
     expect(component.isSpeedReadingTeacherWorkspaceSelected).toBe(true);
     expect(component.isSpeedReadingInstitutionWorkspaceSelected).toBe(false);
   });
 });
 
 describe('Staff portal product deep links', () => {
+  it('opens a weekly notification only after the teacher workspace accepts navigation',async ()=>{
+    const component=createComponent({products:signal<StaffProductAccess[]>([{product:'coaching',roles:['Teacher']}]),activeProduct:signal('coaching')});
+    const open=vi.fn(()=>false);component.coachingTeacherWorkspace={openWeeklyFromNotification:open}as unknown as NonNullable<AppComponent['coachingTeacherWorkspace']>;
+    const target={studentId:'student',weekStart:'2026-10-12',decisionId:null};component.notificationsVisible=true;(await component.openCoachingWeekly(target));
+    expect(open).toHaveBeenCalledWith(target);expect(component.notificationsVisible).toBe(true);open.mockReturnValue(true);(await component.openCoachingWeekly(target));expect(component.notificationsVisible).toBe(false);
+  });
+  it('opens a notification through the teacher workspace and keeps the inbox open if navigation is blocked',async ()=>{
+    const component=createComponent({products:signal<StaffProductAccess[]>([{product:'coaching',roles:['Teacher']}]),activeProduct:signal('coaching')});
+    const open=vi.fn(()=>false);
+    component.coachingTeacherWorkspace={openAssignmentFromNotification:open} as unknown as NonNullable<AppComponent['coachingTeacherWorkspace']>;
+    component.notificationsVisible=true;(await component.openCoachingAssignment('assignment-1'));
+    expect(open).toHaveBeenCalledWith('assignment-1');expect(component.notificationsVisible).toBe(true);
+    open.mockReturnValue(true);(await component.openCoachingAssignment('assignment-2'));expect(component.notificationsVisible).toBe(false);
+  });
   it('blocks role, product and logout transitions while an institution membership save is pending', async () => {
     const auth = { products: signal<StaffProductAccess[]>([{ product: 'coaching', roles: ['Teacher', 'InstitutionAdmin'] }]),
       activeProduct: signal<'coaching'>('coaching'), switchProduct: vi.fn(), logout: vi.fn() };
     const component = createComponent(auth);
-    component.coachingInstitutionWorkspace = { canLeavePage: () => false };
-    component.selectWorkspaceRole('teacher'); await component.switchProduct('speed-reading'); await component.logout();
+    component.coachingInstitutionWorkspace = { canLeavePage: async () => false };
+    (await component.selectWorkspaceRole('teacher')); await component.switchProduct('speed-reading'); await component.logout();
     expect(component.activeWorkspaceRole).toBe('institution');
     expect(auth.switchProduct).not.toHaveBeenCalled(); expect(auth.logout).not.toHaveBeenCalled();
   });
@@ -197,6 +213,44 @@ describe('Staff portal product deep links', () => {
   });
 });
 
+describe('Coaching teacher design shell', () => {
+  async function shell() {
+    const dark=signal(false);
+    const auth={isAuthenticated:signal(true),products:signal([{product:'coaching',roles:['Teacher']}]),activeProduct:signal('coaching')};
+    TestBed.configureTestingModule({imports:[AppComponent],deferBlockBehavior:DeferBlockBehavior.Manual,providers:[
+      {provide:StaffAuthService,useValue:auth},
+      {provide:DarkModeService,useValue:{isDarkMode:dark,toggle:()=>dark.update(v=>!v)}}
+    ]});
+    const fixture=TestBed.createComponent(AppComponent); fixture.detectChanges(); await fixture.whenStable();
+    return {fixture,dark,auth};
+  }
+  it('uses the common coaching shell and exposes the selected theme',async()=>{
+    const {fixture,dark}=await shell();
+    expect(fixture.nativeElement.querySelector('.coaching-staff-shell.coaching-shell')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.session-panel')).toBeNull();
+    fixture.nativeElement.querySelector('[aria-label="Koyu temaya geç"]').click();fixture.detectChanges();
+    expect(dark()).toBe(true);expect(fixture.nativeElement.querySelector('[aria-label="Açık temaya geç"]')).toBeTruthy();
+  });
+  it('closes the mobile menu with Escape and restores focus to its control',async()=>{
+    const {fixture}=await shell(); const toggle=fixture.nativeElement.querySelector('[aria-label="Personel menüsünü aç"]') as HTMLButtonElement;
+    toggle.click();fixture.detectChanges();expect(fixture.componentInstance.menuOpen()).toBe(true);
+    fixture.componentInstance.closeTeacherMenuOnEscape();fixture.detectChanges();
+    expect(fixture.componentInstance.menuOpen()).toBe(false);expect(document.activeElement).toBe(toggle);
+  });
+  it('does not apply coaching design classes to the speed reading workspace',async()=>{
+    const {fixture,auth}=await shell();auth.activeProduct.set('speed-reading');fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.coaching-staff-shell')).toBeNull();
+  });
+  it('closes the drawer before awaiting a dirty-form decision and preserves the current product on cancel',async()=>{
+    const {fixture,auth}=await shell();
+    fixture.componentInstance.coachingTeacherWorkspace={canLeavePage:async()=>false} as unknown as NonNullable<AppComponent['coachingTeacherWorkspace']>;
+    fixture.componentInstance.menuOpen.set(true);
+    const navigation=fixture.componentInstance.chooseProductFromMenu('speed-reading');
+    expect(fixture.componentInstance.menuOpen()).toBe(false);
+    await navigation;expect(auth.activeProduct()).toBe('coaching');
+  });
+});
+
 function createComponent(auth: Partial<StaffAuthService>): AppComponent {
   TestBed.configureTestingModule({
     providers: [{ provide: StaffAuthService, useValue: auth }, { provide: ChangeDetectorRef, useValue: { markForCheck: vi.fn() } }]
@@ -210,3 +264,5 @@ function createWorkspaceComponent(): AppComponent {
     activeProduct: signal('coaching')
   });
 }
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

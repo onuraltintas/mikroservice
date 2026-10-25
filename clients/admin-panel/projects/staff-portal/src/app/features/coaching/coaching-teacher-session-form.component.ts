@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -304,4 +305,7 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
     return globalThis.crypto?.randomUUID?.()
       ?? `teacher-session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
+
+  private readonly errorMessageFeedback = coachingFeedback(undefined, this.errorMessage);
+  private readonly successMessageFeedback = coachingFeedback(this.successMessage);
 }

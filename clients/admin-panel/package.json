@@ -7,6 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:coaching-development": "node ../../tools/test-coaching-development.mjs",
     "serve:ssr:admin-panel": "node dist/admin-panel/server/server.mjs"
   },
   "prettier": {

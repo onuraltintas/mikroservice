@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -13,7 +14,26 @@ import { CoachingTeacherStudentsService } from './coaching-teacher-students.serv
 import { CoachingTeacherAssignmentsComponent } from './coaching-teacher-assignments.component';
 
 describe('CoachingTeacherAssignmentsComponent', () => {
-  it('loads the current teacher assignment list with delivery and status information', () => {
+  it('opens a notification assignment outside the list page and reloads a second exact assignment',async () =>{
+    const service=assignmentService();const fixture=createFixture(service);
+    fixture.componentRef.setInput('notificationAssignmentId','not-on-page');fixture.detectChanges();
+    expect(service.getAssignment).toHaveBeenLastCalledWith('not-on-page');
+    await fixture.componentInstance.reviewAssignment('second');fixture.detectChanges();
+    expect(service.getAssignment).toHaveBeenLastCalledWith('second');
+    await fixture.componentInstance.closeAssignmentDetail();fixture.detectChanges();
+    await fixture.componentInstance.reviewAssignment('second');fixture.detectChanges();
+    expect(service.getAssignment.mock.calls.map(call=>call[0])).toEqual(['not-on-page','second','second']);
+  });
+  it('keeps an open assignment form instead of replacing it with a notification target',async () =>{
+    const service=assignmentService();const fixture=createFixture(service);fixture.detectChanges();
+    fixture.componentInstance.createAssignment();fixture.detectChanges();
+    await fixture.componentInstance.reviewAssignment('other');fixture.detectChanges();
+    expect(fixture.componentInstance.formMode()?.kind).toBe('new');
+    expect(fixture.componentInstance.detailAssignmentId()).toBeNull();
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('ödev formunu');
+    expect(service.getAssignment).not.toHaveBeenCalled();
+  });
+  it('loads the current teacher assignment list with delivery and status information', async () => {
     const service = assignmentService();
     service.getTeacherAssignments.mockReturnValue(of(page([assignment('assignment-1')])));
     const fixture = createFixture(service);
@@ -25,7 +45,7 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Aktif');
   });
 
-  it('filters status from page one and lets the teacher move between pages', () => {
+  it('filters status from page one and lets the teacher move between pages', async () => {
     const service = assignmentService();
     service.getTeacherAssignments
       .mockReturnValueOnce(of(page([], 1, 30, 2)))
@@ -46,7 +66,7 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     expect(component.pageNumber()).toBe(1);
   });
 
-  it('requires explicit confirmation and reloads after cancel succeeds', () => {
+  it('requires explicit confirmation and reloads after cancel succeeds', async () => {
     const service = assignmentService();
     service.getTeacherAssignments.mockReturnValue(of(page([assignment('assignment-1')])));
     const fixture = createFixture(service);
@@ -63,7 +83,7 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     expect(service.getTeacherAssignments).toHaveBeenCalledTimes(2);
   });
 
-  it('shows a retryable friendly error when the assignment list fails', () => {
+  it('shows a retryable friendly error when the assignment list fails', async () => {
     const service = assignmentService();
     service.getTeacherAssignments.mockReturnValue(throwError(() => new Error('network')));
     const fixture = createFixture(service);
@@ -74,7 +94,7 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Tekrar dene');
   });
 
-  it('does not request a list if the authenticated user id is unavailable', () => {
+  it('does not request a list if the authenticated user id is unavailable', async () => {
     const service = assignmentService();
     const fixture = createFixture(service, null);
     fixture.detectChanges();
@@ -83,7 +103,7 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     expect(fixture.componentInstance.errorMessage()).toBe('Öğretmen oturumu doğrulanamadı. Lütfen yeniden giriş yapın.');
   });
 
-  it('opens the new assignment form from the teacher list and returns without navigating away', () => {
+  it('opens the new assignment form from the teacher list and returns without navigating away', async () => {
     const service = assignmentService();
     const fixture = createFixture(service);
     fixture.detectChanges();
@@ -113,7 +133,7 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     expect((fixture.nativeElement.querySelector('#assignment-title') as HTMLInputElement).value).toBe('Haftalık tekrar');
   });
 
-  it('opens the teacher submission review from the assignment list', () => {
+  it('opens the teacher submission review from the assignment list', async () => {
     const service = assignmentService();
     service.getTeacherAssignments.mockReturnValue(of(page([assignment('assignment-1')])));
     const fixture = createFixture(service);
@@ -142,7 +162,7 @@ function createFixture(service: ReturnType<typeof assignmentService>, userId: st
 function assignmentService() {
   return {
     getTeacherAssignments: vi.fn(() => of(page([]))),
-    getAssignment: vi.fn(() => of({
+    getAssignment: vi.fn((_id: string) => of({
       id: 'assignment-1', teacherId: 'teacher-1', title: 'Haftalık tekrar', type: 'Individual', source: 'Digital',
       totalStudents: 0, submittedCount: 0,
       dueDate: '2030-01-02T10:00:00Z', status: 'Active', assignedStudents: [], createdAt: '2029-12-01T10:00:00Z'
@@ -187,3 +207,5 @@ function assignment(id: string): CoachingTeacherAssignment {
 function page(items: CoachingTeacherAssignment[], pageNumber = 1, totalCount = items.length, totalPages = 1) {
   return { items, pageNumber, pageSize: 25, totalCount, totalPages };
 }
+
+beforeEach(() => TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn()}}));

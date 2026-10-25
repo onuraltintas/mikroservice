@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -94,4 +95,5 @@ export class StudentAssignmentsComponent implements OnInit {
   trackById(_: number, item: StudentAssignment) {
     return item.id;
   }
+  private readonly feedback = coachingFeedback(undefined, this.errorMessage);
 }

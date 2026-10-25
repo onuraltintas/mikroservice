@@ -2,7 +2,7 @@ using Coaching.Application.StudyPlanning;
 
 namespace Coaching.Application.CatalogAdministration;
 
-public enum CatalogKind { Lessons, Units, Topics, Schools, UniversityPrograms }
+public enum CatalogKind { Lessons, Units, Topics, Schools }
 
 public sealed record AdminCatalogFilter
 {
@@ -19,7 +19,6 @@ public sealed record AdminCatalogFilter
     public bool? HasParent { get; init; }
     public string? ProvinceId { get; init; }
     public string? DistrictId { get; init; }
-    public string? ScoreType { get; init; }
     public int? ScoreYear { get; init; }
 }
 
@@ -38,9 +37,6 @@ public sealed record AdminCatalogRow
     public string? ExamCode { get; init; }
     public int? DisplayOrder { get; init; }
     public int? EstimatedMinutes { get; init; }
-    public string? UniversityName { get; init; }
-    public string? ProgramCode { get; init; }
-    public string? ScoreType { get; init; }
     public decimal? MinimumScore { get; init; }
     public int? ScoreYear { get; init; }
     public string? City { get; init; }

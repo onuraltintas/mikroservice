@@ -2,6 +2,8 @@ namespace EduPlatform.Shared.Contracts.Events.Coaching;
 
 public sealed record StudyPlanPublishedEvent(Guid RevisionId, Guid StudentId);
 public sealed record StudyPlanUpdatedEvent(Guid RevisionId, Guid StudentId, string ChangeDescription);
+public sealed record WeeklyReflectionSavedEvent(Guid ReflectionId, Guid StudentId, DateOnly WeekStart, Guid[] TeacherIds);
+public sealed record WeeklyDecisionChangedEvent(Guid DecisionId, Guid StudentId, Guid TeacherId, DateOnly WeekStart, bool Created, bool ResponsibilityTransferred = false);
 public sealed record CoachingReminderDueEvent(Guid ReminderId, Guid RecipientUserId, Guid SourceId, string Kind, DateTime DueAt);
 
 public sealed record AssignmentCreatedEvent(

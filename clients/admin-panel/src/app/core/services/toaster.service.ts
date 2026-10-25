@@ -57,7 +57,9 @@ export class ToasterService {
             width: 'min(460px, calc(100vw - 32px))',
             maxWidth: 'calc(100vw - 32px)',
             panelClass: 'ui-confirm-dialog',
-            autoFocus: false,
+            autoFocus: 'first-tabbable',
+            restoreFocus: true,
+            ariaLabel: options.title || 'Onay',
             data: {
                 title: options.title || 'Onay',
                 message,
@@ -83,7 +85,9 @@ export class ToasterService {
             width: 'min(520px, calc(100vw - 32px))',
             maxWidth: 'calc(100vw - 32px)',
             panelClass: 'ui-confirm-dialog',
-            autoFocus: false,
+            autoFocus: 'first-tabbable',
+            restoreFocus: true,
+            ariaLabel: options.title || 'Bilgi',
             data: {
                 ...options,
                 title: options.title || 'Bilgi',

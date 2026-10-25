@@ -46,6 +46,11 @@ export interface AssignmentAttachment {
   scannedAt?: string;
 }
 
+export interface AssignmentInstructionAttachment extends AssignmentAttachment {
+  uploadedAt: string;
+  scannedAt: string;
+}
+
 export interface AssignedStudent {
   studentId: string;
   submittedAt?: string;
@@ -79,6 +84,7 @@ export interface AssignmentDetail {
   passingScore?: number;
   status: string;
   assignedStudents: AssignedStudent[];
+  instructionAttachments?: AssignmentInstructionAttachment[];
   createdAt: string;
 }
 
@@ -174,6 +180,7 @@ export interface CoachingStudentHistoryItem {
 }
 
 export interface ExamResult {
+  netSummary?: import('../models/practice-exam').PracticeExamSummary | null;
   source?: 'StudentReported' | 'TeacherRecorded';
   examId: string;
   examTitle: string;
@@ -600,6 +607,13 @@ export class CoachingPortalService {
   ): Observable<Blob> {
     return this.http.get(
       `${this.url}/${this.id(assignmentId)}/students/${this.id(studentId)}/attachments/${this.id(attachmentId)}/content`,
+      { responseType: 'blob' }
+    );
+  }
+
+  downloadInstructionAttachment(assignmentId: string, attachmentId: string): Observable<Blob> {
+    return this.http.get(
+      `${this.url}/${this.id(assignmentId)}/instruction-attachments/${this.id(attachmentId)}/content`,
       { responseType: 'blob' }
     );
   }

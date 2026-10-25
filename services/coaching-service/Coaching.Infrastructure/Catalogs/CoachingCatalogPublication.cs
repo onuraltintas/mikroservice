@@ -27,7 +27,6 @@ public sealed class CoachingCatalogPublication(CoachingDbContext db)
                 ["units-derived.json"] = await db.StudyCatalogUnits.CountAsync(x => x.Source == source, cancellationToken),
                 ["upper-subjects.json"] = await db.StudyCatalogTopics.CountAsync(x => x.Source == source && x.ParentId == null, cancellationToken),
                 ["subjects.json"] = await db.StudyCatalogTopics.CountAsync(x => x.Source == source && x.ParentId != null, cancellationToken),
-                ["university-programs.json"] = await db.TargetUniversityPrograms.CountAsync(x => x.Source == source, cancellationToken),
                 ["lgs-programs.json"] = await db.TargetSchools.CountAsync(x => x.Source == source, cancellationToken)
             };
             if (expected.Counts.Count != counts.Count || counts.Any(x => !expected.Counts.TryGetValue(x.Key, out var value) || value != x.Value)
@@ -38,8 +37,6 @@ public sealed class CoachingCatalogPublication(CoachingDbContext db)
             changed += await db.StudyCatalogUnits.Where(x => x.Source == source && x.IsActive != published)
                 .ExecuteUpdateAsync(x => x.SetProperty(row => row.IsActive, published), cancellationToken);
             changed += await db.StudyCatalogTopics.Where(x => x.Source == source && x.IsActive != published)
-                .ExecuteUpdateAsync(x => x.SetProperty(row => row.IsActive, published), cancellationToken);
-            changed += await db.TargetUniversityPrograms.Where(x => x.Source == source && x.IsActive != published)
                 .ExecuteUpdateAsync(x => x.SetProperty(row => row.IsActive, published), cancellationToken);
             changed += await db.TargetSchools.Where(x => x.Source == source && x.IsActive != published)
                 .ExecuteUpdateAsync(x => x.SetProperty(row => row.IsActive, published), cancellationToken);

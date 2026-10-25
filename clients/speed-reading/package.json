@@ -6,7 +6,8 @@
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:contracts": "node ../../tools/test-speed-reading-contracts.mjs"
   },
   "prettier": {
     "overrides": [

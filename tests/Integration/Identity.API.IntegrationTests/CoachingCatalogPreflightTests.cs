@@ -8,7 +8,7 @@ public sealed class CoachingCatalogPreflightTests
     {
         ["lessons.json"] = "[]", ["units-derived.json"] = "[]",
         ["upper-subjects.json"] = "[]", ["subjects.json"] = "[]",
-        ["university-programs.json"] = "[]", ["lgs-programs.json"] = "[]"
+        ["lgs-programs.json"] = "[]"
     };
 
     [Fact]
@@ -41,7 +41,7 @@ public sealed class CoachingCatalogPreflightTests
             await File.WriteAllTextAsync(Path.Combine(directory, "student-goals.json"), "invalid JSON must not be read");
             var report = await CatalogPreflight.ReadAsync(directory);
             Assert.Empty(report.Errors);
-            Assert.Equal(6, report.Counts.Count);
+            Assert.Equal(5, report.Counts.Count);
         }
         finally
         {

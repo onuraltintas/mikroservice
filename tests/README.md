@@ -33,11 +33,32 @@ tests/
     └── EduPlatform.E2E.Tests/
 ```
 
+## Hızlı Okuma testleri
+
+Hızlı Okuma yerel test projesi `Unit/SpeedReading.Application.UnitTests` altındadır;
+API ve Infrastructure testleri de içerir. PostgreSQL entegrasyonları ortak
+`Integration/Identity.API.IntegrationTests` projesinde bulunur ve Testcontainers
+ile geçici veritabanında çalışır.
+
+Depo kökünden:
+
+```powershell
+dotnet test tests/Unit/SpeedReading.Application.UnitTests/SpeedReading.Application.UnitTests.csproj
+dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj --filter "FullyQualifiedName~SpeedReading"
+npm test --prefix clients/speed-reading -- --watch=false --browsers=ChromeHeadless --progress=false
+npm run test:contracts --prefix clients/speed-reading
+```
+
+PostgreSQL fixture'ları veritabanını oluşturup siler; canlı bağlantı bilgileri
+kullanılmaz. Öğrenci testleri Chrome, PostgreSQL testleri çalışan Docker gerektirir.
+Playwright egzersiz UI testleri ile Gateway assessment API testinin kapsamları
+ayrıdır: [E2E rehberi](../docs/E2E_TESTING.md).
+
 ## 🚀 Running Tests
 
 ### Prerequisites
 
-- **.NET 9.0 SDK** installed
+- **.NET 10 SDK** installed
 - **Docker** running (for Testcontainers)
 
 ### Run All Tests

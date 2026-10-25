@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "outDir": "./out-tsc/spec", "types": ["vitest/globals", "node"] },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"],
+  "files": [
+    "src/app/features/dashboard/pages/coaching-curriculum-manager.component.spec.ts",
+    "src/app/features/dashboard/pages/coaching-outcomes.component.spec.ts",
+    "src/app/features/coaching-portal/pages/student-learning-setup.component.spec.ts"
+  ]
+}

@@ -11,4 +11,14 @@ describe('weekly draft API',()=>{
     service.save(3,'Europe/Istanbul',[{id:'one',lessonId:'math',lessonName:'Client label',examCode:'LGS',day:'Monday',startMinute:1080,durationMinutes:30}]).subscribe();
     const put=http.expectOne(r=>r.method==='PUT');expect(put.request.body).toEqual({expectedVersion:3,timeZoneId:'Europe/Istanbul',slots:[{id:'one',lessonId:'math',day:'Monday',startMinute:1080,durationMinutes:30}]});put.flush({data:{version:4,timeZoneId:'Europe/Istanbul',slots:[]}});http.verify();
   });
+
+  it('uses the selected student scope for a teacher instead of the teachers own draft',()=>{
+    TestBed.configureTestingModule({providers:[provideHttpClient(),provideHttpClientTesting()]});
+    const service=TestBed.inject(CoachingWeeklyDraftService),http=TestBed.inject(HttpTestingController);
+    service.get('student-1').subscribe();
+    http.expectOne('/api/coaching/staff/students/student-1/study/weekly-draft').flush({data:{draft:null,lessons:[]}});
+    service.save(2,'Europe/Istanbul',[],'student-1').subscribe();
+    const save=http.expectOne(r=>r.method==='PUT');expect(save.request.url).toBe('/api/coaching/staff/students/student-1/study/weekly-draft');
+    save.flush({data:{version:3,timeZoneId:'Europe/Istanbul',slots:[]}});http.verify();
+  });
 });

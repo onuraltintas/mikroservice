@@ -58,7 +58,14 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
                 input with { Tasks = Enumerable.Repeat(new ManualStudyTaskInput(new DateOnly(2026, 10, 5), "Konu", 45, null, false), 501).ToArray() }));
             await Assert.ThrowsAsync<ArgumentException>(() => service.ReplaceDraftAsync(empty.Id, empty.Version,
                 input with { Tasks = [new(new DateOnly(2026, 10, 5), "Konu", 1440, null, false), new(new DateOnly(2026, 10, 5), "Konu", 1, null, false)] }));
-            await Assert.ThrowsAsync<BusinessRuleException>(() => service.PublishAsync(empty.Id, empty.Version));
+            // Empty replacement input retains the protected continuation, so it is no longer an empty plan.
+            Assert.Contains(empty.Tasks,x=>x.OriginalTaskId==active.Tasks[0].Id);
+            var owner=actor.UserId;
+            actor.UserId=Guid.NewGuid();
+            var trulyEmpty=await service.CreateDraftAsync(input with {Tasks=[]});
+            Assert.Empty(trulyEmpty.Tasks);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.PublishAsync(trulyEmpty.Id, trulyEmpty.Version));
+            actor.UserId=owner;
             Assert.Equal(StudyPlanStatus.Active, (await service.GetAsync(next.Id))!.Status);
             actor.UserId = Guid.NewGuid();
             Assert.Null(await service.GetAsync(next.Id));

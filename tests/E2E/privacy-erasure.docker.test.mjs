@@ -13,12 +13,25 @@ const executionContract = 'EduPlatform.Shared.Contracts.Events.Privacy:PersonalD
 const docker = process.env.DOCKER_EXE || 'docker';
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
+function composeArgs(config, ...args) {
+  return ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE,
+    ...(config.E2E_COURSE_MANAGEMENT_ENABLED === 'true'
+      ? ['-f', 'docker-compose.yml', '-f', 'docker-compose.course-management.yml']
+      : []),
+    ...(config.E2E_COMPOSE_EXTRA_FILE ? ['-f', config.E2E_COMPOSE_EXTRA_FILE] : []),
+    ...args];
+}
+
 function verifyContainers(config) {
   requireDisposableEnvironment(config);
   assert.match(config.COMPOSE_PROJECT_NAME || '', /^privacy-e2e-[a-z0-9-]+$/);
-  for (const service of ['identity-service', 'rabbitmq', 'coaching-service']) {
-    const compose = spawnSync(docker, ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE,
-      'ps', '-q', service], { cwd: repoRoot, encoding: 'utf8', timeout: 20_000 });
+  const services = ['identity-service', 'rabbitmq', 'coaching-service'];
+  if (config.E2E_COURSE_MANAGEMENT_ENABLED === 'true')
+    services.push('course-management-service', 'course-management-db');
+  for (const service of services) {
+    const compose = spawnSync(docker, composeArgs(config, 'ps', '-q', service), {
+      cwd: repoRoot, encoding: 'utf8', timeout: 20_000,
+    });
     if (compose.error || compose.status !== 0 || !compose.stdout.trim()) {
       throw new Error(`Privacy Docker E2E requires a running Compose ${service} service.`);
     }
@@ -31,7 +44,7 @@ function verifyContainers(config) {
     }
     const container = JSON.parse(inspect.stdout);
     assert.equal(container.Config.Labels['com.docker.compose.project'], config.COMPOSE_PROJECT_NAME);
-    if (service === 'identity-service') {
+    if (service === 'identity-service' || service === 'course-management-service') {
       requireDisposableContainer(container.Config.Env, config.ENVIRONMENT);
     } else if (service === 'rabbitmq') {
       const port = String(config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672);
@@ -54,11 +67,15 @@ async function settings() {
 }
 
 function sql(config, database, statement) {
-  const result = spawnSync(docker, [
-    'compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'exec', '-T', 'postgres',
+  return sqlOnService(config, 'postgres', database, statement);
+}
+
+function sqlOnService(config, service, database, statement, username = config.POSTGRES_USER) {
+  const result = spawnSync(docker, composeArgs(config,
+    'exec', '-T', service,
     'psql', '-X', '-v', 'ON_ERROR_STOP=1',
-    '-U', config.POSTGRES_USER, '-d', database, '-At',
-  ], { cwd: repoRoot, input: `${statement}\n`, encoding: 'utf8', timeout: 20_000 });
+    '-U', username, '-d', database, '-At',
+  ), { cwd: repoRoot, input: `${statement}\n`, encoding: 'utf8', timeout: 20_000 });
   if (result.error || result.status !== 0) {
     throw new Error(`PostgreSQL E2E query failed in ${database}: ${result.stderr?.trim() || result.error?.message}`);
   }
@@ -70,10 +87,9 @@ function localAttachment(config, operation, key) {
   const script = operation === 'write'
     ? 'mkdir -p "$(dirname "$1")" && printf jpeg > "$1"'
     : 'test -f "$1"';
-  return spawnSync(docker, [
-    'compose', '--env-file', config.E2E_COMPOSE_ENV_FILE,
+  return spawnSync(docker, composeArgs(config,
     'exec', '-T', 'coaching-service', 'sh', '-c', script, 'sh', path,
-  ], { cwd: repoRoot, encoding: 'utf8', timeout: 20_000 });
+  ), { cwd: repoRoot, encoding: 'utf8', timeout: 20_000 });
 }
 
 async function publish(config, contract, message, requestId) {
@@ -137,7 +153,7 @@ async function eventually(read, expected, label) {
   throw new Error(`${label} did not reach ${expected}.`);
 }
 
-test('disposable Docker account erasure completes across three product databases and Identity',
+test('disposable Docker Coaching-scope erasure removes only Coaching data',
   { timeout: 120_000 }, async () => {
     const config = await settings();
     verifyContainers(config);
@@ -168,7 +184,7 @@ test('disposable Docker account erasure completes across three product databases
       INSERT INTO identity."DataSubjectRequests" ("Id", "RequesterUserId", "RequestType", "Scope",
         "Status", "Reason", "SubmittedAt", "IdentityVerifiedAt", "DecidedByUserId",
         "DecisionReason", "DecidedAt", "ProcessingStartedAt", "CreatedAt", "UpdatedAt", "Version")
-      VALUES ('${requestId}', '${userId}', 'Erasure', 'Account', 'Processing', 'Disposable Docker E2E',
+      VALUES ('${requestId}', '${userId}', 'Erasure', 'Coaching', 'Processing', 'Disposable Docker E2E',
         '${now}', '${now}', '${userId}', 'E2E approval', '${now}', '${now}', '${now}', '${now}', 0);
     `);
     sql(config, coachingDb, `
@@ -207,7 +223,7 @@ test('disposable Docker account erasure completes across three product databases
 
     await publish(config, assessmentContract, {
       eventId: randomUUID(), requestId, subjectUserId: userId, approvedAt: now,
-      dryRun: true, scope: 1, schemaVersion: '1.0',
+      dryRun: true, scope: 2, schemaVersion: '1.0',
     }, requestId);
     await eventually(() => sql(config, coachingDb, `SELECT count(*) FROM coaching."CoachingErasureAssessments"
       WHERE "RequestId"='${requestId}' AND "CanProceed"=true AND "GoalCount"=1
@@ -215,7 +231,7 @@ test('disposable Docker account erasure completes across three product databases
 
     const execution = {
       eventId: randomUUID(), requestId, subjectUserId: userId,
-      authorizedAt: new Date().toISOString(), scope: 1, schemaVersion: '1.0',
+      authorizedAt: new Date().toISOString(), scope: 2, schemaVersion: '1.0',
     };
     await publish(config, executionContract, execution, requestId);
     await eventually(() => sql(config, identityDb, `SELECT "Status" FROM identity."DataSubjectRequests"
@@ -223,10 +239,10 @@ test('disposable Docker account erasure completes across three product databases
 
     assert.equal(sql(config, identityDb, `SELECT string_agg("ServiceName" || ':' || "DeletedRecordCount", ','
       ORDER BY "ServiceName") FROM identity."DataSubjectRequestExecutionResults"
-      WHERE "RequestId"='${requestId}';`), 'Coaching:3,Notification:3,SpeedReading:1');
+      WHERE "RequestId"='${requestId}';`), 'Coaching:3');
     assert.equal(sql(config, identityDb, `SELECT "Email" || '|' || "IsActive" || '|' ||
       octet_length("PasswordHash") FROM identity.users WHERE "Id"='${userId}';`),
-    `erased-${userId.replaceAll('-', '')}@deleted.invalid|false|0`);
+    `${email}|true|1`);
     assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.academic_goals
       WHERE student_id='${userId}';`), '0');
     assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.assignment_students
@@ -239,22 +255,84 @@ test('disposable Docker account erasure completes across three product databases
       'Unrelated file must survive');
     assert.equal(sql(config, notificationDb, `SELECT (SELECT count(*) FROM "Notifications" WHERE "UserId"='${userId}')
       + (SELECT count(*) FROM "EmailDeliveries" WHERE "SubjectUserId"='${userId}')
-      + (SELECT count(*) FROM "SupportRequests" WHERE "SubjectUserId"='${userId}');`), '0');
+      + (SELECT count(*) FROM "SupportRequests" WHERE "SubjectUserId"='${userId}');`), '3');
     assert.equal(sql(config, speedDb, `SELECT count(*) FROM speed_reading.user_profiles
-      WHERE "UserId"='${userId}';`), '0');
+      WHERE "UserId"='${userId}';`), '1');
 
     const replayMessageId = await publish(
       config, executionContract, { ...execution, eventId: randomUUID() }, requestId);
     for (const [database, schema, table] of [
       [coachingDb, 'coaching', 'CoachingErasureExecutions'],
-      [notificationDb, 'public', 'PrivacyErasureExecutions'],
-      [speedDb, 'speed_reading', 'privacy_erasure_executions'],
     ]) {
       await eventually(() => sql(config, database, `SELECT count(*) FROM ${schema}."InboxState"
         WHERE "MessageId"='${replayMessageId}';`), '1', `${schema} replay inbox`);
       assert.equal(sql(config, database, `SELECT count(*) FROM ${schema}."${table}"
         WHERE "RequestId"='${requestId}';`), '1');
     }
+  });
+
+test('disposable Docker Account assessment uses the complete Identity review summary for hold decisions',
+  { timeout: 120_000, skip: process.env.E2E_COURSE_MANAGEMENT_ENABLED !== 'true' }, async () => {
+    const config = await settings();
+    verifyContainers(config);
+    for (const key of ['POSTGRES_USER', 'RABBITMQ_DEFAULT_USER', 'RABBITMQ_DEFAULT_PASS']) {
+      assert.ok(config[key], `${key} is required`);
+    }
+    await eventually(() => consumersReady(config), 'true', 'privacy consumers');
+    const identityDb = config.POSTGRES_DB_IDENTITY || 'identity_db';
+    const coachingDb = config.POSTGRES_DB_COACHING || 'coaching_db';
+    const courseManagementDb = 'course_management';
+    const userId = randomUUID();
+    const requestId = randomUUID();
+    const now = new Date().toISOString();
+    const email = `privacy-erasure-cm-${userId.replaceAll('-', '')}@example.test`;
+
+    sql(config, identityDb, `
+      INSERT INTO identity.users ("Id", "Email", "FirstName", "LastName", "PasswordHash", "PasswordSalt",
+        "EmailConfirmed", "PhoneConfirmed", "IsActive", "CreatedAt", "Version", "MfaEnabled",
+        "MfaFailedAttempts", "MfaRecoveryCodeHashesJson")
+      VALUES ('${userId}', '${email}', 'Privacy', 'Course Management', decode('01', 'hex'), decode('02', 'hex'),
+        true, false, true, '${now}', 0, false, 0, '[]');
+      INSERT INTO identity."DataSubjectRequests" ("Id", "RequesterUserId", "RequestType", "Scope",
+        "Status", "Reason", "SubmittedAt", "IdentityVerifiedAt", "DecidedByUserId",
+        "DecisionReason", "DecidedAt", "CreatedAt", "UpdatedAt", "Version")
+      VALUES ('${requestId}', '${userId}', 'Erasure', 'Account', 'Approved', 'Disposable Course Management hold E2E',
+        '${now}', '${now}', '${userId}', 'E2E approval', '${now}', '${now}', '${now}', 0);
+    `);
+    sql(config, coachingDb, `
+      INSERT INTO coaching."CoachingLegalHolds"
+        ("Id", "SubjectUserId", "Reason", "PlacedByUserId", "PlacedAt", "CreatedAt", "Version")
+      VALUES (gen_random_uuid(), '${userId}', 'Disposable account-scope hold', '${userId}', '${now}', '${now}', 0);
+    `);
+
+    await publish(config, assessmentContract, {
+      eventId: randomUUID(), requestId, subjectUserId: userId, approvedAt: now,
+      dryRun: true, scope: 1, schemaVersion: '1.0',
+    }, requestId);
+
+    await eventually(() => sqlOnService(config, 'course-management-db', courseManagementDb, `
+      SELECT count(*) FROM "AccountErasureAssessments"
+      WHERE "RequestId"='${requestId}' AND "CanProceed"=true
+        AND "HasActiveLegalHold"=false AND "LegalHoldStatusVerified"=true;`, 'course_management'),
+    '1', 'Course Management local assessment result');
+    await eventually(() => sql(config, identityDb, `SELECT count(*)
+      FROM identity."DataSubjectRequestAssessmentResults" WHERE "RequestId"='${requestId}';`),
+    '4', 'all four Account-scope assessment results');
+
+    assert.equal(sql(config, identityDb, `SELECT "CanProceed" || '|' || "HasActiveLegalHold"
+      FROM identity."DataSubjectRequestAssessmentResults"
+      WHERE "RequestId"='${requestId}' AND "ServiceName"='CourseManagement';`), 'true|false');
+    assert.equal(sql(config, identityDb, `SELECT "CanProceed" || '|' || "HasActiveLegalHold"
+      FROM identity."DataSubjectRequestAssessmentResults"
+      WHERE "RequestId"='${requestId}' AND "ServiceName"='Coaching';`), 'false|true');
+    assert.equal(sql(config, identityDb, `SELECT "Status" FROM identity."DataSubjectRequests"
+      WHERE "Id"='${requestId}';`), 'Approved');
+    assert.equal(sql(config, identityDb, `SELECT "Email" || '|' || "IsActive"
+      FROM identity.users WHERE "Id"='${userId}';`), `${email}|true`);
+    assert.equal(sql(config, identityDb, `SELECT count(*)
+      FROM identity."DataSubjectRequestExecutionResults" WHERE "RequestId"='${requestId}';`), '0');
+    assert.equal(sqlOnService(config, 'course-management-db', courseManagementDb, `
+      SELECT count(*) FROM "AccountErasureExecutions" WHERE "RequestId"='${requestId}';`, 'course_management'), '0');
   });
 
 test('disposable Docker assessment retains Coaching data under an active legal hold',

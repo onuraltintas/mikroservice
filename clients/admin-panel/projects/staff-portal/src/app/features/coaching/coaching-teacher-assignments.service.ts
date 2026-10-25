@@ -46,6 +46,7 @@ export interface CoachingAssignmentDetail extends CoachingTeacherAssignment {
   estimatedDurationMinutes?: number;
   maxScore?: number;
   passingScore?: number;
+  instructionAttachments?: CoachingAssignmentInstructionAttachment[];
   assignedStudents: Array<{
     studentId: string;
     status: string;
@@ -65,6 +66,11 @@ export interface CoachingAssignmentAttachment {
   status: string;
   uploadedAt?: string;
   scannedAt?: string;
+}
+
+export interface CoachingAssignmentInstructionAttachment extends CoachingAssignmentAttachment {
+  uploadedAt: string;
+  scannedAt: string;
 }
 
 interface AssignmentFields {
@@ -195,6 +201,21 @@ export class CoachingTeacherAssignmentsService {
     );
   }
 
+  uploadInstructionAttachment(assignmentId: string, file: File): Observable<CoachingAssignmentInstructionAttachment> {
+    const headers = new HttpHeaders({ 'Content-Type': file.type || this.contentTypeForFile(file.name) });
+    const params = new HttpParams().set('fileName', file.name);
+    return this.http.post<CoachingAssignmentInstructionAttachment>(
+      `${this.url}/${encodeURIComponent(assignmentId)}/instruction-attachments`, file, { headers, params }
+    );
+  }
+
+  downloadInstructionAttachment(assignmentId: string, attachmentId: string): Observable<Blob> {
+    return this.http.get(
+      `${this.url}/${encodeURIComponent(assignmentId)}/instruction-attachments/${encodeURIComponent(attachmentId)}/content`,
+      { responseType: 'blob' }
+    );
+  }
+
   cancelAssignment(assignmentId: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(
       `${this.url}/${encodeURIComponent(assignmentId)}/cancel`,
@@ -220,5 +241,18 @@ export class CoachingTeacherAssignmentsService {
     }
 
     return body;
+  }
+
+  private contentTypeForFile(fileName: string): string {
+    switch (fileName.split('.').pop()?.toLowerCase()) {
+      case 'jpg': case 'jpeg': return 'image/jpeg';
+      case 'png': return 'image/png';
+      case 'webp': return 'image/webp';
+      case 'pdf': return 'application/pdf';
+      case 'doc': return 'application/msword';
+      case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'md': return 'text/markdown';
+      default: return 'application/octet-stream';
+    }
   }
 }
