@@ -209,6 +209,12 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                         GoogleAuthenticationRules.LoginProvider,
                         googleUser.GoogleId,
                         GoogleAuthenticationRules.LoginProvider);
+                    if (!createdNewUser && !user.EmailConfirmed)
+                    {
+                        // Registration race onto an account someone else created and never confirmed.
+                        user.ClaimUnconfirmedAccountByVerifiedExternalLogin();
+                    }
+
                     userChanged = true;
                 }
 
@@ -317,10 +323,9 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     login.LoginProvider == GoogleAuthenticationRules.LoginProvider
                     && login.ProviderKey == googleUser.GoogleId))
             {
-                if (!user.EmailConfirmed)
-                {
-                    user.ConfirmEmail();
-                }
+                // The local password of an unconfirmed account may have been chosen by
+                // someone else; Google's verified address now proves the real owner.
+                user.ClaimUnconfirmedAccountByVerifiedExternalLogin();
 
                 try
                 {
@@ -385,8 +390,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             return ProductAccessDenied();
         }
 
-        if (isAdmin
-            && user.MfaEnabled
+        // Same rule as password login: any account with an enrolled authenticator.
+        if (user.MfaEnabled
             && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             return Result.Success(LoginResponse.RequireMfa(

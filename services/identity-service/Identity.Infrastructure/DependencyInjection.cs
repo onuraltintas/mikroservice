@@ -80,6 +80,19 @@ public static class DependencyInjection
         services.AddScoped<IConfigurationService, Services.ConfigurationService>();
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IMultiFactorService, MultiFactorService>();
+        services.AddOptions<Security.LoginLockoutOptions>()
+            .Bind(configuration.GetSection(Security.LoginLockoutOptions.SectionName))
+            .Validate(options =>
+            {
+                options.Validate();
+                return true;
+            })
+            .ValidateOnStart();
+        // PublicationOnly: a failed first connection is retried on the next use instead of being cached.
+        services.AddSingleton(provider => new Lazy<StackExchange.Redis.IConnectionMultiplexer>(
+            () => provider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>(),
+            LazyThreadSafetyMode.PublicationOnly));
+        services.AddSingleton<ILoginAttemptLimiter, Security.RedisLoginAttemptLimiter>();
         services.AddScoped<IUserAccessManagementService, Services.UserAccessManagementService>();
         services.AddSingleton<IAdminAuditWriter, IdentityAdminAuditWriter>();
 

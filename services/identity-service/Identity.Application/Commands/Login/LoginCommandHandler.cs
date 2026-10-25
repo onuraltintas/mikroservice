@@ -18,7 +18,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
     private readonly IIdentityService _identityService;
     private readonly IConfigurationService _configurationService;
     private readonly IMultiFactorService _multiFactorService;
+    private readonly ILoginAttemptLimiter _loginAttempts;
     private readonly Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> _logger;
+
+    // Verified against when the address is unknown, so both outcomes cost one full
+    // key derivation and the response time does not reveal which accounts exist.
+    private static readonly object DummyCredentialLock = new();
+    private static (byte[] Hash, byte[] Salt)? _dummyCredential;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
@@ -28,8 +34,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         IIdentityService identityService,
         IConfigurationService configurationService,
         IMultiFactorService multiFactorService,
-        Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> logger)
+        Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> logger,
+        ILoginAttemptLimiter? loginAttempts = null)
     {
+        _loginAttempts = loginAttempts ?? NoLoginAttemptLimiter.Instance;
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
@@ -42,18 +50,31 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
 
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
+        // 0. Per-account lockout (keyed by address, identical for unknown accounts).
+        var lockout = await _loginAttempts.GetLockoutAsync(request.Email, cancellationToken);
+        if (lockout is { } remaining)
+        {
+            return Result.Failure<LoginResponse>(TooManyAttempts(remaining));
+        }
+
         // 1. Get User
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user == null)
         {
+            var dummy = GetDummyCredential();
+            _passwordHasher.VerifyPasswordHash(request.Password, dummy.Hash, dummy.Salt);
+            await _loginAttempts.RecordFailureAsync(request.Email, cancellationToken);
             return Result.Failure<LoginResponse>(new Error("Auth.InvalidCredentials", "E-posta veya şifre hatalı."));
         }
 
         // 2. Verify Password
         if (!_passwordHasher.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
         {
+            await _loginAttempts.RecordFailureAsync(request.Email, cancellationToken);
             return Result.Failure<LoginResponse>(new Error("Auth.InvalidCredentials", "E-posta veya şifre hatalı."));
         }
+
+        await _loginAttempts.ResetAsync(request.Email, cancellationToken);
 
         var passwordRehashed = _passwordHasher.NeedsRehash(user.PasswordHash, user.PasswordSalt);
         if (passwordRehashed)
@@ -113,12 +134,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             }
         }
 
-        // Any privileged administrator may operate on a category protected by
-        // the central MFA policy. When MFA is enabled for the account, issue a
-        // challenge before minting an administrative session so Institution
-        // admins and owners receive the same step-up flow as SystemAdmin.
-        if (isAdmin
-            && user.MfaEnabled
+        // Every account that enrolled an authenticator gets the second factor,
+        // not only administrators. The central "system" policy stays the single
+        // break-glass switch that suspends login challenges platform-wide.
+        if (user.MfaEnabled
             && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             if (passwordRehashed)
@@ -166,6 +185,25 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
             ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));
+    }
+
+    internal static Error TooManyAttempts(TimeSpan remaining) => new(
+        "Auth.TooManyAttempts",
+        $"Çok fazla başarısız giriş denemesi. Lütfen {Math.Max(1, (int)Math.Ceiling(remaining.TotalMinutes))} dakika sonra tekrar deneyin.");
+
+    private (byte[] Hash, byte[] Salt) GetDummyCredential()
+    {
+        if (_dummyCredential is { } existing) return existing;
+        lock (DummyCredentialLock)
+        {
+            if (_dummyCredential is null)
+            {
+                _passwordHasher.CreatePasswordHash(Guid.NewGuid().ToString("N"), out var hash, out var salt);
+                _dummyCredential = (hash, salt);
+            }
+
+            return _dummyCredential.Value;
+        }
     }
 
     private async Task<bool> IsPrivilegedMfaRequiredAsync(CancellationToken cancellationToken)

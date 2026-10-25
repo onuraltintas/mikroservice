@@ -21,8 +21,10 @@ internal static class GoogleAuthenticationRules
         && user.EmailVerified
         && TrustedIssuers.Contains(user.Issuer, StringComparer.Ordinal);
 
+    // Staff roles in ANY product require an explicit link: a Google sign-in through a
+    // product where the account is only a student must not link a staff account.
     public static bool RequiresExplicitLink(User user, PlatformProduct? product) =>
-        user.GetRolesForProductScope(product).Any(userRole =>
+        user.Roles.Where(userRole => userRole.Role is not null).Any(userRole =>
         userRole.Role.Name.Equals("SystemAdmin", StringComparison.OrdinalIgnoreCase)
         || userRole.Role.Name.Equals("InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
         || userRole.Role.Name.Equals("InstitutionOwner", StringComparison.OrdinalIgnoreCase)

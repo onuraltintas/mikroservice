@@ -94,8 +94,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
                 || string.Equals(role.Role.Name, "InstitutionOwner", StringComparison.OrdinalIgnoreCase)
                 || targetProduct == Identity.Domain.Enums.PlatformProduct.CourseManagement && string.Equals(role.Role.Name, "CourseInstitutionOwner", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role.Role.Name, "Editor", StringComparison.OrdinalIgnoreCase)));
-        if (isPrivilegedAdministrator
-            && user.MfaEnabled
+        // A session opened without the second factor (for example before the account
+        // enrolled, or before MFA applied to non-administrators) cannot be extended.
+        if (user.MfaEnabled
             && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             if (existingRefreshToken.MfaVerifiedAt is null)
@@ -115,7 +116,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
                     "Auth.MfaRequired",
                     isProductSwitch
                         ? "Bu yönetici paneline geçmek için yeniden giriş yapıp iki adımlı doğrulamayı tamamlayın."
-                        : "Yönetici oturumunun iki adımlı doğrulamayla yeniden açılması gerekiyor."));
+                        : isPrivilegedAdministrator
+                            ? "Yönetici oturumunun iki adımlı doğrulamayla yeniden açılması gerekiyor."
+                            : "Oturumunuzun iki adımlı doğrulamayla yeniden açılması gerekiyor."));
             }
         }
 

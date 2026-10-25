@@ -121,6 +121,32 @@ public class User : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// A verified external identity proves ownership of an address that this local
+    /// account never confirmed. Whoever registered the account could have chosen its
+    /// password, so every credential set before the proof is discarded: the password,
+    /// pending reset/verification links and any session. The owner signs in with the
+    /// external provider and can set a password through the reset flow.
+    /// </summary>
+    public void ClaimUnconfirmedAccountByVerifiedExternalLogin()
+    {
+        if (EmailConfirmed)
+        {
+            return;
+        }
+
+        PasswordHash = [];
+        PasswordSalt = [];
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
+        foreach (var refreshToken in _refreshTokens.Where(token => token.IsActive))
+        {
+            refreshToken.Revoke(null, "unconfirmed account claimed by verified external login");
+        }
+
+        ConfirmEmail();
+    }
+
     public void RevokeEmailConfirmation()
     {
         EmailConfirmed = false;

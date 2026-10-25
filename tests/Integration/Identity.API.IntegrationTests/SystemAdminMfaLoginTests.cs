@@ -616,6 +616,31 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
+    public async Task NonAdminRefreshToken_WithoutMfaProof_ShouldRequireFreshMfaLogin()
+    {
+        var user = CreateUserWithRole("Student", PlatformProduct.Coaching);
+        user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.Admin, grantedByUserId: null, DateTimeOffset.UtcNow);
+        user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(
+            user.Id, "student-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1",
+            isPersistent: true, mfaVerifiedAt: null, product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new RejectingTokenService();
+        var handler = new RefreshTokenCommandHandler(
+            new StubUserRepository(user),
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(new RefreshTokenCommand("student-refresh"), CancellationToken.None);
+
+        result.Error.Code.Should().Be("Auth.MfaRequired");
+        result.Error.Description.Should().NotContain("Yönetici");
+        refreshToken.IsActive.Should().BeFalse();
+        tokenService.AccessTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task RefreshToken_WhenSystemMfaPolicyIsDisabled_ShouldIssueNormalSession()
     {
         var user = CreateSystemAdministrator(mfaEnabled: true);
@@ -1035,6 +1060,141 @@ public sealed class SystemAdminMfaLoginTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Auth.InvalidToken");
     }
+
+    [Theory]
+    [InlineData("Student")]
+    [InlineData("Teacher")]
+    [InlineData("Parent")]
+    public async Task PasswordLogin_NonAdminWithEnrolledMfa_ShouldReturnMfaChallenge(string roleName)
+    {
+        var user = CreateUserWithRole(roleName, PlatformProduct.Coaching);
+        user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.Admin, grantedByUserId: null, DateTimeOffset.UtcNow);
+        user.ConfirmEmail();
+        user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
+        var tokenService = new RejectingTokenService();
+        var handler = new LoginCommandHandler(
+            new StubUserRepository(user),
+            new AcceptingPasswordHasher(),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<LoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new LoginCommand(user.Email, "correct-password", RememberMe: false, Product: PlatformProduct.Coaching),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeTrue();
+        tokenService.AccessTokenRequested.Should().BeFalse();
+        tokenService.RefreshTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_NonAdminWithEnrolledMfa_ShouldReturnMfaChallenge()
+    {
+        var user = CreateUserWithRole("Student", PlatformProduct.Coaching);
+        user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.Admin, grantedByUserId: null, DateTimeOffset.UtcNow);
+        user.ConfirmEmail();
+        user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
+        user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
+        var tokenService = new RejectingTokenService();
+        var handler = CreateGoogleHandler(user, tokenService, externalUser: user);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeTrue();
+        tokenService.AccessTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_LinkingUnconfirmedAccount_ShouldDiscardThePreviouslyChosenPassword()
+    {
+        // Someone registered the victim's address with a password of their choice and
+        // never confirmed it; the verified Google identity must not inherit that password.
+        var user = CreateUserWithRole("Student", PlatformProduct.Coaching);
+        user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.Admin, grantedByUserId: null, DateTimeOffset.UtcNow);
+        var hasher = new EduPlatform.Shared.Security.Services.PasswordHasher();
+        hasher.CreatePasswordHash("attacker-chosen-1!", out var hash, out var salt);
+        user.SetPassword(hash, salt);
+        user.GeneratePasswordResetToken();
+        user.EmailConfirmed.Should().BeFalse();
+        var handler = CreateGoogleHandler(user, new IssuingTokenService(), allowRefreshToken: true);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        user.EmailConfirmed.Should().BeTrue();
+        user.Logins.Should().ContainSingle(login => login.LoginProvider == "Google");
+        hasher.VerifyPasswordHash("attacker-chosen-1!", user.PasswordHash, user.PasswordSalt).Should().BeFalse();
+        user.PasswordResetToken.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_LinkingConfirmedAccount_ShouldKeepItsPassword()
+    {
+        var user = CreateUserWithRole("Student", PlatformProduct.Coaching);
+        user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.Admin, grantedByUserId: null, DateTimeOffset.UtcNow);
+        var hasher = new EduPlatform.Shared.Security.Services.PasswordHasher();
+        hasher.CreatePasswordHash("owner-password-1!", out var hash, out var salt);
+        user.SetPassword(hash, salt);
+        user.ConfirmEmail();
+        var handler = CreateGoogleHandler(user, new IssuingTokenService(), allowRefreshToken: true);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        hasher.VerifyPasswordHash("owner-password-1!", user.PasswordHash, user.PasswordSalt).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_StaffRoleInAnotherProduct_ShouldRequireExplicitLink()
+    {
+        // Teacher in coaching, student in speed reading: signing in through speed reading
+        // must not auto-link the staff account.
+        var user = CreateUserWithRole("Teacher", PlatformProduct.Coaching);
+        var studentRole = Role.Create("Student", "Student");
+        var studentLink = new UserRole(user.Id, studentRole.Id, PlatformProduct.SpeedReading);
+        typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(studentLink, studentRole);
+        user.AddRole(studentLink);
+        user.GrantProductAccess(PlatformProduct.SpeedReading, UserProductAccessSource.Admin, grantedByUserId: null, DateTimeOffset.UtcNow);
+        user.ConfirmEmail();
+        var handler = CreateGoogleHandler(user, new RejectingTokenService());
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.SpeedReading),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.ExternalLoginLinkRequired");
+        user.Logins.Should().BeEmpty();
+    }
+
+    private static GoogleLoginCommandHandler CreateGoogleHandler(
+        User user,
+        ITokenService tokenService,
+        User? externalUser = null,
+        bool allowRefreshToken = false) => new(
+            new StubGoogleAuthService(user.Email),
+            new StubUserRepository(user, externalUser),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: allowRefreshToken),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService(),
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
 
     private static User CreateSystemAdministrator(bool mfaEnabled = false, Guid? id = null)
     {
