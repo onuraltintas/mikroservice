@@ -378,6 +378,8 @@ services:
       - notification_data_protection:/var/lib/eduplatform/data-protection-keys
     # Notification is reachable through the gateway; keep the service internal.
     depends_on:
+      notification-volume-permissions:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       rabbitmq:
@@ -388,6 +390,20 @@ services:
         condition: service_started
     networks:
       - edu-network
+
+  # Gives the notification key-ring volume to the non-root user (UID 1654); needed once for
+  # volumes created by the earlier root image. Without it queued e-mails cannot be decrypted.
+  notification-volume-permissions:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/notification-service:${RELEASE_TAG:-dev}
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    user: "0:0"
+    entrypoint: ["chown", "-R", "1654:1654", "/var/lib/eduplatform/data-protection-keys"]
+    volumes:
+      - notification_data_protection:/var/lib/eduplatform/data-protection-keys
+    network_mode: none
+    restart: "no"
 
   # One-shot ownership fix for the gateway key-ring volume. The gateway image runs as the
   # non-root app user (UID 1654); volumes created while older images ran as root keep root

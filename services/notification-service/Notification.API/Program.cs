@@ -19,18 +19,20 @@ using System.Security.Claims;
 using DotNetEnv;
 using EduPlatform.Shared.Infrastructure.Resiliency;
 using EduPlatform.Shared.Infrastructure.Extensions;
-using EduPlatform.Shared.Infrastructure.Caching;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Security.Extensions;
 using EduPlatform.Shared.Security.Services;
 using FluentValidation;
 
 
-// Load .env file from solution root
+// `dotnet run` convenience only: containers get configuration from the environment and
+// must never pick up (or be overridden by) a stray .env file.
+var startupEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+    ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
-if (File.Exists(envPath))
+if (string.Equals(startupEnvironment, "Development", StringComparison.OrdinalIgnoreCase) && File.Exists(envPath))
 {
-    Env.Load(envPath);
+    Env.NoClobber().Load(envPath);
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,18 +43,7 @@ var migrationOnly = args.Any(argument =>
 // The web host only performs automatic migrations in Development.
 if (migrationOnly)
 {
-    var migrationConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (string.IsNullOrEmpty(migrationConnectionString))
-    {
-        var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
-        var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
-        var database = Environment.GetEnvironmentVariable("POSTGRES_DB_NOTIFICATION") ?? "notification_db";
-        var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
-        var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
-            ?? builder.Configuration["POSTGRES_PASSWORD"]
-            ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
-        migrationConnectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
-    }
+    var migrationConnectionString = NotificationConnectionString(builder.Configuration);
 
     builder.Services.AddDbContext<NotificationDbContext>(options =>
         options.UseNpgsql(migrationConnectionString));
@@ -67,6 +58,7 @@ if (migrationOnly)
 }
 
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
+Notification.Infrastructure.Services.EmailService.ValidateConfiguration(builder.Configuration);
 
 // Serilog Configuration (Centralized)
 builder.Host.UseCustomSerilog();
@@ -74,9 +66,6 @@ builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Notification");
 builder.Services.AddOpenTelemetry().WithMetrics(metrics => metrics.AddMeter(CourseManagementEventDeliveryMetrics.MeterName));
 builder.Services.AddGlobalExceptionHandler();
-// Keep notification/admin authorization in sync with the identity MFA policy
-// categories.
-builder.Services.AddRedisCache(builder.Configuration);
 builder.Services.AddOptions<PublicAppUrlOptions>()
     .Bind(builder.Configuration.GetSection(PublicAppUrlOptions.SectionName))
     .Validate(
@@ -132,19 +121,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Build connection string from environment variables
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString))
-{
-    var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
-    var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
-    var database = Environment.GetEnvironmentVariable("POSTGRES_DB_NOTIFICATION") ?? "notification_db";
-    var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
-    var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
-        ?? builder.Configuration["POSTGRES_PASSWORD"]
-        ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
-    connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
-}
+var connectionString = NotificationConnectionString(builder.Configuration);
 
 builder.Services.AddDbContext<NotificationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -285,6 +262,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+static string NotificationConnectionString(IConfiguration configuration)
+{
+    var connectionString = configuration.GetConnectionString("DefaultConnection");
+    if (!string.IsNullOrEmpty(connectionString)) return connectionString;
+    var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
+    var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
+    var database = Environment.GetEnvironmentVariable("POSTGRES_DB_NOTIFICATION") ?? "notification_db";
+    var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
+    var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
+        ?? configuration["POSTGRES_PASSWORD"]
+        ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
+    return $"Host={host};Port={port};Database={database};Username={username};Password={password}";
+}
+
 public partial class Program { }
 
 public class CustomUserIdProvider : IUserIdProvider

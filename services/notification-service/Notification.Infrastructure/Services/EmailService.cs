@@ -16,6 +16,19 @@ public class EmailService : IEmailService
         _configuration = configuration;
     }
 
+    /// <summary>Fails start-up on an unusable SMTP port instead of failing every send.</summary>
+    public static void ValidateConfiguration(IConfiguration configuration) => ResolvePort(configuration);
+
+    private static int ResolvePort(IConfiguration configuration)
+    {
+        // Environment variables reach IConfiguration through the host's environment provider.
+        var value = new[] { configuration["SMTP_PORT"], configuration["Email:Port"] }
+            .FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate)) ?? "1025";
+        return int.TryParse(value, out var port) && port is > 0 and <= 65535
+            ? port
+            : throw new InvalidOperationException($"SMTP port '{value}' is not a valid port number.");
+    }
+
     public async Task SendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default)
     {
         var email = new MimeMessage();
@@ -34,9 +47,7 @@ public class EmailService : IEmailService
         
         var host = Environment.GetEnvironmentVariable("SMTP_HOST") 
                    ?? _configuration["SMTP_HOST"] ?? _configuration["Email:Host"] ?? "localhost";
-        var portStr = Environment.GetEnvironmentVariable("SMTP_PORT") 
-                     ?? _configuration["SMTP_PORT"] ?? _configuration["Email:Port"] ?? "1025";
-        var port = int.Parse(portStr);
+        var port = ResolvePort(_configuration);
         var username = Environment.GetEnvironmentVariable("SMTP_USERNAME") 
                        ?? _configuration["SMTP_USERNAME"] ?? _configuration["Email:Username"];
         var password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") 
