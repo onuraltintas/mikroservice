@@ -74,28 +74,6 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
                 return await _enrollment.JoinAsync(request.Email, request.Password, product, "student",
                     legalValidation.Value, null, cancellationToken);
 
-            if (identityResult.Error.Code == "User.Duplicate")
-            {
-                // Check local DB if user exists but inactive (Soft Deleted)
-                var existingUser = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
-        
-                if (existingUser != null
-                    && !existingUser.IsActive
-                    && existingUser.HasProductAccess(product))
-                {
-                    // Reactivate Case
-                    existingUser.Activate();
-                    _registrationLegalConsentService.TrackAcceptedDocuments(
-                        existingUser.Id, product, legalValidation.Value, "password");
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
-            
-                    // Reactivate in System (This will enable user AND set emailVerified=true)
-                    await _identityService.ActivateUserAsync(existingUser.Id, cancellationToken);
-            
-                    return Result.Success(existingUser.Id);
-                }
-            }
-
             return Result.Failure<Guid>(identityResult.Error);
         }
 

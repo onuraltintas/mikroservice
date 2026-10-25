@@ -28,10 +28,7 @@ ile mevcut 68 route / 4 cluster (korunan ürün sözleşmesi) değiştirilmedi.
    compose bunu gateway'den önce otomatik çalıştırır.
 3. Production `.env`: `SERVICE_TRUSTED_PROXY_NETWORKS` = production subnet (örn. `172.31.0.0/16`).
    Boşsa `172.16.0.0/12` kullanılır.
-4. CI: `.github/workflows/ci.yml` uzak araçla yazılamayan korumalı dosya olduğu için değişiklik
-   `GATEWAY_HARDENING_2026-10-25-ci.patch` olarak bırakıldı:
-   `git apply docs/releases/GATEWAY_HARDENING_2026-10-25-ci.patch`
-   (Redis servisli `gateway-tests` işi ve gateway alarm testi).
+4. CI: Redis servisli `gateway-tests` işi ve gateway alarm testi `.github/workflows/ci.yml` içinde (uygulandı).
 5. Yük testi: tek kullanıcıyla 128 worker kullanıcı başı limite takılır. Staging'de
    `Gateway__RateLimiting__AuthenticatedUser__PermitLimit` yükseltin veya izole ortamda
    `Gateway__RateLimiting__Enabled=false` kullanın.
