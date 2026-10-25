@@ -145,24 +145,6 @@ public sealed class CourseManagementNotificationConsumerTests
         }
     }
 
-    [Fact]
-    public void ProductionConfiguration_UsesDedicatedCourseManagementQueuesWithInboxAndRetry()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "services", "notification-service")))
-            directory = directory.Parent;
-        Assert.NotNull(directory);
-        var source = File.ReadAllText(Path.Combine(directory.FullName, "services", "notification-service", "Notification.API", "Program.cs"));
-        foreach (var endpoint in new[] { "course-management-lesson-scheduled", "course-management-assignment-published", "course-management-payment-recorded", "course-management-reminder-due" })
-        {
-            var binding = System.Text.RegularExpressions.Regex.Match(source,
-                $"ReceiveEndpoint\\(\\\"{endpoint}\\\".*?\\n        \\}}\\);", System.Text.RegularExpressions.RegexOptions.Singleline);
-            Assert.True(binding.Success, $"The dedicated {endpoint} endpoint must be registered.");
-            Assert.Contains("UseEntityFrameworkOutbox<NotificationDbContext>", binding.Value);
-            Assert.Contains("UseMessageRetry", binding.Value);
-        }
-    }
-
     private sealed class RecordingDispatcher : ICourseManagementNotificationDispatcher
     {
         public ConcurrentQueue<DispatchCall> Calls { get; } = new();

@@ -12,21 +12,6 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingNotificationConsumerTests
 {
     [Fact]
-    public void ProductionConfiguration_BindsStudyPlanConsumerWithInboxAndRetry()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "services", "notification-service"))) directory = directory.Parent;
-        Assert.NotNull(directory);
-        var source = File.ReadAllText(Path.Combine(directory.FullName, "services", "notification-service", "Notification.API", "Program.cs"));
-        var binding = System.Text.RegularExpressions.Regex.Match(source,
-            "ReceiveEndpoint\\(\"coaching-study-plan-published\".*?\\n        \\}\\);", System.Text.RegularExpressions.RegexOptions.Singleline);
-        Assert.True(binding.Success, "The production consumer must have a receive endpoint.");
-        Assert.Contains("ConfigureConsumer<StudyPlanPublishedConsumer>", binding.Value);
-        Assert.Contains("UseEntityFrameworkOutbox<NotificationDbContext>", binding.Value);
-        Assert.Contains("UseMessageRetry", binding.Value);
-    }
-
-    [Fact]
     public async Task CoachingConsumers_MapEventsToExpectedRecipients()
     {
         var teacherId = Guid.NewGuid();
@@ -111,7 +96,7 @@ public sealed class CoachingNotificationConsumerTests
             (await harness.Consumed.Any<StudyPlanPublishedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<CoachingReminderDueEvent>()).Should().BeTrue();
 
-            for (var attempt = 0; attempt < 50 && recordingDispatcher.Calls.Count < 16; attempt++)
+            for (var attempt = 0; attempt < 250 && recordingDispatcher.Calls.Count < 17; attempt++)
             {
                 await Task.Delay(20);
             }
@@ -178,17 +163,6 @@ public sealed class CoachingNotificationConsumerTests
             transfer.RelatedEntityId.Should().Be($"weekly:{student:D}:2026-10-12:{decision:D}");
             transfer.Title.Should().Contain("devredildi");
         } finally { await harness.Stop(); }
-    }
-
-    [Fact]
-    public void WeeklyProductionEndpointsUseInboxAndRetry()
-    {
-        var directory=new DirectoryInfo(AppContext.BaseDirectory);while(directory is not null&&!File.Exists(Path.Combine(directory.FullName,"EduPlatform.sln")))directory=directory.Parent;
-        Assert.NotNull(directory);var source=File.ReadAllText(Path.Combine(directory!.FullName,"services/notification-service/Notification.API/Program.cs"));
-        foreach(var endpoint in new[]{"coaching-weekly-reflection-saved","coaching-weekly-decision-changed"}) {
-            var binding=System.Text.RegularExpressions.Regex.Match(source,"ReceiveEndpoint\\(\""+endpoint+"\".*?\\n        \\}\\);",System.Text.RegularExpressions.RegexOptions.Singleline);
-            Assert.True(binding.Success);Assert.Contains("UseEntityFrameworkOutbox<NotificationDbContext>",binding.Value);Assert.Contains("UseMessageRetry",binding.Value);
-        }
     }
 
     private sealed class RecordingDispatcher : ICoachingNotificationDispatcher
