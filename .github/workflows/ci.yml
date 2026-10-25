@@ -224,7 +224,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore "${{ matrix.project }}" --locked-mode false
+        run: dotnet restore "${{ matrix.project }}"
 
       - name: Build with warnings as errors
         run: dotnet build "${{ matrix.project }}" --configuration Release --no-restore --warnaserror
