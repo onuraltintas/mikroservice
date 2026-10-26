@@ -119,6 +119,47 @@ public sealed class GatewayContractTests
         services.Should().Contain(["identity", "coaching", "notification", "speed-reading"]);
     }
 
+    [Theory]
+    [InlineData("/api/course-management/v1/me/profile")]
+    [InlineData("/api/course-management/notifications")]
+    [InlineData("/api/course-management/notifications/unread-count")]
+    public async Task Course_management_paths_are_not_routed_when_the_product_is_disabled(string path)
+    {
+        await using var gateway = _fixture.CreateGateway(new Dictionary<string, string?> { ["CourseManagement:Enabled"] = "false" });
+        using var client = gateway.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            GatewayFactory.CreateToken(Guid.NewGuid().ToString()));
+        request.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+
+        using var response = await client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Other_routes_and_the_service_list_are_unchanged_when_course_management_is_disabled()
+    {
+        await using var gateway = _fixture.CreateGateway(new Dictionary<string, string?> { ["CourseManagement:Enabled"] = "false" });
+        using var client = gateway.CreateClient();
+        var token = GatewayFactory.CreateToken(Guid.NewGuid().ToString(), roles: ["SystemAdmin"]);
+
+        using var routed = new HttpRequestMessage(HttpMethod.Get, "/api/notifications");
+        routed.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        routed.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+        using var routedResponse = await client.SendAsync(routed);
+        routedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await EchoResponse.ReadAsync(routedResponse)).Cluster.Should().Be("notification");
+
+        using var list = new HttpRequestMessage(HttpMethod.Get, "/api/gateway/services");
+        list.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        using var listResponse = await client.SendAsync(list);
+        listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var services = await listResponse.Content.ReadFromJsonAsync<string[]>();
+        services.Should().BeEquivalentTo(["identity", "coaching", "notification", "speed-reading"]);
+    }
+
     [Fact]
     public async Task Gateway_service_list_requires_authentication()
     {

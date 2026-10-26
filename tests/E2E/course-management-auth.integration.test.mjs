@@ -213,6 +213,8 @@ test('live API enforces product and subject boundaries before database access', 
           ASPNETCORE_URLS: gatewayBase, ASPNETCORE_ENVIRONMENT: 'Development',
           JWT_SECRET: secret, JWT_ISSUER: 'course-tests', JWT_AUDIENCE: 'course-tests', JWT_KEY_ID: 'course-tests',
           REDIS_HOST: '127.0.0.1', REDIS_PORT: '1',
+          // Course Management routes load only when the product is enabled (off in production).
+          CourseManagement__Enabled: 'true',
           'ReverseProxy__Clusters__course-management-cluster__Destinations__destination1__Address': base
         }
       });

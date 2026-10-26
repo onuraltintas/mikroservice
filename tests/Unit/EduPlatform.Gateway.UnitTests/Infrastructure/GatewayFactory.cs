@@ -46,6 +46,8 @@ public sealed class GatewayFactory : WebApplicationFactory<Program>
         builder.UseSetting("JWT_ISSUER", JwtIssuer);
         builder.UseSetting("JWT_AUDIENCE", JwtAudience);
         builder.UseSetting("JWT_KEY_ID", "tests");
+        // Production runs without Course Management; the contract tests cover the routes it adds.
+        builder.UseSetting("CourseManagement:Enabled", "true");
 
         foreach (var clusterId in ClusterIds)
         {

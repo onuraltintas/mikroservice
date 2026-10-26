@@ -58,6 +58,7 @@ services:
 
   api-gateway:
     environment:
+      - CourseManagement__Enabled=true
       - ReverseProxy__Clusters__course-management-cluster__Destinations__destination1__Address=http://course-management-service:8080
 
 volumes:
