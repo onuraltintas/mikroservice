@@ -28,7 +28,7 @@ services:
       dockerfile: services/course-management-service/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      COURSE_MANAGEMENT_CONNECTION_STRING: "Host=course-management-db;Database=course_management;Username=course_management;Password=${COURSE_MANAGEMENT_DB_PASSWORD}"
+      COURSE_MANAGEMENT_CONNECTION_STRING: "Host=course-management-db;Database=course_management;Username=course_management;Password=${COURSE_MANAGEMENT_DB_PASSWORD};GSS Encryption Mode=Disable"
       JWT_SECRET: ${JWT_SECRET:?Set Identity JWT secret}
       JWT_ISSUER: ${JWT_ISSUER:?Set Identity JWT issuer}
       JWT_AUDIENCE: ${JWT_AUDIENCE:?Set Identity JWT audience}
