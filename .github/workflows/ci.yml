@@ -187,7 +187,8 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Run frontend unit tests
-        run: npm test -- --watch=false --progress=false
+        # Karma: CI has no display, so the browser runs headless.
+        run: npm test -- --watch=false --progress=false --browsers=ChromeHeadless
 
       - name: Verify Speed Reading template and backend contracts
         run: npm run test:contracts
