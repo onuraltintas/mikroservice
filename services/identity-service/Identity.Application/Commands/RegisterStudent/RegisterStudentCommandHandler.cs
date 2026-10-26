@@ -64,6 +64,22 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
             
                     // Reactivate in System (This will enable user AND set emailVerified=true)
                     await _identityService.ActivateUserAsync(existingUser.Id, cancellationToken);
+
+                    var reactivatedRoleResult = await _identityService.AssignProductRoleAsync(
+                        existingUser.Id,
+                        Identity.Domain.Enums.UserRole.Student.ToString(),
+                        request.Product,
+                        cancellationToken);
+                    if (reactivatedRoleResult.IsFailure)
+                        return Result.Failure<Guid>(reactivatedRoleResult.Error);
+
+                    await _userRepository.EnsureProductAccessAsync(
+                        existingUser.Id,
+                        request.Product,
+                        Identity.Domain.Enums.ProductAccessSource.Registration,
+                        grantedByUserId: null,
+                        cancellationToken);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
             
                     return Result.Success(existingUser.Id);
                 }
@@ -75,7 +91,11 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
         var userId = identityResult.Value;
 
         // Assign Role
-        var roleResult = await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Student.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignProductRoleAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.Student.ToString(),
+            request.Product,
+            cancellationToken);
         if (roleResult.IsFailure)
         {
              await _identityService.DeleteUserAsync(userId, cancellationToken);
@@ -96,6 +116,12 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
 
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
             await _studentRepository.AddAsync(student, cancellationToken);
+            await _userRepository.EnsureProductAccessAsync(
+                userId,
+                request.Product,
+                Identity.Domain.Enums.ProductAccessSource.Registration,
+                grantedByUserId: null,
+                cancellationToken);
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(

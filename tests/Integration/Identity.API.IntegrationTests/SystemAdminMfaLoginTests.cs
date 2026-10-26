@@ -244,6 +244,10 @@ public sealed class SystemAdminMfaLoginTests
     public async Task GoogleLogin_ShouldRecordLastLoginAtAfterIssuingSession()
     {
         var user = User.Create(Guid.NewGuid(), "student@example.com");
+        user.AddProductAccess(UserProductAccess.Grant(
+            user.Id,
+            Identity.Domain.Enums.PlatformProduct.Coaching,
+            Identity.Domain.Enums.ProductAccessSource.Registration));
         user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
         var handler = new GoogleLoginCommandHandler(
             new StubGoogleAuthService(user.Email),
@@ -341,7 +345,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<GoogleLoginCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            new GoogleLoginCommand("google-token", "127.0.0.1", Identity.Domain.Enums.PlatformProduct.Coaching),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -511,6 +515,38 @@ public sealed class SystemAdminMfaLoginTests
         result.Error.Code.Should().Be("Auth.InvalidToken");
     }
 
+    [Fact]
+    public async Task RefreshToken_ShouldPreserveProductScopeDuringRotation()
+    {
+        var user = User.Create(Guid.NewGuid(), "reader@example.test");
+        user.AddProductAccess(UserProductAccess.Grant(
+            user.Id,
+            Identity.Domain.Enums.PlatformProduct.SpeedReading,
+            Identity.Domain.Enums.ProductAccessSource.Registration));
+        var originalToken = RefreshToken.Create(
+            user.Id,
+            "product-refresh-token",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: Identity.Domain.Enums.PlatformProduct.SpeedReading);
+        user.AddRefreshToken(originalToken);
+        var repository = new StubUserRepository(user);
+        var handler = new RefreshTokenCommandHandler(
+            repository,
+            new IssuingTokenService(),
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(originalToken.Token),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        user.RefreshTokens.Should().ContainSingle(token =>
+            token.Token != originalToken.Token
+            && token.Product == Identity.Domain.Enums.PlatformProduct.SpeedReading);
+    }
+
     private static User CreateSystemAdministrator(bool mfaEnabled = false, Guid? id = null)
     {
         var user = User.Create(id ?? Guid.NewGuid(), "admin@example.com");
@@ -528,6 +564,10 @@ public sealed class SystemAdminMfaLoginTests
     private static User CreateUserWithRole(string roleName)
     {
         var user = User.Create(Guid.NewGuid(), "institution-owner@example.com");
+        user.AddProductAccess(UserProductAccess.Grant(
+            user.Id,
+            Identity.Domain.Enums.PlatformProduct.Coaching,
+            Identity.Domain.Enums.ProductAccessSource.Admin));
         var role = Role.Create(roleName, roleName);
         var userRole = new UserRole(user.Id, role.Id);
         typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
@@ -580,6 +620,12 @@ public sealed class SystemAdminMfaLoginTests
 
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
+        public Task EnsureProductAccessAsync(
+            Guid userId,
+            Identity.Domain.Enums.PlatformProduct product,
+            Identity.Domain.Enums.ProductAccessSource source,
+            Guid? grantedByUserId,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
             IReadOnlyCollection<Guid> userIds,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<SpeedReadingUserDirectoryItem>>([]);
@@ -637,12 +683,12 @@ public sealed class SystemAdminMfaLoginTests
         public bool AccessTokenRequested { get; private set; }
         public bool RefreshTokenRequested { get; private set; }
         public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
-        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null)
+        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null, Identity.Domain.Enums.PlatformProduct? product = null)
         {
             AccessTokenRequested = true;
             throw new InvalidOperationException("Access token must not be issued before MFA.");
         }
-        public RefreshToken GenerateRefreshToken(Guid userId, string ipAddress, bool isPersistent = true, DateTimeOffset? mfaVerifiedAt = null)
+        public RefreshToken GenerateRefreshToken(Guid userId, string ipAddress, bool isPersistent = true, DateTimeOffset? mfaVerifiedAt = null, Identity.Domain.Enums.PlatformProduct? product = null)
         {
             RefreshTokenRequested = true;
             throw new InvalidOperationException("Refresh token must not be issued before MFA.");
@@ -651,26 +697,28 @@ public sealed class SystemAdminMfaLoginTests
 
     private sealed class IssuingTokenService : ITokenService
     {
-        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null) => Task.FromResult("access-token");
+        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null, Identity.Domain.Enums.PlatformProduct? product = null) => Task.FromResult("access-token");
         public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
         public RefreshToken GenerateRefreshToken(
             Guid userId,
             string ipAddress,
             bool isPersistent = true,
-            DateTimeOffset? mfaVerifiedAt = null) =>
+            DateTimeOffset? mfaVerifiedAt = null,
+            Identity.Domain.Enums.PlatformProduct? product = null) =>
             RefreshToken.Create(
                 userId,
                 "refresh-token",
                 DateTime.UtcNow.AddDays(1),
                 ipAddress,
                 isPersistent,
-                mfaVerifiedAt);
+                mfaVerifiedAt,
+                product);
     }
 
     private sealed class StubMfaService(Guid expectedUserId) : IMultiFactorService
     {
         public bool? RememberMe { get; private set; }
-        public string CreateChallenge(Guid userId, bool rememberMe)
+        public string CreateChallenge(Guid userId, bool rememberMe, Identity.Domain.Enums.PlatformProduct? product = null)
         {
             userId.Should().Be(expectedUserId);
             RememberMe = rememberMe;
@@ -760,6 +808,7 @@ public sealed class SystemAdminMfaLoginTests
         public Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result> AssignProductRoleAsync(Guid userId, string roleName, Identity.Domain.Enums.PlatformProduct product, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleWithProfileAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(string email, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result<ProvisionedUser>> RegisterUserWithRoleAsync(string email, string firstName, string lastName, string roleName, string? phoneNumber, CancellationToken cancellationToken) => throw new NotSupportedException();

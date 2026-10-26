@@ -47,9 +47,9 @@ describe('authInterceptor', () => {
   });
 
   it('does not attach a stale access token to anonymous login requests', () => {
-    client.post('/api/auth/login', { email: 'user@example.com', password: 'secret' }).subscribe();
+    client.post('/api/auth/speed-reading/login', { email: 'user@example.com', password: 'secret' }).subscribe();
 
-    const request = http.expectOne('/api/auth/login');
+    const request = http.expectOne('/api/auth/speed-reading/login');
 
     expect(request.request.headers.has('Authorization')).toBeFalse();
     request.flush({});

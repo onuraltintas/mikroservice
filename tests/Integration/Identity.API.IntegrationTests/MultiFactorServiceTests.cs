@@ -23,6 +23,20 @@ public sealed class MultiFactorServiceTests
         result.Value.RememberMe.Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching)]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading)]
+    public void Challenge_ShouldRetainTheProductSessionScope(Identity.Domain.Enums.PlatformProduct product)
+    {
+        var service = CreateService(Now);
+        var token = service.CreateChallenge(Guid.NewGuid(), rememberMe: true, product: product);
+
+        var result = service.ReadChallenge(token);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Product.Should().Be(product);
+    }
+
     [Fact]
     public void Challenge_ShouldRejectTamperingAndExpiry()
     {

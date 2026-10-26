@@ -12,6 +12,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
 {
     private readonly IInvitationRepository _invitationRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IRoleRepository _roleRepository;
     private readonly ITeacherRepository _teacherRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -21,6 +22,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
     public AcceptInvitationCommandHandler(
         IInvitationRepository invitationRepository,
         IUserRepository userRepository,
+        IRoleRepository roleRepository,
         ITeacherRepository teacherRepository,
         IStudentRepository studentRepository,
         IUnitOfWork unitOfWork,
@@ -29,6 +31,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
     {
         _invitationRepository = invitationRepository;
         _userRepository = userRepository;
+        _roleRepository = roleRepository;
         _teacherRepository = teacherRepository;
         _studentRepository = studentRepository;
         _unitOfWork = unitOfWork;
@@ -101,6 +104,36 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         // 5. Accept invitation and perform the assignment
         try
         {
+            var invitedRoleName = invitation.Type == InvitationType.TeacherToInstitution
+                ? Identity.Domain.Enums.UserRole.Teacher.ToString()
+                : Identity.Domain.Enums.UserRole.Student.ToString();
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            var role = await _roleRepository.GetByNameAsync(invitedRoleName, cancellationToken);
+            if (user is null || role is null || role.IsDeleted)
+            {
+                return Result.Failure(new Error("Invitation.RoleUnavailable", "Davet için gerekli rol bulunamadı."));
+            }
+
+            if (!user.Roles.Any(userRole =>
+                    userRole.Role is { IsDeleted: false }
+                    && string.Equals(userRole.Role.Name, invitedRoleName, StringComparison.OrdinalIgnoreCase)))
+            {
+                return Result.Failure(new Error(
+                    "Invitation.RoleRequired",
+                    "Önce davette belirtilen kullanıcı türüyle kayıt olmanız gerekir."));
+            }
+
+            user.AddRole(new Identity.Domain.Entities.UserRole(
+                userId,
+                role.Id,
+                PlatformProduct.Coaching));
+            await _userRepository.EnsureProductAccessAsync(
+                userId,
+                PlatformProduct.Coaching,
+                ProductAccessSource.Invitation,
+                invitation.InviterId,
+                cancellationToken);
+
             invitation.Accept(userId);
 
             // Perform different actions based on invitation type
@@ -140,7 +173,8 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         {
             var user = await _userRepository.GetByIdAsync(teacherUserId, cancellationToken);
             if (user is null || !user.Roles.Any(role =>
-                    role.Role is { IsDeleted: false, Name: "Teacher" }))
+                    role.Role is { IsDeleted: false, Name: "Teacher" }
+                    && role.Product == PlatformProduct.Coaching))
             {
                 throw new InvalidOperationException("Teacher role not found");
             }

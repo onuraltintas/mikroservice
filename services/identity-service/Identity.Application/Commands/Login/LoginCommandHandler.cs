@@ -2,7 +2,9 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Authorization;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
+using Identity.Application.Services;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -81,6 +83,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         {
             return Result.Failure<LoginResponse>(new Error("Auth.EmailNotConfirmed", "Lütfen e-posta adresinizi doğrulayın."));
         }
+
+        var sessionContext = ProductSessionContext.Resolve(user, request.Product, isSystemAdministrator);
+        if (sessionContext.IsFailure)
+        {
+            return Result.Failure<LoginResponse>(sessionContext.Error);
+        }
+        var sessionProduct = sessionContext.Value;
         
         // 5. MAINTENANCE MODE CHECK
         // Check if System is in Maintenance Mode (Global or Identity Service)
@@ -111,15 +120,15 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             }
 
             return Result.Success(LoginResponse.RequireMfa(
-                _multiFactorService.CreateChallenge(user.Id, request.RememberMe),
+                _multiFactorService.CreateChallenge(user.Id, request.RememberMe, sessionProduct),
                 enrollmentRequired: !user.MfaEnabled));
         }
 
         // 6. Generate Tokens
-        var accessToken = await _tokenService.GenerateAccessTokenAsync(user);
+        var accessToken = await _tokenService.GenerateAccessTokenAsync(user, product: sessionProduct);
         
         var ipAddress = "0.0.0.0"; // Should be passed in command but defaulting here
-        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ipAddress, request.RememberMe);
+        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ipAddress, request.RememberMe, product: sessionProduct);
         
         // 7. Save Refresh Token (Securely bypassing concurrency checks on User)
         var saveTokenResult = await _identityService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);

@@ -230,6 +230,7 @@ var app = builder.Build();
 app.UseRequestLogging();
 app.UseExceptionHandler();
 app.UseAuthentication();
+app.UseMiddleware<EduPlatform.Shared.Security.Authorization.ProductScopeMiddleware>("speed-reading");
 app.UseRateLimiter();
 app.UseMiddleware<EduPlatform.Shared.Infrastructure.Middleware.AdminAuditMiddleware>();
 app.UseAuthorization();

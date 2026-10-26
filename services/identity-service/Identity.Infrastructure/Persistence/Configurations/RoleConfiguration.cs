@@ -34,6 +34,13 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
             
         builder.ToTable("UserRoles");
 
+        builder.Property(userRole => userRole.Product)
+            .HasConversion<string>()
+            .HasMaxLength(32);
+
+        builder.HasIndex(userRole => new { userRole.UserId, userRole.RoleId, userRole.Product })
+            .IsUnique();
+
         builder.HasOne<User>()
             .WithMany(u => u.Roles)
             .HasForeignKey(ur => ur.UserId)
@@ -43,5 +50,36 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
             .WithMany()
             .HasForeignKey(ur => ur.RoleId)
             .OnDelete(DeleteBehavior.Restrict); // Rol silinirse kullanıcı rolü kaydı ne olur? Restrict: Rol silinemez eğer kullanıcısı varsa.
+    }
+}
+
+public sealed class UserProductAccessConfiguration : IEntityTypeConfiguration<UserProductAccess>
+{
+    public void Configure(EntityTypeBuilder<UserProductAccess> builder)
+    {
+        builder.HasKey(access => access.Id);
+        builder.ToTable("UserProductAccess");
+
+        builder.Property(access => access.Product)
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .IsRequired();
+        builder.Property(access => access.Status)
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .IsRequired();
+        builder.Property(access => access.Source)
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .IsRequired();
+
+        builder.HasOne<User>()
+            .WithMany(user => user.ProductAccesses)
+            .HasForeignKey(access => access.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(access => new { access.UserId, access.Product })
+            .IsUnique();
+        builder.HasIndex(access => new { access.Product, access.Status, access.UserId });
     }
 }

@@ -341,20 +341,22 @@ public sealed class SessionInvalidationTests
     private sealed class StubTokenService : ITokenService
     {
         public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
-        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null) => Task.FromResult("unused");
+        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null, Identity.Domain.Enums.PlatformProduct? product = null) => Task.FromResult("unused");
 
         public RefreshToken GenerateRefreshToken(
             Guid userId,
             string ipAddress,
             bool isPersistent = true,
-            DateTimeOffset? mfaVerifiedAt = null) =>
+            DateTimeOffset? mfaVerifiedAt = null,
+            Identity.Domain.Enums.PlatformProduct? product = null) =>
             RefreshToken.Create(
                 userId,
                 "unused",
                 DateTime.UtcNow.AddDays(1),
                 ipAddress,
                 isPersistent,
-                mfaVerifiedAt);
+                mfaVerifiedAt,
+                product);
     }
 
     private sealed class SystemAdminCurrentUser(Guid? userId = null) : ICurrentUserService

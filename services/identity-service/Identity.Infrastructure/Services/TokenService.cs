@@ -21,7 +21,10 @@ public class TokenService : ITokenService
         _configService = configService;
     }
 
-    public async Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null)
+    public async Task<string> GenerateAccessTokenAsync(
+        User user,
+        DateTimeOffset? mfaVerifiedAt = null,
+        Identity.Domain.Enums.PlatformProduct? product = null)
     {
         try 
         {
@@ -51,6 +54,11 @@ public class TokenService : ITokenService
                 new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(issuedAt).ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture), ClaimValueTypes.Integer64)
             };
 
+            if (product.HasValue)
+            {
+                claims.Add(new Claim("platform_product", ToProductClaim(product.Value)));
+            }
+
             if (mfaVerifiedAt.HasValue)
             {
                 claims.Add(new Claim("amr", "mfa"));
@@ -59,7 +67,10 @@ public class TokenService : ITokenService
 
             if (user.Roles != null)
             {
-                foreach (var userRole in user.Roles)
+                foreach (var userRole in user.Roles.Where(userRole =>
+                    (product.HasValue && userRole.Product == product)
+                    || (userRole.Product is null
+                        && string.Equals(userRole.Role?.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase))))
                 {
                     // Skip deleted roles
                     if (userRole.Role != null && !userRole.Role.IsDeleted)
@@ -124,7 +135,8 @@ public class TokenService : ITokenService
         Guid userId,
         string ipAddress,
         bool isPersistent = true,
-        DateTimeOffset? mfaVerifiedAt = null)
+        DateTimeOffset? mfaVerifiedAt = null,
+        Identity.Domain.Enums.PlatformProduct? product = null)
     {
         var expiryDaysStr = Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_EXPIRY_DAYS")
                             ?? _configuration["JWT_REFRESH_TOKEN_EXPIRY_DAYS"]
@@ -143,7 +155,15 @@ public class TokenService : ITokenService
             DateTime.UtcNow.AddDays(expiryDays), 
             ipAddress,
             isPersistent,
-            mfaVerifiedAt
+            mfaVerifiedAt,
+            product
         );
     }
+
+    private static string ToProductClaim(Identity.Domain.Enums.PlatformProduct product) => product switch
+    {
+        Identity.Domain.Enums.PlatformProduct.Coaching => "coaching",
+        Identity.Domain.Enums.PlatformProduct.SpeedReading => "speed-reading",
+        _ => throw new ArgumentOutOfRangeException(nameof(product))
+    };
 }

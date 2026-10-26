@@ -2,7 +2,9 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Authorization;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
+using Identity.Application.Services;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -73,6 +75,13 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             {
                  _logger.LogWarning("Google login blocked because registration is disabled.");
                  return Result.Failure<LoginResponse>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları kapalıdır. Mevcut bir hesabınız yoksa giriş yapamazsınız."));
+            }
+
+            if (!request.Product.HasValue)
+            {
+                return Result.Failure<LoginResponse>(new Error(
+                    "Auth.ProductContextRequired",
+                    "Yeni hesap oluşturmak için ilgili ürünün Google kayıt sayfasını kullanın."));
             }
 
             // 2b. Auto-Register User
@@ -212,9 +221,10 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     _logger.LogInformation("Google Login: Setting up profile/roles for new user {UserId}", userId);
                     
                     // Assign Role: Student (Default)
-                    var roleResult = await _identityService.AssignRoleAsync(
+                    var roleResult = await _identityService.AssignProductRoleAsync(
                         userId,
                         Identity.Domain.Enums.UserRole.Student.ToString(),
+                        request.Product.Value,
                         cancellationToken);
                     if (roleResult.IsFailure)
                     {
@@ -226,11 +236,18 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     // Create Student Profile
                     try
                     {
+                        await _userRepository.EnsureProductAccessAsync(
+                            userId,
+                            request.Product.Value,
+                            ProductAccessSource.GoogleRegistration,
+                            grantedByUserId: null,
+                            cancellationToken);
                         var student = StudentProfile.Create(userId, googleUser.FirstName, googleUser.LastName);
                         if (!string.IsNullOrEmpty(googleUser.PictureUrl)) student.SetAvatar(googleUser.PictureUrl);
 
                         await _studentRepository.AddAsync(student, cancellationToken);
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
+                        user = await _userRepository.GetByIdAsync(userId, cancellationToken);
                     }
                     catch (Exception ex)
                     {
@@ -308,6 +325,20 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
              }
         }
 
+        if (!user.IsActive)
+        {
+            return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "User account is inactive."));
+        }
+
+        var isSystemAdministrator = user.Roles.Any(role =>
+            string.Equals(role.Role?.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        var sessionContext = ProductSessionContext.Resolve(user, request.Product, isSystemAdministrator);
+        if (sessionContext.IsFailure)
+        {
+            return Result.Failure<LoginResponse>(sessionContext.Error);
+        }
+        var sessionProduct = sessionContext.Value;
+
         // MAINTENANCE MODE CHECK (Google users can be logged in now, check roles)
         var isAdmin = user.Roles.Any(r => 
             r.Role.Name == "SystemAdmin" || 
@@ -332,13 +363,13 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             return Result.Success(LoginResponse.RequireMfa(
-                _multiFactorService.CreateChallenge(user.Id, rememberMe: true),
+                _multiFactorService.CreateChallenge(user.Id, rememberMe: true, product: sessionProduct),
                 enrollmentRequired: !user.MfaEnabled));
         }
 
         // 3. Generate Tokens
-        var accessToken = await _tokenService.GenerateAccessTokenAsync(user);
-        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, request.IpAddress);
+        var accessToken = await _tokenService.GenerateAccessTokenAsync(user, product: sessionProduct);
+        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, request.IpAddress, product: sessionProduct);
 
         // 4. Save Refresh Token (Using Safe Method)
         var saveTokenResult = await _identityService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);

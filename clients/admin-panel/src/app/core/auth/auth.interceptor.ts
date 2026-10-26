@@ -52,7 +52,12 @@ function withSession(req: HttpRequest<unknown>, token: string): HttpRequest<unkn
 
 function isSessionEndpoint(url: string): boolean {
     return url.endsWith('/auth/login')
+        || url.endsWith('/auth/coaching/login')
+        || url.endsWith('/auth/speed-reading/login')
         || url.endsWith('/auth/google-login')
+        || url.endsWith('/auth/google')
+        || url.endsWith('/auth/coaching/google')
+        || url.endsWith('/auth/speed-reading/google')
         || url.endsWith('/auth/refresh-token')
         || url.endsWith('/auth/revoke-token');
 }

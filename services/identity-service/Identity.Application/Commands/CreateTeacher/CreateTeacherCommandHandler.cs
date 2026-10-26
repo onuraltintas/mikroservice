@@ -71,7 +71,11 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         var teacherUserId = provisionedUser.UserId;
 
         // Assign Role
-        var roleResult = await _identityService.AssignRoleAsync(teacherUserId, Identity.Domain.Enums.UserRole.Teacher.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignProductRoleAsync(
+            teacherUserId,
+            Identity.Domain.Enums.UserRole.Teacher.ToString(),
+            Identity.Domain.Enums.PlatformProduct.Coaching,
+            cancellationToken);
         if (roleResult.IsFailure)
         {
              await _identityService.DeleteUserAsync(teacherUserId, cancellationToken);
@@ -91,6 +95,12 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         {
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED
             await _teacherRepository.AddAsync(teacher, cancellationToken);
+            await _userRepository.EnsureProductAccessAsync(
+                teacherUserId,
+                Identity.Domain.Enums.PlatformProduct.Coaching,
+                Identity.Domain.Enums.ProductAccessSource.Admin,
+                adminUserId,
+                cancellationToken);
             
             // Publish UserCreated Event
             var eventMessage = new EduPlatform.Shared.Contracts.Events.Identity.UserCreatedEvent(

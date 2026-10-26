@@ -7,7 +7,7 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService, landingRouteForRole, invitationReturnRoute } from './auth.service';
+import { AuthService, landingRouteForRole, invitationReturnRoute, productAuthRoutePrefix } from './auth.service';
 
 describe('coaching institution landing route', () => {
   it('opens the shared portal on the coaching domain but retains eduivme management', () => {
@@ -22,6 +22,13 @@ describe('coaching institution landing route', () => {
     expect(invitationReturnRoute('https://evil.example/coaching-portal/invitations')).toBeNull();
     expect(invitationReturnRoute('//evil.example')).toBeNull();
     expect(invitationReturnRoute('/dashboard')).toBeNull();
+  });
+
+  it('selects the Coaching login endpoint only for the dedicated portal hosts', () => {
+    expect(productAuthRoutePrefix('onuraltintas.net')).toBe('/coaching');
+    expect(productAuthRoutePrefix('www.onuraltintas.net')).toBe('/coaching');
+    expect(productAuthRoutePrefix('eduivme.com')).toBe('');
+    expect(productAuthRoutePrefix('onuraltintas.net.attacker.test')).toBe('');
   });
 });
 

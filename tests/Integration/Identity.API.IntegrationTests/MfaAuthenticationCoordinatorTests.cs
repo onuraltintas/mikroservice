@@ -74,7 +74,7 @@ public sealed class MfaAuthenticationCoordinatorTests
     private sealed class StubMfaService(Guid userId) : IMultiFactorService
     {
         public bool? LastRememberMe { get; private set; }
-        public string CreateChallenge(Guid id, bool rememberMe)
+        public string CreateChallenge(Guid id, bool rememberMe, Identity.Domain.Enums.PlatformProduct? product = null)
         {
             LastRememberMe = rememberMe;
             return "challenge";
@@ -95,7 +95,7 @@ public sealed class MfaAuthenticationCoordinatorTests
     {
         public bool WasCalled { get; private set; }
         public DateTimeOffset? MfaVerifiedAt { get; private set; }
-        public Task<Result<LoginResponse>> IssueAsync(User user, bool rememberMe, string ipAddress, DateTimeOffset? mfaVerifiedAt, CancellationToken cancellationToken)
+        public Task<Result<LoginResponse>> IssueAsync(User user, bool rememberMe, string ipAddress, DateTimeOffset? mfaVerifiedAt, CancellationToken cancellationToken, Identity.Domain.Enums.PlatformProduct? product = null)
         {
             WasCalled = true;
             MfaVerifiedAt = mfaVerifiedAt;
@@ -107,6 +107,12 @@ public sealed class MfaAuthenticationCoordinatorTests
     private sealed class StubUserRepository(User user) : IUserRepository
     {
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
+        public Task EnsureProductAccessAsync(
+            Guid userId,
+            Identity.Domain.Enums.PlatformProduct product,
+            Identity.Domain.Enums.ProductAccessSource source,
+            Guid? grantedByUserId,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
             IReadOnlyCollection<Guid> userIds,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<SpeedReadingUserDirectoryItem>>([]);

@@ -126,7 +126,7 @@ export class AuthService {
    * Service receives: AuthResponse (auto-unwrapped)
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/login`, credentials, { withCredentials: true }).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/login`, credentials, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => this.persistAndHydrateProfile(response))
     );
@@ -134,21 +134,21 @@ export class AuthService {
 
   /** Registers an independent student. Registration requires a later login. */
   register(data: RegisterRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register/student`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/student`, data, { withCredentials: true });
   }
 
   /**
    * Register new institution
    */
   registerInstitution(data: RegisterInstitutionRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register-institution`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/institution`, data, { withCredentials: true });
   }
 
   /**
    * Register new teacher
    */
   registerTeacher(data: RegisterTeacherRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register-teacher`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/teacher`, data, { withCredentials: true });
   }
 
   registerCoach(data: any): Observable<void> {
@@ -229,7 +229,7 @@ export class AuthService {
     if (role) {
       payload.role = role;
     }
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/google-login`, payload, { withCredentials: true }).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/google`, payload, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => this.persistAndHydrateProfile(response))
     );

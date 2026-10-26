@@ -36,6 +36,27 @@ public enum UserRole
     Editor = 7
 }
 
+public enum PlatformProduct
+{
+    Coaching = 1,
+    SpeedReading = 2
+}
+
+public enum ProductAccessStatus
+{
+    Active = 1,
+    Suspended = 2,
+    Revoked = 3
+}
+
+public enum ProductAccessSource
+{
+    Registration = 1,
+    GoogleRegistration = 2,
+    Invitation = 3,
+    Admin = 4
+}
+
 /// <summary>
 /// Kurum yöneticisi rolü
 /// </summary>

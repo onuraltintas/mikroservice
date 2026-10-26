@@ -51,7 +51,7 @@ test.describe('Disposable registration and email confirmation', () => {
     const nonce = crypto.randomUUID();
     const email = `e2e-student-${nonce}@example.test`;
 
-    const registration = await request.post('/api/auth/register/student', {
+    const registration = await request.post('/api/auth/coaching/register/student', {
       data: {
         email,
         password: 'E2e-Disposable-Password-123!',

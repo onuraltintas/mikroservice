@@ -73,8 +73,21 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
 
         // 2. Create Domain Entities
         // 2. Assign Roles
-        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), cancellationToken);
-        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), cancellationToken);
+        var adminRoleResult = await _identityService.AssignProductRoleAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(),
+            request.Product,
+            cancellationToken);
+        var ownerRoleResult = await _identityService.AssignProductRoleAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(),
+            request.Product,
+            cancellationToken);
+        if (adminRoleResult.IsFailure || ownerRoleResult.IsFailure)
+        {
+            await _identityService.DeleteUserAsync(userId, cancellationToken);
+            return Result.Failure<Guid>(adminRoleResult.IsFailure ? adminRoleResult.Error : ownerRoleResult.Error);
+        }
 
         // 3. Create Domain Entities
         // Update Phone if needed
@@ -102,6 +115,12 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             // await _userRepository.AddAsync(user, cancellationToken); // Removed
             await _institutionRepository.AddAsync(institution, cancellationToken);
             await _institutionRepository.AddAdminAsync(admin, cancellationToken);
+            await _userRepository.EnsureProductAccessAsync(
+                userId,
+                request.Product,
+                Identity.Domain.Enums.ProductAccessSource.Registration,
+                grantedByUserId: null,
+                cancellationToken);
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(

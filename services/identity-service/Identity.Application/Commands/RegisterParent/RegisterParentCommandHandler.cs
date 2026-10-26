@@ -56,7 +56,11 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         var userId = identityResult.Value;
 
         // Assign Role
-        var roleResult = await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Parent.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignProductRoleAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.Parent.ToString(),
+            request.Product,
+            cancellationToken);
         if (roleResult.IsFailure)
         {
              await _identityService.DeleteUserAsync(userId, cancellationToken);
@@ -76,6 +80,12 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
             }
 
             await _parentRepository.AddAsync(parent, cancellationToken);
+            await _userRepository.EnsureProductAccessAsync(
+                userId,
+                request.Product,
+                Identity.Domain.Enums.ProductAccessSource.Registration,
+                grantedByUserId: null,
+                cancellationToken);
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(

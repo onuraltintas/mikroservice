@@ -30,7 +30,7 @@ describe('InstitutionRegisterComponent', () => {
 
     void component.onSubmit();
 
-    const request = TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/register-institution'));
+    const request = TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/coaching/register/institution'));
     request.flush({ code: 'Identity.UserExists', message: 'Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın.' }, { status: 409, statusText: 'Conflict' });
     expect(component.errorMessage()).toContain('Bu e-posta adresiyle zaten kayıtlı');
     expect(toaster.error).toHaveBeenCalledWith(expect.stringContaining('Bu e-posta adresiyle zaten kayıtlı'));
@@ -53,7 +53,7 @@ describe('InstitutionRegisterComponent', () => {
       password: 'StrongPass1!', confirmPassword: 'StrongPass1!'
     });
     void component.onSubmit();
-    TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/register-institution'))
+    TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/coaching/register/institution'))
       .flush({ message: 'SQL connection failed' }, { status: 500, statusText: 'Server Error' });
     expect(toaster.error).toHaveBeenCalledWith('Kayıt şu anda tamamlanamıyor. Lütfen daha sonra yeniden deneyin.');
     TestBed.inject(HttpTestingController).verify();
@@ -84,7 +84,7 @@ describe('InstitutionRegisterComponent', () => {
 
     void component.onSubmit();
 
-    const request = TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/register-institution'));
+    const request = TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/coaching/register/institution'));
     expect(request.request.body).toEqual({
       institutionName: 'Örnek Okul', institutionType: 1, provinceId: '34', districtId: '3401',
       firstName: 'Ayşe', lastName: 'Yılmaz', email: 'ayse@example.com',

@@ -5,6 +5,7 @@ using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
+using System.Security.Claims;
 
 namespace Identity.API.IntegrationTests;
 
@@ -52,6 +53,38 @@ public sealed class TokenLifetimeConsistencyTests
             .Where(claim => claim.Type == "permission")
             .Select(claim => claim.Value);
         permissions.Should().BeEquivalentTo(Identity.Domain.Constants.Permissions.GetAll());
+    }
+
+    [Fact]
+    public async Task ProductSessionToken_ShouldContainOnlyRolesForItsProduct()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["JWT_SECRET"] = "a-secure-test-secret-that-is-at-least-32-characters",
+            ["JWT_ISSUER"] = "test-issuer",
+            ["JWT_AUDIENCE"] = "test-audience"
+        }).Build();
+        var service = new TokenService(configuration, new StubConfigurationService());
+        var user = User.Create(Guid.NewGuid(), "multi-product@example.test");
+        AddRole(user, "Student", Identity.Domain.Enums.PlatformProduct.Coaching);
+        AddRole(user, "Teacher", Identity.Domain.Enums.PlatformProduct.SpeedReading);
+
+        var token = new JwtSecurityTokenHandler().ReadJwtToken(
+            await service.GenerateAccessTokenAsync(user, product: Identity.Domain.Enums.PlatformProduct.Coaching));
+
+        token.Claims.Where(claim => claim.Type == ClaimTypes.Role)
+            .Select(claim => claim.Value)
+            .Should().Equal("Student");
+        token.Claims.Single(claim => claim.Type == "platform_product")
+            .Value.Should().Be("coaching");
+    }
+
+    private static void AddRole(User user, string roleName, Identity.Domain.Enums.PlatformProduct product)
+    {
+        var role = Role.Create(roleName, roleName);
+        var userRole = new UserRole(user.Id, role.Id, product);
+        typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
+        user.AddRole(userRole);
     }
 
     private sealed class StubConfigurationService : IConfigurationService

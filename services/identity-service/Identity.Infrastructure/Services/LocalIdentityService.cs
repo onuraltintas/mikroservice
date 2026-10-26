@@ -154,12 +154,24 @@ public class LocalIdentityService : IIdentityService
         => Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)) + "Aa1!";
 
     public async Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken)
-        => await AssignRoleCoreAsync(userId, roleName, ensureProfile: false, cancellationToken);
+        => await AssignRoleCoreAsync(userId, roleName, ensureProfile: false, product: null, cancellationToken);
+
+    public async Task<Result> AssignProductRoleAsync(
+        Guid userId,
+        string roleName,
+        PlatformProduct product,
+        CancellationToken cancellationToken)
+        => await AssignRoleCoreAsync(userId, roleName, ensureProfile: false, product, cancellationToken);
 
     public async Task<Result> AssignRoleWithProfileAsync(Guid userId, string roleName, CancellationToken cancellationToken)
-        => await AssignRoleCoreAsync(userId, roleName, ensureProfile: true, cancellationToken);
+        => await AssignRoleCoreAsync(userId, roleName, ensureProfile: true, product: null, cancellationToken);
 
-    private async Task<Result> AssignRoleCoreAsync(Guid userId, string roleName, bool ensureProfile, CancellationToken cancellationToken)
+    private async Task<Result> AssignRoleCoreAsync(
+        Guid userId,
+        string roleName,
+        bool ensureProfile,
+        PlatformProduct? product,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -210,7 +222,7 @@ public class LocalIdentityService : IIdentityService
                 }
             }
 
-            user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id));
+            user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id, product));
             await _userRepository.RevokeActiveRefreshTokensAsync(
                 userId,
                 SecuritySensitiveChangeReason,

@@ -83,7 +83,7 @@ describe('AuthService', () => {
   it('uses the canonical auth endpoint for login and sends the session cookie', () => {
     service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe();
 
-    const request = http.expectOne('/api/auth/login');
+    const request = http.expectOne('/api/auth/speed-reading/login');
     expect(request.request.withCredentials).toBeTrue();
     request.flush({
       accessToken: '',
@@ -98,7 +98,7 @@ describe('AuthService', () => {
     service.login({ email: 'student@example.com', password: 'Password1!', rememberMe: true })
       .subscribe(value => response = value);
 
-    const loginRequest = http.expectOne('/api/auth/login');
+    const loginRequest = http.expectOne('/api/auth/speed-reading/login');
     loginRequest.flush({ accessToken, roles: [] });
 
     const profileRequest = http.expectOne('/api/v1/users/me');
@@ -159,12 +159,21 @@ describe('AuthService', () => {
       password: 'Password1!'
     }).subscribe();
 
-    const request = http.expectOne('/api/auth/register/student');
+    const request = http.expectOne('/api/auth/speed-reading/register/student');
     expect(request.request.withCredentials).toBeTrue();
     request.flush({ userId: 'student-id' });
 
     expect(service.currentUserValue).toBeNull();
     expect(localStorage.getItem('currentUser')).toBeNull();
+  });
+
+  it('uses the Speed Reading product endpoint for Google login', () => {
+    service.googleAuth('google-id-token').subscribe();
+
+    const request = http.expectOne('/api/auth/speed-reading/google');
+    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.body).toEqual({ idToken: 'google-id-token' });
+    request.flush({ accessToken: 'access-token', roles: [] });
   });
 
   it('confirms email with the user identifier and verification token from the email link', () => {
@@ -179,7 +188,7 @@ describe('AuthService', () => {
     let response: AuthResponse | undefined;
     service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe(value => response = value);
 
-    const request = http.expectOne('/api/auth/login');
+    const request = http.expectOne('/api/auth/speed-reading/login');
     request.flush({
       requiresMfa: true,
       mfaEnrollmentRequired: false,
@@ -263,7 +272,7 @@ describe('AuthService', () => {
     const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwicm9sZSI6IlN5c3RlbUFkbWluIiwiZXhwIjo0MTAyNDQ0ODAwfQ.';
     service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe();
 
-    const request = http.expectOne('/api/auth/login');
+    const request = http.expectOne('/api/auth/speed-reading/login');
     request.flush({
       accessToken,
       roles: ['SystemAdmin']

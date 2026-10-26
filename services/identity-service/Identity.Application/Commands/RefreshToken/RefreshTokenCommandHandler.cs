@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Authorization;
 using Identity.Application.Interfaces;
+using Identity.Application.Services;
 using Identity.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -44,6 +45,20 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (existingRefreshToken == null || !existingRefreshToken.IsActive)
              return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Oturum süresi dolmuş veya geçersiz."));
 
+        var isSystemAdministrator = user.Roles.Any(role =>
+            string.Equals(role.Role?.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        var sessionContext = ProductSessionContext.Resolve(user, existingRefreshToken.Product, isSystemAdministrator);
+        if (sessionContext.IsFailure)
+        {
+            await _userRepository.RevokeRefreshTokenAsync(
+                request.RefreshToken,
+                "system",
+                "Product access no longer available",
+                cancellationToken);
+            return Result.Failure<RefreshTokenResponse>(sessionContext.Error);
+        }
+        var sessionProduct = sessionContext.Value;
+
         var isPrivilegedAdministrator = user.Roles.Any(role =>
             role.Role is not null
             && (string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase)
@@ -69,12 +84,16 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         }
 
         // Generate the replacement before atomically revoking the old token.
-        var newAccessToken = await _tokenService.GenerateAccessTokenAsync(user, existingRefreshToken.MfaVerifiedAt);
+        var newAccessToken = await _tokenService.GenerateAccessTokenAsync(
+            user,
+            existingRefreshToken.MfaVerifiedAt,
+            sessionProduct);
         var newRefreshToken = _tokenService.GenerateRefreshToken(
             user.Id,
             "0.0.0.0",
             existingRefreshToken.IsPersistent,
-            existingRefreshToken.MfaVerifiedAt);
+            existingRefreshToken.MfaVerifiedAt,
+            sessionProduct);
         
         var rotated = await _userRepository.RotateRefreshTokenAsync(
             request.RefreshToken,

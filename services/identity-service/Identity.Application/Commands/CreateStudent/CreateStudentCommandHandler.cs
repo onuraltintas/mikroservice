@@ -73,7 +73,11 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         var studentUserId = provisionedUser.UserId;
 
         // Assign Role
-        var roleResult = await _identityService.AssignRoleAsync(studentUserId, Identity.Domain.Enums.UserRole.Student.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignProductRoleAsync(
+            studentUserId,
+            Identity.Domain.Enums.UserRole.Student.ToString(),
+            Identity.Domain.Enums.PlatformProduct.Coaching,
+            cancellationToken);
         if (roleResult.IsFailure)
         {
              await _identityService.DeleteUserAsync(studentUserId, cancellationToken);
@@ -105,6 +109,12 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         {
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED
             await _studentRepository.AddAsync(student, cancellationToken);
+            await _userRepository.EnsureProductAccessAsync(
+                studentUserId,
+                Identity.Domain.Enums.PlatformProduct.Coaching,
+                Identity.Domain.Enums.ProductAccessSource.Admin,
+                adminUserId,
+                cancellationToken);
             if (teacher is not null)
             {
                 await _teacherRepository.AddStudentAssignmentAsync(

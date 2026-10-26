@@ -75,6 +75,12 @@ export function invitationReturnRoute(value: string | null): string | null {
     return value && /^\/coaching-portal\/invitations(?:\?id=[a-zA-Z0-9-]+)?$/.test(value) ? value : null;
 }
 
+export function productAuthRoutePrefix(hostname: string): string {
+    return ['onuraltintas.net', 'www.onuraltintas.net'].includes(hostname.toLowerCase())
+        ? '/coaching'
+        : '';
+}
+
 export function hasRequiredAccess(
     user: UserProfile | null,
     permission: string,
@@ -145,9 +151,10 @@ export class AuthService implements OnDestroy {
         this.oauthService.initLoginFlow();
     }
 
-    async loginWithGoogle(idToken: string): Promise<AuthLoginResult> {
+    async loginWithGoogle(idToken: string, product?: 'coaching' | 'speed-reading'): Promise<AuthLoginResult> {
+        const productRoute = product ?? this.getCurrentProductRoute();
         const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
-            `${environment.apiUrl}/auth/google-login`,
+            `${environment.apiUrl}/auth${productRoute}/google`,
             { idToken },
             { withCredentials: true }));
         return this.handleLoginResponse(response);
@@ -164,11 +171,17 @@ export class AuthService implements OnDestroy {
         email: string,
         pass: string,
         rememberMe: boolean = true): Promise<AuthLoginResult> {
+        const productRoute = this.getCurrentProductRoute();
         const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
-            `${environment.apiUrl}/auth/login`,
+            `${environment.apiUrl}/auth${productRoute}/login`,
             { email, password: pass, rememberMe },
             { withCredentials: true }));
         return this.handleLoginResponse(response);
+    }
+
+    private getCurrentProductRoute(): string {
+        if (!isPlatformBrowser(this.platformId)) return '';
+        return productAuthRoutePrefix(window.location.hostname);
     }
 
     async startMfaSetup(challengeToken: string): Promise<MfaSetupResponse> {

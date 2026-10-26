@@ -57,7 +57,16 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         var userId = identityResult.Value;
 
         // Assign Role
-        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Teacher.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignProductRoleAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.Teacher.ToString(),
+            request.Product,
+            cancellationToken);
+        if (roleResult.IsFailure)
+        {
+            await _identityService.DeleteUserAsync(userId, cancellationToken);
+            return Result.Failure<Guid>(roleResult.Error);
+        }
 
         // Update Phone if needed
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
@@ -74,6 +83,12 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         {
             // await _userRepository.AddAsync(user, cancellationToken); // Removed
             await _teacherRepository.AddAsync(teacher, cancellationToken);
+            await _userRepository.EnsureProductAccessAsync(
+                userId,
+                request.Product,
+                Identity.Domain.Enums.ProductAccessSource.Registration,
+                grantedByUserId: null,
+                cancellationToken);
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(

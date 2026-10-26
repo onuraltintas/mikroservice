@@ -93,7 +93,28 @@ public class UserRepository : IUserRepository
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
+            .Include(u => u.ProductAccesses)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+    }
+
+    public async Task EnsureProductAccessAsync(
+        Guid userId,
+        PlatformProduct product,
+        ProductAccessSource source,
+        Guid? grantedByUserId,
+        CancellationToken cancellationToken)
+    {
+        var exists = _context.UserProductAccesses.Local.Any(
+            access => access.UserId == userId && access.Product == product)
+            || await _context.UserProductAccesses.AnyAsync(
+                access => access.UserId == userId && access.Product == product,
+                cancellationToken);
+        if (exists)
+            return;
+
+        await _context.UserProductAccesses.AddAsync(
+            UserProductAccess.Grant(userId, product, source, grantedByUserId),
+            cancellationToken);
     }
 
     public async Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
@@ -149,6 +170,7 @@ public class UserRepository : IUserRepository
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
+            .Include(u => u.ProductAccesses)
             .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
     }
 
@@ -162,6 +184,7 @@ public class UserRepository : IUserRepository
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
+            .Include(u => u.ProductAccesses)
             .FirstOrDefaultAsync(
                 user => user.Logins.Any(login =>
                     login.LoginProvider == loginProvider
@@ -227,7 +250,8 @@ public class UserRepository : IUserRepository
                 token.UserId,
                 token.ExpiresAt,
                 token.IsPersistent,
-                token.MfaVerifiedAt
+                token.MfaVerifiedAt,
+                token.Product
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -239,6 +263,7 @@ public class UserRepository : IUserRepository
             .Include(u => u.Roles)
                 .ThenInclude(userRole => userRole.Role)
                     .ThenInclude(role => role.Permissions)
+            .Include(u => u.ProductAccesses)
             .FirstOrDefaultAsync(u => u.Id == matchedToken.UserId, cancellationToken);
 
         if (user is null)
@@ -250,7 +275,8 @@ public class UserRepository : IUserRepository
             matchedToken.ExpiresAt,
             createdByIp: null,
             matchedToken.IsPersistent,
-            matchedToken.MfaVerifiedAt));
+            matchedToken.MfaVerifiedAt,
+            matchedToken.Product));
         return user;
     }
 

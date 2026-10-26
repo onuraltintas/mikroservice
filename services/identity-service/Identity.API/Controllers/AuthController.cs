@@ -38,9 +38,21 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
-    public async Task<IActionResult> Login([FromBody] LoginCommand command)
+    public Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken) =>
+        CompleteLogin(command with { Product = null }, cancellationToken);
+
+    [HttpPost("{product:regex(coaching|speed-reading)}/login")]
+    [AllowAnonymous]
+    public Task<IActionResult> LoginForProduct(string product, [FromBody] LoginCommand command, CancellationToken cancellationToken) =>
+        TryResolveProduct(product, out var platformProduct)
+            ? CompleteLogin(command with { Product = platformProduct }, cancellationToken)
+            : Task.FromResult<IActionResult>(BadRequest(new Error(
+                "Auth.ProductContextRequired",
+                "Giriş için geçerli bir ürün seçilmelidir.")));
+
+    private async Task<IActionResult> CompleteLogin(LoginCommand command, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command, cancellationToken);
         if (result.IsFailure)
         {
             return BadRequest(result.Error);
@@ -55,12 +67,16 @@ public class AuthController : ControllerBase
             UseSecureSessionCookie));
     }
 
-    [HttpPost("register/student")]
-    [HttpPost("register-student")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/student")]
     [AllowAnonymous]
-    public async Task<IActionResult> RegisterStudent([FromBody] RegisterStudentCommand command)
+    public async Task<IActionResult> RegisterStudent(string product, [FromBody] RegisterStudentCommand command, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(command);
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.ProductContextRequired", "Kayıt için geçerli bir ürün seçilmelidir."));
+        }
+
+        var result = await _mediator.Send(command with { Product = platformProduct }, cancellationToken);
         if (result.IsFailure)
         {
             return RegistrationFailure(result);
@@ -68,12 +84,16 @@ public class AuthController : ControllerBase
         return Ok(new { UserId = result.Value });
     }
 
-    [HttpPost("register/teacher")]
-    [HttpPost("register-teacher")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/teacher")]
     [AllowAnonymous]
-    public async Task<IActionResult> RegisterTeacher([FromBody] RegisterTeacherCommand command)
+    public async Task<IActionResult> RegisterTeacher(string product, [FromBody] RegisterTeacherCommand command, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(command);
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.ProductContextRequired", "Kayıt için geçerli bir ürün seçilmelidir."));
+        }
+
+        var result = await _mediator.Send(command with { Product = platformProduct }, cancellationToken);
         if (result.IsFailure)
         {
             return RegistrationFailure(result);
@@ -81,12 +101,16 @@ public class AuthController : ControllerBase
         return Ok(new { UserId = result.Value });
     }
 
-    [HttpPost("register/institution")]
-    [HttpPost("register-institution")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/institution")]
     [AllowAnonymous]
-    public async Task<IActionResult> RegisterInstitution([FromBody] RegisterInstitutionCommand command)
+    public async Task<IActionResult> RegisterInstitution(string product, [FromBody] RegisterInstitutionCommand command, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(command);
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.ProductContextRequired", "Kayıt için geçerli bir ürün seçilmelidir."));
+        }
+
+        var result = await _mediator.Send(command with { Product = platformProduct }, cancellationToken);
         if (result.IsFailure)
         {
             return RegistrationFailure(result);
@@ -94,12 +118,16 @@ public class AuthController : ControllerBase
         return Ok(new { UserId = result.Value });
     }
 
-    [HttpPost("register/parent")]
-    [HttpPost("register-parent")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/parent")]
     [AllowAnonymous]
-    public async Task<IActionResult> RegisterParent([FromBody] RegisterParentCommand command)
+    public async Task<IActionResult> RegisterParent(string product, [FromBody] RegisterParentCommand command, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(command);
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.ProductContextRequired", "Kayıt için geçerli bir ürün seçilmelidir."));
+        }
+
+        var result = await _mediator.Send(command with { Product = platformProduct }, cancellationToken);
         if (result.IsFailure)
         {
             return RegistrationFailure(result);
@@ -161,7 +189,25 @@ public class AuthController : ControllerBase
     [HttpPost("google-login")]
     [HttpPost("google")]
     [AllowAnonymous]
-    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest? request)
+    public Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest? request, CancellationToken cancellationToken) =>
+        CompleteGoogleLogin(request, product: null, cancellationToken);
+
+    [HttpPost("{product:regex(coaching|speed-reading)}/google")]
+    [AllowAnonymous]
+    public Task<IActionResult> GoogleLoginForProduct(
+        string product,
+        [FromBody] GoogleLoginRequest? request,
+        CancellationToken cancellationToken) =>
+        TryResolveProduct(product, out var platformProduct)
+            ? CompleteGoogleLogin(request, platformProduct, cancellationToken)
+            : Task.FromResult<IActionResult>(BadRequest(new Error(
+                "Auth.ProductContextRequired",
+                "Google ile giriş için geçerli bir ürün seçilmelidir.")));
+
+    private async Task<IActionResult> CompleteGoogleLogin(
+        GoogleLoginRequest? request,
+        Identity.Domain.Enums.PlatformProduct? product,
+        CancellationToken cancellationToken)
     {
         if (request is null || string.IsNullOrWhiteSpace(request.IdToken))
         {
@@ -169,8 +215,8 @@ public class AuthController : ControllerBase
         }
 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
-        var command = new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(request.IdToken!, ipAddress);
-        var result = await _mediator.Send(command);
+        var command = new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(request.IdToken!, ipAddress, product);
+        var result = await _mediator.Send(command, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -230,7 +276,8 @@ public class AuthController : ControllerBase
         var result = await coordinator.StartAuthenticatedSetupAsync(
             currentUser.UserId.Value,
             request.CurrentPassword,
-            cancellationToken);
+            cancellationToken,
+            ResolveProductClaim(HttpContext.User.FindFirst("platform_product")?.Value));
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
@@ -349,6 +396,26 @@ public class AuthController : ControllerBase
 
     private string GetClientIpAddress() =>
         HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
+
+    private static bool TryResolveProduct(string product, out Identity.Domain.Enums.PlatformProduct platformProduct)
+    {
+        platformProduct = product.ToLowerInvariant() switch
+        {
+            "coaching" => Identity.Domain.Enums.PlatformProduct.Coaching,
+            "speed-reading" => Identity.Domain.Enums.PlatformProduct.SpeedReading,
+            _ => default
+        };
+
+        return product.Equals("coaching", StringComparison.OrdinalIgnoreCase)
+            || product.Equals("speed-reading", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static Identity.Domain.Enums.PlatformProduct? ResolveProductClaim(string? product) => product switch
+    {
+        "coaching" => Identity.Domain.Enums.PlatformProduct.Coaching,
+        "speed-reading" => Identity.Domain.Enums.PlatformProduct.SpeedReading,
+        _ => null
+    };
 
     private static IActionResult RegistrationFailure<T>(Result<T> result) =>
         result.Error.Code == "Identity.UserExists"

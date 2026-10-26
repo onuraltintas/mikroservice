@@ -13,6 +13,12 @@ public interface IUserRepository
 {
     Task AddAsync(User user, CancellationToken cancellationToken);
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task EnsureProductAccessAsync(
+        Guid userId,
+        PlatformProduct product,
+        ProductAccessSource source,
+        Guid? grantedByUserId,
+        CancellationToken cancellationToken);
     Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
         IReadOnlyCollection<Guid> userIds,
         CancellationToken cancellationToken);

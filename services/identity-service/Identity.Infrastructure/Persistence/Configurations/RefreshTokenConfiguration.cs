@@ -23,6 +23,10 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(x => x.ReasonRevoked)
             .HasMaxLength(250);
 
+        builder.Property(x => x.Product)
+            .HasConversion<string>()
+            .HasMaxLength(32);
+
         // Configure foreign key
         builder.HasOne<User>()
             .WithMany(u => u.RefreshTokens)

@@ -204,6 +204,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseAuthentication();
+app.UseMiddleware<EduPlatform.Shared.Security.Authorization.ProductScopeMiddleware>("coaching");
 app.UseMiddleware<AdminAuditMiddleware>();
 app.UseAuthorization();
 

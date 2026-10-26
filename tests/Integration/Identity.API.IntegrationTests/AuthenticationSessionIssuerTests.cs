@@ -11,6 +11,30 @@ namespace Identity.API.IntegrationTests;
 public sealed class AuthenticationSessionIssuerTests
 {
     [Fact]
+    public async Task IssueAsync_ShouldKeepProductScopeInAccessAndRefreshTokens()
+    {
+        var user = User.Create(Guid.NewGuid(), "product-user@example.test");
+        var tokens = new StubTokenService();
+        var issuer = new AuthenticationSessionIssuer(
+            tokens,
+            new PersistingIdentityService(),
+            new RecordingUnitOfWork(),
+            NullLogger<AuthenticationSessionIssuer>.Instance);
+
+        var result = await issuer.IssueAsync(
+            user,
+            rememberMe: true,
+            ipAddress: "127.0.0.1",
+            mfaVerifiedAt: null,
+            cancellationToken: CancellationToken.None,
+            product: Identity.Domain.Enums.PlatformProduct.SpeedReading);
+
+        result.IsSuccess.Should().BeTrue();
+        tokens.AccessProduct.Should().Be(Identity.Domain.Enums.PlatformProduct.SpeedReading);
+        tokens.RefreshProduct.Should().Be(Identity.Domain.Enums.PlatformProduct.SpeedReading);
+    }
+
+    [Fact]
     public async Task IssueAsync_ShouldRecordLoginAfterPersistingSession()
     {
         var user = User.Create(Guid.NewGuid(), "mfa-user@example.test");
@@ -77,7 +101,14 @@ public sealed class AuthenticationSessionIssuerTests
 
     private sealed class StubTokenService : ITokenService
     {
-        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null) => Task.FromResult("access-token");
+        public Identity.Domain.Enums.PlatformProduct? AccessProduct { get; private set; }
+        public Identity.Domain.Enums.PlatformProduct? RefreshProduct { get; private set; }
+
+        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null, Identity.Domain.Enums.PlatformProduct? product = null)
+        {
+            AccessProduct = product;
+            return Task.FromResult("access-token");
+        }
 
         public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
 
@@ -85,14 +116,19 @@ public sealed class AuthenticationSessionIssuerTests
             Guid userId,
             string ipAddress,
             bool isPersistent = true,
-            DateTimeOffset? mfaVerifiedAt = null) =>
-            RefreshToken.Create(
+            DateTimeOffset? mfaVerifiedAt = null,
+            Identity.Domain.Enums.PlatformProduct? product = null)
+        {
+            RefreshProduct = product;
+            return RefreshToken.Create(
                 userId,
                 "refresh-token",
                 DateTime.UtcNow.AddDays(1),
                 ipAddress,
                 isPersistent,
-                mfaVerifiedAt);
+                mfaVerifiedAt,
+                product);
+        }
     }
 
     private sealed class PersistingIdentityService : IIdentityService
@@ -107,6 +143,7 @@ public sealed class AuthenticationSessionIssuerTests
         public Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result> AssignProductRoleAsync(Guid userId, string roleName, Identity.Domain.Enums.PlatformProduct product, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleWithProfileAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(

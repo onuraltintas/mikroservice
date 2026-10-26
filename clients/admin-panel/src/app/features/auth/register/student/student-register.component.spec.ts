@@ -18,7 +18,7 @@ describe('StudentRegisterComponent Google registration', () => {
     const component = createComponent(authState, {}, toaster);
     component.form.patchValue({ firstName: 'Ayşe', lastName: 'Yılmaz', email: 'ayse@example.com', password: 'StrongPass1!', confirmPassword: 'StrongPass1!' });
     void component.onSubmit();
-    TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/register-student'))
+    TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/coaching/register/student'))
       .flush({ code: 'Identity.UserExists', message: 'Bu e-posta adresiyle zaten kayıtlı bir hesap var.' }, { status: 409, statusText: 'Conflict' });
     expect(toaster.error).toHaveBeenCalledWith('Bu e-posta adresiyle zaten kayıtlı bir hesap var. Giriş yapın veya şifrenizi sıfırlayın.');
     TestBed.inject(HttpTestingController).verify();

@@ -13,5 +13,6 @@ public record RegisterInstitutionCommand(
     InstitutionType InstitutionType,
     string? Phone,
     string ProvinceId,
-    string DistrictId
+    string DistrictId,
+    PlatformProduct Product = PlatformProduct.Coaching
 ) : IRequest<Result<Guid>>;

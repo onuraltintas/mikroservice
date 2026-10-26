@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Primitives;
+using Identity.Domain.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Cryptography;
 using System.Text;
@@ -46,6 +47,9 @@ public class User : AggregateRoot
     // Navigation properties
     private readonly List<UserRole> _roles = new();
     public IReadOnlyCollection<UserRole> Roles => _roles.AsReadOnly();
+
+    private readonly List<UserProductAccess> _productAccesses = new();
+    public IReadOnlyCollection<UserProductAccess> ProductAccesses => _productAccesses.AsReadOnly();
     
     private readonly List<RefreshToken> _refreshTokens = new();
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
@@ -301,10 +305,16 @@ public class User : AggregateRoot
 
     public void AddRole(UserRole userRole)
     {
-        if (!_roles.Any(r => r.RoleId == userRole.RoleId))
+        if (!_roles.Any(r => r.RoleId == userRole.RoleId && r.Product == userRole.Product))
         {
             _roles.Add(userRole);
         }
+    }
+
+    public void AddProductAccess(UserProductAccess productAccess)
+    {
+        if (!_productAccesses.Any(access => access.Product == productAccess.Product))
+            _productAccesses.Add(productAccess);
     }
 
     public void RemoveRole(Guid roleId)
@@ -327,12 +337,14 @@ public class UserRole : Entity<Guid>
 
     public Guid RoleId { get; private set; }
     public Role Role { get; private set; } = null!;
+    public PlatformProduct? Product { get; private set; }
 
     private UserRole() { }
 
-    public UserRole(Guid userId, Guid roleId)
+    public UserRole(Guid userId, Guid roleId, PlatformProduct? product = null)
     {
         UserId = userId;
         RoleId = roleId;
+        Product = product;
     }
 }

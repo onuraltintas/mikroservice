@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 
 namespace Identity.Application.Interfaces;
 
@@ -35,6 +36,12 @@ public interface IIdentityService
     /// Assigns a role to a user.
     /// </summary>
     Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken);
+
+    Task<Result> AssignProductRoleAsync(
+        Guid userId,
+        string roleName,
+        PlatformProduct product,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Assigns a role from user administration and ensures its required profile exists.

@@ -69,11 +69,13 @@ public sealed class InvitationInstitutionScopeTests
         var studentUser = User.Create(Guid.NewGuid(), "student@example.com", "Student", "One");
         var teacher = TeacherProfile.Create(teacherUser.Id, "Teacher", "One", institution.Id);
         var student = StudentProfile.Create(studentUser.Id, "Student", "One");
+        var studentRole = Role.Create("Student", "Student", isSystemRole: true);
+        studentUser.AddRole(new Identity.Domain.Entities.UserRole(studentUser.Id, studentRole.Id));
         var invitation = Invitation.Create(Guid.NewGuid(), studentUser.Email,
             InvitationType.StudentToInstitution, institution.Id, teacher.Id);
         await using var context = new IdentityDbContext(new DbContextOptionsBuilder<IdentityDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
-        context.AddRange(institution, teacherUser, studentUser, teacher, student, invitation);
+        context.AddRange(institution, teacherUser, studentUser, teacher, student, studentRole, invitation);
         await context.SaveChangesAsync();
 
         var result = await CreateHandler(context, studentUser).Handle(
@@ -180,11 +182,21 @@ public sealed class InvitationInstitutionScopeTests
         invitation.Status.Should().Be(InvitationStatus.Pending);
     }
 
-    private static AcceptInvitationCommandHandler CreateHandler(IdentityDbContext context, User user) => new(
-        new InvitationRepository(context), new UserRepository(context),
-        new TeacherRepository(context), new StudentRepository(context),
-        new UnitOfWork(context), new CurrentUser(user.Id, user.Email),
-        NullLogger<AcceptInvitationCommandHandler>.Instance);
+    private static AcceptInvitationCommandHandler CreateHandler(IdentityDbContext context, User user)
+    {
+        foreach (var roleName in new[] { "Student", "Teacher" })
+        {
+            if (!context.Roles.Any(role => role.Name == roleName))
+                context.Roles.Add(Role.Create(roleName, roleName, isSystemRole: true));
+        }
+        context.SaveChanges();
+
+        return new AcceptInvitationCommandHandler(
+            new InvitationRepository(context), new UserRepository(context), new RoleRepository(context),
+            new TeacherRepository(context), new StudentRepository(context),
+            new UnitOfWork(context), new CurrentUser(user.Id, user.Email),
+            NullLogger<AcceptInvitationCommandHandler>.Instance);
+    }
 
     private sealed class CurrentUser(Guid id, string email) : ICurrentUserService
     {
