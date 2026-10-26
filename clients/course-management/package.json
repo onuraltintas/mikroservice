@@ -7,18 +7,22 @@
     "build": "ng build"
   },
   "dependencies": {
-    "@angular/common": "21.2.24",
-    "@angular/compiler": "21.2.24",
-    "@angular/core": "21.2.24",
-    "@angular/forms": "21.2.24",
-    "@angular/platform-browser": "21.2.24",
+    "@angular/common": "21.2.25",
+    "@angular/compiler": "21.2.25",
+    "@angular/core": "21.2.25",
+    "@angular/forms": "21.2.25",
+    "@angular/platform-browser": "21.2.25",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "21.2.26",
-    "@angular/cli": "21.2.26",
-    "@angular/compiler-cli": "21.2.24",
+    "@angular/build": "21.2.28",
+    "@angular/cli": "21.2.28",
+    "@angular/compiler-cli": "21.2.25",
     "typescript": "~5.9.2"
+  },
+  "overrides": {
+    "piscina": "5.3.2",
+    "undici": "7.30.1"
   }
 }

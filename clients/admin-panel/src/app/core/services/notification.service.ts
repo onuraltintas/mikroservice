@@ -161,8 +161,8 @@ export class NotificationService implements OnDestroy {
     }
 
     replyToSupportRequest(supportRequestId: string, message: string): Observable<any> {
-        return this.http.post(`${environment.apiUrl}/support/reply`, {
-            supportRequestId,
+        // The support inbox endpoint (the duplicate /support/reply was removed).
+        return this.http.post<void>(`${environment.apiUrl}/support/requests/${encodeURIComponent(supportRequestId)}/reply`, {
             replyMessage: message
         });
     }

@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
+using Notification.Application.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Notification.Application.Configuration;
@@ -42,12 +43,12 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         if (template != null)
         {
             subject = template.Subject
-                .Replace("{{FirstName}}", message.FirstName ?? "")
-                .Replace("{{LastName}}", message.LastName ?? "");
+                .Replace("{{FirstName}}", EmailContent.SubjectText(message.FirstName))
+                .Replace("{{LastName}}", EmailContent.SubjectText(message.LastName));
 
             body = template.Body
-                .Replace("{{FirstName}}", message.FirstName ?? "")
-                .Replace("{{LastName}}", message.LastName ?? "")
+                .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
+                .Replace("{{LastName}}", EmailContent.Html(message.LastName))
                 .Replace("{{VerificationLink}}", verificationLink);
             subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
             body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role);
@@ -56,10 +57,10 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         {
             var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
             subject = $"E-posta Adresinizi Doğrulayın - {appName}";
-            body = $"<h1>{appName}</h1><p>Merhaba {message.FirstName}!</p><p>Lütfen e-posta adresinizi doğrulamak için tıklayın: <a href='{verificationLink}'>Doğrula</a></p>";
+            body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}!</p><p>Lütfen e-posta adresinizi doğrulamak için tıklayın: <a href='{verificationLink}'>Doğrula</a></p>";
         }
 
-        var messageId = context.MessageId ?? throw new InvalidOperationException("UserRegisteredEvent.MessageId is required.");
+        var messageId = MessageIds.Require(context);
         await _emailDeliveryQueue.QueueAsync(
             messageId,
             nameof(UserRegisteredConsumer),

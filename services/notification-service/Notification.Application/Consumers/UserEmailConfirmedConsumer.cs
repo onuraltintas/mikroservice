@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
+using Notification.Application.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Notification.Application.Configuration;
@@ -41,13 +42,13 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
         if (template != null)
         {
             subject = template.Subject
-                .Replace("{{FirstName}}", message.FirstName ?? "")
-                .Replace("{{LastName}}", message.LastName ?? "");
+                .Replace("{{FirstName}}", EmailContent.SubjectText(message.FirstName))
+                .Replace("{{LastName}}", EmailContent.SubjectText(message.LastName));
 
             body = template.Body
-                .Replace("{{FirstName}}", message.FirstName ?? "")
-                .Replace("{{LastName}}", message.LastName ?? "")
-                .Replace("{{Email}}", message.Email ?? "")
+                .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
+                .Replace("{{LastName}}", EmailContent.Html(message.LastName))
+                .Replace("{{Email}}", EmailContent.Html(message.Email))
                 .Replace("{{LoginLink}}", _publicAppUrlOptions.BuildLoginLink(message.Role))
                 .Replace("http://localhost:4200/auth/login", _publicAppUrlOptions.BuildLoginLink(message.Role));
             subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
@@ -56,11 +57,11 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
         else
         {
             var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
-            subject = $"Hoş Geldiniz, {message.FirstName}!";
-            body = $"<h1>{appName}</h1><p>Merhaba {message.FirstName}, e-posta adresiniz başarıyla doğrulandı.</p><p><a href='{_publicAppUrlOptions.BuildLoginLink(message.Role)}'>Giriş yapın</a></p>";
+            subject = $"Hoş Geldiniz, {EmailContent.SubjectText(message.FirstName)}!";
+            body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}, e-posta adresiniz başarıyla doğrulandı.</p><p><a href='{_publicAppUrlOptions.BuildLoginLink(message.Role)}'>Giriş yapın</a></p>";
         }
 
-        var messageId = context.MessageId ?? throw new InvalidOperationException("UserEmailConfirmedEvent.MessageId is required.");
+        var messageId = MessageIds.Require(context);
         await _emailDeliveryQueue.QueueAsync(
             messageId,
             nameof(UserEmailConfirmedConsumer),

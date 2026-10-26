@@ -45,6 +45,7 @@ public sealed class UserCreatedConsumerTests
         });
         services.AddMassTransitTestHarness(configurator =>
         {
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<UserCreatedConsumer>();
             configurator.UsingInMemory((context, busConfigurator) =>
                 busConfigurator.ConfigureEndpoints(context));
@@ -80,7 +81,7 @@ public sealed class UserCreatedConsumerTests
                 DateTime.UtcNow) { Product = product });
 
             (await harness.Consumed.Any<UserCreatedEvent>()).Should().BeTrue();
-            await WaitUntilAsync(() => queue.Messages.Count == 1);
+            await TestHarnessTimeouts.UntilAsync(() => queue.Messages.Count == 1);
 
             var body = queue.Messages.Single().Body;
             body.Should().Contain("/auth/reset-password?");
@@ -98,13 +99,6 @@ public sealed class UserCreatedConsumerTests
         }
     }
 
-    private static async Task WaitUntilAsync(Func<bool> condition)
-    {
-        for (var attempt = 0; attempt < 50 && !condition(); attempt++)
-        {
-            await Task.Delay(20);
-        }
-    }
 
     private sealed class RecordingEmailQueue : IEmailDeliveryQueue
     {

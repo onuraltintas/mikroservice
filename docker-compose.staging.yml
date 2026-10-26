@@ -41,6 +41,9 @@ services:
   api-gateway-volume-permissions:
     image: eduivme-staging/api-gateway:${STAGING_RELEASE_TAG:-snapshot}
 
+  notification-volume-permissions:
+    image: eduivme-staging/notification-service:${STAGING_RELEASE_TAG:-snapshot}
+
   identity-service:
     image: eduivme-staging/identity-service:${STAGING_RELEASE_TAG:-snapshot}
     environment:

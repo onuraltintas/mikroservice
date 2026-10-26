@@ -38,10 +38,11 @@ describe('Course management product isolation', () => {
     expect(component.isSpeedReadingInstitutionWorkspaceSelected).toBe(false);
   });
 
-  it('allows the institution and independent teacher views without activating another product', () => {
+  it('allows the institution and independent teacher views without activating another product', async () => {
     const component = create('course-management', ['Teacher', 'InstitutionOwner']);
     expect(component.activeWorkspaceRole).toBe('institution');
-    component.selectWorkspaceRole('teacher');
+    // Switching is async now: it first asks whether unsaved Coaching work may be left.
+    await component.selectWorkspaceRole('teacher');
     expect(component.activeWorkspaceRole).toBe('teacher');
     expect(component.isTeacherWorkspaceSelected).toBe(false);
   });

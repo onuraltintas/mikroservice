@@ -1,3 +1,4 @@
+import { coachingOwnedProfilesSql, identityCoachingAccessSql } from './support/coaching-owned-accounts.mjs';
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -157,10 +158,14 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
             30, '{}', true, '${now}', 0),
           (gen_random_uuid(), '${otherId}', '${otherInstitutionId}', 'Other', 'E2E',
             30, '{}', true, '${now}', 0);
+        ${identityCoachingAccessSql([studentId, otherId], now)}
         COMMIT;
       `);
       seeded = true;
       sql(config, coachingDb, `BEGIN;
+        ${coachingOwnedProfilesSql({ students: [
+          { userId: studentId, institutionId: ownInstitutionId },
+          { userId: otherId, institutionId: otherInstitutionId }] }, now)}
         INSERT INTO coaching.academic_goals
         (id, student_id, title, category, current_progress, is_completed, created_at, "Version")
         VALUES (gen_random_uuid(), '${studentId}', 'Own export goal', 'Other', 0, false, '${now}', 0),
@@ -329,6 +334,8 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         sql(config, coachingDb, `DELETE FROM coaching.coaching_sessions
           WHERE id IN ('${privateSessionId}', '${sharedSessionId}', '${otherSessionId}');`);
         sql(config, coachingDb, `DELETE FROM coaching.academic_goals WHERE student_id IN ('${studentId}', '${otherId}');`);
+        sql(config, coachingDb, `DELETE FROM coaching.institution_memberships WHERE "UserId" IN ('${studentId}', '${otherId}');
+          DELETE FROM coaching.student_profiles WHERE "UserId" IN ('${studentId}', '${otherId}');`);
         sql(config, identityDb, `DELETE FROM identity.users WHERE "Id" IN ('${studentId}', '${otherId}');
           DELETE FROM identity.institutions WHERE "Id" IN ('${ownInstitutionId}', '${otherInstitutionId}');`);
       }

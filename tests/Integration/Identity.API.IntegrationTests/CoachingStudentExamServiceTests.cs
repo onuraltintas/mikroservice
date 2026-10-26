@@ -33,7 +33,7 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
             ownPlan.Activate();
             var otherPlan = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Other plan");
             otherPlan.Activate();
-            var task = StudyPlanTask.Create(ownPlan, new(2026, 10, 1), "Read", 30); task.Complete(25);
+            var task = StudyPlanTask.Create(ownPlan, new(2026, 10, 1), "Read", 30); task.Complete(25, workedOn: new(2026, 10, 1));
             db.AddRange(ownPlan, otherPlan, task, StudyPlanTask.Create(otherPlan, new(2026, 10, 1), "Private", 60));
             await db.SaveChangesAsync();
             var studyReport = await studyReports.GetAsync(new(2026, 10, 1), new(2026, 10, 2));

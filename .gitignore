@@ -88,3 +88,6 @@ tools/releases/*/application/
 tools/releases/*/probe-runtime/
 *.pdb
 tools/releases/*/patch/*.dll
+
+# Local runs of tools/run-e2e-stack.ps1 (test-results/ is ignored above)
+e2e-results/

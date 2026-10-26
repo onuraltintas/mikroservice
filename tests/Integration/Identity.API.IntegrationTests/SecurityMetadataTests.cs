@@ -34,7 +34,7 @@ public class SecurityMetadataTests
         typeof(SupportController)
             .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
             .Should()
-            .NotBeEmpty("support reply is an administrative action");
+            .NotBeEmpty("only the anonymous submit action may opt out");
     }
 
     [Fact]
@@ -66,13 +66,16 @@ public class SecurityMetadataTests
     }
 
     [Fact]
-    public void SupportReply_MustRemainAuthenticated()
+    public void SupportReplies_GoOnlyThroughTheInbox_WithPermissionAndMfaPolicy()
     {
-        var action = typeof(SupportController).GetMethod(nameof(SupportController.Reply));
-
-        action.Should().NotBeNull();
-        action!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true).Should().BeEmpty();
-        action.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true).Should().NotBeEmpty();
+        typeof(SupportController).GetMethods().Should().NotContain(method => method.Name == "Reply",
+            "replies have a single endpoint, the support inbox");
+        foreach (var name in new[] { nameof(SupportAdminController.Reply), nameof(SupportAdminController.Process) })
+        {
+            var action = typeof(SupportAdminController).GetMethod(name)!;
+            action.GetCustomAttributes(typeof(HasPermissionAttribute), inherit: true).Should().NotBeEmpty();
+            action.GetCustomAttributes(typeof(MfaCategoryAttribute), inherit: true).Should().NotBeEmpty();
+        }
     }
 
     [Fact]

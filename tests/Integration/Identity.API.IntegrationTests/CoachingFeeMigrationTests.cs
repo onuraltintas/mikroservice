@@ -17,6 +17,12 @@ public sealed class CoachingFeeMigrationTests(PostgresFixture postgres)
         await db.Database.EnsureDeletedAsync();
         try {
             await db.Database.MigrateAsync(); Assert.False(db.Database.HasPendingModelChanges());
+            // Migrations before UnifiedTargetCatalog are not reversible from the latest schema
+            // (that one requires a backup restore), so the fee ledger's own Down is checked from
+            // the schema it created; the fee and reminder tables are unchanged since then.
+            await db.Database.EnsureDeletedAsync();
+            var migrator = db.GetService<IMigrator>();
+            await migrator.MigrateAsync("20261013140909_AddCoachingFeeLedger");
             var now = DateTime.UtcNow; var student = Guid.NewGuid(); var actor = Guid.NewGuid();
             var study = CoachingReminderReceipt.Create(student, Guid.NewGuid(), "StudyDay", "2026-10-13", now, now);
             var overdue = CoachingReminderReceipt.Create(student, student, "FeeOverdue", "2026-10-13", now, now);
@@ -26,7 +32,6 @@ public sealed class CoachingFeeMigrationTests(PostgresFixture postgres)
             fee.ReversePayment(Guid.NewGuid(), payment.Id, actor, DateOnly.FromDateTime(now), "Düzeltme", now);
             db.AddRange(study, overdue, fee); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             Assert.Equal(2, await db.CoachingFeePayments.CountAsync());
-            var migrator = db.GetService<IMigrator>();
             await migrator.MigrateAsync("20261013130901_AddCoachingReminderReceipts");
             Assert.Equal(study.Id, (await db.CoachingReminderReceipts.SingleAsync()).Id);
             await migrator.MigrateAsync();

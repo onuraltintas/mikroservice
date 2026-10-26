@@ -41,4 +41,9 @@ export class SupportAdminService {
   reply(id: string, replyMessage: string) {
     return this.http.post<void>(`${this.url}/${id}/reply`, { replyMessage });
   }
+
+  /** Permanently deletes the request and the sender's data stored with it. */
+  delete(id: string) {
+    return this.http.delete<void>(`${this.url}/${encodeURIComponent(id)}`);
+  }
 }

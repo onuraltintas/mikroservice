@@ -17,7 +17,7 @@ public sealed class CoachingAttachmentDeletionConsumerTests
         services.AddSingleton<IAssignmentAttachmentStorage>(storage);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<AssignmentAttachmentDeletionRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
