@@ -56,6 +56,12 @@ $compose = @('compose', '--env-file', '.env.example', '-f', 'docker-compose.yml'
 $summary = @("E2E run $(Get-Date -Format s)  commit $(git rev-parse --short HEAD)", '')
 $failed = $false
 
+# Windows PowerShell strips the inner quotes of {{.Label "..."}} on the way to docker, so read
+# the whole label list and pick the compose project out of it.
+function Get-ComposeProject([string]$labels) {
+    if ($labels -match 'com\.docker\.compose\.project=([^,|]+)') { $Matches[1] } else { '' }
+}
+
 function Step([string]$name, [scriptblock]$action) {
     $log = Join-Path $out (($name -replace '[^A-Za-z0-9-]+', '-') + '.log')
     Write-Host "=== $name"
@@ -77,19 +83,19 @@ try {
     # so another stack that uses them must be stopped first. Name the owner instead of guessing.
     $conflicts = @()
     foreach ($name in 'postgres', 'rabbitmq', 'redis', 'mailcatcher') {
-        $owner = docker ps -a --filter "name=^/$name$" --format '{{.Label "com.docker.compose.project"}}'
-        if ($owner) { $conflicts += "container '$name' (compose project '$owner')" }
+        $labels = docker ps -a --filter "name=^/$name$" --format '{{.Labels}}'
+        if ($labels) { $conflicts += "container '$name' (compose project '$(Get-ComposeProject $labels)')" }
     }
     $ports = Select-String -Path .env.example -Pattern '^(POSTGRES_PORT|REDIS_PORT|RABBITMQ_PORT|GATEWAY_PORT)=(\d+)' |
         ForEach-Object { [int]$_.Matches[0].Groups[2].Value }
     foreach ($port in $ports) {
         if ((Test-NetConnection 127.0.0.1 -Port $port -WarningAction SilentlyContinue).TcpTestSucceeded) {
-            $owner = docker ps --filter "publish=$port" --format '{{.Names}} (compose project {{.Label "com.docker.compose.project"}})'
-            $conflicts += "port $port used by $(if ($owner) { $owner } else { 'a program outside Docker' })"
+            $owner = docker ps --filter "publish=$port" --format '{{.Names}}|{{.Labels}}' | Select-Object -First 1
+            $conflicts += "port $port used by $(if ($owner) { '{0} (compose project {1})' -f $owner.Split('|')[0], (Get-ComposeProject $owner) } else { 'a program outside Docker' })"
         }
     }
     if ($conflicts) {
-        $projects = docker ps -a --format '{{.Label "com.docker.compose.project"}}' | Where-Object { $_ } | Sort-Object -Unique
+        $projects = docker ps -a --format '{{.Labels}}' | ForEach-Object { Get-ComposeProject $_ } | Where-Object { $_ } | Sort-Object -Unique
         throw ("Another stack is in the way: " + ($conflicts -join '; ') +
             ". Stop it and run again, e.g.: docker compose -p <project> stop   (projects running now: $($projects -join ', '))")
     }
