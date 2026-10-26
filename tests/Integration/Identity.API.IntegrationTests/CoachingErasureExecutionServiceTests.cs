@@ -91,41 +91,35 @@ public sealed class CoachingErasureExecutionServiceTests
     }
 
     [Fact]
-    public async Task Execute_ShouldPreserveRecordsAndAllowRetryWhenAttachmentStorageFails()
+    public async Task Execute_ShouldHandFileDeletionToTheOutboxSoAStorageOutageDoesNotBlockErasure()
     {
+        // Files are deleted by AssignmentAttachmentDeletionRequested after the erasure commits; that message is
+        // retried on its own, so an unavailable object store neither blocks nor half-applies the erasure.
         await using var context = CreateContext();
         var subjectId = Guid.NewGuid();
-        var assignment = Assignment.Create(Guid.NewGuid(), "Korunacak ödev", DateTime.UtcNow.AddDays(1));
+        var assignment = Assignment.Create(Guid.NewGuid(), "Silinecek ödev", DateTime.UtcNow.AddDays(1));
         assignment.AssignToStudent(subjectId);
         assignment.AssignedStudents.Single().AddSubmissionAttachment(
             "coaching/retry-file.pdf", "ödev.pdf", "application/pdf", 128, new string('a', 64));
         context.Assignments.Add(assignment);
-        context.AcademicGoals.Add(AcademicGoal.Create(subjectId, "Korunacak hedef", GoalCategory.SubjectMastery));
+        context.AcademicGoals.Add(AcademicGoal.Create(subjectId, "Silinecek hedef", GoalCategory.SubjectMastery));
         await context.SaveChangesAsync();
         var request = Request(subjectId);
         await new CoachingErasureAssessmentService(context, TimeProvider.System)
             .AssessAsync(AssessmentRequest(request), CancellationToken.None);
         var storage = new StubAttachmentStorage { FailDelete = true };
-        var service = new CoachingErasureExecutionService(context, storage, TimeProvider.System);
+        var outbox = new CapturingPublisher();
 
-        var action = () => service.ExecuteAsync(request, CancellationToken.None);
-
-        await action.Should().ThrowAsync<IOException>();
-        (await context.AssignmentStudents.CountAsync(row => row.StudentId == subjectId)).Should().Be(1);
-        (await context.AssignmentSubmissionAttachments.CountAsync()).Should().Be(1);
-        (await context.AcademicGoals.CountAsync(goal => goal.StudentId == subjectId)).Should().Be(1);
-        (await context.CoachingErasureExecutions.CountAsync()).Should().Be(0);
-        (await context.CoachingErasureAssessments.CountAsync()).Should().Be(1);
-
-        storage.FailDelete = false;
-        var completed = await service.ExecuteAsync(request, CancellationToken.None);
+        var completed = await new CoachingErasureExecutionService(context, storage, TimeProvider.System, outbox)
+            .ExecuteAsync(request, CancellationToken.None);
 
         completed.DeletedRecordCount.Should().Be(3);
-        storage.DeletedKeys.Should().Equal("coaching/retry-file.pdf");
+        storage.DeletedKeys.Should().BeEmpty();
+        outbox.Messages.OfType<AssignmentAttachmentDeletionRequested>().Select(x => x.StorageKey)
+            .Should().Equal("coaching/retry-file.pdf");
         (await context.AssignmentStudents.CountAsync(row => row.StudentId == subjectId)).Should().Be(0);
         (await context.AssignmentSubmissionAttachments.CountAsync()).Should().Be(0);
         (await context.AcademicGoals.CountAsync(goal => goal.StudentId == subjectId)).Should().Be(0);
-        (await context.CoachingErasureExecutions.CountAsync()).Should().Be(1);
     }
 
     [Fact]
@@ -169,6 +163,16 @@ public sealed class CoachingErasureExecutionServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         return new CoachingDbContext(options);
+    }
+
+    private sealed class CapturingPublisher : Coaching.Application.Interfaces.ICoachingEventPublisher
+    {
+        public List<object> Messages { get; } = [];
+        public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default) where T : class
+        {
+            Messages.Add(message);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class StubAttachmentStorage : IAssignmentAttachmentStorage
