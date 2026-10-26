@@ -242,7 +242,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapGet("/", () => "Notification Service Runnning").AllowAnonymous();
+app.MapGet("/", () => "Notification Service Running").AllowAnonymous();
+// "/health" is kept as an alias of "/health/ready": compose healthchecks and monitoring call both.
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapHealthChecks("/health/ready").AllowAnonymous();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();

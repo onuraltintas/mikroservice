@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Notification.Application.Interfaces;
@@ -9,11 +8,8 @@ using Notification.Infrastructure.Persistence;
 
 namespace Notification.Infrastructure.Services;
 
-public sealed class EmailDeliveryWorker : BackgroundService
+public sealed class EmailDeliveryWorker : LeasedDeliveryWorker<EmailDeliveryWorker.EmailDeliveryWorkItem>
 {
-    private const int MaxAttempts = 12;
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan LeaseDuration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan SentBodyRetention = TimeSpan.FromDays(7);
     private static readonly TimeSpan FailedBodyRetention = TimeSpan.FromDays(30);
@@ -23,56 +19,28 @@ public sealed class EmailDeliveryWorker : BackgroundService
     // Read in-app notifications older than this are deleted.
     public static readonly TimeSpan ReadNotificationRetention = TimeSpan.FromDays(365);
 
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<EmailDeliveryWorker> _logger;
     private readonly IDataProtector _bodyProtector;
+    private DateTime _lastCleanupAt = DateTime.MinValue;
 
     public EmailDeliveryWorker(
         IServiceScopeFactory scopeFactory,
         ILogger<EmailDeliveryWorker> logger,
         IDataProtectionProvider dataProtectionProvider)
+        : base(scopeFactory, logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
         _bodyProtector = dataProtectionProvider.CreateProtector("EduPlatform.Notification.EmailDelivery.v1");
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task RunMaintenanceAsync(CancellationToken cancellationToken)
     {
-        var lastCleanupAt = DateTime.MinValue;
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                if (DateTime.UtcNow - lastCleanupAt >= CleanupInterval)
-                {
-                    await CleanupCompletedAsync(stoppingToken);
-                    lastCleanupAt = DateTime.UtcNow;
-                }
-
-                var workItem = await ClaimNextAsync(stoppingToken);
-                if (workItem is not null)
-                {
-                    await DeliverAsync(workItem, stoppingToken);
-                    continue;
-                }
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Email delivery worker iteration failed");
-            }
-
-            await Task.Delay(PollInterval, stoppingToken);
-        }
+        if (DateTime.UtcNow - _lastCleanupAt < CleanupInterval) return;
+        await CleanupCompletedAsync(cancellationToken);
+        _lastCleanupAt = DateTime.UtcNow;
     }
 
-    private async Task<EmailDeliveryWorkItem?> ClaimNextAsync(CancellationToken cancellationToken)
+    protected override async Task<EmailDeliveryWorkItem?> ClaimNextAsync(CancellationToken cancellationToken)
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
+        await using var scope = ScopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -112,9 +80,9 @@ public sealed class EmailDeliveryWorker : BackgroundService
             delivery.SubjectUserId);
     }
 
-    private async Task DeliverAsync(EmailDeliveryWorkItem workItem, CancellationToken cancellationToken)
+    protected override async Task DeliverAsync(EmailDeliveryWorkItem workItem, CancellationToken cancellationToken)
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
+        await using var scope = ScopeFactory.CreateAsyncScope();
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
 
@@ -167,7 +135,7 @@ public sealed class EmailDeliveryWorker : BackgroundService
                 return;
             }
 
-            _logger.LogWarning(
+            Logger.LogWarning(
                 "Email delivery {DeliveryId} lease was lost before marking it sent",
                 workItem.Id);
         }
@@ -178,9 +146,8 @@ public sealed class EmailDeliveryWorker : BackgroundService
         catch (Exception exception)
         {
             var permanentlyFailed = workItem.AttemptCount >= MaxAttempts;
-            var delaySeconds = Math.Min(300, Math.Pow(2, Math.Min(workItem.AttemptCount, 8)));
-            var retryAt = DateTime.UtcNow.AddSeconds(delaySeconds);
-            var error = exception.Message[..Math.Min(exception.Message.Length, 2_000)];
+            var retryAt = RetryAt(DateTime.UtcNow, workItem.AttemptCount);
+            var error = Truncate(exception.Message);
             var failedRows = await dbContext.EmailDeliveries
                 .Where(x =>
                     x.Id == workItem.Id
@@ -197,13 +164,13 @@ public sealed class EmailDeliveryWorker : BackgroundService
                     .SetProperty(x => x.LastError, error), cancellationToken);
             if (failedRows == 0)
             {
-                _logger.LogWarning(
+                Logger.LogWarning(
                     "Email delivery {DeliveryId} lease was lost before recording failure",
                     workItem.Id);
                 return;
             }
 
-            _logger.LogWarning(
+            Logger.LogWarning(
                 exception,
                 "Email delivery {DeliveryId} failed on attempt {Attempt}; permanent={Permanent}",
                 workItem.Id,
@@ -214,7 +181,7 @@ public sealed class EmailDeliveryWorker : BackgroundService
 
     private async Task CleanupCompletedAsync(CancellationToken cancellationToken)
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
+        await using var scope = ScopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
         var now = DateTime.UtcNow;
         var sentCutoff = now.Subtract(SentBodyRetention);
@@ -240,13 +207,13 @@ public sealed class EmailDeliveryWorker : BackgroundService
         var cleared = clearedSent + clearedFailed;
         if (cleared > 0)
         {
-            _logger.LogInformation("Cleared protected bodies from {Count} retained email delivery records", cleared);
+            Logger.LogInformation("Cleared protected bodies from {Count} retained email delivery records", cleared);
         }
 
         var deleted = await PurgeExpiredRecordsAsync(dbContext, now, cancellationToken);
         if (deleted > 0)
         {
-            _logger.LogInformation("Deleted {Count} expired delivery and notification records", deleted);
+            Logger.LogInformation("Deleted {Count} expired delivery and notification records", deleted);
         }
     }
 
@@ -271,7 +238,7 @@ public sealed class EmailDeliveryWorker : BackgroundService
         return deliveries + forwards + notifications;
     }
 
-    private sealed record EmailDeliveryWorkItem(
+    public sealed record EmailDeliveryWorkItem(
         Guid Id,
         string Recipient,
         string Subject,
