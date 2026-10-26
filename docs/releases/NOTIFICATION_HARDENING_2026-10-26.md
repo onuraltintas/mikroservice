@@ -27,9 +27,11 @@ veritabanı modeli değiştirilmedi (yeni migration yok). İnceleme: proje dokü
 | Anlık bildirim | SignalR, consumer transaction'ı commit edilmeden gönderiliyordu | Outbox üzerinden `notification-realtime` kuyruğu; yalnız commit edilmiş ve alıcısı silinmemiş kayıt gönderilir |
 | Destek yanıt ucu | İki uç (`/support/reply` ve `/support/requests/{id}/reply`) | Tek uç; admin paneli bildirim penceresi de onu kullanır |
 | Destek talebi silme | Yoktu | `Support.Delete` yetkisi; talep, personel bildirim kopyaları, bekleyen iletim ve destek e-postalarıyla birlikte silinir; denetim kaydı yazılır |
-| Saklama | Destek talepleri süresiz | Yanıtlanan (işlenen) talepler yanıttan 6 ay sonra otomatik silinir; açık talepler kalır |
+| Saklama | Destek talepleri süresiz | Yanıtlanan (işlenen) talepler yanıttan 6 ay, yanıtlanmayanlar gelişten 3 ay sonra otomatik silinir |
 | Anonim destek formu | CAPTCHA yok | reCAPTCHA (giriş ekranıyla aynı site anahtarı); token'ı Identity doğrular, doğrulanamazsa reddedilir; giriş yapmış kullanıcıya sorulmaz |
 | Worker'lar | İki kopya döngü | Ortak `LeasedDeliveryWorker`; davranış aynı |
+| Course Management | 8 kuyruk ve bildirim API'si CM yayında değilken de açık | `CourseManagement__Enabled` (varsayılan kapalı); yalnız CM compose overlay'leri açar. Release dalında satır silmeye gerek yok |
+| Tekrarlar | İki aynı dispatcher, dağınık MessageId kontrolleri ve id üreticileri | `RecipientNotificationDispatcher`, `MessageIds`; üretilen id'ler değişmedi (testle sabit) |
 
 **MFA ve silme:** `Support.Delete`, yanıtlama gibi İçerik (cms) MFA politikasına bağlıdır. MFA'yı açmış
 admin her zaman MFA ile giriş yaptığı için (Identity sertleştirmesi) silmede ayrıca sorulmaz. MFA
@@ -38,7 +40,7 @@ kullanmayan adminin silebilmesi, admin panelindeki İçerik MFA politikasının 
 
 ## Temizlik
 
-`Notification.API.http`, kullanılmayan `Microsoft.AspNetCore.OpenApi` ve `MassTransit.RabbitMQ`
+`Notification.API.http`, `Coaching_NewCourse` şablonu (hiçbir yerden gönderilmiyordu), kullanılmayan `Microsoft.AspNetCore.OpenApi` ve `MassTransit.RabbitMQ`
 (Infrastructure) paketleri, boş `OnConnectedAsync`, `GetCompanyName`, `Jwt:Authority` ayarı,
 iki kopya bağlantı dizesi kurucusu, Dockerfile'daki gereksiz build adımı.
 
@@ -56,10 +58,12 @@ iki kopya bağlantı dizesi kurucusu, Dockerfile'daki gereksiz build adımı.
 6. `Support.Delete` yetkisi Identity açılışında otomatik eklenir; SystemAdmin'de vardır, diğer
    roller için Roller ekranından verilir.
 7. Yeni kuyruk: `notification-realtime` (ilk açılışta oluşur).
+8. Course Management notification'da varsayılan kapalı; CM yayına çıkarken
+   `docker-compose.course-management.production.yml` ile birlikte açılır.
 
 ## Doğrulama
 
-- Her adım ayrı commit (N1–N9); her adımda tam paket önceki duruma göre karşılaştırıldı —
+- Her adım ayrı commit (N1–N12); her adımda tam paket önceki duruma göre karşılaştırıldı —
   fark yalnız Docker gerektiren testler ve önceden kararsız MassTransit consumer testleri.
 - Yeni testler: kuyruk eşleşmesi (her consumer'ın kuyruğu var), e-posta enjeksiyonu ve link
   doğrulama, gerçek PostgreSQL'de destek yanıtı transaction'ı, onay sınırı ve saklama
@@ -68,7 +72,6 @@ iki kopya bağlantı dizesi kurucusu, Dockerfile'daki gereksiz build adımı.
 
 ## Sonraya kalan
 
-- Anonim ve yanıtlanmamış destek talepleri için saklama süresi (şimdilik admin elle siler).
 - Şablonların veritabanında HTML olarak saklanması (yönetici paneli düzenlemesi): şablon
   değişkenleri artık encode ediliyor, şablonun kendisi güvenilir içerik sayılıyor.
 - SignalR hub'ı için ayrı ölçek planı (birden fazla instance'ta backplane).
