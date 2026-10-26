@@ -114,21 +114,30 @@ public sealed class CoachingContractTests
     }
 
     [Fact]
-    public async Task CreateExamContract_RejectsInvalidScoreAndPastDate()
+    public async Task CreateExamContract_RejectsInvalidScore_AndAcceptsAlreadyHeldExams()
     {
+        // Teachers record practice exams after they were sat (4ba9821 dropped the
+        // future-date rule in the API and the staff portal), so only a missing date fails.
         var validator = new CreateExamCommandValidator();
-        var result = await validator.ValidateAsync(new CreateExamCommand(
+        var past = await validator.ValidateAsync(new CreateExamCommand(
             Guid.NewGuid(),
             "Mock exam",
             ExamType.Mock,
-            DateTime.UtcNow.AddMinutes(-1),
+            DateTime.UtcNow.AddDays(-3),
             0,
             null,
             null));
+        var missingDate = await validator.ValidateAsync(new CreateExamCommand(
+            Guid.NewGuid(),
+            "Mock exam",
+            ExamType.Mock,
+            DateTime.MinValue,
+            100,
+            null,
+            null));
 
-        result.IsValid.Should().BeFalse();
-        result.Errors.Select(error => error.PropertyName)
-            .Should().Contain(new[] { "ExamDate", "MaxScore" });
+        past.Errors.Select(error => error.PropertyName).Should().Contain("MaxScore").And.NotContain("ExamDate");
+        missingDate.Errors.Select(error => error.PropertyName).Should().Contain("ExamDate");
     }
 
     [Fact]
