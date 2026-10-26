@@ -16,13 +16,31 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingDataExportQueryTests
 {
     [Fact]
-    public void ExportEndpoint_ShouldRequireStudentRole()
+    public void ExportEndpoint_ShouldAllowStudentsAndTeachers()
     {
         typeof(DataPrivacyController)
             .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
             .Cast<AuthorizeAttribute>()
             .Should()
-            .Contain(attribute => attribute.Roles == "Student");
+            .Contain(attribute => attribute.Roles == "Student,Teacher");
+    }
+
+    [Fact]
+    public async Task Export_ShouldLetATeacherExportTheirOwnData()
+    {
+        var teacherId = Guid.NewGuid();
+        var expected = CoachingDataExportDto.Empty(teacherId, DateTimeOffset.Parse("2026-09-21T12:00:00Z"));
+        var repository = new StubRepository(expected);
+        var handler = new ExportCoachingDataQueryHandler(
+            repository,
+            new StubAccessPolicy(teacherId, isStudent: false, isTeacher: true),
+            new StubIdentityAuthorizationClient([]),
+            new FixedTimeProvider(expected.ExportedAt));
+
+        var result = await handler.Handle(new ExportCoachingDataQuery(), CancellationToken.None);
+
+        result.Should().Be(expected);
+        repository.RequestedUserId.Should().Be(teacherId);
     }
 
     [Fact]
@@ -42,7 +60,7 @@ public sealed class CoachingDataExportQueryTests
     }
 
     [Fact]
-    public async Task Export_ShouldRejectNonStudentAccounts()
+    public async Task Export_ShouldRejectAccountsThatAreNeitherStudentNorTeacher()
     {
         var handler = new ExportCoachingDataQueryHandler(
             new StubRepository(null),
@@ -86,19 +104,24 @@ public sealed class CoachingDataExportQueryTests
 
     private sealed class StubRepository(CoachingDataExportDto? result) : ICoachingDataExportRepository
     {
+        public Guid? RequestedUserId { get; private set; }
+
         public Task<CoachingDataExportDto> ExportStudentDataAsync(
             Guid studentId,
             DateTimeOffset exportedAt,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(result ?? throw new InvalidOperationException("Repository must not be called."));
+            CancellationToken cancellationToken)
+        {
+            RequestedUserId = studentId;
+            return Task.FromResult(result ?? throw new InvalidOperationException("Repository must not be called."));
+        }
     }
 
-    private sealed class StubAccessPolicy(Guid userId, bool isStudent) : ICoachingAccessPolicy
+    private sealed class StubAccessPolicy(Guid userId, bool isStudent, bool isTeacher = false) : ICoachingAccessPolicy
     {
         public Guid? CurrentUserId => userId;
         public bool IsSystemAdministrator => false;
         public bool IsInstitutionAdministrator => false;
-        public bool IsCurrentTeacher(Guid teacherId) => false;
+        public bool IsCurrentTeacher(Guid teacherId) => isTeacher && teacherId == userId;
         public bool IsCurrentStudent(Guid studentId) => isStudent && studentId == userId;
         public Guid RequireCurrentTeacher() => throw new NotSupportedException();
         public void RequireTeacher(Guid teacherId) => throw new NotSupportedException();

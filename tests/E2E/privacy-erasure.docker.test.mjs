@@ -249,7 +249,8 @@ test('disposable Docker Coaching-scope erasure removes only Coaching data',
       WHERE student_id='${userId}';`), '0');
     assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.assignment_submission_attachments
       WHERE id='${attachmentId}';`), '0');
-    assert.notEqual(localAttachment(config, 'exists', storageKey).status, 0,
+    // The file goes with an outbox message that is delivered once the erasure has committed.
+    await eventually(() => String(localAttachment(config, 'exists', storageKey).status !== 0), 'true',
       'Erased student file must no longer exist');
     assert.equal(localAttachment(config, 'exists', otherStorageKey).status, 0,
       'Unrelated file must survive');
