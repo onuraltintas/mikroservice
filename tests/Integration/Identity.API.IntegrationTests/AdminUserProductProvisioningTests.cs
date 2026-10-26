@@ -15,15 +15,15 @@ namespace Identity.API.IntegrationTests;
 public sealed class AdminUserProductProvisioningTests
 {
     [Theory]
-    [InlineData(PlatformProduct.Coaching, "Student", 1, 0)]
-    [InlineData(PlatformProduct.Coaching, "Teacher", 0, 1)]
-    [InlineData(PlatformProduct.Coaching, "InstitutionAdmin", 0, 0)]
-    [InlineData(PlatformProduct.Coaching, "InstitutionOwner", 0, 0)]
-    [InlineData(PlatformProduct.SpeedReading, "Student", 0, 0)]
-    [InlineData(PlatformProduct.SpeedReading, "Teacher", 0, 0)]
-    [InlineData(PlatformProduct.SpeedReading, "InstitutionAdmin", 0, 0)]
-    [InlineData(PlatformProduct.SpeedReading, "InstitutionOwner", 0, 0)]
-    public async Task Selected_product_scopes_provisioning_access_profile_and_event(PlatformProduct product, string role, int students, int teachers)
+    [InlineData(PlatformProduct.Coaching, "Student", true)]
+    [InlineData(PlatformProduct.Coaching, "Teacher", true)]
+    [InlineData(PlatformProduct.Coaching, "InstitutionAdmin", false)]
+    [InlineData(PlatformProduct.Coaching, "InstitutionOwner", false)]
+    [InlineData(PlatformProduct.SpeedReading, "Student", false)]
+    [InlineData(PlatformProduct.SpeedReading, "Teacher", false)]
+    [InlineData(PlatformProduct.SpeedReading, "InstitutionAdmin", false)]
+    [InlineData(PlatformProduct.SpeedReading, "InstitutionOwner", false)]
+    public async Task Selected_product_scopes_provisioning_access_profile_and_event(PlatformProduct product, string role, bool coachingProfile)
     {
         var fixture = new Fixture();
         var result = await fixture.Handler.Handle(Command(role, product), CancellationToken.None);
@@ -32,18 +32,18 @@ public sealed class AdminUserProductProvisioningTests
         Assert.Equal(role, fixture.Identity.Role);
         Assert.True(fixture.Users.User.HasProductAccess(product));
         Assert.False(fixture.Users.User.HasProductAccess(product == PlatformProduct.Coaching ? PlatformProduct.SpeedReading : PlatformProduct.Coaching));
-        Assert.Equal(students, fixture.Students.AddCount);
-        Assert.Equal(teachers, fixture.Teachers.AddCount);
+        // Coaching creates student/teacher profiles itself from this event (Identity no longer writes them).
+        Assert.Equal(coachingProfile ? [role] : [], fixture.Publisher.CoachingProfiles.Select(x => x.Role));
         Assert.Equal(product.ToRouteValue(), fixture.Publisher.Event!.Product);
         Assert.Equal(role, fixture.Publisher.Event.Role);
     }
 
     [Theory]
-    [InlineData("Student", 1, 0)]
-    [InlineData("Teacher", 0, 1)]
-    [InlineData("InstitutionAdmin", 0, 0)]
-    [InlineData("InstitutionOwner", 0, 0)]
-    public async Task Both_services_share_one_account_but_have_distinct_role_and_access_records(string role, int students, int teachers)
+    [InlineData("Student", true)]
+    [InlineData("Teacher", true)]
+    [InlineData("InstitutionAdmin", false)]
+    [InlineData("InstitutionOwner", false)]
+    public async Task Both_services_share_one_account_but_have_distinct_role_and_access_records(string role, bool coachingProfile)
     {
         var fixture = new Fixture();
         var command = Command(role, null) with { Products = [PlatformProduct.SpeedReading, PlatformProduct.Coaching, PlatformProduct.SpeedReading] };
@@ -55,9 +55,8 @@ public sealed class AdminUserProductProvisioningTests
         Assert.Equal(2, user.Roles.Count);
         Assert.Equal(user.Roles.First().RoleId, user.Roles.Last().RoleId);
         Assert.Equal(2, user.Roles.Select(r => r.Product).Distinct().Count());
-        Assert.Equal(students, fixture.Students.AddCount);
-        Assert.Equal(teachers, fixture.Teachers.AddCount);
-        Assert.Equal(1, fixture.Publisher.PublishCount);
+        Assert.Equal(coachingProfile ? 1 : 0, fixture.Publisher.CoachingProfiles.Count);
+        Assert.Equal(1, fixture.Publisher.UserCreatedCount);
         Assert.Equal("coaching", fixture.Publisher.Event!.Product);
         user.RemoveRole(user.Roles.First().RoleId, PlatformProduct.Coaching);
         Assert.Equal(PlatformProduct.SpeedReading, Assert.Single(user.Roles).Product);
@@ -151,8 +150,6 @@ public sealed class AdminUserProductProvisioningTests
     {
         public IdentityProxy Identity { get; }
         public UsersProxy Users { get; }
-        public ProfileProxy Students { get; }
-        public ProfileProxy Teachers { get; }
         public PublisherProxy Publisher { get; }
         public CreateUserCommandHandler Handler { get; }
         public Fixture()
@@ -163,13 +160,9 @@ public sealed class AdminUserProductProvisioningTests
             Users = (UsersProxy)(object)users;
             Identity.UserId = Users.User.Id;
             Identity.User = Users.User;
-            var students = DispatchProxy.Create<IStudentRepository, ProfileProxy>();
-            Students = (ProfileProxy)(object)students;
-            var teachers = DispatchProxy.Create<ITeacherRepository, ProfileProxy>();
-            Teachers = (ProfileProxy)(object)teachers;
             var publisher = DispatchProxy.Create<IPublishEndpoint, PublisherProxy>();
             Publisher = (PublisherProxy)(object)publisher;
-            Handler = new CreateUserCommandHandler(identity, users, students, teachers, null!,
+            Handler = new CreateUserCommandHandler(identity, users,
                 DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(), publisher, new AdminUser(), NullLogger<CreateUserCommandHandler>.Instance);
         }
     }
@@ -205,24 +198,22 @@ public sealed class AdminUserProductProvisioningTests
             _ => throw new NotSupportedException(method.Name)
         };
     }
-    public class ProfileProxy : DispatchProxy
-    {
-        public int AddCount { get; private set; }
-        protected override object? Invoke(MethodInfo? method, object?[]? args)
-        {
-            if (method!.Name != "AddAsync") throw new NotSupportedException(method.Name);
-            AddCount++; return Task.CompletedTask;
-        }
-    }
     public class PublisherProxy : DispatchProxy
     {
         public UserCreatedEvent? Event { get; private set; }
+        public List<EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested> CoachingProfiles { get; } = [];
         public bool Fail { get; set; }
-        public int PublishCount { get; private set; }
+        public int UserCreatedCount { get; private set; }
         protected override object? Invoke(MethodInfo? method, object?[]? args)
         {
             if (Fail) throw new InvalidOperationException("Test publication failure");
-            PublishCount++; Event = Assert.IsType<UserCreatedEvent>(args![0]); return Task.CompletedTask;
+            switch (args![0])
+            {
+                case UserCreatedEvent created: UserCreatedCount++; Event = created; break;
+                case EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested profile: CoachingProfiles.Add(profile); break;
+                default: throw new NotSupportedException(args[0]?.GetType().Name);
+            }
+            return Task.CompletedTask;
         }
     }
     public class UnitOfWorkProxy : DispatchProxy
