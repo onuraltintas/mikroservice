@@ -31,60 +31,95 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
     {
         var message = context.Message;
         var email = message.Email ?? throw new InvalidOperationException("UserCreatedEvent.Email is required.");
-        var templateName = PublicAppUrlOptions.GetTemplateName("Auth_DirectCreate", message.Role, message.Product);
-        
-        // 1. Retrieve Template dynamically from Database
-        var template = await _dbContext.EmailTemplates
-            .AsNoTracking() // Performans için
-            .FirstOrDefaultAsync(t => t.TemplateName == templateName && t.IsActive);
-
-        string subject;
-        string body;
-        var passwordSetupUrl = _publicAppUrlOptions.BuildPasswordResetLink(
-            message.PasswordSetupToken,
-            email,
-            message.Role,
-            message.Product);
-
-        if (template != null)
-        {
-            // 2. Apply Template (Dynamic)
-            subject = template.Subject
-                .Replace("{{FirstName}}", EmailContent.SubjectText(message.FirstName))
-                .Replace("{{LastName}}", EmailContent.SubjectText(message.LastName));
-
-            body = template.Body
-                .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
-                .Replace("{{LastName}}", EmailContent.Html(message.LastName))
-                .Replace("{{Role}}", EmailContent.Html(message.Role))
-                .Replace("{{PasswordSetupUrl}}", passwordSetupUrl)
-                .Replace("{{PasswordSetupTokenExpiresAt}}", message.PasswordSetupTokenExpiresAt.ToString("O"))
-                .Replace("{{Email}}", EmailContent.Html(message.Email));
-            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
-            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
-        }
-        else
-        {
-            // Fallback (Safe Mode)
-            var appName = PublicAppUrlOptions.GetApplicationName(message.Role, message.Product);
-            subject = $"{appName} hesabınız hazır, {EmailContent.SubjectText(message.FirstName)}!";
-            body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {message.PasswordSetupTokenExpiresAt:O}.</p>";
-        }
-
         var messageId = MessageIds.Require(context);
-        await _emailDeliveryQueue.QueueAsync(
-            messageId,
-            nameof(UserCreatedConsumer),
-            email,
-            subject,
-            body,
-            message.UserId,
-            context.CancellationToken);
+
+        // Current Identity versions send the password-setup e-mail separately (UserPasswordSetupRequestedV1);
+        // only events published by older versions still carry the token and get the e-mail from here.
+        if (!string.IsNullOrEmpty(message.PasswordSetupToken))
+        {
+            var (subject, body) = await AccountSetupEmail.BuildAsync(_dbContext, _publicAppUrlOptions, email,
+                message.FirstName, message.LastName, message.Role, message.Product,
+                message.PasswordSetupToken, message.PasswordSetupTokenExpiresAt, context.CancellationToken);
+            await _emailDeliveryQueue.QueueAsync(
+                messageId,
+                nameof(UserCreatedConsumer),
+                email,
+                subject,
+                body,
+                message.UserId,
+                context.CancellationToken);
+        }
         await _notificationService.SendNotificationAsync(
             message.UserId, 
             $"{PublicAppUrlOptions.GetApplicationName(message.Role, message.Product)} hesabınız oluşturuldu",
             "Hesabınız başarıyla oluşturuldu.",
             "Account",
             sourceMessageId: messageId);
+    }
+}
+
+/// <summary>Sends the password-setup e-mail of a new account.</summary>
+public sealed class UserPasswordSetupRequestedConsumer(
+    IEmailDeliveryQueue emailDeliveryQueue,
+    INotificationDbContext dbContext,
+    IOptions<PublicAppUrlOptions> publicAppUrlOptions) : IConsumer<UserPasswordSetupRequestedV1>
+{
+    public async Task Consume(ConsumeContext<UserPasswordSetupRequestedV1> context)
+    {
+        var message = context.Message;
+        var (subject, body) = await AccountSetupEmail.BuildAsync(dbContext, publicAppUrlOptions.Value, message.Email,
+            message.FirstName, message.LastName, message.Role, message.Product,
+            message.PasswordSetupToken, message.PasswordSetupTokenExpiresAt, context.CancellationToken);
+        await emailDeliveryQueue.QueueAsync(
+            MessageIds.Require(context),
+            nameof(UserPasswordSetupRequestedConsumer),
+            message.Email,
+            subject,
+            body,
+            message.UserId,
+            context.CancellationToken);
+    }
+}
+
+internal static class AccountSetupEmail
+{
+    public static async Task<(string Subject, string Body)> BuildAsync(
+        INotificationDbContext dbContext,
+        PublicAppUrlOptions options,
+        string email,
+        string firstName,
+        string lastName,
+        string role,
+        string? product,
+        string passwordSetupToken,
+        DateTime passwordSetupTokenExpiresAt,
+        CancellationToken cancellationToken)
+    {
+        var templateName = PublicAppUrlOptions.GetTemplateName("Auth_DirectCreate", role, product);
+        var template = await dbContext.EmailTemplates
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.TemplateName == templateName && t.IsActive, cancellationToken);
+        var passwordSetupUrl = options.BuildPasswordResetLink(passwordSetupToken, email, role, product);
+
+        if (template is null)
+        {
+            // Fallback (Safe Mode)
+            var appName = PublicAppUrlOptions.GetApplicationName(role, product);
+            return ($"{appName} hesabınız hazır, {EmailContent.SubjectText(firstName)}!",
+                $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(firstName)}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {passwordSetupTokenExpiresAt:O}.</p>");
+        }
+
+        var subject = template.Subject
+            .Replace("{{FirstName}}", EmailContent.SubjectText(firstName))
+            .Replace("{{LastName}}", EmailContent.SubjectText(lastName));
+        var body = template.Body
+            .Replace("{{FirstName}}", EmailContent.Html(firstName))
+            .Replace("{{LastName}}", EmailContent.Html(lastName))
+            .Replace("{{Role}}", EmailContent.Html(role))
+            .Replace("{{PasswordSetupUrl}}", passwordSetupUrl)
+            .Replace("{{PasswordSetupTokenExpiresAt}}", passwordSetupTokenExpiresAt.ToString("O"))
+            .Replace("{{Email}}", EmailContent.Html(email));
+        return (PublicAppUrlOptions.ApplySpeedReadingBranding(subject, role, product),
+            PublicAppUrlOptions.ApplySpeedReadingBranding(body, role, product));
     }
 }
