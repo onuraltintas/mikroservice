@@ -951,7 +951,7 @@
     "services/coaching-service/Coaching.Application/Interfaces/IRepositories.cs": "54b28e49fb07e0daca93465f39e732af63d376af151704e02c4d354f2604f4d2",
     "services/coaching-service/Coaching.Application/Newsletters/CoachingNewsletterContracts.cs": "6eecf1b098e75ecb564596264232981bbf32436b06872479407005882931fae5",
     "services/coaching-service/Coaching.Application/Privacy/ICoachingErasureAssessmentService.cs": "7cec50cfb201c280a87c3b4e9f3cbbde1feb24e2ea5881b1380c40a1c0a2fe16",
-    "services/coaching-service/Coaching.Application/Privacy/ICoachingErasureExecutionService.cs": "fa4ce0647fcabf692df069b68960995f69be3645d2f3f658c209bb0a5c8ad363",
+    "services/coaching-service/Coaching.Application/Privacy/ICoachingErasureExecutionService.cs": "9463b507f3ca517387e5211a6ad366100324ef815c0d1e281d38be1594767ea7",
     "services/coaching-service/Coaching.Application/Profiles/CoachingProfileContracts.cs": "72cd6a5395eac5e70e97aab74c32b23c9c4224deb8150f5570a6516fd5f3434f",
     "services/coaching-service/Coaching.Application/Profiles/CoachingProfileProvisioningConsumer.cs": "59bc77eaf75b9c1c3ef32ae45e9f0fa05cea1498fc567c14d51c063b9a2617cf",
     "services/coaching-service/Coaching.Application/Queries/ExportCoachingData/ExportCoachingDataQuery.cs": "9bc070b0691be0325bc709310b98572da8af6a53bfdfe3e7e32cea361a1bb84c",
@@ -2539,7 +2539,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "Coaching KVKK fix: one-year financial retention with later anonymization, blocked-erasure reporting, post-commit file deletion and finance in the data export",
+    "purpose": "Coaching KVKK fix: keep erasure error messages for blocked erasures",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2587,7 +2587,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "364e65cb",
+    "previousBaselineCommit": "e4693aeb",
     "removedSincePreviousBaseline": []
   }
 }
