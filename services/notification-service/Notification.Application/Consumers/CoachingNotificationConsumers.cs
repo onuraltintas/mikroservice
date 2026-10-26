@@ -1,3 +1,4 @@
+using Notification.Application.Configuration;
 using EduPlatform.Shared.Contracts.Events.Coaching;
 using MassTransit;
 using Notification.Application.Interfaces;
@@ -20,7 +21,7 @@ public sealed class AssignmentCreatedConsumer : IConsumer<AssignmentCreatedEvent
             CoachingConsumerMessageIds.Require(context),
             message.StudentIds,
             $"Yeni ödev: {message.Title}",
-            $"Ödevin son teslim tarihi: {message.DueDate:dd.MM.yyyy HH:mm}",
+            $"Ödevin son teslim tarihi: {TurkeyTime.Format(message.DueDate)}",
             "AssignmentCreated",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -48,7 +49,7 @@ public sealed class AssignmentSubmittedConsumer : IConsumer<AssignmentSubmittedE
             CoachingConsumerMessageIds.Require(context),
             new[] { message.TeacherId.Value },
             "Ödev teslim edildi",
-            $"Bir öğrenci ödevini teslim etti: {message.SubmittedAt:dd.MM.yyyy HH:mm}",
+            $"Bir öğrenci ödevini teslim etti: {TurkeyTime.Format(message.SubmittedAt)}",
             "AssignmentSubmitted",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -71,7 +72,7 @@ public sealed class AssignmentUpdatedConsumer : IConsumer<AssignmentUpdatedEvent
             CoachingConsumerMessageIds.Require(context),
             message.StudentIds,
             "Ödev güncellendi",
-            $"Ödevin yeni son teslim tarihi: {message.DueDate:dd.MM.yyyy HH:mm}",
+            $"Ödevin yeni son teslim tarihi: {TurkeyTime.Format(message.DueDate)}",
             "AssignmentUpdated",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -146,7 +147,7 @@ public sealed class ExamUpdatedConsumer : IConsumer<ExamUpdatedEvent>
             CoachingConsumerMessageIds.Require(context),
             message.StudentIds,
             "Sınav bilgileri güncellendi",
-            $"Sınav tarihi: {message.ExamDate:dd.MM.yyyy HH:mm}",
+            $"Sınav tarihi: {TurkeyTime.Format(message.ExamDate)}",
             "ExamUpdated",
             message.ExamId.ToString(),
             context.CancellationToken);
@@ -192,7 +193,7 @@ public sealed class SessionScheduledConsumer : IConsumer<SessionScheduledEvent>
             CoachingConsumerMessageIds.Require(context),
             message.StudentIds,
             "Yeni koçluk seansı",
-            $"Koçluk seansın planlandı: {message.ScheduledDate:dd.MM.yyyy HH:mm}",
+            $"Koçluk seansın planlandı: {TurkeyTime.Format(message.ScheduledDate)}",
             "SessionScheduled",
             message.SessionId.ToString(),
             context.CancellationToken);
@@ -215,7 +216,7 @@ public sealed class SessionUpdatedConsumer : IConsumer<SessionUpdatedEvent>
             CoachingConsumerMessageIds.Require(context),
             message.StudentIds,
             "Koçluk seansı güncellendi",
-            $"Güncel seans zamanı: {message.ScheduledDate:dd.MM.yyyy HH:mm}",
+            $"Güncel seans zamanı: {TurkeyTime.Format(message.ScheduledDate)}",
             "SessionUpdated",
             message.SessionId.ToString(),
             context.CancellationToken);
@@ -238,7 +239,7 @@ public sealed class SessionCancelledConsumer : IConsumer<SessionCancelledEvent>
             CoachingConsumerMessageIds.Require(context),
             message.StudentIds,
             "Koçluk seansı iptal edildi",
-            $"Koçluk seansın iptal edildi: {message.ScheduledDate:dd.MM.yyyy HH:mm}",
+            $"Koçluk seansın iptal edildi: {TurkeyTime.Format(message.ScheduledDate)}",
             "SessionCancelled",
             message.SessionId.ToString(),
             context.CancellationToken);

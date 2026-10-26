@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.CourseManagement;
 using MassTransit;
+using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
 
 namespace Notification.Application.Consumers;
@@ -12,7 +13,7 @@ public sealed class CourseManagementLessonScheduledConsumer(ICourseManagementNot
         var message = context.Message;
         return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
             CourseManagementConsumerMessageIds.RequireMessageId(context), message.StudentUserIds,
-            "Yeni ders planlandı", $"Dersin {message.StartsAt:dd.MM.yyyy HH:mm} tarihinde planlandı.",
+            "Yeni ders planlandı", $"Dersin {TurkeyTime.Format(message.StartsAt)} tarihinde planlandı.",
             "CourseManagement.LessonScheduled", message.LessonId.ToString(), context.CancellationToken));
     }
 }
@@ -25,7 +26,7 @@ public sealed class CourseManagementLessonRescheduledConsumer(ICourseManagementN
         var message = context.Message;
         return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
             CourseManagementConsumerMessageIds.RequireMessageId(context), message.StudentUserIds,
-            "Ders saati değişti", $"Dersin yeni saati: {message.StartsAt:dd.MM.yyyy HH:mm}.",
+            "Ders saati değişti", $"Dersin yeni saati: {TurkeyTime.Format(message.StartsAt)}.",
             "CourseManagement.LessonRescheduled", message.LessonId.ToString(), context.CancellationToken));
     }
 }
@@ -38,7 +39,7 @@ public sealed class CourseManagementLessonCancelledConsumer(ICourseManagementNot
         var message = context.Message;
         return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
             CourseManagementConsumerMessageIds.RequireMessageId(context), message.StudentUserIds,
-            "Ders iptal edildi", $"{message.StartsAt:dd.MM.yyyy HH:mm} tarihindeki ders iptal edildi.",
+            "Ders iptal edildi", $"{TurkeyTime.Format(message.StartsAt)} tarihindeki ders iptal edildi.",
             "CourseManagement.LessonCancelled", message.LessonId.ToString(), context.CancellationToken));
     }
 }
@@ -51,7 +52,7 @@ public sealed class CourseManagementAssignmentPublishedConsumer(ICourseManagemen
         var message = context.Message;
         return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
             CourseManagementConsumerMessageIds.RequireMessageId(context), message.StudentUserIds,
-            $"Yeni ödev: {message.Title}", $"Son teslim: {message.DueAt:dd.MM.yyyy HH:mm}.",
+            $"Yeni ödev: {message.Title}", $"Son teslim: {TurkeyTime.Format(message.DueAt)}.",
             "CourseManagement.AssignmentPublished", message.AssignmentId.ToString(), context.CancellationToken));
     }
 }
@@ -98,16 +99,14 @@ public sealed class CourseManagementPaymentRecordedConsumer(ICourseManagementNot
 public sealed class CourseManagementReminderDueConsumer(ICourseManagementNotificationDispatcher dispatcher)
     : IConsumer<CourseManagementReminderDueV1>
 {
-    private static readonly TimeZoneInfo IstanbulTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-
     public Task Consume(ConsumeContext<CourseManagementReminderDueV1> context)
     {
         var message = context.Message;
         var reminder = message.ReminderType switch
         {
-            "Lesson" => ("Yaklaşan dersin", $"Dersin {TimeZoneInfo.ConvertTime(message.TargetAt, IstanbulTimeZone):dd.MM.yyyy HH:mm} tarihinde.",
+            "Lesson" => ("Yaklaşan dersin", $"Dersin {TurkeyTime.Format(message.TargetAt)} tarihinde.",
                 "CourseManagement.LessonReminder"),
-            "Assignment" => ("Ödev teslim zamanı yaklaşıyor", $"Ödevinin son teslim zamanı {TimeZoneInfo.ConvertTime(message.TargetAt, IstanbulTimeZone):dd.MM.yyyy HH:mm}.",
+            "Assignment" => ("Ödev teslim zamanı yaklaşıyor", $"Ödevinin son teslim zamanı {TurkeyTime.Format(message.TargetAt)}.",
                 "CourseManagement.AssignmentReminder"),
             "InstallmentUpcoming" => ("Yaklaşan vade", "Kurs finans özetinde yaklaşan bir vade var. Güncel bakiyeni kurs panelinden görebilirsin.",
                 "CourseManagement.InstallmentUpcomingReminder"),

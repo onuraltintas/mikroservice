@@ -1,3 +1,4 @@
+using Notification.Application.Configuration;
 using System.Net;
 using EduPlatform.Shared.Kernel.Results;
 using MediatR;
@@ -152,7 +153,7 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
                 .Replace("{{FirstName}}", firstName)
                 .Replace("{{LastName}}", lastName)
                 .Replace("{{Subject}}", requestSubject)
-                .Replace("{{Date}}", DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
+                .Replace("{{Date}}", TurkeyTime.Format(DateTimeOffset.UtcNow));
         }
         else
         {

@@ -1,5 +1,6 @@
 using MassTransit;
 using Notification.Application.Consumers;
+using Notification.API.Services;
 using Notification.Application.Privacy;
 using Notification.Infrastructure.Persistence;
 
@@ -50,6 +51,7 @@ public static class NotificationReceiveEndpoints
         new("course-management-reminder-due", typeof(CourseManagementReminderDueConsumer)),
         new("notification-privacy-erasure-assessment", typeof(NotificationErasureAssessmentRequestedConsumer)),
         new("notification-privacy-erasure-execution", typeof(NotificationErasureExecutionRequestedConsumer)),
+        new("notification-realtime", typeof(NotificationRealtimeConsumer)),
     ];
 
     public static void AddNotificationConsumers(this IBusRegistrationConfigurator configurator)

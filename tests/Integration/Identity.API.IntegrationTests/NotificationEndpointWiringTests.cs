@@ -34,8 +34,8 @@ public sealed class NotificationEndpointWiringTests
     [Fact]
     public void EveryConsumerInTheApplication_HasExactlyOneQueue()
     {
-        var consumers = typeof(Notification.Application.Consumers.InvitationCreatedConsumer).Assembly
-            .GetTypes()
+        var consumers = new[] { typeof(Notification.Application.Consumers.InvitationCreatedConsumer).Assembly, typeof(NotificationReceiveEndpoints).Assembly }
+            .SelectMany(assembly => assembly.GetTypes())
             .Where(type => type is { IsClass: true, IsAbstract: false }
                 && type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IConsumer<>)))
             .ToHashSet();
@@ -54,8 +54,8 @@ public sealed class NotificationEndpointWiringTests
         queues.Should().Contain(ExistingQueues);
         queues.Except(ExistingQueues).Should().BeEquivalentTo(
             ["coaching-assignment-updated", "coaching-exam-updated", "coaching-exam-result-updated",
-             "coaching-session-updated", "coaching-goal-updated"],
-            "these five update notifications were registered without a queue and are now bound");
+             "coaching-session-updated", "coaching-goal-updated", "notification-realtime"],
+            "five update notifications were registered without a queue; realtime pushes now run after commit");
     }
 
     [Fact]
