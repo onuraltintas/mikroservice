@@ -14,10 +14,17 @@ namespace Identity.API.IntegrationTests;
 /// </summary>
 public static class TestHarnessTimeouts
 {
-    public static readonly TimeSpan Inactivity = TimeSpan.FromSeconds(30);
+    /// <summary>
+    /// The harness counts inactivity from its start. Under full-suite load a test's own
+    /// continuation between <c>Start</c> and <c>Publish</c> was seen to wait 40 s for an
+    /// xUnit thread; the harness had already declared itself inactive, so <c>Consumed.Any</c>
+    /// returned false for a message that arrived moments later. The window is therefore as
+    /// long as the test timeout. Waits still end as soon as the message is seen.
+    /// </summary>
+    public static readonly TimeSpan Inactivity = TimeSpan.FromMinutes(2);
 
     public static void UseSuiteTimeouts(this IBusRegistrationConfigurator configurator) =>
-        configurator.SetTestTimeouts(testTimeout: TimeSpan.FromMinutes(2), testInactivityTimeout: Inactivity);
+        configurator.SetTestTimeouts(testTimeout: TimeSpan.FromMinutes(3), testInactivityTimeout: Inactivity);
 
     /// <summary>Polls until the condition holds or the inactivity window passes.</summary>
     public static async Task UntilAsync(Func<bool> condition)
