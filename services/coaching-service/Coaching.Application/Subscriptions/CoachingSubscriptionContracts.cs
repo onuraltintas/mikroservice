@@ -79,6 +79,7 @@ public sealed record CoachingBankTransferRequestCreate(
     bool AdultPayerDeclaration = false);
 
 public sealed record CoachingBankTransferReviewRequest(string Status, string? ReviewNote);
+public sealed record CoachingBankTransferCancelRequest(string Reason);
 
 public sealed record CoachingSubscriptionSettingsSummary(
     bool RequireActiveSubscription,
@@ -160,6 +161,11 @@ public interface ICoachingSubscription
     Task<PagedResponse<CoachingBankTransferRequestSummary>> GetBankTransferRequestsAsync(string? search, string? status, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<CoachingBankTransferRequestSummary?> ReviewBankTransferRequestAsync(Guid id, CoachingBankTransferReviewRequest request, Guid actorId, string idempotencyKey, CancellationToken cancellationToken = default);
     Task<bool> DeleteBankTransferRequestAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Reverses a wrongly approved transfer: the access it granted ends, and the transfer and its payment stay
+    /// as a record marked "Cancelled" with the reason. Returns null when the transfer is not approved.
+    /// </summary>
+    Task<CoachingBankTransferRequestSummary?> CancelApprovedBankTransferAsync(Guid id, string reason, Guid actorId, CancellationToken cancellationToken = default);
     Task<PagedResponse<CoachingSubscriptionSummary>> GetSubscriptionsAsync(string? search, string? status, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<CoachingSubscriptionSummary?> CreateSubscriptionAsync(CoachingSubscriptionCreateRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<CoachingSubscriptionSummary?> UpdateSubscriptionAsync(Guid id, CoachingSubscriptionUpdateRequest request, Guid actorId, CancellationToken cancellationToken = default);

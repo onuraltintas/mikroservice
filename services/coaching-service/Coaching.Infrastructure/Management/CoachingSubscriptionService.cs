@@ -658,6 +658,59 @@ public sealed class CoachingSubscriptionService(
         return await GetBankTransferSummaryAsync(transfer, cancellationToken);
     }
 
+    public async Task<CoachingBankTransferRequestSummary?> CancelApprovedBankTransferAsync(Guid id, string reason, Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var note = (reason ?? string.Empty).Trim();
+        if (note.Length is < 5 or > 1000) throw new ArgumentException("İptal gerekçesi 5-1000 karakter olmalıdır.");
+        await using var transaction = db.Database.IsRelational()
+            ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            : null;
+        var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (transfer is null || transfer.Status != "Approved") return null;
+        var plan = await db.CoachingSubscriptionPlans.SingleOrDefaultAsync(item => item.Id == transfer.PlanId, cancellationToken);
+        var now = DateTime.UtcNow;
+
+        // The subscription this payment created ends now; a renewal it extended loses exactly the paid period.
+        if (transfer.SubscriptionId is { } subscriptionId
+            && await db.CoachingSubscriptions.SingleOrDefaultAsync(item => item.Id == subscriptionId, cancellationToken) is { } subscription)
+        {
+            if (subscription.BankTransferRequestId == transfer.Id || plan is null)
+            {
+                subscription.Status = "Cancelled";
+                subscription.EndDate = now > subscription.StartDate ? now : subscription.StartDate;
+            }
+            else
+            {
+                var shortened = subscription.EndDate.AddDays(-plan.DurationDays);
+                subscription.EndDate = shortened > subscription.StartDate ? shortened : subscription.StartDate;
+                if (subscription.EndDate <= now) subscription.Status = "Cancelled";
+            }
+            subscription.UpdatedBy = actorId;
+            subscription.UpdatedAt = now;
+        }
+
+        foreach (var payment in await db.CoachingPaymentRecords.Where(item => item.BankTransferRequestId == transfer.Id).ToListAsync(cancellationToken))
+            payment.Status = "Cancelled";
+
+        transfer.Status = "Cancelled";
+        transfer.ReviewNote = string.IsNullOrWhiteSpace(transfer.ReviewNote)
+            ? $"İptal ({now:yyyy-MM-dd HH:mm} UTC, {actorId}): {note}"
+            : $"{transfer.ReviewNote}\nİptal ({now:yyyy-MM-dd HH:mm} UTC, {actorId}): {note}";
+        transfer.UpdatedAt = now;
+        transfer.Version++;
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsSerializationFailure(exception))
+        {
+            return null;
+        }
+        if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+        return await GetBankTransferSummaryAsync(transfer, cancellationToken);
+    }
+
     public async Task<bool> DeleteBankTransferRequestAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
@@ -668,11 +721,12 @@ public sealed class CoachingSubscriptionService(
 
         // An approved transfer is the record of a received payment and of the access it granted. Deleting it
         // would free its payment reference for a second approval and unlink the payment and subscription.
-        if (transfer.Status == "Approved")
+        // A cancelled approval is the trail of a reversed payment and is kept the same way.
+        if (transfer.Status is "Approved" or "Cancelled")
         {
             throw new BusinessRuleException(
                 "Subscription.TransferApproved",
-                "Onaylanmış banka transferi silinemez. Ödeme ve abonelik kaydı korunur.");
+                "Onaylanmış veya iptal edilmiş banka transferi silinemez. Ödeme ve abonelik kaydı korunur.");
         }
 
         var idempotencyRecords = await db.IdempotencyRecords

@@ -1,3 +1,4 @@
+using Coaching.Domain;
 using Coaching.Application.Queries.GetCoachingAdminOverview;
 using Coaching.Application.Queries.GetCoachingAdminAssignments;
 using Coaching.Application.Queries.GetAssignment;
@@ -150,7 +151,7 @@ public sealed class CoachingAdminController : ControllerBase
 
         return Ok(await repository.GetStudentHistoryAsync(
             studentId, type, pageNumber, pageSize, cancellationToken,
-            new CoachingStudentHistoryFilter(fromDate, toDate, status, search)));
+            new CoachingStudentHistoryFilter(CoachingTime.RangeStart(fromDate), CoachingTime.RangeEnd(toDate), status, search)));
     }
 
     [HttpGet("institutions/{institutionId:guid}/students")]

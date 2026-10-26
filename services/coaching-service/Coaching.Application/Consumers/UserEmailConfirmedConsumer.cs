@@ -23,35 +23,16 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Consume(ConsumeContext<UserEmailConfirmedEvent> context)
+    public Task Consume(ConsumeContext<UserEmailConfirmedEvent> context) => HandleAsync(context.Message, context.CancellationToken);
+
+    public async Task HandleAsync(UserEmailConfirmedEvent message, CancellationToken cancellationToken)
     {
-        var message = context.Message;
-        _logger.LogInformation("UserEmailConfirmedEvent received for Student: {Email}", message.Email);
-
-        if (message.Role.Equals("Student", StringComparison.OrdinalIgnoreCase))
-        {
-            try
-            {
-                var welcomeGoal = AcademicGoal.Create(
-                    studentId: message.UserId,
-                    title: "Profilini Tamamla ve İlk Koçunu Bul",
-                    category: GoalCategory.StudyHabits,
-                    setByTeacherId: null
-                );
-
-                welcomeGoal.UpdateDetails(description: "Platforma hoşgeldin! İlk adım olarak profil bilgilerini doldur ve kendine uygun bir koç aramaya başla.");
-                welcomeGoal.SetTarget(targetDate: DateTime.UtcNow.AddDays(7), targetScore: null);
-
-                await _goalRepository.AddAsync(welcomeGoal, context.CancellationToken);
-                await _unitOfWork.SaveChangesAsync(context.CancellationToken);
-
-                _logger.LogInformation("Welcome goal created for Student: {UserId}", message.UserId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create welcome goal for Student: {UserId}", message.UserId);
-                throw; 
-            }
-        }
+        // The event carries no product. Only students Coaching already knows get the Coaching welcome goal;
+        // Speed Reading-only students are not Coaching data subjects. No e-mail address in logs.
+        if (!message.Role.Equals("Student", StringComparison.OrdinalIgnoreCase)
+            || !await _goalRepository.IsCoachingStudentAsync(message.UserId, cancellationToken))
+            return;
+        if (await WelcomeGoal.EnsureAsync(_goalRepository, _unitOfWork, message.UserId, cancellationToken))
+            _logger.LogInformation("Welcome goal created for Student: {UserId}", message.UserId);
     }
 }

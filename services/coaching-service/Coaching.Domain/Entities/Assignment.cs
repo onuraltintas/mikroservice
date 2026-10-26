@@ -57,7 +57,7 @@ public class Assignment : AggregateRoot
         {
             TeacherId = teacherId,
             Title = title ?? throw new ArgumentNullException(nameof(title)),
-            DueDate = dueDate,
+            DueDate = CoachingTime.ToUtc(dueDate),
             Type = type,
             InstitutionId = institutionId,
             Source = AssignmentSource.Digital,
@@ -77,7 +77,7 @@ public class Assignment : AggregateRoot
         if (title != null) Title = title;
         if (description != null) Description = description;
         if (subject != null) Subject = subject;
-        if (dueDate.HasValue) DueDate = dueDate.Value;
+        if (dueDate.HasValue) DueDate = CoachingTime.ToUtc(dueDate.Value);
         if (estimatedDurationMinutes.HasValue) EstimatedDurationMinutes = estimatedDurationMinutes;
 
         UpdatedAt = DateTime.UtcNow;
@@ -105,7 +105,7 @@ public class Assignment : AggregateRoot
         Title = title.Trim();
         Description = NormalizeOptional(description);
         Subject = NormalizeOptional(subject);
-        DueDate = dueDate;
+        DueDate = CoachingTime.ToUtc(dueDate);
         EstimatedDurationMinutes = estimatedDurationMinutes;
         UpdatedAt = DateTime.UtcNow;
     }

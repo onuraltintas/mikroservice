@@ -470,6 +470,12 @@ public class AcademicGoalRepository : IAcademicGoalRepository
         _context = context;
     }
 
+    public Task<bool> HasSystemGoalAsync(Guid studentId, string title, CancellationToken cancellationToken = default) =>
+        _context.AcademicGoals.AnyAsync(goal => goal.StudentId == studentId && goal.SetByTeacherId == null && goal.Title == title, cancellationToken);
+
+    public Task<bool> IsCoachingStudentAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        _context.CoachingStudentProfiles.AnyAsync(profile => profile.UserId == userId && profile.IsActive, cancellationToken);
+
     public async Task<AcademicGoal?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.AcademicGoals

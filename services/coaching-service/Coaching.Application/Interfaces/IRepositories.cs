@@ -78,6 +78,10 @@ public interface IAcademicGoalRepository
 {
     Task<AcademicGoal?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyCollection<Guid>> GetStudentIdsByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken = default);
+    /// <summary>Whether the student already has a system-created goal with this title.</summary>
+    Task<bool> HasSystemGoalAsync(Guid studentId, string title, CancellationToken cancellationToken = default) => Task.FromResult(false);
+    /// <summary>Whether the user has an active Coaching student profile (owned by Coaching).</summary>
+    Task<bool> IsCoachingStudentAsync(Guid userId, CancellationToken cancellationToken = default) => Task.FromResult(true);
     Task<PagedRepositoryResult<AcademicGoal>> GetByTeacherIdAsync(
         Guid teacherId,
         int pageNumber,
@@ -380,4 +384,6 @@ public interface IUnitOfWork
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
     Task CommitTransactionAsync(CancellationToken cancellationToken = default);
     Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
+    /// <summary>Forgets tracked changes (including queued outbox messages) so an operation can be retried on fresh data.</summary>
+    void DiscardChanges() { }
 }

@@ -1,3 +1,4 @@
+using Coaching.Domain;
 using Coaching.Application.Queries.GetStudentProgress;
 using Coaching.Application.Queries.GetTeacherStudentHistory;
 using Coaching.Application.Interfaces;
@@ -51,7 +52,7 @@ public sealed class ReportsController(IMediator mediator) : ControllerBase
         {
             return Ok(await mediator.Send(
                 new GetTeacherStudentHistoryQuery(studentId, type, pageNumber, pageSize)
-                { Filter = new CoachingStudentHistoryFilter(fromDate, toDate, status, search) },
+                { Filter = new CoachingStudentHistoryFilter(CoachingTime.RangeStart(fromDate), CoachingTime.RangeEnd(toDate), status, search) },
                 cancellationToken));
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))

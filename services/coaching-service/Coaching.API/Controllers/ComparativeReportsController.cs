@@ -1,3 +1,4 @@
+using Coaching.Domain;
 using Coaching.Application.Queries.GetInstitutionCoachingComparison;
 using Coaching.Application.Queries.GetInstitutionEarlyWarnings;
 using EduPlatform.Shared.Contracts.Authorization;
@@ -33,8 +34,8 @@ public sealed class ComparativeReportsController(IMediator mediator) : Controlle
             return Ok(await mediator.Send(
                 new GetInstitutionCoachingComparisonQuery(
                     institutionId,
-                    fromDate,
-                    toDate,
+                    CoachingTime.RangeStart(fromDate),
+                    CoachingTime.RangeEnd(toDate),
                     gradeLevel),
                 cancellationToken));
         }
@@ -61,8 +62,8 @@ public sealed class ComparativeReportsController(IMediator mediator) : Controlle
             return Ok(await mediator.Send(
                 new GetInstitutionEarlyWarningsQuery(
                     institutionId,
-                    fromDate,
-                    toDate,
+                    CoachingTime.RangeStart(fromDate),
+                    CoachingTime.RangeEnd(toDate),
                     gradeLevel,
                     pageNumber,
                     pageSize),

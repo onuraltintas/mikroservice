@@ -434,6 +434,10 @@ export class CoachingManagementService {
     return this.http.post<void>(`${this.coachingSubscriptionsAdminUrl}/transfer-requests/${encodeURIComponent(id)}/review`, { status, reviewNote }, { headers: this.idempotencyHeaders() });
   }
 
+  cancelApprovedTransferRequest(id: string, reason: string) {
+    return this.http.post<void>(`${this.coachingSubscriptionsAdminUrl}/transfer-requests/${encodeURIComponent(id)}/cancel`, { reason });
+  }
+
   deleteTransferRequest(id: string) {
     return this.http.delete<void>(`${this.coachingSubscriptionsAdminUrl}/transfer-requests/${encodeURIComponent(id)}`);
   }
