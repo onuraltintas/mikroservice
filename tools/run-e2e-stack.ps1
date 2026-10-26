@@ -7,7 +7,7 @@
 
 .PARAMETER Keep
   Leave the stack running afterwards (Gateway on the port from .env.example) for manual checks.
-  Remove it later with:  docker compose -p eduplatform-e2e-local down -v
+  Remove it later with:  docker compose -p privacy-e2e-local down -v
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\run-e2e-stack.ps1
@@ -39,7 +39,7 @@ foreach ($script in (git ls-files -- '*.sh')) {
 }
 
 # Same disposable settings as CI; a separate project name keeps your own dev stack untouched.
-$env:COMPOSE_PROJECT_NAME = 'eduplatform-e2e-local'
+$env:COMPOSE_PROJECT_NAME = 'privacy-e2e-local'
 $env:E2E_COMPOSE_ENV_FILE = '.env.example'
 $env:E2E_DISPOSABLE_ENV = 'true'
 $env:ENVIRONMENT = 'Development'
