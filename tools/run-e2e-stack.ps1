@@ -28,6 +28,16 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     throw 'Node.js 22+ is required for the E2E tests. Install it (winget install OpenJS.NodeJS.LTS), open a new PowerShell and run again.'
 }
 
+# Checkouts made before .gitattributes pinned *.sh to LF may still hold CRLF copies,
+# which Linux containers cannot execute (PostgreSQL init scripts exit with 126).
+foreach ($script in (git ls-files -- '*.sh')) {
+    if ((Get-Content -Raw $script) -match "`r`n") {
+        Remove-Item $script
+        git checkout -- $script
+        Write-Host "Re-checked out with LF line endings: $script"
+    }
+}
+
 # Same disposable settings as CI; a separate project name keeps your own dev stack untouched.
 $env:COMPOSE_PROJECT_NAME = 'eduplatform-e2e-local'
 $env:E2E_COMPOSE_ENV_FILE = '.env.example'
