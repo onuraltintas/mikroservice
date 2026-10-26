@@ -89,6 +89,5 @@ tools/releases/*/probe-runtime/
 *.pdb
 tools/releases/*/patch/*.dll
 
-# Local runs of tools/run-full-tests.ps1 and tools/run-e2e-stack.ps1
-test-results/
+# Local runs of tools/run-e2e-stack.ps1 (test-results/ is ignored above)
 e2e-results/
