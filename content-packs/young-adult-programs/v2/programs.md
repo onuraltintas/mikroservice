@@ -26,4 +26,4 @@ Geçiş yalnız onaylanan bir eski Seviye 1 test ilerlemesi ve üç bağlı otur
 temizler; kullanıcı hesabını veya diğer geçmişi silmez. Beklenmeyen bağlantıda abort eder.
 
 Yedekli geçiş sırası, test kanıtları ve canlı sonuçlar için
-[yayın raporu](../../../docs/reports/young-adult-programs-v2-live-20261010.md).
+yayın raporu.

@@ -1,7 +1,0 @@
-services:
-  speed-reading-service:
-    image: eduivme/speed-reading-service:session-cleanup-319b250c
-    pull_policy: never
-  speed-reading-frontend:
-    image: eduivme/speed-reading-frontend:session-cleanup-319b250c
-    pull_policy: never

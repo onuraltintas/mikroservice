@@ -1,3 +1,0 @@
-services:
-  speed-reading-service:
-    image: ${TEEN_API_IMAGE:?Set the reviewed release image explicitly}
