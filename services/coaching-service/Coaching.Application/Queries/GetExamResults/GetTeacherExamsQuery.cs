@@ -49,23 +49,23 @@ public sealed class GetTeacherExamsQueryHandler
         CancellationToken cancellationToken)
     {
         _accessPolicy.RequireTeacher(query.TeacherId);
-        var page = await _repository.GetByTeacherIdAsync(
+        var page = await _repository.GetTeacherSummariesAsync(
             query.TeacherId,
             query.PageNumber,
             query.PageSize,
             cancellationToken);
 
-        var exams = page.Items.Select(exam => new TeacherExamDto(
-            exam.Id,
-            exam.Title,
-            exam.ExamType.ToString(),
-            exam.ExamDate,
-            exam.MaxScore,
-            exam.Subject,
-            exam.Results.Count,
-            exam.Description,
-            exam.DurationMinutes,
-            exam.TargetGradeLevel)).ToList();
+        var exams = page.Items.Select(row => new TeacherExamDto(
+            row.Exam.Id,
+            row.Exam.Title,
+            row.Exam.ExamType.ToString(),
+            row.Exam.ExamDate,
+            row.Exam.MaxScore,
+            row.Exam.Subject,
+            row.ResultCount,
+            row.Exam.Description,
+            row.Exam.DurationMinutes,
+            row.Exam.TargetGradeLevel)).ToList();
 
         return new PagedResponse<TeacherExamDto>(exams, query.PageNumber, query.PageSize, page.TotalCount);
     }

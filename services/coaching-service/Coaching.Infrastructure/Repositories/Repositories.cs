@@ -74,6 +74,35 @@ public class AssignmentRepository : IAssignmentRepository
         return new PagedRepositoryResult<Assignment>(items, totalCount);
     }
 
+    public async Task<PagedRepositoryResult<TeacherAssignmentSummary>> GetTeacherSummariesAsync(
+        Guid teacherId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default,
+        AssignmentStatus? status = null)
+    {
+        var query = _context.Assignments.AsNoTracking()
+            .Where(a => a.TeacherId == teacherId
+                && (!status.HasValue || a.Status == status.Value));
+        var totalCount = await query.CountAsync(cancellationToken);
+        var rows = await query
+            .OrderByDescending(a => a.CreatedAt)
+            .ThenByDescending(a => a.Id)
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .Select(a => new
+            {
+                Assignment = a,
+                Total = a.AssignedStudents.Count,
+                Submitted = a.AssignedStudents.Count(s => s.Status == StudentAssignmentStatus.Submitted
+                    || s.Status == StudentAssignmentStatus.Graded)
+            })
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<TeacherAssignmentSummary>(
+            rows.Select(x => new TeacherAssignmentSummary(x.Assignment, x.Total, x.Submitted)).ToArray(), totalCount);
+    }
+
     public async Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _context.Assignments
@@ -195,6 +224,26 @@ public class ExamRepository : IExamRepository
             .ToListAsync(cancellationToken);
 
         return new PagedRepositoryResult<Exam>(items, totalCount);
+    }
+
+    public async Task<PagedRepositoryResult<TeacherExamSummary>> GetTeacherSummariesAsync(
+        Guid teacherId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Exams.AsNoTracking().Where(exam => exam.CreatedByTeacherId == teacherId);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var rows = await query
+            .OrderByDescending(exam => exam.ExamDate)
+            .ThenByDescending(exam => exam.Id)
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .Select(exam => new { Exam = exam, Results = exam.Results.Count })
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<TeacherExamSummary>(
+            rows.Select(x => new TeacherExamSummary(x.Exam, x.Results)).ToArray(), totalCount);
     }
 
     public async Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)

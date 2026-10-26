@@ -18,6 +18,19 @@ public interface IAssignmentRepository
         int pageSize,
         CancellationToken cancellationToken = default,
         AssignmentStatus? status = null);
+    /// <summary>Teacher list page: assignment rows and student counts only (no student or attachment rows).</summary>
+    async Task<PagedRepositoryResult<TeacherAssignmentSummary>> GetTeacherSummariesAsync(
+        Guid teacherId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default,
+        AssignmentStatus? status = null)
+    {
+        var page = await GetByTeacherIdAsync(teacherId, pageNumber, pageSize, cancellationToken, status);
+        return new(page.Items.Select(a => new TeacherAssignmentSummary(a, a.AssignedStudents.Count,
+            a.AssignedStudents.Count(s => s.Status is StudentAssignmentStatus.Submitted or StudentAssignmentStatus.Graded))).ToArray(),
+            page.TotalCount);
+    }
     Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<Assignment> AddAsync(Assignment assignment, CancellationToken cancellationToken = default);
     Task UpdateAsync(Assignment assignment, CancellationToken cancellationToken = default);
@@ -37,6 +50,12 @@ public interface IExamRepository
         IReadOnlyCollection<Guid>? scopedStudentIds = null);
     Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<Exam>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
+    /// <summary>Teacher list page: exam rows and result counts only (no result rows or their JSON columns).</summary>
+    async Task<PagedRepositoryResult<TeacherExamSummary>> GetTeacherSummariesAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var page = await GetByTeacherIdAsync(teacherId, pageNumber, pageSize, cancellationToken);
+        return new(page.Items.Select(e => new TeacherExamSummary(e, e.Results.Count)).ToArray(), page.TotalCount);
+    }
     Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<Exam> AddAsync(Exam exam, CancellationToken cancellationToken = default);
     Task UpdateAsync(Exam exam, CancellationToken cancellationToken = default);
@@ -131,6 +150,8 @@ public interface ICoachingComparativeReportRepository
 }
 
 public sealed record PagedRepositoryResult<T>(IReadOnlyList<T> Items, int TotalCount);
+public sealed record TeacherAssignmentSummary(Assignment Assignment, int TotalStudents, int SubmittedCount);
+public sealed record TeacherExamSummary(Exam Exam, int ResultCount);
 
 public enum CoachingStudentHistoryType
 {

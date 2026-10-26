@@ -25,23 +25,22 @@ public class GetTeacherAssignmentsQueryHandler : IRequestHandler<GetTeacherAssig
         CancellationToken cancellationToken)
     {
         _accessPolicy.RequireTeacher(query.TeacherId);
-        var page = await _repository.GetByTeacherIdAsync(
+        var page = await _repository.GetTeacherSummariesAsync(
             query.TeacherId,
             query.PageNumber,
             query.PageSize,
             cancellationToken,
             query.Status);
 
-        var dtos = page.Items.Select(a => new TeacherAssignmentDto(
-            Id: a.Id,
-            Title: a.Title,
-            Type: a.Type.ToString(),
-            DueDate: a.DueDate,
-            Status: a.Status.ToString(),
-            TotalStudents: a.AssignedStudents.Count,
-            SubmittedCount: a.AssignedStudents.Count(s => s.Status == StudentAssignmentStatus.Submitted || 
-                                                          s.Status == StudentAssignmentStatus.Graded),
-            CreatedAt: a.CreatedAt
+        var dtos = page.Items.Select(row => new TeacherAssignmentDto(
+            Id: row.Assignment.Id,
+            Title: row.Assignment.Title,
+            Type: row.Assignment.Type.ToString(),
+            DueDate: row.Assignment.DueDate,
+            Status: row.Assignment.Status.ToString(),
+            TotalStudents: row.TotalStudents,
+            SubmittedCount: row.SubmittedCount,
+            CreatedAt: row.Assignment.CreatedAt
         )).ToList();
 
         return new PagedResponse<TeacherAssignmentDto>(
