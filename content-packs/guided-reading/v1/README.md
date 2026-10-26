@@ -50,4 +50,4 @@ SQL başarısızsa işlem tamamen geri alınır. Yayın sonrası geri dönüşte
 
 ## Doğrulama
 
-Sunucu birim testleri, gerçek geçici PostgreSQL testleri ve Chrome testleri vardır. Playwright gerçek Angular ekran/motorunu masaüstü ve mobilde çalıştırır; Identity/API yanıtları deterministik test düzenekleridir. Canlı Identity oturumu ve canlı yayın sonrası kontrolün yerine geçmez. Komutlar ve son sonuçlar `docs/reports/guided-reading-v1-20261010.md` dosyasındadır.
+Sunucu birim testleri, gerçek geçici PostgreSQL testleri ve Chrome testleri vardır. Playwright gerçek Angular ekran/motorunu masaüstü ve mobilde çalıştırır; Identity/API yanıtları deterministik test düzenekleridir. Canlı Identity oturumu ve canlı yayın sonrası kontrolün yerine geçmez.

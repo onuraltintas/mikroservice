@@ -1,5 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
-  <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /><PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" /><PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" /></ItemGroup>
-  <ItemGroup><ProjectReference Include="../../../../artifacts/coaching-yks-20261019-r3/backend-source/services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj" /></ItemGroup>
-</Project>

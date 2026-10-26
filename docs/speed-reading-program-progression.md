@@ -29,6 +29,6 @@ Sunucu aktif program sahipliğini, izni, tamamlanan bütün görevleri ve sonrak
 
 `20261015202217_AddProgramDayAdvance`, mevcut programlara varsayılanı sıfır olan `EarlyAdvanceDays` alanını ve global/kullanıcı tercih tablosunu ekler. Global satır anahtarı `Guid.Empty` değeridir. Kullanıcı silme süreci yalnız o kullanıcının tercihini temizler; genel ayarı ve diğer kullanıcıları korur.
 
-Önce yedek ve migration, ardından API, öğrenci ve admin paketleri yayınlanır. Uygulama geri dönüşünde eklenen şema korunur; eski uygulama imajları bu additive şemayla uyumludur. Yayın aracı ve yalnız adlandırılmış veritabanı kopyasında çalışan doğrulayıcı `tools/releases/day-advance-20261015` dizinindedir.
+Önce yedek ve migration, ardından API, öğrenci ve admin paketleri yayınlanır. Uygulama geri dönüşünde eklenen şema korunur; eski uygulama imajları bu additive şemayla uyumludur.
 
 PostgreSQL ve HTTP yetki testleri için Docker açıkken `dotnet test tests/Integration/SpeedReading.ProgramProgression.IntegrationTests/SpeedReading.ProgramProgression.IntegrationTests.csproj` çalıştırın. Tarayıcı testleri `tests/E2E/speed-reading-day-advance.config.mjs` yapılandırmasıyla, öğrenci üretim paketinin localhost:4352 üzerinde servis edildiği ortamda çalışır.

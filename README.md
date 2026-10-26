@@ -287,7 +287,6 @@ cat .env | grep POSTGRES
 ## 📚 Dokümantasyon
 
 - [Proje Yapısı](PROJECT_STRUCTURE.md)
-- [Mimari Rapor](ARCHITECTURE_REPORT.md)
 - [Environment Konfigürasyonu](ENV_CONFIG.md)
 - [Test rehberi](tests/README.md)
 - [Uygulama Planı](IMPLEMENTATION_PLAN.md)

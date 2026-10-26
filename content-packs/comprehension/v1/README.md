@@ -38,7 +38,7 @@ Varsayılan okuma ve soru süre sınırı yoktur. Pacer ve oturum içi otomatik 
 | Genç yetişkin | 0 | 3 | 13 | 0 | 0 |
 | Yetişkin | 5 | 3 | 2 | 0 | 0 |
 
-Her iki modda sayılar aynı çıktı. **Geçiş öncesinde 20 yaş/seviye havuzunun 10'u boştu.** Yeni paket 11 Ekim 2026'da yayımlandı; 40 yaş/seviye/mod havuzunun her birinde iki yeni uygun metin doğrulandı. Güncel durum [içerik ve canlı geçiş raporunda](../../../docs/reports/comprehension-content-20261011.md). Envanter sayısal uygunluk kontrolüdür; telif/kullanım yetkisi, soru kalitesi, açıklamaların doğruluğu ve pedagojik ilerleme kontrolü yerine geçmez.
+Her iki modda sayılar aynı çıktı. **Geçiş öncesinde 20 yaş/seviye havuzunun 10'u boştu.** Yeni paket 11 Ekim 2026'da yayımlandı; 40 yaş/seviye/mod havuzunun her birinde iki yeni uygun metin doğrulandı. Güncel durum içerik ve canlı geçiş raporunda. Envanter sayısal uygunluk kontrolüdür; telif/kullanım yetkisi, soru kalitesi, açıklamaların doğruluğu ve pedagojik ilerleme kontrolü yerine geçmez.
 
 ## İçerik kaynağı ve sınırlar
 
@@ -60,4 +60,4 @@ Eski metin ve sorular silinmez veya bu pakette yeniden yazılmaz. Seçim motoru 
 
 Gerekirse API durdurulup yeni yedek alındıktan sonra `rollback.sql` çalıştırılır. Yalnız bilinen ayarlar/adlar eski hâline gelir; yeni metinler pasife alınır, sorular ve kullanıcı sonuçları **silinmez**. Yönetici hedef ayarı/metni sonradan değiştirmişse otomatik geri dönüş durur. Geri dönüş de tekrar uygulanabilir; arşivlenmiş paketi `apply.sql` ile körlemesine yeniden açmak reddedilir. Yeniden yayın ayrı bir inceleme gerektirir. Kullanıcı yazıları başladıktan sonra tüm veritabanını eski yedekle değiştirmeyin.
 
-Motor geliştirme raporu: [Anlama modları — 11 Ekim 2026](../../../docs/reports/comprehension-modes-20261011.md). İçerik testleri ve canlı yayın: [Anlama içerik paketi — 11 Ekim 2026](../../../docs/reports/comprehension-content-20261011.md).
+Motor geliştirme raporu: Anlama modları — 11 Ekim 2026. İçerik testleri ve canlı yayın: Anlama içerik paketi — 11 Ekim 2026.

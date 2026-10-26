@@ -6,7 +6,7 @@ Tarih: 2026-10-02. Kapsam: yalnız Koçluk öğrenci paneli; bu çalışma canl�
 
 Öğrenci planlama, hedef, otomatik puan karşılaştırması, sonuç ve rapor kod kapsamı
 yerelde tamamlandı. Güncel kabul sonuçları ve canlıya geçiş sınırları
-[tamamlanma raporundadır](student-planning-completion-20261002.md).
+tamamlanma raporundadır.
 Aşağıdaki yerel ilerleme notları tarihsel ara kontrol kayıtlarıdır; son durumu temsil etmez.
 
 ## Kesin sınırlar
