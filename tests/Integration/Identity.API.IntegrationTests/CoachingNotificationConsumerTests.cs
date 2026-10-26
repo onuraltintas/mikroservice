@@ -22,7 +22,7 @@ public sealed class CoachingNotificationConsumerTests
         services.AddSingleton<ICoachingNotificationDispatcher>(recordingDispatcher);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<AssignmentCreatedConsumer>();
             configurator.AddConsumer<AssignmentUpdatedConsumer>();
             configurator.AddConsumer<AssignmentSubmittedConsumer>();
@@ -96,10 +96,7 @@ public sealed class CoachingNotificationConsumerTests
             (await harness.Consumed.Any<StudyPlanPublishedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<CoachingReminderDueEvent>()).Should().BeTrue();
 
-            for (var attempt = 0; attempt < 250 && recordingDispatcher.Calls.Count < 17; attempt++)
-            {
-                await Task.Delay(20);
-            }
+            await TestHarnessTimeouts.UntilAsync(() => recordingDispatcher.Calls.Count >= 17);
 
             recordingDispatcher.Calls.Should().HaveCount(17);
             recordingDispatcher.Calls.Single(call => call.Type == "StudyPlanOverdueReminder").RecipientIds.Should().Equal(firstStudentId);
@@ -136,7 +133,7 @@ public sealed class CoachingNotificationConsumerTests
         var dispatcher = new RecordingDispatcher(); var student = Guid.NewGuid(); var teacher = Guid.NewGuid(); var decision = Guid.NewGuid();
         var services = new ServiceCollection(); services.AddSingleton<ICoachingNotificationDispatcher>(dispatcher);
         services.AddMassTransitTestHarness(x => {
-            x.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            x.UseSuiteTimeouts();
             x.AddConsumer<WeeklyReflectionSavedConsumer>(); x.AddConsumer<WeeklyDecisionChangedConsumer>();
             x.UsingInMemory((context, config) => config.ConfigureEndpoints(context));
         });
@@ -147,7 +144,7 @@ public sealed class CoachingNotificationConsumerTests
             await harness.Bus.Publish(new WeeklyDecisionChangedEvent(decision,student,teacher,new(2026,10,12),true));
             await harness.Bus.Publish(new WeeklyDecisionChangedEvent(decision,student,teacher,new(2026,10,12),false));
             (await harness.Consumed.Any<WeeklyReflectionSavedEvent>()).Should().BeTrue();
-            for(var i=0;i<50 && dispatcher.Calls.Count<3;i++) await Task.Delay(20);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 3);
             dispatcher.Calls.Should().HaveCount(3);
             var reflection=dispatcher.Calls.Single(x=>x.Type=="WeeklyReflectionSaved");
             reflection.RecipientIds.Should().Equal(teacher); reflection.EventMessageId.Should().Be(reflectionEventId);
@@ -157,7 +154,7 @@ public sealed class CoachingNotificationConsumerTests
             }
             var transferId=Guid.NewGuid();
             await harness.Bus.Publish(new WeeklyDecisionChangedEvent(decision,student,teacher,new(2026,10,12),false,true),x=>x.MessageId=transferId);
-            for(var i=0;i<50 && dispatcher.Calls.Count<4;i++) await Task.Delay(20);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 4);
             var transfer=dispatcher.Calls.Single(x=>x.EventMessageId==transferId);
             transfer.RecipientIds.Should().Equal(student,teacher);transfer.Type.Should().Be("WeeklyDecisionUpdated");
             transfer.RelatedEntityId.Should().Be($"weekly:{student:D}:2026-10-12:{decision:D}");

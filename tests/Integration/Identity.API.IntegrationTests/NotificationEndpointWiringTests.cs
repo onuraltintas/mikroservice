@@ -126,7 +126,7 @@ public sealed class NotificationEndpointWiringTests
         services.AddSingleton<ICoachingNotificationDispatcher>(dispatcher);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddNotificationConsumers(courseManagementEnabled: false);
             // Same queue list as production; only the EF outbox (needs PostgreSQL) is left out.
             configurator.UsingInMemory((context, bus) =>
@@ -148,8 +148,7 @@ public sealed class NotificationEndpointWiringTests
             await harness.Bus.Publish(new SessionUpdatedEvent(Guid.NewGuid(), teacher, null, new[] { student }, DateTime.UtcNow.AddHours(3)));
             await harness.Bus.Publish(new GoalUpdatedEvent(Guid.NewGuid(), student, teacher, "Üç kitap oku"));
 
-            for (var attempt = 0; attempt < 250 && dispatcher.Calls.Count < 5; attempt++)
-                await Task.Delay(20);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 5);
 
             dispatcher.Calls.Should().HaveCount(5, "each update event is delivered to exactly one bound consumer");
         }

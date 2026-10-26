@@ -27,7 +27,7 @@ public sealed class CourseManagementNotificationConsumerTests
         services.AddSingleton<ICourseManagementNotificationDispatcher>(dispatcher);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<CourseManagementLessonScheduledConsumer>();
             configurator.AddConsumer<CourseManagementLessonRescheduledConsumer>();
             configurator.AddConsumer<CourseManagementLessonCancelledConsumer>();
@@ -68,8 +68,7 @@ public sealed class CourseManagementNotificationConsumerTests
             (await harness.Consumed.Any<CourseManagementPaymentRecordedV1>()).Should().BeTrue();
             (await harness.Consumed.Any<CourseManagementReminderDueV1>()).Should().BeTrue();
 
-            for (var attempt = 0; attempt < 50 && dispatcher.Calls.Count < 8; attempt++)
-                await Task.Delay(20);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 8);
 
             dispatcher.Calls.Should().HaveCount(8);
             dispatcher.Calls.Single(call => call.Type == "CourseManagement.LessonScheduled").RecipientIds
@@ -113,7 +112,7 @@ public sealed class CourseManagementNotificationConsumerTests
         services.AddSingleton<ICourseManagementNotificationDispatcher>(dispatcher);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<CourseManagementReminderDueConsumer>();
             configurator.UsingInMemory((context, bus) =>
             {

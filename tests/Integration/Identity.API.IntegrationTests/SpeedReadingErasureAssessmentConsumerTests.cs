@@ -22,7 +22,7 @@ public sealed class SpeedReadingErasureAssessmentConsumerTests
         services.AddSingleton<ISpeedReadingErasureAssessmentService>(service);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<SpeedReadingErasureAssessmentRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
@@ -39,8 +39,7 @@ public sealed class SpeedReadingErasureAssessmentConsumerTests
 
             (await harness.Consumed.Any<PersonalDataErasureAssessmentRequestedV1>()).Should().BeTrue();
             service.CallCount.Should().Be(expectedCalls);
-            var results = harness.Published.Select<PersonalDataErasureAssessmentCompletedV1>()
-                .Select(item => item.Context.Message).ToArray();
+            var results = await harness.PublishedMessagesAsync<PersonalDataErasureAssessmentCompletedV1>();
             results.Should().HaveCount(expectedCalls);
             if (expectedCalls == 1)
             {

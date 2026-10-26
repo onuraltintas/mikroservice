@@ -112,7 +112,7 @@ public sealed class NotificationEmailInjectionTests
         });
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<TConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
@@ -131,8 +131,7 @@ public sealed class NotificationEmailInjectionTests
         try
         {
             await harness.Bus.Publish(message, message.GetType());
-            for (var attempt = 0; attempt < 250 && queue.Messages.IsEmpty; attempt++)
-                await Task.Delay(20);
+            await TestHarnessTimeouts.UntilAsync(() => !queue.Messages.IsEmpty);
             queue.Messages.Should().ContainSingle($"{typeof(TConsumer).Name} queues one e-mail");
             return queue.Messages.ToArray();
         }

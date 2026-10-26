@@ -12,10 +12,10 @@ public sealed class StudyPlanUpdatedNotificationTests
  public async Task PlanChangeGoesOnlyToTheStudentWithThePlanLinkAndOriginalMessageId()
  {
   var recording=new Recorder();var services=new ServiceCollection();services.AddSingleton<ICoachingNotificationDispatcher>(recording);
-  services.AddMassTransitTestHarness(c=>{c.SetTestTimeouts(testInactivityTimeout:TimeSpan.FromSeconds(5));c.AddConsumer<StudyPlanUpdatedConsumer>();c.UsingInMemory((context,bus)=>bus.ConfigureEndpoints(context));});
+  services.AddMassTransitTestHarness(c=>{c.UseSuiteTimeouts();c.AddConsumer<StudyPlanUpdatedConsumer>();c.UsingInMemory((context,bus)=>bus.ConfigureEndpoints(context));});
   await using var provider=services.BuildServiceProvider();var harness=provider.GetRequiredService<ITestHarness>();await harness.Start();
   try {var student=Guid.NewGuid();var plan=Guid.NewGuid();var messageId=Guid.NewGuid();await harness.Bus.Publish(new StudyPlanUpdatedEvent(plan,student,"Matematik: 06.01.2027 18:30"),c=>c.MessageId=messageId);
-   Assert.True(await harness.Consumed.Any<StudyPlanUpdatedEvent>());for(var i=0;i<50&&recording.Calls.IsEmpty;i++)await Task.Delay(20);
+   Assert.True(await harness.Consumed.Any<StudyPlanUpdatedEvent>());await TestHarnessTimeouts.UntilAsync(()=>!recording.Calls.IsEmpty);
    var call=Assert.Single(recording.Calls);Assert.Equal(messageId,call.Id);Assert.Equal(student,Assert.Single(call.Recipients));Assert.Equal(plan.ToString(),call.Related);Assert.Equal("StudyPlanUpdated",call.Type);Assert.Contains("Matematik",call.Message);Assert.Equal("Çalışma planın güncellendi",call.Title);
   }finally{await harness.Stop();}
  }
