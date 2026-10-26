@@ -3,6 +3,11 @@
 # volumes hold Course Management attachments and scanner signatures. Provision
 # a dedicated database and least-privilege role before running its migration job.
 services:
+  # Course Management notifications (queues and API) are off unless this overlay is used.
+  notification-service:
+    environment:
+      CourseManagement__Enabled: "true"
+
   course-management-migrations:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/course-management-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     build:

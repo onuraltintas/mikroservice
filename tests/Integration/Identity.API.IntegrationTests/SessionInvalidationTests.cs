@@ -100,8 +100,7 @@ public sealed class SessionInvalidationTests
     {
         await using var context = CreateContext();
         var user = User.Create(Guid.NewGuid(), "reset@example.test", "Reset", "User");
-        user.GeneratePasswordResetToken();
-        var resetToken = user.PasswordResetToken!;
+        var resetToken = user.GeneratePasswordResetToken();
         var refreshToken = AddRefreshToken(user);
         context.Users.Add(user);
         await context.SaveChangesAsync();

@@ -18,29 +18,12 @@ public static class NotificationDbContextSeeder
 
             // 1. Locate seeds.json
             var baseDir = AppContext.BaseDirectory;
-            // Adjustment for Docker vs Local run paths might be needed if files are not copied to output.
-            // But usually we can embed them or copy them. 
-            // For now let's assume valid relative path from execution context or a fixed location.
-            // A safer way in .NET is to look relative to the assembly location or ContentRoot.
-            
-            // NOTE: In a real app, ensure 'Seed' folder is copied to output directory!
-            // services/notification-service/Notification.Infrastructure/Seed/seeds.json
-            
-            // Let's try to find the file dynamically or assume a path.
-            // In Docker/Production, ContentRootPath is safer. 
-            // Here we will try to read from where the key files are expected.
-            
+            // seeds.json is copied to the output; during `dotnet run` fall back to the source tree.
             string seedFilePath = Path.Combine(baseDir, "Seed", "seeds.json");
             
-            // Eğer BaseDirectory içinde yoksa (yani build output'a kopyalanmamışsa), kaynak koda gitmeye çalışalım (Development only)
             if (!File.Exists(seedFilePath))
             {
-               // Fallback for local development if not copied
-               // This requires knowing the relative path to source code which is fragile but works for dev.
-               var currentDir = Directory.GetCurrentDirectory();
-               // We are likely in Notification.API. 
-               // Path to Infrastructure: ../Notification.Infrastructure/Seed/seeds.json
-               seedFilePath = Path.GetFullPath(Path.Combine(currentDir, "../Notification.Infrastructure/Seed/seeds.json"));
+               seedFilePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../Notification.Infrastructure/Seed/seeds.json"));
             }
 
             if (!File.Exists(seedFilePath))

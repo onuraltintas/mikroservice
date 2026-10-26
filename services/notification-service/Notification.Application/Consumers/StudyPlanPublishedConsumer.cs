@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Coaching;
 using MassTransit;
+using Notification.Application.Messaging;
 using Notification.Application.Interfaces;
 
 namespace Notification.Application.Consumers;
@@ -9,7 +10,7 @@ public sealed class StudyPlanPublishedConsumer(ICoachingNotificationDispatcher d
     public Task Consume(ConsumeContext<StudyPlanPublishedEvent> context)
     {
         var message = context.Message;
-        var messageId = context.MessageId ?? throw new InvalidOperationException("StudyPlanPublishedEvent.MessageId is required.");
+        var messageId = MessageIds.Require(context);
         return dispatcher.SendAsync(messageId, [message.StudentId],
             "Çalışma planın hazır", "Çalışma planını öğrenci panelinden inceleyebilirsin.", "StudyPlanPublished", message.RevisionId.ToString(), context.CancellationToken);
     }

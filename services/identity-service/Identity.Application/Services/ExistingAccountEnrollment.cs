@@ -13,8 +13,11 @@ public sealed class ExistingAccountEnrollment(
     IUserRepository users,
     IInstitutionRepository institutions, IRoleRepository roles, IPasswordHasher passwords,
     IMultiFactorService multiFactor, IUnitOfWork unitOfWork,
-    IRegistrationLegalConsentService legalConsent, TimeProvider timeProvider, IAuthenticationLock authenticationLock, IPublishEndpoint publisher)
+    IRegistrationLegalConsentService legalConsent, TimeProvider timeProvider, IAuthenticationLock authenticationLock, IPublishEndpoint publisher,
+    ILoginAttemptLimiter? loginAttempts = null)
 {
+    private readonly ILoginAttemptLimiter _loginAttempts = loginAttempts ?? NoLoginAttemptLimiter.Instance;
+
     public async Task<Result<Guid>> JoinAsync(string email, string password, PlatformProduct target,
         string account, IReadOnlyList<PlatformLegalPageDto> documents, string? mfaCode,
         CancellationToken cancellationToken, Guid? institutionId = null)
@@ -24,9 +27,16 @@ public sealed class ExistingAccountEnrollment(
             || institutionId.HasValue && (account != "institution" || institutionId == Guid.Empty))
             return Failure("Auth.InvalidProduct", "Geçersiz servis veya hesap türü.");
 
+        // Joining verifies the account password, so it shares the sign-in lockout.
+        if (await _loginAttempts.GetLockoutAsync(email, cancellationToken) is { } remaining)
+            return Result.Failure<Guid>(Commands.Login.LoginCommandHandler.TooManyAttempts(remaining));
         var user = await users.GetByEmailAsync(email.Trim(), cancellationToken);
         if (user is null || !passwords.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+        {
+            await _loginAttempts.RecordFailureAsync(email, cancellationToken);
             return Failure("Auth.ExistingAccountPasswordRequired", "Mevcut hesabınızın e-posta adresini ve şifresini kullanın.");
+        }
+        await _loginAttempts.ResetAsync(email, cancellationToken);
         var lockedUserId = user.Id;
         await using var lease = await authenticationLock.AcquireAsync(lockedUserId, cancellationToken);
         unitOfWork.ClearTracking();

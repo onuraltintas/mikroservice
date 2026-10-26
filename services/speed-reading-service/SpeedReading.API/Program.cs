@@ -79,7 +79,22 @@ var auditOwnedContent = args.Any(argument =>
 var refreshReadingTextWordCounts = args.Any(argument =>
     string.Equals(argument, "--refresh-reading-text-word-counts", StringComparison.OrdinalIgnoreCase));
 
-if (args.Contains("--audit-training-programs", StringComparer.OrdinalIgnoreCase))
+var auditTrainingPrograms = args.Contains("--audit-training-programs", StringComparer.OrdinalIgnoreCase);
+
+// Maintenance commands (migrations, audits, backfills) build only the infrastructure
+// services. Some of those serve HTTP requests and need the signed-in user, which these
+// commands never resolve, so Development's eager container validation would abort them.
+if (migrationOnly || recalculateOwnedGamification || bootstrapOwnedExerciseTaxonomy
+    || auditOwnedContent || refreshReadingTextWordCounts || auditTrainingPrograms)
+{
+    builder.Host.UseDefaultServiceProvider(options =>
+    {
+        options.ValidateOnBuild = false;
+        options.ValidateScopes = true;
+    });
+}
+
+if (auditTrainingPrograms)
 {
     builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
     await using var auditApp = builder.Build();

@@ -139,7 +139,7 @@ public class DatabaseCrudTests : IAsyncLifetime
         var repository = new Identity.Infrastructure.Repositories.UserRepository(_dbContext);
 
         var loadedUser = await repository.GetByRefreshTokenAsync(
-            refreshToken.Token,
+            refreshToken.IssuedValue!,
             CancellationToken.None);
 
         loadedUser.Should().NotBeNull();

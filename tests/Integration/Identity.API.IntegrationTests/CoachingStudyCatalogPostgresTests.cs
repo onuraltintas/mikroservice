@@ -29,36 +29,40 @@ public sealed class CoachingStudyCatalogPostgresTests(PostgresFixture postgres)
             const string previous = "20260930193749_AddCoachingBankTransferRequestReferenceIndex";
             const string current = "20261002082803_AddCoachingStudyCatalog";
             await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(previous, current));
-            var first = StudyCatalogLesson.Create("test", "first", "First", 8, null);
-            var second = StudyCatalogLesson.Create("test", "second", "Second", 8, null);
-            var unit = StudyCatalogUnit.Create("test", "unit", first.Id, "Unit", null);
-            var otherUnit = StudyCatalogUnit.Create("test", "other-unit", first.Id, "Other unit", null);
-            var parent = StudyCatalogTopic.Create("test", "parent", first.Id, unit.Id, "Parent", null, null);
-            db.StudyCatalogLessons.AddRange(first, second);
-            db.StudyCatalogUnits.AddRange(unit, otherUnit);
-            db.StudyCatalogTopics.Add(parent);
-            await db.SaveChangesAsync();
-            db.ChangeTracker.Clear();
+            // Rows are written with SQL in this migration's schema; today's model maps
+            // columns added later (curriculum versions, outcomes).
+            Guid first = Guid.NewGuid(), second = Guid.NewGuid(), unit = Guid.NewGuid(), otherUnit = Guid.NewGuid(), parent = Guid.NewGuid();
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO coaching.study_catalog_lessons ("Id", "Source", "SourceId", "Name", "GradeNumber", "IsActive")
+                VALUES ({first}, 'test', 'first', 'First', 8, true), ({second}, 'test', 'second', 'Second', 8, true);
+                INSERT INTO coaching.study_catalog_units ("Id", "Source", "SourceId", "LessonId", "Name", "IsActive")
+                VALUES ({unit}, 'test', 'unit', {first}, 'Unit', true), ({otherUnit}, 'test', 'other-unit', {first}, 'Other unit', true);
+                INSERT INTO coaching.study_catalog_topics ("Id", "Source", "SourceId", "LessonId", "UnitId", "Name", "IsActive")
+                VALUES ({parent}, 'test', 'parent', {first}, {unit}, 'Parent', false);
+                """);
 
-            switch (invalidCase)
+            var invalid = invalidCase switch
             {
-                case "duplicate-source":
-                    db.StudyCatalogLessons.Add(StudyCatalogLesson.Create("test", "first", "Duplicate", 8, null));
-                    break;
-                case "wrong-lesson":
-                    db.StudyCatalogTopics.Add(StudyCatalogTopic.Create("test", "wrong", second.Id, unit.Id, "Wrong", null, 1));
-                    break;
-                case "wrong-parent-unit":
-                    db.StudyCatalogTopics.Add(StudyCatalogTopic.Create("test", "wrong", first.Id, otherUnit.Id, "Wrong", parent.Id, 1));
-                    break;
-            }
-            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
-            db.ChangeTracker.Clear();
-            Assert.Equal(2, await db.StudyCatalogLessons.CountAsync());
-            Assert.Equal(1, await db.StudyCatalogTopics.CountAsync());
-            Assert.False((await db.StudyCatalogTopics.SingleAsync()).IsActive);
+                "duplicate-source" => db.Database.ExecuteSqlInterpolatedAsync($"""
+                    INSERT INTO coaching.study_catalog_lessons ("Id", "Source", "SourceId", "Name", "GradeNumber", "IsActive")
+                    VALUES ({Guid.NewGuid()}, 'test', 'first', 'Duplicate', 8, true)
+                    """),
+                "wrong-lesson" => db.Database.ExecuteSqlInterpolatedAsync($"""
+                    INSERT INTO coaching.study_catalog_topics ("Id", "Source", "SourceId", "LessonId", "UnitId", "Name", "DisplayOrder", "IsActive")
+                    VALUES ({Guid.NewGuid()}, 'test', 'wrong', {second}, {unit}, 'Wrong', 1, true)
+                    """),
+                "wrong-parent-unit" => db.Database.ExecuteSqlInterpolatedAsync($"""
+                    INSERT INTO coaching.study_catalog_topics ("Id", "Source", "SourceId", "LessonId", "UnitId", "ParentId", "Name", "DisplayOrder", "IsActive")
+                    VALUES ({Guid.NewGuid()}, 'test', 'wrong', {first}, {otherUnit}, {parent}, 'Wrong', 1, true)
+                    """),
+                _ => throw new ArgumentOutOfRangeException(nameof(invalidCase))
+            };
+            await Assert.ThrowsAsync<Npgsql.PostgresException>(() => invalid);
+            Assert.Equal(2, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM coaching.study_catalog_lessons").SingleAsync());
+            Assert.Equal(1, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM coaching.study_catalog_topics").SingleAsync());
             await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(current, previous));
-            await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.StudyCatalogLessons.CountAsync());
+            await Assert.ThrowsAsync<Npgsql.PostgresException>(() =>
+                db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM coaching.study_catalog_lessons").SingleAsync());
         }
         finally
         {

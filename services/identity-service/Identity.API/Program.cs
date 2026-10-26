@@ -21,11 +21,14 @@ using Identity.Infrastructure.Services;
 using Identity.API.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-// Load .env file from solution root
+// `dotnet run` convenience only: containers receive configuration from the environment
+// and must never pick up (or be overridden by) a stray .env file.
+var startupEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+    ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
-if (File.Exists(envPath))
+if (string.Equals(startupEnvironment, "Development", StringComparison.OrdinalIgnoreCase) && File.Exists(envPath))
 {
-    Env.Load(envPath);
+    Env.NoClobber().Load(envPath);
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -195,7 +198,8 @@ InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 // Add Health Checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<IdentityDbContext>("database");
+    .AddDbContextCheck<IdentityDbContext>("database", tags: ["ready"])
+    .AddCheck<RedisReadinessCheck>("redis", tags: ["ready"]);
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -250,6 +254,7 @@ app.UseAuthorization();
 
 // Health Checks
 app.MapHealthChecks("/health").AllowAnonymous();
+// Ready: database, Redis and the message bus (MassTransit registers its own check).
 app.MapHealthChecks("/health/ready").AllowAnonymous();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
 

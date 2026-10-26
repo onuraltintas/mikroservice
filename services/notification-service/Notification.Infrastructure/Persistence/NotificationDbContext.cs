@@ -13,11 +13,11 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     {
     }
 
-    public DbSet<NotificationItem> Notifications { get; set; }
-    public DbSet<EmailTemplate> EmailTemplates { get; set; }
-    public DbSet<EmailDelivery> EmailDeliveries { get; set; }
-    public DbSet<SupportRequest> SupportRequests { get; set; }
-    public DbSet<SupportForwardDelivery> SupportForwardDeliveries { get; set; }
+    public DbSet<NotificationItem> Notifications => Set<NotificationItem>();
+    public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
+    public DbSet<EmailDelivery> EmailDeliveries => Set<EmailDelivery>();
+    public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
+    public DbSet<SupportForwardDelivery> SupportForwardDeliveries => Set<SupportForwardDelivery>();
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
     public DbSet<NotificationErasureExecutionReceipt> ErasureExecutions => Set<NotificationErasureExecutionReceipt>();
     public DbSet<NotificationErasedRecipient> ErasedRecipients => Set<NotificationErasedRecipient>();

@@ -40,6 +40,7 @@ public static class PlatformPermissions
     {
         public const string View = "Permissions.Support.View";
         public const string Reply = "Permissions.Support.Reply";
+        public const string Delete = "Permissions.Support.Delete";
     }
 
     public static class Notifications
@@ -80,6 +81,7 @@ public static class PlatformPermissions
         SpeedReading.CommunicationsManage,
         Support.View,
         Support.Reply,
+        Support.Delete,
         Notifications.Templates,
         Operations.View,
         Privacy.View,

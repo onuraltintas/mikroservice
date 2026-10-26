@@ -66,6 +66,7 @@ public static class Permissions
     {
         public const string View = PlatformPermissions.Support.View;
         public const string Reply = PlatformPermissions.Support.Reply;
+        public const string Delete = PlatformPermissions.Support.Delete;
     }
 
     public static class Notifications

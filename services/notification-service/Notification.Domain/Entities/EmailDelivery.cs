@@ -64,42 +64,4 @@ public class EmailDelivery
         AttemptCount++;
         return leaseToken;
     }
-
-    public bool MarkSent(DateTime sentAt, Guid leaseToken)
-    {
-        if (!OwnsLease(leaseToken))
-        {
-            return false;
-        }
-
-        Status = EmailDeliveryStatus.Sent;
-        SentAt = sentAt;
-        LeaseUntil = null;
-        LeaseToken = null;
-        LastError = null;
-        return true;
-    }
-
-    public bool MarkRetry(DateTime nextAttemptAt, string error, bool permanentlyFailed, Guid leaseToken)
-    {
-        if (!OwnsLease(leaseToken))
-        {
-            return false;
-        }
-
-        Status = permanentlyFailed ? EmailDeliveryStatus.Failed : EmailDeliveryStatus.Pending;
-        NextAttemptAt = nextAttemptAt;
-        LeaseUntil = null;
-        LeaseToken = null;
-        LastError = error;
-        return true;
-    }
-
-    private bool OwnsLease(Guid leaseToken)
-    {
-        return Status == EmailDeliveryStatus.Processing
-            && LeaseToken == leaseToken
-            && LeaseUntil is not null
-            && LeaseUntil > DateTime.UtcNow;
-    }
 }

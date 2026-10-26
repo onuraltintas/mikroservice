@@ -84,14 +84,24 @@ public static class RedisConfiguration
                 : $"{host}:{port},password={password}";
         }
 
+        // abortConnect=false: a Redis outage at start-up must not crash the service or
+        // poison the singleton; the multiplexer keeps reconnecting in the background and
+        // callers see ordinary RedisConnectionExceptions they can fall back from.
+        ConfigurationOptions CreateOptions()
+        {
+            var options = ConfigurationOptions.Parse(connectionString);
+            options.AbortOnConnectFail = false;
+            return options;
+        }
+
         services.AddStackExchangeRedisCache(options =>
         {
-            options.Configuration = connectionString;
+            options.ConfigurationOptions = CreateOptions();
             options.InstanceName = "EduPlatform:";
         });
 
         services.AddSingleton<IConnectionMultiplexer>(sp =>
-            ConnectionMultiplexer.Connect(connectionString));
+            ConnectionMultiplexer.Connect(CreateOptions()));
 
         services.AddScoped<ICacheService, RedisCacheService>();
 

@@ -14,8 +14,20 @@ public static class LoggerExtensions
             var env = context.HostingEnvironment;
             var appName = env.ApplicationName;
 
-            // Seq server URL
-            var seqUrl = Environment.GetEnvironmentVariable("SEQ_URL") ?? "http://localhost:5341";
+            // Seq only where one is configured (or the local default during development);
+            // in containers the old localhost default pointed at nothing.
+            var seqUrl = Environment.GetEnvironmentVariable("SEQ_URL");
+            if (string.IsNullOrWhiteSpace(seqUrl) && env.IsDevelopment())
+            {
+                seqUrl = "http://localhost:5341";
+            }
+
+            // LOG_FORMAT=json writes one compact JSON object per event (for Loki/ELK
+            // ingestion); the default stays the human-readable console format.
+            var jsonConsole = string.Equals(
+                Environment.GetEnvironmentVariable("LOG_FORMAT"),
+                "json",
+                StringComparison.OrdinalIgnoreCase);
 
             // Basic Configuration
             configuration
@@ -25,9 +37,21 @@ public static class LoggerExtensions
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Application", appName)
-                .Enrich.WithProperty("Environment", env.EnvironmentName)
-                .WriteTo.Console()
-                .WriteTo.Seq(seqUrl);
+                .Enrich.WithProperty("Environment", env.EnvironmentName);
+
+            if (jsonConsole)
+            {
+                configuration.WriteTo.Console(new Serilog.Formatting.Compact.RenderedCompactJsonFormatter());
+            }
+            else
+            {
+                configuration.WriteTo.Console();
+            }
+
+            if (!string.IsNullOrWhiteSpace(seqUrl))
+            {
+                configuration.WriteTo.Seq(seqUrl);
+            }
         });
 
         return hostBuilder;

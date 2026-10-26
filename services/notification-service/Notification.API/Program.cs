@@ -1,3 +1,4 @@
+using Notification.API.Messaging;
 using EduPlatform.Shared.Infrastructure.Logging;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using EduPlatform.Shared.Infrastructure.Observability;
@@ -18,18 +19,20 @@ using System.Security.Claims;
 using DotNetEnv;
 using EduPlatform.Shared.Infrastructure.Resiliency;
 using EduPlatform.Shared.Infrastructure.Extensions;
-using EduPlatform.Shared.Infrastructure.Caching;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Security.Extensions;
 using EduPlatform.Shared.Security.Services;
 using FluentValidation;
 
 
-// Load .env file from solution root
+// `dotnet run` convenience only: containers get configuration from the environment and
+// must never pick up (or be overridden by) a stray .env file.
+var startupEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+    ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
-if (File.Exists(envPath))
+if (string.Equals(startupEnvironment, "Development", StringComparison.OrdinalIgnoreCase) && File.Exists(envPath))
 {
-    Env.Load(envPath);
+    Env.NoClobber().Load(envPath);
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,18 +43,7 @@ var migrationOnly = args.Any(argument =>
 // The web host only performs automatic migrations in Development.
 if (migrationOnly)
 {
-    var migrationConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (string.IsNullOrEmpty(migrationConnectionString))
-    {
-        var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
-        var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
-        var database = Environment.GetEnvironmentVariable("POSTGRES_DB_NOTIFICATION") ?? "notification_db";
-        var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
-        var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
-            ?? builder.Configuration["POSTGRES_PASSWORD"]
-            ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
-        migrationConnectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
-    }
+    var migrationConnectionString = NotificationConnectionString(builder.Configuration);
 
     builder.Services.AddDbContext<NotificationDbContext>(options =>
         options.UseNpgsql(migrationConnectionString));
@@ -66,6 +58,7 @@ if (migrationOnly)
 }
 
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
+Notification.Infrastructure.Services.EmailService.ValidateConfiguration(builder.Configuration);
 
 // Serilog Configuration (Centralized)
 builder.Host.UseCustomSerilog();
@@ -73,9 +66,6 @@ builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Notification");
 builder.Services.AddOpenTelemetry().WithMetrics(metrics => metrics.AddMeter(CourseManagementEventDeliveryMetrics.MeterName));
 builder.Services.AddGlobalExceptionHandler();
-// Keep notification/admin authorization in sync with the identity MFA policy
-// categories.
-builder.Services.AddRedisCache(builder.Configuration);
 builder.Services.AddOptions<PublicAppUrlOptions>()
     .Bind(builder.Configuration.GetSection(PublicAppUrlOptions.SectionName))
     .Validate(
@@ -91,7 +81,8 @@ builder.Services.AddOptions<PublicAppUrlOptions>()
     .ValidateOnStart();
 
 // Add services
-builder.Services.AddControllers()
+var courseManagementEnabled = CourseManagementFeature.IsEnabled(builder.Configuration);
+builder.Services.AddControllers(options => options.Conventions.Add(new CourseManagementFeature.ControllerConvention(courseManagementEnabled)))
     .AddEduPlatformApiConventions();
 builder.Services.AddEduPlatformApiVersioning();
 
@@ -131,19 +122,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Build connection string from environment variables
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString))
-{
-    var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
-    var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
-    var database = Environment.GetEnvironmentVariable("POSTGRES_DB_NOTIFICATION") ?? "notification_db";
-    var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
-    var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
-        ?? builder.Configuration["POSTGRES_PASSWORD"]
-        ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
-    connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
-}
+var connectionString = NotificationConnectionString(builder.Configuration);
 
 builder.Services.AddDbContext<NotificationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -211,45 +190,17 @@ builder.Services.AddAuthorization(options => options.AddPolicy("CourseManagement
 // MassTransit Config
 builder.Services.AddMassTransit(x =>
 {
-    x.AddConsumer<InvitationCreatedConsumer>();
-    x.AddConsumer<UserRegisteredConsumer>();
-    x.AddConsumer<UserEmailConfirmedConsumer>();
-    x.AddConsumer<UserCreatedConsumer>();
-    x.AddConsumer<SendNotificationConsumer>();
-    x.AddConsumer<UserForgotPasswordConsumer>();
-    x.AddConsumer<AssignmentCreatedConsumer>();
-    x.AddConsumer<AssignmentUpdatedConsumer>();
-    x.AddConsumer<AssignmentSubmittedConsumer>();
-    x.AddConsumer<AssignmentGradedConsumer>();
-    x.AddConsumer<ExamUpdatedConsumer>();
-    x.AddConsumer<ExamResultAddedConsumer>();
-    x.AddConsumer<ExamResultUpdatedConsumer>();
-    x.AddConsumer<SessionScheduledConsumer>();
-    x.AddConsumer<SessionUpdatedConsumer>();
-    x.AddConsumer<SessionCancelledConsumer>();
-    x.AddConsumer<GoalCreatedConsumer>();
-    x.AddConsumer<GoalUpdatedConsumer>();
-    x.AddConsumer<StudyPlanPublishedConsumer>();
-    x.AddConsumer<StudyPlanUpdatedConsumer>();
-    x.AddConsumer<WeeklyReflectionSavedConsumer>();
-    x.AddConsumer<WeeklyDecisionChangedConsumer>();
-    x.AddConsumer<CoachingReminderDueConsumer>();
-    x.AddConsumer<CourseManagementLessonScheduledConsumer>();
-    x.AddConsumer<CourseManagementLessonRescheduledConsumer>();
-    x.AddConsumer<CourseManagementLessonCancelledConsumer>();
-    x.AddConsumer<CourseManagementAssignmentPublishedConsumer>();
-    x.AddConsumer<CourseManagementAssignmentSubmittedConsumer>();
-    x.AddConsumer<CourseManagementAssignmentReviewedConsumer>();
-    x.AddConsumer<CourseManagementPaymentRecordedConsumer>();
-    x.AddConsumer<CourseManagementReminderDueConsumer>();
-    x.AddConsumer<NotificationErasureAssessmentRequestedConsumer>();
-    x.AddConsumer<NotificationErasureExecutionRequestedConsumer>();
+    // Consumers and their queues are listed once, in NotificationReceiveEndpoints.
+    x.AddNotificationConsumers(courseManagementEnabled);
     
     // Outbox Pattern Configuration
     x.AddEntityFrameworkOutbox<NotificationDbContext>(o =>
     {
         o.UsePostgres();
         o.UseBusOutbox();
+        // Read committed: the erased-recipient check runs after the advisory lock and
+        // must see an erasure that committed while the consumer waited for it.
+        o.IsolationLevel = System.Data.IsolationLevel.ReadCommitted;
     });
 
     x.UsingRabbitMq((context, cfg) =>
@@ -269,208 +220,7 @@ builder.Services.AddMassTransit(x =>
             h.Password(rabbitPass);
         });
 
-        cfg.ReceiveEndpoint("invitation-created", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<InvitationCreatedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("user-registered", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<UserRegisteredConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("user-email-confirmed", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<UserEmailConfirmedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("user-created", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<UserCreatedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("send-notification", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<SendNotificationConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("user-forgot-password", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<UserForgotPasswordConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("coaching-assignment-created", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<AssignmentCreatedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("coaching-assignment-submitted", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<AssignmentSubmittedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("coaching-assignment-graded", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<AssignmentGradedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("coaching-exam-result-added", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<ExamResultAddedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("coaching-session-scheduled", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<SessionScheduledConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("coaching-session-cancelled", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<SessionCancelledConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("coaching-goal-created", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<GoalCreatedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("coaching-study-plan-published", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<StudyPlanPublishedConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("coaching-study-plan-updated", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<StudyPlanUpdatedConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("coaching-weekly-reflection-saved", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<WeeklyReflectionSavedConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("coaching-weekly-decision-changed", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<WeeklyDecisionChangedConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("coaching-reminder-due", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CoachingReminderDueConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("course-management-lesson-scheduled", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CourseManagementLessonScheduledConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("course-management-lesson-rescheduled", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CourseManagementLessonRescheduledConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("course-management-lesson-cancelled", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CourseManagementLessonCancelledConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("course-management-assignment-published", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CourseManagementAssignmentPublishedConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("course-management-assignment-submitted", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CourseManagementAssignmentSubmittedConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("course-management-assignment-reviewed", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CourseManagementAssignmentReviewedConsumer>(context);
-        });
-        cfg.ReceiveEndpoint("course-management-payment-recorded", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CourseManagementPaymentRecordedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("course-management-reminder-due", e =>
-        {
-            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<CourseManagementReminderDueConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("notification-privacy-erasure-assessment", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<NotificationErasureAssessmentRequestedConsumer>(context);
-        });
-
-        cfg.ReceiveEndpoint("notification-privacy-erasure-execution", e =>
-        {
-            e.UseMessageRetry(retry =>
-                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
-            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
-            e.ConfigureConsumer<NotificationErasureExecutionRequestedConsumer>(context);
-        });
+        cfg.ConfigureNotificationEndpoints(context, courseManagementEnabled);
     });
 });
 
@@ -493,7 +243,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapGet("/", () => "Notification Service Runnning").AllowAnonymous();
+app.MapGet("/", () => "Notification Service Running").AllowAnonymous();
+// "/health" is kept as an alias of "/health/ready": compose healthchecks and monitoring call both.
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapHealthChecks("/health/ready").AllowAnonymous();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
@@ -513,6 +264,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+static string NotificationConnectionString(IConfiguration configuration)
+{
+    var connectionString = configuration.GetConnectionString("DefaultConnection");
+    if (!string.IsNullOrEmpty(connectionString)) return connectionString;
+    var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
+    var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
+    var database = Environment.GetEnvironmentVariable("POSTGRES_DB_NOTIFICATION") ?? "notification_db";
+    var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
+    var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
+        ?? configuration["POSTGRES_PASSWORD"]
+        ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
+    return $"Host={host};Port={port};Database={database};Username={username};Password={password}";
+}
+
 public partial class Program { }
 
 public class CustomUserIdProvider : IUserIdProvider

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Notification.Application.Commands.SubmitSupportRequest;
 using Notification.Application.Interfaces;
@@ -9,52 +8,18 @@ using Notification.Infrastructure.Persistence;
 
 namespace Notification.Infrastructure.Services;
 
-public sealed class SupportForwardDeliveryWorker : BackgroundService
+public sealed class SupportForwardDeliveryWorker : LeasedDeliveryWorker<SupportForwardDeliveryWorker.SupportForwardWorkItem>
 {
-    private const int MaxAttempts = 12;
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan LeaseDuration = TimeSpan.FromMinutes(5);
-
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<SupportForwardDeliveryWorker> _logger;
-
     public SupportForwardDeliveryWorker(
         IServiceScopeFactory scopeFactory,
         ILogger<SupportForwardDeliveryWorker> logger)
+        : base(scopeFactory, logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task<SupportForwardWorkItem?> ClaimNextAsync(CancellationToken cancellationToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                var workItem = await ClaimNextAsync(stoppingToken);
-                if (workItem is not null)
-                {
-                    await DeliverAsync(workItem, stoppingToken);
-                    continue;
-                }
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Support forward delivery worker iteration failed");
-            }
-
-            await Task.Delay(PollInterval, stoppingToken);
-        }
-    }
-
-    private async Task<SupportForwardWorkItem?> ClaimNextAsync(CancellationToken cancellationToken)
-    {
-        await using var scope = _scopeFactory.CreateAsyncScope();
+        await using var scope = ScopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -90,9 +55,9 @@ public sealed class SupportForwardDeliveryWorker : BackgroundService
             leaseToken);
     }
 
-    private async Task DeliverAsync(SupportForwardWorkItem workItem, CancellationToken cancellationToken)
+    protected override async Task DeliverAsync(SupportForwardWorkItem workItem, CancellationToken cancellationToken)
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
+        await using var scope = ScopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
         var identityService = scope.ServiceProvider.GetRequiredService<IIdentityInternalService>();
         var supportRequest = await dbContext.SupportRequests
@@ -119,10 +84,11 @@ public sealed class SupportForwardDeliveryWorker : BackgroundService
 
         try
         {
-            if (await identityService.ForwardSupportRequestAsync(
-                    command,
-                    supportRequest.Id,
-                    cancellationToken))
+            var result = await identityService.ForwardSupportRequestAsync(
+                command,
+                supportRequest.Id,
+                cancellationToken);
+            if (result == SupportForwardResult.Sent)
             {
                 var sentAt = DateTime.UtcNow;
                 var sentRows = await dbContext.SupportForwardDeliveries
@@ -142,10 +108,13 @@ public sealed class SupportForwardDeliveryWorker : BackgroundService
                     return;
             }
 
+            // A refusal is final; transient failures stop after MaxAttempts like exceptions do.
             await MarkFailureAsync(
                 workItem,
-                "Identity service rejected the support forward request.",
-                permanentlyFailed: false,
+                result == SupportForwardResult.Rejected
+                    ? "Identity service rejected the support forward request."
+                    : "Identity service could not be reached for the support forward request.",
+                permanentlyFailed: result == SupportForwardResult.Rejected || workItem.AttemptCount >= MaxAttempts,
                 cancellationToken: cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -168,10 +137,10 @@ public sealed class SupportForwardDeliveryWorker : BackgroundService
         bool permanentlyFailed,
         CancellationToken cancellationToken)
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
+        await using var scope = ScopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
-        var retryAt = DateTime.UtcNow.AddSeconds(Math.Min(300, Math.Pow(2, Math.Min(workItem.AttemptCount, 8))));
-        var error = message[..Math.Min(message.Length, 2_000)];
+        var retryAt = RetryAt(DateTime.UtcNow, workItem.AttemptCount);
+        var error = Truncate(message);
         var updated = await dbContext.SupportForwardDeliveries
             .Where(x =>
                 x.Id == workItem.Id
@@ -189,7 +158,7 @@ public sealed class SupportForwardDeliveryWorker : BackgroundService
 
         if (updated > 0)
         {
-            _logger.LogWarning(
+            Logger.LogWarning(
                 "Support forward delivery {DeliveryId} failed; attempt={Attempt}; permanent={Permanent}",
                 workItem.Id,
                 workItem.AttemptCount,
@@ -197,7 +166,7 @@ public sealed class SupportForwardDeliveryWorker : BackgroundService
         }
     }
 
-    private sealed record SupportForwardWorkItem(
+    public sealed record SupportForwardWorkItem(
         Guid Id,
         Guid SupportRequestId,
         int AttemptCount,

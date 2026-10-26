@@ -13,15 +13,21 @@ COPY ["shared/EduPlatform.Shared.Security/EduPlatform.Shared.Security.csproj", "
 
 RUN dotnet restore "services/notification-service/Notification.API/Notification.API.csproj"
 
-# Copy everything else and build
+# Copy everything else and publish (publish builds; a separate build step only repeated it)
 COPY . .
 WORKDIR "/src/services/notification-service/Notification.API"
-RUN dotnet build "Notification.API.csproj" -c Release -o /app/build --no-restore
 
 FROM build AS publish
 RUN dotnet publish "Notification.API.csproj" -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+# The Data Protection key ring (it also decrypts queued e-mail bodies) lives on a named
+# volume mounted here. A fresh volume inherits the runtime user's ownership; volumes
+# created by older root images are fixed by notification-volume-permissions.
+RUN mkdir -p /var/lib/eduplatform/data-protection-keys \
+    && chown -R "$APP_UID" /var/lib/eduplatform
 COPY --from=publish /app/publish .
+# Run as the image's built-in non-root user (UID 1654); the service listens on 8080.
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Notification.API.dll"]

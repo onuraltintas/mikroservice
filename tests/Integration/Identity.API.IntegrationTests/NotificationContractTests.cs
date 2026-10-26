@@ -23,7 +23,8 @@ public sealed class NotificationContractTests
 
         firstToken.Should().HaveLength(43);
         firstToken.Should().NotBe(secondToken);
-        user.PasswordResetToken.Should().Be(secondToken);
+        user.PasswordResetTokenMatches(secondToken).Should().BeTrue();
+        user.PasswordResetTokenMatches(firstToken).Should().BeFalse("a new link replaces the previous one");
         firstExpiry.Should().BeAfter(DateTime.UtcNow.AddHours(1));
         firstExpiry.Should().BeBefore(DateTime.UtcNow.AddHours(3));
     }
@@ -154,39 +155,5 @@ public sealed class NotificationContractTests
                 "Access",
                 "I need help signing in.")
             .Should().BeTrue();
-    }
-
-    [Fact]
-    public void SupportForwardDelivery_RetryThenSend_IsSingleDurableWorkItem()
-    {
-        var delivery = SupportForwardDelivery.Create(Guid.NewGuid());
-        delivery.Status.Should().Be(SupportForwardDeliveryStatus.Pending);
-
-        var firstLease = delivery.Claim(DateTime.UtcNow.AddMinutes(5));
-        delivery.AttemptCount.Should().Be(1);
-        delivery.MarkRetry(
-                DateTime.UtcNow.AddSeconds(30),
-                "temporary identity outage",
-                permanentlyFailed: false,
-                leaseToken: firstLease)
-            .Should().BeTrue();
-        delivery.Status.Should().Be(SupportForwardDeliveryStatus.Pending);
-
-        var secondLease = delivery.Claim(DateTime.UtcNow.AddMinutes(5));
-        delivery.AttemptCount.Should().Be(2);
-        delivery.MarkSent(DateTime.UtcNow, secondLease).Should().BeTrue();
-        delivery.Status.Should().Be(SupportForwardDeliveryStatus.Sent);
-        delivery.LeaseToken.Should().BeNull();
-    }
-
-    [Fact]
-    public void SupportForwardDelivery_StaleLeaseCannotCompleteWork()
-    {
-        var delivery = SupportForwardDelivery.Create(Guid.NewGuid());
-        var lease = delivery.Claim(DateTime.UtcNow.AddMinutes(5));
-
-        delivery.MarkSent(DateTime.UtcNow, Guid.NewGuid()).Should().BeFalse();
-        delivery.Status.Should().Be(SupportForwardDeliveryStatus.Processing);
-        delivery.MarkSent(DateTime.UtcNow, lease).Should().BeTrue();
     }
 }

@@ -103,9 +103,6 @@ public sealed class PublicAppUrlOptions
     public static string GetApplicationName(string? role, string? product) =>
         IsSpeedReadingProduct(role, product) ? "Master Hızlı Okuma" : "Eduİvme";
 
-    public static string GetCompanyName(string? role) =>
-        IsSpeedReadingRole(role) ? "ONAL Yazılım ve Otomasyon" : "Eduİvme";
-
     public static string GetTemplateName(string baseName, string? role) =>
         GetTemplateName(baseName, role, null);
 

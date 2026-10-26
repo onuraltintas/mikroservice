@@ -16,7 +16,8 @@ describe('auth reCAPTCHA interceptor', () => {
     ['/api/auth/speed-reading/register/join', 'auth_register'],
     ['/api/auth/speed-reading/register/student', 'auth_register'],
     ['/api/auth/forgot-password', 'auth_recovery'],
-    ['/api/auth/resend-verification-email', 'auth_recovery']
+    ['/api/auth/resend-verification-email', 'auth_recovery'],
+    ['/api/support/submit', 'support_submit']
   ])('maps %s to %s', (url, expectedAction) => {
     expect(getAuthRecaptchaAction(new HttpRequest('POST', url, {}))).toBe(expectedAction);
   });

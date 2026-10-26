@@ -65,7 +65,7 @@ public class User : AggregateRoot
 
     public User(Guid id, string email, string firstName, string lastName) : base(id)
     {
-        Email = email ?? throw new ArgumentNullException(nameof(email));
+        Email = NormalizeEmail(email ?? throw new ArgumentNullException(nameof(email)));
         FirstName = firstName;
         LastName = lastName;
     }
@@ -76,6 +76,13 @@ public class User : AggregateRoot
         // Domain event can be raised
         return user;
     }
+
+    /// <summary>
+    /// Canonical form of an address: trimmed and lower-case (invariant). Stored this way so
+    /// the unique index on <see cref="Email"/> is case-insensitive in practice and look-ups
+    /// can use it.
+    /// </summary>
+    public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
     public void SetPassword(byte[] passwordHash, byte[] passwordSalt)
     {
@@ -99,7 +106,7 @@ public class User : AggregateRoot
 
     public void RevokeRefreshToken(string token, string ipAddress, string reason)
     {
-        var refreshToken = _refreshTokens.SingleOrDefault(t => t.Token == token);
+        var refreshToken = _refreshTokens.SingleOrDefault(t => t.Matches(token));
         if (refreshToken != null && refreshToken.IsActive)
         {
             refreshToken.Revoke(ipAddress, reason);
@@ -121,6 +128,32 @@ public class User : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// A verified external identity proves ownership of an address that this local
+    /// account never confirmed. Whoever registered the account could have chosen its
+    /// password, so every credential set before the proof is discarded: the password,
+    /// pending reset/verification links and any session. The owner signs in with the
+    /// external provider and can set a password through the reset flow.
+    /// </summary>
+    public void ClaimUnconfirmedAccountByVerifiedExternalLogin()
+    {
+        if (EmailConfirmed)
+        {
+            return;
+        }
+
+        PasswordHash = [];
+        PasswordSalt = [];
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
+        foreach (var refreshToken in _refreshTokens.Where(token => token.IsActive))
+        {
+            refreshToken.Revoke(null, "unconfirmed account claimed by verified external login");
+        }
+
+        ConfirmEmail();
+    }
+
     public void RevokeEmailConfirmation()
     {
         EmailConfirmed = false;
@@ -136,18 +169,32 @@ public class User : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Issues a single-use reset / password-setup link value and returns it. Only its
+    /// SHA-256 digest is kept (<see cref="PasswordResetToken"/>), so a database copy
+    /// cannot be used to take over accounts with a pending link.
+    /// </summary>
     public string GeneratePasswordResetToken()
     {
         Span<byte> tokenBytes = stackalloc byte[32];
         RandomNumberGenerator.Fill(tokenBytes);
-        PasswordResetToken = Convert.ToBase64String(tokenBytes)
+        var token = Convert.ToBase64String(tokenBytes)
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
+        PasswordResetToken = RefreshToken.Digest(token);
         PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(2); // Short lived
         UpdatedAt = DateTime.UtcNow;
-        return PasswordResetToken;
+        return token;
     }
+
+    /// <summary>Constant-time check of a presented reset link value against the stored digest.</summary>
+    public bool PasswordResetTokenMatches(string? presented) =>
+        PasswordResetToken is { } stored
+        && !string.IsNullOrEmpty(presented)
+        && CryptographicOperations.FixedTimeEquals(
+            System.Text.Encoding.ASCII.GetBytes(RefreshToken.Digest(presented)),
+            System.Text.Encoding.ASCII.GetBytes(stored));
 
     public void ClearPasswordResetToken()
     {

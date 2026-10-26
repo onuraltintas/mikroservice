@@ -42,7 +42,7 @@ test.describe('Gateway critical API flows', () => {
   });
 
   test('does not expose support replies anonymously', async ({ request }) => {
-    const response = await request.post('/api/support/reply', { data: {} });
+    const response = await request.post('/api/support/requests/00000000-0000-0000-0000-000000000001/reply', { data: {} });
 
     expect(response.status()).toBe(401);
   });

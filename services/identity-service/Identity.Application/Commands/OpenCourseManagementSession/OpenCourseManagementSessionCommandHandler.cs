@@ -35,12 +35,6 @@ public sealed class OpenCourseManagementSessionCommandHandler(
             string.Equals(userRole.Role!.Name, "CourseStudent", StringComparison.OrdinalIgnoreCase));
         var isSystemAdministrator = productRoles.Any(userRole =>
             string.Equals(userRole.Role!.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
-        var requiresMfa = productRoles.Any(userRole =>
-            string.Equals(userRole.Role!.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole.Role.Name, "InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole.Role.Name, "InstitutionOwner", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole.Role.Name, "CourseInstitutionOwner", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole.Role.Name, "Editor", StringComparison.OrdinalIgnoreCase));
         var hasStaffAccess = StaffProductAccessPolicy.GetStaffRoles(user, PlatformProduct.CourseManagement).Count > 0;
 
         if ((!user.HasProductAccess(PlatformProduct.CourseManagement) && !isSystemAdministrator)
@@ -51,14 +45,14 @@ public sealed class OpenCourseManagementSessionCommandHandler(
                 "Bu platform için hesabınıza erişim yetkisi tanımlı değil."));
         }
 
-        if (requiresMfa
-            && user.MfaEnabled
+        // Same rule as sign-in: any account with an enrolled authenticator.
+        if (user.MfaEnabled
             && request.MfaVerifiedAt is null
             && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             return Result.Failure<LoginResponse>(new Error(
                 "Auth.MfaRequired",
-                "Bu yönetici paneline geçmek için yeniden giriş yapıp iki adımlı doğrulamayı tamamlayın."));
+                "Bu platforma geçmek için yeniden giriş yapıp iki adımlı doğrulamayı tamamlayın."));
         }
 
         return await sessionIssuer.IssueAsync(

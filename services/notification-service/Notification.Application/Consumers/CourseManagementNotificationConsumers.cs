@@ -1,5 +1,7 @@
 using EduPlatform.Shared.Contracts.Events.CourseManagement;
 using MassTransit;
+using Notification.Application.Messaging;
+using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
 
 namespace Notification.Application.Consumers;
@@ -10,9 +12,9 @@ public sealed class CourseManagementLessonScheduledConsumer(ICourseManagementNot
     public Task Consume(ConsumeContext<CourseManagementLessonScheduledV1> context)
     {
         var message = context.Message;
-        return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
-            CourseManagementConsumerMessageIds.RequireMessageId(context), message.StudentUserIds,
-            "Yeni ders planlandı", $"Dersin {message.StartsAt:dd.MM.yyyy HH:mm} tarihinde planlandı.",
+        return CourseManagementDelivery.DispatchAsync(context, () => dispatcher.SendAsync(
+            MessageIds.Require(context), message.StudentUserIds,
+            "Yeni ders planlandı", $"Dersin {TurkeyTime.Format(message.StartsAt)} tarihinde planlandı.",
             "CourseManagement.LessonScheduled", message.LessonId.ToString(), context.CancellationToken));
     }
 }
@@ -23,9 +25,9 @@ public sealed class CourseManagementLessonRescheduledConsumer(ICourseManagementN
     public Task Consume(ConsumeContext<CourseManagementLessonRescheduledV1> context)
     {
         var message = context.Message;
-        return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
-            CourseManagementConsumerMessageIds.RequireMessageId(context), message.StudentUserIds,
-            "Ders saati değişti", $"Dersin yeni saati: {message.StartsAt:dd.MM.yyyy HH:mm}.",
+        return CourseManagementDelivery.DispatchAsync(context, () => dispatcher.SendAsync(
+            MessageIds.Require(context), message.StudentUserIds,
+            "Ders saati değişti", $"Dersin yeni saati: {TurkeyTime.Format(message.StartsAt)}.",
             "CourseManagement.LessonRescheduled", message.LessonId.ToString(), context.CancellationToken));
     }
 }
@@ -36,9 +38,9 @@ public sealed class CourseManagementLessonCancelledConsumer(ICourseManagementNot
     public Task Consume(ConsumeContext<CourseManagementLessonCancelledV1> context)
     {
         var message = context.Message;
-        return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
-            CourseManagementConsumerMessageIds.RequireMessageId(context), message.StudentUserIds,
-            "Ders iptal edildi", $"{message.StartsAt:dd.MM.yyyy HH:mm} tarihindeki ders iptal edildi.",
+        return CourseManagementDelivery.DispatchAsync(context, () => dispatcher.SendAsync(
+            MessageIds.Require(context), message.StudentUserIds,
+            "Ders iptal edildi", $"{TurkeyTime.Format(message.StartsAt)} tarihindeki ders iptal edildi.",
             "CourseManagement.LessonCancelled", message.LessonId.ToString(), context.CancellationToken));
     }
 }
@@ -49,9 +51,9 @@ public sealed class CourseManagementAssignmentPublishedConsumer(ICourseManagemen
     public Task Consume(ConsumeContext<CourseManagementAssignmentPublishedV1> context)
     {
         var message = context.Message;
-        return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
-            CourseManagementConsumerMessageIds.RequireMessageId(context), message.StudentUserIds,
-            $"Yeni ödev: {message.Title}", $"Son teslim: {message.DueAt:dd.MM.yyyy HH:mm}.",
+        return CourseManagementDelivery.DispatchAsync(context, () => dispatcher.SendAsync(
+            MessageIds.Require(context), message.StudentUserIds,
+            $"Yeni ödev: {message.Title}", $"Son teslim: {TurkeyTime.Format(message.DueAt)}.",
             "CourseManagement.AssignmentPublished", message.AssignmentId.ToString(), context.CancellationToken));
     }
 }
@@ -62,8 +64,8 @@ public sealed class CourseManagementAssignmentSubmittedConsumer(ICourseManagemen
     public Task Consume(ConsumeContext<CourseManagementAssignmentSubmittedV1> context)
     {
         var message = context.Message;
-        return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
-            CourseManagementConsumerMessageIds.RequireMessageId(context), [message.TeacherUserId], "Ödev teslim edildi",
+        return CourseManagementDelivery.DispatchAsync(context, () => dispatcher.SendAsync(
+            MessageIds.Require(context), [message.TeacherUserId], "Ödev teslim edildi",
             "Bir öğrenci ödevini gönderdi. Teslimi kurs panelinden inceleyebilirsin.",
             "CourseManagement.AssignmentSubmitted", message.AssignmentId.ToString(), context.CancellationToken));
     }
@@ -75,8 +77,8 @@ public sealed class CourseManagementAssignmentReviewedConsumer(ICourseManagement
     public Task Consume(ConsumeContext<CourseManagementAssignmentReviewedV1> context)
     {
         var message = context.Message;
-        return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
-            CourseManagementConsumerMessageIds.RequireMessageId(context), [message.StudentUserId], "Ödev değerlendirildi",
+        return CourseManagementDelivery.DispatchAsync(context, () => dispatcher.SendAsync(
+            MessageIds.Require(context), [message.StudentUserId], "Ödev değerlendirildi",
             "Puan ve geri bildirimi kurs panelinden görebilirsin.",
             "CourseManagement.AssignmentReviewed", message.AssignmentId.ToString(), context.CancellationToken));
     }
@@ -88,8 +90,8 @@ public sealed class CourseManagementPaymentRecordedConsumer(ICourseManagementNot
     public Task Consume(ConsumeContext<CourseManagementPaymentRecordedV1> context)
     {
         var message = context.Message;
-        return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
-            CourseManagementConsumerMessageIds.RequireMessageId(context), [message.StudentUserId], "Kurs finans özeti güncellendi",
+        return CourseManagementDelivery.DispatchAsync(context, () => dispatcher.SendAsync(
+            MessageIds.Require(context), [message.StudentUserId], "Kurs finans özeti güncellendi",
             "Bakiye ve kalan paket hakların güncellendi.",
             "CourseManagement.PaymentRecorded", null, context.CancellationToken));
     }
@@ -98,16 +100,14 @@ public sealed class CourseManagementPaymentRecordedConsumer(ICourseManagementNot
 public sealed class CourseManagementReminderDueConsumer(ICourseManagementNotificationDispatcher dispatcher)
     : IConsumer<CourseManagementReminderDueV1>
 {
-    private static readonly TimeZoneInfo IstanbulTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-
     public Task Consume(ConsumeContext<CourseManagementReminderDueV1> context)
     {
         var message = context.Message;
         var reminder = message.ReminderType switch
         {
-            "Lesson" => ("Yaklaşan dersin", $"Dersin {TimeZoneInfo.ConvertTime(message.TargetAt, IstanbulTimeZone):dd.MM.yyyy HH:mm} tarihinde.",
+            "Lesson" => ("Yaklaşan dersin", $"Dersin {TurkeyTime.Format(message.TargetAt)} tarihinde.",
                 "CourseManagement.LessonReminder"),
-            "Assignment" => ("Ödev teslim zamanı yaklaşıyor", $"Ödevinin son teslim zamanı {TimeZoneInfo.ConvertTime(message.TargetAt, IstanbulTimeZone):dd.MM.yyyy HH:mm}.",
+            "Assignment" => ("Ödev teslim zamanı yaklaşıyor", $"Ödevinin son teslim zamanı {TurkeyTime.Format(message.TargetAt)}.",
                 "CourseManagement.AssignmentReminder"),
             "InstallmentUpcoming" => ("Yaklaşan vade", "Kurs finans özetinde yaklaşan bir vade var. Güncel bakiyeni kurs panelinden görebilirsin.",
                 "CourseManagement.InstallmentUpcomingReminder"),
@@ -116,17 +116,14 @@ public sealed class CourseManagementReminderDueConsumer(ICourseManagementNotific
             _ => throw new InvalidOperationException($"Unsupported course-management reminder type: {message.ReminderType}.")
         };
 
-        return CourseManagementConsumerMessageIds.DispatchAsync(context, () => dispatcher.SendAsync(
-            CourseManagementConsumerMessageIds.RequireMessageId(context), [message.RecipientUserId],
+        return CourseManagementDelivery.DispatchAsync(context, () => dispatcher.SendAsync(
+            MessageIds.Require(context), [message.RecipientUserId],
             reminder.Item1, reminder.Item2, reminder.Item3, null, context.CancellationToken));
     }
 }
 
-file static class CourseManagementConsumerMessageIds
+file static class CourseManagementDelivery
 {
-    public static Guid RequireMessageId<T>(ConsumeContext<T> context) where T : class
-        => context.MessageId ?? throw new InvalidOperationException($"{typeof(T).Name}.MessageId is required.");
-
     public static async Task DispatchAsync<T>(ConsumeContext<T> context, Func<Task> dispatch) where T : class
     {
         await dispatch();

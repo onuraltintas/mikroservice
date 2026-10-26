@@ -57,7 +57,7 @@ public sealed class AuthenticationSessionIssuer : IAuthenticationSessionIssuer
 
         return Result.Success(new LoginResponse(
             accessToken,
-            refreshToken.Token,
+            refreshToken.IssuedValue!,
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
             ExpiresInMinutes: await _tokens.GetAccessTokenLifetimeMinutesAsync()));
