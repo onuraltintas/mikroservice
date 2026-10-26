@@ -70,10 +70,29 @@ function Step([string]$name, [scriptblock]$action) {
 }
 
 try {
+    # A previous run that was interrupted can leave this disposable project behind; remove it first.
+    docker @compose down -v --remove-orphans *> $null
+
+    # The compose file pins container names (postgres, rabbitmq, redis, mailcatcher) and host ports,
+    # so another stack that uses them must be stopped first. Name the owner instead of guessing.
+    $conflicts = @()
+    foreach ($name in 'postgres', 'rabbitmq', 'redis', 'mailcatcher') {
+        $owner = docker ps -a --filter "name=^/$name$" --format '{{.Label "com.docker.compose.project"}}'
+        if ($owner) { $conflicts += "container '$name' (compose project '$owner')" }
+    }
     $ports = Select-String -Path .env.example -Pattern '^(POSTGRES_PORT|REDIS_PORT|RABBITMQ_PORT|GATEWAY_PORT)=(\d+)' |
         ForEach-Object { [int]$_.Matches[0].Groups[2].Value }
-    $busy = $ports | Where-Object { (Test-NetConnection 127.0.0.1 -Port $_ -WarningAction SilentlyContinue).TcpTestSucceeded }
-    if ($busy) { throw "Ports already in use: $($busy -join ', '). Stop your local dev stack (docker compose down) first." }
+    foreach ($port in $ports) {
+        if ((Test-NetConnection 127.0.0.1 -Port $port -WarningAction SilentlyContinue).TcpTestSucceeded) {
+            $owner = docker ps --filter "publish=$port" --format '{{.Names}} (compose project {{.Label "com.docker.compose.project"}})'
+            $conflicts += "port $port used by $(if ($owner) { $owner } else { 'a program outside Docker' })"
+        }
+    }
+    if ($conflicts) {
+        $projects = docker ps -a --format '{{.Label "com.docker.compose.project"}}' | Where-Object { $_ } | Sort-Object -Unique
+        throw ("Another stack is in the way: " + ($conflicts -join '; ') +
+            ". Stop it and run again, e.g.: docker compose -p <project> stop   (projects running now: $($projects -join ', '))")
+    }
 
     $ok = Step 'start-stack' { docker @compose up -d --build postgres redis rabbitmq identity-service coaching-service notification-service speed-reading-service api-gateway course-management-db }
     if ($ok) {
