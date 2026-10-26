@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
+using Notification.Application.Messaging;
 using Microsoft.Extensions.Options;
 using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
@@ -51,7 +52,7 @@ public class InvitationCreatedConsumer : IConsumer<InvitationCreatedEvent>
             </html>
         ";
 
-        var messageId = context.MessageId ?? throw new InvalidOperationException("InvitationCreatedEvent.MessageId is required.");
+        var messageId = MessageIds.Require(context);
         await _emailDeliveryQueue.QueueAsync(
             messageId,
             nameof(InvitationCreatedConsumer),

@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
+using Notification.Application.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Notification.Application.Configuration;
@@ -59,7 +60,7 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
             body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}!</p><p>Lütfen e-posta adresinizi doğrulamak için tıklayın: <a href='{verificationLink}'>Doğrula</a></p>";
         }
 
-        var messageId = context.MessageId ?? throw new InvalidOperationException("UserRegisteredEvent.MessageId is required.");
+        var messageId = MessageIds.Require(context);
         await _emailDeliveryQueue.QueueAsync(
             messageId,
             nameof(UserRegisteredConsumer),

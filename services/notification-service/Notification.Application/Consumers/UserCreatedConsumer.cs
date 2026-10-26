@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
+using Notification.Application.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Notification.Application.Configuration;
@@ -70,7 +71,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
             body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {message.PasswordSetupTokenExpiresAt:O}.</p>";
         }
 
-        var messageId = context.MessageId ?? throw new InvalidOperationException("UserCreatedEvent.MessageId is required.");
+        var messageId = MessageIds.Require(context);
         await _emailDeliveryQueue.QueueAsync(
             messageId,
             nameof(UserCreatedConsumer),

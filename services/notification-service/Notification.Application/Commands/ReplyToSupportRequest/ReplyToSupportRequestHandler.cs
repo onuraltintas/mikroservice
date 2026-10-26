@@ -3,8 +3,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Notification.Application.Interfaces;
 using System.Net;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Notification.Application.Commands.ReplyToSupportRequest;
 
@@ -81,12 +79,8 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
         return Result.Success();
     }
 
-    public static Guid ReplyMessageId(Guid supportRequestId, string replyMessage)
-    {
-        var payload = Encoding.UTF8.GetBytes($"{supportRequestId:N}:{replyMessage}");
-        var hash = SHA256.HashData(payload);
-        return new Guid(hash.AsSpan(0, 16));
-    }
+    public static Guid ReplyMessageId(Guid supportRequestId, string replyMessage) =>
+        Messaging.MessageIds.Derive($"{supportRequestId:N}:{replyMessage}");
 
     private static string RemoveSubjectLineBreaks(string value) =>
         value.Replace("\r", " ", StringComparison.Ordinal)

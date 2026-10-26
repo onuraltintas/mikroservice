@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
+using Notification.Application.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Notification.Application.Configuration;
@@ -70,7 +71,7 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
                 </div>";
         }
 
-        var messageId = context.MessageId ?? throw new InvalidOperationException("UserForgotPasswordEvent.MessageId is required.");
+        var messageId = MessageIds.Require(context);
         await _emailDeliveryQueue.QueueAsync(
             messageId,
             nameof(UserForgotPasswordConsumer),
