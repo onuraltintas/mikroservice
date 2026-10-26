@@ -7,6 +7,8 @@ COPY ["shared/EduPlatform.Shared.Kernel/EduPlatform.Shared.Kernel.csproj", "shar
 COPY ["shared/EduPlatform.Shared.Contracts/EduPlatform.Shared.Contracts.csproj", "shared/EduPlatform.Shared.Contracts/"]
 COPY ["shared/EduPlatform.Shared.Infrastructure/EduPlatform.Shared.Infrastructure.csproj", "shared/EduPlatform.Shared.Infrastructure/"]
 COPY ["shared/EduPlatform.Shared.Security/EduPlatform.Shared.Security.csproj", "shared/EduPlatform.Shared.Security/"]
+# Package versions are managed centrally for the whole repository.
+COPY ["Directory.Packages.props", "./"]
 RUN dotnet restore "services/api-gateway/EduPlatform.Gateway.csproj"
 
 # Copy everything else and build

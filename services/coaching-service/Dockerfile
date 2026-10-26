@@ -11,6 +11,8 @@ COPY ["shared/EduPlatform.Shared.Infrastructure/EduPlatform.Shared.Infrastructur
 COPY ["shared/EduPlatform.Shared.Security/EduPlatform.Shared.Security.csproj", "shared/EduPlatform.Shared.Security/"]
 COPY ["shared/EduPlatform.Shared.Contracts/EduPlatform.Shared.Contracts.csproj", "shared/EduPlatform.Shared.Contracts/"]
 
+# Package versions are managed centrally for the whole repository.
+COPY ["Directory.Packages.props", "./"]
 RUN dotnet restore "services/coaching-service/Coaching.API/Coaching.API.csproj"
 
 # Copy everything else and build

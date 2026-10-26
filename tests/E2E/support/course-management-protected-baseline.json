@@ -796,7 +796,7 @@
     "clients/speed-reading/tsconfig.app.json": "b46615438d1762cd73feff332253962848b2e7f28cd0a61ad7e5f634cf480a17",
     "clients/speed-reading/tsconfig.json": "20b96bd7aa6e9d6005f29760323085d77480249ca5ae7d0e79bfe164d1ee5d01",
     "clients/speed-reading/tsconfig.spec.json": "e152888a28f664ba59eef9583fd7377df22e6e4d6de5bfcd577c0d6456a0229f",
-    "services/coaching-service/Coaching.API/Coaching.API.csproj": "c9eaac5126ca419ae9d4dda79cd01743f96e7b25c397aa70f9f2bd5cff09ae5f",
+    "services/coaching-service/Coaching.API/Coaching.API.csproj": "6e9611a4422703526cf44817d5acdaa884db5d59f49cfc14a3140d17a7bafb22",
     "services/coaching-service/Coaching.API/Coaching.API.http": "b0cfd5d12465a915f9d4373b583cb91714454a66bf752d8755186046d39e57be",
     "services/coaching-service/Coaching.API/Controllers/AdminAuditController.cs": "3260701f7096745eedaf04b5cd56d170aed83ac34c10743aaa85d088a3598ef0",
     "services/coaching-service/Coaching.API/Controllers/AssignmentsController.cs": "7a72b44c5497c0a1c17c7662bfa4f0cd642d336d2140bfac14e5a70ae6e75320",
@@ -878,7 +878,7 @@
     "services/coaching-service/Coaching.Application/CatalogAdministration/ICoachingCatalogManagementService.cs": "9838a9d3c5eadc6efe470662adb6df3f112c7a14387e165b673f9e237a729ea2",
     "services/coaching-service/Coaching.Application/CatalogAdministration/ICoachingLocationDirectory.cs": "1b87d32b47e76d1bdaf883efa4ac404e84878567bdcc1e2b90eeecfc6f575c57",
     "services/coaching-service/Coaching.Application/CatalogAdministration/SchoolLocationMatcher.cs": "e44de19ee4b70ca3544327332ece484dbdad223c394e7a832bcb159a9c35d92c",
-    "services/coaching-service/Coaching.Application/Coaching.Application.csproj": "06e9f4bfa7d66e05e2218d5d935942851c9a0214696725cefc31bac175e72c92",
+    "services/coaching-service/Coaching.Application/Coaching.Application.csproj": "41bb64d867d6e7c34c9d09339e2cfb53b981f8a28cc15041715d06c592fe3e17",
     "services/coaching-service/Coaching.Application/CoachingAgreements/CoachingAgreementRequirementBehavior.cs": "41f6a3416a840f5b3772d2b46c6c28da4b29e1b7b1c65b1a1bee1264003b39dc",
     "services/coaching-service/Coaching.Application/CoachingAgreements/CoachingAgreementUseCases.cs": "617b5f6a96f51b70d82eccb0947928005f26757d6511096396e9da396a2ba2ce",
     "services/coaching-service/Coaching.Application/Commands/AddExamResult/AddExamResultCommand.cs": "7a9f757af6be3fc3d48d687c61d9d1903f2f8facbe476a6a6ee1f2224da8c259",
@@ -1077,7 +1077,7 @@
     "services/coaching-service/Coaching.Infrastructure/Catalogs/CoachingYksCatalogImportService.cs": "328da4136d3eb8e1e46935be3cee45a2a558bbcdab31b47f29f9b18b3eee372c",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/OutcomeImportPackage.cs": "0dd265dd78a997a17aa32972561dc50b7f58c4c5081183841053f2c3000457b2",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/TargetCatalogImporter.cs": "285c80968e724d58a1405464d06885736a87a16b4945353d40b9e27e8c21ebca",
-    "services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj": "53b8dc646214d494925a32ec22cbd6c1c4ed6515554cc834844034cbdee59232",
+    "services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj": "20733b311fc632bb643e455a79f3d543f2b1e1139f06a827ee49f545af80cffa",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AcademicGoalConfiguration.cs": "398b24bdef9df2c6dfc8f3adc055ab25a438646abdf5c0af41fc7d0f4bbc0fd3",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AssignmentConfiguration.cs": "8ff902355a8414bdb1c623eeb9e34f89c0a55b5d1bb946460e50abf5f1f4e3f9",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AssignmentInstructionAttachmentConfiguration.cs": "8af5909e285bdcffe163f5e47e28eb422a330b2ca57c58b957e97cc556f163d9",
@@ -1305,10 +1305,10 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/TargetAdmissionSearchService.cs": "7f79720e4a9ba3ca4ff34b778dd0a7bc09198aa1d8ceb4209280d6985a148894",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/YksCatalogEligibility.cs": "fbedc2c2e6a9865d5ecbf8fd1a65ee01bd12e5035cb8861b1eb2ae2e29ae5a02",
     "services/coaching-service/Coaching.sln": "c0ddddad6384e9205556a700ed32049585f5fbc06c55cfde566ad07a65ace5f6",
-    "services/coaching-service/Dockerfile": "7316f1c4f498cf4fe8c8a36363e96a5492584d563026e0d992b4679ab562e477",
+    "services/coaching-service/Dockerfile": "bca110da90e391711e73fa645a53e33afe55920d30feca188f499fd79651b1c4",
     "services/coaching-service/IMPLEMENTATION_PLAN.md": "ed56425f95a252dfec8a26ba177e03adb6e4574ec699cbb0d7fac187adc73833",
     "services/coaching-service/PROGRESS_REPORT.md": "38963f16cf2c30eab8df9431dadf562f1f7cd0a7c40ebc2bc9bdb973b4a7eec5",
-    "services/speed-reading-service/Dockerfile": "0cce2cf9e2bde758a0689e150b04509ff87a8ca6b4f5c6cdcfb0dd5a00646b82",
+    "services/speed-reading-service/Dockerfile": "d57e1edf67b74752243d0780bfd13ca3cc56e0d80ea3c960783279fddb96bdbc",
     "services/speed-reading-service/SpeedReading.API/Controllers/AchievementsController.cs": "0691232f59b47c9030f85e456b6fa62780e31961b2bd6a6cc536800e34fc6c34",
     "services/speed-reading-service/SpeedReading.API/Controllers/AdaptiveLearningController.cs": "64d7b99ee2fb8a84167c0f50f2523d7fc477220c1a94189ac33c80be6cef0890",
     "services/speed-reading-service/SpeedReading.API/Controllers/AdaptiveTextController.cs": "3ab383c2b31e2152e3abf73eeb0a7e8d17ae8ce6b7a8849a61b7515779b56f79",
@@ -1393,7 +1393,7 @@
     "services/speed-reading-service/SpeedReading.API/Security/GoogleRecaptcha.cs": "00ae3f0ea2ba44f275ed507c083f865bda031e69653a21ab107e486935adee07",
     "services/speed-reading-service/SpeedReading.API/Security/SpeedReadingSubscriptionAccessMiddleware.cs": "eaf995b6bafbdc2f9f22cba79bbd39492f28f719ac90462b6f180311ab3f6d38",
     "services/speed-reading-service/SpeedReading.API/Security/StaffTrainingAccess.cs": "a160b4d8775b86bf03b7430f83aac66b4ab80898e0993b0c7b9348709e2e236b",
-    "services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj": "a325d806f4a1fbee9d436bb2707b327e28f05e6293a2479996c3bb1c2acf00a4",
+    "services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj": "a31095e385a689c359b5aee8b60db97664bdfc2597172dd98a6cc7681dbcdf36",
     "services/speed-reading-service/SpeedReading.API/migration-host.contract.test.mjs": "f92ede6bfb824267857fd3a4219265daa8c64d963cdf478ad4296785c98fc8bb",
     "services/speed-reading-service/SpeedReading.Application/AdaptiveLearning/AdaptiveProgressionRules.cs": "b3432b4c7303ef217015079ec5ad24191214296f0caa475471e99c369ca17347",
     "services/speed-reading-service/SpeedReading.Application/AdaptiveLearning/SpeedReadingAdaptiveLearningContracts.cs": "c2c7bbef2d886197797f4dad553d080842e0ce454cdb2a374c889a5f3930abed",
@@ -1447,7 +1447,7 @@
     "services/speed-reading-service/SpeedReading.Application/Review/SpeedReadingReviewContracts.cs": "0fd0c27468d71656449372aab16e09758fdf734894a1844bd37b702888a661c8",
     "services/speed-reading-service/SpeedReading.Application/Rsvp/SpeedReadingRsvpContracts.cs": "5dbdb1c45a13cb10c40e0e8fb8087e62876c5c20426f9d207219abf998cdf2e5",
     "services/speed-reading-service/SpeedReading.Application/SeriesAccess/SpeedReadingSeriesAccessContracts.cs": "bc064fb81a534553f0a281babfb7c0a7b73f8d45de14f8c22250f5ce4f70190e",
-    "services/speed-reading-service/SpeedReading.Application/SpeedReading.Application.csproj": "7fd142f0176b9ed8695c241133cbdba914f7383e47ebb6e3d5cacc4007c99593",
+    "services/speed-reading-service/SpeedReading.Application/SpeedReading.Application.csproj": "ee7c81ade3aeccc89cd0e98fa7620fedf41061ffa773d8c06489b1798243b784",
     "services/speed-reading-service/SpeedReading.Application/StudentProgram/SpeedReadingStudentProgramContracts.cs": "60ec2808f87b7d80ea7532b7110af21130738d4e77497205164438058a0caacf",
     "services/speed-reading-service/SpeedReading.Application/StudentReading/SpeedReadingStudentReadingContracts.cs": "fd31d3a28615dce405df2295cd55d1ea18018753f35c633ed4cce26d388b3840",
     "services/speed-reading-service/SpeedReading.Application/Subscription/BankTransferPaymentRules.cs": "5f06e63312410ba9d3cac9c0277ea13b205b720f37ab179da7bdd4b56a8919c4",
@@ -1730,7 +1730,7 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/program-template-validation.contract.test.mjs": "519d4bcffa641dd238b9cf86dc43bd2856b21a4a698bf55afc09f72c6c422fe9",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingErasureExecutionService.cs": "f19c1636f605d8552e85b9aa273a57a1541da398c18c94a554e06ec700374ba5",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingPrivacyInventoryRepository.cs": "173fe1cc1dd3c8249e1dd61ceb70f14fb402e272d3f2149b7db9552db03884a4",
-    "services/speed-reading-service/SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj": "bb95608c97b40598b68e6dcee53a357b98c8bde6fd410857525df450b2354e25",
+    "services/speed-reading-service/SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj": "387260a58adf1b34f8d4ed88b1658cf74fa24b108b715937c14404c37ee39b37",
     "services/speed-reading-service/SpeedReading.Infrastructure/SpeedReadingIdempotencyCleanupWorker.cs": "fab2bafc18f60275e8f00ec4bcc523ac9691e1cd84fe4fba42468d0c2e21b587",
     "services/speed-reading-service/appsettings.Development.json": "a29a0684102d884f68acd5792001d2f0748159618339016681f7b8f51236f0c5",
     "services/speed-reading-service/appsettings.json": "3466bbb6f7e088b7d1ee20a235c77bf4a8d45a0810c81adbad32a9a7fd990ca2",
@@ -2527,10 +2527,10 @@
       }
     }
   },
-  "baselineCommit": "91108f5",
+  "baselineCommit": "f8dbfbf",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "Reviewed non-root runtime change: the Coaching and Speed Reading API images run as UID 1654 with one-shot volume ownership services, and the Speed Reading frontend uses unprivileged nginx on port 8080. No application code changed. Not a deployment manifest.",
+    "purpose": "Reviewed build-only change: NuGet Central Package Management (versions moved from the Coaching and Speed Reading csproj files to Directory.Packages.props, which the Dockerfiles now copy before restore). Package upgrades to .NET 10 follow in the same PR. No application code changed. Not a deployment manifest.",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2578,7 +2578,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "4890c2a",
+    "previousBaselineCommit": "91108f5",
     "removedSincePreviousBaseline": []
   }
 }

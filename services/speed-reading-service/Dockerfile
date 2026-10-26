@@ -10,6 +10,8 @@ COPY ["shared/EduPlatform.Shared.Contracts/EduPlatform.Shared.Contracts.csproj",
 COPY ["shared/EduPlatform.Shared.Infrastructure/EduPlatform.Shared.Infrastructure.csproj", "shared/EduPlatform.Shared.Infrastructure/"]
 COPY ["shared/EduPlatform.Shared.Security/EduPlatform.Shared.Security.csproj", "shared/EduPlatform.Shared.Security/"]
 
+# Package versions are managed centrally for the whole repository.
+COPY ["Directory.Packages.props", "./"]
 RUN dotnet restore "services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj"
 COPY . .
 WORKDIR "/src/services/speed-reading-service/SpeedReading.API"
