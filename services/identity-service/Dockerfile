@@ -13,15 +13,21 @@ COPY ["shared/EduPlatform.Shared.Contracts/EduPlatform.Shared.Contracts.csproj",
 
 RUN dotnet restore "services/identity-service/Identity.API/Identity.API.csproj"
 
-# Copy everything else and build
+# Copy everything else and publish (publish builds; a separate build step only repeated it)
 COPY . .
 WORKDIR "/src/services/identity-service/Identity.API"
-RUN dotnet build "Identity.API.csproj" -c Release -o /app/build --no-restore
 
 FROM build AS publish
 RUN dotnet publish "Identity.API.csproj" -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+# The Data Protection key ring lives on a named volume mounted here. Creating the mount
+# point owned by the runtime user makes a fresh volume inherit writable ownership;
+# volumes created by older root images are fixed by identity-volume-permissions.
+RUN mkdir -p /var/lib/eduplatform/data-protection-keys \
+    && chown -R "$APP_UID" /var/lib/eduplatform
 COPY --from=publish /app/publish .
+# Run as the image's built-in non-root user (UID 1654); the service listens on 8080.
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Identity.API.dll"]

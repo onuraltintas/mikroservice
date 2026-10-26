@@ -29,7 +29,7 @@ import { RouterLink } from '@angular/router';
       </header>
       @if (canDelete()) { <details class="rounded-xl border p-4"><summary class="cursor-pointer font-medium">Toplu katalog aktarımı ve yayın</summary><app-coaching-catalog-import /></details> }
       @if (canDelete()) { <details class="rounded-xl border p-4" (toggle)="curriculumOpen = $any($event.target).open"><summary class="cursor-pointer font-medium">Müfredat ve program sürümleri</summary>@if (curriculumOpen) { <app-coaching-curriculum /> }</details> }
-      @if (canDelete()) { <details class="rounded-xl border p-4" (toggle)="outcomesOpen = $any($event.target).open"><summary class="cursor-pointer font-medium">LGS kazanımları ve süre incelemesi</summary>@if (outcomesOpen) { <app-coaching-outcomes /> }</details> }
+      @if (canDelete()) { <details class="rounded-xl border p-4" (toggle)="outcomesOpen = $any($event.target).open"><summary class="cursor-pointer font-medium">Kazanımlar ve süre incelemesi</summary>@if (outcomesOpen) { <app-coaching-outcomes /> }</details> }
       <form (ngSubmit)="load()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-4">
         <div><label for="catalog-kind" class="block text-sm font-medium">Katalog</label>
           <select id="catalog-kind" [disabled]="editorOpen() || deleting()" [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800">
@@ -47,11 +47,8 @@ import { RouterLink } from '@angular/router';
           <div><label for="catalog-grade" class="block text-sm font-medium">Sınıf</label><input id="catalog-grade" type="number" min="1" max="12" name="grade" [(ngModel)]="gradeNumber" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
           <div><label for="catalog-exam" class="block text-sm font-medium">Sınav</label><select id="catalog-exam" name="exam" [(ngModel)]="examCode" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for (exam of exams(); track exam.code) {<option [value]="exam.code">{{ exam.name }} ({{ exam.code }})</option>}</select></div>
         }
-        @if (kind === 'schools' || kind === 'universityPrograms') {
+        @if (kind === 'schools') {
           <div><label for="catalog-year" class="block text-sm font-medium">Puan yılı</label><input id="catalog-year" type="number" min="1900" max="2200" name="year" [(ngModel)]="scoreYear" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-        }
-        @if (kind === 'universityPrograms') {
-          <div><label for="catalog-score" class="block text-sm font-medium">Puan türü</label><input id="catalog-score" name="score" [(ngModel)]="scoreType" maxlength="30" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
         }
         @if (kind === 'schools') {
           <div><label for="catalog-province" class="block text-sm font-medium">Doğrulanmış şehir</label><select id="catalog-province" name="province" [(ngModel)]="provinceId" (ngModelChange)="provinceChanged()" [disabled]="editorOpen() || deleting()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for (row of provinces(); track row.id) { <option [value]="row.id">{{ row.name }}</option> }</select></div>
@@ -94,8 +91,8 @@ import { RouterLink } from '@angular/router';
             <tbody>@for (row of items(); track row.id) {
               <tr class="border-t dark:border-gray-700">
                 <td class="p-4 font-medium">{{ row.name }}</td>
-                <td class="p-4">@if (kind === 'schools') {<span class="block text-xs text-gray-500">Kaynak konum (korunur)</span>}{{ row.universityName || row.city || row.examCode || '-' }} @if (row.district) {<span class="block text-gray-500">{{ row.district }} · {{ row.districtId ? 'Ortak dizinle eşleştirilmiş' : 'Konum eşleştirilmemiş' }}</span>} @if (row.gradeNumber) {<span class="block">{{ row.gradeNumber }}. sınıf</span>}</td>
-                <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }} · {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else if (row.estimatedMinutes != null) {{{ row.estimatedMinutes }} dakika} @else {—} @if (row.displayOrder != null) {<span class="block">Sıra: {{ row.displayOrder }}</span>} @if (row.scoreType) {<span class="block">{{ row.scoreType }} · {{ row.programCode || 'Kod yok' }}</span>}</td>
+                <td class="p-4">@if (kind === 'schools') {<span class="block text-xs text-gray-500">Kaynak konum (korunur)</span>}{{ row.city || row.examCode || '-' }} @if (row.district) {<span class="block text-gray-500">{{ row.district }} · {{ row.districtId ? 'Ortak dizinle eşleştirilmiş' : 'Konum eşleştirilmemiş' }}</span>} @if (row.gradeNumber) {<span class="block">{{ row.gradeNumber }}. sınıf</span>}</td>
+                <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }} · {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else if (row.estimatedMinutes != null) {{{ row.estimatedMinutes }} dakika} @else {—} @if (row.displayOrder != null) {<span class="block">Sıra: {{ row.displayOrder }}</span>}</td>
                 <td class="p-4">{{ row.source }}<span class="block text-xs text-gray-500">{{ row.sourceId }}</span></td>
                 <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}@if (canDelete()) {<button type="button" [attr.aria-label]="row.name + ' (' + row.id + ') düzenle'" (click)="openEditor(row.id)" [disabled]="editorOpen() || deleting()" class="mt-2 block rounded-lg border px-2 py-1">Düzenle / yayın durumu</button>}<button type="button" [attr.aria-label]="kindLabel() + ': ' + row.name + ' (' + row.id + ') kullanımını incele'" (click)="inspectUsage(row.id)" [disabled]="editorOpen() || deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
               </tr>
@@ -141,8 +138,7 @@ export class CoachingCatalogComponent implements OnInit {
   deleteConfirmation = '';
   readonly kinds: { value: CoachingCatalogKind; label: string }[] = [
     { value: 'lessons', label: 'Dersler' }, { value: 'units', label: 'Üniteler' },
-    { value: 'topics', label: 'Konular' }, { value: 'schools', label: 'Okullar' },
-    { value: 'universityPrograms', label: 'Üniversite programları' }
+    { value: 'topics', label: 'Konular' }, { value: 'schools', label: 'Okullar' }
   ];
   readonly exams = signal<{code:string;name:string;isActive:boolean}[]>([]);
   readonly items = signal<CoachingCatalogRow[]>([]);
@@ -157,7 +153,6 @@ export class CoachingCatalogComponent implements OnInit {
   gradeNumber: number | null = null;
   examCode = '';
   scoreYear: number | null = null;
-  scoreType = '';
 
   constructor() { this.destroyRef.onDestroy(() => { this.request?.unsubscribe(); this.usageRequest?.unsubscribe(); }); }
   canDelete() { return this.auth.userProfile()?.roles?.includes('SystemAdmin') && this.auth.hasPermission(ADMIN_PERMISSIONS.coachingContentManage); }
@@ -217,7 +212,6 @@ export class CoachingCatalogComponent implements OnInit {
     this.gradeNumber = null;
     this.examCode = '';
     this.scoreYear = null;
-    this.scoreType = '';
     this.load();
   }
   provinceChanged() {
@@ -264,7 +258,7 @@ export class CoachingCatalogComponent implements OnInit {
       this.error.set('Sınıf 1 ile 12 arasında tam sayı olmalıdır.');
       return;
     }
-    if ((this.kind === 'schools' || this.kind === 'universityPrograms') && this.scoreYear !== null
+    if (this.kind === 'schools' && this.scoreYear !== null
         && (!Number.isInteger(this.scoreYear) || this.scoreYear < 1900 || this.scoreYear > 2200)) {
       this.error.set('Puan yılı 1900 ile 2200 arasında tam sayı olmalıdır.');
       return;
@@ -273,11 +267,10 @@ export class CoachingCatalogComponent implements OnInit {
     const filter: CoachingCatalogFilter = { pageNumber: page, pageSize: 25, search: this.search.trim(), source: this.source.trim() };
     if (this.status) filter.isActive = this.status === 'active';
     if (this.kind === 'lessons') { filter.gradeNumber = this.gradeNumber ?? undefined; filter.examCode = this.examCode; }
-    if (this.kind === 'schools' || this.kind === 'universityPrograms') filter.scoreYear = this.scoreYear ?? undefined;
+    if (this.kind === 'schools') filter.scoreYear = this.scoreYear ?? undefined;
     if (this.kind === 'schools') { filter.provinceId = this.provinceId || undefined; filter.districtId = this.districtId || undefined; }
     if (this.kind === 'units' || this.kind === 'topics') filter.lessonId = this.lessonId || undefined;
     if (this.kind === 'topics') filter.unitId = this.unitId || undefined;
-    if (this.kind === 'universityPrograms') filter.scoreType = this.scoreType.trim();
     this.request = this.service.list(this.kind, filter).subscribe({
       next: result => { this.items.set(result.items); this.totalCount.set(result.totalCount); this.loading.set(false); },
       error: () => { this.loading.set(false); this.error.set('Katalog yüklenemedi. Filtreleri kontrol edip yeniden deneyin.'); }

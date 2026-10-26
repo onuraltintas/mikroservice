@@ -228,6 +228,10 @@ public sealed class CurriculumManagementTests
         Assert.Equal("Matematik",(await f.Db.StudyCatalogLessons.SingleAsync()).Name);
     }
 
+    // Historical schema snapshots synthesize the fields absent from their original shape.
+    internal static IQueryable<StudyPlanTask> LegacyStudyTasks(CoachingDbContext db) => db.StudyPlanTasks.FromSqlRaw(
+        """SELECT task.*, NULL::uuid AS "CompletionSourceTaskId", NULL::uuid AS "OriginalTaskId", '[]'::jsonb AS "RealizationHistoryJson",NULL::integer AS "RemainingMinutes",NULL::integer AS "RemainingQuestions",NULL::uuid AS "PredecessorTaskId",NULL::integer AS "PredecessorVersion",NULL::jsonb AS "ActualWorkJson",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkFromDate",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkToDate" FROM coaching.study_plan_tasks AS task""");
+
     internal sealed class Fixture : IAsyncDisposable
     {
         public CoachingDbContext Db { get; }
@@ -242,7 +246,7 @@ public sealed class CurriculumManagementTests
         }
         public Scope Scope { get; } = new(); public Actor User { get; } = new();
         public CoachingCurriculumManagementService Service => new(Db, Scope, User);
-        public async Task<StudyCatalogTopic> Seed()
+        public async Task<StudyCatalogTopic> Seed(bool legacyPlanSchema = false)
         {
             var lesson = StudyCatalogLesson.Create("approved-catalog", "math", "Matematik", 8, "LGS"); lesson.SetActive(true);
             var unit = StudyCatalogUnit.Create("test", "unit", lesson.Id, "Sayılar", 1); unit.SetActive(true);
@@ -253,9 +257,27 @@ public sealed class CurriculumManagementTests
             var estimate = OutcomeDurationEstimate.Create(outcome.Id, 1, 20, 30, 10, "ReviewedStudy", "Medium", "İlk süre dayanağı", User.UserId); estimate.Publish();
             var mapping = StudyCatalogTopicOutcome.Create(topic.Id, outcome.Id, "Onaylı eşleştirme"); mapping.Review(true, "Onaylı eşleştirme", User.UserId!.Value);
             var plan = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Eski plan"); plan.Activate();
-            var task = StudyPlanTask.Create(plan, new(2026,10,19), "Çarpanlar", 30, topic.Id); task.Complete(25,8);
+            var task = StudyPlanTask.Create(plan, new(2026,10,19), "Çarpanlar", 30, topic.Id); task.Complete(25,8,new(2026,10,19));
             var link = StudyPlanTaskOutcome.Create(task.Id, outcome.Id, estimate.Id, 30, "StudentOverride");
-            Db.AddRange(lesson,unit,topic,edition,official,outcome,estimate,mapping,plan,task,link); await Db.SaveChangesAsync(); return topic;
+            Db.AddRange(lesson,unit,topic,edition,official,outcome,estimate,mapping);
+            if (legacyPlanSchema)
+            {
+                // Historical migration tests must insert the historical shape, rather than
+                // ask the current model to write columns introduced by later migrations.
+                await Db.SaveChangesAsync();
+                await Db.Database.ExecuteSqlInterpolatedAsync($"""
+                    INSERT INTO coaching.study_plan_revisions ("Id","StudentId","PlanId","RevisionNumber","Title","Status","IsActive","Version","CreatedAt")
+                    VALUES ({plan.Id},{plan.StudentId},{plan.PlanId},1,{plan.Title},1,true,0,{plan.CreatedAt})
+                    """);
+            }
+            else Db.Add(plan);
+            if (legacyPlanSchema)
+                await Db.Database.ExecuteSqlInterpolatedAsync($"""
+                    INSERT INTO coaching.study_plan_tasks ("Id","RevisionId","StudentId","TopicId","PlannedDate","Title","PlannedMinutes","ActualMinutes","ActualQuestions","IsPinned","IsCompleted","CompletedAt","Version","CreatedAt")
+                    VALUES ({task.Id},{task.RevisionId},{task.StudentId},{task.TopicId},{task.PlannedDate},{task.Title},{task.PlannedMinutes},{task.ActualMinutes},{task.ActualQuestions},false,true,{task.CompletedAt},0,{task.CreatedAt})
+                    """);
+            else Db.Add(task);
+            Db.Add(link); await Db.SaveChangesAsync(); return topic;
         }
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }

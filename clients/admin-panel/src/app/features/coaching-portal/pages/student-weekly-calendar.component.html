@@ -1,5 +1,5 @@
 <section class="weekly-page" aria-labelledby="weekly-title">
-  <header class="page-heading"><div><p class="eyebrow">KENDİ ÇALIŞMA RİTMİN</p><h1 id="weekly-title">Haftalık programım</h1><p>Derslerini haftaya yerleştir. Konuları planlamadan önce sana uygun düzeni hazırla.</p></div><a routerLink="/coaching-portal/study-plans">Mevcut planlarım ↗</a></header>
+  <header class="page-heading"><div><p class="eyebrow">KENDİ ÇALIŞMA RİTMİN</p><h1 id="weekly-title">Haftalık programım</h1><p>Derslerini haftaya yerleştir. Konuları planlamadan önce sana uygun düzeni hazırla.</p></div><div><a routerLink="/coaching-portal/study-plan-assistant">Sihirbazla planla ↗</a>　<a routerLink="/coaching-portal/study-plans">Mevcut planlarım ↗</a></div></header>
   <div class="draft-strip"><span class="draft-badge">Haftalık taslak</span><span>Bu düzen her hafta tekrar eder. Mevcut planın ve çalışma kayıtların korunur.</span><strong>{{ weeklyMinutes() }} dk / hafta</strong></div>
   @if(error()){<div role="alert" class="notice error">{{ error() }}</div>}
   @if(message()){<p role="status" class="notice success">{{ message() }}</p>}
@@ -46,7 +46,7 @@
         </div>
       </div>
     }
-    <footer class="calendar-footer"><label>Saat dilimi<input aria-label="Saat dilimi" [(ngModel)]="timeZoneId" maxlength="100" [disabled]="busy()"></label><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button><button type="button" data-testid="weekly-preview-link" class="primary" routerLink="/coaching-portal/weekly-plan-preview" [disabled]="busy()||dirty()||version===null||!slots().length||!!form">Çalışma planı oluştur →</button></footer>
+    <footer class="calendar-footer"><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button><button type="button" data-testid="weekly-preview-link" class="primary" routerLink="/coaching-portal/weekly-plan-preview" [disabled]="busy()||dirty()||version===null||!slots().length||!!form">Çalışma planı oluştur →</button></footer>
     <p class="muted">Önce haftalık taslağını kaydet. Sonra kazanımların ders saatlerine ve hedef tarihine nasıl yerleşeceğini önizleyebilirsin.</p>
   }
 </section>

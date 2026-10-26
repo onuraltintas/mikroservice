@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -93,4 +94,9 @@ export class StaffAccountSettingsComponent implements OnInit {
         error: () => this.passwordErrorMessage.set('Şifre değiştirilemedi. Mevcut şifrenizi kontrol edip yeniden deneyin.'),
       });
   }
+
+ private readonly errorMessageFeedback=coachingFeedback(undefined,this.errorMessage);
+ private readonly profileErrorMessageFeedback=coachingFeedback(undefined,this.profileErrorMessage);
+ private readonly passwordErrorMessageFeedback=coachingFeedback(undefined,this.passwordErrorMessage);
+ private readonly successMessageFeedback=coachingFeedback(this.successMessage);
 }

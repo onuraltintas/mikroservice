@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthResponse } from '../../core/models/user.model';
@@ -120,6 +120,34 @@ describe('AuthService', () => {
     });
   });
 
+  it('times out a Google authentication request that never responds', fakeAsync(() => {
+    let error: any;
+    service.googleAuth('google-id-token').subscribe({ error: value => error = value });
+
+    const request = http.expectOne('/api/auth/speed-reading/google-login');
+    tick(15_000);
+
+    expect(error?.name).toBe('TimeoutError');
+    expect(request.cancelled).toBeTrue();
+  }));
+
+  it('continues authentication when optional profile hydration requests stall', fakeAsync(() => {
+    const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJzdHVkZW50Iiwicm9sZSI6IlN0dWRlbnQiLCJleHAiOjQxMDI0NDQ4MDB9.';
+    let response: AuthResponse | undefined;
+    service.googleAuth('google-id-token').subscribe(value => response = value);
+
+    http.expectOne('/api/auth/speed-reading/google-login').flush({ accessToken, roles: [] });
+    const identityProfileRequest = http.expectOne('/api/v1/users/me');
+    tick(5_000);
+    expect(identityProfileRequest.cancelled).toBeTrue();
+
+    const speedReadingProfileRequest = http.expectOne('/api/speed-reading/adaptive-learning/profile/settings');
+    tick(5_000);
+
+    expect(speedReadingProfileRequest.cancelled).toBeTrue();
+    expect(response?.id).toBe('student');
+  }));
+
   it('hydrates a student profile before the login observable completes', () => {
     const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJzdHVkZW50Iiwicm9sZSI6IlN0dWRlbnQiLCJleHAiOjQxMDI0NDQ4MDB9.';
     let response: AuthResponse | undefined;
@@ -209,6 +237,23 @@ describe('AuthService', () => {
     expect(service.currentUserValue).toBeNull();
     expect(localStorage.getItem('currentUser')).toBeNull();
   });
+
+  it('times out student, teacher, and institution registration requests that never respond', fakeAsync(() => {
+    const errors: unknown[] = [];
+    service.register({} as any).subscribe({ error: error => errors.push(error) });
+    service.registerTeacher({} as any).subscribe({ error: error => errors.push(error) });
+    service.registerInstitution({} as any).subscribe({ error: error => errors.push(error) });
+
+    const requests = [
+      http.expectOne('/api/auth/speed-reading/register/student'),
+      http.expectOne('/api/auth/speed-reading/register/teacher'),
+      http.expectOne('/api/auth/speed-reading/register/institution')
+    ];
+    tick(15_000);
+
+    expect(errors.length).toBe(3);
+    requests.forEach(request => expect(request.cancelled).toBeTrue());
+  }));
 
   it('confirms email with the user identifier and verification token from the email link', () => {
     service.verifyEmail({ userId: 'student-id', token: 'verification-token' }).subscribe();

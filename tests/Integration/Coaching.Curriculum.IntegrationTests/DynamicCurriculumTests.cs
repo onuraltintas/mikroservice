@@ -81,8 +81,8 @@ public sealed class DynamicCurriculumTests
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task MigrationBackfillsEveryLegacyExamCode_AndPreservesPlansOnRepeatedUpgrade()
     {
-        await using var f=await CurriculumPostgresTests.Pg.Create(); await f.Data.Seed();
-        var before=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());
+        await using var f=await CurriculumPostgresTests.Pg.Create("20261020065330_MebiLgsProgramCatalog"); await f.Data.Seed(legacyPlanSchema: true);
+        var before=JsonSerializer.Serialize(await CurriculumManagementTests.LegacyStudyTasks(f.Db).AsNoTracking().ToArrayAsync());
         await f.Db.GetService<IMigrator>().MigrateAsync("20261016185534_CurriculumManagementHierarchy");
         var legacy=StudyCatalogLesson.Create("test","legacy-ales","Matematik",12,"ALES");f.Db.Add(legacy);await f.Db.SaveChangesAsync();
         await f.Db.Database.MigrateAsync(); await f.Db.Database.MigrateAsync(); f.Db.ChangeTracker.Clear();
@@ -109,7 +109,7 @@ public sealed class DynamicCurriculumTests
         Assert.Equal(program.Id,Assert.Single((await f.Service.ChildrenAsync("programs",null,null,1,default,true)).Items).Id);
         var source=await f.Service.SaveAsync("programTopics",null,Request(new {Name="Sayılar",Reason="Program konu grubu ekle",ParentId=program.Id,Code="SAY",OutcomeCount=1,LessonPeriods=5}),default);
         Assert.Equal(source.Id,Assert.Single((await f.Service.ChildrenAsync("programTopics",program.Id,null,1,default,true)).Items).Id);
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>f.Db.GetService<IMigrator>().MigrateAsync("20261016195911_DynamicCurriculumExams"));
+        await Assert.ThrowsAsync<NotSupportedException>(()=>f.Db.GetService<IMigrator>().MigrateAsync("20261016195911_DynamicCurriculumExams"));
         Assert.True(await f.Db.Set<OfficialCurriculumEdition>().AnyAsync(x=>x.Id==program.Id&&x.GradeNumber==null));
         await Assert.ThrowsAsync<ArgumentException>(()=>new CoachingTopicSearchService(f.Db).SearchAsync(null,null,"UNKNOWN",1,20));
         var invalid=StudyCatalogLesson.Create("test","bad-exam","Bilinmeyen",null,"BAD");f.Db.Add(invalid);

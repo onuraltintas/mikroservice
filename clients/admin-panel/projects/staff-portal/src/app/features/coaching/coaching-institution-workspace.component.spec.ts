@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CoachingInstitutionAnalyticsComponent } from './coaching-institution-analytics.component';
@@ -11,85 +12,85 @@ import { CoachingInstitutionWorkspaceComponent } from './coaching-institution-wo
 describe('CoachingInstitutionWorkspaceComponent', () => {
   it('retains the student report and section while a financial operation is pending', async () => {
     const fixture = await createFixture(institutionService()); fixture.detectChanges();
-    const component = fixture.componentInstance; const selected = student('student-1'); component.openStudentReport(selected);
-    component.studentReportPanel = { canLeavePage: () => false }; component.closeStudentReport(); component.selectSection('finance');
+    const component = fixture.componentInstance; const selected = student('student-1'); (await component.openStudentReport(selected));
+    component.studentReportPanel = { canLeavePage: async () => false }; (await component.closeStudentReport()); (await component.selectSection('finance'));
     expect(component.selectedStudent()).toEqual(selected); expect(component.activeSection()).toBe('overview');
-    component.studentReportPanel = undefined; component.financePanel = { canLeavePage: () => false };
-    expect(component.canLeavePage()).toBe(false);
+    component.studentReportPanel = undefined; component.financePanel = { canLeavePage: async () => false };
+    expect((await component.canLeavePage())).toBe(false);
   });
   it('opens institution subscription management and delegates its pending navigation guard', async () => {
     const service = institutionService(); const fixture = await createFixture(service); fixture.detectChanges();
     const tab = fixture.nativeElement.querySelector('[data-testid="institution-subscription-tab"]') as HTMLButtonElement;
-    expect(tab).toBeTruthy(); tab.click(); fixture.detectChanges();
+    expect(tab).toBeTruthy(); await fixture.componentInstance.selectSection('subscription'); fixture.detectChanges();
     expect(service.getSubscription).toHaveBeenCalled();
     fixture.componentInstance.subscriptionPanel = { canLeavePage: () => false };
-    fixture.componentInstance.selectSection('students');
+    (await fixture.componentInstance.selectSection('students'));
     expect(fixture.componentInstance.activeSection()).toBe('subscription');
-    expect(fixture.componentInstance.canLeavePage()).toBe(false);
+    expect((await fixture.componentInstance.canLeavePage())).toBe(false);
   });
   it('reassigns a roster student while preserving a valid grade and refreshes the roster', async () => {
     const service = institutionService({ students: [student('student-1')], teachers: [teacher('teacher-1'), teacher('teacher-2')] });
     const fixture = await createFixture(service); fixture.detectChanges();
-    const component = fixture.componentInstance; component.selectSection('students'); fixture.detectChanges();
+    const component = fixture.componentInstance; (await component.selectSection('students')); fixture.detectChanges();
     const edit = fixture.nativeElement.querySelector('[data-testid="edit-student-student-1"]') as HTMLButtonElement;
-    expect(edit).toBeTruthy(); edit.click();
+    expect(edit).toBeTruthy(); await component.startStudentEdit(student('student-1'));
     component.editStudentGrade = 9; component.editStudentTeacherId = 'teacher-2'; component.saveStudentEdit();
     expect(service.updateStudent).toHaveBeenCalledWith('student-1', 9, 'teacher-2');
-    expect(service.getStudentRoster).toHaveBeenCalledTimes(2);
+    await vi.waitFor(()=>expect(service.getStudentRoster).toHaveBeenCalledTimes(2));
     expect(component.editingStudentId()).toBeNull();
   });
 
   it('rejects invalid grade and blocks navigation and duplicate membership saves while pending', async () => {
     const service = institutionService({ students: [student('student-1')] });
     const fixture = await createFixture(service); fixture.detectChanges();
-    const component = fixture.componentInstance; component.selectSection('students'); component.startStudentEdit(student('student-1'));
+    const component = fixture.componentInstance; (await component.selectSection('students')); (await component.startStudentEdit(student('student-1')));
     component.editStudentGrade = 13; component.saveStudentEdit(); expect(service.updateStudent).not.toHaveBeenCalled();
     component.editStudentGrade = 8;
     const pending = new Subject<undefined>(); service.updateStudent.mockReturnValueOnce(pending);
-    component.saveStudentEdit(); component.saveStudentEdit(); component.selectSection('teachers');
-    component.searchStudents('Ece'); component.setTeacherFilter('teacher-2'); component.setGradeFilter('9'); component.loadStudents();
+    component.saveStudentEdit(); component.saveStudentEdit(); (await component.selectSection('teachers'));
+    (await component.searchStudents('Ece')); (await component.setTeacherFilter('teacher-2')); (await component.setGradeFilter('9')); (await component.loadStudents());
     expect(service.getStudentRoster).toHaveBeenCalledTimes(1);
     expect(component.studentSearchTerm()).toBe(''); expect(component.studentTeacherFilter()).toBe(''); expect(component.studentGradeFilter()).toBeNull();
-    component.teacherPageNumber.set(2); component.searchTeachers('Yeni');
+    component.teacherPageNumber.set(2); (await component.searchTeachers('Yeni'));
     expect(component.teacherSearchTerm()).toBe(''); expect(component.teacherPageNumber()).toBe(2);
-    expect(service.updateStudent).toHaveBeenCalledTimes(1); expect(component.activeSection()).toBe('students'); expect(component.canLeavePage()).toBe(false);
+    expect(service.updateStudent).toHaveBeenCalledTimes(1); expect(component.activeSection()).toBe('students'); expect((await component.canLeavePage())).toBe(false);
     pending.complete(); expect(component.isMembershipSaving()).toBe(false);
   });
 
   it('confirms member removal and keeps authorization failures visible without clearing the roster', async () => {
     const service = institutionService({ students: [student('student-1')], teachers: [teacher('teacher-1')] });
-    const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance; component.selectSection('students');
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
-    component.removeStudent(student('student-1')); expect(service.removeStudent).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true); service.removeStudent.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 403 })));
-    component.removeStudent(student('student-1')); expect(component.students().length).toBe(1); expect(component.membershipError()).toBeTruthy();
-    component.selectSection('teachers'); component.removeTeacher(teacher('teacher-1'));
-    expect(service.removeTeacher).toHaveBeenCalledWith('teacher-1'); expect(service.getTeacherRoster).toHaveBeenCalledTimes(4);
+    const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance; (await component.selectSection('students'));
+    const confirm = vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
+    (await component.removeStudent(student('student-1'))); expect(service.removeStudent).not.toHaveBeenCalled();
+    confirm.mockResolvedValue(true); service.removeStudent.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 403 })));
+    (await component.removeStudent(student('student-1'))); expect(component.students().length).toBe(1); expect(component.membershipError()).toBeTruthy();
+    (await component.selectSection('teachers')); (await component.removeTeacher(teacher('teacher-1')));
+    expect(service.removeTeacher).toHaveBeenCalledWith('teacher-1'); await vi.waitFor(()=>expect(service.getTeacherRoster).toHaveBeenCalledTimes(4));
   });
 
   it('drops removed teachers from fresh assignment filter options', async () => {
     const service = institutionService({ teachers: [teacher('teacher-1')] });
     const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
-    component.selectSection('students'); component.selectSection('teachers');
+    (await component.selectSection('students')); (await component.selectSection('teachers'));
     service.getTeacherRoster.mockReturnValue(of({ teachers: [], totalCount: 0 }));
-    vi.spyOn(window, 'confirm').mockReturnValue(true); component.removeTeacher(teacher('teacher-1'));
+    vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(true); (await component.removeTeacher(teacher('teacher-1')));
     expect(component.teacherFilterOptions()).toEqual([]);
   });
   it('evicts a successfully removed teacher even when subsequent roster refresh fails', async () => {
     const service = institutionService({ teachers: [teacher('teacher-1')] });
     const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
-    component.selectSection('students'); component.selectSection('teachers');
+    (await component.selectSection('students')); (await component.selectSection('teachers'));
     service.getTeacherRoster.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
-    vi.spyOn(window, 'confirm').mockReturnValue(true); component.removeTeacher(teacher('teacher-1'));
+    vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(true); (await component.removeTeacher(teacher('teacher-1')));
     expect(component.teacherFilterOptions()).toEqual([]); expect(component.teachers()).toEqual([]);
-    expect(service.getTeacherRoster).toHaveBeenCalledTimes(4);
+    await vi.waitFor(()=>expect(service.getTeacherRoster).toHaveBeenCalledTimes(4));
   });
   it('opens scoped analysis only after selecting the institution analytics tab', async () => {
     const fixture = await createFixture(); fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
     http.expectNone(request => request.url.includes('/reports/institution/'));
     const tab = fixture.nativeElement.querySelector('[data-testid="institution-analytics-tab"]') as HTMLButtonElement;
-    expect(tab).toBeTruthy(); tab.click(); fixture.detectChanges();
+    expect(tab).toBeTruthy(); await fixture.componentInstance.selectSection('analytics'); fixture.detectChanges();
     const comparison = http.expectOne(request => request.url === '/api/reports/institution/institution-1/comparison');
     const warnings = http.expectOne(request => request.url === '/api/reports/institution/institution-1/early-warnings');
     comparison.flush({ studentCount: 1, assignedAssignmentCount: 0, submittedAssignmentCount: 0, goalCount: 0, completedGoalCount: 0 });
@@ -99,8 +100,8 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const analytics = fixture.debugElement.query(By.directive(CoachingInstitutionAnalyticsComponent)).componentInstance;
     analytics.fromDate = '2026-10-01'; analytics.gradeLevel = 8;
     analytics.warnings.set({ items: [], totalCount: 30, pageNumber: 2, totalPages: 2 });
-    fixture.componentInstance.openStudentReport(student('student-1')); fixture.detectChanges();
-    fixture.componentInstance.closeStudentReport(); fixture.detectChanges();
+    (await fixture.componentInstance.openStudentReport(student('student-1'))); fixture.detectChanges();
+    (await fixture.componentInstance.closeStudentReport()); fixture.detectChanges();
     const returned = fixture.debugElement.query(By.directive(CoachingInstitutionAnalyticsComponent)).componentInstance;
     expect(returned).toBe(analytics); expect(returned.fromDate).toBe('2026-10-01'); expect(returned.gradeLevel).toBe(8);
     expect(returned.warnings()?.pageNumber).toBe(2);
@@ -123,7 +124,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     fixture.detectChanges();
     expect(service.getStudentRoster).not.toHaveBeenCalled();
 
-    (fixture.nativeElement.querySelector('[data-testid="institution-students-tab"]') as HTMLButtonElement).click();
+    await fixture.componentInstance.selectSection('students');
     fixture.detectChanges();
 
     expect(service.getStudentRoster).toHaveBeenCalledWith('institution-1', 1, '', undefined, null);
@@ -135,10 +136,10 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const service = institutionService({ students: [student('student-1')] });
     const fixture = await createFixture(service);
     fixture.detectChanges();
-    fixture.componentInstance.selectSection('students');
+    (await fixture.componentInstance.selectSection('students'));
     fixture.detectChanges();
 
-    (fixture.nativeElement.querySelector('[data-testid="student-report-student-1"]') as HTMLButtonElement).click();
+    await fixture.componentInstance.openStudentReport(student('student-1'));
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -150,17 +151,17 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const service = institutionService({ teachers: [teacher('teacher-1')], students: [student('student-1')] });
     const fixture = await createFixture(service);
     fixture.detectChanges();
-    fixture.componentInstance.selectSection('teachers');
+    (await fixture.componentInstance.selectSection('teachers'));
     fixture.detectChanges();
 
-    (fixture.nativeElement.querySelector('[data-testid="teacher-report-teacher-1"]') as HTMLButtonElement).click();
+    await fixture.componentInstance.openTeacherReport(teacher('teacher-1'));
     fixture.detectChanges();
     await fixture.whenStable();
     expect(fixture.componentInstance.selectedTeacher()?.userId).toBe('teacher-1');
     expect(service.getTeacherOverview).toHaveBeenCalledWith('teacher-1');
 
-    fixture.componentInstance.openStudentReport(student('student-1'));
-    fixture.componentInstance.closeStudentReport();
+    (await fixture.componentInstance.openStudentReport(student('student-1')));
+    (await fixture.componentInstance.closeStudentReport());
     expect(fixture.componentInstance.selectedStudent()).toBeNull();
     expect(fixture.componentInstance.selectedTeacher()?.userId).toBe('teacher-1');
   });
@@ -175,13 +176,13 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const fixture = await createFixture(service);
     fixture.detectChanges();
     const component = fixture.componentInstance;
-    component.selectSection('students');
-    component.searchStudents('  Ada  ');
-    component.setTeacherFilter('teacher-1');
-    component.setGradeFilter('8');
+    (await component.selectSection('students'));
+    (await component.searchStudents('  Ada  '));
+    (await component.setTeacherFilter('teacher-1'));
+    (await component.setGradeFilter('8'));
 
     expect(service.getStudentRoster).toHaveBeenLastCalledWith('institution-1', 1, 'Ada', 'teacher-1', 8);
-    component.loadMoreStudents();
+    (await component.loadMoreStudents());
     expect(service.getStudentRoster).toHaveBeenLastCalledWith('institution-1', 2, 'Ada', 'teacher-1', 8);
     expect(component.students().map(item => item.userId)).toEqual(['student-1', 'student-2']);
   });
@@ -190,8 +191,8 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const service = institutionService({ teachers: [teacher('teacher-1')] });
     const fixture = await createFixture(service);
     fixture.detectChanges();
-    fixture.componentInstance.selectSection('teachers');
-    fixture.componentInstance.searchTeachers('Zeynep');
+    (await fixture.componentInstance.selectSection('teachers'));
+    (await fixture.componentInstance.searchTeachers('Zeynep'));
     fixture.detectChanges();
 
     expect(service.getTeacherRoster).toHaveBeenLastCalledWith('institution-1', 1, 'Zeynep');
@@ -203,7 +204,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const fixture = await createFixture(service);
     fixture.detectChanges();
 
-    (fixture.nativeElement.querySelector('[data-testid="institution-teachers-tab"]') as HTMLButtonElement).click();
+    await fixture.componentInstance.selectSection('teachers');
     fixture.detectChanges();
     const teacherEmail = fixture.nativeElement.querySelector('[data-testid="institution-teacher-invite-email"]') as HTMLInputElement;
     expect(teacherEmail).toBeTruthy();
@@ -213,7 +214,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(service.inviteTeacher).toHaveBeenCalledWith('teacher@example.test');
     expect(fixture.nativeElement.textContent).toContain('Öğretmen daveti gönderildi');
 
-    (fixture.nativeElement.querySelector('[data-testid="institution-students-tab"]') as HTMLButtonElement).click();
+    await fixture.componentInstance.selectSection('students');
     fixture.detectChanges();
     const studentEmail = fixture.nativeElement.querySelector('[data-testid="institution-student-invite-email"]') as HTMLInputElement;
     expect(studentEmail).toBeTruthy();
@@ -228,7 +229,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
   it('loads pending Coaching invitations from Identity when institution management is opened', async () => {
     const fixture = await createFixture();
     fixture.detectChanges();
-    fixture.componentInstance.selectSection('teachers');
+    (await fixture.componentInstance.selectSection('teachers'));
     fixture.detectChanges();
     (fixture.nativeElement.querySelector('[data-testid="toggle-pending-invitations"]') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -254,7 +255,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     })));
     const fixture = await createFixture(service);
     fixture.detectChanges();
-    fixture.componentInstance.selectSection('teachers');
+    (await fixture.componentInstance.selectSection('teachers'));
     fixture.detectChanges();
     fixture.componentInstance.teacherInviteEmail = 'teacher@example.test';
     fixture.componentInstance.sendTeacherInvitation();
@@ -268,7 +269,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     service.getTeacherRoster.mockReturnValue(of(teacherPage([], 101)));
     const fixture = await createFixture(service);
     fixture.detectChanges();
-    fixture.componentInstance.selectSection('students');
+    (await fixture.componentInstance.selectSection('students'));
     expect(fixture.componentInstance.teacherFilterTotalPages()).toBe(2);
 
     fixture.componentInstance.loadMoreTeacherFilterOptions();
@@ -359,3 +360,5 @@ function studentPage(items: CoachingInstitutionStudent[], pageNumber: number, to
 function teacherPage(items: CoachingInstitutionTeacher[], totalCount: number) {
   return { teachers: items, totalCount };
 }
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

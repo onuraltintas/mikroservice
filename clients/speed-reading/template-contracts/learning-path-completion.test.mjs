@@ -6,5 +6,7 @@ const service = readFileSync(new URL('../src/app/core/services/learning-path.ser
 
 assert.match(player, /pathItemId/);
 assert.match(player, /completePersonalizedPathItem/);
-assert.match(player, /if \(!isAssessmentMode && this\.pathItemId.*?\} else if \(!isAssessmentMode && !isPracticeMode && this\.exercise\?\.id\) \{\s*this\.completeDailyProgress/s);
+assert.match(player, /if \(!incomplete && !isAssessmentMode && this\.pathItemId && this\.sessionId\)\s*\{\s*this\.learningPathService\.completePersonalizedPathItem\(this\.pathItemId, this\.sessionId\)/s);
+// Daily progress is completed only for an exercise opened from a daily program slot.
+assert.match(player, /else if \(!incomplete && !isAssessmentMode && !isPracticeMode && !this\.reviewItemId && this\.exercise\?\.id\s*&& this\.dailySlotOrder && this\.dailyProgramDay && this\.dailyProgramProgressId\) \{\s*this\.completeDailyProgress/s);
 assert.match(service, /sessionId: string/);

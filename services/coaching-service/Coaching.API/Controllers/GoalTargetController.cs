@@ -13,6 +13,16 @@ namespace Coaching.API.Controllers;
 [Route("api/coaching/study-planning/goals/{goalId:guid}/target")]
 public sealed class GoalTargetController(IGoalTargetService targets) : ControllerBase
 {
+    [HttpPut("net"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
+    public async Task<IActionResult> ReplaceNet(Guid goalId, GoalNetTargetUpdate request, CancellationToken ct = default)
+    {
+        try { return Ok(new { success = true, data = await targets.ReplaceNetAsync(goalId, request, ct) }); }
+        catch (BusinessRuleException e) when (e.Code.StartsWith("Authorization.")) { return StatusCode(403, new { message = e.Message }); }
+        catch (BusinessRuleException e) when (e.Code == "StudyPlanning.Conflict") { return Conflict(new { message = e.Message }); }
+        catch (ConcurrencyException) { return Conflict(new { message = "Hedef değişti. Yeniden yükleyin." }); }
+        catch (KeyNotFoundException) { return Missing(); }
+        catch (ArgumentException e) { return BadRequest(new { message = e.Message }); }
+    }
     [HttpGet]
     public async Task<IActionResult> Get(Guid goalId, CancellationToken cancellationToken = default)
     {

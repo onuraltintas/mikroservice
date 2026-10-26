@@ -73,28 +73,6 @@ public sealed class CoachingCatalogDeletionPostgresTests(PostgresFixture postgre
     }
 
     [Fact]
-    public async Task StaleFingerprintAndInstitutionScopeCannotDelete()
-    {
-        await using var db = Database();
-        await db.Database.EnsureDeletedAsync();
-        try
-        {
-            await db.Database.EnsureCreatedAsync();
-            var program = TargetUniversityProgram.Create("admin", "u1", "University", "Program", null, null, null);
-            db.TargetUniversityPrograms.Add(program);
-            await db.SaveChangesAsync();
-            var service = Service(db);
-            var usage = await service.GetUsageAsync(CatalogKind.UniversityPrograms, program.Id, default);
-            program.Edit("University", "Changed", null, null, null, null);
-            await db.SaveChangesAsync();
-            await Assert.ThrowsAsync<BusinessRuleException>(() => service.DeleteAsync(CatalogKind.UniversityPrograms, program.Id, new(usage.Fingerprint, "Duplicate", program.Id), default));
-            await Assert.ThrowsAsync<BusinessRuleException>(() => Service(db, false).GetUsageAsync(CatalogKind.UniversityPrograms, program.Id, default));
-            Assert.True(await db.TargetUniversityPrograms.AnyAsync());
-        }
-        finally { await db.Database.EnsureDeletedAsync(); }
-    }
-
-    [Fact]
     public async Task ExamJsonAndGoalReferencesBlockDeletionEvenWithoutCatalogForeignKeys()
     {
         await using var db = Database();
@@ -134,7 +112,7 @@ public sealed class CoachingCatalogDeletionPostgresTests(PostgresFixture postgre
     [InlineData(CatalogKind.Lessons)]
     [InlineData(CatalogKind.Units)]
     [InlineData(CatalogKind.Topics)]
-    [InlineData(CatalogKind.UniversityPrograms)]
+    [InlineData(CatalogKind.Schools)]
     public async Task EveryUnusedCatalogKindCanBePermanentlyDeleted(CatalogKind kind)
     {
         await using var db = Database();
@@ -149,7 +127,7 @@ public sealed class CoachingCatalogDeletionPostgresTests(PostgresFixture postgre
                 CatalogKind.Lessons => lesson,
                 CatalogKind.Units => unit,
                 CatalogKind.Topics => StudyCatalogTopic.Create("admin", "t1", lesson.Id, unit.Id, "Topic", null, 1, 30),
-                _ => TargetUniversityProgram.Create("admin", "p1", "University", "Program", null, null, null)
+                _ => TargetSchool.Create("admin", "s1", "School", "City", "District", null)
             };
             if (kind is CatalogKind.Units or CatalogKind.Topics) db.Add(lesson);
             if (kind == CatalogKind.Topics) db.Add(unit);

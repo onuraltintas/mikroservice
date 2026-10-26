@@ -9,9 +9,11 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
     public DbSet<CourseUserProfile> UserProfiles => Set<CourseUserProfile>();
     public DbSet<Workspace> Workspaces => Set<Workspace>();
     public DbSet<WorkspaceMembership> Memberships => Set<WorkspaceMembership>();
+    public DbSet<WorkspaceSubscription> WorkspaceSubscriptions => Set<WorkspaceSubscription>();
     public DbSet<WorkspaceInvitation> Invitations => Set<WorkspaceInvitation>();
     public DbSet<WorkspaceAuditEntry> AuditEntries => Set<WorkspaceAuditEntry>();
     public DbSet<StudentRecord> Students => Set<StudentRecord>();
+    public DbSet<LegacyStudentImportMapping> LegacyStudentImports => Set<LegacyStudentImportMapping>();
     public DbSet<GuardianContact> Guardians => Set<GuardianContact>();
     public DbSet<StudentGuardianLink> StudentGuardianLinks => Set<StudentGuardianLink>();
     public DbSet<Course> Courses => Set<Course>();
@@ -30,12 +32,15 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
     public DbSet<CourseAssignmentRecipient> AssignmentRecipients => Set<CourseAssignmentRecipient>();
     public DbSet<CourseAssignmentSubmission> AssignmentSubmissions => Set<CourseAssignmentSubmission>();
     public DbSet<CourseAssignmentAttachment> AssignmentAttachments => Set<CourseAssignmentAttachment>();
+    public DbSet<CourseAssignmentAttachmentCleanupRequest> AttachmentCleanupRequests => Set<CourseAssignmentAttachmentCleanupRequest>();
     public DbSet<FeeAgreement> FeeAgreements => Set<FeeAgreement>();
     public DbSet<Installment> Installments => Set<Installment>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<PaymentAllocation> PaymentAllocations => Set<PaymentAllocation>();
     public DbSet<PackageMovement> PackageMovements => Set<PackageMovement>();
     public DbSet<CourseManagementReminder> Reminders => Set<CourseManagementReminder>();
+    public DbSet<CourseManagementErasureAssessment> ErasureAssessments => Set<CourseManagementErasureAssessment>();
+    public DbSet<CourseManagementErasureExecution> ErasureExecutions => Set<CourseManagementErasureExecution>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +55,17 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasIndex(student => new { student.WorkspaceId, student.Email }).IsUnique();
             entity.HasIndex(student => new { student.WorkspaceId, student.UserId }).IsUnique();
             entity.HasOne<Workspace>().WithMany().HasForeignKey(student => student.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyStudentImportMapping>(entity =>
+        {
+            entity.ToTable("LegacyStudentImportMappings");
+            entity.HasKey(mapping => mapping.Id);
+            entity.Property(mapping => mapping.SourceSystem).HasMaxLength(32).IsRequired();
+            entity.Property(mapping => mapping.SelectedFields).HasMaxLength(80).IsRequired();
+            entity.HasIndex(mapping => new { mapping.WorkspaceId, mapping.SourceSystem, mapping.SourceRecordId }).IsUnique();
+            entity.HasIndex(mapping => mapping.StudentRecordId).IsUnique();
+            entity.HasOne<Workspace>().WithMany().HasForeignKey(mapping => mapping.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<StudentRecord>().WithMany().HasForeignKey(mapping => mapping.StudentRecordId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<Course>(entity =>
         {
@@ -245,6 +261,14 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasOne<StudentRecord>().WithMany().HasForeignKey(attachment => attachment.StudentId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<CourseAssignmentSubmission>().WithMany().HasForeignKey(attachment => attachment.SubmissionId).OnDelete(DeleteBehavior.Restrict);
         });
+        modelBuilder.Entity<CourseAssignmentAttachmentCleanupRequest>(entity =>
+        {
+            entity.ToTable("CourseAssignmentAttachmentCleanupRequests");
+            entity.HasKey(request => request.Id);
+            entity.Property(request => request.StorageKey).HasMaxLength(300).IsRequired();
+            entity.HasIndex(request => request.StorageKey).IsUnique();
+            entity.HasIndex(request => request.QueuedAt);
+        });
         modelBuilder.Entity<FeeAgreement>(entity =>
         {
             entity.ToTable("FeeAgreements");
@@ -337,6 +361,7 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasIndex(invitation => new { invitation.WorkspaceId, invitation.TargetUserId }).IsUnique().HasFilter("\"Status\" = 1");
             entity.HasIndex(invitation => new { invitation.TargetUserId, invitation.Status });
             entity.HasOne<Workspace>().WithMany().HasForeignKey(invitation => invitation.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<StudentRecord>().WithMany().HasForeignKey(invitation => invitation.StudentRecordId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<WorkspaceAuditEntry>(entity =>
         {
@@ -344,6 +369,9 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasKey(entry => entry.Id);
             entity.Property(entry => entry.Action).HasMaxLength(80).IsRequired();
             entity.HasIndex(entry => new { entry.WorkspaceId, entry.OccurredAt });
+            entity.HasIndex(entry => new { entry.OccurredAt, entry.Id })
+                .HasDatabaseName("IX_WorkspaceAuditEntries_SubscriptionAudit")
+                .HasFilter("\"Action\" IN ('Subscription.Assigned', 'Subscription.Updated')");
             entity.HasOne<Workspace>().WithMany().HasForeignKey(entry => entry.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<CourseUserProfile>(entity =>
@@ -357,7 +385,30 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.ToTable("Workspaces");
             entity.HasKey(workspace => workspace.Id);
             entity.Property(workspace => workspace.Name).HasMaxLength(200).IsRequired();
+            entity.Property(workspace => workspace.InstitutionCategory);
+            entity.Property(workspace => workspace.IsErasureReadOnly).HasDefaultValue(false);
             entity.HasIndex(workspace => workspace.OwnerUserId);
+        });
+        modelBuilder.Entity<WorkspaceSubscription>(entity =>
+        {
+            entity.ToTable("WorkspaceSubscriptions");
+            entity.HasKey(subscription => subscription.WorkspaceId);
+            entity.Property(subscription => subscription.PlanName).HasMaxLength(80).IsRequired();
+            entity.Property(subscription => subscription.AccessStatus).IsRequired();
+            entity.HasIndex(subscription => new { subscription.AccessStatus, subscription.EndsAt });
+            entity.HasOne<Workspace>().WithOne().HasForeignKey<WorkspaceSubscription>(subscription => subscription.WorkspaceId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<CourseManagementErasureAssessment>(entity =>
+        {
+            entity.ToTable("AccountErasureAssessments");
+            entity.HasKey(assessment => assessment.RequestId);
+            entity.Property(assessment => assessment.RecordCountsJson).HasColumnType("jsonb").IsRequired();
+        });
+        modelBuilder.Entity<CourseManagementErasureExecution>(entity =>
+        {
+            entity.ToTable("AccountErasureExecutions");
+            entity.HasKey(execution => execution.RequestId);
         });
 
         modelBuilder.AddInboxStateEntity();

@@ -3,8 +3,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Notification.Application.Interfaces;
 using System.Net;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Notification.Application.Commands.ReplyToSupportRequest;
 
@@ -21,6 +19,10 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
 
     public async Task<Result> Handle(ReplyToSupportRequestCommand request, CancellationToken cancellationToken)
     {
+        // One transaction for the queued reply and the processed state. Without it the
+        // recipient lock opened (and on exit cleared) its own transaction and change
+        // tracker, so the reply e-mail was sent while the request stayed unprocessed.
+        await using var transaction = await _context.BeginTransactionAsync(cancellationToken);
         var supportRequest = await _context.SupportRequests
             .FirstOrDefaultAsync(x => x.Id == request.SupportRequestId, cancellationToken);
 
@@ -61,8 +63,8 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
             </html>";
 
         await _emailDeliveryQueue.QueueAsync(
-            CreateMessageId(supportRequest.Id, request.ReplyMessage),
-            "SupportReply",
+            ReplyMessageId(supportRequest.Id, request.ReplyMessage),
+            Support.SupportRequestRemoval.ReplyConsumerType,
             supportRequest.Email,
             subject,
             body,
@@ -72,16 +74,13 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
         // 2. Mark as Processed
         supportRequest.Process(request.ReplyMessage);
         await _context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result.Success();
     }
 
-    private static Guid CreateMessageId(Guid supportRequestId, string replyMessage)
-    {
-        var payload = Encoding.UTF8.GetBytes($"{supportRequestId:N}:{replyMessage}");
-        var hash = SHA256.HashData(payload);
-        return new Guid(hash.AsSpan(0, 16));
-    }
+    public static Guid ReplyMessageId(Guid supportRequestId, string replyMessage) =>
+        Messaging.MessageIds.Derive($"{supportRequestId:N}:{replyMessage}");
 
     private static string RemoveSubjectLineBreaks(string value) =>
         value.Replace("\r", " ", StringComparison.Ordinal)

@@ -1,3 +1,4 @@
+import { coachingOwnedProfilesSql, identityCoachingAccessSql } from './support/coaching-owned-accounts.mjs';
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -54,7 +55,7 @@ function token(config, userId, role, admin = false) {
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const unsigned = `${encode({ alg: 'HS256', typ: 'JWT', kid: config.JWT_KEY_ID })}.${encode({
     sub: userId, iss: config.JWT_ISSUER, aud: config.JWT_AUDIENCE,
-    iat: now, nbf: now, exp: now + 300, [roleClaim]: role,
+    iat: now, nbf: now, exp: now + 300, [roleClaim]: role, platform_product: 'coaching',
     ...(admin ? { permission: 'Permissions.Coaching.View', amr: 'mfa' } : {}),
   })}`;
   return `${unsigned}.${createHmac('sha256', config.JWT_SECRET).update(unsigned).digest('base64url')}`;
@@ -128,9 +129,9 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
         AS users(user_id, role_name)
       JOIN identity."Roles" AS roles ON roles."Name"=users.role_name AND roles."IsDeleted"=false;
       INSERT INTO identity.institution_admins
-        ("Id", "UserId", "InstitutionId", "Role", "IsActive", "CreatedAt")
-      VALUES (gen_random_uuid(), '${id.adminA}', '${id.institutionA}', 'Admin', true, '${now}'),
-        (gen_random_uuid(), '${id.adminB}', '${id.institutionB}', 'Admin', true, '${now}');
+        ("Id", "UserId", "InstitutionId", "Role", "Product", "IsActive", "CreatedAt")
+      VALUES (gen_random_uuid(), '${id.adminA}', '${id.institutionA}', 'Admin', 'Coaching', true, '${now}'),
+        (gen_random_uuid(), '${id.adminB}', '${id.institutionB}', 'Admin', 'Coaching', true, '${now}');
       INSERT INTO identity.student_profiles ("Id", "UserId", "InstitutionId", "FirstName", "LastName",
         "DailyGoalMinutes", "Preferences", "ShareProgressWithTeachers", "IsActive", "CreatedAt", "Version")
       VALUES (gen_random_uuid(), '${id.studentA}', '${id.institutionA}', 'Student', 'A',
@@ -151,8 +152,16 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
       JOIN identity.student_profiles AS student ON student."InstitutionId"=teacher."InstitutionId"
       WHERE teacher."UserId" IN ('${id.teacherA}', '${id.teacherB}')
         AND student."UserId" IN ('${id.studentA}', '${id.studentB}');
+      ${identityCoachingAccessSql([id.adminA, id.adminB, id.teacherA, id.teacherB, id.studentA, id.studentB], now)}
       COMMIT;`);
     sql(config, coachingDb, `BEGIN;
+      ${coachingOwnedProfilesSql({
+        students: [{ userId: id.studentA, institutionId: id.institutionA }, { userId: id.studentB, institutionId: id.institutionB }],
+        teachers: [{ userId: id.teacherA, institutionId: id.institutionA }, { userId: id.teacherB, institutionId: id.institutionB }],
+        assignments: [
+          { teacherUserId: id.teacherA, studentUserId: id.studentA, institutionId: id.institutionA },
+          { teacherUserId: id.teacherB, studentUserId: id.studentB, institutionId: id.institutionB }],
+      }, now)}
       INSERT INTO coaching.assignments
         (id, teacher_id, institution_id, title, type, source, due_date, status, created_at, "Version")
       VALUES ('${id.assignmentA}', '${id.teacherA}', '${id.institutionA}', 'Institution A only',
@@ -183,9 +192,9 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
       VALUES (gen_random_uuid(), '${id.examA}', '${id.studentA}', 80, '${now}'),
         (gen_random_uuid(), '${id.examB}', '${id.studentB}', 60, '${now}');
       INSERT INTO coaching.academic_goals
-        (id, student_id, title, category, current_progress, is_completed, created_at, "Version")
-      VALUES ('${id.goalA}', '${id.studentA}', 'Goal A only', 'Other', 0, false, '${now}', 0),
-        ('${id.goalB}', '${id.studentB}', 'Goal B only', 'Other', 0, false, '${now}', 0);
+        (id, student_id, institution_id, title, category, current_progress, is_completed, created_at, "Version")
+      VALUES ('${id.goalA}', '${id.studentA}', '${id.institutionA}', 'Goal A only', 'Other', 0, false, '${now}', 0),
+        ('${id.goalB}', '${id.studentB}', '${id.institutionB}', 'Goal B only', 'Other', 0, false, '${now}', 0);
       COMMIT;`);
 
     const adminA = token(config, id.adminA, 'InstitutionAdmin', true);
@@ -194,6 +203,9 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
     const teacherB = token(config, id.teacherB, 'Teacher');
     await expectStatus(await get('/api/coaching-admin/assignments'), 401);
     await expectStatus(await get('/api/coaching-admin/assignments', teacherA), 403);
+    const scopeA = await get('/api/coaching-admin/scope', adminA);
+    await expectStatus(scopeA, 200);
+    assert.equal((await scopeA.json()).institutionId.toLowerCase(), id.institutionA);
     const listA = await get('/api/coaching-admin/assignments', adminA);
     await expectStatus(listA, 200);
     assert.deepEqual((await listA.json()).items.map(item => item.id.toLowerCase()), [id.assignmentA]);
@@ -211,10 +223,12 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
     ]) {
       const a = await get(`/api/coaching-admin/${resource}`, adminA);
       await expectStatus(a, 200);
-      assert.deepEqual((await a.json()).items.map(item => item.id.toLowerCase()), [ownA]);
+      assert.deepEqual((await a.json()).items.map(item => item.id.toLowerCase()), [ownA],
+        `${resource} must list only Institution A records`);
       const b = await get(`/api/coaching-admin/${resource}`, adminB);
       await expectStatus(b, 200);
-      assert.deepEqual((await b.json()).items.map(item => item.id.toLowerCase()), [ownB]);
+      assert.deepEqual((await b.json()).items.map(item => item.id.toLowerCase()), [ownB],
+        `${resource} must list only Institution B records`);
       await expectStatus(await get(`/api/coaching-admin/${resource}/${ownA}`, adminA), 200);
       await expectStatus(await get(`/api/coaching-admin/${resource}/${ownB}`, adminA), 404);
       await expectStatus(await get(`/api/coaching-admin/${resource}/${ownB}`, adminB), 200);

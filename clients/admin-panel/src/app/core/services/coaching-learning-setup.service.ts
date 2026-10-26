@@ -27,10 +27,15 @@ export class CoachingLearningSetupService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching/study-planning/setup`;
   get() { return this.http.get<{ data: LearningSetupView }>(this.url).pipe(map(r => r.data)); }
+  getForStudent(studentId:string) { return this.http.get<{data:LearningSetupView}>(`${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study/learning-setup`).pipe(map(r=>r.data)); }
   save(request: LearningSetupUpdate) { return this.http.put<{ data: LearningSetupView }>(this.url, request).pipe(map(r => r.data)); }
   catalog(lessonId: string | null = null, pageNumber = 1) {
     let params = new HttpParams().set('pageNumber', pageNumber);
     if (lessonId) params = params.set('lessonId', lessonId);
     return this.http.get<{ data: LearningCatalog }>(`${this.url}/catalog`, { params }).pipe(map(r => r.data));
+  }
+  catalogForStudent(studentId:string,lessonId:string|null=null,pageNumber=1) {
+    let params=new HttpParams().set('pageNumber',pageNumber);if(lessonId)params=params.set('lessonId',lessonId);
+    return this.http.get<{data:LearningCatalog}>(`${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study/learning-setup/catalog`,{params}).pipe(map(r=>r.data));
   }
 }

@@ -14,12 +14,18 @@ export interface StudyTaskInput {
   plannedQuestions?: number | null;
   plannedStartMinute?:number|null;
 }
+export interface StudyWorkDay { workedOn:string;minutes:number;questions:number|null;isLegacyDate:boolean }
+export interface StudyRealizationChange { workedOn?:string|null;reassignFromDate?:string|null;previousWorkDays?:StudyWorkDay[]|null;workDays?:StudyWorkDay[]|null; at:string; actorUserId:string; action:string; previousMinutes:number|null; previousQuestions:number|null; previouslyCompleted:boolean; previousCompletedAt:string|null; minutes:number; questions:number|null; completed:boolean; reason:string|null;previousRemainingMinutes?:number|null;remainingMinutes?:number|null;previousRemainingQuestions?:number|null;remainingQuestions?:number|null }
 export interface StudyTask extends StudyTaskInput {
+  completionSourceTaskId?:string|null;
+  continuation?:{revisionId:string;revisionVersion:number;taskId:string;isCompleted:boolean;hasOwnCompletion:boolean;remainingMinutes:number|null;remainingQuestions:number|null;requiresExplicitScope:boolean}|null;
+  workDays?:StudyWorkDay[];
   id: string;
   isCompleted: boolean;
   actualMinutes: number | null;
   actualQuestions?: number | null;
   completedAt: string | null;
+  realizationHistory?: StudyRealizationChange[];remainingMinutes?:number|null;remainingQuestions?:number|null;originalTaskId?:string|null;predecessorTaskId?:string|null;
   outcomes?: { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; allocatedMinutes: number; origin: string }[];
   plannedStartMinute?:number|null;weeklyLessonId?:string|null;lessonName?:string|null;
 }
@@ -41,8 +47,9 @@ export interface GoalTarget { goalId: string; version: number; targetSchoolId: s
 export interface StudyTopic { id: string; lessonId?: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
 export interface PublishedStudyOutcome { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; totalMinutes: number; editionCode: string; officialLessonPeriods: number | null; sourceKind?: 'Official' | 'ExamSkill' }
 export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null; outcomes?: { outcomeId: string; estimateId: string; requiredMinutes: number | null }[] }[]; expectedLearningContextVersion?: number }
-export interface AutomaticStudyDraftRequest { title: string; preview: AutomaticStudyRequest; expectedActiveRevisionId: string | null; expectedActiveRevisionVersion: number | null }
+export interface AutomaticStudyDraftRequest { title: string; preview: AutomaticStudyRequest; expectedActiveRevisionId: string | null; expectedActiveRevisionVersion: number | null;expectedEvidenceFingerprint?:string }
 export interface AutomaticStudyPreview {
+  evidenceFingerprint?:string;completedOutcomeMinutes?:number;
   availabilityVersion: number; timeZoneId: string; activeRevisionId: string | null; activeRevisionVersion: number | null;
   protectedTasks: { taskId: string; plannedDate: string; title: string; plannedMinutes: number; isPinned: boolean; isCompleted: boolean }[];
   schedule: { tasks: { topicId: string; plannedDate: string; plannedMinutes: number }[];
@@ -54,6 +61,13 @@ export interface CalendarTaskSave {expectedVersion:number;title:string;plannedDa
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudyPlanningService {
+  setRemainingScope(id:string,taskId:string,expectedVersion:number,remainingMinutes:number,remainingQuestions:number|null,studentId:string|null=null) {
+    return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/remaining-scope`,{expectedVersion,remainingMinutes,remainingQuestions}).pipe(map(x=>x.data));
+  }
+  recordRealization(planId:string, taskId:string, body:{expectedVersion:number;actualMinutes:number;actualQuestions:number|null;isCompleted:boolean;reason?:string;remainingMinutes?:number;remainingQuestions?:number|null;workedOn?:string;reassignFromDate?:string;continuationScope?:{revisionId:string;expectedVersion:number;remainingMinutes:number;remainingQuestions:number|null}}, correction=false) {
+    const url=`${this.url}/${encodeURIComponent(planId)}/tasks/${encodeURIComponent(taskId)}/${correction?'realization-corrections':'progress'}`;
+    return (correction ? this.http.post<ApiResult<StudyPlan>>(url,body) : this.http.put<ApiResult<StudyPlan>>(url,body)).pipe(map(x=>x.data));
+  }
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching/study-planning/plans`;
   private readonly availabilityUrl = `${environment.apiUrl}/coaching/study-planning/availability`;
@@ -131,7 +145,8 @@ export class CoachingStudyPlanningService {
   restore(id:string,expectedVersion:number,active:{id:string;version:number}|null,studentId:string|null=null){
     return this.http.post<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/restore`,{expectedVersion,expectedActiveRevisionId:active?.id??null,expectedActiveRevisionVersion:active?.version??null}).pipe(map(r=>r.data));
   }
-  complete(id: string, taskId: string, expectedVersion: number, actualMinutes: number, actualQuestions: number | null = null) {
+  complete(id: string, taskId: string, expectedVersion: number, actualMinutes: number, actualQuestions: number | null = null, workedOn?:string) {
+    if(workedOn)return this.recordRealization(id,taskId,{expectedVersion,actualMinutes,actualQuestions,isCompleted:true,workedOn});
     return this.http.put<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/completion`,
       { expectedVersion, actualMinutes, actualQuestions }).pipe(map(result => result.data));
   }

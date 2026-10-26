@@ -17,15 +17,15 @@ test('saccade describes observation and reports seconds and transitions without 
   assert.match(html, /Göz hareketleri ölçülmedi/);
 });
 
-test('eye tracking and fixation share one compact information strip', () => {
+test('fixation shows one compact statistics strip while observation modes hide it', () => {
   assert.match(motionPath, /class="game-header motion-path-header"/);
-  assert.match(motionPath, /class="game-stats motion-path-stats"[^>]*\*ngIf="!isSaccadeMode\(\)"/);
+  assert.match(motionPath, /class="game-stats motion-path-stats"[^>]*\*ngIf="isFixationMode\(\)"/);
   assert.match(motionPath, /class="motion-path-actions"/);
   assert.match(scss, /\.motion-path-stats\s*\{[^}]*width:\s*auto/);
 });
 
 test('saccade does not render the empty grey statistics bar', () => {
-  assert.match(motionPath, /\*ngIf="!isSaccadeMode\(\)"/);
+  assert.match(motionPath, /class="game-stats motion-path-stats"[^>]*\*ngIf="isFixationMode\(\)"/);
   assert.match(scss, /\.motion-path-stats\s*\{[^}]*background:\s*transparent/);
 });
 

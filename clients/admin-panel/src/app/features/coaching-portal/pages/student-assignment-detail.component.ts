@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -67,6 +68,9 @@ export class StudentAssignmentDetailComponent implements OnInit {
       case 'Active': return 'Aktif';
       case 'Completed': return 'Tamamlandı';
       case 'Cancelled': return 'İptal edildi';
+      case 'Assigned': return 'Çalışmanı bekliyor';
+      case 'Submitted': return 'Teslim edildi';
+      case 'Graded': return 'Değerlendirildi';
       default: return status;
     }
   }
@@ -170,13 +174,19 @@ export class StudentAssignmentDetailComponent implements OnInit {
     input.value = '';
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      this.errorMessage.set('Yalnızca JPEG, PNG veya WebP fotoğraf yükleyebilirsiniz.');
+    const browserMimeMissing = !file.type || file.type === 'application/octet-stream';
+    const contentType = browserMimeMissing ? this.contentTypeForFile(file.name) : file.type;
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/markdown', 'text/plain', 'text/x-markdown'
+    ];
+    if (!allowedTypes.includes(contentType)) {
+      this.errorMessage.set('JPEG, PNG, WebP, PDF, Word veya Markdown dosyası yükleyebilirsiniz.');
       return;
     }
     if (file.size < 1 || file.size > 10 * 1024 * 1024) {
-      this.errorMessage.set('Fotoğraf 10 MB sınırını aşmamalıdır.');
+      this.errorMessage.set('Dosya 10 MB sınırını aşmamalıdır.');
       return;
     }
 
@@ -189,14 +199,28 @@ export class StudentAssignmentDetailComponent implements OnInit {
     this.successMessage.set(null);
     try {
       const sha256 = await this.coachingService.calculateSha256(file);
-      const metadata = await firstValueFrom(this.coachingService.createAttachment(assignmentId, studentId, file, sha256));
-      await firstValueFrom(this.coachingService.uploadAttachment(assignmentId, studentId, metadata.attachmentId, file, sha256));
-      this.successMessage.set('Fotoğraf yüklendi ve güvenlik taramasına alındı.');
+      const uploadFile = contentType === file.type ? file : new File([file], file.name, { type: contentType });
+      const metadata = await firstValueFrom(this.coachingService.createAttachment(assignmentId, studentId, uploadFile, sha256));
+      await firstValueFrom(this.coachingService.uploadAttachment(assignmentId, studentId, metadata.attachmentId, uploadFile, sha256));
+      this.successMessage.set('Dosya yüklendi ve güvenlik taramasına alındı.');
       this.load();
     } catch (error: any) {
-      this.errorMessage.set(error?.status === 400 ? 'Fotoğraf yükleme koşulları sağlanmadı.' : 'Fotoğraf yüklenemedi.');
+      this.errorMessage.set(error?.status === 400 ? 'Dosya yükleme koşulları sağlanmadı.' : 'Dosya yüklenemedi.');
     } finally {
       this.isUploading.set(false);
+    }
+  }
+
+  private contentTypeForFile(fileName: string): string {
+    switch (fileName.split('.').pop()?.toLowerCase()) {
+      case 'jpg': case 'jpeg': return 'image/jpeg';
+      case 'png': return 'image/png';
+      case 'webp': return 'image/webp';
+      case 'pdf': return 'application/pdf';
+      case 'doc': return 'application/msword';
+      case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'md': return 'text/markdown';
+      default: return '';
     }
   }
 
@@ -209,6 +233,22 @@ export class StudentAssignmentDetailComponent implements OnInit {
   downloadTeacherAttachment(studentId: string, attachment: AssignmentAttachment) {
     if (!this.isTeacher() || attachment.status !== 'Clean') return;
     this.downloadAttachmentForStudent(studentId, attachment);
+  }
+
+  downloadInstructionAttachment(attachment: AssignmentAttachment) {
+    const assignmentId = this.assignment()?.id;
+    if (!assignmentId || attachment.status !== 'Clean') return;
+    this.coachingService.downloadInstructionAttachment(assignmentId, attachment.id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = attachment.originalFileName;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set('Öğretmenin eklediği dosya indirilemedi.')
+    });
   }
 
   assignedStudentLabel(studentId: string) {
@@ -252,4 +292,5 @@ export class StudentAssignmentDetailComponent implements OnInit {
         error: () => this.assignedStudentNames.set({})
       });
   }
+  private readonly feedback = coachingFeedback(this.successMessage, this.errorMessage);
 }

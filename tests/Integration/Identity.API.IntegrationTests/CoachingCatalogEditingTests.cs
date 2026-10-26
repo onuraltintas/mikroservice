@@ -48,10 +48,10 @@ public sealed class CoachingCatalogEditingTests
         school.SetActive(true);
         Assert.Equal("123", school.DistrictId);
         Assert.True(school.IsActive);
-        var program = TargetUniversityProgram.Create("approved", "u", "University", "Program", null, "SAY", 400);
-        Assert.Throws<ArgumentException>(() => program.Edit("", "New", null, "SAY", 400, 2025));
+        var program = TargetUniversityProgram.Create("u", "University", "Program", null, "Bachelor", "SAY");
+        Assert.Throws<ArgumentException>(() => program.UpdateOfficial("", "New", "u", null, "Bachelor", "SAY"));
         Assert.Equal("Program", program.Name);
-        program.Edit("New university", "New program", "123", "EA", 420, 2025);
+        program.UpdateOfficial("New university", "New program", "123", null, "Bachelor", "EA");
         program.SetActive(true);
         Assert.Equal("New program", program.Name);
         Assert.True(program.IsActive);

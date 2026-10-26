@@ -16,4 +16,14 @@ describe('CoachingLearningSetupService', () => {
     service.catalog('lesson-id', 2).subscribe(); const next = http.expectOne(r => r.url.endsWith('/setup/catalog')); expect(next.request.params.get('lessonId')).toBe('lesson-id'); expect(next.request.params.get('pageNumber')).toBe('2'); next.flush({ data: {} });
     http.verify();
   });
+
+  it('loads a selected students setup and catalog through teacher scoped read endpoints',()=>{
+    TestBed.configureTestingModule({providers:[provideHttpClient(),provideHttpClientTesting()]});
+    const service=TestBed.inject(CoachingLearningSetupService),http=TestBed.inject(HttpTestingController);
+    service.getForStudent('student-1').subscribe();
+    http.expectOne('/api/coaching/staff/students/student-1/study/learning-setup').flush({data:{context:{id:'context'}}});
+    service.catalogForStudent('student-1','lesson-1',2).subscribe();
+    const catalog=http.expectOne(r=>r.url==='/api/coaching/staff/students/student-1/study/learning-setup/catalog');
+    expect(catalog.request.params.get('lessonId')).toBe('lesson-1');expect(catalog.request.params.get('pageNumber')).toBe('2');catalog.flush({data:{}});http.verify();
+  });
 });

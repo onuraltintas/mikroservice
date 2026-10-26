@@ -118,6 +118,12 @@
           <article class="history-row">
             <div class="history-item-copy">
               <h4>{{ item.title }}</h4>
+              @if (item.netSummary; as net) {
+                <p><strong>{{net.name}} · {{net.net | number:'1.2-2'}} net</strong> · {{item.source === 'StudentReported' ? 'Öğrenci beyanı' : 'Öğretmen kaydı'}}</p>
+                <details><summary>Ders netleri</summary>@for (section of net.sections; track section.sectionCode) {
+                  <p>{{section.name}}: {{section.net | number:'1.2-2'}} net ({{section.correct}} doğru / {{section.wrong}} yanlış / {{section.empty}} boş)</p>
+                }</details>
+              }
               <p>{{ formatDate(item.eventDate) }} <span aria-hidden="true">·</span> {{ statusLabel(item.status) }}
                 @if (item.category) { <span> · {{ item.category }}</span> }
               </p>

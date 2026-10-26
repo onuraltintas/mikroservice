@@ -26,7 +26,7 @@ assert.doesNotMatch(
 );
 assert.match(
   source,
-  /if \(RequiresAssessmentReadingText\(role, candidate\.TypeName, candidate\.EngineType\)\)/,
+  /if \(RequiresAssessmentReadingText\(role, candidate\.TypeName, candidate\.EngineType\)\s*&& !candidate\.TypeName\.Equals\("Tachistoscope", StringComparison\.OrdinalIgnoreCase\)\)/,
 );
 assert.match(
   source,

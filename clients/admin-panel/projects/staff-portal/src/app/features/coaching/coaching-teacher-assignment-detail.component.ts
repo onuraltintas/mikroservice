@@ -1,3 +1,4 @@
+import { coachingFeedback, coachingToaster } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -22,11 +23,14 @@ interface GradeDraft {
   styleUrl: './coaching-teacher-assignment-detail.component.scss'
 })
 export class CoachingTeacherAssignmentDetailComponent implements OnInit {
+  private readonly toaster = coachingToaster();
   private readonly assignmentsService = inject(CoachingTeacherAssignmentsService);
   private readonly studentsService = inject(CoachingTeacherStudentsService);
   private requestVersion = 0;
 
   @Input() assignmentId = '';
+  @Input() selectedStudentId: string | null = null;
+  visibleStudents() { return this.assignment()?.assignedStudents.filter(student => !this.selectedStudentId || student.studentId === this.selectedStudentId) ?? []; }
   @Output() close = new EventEmitter<void>();
 
   readonly assignment = signal<CoachingAssignmentDetail | null>(null);
@@ -38,6 +42,14 @@ export class CoachingTeacherAssignmentDetailComponent implements OnInit {
   readonly gradingStudentId = signal<string | null>(null);
   readonly gradeDrafts = signal<Record<string, GradeDraft>>({});
   readonly studentNames = signal<Record<string, string>>({});
+  async canLeavePage(): Promise<boolean> {
+    if (this.gradingStudentId()) return false;
+    const changed = this.assignment()?.assignedStudents.some(student => {
+      const draft = this.gradeDraft(student.studentId);
+      return draft.score !== (student.score ?? null) || draft.feedback !== (student.teacherFeedback ?? '');
+    });
+    return !changed || await this.toaster.confirm('Kaydedilmemiş değerlendirme var. Kaydetmeden ayrılmak istiyor musunuz?');
+  }
 
   ngOnInit(): void {
     this.load();
@@ -193,4 +205,7 @@ export class CoachingTeacherAssignmentDetailComponent implements OnInit {
       }
     });
   }
+
+  private readonly errorMessageFeedback = coachingFeedback(undefined, this.errorMessage);
+  private readonly successMessageFeedback = coachingFeedback(this.successMessage);
 }

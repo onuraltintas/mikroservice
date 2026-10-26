@@ -1,6 +1,9 @@
 @if (auth.isAuthenticated()) {
-  <div class="portal-shell">
-    <aside class="sidebar" aria-label="Personel portalı">
+  <div class="portal-shell" [class.coaching-shell]="isTeacherWorkspaceSelected" [class.coaching-staff-shell]="isTeacherWorkspaceSelected" [class.menu-open]="menuOpen()">
+    @if (isTeacherWorkspaceSelected) { <a class="teacher-skip" href="#teacher-main">İçeriğe geç</a> }
+    @if (isTeacherWorkspaceSelected && menuOpen()) { <button class="teacher-scrim" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"></button> }
+    <aside class="sidebar" aria-label="Personel portalı" [attr.role]="isTeacherWorkspaceSelected && menuOpen() ? 'dialog' : null" [attr.aria-modal]="isTeacherWorkspaceSelected && menuOpen() ? 'true' : null" [cdkTrapFocus]="isTeacherWorkspaceSelected && menuOpen()" [cdkTrapFocusAutoCapture]="isTeacherWorkspaceSelected && menuOpen()">
+      @if (isTeacherWorkspaceSelected && menuOpen()) { <button class="teacher-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"><app-coaching-icon name="close" /></button> }
       <a class="brand" href="/staff/" aria-label="Eduİvme personel portalı ana sayfa">
         <span class="brand-symbol">İ</span>
         <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
@@ -14,7 +17,7 @@
             [class.active]="auth.activeProduct() === access.product"
             [attr.aria-current]="auth.activeProduct() === access.product ? 'page' : null"
             type="button"
-            (click)="switchProduct(access.product)">
+            (click)="chooseProductFromMenu(access.product)">
             <span class="product-mark" [class.reading]="access.product === 'speed-reading'">
               {{ access.product === 'course-management' ? 'D' : access.product === 'coaching' ? 'K' : 'H' }}
             </span>
@@ -27,31 +30,37 @@
         }
       </nav>
 
+      @defer (when !auth.products().some(hasCourseAccess)) {
+        <staff-course-management-enrollment />
+      }
+
       <div class="sidebar-bottom">
         <span class="secure-dot" aria-hidden="true"></span>
         <div><strong>Güvenli oturum</strong><small>Ürün erişimi ayrı doğrulanır</small></div>
       </div>
     </aside>
 
-    <main class="main-area">
+    <main class="main-area" [class.coaching-body]="isTeacherWorkspaceSelected" id="teacher-main" tabindex="-1">
       <header class="topbar">
+        @if (isTeacherWorkspaceSelected) { <button #teacherMenuToggle class="teacher-menu-toggle" type="button" aria-label="Personel menüsünü aç" [attr.aria-expanded]="menuOpen()" (click)="menuOpen.set(!menuOpen())"><app-coaching-icon name="menu" /></button> }
         <div class="breadcrumb"><span>Personel portalı</span><span aria-hidden="true">/</span><strong>{{ currentProductLabel }}</strong></div>
         <div class="topbar-actions">
-          @if (auth.activeProduct() !== 'course-management') {
+          @if (isTeacherWorkspaceSelected) { <button class="teacher-theme-toggle" type="button" [attr.aria-label]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" (click)="theme.toggle()"><app-coaching-icon [name]="theme.isDarkMode() ? 'sun' : 'moon'" /></button> }
           <button class="account-button" type="button" data-testid="toggle-notifications" [attr.aria-expanded]="notificationsVisible" (click)="notificationsVisible = !notificationsVisible">{{ notificationsVisible ? 'Bildirimleri gizle' : 'Bildirimler' }}</button>
+          @if (auth.activeProduct() !== 'course-management') {
           <button class="account-button" type="button" data-testid="toggle-account-settings" [attr.aria-expanded]="accountSettingsVisible" (click)="accountSettingsVisible = !accountSettingsVisible">{{ accountSettingsVisible ? 'Hesap ayarlarını gizle' : 'Hesap ayarları' }}</button>
           }
           <button class="logout-button" type="button" (click)="logout()"><span aria-hidden="true">↪</span> Güvenli çıkış</button>
         </div>
       </header>
 
-      <div class="content-wrap">
+      <div class="content-wrap" [class.coaching-content]="isTeacherWorkspaceSelected">
         <section class="welcome-block">
           <p class="eyebrow">{{ activeWorkspaceRole === 'institution' ? 'KURUM YÖNETİMİ' : 'ÖĞRETMEN ÇALIŞMA ALANI' }}</p>
-          <h1>{{ activeWorkspaceRole === 'institution' ? 'Kurumunuz için tek çalışma alanı.' : 'Öğrencileriniz için tek çalışma alanı.' }}</h1>
+          <h1>{{ isTeacherWorkspaceSelected ? 'Birlikte, adım adım ilerleyelim.' : activeWorkspaceRole === 'institution' ? 'Kurumunuz için tek çalışma alanı.' : 'Öğrencileriniz için tek çalışma alanı.' }}</h1>
           <p class="welcome-copy">
-            {{ currentProductLabel }} erişiminiz, bu üründeki rolünüze göre sınırlandırılmıştır.
-            Diğer ürünler ayrı yetkiyle açılır.
+            @if (isTeacherWorkspaceSelected) { Öğrencilerinin çalışmalarını takip et, geri bildirim ver ve bir sonraki adımı birlikte planla. } @else { {{ currentProductLabel }} erişiminiz, bu üründeki rolünüze göre sınırlandırılmıştır.
+            Diğer ürünler ayrı yetkiyle açılır. }
           </p>
         </section>
 
@@ -67,7 +76,7 @@
           <div class="notice warning" role="alert">{{ switchError }}</div>
         }
 
-        <section class="session-panel" aria-labelledby="session-title">
+        @if (!isTeacherWorkspaceSelected) { <section class="session-panel" aria-labelledby="session-title">
           <div class="session-heading">
             <div>
               <p class="eyebrow">OTURUM VE YETKİ</p>
@@ -98,16 +107,24 @@
           </div>
         </section>
 
+        }
         @if (accountSettingsVisible && auth.activeProduct() !== 'course-management') { <staff-account-settings /> }
-        @if (notificationsVisible && auth.activeProduct() !== 'course-management') { <staff-notification-center [product]="auth.activeProduct() === 'speed-reading' ? 'speed-reading' : 'coaching'" /> }
+        @if (notificationsVisible) {
+          @defer (on immediate) {
+            <staff-notification-center [product]="auth.activeProduct() === 'speed-reading' ? 'speed-reading' : auth.activeProduct() === 'course-management' ? 'course-management' : 'coaching'"
+              [canOpenCoachingAssignments]="isTeacherWorkspaceSelected" (openCoachingAssignment)="openCoachingAssignment($event)" (openCoachingWeekly)="openCoachingWeekly($event)" />
+          } @placeholder { <p role="status">Bildirimler hazırlanıyor…</p> }
+        }
 
-        @if (auth.activeProduct() === 'course-management' && activeWorkspaceRole; as courseRole) {
-          <staff-course-management-workspace [role]="courseRole" />
+        @defer (when auth.activeProduct() === 'course-management' && activeWorkspaceRole) {
+          @if (auth.activeProduct() === 'course-management' && activeWorkspaceRole; as courseRole) {
+            <staff-course-management-workspace [role]="courseRole" />
+          }
         }
 
         @if (isTeacherWorkspaceSelected) {
           @defer (on immediate) {
-            <staff-coaching-teacher-workspace />
+            <staff-coaching-teacher-workspace #coachingTeacherWorkspace />
           } @placeholder {
             <p class="migration-note" role="status">Koçluk öğretmen alanı hazırlanıyor…</p>
           }

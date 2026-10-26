@@ -4,11 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace Notification.API.Hubs;
 
 [Authorize]
+// Server-to-client only: messages go to Clients.User(sub); clients call nothing.
 public class NotificationHub : Hub
 {
-    public override async Task OnConnectedAsync()
-    {
-        // Context.UserIdentifier is populated from the NameIdentifier claim (sub or nameid)
-        await base.OnConnectedAsync();
-    }
 }

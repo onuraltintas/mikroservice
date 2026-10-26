@@ -250,7 +250,10 @@ public sealed record CoachingAdminStudentHistoryItemDto(
     decimal? MaxScore = null,
     int? Progress = null,
     string? Category = null,
-    string? Source = null);
+    string? Source = null)
+{
+    public Coaching.Domain.Entities.PracticeExamSummary? NetSummary { get; init; }
+}
 
 public sealed record TeacherCoachingAnalyticsDto(
     Guid TeacherId,

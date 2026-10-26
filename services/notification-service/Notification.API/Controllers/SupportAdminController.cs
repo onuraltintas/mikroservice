@@ -66,6 +66,19 @@ public sealed class SupportAdminController : ControllerBase
         return result.IsSuccess ? NoContent() : BadRequest(new { Error = result.Error });
     }
 
+    /// <summary>
+    /// Deletes the request and the sender's data held with it. Support.Delete is a management
+    /// permission, so it follows the content MFA policy like replying; the admin audit log
+    /// records who deleted which request.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [HasPermission(PlatformPermissions.Support.Delete)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new DeleteSupportRequestCommand(id), cancellationToken);
+        return result.IsSuccess ? NoContent() : NotFound();
+    }
+
     public sealed record ProcessRequest(string? AdminNote);
     public sealed record ReplyRequest(string ReplyMessage);
 }

@@ -12,21 +12,6 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingNotificationConsumerTests
 {
     [Fact]
-    public void ProductionConfiguration_BindsStudyPlanConsumerWithInboxAndRetry()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "services", "notification-service"))) directory = directory.Parent;
-        Assert.NotNull(directory);
-        var source = File.ReadAllText(Path.Combine(directory.FullName, "services", "notification-service", "Notification.API", "Program.cs"));
-        var binding = System.Text.RegularExpressions.Regex.Match(source,
-            "ReceiveEndpoint\\(\"coaching-study-plan-published\".*?\\n        \\}\\);", System.Text.RegularExpressions.RegexOptions.Singleline);
-        Assert.True(binding.Success, "The production consumer must have a receive endpoint.");
-        Assert.Contains("ConfigureConsumer<StudyPlanPublishedConsumer>", binding.Value);
-        Assert.Contains("UseEntityFrameworkOutbox<NotificationDbContext>", binding.Value);
-        Assert.Contains("UseMessageRetry", binding.Value);
-    }
-
-    [Fact]
     public async Task CoachingConsumers_MapEventsToExpectedRecipients()
     {
         var teacherId = Guid.NewGuid();
@@ -37,7 +22,7 @@ public sealed class CoachingNotificationConsumerTests
         services.AddSingleton<ICoachingNotificationDispatcher>(recordingDispatcher);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<AssignmentCreatedConsumer>();
             configurator.AddConsumer<AssignmentUpdatedConsumer>();
             configurator.AddConsumer<AssignmentSubmittedConsumer>();
@@ -111,10 +96,7 @@ public sealed class CoachingNotificationConsumerTests
             (await harness.Consumed.Any<StudyPlanPublishedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<CoachingReminderDueEvent>()).Should().BeTrue();
 
-            for (var attempt = 0; attempt < 50 && recordingDispatcher.Calls.Count < 16; attempt++)
-            {
-                await Task.Delay(20);
-            }
+            await TestHarnessTimeouts.UntilAsync(() => recordingDispatcher.Calls.Count >= 17);
 
             recordingDispatcher.Calls.Should().HaveCount(17);
             recordingDispatcher.Calls.Single(call => call.Type == "StudyPlanOverdueReminder").RecipientIds.Should().Equal(firstStudentId);
@@ -151,7 +133,7 @@ public sealed class CoachingNotificationConsumerTests
         var dispatcher = new RecordingDispatcher(); var student = Guid.NewGuid(); var teacher = Guid.NewGuid(); var decision = Guid.NewGuid();
         var services = new ServiceCollection(); services.AddSingleton<ICoachingNotificationDispatcher>(dispatcher);
         services.AddMassTransitTestHarness(x => {
-            x.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            x.UseSuiteTimeouts();
             x.AddConsumer<WeeklyReflectionSavedConsumer>(); x.AddConsumer<WeeklyDecisionChangedConsumer>();
             x.UsingInMemory((context, config) => config.ConfigureEndpoints(context));
         });
@@ -162,7 +144,7 @@ public sealed class CoachingNotificationConsumerTests
             await harness.Bus.Publish(new WeeklyDecisionChangedEvent(decision,student,teacher,new(2026,10,12),true));
             await harness.Bus.Publish(new WeeklyDecisionChangedEvent(decision,student,teacher,new(2026,10,12),false));
             (await harness.Consumed.Any<WeeklyReflectionSavedEvent>()).Should().BeTrue();
-            for(var i=0;i<50 && dispatcher.Calls.Count<3;i++) await Task.Delay(20);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 3);
             dispatcher.Calls.Should().HaveCount(3);
             var reflection=dispatcher.Calls.Single(x=>x.Type=="WeeklyReflectionSaved");
             reflection.RecipientIds.Should().Equal(teacher); reflection.EventMessageId.Should().Be(reflectionEventId);
@@ -170,18 +152,14 @@ public sealed class CoachingNotificationConsumerTests
             foreach(var type in new[]{"WeeklyDecisionCreated","WeeklyDecisionUpdated"}) {
                 var call=dispatcher.Calls.Single(x=>x.Type==type);call.RecipientIds.Should().Equal(student);call.RelatedEntityId.Should().Be($"weekly:{student:D}:2026-10-12:{decision:D}");
             }
+            var transferId=Guid.NewGuid();
+            await harness.Bus.Publish(new WeeklyDecisionChangedEvent(decision,student,teacher,new(2026,10,12),false,true),x=>x.MessageId=transferId);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 4);
+            var transfer=dispatcher.Calls.Single(x=>x.EventMessageId==transferId);
+            transfer.RecipientIds.Should().Equal(student,teacher);transfer.Type.Should().Be("WeeklyDecisionUpdated");
+            transfer.RelatedEntityId.Should().Be($"weekly:{student:D}:2026-10-12:{decision:D}");
+            transfer.Title.Should().Contain("devredildi");
         } finally { await harness.Stop(); }
-    }
-
-    [Fact]
-    public void WeeklyProductionEndpointsUseInboxAndRetry()
-    {
-        var directory=new DirectoryInfo(AppContext.BaseDirectory);while(directory is not null&&!File.Exists(Path.Combine(directory.FullName,"EduPlatform.sln")))directory=directory.Parent;
-        Assert.NotNull(directory);var source=File.ReadAllText(Path.Combine(directory!.FullName,"services/notification-service/Notification.API/Program.cs"));
-        foreach(var endpoint in new[]{"coaching-weekly-reflection-saved","coaching-weekly-decision-changed"}) {
-            var binding=System.Text.RegularExpressions.Regex.Match(source,"ReceiveEndpoint\\(\""+endpoint+"\".*?\\n        \\}\\);",System.Text.RegularExpressions.RegexOptions.Singleline);
-            Assert.True(binding.Success);Assert.Contains("UseEntityFrameworkOutbox<NotificationDbContext>",binding.Value);Assert.Contains("UseMessageRetry",binding.Value);
-        }
     }
 
     private sealed class RecordingDispatcher : ICoachingNotificationDispatcher

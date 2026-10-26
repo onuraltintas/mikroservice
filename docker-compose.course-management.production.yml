@@ -1,0 +1,107 @@
+# Optional production overlay for Course Management.
+# Use with docker-compose.yml and docker-compose.production.yml. The database
+# volumes hold Course Management attachments and scanner signatures. Provision
+# a dedicated database and least-privilege role before running its migration job.
+services:
+  # Course Management notifications (queues and API) are off unless this overlay is used.
+  notification-service:
+    environment:
+      CourseManagement__Enabled: "true"
+
+  course-management-migrations:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/course-management-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    build:
+      context: .
+      dockerfile: services/course-management-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      COURSE_MANAGEMENT_CONNECTION_STRING: ${COURSE_MANAGEMENT_CONNECTION_STRING:?COURSE_MANAGEMENT_CONNECTION_STRING must target the dedicated Course Management database and role}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - edu-network
+
+  course-management-clamav:
+    image: clamav/clamav:1.5.4
+    environment:
+      CLAMD_CONF_MaxScanSize: 10M
+      CLAMD_CONF_MaxFileSize: 10M
+      CLAMD_CONF_StreamMaxLength: 10M
+      CLAMD_CONF_ConcurrentDatabaseReload: "no"
+      CLAMD_CONF_MaxThreads: "4"
+      CLAMD_CONF_MaxQueue: "16"
+      CLAMAV_NO_MILTERD: "true"
+      FRESHCLAM_CHECKS: "1"
+    mem_limit: 1536m
+    cpus: "1.0"
+    pids_limit: 128
+    restart: unless-stopped
+    expose:
+      - "3310"
+    volumes:
+      - course_management_clamav_data:/var/lib/clamav
+    networks:
+      - edu-network
+    healthcheck:
+      test: [ "CMD-SHELL", "clamdscan --ping 3 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  course-management-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/course-management-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    build:
+      context: .
+      dockerfile: services/course-management-service/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      COURSE_MANAGEMENT_CONNECTION_STRING: ${COURSE_MANAGEMENT_CONNECTION_STRING:?COURSE_MANAGEMENT_CONNECTION_STRING must target the dedicated Course Management database and role}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      JWT_ISSUER: ${JWT_ISSUER:?JWT_ISSUER must be set}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:?JWT_AUDIENCE must be set}
+      JWT_KEY_ID: ${JWT_KEY_ID:-}
+      JWT_PREVIOUS_SECRETS: ${JWT_PREVIOUS_SECRETS:-}
+      JWT_PREVIOUS_KEY_IDS: ${JWT_PREVIOUS_KEY_IDS:-}
+      INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set for identity erasure readiness}
+      Services__IdentityService: http://identity-service:8080
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?RABBITMQ_DEFAULT_USER must be set}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?RABBITMQ_DEFAULT_PASS must be set}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${COURSE_MANAGEMENT_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: EduPlatform.CourseManagement
+      OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.1}
+      CourseManagement__AssignmentAttachments__RootPath: /var/lib/course-management/attachments
+      CourseManagement__AssignmentAttachments__ScannerProvider: ClamAv
+      CourseManagement__AssignmentAttachments__ClamAvHost: course-management-clamav
+      CourseManagement__AssignmentAttachments__ClamAvPort: 3310
+      AllowedHosts: ${COURSE_MANAGEMENT_ALLOWED_HOSTS:?COURSE_MANAGEMENT_ALLOWED_HOSTS must be set}
+    volumes:
+      - course_management_assignment_attachments:/var/lib/course-management/attachments
+    depends_on:
+      course-management-migrations:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      course-management-clamav:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - edu-network
+
+  api-gateway:
+    environment:
+      ReverseProxy__Clusters__course-management-cluster__Destinations__destination1__Address: http://course-management-service:8080
+    depends_on:
+      course-management-service:
+        condition: service_started
+
+volumes:
+  course_management_assignment_attachments:
+  course_management_clamav_data:

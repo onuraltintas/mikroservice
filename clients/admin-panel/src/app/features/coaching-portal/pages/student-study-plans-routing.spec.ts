@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -22,7 +23,7 @@ describe('student plan route integration', () => {
     };
     TestBed.configureTestingModule({ providers: [
       provideRouter([
-        { path: 'plans', component: StudentStudyPlansComponent, canDeactivate: [(component: StudentStudyPlansComponent) => component.canLeavePage()] },
+        { path: 'plans', component: StudentStudyPlansComponent, canDeactivate: [async (component: StudentStudyPlansComponent) => await component.canLeavePage()] },
         { path: 'other', component: OtherPageComponent }
       ]),
       { provide: CoachingStudyPlanningService, useValue: service }
@@ -44,7 +45,7 @@ describe('student plan route integration', () => {
     setup();
     const harness = await RouterTestingHarness.create();
     const component = await harness.navigateByUrl('/plans?plan=old-plan', StudentStudyPlansComponent);
-    component.open('active-plan');
+    await component.open('active-plan');
     await harness.fixture.whenStable();
     const url = TestBed.inject(Router).url;
     expect(url).toBe('/plans?plan=active-plan');
@@ -53,19 +54,41 @@ describe('student plan route integration', () => {
     expect(reopened.selected()?.id).toBe('active-plan');
   });
 
+  it('opens the linked task details when arriving from a weekly decision', async () => {
+    setup();
+    const harness = await RouterTestingHarness.create();
+    const component = await harness.navigateByUrl('/plans?plan=active-plan&task=task', StudentStudyPlansComponent);
+    await harness.fixture.whenStable();
+    expect(component.selectedTaskIds()).toEqual(['task']);
+    expect(component.planView()).toBe('calendar');
+    expect(component.visibleTasks().map(task => task.id)).toEqual(['task']);
+    expect(harness.routeNativeElement?.querySelector('article.task h3')?.textContent).toContain('Çalışma');
+  });
+
+  it('ignores a task that does not belong to the requested plan', async () => {
+    setup();
+    const harness = await RouterTestingHarness.create();
+    const component = await harness.navigateByUrl('/plans?plan=active-plan&task=another-students-task', StudentStudyPlansComponent);
+    await harness.fixture.whenStable();
+    expect(component.selected()?.id).toBe('active-plan');
+    expect(component.selectedTaskIds()).toEqual([]);
+  });
+
   it('keeps the actual fields and route when the student cancels leaving', async () => {
     setup();
     const harness = await RouterTestingHarness.create();
     const component = await harness.navigateByUrl('/plans?plan=active-plan', StudentStudyPlansComponent);
     component.actualMinutes['task'] = 17; component.actualQuestions['task'] = 8;
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const confirm = vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
     await TestBed.inject(Router).navigateByUrl('/other');
     expect(TestBed.inject(Router).url).toBe('/plans?plan=active-plan');
     expect(component.actualMinutes['task']).toBe(17);
     expect(component.actualQuestions['task']).toBe(8);
-    confirm.mockReturnValue(true);
+    confirm.mockResolvedValue(true);
     await TestBed.inject(Router).navigateByUrl('/other');
     expect(TestBed.inject(Router).url).toBe('/other');
     confirm.mockRestore();
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

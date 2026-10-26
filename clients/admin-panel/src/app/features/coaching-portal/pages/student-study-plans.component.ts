@@ -1,12 +1,16 @@
+import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, ElementRef, HostListener, Injector, Input, OnChanges, OnInit, ViewChild, afterNextRender, inject, signal } from '@angular/core';
+import { Component, ChangeDetectorRef, DestroyRef, ElementRef, Injector, Input, OnChanges, OnInit, ViewChild, afterNextRender, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subject, finalize, takeUntil, switchMap } from 'rxjs';
+import { Observable, Subject, finalize, firstValueFrom, takeUntil, switchMap } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 import {clock} from './weekly-calendar';
-import {StudyPlanCalendarComponent} from './study-plan-calendar.component';
+import {CoachingLearningSetupService,LearningLesson} from '../../../core/services/coaching-learning-setup.service';
+import {lessonColors,lessonKey} from './study-plan-colors';
+import {computed} from '@angular/core';
+import {CalendarAction,StudyPlanCalendarComponent} from './study-plan-calendar.component';
 import {CalendarMove,calendarTaskOverdue} from './study-plan-calendar';
 
 @Component({
@@ -17,14 +21,75 @@ import {CalendarMove,calendarTaskOverdue} from './study-plan-calendar';
   styleUrl: './student-study-plans.component.scss'
 })
 export class StudentStudyPlansComponent implements OnInit, OnChanges {
+  private readonly toaster = coachingToaster();
   readonly clock=clock;taskPage=1;
   readonly planView=signal<'calendar'|'list'>('list');readonly selectedTaskIds=signal<string[]>([]);
   private readonly injector=inject(Injector);
+  private readonly changeDetector=inject(ChangeDetectorRef);
   @ViewChild('calendarTaskDetail') private calendarTaskDetail?:ElementRef<HTMLElement>;
   selectCalendarTasks(ids:string[]){this.selectedTaskIds.set(ids);afterNextRender(()=>this.calendarTaskDetail?.nativeElement.focus(),{injector:this.injector});}
   visibleTasks(){const plan=this.selected();if(this.planView()==='calendar')return plan?.tasks.filter(t=>this.selectedTaskIds().includes(t.id))??[];const tasks=this.filteredTasks();return plan?.weeklySource?tasks.slice((this.taskPage-1)*50,this.taskPage*50):tasks;}
+  readonly taskColors=computed(()=>lessonColors(this.selected()?.tasks??[]));
+  taskColor(task:StudyTask){return this.taskColors().get(lessonKey(task));}
+  @ViewChild('taskDialog') private taskDialogElement?:ElementRef<HTMLElement>;
+  calendarForm:{kind:CalendarAction['kind'];taskId:string|null;taskIds:string[];date:string;time:string;title:string;minutes:number;lessonId:string|null;actualMinutes:number;actualQuestions:number|null;workedOn?:string}|null=null;
+  calendarLessons:LearningLesson[]=[];calendarLessonsLoading=false;
+  async calendarCommand(action:CalendarAction){
+    const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived'||action.kind==='complete'&&(!!this.staffStudentId||plan.status!=='Active'))return;
+    const tasks=plan.tasks.filter(t=>action.taskIds.includes(t.id)&&!t.isCompleted),task=tasks[0];
+    if(action.kind!=='add'&&!task)return;
+    this.calendarForm={kind:action.kind,taskId:task?.id??null,taskIds:tasks.map(t=>t.id),date:action.date,time:clock(action.startMinute),title:'',minutes:30,lessonId:null,actualMinutes:30,actualQuestions:null};
+    this.error.set(null);if(task)this.chooseCalendarTask(task.id);
+    afterNextRender(()=>this.taskDialogElement?.nativeElement.querySelector<HTMLElement>('input,select,button')?.focus(),{injector:this.injector});
+    if(action.kind==='add'){
+      this.calendarLessons=[];this.calendarLessonsLoading=true;
+      try{
+        const setup=this.injector.get(CoachingLearningSetupService),student=this.staffStudentId;
+        const catalog=await firstValueFrom((student?setup.catalogForStudent(student):setup.catalog()).pipe(takeUntil(this.scopeChanged),takeUntilDestroyed(this.destroyRef)),{defaultValue:null});
+        if(this.calendarForm?.kind==='add'&&catalog){this.calendarLessons=catalog.lessons;this.calendarForm.lessonId=catalog.lessons[0]?.id??null;}
+      }catch(error){this.showError(error,'Dersler yüklenemedi. Tekrar deneyin.');}
+      finally{this.calendarLessonsLoading=false;this.changeDetector.markForCheck();}
+    }
+  }
+  chooseCalendarTask(id:string){
+    const task=this.selected()?.tasks.find(t=>t.id===id),form=this.calendarForm;if(!task||!form)return;
+    Object.assign(form,{taskId:id,date:task.plannedDate,time:clock(task.plannedStartMinute??540),title:task.title,minutes:task.plannedMinutes,lessonId:task.weeklyLessonId??null,actualMinutes:this.actualMinutes[id]??task.plannedMinutes,actualQuestions:this.actualQuestions[id]??null});
+  }
+  calendarTaskOptions(){return this.selected()?.tasks.filter(t=>this.calendarForm?.taskIds.includes(t.id))??[];}
+  calendarDurationLocked(){const task=this.selected()?.tasks.find(t=>t.id===this.calendarForm?.taskId);return !!task?.outcomes?.length;}
+  closeCalendarForm(){if(this.busy())return;this.calendarForm=null;}
+  calendarDialogKey(event:KeyboardEvent){
+    if(event.key==='Escape'){event.preventDefault();this.closeCalendarForm();return;}
+    if(event.key!=='Tab')return;
+    const items=[...this.taskDialogElement!.nativeElement.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]')];
+    const first=items[0],last=items.at(-1);
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+    if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  }
+  async saveCalendarForm(){
+    const form=this.calendarForm,plan=this.selected();if(!form||!plan||this.readOnly||this.busy()||plan.status==='Archived')return;
+    const task=plan.tasks.find(t=>t.id===form.taskId);
+    if(form.kind==='complete'){
+      if(!task||this.staffStudentId)return;
+      if(form.workedOn)this.workDates[task.id]=form.workedOn;
+      this.complete(task,form.actualMinutes,form.actualQuestions);
+      return;
+    }
+    if(form.kind==='delete'){
+      if(!task||task.isCompleted)return;
+      const scope=this.staffStudentId;
+      if(!await this.toaster.confirm(`“${task.title}” çalışması silinsin mi? Bu çalışmanın planlanan kazanım payları da kaldırılır. Tamamlanan çalışmalar korunur.`))return;
+      if(this.staffStudentId!==scope||this.selected()?.id!==plan.id||this.busy())return;
+      this.mutate(this.service.deleteCalendarTask(plan.id,task.id,plan.version,...this.studentArgument),'Bekleyen çalışma silindi.');return;
+    }
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(form.time)||!form.date||!form.title.trim()||form.title.trim().length>200||!Number.isInteger(form.minutes)||form.minutes<1||form.minutes>1440||form.kind==='add'&&!form.lessonId){this.error.set('Ders, başlık, tarih ve süreyi kontrol et.');return;}
+    const [h,m]=form.time.split(':').map(Number),start=h*60+m;
+    if(start+form.minutes>1440||plan.tasks.some(t=>t.id!==form.taskId&&t.plannedDate===form.date&&t.plannedStartMinute!=null&&t.plannedStartMinute<start+form.minutes&&t.plannedStartMinute+t.plannedMinutes>start)){this.error.set('Çalışma günün dışına taşıyor veya başka bir çalışmayla çakışıyor.');return;}
+    this.mutate(this.service.saveCalendarTask(plan.id,form.taskId,{expectedVersion:plan.version,title:form.title.trim(),plannedDate:form.date,startMinute:start,plannedMinutes:form.minutes,lessonId:form.lessonId},...this.studentArgument),'Çalışma takvime kaydedildi.');
+  }
   @Input() autoOpenActive=false;
   @Input() initialPlanId:string|null=null;
+  @Input() initialTaskId:string|null=null;
   @Input() taskFilter:'all'|'pending'|'completed'|'overdue'='all';
   filteredTasks(){return this.selected()?.tasks.filter(t=>this.taskFilter==='all'||this.taskFilter==='completed'&&t.isCompleted||this.taskFilter==='pending'&&!t.isCompleted||this.taskFilter==='overdue'&&this.isOverdue(t))??[];}
   isOverdue(task:StudyTask){return this.selected()?.status==='Active'&&calendarTaskOverdue(task,this.selected()?.weeklySource?.timeZoneId);}
@@ -43,6 +108,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly router = inject(Router, { optional: true });
   private requestedPlanId = this.route?.snapshot.queryParamMap.get('plan') ?? null;
+  private readonly requestedTaskPlanId = this.requestedPlanId;
+  private readonly requestedTaskId = this.route?.snapshot.queryParamMap.get('task') ?? null;
   readonly page = signal<StudyPlanPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
   readonly selected = signal<StudyPlan | null>(null);
   readonly busy = signal(false);
@@ -53,13 +120,15 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   readonly knownDraftId = signal<string | null>(null);
   editing = false;
   dirty = false;
-  filter: StudyPlanStatus | '' = '';
+  filter: StudyPlanStatus | '' = 'Active';
   editTitle = '';
   editTasks: StudyTaskInput[] = [];
   publishConfirmed = false;
   restoreConfirmed=false;
   restore(){const plan=this.selected();if(!plan||plan.status!=='Archived'||!this.restoreConfirmed||this.readOnly||this.busy())return;
     this.mutate(this.service.list(1,'Active',...this.studentArgument).pipe(switchMap(page=>this.service.restore(plan.id,plan.version,page.items[0]??null,...this.studentArgument))),'Plan yeniden etkinleştirildi. Önceki aktif plan ve çalışmalar arşivde korundu.');}
+  readonly today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  workDates:Record<string,string>={};
   actualMinutes: Record<string, number> = {};
   actualQuestions: Record<string, number | null> = {};
   moveCalendar(move:CalendarMove){const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived')return;
@@ -67,24 +136,26 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   setDraftTime(task:StudyTaskInput,value:string){task.plannedStartMinute=value?Number(value.slice(0,2))*60+Number(value.slice(3)):null;this.dirty=true;}
   targetDates: Record<string, string> = {};
 
-  ngOnInit() { this.initialized = true; this.loadList(); }
+  ngOnInit() { this.initialized = true; if (this.staffStudentId) this.filter = ''; this.loadList(); }
   ngOnChanges() {
     if (!this.initialized) return;
-    this.scopeChanged.next();
+    this.scopeChanged.next();this.calendarForm=null;this.correction=null;
     this.selected.set(null); this.page.set({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
-    this.knownDraftId.set(null); this.filter = ''; this.editing = false; this.dirty = false;
+    this.knownDraftId.set(null); this.filter = this.staffStudentId ? '' : 'Active'; this.editing = false; this.dirty = false;
     this.busy.set(false); this.loading.set(false); this.success.set(null); this.error.set(null);
     this.loadList();
   }
 
-  canLeavePage() {
+  async canLeavePage() {
     if (this.busy()) { this.error.set('İşlem sürüyor. Tamamlanmasını bekleyin.'); return false; }
-    return !(this.dirty || this.hasUnsavedTaskInputs()) || (typeof window !== 'undefined' && window.confirm('Kaydedilmemiş değişiklikleriniz var. Değişikliklerden vazgeçerek ayrılmak istiyor musunuz?'));
+    return !(this.dirty || !!this.calendarForm || !!this.correction || this.hasUnsavedTaskInputs()) || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş değişiklikleriniz var. Değişikliklerden vazgeçerek ayrılmak istiyor musunuz?'));
   }
 
-  @HostListener('window:beforeunload', ['$event'])
-  beforeUnload(event: BeforeUnloadEvent) {
-    if (this.dirty || this.hasUnsavedTaskInputs() || this.busy()) { event.preventDefault(); event.returnValue = ''; }
+  async refreshAfterExternalChange() {
+    if (this.busy() || this.dirty || this.calendarForm || this.correction || this.hasUnsavedTaskInputs()) return;
+    const plan = this.selected();
+    if (plan) await this.open(plan.id);
+    else this.loadList();
   }
 
   loadList(pageNumber = 1) {
@@ -93,16 +164,16 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.error.set(null);
     this.service.list(pageNumber, this.filter || undefined, ...this.studentArgument).pipe(
       takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))
-    ).subscribe({ next: page => {
+    ).subscribe({ next: async page => {
       this.page.set(page);
-      if(this.staffStudentId&&this.initialPlanId&&!this.selected()&&!this.editing){this.open(this.initialPlanId);}
+      if(this.staffStudentId&&this.initialPlanId&&!this.selected()&&!this.editing){await this.open(this.initialPlanId);}
       else if (!this.staffStudentId && this.requestedPlanId) {
-        const id = this.requestedPlanId; this.requestedPlanId = null; this.open(id);
-      } else if ((!this.staffStudentId||this.autoOpenActive) && !this.selected() && !this.editing && !this.filter) {
+        const id = this.requestedPlanId; this.requestedPlanId = null; await this.open(id);
+      } else if ((!this.staffStudentId||this.autoOpenActive) && !this.selected() && !this.editing && (!this.filter || this.filter === 'Active')) {
         const active = page.items.find(plan => plan.status === 'Active');
-        if (active) this.open(active.id);
-        else this.service.list(1, 'Active',...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef))
-          .subscribe({ next: plans => { if (plans.items.length && !this.selected() && !this.editing) this.open(plans.items[0].id); },
+        if (active) await this.open(active.id);
+        else if (!this.filter) this.service.list(1, 'Active',...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef))
+          .subscribe({ next: async plans => { if (plans.items.length && !this.selected() && !this.editing) await this.open(plans.items[0].id); },
             error: error => this.showError(error, 'Aktif plan yüklenemedi. Lütfen tekrar deneyin.') });
       }
       if (pageNumber === 1 && (!this.filter || this.filter === 'Draft')) {
@@ -111,23 +182,35 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     }, error: error => this.showError(error, 'Planlar yüklenemedi. Lütfen tekrar deneyin.') });
   }
 
-  open(id: string) {
-    if (!this.canLeaveEditor()) return;
+  async open(id: string) {
+    if (!await this.canLeaveEditor()) return;
     this.busy.set(true);
     this.error.set(null);
     this.service.get(id, ...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
       .subscribe({ next: plan => this.applyPlan(plan), error: error => this.showError(error, 'Plan açılamadı.') });
   }
 
-  newDraft() {
+  async newDraft() {
     if (this.readOnly) return;
-    if (!this.canLeaveEditor()) return;
-    const draftId = this.selected()?.status === 'Draft' ? this.selected()!.id : this.knownDraftId();
-    if (draftId) { this.open(draftId); return; }
+    if (!await this.canLeaveEditor()) return;
+    let draftId = this.selected()?.status === 'Draft' ? this.selected()!.id : this.knownDraftId();
+    if (!draftId && !this.staffStudentId) {
+      this.busy.set(true);
+      try {
+        const drafts = await firstValueFrom(this.service.list(1, 'Draft', ...this.studentArgument).pipe(
+          takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))
+        ), { defaultValue: null });
+        if (!drafts || this.destroyRef.destroyed) return;
+        draftId = drafts.items.find(plan => plan.status === 'Draft')?.id ?? null;
+        this.knownDraftId.set(draftId);
+      } catch (error) { this.showError(error, 'Taslak kontrol edilemedi. Lütfen tekrar deneyin.'); return; }
+    }
+    if (draftId) { await this.open(draftId); return; }
     this.selected.set(null);
     this.editing = true;
     this.editTitle = '';
     this.editTasks = [];
+    this.correction=null;
     this.dirty = false;
     this.publishConfirmed = false;
     this.error.set(null);
@@ -179,12 +262,54 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     if (!plan || plan.status !== 'Draft' || !plan.tasks.length || !this.publishConfirmed || this.dirty || this.busy()) return;
     this.mutate(this.service.publish(plan.id, plan.version, ...this.studentArgument), 'Plan yayımlandı. Önceki planın geçmişi korundu.');
   }
-  archiveDraft() {
+  async archiveDraft() {
     if (this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Draft' || this.busy() || this.dirty || typeof window === 'undefined') return;
-    if (!window.confirm('Taslak arşivlensin mi? Çalışmalar geçmişte korunacak; yeni bir taslak hazırlayabileceksiniz.')) return;
+    if (!await this.toaster.confirm('Taslak arşivlensin mi? Çalışmalar geçmişte korunacak; yeni bir taslak hazırlayabileceksiniz.')) return;
     this.mutate(this.service.archive(plan.id, plan.version, ...this.studentArgument), 'Taslak arşivlendi. Geçmiş korundu; yeni taslak hazırlayabilirsin.');
+  }
+
+  remainingMinutes:Record<string,number|null>={};
+  remainingQuestions:Record<string,number|null>={};
+  correction: {taskId:string;minutes:number;questions:number|null;completed:boolean;reason:string;remainingMinutes:number|null;remainingQuestions:number|null;workedOn:string;reassignFromDate:string;continuationMinutes?:number|null;continuationQuestions?:number|null}|null=null;
+  saveRemainingScope(task:StudyTask){
+    const plan=this.selected(),minutes=this.remainingMinutes[task.id],questions=this.remainingQuestions[task.id]??null;
+    if(!plan||plan.status==='Draft'||this.readOnly||task.isCompleted||this.busy())return;
+    if(!Number.isInteger(minutes)||minutes!<1||minutes!>1440||questions!=null&&(!Number.isInteger(questions)||questions<0||questions>100000)){this.error.set('Kalan süreyi ve soru sayısını kontrol edin.');return;}
+    this.mutate(this.service.setRemainingScope(plan.id,task.id,plan.version,minutes!,questions,this.staffStudentId),'Kalan kapsam kaydedildi. Gerçekleşme toplamı korundu.');
+  }
+  partial(task:StudyTask) {
+    const plan=this.selected(); if(!plan||plan.status!=='Active'||this.staffStudentId||this.readOnly||task.isCompleted||this.busy())return;
+    const minutes=this.actualMinutes[task.id],questions=this.actualQuestions[task.id]??null;
+    if(!Number.isInteger(minutes)||minutes<1||minutes>1440||questions!=null&&(!Number.isInteger(questions)||questions<0||questions>100000)) {this.error.set('Süreyi ve soru sayısını kontrol edin.');return;}
+    const remainingMinutes=this.remainingMinutes[task.id],remainingQuestions=this.remainingQuestions[task.id]??null;
+    if(!Number.isInteger(remainingMinutes)||remainingMinutes!<1||remainingMinutes!>1440||remainingQuestions!=null&&(!Number.isInteger(remainingQuestions)||remainingQuestions<0||remainingQuestions>100000)){this.error.set('Kısmi çalışma için kalan süreyi 1–1440 dakika olarak belirt. Bu süre yeni plana devredilecek iş miktarıdır.');return;}
+    this.mutate(this.service.recordRealization(plan.id,task.id,{expectedVersion:plan.version,actualMinutes:minutes,actualQuestions:questions,isCompleted:false,remainingMinutes:remainingMinutes!,remainingQuestions,...(this.workDates[task.id]?{workedOn:this.workDates[task.id]}:{})}),'Kısmi çalışma toplamı kaydedildi.');
+  }
+  startCorrection(task:StudyTask) {
+    if(this.staffStudentId||this.readOnly||this.busy()||task.actualMinutes==null&&!task.realizationHistory?.length)return;
+    this.correction={taskId:task.id,minutes:task.actualMinutes??0,questions:task.actualQuestions??null,completed:task.isCompleted&&task.actualMinutes!=null,reason:'',remainingMinutes:task.remainingMinutes??null,remainingQuestions:task.remainingQuestions??null,workedOn:task.workDays?.at(-1)?.workedOn??this.today,reassignFromDate:'',continuationMinutes:null,continuationQuestions:null};
+  }
+  continuationScopeRequired(task:StudyTask):boolean {
+    const form=this.correction,active=task.continuation;
+    if(!form||form.taskId!==task.id||!active||active.hasOwnCompletion||!active.requiresExplicitScope||form.completed)return false;
+    const remaining=form.minutes===0?null:form.remainingMinutes??task.remainingMinutes??null;
+    const questions=form.minutes===0?null:form.remainingQuestions??task.remainingQuestions??null;
+    return active.isCompleted||task.isCompleted!==form.completed||(task.remainingMinutes??null)!==remaining||(task.remainingQuestions??null)!==questions;
+  }
+  saveCorrection() {
+    const plan=this.selected(),form=this.correction;
+    if(!plan||!form||this.staffStudentId||this.readOnly||this.busy())return;
+    if(!Number.isInteger(form.minutes)||form.minutes<0||form.minutes>1440||form.minutes===0&&(form.completed||(form.questions??0)>0)||form.questions!=null&&(!Number.isInteger(form.questions)||form.questions<0||form.questions>100000)||form.reason.trim().length<5||form.reason.trim().length>1000){this.error.set('Süreyi, soru sayısını ve en az 5 karakterlik gerekçeyi kontrol edin.');return;}
+    if(!form.completed&&form.minutes>0&&form.remainingMinutes!=null&&(!Number.isInteger(form.remainingMinutes)||form.remainingMinutes<1||form.remainingMinutes>1440)){this.error.set('Kalan süreyi kontrol edin.');return;}
+    const task=plan.tasks.find(x=>x.id===form.taskId);
+    const active=task?.continuation;
+    const reconcile=!!task&&this.continuationScopeRequired(task);
+    if(reconcile&&(!Number.isInteger(form.continuationMinutes)||form.continuationMinutes!<1||form.continuationMinutes!>1440||form.continuationQuestions!=null&&(!Number.isInteger(form.continuationQuestions)||form.continuationQuestions<0||form.continuationQuestions>100000))){this.error.set('Aktif devamın güncel kalan süresini ve soru sayısını belirt. Sonraki çalışmanın kapsamı geçmiş süreden tahmin edilmez.');return;}
+    const scope=!form.completed&&form.minutes>0&&form.remainingMinutes!=null?{remainingMinutes:form.remainingMinutes,remainingQuestions:form.remainingQuestions}:{};
+    const continuation=reconcile&&active?{continuationScope:{revisionId:active.revisionId,expectedVersion:active.revisionVersion,remainingMinutes:form.continuationMinutes!,remainingQuestions:form.continuationQuestions??null}}:{};
+    this.mutate(this.service.recordRealization(plan.id,form.taskId,{expectedVersion:plan.version,actualMinutes:form.minutes,actualQuestions:form.questions,isCompleted:form.completed,reason:form.reason.trim(),workedOn:form.workedOn,...(form.reassignFromDate?{reassignFromDate:form.reassignFromDate}:{}),...scope,...continuation},true),'Gerçekleşme gerekçesiyle düzeltildi; önceki kayıt korundu ve aktif devam uzlaştırıldı.');
   }
 
   complete(task: StudyTask, actualMinutes: number, actualQuestions: number | null = null) {
@@ -199,7 +324,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       this.completionError.set({ taskId: task.id, field: 'questions', message: 'Gerçek soru sayısını 0–100000 arasında tam sayı olarak girin.' }); return;
     }
     this.completionError.set(null);
-    this.mutate(this.service.complete(plan.id, task.id, plan.version, actualMinutes, actualQuestions), 'Çalışma tamamlandı.');
+    this.mutate(this.service.complete(plan.id, task.id, plan.version, actualMinutes, actualQuestions,...(this.workDates[task.id]?[this.workDates[task.id]]:[])), 'Çalışma tamamlandı.');
   }
 
   reschedule(task: StudyTask, plannedDate: string) {
@@ -214,20 +339,33 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
 
   private applyPlan(plan: StudyPlan, preserveInputs = false) {
     const previous = this.selected();
+    if(!preserveInputs||previous?.id!==plan.id)this.workDates={};
     if(previous?.id!==plan.id||!!previous?.weeklySource!==!!plan.weeklySource){this.planView.set(this.taskFilter!=='all'?'list':plan.weeklySource?'calendar':'list');this.selectedTaskIds.set([]);}
     const keepInputs = preserveInputs && previous?.id === plan.id && plan.status === 'Active';
     const minutes = this.actualMinutes; const questions = this.actualQuestions; const dates = this.targetDates;
     const titles=this.taskTitles;
-    this.selected.set(plan);
+    this.calendarForm=null;this.selected.set(plan);
+    const focusTask = this.initialPlanId === plan.id ? this.initialTaskId : this.requestedTaskPlanId === plan.id ? this.requestedTaskId : null;
+    if (previous?.id !== plan.id && focusTask && plan.tasks.some(task => task.id === focusTask)) {
+      this.planView.set('calendar');
+      this.selectCalendarTasks([focusTask]);
+    }
     this.editing = plan.status === 'Draft' && !this.readOnly && !plan.weeklySource;
     this.taskPage=1;
     this.editTitle = plan.title;
-    this.editTasks = plan.tasks.map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions,plannedStartMinute }) =>
+    this.editTasks = plan.tasks.filter(task=>!task.predecessorTaskId).map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions,plannedStartMinute }) =>
       ({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName: sourceName ?? null, plannedQuestions: plannedQuestions ?? null,plannedStartMinute:plannedStartMinute??null }));
-    this.actualMinutes = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && Object.hasOwn(minutes, task.id) ? minutes[task.id] : task.actualMinutes ?? task.plannedMinutes]));
+    this.actualMinutes = Object.fromEntries(plan.tasks.map(task => {
+      const old = previous?.tasks.find(item => item.id === task.id);
+      const changed = old && minutes[task.id] !== (old.actualMinutes ?? old.plannedMinutes);
+      return [task.id, keepInputs && !task.isCompleted && Object.hasOwn(minutes, task.id) && changed ? minutes[task.id] : task.actualMinutes ?? task.plannedMinutes];
+    }));
     this.actualQuestions = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && Object.hasOwn(questions, task.id) ? questions[task.id] : task.actualQuestions ?? null]));
+    this.remainingMinutes=Object.fromEntries(plan.tasks.map(task=>[task.id,keepInputs&&Object.hasOwn(this.remainingMinutes,task.id)?this.remainingMinutes[task.id]:task.remainingMinutes??null]));
+    this.remainingQuestions=Object.fromEntries(plan.tasks.map(task=>[task.id,keepInputs&&Object.hasOwn(this.remainingQuestions,task.id)?this.remainingQuestions[task.id]:task.remainingQuestions??null]));
     this.targetDates = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && dates[task.id] && dates[task.id] !== previous?.tasks.find(old => old.id === task.id)?.plannedDate ? dates[task.id] : task.plannedDate]));
     this.taskTitles=Object.fromEntries(plan.tasks.map(t=>[t.id,keepInputs&&!t.isCompleted&&titles[t.id]&&titles[t.id]!==previous?.tasks.find(old=>old.id===t.id)?.title?titles[t.id]:t.title]));
+    this.correction=null;
     this.dirty = false;
     this.publishConfirmed = false;
     this.completionError.set(null);
@@ -244,13 +382,14 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     return !this.readOnly && plan?.status === 'Active' && plan.tasks.some(task => !task.isCompleted && (
       this.actualMinutes[task.id] !== (task.actualMinutes ?? task.plannedMinutes)
       || (this.actualQuestions[task.id] ?? null) !== (task.actualQuestions ?? null)
-      || this.targetDates[task.id] !== task.plannedDate || !!this.staffStudentId&&this.taskTitles[task.id]!==task.title));
+      || (this.remainingMinutes[task.id]??null)!==(task.remainingMinutes??null) || (this.remainingQuestions[task.id]??null)!==(task.remainingQuestions??null)
+      || !!this.workDates[task.id] && this.workDates[task.id]!==this.today || this.targetDates[task.id] !== task.plannedDate || !!this.staffStudentId&&this.taskTitles[task.id]!==task.title));
   }
 
-  private canLeaveEditor() {
+  private async canLeaveEditor() {
     if (this.busy()) return false;
     if (this.dirty) { this.error.set('Önce taslağınızı kaydedin veya değişikliklerden vazgeçin.'); return false; }
-    if (this.hasUnsavedTaskInputs() && (typeof window === 'undefined' || !window.confirm('Kaydedilmemiş çalışma bilgileriniz var. Değişikliklerden vazgeçmek istiyor musunuz?'))) return false;
+    if ((this.calendarForm || this.correction || this.hasUnsavedTaskInputs()) && (typeof window === 'undefined' || !await this.toaster.confirm('Kaydedilmemiş çalışma bilgileriniz var. Değişikliklerden vazgeçmek istiyor musunuz?'))) return false;
     this.success.set(null);
     return true;
   }
@@ -260,7 +399,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.error.set(null);
     this.success.set(null);
     request.pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
-      next: plan => { this.applyPlan(plan, true); this.success.set(message); this.loadList(this.page().pageNumber); },
+      next: plan => { this.calendarForm=null;this.applyPlan(plan, true); this.success.set(message); this.loadList(this.page().pageNumber); },
       error: error => this.showError(error, 'İşlem tamamlanamadı. Lütfen tekrar deneyin.')
     });
   }
@@ -271,4 +410,5 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.error.set(typeof message === 'string' ? message : fallback);
     if (response?.status === 409) this.error.update(value => `${value} Planı yeniden açarak güncel durumu kontrol edin.`);
   }
+  private readonly feedback = coachingFeedback(this.success, this.error);
 }

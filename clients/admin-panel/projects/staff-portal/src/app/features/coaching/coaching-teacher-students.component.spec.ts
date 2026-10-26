@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -207,7 +208,7 @@ describe('CoachingTeacherStudentsComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Mehmet Kaya');
   });
 
-  it('opens the selected student report and returns to the same roster', () => {
+  it('opens the selected student report and returns to the same roster', async () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
     http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
@@ -237,9 +238,11 @@ describe('CoachingTeacherStudentsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('ÖĞRENCİ RAPORU');
 
     const backButton = fixture.nativeElement.querySelector('button[data-testid="back-to-roster"]') as HTMLButtonElement;
-    backButton.click();
+    backButton.click(); await vi.waitFor(()=>expect(fixture.componentInstance.selectedStudent()).toBeNull());
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Öğrencilerim');
     expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

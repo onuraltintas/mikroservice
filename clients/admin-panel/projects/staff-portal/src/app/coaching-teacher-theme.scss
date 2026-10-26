@@ -1,0 +1,139 @@
+body:has(.coaching-staff-shell) { min-width: 0; background: var(--ui-page); color: var(--ui-text); }
+body .coaching-shell.coaching-staff-shell {
+  --ui-font-body: Inter, 'Segoe UI', sans-serif;
+  --surface: var(--ui-surface);
+  background: var(--ui-page); color: var(--ui-text); font: 15px/1.65 var(--ui-font-body);
+  :is(button, a, input, textarea, select):focus-visible { outline: 3px solid var(--coaching-focus); outline-offset: 3px; }
+  .sidebar { background: var(--ui-surface); color: var(--ui-text); border-right: 1px solid var(--ui-border); overflow-y: auto; }
+  .sidebar .brand { margin: 0 8px 30px; }
+  staff-course-management-enrollment {
+    display: block; margin-top: 24px;
+    section { margin: 0; padding: 16px; color: var(--ui-text); border-color: var(--ui-border); background: var(--ui-surface-muted); }
+    h2 { font: 700 16px/1.5 var(--ui-font-body); }
+    p, label { color: var(--ui-text-muted); font-size: 13px; }
+    select, button { min-height: 44px; color: var(--ui-text); background: var(--ui-surface); border-color: var(--ui-border); font: inherit; }
+  }
+  .brand { color: var(--ui-text); }
+  .brand-symbol, .product-mark { background: var(--ui-brand-soft); color: var(--ui-success); font-family: inherit; }
+  :is(.brand-copy small, .sidebar-caption, .product-copy small, .sidebar-bottom small, .breadcrumb, .page-footer) { color: var(--ui-text-muted); font-size: 12px; }
+  .brand-copy strong { font-size: 22px; }
+  .product-choice { color: var(--ui-text); border-color: transparent; }
+  .product-choice.active { background: var(--ui-brand-soft); border-color: var(--ui-border); color: var(--ui-text); }
+  .product-choice:hover { background: var(--ui-surface-muted); }
+  .product-copy strong { font-size: 15px; }
+  .product-arrow { color: var(--ui-success); }
+  .sidebar-bottom { border-color: var(--ui-border); strong { font-size: 13px; } }
+  .secure-dot { background: var(--ui-success); box-shadow: none; }
+  .topbar { gap: 12px; height: auto; min-height: 76px; padding: 14px 28px; border-color: var(--ui-border); background: var(--ui-surface); }
+  .breadcrumb { font-size: 13px; strong { color: var(--ui-text); } }
+  .topbar-actions { flex-wrap: wrap; justify-content: flex-end; }
+  :is(.account-button, .logout-button, .teacher-theme-toggle, .teacher-menu-toggle, .teacher-drawer-close) { min-height: 44px; border: 1px solid var(--ui-border); border-radius: 11px; background: var(--ui-surface); color: var(--ui-text); font: 600 14px var(--ui-font-body); padding: 10px 12px; cursor: pointer; }
+  .teacher-theme-toggle, .teacher-menu-toggle, .teacher-drawer-close { display: inline-grid; place-items: center; width: 44px; padding: 0; flex-shrink: 0; }
+  .teacher-menu-toggle { display: none; }
+  .account-button:hover, .logout-button:hover { background: var(--ui-brand-soft); border-color: var(--ui-border); }
+  .content-wrap { width: min(100%, 1440px); padding: 32px; animation: none; }
+  .welcome-block { max-width: 900px; }
+  .welcome-block h1 { color: var(--ui-text); font: 750 clamp(24px, 2.5vw, 34px)/1.3 var(--ui-font-body); letter-spacing: -.6px; }
+  .welcome-copy { color: var(--ui-text-muted); max-width: 72ch; margin-top: 10px; font-size: 15px; }
+  .eyebrow { color: var(--ui-success); font-size: 12px; }
+  .workspace-role-switch { display: flex; background: var(--ui-surface); border-color: var(--ui-border); :is(span, button) { font-size: 14px; color: var(--ui-text); } button { min-height: 44px; } .selected { background: var(--ui-brand-soft); border-color: var(--ui-border); color: var(--ui-success); } }
+  .page-footer { display: flex; flex-wrap: wrap; }
+  .teacher-skip { position: fixed; top: -100px; left: 16px; z-index: 1100; background: var(--ui-brand); color: white; padding: 12px; border-radius: 8px; &:focus { top: 10px; } }
+  .teacher-scrim, .teacher-drawer-close { display: none; }
+}
+
+body .coaching-shell.coaching-staff-shell .coaching-body .coaching-content {
+  :is(h2, h3, h4) { font-family: var(--ui-font-body); font-weight: 700; color: var(--ui-text); letter-spacing: -.3px; }
+  h2 { font-size: 25px; } h3 { font-size: 19px; } h4 { font-size: 16px; }
+  :is(p, label) { line-height: 1.65; }
+  :is(button, label, .workspace-tabs button) { font-size: 14px; }
+  :is(button, input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]), select, textarea) { min-height: 44px; max-width: 100%; }
+  :is(.student-option, label.check) { min-height: 44px; }
+  :is(button, a) { touch-action: manipulation; }
+  button { height: auto; }
+  button:where(:not([class])) { padding: 10px 14px; border: 1px solid var(--ui-border); border-radius: 10px; color: var(--ui-text); background: var(--ui-surface); cursor: pointer; }
+  :is(input, textarea)::placeholder { opacity: 1; color: var(--ui-text-muted); }
+  :is(.note, small, .muted, .filter-note, .section-loading) { color: var(--ui-text-muted); opacity: 1; font-size: 13px; }
+  :is(.teacher-workspace, .tracking, .study-overview, .roster, .assignments, .teacher-goals, .teacher-plan, .profile-panel) { color: var(--ui-text); }
+  .teacher-workspace { margin-top: 24px; }
+  .workspace-heading h2 { font-size: 22px; }
+  .workspace-heading p:not(.workspace-eyebrow) { font-size: 14px; color: var(--ui-text-muted); }
+  .workspace-tabs { padding: 6px; gap: 6px; background: var(--ui-surface); border-color: var(--ui-border); border-radius: 15px; }
+  .workspace-tabs button { color: var(--ui-text-muted); padding: 10px 14px; }
+  .workspace-tabs button.active { color: white; background: var(--ui-brand); box-shadow: none; }
+  :is(.study-overview, .goal-form, .assignment-editor, .editor-form, .teacher-plan .card, .student-list, .table-scroll, .table-wrap) { border-color: var(--ui-border); border-radius: 16px; background: var(--ui-surface); }
+  :is(.error, .overdue, .editor-error, .roster-error, .invitation-error, [role=alert]) { color: var(--ui-danger); }
+  :is(.success, .invitation-success) { color: var(--ui-success); background: var(--ui-brand-soft); }
+  .tracking .status.review { background: var(--ui-brand-soft); color: var(--ui-success); }
+  :is(.primary, .primary-button, .save-goal, .submit-button, .create-assignment-button, .create-session-button, .create-exam-button, .search-button, .student-invitation button, .filters button[type=submit]) { background: var(--ui-brand); color: #fff; border-color: var(--ui-brand); }
+  :is(.account-panel, .account-card, .notification-center, .notification-card) { background: var(--ui-surface); border-color: var(--ui-border); color: var(--ui-text); }
+  :is(.notification-card.unread, .notification-center .empty-state, .notification-center .preference-panel) { background: var(--ui-surface-muted); border-color: var(--ui-border); }
+  :is(.account-heading p, .account-card label, .account-card small, .notification-copy p, .notification-copy time, .notification-center .section-heading p) { color: var(--ui-text-muted); font-size: 13px; }
+  :is(.notification-center .secondary-button, .notification-center .filters button) { background: var(--ui-surface); color: var(--ui-text); border-color: var(--ui-border); }
+  :is(.notification-center .filters button.selected, .unread-badge) { background: var(--ui-brand-soft); color: var(--ui-success); border-color: var(--ui-border); }
+  .notification-center .text-button { color: var(--ui-success); }
+  .notification-center .text-button.danger, .account-card .field-error { color: var(--ui-danger); }
+  :is(.roster-search, .student-invitation, .roster-heading, .assignments-heading, .assignment-main, .assignment-meta, .session-heading) { flex-wrap: wrap; }
+  .roster-search { align-items: flex-end; }
+  :is(.roster-search, .student-invitation, .editor-grid, .goal-form-grid) > * { min-width: 0; }
+  .roster-search .grade-filter { min-width: 140px; }
+  :is(.student-name-block h3, .assignment-title-group h3) { white-space: normal; overflow-wrap: anywhere; }
+  .student-avatar { background: var(--ui-brand-soft); color: var(--ui-success); font-family: inherit; }
+  .report-identity { background: linear-gradient(130deg, var(--ui-brand-soft), var(--ui-surface)); }
+  staff-coaching-student-profile :is(fieldset, dl) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  :is(.table-scroll, .table-wrap, .table) { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+  table { width: 100%; font-size: 14px; }
+  thead { color: var(--ui-text-muted); background: var(--ui-surface-muted); font-size: 13px; }
+  .tracking .totals { gap: 12px; border: 0; padding: 0; }
+  .tracking .totals > div { min-width: 150px; padding: 18px; border-radius: 14px; background: var(--ui-surface); border: 1px solid var(--ui-border); }
+  .tracking dd { font: 750 28px/1.3 var(--ui-font-body); }
+  .skeleton, .editor-loading div { background: var(--ui-surface-muted); }
+  :is(.pagination, .roster-pagination, .assignments-pagination) { flex-wrap: wrap; gap: 10px; }
+  // Shared widgets use the same responsive and dark surfaces as the student portal.
+  .study-plans button:not(.secondary):not(.plan-row):not(:where(.plan-calendar *)) { color: white; }
+}
+
+body:has(.coaching-staff-shell) .ui-confirm-dialog { font-family: var(--ui-font-body); }
+body:has(.coaching-staff-shell) .ui-toast { max-width: calc(100vw - 24px); }
+body:has(.coaching-staff-shell) .ui-toast .mat-mdc-button { color: var(--ui-success); }
+.dark body:has(.coaching-staff-shell) { color-scheme: dark; }
+@media (max-width: 1100px) {
+  body .coaching-shell.coaching-staff-shell .coaching-body .coaching-content :is(.four-columns, .three-columns) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 850px) {
+  body .coaching-shell.coaching-staff-shell {
+    .sidebar { display: none; position: fixed; top: 0; bottom: 0; left: 0; width: min(310px, 86vw); height: 100dvh; overflow-y: auto; z-index: 90; padding: 24px 18px; }
+    &.menu-open .sidebar { display: flex; }
+    .sidebar .brand { margin: 0 0 24px; }
+    .product-list { grid-template-columns: 1fr; }
+    .sidebar-caption, .sidebar-bottom { display: flex; }
+    .teacher-drawer-close { display: grid; align-self: flex-end; margin-bottom: 12px; }
+    .teacher-menu-toggle { display: grid; }
+    .teacher-scrim { display: block; position: fixed; inset: 0; z-index: 89; background: #071b15a8; border: 0; }
+    .topbar { flex-wrap: wrap; padding: 12px 16px; }
+    .breadcrumb { flex: 1; }
+    .topbar-actions { gap: 6px; }
+    .content-wrap { padding: 24px 16px; }
+    .page-footer { font-size: 12px; }
+  }
+}
+@media (max-width: 600px) {
+  body .coaching-shell.coaching-staff-shell {
+    .topbar-actions { width: 100%; justify-content: flex-start; }
+    .account-button, .logout-button { flex: 1 1 auto; }
+    .breadcrumb > span { display: none; }
+    .content-wrap { padding: 22px 14px; }
+  }
+  body .coaching-shell.coaching-staff-shell .coaching-body .coaching-content {
+    .workspace-tabs { flex-wrap: nowrap; overflow-x: auto; padding: 6px; overscroll-behavior-x: contain; }
+    .workspace-tabs button { flex-shrink: 0; white-space: nowrap; }
+    :is(.two-columns, .three-columns, .four-columns, .editor-grid, .goal-form-grid) { grid-template-columns: minmax(0, 1fr); }
+    .roster-search input { flex-basis: 100%; }
+    .student-invitation > label { flex-basis: 100%; }
+    .tracking .totals > div { min-width: 125px; }
+    .study-overview { padding: 16px; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coaching-staff-shell *, .coaching-staff-shell *::before, .coaching-staff-shell *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

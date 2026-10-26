@@ -1,6 +1,9 @@
 using EduPlatform.Shared.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
+using EduPlatform.Shared.Infrastructure.Networking;
+using Microsoft.AspNetCore.HttpOverrides;
 using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
 using Identity.Infrastructure;
@@ -18,11 +21,14 @@ using Identity.Infrastructure.Services;
 using Identity.API.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-// Load .env file from solution root
+// `dotnet run` convenience only: containers receive configuration from the environment
+// and must never pick up (or be overridden by) a stray .env file.
+var startupEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+    ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
-if (File.Exists(envPath))
+if (string.Equals(startupEnvironment, "Development", StringComparison.OrdinalIgnoreCase) && File.Exists(envPath))
 {
-    Env.Load(envPath);
+    Env.NoClobber().Load(envPath);
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -192,7 +198,8 @@ InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 // Add Health Checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<IdentityDbContext>("database");
+    .AddDbContextCheck<IdentityDbContext>("database", tags: ["ready"])
+    .AddCheck<RedisReadinessCheck>("redis", tags: ["ready"]);
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -206,6 +213,11 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Behind the gateway, take the caller address from its X-Forwarded-For when the request
+// comes from a configured internal network (ForwardedHeaders:KnownNetworks). The scheme
+// is left untouched. With no trusted network configured this is a no-op.
+app.UseTrustedForwardedHeaders(ForwardedHeaders.XForwardedFor);
 
 // ============================================
 // Middleware Pipeline
@@ -242,8 +254,9 @@ app.UseAuthorization();
 
 // Health Checks
 app.MapHealthChecks("/health").AllowAnonymous();
+// Ready: database, Redis and the message bus (MassTransit registers its own check).
 app.MapHealthChecks("/health/ready").AllowAnonymous();
-app.MapHealthChecks("/health/live").AllowAnonymous();
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
 
 // Controllers
 app.MapControllers();

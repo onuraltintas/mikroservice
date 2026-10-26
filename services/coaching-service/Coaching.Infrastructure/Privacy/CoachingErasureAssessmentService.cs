@@ -56,8 +56,9 @@ public sealed class CoachingErasureAssessmentService(
             + await context.StudyPlanTasks.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.StudyAvailability.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.Set<WeeklyStudyDraft>().CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
+            + await context.Set<WeeklyReflectionReview>().CountAsync(x => x.StudentId == message.SubjectUserId || x.TeacherId == message.SubjectUserId, cancellationToken)
             + await context.Set<WeeklyReflection>().CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
-            + await context.Set<WeeklyDecision>().CountAsync(x => x.StudentId == message.SubjectUserId || x.TeacherId == message.SubjectUserId, cancellationToken)
+            + await context.Set<WeeklyDecision>().CountAsync(x => x.StudentId == message.SubjectUserId || x.TeacherId == message.SubjectUserId || x.ResponsibleTeacherId == message.SubjectUserId, cancellationToken)
             + await CoachingStudyPlanErasureMessages.DecisionWorkRequests(context, message.SubjectUserId).CountAsync(cancellationToken)
             + await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).CountAsync(cancellationToken)
             + await context.CoachingReminderReceipts.CountAsync(x => x.RecipientUserId == message.SubjectUserId, cancellationToken);

@@ -1,5 +1,6 @@
+import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, inject, signal, Input, Injector } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal, Input, Injector } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -14,6 +15,7 @@ import { CoachingLearningSetupService, LearningLesson } from '../../../core/serv
   styleUrl: './student-study-plans.component.scss'
 })
 export class StudentAutomaticPlanComponent implements OnInit {
+  private readonly toaster = coachingToaster();
   @Input() learningContextVersion: number | null = null;
   private readonly injector = inject(Injector);
   private get setupService() { return this.injector.get(CoachingLearningSetupService); }
@@ -126,14 +128,15 @@ export class StudentAutomaticPlanComponent implements OnInit {
   }
   saveDraft() {
     const preview = this.preview();
-    if (this.locked() || this.stale() || !preview || !this.saveConfirmed) return;
+    if (this.locked() || this.stale() || !preview || !this.saveConfirmed || !this.hasPendingWork()) return;
     if (!this.title.trim() || this.title.trim().length > 200) { this.error.set('1-200 karakterlik bir plan başlığı girin.'); return; }
     this.saving.set(true); this.error.set(null);
     this.service.saveAutomaticDraft({ title: this.title.trim(),
       preview: { startDate: this.startDate, days: this.days, expectedAvailabilityVersion: preview.availabilityVersion,
         topics: this.topicRequests(),
         ...(this.learningContextVersion !== null ? { expectedLearningContextVersion: this.learningContextVersion } : {}) },
-      expectedActiveRevisionId: preview.activeRevisionId, expectedActiveRevisionVersion: preview.activeRevisionVersion })
+      expectedActiveRevisionId: preview.activeRevisionId, expectedActiveRevisionVersion: preview.activeRevisionVersion,
+      ...(preview.evidenceFingerprint?{expectedEvidenceFingerprint:preview.evidenceFingerprint}:{}) })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
       .subscribe({ next: plan => { this.savedPlan.set(plan); this.dirty = false; this.saveConfirmed = false; },
         error: error => {
@@ -142,10 +145,10 @@ export class StudentAutomaticPlanComponent implements OnInit {
           this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Taslak kaydedilemedi. Seçimleriniz korundu. Mevcut taslağı çalışma planlarından kontrol edin.');
         } });
   }
-  canLeavePage() {
+  hasPendingWork() {const preview=this.preview();return !!preview&&(preview.schedule.tasks.length>0||preview.protectedTasks.some(x=>!x.isCompleted));}
+  async canLeavePage() {
     if (this.saving()) return false;
-    return !this.dirty || (typeof window !== 'undefined' && window.confirm('Kaydedilmemiş plan seçimlerinden vazgeçerek ayrılmak istiyor musunuz?'));
+    return !this.dirty || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş plan seçimlerinden vazgeçerek ayrılmak istiyor musunuz?'));
   }
-  @HostListener('window:beforeunload', ['$event'])
-  beforeUnload(event: BeforeUnloadEvent) { if (this.dirty || this.saving()) { event.preventDefault(); event.returnValue = ''; } }
+  private readonly feedback = coachingFeedback(undefined, this.error);
 }

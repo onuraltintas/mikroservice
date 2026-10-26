@@ -153,10 +153,31 @@ public sealed class LocalAssignmentAttachmentStorage(
             "image/webp" => read >= 12
                 && header.AsSpan(0, 4).SequenceEqual("RIFF"u8)
                 && header.AsSpan(8, 4).SequenceEqual("WEBP"u8),
+            "application/pdf" => read >= 5 && header.AsSpan(0, 5).SequenceEqual("%PDF-"u8),
+            "application/msword" => read >= 8
+                && header.AsSpan(0, 8).SequenceEqual(new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 }),
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => read >= 4
+                && header.AsSpan(0, 4).SequenceEqual(new byte[] { 0x50, 0x4B, 0x03, 0x04 }),
+            "text/markdown" or "text/plain" or "text/x-markdown" =>
+                await IsValidMarkdownAsync(path, cancellationToken),
             _ => false
         };
 
         if (!isValid)
-            throw new ArgumentException("Attachment content does not match its declared image type.", nameof(expectedContentType));
+            throw new ArgumentException("Attachment content does not match its declared file type.", nameof(expectedContentType));
+    }
+
+    private static async Task<bool> IsValidMarkdownAsync(string path, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+            var text = new System.Text.UTF8Encoding(false, true).GetString(bytes);
+            return !text.Any(character => char.IsControl(character) && character is not ('\r' or '\n' or '\t'));
+        }
+        catch (System.Text.DecoderFallbackException)
+        {
+            return false;
+        }
     }
 }

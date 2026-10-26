@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import {TestBed} from '@angular/core/testing';
 import {calendarMoveError,calendarBlocks} from './study-plan-calendar';
 import {StudyPlanCalendarComponent} from './study-plan-calendar.component';
@@ -15,17 +16,17 @@ describe('annual calendar movement',()=>{
   it('emits a move without mutating tasks and exposes an accessible date/time alternative',async()=>{
     TestBed.configureTestingModule({imports:[StudyPlanCalendarComponent]});const f=TestBed.createComponent(StudyPlanCalendarComponent);
     const plan:StudyPlan={id:'plan',version:2,title:'Yıllık',status:'Active',tasks};
-    f.componentRef.setInput('plan',plan);f.componentRef.setInput('editable',true);f.detectChanges();await f.whenStable();
+    f.componentRef.setInput('plan',plan);f.componentRef.setInput('editable',true);f.detectChanges(); await f.whenStable();await f.whenStable();
     const c=f.componentInstance;const emit=vi.spyOn(c.tasksMoved,'emit'),before=JSON.stringify(tasks);
     c.requestMove(calendarBlocks(tasks)[0],'2027-01-05',600);
     expect(emit).toHaveBeenCalledWith({taskIds:['a','b'],plannedDate:'2027-01-05',startMinute:600});expect(JSON.stringify(tasks)).toBe(before);
     expect(f.nativeElement.textContent).toContain('Gün ve saat değiştir');
     c.requestMove(calendarBlocks(tasks)[0],'2027-01-05',540);expect(emit).toHaveBeenCalledTimes(1);expect(c.moveError()).toContain('çakış');
-    f.componentRef.setInput('editable',false);f.detectChanges();c.requestMove(calendarBlocks(tasks)[0],'2027-01-05',600);expect(emit).toHaveBeenCalledTimes(1);
+    f.componentRef.setInput('editable',false);f.detectChanges(); await f.whenStable();c.requestMove(calendarBlocks(tasks)[0],'2027-01-05',600);expect(emit).toHaveBeenCalledTimes(1);
   });
   it('supports the date/time form, no-op saves and cancelling without writes',async()=>{
     TestBed.configureTestingModule({imports:[StudyPlanCalendarComponent]});const f=TestBed.createComponent(StudyPlanCalendarComponent),c=f.componentInstance;
-    f.componentRef.setInput('plan',{id:'p',version:1,title:'Test',status:'Active',tasks});f.componentRef.setInput('editable',true);f.detectChanges();await f.whenStable();
+    f.componentRef.setInput('plan',{id:'p',version:1,title:'Test',status:'Active',tasks});f.componentRef.setInput('editable',true);f.detectChanges(); await f.whenStable();await f.whenStable();
     const emit=vi.spyOn(c.tasksMoved,'emit');c.openMoveForm();expect(c.moveForm?.time).toBe('18:00');
     c.chooseMoveBlock('c');expect(c.moveForm?.date).toBe('2027-01-05');c.moveForm!.time='24:00';c.applyMoveForm();expect(c.moveError()).toContain('Geçerli');
     c.moveForm!.time='09:30';c.applyMoveForm();expect(emit).not.toHaveBeenCalled();expect(c.moveForm).toBeNull();
@@ -34,19 +35,19 @@ describe('annual calendar movement',()=>{
   });
   it('handles pointer thresholds, different days, cancellation and leaving the grid',async()=>{
     TestBed.configureTestingModule({imports:[StudyPlanCalendarComponent]});const f=TestBed.createComponent(StudyPlanCalendarComponent),c=f.componentInstance;
-    f.componentRef.setInput('plan',{id:'p',version:1,title:'Test',status:'Active',tasks});f.componentRef.setInput('editable',true);f.detectChanges();await f.whenStable();
-    c.changeView('week');c.goToDate('2027-01-04');f.detectChanges();await f.whenStable();
+    f.componentRef.setInput('plan',{id:'p',version:1,title:'Test',status:'Active',tasks});f.componentRef.setInput('editable',true);f.detectChanges(); await f.whenStable();await f.whenStable();
+    c.changeView('week');c.goToDate('2027-01-04');f.detectChanges(); await f.whenStable();await f.whenStable();
     const block=calendarBlocks(tasks)[0],card=f.nativeElement.querySelector('.timed-block'),track=f.nativeElement.querySelector('.day-track[data-date="2027-01-06"]');
     vi.spyOn(card,'getBoundingClientRect').mockReturnValue({top:0} as DOMRect);vi.spyOn(track,'getBoundingClientRect').mockReturnValue({top:0} as DOMRect);
     Object.defineProperty(document,'elementFromPoint',{configurable:true,value:vi.fn(()=>track)});
     const e=(x:number,y:number,id=7)=>({pointerId:id,button:0,isPrimary:true,clientX:x,clientY:y,currentTarget:card,preventDefault:vi.fn()} as unknown as PointerEvent);
-    const emit=vi.spyOn(c.tasksMoved,'emit');c.beginMove(e(0,5),block);c.movePointer(e(1,6));expect(c.preview()).toBeNull();c.movePointer(e(10,605,8));expect(c.preview()).toBeNull();
-    c.movePointer(e(10,605));expect(c.preview()?.startMinute).toBe(600);c.endMove(e(10,605));expect(emit).toHaveBeenCalledWith({taskIds:['a','b'],plannedDate:'2027-01-06',startMinute:600});
+    const emit=vi.spyOn(c.tasksMoved,'emit');c.beginMove(e(0,5),block);c.movePointer(e(1,6));expect(c.preview()).toBeNull();c.movePointer(e(10,1205,8));expect(c.preview()).toBeNull();
+    c.movePointer(e(10,1205));expect(c.preview()?.startMinute).toBe(600);c.endMove(e(10,1205));expect(emit).toHaveBeenCalledWith({taskIds:['a','b'],plannedDate:'2027-01-06',startMinute:600});
     const select=vi.spyOn(c.taskSelected,'emit');c.select(block);expect(select).not.toHaveBeenCalled();c.select(block);expect(select).toHaveBeenCalled();
     c.beginMove(e(0,5),block);vi.mocked(document.elementFromPoint).mockReturnValue(null);c.movePointer(e(90,500));c.endMove(e(90,500));expect(c.moveError()).toContain('boş bir saate');expect(emit).toHaveBeenCalledTimes(1);
     c.beginMove(e(0,5),block);c.cancelMove();c.endMove(e(0,605));c.movePointer(e(0,605));expect(emit).toHaveBeenCalledTimes(1);
     c.beginMove(e(0,5),block);c.endMove(e(0,5));expect(emit).toHaveBeenCalledTimes(1);
-    c.changeView('month');f.detectChanges();const day=f.nativeElement.querySelector('.month-day[data-date="2027-01-06"]');vi.mocked(document.elementFromPoint).mockReturnValue(day);
+    c.changeView('month');f.detectChanges(); await f.whenStable();const day=f.nativeElement.querySelector('.month-day[data-date="2027-01-06"]');vi.mocked(document.elementFromPoint).mockReturnValue(day);
     c.beginMove(e(0,5),block);c.movePointer(e(50,60));c.endMove(e(50,60));expect(emit).toHaveBeenLastCalledWith({taskIds:['a','b'],plannedDate:'2027-01-06',startMinute:1080});
     // A release can disable the dragged card before its synthetic click arrives.
     // The next real press on a locked completed card must still open its details.
@@ -59,3 +60,5 @@ describe('annual calendar movement',()=>{
     expect(calendarMoveError(b,'2027-01-05',600,[{...task('legacy',0,1440),plannedDate:'2027-01-05',plannedStartMinute:null}])).toContain('24 saat');
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

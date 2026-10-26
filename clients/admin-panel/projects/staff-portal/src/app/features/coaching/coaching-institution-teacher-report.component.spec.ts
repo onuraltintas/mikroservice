@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -30,7 +31,7 @@ describe('CoachingInstitutionTeacherReportComponent', () => {
     service.getStudentRoster.mockReturnValue(of(studentPage([student('student-1')], 26)));
     const fixture = await createFixture(service);
     fixture.detectChanges();
-    fixture.componentInstance.searchStudents('  Ada  ');
+    (await fixture.componentInstance.searchStudents('  Ada  '));
 
     expect(service.getStudentRoster).toHaveBeenLastCalledWith('institution-1', 1, 'Ada', 'teacher-1', null);
     expect(fixture.componentInstance.studentTotalPages()).toBe(2);
@@ -118,3 +119,5 @@ function student(id: string): CoachingInstitutionStudent {
 function studentPage(students: CoachingInstitutionStudent[], totalCount: number): CoachingInstitutionStudentPage {
   return { students, totalCount };
 }
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

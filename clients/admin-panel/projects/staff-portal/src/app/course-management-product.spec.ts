@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { signal } from '@angular/core';
+import { ChangeDetectorRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { StaffAuthService } from './auth/staff-auth.service';
@@ -13,6 +13,7 @@ describe('Course management product isolation', () => {
   });
   function create(product: StaffProduct, roles: string[]) {
     TestBed.configureTestingModule({ providers: [
+      { provide: ChangeDetectorRef, useValue: { markForCheck: () => undefined } },
       { provide: DOCUMENT, useValue: { defaultView: { location: { search: '?product=course-management' } } } },
       { provide: StaffAuthService, useValue: {
         activeProduct: signal<StaffProduct | null>(product),
@@ -37,10 +38,11 @@ describe('Course management product isolation', () => {
     expect(component.isSpeedReadingInstitutionWorkspaceSelected).toBe(false);
   });
 
-  it('allows the institution and independent teacher views without activating another product', () => {
+  it('allows the institution and independent teacher views without activating another product', async () => {
     const component = create('course-management', ['Teacher', 'InstitutionOwner']);
     expect(component.activeWorkspaceRole).toBe('institution');
-    component.selectWorkspaceRole('teacher');
+    // Switching is async now: it first asks whether unsaved Coaching work may be left.
+    await component.selectWorkspaceRole('teacher');
     expect(component.activeWorkspaceRole).toBe('teacher');
     expect(component.isTeacherWorkspaceSelected).toBe(false);
   });

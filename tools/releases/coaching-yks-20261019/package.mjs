@@ -1,0 +1,25 @@
+import {cpSync,existsSync,mkdirSync,readFileSync,writeFileSync,readdirSync,statSync} from 'node:fs';
+import {resolve,join,relative} from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+const root=process.cwd(),release=resolve(root,'artifacts/coaching-yks-20261019-r3'),pack=join(release,'package');
+assert.ok(!existsSync(pack),'A sealed package must not be overwritten.');mkdirSync(join(pack,'payload/coaching'),{recursive:true});
+for(const name of ['Coaching.API','Coaching.Application','Coaching.Domain','Coaching.Infrastructure'])
+ for(const ext of ['dll','pdb'])cpSync(join(release,'publish',name+'.'+ext),join(pack,'payload/coaching',name+'.'+ext));
+mkdirSync(join(pack,'payload/verification'),{recursive:true});
+for(const ext of ['dll','deps.json','runtimeconfig.json'])cpSync(join(release,'verification/Verification.'+ext),join(pack,'payload/verification/Verification.'+ext));
+cpSync(resolve(root,'data/coaching-outcomes/yks-2026-basis-v1.json'),join(pack,'payload/verification/yks-2026-basis-v1.json'));
+cpSync(join(release,'admin-tree/clients/admin-panel/dist/admin-panel'),join(pack,'payload/admin'),{recursive:true});
+cpSync(join(release,'staff-tree/clients/admin-panel/dist/staff-portal/browser'),join(pack,'payload/staff'),{recursive:true});
+writeFileSync(join(pack,'coaching-service.Dockerfile'),'ARG BASE_IMAGE\nFROM ${BASE_IMAGE}\nARG SOURCE_REVISION\nCOPY payload/coaching/ /app/\nLABEL org.opencontainers.image.revision=$SOURCE_REVISION\n');
+writeFileSync(join(pack,'admin-panel.Dockerfile'),'ARG BASE_IMAGE\nFROM ${BASE_IMAGE}\nARG SOURCE_REVISION\nUSER root\nRUN rm -f /app/dist/admin-panel/browser/index.html /app/dist/admin-panel/browser/index.html.gz /app/dist/admin-panel/browser/index.html.br\nCOPY payload/admin/ /app/dist/admin-panel/\nRUN chown -R node:node /app/dist/admin-panel && chmod -R u=rwX,go=rX /app/dist/admin-panel\nUSER node\nLABEL org.opencontainers.image.revision=$SOURCE_REVISION\n');
+writeFileSync(join(pack,'staff-portal.Dockerfile'),'ARG BASE_IMAGE\nFROM ${BASE_IMAGE}\nARG SOURCE_REVISION\nUSER root\nRUN rm -f /usr/share/nginx/html/index.html /usr/share/nginx/html/index.html.gz /usr/share/nginx/html/index.html.br\nCOPY payload/staff/ /usr/share/nginx/html/\nRUN chmod -R u=rwX,go=rX /usr/share/nginx/html\nLABEL org.opencontainers.image.revision=$SOURCE_REVISION\n');
+for(const file of ['deploy.sh'])writeFileSync(join(pack,file),readFileSync(resolve(root,'tools/releases/coaching-yks-20261019',file),'utf8').replaceAll('\r\n','\n'));
+for(const file of ['source-provenance.json','expected-base-dlls.sha256'])cpSync(join(release,file),join(pack,file));
+const files=dir=>readdirSync(dir).flatMap(n=>statSync(join(dir,n)).isDirectory()?files(join(dir,n)):[join(dir,n)]);
+assert.ok(files(pack).every(f=>!relative(pack,f).split(/[\\/]/).some(n=>n==='.env'||n.startsWith('.env.'))));
+const sha=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
+writeFileSync(join(pack,'payload.sha256'),files(pack).map(f=>sha(f)+'  '+relative(pack,f).replaceAll('\\','/')).join('\n')+'\n');
+const archive=join(release,'release.tar.gz');execFileSync('tar',['-czf',archive,'-C',pack,'.']);
+const result={archive,sha256:sha(archive),files:files(pack).length};writeFileSync(join(release,'package-info.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));

@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, Input, OnChanges, computed, inject, signal } from '@angular/core';
@@ -9,7 +10,7 @@ import { environment } from '../../../../environments/environment';
 interface StudyReport {
   fromDate: string; toDate: string; source: string; reason: string;
   scheduledTasks: number; completedTasks: number; completionPercentage: number | null;
-  plannedMinutes: number; actualMinutes: number | null;
+  plannedMinutes: number; actualMinutes: number | null;legacyDateActualMinutes?:number|null;
   plannedQuestions?: number | null; actualQuestions?: number | null; plannedQuestionTasks?: number; actualQuestionTasks?: number;
   topics: { topicId: string | null; topicName?: string | null; scheduledTasks: number; completedTasks: number; plannedMinutes: number; actualMinutes: number | null;
     plannedQuestions?: number | null; actualQuestions?: number | null; plannedQuestionTasks?: number; actualQuestionTasks?: number }[];
@@ -51,13 +52,13 @@ interface StudyReport {
       <div *ngIf="report() as data" aria-live="polite">
         <p class="text-sm text-slate-500">{{ data.fromDate | date:'dd.MM.yyyy' }} – {{ data.toDate | date:'dd.MM.yyyy' }}</p>
         <p *ngIf="data.reason === 'NoScheduledTasks'" class="mt-3">Bu döneme planlanmış çalışma yok. Başarı oranı hesaplanmadı.</p>
-        <dl *ngIf="data.scheduledTasks > 0" class="mt-4 grid gap-4 sm:grid-cols-3">
-          <div><dt>Tamamlanan çalışma</dt><dd class="text-xl font-semibold">{{ data.completedTasks }} / {{ data.scheduledTasks }} · %{{ data.completionPercentage }}</dd></div>
+        <p>Plan yükü planlanan tarihlere, kaydedilen süre ve sorular fiili çalışma günlerine göre hesaplanır.</p><p *ngIf="data.legacyDateActualMinutes != null">{{data.legacyDateActualMinutes}} dakika eski kaydın sabitlenmiş plan tarihine aittir; fiili tarihi bilinmiyor.</p><dl *ngIf="data.scheduledTasks > 0 || data.actualMinutes != null" class="mt-4 grid gap-4 sm:grid-cols-3">
+          <div><dt>Tamamlanan çalışma</dt><dd class="text-xl font-semibold">{{ data.completedTasks }} / {{ data.scheduledTasks }} · {{data.completionPercentage == null ? 'Oran yok' : '%' + data.completionPercentage}}</dd></div>
           <div><dt>Planlanan süre</dt><dd class="text-xl font-semibold">{{ data.plannedMinutes }} dakika</dd></div>
           <div><dt>Kaydedilen süre</dt><dd class="text-xl font-semibold">{{ data.actualMinutes === null ? 'Henüz süre kaydı yok' : data.actualMinutes + ' dakika' }}</dd></div>
         </dl>
         <p class="mt-3 text-sm">Planlanan soru: {{ data.plannedQuestions ?? 'Kayıt yok' }} · {{ data.plannedQuestionTasks ?? 0 }} / {{ data.scheduledTasks }} çalışmada sayı var</p>
-        <p class="mt-2 text-sm">Kaydedilen soru: {{ data.actualQuestions ?? 'Kayıt yok' }} · {{ data.actualQuestionTasks ?? 0 }} / {{ data.completedTasks }} tamamlanmış çalışmada sayı var</p>
+        <p class="mt-2 text-sm">Kaydedilen soru: {{ data.actualQuestions ?? 'Kayıt yok' }} · {{ data.actualQuestionTasks ?? 0 }} çalışmada bu dönem soru kaydı var</p>
         @if (previousReport(); as previous) {
           <div class="mt-4 overflow-x-auto">
             <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Haftalar arası çalışma karşılaştırması</caption>
@@ -189,4 +190,5 @@ export class StudentStudyReportComponent implements OnChanges {
     const date = new Date(`${value}T00:00:00Z`);
     return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? date.getTime() : null;
   }
+  private readonly feedback = coachingFeedback(undefined, this.error);
 }

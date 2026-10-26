@@ -62,7 +62,7 @@ public sealed class CoachingGoalTargetServiceTests(PostgresFixture postgres)
             goal.UpdateProgress(30);
             var teacherGoal = AcademicGoal.Create(actor.UserId.Value, "Teacher goal", GoalCategory.ExamPreparation, Guid.NewGuid());
             var school = TargetSchool.Create("test", "s", "School", "City", "District", null);
-            var program = TargetUniversityProgram.Create("test", "p", "University", "Program", null, "SAY", null);
+            var program = TargetUniversityProgram.Create("p", "University", "Program", null, "Bachelor", "SAY");
             var inactive = TargetSchool.Create("test", "inactive", "Hidden", "City", "District", null);
             db.AddRange(goal, teacherGoal, school, program, inactive);
             db.Entry(school).Property(x => x.IsActive).CurrentValue = true;

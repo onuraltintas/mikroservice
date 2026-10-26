@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Notification.API.Hubs;
 using Notification.API.Services;
+using Notification.Application.Messaging;
 using Notification.Infrastructure.Persistence;
 using Notification.Infrastructure.Services;
 using Shared.IntegrationTests.Fixtures;
@@ -32,7 +33,11 @@ public sealed class NotificationRealtimeErasureTests(PostgresFixture postgres)
         {
             hook.Enabled = true;
             var hub = new Hub();
-            await new NotificationManager(db, hub).SendNotificationAsync(subject, "Plan", "Plan", "Info");
+            var published = new RecordingPublishEndpoint();
+            await new NotificationManager(db, published.Endpoint).SendNotificationAsync(subject, "Plan", "Plan", "Info");
+            var request = Assert.Single(published.Messages.OfType<NotificationRealtimeRequested>());
+            await using var realtimeDb = new NotificationDbContext(options);
+            Assert.False(await new NotificationRealtimeConsumer(realtimeDb, hub).DeliverAsync(request, CancellationToken.None));
             Assert.Equal(0, hub.Client.Calls);
             Assert.False(await db.Notifications.AnyAsync(x => x.UserId == subject));
         }

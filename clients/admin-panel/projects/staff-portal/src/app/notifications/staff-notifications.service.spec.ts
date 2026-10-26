@@ -65,4 +65,22 @@ describe('StaffNotificationsService', () => {
     markAllRequest.flush(null);
     await markedAll;
   });
+
+  it('uses the product-scoped course notification API without changing Coaching routes', async () => {
+    const notifications = firstValueFrom(service.getNotifications('course-management'));
+    const request = http.expectOne('/api/course-management/notifications?pageNumber=1&pageSize=100');
+    request.flush([{ id: 'course-1', title: 'Yeni ders', message: 'Yarın', type: 'CourseManagement.LessonScheduled', isRead: false }]);
+    await expect(notifications).resolves.toHaveLength(1);
+
+    const marked = firstValueFrom(service.markAsRead('course-management', 'course-1'));
+    const markRequest = http.expectOne('/api/course-management/notifications/course-1/mark-as-read');
+    expect(markRequest.request.method).toBe('POST');
+    markRequest.flush(null);
+    await marked;
+
+    const coaching = firstValueFrom(service.getNotifications('coaching'));
+    http.expectOne('/api/notifications?pageNumber=1&pageSize=100')
+      .flush([{ id: 'coaching-1', title: 'Yeni seans', message: 'Yarın', isRead: false }]);
+    await expect(coaching).resolves.toHaveLength(1);
+  });
 });

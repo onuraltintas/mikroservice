@@ -7,6 +7,14 @@ namespace Identity.API.IntegrationTests;
 public sealed class RegistrationLegalConsentPolicyTests
 {
     [Theory]
+    [InlineData(PlatformProduct.Coaching, true)]
+    [InlineData(PlatformProduct.SpeedReading, false)]
+    public void GoogleRegistration_RequiresLegalAcceptanceOnlyForCoaching(PlatformProduct product, bool expected)
+    {
+        RegistrationLegalConsentPolicy.GoogleRequiresAcceptance(product).Should().Be(expected);
+    }
+
+    [Theory]
     [InlineData(PlatformProduct.Coaching, "coaching-terms")]
     [InlineData(PlatformProduct.SpeedReading, "speed-reading-terms")]
     public void RequiredSlugs_AlwaysIncludeSharedNoticesAndProductSpecificTerms(

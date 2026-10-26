@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
@@ -6,7 +7,16 @@ import { CoachingTeacherStudentsService } from './coaching-teacher-students.serv
 import { CoachingTeacherAssignmentDetailComponent } from './coaching-teacher-assignment-detail.component';
 
 describe('CoachingTeacherAssignmentDetailComponent', () => {
-  it('loads the assigned student names, submission status and existing feedback', () => {
+  it('protects unsaved feedback and an in-flight grade when a notification changes the assignment',async () =>{
+    const fixture=createFixture(assignmentService());fixture.detectChanges();const component=fixture.componentInstance;
+    const confirm=vi.mocked(TestBed.inject(ToasterService).confirm).mockResolvedValue(false);
+    expect(await component.canLeavePage()).toBe(true);expect(confirm).not.toHaveBeenCalled();
+    component.updateGradeDraft('student-1','feedback','Henüz kaydedilmedi');
+    expect(await component.canLeavePage()).toBe(false);expect(confirm).toHaveBeenCalledTimes(1);
+    component.gradingStudentId.set('student-1');expect(await component.canLeavePage()).toBe(false);expect(confirm).toHaveBeenCalledTimes(1);
+    component.gradingStudentId.set(null);confirm.mockResolvedValue(true);expect(await component.canLeavePage()).toBe(true);
+  });
+  it('loads the assigned student names, submission status and existing feedback', async () => {
     const assignments = assignmentService();
     const fixture = createFixture(assignments);
     fixture.detectChanges();
@@ -20,7 +30,7 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
     expect(fixture.nativeElement.querySelector('.assignment-facts').textContent).toContain('1 / 1');
   });
 
-  it('rejects a negative score or a score above the assignment maximum', () => {
+  it('rejects a negative score or a score above the assignment maximum', async () => {
     const assignments = assignmentService();
     const fixture = createFixture(assignments);
     fixture.detectChanges();
@@ -32,7 +42,7 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
     expect(component.errorMessage()).toContain('0 ile 100');
   });
 
-  it('counts submitted and graded students, leaving pending students out', () => {
+  it('counts submitted and graded students, leaving pending students out', async () => {
     const fixture = createFixture(assignmentService());
     fixture.detectChanges();
     const component = fixture.componentInstance;
@@ -44,8 +54,20 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
     expect(fixture.nativeElement.querySelector('.assignment-facts').textContent).toContain('2 / 4');
     expect(fixture.nativeElement.textContent).not.toContain('Öğrencinin notu');
   });
+  it('opens only the selected student submission from tracking without changing other grades', async () => {
+    const service = assignmentService(); const fixture = createFixture(service); fixture.detectChanges();
+    const c = fixture.componentInstance; fixture.componentRef.setInput('selectedStudentId', 'student-1');
+    c.assignment.update(a => ({ ...a!, assignedStudents: [...a!.assignedStudents, { studentId: 'other', status: 'Graded', score: 88, teacherFeedback: 'Diğer öğrenci' }] }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.submission-card').length).toBe(1);
+    expect(c.visibleStudents()[0].studentId).toBe('student-1'); expect(service.gradeAssignment).not.toHaveBeenCalled();
+    expect(c.assignment()?.assignedStudents.find(s => s.studentId === 'other')?.score).toBe(88);
+    fixture.componentRef.setInput('selectedStudentId', 'removed'); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.submission-card').length).toBe(0);
+    expect(fixture.nativeElement.textContent).toContain('Seçilen öğrenci bu ödevin görünür teslimleri arasında bulunmuyor.');
+  });
 
-  it('saves a valid grade and reloads the server-authoritative assignment state', () => {
+  it('saves a valid grade and reloads the server-authoritative assignment state', async () => {
     const assignments = assignmentService();
     const fixture = createFixture(assignments);
     fixture.detectChanges();
@@ -60,7 +82,7 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
     expect(component.successMessage()).toBe('Değerlendirme kaydedildi.');
   });
 
-  it('allows clean attachments to download and blocks attachments awaiting or failing security scans', () => {
+  it('allows clean attachments to download and blocks attachments awaiting or failing security scans', async () => {
     const assignments = assignmentService();
     const fixture = createFixture(assignments);
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
@@ -78,7 +100,7 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
     expect(click).toHaveBeenCalledOnce();
   });
 
-  it('returns to the assignment list when the back action is used', () => {
+  it('returns to the assignment list when the back action is used', async () => {
     const fixture = createFixture(assignmentService());
     const close = vi.spyOn(fixture.componentInstance.close, 'emit');
     fixture.componentInstance.goBack();
@@ -124,3 +146,5 @@ function assignmentService() {
     downloadAttachment: vi.fn(() => of(new Blob(['file'], { type: 'image/png' })))
   };
 }
+
+beforeEach(() => TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn()}}));

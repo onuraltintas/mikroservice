@@ -37,16 +37,8 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
             .Take(1001).ToListAsync(cancellationToken);
         if (goals.Count > 1000) throw new BusinessRuleException("StudyPlanning.GoalReportLimit",
             "Hedef sayısı rapor sınırını aşıyor. Hedefleri Hedefler ekranından inceleyebilirsiniz.");
-        var rows = await (from task in db.StudyPlanTasks.AsNoTracking()
-            join plan in db.StudyPlanRevisions.AsNoTracking() on task.RevisionId equals plan.Id
-            where task.StudentId == student && plan.StudentId == student
-                && task.PlannedDate >= fromDate && task.PlannedDate <= toDate
-                && (plan.Status == StudyPlanStatus.Active || plan.Status == StudyPlanStatus.Archived && task.IsCompleted)
-            select new { plan.Status, task.PlannedDate, task.TopicId, task.PlannedMinutes, task.IsCompleted, task.ActualMinutes, task.PlannedQuestions, task.ActualQuestions })
-            .Take(10001).ToListAsync(cancellationToken);
-        if (rows.Count > 10000) throw ReportLimit();
-        var report = StudyReportCalculator.Calculate(fromDate, toDate, rows.Select(x => new StudyReportTask(x.Status,
-            x.PlannedDate, x.TopicId, x.PlannedMinutes, x.IsCompleted, x.ActualMinutes, x.PlannedQuestions, x.ActualQuestions)).ToArray());
+        var rows = await CoachingStudyWorkReports.ReadAsync(db,student,fromDate,toDate,cancellationToken);
+        var report = CoachingStudyWorkReports.Calculate(fromDate,toDate,rows);
         var topicIds = report.Topics.Where(x => x.TopicId.HasValue).Select(x => x.TopicId!.Value).ToArray();
         var names = await db.StudyCatalogTopics.AsNoTracking().Where(x => Enumerable.Contains(topicIds, x.Id))
             .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);

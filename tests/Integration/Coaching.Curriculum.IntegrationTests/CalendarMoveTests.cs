@@ -15,9 +15,9 @@ public sealed class CalendarMoveTests
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task TimedManualMigrationPreservesOldCompletedRecordsAndCanBeAppliedTwice()
     {
-        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;await f.Seed();
+        await using var pg=await CurriculumPostgresTests.Pg.Create("20261020065330_MebiLgsProgramCatalog");var f=pg.Data;await f.Seed(legacyPlanSchema: true);
         await f.Db.GetService<IMigrator>().MigrateAsync("20261017061920_WeeklyOutcomePlans");f.Db.ChangeTracker.Clear();
-        var before=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());
+        var before=JsonSerializer.Serialize(await CurriculumManagementTests.LegacyStudyTasks(f.Db).AsNoTracking().ToArrayAsync());
         await f.Db.Database.MigrateAsync();await f.Db.Database.MigrateAsync();f.Db.ChangeTracker.Clear();
         Assert.Equal(before,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync()));
         Assert.Empty(await f.Db.Database.GetPendingMigrationsAsync());

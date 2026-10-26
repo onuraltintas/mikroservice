@@ -11,9 +11,18 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
     {
         builder.HasKey(x => x.Id);
 
+        // SHA-256 digest of the issued value; every refresh, rotation and logout looks it up.
         builder.Property(x => x.Token)
             .HasMaxLength(200)
-            .IsRequired(); // Use HasIndex if lookups by Token are frequent
+            .IsRequired();
+        builder.HasIndex(x => x.Token)
+            .IsUnique();
+
+        builder.Ignore(x => x.IssuedValue);
+
+        builder.HasIndex(x => x.FamilyId);
+        // Supports the retention purge of expired sessions.
+        builder.HasIndex(x => x.ExpiresAt);
 
         builder.Property(x => x.CreatedByIp)
             .HasMaxLength(50);

@@ -71,6 +71,17 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
     public Task<IActionResult> Restore(Guid id,StudyPlanRestoreInput request,CancellationToken ct)
         => Respond(async()=>Ok(new {success=true,data=await plans.RestoreArchivedAsync(id,request,ct)}));
 
+    [HttpPut("{id:guid}/tasks/{taskId:guid}/remaining-scope"), RequestSizeLimit(4096), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> RemainingScope(Guid id, Guid taskId, StudyRemainingScopeInput request, CancellationToken ct)
+        => Respond(async()=>Ok(new {success=true,data=await plans.SetRemainingScopeAsync(id,taskId,request,ct)}));
+
+    [HttpPut("{id:guid}/tasks/{taskId:guid}/progress"), RequestSizeLimit(8192), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> Progress(Guid id, Guid taskId, StudyRealizationInput request, CancellationToken ct)
+        => Respond(async () => Ok(new { success = true, data = await plans.RecordRealizationAsync(id, taskId, request, false, ct) }));
+    [HttpPost("{id:guid}/tasks/{taskId:guid}/realization-corrections"), RequestSizeLimit(8192), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> CorrectRealization(Guid id, Guid taskId, StudyRealizationInput request, CancellationToken ct)
+        => Respond(async () => Ok(new { success = true, data = await plans.RecordRealizationAsync(id, taskId, request, true, ct) }));
+
     [HttpPut("{id:guid}/tasks/{taskId:guid}/completion")]
     [RequestSizeLimit(1024)]
     [EnableRateLimiting("study-planning-write")]
@@ -88,6 +99,16 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
     [HttpPut("{id:guid}/calendar-move"), RequestSizeLimit(32768), EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Move(Guid id, StudyTasksMoveInput request, CancellationToken ct)
         => Respond(async()=>Ok(new {success=true,data=await plans.MoveTasksAsync(id,request,ct)}));
+
+    [HttpPost("{id:guid}/tasks"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> AddCalendarTask(Guid id,CalendarTaskSaveInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new{success=true,data=await plans.SaveCalendarTaskAsync(id,null,request,ct)}));
+    [HttpPut("{id:guid}/tasks/{taskId:guid}"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> EditCalendarTask(Guid id,Guid taskId,CalendarTaskSaveInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new{success=true,data=await plans.SaveCalendarTaskAsync(id,taskId,request,ct)}));
+    [HttpDelete("{id:guid}/tasks/{taskId:guid}"),RequestSizeLimit(1024),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> DeleteCalendarTask(Guid id,Guid taskId,[FromBody] StudyPlanPublishInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new{success=true,data=await plans.DeleteCalendarTaskAsync(id,taskId,request.ExpectedVersion,ct)}));
 
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {

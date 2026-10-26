@@ -6,21 +6,24 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingTargetCatalogTests
 {
-    [Fact]
-    public void Catalogs_PreserveVerifiedScoreYearWhenProvided()
+    [Theory]
+    [InlineData("DİL","lisans","YDT","Bachelor")]
+    [InlineData("dil","LİSANS","YDT","Bachelor")]
+    [InlineData("SÖZ","önlisans","SOZ","Associate")]
+    public void TurkishCatalogLabelsUseValidUnicode(string score,string degree,string expectedScore,string expectedDegree)
     {
-        Assert.Equal(2025, TargetUniversityProgram.Create("source", "p", "University", "Program", null, null, 400, scoreYear: 2025).ScoreYear);
-        Assert.Equal(2025, TargetSchool.Create("source", "s", "School", "City", "District", 400, scoreYear: 2025).ScoreYear);
+        var program=TargetUniversityProgram.Create("code","University","Program",null,degree,score);
+        Assert.Equal(expectedScore,program.ScoreType);Assert.Equal(expectedDegree,program.ProgramType);
     }
-
     [Fact]
-    public void UniversityProgram_PreservesUnknownYearAndStartsInactive()
+    public void UniversityProgramStoresIdentityOnlyAndNormalizesLanguageProgramsToYdt()
     {
-        var program = TargetUniversityProgram.Create("catalog", "p1", "University", "Program", "106510077", "SAY", 442.53m);
+        var program = TargetUniversityProgram.Create("106510077", "University", "Program", "Engineering Faculty", "Bachelor", "DİL");
         Assert.False(program.IsActive);
-        Assert.Null(program.ScoreYear);
-        Assert.Equal(442.53m, program.MinimumScore);
         Assert.Equal("106510077", program.ProgramCode);
+        Assert.Equal("YDT", program.ScoreType);
+        Assert.Equal("Engineering Faculty", program.FacultyName);
+        Assert.Equal("Bachelor", program.ProgramType);
     }
 
     [Fact]
@@ -40,15 +43,15 @@ public sealed class CoachingTargetCatalogTests
         () => TargetSchool.Create("catalog", "s1", "School", "City", "District", score));
 
     [Fact]
-    public void Program_RejectsMissingIdentityAndNegativeScore()
+    public void Program_RejectsMissingIdentityAndUnknownProgramType()
     {
-        Assert.Throws<ArgumentException>(() => TargetUniversityProgram.Create("", "p", "University", "Program", null, null, null));
-        Assert.Throws<ArgumentException>(() => TargetUniversityProgram.Create("source", "p", " ", "Program", null, null, null));
-        Assert.Throws<ArgumentOutOfRangeException>(() => TargetUniversityProgram.Create("source", "p", "University", "Program", null, null, -1));
+        Assert.Throws<ArgumentException>(() => TargetUniversityProgram.Create("", "University", "Program", null, "Bachelor", "SAY"));
+        Assert.Throws<ArgumentException>(() => TargetUniversityProgram.Create("code", " ", "Program", null, "Bachelor", "SAY"));
+        Assert.Throws<ArgumentException>(() => TargetUniversityProgram.Create("code", "University", "Program", null, "Certificate", "SAY"));
     }
 
     [Fact]
-    public void Catalogs_UseCoachingSchemaAndUniqueSourceIdentity()
+    public void Catalogs_UseCoachingSchemaAndUniqueActiveProgramCode()
     {
         using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
             .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused").Options);
@@ -56,8 +59,12 @@ public sealed class CoachingTargetCatalogTests
         {
             var entity = db.Model.FindEntityType(type)!;
             Assert.Equal("coaching", entity.GetSchema());
-            Assert.Contains(entity.GetIndexes(), index => index.IsUnique && index.Properties.Select(x => x.Name)
-                .SequenceEqual(new[] { "Source", "SourceId" }));
+            if (type == typeof(TargetUniversityProgram))
+                Assert.Contains(entity.GetIndexes(), index => index.IsUnique && index.Properties.Select(x => x.Name).SequenceEqual(new[] { "ProgramCode" })
+                    && index.GetFilter() == "\"ProgramCode\" IS NOT NULL AND \"IsActive\" = TRUE");
+            else
+                Assert.Contains(entity.GetIndexes(), index => index.IsUnique && index.Properties.Select(x => x.Name)
+                    .SequenceEqual(new[] { "Source", "SourceId" }));
         }
     }
 }

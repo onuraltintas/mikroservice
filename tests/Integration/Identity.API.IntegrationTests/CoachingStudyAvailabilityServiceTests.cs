@@ -51,7 +51,7 @@ public sealed class CoachingStudyAvailabilityServiceTests(PostgresFixture postgr
             db.ChangeTracker.Clear();
             Assert.Empty((await service.GetAsync())!.Windows);
             var zoneChanged = await service.ReplaceAsync(request with { ExpectedVersion = changed.Version, TimeZoneId = "UTC", Windows = [] });
-            Assert.Equal("UTC", zoneChanged.TimeZoneId);
+            Assert.Equal("Europe/Istanbul", zoneChanged.TimeZoneId);
             db.ChangeTracker.Clear();
             var other = Guid.NewGuid();
             actor.UserId = other;

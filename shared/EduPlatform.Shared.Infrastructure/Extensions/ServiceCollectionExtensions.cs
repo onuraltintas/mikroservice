@@ -53,33 +53,6 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds health checks for infrastructure dependencies
-    /// </summary>
-    public static IServiceCollection AddInfrastructureHealthChecks(
-        this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        // Build Redis connection from environment variables for security
-        var redisConnection = configuration.GetConnectionString("Redis");
-        if (string.IsNullOrEmpty(redisConnection))
-        {
-            var host = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
-            var port = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
-            var password = Environment.GetEnvironmentVariable("REDIS_PASSWORD");
-            
-            redisConnection = string.IsNullOrEmpty(password) 
-                ? $"{host}:{port}" 
-                : $"{host}:{port},password={password}";
-        }
-        
-        services.AddHealthChecks()
-            .AddRedis(redisConnection, name: "redis", tags: new[] { "infrastructure", "cache" })
-            .AddRabbitMQ(name: "rabbitmq", tags: new[] { "infrastructure", "messaging" });
-
-        return services;
-    }
-
-    /// <summary>
     /// Adds Global Exception Handler
     /// </summary>
     public static IServiceCollection AddGlobalExceptionHandler(this IServiceCollection services)

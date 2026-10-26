@@ -4,6 +4,7 @@ using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Commands.SubmitAssignment;
 using Coaching.Application.Commands.CreateAssignmentAttachment;
 using Coaching.Application.Commands.UploadAssignmentAttachment;
+using Coaching.Application.Commands.UploadAssignmentInstructionAttachment;
 using Coaching.Application.Attachments;
 using Coaching.Application.Commands.GradeAssignment;
 using Coaching.Application.Commands.UpdateAssignment;
@@ -13,6 +14,7 @@ using Coaching.Application.Queries.GetAssignment;
 using Coaching.Application.Queries.GetTeacherAssignments;
 using Coaching.Application.Queries.GetStudentAssignments;
 using Coaching.Application.Queries.GetAssignmentAttachment;
+using Coaching.Application.Queries.GetAssignmentInstructionAttachment;
 using Coaching.Application.Queries;
 using Coaching.Domain.Enums;
 using MediatR;
@@ -315,6 +317,80 @@ public class AssignmentsController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Attachment.NotAvailable", StringComparison.OrdinalIgnoreCase))
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound(new { error = "Attachment content not found." });
+        }
+    }
+
+    /// <summary>
+    /// Upload a teacher-provided file for an assignment. The file is scanned before it is made available.
+    /// </summary>
+    [HttpPost("{id}/instruction-attachments")]
+    [RequestSizeLimit(AssignmentAttachmentPolicy.MaxFileSizeBytes)]
+    [ProducesResponseType(typeof(AssignmentInstructionAttachmentResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<AssignmentInstructionAttachmentResponse>> UploadInstructionAttachment(
+        Guid id,
+        [FromQuery] string fileName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var memory = new MemoryStream();
+            await Request.Body.CopyToAsync(memory, cancellationToken);
+            var fileBytes = memory.ToArray();
+            var contentType = (Request.ContentType ?? string.Empty).Split(';', 2)[0].Trim();
+            if (string.IsNullOrWhiteSpace(contentType) || contentType == "application/octet-stream")
+                contentType = AssignmentAttachmentPolicy.ContentTypeForFileName(fileName);
+
+            var result = await _mediator.Send(new UploadAssignmentInstructionAttachmentCommand(
+                id, fileName, contentType, fileBytes), cancellationToken);
+            return CreatedAtAction(nameof(GetAssignment), new { id }, result);
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Attachment.Rejected", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Download a clean assignment file for its teacher or an authorized student/parent.
+    /// </summary>
+    [HttpGet("{id}/instruction-attachments/{attachmentId}/content")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInstructionAttachment(
+        Guid id,
+        Guid attachmentId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new GetAssignmentInstructionAttachmentQuery(id, attachmentId), cancellationToken);
+            return result is null
+                ? NotFound(new { error = "Attachment not found." })
+                : File(result.Content, result.ContentType, result.OriginalFileName, enableRangeProcessing: true);
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
         }
         catch (BusinessRuleException ex) when (ex.Code.Equals("Attachment.NotAvailable", StringComparison.OrdinalIgnoreCase))
         {

@@ -289,7 +289,7 @@ cat .env | grep POSTGRES
 - [Proje Yapısı](PROJECT_STRUCTURE.md)
 - [Mimari Rapor](ARCHITECTURE_REPORT.md)
 - [Environment Konfigürasyonu](ENV_CONFIG.md)
-- [Test Stratejisi](TESTING_STRATEGY.md)
+- [Test rehberi](tests/README.md)
 - [Uygulama Planı](IMPLEMENTATION_PLAN.md)
 - [Faz 5 Üretim Sertleştirme Runbook'u](docs/PHASE5_PRODUCTION_HARDENING.md)
 - [Faz 6 Performans ve Gözlemlenebilirlik Runbook'u](docs/PHASE6_PERFORMANCE_OBSERVABILITY.md)

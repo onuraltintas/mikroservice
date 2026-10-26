@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Okul Ara</title>
+
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css?v=xkWGNSZq8TGjJIBW66-F8HLEtZm8JYEH5g8R5AY4RZ8" />
+    <link rel="stylesheet" href="/assets/css/style.css?v=WxU54Uzh3bQYnJ9E19Y8-JIWLXDsRztjs-XB0Uw7Me4" />
+
+    <link rel="stylesheet" href="/css/site.css?v=d0_OGE_akhJIJoeN5zSNMssda55wHqRU8FbrV7wfOEY" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Güvenlik: fetch wrapper + copy/right-click caydırıcı — mümkün olduğunca erken yükle -->
+    <script src="/js/rm-security.js?v=yxbO4oaxgaPKKn7KMojMo9jd7IdGcqQxcdj4ojrB6ek"></script>
+    <script src="/js/rm-analytics.js?v=3WEgYK1FL6uKgZ_lvbvBPnYsn2ey3VD_TeJBuMDI9FE"></script>
+    
+    <link rel="stylesheet" href="/assets/css/dataTables.bootstrap5.css?v=NhiDfGdA1vucktHLjSOcI2E4JTu9L_ZNmdgWuUywnTc" />
+    <style>
+        html, body { overflow-x: hidden; }
+        .rm-tumokullar-page .rm-tumokullar-main {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1rem .75rem 2rem;
+        }
+        .rm-tumokullar-hero {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+        .rm-tumokullar-hero h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #4b2fa6;
+            margin-bottom: .35rem;
+        }
+        .rm-tumokullar-hero p {
+            color: #64748b;
+            font-size: .92rem;
+            margin: 0;
+        }
+        .rm-tumokullar-search-wrap {
+            background: #fff;
+            border: 1px solid rgba(111, 66, 193, .12);
+            border-radius: 14px;
+            padding: 1rem 1.1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 24px rgba(79, 70, 229, .06);
+        }
+        .rm-tumokullar-search-wrap label {
+            font-size: .84rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: .4rem;
+        }
+        .rm-tumokullar-search-wrap .form-control {
+            border-radius: 999px;
+            padding: .55rem 1rem;
+            border-color: rgba(148, 163, 184, .45);
+        }
+        .rm-tumokullar-search-wrap .form-control:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 .2rem rgba(111, 66, 193, .12);
+        }
+        .rm-tumokullar-page .rm-table-wrap {
+            overflow-x: visible;
+            overflow-y: visible;
+            max-width: 100%;
+            width: 100%;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid rgba(111, 66, 193, 0.10);
+            box-shadow: 0 8px 28px rgba(111, 66, 193, 0.07);
+            padding: .65rem .65rem .25rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        .rm-tumokullar-page #myTable { table-layout: fixed; }
+        .rm-tumokullar-page #myTable th,
+        .rm-tumokullar-page #myTable td {
+            font-size: .78rem;
+            padding: .4rem .45rem;
+            vertical-align: middle;
+            line-height: 1.35;
+            box-sizing: border-box;
+        }
+        .rm-tumokullar-page #myTable {
+            width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0;
+            border-radius: 12px;
+            overflow: visible;
+            margin-top: .25rem !important;
+        }
+        @media (min-width: 769px) {
+            .rm-tumokullar-page #myTable thead th { z-index: 2; }
+        }
+        .rm-tumokullar-page #myTable thead th {
+            background: linear-gradient(180deg, #f0ebff 0%, #faf8ff 52%, #ffffff 100%) !important;
+            color: #1e293b !important;
+            border: none !important;
+            border-right: 1px solid rgba(111, 66, 193, 0.08) !important;
+            border-bottom: 1px solid rgba(111, 66, 193, 0.12) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .98), 0 2px 6px rgba(15, 23, 42, 0.06);
+            font-weight: 700;
+            font-size: .68rem;
+            letter-spacing: .02em;
+            padding: .55rem .4rem !important;
+            vertical-align: middle;
+            white-space: normal;
+            word-break: normal;
+            line-height: 1.2;
+            overflow: hidden;
+        }
+        .rm-tumokullar-page #myTable thead th:nth-child(1),
+        .rm-tumokullar-page #myTable thead th:nth-child(2) {
+            font-size: .72rem;
+            white-space: nowrap;
+        }
+        .rm-tumokullar-page #myTable thead th:nth-child(3),
+        .rm-tumokullar-page #myTable thead th:nth-child(4) {
+            font-size: .72rem;
+            white-space: normal;
+            line-height: 1.2;
+            text-align: left;
+        }
+        .rm-tumokullar-page #myTable thead th:nth-child(5) {
+            font-size: .72rem;
+            white-space: normal;
+            line-height: 1.2;
+            text-align: center;
+        }
+        .rm-tumokullar-page #myTable thead th div.dt-column-header,
+        .rm-tumokullar-page #myTable thead th .dt-column-title {
+            min-width: 0;
+            max-width: 100%;
+        }
+        .rm-tumokullar-page #myTable thead th:last-child { border-right: none !important; }
+        .rm-tumokullar-page #myTable thead th:first-child { border-top-left-radius: 10px; }
+        .rm-tumokullar-page #myTable thead th:last-child { border-top-right-radius: 10px; }
+        .rm-tumokullar-page #myTable_wrapper .dataTables_length { margin-bottom: .75rem; }
+        .rm-tumokullar-page #myTable_wrapper > .row.mt-2 {
+            align-items: center;
+            margin-top: .5rem !important;
+        }
+        .rm-tumokullar-page #myTable_wrapper > .row.mt-2 .dataTables_paginate {
+            display: flex;
+            justify-content: flex-end;
+        }
+        @media (min-width: 769px) {
+            .rm-tumokullar-page #myTable th:nth-child(1),
+            .rm-tumokullar-page #myTable td:nth-child(1) { width: 11%; text-align: left; }
+            .rm-tumokullar-page #myTable th:nth-child(2),
+            .rm-tumokullar-page #myTable td:nth-child(2) { width: 13%; text-align: left; }
+            .rm-tumokullar-page #myTable th:nth-child(3),
+            .rm-tumokullar-page #myTable td:nth-child(3) { width: 34%; text-align: left; }
+            .rm-tumokullar-page #myTable th:nth-child(4),
+            .rm-tumokullar-page #myTable td:nth-child(4) { width: 28%; text-align: left; }
+            .rm-tumokullar-page #myTable th:nth-child(5),
+            .rm-tumokullar-page #myTable td:nth-child(5) { width: 14%; text-align: center; }
+            .rm-tumokullar-page #myTable tbody td {
+                border-right: 1px solid #f0eef5 !important;
+                border-bottom: 1px solid #ebe9f2 !important;
+                padding: .52rem .5rem !important;
+                vertical-align: middle;
+                color: #374151;
+                white-space: normal !important;
+                word-break: normal !important;
+                overflow-wrap: normal !important;
+            }
+            .rm-tumokullar-page #myTable tbody td:nth-child(1),
+            .rm-tumokullar-page #myTable tbody td:nth-child(2) {
+                white-space: nowrap !important;
+                overflow: hidden;
+                text-overflow: clip;
+            }
+            .rm-tumokullar-page #myTable tbody td:last-child { border-right: none !important; }
+            .rm-tumokullar-page #myTable tbody tr:nth-child(even) td { background: #faf9fc; }
+            .rm-tumokullar-page #myTable tbody tr:hover td { background: #f7f4ff !important; }
+            .rm-tumokullar-page #myTable tbody tr:last-child td:first-child { border-bottom-left-radius: 10px; }
+            .rm-tumokullar-page #myTable tbody tr:last-child td:last-child { border-bottom-right-radius: 10px; }
+            .rm-tumokullar-page #myTable tbody td:nth-child(3) .rm-kurum-name {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .rm-tumokullar-page #myTable tbody td:nth-child(3) .rm-kurum-cell .rm-kurum-name {
+                color: #0f172a;
+                font-weight: 600;
+            }
+        }
+        .rm-tumokullar-page #myTable_wrapper .dataTables_length label {
+            font-size: .82rem;
+            color: #555;
+            font-weight: 500;
+        }
+        .rm-tumokullar-page #myTable_wrapper .dataTables_length select {
+            border-radius: 999px;
+            border: 1px solid rgba(111, 66, 193, 0.14);
+            padding: .3rem 1.75rem .3rem .65rem;
+            margin: 0 .35rem;
+            color: #444;
+            background-color: #fff;
+        }
+        .rm-tumokullar-page #myTable_wrapper { padding: 0 .15rem; }
+        .rm-tumokullar-page #myTable_wrapper .dataTables_info {
+            font-size: .8rem;
+            color: #666;
+            padding-top: .85rem;
+        }
+        .rm-tumokullar-page #myTable_wrapper .dataTables_paginate { padding-top: .65rem; }
+        .rm-tumokullar-page #myTable_wrapper .pagination { gap: 4px; }
+        .rm-tumokullar-page #myTable_wrapper .page-link {
+            border-radius: 999px !important;
+            min-width: 34px;
+            text-align: center;
+            border-color: rgba(111, 66, 193, 0.16);
+            color: #5b6478;
+            font-size: .82rem;
+        }
+        .rm-tumokullar-page #myTable_wrapper .page-item.active .page-link {
+            background: #6f42c1;
+            border-color: #6f42c1;
+            color: #fff !important;
+        }
+        .rm-tumokullar-page #myTable_wrapper .page-item.active .page-link:hover,
+        .rm-tumokullar-page #myTable_wrapper .page-item.active .page-link:focus {
+            background: #5a36a3;
+            border-color: #5a36a3;
+            color: #fff !important;
+        }
+        .rm-tumokullar-page #myTable_wrapper .page-link:hover {
+            background: #f7f4ff;
+            border-color: rgba(111, 66, 193, 0.24);
+            color: #1e293b;
+        }
+        .rm-tumokullar-page #myTable_wrapper .dataTables_processing {
+            display: none !important;
+        }
+        .rm-tumokullar-page #resultSummary {
+            display: inline-block;
+            background: linear-gradient(180deg, #f7f4ff 0%, #ffffff 100%);
+            color: #5a36a3;
+            font-weight: 600;
+            font-size: .82rem;
+            padding: .35rem .75rem;
+            border-radius: 999px;
+            border: 1px solid rgba(111, 66, 193, 0.14);
+            margin-bottom: .75rem;
+        }
+
+        @media (max-width: 768px) {
+            .rm-tumokullar-page .rm-tumokullar-main {
+                padding-left: .65rem !important;
+                padding-right: .65rem !important;
+            }
+
+            .rm-tumokullar-page #myTable { table-layout: auto !important; }
+            .rm-tumokullar-page #myTable colgroup { display: none; }
+            .rm-tumokullar-page #myTable thead { display: none; }
+
+            .rm-tumokullar-page #myTable,
+            .rm-tumokullar-page #myTable tbody,
+            .rm-tumokullar-page #myTable tr,
+            .rm-tumokullar-page #myTable td {
+                display: block;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+            }
+
+            .rm-tumokullar-page #myTable th:nth-child(1), .rm-tumokullar-page #myTable td:nth-child(1),
+            .rm-tumokullar-page #myTable th:nth-child(2), .rm-tumokullar-page #myTable td:nth-child(2) {
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+            }
+
+            .rm-tumokullar-page #myTable tbody td:nth-child(1),
+            .rm-tumokullar-page #myTable tbody td:nth-child(2) {
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: unset !important;
+            }
+
+            .rm-tumokullar-page #myTable tr {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 0 8px;
+                margin: 0 0 14px 0;
+                border: 1px solid rgba(111,66,193,.12);
+                border-radius: 12px;
+                padding: 12px 12px 10px;
+                background: #fff;
+                box-shadow: 0 4px 16px rgba(111,66,193,.06);
+            }
+
+            .rm-tumokullar-page #myTable td:nth-child(3) {
+                grid-column: 1 / -1;
+                order: -20;
+                display: block !important;
+                padding: 0 0 10px !important;
+                margin-bottom: 6px;
+                border-bottom: 1px solid rgba(111,66,193,.14) !important;
+            }
+
+            .rm-tumokullar-page #myTable td:nth-child(3)::before { display: none; }
+
+            .rm-tumokullar-page #myTable td:nth-child(3) .rm-kurum-cell {
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .rm-tumokullar-page #myTable td:nth-child(3) .rm-kurum-name {
+                font-size: 1rem;
+                font-weight: 700;
+            }
+
+            .rm-tumokullar-page #myTable td:nth-child(1) { order: 1; }
+            .rm-tumokullar-page #myTable td:nth-child(2) { order: 2; }
+            .rm-tumokullar-page #myTable td:nth-child(4) { order: 3; grid-column: 1 / -1; }
+            .rm-tumokullar-page #myTable td:nth-child(5) { order: 4; grid-column: 1 / -1; }
+
+            .rm-tumokullar-page #myTable td {
+                display: grid !important;
+                grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+                gap: 6px 10px;
+                align-items: start;
+                text-align: right;
+                padding: 6px 0 !important;
+                border: 0 !important;
+                border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+                white-space: normal !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                font-size: .84rem;
+            }
+
+            .rm-tumokullar-page #myTable td:last-child { border-bottom: 0 !important; }
+
+            .rm-tumokullar-page #myTable td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #333;
+                text-align: left;
+                white-space: normal;
+                word-break: break-word;
+                line-height: 1.25;
+                font-size: .78rem;
+            }
+
+            .rm-tumokullar-page .rm-table-wrap {
+                padding: .45rem .35rem .2rem;
+                overflow-x: hidden;
+                border-radius: 12px;
+            }
+
+            .rm-tumokullar-page #myTable_wrapper,
+            .rm-tumokullar-page #myTable_wrapper .row,
+            .rm-tumokullar-page #myTable_wrapper .col-sm-12 {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .rm-tumokullar-page #myTable_wrapper .dataTables_length,
+            .rm-tumokullar-page #myTable_wrapper .dataTables_paginate {
+                width: 100%;
+            }
+
+            .rm-tumokullar-page #myTable_wrapper .dataTables_length label {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: .3rem;
+                width: 100%;
+                margin: 0;
+            }
+
+            .rm-tumokullar-page #myTable_wrapper .dataTables_length select {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .rm-tumokullar-page #myTable_wrapper .dataTables_paginate {
+                display: flex;
+                justify-content: center;
+                padding-top: .5rem;
+            }
+
+            .rm-tumokullar-page #myTable_wrapper .pagination {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .rm-tumokullar-page #resultSummary {
+                font-size: .82rem;
+                max-width: 100%;
+                word-break: break-word;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .rm-tumokullar-page #myTable tr { grid-template-columns: 1fr; }
+            .rm-tumokullar-page #myTable td:nth-child(1),
+            .rm-tumokullar-page #myTable td:nth-child(2) { grid-column: 1 / -1; }
+        }
+    </style>
+
+</head>
+<body class="rm-site-body rm-tumokullar-page" style="margin:0;">
+    <div class="rm-site-content">
+        
+
+<div class="rm-tumokullar-page">
+    <div class="container-fluid py-2 border-bottom bg-white">
+        <div class="row justify-content-between align-items-center">
+            <div class="col-6 col-md-3">
+                <a href="/Home/Index"><img src="/assets/images/logo-rota-marif.png" alt="Rota Maarif" class="img-fluid" style="max-height:42px" /></a>
+            </div>
+            <div class="col-6 col-md-3 text-end">
+                <img src="/assets/images/logo-meb-gr.png" alt="MEB" class="img-fluid" style="max-height:42px" />
+            </div>
+        </div>
+    </div>
+
+    <div class="rm-tumokullar-main">
+        <div class="rm-tumokullar-hero">
+            <h1>Tüm Okullar</h1>
+            <p>Türkiye genelindeki eğitim kurumları arasında kelime ile arama yapın.</p>
+        </div>
+
+        <div class="rm-tumokullar-search-wrap">
+            <label for="wordSearch">Kelime ile ara</label>
+            <input id="wordSearch" type="search" class="form-control" placeholder="Okul adı, il, ilçe veya okul türü..." autocomplete="off" />
+        </div>
+
+        <div id="resultSummary">Yükleniyor...</div>
+
+        <div class="rm-table-wrap">
+            <table id="myTable" class="display table table-hover rm-dt-table w-100">
+                <thead>
+                    <tr>
+                        <th>İl</th>
+                        <th>İlçe</th>
+                        <th>Kurum Adı</th>
+                        <th>Kurum Türü</th>
+                        <th>Kademe</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="rm-footer mt-4">
+        <div class="container-fluid py-2">
+            <div class="rm-footer-row">
+                <a class="rm-footer-brand" href="/Home/Index" aria-label="Anasayfa">
+                    <img src="/assets/images/logo-rota-marif.png" alt="Rota Maarif" style="height:24px" />
+                </a>
+                <div class="rm-footer-copy text-muted small">Millî Eğitim Bakanlığı © 2026 | Tüm Hakları Saklıdır.</div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+
+    </div>
+
+    <script src="/assets/js/popper.min.js?v=dcmHIMHhglKfn7QvWlHRqGOiejhy8J1cnRfedkuGNuM"></script>
+    <script src="/assets/js/bootstrap.min.js?v=F1ytps3bBRw7Fx6NeN7cdd2wF1jV-8F1Fas4QdGTEnk"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/rm-checkbox-dropdown.js?v=Orsn_y7mkHvepazvqZGd3lvnY46VRRX25fHTyTj6GUw"></script>
+    <script src="/js/rm-kurum-link.js?v=77s7iwdzUNy7Qtp33IzK1sKNN9iIwRp5djbXHSAArXQ"></script>
+    <script src="/js/rm-sticky-table-head.js?v=lGD8jnhVvDImEOyHBYH3tozHIQ6F43bSne87TYdxar0"></script>
+    
+    <script src="/assets/js/jquery-3.7.1.js?v=6440qEDaqjKqrIVfk4x21neDBVsbef6XUR5dUCKBv_E"></script>
+    <script src="/assets/js/dataTables.js?v=7Hpdbld8snmw80CF5886EKLMKqRT-b0cg4zUEz2lL-I"></script>
+    <script src="/assets/js/dataTables.bootstrap5.js?v=zsCPSDFQRIFUc6l_eyE7ifiFBBCxBe2MOb5EOQhXs_A"></script>
+    <script>
+        (function(){
+          const summary = document.getElementById('resultSummary');
+          const wordSearch = document.getElementById('wordSearch');
+          let dt = null;
+          let searchTimer = null;
+
+          const KADEME_LABELS = {
+            0: 'Okul öncesi',
+            1: 'İlkokul',
+            2: 'Ortaokul',
+            4: 'Lise'
+          };
+
+          const RM_DT_LANGUAGE = {
+            emptyTable: 'Kayıt bulunamadı',
+            info: '_TOTAL_ kayıttan _START_–_END_ arası gösteriliyor',
+            infoEmpty: 'Kayıt yok',
+            infoFiltered: '(_MAX_ kayıt içinden filtrelendi)',
+            lengthMenu: '_MENU_ kayıt göster',
+            loadingRecords: 'Yükleniyor...',
+            processing: 'Yükleniyor...',
+            search: 'Ara:',
+            zeroRecords: 'Eşleşen kayıt bulunamadı',
+            paginate: { first: 'İlk', last: 'Son', next: 'Sonraki', previous: 'Önceki' }
+          };
+
+          function escapeHtml(s){
+            return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+              .replaceAll('"','&quot;').replaceAll("'",'&#39;');
+          }
+
+          const titleCaseTr = (s) => (window.RmTitleCaseTr ? window.RmTitleCaseTr(s) : String(s ?? ''));
+          function displayText(v){
+            return escapeHtml(titleCaseTr(v));
+          }
+
+          function kademeLabel(v){
+            const n = Number(v);
+            return titleCaseTr(KADEME_LABELS[n] || '—');
+          }
+
+          function kurumCellHtml(row){
+            const kk = row.kurumKodu ?? row.KurumKodu;
+            const ad = row.kurumAdi ?? row.KurumAdi ?? '';
+            if(window.RmKurumLink?.kurumCellHtml){
+              return RmKurumLink.kurumCellHtml(kk, ad, escapeHtml);
+            }
+            return `<div class="rm-kurum-cell"><span class="rm-kurum-name">${displayText(ad)}</span></div>`;
+          }
+
+          function initDataTable(){
+            if(dt){ dt.destroy(); dt = null; }
+            dt = $('#myTable').DataTable({
+              processing: true,
+              serverSide: true,
+              searching: false,
+              ordering: false,
+              autoWidth: false,
+              pageLength: 50,
+              lengthMenu: [[25, 50, 100], [25, 50, 100]],
+              dom: '<"row align-items-center mb-2"<"col-sm-6"l>>rt<"row align-items-center mt-2"<"col-sm-6"i><"col-sm-6"p>>',
+              language: RM_DT_LANGUAGE,
+              ajax: function(data, callback){
+                const params = new URLSearchParams();
+                params.set('page', String(Math.floor(data.start / data.length) + 1));
+                params.set('pageSize', String(data.length));
+                const q = (wordSearch?.value || '').trim();
+                if(q) params.set('q', q);
+                fetch('/api/tumOkullar/arama?' + params.toString())
+                  .then(r => { if(!r.ok) throw new Error('Arama başarısız'); return r.json(); })
+                  .then(json => {
+                    const items = json.items || [];
+                    const total = json.total || 0;
+                    summary.textContent = total ? `${total.toLocaleString('tr-TR')} okul kaydı` : 'Kayıt bulunamadı';
+                    callback({
+                      draw: data.draw,
+                      recordsTotal: total,
+                      recordsFiltered: total,
+                      data: items.map(row => [
+                        displayText(row.ilAdi ?? row.IlAdi ?? ''),
+                        displayText(row.ilceAdi ?? row.IlceAdi ?? ''),
+                        kurumCellHtml(row),
+                        displayText(row.kurumTuruAdi ?? row.KurumTuruAdi ?? '—'),
+                        escapeHtml(kademeLabel(row.kademe ?? row.Kademe))
+                      ])
+                    });
+                  })
+                  .catch(err => {
+                    console.error(err);
+                    summary.textContent = 'Arama sırasında bir sorun oluştu.';
+                    callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                  });
+              },
+              drawCallback: function(){
+                const labels = ['İl', 'İlçe', 'Kurum Adı', 'Kurum Türü', 'Kademe'];
+                this.api().rows().every(function(){
+                  $(this.node()).find('td').each(function(i){
+                    this.setAttribute('data-label', labels[i] || '');
+                    if(window.innerWidth <= 768){
+                      this.style.minWidth = '';
+                      this.style.width = '';
+                    }
+                  });
+                });
+                if(window.innerWidth <= 768){
+                  const tbl = document.getElementById('myTable');
+                  if(tbl){
+                    tbl.style.width = '100%';
+                    tbl.style.minWidth = '0';
+                  }
+                }
+                if(window.RmKurumLink?.bindTableLinks){
+                  RmKurumLink.bindTableLinks(document.getElementById('myTable'));
+                }
+                window.RmStickyTableHead?.refresh(document.querySelector('.rm-table-wrap'));
+              }
+            });
+          }
+
+          wordSearch?.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+              if(dt) dt.ajax.reload(null, false);
+            }, 300);
+          });
+
+          initDataTable();
+        })();
+    </script>
+
+    <!-- rm-deploy:20260629 -->
+</body>
+</html>

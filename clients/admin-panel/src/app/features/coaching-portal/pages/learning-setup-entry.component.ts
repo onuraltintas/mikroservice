@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -27,4 +28,5 @@ export class LearningSetupEntryComponent implements OnInit {
       }
     });
   }
+  private readonly feedback = coachingFeedback(undefined, this.error);
 }

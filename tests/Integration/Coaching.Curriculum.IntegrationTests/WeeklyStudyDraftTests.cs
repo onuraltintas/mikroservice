@@ -51,8 +51,8 @@ public sealed class WeeklyStudyDraftTests
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task MigrationRoundTripAndConcurrentEditsPreserveExistingWork()
     {
-        await using var f=await CurriculumPostgresTests.Pg.Create();await f.Data.Seed();f.Data.User.Roles=["Student"];
-        var before=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());
+        await using var f=await CurriculumPostgresTests.Pg.Create("20261020065330_MebiLgsProgramCatalog");await f.Data.Seed(legacyPlanSchema: true);f.Data.User.Roles=["Student"];
+        var before=JsonSerializer.Serialize(await CurriculumManagementTests.LegacyStudyTasks(f.Db).AsNoTracking().ToArrayAsync());
         await f.Db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>().MigrateAsync("20261016204727_ExamScheduledDate");
         await f.Db.Database.MigrateAsync();await f.Db.Database.MigrateAsync();
         var lesson=(await f.Db.StudyCatalogLessons.SingleAsync()).Id;var svc=Service(f.Data,new(f.Db));
@@ -127,7 +127,9 @@ public sealed class WeeklyStudyDraftTests
     {
         public bool Empty;
         public Task<LearningSetupView> GetAsync(CancellationToken ct)=>throw new NotSupportedException();
+        public Task<LearningSetupView> GetForStudentAsync(Guid studentId,CancellationToken ct)=>throw new NotSupportedException();
         public Task<LearningSetupView> SaveAsync(LearningSetupUpdate r,CancellationToken ct)=>throw new NotSupportedException();
+        public Task<LearningCatalogView> GetCatalogForStudentAsync(Guid studentId,Guid? lessonId,int pageNumber,CancellationToken ct)=>GetCatalogAsync(lessonId,pageNumber,ct);
         public async Task<LearningCatalogView> GetCatalogAsync(Guid? lessonId,int pageNumber,CancellationToken ct)=>new(null,
             Empty ? [] : await db.StudyCatalogLessons.Where(x=>x.IsActive).Select(x=>new LearningLessonView(x.Id,x.Name,x.GradeNumber,x.ExamCode,0,0)).ToArrayAsync(ct),new([],0,1,50),0,[]);
     }

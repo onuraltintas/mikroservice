@@ -131,6 +131,12 @@ public class Exam : AggregateRoot
                 nameof(targetGradeLevel),
                 "Grade level must be between 1 and 12.");
 
+        foreach (var result in _results.Where(x => x.GetPracticeExam() is not null))
+            PracticeExamRules.Validate(result.GetPracticeExam()!, examType,
+                result.CorrectAnswers ?? 0, result.WrongAnswers ?? 0, result.EmptyAnswers ?? 0);
+        if (examType is ExamType.LGS or ExamType.YKS && _results.Any(x => x.GetPracticeExam() is null))
+            throw new ArgumentException("Sonuçlar ders cevapları olmadan LGS/YKS kapsamına çevrilemez.");
+
         Title = title.Trim();
         ExamType = examType;
         Subject = NormalizeOptional(subject);
@@ -151,11 +157,15 @@ public class Exam : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void RecordAnalysisChange() => UpdatedAt = DateTime.UtcNow;
+
     public void AddResult(ExamResult result)
     {
         if (result.ExamId != Id) throw new ArgumentException("Result belongs to another exam.", nameof(result));
         if (StudentOwnerId.HasValue && result.StudentId != StudentOwnerId)
             throw new BusinessRuleException("Authorization.Forbidden", "Only the student's own result is allowed.");
+        if (result.GetPracticeExam() is { } practice)
+            PracticeExamRules.Validate(practice, ExamType, result.CorrectAnswers ?? 0, result.WrongAnswers ?? 0, result.EmptyAnswers ?? 0);
         if (result.Score < 0 || result.Score > MaxScore)
             throw new BusinessRuleException(
                 "Exam.ScoreInvalid",
@@ -177,11 +187,18 @@ public class Exam : AggregateRoot
         int emptyAnswers,
         Dictionary<string, decimal>? subjectScores,
         int? ranking,
-        string? teacherNotes)
+        string? teacherNotes,
+        PracticeExamInput? practiceExam = null)
     {
         var result = _results.FirstOrDefault(existing => existing.Id == resultId);
         if (result is null)
             throw new InvalidOperationException($"Exam result {resultId} not found.");
+
+        var practice = practiceExam ?? result.GetPracticeExam();
+        if (ExamType is ExamType.LGS or ExamType.YKS && practice is null)
+            throw new ArgumentException("LGS/YKS denemesinde ders cevapları zorunludur.");
+        if (practice is not null)
+            PracticeExamRules.Validate(practice, ExamType, correctAnswers, wrongAnswers, emptyAnswers);
 
         result.UpdateEditableDetails(
             score,
@@ -191,7 +208,8 @@ public class Exam : AggregateRoot
             subjectScores,
             ranking,
             teacherNotes,
-            MaxScore);
+            MaxScore,
+            practice);
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -227,6 +245,8 @@ public class ExamResult : Entity
 
     public string? SubjectScoresJson { get; private set; } // JSON: {"Matematik": 85, "Türkçe": 90}
     public string? LessonAnswersJson { get; private set; }
+    public string? PracticeExamJson { get; private set; }
+    public string? TopicAnalysisJson { get; private set; }
     public int? Ranking { get; private set; } // Sıralamadaki yeri
 
     public string? TeacherNotes { get; private set; }
@@ -252,6 +272,8 @@ public class ExamResult : Entity
         ArgumentOutOfRangeException.ThrowIfNegative(correct);
         ArgumentOutOfRangeException.ThrowIfNegative(wrong);
         ArgumentOutOfRangeException.ThrowIfNegative(empty);
+
+        ValidatePracticeTotals(GetPracticeExam(), correct, wrong, empty);
 
         CorrectAnswers = correct;
         WrongAnswers = wrong;
@@ -296,6 +318,35 @@ public class ExamResult : Entity
     public IReadOnlyList<LessonAnswerStatistics> GetLessonAnswers() => string.IsNullOrWhiteSpace(LessonAnswersJson)
         ? [] : System.Text.Json.JsonSerializer.Deserialize<List<LessonAnswerStatistics>>(LessonAnswersJson)!;
 
+    public PracticeExamInput? GetPracticeExam() => string.IsNullOrWhiteSpace(PracticeExamJson)
+        ? null : System.Text.Json.JsonSerializer.Deserialize<PracticeExamInput>(PracticeExamJson);
+
+    public PracticeTopicAnalysis GetTopicAnalysis() => TopicAnalysisJson is null ? new([])
+        : System.Text.Json.JsonSerializer.Deserialize<PracticeTopicAnalysis>(TopicAnalysisJson)!;
+
+    public void SetTopicAnalysis(PracticeTopicAnalysis analysis)
+    {
+        PracticeExamRules.ValidateTopics(GetPracticeExam() ?? throw new ArgumentException("Deneme kapsamı gerekli."), analysis);
+        TopicAnalysisJson = System.Text.Json.JsonSerializer.Serialize(analysis with { TestIdentity = analysis.TestIdentity?.Trim() });
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetPracticeExam(PracticeExamInput input, ExamType examType)
+    {
+        PracticeExamRules.Validate(input, examType, CorrectAnswers ?? 0, WrongAnswers ?? 0, EmptyAnswers ?? 0);
+        var json = System.Text.Json.JsonSerializer.Serialize(input);
+        if (System.Text.Json.JsonSerializer.Serialize(GetPracticeExam()) != json) TopicAnalysisJson = null;
+        PracticeExamJson = json;
+    }
+
+    private static void ValidatePracticeTotals(PracticeExamInput? input, int correct, int wrong, int empty)
+    {
+        if (input is null) return;
+        var summary = PracticeExamRules.Summarize(input);
+        if (summary.Correct != correct || summary.Wrong != wrong || summary.Empty != empty)
+            throw new ArgumentException("Ders toplamları sınavın doğru, yanlış ve boş toplamlarıyla eşleşmelidir.");
+    }
+
     public void SetRanking(int ranking)
     {
         if (ranking < 1)
@@ -317,7 +368,8 @@ public class ExamResult : Entity
         Dictionary<string, decimal>? subjectScores,
         int? ranking,
         string? teacherNotes,
-        decimal maxScore)
+        decimal maxScore,
+        PracticeExamInput? practiceExam = null)
     {
         if (score is < 0 || score > maxScore)
             throw new BusinessRuleException(
@@ -333,12 +385,17 @@ public class ExamResult : Entity
             throw new ArgumentOutOfRangeException(nameof(ranking), "Ranking must be greater than 0.");
 
         var subjectScoresJson = SerializeSubjectScores(subjectScores, maxScore);
+        var practice = practiceExam ?? GetPracticeExam();
+        ValidatePracticeTotals(practice, correctAnswers, wrongAnswers, emptyAnswers);
 
         Score = score;
         CorrectAnswers = correctAnswers;
         WrongAnswers = wrongAnswers;
         EmptyAnswers = emptyAnswers;
         SubjectScoresJson = subjectScoresJson;
+        var practiceJson = practice is null ? null : System.Text.Json.JsonSerializer.Serialize(practice);
+        if ((GetPracticeExam() is {} previousPractice ? System.Text.Json.JsonSerializer.Serialize(previousPractice) : null) != practiceJson) TopicAnalysisJson = null;
+        PracticeExamJson = practiceJson;
         Ranking = ranking;
         TeacherNotes = string.IsNullOrWhiteSpace(teacherNotes) ? null : teacherNotes.Trim();
         UpdatedAt = DateTime.UtcNow;

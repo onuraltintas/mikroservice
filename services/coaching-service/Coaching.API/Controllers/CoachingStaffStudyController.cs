@@ -17,8 +17,41 @@ namespace Coaching.API.Controllers;
 [Route("api/coaching/staff/students/{studentId:guid}/study")]
 public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService plans,
     CoachingStudentStudyReportService reports, CoachingStudyPlanAccess access, CoachingDbContext db,
-    CoachingGoalTargetService goalTargets) : ControllerBase
+    CoachingGoalTargetService goalTargets, IWeeklyStudyDraftService weeklyDrafts,
+    ILearningSetupService learningSetup, IWeeklyOutcomePlanService outcomePlans) : ControllerBase
 {
+    [HttpGet("weekly-draft")]
+    public Task<IActionResult> WeeklyDraft(Guid studentId,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=await weeklyDrafts.GetForStudentAsync(studentId,ct)}));
+
+    [HttpPut("goals/{goalId:guid}/target/net"), Authorize(Roles = "Teacher"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> ReplaceGoalNet(Guid studentId, Guid goalId, GoalNetTargetUpdate request, CancellationToken ct) => Respond(async () =>
+        Ok(new { success = true, data = await goalTargets.ReplaceNetForStudentAsync(studentId, goalId, request, ct) }));
+
+    [HttpPut("weekly-draft"),Authorize(Roles="Teacher"),RequestSizeLimit(65536),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> SaveWeeklyDraft(Guid studentId,WeeklyDraftInput request,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct)}));
+
+    [HttpGet("learning-setup")]
+    public Task<IActionResult> LearningSetup(Guid studentId,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=await learningSetup.GetForStudentAsync(studentId,ct)}));
+
+    [HttpGet("learning-setup/catalog")]
+    public Task<IActionResult> LearningCatalog(Guid studentId,Guid? lessonId=null,int pageNumber=1,CancellationToken ct=default)=>Respond(async()=>
+        Ok(new{success=true,data=await learningSetup.GetCatalogForStudentAsync(studentId,lessonId,pageNumber,ct)}));
+
+    [HttpGet("weekly-outcome-plans/options")]
+    public Task<IActionResult> OutcomeOptions(Guid studentId,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=await outcomePlans.OptionsForStudentAsync(studentId,ct)}));
+
+    [HttpPost("weekly-outcome-plans/preview"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> OutcomePreview(Guid studentId,WeeklyOutcomePlanRequest request,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=await outcomePlans.PreviewForStudentAsync(studentId,request,ct)}));
+
+    [HttpPost("weekly-outcome-plans/drafts"),Authorize(Roles="Teacher"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> CreateOutcomeDraft(Guid studentId,WeeklyOutcomePlanSave request,CancellationToken ct)=>Respond(async()=>
+    {var created=await outcomePlans.CreateForStudentAsync(studentId,request,ct);return CreatedAtAction(nameof(Get),new{studentId,id=created.Id},new{success=true,data=created});});
+
     [HttpGet("goals/{goalId:guid}/target")]
     public Task<IActionResult> GetGoalTarget(Guid studentId, Guid goalId, CancellationToken ct) => Respond(async () =>
     {
@@ -94,6 +127,20 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     [HttpPut("plans/{id:guid}/tasks/{taskId:guid}/title"), Authorize(Roles="Teacher"), RequestSizeLimit(2048), EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> CorrectTitle(Guid studentId,Guid id,Guid taskId,StudyTaskTitleInput request,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await plans.CorrectTitleForStudentAsync(studentId,id,taskId,request.ExpectedVersion,request.Title,ct)}));
+
+    [HttpPost("plans/{id:guid}/tasks"),Authorize(Roles="Teacher"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> AddCalendarTask(Guid studentId,Guid id,CalendarTaskSaveInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new{success=true,data=await plans.SaveCalendarForStudentAsync(studentId,id,null,request,ct)}));
+    [HttpPut("plans/{id:guid}/tasks/{taskId:guid}"),Authorize(Roles="Teacher"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> EditCalendarTask(Guid studentId,Guid id,Guid taskId,CalendarTaskSaveInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new{success=true,data=await plans.SaveCalendarForStudentAsync(studentId,id,taskId,request,ct)}));
+    [HttpDelete("plans/{id:guid}/tasks/{taskId:guid}"),Authorize(Roles="Teacher"),RequestSizeLimit(1024),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> DeleteCalendarTask(Guid studentId,Guid id,Guid taskId,[FromBody] StudyPlanPublishInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new{success=true,data=await plans.DeleteCalendarForStudentAsync(studentId,id,taskId,request.ExpectedVersion,ct)}));
+
+    [HttpPut("plans/{id:guid}/tasks/{taskId:guid}/remaining-scope"),Authorize(Roles="Teacher"),RequestSizeLimit(4096)]
+    public Task<IActionResult> RemainingScope(Guid studentId,Guid id,Guid taskId,StudyRemainingScopeInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new {success=true,data=await plans.SetRemainingScopeForStudentAsync(studentId,id,taskId,request,ct)}));
 
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {

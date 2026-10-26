@@ -18,6 +18,7 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         var result = ExamResult.Create(exam.Id, student, request.Score);
         result.SetAnswerStatistics(request.CorrectAnswers, request.WrongAnswers, request.EmptyAnswers);
         result.SetLessonAnswers(lessons);
+        if (request.PracticeExam is not null) result.SetPracticeExam(request.PracticeExam, request.ExamType);
         exam.AddResult(result); db.Exams.Add(exam);
         await SaveAsync(cancellationToken);
         return View(exam);
@@ -49,12 +50,15 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         var exam = await OwnedAsync(id, student, request.ExpectedVersion, cancellationToken);
         var lessons = await ValidateAsync(request.Exam, cancellationToken);
         var input = request.Exam;
+        var practice = input.PracticeExam ?? exam.Results.Single().GetPracticeExam();
+        if (practice is not null && input.Lessons.Count > 0) throw new ArgumentException("Deneme kapsamı ile serbest ders/konu satırları birlikte girilemez.");
+        if (practice is not null) PracticeExamRules.Validate(practice, input.ExamType, input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers);
         // Validate a detached result first, so rejected lesson totals cannot partially mutate the tracked aggregate.
         var check = ExamResult.Create(exam.Id, student, input.Score);
         check.SetAnswerStatistics(input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers);
         check.SetLessonAnswers(lessons);
         var result = exam.Results.Single();
-        result.UpdateEditableDetails(input.Score, input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers, null, null, null, input.MaxScore);
+        result.UpdateEditableDetails(input.Score, input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers, null, null, null, input.MaxScore, practice);
         result.SetLessonAnswers(lessons);
         exam.UpdateEditableDetails(input.Title, input.ExamType, null, null,
             input.ExamDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), null, input.MaxScore, null);
@@ -81,6 +85,8 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
     private async Task<IReadOnlyList<LessonAnswerStatistics>> ValidateAsync(StudentExamInput request, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
+        if (request.ExamType is Coaching.Domain.Enums.ExamType.LGS or Coaching.Domain.Enums.ExamType.YKS && request.PracticeExam is null)
+            throw new ArgumentException("LGS/YKS denemesinde sınav kapsamı ve ders cevapları zorunludur.");
         if (string.IsNullOrWhiteSpace(request.Title) || request.Title.Trim().Length > 200
             || !Enum.IsDefined(request.ExamType) || request.ExamDate == DateOnly.MinValue
             || request.ExamDate > DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1)
@@ -93,6 +99,11 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         var check = ExamResult.Create(Guid.NewGuid(), Guid.NewGuid(), request.Score);
         check.SetAnswerStatistics(request.CorrectAnswers, request.WrongAnswers, request.EmptyAnswers);
         check.SetLessonAnswers(request.Lessons);
+        if (request.PracticeExam is not null)
+        {
+            if (request.Lessons.Count > 0) throw new ArgumentException("Deneme kapsamı ile serbest ders/konu satırları birlikte girilemez.");
+            check.SetPracticeExam(request.PracticeExam, request.ExamType);
+        }
         var lessonIds = request.Lessons.Select(x => x.LessonId).Distinct().ToArray();
         var activeLessons = await db.StudyCatalogLessons.AsNoTracking().Where(x => x.IsActive && Enumerable.Contains(lessonIds, x.Id))
             .Select(x => new { x.Id, x.Name }).ToListAsync(ct);
@@ -124,6 +135,7 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         var result = exam.Results.Single();
         return new(exam.Id, exam.Version, exam.Title, exam.ExamType, DateOnly.FromDateTime(exam.ExamDate),
             result.Score, exam.MaxScore, result.CorrectAnswers ?? 0, result.WrongAnswers ?? 0, result.EmptyAnswers ?? 0,
-            "StudentReported", result.GetLessonAnswers());
+            "StudentReported", result.GetLessonAnswers(), result.GetPracticeExam(),
+            result.GetPracticeExam() is { } practice ? PracticeExamRules.Summarize(practice) : null);
     }
 }

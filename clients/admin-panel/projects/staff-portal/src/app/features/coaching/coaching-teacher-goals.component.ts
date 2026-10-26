@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, QueryList, ViewChildren, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -333,4 +334,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
     return globalThis.crypto?.randomUUID?.()
       ?? `teacher-goal-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
+
+  private readonly errorMessageFeedback = coachingFeedback(undefined, this.errorMessage);
+  private readonly successMessageFeedback = coachingFeedback(this.successMessage);
 }

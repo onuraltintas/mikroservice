@@ -57,7 +57,8 @@ public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamR
                 SubjectScores: studentResult.GetSubjectScores(),
                 Ranking: studentResult.Ranking,
                 Source: exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded",
-                LessonAnswers: studentResult.GetLessonAnswers()
+                LessonAnswers: studentResult.GetLessonAnswers(),
+                NetSummary: studentResult.GetPracticeExam() is { } practice ? Coaching.Domain.Entities.PracticeExamRules.Summarize(practice) : null
             ));
         }
 

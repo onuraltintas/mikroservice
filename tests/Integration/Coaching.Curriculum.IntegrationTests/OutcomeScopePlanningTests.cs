@@ -10,24 +10,35 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class OutcomeScopePlanningTests
 {
     [Theory]
-    [InlineData(false,20,40)]
-    [InlineData(true,20,40)]
+    [InlineData(false,20,10)]
+    [InlineData(true,20,30)]
     [InlineData(false,60,0)]
-    [InlineData(true,60,40)]
+    [InlineData(true,60,30)]
     public async Task PinnedPortionIsCreditedOnceAndOtherSectionRemains(bool scopedPinnedEstimate,int pinnedMinutes,int expectedNewMinutes)
     {
         await using var f=new CurriculumManagementTests.Fixture();
         await Verify(f,scopedPinnedEstimate,pinnedMinutes,expectedNewMinutes);
     }
 
+    [Theory]
+    [InlineData(false,20,10)]
+    [InlineData(true,20,30)]
+    [InlineData(false,60,0)]
+    [InlineData(true,60,30)]
+    public async Task CompletedPortionCreditRespectsScopeAndEstimateChanges(bool scopedEstimate,int minutes,int expected)
+    {
+        await using var f=new CurriculumManagementTests.Fixture();
+        await Verify(f,scopedEstimate,minutes,expected,true);
+    }
+
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task PublishedPortionsAndPinnedCreditWorkWithRealPostgresForeignKeys()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();
-        await Verify(pg.Data,true,20,40);
+        await Verify(pg.Data,true,20,30);
     }
 
-    private static async Task Verify(CurriculumManagementTests.Fixture f,bool scopedPinnedEstimate,int pinnedMinutes,int expectedNewMinutes)
+    private static async Task Verify(CurriculumManagementTests.Fixture f,bool scopedPinnedEstimate,int pinnedMinutes,int expectedNewMinutes,bool completed=false)
     {
         var service=await WeeklyOutcomePlanTests.Seed(f);
         var topic=await f.Db.StudyCatalogTopics.SingleAsync();
@@ -47,21 +58,23 @@ public sealed class OutcomeScopePlanningTests
         var automatic=new CoachingAutomaticStudyPlanPreviewService(f.Db,new CoachingAccessPolicy(f.User));
         var automaticPreview=await automatic.PreviewAsync(new(new(2027,5,24),7,availability.Version,
             [new(topic.Id,null,[new(outcome.Id,estimate.Id)]),new(second.Id,null,[new(outcome.Id,estimate.Id)])]));
-        Assert.Equal(60,automaticPreview.Schedule.ScheduledMinutes);Assert.Equal(2,automaticPreview.Outcomes!.Count);
-        Assert.All(automaticPreview.Outcomes,x=>Assert.True(x.IsTopicShare));
+        Assert.Equal(30,automaticPreview.CompletedOutcomeMinutes);Assert.Equal(30,automaticPreview.Schedule.ScheduledMinutes);
+        Assert.Equal(second.Id,Assert.Single(automaticPreview.Outcomes!).TopicId);
+        Assert.All(automaticPreview.Outcomes!,x=>Assert.True(x.IsTopicShare));
         var input=new WeeklyOutcomePlanRequest(new(2027,5,24),new(2027,6,1),0,false);
         var both=await service.PreviewAsync(input,default);
-        Assert.Equal(60,both.Schedule.Tasks.Sum(x=>x.Minutes));
-        Assert.Contains(both.Schedule.Tasks,x=>x.Outcome.TopicId==topic.Id);
+        Assert.Equal(30,both.Schedule.Tasks.Sum(x=>x.Minutes));
+        Assert.DoesNotContain(both.Schedule.Tasks,x=>x.Outcome.TopicId==topic.Id);
         Assert.Contains(both.Schedule.Tasks,x=>x.Outcome.TopicId==second.Id);
         var old=await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive);
         var pinned=StudyPlanTask.Create(old,input.StartDate,"Sabit bölüm",pinnedMinutes,topic.Id,true);pinned.SetWeeklyPlacement(topic.LessonId,"Matematik",1080);
+        if(completed)pinned.Complete(1);
         f.Db.Add(pinned);f.Db.Add(StudyPlanTaskOutcome.Create(pinned.Id,outcome.Id,scopedPinnedEstimate?estimate.Id:oldEstimate.Id,pinnedMinutes,"Catalog"));
         await f.Db.SaveChangesAsync();
         var preview=await service.PreviewAsync(input,default);
         Assert.Equal(expectedNewMinutes,preview.Schedule.Tasks.Sum(x=>x.Minutes)+preview.Schedule.Lessons.Sum(x=>x.RemainingMinutes));
         Assert.All(preview.Schedule.Tasks,x=>Assert.Equal(second.Id,x.Outcome.TopicId));
-        Assert.Equal(60,Assert.Single(preview.Schedule.Lessons).RequiredMinutes);
+        Assert.Equal(completed?expectedNewMinutes:30,Assert.Single(preview.Schedule.Lessons).RequiredMinutes);
         Assert.Equal(1,Assert.Single(preview.Schedule.Lessons).OutcomeCount);
         Assert.Equal(pinnedMinutes,(await f.Db.StudyPlanTasks.SingleAsync(x=>x.Id==pinned.Id)).PlannedMinutes);
         Assert.Equal(oldEstimate.Id,(await f.Db.Set<OutcomeDurationEstimate>().SingleAsync(x=>x.Id==oldEstimate.Id)).Id);

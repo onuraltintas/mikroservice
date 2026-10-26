@@ -1,6 +1,6 @@
 # Öğrenci günlük işleri ve öğretmen takip bağlamı
 
-21 Ekim 2026. Geliştirme ve yerel doğrulama tamamlandı. Bu paket canlıya dağıtılmadı; canlı veritabanına bağlantı veya kayıt değişikliği yapılmadı.
+21 Ekim 2026. Geliştirme, yerel doğrulama ve canlı dağıtım tamamlandı. Aşağıdaki geliştirme testleri yerel kanıtlardır; gerçek hesap ve kayıt koruma sonuçları [canlı doğrulama raporunda](gunluk-isler-canli-20261021.md) bulunur.
 
 ## Öğrenci ana sayfası
 
@@ -71,4 +71,4 @@ Yerel tarayıcı örneğinde gerçek bileşenlerle üç filtre, üç kaydın do�
 - `artifacts/daily-agenda-student-light-desktop.png`, `artifacts/daily-agenda-student-dark-mobile.png`: yeni öğrenci bölümü.
 - `artifacts/daily-agenda-teacher-light-desktop.png`, `artifacts/daily-agenda-teacher-dark-mobile.png`: öğretmen bölümü.
 
-Canlıya alınırken Coaching API ve öğrenci/öğretmen arayüzleri birlikte yayımlanmalıdır; veritabanı geçişi gerekmiyor. Üretim oturumlarında aynı durum geçişleri ve filtreye dönüş akışı ayrıca doğrulanmalıdır.
+Coaching API ve öğrenci/öğretmen arayüzleri birlikte yayımlandı; veritabanı geçişi gerekmedi. Üretim oturumlarında durum geçişleri ve filtreye dönüş akışı doğrulandı; ayrıntılar canlı rapordadır.

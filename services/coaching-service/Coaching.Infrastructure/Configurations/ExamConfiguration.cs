@@ -139,6 +139,8 @@ public class ExamResultConfiguration : IEntityTypeConfiguration<ExamResult>
             .HasColumnType("jsonb");
 
         builder.Property(x => x.LessonAnswersJson).HasColumnName("lesson_answers").HasColumnType("jsonb");
+        builder.Property(x => x.PracticeExamJson).HasColumnName("practice_exam").HasColumnType("jsonb");
+        builder.Property(x => x.TopicAnalysisJson).HasColumnName("topic_analysis").HasColumnType("jsonb").IsConcurrencyToken();
 
         builder.Property(x => x.Ranking)
             .HasColumnName("ranking");

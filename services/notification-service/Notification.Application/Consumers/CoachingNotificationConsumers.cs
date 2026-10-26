@@ -1,5 +1,7 @@
+using Notification.Application.Configuration;
 using EduPlatform.Shared.Contracts.Events.Coaching;
 using MassTransit;
+using Notification.Application.Messaging;
 using Notification.Application.Interfaces;
 
 namespace Notification.Application.Consumers;
@@ -17,10 +19,10 @@ public sealed class AssignmentCreatedConsumer : IConsumer<AssignmentCreatedEvent
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             message.StudentIds,
             $"Yeni ödev: {message.Title}",
-            $"Ödevin son teslim tarihi: {message.DueDate:dd.MM.yyyy HH:mm}",
+            $"Ödevin son teslim tarihi: {TurkeyTime.Format(message.DueDate)}",
             "AssignmentCreated",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -45,10 +47,10 @@ public sealed class AssignmentSubmittedConsumer : IConsumer<AssignmentSubmittedE
         }
 
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             new[] { message.TeacherId.Value },
             "Ödev teslim edildi",
-            $"Bir öğrenci ödevini teslim etti: {message.SubmittedAt:dd.MM.yyyy HH:mm}",
+            $"Bir öğrenci ödevini teslim etti: {TurkeyTime.Format(message.SubmittedAt)}",
             "AssignmentSubmitted",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -68,10 +70,10 @@ public sealed class AssignmentUpdatedConsumer : IConsumer<AssignmentUpdatedEvent
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             message.StudentIds,
             "Ödev güncellendi",
-            $"Ödevin yeni son teslim tarihi: {message.DueDate:dd.MM.yyyy HH:mm}",
+            $"Ödevin yeni son teslim tarihi: {TurkeyTime.Format(message.DueDate)}",
             "AssignmentUpdated",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -95,7 +97,7 @@ public sealed class AssignmentGradedConsumer : IConsumer<AssignmentGradedEvent>
             : $" Geri bildirim: {message.TeacherFeedback}";
 
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             new[] { message.StudentId },
             "Ödev değerlendirildi",
             $"Ödev puanın: {message.Score:0.##}.{feedback}",
@@ -120,7 +122,7 @@ public sealed class ExamResultAddedConsumer : IConsumer<ExamResultAddedEvent>
         var ranking = message.Ranking.HasValue ? $" Sıralaman: {message.Ranking}." : string.Empty;
 
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             new[] { message.StudentId },
             "Sınav sonucu açıklandı",
             $"Sınav puanın: {message.Score:0.##}.{ranking}",
@@ -143,10 +145,10 @@ public sealed class ExamUpdatedConsumer : IConsumer<ExamUpdatedEvent>
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             message.StudentIds,
             "Sınav bilgileri güncellendi",
-            $"Sınav tarihi: {message.ExamDate:dd.MM.yyyy HH:mm}",
+            $"Sınav tarihi: {TurkeyTime.Format(message.ExamDate)}",
             "ExamUpdated",
             message.ExamId.ToString(),
             context.CancellationToken);
@@ -166,7 +168,7 @@ public sealed class ExamResultUpdatedConsumer : IConsumer<ExamResultUpdatedEvent
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             new[] { message.StudentId },
             "Sınav sonucu düzeltildi",
             $"Güncel sınav puanın: {message.Score:0.##}.",
@@ -189,10 +191,10 @@ public sealed class SessionScheduledConsumer : IConsumer<SessionScheduledEvent>
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             message.StudentIds,
             "Yeni koçluk seansı",
-            $"Koçluk seansın planlandı: {message.ScheduledDate:dd.MM.yyyy HH:mm}",
+            $"Koçluk seansın planlandı: {TurkeyTime.Format(message.ScheduledDate)}",
             "SessionScheduled",
             message.SessionId.ToString(),
             context.CancellationToken);
@@ -212,10 +214,10 @@ public sealed class SessionUpdatedConsumer : IConsumer<SessionUpdatedEvent>
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             message.StudentIds,
             "Koçluk seansı güncellendi",
-            $"Güncel seans zamanı: {message.ScheduledDate:dd.MM.yyyy HH:mm}",
+            $"Güncel seans zamanı: {TurkeyTime.Format(message.ScheduledDate)}",
             "SessionUpdated",
             message.SessionId.ToString(),
             context.CancellationToken);
@@ -235,10 +237,10 @@ public sealed class SessionCancelledConsumer : IConsumer<SessionCancelledEvent>
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             message.StudentIds,
             "Koçluk seansı iptal edildi",
-            $"Koçluk seansın iptal edildi: {message.ScheduledDate:dd.MM.yyyy HH:mm}",
+            $"Koçluk seansın iptal edildi: {TurkeyTime.Format(message.ScheduledDate)}",
             "SessionCancelled",
             message.SessionId.ToString(),
             context.CancellationToken);
@@ -258,7 +260,7 @@ public sealed class GoalCreatedConsumer : IConsumer<GoalCreatedEvent>
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             new[] { message.StudentId },
             "Yeni akademik hedef",
             message.Title,
@@ -281,7 +283,7 @@ public sealed class GoalUpdatedConsumer : IConsumer<GoalUpdatedEvent>
     {
         var message = context.Message;
         return _dispatcher.SendAsync(
-            CoachingConsumerMessageIds.Require(context),
+            MessageIds.Require(context),
             new[] { message.StudentId },
             "Akademik hedef güncellendi",
             message.Title,
@@ -291,10 +293,3 @@ public sealed class GoalUpdatedConsumer : IConsumer<GoalUpdatedEvent>
     }
 }
 
-file static class CoachingConsumerMessageIds
-{
-    public static Guid Require<T>(ConsumeContext<T> context)
-        where T : class
-        => context.MessageId
-           ?? throw new InvalidOperationException($"{typeof(T).Name}.MessageId is required.");
-}

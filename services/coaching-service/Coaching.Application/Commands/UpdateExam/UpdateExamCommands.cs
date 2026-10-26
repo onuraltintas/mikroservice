@@ -35,7 +35,8 @@ public record UpdateExamResultCommand(
     int EmptyAnswers,
     Dictionary<string, decimal>? SubjectScores,
     int? Ranking,
-    string? Notes
+    string? Notes,
+    Coaching.Domain.Entities.PracticeExamInput? PracticeExam = null
 ) : IRequest<UpdateExamResultResponse>
 {
     [JsonIgnore]
@@ -170,7 +171,8 @@ public sealed class UpdateExamResultCommandHandler
             command.EmptyAnswers,
             command.SubjectScores,
             command.Ranking,
-            command.Notes);
+            command.Notes,
+            command.PracticeExam);
 
         var result = exam.Results.Single(item => item.Id == command.ResultId);
         await _eventPublisher.PublishAsync(

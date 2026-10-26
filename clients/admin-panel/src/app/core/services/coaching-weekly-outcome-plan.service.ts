@@ -15,7 +15,8 @@ export interface WeeklyOutcomePreview {
 @Injectable({providedIn:'root'})
 export class CoachingWeeklyOutcomePlanService {
   private readonly http=inject(HttpClient);private readonly url=`${environment.apiUrl}/coaching/study-planning/weekly-outcome-plans`;
-  options(){return this.http.get<{data:WeeklyOutcomeOptions}>(this.url+'/options').pipe(map(r=>r.data));}
-  preview(request:WeeklyOutcomeRequest){return this.http.post<{data:WeeklyOutcomePreview}>(this.url+'/preview',request).pipe(map(r=>r.data));}
-  create(request:{title:string;preview:WeeklyOutcomeRequest;fingerprint:string}){return this.http.post<{data:{id:string;version:number}}>(this.url+'/drafts',request).pipe(map(r=>r.data));}
+  private scopedUrl(studentId?:string){return studentId?`${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study/weekly-outcome-plans`:this.url;}
+  options(studentId?:string){return this.http.get<{data:WeeklyOutcomeOptions}>(this.scopedUrl(studentId)+'/options').pipe(map(r=>r.data));}
+  preview(request:WeeklyOutcomeRequest,studentId?:string){return this.http.post<{data:WeeklyOutcomePreview}>(this.scopedUrl(studentId)+'/preview',request).pipe(map(r=>r.data));}
+  create(request:{title:string;preview:WeeklyOutcomeRequest;fingerprint:string},studentId?:string){return this.http.post<{data:{id:string;version:number}}>(this.scopedUrl(studentId)+'/drafts',request).pipe(map(r=>r.data));}
 }

@@ -1,0 +1,28 @@
+import {readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs';
+import {resolve,dirname} from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+const sourceTag='coaching-teacher-design-20261020',tag=process.argv[2]||sourceTag,previous='coaching-student-design-20261020',base=previous+'-r7';
+const out=resolve('artifacts/'+tag),pack=resolve(out,'package');
+if(existsSync(pack))throw Error('Already sealed');mkdirSync(pack,{recursive:true});const files=[];
+function write(name,text){const p=resolve(pack,name);mkdirSync(dirname(p),{recursive:true});writeFileSync(p,text.replaceAll('\r\n','\n'));files.push(name);}
+for(const name of ['transform.cjs','finish-styles.cjs','runtime-image.cjs'])write(name,readFileSync('tools/releases/'+sourceTag+'/'+name,'utf8'));
+for(const file of ['projects/staff-portal/src/styles.scss','projects/staff-portal/src/app/coaching-teacher-theme.scss'])write('overlay/'+file,readFileSync('clients/admin-panel/'+file,'utf8'));
+let deploy=readFileSync('tools/releases/'+previous+'/deploy.sh','utf8').replaceAll(previous,tag).replace('/coaching-weekly-followup-20261020','/'+base).replace('services=(admin-panel staff-portal)','services=(staff-portal)');
+deploy=deploy.replace('eduivme-production-admin-panel-1|eduivme-production-staff-portal-1','eduivme-production-staff-portal-1');
+deploy=deploy.replace('.services["admin-panel"].image=("eduivme/admin-panel:"+$tag)|','');
+deploy=deploy.split('\n').filter(l=>!/(transform\.cjs|feedback\.cjs|finalize-source\.cjs|mkdir source\/clients)/.test(l)).join('\n');
+deploy=deploy.replace('cp -a overlay/.','docker run --rm --memory=2g --network none -v "$release:/release" -w /release node:24-alpine node transform.cjs ./source/admin-panel > transform.log 2>&1\n cp -a overlay/.');
+deploy=deploy.replace('cp "/var/lib/eduivme/releases/coaching-practice-adaptation-20261020/$s.Dockerfile" "$s.Dockerfile"','docker image inspect "$(<"previous-staff-portal.txt")" > runtime-image.json\n  docker run --rm --memory=1g --network none -v "$release:/release" -w /release node:24-alpine node runtime-image.cjs > runtime-image.log');
+deploy=deploy.replace('cp -a source/admin-panel/dist/admin-panel/. payload/admin/; ','');
+deploy=deploy.replace('coaching-student-design-builder-20261020','coaching-teacher-design-builder-20261020');
+write('deploy.sh',deploy);
+write('build-portals.cjs',readFileSync('tools/releases/coaching-practice-adaptation-20261020/build-portals.cjs','utf8').replaceAll("['admin-panel','staff-portal']","['staff-portal']"));
+for(const n of ['history.sh','public-check.sh'])write(n,readFileSync('artifacts/'+previous+'/package/'+n,'utf8').replaceAll(previous,tag));
+write('.dockerignore','**\n!staff-portal.Dockerfile\n!payload\n!payload/staff\n!payload/staff/**\n');
+const sha=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
+writeFileSync(resolve(pack,'package.sha256'),files.map(n=>sha(resolve(pack,n))+'  '+n).join('\n')+'\n');
+execFileSync('tar',['-czf',resolve(out,'release.tar.gz'),'-C',pack,'.']);const digest=sha(resolve(out,'release.tar.gz'));
+writeFileSync(resolve(out,'archive.sha256'),digest+'\n');
+writeFileSync('tools/releases/'+sourceTag+'/'+('start'+tag.slice(sourceTag.length)+'.sh'),`set -euo pipefail\numask 077\nrelease=/var/lib/eduivme/releases/${tag}\necho '${digest}  /var/lib/eduivme/releases/${tag}.tar.gz' | sha256sum -c -\ntest ! -e "$release"; mkdir -m 700 "$release"\ntar -xzf "$release.tar.gz" -C "$release"\ncd "$release"; bash -n deploy.sh; bash deploy.sh prepare\nnohup bash deploy.sh build > build-driver.log 2>&1 </dev/null &\necho 'Teacher design isolated build started.'\n`);
+console.log(JSON.stringify({archive:resolve(out,'release.tar.gz'),sha256:digest}));

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { NgZone } from '@angular/core';
 import { GoogleIdentityService } from './google-identity.service';
 
 describe('GoogleIdentityService', () => {
@@ -11,6 +12,24 @@ describe('GoogleIdentityService', () => {
 
   afterEach(() => {
     delete (window as Window & { google?: unknown }).google;
+  });
+
+  it('delivers external Google responses inside Angular so loading and navigation refresh', async () => {
+    const initialize = jasmine.createSpy('initialize');
+    Object.defineProperty(window, 'google', {
+      configurable: true,
+      value: { accounts: { id: { initialize, renderButton: jasmine.createSpy('renderButton') } } }
+    });
+    let callbackInAngularZone = false;
+    await service.renderButton(document.createElement('div'), 'signin_with', () => {
+      callbackInAngularZone = NgZone.isInAngularZone();
+    });
+
+    TestBed.inject(NgZone).runOutsideAngular(() => {
+      initialize.calls.mostRecent().args[0].callback({ credential: 'test-credential' });
+    });
+
+    expect(callbackInAngularZone).toBeTrue();
   });
 
   it('initializes the Google SDK once while rendering buttons for multiple auth screens', async () => {

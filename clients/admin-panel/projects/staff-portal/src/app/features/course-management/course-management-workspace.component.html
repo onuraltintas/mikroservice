@@ -1,0 +1,843 @@
+<section class="course-workspace" aria-labelledby="course-workspace-title">
+  <header><p class="eyebrow">KURS YÖNETİMİ</p><h2 id="course-workspace-title">{{ role === 'institution' ? 'Kurum çalışma alanınız' : 'Özel ders çalışma alanınız' }}</h2></header>
+  @if (error) { <p class="message error" role="alert">{{ error }}</p> }
+  @if (notice) { <p class="message" role="status">{{ notice }}</p> }
+  @if (busy) { <p role="status">İşlem sürüyor…</p> }
+  <div class="course-grid">
+    <form (ngSubmit)="saveProfile()">
+      <h3>Kurs profilim</h3><label for="course-display-name">Görünen ad</label>
+      <input id="course-display-name" name="displayName" [(ngModel)]="displayName" maxlength="200" [disabled]="busy" required>
+      <button type="submit" [disabled]="busy || !displayName.trim()">Profili kaydet</button>
+      <p>Bu ad yalnızca kurs yönetiminde kullanılır.</p>
+      <p class="identity">Davet almak için kullanıcı kimliğiniz: <code>{{ auth.getCurrentUserId() }}</code></p>
+    </form>
+    <form (ngSubmit)="createWorkspace()">
+      <h3>{{ role === 'institution' ? 'Yeni kurum alanı' : 'Yeni özel ders alanı' }}</h3>
+      <label for="course-workspace-name">Çalışma alanı adı</label>
+      <input id="course-workspace-name" name="workspaceName" [ngModel]="workspaceName" (ngModelChange)="changeWorkspaceName($event)" maxlength="200" [disabled]="busy" required>
+      <button type="submit" [disabled]="busy || !workspaceName.trim() || !displayName.trim()">Çalışma alanı oluştur</button>
+      <p>Mevcut kurum kayıtları otomatik aktarılmaz.</p>
+    </form>
+  </div>
+  @if (pending.length) {
+    <article><h3>Bekleyen davetlerim</h3>
+      @for (invitation of pending; track invitation.id) {
+        <div class="row"><span>{{ invitation.workspaceName }} · {{ invitation.role === 'Teacher' ? 'Öğretmen' : 'Öğrenci' }}</span>
+          @if (invitation.role === 'Teacher') {
+            <button type="button" (click)="accept(invitation.id)" [disabled]="busy || !displayName.trim()">Öğretmen davetini kabul et</button>
+          } @else {
+            <span>Öğrenci davetini öğrenci alanından kabul edin.</span>
+          }</div>
+      }
+    </article>
+  }
+  <article><h3>Çalışma alanlarım</h3>
+    @if (!workspaces.length && !busy) { <p>Henüz çalışma alanınız yok. Yeni bir alan oluşturabilir veya davet kabul edebilirsiniz.</p> }
+    @if (workspaces.length) {
+      <label for="course-workspace-select">Seçili alan</label>
+      <select id="course-workspace-select" [ngModel]="selectedId" (ngModelChange)="selectWorkspace($event)" [disabled]="busy">
+        @for (workspace of workspaces; track workspace.id) { <option [value]="workspace.id">{{ workspace.name }} · {{ workspace.role === 'Owner' ? 'Alan sahibi' : workspace.role === 'Teacher' ? 'Öğretmen' : 'Öğrenci' }}</option> }
+      </select>
+    }
+  </article>
+  @if (selected?.role === 'Owner') {
+    <article aria-labelledby="course-platform-subscription-title">
+      <h3 id="course-platform-subscription-title">Platform aboneliği</h3>
+      @if (selectedSubscription?.subscription; as plan) {
+        <p><strong>{{ plan.planName }}</strong> · Kayıt durumu: {{ plan.accessStatus === 'Active' ? 'Etkin' : 'Askıya alınmış' }}</p>
+        <p>Etkin öğrenci: {{ selectedSubscription?.activeStudentCount }} / {{ plan.activeStudentLimit }}</p>
+        <p>{{ lessonTime(plan.startsAt, null) }} – {{ lessonTime(plan.endsAt, null) }}</p>
+        <p>Başlangıç öncesi, bitiş sonrası veya plan askıya alındığında çalışma alanı salt okunur olur. Mevcut verileri okuyup dışa aktarabilirsiniz; davet, öğrenci, ders, ödev ve finans değişiklikleri durur. Kişisel profiliniz etkilenmez.</p>
+      } @else {
+        <p>Bu çalışma alanına henüz bir platform planı atanmamış.</p>
+      }
+      <p>Plan bilgisi salt okunurdur. Plan yönetimi kurs yönetimi admin alanından yapılır.</p>
+    </article>
+  }
+  @if (selected?.isReadOnly && selected?.role !== 'Owner') {
+    <p role="status">Bu çalışma alanı salt okunur. Mevcut bilgileri görüntüleyip dışa aktarabilirsiniz; davet, öğrenci, ders, ödev ve finans değişiklikleri durur. Planı yalnız SystemAdmin yeniden etkinleştirebilir.</p>
+  }
+  <article aria-labelledby="course-assignments-title">
+    <h3 id="course-assignments-title">Ödevler ve öğrenci teslimleri</h3>
+    @if (canManageLearningData) {
+      <button type="button" (click)="exportAssignmentProgressCsv()" [disabled]="busy">Ödev teslim raporunu CSV indir</button>
+      <button type="button" (click)="exportAssignmentProgressPdf()" [disabled]="busy">Ödev teslim raporunu yazdır / PDF</button>
+      <p>Rapor, görüntülemeye yetkili olduğunuz tüm ödev kayıtlarını kapsar.</p>
+    }
+    <p>Ödev tek gruba veya tek öğrenciye atanır. Grup alıcıları yayımlama anında kaydedilir; geç teslimler işaretlenir.</p>
+    <form (ngSubmit)="createAssignment()">
+      <label for="assignment-course">Kurs</label>
+      <select id="assignment-course" name="assignmentCourse" [ngModel]="assignmentCourseId"
+        (ngModelChange)="assignmentCourseId = $event; assignmentGroupId = assignmentGroups[0]?.id ?? ''" [disabled]="busy || !courses.length" required>
+        @for (course of courses; track course.id) { <option [value]="course.id">{{ course.name }}</option> }
+      </select>
+      <label for="assignment-target">Atama hedefi</label>
+      <select id="assignment-target" name="assignmentTarget" [(ngModel)]="assignmentTarget" [disabled]="busy">
+        <option value="group">Grup</option><option value="student">Tek öğrenci</option>
+      </select>
+      @if (assignmentTarget === 'group') {
+        <label for="assignment-group">Grup</label>
+        <select id="assignment-group" name="assignmentGroup" [(ngModel)]="assignmentGroupId" [disabled]="busy || !assignmentGroups.length" required>
+          @for (group of assignmentGroups; track group.id) { <option [value]="group.id">{{ group.name }}</option> }
+        </select>
+      } @else {
+        <label for="assignment-student">Öğrenci</label>
+        <select id="assignment-student" name="assignmentStudent" [(ngModel)]="assignmentStudentId" [disabled]="busy || !hasActiveStudent" required>
+          @for (student of students; track student.id) { @if (student.isActive) { <option [value]="student.id">{{ student.displayName }}</option> } }
+        </select>
+      }
+      <label for="assignment-title">Ödev adı</label>
+      <input id="assignment-title" name="assignmentTitle" [(ngModel)]="assignmentTitle" maxlength="160" [disabled]="busy" required>
+      <label for="assignment-instructions">Açıklama</label>
+      <textarea id="assignment-instructions" name="assignmentInstructions" [(ngModel)]="assignmentInstructions" maxlength="4000" [disabled]="busy"></textarea>
+      <label for="assignment-due-at">Son teslim tarihi</label>
+      <input id="assignment-due-at" name="assignmentDueAt" type="datetime-local" [(ngModel)]="assignmentDueAt" [disabled]="busy" required>
+      <button type="submit" [disabled]="busy || !canCreateAssignment">Ödevi yayımla</button>
+    </form>
+    @if (!assignments.length) { <p>Henüz ödev yok.</p> }
+    @for (assignment of assignments; track assignment.id) {
+      <div class="row"><span><strong>{{ assignment.title }}</strong> · {{ assignment.courseName || courseDisplayName(assignment.courseId) }}<br>
+        <small>Son teslim {{ lessonTime(assignment.dueAt, null) }} · {{ assignment.submissionCount ?? 0 }} / {{ assignment.recipientCount }} teslim</small></span>
+        <button type="button" (click)="selectAssignment(assignment.id)" [disabled]="busy">Teslimleri gör</button></div>
+    }
+    @if (selectedAssignment; as assignment) {
+      <h4>{{ assignment.title }} · teslimler</h4>
+      <label for="assignment-materials">Öğrencilere eklenecek dosyalar (PDF, JPEG, PNG · en çok 10 MB)</label>
+      <input id="assignment-materials" name="assignmentMaterials" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+        multiple (change)="selectAssignmentMaterialFiles($event)" [disabled]="busy">
+      <button type="button" (click)="uploadAssignmentMaterials()" [disabled]="busy || !selectedMaterialFiles.length">Dosyaları ekle</button>
+      @if (assignmentMaterials.length) {
+        <ul aria-label="Ödev dosyaları">
+          @for (attachment of assignmentMaterials; track attachment.id) {
+            <li>{{ attachment.fileName }} · <button type="button" (click)="downloadAssignmentAttachment(attachment)" [disabled]="busy">Dosyayı indir</button></li>
+          }
+        </ul>
+      }
+      <p>Eklenen ve teslim edilen dosyalar, son teslim tarihinden 180 gün sonra silinir.</p>
+      @if (!assignmentSubmissions.length) { <p>Atama anında etkin öğrenci kaydı yok.</p> }
+      @for (submission of assignmentSubmissions; track submission.studentId) {
+        <article>
+          <h5>{{ submission.studentName }} · {{ assignmentStatus(submission.status, submission.isLate) }}</h5>
+          @if (submission.submissionId) {
+            <p>{{ submission.text || 'Metin yanıtı yok; dosya teslimi bulunuyor.' }}</p>
+            @for (attachment of submission.attachments; track attachment.id) {
+              <p>{{ attachment.fileName }} · <button type="button" (click)="downloadAssignmentAttachment(attachment)" [disabled]="busy">Teslim edilen dosyayı indir</button></p>
+            }
+            <label [attr.for]="'assignment-score-' + submission.studentId">Puan (0–100)</label>
+            <input [id]="'assignment-score-' + submission.studentId" [name]="'assignment-score-' + submission.studentId" type="number" min="0" max="100" step="0.01"
+              [ngModel]="assignmentScores[submission.studentId]" (ngModelChange)="assignmentScores[submission.studentId] = $event" [disabled]="busy">
+            <label [attr.for]="'assignment-feedback-' + submission.studentId">Geri bildirim</label>
+            <textarea [id]="'assignment-feedback-' + submission.studentId" [name]="'assignment-feedback-' + submission.studentId" maxlength="3000"
+              [ngModel]="assignmentFeedback[submission.studentId]" (ngModelChange)="assignmentFeedback[submission.studentId] = $event" [disabled]="busy"></textarea>
+            <button type="button" (click)="saveAssignmentReview(submission)" [disabled]="busy || (assignmentScores[submission.studentId] == null && !assignmentFeedback[submission.studentId]?.trim())">Değerlendirmeyi kaydet</button>
+          } @else { <p>Öğrenci henüz teslim etmedi.</p> }
+        </article>
+      }
+    }
+  </article>
+  @if (isOwner) {
+    <form (ngSubmit)="createCourse()"><h3>Kurs oluştur</h3>
+      <label for="course-name">Kurs adı</label><input id="course-name" name="courseName" [(ngModel)]="courseName" maxlength="160" [disabled]="busy" required>
+      <label for="course-subject">Ders alanı</label><input id="course-subject" name="courseSubject" [(ngModel)]="courseSubject" maxlength="100" [disabled]="busy" required>
+      <button type="submit" [disabled]="busy || !courseName.trim() || !courseSubject.trim()">Kurs oluştur</button>
+    </form>
+    <form (ngSubmit)="invite()"><h3>Öğretmen veya öğrenci davet et</h3>
+      <label for="course-target-user">Davetlinin kullanıcı kimliği</label>
+      <input id="course-target-user" name="targetUserId" [ngModel]="targetUserId" (ngModelChange)="changeTarget($event)" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" [disabled]="busy" required>
+      <label for="course-invite-role">Bu alandaki rolü</label>
+      <select id="course-invite-role" name="inviteRole" [ngModel]="inviteRole" (ngModelChange)="changeInviteRole($event)" [disabled]="busy"><option [ngValue]="1">Öğrenci</option><option [ngValue]="2">Öğretmen</option></select>
+      @if (inviteRole === 1) {
+        <label for="course-invite-student-record">İlişkilendirilecek öğrenci kaydı</label>
+        <select id="course-invite-student-record" name="inviteStudentRecordId" [ngModel]="inviteStudentRecordId"
+          (ngModelChange)="changeInviteStudentRecord($event)" [disabled]="busy">
+          <option value="">Yeni öğrenci kaydı oluştur</option>
+          @for (student of unlinkedActiveStudents; track student.id) { <option [value]="student.id">{{ student.displayName }} · {{ student.email || 'e-posta yok' }}</option> }
+        </select>
+        <p>Mevcut hesapsız öğrenci kaydını seçerek hesapla ilişkilendirin. E-posta otomatik eşleştirilmez; eşleşen kayıt seçilmediyse davet kabul edilemez. Yeni öğrenci için alanı boş bırakın.</p>
+      }
+      <button type="submit" [disabled]="busy || !targetUserId.trim()">Davet oluştur</button>
+      <p>Davet yalnızca belirtilen kullanıcı tarafından kabul edilebilir ve 7 gün geçerlidir. E-posta gönderimi henüz açık değildir.</p>
+    </form>
+    <article><h3>Üyeler</h3>
+      @for (member of members; track member.userId) {
+        <div class="row"><span><code>{{ member.userId }}</code> · {{ member.role === 'Owner' ? 'Alan sahibi' : member.role === 'Teacher' ? 'Öğretmen' : 'Öğrenci' }} · {{ member.isActive ? 'Aktif' : 'Pasif' }}</span>
+          @if (member.isActive && member.role !== 'Owner') { <button type="button" (click)="revoke(member.userId)" [disabled]="busy">Üyeliği kapat</button> }</div>
+      }
+    </article>
+    <article><h3>Gönderilen davetler</h3>
+      @if (!invitations.length) { <p>Henüz davet oluşturulmadı.</p> }
+      @for (invitation of invitations; track invitation.id) {
+        <div class="row"><span><code>{{ invitation.targetUserId }}</code>{{ invitationStudentLabel(invitation) }} · {{ invitation.status === 'Pending' ? 'Bekliyor' : invitation.status === 'Accepted' ? 'Kabul edildi' : invitation.status === 'Cancelled' ? 'İptal edildi' : 'Süresi doldu' }}</span>
+          @if (invitation.status === 'Pending') { <button type="button" (click)="cancel(invitation.id)" [disabled]="busy">Daveti iptal et</button> }</div>
+      }
+    </article>
+    <article aria-labelledby="course-audit-title"><h3 id="course-audit-title">Son işlemler</h3>
+      @if (!auditEntries.length) { <p>Henüz denetim kaydı yok.</p> }
+      @for (entry of auditEntries; track $index) {
+        <div class="row"><span>{{ auditActionLabel(entry.action) }}</span><time [attr.datetime]="entry.occurredAt">{{ formatAuditTimestamp(entry.occurredAt) }}</time></div>
+      }
+    </article>
+  }
+  @if (canManageLearningData) {
+  <div class="course-grid">
+    @if (isOwner) {
+      <form (ngSubmit)="createBranch()"><h3>Şube oluştur</h3>
+        <label for="course-branch-name">Şube adı</label><input id="course-branch-name" name="branchName" [(ngModel)]="branchName" maxlength="120" [disabled]="busy" required>
+        <button type="submit" [disabled]="busy || !branchName.trim()">Şube oluştur</button>
+      </form>
+      <form (ngSubmit)="createRoom()"><h3>Derslik oluştur</h3>
+        <label for="course-room-branch">Şube</label><select id="course-room-branch" name="roomBranchId" [(ngModel)]="roomBranchId" [disabled]="busy || !branches.length" required>
+          @for (branch of branches; track branch.id) { <option [value]="branch.id">{{ branch.name }}</option> }
+        </select>
+        <label for="course-room-name">Derslik adı</label><input id="course-room-name" name="roomName" [(ngModel)]="roomName" maxlength="120" [disabled]="busy || !branches.length" required>
+        <label for="course-room-capacity">Kapasite (isteğe bağlı)</label><input id="course-room-capacity" name="roomCapacity" type="number" min="1" step="1" [(ngModel)]="roomCapacity" [disabled]="busy || !branches.length">
+        <button type="submit" [disabled]="busy || !roomBranchId || !roomName.trim() || (roomCapacity !== null && roomCapacity < 1)">Derslik oluştur</button>
+        @if (!branches.length) { <p>Önce şube oluşturun.</p> }
+      </form>
+      <form (ngSubmit)="addStudent()"><h3>Öğrenci kaydı</h3>
+        <label for="course-student-name">Ad soyad</label><input id="course-student-name" name="studentName" [(ngModel)]="studentName" maxlength="200" [disabled]="busy" required>
+        <label for="course-student-email">E-posta (isteğe bağlı)</label><input id="course-student-email" name="studentEmail" type="email" [(ngModel)]="studentEmail" maxlength="320" [disabled]="busy">
+        <label for="course-student-phone">Telefon (isteğe bağlı)</label><input id="course-student-phone" name="studentPhone" type="tel" [(ngModel)]="studentPhone" maxlength="40" [disabled]="busy">
+        <button type="submit" [disabled]="busy || !studentName.trim()">Öğrenci ekle</button>
+        <p>Hesabı olmayan öğrenci çalışma alanına yerel kayıt olarak eklenir.</p>
+      </form>
+      <article class="student-import">
+        <h3>CSV ile öğrenci aktarımı</h3>
+        <p>UTF-8 CSV başlıkları: <code>displayName,email,phoneNumber</code>. E-posta ve telefon isteğe bağlıdır; en fazla 500 satır ve 1 MB kabul edilir.</p>
+        <label for="course-student-csv">CSV dosyası</label>
+        <input id="course-student-csv" type="file" accept=".csv,text/csv" (change)="selectStudentCsv($event)" [disabled]="busy">
+        @if (studentCsvFileName) { <p>Seçilen dosya: {{ studentCsvFileName }}</p> }
+        <button type="button" (click)="previewStudentCsv()" [disabled]="busy || !studentCsv">Önizlemeyi yükle</button>
+        @if (studentCsvPreview; as preview) {
+          <p>Yeni: {{ preview.readyCount }} · Önceden aktarılmış: {{ preview.importedCount }} · Hatalı: {{ preview.invalidCount }} · Yinelenen: {{ preview.duplicateCount }}</p>
+          <ul class="student-import-preview" aria-label="CSV aktarım satırları">
+            @for (row of preview.rows; track row.rowNumber) {
+              <li><strong>{{ row.rowNumber }}. satır · {{ row.status === 'Ready' ? 'Aktarılabilir' : row.status === 'Imported' ? 'Önceden aktarılmış' : row.status === 'Duplicate' ? 'Yinelenen' : 'Hatalı' }}:</strong> {{ row.displayName || 'Ad yok' }}
+                @if (row.error) { <span> — {{ row.error }}</span> }
+              </li>
+            }
+          </ul>
+          <button type="button" (click)="commitStudentCsv()" [disabled]="busy || preview.rows.length === 0 || preview.invalidCount > 0 || preview.duplicateCount > 0">Öğrencileri aktar</button>
+        }
+      </article>
+      @if (canImportLegacyStudents) {
+        <article class="student-import" aria-labelledby="course-legacy-import-title">
+          <h3 id="course-legacy-import-title">Eski üründen öğrenci aktarımı</h3>
+          <p>Yalnız erişiminiz olan kaynaklardaki öğrencileri seçip aktarabilirsiniz. Ad soyad zorunludur; e-posta ve aktiflik bilgisi isteğe bağlıdır. Hesaplar otomatik bağlanmaz.</p>
+          <label for="course-legacy-source">Kaynak ürün</label>
+          <select id="course-legacy-source" name="legacySource" [ngModel]="legacySource"
+            (ngModelChange)="changeLegacySource($event)" [disabled]="busy">
+            @for (source of legacySourceOptions; track source) { <option [value]="source">{{ legacySourceLabel(source) }}</option> }
+          </select>
+          <button type="button" (click)="loadLegacySourcePage(1)" [disabled]="busy">Kaynak öğrencilerini getir</button>
+          @if (legacySourcePage; as sourcePage) {
+            <p>{{ sourcePage.totalCount }} kaynak kaydı · Seçilen {{ legacySelectedRows.size }} / 500</p>
+            <label><input id="legacy-include-email" name="legacyIncludeEmail" type="checkbox" [ngModel]="legacyIncludeEmail"
+              (ngModelChange)="legacyIncludeEmail = $event; legacyImportPreview = null" [disabled]="busy"> E-posta adresini aktar</label>
+            <label><input id="legacy-include-active-status" name="legacyIncludeActiveStatus" type="checkbox" [ngModel]="legacyIncludeActiveStatus"
+              (ngModelChange)="legacyIncludeActiveStatus = $event; legacyImportPreview = null" [disabled]="busy"> Aktiflik bilgisini aktar</label>
+            <ul class="student-import-preview" aria-label="Kaynak öğrenci kayıtları">
+              @for (row of sourcePage.items; track row.sourceRecordId) {
+                <li>
+                  <label [for]="'legacy-student-' + row.sourceRecordId">
+                    <input [id]="'legacy-student-' + row.sourceRecordId" type="checkbox" [checked]="legacySelectedRows.has(row.sourceRecordId)"
+                      (change)="toggleLegacyStudent(row, $event)" [disabled]="busy">
+                    {{ row.displayName || 'Ad yok' }}
+                    @if (legacyIncludeEmail && row.email) { · {{ row.email }} }
+                    @if (legacyIncludeActiveStatus) { · {{ row.isActive ? 'Aktif' : 'Pasif' }} }
+                  </label>
+                </li>
+              }
+            </ul>
+            <div class="row" aria-label="Kaynak sayfaları">
+              <button type="button" (click)="loadLegacySourcePage(legacySourcePageNumber - 1)"
+                [disabled]="busy || legacySourcePageNumber <= 1">Önceki</button>
+              <span>Sayfa {{ legacySourcePageNumber }} / {{ legacySourcePageCount }}</span>
+              <button type="button" (click)="loadLegacySourcePage(legacySourcePageNumber + 1)"
+                [disabled]="busy || legacySourcePageNumber >= legacySourcePageCount">Sonraki</button>
+            </div>
+            <button type="button" (click)="previewLegacyStudents()"
+              [disabled]="busy || legacySelectedRows.size === 0 || legacySelectedRows.size > 500">Seçilen kayıtları önizle</button>
+          }
+          @if (legacyImportPreview; as preview) {
+            <p>Aktarılabilir: {{ preview.readyCount }} · Zaten aktarıldı: {{ preview.importedCount }} · Çakışma: {{ preview.conflictCount }} · Hatalı: {{ preview.invalidCount }} · Yinelenen: {{ preview.duplicateCount }}</p>
+            <ul class="student-import-preview" aria-label="Eski ürün aktarım önizlemesi">
+              @for (row of preview.rows; track row.rowNumber) {
+                <li><strong>{{ row.status === 'Ready' ? 'Aktarılabilir' : row.status === 'Imported' ? 'Zaten aktarıldı' : row.status === 'Conflict' ? 'Çakışma' : row.status === 'Duplicate' ? 'Yinelenen' : 'Hatalı' }}:</strong> {{ row.displayName || 'Ad yok' }}
+                  @if (row.email && preview.selectedFields.includes('email')) { · {{ row.email }} }
+                  @if (row.error) { — {{ row.error }} }
+                </li>
+              }
+            </ul>
+            <button type="button" (click)="commitLegacyStudents()"
+              [disabled]="busy || selected?.isReadOnly || preview.readyCount === 0 || preview.invalidCount > 0 || preview.conflictCount > 0 || preview.duplicateCount > 0">Seçilen öğrencileri aktar</button>
+            @if (selected?.isReadOnly) { <p>Çalışma alanı salt okunur olduğu için önizleme yapılabilir, aktarım kaydedilemez.</p> }
+          }
+        </article>
+      }
+      @if (canImportLegacyTeachers) {
+        <article class="student-import" aria-labelledby="course-legacy-teachers-title">
+          <h3 id="course-legacy-teachers-title">Eski üründen öğretmen daveti</h3>
+          <p>Kaynak kurumunuzdaki öğretmenleri tek tek seçin. Davet mevcut Identity kullanıcı kimliğine gider; eski ürün rolü, grupları ve erişimleri kopyalanmaz. Kurs üyeliği yalnızca öğretmen daveti kabul edince etkinleşir.</p>
+          <label for="course-legacy-teacher-source">Kaynak ürün</label>
+          <select id="course-legacy-teacher-source" name="legacyTeacherSource" [ngModel]="legacyTeacherSource"
+            (ngModelChange)="changeLegacyTeacherSource($event)" [disabled]="busy">
+            @for (source of legacySourceOptions; track source) { <option [value]="source">{{ legacySourceLabel(source) }}</option> }
+          </select>
+          <button type="button" (click)="loadLegacyTeacherInstitutions(1)" [disabled]="busy">Kaynak kurumları getir</button>
+          @if (legacyTeacherInstitutionPage; as institutionPage) {
+            <label for="course-legacy-teacher-institution">Kaynak kurum</label>
+            <select id="course-legacy-teacher-institution" name="legacyTeacherInstitution"
+              [ngModel]="legacyTeacherInstitutionId" (ngModelChange)="selectLegacyTeacherInstitution($event)" [disabled]="busy">
+              <option value="">Kurum seçin</option>
+              @for (institution of institutionPage.items; track institution.sourceInstitutionId) {
+                <option [value]="institution.sourceInstitutionId">{{ institution.name }} · {{ legacyInstitutionCategoryLabel(institution.institutionCategory) }}</option>
+              }
+            </select>
+            @if (legacyTeacherInstitutionPageCount > 1) {
+              <div class="row" aria-label="Kaynak kurum sayfaları">
+                <button type="button" (click)="loadLegacyTeacherInstitutions(institutionPage.pageNumber - 1)"
+                  [disabled]="busy || institutionPage.pageNumber <= 1">Önceki kurumlar</button>
+                <span>Kurum sayfası {{ institutionPage.pageNumber }} / {{ legacyTeacherInstitutionPageCount }}</span>
+                <button type="button" (click)="loadLegacyTeacherInstitutions(institutionPage.pageNumber + 1)"
+                  [disabled]="busy || institutionPage.pageNumber >= legacyTeacherInstitutionPageCount">Sonraki kurumlar</button>
+              </div>
+            }
+          }
+          <button type="button" (click)="loadLegacyTeacherPage(1)"
+            [disabled]="busy || !legacyTeacherInstitutionId">Seçilen kurumun öğretmenlerini getir</button>
+          @if (legacyTeacherSourcePage; as sourcePage) {
+            <p>{{ sourcePage.totalCount }} kaynak öğretmeni · Seçilen {{ legacySelectedTeachers.size }} / 500</p>
+            <ul class="student-import-preview" aria-label="Kaynak öğretmenler">
+              @for (row of sourcePage.items; track row.sourceUserId) {
+                <li>
+                  <label [for]="'legacy-teacher-' + row.sourceUserId">
+                    <input [id]="'legacy-teacher-' + row.sourceUserId" type="checkbox"
+                      [checked]="legacySelectedTeachers.has(row.sourceUserId)" (change)="toggleLegacyTeacher(row, $event)"
+                      [disabled]="busy || !!legacyTeacherStatus(row)">
+                    {{ row.displayName || 'Ad yok' }} @if (row.email) { · {{ row.email }} }
+                    · <code>{{ row.sourceUserId }}</code>
+                  </label>
+                  @if (legacyTeacherStatus(row)) { <small>{{ legacyTeacherStatus(row) }}</small> }
+                </li>
+              }
+            </ul>
+            <div class="row" aria-label="Öğretmen kaynak sayfaları">
+              <button type="button" (click)="loadLegacyTeacherPage(legacyTeacherSourcePageNumber - 1)"
+                [disabled]="busy || legacyTeacherSourcePageNumber <= 1">Önceki</button>
+              <span>Sayfa {{ legacyTeacherSourcePageNumber }} / {{ legacyTeacherSourcePageCount }}</span>
+              <button type="button" (click)="loadLegacyTeacherPage(legacyTeacherSourcePageNumber + 1)"
+                [disabled]="busy || legacyTeacherSourcePageNumber >= legacyTeacherSourcePageCount">Sonraki</button>
+            </div>
+          }
+          @if (selectedLegacyTeachers.length) {
+            <p>Önizleme — seçili Identity hesapları:</p>
+            <ul aria-label="Davet önizlemesi">
+              @for (row of selectedLegacyTeachers; track row.sourceUserId) { <li>{{ row.displayName }} · <code>{{ row.sourceUserId }}</code></li> }
+            </ul>
+          }
+          <button type="button" (click)="createLegacyTeacherInvitations()"
+            [disabled]="busy || selected?.isReadOnly || selectedLegacyTeachers.length === 0">Seçili öğretmenlere davet oluştur</button>
+          @if (selected?.isReadOnly) { <p>Çalışma alanı salt okunur olduğu için davet oluşturulamaz.</p> }
+        </article>
+      }
+      @if (canImportLegacyInstitution) {
+        <article class="student-import" aria-labelledby="course-legacy-institution-title">
+          <h3 id="course-legacy-institution-title">Kurum adı ve türünü aktar</h3>
+          <p>Kaynak kurumun yalnız seçtiğiniz ad ve tür alanları mevcut kurum çalışma alanınıza aktarılır. Başka bir alan, öğrenci veya üyelik taşınmaz.</p>
+          <label for="course-legacy-institution-source">Kaynak ürün</label>
+          <select id="course-legacy-institution-source" name="legacyInstitutionSource" [ngModel]="legacyInstitutionSource"
+            (ngModelChange)="changeLegacyInstitutionSource($event)" [disabled]="busy">
+            @for (source of legacySourceOptions; track source) { <option [value]="source">{{ legacySourceLabel(source) }}</option> }
+          </select>
+          <button type="button" (click)="loadLegacyInstitutionInfo(1)" [disabled]="busy">Kaynak kurumları getir</button>
+          @if (legacyInstitutionSourcePage; as institutionPage) {
+            <label for="course-legacy-institution-choice">Aktarılacak kaynak kurum</label>
+            <select id="course-legacy-institution-choice" name="legacyInstitutionSourceId"
+              [ngModel]="legacyInstitutionSourceId" (ngModelChange)="selectLegacyInstitutionSourceInstitution($event)" [disabled]="busy">
+              <option value="">Kurum seçin</option>
+              @for (sourceInstitution of institutionPage.items; track sourceInstitution.sourceInstitutionId) {
+                <option [value]="sourceInstitution.sourceInstitutionId">{{ sourceInstitution.name }} · {{ legacyInstitutionCategoryLabel(sourceInstitution.institutionCategory) }}</option>
+              }
+            </select>
+            @if (legacyInstitutionSourcePageCount > 1) {
+              <div class="row" aria-label="Kurum aktarımı kaynak sayfaları">
+                <button type="button" (click)="loadLegacyInstitutionInfo(institutionPage.pageNumber - 1)"
+                  [disabled]="busy || institutionPage.pageNumber <= 1">Önceki kurumlar</button>
+                <span>Kurum sayfası {{ institutionPage.pageNumber }} / {{ legacyInstitutionSourcePageCount }}</span>
+                <button type="button" (click)="loadLegacyInstitutionInfo(institutionPage.pageNumber + 1)"
+                  [disabled]="busy || institutionPage.pageNumber >= legacyInstitutionSourcePageCount">Sonraki kurumlar</button>
+              </div>
+            }
+          }
+          @if (legacyInstitutionInfo; as institution) {
+            <p>Kaynak: <strong>{{ institution.name }}</strong> · {{ legacyInstitutionCategoryLabel(institution.institutionCategory) }}</p>
+            <label><input id="legacy-institution-include-name" name="legacyInstitutionIncludeName" type="checkbox"
+              [ngModel]="legacyInstitutionIncludeName" (ngModelChange)="legacyInstitutionIncludeName = $event; legacyInstitutionPreview = null"
+              [disabled]="busy"> Kurum adını aktar</label>
+            <label><input id="legacy-institution-include-type" name="legacyInstitutionIncludeType" type="checkbox"
+              [ngModel]="legacyInstitutionIncludeType" (ngModelChange)="legacyInstitutionIncludeType = $event; legacyInstitutionPreview = null"
+              [disabled]="busy"> Kurum türünü aktar</label>
+            <button type="button" (click)="previewLegacyInstitution()"
+              [disabled]="busy || (!legacyInstitutionIncludeName && !legacyInstitutionIncludeType)">Aktarımı önizle</button>
+          }
+          @if (legacyInstitutionPreview; as preview) {
+            <dl aria-label="Kurum aktarım önizlemesi">
+              <dt>Çalışma alanı adı</dt><dd>{{ preview.workspaceName }} → {{ preview.targetName }}</dd>
+              <dt>Çalışma alanı türü</dt><dd>{{ legacyInstitutionCategoryLabel(preview.workspaceInstitutionCategory) }} → {{ legacyInstitutionCategoryLabel(preview.targetInstitutionCategory) }}</dd>
+              <dt>Kaydedilecek alanlar</dt><dd>{{ preview.selectedFields.includes('name') && preview.selectedFields.includes('type') ? 'Kurum adı ve türü' : preview.selectedFields.includes('name') ? 'Kurum adı' : 'Kurum türü' }}</dd>
+            </dl>
+            <button type="button" (click)="commitLegacyInstitution()" [disabled]="busy || selected?.isReadOnly">Önizlenen kurum bilgilerini aktar</button>
+            @if (selected?.isReadOnly) { <p>Çalışma alanı salt okunur olduğu için aktarım kaydedilemez.</p> }
+          }
+        </article>
+      }
+    }
+    <form (ngSubmit)="createGroup()"><h3>Grup ve öğretmen atama</h3>
+      <label for="group-course">Kurs</label><select id="group-course" name="groupCourse" [(ngModel)]="selectedCourseId" [disabled]="busy" required>
+        @for (course of courses; track course.id) { <option [value]="course.id">{{ course.name }}</option> }
+      </select>
+      <label for="group-teacher">Öğretmen</label><select id="group-teacher" name="groupTeacher" [(ngModel)]="selectedTeacherId" [disabled]="busy">
+        <option [value]="auth.getCurrentUserId()">Ben</option>
+        @for (member of members; track member.userId) { @if (member.role === 'Teacher' && member.isActive) { <option [value]="member.userId">{{ member.userId }}</option> } }
+      </select>
+      <label for="group-name">Grup adı</label><input id="group-name" name="groupName" [(ngModel)]="groupName" maxlength="160" [disabled]="busy" required>
+      <button type="submit" [disabled]="busy || !selectedCourseId || !groupName.trim()">Grup oluştur</button>
+    </form>
+  </div>
+  <article><h3>Öğrenciler · {{ students.length }}</h3>
+    @if (canManageLearningData) {
+      <button type="button" (click)="exportStudentRosterCsv()" [disabled]="busy">Öğrenci raporunu CSV indir</button>
+      <button type="button" (click)="exportStudentRosterPdf()" [disabled]="busy">Öğrenci raporunu yazdır / PDF</button>
+      <p>Rapor, görüntülemeye yetkili olduğunuz tüm öğrenci kayıtlarını kapsar; e-posta ve telefon içermez.</p>
+    }
+    @if (!students.length) { <p>Bu çalışma alanında henüz öğrenci yok.</p> }
+    @for (student of students; track student.id) {
+      <div class="row"><span>{{ student.displayName }} · {{ student.isActive ? 'Aktif' : 'Arşivde' }}<br><small>{{ student.email || 'Hesap daveti bekleniyor' }}</small></span>
+        @if (isOwner) {
+          <button type="button" (click)="editStudent(student)" [disabled]="busy">Düzenle</button>
+          @if (student.isActive) { <button type="button" (click)="setStudentActive(student, false)" [disabled]="busy">Arşivle</button> }
+          @else { <button type="button" (click)="setStudentActive(student, true)" [disabled]="busy">Etkinleştir</button> }
+        }
+      </div>
+    }
+  </article>
+  @if (isOwner && editingStudentId) {
+    <form (ngSubmit)="saveStudent()"><h3>Öğrenci bilgilerini düzenle</h3>
+      <label for="edit-course-student-name">Ad soyad</label><input id="edit-course-student-name" name="editingStudentName" [(ngModel)]="editingStudentName" maxlength="200" [disabled]="busy" required>
+      <label for="edit-course-student-email">E-posta</label><input id="edit-course-student-email" name="editingStudentEmail" type="email" [(ngModel)]="editingStudentEmail" maxlength="320" [disabled]="busy">
+      <label for="edit-course-student-phone">Telefon</label><input id="edit-course-student-phone" name="editingStudentPhone" type="tel" [(ngModel)]="editingStudentPhone" maxlength="40" [disabled]="busy">
+      <button type="submit" [disabled]="busy || !editingStudentName.trim()">Değişiklikleri kaydet</button>
+      <button type="button" (click)="editingStudentId = ''" [disabled]="busy">Vazgeç</button>
+    </form>
+  }
+  <article><h3>Veli iletişim bağlantıları</h3>
+    @if (isOwner && guardians.length) {
+      <h4>Çalışma alanı veli rehberi</h4>
+      @for (guardian of guardians; track guardian.id) {
+        <div class="row"><span>{{ guardian.displayName }}<br><small>{{ guardian.email || guardian.phoneNumber || 'İletişim bilgisi yok' }}</small></span>
+          <button type="button" (click)="editGuardian(guardian)" [disabled]="busy">Bilgiyi düzenle</button>
+        </div>
+      }
+    }
+    @if (isOwner && editingGuardianId) {
+      <form (ngSubmit)="saveGuardian()"><h4>Veli iletişim bilgisini düzenle</h4>
+        <label for="edit-guardian-name">Ad soyad</label><input id="edit-guardian-name" name="editingGuardianName" [(ngModel)]="editingGuardianName" maxlength="200" [disabled]="busy" required>
+        <label for="edit-guardian-email">E-posta</label><input id="edit-guardian-email" name="editingGuardianEmail" type="email" [(ngModel)]="editingGuardianEmail" maxlength="320" [disabled]="busy">
+        <label for="edit-guardian-phone">Telefon</label><input id="edit-guardian-phone" name="editingGuardianPhone" type="tel" [(ngModel)]="editingGuardianPhone" maxlength="40" [disabled]="busy">
+        <button type="submit" [disabled]="busy || !editingGuardianName.trim()">Değişiklikleri kaydet</button>
+        <button type="button" (click)="editingGuardianId = ''" [disabled]="busy">Vazgeç</button>
+      </form>
+    }
+    @if (isOwner && !students.length) { <p>Veli bağlamak için önce etkin bir öğrenci kaydı oluşturun.</p> }
+    @if (students.length) {
+      <label for="guardian-student">Öğrenci</label>
+      <select id="guardian-student" name="guardianStudent" [ngModel]="guardianStudentId" (ngModelChange)="selectGuardianStudent($event)" [disabled]="busy">
+        @for (student of students; track student.id) { @if (student.isActive) { <option [value]="student.id">{{ student.displayName }}</option> } }
+      </select>
+      @if (isOwner && guardians.length) {
+        <label for="guardian-contact">Kayıtlı veli iletişimi</label>
+        <select id="guardian-contact" name="guardianContact" [ngModel]="selectedGuardianId" (ngModelChange)="changeGuardianSelection($event)" [disabled]="busy">
+          <option value="">Yeni iletişim kaydı oluştur</option>
+          @for (guardian of guardians; track guardian.id) { <option [value]="guardian.id">{{ guardian.displayName }} · {{ guardian.email || guardian.phoneNumber || 'İletişim bilgisi yok' }}</option> }
+        </select>
+      }
+      @if (isOwner) {
+        <form (ngSubmit)="linkGuardian()">
+          <label for="guardian-name">Veli adı</label><input id="guardian-name" name="guardianName" [(ngModel)]="guardianName" maxlength="200" [disabled]="busy || !!selectedGuardianId" [required]="!selectedGuardianId">
+          <label for="guardian-email">E-posta (isteğe bağlı)</label><input id="guardian-email" name="guardianEmail" type="email" [(ngModel)]="guardianEmail" maxlength="320" [disabled]="busy || !!selectedGuardianId">
+          <label for="guardian-phone">Telefon (isteğe bağlı)</label><input id="guardian-phone" name="guardianPhone" type="tel" [(ngModel)]="guardianPhone" maxlength="40" [disabled]="busy || !!selectedGuardianId">
+          <label for="guardian-relationship">Yakınlık</label>
+          <select id="guardian-relationship" name="guardianRelationship" [(ngModel)]="guardianRelationship" [disabled]="busy">
+            <option [ngValue]="1">Veli</option><option [ngValue]="2">Anne</option><option [ngValue]="3">Baba</option><option [ngValue]="4">Yasal vasi</option><option [ngValue]="5">Diğer</option>
+          </select>
+          <button type="submit" [disabled]="busy || !guardianStudentId || (!selectedGuardianId && !guardianName.trim())">Veli bağlantısını kaydet</button>
+        </form>
+      }
+      @if (!studentGuardianLinks.length) { <p>Bu öğrenciye bağlı veli iletişimi yok.</p> }
+      @for (guardian of studentGuardianLinks; track guardian.id) {
+        <div class="row"><span>{{ guardian.displayName }} · {{ guardianRelationshipLabel(guardian.relationship) }}<br><small>{{ guardian.email || guardian.phoneNumber || 'İletişim bilgisi yok' }}</small></span>
+          @if (isOwner) { <button type="button" (click)="unlinkGuardian(guardian.id)" [disabled]="busy">Bağlantıyı kaldır</button> }
+        </div>
+      }
+      <p>Bu bilgiler çalışma alanındaki iletişim kaydıdır; doğrulanmış hesap, öğrenci portalı erişimi veya ödeme görünürlüğü sağlamaz.</p>
+    }
+  </article>
+  <form (ngSubmit)="enrollStudent()"><h3>Öğrenciyi gruba kaydet</h3>
+    <label for="enrollment-group">Grup</label><select id="enrollment-group" name="enrollmentGroup" [(ngModel)]="selectedGroupId" [disabled]="busy" required>
+      @for (group of groups; track group.id) { <option [value]="group.id">{{ group.courseName }} · {{ group.name }}</option> }
+    </select>
+    <label for="enrollment-student">Öğrenci</label><select id="enrollment-student" name="enrollmentStudent" [(ngModel)]="selectedStudentId" [disabled]="busy" required>
+      @for (student of students; track student.id) { @if (student.isActive) { <option [value]="student.id">{{ student.displayName }}</option> } }
+    </select>
+    <button type="submit" [disabled]="busy || !selectedGroupId || !selectedStudentId">Gruba kaydet</button>
+  </form>
+  <form (ngSubmit)="createLesson()"><h3>Ders planla</h3>
+    <label for="lesson-mode">Ders biçimi</label>
+    <select id="lesson-mode" name="lessonMode" [(ngModel)]="lessonMode" [disabled]="busy">
+      <option value="group">Grup dersi</option><option value="private">Bire bir ders</option>
+    </select>
+    <label for="lesson-schedule">Plan türü</label>
+    <select id="lesson-schedule" name="lessonSchedule" [(ngModel)]="lessonSchedule" [disabled]="busy">
+      <option value="once">Tek ders</option><option value="weekly">Haftalık tekrar</option>
+    </select>
+    @if (lessonMode === 'group') {
+      <label for="lesson-group">Grup</label>
+      <select id="lesson-group" name="lessonGroup" [(ngModel)]="lessonGroupId" [disabled]="busy || !groups.length" required>
+        @for (group of groups; track group.id) { <option [value]="group.id">{{ group.courseName }} · {{ group.name }}</option> }
+      </select>
+    } @else {
+      <label for="lesson-course">Kurs</label>
+      <select id="lesson-course" name="lessonCourse" [(ngModel)]="lessonCourseId" [disabled]="busy || !courses.length" required>
+        @for (course of courses; track course.id) { <option [value]="course.id">{{ course.name }}</option> }
+      </select>
+      <label for="lesson-student">Öğrenci</label>
+      <select id="lesson-student" name="lessonStudent" [(ngModel)]="lessonStudentId" [disabled]="busy || !students.length" required>
+        @for (student of students; track student.id) { @if (student.isActive) { <option [value]="student.id">{{ student.displayName }}</option> } }
+      </select>
+      @if (isOwner) {
+        <label for="lesson-teacher">Öğretmen</label>
+        <select id="lesson-teacher" name="lessonTeacher" [(ngModel)]="lessonTeacherId" [disabled]="busy">
+          <option [ngValue]="auth.getCurrentUserId() || ''">Ben</option>
+          @for (member of members; track member.userId) { @if (member.role === 'Teacher' && member.isActive) { <option [value]="member.userId">{{ member.userId }}</option> } }
+        </select>
+      }
+    }
+    <label for="lesson-room">Şube ve derslik (isteğe bağlı)</label>
+    <select id="lesson-room" name="lessonRoomId" [(ngModel)]="lessonRoomId" [disabled]="busy || !rooms.length">
+      <option value="">Derslik belirtme</option>
+      @for (room of rooms; track room.id) { <option [value]="room.id">{{ room.branchName }} · {{ room.name }}{{ room.capacity ? ' · Kapasite ' + room.capacity : '' }}</option> }
+    </select>
+    @if (lessonSchedule === 'once') {
+      <label for="lesson-start">Başlangıç</label><input id="lesson-start" name="lessonStartsAt" type="datetime-local" [(ngModel)]="lessonStartsAt" [disabled]="busy" required>
+      <label for="lesson-end">Bitiş</label><input id="lesson-end" name="lessonEndsAt" type="datetime-local" [(ngModel)]="lessonEndsAt" [disabled]="busy" required>
+    } @else {
+      <label for="lesson-series-start">İlk ders tarihi</label><input id="lesson-series-start" name="lessonSeriesStartsOn" type="date" [(ngModel)]="lessonSeriesStartsOn" [disabled]="busy" required>
+      <label for="lesson-series-end">Tekrar bitiş tarihi</label><input id="lesson-series-end" name="lessonSeriesEndsOn" type="date" [(ngModel)]="lessonSeriesEndsOn" [min]="lessonSeriesStartsOn" [disabled]="busy" required>
+      <label for="lesson-series-time">Yerel başlangıç saati</label><input id="lesson-series-time" name="lessonSeriesStartTime" type="time" [(ngModel)]="lessonSeriesStartTime" [disabled]="busy" required>
+      <label for="lesson-series-duration">Ders süresi (dakika)</label><input id="lesson-series-duration" name="lessonSeriesDurationMinutes" type="number" min="1" max="480" step="1" [(ngModel)]="lessonSeriesDurationMinutes" [disabled]="busy" required>
+      <fieldset><legend>Tekrarlanacağı günler</legend>
+        @for (weekday of weekdays; track weekday.index) {
+          <label><input type="checkbox" [name]="'lesson-day-' + weekday.index" [(ngModel)]="lessonDaysOfWeek[weekday.index]" [disabled]="busy">{{ weekday.label }}</label>
+        }
+      </fieldset>
+      <label for="lesson-series-timezone">Saat dilimi (IANA)</label><input id="lesson-series-timezone" name="lessonSeriesTimeZoneId" type="text" [(ngModel)]="lessonSeriesTimeZoneId" maxlength="80" placeholder="Europe/Istanbul" [disabled]="busy" required>
+      <p>Haftalık seri 180 güne kadar oluşturulur. Yaz saati geçişinde olmayan veya iki kez oluşan yerel saatler reddedilir.</p>
+    }
+    <button type="submit" [disabled]="busy || (lessonSchedule === 'once' && (!lessonStartsAt || !lessonEndsAt)) || (lessonSchedule === 'weekly' && (!lessonSeriesStartsOn || !lessonSeriesEndsOn || !lessonSeriesStartTime || !lessonSeriesTimeZoneId.trim() || !lessonDaysOfWeekMask)) || (lessonMode === 'group' && !lessonGroupId) || (lessonMode === 'private' && (!lessonStudentId || !lessonCourseId))">{{ lessonSchedule === 'weekly' ? 'Ders serisi oluştur' : 'Dersi planla' }}</button>
+    <p>Tek ders cihazınızın yerel saat dilimiyle girilir; haftalık seri seçili IANA saat diliminde tutulur. Öğretmen ve öğrenci çakışmaları engellenir.</p>
+  </form>
+  @if (editingSeriesId) {
+    <form (ngSubmit)="saveLessonSeriesSchedule()"><h3>Haftalık serinin gelecek planını düzenle</h3>
+      <label for="edit-series-end">Tekrar bitiş tarihi</label><input id="edit-series-end" name="editingSeriesEndsOn" type="date" [(ngModel)]="editingSeriesEndsOn" [disabled]="busy" required>
+      <label for="edit-series-time">Yerel başlangıç saati</label><input id="edit-series-time" name="editingSeriesStartTime" type="time" [(ngModel)]="editingSeriesStartTime" [disabled]="busy" required>
+      <label for="edit-series-duration">Ders süresi (dakika)</label><input id="edit-series-duration" name="editingSeriesDurationMinutes" type="number" min="1" max="480" step="1" [(ngModel)]="editingSeriesDurationMinutes" [disabled]="busy" required>
+      <fieldset><legend>Tekrarlanacağı günler</legend>
+        @for (weekday of weekdays; track weekday.index) {
+          <label><input type="checkbox" [name]="'edit-series-day-' + weekday.index" [(ngModel)]="editingSeriesDaysOfWeek[weekday.index]" [disabled]="busy">{{ weekday.label }}</label>
+        }
+      </fieldset>
+      <label for="edit-series-room">Şube ve derslik (isteğe bağlı)</label>
+      <select id="edit-series-room" name="editingSeriesRoomId" [(ngModel)]="editingSeriesRoomId" [disabled]="busy || !rooms.length">
+        <option value="">Derslik belirtme</option>
+        @for (room of rooms; track room.id) { <option [value]="room.id">{{ room.branchName }} · {{ room.name }}{{ room.capacity ? ' · Kapasite ' + room.capacity : '' }}</option> }
+      </select>
+      <button type="submit" [disabled]="busy || !editingSeriesEndsOn || !editingSeriesStartTime || !editingSeriesDaysOfWeekMask || editingSeriesDurationMinutes < 1 || editingSeriesDurationMinutes > 480">Gelecek planı kaydet</button>
+      <button type="button" (click)="editingSeriesId = ''" [disabled]="busy">Vazgeç</button>
+      <p>Yalnızca henüz başlamamış planlı oturumlar etkilenir. Geçmiş, tamamlanmış ve başlamış oturumlar korunur; değişen zamanlar eski oturumu iptal edip yeni oturum ekler.</p>
+    </form>
+  }
+  <article><h3>Telafi kredileri</h3>
+    @if (!makeupCredits.length) { <p>Onay veya planlama bekleyen telafi kredisi yok.</p> }
+    @for (credit of makeupCredits; track credit.id) {
+      <div class="row"><span>
+        <strong>{{ credit.studentName }}</strong> · {{ makeupCreditStatus(credit.status) }}<br>
+        <small>{{ lessonTime(credit.sourceLessonStartsAt, null) }} kaynaklı ders · Son kullanım: {{ lessonTime(credit.expiresAt, null) }}</small>
+      </span>
+        @if (credit.status === 'PendingTeacherApproval') {
+          <button type="button" (click)="approveMakeupCredit(credit.id)" [disabled]="busy">Telafi talebini onayla</button>
+        }
+        @if (credit.status === 'Available') {
+          <form class="lesson-reschedule" (ngSubmit)="scheduleMakeupCredit(credit)">
+            <label [attr.for]="'makeup-start-' + credit.id">Telafi dersi zamanı</label>
+            <input [id]="'makeup-start-' + credit.id" [name]="'makeup-start-' + credit.id" type="datetime-local"
+              [(ngModel)]="makeupStartsAt[credit.id]" [disabled]="busy" required>
+            <button type="submit" [disabled]="busy || !canScheduleMakeupCredit(credit)">Telafi dersini planla</button>
+          </form>
+        }
+      </div>
+    }
+    <p>Öğrencinin erken iptal talebi öğretmen onayı bekler. Onaydan sonra telafi dersi 30 günlük süre dolmadan planlanmalı ve tamamlanmalıdır.</p>
+  </article>
+  <article><h3>Haftalık ders serileri</h3>
+    @if (!lessonSeries.length) { <p>İptal edilebilir gelecek oturumu olan haftalık seri yok.</p> }
+    @for (series of lessonSeries; track series.id) {
+      <div class="row"><span>
+        <strong>{{ series.courseName }}</strong> · {{ series.groupName || 'Bire bir ders' }}<br>
+        <small>{{ series.startsOn }} – {{ series.endsOn }} · Sonraki ders: {{ lessonTime(series.nextStartsAt, series.timeZoneId) }} · {{ series.remainingSessions }} gelecek oturum{{ series.branchName && series.roomName ? ' · ' + series.branchName + ' / ' + series.roomName : '' }}</small>
+        @if (isOwner) { <small><br>Öğretmen · <code>{{ series.teacherUserId }}</code></small> }
+      </span>
+        <button type="button" (click)="editLessonSeries(series)" [disabled]="busy">Gelecek planı düzenle</button>
+        <button type="button" (click)="cancelFutureSeries(series.id)" [disabled]="busy">Kalan dersleri iptal et</button>
+      </div>
+    }
+    <p>Toplu iptal yalnızca henüz başlamamış, planlı oturumları etkiler; geçmiş ve tamamlanmış dersler korunur.</p>
+  </article>
+  <article><h3>Ders takvimi</h3>
+    @if (canManageLearningData) {
+      <button type="button" (click)="exportLessonAttendanceCsv()" [disabled]="busy">Ders ve yoklama raporunu CSV indir</button>
+      <button type="button" (click)="exportLessonAttendancePdf()" [disabled]="busy">Ders ve yoklama raporunu yazdır / PDF</button>
+      <p>Rapor, son 7 gün ve sonraki 30 günlük aralıkta görüntülemeye yetkili olduğunuz tüm dersleri kapsar.</p>
+    }
+    @if (!lessons.length) { <p>Bu tarih aralığında planlı ders bulunmuyor.</p> }
+    @for (lesson of lessons; track lesson.id) {
+      <div class="row"><div><strong>{{ lesson.courseName }}</strong> · {{ lesson.groupName || 'Bire bir ders' }}{{ lesson.seriesId ? ' · Haftalık seri' : '' }}<br>
+        <small>{{ lessonTime(lesson.startsAt, lesson.timeZoneId) }} – {{ lessonTime(lesson.endsAt, lesson.timeZoneId) }} · {{ lessonStatus(lesson.status) }}{{ lesson.timeZoneId ? ' · ' + lesson.timeZoneId : '' }}{{ lesson.branchName && lesson.roomName ? ' · ' + lesson.branchName + ' / ' + lesson.roomName : '' }}</small>
+        @if (canTakeAttendance(lesson)) {
+          @for (student of lesson.students; track student.studentId) {
+            @if (student.isActive !== false) {
+              <label>{{ student.displayName }} · {{ attendanceLabel(student.attendanceStatus) }}
+                <select [ngModel]="student.attendanceStatus ?? ''" (ngModelChange)="markAttendance(lesson.id, student.studentId, $event)" [disabled]="busy">
+                  <option value="" disabled>Yoklama seçin</option><option value="Present">Katıldı</option>
+                  <option value="Absent">Katılmadı</option><option value="Excused">Mazeretli</option><option value="Late">Geç katıldı</option>
+                </select>
+              </label>
+            } @else { <small>{{ student.displayName }} · Katılım iptal edildi</small> }
+          }
+        } @else {
+          @for (student of lesson.students; track student.studentId) { <small>{{ student.displayName }} · {{ attendanceLabel(student.attendanceStatus, student.isActive !== false) }}</small> }
+        }
+        @if (lesson.status === 'Scheduled') {
+          @if (canRescheduleLesson(lesson)) { <button type="button" (click)="beginLessonReschedule(lesson)" [disabled]="busy">Dersi taşı</button> }
+          <button type="button" (click)="completeLesson(lesson.id)" [disabled]="busy || !canCompleteLesson(lesson)">Dersi tamamla</button>
+          @if (canCancelLesson(lesson)) { <button type="button" (click)="cancelLesson(lesson.id)" [disabled]="busy">Dersi iptal et</button> }
+          @if (!canCompleteLesson(lesson)) { <small>Ders, bitiş saatinden sonra ve tüm öğrencilere yoklama girilince tamamlanabilir.</small> }
+        }
+        @if (editingLessonId === lesson.id) {
+          <form class="lesson-reschedule" (ngSubmit)="saveLessonReschedule()"><h4>Tek dersi yeni saate taşı</h4>
+            <label for="edit-lesson-start">Yeni başlangıç</label><input id="edit-lesson-start" name="editingLessonStartsAt" type="datetime-local" [(ngModel)]="editingLessonStartsAt" [disabled]="busy" required>
+            <label for="edit-lesson-end">Yeni bitiş</label><input id="edit-lesson-end" name="editingLessonEndsAt" type="datetime-local" [(ngModel)]="editingLessonEndsAt" [disabled]="busy" required>
+            <label for="edit-lesson-room">Şube ve derslik (isteğe bağlı)</label>
+            <select id="edit-lesson-room" name="editingLessonRoomId" [(ngModel)]="editingLessonRoomId" [disabled]="busy || !rooms.length">
+              <option value="">Derslik belirtme</option>
+              @for (room of rooms; track room.id) { <option [value]="room.id">{{ room.branchName }} · {{ room.name }}{{ room.capacity ? ' · Kapasite ' + room.capacity : '' }}</option> }
+            </select>
+            <button type="submit" [disabled]="busy || !canSaveLessonReschedule()">Yeni saati kaydet</button>
+            <button type="button" (click)="editingLessonId = ''" [disabled]="busy">Vazgeç</button>
+            <p>Öğretmen, öğrenci, derslik ve çalışma saati çakışmaları denetlenir. Başlamış dersler ve haftalık seri oturumları buradan taşınamaz.</p>
+          </form>
+        }
+        </div>
+      </div>
+    }
+  </article>
+  <article><h3>Öğretmen izin aralıkları</h3>
+    <form (ngSubmit)="addTeacherTimeOff()">
+      @if (isOwner) {
+        <label for="timeoff-teacher">Öğretmen</label>
+        <select id="timeoff-teacher" name="timeOffTeacher" [(ngModel)]="timeOffTeacherUserId" [disabled]="busy">
+          <option [ngValue]="auth.getCurrentUserId() || ''">Ben</option>
+          @for (member of members; track member.userId) { @if (member.role === 'Teacher' && member.isActive) { <option [value]="member.userId">{{ member.userId }}</option> } }
+        </select>
+      }
+      <label for="timeoff-start">Başlangıç</label><input id="timeoff-start" name="timeOffStartsAt" type="datetime-local" [(ngModel)]="timeOffStartsAt" [disabled]="busy" required>
+      <label for="timeoff-end">Bitiş</label><input id="timeoff-end" name="timeOffEndsAt" type="datetime-local" [(ngModel)]="timeOffEndsAt" [disabled]="busy" required>
+      <label for="timeoff-reason">Not (isteğe bağlı)</label><input id="timeoff-reason" name="timeOffReason" [(ngModel)]="timeOffReason" maxlength="300" [disabled]="busy">
+      <button type="submit" [disabled]="busy || !timeOffStartsAt || !timeOffEndsAt || (isOwner && !timeOffTeacherUserId)">İzin aralığı ekle</button>
+      <p>İzin gelecekte başlamalı ve en fazla 90 gün sürebilir. Aralıkta planlı ders varsa önce dersi ayrıca iptal edin.</p>
+    </form>
+    @if (!teacherTimeOff.length) { <p>Bu tarih aralığında kayıtlı izin yok.</p> }
+    @for (block of teacherTimeOff; track block.id) {
+      <div class="row"><span>
+        @if (isOwner) { <small>Öğretmen · <code>{{ block.teacherUserId }}</code><br></small> }
+        {{ lessonTime(block.startsAt, null) }} – {{ lessonTime(block.endsAt, null) }}{{ block.reason ? ' · ' + block.reason : '' }}
+      </span>
+        @if (isOwner || block.teacherUserId === auth.getCurrentUserId()) { <button type="button" (click)="removeTeacherTimeOff(block.id)" [disabled]="busy">İzni kaldır</button> }
+      </div>
+    }
+  </article>
+  <article><h3>Haftalık çalışma saatleri</h3>
+    <form (ngSubmit)="addTeacherAvailability()">
+      @if (isOwner) {
+        <label for="availability-teacher">Öğretmen</label>
+        <select id="availability-teacher" name="availabilityTeacher" [(ngModel)]="availabilityTeacherUserId" [disabled]="busy">
+          <option [ngValue]="auth.getCurrentUserId() || ''">Ben</option>
+          @for (member of members; track member.userId) { @if (member.role === 'Teacher' && member.isActive) { <option [value]="member.userId">{{ member.userId }}</option> } }
+        </select>
+      }
+      <label for="availability-weekday">Gün</label>
+      <select id="availability-weekday" name="availabilityWeekday" [(ngModel)]="availabilityWeekday" [disabled]="busy">
+        @for (weekday of weekdays; track weekday.index) { <option [ngValue]="weekday.index">{{ weekday.label }}</option> }
+      </select>
+      <label for="availability-start">Başlangıç</label><input id="availability-start" name="availabilityStart" type="time" [(ngModel)]="availabilityStartTime" [disabled]="busy" required>
+      <label for="availability-end">Bitiş</label><input id="availability-end" name="availabilityEnd" type="time" [(ngModel)]="availabilityEndTime" [disabled]="busy" required>
+      <label for="availability-timezone">Saat dilimi (IANA)</label><input id="availability-timezone" name="availabilityTimeZoneId" [(ngModel)]="availabilityTimeZoneId" maxlength="80" placeholder="Europe/Istanbul" [disabled]="busy" required>
+      <button type="submit" [disabled]="busy || !availabilityStartTime || !availabilityEndTime || availabilityEndTime <= availabilityStartTime || (isOwner && !availabilityTeacherUserId)">Çalışma saati ekle</button>
+    </form>
+    @if (!teacherAvailability.length) { <p>Henüz haftalık saat tanımlanmamış; yeni dersler için saat kısıtı uygulanmıyor.</p> }
+    @for (window of teacherAvailability; track window.id) {
+      <div class="row"><span>
+        @if (isOwner) { <small>Öğretmen · <code>{{ window.teacherUserId }}</code><br></small> }
+        {{ weekdayLabel(window.weekday) }} · {{ window.startTime }}–{{ window.endTime }} · {{ window.timeZoneId }}
+      </span>
+        <button type="button" (click)="removeTeacherAvailability(window.id)" [disabled]="busy">Saati kaldır</button>
+      </div>
+    }
+    <p>Yeni dersler tanımlı aralıklara göre denetlenir. Saatleri değiştirmek mevcut dersleri taşımaz veya iptal etmez.</p>
+  </article>
+  @if (isOwner) {
+    <article class="finance-account" aria-labelledby="course-finance-title">
+      <h3 id="course-finance-title">Öğrenci ücretleri ve tahsilatlar</h3>
+      <p>Finans kayıtları yalnızca çalışma alanı sahibine açıktır. TRY tutarları iki ondalık basamakla tutulur; aylık ücret için otomatik prorata uygulanmaz.</p>
+      @if (financeSummary; as summary) {
+        <p class="finance-balance"><strong>Finans özeti · Tahsilat dönemi {{ summary.from }}–{{ summary.to }}:</strong>
+          Güncel bakiye {{ money(summary.balance) }} · Toplam borç (tüm zamanlar) {{ money(summary.totalCharges) }} · Net tahsilat (tüm zamanlar) {{ money(summary.totalPayments) }} ·
+          Vadesi geçen {{ money(summary.overdueAmount) }} · Önümüzdeki 30 gün {{ money(summary.dueInNext30Days) }}</p>
+        @if (summary.collectionsByMethod.length) {
+          <p><strong>Dönem tahsilatı:</strong> @for (collection of summary.collectionsByMethod; track collection.method) {
+            {{ collection.method === 'Cash' ? 'Nakit' : 'EFT / Havale' }}: {{ money(collection.amount) }}@if (!$last) { · }
+          }</p>
+        } @else { <p>Seçili tahsilat döneminde tahsilat yok.</p> }
+        <button type="button" (click)="exportFinanceSummary()" [disabled]="busy">Finans özetini CSV indir</button>
+        <button type="button" (click)="exportFinanceWorkspaceReportCsv()" [disabled]="busy">Vadesi gelen borç ve paket raporunu CSV indir</button>
+        <button type="button" (click)="exportFinanceWorkspaceReportPdf()" [disabled]="busy">Borç ve paket raporunu yazdır / PDF</button>
+      }
+      <label for="finance-student">Öğrenci hesabı</label>
+      <select id="finance-student" name="financeStudent" [ngModel]="financeStudentId" (ngModelChange)="selectFinanceStudent($event)" [disabled]="busy || !students.length">
+        @for (student of students; track student.id) { @if (student.isActive) { <option [value]="student.id">{{ student.displayName }}</option> } }
+      </select>
+      @if (financeAccount; as account) {
+        <p class="finance-balance"><strong>Net bakiye:</strong> {{ money(account.balance) }} · Borç {{ money(account.totalCharges) }} · Tahsilat {{ money(account.totalPayments) }} · Dağıtılmamış {{ money(account.unallocatedPaymentAmount) }}</p>
+        <button type="button" (click)="exportStudentAccountCsv()" [disabled]="busy">Öğrenci ekstresini CSV indir</button>
+        <button type="button" (click)="exportStudentAccountPdf()" [disabled]="busy">Öğrenci ekstresini yazdır / PDF</button>
+        <p>PDF çıktısı yazdırma penceresinde kaydedilebilir.</p>
+        <div class="course-grid">
+          <form (ngSubmit)="createFeeAgreement()">
+            <h4>Ücret anlaşması ekle</h4>
+            <label for="finance-course">Kurs</label>
+            <select id="finance-course" name="financeCourse" [(ngModel)]="financeCourseId" [disabled]="busy || !courses.length" required>
+              @for (course of courses; track course.id) { <option [value]="course.id">{{ course.name }}</option> }
+            </select>
+            <label for="fee-model">Ücret modeli</label>
+            <select id="fee-model" name="feeAgreementModel" [(ngModel)]="feeAgreementModel" [disabled]="busy">
+              <option [ngValue]="1">Dönemlik / taksitli</option><option [ngValue]="2">Aylık sabit</option>
+              <option [ngValue]="3">Ders veya saat başı</option><option [ngValue]="4">Ders paketi</option>
+            </select>
+            <label for="fee-amount">Anlaşma tutarı (TRY)</label>
+            <input id="fee-amount" name="feeAgreementAmount" type="number" min="0.01" max="9999999999.99" step="0.01" [(ngModel)]="feeAgreementAmount" [disabled]="busy" required>
+            @if (feeAgreementModel === 3) {
+              <label for="fee-billing-unit">Birim</label>
+              <select id="fee-billing-unit" name="feeBillingUnit" [(ngModel)]="feeBillingUnit" [disabled]="busy">
+                <option [ngValue]="1">Ders başı</option><option [ngValue]="2">Saat başı</option>
+              </select>
+            }
+            @if (feeAgreementModel === 4) {
+              <label for="package-sessions">Paket ders sayısı</label>
+              <input id="package-sessions" name="packageSessions" type="number" min="1" step="1" [(ngModel)]="packageSessions" [disabled]="busy" required>
+              <label for="package-expiry">Paket son kullanım tarihi</label>
+              <input id="package-expiry" name="packageExpiresOn" type="date" [(ngModel)]="packageExpiresOn" [disabled]="busy" required>
+            }
+            <button type="submit" [disabled]="busy || !financeStudentId || !financeCourseId || !feeAgreementAmount || feeAgreementAmount <= 0 || (feeAgreementModel === 4 && (!packageSessions || packageSessions < 1 || !packageExpiresOn))">Anlaşmayı kaydet</button>
+          </form>
+          <form (ngSubmit)="createInstallment()">
+            <h4>Borç / taksit ekle</h4>
+            <label for="installment-agreement">Anlaşma</label>
+            <select id="installment-agreement" name="installmentAgreement" [ngModel]="selectedFeeAgreementId" (ngModelChange)="selectFeeAgreement($event)" [disabled]="busy || !account.agreements.length" required>
+              @for (agreement of account.agreements; track agreement.id) {
+                @if (agreement.isActive && agreement.model !== 'PerLesson') { <option [value]="agreement.id">{{ feeModelLabel(agreement.model) }} · {{ courseDisplayName(agreement.courseId) }}</option> }
+              }
+            </select>
+            <label for="installment-label">Açıklama</label>
+            <input id="installment-label" name="installmentLabel" [(ngModel)]="installmentLabel" maxlength="120" [disabled]="busy" required>
+            <label for="installment-amount">Tutar (TRY)</label>
+            <input id="installment-amount" name="installmentAmount" type="number" min="0.01" max="9999999999.99" step="0.01" [(ngModel)]="installmentAmount" [disabled]="busy" required>
+            <label for="installment-due">Vade tarihi</label>
+            <input id="installment-due" name="installmentDueOn" type="date" [(ngModel)]="installmentDueOn" [disabled]="busy" required>
+            <button type="submit" [disabled]="busy || !selectedFeeAgreementId || !installmentLabel.trim() || !installmentAmount || installmentAmount <= 0 || !installmentDueOn">Borç kaydını ekle</button>
+            <p>Aylık sabit modelde her taksit anlaşmadaki tam aylık tutardır.</p>
+          </form>
+        </div>
+        <form (ngSubmit)="recordPayment()">
+          <h4>Manuel tahsilat kaydet</h4>
+          <div class="course-grid">
+            <div>
+              <label for="payment-method">Yöntem</label>
+              <select id="payment-method" name="paymentMethod" [(ngModel)]="paymentMethod" (ngModelChange)="paymentFormChanged()" [disabled]="busy">
+                <option [ngValue]="1">Nakit</option><option [ngValue]="2">EFT / Havale</option>
+              </select>
+              <label for="payment-amount">Tahsil edilen (TRY)</label>
+              <input id="payment-amount" name="paymentAmount" type="number" min="0.01" max="9999999999.99" step="0.01" [(ngModel)]="paymentAmount" (ngModelChange)="paymentFormChanged()" [disabled]="busy" required>
+              <label for="payment-note">Not (isteğe bağlı)</label>
+              <input id="payment-note" name="paymentNote" [(ngModel)]="paymentNote" (ngModelChange)="paymentFormChanged()" maxlength="300" [disabled]="busy">
+              <p>Taksit seçmeden kaydedilen tutar dağıtılmamış bakiye olarak görünür. Online ödeme ve fatura bu sürümde yoktur.</p>
+            </div>
+            <div>
+              <h4>Taksitlere dağıt</h4>
+              @for (installment of account.installments; track installment.id) {
+                @if (installment.amount > 0 && installment.remainingAmount > 0) {
+                  <label [attr.for]="'allocation-' + installment.id">{{ installment.label }} · {{ installment.dueOn }} · Kalan {{ money(installment.remainingAmount) }}</label>
+                  <input [id]="'allocation-' + installment.id" [name]="'allocation-' + installment.id" type="number" min="0" [max]="installment.remainingAmount" step="0.01"
+                    [ngModel]="paymentAllocationValue(installment.id)" (ngModelChange)="setPaymentAllocation(installment.id, $event)" [disabled]="busy">
+                }
+              }
+              <p>Dağıtılan toplam: {{ money(financeAllocationsTotal) }}</p>
+            </div>
+          </div>
+          <button type="submit" [disabled]="busy || !canRecordPayment">Tahsilatı kaydet</button>
+        </form>
+        <h4>Ücret anlaşmaları</h4>
+        @if (!account.agreements.length) { <p>Bu öğrenci için ücret anlaşması yok.</p> }
+        @for (agreement of account.agreements; track agreement.id) {
+          <div class="row"><span><strong>{{ feeModelLabel(agreement.model) }}</strong> · {{ courseDisplayName(agreement.courseId) }} · {{ money(agreement.amount) }} · {{ agreement.isActive ? 'Etkin' : 'Kapalı' }}
+            @if (agreement.model === 'LessonPackage') { <br><small>Kalan hak: {{ packageRemaining(account, agreement.id) }} / {{ agreement.packageSessions }} · Son kullanım: {{ agreement.packageExpiresAt ? lessonTime(agreement.packageExpiresAt, null) : 'Süresiz' }}</small> }
+          </span>
+          @if (agreement.isActive) { <button type="button" (click)="closeFeeAgreement(agreement)" [disabled]="busy">Anlaşmayı kapat</button> }</div>
+        }
+        <h4>Borç ve taksit hareketleri</h4>
+        @if (!account.installments.length) { <p>Henüz borç kaydı yok.</p> }
+        @for (installment of account.installments; track installment.id) {
+          <div class="row"><span>{{ installment.label }} · Vade {{ installment.dueOn }} · {{ money(installment.amount) }} · Kalan {{ money(installment.remainingAmount) }}</span>
+            @if (installment.amount > 0 && !isInstallmentReversed(installment.id)) { <button type="button" (click)="reverseInstallment(installment)" [disabled]="busy">Ters kayıt ekle</button> }</div>
+        }
+        <h4>Tahsilat hareketleri</h4>
+        @if (!account.payments.length) { <p>Henüz tahsilat yok.</p> }
+        @for (payment of account.payments; track payment.id) {
+          <div class="row"><span>{{ payment.method === 'Cash' ? 'Nakit' : 'EFT / Havale' }} · {{ lessonTime(payment.receivedAt, null) }} · {{ money(payment.amount) }} · Dağıtılan {{ money(payment.allocatedAmount) }}{{ payment.note ? ' · ' + payment.note : '' }}</span>
+            @if (payment.amount > 0 && !isPaymentReversed(payment.id)) { <button type="button" (click)="reversePayment(payment)" [disabled]="busy">İade / ters kayıt</button> }</div>
+        }
+        <h4>Paket ders hakkı hareketleri</h4>
+        @if (!account.packageMovements.length) { <p>Paket hakkı hareketi yok.</p> }
+        @for (movement of account.packageMovements; track movement.id) {
+          <div class="row"><span>{{ packageMovementLabel(movement) }} · {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity }} · {{ lessonTime(movement.occurredAt, null) }}</span>
+            @if (movement.type === 'LessonConsumed' && !isPackageMovementReversed(movement.id)) {
+              <button type="button" (click)="reversePackageMovement(movement)" [disabled]="busy">Hak tüketimini ters kaydet</button>
+            }
+          </div>
+        }
+      }
+      @if (!hasActiveStudent) { <p>Finans takibi için önce etkin öğrenci ekleyin.</p> }
+    </article>
+  }
+  }
+  <p>Şube ve derslikler temel düzeyde planlamada kullanılabilir.</p>
+</section>

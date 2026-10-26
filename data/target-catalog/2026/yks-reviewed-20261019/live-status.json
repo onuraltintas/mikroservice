@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-19",
+  "examCode": "YKS",
+  "year": 2026,
+  "stage": "Main",
+  "scope": [
+    "TYT",
+    "SAY",
+    "EA",
+    "SOZ"
+  ],
+  "sourceRows": 20812,
+  "verified": 20811,
+  "conflict": 1,
+  "ambiguous": 0,
+  "verifiedByScoreType": {
+    "TYT": 9254,
+    "SAY": 5744,
+    "EA": 3899,
+    "SOZ": 1914
+  },
+  "oldProgramsPreserved": 21602,
+  "newPrograms": 1582,
+  "totalPrograms": 23184,
+  "oldSchoolsPreserved": 3112,
+  "oldGoalsPreserved": 16,
+  "newLiveTestGoals": 2,
+  "sourceTitleDifferences": 13,
+  "withheldProgramCode": "409610874",
+  "sourceEvidenceHash": "c2be63ffdc5ed113a31035c05ae5389b9987ddce07edb4f858cb7360ad730832",
+  "packageHash": "3ff87dd3d41fd8a74fa44c8685b86da0f09fe5ba5faea97dbfc47cd90b30bd37",
+  "officialPlacementSource": "https://www.osym.gov.tr/2026-yks-yerlestirme-sonuclarina-iliskin-sayisal-bilgiler",
+  "enrichmentSource": "https://yokatlas.yok.gov.tr/api/tercih-kilavuz/search",
+  "backup": "server-local /var/lib/eduivme/releases/yks-target-import-20261019/coaching-before.dump",
+  "postUiBackup": "server-local /var/lib/eduivme/releases/yks-target-import-20261019/coaching-before-identity.dump",
+  "backendTestsPassed": 16,
+  "pythonTestsPassed": 21,
+  "report": "docs/coaching/yks-target-catalog-live-20261019.md"
+}

@@ -29,6 +29,7 @@ public sealed class CoachingAdminGoalScopeTests
             Guid.NewGuid(), "Unrostered goal", GoalCategory.ExamPreparation, institutionId: institutionId);
         context.AcademicGoals.AddRange(ownGoal, otherGoal, unscopedGoal, unrosteredGoal);
         await context.SaveChangesAsync();
+        ownGoal.UpdateProgress(20); await context.SaveChangesAsync();
         var handler = new GetCoachingAdminGoalQueryHandler(new AcademicGoalRepository(context));
 
         var ownResult = await handler.Handle(

@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import {TestBed} from '@angular/core/testing';
 import {provideHttpClient} from '@angular/common/http';
 import {provideHttpClientTesting,HttpTestingController} from '@angular/common/http/testing';
@@ -10,5 +11,7 @@ describe('teacher assignment follow up',()=>{
   const open=vi.spyOn(c.openAssignment,'emit');(f.nativeElement.querySelector('tbody button') as HTMLButtonElement).click();expect(open).toHaveBeenCalledWith('a');c.nextPage();http.expectOne(r=>r.params.get('pageNumber')==='2').flush({...page,pageNumber:2});c.setMode('pending');http.expectOne(r=>r.params.get('mode')==='pending'&&r.params.get('pageNumber')==='1').flush({...page,items:[],totalCount:0});
   http.verify();
  });
- it('does not show stale rows on request failure and supports retry',()=>{const {f,c,http}=setup();http.expectOne(r=>r.url.endsWith('/assignment-follow-up')).flush(page);c.load();http.expectOne(r=>r.url.endsWith('/assignment-follow-up')).flush({},{status:500,statusText:'Error'});f.detectChanges();expect(f.nativeElement.querySelector('[role="alert"]')).not.toBeNull();expect(f.nativeElement.textContent).not.toContain('Ayşe Test');c.load();http.expectOne(r=>r.url.endsWith('/assignment-follow-up')).flush({...page,items:[],totalCount:0});f.detectChanges();expect(f.nativeElement.textContent).toContain('Kayıt bulunamadı');http.verify();});
+ it('does not show stale rows on request failure and supports retry',async ()=>{const {f,c,http}=setup();http.expectOne(r=>r.url.endsWith('/assignment-follow-up')).flush(page);(await c.load());http.expectOne(r=>r.url.endsWith('/assignment-follow-up')).flush({},{status:500,statusText:'Error'});f.detectChanges();expect(f.nativeElement.querySelector('[role="alert"]')).not.toBeNull();expect(f.nativeElement.textContent).not.toContain('Ayşe Test');(await c.load());http.expectOne(r=>r.url.endsWith('/assignment-follow-up')).flush({...page,items:[],totalCount:0});f.detectChanges();expect(f.nativeElement.textContent).toContain('Kayıt bulunamadı');http.verify();});
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

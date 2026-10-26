@@ -31,9 +31,9 @@ export class CoachingInstitutionStudentReportComponent implements OnInit {
   @ViewChild(CoachingStaffStudyComponent) private study?: CoachingStaffStudyComponent;
   @ViewChild(CoachingFinanceComponent) private finance?: CoachingFinanceComponent;
   readonly financeVisible = signal(false);
-  canLeavePage(): boolean { return this.finance?.canLeavePage() ?? true; }
-  toggleFinance(): void {
-    if (this.financeVisible() && !this.canLeavePage()) return;
+  async canLeavePage(): Promise<boolean> { return await this.finance?.canLeavePage() ?? true; }
+  async toggleFinance(): Promise<void> {
+    if (this.financeVisible() && !await this.canLeavePage()) return;
     this.financeVisible.set(!this.financeVisible());
   }
 

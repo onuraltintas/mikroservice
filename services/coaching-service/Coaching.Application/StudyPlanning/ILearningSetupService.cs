@@ -18,4 +18,6 @@ public interface ILearningSetupService
     Task<LearningSetupView> GetAsync(CancellationToken ct);
     Task<LearningSetupView> SaveAsync(LearningSetupUpdate request, CancellationToken ct);
     Task<LearningCatalogView> GetCatalogAsync(Guid? lessonId, int pageNumber, CancellationToken ct);
+    Task<LearningSetupView> GetForStudentAsync(Guid studentId, CancellationToken ct);
+    Task<LearningCatalogView> GetCatalogForStudentAsync(Guid studentId, Guid? lessonId, int pageNumber, CancellationToken ct);
 }

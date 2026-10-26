@@ -25,7 +25,7 @@ public sealed class CoachingErasureExecutionConsumerTests
         services.AddSingleton<ICoachingErasureExecutionService>(service);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<PersonalDataErasureExecutionRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
@@ -40,10 +40,7 @@ public sealed class CoachingErasureExecutionConsumerTests
 
             (await harness.Consumed.Any<PersonalDataErasureExecutionRequestedV1>()).Should().BeTrue();
             service.CallCount.Should().Be(expectedCalls);
-            var completions = harness.Published
-                .Select<PersonalDataErasureExecutionCompletedV1>()
-                .Select(context => context.Context.Message)
-                .ToArray();
+            var completions = await harness.PublishedMessagesAsync<PersonalDataErasureExecutionCompletedV1>();
             completions.Should().HaveCount(expectedCalls);
             if (expectedCalls == 1)
             {

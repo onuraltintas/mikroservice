@@ -19,7 +19,7 @@ public sealed class CoachingErasureAssessmentConsumerTests
         services.AddSingleton<ICoachingErasureAssessmentService>(service);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<PersonalDataErasureAssessmentRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
@@ -35,7 +35,7 @@ public sealed class CoachingErasureAssessmentConsumerTests
 
             (await harness.Consumed.Any<PersonalDataErasureAssessmentRequestedV1>()).Should().BeTrue();
             service.CallCount.Should().Be(0);
-            (await harness.Published.Any<PersonalDataErasureAssessmentCompletedV1>()).Should().BeFalse();
+            (await harness.PublishedDuringConsumeAsync<PersonalDataErasureAssessmentCompletedV1>()).Should().BeFalse();
         }
         finally
         {
@@ -53,7 +53,7 @@ public sealed class CoachingErasureAssessmentConsumerTests
             new StubAssessmentService(requestId, studentId));
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<PersonalDataErasureAssessmentRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
@@ -67,9 +67,7 @@ public sealed class CoachingErasureAssessmentConsumerTests
                 requestId, requestId, studentId, DateTime.UtcNow, DryRun: true));
 
             (await harness.Consumed.Any<PersonalDataErasureAssessmentRequestedV1>()).Should().BeTrue();
-            var published = harness.Published
-                .Select<PersonalDataErasureAssessmentCompletedV1>()
-                .Select(context => context.Context.Message)
+            var published = (await harness.PublishedMessagesAsync<PersonalDataErasureAssessmentCompletedV1>())
                 .Should()
                 .ContainSingle()
                 .Subject;

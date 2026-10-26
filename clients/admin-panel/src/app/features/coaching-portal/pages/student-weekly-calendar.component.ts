@@ -1,3 +1,4 @@
+import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import {CommonModule} from '@angular/common';
 import {Component,DestroyRef,ElementRef,HostListener,OnInit,ViewChild,computed,inject,signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
@@ -11,6 +12,7 @@ interface Gesture {id:number;slot:WeeklySlot;mode:'move'|'top'|'bottom';startX:n
 @Component({selector:'app-student-weekly-calendar',standalone:true,imports:[CommonModule,FormsModule,RouterLink,CdkTrapFocus],
   templateUrl:'./student-weekly-calendar.component.html',styleUrl:'./student-weekly-calendar.component.scss'})
 export class StudentWeeklyCalendarComponent implements OnInit {
+  private readonly toaster = coachingToaster();
   private readonly service=inject(CoachingWeeklyDraftService);private readonly destroy=inject(DestroyRef);
   readonly loading=signal(true);readonly saving=signal(false);readonly ready=signal(false);readonly error=signal('');readonly message=signal('');readonly conflict=signal(false);
   readonly lessons=signal<WeeklyLesson[]>([]);readonly slots=signal<WeeklySlot[]>([]);readonly view=signal<CalendarView>('week');readonly anchor=signal(new Date());
@@ -29,13 +31,13 @@ export class StudentWeeklyCalendarComponent implements OnInit {
       value.nativeElement.scrollTop=(starts.length?Math.max(0,Math.min(...starts)-30):480)*72/60;
     }
   }
-  ngOnInit(){if(typeof window!=='undefined'&&window.innerWidth<680)this.view.set('day');this.load();}
+  async ngOnInit(){if(typeof window!=='undefined'&&window.innerWidth<680)this.view.set('day');await this.load();}
   private snapshot(){return JSON.stringify({timeZoneId:this.timeZoneId,slots:this.slots()});}
   dirty(){return this.ready()&&this.snapshot()!==this.initial;}
   busy(){return this.loading()||this.saving();}
-  load(discard=false){
+  async load(discard=false){
     if(this.busy()&&this.ready()||this.saving())return;
-    if(this.dirty()&&(!discard||!window.confirm('Kaydedilmemiş haftalık düzeni bırakıp kaydedileni yüklemek istiyor musun?')))return;
+    if(this.dirty()&&(!discard||!await this.toaster.confirm('Kaydedilmemiş haftalık düzeni bırakıp kaydedileni yüklemek istiyor musun?')))return;
     this.loading.set(true);this.error.set('');this.menu=null;this.form=null;
     this.service.get().pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r=>{
       this.lessons.set(r.lessons);this.slots.set(r.draft?.slots??[]);this.version=r.draft?.version??null;this.timeZoneId=r.draft?.timeZoneId??'Europe/Istanbul';
@@ -122,6 +124,6 @@ export class StudentWeeklyCalendarComponent implements OnInit {
   @HostListener('document:keydown.escape') escape(){this.cancelGesture();this.menu=null;this.form=null;}
   previewError(){return this.preview()?slotError(this.preview()!,this.slots()):'';}
   monthDay(d:Date){this.escape();this.anchor.set(d);this.view.set('day');}
-  canLeavePage(){return !this.saving()&&(!this.dirty()&&!this.form||window.confirm('Kaydedilmemiş haftalık düzeni bırakarak ayrılmak istiyor musun?'));}
-  @HostListener('window:beforeunload',['$event']) beforeUnload(e:BeforeUnloadEvent){if(this.dirty()||this.saving()){e.preventDefault();e.returnValue='';}}
+  async canLeavePage(){return !this.saving()&&(!this.dirty()&&!this.form||await this.toaster.confirm('Kaydedilmemiş haftalık düzeni bırakarak ayrılmak istiyor musun?'));}
+  private readonly feedback = coachingFeedback(this.message, this.error);
 }

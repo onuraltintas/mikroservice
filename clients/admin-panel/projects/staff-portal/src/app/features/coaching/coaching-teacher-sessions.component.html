@@ -45,7 +45,7 @@
           </header>
 
           <dl class="session-facts">
-            <div><dt>Başlangıç</dt><dd>{{ session.startTime | date:'d MMMM y, HH:mm' }}</dd></div>
+            <div><dt>Başlangıç</dt><dd>{{ session.startTime | date:'dd.MM.yyyy HH:mm' }}</dd></div>
             <div><dt>Süre</dt><dd>{{ session.durationMinutes }} dk</dd></div>
             <div><dt>Katılımcı</dt><dd>{{ session.studentIds.length }} öğrenci</dd></div>
           </dl>

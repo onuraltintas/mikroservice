@@ -66,7 +66,7 @@ public class ConfigurationService : IConfigurationService
 
         var cacheKey = $"{CacheKeyPrefix}{normalizedKey}";
 
-        var cachedValue = await _cache.GetStringAsync(cacheKey, cancellationToken);
+        var cachedValue = await TryReadCacheAsync(cacheKey, cancellationToken);
         if (!string.IsNullOrEmpty(cachedValue)) return cachedValue;
 
         var config = await _context.Configurations
@@ -75,7 +75,7 @@ public class ConfigurationService : IConfigurationService
 
         if (config == null) return null;
 
-        await _cache.SetStringAsync(cacheKey, config.Value, CacheOptionsFor(normalizedKey), cancellationToken);
+        await TryWriteCacheAsync(cacheKey, config.Value, CacheOptionsFor(normalizedKey), cancellationToken);
 
         return config.Value;
     }
@@ -97,15 +97,46 @@ public class ConfigurationService : IConfigurationService
 
         if (config == null) return null;
 
-        var cachedValue = await _cache.GetStringAsync(cacheKey, cancellationToken);
+        var cachedValue = await TryReadCacheAsync(cacheKey, cancellationToken);
         if (!string.IsNullOrEmpty(cachedValue)) return cachedValue;
 
-        await _cache.SetStringAsync(cacheKey, config.Value, new DistributedCacheEntryOptions
+        await TryWriteCacheAsync(cacheKey, config.Value, new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
         }, cancellationToken);
 
         return config.Value;
+    }
+
+    // The database is the source of truth; Redis only saves round trips. When the cache
+    // is unreachable, reads fall back to the database instead of failing sign-in.
+    private async Task<string?> TryReadCacheAsync(string cacheKey, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _cache.GetStringAsync(cacheKey, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(exception, "Configuration cache read failed for {CacheKey}; using the database.", cacheKey);
+            return null;
+        }
+    }
+
+    private async Task TryWriteCacheAsync(
+        string cacheKey,
+        string value,
+        DistributedCacheEntryOptions options,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _cache.SetStringAsync(cacheKey, value, options, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(exception, "Configuration cache write failed for {CacheKey}.", cacheKey);
+        }
     }
 
     public async Task<ConfigurationDto> CreateConfigurationAsync(CreateConfigurationRequest request, CancellationToken cancellationToken)
@@ -210,8 +241,13 @@ public class ConfigurationService : IConfigurationService
          await _cache.RemoveAsync($"{CacheKeyPrefix}public:{key}", ct);
     }
 
+    // MFA modes and maintenance switches are read by other services straight from the shared
+    // cache (the gateway enforces maintenance). They must not silently expire while the database
+    // still holds the value, so they are cached without expiry and rewritten on every change.
     private static DistributedCacheEntryOptions CacheOptionsFor(string key) =>
         key.StartsWith("security.mfa.", StringComparison.Ordinal)
+        || key.StartsWith("maintenance.", StringComparison.Ordinal)
+        || string.Equals(key, "system.maintenancemode", StringComparison.Ordinal)
             ? new DistributedCacheEntryOptions()
             : new DistributedCacheEntryOptions
             {

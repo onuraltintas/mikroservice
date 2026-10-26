@@ -20,7 +20,7 @@ public sealed class NotificationErasureExecutionConsumerTests
         services.AddSingleton<INotificationErasureExecutionService>(service);
         services.AddMassTransitTestHarness(configurator =>
         {
-            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
+            configurator.UseSuiteTimeouts();
             configurator.AddConsumer<NotificationErasureExecutionRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
@@ -35,7 +35,7 @@ public sealed class NotificationErasureExecutionConsumerTests
 
             (await harness.Consumed.Any<PersonalDataErasureExecutionRequestedV1>()).Should().BeTrue();
             service.CallCount.Should().Be(expectedCalls);
-            (await harness.Published.Any<PersonalDataErasureExecutionCompletedV1>())
+            (await harness.PublishedDuringConsumeAsync<PersonalDataErasureExecutionCompletedV1>())
                 .Should().Be(expectedCalls == 1);
         }
         finally

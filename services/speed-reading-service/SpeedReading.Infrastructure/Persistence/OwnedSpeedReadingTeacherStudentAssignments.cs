@@ -132,10 +132,10 @@ public sealed class OwnedSpeedReadingTeacherStudentAssignments(
         var query =
             from assignment in db.TeacherStudentAssignments.AsNoTracking()
             join teacherMembership in db.InstitutionMemberships.AsNoTracking()
-                on new { InstitutionId = assignment.InstitutionId.GetValueOrDefault(), UserId = assignment.TeacherUserId }
+                on new { InstitutionId = assignment.InstitutionId ?? Guid.Empty, UserId = assignment.TeacherUserId }
                 equals new { teacherMembership.InstitutionId, teacherMembership.UserId }
             join membership in db.InstitutionMemberships.AsNoTracking()
-                on new { InstitutionId = assignment.InstitutionId.GetValueOrDefault(), UserId = assignment.StudentUserId }
+                on new { InstitutionId = assignment.InstitutionId ?? Guid.Empty, UserId = assignment.StudentUserId }
                 equals new { membership.InstitutionId, membership.UserId }
             where assignment.InstitutionId == institutionId
                 && assignment.TeacherUserId == teacherUserId
@@ -181,10 +181,10 @@ public sealed class OwnedSpeedReadingTeacherStudentAssignments(
         var institutionAssignments =
             from assignment in db.TeacherStudentAssignments.AsNoTracking()
             join teacherMembership in db.InstitutionMemberships.AsNoTracking()
-                on new { InstitutionId = assignment.InstitutionId.GetValueOrDefault(), UserId = assignment.TeacherUserId }
+                on new { InstitutionId = assignment.InstitutionId ?? Guid.Empty, UserId = assignment.TeacherUserId }
                 equals new { teacherMembership.InstitutionId, teacherMembership.UserId }
             join studentMembership in db.InstitutionMemberships.AsNoTracking()
-                on new { InstitutionId = assignment.InstitutionId.GetValueOrDefault(), UserId = assignment.StudentUserId }
+                on new { InstitutionId = assignment.InstitutionId ?? Guid.Empty, UserId = assignment.StudentUserId }
                 equals new { studentMembership.InstitutionId, studentMembership.UserId }
             join profile in db.UserProfiles.AsNoTracking()
                 on assignment.StudentUserId equals profile.UserId into profiles
@@ -192,7 +192,7 @@ public sealed class OwnedSpeedReadingTeacherStudentAssignments(
             where assignment.TeacherUserId == teacherUserId
                 && assignment.IsActive
                 && assignment.InstitutionId.HasValue
-                && Enumerable.Contains(institutionIds, assignment.InstitutionId.GetValueOrDefault())
+                && Enumerable.Contains(institutionIds, assignment.InstitutionId ?? Guid.Empty)
                 && teacherMembership.Role == SpeedReadingInstitutionMemberRole.Teacher
                 && teacherMembership.IsActive
                 && studentMembership.Role == SpeedReadingInstitutionMemberRole.Student

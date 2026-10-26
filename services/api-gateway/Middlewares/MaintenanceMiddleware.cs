@@ -1,89 +1,65 @@
-using Microsoft.Extensions.Caching.Distributed;
-using Yarp.ReverseProxy.Model;
 using System.Security.Claims;
+using EduPlatform.Gateway.Configuration;
+using EduPlatform.Gateway.Http;
+using Microsoft.Extensions.Options;
+using Yarp.ReverseProxy.Model;
 
 namespace EduPlatform.Gateway.Middlewares;
 
-public class MaintenanceMiddleware
+/// <summary>
+/// Blocks proxied requests while the platform or the target service is in maintenance.
+/// Only verified tokens are considered for the role bypass (the middleware runs after
+/// authentication); sign-in and the public configuration stay reachable.
+/// </summary>
+public sealed class MaintenanceMiddleware
 {
-    private readonly RequestDelegate _next;
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<MaintenanceMiddleware> _logger;
-    private const string CacheKeyPrefix = "config:";
+    private const string GlobalKey = "system.maintenancemode";
 
-    // Bakım modundan etkilenmeyen roller (Whitelist)
-    private readonly HashSet<string> _allowedRoles = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "SystemAdmin",
-        "InstitutionOwner"
-    };
+    private readonly RequestDelegate _next;
+    private readonly MaintenanceFlagStore _flags;
+    private readonly ILogger<MaintenanceMiddleware> _logger;
+    private readonly HashSet<string> _bypassRoles;
+    private readonly string[] _bypassPathPrefixes;
 
     public MaintenanceMiddleware(
         RequestDelegate next,
-        IDistributedCache cache,
+        MaintenanceFlagStore flags,
+        IOptions<GatewayMaintenanceOptions> options,
         ILogger<MaintenanceMiddleware> logger)
     {
         _next = next;
-        _cache = cache;
+        _flags = flags;
         _logger = logger;
+        _bypassRoles = new HashSet<string>(options.Value.BypassRoles, StringComparer.OrdinalIgnoreCase);
+        _bypassPathPrefixes = options.Value.BypassPathPrefixes;
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var path = context.Request.Path.Value ?? "";
-
-        // 1. Altyapı Endpoint'leri (Her zaman açık olmalı)
-        if (path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase) || 
-            path.StartsWith("/health", StringComparison.OrdinalIgnoreCase))
+        var path = context.Request.Path;
+        if (_bypassPathPrefixes.Any(prefix => path.StartsWithSegments(prefix, StringComparison.OrdinalIgnoreCase))
+            || (context.User.Identity?.IsAuthenticated == true && HasBypassRole(context.User)))
         {
             await _next(context);
             return;
         }
 
-        // 2. Authentication Endpoint'leri (Giriş yapabilmek için açık olmalı)
-        // Login, Google Login, Register, Forgot Password gibi tüm auth işlemleri
-        // Bu istekler Identity Service'e ulaşmalı ki kullanıcı kimlik doğrulabilsin (Admin mi değil mi anlaşılsın)
-        if (path.StartsWith("/api/auth/", StringComparison.OrdinalIgnoreCase) ||
-            path.Contains("/refresh-token", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("/api/configurations", StringComparison.OrdinalIgnoreCase))
+        if (await _flags.IsEnabledAsync(GlobalKey, context.RequestAborted))
         {
-            await _next(context);
+            await BlockAsync(context, "System", "Genel Bakım Modu Aktif. Lütfen daha sonra tekrar deneyiniz.");
             return;
         }
 
-        // 3. Admin Bypass Kontrolü (Sektör Best Practice: Doğrulanmış Kimlik)
-        // Manuel token parse YOK. Sadece doğrulanmış (imzası geçerli) kullanıcıya güvenilir.
-        if (context.User.Identity?.IsAuthenticated == true)
+        var clusterId = context.GetReverseProxyFeature()?.Route?.Cluster?.ClusterId;
+        if (clusterId is not null)
         {
-            // Kullanıcının rollerini kontrol et
-            if (IsAdminUser(context.User))
-            {
-                // Admin kullanıcıları bakım modundan etkilenmez
-                await _next(context);
-                return;
-            }
-        }
-
-        // 4. Bakım Modu Kontrolleri
-        
-        // A. Genel Sistem Bakımı
-        if (await IsInMaintenance("system.maintenancemode"))
-        {
-            await BlockRequest(context, "System", "Genel Bakım Modu Aktif. Lütfen daha sonra tekrar deneyiniz.");
-            return;
-        }
-
-        // B. Mikroservis Bazlı Bakım (API Gateway Routing'e göre)
-        var proxyFeature = context.GetReverseProxyFeature();
-        if (proxyFeature?.Route?.Cluster is not null)
-        {
-            var clusterId = proxyFeature.Route.Cluster.ClusterId;
             // "identity-cluster" -> "identity"
-            var serviceName = clusterId.Replace("-cluster", "", StringComparison.OrdinalIgnoreCase).ToLower().Trim();
-            
-            if (await IsInMaintenance($"maintenance.{serviceName}"))
+            var service = clusterId.Replace("-cluster", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Trim()
+                .ToLowerInvariant();
+            if (service.Length > 0 && await _flags.IsEnabledAsync($"maintenance.{service}", context.RequestAborted))
             {
-                await BlockRequest(context, serviceName, $"{char.ToUpper(serviceName[0]) + serviceName[1..]} Servisi Bakımda.");
+                await BlockAsync(context, service, $"{char.ToUpperInvariant(service[0])}{service[1..]} Servisi Bakımda.");
                 return;
             }
         }
@@ -91,47 +67,16 @@ public class MaintenanceMiddleware
         await _next(context);
     }
 
-    private bool IsAdminUser(ClaimsPrincipal user)
-    {
-        // Standart Role Claim kontrolü
-        foreach (var role in _allowedRoles)
-        {
-            if (user.IsInRole(role)) return true;
-        }
+    private bool HasBypassRole(ClaimsPrincipal user) =>
+        _bypassRoles.Any(user.IsInRole)
+        // Tokens keep their original claim names (MapInboundClaims = false).
+        || user.Claims.Any(claim =>
+            (claim.Type == ClaimTypes.Role || claim.Type == "role" || claim.Type.EndsWith("/role", StringComparison.Ordinal))
+            && _bypassRoles.Contains(claim.Value));
 
-        // Fallback: Bazı durumlarda "role" claim tipi farklı gelebilir, manuel claim kontrolü
-        return user.Claims.Any(c => 
-            (c.Type == ClaimTypes.Role || c.Type == "role" || c.Type.EndsWith("/role")) &&
-            _allowedRoles.Contains(c.Value));
-    }
-
-    private async Task<bool> IsInMaintenance(string key)
+    private Task BlockAsync(HttpContext context, string service, string message)
     {
-        try
-        {
-            var value = await _cache.GetStringAsync($"{CacheKeyPrefix}{key}");
-            return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
-        }
-        catch (Exception ex)
-        { 
-            // Redis hatası sistemi durdurmamalı, varsayılan olarak açık kabul et
-            _logger.LogWarning(ex, "Redis maintenance check failed for key: {Key}", key);
-            return false; 
-        }
-    }
-
-    private async Task BlockRequest(HttpContext context, string serviceName, string message)
-    {
-        _logger.LogInformation("Request blocked due to maintenance. Service: {Service}, Path: {Path}", serviceName, context.Request.Path);
-        
-        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new 
-        { 
-            error = "Service Unavailable", 
-            message = message, 
-            service = serviceName,
-            timestamp = DateTime.UtcNow 
-        });
+        _logger.LogInformation("Request blocked due to maintenance. Service: {Service}, Path: {Path}", service, context.Request.Path);
+        return GatewayProblemDetails.WriteMaintenanceAsync(context, service, message);
     }
 }

@@ -7,11 +7,11 @@ namespace Coaching.Application.StudyPlanning;
 
 public sealed record StudentExamInput([Required] string Title, ExamType ExamType, DateOnly ExamDate,
     decimal Score, decimal MaxScore, int CorrectAnswers, int WrongAnswers, int EmptyAnswers,
-    [Required] IReadOnlyList<LessonAnswerStatistics> Lessons);
+    [Required] IReadOnlyList<LessonAnswerStatistics> Lessons, PracticeExamInput? PracticeExam = null);
 public sealed record ReplaceStudentExamRequest([Required] StudentExamInput Exam, [property: JsonRequired] int ExpectedVersion);
 public sealed record StudentExamView(Guid Id, int Version, string Title, ExamType ExamType, DateOnly ExamDate,
     decimal Score, decimal MaxScore, int CorrectAnswers, int WrongAnswers, int EmptyAnswers,
-    string Source, IReadOnlyList<LessonAnswerStatistics> Lessons);
+    string Source, IReadOnlyList<LessonAnswerStatistics> Lessons, PracticeExamInput? PracticeExam = null, PracticeExamSummary? NetSummary = null);
 public interface IStudentExamService
 {
     Task<StudentExamView> CreateAsync(StudentExamInput request, CancellationToken cancellationToken = default);

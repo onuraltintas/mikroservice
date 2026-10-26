@@ -1,20 +1,13 @@
-# Sitemap Generator Script
+# Sitemap sahipliği
 
-This script generates a sitemap.xml for the CMS frontend.
+Canlı edge yapılandırması `/sitemap.xml` isteğini backend'in `/api/speed-reading/sitemap.xml` endpoint'ine yönlendirir. Dinamik içerik için yetkili kaynak `SpeedReading.API/Controllers/SitemapController.cs` dosyasıdır; edge eşlemesi `infrastructure/caddy/Caddyfile.speed-reading.litespeed` içinde bulunur.
 
-## Usage
+`generate-sitemap.js` elle çalıştırılabilen statik yardımcıdır:
 
-```bash
+```powershell
 node generate-sitemap.js
 ```
 
-## Output
+Çıktı `public/sitemap.xml` dosyasıdır. Betik mevcut sabit sayfa listesini kullanır; CMS/blog için dinamik veri çekme bölümü henüz yalnız açıklama/örnektir. Bu nedenle canlı backend sitemap'inin bütün dinamik içeriğini ürettiği varsayılmamalıdır. Betik varsayılan build/CI komutuna bağlı değildir.
 
-Creates `sitemap.xml` in the `src` directory with:
-- Static pages (home, blog, contact)
-- Dynamic pages from CMS
-- Blog posts from CMS
-
-## Configuration
-
-Update the `BASE_URL` constant with your production URL.
+Statik dosya üretmeden önce `BASE_URL` ve sabit route listesini kontrol edin. Aynı sitemap için farklı kaynakları otomatik çalıştırmayın; canlı edge'in backend yönlendirmesini koruyun.

@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { finalize, forkJoin } from 'rxjs';
@@ -263,4 +264,7 @@ export class CoachingTeacherSessionsComponent implements OnInit {
       error: () => this.studentNameLookupFailed.set(true)
     });
   }
+
+  private readonly errorMessageFeedback = coachingFeedback(undefined, this.errorMessage);
+  private readonly successMessageFeedback = coachingFeedback(this.successMessage);
 }

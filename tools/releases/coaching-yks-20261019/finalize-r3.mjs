@@ -1,0 +1,14 @@
+import {readFileSync,writeFileSync,readdirSync,existsSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+const root=process.cwd(),release=resolve(root,'artifacts/coaching-yks-20261019-r3'),source=join(release,'backend-source/services/coaching-service');
+const initial=JSON.parse(readFileSync(join(release,'source-provenance.initial.json'),'utf8'));
+const paths=initial.changes.filter(x=>x.surface==='backend'&&!x.file.startsWith('Coaching.Infrastructure/Data/Migrations/')).map(x=>x.file);
+for(const n of readdirSync(join(source,'Coaching.Infrastructure/Data/Migrations')).filter(n=>/YksExamPreparationCatalog/.test(n)||n==='CoachingDbContextModelSnapshot.cs'))paths.push('Coaching.Infrastructure/Data/Migrations/'+n);
+const hash=p=>createHash('sha256').update(readFileSync(p)).digest('hex');
+const backend=paths.map(file=>{const before=resolve(root,'artifacts/coaching-clean-start-20261018/backend-source/services/coaching-service',file);return {surface:'backend',file,before:existsSync(before)?hash(before):null,after:hash(join(source,file))};});
+const check=readFileSync(join(release,'isolated-model-check.log'),'utf8');assert.ok(check.includes('No changes have been made to the model'));
+initial.changes=[...backend,...initial.changes.filter(x=>x.surface!=='backend')];initial.isolatedModelMatchesSnapshot=true;
+writeFileSync(join(release,'source-provenance.json'),JSON.stringify(initial,null,2));
+console.log(JSON.stringify({backendFiles:backend.length,modelMatches:true,frontendArtifactsUnchanged:true}));

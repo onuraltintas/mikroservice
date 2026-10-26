@@ -1,17 +1,21 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
+import { CoachingPracticeAdaptationService } from '../../../../../../src/app/core/services/coaching-practice-adaptation.service';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockBehavior, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { StudentStudyPlansComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-plans.component';
 import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-student-detail.component';
 import { CoachingTeacherStudent } from './coaching-teacher-students.service';
+import { CoachingPracticeProgressService } from '../../../../../../src/app/core/services/coaching-practice-progress.service';
+import { of } from 'rxjs';
 
 describe('CoachingTeacherStudentDetailComponent', () => {
-  it('does not close or navigate away from a pending finance form', () => {
+  it('does not close or navigate away from a pending finance form', async () => {
     const fixture = createDetail(); flushInitialReport(); const component = fixture.componentInstance;
-    component.financeVisible.set(true); component.financePanel = { canLeavePage: () => false };
-    const back = vi.spyOn(component.back, 'emit'); component.toggleFinance(); component.goBack();
-    expect(component.financeVisible()).toBe(true); expect(back).not.toHaveBeenCalled(); expect(component.canLeavePage()).toBe(false);
+    component.financeVisible.set(true); component.financePanel = { canLeavePage: async () => false };
+    const back = vi.spyOn(component.back, 'emit'); (await component.toggleFinance()); (await component.goBack());
+    expect(component.financeVisible()).toBe(true); expect(back).not.toHaveBeenCalled(); expect((await component.canLeavePage())).toBe(false);
   });
   let http: HttpTestingController;
   const student: CoachingTeacherStudent = {
@@ -24,11 +28,12 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     assignmentStartDate: '2026-09-01T00:00:00Z'
   };
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      deferBlockBehavior: DeferBlockBehavior.Manual,
       imports: [CoachingTeacherStudentDetailComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()]
-    });
+      providers: [{provide:CoachingPracticeAdaptationService,useValue:{get:()=>of({exams:[],advice:[]})}},provideHttpClient(), provideHttpClientTesting(), {provide:CoachingPracticeProgressService,useValue:{get:()=>of({trends:[],goals:[],recovery:[]})}}]
+    }).compileComponents();
     http = TestBed.inject(HttpTestingController);
   });
 
@@ -87,17 +92,18 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Kesirler çalışma kağıdı');
     expect(fixture.nativeElement.textContent).toContain('önceki kurumlarında oluşan Koçluk kayıtları da kapsanır');
   });
-  it('opens a session briefing with fresh summary and two scoped weekly reports without a plan editor', () => {
+  it('opens a session briefing with fresh summary and two scoped weekly reports without a plan editor', async () => {
     const fixture = createDetail(); flushInitialReport(); fixture.detectChanges();
-    fixture.componentInstance.openSessionBrief();
+    (await fixture.componentInstance.openSessionBrief());
     http.expectOne('/api/reports/student/student-1/progress').flush(fixture.componentInstance.progress()); fixture.detectChanges();
     const reports = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report'); expect(reports.length).toBe(2);
     for (const report of reports) report.flush({ success: true, data: { fromDate: report.request.params.get('fromDate'), toDate: report.request.params.get('toDate'),
       source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
     http.expectNone(r => r.url.includes('/study/plans') || r.url.includes('/study/availability')); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Seans hazırlık özeti'); expect(fixture.nativeElement.textContent).toContain('Haftalar arası çalışma karşılaştırması');
+    expect(fixture.nativeElement.querySelector('[role="tab"][aria-selected="true"]').textContent).toBe('Çalışma raporu');
     expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent))).toBeNull();
-    fixture.componentInstance.openSessionBrief(); fixture.detectChanges();
+    (await fixture.componentInstance.openSessionBrief()); fixture.detectChanges();
     http.expectOne('/api/reports/student/student-1/progress').flush(fixture.componentInstance.progress());
     const refreshed = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report');
     expect(refreshed.length).toBe(2);
@@ -105,18 +111,22 @@ describe('CoachingTeacherStudentDetailComponent', () => {
       source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
   });
 
-  it.each(['section', 'roster', 'brief'])('protects an unsaved weekly plan when leaving through %s', transition => {
+  it.each(['section', 'roster', 'brief'])('protects an unsaved weekly plan when leaving through %s', async transition => {
     const fixture = createDetail(); flushInitialReport(); fixture.detectChanges();
     const toggle = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button: any) => button.textContent.includes('Haftalık plan')) as HTMLButtonElement;
     toggle.click(); fixture.detectChanges();
     http.expectOne('/api/coaching/staff/students/student-1/study/availability').flush({ success: true, data: null });
     http.expectOne('/api/coaching/staff/students/student-1/study/plans?pageNumber=1&pageSize=20').flush({ success: true, data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 } });
     const editor = fixture.debugElement.query(By.directive(StudentStudyPlansComponent)).componentInstance as StudentStudyPlansComponent;
-    editor.newDraft(); editor.editTitle = 'Kaydedilmemiş hafta';
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    (await editor.newDraft()); editor.editTitle = 'Kaydedilmemiş hafta';
+    const developmentTabs=Array.from(fixture.nativeElement.querySelectorAll('staff-coaching-study [role="tab"]')) as HTMLButtonElement[];
+    developmentTabs[0].click();fixture.detectChanges();developmentTabs.at(-1)!.click();fixture.detectChanges();
+    expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent)).componentInstance).toBe(editor);
+    expect(editor.editTitle).toBe('Kaydedilmemiş hafta');
+    vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
     const back = vi.spyOn(fixture.componentInstance.back, 'emit');
     if (transition === 'section') toggle.click();
-    else if (transition === 'brief') fixture.componentInstance.openSessionBrief();
+    else if (transition === 'brief') (await fixture.componentInstance.openSessionBrief());
     else (fixture.nativeElement.querySelector('[data-testid="back-to-roster"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent))).toBeTruthy();
@@ -165,6 +175,18 @@ describe('CoachingTeacherStudentDetailComponent', () => {
         && request.params.get('search') === 'Fen sınavı');
     expect(pageRequest.request.method).toBe('GET');
     pageRequest.flush({ items: [], pageNumber: 2, pageSize: 10, totalCount: 21, totalPages: 3 });
+  });
+  it('shows student-reported practice nets and subject detail in the teacher history', () => {
+    const fixture = createDetail(); flushInitialReport(); fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-history-type="Exams"]') as HTMLButtonElement).click();
+    http.expectOne(request => request.url === '/api/reports/student/student-1/history' && request.params.get('type') === 'Exams').flush({
+      items: [{ id: 'practice', type: 'Exams', title: 'TYT denemesi', eventDate: '2026-10-01', status: 'Result', score: 300, maxScore: 500,
+        source: 'StudentReported', netSummary: { name: 'TYT', net: 29, sections: [{ sectionCode: 'MAT', name: 'Matematik', net: 29, correct: 30, wrong: 4, empty: 6 }] } }],
+      pageNumber: 1, pageSize: 10, totalCount: 1, totalPages: 1
+    }); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci beyanı');
+    expect(fixture.nativeElement.textContent).toContain('29.00 net');
+    expect(fixture.nativeElement.querySelector('details').textContent).toContain('Matematik');
   });
 
   it('allows retrying a failed history request without losing the student summary', () => {
@@ -291,7 +313,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     expect(printWindow.print).toHaveBeenCalledOnce();
   });
 
-  it('emits a return action to the student roster', () => {
+  it('emits a return action to the student roster', async () => {
     const fixture = createDetail();
     http.expectOne('/api/reports/student/student-1/progress').flush({
       studentId: 'student-1', totalAssignments: 0, submittedAssignments: 0, gradedAssignments: 0,
@@ -308,6 +330,8 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     const backButton = fixture.nativeElement.querySelector('button[data-testid="back-to-roster"]') as HTMLButtonElement;
     backButton.click();
 
-    expect(backEmitted).toBe(1);
+    await vi.waitFor(()=>expect(backEmitted).toBe(1));
   });
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

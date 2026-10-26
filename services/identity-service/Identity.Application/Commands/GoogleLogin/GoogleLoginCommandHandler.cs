@@ -93,13 +93,19 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                  return Result.Failure<LoginResponse>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları kapalıdır. Mevcut bir hesabınız yoksa giriş yapamazsınız."));
             }
 
-            var legalValidation = await _registrationLegalConsentService.ValidateAsync(
-                request.Product!.Value,
-                request.LegalAcceptances,
-                cancellationToken);
-            if (legalValidation.IsFailure)
-                return Result.Failure<LoginResponse>(legalValidation.Error);
-            var acceptedLegalPages = legalValidation.Value;
+            IReadOnlyList<PlatformLegalPageDto> acceptedLegalPages = [];
+            var requiresLegalAcceptance = RegistrationLegalConsentPolicy.GoogleRequiresAcceptance(request.Product!.Value);
+            if (requiresLegalAcceptance || request.LegalAcceptances is { Count: > 0 })
+            {
+                var legalValidation = await _registrationLegalConsentService.ValidateAsync(
+                    request.Product.Value,
+                    request.LegalAcceptances,
+                    cancellationToken);
+                if (legalValidation.IsFailure && requiresLegalAcceptance)
+                    return Result.Failure<LoginResponse>(legalValidation.Error);
+                if (legalValidation.IsSuccess)
+                    acceptedLegalPages = legalValidation.Value;
+            }
 
             // 2b. Auto-Register User
             _logger.LogInformation("Google login is registering a new user.");
@@ -147,7 +153,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                createdNewUser = true;
                // Reload user to get fresh entity
                user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-               if (user is not null)
+               if (user is not null && acceptedLegalPages.Count > 0)
                {
                    _registrationLegalConsentService.TrackAcceptedDocuments(
                        userId,
@@ -203,6 +209,12 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                         GoogleAuthenticationRules.LoginProvider,
                         googleUser.GoogleId,
                         GoogleAuthenticationRules.LoginProvider);
+                    if (!createdNewUser && !user.EmailConfirmed)
+                    {
+                        // Registration race onto an account someone else created and never confirmed.
+                        user.ClaimUnconfirmedAccountByVerifiedExternalLogin();
+                    }
+
                     userChanged = true;
                 }
 
@@ -311,10 +323,9 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     login.LoginProvider == GoogleAuthenticationRules.LoginProvider
                     && login.ProviderKey == googleUser.GoogleId))
             {
-                if (!user.EmailConfirmed)
-                {
-                    user.ConfirmEmail();
-                }
+                // The local password of an unconfirmed account may have been chosen by
+                // someone else; Google's verified address now proves the real owner.
+                user.ClaimUnconfirmedAccountByVerifiedExternalLogin();
 
                 try
                 {
@@ -379,8 +390,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             return ProductAccessDenied();
         }
 
-        if (isAdmin
-            && user.MfaEnabled
+        // Same rule as password login: any account with an enrolled authenticator.
+        if (user.MfaEnabled
             && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             return Result.Success(LoginResponse.RequireMfa(
@@ -419,7 +430,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
 
         return Result.Success(new LoginResponse(
             accessToken,
-            refreshToken.Token,
+            refreshToken.IssuedValue!,
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
             ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));

@@ -20,9 +20,9 @@ public sealed class TargetAdmissionsController(CoachingDbContext db):ControllerB
         catch(ArgumentException){return BadRequest(new{success=false,message="Hedef katalog filtrelerini kontrol edin."});}
     }
     [HttpGet("filters")]
-    public async Task<IActionResult> Filters([FromQuery]string examCode="YKS",[FromQuery]int year=2026,CancellationToken ct=default)
+    public async Task<IActionResult> Filters([FromQuery] TargetAdmissionFilter filter, CancellationToken ct = default)
     {
-        try{return Ok(new{success=true,data=await new TargetAdmissionSearchService(db).FacetsAsync(examCode,year,ct)});}
+        try{return Ok(new{success=true,data=await new TargetAdmissionSearchService(db).FacetsAsync(filter,ct)});}
         catch(ArgumentException){return BadRequest(new{success=false,message="Sınav ve veri yılını kontrol edin."});}
     }
 }

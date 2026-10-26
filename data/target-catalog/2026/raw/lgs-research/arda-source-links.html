@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <title>Arda Çankaya Eğitim</title>
+    <meta name="description" content="Arda Çankaya Eğitim - Liselere Hazırlık Üstün Başarı Programları">
+    <link rel="canonical" href="https://ardacankaya.com/" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ardacankaya.com/" />
+    <meta property="og:title" content="Arda Çankaya Eğitim">
+    <meta property="og:description" content="Arda Çankaya Eğitim - Liselere Hazırlık Üstün Başarı Programları">
+    <meta property="og:image" content="https://ardacankaya.com/og-image.png?v=4">
+    <meta property="og:image:width" content="641">
+    <meta property="og:image:height" content="641">
+    <meta property="og:image:type" content="image/png">
+
+    <meta name="twitter:card" content="summary" />
+
+    <meta name="twitter:title" content="Arda Çankaya Eğitim">
+    <meta name="twitter:description" content="Arda Çankaya Eğitim - Liselere Hazırlık Üstün Başarı Programları">
+    <meta name="twitter:image" content="https://ardacankaya.com/og-image.png?v=4">
+
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <!-- PWA: ana ekrana ekleme -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#283953" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AÇ Eğitim" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <!--
+      Gömülü Zoom SDK'nın ekran paylaşımını çözebilmesi için sayfanın
+      cross-origin isolated olması (SharedArrayBuffer) gerekir. Hosting özel
+      HTTP başlığı göndermediği için başlıkları bir service worker ekler.
+      Yalnızca /canli-ders/ altındaki sayfalarda devreye girer; scope o klasör
+      olduğu için uygulamanın geri kalanı etkilenmez.
+    -->
+    <script>
+      (function () {
+        if (location.pathname.indexOf("/canli-ders/") === 0) {
+          var s = document.createElement("script");
+          s.src = "/canli-ders/coi-serviceworker.js";
+          document.head.appendChild(s);
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-COBn6UP_.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B_vPXFLp.css">
+  <script defer src="/~flock.js" data-proxy-url="/~api/analytics"></script><script defer src="/__l5e/events.124894084da8c432.js" data-artifact-kind="dwl_content_hash" data-artifact-id="e1201295e829f0ce397000c4aaf42646dc7c7423853c469e2ca691e077afb78b" data-commit-sha="e8d4e1f50f492ef81502876c11a6d9118b5848d5" data-context-token="v1.eyJwcm9qZWN0X2lkIjoibG92cF83ZmFmbm1nOTl3OGNncjRjZWFnbWRjdHNwYSIsImFydGlmYWN0X2tpbmQiOiJkd2xfY29udGVudF9oYXNoIiwiYXJ0aWZhY3RfaWQiOiJlMTIwMTI5NWU4MjlmMGNlMzk3MDAwYzRhYWY0MjY0NmRjN2M3NDIzODUzYzQ2OWUyY2E2OTFlMDc3YWZiNzhiIiwiY29tbWl0X3NoYSI6ImU4ZDRlMWY1MGY0OTJlZjgxNTAyODc2YzExYTZkOTExOGI1ODQ4ZDUiLCJleHAiOjE3OTQ5OTg0NzN9.wSayHQBXnRCw4nYOFSJlCWYj9sJLgIrSJnFfQQ4xbYA"></script></head>
+
+
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

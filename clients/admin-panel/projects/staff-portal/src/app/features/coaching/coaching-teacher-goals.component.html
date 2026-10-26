@@ -116,7 +116,7 @@
           </header>
           @if (goal.description) { <p class="goal-description">{{ goal.description }}</p> }
           <dl class="goal-facts">
-            @if (goal.targetDate) { <div><dt>Hedef tarihi</dt><dd>{{ goal.targetDate | date:'d MMM y' }}</dd></div> }
+            @if (goal.targetDate) { <div><dt>Hedef tarihi</dt><dd>{{ goal.targetDate | date:'dd.MM.yyyy' }}</dd></div> }
             @if (goal.targetScore !== undefined) { <div><dt>Hedef puan</dt><dd>{{ goal.targetScore }}</dd></div> }
             @if (goal.targetExamType) { <div><dt>Hedef sınav</dt><dd>{{ goalExamTypeLabel(goal.targetExamType) }}</dd></div> }
             @if (goal.targetSubject) { <div><dt>Hedef ders</dt><dd>{{ goal.targetSubject }}</dd></div> }

@@ -65,9 +65,10 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
         var selectedOutcomes = new List<ResolvedStudyOutcome>();
         var academicYear = request.Topics.Any(x => x.Outcomes is not null)
             ? await CoachingOutcomeCatalogService.AcademicYearAsync(db, studentId, cancellationToken) : 0;
+        var learningContext=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==studentId,cancellationToken);
         foreach (var selection in request.Topics.Where(x => x.Outcomes is not null))
         {
-            var published = await CoachingOutcomeCatalogService.ReadPublishedAsync(db, selection.TopicId, academicYear, cancellationToken);
+            var published = await CoachingOutcomeCatalogService.ReadPublishedAsync(db, selection.TopicId, academicYear, cancellationToken,learningContext);
             foreach (var chosen in selection.Outcomes!)
             {
                 var outcome = published.SingleOrDefault(x => x.OutcomeId == chosen.OutcomeId && x.EstimateId == chosen.EstimateId)
@@ -89,19 +90,34 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
         var revision = await db.StudyPlanRevisions.AsNoTracking()
             .SingleOrDefaultAsync(x => x.StudentId == studentId && x.Status == StudyPlanStatus.Active, cancellationToken);
         var endDate = request.StartDate.AddDays(request.Days - 1);
-        var protectedTasks = revision is null ? [] : await db.StudyPlanTasks.AsNoTracking()
-            .Where(x => x.StudentId == studentId && x.RevisionId == revision.Id
-                && (x.IsPinned || x.IsCompleted) && x.PlannedDate >= request.StartDate && x.PlannedDate <= endDate)
-            .OrderBy(x => x.PlannedDate).ThenBy(x => x.Id)
-            .Select(x => new ProtectedStudyTask(x.Id, x.PlannedDate, x.Title, x.PlannedMinutes, x.IsPinned, x.IsCompleted))
-            .ToArrayAsync(cancellationToken);
+        var sources = await CoachingStudyContinuation.SourcesAsync(db,studentId,cancellationToken);
+        var placements = CoachingStudyContinuation.Place(sources,request.StartDate,endDate,
+            availability.Windows.Select(x=>(x.Day,x.StartMinute,x.EndMinute,(Guid?)null)).ToArray());
+        var completed = revision is null ? [] : await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==studentId&&x.RevisionId==revision.Id&&x.IsCompleted&&x.PlannedDate>=request.StartDate&&x.PlannedDate<=endDate).ToArrayAsync(cancellationToken);
+        var protectedTasks = placements.Select(x=>new ProtectedStudyTask(x.Source.Id,x.Date,x.Source.Title,x.Minutes,x.Source.IsPinned,false))
+            .Concat(completed.Select(x=>new ProtectedStudyTask(x.Id,x.PlannedDate,x.Title,x.PlannedMinutes,x.IsPinned,true))).ToArray();
+        var sourceIds=sources.Select(x=>x.Id).ToArray();
+        var links=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(sourceIds,x.TaskId)).ToArrayAsync(cancellationToken);
+        var credits=await CoachingCompletedOutcomeCredits.ReadAsync(db,studentId,resolved.Select(x=>x.OutcomeId).Distinct().ToArray(),cancellationToken);
+        var uncompleted=CoachingCompletedOutcomeCredits.Subtract(resolved,credits);
+        var completedMinutes=resolved.Sum(x=>x.Minutes)-uncompleted.Sum(x=>x.Minutes);
+        var pendingVersions=links.Select(x=>x.EstimateId).Distinct().ToArray();
+        var scoped=(await db.Set<StudyCatalogTopicOutcomeShare>().AsNoTracking().Where(x=>Enumerable.Contains(pendingVersions,x.EstimateId))
+            .Select(x=>x.EstimateId).Distinct().ToArrayAsync(cancellationToken)).ToHashSet();
+        var carriedResolved=CoachingCompletedOutcomeCredits.Subtract(uncompleted,links.Select(link=>new CoachingCompletedOutcomeCredits.Evidence(
+            sources.Single(x=>x.Id==link.TaskId),link,scoped.Contains(link.EstimateId))));
+        var rootIds=sources.Select(x=>x.OriginalTaskId ?? x.Id).ToArray();
+        var scope=await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==studentId&&Enumerable.Contains(rootIds,x.Id)).ToDictionaryAsync(x=>x.Id,x=>x.PlannedMinutes,cancellationToken);
+        var remainingTopics=topics.Select(topic=>new AutomaticStudyTopic(topic.TopicId,request.Topics.Single(x=>x.TopicId==topic.TopicId).Outcomes is not null
+            ?carriedResolved.Where(x=>x.TopicId==topic.TopicId).Sum(x=>x.Minutes)
+            :Math.Max(0,topic.RequiredMinutes-sources.Where(x=>x.TopicId==topic.TopicId&&(x.ActualMinutes.HasValue||x.PredecessorTaskId.HasValue)).Sum(x=>scope.GetValueOrDefault(x.OriginalTaskId ?? x.Id,x.PlannedMinutes)))))
+            .Where(x=>x.RequiredMinutes>0).ToArray();
         var schedule = StudyPlanDraftScheduler.Generate(request.StartDate, request.Days, availability.Windows,
-            topics, protectedTasks.Select(x => new StudyCapacityReservation(x.PlannedDate, x.PlannedMinutes)).ToArray());
-        var pinnedCount = revision is null ? 0 : await db.StudyPlanTasks.CountAsync(x => x.StudentId == studentId
-            && x.RevisionId == revision.Id && x.IsPinned && !x.IsCompleted, cancellationToken);
-        if (pinnedCount + schedule.Tasks.Count > 500)
-            throw new ArgumentException("Korunan sabit çalışmalar dahil en fazla 500 çalışma planlanabilir. Konu sayısını azaltın.");
-        // Advisory preview only: saving later must revalidate both returned versions.
-        return new(availability.Version, availability.TimeZoneId, revision?.Id, revision?.Version, protectedTasks, schedule, resolved);
+            remainingTopics, protectedTasks.Select(x => new StudyCapacityReservation(x.PlannedDate, x.PlannedMinutes)).ToArray());
+        if (sources.Length + schedule.Tasks.Count > 500)
+            throw new ArgumentException("Devam çalışmaları dahil en fazla 500 çalışma planlanabilir. Konu sayısını azaltın.");
+        var fingerprint=CoachingCompletedOutcomeCredits.Fingerprint(credits);
+        return new(availability.Version, availability.TimeZoneId, revision?.Id, revision?.Version, protectedTasks, schedule, carriedResolved,
+            placements.Select(x=>new StudyContinuationPreview(x.Source.Id,x.Date,x.Start,x.Minutes)).ToArray(),fingerprint,completedMinutes);
     }
 }

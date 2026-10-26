@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -14,18 +15,19 @@ import {
 import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
 
 describe('CoachingInstitutionStudentReportComponent', () => {
-  it('opens the same scoped session briefing read-only with a refreshed institution summary', () => {
+  it('opens the same scoped session briefing read-only with a refreshed institution summary', async () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const service = reportService(); const fixture = createFixture(service); fixture.detectChanges();
-    fixture.componentInstance.openSessionBrief(); fixture.detectChanges();
+    (await fixture.componentInstance.openSessionBrief()); fixture.detectChanges();
     expect(service.getStudentDetail).toHaveBeenCalledTimes(2);
     const http = TestBed.inject(HttpTestingController);
+    http.match(r => r.url.endsWith('/study/practice-progress')).forEach(r=>r.flush({data:{fromDate:'2026-10-01',toDate:'2026-10-20',trends:[],goals:[],recovery:[]}}));
     const reports = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report'); expect(reports.length).toBe(2);
     for (const report of reports) report.flush({ success: true, data: { fromDate: report.request.params.get('fromDate'), toDate: report.request.params.get('toDate'),
       source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
     fixture.detectChanges(); http.expectNone(r => r.url.includes('/study/plans') || r.url.includes('/study/availability')); http.verify();
     expect(fixture.nativeElement.textContent).toContain('Seans hazırlık özeti'); expect(fixture.nativeElement.textContent).not.toContain('Yeni taslak');
-    fixture.componentInstance.openSessionBrief(); fixture.detectChanges();
+    (await fixture.componentInstance.openSessionBrief()); fixture.detectChanges();
     expect(service.getStudentDetail).toHaveBeenCalledTimes(3);
     const refreshed = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report');
     expect(refreshed.length).toBe(2);
@@ -155,3 +157,5 @@ function historyItem(id: string, type: CoachingInstitutionHistoryType): Coaching
     eventDate: '2026-01-20T10:00:00Z', status: type === 'Goals' ? 'InProgress' : 'Submitted', progress: 50
   };
 }
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

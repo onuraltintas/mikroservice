@@ -1,3 +1,4 @@
+import { coachingOwnedProfilesSql, identityCoachingAccessSql } from './support/coaching-owned-accounts.mjs';
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -58,7 +59,7 @@ function token(config, userId, role) {
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const unsigned = `${encode({ alg: 'HS256', typ: 'JWT', kid: config.JWT_KEY_ID })}.${encode({
     sub: userId, iss: config.JWT_ISSUER, aud: config.JWT_AUDIENCE,
-    iat: now, nbf: now, exp: now + 300, [roleClaim]: role,
+    iat: now, nbf: now, exp: now + 300, [roleClaim]: role, platform_product: 'coaching',
   })}`;
   return `${unsigned}.${createHmac('sha256', config.JWT_SECRET).update(unsigned).digest('base64url')}`;
 }
@@ -110,6 +111,8 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
     const coachingDb = config.POSTGRES_DB_COACHING || 'coaching_db';
     const email = `coaching-export-${studentId.replaceAll('-', '')}@example.test`;
     const now = new Date().toISOString();
+    const sessionTimes = [0, 2, 4].map(offsetHours =>
+      new Date(Date.now() + offsetHours * 60 * 60 * 1000).toISOString());
     let seeded = false;
     let identityStopped = false;
     let postgresStopped = false;
@@ -155,10 +158,14 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
             30, '{}', true, '${now}', 0),
           (gen_random_uuid(), '${otherId}', '${otherInstitutionId}', 'Other', 'E2E',
             30, '{}', true, '${now}', 0);
+        ${identityCoachingAccessSql([studentId, otherId], now)}
         COMMIT;
       `);
       seeded = true;
       sql(config, coachingDb, `BEGIN;
+        ${coachingOwnedProfilesSql({ students: [
+          { userId: studentId, institutionId: ownInstitutionId },
+          { userId: otherId, institutionId: otherInstitutionId }] }, now)}
         INSERT INTO coaching.academic_goals
         (id, student_id, title, category, current_progress, is_completed, created_at, "Version")
         VALUES (gen_random_uuid(), '${studentId}', 'Own export goal', 'Other', 0, false, '${now}', 0),
@@ -167,11 +174,11 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
           (id, teacher_id, institution_id, title, session_type, scheduled_date, duration_minutes, status,
             teacher_notes, teacher_notes_visibility, created_at, "Version")
         VALUES
-          ('${privateSessionId}', '${teacherId}', '${ownInstitutionId}', 'Private-note session', 'OneOnOne', '${now}', 60,
+          ('${privateSessionId}', '${teacherId}', '${ownInstitutionId}', 'Private-note session', 'OneOnOne', '${sessionTimes[0]}', 60,
             'Scheduled', 'Coach-only secret', 'CoachPrivate', '${now}', 0),
-          ('${sharedSessionId}', '${teacherId}', '${ownInstitutionId}', 'Shared-note session', 'OneOnOne', '${now}', 60,
+          ('${sharedSessionId}', '${teacherId}', '${ownInstitutionId}', 'Shared-note session', 'OneOnOne', '${sessionTimes[1]}', 60,
             'Scheduled', 'Shared guidance', 'StudentVisible', '${now}', 0),
-          ('${otherSessionId}', '${teacherId}', '${otherInstitutionId}', 'Other student session', 'OneOnOne', '${now}', 60,
+          ('${otherSessionId}', '${teacherId}', '${otherInstitutionId}', 'Other student session', 'OneOnOne', '${sessionTimes[2]}', 60,
             'Scheduled', 'Other student private note', 'CoachPrivate', '${now}', 0);
         INSERT INTO coaching.session_attendances
           (id, session_id, student_id, attendance_status, student_note, teacher_note, created_at)
@@ -327,6 +334,8 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         sql(config, coachingDb, `DELETE FROM coaching.coaching_sessions
           WHERE id IN ('${privateSessionId}', '${sharedSessionId}', '${otherSessionId}');`);
         sql(config, coachingDb, `DELETE FROM coaching.academic_goals WHERE student_id IN ('${studentId}', '${otherId}');`);
+        sql(config, coachingDb, `DELETE FROM coaching.institution_memberships WHERE "UserId" IN ('${studentId}', '${otherId}');
+          DELETE FROM coaching.student_profiles WHERE "UserId" IN ('${studentId}', '${otherId}');`);
         sql(config, identityDb, `DELETE FROM identity.users WHERE "Id" IN ('${studentId}', '${otherId}');
           DELETE FROM identity.institutions WHERE "Id" IN ('${ownInstitutionId}', '${otherInstitutionId}');`);
       }

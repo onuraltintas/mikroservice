@@ -1,0 +1,15 @@
+{
+  "scoreCounts": {
+    "YDT": 681
+  },
+  "issues": {},
+  "languageProgramCounts": {
+    "Other": 635,
+    "Arabic": 46
+  },
+  "officialEvidenceHash": "c2be63ffdc5ed113a31035c05ae5389b9987ddce07edb4f858cb7360ad730832",
+  "packageHash": "c907978c90fbe975dd5025332cd8464207a4e4ad9dc27f25a251dc55e5baeabc",
+  "year": 2026,
+  "stage": "Main",
+  "sourceFields": "OSYM placement quota/scores plus YOK Atlas program code and identity enrichment"
+}

@@ -90,4 +90,40 @@ public sealed class CoachingAttachmentStorageTests
                 Directory.Delete(root, recursive: true);
         }
     }
+
+    [Theory]
+    [InlineData("application/pdf", "%PDF-1.7\n")]
+    [InlineData("application/msword", "\u00d0\u00cf\u0011\u00e0\u00a1\u00b1\u001a\u00e1")]
+    [InlineData("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "PK\u0003\u0004\u0014\u0000\u0000\u0000")]
+    [InlineData("text/markdown", "# Homework\nAnswer\n")]
+    public async Task LocalStorage_StoresSupportedDocumentsAfterSignatureAndHashValidation(
+        string contentType,
+        string contentText)
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"eduplatform-attachments-{Guid.NewGuid():N}");
+        var storage = new LocalAssignmentAttachmentStorage(
+            Options.Create(new AssignmentAttachmentOptions { RootPath = root }));
+        var bytes = System.Text.Encoding.Latin1.GetBytes(contentText);
+        var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes));
+
+        try
+        {
+            await using var content = new MemoryStream(bytes);
+            var stored = await storage.StoreAsync(
+                "assignments/test/document-1",
+                content,
+                contentType,
+                bytes.Length,
+                hash,
+                CancellationToken.None);
+
+            stored.ContentType.Should().Be(contentType);
+            stored.SizeBytes.Should().Be(bytes.Length);
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
 }

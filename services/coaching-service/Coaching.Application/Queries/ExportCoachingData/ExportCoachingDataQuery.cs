@@ -24,7 +24,10 @@ public sealed record CoachingDataExportDto(
     Coaching.Application.Profiles.CoachingOwnProfile? Profile = null,
     IReadOnlyList<Coaching.Domain.Profiles.CoachingTeacherStudentAssignment>? ProfileAssignments = null,
     Coaching.Domain.Entities.StudentLearningContext? LearningContext = null,
-    Coaching.Application.StudyPlanning.WeeklyDraftView? WeeklyDraft = null)
+    Coaching.Application.StudyPlanning.WeeklyDraftView? WeeklyDraft = null,
+    IReadOnlyList<Coaching.Domain.Entities.WeeklyReflection>? WeeklyReflections = null,
+    IReadOnlyList<Coaching.Domain.Entities.WeeklyDecision>? WeeklyDecisions = null,
+    IReadOnlyList<Coaching.Domain.Entities.WeeklyReflectionReview>? WeeklyReflectionReviews = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
@@ -42,7 +45,7 @@ public sealed record CoachingDataExamDto(
 
 public sealed record CoachingDataStudyPlanDto(Guid Id, Guid PlanId, int RevisionNumber, int Version, string Title,
     string Status, int? AutomaticAvailabilityVersion, Guid? AutomaticSourceRevisionId, int? AutomaticSourceRevisionVersion,
-    IReadOnlyList<Coaching.Application.StudyPlanning.ManualStudyTaskView> Tasks,Coaching.Domain.Entities.WeeklyPlanSource? WeeklySource=null);
+    IReadOnlyList<Coaching.Application.StudyPlanning.ManualStudyTaskView> Tasks,Coaching.Domain.Entities.WeeklyPlanSource? WeeklySource=null,Coaching.Domain.Entities.AutomaticOutcomeEvidence? AutomaticOutcomeEvidence=null);
 
 public sealed record CoachingDataGoalDto(
     Guid GoalId, string Title, string? Description, string Category, int CurrentProgress,

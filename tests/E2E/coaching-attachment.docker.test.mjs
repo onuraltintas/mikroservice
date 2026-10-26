@@ -1,3 +1,4 @@
+import { coachingOwnedProfilesSql, identityCoachingAccessSql } from './support/coaching-owned-accounts.mjs';
 import assert from 'node:assert/strict';
 import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -60,7 +61,7 @@ function token(config, userId, role) {
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const unsigned = `${encode({ alg: 'HS256', typ: 'JWT', kid: config.JWT_KEY_ID })}.${encode({
     sub: userId, iss: config.JWT_ISSUER, aud: config.JWT_AUDIENCE,
-    iat: now, nbf: now, exp: now + 300, [roleClaim]: role,
+    iat: now, nbf: now, exp: now + 300, [roleClaim]: role, platform_product: 'coaching',
   })}`;
   return `${unsigned}.${createHmac('sha256', config.JWT_SECRET).update(unsigned).digest('base64url')}`;
 }
@@ -137,8 +138,11 @@ test('disposable student attachment uses persistent local storage and enforces o
       VALUES
         (gen_random_uuid(), '${studentId}', '${institutionId}', 'Owner', 'E2E', 30, '{}', true, '${now}', 0),
         (gen_random_uuid(), '${otherId}', '${institutionId}', 'Other', 'E2E', 30, '{}', true, '${now}', 0);
+      ${identityCoachingAccessSql([studentId, otherId], now)}
       COMMIT;`);
     sql(config, coachingDb, `BEGIN;
+      ${coachingOwnedProfilesSql({ students: [
+        { userId: studentId, institutionId }, { userId: otherId, institutionId }] }, now)}
       INSERT INTO coaching.assignments
         (id, teacher_id, institution_id, title, type, source, due_date, status, created_at, "Version")
       VALUES ('${assignmentId}', '${teacherId}', '${institutionId}', 'Attachment E2E', 'Individual',

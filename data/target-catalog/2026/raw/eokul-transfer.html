@@ -1,0 +1,264 @@
+
+<!DOCTYPE HTML>
+<HTML xmlns:o>
+	<HEAD>
+		<title>MEB - e-Okul Uygulamaları </title>
+		<meta content="Microsoft Visual Studio 7.1" name="GENERATOR">
+		<meta content="C#" name="CODE_LANGUAGE">
+		<meta content="JavaScript" name="vs_defaultClientScript">
+		<meta content="http://schemas.microsoft.com/intellisense/ie5" name="vs_targetSchema">
+		<LINK href="../../Styles/style.css" type="text/css" rel="stylesheet">
+		<script language="javascript" src="../../scripts/kabartma.js" charset="ISO-8859-9"></script>
+        <script src="../../theme/js/jquery.min.js"></script>
+        <script src="../../theme/js/chosen.jquery.min.js"></script>
+        <link rel="stylesheet" href="../../theme/css/chosen.min.css"/>
+		<script language="javascript">
+            var bgcolor = "#ffffff";
+            var change_color = "Lavender";
+            function mover(aa) {
+                aa.style.backgroundColor = change_color;
+            }
+            function mout(aa) {
+                aa.style.backgroundColor = bgcolor;
+            }
+            function GirisYap() {
+                var UyariMesaji = "";
+                var frm;
+                frm = document.getElementById("Form1");
+                if (frm.ddlTercihTuru.value == "-1")
+                    UyariMesaji = UyariMesaji + "Genel Müdürlük Listeleri Alanı Boş Geçilemez!\n ";
+
+                if (frm.ddlIl.value == "-1")
+                    UyariMesaji = UyariMesaji + "Il Alanı Boş Geçilemez!\n ";
+
+                //	if (frm.ddlIlce.value == "-1")
+                //		UyariMesaji = UyariMesaji + "Ilçe Alanı Boş Geçilemez!\n ";
+
+                if (frm.ddlOkul.value == "-1")
+                    UyariMesaji = UyariMesaji + "Okul Alanı Boş Geçilemez!\n ";
+
+
+                if (UyariMesaji != "") {
+                    frm.hdnKontrol.value = "";
+                    alert(UyariMesaji);
+                    return false;
+                }
+                else {
+                    frm.hdnKontrol.value = "evet";
+                    return true;
+                }
+            }
+		</script>
+	</HEAD>
+	<body bottomMargin="0" leftMargin="0" topMargin="0" rightMargin="0">
+		<form method="post" action="./OOK06006.aspx" id="Form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__LASTFOCUS" id="__LASTFOCUS" value="" />
+<input type="hidden" name="__VIEWSTATEFIELDCOUNT" id="__VIEWSTATEFIELDCOUNT" value="19" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTExMjMwMzYx" />
+<input type="hidden" name="__VIEWSTATE1" id="__VIEWSTATE1" value="OTMPFgIeE1ZhbGlkYXRl" />
+<input type="hidden" name="__VIEWSTATE2" id="__VIEWSTATE2" value="UmVxdWVzdE1vZGUCARYC" />
+<input type="hidden" name="__VIEWSTATE3" id="__VIEWSTATE3" value="AgEPZBYIAggPZBYCAgEP" />
+<input type="hidden" name="__VIEWSTATE4" id="__VIEWSTATE4" value="EGRkFgFmZAIJD2QWCAIB" />
+<input type="hidden" name="__VIEWSTATE5" id="__VIEWSTATE5" value="DxBkZBYAZAIDDxBkZBYA" />
+<input type="hidden" name="__VIEWSTATE6" id="__VIEWSTATE6" value="ZAIFDxBkZBYAZAIHDw9k" />
+<input type="hidden" name="__VIEWSTATE7" id="__VIEWSTATE7" value="FgIeB29uQ2xpY2sFEnJl" />
+<input type="hidden" name="__VIEWSTATE8" id="__VIEWSTATE8" value="dHVybiBHaXJpc1lhcCgp" />
+<input type="hidden" name="__VIEWSTATE9" id="__VIEWSTATE9" value="O2QCCw9kFggCAQ9kFgIC" />
+<input type="hidden" name="__VIEWSTATE10" id="__VIEWSTATE10" value="BQ88KwALAGQCAw9kFgIC" />
+<input type="hidden" name="__VIEWSTATE11" id="__VIEWSTATE11" value="BQ88KwALAGQCBQ9kFgIC" />
+<input type="hidden" name="__VIEWSTATE12" id="__VIEWSTATE12" value="BQ88KwALAGQCBw9kFgIC" />
+<input type="hidden" name="__VIEWSTATE13" id="__VIEWSTATE13" value="BQ88KwALAGQCDQ9kFgJm" />
+<input type="hidden" name="__VIEWSTATE14" id="__VIEWSTATE14" value="Dw8WAh4HVmlzaWJsZWhk" />
+<input type="hidden" name="__VIEWSTATE15" id="__VIEWSTATE15" value="FgICAQ9kFgICAg8WAh4F" />
+<input type="hidden" name="__VIEWSTATE16" id="__VIEWSTATE16" value="VmFsdWVlZGSQ7A6NkW99" />
+<input type="hidden" name="__VIEWSTATE17" id="__VIEWSTATE17" value="7lLeyZD87mstgILaIKtt" />
+<input type="hidden" name="__VIEWSTATE18" id="__VIEWSTATE18" value="sB8OlnnGbT9a3w==" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form1'];
+if (!theForm) {
+    theForm = document.Form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="08A14488" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAqNQT5cxhVAwnBLO08+tT9HBeswNteea2BIxDaPTL+h38NI9ETYTtkJtD31kXQZ6eUOJ3Yxz0q+QqmuNt0t8zyJVqnLQSp8h1uhFEuMFvJ08pFEDqBR/9tK/LgE4YUnvE3XaWuZam0BfVH8xyZiW6j4V9ftJHnQvgfYRMkfMml+xuOscQ6sDe+97ffdiAqRGqDbK65rR0uaoXEguxiAaYippFeJaNdGGomwyeIzlZdKoYnfMwRoxRFbWhhl1Y9RhCg=" />
+</div>
+			<script language="javascript" type="text/javascript">
+<!--
+    function __doPostBackEk(eventTarget, eventArgument) {
+        var theform;
+        if (window.navigator.appName.toLowerCase().indexOf("microsoft") > -1) {
+            theform = document.Form1;
+        }
+        else {
+            theform = document.forms["Form1"];
+        }
+        theform.__EVENTTARGETek.value = eventTarget.split("$").join(":");
+        theform.__EVENTARGUMENTek.value = eventArgument;
+		/*if (theform.ddlTercihTuru.value=="3" || theform.ddlTercihTuru.value=="4"|| theform.ddlTercihTuru.value=="5"||theform.ddlTercihTuru.value=="6") 
+		{ //window.showModalDialog("SNVOGESAciklama.aspx?GM="+ theform.ddlTercihTuru.value+"",window," dialogWidth:600px,dialogHeight:500px"); 
+			if (window.showModalDialog) {
+				window.showModalDialog( "SNVOGESAciklama.aspx?GM="+ theform.ddlTercihTuru.value+"",window," dialogWidth:600px,dialogHeight:500px");
+			} 
+			else {
+				window.open('SNVOGESAciklama.aspx?GM='+ theform.ddlTercihTuru.value+'','OGES','height=500,width=600,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no ,modal=yes');
+			}
+		} */
+        theform.submit();
+    }
+// -->
+			</script>
+			<table height="100%" cellSpacing="0" cellPadding="5" width="100%" border="0">
+				<tr>
+					<td height="40"></td>
+				</tr>
+				<tr>
+					<td vAlign="top" width="100%">
+						<table id="Table2" cellSpacing="0" cellPadding="0" width="100%" border="0">
+							<TR>
+								<TD vAlign="top" align="left" width="130" height="15"></TD>
+								<TD vAlign="top" align="left" width="100%" height="15"><input type="hidden" name="__EVENTTARGETek"><input type="hidden" name="__EVENTARGUMENTek">
+									<input name="hdnKontrol" type="hidden" id="hdnKontrol" /><input name="hdnAlan" type="hidden" id="hdnAlan" /></TD>
+							</TR>
+							<TR>
+								<TD vAlign="top" align="left" width="130"></TD>
+								<TD vAlign="top" align="center" width="100%">
+									<TABLE class="frmList" id="Table7" cellSpacing="0" cellPadding="2" width="700" align="center"
+										border="0">
+										<TR>
+											<TD align="center" colSpan="5" height="10"></TD>
+										</TR>
+										<TR>
+											<TD height="10" colSpan="5" align="center">
+												<A href="javascript:void(0);"><IMG border="0" src="../../images/hatauyari_r1_c1.jpg"></A></TD>
+											</A>
+										</TR>
+										
+										<TR class="frmBaslik">
+											<TD align="left" colSpan="5">
+												<P align="center"><STRONG>T.C.</STRONG></P>
+											</TD>
+										</TR>
+										<TR class="frmBaslik">
+											<TD align="left" colSpan="5">
+												<P align="center"><STRONG>MİLLÎ EĞİTİM BAKANLIĞI</STRONG></P>
+											</TD>
+										</TR>
+										<!--
+										<TR class="frmBaslik">
+											<TD align="left" colSpan="5">
+												<P align="center"><STRONG>&nbsp;
+														<span id="lblYil2"></span>&nbsp;YILI&nbsp;ORTAÖĞRETİM 
+														KURUMLARINA GEÇİŞ SİSTEMİ (OGES)&nbsp;II. YERLEŞTİRME TERCİH LİSTELERİ</STRONG></P>
+											</TD>
+										</TR>
+										-->
+										<TR class="frmBaslik">
+											<TD align="left" colSpan="5">
+												<P align="center"><STRONG>&nbsp;&nbsp;&nbsp;SINAVLI/SINAVSIZ OKUL BOŞ KONTENJAN VE SINAVLI OKUL TABAN PUAN BİLGİLERİ</STRONG></P>
+											</TD>
+										</TR>
+										<TR>
+											<TD width="10%" height="10"></TD>
+											<TD width="20%" height="10"></TD>
+											<TD width="2%" height="10"></TD>
+											<TD width="71%" height="10"></TD>
+											<TD width="5%" height="10"></TD>
+										</TR>
+										<!--
+										<TR>
+											<TD colSpan="5" height="10">
+												<P align="center"><A href="http://oges.meb.gov.tr/document/veli_bilgilendirme_notu.pdf" target="_blank"><STRONG><FONT size="2">2010 
+																ORTAÖĞRETİM KURUMLARINA GEÇİŞ SİSTEMİ TERCİH VE YERLEŞTİRME VELİ BİLGİLENDİRME 
+																NOTU<BR>
+																İÇİN TIKLAYINIZ</FONT></STRONG></A></P>
+											</TD>
+										</TR>
+										--><div id="pnlTercihListeleriGM">
+	
+											<TR>
+												<TD height="10" width="10%"></TD>
+												<TD height="10" width="12%">
+													<P><STRONG>Genel Müdürlük</STRONG></P>
+												</TD>
+												<TD height="10" width="2%"><STRONG>:</STRONG></TD>
+												<TD height="10" width="71%">
+													<select name="ddlTercihTuru" onchange="javascript:setTimeout(&#39;__doPostBack(\&#39;ddlTercihTuru\&#39;,\&#39;\&#39;)&#39;, 0)" id="ddlTercihTuru" class="frmInput2" style="width:435px;">
+		<option selected="selected" value="-1">&#160;... L&#252;tfen Listeden Se&#231;iniz ...</option>
+		<option value="21">Orta&#246;ğretim Genel M&#252;d&#252;rl&#252;ğ&#252; Fen ve Sosyal Bilimler Liseleri Okul Listesi</option>
+		<option value="22">Orta&#246;ğretim Genel M&#252;d&#252;rl&#252;ğ&#252; Anadolu Liseleri Okul Listesi</option>
+		<option value="23">Orta&#246;ğretim Genel M&#252;d&#252;rl&#252;ğ&#252; G&#252;zel Sanatlar ve Spor Liseleri Okul Listesi</option>
+		<option value="6">Din &#214;ğretimi Genel M&#252;d&#252;rl&#252;ğ&#252; Anadolu İmam Hatip Lisesi T&#252;r&#252; Okul Listesi</option>
+		<option value="552">Mesleki ve Teknik Eğitim Genel M&#252;d&#252;rl&#252;ğ&#252;ne Bağlı Anadolu T&#252;r&#252; Okul Listesi</option>
+
+	</select> <!-- spor ve gsl aktarımlarından sonra buraya koyacağız.
+													 -->
+													
+                                                    <!--<asp:ListItem Value="553">Mesleki ve Teknik Eğitim Genel M&#252;d&#252;rl&#252;ğ&#252; Anadolu Sağlık Meslek Liseleri Okul Listesi</asp:ListItem>-->
+                                                    <!--<asp:ListItem Value="9">Anadolu &#214;ğretmen Liseleri Okul Listesi</asp:ListItem>--2017-2018 öğretim yılında öğrenci kalmayacağı için çıkarttım. mbt:02.08.2017 -->
+                                                    <!--<asp:ListItem Value="553">Mesleki ve Teknik Eğitim Genel M&#252;d&#252;rl&#252;ğ&#252; Anadolu Sağlık Meslek Liseleri Okul Listesi</asp:ListItem> 2018-2019 öğretim yılında çıkarttım.AMP altında sağlık alanı olduğu için mbt:19.07.2018 -->
+												<TD height="10" width="5%"></TD>
+											</TR>
+											<TR>
+												<TD height="5"></TD>
+												<TD height="5"></TD>
+												<TD height="5"></TD>
+												<TD height="5"></TD>
+												<TD height="5"></TD>
+											</TR>
+										
+</div></TABLE>
+								</TD>
+							</TR>
+							<TR>
+								<TD vAlign="top" align="left" width="130" height="5"></TD>
+								<TD vAlign="top" align="center" width="100%" height="5"></TD>
+							</TR>
+							
+
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td vAlign="bottom" align="center" width="100%">
+<div id="OOMPageFooter1_pnlEski">
+	
+   <LINK rel="stylesheet" type="text/css" href="../../css/eokul.css">
+<TABLE id="Table1" width="100%" border="0">
+	<TR>
+		<td class="bodytext" align="center">
+			Tüm hakları Milli Eğitim Bakanlığına aittir.
+			
+			</td>
+		<!--<TD align="right" width="100%"><IMG src="../../../images/sonlandirici.jpg"></TD>--></TR>
+</TABLE>
+
+</div>
+
+<script type="text/javascript" src="/assets/js/bookmarklet-blocker.js"></script>
+</td>
+				</tr>
+			</table>
+		</form>
+           <script>
+               $('#ddlTercihTuru,#ddlIl,#ddlIl,#ddlIlce,#ddlOkul').chosen();
+    </script>
+	</body>
+</HTML>

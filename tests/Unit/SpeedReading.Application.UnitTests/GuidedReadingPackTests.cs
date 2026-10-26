@@ -56,7 +56,8 @@ public sealed class GuidedReadingPackTests
             var bounds = exercise["configuration"]!["engineConfig"]!["content"]!;
             if (entry["file"] is not null)
             {
-                var content = File.ReadAllText(Path.Combine(root, "content-packs/guided-reading/v1/texts", entry["file"]!.GetValue<string>())).Trim();
+                var content = File.ReadAllText(Path.Combine(root, "content-packs/guided-reading/v1/texts", entry["file"]!.GetValue<string>()))
+                    .Replace("\r\n", "\n").Trim(); // Windows checkouts may convert the texts to CRLF.
                 Assert.True(originals.Add(content));
                 Assert.InRange(ReadingText.CalculateWordCount(content), bounds["minWordCount"]!.GetValue<int>(), bounds["maxWordCount"]!.GetValue<int>());
                 Assert.Contains(JsonValue.Create(content)!.ToJsonString(new System.Text.Json.JsonSerializerOptions {

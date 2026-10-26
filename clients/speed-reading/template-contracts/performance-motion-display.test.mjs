@@ -14,5 +14,5 @@ assert.match(performanceTemplate, /readingSpeed\.current\s*\|\s*number:'1\.0-0'/
 
 const motionHeader = playerTemplate.split('<!-- Exercise Running - Motion Path')[1]
   ?.split('<div class="eye-tracking-area">')[0] ?? '';
-assert.match(motionHeader, /engineState\.targetCount\s*\|\|\s*0\s*}} hedef/);
+assert.match(motionHeader, /engineState\.targetCount\s*\|\|\s*0\s*}} geçiş/);
 assert.doesNotMatch(motionHeader, /<span class="label">Hedefler<\/span>/);

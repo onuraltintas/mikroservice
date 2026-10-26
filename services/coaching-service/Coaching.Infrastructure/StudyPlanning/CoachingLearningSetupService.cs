@@ -11,12 +11,20 @@ using Npgsql;
 namespace Coaching.Infrastructure.StudyPlanning;
 
 public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoachingAccessPolicy access,
-    ICoachingAccountDirectory accounts) : ILearningSetupService
+    ICoachingAccountDirectory accounts, CoachingStudyPlanAccess? staffAccess = null) : ILearningSetupService
 {
     public async Task<LearningSetupView> GetAsync(CancellationToken ct)
     {
         var profile = await RequireStudent(ct);
         return await View(await Context(profile.UserId).AsNoTracking().SingleOrDefaultAsync(ct), profile, ct);
+    }
+
+    public async Task<LearningSetupView> GetForStudentAsync(Guid studentId, CancellationToken ct)
+    {
+        if (staffAccess is null) throw Forbidden();
+        await staffAccess.RequireAsync(studentId, ct);
+        var profile = await RequireStudent(studentId, ct);
+        return await View(await Context(studentId).AsNoTracking().SingleOrDefaultAsync(ct), profile, ct);
     }
 
     public async Task<LearningSetupView> SaveAsync(LearningSetupUpdate r, CancellationToken ct)
@@ -39,7 +47,7 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         if (await lessonQuery.CountAsync(x => Enumerable.Contains(ids, x.Id), ct) != ids.Length)
             throw new ArgumentException("Eğitim bağlamına uygun aktif dersleri seçin.");
         var topicIds = r.Topics.Select(x => x.TopicId).ToArray();
-        if (await Topics(lessonQuery).CountAsync(x => Enumerable.Contains(topicIds, x.Id) && Enumerable.Contains(ids, x.LessonId), ct) != topicIds.Length)
+        if (await Topics(lessonQuery,candidate).CountAsync(x => Enumerable.Contains(topicIds, x.Id) && Enumerable.Contains(ids, x.LessonId), ct) != topicIds.Length)
             throw new ArgumentException("Seçilen derslere ait aktif konuları belirtin.");
         // Validate every selection before mutating tracked state.
         var target = context ?? candidate;
@@ -59,11 +67,26 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         if (pageNumber is < 1 or > 10000 || lessonId == Guid.Empty) throw new ArgumentException("Geçerli ders ve sayfa seçin.");
         var profile = await RequireStudent(ct);
         var context = await Context(profile.UserId).AsNoTracking().SingleOrDefaultAsync(ct);
+        return await GetCatalog(profile, context, lessonId, pageNumber, ct);
+    }
+
+    public async Task<LearningCatalogView> GetCatalogForStudentAsync(Guid studentId, Guid? lessonId, int pageNumber, CancellationToken ct)
+    {
+        if (pageNumber is < 1 or > 10000 || lessonId == Guid.Empty) throw new ArgumentException("Geçerli ders ve sayfa seçin.");
+        if (staffAccess is null) throw Forbidden();
+        await staffAccess.RequireAsync(studentId, ct);
+        var profile = await RequireStudent(studentId, ct);
+        var context = await Context(studentId).AsNoTracking().SingleOrDefaultAsync(ct);
+        return await GetCatalog(profile, context, lessonId, pageNumber, ct);
+    }
+
+    private async Task<LearningCatalogView> GetCatalog(CoachingStudentProfile profile, StudentLearningContext? context, Guid? lessonId, int pageNumber, CancellationToken ct)
+    {
         if (context is null) return new(null, [], new([], 0, pageNumber, 50), 0, ["Önce çalışma amacınızı kaydedin."]);
         var curriculum = await ResolveCurriculum(context, profile, ct);
         var curriculumId = curriculum?.Id;
         var lessons = Lessons(context, profile).Where(x => curriculumId != null && x.CurriculumVersionId == curriculumId);
-        var eligibleTopics = Topics(lessons);
+        var eligibleTopics = Topics(lessons,context);
         var choices = await lessons.OrderBy(x => x.Name).ThenBy(x => x.Id).Select(x => new LearningLessonView(x.Id, x.Name, x.GradeNumber, x.ExamCode,
             eligibleTopics.Count(t => t.LessonId == x.Id), eligibleTopics.Count(t => t.LessonId == x.Id && t.EstimatedMinutes == null))).ToArrayAsync(ct);
         var topicQuery = eligibleTopics.Where(x => lessonId != null && x.LessonId == lessonId);
@@ -86,20 +109,19 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
     private IQueryable<StudyCatalogLesson> Lessons(StudentLearningContext c, CoachingStudentProfile p)
     {
         var query = db.StudyCatalogLessons.AsNoTracking().Where(x => x.IsActive);
+        var yksTopics=YksCatalogEligibility.Topics(db,c);
         return c.Purpose switch
         {
             LearningPurpose.School => query.Where(x => x.GradeNumber == p.GradeLevel && x.ExamCode == null),
             LearningPurpose.Lgs => query.Where(x => x.ExamCode == "LGS"),
-            LearningPurpose.Yks when c.PrimaryScoreType == "TYT" => query.Where(x => x.ExamCode == "TYT"),
-            LearningPurpose.Yks when c.PrimaryScoreType == "DIL" => query.Where(x => x.ExamCode == "TYT" || x.ExamCode == "YDT"),
-            LearningPurpose.Yks => query.Where(x => x.ExamCode == "TYT" || x.ExamCode == "AYT"),
+            LearningPurpose.Yks => query.Where(x => yksTopics.Any(t=>t.LessonId==x.Id&&t.IsActive)),
             _ when p.GradeLevel.HasValue => query.Where(x => x.GradeNumber == p.GradeLevel || x.GradeNumber == null),
             _ => query
         };
     }
 
-    private IQueryable<StudyCatalogTopic> Topics(IQueryable<StudyCatalogLesson> lessons) =>
-        from t in db.StudyCatalogTopics.AsNoTracking()
+    private IQueryable<StudyCatalogTopic> Topics(IQueryable<StudyCatalogLesson> lessons,StudentLearningContext? context) =>
+        from t in YksCatalogEligibility.Topics(db,context).AsNoTracking()
         join u in db.StudyCatalogUnits on new { t.UnitId, t.LessonId } equals new { UnitId = u.Id, u.LessonId }
         where t.IsActive && u.IsActive && lessons.Any(l => l.Id == t.LessonId)
             && !db.StudyCatalogTopics.Any(child => child.ParentId == t.Id)
@@ -126,11 +148,11 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         if (curriculum is null || curriculum.Id != c.CurriculumVersionId) missing.Add("Catalog");
         var lessonQuery = Lessons(c, p).Where(x => x.CurriculumVersionId == c.CurriculumVersionId && x.CurriculumVersionId != null);
         var ids = c.CoursePreferences.Select(x => x.LessonId).ToArray();
-        var eligibleTopics = Topics(lessonQuery);
+        var eligibleTopics = Topics(lessonQuery,c);
         if (ids.Length == 0 || await lessonQuery.CountAsync(x => Enumerable.Contains(ids, x.Id), ct) != ids.Length
             || await lessonQuery.AnyAsync(x => Enumerable.Contains(ids, x.Id) && !eligibleTopics.Any(t => t.LessonId == x.Id), ct)) missing.Add("Courses");
         if (!c.StartingStatusReviewed) missing.Add("Starting");
-        if (await Topics(lessonQuery).AnyAsync(x => Enumerable.Contains(ids, x.LessonId) && x.EstimatedMinutes == null, ct))
+        if (await Topics(lessonQuery,c).AnyAsync(x => Enumerable.Contains(ids, x.LessonId) && x.EstimatedMinutes == null, ct))
             warnings.Add("Seçilen derslerde çalışma süresi eksik konular var; önizlemede süre girin.");
         if (missing.Contains("Catalog")) warnings.Add("Uygun yayımlanmış katalog eksik veya değişmiş. Mevcut planlarınıza erişebilirsiniz.");
         return new(c, missing.FirstOrDefault() ?? "Preview", missing.Count == 0, missing, warnings);
@@ -140,6 +162,10 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
     {
         var student = access.CurrentUserId ?? Guid.Empty;
         if (!access.IsCurrentStudent(student)) throw Forbidden();
+        return await RequireStudent(student, ct);
+    }
+    private async Task<CoachingStudentProfile> RequireStudent(Guid student, CancellationToken ct)
+    {
         var account = (await accounts.GetAccountsAsync([student], ct)).SingleOrDefault(x => x.UserId == student);
         if (account?.IsEligible("Student") != true) throw Forbidden();
         var profile = await db.CoachingStudentProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == student, ct)

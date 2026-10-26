@@ -396,6 +396,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<long?>("GradeRevision")
+                        .HasColumnType("bigint");
+
                     b.Property<decimal?>("Score")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
@@ -3086,6 +3089,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int?>("AutomaticAvailabilityVersion")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AutomaticOutcomeEvidence")
+                        .HasColumnType("jsonb");
+
                     b.Property<Guid?>("AutomaticSourceRevisionId")
                         .HasColumnType("uuid");
 
@@ -3131,6 +3137,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
 
+                    b.Property<bool>("WasPublished")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("WeeklySource")
                         .HasColumnType("jsonb");
 
@@ -3167,8 +3176,14 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int?>("ActualQuestions")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ActualWorkJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CompletionSourceTaskId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -3186,6 +3201,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<Guid?>("OriginalTaskId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateOnly>("PlannedDate")
                         .HasColumnType("date");
 
@@ -3196,6 +3214,24 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int?>("PlannedStartMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("PredecessorTaskId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("PredecessorVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RealizationHistoryJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]");
+
+                    b.Property<int?>("RemainingMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RemainingQuestions")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("RevisionId")
@@ -3229,6 +3265,12 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<Guid?>("WeeklyLessonId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateOnly?>("WorkFromDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("WorkToDate")
+                        .HasColumnType("date");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TopicId");
@@ -3237,13 +3279,17 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasIndex("StudentId", "PlannedDate");
 
+                    b.HasIndex("StudentId", "WorkFromDate", "WorkToDate");
+
                     b.ToTable("study_plan_tasks", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_study_task_completion", "(\"IsCompleted\" AND \"ActualMinutes\" IS NOT NULL AND \"CompletedAt\" IS NOT NULL) OR (NOT \"IsCompleted\" AND \"ActualMinutes\" IS NULL AND \"CompletedAt\" IS NULL)");
+                            t.HasCheckConstraint("ck_study_task_completion", "(\"IsCompleted\" AND (\"ActualMinutes\" IS NOT NULL OR \"CompletionSourceTaskId\" IS NOT NULL) AND \"CompletedAt\" IS NOT NULL) OR (NOT \"IsCompleted\" AND \"CompletedAt\" IS NULL AND \"CompletionSourceTaskId\" IS NULL)");
 
                             t.HasCheckConstraint("ck_study_task_minutes", "\"PlannedMinutes\" BETWEEN 1 AND 1440 AND (\"ActualMinutes\" IS NULL OR \"ActualMinutes\" BETWEEN 1 AND 1440)");
 
-                            t.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"IsCompleted\" OR \"ActualQuestions\" IS NULL)");
+                            t.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualMinutes\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_study_task_remaining", "(\"RemainingMinutes\" IS NULL OR (NOT \"IsCompleted\" AND \"RemainingMinutes\" BETWEEN 1 AND 1440)) AND (\"RemainingQuestions\" IS NULL OR (\"RemainingMinutes\" IS NOT NULL AND \"RemainingQuestions\" BETWEEN 0 AND 100000)) AND ((\"PredecessorTaskId\" IS NULL AND \"PredecessorVersion\" IS NULL) OR (\"PredecessorTaskId\" IS NOT NULL AND \"PredecessorVersion\" >= 0 AND \"OriginalTaskId\" IS NOT NULL))");
 
                             t.HasCheckConstraint("ck_study_task_weekly_time", "(\"PlannedStartMinute\" IS NULL AND \"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"PlannedStartMinute\" IS NOT NULL AND \"PlannedStartMinute\" BETWEEN 0 AND 1439 AND \"PlannedStartMinute\"+\"PlannedMinutes\"<=1440 AND ((\"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"WeeklyLessonId\" IS NOT NULL AND \"LessonNameSnapshot\" IS NOT NULL)))");
                         });
@@ -3436,17 +3482,44 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<DateOnly>("DueOn")
                         .HasColumnType("date");
 
+                    b.Property<bool>("HasAssignmentScope")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("HistoryJson")
                         .IsRequired()
                         .HasColumnType("jsonb");
+
+                    b.Property<DateOnly>("InitialDueOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("InstitutionId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Note")
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<Guid?>("PreviousDecisionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PreviousDecisionSnapshotJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("ResponsibleTeacherId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateOnly>("ReviewWeekStart")
                         .HasColumnType("date");
+
+                    b.Property<Guid?>("SourceReflectionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceReflectionSnapshotJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int?>("SourceReflectionVersion")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -3479,7 +3552,13 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PreviousDecisionId");
+
+                    b.HasIndex("SourceReflectionId");
+
                     b.HasIndex("TeacherId");
+
+                    b.HasIndex("ResponsibleTeacherId", "StudentId", "Status");
 
                     b.HasIndex("StudentId", "ReviewWeekStart", "Status");
 
@@ -3487,7 +3566,7 @@ namespace Coaching.Infrastructure.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_weekly_decision_status", "\"Status\" IN ('Planned','InProgress','Completed','Cancelled') AND ((\"Status\"='Completed')=(\"CompletedAt\" IS NOT NULL))");
 
-                            t.HasCheckConstraint("ck_weekly_decision_week", "extract(isodow from \"ReviewWeekStart\")=1 AND \"DueOn\" BETWEEN \"ReviewWeekStart\"+7 AND \"ReviewWeekStart\"+13");
+                            t.HasCheckConstraint("ck_weekly_decision_week", "extract(isodow from \"ReviewWeekStart\")=1 AND \"DueOn\" >= \"ReviewWeekStart\"+7");
                         });
                 });
 
@@ -3516,6 +3595,15 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int?>("Rating")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ReflectionHistoryJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]");
+
+                    b.Property<string>("ResultsJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
 
@@ -3542,12 +3630,75 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("StudentId", "WeekStart")
                         .IsUnique();
 
+                    b.HasIndex("WeekStart", "Id");
+
                     b.ToTable("weekly_reflections", "coaching", t =>
                         {
                             t.HasCheckConstraint("ck_weekly_reflection_monday", "extract(isodow from \"WeekStart\")=1");
 
                             t.HasCheckConstraint("ck_weekly_reflection_rating", "\"Rating\" IS NULL OR \"Rating\" BETWEEN 1 AND 5");
                         });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.WeeklyReflectionReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EvidenceFingerprint")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("EvidenceSnapshotJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("ReflectionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReflectionSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("ReflectionVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("ReflectionId", "TeacherId", "ReflectionVersion");
+
+                    b.HasIndex("TeacherId", "ReflectionId", "CreatedAt", "Id")
+                        .IsDescending(false, false, true, true);
+
+                    b.ToTable("weekly_reflection_reviews", "coaching");
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.WeeklyStudyDraft", b =>
@@ -4587,6 +4738,15 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("EstimateId", "OutcomeId")
                         .HasPrincipalKey("Id", "OutcomeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.WeeklyReflectionReview", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.WeeklyReflection", null)
+                        .WithMany()
+                        .HasForeignKey("ReflectionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

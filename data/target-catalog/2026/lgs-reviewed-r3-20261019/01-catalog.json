@@ -1,0 +1,29 @@
+{
+  "examCode": "LGS",
+  "year": 2026,
+  "stage": "Catalog",
+  "sourceUrl": "https://bif.meb.k12.tr/tema/okulumuz_hakkinda.html",
+  "documentHash": "ad9058a7ba934a4a878e4b56a49fee78a9a503e7dc2a69213385c0f62e4718b3",
+  "rows": [
+    {
+      "institution": "Borsa İstanbul Fen Lisesi",
+      "name": "Borsa İstanbul Fen Lisesi / İngilizce",
+      "scoreType": "LGS",
+      "city": "ESKİŞEHİR",
+      "district": "TEPEBAŞI",
+      "institutionType": "Fen Lisesi",
+      "degree": null,
+      "language": "İngilizce",
+      "scholarship": null,
+      "educationType": null,
+      "field": null,
+      "quota": 120,
+      "placed": null,
+      "minimumScore": null,
+      "maximumScore": null,
+      "rank": null,
+      "percentile": null,
+      "externalCode": "reviewed-lgs2026:f316499d1689cf997537c4075c9e544f"
+    }
+  ]
+}

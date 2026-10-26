@@ -1,0 +1,9 @@
+# Optional Course Management telemetry override.
+# Include only with docker-compose.course-management.production.yml and the
+# shared docker-compose.observability.yml collector stack.
+services:
+  course-management-service:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: EduPlatform.CourseManagement
+      OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.1}

@@ -1,29 +1,36 @@
 import { CommonModule } from '@angular/common';
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { Component, DestroyRef, Input, OnChanges, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, finalize } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../../../../src/app/core/services/coaching-study-planning.service';
 import { StudentStudyPlansComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-plans.component';
 import { StudentStudyReportComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-report.component';
+import { PracticeProgressComponent } from '../../../../../../src/app/features/coaching-portal/pages/practice-progress.component';
 
 @Component({
   selector: 'staff-coaching-study', standalone: true,
-  imports: [CommonModule, StudentStudyPlansComponent, StudentStudyReportComponent],
+  imports: [CommonModule, StudentStudyPlansComponent, StudentStudyReportComponent, PracticeProgressComponent],
   styles: [':host { display: block; min-width: 0; } section { min-width: 0; }'],
   template: `
     <section aria-label="Öğrencinin haftalık koçluk planı" class="space-y-5">
+      @if (briefOnly) { <h3>Seans hazırlık özeti</h3> }
+      <app-practice-progress [tabbed]="true" [showPlanTab]="!briefOnly" [initialTab]="briefOnly ? 'work' : 'plan'"
+        [staffStudentId]="studentId" [readOnly]="readOnly" (planChanged)="refreshPlan()">
+      <div developmentPlan>
       @if (!briefOnly) {
       <h3>Haftalık çalışma saatleri</h3>
       @if (loading()) { <p role="status">Çalışma saatleri yükleniyor…</p> }
       @if (error()) { <p role="alert">{{ error() }}</p><button type="button" (click)="loadAvailability()">Tekrar dene</button> }
       @else if (availability(); as hours) {
-        <p>{{ hours.timeZoneId }}</p>
         <ul>@for (window of hours.windows; track $index) { <li>{{ day(window.day) }} · {{ time(window.startMinute) }}–{{ time(window.endMinute) }}</li> }</ul>
         @if (!hours.windows.length) { <p>Öğrenci henüz çalışma saati belirlememiş.</p> }
       } @else if (!loading()) { <p>Öğrenci henüz çalışma saati belirlememiş.</p> }
       <app-student-study-plans [staffStudentId]="studentId" [readOnly]="readOnly" />
-      } @else { <h3>Seans hazırlık özeti</h3> }
-      <app-student-study-report [staffStudentId]="studentId" [autoWeekly]="briefOnly" />
+      }
+      </div>
+      <app-student-study-report developmentReport [staffStudentId]="studentId" [autoWeekly]="briefOnly" />
+      </app-practice-progress>
     </section>`
 })
 export class CoachingStaffStudyComponent implements OnChanges {
@@ -32,7 +39,12 @@ export class CoachingStaffStudyComponent implements OnChanges {
   @Input() briefOnly = false;
   @ViewChild(StudentStudyPlansComponent) private editor?: StudentStudyPlansComponent;
   @ViewChild(StudentStudyReportComponent) private report?: StudentStudyReportComponent;
-  canLeavePage(): boolean { return this.editor?.canLeavePage() ?? true; }
+  @ViewChild(PracticeProgressComponent) private practice?: PracticeProgressComponent;
+  async canLeavePage(): Promise<boolean> { return (await this.editor?.canLeavePage() ?? true) && (await this.practice?.canLeavePage() ?? true); }
+  refreshPlan(): void {
+    this.editor?.refreshAfterExternalChange();
+    this.report?.load();
+  }
   refreshBrief(): void { if (this.briefOnly) this.report?.useLastWeek(); }
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
@@ -40,6 +52,7 @@ export class CoachingStaffStudyComponent implements OnChanges {
   readonly availability = signal<StudyAvailability | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  private readonly feedback = coachingFeedback(undefined, this.error);
 
   ngOnChanges(): void { this.loadAvailability(); }
   loadAvailability(): void {

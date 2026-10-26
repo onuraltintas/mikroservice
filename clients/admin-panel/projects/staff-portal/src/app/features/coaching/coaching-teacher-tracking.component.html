@@ -1,0 +1,42 @@
+<section class="tracking" aria-labelledby="tracking-title">
+  <header class="tracking-heading"><div><p class="eyebrow">KOÇLUK · GÜNLÜK TAKİP</p><h2 id="tracking-title">Takip merkezi</h2><p>İşlem bekleyen çalışmaları ve teslimleri aynı yerden inceleyin.</p></div>
+    @if (!selected()) { <button type="button" (click)="refresh()" [disabled]="loading()">Listeyi yenile</button> }
+  </header>
+  @if (selected(); as item) {
+    <div class="detail-heading"><button type="button" (click)="back()">← Takip merkezine dön</button><p><strong>{{ item.studentName }}</strong> · {{ item.title }}</p></div>
+    @if (item.kind === 'weekly-review' || item.kind === 'reflection' || item.kind === 'decision') {
+      @defer (when selected()) {
+        <app-weekly-review #weekly [staffStudentId]="item.studentId" [initialWeek]="item.weekStart ?? null" [decisionId]="item.kind === 'decision' ? item.recordId : null" />
+      } @placeholder { <p role="status">Haftalık kayıt açılıyor…</p> }
+    } @else if (item.kind === 'study') {
+      <app-student-study-plans [staffStudentId]="item.studentId" [initialPlanId]="item.planId" [initialTaskId]="item.recordId" />
+    } @else {
+      <staff-coaching-teacher-assignment-detail [assignmentId]="item.recordId" [selectedStudentId]="item.studentId" (close)="back()" />
+    }
+  } @else {
+    <form (ngSubmit)="applyFilters()" class="filters">
+      <p>Eksik değerlendirmeler ve inceleme bekleyen değerlendirmeler, başlangıç tarihinden önceki haftalar için de bitiş tarihine kadar listelenir.</p><label>Başlangıç tarihi<input name="fromDate" type="date" [(ngModel)]="filters.fromDate" required></label>
+      <label>Bitiş tarihi<input name="toDate" type="date" [(ngModel)]="filters.toDate" required></label>
+      <label>Öğrenci veya başlık ara<input name="search" type="search" [(ngModel)]="filters.search" maxlength="200" placeholder="Öğrenci adı, çalışma veya ödev"></label>
+      <label>Kayıt türü<select name="mode" [(ngModel)]="filters.mode"><option value="all">Tüm kayıtlar</option><option value="study">Geciken çalışmalar</option><option value="assignment">Geciken ödevler</option><option value="review">Değerlendirme bekleyen teslimler</option><option value="reflection">Haftalık değerlendirme bekleyenler</option><option value="weekly-review">İnceleme bekleyen haftalık değerlendirmeler</option><option value="decision">Geciken kararlar</option></select></label>
+      <button type="submit">Filtrele</button>
+    </form>
+    @if (hasUnappliedFilters) { <p class="filter-note" role="status">Filtre değişiklikleri henüz uygulanmadı. Liste ve sayaçlar son uygulanan filtrelere aittir.</p> }
+    <p class="filter-note">Tarih filtresi çalışmalarda planlanan günü, ödevlerde son teslim/teslim tarihini, kararlarda son tarihi kullanır. Eksik haftalık değerlendirmeler ve inceleme bekleyen değerlendirmeler, başlangıç tarihinden önceki haftalar dahil seçilen bitiş tarihine kadar takip edilir. İncelenmiş sonuçlar değişirse değerlendirme yeniden inceleme kuyruğuna girer. İnceleme listesinde yalnız bekleyen işler gösterilir; toplamlar tüm sayfaları kapsar. Ödev ve haftalık kayıtlar Türkiye, çalışmalar planın saat dilimindedir. Varsayılan dönem son 30 gündür.</p>
+    @if (loading()) { <p role="status">Takip kayıtları yükleniyor…</p> }
+    @else if (error()) { <div class="error" role="alert"><p>{{ error() }}</p><button type="button" (click)="refresh()">Tekrar dene</button></div> }
+    @else if (data(); as page) {
+      <dl class="totals" aria-label="Seçilen tarih ve aramanın özeti"><div><dt>Geciken çalışma</dt><dd>{{ page.overdueStudyCount }}</dd></div><div><dt>Geciken ödev</dt><dd>{{ page.overdueAssignmentCount }}</dd></div><div><dt>Değerlendirme bekleyen teslim</dt><dd>{{ page.awaitingReviewCount }}</dd></div><div><dt>Haftalık değerlendirme bekleyen</dt><dd>{{ page.awaitingReflectionCount }}</dd></div><div><dt>Haftalık inceleme bekleyen</dt><dd>{{ page.awaitingWeeklyReviewCount ?? 0 }}</dd></div><div><dt>Geciken karar</dt><dd>{{ page.overdueDecisionCount }}</dd></div></dl>
+      <div class="results-heading"><p><strong>{{ page.totalCount }} kayıt</strong> · Özetler tüm sayfaları kapsar; kayıt türü yalnız listeyi daraltır.</p><small>Son yenileme {{ refreshedAt() | date:'HH:mm:ss' }}</small></div>
+      @if (!page.items.length) { <div class="empty"><h3>Bu filtrelerde işlem bekleyen kayıt yok.</h3><p>Gerekirse tarih aralığını genişletin veya aramayı temizleyin. Kayıt bulunmaması öğrencinin çalışmadığı anlamına gelmez.</p></div> }
+      @else {
+        <div class="table-scroll"><table><caption class="sr-only">Öğrenci bazında işlem bekleyen kayıtlar</caption><thead><tr><th>Öğrenci</th><th>Kayıt</th><th>Tarih / saat</th><th>Durum</th><th>İşlem</th></tr></thead><tbody>
+          @for (item of page.items; track item.kind + ':' + item.recordId + ':' + item.studentId + ':' + (item.weekStart ?? '')) {
+            <tr><th scope="row">{{ item.studentName }}</th><td><strong>{{ item.title }}</strong>@if (item.minutes != null) { <small>{{ item.minutes }} dk</small> }</td><td>{{ item.date | date:'dd.MM.yyyy' }} · {{ item.startMinute == null ? 'Saati belirtilmemiş' : clock(item.startMinute) }}<small>{{item.timeZoneId}}</small></td><td><span class="status" [class.review]="item.kind === 'review' || item.kind === 'reflection'">{{ labels[item.kind] }}</span></td><td><button type="button" (click)="open(item)" [attr.aria-label]="item.studentName + ' · ' + item.title + ' kaydını aç'">{{ item.kind === 'decision' ? 'Kararı aç' : item.kind === 'reflection' || item.kind === 'weekly-review' ? 'Haftayı aç' : item.kind === 'study' ? 'Çalışmayı aç' : item.kind === 'review' ? 'Teslimi değerlendir' : 'Ödevi aç' }}</button></td></tr>
+          }
+        </tbody></table></div>
+      }
+      <nav class="pagination" aria-label="Takip sayfaları"><button type="button" (click)="load(page.pageNumber - 1)" [disabled]="page.pageNumber <= 1">Önceki</button><span>{{ page.pageNumber }} / {{ totalPages(page) }}. sayfa · {{ page.totalCount }} kayıt</span><button type="button" (click)="load(page.pageNumber + 1)" [disabled]="page.pageNumber * page.pageSize >= page.totalCount">Sonraki</button><form (ngSubmit)="goToPage()"><label>Sayfaya git<input name="trackingPage" type="number" [(ngModel)]="pageInput" min="1" [max]="totalPages(page)" step="1" required></label><button type="submit" [disabled]="loading()">Git</button>@if(pageError()){<span role="alert">{{pageError()}}</span>}</form></nav>
+    }
+  }
+</section>

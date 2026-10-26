@@ -1,0 +1,46 @@
+{
+  "source": "MEBİ public university-programs API",
+  "sourceUrl": "https://ogmmateryal.eba.gov.tr/mebi/api/mebi/api/student/university-programs",
+  "retrievedAt": "2026-10-19",
+  "totalCount": 21493,
+  "pageSize": 100,
+  "totalPages": 215,
+  "uniqueProgramCodes": 21493,
+  "programTypeCounts": {
+    "LİSANS": 12239,
+    "ÖNLİSANS": 9254
+  },
+  "scoreTypeCounts": {
+    "DİL": 681,
+    "EA": 3900,
+    "SAY": 5744,
+    "SÖZ": 1914,
+    "TYT": 9254
+  },
+  "programCodeSha256": "79c39840cb9ec50053a5f5254630cfad4dce4e9120433c99d9010243a543f836",
+  "identityFields": [
+    "programCode",
+    "university",
+    "programName",
+    "department",
+    "programType",
+    "scoreType"
+  ],
+  "identitySha256": "d276f32bc09a47783535f7afcb026666ab2bf9094b757b64cf36d43c20c4995e",
+  "identityComparison": {
+    "officialPackage": "yks-results.json",
+    "officialPackageYear": 2026,
+    "matchedProgramCodes": 21493,
+    "matchedIdentityFields": 21493,
+    "scoreTypeMapping": {
+      "DİL": "YDT",
+      "SÖZ": "SOZ"
+    },
+    "programTypeMapping": {
+      "ÖNLİSANS": "Associate",
+      "LİSANS": "Bachelor"
+    }
+  },
+  "scoreYearConfirmed": false,
+  "note": "The MEBİ API provides minScore/maxScore without a verified score year. These values are excluded from annual admission records; 2026 placement metrics come only from the official 2026 YKS package."
+}

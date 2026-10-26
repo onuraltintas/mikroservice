@@ -8,7 +8,8 @@ using Npgsql;
 
 namespace Coaching.Infrastructure.Profiles;
 
-public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountDirectory accounts) : ICoachingProfileProvisioner
+public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoachingAccountDirectory accounts,
+    Coaching.Application.Interfaces.ICoachingEventPublisher? events = null, TimeProvider? clock = null) : ICoachingProfileProvisioner
 {
     public Task<CoachingStudentProfile?> GetStudentAsync(Guid userId, CancellationToken ct) =>
         db.CoachingStudentProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == userId, ct);
@@ -126,10 +127,13 @@ public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountD
     public async Task SetAssignmentAsync(Guid actorUserId, Guid teacherUserId, Guid studentUserId,
         Guid institutionId, string? subject, bool active, CancellationToken ct)
     {
-        await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
-        if (active) await RequireAssignmentAccountsAsync(teacherUserId, studentUserId, institutionId, ct);
-        await UpsertAssignmentAsync(teacherUserId, studentUserId, institutionId, subject, active, actorUserId, ct);
-        await db.SaveChangesAsync(ct);
+        await MutateStudentAsync(studentUserId, async () =>
+        {
+            await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
+            if (active) await RequireAssignmentAccountsAsync(teacherUserId, studentUserId, institutionId, ct);
+            await UpsertAssignmentAsync(teacherUserId, studentUserId, institutionId, subject, active, actorUserId, ct);
+            await db.SaveChangesAsync(ct);
+        }, ct);
     }
 
     internal async Task RequireAssignmentAccountsAsync(Guid teacherUserId, Guid studentUserId, Guid? institutionId, CancellationToken ct)
@@ -151,40 +155,47 @@ public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountD
     public async Task UpdateInstitutionStudentAsync(Guid actorUserId, Guid institutionId, Guid studentUserId,
         int gradeLevel, Guid? teacherUserId, CancellationToken ct)
     {
-        await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
-        await RequireAccountAsync(studentUserId, "Student", ct);
-        if (gradeLevel is < 1 or > 12) throw new ArgumentException("Sınıf 1–12 arasında olmalıdır.");
-        if (!await HasMembershipAsync(studentUserId, institutionId, CoachingMemberRole.Student, ct)) throw Forbidden();
-        var profile = await db.CoachingStudentProfiles.SingleOrDefaultAsync(x => x.UserId == studentUserId && x.IsActive, ct)
-            ?? throw Forbidden();
-        if (teacherUserId.HasValue) await RequireAssignmentAccountsAsync(teacherUserId.Value, studentUserId, institutionId, ct);
-        var assignments = await db.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == studentUserId
-            && x.InstitutionId == institutionId && x.IsActive).ToListAsync(ct);
-        profile.UpdateEducation(CoachingEducationStatus.Student, gradeLevel, profile.SchoolName, profile.SchoolCity,
-            profile.SchoolDistrict, profile.SchoolType, profile.ClassBranch, null);
-        foreach (var assignment in assignments.Where(x => x.TeacherUserId != teacherUserId)) assignment.SetActive(false, actorUserId);
-        if (teacherUserId.HasValue) await UpsertAssignmentAsync(teacherUserId.Value, studentUserId, institutionId, null, true, actorUserId, ct);
-        await db.SaveChangesAsync(ct);
+        await MutateStudentAsync(studentUserId, async () =>
+        {
+            await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
+            await RequireAccountAsync(studentUserId, "Student", ct);
+            if (gradeLevel is < 1 or > 12) throw new ArgumentException("Sınıf 1–12 arasında olmalıdır.");
+            if (!await HasMembershipAsync(studentUserId, institutionId, CoachingMemberRole.Student, ct)) throw Forbidden();
+            var profile = await db.CoachingStudentProfiles.SingleOrDefaultAsync(x => x.UserId == studentUserId && x.IsActive, ct)
+                ?? throw Forbidden();
+            if (teacherUserId.HasValue) await RequireAssignmentAccountsAsync(teacherUserId.Value, studentUserId, institutionId, ct);
+            var assignments = await db.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == studentUserId
+                && x.InstitutionId == institutionId && x.IsActive).ToListAsync(ct);
+            profile.UpdateEducation(CoachingEducationStatus.Student, gradeLevel, profile.SchoolName, profile.SchoolCity,
+                profile.SchoolDistrict, profile.SchoolType, profile.ClassBranch, null);
+            foreach (var assignment in assignments.Where(x => x.TeacherUserId != teacherUserId)) assignment.SetActive(false, actorUserId);
+            if (teacherUserId.HasValue) await UpsertAssignmentAsync(teacherUserId.Value, studentUserId, institutionId, null, true, actorUserId, ct);
+            await db.SaveChangesAsync(ct);
+        }, ct);
     }
 
     public async Task EndAssignmentAsync(Guid actorUserId, Guid teacherUserId, Guid studentUserId,
         bool studentInitiated, CancellationToken ct)
     {
-        if (actorUserId != (studentInitiated ? studentUserId : teacherUserId)) throw Forbidden();
-        await RequireAccountAsync(actorUserId, studentInitiated ? "Student" : "Teacher", ct);
-        var hasActiveProfile = studentInitiated
-            ? await db.CoachingStudentProfiles.AnyAsync(x => x.UserId == actorUserId && x.IsActive, ct)
-            : await db.CoachingTeacherProfiles.AnyAsync(x => x.UserId == actorUserId && x.IsActive, ct);
-        if (!hasActiveProfile) throw Forbidden();
-        var rows = await db.CoachingTeacherStudentAssignments.Where(x => x.TeacherUserId == teacherUserId && x.StudentUserId == studentUserId).ToListAsync(ct);
-        if (rows.Count == 0) throw new KeyNotFoundException("Koçluk bağlantısı bulunamadı.");
-        foreach (var row in rows.Where(x => x.IsActive)) row.SetActive(false, actorUserId);
-        await db.SaveChangesAsync(ct);
+        await MutateStudentAsync(studentUserId, async () =>
+        {
+            if (actorUserId != (studentInitiated ? studentUserId : teacherUserId)) throw Forbidden();
+            await RequireAccountAsync(actorUserId, studentInitiated ? "Student" : "Teacher", ct);
+            var hasActiveProfile = studentInitiated
+                ? await db.CoachingStudentProfiles.AnyAsync(x => x.UserId == actorUserId && x.IsActive, ct)
+                : await db.CoachingTeacherProfiles.AnyAsync(x => x.UserId == actorUserId && x.IsActive, ct);
+            if (!hasActiveProfile) throw Forbidden();
+            var rows = await db.CoachingTeacherStudentAssignments.Where(x => x.TeacherUserId == teacherUserId && x.StudentUserId == studentUserId).ToListAsync(ct);
+            if (rows.Count == 0) throw new KeyNotFoundException("Koçluk bağlantısı bulunamadı.");
+            foreach (var row in rows.Where(x => x.IsActive)) row.SetActive(false, actorUserId);
+            await db.SaveChangesAsync(ct);
+        }, ct);
     }
 
     internal async Task UpsertAssignmentAsync(Guid teacherUserId, Guid studentUserId, Guid? institutionId,
         string? subject, bool active, Guid actorUserId, CancellationToken ct)
     {
+        await LockDecisionStudentAsync(studentUserId,ct);
         var normalizedSubject = string.IsNullOrWhiteSpace(subject) ? null : subject.Trim();
         var assignment = await db.CoachingTeacherStudentAssignments.SingleOrDefaultAsync(x =>
             x.TeacherUserId == teacherUserId && x.StudentUserId == studentUserId
@@ -195,6 +206,7 @@ public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountD
             db.CoachingTeacherStudentAssignments.Add(CoachingTeacherStudentAssignment.Create(teacherUserId, studentUserId, institutionId, normalizedSubject, actorUserId));
         }
         else if (assignment.IsActive != active) assignment.SetActive(active, actorUserId);
+        if (active) await TransferOpenDecisionsAsync(teacherUserId,studentUserId,institutionId,actorUserId,ct);
     }
 
     public async Task<Guid> RequireInstitutionAdminAsync(Guid actorUserId, Guid institutionId, CancellationToken ct)

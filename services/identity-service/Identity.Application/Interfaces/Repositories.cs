@@ -43,6 +43,17 @@ public interface IUserRepository
         string reason,
         CancellationToken cancellationToken);
     Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// When <paramref name="presentedToken"/> was already rotated, revokes every token of
+    /// its family and returns <c>true</c>.
+    /// </summary>
+    Task<bool> RevokeRefreshTokenFamilyOnReuseAsync(string presentedToken, CancellationToken cancellationToken) =>
+        Task.FromResult(false);
+
+    /// <summary>Deletes one batch of tokens that expired or were revoked before the cutoff.</summary>
+    Task<int> PurgeRefreshTokensAsync(DateTime expiredOrRevokedBefore, int batchSize, CancellationToken cancellationToken) =>
+        Task.FromResult(0);
     Task RevokeActiveRefreshTokensForProductAsync(
         Guid userId,
         PlatformProduct product,

@@ -188,13 +188,13 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
-        var normalizedEmail = email.ToLowerInvariant();
+        var normalizedEmail = User.NormalizeEmail(email);
         return await _context.Users
             .Include(u => u.ProductAccesses)
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
     }
 
     public async Task<User?> GetByLoginAsync(
@@ -251,6 +251,12 @@ public class UserRepository : IUserRepository
             "IX_UserLogins_LoginProvider_ProviderKey",
             StringComparison.Ordinal);
 
+    /// <summary>A concurrent registration won the race for the same (normalised) address.</summary>
+    public static bool IsDuplicateEmailViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgresException
+        && postgresException.SqlState == PostgresErrorCodes.UniqueViolation
+        && string.Equals(postgresException.ConstraintName, "IX_users_Email", StringComparison.Ordinal);
+
     public void Delete(User user)
     {
         _context.Users.Remove(user);
@@ -263,9 +269,10 @@ public class UserRepository : IUserRepository
         // token value below; this keeps the flow independent from EF's entity
         // materialization of inherited keys.
         var now = DateTime.UtcNow;
+        var digest = RefreshToken.Digest(refreshToken);
         var matchedToken = await _context.RefreshTokens
             .AsNoTracking()
-            .Where(token => token.Token == refreshToken
+            .Where(token => token.Token == digest
                 && token.RevokedAt == null
                 && token.ExpiresAt > now)
             .Select(token => new
@@ -274,7 +281,9 @@ public class UserRepository : IUserRepository
                 token.ExpiresAt,
                 token.IsPersistent,
                 token.MfaVerifiedAt,
-                token.Product
+                token.Product,
+                token.FamilyId,
+                token.SessionStartedAt
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -299,7 +308,9 @@ public class UserRepository : IUserRepository
             createdByIp: null,
             matchedToken.IsPersistent,
             matchedToken.MfaVerifiedAt,
-            matchedToken.Product));
+            matchedToken.Product,
+            matchedToken.FamilyId,
+            matchedToken.SessionStartedAt));
         return user;
     }
 
@@ -310,8 +321,9 @@ public class UserRepository : IUserRepository
         CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
+        var digest = RefreshToken.Digest(refreshToken);
         var affectedRows = await _context.RefreshTokens
-            .Where(token => token.Token == refreshToken && token.RevokedAt == null)
+            .Where(token => token.Token == digest && token.RevokedAt == null)
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(token => token.RevokedAt, now)
                 .SetProperty(token => token.RevokedByIp, revokedByIp)
@@ -334,8 +346,9 @@ public class UserRepository : IUserRepository
             await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
             var now = DateTime.UtcNow;
+            var digest = RefreshToken.Digest(refreshToken);
             var affectedRows = await _context.RefreshTokens
-                .Where(token => token.Token == refreshToken
+                .Where(token => token.Token == digest
                     && token.RevokedAt == null
                     && token.ExpiresAt > now)
                 .ExecuteUpdateAsync(setters => setters
@@ -355,6 +368,53 @@ public class UserRepository : IUserRepository
             await transaction.CommitAsync(cancellationToken);
             return true;
         });
+    }
+
+    public async Task<bool> RevokeRefreshTokenFamilyOnReuseAsync(
+        string presentedToken,
+        CancellationToken cancellationToken)
+    {
+        // A token that was already exchanged for a successor is being presented again:
+        // either the client or a thief holds a stale copy. Neither can be told apart, so
+        // the whole sign-in (every token of the family) is ended.
+        var digest = RefreshToken.Digest(presentedToken);
+        var reused = await _context.RefreshTokens
+            .AsNoTracking()
+            .Where(token => token.Token == digest
+                && token.RevokedAt != null
+                && token.ReasonRevoked == RefreshToken.RotatedReason)
+            .Select(token => new { token.FamilyId })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (reused is null)
+        {
+            return false;
+        }
+
+        var now = DateTime.UtcNow;
+        await _context.RefreshTokens
+            .Where(token => token.FamilyId == reused.FamilyId && token.RevokedAt == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(token => token.RevokedAt, now)
+                .SetProperty(token => token.RevokedByIp, "system")
+                .SetProperty(token => token.ReasonRevoked, "refresh token reuse detected")
+                .SetProperty(token => token.UpdatedAt, now), cancellationToken);
+        return true;
+    }
+
+    public async Task<int> PurgeRefreshTokensAsync(
+        DateTime expiredOrRevokedBefore,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        var batch = _context.RefreshTokens
+            .Where(token => token.ExpiresAt < expiredOrRevokedBefore
+                || token.RevokedAt != null && token.RevokedAt < expiredOrRevokedBefore)
+            .OrderBy(token => token.ExpiresAt)
+            .Select(token => token.Id)
+            .Take(batchSize);
+        return await _context.RefreshTokens
+            .Where(token => batch.Contains(token.Id))
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task RevokeActiveRefreshTokensAsync(

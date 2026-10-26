@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Identity.API.IntegrationTests" />
+    <InternalsVisibleTo Include="EduPlatform.Gateway.UnitTests" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\shared\EduPlatform.Shared.Contracts\EduPlatform.Shared.Contracts.csproj" />
     <ProjectReference Include="..\..\shared\EduPlatform.Shared.Infrastructure\EduPlatform.Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\..\shared\EduPlatform.Shared.Security\EduPlatform.Shared.Security.csproj" />
 

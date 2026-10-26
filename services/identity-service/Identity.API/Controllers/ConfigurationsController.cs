@@ -36,9 +36,10 @@ public class ConfigurationsController : ControllerBase
     }
 
     /// <summary>
-    /// Changes the MFA policy control plane itself. This route deliberately
-    /// remains available to a SystemAdmin without the policy it is changing,
-    /// so an admin cannot be locked out before MFA has been enrolled.
+    /// Changes the MFA policy control plane itself. Making a category stricter stays
+    /// available to a SystemAdmin without step-up, so MFA can be switched on before
+    /// anyone has enrolled. Making it weaker needs a session verified with MFA: a
+    /// phished password alone must not be able to switch the second factor off.
     /// </summary>
     [HttpPut("mfa/{category}")]
     [Authorize(Roles = "SystemAdmin")]
@@ -50,6 +51,23 @@ public class ConfigurationsController : ControllerBase
         if (!MfaOperationCategories.IsKnown(category))
         {
             return BadRequest(new { message = "Geçersiz MFA kategorisi." });
+        }
+
+        if (!MfaPolicyModes.IsKnown(request.Value))
+        {
+            return BadRequest(new { message = "Geçersiz MFA politikası." });
+        }
+
+        var key = MfaOperationCategories.ConfigurationKey(category);
+        var current = await _configurationService.GetManageableConfigurationValueAsync(key, cancellationToken);
+        if (MfaPolicyChangeRules.Weakens(current, request.Value)
+            && !MfaPolicyChangeRules.IsMfaVerified(User))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                code = "Auth.MfaRequired",
+                message = "MFA politikasını gevşetmek için iki adımlı doğrulamayla açılmış bir oturum gerekir."
+            });
         }
 
         await _configurationService.UpdateConfigurationAsync(
@@ -108,4 +126,24 @@ public class ConfigurationsController : ControllerBase
         await _configurationService.RefreshCacheAsync(cancellationToken);
         return Ok(new { message = "Cache refreshed successfully" });
     }
+}
+
+/// <summary>Strictness order of MFA policy modes: disabled &lt; mutations &lt; required.</summary>
+public static class MfaPolicyChangeRules
+{
+    /// <summary>
+    /// True when <paramref name="requested"/> is less strict than <paramref name="current"/>.
+    /// A missing or unreadable current value counts as "required", the effective default.
+    /// </summary>
+    public static bool Weakens(string? current, string? requested) => Rank(requested) < Rank(current ?? MfaPolicyModes.Required);
+
+    public static bool IsMfaVerified(System.Security.Claims.ClaimsPrincipal user) =>
+        user.Identity?.IsAuthenticated == true
+        && user.Claims.Any(claim => claim.Type == "amr" && claim.Value.Equals("mfa", StringComparison.OrdinalIgnoreCase));
+
+    private static int Rank(string? mode) =>
+        mode is null ? 2
+        : mode.Equals(MfaPolicyModes.Disabled, StringComparison.OrdinalIgnoreCase) ? 0
+        : mode.Equals(MfaPolicyModes.MutationsOnly, StringComparison.OrdinalIgnoreCase) ? 1
+        : 2;
 }

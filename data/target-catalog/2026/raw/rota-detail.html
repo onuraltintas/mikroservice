@@ -1,0 +1,3585 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Detayl&#x131; Arama</title>
+
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css?v=xkWGNSZq8TGjJIBW66-F8HLEtZm8JYEH5g8R5AY4RZ8" />
+    <link rel="stylesheet" href="/assets/css/style.css?v=WxU54Uzh3bQYnJ9E19Y8-JIWLXDsRztjs-XB0Uw7Me4" />
+
+    <link rel="stylesheet" href="/css/site.css?v=d0_OGE_akhJIJoeN5zSNMssda55wHqRU8FbrV7wfOEY" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Güvenlik: fetch wrapper + copy/right-click caydırıcı — mümkün olduğunca erken yükle -->
+    <script src="/js/rm-security.js?v=yxbO4oaxgaPKKn7KMojMo9jd7IdGcqQxcdj4ojrB6ek"></script>
+    <script src="/js/rm-analytics.js?v=3WEgYK1FL6uKgZ_lvbvBPnYsn2ey3VD_TeJBuMDI9FE"></script>
+    
+    <style>
+
+        html, body {
+            overflow-x: hidden;
+        }
+
+        #resultsSection, #resultsContainer, .results-container {
+            overflow-x: visible !important;
+        }
+
+        #myTable {
+            width: 100% !important;
+        }
+
+        @media (min-width: 769px) {
+            #myTable {
+                table-layout: fixed;
+            }
+
+            #myTable th, #myTable td {
+                font-size: .78rem;
+                padding: .4rem .45rem;
+                vertical-align: middle;
+                line-height: 1.35;
+                box-sizing: border-box;
+            }
+
+            #myTable tbody td {
+                white-space: normal !important;
+                word-break: normal !important;
+                overflow-wrap: normal !important;
+                hyphens: none;
+                overflow: visible;
+            }
+
+            #myTable th {
+                font-weight: 600;
+            }
+
+            #myTable th:nth-child(1), #myTable th:nth-child(2) {
+                overflow: hidden;
+            }
+
+            /* Lise (kademe=4): Afyonkarahisar / Şereflikoçhisar sığsın */
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) #myTable th:nth-child(1),
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) #myTable th:nth-child(2) {
+                overflow: visible;
+            }
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) #myTable th:nth-child(1),
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) #myTable td:nth-child(1) {
+                width: 10% !important;
+                min-width: 14ch;
+                max-width: 11rem;
+                white-space: nowrap;
+            }
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) #myTable th:nth-child(2),
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) #myTable td:nth-child(2) {
+                width: 12% !important;
+                min-width: 16ch;
+                max-width: 12.5rem;
+                white-space: nowrap;
+            }
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) #myTable th:nth-child(3),
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) #myTable td:nth-child(3) {
+                width: 14% !important;
+                min-width: 8.5rem;
+            }
+
+            #myTable th:nth-child(1), #myTable td:nth-child(1) { width: 9%; }
+            #myTable th:nth-child(2), #myTable td:nth-child(2) { width: 10%; }
+            #myTable th:nth-child(3), #myTable td:nth-child(3) {
+                width: 16%;
+                min-width: 9rem;
+            }
+            #myTable th:nth-child(4), #myTable td:nth-child(4) {
+                width: 11%;
+                min-width: 6rem;
+                white-space: normal !important;
+                overflow-wrap: anywhere;
+            }
+            #myTable th:nth-child(5), #myTable td:nth-child(5) {
+                width: 11%;
+                min-width: 6rem;
+                white-space: normal !important;
+                overflow-wrap: anywhere;
+                text-align: left;
+            }
+            #myTable th:nth-child(6), #myTable td:nth-child(6),
+            #myTable th.rm-detail-dil-col, #myTable td.rm-detail-dil-col {
+                width: 8.5%;
+                min-width: 5.5rem;
+                text-align: center;
+                white-space: nowrap;
+            }
+            #myTable thead th.rm-detail-dil-col .dt-column-title {
+                white-space: normal;
+                line-height: 1.25;
+            }
+
+            #myTable th:nth-child(1), #myTable td:nth-child(1),
+            #myTable th:nth-child(2), #myTable td:nth-child(2) {
+                text-align: left;
+            }
+
+            #myTable th:nth-child(3), #myTable td:nth-child(3),
+            #myTable th:nth-child(4), #myTable td:nth-child(4),
+            #myTable th:nth-child(5), #myTable td:nth-child(5) {
+                text-align: left;
+            }
+
+            #myTable th:nth-child(n+7), #myTable td:nth-child(n+7) {
+                width: 7%;
+                text-align: center;
+            }
+
+            #myTable td:nth-child(n+7) {
+                font-variant-numeric: tabular-nums;
+            }
+
+            #myTable .rm-kurum-cell {
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            #myTable th, #myTable td {
+                font-size: .72rem;
+                padding: .3rem .35rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            #myTable th, #myTable td {
+                font-size: .68rem;
+                padding: .25rem .3rem;
+            }
+        }
+
+        /* Mobil kart — LGS ile aynı (rm-lgs-page hariç) */
+        @media (max-width: 768px) {
+            body.rm-detailsearch-page:not(.rm-lgs-page) .container.mt-4 {
+                max-width: 100% !important;
+                padding-left: .65rem !important;
+                padding-right: .65rem !important;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable { table-layout: auto !important; }
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable colgroup { display: none; }
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable thead { display: none; }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable tbody,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable tr,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td {
+                display: block;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable th:nth-child(1), body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(1),
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable th:nth-child(2), body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(2),
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable th:nth-child(n+5), body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(n+5),
+            body.rm-detailsearch-page:not(.rm-lgs-page) .rm-hide-lise-cols #myTable td {
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable tbody td:nth-child(1),
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable tbody td:nth-child(2) {
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: unset !important;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable tr {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 0 8px;
+                margin: 0 0 14px 0;
+                border: 1px solid rgba(111,66,193,.12);
+                border-radius: 12px;
+                padding: 12px 12px 10px;
+                background: #fff;
+                box-shadow: 0 4px 16px rgba(111,66,193,.06);
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(3) {
+                grid-column: 1 / -1;
+                order: -20;
+                display: block !important;
+                padding: 0 0 10px !important;
+                margin-bottom: 6px;
+                border-bottom: 1px solid rgba(111,66,193,.14) !important;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(3)::before { display: none; }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(3) .rm-kurum-cell {
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(3) .rm-kurum-name {
+                font-size: 1rem;
+                font-weight: 700;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(3) .rm-kurum-zoom {
+                width: 30px;
+                height: 30px;
+                margin-top: 1px;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(1) { order: 1; }
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(2) { order: 2; }
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(4) { order: 3; grid-column: 1 / -1; }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(n+5) {
+                order: 10;
+                grid-column: span 1;
+                grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+                gap: 6px 10px;
+                align-items: start;
+                padding: 6px 8px !important;
+                margin: 2px 0;
+                border-radius: 6px;
+                border: 0 !important;
+                font-size: .8rem;
+                text-align: right;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(n+5)::before {
+                font-size: .7rem;
+                color: #64748b;
+                font-weight: 600;
+                text-align: left;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td {
+                display: grid !important;
+                grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+                gap: 6px 10px;
+                align-items: start;
+                text-align: right;
+                padding: 6px 0 !important;
+                border: 0 !important;
+                border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+                white-space: normal !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:last-child { border-bottom: 0 !important; }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #333;
+                text-align: left;
+                white-space: normal;
+                word-break: break-word;
+                line-height: 1.25;
+                font-size: .78rem;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) .rm-table-wrap {
+                padding: .45rem .35rem .2rem;
+                overflow-x: hidden;
+                border-radius: 12px;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #resultsSection { overflow-x: hidden !important; }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper .row,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper .col-sm-12 {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper .dataTables_length,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper .dataTables_filter {
+                width: 100%;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper .dataTables_length label,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper .dataTables_filter label {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: .3rem;
+                width: 100%;
+                margin: 0;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper .dataTables_length select,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable_wrapper .dataTables_filter input,
+            body.rm-detailsearch-page:not(.rm-lgs-page) #dtSearchWrap .dataTables_filter input {
+                width: 100%;
+                max-width: 100%;
+                margin: 0 !important;
+            }
+
+            body.rm-detailsearch-page:not(.rm-lgs-page) #resultSummary {
+                font-size: .82rem;
+                max-width: 100%;
+                word-break: break-word;
+            }
+        }
+
+        @media (max-width: 400px) {
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable tr { grid-template-columns: 1fr; }
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(1),
+            body.rm-detailsearch-page:not(.rm-lgs-page) #myTable td:nth-child(2) {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* Detaylı arama sayfasında arka plan görseli olmasın */
+        body {
+            background: transparent !important;
+        }
+
+        main, .layout, .rm-hero {
+            background: transparent !important;
+        }
+
+        #myTable tbody tr:hover {
+            background: transparent !important;
+        }
+
+        /* Lise tablosu dar ekranda yatay kaydırılabilir; mobil kart düzeni aynı */
+        @media (min-width: 769px) {
+            body.rm-detailsearch-page:not(.rm-hide-lise-cols) .rm-table-wrap {
+                overflow-x: auto;
+            }
+        }
+
+        /* DataTables görünüm */
+        .rm-table-wrap {
+            overflow-x: auto;
+            overflow-y: clip;
+            max-width: 100%;
+            width: 100%;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid rgba(111, 66, 193, 0.10);
+            box-shadow: 0 8px 28px rgba(111, 66, 193, 0.07);
+            padding: .65rem .65rem .25rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #myTable_wrapper {
+            padding: 0 .15rem;
+        }
+
+        #myTable_wrapper .dataTables_length,
+        #myTable_wrapper .dataTables_filter {
+            margin-bottom: .75rem;
+        }
+
+        #myTable_wrapper .dataTables_length label,
+        #myTable_wrapper .dataTables_filter label {
+            font-size: .82rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        #myTable_wrapper .dataTables_length select {
+            border-radius: 999px;
+            border: 1px solid rgba(111, 66, 193, 0.14);
+            padding: .3rem 1.75rem .3rem .65rem;
+            margin: 0 .35rem;
+            color: #444;
+            background-color: #fff;
+        }
+
+        #myTable_wrapper .dataTables_filter input {
+            border-radius: 999px;
+            border: 1px solid rgba(111, 66, 193, 0.14);
+            padding: .4rem .85rem;
+            margin-left: .4rem !important;
+            min-width: 180px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        #myTable_wrapper .dataTables_filter input:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 .2rem rgba(111, 66, 193, .12);
+            outline: none;
+        }
+
+        #myTable {
+            border-collapse: separate !important;
+            border-spacing: 0;
+            border-radius: 12px;
+            overflow: visible;
+            margin-top: .25rem !important;
+        }
+
+        @media (min-width: 769px) {
+            #myTable thead th {
+                z-index: 2;
+            }
+        }
+
+        #myTable thead th {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 55%, #ffffff 100%) !important;
+            color: #1e293b !important;
+            border: none !important;
+            border-right: 1px solid rgba(148, 163, 184, 0.12) !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .98), 0 2px 6px rgba(15, 23, 42, 0.06);
+            font-weight: 700;
+            font-size: .68rem;
+            letter-spacing: .02em;
+            text-transform: none;
+            padding: .55rem .4rem !important;
+            vertical-align: middle;
+            white-space: normal;
+            word-break: normal;
+            line-height: 1.2;
+            overflow: hidden;
+        }
+
+        #myTable thead th:nth-child(3),
+        #myTable thead th:nth-child(4) {
+            overflow: visible;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        #myTable tbody td:nth-child(3),
+        #myTable tbody td:nth-child(4) {
+            overflow: visible;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        #myTable thead th:nth-child(1),
+        #myTable thead th:nth-child(2) {
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: .72rem;
+            white-space: nowrap;
+        }
+
+        #myTable thead th:nth-child(3),
+        #myTable thead th:nth-child(4) {
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: .72rem;
+            white-space: normal;
+            line-height: 1.2;
+        }
+
+        #myTable thead th:nth-child(n+5) {
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: .64rem;
+            line-height: 1.15;
+            padding: .45rem .25rem !important;
+            white-space: normal !important;
+            vertical-align: middle;
+        }
+
+        .rm-detailsearch-page table.dataTable thead > tr > th.dt-orderable-asc,
+        .rm-detailsearch-page table.dataTable thead > tr > th.dt-orderable-desc {
+            padding-right: .35rem !important;
+        }
+
+        .rm-detailsearch-page #myTable thead th div.dt-column-header,
+        .rm-detailsearch-page #myTable thead th .dt-column-title {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .rm-detailsearch-page #myTable thead th:nth-child(5),
+        .rm-detailsearch-page #myTable thead th:nth-child(6),
+        .rm-detailsearch-page #myTable thead th:nth-child(7),
+        .rm-detailsearch-page #myTable thead th:nth-child(8),
+        .rm-detailsearch-page #myTable thead th:nth-child(9),
+        .rm-detailsearch-page #myTable thead th:nth-child(10),
+        .rm-detailsearch-page #myTable thead th:nth-child(11),
+        .rm-detailsearch-page #myTable thead th:nth-child(12),
+        .rm-detailsearch-page #myTable thead th:nth-child(13),
+        .rm-detailsearch-page #myTable thead th:nth-child(14) div.dt-column-header {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .rm-detailsearch-page #myTable thead th:nth-child(n+5) .dt-column-title {
+            display: block;
+            flex: 1 1 auto;
+            min-width: 0;
+            white-space: normal !important;
+            text-align: center;
+            line-height: 1.15;
+        }
+
+        .rm-detailsearch-page #myTable thead th:nth-child(5) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(6) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(7) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(8) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(9) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(10) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(11) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(12) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(13) .dt-column-title,
+        .rm-detailsearch-page #myTable thead th:nth-child(14) .dt-column-title {
+            width: 100%;
+        }
+
+        .rm-detailsearch-page #myTable thead th:nth-child(5) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(6) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(7) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(8) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(9) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(10) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(11) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(12) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(13) .dt-column-order,
+        .rm-detailsearch-page #myTable thead th:nth-child(14) .dt-column-order {
+            display: none !important;
+        }
+
+        #myTable thead th:last-child {
+            border-right: none !important;
+        }
+
+        /* Sıralama okları – net ve okunaklı */
+        .rm-detailsearch-page table.dataTable thead > tr > th .dt-column-order {
+            width: 14px !important;
+            height: 18px !important;
+        }
+
+        .rm-detailsearch-page table.dataTable thead > tr > th .dt-column-order:before,
+        .rm-detailsearch-page table.dataTable thead > tr > th .dt-column-order:after {
+            opacity: .45 !important;
+            color: #a39bb8 !important;
+            font-size: .72rem !important;
+            font-weight: 700;
+            line-height: 10px !important;
+        }
+
+        .rm-detailsearch-page table.dataTable thead > tr > th.dt-ordering-asc .dt-column-order:before {
+            opacity: 1 !important;
+            color: #6f42c1 !important;
+        }
+
+        .rm-detailsearch-page table.dataTable thead > tr > th.dt-ordering-desc .dt-column-order:after {
+            opacity: 1 !important;
+            color: #6f42c1 !important;
+        }
+
+        .rm-detailsearch-page table.dataTable thead > tr > th.dt-orderable-asc:hover,
+        .rm-detailsearch-page table.dataTable thead > tr > th.dt-orderable-desc:hover {
+            background: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 100%) !important;
+            outline: none !important;
+        }
+
+        .rm-detailsearch-page #myTable thead th.rm-detail-sort-col .dt-column-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .rm-detailsearch-page #myTable thead th.rm-detail-sort-col .dt-column-title {
+            display: block;
+            width: 100%;
+            text-align: center;
+            line-height: 1.15;
+            order: 1;
+        }
+
+        .rm-detailsearch-page #myTable thead th.rm-detail-sort-col .rm-detail-sort {
+            order: 2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            margin-top: 0;
+        }
+
+        .rm-detail-sort {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            margin-top: 2px;
+        }
+
+        .rm-detail-sort .rm-sort-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 16px;
+            padding: 0;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+            background: #fff;
+            color: #94a3b8;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .rm-detail-sort .rm-sort-btn:hover {
+            color: #6f42c1;
+            border-color: rgba(111, 66, 193, 0.35);
+        }
+
+        .rm-detail-sort .rm-sort-btn.is-active {
+            color: #6f42c1;
+            border-color: rgba(111, 66, 193, 0.45);
+            background: rgba(111, 66, 193, 0.08);
+        }
+
+        .rm-detail-sort .rm-sort-btn .bi {
+            font-size: .72rem;
+            line-height: 1;
+        }
+
+        #myTable tbody td {
+            border-right: 1px solid #f0eef5 !important;
+            border-bottom: 1px solid #ebe9f2 !important;
+            padding: .52rem .5rem !important;
+            vertical-align: middle;
+            color: #374151;
+            white-space: normal !important;
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+            hyphens: none;
+        }
+
+        #myTable tbody td:last-child {
+            border-right: none !important;
+        }
+
+        #myTable tbody tr:nth-child(even) td {
+            background: #faf9fc;
+        }
+
+        #myTable tbody tr:hover td {
+            background: #f7f4ff !important;
+        }
+
+        #myTable tbody tr:last-child td:first-child {
+            border-bottom-left-radius: 10px;
+        }
+
+        #myTable tbody tr:last-child td:last-child {
+            border-bottom-right-radius: 10px;
+        }
+
+        /* Puan ve kontenjan — kolon normal, yalnızca pill renkli */
+        .rm-detailsearch-page #myTable tbody td:nth-child(n+5) {
+            text-align: center;
+            vertical-align: middle !important;
+            overflow: visible;
+            padding: .42rem .35rem !important;
+        }
+
+        .rm-pill-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 1.65rem;
+        }
+
+        .rm-puan-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 3rem;
+            padding: .28rem .52rem;
+            border-radius: 999px;
+            background: #f6f1ff;
+            color: #7a6aad;
+            font-weight: 700;
+            font-size: .76rem;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        .rm-kont-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.6rem;
+            padding: .28rem .5rem;
+            border-radius: 999px;
+            background: #f1f7fc;
+            color: #6d9ec6;
+            font-weight: 700;
+            font-size: .76rem;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        #myTable_wrapper .dataTables_info {
+            font-size: .8rem;
+            color: #666;
+            padding-top: .85rem;
+        }
+
+        #myTable_wrapper .dataTables_paginate {
+            padding-top: .65rem;
+        }
+
+        #myTable_wrapper .pagination {
+            gap: 4px;
+        }
+
+        #myTable_wrapper .page-link {
+            border-radius: 999px !important;
+            min-width: 34px;
+            text-align: center;
+            border-color: rgba(111, 66, 193, 0.16);
+            color: #5b6478;
+            font-size: .82rem;
+        }
+
+        #myTable_wrapper .page-item.active .page-link {
+            background: #6f42c1;
+            border-color: #6f42c1;
+            color: #fff !important;
+        }
+
+        #myTable_wrapper .page-item.active .page-link:hover,
+        #myTable_wrapper .page-item.active .page-link:focus {
+            background: #5a36a3;
+            border-color: #5a36a3;
+            color: #fff !important;
+        }
+
+        #myTable_wrapper .page-link:hover {
+            background: #f7f4ff;
+            border-color: rgba(111, 66, 193, 0.24);
+            color: #1e293b;
+        }
+
+        #myTable_wrapper .dataTables_processing {
+            display: none !important;
+        }
+
+        #myTable thead th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        #myTable thead th:last-child {
+            border-top-right-radius: 10px;
+        }
+
+        #resultSummary {
+            background: linear-gradient(180deg, #f7f4ff 0%, #ffffff 100%);
+            color: #5a36a3;
+            font-weight: 600;
+            font-size: .82rem;
+            padding: .35rem .75rem;
+            border-radius: 999px;
+            border: 1px solid rgba(111, 66, 193, 0.14);
+        }
+
+        .rm-results-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 240px;
+            padding: 36px 24px;
+            text-align: center;
+            background: linear-gradient(180deg, #f8f5ff 0%, #ffffff 100%);
+            border: 1px dashed rgba(111, 66, 193, 0.22);
+            border-radius: 12px;
+        }
+
+        .rm-results-empty-icon {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(111, 66, 193, 0.1);
+            color: #6f42c1;
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+
+        .rm-results-empty-title {
+            margin: 0 0 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .rm-results-empty-text {
+            margin: 0 auto 18px;
+            max-width: 420px;
+            font-size: .9rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .rm-table-wrap.has-empty-results #myTable,
+        .rm-table-wrap.has-empty-results #dtToolbar {
+            display: none !important;
+        }
+
+        /* Filtre checkbox'ları: yan yana, sıkı ve derli toplu (araları açılmasın) */
+        .rm-filter-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            align-items: flex-start;
+            margin-top: 2px;
+        }
+
+            .rm-filter-grid .form-check {
+                margin: 0;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                /* Uzun etiketler ("Sadece boş kontenjan...") mobilde daha düzgün kırılsın */
+                max-width: 100%;
+            }
+
+            .rm-filter-grid .form-check-input {
+                margin-top: 0;
+                flex: 0 0 auto;
+            }
+
+        .rm-filter-grid .form-check-label {
+            margin: 0;
+            line-height: 1.25;
+        }
+
+        .rm-pansiyon-filter-group {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-start;
+            flex: 0 1 auto;
+        }
+
+        .rm-pansiyon-subgroup {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-left: 1.35rem;
+            padding-left: .65rem;
+            border-left: 2px solid rgba(111,66,193,.18);
+        }
+
+        .rm-kontenjan-subpanel {
+            background: linear-gradient(180deg, #f8f5ff 0%, #ffffff 100%);
+            border: 1px solid rgba(111, 66, 193, 0.14);
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .rm-kontenjan-subpanel .rm-filter-block-title {
+            margin-bottom: 10px;
+        }
+
+        .rm-kontenjan-subpanel .form-check {
+            margin-bottom: 8px;
+        }
+
+        .rm-kontenjan-subpanel .form-check:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .rm-kontenjan-subpanel .form-text {
+            margin-top: 10px;
+            font-size: .78rem;
+        }
+
+        .rm-puan-presets {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px 20px;
+            margin-top: 10px;
+            width: 100%;
+            padding-left: 0;
+        }
+
+        .rm-puan-presets .form-check {
+            margin: 0;
+            padding-left: 0 !important;
+            min-height: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rm-puan-presets .form-check-input {
+            width: 1.125rem;
+            height: 1.125rem;
+            margin: 0 !important;
+            flex: 0 0 auto;
+            float: none;
+            position: static;
+        }
+
+        .rm-puan-presets .form-check-label {
+            font-size: .95rem;
+            font-weight: 500;
+            line-height: 1.125rem;
+            white-space: nowrap;
+            margin: 0;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .rm-puan-inputs-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .rm-puan-inputs-row .form-control {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        @media (max-width: 576px) {
+            .rm-puan-presets {
+                gap: 8px 14px;
+            }
+        }
+
+            .rm-filter-grid .form-check-label[data-bs-toggle="tooltip"] {
+                cursor: help;
+                border-bottom: 1px dotted rgba(111,66,193,.45);
+            }
+
+        /* Tablo responsive: ekran daralınca yatay kaydırma ile tüm kolonlar görülsün (12. sınıf dahil) */
+
+        .rm-table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+            .rm-table th, .rm-table td {
+                font-size: 12px;
+                padding: 6px 6px;
+                word-break: normal;
+                overflow-wrap: normal;
+                white-space: normal;
+            }
+
+            .rm-table thead th {
+                line-height: 1.15;
+                background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 55%, #ffffff 100%);
+                color: #1e293b;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+                font-weight: 700;
+            }
+
+        @media (max-width: 992px) {
+            .rm-table th, .rm-table td {
+                font-size: 11px;
+                padding: 5px 5px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .rm-table th, .rm-table td {
+                font-size: 10px;
+                padding: 4px 4px;
+            }
+        }
+
+        /* Okul adı linkleri tema ile uyumlu olsun (mavi değil) */
+        .rm-link {
+            color: #6f42c1;
+        }
+
+            .rm-link:hover {
+                color: #5a36a3;
+                text-decoration: underline;
+            }
+
+        /* Tam sayfa arama yükleme paneli */
+        .rm-search-loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1060;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .rm-search-loading-overlay.d-none {
+            display: none !important;
+        }
+
+        .rm-search-loading-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.48);
+        }
+
+        .rm-search-loading-dialog {
+            position: relative;
+            z-index: 1;
+            width: min(380px, 94vw);
+            background: #fff;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid rgba(111, 66, 193, 0.18);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+        }
+
+        body.rm-search-loading-active {
+            overflow: hidden;
+        }
+
+        .rm-loading-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .rm-loading-text {
+            margin-top: 8px;
+            font-size: 0.875rem;
+            color: #6c757d;
+            text-align: right;
+        }
+
+        /* Seçilen filtre alanları (şehir/ilçe/okul türü/okul tipi vb.) tema rengi ile vurgulansın */
+        
+        /* Lise kolonları gizlenince tablo sola yapışmasın — yalnızca masaüstü */
+        @media (min-width: 769px) {
+            .rm-hide-lise-cols #myTable{
+                width: 100% !important;
+                min-width: 0;
+                table-layout: fixed;
+                margin: 0 auto;
+            }
+            .rm-hide-lise-cols #myTable colgroup col:nth-child(1){ width:11% !important; }
+            .rm-hide-lise-cols #myTable colgroup col:nth-child(2){ width:13% !important; }
+            .rm-hide-lise-cols #myTable colgroup col:nth-child(3){ width:38% !important; }
+            .rm-hide-lise-cols #myTable colgroup col:nth-child(4){ width:14% !important; }
+            .rm-hide-lise-cols #myTable th:nth-child(1),
+            .rm-hide-lise-cols #myTable td:nth-child(1) { width: 11% !important; }
+            .rm-hide-lise-cols #myTable th:nth-child(2),
+            .rm-hide-lise-cols #myTable td:nth-child(2) { width: 13% !important; }
+            .rm-hide-lise-cols #myTable th:nth-child(3),
+            .rm-hide-lise-cols #myTable td:nth-child(3) { width: 38% !important; }
+            .rm-hide-lise-cols #myTable th:nth-child(4),
+            .rm-hide-lise-cols #myTable td:nth-child(4) { width: 14% !important; }
+            .rm-hide-lise-cols #myTable colgroup col:nth-child(n+5){ width:0% !important; }
+            .rm-hide-lise-cols #myTable th:nth-child(n+5),
+            .rm-hide-lise-cols #myTable td:nth-child(n+5) {
+                display: none !important;
+            }
+        }
+
+        .rm-selected {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 0 0 .2rem rgba(100,116,139,.15) !important;
+            background: #fff !important;
+        }
+
+        .rm-filter-step {
+            font-size: .82rem;
+            font-weight: 700;
+            color: #6f42c1;
+            margin-bottom: .65rem;
+        }
+
+        .rm-filter-block {
+            border: 1px solid rgba(111,66,193,.12);
+            border-radius: 14px;
+            padding: .85rem 1rem;
+            background: #fff;
+        }
+
+        .rm-filter-block-title {
+            font-size: .88rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: .5rem;
+        }
+
+        .rm-filter-block .form-text {
+            font-size: .72rem;
+            margin-top: .15rem;
+        }
+
+        /* Üst yatay adım şeması */
+        .rm-wizard-bar {
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 0;
+            padding: .35rem .15rem 1.1rem;
+            margin-bottom: .35rem;
+            scrollbar-width: thin;
+        }
+
+        .rm-wizard-step {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 68px;
+            max-width: 96px;
+            text-align: center;
+            cursor: default;
+            user-select: none;
+        }
+
+        .rm-wizard-step.is-done {
+            cursor: pointer;
+        }
+
+        .rm-wizard-node {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .82rem;
+            font-weight: 700;
+            border: 2px solid rgba(111,66,193,.22);
+            background: #fff;
+            color: #999;
+            transition: all .2s ease;
+        }
+
+        .rm-wizard-step.is-active .rm-wizard-node {
+            border-color: #6f42c1;
+            background: rgba(111,66,193,.12);
+            color: #6f42c1;
+            box-shadow: 0 0 0 4px rgba(111,66,193,.1);
+        }
+
+        .rm-wizard-step.is-done .rm-wizard-node {
+            border-color: #198754;
+            background: #198754;
+            color: #fff;
+        }
+
+        .rm-wizard-step.is-done .rm-wizard-node span {
+            display: none;
+        }
+
+        .rm-wizard-step.is-done .rm-wizard-node::after {
+            content: '✓';
+            font-size: .9rem;
+            line-height: 1;
+        }
+
+        .rm-wizard-step.is-locked .rm-wizard-node {
+            opacity: .55;
+        }
+
+        .rm-wizard-label {
+            margin-top: .4rem;
+            font-size: .68rem;
+            font-weight: 600;
+            line-height: 1.25;
+            color: #888;
+        }
+
+        .rm-wizard-step.is-active .rm-wizard-label {
+            color: #6f42c1;
+        }
+
+        .rm-wizard-step.is-done .rm-wizard-label {
+            color: #198754;
+        }
+
+        .rm-wizard-step.is-pending-review .rm-wizard-node {
+            border-color: #ffc107;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .rm-wizard-step.is-pending-review.is-done .rm-wizard-node::after {
+            content: '!';
+        }
+
+        .rm-wizard-connector {
+            flex: 1 1 20px;
+            min-width: 14px;
+            max-width: 42px;
+            height: 2px;
+            margin-top: 16px;
+            background: rgba(111,66,193,.14);
+            position: relative;
+        }
+
+        .rm-wizard-connector.is-done {
+            background: rgba(25,135,84,.45);
+        }
+
+        .rm-wizard-connector::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            border-left: 5px solid rgba(111,66,193,.22);
+        }
+
+        .rm-wizard-connector.is-done::after {
+            border-left-color: rgba(25,135,84,.55);
+        }
+
+        /* Sol dikey adım hattı */
+        .rm-steps-flow {
+            position: relative;
+        }
+
+        .rm-step-layout {
+            display: flex;
+            align-items: stretch;
+            gap: .75rem;
+        }
+
+        .rm-step-rail {
+            flex: 0 0 34px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: .1rem;
+        }
+
+        .rm-step-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .82rem;
+            font-weight: 700;
+            border: 2px solid rgba(111,66,193,.22);
+            background: #fff;
+            color: #999;
+            flex-shrink: 0;
+            transition: all .2s ease;
+        }
+
+        .rm-step-panel.is-active .rm-step-circle {
+            border-color: #6f42c1;
+            background: rgba(111,66,193,.12);
+            color: #6f42c1;
+            box-shadow: 0 0 0 4px rgba(111,66,193,.1);
+        }
+
+        .rm-step-panel.is-done:not(.is-active) .rm-step-circle {
+            border-color: #198754;
+            background: #198754;
+            color: #fff;
+        }
+
+        .rm-step-panel.is-done:not(.is-active) .rm-step-circle span {
+            display: none;
+        }
+
+        .rm-step-panel.is-done:not(.is-active) .rm-step-circle::after {
+            content: '✓';
+            font-size: .9rem;
+            line-height: 1;
+        }
+
+        .rm-step-vline {
+            flex: 1 1 auto;
+            width: 2px;
+            min-height: 18px;
+            margin-top: .35rem;
+            background: rgba(111,66,193,.14);
+            border-radius: 999px;
+        }
+
+        .rm-step-panel.is-done:not(.is-active) .rm-step-vline {
+            background: rgba(25,135,84,.35);
+        }
+
+        .rm-step-content {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .rm-step-panel {
+            transition: opacity .2s ease;
+            scroll-margin-top: 1.25rem;
+        }
+
+        /* Kilitli adımlar tamamen gizli; tamamlanan + aktif adım görünür */
+        .rm-step-panel.is-locked {
+            display: none !important;
+        }
+
+        .rm-step-panel.is-done:not(.is-active) .rm-step-body {
+            display: none;
+        }
+
+        .rm-step-panel.is-done:not(.is-active) .rm-step-summary {
+            display: flex;
+        }
+
+        .rm-step-panel.is-done:not(.is-active) {
+            padding: .55rem .85rem;
+        }
+
+        .rm-step-panel.is-pending-review:not(.is-active) {
+            border-color: rgba(255, 193, 7, 0.35);
+        }
+
+        .rm-step-panel.is-pending-review:not(.is-active) .rm-step-body {
+            display: none;
+        }
+
+        .rm-step-panel.is-pending-review:not(.is-active) .rm-step-summary {
+            display: flex;
+        }
+
+        .rm-step-panel.is-pending-review .rm-step-summary-text {
+            color: #856404;
+        }
+
+        .rm-step-panel:not(.is-done):not(.is-pending-review) .rm-step-summary,
+        .rm-step-panel.is-active .rm-step-summary {
+            display: none;
+        }
+
+        .rm-step-locked-msg {
+            display: none;
+        }
+
+        .rm-step-summary {
+            display: none;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .75rem;
+            padding: .25rem 0;
+        }
+
+        .rm-step-summary-text {
+            flex: 1;
+            min-width: 0;
+            font-size: .85rem;
+            color: #444;
+            line-height: 1.35;
+        }
+
+        .rm-step-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: .65rem;
+        }
+
+        .rm-step-next {
+            min-width: 110px;
+        }
+
+        #dtSearchWrap .dataTables_filter label {
+            width: 100%;
+            text-align: left;
+        }
+
+        #dtSearchWrap .dataTables_filter input {
+            width: 100%;
+            max-width: 420px;
+            margin-left: 0 !important;
+        }
+
+        table.dataTable thead th {
+            font-size: .78rem;
+        }
+    </style>
+    <link rel="stylesheet" href="/assets/css/dataTables.bootstrap5.css?v=NhiDfGdA1vucktHLjSOcI2E4JTu9L_ZNmdgWuUywnTc" />
+
+</head>
+<body class="rm-site-body rm-detailsearch-page" style="margin:0;">
+    <div class="rm-site-content">
+        
+
+<div class="container-fluid">
+    <div class="row justify-content-between p-2">
+        <div class="col-6 col-md-3">
+            <a href="/Home/Index" aria-label="Anasayfa">
+                <img src="/assets/images/logo-rota-marif.png" alt="Rota Maarif" class="img-fluid">
+            </a>
+        </div>
+        <div class="col-6 col-md-3 text-end">
+            <a href="#" aria-label="Milli Eğitim Bakanlığı">
+                <img src="/assets/images/logo-meb-gr.png" alt="MEB" class="img-fluid">
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">Detaylı Arama</h4>
+        </div>
+
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius:18px;">
+                <div class="card-body">
+                    <div id="puanSortHelpBar" class="alert alert-warning py-2 px-3 mb-2 d-none" role="alert">Puan sıralaması yalnızca lise kademesi için kullanılabilir.</div>
+
+                    <div class="rm-wizard-bar" id="wizardBar" aria-label="Arama adımları"></div>
+                    <div id="wizardReviewHint" class="alert alert-info py-2 px-3 small mb-2 d-none" role="status"></div>
+
+                    <div class="rm-steps-flow" id="stepsFlow">
+
+                    <!-- Adım 1: Okul kademesi -->
+                    <div class="rm-filter-block mb-2 rm-step-panel is-active" id="stepKademe" data-step="1">
+                        <div class="rm-filter-step" data-step-title="Okul kademesi">Adım 1 · Okul kademesi</div>
+                        <div class="rm-step-locked-msg">Önce bir kademe seçin.</div>
+                        <div class="rm-step-summary">
+                            <div class="rm-step-summary-text" id="summaryStep1"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rm-step-edit" data-goto="1">Düzenle</button>
+                        </div>
+                        <div class="rm-step-body">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <label class="form-label small text-muted mb-1" for="kademe">Okul Kademesi</label>
+                                    <select class="form-select rm-select" id="kademe">
+                                        <option value="">Kademe seçiniz</option>
+ <option value="0">Anaokulu</option>  <option value="1">İlkokul</option>  <option value="2">Ortaokul</option>                                     </select>
+                                    <div class="form-text">Kademe seçmeden sonraki adımlara geçemezsiniz.</div>
+                                </div>
+                            </div>
+                            <div class="rm-step-actions">
+                                <button type="button" class="btn btn-sm rm-btn rm-step-next" id="btnStep1Next" disabled>Devam et</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adım 2: Konum -->
+                    <div class="rm-filter-block mb-2 rm-step-panel is-locked" id="stepLocation" data-step="2">
+                        <div class="rm-filter-step" data-step-title="Konum">Adım 2 · Konum</div>
+                        <div class="rm-step-locked-msg">Önce Adım 1’i tamamlayın.</div>
+                        <div class="rm-step-summary">
+                            <div class="rm-step-summary-text" id="summaryStep2"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rm-step-edit" data-goto="2">Düzenle</button>
+                        </div>
+                        <div class="rm-step-body">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-md-4">
+                                    <div class="rm-field-wrap" id="sehirFieldWrap">
+                                        <div class="rm-field-error-msg d-none" id="sehirFieldError" role="alert">Lütfen önce il seçiniz</div>
+                                        <label class="form-label small text-muted mb-1" for="sehir">İl</label>
+                                        <select class="form-select rm-select" id="sehir" disabled>
+                                            <option value="">Önce kademe seçiniz</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label small text-muted mb-1">İlçe</label>
+                                    <select class="form-select rm-select" id="ilce" disabled>
+                                        <option value="">İlçe</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label small text-muted mb-1">Okul Türü</label>
+                                    <select class="form-select rm-select" id="okul" disabled>
+                                        <option value="">Okul Türü</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-text mt-1">Aramaya başlamak için <strong>il seçiniz</strong>. İlçe ve okul türünü daraltabilirsiniz.</div>
+                            <div class="rm-step-actions">
+                                <button type="button" class="btn btn-sm rm-btn rm-step-next rm-step-next--inactive" id="btnStep2Next">Devam et</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adım 3: Alan / okul tipi (yalnızca lise) -->
+                    <div class="rm-filter-block mb-2 rm-step-panel is-locked d-none" id="stepAlan" data-step="3">
+                        <div class="rm-filter-step" data-step-title="Alan ve öğrenci alma şekli">Adım 3 · Alan ve öğrenci alma şekli</div>
+                        <div class="rm-step-locked-msg">Önce Adım 2’yi tamamlayın.</div>
+                        <div class="rm-step-summary">
+                            <div class="rm-step-summary-text" id="summaryStep3"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rm-step-edit" data-goto="3">Düzenle</button>
+                        </div>
+                        <div class="rm-step-body">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-md-8">
+                                    <label class="form-label small text-muted mb-1">Alan Adı</label>
+                                    <select class="form-select rm-select" id="alan" disabled>
+                                        <option value="">Önce okul türü seçmelisiniz</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-4" id="sinavTipiWrap">
+                                    <label class="form-label small text-muted mb-1">Öğrenci Alma Şekli</label>
+                                    <select class="form-select rm-select" id="sinavTipi">
+                                        <option value="" selected>Hepsi</option>
+                                        <option value="sinavli">Sınavlı</option>
+                                        <option value="sinavsiz">Sınavsız</option>
+                                        <option value="sinavli-sinavsiz">Sınavlı-Sınavsız</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="rm-step-actions">
+                                <button type="button" class="btn btn-sm rm-btn rm-step-next" id="btnStep3Next">Devam et</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adım 4: Puan (lise) -->
+                    <div class="rm-filter-block mb-2 rm-step-panel is-locked d-none" id="stepPuan" data-step="4">
+                        <div class="rm-filter-step" data-step-title="Taban puan">Adım 4 · Taban puan</div>
+                        <div class="rm-step-locked-msg">Önce bir önceki adımı tamamlayın.</div>
+                        <div class="rm-step-summary">
+                            <div class="rm-step-summary-text" id="summaryStep4"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rm-step-edit" data-goto="4">Düzenle</button>
+                        </div>
+                        <div class="rm-step-body">
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small text-muted mb-1" for="puanMin" id="puanRangeLabel">Taban puan aralığı (9–11. sınıf)</label>
+                                    <div class="rm-puan-inputs-row">
+                                        <input id="puanMin" type="number" min="0" max="500" class="form-control rm-input" placeholder="En az" value="0" />
+                                        <input id="puanMax" type="number" min="0" max="500" class="form-control rm-input" placeholder="En fazla" value="500" />
+                                    </div>
+                                    <div class="rm-puan-presets">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="puanPreset300350" data-puan-min="300" data-puan-max="350" />
+                                            <label class="form-check-label" for="puanPreset300350">300–350</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="puanPreset350400" data-puan-min="350" data-puan-max="400" />
+                                            <label class="form-check-label" for="puanPreset350400">350–400</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="puanPreset400450" data-puan-min="400" data-puan-max="450" />
+                                            <label class="form-check-label" for="puanPreset400450">400–450</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="puanPreset450500" data-puan-min="450" data-puan-max="500" />
+                                            <label class="form-check-label" for="puanPreset450500">450–500</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                    </div>
+                                    <div class="rm-dual-range-wrap" aria-hidden="true">
+                                        <div class="rm-dual-range-rail"></div>
+                                        <div class="rm-dual-range-track" id="puanSliderTrack"></div>
+                                        <input type="range" id="puanSliderMin" min="0" max="500" step="1" value="0" />
+                                        <input type="range" id="puanSliderMax" min="0" max="500" step="1" value="500" />
+                                    </div>
+                                    <div class="form-text mt-1" id="puanRangeHint">Puan filtresi 9, 10 ve 11. sınıf taban puanlarına uygulanır. Sonuçlar taban puanına göre yüksekten düşüğe sıralanır.</div>
+                            <div class="rm-step-actions">
+                                <button type="button" class="btn btn-sm rm-btn rm-step-next" id="btnStep4Next">Devam et</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Okul içi özellikler -->
+                    <div class="rm-filter-block mb-2 rm-step-panel is-locked" id="stepFeatures" data-step="6">
+                        <div class="rm-filter-step" data-step-title="Okul İçi Özellikler">Adım · Okul İçi Özellikler</div>
+                        <div class="rm-step-locked-msg">Önce bir önceki adımı tamamlayın.</div>
+                        <div class="rm-step-summary">
+                            <div class="rm-step-summary-text" id="summaryStep6"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rm-step-edit" data-goto="6">Düzenle</button>
+                        </div>
+                        <div class="rm-step-body">
+                            <div class="row g-3">
+                                <div class="col-12 col-lg-7">
+                                    <div class="rm-filter-block-title">Sadece aşağıdaki özelliği olan okulları göster</div>
+                                    <div class="rm-filter-grid">
+                                        <div class="form-check rm-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="chkAnasinifi" disabled />
+                                            <label class="form-check-label" for="chkAnasinifi"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                   title="Okul bünyesinde anasınıfı sınıfı bulunan kurumları listeler.">Anasınıfı bulunan okullar</label>
+                                        </div>
+                                        <div class="rm-pansiyon-filter-group">
+                                            <div class="form-check rm-checkbox">
+                                                <input class="form-check-input" type="checkbox" id="chkPans" disabled />
+                                                <label class="form-check-label" for="chkPans"
+                                                       data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                       title="Öğrenci barınma hizmeti (pansiyon) sunan okulları listeler.">Pansiyonlu okullar</label>
+                                            </div>
+                                            <div class="rm-pansiyon-subgroup d-none" id="pansiyonSubgroup">
+                                                <div class="form-check rm-checkbox">
+                                                    <input class="form-check-input" type="checkbox" id="chkErkekPans" disabled />
+                                                    <label class="form-check-label" for="chkErkekPans">Erkek Öğrenci Pansiyon</label>
+                                                </div>
+                                                <div class="form-check rm-checkbox">
+                                                    <input class="form-check-input" type="checkbox" id="chkKizPans" disabled />
+                                                    <label class="form-check-label" for="chkKizPans">Kız Öğrenci Pansiyon</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-check rm-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="chkProje" disabled />
+                                            <label class="form-check-label" for="chkProje"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                   title="Proje okulu statüsündeki kurumları listeler.">Proje okulu</label>
+                                        </div>
+                                        <div class="form-check rm-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="chkOzelEgitim" disabled />
+                                            <label class="form-check-label" for="chkOzelEgitim"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                   title="Özel eğitim ihtiyacı olan öğrenciler için sınıf veya destek birimi bulunan okulları listeler.">Özel eğitim sınıfı bulunan okullar</label>
+                                        </div>
+                                        <div class="form-check rm-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="chkDyk" disabled />
+                                            <label class="form-check-label" for="chkDyk"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                   title="Destek ve Yetiştirme Kursu (DYK) merkezi olan kurumları listeler.">Destek ve Yetiştirme Kursu (DYK)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-5 d-none" id="kontenjanFilterWrap">
+                                    <div class="rm-kontenjan-subpanel">
+                                        <div class="rm-filter-block-title">Kontenjan</div>
+                                        <div class="form-check rm-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="chkBosKont9" data-sinif="9" disabled />
+                                            <label class="form-check-label" for="chkBosKont9"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                   title="9. sınıfta boş kontenjanı bulunan liseleri listeler.">9. sınıf boş kontenjanı olan okullar</label>
+                                        </div>
+                                        <div class="form-check rm-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="chkBosKont10" data-sinif="10" disabled />
+                                            <label class="form-check-label" for="chkBosKont10"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                   title="10. sınıfta boş kontenjanı bulunan liseleri listeler.">10. sınıf boş kontenjanı olan okullar</label>
+                                        </div>
+                                        <div class="form-check rm-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="chkBosKont11" data-sinif="11" disabled />
+                                            <label class="form-check-label" for="chkBosKont11"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                   title="11. sınıfta boş kontenjanı bulunan liseleri listeler.">11. sınıf boş kontenjanı olan okullar</label>
+                                        </div>
+                                        <div class="form-text">Seçili sınıflarda boş kontenjanı olan lise kayıtları listelenir.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div><!-- /rm-steps-flow -->
+
+                    <div class="col-12 d-flex justify-content-end gap-2 mt-2 d-none" id="wizardActions">
+                        <button id="btnClear" class="btn btn-outline-secondary btn-black">Temizle</button>
+                        <button id="btnSearch" class="btn rm-btn" type="button" title="Okul ara">Okul Ara</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3 d-none" id="resultsSection">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h4 class="mb-0">Arama Sonuçları</h4>
+            <div class="d-flex align-items-center gap-2">
+                <div class="text-muted small" id="resultSummary"></div>
+            </div>
+        </div>
+        <div class="col-12 mt-3">
+            <div class="rm-table-wrap position-relative">
+                <div id="resultsEmptyState" class="rm-results-empty d-none" aria-live="polite">
+                    <div>
+                        <div class="rm-results-empty-icon" aria-hidden="true">?</div>
+                        <p class="rm-results-empty-title">Bu kriterlere uygun okul bulunamadı</p>
+                        <p class="rm-results-empty-text">Lütfen filtrelerinizi esneterek tekrar deneyin.</p>
+                        <button type="button" id="btnResetFromEmpty" class="btn rm-btn">Filtreleri Temizle</button>
+                    </div>
+                </div>
+                <table id="myTable" class="display table table-hover rm-dt-table" style="width:100%">
+                    <colgroup>
+                        <col style="width:9%">
+                        <col style="width:10%">
+                        <col style="width:14%">
+                        <col style="width:11%">
+                        <col style="width:7%">
+                        <col style="width:7%">
+                        <col style="width:7%">
+                        <col style="width:7%">
+                        <col style="width:7%">
+                        <col style="width:7%">
+                        <col style="width:7%">
+                        <col style="width:7%">
+                    </colgroup>
+
+
+
+                    <thead>
+                        <tr>
+                            <th>İl</th>
+                            <th>İlçe</th>
+                            <th>Kurum Adı</th>
+                            <th>Kurum<br>Türü</th>
+                            <th>9. Sınıf<br>Kontenjan</th>
+                            <th>9. Sınıf<br>Taban Puanı</th>
+                            <th>10. Sınıf<br>Kontenjan</th>
+                            <th>10. Sınıf<br>Taban Puan</th>
+                            <th>11. Sınıf<br>Kontenjan</th>
+                            <th>11. Sınıf<br>Taban Puan</th>
+                            <th>12. Sınıf<br>Kontenjan</th>
+                            <th>12. Sınıf<br>Taban Puan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2" id="dtToolbar">
+                <div id="dtSearchWrap"></div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2 d-none" id="legacyPagerWrap">
+                <div class="text-muted small" id="pagingInfo"></div>
+                <nav aria-label="Sayfalama" class="ms-auto">
+                    <ul id="pager" class="pagination pagination-sm mb-0"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<div id="gridLoading" class="rm-search-loading-overlay d-none" aria-hidden="true" role="alertdialog" aria-labelledby="gridLoadingTitle" aria-modal="true">
+    <div class="rm-search-loading-backdrop"></div>
+    <div class="rm-search-loading-dialog">
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <div id="gridLoadingTitle" class="rm-loading-title mb-0">Sonuçlar getiriliyor</div>
+            <div id="gridLoadingText" class="rm-loading-text mb-0">0%</div>
+        </div>
+        <div class="progress" style="height:8px; border-radius:999px;">
+            <div id="gridLoadingBar" class="progress-bar" role="progressbar" style="width:0%; background:#6f42c1"></div>
+        </div>
+        <div class="text-muted small mt-2">Lütfen bekleyin.</div>
+    </div>
+</div>
+
+<footer class="rm-footer rm-sticky-footer border-top">
+    <div class="container-fluid py-3">
+        <div class="rm-footer-row">
+            <a class="rm-footer-brand" href="/Home/Index" aria-label="Anasayfa">
+                <img src="/assets/images/logo-rota-marif.png" alt="Rota Maarif" style="height:24px" />
+            </a>
+            <div class="rm-footer-copy text-muted small">Millî Eğitim Bakanlığı © 2026 | Tüm Hakları Saklıdır.</div>
+        </div>
+    </div>
+</footer>
+
+
+    </div>
+
+    <script src="/assets/js/popper.min.js?v=dcmHIMHhglKfn7QvWlHRqGOiejhy8J1cnRfedkuGNuM"></script>
+    <script src="/assets/js/bootstrap.min.js?v=F1ytps3bBRw7Fx6NeN7cdd2wF1jV-8F1Fas4QdGTEnk"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/rm-checkbox-dropdown.js?v=Orsn_y7mkHvepazvqZGd3lvnY46VRRX25fHTyTj6GUw"></script>
+    <script src="/js/rm-kurum-link.js?v=77s7iwdzUNy7Qtp33IzK1sKNN9iIwRp5djbXHSAArXQ"></script>
+    <script src="/js/rm-sticky-table-head.js?v=lGD8jnhVvDImEOyHBYH3tozHIQ6F43bSne87TYdxar0"></script>
+    
+    <script src="/assets/js/jquery-3.7.1.js?v=6440qEDaqjKqrIVfk4x21neDBVsbef6XUR5dUCKBv_E"></script>
+    <script src="/assets/js/dataTables.js?v=7Hpdbld8snmw80CF5886EKLMKqRT-b0cg4zUEz2lL-I"></script>
+    <script src="/assets/js/dataTables.bootstrap5.js?v=zsCPSDFQRIFUc6l_eyE7ifiFBBCxBe2MOb5EOQhXs_A"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/rm-wizard-summary.js?v=cQ13T6E25D7Vc95mdqj4Cxah9nQbK9jjjLqlkdkX0WU"></script>
+    <script>
+        (function(){
+          // 12. sınıf kontenjan + taban puan kolonları (kademe=4). Açmak için true yapın.
+          const RM_SHOW_SINIF_12_COLUMNS = false;
+          function showSinif12Columns(){ return RM_SHOW_SINIF_12_COLUMNS; }
+
+          const kademeSel = document.getElementById('kademe');
+          const sehir = document.getElementById('sehir');
+          const ilce  = document.getElementById('ilce');
+          const okul  = document.getElementById('okul');
+          const alan  = document.getElementById('alan');
+          const sinavTipi = document.getElementById('sinavTipi');
+          const puanMin = document.getElementById('puanMin');
+          const puanMax = document.getElementById('puanMax');
+          const puanSliderMin = document.getElementById('puanSliderMin');
+          const puanSliderMax = document.getElementById('puanSliderMax');
+          const puanSliderTrack = document.getElementById('puanSliderTrack');
+          const stepPuan = document.getElementById('stepPuan');
+          const kontenjanFilterWrap = document.getElementById('kontenjanFilterWrap');
+          const chkBosKont9 = document.getElementById('chkBosKont9');
+          const chkBosKont10 = document.getElementById('chkBosKont10');
+          const chkBosKont11 = document.getElementById('chkBosKont11');
+
+          function kontenjanSinifInputs(){
+            return [chkBosKont9, chkBosKont10, chkBosKont11].filter(Boolean);
+          }
+
+          function resetKontenjanCheckboxes(checked){
+            kontenjanSinifInputs().forEach(cb => { cb.checked = checked; });
+          }
+
+          const sehirMs = new RmCheckboxDropdown(sehir, {
+            placeholder: 'İl seçiniz',
+            selectAllLabel: 'Tüm iller',
+            summary: (selected, items) => {
+              if(!items || items.length === 0) return 'İl seçiniz';
+              if(selected.length === 0) return 'İl seçiniz';
+              if(selected.length === items.length) return 'Tüm iller';
+              return `${selected.length} il seçildi`;
+            }
+          });
+          const ilceMs = new RmCheckboxDropdown(ilce, {
+            selectAllLabel: 'Tüm ilçeler',
+            placeholder: 'İlçe',
+            summary: (selected, items) => {
+              if(!items || items.length === 0) return 'İlçe';
+              if(selected.length === 0) return 'İlçe';
+              if(selected.length === items.length) return 'Tüm ilçeler';
+              return `${selected.length} ilçe seçildi`;
+            }
+          });
+          const okulMs = new RmCheckboxDropdown(okul, {
+            selectAllLabel: 'Tüm okul türleri',
+            placeholder: 'Okul Türü',
+            summary: (selected, items) => {
+              if(!items || items.length === 0) return 'Okul Türü';
+              if(selected.length === 0) return 'Okul Türü';
+              if(selected.length === items.length) return 'Tüm okul türleri';
+              return `${selected.length} okul türü seçildi`;
+            }
+          });
+          const alanMs = new RmCheckboxDropdown(alan, {
+            selectAllLabel: 'Tüm alanlar',
+            placeholder: 'Alan Adı',
+            summary: (selected, items) => {
+              if(!items || items.length === 0){
+                if(alan.disabled) return (alan.options && alan.options[0] ? (alan.options[0].textContent || 'Önce okul türü seçmelisiniz') : 'Önce okul türü seçmelisiniz');
+                return 'Alan Adı';
+              }
+              if(selected.length === 0) return 'Alan Adı';
+              if(selected.length === items.length) return 'Tüm alanlar';
+              return `${selected.length} alan seçildi`;
+            }
+          });
+
+          const chkPans = document.getElementById('chkPans');
+          const chkErkekPans = document.getElementById('chkErkekPans');
+          const chkKizPans = document.getElementById('chkKizPans');
+          const pansiyonInputs = [chkErkekPans, chkKizPans];
+          const pansiyonSubgroup = document.getElementById('pansiyonSubgroup');
+          const chkAnasinifi = document.getElementById('chkAnasinifi');
+          const chkProje = document.getElementById('chkProje');
+          const chkOzelEgitim = document.getElementById('chkOzelEgitim');
+          const chkDyk = document.getElementById('chkDyk');
+          const btnSearch = document.getElementById('btnSearch');
+          const btnClear = document.getElementById('btnClear');
+          const summary = document.getElementById('resultSummary');
+          const resultsSection = document.getElementById('resultsSection');
+          const resultsEmptyState = document.getElementById('resultsEmptyState');
+          const resultsTableWrap = document.querySelector('.rm-table-wrap');
+          const btnResetFromEmpty = document.getElementById('btnResetFromEmpty');
+          const gridLoading = document.getElementById('gridLoading');
+          const gridLoadingBar = document.getElementById('gridLoadingBar');
+          const gridLoadingText = document.getElementById('gridLoadingText');
+          let loadingTimer = null;
+          let dt = null;
+          let detailSortState = null;
+          let detailSortUiBound = false;
+          let pendingNoResultAlert = false;
+          let searchSubmitted = false;
+          let filtersDirty = false;
+          let kurumTooltips = [];
+          const titleCaseTr = (s) => (window.RmTitleCaseTr ? window.RmTitleCaseTr(s) : String(s ?? ''));
+
+          const NO_RESULT_MSG = 'Arama sonucunda belirlemiş olduğunuz kriterlere uygun okul bulunamadı.';
+          const RM_DT_LANGUAGE = {
+            emptyTable: 'Gösterilecek kayıt yok',
+            zeroRecords: 'Eşleşen kayıt bulunamadı',
+            info: '_TOTAL_ kayıttan _START_–_END_ arası',
+            infoEmpty: 'Kayıt yok',
+            infoFiltered: '(_MAX_ kayıt içinden filtrelendi)',
+            lengthMenu: '_MENU_ kayıt göster',
+            search: 'Tabloda ara:',
+            loadingRecords: 'Yükleniyor...',
+            processing: 'İşleniyor...',
+            paginate: { first: '«', last: '»', next: '›', previous: '‹' }
+          };
+
+          function showNoResultSwal(){
+            if(typeof Swal !== 'undefined'){
+              Swal.fire({
+                icon: 'info',
+                text: NO_RESULT_MSG,
+                confirmButtonText: 'Tamam',
+                confirmButtonColor: '#475569'
+              });
+            } else {
+              alert(NO_RESULT_MSG);
+            }
+          }
+
+          let pendingScrollToResults = false;
+
+          function scrollToResults(){
+            const el = resultsSection || document.getElementById('myTable');
+            if(!el) return;
+            requestAnimationFrame(() => {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+          }
+
+          function clearIlRequiredHint(){
+            const wrap = document.getElementById('sehirFieldWrap');
+            const err = document.getElementById('sehirFieldError');
+            wrap?.classList.remove('rm-field-error', 'rm-field-error-pulse');
+            err?.classList.add('d-none');
+          }
+
+          function showIlRequiredHint(){
+            const wrap = document.getElementById('sehirFieldWrap');
+            const err = document.getElementById('sehirFieldError');
+            if(!wrap || !sehir) return;
+            if(!kademeSel.value){
+              gotoStep(1);
+              return;
+            }
+            const needPanelOpen = currentStep !== 2;
+            if(needPanelOpen){
+              unlockedStep = Math.max(unlockedStep, 2);
+              currentStep = 2;
+              updateStepPanels();
+              updateKademeUi();
+              refreshSelectedStyles();
+              scrollToStep(2);
+            }
+            err?.classList.remove('d-none');
+            wrap.classList.add('rm-field-error');
+            wrap.classList.remove('rm-field-error-pulse');
+            setTimeout(() => {
+              wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              requestAnimationFrame(() => {
+                wrap.classList.add('rm-field-error-pulse');
+                try { sehir.focus({ preventScroll: true }); } catch(e) {}
+              });
+            }, needPanelOpen ? 150 : 0);
+          }
+
+          function scrollToStep(step){
+            const panelId = STEP_META[step]?.panelId;
+            if(!panelId) return;
+            const panel = document.getElementById(panelId);
+            if(!panel || panel.classList.contains('is-locked')) return;
+            setTimeout(() => {
+              panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 80);
+          }
+
+          function hideEmptyResultsState(){
+            if(resultsTableWrap) resultsTableWrap.classList.remove('has-empty-results');
+            if(resultsEmptyState) resultsEmptyState.classList.add('d-none');
+          }
+
+          function showEmptyResultsState(){
+            stopGridLoading();
+            destroyDataTable();
+            if(resultsSection) resultsSection.classList.remove('d-none');
+            if(resultsTableWrap) resultsTableWrap.classList.add('has-empty-results');
+            if(resultsEmptyState) resultsEmptyState.classList.remove('d-none');
+            if(summary) summary.textContent = '0 kayıt bulundu';
+            setTimeout(scrollToResults, 80);
+          }
+
+          function closeResultsForEmpty(){
+            showEmptyResultsState();
+          }
+          let illerLoaded = false;
+
+          const featureInputs = [chkAnasinifi, chkProje, chkOzelEgitim, chkDyk, chkBosKont9, chkBosKont10, chkBosKont11];
+          let syncingPansiyon = false;
+
+          function getSinifDuzeyiLabel(){
+            return showSinif12Columns() ? '9–12. sınıf' : '9–11. sınıf';
+          }
+
+          function syncSinif12UiTexts(){
+            const lbl = document.getElementById('puanRangeLabel');
+            const hint = document.getElementById('puanRangeHint');
+            if(lbl) lbl.textContent = `Taban puan aralığı (${getSinifDuzeyiLabel()})`;
+            if(hint){
+              hint.textContent = showSinif12Columns()
+                ? 'Puan filtresi 9, 10, 11 ve 12. sınıf taban puanlarına uygulanır. Sonuçlar taban puanına göre yüksekten düşüğe sıralanır.'
+                : 'Puan filtresi 9, 10 ve 11. sınıf taban puanlarına uygulanır. Sonuçlar taban puanına göre yüksekten düşüğe sıralanır.';
+            }
+          }
+
+          function parsePuanValue(v, fallback){
+            const n = parseInt(String(v ?? '').trim(), 10);
+            return Number.isNaN(n) ? fallback : n;
+          }
+
+          function updatePuanSliderTrack(){
+            if(!puanSliderTrack || !puanSliderMin || !puanSliderMax) return;
+            const mn = parsePuanValue(puanSliderMin.value, 0);
+            const mx = parsePuanValue(puanSliderMax.value, 500);
+            const pctMin = (mn / 500) * 100;
+            const pctMax = (mx / 500) * 100;
+            puanSliderTrack.style.left = pctMin + '%';
+            puanSliderTrack.style.width = Math.max(0, pctMax - pctMin) + '%';
+          }
+
+          function syncPuanSliders(source){
+            if(!puanSliderMin || !puanSliderMax) return;
+            let mn = parsePuanValue(puanMin.value, 0);
+            let mx = parsePuanValue(puanMax.value, 500);
+            mn = clamp(mn, 0, 500);
+            mx = clamp(mx, 0, 500);
+            if(mn > mx){
+              if(source === 'min' || source === 'sliderMin') mx = mn;
+              else mn = mx;
+            }
+            puanMin.value = String(mn);
+            puanMax.value = String(mx);
+            puanSliderMin.value = String(mn);
+            puanSliderMax.value = String(mx);
+            updatePuanSliderTrack();
+          }
+
+          function syncPuanSliderLive(source){
+            if(!puanSliderMin || !puanSliderMax) return;
+            const mnRaw = (puanMin.value ?? '').trim();
+            const mxRaw = (puanMax.value ?? '').trim();
+            let mn = mnRaw === ''
+              ? parsePuanValue(puanSliderMin.value, 0)
+              : clamp(parsePuanValue(mnRaw, parsePuanValue(puanSliderMin.value, 0)), 0, 500);
+            let mx = mxRaw === ''
+              ? parsePuanValue(puanSliderMax.value, 500)
+              : clamp(parsePuanValue(mxRaw, parsePuanValue(puanSliderMax.value, 500)), 0, 500);
+            const editingMin = source === 'min' || document.activeElement === puanMin;
+            if(mnRaw !== '' && mxRaw !== '' && mn > mx){
+              if(editingMin) mx = mn;
+              else mn = mx;
+            } else if(mnRaw !== '' && mn > mx){
+              mx = mn;
+            } else if(mxRaw !== '' && mx < mn){
+              mn = mx;
+            }
+            puanSliderMin.value = String(mn);
+            puanSliderMax.value = String(mx);
+            updatePuanSliderTrack();
+          }
+
+          function updatePuanRangeHint(){
+            syncPuanSliders();
+            syncPuanPresetChecks();
+          }
+
+          const puanPresetInputs = () => Array.from(document.querySelectorAll('.rm-puan-presets input[type="checkbox"][data-puan-min]'));
+          let applyingPuanPreset = false;
+
+          function clearPuanPresetChecks(){
+            puanPresetInputs().forEach(cb => { cb.checked = false; });
+          }
+
+          function syncPuanPresetChecks(){
+            const mn = parseInt(puanMin.value || '0', 10);
+            const mx = parseInt(puanMax.value || '500', 10);
+            puanPresetInputs().forEach(cb => {
+              const pMin = parseInt(cb.dataset.puanMin || '0', 10);
+              const pMax = parseInt(cb.dataset.puanMax || '0', 10);
+              cb.checked = mn === pMin && mx === pMax;
+            });
+          }
+
+          function applyPuanPreset(min, max){
+            applyingPuanPreset = true;
+            try {
+              puanMin.value = String(min);
+              puanMax.value = String(max);
+              syncPuanSliders();
+              syncPuanPresetChecks();
+            } finally {
+              applyingPuanPreset = false;
+            }
+            refreshSelectedStyles();
+          }
+          let featureTooltips = [];
+
+          function initFeatureTooltips(){
+            featureTooltips.forEach(t => { try { t.dispose(); } catch(e) {} });
+            featureTooltips = [];
+            if(typeof bootstrap === 'undefined' || !bootstrap.Tooltip) return;
+            document.querySelectorAll('#stepFeatures [data-bs-toggle="tooltip"]').forEach(el => {
+              featureTooltips.push(new bootstrap.Tooltip(el, { trigger: 'hover focus' }));
+            });
+          }
+
+          function initKurumTooltips(){
+            kurumTooltips.forEach(t => { try { t.dispose(); } catch(e) {} });
+            kurumTooltips = [];
+            if(typeof bootstrap === 'undefined' || !bootstrap.Tooltip) return;
+            document.querySelectorAll('#myTable .rm-kurum-zoom[data-bs-toggle="tooltip"]').forEach(el => {
+              kurumTooltips.push(new bootstrap.Tooltip(el, { trigger: 'hover focus' }));
+            });
+          }
+
+          function kurumCellHtml(row){
+            const kk = row.kurumKodu ?? row.KurumKodu;
+            const ad = row.kurumAdi ?? row.KurumAdi ?? '';
+            if(window.RmKurumLink?.kurumCellHtml){
+              return RmKurumLink.kurumCellHtml(kk, ad, escapeHtml);
+            }
+            return `<div class="rm-kurum-cell"><span class="rm-kurum-name">${escapeHtml(ad)}</span><button type="button" class="rm-kurum-zoom rm-kurum-link" data-kurum-kodu="${encodeURIComponent(kk)}" data-bs-toggle="tooltip" title="Okul ayrıntılarını yeni sekmede görüntüle" aria-label="Okul ayrıntıları"><i class="bi bi-search" aria-hidden="true"></i></button></div>`;
+          }
+
+          const tableColLabels = ['İl','İlçe','Kurum Adı','Kurum Türü','Alan','Yabancı Dil','9. Sınıf Kontenjan','9. Sınıf Taban Puanı','10. Sınıf Kontenjan','10. Sınıf Taban Puan','11. Sınıf Kontenjan','11. Sınıf Taban Puan','12. Sınıf Kontenjan','12. Sınıf Taban Puan'];
+
+          function tuneDetailTextColumns(){
+            if(window.RmKurumLink?.tuneTableTextColumns){
+              RmKurumLink.tuneTableTextColumns('myTable', [3, 4, 5]);
+            }
+          }
+
+          const gradeHeaderTitles = [
+            { idx: 6, html: '9. Sınıf<br>Kontenjan', visible: showKontenjanColumn },
+            { idx: 7, html: '9. Sınıf<br>Taban Puanı', visible: () => isLiseKademe() && showPuanStep() },
+            { idx: 8, html: '10. Sınıf<br>Kontenjan', visible: showKontenjanColumn },
+            { idx: 9, html: '10. Sınıf<br>Taban Puan', visible: () => isLiseKademe() && showPuanStep() },
+            { idx: 10, html: '11. Sınıf<br>Kontenjan', visible: showKontenjanColumn },
+            { idx: 11, html: '11. Sınıf<br>Taban Puan', visible: () => isLiseKademe() && showPuanStep() },
+            { idx: 12, html: '12. Sınıf<br>Kontenjan', visible: () => showKontenjanColumn() && showSinif12Columns() },
+            { idx: 13, html: '12. Sınıf<br>Taban Puan', visible: () => isLiseKademe() && showPuanStep() && showSinif12Columns() }
+          ];
+
+          function fixTableHeaders(){
+            gradeHeaderTitles.forEach(({ idx, html, visible }) => {
+              if(!visible()) return;
+              let th = null;
+              if(dt && dt.column){
+                try { th = dt.column(idx).header(); } catch(e) {}
+              }
+              if(!th) th = document.querySelector(`#myTable thead th:nth-child(${idx + 1})`);
+              if(!th) return;
+              const titleEl = th.querySelector('.dt-column-title') || th;
+              titleEl.innerHTML = html;
+            });
+          }
+
+          const STEP_META = {
+            1: { panelId: 'stepKademe', label: 'Kademe', liseOnly: false },
+            2: { panelId: 'stepLocation', label: 'Konum', liseOnly: false },
+            3: { panelId: 'stepAlan', label: 'Alan / Öğrenci Alma', liseOnly: true },
+            4: { panelId: 'stepPuan', label: 'Taban Puan', liseOnly: true },
+            6: { panelId: 'stepFeatures', label: 'Okul İçi Özellikler', liseOnly: false }
+          };
+
+          let currentStep = 1;
+          let unlockedStep = 1;
+          let completedThrough = 0;
+          let pendingReviewFrom = 0;
+          let kademeLockedFromEntry = false;
+          let pendingKademeLock = shouldLockKademeFromEntry();
+
+          function shouldLockKademeFromEntry(){
+            const k = new URLSearchParams(window.location.search).get('kademe');
+            return !!(k && ['0', '1', '2', '4'].includes(k));
+          }
+
+          function showPuanStep(){
+            if(!isLiseKademe()) return false;
+            const v = (sinavTipi?.value || '').trim();
+            return v !== 'sinavsiz';
+          }
+
+          function showKontenjanColumn(){
+            return isLiseKademe() && showPuanStep();
+          }
+
+          function applyKademeEntrySkip(){
+            if(!kademeSel.value) return;
+            kademeLockedFromEntry = true;
+            kademeSel.disabled = true;
+            completedThrough = 1;
+            unlockedStep = 2;
+            currentStep = 2;
+            const s1 = document.getElementById('summaryStep1');
+            if(s1) RmWizardSummary.applyStepSummary(s1, RmWizardSummary.buildLabeledHtml(
+              [{ label: 'Okul Kademesi:', value: getKademeLabel() || '—' }],
+              { titleCase: titleCaseTr }
+            ));
+          }
+
+          function onSinavTipiChanged(){
+            markDownstreamForReview(3);
+            if(isLiseKademe() && okulMs.getSelected().length){
+              void loadAlanAdlari(okulMs.getSelected());
+            }
+            if(!showPuanStep()){
+              detailSortState = null;
+              puanMin.value = '0';
+              puanMax.value = '500';
+              puanPresetInputs().forEach(cb => { cb.checked = false; });
+              updatePuanRangeHint();
+              if(completedThrough === 4) completedThrough = 3;
+              if(currentStep === 4) currentStep = 3;
+              if(unlockedStep === 4) unlockedStep = 3;
+            }
+            updateStepPanels();
+            refreshSelectedStyles();
+          }
+
+          function isLiseKademe(){ return String(kademeSel.value) === '4'; }
+          function isOkulOncesiKademe(){ return String(kademeSel.value) === '0'; }
+          function showFeaturesStep(){ return !isOkulOncesiKademe(); }
+
+          function getVisibleSteps(){
+            const includeKademe = !kademeLockedFromEntry;
+            if(isLiseKademe()){
+              const steps = includeKademe ? [1, 2, 3] : [2, 3];
+              if(showPuanStep()) steps.push(4);
+              if(showFeaturesStep()) steps.push(6);
+              return steps;
+            }
+            const steps = includeKademe ? [1, 2] : [2];
+            if(showFeaturesStep()) steps.push(6);
+            return steps;
+          }
+
+          function getKademeLabel(){
+            const opt = kademeSel.options[kademeSel.selectedIndex];
+            return opt ? opt.textContent : '';
+          }
+
+          function canCompleteStep(step){
+            switch(step){
+              case 1: return !!kademeSel.value;
+              case 2: return sehirMs.getSelected().length > 0 && !!(okulMs.items && okulMs.items.length > 0);
+              case 3: return isLiseKademe();
+              case 4: return showPuanStep();
+              case 6: return true;
+              default: return false;
+            }
+          }
+
+          function textForSingle(ms, value){
+            const v = String(value ?? '');
+            const it = (ms?.items || []).find(x => String(x.value) === v);
+            return it ? String(it.text || '').trim() : '';
+          }
+
+          function buildStepSummaryHtml(step){
+            const tc = titleCaseTr;
+            const labeled = (lines) => RmWizardSummary.buildLabeledHtml(lines, { titleCase: tc });
+
+            switch(step){
+              case 1:
+                return labeled([{ label: 'Okul Kademesi:', value: getKademeLabel() || '—' }]);
+              case 2:
+                return labeled(RmWizardSummary.buildKonumSummaryLines(sehirMs, ilceMs, okulMs));
+              case 3: {
+                const tipMap = { '': 'Hepsi', sinavli: 'Sınavlı', sinavsiz: 'Sınavsız', 'sinavli-sinavsiz': 'Sınavlı-Sınavsız' };
+                const tip = tipMap[sinavTipi.value] || 'Hepsi';
+                return labeled(RmWizardSummary.buildAlanSummaryLines(alanMs, [
+                  { label: 'Öğrenci Alma Şekli:', value: tip }
+                ]));
+              }
+              case 4: {
+                syncRanges();
+                return labeled([
+                  { label: 'Sınıf Düzeyi:', value: getSinifDuzeyiLabel() },
+                  { label: 'Puan Aralığı:', value: `${puanMin.value}–${puanMax.value}` },
+                  { label: 'Sıralama:', value: 'Yüksekten düşüğe' }
+                ]);
+              }
+              case 6: {
+                const names = getPansiyonFilterLabels();
+                if(chkAnasinifi.checked) names.push('Anasınıfı');
+                if(chkProje.checked) names.push('Proje');
+                if(chkOzelEgitim.checked) names.push('Özel eğitim');
+                if(chkDyk.checked) names.push('DYK');
+                const kontSiniflar = kontenjanSinifInputs().filter(cb => cb.checked).map(cb => cb.dataset.sinif);
+                if(kontSiniflar.length) names.push(`Kontenjan (${kontSiniflar.join(', ')}. sınıf)`);
+                return labeled([
+                  { label: 'Seçilen Özellikler:', value: names.length ? names.join(', ') : 'Ek filtre yok' }
+                ]);
+              }
+              default:
+                return '';
+            }
+          }
+
+          function initStepRails(){
+            document.querySelectorAll('.rm-step-panel').forEach(panel => {
+              if(panel.querySelector('.rm-step-layout')) return;
+              const step = panel.dataset.step || '';
+              const layout = document.createElement('div');
+              layout.className = 'rm-step-layout';
+              const rail = document.createElement('div');
+              rail.className = 'rm-step-rail';
+              rail.setAttribute('aria-hidden', 'true');
+              rail.innerHTML = `<div class="rm-step-circle"><span>${step}</span></div><div class="rm-step-vline"></div>`;
+              const content = document.createElement('div');
+              content.className = 'rm-step-content';
+              while(panel.firstChild) content.appendChild(panel.firstChild);
+              layout.appendChild(rail);
+              layout.appendChild(content);
+              panel.appendChild(layout);
+            });
+          }
+
+          function updateStepTitles(){
+            getVisibleSteps().forEach((stepNum, idx) => {
+              const panel = document.getElementById(STEP_META[stepNum].panelId);
+              const titleEl = panel?.querySelector('.rm-filter-step');
+              if(!titleEl) return;
+              const name = titleEl.dataset.stepTitle || STEP_META[stepNum].label;
+              titleEl.textContent = `Adım ${idx + 1} · ${name}`;
+            });
+          }
+
+          function updateStepRails(){
+            const steps = getVisibleSteps();
+            const visible = steps.filter(s => {
+              const wasCompleted = s <= completedThrough;
+              const isFuture = s > unlockedStep && !wasCompleted;
+              return !isFuture;
+            });
+            visible.forEach((stepNum, idx) => {
+              const panel = document.getElementById(STEP_META[stepNum].panelId);
+              if(!panel) return;
+              const numEl = panel.querySelector('.rm-step-circle span');
+              if(numEl) numEl.textContent = String(idx + 1);
+              const vline = panel.querySelector('.rm-step-vline');
+              if(vline) vline.style.display = idx === visible.length - 1 ? 'none' : '';
+            });
+          }
+
+          function maxNavigableStep(){
+            return Math.max(unlockedStep, completedThrough);
+          }
+
+          function markDownstreamForReview(fromStep){
+            if(completedThrough < fromStep) return;
+            pendingReviewFrom = pendingReviewFrom > 0
+              ? Math.min(pendingReviewFrom, fromStep)
+              : fromStep;
+            invalidateSearchResults();
+            updateStepPanels();
+          }
+
+          function updateReviewHint(){
+            const hint = document.getElementById('wizardReviewHint');
+            if(!hint) return;
+            const steps = getVisibleSteps();
+            const allDone = steps.every(s => s <= completedThrough);
+
+            if(pendingReviewFrom > 0 && !allDone){
+              hint.innerHTML = 'Değişiklik yaptıysanız bu adımda <strong>Devam et</strong> ile ilerleyin.';
+              hint.classList.remove('d-none');
+              return;
+            }
+
+            if(filtersDirty && allDone){
+              hint.innerHTML = 'Filtreleriniz güncellendi. Güncel sonuçlar için <strong>Okul Ara</strong>\'ya tıklayın.';
+              hint.classList.remove('d-none');
+              return;
+            }
+
+            hint.classList.add('d-none');
+          }
+
+          function renderWizardBar(){
+            const bar = document.getElementById('wizardBar');
+            if(!bar) return;
+            const steps = getVisibleSteps();
+            const parts = [];
+            steps.forEach((n, idx) => {
+              let stepCls = 'rm-wizard-step';
+              const isPending = pendingReviewFrom > 0 && n > pendingReviewFrom && n <= completedThrough;
+              if(n === currentStep) stepCls += ' is-active';
+              else if(n <= completedThrough){
+                stepCls += ' is-done';
+                if(isPending) stepCls += ' is-pending-review';
+              }
+              else if(n > unlockedStep) stepCls += ' is-locked';
+              parts.push(`
+                <div class="${stepCls}" data-step="${n}" title="${STEP_META[n].label}">
+                  <div class="rm-wizard-node"><span>${idx + 1}</span></div>
+                  <div class="rm-wizard-label">${STEP_META[n].label}</div>
+                </div>`);
+              if(idx < steps.length - 1){
+                const doneConn = n <= completedThrough;
+                parts.push(`<div class="rm-wizard-connector${doneConn ? ' is-done' : ''}" aria-hidden="true"></div>`);
+              }
+            });
+            bar.innerHTML = parts.join('');
+            bar.querySelectorAll('.rm-wizard-step.is-done').forEach(el => {
+              el.addEventListener('click', () => gotoStep(Number(el.dataset.step)));
+            });
+          }
+
+          function updateStepPanels(){
+            const steps = getVisibleSteps();
+            Object.entries(STEP_META).forEach(([num, meta]) => {
+              const panel = document.getElementById(meta.panelId);
+              if(!panel) return;
+              const step = Number(num);
+              const liseHidden = meta.liseOnly && !isLiseKademe();
+              const inFlow = steps.includes(step);
+              if(liseHidden || !inFlow){
+                panel.classList.remove('is-active', 'is-done', 'is-pending-review');
+                panel.classList.add('is-locked');
+                panel.classList.add('d-none');
+                return;
+              }
+              panel.classList.remove('d-none');
+              const wasCompleted = step <= completedThrough;
+              const isFuture = step > unlockedStep && !wasCompleted;
+              const isPendingReview = pendingReviewFrom > 0 && step > pendingReviewFrom && wasCompleted;
+              panel.classList.toggle('is-active', !isFuture && step === currentStep);
+              panel.classList.toggle('is-done', !isFuture && wasCompleted && step !== currentStep && !isPendingReview);
+              panel.classList.toggle('is-pending-review', isPendingReview && step !== currentStep);
+              panel.classList.toggle('is-locked', isFuture);
+              const summaryEl = document.getElementById('summaryStep' + step);
+              if(summaryEl && wasCompleted) RmWizardSummary.applyStepSummary(summaryEl, buildStepSummaryHtml(step));
+            });
+            updateReviewHint();
+            renderWizardBar();
+            updateStepTitles();
+            updateStepRails();
+            const allDone = steps.every(s => s <= completedThrough);
+            const wizardActions = document.getElementById('wizardActions');
+            if(wizardActions) wizardActions.classList.toggle('d-none', !allDone);
+          }
+
+          function gotoStep(step){
+            const steps = getVisibleSteps();
+            if(!steps.includes(step) || step > maxNavigableStep()) return;
+            if(step < completedThrough){
+              pendingReviewFrom = pendingReviewFrom > 0
+                ? Math.min(pendingReviewFrom, step)
+                : step;
+              invalidateSearchResults();
+            }
+            currentStep = step;
+            if(step === 2) ensureIller({ resetSelection: false }).catch(console.error);
+            if(step === 3 && isLiseKademe()) loadAlanAdlari(okulMs.getSelected());
+            updateKademeUi();
+            updateStepPanels();
+            refreshSelectedStyles();
+            scrollToStep(step);
+          }
+
+          function advanceFrom(step){
+            if(step === 2 && !sehirMs.getSelected().length){
+              showIlRequiredHint();
+              return;
+            }
+            if(!canCompleteStep(step)) return;
+            const steps = getVisibleSteps();
+            completedThrough = Math.max(completedThrough, step);
+            if(pendingReviewFrom > 0 && step === pendingReviewFrom){
+              pendingReviewFrom = 0;
+            }
+            const idx = steps.indexOf(step);
+            if(idx < 0) return;
+            if(idx < steps.length - 1){
+              currentStep = steps[idx + 1];
+              unlockedStep = Math.max(unlockedStep, currentStep);
+              if(currentStep === 2) ensureIller({ resetSelection: false }).catch(console.error);
+              if(currentStep === 3 && isLiseKademe()) loadAlanAdlari(okulMs.getSelected());
+              if(currentStep === 6) completedThrough = Math.max(completedThrough, 6);
+            } else {
+              currentStep = step;
+              unlockedStep = Math.max(unlockedStep, step);
+              completedThrough = Math.max(completedThrough, step);
+            }
+            updateKademeUi();
+            updateStepPanels();
+            refreshSelectedStyles();
+            scrollToStep(currentStep);
+          }
+
+          function resetWizard(){
+            currentStep = 1;
+            unlockedStep = 1;
+            completedThrough = 0;
+            pendingReviewFrom = 0;
+            updateStepPanels();
+          }
+
+          function resetFeatureFields(){
+            featureInputs.forEach(el => { if(el){ el.checked = false; } });
+            if(chkPans) chkPans.checked = false;
+            setPansiyonSubgroupOpen(false);
+            pansiyonInputs.forEach(el => { if(el) el.checked = false; });
+          }
+
+          function resetLiseOnlyFields(){
+            if(sinavTipi){ sinavTipi.value = ''; setSelectedState(sinavTipi, false); }
+            puanMin.value = '0';
+            puanMax.value = '500';
+            puanPresetInputs().forEach(cb => { cb.checked = false; });
+            updatePuanRangeHint();
+            resetKontenjanCheckboxes(false);
+            setAlanDisabledMessage('Alan filtresi yalnızca lise kademesinde kullanılır');
+          }
+
+          function setSelectedState(el, isSelected){
+            if(!el) return;
+            el.classList.toggle('rm-selected', !!isSelected);
+          }
+
+          function refreshSelectedStyles(){
+            setSelectedState(kademeSel, !!kademeSel.value);
+            setSelectedState(sehir, sehirMs.getSelected().length > 0 && !sehir.disabled);
+            setSelectedState(ilce,  !!ilce.value);
+            setSelectedState(okul,  !!okul.value);
+            setSelectedState(alan,  !!alan.value);
+            setSelectedState(sinavTipi, !!sinavTipi.value);
+            setSelectedState(puanMin, puanMin.value !== '0' || puanMax.value !== '500');
+            setSelectedState(puanMax, puanMin.value !== '0' || puanMax.value !== '500');
+          }
+
+          function startGridLoading(){
+            if(!gridLoading) return;
+            document.body.classList.add('rm-search-loading-active');
+            gridLoading.classList.remove('d-none');
+            gridLoading.setAttribute('aria-hidden', 'false');
+            let p = 0;
+            if(gridLoadingBar) gridLoadingBar.style.width = '0%';
+            if(gridLoadingText) gridLoadingText.textContent = '0%';
+            clearInterval(loadingTimer);
+            loadingTimer = setInterval(() => {
+              p = Math.min(92, p + Math.max(1, Math.round((92 - p) * 0.08)));
+              if(gridLoadingBar) gridLoadingBar.style.width = p + '%';
+              if(gridLoadingText) gridLoadingText.textContent = p + '%';
+            }, 120);
+          }
+
+          function stopGridLoading(){
+            document.body.classList.remove('rm-search-loading-active');
+            if(!gridLoading) return;
+            clearInterval(loadingTimer);
+            if(gridLoadingBar) gridLoadingBar.style.width = '100%';
+            if(gridLoadingText) gridLoadingText.textContent = '100%';
+            gridLoading.classList.add('d-none');
+            gridLoading.setAttribute('aria-hidden', 'true');
+          }
+
+          function resetSelect(sel, placeholder){
+            sel.innerHTML = '';
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = placeholder;
+            sel.appendChild(opt);
+          }
+
+          function friendlyHttpError(status){
+            if(status === 404) return 'Aradığınız kayıt bulunamadı.';
+            if(status >= 500) return 'Sunucuda bir sorun oluştu. Lütfen daha sonra tekrar deneyin.';
+            return 'İstek tamamlanamadı. Lütfen tekrar deneyin.';
+          }
+
+          function friendlyFetchError(err){
+            if(err && err.name === 'AbortError') return 'İstek zaman aşımına uğradı. Bağlantınızı kontrol edip tekrar deneyin.';
+            const msg = String(err?.message || '').trim();
+            if(msg && !msg.startsWith('API ')) return msg;
+            return 'Bir sorun oluştu. Lütfen tekrar deneyin.';
+          }
+
+          async function apiJson(url, opts){
+            const timeoutMs = (opts && opts.timeoutMs) || 45000;
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try{
+              const res = await fetch(url, { signal: controller.signal });
+              if(!res.ok) throw new Error(friendlyHttpError(res.status));
+              return await res.json();
+            }catch(err){
+              if(err && err.name === 'AbortError') throw new Error('İstek zaman aşımına uğradı. Bağlantınızı kontrol edip tekrar deneyin.');
+              throw err;
+            }finally{
+              clearTimeout(timer);
+            }
+          }
+
+          function appendKademe(qs){
+            const k = kademeSel.value;
+            if(k) qs.set('kademe', k);
+            return qs;
+          }
+
+          function updateFeatureFiltersLayout(){
+            const grid = document.querySelector('#stepFeatures .rm-filter-grid');
+            const pansiyonGroup = grid?.querySelector('.rm-pansiyon-filter-group');
+            if(!grid || !pansiyonGroup) return;
+            if(showFeaturesStep()){
+              grid.insertBefore(pansiyonGroup, grid.firstElementChild);
+            }
+          }
+
+          function updateKademeUi(){
+            const hasKademe = !!kademeSel.value;
+            const lise = isLiseKademe();
+            document.body.classList.toggle('rm-hide-lise-cols', !lise);
+            if(kontenjanFilterWrap) kontenjanFilterWrap.classList.toggle('d-none', !lise);
+            syncSinif12UiTexts();
+            if(!lise) resetLiseOnlyFields();
+            if(isOkulOncesiKademe()) resetFeatureFields();
+            updateFeatureFiltersLayout();
+            const featuresUnlocked = showFeaturesStep() && hasKademe && unlockedStep >= 6 && currentStep === 6;
+            featureInputs.forEach(el => { if(el) el.disabled = !featuresUnlocked; });
+            setPansiyonInputsDisabled(!featuresUnlocked);
+            if(featuresUnlocked) initFeatureTooltips();
+            const btn1 = document.getElementById('btnStep1Next');
+            if(btn1) btn1.disabled = !canCompleteStep(1);
+            const btn2 = document.getElementById('btnStep2Next');
+            if(btn2) btn2.classList.toggle('rm-step-next--inactive', !canCompleteStep(2));
+          }
+
+          function resetOkulTurleriNoIl(){
+            invalidateOkulTurleriCache();
+            resetSelect(okul, 'Okul Türü');
+            okulMs.setItems([]);
+            okulMs.clear();
+            okulMs.setDisabled(true);
+            okulMs.setMessageOnly('Önce il seçiniz');
+            setAlanDisabledMessage('Önce okul türü seçmelisiniz');
+          }
+
+          async function ensureIller(opts){
+            const resetSelection = !!(opts && opts.resetSelection);
+            if(!illerLoaded){
+              resetSelect(sehir, 'İl seçiniz');
+              const data = await apiJson('/api/iller');
+              const items = [];
+              for(const x of (data || [])){
+                const opt = document.createElement('option');
+                opt.value = x.ilKodu ?? x.IlKodu ?? x.kod ?? x.Kod;
+                opt.textContent = x.ilAdi ?? x.IlAdi ?? x.ad ?? x.Ad;
+                sehir.appendChild(opt);
+                items.push({ value: String(opt.value), text: String(opt.textContent) });
+              }
+              sehirMs.setItems(items);
+              illerLoaded = true;
+            }
+            sehirMs.setDisabled(false);
+            if(resetSelection){
+              sehirMs.clear();
+              ilceMs.setItems([]);
+              ilceMs.setDisabled(true);
+              ilceMs.setMessageOnly('İl seçiniz');
+              resetOkulTurleriNoIl();
+            }
+          }
+
+          async function loadIlceler(ilKodu){
+            resetSelect(ilce, 'İlçe');
+            ilceMs.setItems([]);
+            ilceMs.setDisabled(true);
+            if(!ilKodu) return;
+            const data = await apiJson('/api/ilceler?ilKodu=' + encodeURIComponent(ilKodu));
+            const items = [];
+            for(const x of (data || [])){
+              const opt = document.createElement('option');
+              opt.value = x.ilceKodu ?? x.IlceKodu;
+              opt.textContent = x.ilceAdi ?? x.IlceAdi;
+              ilce.appendChild(opt);
+              items.push({ value: String(opt.value), text: String(opt.textContent) });
+            }
+            ilceMs.setItems(items);
+            ilceMs.setDisabled(false);
+            ilceMs.selectAll();
+          }
+
+          function setAlanDisabledMessage(msg){
+            resetSelect(alan, msg);
+            alanMs.setItems([]);
+            alanMs.clear();
+            alanMs.setDisabled(true);
+          }
+
+          function parseKurumTuruAdi(v){
+            const s = String(v ?? '').trim();
+            const idx = s.indexOf('|');
+            return idx >= 0 ? s.slice(idx + 1).trim() : s;
+          }
+
+          function buildAlanAdlariQuery(kurumTurleri){
+            const qs = appendKademe(new URLSearchParams());
+            const ilKodlari = sehirMs.getSelected();
+            for(const k of ilKodlari) qs.append('ilKodu', k);
+            if(ilKodlari.length === 1){
+              const ilceKodlari = ilceMs.getSelected();
+              const allIlce = ilceMs.items && ilceKodlari.length === ilceMs.items.length;
+              if(!allIlce && ilceKodlari.length){
+                for(const k of ilceKodlari) qs.append('ilceKodu', k);
+              }
+            }
+            const allTurSelected = okulMs.items && kurumTurleri.length === okulMs.items.length;
+            if(!allTurSelected){
+              for(const t of kurumTurleri) qs.append('kurumTuru', parseKurumTuruAdi(t));
+            }
+            const tip = (sinavTipi?.value || '').trim();
+            if(tip) qs.set('sinavTipi', tip);
+            return qs;
+          }
+
+          async function loadAlanAdlari(kurumTurleri){
+            if(!isLiseKademe()){
+              setAlanDisabledMessage('Alan filtresi yalnızca lise kademesinde kullanılır');
+              return;
+            }
+            if(unlockedStep < 3 && currentStep !== 3) return;
+            if(!kurumTurleri || kurumTurleri.length === 0){
+              setAlanDisabledMessage('Önce okul türü seçmelisiniz');
+              return;
+            }
+            resetSelect(alan, 'Alan Adı');
+            alanMs.setItems([]);
+            alanMs.setDisabled(true);
+            try{
+              const data = await apiJson('/api/alanAdlari?' + buildAlanAdlariQuery(kurumTurleri).toString());
+              const items = [];
+              for(const x of (data || [])){
+                const opt = document.createElement('option');
+                opt.value = String(x);
+                opt.textContent = String(x);
+                alan.appendChild(opt);
+                items.push({ value: String(opt.value), text: String(opt.textContent) });
+              }
+              if(items.length === 0){
+                setAlanDisabledMessage('Seçilen okul türünde alan bilgisi bulunamadı');
+                return;
+              }
+              alanMs.setItems(items);
+              alanMs.setDisabled(false);
+              alanMs.selectAll();
+            }catch(err){
+              console.error(err);
+              setAlanDisabledMessage('Alan listesi yüklenemedi');
+            }
+          }
+
+          const okulTurleriCache = new Map();
+          let okulTurleriInflightKey = '';
+          let okulTurleriInflight = null;
+
+          function invalidateOkulTurleriCache(){
+            okulTurleriCache.clear();
+            okulTurleriInflightKey = '';
+            okulTurleriInflight = null;
+          }
+
+          function buildOkulTurleriUrl(ilKodlari, ilceKodlari, allIlcelerSelected){
+            if(!ilKodlari || ilKodlari.length === 0){
+              return '/api/okulTurleri?' + appendKademe(new URLSearchParams()).toString();
+            }
+            if(ilKodlari.length > 1){
+              const qs = appendKademe(new URLSearchParams());
+              for(const k of ilKodlari) qs.append('ilKodu', k);
+              return '/api/okulTurleriMulti?' + qs.toString();
+            }
+            const qs = appendKademe(new URLSearchParams());
+            qs.set('ilKodu', ilKodlari[0]);
+            if(!allIlcelerSelected && Array.isArray(ilceKodlari) && ilceKodlari.length){
+              for(const k of ilceKodlari) qs.append('ilceKodu', k);
+            }
+            return '/api/okulTurleri?' + qs.toString();
+          }
+
+          function applyOkulTuruItems(data){
+            const items = [];
+            for(const x of (data || [])){
+              const opt = document.createElement('option');
+              opt.value = x.kod ?? x.Kod ?? x.ad ?? x.Ad;
+              const ad = x.ad ?? x.Ad;
+              const sayi = x.okulSayisi ?? x.OkulSayisi;
+              opt.textContent = (sayi && Number(sayi) > 0) ? `${ad} (${sayi})` : ad;
+              okul.appendChild(opt);
+              items.push({ value: String(opt.value), text: String(opt.textContent) });
+            }
+            okulMs.setItems(items);
+            okulMs.setDisabled(false);
+            okulMs.selectAll();
+            updateKademeUi();
+            updateStepPanels();
+          }
+
+          async function loadOkulTurleri(ilKodlari, ilceKodlari, allIlcelerSelected){
+            const url = buildOkulTurleriUrl(ilKodlari, ilceKodlari, allIlcelerSelected);
+            const cached = okulTurleriCache.get(url);
+            if(cached){
+              resetSelect(okul, 'Okul Türü');
+              okulMs.setItems([]);
+              applyOkulTuruItems(cached);
+              void loadAlanAdlari(okulMs.getSelected());
+              return;
+            }
+            if(okulTurleriInflight && okulTurleriInflightKey === url){
+              const data = await okulTurleriInflight;
+              resetSelect(okul, 'Okul Türü');
+              okulMs.setItems([]);
+              applyOkulTuruItems(data);
+              void loadAlanAdlari(okulMs.getSelected());
+              return;
+            }
+            resetSelect(okul, 'Okul Türü');
+            okulMs.setItems([]);
+            okulMs.setDisabled(true);
+            if(!kademeSel.value) return;
+
+            okulTurleriInflightKey = url;
+            okulTurleriInflight = apiJson(url)
+              .then(data => {
+                const list = data || [];
+                okulTurleriCache.set(url, list);
+                return list;
+              })
+              .finally(() => {
+                if(okulTurleriInflightKey === url){
+                  okulTurleriInflight = null;
+                  okulTurleriInflightKey = '';
+                }
+              });
+            const data = await okulTurleriInflight;
+            applyOkulTuruItems(data);
+            void loadAlanAdlari(okulMs.getSelected());
+          }
+
+          function clamp(n, min, max){
+            n = Number.isFinite(n) ? n : min;
+            return Math.max(min, Math.min(max, n));
+          }
+
+          function syncRanges(){
+            syncPuanSliders();
+          }
+
+          function escapeHtml(s){
+            return String(s ?? '')
+              .replaceAll('&','&amp;')
+              .replaceAll('<','&lt;')
+              .replaceAll('>','&gt;')
+              .replaceAll('"','&quot;')
+              .replaceAll("'",'&#39;');
+          }
+
+          function displayText(v){
+            return escapeHtml(titleCaseTr(v));
+          }
+
+          function fmt0(v){
+            if(v === null || v === undefined || v === '') return '0';
+            return String(v);
+          }
+
+          function detailSortColumns(){
+            if(!showPuanStep()) return [];
+            const cols = [6, 7, 8, 9, 10, 11];
+            if(showSinif12Columns()) cols.push(12, 13);
+            return cols;
+          }
+
+          function detailSortToken(col, dir){
+            const map = { 6: 'k9', 7: 'p9', 8: 'k10', 9: 'p10', 10: 'k11', 11: 'p11', 12: 'k12', 13: 'p12' };
+            const prefix = map[col];
+            if(!prefix || !dir) return null;
+            return `${prefix}_${dir}`;
+          }
+
+          function initDetailSortState(){
+            if(!showPuanStep()){
+              detailSortState = null;
+              return;
+            }
+            detailSortState = { col: 7, dir: 'desc' };
+          }
+
+          function appendDetailSortParams(params, extra){
+            if(!showPuanStep()) return;
+            const sort = detailSortState || { col: 7, dir: 'desc' };
+            const col = extra?.orderCol ?? sort.col;
+            const dir = extra?.orderDir ?? sort.dir;
+            const token = detailSortToken(col, dir);
+            if(token) params.set('puanSort', token);
+          }
+
+          function mountDetailSortControls(api){
+            if(!showPuanStep() || !api) return;
+            detailSortColumns().forEach(colIdx => {
+              const th = api.column(colIdx).header();
+              if(!th) return;
+              th.classList.add('rm-detail-sort-col');
+              const orderEl = th.querySelector('.dt-column-order');
+              if(orderEl) orderEl.style.display = 'none';
+              const header = th.querySelector('.dt-column-header') || th;
+              const titleEl = header.querySelector('.dt-column-title');
+              let wrap = th.querySelector('.rm-detail-sort');
+              if(!wrap){
+                wrap = document.createElement('div');
+                wrap.className = 'rm-detail-sort';
+                wrap.innerHTML = `
+                  <button type="button" class="rm-sort-btn rm-sort-desc" data-col="${colIdx}" data-dir="desc" title="Büyükten küçüğe" aria-label="Büyükten küçüğe" aria-pressed="false"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+                  <button type="button" class="rm-sort-btn rm-sort-asc" data-col="${colIdx}" data-dir="asc" title="Küçükten büyüğe" aria-label="Küçükten büyüğe" aria-pressed="false"><i class="bi bi-chevron-up" aria-hidden="true"></i></button>
+                `;
+                if(titleEl) titleEl.insertAdjacentElement('afterend', wrap);
+                else header.appendChild(wrap);
+              }
+            });
+            if(!detailSortUiBound){
+              detailSortUiBound = true;
+              document.getElementById('myTable')?.addEventListener('click', onDetailSortBtnClick);
+            }
+            syncDetailSortControls();
+          }
+
+          function onDetailSortBtnClick(e){
+            const btn = e.target.closest('.rm-detail-sort .rm-sort-btn');
+            if(!btn || !dt || !detailSortState) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const col = Number(btn.dataset.col);
+            const dir = btn.dataset.dir;
+            if(detailSortState.col === col && detailSortState.dir === dir) return;
+            detailSortState = { col, dir };
+            syncDetailSortControls();
+            dt.ajax.reload(null, false);
+          }
+
+          function syncDetailSortControls(){
+            if(!detailSortState) return;
+            document.querySelectorAll('#myTable .rm-detail-sort .rm-sort-btn').forEach(btn => {
+              const active = Number(btn.dataset.col) === detailSortState.col && btn.dataset.dir === detailSortState.dir;
+              btn.classList.toggle('is-active', active);
+              btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+          }
+
+          function fmtPuan(v){
+            if(v === null || v === undefined || v === '') return '—';
+            const s = String(v).trim();
+            if(!s || s === '-1' || s.toUpperCase() === 'YOK') return '—';
+            const n = parseFloat(s.replace(',', '.'));
+            if(!Number.isNaN(n) && n <= 0) return '—';
+            return s;
+          }
+
+          function fmtKontHtml(v){
+            const t = fmt0(v);
+            return `<span class="rm-pill-cell"><span class="rm-kont-pill">${escapeHtml(t)}</span></span>`;
+          }
+
+          function fmtPuanHtml(v){
+            const t = fmtPuan(v);
+            return `<span class="rm-pill-cell"><span class="rm-puan-pill">${escapeHtml(t)}</span></span>`;
+          }
+
+          function buildSearchParams(extra){
+            if(!kademeSel.value) return null;
+            syncRanges();
+            const params = new URLSearchParams();
+            params.set('kademe', kademeSel.value);
+
+            const ilKodlari = sehirMs.getSelected();
+            if(!ilKodlari.length) return null;
+            const allIlSelected = sehirMs.items.length > 0 && ilKodlari.length === sehirMs.items.length;
+            if(!allIlSelected){
+              for(const k of ilKodlari) params.append('ilKodu', k);
+            }
+            if(ilKodlari.length === 1){
+              const ilceKodlari = ilceMs.getSelected();
+              const allIlceSelected = ilceMs.items && ilceKodlari.length === ilceMs.items.length;
+              if(ilceKodlari.length && !allIlceSelected){
+                for(const k of ilceKodlari) params.append('ilceKodu', k);
+              }
+            }
+
+            const turler = okulMs.getSelected();
+            const allTurSelected = okulMs.items && turler.length === okulMs.items.length;
+            if(turler.length && !allTurSelected){
+              for(const t of turler) params.append('kurumTuru', t);
+            }
+
+            if(isLiseKademe()){
+              const alanlar = alanMs.getSelected();
+              const allAlanSelected = alanMs.items && alanlar.length === alanMs.items.length;
+              if(alanlar.length && !allAlanSelected){
+                for(const a of alanlar) params.append('alanAdi', a);
+              }
+              if(sinavTipi.value) params.set('sinavTipi', sinavTipi.value);
+              if(showPuanStep()){
+                const mnRaw = parseInt(puanMin.value ?? '0', 10);
+                const mxRaw = parseInt(puanMax.value ?? '500', 10);
+                const mn = Number.isNaN(mnRaw) ? 0 : mnRaw;
+                const mx = Number.isNaN(mxRaw) ? 500 : mxRaw;
+                const isDefaultRange = mn === 0 && mx === 500;
+                if(!isDefaultRange){
+                  params.set('puanMin', String(mn));
+                  params.set('puanMax', String(mx));
+                }
+                appendDetailSortParams(params, extra);
+              }
+              kontenjanSinifInputs().forEach(cb => {
+                if(cb.checked) params.append('kontenjanSinif', cb.dataset.sinif);
+              });
+            }
+
+            if(showFeaturesStep()){
+              if(chkDyk && chkDyk.checked) params.set('dykKursMerkezi', '1');
+              appendPansiyonParams(params);
+              if(chkAnasinifi && chkAnasinifi.checked) params.set('anasinifi', 'true');
+              if(chkProje && chkProje.checked) params.set('projeOkulu', 'true');
+              if(chkOzelEgitim && chkOzelEgitim.checked) params.set('ozelEgitimSinifi', 'true');
+            }
+
+            const txt = (extra?.q ?? '').trim();
+            if(txt) params.set('q', txt);
+
+            if(extra?.page) params.set('page', String(extra.page));
+            if(extra?.pageSize) params.set('pageSize', String(extra.pageSize));
+            return params;
+          }
+
+          function destroyDataTable(){
+            kurumTooltips.forEach(t => { try { t.dispose(); } catch(e) {} });
+            kurumTooltips = [];
+            window.RmStickyTableHead?.detach(document.querySelector('.rm-table-wrap'));
+            if(dt){
+              dt.destroy();
+              dt = null;
+            }
+            $('#myTable tbody').empty();
+            const searchWrap = document.getElementById('dtSearchWrap');
+            if(searchWrap) searchWrap.innerHTML = '';
+          }
+
+          function showResultsSection(){
+            if(resultsSection) resultsSection.classList.remove('d-none');
+            hideEmptyResultsState();
+          }
+
+          function hideResultsSection(){
+            searchSubmitted = false;
+            pendingScrollToResults = false;
+            stopGridLoading();
+            destroyDataTable();
+            hideEmptyResultsState();
+            if(resultsSection) resultsSection.classList.add('d-none');
+            if(summary) summary.textContent = '';
+          }
+
+          function invalidateSearchResults(){
+            if(searchSubmitted) filtersDirty = true;
+            hideResultsSection();
+            updateReviewHint();
+          }
+
+          function reloadSearchResultsIfVisible(){
+            if(!searchSubmitted) return;
+            if(!kademeSel.value) return;
+            if(!dt){
+              void runSearch();
+              return;
+            }
+            if(!resultsSection || resultsSection.classList.contains('d-none')) return;
+            summary.textContent = 'Sorgulanıyor...';
+            pendingNoResultAlert = false;
+            dt.ajax.reload();
+          }
+
+          function setPansiyonSubgroupOpen(open){
+            if(pansiyonSubgroup) pansiyonSubgroup.classList.toggle('d-none', !open);
+          }
+
+          function onPansiyonMasterChanged(){
+            if(syncingPansiyon) return;
+            syncingPansiyon = true;
+            if(chkPans?.checked){
+              setPansiyonSubgroupOpen(true);
+              if(showFeaturesStep()){
+                pansiyonInputs.forEach(el => { if(el) el.checked = true; });
+              }
+            } else {
+              setPansiyonSubgroupOpen(false);
+              pansiyonInputs.forEach(el => { if(el) el.checked = false; });
+            }
+            syncingPansiyon = false;
+            onFeatureFilterChanged();
+          }
+
+          function onPansiyonSubChanged(){
+            if(syncingPansiyon) return;
+            syncingPansiyon = true;
+            const any = pansiyonInputs.some(el => el?.checked);
+            if(chkPans) chkPans.checked = any;
+            setPansiyonSubgroupOpen(!!(any || chkPans?.checked));
+            syncingPansiyon = false;
+            onFeatureFilterChanged();
+          }
+
+          function appendPansiyonParams(params){
+            const erkek = !!chkErkekPans?.checked;
+            const kiz = !!chkKizPans?.checked;
+            const master = !!chkPans?.checked;
+            if(!master && !erkek && !kiz) return;
+            if(showFeaturesStep() && master && erkek && kiz){
+              params.set('pansiyon', 'true');
+              return;
+            }
+            if(erkek) params.set('erkekPansiyon', 'true');
+            if(kiz) params.set('kizPansiyon', 'true');
+            if(!erkek && !kiz && master) params.set('pansiyon', 'true');
+          }
+
+          function getPansiyonFilterLabels(){
+            const labels = [];
+            if(showFeaturesStep() && chkPans?.checked && chkErkekPans?.checked && chkKizPans?.checked){
+              labels.push('Pansiyonlu okullar');
+              return labels;
+            }
+            if(chkErkekPans?.checked) labels.push('Erkek Öğrenci Pansiyon');
+            if(chkKizPans?.checked) labels.push('Kız Öğrenci Pansiyon');
+            if(!labels.length && chkPans?.checked) labels.push('Pansiyonlu okullar');
+            return labels;
+          }
+
+          function setPansiyonInputsDisabled(disabled){
+            if(chkPans) chkPans.disabled = disabled;
+            pansiyonInputs.forEach(el => { if(el) el.disabled = disabled; });
+          }
+
+          function initPansiyonFilters(){
+            setPansiyonSubgroupOpen(false);
+            chkPans?.addEventListener('change', onPansiyonMasterChanged);
+            pansiyonInputs.forEach(el => el?.addEventListener('change', onPansiyonSubChanged));
+          }
+
+          function onFeatureFilterChanged(){
+            const summaryEl = document.getElementById('summaryStep6');
+            if(summaryEl && completedThrough >= 6) RmWizardSummary.applyStepSummary(summaryEl, buildStepSummaryHtml(6));
+            reloadSearchResultsIfVisible();
+          }
+
+          function initDataTable(){
+            destroyDataTable();
+            initDetailSortState();
+            const lise = isLiseKademe();
+            const puanFlow = lise && showPuanStep();
+            const kontFlow = showKontenjanColumn();
+            const sinif12 = showSinif12Columns();
+            dt = $('#myTable').DataTable({
+              processing: false,
+              serverSide: true,
+              searching: true,
+              ordering: false,
+              autoWidth: false,
+              order: [],
+              pageLength: 50,
+              lengthMenu: [[25, 50, 100], [25, 50, 100]],
+              dom: '<"row align-items-center mb-2"<"col-sm-6"l><"col-sm-6"f>>rtip',
+              language: RM_DT_LANGUAGE,
+              columnDefs: [
+                { targets: 0, width: lise ? '10%' : '7%', orderable: false },
+                { targets: 1, width: lise ? '12%' : '8%', orderable: false },
+                { targets: 2, width: lise ? '14%' : '12%', orderable: false },
+                { targets: 3, width: lise ? '8%' : '9%', orderable: false },
+                { targets: 4, width: lise ? '9%' : '10%', orderable: false, visible: lise, className: 'rm-detail-alan-col' },
+                { targets: 5, width: lise ? '7.5%' : '8.5%', orderable: false, visible: lise, className: 'rm-detail-dil-col' },
+                { targets: 6, width: lise ? '5.5%' : '6%', orderable: false, visible: kontFlow },
+                { targets: 7, width: lise ? '5.5%' : '6%', orderable: false, type: 'num', visible: puanFlow },
+                { targets: 8, width: lise ? '5.5%' : '6%', orderable: false, visible: kontFlow },
+                { targets: 9, width: lise ? '5.5%' : '6%', orderable: false, type: 'num', visible: puanFlow },
+                { targets: 10, width: lise ? '5.5%' : '6%', orderable: false, visible: kontFlow },
+                { targets: 11, width: lise ? '5.5%' : '6%', orderable: false, type: 'num', visible: puanFlow },
+                { targets: 12, width: lise ? '5.5%' : '6%', orderable: false, visible: kontFlow && sinif12 },
+                { targets: 13, width: lise ? '5.5%' : '6%', orderable: false, type: 'num', visible: puanFlow && sinif12 }
+              ],
+              columns: [
+                { title: 'İl' },
+                { title: 'İlçe' },
+                { title: 'Kurum Adı' },
+                { title: 'Kurum<br>Türü' },
+                { title: 'Alan' },
+                { title: 'Yabancı<br>Dil' },
+                { title: '9. Sınıf<br>Kontenjan' },
+                { title: '9. Sınıf<br>Taban Puanı' },
+                { title: '10. Sınıf<br>Kontenjan' },
+                { title: '10. Sınıf<br>Taban Puan' },
+                { title: '11. Sınıf<br>Kontenjan' },
+                { title: '11. Sınıf<br>Taban Puan' },
+                { title: '12. Sınıf<br>Kontenjan' },
+                { title: '12. Sınıf<br>Taban Puan' }
+              ],
+              initComplete: function(){
+                fixTableHeaders();
+                mountDetailSortControls(this.api());
+                window.RmStickyTableHead?.refresh(document.querySelector('.rm-table-wrap'));
+              },
+              ajax: function(data, callback){
+                const params = buildSearchParams({
+                  page: Math.floor(data.start / data.length) + 1,
+                  pageSize: data.length,
+                  q: data.search.value || ''
+                });
+                if(!params){
+                  callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                  return;
+                }
+                startGridLoading();
+                fetch('/api/detayliArama?' + params.toString())
+                  .then(r => { if(!r.ok) throw new Error(friendlyHttpError(r.status)); return r.json(); })
+                  .then(json => {
+                    stopGridLoading();
+                    const items = json.items || [];
+                    const total = json.total || 0;
+                    const isTableFilter = !!(data.search?.value || '').trim();
+                    if(!total){
+                      pendingNoResultAlert = false;
+                      pendingScrollToResults = false;
+                      callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                      if(!isTableFilter) closeResultsForEmpty();
+                      return;
+                    }
+                    summary.textContent = `${total} kayıt bulundu`;
+                    if(pendingScrollToResults && !isTableFilter){
+                      pendingScrollToResults = false;
+                      setTimeout(scrollToResults, 80);
+                    }
+                    callback({
+                      draw: data.draw,
+                      recordsTotal: total,
+                      recordsFiltered: total,
+                      data: items.map(row => [
+                        displayText(row.ilAdi ?? row.IlAdi ?? ''),
+                        displayText(row.ilceAdi ?? row.IlceAdi ?? ''),
+                        kurumCellHtml(row),
+                        displayText(row.kurumTuruAdi ?? row.KurumTuruAdi ?? ''),
+                        displayText(row.alanAdi ?? row.AlanAdi ?? '—'),
+                        displayText(row.dilAdi ?? row.DilAdi ?? '—'),
+                        fmtKontHtml(row.kont9 ?? row.Kont9),
+                        fmtPuanHtml(row.puan9 ?? row.Puan9),
+                        fmtKontHtml(row.kont10 ?? row.Kont10),
+                        fmtPuanHtml(row.puan10 ?? row.Puan10),
+                        fmtKontHtml(row.kont11 ?? row.Kont11),
+                        fmtPuanHtml(row.puan11 ?? row.Puan11),
+                        fmtKontHtml(row.kont12 ?? row.Kont12),
+                        fmtPuanHtml(row.puan12 ?? row.Puan12)
+                      ])
+                    });
+                  })
+                  .catch(err => {
+                    console.error(err);
+                    pendingScrollToResults = false;
+                    stopGridLoading();
+                    pendingNoResultAlert = false;
+                    summary.textContent = friendlyFetchError(err);
+                    callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                  });
+              },
+              drawCallback: function(){
+                fixTableHeaders();
+                mountDetailSortControls(this.api());
+                initKurumTooltips();
+                const api = this.api();
+                api.rows().every(function(){
+                  $(this.node()).find('td').each(function(i){
+                    this.setAttribute('data-label', tableColLabels[i] || '');
+                    if(window.innerWidth <= 768){
+                      this.style.minWidth = '';
+                      this.style.width = '';
+                    }
+                  });
+                });
+                if(window.innerWidth <= 768){
+                  const tbl = document.getElementById('myTable');
+                  if(tbl){
+                    tbl.style.width = '100%';
+                    tbl.style.minWidth = '0';
+                  }
+                }
+                requestAnimationFrame(tuneDetailTextColumns);
+                window.RmStickyTableHead?.refresh(document.querySelector('.rm-table-wrap'));
+              }
+            });
+            const filterEl = document.querySelector('#myTable_wrapper .dataTables_filter');
+            if(filterEl) document.getElementById('dtSearchWrap')?.appendChild(filterEl);
+            window.RmStickyTableHead?.refresh(document.querySelector('.rm-table-wrap'));
+          }
+
+          function runSearch(){
+            if(!kademeSel.value){
+              kademeSel.focus();
+              return;
+            }
+            if(!sehirMs.getSelected().length){
+              showIlRequiredHint();
+              return;
+            }
+            searchSubmitted = true;
+            filtersDirty = false;
+            updateReviewHint();
+            pendingScrollToResults = true;
+            pendingNoResultAlert = false;
+            summary.textContent = 'Sorgulanıyor...';
+            showResultsSection();
+            try {
+              window.RmAnalytics?.trackDetayliAramaKademe(kademeSel.value, getKademeLabel());
+              window.RmAnalytics?.trackSearchFilters(sehirMs, ilceMs, okulMs);
+            } catch (_) {}
+            try {
+              initDataTable();
+            } catch(err){
+              console.error(err);
+              pendingScrollToResults = false;
+              stopGridLoading();
+              hideResultsSection();
+              if(summary) summary.textContent = friendlyFetchError(err);
+            }
+          }
+
+          function clearAll(){
+            clearIlRequiredHint();
+            kademeSel.disabled = false;
+            kademeLockedFromEntry = false;
+            pendingKademeLock = shouldLockKademeFromEntry();
+            kademeSel.value = '';
+            sehirMs.clear();
+            sehirMs.setDisabled(true);
+            ilceMs.setItems([]);
+            ilceMs.setDisabled(true);
+            ilceMs.setMessageOnly('İl seçiniz');
+            okulMs.setItems([]);
+            okulMs.setDisabled(true);
+            resetSelect(okul, 'Okul Türü');
+            okulMs.setMessageOnly('Önce il seçiniz');
+            setAlanDisabledMessage('Önce okul türü seçmelisiniz');
+            resetLiseOnlyFields();
+            featureInputs.forEach(el => { if(el){ el.checked = false; el.disabled = true; } });
+            setPansiyonInputsDisabled(true);
+            if(chkPans) chkPans.checked = false;
+            setPansiyonSubgroupOpen(false);
+            pansiyonInputs.forEach(el => { if(el) el.checked = false; });
+            hideResultsSection();
+            filtersDirty = false;
+            illerLoaded = false;
+            resetSelect(sehir, 'Önce kademe seçiniz');
+            resetWizard();
+            updateKademeUi();
+            refreshSelectedStyles();
+            if(pendingKademeLock){
+              const k = new URLSearchParams(window.location.search).get('kademe');
+              if(k && ['0', '1', '2', '4'].includes(k)){
+                kademeSel.value = k;
+                kademeSel.dispatchEvent(new Event('change'));
+              }
+            }
+          }
+
+          kademeSel.addEventListener('change', async () => {
+            resetLiseOnlyFields();
+            if(!pendingKademeLock) resetWizard();
+            invalidateSearchResults();
+            sehirMs.clear();
+            ilceMs.setItems([]);
+            ilceMs.setDisabled(true);
+            ilceMs.setMessageOnly('İl seçiniz');
+            okulMs.setItems([]);
+            okulMs.setDisabled(true);
+            resetSelect(okul, 'Okul Türü');
+            okulMs.setMessageOnly('Önce il seçiniz');
+            if(!kademeSel.value){
+              sehirMs.setDisabled(true);
+              resetSelect(sehir, 'Önce kademe seçiniz');
+              updateKademeUi();
+              updateStepPanels();
+              refreshSelectedStyles();
+              return;
+            }
+            try{
+              await ensureIller({ resetSelection: true });
+            }catch(err){
+              console.error(err);
+            }
+            if(pendingKademeLock && kademeSel.value){
+              pendingKademeLock = false;
+              applyKademeEntrySkip();
+            }
+            updateKademeUi();
+            updateStepPanels();
+            refreshSelectedStyles();
+          });
+
+          sehirMs.onChange = async (ilKodlari) => {
+            if(!kademeSel.value) return;
+            if(ilKodlari.length) clearIlRequiredHint();
+            invalidateOkulTurleriCache();
+            markDownstreamForReview(2);
+            const n = ilKodlari.length;
+            if(n === 0){
+              ilceMs.setItems([]);
+              ilceMs.setDisabled(true);
+              ilceMs.setMessageOnly('İl seçiniz');
+              resetOkulTurleriNoIl();
+              updateKademeUi();
+              refreshSelectedStyles();
+              return;
+            }
+            if(n > 1){
+              ilceMs.setItems([]);
+              ilceMs.setDisabled(true);
+              ilceMs.setMessageOnly('Tüm ilçeler');
+              await loadOkulTurleri(ilKodlari, [], true);
+              refreshSelectedStyles();
+              return;
+            }
+            await loadIlceler(ilKodlari[0]);
+            const ilceKodlari = ilceMs.getSelected();
+            const allSelected = ilceMs.items && ilceKodlari.length === ilceMs.items.length;
+            await loadOkulTurleri([ilKodlari[0]], ilceKodlari, allSelected);
+            refreshSelectedStyles();
+          };
+
+          ilceMs.onChange = async (ilceKodlari) => {
+            const ilKodlari = sehirMs.getSelected();
+            if(ilKodlari.length !== 1) return;
+            markDownstreamForReview(2);
+            const allSelected = ilceMs.items && ilceKodlari.length === ilceMs.items.length;
+            await loadOkulTurleri([ilKodlari[0]], ilceKodlari, allSelected);
+            refreshSelectedStyles();
+          };
+
+          okulMs.onChange = async (turler) => {
+            markDownstreamForReview(2);
+            refreshSelectedStyles();
+            updateKademeUi();
+            if(isLiseKademe()) await loadAlanAdlari(turler);
+          };
+
+          alanMs.onChange = () => {
+            markDownstreamForReview(3);
+            refreshSelectedStyles();
+          };
+
+          document.getElementById('btnStep1Next')?.addEventListener('click', () => advanceFrom(1));
+          document.getElementById('btnStep2Next')?.addEventListener('click', () => advanceFrom(2));
+          document.getElementById('btnStep3Next')?.addEventListener('click', () => advanceFrom(3));
+          document.getElementById('btnStep4Next')?.addEventListener('click', () => advanceFrom(4));
+          document.querySelectorAll('.rm-step-edit').forEach(btn => {
+            btn.addEventListener('click', () => gotoStep(Number(btn.dataset.goto)));
+          });
+
+          function onPuanRangeInput(source){
+            if(!applyingPuanPreset) clearPuanPresetChecks();
+            syncPuanSliderLive(source);
+            markDownstreamForReview(4);
+            refreshSelectedStyles();
+          }
+
+          function onPuanRangeCommit(source){
+            if(!applyingPuanPreset) clearPuanPresetChecks();
+            syncPuanSliders(source);
+            markDownstreamForReview(4);
+            refreshSelectedStyles();
+          }
+
+          sinavTipi.addEventListener('change', onSinavTipiChanged);
+          puanMin?.addEventListener('focus', () => {
+            if(!applyingPuanPreset) clearPuanPresetChecks();
+          });
+          puanMax?.addEventListener('focus', () => {
+            if(!applyingPuanPreset) clearPuanPresetChecks();
+          });
+          puanMin?.addEventListener('input', () => onPuanRangeInput('min'));
+          puanMax?.addEventListener('input', () => onPuanRangeInput('max'));
+          puanMin?.addEventListener('keyup', () => onPuanRangeInput('min'));
+          puanMax?.addEventListener('keyup', () => onPuanRangeInput('max'));
+          puanMin?.addEventListener('change', () => onPuanRangeCommit('min'));
+          puanMax?.addEventListener('change', () => onPuanRangeCommit('max'));
+          puanSliderMin?.addEventListener('input', () => {
+            puanMin.value = puanSliderMin.value;
+            if(parsePuanValue(puanSliderMin.value, 0) > parsePuanValue(puanSliderMax.value, 500)){
+              puanSliderMax.value = puanSliderMin.value;
+              puanMax.value = puanSliderMin.value;
+            }
+            if(!applyingPuanPreset) clearPuanPresetChecks();
+            onPuanRangeCommit('sliderMin');
+          });
+          puanSliderMax?.addEventListener('input', () => {
+            puanMax.value = puanSliderMax.value;
+            if(parsePuanValue(puanSliderMax.value, 500) < parsePuanValue(puanSliderMin.value, 0)){
+              puanSliderMin.value = puanSliderMax.value;
+              puanMin.value = puanSliderMax.value;
+            }
+            if(!applyingPuanPreset) clearPuanPresetChecks();
+            onPuanRangeCommit('sliderMax');
+          });
+          puanPresetInputs().forEach(cb => {
+            cb.addEventListener('change', () => {
+              markDownstreamForReview(4);
+              if(!cb.checked){
+                clearPuanPresetChecks();
+                invalidateSearchResults();
+                return;
+              }
+              puanPresetInputs().forEach(other => { if(other !== cb) other.checked = false; });
+              applyPuanPreset(parseInt(cb.dataset.puanMin, 10), parseInt(cb.dataset.puanMax, 10));
+              invalidateSearchResults();
+            });
+          });
+
+
+          featureInputs.forEach(el => {
+            if(!el) return;
+            el.addEventListener('change', onFeatureFilterChanged);
+          });
+          initPansiyonFilters();
+
+          function applyInitialKademeFromQuery(){
+            const k = new URLSearchParams(window.location.search).get('kademe');
+            if(!k || !['0', '1', '2', '4'].includes(k)) return false;
+            kademeSel.value = k;
+            kademeSel.dispatchEvent(new Event('change'));
+            return true;
+          }
+
+          btnSearch.addEventListener('click', runSearch);
+          btnClear.addEventListener('click', () => { clearAll(); syncRanges(); });
+          btnResetFromEmpty?.addEventListener('click', () => {
+            clearAll();
+            syncRanges();
+            hideResultsSection();
+            const formTop = document.querySelector('.rm-steps-flow') || document.getElementById('wizardActions');
+            formTop?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+
+          initStepRails();
+          resetWizard();
+          if(!applyInitialKademeFromQuery()){
+            updateKademeUi();
+            refreshSelectedStyles();
+          }
+          syncRanges();
+          updatePuanRangeHint();
+          initFeatureTooltips();
+        })();
+    </script>
+
+    <!-- rm-deploy:20260629 -->
+</body>
+</html>

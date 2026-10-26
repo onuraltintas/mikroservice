@@ -10,4 +10,6 @@ public interface IWeeklyStudyDraftService
 {
     Task<WeeklyDraftPage> GetAsync(CancellationToken ct);
     Task<WeeklyDraftView> SaveAsync(WeeklyDraftInput request,CancellationToken ct);
+    Task<WeeklyDraftPage> GetForStudentAsync(Guid studentId,CancellationToken ct);
+    Task<WeeklyDraftView> SaveForStudentAsync(Guid studentId,WeeklyDraftInput request,CancellationToken ct);
 }

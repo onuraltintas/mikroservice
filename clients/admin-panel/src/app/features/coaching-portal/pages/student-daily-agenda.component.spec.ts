@@ -1,3 +1,4 @@
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
@@ -65,3 +66,5 @@ describe('StudentDailyAgendaComponent', () => {
     c.refresh(); expect(api.get).toHaveBeenLastCalledWith('upcoming', 1);
   });
 });
+
+beforeEach(() => TestBed.overrideProvider(CoachingStudentNavigationService, { useValue: { showAssignments: () => true, showSessions: () => true, refresh: () => {} } }));

@@ -18,10 +18,10 @@ describe('StudentLearningSetupComponent', () => {
     const fixture = TestBed.createComponent(StudentLearningSetupComponent); fixture.detectChanges(); await fixture.whenStable();
     return { fixture, component: fixture.componentInstance, service, planning };
   }
-  it('keeps plan and assignment links visible without completing setup', async () => {
+  it('keeps profile, routine and existing plan entry points available without completing setup', async () => {
     const { fixture } = await setup();
     expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/study-plans"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/assignments"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/profile"]')).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Çalışma amacım');
   });
   it('requires conditional exam fields and preserves input on save failure', async () => {
@@ -38,7 +38,7 @@ describe('StudentLearningSetupComponent', () => {
     const { component, fixture } = await setup({ ...empty, nextStep: 'Catalog' });
     expect(component.step()).toBe('Courses');
     expect(fixture.nativeElement.textContent).toContain('Katalog hazırlanıyor.');
-    expect(fixture.nativeElement.textContent).toContain('Mevcut planlarım');
+    expect(fixture.nativeElement.textContent).toContain('Mevcut planım');
   });
   it('prevents repeated saves and leaving during a pending request', async () => {
     const { component, service } = await setup();

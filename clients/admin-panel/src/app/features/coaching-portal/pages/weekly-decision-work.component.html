@@ -1,0 +1,52 @@
+<section class="weekly-review" aria-label="Kararın çalışma ve ödev bağlantıları">
+  <header><h3>{{decision.title}} · İlgili işler</h3><button type="button" (click)="cancel()" [disabled]="saving()">Kapat</button></header>
+  <p>Bir çalışma ve bir ödev bağlayabilirsin. Gerçekleşme durumu ilgili kayıttan okunur; kararın durumunu ayrıca sen belirlersin.</p>
+  <div class="actions" role="group" aria-label="Karar işi işlemleri">
+    <button type="button" (click)="chooseMode('link')" [attr.aria-pressed]="mode==='link'" [disabled]="saving()">Mevcut işe bağla</button>
+    <button type="button" (click)="chooseMode('study')" [attr.aria-pressed]="mode==='study'" [disabled]="saving()">Çalışma ekle / taşı</button>
+    <button type="button" (click)="chooseMode('assignment')" [attr.aria-pressed]="mode==='assignment'" [disabled]="saving()">Yeni ödev oluştur</button>
+  </div>
+  @if(error()){<p role="alert" class="error">{{error()}}</p>}
+  @if(stale()){<p>Kayıt veya yetki değişti. Girdilerini gözden geçirip güncel kararı yeniden aç.</p><button type="button" (click)="reload()" [disabled]="saving()">Güncel karar için kapat</button>}
+  @if(loading()){<p role="status">İlgili bilgiler yükleniyor…</p>}
+  <fieldset [disabled]="saving() || loading() || stale()">
+  @if(mode==='link'){
+    <legend>Mevcut çalışma veya ödev seç</legend>
+    <p>Çalışma: {{studyId ? 'Seçili çalışma var' : 'Bağlı değil'}} <button type="button" (click)="clear('study')">Çalışma bağını kaldır</button></p>
+    <p>Ödev: {{assignmentId ? 'Seçili ödev var' : 'Bağlı değil'}} <button type="button" (click)="clear('assignment')">Ödev bağını kaldır</button></p>
+    <label>İş türü<select [(ngModel)]="kind" (ngModelChange)="changeKind()"><option value="study">Aktif plandaki çalışmalar</option><option value="assignment">Öğrencinin ödevleri</option></select></label>
+    <form (ngSubmit)="load()"><label>Başlıkta ara<input name="search" [(ngModel)]="search" maxlength="200"></label><button type="submit">Ara</button></form>
+    @if(options();as page){
+      @for(item of page.items;track item.id){<article><strong>{{item.title}}</strong><p>@if(item.date){ {{item.date | date:'dd.MM.yyyy'}} } @if(item.startMinute!=null){ · {{clock(item.startMinute)}} } @if(item.minutes){ · {{item.minutes}} dk } · {{item.isDone ? 'Gerçekleşti' : 'Bekliyor'}}</p><button type="button" (click)="select(item.id)" [attr.aria-pressed]="kind==='study' ? studyId===item.id : assignmentId===item.id">{{(kind==='study' ? studyId===item.id : assignmentId===item.id) ? 'Seçildi' : 'Seç'}}</button></article>}
+      @if(!page.items.length){<p>Bu aramada uygun kayıt yok.</p>}
+      <nav class="actions" aria-label="İlgili iş sayfaları"><button type="button" (click)="load(page.pageNumber-1)" [disabled]="page.pageNumber<=1">Önceki</button><span>{{page.pageNumber}}. sayfa · {{page.totalCount}} kayıt</span><button type="button" (click)="load(page.pageNumber+1)" [disabled]="page.pageNumber*20>=page.totalCount">Sonraki</button></nav>
+    }
+    <button type="button" (click)="link()" [disabled]="!dirty">Bağlantıları kaydet</button>
+  }@else if(mode==='study'){
+    <legend>Takvim değişikliği</legend>
+    @if(options()?.plan;as plan){
+      <p>Mevcut plan ve tamamlanmış çalışmalar korunur.</p>
+      <label>İşlem<select [ngModel]="moveExisting" (ngModelChange)="setMove($event)"><option [ngValue]="false">Karardan yeni çalışma ekle</option>@if(decision.work?.study?.canOpen && !decision.work?.study?.isDone && decision.work?.study?.status!=='Archived'){<option [ngValue]="true">Bağlı çalışmayı taşı</option>}</select></label>
+      <p>Yeni çalışma karar başlığıyla eklenir. Taşımada çalışma süresi ve kazanım bağlantıları korunur.</p>
+      @if(!moveExisting && studyId){<p>Yeni çalışma, bu kararın mevcut çalışma bağlantısının yerini alacak. Önceki çalışma planında kalır.</p>}
+      <label>Çalışma tarihi<input type="date" [(ngModel)]="date" (ngModelChange)="changed()" [min]="plan.startDate ?? ''" [max]="plan.endDate ?? ''"></label>
+      <label>Başlangıç saati<input type="time" [(ngModel)]="time" (ngModelChange)="changed()"></label>
+      <label>Süre (dakika)<input type="number" [(ngModel)]="minutes" (ngModelChange)="changed()" min="1" max="1440" [readOnly]="moveExisting"></label>
+      <button type="button" (click)="prepare()">Takvim etkisini önizle</button>
+    }@else{<p>Yeni çalışma eklemek için öğrencinin yayımlanmış aktif planı olmalı. Önce mevcut plan hazırlama ekranından planı oluşturup yayımla.</p>}
+    @if(preview();as impact){<article aria-label="Takvim etkisi önizlemesi"><h4>Onay öncesi takvim özeti</h4><strong>{{impact.title}}</strong>
+      @if(impact.previousDate){<p>Önce: {{impact.previousDate | date:'dd.MM.yyyy'}} @if(impact.previousStartMinute!=null){ · {{clock(impact.previousStartMinute)}} }</p>}
+      <p>{{impact.previousDate ? 'Sonra' : 'Yeni çalışma'}}: {{impact.proposal.date | date:'dd.MM.yyyy'}} · {{clock(impact.proposal.startMinute)}}–{{clock(impact.proposal.startMinute+impact.proposal.minutes)}} · {{impact.proposal.minutes}} dk</p>
+      <p>Saati belirtilen çalışmalarla çakışma yok. O gün {{impact.otherWorkCount}} diğer çalışma var; değişiklik sonrası toplam {{impact.dayMinutes}} dakika.</p>
+      @if(impact.untimedWorkCount){<p class="error">{{impact.untimedWorkCount}} çalışmanın saati belirtilmemiş. Bu çalışmalar için saat çakışması kontrol edilemedi; toplam günlük süreye dahil edildi.</p>}
+      <label><input type="checkbox" [(ngModel)]="confirmed"> Bu takvim değişikliğini onaylıyorum.</label><button type="button" (click)="apply()" [disabled]="!confirmed">Onayla ve plana uygula</button>
+    </article>}
+  }@else{
+    <legend>Karardan yeni ödev</legend><p>Başlık: {{decision.title}}. Karar açıklaması ödev açıklaması olarak alınır; yalnız bu öğrenciye atanır.</p>
+    @if(assignmentId){<p>Yeni ödev, bu kararın mevcut ödev bağlantısının yerini alır. Önceki ödev korunur.</p>}
+    <label>Son teslim tarihi ve saati<input type="datetime-local" [(ngModel)]="dueAt" (ngModelChange)="changed()"></label>
+    <label>Tahmini süre (dakika)<input type="number" [(ngModel)]="estimatedMinutes" (ngModelChange)="changed()" min="1" max="1440"></label>
+    <button type="button" (click)="createAssignment()" [disabled]="!dueAt">Ödevi oluştur ve karara bağla</button>
+  }
+  </fieldset>
+</section>

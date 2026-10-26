@@ -10,7 +10,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
   <section class="space-y-4 rounded-xl border bg-white p-5 dark:bg-gray-900" aria-labelledby="catalog-import-title" [attr.aria-busy]="busy()">
     <h2 id="catalog-import-title" class="text-xl font-semibold">Kontrollü katalog aktarımı</h2>
     @if(busy()) { <p role="status" aria-live="polite" class="text-sm text-indigo-600">İşlem sürüyor; tamamlanana kadar bekleyin.</p> }
-    <p class="text-sm text-gray-500">Altı JSON dosyasını birlikte seçin. Yeni kayıtlar pasif eklenir; yayınlama ayrı onay ister. Mevcut içerik değiştirilmez, geçmiş silinmez.</p>
+    <p class="text-sm text-gray-500">Beş JSON dosyasını birlikte seçin. Yeni kayıtlar pasif eklenir; yayınlama ayrı onay ister. Mevcut içerik değiştirilmez, geçmiş silinmez.</p>
     <fieldset [disabled]="busy() || !permitted()" class="space-y-3">
       <label class="block text-sm">Kaynak adı<input [(ngModel)]="source" (ngModelChange)="invalidate()" maxlength="100" class="ml-3 rounded border p-2 dark:bg-gray-800" /></label>
       <label class="block text-sm">Katalog JSON dosyaları<input type="file" multiple accept=".json,application/json" (change)="selectFiles($event)" class="ml-3" /></label>
@@ -33,19 +33,19 @@ export class CoachingCatalogImportComponent {
   private readonly auth = inject(AuthService);
   private readonly toaster = inject(ToasterService);
   private readonly destroyRef = inject(DestroyRef);
-  readonly fileNames = ['lessons.json', 'units-derived.json', 'upper-subjects.json', 'subjects.json', 'university-programs.json', 'lgs-programs.json'];
+  readonly fileNames = ['lessons.json', 'units-derived.json', 'upper-subjects.json', 'subjects.json', 'lgs-programs.json'];
   source = ''; reason = ''; files: Record<string, string> = {};
   readonly review = signal<CoachingCatalogImportReview | null>(null);
   readonly busy = signal(false); readonly error = signal('');
   permitted() { return !!this.auth.userProfile()?.roles?.includes('SystemAdmin') && this.auth.hasPermission(ADMIN_PERMISSIONS.coachingContentManage); }
-  ready() { return !!this.source.trim() && Object.keys(this.files).length === 6 && this.fileNames.every(name => typeof this.files[name] === 'string'); }
+  ready() { return !!this.source.trim() && Object.keys(this.files).length === 5 && this.fileNames.every(name => typeof this.files[name] === 'string'); }
   total() { return Object.values(this.review()?.counts ?? {}).reduce((sum, count) => sum + count, 0); }
   invalidate() { this.review.set(null); this.reason = ''; this.error.set(''); }
   async selectFiles(event: Event) {
     if (this.busy() || !this.permitted()) return;
     this.invalidate(); this.files = {};
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    if (files.length !== 6 || new Set(files.map(file => file.name)).size !== 6 || files.some(file => !this.fileNames.includes(file.name)) || files.reduce((sum, file) => sum + file.size, 0) > 40 * 1024 * 1024) { this.error.set('Altı farklı katalog JSON dosyasını toplam 40 MiB sınırı içinde seçin.'); return; }
+    if (files.length !== 5 || new Set(files.map(file => file.name)).size !== 5 || files.some(file => !this.fileNames.includes(file.name)) || files.reduce((sum, file) => sum + file.size, 0) > 40 * 1024 * 1024) { this.error.set('Beş farklı katalog JSON dosyasını toplam 40 MiB sınırı içinde seçin.'); return; }
     this.busy.set(true);
     try {
       const entries = await Promise.all(files.map(async file => [file.name, await file.text()] as const));

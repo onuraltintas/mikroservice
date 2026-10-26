@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { coachingExamTypes } from './coaching-enum-contract';
+import { PracticeExamInput, PracticeExamProfile, PracticeExamSummary } from '../../../../../../src/app/core/models/practice-exam';
 
 export interface CoachingTeacherExam {
   id: string;
@@ -27,6 +28,8 @@ export interface CoachingTeacherExamResult {
   subjectScores?: Record<string, number> | null;
   ranking?: number | null;
   teacherNotes?: string | null;
+  practiceExam?: PracticeExamInput | null;
+  netSummary?: PracticeExamSummary | null;
 }
 
 export interface CoachingTeacherExamDetail extends CoachingTeacherExam {
@@ -77,12 +80,14 @@ export interface CoachingTeacherExamResultRequest {
   subjectScores?: Record<string, number> | null;
   ranking?: number | null;
   notes?: string | null;
+  practiceExam?: PracticeExamInput | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class CoachingTeacherExamsService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/exams`;
+  profiles() { return this.http.get<PracticeExamProfile[]>(`${this.url}/profiles`); }
 
   getTeacherExams(teacherId: string, pageNumber = 1, pageSize = 25): Observable<CoachingTeacherExamPage> {
     return this.http.get<CoachingTeacherExamPage>(

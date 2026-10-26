@@ -11,6 +11,24 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingErasureExecutionServiceTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Execute_ShouldIncludeReflectionReviewsInStudentAndTeacherErasure(bool eraseTeacher)
+    {
+        await using var context=CreateContext();var student=Guid.NewGuid();var teacher=Guid.NewGuid();
+        var reflection=WeeklyReflection.Create(student,new(2026,10,12));reflection.Edit("Özel değerlendirme","","Tekrar",4);
+        context.Add(reflection);await context.SaveChangesAsync();context.Add(WeeklyReflectionReview.Create(reflection,teacher,"Özel takip notu"));
+        var other=WeeklyReflection.Create(Guid.NewGuid(),new(2026,10,12));other.Edit("Diğer öğrenci","","Tekrar",3);
+        context.Add(other);await context.SaveChangesAsync();context.Add(WeeklyReflectionReview.Create(other,Guid.NewGuid(),"Diğer öğretmenin notu"));await context.SaveChangesAsync();
+        var request=Request(eraseTeacher?teacher:student);
+        await new CoachingErasureAssessmentService(context,TimeProvider.System).AssessAsync(AssessmentRequest(request),default);
+        await new CoachingErasureExecutionService(context,new StubAttachmentStorage(),TimeProvider.System).ExecuteAsync(request,default);
+        Assert.False(await context.Set<WeeklyReflectionReview>().AnyAsync(x=>x.StudentId==student));
+        Assert.True(await context.Set<WeeklyReflectionReview>().AnyAsync(x=>x.StudentId==other.StudentId));
+        Assert.Equal(eraseTeacher,await context.Set<WeeklyReflection>().AnyAsync(x=>x.StudentId==student));
+    }
+
     [Fact]
     public async Task Execute_ShouldDeleteOnlySubjectDataAndRemainIdempotent()
     {

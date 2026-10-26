@@ -54,7 +54,7 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
 
         var key = command.IdempotencyKey?.Trim();
         EnsureKey(key);
-        var requestHash = IdempotencyRequestHasher.Create(
+        var hashParts = new[] {
             IdempotencyRequestHasher.Format(command.ExamId),
             IdempotencyRequestHasher.Format(command.StudentId),
             IdempotencyRequestHasher.Format(command.Score),
@@ -63,7 +63,10 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
             command.EmptyAnswers.ToString(),
             IdempotencyRequestHasher.Format(command.SubjectScores),
             command.Notes,
-            command.Ranking?.ToString());
+            command.Ranking?.ToString() };
+        // Keep the hash of pre-existing requests stable when no breakdown is supplied.
+        var requestHash = IdempotencyRequestHasher.Create(command.PracticeExam is null ? hashParts
+            : [.. hashParts, System.Text.Json.JsonSerializer.Serialize(command.PracticeExam)]);
         var existing = await _idempotencyRepository.GetAsync(IdempotencyScope, key!, cancellationToken);
         if (existing is not null)
         {
@@ -93,8 +96,11 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
         }
 
         var result = ExamResult.Create(command.ExamId, command.StudentId, command.Score);
+        if (exam.ExamType is Coaching.Domain.Enums.ExamType.LGS or Coaching.Domain.Enums.ExamType.YKS && command.PracticeExam is null)
+            throw new ArgumentException("LGS/YKS denemesinde sınav kapsamı ve ders cevapları zorunludur.");
         
         result.SetAnswerStatistics(command.CorrectAnswers, command.WrongAnswers, command.EmptyAnswers);
+        if (command.PracticeExam is not null) result.SetPracticeExam(command.PracticeExam, exam.ExamType);
         
         if (command.SubjectScores != null)
         {

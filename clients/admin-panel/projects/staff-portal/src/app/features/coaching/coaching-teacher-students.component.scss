@@ -1,55 +1,55 @@
 .roster { margin-top: 28px; }
 .roster-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
 .roster-heading-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
-.roster-refresh { min-height: 34px; padding: 0 10px; border: 1px solid #d9dfd7; border-radius: 8px; color: #425b56; background: #fbfaf6; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.roster-refresh { min-height: 34px; padding: 0 10px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .roster-refresh:disabled { cursor: wait; opacity: .55; }
-.roster-eyebrow { margin: 0 0 8px; color: #64876e; font-size: 9px; font-weight: 800; letter-spacing: .15em; }
-.roster-heading h2 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; letter-spacing: -.035em; }
-.roster-description { margin: 8px 0 0; color: #72817d; font-size: 11px; line-height: 1.6; }
-.roster-count { flex: 0 0 auto; padding: 8px 11px; border: 1px solid #dfe6d8; border-radius: 999px; color: #4b6c55; background: #f1f5e9; font-size: 10px; font-weight: 700; }
-.student-invitation { display: flex; align-items: end; gap: 8px; margin-top: 15px; padding: 12px; border: 1px solid #e0e5dc; border-radius: 10px; background: #f7f8f2; }
-.invitation-field { display: grid; flex: 1; gap: 5px; color: #596963; font-size: 10px; font-weight: 700; }
-.invitation-field input { min-width: 0; height: 38px; padding: 0 10px; border: 1px solid #d9dfd7; border-radius: 8px; color: #243e43; background: #fffefa; font: inherit; }
-.student-invitation button { height: 38px; padding: 0 12px; border: 0; border-radius: 8px; color: #fff; background: #286250; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
+.roster-eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: .15em; }
+.roster-heading h2 { margin: 0; color: var(--ui-text); font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -.035em; }
+.roster-description { margin: 8px 0 0; color: var(--ui-text-muted); font-size: 13px; line-height: 1.6; }
+.roster-count { flex: 0 0 auto; padding: 8px 11px; border: 1px solid var(--ui-border); border-radius: 999px; color: var(--ui-text); background: var(--ui-surface); font-size: 13px; font-weight: 700; }
+.student-invitation { display: flex; align-items: end; gap: 8px; margin-top: 15px; padding: 12px; border: 1px solid var(--ui-border); border-radius: 10px; background: var(--ui-surface); }
+.invitation-field { display: grid; flex: 1; gap: 5px; color: var(--ui-text); font-size: 13px; font-weight: 700; }
+.invitation-field input { min-width: 0; height: 38px; padding: 0 10px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-surface); font: inherit; }
+.student-invitation button { height: 38px; padding: 0 12px; border: 0; border-radius: 8px; color: #fff; background: var(--ui-brand); font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
 .student-invitation button:disabled { cursor: wait; opacity: .55; }
-.invitation-success { margin: 0; padding: 9px 11px; border: 1px solid #bbdec6; border-radius: 8px; color: #27623b; background: #f0faf2; font-size: 10px; }
-.invitation-note { margin: -5px 0 0; color: #71807a; font-size: 10px; line-height: 1.5; }
+.invitation-success { margin: 0; padding: 9px 11px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-success); background: var(--ui-brand-soft); font-size: 13px; }
+.invitation-note { margin: -5px 0 0; color: var(--ui-text-muted); font-size: 13px; line-height: 1.5; }
 .roster-search { display: flex; gap: 8px; margin: 22px 0 13px; }
-.roster-search input { min-width: 0; height: 42px; flex: 1; padding: 0 12px; border: 1px solid #d9dfd7; border-radius: 9px; outline: none; color: #243e43; background: #fffefa; font: inherit; font-size: 11px; }
-.roster-search input:focus { border-color: #779372; box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }
-.grade-filter { display: grid; min-width: 132px; gap: 4px; color: #596963; font-size: 9px; font-weight: 700; }
-.grade-filter select { height: 42px; padding: 0 10px; border: 1px solid #d9dfd7; border-radius: 9px; color: #243e43; background: #fffefa; font: inherit; font-size: 10px; }
-.search-button, .clear-search, .roster-error button, .roster-pagination button { min-height: 42px; padding: 0 14px; border: 1px solid #d9dfd7; border-radius: 9px; color: #425b56; background: #fbfaf6; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
-.search-button { border-color: #264b44; color: #f6f8ed; background: #264b44; }
-.search-button:hover { background: #1b3e38; }
-.student-list { overflow: hidden; border: 1px solid #e3e5dc; border-radius: 14px; background: #fbfaf6; }
-.student-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 18px; border-bottom: 1px solid #e9eae3; }
+.roster-search input { min-width: 0; height: 42px; flex: 1; padding: 0 12px; border: 1px solid var(--ui-border); border-radius: 9px; outline: none; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; }
+.roster-search input:focus { border-color: var(--ui-border); box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }
+.grade-filter { display: grid; min-width: 132px; gap: 4px; color: var(--ui-text); font-size: 13px; font-weight: 700; }
+.grade-filter select { height: 42px; padding: 0 10px; border: 1px solid var(--ui-border); border-radius: 9px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; }
+.search-button, .clear-search, .roster-error button, .roster-pagination button { min-height: 42px; padding: 0 14px; border: 1px solid var(--ui-border); border-radius: 9px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.search-button { border-color: var(--ui-border); color: #fff; background: var(--ui-brand); }
+.search-button:hover { background: var(--ui-brand); }
+.student-list { overflow: hidden; border: 1px solid var(--ui-border); border-radius: 14px; background: var(--ui-surface); }
+.student-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 18px; border-bottom: 1px solid var(--ui-border); }
 .student-row:last-child { border-bottom: 0; }
 .student-identity { display: flex; min-width: 0; align-items: center; gap: 12px; }
-.student-avatar { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 12px; color: #26443f; background: #e3edcf; font-family: Georgia, serif; font-size: 12px; font-weight: 700; }
+.student-avatar { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 12px; color: var(--ui-text); background: var(--ui-surface); font-family: inherit; font-size: 13px; font-weight: 700; }
 .student-name-block { min-width: 0; }
-.student-name-block h3 { overflow: hidden; margin: 0; color: #2b4144; font-size: 12px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.student-name-block p { margin: 5px 0 0; color: #7a8883; font-size: 10px; }
-.student-context { display: grid; flex: 0 0 auto; gap: 5px; color: #526962; font-size: 10px; text-align: right; }
-.student-context small { color: #8a9690; font-size: 9px; }
-.student-open { display: inline-flex; min-height: 34px; flex: 0 0 auto; align-items: center; gap: 8px; padding: 0 11px; border: 1px solid #d6e0ce; border-radius: 8px; color: #355b4b; background: #f0f5e9; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
-.student-open:hover { border-color: #a8b99c; background: #e5edd9; }
-.roster-empty, .roster-error { padding: 25px; border: 1px dashed #d9dfd7; border-radius: 13px; color: #6d7c77; background: #fbfaf6; text-align: center; }
-.roster-empty > span { display: grid; width: 33px; height: 33px; place-items: center; margin: 0 auto 9px; border: 1px solid #dce4d4; border-radius: 50%; color: #68836b; font-size: 18px; }
-.roster-empty h3 { margin: 0; color: #354c4d; font-size: 12px; }
-.roster-empty p { margin: 6px 0 0; font-size: 10px; }
-.roster-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-style: solid; border-color: #efc7b9; color: #873f2d; background: #fff1eb; font-size: 11px; text-align: left; }
-.roster-error button { min-height: 34px; flex: 0 0 auto; border-color: #ecc5b5; color: #873f2d; background: #fffaf7; }
+.student-name-block h3 { overflow: hidden; margin: 0; color: var(--ui-text); font-size: 13px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.student-name-block p { margin: 5px 0 0; color: var(--ui-text-muted); font-size: 13px; }
+.student-context { display: grid; flex: 0 0 auto; gap: 5px; color: var(--ui-text-muted); font-size: 13px; text-align: right; }
+.student-context small { color: var(--ui-text-muted); font-size: 13px; }
+.student-open { display: inline-flex; min-height: 34px; flex: 0 0 auto; align-items: center; gap: 8px; padding: 0 11px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
+.student-open:hover { border-color: var(--ui-border); background: var(--ui-surface); }
+.roster-empty, .roster-error { padding: 25px; border: 1px dashed var(--ui-border); border-radius: 13px; color: var(--ui-text); background: var(--ui-surface); text-align: center; }
+.roster-empty > span { display: grid; width: 33px; height: 33px; place-items: center; margin: 0 auto 9px; border: 1px solid var(--ui-border); border-radius: 50%; color: var(--ui-text); font-size: 18px; }
+.roster-empty h3 { margin: 0; color: var(--ui-text); font-size: 13px; }
+.roster-empty p { margin: 6px 0 0; font-size: 13px; }
+.roster-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-style: solid; border-color: var(--ui-border); color: var(--ui-danger); background: var(--coaching-danger-soft); font-size: 13px; text-align: left; }
+.roster-error button { min-height: 34px; flex: 0 0 auto; border-color: var(--ui-border); color: var(--ui-danger); background: var(--coaching-danger-soft); }
 .roster-loading { display: grid; gap: 8px; }
 .skeleton { height: 66px; border-radius: 12px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
-.roster-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 8px 10px; border: 1px solid #e3e5dc; border-radius: 11px; color: #73817c; background: #fbfaf6; font-size: 10px; }
+.roster-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 8px 10px; border: 1px solid var(--ui-border); border-radius: 11px; color: var(--ui-text); background: var(--ui-surface); font-size: 13px; }
 .roster-pagination button { min-height: 34px; }
 .roster-pagination button:disabled { opacity: .45; cursor: not-allowed; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @media (max-width: 560px) {
   .roster-heading { align-items: flex-start; }
-  .roster-count { padding: 7px 8px; font-size: 9px; }
+  .roster-count { padding: 7px 8px; font-size: 13px; }
   .student-row { align-items: flex-start; flex-direction: column; gap: 11px; padding: 14px; }
   .student-context { padding-left: 50px; text-align: left; }
   .student-open { margin-left: 50px; }

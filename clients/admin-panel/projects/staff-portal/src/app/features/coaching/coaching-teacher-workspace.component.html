@@ -8,6 +8,7 @@
   </div>
 
   <nav class="workspace-tabs" aria-label="Koçluk öğretmen işlemleri">
+    <button type="button" data-testid="tracking-tab" [attr.aria-pressed]="activeSection()==='tracking'" [class.active]="activeSection()==='tracking'" (click)="selectSection('tracking')">Takip merkezi</button>
     <button type="button" data-testid="study-tab" [attr.aria-pressed]="activeSection()==='study'" [class.active]="activeSection()==='study'" (click)="selectSection('study')">Çalışma takibi</button>
     <button type="button" data-testid="teacher-profile-tab" [attr.aria-pressed]="activeSection() === 'profile'" [class.active]="activeSection() === 'profile'" (click)="selectSection('profile')">Koçluk profilim ve davetlerim</button>
     <button type="button" data-testid="teacher-finance-tab" [attr.aria-pressed]="activeSection() === 'finance'" [class.active]="activeSection() === 'finance'" (click)="selectSection('finance')">Tahsilat hareketleri</button>
@@ -43,12 +44,16 @@
     </button>
   </nav>
 
-  @if(activeSection()==='study'){
+  @if(activeSection()==='tracking'){
+    @defer (on immediate) {
+      <staff-coaching-teacher-tracking #trackingPanel [initialWeeklyTarget]="notificationWeeklyTarget()" />
+    } @placeholder { <p class="section-loading" role="status">Takip merkezi hazırlanıyor…</p> }
+  } @else if(activeSection()==='study'){
     <staff-coaching-teacher-study-overview />
   } @else if (activeSection() === 'students') {
     <staff-coaching-teacher-students />
   } @else if (activeSection() === 'assignments') {
-    <staff-coaching-teacher-assignments />
+    <staff-coaching-teacher-assignments [notificationAssignmentId]="notificationAssignmentId()" />
   } @else if (activeSection() === 'sessions') {
     <staff-coaching-teacher-sessions />
   } @else if (activeSection() === 'goals') {

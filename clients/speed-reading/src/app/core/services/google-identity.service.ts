@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
 export interface GoogleIdentityResponse {
@@ -36,6 +36,7 @@ declare global {
 @Injectable({ providedIn: 'root' })
 export class GoogleIdentityService {
   private static readonly scriptSource = 'https://accounts.google.com/gsi/client';
+  private readonly zone = inject(NgZone);
 
   private scriptPromise: Promise<void> | null = null;
   private initialized = false;
@@ -57,7 +58,7 @@ export class GoogleIdentityService {
       if (!this.initialized) {
         googleIdentity.initialize({
           client_id: environment.googleClientId,
-          callback: response => this.activeCallback?.(response),
+          callback: response => this.zone.run(() => this.activeCallback?.(response)),
           auto_select: false,
           cancel_on_tap_outside: true
         });

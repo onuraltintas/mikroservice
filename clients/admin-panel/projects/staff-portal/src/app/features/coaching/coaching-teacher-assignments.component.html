@@ -1,5 +1,8 @@
+@if (navigationError()) { <p role="alert">{{navigationError()}}</p> }
 @if (detailAssignmentId(); as detailId) {
-  <staff-coaching-teacher-assignment-detail [assignmentId]="detailId" (close)="closeAssignmentDetail()" />
+  @for (id of [detailId]; track id) {
+    <staff-coaching-teacher-assignment-detail [assignmentId]="id" (close)="closeAssignmentDetail()" />
+  }
 } @else if (formMode(); as mode) {
   <staff-coaching-teacher-assignment-form
     [assignmentId]="mode.kind === 'edit' ? mode.id : null"
@@ -61,7 +64,7 @@
           <div class="assignment-main">
             <div class="assignment-title-group">
               <h3>{{ assignment.title }}</h3>
-              <p>{{ assignment.type }} <span aria-hidden="true">·</span> Son tarih {{ assignment.dueDate | date:'d MMM y, HH:mm' }}</p>
+              <p>{{ assignment.type === 'Individual' ? 'Bireysel' : assignment.type === 'Group' ? 'Grup' : assignment.type }} <span aria-hidden="true">·</span> Son tarih {{ assignment.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
             </div>
             <div class="assignment-meta">
               <span class="delivery-count">{{ assignment.submittedCount }} / {{ assignment.totalStudents }} teslim</span>

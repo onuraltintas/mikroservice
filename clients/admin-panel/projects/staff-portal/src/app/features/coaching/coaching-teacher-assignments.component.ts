@@ -1,5 +1,6 @@
+import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { StaffAuthService } from '../../auth/staff-auth.service';
@@ -23,6 +24,16 @@ type AssignmentFormMode = { kind: 'new' } | { kind: 'edit'; id: string };
   styleUrl: './coaching-teacher-assignments.component.scss'
 })
 export class CoachingTeacherAssignmentsComponent implements OnInit {
+  @Input() notificationAssignmentId: string | null = null;
+  @ViewChild(CoachingTeacherAssignmentDetailComponent) private detail?: CoachingTeacherAssignmentDetailComponent;
+  readonly navigationError = signal<string | null>(null);
+  async canLeavePage(): Promise<boolean> {
+    if (this.isCancelling() || this.formMode()) {
+      this.navigationError.set('Önce açık ödev formunu kaydedin veya kapatın; süren işlemin tamamlanmasını bekleyin.');
+      return false;
+    }
+    return this.detail?.canLeavePage() ?? true;
+  }
   private readonly auth = inject(StaffAuthService);
   private readonly assignmentsService = inject(CoachingTeacherAssignmentsService);
   private requestVersion = 0;
@@ -43,6 +54,7 @@ export class CoachingTeacherAssignmentsComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    if (this.notificationAssignmentId) this.reviewAssignment(this.notificationAssignmentId);
   }
 
   createAssignment(): void {
@@ -57,17 +69,22 @@ export class CoachingTeacherAssignmentsComponent implements OnInit {
     this.formMode.set({ kind: 'edit', id: assignmentId });
   }
 
-  reviewAssignment(assignmentId: string): void {
+  async reviewAssignment(assignmentId: string): Promise<boolean> {
+    if ((this.detail || this.formMode() || this.isCancelling()) && !await this.canLeavePage()) return false;
+    this.navigationError.set(null);
     this.successMessage.set(null);
     this.formMode.set(null);
     this.detailAssignmentId.set(assignmentId);
+    return true;
   }
 
-  closeAssignmentDetail(): void {
+  async closeAssignmentDetail(): Promise<void> {
+    if (!(await this.detail?.canLeavePage() ?? true)) return;
     this.detailAssignmentId.set(null);
   }
 
   closeEditor(): void {
+    this.navigationError.set(null);
     this.formMode.set(null);
   }
 
@@ -175,4 +192,8 @@ export class CoachingTeacherAssignmentsComponent implements OnInit {
       default: return status;
     }
   }
+
+  private readonly navigationErrorFeedback = coachingFeedback(undefined, this.navigationError);
+  private readonly errorMessageFeedback = coachingFeedback(undefined, this.errorMessage);
+  private readonly successMessageFeedback = coachingFeedback(this.successMessage);
 }

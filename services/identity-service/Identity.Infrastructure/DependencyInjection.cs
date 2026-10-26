@@ -80,6 +80,33 @@ public static class DependencyInjection
         services.AddScoped<IConfigurationService, Services.ConfigurationService>();
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IMultiFactorService, MultiFactorService>();
+        services.AddOptions<Security.LoginLockoutOptions>()
+            .Bind(configuration.GetSection(Security.LoginLockoutOptions.SectionName))
+            .Validate(options =>
+            {
+                options.Validate();
+                return true;
+            })
+            .ValidateOnStart();
+        // PublicationOnly: a failed first connection is retried on the next use instead of being cached.
+        services.AddSingleton(provider => new Lazy<StackExchange.Redis.IConnectionMultiplexer>(
+            () => provider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>(),
+            LazyThreadSafetyMode.PublicationOnly));
+        services.AddSingleton<ILoginAttemptLimiter, Security.RedisLoginAttemptLimiter>();
+
+        var sessionLifetime = configuration.GetSection(SessionLifetimeOptions.SectionName).Get<SessionLifetimeOptions>()
+            ?? new SessionLifetimeOptions();
+        sessionLifetime.Validate();
+        services.AddSingleton(sessionLifetime);
+        services.AddOptions<Security.RefreshTokenRetentionOptions>()
+            .Bind(configuration.GetSection(Security.RefreshTokenRetentionOptions.SectionName))
+            .Validate(options =>
+            {
+                options.Validate();
+                return true;
+            })
+            .ValidateOnStart();
+        services.AddHostedService<Security.RefreshTokenRetentionService>();
         services.AddScoped<IUserAccessManagementService, Services.UserAccessManagementService>();
         services.AddSingleton<IAdminAuditWriter, IdentityAdminAuditWriter>();
 

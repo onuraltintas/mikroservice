@@ -6,13 +6,13 @@ import { finalize, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 interface Edition { id: string; code: string; subjectName: string; academicYearStart: number; academicYearEnd: number; sourceUrl: string; documentSha256: string }
-interface Outcome { id: string; code: string; name: string; officialTopicId: string; sourcePage: number }
+interface Outcome { id: string; code: string; name: string; officialTopicId: string; sourcePage: number | null; sourceKind?: string }
 interface Estimate { id: string; outcomeId: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; method: string; confidence: string; evidence: string; isPublished: boolean }
-interface Catalog { edition: Edition; officialTopics: { id: string; name: string; lessonPeriods: number; outcomeCount: number }[]; outcomes: Outcome[]; estimates: Estimate[]; mappings: { topicId: string; outcomeId: string; isApproved: boolean; evidence: string }[]; topics: { id: string; name: string }[] }
+interface Catalog { edition: Edition; officialTopics: { id: string; name: string; lessonPeriods: number | null; outcomeCount: number }[]; outcomes: Outcome[]; estimates: Estimate[]; mappings: { topicId: string; outcomeId: string; isApproved: boolean; evidence: string }[]; topics: { id: string; name: string }[] }
 interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopics: number; unmatchedTopics: string[]; warnings: string[] }
 
 @Component({ selector: 'app-coaching-outcomes', standalone: true, imports: [FormsModule],
-  template: `<section><h2>LGS kazanımları ve çalışma süreleri</h2>
+  template: `<section><h2>Kazanımlar ve çalışma süreleri</h2>
     <p>Resmî ders saati konu bütçesidir. Kazanımın net çalışma dakikaları ayrı bir tahmindir; mola ve video sürelerini içermez.</p>
     @if (error()) { <p role="alert">{{ error() }}</p> }
     @if (busy()) { <p role="status">İşlem sürüyor…</p> }
@@ -34,7 +34,9 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
         @for (group of c.officialTopics; track group.id) { <p>{{ group.name }}: {{ group.lessonPeriods }} resmî ders saati · {{ group.outcomeCount }} kazanım</p> }
         <label>Kazanım<select [(ngModel)]="outcomeId" (ngModelChange)="selectOutcome()"><option value="">Kazanım seçin</option>
           @for (o of c.outcomes; track o.id) { <option [value]="o.id">{{ o.code }} — {{ o.name }}</option> }</select></label>
-        @if (selectedOutcome(); as outcome) { <h3>{{ outcome.code }} — {{ outcome.name }}</h3><p>Kaynak PDF sayfası: {{ outcome.sourcePage }}</p>
+        @if (selectedOutcome(); as outcome) { <h3>{{ outcome.code }} — {{ outcome.name }}</h3>
+          @if (outcome.sourceKind === 'ExamSkill') { <p>MEBİ sınav hazırlık becerisi · Resmî kazanım kodu değildir.</p> }
+          @else { <p>Kaynak PDF sayfası: {{ outcome.sourcePage }}</p> }
           <h4>Konu eşleştirmelerini incele</h4><label>Eşleştirme inceleme dayanağı<textarea [(ngModel)]="mappingEvidence" maxlength="500"></textarea></label>
           @for (m of mappings(); track m.topicId) { <article><p>{{ topicName(m.topicId) }} · {{ m.isApproved ? 'Onaylı' : 'İnceleme bekliyor' }}</p><p>{{ m.evidence }}</p>
             <button type="button" [disabled]="mappingEvidence.trim().length < 5" (click)="reviewMapping(m.topicId, !m.isApproved)">{{ m.isApproved ? 'Onayı kaldır' : 'Kapsamı onayla' }}</button></article> }

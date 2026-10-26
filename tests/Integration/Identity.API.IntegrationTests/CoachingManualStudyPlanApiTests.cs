@@ -58,9 +58,13 @@ public sealed class CoachingManualStudyPlanApiTests
         Assert.IsType<OkObjectResult>(await controller.List(1, 20, StudyPlanStatus.Active));
         Assert.IsType<OkObjectResult>(await controller.Complete(Guid.NewGuid(), Guid.NewGuid(), new(0, 30)));
         Assert.IsType<OkObjectResult>(await controller.Reschedule(Guid.NewGuid(), Guid.NewGuid(), new(0, new DateOnly(2026, 10, 6))));
+        Assert.IsType<OkObjectResult>(await controller.RemainingScope(Guid.NewGuid(), Guid.NewGuid(), new(0, 25, 6), default));
+        Assert.IsType<OkObjectResult>(await controller.Progress(Guid.NewGuid(), Guid.NewGuid(), new(0, 15, 5, false), default));
+        Assert.IsType<OkObjectResult>(await controller.CorrectRealization(Guid.NewGuid(), Guid.NewGuid(), new(0, 10, 4, false, "Yanlış süre girildi"), default));
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<StudyRealizationInput>("{\"ActualMinutes\":15,\"IsCompleted\":false}"));
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<StudyTaskCompleteInput>("{\"ActualMinutes\":30}"));
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<StudyTaskRescheduleInput>("{\"PlannedDate\":\"2026-10-06\"}"));
-        foreach (var name in new[] { nameof(ManualStudyPlansController.Complete), nameof(ManualStudyPlansController.Reschedule) })
+        foreach (var name in new[] { nameof(ManualStudyPlansController.Complete), nameof(ManualStudyPlansController.Progress), nameof(ManualStudyPlansController.RemainingScope), nameof(ManualStudyPlansController.CorrectRealization), nameof(ManualStudyPlansController.Reschedule) })
         {
             var method = typeof(ManualStudyPlansController).GetMethod(name)!;
             Assert.Single(method.GetCustomAttributes(typeof(RequestSizeLimitAttribute), false));
@@ -72,6 +76,10 @@ public sealed class CoachingManualStudyPlanApiTests
 
     private sealed class Stub : IManualStudyPlanService
     {
+        public Task<ManualStudyPlanView> SaveCalendarTaskAsync(Guid id,Guid? taskId,CalendarTaskSaveInput request,CancellationToken ct=default)=>Result();
+        public Task<ManualStudyPlanView> DeleteCalendarTaskAsync(Guid id,Guid taskId,int expectedVersion,CancellationToken ct=default)=>Result();
+        public Task<ManualStudyPlanView> SetRemainingScopeAsync(Guid id,Guid taskId,StudyRemainingScopeInput request,CancellationToken ct=default)=>Result();
+        public Task<ManualStudyPlanView> RecordRealizationAsync(Guid id,Guid taskId,StudyRealizationInput request,bool correction,CancellationToken ct=default)=>Result();
         public Exception? Failure { get; init; }
         public Task<StudyPlanPage> ListAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken cancellationToken = default)
             => Task.FromResult(new StudyPlanPage([], 0, pageNumber, pageSize));

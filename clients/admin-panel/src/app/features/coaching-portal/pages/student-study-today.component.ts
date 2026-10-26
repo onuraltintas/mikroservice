@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -47,4 +48,5 @@ export class StudentStudyTodayComponent implements OnInit {
         this.overdue.set(pending.filter(x => x.plannedDate < this.today()));
       }, error: () => this.error.set('Çalışma planı yüklenemedi. Mevcut planın durumu doğrulanamadı.') });
   }
+  private readonly feedback = coachingFeedback(undefined, this.error);
 }

@@ -33,6 +33,7 @@ public class CoachingDbContext : DbContext
     public DbSet<StudyCatalogLesson> StudyCatalogLessons => Set<StudyCatalogLesson>();
     public DbSet<StudyCatalogUnit> StudyCatalogUnits => Set<StudyCatalogUnit>();
     public DbSet<StudyCatalogTopic> StudyCatalogTopics => Set<StudyCatalogTopic>();
+    public DbSet<TargetCatalogEntry> TargetCatalog => Set<TargetCatalogEntry>();
     public DbSet<TargetUniversityProgram> TargetUniversityPrograms => Set<TargetUniversityProgram>();
     public DbSet<TargetSchool> TargetSchools => Set<TargetSchool>();
     public DbSet<StudyPlanRevision> StudyPlanRevisions => Set<StudyPlanRevision>();
@@ -45,6 +46,7 @@ public class CoachingDbContext : DbContext
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<AssignmentStudent> AssignmentStudents => Set<AssignmentStudent>();
     public DbSet<AssignmentSubmissionAttachment> AssignmentSubmissionAttachments => Set<AssignmentSubmissionAttachment>();
+    public DbSet<AssignmentInstructionAttachment> AssignmentInstructionAttachments => Set<AssignmentInstructionAttachment>();
     public DbSet<Exam> Exams => Set<Exam>();
     public DbSet<ExamResult> ExamResults => Set<ExamResult>();
     public DbSet<CoachingSession> CoachingSessions => Set<CoachingSession>();

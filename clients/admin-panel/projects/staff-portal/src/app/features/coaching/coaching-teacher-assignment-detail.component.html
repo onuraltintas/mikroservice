@@ -18,14 +18,14 @@
       <div>
         <p class="detail-eyebrow">KOÇLUK · ÖDEV DEĞERLENDİRMESİ</p>
         <h2 id="assignment-detail-title">{{ item.title }}</h2>
-        <p>{{ item.subject || 'Koçluk ödevi' }} · {{ item.source }}</p>
+        <p>{{ item.subject || 'Koçluk ödevi' }} · {{ item.source === 'Digital' ? 'Dijital' : item.source === 'Book' ? 'Kitap' : item.source === 'Mixed' ? 'Kitap ve dijital' : item.source }}</p>
       </div>
       <span class="detail-status" [attr.data-status]="item.status">{{ assignmentStatusLabel(item.status) }}</span>
     </header>
 
     @if (item.description) { <p class="assignment-description">{{ item.description }}</p> }
     <dl class="assignment-facts">
-      <div><dt>Son tarih</dt><dd>{{ item.dueDate | date:'d MMM y, HH:mm' }}</dd></div>
+      <div><dt>Son tarih</dt><dd>{{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</dd></div>
       <div><dt>Teslim</dt><dd>{{ submittedCount() }} / {{ item.assignedStudents.length }}</dd></div>
       <div><dt>Maksimum puan</dt><dd>{{ item.maxScore ?? 'Belirtilmedi' }}</dd></div>
     </dl>
@@ -39,15 +39,16 @@
         @if (isLoadingNames()) { <span class="student-name-loading">Öğrenci adları yükleniyor…</span> }
       </div>
 
-      @if (item.assignedStudents.length === 0) {
-        <div class="detail-empty">Bu ödeve atanmış öğrenci bulunmuyor.</div>
+      @if (selectedStudentId) { <p>Seçilen öğrencinin teslimi gösteriliyor.</p> }
+      @if (visibleStudents().length === 0) {
+        <div class="detail-empty">{{ selectedStudentId ? 'Seçilen öğrenci bu ödevin görünür teslimleri arasında bulunmuyor.' : 'Bu ödeve atanmış öğrenci bulunmuyor.' }}</div>
       } @else {
-        @for (student of item.assignedStudents; track student.studentId) {
+        @for (student of visibleStudents(); track student.studentId) {
           <article class="submission-card">
             <header class="submission-heading">
               <div>
                 <h4>{{ studentLabel(student.studentId) }}</h4>
-                <p>{{ student.submittedAt ? (student.submittedAt | date:'d MMM y, HH:mm') : 'Henüz teslim edilmedi' }}</p>
+                <p>{{ student.submittedAt ? (student.submittedAt | date:'dd.MM.yyyy HH:mm') : 'Henüz teslim edilmedi' }}</p>
               </div>
               <span class="submission-status" [attr.data-status]="student.status">{{ studentStatusLabel(student.status) }}</span>
             </header>

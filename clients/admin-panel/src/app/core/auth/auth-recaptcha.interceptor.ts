@@ -11,6 +11,10 @@ export function getAuthRecaptchaAction(request: HttpRequest<unknown>): string | 
       && request.url === `${environment.apiUrl}/coaching/subscriptions/bank-transfer-requests`) {
     return 'coaching_eft_submit';
   }
+  // Anonymous support form: Notification has Identity check the token (same site key).
+  if (request.method === 'POST' && request.url === `${environment.apiUrl}/support/submit`) {
+    return 'support_submit';
+  }
   if (request.method !== 'POST' || !request.url.startsWith(`${environment.apiUrl}/auth/`)) {
     return null;
   }

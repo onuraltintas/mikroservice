@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Notification.Application.Commands.SubmitSupportRequest;
-using EduPlatform.Shared.Contracts.Authorization;
-using EduPlatform.Shared.Security.Authorization;
+using Notification.Application.Interfaces;
 using System.Security.Claims;
 
 namespace Notification.API.Controllers;
@@ -15,6 +14,8 @@ namespace Notification.API.Controllers;
 [Route("api/[controller]")]
 public class SupportController : ControllerBase
 {
+    public const string CaptchaTokenHeader = "X-Auth-Recaptcha-Token";
+
     private readonly IMediator _mediator;
 
     public SupportController(IMediator mediator)
@@ -26,8 +27,24 @@ public class SupportController : ControllerBase
     [RequestSizeLimit(32_768)]
     [RequestTimeout(milliseconds: 10_000)]
     [AllowAnonymous]
-    public async Task<IActionResult> Submit([FromBody] SubmitSupportRequestCommand command)
+    public async Task<IActionResult> Submit(
+        [FromBody] SubmitSupportRequestCommand command,
+        [FromServices] IIdentityInternalService identity,
+        CancellationToken cancellationToken)
     {
+        // Signed-in users are already verified; the anonymous form needs a reCAPTCHA token
+        // (same header and site key as the sign-in screens, checked by Identity).
+        if (User.Identity?.IsAuthenticated != true
+            && !await identity.VerifySupportCaptchaAsync(Request.Headers[CaptchaTokenHeader].ToString(), cancellationToken))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                success = false,
+                code = "Auth.CaptchaFailed",
+                message = "Güvenlik doğrulaması tamamlanamadı. Lütfen tekrar deneyin."
+            });
+        }
+
         command = command with
         {
             IdempotencyKey = Request.Headers["Idempotency-Key"].ToString(),
@@ -38,7 +55,7 @@ public class SupportController : ControllerBase
                 ? subjectUserId
                 : null
         };
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -51,19 +68,5 @@ public class SupportController : ControllerBase
         }
 
         return Ok(result.Value);
-    }
-
-    [HttpPost("reply")]
-    [HasPermission(PlatformPermissions.Support.Reply)]
-    public async Task<IActionResult> Reply([FromBody] Notification.Application.Commands.ReplyToSupportRequest.ReplyToSupportRequestCommand command)
-    {
-        var result = await _mediator.Send(command);
-
-        if (result.IsFailure)
-        {
-            return BadRequest(result.Error);
-        }
-
-        return Ok();
     }
 }

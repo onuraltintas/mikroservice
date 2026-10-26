@@ -33,5 +33,6 @@ public record ExamResultDto(
     Dictionary<string, decimal>? SubjectScores,
     int? Ranking = null,
     string Source = "TeacherRecorded",
-    IReadOnlyList<Coaching.Domain.Entities.LessonAnswerStatistics>? LessonAnswers = null
+    IReadOnlyList<Coaching.Domain.Entities.LessonAnswerStatistics>? LessonAnswers = null,
+    Coaching.Domain.Entities.PracticeExamSummary? NetSummary = null
 );

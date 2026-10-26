@@ -44,6 +44,7 @@ public class AssignmentRepository : IAssignmentRepository
     public async Task<Assignment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Assignments
+            .Include(a => a.InstructionAttachments)
             .Include(a => a.AssignedStudents)
                 .ThenInclude(student => student.SubmissionAttachments)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
@@ -999,11 +1000,13 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                 if (!string.IsNullOrWhiteSpace(search)) query = query.Where(item => item.Exam.Title.ToLower().Contains(search));
                 if (!string.IsNullOrWhiteSpace(status) && !status.Equals("Result", StringComparison.OrdinalIgnoreCase)) query = query.Where(_ => false);
                 totalCount = await query.CountAsync(cancellationToken);
-                items = await query
+                var examPage = await query.Include(item => item.Exam)
                     .OrderByDescending(item => item.Exam.ExamDate)
                     .ThenByDescending(item => item.ExamId)
                     .Skip(skip)
                     .Take(pageSize)
+                    .ToListAsync(cancellationToken);
+                items = examPage
                     .Select(item => new CoachingAdminStudentHistoryItemDto(
                         item.ExamId,
                         typeName,
@@ -1012,8 +1015,10 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                         "Result",
                         item.Score,
                         item.Exam.MaxScore,
-                        null, null, item.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded"))
-                    .ToListAsync(cancellationToken);
+                        null, null, item.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded") {
+                            NetSummary = item.GetPracticeExam() is { } practice ? PracticeExamRules.Summarize(practice) : null
+                        })
+                    .ToArray();
                 break;
             }
             case CoachingStudentHistoryType.Sessions:

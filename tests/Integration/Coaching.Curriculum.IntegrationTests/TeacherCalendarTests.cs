@@ -96,6 +96,15 @@ public sealed class TeacherCalendarTests
         await Assert.ThrowsAsync<BusinessRuleException>(()=>plans.MoveForStudentAsync(Guid.NewGuid(),original.Id,new(corrected.Version,[future.Id],new(2027,1,6),600)));
         var moved=await plans.MoveForStudentAsync(student,original.Id,new(corrected.Version,[future.Id],new(2027,1,6),600));
         Assert.Equal(600,moved.Tasks.Single(t=>t.Id==future.Id).PlannedStartMinute);
+        var lesson=(await f.Db.StudyCatalogTopics.SingleAsync()).LessonId;
+        var added=await plans.SaveCalendarForStudentAsync(student,original.Id,null,new(moved.Version,"Öğretmen ek çalışması",new(2027,1,8),600,30,lesson));
+        var extra=added.Tasks.Single(t=>t.Title=="Öğretmen ek çalışması");
+        var edited=await plans.SaveCalendarForStudentAsync(student,original.Id,extra.Id,new(added.Version,"Düzenlenen ek çalışma",new(2027,1,8),630,60,lesson));
+        Assert.Equal(60,edited.Tasks.Single(t=>t.Id==extra.Id).PlannedMinutes);
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>plans.DeleteCalendarForStudentAsync(Guid.NewGuid(),original.Id,extra.Id,edited.Version));
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>plans.DeleteCalendarForStudentAsync(student,original.Id,done.Id,edited.Version));
+        var removed=await plans.DeleteCalendarForStudentAsync(student,original.Id,extra.Id,edited.Version);
+        Assert.DoesNotContain(removed.Tasks,t=>t.Id==extra.Id);
         var draft=await plans.CreateForStudentAsync(student,new("Öğretmen planı",[new(new(2027,1,7),"Matematik",30,null,false,PlannedStartMinute:1080)]));
         var published=await plans.PublishForStudentAsync(student,draft.Id,draft.Version);
         f.User.UserId=student;f.User.Roles=["Student"];

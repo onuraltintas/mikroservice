@@ -1,0 +1,4 @@
+FROM eduivme/identity-service:google-inline-20261001
+COPY patch/Identity.Application.dll /app/Identity.Application.dll
+COPY patch/Identity.Application.pdb /app/Identity.Application.pdb
+LABEL org.opencontainers.image.release="google-direct-20261013"

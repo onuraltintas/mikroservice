@@ -301,7 +301,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                     await db.Database.ExecuteSqlRawAsync("""
                         LOCK TABLE coaching.academic_goals, coaching.exam_results, coaching.study_catalog_lessons,
                           coaching.study_catalog_topics, coaching.study_catalog_units, coaching.study_plan_tasks,
-                          coaching.target_schools, coaching.target_university_programs, coaching.student_course_preferences,
+                          coaching.target_catalog, coaching.student_course_preferences,
                           coaching.student_topic_states, coaching.study_catalog_topic_outcomes, coaching.study_catalog_outcomes,
                           coaching.outcome_duration_estimates, coaching.study_plan_task_outcomes,
                           coaching.study_catalog_exams, coaching.official_curriculum_editions, coaching.official_curriculum_topics,

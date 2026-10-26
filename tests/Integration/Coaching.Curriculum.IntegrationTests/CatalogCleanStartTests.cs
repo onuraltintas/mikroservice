@@ -11,7 +11,7 @@ public sealed class CatalogCleanStartTests
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task MigrationRefusesToDiscardAnyRemainingGroupData()
     {
-        await using var pg=await CurriculumPostgresTests.Pg.Create();
+        await using var pg=await CurriculumPostgresTests.Pg.Create("20261020065330_MebiLgsProgramCatalog");
         var migrator=pg.Db.GetService<IMigrator>();
         await migrator.MigrateAsync("20261018203437_TopicOutcomeScopeShares");
         var id=Guid.NewGuid();

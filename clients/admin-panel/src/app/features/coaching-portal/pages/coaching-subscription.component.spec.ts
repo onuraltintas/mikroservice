@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
@@ -5,35 +6,35 @@ import { CoachingManagementService, CoachingSubscriptionPlan } from '../../../co
 import { CoachingSubscriptionComponent } from './coaching-subscription.component';
 
 describe('CoachingSubscriptionComponent', () => {
-  it('does not submit a payment without an explicit adult payer declaration', () => {
+  it('does not submit a payment without an explicit adult payer declaration', async () => {
     const fixture = setup();
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     fixture.componentInstance.selectedPlanId.set('individual-plan');
     fixture.componentInstance.paymentReference = 'EFT-123';
-    fixture.componentInstance.submitRequest();
+    await fixture.componentInstance.submitRequest();
     const service = TestBed.inject(CoachingManagementService);
     expect(service.createMyCoachingBankTransferRequest).not.toHaveBeenCalled();
     expect(fixture.componentInstance.error()).toContain('18 yaş');
   });
-  it('shows individual Coaching plans and excludes institution plans', () => {
+  it('shows individual Coaching plans and excludes institution plans', async () => {
     const fixture = setup();
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
 
     expect(fixture.nativeElement.textContent).toContain('Öğrenci planı');
     expect(fixture.nativeElement.textContent).not.toContain('Kurum planı');
   });
 
-  it('submits a selected plan with trimmed transfer details and updates request history', () => {
+  it('submits a selected plan with trimmed transfer details and updates request history', async () => {
     const fixture = setup();
     const component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     component.selectedPlanId.set('individual-plan');
     component.paymentReference = '  EFT-2026-01  ';
     component.payerName = '  Ada Öğrenci  ';
     component.note = '  Mart dönemi  ';
     component.adultPayerDeclaration = true;
 
-    component.submitRequest();
+    await component.submitRequest();
 
     const service = TestBed.inject(CoachingManagementService) as unknown as {
       createMyCoachingBankTransferRequest: ReturnType<typeof vi.fn>;
@@ -67,3 +68,5 @@ describe('CoachingSubscriptionComponent', () => {
     return TestBed.createComponent(CoachingSubscriptionComponent);
   }
 });
+
+beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

@@ -159,6 +159,11 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
           });
           return;
         }
+        if (err?.name === 'TimeoutError') {
+          this.error = 'Google ile giriş zaman aşımına uğradı. Bağlantınızı kontrol edip tekrar deneyin.';
+          this.loading = false;
+          return;
+        }
         if (err.error?.Message) {
           this.error = err.error.Message;
         } else if (err.error?.message) {
@@ -188,7 +193,9 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
       },
       error: error => {
         this.loading = false;
-        this.error = error.error?.description || error.error?.message || 'Kayıt tamamlanamadı. Lütfen Google ile tekrar devam edin.';
+        this.error = error?.name === 'TimeoutError'
+          ? 'Google kaydı zaman aşımına uğradı. Lütfen tekrar deneyin.'
+          : error.error?.description || error.error?.message || 'Kayıt tamamlanamadı. Lütfen Google ile tekrar devam edin.';
         if (error.error?.code === 'Auth.GoogleRegistrationExpired') this.googleRegistrationToken = '';
       }
     });
@@ -231,15 +238,19 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
         error: (err) => {
           // Check if error is about email verification
           const errorMessage = this.readErrorMessage(err, '').toLocaleLowerCase('tr-TR');
+          const emailNotConfirmed = (err?.error?.code ?? err?.error?.Code) === 'Auth.EmailNotConfirmed';
 
-          if (errorMessage && (errorMessage.includes('verify your email') || errorMessage.includes('doğrulanma') || errorMessage.includes('doğrula'))) {
+          if (emailNotConfirmed || errorMessage.includes('verify your email')
+            || (errorMessage.includes('e-posta') && errorMessage.includes('doğrula'))) {
             this.showEmailVerificationWarning = true;
             this.unverifiedEmail = email;
             this.error = 'E-posta adresiniz doğrulanmamış. Lütfen e-postanızdaki doğrulama linkine tıklayın.';
           } else {
             // Backend'den gelen hata mesajını göster
             let message: string;
-            if (err.error?.Message) {
+            if (err?.name === 'TimeoutError') {
+              message = 'Giriş isteği zaman aşımına uğradı. Bağlantınızı kontrol edip tekrar deneyin.';
+            } else if (err.error?.Message) {
               message = err.error.Message;
             } else if (err.error?.message) {
               message = err.error.message;
