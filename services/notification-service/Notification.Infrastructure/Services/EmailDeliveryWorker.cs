@@ -236,7 +236,7 @@ public sealed class EmailDeliveryWorker : LeasedDeliveryWorker<EmailDeliveryWork
         var notifications = await dbContext.Notifications
             .Where(x => x.IsRead && x.CreatedAt < notificationCutoff)
             .ExecuteDeleteAsync(cancellationToken);
-        var supportRequests = await SupportRequestRemoval.DeleteExpiredAnsweredAsync(dbContext, now, cancellationToken);
+        var supportRequests = await SupportRequestRemoval.DeleteExpiredAsync(dbContext, now, cancellationToken);
         return deliveries + forwards + notifications + supportRequests;
     }
 

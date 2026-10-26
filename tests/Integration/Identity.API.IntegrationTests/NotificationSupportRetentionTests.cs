@@ -98,11 +98,12 @@ public sealed class NotificationSupportRetentionTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task AnsweredRequests_AreDeletedSixMonthsAfterTheAnswer_OpenOnesAreKept()
+    public async Task Requests_AreDeletedSixMonthsAfterTheAnswer_OrThreeMonthsAfterArrivalWhenUnanswered()
     {
         var expired = await SeedAnsweredRequestAsync("old@example.test", "Eski yanıt.");
         var recent = await SeedAnsweredRequestAsync("new@example.test", "Yeni yanıt.");
         var open = await SeedOpenRequestAsync("open@example.test");
+        var staleOpen = await SeedOpenRequestAsync("stale@example.test");
         var now = DateTime.UtcNow;
         await using (var context = CreateContext())
         {
@@ -110,8 +111,13 @@ public sealed class NotificationSupportRetentionTests : IAsyncLifetime
                 .ExecuteUpdateAsync(x => x.SetProperty(r => r.UpdatedAt, now.AddMonths(-6).AddDays(-1)));
             await context.SupportRequests.Where(x => x.Id == recent)
                 .ExecuteUpdateAsync(x => x.SetProperty(r => r.UpdatedAt, now.AddMonths(-5)));
-            await context.SupportRequests.Where(x => x.Id == open)
+            // Answered recently: the answer date counts, not the arrival.
+            await context.SupportRequests.Where(x => x.Id == recent)
                 .ExecuteUpdateAsync(x => x.SetProperty(r => r.CreatedAt, now.AddYears(-2)));
+            await context.SupportRequests.Where(x => x.Id == open)
+                .ExecuteUpdateAsync(x => x.SetProperty(r => r.CreatedAt, now.AddMonths(-2)));
+            await context.SupportRequests.Where(x => x.Id == staleOpen)
+                .ExecuteUpdateAsync(x => x.SetProperty(r => r.CreatedAt, now.AddMonths(-3).AddDays(-1)));
         }
 
         await using (var context = CreateContext())
@@ -123,6 +129,8 @@ public sealed class NotificationSupportRetentionTests : IAsyncLifetime
         (await check.SupportRequests.Select(x => x.Id).ToListAsync()).Should().BeEquivalentTo([recent, open]);
         (await check.Notifications.AnyAsync(x => x.RelatedEntityId == expired.ToString())).Should().BeFalse();
         (await check.EmailDeliveries.AnyAsync(x => x.Recipient == "old@example.test")).Should().BeFalse();
+        (await check.Notifications.AnyAsync(x => x.RelatedEntityId == staleOpen.ToString())).Should().BeFalse();
+        (await check.EmailDeliveries.AnyAsync(x => x.Recipient == "stale@example.test")).Should().BeFalse();
     }
 
     private NotificationDbContext CreateContext() => new(

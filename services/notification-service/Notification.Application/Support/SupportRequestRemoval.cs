@@ -15,6 +15,9 @@ public static class SupportRequestRemoval
     /// <summary>Answered requests are deleted this long after they were answered.</summary>
     public const int AnsweredRetentionMonths = 6;
 
+    /// <summary>Requests nobody answered are deleted this long after they arrived.</summary>
+    public const int OpenRetentionMonths = 3;
+
     public const string AcknowledgementConsumerType = "SupportAcknowledgement";
     public const string ReplyConsumerType = "SupportReply";
     public const string StaffNotificationType = "SupportRequest";
@@ -25,14 +28,23 @@ public static class SupportRequestRemoval
     public static Task<int> DeleteAsync(INotificationDbContext db, Guid supportRequestId, CancellationToken cancellationToken) =>
         DeleteWhereAsync(db, db.SupportRequests.Where(x => x.Id == supportRequestId), cancellationToken);
 
-    /// <summary>Deletes requests answered (processed) more than six months before <paramref name="now"/>.</summary>
-    public static Task<int> DeleteExpiredAnsweredAsync(INotificationDbContext db, DateTime now, CancellationToken cancellationToken)
+    /// <summary>
+    /// Deletes requests answered more than six months ago and unanswered requests older
+    /// than three months.
+    /// </summary>
+    public static async Task<int> DeleteExpiredAsync(INotificationDbContext db, DateTime now, CancellationToken cancellationToken)
     {
-        var cutoff = now.AddMonths(-AnsweredRetentionMonths);
-        return DeleteWhereAsync(db, db.SupportRequests
-            .Where(x => x.IsProcessed && (x.UpdatedAt ?? x.CreatedAt) < cutoff)
+        var answeredCutoff = now.AddMonths(-AnsweredRetentionMonths);
+        var openCutoff = now.AddMonths(-OpenRetentionMonths);
+        var answered = await DeleteWhereAsync(db, db.SupportRequests
+            .Where(x => x.IsProcessed && (x.UpdatedAt ?? x.CreatedAt) < answeredCutoff)
             .OrderBy(x => x.UpdatedAt)
             .Take(RetentionBatchSize), cancellationToken);
+        var open = await DeleteWhereAsync(db, db.SupportRequests
+            .Where(x => !x.IsProcessed && x.CreatedAt < openCutoff)
+            .OrderBy(x => x.CreatedAt)
+            .Take(RetentionBatchSize), cancellationToken);
+        return answered + open;
     }
 
     private static async Task<int> DeleteWhereAsync(
