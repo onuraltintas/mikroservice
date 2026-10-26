@@ -24,7 +24,7 @@ describe('StudentExamResultsComponent', () => {
     expect(component.lessons.length).toBe(1);
     Object.assign(component.lessons[0], { questionCount: 10, correct: 8, wrong: 1, empty: 1 });
     component.confirmed = true; component.save();
-    expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ correctAnswers: 8, lessons: [expect.objectContaining({ lessonId: 'lesson', topicId: 'topic' })] }));
+    expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ correctAnswers: 8, lessons: [expect.objectContaining({ lessonId: 'lesson', topicId: 'topic' })] }), expect.stringMatching(/^[0-9a-f-]{36}$/));
     expect(await component.page().totalCount).toBe(1);
   });
   it('does not present a failed result load as an empty account', async () => {
@@ -71,7 +71,7 @@ describe('StudentExamResultsComponent', () => {
     service.create.mockReturnValueOnce(of(saved)); service.get.mockReturnValueOnce(of(saved));
     await component.practiceChanged(practice); component.title = saved.title; component.examDate = saved.examDate;
     component.score = 300; component.maxScore = 500; component.confirmed = true; component.save();
-    expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ practiceExam: practice, examType: 'YKS', correctAnswers: 30, wrongAnswers: 4, emptyAnswers: 6, score: 300 }));
+    expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ practiceExam: practice, examType: 'YKS', correctAnswers: 30, wrongAnswers: 4, emptyAnswers: 6, score: 300 }), expect.any(String));
     await component.open('saved'); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges(); await fixture.whenStable();
     expect(component.practiceExam).toEqual(practice);
     expect(fixture.nativeElement.querySelector('app-practice-exam-editor select').disabled).toBe(true);
