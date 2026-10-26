@@ -31,7 +31,7 @@ onuraltintas.net:80, www.onuraltintas.net:80 {
 		@staffRoot path /staff
 		redir @staffRoot /staff/ 308
 		handle_path /staff/* {
-			reverse_proxy staff-portal:80
+			reverse_proxy staff-portal:8080
 		}
 
 		@management path /dashboard /dashboard/*

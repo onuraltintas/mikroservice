@@ -128,13 +128,13 @@
     "clients/speed-reading/.gitignore": "64249cc9d9490bf1a7de793f568d64e530a3d0431e5f60cdec0ff6f8143d2c9c",
     "clients/speed-reading/.npmrc": "97bb4bbf852475fa72e53dc61fc1d5cf784fd0c860b86359b26afe99d19a3d8e",
     "clients/speed-reading/.postcssrc.json": "6c96a7becce80948b52897a8968a815644d70dbe647227ae627a9cca0edcbabb",
-    "clients/speed-reading/Dockerfile": "879df43119ff9f6cd7dc5ca9f65881560937c794f006433629898ad5b8c8ba4d",
+    "clients/speed-reading/Dockerfile": "aa9c5392b9849b29c0ec2df4167f1abe05acb429053378d1ff722d05aebc9863",
     "clients/speed-reading/README.md": "8775f876b25cd50a8a1c2026099df8fdf0ddc8997675fded56b71772dcc3eba9",
     "clients/speed-reading/angular.json": "42b4603ebb8757dbfcead2e53b1dd0ab42186b6dc97dbb5bbdf0c0d9ead1fd6b",
     "clients/speed-reading/backend_logic_summary.txt": "cde89e255b43de6e6ad0571fd4c6d34e06fe05bb157aa6c9d7c3ce9215b2619a",
     "clients/speed-reading/build-release.txt": "91668d4bad10bd0358c08c81127e35fba9605dc75b952cee1ae780026dec68e1",
     "clients/speed-reading/generate-sitemap.js": "d987b8ebd30790f9aa991c74ae59f9a938ca3c65cf91ea6ffa3972342c6bd90a",
-    "clients/speed-reading/nginx.conf": "78ab4069880de29d5e778afab82516647cee2a2bee321d8792a8236ad5f58f60",
+    "clients/speed-reading/nginx.conf": "647b228424e1216d91aa7299a4255d63ffa49829b48acfa8dcaceb98a8e7cd77",
     "clients/speed-reading/ngsw-config.json": "17492b934a00cf68bb3866b8cf3cd9c4c55b20cc23d13ca0a9bf6507f1dcec11",
     "clients/speed-reading/package-lock.json": "a6e77dbd164527f6975bff53e2b82a34b6fa21e9ea70d448c77478ab3adc992b",
     "clients/speed-reading/package.json": "0e552cb979c9f4cc2cbcb45dedd0e4389278a9c2c630c1312fe08f0e3ecee075",
@@ -1305,10 +1305,10 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/TargetAdmissionSearchService.cs": "7f79720e4a9ba3ca4ff34b778dd0a7bc09198aa1d8ceb4209280d6985a148894",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/YksCatalogEligibility.cs": "fbedc2c2e6a9865d5ecbf8fd1a65ee01bd12e5035cb8861b1eb2ae2e29ae5a02",
     "services/coaching-service/Coaching.sln": "c0ddddad6384e9205556a700ed32049585f5fbc06c55cfde566ad07a65ace5f6",
-    "services/coaching-service/Dockerfile": "015cc6285ccdaf93bd6a90987d005bb24fcea7dcd5b82bd6ef17ffcf7f8339d3",
+    "services/coaching-service/Dockerfile": "7316f1c4f498cf4fe8c8a36363e96a5492584d563026e0d992b4679ab562e477",
     "services/coaching-service/IMPLEMENTATION_PLAN.md": "ed56425f95a252dfec8a26ba177e03adb6e4574ec699cbb0d7fac187adc73833",
     "services/coaching-service/PROGRESS_REPORT.md": "38963f16cf2c30eab8df9431dadf562f1f7cd0a7c40ebc2bc9bdb973b4a7eec5",
-    "services/speed-reading-service/Dockerfile": "f2f74b4a9bb5be054668cf5240f723e2c41813dbc524bb1676f75dac818c792d",
+    "services/speed-reading-service/Dockerfile": "0cce2cf9e2bde758a0689e150b04509ff87a8ca6b4f5c6cdcfb0dd5a00646b82",
     "services/speed-reading-service/SpeedReading.API/Controllers/AchievementsController.cs": "0691232f59b47c9030f85e456b6fa62780e31961b2bd6a6cc536800e34fc6c34",
     "services/speed-reading-service/SpeedReading.API/Controllers/AdaptiveLearningController.cs": "64d7b99ee2fb8a84167c0f50f2523d7fc477220c1a94189ac33c80be6cef0890",
     "services/speed-reading-service/SpeedReading.API/Controllers/AdaptiveTextController.cs": "3ab383c2b31e2152e3abf73eeb0a7e8d17ae8ce6b7a8849a61b7515779b56f79",
@@ -2527,10 +2527,10 @@
       }
     }
   },
-  "baselineCommit": "4890c2a",
+  "baselineCommit": "91108f5",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "Reviewed Speed Reading changes for the integration-test PR: patched npm dependencies with .npmrc, the slot-scoped daily-progress contract, and maintenance commands skipping eager DI validation (fixes --migrate-only). Not a deployment manifest.",
+    "purpose": "Reviewed non-root runtime change: the Coaching and Speed Reading API images run as UID 1654 with one-shot volume ownership services, and the Speed Reading frontend uses unprivileged nginx on port 8080. No application code changed. Not a deployment manifest.",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2578,7 +2578,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "4ba98214f5d468bd6f425b4bf57f8e8b2d2c0184",
+    "previousBaselineCommit": "4890c2a",
     "removedSincePreviousBaseline": []
   }
 }

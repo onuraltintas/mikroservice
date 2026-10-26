@@ -200,6 +200,22 @@ services:
       timeout: 10s
       retries: 10
 
+  # Gives the Coaching volumes (key ring, attachments, CMS media) to the non-root coaching
+  # user (UID 1654). Needed once for volumes created by the earlier root image; harmless afterwards.
+  coaching-volume-permissions:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/coaching-service:${RELEASE_TAG:-dev}
+    build:
+      context: .
+      dockerfile: services/coaching-service/Dockerfile
+    user: "0:0"
+    entrypoint: ["chown", "-R", "1654:1654", "/var/lib/eduplatform"]
+    volumes:
+      - coaching_data_protection:/var/lib/eduplatform/data-protection-keys
+      - coaching_attachments:/var/lib/eduplatform/attachments
+      - coaching_cms_media:/var/lib/eduplatform/coaching-cms-media
+    network_mode: none
+    restart: "no"
+
   # Coaching Service
   coaching-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/coaching-service:${RELEASE_TAG:-dev}
@@ -244,6 +260,8 @@ services:
       - coaching_attachments:/var/lib/eduplatform/attachments
       - coaching_cms_media:/var/lib/eduplatform/coaching-cms-media
     depends_on:
+      coaching-volume-permissions:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       rabbitmq:
@@ -252,6 +270,22 @@ services:
         condition: service_started
     networks:
       - edu-network
+
+  # Gives the Speed Reading volumes (key ring, CMS media) to the non-root user (UID 1654).
+  # Needed once for volumes created by the earlier root image; harmless afterwards.
+  speed-reading-volume-permissions:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/speed-reading-service:${RELEASE_TAG:-dev}
+    profiles: ["speed-reading"]
+    build:
+      context: .
+      dockerfile: services/speed-reading-service/Dockerfile
+    user: "0:0"
+    entrypoint: ["chown", "-R", "1654:1654", "/var/lib/eduplatform"]
+    volumes:
+      - speed_reading_data_protection:/var/lib/eduplatform/data-protection-keys
+      - speed_reading_media:/var/lib/eduplatform/media
+    network_mode: none
+    restart: "no"
 
   # Speed Reading Service. Production/staging overlays remove the optional
   # profile; every environment uses the owned Speed Reading database.
@@ -315,6 +349,8 @@ services:
     networks:
       - edu-network
     depends_on:
+      speed-reading-volume-permissions:
+        condition: service_completed_successfully
       speed-reading-migrations:
         condition: service_completed_successfully
       notification-service:
@@ -333,7 +369,7 @@ services:
       args:
         RELEASE_TAG: ${RELEASE_TAG:-dev}
     expose:
-      - "80"
+      - "8080"
     depends_on:
       api-gateway:
         condition: service_started
