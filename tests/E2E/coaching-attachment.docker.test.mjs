@@ -127,22 +127,30 @@ test('disposable student attachment uses persistent local storage and enforces o
         ('${studentId}', 'attachment-${studentId}@example.test', 'Owner', 'E2E',
           decode('01', 'hex'), decode('02', 'hex'), true, false, true, '${now}', 0, false, 0, '[]'),
         ('${otherId}', 'attachment-${otherId}@example.test', 'Other', 'E2E',
+          decode('01', 'hex'), decode('02', 'hex'), true, false, true, '${now}', 0, false, 0, '[]'),
+        ('${teacherId}', 'attachment-${teacherId}@example.test', 'Teacher', 'E2E',
           decode('01', 'hex'), decode('02', 'hex'), true, false, true, '${now}', 0, false, 0, '[]');
       INSERT INTO identity."UserRoles" ("Id", "UserId", "RoleId", "CreatedAt")
       SELECT gen_random_uuid(), users.user_id, roles."Id", '${now}'
         FROM (VALUES ('${studentId}'::uuid), ('${otherId}'::uuid)) AS users(user_id)
         CROSS JOIN identity."Roles" AS roles
         WHERE roles."Name"='Student' AND roles."IsDeleted"=false;
+      -- The teacher who deletes the assignment must still be an active teacher of the institution.
+      INSERT INTO identity."UserRoles" ("Id", "UserId", "RoleId", "CreatedAt")
+      SELECT gen_random_uuid(), '${teacherId}'::uuid, roles."Id", '${now}'
+        FROM identity."Roles" AS roles WHERE roles."Name"='Teacher' AND roles."IsDeleted"=false;
       INSERT INTO identity.student_profiles ("Id", "UserId", "InstitutionId", "FirstName", "LastName",
         "DailyGoalMinutes", "Preferences", "IsActive", "CreatedAt", "Version")
       VALUES
         (gen_random_uuid(), '${studentId}', '${institutionId}', 'Owner', 'E2E', 30, '{}', true, '${now}', 0),
         (gen_random_uuid(), '${otherId}', '${institutionId}', 'Other', 'E2E', 30, '{}', true, '${now}', 0);
-      ${identityCoachingAccessSql([studentId, otherId], now)}
+      ${identityCoachingAccessSql([studentId, otherId, teacherId], now)}
       COMMIT;`);
     sql(config, coachingDb, `BEGIN;
       ${coachingOwnedProfilesSql({ students: [
-        { userId: studentId, institutionId }, { userId: otherId, institutionId }] }, now)}
+        { userId: studentId, institutionId }, { userId: otherId, institutionId }],
+        teachers: [{ userId: teacherId, institutionId }],
+        assignments: [{ teacherUserId: teacherId, studentUserId: studentId, institutionId }] }, now)}
       INSERT INTO coaching.assignments
         (id, teacher_id, institution_id, title, type, source, due_date, status, created_at, "Version")
       VALUES ('${assignmentId}', '${teacherId}', '${institutionId}', 'Attachment E2E', 'Individual',
