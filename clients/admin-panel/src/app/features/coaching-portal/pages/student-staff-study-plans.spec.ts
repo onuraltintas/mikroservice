@@ -28,7 +28,12 @@ describe('shared staff plan editor', () => {
     http.expectOne('/api/coaching/staff/students/student-1/study/plans?pageNumber=1&pageSize=20').flush({ success: true, data: { ...page, items: [draft] } });
     fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Matematik');
-    expect(fixture.nativeElement.querySelector('input[type="number"]')).toBeNull();
+    // Staff may record the remaining scope of an active plan, but only the student records
+    // completed work (actual minutes, questions and the day it was done).
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).not.toContain('Gerçek süre');
+    expect(text).not.toContain('Fiili çalışma günü');
+    expect(text).toContain('Yalnız kalan kapsamı kaydet');
   });
 
   it('keeps the institution read-only and cancels a previous student request', async () => {
