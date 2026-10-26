@@ -9,16 +9,21 @@ COPY speed-reading/ ./
 COPY shared/ /workspace/clients/shared/
 RUN npm run build -- --configuration production
 
-FROM nginx:1.27.5-alpine AS runtime
+# Unprivileged nginx: runs as UID 101 and listens on 8080.
+FROM nginxinc/nginx-unprivileged:1.27.5-alpine AS runtime
 ARG RELEASE_TAG=dev
+# Assemble the image as root; the files stay root-owned and world-readable.
+USER root
 COPY speed-reading/nginx.conf /etc/nginx/conf.d/default.conf
 COPY speed-reading/build-release.txt /tmp/build-release.txt
 COPY --from=build /workspace/clients/speed-reading/dist/speed-reading-frontend/browser /usr/share/nginx/html
 # Angular only changes ngsw.json for an application release. Versioning the
 # worker script itself lets already-open clients activate the release instead
 # of indefinitely serving their previous cached application shell.
-RUN printf '\n// release: %s-%s\n' "$RELEASE_TAG" "$(cat /tmp/build-release.txt)" >> /usr/share/nginx/html/ngsw-worker.js
+RUN printf '\n// release: %s-%s\n' "$RELEASE_TAG" "$(cat /tmp/build-release.txt)" >> /usr/share/nginx/html/ngsw-worker.js \
+    && rm /tmp/build-release.txt
+USER 101
 
-EXPOSE 80
+EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --retries=6 \
-  CMD wget --spider --no-verbose http://127.0.0.1/ || exit 1
+  CMD wget --spider --no-verbose http://127.0.0.1:8080/ || exit 1

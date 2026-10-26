@@ -64,6 +64,7 @@ jobs:
         run: |
           node --test tests/E2E/support/production-local-storage.contract.test.mjs
           node --test tests/E2E/support/staff-portal-hosting.contract.test.mjs
+          node --test tests/E2E/support/non-root-runtime.contract.test.mjs
           node --test tests/E2E/course-management-foundation.contract.test.mjs
 
   frontend:

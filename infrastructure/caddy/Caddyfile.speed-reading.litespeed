@@ -502,6 +502,6 @@
     redir @legacyTeacher https://onuraltintas.net/staff/?product=speed-reading 302
 
     handle {
-        reverse_proxy speed-reading-frontend:80
+        reverse_proxy speed-reading-frontend:8080
     }
 }

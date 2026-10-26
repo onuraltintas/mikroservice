@@ -44,6 +44,13 @@ services:
   notification-volume-permissions:
     image: eduivme-staging/notification-service:${STAGING_RELEASE_TAG:-snapshot}
 
+  coaching-volume-permissions:
+    image: eduivme-staging/coaching-service:${STAGING_RELEASE_TAG:-snapshot}
+
+  speed-reading-volume-permissions:
+    profiles: !reset []
+    image: eduivme-staging/speed-reading-service:${STAGING_RELEASE_TAG:-snapshot}
+
   identity-service:
     image: eduivme-staging/identity-service:${STAGING_RELEASE_TAG:-snapshot}
     environment:
@@ -155,7 +162,7 @@ services:
     environment:
       NODE_ENV: production
     expose:
-      - "80"
+      - "8080"
     restart: unless-stopped
     depends_on:
       api-gateway:

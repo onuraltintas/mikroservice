@@ -17,7 +17,7 @@ test('staff portal is built and served as a separate production web service', as
   assert.match(compose, /^  staff-portal:\s*$/m);
   assert.match(compose, /\/staff-portal:\$\{RELEASE_TAG/);
   assert.match(edge, /handle_path \/staff\/\*/);
-  assert.match(edge, /reverse_proxy staff-portal:80/);
+  assert.match(edge, /reverse_proxy staff-portal:8080\b/);
   assert.match(dockerfile, /--project staff-portal --configuration production --base-href \/staff\//);
   assert.match(dockerfile, /dist\/staff-portal\/browser/);
   assert.match(nginx, /try_files \$uri \$uri\/ \/index\.html/);

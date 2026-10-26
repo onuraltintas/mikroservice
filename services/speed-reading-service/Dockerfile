@@ -20,5 +20,12 @@ RUN dotnet publish "SpeedReading.API.csproj" -c Release -o /app/publish --no-res
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+# Data Protection keys and CMS media live on named volumes mounted here. Creating the
+# mount points owned by the runtime user makes fresh volumes writable; volumes created
+# by older root images are fixed by speed-reading-volume-permissions.
+RUN mkdir -p /var/lib/eduplatform/data-protection-keys /var/lib/eduplatform/media \
+    && chown -R "$APP_UID" /var/lib/eduplatform
 COPY --from=publish /app/publish .
+# Run as the image's built-in non-root user (UID 1654); the service listens on 8080.
+USER $APP_UID
 ENTRYPOINT ["dotnet", "SpeedReading.API.dll"]

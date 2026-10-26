@@ -41,7 +41,7 @@ services:
       timeout: 10s
       retries: 10
 
-  # The identity, gateway and notification images run as UID 1654. File-based secrets keep the host file's
+  # All .NET service images run as UID 1654. File-based secrets keep the host file's
   # mode, so check before the new containers replace the running ones that the runtime user
   # can read them; when it cannot, the deployment stops here and the current services keep
   # serving. Fix on the host with e.g. `chgrp 1654 <file> && chmod 0640 <file>`.
@@ -132,6 +132,8 @@ services:
         condition: service_healthy
       clamav:
         condition: service_healthy
+      runtime-secrets-preflight:
+        condition: service_completed_successfully
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
@@ -206,12 +208,17 @@ services:
         target: eduplatform-dataprotection.pfx
     restart: unless-stopped
     depends_on:
+      runtime-secrets-preflight:
+        condition: service_completed_successfully
       speed-reading-migrations:
         condition: service_completed_successfully
       notification-service:
         condition: service_started
     networks:
       - edu-network
+
+  speed-reading-volume-permissions:
+    profiles: !reset []
 
   speed-reading-migrations:
     profiles: !reset []
@@ -239,7 +246,7 @@ services:
     environment:
       NODE_ENV: production
     expose:
-      - "80"
+      - "8080"
     restart: unless-stopped
     depends_on:
       api-gateway:
@@ -343,9 +350,9 @@ services:
       context: ./clients
       dockerfile: admin-panel/Dockerfile.staff-portal
     expose:
-      - "80"
+      - "8080"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--no-verbose", "http://127.0.0.1/health/live"]
+      test: ["CMD", "wget", "--spider", "--no-verbose", "http://127.0.0.1:8080/health/live"]
       interval: 10s
       timeout: 5s
       retries: 6
