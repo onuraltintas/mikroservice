@@ -9,12 +9,15 @@ public sealed class DeleteExamResultCommandHandler : IRequestHandler<DeleteExamR
     private readonly IExamRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
 
     public DeleteExamResultCommandHandler(
         IExamRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient teacherRecords)
     {
+        _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
@@ -25,7 +28,9 @@ public sealed class DeleteExamResultCommandHandler : IRequestHandler<DeleteExamR
         var exam = await _repository.GetByIdAsync(command.ExamId, cancellationToken)
             ?? throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.RequireTeacherCreator(), command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, exam.RequireTeacherCreator(), exam.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken,
+            exam.Results.Where(item => item.Id == command.ResultId).Select(item => item.StudentId));
         exam.RemoveResult(command.ResultId);
 
         await _repository.UpdateAsync(exam, cancellationToken);

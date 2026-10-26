@@ -26,6 +26,7 @@ public sealed class UploadAssignmentInstructionAttachmentCommandHandler(
     IAssignmentRepository repository,
     IUnitOfWork unitOfWork,
     ICoachingAccessPolicy accessPolicy,
+    ICoachingIdentityAuthorizationClient teacherRecords,
     IAssignmentAttachmentStorage storage,
     IAssignmentAttachmentScanner scanner)
     : IRequestHandler<UploadAssignmentInstructionAttachmentCommand, AssignmentInstructionAttachmentResponse>
@@ -39,7 +40,7 @@ public sealed class UploadAssignmentInstructionAttachmentCommandHandler(
 
         var assignment = await repository.GetByIdAsync(command.AssignmentId, cancellationToken)
             ?? throw new InvalidOperationException($"Assignment {command.AssignmentId} not found.");
-        accessPolicy.RequireTeacher(assignment.TeacherId);
+        await teacherRecords.RequireCurrentTeacherAsync(accessPolicy, assignment.TeacherId, assignment.InstitutionId, false, cancellationToken);
         if (teacherId != assignment.TeacherId)
             throw new BusinessRuleException("Authorization.Forbidden", "Only the assignment owner can attach files.");
 

@@ -1,3 +1,4 @@
+using Coaching.API.Security;
 using System.Security.Claims;
 using Asp.Versioning;
 using Coaching.Application.Subscriptions;
@@ -14,6 +15,7 @@ namespace Coaching.API.Controllers;
 [Route("api/coaching-admin/subscriptions")]
 [Authorize]
 [HasPermission(PlatformPermissions.Coaching.SubscriptionManage)]
+[RequireGlobalCoachingAdmin]
 [MfaCategory(MfaOperationCategories.Coaching)]
 public sealed class CoachingSubscriptionsAdminController(ICoachingSubscription subscriptions) : ControllerBase
 {

@@ -120,6 +120,11 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             var assignments = await db.CoachingTeacherStudentAssignments.Where(x => x.InstitutionId == institutionId && x.IsActive
                 && (role == CoachingMemberRole.Student ? x.StudentUserId == userId : x.TeacherUserId == userId)).ToListAsync(ct);
             foreach (var assignment in assignments) assignment.SetActive(false, actorUserId);
+            // Institution-wide read access (imported from the legacy system) belonged to this institution.
+            // It must not carry over to the teacher's next institution.
+            if (role == CoachingMemberRole.Teacher
+                && await db.CoachingTeacherProfiles.SingleOrDefaultAsync(x => x.UserId == userId, ct) is { CanViewAllInstitutionStudents: true } teacher)
+                teacher.SetInstitutionWideAccess(false, actorUserId);
         }
         await db.SaveChangesAsync(ct);
     }

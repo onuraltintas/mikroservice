@@ -1,3 +1,4 @@
+using Coaching.API.Security;
 using System.Security.Claims;
 using Asp.Versioning;
 using Coaching.Application.Content;
@@ -13,6 +14,7 @@ namespace Coaching.API.Controllers;
 [Route("api/coaching-admin/cms")]
 [Authorize]
 [HasPermission(PlatformPermissions.Coaching.ContentManage)]
+[RequireGlobalCoachingAdmin]
 [MfaCategory(MfaOperationCategories.Coaching)]
 public sealed class CoachingCmsAdminController(ICoachingCms cms) : ControllerBase
 {

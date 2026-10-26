@@ -86,14 +86,17 @@ public sealed class UpdateExamCommandHandler
     private readonly IExamRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
     private readonly ICoachingEventPublisher _eventPublisher;
 
     public UpdateExamCommandHandler(
         IExamRepository repository,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
-        ICoachingEventPublisher eventPublisher)
+        ICoachingEventPublisher eventPublisher,
+        ICoachingIdentityAuthorizationClient teacherRecords)
     {
+        _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
@@ -107,7 +110,8 @@ public sealed class UpdateExamCommandHandler
         var exam = await _repository.GetByIdAsync(command.ExamId, cancellationToken)
             ?? throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.RequireTeacherCreator(), command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, exam.RequireTeacherCreator(), exam.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken);
         exam.UpdateEditableDetails(
             command.Title,
             command.Type,
@@ -141,14 +145,17 @@ public sealed class UpdateExamResultCommandHandler
     private readonly IExamRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
     private readonly ICoachingEventPublisher _eventPublisher;
 
     public UpdateExamResultCommandHandler(
         IExamRepository repository,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
-        ICoachingEventPublisher eventPublisher)
+        ICoachingEventPublisher eventPublisher,
+        ICoachingIdentityAuthorizationClient teacherRecords)
     {
+        _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
@@ -162,7 +169,9 @@ public sealed class UpdateExamResultCommandHandler
         var exam = await _repository.GetByIdAsync(command.ExamId, cancellationToken)
             ?? throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.RequireTeacherCreator(), command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, exam.RequireTeacherCreator(), exam.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken,
+            exam.Results.Where(item => item.Id == command.ResultId).Select(item => item.StudentId));
         exam.UpdateResult(
             command.ResultId,
             command.Score,

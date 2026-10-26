@@ -14,14 +14,17 @@ public class GradeAssignmentCommandHandler : IRequestHandler<GradeAssignmentComm
     private readonly IAssignmentRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
     private readonly ICoachingEventPublisher _eventPublisher;
 
     public GradeAssignmentCommandHandler(
         IAssignmentRepository repository,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
-        ICoachingEventPublisher eventPublisher)
+        ICoachingEventPublisher eventPublisher,
+        ICoachingIdentityAuthorizationClient teacherRecords)
     {
+        _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
@@ -38,7 +41,8 @@ public class GradeAssignmentCommandHandler : IRequestHandler<GradeAssignmentComm
         if (assignment == null)
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
 
-        _accessPolicy.RequireTeacher(assignment.TeacherId, command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, assignment.TeacherId, assignment.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken, [command.StudentId]);
 
         // Grade assignment (domain logic)
         assignment.GradeAssignment(

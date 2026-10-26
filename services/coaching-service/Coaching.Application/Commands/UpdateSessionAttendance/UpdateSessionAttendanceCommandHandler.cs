@@ -10,12 +10,15 @@ public class UpdateSessionAttendanceCommandHandler : IRequestHandler<UpdateSessi
     private readonly ICoachingSessionRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
 
     public UpdateSessionAttendanceCommandHandler(
         ICoachingSessionRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient teacherRecords)
     {
+        _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
@@ -30,7 +33,9 @@ public class UpdateSessionAttendanceCommandHandler : IRequestHandler<UpdateSessi
         if (session == null)
             throw new InvalidOperationException($"Session {command.SessionId} not found");
 
-        _accessPolicy.RequireTeacher(session.TeacherId, command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, session.TeacherId, session.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken,
+            command.StudentId.HasValue ? [command.StudentId.Value] : session.Attendances.Select(item => item.StudentId));
 
         var attendance = command.StudentId.HasValue
             ? session.Attendances.FirstOrDefault(item => item.StudentId == command.StudentId.Value)

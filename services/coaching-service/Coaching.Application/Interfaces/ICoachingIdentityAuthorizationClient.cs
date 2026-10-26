@@ -15,6 +15,14 @@ public interface ICoachingIdentityAuthorizationClient
         bool isSystemAdministrator,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Teacher access to a student's study planning and progress (plans, reports, availability, drafts,
+    /// practice progress, profile). Besides the teaching relationship, the student must share progress
+    /// with teachers.
+    /// </summary>
+    Task<Guid?> AuthorizeTeacherStudyAccessAsync(Guid teacherId, IReadOnlyCollection<Guid> studentIds, CancellationToken cancellationToken) =>
+        AuthorizeTeacherTargetsAsync(teacherId, studentIds, null, false, cancellationToken);
+
     Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentIds,

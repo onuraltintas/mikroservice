@@ -12,6 +12,7 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
     private readonly IAssignmentRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
     private readonly IAssignmentAttachmentStorage _attachmentStorage;
     private readonly ICoachingEventPublisher _eventPublisher;
     private readonly ILogger<DeleteAssignmentCommandHandler> _logger;
@@ -22,8 +23,10 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
         ICoachingAccessPolicy accessPolicy,
         IAssignmentAttachmentStorage attachmentStorage,
         ICoachingEventPublisher eventPublisher,
-        ILogger<DeleteAssignmentCommandHandler> logger)
+        ILogger<DeleteAssignmentCommandHandler> logger,
+        ICoachingIdentityAuthorizationClient teacherRecords)
     {
+        _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
@@ -39,7 +42,8 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
         if (assignment == null)
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
 
-        _accessPolicy.RequireTeacher(assignment.TeacherId, command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, assignment.TeacherId, assignment.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken);
 
         var attachments = assignment.AssignedStudents
             .SelectMany(student => student.SubmissionAttachments)
