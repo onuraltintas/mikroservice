@@ -81,7 +81,8 @@ builder.Services.AddOptions<PublicAppUrlOptions>()
     .ValidateOnStart();
 
 // Add services
-builder.Services.AddControllers()
+var courseManagementEnabled = CourseManagementFeature.IsEnabled(builder.Configuration);
+builder.Services.AddControllers(options => options.Conventions.Add(new CourseManagementFeature.ControllerConvention(courseManagementEnabled)))
     .AddEduPlatformApiConventions();
 builder.Services.AddEduPlatformApiVersioning();
 
@@ -190,7 +191,7 @@ builder.Services.AddAuthorization(options => options.AddPolicy("CourseManagement
 builder.Services.AddMassTransit(x =>
 {
     // Consumers and their queues are listed once, in NotificationReceiveEndpoints.
-    x.AddNotificationConsumers();
+    x.AddNotificationConsumers(courseManagementEnabled);
     
     // Outbox Pattern Configuration
     x.AddEntityFrameworkOutbox<NotificationDbContext>(o =>
@@ -219,7 +220,7 @@ builder.Services.AddMassTransit(x =>
             h.Password(rabbitPass);
         });
 
-        cfg.ConfigureNotificationEndpoints(context);
+        cfg.ConfigureNotificationEndpoints(context, courseManagementEnabled);
     });
 });
 

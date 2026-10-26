@@ -14,7 +14,7 @@ namespace Notification.API.Messaging;
 /// </summary>
 public static class NotificationReceiveEndpoints
 {
-    public sealed record Endpoint(string Queue, Type Consumer);
+    public sealed record Endpoint(string Queue, Type Consumer, bool CourseManagement = false);
 
     public static IReadOnlyList<Endpoint> All { get; } =
     [
@@ -41,22 +41,26 @@ public static class NotificationReceiveEndpoints
         new("coaching-weekly-reflection-saved", typeof(WeeklyReflectionSavedConsumer)),
         new("coaching-weekly-decision-changed", typeof(WeeklyDecisionChangedConsumer)),
         new("coaching-reminder-due", typeof(CoachingReminderDueConsumer)),
-        new("course-management-lesson-scheduled", typeof(CourseManagementLessonScheduledConsumer)),
-        new("course-management-lesson-rescheduled", typeof(CourseManagementLessonRescheduledConsumer)),
-        new("course-management-lesson-cancelled", typeof(CourseManagementLessonCancelledConsumer)),
-        new("course-management-assignment-published", typeof(CourseManagementAssignmentPublishedConsumer)),
-        new("course-management-assignment-submitted", typeof(CourseManagementAssignmentSubmittedConsumer)),
-        new("course-management-assignment-reviewed", typeof(CourseManagementAssignmentReviewedConsumer)),
-        new("course-management-payment-recorded", typeof(CourseManagementPaymentRecordedConsumer)),
-        new("course-management-reminder-due", typeof(CourseManagementReminderDueConsumer)),
+        new("course-management-lesson-scheduled", typeof(CourseManagementLessonScheduledConsumer), CourseManagement: true),
+        new("course-management-lesson-rescheduled", typeof(CourseManagementLessonRescheduledConsumer), CourseManagement: true),
+        new("course-management-lesson-cancelled", typeof(CourseManagementLessonCancelledConsumer), CourseManagement: true),
+        new("course-management-assignment-published", typeof(CourseManagementAssignmentPublishedConsumer), CourseManagement: true),
+        new("course-management-assignment-submitted", typeof(CourseManagementAssignmentSubmittedConsumer), CourseManagement: true),
+        new("course-management-assignment-reviewed", typeof(CourseManagementAssignmentReviewedConsumer), CourseManagement: true),
+        new("course-management-payment-recorded", typeof(CourseManagementPaymentRecordedConsumer), CourseManagement: true),
+        new("course-management-reminder-due", typeof(CourseManagementReminderDueConsumer), CourseManagement: true),
         new("notification-privacy-erasure-assessment", typeof(NotificationErasureAssessmentRequestedConsumer)),
         new("notification-privacy-erasure-execution", typeof(NotificationErasureExecutionRequestedConsumer)),
         new("notification-realtime", typeof(NotificationRealtimeConsumer)),
     ];
 
-    public static void AddNotificationConsumers(this IBusRegistrationConfigurator configurator)
+    /// <summary>The endpoints this instance runs; Course Management ones only when enabled.</summary>
+    public static IEnumerable<Endpoint> Active(bool courseManagementEnabled) =>
+        All.Where(endpoint => courseManagementEnabled || !endpoint.CourseManagement);
+
+    public static void AddNotificationConsumers(this IBusRegistrationConfigurator configurator, bool courseManagementEnabled)
     {
-        foreach (var endpoint in All)
+        foreach (var endpoint in Active(courseManagementEnabled))
         {
             configurator.AddConsumer(endpoint.Consumer);
         }
@@ -65,9 +69,10 @@ public static class NotificationReceiveEndpoints
     /// <summary>One queue per consumer, each with retry and the EF inbox/outbox.</summary>
     public static void ConfigureNotificationEndpoints(
         this IBusFactoryConfigurator bus,
-        IBusRegistrationContext context)
+        IBusRegistrationContext context,
+        bool courseManagementEnabled)
     {
-        foreach (var endpoint in All)
+        foreach (var endpoint in Active(courseManagementEnabled))
         {
             bus.ReceiveEndpoint(endpoint.Queue, e => ConfigureEndpoint(e, context, endpoint.Consumer));
         }

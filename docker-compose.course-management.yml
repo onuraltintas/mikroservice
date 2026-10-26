@@ -1,5 +1,10 @@
 # Optional development overlay; existing product services keep their configuration.
 services:
+  # Course Management notifications (queues and API) are off unless this overlay is used.
+  notification-service:
+    environment:
+      CourseManagement__Enabled: "true"
+
   course-management-db:
     image: postgres:16-alpine
     environment:
