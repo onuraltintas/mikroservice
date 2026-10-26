@@ -23,8 +23,10 @@ Set-Location $root
 
 docker info --format '{{.ServerVersion}}' *> $null
 if ($LASTEXITCODE -ne 0) { throw 'Docker is not running. Start Docker Desktop and run the script again.' }
-node --version *> $null
-if ($LASTEXITCODE -ne 0) { throw 'Node.js 22+ is required for the E2E tests (https://nodejs.org).' }
+# Get-Command, not $LASTEXITCODE: a missing executable leaves the previous exit code in place.
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    throw 'Node.js 22+ is required for the E2E tests. Install it (winget install OpenJS.NodeJS.LTS), open a new PowerShell and run again.'
+}
 
 # Same disposable settings as CI; a separate project name keeps your own dev stack untouched.
 $env:COMPOSE_PROJECT_NAME = 'eduplatform-e2e-local'
