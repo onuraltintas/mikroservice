@@ -19,6 +19,23 @@ veritabanı modeli değiştirilmedi (yeni migration yok). İnceleme: proje dokü
 | Başlangıç | `.env` her ortamda; Redis kaydı (kullanılmıyordu); hatalı `SMTP_PORT` gönderimde patlıyordu | `.env` yalnız Development ve var olanı ezmez; Redis yok; SMTP portu başlangıçta doğrulanır |
 | Container | root | UID 1654 (`USER $APP_UID`); `notification-volume-permissions` volume'ü hazırlar |
 
+## İkinci tur (N6–N9)
+
+| Alan | Önce | Sonra |
+| --- | --- | --- |
+| Bildirim saatleri | Coaching ve Course Management UTC yayınlıyor; 11 bildirim metni ve destek şablonu saati çevirmeden yazıyordu (3 saat geri) | Türkiye saati (`TurkeyTime`) |
+| Anlık bildirim | SignalR, consumer transaction'ı commit edilmeden gönderiliyordu | Outbox üzerinden `notification-realtime` kuyruğu; yalnız commit edilmiş ve alıcısı silinmemiş kayıt gönderilir |
+| Destek yanıt ucu | İki uç (`/support/reply` ve `/support/requests/{id}/reply`) | Tek uç; admin paneli bildirim penceresi de onu kullanır |
+| Destek talebi silme | Yoktu | `Support.Delete` yetkisi; talep, personel bildirim kopyaları, bekleyen iletim ve destek e-postalarıyla birlikte silinir; denetim kaydı yazılır |
+| Saklama | Destek talepleri süresiz | Yanıtlanan (işlenen) talepler yanıttan 6 ay sonra otomatik silinir; açık talepler kalır |
+| Anonim destek formu | CAPTCHA yok | reCAPTCHA (giriş ekranıyla aynı site anahtarı); token'ı Identity doğrular, doğrulanamazsa reddedilir; giriş yapmış kullanıcıya sorulmaz |
+| Worker'lar | İki kopya döngü | Ortak `LeasedDeliveryWorker`; davranış aynı |
+
+**MFA ve silme:** `Support.Delete`, yanıtlama gibi İçerik (cms) MFA politikasına bağlıdır. MFA'yı açmış
+admin her zaman MFA ile giriş yaptığı için (Identity sertleştirmesi) silmede ayrıca sorulmaz. MFA
+kullanmayan adminin silebilmesi, admin panelindeki İçerik MFA politikasının "kapalı" olmasına bağlıdır;
+"zorunlu" ise yanıtlamada olduğu gibi silmede de MFA gerekir.
+
 ## Temizlik
 
 `Notification.API.http`, kullanılmayan `Microsoft.AspNetCore.OpenApi` ve `MassTransit.RabbitMQ`
@@ -33,10 +50,16 @@ iki kopya bağlantı dizesi kurucusu, Dockerfile'daki gereksiz build adımı.
    hazırlanan paketlerde bu servis ve `runtime-secrets-preflight` bağımlılığı da olmalı.
 3. Secret dosyaları identity notunda anlatıldığı gibi (`chgrp 1654`, `chmod 0640`).
 4. İsteğe bağlı: `SMTP_PORT` boşsa 1025; geçersizse servis başlamaz.
+5. **Identity önce:** Anonim form CAPTCHA'sı Identity'nin `/api/internal/captcha/verify` ucunu
+   kullanır. Bu uç olmadan form 403 döner; Identity bu notification sürümüyle birlikte ya da önce
+   yayınlanmalı. Identity'de `AuthRecaptcha` kapalıysa token istenmez.
+6. `Support.Delete` yetkisi Identity açılışında otomatik eklenir; SystemAdmin'de vardır, diğer
+   roller için Roller ekranından verilir.
+7. Yeni kuyruk: `notification-realtime` (ilk açılışta oluşur).
 
 ## Doğrulama
 
-- Her adım ayrı commit (N1–N5); her adımda tam paket önceki duruma göre karşılaştırıldı —
+- Her adım ayrı commit (N1–N9); her adımda tam paket önceki duruma göre karşılaştırıldı —
   fark yalnız Docker gerektiren testler ve önceden kararsız MassTransit consumer testleri.
 - Yeni testler: kuyruk eşleşmesi (her consumer'ın kuyruğu var), e-posta enjeksiyonu ve link
   doğrulama, gerçek PostgreSQL'de destek yanıtı transaction'ı, onay sınırı ve saklama
@@ -45,6 +68,7 @@ iki kopya bağlantı dizesi kurucusu, Dockerfile'daki gereksiz build adımı.
 
 ## Sonraya kalan
 
+- Anonim ve yanıtlanmamış destek talepleri için saklama süresi (şimdilik admin elle siler).
 - Şablonların veritabanında HTML olarak saklanması (yönetici paneli düzenlemesi): şablon
   değişkenleri artık encode ediliyor, şablonun kendisi güvenilir içerik sayılıyor.
 - SignalR hub'ı için ayrı ölçek planı (birden fazla instance'ta backplane).
