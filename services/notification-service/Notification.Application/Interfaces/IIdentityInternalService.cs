@@ -5,6 +5,9 @@ namespace Notification.Application.Interfaces;
 public interface IIdentityInternalService
 {
     Task<SupportForwardResult> ForwardSupportRequestAsync(SubmitSupportRequestCommand request, Guid supportRequestId, CancellationToken cancellationToken = default);
+
+    /// <summary>Checks the anonymous support form's reCAPTCHA token through Identity; false when it cannot be checked.</summary>
+    Task<bool> VerifySupportCaptchaAsync(string? token, CancellationToken cancellationToken = default);
 }
 
 public enum SupportForwardResult

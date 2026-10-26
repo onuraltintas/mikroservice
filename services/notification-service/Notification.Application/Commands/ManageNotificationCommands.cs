@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Notification.Application.Interfaces;
+using Notification.Application.Support;
 using Notification.Domain.Entities;
 
 namespace Notification.Application.Commands.ManageNotifications;
@@ -42,6 +43,17 @@ public sealed class ProcessSupportRequestCommandHandler
         await _context.SaveChangesAsync(cancellationToken);
         return Result.Success();
     }
+}
+
+public sealed record DeleteSupportRequestCommand(Guid Id) : IRequest<Result>;
+
+public sealed class DeleteSupportRequestCommandHandler(INotificationDbContext context)
+    : IRequestHandler<DeleteSupportRequestCommand, Result>
+{
+    public async Task<Result> Handle(DeleteSupportRequestCommand request, CancellationToken cancellationToken) =>
+        await SupportRequestRemoval.DeleteAsync(context, request.Id, cancellationToken) > 0
+            ? Result.Success()
+            : Result.Failure(new Error("SupportRequest.NotFound", "Destek talebi bulunamadı."));
 }
 
 public sealed record CreateEmailTemplateCommand(

@@ -69,4 +69,45 @@ public class IdentityInternalService : IIdentityInternalService
             return SupportForwardResult.Transient;
         }
     }
+
+    public const string SupportCaptchaAction = "support_submit";
+
+    public async Task<bool> VerifySupportCaptchaAsync(string? token, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(_serviceApiKey))
+        {
+            _logger.LogError("Internal service API key is not configured; the support form CAPTCHA cannot be checked.");
+            return false;
+        }
+
+        try
+        {
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/api/internal/captcha/verify")
+            {
+                Content = JsonContent.Create(new { Token = token, Action = SupportCaptchaAction })
+            };
+            requestMessage.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
+
+            using var response = await _httpClient.SendAsync(requestMessage, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Identity answered {StatusCode} to the support CAPTCHA check.", (int)response.StatusCode);
+                return false;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<CaptchaVerification>(cancellationToken);
+            return result?.Accepted == true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
+        {
+            _logger.LogWarning("Support CAPTCHA check could not reach Identity; rejecting the request.");
+            return false;
+        }
+    }
+
+    private sealed record CaptchaVerification(bool Accepted);
 }

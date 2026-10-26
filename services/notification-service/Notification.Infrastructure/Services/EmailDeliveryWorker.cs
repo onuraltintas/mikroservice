@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Notification.Application.Interfaces;
+using Notification.Application.Support;
 using Notification.Domain.Entities;
 using Notification.Infrastructure.Persistence;
 
@@ -235,7 +236,8 @@ public sealed class EmailDeliveryWorker : LeasedDeliveryWorker<EmailDeliveryWork
         var notifications = await dbContext.Notifications
             .Where(x => x.IsRead && x.CreatedAt < notificationCutoff)
             .ExecuteDeleteAsync(cancellationToken);
-        return deliveries + forwards + notifications;
+        var supportRequests = await SupportRequestRemoval.DeleteExpiredAnsweredAsync(dbContext, now, cancellationToken);
+        return deliveries + forwards + notifications + supportRequests;
     }
 
     public sealed record EmailDeliveryWorkItem(

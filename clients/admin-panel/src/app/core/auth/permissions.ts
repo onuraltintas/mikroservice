@@ -35,6 +35,7 @@ export const ADMIN_PERMISSIONS = {
   speedReadingCommunicationsManage: 'Permissions.SpeedReading.CommunicationsManage',
   supportView: 'Permissions.Support.View',
   supportReply: 'Permissions.Support.Reply',
+  supportDelete: 'Permissions.Support.Delete',
   notificationTemplates: 'Permissions.Notifications.Templates',
   operationsView: 'Permissions.Operations.View',
   privacyView: 'Permissions.Privacy.View',

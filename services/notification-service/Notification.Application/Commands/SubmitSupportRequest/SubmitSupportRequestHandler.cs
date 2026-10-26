@@ -165,7 +165,7 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
 
         await _emailDeliveryQueue.QueueAsync(
             messageId,
-            "SupportAcknowledgement",
+            Support.SupportRequestRemoval.AcknowledgementConsumerType,
             request.Email,
             subject,
             body,

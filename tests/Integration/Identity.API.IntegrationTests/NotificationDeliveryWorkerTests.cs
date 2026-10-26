@@ -206,5 +206,8 @@ public sealed class NotificationDeliveryWorkerTests : IAsyncLifetime
         public Task<SupportForwardResult> ForwardSupportRequestAsync(
             SubmitSupportRequestCommand command, Guid supportRequestId, CancellationToken cancellationToken = default) =>
             Task.FromResult(result);
+
+        public Task<bool> VerifySupportCaptchaAsync(string? token, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
     }
 }

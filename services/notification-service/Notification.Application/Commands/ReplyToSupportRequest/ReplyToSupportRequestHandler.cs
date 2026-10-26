@@ -65,8 +65,8 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
             </html>";
 
         await _emailDeliveryQueue.QueueAsync(
-            CreateMessageId(supportRequest.Id, request.ReplyMessage),
-            "SupportReply",
+            ReplyMessageId(supportRequest.Id, request.ReplyMessage),
+            Support.SupportRequestRemoval.ReplyConsumerType,
             supportRequest.Email,
             subject,
             body,
@@ -81,7 +81,7 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
         return Result.Success();
     }
 
-    private static Guid CreateMessageId(Guid supportRequestId, string replyMessage)
+    public static Guid ReplyMessageId(Guid supportRequestId, string replyMessage)
     {
         var payload = Encoding.UTF8.GetBytes($"{supportRequestId:N}:{replyMessage}");
         var hash = SHA256.HashData(payload);
