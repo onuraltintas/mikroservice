@@ -479,6 +479,76 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
     }
 
     [Fact]
+    public async Task IndividualEarlyRenewal_KeepsTheRemainingPaidDays()
+    {
+        await using var db = CreateDbContext();
+        var subscriptions = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient());
+        var actorId = Guid.NewGuid(); var userId = Guid.NewGuid();
+        var planId = await subscriptions.CreatePlanAsync(Plan("individual-renew", "Bireysel yenileme", "Individual", 1200m, null), actorId);
+        await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
+            true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-individual-renew-01");
+        var first = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-RENEW-1", "Ada", null, true), "create-individual-renew-01");
+        await subscriptions.ReviewBankTransferRequestAsync(first!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-individual-renew-01");
+        var paidUntil = (await db.CoachingSubscriptions.SingleAsync()).EndDate;
+
+        var second = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(planId.Value, "EFT-RENEW-2", "Ada", null, true), "create-individual-renew-02");
+        (await subscriptions.ReviewBankTransferRequestAsync(second!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId,
+            "review-individual-renew-02"))!.Status.Should().Be("Approved");
+
+        // The new period starts where the paid one ends: no day of the first payment is lost.
+        var subscription = await db.CoachingSubscriptions.SingleAsync();
+        subscription.EndDate.Should().BeCloseTo(paidUntil.AddDays(365), TimeSpan.FromSeconds(1));
+        (await subscriptions.GetPaymentsAsync(null, null, 1, 25)).TotalCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task IndividualPlanChange_StartsAfterTheCurrentPaidPeriod()
+    {
+        await using var db = CreateDbContext();
+        var subscriptions = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient());
+        var actorId = Guid.NewGuid(); var userId = Guid.NewGuid();
+        var annual = await subscriptions.CreatePlanAsync(Plan("individual-annual-change", "Bireysel yıllık", "Individual", 1200m, null), actorId);
+        var other = await subscriptions.CreatePlanAsync(Plan("individual-other-change", "Bireysel diğer", "Individual", 900m, null), actorId);
+        await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
+            true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-individual-change-1");
+        var first = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(annual!.Value, "EFT-CHANGE-1", "Ada", null, true), "create-individual-change-01");
+        await subscriptions.ReviewBankTransferRequestAsync(first!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-individual-change-01");
+        var paidUntil = (await db.CoachingSubscriptions.SingleAsync()).EndDate;
+
+        var second = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(other!.Value, "EFT-CHANGE-2", "Ada", null, true), "create-individual-change-02");
+        await subscriptions.ReviewBankTransferRequestAsync(second!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-individual-change-02");
+
+        var next = await db.CoachingSubscriptions.SingleAsync(x => x.PlanId == other.Value);
+        next.StartDate.Should().BeCloseTo(paidUntil, TimeSpan.FromSeconds(1));
+        next.EndDate.Should().BeCloseTo(paidUntil.AddDays(365), TimeSpan.FromSeconds(1));
+        (await subscriptions.GetMyAccessAsync(userId)).HasAccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ApprovedBankTransfer_CannotBeDeletedSoThePaymentCannotBeCreditedTwice()
+    {
+        await using var db = CreateDbContext();
+        var subscriptions = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient());
+        var actorId = Guid.NewGuid(); var userId = Guid.NewGuid();
+        var planId = await subscriptions.CreatePlanAsync(Plan("approved-delete", "Bireysel EFT", "Individual", 1200m, null), actorId);
+        await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
+            true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-approved-delete-01");
+        var transfer = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-APPROVED-DEL", "Ada", null, true), "create-approved-delete-01");
+        await subscriptions.ReviewBankTransferRequestAsync(transfer!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-approved-delete-01");
+
+        var delete = () => subscriptions.DeleteBankTransferRequestAsync(transfer.Id);
+        await delete.Should().ThrowAsync<BusinessRuleException>().Where(x => x.Code == "Subscription.TransferApproved");
+        (await db.CoachingBankTransferRequests.CountAsync()).Should().Be(1);
+        (await db.CoachingPaymentRecords.SingleAsync()).BankTransferRequestId.Should().Be(transfer.Id);
+        (await db.CoachingSubscriptions.SingleAsync()).BankTransferRequestId.Should().Be(transfer.Id);
+    }
+
+    [Fact]
     public async Task TeacherPlan_AdminGrantRejectsInstitutionLinkedTeacher()
     {
         await using var db = CreateDbContext();
