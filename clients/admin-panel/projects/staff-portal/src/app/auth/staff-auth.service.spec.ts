@@ -100,10 +100,12 @@ describe('StaffAuthService product-scoped sessions', () => {
   });
 
   it('gets a source product token without switching or persisting the active course session', async () => {
+    // One expiry for every token in the test: tokens built a second apart must still compare equal.
+    const exp = Math.floor(Date.now() / 1000) + 900;
     const accessToken = (product: string) => {
       const payload = btoa(JSON.stringify({
         platform_product: product,
-        exp: Math.floor(Date.now() / 1000) + 900
+        exp
       }));
       return `e30.${payload}.signature`;
     };
