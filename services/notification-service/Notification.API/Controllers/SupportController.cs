@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Notification.Application.Commands.SubmitSupportRequest;
-using EduPlatform.Shared.Contracts.Authorization;
-using EduPlatform.Shared.Security.Authorization;
 using System.Security.Claims;
 
 namespace Notification.API.Controllers;
@@ -51,19 +49,5 @@ public class SupportController : ControllerBase
         }
 
         return Ok(result.Value);
-    }
-
-    [HttpPost("reply")]
-    [HasPermission(PlatformPermissions.Support.Reply)]
-    public async Task<IActionResult> Reply([FromBody] Notification.Application.Commands.ReplyToSupportRequest.ReplyToSupportRequestCommand command)
-    {
-        var result = await _mediator.Send(command);
-
-        if (result.IsFailure)
-        {
-            return BadRequest(result.Error);
-        }
-
-        return Ok();
     }
 }
