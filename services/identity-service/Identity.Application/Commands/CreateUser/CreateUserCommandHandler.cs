@@ -16,7 +16,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
 {
     private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
-    private readonly IInstitutionRepository _institutionRepository; 
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly ICurrentUserService _currentUserService;
@@ -25,9 +24,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
     public CreateUserCommandHandler(
         IIdentityService identityService,
         IUserRepository userRepository,
-        IStudentRepository studentRepository,
-        ITeacherRepository teacherRepository,
-        IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
         ICurrentUserService currentUserService,
@@ -35,7 +31,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
     {
         _identityService = identityService;
         _userRepository = userRepository;
-        _institutionRepository = institutionRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _currentUserService = currentUserService;

@@ -36,4 +36,7 @@ test('old Coaching and Speed Reading staff URLs hand off to the unified portal',
     2
   );
   assert.match(speedReadingEdge, /onuraltintas\.net\/staff\/\?product=speed-reading/);
+  // Live since the 2026-10-13 Coaching completion release; previously only added by its deploy script.
+  assert.match(speedReadingEdge, /redir @legacyCoachingStudent https:\/\/eduivme\.com\/coaching-portal 302/);
+  assert.match(speedReadingEdge, /redir @legacyCoachingStaff https:\/\/onuraltintas\.net\/staff\/\?product=coaching 302/);
 });

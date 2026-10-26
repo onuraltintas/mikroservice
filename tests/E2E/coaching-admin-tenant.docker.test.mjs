@@ -1,3 +1,4 @@
+import { coachingOwnedProfilesSql, identityCoachingAccessSql } from './support/coaching-owned-accounts.mjs';
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -128,9 +129,9 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
         AS users(user_id, role_name)
       JOIN identity."Roles" AS roles ON roles."Name"=users.role_name AND roles."IsDeleted"=false;
       INSERT INTO identity.institution_admins
-        ("Id", "UserId", "InstitutionId", "Role", "IsActive", "CreatedAt")
-      VALUES (gen_random_uuid(), '${id.adminA}', '${id.institutionA}', 'Admin', true, '${now}'),
-        (gen_random_uuid(), '${id.adminB}', '${id.institutionB}', 'Admin', true, '${now}');
+        ("Id", "UserId", "InstitutionId", "Role", "Product", "IsActive", "CreatedAt")
+      VALUES (gen_random_uuid(), '${id.adminA}', '${id.institutionA}', 'Admin', 'Coaching', true, '${now}'),
+        (gen_random_uuid(), '${id.adminB}', '${id.institutionB}', 'Admin', 'Coaching', true, '${now}');
       INSERT INTO identity.student_profiles ("Id", "UserId", "InstitutionId", "FirstName", "LastName",
         "DailyGoalMinutes", "Preferences", "ShareProgressWithTeachers", "IsActive", "CreatedAt", "Version")
       VALUES (gen_random_uuid(), '${id.studentA}', '${id.institutionA}', 'Student', 'A',
@@ -151,8 +152,16 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
       JOIN identity.student_profiles AS student ON student."InstitutionId"=teacher."InstitutionId"
       WHERE teacher."UserId" IN ('${id.teacherA}', '${id.teacherB}')
         AND student."UserId" IN ('${id.studentA}', '${id.studentB}');
+      ${identityCoachingAccessSql([id.adminA, id.adminB, id.teacherA, id.teacherB, id.studentA, id.studentB], now)}
       COMMIT;`);
     sql(config, coachingDb, `BEGIN;
+      ${coachingOwnedProfilesSql({
+        students: [{ userId: id.studentA, institutionId: id.institutionA }, { userId: id.studentB, institutionId: id.institutionB }],
+        teachers: [{ userId: id.teacherA, institutionId: id.institutionA }, { userId: id.teacherB, institutionId: id.institutionB }],
+        assignments: [
+          { teacherUserId: id.teacherA, studentUserId: id.studentA, institutionId: id.institutionA },
+          { teacherUserId: id.teacherB, studentUserId: id.studentB, institutionId: id.institutionB }],
+      }, now)}
       INSERT INTO coaching.assignments
         (id, teacher_id, institution_id, title, type, source, due_date, status, created_at, "Version")
       VALUES ('${id.assignmentA}', '${id.teacherA}', '${id.institutionA}', 'Institution A only',

@@ -95,13 +95,13 @@ public class EventPublishingTests : IAsyncLifetime
         (await _harness.Published.Any<UserCreatedEvent>()).Should().BeTrue("the event should be published");
 
         // Verify the published event has correct data
-        var publishedEvent = _harness.Published.Select<UserCreatedEvent>().FirstOrDefault();
+        var publishedEvent = (await _harness.PublishedMessagesAsync<UserCreatedEvent>()).FirstOrDefault();
         publishedEvent.Should().NotBeNull("the published event should be retrievable");
         
         if (publishedEvent != null)
         {
-            publishedEvent.Context.Message.UserId.Should().Be(userCreatedEvent.UserId);
-            publishedEvent.Context.Message.Email.Should().Be(userCreatedEvent.Email);
+            publishedEvent.UserId.Should().Be(userCreatedEvent.UserId);
+            publishedEvent.Email.Should().Be(userCreatedEvent.Email);
         }
     }
 
@@ -139,7 +139,7 @@ public class EventPublishingTests : IAsyncLifetime
         await Task.Delay(1000);
 
         // Assert
-        var publishedEvents = _harness.Published.Select<UserCreatedEvent>().ToList();
+        var publishedEvents = await _harness.PublishedMessagesAsync<UserCreatedEvent>();
         publishedEvents.Should().HaveCount(2, "both events should be published");
     }
 
