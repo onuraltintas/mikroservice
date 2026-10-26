@@ -129,9 +129,9 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
         AS users(user_id, role_name)
       JOIN identity."Roles" AS roles ON roles."Name"=users.role_name AND roles."IsDeleted"=false;
       INSERT INTO identity.institution_admins
-        ("Id", "UserId", "InstitutionId", "Role", "IsActive", "CreatedAt")
-      VALUES (gen_random_uuid(), '${id.adminA}', '${id.institutionA}', 'Admin', true, '${now}'),
-        (gen_random_uuid(), '${id.adminB}', '${id.institutionB}', 'Admin', true, '${now}');
+        ("Id", "UserId", "InstitutionId", "Role", "Product", "IsActive", "CreatedAt")
+      VALUES (gen_random_uuid(), '${id.adminA}', '${id.institutionA}', 'Admin', 'Coaching', true, '${now}'),
+        (gen_random_uuid(), '${id.adminB}', '${id.institutionB}', 'Admin', 'Coaching', true, '${now}');
       INSERT INTO identity.student_profiles ("Id", "UserId", "InstitutionId", "FirstName", "LastName",
         "DailyGoalMinutes", "Preferences", "ShareProgressWithTeachers", "IsActive", "CreatedAt", "Version")
       VALUES (gen_random_uuid(), '${id.studentA}', '${id.institutionA}', 'Student', 'A',
