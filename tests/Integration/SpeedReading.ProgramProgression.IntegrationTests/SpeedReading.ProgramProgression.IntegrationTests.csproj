@@ -7,11 +7,11 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="Testcontainers.PostgreSql" Version="4.15.0" />
-    <PackageReference Include="xunit" Version="2.6.6" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
     <Using Include="Xunit" />
     <Compile Include="../../Shared.IntegrationTests/Fixtures/PostgresFixture.cs" Link="PostgresFixture.cs" />
     <ProjectReference Include="../../../services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj" />

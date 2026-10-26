@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY services/course-management-service/ services/course-management-service/
 COPY shared/ shared/
+COPY Directory.Packages.props ./
 RUN dotnet publish services/course-management-service/CourseManagement.API/CourseManagement.API.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
