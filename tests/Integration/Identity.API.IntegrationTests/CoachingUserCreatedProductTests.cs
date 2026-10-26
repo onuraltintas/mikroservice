@@ -42,7 +42,8 @@ public sealed class CoachingUserCreatedProductTests
         public int AddCount { get; private set; }
         protected override object? Invoke(MethodInfo? method, object?[]? args)
         {
-            if (method!.Name != nameof(IAcademicGoalRepository.AddAsync)) throw new NotSupportedException(method.Name);
+            if (method!.Name == nameof(IAcademicGoalRepository.HasSystemGoalAsync)) return Task.FromResult(false);
+            if (method.Name != nameof(IAcademicGoalRepository.AddAsync)) throw new NotSupportedException(method.Name);
             AddCount++; return Task.FromResult((Coaching.Domain.Entities.AcademicGoal)args![0]!);
         }
     }

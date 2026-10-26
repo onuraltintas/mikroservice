@@ -549,6 +549,59 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
     }
 
     [Fact]
+    public async Task CancellingAnApprovedTransfer_EndsTheAccessAndKeepsTheRecords()
+    {
+        await using var db = CreateDbContext();
+        var subscriptions = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient());
+        var actorId = Guid.NewGuid(); var userId = Guid.NewGuid();
+        var planId = await subscriptions.CreatePlanAsync(Plan("cancel-approved", "Bireysel EFT", "Individual", 1200m, null), actorId);
+        await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
+            true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-cancel-approved-01");
+        var transfer = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-CANCEL-1", "Ada", null, true), "create-cancel-approved-01");
+        await subscriptions.ReviewBankTransferRequestAsync(transfer!.Id, new CoachingBankTransferReviewRequest("Approved", "Doğrulandı"), actorId, "review-cancel-approved-01");
+        (await subscriptions.GetMyAccessAsync(userId)).HasAccess.Should().BeTrue();
+
+        var noReason = () => subscriptions.CancelApprovedBankTransferAsync(transfer.Id, " ", actorId);
+        await noReason.Should().ThrowAsync<ArgumentException>();
+        var cancelled = await subscriptions.CancelApprovedBankTransferAsync(transfer.Id, "Yanlış hesaba onaylandı", actorId);
+
+        cancelled!.Status.Should().Be("Cancelled");
+        cancelled.ReviewNote.Should().Contain("Doğrulandı").And.Contain("Yanlış hesaba onaylandı");
+        (await subscriptions.GetMyAccessAsync(userId)).HasAccess.Should().BeFalse();
+        (await db.CoachingSubscriptions.SingleAsync()).Status.Should().Be("Cancelled");
+        (await db.CoachingPaymentRecords.SingleAsync()).Status.Should().Be("Cancelled");
+        (await subscriptions.CancelApprovedBankTransferAsync(transfer.Id, "İkinci kez", actorId)).Should().BeNull();
+        var delete = () => subscriptions.DeleteBankTransferRequestAsync(transfer.Id);
+        await delete.Should().ThrowAsync<BusinessRuleException>().Where(x => x.Code == "Subscription.TransferApproved");
+    }
+
+    [Fact]
+    public async Task CancellingAnApprovedRenewal_RemovesOnlyTheRenewedPeriod()
+    {
+        await using var db = CreateDbContext();
+        var subscriptions = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient());
+        var actorId = Guid.NewGuid(); var userId = Guid.NewGuid();
+        var planId = await subscriptions.CreatePlanAsync(Plan("cancel-renewal", "Bireysel yenileme", "Individual", 1200m, null), actorId);
+        await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
+            true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-cancel-renewal-01");
+        var first = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-CR-1", "Ada", null, true), "create-cancel-renewal-01");
+        await subscriptions.ReviewBankTransferRequestAsync(first!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-cancel-renewal-01");
+        var paidUntil = (await db.CoachingSubscriptions.SingleAsync()).EndDate;
+        var second = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(planId.Value, "EFT-CR-2", "Ada", null, true), "create-cancel-renewal-02");
+        await subscriptions.ReviewBankTransferRequestAsync(second!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-cancel-renewal-02");
+
+        await subscriptions.CancelApprovedBankTransferAsync(second.Id, "Mükerrer ödeme iade edildi", actorId);
+
+        var subscription = await db.CoachingSubscriptions.SingleAsync();
+        subscription.Status.Should().Be("Active");
+        subscription.EndDate.Should().BeCloseTo(paidUntil, TimeSpan.FromSeconds(1));
+        (await subscriptions.GetMyAccessAsync(userId)).HasAccess.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task TeacherPlan_AdminGrantRejectsInstitutionLinkedTeacher()
     {
         await using var db = CreateDbContext();
