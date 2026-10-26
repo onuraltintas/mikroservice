@@ -19,6 +19,8 @@ export class StudentExamResultsComponent {
   readonly profileWarning = signal('');
   private readonly toaster = coachingToaster();
   private readonly service = inject(CoachingStudentExamsService);
+  // One key per new result: retries of the same form reuse it; it changes after a successful create.
+  private createKey = crypto.randomUUID();
   private readonly catalog = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   readonly page = signal<TargetPage<StudentExam>>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
@@ -134,9 +136,10 @@ export class StudentExamResultsComponent {
     const input = { title: this.title.trim(), examType: this.examType, examDate: this.examDate, score: this.score,
       maxScore: this.maxScore, correctAnswers: counts[0], wrongAnswers: counts[1], emptyAnswers: counts[2], lessons: this.lessons.map(x => ({ ...x })), practiceExam: this.practiceExam };
     const isNew = !this.selected;
-    const write = this.selected ? this.service.replace(this.selected.id, this.selected.version, input) : this.service.create(input);
+    const write = this.selected ? this.service.replace(this.selected.id, this.selected.version, input) : this.service.create(input, this.createKey);
     this.busy.set(true); this.error.set(null);
     write.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({ next: exam => {
+      if (isNew) this.createKey = crypto.randomUUID();
       this.apply(exam); this.success.set('Sonucun kaydedildi. Öğrenci beyanı olarak raporlanacak.');
       this.page.update(page => ({ ...page, totalCount: page.totalCount + (isNew ? 1 : 0), items: [exam, ...page.items.filter(x => x.id !== exam.id)].slice(0, 20) }));
     }, error: error => { this.confirmed = false; if (error?.status === 409) this.stale.set(true);

@@ -9,9 +9,19 @@ namespace Coaching.Infrastructure.StudyPlanning;
 
 public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAccessPolicy access) : IStudentExamService
 {
-    public async Task<StudentExamView> CreateAsync(StudentExamInput request, CancellationToken cancellationToken = default)
+    private const string CreateIdempotencyScope = "coaching.student-exams.create";
+
+    public Task<StudentExamView> CreateAsync(StudentExamInput request, CancellationToken cancellationToken = default)
+        => CreateAsync(request, null, cancellationToken);
+
+    public async Task<StudentExamView> CreateAsync(StudentExamInput request, string? idempotencyKey, CancellationToken cancellationToken = default)
     {
         var student = RequireStudent();
+        var key = string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey.Trim();
+        if (key?.Length > 100) throw new ArgumentException("Idempotency-Key en fazla 100 karakter olabilir.");
+        var requestHash = key is null ? null : Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(student.ToString("D") + "\n" + System.Text.Json.JsonSerializer.Serialize(request))));
+        if (key is not null && await ReplayAsync(student, key, requestHash!, cancellationToken) is { } replay) return replay;
         var lessons = await ValidateAsync(request, cancellationToken);
         var exam = Exam.CreateStudentReported(student, request.Title, request.ExamType,
             request.ExamDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), request.MaxScore);
@@ -20,9 +30,30 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         result.SetLessonAnswers(lessons);
         if (request.PracticeExam is not null) result.SetPracticeExam(request.PracticeExam, request.ExamType);
         exam.AddResult(result); db.Exams.Add(exam);
-        await SaveAsync(cancellationToken);
+        if (key is not null) db.IdempotencyRecords.Add(IdempotencyRecord.Create(CreateIdempotencyScope, key, requestHash!, exam.Id));
+        try { await SaveAsync(cancellationToken); }
+        catch (Coaching.Application.Exceptions.IdempotencyConflictException) when (key is not null)
+        {
+            // A concurrent retry with the same key won the insert; return its result.
+            db.ChangeTracker.Clear();
+            return await ReplayAsync(student, key, requestHash!, cancellationToken) ?? throw IdempotencyConflict();
+        }
         return View(exam);
     }
+
+    private async Task<StudentExamView?> ReplayAsync(Guid student, string key, string requestHash, CancellationToken ct)
+    {
+        // A replay only ever returns the caller's own exam; the hash also binds the key to the student.
+        var existing = await db.IdempotencyRecords.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Scope == CreateIdempotencyScope && x.Key == key, ct);
+        if (existing is null) return null;
+        if (!existing.Matches(requestHash)) throw IdempotencyConflict();
+        var exam = await db.Exams.AsNoTracking().Include(x => x.Results)
+            .SingleOrDefaultAsync(x => x.Id == existing.ResourceId && x.StudentOwnerId == student, ct);
+        return exam is null ? throw IdempotencyConflict() : View(exam);
+    }
+    private static BusinessRuleException IdempotencyConflict() => new("Idempotency.Conflict",
+        "Bu kayıt isteği daha önce farklı bilgilerle gönderildi. Sayfayı yenileyip yeniden deneyin.");
 
     public async Task<StudentExamView?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {

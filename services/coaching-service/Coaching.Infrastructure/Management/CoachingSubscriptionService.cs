@@ -540,11 +540,24 @@ public sealed class CoachingSubscriptionService(
                         && item.StartDate <= now)
                     .OrderByDescending(item => item.EndDate)
                     .FirstOrDefaultAsync(cancellationToken);
+                subscriptionStartDate = renewalSubscription is not null && renewalSubscription.EndDate > now
+                    ? renewalSubscription.EndDate
+                    : now;
             }
-
-            subscriptionStartDate = renewalSubscription is not null && renewalSubscription.EndDate > now
-                ? renewalSubscription.EndDate
-                : now;
+            else
+            {
+                // An individual who pays before the current period ends keeps every paid day: the new period
+                // starts when the last active individual period ends. The same plan is extended in place;
+                // a different plan starts as its own subscription at that moment.
+                var latest = await (from item in db.CoachingSubscriptions
+                                    join plan in db.CoachingSubscriptionPlans on item.PlanId equals plan.Id
+                                    where item.UserId == transfer.UserId && item.Status == "Active"
+                                        && plan.Audience == "Individual" && item.EndDate > now
+                                    orderby item.EndDate descending
+                                    select item).FirstOrDefaultAsync(cancellationToken);
+                subscriptionStartDate = latest?.EndDate ?? now;
+                renewalSubscription = latest?.PlanId == approvedPlan.Id ? latest : null;
+            }
             subscriptionEndDate = subscriptionStartDate.Value.AddDays(approvedPlan.DurationDays);
             if (approvedPlan.Audience == "Teacher"
                 && await HasOverlappingTeacherSubscriptionAsync(
@@ -651,6 +664,15 @@ public sealed class CoachingSubscriptionService(
         if (transfer is null)
         {
             return false;
+        }
+
+        // An approved transfer is the record of a received payment and of the access it granted. Deleting it
+        // would free its payment reference for a second approval and unlink the payment and subscription.
+        if (transfer.Status == "Approved")
+        {
+            throw new BusinessRuleException(
+                "Subscription.TransferApproved",
+                "Onaylanmış banka transferi silinemez. Ödeme ve abonelik kaydı korunur.");
         }
 
         var idempotencyRecords = await db.IdempotencyRecords
