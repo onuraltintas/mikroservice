@@ -45,6 +45,9 @@ public sealed class UpdateAssignmentCommandValidator : AbstractValidator<UpdateA
     {
         RuleFor(command => command.AssignmentId).NotEmpty();
         RuleFor(command => command.Title).NotEmpty().MaximumLength(200);
+        // Stored as text and returned on every student read; the column for Subject is 100 characters.
+        RuleFor(command => command.Description).MaximumLength(20000);
+        RuleFor(command => command.Subject).MaximumLength(100);
         RuleFor(command => command.DueDate)
             .NotEqual(DateTime.MinValue)
             .WithMessage("Due date is required.");

@@ -3,6 +3,10 @@ namespace Coaching.Application.Attachments;
 public static class AssignmentAttachmentPolicy
 {
     public const long MaxFileSizeBytes = 10 * 1024 * 1024;
+    // Per student per assignment, counting uploaded files and uploads still in their window.
+    public const int MaxSubmissionAttachmentsPerStudent = 10;
+    public const long MaxSubmissionBytesPerStudent = 50L * 1024 * 1024;
+    public const int MaxInstructionAttachmentsPerAssignment = 10;
 
     private static readonly IReadOnlyDictionary<string, string[]> AllowedTypes =
         new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
