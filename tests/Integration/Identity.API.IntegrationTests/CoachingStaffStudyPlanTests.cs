@@ -74,7 +74,10 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
             var publisher = new RecordingStudyPublisher();
             var plans = new CoachingManualStudyPlanService(db, policy,
                 new CoachingAutomaticStudyPlanPreviewService(db, policy), publisher, scope);
-            var input = new ManualStudyPlanInput("Haftalık koç planı", [new(new(2026, 10, 19), "Matematik", 45, null, true, "Matematik kitabı", 30)]);
+            // Effort is reported on the day the student worked (today in Turkey), so the plan
+            // week starts today instead of on a fixed date that has since passed.
+            var day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul")));
+            var input = new ManualStudyPlanInput("Haftalık koç planı", [new(day, "Matematik", 45, null, true, "Matematik kitabı", 30)]);
             var draft = await plans.CreateForStudentAsync(student, input);
             var active = await plans.PublishForStudentAsync(student, draft.Id, draft.Version);
             Assert.Equal(StudyPlanStatus.Active, active.Status);
@@ -91,18 +94,18 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
 
             actor.UserId = Guid.NewGuid(); actor.Roles = ["Teacher"];
             var stale = await Assert.ThrowsAsync<BusinessRuleException>(() =>
-                plans.RescheduleForStudentAsync(student, active.Id, active.Tasks.Single().Id, active.Version, new(2026, 10, 20)));
+                plans.RescheduleForStudentAsync(student, active.Id, active.Tasks.Single().Id, active.Version, day.AddDays(1)));
             Assert.Equal("StudyPlanning.Conflict", stale.Code);
             await Assert.ThrowsAsync<BusinessRuleException>(() =>
-                plans.RescheduleForStudentAsync(student, active.Id, active.Tasks.Single().Id, completed.Version, new(2026, 10, 20)));
+                plans.RescheduleForStudentAsync(student, active.Id, active.Tasks.Single().Id, completed.Version, day.AddDays(1)));
             var unchanged = (await plans.GetForStudentAsync(student, active.Id))!.Tasks.Single();
             Assert.Equal(40, unchanged.ActualMinutes);
-            Assert.Equal(new DateOnly(2026, 10, 19), unchanged.PlannedDate);
+            Assert.Equal(day, unchanged.PlannedDate);
             var foreign = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Other student's private plan");
             db.StudyPlanRevisions.Add(foreign); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             Assert.Null(await plans.GetForStudentAsync(student, foreign.Id));
             var reportService = new CoachingStudentStudyReportService(db, policy, scope);
-            var report = await reportService.GetForStudentAsync(student, new(2026, 10, 19), new(2026, 10, 25));
+            var report = await reportService.GetForStudentAsync(student, day, day.AddDays(6));
             Assert.Equal(1, report.CompletedTasks);
             Assert.Equal(40, report.ActualMinutes);
             Assert.Equal(30, report.PlannedQuestions); Assert.Equal(24, report.ActualQuestions);
@@ -112,7 +115,7 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
 
             actor.Roles = ["InstitutionAdmin"];
             Assert.Equal(2, (await plans.ListForStudentAsync(student, 1, 20, null)).TotalCount);
-            Assert.Equal(1, (await reportService.GetForStudentAsync(student, new(2026, 10, 19), new(2026, 10, 25))).CompletedTasks);
+            Assert.Equal(1, (await reportService.GetForStudentAsync(student, day, day.AddDays(6))).CompletedTasks);
 
             membership.Active = false;
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.ListForStudentAsync(student, 1, 20, null));

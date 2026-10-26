@@ -57,7 +57,7 @@ public sealed class CoachingTimeZonePostgresTests(Shared.IntegrationTests.Fixtur
     public async Task ConcurrentInitialSettingsSaveHasOneWinner()
     {
         var connection = new Npgsql.NpgsqlConnectionStringBuilder(postgres.ConnectionString);
-        Assert.Equal("test_db", connection.Database);
+        Assert.Equal(postgres.DatabaseName, connection.Database);
         Assert.Equal(postgres.Port, connection.Port);
         var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Coaching.Infrastructure.Data.CoachingDbContext>()
             .UseNpgsql(postgres.ConnectionString, x => x.EnableRetryOnFailure()).Options;

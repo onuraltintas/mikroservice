@@ -31,16 +31,15 @@ public sealed class CoachingSchoolLocationPostgresTests(PostgresFixture postgres
             const string previous = "20261002134329_AddGoalScoreScale";
             const string current = "20261002151257_LinkTargetSchoolAdministrativeLocations";
             await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(previous, current));
-            var school = await db.TargetSchools.SingleAsync();
-            Assert.Null(school.ProvinceId);
-            Assert.Null(school.DistrictId);
-            Assert.Equal("ÇANKAYA (MERKEZ)", school.District);
+            // Read and written with SQL: today's model maps schools to the later unified target_catalog.
+            Task<SchoolLocation> SchoolAsync() => db.Database.SqlQueryRaw<SchoolLocation>(
+                "SELECT \"ProvinceId\", \"DistrictId\", \"District\" FROM coaching.target_schools").SingleAsync();
+            Assert.Equal(new SchoolLocation(null, null, "ÇANKAYA (MERKEZ)"), await SchoolAsync());
             await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlRawAsync(
                 "UPDATE coaching.target_schools SET \"ProvinceId\" = 'TUR006'"));
-            school.SetVerifiedLocation("TUR006", "TUR006007");
-            await db.SaveChangesAsync();
-            db.ChangeTracker.Clear();
-            Assert.Equal("TUR006007", (await db.TargetSchools.SingleAsync()).DistrictId);
+            await db.Database.ExecuteSqlRawAsync(
+                "UPDATE coaching.target_schools SET \"ProvinceId\" = 'TUR006', \"DistrictId\" = 'TUR006007'");
+            Assert.Equal("TUR006007", (await SchoolAsync()).DistrictId);
             await Assert.ThrowsAsync<Npgsql.PostgresException>(() =>
                 db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(current, previous)));
             await db.Database.ExecuteSqlRawAsync("UPDATE coaching.target_schools SET \"ProvinceId\" = NULL, \"DistrictId\" = NULL");
@@ -50,4 +49,6 @@ public sealed class CoachingSchoolLocationPostgresTests(PostgresFixture postgres
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
+
+    private sealed record SchoolLocation(string? ProvinceId, string? DistrictId, string? District);
 }

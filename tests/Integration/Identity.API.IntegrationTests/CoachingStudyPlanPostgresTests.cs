@@ -17,22 +17,13 @@ public sealed class CoachingStudyPlanPostgresTests(PostgresFixture postgres)
             .UseNpgsql(postgres.ConnectionString, x => x.EnableRetryOnFailure()).Options;
         await using var db = new CoachingDbContext(options);
         await db.Database.EnsureDeletedAsync();
-        await db.Database.EnsureCreatedAsync();
         try
         {
-            // Apply the actual Down/Up SQL against the disposable schema before writing data.
-            await db.Database.ExecuteSqlRawAsync("CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL);");
-            var migrator = db.GetService<IMigrator>();
-            const string previous = "20261002092936_LinkAcademicGoalTargetCatalog";
-            const string current = "20261002111022_TrackAutomaticStudyPlanSource";
-            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(current, previous));
-            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(previous, current));
-            // The historical plan-table round trip predates the nullable tracking columns.
-            const string trackingPrevious = "20261005090416_RecordAdultPayerDeclaration";
-            const string trackingCurrent = "20261013121249_AddStudyTaskQuestionTracking";
-            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(trackingPrevious, trackingCurrent));
-            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(trackingCurrent, trackingPrevious));
-            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(trackingPrevious, trackingCurrent));
+            // The real migrated schema. The test used to replay old Down/Up scripts on an
+            // EnsureCreated schema; later tables now depend on study_plan_tasks, and rolling
+            // back past UnifiedTargetCatalog requires a backup restore anyway.
+            await db.Database.MigrateAsync();
+            Assert.False(db.Database.HasPendingModelChanges());
             var student = Guid.NewGuid();
             var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan");
             plan.Activate();
