@@ -77,7 +77,8 @@ public sealed class CoachingErasureAssessmentService(
             goalCount,
             sessionCount,
             agreementCount,
-            assessedAt, planningCount, financeCount);
+            assessedAt, planningCount, financeCount,
+            await CoachingFinancialRetention.CountAsync(context, message.SubjectUserId, cancellationToken));
         context.CoachingErasureAssessments.Add(assessment);
         await context.SaveChangesAsync(cancellationToken);
         return assessment;

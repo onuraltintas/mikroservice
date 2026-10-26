@@ -118,13 +118,32 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
             await context.CoachingInstitutionMemberships.AsNoTracking().Where(x => x.UserId == studentId).ToArrayAsync(cancellationToken));
         var profileAssignments = await context.CoachingTeacherStudentAssignments.AsNoTracking()
             .Where(x => x.StudentUserId == studentId || x.TeacherUserId == studentId).ToArrayAsync(cancellationToken);
+        var subscriptionRows = await context.CoachingSubscriptions.AsNoTracking().Where(x => x.UserId == studentId)
+            .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(cancellationToken);
+        var planIds = subscriptionRows.Select(x => x.PlanId).Distinct().ToArray();
+        var planNames = await context.CoachingSubscriptionPlans.AsNoTracking().Where(x => Enumerable.Contains(planIds, x.Id))
+            .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
+        var subscriptions = subscriptionRows.Select(x => new CoachingDataSubscriptionDto(x.Id, x.PlanId, planNames.GetValueOrDefault(x.PlanId),
+            x.InstitutionId, x.Status, x.StartDate, x.EndDate, x.PaymentReference, x.BankTransferRequestId, x.CreatedAt)).ToArray();
+        var seats = await context.CoachingSubscriptionSeats.AsNoTracking().Where(x => x.StudentId == studentId)
+            .OrderBy(x => x.AssignedAt).ThenBy(x => x.Id)
+            .Select(x => new CoachingDataSeatDto(x.Id, x.SubscriptionId, x.IsSuspended, x.SuspensionReason, x.AssignedAt)).ToArrayAsync(cancellationToken);
+        var transfers = await context.CoachingBankTransferRequests.AsNoTracking().Where(x => x.UserId == studentId)
+            .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
+            .Select(x => new CoachingDataBankTransferDto(x.Id, x.PlanId, x.Amount, x.Currency, x.PaymentReference, x.PayerName, x.Note,
+                x.Status, x.SubscriptionId, x.ReviewedAt, x.ReviewNote, x.CreatedAt)).ToArrayAsync(cancellationToken);
+        var payments = await context.CoachingPaymentRecords.AsNoTracking().Where(x => x.UserId == studentId)
+            .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
+            .Select(x => new CoachingDataPaymentDto(x.Id, x.PlanId, x.PlanName, x.SubscriptionId, x.BankTransferRequestId,
+                x.Amount, x.Currency, x.Status, x.Provider, x.Reference, x.CreatedAt)).ToArrayAsync(cancellationToken);
         return new CoachingDataExportDto(
-            "1.8", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments,
+            "1.9", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments,
             await context.StudentLearningContexts.AsNoTracking().Include(x => x.CoursePreferences).Include(x => x.TopicStates)
                 .SingleOrDefaultAsync(x => x.StudentUserId == studentId, cancellationToken),
             weeklyDraft is null ? null : Coaching.Infrastructure.StudyPlanning.CoachingWeeklyStudyDraftService.View(weeklyDraft),
             await context.Set<Coaching.Domain.Entities.WeeklyReflection>().AsNoTracking().Where(x => x.StudentId == studentId).OrderBy(x => x.WeekStart).ToArrayAsync(cancellationToken),
             await context.Set<Coaching.Domain.Entities.WeeklyDecision>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId || x.ResponsibleTeacherId == studentId).OrderBy(x => x.DueOn).ThenBy(x => x.Id).ToArrayAsync(cancellationToken),
-            await context.Set<Coaching.Domain.Entities.WeeklyReflectionReview>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId).OrderBy(x => x.CreatedAt).ToArrayAsync(cancellationToken));
+            await context.Set<Coaching.Domain.Entities.WeeklyReflectionReview>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId).OrderBy(x => x.CreatedAt).ToArrayAsync(cancellationToken),
+            subscriptions, seats, transfers, payments);
     }
 }

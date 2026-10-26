@@ -34,5 +34,7 @@ public sealed class CoachingErasureExecutionConfiguration : IEntityTypeConfigura
         builder.HasKey(execution => execution.Id);
         builder.HasIndex(execution => execution.RequestId).IsUnique();
         builder.HasIndex(execution => execution.CompletedAt);
+        builder.HasIndex(execution => execution.FinancialRetentionUntil)
+            .HasFilter("\"FinancialAnonymizedAt\" IS NULL AND \"FinancialRetentionUntil\" IS NOT NULL");
     }
 }

@@ -48,3 +48,15 @@ public sealed record PersonalDataErasureExecutionCompletedV1(
     int DeletedRecordCount,
     DateTime CompletedAt,
     string SchemaVersion = "1.0");
+
+/// <summary>
+/// A service refused to execute an approved erasure (for example an active legal hold or a missing
+/// assessment). The request cannot complete until it is handled by an operator.
+/// </summary>
+public sealed record PersonalDataErasureExecutionBlockedV1(
+    Guid EventId,
+    Guid RequestId,
+    string ServiceName,
+    string ReasonCode,
+    DateTime BlockedAt,
+    string SchemaVersion = "1.0");

@@ -1092,6 +1092,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<Guid>("RequestId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("RetainedFinancialRecordCount")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SessionCount")
                         .HasColumnType("integer");
 
@@ -1138,7 +1141,19 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int>("DeletedRecordCount")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("FinancialAnonymizedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FinancialRetentionUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("RequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("RetainedFinancialRecordCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("SubjectUserId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -1153,6 +1168,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompletedAt");
+
+                    b.HasIndex("FinancialRetentionUntil")
+                        .HasFilter("\"FinancialAnonymizedAt\" IS NULL AND \"FinancialRetentionUntil\" IS NOT NULL");
 
                     b.HasIndex("RequestId")
                         .IsUnique();

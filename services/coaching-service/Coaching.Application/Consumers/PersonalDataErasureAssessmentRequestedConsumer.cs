@@ -36,7 +36,9 @@ public sealed class PersonalDataErasureAssessmentRequestedConsumer(
                     ["Assignments"] = assessment.AssignmentCount, ["Attachments"] = assessment.AttachmentCount,
                     ["ExamResults"] = assessment.ExamResultCount, ["Goals"] = assessment.GoalCount,
                     ["Sessions"] = assessment.SessionCount, ["Agreements"] = assessment.AgreementCount,
-                    ["StudyPlanning"] = assessment.StudyPlanningRecordCount, ["Finance"] = assessment.FinanceRecordCount }),
+                    ["StudyPlanning"] = assessment.StudyPlanningRecordCount, ["Finance"] = assessment.FinanceRecordCount,
+                    // Kept unchanged for the retention period, then anonymized; not part of the deleted count.
+                    ["RetainedFinancialRecords"] = assessment.RetainedFinancialRecordCount }),
             publishContext =>
             {
                 publishContext.MessageId = assessment.Id;

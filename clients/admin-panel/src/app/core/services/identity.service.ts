@@ -206,6 +206,7 @@ export interface DataSubjectRequestDto {
     status: DataSubjectRequestStatus;
     reason: string;
     submittedAt: string;
+    failureReason?: string | null;
 }
 
 export interface DataSubjectRequestAssessmentItemDto {

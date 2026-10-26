@@ -18,12 +18,16 @@ otomatik imha etkinleştirilmez.
 | Hedef ve ilerleme | Coaching | öğrenci ve yetkili koç/veli | ilişki + 2 yıl | anonimleştir veya sil |
 | Anlaşma/onam kanıtı | Coaching | ilgili kişi; denetimde yetkili roller | hukuken gerekli süre | içerik değişmez, erişim kısıtlı tutulur |
 | Admin audit | Coaching | MFA'lı operasyon yetkisi | güvenlik politikası | append-only arşiv/imha süreci |
+| Abonelik, koltuk, banka transferi, ödeme kaydı | Coaching | kullanıcı (export), global yönetici | silme talebinden itibaren 1 yıl, değişmeden | ad, e-posta, ödeyen adı ve notlar silinir; kullanıcı kimliği rastgele bir kimlikle değişir; tutar, tarih, plan ve banka referansı kalır |
 
 ## İlgili kişi akışları
 
-1. **Export:** `GET /api/data-privacy/export` yalnız Student JWT'siyle çalışır.
+1. **Export:** `GET /api/data-privacy/export` Student veya Teacher JWT'siyle
+   çalışır ve her zaman yalnız token sahibinin verisini döndürür. Öğrencide
    Identity servisi aktif öğrenci kapsamını tekrar doğrular. JSON çıktısı
-   `schemaVersion` içerir; koçun özel notlarını ve storage anahtarlarını içermez.
+   `schemaVersion` (şu an `1.9`) içerir; abonelik, koltuk, banka transferi ve
+   ödeme kayıtları da dahildir; koçun özel notlarını, yönetici notlarını ve
+   storage anahtarlarını içermez.
 2. **Düzeltme:** veri sahibi mevcut alan bazlı güncelleme akışlarını kullanır;
    değişiklikler yetki ve concurrency kontrollerinden geçer.
 3. **Silme/anonimleştirme talebi:** Identity talebin kimliğini doğrular, yasal
@@ -31,10 +35,22 @@ otomatik imha etkinleştirilmez.
    yollar. Coaching veriyi tek başına, senkron bir HTTP isteğinde topluca silmez.
 4. **Kapanış:** servis sonuçları korelasyon kimliğiyle toplanır; başarısız işler
    tekrar denenir; tamamlanma kanıtı kullanıcıya bildirilir.
+5. **Engellenen yürütme:** Coaching yürütme anında etkin legal hold veya eksik/
+   olumsuz değerlendirme görürse hiçbir şey silmez ve
+   `PersonalDataErasureExecutionBlockedV1` yayınlar; Identity talebi okunur bir
+   gerekçeyle `Failed` yapar (yönetim panelinde görünür).
+6. **Mali saklama:** silmede abonelik, koltuk, transfer ve ödeme kayıtları
+   değişmeden kalır (kurumdaki koltuk serbest bırakılır) ve
+   `CoachingErasureExecutions` satırına saklama bitişi yazılır. Günlük çalışan
+   işçi süresi dolan kayıtları anonimleştirir; etkin legal hold anonimleştirmeyi
+   erteler. Değerlendirmede bu kayıtlar `RetainedFinancialRecords` olarak raporlanır.
+7. **Dosyalar:** silinen ödev eklerinin dosyaları, silme işlemi commit edildikten
+   sonra outbox üzerinden teslim edilen `AssignmentAttachmentDeletionRequested`
+   mesajıyla kaldırılır; geri alınan bir silme dosya kaybettirmez.
 
 ## Güvenlik kuralları
 
-- Export sadece veri öznesi öğrenciye açıktır; veli adına export ayrı temsil
+- Export sadece veri öznesine (öğrenci veya öğretmen) açıktır; veli adına export ayrı temsil
   yetkisi ve çocuk yüksek yararı değerlendirmesi olmadan açılmaz.
 - Export yanıtı cache'lenmez, log gövdesine yazılmaz ve kalıcı indirme URL'si
   üretmez.

@@ -73,6 +73,8 @@ public sealed class CoachingErasureAssessment : AggregateRoot
     public int AgreementCount { get; private set; }
     public int StudyPlanningRecordCount { get; private set; }
     public int FinanceRecordCount { get; private set; }
+    /// <summary>Subscription, seat, bank transfer and payment records kept for the financial retention period.</summary>
+    public int RetainedFinancialRecordCount { get; private set; }
     public DateTime AssessedAt { get; private set; }
 
     private CoachingErasureAssessment() { }
@@ -90,7 +92,7 @@ public sealed class CoachingErasureAssessment : AggregateRoot
         int sessionCount,
         int agreementCount,
         DateTime assessedAt,
-        int studyPlanningRecordCount = 0, int financeRecordCount = 0)
+        int studyPlanningRecordCount = 0, int financeRecordCount = 0, int retainedFinancialRecordCount = 0)
     {
         if (requestId == Guid.Empty || subjectUserId == Guid.Empty)
             throw new ArgumentException("Request and subject are required.");
@@ -114,6 +116,7 @@ public sealed class CoachingErasureAssessment : AggregateRoot
             AgreementCount = agreementCount,
             StudyPlanningRecordCount = studyPlanningRecordCount,
             FinanceRecordCount = financeRecordCount,
+            RetainedFinancialRecordCount = retainedFinancialRecordCount,
             AssessedAt = assessedAt,
             CreatedAt = assessedAt
         };
@@ -122,22 +125,46 @@ public sealed class CoachingErasureAssessment : AggregateRoot
 
 public sealed class CoachingErasureExecution : AggregateRoot
 {
+    /// <summary>Subscription, seat, bank transfer and payment records are kept unchanged for this many years after erasure.</summary>
+    public const int FinancialRetentionYears = 1;
+
     public Guid RequestId { get; private set; }
     public int DeletedRecordCount { get; private set; }
     public DateTime CompletedAt { get; private set; }
+    public Guid? SubjectUserId { get; private set; }
+    public int RetainedFinancialRecordCount { get; private set; }
+    public DateTime? FinancialRetentionUntil { get; private set; }
+    public DateTime? FinancialAnonymizedAt { get; private set; }
 
     private CoachingErasureExecution() { }
     private CoachingErasureExecution(Guid id) : base(id) { }
 
+    public void MarkFinancialDataAnonymized(DateTime anonymizedAt)
+    {
+        if (anonymizedAt.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("Anonymization timestamp must be UTC.", nameof(anonymizedAt));
+        if (FinancialAnonymizedAt.HasValue)
+            throw new InvalidOperationException("Financial records have already been anonymized.");
+        FinancialAnonymizedAt = anonymizedAt;
+        SubjectUserId = null;
+        UpdatedAt = anonymizedAt;
+    }
+
     public static CoachingErasureExecution Complete(
         Guid requestId,
         int deletedRecordCount,
-        DateTime completedAt)
+        DateTime completedAt,
+        Guid? subjectUserId = null,
+        int retainedFinancialRecordCount = 0)
     {
         if (requestId == Guid.Empty)
             throw new ArgumentException("Request is required.", nameof(requestId));
         if (deletedRecordCount < 0)
             throw new ArgumentOutOfRangeException(nameof(deletedRecordCount));
+        if (retainedFinancialRecordCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(retainedFinancialRecordCount));
+        if (retainedFinancialRecordCount > 0 && (subjectUserId is null || subjectUserId == Guid.Empty))
+            throw new ArgumentException("Retained financial records need their subject.", nameof(subjectUserId));
         if (completedAt.Kind != DateTimeKind.Utc)
             throw new ArgumentException("Completion timestamp must be UTC.", nameof(completedAt));
 
@@ -146,7 +173,14 @@ public sealed class CoachingErasureExecution : AggregateRoot
             RequestId = requestId,
             DeletedRecordCount = deletedRecordCount,
             CompletedAt = completedAt,
-            CreatedAt = completedAt
+            CreatedAt = completedAt,
+            // The subject id is only kept while there are retained records to anonymize later.
+            SubjectUserId = retainedFinancialRecordCount > 0 ? subjectUserId : null,
+            RetainedFinancialRecordCount = retainedFinancialRecordCount,
+            FinancialRetentionUntil = retainedFinancialRecordCount > 0
+                ? completedAt.AddYears(FinancialRetentionYears)
+                : null
         };
     }
 }
+
