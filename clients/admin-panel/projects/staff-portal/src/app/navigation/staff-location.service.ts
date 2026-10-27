@@ -71,6 +71,12 @@ export class StaffLocationService {
     });
   }
 
+  /** Back to the portal root without adding a history entry. */
+  goRoot(): void {
+    this.place.set(null);
+    if (this.location.path().split(/[?#]/)[0] !== '') this.location.replaceState('/');
+  }
+
   go(place: StaffPlace, replace = false): void {
     const url = formatStaffPath(place);
     this.place.set(parseStaffPath(url));

@@ -112,6 +112,8 @@ export class AppComponent implements AfterViewInit {
     const product = this.auth.activeProduct?.();
     if (!this.staffLocation || !product) return;
     const current = this.staffLocation.place();
+    // Only the Coaching workspaces keep their place in the address; other products stay on the portal root.
+    if (product !== 'coaching') { if (current) this.staffLocation.goRoot(); return; }
     const role = this.activeWorkspaceRole;
     if (current?.product === product && current.role === role) return;
     this.staffLocation.go({ product, role, section: null, id: null, week: null }, replace);
