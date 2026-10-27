@@ -804,7 +804,9 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
             Guid viewerUserId,
             IReadOnlyCollection<Guid> studentIds,
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyCollection<Guid>>(Array.Empty<Guid>());
+            Task.FromResult<IReadOnlyCollection<Guid>>(studentIds.Where(student => ParentLinks.Contains((viewerUserId, student))).ToArray());
+
+        public HashSet<(Guid ParentId, Guid StudentId)> ParentLinks { get; } = [];
     }
 
     private static CoachingCmsService CreateCmsService(CoachingDbContext db) => new(db, new MemoryCmsMediaStorage());

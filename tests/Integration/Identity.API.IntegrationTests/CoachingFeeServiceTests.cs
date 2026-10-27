@@ -204,6 +204,28 @@ public sealed class CoachingFeeServiceTests(PostgresFixture postgres)
         } finally { await db.Database.EnsureDeletedAsync(); }
     }
 
+    // Roadmap Y7: a verified parent sees their child's fees and payments read-only.
+    [Fact]
+    public async Task LinkedParentsReadTheirChildsFeesOnly()
+    {
+        await using var db = new CoachingDbContext(Options); await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try {
+            var student = Guid.NewGuid(); var parent = Guid.NewGuid(); var institution = Guid.NewGuid();
+            var actor = new Actor(Guid.NewGuid(), "InstitutionAdmin"); var scope = new Scope(new(false, institution, [student]));
+            var identity = new Identity(student) { LinkedParent = parent };
+            var fee = await new CoachingFeeService(db, actor, identity, scope, Time).CreateAsync(student, Input());
+            actor.Roles = ["Parent"]; actor.UserId = parent;
+            var service = new CoachingFeeService(db, actor, identity, scope, Time);
+
+            var account = await service.GetStudentAsync(student, studentView: true);
+            Assert.Equal(1000m, account.Balance);
+            Assert.Equal(fee.Id, (await service.GetAsync(student, fee.Id, default, studentView: true)).Id);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.GetStudentAsync(Guid.NewGuid(), studentView: true));
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.GetStudentAsync(student));
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.CreateAsync(student, Input()));
+        } finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     private sealed class Clock : TimeProvider { public override DateTimeOffset GetUtcNow() => new(2026, 10, 13, 12, 0, 0, TimeSpan.Zero); }
     private sealed class CommitFailure(bool afterCommit) : DbTransactionInterceptor {
         public bool Armed; public int Failures;
@@ -225,6 +247,8 @@ public sealed class CoachingFeeServiceTests(PostgresFixture postgres)
         public Task<Guid?> AuthorizeTeacherTargetsAsync(Guid teacherId, IReadOnlyCollection<Guid> students, Guid? institution, bool admin, CancellationToken ct) {
             if (!students.SequenceEqual([student])) throw new BusinessRuleException("Authorization.Forbidden", "Foreign student"); return Task.FromResult(Institution);
         }
-        public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewerUserId, IReadOnlyCollection<Guid> students, CancellationToken ct) => throw new NotImplementedException();
+        public Guid? LinkedParent { get; init; }
+        public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewerUserId, IReadOnlyCollection<Guid> students, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyCollection<Guid>>(viewerUserId == LinkedParent ? students.Where(x => x == student).ToArray() : []);
     }
 }
