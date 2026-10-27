@@ -42,7 +42,7 @@ public sealed class StudentDailyAgendaController(CoachingDbContext db, ICoaching
             var minute = local.Hour * 60 + local.Minute; var planId = plan?.Id ?? Guid.Empty;
 
             var studies = db.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == student && x.RevisionId == planId
-                    && !x.IsCompleted && x.PlannedDate <= studyEnd)
+                    && !x.IsCompleted && x.SkippedAt == null && x.PlannedDate <= studyEnd)
                 .Select(x => new { Row = x, Mode = x.PlannedDate < studyToday || x.PlannedDate == studyToday
                     && x.PlannedStartMinute.HasValue && x.PlannedStartMinute + x.PlannedMinutes <= minute
                     ? "overdue" : x.PlannedDate == studyToday ? "today" : "upcoming" });

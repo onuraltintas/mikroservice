@@ -59,7 +59,7 @@ public sealed class CoachingPracticeProgressService(CoachingDbContext db, ICoach
         var tasks = active is null ? [] : await db.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == student && x.RevisionId == active.Id)
             .OrderBy(x => x.PlannedDate).ThenBy(x => x.PlannedStartMinute).ThenBy(x => x.Id).Take(10001).ToArrayAsync(ct);
         if (tasks.Length > 10000) throw new BusinessRuleException("StudyPlanning.ReportLimit", "Plan rapor sınırını aşıyor.");
-        var overdue = tasks.Where(x => !x.IsCompleted && x.PlannedDate < today).ToArray();
+        var overdue = tasks.Where(x => !x.IsCompleted && x.SkippedAt == null && x.PlannedDate < today).ToArray();
         var windows = availability?.TimeZoneId == zoneId ? availability.Windows.ToArray()
             : weekly?.TimeZoneId == zoneId ? weekly.Slots.Select(x => new StudyAvailabilityWindow(x.Day, x.StartMinute, x.StartMinute + x.DurationMinutes)).ToArray() : [];
         var merged = new List<StudyAvailabilityWindow>();
@@ -84,7 +84,7 @@ public sealed class CoachingPracticeProgressService(CoachingDbContext db, ICoach
         if (plan is null) return [];
         var proposals = new List<RecoveryProposal>();
         var blocks = new List<List<StudyPlanTask>>();
-        foreach (var task in tasks.Where(x => !x.IsCompleted && !x.IsPinned && x.PlannedDate < today && x.PlannedStartMinute.HasValue))
+        foreach (var task in tasks.Where(x => !x.IsCompleted && x.SkippedAt == null && !x.IsPinned && x.PlannedDate < today && x.PlannedStartMinute.HasValue))
         {
             var previous = blocks.LastOrDefault()?.LastOrDefault();
             if (previous is not null && previous.PlannedDate == task.PlannedDate

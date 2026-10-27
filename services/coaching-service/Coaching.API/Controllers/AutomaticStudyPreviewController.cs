@@ -26,6 +26,8 @@ public sealed class AutomaticStudyPreviewController(IAutomaticStudyPlanPreviewSe
         { return Conflict(new { success = false, code = ex.Code, message = ex.Message }); }
         catch (KeyNotFoundException)
         { return NotFound(new { success = false, code = "StudyPlanning.AvailabilityMissing", message = "Önce çalışma saatlerinizi belirleyin." }); }
+        catch (StudyPlanValidationException ex)
+        { return BadRequest(new { success = false, code = "StudyPlanning.Validation", message = ex.Message }); }
         catch (ArgumentException)
         { return BadRequest(new { success = false, code = "StudyPlanning.Validation", message = "Aktif konuları, geçerli süreleri ve tarihleri seçin. Korunan görevler çalışma saatlerinize sığmalıdır." }); }
     }

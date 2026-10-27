@@ -3131,6 +3131,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int?>("AutomaticAvailabilityVersion")
                         .HasColumnType("integer");
 
@@ -3281,6 +3284,9 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.Property<Guid>("RevisionId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("SkippedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SourceName")
                         .HasMaxLength(300)

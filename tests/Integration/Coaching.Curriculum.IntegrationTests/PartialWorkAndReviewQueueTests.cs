@@ -126,7 +126,7 @@ public sealed class PartialWorkAndReviewQueueTests
         var taskId=Guid.NewGuid();await pg.Db.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO coaching.study_plan_tasks ("Id","RevisionId","StudentId","PlannedDate","Title","PlannedMinutes","ActualMinutes","IsPinned","IsCompleted","CompletedAt","CreatedAt","Version") VALUES ({taskId},{id},{student},{Week},'Eski tamamlanan',60,45,false,true,{now},{now},0);
             """);
-        async Task<string> Snapshot()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'RealizationHistoryJson'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t""").SingleAsync();
+        async Task<string> Snapshot()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'SkippedAt'-'RealizationHistoryJson'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t""").SingleAsync();
         var before=await Snapshot();await pg.Db.Database.MigrateAsync();Assert.False(pg.Db.Database.HasPendingModelChanges());Assert.Equal(before,await Snapshot());
         var row=await pg.Db.StudyPlanTasks.SingleAsync();Assert.Empty(row.RealizationHistory);
         row.RecordRealization(40,null,true,student,"Eski süre düzeltiliyor");await pg.Db.SaveChangesAsync();

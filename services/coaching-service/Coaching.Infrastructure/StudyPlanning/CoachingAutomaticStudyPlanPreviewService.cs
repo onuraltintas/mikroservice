@@ -8,7 +8,8 @@ using Coaching.Infrastructure.Catalogs;
 
 namespace Coaching.Infrastructure.StudyPlanning;
 
-public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext db, ICoachingAccessPolicy access, ILearningSetupService? setup = null)
+public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext db, ICoachingAccessPolicy access, ILearningSetupService? setup = null,
+    TimeProvider? clock = null)
     : IAutomaticStudyPlanPreviewService
 {
     public static void Validate(AutomaticStudyPreviewRequest request)
@@ -50,6 +51,14 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
             ?? throw new KeyNotFoundException("Önce çalışma saatlerinizi belirleyin.");
         if (availability.Version != request.ExpectedAvailabilityVersion)
             throw new BusinessRuleException("StudyPlanning.Conflict", "Çalışma saatleri değişti. Yeniden yükleyin.");
+        // Days before today would be overdue the moment the plan is published. The service host always supplies the
+        // clock; tests that only exercise placement on fixed dates construct the service without one.
+        if (clock is not null)
+        {
+            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(availability.TimeZoneId)).DateTime);
+            if (request.StartDate < today)
+                throw new StudyPlanValidationException(FormattableString.Invariant($"Plan geçmiş bir günden başlayamaz. Başlangıç olarak bugünü ({today:dd.MM.yyyy}) veya sonraki bir günü seçin."));
+        }
         var ids = request.Topics.Select(x => x.TopicId).ToArray();
         var catalog = await (from topic in db.StudyCatalogTopics.AsNoTracking()
                              join unit in db.StudyCatalogUnits on topic.UnitId equals unit.Id
@@ -108,16 +117,46 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
             sources.Single(x=>x.Id==link.TaskId),link,scoped.Contains(link.EstimateId))));
         var rootIds=sources.Select(x=>x.OriginalTaskId ?? x.Id).ToArray();
         var scope=await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==studentId&&Enumerable.Contains(rootIds,x.Id)).ToDictionaryAsync(x=>x.Id,x=>x.PlannedMinutes,cancellationToken);
-        var remainingTopics=topics.Select(topic=>new AutomaticStudyTopic(topic.TopicId,request.Topics.Single(x=>x.TopicId==topic.TopicId).Outcomes is not null
-            ?carriedResolved.Where(x=>x.TopicId==topic.TopicId).Sum(x=>x.Minutes)
-            :Math.Max(0,topic.RequiredMinutes-sources.Where(x=>x.TopicId==topic.TopicId&&(x.ActualMinutes.HasValue||x.PredecessorTaskId.HasValue)).Sum(x=>scope.GetValueOrDefault(x.OriginalTaskId ?? x.Id,x.PlannedMinutes)))))
+        // A topic chosen again by minutes keeps what was already finished on it: completed published work counts once per
+        // work chain at its planned size (outcome-based topics are credited through their outcomes above).
+        var minuteTopics=request.Topics.Where(x=>x.Outcomes is null).Select(x=>(Guid?)x.TopicId).ToArray();
+        var completedTopicWork=(await (from task in db.StudyPlanTasks.AsNoTracking() join plan in db.StudyPlanRevisions.AsNoTracking() on task.RevisionId equals plan.Id
+                where task.StudentId==studentId&&plan.StudentId==studentId&&task.IsCompleted&&(plan.IsActive||plan.WasPublished)&&Enumerable.Contains(minuteTopics,task.TopicId)
+                select new{TopicId=task.TopicId!.Value,Root=task.OriginalTaskId??task.Id,task.PlannedMinutes}).ToArrayAsync(cancellationToken))
+            .GroupBy(x=>(x.TopicId,x.Root)).Select(g=>(g.Key.TopicId,Minutes:g.Max(x=>x.PlannedMinutes))).ToArray();
+        var completedTopicMinutes=new Dictionary<Guid,int>();
+        var remainingTopics=topics.Select(topic=>{
+            if(request.Topics.Single(x=>x.TopicId==topic.TopicId).Outcomes is not null)
+                return new AutomaticStudyTopic(topic.TopicId,carriedResolved.Where(x=>x.TopicId==topic.TopicId).Sum(x=>x.Minutes));
+            var carried=sources.Where(x=>x.TopicId==topic.TopicId&&(x.ActualMinutes.HasValue||x.PredecessorTaskId.HasValue)).Sum(x=>scope.GetValueOrDefault(x.OriginalTaskId ?? x.Id,x.PlannedMinutes));
+            var done=Math.Min(Math.Max(0,topic.RequiredMinutes-carried),completedTopicWork.Where(x=>x.TopicId==topic.TopicId).Sum(x=>x.Minutes));
+            completedTopicMinutes[topic.TopicId]=done;
+            return new AutomaticStudyTopic(topic.TopicId,Math.Max(0,topic.RequiredMinutes-carried-done));})
             .Where(x=>x.RequiredMinutes>0).ToArray();
+        EnsureProtectedWorkFits(request.StartDate,request.Days,availability.Windows,protectedTasks);
         var schedule = StudyPlanDraftScheduler.Generate(request.StartDate, request.Days, availability.Windows,
             remainingTopics, protectedTasks.Select(x => new StudyCapacityReservation(x.PlannedDate, x.PlannedMinutes)).ToArray());
         if (sources.Length + schedule.Tasks.Count > 500)
             throw new ArgumentException("Devam çalışmaları dahil en fazla 500 çalışma planlanabilir. Konu sayısını azaltın.");
         var fingerprint=CoachingCompletedOutcomeCredits.Fingerprint(credits);
         return new(availability.Version, availability.TimeZoneId, revision?.Id, revision?.Version, protectedTasks, schedule, carriedResolved,
-            placements.Select(x=>new StudyContinuationPreview(x.Source.Id,x.Date,x.Start,x.Minutes)).ToArray(),fingerprint,completedMinutes);
+            placements.Select(x=>new StudyContinuationPreview(x.Source.Id,x.Date,x.Start,x.Minutes)).ToArray(),fingerprint,completedMinutes,
+            completedTopicMinutes.Values.Sum());
+    }
+
+    // Work that must stay on its day (started, pinned or completed) can exceed the study hours of that day.
+    // Name the day and the work, so the student knows what to move or which hours to extend.
+    private static void EnsureProtectedWorkFits(DateOnly start, int days, IEnumerable<StudyAvailabilityWindow> windows, IReadOnlyList<ProtectedStudyTask> tasks)
+    {
+        var capacity = windows.GroupBy(x => x.Day).ToDictionary(x => x.Key, x => x.Sum(y => y.EndMinute - y.StartMinute));
+        var last = start.AddDays(days - 1);
+        foreach (var day in tasks.Where(x => x.PlannedDate >= start && x.PlannedDate <= last).GroupBy(x => x.PlannedDate).OrderBy(x => x.Key))
+        {
+            var over = day.Sum(x => x.PlannedMinutes) - capacity.GetValueOrDefault(day.Key.DayOfWeek);
+            if (over <= 0) continue;
+            var work = string.Join(", ", day.Select(x => FormattableString.Invariant($"{x.Title} ({x.PlannedMinutes} dk)")));
+            throw new StudyPlanValidationException(FormattableString.Invariant(
+                $"{day.Key:dd.MM.yyyy} günü korunan çalışmalar çalışma saatini {over} dk aşıyor: {work}. Bu çalışmalardan birini başka güne taşıyın veya o günün çalışma saatini artırın."));
+        }
     }
 }

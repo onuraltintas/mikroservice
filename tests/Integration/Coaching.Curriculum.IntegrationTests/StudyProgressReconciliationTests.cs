@@ -232,7 +232,7 @@ public sealed class StudyProgressReconciliationTests
     {
         const string previous="20261024230308_WeeklyGradeResultRevision";
         await using var pg=await CurriculumPostgresTests.Pg.Create(previous);await pg.Data.Seed(legacyPlanSchema:true);
-        async Task<string> Row()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t""").SingleAsync();
+        async Task<string> Row()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'SkippedAt'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t""").SingleAsync();
         var before=await Row();await pg.Db.Database.MigrateAsync();await pg.Db.Database.MigrateAsync();Assert.Equal(before,await Row());Assert.False(pg.Db.Database.HasPendingModelChanges());
         var plan=await pg.Db.StudyPlanRevisions.SingleAsync();var source=await pg.Db.StudyPlanTasks.SingleAsync();
         var copy=StudyPlanTask.Create(plan,Day,"Aynı kapsam",30);copy.RecordRealization(1,null,false,plan.StudentId,remainingMinutes:20,workedOn:Day);

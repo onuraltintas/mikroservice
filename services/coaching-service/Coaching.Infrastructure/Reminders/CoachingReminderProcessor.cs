@@ -12,6 +12,8 @@ namespace Coaching.Infrastructure.Reminders;
 public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEventPublisher events, TimeProvider clock)
 {
     private const int BatchSize = 100;
+    // A missed task is mentioned for this many days; after that the student has seen it and the reminder would only nag.
+    private const int OverdueReminderDays = 3;
 
     public async Task<int> ProcessAsync(CancellationToken ct = default)
     {
@@ -32,7 +34,7 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
         {
             var zone = TimeZoneInfo.FindSystemTimeZoneById(zoneId); var local = TimeZoneInfo.ConvertTime(now, zone);
             if (local.Hour < 9) continue;
-            var date = DateOnly.FromDateTime(local.DateTime);
+            var date = DateOnly.FromDateTime(local.DateTime); var since = date.AddDays(-OverdueReminderDays);
             var occurrence = date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
             var due = TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(new TimeOnly(9, 0)), zone);
             var plans = await (from plan in db.StudyPlanRevisions.AsNoTracking()
@@ -40,7 +42,7 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
                 from hours in preferences.DefaultIfEmpty()
                 where plan.IsActive && (hours == null ? zoneId == "Europe/Istanbul" : hours.TimeZoneId == zoneId)
                     && db.StudyPlanTasks.Any(task => task.RevisionId == plan.Id && task.StudentId == plan.StudentId
-                        && !task.IsCompleted && (overdue ? task.PlannedDate < date : task.PlannedDate == date))
+                        && !task.IsCompleted && task.SkippedAt == null && (overdue ? task.PlannedDate < date && task.PlannedDate >= since : task.PlannedDate == date))
                     && !db.CoachingReminderReceipts.Any(receipt => receipt.Kind == kind && receipt.SourceId == plan.Id
                         && receipt.RecipientUserId == plan.StudentId && receipt.OccurrenceKey == occurrence)
                 orderby plan.StudentId, plan.Id
@@ -51,7 +53,7 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
                 var key = "coaching-study-plan:" + plan.StudentId;
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", ct);
                 if (!await db.StudyPlanRevisions.AnyAsync(x => x.Id == plan.Id && x.IsActive, ct)
-                    || !await db.StudyPlanTasks.AnyAsync(x => x.RevisionId == plan.Id && x.StudentId == plan.StudentId && (overdue ? x.PlannedDate < date : x.PlannedDate == date) && !x.IsCompleted, ct)) continue;
+                    || !await db.StudyPlanTasks.AnyAsync(x => x.RevisionId == plan.Id && x.StudentId == plan.StudentId && (overdue ? x.PlannedDate < date && x.PlannedDate >= since : x.PlannedDate == date) && !x.IsCompleted && x.SkippedAt == null, ct)) continue;
                 if (await QueueAsync(CoachingReminderReceipt.Create(plan.StudentId, plan.Id, kind, occurrence, due, now.UtcDateTime), ct)) count++;
                 if (count == BatchSize) break;
             }

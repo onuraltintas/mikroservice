@@ -55,10 +55,10 @@ public sealed class PlanAccuracyTests
         Assert.Throws<InvalidOperationException>(() => task.Skip());
     }
 
-    [Fact]
-    public async Task StudentAndTeacherCanSkipMissedWorkOnlyInTheActivePlan()
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task StudentCanSkipMissedWorkOnlyInTheActivePlanAndMovingReopensIt()
     {
-        await using var f = new CurriculumManagementTests.Fixture(); await f.Seed();
+        await using var pg = await CurriculumPostgresTests.Pg.Create(); var f = pg.Data; await f.Seed();
         var plan = await f.Db.StudyPlanRevisions.SingleAsync(); f.User.UserId = plan.StudentId; f.User.Roles = ["Student"];
         var missed = StudyPlanTask.Create(plan, Monday, "Kaçırılan tekrar", 40); f.Db.Add(missed); await f.Db.SaveChangesAsync();
         var done = await f.Db.StudyPlanTasks.SingleAsync(x => x.IsCompleted);

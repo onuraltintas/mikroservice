@@ -69,7 +69,7 @@ public sealed class ActualWorkDatesTests
     public async Task MigrationFreezesLegacyAttributionWithoutChangingOldColumnsAndBlocksLossyDowngradeAfterDateChange()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create("20261024220155_StudyContinuationScope");await pg.Data.Seed(legacyPlanSchema:true);
-        async Task<string> Old()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t""").SingleAsync();
+        async Task<string> Old()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'SkippedAt'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t""").SingleAsync();
         var before=await Old();await pg.Db.Database.MigrateAsync();Assert.Equal(before,await Old());Assert.False(pg.Db.Database.HasPendingModelChanges());
         var task=await pg.Db.StudyPlanTasks.SingleAsync();Assert.Null(task.ActualWorkJson);Assert.Equal(task.PlannedDate,task.WorkFromDate);Assert.True(Assert.Single(task.WorkDays).IsLegacyDate);
         var student=task.StudentId;var access=new CoachingAccessPolicy(pg.Data.User);pg.Data.User.UserId=student;pg.Data.User.Roles=["Student"];

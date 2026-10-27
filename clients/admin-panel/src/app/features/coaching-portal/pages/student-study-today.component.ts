@@ -15,7 +15,8 @@ export class StudentStudyTodayComponent implements OnInit {
   readonly busy = signal(false); readonly error = signal<string | null>(null);
   readonly title = signal<string | null>(null); readonly timeZone = signal(''); readonly today = signal('');
   readonly todayTasks = signal<StudyTask[]>([]); readonly overdue = signal<StudyTask[]>([]);
-  readonly planId = signal<string | null>(null);
+  readonly planId = signal<string | null>(null); readonly planVersion = signal<number | null>(null);
+  readonly acting = signal<string | null>(null);
   readonly scheduledToday = signal(0); readonly completedToday = signal(0);
   readonly recordedMinutes = signal<number | null>(null);
   readonly remainingMinutes = computed(() => this.todayTasks().reduce((sum, task) => sum + task.plannedMinutes, 0));
@@ -24,7 +25,7 @@ export class StudentStudyTodayComponent implements OnInit {
   load() {
     if (this.busy()) return;
     this.busy.set(true); this.error.set(null); this.title.set(null); this.todayTasks.set([]); this.overdue.set([]);
-    this.planId.set(null); this.scheduledToday.set(0); this.completedToday.set(0); this.recordedMinutes.set(null);
+    this.planId.set(null); this.planVersion.set(null); this.scheduledToday.set(0); this.completedToday.set(0); this.recordedMinutes.set(null);
     forkJoin({ plans: this.service.list(1, 'Active'), hours: this.service.getAvailability().pipe(catchError(error =>
       error?.status === 404 ? of({ timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone }) : throwError(() => error))) })
       .pipe(switchMap(({ plans, hours }) => {
@@ -37,16 +38,27 @@ export class StudentStudyTodayComponent implements OnInit {
       }), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
       .subscribe({ next: plan => {
         this.title.set(plan?.title ?? null);
-        this.planId.set(plan?.id ?? null);
+        this.planId.set(plan?.id ?? null); this.planVersion.set(plan?.version ?? null);
         const scheduled = (plan?.tasks ?? []).filter(task => task.plannedDate === this.today());
         const completed = scheduled.filter(task => task.isCompleted);
         this.scheduledToday.set(scheduled.length); this.completedToday.set(completed.length);
         const recorded = completed.filter(task => task.actualMinutes != null);
         this.recordedMinutes.set(recorded.length ? recorded.reduce((sum, task) => sum + task.actualMinutes!, 0) : null);
-        const pending = (plan?.tasks ?? []).filter(x => !x.isCompleted).sort((a, b) => a.plannedDate.localeCompare(b.plannedDate) || a.id.localeCompare(b.id));
+        const pending = (plan?.tasks ?? []).filter(x => !x.isCompleted && !x.skippedAt).sort((a, b) => a.plannedDate.localeCompare(b.plannedDate) || a.id.localeCompare(b.id));
         this.todayTasks.set(pending.filter(x => x.plannedDate === this.today()));
         this.overdue.set(pending.filter(x => x.plannedDate < this.today()));
       }, error: () => this.error.set('Çalışma planı yüklenemedi. Mevcut planın durumu doğrulanamadı.') });
+  }
+  /** Missed work is either brought to today or closed as skipped; both keep the work in the plan's history. */
+  catchUp(task: StudyTask, action: 'today' | 'skip') {
+    const plan = this.planId(); const version = this.planVersion();
+    if (!plan || version == null || this.acting()) return;
+    this.acting.set(task.id); this.error.set(null);
+    const request = action === 'today' ? this.service.reschedule(plan, task.id, version, this.today()) : this.service.skip(plan, task.id, version);
+    request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.acting.set(null))).subscribe({
+      next: () => this.load(),
+      error: () => this.error.set(action === 'today' ? 'Çalışma bugüne taşınamadı. Plan değişmiş olabilir; sayfayı yenileyip tekrar dene.' : 'Çalışma atlanamadı. Plan değişmiş olabilir; sayfayı yenileyip tekrar dene.')
+    });
   }
   private readonly feedback = coachingFeedback(undefined, this.error);
 }

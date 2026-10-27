@@ -10,7 +10,7 @@ describe('StudentStudyTodayComponent', () => {
     const service = { list: vi.fn(() => failure ? throwError(() => new Error('offline')) : of({ items: empty ? [] : [{ id: 'plan' }] })),
       getAvailability: vi.fn(() => of({ timeZoneId: 'Europe/Istanbul' })),
       skip: vi.fn(() => of({})), reschedule: vi.fn(() => of({})),
-      get: vi.fn(() => of({ id: 'plan', version: 4, title: 'My plan', tasks: [
+      get: vi.fn((): any => of({ id: 'plan', version: 4, title: 'My plan', tasks: [
         { id: 'today', title: 'Today work', plannedDate: '2026-10-02', plannedMinutes: 30, isCompleted: false },
         { id: 'old', title: 'Overdue work', plannedDate: '2026-10-01', plannedMinutes: 20, isCompleted: false },
         { id: 'done', title: 'Done work', plannedDate: '2026-10-02', plannedMinutes: 20, isCompleted: true },
@@ -39,9 +39,9 @@ describe('StudentStudyTodayComponent', () => {
     const box = fixture.nativeElement.querySelector('.today-catch-up');
     expect(box.textContent).not.toContain('Skipped work');
     expect(fixture.nativeElement.querySelector('.today-catch-up strong').textContent).toContain('1 çalışma');
-    box.querySelector('button[data-action="today"]').click(); await fixture.whenStable();
+    box.querySelector('button[data-action="today"]').click(); fixture.detectChanges(); await fixture.whenStable();
     expect(service.reschedule).toHaveBeenCalledWith('plan', 'old', 4, '2026-10-02');
-    box.querySelector('button[data-action="skip"]').click(); await fixture.whenStable();
+    fixture.nativeElement.querySelector('.today-catch-up button[data-action="skip"]').click(); fixture.detectChanges(); await fixture.whenStable();
     expect(service.skip).toHaveBeenCalledWith('plan', 'old', 4);
     expect(service.get).toHaveBeenCalledTimes(3);
   });

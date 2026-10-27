@@ -86,6 +86,7 @@ public sealed class CoachingManualStudyPlanApiTests
         public Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, int? actualQuestions, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid taskId, int expectedVersion, DateOnly plannedDate, CancellationToken cancellationToken = default) => Result();
+        public Task<ManualStudyPlanView> SkipTaskAsync(Guid id, Guid taskId, int expectedVersion, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView> MoveTasksAsync(Guid id, StudyTasksMoveInput request, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<ManualStudyPlanView?>(null);
         public Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();

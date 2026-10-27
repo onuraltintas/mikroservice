@@ -53,7 +53,7 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
             if (context?.Purpose == LearningPurpose.Yks && request.TargetUniversityProgramId is { } selectedProgram)
             {
                 var score = await db.TargetUniversityPrograms.Where(x => x.Id == selectedProgram).Select(x => x.ScoreType).SingleAsync(cancellationToken);
-                if (context.PrimaryScoreType is { } expected && score != expected && score != "TYT")
+                if (!YksScoreTypes.ProgramFitsProfile(context.PrimaryScoreType, score))
                     throw new ArgumentException("Programın puan türü profilindeki alanla eşleşmeli.");
             }
         }
@@ -143,7 +143,7 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
         if (request.ExamCode is { } code && await db.Set<StudentPrimaryGoal>().AnyAsync(x => x.StudentId == student && x.GoalId == goalId, ct))
         {
             var context = await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x => x.StudentUserId == student, ct);
-            var advanced = context?.PrimaryScoreType switch { "SAY" => "AYT_SAY", "EA" => "AYT_EA", "SOZ" => "AYT_SOZ", "YDT" => "YDT_EN", _ => "TYT" };
+            var advanced = YksScoreTypes.AdvancedNetExam(context?.PrimaryScoreType);
             if (context?.Purpose == LearningPurpose.Lgs && code != "LGS" || context?.Purpose == LearningPurpose.Yks && code != "TYT" && code != advanced)
                 throw new ArgumentException("Ana hedefin net kapsamı profilindeki sınavla eşleşmeli.");
         }
@@ -159,7 +159,7 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
         if (programId is { } id)
         {
             var scoreType = await db.TargetUniversityPrograms.Where(x=>x.Id==id).Select(x=>x.ScoreType).SingleAsync(ct);
-            var expected = scoreType switch { "SAY"=>"AYT_SAY", "EA"=>"AYT_EA", "SOZ"=>"AYT_SOZ", "YDT"=>"YDT_EN", _=>"TYT" };
+            var expected = YksScoreTypes.AdvancedNetExam(scoreType);
             if (code != "TYT" && code != expected) throw new ArgumentException("Net kapsamı programın puan türüyle eşleşmeli. Katalog hedefini değiştirirken önce uyumsuz net hedefini kaldırın.");
         }
     }
