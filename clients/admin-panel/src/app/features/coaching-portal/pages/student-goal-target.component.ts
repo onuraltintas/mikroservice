@@ -10,8 +10,9 @@ import { CoachingStudyPlanningService, GoalTarget } from '../../../core/services
 import { TargetAdmissionSearchComponent } from './target-admission-search.component';
 import { PracticeExamProfile } from '../../../core/models/practice-exam';
 
+import { CoachingLabelPipe } from '../coaching-labels';
 @Component({
-  selector: 'app-student-goal-target', standalone: true, imports: [CommonModule, FormsModule, TargetAdmissionSearchComponent],
+  selector: 'app-student-goal-target', standalone: true, imports: [CoachingLabelPipe, CommonModule, FormsModule, TargetAdmissionSearchComponent],
   templateUrl: './student-goal-target.component.html',
   styles: [`
     :host-context(staff-coaching-teacher-goals) { display: block; margin-top: 1rem; }

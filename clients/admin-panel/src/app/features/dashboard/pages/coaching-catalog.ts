@@ -14,10 +14,11 @@ import { CoachingOutcomesComponent } from './coaching-outcomes.component';
 import { DistrictOption, LocationService, ProvinceOption } from '../../../core/services/location.service';
 import { RouterLink } from '@angular/router';
 
+import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
 @Component({
   selector: 'app-coaching-catalog',
   standalone: true,
-  imports: [FormsModule, RouterLink, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent, CoachingCurriculumComponent, CoachingOutcomesComponent],
+  imports: [CoachingLabelPipe, FormsModule, RouterLink, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent, CoachingCurriculumComponent, CoachingOutcomesComponent],
   template: `
     <main class="space-y-6" aria-labelledby="coaching-catalog-title">
       <header>
@@ -93,7 +94,7 @@ import { RouterLink } from '@angular/router';
                 <td class="p-4 font-medium">{{ row.name }}</td>
                 <td class="p-4">@if (kind === 'schools') {<span class="block text-xs text-gray-500">Kaynak konum (korunur)</span>}{{ row.city || row.examCode || '-' }} @if (row.district) {<span class="block text-gray-500">{{ row.district }} · {{ row.districtId ? 'Ortak dizinle eşleştirilmiş' : 'Konum eşleştirilmemiş' }}</span>} @if (row.gradeNumber) {<span class="block">{{ row.gradeNumber }}. sınıf</span>}</td>
                 <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }} · {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else if (row.estimatedMinutes != null) {{{ row.estimatedMinutes }} dakika} @else {—} @if (row.displayOrder != null) {<span class="block">Sıra: {{ row.displayOrder }}</span>}</td>
-                <td class="p-4">{{ row.source }}<span class="block text-xs text-gray-500">{{ row.sourceId }}</span></td>
+                <td class="p-4">{{ row.source | coachingLabel }}<span class="block text-xs text-gray-500">{{ row.sourceId }}</span></td>
                 <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}@if (canDelete()) {<button type="button" [attr.aria-label]="row.name + ' (' + row.id + ') düzenle'" (click)="openEditor(row.id)" [disabled]="editorOpen() || deleting()" class="mt-2 block rounded-lg border px-2 py-1">Düzenle / yayın durumu</button>}<button type="button" [attr.aria-label]="kindLabel() + ': ' + row.name + ' (' + row.id + ') kullanımını incele'" (click)="inspectUsage(row.id)" [disabled]="editorOpen() || deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
               </tr>
             }</tbody>

@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
+import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
 import {
   CoachingAdminAssignmentListItem,
   CoachingAdminService
@@ -13,7 +14,7 @@ import {
 @Component({
   selector: 'app-coaching-assignments',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterModule],
   template: `
     <section class="space-y-6">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -70,7 +71,7 @@ import {
                 <td class="px-4 py-3">{{ bookRange(assignment) }}</td>
                 <td class="px-4 py-3">{{ assignment.submittedStudentCount }}/{{ assignment.studentCount }}</td>
                 <td class="px-4 py-3">{{ assignment.attachmentCount }}</td>
-                <td class="px-4 py-3">{{ assignment.status }}</td>
+                <td class="px-4 py-3">{{ assignment.status | coachingLabel }}</td>
               </tr>
             } @empty {
               <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">Kayıt bulunamadı.</td></tr>

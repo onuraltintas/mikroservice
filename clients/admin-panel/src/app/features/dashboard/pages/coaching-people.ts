@@ -17,10 +17,11 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
 import { ToasterService } from '../../../core/services/toaster.service';
 import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv, renderCoachingHistoryPrint } from '../../coaching-portal/coaching-history-export';
 
+import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
 @Component({
   selector: 'app-coaching-people',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingAdminStudyComponent, CoachingFinanceComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingAdminStudyComponent, CoachingFinanceComponent],
   template: `
     <section class="space-y-5">
       <div>
@@ -77,7 +78,7 @@ import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv,
               @if (studentDetail(); as detail) {
                 <div class="grid gap-3 sm:grid-cols-4 text-sm"><p>Ödev: {{ detail.submittedAssignments }}/{{ detail.totalAssignments }} teslim</p><p>Sınav sonucu: {{ detail.totalExams }}</p><p>Seans: {{ detail.totalSessions }}</p><p>Hedef: {{ detail.totalGoals }}</p></div>
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
-                  <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
+                  <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status | coachingLabel }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
                   <div><h3 class="font-semibold">Son sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
                 </div>
                 <p class="text-xs text-gray-500">Bu öğrenciye erişim aktif kurum üyeliğiyle doğrulanır; ayrıntı kurum değişikliği dâhil tüm koçluk geçmişini kapsar.</p>
@@ -111,8 +112,8 @@ import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv,
                 <div class="divide-y text-sm">
                   @for (item of history.items; track item.id) {
                     <article class="py-3"><div class="flex flex-wrap justify-between gap-2"><strong>{{ item.title }}</strong><time>{{ item.eventDate | date:'dd.MM.yyyy HH:mm' }}</time></div>
-                      <p class="mt-1 text-gray-500">{{ item.status }}</p>
-                      @if (item.category) { <p class="text-gray-500">Kategori: {{ item.category }}</p> }
+                      <p class="mt-1 text-gray-500">{{ item.status | coachingLabel }}</p>
+                      @if (item.category) { <p class="text-gray-500">Kategori: {{ item.category | coachingLabel }}</p> }
                       @if (item.progress !== null && item.progress !== undefined) { <p class="text-gray-500">İlerleme: %{{ item.progress }}</p> }
                       @if (item.score !== null && item.score !== undefined) { <p class="text-gray-500">Puan: {{ item.score }} / {{ item.maxScore ?? '—' }}</p> }
                     </article>

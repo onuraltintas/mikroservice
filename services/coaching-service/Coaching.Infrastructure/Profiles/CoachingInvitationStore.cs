@@ -35,7 +35,7 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         var duplicates = await db.CoachingInvitations.Where(x => x.RecipientEmail == invitation.RecipientEmail
             && x.Role == role && x.InstitutionId == institution && x.TeacherUserId == teacher
             && x.IsInstitutionInvitation == institutionInvitation && x.Status == CoachingInvitationStatus.Pending).ToListAsync(ct);
-        if (duplicates.Any(x => x.ExpiresAt > now)) throw CoachingProfileStore.Conflict("Bu kullanÄ±cÄ± iÃ§in bekleyen davet var.");
+        if (duplicates.Any(x => x.ExpiresAt > now)) throw CoachingProfileStore.Conflict("Bu kullanıcı için bekleyen davet var.");
         foreach (var old in duplicates) old.Finish(CoachingInvitationStatus.Expired, actor, now);
         if (duplicates.Count > 0) await db.SaveChangesAsync(ct);
         var sender = (await accounts.GetAccountsAsync([actor], ct)).Single(x => x.UserId == actor);
@@ -45,7 +45,7 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         if (!Uri.TryCreate(publicUrl, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http"))
             throw new InvalidOperationException("Coaching public base URL is invalid.");
         await events.PublishAsync(new InvitationCreatedEvent(invitation.Id, sender.Email, invitation.RecipientEmail,
-            recipient?.UserId, invitation.Type, invitation.Message, invitation.Role == "Teacher" ? $"{publicUrl}/staff/?product=coaching" : $"{publicUrl}/coaching-portal/profile", now), ct);
+            recipient?.UserId, invitation.Type, invitation.Message, invitation.Role == "Teacher" ? $"{publicUrl}/staff/?product=coaching" : $"{publicUrl}/coaching-portal/profile", now) { Product = "coaching" }, ct);
         await db.SaveChangesAsync(ct);
         return invitation;
     }
@@ -95,7 +95,7 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
             && !await accounts.IsActiveInstitutionAsync(held, ct)) currentInstitution = null;
         if (currentInstitution.HasValue && currentInstitution != invitation.InstitutionId
             || !invitation.IsInstitutionInvitation && currentInstitution != invitation.InstitutionId)
-            throw CoachingProfileStore.Conflict("Davet mevcut kurum Ã¼yeliÄŸinizle uyuÅŸmuyor.");
+            throw CoachingProfileStore.Conflict("Davet mevcut kurum üyeliğinizle uyuşmuyor.");
         await profiles.ProvisionAsync(actor, invitation.Role, ct);
         if (invitation.IsInstitutionInvitation)
             await profiles.SetMembershipAsync(invitation.InviterUserId, invitation.InstitutionId!.Value, actor, role, true, ct);
@@ -128,12 +128,12 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
 
     private async Task<CoachingInvitation> Get(Guid id, CancellationToken ct) =>
         await db.CoachingInvitations.SingleOrDefaultAsync(x => x.Id == id, ct)
-        ?? throw new KeyNotFoundException("Davet bulunamadÄ±.");
+        ?? throw new KeyNotFoundException("Davet bulunamadı.");
 
     private void RequirePending(CoachingInvitation row)
     {
         if (row.Status != CoachingInvitationStatus.Pending || row.ExpiresAt <= clock.GetUtcNow().UtcDateTime)
-            throw CoachingProfileStore.Conflict("Davet sona ermiÅŸ veya sonuÃ§landÄ±rÄ±lmÄ±ÅŸ.");
+            throw CoachingProfileStore.Conflict("Davet sona ermiş veya sonuçlandırılmış.");
     }
 
     private Task<Guid?> TeacherInstitution(Guid userId, CancellationToken ct) => db.CoachingInstitutionMemberships

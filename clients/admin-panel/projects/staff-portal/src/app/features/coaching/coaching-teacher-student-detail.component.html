@@ -125,7 +125,7 @@
                 }</details>
               }
               <p>{{ formatDate(item.eventDate) }} <span aria-hidden="true">·</span> {{ statusLabel(item.status) }}
-                @if (item.category) { <span> · {{ item.category }}</span> }
+                @if (item.category) { <span> · {{ item.category | coachingLabel }}</span> }
               </p>
             </div>
             @if (item.score != null) {

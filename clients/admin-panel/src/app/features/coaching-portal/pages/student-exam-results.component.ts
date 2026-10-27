@@ -11,7 +11,8 @@ import { CoachingStudyPlanningService, StudyTopic, TargetPage } from '../../../c
 import { PracticeExamInput, PracticeExamProfile, practiceTotals } from '../../../core/models/practice-exam';
 import { PracticeExamEditorComponent } from './practice-exam-editor.component';
 
-@Component({ selector: 'app-student-exam-results', standalone: true, imports: [CommonModule, FormsModule, PracticeExamEditorComponent],
+import { CoachingDatePipe } from '../coaching-labels';
+@Component({ selector: 'app-student-exam-results', standalone: true, imports: [CoachingDatePipe, CommonModule, FormsModule, PracticeExamEditorComponent],
   templateUrl: './student-exam-results.component.html', styleUrl: './student-study-plans.component.scss' })
 export class StudentExamResultsComponent {
   private readonly learningSetup = inject(CoachingLearningSetupService);

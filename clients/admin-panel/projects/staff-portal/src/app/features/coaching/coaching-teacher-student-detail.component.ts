@@ -8,6 +8,7 @@ import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
 import {CoachingTeacherStudentProfileComponent} from './coaching-teacher-student-profile.component';
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 import { finalize } from 'rxjs';
+import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-portal/coaching-labels';
 import {
   coachingHistoryCsv,
   collectCoachingHistory,
@@ -27,7 +28,7 @@ import {
 @Component({
   selector: 'staff-coaching-teacher-student-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent,CoachingTeacherStudentProfileComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent,CoachingTeacherStudentProfileComponent],
   templateUrl: './coaching-teacher-student-detail.component.html',
   styleUrl: './coaching-teacher-student-detail.component.scss'
 })

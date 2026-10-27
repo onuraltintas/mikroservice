@@ -6,9 +6,10 @@ import {StudyPlan} from '../../../core/services/coaching-study-planning.service'
 import {CalendarView,calendarDays,clock} from './weekly-calendar';
 import {CalendarMove,PlanCalendarBlock,calendarBlocks,calendarDate,calendarFocusDate,calendarMoveError,calendarTaskOverdue,calendarToday,dateKey} from './study-plan-calendar';
 
+import { CoachingDatePipe } from '../coaching-labels';
 export interface CalendarAction {kind:'add'|'edit'|'delete'|'complete';taskIds:string[];date:string;startMinute:number}
 
-@Component({selector:'app-study-plan-calendar',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./study-plan-calendar.component.html',styleUrl:'./study-plan-calendar.component.scss'})
+@Component({selector:'app-study-plan-calendar',standalone:true,imports:[CoachingDatePipe, CommonModule,FormsModule],templateUrl:'./study-plan-calendar.component.html',styleUrl:'./study-plan-calendar.component.scss'})
 export class StudyPlanCalendarComponent implements OnChanges {
   @Input({required:true}) plan!:StudyPlan;
   @Input() disabled=false;

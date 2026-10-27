@@ -13,10 +13,11 @@ import {
 } from './coaching-teacher-assignments.service';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
 
+import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-portal/coaching-labels';
 @Component({
   selector: 'staff-coaching-teacher-assignment-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule],
   templateUrl: './coaching-teacher-assignment-form.component.html',
   styleUrl: './coaching-teacher-assignment-form.component.scss'
 })

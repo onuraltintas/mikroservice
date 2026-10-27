@@ -12,10 +12,11 @@ import {
 } from '../../../core/services/coaching-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
+import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
 @Component({
   selector: 'app-coaching-assignment-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterModule],
   template: `
     <section class="space-y-6">
       <a routerLink="/dashboard/coaching/assignments" class="inline-flex text-sm font-medium text-indigo-600 hover:underline">← Ödev listesine dön</a>
@@ -29,7 +30,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ item.title }}</h1>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ item.source }} · {{ item.status }} · Son tarih {{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ item.source | coachingLabel }} · {{ item.status | coachingLabel }} · Son tarih {{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
               <button type="button" (click)="load()" [disabled]="loading() || actionLoading()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600">Yenile</button>
@@ -61,7 +62,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
               @for (student of item.assignedStudents; track student.studentId) {
                 <tr>
                   <td class="px-4 py-3 font-mono text-xs">{{ student.studentId }}</td>
-                  <td class="px-4 py-3">{{ student.status }}</td>
+                  <td class="px-4 py-3">{{ student.status | coachingLabel }}</td>
                   <td class="px-4 py-3">{{ student.submittedAt ? (student.submittedAt | date:'dd.MM.yyyy HH:mm') : '—' }}</td>
                   <td class="px-4 py-3">{{ student.score ?? '—' }}</td>
                   <td class="max-w-xs px-4 py-3">{{ student.teacherFeedback || '—' }}</td>
@@ -69,7 +70,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
                     @for (attachment of student.attachments ?? []; track attachment.id) {
                       @if (attachment.status === 'Clean') {
                         <a class="mr-2 inline-block text-indigo-600 hover:underline" href="#" (click)="openAttachment($event, item.id, student.studentId, attachment.id)">{{ attachment.originalFileName }}</a>
-                      } @else { <span class="mr-2 text-amber-600">{{ attachment.originalFileName }} ({{ attachment.status }})</span> }
+                      } @else { <span class="mr-2 text-amber-600">{{ attachment.originalFileName }} ({{ attachment.status | coachingLabel }})</span> }
                     } @empty { <span class="text-gray-400">—</span> }
                   </td>
                   @if (canManage()) { <td class="min-w-64 px-4 py-3">

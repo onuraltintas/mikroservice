@@ -14,19 +14,20 @@ import {
 import { IdentityService, UserDto } from '../../../core/services/identity.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
+import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
 type Resource = 'session' | 'exam';
 
 @Component({
   selector: 'app-coaching-resource-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterModule],
   template: `
     <section class="mx-auto max-w-5xl space-y-6">
       <div>
         <a routerLink="/dashboard/coaching/operations" class="text-sm font-medium text-indigo-600 hover:underline">← Operasyonlara dön</a>
         @if (session(); as value) {
           <h1 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ value.title }}</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400">{{ value.scheduledDate | date:'dd.MM.yyyy HH:mm' }} · {{ value.status }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ value.scheduledDate | date:'dd.MM.yyyy HH:mm' }} · {{ value.status | coachingLabel }}</p>
           @if (canManage()) { <a [routerLink]="['/dashboard/coaching/operations/session', value.id, 'edit']" class="mt-2 inline-flex text-sm font-medium text-indigo-600 hover:underline">Seansı düzenle →</a> }
           @if (value.meetingLink) { <a [href]="value.meetingLink" target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex text-sm font-medium text-indigo-600 hover:underline">Online görüşme bağlantısını aç →</a> }
         } @else if (exam(); as value) {
@@ -48,7 +49,7 @@ type Resource = 'session' | 'exam';
       @if (session(); as value) {
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <h2 class="mb-4 font-semibold text-gray-900 dark:text-white">Katılım kayıtları</h2>
-          <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700"><thead class="text-left text-xs uppercase text-gray-500"><tr><th class="px-3 py-2">Öğrenci</th><th class="px-3 py-2">Mevcut durum</th><th class="px-3 py-2">Not</th><th class="px-3 py-2"></th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700">@for (attendance of value.attendances; track attendance.studentId) {<tr><td class="px-3 py-3">{{ userName(attendance.studentId) }}</td><td class="px-3 py-3">{{ attendance.status }}</td><td class="px-3 py-3"><input [(ngModel)]="attendanceDraft[attendance.studentId].notes" [name]="'note-' + attendance.studentId" maxlength="1000" class="w-full rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900" /></td><td class="px-3 py-3">@if (canManage()) {<div class="flex items-center gap-2"><select [(ngModel)]="attendanceDraft[attendance.studentId].attended" [name]="'attended-' + attendance.studentId" class="rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900"><option [ngValue]="true">Katıldı</option><option [ngValue]="false">Katılmadı</option></select><button type="button" (click)="saveAttendance(attendance.studentId)" [disabled]="actionLoading()" class="text-xs text-indigo-700 hover:underline">Kaydet</button></div>}</td></tr>} @empty {<tr><td colspan="4" class="px-3 py-8 text-center text-gray-500">Katılım kaydı bulunamadı.</td></tr>}</tbody></table></div>
+          <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700"><thead class="text-left text-xs uppercase text-gray-500"><tr><th class="px-3 py-2">Öğrenci</th><th class="px-3 py-2">Mevcut durum</th><th class="px-3 py-2">Not</th><th class="px-3 py-2"></th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700">@for (attendance of value.attendances; track attendance.studentId) {<tr><td class="px-3 py-3">{{ userName(attendance.studentId) }}</td><td class="px-3 py-3">{{ attendance.status | coachingLabel }}</td><td class="px-3 py-3"><input [(ngModel)]="attendanceDraft[attendance.studentId].notes" [name]="'note-' + attendance.studentId" maxlength="1000" class="w-full rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900" /></td><td class="px-3 py-3">@if (canManage()) {<div class="flex items-center gap-2"><select [(ngModel)]="attendanceDraft[attendance.studentId].attended" [name]="'attended-' + attendance.studentId" class="rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900"><option [ngValue]="true">Katıldı</option><option [ngValue]="false">Katılmadı</option></select><button type="button" (click)="saveAttendance(attendance.studentId)" [disabled]="actionLoading()" class="text-xs text-indigo-700 hover:underline">Kaydet</button></div>}</td></tr>} @empty {<tr><td colspan="4" class="px-3 py-8 text-center text-gray-500">Katılım kaydı bulunamadı.</td></tr>}</tbody></table></div>
         </div>
       } @else if (exam(); as value) {
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
