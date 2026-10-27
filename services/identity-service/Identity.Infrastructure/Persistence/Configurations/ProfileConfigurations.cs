@@ -239,3 +239,23 @@ public class TeacherStudentAssignmentConfiguration : IEntityTypeConfiguration<Te
             .OnDelete(DeleteBehavior.SetNull);
     }
 }
+
+public sealed class ParentLinkCodeConfiguration : IEntityTypeConfiguration<ParentLinkCode>
+{
+    public void Configure(EntityTypeBuilder<ParentLinkCode> builder)
+    {
+        builder.ToTable("parent_link_codes");
+        builder.HasKey(code => code.Id);
+        builder.Property(code => code.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(code => code.StudentUserId).HasColumnName("student_user_id");
+        builder.Property(code => code.CodeHash).HasColumnName("code_hash").HasMaxLength(64).IsFixedLength().IsRequired();
+        builder.Property(code => code.CreatedAt).HasColumnName("created_at");
+        builder.Property(code => code.ExpiresAt).HasColumnName("expires_at");
+        builder.Property(code => code.UsedAt).HasColumnName("used_at");
+        builder.Property(code => code.UsedByUserId).HasColumnName("used_by_user_id");
+        builder.Property(code => code.RevokedAt).HasColumnName("revoked_at");
+        builder.HasIndex(code => code.CodeHash).IsUnique();
+        builder.HasIndex(code => code.StudentUserId);
+        builder.HasOne<User>().WithMany().HasForeignKey(code => code.StudentUserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}

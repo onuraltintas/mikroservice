@@ -284,6 +284,7 @@ public class CoachingDbContext : DbContext
         requests.HasIndex(request => new { request.UserId, request.PaymentReference }).IsUnique();
         requests.HasIndex(request => new { request.Status, request.CreatedAt });
         requests.HasIndex(request => new { request.UserId, request.Status });
+        requests.HasIndex(request => request.SubmittedByUserId);
 
         var payments = modelBuilder.Entity<CoachingPaymentRecord>();
         payments.ToTable("payment_records", table => table.HasCheckConstraint("ck_coaching_payment_owner",

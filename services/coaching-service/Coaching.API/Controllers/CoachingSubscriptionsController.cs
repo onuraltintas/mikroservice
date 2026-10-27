@@ -72,6 +72,51 @@ public sealed class CoachingSubscriptionsController(
             : Ok(new { success = true, data = result, message = "Ödeme bildiriminiz incelemeye alındı." });
     }
 
+    /// <summary>Roadmap Y7: a linked parent sees the child's Coaching access.</summary>
+    [HttpGet("children/{studentId:guid}/access")]
+    [Authorize(Roles = "Parent")]
+    public async Task<IActionResult> GetChildAccess(Guid studentId, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var parentId)) return Unauthorized();
+        var result = await subscriptions.GetChildAccessAsync(parentId, studentId, cancellationToken);
+        return result is null ? Forbid() : Ok(new { success = true, data = result });
+    }
+
+    [HttpGet("children/{studentId:guid}/bank-transfer-requests")]
+    [Authorize(Roles = "Parent")]
+    public async Task<IActionResult> GetChildBankTransferRequests(Guid studentId, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var parentId)) return Unauthorized();
+        var result = await subscriptions.GetChildBankTransferRequestsAsync(parentId, studentId, cancellationToken);
+        return result is null ? Forbid() : Ok(new { success = true, data = result });
+    }
+
+    /// <summary>Roadmap Y7: a linked parent sends a bank-transfer notice for the child; the access goes to the child.</summary>
+    [HttpPost("children/{studentId:guid}/bank-transfer-requests")]
+    [Authorize(Roles = "Parent")]
+    [EnableRateLimiting("payment-request")]
+    public async Task<IActionResult> CreateChildBankTransferRequest(
+        Guid studentId,
+        [FromBody] CoachingBankTransferRequestCreate request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        [FromServices] Coaching.Application.Profiles.ICoachingAccountDirectory accounts,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var parentId)) return Unauthorized();
+        var captchaError = await ValidatePaymentCaptchaAsync(cancellationToken);
+        if (captchaError is not null) return captchaError;
+        var parentName = User.FindFirstValue(ClaimTypes.Name)
+            ?? string.Join(' ', new[] { User.FindFirstValue(ClaimTypes.GivenName), User.FindFirstValue(ClaimTypes.Surname) }
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+        var parentEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
+        var child = (await accounts.GetAccountsAsync([studentId], cancellationToken)).SingleOrDefault(x => x.UserId == studentId);
+        var result = child is null ? null : await subscriptions.CreateChildBankTransferRequestAsync(parentId, parentName, parentEmail, studentId,
+            $"{child.FirstName} {child.LastName}".Trim(), child.Email, request, idempotencyKey ?? string.Empty, cancellationToken);
+        return result is null
+            ? BadRequest(new { success = false, message = "Bu öğrenci için ödeme bildirimi gönderilemedi. Veli bağlantını, planı ve ödeme bilgisini kontrol et." })
+            : Ok(new { success = true, data = result, message = "Ödeme bildirimin incelemeye alındı." });
+    }
+
     /// <summary>The payer corrects the reference, payer name or note of a notice still waiting for review.</summary>
     [HttpPut("bank-transfer-requests/{id:guid}")]
     [EnableRateLimiting("payment-request")]

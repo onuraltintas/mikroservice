@@ -181,6 +181,13 @@ public static class DependencyInjection
         services.AddScoped<CoachingSubscriptionLifecycleProcessor>();
         if (configuration.GetValue("Coaching:Subscriptions:LifecycleEnabled", true))
             services.AddHostedService<CoachingSubscriptionLifecycleWorker>();
+        services.AddScoped<CoachingParentWeeklySummaryProcessor>();
+        if (configuration.GetValue("Coaching:Parents:WeeklySummaryEnabled", true))
+            services.AddHostedService<CoachingParentWeeklySummaryWorker>();
+        services.AddHttpClient<ICoachingParentDirectory, IdentityParentDirectoryClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        }).AddCorrelationIdPropagation();
         if (configuration.GetValue("Coaching:Reminders:Enabled", true))
             services.AddHostedService<Coaching.Infrastructure.Reminders.CoachingReminderWorker>();
         services.AddScoped<Coaching.Infrastructure.Attachments.CoachingAttachmentCleanupProcessor>();

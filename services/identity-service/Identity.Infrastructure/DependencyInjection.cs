@@ -119,6 +119,7 @@ public static class DependencyInjection
         services.AddScoped<IStudentRepository, Repositories.StudentRepository>();
         services.AddScoped<IParentRepository, Repositories.ParentRepository>();
         services.AddScoped<IParentStudentRelationshipRepository, Repositories.ParentStudentRelationshipRepository>();
+        services.AddScoped<Identity.Application.ParentLinks.IParentLinkService, Services.ParentLinkService>();
         services.AddScoped<IInvitationRepository, Repositories.InvitationRepository>();
         services.AddScoped<IIdempotencyRepository, Repositories.IdempotencyRepository>();
         services.AddScoped<IRoleRepository, Repositories.RoleRepository>();

@@ -33,6 +33,7 @@ public class IdentityDbContext : DbContext
     public DbSet<TeacherProfile> TeacherProfiles => Set<TeacherProfile>();
     public DbSet<ParentProfile> ParentProfiles => Set<ParentProfile>();
     public DbSet<ParentStudentRelationship> ParentStudentRelationships => Set<ParentStudentRelationship>();
+    public DbSet<ParentLinkCode> ParentLinkCodes => Set<ParentLinkCode>();
     public DbSet<TeacherStudentAssignment> TeacherStudentAssignments => Set<TeacherStudentAssignment>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();

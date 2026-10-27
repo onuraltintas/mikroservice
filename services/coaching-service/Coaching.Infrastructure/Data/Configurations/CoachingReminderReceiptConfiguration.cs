@@ -8,7 +8,7 @@ public sealed class CoachingReminderReceiptConfiguration : IEntityTypeConfigurat
 {
     public void Configure(EntityTypeBuilder<CoachingReminderReceipt> builder)
     {
-        builder.ToTable("reminder_receipts", table => table.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'StudyOverdue', 'Session', 'FeeOverdue', 'SubscriptionExpiring', 'SubscriptionExpired')"));
+        builder.ToTable("reminder_receipts", table => table.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'StudyOverdue', 'Session', 'FeeOverdue', 'SubscriptionExpiring', 'SubscriptionExpired', 'ParentWeeklySummary')"));
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Kind).HasMaxLength(20).IsRequired();
         builder.Property(x => x.OccurrenceKey).HasMaxLength(64).IsRequired();

@@ -599,6 +599,53 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("invitations", "identity");
                 });
 
+            modelBuilder.Entity("Identity.Domain.Entities.ParentLinkCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("code_hash")
+                        .IsFixedLength();
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<Guid>("StudentUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("student_user_id");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_at");
+
+                    b.Property<Guid?>("UsedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("used_by_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CodeHash")
+                        .IsUnique();
+
+                    b.HasIndex("StudentUserId");
+
+                    b.ToTable("parent_link_codes", "identity");
+                });
+
             modelBuilder.Entity("Identity.Domain.Entities.ParentProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1873,6 +1920,15 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Navigation("Institution");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Identity.Domain.Entities.ParentLinkCode", b =>
+                {
+                    b.HasOne("Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("StudentUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.ParentProfile", b =>

@@ -101,6 +101,8 @@ public sealed class CoachingBankTransferRequest
     public string Currency { get; set; } = "TRY";
     /// <summary>The plan's length when the payer sent the notice; later plan edits do not change what was bought.</summary>
     public int? DurationDays { get; set; }
+    /// <summary>A linked parent who sent the notice for the child (<see cref="UserId"/>); empty when the child sent it.</summary>
+    public Guid? SubmittedByUserId { get; set; }
     public string PaymentReference { get; set; } = string.Empty;
     public string? PayerName { get; set; }
     public string? Note { get; set; }

@@ -144,6 +144,20 @@ public sealed class InternalCoachingController : ControllerBase
                 authorization.InstitutionId));
     }
 
+    /// <summary>Verified parents who want the weekly Coaching summary of their child (roadmap Y7).</summary>
+    [HttpGet("parent-summary-recipients")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    public async Task<IActionResult> GetParentSummaryRecipients(
+        [FromServices] Identity.Application.ParentLinks.IParentLinkService parentLinks,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 200,
+        CancellationToken cancellationToken = default)
+    {
+        if (pageNumber is < 1 or > 10_000 || pageSize is < 1 or > 500) return BadRequest("Paging is invalid.");
+        return Ok(await parentLinks.GetWeeklySummaryRecipientsAsync(pageNumber, pageSize, cancellationToken));
+    }
+
     [HttpPost("authorize-student-read")]
     [AllowAnonymous]
     [InternalServiceKey]

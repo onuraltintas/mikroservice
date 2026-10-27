@@ -110,7 +110,7 @@ public sealed class ParentLinkTests
 
     [Theory]
     [InlineData(nameof(ParentLinksController.CreateCode), "Student")]
-    [InlineData(nameof(ParentLinksController.Request), "Parent")]
+    [InlineData(nameof(ParentLinksController.RequestLink), "Parent")]
     [InlineData(nameof(ParentLinksController.Approve), "Student")]
     [InlineData(nameof(ParentLinksController.Revoke), "Student,Parent")]
     [InlineData(nameof(ParentLinksController.List), "Student,Parent")]
