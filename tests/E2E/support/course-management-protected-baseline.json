@@ -1299,7 +1299,7 @@
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingCmsService.cs": "e18b81d01e9620c07defdaaf8b31c13e9324c3274bb04d941849da292bbded2f",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingInstitutionExamService.cs": "e9471bc8df976aeda791931bad328003307c70cc2f0be44225886d181dcaf5ba",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingInstitutionSubscriptionService.cs": "c653201df08d7d9415d6bd1fa0b95da51d98dfa921d071f72cb586a807f27c21",
-    "services/coaching-service/Coaching.Infrastructure/Management/CoachingMessagingService.cs": "2b69761a0636e7ac8dde3244c8c99658d91cc85799e8aae5f2c3d2884be76b5d",
+    "services/coaching-service/Coaching.Infrastructure/Management/CoachingMessagingService.cs": "c5eb414f8162d1b6463bd3f245cde776b1c1edc6094ed2bcf9e1a7f1548337e2",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingNewsletterService.cs": "50f0a545615ed7627973bc5ca69bdab60306cb3ac62264bf248e7b3ac2262d79",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentWeeklySummary.cs": "1fec16a758970f353e83d6deeea3073dcbdc20c3c094a5dd6904be31742d7ce0",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSubscriptionLifecycle.cs": "c4cd314c55f2bd4a5e3dbf20819825182c9dc434d6f0aa53943cd91ecbd36869",
