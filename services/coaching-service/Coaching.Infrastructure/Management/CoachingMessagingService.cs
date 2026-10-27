@@ -178,7 +178,8 @@ public sealed class CoachingMessagingService(CoachingDbContext db, ICoachingAcco
         var recipientReadAt = conversation.ReadAtOf(recipient);
         var recipientHadUnread = conversation.MessageCount > 0 && (recipientReadAt is null || conversation.LastMessageAt > recipientReadAt);
         // Messages of a conversation keep their order even when two arrive within the same microsecond.
-        var sentAt = Now;
+        // PostgreSQL keeps microseconds, so the comparison is made at that precision.
+        var sentAt = Now; sentAt = sentAt.AddTicks(-(sentAt.Ticks % 10));
         if (conversation.MessageCount > 0 && sentAt <= conversation.LastMessageAt) sentAt = conversation.LastMessageAt.AddTicks(10);
         var message = CoachingMessage.Create(conversation.Id, actor, request.Body, files.Count > 0, sentAt);
         db.Add(message);
