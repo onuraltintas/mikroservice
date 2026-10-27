@@ -14,7 +14,7 @@ import { StudentRegisterComponent } from './student-register.component';
 describe('StudentRegisterComponent registration', () => {
   // Roadmap Y8: registration asks for the student's birth date and sends it as a calendar date.
   it('requires a real past birth date and sends it with the registration', async () => {
-    const component = createComponent(new Subject(), {}, {}, { navigate: vi.fn() });
+    const component = createComponent(new Subject(), {}, { success: vi.fn(), error: vi.fn() }, { navigate: vi.fn().mockResolvedValue(true) });
     const values = { firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!', confirmPassword: 'NewPassword1!' };
     component.form.setValue({ ...values, birthDate: '' });
     expect(component.form.invalid).toBe(true);
