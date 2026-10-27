@@ -1,5 +1,7 @@
 import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
@@ -37,6 +39,7 @@ describe('CoachingTeacherSubscriptionComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CoachingTeacherSubscriptionComponent],
       providers: [
+        provideHttpClient(), provideHttpClientTesting(),
         { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
         { provide: CoachingTeacherStudentsService, useValue: teacherStudents }
       ]
@@ -72,6 +75,7 @@ describe('CoachingTeacherSubscriptionComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CoachingTeacherSubscriptionComponent],
       providers: [
+        provideHttpClient(), provideHttpClientTesting(),
         { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
         { provide: CoachingTeacherStudentsService, useValue: { getMyStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })) } }
       ]
@@ -112,6 +116,7 @@ describe('CoachingTeacherSubscriptionComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CoachingTeacherSubscriptionComponent],
       providers: [
+        provideHttpClient(), provideHttpClientTesting(),
         { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
         { provide: CoachingTeacherStudentsService, useValue: { getMyStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })) } }
       ]
@@ -130,11 +135,47 @@ describe('CoachingTeacherSubscriptionComponent', () => {
     checkbox.click();
     fixture.detectChanges();
     await fixture.componentInstance.submitRequest();
+    expect(subscriptionService.createBankTransferRequest).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.error()).toContain('mesafeli satış sözleşmesini');
+
+    fixture.componentInstance.checkout = { couponCode: 'OGRETMEN-10', acceptSalesContract: true };
+    await fixture.componentInstance.submitRequest();
 
     expect(subscriptionService.createBankTransferRequest).toHaveBeenCalledWith({
-      planId: 'teacher-plan', paymentReference: ' EFT-77 ', payerName: ' Ada Teacher ', note: '', adultPayerDeclaration: true
+      planId: 'teacher-plan', paymentReference: ' EFT-77 ', payerName: ' Ada Teacher ', note: '', adultPayerDeclaration: true,
+      couponCode: 'OGRETMEN-10', acceptSalesContract: true
     });
     expect(fixture.componentInstance.success()).toContain('Ödeme bildiriminiz alındı');
+  });
+
+  it('starts a teacher trial when the plan offers one and no plan runs (O10)', async () => {
+    const subscriptionService = {
+      getTeacherPlans: vi.fn(() => of([{ id: 'teacher-plan', name: 'Öğretmen planı', description: '', audience: 'Teacher' as const, price: 500,
+        isContactOnly: false, billingPeriod: 'Monthly', durationDays: 30, includedStudentSeats: 5, features: [], isActive: true, isPublic: true, trialDays: 14 }])),
+      getBankTransferSettings: vi.fn(() => of(null)), getMyBankTransferRequests: vi.fn(() => of([])), getMySeatSummary: vi.fn(() => of(null)),
+      assignStudent: vi.fn(), removeStudent: vi.fn(), createBankTransferRequest: vi.fn()
+    };
+    await TestBed.configureTestingModule({
+      imports: [CoachingTeacherSubscriptionComponent],
+      providers: [
+        provideHttpClient(), provideHttpClientTesting(),
+        { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
+        { provide: CoachingTeacherStudentsService, useValue: { getMyStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })) } }
+      ]
+    }).compileComponents();
+    const fixture = TestBed.createComponent(CoachingTeacherSubscriptionComponent);
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/coaching/subscriptions/my-payments').flush({ data: [] });
+    expect(fixture.nativeElement.querySelector('[data-testid="teacher-trial-teacher-plan"]').textContent).toContain('14 gün ücretsiz');
+
+    const starting = fixture.componentInstance.startTrial(fixture.componentInstance.plans()[0]);
+    const request = http.expectOne('/api/coaching/subscriptions/trials');
+    expect(request.request.body).toEqual({ planId: 'teacher-plan', audience: 'Teacher' });
+    request.flush({ data: { subscriptionId: 's1', planId: 'teacher-plan', planName: 'Öğretmen planı', startDate: '2026-10-28T00:00:00Z', endDate: '2026-11-11T00:00:00Z' } });
+    await starting;
+    expect(fixture.componentInstance.success()).toContain('14 günlük ücretsiz denemeniz başladı');
+    expect(subscriptionService.getMySeatSummary).toHaveBeenCalledTimes(2);
   });
 });
 

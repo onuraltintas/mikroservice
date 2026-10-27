@@ -1,5 +1,7 @@
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
@@ -17,6 +19,47 @@ describe('CoachingSubscriptionComponent', () => {
     expect(service.createMyCoachingBankTransferRequest).not.toHaveBeenCalled();
     expect(fixture.componentInstance.error()).toContain('18 yaş');
   });
+  it('does not submit a payment before the sales documents are accepted (O10)', async () => {
+    const fixture = setup();
+    fixture.detectChanges(); await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.selectedPlanId.set('individual-plan');
+    component.paymentReference = 'EFT-123';
+    component.adultPayerDeclaration = true;
+    await component.submitRequest();
+    expect(TestBed.inject(CoachingManagementService).createMyCoachingBankTransferRequest).not.toHaveBeenCalled();
+    expect(component.error()).toContain('mesafeli satış sözleşmesini');
+  });
+
+  it('shows the checkout and the payments section (O10)', async () => {
+    const fixture = setup();
+    fixture.detectChanges(); await fixture.whenStable();
+    fixture.componentInstance.selectedPlanId.set('individual-plan');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('edu-coaching-checkout')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('edu-coaching-my-payments')).toBeTruthy();
+    TestBed.inject(HttpTestingController).expectOne('/api/coaching/subscriptions/my-payments').flush({ data: [] });
+  });
+
+  it('starts a free trial on a plan that has one and refreshes the access (O10)', async () => {
+    const fixture = setup({}, [], 7);
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('[data-testid="trial-individual-plan"]') as HTMLButtonElement;
+    expect(button.textContent).toContain('7 gün ücretsiz dene');
+    const starting = fixture.componentInstance.startTrial(fixture.componentInstance.plans()[0]);
+    const request = TestBed.inject(HttpTestingController).expectOne('/api/coaching/subscriptions/trials');
+    expect(request.request.body).toEqual({ planId: 'individual-plan' });
+    request.flush({ data: { subscriptionId: 's1', planId: 'individual-plan', planName: 'Öğrenci planı', startDate: '2026-10-28T00:00:00Z', endDate: '2026-11-04T00:00:00Z' } });
+    await starting;
+    expect(fixture.componentInstance.success()).toContain('7 günlük ücretsiz denemen başladı');
+  });
+
+  it('offers no trial when the plan has none', async () => {
+    const fixture = setup();
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="trial-individual-plan"]')).toBeNull();
+  });
+
   it('shows individual Coaching plans and excludes institution plans', async () => {
     const fixture = setup();
     fixture.detectChanges(); await fixture.whenStable();
@@ -34,6 +77,7 @@ describe('CoachingSubscriptionComponent', () => {
     component.payerName = '  Ada Öğrenci  ';
     component.note = '  Mart dönemi  ';
     component.adultPayerDeclaration = true;
+    component.checkout = { couponCode: 'YAZ-2026', acceptSalesContract: true };
 
     await component.submitRequest();
 
@@ -41,7 +85,8 @@ describe('CoachingSubscriptionComponent', () => {
       createMyCoachingBankTransferRequest: ReturnType<typeof vi.fn>;
     };
     expect(service.createMyCoachingBankTransferRequest).toHaveBeenCalledWith({
-      planId: 'individual-plan', paymentReference: 'EFT-2026-01', payerName: 'Ada Öğrenci', note: 'Mart dönemi', adultPayerDeclaration: true
+      planId: 'individual-plan', paymentReference: 'EFT-2026-01', payerName: 'Ada Öğrenci', note: 'Mart dönemi', adultPayerDeclaration: true,
+      couponCode: 'YAZ-2026', acceptSalesContract: true
     });
     expect(component.requests()[0].id).toBe('request-1');
     expect(component.success()).toContain('incelemeye alındı');
@@ -89,10 +134,10 @@ describe('CoachingSubscriptionComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Süresi doldu');
   });
 
-  function setup(query: Record<string, string> = {}, requests: unknown[] = []) {
+  function setup(query: Record<string, string> = {}, requests: unknown[] = [], trialDays = 0) {
     const plan = (id: string, name: string, audience: 'Individual' | 'Institution'): CoachingSubscriptionPlan => ({
       id, slug: id, name, description: '', audience, price: 100, isContactOnly: false, billingPeriod: 'Annual',
-      durationDays: 365, includedStudentSeats: audience === 'Institution' ? 20 : null, features: [], isActive: true, isPublic: true, sortOrder: 0
+      durationDays: 365, includedStudentSeats: audience === 'Institution' ? 20 : null, features: [], isActive: true, isPublic: true, sortOrder: 0, trialDays
     });
     const service = {
       getPublicSubscriptionPlans: () => of([plan('individual-plan', 'Öğrenci planı', 'Individual'), plan('institution-plan', 'Kurum planı', 'Institution')]),
@@ -107,6 +152,7 @@ describe('CoachingSubscriptionComponent', () => {
       }))
     };
     TestBed.configureTestingModule({ imports: [CoachingSubscriptionComponent], providers: [
+      provideHttpClient(), provideHttpClientTesting(),
       { provide: CoachingManagementService, useValue: service },
       { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } }
     ] });

@@ -119,17 +119,27 @@ describe('CoachingSubscriptionsComponent', () => {
       audience: 'Teacher',
       price: contactOnly ? 0 : 1000,
       isContactOnly: contactOnly,
-      includedStudentSeats: contactOnly ? null : 12
+      includedStudentSeats: contactOnly ? null : 12,
+      trialDays: 120
     };
 
     fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="plan-trial-days"]')).toBeTruthy();
     const seatInput = fixture.nativeElement.querySelector('input[name="planSeats"]') as HTMLInputElement;
     expect(seatInput.required).toBe(!contactOnly);
 
     await component.savePlan();
 
     expect(createdPlans).toHaveLength(1);
-    expect(createdPlans[0]).toMatchObject({ audience: 'Teacher', includedStudentSeats: contactOnly ? null : 12, name: 'Bağımsız öğretmen' });
+    expect(createdPlans[0]).toMatchObject({ audience: 'Teacher', includedStudentSeats: contactOnly ? null : 12, name: 'Bağımsız öğretmen', trialDays: 90 });
+
+    // Institution plans have no trial (O10).
+    component.startPlanCreate();
+    component.planDraft = { ...component.planDraft, name: 'Kurum', slug: 'kurum', audience: 'Institution', price: 5000, includedStudentSeats: 50, trialDays: 30 };
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="plan-trial-days"]')).toBeNull();
+    await component.savePlan();
+    expect(createdPlans[1]).toMatchObject({ audience: 'Institution', trialDays: 0 });
   });
 
   it('requires a visible reason before rejecting an EFT request', async () => {
