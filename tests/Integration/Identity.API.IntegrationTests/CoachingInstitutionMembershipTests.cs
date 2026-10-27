@@ -115,6 +115,30 @@ public sealed class CoachingInstitutionMembershipTests
         Assert.Equal(replacement, (await f.Db.Assignments.SingleAsync()).TeacherId);
     }
 
+    // Roadmap Y5: a student who leaves frees the seat they held, so it can go to someone else.
+    [Fact]
+    public async Task LeavingAnInstitutionOrACoachFreesTheStudentsSeat()
+    {
+        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture(); var (admin, inst) = Institution(f);
+        var coach = f.AddAccount("Teacher"); var student = f.AddAccount("Student"); var other = f.AddAccount("Student");
+        await f.Store.ProvisionAsync(coach, "Teacher", default); await f.Store.ProvisionAsync(other, "Student", default);
+        f.Db.Add(CoachingTeacherStudentAssignment.Create(coach, other, null, null, coach));
+        await f.Store.SetMembershipAsync(admin, inst, student, CoachingMemberRole.Student, true, default);
+        var institutionLicense = new CoachingSubscription { PlanId = Guid.NewGuid(), InstitutionId = inst, StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(30) };
+        var coachLicense = new CoachingSubscription { PlanId = Guid.NewGuid(), UserId = coach, StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(30) };
+        f.Db.AddRange(institutionLicense, coachLicense,
+            new CoachingSubscriptionSeat { SubscriptionId = institutionLicense.Id, StudentId = student },
+            new CoachingSubscriptionSeat { SubscriptionId = coachLicense.Id, StudentId = other });
+        await f.Db.SaveChangesAsync();
+
+        await f.Store.SetMembershipAsync(admin, inst, student, CoachingMemberRole.Student, false, default);
+        await f.Store.EndAssignmentAsync(other, coach, other, true, default);
+
+        var seats = await f.Db.CoachingSubscriptionSeats.ToListAsync();
+        Assert.All(seats, seat => Assert.True(seat.IsSuspended));
+        Assert.All(seats, seat => Assert.False(string.IsNullOrWhiteSpace(seat.SuspensionReason)));
+    }
+
     private static (Guid Admin, Guid Institution) Institution(CoachingOwnedProfilePersistenceTests.Fixture f)
     {
         var institution = Guid.NewGuid(); f.Accounts.Institutions.Add(institution);

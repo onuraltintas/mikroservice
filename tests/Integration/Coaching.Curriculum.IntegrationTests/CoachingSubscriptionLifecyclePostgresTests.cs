@@ -80,6 +80,36 @@ public sealed class CoachingSubscriptionLifecyclePostgresTests
         Assert.Equal("Expired", (await pg.Db.CoachingSubscriptions.AsNoTracking().SingleAsync(x => x.Id == current)).Status);
     }
 
+    // Roadmap Y5: a payment notice nobody could verify does not wait forever; the payer is told and can send a new one.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task PendingTransfersExpireAfterTwoWeeksAndThePayerIsToldOnce()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var clock = new Clock(Start); var events = new Publisher();
+        var plan = Plan(pg.Db, "Individual", "Bireysel aylık");
+        var stale = Transfer(pg.Db, plan, "EFT-STALE-001", Start.AddDays(-15));
+        var fresh = Transfer(pg.Db, plan, "EFT-FRESH-001", Start.AddDays(-13));
+        await pg.Db.SaveChangesAsync();
+
+        await Run(pg, clock, events); await Run(pg, clock, events);
+
+        pg.Db.ChangeTracker.Clear();
+        Assert.Equal("Expired", (await pg.Db.CoachingBankTransferRequests.SingleAsync(x => x.Id == stale)).Status);
+        Assert.Equal("Pending", (await pg.Db.CoachingBankTransferRequests.SingleAsync(x => x.Id == fresh)).Status);
+        var notice = Assert.Single(events.Notices);
+        Assert.Equal((CoachingSubscriptionNoticeKinds.TransferExpired, "payer@example.test", "Bireysel aylık"),
+            (notice.Kind, notice.RecipientEmail, notice.PlanName));
+        Assert.Contains("EFT-STALE-001", notice.Detail);
+    }
+
+    private static Guid Transfer(CoachingDbContext db, Guid plan, string reference, DateTime createdAt)
+    {
+        var transfer = new CoachingBankTransferRequest { UserId = Guid.NewGuid(), UserName = "Ödeyen", UserEmail = "payer@example.test",
+            PlanId = plan, Amount = 250, PaymentReference = reference, CreatedAt = createdAt, UpdatedAt = createdAt, DurationDays = 30 };
+        db.Add(transfer);
+        return transfer.Id;
+    }
+
     private static async Task Run(CurriculumPostgresTests.Pg pg, Clock clock, Publisher events)
     {
         await using var db = new CoachingDbContext(pg.Options);

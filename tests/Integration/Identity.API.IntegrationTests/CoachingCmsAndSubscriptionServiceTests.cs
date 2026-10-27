@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.API.IntegrationTests;
 
-public sealed class CoachingCmsAndSubscriptionServiceTests
+public sealed partial class CoachingCmsAndSubscriptionServiceTests
 {
     [Fact]
     public async Task SubscriptionRequirementCanBeTurnedOnAndOffWithoutCreatingALicense()

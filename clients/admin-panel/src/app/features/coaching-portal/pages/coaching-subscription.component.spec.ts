@@ -60,7 +60,36 @@ describe('CoachingSubscriptionComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="subscription-required"]')).toBeNull();
   });
 
-  function setup(query: Record<string, string> = {}) {
+  it('lets the payer correct and withdraw a notice that is still pending', async () => {
+    const pending = { id: 'request-1', status: 'Pending', paymentReference: 'EFT-TYPO', payerName: null, note: null, createdAt: '2026-03-01T00:00:00Z',
+      plan: { id: 'individual-plan', name: 'Öğrenci planı' }, reviewNote: null };
+    const fixture = setup({}, [pending]); const component = fixture.componentInstance;
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const service = TestBed.inject(CoachingManagementService) as unknown as Record<string, ReturnType<typeof vi.fn>>;
+    expect(fixture.nativeElement.querySelector('[data-testid="edit-request-request-1"]')).toBeTruthy();
+
+    component.startEdit(component.requests()[0]);
+    component.editReference = '  EFT-FIXED  '; component.editPayerName = '  Ada  '; component.editNote = '  ';
+    await component.saveEdit();
+    expect(service['updateMyCoachingBankTransferRequest']).toHaveBeenCalledWith('request-1', { paymentReference: 'EFT-FIXED', payerName: 'Ada', note: null });
+    expect(component.requests()[0].paymentReference).toBe('EFT-FIXED'); expect(component.editingRequestId()).toBeNull();
+
+    await component.withdraw(component.requests()[0]);
+    expect(service['withdrawMyCoachingBankTransferRequest']).toHaveBeenCalledWith('request-1');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Geri çekildi');
+    expect(fixture.nativeElement.querySelector('[data-testid="edit-request-request-1"]')).toBeNull();
+  });
+
+  it('says when an unverified notice expired', async () => {
+    const expired = { id: 'request-2', status: 'Expired', paymentReference: 'EFT-OLD', createdAt: '2026-01-01T00:00:00Z',
+      plan: { id: 'individual-plan', name: 'Öğrenci planı' }, reviewNote: null };
+    const fixture = setup({}, [expired]);
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Süresi doldu');
+  });
+
+  function setup(query: Record<string, string> = {}, requests: unknown[] = []) {
     const plan = (id: string, name: string, audience: 'Individual' | 'Institution'): CoachingSubscriptionPlan => ({
       id, slug: id, name, description: '', audience, price: 100, isContactOnly: false, billingPeriod: 'Annual',
       durationDays: 365, includedStudentSeats: audience === 'Institution' ? 20 : null, features: [], isActive: true, isPublic: true, sortOrder: 0
@@ -69,7 +98,9 @@ describe('CoachingSubscriptionComponent', () => {
       getPublicSubscriptionPlans: () => of([plan('individual-plan', 'Öğrenci planı', 'Individual'), plan('institution-plan', 'Kurum planı', 'Institution')]),
       getPublicBankTransferSettings: () => of({ currency: 'TRY', accountHolder: 'Edu İvme', bankName: 'Banka', iban: 'TR…', paymentInstructions: null }),
       getMyCoachingSubscriptionAccess: () => of({ hasAccess: true, enforcementEnabled: false, planName: null, status: null, accessUntil: null, subscriptions: [] }),
-      getMyCoachingBankTransferRequests: () => of([]),
+      getMyCoachingBankTransferRequests: () => of(requests),
+      updateMyCoachingBankTransferRequest: vi.fn((id: string, body: { paymentReference: string }) => of({ ...(requests[0] as object), id, ...body })),
+      withdrawMyCoachingBankTransferRequest: vi.fn((id: string) => of({ ...(requests[0] as object), id, status: 'Withdrawn' })),
       createMyCoachingBankTransferRequest: vi.fn(() => of({
         id: 'request-1', status: 'Pending', paymentReference: 'EFT-2026-01', createdAt: '2026-03-01T00:00:00Z',
         plan: plan('individual-plan', 'Öğrenci planı', 'Individual'), reviewNote: null

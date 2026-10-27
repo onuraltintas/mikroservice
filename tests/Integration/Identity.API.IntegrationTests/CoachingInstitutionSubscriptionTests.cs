@@ -88,6 +88,36 @@ public sealed class CoachingInstitutionSubscriptionTests(PostgresFixture postgre
         finally { await db.Database.EnsureDeletedAsync(); }
     }
 
+    // Roadmap Y5: a renewal bought ahead of time is visible to the institution and can be seated before it starts.
+    [Fact]
+    public async Task InstitutionAdminsSeeAComingLicenseAndCanSeatStudentsOnIt()
+    {
+        var options = new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options;
+        await using var db = new CoachingDbContext(options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var institution = Guid.NewGuid(); var student = Guid.NewGuid();
+            var plan = new CoachingSubscriptionPlan { Slug = "institution-coming", Name = "Kurum yıllık", Audience = "Institution", IncludedStudentSeats = 2, DurationDays = 365 };
+            var current = new CoachingSubscription { PlanId = plan.Id, InstitutionId = institution, StartDate = DateTime.UtcNow.AddDays(-355), EndDate = DateTime.UtcNow.AddDays(10) };
+            var coming = new CoachingSubscription { PlanId = plan.Id, InstitutionId = institution, StartDate = current.EndDate, EndDate = current.EndDate.AddDays(365) };
+            db.AddRange(plan, current, coming); await db.SaveChangesAsync();
+            var service = new CoachingInstitutionSubscriptionService(db, new Scope(new(false, institution, [student])), new Actor());
+
+            var summary = (await service.GetAsync())!;
+            Assert.Equal(current.Id, summary.SubscriptionId); Assert.Null(summary.StartsAt);
+            Assert.Equal(coming.Id, summary.Upcoming!.SubscriptionId);
+            Assert.Equal(coming.StartDate, summary.Upcoming.StartsAt, TimeSpan.FromSeconds(1));
+            Assert.True(await service.SetSeatAsync(coming.Id, student, false));
+
+            current.Status = "Expired"; await db.SaveChangesAsync();
+            summary = (await service.GetAsync())!;
+            Assert.Equal(coming.Id, summary.SubscriptionId); Assert.NotNull(summary.StartsAt); Assert.Null(summary.Upcoming);
+            Assert.Equal(1, summary.UsedStudentSeats);
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     private sealed class Scope(CoachingAdminScope scope) : ICoachingAdminScopeAuthorization
     {
         public CoachingAdminScope Value { get; set; } = scope;

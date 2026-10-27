@@ -43,6 +43,16 @@ describe('CoachingTeacherSubscriptionService', () => {
     expect(completed).toBe(true);
   });
 
+  it('corrects or withdraws the teacher\'s own pending notice', () => {
+    service.updateBankTransferRequest('request/1', { paymentReference: ' EFT-9 ', payerName: ' ', note: ' Not ' }).subscribe();
+    const update = http.expectOne('/api/coaching/subscriptions/bank-transfer-requests/request%2F1');
+    expect(update.request.method).toBe('PUT'); expect(update.request.body).toEqual({ paymentReference: 'EFT-9', payerName: null, note: 'Not' });
+    update.flush({ data: { id: 'request/1' } });
+    service.withdrawBankTransferRequest('request/1').subscribe();
+    const withdraw = http.expectOne('/api/coaching/subscriptions/bank-transfer-requests/request%2F1/withdraw');
+    expect(withdraw.request.method).toBe('POST'); withdraw.flush({ data: { id: 'request/1', status: 'Withdrawn' } });
+  });
+
   it('uses teacher-scoped seat endpoints', () => {
     let loaded = false;
     service.getMySeatSummary().subscribe(summary => loaded = summary?.subscriptionId === 'subscription-1');
