@@ -94,6 +94,8 @@ export interface CoachingSubscriptionPlan {
   isActive: boolean;
   isPublic: boolean;
   sortOrder: number;
+  /** Roadmap O10: free trial length for individual and teacher plans; 0 means no trial. */
+  trialDays?: number;
 }
 
 export type CoachingSubscriptionPlanRequest = Omit<CoachingSubscriptionPlan, 'id'>;
@@ -152,6 +154,9 @@ export interface CoachingBankTransferRequestCreate {
   payerName: string | null;
   note: string | null;
   adultPayerDeclaration: boolean;
+  /** Roadmap O10: an optional discount code and the accepted pre-information form and distance-sales contract. */
+  couponCode?: string | null;
+  acceptSalesContract?: boolean;
 }
 
 export interface CoachingBankTransferRequest {
@@ -177,6 +182,12 @@ export interface CoachingBankTransferRequest {
   durationDays?: number | null;
   /** Other payers who sent the same receipt number (admin list). */
   duplicateReferenceCount?: number;
+  /** Roadmap O10: price before the discount code, the code and the version of the accepted contract. */
+  listPrice?: number | null;
+  couponCode?: string | null;
+  discountAmount?: number;
+  salesContractVersion?: string | null;
+  withdrawalStatus?: string | null;
 }
 
 export interface CoachingBankTransferRequestUpdate {

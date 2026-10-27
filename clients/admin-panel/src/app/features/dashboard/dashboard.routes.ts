@@ -60,6 +60,13 @@ export const DASHBOARD_ROUTES: Routes = [
       loadComponent: () => import('./pages/coaching-subscriptions').then(m => m.CoachingSubscriptionsComponent)
     },
     {
+      // Roadmap O10: discount codes, seller details, withdrawals and invoices.
+      path: 'coaching/sales',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.coachingSubscriptionManage, role: 'SystemAdmin' },
+      loadComponent: () => import('./pages/coaching-sales').then(m => m.CoachingSalesComponent)
+    },
+    {
         path: 'coaching/assignments/new',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingManage },

@@ -1,11 +1,16 @@
 import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingLabelPipe } from '../coaching-labels';
+import { environment } from '../../../../environments/environment';
+import { CoachingCheckoutComponent } from '../../../../../shared/coaching-checkout.component';
+import { CoachingMyPaymentsComponent } from '../../../../../shared/coaching-my-payments.component';
+import { CoachingCheckoutChoice, CoachingSalesApi, coachingErrorMessage, coachingMoney } from '../../../../../shared/coaching-sales.api';
 import {
   CoachingBankTransferRequest,
   CoachingManagementService,
@@ -17,7 +22,7 @@ import {
 @Component({
   selector: 'app-coaching-subscription',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule],
+  imports: [CoachingCheckoutComponent, CoachingLabelPipe, CoachingMyPaymentsComponent, CommonModule, FormsModule],
   template: `
     <main class="space-y-6" aria-labelledby="coaching-subscription-title">
       <header>
@@ -62,7 +67,10 @@ import {
               <p class="mt-1 text-sm text-slate-500">{{ plan.durationDays }} gün erişim · {{ plan.billingPeriod | coachingLabel:'billingPeriod' }}</p>
               @if (plan.features.length) { <ul class="mt-4 list-disc space-y-1 pl-5 text-sm">@for (feature of plan.features; track feature) { <li>{{ feature }}</li> }</ul> }
               @if (plan.isContactOnly) { <p class="mt-4 text-sm text-slate-500">Bu plan için fiyat bilgisi Koçluk yönetiminden alınır.</p> }
-              <button type="button" class="mt-5 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="plan.isContactOnly" (click)="selectPlan(plan)">{{ plan.isContactOnly ? 'Şu an çevrimiçi satın alınamıyor' : (selectedPlanId() === plan.id ? 'Seçildi' : 'Bu planı seç') }}</button>
+              @if ((plan.trialDays ?? 0) > 0 && !plan.isContactOnly && !hasSubscription()) {
+                <button type="button" class="mt-5 w-full rounded-lg border border-indigo-600 px-4 py-2 font-medium text-indigo-700 disabled:opacity-50 dark:text-indigo-200" [attr.data-testid]="'trial-' + plan.id" [disabled]="trialPlanId() !== null" (click)="startTrial(plan)">{{ trialPlanId() === plan.id ? 'Başlatılıyor…' : plan.trialDays + ' gün ücretsiz dene' }}</button>
+              }
+              <button type="button" class="mt-2 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="plan.isContactOnly" (click)="selectPlan(plan)">{{ plan.isContactOnly ? 'Şu an çevrimiçi satın alınamıyor' : (selectedPlanId() === plan.id ? 'Seçildi' : 'Bu planı seç') }}</button>
             </article>
           }
         </div>
@@ -82,8 +90,9 @@ import {
             <label class="mt-4 block text-sm">Banka işlem referansı<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="paymentReference" name="paymentReference" maxlength="120" required autocomplete="off" /></label>
             <label class="mt-3 block text-sm">Ödemeyi yapan kişi (isteğe bağlı)<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" /></label>
             <label class="mt-3 block text-sm">Not (isteğe bağlı)<textarea class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="note" name="paymentNote" maxlength="1000" rows="3"></textarea></label>
+            <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId()" [price]="selectedPlan()?.price ?? 0" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" />
             <label class="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" required />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum. Bu beyan yaş doğrulaması değildir.</label>
-            <button class="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50" type="submit" [disabled]="submitting() || !settings() || !adultPayerDeclaration">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
+            <button class="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50" type="submit" [disabled]="submitting() || !settings() || !adultPayerDeclaration || !checkout.acceptSalesContract">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
             <p class="mt-2 text-xs text-slate-500">Erişim, yönetici banka hareketini doğruladıktan sonra açılır. Bu ekran kart bilgisi almaz.</p>
           </form>
         </section>
@@ -92,7 +101,7 @@ import {
       <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="requests-heading">
         <h2 id="requests-heading" class="font-semibold">Ödeme bildirimlerim</h2>
         @for (request of requests(); track request.id) {
-          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800"><div><strong>{{ request.plan.name }}</strong><p class="text-slate-500">{{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>@if (request.reviewNote) {<p class="text-slate-500">İnceleme notu: {{ request.reviewNote }}</p>}</div>
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800"><div><strong>{{ request.plan.name }}</strong><p class="text-slate-500">{{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}@if (request.couponCode) { · {{ request.couponCode }} ile {{ money(request.discountAmount) }} {{ request.currency }} indirim }</p>@if (request.reviewNote) {<p class="text-slate-500">İnceleme notu: {{ request.reviewNote }}</p>}</div>
             <div class="flex flex-wrap items-center gap-2"><span>{{ statusLabel(request.status) }}</span>
               @if (request.status === 'Pending' && editingRequestId() !== request.id) {
                 <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 dark:border-slate-700" [attr.data-testid]="'edit-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="startEdit(request)">Düzelt</button>
@@ -109,6 +118,10 @@ import {
             }
           </div>
         } @empty { <p class="mt-2 text-sm text-slate-500">Henüz ödeme bildirimin yok.</p> }
+      </section>
+
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-label="Onaylanan ödemelerim">
+        <edu-coaching-my-payments [api]="sales" heading="Ödemelerim, faturalar ve cayma" />
       </section>
     </main>
   `
@@ -129,6 +142,12 @@ export class CoachingSubscriptionComponent implements OnInit {
   payerName = '';
   note = '';
   adultPayerDeclaration = false;
+  /** Roadmap O10: discount code and contract acceptance from the checkout. */
+  checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
+  readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
+  readonly money = coachingMoney;
+  readonly trialPlanId = signal<string | null>(null);
+  private readonly checkoutForm = viewChild(CoachingCheckoutComponent);
   private readonly toaster = inject(ToasterService);
   readonly editingRequestId = signal<string | null>(null);
   readonly busyRequestId = signal<string | null>(null);
@@ -161,6 +180,7 @@ export class CoachingSubscriptionComponent implements OnInit {
     if (!plan || plan.isContactOnly || !this.settings()) { this.error.set('Ödeme bildirimi için satışa açık plan ve yayınlanmış banka bilgisi gereklidir.'); return; }
     if (!reference || reference.length > 120) { this.error.set('Banka işlem referansını 1–120 karakter arasında gir.'); return; }
     if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunu beyan etmeniz gerekir.'); return; }
+    if (!this.checkout.acceptSalesContract) { this.error.set('Ödeme bildiriminden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini açıp onaylaman gerekir.'); return; }
 
     this.submitting.set(true);
     this.error.set(null);
@@ -170,7 +190,9 @@ export class CoachingSubscriptionComponent implements OnInit {
       paymentReference: reference,
       payerName: this.payerName.trim() || null,
       note: this.note.trim() || null,
-      adultPayerDeclaration: this.adultPayerDeclaration
+      adultPayerDeclaration: this.adultPayerDeclaration,
+      couponCode: this.checkout.couponCode,
+      acceptSalesContract: this.checkout.acceptSalesContract
     }).subscribe({
       next: request => {
         this.requests.update(items => [request, ...items.filter(item => item.id !== request.id)]);
@@ -181,6 +203,7 @@ export class CoachingSubscriptionComponent implements OnInit {
         this.payerName = '';
         this.note = '';
         this.adultPayerDeclaration = false;
+        this.checkoutForm()?.reset();
         this.submitting.set(false);
       },
       error: response => {
@@ -188,6 +211,21 @@ export class CoachingSubscriptionComponent implements OnInit {
         this.submitting.set(false);
       }
     });
+  }
+
+  hasSubscription(): boolean { return (this.access()?.subscriptions?.length ?? 0) > 0; }
+
+  /** Roadmap O10: a plan with trial days opens access right away, once per account. */
+  async startTrial(plan: CoachingSubscriptionPlan): Promise<void> {
+    if (this.trialPlanId() || !(plan.trialDays ?? 0)) return;
+    this.trialPlanId.set(plan.id); this.error.set(null); this.success.set(null);
+    try {
+      const trial = await firstValueFrom(this.sales.startTrial(plan.id));
+      this.success.set(`${plan.trialDays} günlük ücretsiz denemen başladı. Erişimin ${new Date(trial.endDate).toLocaleDateString('tr-TR')} tarihine kadar açık.`);
+      this.service.getMyCoachingSubscriptionAccess().subscribe({ next: access => this.access.set(access) });
+    } catch (response) {
+      this.error.set(coachingErrorMessage(response, 'Ücretsiz deneme başlatılamadı.'));
+    } finally { this.trialPlanId.set(null); }
   }
 
   statusLabel(status: string): string {
