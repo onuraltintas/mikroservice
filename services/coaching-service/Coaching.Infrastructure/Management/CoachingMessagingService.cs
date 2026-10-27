@@ -205,10 +205,11 @@ public sealed class CoachingMessagingService(CoachingDbContext db, ICoachingAcco
         while ((read = await content.ReadAsync(chunk, ct)) > 0)
         {
             if (buffer.Length + read > AssignmentAttachmentPolicy.MaxFileSizeBytes)
-                throw new ArgumentOutOfRangeException(nameof(content), "Dosya en fazla 10 MB olabilir.");
+                throw new ArgumentException("Dosya en fazla 10 MB olabilir.");
             buffer.Write(chunk, 0, read);
         }
-        AssignmentAttachmentPolicy.ValidateMetadata(name, type, buffer.Length);
+        try { AssignmentAttachmentPolicy.ValidateMetadata(name, type, buffer.Length); }
+        catch (ArgumentException) { throw UnsupportedFile(); }
         if (await db.Set<CoachingMessageAttachment>().CountAsync(x => x.ConversationId == conversation.Id && x.UploaderUserId == actor && x.MessageId == null, ct)
             >= MaxPendingUploads) throw new ArgumentException("Gönderilmemiş çok fazla dosya var; önce mesajını gönder.");
 
@@ -216,7 +217,9 @@ public sealed class CoachingMessagingService(CoachingDbContext db, ICoachingAcco
         var key = CoachingMessageAttachment.KeyFor(conversation.Id, id);
         var sha = Convert.ToHexString(SHA256.HashData(buffer.GetBuffer().AsSpan(0, (int)buffer.Length)));
         buffer.Position = 0;
-        var stored = await storage.StoreAsync(key, buffer, type, buffer.Length, sha, ct);
+        StoredAssignmentAttachment stored;
+        try { stored = await storage.StoreAsync(key, buffer, type, buffer.Length, sha, ct); }
+        catch (ArgumentException) { throw UnsupportedFile(); }
         try
         {
             AttachmentScanResult scan;
@@ -436,6 +439,8 @@ public sealed class CoachingMessagingService(CoachingDbContext db, ICoachingAcco
     private static string Name(CoachingAccount account) => $"{account.FirstName} {account.LastName}".Trim();
     private static string NameOf(IReadOnlyDictionary<Guid, CoachingAccount> people, Guid id) => people.TryGetValue(id, out var account) ? Name(account) : "Kullanıcı";
     private static CoachingMessageAttachmentView View(CoachingMessageAttachment x) => new(x.Id, x.FileName, x.ContentType, x.SizeBytes);
+    private static ArgumentException UnsupportedFile() =>
+        new("Dosya türü ya da içeriği desteklenmiyor. 10 MB'a kadar fotoğraf (JPG, PNG, WEBP), PDF, Word ya da Markdown dosyası ekleyebilirsin.");
     private static BusinessRuleException Forbidden() => new("Authorization.Forbidden", "Bu yazışma için aktif bir öğretmen–öğrenci ya da veli bağlantısı gereklidir.");
 }
 

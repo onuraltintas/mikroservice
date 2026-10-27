@@ -53,7 +53,10 @@ public sealed class CoachingMessagesController(CoachingMessagingService messages
     {
         var contentType = (Request.ContentType ?? string.Empty).Split(';', 2)[0].Trim();
         if (string.IsNullOrWhiteSpace(contentType) || contentType == "application/octet-stream")
-            contentType = AssignmentAttachmentPolicy.ContentTypeForFileName(fileName ?? string.Empty);
+        {
+            try { contentType = AssignmentAttachmentPolicy.ContentTypeForFileName(fileName ?? string.Empty); }
+            catch (ArgumentException) { contentType = "application/octet-stream"; } // the service rejects it with a readable message
+        }
         return Ok(await messages.UploadAsync(UserId, conversationId, fileName ?? string.Empty, contentType, Request.Body, ct));
     });
 
