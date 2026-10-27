@@ -14,7 +14,14 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
       @if (success()) { <p role="status">{{ success() }}</p> }
       @if (loading()) { <p role="status">Abonelik yükleniyor…</p> }
       @else if (subscription(); as plan) {
-        <p><strong>{{ plan.planName }}</strong> · {{ plan.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar</p>
+        @if (plan.startsAt) {
+          <p><strong>{{ plan.planName }}</strong> · {{ plan.startsAt | date:'dd.MM.yyyy' }} tarihinde başlıyor, {{ plan.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar. Koltukları şimdiden ayırabilirsiniz.</p>
+        } @else {
+          <p><strong>{{ plan.planName }}</strong> · {{ plan.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar</p>
+        }
+        @if (plan.upcoming; as next) {
+          <p class="upcoming" data-testid="institution-upcoming">Yenileme: <strong>{{ next.planName }}</strong> {{ next.startsAt | date:'dd.MM.yyyy' }} – {{ next.accessUntil | date:'dd.MM.yyyy' }} · {{ next.usedStudentSeats }} / {{ next.includedStudentSeats }} koltuk ayrılmış. Bugünkü koltuklar yenilemeye taşınır.</p>
+        }
         <p><strong>{{ plan.usedStudentSeats }} / {{ plan.includedStudentSeats }}</strong> öğrenci koltuğu ayrılmış.</p>
         <ul>
           @for (student of students(); track student.userId) {
@@ -39,6 +46,7 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
     ul { list-style:none; padding:0; } li, .departed { padding:.8rem 0; border-top:1px solid #e8ece5; }
     button { min-height:2.4rem; border:1px solid #9aa99b; border-radius:.5rem; background:#fffefa; padding:.35rem .7rem; color:#29473b; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; } .error { color:#991b1b; }
+    .upcoming { padding:.6rem .75rem; border-radius:.6rem; background:#f1f5ee; color:#243b36; }
   `]
 })
 export class CoachingInstitutionSubscriptionComponent implements OnChanges {

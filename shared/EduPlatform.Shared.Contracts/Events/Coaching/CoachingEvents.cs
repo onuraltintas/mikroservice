@@ -123,6 +123,8 @@ public static class CoachingSubscriptionNoticeKinds
     public const string Expired = "Expired";
     public const string InstitutionExpiring = "InstitutionExpiring";
     public const string InstitutionExpired = "InstitutionExpired";
+    /// <summary>A pending transfer nobody could verify in time; the payer can send a new notice.</summary>
+    public const string TransferExpired = "TransferExpired";
 }
 
 /// <summary>An assignment was called off (cancelled, or deleted before anyone submitted); its students are told.</summary>

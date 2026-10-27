@@ -69,9 +69,9 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         var subscriptions = new CoachingSubscriptionService(db, identity);
         var actor = Guid.NewGuid(); var teacher = Guid.NewGuid(); var student = Guid.NewGuid();
         identity.ActiveTeachers.Add(teacher); identity.TeacherAssignments.Add((teacher, student));
-        var small = (await subscriptions.CreatePlanAsync(Plan("teacher-small", "Öğretmen 1", "Teacher", 500m, 1), actor))!.Value;
+        var small = (await subscriptions.CreatePlanAsync(Plan("teacher-small", "Öğretmen 3", "Teacher", 500m, 3), actor))!.Value;
         var large = (await subscriptions.CreatePlanAsync(Plan("teacher-large", "Öğretmen 5", "Teacher", 1500m, 5), actor))!.Value;
-        var tiny = (await subscriptions.CreatePlanAsync(Plan("teacher-tiny", "Öğretmen 0", "Teacher", 300m, 0), actor))!.Value;
+        var tiny = (await subscriptions.CreatePlanAsync(Plan("teacher-tiny", "Öğretmen 1", "Teacher", 300m, 1), actor))!.Value;
         await Settings(subscriptions, actor, "settings-upgrade-0001");
         var current = await subscriptions.CreateSubscriptionAsync(new CoachingSubscriptionCreateRequest(
             small, teacher, "Öğretmen", "teacher@example.test", null, [], DateTime.UtcNow, null), actor);

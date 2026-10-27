@@ -15,6 +15,19 @@ export interface CoachingInstitutionSubscription {
   includedStudentSeats: number;
   usedStudentSeats: number;
   students: { studentId: string; isSuspended: boolean; assignedAt: string; isCurrentMember: boolean }[];
+  /** Set when this license has not started yet. */
+  startsAt?: string | null;
+  /** A renewal bought ahead of time, starting after this license. */
+  upcoming?: CoachingInstitutionUpcomingSubscription | null;
+}
+
+export interface CoachingInstitutionUpcomingSubscription {
+  subscriptionId: string;
+  planName: string;
+  startsAt: string;
+  accessUntil: string;
+  includedStudentSeats: number;
+  usedStudentSeats: number;
 }
 
 export interface CoachingInstitutionAssignmentSummary {

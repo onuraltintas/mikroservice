@@ -705,6 +705,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
 
+                    b.Property<int?>("DurationDays")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Note")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
@@ -1529,6 +1532,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
 
+                    b.Property<Guid?>("InstitutionId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("PlanId")
                         .HasColumnType("uuid");
 
@@ -1559,7 +1565,7 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("UserName")
@@ -1572,9 +1578,14 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("BankTransferRequestId")
                         .IsUnique();
 
+                    b.HasIndex("InstitutionId");
+
                     b.HasIndex("CreatedAt", "Status");
 
-                    b.ToTable("payment_records", "coaching");
+                    b.ToTable("payment_records", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_payment_owner", "\"UserId\" IS NOT NULL OR \"InstitutionId\" IS NOT NULL");
+                        });
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingReminderReceipt", b =>
@@ -1795,6 +1806,64 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_coaching_subscription_dates", "\"EndDate\" >= \"StartDate\"");
 
                             t.HasCheckConstraint("ck_coaching_subscription_owner", "((\"UserId\" IS NOT NULL)::int + (\"InstitutionId\" IS NOT NULL)::int) = 1");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingSubscriptionPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BankTransferRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DurationDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankTransferRequestId")
+                        .IsUnique()
+                        .HasFilter("\"BankTransferRequestId\" IS NOT NULL");
+
+                    b.HasIndex("SubscriptionId", "StartDate");
+
+                    b.ToTable("subscription_periods", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_subscription_period_dates", "\"EndDate\" >= \"StartDate\"");
+
+                            t.HasCheckConstraint("ck_coaching_subscription_period_source", "\"Source\" IN ('BankTransfer', 'Manual')");
+
+                            t.HasCheckConstraint("ck_coaching_subscription_period_status", "\"Status\" IN ('Active', 'Cancelled')");
                         });
                 });
 

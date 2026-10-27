@@ -71,6 +71,7 @@ public class CoachingDbContext : DbContext
     public DbSet<CoachingSubscriptionSettings> CoachingSubscriptionSettings => Set<CoachingSubscriptionSettings>();
     public DbSet<CoachingBankTransferRequest> CoachingBankTransferRequests => Set<CoachingBankTransferRequest>();
     public DbSet<CoachingPaymentRecord> CoachingPaymentRecords => Set<CoachingPaymentRecord>();
+    public DbSet<CoachingSubscriptionPeriod> CoachingSubscriptionPeriods => Set<CoachingSubscriptionPeriod>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -245,6 +246,20 @@ public class CoachingDbContext : DbContext
         seats.HasIndex(seat => new { seat.SubscriptionId, seat.StudentId }).IsUnique();
         seats.HasIndex(seat => new { seat.StudentId, seat.IsSuspended });
 
+        var periods = modelBuilder.Entity<CoachingSubscriptionPeriod>();
+        periods.ToTable("subscription_periods", table =>
+        {
+            table.HasCheckConstraint("ck_coaching_subscription_period_dates", "\"EndDate\" >= \"StartDate\"");
+            table.HasCheckConstraint("ck_coaching_subscription_period_status", "\"Status\" IN ('Active', 'Cancelled')");
+            table.HasCheckConstraint("ck_coaching_subscription_period_source", "\"Source\" IN ('BankTransfer', 'Manual')");
+        });
+        periods.HasKey(period => period.Id);
+        periods.Property(period => period.Source).HasMaxLength(20).IsRequired();
+        periods.Property(period => period.Status).HasMaxLength(20).IsRequired();
+        periods.HasIndex(period => new { period.SubscriptionId, period.StartDate });
+        periods.HasIndex(period => period.BankTransferRequestId).IsUnique()
+            .HasFilter("\"BankTransferRequestId\" IS NOT NULL");
+
         var settings = modelBuilder.Entity<CoachingSubscriptionSettings>();
         settings.ToTable("subscription_settings");
         settings.HasKey(value => value.Id);
@@ -271,7 +286,8 @@ public class CoachingDbContext : DbContext
         requests.HasIndex(request => new { request.UserId, request.Status });
 
         var payments = modelBuilder.Entity<CoachingPaymentRecord>();
-        payments.ToTable("payment_records");
+        payments.ToTable("payment_records", table => table.HasCheckConstraint("ck_coaching_payment_owner",
+            "\"UserId\" IS NOT NULL OR \"InstitutionId\" IS NOT NULL"));
         payments.HasKey(payment => payment.Id);
         payments.Property(payment => payment.UserName).HasMaxLength(200).IsRequired();
         payments.Property(payment => payment.UserEmail).HasMaxLength(320).IsRequired();
@@ -284,6 +300,7 @@ public class CoachingDbContext : DbContext
         payments.Property(payment => payment.Reference).HasMaxLength(120);
         payments.HasIndex(payment => payment.BankTransferRequestId).IsUnique();
         payments.HasIndex(payment => new { payment.CreatedAt, payment.Status });
+        payments.HasIndex(payment => payment.InstitutionId);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

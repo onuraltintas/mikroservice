@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { CoachingTeacherStudentsService, CoachingTeacherStudent } from './coaching-teacher-students.service';
+import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import {
   CoachingTeacherBankTransferRequest,
   CoachingTeacherBankTransferSettings,
@@ -71,8 +72,8 @@ import {
           <ul class="plans">
             @for (plan of plans(); track plan.id) {
               <li [class.selected]="selectedPlanId === plan.id">
-                <label><input type="radio" name="teacherPlan" [value]="plan.id" [(ngModel)]="selectedPlanId" [disabled]="savingRequest()" />
-                  <span><strong>{{ plan.name }}</strong><small>{{ plan.description }}</small><small>{{ plan.includedStudentSeats }} öğrenci koltuğu · {{ plan.durationDays }} gün · {{ plan.isContactOnly ? 'Fiyat için iletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (settings()?.currency || 'TRY') }}</small></span>
+                <label><input type="radio" name="teacherPlan" [attr.data-testid]="'teacher-plan-' + plan.id" [value]="plan.id" [(ngModel)]="selectedPlanId" [disabled]="savingRequest() || isSmallerPlan(plan)" />
+                  <span><strong>{{ plan.name }}</strong>@if (planChangeLabel(plan); as change) { <em class="plan-tag">{{ change }}</em> }<small>{{ plan.description }}</small><small>{{ plan.includedStudentSeats }} öğrenci koltuğu · {{ plan.durationDays }} gün · {{ plan.isContactOnly ? 'Fiyat için iletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (settings()?.currency || 'TRY') }}</small></span>
                 </label>
               </li>
             }
@@ -85,6 +86,7 @@ import {
             <p><strong>{{ settings()?.accountHolder }}</strong> · {{ settings()?.bankName }}</p>
             <p class="iban">{{ settings()?.iban }}</p>
             @if (settings()?.paymentInstructions) { <p>{{ settings()?.paymentInstructions }}</p> }
+            @if (seatSummary()) { <p class="muted">Planınız sürerken aynı planı yenileyebilir veya daha fazla koltuklu bir plana geçebilirsiniz. Yükseltme onaylanınca koltuklarınız korunur, yeni süre mevcut sürenin sonuna eklenir.</p> }
           </div>
           <form class="payment-form" (ngSubmit)="submitRequest()">
             <label>Ödeme referansı<input name="paymentReference" [(ngModel)]="paymentReference" required maxlength="120" autocomplete="off" /></label>
@@ -101,7 +103,16 @@ import {
       <section class="card" aria-labelledby="teacher-payment-history-title">
         <h3 id="teacher-payment-history-title">Ödeme bildirimlerim</h3>
         @for (request of requests(); track request.id) {
-          <div class="request-row"><span><strong>{{ request.plan.name }}</strong><small>{{ request.amount | number:'1.2-2' }} {{ request.currency }} · {{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</small></span><span>{{ statusLabel(request.status) }} @if (request.reviewNote) {<small>{{ request.reviewNote }}</small>}</span></div>
+          <div class="request-row"><span><strong>{{ request.plan.name }}</strong><small>{{ request.amount | number:'1.2-2' }} {{ request.currency }} · {{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</small></span><span>{{ statusLabel(request.status) }} @if (request.reviewNote) {<small>{{ request.reviewNote }}</small>}
+            @if (request.status === 'Pending' && editingRequestId() !== request.id) { <span class="request-actions"><button type="button" class="secondary" [attr.data-testid]="'edit-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="startEdit(request)">Düzelt</button><button type="button" class="secondary" [attr.data-testid]="'withdraw-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="withdraw(request)">Geri çek</button></span> }</span></div>
+          @if (editingRequestId() === request.id) {
+            <form class="payment-form" (ngSubmit)="saveEdit()">
+              <label>Ödeme referansı<input name="editReference" [(ngModel)]="editReference" required maxlength="120" autocomplete="off" /></label>
+              <label>Ödeyen adı<input name="editPayerName" [(ngModel)]="editPayerName" maxlength="200" autocomplete="name" /></label>
+              <label>Not<input name="editNote" [(ngModel)]="editNote" maxlength="1000" /></label>
+              <span class="request-actions"><button type="submit" [disabled]="busyRequestId() === request.id">Kaydet</button><button type="button" class="secondary" (click)="editingRequestId.set(null)">Vazgeç</button></span>
+            </form>
+          }
         } @empty { <p class="muted">Henüz ödeme bildiriminiz yok.</p> }
       </section>
     </section>
@@ -134,6 +145,8 @@ import {
     .message { padding: .75rem; border-radius: .5rem; background: var(--ui-surface); font-size: .85rem; }
     .error { border: 1px solid var(--ui-border); background: var(--coaching-danger-soft); color: var(--ui-danger); }
     .success { border: 1px solid var(--ui-border); background: var(--ui-brand-soft); color: var(--ui-success); }
+    .plan-tag { margin-left: .4rem; padding: .05rem .4rem; border-radius: 999px; background: var(--ui-surface-muted); font-size: .72rem; font-style: normal; font-weight: 700; }
+    .request-actions { display: inline-flex; flex-wrap: wrap; gap: .4rem; margin-left: .5rem; }
     @media (max-width: 640px) { .plan-heading, .student-list li, .request-row { align-items: stretch; flex-direction: column; } }
   `]
 })
@@ -159,6 +172,12 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
   payerName = '';
   paymentNote = '';
   adultPayerDeclaration = false;
+  private readonly toaster = inject(ToasterService);
+  readonly editingRequestId = signal<string | null>(null);
+  readonly busyRequestId = signal<string | null>(null);
+  editReference = '';
+  editPayerName = '';
+  editNote = '';
 
   ngOnInit(): void {
     this.load();
@@ -181,7 +200,7 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
       this.settings.set(result.settings);
       this.requests.set(result.requests);
       this.seatSummary.set(result.seats);
-      if (!this.selectedPlanId && result.plans.length) this.selectedPlanId = result.plans[0].id;
+      if (!this.selectedPlanId && result.plans.length) this.selectedPlanId = (result.plans.find(plan => !this.isSmallerPlan(plan)) ?? result.plans[0]).id;
       this.loading.set(false);
       this.loadStudents();
     });
@@ -256,7 +275,62 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
   }
 
   statusLabel(status: string): string {
-    return status === 'Pending' ? 'İncelemede' : status === 'Approved' ? 'Onaylandı' : status === 'Rejected' ? 'Reddedildi' : status;
+    return ({ Pending: 'İncelemede', Approved: 'Onaylandı', Rejected: 'Reddedildi', Cancelled: 'İptal edildi', Withdrawn: 'Geri çekildi', Expired: 'Süresi doldu' } as Record<string, string>)[status] ?? status;
+  }
+
+  /** While a plan runs only the same plan or a larger one can be bought; a smaller one would take seats away. */
+  isSmallerPlan(plan: CoachingTeacherSubscriptionPlan): boolean {
+    const current = this.seatSummary();
+    if (!current) return false;
+    const seats = plan.includedStudentSeats ?? 0;
+    return seats < current.includedStudentSeats || (seats === current.includedStudentSeats && plan.name !== current.planName);
+  }
+
+  planChangeLabel(plan: CoachingTeacherSubscriptionPlan): string {
+    const current = this.seatSummary();
+    if (!current) return '';
+    if (this.isSmallerPlan(plan)) return 'Mevcut planınızdan küçük';
+    return (plan.includedStudentSeats ?? 0) > current.includedStudentSeats ? 'Yükseltme' : 'Yenileme';
+  }
+
+  startEdit(request: CoachingTeacherBankTransferRequest): void {
+    if (request.status !== 'Pending') return;
+    this.editingRequestId.set(request.id);
+    this.editReference = request.paymentReference; this.editPayerName = request.payerName ?? ''; this.editNote = request.note ?? '';
+    this.error.set(null); this.success.set(null);
+  }
+
+  async saveEdit(): Promise<void> {
+    const id = this.editingRequestId();
+    if (!id || this.busyRequestId()) return;
+    if (!this.editReference.trim()) { this.error.set('Ödeme referansı zorunludur.'); return; }
+    this.busyRequestId.set(id); this.error.set(null);
+    try {
+      const updated = await firstValueFrom(this.subscriptions.updateBankTransferRequest(id, {
+        paymentReference: this.editReference.trim(), payerName: this.editPayerName.trim() || null, note: this.editNote.trim() || null
+      }));
+      this.replaceRequest(updated); this.editingRequestId.set(null);
+      this.success.set('Ödeme bildiriminiz güncellendi.');
+    } catch (error) {
+      this.error.set(this.errorMessage(error, 'Ödeme bildirimi güncellenemedi.'));
+    } finally { this.busyRequestId.set(null); }
+  }
+
+  async withdraw(request: CoachingTeacherBankTransferRequest): Promise<void> {
+    if (request.status !== 'Pending' || this.busyRequestId()) return;
+    if (!await this.toaster.confirm(`${request.paymentReference} referanslı ödeme bildirimi geri çekilsin mi?`)) return;
+    this.busyRequestId.set(request.id); this.error.set(null);
+    try {
+      this.replaceRequest(await firstValueFrom(this.subscriptions.withdrawBankTransferRequest(request.id)));
+      if (this.editingRequestId() === request.id) this.editingRequestId.set(null);
+      this.success.set('Ödeme bildiriminiz geri çekildi.');
+    } catch (error) {
+      this.error.set(this.errorMessage(error, 'Ödeme bildirimi geri çekilemedi.'));
+    } finally { this.busyRequestId.set(null); }
+  }
+
+  private replaceRequest(updated: CoachingTeacherBankTransferRequest): void {
+    this.requests.update(items => items.map(item => item.id === updated.id ? { ...item, ...updated } : item));
   }
 
   private async updateSeat(student: CoachingTeacherStudent, request: () => ReturnType<CoachingTeacherSubscriptionService['assignStudent']>, message: string): Promise<void> {

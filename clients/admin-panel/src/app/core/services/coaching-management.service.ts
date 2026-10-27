@@ -173,11 +173,23 @@ export interface CoachingBankTransferRequest {
   reviewedAt: string | null;
   reviewNote: string | null;
   createdAt: string;
+  /** Plan length fixed when the notice was sent. */
+  durationDays?: number | null;
+  /** Other payers who sent the same receipt number (admin list). */
+  duplicateReferenceCount?: number;
+}
+
+export interface CoachingBankTransferRequestUpdate {
+  paymentReference: string;
+  payerName: string | null;
+  note: string | null;
 }
 
 export interface CoachingPayment {
   id: string;
-  userId: string;
+  /** Empty for an institution license. */
+  userId: string | null;
+  institutionId?: string | null;
   userName: string;
   userEmail: string;
   planName: string;
@@ -400,6 +412,21 @@ export class CoachingManagementService {
     }, { headers: this.idempotencyHeaders() }).pipe(map(response => response.data));
   }
 
+  /** Corrects a notice that is still waiting for review. */
+  updateMyCoachingBankTransferRequest(id: string, request: CoachingBankTransferRequestUpdate) {
+    return this.http.put<{ data: CoachingBankTransferRequest }>(`${this.coachingPublicSubscriptionUrl}/bank-transfer-requests/${encodeURIComponent(id)}`, {
+      paymentReference: request.paymentReference.trim(),
+      payerName: request.payerName?.trim() || null,
+      note: request.note?.trim() || null
+    }).pipe(map(response => response.data));
+  }
+
+  /** Takes back a notice that is still waiting for review. */
+  withdrawMyCoachingBankTransferRequest(id: string) {
+    return this.http.post<{ data: CoachingBankTransferRequest }>(`${this.coachingPublicSubscriptionUrl}/bank-transfer-requests/${encodeURIComponent(id)}/withdraw`, {})
+      .pipe(map(response => response.data));
+  }
+
   createPlan(request: CoachingSubscriptionPlanRequest) {
     return this.http.post<{ data: { id: string } }>(`${this.coachingSubscriptionsAdminUrl}/plans`, request);
   }
@@ -453,6 +480,8 @@ export class CoachingManagementService {
   createSubscription(request: {
     planId: string; userId: string | null; userName: string | null; userEmail: string | null;
     institutionId: string | null; studentIds: string[]; startDate: string; notes: string | null; paymentReference?: string | null;
+    /** Money received for this license; the plan price when empty. */
+    amount?: number | null;
   }) {
     return this.http.post<void>(this.coachingSubscriptionsAdminUrl, request);
   }

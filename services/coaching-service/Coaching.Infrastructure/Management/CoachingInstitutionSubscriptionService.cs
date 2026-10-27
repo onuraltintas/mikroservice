@@ -16,16 +16,29 @@ public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db,
     public async Task<CoachingInstitutionSubscriptionSummary?> GetAsync(CancellationToken ct = default)
     {
         var scope = await RequireScopeAsync(ct);
-        var row = await ActiveSubscriptions(scope.InstitutionId!.Value).OrderByDescending(row => row.EndDate)
-            .ThenByDescending(row => row.CreatedAt).FirstOrDefaultAsync(ct);
+        var now = DateTime.UtcNow;
+        var rows = await ManageableSubscriptions(scope.InstitutionId!.Value).ToListAsync(ct);
+        // The running license comes first; a license bought ahead of time is shown next to it, or on its own until it starts.
+        var row = rows.Where(item => item.StartDate <= now).OrderByDescending(item => item.EndDate).ThenByDescending(item => item.CreatedAt).FirstOrDefault()
+            ?? rows.OrderBy(item => item.StartDate).ThenBy(item => item.CreatedAt).FirstOrDefault();
         if (row is null) return null;
-        var plan = await db.CoachingSubscriptionPlans.AsNoTracking().SingleAsync(plan => plan.Id == row.PlanId, ct);
+        var next = rows.Where(item => item.Id != row.Id && item.StartDate > now).OrderBy(item => item.StartDate).FirstOrDefault();
+        var planIds = new[] { row.PlanId, next?.PlanId ?? row.PlanId };
+        var plans = await db.CoachingSubscriptionPlans.AsNoTracking().Where(plan => Enumerable.Contains(planIds, plan.Id)).ToDictionaryAsync(plan => plan.Id, ct);
+        var plan = plans[row.PlanId];
         var seats = await db.CoachingSubscriptionSeats.AsNoTracking().Where(seat => seat.SubscriptionId == row.Id)
             .OrderBy(seat => seat.AssignedAt).ToListAsync(ct);
         var members = await MemberIdsAsync(scope.InstitutionId!.Value, seats.Select(seat => seat.StudentId).ToArray(), ct);
+        CoachingInstitutionUpcomingSubscription? upcoming = null;
+        if (next is not null)
+        {
+            var used = await db.CoachingSubscriptionSeats.AsNoTracking().CountAsync(seat => seat.SubscriptionId == next.Id && !seat.IsSuspended, ct);
+            upcoming = new(next.Id, plans[next.PlanId].Name, next.StartDate, next.EndDate, plans[next.PlanId].IncludedStudentSeats.GetValueOrDefault(), used);
+        }
         return new(row.Id, plan.Name, row.EndDate, plan.IncludedStudentSeats.GetValueOrDefault(),
             seats.Count(seat => !seat.IsSuspended), seats.Select(seat => new CoachingInstitutionSubscriptionSeat(
-                seat.StudentId, seat.IsSuspended, seat.AssignedAt, members.Contains(seat.StudentId) || scope.StudentIds!.Contains(seat.StudentId))).ToArray());
+                seat.StudentId, seat.IsSuspended, seat.AssignedAt, members.Contains(seat.StudentId) || scope.StudentIds!.Contains(seat.StudentId))).ToArray(),
+            row.StartDate > now ? row.StartDate : null, upcoming);
     }
 
     public async Task<bool> SetSeatAsync(Guid subscriptionId, Guid studentId, bool isSuspended, CancellationToken ct = default)
@@ -40,7 +53,7 @@ public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db,
             if (attempts++ > 0) db.ChangeTracker.Clear();
             await using var transaction = db.Database.IsRelational()
                 ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct) : null;
-            var row = await ActiveSubscriptions(scope.InstitutionId!.Value).SingleOrDefaultAsync(row => row.Id == subscriptionId, ct);
+            var row = await ManageableSubscriptions(scope.InstitutionId!.Value).SingleOrDefaultAsync(row => row.Id == subscriptionId, ct);
             if (row is null) return false;
             var capacity = await db.CoachingSubscriptionPlans.Where(plan => plan.Id == row.PlanId).Select(plan => plan.IncludedStudentSeats).SingleAsync(ct);
             var seat = await db.CoachingSubscriptionSeats.SingleOrDefaultAsync(item => item.SubscriptionId == subscriptionId && item.StudentId == studentId, ct);
@@ -73,11 +86,12 @@ public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db,
             && db.CoachingStudentProfiles.Any(profile => profile.UserId == member.UserId && profile.IsActive))
             .Select(member => member.UserId).ToArrayAsync(ct)).ToHashSet();
 
-    private IQueryable<CoachingSubscription> ActiveSubscriptions(Guid institutionId)
+    // Running licenses and the ones bought ahead of time: seats can be prepared before a renewal starts.
+    private IQueryable<CoachingSubscription> ManageableSubscriptions(Guid institutionId)
     {
         var now = DateTime.UtcNow;
         return db.CoachingSubscriptions.AsNoTracking().Where(subscription => subscription.InstitutionId == institutionId
-            && subscription.Status == "Active" && subscription.StartDate <= now && subscription.EndDate >= now
+            && subscription.Status == "Active" && subscription.EndDate >= now
             && db.CoachingSubscriptionPlans.Any(plan => plan.Id == subscription.PlanId && plan.Audience == "Institution"));
     }
     private async Task<CoachingAdminScope> RequireScopeAsync(CancellationToken ct)

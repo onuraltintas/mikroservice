@@ -81,7 +81,7 @@ describe('CoachingTeacherSubscriptionComponent', () => {
 
     expect(component.isSmallerPlan(plan('teacher-3', 3))).toBe(true);
     expect(component.isSmallerPlan(plan('teacher-10', 10))).toBe(false);
-    expect((fixture.nativeElement.querySelector('input[value="teacher-3"]') as HTMLInputElement).disabled).toBe(true);
+    expect((fixture.nativeElement.querySelector('[data-testid="teacher-plan-teacher-3"]') as HTMLInputElement).disabled).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('Yükseltme');
 
     component.startEdit(component.requests()[0]); component.editReference = ' EFT-FIXED '; component.editPayerName = ''; component.editNote = '';

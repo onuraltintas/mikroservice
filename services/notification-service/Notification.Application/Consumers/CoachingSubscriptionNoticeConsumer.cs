@@ -68,6 +68,8 @@ public sealed class CoachingSubscriptionNoticeConsumer(
                 ends is null ? $"{plan} aboneliğin etkinleştirildi." : $"{plan} aboneliğin {ends} tarihine kadar etkin.", false),
             CoachingSubscriptionNoticeKinds.TransferRejected => new("Ödeme bildirimin onaylanmadı",
                 $"{plan} için gönderdiğin ödeme bildirimi onaylanmadı. Gerekçe: {notice.Detail}", false),
+            CoachingSubscriptionNoticeKinds.TransferExpired => new("Ödeme bildiriminin süresi doldu",
+                $"{plan} için gönderdiğin {notice.Detail} referanslı ödeme bildirimi 14 gün içinde doğrulanamadı. Ödemeyi yaptıysan dekont bilgileriyle yeni bir bildirim gönderebilirsin.", false),
             CoachingSubscriptionNoticeKinds.ApprovalCancelled => new("Ödeme onayın iptal edildi",
                 $"{plan} için onaylanan ödemen iptal edildi ve abonelik süren buna göre güncellendi. Gerekçe: {notice.Detail}", false),
             CoachingSubscriptionNoticeKinds.Expiring => new("Aboneliğin yakında sona eriyor",

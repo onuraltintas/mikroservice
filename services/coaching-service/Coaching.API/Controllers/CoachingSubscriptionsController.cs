@@ -72,6 +72,39 @@ public sealed class CoachingSubscriptionsController(
             : Ok(new { success = true, data = result, message = "Ödeme bildiriminiz incelemeye alındı." });
     }
 
+    /// <summary>The payer corrects the reference, payer name or note of a notice still waiting for review.</summary>
+    [HttpPut("bank-transfer-requests/{id:guid}")]
+    [EnableRateLimiting("payment-request")]
+    public async Task<IActionResult> UpdateMyBankTransferRequest(Guid id, [FromBody] CoachingBankTransferRequestUpdate request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var userId)) return Unauthorized();
+        try
+        {
+            var result = await subscriptions.UpdateMyBankTransferRequestAsync(userId, id, request, cancellationToken);
+            return result is null
+                ? NotFound(new { success = false, message = "Ödeme bildirimi bulunamadı." })
+                : Ok(new { success = true, data = result, message = "Ödeme bildirimin güncellendi." });
+        }
+        catch (ArgumentException error) { return BadRequest(new { success = false, message = error.Message }); }
+        catch (EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException error) { return Conflict(new { success = false, code = error.Code, message = error.Message }); }
+    }
+
+    /// <summary>The payer takes back a notice that is still waiting for review.</summary>
+    [HttpPost("bank-transfer-requests/{id:guid}/withdraw")]
+    public async Task<IActionResult> WithdrawMyBankTransferRequest(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var userId)) return Unauthorized();
+        try
+        {
+            var result = await subscriptions.WithdrawMyBankTransferRequestAsync(userId, id, cancellationToken);
+            return result is null
+                ? NotFound(new { success = false, message = "Ödeme bildirimi bulunamadı." })
+                : Ok(new { success = true, data = result, message = "Ödeme bildirimin geri çekildi." });
+        }
+        catch (EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException error) { return Conflict(new { success = false, code = error.Code, message = error.Message }); }
+    }
+
     [HttpPost("teacher-bank-transfer-requests")]
     [Authorize(Roles = "Teacher")]
     [EnableRateLimiting("payment-request")]
@@ -89,7 +122,7 @@ public sealed class CoachingSubscriptionsController(
         var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
         var result = await subscriptions.CreateTeacherBankTransferRequestAsync(userId, userName, userEmail, request, idempotencyKey ?? string.Empty, cancellationToken);
         return result is null
-            ? BadRequest(new { success = false, message = "Bağımsız öğretmen planı, banka ayarı veya ödeme referansı geçersiz." })
+            ? BadRequest(new { success = false, message = "Bağımsız öğretmen planı, banka ayarı veya ödeme referansı geçersiz. Planınız sürerken yalnız aynı planı yenileyebilir veya daha fazla koltuklu bir plana geçebilirsiniz." })
             : Ok(new { success = true, data = result, message = "Öğretmen abonelik ödeme bildiriminiz incelemeye alındı." });
     }
 
