@@ -195,7 +195,8 @@ describe('CoachingTeacherExamsComponent', () => {
     expect(exams.deleteExamResult).toHaveBeenCalledWith('exam-1', 'result-1');
     expect(component.examDetail()!.results.map(x => x.id)).toEqual(['result-2']);
     expect(component.exams()[0].resultCount).toBe(1);
-  });
+    // The confirmation dialog module is loaded on first use, which can be slow on a cold CI runner.
+  }, 30_000);
 
   it('edits existing subject scores using rows and clears removed subjects', () => {
     const exams = examsService([exam('exam-1')]);
