@@ -8,7 +8,7 @@ import { CoachingPortalService } from '../../../core/services/coaching-portal.se
 import { StudentAssignmentsComponent } from './student-assignments.component';
 
 describe('StudentAssignmentsComponent cancelled assignments', () => {
-  it('separates cancelled work from pending and overdue filters', () => {
+  it('labels cancelled work as cancelled even when its due date has passed', () => {
     TestBed.configureTestingModule({
       imports: [StudentAssignmentsComponent],
       providers: [
@@ -27,12 +27,6 @@ describe('StudentAssignmentsComponent cancelled assignments', () => {
       { id: 'cancelled', title: 'İptal', dueDate: '', status: 'Assigned', assignmentStatus: 'Cancelled', isOverdue: true }
     ]);
 
-    component.setFilter('pending');
-    expect(component.visibleAssignments().map(assignment => assignment.id)).toEqual(['pending']);
-    component.setFilter('overdue');
-    expect(component.visibleAssignments().map(assignment => assignment.id)).toEqual(['overdue']);
-    component.setFilter('cancelled');
-    expect(component.visibleAssignments().map(assignment => assignment.id)).toEqual(['cancelled']);
     expect(component.assignmentStatusLabel(component.assignments()[2])).toBe('İptal edildi');
   });
 });

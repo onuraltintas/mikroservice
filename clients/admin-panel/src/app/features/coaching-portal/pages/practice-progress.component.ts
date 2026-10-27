@@ -87,7 +87,7 @@ export class PracticeProgressComponent implements OnChanges {
     this.request?.unsubscribe(); this.error.set(''); this.selected.set(null); this.stale.set(false); this.busy.set(true);
     this.request = this.service.get(this.staffStudentId, this.fromDate, this.toDate).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
       next: value => { this.report.set(value); this.fromDate = value.fromDate; this.toDate = value.toDate; },
-      error: () => { this.report.set(null); this.error.set('Rapor yüklenemedi. Tarih aralığını, yetkinizi ve bağlantıyı kontrol edip yeniden deneyin.'); }
+      error: () => { this.report.set(null); this.error.set('Rapor yüklenemedi. Tarih aralığını, yetkini ve bağlantıyı kontrol edip yeniden dene.'); }
     });
   }
   review(proposal: RecoveryProposal) { if (this.saving() || this.readOnly) return; this.selected.set(proposal); this.approved = false; this.stale.set(false); this.success.set(''); }
@@ -96,8 +96,8 @@ export class PracticeProgressComponent implements OnChanges {
     this.saving.set(true); this.error.set('');
     this.plans.move(proposal.planId, proposal.expectedVersion, proposal.taskIds, proposal.plannedDate, proposal.startMinute, this.staffStudentId)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false))).subscribe({
-        next: () => { this.saving.set(false); this.selected.set(null); this.success.set('Çalışma onayladığınız saate taşındı.'); this.planChanged.emit(); this.load(); },
-        error: err => { this.approved = false; this.stale.set(true); this.error.set(err.status === 409 ? 'Plan değişti veya seçilen saat artık uygun değil. Yeni öneri için raporu yenileyin.' : 'Değişiklik uygulanamadı. Güncel raporu yeniden yükleyin.'); }
+        next: () => { this.saving.set(false); this.selected.set(null); this.success.set('Çalışma onayladığın saate taşındı.'); this.planChanged.emit(); this.load(); },
+        error: err => { this.approved = false; this.stale.set(true); this.error.set(err.status === 409 ? 'Plan değişti veya seçilen saat artık uygun değil. Yeni öneri için raporu yenile.' : 'Değişiklik uygulanamadı. Güncel raporu yeniden yükle.'); }
       });
   }
   @ViewChild('adaptation') private adaptation?: PracticeAdaptationComponent;
@@ -106,6 +106,6 @@ export class PracticeProgressComponent implements OnChanges {
   async canLeavePage() { return !this.saving() && (await this.adaptation?.canLeavePage() ?? true) && (await this.weekly?.canLeavePage() ?? true); }
   source(value: string) { return value === 'StudentReported' ? 'Öğrenci beyanı' : 'Öğretmen kaydı'; }
   time(minute: number) { return `${Math.floor(minute / 60).toString().padStart(2, '0')}:${(minute % 60).toString().padStart(2, '0')}`; }
-  reason(code: string) { return ({ NoActivePlan: 'Aktif çalışma planı yok.', NoOverdueWork: 'Günü geçmiş çalışma yok.', NoStudyHours: 'Saat önerisi için haftalık çalışma saatlerini tanımlayın.', NoFreeSlot: 'Gelecek 14 günde, mevcut plan bitişini aşmadan uygun boş saat bulunamadı. Sabit veya saatsiz çalışmaları takvimden inceleyin.', ReviewBeforeApplying: 'Gelecek 14 gündeki boş saatler önerilir. Her değişiklik ayrı onaylanır; diğer öneriler son duruma göre yenilenir.' } as Record<string, string>)[code] || code; }
+  reason(code: string) { return ({ NoActivePlan: 'Aktif çalışma planı yok.', NoOverdueWork: 'Günü geçmiş çalışma yok.', NoStudyHours: 'Saat önerisi için haftalık çalışma saatlerini tanımla.', NoFreeSlot: 'Gelecek 14 günde, mevcut plan bitişini aşmadan uygun boş saat bulunamadı. Sabit veya saatsiz çalışmaları takvimden incele.', ReviewBeforeApplying: 'Gelecek 14 gündeki boş saatler önerilir. Her değişiklik ayrı onaylanır; diğer öneriler son duruma göre yenilenir.' } as Record<string, string>)[code] || code; }
   private readonly feedback = coachingFeedback(this.success, this.error);
 }

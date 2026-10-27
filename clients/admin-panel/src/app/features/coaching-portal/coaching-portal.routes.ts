@@ -62,10 +62,8 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/student-study-plan-assistant.component').then(m => m.StudentStudyPlanAssistantComponent)
   },
-  {
-    path: 'study-plan-assistant', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
-    loadComponent: () => import('./pages/student-study-plan-assistant.component').then(m => m.StudentStudyPlanAssistantComponent)
-  },
+  // Roadmap O1: one entry for the plan wizard; the old address keeps working.
+  { path: 'study-plan-assistant', redirectTo: 'automatic-plan', pathMatch: 'full' },
   {
     path: '',
     canActivate: [parentHomeRedirect],

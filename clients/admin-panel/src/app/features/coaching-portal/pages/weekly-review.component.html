@@ -46,19 +46,19 @@
         <p>Değerlendirmeyi inceleyip takip notunu yaz. Yeni karar gerekiyorsa aşağıdan ekleyebilirsin. Öğrenci değerlendirmesi veya incelediğin çalışma/ödev sonuçları değişirse yeniden inceleme gerekir.</p>
         <label>İnceleme / takip notu<textarea name="reviewNote" [(ngModel)]="reviewNote" (ngModelChange)="dirty=true" required minlength="5" maxlength="2000"></textarea></label>
         <button type="submit" [disabled]="reviewForm.invalid || reviewNote.trim().length<5 || stale() || !!editor || !!postponement || !!workDecision()">İnceledim, kuyruğu kapat</button>
-      </fieldset></form>}@else{<p>Bu değerlendirme sürümünü incelediniz.</p>}
+      </fieldset></form>}@else{<p>Bu değerlendirme sürümünü inceledin.</p>}
     }
     @if(view.reviews?.length){<details><summary>Öğretmen inceleme geçmişi</summary>
       @for(review of view.reviews;track $index){<p>{{review.reviewedAt | date:'dd.MM.yyyy HH:mm':'+0300'}} · Değerlendirme sürümü {{review.reflectionVersion}} · {{review.note}}</p>@if(review.results;as evidence){<details><summary>Bu incelemede görülen sonuçlar</summary><app-weekly-results [snapshot]="evidence" /></details>}}
     </details>}
-    <div class="decision-heading"><div><h3>Değerlendirmeden alınan kararlar</h3><p>Yeni kararlar için son tarihi {{newDecisionMinDate(week) | date:'dd.MM.yyyy'}} veya sonrasına seçebilirsiniz. Kararın kaynak değerlendirme haftası korunur. Önceki haftalardan açık ve gerekçeyle ertelenmiş kararlar da listelenir.</p></div>@if (view.canDecide && !readOnly) { <button type="button" (click)="newDecision()" [disabled]="saving() || loading()">Karar ekle</button> }</div>
+    <div class="decision-heading"><div><h3>Değerlendirmeden alınan kararlar</h3><p>Yeni kararlar için son tarihi {{newDecisionMinDate(week) | date:'dd.MM.yyyy'}} veya sonrasına seçebilirsin. Kararın kaynak değerlendirme haftası korunur. Önceki haftalardan açık ve gerekçeyle ertelenmiş kararlar da listelenir.</p></div>@if (view.canDecide && !readOnly) { <button type="button" (click)="newDecision()" [disabled]="saving() || loading()">Karar ekle</button> }</div>
     @if (editor; as edit) {
       <form #decisionForm="ngForm" (ngSubmit)="saveDecision()"><fieldset [disabled]="saving() || loading()"><legend>{{edit.body.expectedVersion === null ? 'Yeni karar' : 'Kararı düzenle'}}</legend>
         @if(edit.body.expectedVersion === null && edit.body.sourceReflectionVersion != null){<p>Kaynak değerlendirme sürümü: {{edit.body.sourceReflectionVersion}}. Kayıt anındaki değerlendirme korunacak.</p><label>Önceki karar (isteğe bağlı)<select name="previousDecisionId" [(ngModel)]="edit.body.previousDecisionId" (ngModelChange)="dirty=true"><option [ngValue]="null">Bağımsız yeni karar</option>@for(row of previousDecisionOptions();track row.decisionId){<option [value]="row.decisionId">{{row.title}}</option>}</select></label>}
         <label>Karar başlığı<input name="decisionTitle" [(ngModel)]="edit.body.title" (ngModelChange)="dirty=true" required maxlength="200"></label>
         <label>Açıklama / takip notu<textarea name="decisionNote" [(ngModel)]="edit.body.note" (ngModelChange)="dirty=true" maxlength="2000" rows="3"></textarea></label>
         <label>Son tarih<input name="dueOn" type="date" [(ngModel)]="edit.body.dueOn" (ngModelChange)="dirty=true" [min]="edit.body.expectedVersion === null ? newDecisionMinDate(edit.week) : !edit.dateLocked ? shift(edit.week,7) : ''" [max]="edit.body.expectedVersion !== null && !edit.dateLocked ? shift(edit.week,13) : ''" [readOnly]="!!edit.dateLocked" required></label>
-        @if(edit.dateLocked){<p>Son tarih değişikliği için karardaki gerekçeli tarih değişikliği işlemini kullanın.</p>}
+        @if(edit.dateLocked){<p>Son tarih değişikliği için karardaki gerekçeli tarih değişikliği işlemini kullan.</p>}
         @if (edit.body.expectedVersion !== null) { <label>Karar durumu<select name="decisionStatus" [(ngModel)]="edit.body.status" (ngModelChange)="dirty=true">@for (state of statuses; track state.code) { <option [value]="state.code">{{state.name}}</option> }</select></label> }
         <div class="actions"><button type="submit" [disabled]="decisionForm.invalid || stale()">Kararı kaydet</button><button type="button" (click)="cancelEdit()">Düzenlemeyi kapat</button></div>
       </fieldset></form>

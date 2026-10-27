@@ -24,7 +24,7 @@ export class LearningSetupEntryComponent implements OnInit {
     this.service.get().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
       next: s => this.state.set(s), error: e => {
         if (e?.status === 404) this.state.set(null);
-        else this.error.set(e?.status === 403 ? 'Koçluk öğrenci erişiminiz doğrulanamadı.' : 'Kurulum bilgileri yüklenemedi. Mevcut çalışmalarına devam edebilirsin.');
+        else this.error.set(e?.status === 403 ? 'Koçluk öğrenci erişimin doğrulanamadı.' : 'Kurulum bilgileri yüklenemedi. Mevcut çalışmalarına devam edebilirsin.');
       }
     });
   }

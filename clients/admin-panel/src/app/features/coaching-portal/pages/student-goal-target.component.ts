@@ -66,7 +66,7 @@ export class StudentGoalTargetComponent implements OnChanges {
     this.busy.set(true);
     this.service.getGoalTarget(this.goalId, ...this.studentArgument)
       .pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
-      .subscribe({ next: value => { this.target.set(value); this.loadScore(value); }, error: () => this.error.set('Hedef bilgisi yüklenemedi. Yeniden yükleyebilirsiniz.') });
+      .subscribe({ next: value => { this.target.set(value); this.loadScore(value); }, error: () => this.error.set('Hedef bilgisi yüklenemedi. Yeniden yükleyebilirsin.') });
   }
 
   changeKind(kind: 'school' | 'program') {
@@ -87,7 +87,7 @@ export class StudentGoalTargetComponent implements OnChanges {
   openNet() {
     this.netExpanded.set(true); this.error.set('');
     this.service.practiceProfiles().pipe(takeUntil(this.scopeChanged),takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: profiles => { const codes = contextExamCodes(this.context); this.netProfiles.set(codes.length ? profiles.filter(x=>codes.includes(x.code)) : profiles); }, error: () => this.error.set('Sınav kapsamları yüklenemedi. Yeniden deneyin.')
+      next: profiles => { const codes = contextExamCodes(this.context); this.netProfiles.set(codes.length ? profiles.filter(x=>codes.includes(x.code)) : profiles); }, error: () => this.error.set('Sınav kapsamları yüklenemedi. Yeniden dene.')
     });
   }
   saveNet(clear = false) {
@@ -95,13 +95,13 @@ export class StudentGoalTargetComponent implements OnChanges {
     const profile = this.netProfiles().find(x=>x.code===this.netExamCode);
     if (!clear && (!profile || this.targetNet === null || !Number.isFinite(this.targetNet) || this.targetNet < 0
       || this.targetNet > profile.sections.reduce((sum,x)=>sum+x.questionCount,0) || Math.abs(this.targetNet*100-Math.round(this.targetNet*100))>0.000001)) {
-      this.error.set('Geçerli bir sınav kapsamı ve bu sınırları aşmayan net hedefi girin.'); return;
+      this.error.set('Geçerli bir sınav kapsamı ve bu sınırları aşmayan net hedefi gir.'); return;
     }
     this.saving.set(true); this.error.set(''); this.success.set('');
     this.service.saveGoalNetTarget(this.goalId,target.version,clear?null:this.netExamCode,clear?null:this.targetNet,...this.studentArgument)
       .pipe(takeUntil(this.scopeChanged),takeUntilDestroyed(this.destroyRef),finalize(()=>this.saving.set(false))).subscribe({
-        next: value=>{this.target.set(value);this.loadScore(value);this.targetChanged.emit(value);this.success.set(clear?'Net hedefi kaldırıldı.':'Net hedefi kaydedildi. Gelişim raporunu yenileyebilirsiniz.');},
-        error: err=>{this.stale.set(err.status===409);this.error.set(err.status===409?'Hedef değişti. Yeniden yükleyin.':err.error?.message || 'Net hedefi kaydedilemedi. Seçili okul/program için sınav kapsamını kontrol edin.');}
+        next: value=>{this.target.set(value);this.loadScore(value);this.targetChanged.emit(value);this.success.set(clear?'Net hedefi kaldırıldı.':'Net hedefi kaydedildi. Gelişim raporunu yenileyebilirsin.');},
+        error: err=>{this.stale.set(err.status===409);this.error.set(err.status===409?'Hedef değişti. Yeniden yükle.':err.error?.message || 'Net hedefi kaydedilemedi. Seçili okul/program için sınav kapsamını kontrol et.');}
       });
   }
 
@@ -111,7 +111,7 @@ export class StudentGoalTargetComponent implements OnChanges {
       || Math.abs(this.score * 100 - Math.round(this.score * 100)) > 0.000001
       || Math.abs(this.maxScore * 100 - Math.round(this.maxScore * 100)) > 0.000001
       || !this.examTypes.includes(this.examType)) {
-      this.error.set('Sınav türünü ve geçerli hedef puanı / puan ölçeğini birlikte girin. Hedef puanı ölçeği aşamaz.'); return;
+      this.error.set('Sınav türünü ve geçerli hedef puanı / puan ölçeğini birlikte gir. Hedef puanı ölçeği aşamaz.'); return;
     }
     this.writeScore(this.score, this.maxScore, this.examType);
   }
@@ -125,9 +125,9 @@ export class StudentGoalTargetComponent implements OnChanges {
     this.service.saveGoalScoreTarget(this.goalId, target.version, score, maxScore, examType, ...this.studentArgument)
       .pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
       .subscribe({
-        next: value => { this.target.set(value); this.loadScore(value); this.targetChanged.emit(value); this.success.set(score === null ? 'Puan hedefi kaldırıldı.' : 'Puan hedefi kaydedildi. Raporu yenileyerek hesabı görebilirsiniz.'); },
+        next: value => { this.target.set(value); this.loadScore(value); this.targetChanged.emit(value); this.success.set(score === null ? 'Puan hedefi kaldırıldı.' : 'Puan hedefi kaydedildi. Raporu yenileyerek hesabı görebilirsin.'); },
         error: err => { this.stale.set(err.status === 409); this.error.set(err.status === 409
-          ? 'Hedef değişti. Güncel bilgileri yeniden yükleyin.' : 'Puan hedefi kaydedilemedi. Bilgileri kontrol edip yeniden deneyin.'); }
+          ? 'Hedef değişti. Güncel bilgileri yeniden yükle.' : 'Puan hedefi kaydedilemedi. Bilgileri kontrol edip yeniden dene.'); }
       });
   }
 
@@ -141,7 +141,7 @@ export class StudentGoalTargetComponent implements OnChanges {
         next: value => { this.target.set(value); this.targetChanged.emit(value); this.success.set(programId || schoolId ? 'Hedef bağlantısı kaydedildi.' : 'Hedef bağlantısı kaldırıldı.'); },
         error: err => {
           this.stale.set(err.status === 409);
-          this.error.set(err.status === 409 ? 'Hedef değişti. Güncel bilgileri yeniden yükleyin.' : 'Bağlantı kaydedilemedi. Seçilen kayıt artık aktif olmayabilir; yeniden arayın.');
+          this.error.set(err.status === 409 ? 'Hedef değişti. Güncel bilgileri yeniden yükle.' : 'Bağlantı kaydedilemedi. Seçilen kayıt artık aktif olmayabilir; yeniden ara.');
         }
       });
   }

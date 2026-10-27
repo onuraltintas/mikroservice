@@ -11,6 +11,9 @@ export interface PagedResponse<T> {
   totalPages?: number;
 }
 
+/** Roadmap O1: the student's list is filtered on the server. "open" is waiting and late work together. */
+export type StudentAssignmentFilter = 'open' | 'overdue' | 'pending' | 'submitted' | 'cancelled' | 'all';
+
 export interface StudentAssignment {
   id: string;
   title: string;
@@ -450,11 +453,14 @@ export class CoachingPortalService {
   getStudentAssignments(
     studentId: string,
     pageNumber = 1,
-    pageSize = 25
+    pageSize = 25,
+    status: StudentAssignmentFilter = 'all'
   ): Observable<PagedResponse<StudentAssignment>> {
+    let params = this.paging(pageNumber, pageSize);
+    if (status !== 'all') params = params.set('status', status);
     return this.http.get<PagedResponse<StudentAssignment>>(
       `${this.url}/student/${this.id(studentId)}`,
-      { params: this.paging(pageNumber, pageSize) }
+      { params }
     );
   }
 

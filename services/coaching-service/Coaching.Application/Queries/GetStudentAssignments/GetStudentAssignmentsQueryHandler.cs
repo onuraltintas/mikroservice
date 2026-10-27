@@ -32,8 +32,12 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
             _identityAuthorizationClient,
             new[] { query.StudentId },
             cancellationToken);
+        StudentAssignmentListFilters.TryParse(query.Status, out var filter);
+        var now = DateTime.UtcNow;
         var page = await _repository.GetByStudentIdAsync(
             query.StudentId,
+            filter,
+            now,
             query.PageNumber,
             query.PageSize,
             cancellationToken);
@@ -52,9 +56,10 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
                 Score: studentAssignment.Score,
                 MaxScore: a.MaxScore,
                 TeacherFeedback: studentAssignment.TeacherFeedback,
-                IsOverdue: a.DueDate < DateTime.UtcNow && 
-                          a.Status == AssignmentStatus.Active
-                          && studentAssignment.Status == StudentAssignmentStatus.Assigned,
+                // Started but not handed in is late as well (roadmap O1).
+                IsOverdue: a.DueDate < now
+                          && a.Status == AssignmentStatus.Active
+                          && studentAssignment.Status is StudentAssignmentStatus.Assigned or StudentAssignmentStatus.InProgress,
                 AssignmentStatus: a.Status.ToString()
             );
         }).ToList();

@@ -58,7 +58,7 @@ import {
           @for (plan of plans(); track plan.id) {
             <article class="rounded-2xl border p-5 shadow-sm" [class.border-indigo-500]="selectedPlanId() === plan.id" [class.bg-indigo-50]="selectedPlanId() === plan.id" [class.dark:bg-indigo-950\/20]="selectedPlanId() === plan.id">
               <h3 class="text-lg font-semibold">{{ plan.name }}</h3><p class="mt-2 min-h-10 text-sm text-slate-600 dark:text-slate-300">{{ plan.description }}</p>
-              <p class="mt-4 text-2xl font-bold">{{ plan.isContactOnly ? 'İletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (settings()?.currency || 'TRY') }}</p>
+              <p class="mt-4 text-2xl font-bold">{{ plan.isContactOnly ? 'İletişime geç' : (plan.price | number:'1.2-2') + ' ' + (settings()?.currency || 'TRY') }}</p>
               <p class="mt-1 text-sm text-slate-500">{{ plan.durationDays }} gün erişim · {{ plan.billingPeriod | coachingLabel:'billingPeriod' }}</p>
               @if (plan.features.length) { <ul class="mt-4 list-disc space-y-1 pl-5 text-sm">@for (feature of plan.features; track feature) { <li>{{ feature }}</li> }</ul> }
               @if (plan.isContactOnly) { <p class="mt-4 text-sm text-slate-500">Bu plan için fiyat bilgisi Koçluk yönetiminden alınır.</p> }
@@ -160,7 +160,7 @@ export class CoachingSubscriptionComponent implements OnInit {
     const reference = this.paymentReference.trim();
     if (!plan || plan.isContactOnly || !this.settings()) { this.error.set('Ödeme bildirimi için satışa açık plan ve yayınlanmış banka bilgisi gereklidir.'); return; }
     if (!reference || reference.length > 120) { this.error.set('Banka işlem referansını 1–120 karakter arasında gir.'); return; }
-    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.'); return; }
+    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunu beyan etmeniz gerekir.'); return; }
 
     this.submitting.set(true);
     this.error.set(null);

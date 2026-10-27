@@ -47,15 +47,19 @@
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div *ngIf="item.status === 'Cancelled'" role="status" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">Bu ödev iptal edildi; yeni çalışma teslimi kabul edilmiyor.</div>
         <div class="flex items-center justify-between gap-3">
-          <div><h2 class="font-semibold">Teslim alanı</h2><p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Çalışmanı dosya olarak ekleyebilir veya koçuna not bırakabilirsin.</p></div>
+          <div><h2 class="font-semibold">Teslim alanı</h2><p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Çalışmanı dosya olarak ekleyebilir veya öğretmenine not bırakabilirsin.</p></div>
           <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold dark:bg-slate-800">{{ item.status === 'Cancelled' ? 'İptal edildi' : assignmentStatusLabel(record.status) }}</span>
         </div>
-        <label class="mt-5 block text-sm font-medium" for="student-note">Koça notun</label>
+        <label class="mt-5 block text-sm font-medium" for="student-note">Öğretmene notun</label>
         <textarea id="student-note" [ngModel]="studentNote()" (ngModelChange)="studentNote.set($event)" rows="4" maxlength="1000" [disabled]="!canSubmit()"
           class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-indigo-500 focus:ring-2 dark:border-slate-700 dark:bg-slate-950" placeholder="Çalışırken zorlandığın noktaları yazabilirsin."></textarea>
         <div class="mt-4 flex flex-wrap gap-3">
           <button type="button" (click)="submit()" [disabled]="!canSubmit() || isSubmitting() || isUploading()"
             class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">{{ isSubmitting() ? 'Teslim ediliyor…' : 'Ödevi teslim et' }}</button>
+          <label class="cursor-pointer camera-capture rounded-xl border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-200 dark:hover:bg-indigo-950/30" [class.pointer-events-none]="!canSubmit() || isUploading()" [class.opacity-50]="!canSubmit() || isUploading()">
+            {{ isUploading() ? 'Fotoğraf yükleniyor…' : 'Fotoğraf çek' }}
+            <input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" capture="environment" aria-label="Fotoğraf çek" (change)="onFileSelected($event)" [disabled]="!canSubmit() || isUploading()" />
+          </label>
           <label class="cursor-pointer rounded-xl border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-200 dark:hover:bg-indigo-950/30" [class.pointer-events-none]="!canSubmit() || isUploading()" [class.opacity-50]="!canSubmit() || isUploading()">
             {{ isUploading() ? 'Dosya yükleniyor…' : 'Dosya ekle' }}
             <input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,.md,.doc,.docx,.pdf" (change)="onFileSelected($event)" [disabled]="!canSubmit() || isUploading()" />
@@ -71,7 +75,7 @@
           <p class="mt-1 text-3xl font-bold">{{ record.score ?? '—' }}<span *ngIf="item.maxScore" class="text-base font-medium text-slate-400"> / {{ item.maxScore }}</span></p>
         </div>
         <div class="mt-4">
-          <p class="text-sm text-slate-500 dark:text-slate-400">Koç geri bildirimi</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Öğretmen geri bildirimi</p>
           <p class="mt-2 whitespace-pre-line text-sm leading-6">{{ record.teacherFeedback || 'Henüz geri bildirim yok.' }}</p>
         </div>
       </div>
@@ -122,7 +126,7 @@
       <h2 class="font-semibold">Çocuğun teslim durumu</h2>
       <div *ngFor="let student of item.assignedStudents" class="mt-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
         <div class="flex flex-wrap items-center justify-between gap-3"><span class="text-sm font-semibold">Durum</span><span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">{{ student.status | coachingLabel }}</span></div>
-        <div class="mt-4 grid gap-4 sm:grid-cols-2"><div><p class="text-xs text-slate-500">Puan</p><p class="mt-1 text-xl font-bold">{{ student.score ?? '—' }}<span *ngIf="item.maxScore" class="text-sm font-medium text-slate-400"> / {{ item.maxScore }}</span></p></div><div><p class="text-xs text-slate-500">Koç geri bildirimi</p><p class="mt-1 whitespace-pre-line text-sm">{{ student.teacherFeedback || 'Henüz geri bildirim yok.' }}</p></div></div>
+        <div class="mt-4 grid gap-4 sm:grid-cols-2"><div><p class="text-xs text-slate-500">Puan</p><p class="mt-1 text-xl font-bold">{{ student.score ?? '—' }}<span *ngIf="item.maxScore" class="text-sm font-medium text-slate-400"> / {{ item.maxScore }}</span></p></div><div><p class="text-xs text-slate-500">Öğretmen geri bildirimi</p><p class="mt-1 whitespace-pre-line text-sm">{{ student.teacherFeedback || 'Henüz geri bildirim yok.' }}</p></div></div>
       </div>
     </div>
   </ng-container>

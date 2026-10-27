@@ -1,9 +1,9 @@
 <section class="study-plans" aria-labelledby="study-plans-title">
   <header class="page-heading">
     <div><p class="eyebrow">{{ staffStudentId ? 'Haftalık koçluk takibi' : 'Kendi çalışma ritmin' }}</p><h1 id="study-plans-title">{{ staffStudentId ? 'Öğrencinin çalışma planları' : 'Çalışma planlarım' }}</h1>
-      <p>{{ readOnly ? 'Planları ve öğrencinin kaydettiği çalışmaları inceleyin.' : 'Taslağı hazırla, kontrol ederek yayımla ve günlük çalışmaları takip et.' }}</p></div>
+      <p>{{ readOnly ? 'Planları ve öğrencinin kaydettiği çalışmaları incele.' : 'Taslağı hazırla, kontrol ederek yayımla ve günlük çalışmaları takip et.' }}</p></div>
     @if (!readOnly) {
-    @if (!staffStudentId) { <a class="assistant-entry" href="/coaching-portal/study-plan-assistant">Sihirbazla plan hazırla ↗</a> }
+    @if (!staffStudentId) { <button type="button" class="assistant-entry secondary" (click)="openWizard()">Plan sihirbazını aç ↗</button> }
     <button type="button" (click)="newDraft()" [disabled]="busy() || dirty || loading()">{{ knownDraftId() || selected()?.status === 'Draft' ? 'Taslağı düzenle' : 'Yeni taslak' }}</button>
     }
   </header>
@@ -82,7 +82,7 @@
         }
         <p class="muted">Başlanmış, sabit veya açık karara bağlı çalışmalar yeni planda devam görevleriyle korunur. Kısmi kayıtların kalan süresini planı yenilemeden önce belirt.</p>
         <div class="plan-view-switch" role="group" aria-label="Plan görünümü"><button type="button" class="secondary" [attr.aria-pressed]="planView()==='calendar'" (click)="planView.set('calendar')" [disabled]="busy()">Takvim</button><button type="button" class="secondary" [attr.aria-pressed]="planView()==='list'" (click)="planView.set('list')" [disabled]="busy()">Liste</button></div>
-        <label>Çalışma durumu<select [(ngModel)]="taskFilter" (ngModelChange)="changeTaskFilter()" [disabled]="busy()"><option value="all">Tüm çalışmalar</option><option value="pending">Bekleyen</option><option value="completed">Tamamlanan</option><option value="overdue">Geciken</option></select></label>
+        <label>Çalışma durumu<select [(ngModel)]="taskFilter" (ngModelChange)="changeTaskFilter()" [disabled]="busy()"><option value="all">Tüm çalışmalar</option><option value="today">Bugün</option><option value="pending">Bekleyen</option><option value="completed">Tamamlanan</option><option value="overdue">Geciken</option></select></label>
         @if(planView()==='calendar'){
           <app-study-plan-calendar [plan]="plan" [disabled]="busy()" [editable]="!readOnly" [student]="!staffStudentId" (calendarAction)="calendarCommand($event)" (taskSelected)="selectCalendarTasks($event)" (tasksMoved)="moveCalendar($event)" />
           @if(selectedTaskIds().length){<div #calendarTaskDetail class="calendar-task-detail" tabindex="-1"><h3>Seçilen çalışmalar</h3><button type="button" class="secondary" (click)="selectedTaskIds.set([])" [disabled]="busy()">Ayrıntıları kapat</button></div>}

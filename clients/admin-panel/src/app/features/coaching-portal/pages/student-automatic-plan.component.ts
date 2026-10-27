@@ -50,8 +50,8 @@ export class StudentAutomaticPlanComponent implements OnInit {
     if (this.learningContextVersion !== null) this.setupService.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: setup => this.setupService.catalog().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: catalog => this.contextLessons.set(catalog.lessons.filter(l => setup.context?.coursePreferences.some(c => c.lessonId === l.id))),
-        error: () => this.error.set('Dersler yüklenemedi. Kurulumu yeniden yükleyin.') }),
-      error: () => this.error.set('Eğitim bağlamı yüklenemedi. Kurulumu yeniden yükleyin.')
+        error: () => this.error.set('Dersler yüklenemedi. Kurulumu yeniden yükle.') }),
+      error: () => this.error.set('Eğitim bağlamı yüklenemedi. Kurulumu yeniden yükle.')
     });
   }
   busy() { return this.loading() || this.searching() || this.generating() || this.saving() || this.loadingOutcomes(); }
@@ -61,7 +61,7 @@ export class StudentAutomaticPlanComponent implements OnInit {
     this.loading.set(true); this.availability.set(null); this.preview.set(null); this.error.set(null);
     this.service.getAvailability().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false)))
       .subscribe({ next: hours => { this.availability.set(hours); this.stale.set(false); },
-        error: () => this.error.set('Çalışma saatleri yüklenemedi. Önce saatlerinizi belirleyin veya yeniden yükleyin.') });
+        error: () => this.error.set('Çalışma saatleri yüklenemedi. Önce saatlerini belirle veya yeniden yükle.') });
   }
   searchTopics(pageNumber = 1) {
     if (this.locked()) return;
@@ -71,7 +71,7 @@ export class StudentAutomaticPlanComponent implements OnInit {
       : this.service.searchTopics(this.query, this.gradeNumber, this.examCode, pageNumber);
     request
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.searching.set(false)))
-      .subscribe({ next: result => this.results.set(result), error: () => this.error.set('Konular yüklenemedi. Filtreleri kontrol edip tekrar deneyin.') });
+      .subscribe({ next: result => this.results.set(result), error: () => this.error.set('Konular yüklenemedi. Filtreleri kontrol edip tekrar dene.') });
   }
   addTopic(id: string) {
     if (this.locked() || this.selected.length >= 500 || this.selected.some(x => x.topic.id === id)) return;
@@ -114,7 +114,7 @@ export class StudentAutomaticPlanComponent implements OnInit {
         || x.outcomes.filter(o => o.included).some(o => !Number.isInteger(o.minutes) || o.minutes! < 1 || o.minutes! > 1440)
         || x.outcomes.filter(o => o.included).reduce((sum, o) => sum + (o.minutes ?? 0), 0) > 1440
         : !Number.isInteger(x.minutes) || x.minutes! < 1 || x.minutes! > 1440)) {
-      this.error.set('Geçerli bir başlangıç tarihi, 1-90 gün ve her konu için 1-1440 dakika belirtin.'); return;
+      this.error.set('Geçerli bir başlangıç tarihi, 1-90 gün ve her konu için 1-1440 dakika belirt.'); return;
     }
     this.saveConfirmed = false;
     this.generating.set(true); this.preview.set(null); this.error.set(null);
@@ -123,14 +123,14 @@ export class StudentAutomaticPlanComponent implements OnInit {
       ...(this.learningContextVersion !== null ? { expectedLearningContextVersion: this.learningContextVersion } : {}) })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.generating.set(false)))
       .subscribe({ next: preview => this.preview.set(preview), error: error => {
-        if (error?.status === 409) { this.stale.set(true); this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Çalışma saatleri veya eğitim bağlamı değişti. Kurulumu ve saatleri yeniden yükleyin.'); }
-        else this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Önizleme oluşturulamadı. Seçimleriniz korundu; tekrar deneyin.');
+        if (error?.status === 409) { this.stale.set(true); this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Çalışma saatleri veya eğitim bağlamı değişti. Kurulumu ve saatleri yeniden yükle.'); }
+        else this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Önizleme oluşturulamadı. Seçimlerin korundu; tekrar dene.');
       } });
   }
   saveDraft() {
     const preview = this.preview();
     if (this.locked() || this.stale() || !preview || !this.saveConfirmed || !this.hasPendingWork()) return;
-    if (!this.title.trim() || this.title.trim().length > 200) { this.error.set('1-200 karakterlik bir plan başlığı girin.'); return; }
+    if (!this.title.trim() || this.title.trim().length > 200) { this.error.set('1-200 karakterlik bir plan başlığı gir.'); return; }
     this.saving.set(true); this.error.set(null);
     this.service.saveAutomaticDraft({ title: this.title.trim(),
       preview: { startDate: this.startDate, days: this.days, expectedAvailabilityVersion: preview.availabilityVersion,
@@ -143,13 +143,13 @@ export class StudentAutomaticPlanComponent implements OnInit {
         error: error => {
           this.saveConfirmed = false;
           if (error?.status === 409) { this.stale.set(true); this.preview.set(null); }
-          this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Taslak kaydedilemedi. Seçimleriniz korundu. Mevcut taslağı çalışma planlarından kontrol edin.');
+          this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Taslak kaydedilemedi. Seçimlerin korundu. Mevcut taslağı çalışma planlarından kontrol et.');
         } });
   }
   hasPendingWork() {const preview=this.preview();return !!preview&&(preview.schedule.tasks.length>0||preview.protectedTasks.some(x=>!x.isCompleted));}
   async canLeavePage() {
     if (this.saving()) return false;
-    return !this.dirty || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş plan seçimlerinden vazgeçerek ayrılmak istiyor musunuz?'));
+    return !this.dirty || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş plan seçimlerinden vazgeçerek ayrılmak istiyor musun?'));
   }
   private readonly feedback = coachingFeedback(undefined, this.error);
 }

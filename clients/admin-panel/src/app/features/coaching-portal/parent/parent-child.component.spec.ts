@@ -54,7 +54,7 @@ describe('ParentChildComponent', () => {
 
   it('does not show a child the parent is not linked to', () => {
     const fixture = setup(parent({ getLinks: vi.fn(() => of([])) }), 'child-9');
-    expect(fixture.nativeElement.textContent).toContain('Bu öğrenciyle doğrulanmış bir veli bağlantınız yok');
+    expect(fixture.nativeElement.textContent).toContain('Bu öğrenciyle doğrulanmış bir veli bağlantın yok');
     expect(fixture.componentInstance.loaded()).toBe(false);
   });
 

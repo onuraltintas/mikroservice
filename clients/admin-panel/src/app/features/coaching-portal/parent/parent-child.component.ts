@@ -27,7 +27,7 @@ import { apiMessage } from './parent-home.component';
     <main class="space-y-6" aria-labelledby="parent-child-title">
       <a routerLink="/coaching-portal/parent" class="text-sm text-indigo-600 dark:text-indigo-300">← Çocuklarım</a>
       @if (notLinked()) {
-        <div role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">Bu öğrenciyle doğrulanmış bir veli bağlantınız yok. Çocuğunun bağlantı isteğini onaylamasını bekleyin.</div>
+        <div role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">Bu öğrenciyle doğrulanmış bir veli bağlantın yok. Çocuğunun bağlantı isteğini onaylamasını bekle.</div>
       } @else if (link(); as child) {
         <header><p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Veli paneli · salt okunur</p><h1 id="parent-child-title" class="mt-1 text-2xl font-bold">{{ child.studentName }}</h1></header>
         @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
@@ -131,7 +131,7 @@ export class ParentChildComponent implements OnInit {
   async sendTransfer(): Promise<void> {
     const reference = this.paymentReference.trim();
     if (!this.planId || !reference) { this.error.set('Plan ve banka işlem referansı gerekli.'); return; }
-    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.'); return; }
+    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunu beyan etmeniz gerekir.'); return; }
     this.sending.set(true); this.error.set(null); this.success.set(null);
     try {
       const sent = await firstValueFrom(this.service.sendTransfer(this.studentId, {

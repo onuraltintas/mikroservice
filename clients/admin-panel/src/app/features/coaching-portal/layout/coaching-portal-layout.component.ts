@@ -10,8 +10,10 @@ import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
 import { CoachingIcon, CoachingIconComponent } from '../coaching-icon.component';
 import { DarkModeService } from '../../../core/services/dark-mode.service';
 import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 interface PortalLink { label: string; path: string; icon: CoachingIcon; exact?: boolean }
+interface MobileLink extends PortalLink { short: string; badge?: number }
 
 @Component({
   selector: 'app-coaching-portal-layout',
@@ -24,6 +26,7 @@ interface PortalLink { label: string; path: string; icon: CoachingIcon; exact?: 
 export class CoachingPortalLayoutComponent {
   readonly studentNavigation = inject(CoachingStudentNavigationService);
   readonly theme = inject(DarkModeService);
+  readonly unreadCount = inject(NotificationService).unreadCount;
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly views = inject(CoachingPortalViewService);
@@ -45,7 +48,7 @@ export class CoachingPortalLayoutComponent {
       { label: 'Genel Bakış', path: '/coaching-portal', icon: 'home', exact: true },
       { label: 'Çalışma planlarım', path: '/coaching-portal/study-plans', icon: 'plan' },
       ...(this.studentNavigation.showAssignments() ? [{ label: 'Ödevlerim', path: '/coaching-portal/assignments', icon: 'book' as const }] : []),
-      { label: 'Otomatik plan', path: '/coaching-portal/automatic-plan', icon: 'spark' },
+      { label: 'Plan sihirbazı', path: '/coaching-portal/automatic-plan', icon: 'spark' },
       { label: 'Haftalık düzenim', path: '/coaching-portal/weekly-plan', icon: 'calendar' }
     ] },
     { label: 'Gelişimim', links: [
@@ -62,7 +65,16 @@ export class CoachingPortalLayoutComponent {
       { label: 'Abonelik ve ödeme', path: '/coaching-portal/subscription', icon: 'card' }
     ] }
   ]);
-  readonly mobileLinks = computed(() => [this.navigation()[0].links[0], this.navigation()[0].links[1], this.navigation()[1].links[0]]);
+  /** Roadmap O1: the four things a student opens most on the phone, with the unread notification count. */
+  readonly mobileLinks = computed<MobileLink[]>(() => [
+    { label: 'Genel Bakış', short: 'Bugün', path: '/coaching-portal', icon: 'home', exact: true },
+    { label: 'Çalışma planlarım', short: 'Planım', path: '/coaching-portal/study-plans', icon: 'plan' },
+    this.studentNavigation.showAssignments()
+      ? { label: 'Ödevlerim', short: 'Ödevlerim', path: '/coaching-portal/assignments', icon: 'book' }
+      : { label: 'Hedefim', short: 'Hedefim', path: '/coaching-portal/goals', icon: 'target' },
+    { label: 'Bildirimler', short: 'Bildirimler', path: '/coaching-portal/notifications', icon: 'bell', badge: this.unreadCount() }
+  ]);
+  readonly notificationLabel = computed(() => this.unreadCount() ? `Bildirimlerimi aç (${this.unreadCount()} okunmamış)` : 'Bildirimlerimi aç');
 
   constructor() {
     if (!this.isParent()) this.studentNavigation.refresh(true);

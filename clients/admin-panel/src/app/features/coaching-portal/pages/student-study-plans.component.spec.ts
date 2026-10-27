@@ -380,7 +380,7 @@ describe('StudentStudyPlansComponent', () => {
     service.get.mockClear();
     await component.open('plan');
     expect(service.get).not.toHaveBeenCalled();
-    expect(component.error()).toContain('kaydedin');
+    expect(component.error()).toContain('kaydet');
   });
   it('asks before leaving unsaved work and protects browser refresh', async () => {
     const { component } = await setup();

@@ -34,7 +34,7 @@ async function findAll(pattern) {
 
 const formalVerbs = ['dene', 'ed', 'yap', 'seç', 'kayded', 'aç', 'kapat', 'onayla', 'yükle', 'tamamla', 'kullan', 'geç', 'çık',
   'gir', 'bekle', 'yenile', 'ekle', 'gid', 'bak', 'yaz', 'belirle', 'oluştur', 'gönder', 'düzenle', 'sil', 'başla', 'dön',
-  'tıkla', 'güncelle', 'indir', 'ilet', 'kontrol ed'];
+  'tıkla', 'güncelle', 'indir', 'ilet', 'kontrol ed', 'vazgeç', 'bırak', 'dikkat ed', 'iste', 'göz at', 'gözden geçir', 'belirt', 'ara', 'tanımla', 'incele'];
 
 test('Student screens address the student as "sen"', async () => {
   const imperative = new RegExp(`(?<!\\p{L})(?:${formalVerbs.join('|')})(?:in|ın|un|ün|yin|yın|yun|yün)(?!\\p{L})`, 'gu');
@@ -51,7 +51,7 @@ test('The person who coaches is called "öğretmen" everywhere on student screen
 test('The plan wizard has one name and one entry point', async () => {
   const oldNames = await findAll(/Otomatik plan|Çalışma sihirbazı|ÇALIŞMA SİHİRBAZI|Sihirbazla plan|Sihirbazla planla|Plan asistanı/g);
   assert.deepEqual(oldNames, [], `call it "Plan sihirbazı":\n${oldNames.join('\n')}`);
-  const oldEntry = (await findAll(/study-plan-assistant['"]/g)).filter(hit => !hit.includes('coaching-portal.routes.ts'));
+  const oldEntry = (await findAll(/(?<![\w-])study-plan-assistant['"]/g)).filter(hit => !hit.includes('coaching-portal.routes.ts'));
   assert.deepEqual(oldEntry, [], `link to /coaching-portal/automatic-plan:\n${oldEntry.join('\n')}`);
   const routes = await read(`${portal}/coaching-portal.routes.ts`);
   assert.match(routes, /path:\s*'study-plan-assistant',\s*redirectTo:\s*'automatic-plan'/, 'the old address redirects to the single entry');

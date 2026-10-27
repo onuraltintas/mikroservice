@@ -14,7 +14,7 @@ export function calendarDays(anchor:Date,view:CalendarView):Date[]{
   return Array.from({length:count},(_,i)=>new Date(start.getFullYear(),start.getMonth(),start.getDate()+i));
 }
 export function slotError(s:WeeklySlot,slots:WeeklySlot[]):string{
-  if(!s.lessonId || !weekDays.some(d=>d.value===s.day))return 'Ders ve gün seçin.';
+  if(!s.lessonId || !weekDays.some(d=>d.value===s.day))return 'Ders ve gün seç.';
   if(!Number.isInteger(s.startMinute)||s.startMinute<0||s.startMinute%30||![30,60].includes(s.durationMinutes)||s.startMinute+s.durationMinutes>1440)return 'Başlangıç :00 veya :30; süre 30 veya 60 dakika olmalı. Kart günün dışına çıkamaz.';
   return slots.some(x=>x.id!==s.id&&x.day===s.day&&s.startMinute<x.startMinute+x.durationMinutes&&s.startMinute+s.durationMinutes>x.startMinute)?'Bu saat başka bir dersle çakışıyor.':'';
 }

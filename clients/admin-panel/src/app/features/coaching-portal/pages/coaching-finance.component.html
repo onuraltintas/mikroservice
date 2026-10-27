@@ -42,7 +42,7 @@
   @if (account(); as summary) {
     <div class="totals"><p>Toplam ücret<strong>{{ currency(summary.totalAmount) }}</strong></p><p>Net tahsilat<strong>{{ currency(summary.paidAmount) }}</strong></p><p>Kalan borç<strong>{{ currency(summary.balance) }}</strong></p><p class="overdue">Vadesi geçen<strong>{{ currency(summary.overdueAmount) }}</strong></p></div>
     @if (canCreate()) { <button data-create-fee type="button" [disabled]="pending() || loading()" (click)="openCreate()">Ücret ve taksit oluştur</button> }
-    @if (canManage() && !canCreate()) { <p class="hint">Geçmiş ücretler için tahsilat ve düzeltme yapabilirsiniz. Yeni ücret için aktif öğrenci ilişkisi gerekir.</p> }
+    @if (canManage() && !canCreate()) { <p class="hint">Geçmiş ücretler için tahsilat ve düzeltme yapabilirsin. Yeni ücret için aktif öğrenci ilişkisi gerekir.</p> }
     <div class="records">
       @for (fee of summary.agreements; track fee.id) {
         <article class="fee" [attr.data-fee-id]="fee.id">
@@ -83,7 +83,7 @@
   @if (form(); as kind) {
     <form class="entry" (ngSubmit)="submit()" aria-label="Manuel ücret işlemi">
       <h3>{{ kind === 'create' ? 'Yeni ücret ve taksitler' : kind === 'payment' ? 'Manuel tahsilat' : kind === 'reverse' ? 'Tahsilat düzeltmesi' : 'Ücret iptali' }}</h3>
-      <p class="hint">{{ kind === 'payment' ? 'Daha önce alınan tutarı kaydedin. Bu işlem bankadan para çekmez.' : kind === 'reverse' ? 'İlk kayıt korunur; aynı tutarda negatif bir düzeltme eklenir.' : kind === 'cancel' ? 'Net tahsilatı sıfır olan ücret iptal edilir; geçmiş korunur.' : 'Taksit tutarlarının toplamı ücrete eşit olmalıdır.' }}</p>
+      <p class="hint">{{ kind === 'payment' ? 'Daha önce alınan tutarı kaydet. Bu işlem bankadan para çekmez.' : kind === 'reverse' ? 'İlk kayıt korunur; aynı tutarda negatif bir düzeltme eklenir.' : kind === 'cancel' ? 'Net tahsilatı sıfır olan ücret iptal edilir; geçmiş korunur.' : 'Taksit tutarlarının toplamı ücrete eşit olmalıdır.' }}</p>
       <fieldset [disabled]="pending() || attempted()">
         @if (kind === 'create') {
           <label>Ücret başlığı<input name="feeTitle" [(ngModel)]="title" maxlength="200" required></label>

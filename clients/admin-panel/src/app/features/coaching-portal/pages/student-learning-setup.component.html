@@ -24,7 +24,7 @@
         @if (purpose === 'Lgs' || purpose === 'Yks') { <label>Hedef sınav yılı<input type="number" name="examYear" [min]="academicYearStart" [max]="academicYearStart + 5" required [(ngModel)]="targetExamYear" (ngModelChange)="changed()"></label> }
         @if (purpose === 'Yks') {
           <label>Birincil puan türü<select name="scoreType" [(ngModel)]="primaryScoreType" (ngModelChange)="changed()"><option value="TYT">TYT</option><option value="SAY">Sayısal</option><option value="EA">Eşit ağırlık</option><option value="SOZ">Sözel</option><option value="DIL">Dil</option></select></label>
-          @if (primaryScoreType === 'DIL') { <label>Yabancı dil<select name="language" required [(ngModel)]="foreignLanguage" (ngModelChange)="changed()"><option value="">Seçin</option><option value="English">İngilizce</option></select></label> }
+          @if (primaryScoreType === 'DIL') { <label>Yabancı dil<select name="language" required [(ngModel)]="foreignLanguage" (ngModelChange)="changed()"><option value="">Seç</option><option value="English">İngilizce</option></select></label> }
         }
       </div><p class="muted">Eğitim kapsamını değiştirirsen ders seçimlerini ve başlangıç durumunu yeniden belirlemen gerekir. Aktif planın korunur.</p>
       <button type="submit" [disabled]="purposeForm.invalid">Kaydet ve devam et</button></fieldset>
@@ -54,7 +54,7 @@
         <p>Konu durumları senin beyanındır; sınav başarısı veya kazanım yeterliliği olarak değerlendirilmez. İstersen konu seçmeden devam edebilirsin.</p>
         <fieldset [disabled]="saving() || catalogLoading()">
           <p class="muted">Sınav → ders → ünite → konu. Bu adım yalnızca başlangıç durumunu kaydeder; plan görevlerini veya kazanım yeterliliğini değiştirmez.</p>
-          <label>Ders<select [(ngModel)]="selectedLesson" (ngModelChange)="expandedTopicId.set(null); loadCatalog()"><option value="">Ders seçin</option>@for (lesson of catalog()?.lessons ?? []; track lesson.id) { @if (included(lesson.id)) { <option [value]="lesson.id">{{ lesson.name }} · {{ lesson.examCode || 'Genel' }} · {{ lesson.gradeNumber ? lesson.gradeNumber + '. sınıf' : 'sınıf belirtilmedi' }}</option> } }</select></label>
+          <label>Ders<select [(ngModel)]="selectedLesson" (ngModelChange)="expandedTopicId.set(null); loadCatalog()"><option value="">Ders seç</option>@for (lesson of catalog()?.lessons ?? []; track lesson.id) { @if (included(lesson.id)) { <option [value]="lesson.id">{{ lesson.name }} · {{ lesson.examCode || 'Genel' }} · {{ lesson.gradeNumber ? lesson.gradeNumber + '. sınıf' : 'sınıf belirtilmedi' }}</option> } }</select></label>
           @for (group of topicGroups(); track group.name) {
             <section class="topic-unit" [attr.aria-label]="group.name + ' ünitesi'">
               <h3>{{ group.name }}</h3>
@@ -85,8 +85,8 @@
   @if (ready() && step() === 'Preview') {
     @for (warning of state()?.warnings ?? []; track warning) { <p class="notice">{{ warning }}</p> }
     @if (state()?.isReady) {
-      <p class="notice success">Eğitim bilgilerin hazır. Seçtiğin derslerden konuları ekleyip planı önizleyebilirsin. Mevcut planın, yeni taslağı açıkça yayımlayana kadar korunur.</p>
-      <app-student-automatic-plan [learningContextVersion]="state()!.context!.version" />
+      <p class="notice success">Eğitim bilgilerin hazır. Plan sihirbazında seçtiğin derslerden konuları ekleyip planı önizleyebilirsin. Mevcut planın, yeni taslağı açıkça yayımlayana kadar korunur.</p>
+      <a routerLink="/coaching-portal/automatic-plan">Plan sihirbazını aç</a>
     } @else { <p class="notice">Önizleme için eksik adımları tamamla.</p><button type="button" (click)="load()">Eksik adıma devam et</button> }
   }
 </section>

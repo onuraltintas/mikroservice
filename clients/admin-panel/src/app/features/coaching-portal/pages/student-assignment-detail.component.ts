@@ -131,7 +131,7 @@ export class StudentAssignmentDetailComponent implements OnInit {
     const maxScore = this.assignment()?.maxScore;
     const draft = this.gradeDraft(studentId);
     if (!assignmentId || draft.score === null || !Number.isFinite(draft.score) || draft.score < 0 || (maxScore !== null && maxScore !== undefined && draft.score > maxScore)) {
-      this.errorMessage.set('Geçerli bir puan girin.');
+      this.errorMessage.set('Geçerli bir puan gir.');
       return;
     }
 
@@ -161,12 +161,12 @@ export class StudentAssignmentDetailComponent implements OnInit {
     this.successMessage.set(null);
     this.coachingService.submitAssignment(assignmentId, studentId, this.studentNote()).subscribe({
       next: () => {
-        this.successMessage.set('Ödevin teslim edildi. Koçun değerlendirdiğinde puanını burada göreceksin.');
+        this.successMessage.set('Ödevin teslim edildi. Öğretmenin değerlendirdiğinde puanını burada göreceksin.');
         this.studentNote.set('');
         this.load();
       },
       error: error => {
-        this.errorMessage.set(error.status === 400 ? 'Ödev teslimi kabul edilmedi. Teslim koşullarını kontrol edin.' : 'Ödev teslim edilemedi.');
+        this.errorMessage.set(error.status === 400 ? 'Ödev teslimi kabul edilmedi. Teslim koşullarını kontrol et.' : 'Ödev teslim edilemedi.');
         this.isSubmitting.set(false);
       },
       complete: () => this.isSubmitting.set(false)
@@ -187,7 +187,7 @@ export class StudentAssignmentDetailComponent implements OnInit {
       'text/markdown', 'text/plain', 'text/x-markdown'
     ];
     if (!allowedTypes.includes(contentType)) {
-      this.errorMessage.set('JPEG, PNG, WebP, PDF, Word veya Markdown dosyası yükleyebilirsiniz.');
+      this.errorMessage.set('JPEG, PNG, WebP, PDF, Word veya Markdown dosyası yükleyebilirsin.');
       return;
     }
     if (file.size < 1 || file.size > 10 * 1024 * 1024) {
@@ -211,7 +211,7 @@ export class StudentAssignmentDetailComponent implements OnInit {
       this.load();
     } catch (error: any) {
       this.errorMessage.set(
-        error?.status === 503 ? 'Dosya güvenlik taraması şu an yapılamıyor. Birkaç dakika sonra tekrar deneyin.'
+        error?.status === 503 ? 'Dosya güvenlik taraması şu an yapılamıyor. Birkaç dakika sonra tekrar dene.'
         : error?.error?.code === 'Attachment.LimitReached' ? 'Bir ödeve en çok 10 dosya ve toplam 50 MB yükleyebilirsin. Gerekirse önce bir dosyayı kaldır.'
         : error?.status === 400 ? 'Dosya yükleme koşulları sağlanmadı.' : 'Dosya yüklenemedi.');
     } finally {

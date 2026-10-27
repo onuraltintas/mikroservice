@@ -602,12 +602,13 @@ public class AssignmentsController : ControllerBase
         Guid studentId,
         CancellationToken cancellationToken,
         [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
-        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize,
+        [FromQuery] string? status = null)
     {
         _logger.LogInformation("Getting assignments for student: {StudentId}", studentId);
 
         var result = await _mediator.Send(
-            new GetStudentAssignmentsQuery(studentId, pageNumber, pageSize),
+            new GetStudentAssignmentsQuery(studentId, pageNumber, pageSize, status),
             cancellationToken);
 
         return Ok(result);

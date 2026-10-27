@@ -60,7 +60,7 @@ import { CoachingDatePipe } from '../coaching-labels';
         <article><h4>{{examName(advice.examCode)}} · {{source(advice.source)}}</h4>
           <p>Değerlendirilen farklı deneme: {{advice.examIds.length}} / 3.</p>
           @if (advice.examIds.length < 3) { <p>Şimdilik gözlem gösterilir; plan değişikliği için üç karşılaştırılabilir deneme bekleniyor.</p> }
-          @else if (!advice.topics.length) { <p>Tekrar önerisi için yeterli konu kanıtı yok veya son denemede düzelme var. Konu dağılımlarını inceleyin; yalnız ders netinden konu eksiği çıkarılmaz.</p> }
+          @else if (!advice.topics.length) { <p>Tekrar önerisi için yeterli konu kanıtı yok veya son denemede düzelme var. Konu dağılımlarını incele; yalnız ders netinden konu eksiği çıkarılmaz.</p> }
           @for (topic of advice.topics; track topic.evidence.sectionCode + topic.evidence.topicId) {
             <p><strong>{{topic.lessonName}} / {{topic.topicName}}</strong>: {{topic.evidence.appearances}} denemede {{topic.evidence.correct}} doğru, {{topic.evidence.wrong}} yanlış, {{topic.evidence.empty}} boş. Öneri: {{topic.evidence.suggestedMinutes}} dk {{activity(topic.evidence.reason)}}. {{topic.alreadyPlanned ? 'Bu deneme grubuna ait tekrar planda mevcut.' : ''}}</p>
           }
@@ -122,7 +122,7 @@ export class PracticeAdaptationComponent implements OnChanges {
     this.chosen.set(null); this.invalidate(); this.data.set(null); this.error.set(''); this.busy.set(true);
     this.read = this.service.get(this.staffStudentId).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
       next: data => { this.data.set(data); for (const group of data.advice) for (const topic of group.topics) this.names.set(topic.evidence.topicId, topic.topicName); },
-      error: err => this.error.set(err.error?.message || 'Konu analizi yüklenemedi. Yeniden deneyin.')
+      error: err => this.error.set(err.error?.message || 'Konu analizi yüklenemedi. Yeniden dene.')
     });
   }
   async open(exam: AnalysisExam) {
@@ -138,11 +138,11 @@ export class PracticeAdaptationComponent implements OnChanges {
     this.topicBusy.set(true);
     this.topicRead = this.service.topics(exam.input.examCode, this.sectionCode).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.topicBusy.set(false))).subscribe({
       next: topics => { this.options.set(topics); for (const topic of topics) this.names.set(topic.id, topic.name); },
-      error: () => this.error.set('Konular yüklenemedi. Dersi yeniden seçin.')
+      error: () => this.error.set('Konular yüklenemedi. Dersi yeniden seç.')
     });
   }
   filteredTopics() { const search = this.topicSearch.toLocaleLowerCase('tr'); return this.options().filter(x => (x.lessonName + ' ' + x.name).toLocaleLowerCase('tr').includes(search)); }
-  topicName(id: string) { return this.names.get(id) || 'Konu adını görmek için ilgili dersi seçin'; }
+  topicName(id: string) { return this.names.get(id) || 'Konu adını görmek için ilgili dersi seç'; }
   add(topicId: string) {
     if (!this.canEdit() || this.saving() || !this.options().some(x => x.id === topicId) || this.analysis.topics.length >= 120
       || this.analysis.topics.some(x => x.topicId === topicId && x.sectionCode === this.sectionCode)) return;
