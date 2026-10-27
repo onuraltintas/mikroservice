@@ -10,10 +10,11 @@ import { CoachingStudentExamsService, LessonAnswers, StudentExam, StudentExamTyp
 import { CoachingStudyPlanningService, StudyTopic, TargetPage } from '../../../core/services/coaching-study-planning.service';
 import { PracticeExamInput, PracticeExamProfile, practiceExamName, practiceTotals } from '../../../core/models/practice-exam';
 import { PracticeExamEditorComponent } from './practice-exam-editor.component';
+import { StudentScoreEstimateComponent } from './student-score-estimate.component';
 import { StudentInstitutionExamsComponent } from './student-institution-exams.component';
 
 import { CoachingDatePipe } from '../coaching-labels';
-@Component({ selector: 'app-student-exam-results', standalone: true, imports: [CoachingDatePipe, CommonModule, FormsModule, PracticeExamEditorComponent, StudentInstitutionExamsComponent],
+@Component({ selector: 'app-student-exam-results', standalone: true, imports: [CoachingDatePipe, CommonModule, FormsModule, PracticeExamEditorComponent, StudentInstitutionExamsComponent, StudentScoreEstimateComponent],
   templateUrl: './student-exam-results.component.html', styleUrl: './student-study-plans.component.scss' })
 export class StudentExamResultsComponent {
   private readonly learningSetup = inject(CoachingLearningSetupService);

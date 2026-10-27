@@ -14,6 +14,7 @@ import { CoachingSession, ExamResult, StudentAssignment, StudentProgressSummary 
 import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
 import { CoachingParentService, ParentFeeAccount, ParentLink } from './coaching-parent.service';
 import { apiMessage } from './parent-home.component';
+import { StudentScoreEstimateComponent } from '../pages/student-score-estimate.component';
 
 /**
  * Roadmap Y7: a parent's read-only view of one linked child — progress, exams, assignments, sessions, fees and the
@@ -22,7 +23,7 @@ import { apiMessage } from './parent-home.component';
 @Component({
   selector: 'app-parent-child',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, CoachingLabelPipe],
+  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, CoachingLabelPipe, StudentScoreEstimateComponent],
   template: `
     <main class="space-y-6" aria-labelledby="parent-child-title">
       <a routerLink="/coaching-portal/parent" class="text-sm text-indigo-600 dark:text-indigo-300">← Çocuklarım</a>
@@ -46,6 +47,7 @@ import { apiMessage } from './parent-home.component';
           @for (exam of exams(); track exam.examId) { <p class="mt-2 text-sm"><strong>{{ exam.examTitle }}</strong> · {{ exam.examDate | coachingDate }} · {{ exam.score }} / {{ exam.maxScore }}</p> }
           @empty { <p class="mt-2 text-sm text-slate-500">{{ sectionError()['exams'] || 'Henüz deneme sonucu yok.' }}</p> }
         </section>
+        <app-student-score-estimate [studentId]="childId" />
         <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="assignments-heading">
           <h2 id="assignments-heading" class="font-semibold">Ödevler</h2>
           @for (assignment of assignments(); track assignment.id) { <p class="mt-2 text-sm"><strong>{{ assignment.title }}</strong> · son gün {{ assignment.dueDate | coachingDate }} · {{ assignment.status | coachingLabel }}@if (assignment.isOverdue) { · <span class="text-red-600">gecikti</span> }</p> }
@@ -95,6 +97,7 @@ export class ParentChildComponent implements OnInit {
   private readonly service = inject(CoachingParentService);
   private readonly management = inject(CoachingManagementService);
   private readonly studentId = inject(ActivatedRoute).snapshot.paramMap.get('studentId') ?? '';
+  get childId(): string { return this.studentId; }
   readonly link = signal<ParentLink | null>(null);
   readonly notLinked = signal(false);
   readonly loaded = signal(false);

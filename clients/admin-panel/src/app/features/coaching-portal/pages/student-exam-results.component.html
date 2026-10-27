@@ -3,6 +3,7 @@
     <p>Kendi sonuçlarını gir, ders ve konu dağılımını takip et. Bu kayıtlar öğrenci beyanıdır; resmî puan veya öğretmen ölçümü değildir.</p></div>
     <button type="button" (click)="newExam()" [disabled]="busy()">Yeni sonuç</button></header>
   <app-student-institution-exams />
+  <app-student-score-estimate />
   @if(profileWarning()){<p class="notice" role="status">{{profileWarning()}}</p>}
   @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
   @if (success()) { <p class="notice success" role="status">{{ success() }}</p> }
