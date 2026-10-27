@@ -45,8 +45,4 @@
     .coaching-mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ui-border); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--ui-surface); box-shadow: 0 -4px 24px #19332f08; a { position: relative; display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 3px; min-height: 48px; border-radius: 12px; color: var(--ui-text-muted); font-size: 10px; app-coaching-icon { font-size: 18px; } &.is-active { background: var(--ui-brand-soft); color: var(--ui-success); font-weight: 700; } } }
   }
 }
-/* Roadmap O1: unread notification count on the bell and in the bottom bar. */
-.coaching-shell .coaching-bell { position: relative; }
-.coaching-shell .coaching-badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #c2410c; color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
-.coaching-shell .coaching-mobile-nav .coaching-badge { top: 4px; right: calc(50% - 22px); }
 @media (prefers-reduced-motion: reduce) { .coaching-shell *, .coaching-shell *::before, .coaching-shell *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
