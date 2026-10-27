@@ -194,6 +194,7 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingGamification, OwnedSpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, OwnedSpeedReadingGamificationAdminWriter>();
         services.AddScoped<IAdminAuditWriter, OwnedSpeedReadingAdminAuditWriter>();
+        services.AddAdminAuditClientDataRetention<SpeedReadingAdminAuditClientDataPurger>(configuration);
         services.AddScoped<ILegacySpeedReadingAnalytics, OwnedSpeedReadingAnalytics>();
         services.AddScoped<ILegacySpeedReadingAdminAnalytics, OwnedSpeedReadingAdminAnalytics>();
         services.AddScoped<ILegacySpeedReadingTeacherReports, OwnedSpeedReadingTeacherReports>();

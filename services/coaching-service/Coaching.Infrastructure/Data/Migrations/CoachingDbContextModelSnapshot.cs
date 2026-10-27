@@ -1481,6 +1481,33 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingNewsletterUnsubscribeToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SubscriberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriberId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("cms_newsletter_unsubscribe_tokens", "coaching");
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingPaymentRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4503,6 +4530,15 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasForeignKey("AgreementId", "ReversalOfPaymentId")
                         .HasPrincipalKey("AgreementId", "Id")
                         .OnDelete(DeleteBehavior.NoAction);
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingNewsletterUnsubscribeToken", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CoachingNewsletterSubscriber", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.ExamResult", b =>

@@ -17,3 +17,15 @@ public sealed class CoachingNewsletterSubscriber
     public DateTime? UpdatedAt { get; set; }
     public Guid? UpdatedBy { get; set; }
 }
+
+/// <summary>
+/// Every unsubscribe link ever sent to a subscriber. A new confirmation e-mail gets a new link, and the
+/// links in earlier e-mails keep working.
+/// </summary>
+public sealed class CoachingNewsletterUnsubscribeToken
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid SubscriberId { get; set; }
+    public string TokenHash { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}

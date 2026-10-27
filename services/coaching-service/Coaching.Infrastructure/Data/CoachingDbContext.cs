@@ -64,6 +64,7 @@ public class CoachingDbContext : DbContext
     public DbSet<CoachingCmsNavigationItem> CoachingCmsNavigationItems => Set<CoachingCmsNavigationItem>();
     public DbSet<CoachingCmsMediaAsset> CoachingCmsMediaAssets => Set<CoachingCmsMediaAsset>();
     public DbSet<CoachingNewsletterSubscriber> CoachingNewsletterSubscribers => Set<CoachingNewsletterSubscriber>();
+    public DbSet<CoachingNewsletterUnsubscribeToken> CoachingNewsletterUnsubscribeTokens => Set<CoachingNewsletterUnsubscribeToken>();
     public DbSet<CoachingSubscriptionPlan> CoachingSubscriptionPlans => Set<CoachingSubscriptionPlan>();
     public DbSet<CoachingSubscription> CoachingSubscriptions => Set<CoachingSubscription>();
     public DbSet<CoachingSubscriptionSeat> CoachingSubscriptionSeats => Set<CoachingSubscriptionSeat>();
@@ -143,6 +144,14 @@ public class CoachingDbContext : DbContext
         newsletterSubscribers.HasIndex(subscriber => subscriber.Status);
         newsletterSubscribers.HasIndex(subscriber => subscriber.ConfirmationTokenHash).IsUnique();
         newsletterSubscribers.HasIndex(subscriber => subscriber.UnsubscribeTokenHash).IsUnique();
+
+        var unsubscribeTokens = modelBuilder.Entity<CoachingNewsletterUnsubscribeToken>();
+        unsubscribeTokens.ToTable("cms_newsletter_unsubscribe_tokens");
+        unsubscribeTokens.HasKey(token => token.Id);
+        unsubscribeTokens.Property(token => token.TokenHash).HasMaxLength(64).IsRequired();
+        unsubscribeTokens.HasIndex(token => token.TokenHash).IsUnique();
+        unsubscribeTokens.HasOne<CoachingNewsletterSubscriber>().WithMany()
+            .HasForeignKey(token => token.SubscriberId).OnDelete(DeleteBehavior.Cascade);
 
         var entries = modelBuilder.Entity<CoachingCmsEntry>();
         entries.ToTable("cms_entries");
