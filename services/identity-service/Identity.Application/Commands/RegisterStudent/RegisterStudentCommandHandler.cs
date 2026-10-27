@@ -120,7 +120,7 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
             if (product == PlatformProduct.Coaching)
             {
-                await _publishEndpoint.Publish(new CoachingProfileProvisioningRequested(userId, "Student", DateTime.UtcNow), cancellationToken);
+                await _publishEndpoint.Publish(new CoachingProfileProvisioningRequested(userId, "Student", DateTime.UtcNow) { BirthDate = request.BirthDate }, cancellationToken);
             }
 
             // Publish Event for Notification Service (Verification)
