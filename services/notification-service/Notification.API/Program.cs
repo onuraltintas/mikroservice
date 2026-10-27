@@ -66,6 +66,12 @@ builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Notification");
 builder.Services.AddOpenTelemetry().WithMetrics(metrics => metrics.AddMeter(CourseManagementEventDeliveryMetrics.MeterName));
 builder.Services.AddGlobalExceptionHandler();
+builder.Services.AddOptions<CoachingNoticeOptions>()
+    .Bind(builder.Configuration.GetSection(CoachingNoticeOptions.SectionName))
+    .Validate(options => string.IsNullOrWhiteSpace(options.AdminAlertEmail)
+            || System.Net.Mail.MailAddress.TryCreate(options.AdminAlertEmail.Trim(), out _),
+        "CoachingNotices:AdminAlertEmail must be empty or a valid e-mail address.")
+    .ValidateOnStart();
 builder.Services.AddOptions<PublicAppUrlOptions>()
     .Bind(builder.Configuration.GetSection(PublicAppUrlOptions.SectionName))
     .Validate(

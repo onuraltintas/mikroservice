@@ -407,6 +407,7 @@ services:
       - Email__FromName=${SMTP_FROM_NAME}
       - PublicApp__BaseUrl=${PUBLIC_APP_BASE_URL:?PUBLIC_APP_BASE_URL must be set}
       - PublicApp__SpeedReadingBaseUrl=${SPEED_READING_PUBLIC_BASE_URL:-http://localhost:4200}
+      - CoachingNotices__AdminAlertEmail=${COACHING_ADMIN_ALERT_EMAIL:-}
       - DataProtection__KeysPath=/var/lib/eduplatform/data-protection-keys
       - DataProtection__CertificatePath=${DATAPROTECTION_CERTIFICATE_PATH:-}
       - DataProtection__CertificatePassword=${DATAPROTECTION_CERTIFICATE_PASSWORD:-}

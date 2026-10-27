@@ -1623,7 +1623,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("reminder_receipts", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'StudyOverdue', 'Session', 'FeeOverdue')");
+                            t.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'StudyOverdue', 'Session', 'FeeOverdue', 'SubscriptionExpiring', 'SubscriptionExpired')");
                         });
                 });
 

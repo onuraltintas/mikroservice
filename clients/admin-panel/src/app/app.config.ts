@@ -4,6 +4,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { authRecaptchaInterceptor } from './core/auth/auth-recaptcha.interceptor';
+import { coachingSubscriptionRequiredInterceptor } from './core/auth/coaching-subscription-required.interceptor';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withNavigationErrorHandler(recoverMissingRouteChunk)),
     provideClientHydration(withEventReplay()),
     provideHttpClient(
-      withInterceptors([authInterceptor, authRecaptchaInterceptor]),
+      withInterceptors([authInterceptor, authRecaptchaInterceptor, coachingSubscriptionRequiredInterceptor]),
       withFetch()
     ),
     provideOAuthClient(),

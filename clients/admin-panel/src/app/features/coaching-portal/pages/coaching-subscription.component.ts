@@ -2,6 +2,7 @@ import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import {
   CoachingBankTransferRequest,
   CoachingManagementService,
@@ -22,6 +23,9 @@ import {
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Eduİvme Koçluk erişim paketini ve abonelik ödeme bildirimlerini buradan takip et. Öğretmen veya kurum koçluk ücretlerin ayrı tutulur.</p>
       </header>
 
+      @if (subscriptionRequired) {
+        <div data-testid="subscription-required" role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">Açmaya çalıştığın sayfa için etkin bir Koçluk aboneliği gerekiyor. Aşağıdan bir plan seçip ödeme bildirimini gönderebilirsin. Öğretmeninin veya kurumunun aboneliğine dahilsen erişimin, sana koltuk tanımladıklarında açılır.</div>
+      }
       @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
       @if (success()) { <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{{ success() }}</div> }
 
@@ -93,6 +97,7 @@ import {
 })
 export class CoachingSubscriptionComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
+  readonly subscriptionRequired = inject(ActivatedRoute, { optional: true })?.snapshot.queryParamMap.get('required') === '1';
   readonly loading = signal(true);
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);

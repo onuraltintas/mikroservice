@@ -48,7 +48,8 @@ public sealed class CoachingSubscriptionLifecyclePostgresTests
         Assert.Equal(2, expired.Count(x => x.Kind == CoachingSubscriptionNoticeKinds.Expired));
         Assert.Contains(expired, x => x.Kind == CoachingSubscriptionNoticeKinds.InstitutionExpired && x.RecipientEmail == "kurum@example.test");
         pg.Db.ChangeTracker.Clear();
-        Assert.All(await pg.Db.CoachingSubscriptions.Where(x => new[] { studentSubscription, teacherSubscription, institutionSubscription }.Contains(x.Id)).ToListAsync(),
+        Guid[] ids = [studentSubscription, teacherSubscription, institutionSubscription];
+        Assert.All(await pg.Db.CoachingSubscriptions.Where(x => Enumerable.Contains(ids, x.Id)).ToListAsync(),
             x => Assert.Equal("Expired", x.Status));
         Assert.Equal(events.Notices.Count, events.Notices.Select(x => x.NoticeId).Distinct().Count());
     }

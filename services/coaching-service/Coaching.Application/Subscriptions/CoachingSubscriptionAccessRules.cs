@@ -9,7 +9,13 @@ public static class CoachingSubscriptionAccessRules
         "subscriptions",
         "bank-transfer",
         "payment",
-        "finance"
+        "finance",
+        // Joining a teacher or institution comes before any subscription: the funded seat they give is what
+        // grants access, so invitations, the own profile, leaving a teacher and the exam catalog stay open.
+        "invitations",
+        "profiles",
+        "students",
+        "catalog"
     };
 
     private static readonly HashSet<string> LearningSections = new(StringComparer.OrdinalIgnoreCase)

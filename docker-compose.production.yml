@@ -262,6 +262,8 @@ services:
       # roles use SPEED_READING_PUBLIC_BASE_URL; central roles use PUBLIC_APP_BASE_URL.
       PublicApp__BaseUrl: ${PUBLIC_APP_BASE_URL:-https://eduivme.com}
       PublicApp__SpeedReadingBaseUrl: ${SPEED_READING_PUBLIC_BASE_URL:-https://masterhizliokuma.com}
+      # New bank-transfer notices and institution expiries are e-mailed here; empty sends none.
+      CoachingNotices__AdminAlertEmail: ${COACHING_ADMIN_ALERT_EMAIL:-}
       Email__Host: ${SMTP_HOST:?SMTP_HOST must be set to a production SMTP host}
       Email__Port: ${SMTP_PORT:?SMTP_PORT must be set to a production SMTP port}
       Email__From: ${SMTP_FROM_EMAIL:?SMTP_FROM_EMAIL must be set}
