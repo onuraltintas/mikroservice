@@ -80,6 +80,22 @@ public sealed class AssignmentUpdatedConsumer : IConsumer<AssignmentUpdatedEvent
     }
 }
 
+public sealed class AssignmentCancelledConsumer(ICoachingNotificationDispatcher dispatcher) : IConsumer<AssignmentCancelledEvent>
+{
+    public Task Consume(ConsumeContext<AssignmentCancelledEvent> context)
+    {
+        var message = context.Message;
+        return dispatcher.SendAsync(
+            MessageIds.Require(context),
+            message.StudentIds,
+            "Ödev iptal edildi",
+            $"\"{message.Title}\" ödevi öğretmenin tarafından iptal edildi. Bu ödev için teslim yapman gerekmiyor.",
+            "AssignmentCancelled",
+            message.AssignmentId.ToString(),
+            context.CancellationToken);
+    }
+}
+
 public sealed class AssignmentGradedConsumer : IConsumer<AssignmentGradedEvent>
 {
     private readonly ICoachingNotificationDispatcher _dispatcher;

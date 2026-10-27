@@ -148,7 +148,7 @@ export class CoachingOperationalComponent implements OnInit {
     this.actionLoading.set(true);
     this.service.deleteSession(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.load(),
-      error: () => this.error.set('Seans silinemedi.')
+      error: (e: { status?: number; error?: { error?: string } }) => this.error.set(e?.status === 409 && e.error?.error ? e.error.error : 'Seans silinemedi.')
     });
   }
 
@@ -157,7 +157,7 @@ export class CoachingOperationalComponent implements OnInit {
     this.actionLoading.set(true);
     this.service.deleteExam(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.load(),
-      error: () => this.error.set('Sınav silinemedi.')
+      error: (e: { status?: number; error?: { error?: string } }) => this.error.set(e?.status === 409 && e.error?.error ? e.error.error : 'Sınav silinemedi.')
     });
   }
 

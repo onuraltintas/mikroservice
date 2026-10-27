@@ -12,4 +12,7 @@ public record UpdateSessionAttendanceCommand(
 {
     [JsonIgnore]
     public bool IsInstitutionAdminOperation { get; init; }
+
+    /// <summary>Present, Absent, Late or Excused. Older clients send only <see cref="Attended"/>.</summary>
+    public string? Status { get; init; }
 }

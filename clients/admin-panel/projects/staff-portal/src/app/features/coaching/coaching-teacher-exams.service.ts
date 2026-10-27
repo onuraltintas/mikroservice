@@ -152,6 +152,10 @@ export class CoachingTeacherExamsService {
     );
   }
 
+  deleteExamResult(examId: string, resultId: string): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${encodeURIComponent(examId)}/results/${encodeURIComponent(resultId)}`);
+  }
+
   private paging(pageNumber: number, pageSize: number): HttpParams {
     const page = Math.min(1_000, Math.max(1, Math.floor(Number.isFinite(pageNumber) ? pageNumber : 1)));
     const size = Math.min(100, Math.max(1, Math.floor(Number.isFinite(pageSize) ? pageSize : 25)));

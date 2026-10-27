@@ -108,6 +108,11 @@ public class SessionsController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
+        catch (BusinessRuleException ex)
+        {
+            // A rule about the record itself, e.g. a held session or submitted work that cannot be deleted.
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
         catch (ValidationException ex)
         {
             return BadRequest(new { error = ex.Message, details = ex.Errors });
@@ -175,6 +180,11 @@ public class SessionsController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex)
+        {
+            // A rule about the record itself, e.g. a held session or submitted work that cannot be deleted.
+            return Conflict(new { error = ex.Message, code = ex.Code });
         }
         catch (Exception ex)
         {

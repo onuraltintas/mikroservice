@@ -1,6 +1,7 @@
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Enums;
 using Coaching.Application.Authorization;
+using EduPlatform.Shared.Kernel.Exceptions;
 using MediatR;
 
 namespace Coaching.Application.Commands.UpdateSessionAttendance;
@@ -51,14 +52,17 @@ public class UpdateSessionAttendanceCommandHandler : IRequestHandler<UpdateSessi
                     : "No student assigned to this session");
         }
 
-        // Record attendance
-        session.RecordAttendance(attendance.StudentId, command.Attended, command.Notes);
-
-        if (command.Attended && session.Attendances.All(item =>
-                item.AttendanceStatus != AttendanceStatus.NotRecorded))
-        {
-            session.Complete();
-        }
+        var status = command.Status is null
+            ? command.Attended ? AttendanceStatus.Present : AttendanceStatus.Absent
+            : Enum.TryParse<AttendanceStatus>(command.Status, ignoreCase: true, out var parsed)
+                && parsed is AttendanceStatus.Present or AttendanceStatus.Absent or AttendanceStatus.Late or AttendanceStatus.Excused
+                && !int.TryParse(command.Status, out _)
+                ? parsed
+                : throw new ValidationException(new Dictionary<string, string[]>
+                {
+                    [nameof(command.Status)] = ["Katılım durumu Katıldı, Katılmadı, Geç katıldı veya Mazeretli olmalıdır."]
+                });
+        session.RecordAttendance(attendance.StudentId, status, command.Notes, DateTime.UtcNow);
 
         await _repository.UpdateAsync(session, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

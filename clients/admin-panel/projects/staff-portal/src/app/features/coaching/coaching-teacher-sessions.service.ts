@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export type CoachingAttendanceStatus = 'Present' | 'Absent' | 'Late' | 'Excused';
+
 export interface CoachingTeacherSessionReflection {
   studentId: string;
   note: string | null;
@@ -124,11 +126,11 @@ export class CoachingTeacherSessionsService {
   updateAttendance(
     sessionId: string,
     studentId: string,
-    attended: boolean
+    status: CoachingAttendanceStatus
   ): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(
       `${this.url}/${encodeURIComponent(sessionId)}/attendance`,
-      { sessionId, studentId, attended, notes: null }
+      { sessionId, studentId, attended: status === 'Present' || status === 'Late', status, notes: null }
     );
   }
 

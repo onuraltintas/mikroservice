@@ -8,6 +8,7 @@ using Coaching.Application.Queries;
 
 using MediatR;
 using Coaching.Application.Commands.DeleteExam;
+using Coaching.Application.Commands.DeleteExamResult;
 using EduPlatform.Shared.Kernel.Exceptions;
 
 namespace Coaching.API.Controllers;
@@ -244,10 +245,42 @@ public class ExamsController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
+        catch (BusinessRuleException ex)
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting exam: {ExamId}", id);
             return StatusCode(500, new { error = "An error occurred" });
+        }
+    }
+
+    /// <summary>
+    /// Remove one student's exam result (for example a result entered for the wrong student).
+    /// </summary>
+    [HttpDelete("{id:guid}/results/{resultId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteResult(Guid id, Guid resultId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _mediator.Send(new DeleteExamResultCommand(id, resultId), cancellationToken);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
         }
     }
 

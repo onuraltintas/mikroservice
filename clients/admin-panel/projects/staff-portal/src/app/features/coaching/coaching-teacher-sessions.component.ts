@@ -6,6 +6,7 @@ import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
 import { CoachingTeacherSessionFormComponent } from './coaching-teacher-session-form.component';
 import {
+  CoachingAttendanceStatus,
   CoachingTeacherSession,
   CoachingTeacherSessionReflection,
   CoachingTeacherSessionsService
@@ -143,21 +144,26 @@ export class CoachingTeacherSessionsComponent implements OnInit {
     return `${sessionId}:${studentId}`;
   }
 
+  /** Attendance is taken once the session has started; a cancelled session has none. */
+  canRecordAttendance(session: CoachingTeacherSession): boolean {
+    return session.status !== 'Cancelled' && new Date(session.startTime).getTime() <= Date.now();
+  }
+
   saveAttendance(
     session: CoachingTeacherSession,
     reflection: CoachingTeacherSessionReflection,
-    attended: boolean
+    status: CoachingAttendanceStatus
   ): void {
     const key = this.attendanceKey(session.id, reflection.studentId);
     this.savingAttendanceKey.set(key);
     this.errorMessage.set(null);
-    this.sessionsService.updateAttendance(session.id, reflection.studentId, attended).pipe(
+    this.sessionsService.updateAttendance(session.id, reflection.studentId, status).pipe(
       finalize(() => this.savingAttendanceKey.set(null))
     ).subscribe({
       next: () => this.sessions.update(items => items.map(item => {
         if (item.id !== session.id) return item;
         const studentReflections = item.studentReflections?.map(current => current.studentId === reflection.studentId
-          ? { ...current, attendanceStatus: attended ? 'Present' : 'Absent' }
+          ? { ...current, attendanceStatus: status }
           : current);
         const allAttendanceRecorded = !!studentReflections?.length
           && studentReflections.every(current => current.attendanceStatus !== 'NotRecorded');
@@ -167,7 +173,9 @@ export class CoachingTeacherSessionsComponent implements OnInit {
           studentReflections
         };
       })),
-      error: () => this.errorMessage.set('Yoklama kaydedilemedi. Lütfen tekrar deneyin.')
+      error: (error: { status?: number; error?: { error?: string } }) => this.errorMessage.set(error?.status === 409 && error.error?.error
+        ? error.error.error
+        : 'Yoklama kaydedilemedi. Lütfen tekrar deneyin.')
     });
   }
 
