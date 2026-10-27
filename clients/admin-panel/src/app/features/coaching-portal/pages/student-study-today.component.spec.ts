@@ -9,10 +9,12 @@ describe('StudentStudyTodayComponent', () => {
   async function setup(empty = false, failure = false) {
     const service = { list: vi.fn(() => failure ? throwError(() => new Error('offline')) : of({ items: empty ? [] : [{ id: 'plan' }] })),
       getAvailability: vi.fn(() => of({ timeZoneId: 'Europe/Istanbul' })),
-      get: vi.fn(() => of({ title: 'My plan', tasks: [
+      skip: vi.fn(() => of({})), reschedule: vi.fn(() => of({})),
+      get: vi.fn(() => of({ id: 'plan', version: 4, title: 'My plan', tasks: [
         { id: 'today', title: 'Today work', plannedDate: '2026-10-02', plannedMinutes: 30, isCompleted: false },
         { id: 'old', title: 'Overdue work', plannedDate: '2026-10-01', plannedMinutes: 20, isCompleted: false },
         { id: 'done', title: 'Done work', plannedDate: '2026-10-02', plannedMinutes: 20, isCompleted: true },
+        { id: 'skipped', title: 'Skipped work', plannedDate: '2026-10-01', plannedMinutes: 20, isCompleted: false, skippedAt: '2026-10-01T12:00:00Z' },
         { id: 'future', title: 'Future work', plannedDate: '2026-10-03', plannedMinutes: 20, isCompleted: false }] })) };
     TestBed.configureTestingModule({ imports: [StudentStudyTodayComponent], providers: [provideRouter([]), { provide: CoachingStudyPlanningService, useValue: service }] });
     const fixture = TestBed.createComponent(StudentStudyTodayComponent);
@@ -31,6 +33,17 @@ describe('StudentStudyTodayComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Future work');
     expect(fixture.nativeElement.querySelector('.today-date').textContent).toContain('02.10.2026');
     expect(fixture.nativeElement.querySelector('.today-catch-up').textContent).toContain('01.10.2026');
+  });
+  it('lets the student move missed work to today or skip it, and leaves skipped work out', async () => {
+    const { fixture, service } = await setup();
+    const box = fixture.nativeElement.querySelector('.today-catch-up');
+    expect(box.textContent).not.toContain('Skipped work');
+    expect(fixture.nativeElement.querySelector('.today-catch-up strong').textContent).toContain('1 çalışma');
+    box.querySelector('button[data-action="today"]').click(); await fixture.whenStable();
+    expect(service.reschedule).toHaveBeenCalledWith('plan', 'old', 4, '2026-10-02');
+    box.querySelector('button[data-action="skip"]').click(); await fixture.whenStable();
+    expect(service.skip).toHaveBeenCalledWith('plan', 'old', 4);
+    expect(service.get).toHaveBeenCalledTimes(3);
   });
   it('distinguishes no active plan from a failed request', async () => {
     const { fixture, service } = await setup(true);

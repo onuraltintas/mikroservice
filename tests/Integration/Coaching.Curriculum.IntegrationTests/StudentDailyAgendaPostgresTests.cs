@@ -98,6 +98,21 @@ public sealed class StudentDailyAgendaPostgresTests
         Assert.Equal(1, (await Page(api, "overdue", 100)).PageNumber);
     }
 
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task SkippedWorkLeavesEveryAgendaList()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create(); var f = pg.Data;
+        var student = Guid.NewGuid(); f.User.UserId = student; f.User.Roles = ["Student"];
+        f.Db.Add(CoachingStudentProfile.Create(student));
+        var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Aktif plan"); plan.Activate(); f.Db.Add(plan);
+        var missed = StudyPlanTask.Create(plan, Today.AddDays(-2), "Kaçırılan", 30); var skipped = StudyPlanTask.Create(plan, Today.AddDays(-2), "Atlanan", 30); skipped.Skip();
+        var later = StudyPlanTask.Create(plan, Today.AddDays(2), "Vazgeçilen", 30); later.Skip();
+        f.Db.AddRange(missed, skipped, later); await f.Db.SaveChangesAsync();
+        var api = new StudentDailyAgendaController(f.Db, new CoachingAccessPolicy(f.User), new Clock());
+        var overdue = await Page(api, "overdue");
+        Assert.Equal(1, overdue.OverdueCount); Assert.Equal(0, overdue.UpcomingCount); Assert.Equal(missed.Id, Assert.Single(overdue.Items).RecordId);
+    }
+
     private static async Task<StudentDailyAgendaPage> Page(StudentDailyAgendaController api, string mode = "today", int page = 1) =>
         Assert.IsType<StudentDailyAgendaPage>(Assert.IsType<OkObjectResult>(await api.Get(mode, page)).Value);
     private static async Task<string> Snapshot(CurriculumPostgresTests.Pg pg) => JsonSerializer.Serialize(new {

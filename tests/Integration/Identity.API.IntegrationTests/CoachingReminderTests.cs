@@ -242,6 +242,31 @@ public sealed class CoachingReminderTests(PostgresFixture postgres)
         finally { await db.Database.EnsureDeletedAsync(); }
     }
 
+    [Fact]
+    public async Task OverdueRemindersStopAfterThreeDaysAndIgnoreSkippedWork()
+    {
+        var clock = new Clock { Now = new(new DateTime(2026, 10, 23, 6, 0, 0, DateTimeKind.Utc)) };
+        await using var provider = Services(clock: clock).BuildServiceProvider(); await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>();
+        await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try
+        {
+            var student = Guid.NewGuid(); var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Geciken sınırı"); plan.Activate();
+            var old = StudyPlanTask.Create(plan, new(2026, 10, 19), "Dört gün önceki", 30);
+            var skipped = StudyPlanTask.Create(plan, new(2026, 10, 22), "Atlanan", 30); skipped.Skip();
+            db.AddRange(plan, old, skipped, StudyAvailability.Create(student, "Europe/Istanbul")); await db.SaveChangesAsync();
+            var processor = scope.ServiceProvider.GetRequiredService<CoachingReminderProcessor>();
+            Assert.Equal(0, await processor.ProcessAsync());
+
+            var missed = StudyPlanTask.Create(plan, new(2026, 10, 22), "Dün kaçırılan", 30); db.Add(missed); await db.SaveChangesAsync();
+            var sent = 0;
+            for (var day = 0; day < 5; day++, clock.Now = clock.Now.AddDays(1)) sent += await processor.ProcessAsync();
+            Assert.Equal(3, sent);
+            Assert.Equal(3, await db.CoachingReminderReceipts.CountAsync(x => x.Kind == "StudyOverdue"));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     private ServiceCollection Services(ReminderFault? fault = null, ReminderAckFault? ack = null, TimeProvider? clock = null, StudyLockCounter? counter = null)
     {
         var services = new ServiceCollection(); services.AddLogging();
