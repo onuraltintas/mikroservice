@@ -50,6 +50,7 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-goals.component.ts": "f75e8556532383afaf5648c70b5fce792ceee3f3c6241e03004ff24e9c11c221",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-goals.service.spec.ts": "b87c7ab61d519e1e07c14cc7b5339e8be5377bf050f2ba02a73421353fbc6d4a",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-goals.service.ts": "bf8720f9c9d3ee64bba343c0a66f6d844b0ff2a6a4b744af6997d5fa835055d5",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-remove-student.spec.ts": "0b8f50177d598601f4f6a621a1074f2184349b27b8132fd953663958bd269a9e",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-session-form.component.html": "f4e25b3fd7d0eee97e7ec92c1a33221cf33c5e63546954e64cca719f980487d7",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-session-form.component.scss": "8a51f8fcb833615a792c3b8290975e5657bb7c879801c4a92c376ec13503eeb8",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-session-form.component.spec.ts": "1a0b3bfffaedebd430c999319b851f02683f9f7bd925b1477df6d98968a4b8e3",
@@ -68,12 +69,12 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-student-profile.component.scss": "3dde93fd0d5e55c5d0dcd5f7f6c241c7edef3052e5067e14ca8e0b8827a32f87",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-student-profile.component.spec.ts": "4fa920686f546b0df689869ea7d635335cb8e83ad94ff92123f5657c66fd9117",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-student-profile.component.ts": "cce876c4baf1b99026c91c2357f35d40cec07e5a54894f0d15ae580b22fa8a39",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.component.html": "e52fd48a00eda63f38a0a3ef274db2456aeed88133958652baeb7f7c6470a6f0",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.component.html": "073f533300850038dc21e40afea90c327cc715fddb9c216520bdf2f6f755af60",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.component.scss": "12e2e263177e1bd75aa280b8659ecbc5fb0720f011c7892769cb01795d646298",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.component.spec.ts": "cff62352ad3b568622884a5a8e5d18a0517a8648968c34dee201d87d5dc4cb8d",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.component.ts": "26b5eeac5b3c0ba58277e8ee7dac9b60603b0c003621f73ce2decb7a30457bec",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.component.ts": "6734d7479212c6ff0d064b05f8daa1c9f086621e01bea72b6a092cf893d7ae02",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.service.spec.ts": "d6c1c6a648b3d602157709de01fc443d5a968319f3c988ae7298021c7f93331a",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.service.ts": "0252c67856c55f6038c0fbe4c6b640f889e487d3ce123992c86741a72949f82a",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.service.ts": "438a352f5578a7e08985d307acf74553007893e0b08b535557b214f50ae7f8ea",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.html": "406a1076f16e25daa7ab6cedf40c09edf631712a763a7e8134f7dce88ee5aa8d",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.scss": "db14a82039d27f46befdc440e7c17ed44fcdedca938a5fdcbca98d26d9565b28",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.spec.ts": "0634227edc7f25e68b8d2a10652aecfdc5ea12d6b977db8517e50cd8dd676f32",
@@ -826,7 +827,7 @@
     "services/coaching-service/Coaching.API/Controllers/CoachingProfilesController.cs": "a940a72a4a06114144ab889dfadf08968daa2cb83cd20a35590b36f9634e771c",
     "services/coaching-service/Coaching.API/Controllers/CoachingRosterController.cs": "adbd8c1212fc0a4bad8ee47fa5f64d1206fdfab0ee03c28e1165df7428e3501a",
     "services/coaching-service/Coaching.API/Controllers/CoachingStaffStudyController.cs": "3e20d3644134367eee7b39e8b025d96f7f10f4d66ea1c78b2d0c5521cd3895db",
-    "services/coaching-service/Coaching.API/Controllers/CoachingStudentLinksController.cs": "5f86159ec9cd59461a283b00aed5741aaf5f2430a817e1050e0b908a9245ac8a",
+    "services/coaching-service/Coaching.API/Controllers/CoachingStudentLinksController.cs": "4c3849ee70d2d89f1da55635b95da59442e06bcecc1176dd7c0e6340d04abce5",
     "services/coaching-service/Coaching.API/Controllers/CoachingSubscriptionPlansController.cs": "e6bdebe2d68b50c84569b31f30108c1301820291263d8cdbd40e63bd7484ef00",
     "services/coaching-service/Coaching.API/Controllers/CoachingSubscriptionsAdminController.cs": "dc82e690e0391bb15af97e6b91e5712104b034068be2483aef66be07ac5d7f99",
     "services/coaching-service/Coaching.API/Controllers/CoachingSubscriptionsController.cs": "f6f626f2a6a777397ef1401317843e5bd6f1b6382ae7ae723f568e2274911e66",
@@ -953,7 +954,7 @@
     "services/coaching-service/Coaching.Application/Newsletters/CoachingNewsletterContracts.cs": "6eecf1b098e75ecb564596264232981bbf32436b06872479407005882931fae5",
     "services/coaching-service/Coaching.Application/Privacy/ICoachingErasureAssessmentService.cs": "7cec50cfb201c280a87c3b4e9f3cbbde1feb24e2ea5881b1380c40a1c0a2fe16",
     "services/coaching-service/Coaching.Application/Privacy/ICoachingErasureExecutionService.cs": "9463b507f3ca517387e5211a6ad366100324ef815c0d1e281d38be1594767ea7",
-    "services/coaching-service/Coaching.Application/Profiles/CoachingProfileContracts.cs": "72cd6a5395eac5e70e97aab74c32b23c9c4224deb8150f5570a6516fd5f3434f",
+    "services/coaching-service/Coaching.Application/Profiles/CoachingProfileContracts.cs": "110292bb37caa7ea9fe333b77a4cc2be6e01916fbebc1532ce6d5cd1cd0a0e46",
     "services/coaching-service/Coaching.Application/Profiles/CoachingProfileProvisioningConsumer.cs": "cd77ca3d871c4c02efe68d03e245096647861d84a415db69e9922a78d3a4835e",
     "services/coaching-service/Coaching.Application/Queries/ExportCoachingData/ExportCoachingDataQuery.cs": "9bc070b0691be0325bc709310b98572da8af6a53bfdfe3e7e32cea361a1bb84c",
     "services/coaching-service/Coaching.Application/Queries/GetAssignment/GetAssignmentQuery.cs": "7ecbd8b3b7d76aa881625fe979100d79e3762224f79769d609dbf1be5e840c4a",
@@ -1295,7 +1296,7 @@
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingDecisionResponsibility.cs": "120a22fe6de29bc2e3c10f33a3c27f699c62dba8158578d73954d7f35bdab436",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingInvitationStore.cs": "8ed444c9e3c5b6c2e8f95e5c32109c6105743a9acc5c50031160d87cfdb6251b",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileImporter.cs": "1213ccca7bf48a88e56226c0f51f84489d880a6ac5894b1edbacfc339e0a44e1",
-    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs": "a737f43b885022f590823e1a0548cdb90e819a3feb46ccd9394107543b7278e7",
+    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs": "8673b8706037fbd213f52091cbed471e847465701df1f520aa5b673d849bdc8b",
     "services/coaching-service/Coaching.Infrastructure/Profiles/OwnedCoachingDirectory.cs": "2b31c2da3af9cd621f97028d2d45fd8a4af3dbbe26b428afc0e23a248cb4a111",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderProcessor.cs": "d4621217932de41c21a6be7290e8f30a2db789bfd60ae446efc9eadcc6d10543",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderWorker.cs": "55dec4fcec4257d0c523670cc21435c062e8799d1506f9f6af2458f59b39ec35",
@@ -2557,7 +2558,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "O2 staff portal addresses and phone layout",
+    "purpose": "O12 KVKK and missing screens",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2605,7 +2606,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "3e1fe1ac",
+    "previousBaselineCommit": "b455bf30",
     "removedSincePreviousBaseline": []
   }
 }
