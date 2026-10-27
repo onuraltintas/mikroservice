@@ -25,16 +25,17 @@ describe('O12 my teachers', () => {
     http.expectOne(r => r.method === 'GET' && r.url.endsWith('/coaching/students/me/teachers')).flush([
       { teacherUserId: coach, teacherName: 'Can Öğretmen', institutionId: null, since: '2026-09-01T00:00:00Z', canLeave: true },
       { teacherUserId: institutionTeacher, teacherName: 'Kurum Öğretmeni', institutionId: '33333333-3333-3333-3333-333333333333', since: '2026-09-01T00:00:00Z', canLeave: false }]);
-    fixture.detectChanges(); await fixture.whenStable();
     const page = fixture.nativeElement as HTMLElement;
-    expect(page.textContent).toContain('Can Öğretmen'); expect(page.textContent).toContain('Kurum Öğretmeni');
+    await vi.waitFor(() => { fixture.detectChanges(); expect(page.textContent).toContain('Can Öğretmen'); }); expect(page.textContent).toContain('Kurum Öğretmeni');
     const leaveButtons = [...page.querySelectorAll('button[data-leave-teacher]')] as HTMLButtonElement[];
     expect(leaveButtons.map(b => b.getAttribute('data-leave-teacher'))).toEqual([coach]);
     expect(page.textContent).toContain('kurum yönetimi');
-    await fixture.componentInstance.leave(fixture.componentInstance.teachers()[0]);
-    expect(confirm).toHaveBeenCalled();
-    http.expectOne(r => r.method === 'DELETE' && r.url.endsWith(`/coaching/students/me/teachers/${coach}`)).flush(null);
-    http.expectOne(r => r.method === 'GET' && r.url.endsWith('/coaching/students/me/teachers')).flush([]);
+    const leaving = fixture.componentInstance.leave(fixture.componentInstance.teachers()[0]);
+    await vi.waitFor(() => expect(confirm).toHaveBeenCalled());
+    await vi.waitFor(() => http.expectOne(r => r.method === 'DELETE' && r.url.endsWith(`/coaching/students/me/teachers/${coach}`)).flush(null));
+    await vi.waitFor(() => http.expectOne(r => r.method === 'GET' && r.url.endsWith('/coaching/students/me/teachers')).flush([]));
+    await leaving;
+    expect(fixture.componentInstance.message()).toContain('Can Öğretmen');
     http.verify();
   });
 
@@ -44,6 +45,7 @@ describe('O12 my teachers', () => {
     const fixture = TestBed.createComponent(StudentTeachersComponent); fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
     http.expectOne(r => r.url.endsWith('/coaching/students/me/teachers')).flush([{ teacherUserId: coach, teacherName: 'Can', institutionId: null, since: '2026-09-01T00:00:00Z', canLeave: true }]);
+    await vi.waitFor(() => expect(fixture.componentInstance.teachers()).toHaveLength(1));
     await fixture.componentInstance.leave(fixture.componentInstance.teachers()[0]);
     http.expectNone(r => r.method === 'DELETE'); http.verify();
   });
@@ -78,7 +80,8 @@ describe('O12 fee detail', () => {
       method: 'BankTransfer', amount: 400, receivedOn: '2026-10-02', reference: 'EFT-1', createdAt: '2026-10-02T10:00:00Z' }], totalCount: 1, pageNumber: 1, pageSize: 25 })) };
     TestBed.configureTestingModule({ imports: [StudentFeeDetailComponent], providers: [provideRouter([]), { provide: CoachingFinanceService, useValue: api },
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ feeId: 'fee-1' }) } } }] });
-    const fixture = TestBed.createComponent(StudentFeeDetailComponent); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const fixture = TestBed.createComponent(StudentFeeDetailComponent); fixture.detectChanges();
+    await vi.waitFor(() => { fixture.detectChanges(); expect((fixture.nativeElement as HTMLElement).textContent).toContain('EFT-1'); });
     expect(api.fee).toHaveBeenCalledWith('student', '', 'fee-1'); expect(api.payments).toHaveBeenCalledWith('student', '', 'fee-1', 1);
     const text = (fixture.nativeElement as HTMLElement).textContent!;
     expect(text).toContain('Ekim koçluk ücreti'); expect(text).toContain('2. taksit'); expect(text).toContain('Havale'); expect(text).toContain('EFT-1');

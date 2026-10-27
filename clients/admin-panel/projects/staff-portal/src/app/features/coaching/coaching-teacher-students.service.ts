@@ -9,6 +9,7 @@ export interface CoachingTeacherStudent {
   lastName: string;
   fullName: string;
   gradeLevel?: number;
+  institutionId?: string | null;
   institutionName?: string;
   subject?: string;
   assignmentStartDate: string;
@@ -85,6 +86,11 @@ export class CoachingTeacherStudentsService {
     }
 
     return this.http.get<PagedCoachingResponse<CoachingTeacherStudent>>(this.url, { params });
+  }
+
+  /** Roadmap O12: an independent teacher ends the link with a student. */
+  removeStudent(studentUserId: string): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${encodeURIComponent(studentUserId)}`);
   }
 
   inviteStudent(email: string): Observable<{ invitationId: string }> {

@@ -5,6 +5,8 @@ import { finalize } from 'rxjs';
 import { CoachingTimeZone, CoachingTimeZoneService, detectedTimeZone } from '../../../core/services/coaching-time-zone.service';
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { StudentParentLinksComponent } from './student-parent-links.component';
+import { StudentTeachersComponent } from './student-teachers.component';
+import { StudentDataExportComponent } from './student-data-export.component';
 
 const zoneNames:Record<string,string>={'Europe/Istanbul':'İstanbul (Türkiye)'};
 /** A readable label with the current offset, e.g. "İstanbul (Türkiye) · GMT+3". */
@@ -18,7 +20,7 @@ export function timeZoneOptions(ids:string[]):{id:string;label:string}[]{
   });
 }
 
-@Component({selector:'app-student-settings',standalone:true,imports:[FormsModule, StudentParentLinksComponent],styleUrl:'./student-study-plans.component.scss',
+@Component({selector:'app-student-settings',standalone:true,imports:[FormsModule, StudentParentLinksComponent, StudentTeachersComponent, StudentDataExportComponent],styleUrl:'./student-study-plans.component.scss',
   template:`<section class="study-plans" aria-labelledby="settings-title">
     <header class="page-heading"><div><p class="eyebrow">Çalışma tercihlerim</p><h1 id="settings-title">Ayarlar</h1></div></header>
     @if(error()){<p role="alert" class="notice error">{{error()}}</p>}
@@ -36,7 +38,9 @@ export function timeZoneOptions(ids:string[]):{id:string;label:string}[]{
       </fieldset>
       <p class="muted">Bu seçim hesabına kaydedilir; cihazın değiştiğinde kendiliğinden değiştirilmez. Müsaitlik ve haftalık taslak aynı ayarı kullanır. Mevcut tarihli planların saatleri ve tamamlanan çalışmalar korunur.</p>
     </form><button type="button" class="secondary" (click)="reload()" [disabled]="loading() || saving()">Ayarları yeniden yükle</button>
+    <app-student-teachers />
     <app-student-parent-links />
+    <app-student-data-export />
   </section>`})
 export class StudentSettingsComponent implements OnInit {
   private readonly api=inject(CoachingTimeZoneService); private readonly destroy=inject(DestroyRef); private readonly toaster=coachingToaster();

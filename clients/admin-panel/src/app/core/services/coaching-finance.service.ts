@@ -39,6 +39,10 @@ export class CoachingFinanceService {
   account(mode: CoachingFinanceMode, studentId: string, pageNumber = 1) {
     return this.http.get<ApiResult<CoachingFeeAccount>>(this.accountUrl(mode, studentId), { params: this.page(pageNumber) }).pipe(map(result => result.data));
   }
+  /** Roadmap O12: one fee with its instalments (fee detail screen). */
+  fee(mode: CoachingFinanceMode, studentId: string, feeId: string) {
+    return this.http.get<ApiResult<CoachingFee>>(`${this.accountUrl(mode, studentId)}/fees/${encodeURIComponent(feeId)}`).pipe(map(result => result.data));
+  }
   payments(mode: CoachingFinanceMode, studentId: string, feeId: string, pageNumber = 1) {
     return this.http.get<ApiResult<CoachingPaymentPage>>(`${this.accountUrl(mode, studentId)}/fees/${encodeURIComponent(feeId)}/payments`, { params: this.page(pageNumber) }).pipe(map(result => result.data));
   }

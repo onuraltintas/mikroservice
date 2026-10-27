@@ -83,6 +83,10 @@
             [attr.aria-label]="student.fullName + ' öğrenci raporunu aç'" (click)="openReport(student)">
             Raporu incele <span aria-hidden="true">→</span>
           </button>
+          @if (!student.institutionId) {
+            <button class="clear-search" type="button" [attr.data-remove-student]="student.userId" [disabled]="removingId() !== null"
+              [attr.aria-label]="student.fullName + ' öğrencisini listenden çıkar'" (click)="removeStudent(student)">Öğrenciyi çıkar</button>
+          }
         </article>
       }
     </div>

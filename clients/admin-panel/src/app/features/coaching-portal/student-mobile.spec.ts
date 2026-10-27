@@ -15,6 +15,8 @@ import { NotificationService } from '../../core/services/notification.service';
 import { ToasterService } from '../../core/services/toaster.service';
 import { PracticeExamProfile } from '../../core/models/practice-exam';
 import { CoachingParentService } from './parent/coaching-parent.service';
+import { CoachingStudentTeachersService } from '../../core/services/coaching-student-teachers.service';
+import { CoachingDataExportService } from '../../core/services/coaching-data-export.service';
 import { coachingFeedback } from './coaching-feedback';
 import { CoachingPortalLayoutComponent } from './layout/coaching-portal-layout.component';
 import { StudentAssignmentsComponent } from './pages/student-assignments.component';
@@ -115,7 +117,7 @@ describe('O1 time zone', () => {
   it('chooses the time zone from a list with the saved zone and Istanbul suggested first', async () => {
     const api = { get: vi.fn(() => of({ timeZoneId: 'Europe/Berlin', availabilityVersion: 1, draftVersion: 1 })), save: vi.fn() };
     TestBed.configureTestingModule({ imports: [StudentSettingsComponent], providers: [
-      { provide: CoachingTimeZoneService, useValue: api }, { provide: CoachingParentService, useValue: { getLinks: () => of([]) } }] });
+      { provide: CoachingTimeZoneService, useValue: api }, { provide: CoachingParentService, useValue: { getLinks: () => of([]) } }, { provide: CoachingStudentTeachersService, useValue: { list: () => of([]) } }, { provide: CoachingDataExportService, useValue: {} }] });
     const fixture = TestBed.createComponent(StudentSettingsComponent); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     const page = fixture.nativeElement as HTMLElement;
     expect(page.querySelector('input[name=timeZone]')).toBeNull();

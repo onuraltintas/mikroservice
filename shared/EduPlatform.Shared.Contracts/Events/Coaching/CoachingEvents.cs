@@ -136,7 +136,11 @@ public sealed record AssignmentCancelledEvent(
     Guid[] StudentIds);
 
 /// <summary>A coach's link with a student ended without the coach's own action; the coach is told.</summary>
-public sealed record CoachingTeacherLinkEndedEvent(Guid TeacherUserId, Guid StudentUserId, string StudentName, string Reason);
+public sealed record CoachingTeacherLinkEndedEvent(Guid TeacherUserId, Guid StudentUserId, string StudentName, string Reason)
+{
+    /// <summary>Roadmap O12: set when the teacher ended the link, so the student can be told who.</summary>
+    public string? TeacherName { get; init; }
+}
 
 public static class CoachingTeacherLinkEndedReasons
 {
@@ -144,6 +148,8 @@ public static class CoachingTeacherLinkEndedReasons
     public const string JoinedInstitution = "JoinedInstitution";
     /// <summary>The student ended the link themselves.</summary>
     public const string StudentLeft = "StudentLeft";
+    /// <summary>Roadmap O12: an independent teacher removed the student.</summary>
+    public const string TeacherRemoved = "TeacherRemoved";
 }
 
 /// <summary>Roadmap Y7: one week of a child's Coaching activity, e-mailed to a linked parent on Sunday evening.</summary>

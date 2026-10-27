@@ -207,14 +207,19 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             if (!hasActiveProfile) throw Forbidden();
             var rows = await db.CoachingTeacherStudentAssignments.Where(x => x.TeacherUserId == teacherUserId && x.StudentUserId == studentUserId).ToListAsync(ct);
             if (rows.Count == 0) throw new KeyNotFoundException("Koçluk bağlantısı bulunamadı.");
-            var ended = rows.Where(x => x.IsActive).ToArray();
+            // Roadmap O12: a link made through an institution is changed by the institution, not by one side alone.
+            if (rows.Any(x => x.IsActive && x.InstitutionId != null) && !rows.Any(x => x.IsActive && x.InstitutionId == null))
+                throw Conflict("Kurum üzerinden kurulan öğretmen bağlantısını yalnız kurum yönetimi değiştirebilir.");
+            var ended = rows.Where(x => x.IsActive && x.InstitutionId == null).ToArray();
             foreach (var row in ended) row.SetActive(false, actorUserId);
             if (ended.Any(x => x.InstitutionId == null))
                 await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.UserId == teacherUserId), studentUserId,
                     "Öğretmen bağlantısı sona erdi.", ct);
-            if (studentInitiated && ended.Length > 0 && events is not null)
+            if (ended.Length > 0 && events is not null)
                 await events.PublishAsync(new CoachingTeacherLinkEndedEvent(teacherUserId, studentUserId,
-                    await StudentNameAsync(studentUserId, ct), CoachingTeacherLinkEndedReasons.StudentLeft), ct);
+                    await StudentNameAsync(studentUserId, ct),
+                    studentInitiated ? CoachingTeacherLinkEndedReasons.StudentLeft : CoachingTeacherLinkEndedReasons.TeacherRemoved)
+                    { TeacherName = studentInitiated ? null : await StudentNameAsync(teacherUserId, ct) }, ct);
             await db.SaveChangesAsync(ct);
         }, ct);
     }
@@ -322,6 +327,20 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             seat.IsSuspended = true;
             seat.SuspensionReason = reason;
         }
+    }
+
+    /// <summary>Roadmap O12: the student's active teachers, independent ones first.</summary>
+    public async Task<IReadOnlyList<CoachingStudentTeacherLink>> ListStudentTeachersAsync(Guid studentUserId, CancellationToken ct)
+    {
+        var rows = await db.CoachingTeacherStudentAssignments.AsNoTracking()
+            .Where(x => x.StudentUserId == studentUserId && x.IsActive).ToListAsync(ct);
+        var names = (await accounts.GetAccountsAsync(rows.Select(x => x.TeacherUserId).Distinct().ToArray(), ct))
+            .ToDictionary(x => x.UserId, x => $"{x.FirstName} {x.LastName}".Trim());
+        return rows.GroupBy(x => (x.TeacherUserId, x.InstitutionId)).Select(group => group.OrderBy(x => x.StartDate).First())
+            .Select(x => new CoachingStudentTeacherLink(x.TeacherUserId, names.GetValueOrDefault(x.TeacherUserId) ?? "Öğretmen",
+                x.InstitutionId, x.StartDate, x.InstitutionId == null))
+            .OrderByDescending(x => x.CanLeave).ThenBy(x => x.TeacherName, StringComparer.Create(new System.Globalization.CultureInfo("tr-TR"), true))
+            .ToArray();
     }
 
     private async Task<string> StudentNameAsync(Guid studentUserId, CancellationToken ct)

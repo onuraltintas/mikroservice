@@ -55,6 +55,7 @@
             }</ol>
           }
           <div class="row">
+            @if (mode === 'student') { <button type="button" [attr.data-open-fee]="fee.id" (click)="openFee(fee)">Ayrıntılar</button> }
             <button type="button" [disabled]="pending() || loading()" (click)="loadHistory(fee)">Tahsilat geçmişi</button>
             @if (canManage() && !fee.isCancelled) {
               @if (fee.balance > 0) { <button data-pay-fee type="button" [disabled]="pending() || loading()" (click)="openPayment(fee)">Tahsilat kaydet</button> }

@@ -50,6 +50,11 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     path: 'finance', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/coaching-finance.component').then(m => m.CoachingFinanceComponent)
   },
+  // Roadmap O12: one fee with its instalments and payments.
+  {
+    path: 'finance/:feeId', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
+    loadComponent: () => import('./pages/student-fee-detail.component').then(m => m.StudentFeeDetailComponent)
+  },
   {
     path: 'exam-results', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
     canDeactivate: [async (component: StudentExamResultsComponent) => await component.canLeavePage()],
