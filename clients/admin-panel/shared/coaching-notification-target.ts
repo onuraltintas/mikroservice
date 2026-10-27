@@ -4,7 +4,7 @@ export interface CoachingNotificationReference {
 }
 
 export interface WeeklyDestination { studentId: string; weekStart: string; decisionId: string | null }
-export type CoachingNotificationTarget = { kind: 'plan' | 'assignment'; id: string; label: string }
+export type CoachingNotificationTarget = { kind: 'plan' | 'assignment' | 'message'; id: string; label: string }
   | ({ kind: 'weekly'; id: string; label: string } & WeeklyDestination);
 export function validCoachingId(value: string | null | undefined): value is string {
   return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) && value !== '00000000-0000-0000-0000-000000000000';
@@ -20,7 +20,8 @@ const labels: Record<string, string> = {
   StudyPlanPublished: 'Çalışma planı yayımlandı', StudyPlanUpdated: 'Çalışma planı güncellendi',
   AssignmentCreated: 'Yeni ödev', AssignmentUpdated: 'Ödev güncellendi',
   AssignmentSubmitted: 'Ödev teslim edildi', AssignmentGraded: 'Ödev değerlendirildi',
-  WeeklyReflectionSaved: 'Haftalık değerlendirme kaydedildi', WeeklyDecisionCreated: 'Yeni haftalık karar', WeeklyDecisionUpdated: 'Haftalık karar güncellendi'
+  WeeklyReflectionSaved: 'Haftalık değerlendirme kaydedildi', WeeklyDecisionCreated: 'Yeni haftalık karar', WeeklyDecisionUpdated: 'Haftalık karar güncellendi',
+  CoachingMessage: 'Yeni mesaj'
 };
 
 export function coachingNotificationLabel(type: string): string {
@@ -40,6 +41,8 @@ export function coachingNotificationTarget(notification: CoachingNotificationRef
       label: role === 'teacher' ? 'Haftalık değerlendirmeyi aç' : 'Haftalık kararı aç' };
   }
   if (!validCoachingId(id)) return null;
+  // Roadmap O3: a new message opens its conversation.
+  if (notification.type === 'CoachingMessage') return { kind: 'message', id, label: 'Mesajı aç' };
   if (role === 'teacher') {
     return notification.type === 'AssignmentSubmitted' ? {kind:'assignment', id, label:'Teslimleri incele'} : null;
   }
