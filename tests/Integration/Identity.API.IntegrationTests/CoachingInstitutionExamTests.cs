@@ -42,6 +42,62 @@ public sealed class CoachingInstitutionExamTests
         await Assert.ThrowsAsync<KeyNotFoundException>(() => s.Exams.GetAsync(outsider, other, exam.Id, null, default));
     }
 
+    // Roadmap O4 follow-up: an Excel (.xlsx) file with the template's columns is read like the CSV; line numbers are Excel rows.
+    [Fact]
+    public async Task AnExcelFileWithTheTemplatesColumnsIsReadLikeTheCsv()
+    {
+        await using var s = await Setup.CreateAsync();
+        var exam = await s.Exams.CreateAsync(s.Admin, s.Institution, new("LGS denemesi", "LGS", Day, 8, 500), default);
+        var csv = s.LgsCsv((s.Ada, 15, 3, 400m), (s.Bora, 18, 0, 470.5m));
+        var xlsx = Workbook(csv.Split('\n').Select(line => line.Split(';')).Append(["yok@example.test", "300"]).ToArray());
+
+        var text = InstitutionExamImportText.From(null, Convert.ToBase64String(xlsx));
+        var preview = await s.Exams.PreviewImportAsync(s.Admin, s.Institution, exam.Id, text, default);
+
+        preview.Accepted.Should().HaveCount(2);
+        preview.Errors.Should().ContainSingle(x => x.Line == 4, "the unknown e-mail is on the fourth Excel row");
+        InstitutionExamImportText.From("eposta;puan", null).Should().Be("eposta;puan");
+        Assert.Throws<ArgumentException>(() => InstitutionExamImportText.From(null, Convert.ToBase64String([1, 2, 3, 4])));
+        Assert.Throws<ArgumentException>(() => InstitutionExamImportText.From(null, "bu-base64-değil"));
+        Assert.Throws<ArgumentException>(() => InstitutionExamImportText.From(null, null));
+    }
+
+    /// <summary>A one-sheet workbook; numeric-looking cells are numbers, the rest shared strings.</summary>
+    private static byte[] Workbook(string[][] rows)
+    {
+        using var stream = new MemoryStream();
+        using (var document = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument.Create(stream, DocumentFormat.OpenXml.SpreadsheetDocumentType.Workbook))
+        {
+            var workbook = document.AddWorkbookPart(); workbook.Workbook = new();
+            var strings = workbook.AddNewPart<DocumentFormat.OpenXml.Packaging.SharedStringTablePart>(); strings.SharedStringTable = new();
+            var sheetPart = workbook.AddNewPart<DocumentFormat.OpenXml.Packaging.WorksheetPart>();
+            var data = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
+            for (var r = 0; r < rows.Length; r++)
+            {
+                var row = new DocumentFormat.OpenXml.Spreadsheet.Row { RowIndex = (uint)(r + 1) };
+                for (var c = 0; c < rows[r].Length; c++)
+                {
+                    var value = rows[r][c];
+                    var reference = (c >= 26 ? $"{(char)('A' + c / 26 - 1)}{(char)('A' + c % 26)}" : $"{(char)('A' + c)}") + (r + 1);
+                    if (decimal.TryParse(value.Replace(',', '.'), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var number))
+                        row.Append(new DocumentFormat.OpenXml.Spreadsheet.Cell { CellReference = reference, CellValue = new(number.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                            DataType = DocumentFormat.OpenXml.Spreadsheet.CellValues.Number });
+                    else
+                    {
+                        strings.SharedStringTable.Append(new DocumentFormat.OpenXml.Spreadsheet.SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text(value)));
+                        row.Append(new DocumentFormat.OpenXml.Spreadsheet.Cell { CellReference = reference, CellValue = new((strings.SharedStringTable.Count() - 1).ToString()),
+                            DataType = DocumentFormat.OpenXml.Spreadsheet.CellValues.SharedString });
+                    }
+                }
+                data.Append(row);
+            }
+            sheetPart.Worksheet = new(data);
+            workbook.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets(new DocumentFormat.OpenXml.Spreadsheet.Sheet
+                { Id = workbook.GetIdOfPart(sheetPart), SheetId = 1, Name = "Sonuçlar" }));
+        }
+        return stream.ToArray();
+    }
+
     [Fact]
     public async Task ACsvFileIsPreviewedThenAppliedAndProducesRankingPercentileAndBranches()
     {
