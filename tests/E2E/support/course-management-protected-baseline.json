@@ -3,11 +3,11 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-enum-contract.ts": "fe8742317ce5b47b492ac4429efa8b8a9ed52bfb07af39e86b6a1adaf605c49c",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-analytics.component.spec.ts": "5d4a4d70ab1301d97b2d7315e1d35d2c1d5e30b887a48202f2bcb9d57f394983",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-analytics.component.ts": "b394c5cf061a21b4896bdfe4e70993026cbd04dca3972b9af10ed3869646deb8",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.component.html": "a731c0b5775084845e51f42149f90b6284c676c4040d17e2e2c183a14f96fcf3",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.component.html": "a236652d0f9304c91f9fa3f43bdfdb0bdfdf0e626b226e4a91f2aec2fd66d7bd",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.component.scss": "e3e64b665c728e2e69ae296fb9c7d248ea56debd9a5edfb0faf408ce458d700a",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.component.ts": "ea095ddecfe3c0f7dd4a9bd48af398b6aec962345c29b7b1c182e284e2dc8c8b",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.service.ts": "e97154811972ee437cda550d4b7f85c636c2e3d6195cccd74b8c943e99a15072",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.spec.ts": "549bc14690bcbca8cb0ffc29aad8d67ab7c11e4836d2290cdaf49ce3b02df86c",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.component.ts": "da25a9ea7ea993162a613db7a275717df6d48952e919571005f4cf7c45449d84",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.service.ts": "c67f98be8e59a2365a0894a40fb354e3df5fba54ad10f45fa1d9aa76628355d6",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-exams.spec.ts": "8561101d5827aa7e76d7dfb94b94333a5700ed3aba8f29c093a9c642e24a4072",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-messages.component.ts": "cb08fbe138919ea22916a813d5197d4e32fc0e812f916b8d67fddf183e772692",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-student-report.component.html": "291e45a2f94b22ff1af7d6d84a6b6419387efe1772609cb5eb6c7ec20bcca79d",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-student-report.component.scss": "f466ed0aa0fa6fe8fb1b9fa6f9a0ab0054eff877ac3e2de90e1c4506e4dbd04d",
@@ -825,7 +825,7 @@
     "services/coaching-service/Coaching.API/Controllers/CoachingCurriculumAdminController.cs": "fb34ffe29af8e1b8c5e026ce2b6d516ca42f0c2b89b3097d0ce2f8ba991c59cf",
     "services/coaching-service/Coaching.API/Controllers/CoachingCurriculumManagementAdminController.cs": "8aeecbdc67b1810b710c665ed653e94df2a730fde284d446850e0e8cd378eee0",
     "services/coaching-service/Coaching.API/Controllers/CoachingFeesController.cs": "7af76dee75c597f11dd39ca1b55f1a57d6ac5ee61e75dcd1906eb70ddede6956",
-    "services/coaching-service/Coaching.API/Controllers/CoachingInstitutionExamsController.cs": "7efa9bd4a19a6c6da0630724db58704f5b2b42fd0b7d197bd056a8fd1357c55d",
+    "services/coaching-service/Coaching.API/Controllers/CoachingInstitutionExamsController.cs": "036d1af42fd1d7084346d4ccdad7cd32e7512a1c6244870750d1d2084f3d1dd1",
     "services/coaching-service/Coaching.API/Controllers/CoachingInstitutionSubscriptionsController.cs": "44e64c3128f97be7115653d63d41f26b48eed91c9ff03e4cdbedd12fbd90de33",
     "services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs": "bbf7743fb1cc3c06207b683fb4f45f0ed47e3ad8c72d6907c1a48a63513c2ab1",
     "services/coaching-service/Coaching.API/Controllers/CoachingMembershipsController.cs": "17422acbd415e87ef5b05cdcceac6ba102a982a830953aaf90fbef91450b5bd3",
@@ -1099,7 +1099,7 @@
     "services/coaching-service/Coaching.Infrastructure/Catalogs/CoachingYksCatalogImportService.cs": "328da4136d3eb8e1e46935be3cee45a2a558bbcdab31b47f29f9b18b3eee372c",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/OutcomeImportPackage.cs": "0dd265dd78a997a17aa32972561dc50b7f58c4c5081183841053f2c3000457b2",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/TargetCatalogImporter.cs": "285c80968e724d58a1405464d06885736a87a16b4945353d40b9e27e8c21ebca",
-    "services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj": "20733b311fc632bb643e455a79f3d543f2b1e1139f06a827ee49f545af80cffa",
+    "services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj": "92d80bb685e0dd190804d6bd396ce6b37298e84695f9c681003bd15add2df756",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AcademicGoalConfiguration.cs": "398b24bdef9df2c6dfc8f3adc055ab25a438646abdf5c0af41fc7d0f4bbc0fd3",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AssignmentConfiguration.cs": "8ff902355a8414bdb1c623eeb9e34f89c0a55b5d1bb946460e50abf5f1f4e3f9",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AssignmentInstructionAttachmentConfiguration.cs": "8af5909e285bdcffe163f5e47e28eb422a330b2ca57c58b957e97cc556f163d9",
@@ -1310,6 +1310,7 @@
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingScoreEstimateService.cs": "3e3cffdab4bc171c4c039ea089a0fc2463f4596d4f58168e91597679bd593829",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSubscriptionLifecycle.cs": "c4cd314c55f2bd4a5e3dbf20819825182c9dc434d6f0aa53943cd91ecbd36869",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSubscriptionService.cs": "4600472b1b242568d44aa57224b84b27c308a949943e3898d77f5743a12a0874",
+    "services/coaching-service/Coaching.Infrastructure/Management/InstitutionExamImportText.cs": "22ff1e5182809d2bb0da51d94d0a4b3bc4df123f2ad5f8efda32005a5214291c",
     "services/coaching-service/Coaching.Infrastructure/Management/LocalCoachingCmsMediaStorage.cs": "dd9df404c4943be924750ac1ac4d43fc46436f8ad4a0da3f2b76fbaef8f68173",
     "services/coaching-service/Coaching.Infrastructure/Messaging/MassTransitCoachingEventPublisher.cs": "49b24ac05a95f65ef7385c311d357f207185bc99008098e0a65f4ea0f464602c",
     "services/coaching-service/Coaching.Infrastructure/Privacy/CoachingErasureAssessmentService.cs": "5276636567b830d671abc1d42b1baadf040eb3be9f740416412beb72452059c7",
@@ -2581,7 +2582,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "O5 score and rank estimates",
+    "purpose": "O4 Excel import of institution exam results",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2629,7 +2630,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "2d76aff0",
+    "previousBaselineCommit": "07b121f1",
     "removedSincePreviousBaseline": []
   }
 }
