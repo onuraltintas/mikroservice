@@ -135,11 +135,13 @@ describe('CoachingSubscriptionsComponent', () => {
 
     // Institution plans have no trial (O10).
     component.startPlanCreate();
-    component.planDraft = { ...component.planDraft, name: 'Kurum', slug: 'kurum', audience: 'Institution', price: 5000, includedStudentSeats: 50, trialDays: 30 };
+    component.planDraft = { ...component.planDraft, name: 'Kurum', slug: 'kurum', audience: 'Institution', price: 5000, includedStudentSeats: 50, trialDays: 30, extraSeatPrice: 120.5 };
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-testid="plan-trial-days"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="plan-extra-seat-price"]')).toBeTruthy();
     await component.savePlan();
-    expect(createdPlans[1]).toMatchObject({ audience: 'Institution', trialDays: 0 });
+    expect(createdPlans[1]).toMatchObject({ audience: 'Institution', trialDays: 0, extraSeatPrice: 120.5 });
+    expect(createdPlans[0].extraSeatPrice).toBeNull();
   });
 
   it('requires a visible reason before rejecting an EFT request', async () => {

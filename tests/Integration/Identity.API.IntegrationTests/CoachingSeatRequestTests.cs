@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Coaching.API.Controllers;
+using Coaching.API.Security;
 using Coaching.Application.Authorization;
 using Coaching.Application.Subscriptions;
 using Coaching.Domain.Entities;

@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingManagementService } from '../../../core/services/coaching-management.service';
+import { InstitutionService } from '../../../core/services/institution.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { DASHBOARD_ROUTES } from '../dashboard.routes';
 import { CoachingCoupon, CoachingSalesComponent } from './coaching-sales';
@@ -31,7 +32,8 @@ describe('CoachingSalesComponent (O10)', () => {
   async function setup(withdrawals: unknown[] = []) {
     toaster = { confirm: vi.fn().mockResolvedValue(true), prompt: vi.fn().mockResolvedValue('Hizmet kullanıldı'), success: vi.fn(), error: vi.fn() };
     TestBed.configureTestingModule({ imports: [CoachingSalesComponent], providers: [provideHttpClient(), provideHttpClientTesting(),
-      { provide: CoachingManagementService, useValue: management }, { provide: ToasterService, useValue: toaster }] });
+      { provide: CoachingManagementService, useValue: management }, { provide: ToasterService, useValue: toaster },
+      { provide: InstitutionService, useValue: { getAll: vi.fn(() => of({ items: [{ id: 'inst-1', name: 'Işık Dershanesi' }] })) } }] });
     http = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(CoachingSalesComponent);
     fixture.detectChanges();
@@ -167,5 +169,42 @@ describe('CoachingSalesComponent (O10)', () => {
     http.expectOne(r => r.method === 'DELETE' && r.url.endsWith('/payments/pay-1/invoice')).flush({ success: true });
     await removing;
     expect(component.invoices()['pay-1']).toBeUndefined();
+  });
+
+  it('approves an institution extra-seat request after confirmation and rejects one only with a reason (O10b)', async () => {
+    const request = (id: string, status = 'Pending') => ({ id, subscriptionId: 'sub-1', institutionId: 'inst-1', planName: 'Kurum yıllık', seats: 5, unitPrice: 120,
+      remainingDays: 183, amount: 300.82, currency: 'TRY', paymentReference: 'EFT-K' + id, note: null, status, createdAt: '2026-11-01T09:00:00Z',
+      reviewedAt: null, reviewNote: null, paymentRecordId: null, licenseEndsAt: '2027-06-01T00:00:00Z' });
+    const { fixture, component } = await setup();
+    component.select('seats');
+    const list = http.expectOne(r => r.url === '/api/coaching-admin/sales/seat-requests');
+    expect(list.request.params.get('status')).toBe('Pending');
+    list.flush({ data: [request('s1'), request('s2')] });
+    await flush(); fixture.detectChanges();
+    const row = fixture.nativeElement.querySelector('[data-testid="seat-request-s1"]').textContent as string;
+    expect(row).toContain('Işık Dershanesi'); expect(row).toContain('300,82 TRY'); expect(row).toContain('183 gün');
+
+    const approving = component.reviewSeatRequest(component.seatRequests()[0], true);
+    await flush();
+    const approve = http.expectOne('/api/coaching-admin/sales/seat-requests/s1/review');
+    expect(approve.request.body).toEqual({ approve: true, note: null });
+    approve.flush({ success: true });
+    await flush();
+    http.expectOne(r => r.url === '/api/coaching-admin/sales/seat-requests').flush({ data: [request('s2')] });
+    await approving;
+    expect(toaster.confirm).toHaveBeenCalled();
+    expect(component.success()).toContain('5 ek koltuk lisansa eklendi');
+
+    toaster.prompt.mockResolvedValueOnce('');
+    await component.reviewSeatRequest(component.seatRequests()[0], false);
+    expect(component.error()).toContain('gerekçe');
+    const rejecting = component.reviewSeatRequest(component.seatRequests()[0], false);
+    await flush();
+    const reject = http.expectOne('/api/coaching-admin/sales/seat-requests/s2/review');
+    expect(reject.request.body).toEqual({ approve: false, note: 'Hizmet kullanıldı' });
+    reject.flush({ success: true });
+    await flush();
+    http.expectOne(r => r.url === '/api/coaching-admin/sales/seat-requests').flush({ data: [] });
+    await rejecting;
   });
 });
