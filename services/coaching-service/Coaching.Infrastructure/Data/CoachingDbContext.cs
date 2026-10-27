@@ -208,7 +208,11 @@ public class CoachingDbContext : DbContext
         media.HasIndex(asset => asset.StorageKey).IsUnique();
 
         var plans = modelBuilder.Entity<CoachingSubscriptionPlan>();
-        plans.ToTable("subscription_plans", table => table.HasCheckConstraint("ck_coaching_subscription_plans_price", "\"Price\" >= 0"));
+        plans.ToTable("subscription_plans", table =>
+        {
+            table.HasCheckConstraint("ck_coaching_subscription_plans_price", "\"Price\" >= 0");
+            table.HasCheckConstraint("ck_coaching_subscription_plans_trial", "\"TrialDays\" BETWEEN 0 AND 90 AND (\"TrialDays\" = 0 OR \"Audience\" <> 'Institution')");
+        });
         plans.HasKey(plan => plan.Id);
         plans.Property(plan => plan.Slug).HasMaxLength(80).IsRequired();
         plans.Property(plan => plan.Name).HasMaxLength(150).IsRequired();
@@ -251,7 +255,7 @@ public class CoachingDbContext : DbContext
         {
             table.HasCheckConstraint("ck_coaching_subscription_period_dates", "\"EndDate\" >= \"StartDate\"");
             table.HasCheckConstraint("ck_coaching_subscription_period_status", "\"Status\" IN ('Active', 'Cancelled')");
-            table.HasCheckConstraint("ck_coaching_subscription_period_source", "\"Source\" IN ('BankTransfer', 'Manual')");
+            table.HasCheckConstraint("ck_coaching_subscription_period_source", "\"Source\" IN ('BankTransfer', 'Manual', 'Trial')");
         });
         periods.HasKey(period => period.Id);
         periods.Property(period => period.Source).HasMaxLength(20).IsRequired();
@@ -268,9 +272,20 @@ public class CoachingDbContext : DbContext
         settings.Property(value => value.BankName).HasMaxLength(200);
         settings.Property(value => value.Iban).HasMaxLength(34);
         settings.Property(value => value.PaymentInstructions).HasMaxLength(2000);
+        settings.Property(value => value.SellerTitle).HasMaxLength(200);
+        settings.Property(value => value.SellerAddress).HasMaxLength(500);
+        settings.Property(value => value.SellerTaxOffice).HasMaxLength(100);
+        settings.Property(value => value.SellerTaxNumber).HasMaxLength(20);
+        settings.Property(value => value.SellerMersisNumber).HasMaxLength(20);
+        settings.Property(value => value.SellerEmail).HasMaxLength(320);
+        settings.Property(value => value.SellerPhone).HasMaxLength(40);
 
         var requests = modelBuilder.Entity<CoachingBankTransferRequest>();
-        requests.ToTable("bank_transfer_requests");
+        requests.ToTable("bank_transfer_requests", table =>
+        {
+            table.HasCheckConstraint("ck_coaching_bank_transfer_discount", "\"DiscountAmount\" >= 0 AND (\"CouponCode\" IS NOT NULL OR \"DiscountAmount\" = 0)");
+            table.HasCheckConstraint("ck_coaching_bank_transfer_withdrawal", "\"WithdrawalStatus\" IS NULL OR \"WithdrawalStatus\" IN ('Requested', 'Approved', 'Rejected')");
+        });
         requests.HasKey(request => request.Id);
         requests.Property(request => request.UserName).HasMaxLength(200).IsRequired();
         requests.Property(request => request.UserEmail).HasMaxLength(320).IsRequired();
@@ -281,6 +296,16 @@ public class CoachingDbContext : DbContext
         requests.Property(request => request.Status).HasMaxLength(20).IsRequired();
         requests.Property(request => request.ReviewNote).HasMaxLength(1000);
         requests.Property(request => request.Version).IsConcurrencyToken();
+        requests.Property(request => request.ListPrice).HasPrecision(12, 2);
+        requests.Property(request => request.CouponCode).HasMaxLength(30);
+        requests.Property(request => request.DiscountAmount).HasPrecision(12, 2);
+        requests.Property(request => request.SalesContractVersion).HasMaxLength(20);
+        requests.Property(request => request.SalesDocumentsJson).HasColumnType("jsonb");
+        requests.Property(request => request.WithdrawalStatus).HasMaxLength(20);
+        requests.Property(request => request.WithdrawalReason).HasMaxLength(500);
+        requests.Property(request => request.WithdrawalReviewNote).HasMaxLength(500);
+        requests.HasIndex(request => new { request.WithdrawalStatus, request.WithdrawalRequestedAt }).HasFilter("\"WithdrawalStatus\" IS NOT NULL");
+        requests.HasIndex(request => new { request.UserId, request.CouponCode }).HasFilter("\"CouponCode\" IS NOT NULL");
         requests.HasIndex(request => new { request.UserId, request.PaymentReference }).IsUnique();
         requests.HasIndex(request => new { request.Status, request.CreatedAt });
         requests.HasIndex(request => new { request.UserId, request.Status });
@@ -302,6 +327,39 @@ public class CoachingDbContext : DbContext
         payments.HasIndex(payment => payment.BankTransferRequestId).IsUnique();
         payments.HasIndex(payment => new { payment.CreatedAt, payment.Status });
         payments.HasIndex(payment => payment.InstitutionId);
+        payments.HasIndex(payment => payment.UserId);
+
+        // Roadmap O10: trials, coupons and recorded invoices.
+        var trials = modelBuilder.Entity<CoachingSubscriptionTrial>();
+        trials.ToTable("subscription_trials", table => table.HasCheckConstraint("ck_coaching_subscription_trial_audience", "\"Audience\" IN ('Individual', 'Teacher')"));
+        trials.HasKey(trial => trial.Id);
+        trials.Property(trial => trial.Audience).HasMaxLength(20).IsRequired();
+        trials.HasIndex(trial => new { trial.UserId, trial.Audience }).IsUnique();
+
+        var coupons = modelBuilder.Entity<CoachingCoupon>();
+        coupons.ToTable("coupons", table =>
+        {
+            table.HasCheckConstraint("ck_coaching_coupon_kind", "(\"Kind\" = 'Percent' AND \"Value\" > 0 AND \"Value\" <= 100) OR (\"Kind\" = 'Amount' AND \"Value\" > 0)");
+            table.HasCheckConstraint("ck_coaching_coupon_uses", "\"UsedCount\" >= 0 AND (\"MaxUses\" IS NULL OR \"MaxUses\" > 0)");
+        });
+        coupons.HasKey(coupon => coupon.Id);
+        coupons.Property(coupon => coupon.Code).HasMaxLength(30).IsRequired();
+        coupons.Property(coupon => coupon.Kind).HasMaxLength(10).IsRequired();
+        coupons.Property(coupon => coupon.Value).HasPrecision(12, 2);
+        coupons.Property(coupon => coupon.PlanIdsJson).HasColumnType("jsonb").IsRequired();
+        coupons.HasIndex(coupon => coupon.Code).IsUnique();
+
+        var invoices = modelBuilder.Entity<CoachingInvoice>();
+        invoices.ToTable("invoices");
+        invoices.HasKey(invoice => invoice.Id);
+        invoices.Property(invoice => invoice.InvoiceNumber).HasMaxLength(40).IsRequired();
+        invoices.Property(invoice => invoice.FileName).HasMaxLength(255).IsRequired();
+        invoices.Property(invoice => invoice.StorageKey).HasMaxLength(200).IsRequired();
+        invoices.Property(invoice => invoice.Sha256).HasMaxLength(64).IsRequired();
+        invoices.HasOne<CoachingPaymentRecord>().WithMany().HasForeignKey(invoice => invoice.PaymentRecordId).OnDelete(DeleteBehavior.Restrict);
+        invoices.HasIndex(invoice => invoice.PaymentRecordId).IsUnique();
+        invoices.HasIndex(invoice => invoice.InvoiceNumber).IsUnique();
+        invoices.HasIndex(invoice => invoice.StorageKey).IsUnique();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

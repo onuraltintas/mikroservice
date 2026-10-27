@@ -99,7 +99,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         var kept = await s.Sales.GetTransferDocumentsAsync(s.User, transfer.Id, default);
         kept.DistanceSales.Should().Be(documents.DistanceSales);
         await Assert.ThrowsAsync<KeyNotFoundException>(() => s.Sales.GetTransferDocumentsAsync(Guid.NewGuid(), transfer.Id, default));
-        typeof(CoachingBankTransferRequestCreate).GetProperty(nameof(CoachingBankTransferRequestCreate.AcceptSalesContract))!
+        typeof(CoachingBankTransferRequestCreate).GetConstructors().Single().GetParameters().Single(x => x.Name == nameof(CoachingBankTransferRequestCreate.AcceptSalesContract))
             .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.RangeAttribute), true).Should().ContainSingle(
                 "the API refuses a purchase without the contract and the pre-information form");
     }

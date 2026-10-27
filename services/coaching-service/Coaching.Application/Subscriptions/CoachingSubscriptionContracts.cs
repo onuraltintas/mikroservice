@@ -16,7 +16,9 @@ public sealed record CoachingSubscriptionPlanSummary(
     IReadOnlyList<string> Features,
     bool IsActive,
     bool IsPublic,
-    int SortOrder);
+    int SortOrder,
+    /// <summary>Roadmap O10: free trial days, once per account (0 = none).</summary>
+    int TrialDays = 0);
 
 public sealed record CoachingSubscriptionPlanRequest(
     string Slug,
@@ -31,7 +33,8 @@ public sealed record CoachingSubscriptionPlanRequest(
     IReadOnlyList<string>? Features,
     bool IsActive,
     bool IsPublic,
-    int SortOrder);
+    int SortOrder,
+    int TrialDays = 0);
 
 public sealed record CoachingSubscriptionSummary(
     Guid Id,
@@ -73,7 +76,13 @@ public sealed record CoachingBankTransferRequestSummary(
     /// <summary>How many other payers sent a notice with the same receipt number (admin list only).</summary>
     int DuplicateReferenceCount = 0,
     /// <summary>The linked parent who sent the notice for the child, if any.</summary>
-    Guid? SubmittedByUserId = null);
+    Guid? SubmittedByUserId = null,
+    // Roadmap O10: price before the coupon, the coupon and its discount; the accepted contract; the withdrawal request.
+    decimal? ListPrice = null,
+    string? CouponCode = null,
+    decimal DiscountAmount = 0,
+    string? SalesContractVersion = null,
+    string? WithdrawalStatus = null);
 
 public sealed record CoachingBankTransferRequestCreate(
     Guid PlanId,
@@ -81,7 +90,12 @@ public sealed record CoachingBankTransferRequestCreate(
     string? PayerName,
     string? Note,
     [System.ComponentModel.DataAnnotations.Range(typeof(bool), "true", "true", ErrorMessage = "Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.")]
-    bool AdultPayerDeclaration = false);
+    bool AdultPayerDeclaration = false,
+    /// <summary>Roadmap O10: an optional discount code.</summary>
+    string? CouponCode = null,
+    /// <summary>Roadmap O10: the buyer read and accepts the pre-information form and the distance-sales contract.</summary>
+    [System.ComponentModel.DataAnnotations.Range(typeof(bool), "true", "true", ErrorMessage = "Ön bilgilendirme formunu ve mesafeli satış sözleşmesini onaylamanız gerekir.")]
+    bool AcceptSalesContract = false);
 
 /// <summary>The payer corrects a notice that is still waiting for review.</summary>
 public sealed record CoachingBankTransferRequestUpdate(string PaymentReference, string? PayerName, string? Note);

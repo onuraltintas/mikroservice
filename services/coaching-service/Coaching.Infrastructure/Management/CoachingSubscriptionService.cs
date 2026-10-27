@@ -77,6 +77,7 @@ public sealed class CoachingSubscriptionService(
             BillingPeriod = normalized.BillingPeriod,
             DurationDays = normalized.DurationDays,
             IncludedStudentSeats = normalized.IncludedStudentSeats,
+            TrialDays = normalized.TrialDays,
             FeaturesJson = JsonSerializer.Serialize(normalized.Features, JsonOptions),
             IsActive = normalized.IsActive,
             IsPublic = normalized.IsPublic,
@@ -120,6 +121,7 @@ public sealed class CoachingSubscriptionService(
         plan.BillingPeriod = normalized.BillingPeriod;
         plan.DurationDays = normalized.DurationDays;
         plan.IncludedStudentSeats = normalized.IncludedStudentSeats;
+        plan.TrialDays = normalized.TrialDays;
         plan.FeaturesJson = JsonSerializer.Serialize(normalized.Features, JsonOptions);
         plan.IsActive = normalized.IsActive;
         plan.IsPublic = normalized.IsPublic;
@@ -289,7 +291,9 @@ public sealed class CoachingSubscriptionService(
 
         var requestHash = CreateRequestHash(
             userId.ToString("D"), TransferCreateIdempotencyScope, expectedAudience, request.PlanId.ToString("D"),
-            reference, payerName, note, "adult-payer-v1", submittedBy?.ToString("D"));
+            reference, payerName, note, "adult-payer-v1", submittedBy?.ToString("D"),
+            string.IsNullOrWhiteSpace(request.CouponCode) ? null : request.CouponCode.Trim().ToUpperInvariant(),
+            request.AcceptSalesContract ? CoachingSalesDocumentTexts.Version : null);
         var replay = await GetIdempotencyRecordAsync(TransferCreateIdempotencyScope, key, cancellationToken);
         if (replay is not null)
         {
@@ -385,6 +389,20 @@ public sealed class CoachingSubscriptionService(
             return await GetBankTransferSummaryAsync(existing, cancellationToken);
         }
 
+        // Roadmap O10: a discount code lowers the price frozen on the notice; the documents are kept as the buyer saw them.
+        var quote = string.IsNullOrWhiteSpace(request.CouponCode) ? null
+            : (await CoachingCoupons.QuoteAsync(db, request.CouponCode, plan, userId, DateTime.UtcNow, cancellationToken)).Quote;
+        var amount = quote?.Amount ?? plan.Price;
+        string? documentsJson = null;
+        if (request.AcceptSalesContract)
+        {
+            var sellerSettings = await db.CoachingSubscriptionSettings.AsNoTracking().SingleAsync(item => item.Id == 1, cancellationToken);
+            documentsJson = JsonSerializer.Serialize(CoachingSalesDocumentTexts.Render(new CoachingSalesTerms(sellerSettings,
+                NormalizeOptional(submitterName ?? userName, 200) ?? "Koçluk kullanıcısı", submittedBy is null ? userEmail : null, plan.Name,
+                plan.DurationDays, plan.Price, quote?.Discount ?? 0, amount, settings.Currency, quote?.Code, DateTime.UtcNow,
+                settings.PaymentInstructions ?? string.Empty)), JsonOptions);
+        }
+
         // The same receipt number from another payer is either a typo or a receipt used twice; the admin checks it.
         var usedByOthers = await db.CoachingBankTransferRequests.AsNoTracking()
             .AnyAsync(item => item.PaymentReference == reference && item.UserId != userId, cancellationToken);
@@ -394,7 +412,13 @@ public sealed class CoachingSubscriptionService(
             UserName = NormalizeOptional(userName, 200) ?? "Koçluk kullanıcısı",
             UserEmail = NormalizeOptional(userEmail, 320) ?? string.Empty,
             PlanId = plan.Id,
-            Amount = plan.Price,
+            Amount = amount,
+            ListPrice = plan.Price,
+            CouponCode = quote?.Code,
+            DiscountAmount = quote?.Discount ?? 0,
+            SalesContractVersion = documentsJson is null ? null : CoachingSalesDocumentTexts.Version,
+            SalesContractAcceptedAt = documentsJson is null ? null : DateTime.UtcNow,
+            SalesDocumentsJson = documentsJson,
             Currency = settings.Currency,
             DurationDays = plan.DurationDays,
             SubmittedByUserId = submittedBy,
@@ -746,6 +770,10 @@ public sealed class CoachingSubscriptionService(
                 Provider = "BankTransfer",
                 Reference = transfer.PaymentReference
             });
+            // Roadmap O10: a code counts as used once a payment with it is approved.
+            if (transfer.CouponCode is { } code
+                && await db.Set<CoachingCoupon>().SingleOrDefaultAsync(item => item.Code == code, cancellationToken) is { } coupon)
+                coupon.UsedCount++;
         }
 
         else if (await db.CoachingSubscriptionPlans.AsNoTracking().SingleOrDefaultAsync(item => item.Id == transfer.PlanId, cancellationToken)
@@ -1808,6 +1836,12 @@ public sealed class CoachingSubscriptionService(
             throw new ArgumentException("Plan özellikleri en fazla 200 karakter olabilir.");
         }
 
+        // Roadmap O10: a free trial is offered per plan, once per account; institutions are licensed, not trialled.
+        if (request.TrialDays is < 0 or > 90 || request.TrialDays > 0 && request.Audience.Trim() == "Institution")
+        {
+            throw new ArgumentException("Deneme süresi 0–90 gün olabilir; kurum planlarında deneme süresi olmaz.");
+        }
+
         return request with
         {
             Slug = slug,
@@ -1868,7 +1902,8 @@ public sealed class CoachingSubscriptionService(
         JsonSerializer.Deserialize<string[]>(plan.FeaturesJson, JsonOptions) ?? Array.Empty<string>(),
         plan.IsActive,
         plan.IsPublic,
-        plan.SortOrder);
+        plan.SortOrder,
+        plan.TrialDays);
 
     private static CoachingSubscriptionSettingsSummary ToSettingsSummary(CoachingSubscriptionSettings settings)
     {
@@ -1912,7 +1947,12 @@ public sealed class CoachingSubscriptionService(
             request.AdultPayerDeclaredAt,
             request.DurationDays ?? plan.DurationDays,
             duplicateReferenceCount,
-            request.SubmittedByUserId);
+            request.SubmittedByUserId,
+            request.ListPrice,
+            request.CouponCode,
+            request.DiscountAmount,
+            request.SalesContractVersion,
+            request.WithdrawalStatus);
 
     private static CoachingSubscriptionSummary ToSubscriptionSummary(
         CoachingSubscription subscription,
