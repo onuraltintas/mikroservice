@@ -221,6 +221,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
                 && x.StudentUserId == studentUserId && x.InstitutionId == institutionId && x.IsActive).ToListAsync(ct);
             if (rows.Count == 0) throw new KeyNotFoundException("Öğretmen ataması bulunamadı.");
             foreach (var row in rows) row.SetActive(false, actorUserId);
+            await HandOpenDecisionsToRemainingTeacherAsync(studentUserId, institutionId, actorUserId, ct);
             await db.SaveChangesAsync(ct);
         }, ct);
     }
@@ -256,6 +257,11 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
                     && x.Status == Coaching.Domain.Enums.AssignmentStatus.Active).ToListAsync(ct))
                     assignment.TransferToTeacher(successor);
             }
+            else
+            {
+                // Without a successor, a student who has another teacher here keeps their open decisions with that teacher.
+                foreach (var student in students) await HandOpenDecisionsToRemainingTeacherAsync(student, institutionId, actorUserId, ct);
+            }
             var now = (clock ?? TimeProvider.System).GetUtcNow().UtcDateTime;
             foreach (var session in await db.CoachingSessions.Include(x => x.Attendances).Where(x => x.TeacherId == teacherUserId
                 && x.InstitutionId == institutionId && x.Status == Coaching.Domain.Enums.SessionStatus.Scheduled && x.ScheduledDate > now).ToListAsync(ct))
@@ -267,6 +273,15 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             }
             await db.SaveChangesAsync(ct);
         }, ct);
+    }
+
+    private async Task HandOpenDecisionsToRemainingTeacherAsync(Guid studentUserId, Guid institutionId, Guid actorUserId, CancellationToken ct)
+    {
+        var stored = await db.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == studentUserId
+            && x.InstitutionId == institutionId).ToListAsync(ct);
+        var remaining = stored.Concat(db.CoachingTeacherStudentAssignments.Local.Where(x => x.StudentUserId == studentUserId && x.InstitutionId == institutionId))
+            .DistinctBy(x => x.Id).Where(x => x.IsActive).OrderByDescending(x => x.StartDate).FirstOrDefault();
+        if (remaining is not null) await TransferOpenDecisionsAsync(remaining.TeacherUserId, studentUserId, institutionId, actorUserId, ct);
     }
 
     // A student who joins an institution leaves their independent coach: the two cannot run side by side.
