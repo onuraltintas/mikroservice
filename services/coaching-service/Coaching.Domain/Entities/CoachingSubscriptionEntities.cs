@@ -14,6 +14,8 @@ public sealed class CoachingSubscriptionPlan
     public int? IncludedStudentSeats { get; set; }
     /// <summary>Roadmap O10: free trial days offered once per account (0 = no trial). Not for institution plans.</summary>
     public int TrialDays { get; set; }
+    /// <summary>Roadmap O10b: yearly price of one extra student seat on an institution plan; empty = no extra seats.</summary>
+    public decimal? ExtraSeatPrice { get; set; }
     public string FeaturesJson { get; set; } = "[]";
     public bool IsActive { get; set; } = true;
     public bool IsPublic { get; set; } = true;
@@ -38,6 +40,8 @@ public sealed class CoachingSubscription
     public string? Notes { get; set; }
     public string? PaymentReference { get; set; }
     public Guid? BankTransferRequestId { get; set; }
+    /// <summary>Roadmap O10b: seats bought on top of the plan for this license only; a renewal does not carry them.</summary>
+    public int ExtraSeats { get; set; }
     public Guid CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Guid? UpdatedBy { get; set; }

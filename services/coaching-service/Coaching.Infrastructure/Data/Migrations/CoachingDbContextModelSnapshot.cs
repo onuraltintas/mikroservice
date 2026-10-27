@@ -2089,6 +2089,95 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingSeatRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<int>("DurationDays")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("InstitutionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("PaymentReference")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid?>("PaymentRecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("RemainingDays")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RequestedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Seats")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstitutionId");
+
+                    b.HasIndex("PaymentRecordId")
+                        .IsUnique();
+
+                    b.HasIndex("SubscriptionId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_coaching_seat_requests_one_pending")
+                        .HasFilter("\"Status\" = 'Pending'");
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("seat_requests", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_seat_request_amounts", "\"Seats\" BETWEEN 1 AND 1000 AND \"UnitPrice\" > 0 AND \"Amount\" >= 0 AND \"RemainingDays\" > 0 AND \"DurationDays\" > 0");
+
+                            t.HasCheckConstraint("ck_coaching_seat_request_status", "\"Status\" IN ('Pending', 'Approved', 'Rejected', 'Withdrawn')");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2200,6 +2289,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("ExtraSeats")
+                        .HasColumnType("integer");
+
                     b.Property<Guid?>("InstitutionId")
                         .HasColumnType("uuid");
 
@@ -2255,6 +2347,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("subscriptions", "coaching", t =>
                         {
                             t.HasCheckConstraint("ck_coaching_subscription_dates", "\"EndDate\" >= \"StartDate\"");
+
+                            t.HasCheckConstraint("ck_coaching_subscription_extra_seats", "\"ExtraSeats\" >= 0 AND (\"ExtraSeats\" = 0 OR \"InstitutionId\" IS NOT NULL)");
 
                             t.HasCheckConstraint("ck_coaching_subscription_owner", "((\"UserId\" IS NOT NULL)::int + (\"InstitutionId\" IS NOT NULL)::int) = 1");
                         });
@@ -2348,6 +2442,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int>("DurationDays")
                         .HasColumnType("integer");
 
+                    b.Property<decimal?>("ExtraSeatPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
                     b.Property<string>("FeaturesJson")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -2399,6 +2497,8 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("subscription_plans", "coaching", t =>
                         {
+                            t.HasCheckConstraint("ck_coaching_subscription_plans_extra_seat", "\"ExtraSeatPrice\" IS NULL OR (\"ExtraSeatPrice\" > 0 AND \"Audience\" = 'Institution')");
+
                             t.HasCheckConstraint("ck_coaching_subscription_plans_price", "\"Price\" >= 0");
 
                             t.HasCheckConstraint("ck_coaching_subscription_plans_trial", "\"TrialDays\" BETWEEN 0 AND 90 AND (\"TrialDays\" = 0 OR \"Audience\" <> 'Institution')");
@@ -5183,6 +5283,20 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasOne("Coaching.Domain.Entities.CoachingNewsletterSubscriber", null)
                         .WithMany()
                         .HasForeignKey("SubscriberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingSeatRequest", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CoachingPaymentRecord", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentRecordId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Coaching.Domain.Entities.CoachingSubscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

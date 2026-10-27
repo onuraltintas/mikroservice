@@ -78,6 +78,7 @@ public sealed class CoachingSubscriptionService(
             DurationDays = normalized.DurationDays,
             IncludedStudentSeats = normalized.IncludedStudentSeats,
             TrialDays = normalized.TrialDays,
+            ExtraSeatPrice = normalized.ExtraSeatPrice,
             FeaturesJson = JsonSerializer.Serialize(normalized.Features, JsonOptions),
             IsActive = normalized.IsActive,
             IsPublic = normalized.IsPublic,
@@ -122,6 +123,7 @@ public sealed class CoachingSubscriptionService(
         plan.DurationDays = normalized.DurationDays;
         plan.IncludedStudentSeats = normalized.IncludedStudentSeats;
         plan.TrialDays = normalized.TrialDays;
+        plan.ExtraSeatPrice = normalized.ExtraSeatPrice;
         plan.FeaturesJson = JsonSerializer.Serialize(normalized.Features, JsonOptions);
         plan.IsActive = normalized.IsActive;
         plan.IsPublic = normalized.IsPublic;
@@ -1272,7 +1274,7 @@ public sealed class CoachingSubscriptionService(
             var capacity = await db.CoachingSubscriptionPlans.AsNoTracking().Where(plan => plan.Id == subscription.PlanId)
                 .Select(plan => plan.IncludedStudentSeats).SingleOrDefaultAsync(cancellationToken);
             if (await db.CoachingSubscriptionSeats.CountAsync(item => item.SubscriptionId == subscriptionId && !item.IsSuspended, cancellationToken)
-                >= capacity.GetValueOrDefault())
+                >= capacity.GetValueOrDefault() + subscription.ExtraSeats)
                 return false;
         }
 
@@ -1842,6 +1844,13 @@ public sealed class CoachingSubscriptionService(
             throw new ArgumentException("Deneme süresi 0–90 gün olabilir; kurum planlarında deneme süresi olmaz.");
         }
 
+        // Roadmap O10b: institutions can buy extra seats mid-license at this yearly per-seat price.
+        if (request.ExtraSeatPrice is { } extraSeatPrice
+            && (extraSeatPrice <= 0 || extraSeatPrice > 1_000_000 || request.Audience.Trim() != "Institution"))
+        {
+            throw new ArgumentException("Ek koltuk fiyatı yalnız kurum planlarında, 0'dan büyük ve en çok 1.000.000 olabilir.");
+        }
+
         return request with
         {
             Slug = slug,
@@ -1903,7 +1912,8 @@ public sealed class CoachingSubscriptionService(
         plan.IsActive,
         plan.IsPublic,
         plan.SortOrder,
-        plan.TrialDays);
+        plan.TrialDays,
+        plan.ExtraSeatPrice);
 
     private static CoachingSubscriptionSettingsSummary ToSettingsSummary(CoachingSubscriptionSettings settings)
     {
@@ -1972,5 +1982,6 @@ public sealed class CoachingSubscriptionService(
             seatCounts.Active,
             subscription.Notes,
             subscription.CreatedAt,
-            subscription.PaymentReference);
+            subscription.PaymentReference,
+            subscription.ExtraSeats);
 }

@@ -96,6 +96,8 @@ export interface CoachingSubscriptionPlan {
   sortOrder: number;
   /** Roadmap O10: free trial length for individual and teacher plans; 0 means no trial. */
   trialDays?: number;
+  /** Roadmap O10b: yearly price of one extra seat on an institution plan; empty means no extra seats. */
+  extraSeatPrice?: number | null;
 }
 
 export type CoachingSubscriptionPlanRequest = Omit<CoachingSubscriptionPlan, 'id'>;

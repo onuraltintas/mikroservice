@@ -2,10 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, HostListener, Input, OnChanges, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, finalize, forkJoin } from 'rxjs';
+import { CoachingInstitutionSeatRequestsComponent } from './coaching-institution-seat-requests.component';
 import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitutionSubscription } from './coaching-institution.service';
 
 @Component({
-  selector: 'staff-coaching-institution-subscription', standalone: true, imports: [CommonModule],
+  selector: 'staff-coaching-institution-subscription', standalone: true, imports: [CommonModule, CoachingInstitutionSeatRequestsComponent],
   template: `
     <section aria-labelledby="institution-plan-title" class="institution-plan">
       <header><div><h3 id="institution-plan-title">Kurum aboneliği ve kontenjan</h3><p>Etkin kurum lisansınızın öğrenci erişimini yönetin.</p></div>
@@ -22,7 +23,12 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
         @if (plan.upcoming; as next) {
           <p class="upcoming" data-testid="institution-upcoming">Yenileme: <strong>{{ next.planName }}</strong> {{ next.startsAt | date:'dd.MM.yyyy' }} – {{ next.accessUntil | date:'dd.MM.yyyy' }} · {{ next.usedStudentSeats }} / {{ next.includedStudentSeats }} koltuk ayrılmış. Bugünkü koltuklar yenilemeye taşınır.</p>
         }
-        <p><strong>{{ plan.usedStudentSeats }} / {{ plan.includedStudentSeats }}</strong> öğrenci koltuğu ayrılmış.</p>
+        <p><strong>{{ plan.usedStudentSeats }} / {{ plan.includedStudentSeats }}</strong> öğrenci koltuğu ayrılmış.@if (plan.extraSeats) { <span data-testid="institution-extra-seats"> ({{ plan.extraSeats }} ek koltuk dahil; lisans bitince sona erer)</span> }</p>
+        @if (!plan.startsAt && plan.extraSeatPrice) {
+          <staff-coaching-institution-seat-requests [subscription]="plan" />
+        } @else if (!plan.startsAt && atCapacity()) {
+          <p class="hint">Kontenjanınız doldu. Ek koltuk için platform yöneticisiyle iletişime geçin.</p>
+        }
         <ul>
           @for (student of students(); track student.userId) {
             <li><span>{{ student.firstName }} {{ student.lastName }}<small>{{ student.email }}</small></span>
@@ -46,6 +52,7 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
     ul { list-style:none; padding:0; } li, .departed { padding:.8rem 0; border-top:1px solid #e8ece5; }
     button { min-height:2.4rem; border:1px solid #9aa99b; border-radius:.5rem; background:#fffefa; padding:.35rem .7rem; color:#29473b; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; } .error { color:#991b1b; }
+    .hint { font-size:.9rem; }
     .upcoming { padding:.6rem .75rem; border-radius:.6rem; background:#f1f5ee; color:#243b36; }
   `]
 })

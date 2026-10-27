@@ -33,12 +33,12 @@ public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db,
         if (next is not null)
         {
             var used = await db.CoachingSubscriptionSeats.AsNoTracking().CountAsync(seat => seat.SubscriptionId == next.Id && !seat.IsSuspended, ct);
-            upcoming = new(next.Id, plans[next.PlanId].Name, next.StartDate, next.EndDate, plans[next.PlanId].IncludedStudentSeats.GetValueOrDefault(), used);
+            upcoming = new(next.Id, plans[next.PlanId].Name, next.StartDate, next.EndDate, plans[next.PlanId].IncludedStudentSeats.GetValueOrDefault() + next.ExtraSeats, used);
         }
-        return new(row.Id, plan.Name, row.EndDate, plan.IncludedStudentSeats.GetValueOrDefault(),
+        return new(row.Id, plan.Name, row.EndDate, plan.IncludedStudentSeats.GetValueOrDefault() + row.ExtraSeats,
             seats.Count(seat => !seat.IsSuspended), seats.Select(seat => new CoachingInstitutionSubscriptionSeat(
                 seat.StudentId, seat.IsSuspended, seat.AssignedAt, members.Contains(seat.StudentId) || scope.StudentIds!.Contains(seat.StudentId))).ToArray(),
-            row.StartDate > now ? row.StartDate : null, upcoming);
+            row.StartDate > now ? row.StartDate : null, upcoming, row.ExtraSeats, plan.ExtraSeatPrice);
     }
 
     public async Task<bool> SetSeatAsync(Guid subscriptionId, Guid studentId, bool isSuspended, CancellationToken ct = default)
@@ -60,7 +60,7 @@ public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db,
             if (isSuspended && seat is null) return false;
             if (seat?.IsSuspended == isSuspended) return true;
             if (!isSuspended && await db.CoachingSubscriptionSeats.CountAsync(item => item.SubscriptionId == subscriptionId && !item.IsSuspended, ct)
-                >= capacity.GetValueOrDefault()) return false;
+                >= capacity.GetValueOrDefault() + row.ExtraSeats) return false;
             if (seat is null) {
                 seat = new CoachingSubscriptionSeat { SubscriptionId = subscriptionId, StudentId = studentId };
                 db.CoachingSubscriptionSeats.Add(seat);

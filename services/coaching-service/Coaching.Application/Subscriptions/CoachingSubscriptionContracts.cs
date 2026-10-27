@@ -18,7 +18,9 @@ public sealed record CoachingSubscriptionPlanSummary(
     bool IsPublic,
     int SortOrder,
     /// <summary>Roadmap O10: free trial days, once per account (0 = none).</summary>
-    int TrialDays = 0);
+    int TrialDays = 0,
+    /// <summary>Roadmap O10b: yearly price of one extra seat on an institution plan; empty = no extra seats.</summary>
+    decimal? ExtraSeatPrice = null);
 
 public sealed record CoachingSubscriptionPlanRequest(
     string Slug,
@@ -34,7 +36,8 @@ public sealed record CoachingSubscriptionPlanRequest(
     bool IsActive,
     bool IsPublic,
     int SortOrder,
-    int TrialDays = 0);
+    int TrialDays = 0,
+    decimal? ExtraSeatPrice = null);
 
 public sealed record CoachingSubscriptionSummary(
     Guid Id,
@@ -51,7 +54,9 @@ public sealed record CoachingSubscriptionSummary(
     int UsedSeatCount,
     string? Notes,
     DateTime CreatedAt,
-    string? PaymentReference);
+    string? PaymentReference,
+    /// <summary>Roadmap O10b: seats bought on top of the plan for this license.</summary>
+    int ExtraSeats = 0);
 
 public sealed record CoachingBankTransferRequestSummary(
     Guid Id,
