@@ -202,6 +202,39 @@ public sealed class CoachingNewsletterServiceTests
         (await db.CoachingNewsletterSubscribers.AnyAsync(item => item.Id == activeId)).Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Unsubscribe_LinksFromEarlierEmailsKeepWorkingAfterANewConfirmationEmail()
+    {
+        // Decision 27.10.2026: a re-request still puts the subscriber back to pending (no newsletter until the new
+        // consent is confirmed), the e-mail stays, and every unsubscribe link sent so far keeps working.
+        await using var db = CreateDbContext();
+        var delivery = new RecordingEmailDelivery();
+        var legalPages = new FixedPrivacyVersionProvider(1);
+        var newsletter = new CoachingNewsletterService(db, delivery, legalPages, "https://onuraltintas.net");
+        await newsletter.RequestSubscriptionAsync(Signup("learner@example.com"));
+        var firstUnsubscribe = ExtractToken(delivery.Messages[0].Body, "/coaching/newsletter/unsubscribe?token=");
+        (await newsletter.ConfirmSubscriptionAsync(ExtractToken(delivery.Messages[0].Body, "/coaching/newsletter/confirm?token="))).Should().BeTrue();
+
+        legalPages.Version = 2;
+        await newsletter.RequestSubscriptionAsync(new CoachingNewsletterSignupRequest(
+            "learner@example.com", true, PrivacyPolicyVersion: 2, NewsletterConsentVersion: 2));
+        var secondUnsubscribe = ExtractToken(delivery.Messages[1].Body, "/coaching/newsletter/unsubscribe?token=");
+        secondUnsubscribe.Should().NotBe(firstUnsubscribe);
+        var subscriber = await db.CoachingNewsletterSubscribers.SingleAsync();
+        subscriber.Status.Should().Be(CoachingNewsletterStatuses.PendingConfirmation);
+
+        (await newsletter.UnsubscribeAsync(firstUnsubscribe)).Should().BeTrue();
+        subscriber.Status.Should().Be(CoachingNewsletterStatuses.Unsubscribed);
+        subscriber.Email.Should().Be("learner@example.com");
+
+        subscriber.UpdatedAt = DateTime.UtcNow.AddMinutes(-2);
+        await newsletter.RequestSubscriptionAsync(new CoachingNewsletterSignupRequest(
+            "learner@example.com", true, PrivacyPolicyVersion: 2, NewsletterConsentVersion: 2));
+        (await newsletter.UnsubscribeAsync(secondUnsubscribe)).Should().BeTrue();
+        subscriber.Status.Should().Be(CoachingNewsletterStatuses.Unsubscribed);
+        (await newsletter.UnsubscribeAsync("not-a-sent-token")).Should().BeFalse();
+    }
+
     private static (CoachingNewsletterService Service, RecordingEmailDelivery EmailDelivery) CreateService(CoachingDbContext db)
     {
         var delivery = new RecordingEmailDelivery();
