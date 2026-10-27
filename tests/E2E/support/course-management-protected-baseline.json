@@ -1290,7 +1290,7 @@
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingDecisionResponsibility.cs": "120a22fe6de29bc2e3c10f33a3c27f699c62dba8158578d73954d7f35bdab436",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingInvitationStore.cs": "0fa701a78f0bf333f69b792e4538c517503ae0a8e470b342c4876fd82aff41e4",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileImporter.cs": "1213ccca7bf48a88e56226c0f51f84489d880a6ac5894b1edbacfc339e0a44e1",
-    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs": "a901474b0fd5104aa8f9f6242ce5feef5534507ed209ac406c9201eda1668b67",
+    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs": "a34b17a95ef56ca6fd1dc8efdb74a2b9b95b97920288dc64a71535f49a8acf6c",
     "services/coaching-service/Coaching.Infrastructure/Profiles/OwnedCoachingDirectory.cs": "2b31c2da3af9cd621f97028d2d45fd8a4af3dbbe26b428afc0e23a248cb4a111",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderProcessor.cs": "d4621217932de41c21a6be7290e8f30a2db789bfd60ae446efc9eadcc6d10543",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderWorker.cs": "55dec4fcec4257d0c523670cc21435c062e8799d1506f9f6af2458f59b39ec35",
@@ -2552,7 +2552,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "Y5 payments and seats",
+    "purpose": "Y5 after Y4 decision handoff",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2600,7 +2600,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "a461ac8d",
+    "previousBaselineCommit": "ddcb5d99",
     "removedSincePreviousBaseline": []
   }
 }

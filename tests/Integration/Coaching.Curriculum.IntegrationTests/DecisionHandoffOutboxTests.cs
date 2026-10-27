@@ -23,10 +23,12 @@ public sealed class DecisionHandoffOutboxTests
         await using var provider=services.BuildServiceProvider();await using var scope=provider.CreateAsyncScope();
         var db=scope.ServiceProvider.GetRequiredService<CoachingDbContext>();var publisher=new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>());
         var store=new CoachingProfileStore(db,s.Accounts,publisher,new DecisionResponsibilityAndPostponementTests.Clock());
-        failure.Enabled=true;await Assert.ThrowsAsync<InvalidOperationException>(()=>store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,9,s.Next,default));
+        // Roadmap Y4: the new teacher is added first; the handoff happens when the old teacher's link ends.
+        await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,9,s.Next,default);Assert.Empty(await db.Set<OutboxMessage>().AsNoTracking().ToArrayAsync());
+        failure.Enabled=true;await Assert.ThrowsAsync<InvalidOperationException>(()=>store.EndInstitutionTeacherLinkAsync(s.Admin,s.Institution,s.Student,s.Old,default));
         Assert.Equal(s.Old,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);
-        Assert.True(await db.CoachingTeacherStudentAssignments.AsNoTracking().AnyAsync(x=>x.TeacherUserId==s.Old&&x.IsActive));Assert.False(await db.CoachingTeacherStudentAssignments.AsNoTracking().AnyAsync(x=>x.TeacherUserId==s.Next&&x.IsActive));Assert.Empty(await db.Set<OutboxMessage>().AsNoTracking().ToArrayAsync());
-        failure.Enabled=false;await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,9,s.Next,default);
+        Assert.True(await db.CoachingTeacherStudentAssignments.AsNoTracking().AnyAsync(x=>x.TeacherUserId==s.Old&&x.IsActive));Assert.Empty(await db.Set<OutboxMessage>().AsNoTracking().ToArrayAsync());
+        failure.Enabled=false;await store.EndInstitutionTeacherLinkAsync(s.Admin,s.Institution,s.Student,s.Old,default);
         var transferred=await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync();Assert.Equal(s.Next,transferred.ResponsibleTeacherId);Assert.Equal(original.History.Count+1,transferred.History.Count);
         var message=Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToArrayAsync());Assert.Contains("responsibilityTransferred",message.Body);Assert.DoesNotContain("Korunan karar",message.Body);
         await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,9,s.Next,default);Assert.Equal(1,await db.Set<OutboxMessage>().CountAsync());
