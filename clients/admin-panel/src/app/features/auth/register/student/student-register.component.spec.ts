@@ -12,11 +12,29 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { StudentRegisterComponent } from './student-register.component';
 
 describe('StudentRegisterComponent registration', () => {
+  // Roadmap Y8: registration asks for the student's birth date and sends it as a calendar date.
+  it('requires a real past birth date and sends it with the registration', async () => {
+    const component = createComponent(new Subject(), {}, {}, { navigate: vi.fn() });
+    const values = { firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!', confirmPassword: 'NewPassword1!' };
+    component.form.setValue({ ...values, birthDate: '' });
+    expect(component.form.invalid).toBe(true);
+    component.form.setValue({ ...values, birthDate: '2999-01-01' });
+    expect(component.form.controls.birthDate.hasError('birthDate')).toBe(true);
+    component.form.setValue({ ...values, birthDate: '2011-05-03' });
+    await component.onSubmit();
+    const http = TestBed.inject(HttpTestingController);
+    const request = http.expectOne(candidate => candidate.url.endsWith('/auth/coaching/register/student'));
+    expect(request.request.body.birthDate).toBe('2011-05-03');
+    expect(request.request.body.dateOfBirth).toBeUndefined();
+    request.flush({ userId: 'new-user' });
+    http.verify();
+  });
+
   it('shows the actionable API conflict description instead of a generic registration error', async () => {
     const toaster = { error: vi.fn() };
     const component = createComponent(new Subject(), {}, toaster);
     component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'existing@example.test',
-      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!' });
+      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!', birthDate: '2011-05-03' });
     await component.onSubmit();
     const http = TestBed.inject(HttpTestingController);
     http.expectOne(request => request.url.endsWith('/auth/coaching/register/student')).flush({
@@ -34,7 +52,7 @@ describe('StudentRegisterComponent registration', () => {
     const component = createComponent(new Subject(), {}, toaster, router);
     component.errorMessage.set('Previous error');
     component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'existing@example.test',
-      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!' });
+      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!', birthDate: '2011-05-03' });
     await component.onSubmit();
     expect(component.errorMessage()).toBeNull();
     const http = TestBed.inject(HttpTestingController);
