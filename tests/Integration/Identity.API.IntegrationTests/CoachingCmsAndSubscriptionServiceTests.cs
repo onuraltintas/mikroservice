@@ -1,3 +1,4 @@
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using Coaching.Application.Content;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Subscriptions;
@@ -676,6 +677,88 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
         int? seats) => new(
             slug, name, "Koçluk abonelik planı", audience, price, false, "Annual", 365, seats,
             ["Öğrenci raporları", "Ödev ve seans yönetimi"], true, true, 0);
+
+    [Fact]
+    public async Task TransferNotices_TellTheAdminAboutNewNoticesAndThePayerAboutEveryDecision()
+    {
+        await using var db = CreateDbContext();
+        var notices = new CapturingPublisher();
+        var subscriptions = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient(), notices);
+        var actorId = Guid.NewGuid(); var userId = Guid.NewGuid();
+        var planId = await subscriptions.CreatePlanAsync(Plan("notice-plan", "Bireysel aylık", "Individual", 900m, null), actorId);
+        await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
+            true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-notice-test-0001");
+
+        var first = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-NOTICE-1", "Ada Veli", null, true), "create-notice-test-00001");
+        var submitted = notices.Of<CoachingSubscriptionNoticeV1>().Should().ContainSingle().Subject;
+        submitted.Kind.Should().Be(CoachingSubscriptionNoticeKinds.TransferSubmitted);
+        submitted.RecipientUserId.Should().BeNull();
+        submitted.Detail.Should().Contain("Ada").And.Contain("EFT-NOTICE-1");
+
+        await subscriptions.ReviewBankTransferRequestAsync(first!.Id,
+            new CoachingBankTransferReviewRequest("Approved", "Doğrulandı"), actorId, "review-notice-test-00001");
+        var approved = notices.Of<CoachingSubscriptionNoticeV1>().Last();
+        approved.Kind.Should().Be(CoachingSubscriptionNoticeKinds.TransferApproved);
+        (approved.RecipientUserId, approved.RecipientEmail, approved.PlanName, approved.Audience)
+            .Should().Be((userId, "ada@example.test", "Bireysel aylık", "Individual"));
+        approved.EndsAt.Should().Be((await db.CoachingSubscriptions.SingleAsync()).EndDate);
+
+        await subscriptions.CancelApprovedBankTransferAsync(first.Id, "Yanlış hesaba onaylandı", actorId);
+        notices.Of<CoachingSubscriptionNoticeV1>().Last().Should().Match<CoachingSubscriptionNoticeV1>(x =>
+            x.Kind == CoachingSubscriptionNoticeKinds.ApprovalCancelled && x.Detail == "Yanlış hesaba onaylandı" && x.RecipientUserId == userId);
+
+        var second = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            new CoachingBankTransferRequestCreate(planId.Value, "EFT-NOTICE-2", "Ada Veli", null, true), "create-notice-test-00002");
+        await subscriptions.ReviewBankTransferRequestAsync(second!.Id,
+            new CoachingBankTransferReviewRequest("Rejected", "Tutar eksik geldi"), actorId, "review-notice-test-00002");
+        notices.Of<CoachingSubscriptionNoticeV1>().Last().Should().Match<CoachingSubscriptionNoticeV1>(x =>
+            x.Kind == CoachingSubscriptionNoticeKinds.TransferRejected && x.Detail == "Tutar eksik geldi" && x.RecipientEmail == "ada@example.test");
+        notices.Of<CoachingSubscriptionNoticeV1>().Select(x => x.NoticeId).Should().OnlyHaveUniqueItems();
+    }
+
+    [Fact]
+    public async Task TeacherSubscription_RenewalAfterExpiryStillExtendsTheSameSubscriptionAndKeepsSeats()
+    {
+        await using var db = CreateDbContext();
+        var identity = new TestIdentityAuthorizationClient();
+        var subscriptions = new CoachingSubscriptionService(db, identity);
+        var actorId = Guid.NewGuid(); var teacherId = Guid.NewGuid(); var studentId = Guid.NewGuid();
+        identity.ActiveTeachers.Add(teacherId);
+        identity.TeacherAssignments.Add((teacherId, studentId));
+        var planId = await subscriptions.CreatePlanAsync(Plan("teacher-expired-renewal", "Öğretmen", "Teacher", 500m, 2), actorId);
+        await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
+            true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-expired-renewal-1");
+        var original = await subscriptions.CreateSubscriptionAsync(new CoachingSubscriptionCreateRequest(
+            planId!.Value, teacherId, "Öğretmen", "teacher@example.test", null, [], DateTime.UtcNow, null), actorId);
+        (await subscriptions.AssignMyTeacherStudentSeatAsync(teacherId, studentId)).Should().BeTrue();
+        // The lifecycle job has marked the lapsed subscription as expired.
+        var row = await db.CoachingSubscriptions.SingleAsync();
+        row.StartDate = DateTime.UtcNow.AddDays(-40); row.EndDate = DateTime.UtcNow.AddDays(-2); row.Status = "Expired";
+        await db.SaveChangesAsync();
+
+        var transfer = await subscriptions.CreateTeacherBankTransferRequestAsync(teacherId, "Öğretmen", "teacher@example.test",
+            new CoachingBankTransferRequestCreate(planId.Value, "TEACHER-EFT-LAPSED", "Öğretmen", null, true), "create-expired-renewal-01");
+        (await subscriptions.ReviewBankTransferRequestAsync(transfer!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId,
+            "review-expired-renewal-01"))!.Status.Should().Be("Approved");
+
+        var renewed = await db.CoachingSubscriptions.SingleAsync();
+        renewed.Id.Should().Be(original!.Id);
+        renewed.Status.Should().Be("Active");
+        renewed.EndDate.Should().BeAfter(DateTime.UtcNow.AddDays(25));
+        (await subscriptions.GetMyTeacherSubscriptionAsync(teacherId))!.Students.Should().ContainSingle(x => x.StudentId == studentId);
+    }
+
+    private sealed class CapturingPublisher : ICoachingEventPublisher
+    {
+        private readonly List<object> messages = [];
+        public IReadOnlyList<T> Of<T>() => messages.OfType<T>().ToArray();
+        public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default) where T : class
+        {
+            messages.Add(message);
+            return Task.CompletedTask;
+        }
+    }
 
     private static CoachingDbContext CreateDbContext() => new(
         new DbContextOptionsBuilder<CoachingDbContext>()

@@ -1,5 +1,6 @@
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingManagementService, CoachingSubscriptionPlan } from '../../../core/services/coaching-management.service';
@@ -47,7 +48,19 @@ describe('CoachingSubscriptionComponent', () => {
     expect(component.adultPayerDeclaration).toBe(false);
   });
 
-  function setup() {
+  it('explains why the student was sent here when a learning page needed a subscription', async () => {
+    const fixture = setup({ required: '1' });
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[data-testid="subscription-required"]')?.textContent).toContain('etkin bir Koçluk aboneliği');
+  });
+
+  it('shows no subscription-required notice on a normal visit', async () => {
+    const fixture = setup();
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[data-testid="subscription-required"]')).toBeNull();
+  });
+
+  function setup(query: Record<string, string> = {}) {
     const plan = (id: string, name: string, audience: 'Individual' | 'Institution'): CoachingSubscriptionPlan => ({
       id, slug: id, name, description: '', audience, price: 100, isContactOnly: false, billingPeriod: 'Annual',
       durationDays: 365, includedStudentSeats: audience === 'Institution' ? 20 : null, features: [], isActive: true, isPublic: true, sortOrder: 0
@@ -63,7 +76,8 @@ describe('CoachingSubscriptionComponent', () => {
       }))
     };
     TestBed.configureTestingModule({ imports: [CoachingSubscriptionComponent], providers: [
-      { provide: CoachingManagementService, useValue: service }
+      { provide: CoachingManagementService, useValue: service },
+      { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } }
     ] });
     return TestBed.createComponent(CoachingSubscriptionComponent);
   }
