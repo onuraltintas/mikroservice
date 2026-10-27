@@ -86,6 +86,9 @@ public sealed class CoachingOutcomePostgresTests
             var topic = StudyCatalogTopic.Create("approved-catalog", "topic:factors", lesson.Id, unit.Id, "Çarpanlar ve Katlar", null, 1); topic.SetActive(true);
             db.AddRange(oldPlan, oldWork, lesson, unit, topic); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             // Seed with the current model, then restore the old schema before exercising the upgrade.
+            // Work recorded before dated work (ActualStudyWorkDates) has no day list and is dated on its planned day;
+            // that migration's Down refuses dated work, so the seed is brought to that older shape first.
+            await db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_plan_tasks SET "ActualWorkJson" = NULL, "WorkFromDate" = "PlannedDate", "WorkToDate" = "PlannedDate" WHERE "ActualMinutes" IS NOT NULL""");
             await db.GetService<IMigrator>().MigrateAsync("20261016144923_StudentLearningSetup");
             await db.Database.MigrateAsync(); await db.Database.MigrateAsync();
             await using var f = await CoachingOutcomePilotTests.Fixture.Create();
