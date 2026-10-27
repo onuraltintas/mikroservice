@@ -37,7 +37,9 @@ public sealed class DecisionResponsibilityAndPostponementTests
         decision=await reviews.SaveLinksAsync(s.Student,Week,decision.Id,new(decision.Version,task.Id,assignment.Id),default);
         var history=decision.History.ToArray();var workBefore=JsonSerializer.Serialize(await pg.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());var assignmentBefore=JsonSerializer.Serialize(await pg.Db.AssignmentStudents.AsNoTracking().ToArrayAsync());
         var store=new CoachingProfileStore(pg.Db,s.Accounts,clock:new Clock());
-        await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,8,s.Next,default);pg.Db.ChangeTracker.Clear();
+        // Roadmap Y4: choosing a teacher adds one; the replacement is complete when the old teacher's link ends.
+        await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,8,s.Next,default);
+        await store.EndInstitutionTeacherLinkAsync(s.Admin,s.Institution,s.Student,s.Old,default);pg.Db.ChangeTracker.Clear();
         var row=await pg.Db.Set<WeeklyDecision>().AsNoTracking().SingleAsync(x=>x.Id==decision.Id);
         Assert.Equal(s.Old,row.TeacherId);Assert.Equal(s.Next,row.ResponsibleTeacherId);Assert.Equal(Week.AddDays(10),row.InitialDueOn);Assert.Equal(Week,row.ReviewWeekStart);
         Assert.Equal(task.Id,row.StudyTaskId);Assert.Equal(assignment.Id,row.AssignmentId);Assert.Equal(history,row.History.Take(history.Length));
@@ -91,6 +93,9 @@ public sealed class DecisionResponsibilityAndPostponementTests
         await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,8,null,default);
         Assert.Equal(s.Old,(await pg.Db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);
         await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,8,s.Next,default);
+        Assert.Equal(s.Old,(await pg.Db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);
+        // Ending the first teacher's link hands its open decisions to the teacher who stays.
+        await store.EndInstitutionTeacherLinkAsync(s.Admin,s.Institution,s.Student,s.Old,default);
         Assert.Equal(s.Next,(await pg.Db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);
     }
 
