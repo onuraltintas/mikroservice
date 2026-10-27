@@ -142,3 +142,8 @@
 .plan-calendar .calendar-context-menu button:hover:not(:disabled){background:var(--ui-brand-soft,#e6f3ed)}
 .plan-calendar .calendar-context-menu .danger{color:var(--ui-danger,#b53140)}
 }
+
+/* Roadmap O1: unread notification count on the bell and in the bottom bar. */
+.coaching-shell .coaching-bell { position: relative; }
+.coaching-shell .coaching-badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #c2410c; color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+.coaching-shell .coaching-mobile-nav .coaching-badge { top: 4px; right: calc(50% - 22px); }
