@@ -61,7 +61,10 @@ public sealed class CoachingOwnedProfilePersistenceTests
         Assert.Equal(teacher, Assert.Single(report.Students!).TeacherUserId);
         Assert.Equal("Test Teacher", report.Students!.Single().TeacherName);
         Assert.Equal(teacher, Assert.Single((await f.Scope.GetActiveTeacherPageAsync(admin, inst, 1, 25, null, default)).Teachers).UserId);
+        // Changing only the grade keeps the teacher; the link is ended on its own (roadmap Y4).
         await f.Store.UpdateInstitutionStudentAsync(admin, inst, student, 11, null, default);
+        Assert.True((await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).IsActive);
+        await f.Store.EndInstitutionTeacherLinkAsync(admin, inst, student, teacher, default);
         Assert.False((await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).IsActive);
         Assert.Empty((await f.Scope.GetTeacherRosterAsync(teacher, 1, 25, null, null, true, null, default)).Items);
     }

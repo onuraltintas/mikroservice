@@ -68,6 +68,28 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(service.removeTeacher).toHaveBeenCalledWith('teacher-1'); await vi.waitFor(()=>expect(service.getTeacherRoster).toHaveBeenCalledTimes(4));
   });
 
+  it('lists every teacher of a student and ends one link without touching the others', async () => {
+    const both = { ...student('student-1'), teachers: [{ userId: 'teacher-1', name: 'Ayşe Demir' }, { userId: 'teacher-2', name: 'Can Kaya' }], progressShared: false };
+    const service = institutionService({ students: [both], teachers: [teacher('teacher-1'), teacher('teacher-2')] });
+    const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
+    (await component.selectSection('students')); fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Ayşe Demir'); expect(text).toContain('Can Kaya'); expect(text).toContain('Gelişimini paylaşmıyor');
+    vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(true);
+    await component.removeStudentTeacher(both, both.teachers[0]);
+    expect(service.removeStudentTeacher).toHaveBeenCalledWith('student-1', 'teacher-1');
+    await vi.waitFor(() => expect(service.getStudentRoster).toHaveBeenCalledTimes(2));
+  });
+
+  it('hands a removed teacher over to the chosen replacement', async () => {
+    const service = institutionService({ teachers: [teacher('teacher-1'), teacher('teacher-2')] });
+    const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
+    (await component.selectSection('teachers')); fixture.detectChanges();
+    component.handoverTeacherIds['teacher-1'] = 'teacher-2';
+    vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(true); (await component.removeTeacher(teacher('teacher-1')));
+    expect(service.removeTeacher).toHaveBeenCalledWith('teacher-1', 'teacher-2');
+  });
+
   it('drops removed teachers from fresh assignment filter options', async () => {
     const service = institutionService({ teachers: [teacher('teacher-1')] });
     const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
@@ -321,6 +343,7 @@ function institutionService(options: { students?: CoachingInstitutionStudent[]; 
     updateStudent: vi.fn(() => of(void 0)),
     removeStudent: vi.fn(() => of(void 0)),
     removeTeacher: vi.fn(() => of(void 0)),
+    removeStudentTeacher: vi.fn(() => of(void 0)),
     getOverview: vi.fn(() => of({
       totalAssignments: 12, activeAssignments: 4, completedAssignments: 8, cancelledAssignments: 0,
       totalAssignmentStudents: 30, submittedAssignmentStudents: 24, totalExams: 5, totalExamResults: 21,
