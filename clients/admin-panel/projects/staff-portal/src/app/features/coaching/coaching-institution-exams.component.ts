@@ -33,6 +33,7 @@ export class CoachingInstitutionExamsComponent implements OnInit {
   readonly canApply = computed(() => !!this.preview() && this.preview()!.errors.length === 0 && this.preview()!.accepted.length > 0 && !this.busy());
   form = { title: '', examCode: 'LGS', examDate: '', gradeLevel: null as number | null, maxScore: 500 };
   private csv = '';
+  private xlsx: string | null = null;
 
   ngOnInit(): void { this.load(); }
 
@@ -51,7 +52,7 @@ export class CoachingInstitutionExamsComponent implements OnInit {
   }
 
   async open(exam: InstitutionExam): Promise<void> {
-    this.selected.set(exam); this.branch.set(null); this.preview.set(null); this.csv = '';
+    this.selected.set(exam); this.branch.set(null); this.preview.set(null); this.csv = ''; this.xlsx = null;
     await this.loadReport();
   }
 
@@ -74,11 +75,13 @@ export class CoachingInstitutionExamsComponent implements OnInit {
 
   async previewFile(file: File): Promise<void> {
     const exam = this.selected(); if (!exam) return;
-    if (file.size > 2 * 1024 * 1024) { this.error.set('Dosya en fazla 2 MB olabilir.'); return; }
+    const excel = /\.xlsx$/i.test(file.name);
+    if (file.size > (excel ? 1.5 : 2) * 1024 * 1024) { this.error.set(excel ? 'Excel dosyası en fazla 1,5 MB olabilir.' : 'Dosya en fazla 2 MB olabilir.'); return; }
     this.busy.set(true); this.error.set(null); this.message.set(null); this.preview.set(null);
     try {
-      this.csv = await readText(file);
-      this.preview.set(await firstValueFrom(this.api.preview(exam.id, this.csv)));
+      // Roadmap O4 follow-up: an Excel workbook with the template's columns is read on the server.
+      if (excel) { this.csv = ''; this.xlsx = await readBase64(file); this.preview.set(await firstValueFrom(this.api.preview(exam.id, null, this.xlsx))); }
+      else { this.xlsx = null; this.csv = await readText(file); this.preview.set(await firstValueFrom(this.api.preview(exam.id, this.csv))); }
     } catch (response) { this.error.set((response as { error?: { message?: string } })?.error?.message ?? 'Dosya okunamadı.'); }
     finally { this.busy.set(false); }
   }
@@ -88,8 +91,8 @@ export class CoachingInstitutionExamsComponent implements OnInit {
     if (!exam || !preview || !this.canApply()) return;
     this.busy.set(true); this.error.set(null);
     try {
-      const result = await firstValueFrom(this.api.apply(exam.id, this.csv, preview.fingerprint));
-      this.message.set(`${result.applied} sonuç kaydedildi.`); this.preview.set(null); this.csv = '';
+      const result = await firstValueFrom(this.xlsx ? this.api.apply(exam.id, null, preview.fingerprint, this.xlsx) : this.api.apply(exam.id, this.csv, preview.fingerprint));
+      this.message.set(`${result.applied} sonuç kaydedildi.`); this.preview.set(null); this.csv = ''; this.xlsx = null;
       await this.loadReport(); this.load(this.exams().pageNumber);
     } catch (response) { this.error.set((response as { error?: { message?: string } })?.error?.message ?? 'Sonuçlar kaydedilemedi.'); }
     finally { this.busy.set(false); }
@@ -106,6 +109,14 @@ export class CoachingInstitutionExamsComponent implements OnInit {
   }
 
   private readonly feedback = coachingFeedback(this.message, this.error);
+}
+
+function readBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? '').replace(/^data:[^,]*,/, '')); reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }
 
 function readText(file: File): Promise<string> {

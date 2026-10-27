@@ -26,8 +26,8 @@
       <h4 id="exam-detail-title">{{ exam.title }}</h4>
       <div class="exam-import">
         <button type="button" class="outline-button" (click)="downloadTemplate()">CSV şablonunu indir</button>
-        <label class="file-button">Sonuç dosyası yükle (CSV)<input type="file" accept=".csv,text/csv" (change)="chooseFile($event)" [disabled]="busy()"></label>
-        <p class="hint">Her satırda öğrencinin e-postası, puanı ve her ders için doğru ile yanlış sayısı olur. Boşlar kendiliğinden hesaplanır.</p>
+        <label class="file-button">Sonuç dosyası yükle (CSV ya da Excel)<input type="file" accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="chooseFile($event)" [disabled]="busy()"></label>
+        <p class="hint">Her satırda öğrencinin e-postası, puanı ve her ders için doğru ile yanlış sayısı olur. Boşlar kendiliğinden hesaplanır. Excel'de şablonun sütunlarını ilk sayfada kullanın.</p>
       </div>
       @if (preview(); as check) {
         <div class="import-preview" role="status">

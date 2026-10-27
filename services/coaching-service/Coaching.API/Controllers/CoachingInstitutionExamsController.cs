@@ -43,15 +43,15 @@ public sealed class CoachingInstitutionExamsController(CoachingInstitutionExamSe
         Ok(await exams.GetAsync(UserId, await Resolve(institutionId, ct), examId, branch, ct));
 
     [HttpPost("{examId:guid}/import/preview")]
-    [RequestSizeLimit(2_097_152)]
+    [RequestSizeLimit(2_621_440)]
     public async Task<IActionResult> Preview(Guid? institutionId, Guid examId, [FromBody] InstitutionExamImportRequest request, CancellationToken ct) =>
-        Ok(await exams.PreviewImportAsync(UserId, await Resolve(institutionId, ct), examId, request.Csv, ct));
+        Ok(await exams.PreviewImportAsync(UserId, await Resolve(institutionId, ct), examId, InstitutionExamImportText.From(request.Csv, request.XlsxBase64), ct));
 
     [HttpPost("{examId:guid}/import")]
-    [RequestSizeLimit(2_097_152)]
+    [RequestSizeLimit(2_621_440)]
     public async Task<IActionResult> Import(Guid? institutionId, Guid examId, [FromBody] InstitutionExamImportRequest request, CancellationToken ct)
     {
-        try { return Ok(new { applied = await exams.ApplyImportAsync(UserId, await Resolve(institutionId, ct), examId, request.Csv, request.Fingerprint ?? "", ct) }); }
+        try { return Ok(new { applied = await exams.ApplyImportAsync(UserId, await Resolve(institutionId, ct), examId, InstitutionExamImportText.From(request.Csv, request.XlsxBase64), request.Fingerprint ?? "", ct) }); }
         catch (BusinessRuleException error) when (error.Code.StartsWith("Exam.", StringComparison.Ordinal))
         { return Conflict(new { code = error.Code, message = error.Message }); }
     }
@@ -77,4 +77,5 @@ public sealed class CoachingStudentInstitutionExamsController(CoachingInstitutio
     public async Task<IActionResult> Get(CancellationToken ct) => Ok(await exams.GetStudentRanksAsync(actor.UserId ?? Guid.Empty, ct));
 }
 
-public sealed record InstitutionExamImportRequest(string Csv, string? Fingerprint = null);
+/// <summary>The results as CSV text, or (roadmap O4 follow-up) as a base64 Excel workbook with the same columns.</summary>
+public sealed record InstitutionExamImportRequest(string? Csv, string? Fingerprint = null, string? XlsxBase64 = null);
