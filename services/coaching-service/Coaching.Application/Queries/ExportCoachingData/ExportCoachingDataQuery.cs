@@ -31,7 +31,8 @@ public sealed record CoachingDataExportDto(
     IReadOnlyList<CoachingDataSubscriptionDto>? Subscriptions = null,
     IReadOnlyList<CoachingDataSeatDto>? SubscriptionSeats = null,
     IReadOnlyList<CoachingDataBankTransferDto>? BankTransfers = null,
-    IReadOnlyList<CoachingDataPaymentDto>? Payments = null)
+    IReadOnlyList<CoachingDataPaymentDto>? Payments = null,
+    IReadOnlyList<CoachingDataConversationDto>? Conversations = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
@@ -71,6 +72,9 @@ public sealed record CoachingDataBankTransferDto(Guid Id, Guid PlanId, decimal A
     string? PayerName, string? Note, string Status, Guid? SubscriptionId, DateTime? ReviewedAt, string? ReviewNote, DateTime CreatedAt);
 public sealed record CoachingDataPaymentDto(Guid Id, Guid PlanId, string PlanName, Guid? SubscriptionId, Guid? BankTransferRequestId,
     decimal Amount, string Currency, string Status, string Provider, string? Reference, DateTime CreatedAt);
+/// <summary>Roadmap O3: the student's own conversations with their teachers (a parent's conversations are the parent's data).</summary>
+public sealed record CoachingDataConversationDto(Guid Id, Guid TeacherUserId, DateTime CreatedAt, IReadOnlyList<CoachingDataMessageDto> Messages);
+public sealed record CoachingDataMessageDto(Guid Id, Guid SenderUserId, string Body, DateTime SentAt, IReadOnlyList<string> AttachmentNames);
 public sealed record CoachingDataReminderDto(Guid Id, Guid SourceId, string Kind, DateTime DueAt, DateTime QueuedAt);
 public sealed record CoachingDataFeeInstallmentDto(Guid Id, int Sequence, DateOnly DueOn, decimal Amount);
 public sealed record CoachingDataFeeDto(Guid Id, Guid? InstitutionId, Guid? CoachId, Guid CreatedByUserId, string Title,

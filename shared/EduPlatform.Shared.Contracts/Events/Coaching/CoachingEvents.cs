@@ -172,3 +172,10 @@ public sealed record CoachingParentWeeklySummaryV1(
     int SessionsUpcoming,
     string? LatestExamTitle,
     decimal? LatestExamScore);
+
+/// <summary>
+/// Roadmap O3: a conversation has a new message for the recipient. Sent once per unread batch and without the text,
+/// so the notification never carries the message itself. RecipientRole is Teacher, Student or Parent.
+/// </summary>
+public sealed record CoachingMessageReceivedEvent(Guid ConversationId, Guid RecipientUserId, string RecipientRole, string SenderName,
+    bool HasAttachments);

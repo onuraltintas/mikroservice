@@ -15,6 +15,8 @@ public interface IParentLinkService
     Task<Result> ApproveAsync(Guid studentUserId, Guid linkId, CancellationToken ct);
     Task<Result> RevokeAsync(Guid userId, Guid linkId, CancellationToken ct);
     Task<ParentSummaryRecipientPage> GetWeeklySummaryRecipientsAsync(int pageNumber, int pageSize, CancellationToken ct);
+    /// <summary>Roadmap O3: verified links of the given children, and of the given parent (for Coaching messaging).</summary>
+    Task<IReadOnlyList<VerifiedParentLink>> GetVerifiedLinksAsync(IReadOnlyCollection<Guid> studentUserIds, Guid? parentUserId, CancellationToken ct);
 }
 
 public sealed record ParentLinkCodeIssued(string Code, DateTime ExpiresAt);
@@ -23,6 +25,7 @@ public sealed record ParentLinkView(Guid Id, Guid ParentUserId, string ParentNam
     string Relationship, string Status, DateTime RequestedAt, DateTime? VerifiedAt);
 
 public sealed record ParentSummaryRecipient(Guid ParentUserId, string ParentEmail, string ParentName, Guid StudentUserId, string StudentName);
+public sealed record VerifiedParentLink(Guid ParentUserId, string ParentName, Guid StudentUserId, string StudentName, string Relationship);
 public sealed record ParentSummaryRecipientPage(IReadOnlyList<ParentSummaryRecipient> Items, int TotalCount);
 
 public static class ParentLinkErrors

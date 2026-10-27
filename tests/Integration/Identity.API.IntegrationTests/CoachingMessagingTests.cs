@@ -222,7 +222,7 @@ public sealed class CoachingMessagingTests
 
         var remaining = await s.F.Db.Set<CoachingConversation>().Select(x => x.Id).ToListAsync();
         if (erased == "Parent") remaining.Should().Equal(withStudent.Id);
-        else if (erased == "Student") remaining.Should().Equal(withParent.Id, "the parent's own conversation about the child is the parent's data");
+        else if (erased == "Student") remaining.Should().Equal(new[] { withParent.Id }, "the parent's own conversation about the child is the parent's data");
         else remaining.Should().BeEmpty();
         (await s.F.Db.Set<CoachingMessage>().CountAsync()).Should().Be(remaining.Count);
         (await s.F.Db.Set<CoachingMessageAttachment>().AnyAsync()).Should().Be(erased == "Parent");

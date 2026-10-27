@@ -158,6 +158,20 @@ public sealed class InternalCoachingController : ControllerBase
         return Ok(await parentLinks.GetWeeklySummaryRecipientsAsync(pageNumber, pageSize, cancellationToken));
     }
 
+    /// <summary>Roadmap O3: verified parent links of the given children, and of the given parent.</summary>
+    [HttpPost("parent-links")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    public async Task<IActionResult> GetParentLinks(
+        [FromServices] Identity.Application.ParentLinks.IParentLinkService parentLinks,
+        [FromBody] CoachingParentLinksRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.StudentUserIds is null || request.StudentUserIds.Count > 200 || request.StudentUserIds.Any(x => x == Guid.Empty)
+            || request.ParentUserId == Guid.Empty) return BadRequest("The parent link lookup is invalid.");
+        return Ok(await parentLinks.GetVerifiedLinksAsync(request.StudentUserIds, request.ParentUserId, cancellationToken));
+    }
+
     [HttpPost("authorize-student-read")]
     [AllowAnonymous]
     [InternalServiceKey]
@@ -304,6 +318,8 @@ public sealed record CoachingAuthorizationRequest(
     bool IsSystemAdministrator);
 
 public sealed record CoachingAuthorizationResponse(Guid? InstitutionId);
+
+public sealed record CoachingParentLinksRequest(IReadOnlyList<Guid> StudentUserIds, Guid? ParentUserId);
 
 public sealed record CoachingAgreementRepresentativeAuthorizationRequest(
     Guid RepresentativeUserId,

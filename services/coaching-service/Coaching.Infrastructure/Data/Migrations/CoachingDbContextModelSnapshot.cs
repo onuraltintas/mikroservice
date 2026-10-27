@@ -1055,6 +1055,115 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("cms_revisions", "coaching");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingConversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CounterpartUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CounterpartReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("InstitutionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MessageCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("StudentUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("TeacherReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TeacherUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastMessageAt");
+
+                    b.HasIndex("StudentUserId");
+
+                    b.HasIndex("CounterpartUserId", "LastMessageAt");
+
+                    b.HasIndex("InstitutionId", "LastMessageAt");
+
+                    b.HasIndex("TeacherUserId", "LastMessageAt");
+
+                    b.HasIndex("TeacherUserId", "CounterpartUserId", "StudentUserId")
+                        .IsUnique();
+
+                    b.ToTable("coaching_conversations", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_conversation_kind", "(\"Kind\" = 'TeacherStudent' AND \"CounterpartUserId\" = \"StudentUserId\") OR (\"Kind\" = 'TeacherParent' AND \"CounterpartUserId\" <> \"StudentUserId\")");
+
+                            t.HasCheckConstraint("ck_coaching_conversation_participants", "\"TeacherUserId\" <> \"CounterpartUserId\"");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingConversationAccess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AccessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ViewerUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ViewerUserId");
+
+                    b.HasIndex("ConversationId", "AccessedAt");
+
+                    b.ToTable("coaching_conversation_accesses", "coaching");
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingErasureAssessment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1413,6 +1522,108 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("SubjectUserId", "ReleasedAt");
 
                     b.ToTable("CoachingLegalHolds", "coaching");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "SentAt");
+
+                    b.ToTable("coaching_messages", "coaching");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingMessageAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid?>("MessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UploaderUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StorageKey")
+                        .IsUnique();
+
+                    b.HasIndex("ConversationId", "MessageId");
+
+                    b.HasIndex("MessageId", "CreatedAt");
+
+                    b.ToTable("coaching_message_attachments", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_message_attachment_size", "\"SizeBytes\" > 0 AND \"SizeBytes\" <= 10485760");
+                        });
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingNewsletterSubscriber", b =>
@@ -4597,6 +4808,15 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Navigation("AgreementDocument");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingConversationAccess", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CoachingConversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingFeeInstallment", b =>
                 {
                     b.HasOne("Coaching.Domain.Entities.CoachingFeeAgreement", null)
@@ -4619,6 +4839,29 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasForeignKey("AgreementId", "ReversalOfPaymentId")
                         .HasPrincipalKey("AgreementId", "Id")
                         .OnDelete(DeleteBehavior.NoAction);
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingMessage", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CoachingConversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingMessageAttachment", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CoachingConversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Entities.CoachingMessage", null)
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingNewsletterUnsubscribeToken", b =>

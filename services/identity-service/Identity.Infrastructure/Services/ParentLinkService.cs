@@ -105,6 +105,24 @@ public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock) 
         return new ParentSummaryRecipientPage(page, rows.Length);
     }
 
+    public async Task<IReadOnlyList<VerifiedParentLink>> GetVerifiedLinksAsync(IReadOnlyCollection<Guid> studentUserIds, Guid? parentUserId, CancellationToken ct)
+    {
+        var students = studentUserIds.Distinct().ToList();
+        if (students.Count > 200) throw new ArgumentOutOfRangeException(nameof(studentUserIds));
+        if (students.Count == 0 && parentUserId is null) return [];
+        var rows = await (from link in db.ParentStudentRelationships.AsNoTracking()
+                          join parent in db.Users.AsNoTracking() on link.ParentUserId equals parent.Id
+                          join student in db.Users.AsNoTracking() on link.StudentUserId equals student.Id
+                          where link.Status == ParentStudentRelationshipStatus.Verified && parent.IsActive && student.IsActive
+                              && (students.Contains(link.StudentUserId) || parentUserId != null && link.ParentUserId == parentUserId)
+                          orderby link.StudentUserId, link.ParentUserId
+                          select new { link.ParentUserId, ParentFirst = parent.FirstName, ParentLast = parent.LastName, link.StudentUserId,
+                              StudentFirst = student.FirstName, StudentLast = student.LastName, link.Relationship })
+            .ToListAsync(ct);
+        return rows.Select(x => new VerifiedParentLink(x.ParentUserId, Name(x.ParentFirst, x.ParentLast), x.StudentUserId,
+            Name(x.StudentFirst, x.StudentLast), x.Relationship.ToString())).ToArray();
+    }
+
     private async Task<IReadOnlyList<ParentLinkView>> ViewsAsync(IQueryable<ParentStudentRelationship> links, CancellationToken ct)
     {
         var rows = await (from link in links.AsNoTracking()
