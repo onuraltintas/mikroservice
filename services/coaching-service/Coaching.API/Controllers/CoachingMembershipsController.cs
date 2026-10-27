@@ -55,10 +55,19 @@ public sealed class CoachingMembershipsController(CoachingProfileStore profiles,
         return NoContent();
     }
 
-    [HttpDelete("teachers/{teacherUserId:guid}")]
-    public async Task<IActionResult> RemoveTeacher(Guid teacherUserId, Guid? institutionId, CancellationToken ct)
+    [HttpDelete("students/{studentUserId:guid}/teachers/{teacherUserId:guid}")]
+    public async Task<IActionResult> RemoveStudentTeacher(Guid studentUserId, Guid teacherUserId, Guid? institutionId, CancellationToken ct)
     {
-        await profiles.SetMembershipAsync(UserId, await Resolve(institutionId, ct), teacherUserId, CoachingMemberRole.Teacher, false, ct);
+        await profiles.EndInstitutionTeacherLinkAsync(UserId, await Resolve(institutionId, ct), studentUserId, teacherUserId, ct);
+        return NoContent();
+    }
+
+    /// <summary>Removes a teacher; with a replacement their students and open assignments move to that teacher.</summary>
+    [HttpDelete("teachers/{teacherUserId:guid}")]
+    public async Task<IActionResult> RemoveTeacher(Guid teacherUserId, Guid? institutionId,
+        [FromQuery] Guid? replacementTeacherUserId, CancellationToken ct)
+    {
+        await profiles.RemoveInstitutionTeacherAsync(UserId, await Resolve(institutionId, ct), teacherUserId, replacementTeacherUserId, ct);
         return NoContent();
     }
 

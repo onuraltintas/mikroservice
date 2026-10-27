@@ -141,6 +141,23 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
     {
         ValidatePage(pageNumber, pageSize, search);
         var ids = await GetActiveStudentIdsAsync(viewerUserId, institutionId, gradeLevel, ct);
+        return await StudentPageAsync(ids, institutionId, pageNumber, pageSize, search, teacherUserId, ct);
+    }
+
+    public async Task<CoachingStudentReportPage> GetMemberStudentPageAsync(Guid viewerUserId, Guid institutionId,
+        int? gradeLevel, int pageNumber, int pageSize, CancellationToken ct, string? search = null, Guid? teacherUserId = null)
+    {
+        ValidatePage(pageNumber, pageSize, search);
+        await RequireReportScopeAsync(viewerUserId, institutionId, ct);
+        if (gradeLevel is < 1 or > 12) throw new ArgumentException("Geçersiz sınıf.");
+        var members = await StudentIdsAsync(institutionId, gradeLevel).ToArrayAsync(ct);
+        var ids = (await accounts.GetAccountsAsync(members, ct)).Where(x => x.IsEligible("Student")).Select(x => x.UserId).ToArray();
+        return await StudentPageAsync(ids, institutionId, pageNumber, pageSize, search, teacherUserId, ct);
+    }
+
+    private async Task<CoachingStudentReportPage> StudentPageAsync(IReadOnlyCollection<Guid> ids, Guid institutionId,
+        int pageNumber, int pageSize, string? search, Guid? teacherUserId, CancellationToken ct)
+    {
         if (teacherUserId.HasValue)
         {
             var assigned = await db.CoachingTeacherStudentAssignments.AsNoTracking().Where(x => x.TeacherUserId == teacherUserId
@@ -162,11 +179,15 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
             .Select(x => x.UserId).ToArrayAsync(ct);
         var items = selected.Select(user =>
         {
-            var assignment = assignments.FirstOrDefault(x => x.StudentUserId == user.UserId
-                && activeTeachers.Contains(x.TeacherUserId) && teachers.ContainsKey(x.TeacherUserId));
-            var teacher = assignment is null ? null : teachers[assignment.TeacherUserId];
+            var linked = assignments.Where(x => x.StudentUserId == user.UserId
+                && activeTeachers.Contains(x.TeacherUserId) && teachers.ContainsKey(x.TeacherUserId))
+                .Select(x => teachers[x.TeacherUserId]).DistinctBy(x => x.UserId).ToArray();
+            var teacher = linked.FirstOrDefault();
+            var profile = profiles[user.UserId];
             return new CoachingStudentReportItem(user.UserId, user.FirstName, user.LastName, user.Email,
-                profiles[user.UserId].GradeLevel, teacher is null ? null : $"{teacher.FirstName} {teacher.LastName}", teacher?.UserId);
+                profile.GradeLevel, teacher is null ? null : $"{teacher.FirstName} {teacher.LastName}", teacher?.UserId,
+                profile.ShareProgressWithTeachers,
+                linked.Select(x => new CoachingStudentTeacher(x.UserId, $"{x.FirstName} {x.LastName}")).ToArray());
         }).ToArray();
         return new(selectedIds, matching.Length, items);
     }

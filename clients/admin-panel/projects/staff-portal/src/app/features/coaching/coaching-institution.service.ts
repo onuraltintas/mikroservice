@@ -53,6 +53,15 @@ export interface CoachingInstitutionStudent {
   gradeLevel?: number | null;
   teacherName?: string | null;
   teacherUserId?: string | null;
+  /** Every teacher the student works with in the institution. */
+  teachers?: CoachingInstitutionStudentTeacher[] | null;
+  /** False when the student does not share progress; the roster still lists them. */
+  progressShared?: boolean;
+}
+
+export interface CoachingInstitutionStudentTeacher {
+  userId: string;
+  name: string;
 }
 
 export interface CoachingInstitutionStudentPage {
@@ -155,8 +164,18 @@ export class CoachingInstitutionService {
     return this.http.delete<void>(`${environment.apiUrl}/coaching/institution/students/${encodeURIComponent(studentId)}`);
   }
 
-  removeTeacher(teacherId: string): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/coaching/institution/teachers/${encodeURIComponent(teacherId)}`);
+  /** Removes a teacher; a replacement takes over their students and open assignments. */
+  removeTeacher(teacherId: string, replacementTeacherUserId?: string | null): Observable<void> {
+    const url = `${environment.apiUrl}/coaching/institution/teachers/${encodeURIComponent(teacherId)}`;
+    return replacementTeacherUserId
+      ? this.http.delete<void>(url, { params: { replacementTeacherUserId } })
+      : this.http.delete<void>(url);
+  }
+
+  /** Ends one teacher's link with a student; the student's other teachers stay. */
+  removeStudentTeacher(studentId: string, teacherId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiUrl}/coaching/institution/students/${encodeURIComponent(studentId)}/teachers/${encodeURIComponent(teacherId)}`);
   }
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching-admin`;

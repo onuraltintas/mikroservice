@@ -172,7 +172,8 @@ public sealed class CoachingAdminController : ControllerBase
         if (pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100
             || search?.Length > 100 || teacherUserId == Guid.Empty || gradeLevel is < 1 or > 12)
             return BadRequest();
-        return Ok(await reportClient.GetActiveStudentPageAsync(
+        // The roster lists every member (with whether they share progress); progress reports stay filtered.
+        return Ok(await reportClient.GetMemberStudentPageAsync(
             currentUser.UserId!.Value, institutionId, gradeLevel, pageNumber, pageSize,
             cancellationToken, search, teacherUserId));
     }

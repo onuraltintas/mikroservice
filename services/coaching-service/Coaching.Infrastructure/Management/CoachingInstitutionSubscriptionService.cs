@@ -3,6 +3,7 @@ using Coaching.Application.Authorization;
 using Coaching.Application.Subscriptions;
 using Coaching.Infrastructure.Data;
 using Coaching.Domain.Entities;
+using Coaching.Domain.Profiles;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -21,16 +22,19 @@ public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db,
         var plan = await db.CoachingSubscriptionPlans.AsNoTracking().SingleAsync(plan => plan.Id == row.PlanId, ct);
         var seats = await db.CoachingSubscriptionSeats.AsNoTracking().Where(seat => seat.SubscriptionId == row.Id)
             .OrderBy(seat => seat.AssignedAt).ToListAsync(ct);
+        var members = await MemberIdsAsync(scope.InstitutionId!.Value, seats.Select(seat => seat.StudentId).ToArray(), ct);
         return new(row.Id, plan.Name, row.EndDate, plan.IncludedStudentSeats.GetValueOrDefault(),
             seats.Count(seat => !seat.IsSuspended), seats.Select(seat => new CoachingInstitutionSubscriptionSeat(
-                seat.StudentId, seat.IsSuspended, seat.AssignedAt, scope.StudentIds!.Contains(seat.StudentId))).ToArray());
+                seat.StudentId, seat.IsSuspended, seat.AssignedAt, members.Contains(seat.StudentId) || scope.StudentIds!.Contains(seat.StudentId))).ToArray());
     }
 
     public async Task<bool> SetSeatAsync(Guid subscriptionId, Guid studentId, bool isSuspended, CancellationToken ct = default)
     {
         var scope = await RequireScopeAsync(ct);
         if (subscriptionId == Guid.Empty || studentId == Guid.Empty) return false;
-        if (!isSuspended && !scope.StudentIds!.Contains(studentId)) throw Forbidden();
+        // Seats follow membership, not progress sharing: a student who hides their progress still takes a seat.
+        if (!isSuspended && !scope.StudentIds!.Contains(studentId)
+            && !(await MemberIdsAsync(scope.InstitutionId!.Value, [studentId], ct)).Contains(studentId)) throw Forbidden();
         var attempts = 0;
         return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () => {
             if (attempts++ > 0) db.ChangeTracker.Clear();
@@ -62,6 +66,12 @@ public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db,
             }
         });
     }
+
+    private async Task<HashSet<Guid>> MemberIdsAsync(Guid institutionId, Guid[] studentIds, CancellationToken ct) =>
+        (await db.CoachingInstitutionMemberships.AsNoTracking().Where(member => member.InstitutionId == institutionId
+            && member.Role == CoachingMemberRole.Student && member.IsActive && Enumerable.Contains(studentIds, member.UserId)
+            && db.CoachingStudentProfiles.Any(profile => profile.UserId == member.UserId && profile.IsActive))
+            .Select(member => member.UserId).ToArrayAsync(ct)).ToHashSet();
 
     private IQueryable<CoachingSubscription> ActiveSubscriptions(Guid institutionId)
     {

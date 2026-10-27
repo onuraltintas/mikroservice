@@ -44,6 +44,7 @@ public static class NotificationReceiveEndpoints
         new("coaching-weekly-decision-changed", typeof(WeeklyDecisionChangedConsumer)),
         new("coaching-reminder-due", typeof(CoachingReminderDueConsumer)),
         new("coaching-subscription-notice", typeof(CoachingSubscriptionNoticeConsumer)),
+        new("coaching-teacher-link-ended", typeof(CoachingTeacherLinkEndedConsumer)),
         new("course-management-lesson-scheduled", typeof(CourseManagementLessonScheduledConsumer), CourseManagement: true),
         new("course-management-lesson-rescheduled", typeof(CourseManagementLessonRescheduledConsumer), CourseManagement: true),
         new("course-management-lesson-cancelled", typeof(CourseManagementLessonCancelledConsumer), CourseManagement: true),
