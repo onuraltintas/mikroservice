@@ -143,6 +143,36 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
         }
     }
 
+    [Fact]
+    public async Task SubmittedAssignmentsAreCancelledNotDeletedAndStudentsAreToldEitherWay()
+    {
+        await using var context = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString("N")).Options);
+        var teacherId = Guid.NewGuid(); var first = Guid.NewGuid(); var second = Guid.NewGuid();
+        var submitted = Assignment.Create(teacherId, "Teslim alınan ödev", DateTime.UtcNow.AddDays(1));
+        submitted.AssignToStudent(first); submitted.AssignToStudent(second); submitted.SubmitAssignment(first, "Bitti");
+        var untouched = Assignment.Create(teacherId, "Henüz teslim yok", DateTime.UtcNow.AddDays(1)); untouched.AssignToStudent(second);
+        context.Assignments.AddRange(submitted, untouched); await context.SaveChangesAsync();
+        var publisher = new RecordingPublisher();
+        var delete = new DeleteAssignmentCommandHandler(new AssignmentRepository(context), new UnitOfWork(context), new TeacherAccessPolicy(teacherId),
+            new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = Path.GetTempPath() })),
+            publisher, NullLogger<DeleteAssignmentCommandHandler>.Instance, new AllowTeacherRecords());
+
+        var refused = await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => delete.Handle(new DeleteAssignmentCommand(submitted.Id), default));
+        refused.Code.Should().Be("Assignment.HasSubmissions");
+        (await context.Assignments.CountAsync()).Should().Be(2);
+
+        await delete.Handle(new DeleteAssignmentCommand(untouched.Id), default);
+        publisher.All.OfType<EduPlatform.Shared.Contracts.Events.Coaching.AssignmentCancelledEvent>()
+            .Should().ContainSingle(x => x.AssignmentId == untouched.Id && x.StudentIds.SequenceEqual(new[] { second }) && x.Title == "Henüz teslim yok");
+
+        var cancel = new Coaching.Application.Commands.CancelAssignment.CancelAssignmentCommandHandler(new AssignmentRepository(context), new UnitOfWork(context),
+            new TeacherAccessPolicy(teacherId), new AllowTeacherRecords(), publisher);
+        await cancel.Handle(new Coaching.Application.Commands.CancelAssignment.CancelAssignmentCommand(submitted.Id), default);
+        (await context.Assignments.SingleAsync()).Status.Should().Be(Coaching.Domain.Enums.AssignmentStatus.Cancelled);
+        publisher.All.OfType<EduPlatform.Shared.Contracts.Events.Coaching.AssignmentCancelledEvent>()
+            .Should().Contain(x => x.AssignmentId == submitted.Id && x.StudentIds.Length == 2);
+    }
+
     private sealed class TeacherAccessPolicy(Guid teacherId) : ICoachingAccessPolicy
     {
         public Guid? CurrentUserId => teacherId;
@@ -179,10 +209,12 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
     private sealed class RecordingPublisher : ICoachingEventPublisher
     {
         public List<AssignmentAttachmentDeletionRequested> Messages { get; } = [];
+        public List<object> All { get; } = [];
 
         public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default)
             where T : class
         {
+            All.Add(message);
             if (message is AssignmentAttachmentDeletionRequested deletion)
                 Messages.Add(deletion);
             return Task.CompletedTask;

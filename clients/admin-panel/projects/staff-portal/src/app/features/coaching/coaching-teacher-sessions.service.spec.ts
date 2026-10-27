@@ -81,12 +81,12 @@ describe('CoachingTeacherSessionsService', () => {
   });
 
   it('saves teacher attendance against the selected student', () => {
-    service.updateAttendance('session-1', 'student-1', false).subscribe();
+    service.updateAttendance('session-1', 'student-1', 'Late').subscribe();
 
     const request = http.expectOne('/api/sessions/session-1/attendance');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({
-      sessionId: 'session-1', studentId: 'student-1', attended: false, notes: null
+      sessionId: 'session-1', studentId: 'student-1', attended: true, status: 'Late', notes: null
     });
     request.flush({ message: 'Attendance updated successfully' });
   });

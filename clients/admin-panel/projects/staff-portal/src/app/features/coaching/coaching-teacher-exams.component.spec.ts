@@ -184,6 +184,19 @@ describe('CoachingTeacherExamsComponent', () => {
     expect(exams.addExamResult).not.toHaveBeenCalled();
   });
 
+  it('removes one result after confirmation and keeps the exam and the other results', async () => {
+    const exams = examsService([{ ...exam('exam-1'), resultCount: 2 }]);
+    exams.getExamDetail.mockReturnValue(of(examDetail('exam-1', [result('result-1'), { ...result('result-2'), studentId: 'student-2' }])));
+    const fixture = createFixture(exams);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.openResults({ ...exam('exam-1'), resultCount: 2 });
+    await component.removeExamResult(result('result-1'));
+    expect(exams.deleteExamResult).toHaveBeenCalledWith('exam-1', 'result-1');
+    expect(component.examDetail()!.results.map(x => x.id)).toEqual(['result-2']);
+    expect(component.exams()[0].resultCount).toBe(1);
+  });
+
   it('edits existing subject scores using rows and clears removed subjects', () => {
     const exams = examsService([exam('exam-1')]);
     const fixture = createFixture(exams);
@@ -268,7 +281,8 @@ function examsService(items: CoachingTeacherExam[]) {
     updateExam: vi.fn(() => of({ examId: 'exam-1', examDate: '2030-01-05T10:00:00Z', maxScore: 100 })),
     getExamDetail: vi.fn(() => of(examDetail('exam-1', []))),
     addExamResult: vi.fn(() => of({ message: 'ok' })),
-    updateExamResult: vi.fn(() => of({ examId: 'exam-1', resultId: 'result-1', score: 85 }))
+    updateExamResult: vi.fn(() => of({ examId: 'exam-1', resultId: 'result-1', score: 85 })),
+    deleteExamResult: vi.fn(() => of(undefined))
   };
 }
 

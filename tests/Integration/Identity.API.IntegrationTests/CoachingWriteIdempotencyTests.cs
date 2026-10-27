@@ -263,6 +263,100 @@ public sealed class CoachingWriteIdempotencyTests
         cancellation.StudentIds.Should().BeEquivalentTo(new[] { firstStudentId, secondStudentId });
     }
 
+    [Fact]
+    public async Task Attendance_IsRefusedForCancelledAndNotYetStartedSessions()
+    {
+        var (repository, handler, _) = AttendanceHandler();
+        var future = CoachingSession.Create(Guid.NewGuid(), "Gelecek", DateTime.UtcNow.AddHours(2), SessionType.OneOnOne);
+        var cancelled = CoachingSession.Create(Guid.NewGuid(), "İptal", DateTime.UtcNow.AddHours(3), SessionType.OneOnOne);
+        var student = Guid.NewGuid(); future.AddStudent(student); cancelled.AddStudent(student); cancelled.Cancel();
+        repository.Items.AddRange([future, cancelled]);
+
+        var early = await Assert.ThrowsAsync<BusinessRuleException>(() => handler.Handle(new(future.Id, true, null, student), default));
+        early.Code.Should().Be("Session.AttendanceNotAllowed");
+        var late = await Assert.ThrowsAsync<BusinessRuleException>(() => handler.Handle(new(cancelled.Id, true, null, student), default));
+        late.Message.Should().Contain("İptal");
+        future.Attendances.Single().AttendanceStatus.Should().Be(AttendanceStatus.NotRecorded);
+    }
+
+    [Fact]
+    public async Task Attendance_AcceptsLateAndExcusedAndClosesTheSessionOnceEveryStudentIsRecorded()
+    {
+        var (repository, handler, _) = AttendanceHandler();
+        var session = CoachingSession.Create(Guid.NewGuid(), "Grup", DateTime.UtcNow.AddHours(-1), SessionType.Group);
+        var first = Guid.NewGuid(); var second = Guid.NewGuid(); session.AddStudents([first, second]);
+        repository.Items.Add(session);
+
+        await handler.Handle(new(session.Id, true, null, first) { Status = "Late" }, default);
+        session.Status.Should().Be(SessionStatus.Scheduled);
+        await handler.Handle(new(session.Id, false, null, second) { Status = "Excused" }, default);
+        session.Attendances.Select(x => x.AttendanceStatus).Should().BeEquivalentTo([AttendanceStatus.Late, AttendanceStatus.Excused]);
+        session.Status.Should().Be(SessionStatus.Completed);
+
+        var absent = CoachingSession.Create(Guid.NewGuid(), "Gelmeyen", DateTime.UtcNow.AddHours(-2), SessionType.OneOnOne);
+        absent.AddStudent(first); repository.Items.Add(absent);
+        await handler.Handle(new(absent.Id, false, null, first), default);
+        absent.Status.Should().Be(SessionStatus.Completed);
+        await Assert.ThrowsAsync<ValidationException>(() => handler.Handle(new(absent.Id, false, null, first) { Status = "Maybe" }, default));
+    }
+
+    [Fact]
+    public async Task DeletingASession_KeepsHeldSessionsAndAnnouncesAFutureOneAsCancelled()
+    {
+        var repository = new InMemorySessionRepository(); var publisher = new NoopCoachingEventPublisher();
+        var handler = new Coaching.Application.Commands.DeleteSession.SessionDeleteHandlers(repository, new CountingUnitOfWork(),
+            new AllowTeacherPolicy(), publisher, new AllowIdentityAuthorizationClient());
+        var student = Guid.NewGuid();
+        var held = CoachingSession.Create(Guid.NewGuid(), "Yapıldı", DateTime.UtcNow.AddHours(-3), SessionType.OneOnOne); held.AddStudent(student);
+        held.RecordAttendance(student, AttendanceStatus.Present, null, DateTime.UtcNow);
+        var future = CoachingSession.Create(Guid.NewGuid(), "Gelecek", DateTime.UtcNow.AddDays(2), SessionType.OneOnOne); future.AddStudent(student);
+        repository.Items.AddRange([held, future]);
+
+        var refused = await Assert.ThrowsAsync<BusinessRuleException>(() =>
+            handler.Handle(new Coaching.Application.Commands.DeleteSession.DeleteSessionCommand(held.Id), default));
+        refused.Code.Should().Be("Session.HasHistory"); repository.Items.Should().Contain(held);
+
+        await handler.Handle(new Coaching.Application.Commands.DeleteSession.DeleteSessionCommand(future.Id), default);
+        repository.Items.Should().NotContain(future);
+        publisher.Messages.OfType<SessionCancelledEvent>().Should().ContainSingle(x => x.SessionId == future.Id && x.StudentIds.Contains(student));
+    }
+
+    [Fact]
+    public async Task DeletingAnExamWithResultsIsRefusedAndTeachersCanRemoveASingleResult()
+    {
+        var teacher = Guid.NewGuid(); var student = Guid.NewGuid();
+        var exam = Exam.Create(teacher, "Deneme", ExamType.Mock, DateTime.UtcNow.AddDays(-1), 100m);
+        var result = ExamResult.Create(exam.Id, student, 70m); exam.AddResult(result);
+        var repository = new InMemoryExamRepository(); repository.Items.Add(exam);
+        var delete = new Coaching.Application.Commands.DeleteExam.DeleteExamCommandHandler(repository, new CountingUnitOfWork(), new AllowTeacherPolicy(), new AllowIdentityAuthorizationClient());
+        var refused = await Assert.ThrowsAsync<BusinessRuleException>(() => delete.Handle(new(exam.Id), default));
+        refused.Code.Should().Be("Exam.HasResults"); repository.Items.Should().Contain(exam);
+
+        var mediator = new CapturingMediator();
+        var controller = new Coaching.API.Controllers.ExamsController(mediator, Microsoft.Extensions.Logging.Abstractions.NullLogger<Coaching.API.Controllers.ExamsController>.Instance);
+        (await controller.DeleteResult(exam.Id, result.Id, default)).Should().BeOfType<Microsoft.AspNetCore.Mvc.NoContentResult>();
+        mediator.Sent.OfType<Coaching.Application.Commands.DeleteExamResult.DeleteExamResultCommand>().Should().ContainSingle(x => x.ExamId == exam.Id && x.ResultId == result.Id);
+    }
+
+    private static (InMemorySessionRepository, Coaching.Application.Commands.UpdateSessionAttendance.UpdateSessionAttendanceCommandHandler, CountingUnitOfWork) AttendanceHandler()
+    {
+        var repository = new InMemorySessionRepository(); var unit = new CountingUnitOfWork();
+        return (repository, new Coaching.Application.Commands.UpdateSessionAttendance.UpdateSessionAttendanceCommandHandler(repository, unit,
+            new AllowTeacherPolicy(), new AllowIdentityAuthorizationClient()), unit);
+    }
+
+    private sealed class CapturingMediator : MediatR.IMediator
+    {
+        public List<object> Sent { get; } = [];
+        public Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request, CancellationToken cancellationToken = default) { Sent.Add(request); return Task.FromResult(default(TResponse)!); }
+        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : MediatR.IRequest { Sent.Add(request); return Task.CompletedTask; }
+        public Task<object?> Send(object request, CancellationToken cancellationToken = default) { Sent.Add(request); return Task.FromResult<object?>(null); }
+        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(MediatR.IStreamRequest<TResponse> request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task Publish(object notification, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : MediatR.INotification => Task.CompletedTask;
+    }
+
     private sealed class InMemoryIdempotencyRepository : IIdempotencyRepository
     {
         private readonly Dictionary<(string Scope, string Key), IdempotencyRecord> _records = [];
