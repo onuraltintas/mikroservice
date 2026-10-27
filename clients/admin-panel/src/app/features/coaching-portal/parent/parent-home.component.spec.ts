@@ -30,7 +30,7 @@ describe('ParentHomeComponent', () => {
     await component.submit();
     expect(service.requestLink).toHaveBeenCalledWith('abcd-2345', 'Father');
     expect(service.getLinks).toHaveBeenCalledTimes(2);
-    service.requestLink.mockReturnValueOnce(throwError(() => ({ error: { error: { message: 'Kod geçersiz veya süresi dolmuş.' } } })) as never);
+    service.requestLink.mockReturnValueOnce(throwError(() => ({ error: { error: { description: 'Kod geçersiz veya süresi dolmuş.' } } })) as never);
     component.code = 'WXYZ-9999'; await component.submit();
     expect(component.error()).toContain('Kod geçersiz');
   });

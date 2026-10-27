@@ -2,12 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { CoachingParentService } from '../parent/coaching-parent.service';
+import { CoachingParentService, ParentLink } from '../parent/coaching-parent.service';
 import { StudentParentLinksComponent } from './student-parent-links.component';
 
 // Roadmap Y7: the student hands a code to the parent and approves the link request.
 describe('StudentParentLinksComponent', () => {
-  const pending = { id: 'link-1', parentName: 'Ayşe Veli', relationship: 'Mother', status: 'Pending', studentUserId: 'me', requestedAt: '2026-11-01T00:00:00Z' };
+  const pending: ParentLink = { id: 'link-1', parentUserId: 'parent-1', parentName: 'Ayşe Veli', relationship: 'Mother', status: 'Pending', studentUserId: 'me', studentName: 'Ada Öğrenci', requestedAt: '2026-11-01T00:00:00Z' };
   function setup(service: object) {
     TestBed.configureTestingModule({ imports: [StudentParentLinksComponent], providers: [{ provide: CoachingParentService, useValue: service },
       { provide: ToasterService, useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } }] });

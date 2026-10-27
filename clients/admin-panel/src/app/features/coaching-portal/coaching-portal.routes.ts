@@ -1,5 +1,14 @@
 import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
 import { coachingRoleGuard } from '../../core/auth/auth.guard';
+import { AuthService, hasRole } from '../../core/auth/auth.service';
+
+/** A parent who is not also a student starts on the parent panel. */
+const parentHomeRedirect: CanActivateFn = () => {
+  const profile = inject(AuthService).userProfile();
+  return hasRole(profile, 'Parent') && !hasRole(profile, 'Student') ? inject(Router).createUrlTree(['/coaching-portal/parent']) : true;
+};
 import type { StudentStudyPlansComponent } from './pages/student-study-plans.component';
 import type { StudentStudyRoutineComponent } from './pages/student-study-routine.component';
 import type { CoachingPortalProgressComponent } from './pages/coaching-portal-progress.component';
@@ -59,7 +68,17 @@ export const COACHING_PORTAL_ROUTES: Routes = [
   },
   {
     path: '',
+    canActivate: [parentHomeRedirect],
     loadComponent: () => import('./pages/coaching-portal-home.component').then(m => m.CoachingPortalHomeComponent)
+  },
+  // Roadmap Y7: the parent's read-only panel.
+  {
+    path: 'parent', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },
+    loadComponent: () => import('./parent/parent-home.component').then(m => m.ParentHomeComponent)
+  },
+  {
+    path: 'parent/children/:studentId', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },
+    loadComponent: () => import('./parent/parent-child.component').then(m => m.ParentChildComponent)
   },
   {
     path: 'teacher',

@@ -6,7 +6,15 @@
       <span class="brand-symbol">E<span></span></span><span><strong>eduivme<span>.</span></strong><small>Öğrenci Koçluğu</small></span>
     </a>
     <button class="coaching-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"><app-coaching-icon name="close" /></button>
-    <nav aria-label="Koçluk menüsü" class="coaching-navigation" *ngIf="isStudent()">
+    <nav aria-label="Veli menüsü" class="coaching-navigation" *ngIf="isParent()">
+      <section class="coaching-nav-group">
+        <h2>Veli paneli</h2>
+        <a *ngFor="let link of parentLinks" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" (click)="closeMenu()">
+          <app-coaching-icon [name]="link.icon" /><span>{{ link.label }}</span>
+        </a>
+      </section>
+    </nav>
+    <nav aria-label="Koçluk menüsü" class="coaching-navigation" *ngIf="isStudent() && !isParent()">
       <section *ngFor="let group of navigation()" class="coaching-nav-group">
         <h2>{{ group.label }}</h2>
         <a *ngFor="let link of group.links" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" (click)="closeMenu()">
@@ -14,8 +22,8 @@
         </a>
       </section>
     </nav>
-    <div class="coaching-sidebar-note"><app-coaching-icon name="spark" /><p>Küçük adımlar.<br><strong>Kalıcı alışkanlıklar.</strong></p><a routerLink="/coaching-portal/study-plans" (click)="closeMenu()">Kendi ritmini oluştur <app-coaching-icon name="arrow" /></a></div>
-    <div class="coaching-profile"><span class="coaching-avatar">{{ initials() }}</span><span><strong>{{ user()?.firstName || 'Öğrenci' }} {{ user()?.lastName }}</strong><small>Öğrenci hesabı</small></span><button type="button" (click)="logout()" aria-label="Çıkış" title="Çıkış"><app-coaching-icon name="logout" /></button></div>
+    <div class="coaching-sidebar-note" *ngIf="!isParent()"><app-coaching-icon name="spark" /><p>Küçük adımlar.<br><strong>Kalıcı alışkanlıklar.</strong></p><a routerLink="/coaching-portal/study-plans" (click)="closeMenu()">Kendi ritmini oluştur <app-coaching-icon name="arrow" /></a></div>
+    <div class="coaching-profile"><span class="coaching-avatar">{{ initials() }}</span><span><strong>{{ user()?.firstName || 'Öğrenci' }} {{ user()?.lastName }}</strong><small>{{ isParent() ? 'Veli hesabı' : 'Öğrenci hesabı' }}</small></span><button type="button" (click)="logout()" aria-label="Çıkış" title="Çıkış"><app-coaching-icon name="logout" /></button></div>
   </aside>
   <div class="coaching-body">
     <header class="coaching-topbar">

@@ -371,7 +371,8 @@ export class AuthService implements OnDestroy {
 
     getLandingRoute(): string {
         const role = this.userProfile()?.role;
-        return ['Student', 'Teacher', 'Parent'].includes(role ?? '')
+        if (role === 'Parent') return '/coaching-portal/parent';
+        return ['Student', 'Teacher'].includes(role ?? '')
             ? '/coaching-portal'
             : '/dashboard';
     }

@@ -13,9 +13,9 @@ describe('ParentChildComponent', () => {
     return {
       getLinks: vi.fn(() => of([link])),
       getProgress: vi.fn(() => of({ totalAssignments: 4, submittedAssignments: 3, totalSessions: 2, attendedSessions: 2, upcomingSessions: 1, totalExams: 1 })),
-      getExams: vi.fn(() => of({ items: [{ examTitle: 'TYT Deneme 3', examDate: '2026-11-07T06:00:00Z', score: 87.5, maxScore: 120 }] })),
-      getAssignments: vi.fn(() => of({ items: [{ title: 'Paragraf', dueDate: '2026-11-04T15:00:00Z', status: 'Submitted' }] })),
-      getSessions: vi.fn(() => of({ items: [{ title: 'Haftalık görüşme', scheduledDate: '2026-11-04T07:00:00Z', status: 'Completed' }] })),
+      getExams: vi.fn(() => of({ items: [{ examId: 'e-1', examTitle: 'TYT Deneme 3', examDate: '2026-11-07T06:00:00Z', examType: 'Mock', score: 87.5, maxScore: 120 }] })),
+      getAssignments: vi.fn(() => of({ items: [{ id: 'a-1', title: 'Paragraf', dueDate: '2026-11-04T15:00:00Z', status: 'Submitted', isOverdue: false }] })),
+      getSessions: vi.fn(() => of({ items: [{ id: 's-1', subject: 'Haftalık görüşme', startTime: '2026-11-04T07:00:00Z', status: 'Completed', type: 'OneOnOne' }] })),
       getFees: vi.fn(() => of({ balance: 600, overdueAmount: 0, agreements: [] })),
       getAccess: vi.fn(() => of({ hasAccess: false, enforcementEnabled: true, subscriptions: [] })),
       getTransfers: vi.fn(() => of([])),
