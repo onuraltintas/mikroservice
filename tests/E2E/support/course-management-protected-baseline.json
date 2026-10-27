@@ -40,7 +40,7 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-assignments.service.ts": "2a216fdadc4df33ee9706fbbe40315e71dcc0c5387aa902c8dd5f4807ae0f59b",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-exams.component.html": "b4274a8663f96a940fcd06df7817c4216520130fee79ed1ec30fbbe2dc84120a",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-exams.component.scss": "d630a117fd035d7c56f537c9421b36f62ab037a28102bece5bc738df31e21d71",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-exams.component.spec.ts": "24ed1df6eecaf3ae50e47bd4b5d7fa97aa8c9b032ac6f9d954892b78186ae568",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-exams.component.spec.ts": "f8ec2396dc297a650018426790923e2ad8bed917d2d5e2ae647369f257d0be50",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-exams.component.ts": "f04c9aec63195c101acb08d39d7cdbb960afe243fda0591fdb1b3b21802ad0f0",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-exams.service.spec.ts": "b23d7eabf7469b175a1ed8531544c9fae2128eb7ac6cf10fdeaebbaaac5309f2",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-exams.service.ts": "0b0450364490895e94fcde1203d27aaa4016a4b1dd2a787d848eedd67f26e76c",
@@ -2598,7 +2598,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "01a47f8f",
+    "previousBaselineCommit": "45cd57f1",
     "removedSincePreviousBaseline": []
   }
 }
