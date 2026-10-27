@@ -1,9 +1,9 @@
 @if (auth.isAuthenticated()) {
-  <div class="portal-shell" [class.coaching-shell]="isTeacherWorkspaceSelected" [class.coaching-staff-shell]="isTeacherWorkspaceSelected" [class.menu-open]="menuOpen()">
+  <div class="portal-shell" [class.coaching-shell]="isTeacherWorkspaceSelected" [class.coaching-staff-shell]="isTeacherWorkspaceSelected" [class.staff-phone-menu]="hasPhoneMenu" [class.menu-open]="menuOpen()">
     @if (isTeacherWorkspaceSelected) { <a class="teacher-skip" href="#teacher-main">İçeriğe geç</a> }
-    @if (isTeacherWorkspaceSelected && menuOpen()) { <button class="teacher-scrim" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"></button> }
-    <aside class="sidebar" aria-label="Personel portalı" [attr.role]="isTeacherWorkspaceSelected && menuOpen() ? 'dialog' : null" [attr.aria-modal]="isTeacherWorkspaceSelected && menuOpen() ? 'true' : null" [cdkTrapFocus]="isTeacherWorkspaceSelected && menuOpen()" [cdkTrapFocusAutoCapture]="isTeacherWorkspaceSelected && menuOpen()">
-      @if (isTeacherWorkspaceSelected && menuOpen()) { <button class="teacher-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"><app-coaching-icon name="close" /></button> }
+    @if (hasPhoneMenu && menuOpen()) { <button class="teacher-scrim" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"></button> }
+    <aside class="sidebar" aria-label="Personel portalı" [attr.role]="hasPhoneMenu && menuOpen() ? 'dialog' : null" [attr.aria-modal]="hasPhoneMenu && menuOpen() ? 'true' : null" [cdkTrapFocus]="hasPhoneMenu && menuOpen()" [cdkTrapFocusAutoCapture]="hasPhoneMenu && menuOpen()">
+      @if (hasPhoneMenu && menuOpen()) { <button class="teacher-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"><app-coaching-icon name="close" /></button> }
       <a class="brand" href="/staff/" aria-label="Eduİvme personel portalı ana sayfa">
         <span class="brand-symbol">İ</span>
         <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
@@ -42,7 +42,7 @@
 
     <main class="main-area" [class.coaching-body]="isTeacherWorkspaceSelected" id="teacher-main" tabindex="-1">
       <header class="topbar">
-        @if (isTeacherWorkspaceSelected) { <button #teacherMenuToggle class="teacher-menu-toggle" type="button" aria-label="Personel menüsünü aç" [attr.aria-expanded]="menuOpen()" (click)="menuOpen.set(!menuOpen())"><app-coaching-icon name="menu" /></button> }
+        @if (hasPhoneMenu) { <button #teacherMenuToggle class="teacher-menu-toggle" type="button" aria-label="Personel menüsünü aç" [attr.aria-expanded]="menuOpen()" (click)="menuOpen.set(!menuOpen())"><app-coaching-icon name="menu" /></button> }
         <div class="breadcrumb"><span>Personel portalı</span><span aria-hidden="true">/</span><strong>{{ currentProductLabel }}</strong></div>
         <div class="topbar-actions">
           @if (isTeacherWorkspaceSelected) { <button class="teacher-theme-toggle" type="button" [attr.aria-label]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" (click)="theme.toggle()"><app-coaching-icon [name]="theme.isDarkMode() ? 'sun' : 'moon'" /></button> }

@@ -26,22 +26,7 @@
       </div>
     }
 
-    <nav class="institution-tabs" aria-label="Koçluk kurum işlemleri">
-      <button type="button" data-testid="institution-finance-tab" [attr.aria-pressed]="activeSection() === 'finance'" [class.active]="activeSection() === 'finance'" (click)="selectSection('finance')">Tahsilat hareketleri</button>
-      <button type="button" data-testid="institution-overview-tab"
-        [attr.aria-pressed]="activeSection() === 'overview'"
-        [class.active]="activeSection() === 'overview'" (click)="selectSection('overview')">Genel bakış</button>
-      <button type="button" data-testid="institution-students-tab"
-        [attr.aria-pressed]="activeSection() === 'students'"
-        [class.active]="activeSection() === 'students'" (click)="selectSection('students')">Öğrenciler</button>
-      <button type="button" data-testid="institution-teachers-tab"
-        [attr.aria-pressed]="activeSection() === 'teachers'"
-        [class.active]="activeSection() === 'teachers'" (click)="selectSection('teachers')">Öğretmenler</button>
-      <button type="button" data-testid="institution-analytics-tab"
-        [attr.aria-pressed]="activeSection() === 'analytics'"
-        [class.active]="activeSection() === 'analytics'" (click)="selectSection('analytics')">Analiz ve uyarılar</button>
-      <button type="button" data-testid="institution-subscription-tab" [attr.aria-pressed]="activeSection() === 'subscription'" [class.active]="activeSection() === 'subscription'" (click)="selectSection('subscription')">Abonelik ve kontenjan</button>
-    </nav>
+    <staff-section-nav label="Kurum bölümleri" [groups]="sectionGroups" [active]="activeSection()" (select)="chooseSection($event)" />
 
     @if (activeSection() === 'subscription') {
       <staff-coaching-institution-subscription [institutionId]="institutionId()!" />

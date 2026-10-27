@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { ChangeDetectorRef } from '@angular/core';
 import { ExistingProductJoinComponent } from './existing-product-join.component';
+import { environment } from '../../../environments/environment';
 
 describe('ExistingProductJoinComponent', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [{ provide: ChangeDetectorRef, useValue: { markForCheck: () => {} } }] }));
@@ -77,7 +78,7 @@ describe('ExistingProductJoinComponent', () => {
       expect(req.request.body.legalAcceptances.length).toBe(3);
       req.flush({ userId: 'preserved-user-id' });
       expect(c.joined).toBe(true); expect(c.loading).toBe(false);
-      expect(c.loginUrl).toContain(account === 'student' ? '/auth/login' : '/staff/');
+      expect(c.loginUrl).toContain(account === 'student' ? '/auth/login' : environment.staffPortalUrl);
       http.verify();
     });
   }

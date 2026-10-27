@@ -39,6 +39,7 @@ describe('O2 staff addresses', () => {
 
 describe('O2 teacher workspace', () => {
   function workspace(path = '/') {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({ providers: [provideLocationMocks(), StaffLocationService] });
     const location = TestBed.inject(Location) as SpyLocation; location.replaceState(path);
     const component = TestBed.runInInjectionContext(() => new CoachingTeacherWorkspaceComponent());
@@ -111,6 +112,7 @@ describe('O2 grouped section menu', () => {
 
 describe('O2 portal shell', () => {
   function app(path: string, roles: string[] = ['Teacher', 'InstitutionAdmin'], products: StaffProductAccess['product'][] = ['coaching']) {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({ providers: [provideLocationMocks(), StaffLocationService, { provide: StaffAuthService, useValue: {
       products: signal<StaffProductAccess[]>(products.map(product => ({ product, roles }))), activeProduct: signal(products[0]), isAuthenticated: () => true } }, { provide: ChangeDetectorRef, useValue: { markForCheck: vi.fn() } }] });
     const location = TestBed.inject(Location) as SpyLocation; location.replaceState(path);
