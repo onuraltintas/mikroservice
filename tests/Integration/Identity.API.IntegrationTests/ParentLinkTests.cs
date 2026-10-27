@@ -108,6 +108,29 @@ public sealed class ParentLinkTests
             .Should().Be((parent.Id, "parent@example.test", student.Id, "Ada Öğrenci"));
     }
 
+    // Roadmap O3: Coaching asks for verified links by child (a teacher's message contacts) or by parent (a parent's children).
+    [Fact]
+    public async Task VerifiedLinksAreListedByChildOrByParent()
+    {
+        await using var context = CreateContext(); var clock = new Clock();
+        var (parent, student, otherParent) = AddUsers(context); await context.SaveChangesAsync();
+        var links = new ParentLinkService(context, clock);
+        var verified = (await links.RequestAsync(parent.Id, (await links.CreateCodeAsync(student.Id, default)).Value.Code, ParentRelationship.Mother, default)).Value;
+        await links.ApproveAsync(student.Id, verified.Id, default);
+        await links.RequestAsync(otherParent.Id, (await links.CreateCodeAsync(student.Id, default)).Value.Code, ParentRelationship.Father, default);
+
+        var byChild = (await links.GetVerifiedLinksAsync([student.Id], null, default)).Should().ContainSingle().Subject;
+        (byChild.ParentUserId, byChild.ParentName, byChild.StudentUserId, byChild.StudentName, byChild.Relationship)
+            .Should().Be((parent.Id, "Ayşe Veli", student.Id, "Ada Öğrenci", "Mother"));
+        (await links.GetVerifiedLinksAsync([], parent.Id, default)).Should().ContainSingle(x => x.StudentUserId == student.Id);
+        (await links.GetVerifiedLinksAsync([], otherParent.Id, default)).Should().BeEmpty("a pending link is not a link yet");
+
+        await links.RevokeAsync(student.Id, verified.Id, default);
+        (await links.GetVerifiedLinksAsync([student.Id], null, default)).Should().BeEmpty();
+        typeof(InternalCoachingController).GetMethod(nameof(InternalCoachingController.GetParentLinks))!
+            .GetCustomAttributes(typeof(Identity.API.InternalServiceKeyAttribute), true).Should().ContainSingle();
+    }
+
     [Theory]
     [InlineData(nameof(ParentLinksController.CreateCode), "Student")]
     [InlineData(nameof(ParentLinksController.RequestLink), "Parent")]
