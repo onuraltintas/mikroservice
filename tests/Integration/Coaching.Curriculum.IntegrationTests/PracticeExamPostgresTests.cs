@@ -28,9 +28,15 @@ public sealed class PracticeExamPostgresTests
         var legacyResult = ExamResult.Create(legacy.Id, student, 80); legacyResult.SetAnswerStatistics(8, 1, 1);
         legacyResult.SetSubjectScores(new() { ["Matematik"] = 80 }, 100); legacy.AddResult(legacyResult);
         var goal = AcademicGoal.Create(student, "Mevcut hedef", GoalCategory.ExamPreparation);
-        f.Db.AddRange(legacy, goal); await f.Db.SaveChangesAsync();
+        // The legacy exam is written on the older schema, before the institution-wide exam columns (roadmap O4).
+        await using (var data = new LegacyExamSchemaDbContext(f.Db.Database.GetConnectionString()!))
+        {
+            data.AddRange(legacy, goal); await data.SaveChangesAsync();
+        }
         f.Db.ChangeTracker.Clear();
-        var original = await f.Db.Exams.AsNoTracking().Include(x => x.Results).SingleAsync(x => x.Id == legacy.Id);
+        Exam original;
+        await using (var data = new LegacyExamSchemaDbContext(f.Db.Database.GetConnectionString()!))
+            original = await data.Exams.AsNoTracking().Include(x => x.Results).SingleAsync(x => x.Id == legacy.Id);
         var originalResult = original.Results.Single();
         var legacyBefore = JsonSerializer.Serialize(new { original.Id, original.Version, originalResult.Score, originalResult.SubjectScoresJson });
         var taskBefore = JsonSerializer.Serialize(await f.Db.StudyPlanTasks.FromSqlRaw("""SELECT task.*, NULL::uuid AS "CompletionSourceTaskId", '[]'::jsonb AS "RealizationHistoryJson",NULL::integer AS "RemainingMinutes",NULL::integer AS "RemainingQuestions",NULL::uuid AS "PredecessorTaskId",NULL::integer AS "PredecessorVersion",NULL::jsonb AS "ActualWorkJson",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkFromDate",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkToDate",NULL::timestamptz AS "SkippedAt" FROM coaching.study_plan_tasks task""").AsNoTracking().SingleAsync());

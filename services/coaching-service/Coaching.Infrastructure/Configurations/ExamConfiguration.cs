@@ -26,10 +26,16 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
             .HasColumnName("created_by_teacher_id");
 
         builder.Property(x => x.StudentOwnerId).HasColumnName("student_owner_id");
+        // Roadmap O4: an institution-wide exam is owned by the institution (created by an admin), not by one teacher.
+        builder.Property(x => x.CreatedByAdminId).HasColumnName("created_by_admin_id");
+        builder.Property(x => x.PracticeExamCode).HasColumnName("practice_exam_code").HasMaxLength(20);
+        builder.Ignore(x => x.IsInstitutionWide);
         builder.HasIndex(x => new { x.StudentOwnerId, x.ExamDate });
         builder.ToTable("exams", table => table.HasCheckConstraint("ck_exams_creator",
-            "(created_by_teacher_id IS NOT NULL AND student_owner_id IS NULL) OR "
-            + "(created_by_teacher_id IS NULL AND student_owner_id IS NOT NULL AND institution_id IS NULL)"));
+            "(created_by_teacher_id IS NOT NULL AND student_owner_id IS NULL AND created_by_admin_id IS NULL) OR "
+            + "(created_by_teacher_id IS NULL AND student_owner_id IS NOT NULL AND institution_id IS NULL AND created_by_admin_id IS NULL) OR "
+            + "(created_by_admin_id IS NOT NULL AND created_by_teacher_id IS NULL AND student_owner_id IS NULL "
+            + "AND institution_id IS NOT NULL AND practice_exam_code IS NOT NULL)"));
 
         builder.Property(x => x.Title)
             .HasColumnName("title")

@@ -74,7 +74,8 @@ public class CreateExamCommandHandler : IRequestHandler<CreateExamCommand, Creat
             command.ExamDate,
             command.MaxScore,
             institutionId,
-            command.Description
+            command.Description,
+            command.TargetGradeLevel
         );
 
         await _repository.AddAsync(exam, cancellationToken);

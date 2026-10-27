@@ -690,7 +690,7 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
                 && item.Assignment.CreatedAt >= fromDate
                 && item.Assignment.CreatedAt <= toDate
                 && item.Assignment.Status != Domain.Enums.AssignmentStatus.Cancelled
-                && (!gradeLevel.HasValue || item.Assignment.TargetGradeLevel == gradeLevel.Value))
+                && (!gradeLevel.HasValue || item.Assignment.TargetGradeLevel == null || item.Assignment.TargetGradeLevel == gradeLevel.Value))
             .Select(item => new
             {
                 item.AssignmentId,
@@ -712,7 +712,7 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
                 && item.Exam.InstitutionId == institutionId
                 && item.Exam.ExamDate >= fromDate
                 && item.Exam.ExamDate <= toDate
-                && (!gradeLevel.HasValue || item.Exam.TargetGradeLevel == gradeLevel.Value))
+                && (!gradeLevel.HasValue || item.Exam.TargetGradeLevel == null || item.Exam.TargetGradeLevel == gradeLevel.Value))
             .Select(item => new
             {
                 item.ExamId,
@@ -811,7 +811,7 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
                 && item.Assignment.CreatedAt >= fromDate
                 && item.Assignment.CreatedAt <= toDate
                 && item.Assignment.Status != Domain.Enums.AssignmentStatus.Cancelled
-                && (!gradeLevel.HasValue || item.Assignment.TargetGradeLevel == gradeLevel.Value))
+                && (!gradeLevel.HasValue || item.Assignment.TargetGradeLevel == null || item.Assignment.TargetGradeLevel == gradeLevel.Value))
             .Select(item => new
             {
                 item.StudentId,
@@ -848,7 +848,7 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
                 && item.Exam.InstitutionId == institutionId
                 && item.Exam.ExamDate >= fromDate
                 && item.Exam.ExamDate <= toDate
-                && (!gradeLevel.HasValue || item.Exam.TargetGradeLevel == gradeLevel.Value))
+                && (!gradeLevel.HasValue || item.Exam.TargetGradeLevel == null || item.Exam.TargetGradeLevel == gradeLevel.Value))
             .Select(item => new
             {
                 item.StudentId,

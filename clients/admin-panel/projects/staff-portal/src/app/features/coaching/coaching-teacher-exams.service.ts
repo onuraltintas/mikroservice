@@ -55,6 +55,8 @@ export interface CoachingTeacherExamCreateRequest {
   maxScore: number;
   institutionId?: string | null;
   description?: string | null;
+  /** Roadmap O4: the grade the exam is for. */
+  targetGradeLevel?: number | null;
 }
 
 export interface CoachingTeacherExamUpdateRequest {

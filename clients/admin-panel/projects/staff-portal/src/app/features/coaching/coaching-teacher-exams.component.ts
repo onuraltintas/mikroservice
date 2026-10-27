@@ -243,7 +243,8 @@ export class CoachingTeacherExamsComponent implements OnInit {
         type: this.form.type,
         examDate: normalizedDate,
         maxScore: this.form.maxScore,
-        description: this.form.description || null
+        description: this.form.description || null,
+        targetGradeLevel: this.form.targetGradeLevel ?? null
       } satisfies CoachingTeacherExamCreateRequest, this.idempotencyKey('exam'));
 
     operation.pipe(finalize(() => this.isSavingExam.set(false))).subscribe({

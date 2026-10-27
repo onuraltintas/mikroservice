@@ -1,0 +1,15 @@
+.institution-exams { display: grid; gap: 16px; }
+.exam-create { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; align-items: end; }
+.exam-create label, .branch-filter label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 700; }
+.exam-create :is(input, select), .branch-filter select { min-height: 40px; padding: 0 10px; border: 1px solid #d6dfe2; border-radius: 8px; font: inherit; }
+.exam-list { display: grid; gap: 6px; }
+.exam-row { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border: 1px solid #d6dfe2; border-radius: 10px; background: #fff; text-align: left; cursor: pointer; }
+.exam-row.active { border-color: #779372; box-shadow: 0 0 0 2px #e9f1e6; }
+.exam-row span, .hint { color: #5b6b66; font-size: 13px; }
+.exam-import { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.file-button { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid #779372; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.import-preview { padding: 12px; border: 1px solid #d6dfe2; border-radius: 10px; }
+.import-errors { margin: 8px 0; padding-left: 18px; color: #b42318; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 8px; border-bottom: 1px solid #e3e9eb; text-align: left; }

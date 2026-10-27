@@ -21,7 +21,7 @@ export interface StaffPlace {
 
 const products: StaffProduct[] = ['coaching', 'speed-reading', 'course-management'];
 export const COACHING_TEACHER_SECTIONS = ['tracking', 'study', 'students', 'assignments', 'sessions', 'goals', 'exams', 'profile', 'finance', 'subscription'] as const;
-export const COACHING_INSTITUTION_SECTIONS = ['overview', 'students', 'teachers', 'analytics', 'subscription', 'finance'] as const;
+export const COACHING_INSTITUTION_SECTIONS = ['overview', 'students', 'teachers', 'analytics', 'exams', 'subscription', 'finance'] as const;
 
 function sectionsOf(product: StaffProduct, role: StaffWorkspaceRole | null): readonly string[] {
   if (product !== 'coaching' || !role) return [];

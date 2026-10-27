@@ -25,6 +25,8 @@ public sealed class CreateExamCommandValidator : AbstractValidator<CreateExamCom
             .LessThanOrEqualTo(999.99m)
             .WithMessage("Max score must be greater than 0.");
 
+        RuleFor(command => command.TargetGradeLevel).InclusiveBetween(1, 12).When(command => command.TargetGradeLevel.HasValue);
+
         RuleFor(command => command.Description)
             .MaximumLength(2_000)
             .When(command => command.Description is not null);
