@@ -66,6 +66,7 @@ describe('StaffAccountSettingsComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('edu-notification-preferences')).not.toBeNull();
     http.expectOne('/api/notifications/preferences').flush({ data: [{ category: 'Sessions', label: 'Koçluk seansları', inApp: true, email: true }] });
+    http.expectOne('/api/notifications/commercial-consents').flush({ data: [] });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Bildirim tercihleri');
   });
