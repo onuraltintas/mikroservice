@@ -68,7 +68,10 @@ public sealed record CoachingBankTransferRequestSummary(
     string? ReviewNote,
     DateTime CreatedAt,
     int? AdultPayerDeclarationVersion = null,
-    DateTime? AdultPayerDeclaredAt = null);
+    DateTime? AdultPayerDeclaredAt = null,
+    int? DurationDays = null,
+    /// <summary>How many other payers sent a notice with the same receipt number (admin list only).</summary>
+    int DuplicateReferenceCount = 0);
 
 public sealed record CoachingBankTransferRequestCreate(
     Guid PlanId,
@@ -77,6 +80,9 @@ public sealed record CoachingBankTransferRequestCreate(
     string? Note,
     [System.ComponentModel.DataAnnotations.Range(typeof(bool), "true", "true", ErrorMessage = "Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.")]
     bool AdultPayerDeclaration = false);
+
+/// <summary>The payer corrects a notice that is still waiting for review.</summary>
+public sealed record CoachingBankTransferRequestUpdate(string PaymentReference, string? PayerName, string? Note);
 
 public sealed record CoachingBankTransferReviewRequest(string Status, string? ReviewNote);
 public sealed record CoachingBankTransferCancelRequest(string Reason);
@@ -110,7 +116,9 @@ public sealed record CoachingSubscriptionCreateRequest(
     IReadOnlyList<Guid>? StudentIds,
     DateTime StartDate,
     string? Notes,
-    string? PaymentReference = null);
+    string? PaymentReference = null,
+    /// <summary>Money received for a manually granted license; the plan price when omitted.</summary>
+    decimal? Amount = null);
 
 public sealed record CoachingSubscriptionUpdateRequest(string Status, DateTime? EndDate, string? Notes);
 
@@ -124,7 +132,7 @@ public sealed record CoachingSubscriptionAccessSummary(
 
 public sealed record CoachingPaymentSummary(
     Guid Id,
-    Guid UserId,
+    Guid? UserId,
     string UserName,
     string UserEmail,
     string PlanName,
@@ -133,7 +141,8 @@ public sealed record CoachingPaymentSummary(
     string Status,
     string Provider,
     string? Reference,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    Guid? InstitutionId = null);
 
 public sealed record CoachingSubscriptionSeatChangeRequest(bool IsSuspended, string? Reason);
 public sealed record CoachingSubscriptionSeatSummary(Guid StudentId, bool IsSuspended, string? SuspensionReason, DateTime AssignedAt);
@@ -158,6 +167,8 @@ public interface ICoachingSubscription
     Task<CoachingBankTransferRequestSummary?> CreateBankTransferRequestAsync(Guid userId, string? userName, string? userEmail, CoachingBankTransferRequestCreate request, string idempotencyKey, CancellationToken cancellationToken = default);
     Task<CoachingBankTransferRequestSummary?> CreateTeacherBankTransferRequestAsync(Guid userId, string? userName, string? userEmail, CoachingBankTransferRequestCreate request, string idempotencyKey, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<CoachingBankTransferRequestSummary>> GetMyBankTransferRequestsAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<CoachingBankTransferRequestSummary?> UpdateMyBankTransferRequestAsync(Guid userId, Guid id, CoachingBankTransferRequestUpdate request, CancellationToken cancellationToken = default);
+    Task<CoachingBankTransferRequestSummary?> WithdrawMyBankTransferRequestAsync(Guid userId, Guid id, CancellationToken cancellationToken = default);
     Task<PagedResponse<CoachingBankTransferRequestSummary>> GetBankTransferRequestsAsync(string? search, string? status, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<CoachingBankTransferRequestSummary?> ReviewBankTransferRequestAsync(Guid id, CoachingBankTransferReviewRequest request, Guid actorId, string idempotencyKey, CancellationToken cancellationToken = default);
     Task<bool> DeleteBankTransferRequestAsync(Guid id, CancellationToken cancellationToken = default);

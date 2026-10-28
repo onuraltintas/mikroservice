@@ -26,6 +26,31 @@ describe('CoachingManagementService student subscription flow', () => {
     http.verify();
   });
 
+  it('lets the payer correct or withdraw a pending payment notice', () => {
+    const { service, http } = setup();
+    service.updateMyCoachingBankTransferRequest('request/1', { paymentReference: ' EFT-FIXED ', payerName: ' Ada ', note: ' ' }).subscribe(row => expect(row.id).toBe('request/1'));
+    const update = http.expectOne('/api/coaching/subscriptions/bank-transfer-requests/request%2F1');
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body).toEqual({ paymentReference: 'EFT-FIXED', payerName: 'Ada', note: null });
+    update.flush({ success: true, data: { id: 'request/1' } });
+
+    service.withdrawMyCoachingBankTransferRequest('request/1').subscribe(row => expect(row.status).toBe('Withdrawn'));
+    const withdraw = http.expectOne('/api/coaching/subscriptions/bank-transfer-requests/request%2F1/withdraw');
+    expect(withdraw.request.method).toBe('POST');
+    withdraw.flush({ success: true, data: { id: 'request/1', status: 'Withdrawn' } });
+    http.verify();
+  });
+
+  it('records the amount received for a manually granted license', () => {
+    const { service, http } = setup();
+    service.createSubscription({ planId: 'plan-1', userId: 'user-1', userName: null, userEmail: null, institutionId: null, studentIds: [],
+      startDate: '2026-11-01T00:00:00.000Z', notes: null, paymentReference: null, amount: 900 }).subscribe();
+    const request = http.expectOne('/api/coaching-admin/subscriptions');
+    expect(request.request.body.amount).toBe(900);
+    request.flush(null);
+    http.verify();
+  });
+
   it('reads only public Coaching pages, homepage blocks, blog and navigation', () => {
     const { service, http } = setup();
 

@@ -64,6 +64,24 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
     }
 
     [Fact]
+    public async Task ExpiredTransferNotices_TellThePayerToSendANewOne()
+    {
+        var student = Guid.NewGuid();
+        var (provider, dispatcher, mail) = await StartAsync("finans@example.test");
+        var harness = provider.GetRequiredService<ITestHarness>();
+        try
+        {
+            await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.TransferExpired, student, "ada@example.test", "Individual", "EFT-STALE-001"));
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 1 && mail.Messages.Count >= 1);
+            var call = dispatcher.Calls.Single();
+            call.Type.Should().Be("SubscriptionTransferExpired");
+            (call.Title + " " + call.Message).Should().Contain("EFT-STALE-001").And.Contain("yeni");
+            mail.Messages.Should().ContainSingle(x => x.Recipient == "ada@example.test");
+        }
+        finally { await harness.Stop(); await provider.DisposeAsync(); }
+    }
+
+    [Fact]
     public async Task AdminNotices_AreSkippedWhenNoAlertAddressIsConfigured()
     {
         var (provider, dispatcher, mail) = await StartAsync(null);

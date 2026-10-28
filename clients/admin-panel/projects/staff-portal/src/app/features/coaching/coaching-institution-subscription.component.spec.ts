@@ -15,6 +15,19 @@ describe('CoachingInstitutionSubscriptionComponent', () => {
     return fixture;
   }
   afterEach(() => { TestBed.resetTestingModule(); vi.restoreAllMocks(); });
+  it('shows a renewal that starts later and a license that has not started yet', async () => {
+    const mock = service();
+    mock.getSubscription.mockReturnValue(of({ ...summary, upcoming: { subscriptionId: 'subscription-2', planName: 'Kurum yıllık 2027', startsAt: '2027-01-01T00:00:00Z', accessUntil: '2028-01-01T00:00:00Z', includedStudentSeats: 40, usedStudentSeats: 12 } }) as never);
+    const view = await fixture(mock);
+    const upcoming = view.nativeElement.querySelector('[data-testid="institution-upcoming"]') as HTMLElement;
+    expect(upcoming.textContent).toContain('Kurum yıllık 2027'); expect(upcoming.textContent).toContain('01.01.2027'); expect(upcoming.textContent).toContain('12 / 40');
+    TestBed.resetTestingModule();
+
+    const later = service();
+    later.getSubscription.mockReturnValue(of({ ...summary, startsAt: '2027-01-01T00:00:00Z' }) as never);
+    const pending = await fixture(later);
+    expect(pending.nativeElement.textContent).toContain('01.01.2027 tarihinde başlıyor');
+  });
   it('renders capacity and assigns only a roster student', async () => {
     const mock = service(); const view = await fixture(mock);
     expect(view.nativeElement.textContent).toContain('Kurum yıllık'); expect(view.nativeElement.textContent).toContain('Ada Test');

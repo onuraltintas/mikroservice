@@ -127,6 +127,9 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             var assignments = await db.CoachingTeacherStudentAssignments.Where(x => x.InstitutionId == institutionId && x.IsActive
                 && (role == CoachingMemberRole.Student ? x.StudentUserId == userId : x.TeacherUserId == userId)).ToListAsync(ct);
             foreach (var assignment in assignments) assignment.SetActive(false, actorUserId);
+            if (role == CoachingMemberRole.Student)
+                await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.InstitutionId == institutionId), userId,
+                    "Öğrenci kurumdan ayrıldı.", ct);
             // Institution-wide read access (imported from the legacy system) belonged to this institution.
             // It must not carry over to the teacher's next institution.
             if (role == CoachingMemberRole.Teacher
@@ -203,6 +206,9 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             if (rows.Count == 0) throw new KeyNotFoundException("Koçluk bağlantısı bulunamadı.");
             var ended = rows.Where(x => x.IsActive).ToArray();
             foreach (var row in ended) row.SetActive(false, actorUserId);
+            if (ended.Any(x => x.InstitutionId == null))
+                await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.UserId == teacherUserId), studentUserId,
+                    "Öğretmen bağlantısı sona erdi.", ct);
             if (studentInitiated && ended.Length > 0 && events is not null)
                 await events.PublishAsync(new CoachingTeacherLinkEndedEvent(teacherUserId, studentUserId,
                     await StudentNameAsync(studentUserId, ct), CoachingTeacherLinkEndedReasons.StudentLeft), ct);
@@ -294,9 +300,24 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         foreach (var link in independent)
         {
             link.SetActive(false, actorUserId);
+            await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.UserId == link.TeacherUserId), studentUserId,
+                "Öğrenci bir kuruma katıldı.", ct);
             if (events is not null)
                 await events.PublishAsync(new CoachingTeacherLinkEndedEvent(link.TeacherUserId, studentUserId, name,
                     CoachingTeacherLinkEndedReasons.JoinedInstitution), ct);
+        }
+    }
+
+    // A student who leaves frees the seat they held on that license, so it can be given to someone else.
+    private async Task ReleaseSeatsAsync(IQueryable<Coaching.Domain.Entities.CoachingSubscription> licenses, Guid studentUserId,
+        string reason, CancellationToken ct)
+    {
+        var ids = licenses.Select(x => x.Id);
+        foreach (var seat in await db.CoachingSubscriptionSeats.Where(x => x.StudentId == studentUserId && !x.IsSuspended
+            && ids.Contains(x.SubscriptionId)).ToListAsync(ct))
+        {
+            seat.IsSuspended = true;
+            seat.SuspensionReason = reason;
         }
     }
 

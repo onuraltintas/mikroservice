@@ -34,6 +34,8 @@ export interface CoachingTeacherBankTransferRequest {
   amount: number;
   currency: string;
   paymentReference: string;
+  payerName?: string | null;
+  note?: string | null;
   status: string;
   reviewNote: string | null;
   createdAt: string;
@@ -82,6 +84,21 @@ export class CoachingTeacherSubscriptionService {
       payerName: request.payerName?.trim() || null,
       note: request.note?.trim() || null
     }, { headers: new HttpHeaders({ 'Idempotency-Key': idempotencyKey ?? this.createIdempotencyKey() }) })
+      .pipe(map(response => response.data));
+  }
+
+  /** Corrects the teacher's own notice while it waits for review. */
+  updateBankTransferRequest(id: string, request: { paymentReference: string; payerName: string | null; note: string | null }) {
+    return this.http.put<{ data: CoachingTeacherBankTransferRequest }>(`${this.subscriptionsUrl}/bank-transfer-requests/${encodeURIComponent(id)}`, {
+      paymentReference: request.paymentReference.trim(),
+      payerName: request.payerName?.trim() || null,
+      note: request.note?.trim() || null
+    }).pipe(map(response => response.data));
+  }
+
+  /** Takes back the teacher's own notice while it waits for review. */
+  withdrawBankTransferRequest(id: string) {
+    return this.http.post<{ data: CoachingTeacherBankTransferRequest }>(`${this.subscriptionsUrl}/bank-transfer-requests/${encodeURIComponent(id)}/withdraw`, {})
       .pipe(map(response => response.data));
   }
 

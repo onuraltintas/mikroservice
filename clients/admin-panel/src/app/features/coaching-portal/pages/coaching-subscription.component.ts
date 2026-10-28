@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { ToasterService } from '../../../core/services/toaster.service';
 import {
   CoachingBankTransferRequest,
   CoachingManagementService,
@@ -89,7 +91,22 @@ import {
       <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="requests-heading">
         <h2 id="requests-heading" class="font-semibold">Ödeme bildirimlerim</h2>
         @for (request of requests(); track request.id) {
-          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800"><div><strong>{{ request.plan.name }}</strong><p class="text-slate-500">{{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>@if (request.reviewNote) {<p class="text-slate-500">İnceleme notu: {{ request.reviewNote }}</p>}</div><span>{{ request.status === 'Pending' ? 'İnceleniyor' : request.status === 'Approved' ? 'Onaylandı' : request.status === 'Rejected' ? 'Reddedildi' : request.status === 'Cancelled' ? 'İptal edildi' : request.status }}</span></div>
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800"><div><strong>{{ request.plan.name }}</strong><p class="text-slate-500">{{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>@if (request.reviewNote) {<p class="text-slate-500">İnceleme notu: {{ request.reviewNote }}</p>}</div>
+            <div class="flex flex-wrap items-center gap-2"><span>{{ statusLabel(request.status) }}</span>
+              @if (request.status === 'Pending' && editingRequestId() !== request.id) {
+                <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 dark:border-slate-700" [attr.data-testid]="'edit-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="startEdit(request)">Düzelt</button>
+                <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 dark:border-slate-700" [attr.data-testid]="'withdraw-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="withdraw(request)">Geri çek</button>
+              }
+            </div>
+            @if (editingRequestId() === request.id) {
+              <form class="mt-2 grid w-full gap-2 sm:grid-cols-3" (ngSubmit)="saveEdit()">
+                <label class="text-sm">Banka işlem referansı<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="editReference" name="editReference" maxlength="120" required autocomplete="off" /></label>
+                <label class="text-sm">Ödemeyi yapan kişi<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="editPayerName" name="editPayerName" maxlength="200" autocomplete="name" /></label>
+                <label class="text-sm">Not<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="editNote" name="editNote" maxlength="1000" /></label>
+                <div class="flex gap-2 sm:col-span-3"><button type="submit" class="rounded-lg bg-indigo-600 px-3 py-1 font-medium text-white disabled:opacity-50" [disabled]="busyRequestId() === request.id">Kaydet</button><button type="button" class="rounded-lg border border-slate-300 px-3 py-1 dark:border-slate-700" (click)="editingRequestId.set(null)">Vazgeç</button></div>
+              </form>
+            }
+          </div>
         } @empty { <p class="mt-2 text-sm text-slate-500">Henüz ödeme bildirimin yok.</p> }
       </section>
     </main>
@@ -111,6 +128,12 @@ export class CoachingSubscriptionComponent implements OnInit {
   payerName = '';
   note = '';
   adultPayerDeclaration = false;
+  private readonly toaster = inject(ToasterService);
+  readonly editingRequestId = signal<string | null>(null);
+  readonly busyRequestId = signal<string | null>(null);
+  editReference = '';
+  editPayerName = '';
+  editNote = '';
 
   ngOnInit(): void {
     this.service.getPublicSubscriptionPlans().subscribe({
@@ -164,6 +187,51 @@ export class CoachingSubscriptionComponent implements OnInit {
         this.submitting.set(false);
       }
     });
+  }
+
+  statusLabel(status: string): string {
+    return ({ Pending: 'İnceleniyor', Approved: 'Onaylandı', Rejected: 'Reddedildi', Cancelled: 'İptal edildi', Withdrawn: 'Geri çekildi', Expired: 'Süresi doldu' } as Record<string, string>)[status] ?? status;
+  }
+
+  startEdit(request: CoachingBankTransferRequest): void {
+    if (request.status !== 'Pending') return;
+    this.editingRequestId.set(request.id);
+    this.editReference = request.paymentReference; this.editPayerName = request.payerName ?? ''; this.editNote = request.note ?? '';
+    this.error.set(null); this.success.set(null);
+  }
+
+  async saveEdit(): Promise<void> {
+    const id = this.editingRequestId();
+    const reference = this.editReference.trim();
+    if (!id || this.busyRequestId()) return;
+    if (!reference || reference.length > 120) { this.error.set('Banka işlem referansını 1–120 karakter arasında gir.'); return; }
+    this.busyRequestId.set(id); this.error.set(null);
+    try {
+      const updated = await firstValueFrom(this.service.updateMyCoachingBankTransferRequest(id, {
+        paymentReference: reference, payerName: this.editPayerName.trim() || null, note: this.editNote.trim() || null
+      }));
+      this.replaceRequest(updated); this.editingRequestId.set(null);
+      this.success.set('Ödeme bildirimin güncellendi.');
+    } catch (response) {
+      this.error.set((response as { error?: { message?: string } })?.error?.message ?? 'Ödeme bildirimi güncellenemedi.');
+    } finally { this.busyRequestId.set(null); }
+  }
+
+  async withdraw(request: CoachingBankTransferRequest): Promise<void> {
+    if (request.status !== 'Pending' || this.busyRequestId()) return;
+    if (!await this.toaster.confirm(`${request.paymentReference} referanslı ödeme bildirimi geri çekilsin mi? Ödemeyi yaptıysan daha sonra yeni bir bildirim gönderebilirsin.`)) return;
+    this.busyRequestId.set(request.id); this.error.set(null);
+    try {
+      this.replaceRequest(await firstValueFrom(this.service.withdrawMyCoachingBankTransferRequest(request.id)));
+      if (this.editingRequestId() === request.id) this.editingRequestId.set(null);
+      this.success.set('Ödeme bildirimin geri çekildi.');
+    } catch (response) {
+      this.error.set((response as { error?: { message?: string } })?.error?.message ?? 'Ödeme bildirimi geri çekilemedi.');
+    } finally { this.busyRequestId.set(null); }
+  }
+
+  private replaceRequest(updated: CoachingBankTransferRequest): void {
+    this.requests.update(items => items.map(item => item.id === updated.id ? { ...item, ...updated } : item));
   }
 
   private loadRequests(): void {

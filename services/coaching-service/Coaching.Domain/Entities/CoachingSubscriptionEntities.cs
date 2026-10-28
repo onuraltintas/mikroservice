@@ -42,6 +42,27 @@ public sealed class CoachingSubscription
     public DateTime? UpdatedAt { get; set; }
 }
 
+/// <summary>
+/// One paid stretch of a subscription. A subscription renewed in place is the sum of its periods; cancelling a payment
+/// removes only its own period and moves the periods paid after it forward. Independent of how the money arrived.
+/// </summary>
+public sealed class CoachingSubscriptionPeriod
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid SubscriptionId { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public int DurationDays { get; set; }
+    /// <summary>BankTransfer or Manual.</summary>
+    public string Source { get; set; } = "BankTransfer";
+    public Guid? BankTransferRequestId { get; set; }
+    /// <summary>Active or Cancelled.</summary>
+    public string Status { get; set; } = "Active";
+    public Guid CreatedBy { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? CancelledAt { get; set; }
+}
+
 public sealed class CoachingSubscriptionSeat
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -78,6 +99,8 @@ public sealed class CoachingBankTransferRequest
     public Guid PlanId { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "TRY";
+    /// <summary>The plan's length when the payer sent the notice; later plan edits do not change what was bought.</summary>
+    public int? DurationDays { get; set; }
     public string PaymentReference { get; set; } = string.Empty;
     public string? PayerName { get; set; }
     public string? Note { get; set; }
@@ -94,7 +117,9 @@ public sealed class CoachingBankTransferRequest
 public sealed class CoachingPaymentRecord
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid UserId { get; set; }
+    /// <summary>The payer; empty for an institution license, which records <see cref="InstitutionId"/>.</summary>
+    public Guid? UserId { get; set; }
+    public Guid? InstitutionId { get; set; }
     public string UserName { get; set; } = string.Empty;
     public string UserEmail { get; set; } = string.Empty;
     public Guid PlanId { get; set; }

@@ -293,6 +293,16 @@ public sealed class CoachingSubscriptionService(
             return null;
         }
 
+        // While a teacher plan runs, only the same plan (renewal) or a larger one (upgrade) can be bought: a smaller
+        // plan would take seats away from students who hold them.
+        if (expectedAudience == "Teacher"
+            && await GetActiveTeacherSubscriptionAsync(userId, cancellationToken) is { } running
+            && running.Plan.Id != plan.Id
+            && plan.IncludedStudentSeats.GetValueOrDefault() <= running.Plan.IncludedStudentSeats.GetValueOrDefault())
+        {
+            return null;
+        }
+
         await using var transaction = db.Database.IsRelational()
             ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
@@ -352,6 +362,9 @@ public sealed class CoachingSubscriptionService(
             return await GetBankTransferSummaryAsync(existing, cancellationToken);
         }
 
+        // The same receipt number from another payer is either a typo or a receipt used twice; the admin checks it.
+        var usedByOthers = await db.CoachingBankTransferRequests.AsNoTracking()
+            .AnyAsync(item => item.PaymentReference == reference && item.UserId != userId, cancellationToken);
         var requestEntity = new CoachingBankTransferRequest
         {
             UserId = userId,
@@ -360,6 +373,7 @@ public sealed class CoachingSubscriptionService(
             PlanId = plan.Id,
             Amount = plan.Price,
             Currency = settings.Currency,
+            DurationDays = plan.DurationDays,
             PaymentReference = reference,
             PayerName = payerName,
             Note = note,
@@ -368,7 +382,8 @@ public sealed class CoachingSubscriptionService(
         };
         db.CoachingBankTransferRequests.Add(requestEntity);
         await NoticeAsync(null, null, CoachingSubscriptionNoticeKinds.TransferSubmitted, plan.Audience, plan.Name, null,
-            $"{requestEntity.UserName} · {reference} · {requestEntity.Amount:0.00} {requestEntity.Currency}", cancellationToken);
+            $"{requestEntity.UserName} · {reference} · {requestEntity.Amount:0.00} {requestEntity.Currency}"
+            + (usedByOthers ? " · Uyarı: bu dekont numarası başka bir kullanıcının bildiriminde de var." : string.Empty), cancellationToken);
         db.IdempotencyRecords.Add(IdempotencyRecord.Create(
             TransferCreateIdempotencyScope, key, requestHash, requestEntity.Id));
         try
@@ -412,6 +427,56 @@ public sealed class CoachingSubscriptionService(
         return rows.Select(row => ToTransferSummary(row.request, row.plan)).ToArray();
     }
 
+    /// <summary>The payer fixes a typo in a notice that nobody has reviewed yet.</summary>
+    public async Task<CoachingBankTransferRequestSummary?> UpdateMyBankTransferRequestAsync(Guid userId, Guid id,
+        CoachingBankTransferRequestUpdate request, CancellationToken cancellationToken = default)
+    {
+        var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+        if (transfer is null) return null;
+        RequirePending(transfer);
+        var reference = NormalizePaymentReference(request.PaymentReference)
+            ?? throw new ArgumentException("Banka işlem referansı 6-100 harf, rakam veya tire içermelidir.");
+        if (await db.CoachingBankTransferRequests.AnyAsync(item => item.UserId == userId && item.Id != id
+                && item.PaymentReference == reference, cancellationToken))
+            throw new BusinessRuleException("Subscription.TransferReferenceUsed", "Bu işlem referansıyla daha önce ödeme bildirimi gönderdin.");
+        transfer.PaymentReference = reference;
+        transfer.PayerName = NormalizeOptional(request.PayerName, 200);
+        transfer.Note = NormalizeOptional(request.Note, 1000);
+        transfer.UpdatedAt = DateTime.UtcNow;
+        transfer.Version++;
+        try { await db.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateException exception) when (IsBankTransferReferenceConflict(exception))
+        {
+            throw new BusinessRuleException("Subscription.TransferReferenceUsed", "Bu işlem referansıyla daha önce ödeme bildirimi gönderdin.");
+        }
+        return await GetBankTransferSummaryAsync(transfer, cancellationToken);
+    }
+
+    /// <summary>The payer takes back a notice sent by mistake; a new notice can then be sent for the same plan.</summary>
+    public async Task<CoachingBankTransferRequestSummary?> WithdrawMyBankTransferRequestAsync(Guid userId, Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+        if (transfer is null) return null;
+        if (transfer.Status == "Withdrawn") return await GetBankTransferSummaryAsync(transfer, cancellationToken);
+        RequirePending(transfer);
+        transfer.Status = "Withdrawn";
+        transfer.UpdatedAt = DateTime.UtcNow;
+        transfer.Version++;
+        try { await db.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new BusinessRuleException("Subscription.TransferNotPending", "Ödeme bildirimi bu sırada incelendi; güncel durumu kontrol et.");
+        }
+        return await GetBankTransferSummaryAsync(transfer, cancellationToken);
+    }
+
+    private static void RequirePending(CoachingBankTransferRequest transfer)
+    {
+        if (transfer.Status != "Pending")
+            throw new BusinessRuleException("Subscription.TransferNotPending", "Yalnız incelemeyi bekleyen ödeme bildirimi değiştirilebilir veya geri çekilebilir.");
+    }
+
     public async Task<PagedResponse<CoachingBankTransferRequestSummary>> GetBankTransferRequestsAsync(
         string? search,
         string? status,
@@ -441,8 +506,16 @@ public sealed class CoachingSubscriptionService(
         var total = await query.CountAsync(cancellationToken);
         var rows = await query.OrderByDescending(row => row.request.CreatedAt)
             .Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        var references = rows.Select(row => row.request.PaymentReference).Distinct().ToArray();
+        var senders = (await db.CoachingBankTransferRequests.AsNoTracking()
+                .Where(item => Enumerable.Contains(references, item.PaymentReference))
+                .Select(item => new { item.PaymentReference, item.UserId }).ToListAsync(cancellationToken))
+            .GroupBy(item => item.PaymentReference)
+            .ToDictionary(group => group.Key, group => group.Select(item => item.UserId).Distinct().ToArray());
         return new PagedResponse<CoachingBankTransferRequestSummary>(
-            rows.Select(row => ToTransferSummary(row.request, row.plan)).ToArray(), pageNumber, pageSize, total);
+            rows.Select(row => ToTransferSummary(row.request, row.plan,
+                senders.GetValueOrDefault(row.request.PaymentReference)?.Count(user => user != row.request.UserId) ?? 0)).ToArray(),
+            pageNumber, pageSize, total);
     }
 
     public Task<CoachingBankTransferRequestSummary?> ReviewBankTransferRequestAsync(
@@ -514,6 +587,7 @@ public sealed class CoachingSubscriptionService(
         DateTime? subscriptionStartDate = null;
         DateTime? subscriptionEndDate = null;
         CoachingSubscription? renewalSubscription = null;
+        var upgrade = false;
         if (status == "Approved")
         {
             approvedPlan = await db.CoachingSubscriptionPlans.SingleOrDefaultAsync(item => item.Id == transfer.PlanId, cancellationToken);
@@ -545,6 +619,19 @@ public sealed class CoachingSubscriptionService(
                         && item.StartDate <= now)
                     .OrderByDescending(item => item.EndDate)
                     .FirstOrDefaultAsync(cancellationToken);
+                if (renewalSubscription is null)
+                {
+                    // An upgrade: the running plan switches to the larger one now, keeps its seats and paid days, and
+                    // the new period is added after them.
+                    renewalSubscription = await (from item in db.CoachingSubscriptions
+                                                 join plan in db.CoachingSubscriptionPlans on item.PlanId equals plan.Id
+                                                 where item.UserId == transfer.UserId && item.Status == "Active" && plan.Audience == "Teacher"
+                                                     && item.StartDate <= now && item.EndDate > now
+                                                     && (plan.IncludedStudentSeats ?? 0) < (approvedPlan.IncludedStudentSeats ?? 0)
+                                                 orderby item.EndDate descending
+                                                 select item).FirstOrDefaultAsync(cancellationToken);
+                    upgrade = renewalSubscription is not null;
+                }
                 subscriptionStartDate = renewalSubscription is not null && renewalSubscription.EndDate > now
                     ? renewalSubscription.EndDate
                     : now;
@@ -563,7 +650,8 @@ public sealed class CoachingSubscriptionService(
                 subscriptionStartDate = latest?.EndDate ?? now;
                 renewalSubscription = latest?.PlanId == approvedPlan.Id ? latest : null;
             }
-            subscriptionEndDate = subscriptionStartDate.Value.AddDays(approvedPlan.DurationDays);
+            // The length the payer saw when sending the notice, not the plan's current setting.
+            subscriptionEndDate = subscriptionStartDate.Value.AddDays(transfer.DurationDays ?? approvedPlan.DurationDays);
             if (approvedPlan.Audience == "Teacher"
                 && await HasOverlappingTeacherSubscriptionAsync(
                     transfer.UserId,
@@ -600,10 +688,21 @@ public sealed class CoachingSubscriptionService(
             {
                 subscription.EndDate = subscriptionEndDate!.Value;
                 subscription.Status = "Active";
+                if (upgrade) subscription.PlanId = plan.Id;
                 subscription.UpdatedBy = actorId;
                 subscription.UpdatedAt = DateTime.UtcNow;
             }
 
+            db.CoachingSubscriptionPeriods.Add(new CoachingSubscriptionPeriod
+            {
+                SubscriptionId = subscription.Id,
+                StartDate = subscriptionStartDate!.Value,
+                EndDate = subscriptionEndDate!.Value,
+                DurationDays = transfer.DurationDays ?? plan.DurationDays,
+                Source = "BankTransfer",
+                BankTransferRequestId = transfer.Id,
+                CreatedBy = actorId
+            });
             transfer.SubscriptionId = subscription.Id;
             await NoticeAsync(transfer.UserId, transfer.UserEmail, CoachingSubscriptionNoticeKinds.TransferApproved, plan.Audience,
                 plan.Name, subscription.EndDate, null, cancellationToken);
@@ -685,20 +784,30 @@ public sealed class CoachingSubscriptionService(
         var plan = await db.CoachingSubscriptionPlans.SingleOrDefaultAsync(item => item.Id == transfer.PlanId, cancellationToken);
         var now = DateTime.UtcNow;
 
-        // The subscription this payment created ends now; a renewal it extended loses exactly the paid period.
         if (transfer.SubscriptionId is { } subscriptionId
             && await db.CoachingSubscriptions.SingleOrDefaultAsync(item => item.Id == subscriptionId, cancellationToken) is { } subscription)
         {
-            if (subscription.BankTransferRequestId == transfer.Id || plan is null)
-            {
-                subscription.Status = "Cancelled";
-                subscription.EndDate = now > subscription.StartDate ? now : subscription.StartDate;
-            }
+            var period = await db.CoachingSubscriptionPeriods.SingleOrDefaultAsync(
+                item => item.BankTransferRequestId == transfer.Id && item.Status == "Active", cancellationToken);
+            if (period is not null) await CancelPeriodAsync(subscription, period, now, cancellationToken);
             else
             {
-                var shortened = subscription.EndDate.AddDays(-plan.DurationDays);
-                subscription.EndDate = shortened > subscription.StartDate ? shortened : subscription.StartDate;
-                if (subscription.EndDate <= now) subscription.Status = "Cancelled";
+                // Approved before paid periods were recorded. The subscription this payment created ends now unless
+                // later payments renewed it; those keep their time and the subscription loses this payment's days.
+                var renewedByOthers = await db.CoachingBankTransferRequests.AnyAsync(item => item.SubscriptionId == subscription.Id
+                    && item.Id != transfer.Id && item.Status == "Approved", cancellationToken);
+                var days = transfer.DurationDays ?? plan?.DurationDays;
+                if ((subscription.BankTransferRequestId == transfer.Id && !renewedByOthers) || days is null)
+                {
+                    subscription.Status = "Cancelled";
+                    subscription.EndDate = now > subscription.StartDate ? now : subscription.StartDate;
+                }
+                else
+                {
+                    var shortened = subscription.EndDate.AddDays(-days.Value);
+                    subscription.EndDate = shortened > subscription.StartDate ? shortened : subscription.StartDate;
+                    if (subscription.EndDate <= now) subscription.Status = "Cancelled";
+                }
             }
             subscription.UpdatedBy = actorId;
             subscription.UpdatedAt = now;
@@ -729,6 +838,37 @@ public sealed class CoachingSubscriptionService(
         }
         if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         return await GetBankTransferSummaryAsync(transfer, cancellationToken);
+    }
+
+    /// <summary>
+    /// Removes the unused part of a cancelled payment's period. Periods paid after it move forward by that much, so a
+    /// renewal keeps its full length; the subscription ends when nothing paid is left.
+    /// </summary>
+    private async Task CancelPeriodAsync(CoachingSubscription subscription, CoachingSubscriptionPeriod period, DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var originalEnd = period.EndDate;
+        var usedUntil = now < period.StartDate ? period.StartDate : now > originalEnd ? originalEnd : now;
+        var removed = originalEnd - usedUntil;
+        period.EndDate = usedUntil;
+        period.Status = "Cancelled";
+        period.CancelledAt = now;
+        if (removed > TimeSpan.Zero)
+        {
+            foreach (var later in await db.CoachingSubscriptionPeriods.Where(item => item.SubscriptionId == subscription.Id
+                && item.Status == "Active" && item.Id != period.Id && item.StartDate >= originalEnd).ToListAsync(cancellationToken))
+            {
+                later.StartDate -= removed;
+                later.EndDate -= removed;
+            }
+            if (subscription.EndDate >= originalEnd) subscription.EndDate -= removed;
+        }
+        if (subscription.EndDate < subscription.StartDate) subscription.EndDate = subscription.StartDate;
+        if (subscription.EndDate <= now || subscription.EndDate == subscription.StartDate)
+        {
+            subscription.Status = "Cancelled";
+            if (subscription.EndDate > now) subscription.EndDate = subscription.StartDate > now ? subscription.StartDate : now;
+        }
     }
 
     public async Task<bool> DeleteBankTransferRequestAsync(Guid id, CancellationToken cancellationToken = default)
@@ -855,6 +995,10 @@ public sealed class CoachingSubscriptionService(
 
         var startDate = request.StartDate.Kind == DateTimeKind.Utc ? request.StartDate : request.StartDate.ToUniversalTime();
         var studentIds = (request.StudentIds ?? Array.Empty<Guid>()).Distinct().ToArray();
+        if (request.Amount is < 0 or > 10_000_000) return null;
+        // A renewal without a student list keeps the students who hold a seat today and are still members.
+        if (institutionOwned && studentIds.Length == 0)
+            studentIds = await CarriedSeatsAsync(request.InstitutionId!.Value, plan.IncludedStudentSeats.GetValueOrDefault(), cancellationToken);
         if (startDate < DateTime.UnixEpoch
             || (userOwned && studentIds.Length > 0)
             || studentIds.Any(studentId => studentId == Guid.Empty)
@@ -906,6 +1050,26 @@ public sealed class CoachingSubscriptionService(
             CreatedBy = actorId
         };
         db.CoachingSubscriptions.Add(subscription);
+        // A license granted by hand is still a sale (or a gift worth recording): it gets its paid period and payment.
+        db.CoachingSubscriptionPeriods.Add(new CoachingSubscriptionPeriod
+        {
+            SubscriptionId = subscription.Id, StartDate = startDate, EndDate = endDate, DurationDays = plan.DurationDays,
+            Source = "Manual", CreatedBy = actorId
+        });
+        db.CoachingPaymentRecords.Add(new CoachingPaymentRecord
+        {
+            UserId = request.UserId,
+            InstitutionId = request.InstitutionId,
+            UserName = subscription.UserName ?? (institutionOwned ? "Kurum lisansı" : "Koçluk kullanıcısı"),
+            UserEmail = subscription.UserEmail ?? string.Empty,
+            PlanId = plan.Id,
+            PlanName = plan.Name,
+            SubscriptionId = subscription.Id,
+            Amount = request.Amount ?? plan.Price,
+            Currency = (await GetSettingsAsync(cancellationToken)).Currency,
+            Provider = "Manual",
+            Reference = paymentReference
+        });
         foreach (var studentId in studentIds)
         {
             db.CoachingSubscriptionSeats.Add(new CoachingSubscriptionSeat
@@ -1012,6 +1176,24 @@ public sealed class CoachingSubscriptionService(
         return await GetSubscriptionAsync(subscription.Id, cancellationToken);
     }
 
+    private async Task<Guid[]> CarriedSeatsAsync(Guid institutionId, int capacity, CancellationToken cancellationToken)
+    {
+        var previous = await db.CoachingSubscriptions.AsNoTracking()
+            .Where(item => item.InstitutionId == institutionId && (item.Status == "Active" || item.Status == "Expired"))
+            .OrderByDescending(item => item.EndDate).Select(item => (Guid?)item.Id).FirstOrDefaultAsync(cancellationToken);
+        if (previous is null || capacity <= 0) return [];
+        var seated = await db.CoachingSubscriptionSeats.AsNoTracking()
+            .Where(seat => seat.SubscriptionId == previous && !seat.IsSuspended)
+            .OrderBy(seat => seat.AssignedAt).Select(seat => seat.StudentId).ToListAsync(cancellationToken);
+        var carried = new List<Guid>();
+        foreach (var student in seated)
+        {
+            if (carried.Count >= capacity) break;
+            if (await identityAuthorizationClient.IsActiveInstitutionStudentAsync(institutionId, student, cancellationToken)) carried.Add(student);
+        }
+        return carried.ToArray();
+    }
+
     public async Task<bool> ChangeStudentSeatAsync(
         Guid subscriptionId,
         Guid studentId,
@@ -1028,6 +1210,16 @@ public sealed class CoachingSubscriptionService(
         if (subscription is null || seat is null)
         {
             return false;
+        }
+
+        // Reopening a seat must fit the plan, like every other way of giving one.
+        if (!request.IsSuspended && seat.IsSuspended)
+        {
+            var capacity = await db.CoachingSubscriptionPlans.AsNoTracking().Where(plan => plan.Id == subscription.PlanId)
+                .Select(plan => plan.IncludedStudentSeats).SingleOrDefaultAsync(cancellationToken);
+            if (await db.CoachingSubscriptionSeats.CountAsync(item => item.SubscriptionId == subscriptionId && !item.IsSuspended, cancellationToken)
+                >= capacity.GetValueOrDefault())
+                return false;
         }
 
         seat.IsSuspended = request.IsSuspended;
@@ -1279,7 +1471,8 @@ public sealed class CoachingSubscriptionService(
             payment.Status,
             payment.Provider,
             payment.Reference,
-            payment.CreatedAt)).ToArray();
+            payment.CreatedAt,
+            payment.InstitutionId)).ToArray();
         return new PagedResponse<CoachingPaymentSummary>(items, pageNumber, pageSize, total);
     }
 
@@ -1671,7 +1864,8 @@ public sealed class CoachingSubscriptionService(
 
     private static CoachingBankTransferRequestSummary ToTransferSummary(
         CoachingBankTransferRequest request,
-        CoachingSubscriptionPlan plan) => new(
+        CoachingSubscriptionPlan plan,
+        int duplicateReferenceCount = 0) => new(
             request.Id,
             request.UserId,
             request.UserName,
@@ -1689,7 +1883,9 @@ public sealed class CoachingSubscriptionService(
             request.ReviewNote,
             request.CreatedAt,
             request.AdultPayerDeclarationVersion,
-            request.AdultPayerDeclaredAt);
+            request.AdultPayerDeclaredAt,
+            request.DurationDays ?? plan.DurationDays,
+            duplicateReferenceCount);
 
     private static CoachingSubscriptionSummary ToSubscriptionSummary(
         CoachingSubscription subscription,

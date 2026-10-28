@@ -193,4 +193,35 @@ describe('CoachingSubscriptionsComponent', () => {
     expect(toaster.confirm.mock.calls[0][0]).toContain('kalıcı olarak silinecek');
     expect(service.deleteTransferRequest).toHaveBeenCalledWith('request-2');
   });
+  it('records the amount received with a manual license and flags receipts another payer also sent', async () => {
+    const plan = { id: 'plan-1', slug: 'plan-1', name: 'Bireysel', description: '', audience: 'Individual', price: 1200, isContactOnly: false,
+      billingPeriod: 'Annual', durationDays: 365, includedStudentSeats: null, features: [], isActive: true, isPublic: true, sortOrder: 0 };
+    const service = {
+      getPlans: vi.fn(() => of([plan])), getSubscriptionSettings: vi.fn(() => of({ requireActiveSubscription: false, currency: 'TRY', accountHolder: null, bankName: null, iban: null, paymentInstructions: null, bankTransferEnabled: false, isPubliclyAvailable: false, updatedAt: null })),
+      getSubscriptions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 })),
+      createSubscription: vi.fn(() => of(undefined))
+    };
+    await TestBed.configureTestingModule({
+      imports: [CoachingSubscriptionsComponent],
+      providers: [
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: CoachingManagementService, useValue: service },
+        { provide: IdentityService, useValue: { getAllUsers: vi.fn(() => of({ items: [] })) } },
+        { provide: InstitutionService, useValue: { getAll: vi.fn(() => of({ items: [] })) } },
+        { provide: CoachingAdminService, useValue: { getStudentRoster: vi.fn(() => of({ students: [], totalCount: 0 })) } },
+        { provide: ToasterService, useValue: { success: vi.fn(), warning: vi.fn(), confirm: vi.fn().mockResolvedValue(true), prompt: vi.fn() } }
+      ]
+    }).compileComponents();
+    const component = TestBed.createComponent(CoachingSubscriptionsComponent).componentInstance;
+    component.ngOnInit();
+    component.subscriptionDraft.planId = 'plan-1'; component.subscriptionDraft.userId = 'user-1'; component.subscriptionDraft.amount = 900;
+
+    await component.createSubscription();
+
+    expect((service.createSubscription.mock.calls[0] as unknown[])[0]).toMatchObject({ planId: 'plan-1', userId: 'user-1', amount: 900 });
+    expect(component.duplicateWarning({ duplicateReferenceCount: 1 } as CoachingBankTransferRequest)).toContain('başka');
+    expect(component.duplicateWarning({ duplicateReferenceCount: 0 } as CoachingBankTransferRequest)).toBe('');
+    expect(component.statusLabel('Withdrawn')).toBe('Geri çekildi');
+    expect(component.statusLabel('Expired')).toBe('Süresi doldu');
+  });
 });

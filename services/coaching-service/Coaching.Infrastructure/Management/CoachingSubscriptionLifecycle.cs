@@ -20,6 +20,7 @@ public sealed class CoachingSubscriptionLifecycleProcessor(CoachingDbContext db,
     public const string ExpiredKind = "SubscriptionExpired";
     private const int BatchSize = 500;
     private static readonly TimeSpan ExpiredNoticeWindow = TimeSpan.FromDays(7);
+    public static readonly TimeSpan PendingTransferLifetime = TimeSpan.FromDays(14);
 
     public async Task<int> ProcessAsync(CancellationToken ct = default)
     {
@@ -31,7 +32,7 @@ public sealed class CoachingSubscriptionLifecycleProcessor(CoachingDbContext db,
             if (attempt++ > 0) db.ChangeTracker.Clear();
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
             await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended('coaching-subscription-lifecycle', 0))", ct);
-            var notices = await ExpireAsync(now, ct) + await RemindAsync(now, ct);
+            var notices = await ExpireAsync(now, ct) + await RemindAsync(now, ct) + await ExpireTransfersAsync(now, ct);
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
             return notices;
@@ -59,6 +60,29 @@ public sealed class CoachingSubscriptionLifecycleProcessor(CoachingDbContext db,
             if (await NoticeOnceAsync(subscription, row.Name, row.Audience, ExpiredKind, "expired", kind, now, ct)) sent++;
         }
         return sent;
+    }
+
+    /// <summary>A payment notice that waited two weeks without being verified expires; the payer is told to send a new one.</summary>
+    private async Task<int> ExpireTransfersAsync(DateTime now, CancellationToken ct)
+    {
+        var cutoff = now - PendingTransferLifetime;
+        var stale = await (from transfer in db.CoachingBankTransferRequests
+                           join plan in db.CoachingSubscriptionPlans on transfer.PlanId equals plan.Id
+                           where transfer.Status == "Pending" && transfer.CreatedAt <= cutoff
+                           orderby transfer.CreatedAt, transfer.Id
+                           select new { Transfer = transfer, plan.Name, plan.Audience }).Take(BatchSize).ToListAsync(ct);
+        foreach (var row in stale)
+        {
+            var transfer = row.Transfer;
+            transfer.Status = "Expired";
+            transfer.ReviewNote = $"{PendingTransferLifetime.Days} gün içinde doğrulanamadığı için süresi doldu.";
+            transfer.UpdatedAt = now;
+            transfer.Version++;
+            await events.PublishAsync(new CoachingSubscriptionNoticeV1(Guid.NewGuid(), transfer.UserId,
+                string.IsNullOrWhiteSpace(transfer.UserEmail) ? null : transfer.UserEmail, CoachingSubscriptionNoticeKinds.TransferExpired,
+                row.Audience, row.Name, null, transfer.PaymentReference, now), ct);
+        }
+        return stale.Count;
     }
 
     private async Task<int> RemindAsync(DateTime now, CancellationToken ct)

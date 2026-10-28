@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.API.IntegrationTests;
 
-public sealed class CoachingCmsAndSubscriptionServiceTests
+public sealed partial class CoachingCmsAndSubscriptionServiceTests
 {
     [Fact]
     public async Task SubscriptionRequirementCanBeTurnedOnAndOffWithoutCreatingALicense()
@@ -476,7 +476,8 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
         var renewed = await subscriptions.GetMyTeacherSubscriptionAsync(teacherId);
         renewed!.UsedStudentSeats.Should().Be(1);
         renewed.Students.Should().ContainSingle().Which.StudentId.Should().Be(studentId);
-        (await subscriptions.GetPaymentsAsync(null, null, 1, 25)).TotalCount.Should().Be(1);
+        // The manual grant and the renewal transfer are each recorded as a payment (roadmap Y5).
+        (await subscriptions.GetPaymentsAsync(null, null, 1, 25)).TotalCount.Should().Be(2);
     }
 
     [Fact]

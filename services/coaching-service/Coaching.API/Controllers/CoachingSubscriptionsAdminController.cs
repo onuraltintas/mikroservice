@@ -182,7 +182,7 @@ public sealed class CoachingSubscriptionsAdminController(ICoachingSubscription s
         if (!TryGetActor(out var actorId)) return Unauthorized();
         return await subscriptions.ChangeStudentSeatAsync(id, studentId, request, actorId, cancellationToken)
             ? Ok(new { success = true, message = request.IsSuspended ? "Öğrenci lisansı askıya alındı." : "Öğrenci lisansı yeniden açıldı." })
-            : NotFound(new { success = false, message = "Kurum aboneliği veya öğrenci lisansı bulunamadı." });
+            : NotFound(new { success = false, message = "Kurum aboneliği veya öğrenci lisansı bulunamadı ya da planda boş kontenjan yok." });
     }
 
     [HttpGet("{id:guid}/students")]

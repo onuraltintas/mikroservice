@@ -56,6 +56,42 @@ describe('CoachingTeacherSubscriptionComponent', () => {
     expect(subscriptionService.getMySeatSummary).toHaveBeenCalledTimes(2);
   });
 
+  it('lets the teacher correct or withdraw a pending notice and only offers larger plans while one runs', async () => {
+    const plan = (id: string, seats: number) => ({ id, name: `Öğretmen ${seats}`, description: '', audience: 'Teacher' as const, price: seats * 100,
+      isContactOnly: false, billingPeriod: 'Annual', durationDays: 365, includedStudentSeats: seats, features: [], isActive: true, isPublic: true });
+    const pending = { id: 'request-1', plan: plan('teacher-10', 10), amount: 1000, currency: 'TRY', paymentReference: 'EFT-TYPO', status: 'Pending', reviewNote: null, createdAt: '2026-10-01T00:00:00Z' };
+    const subscriptionService = {
+      getTeacherPlans: vi.fn(() => of([plan('teacher-3', 3), plan('teacher-5', 5), plan('teacher-10', 10)])),
+      getBankTransferSettings: vi.fn(() => of({ currency: 'TRY', accountHolder: 'Edu İvme', bankName: 'Örnek Banka', iban: 'TR330006100519786457841326', paymentInstructions: null, bankTransferEnabled: true, isPubliclyAvailable: true })),
+      getMyBankTransferRequests: vi.fn(() => of([pending])),
+      getMySeatSummary: vi.fn(() => of({ subscriptionId: 'subscription-1', planName: 'Öğretmen 5', accessUntil: '2027-01-01T00:00:00Z', includedStudentSeats: 5, usedStudentSeats: 2, students: [] })),
+      assignStudent: vi.fn(() => of(void 0)), removeStudent: vi.fn(() => of(void 0)), createBankTransferRequest: vi.fn(() => of({ id: 'request-2' })),
+      updateBankTransferRequest: vi.fn((id: string, body: object) => of({ ...pending, ...body, id })),
+      withdrawBankTransferRequest: vi.fn((id: string) => of({ ...pending, id, status: 'Withdrawn' }))
+    };
+    await TestBed.configureTestingModule({
+      imports: [CoachingTeacherSubscriptionComponent],
+      providers: [
+        { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
+        { provide: CoachingTeacherStudentsService, useValue: { getMyStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })) } }
+      ]
+    }).compileComponents();
+    const fixture = TestBed.createComponent(CoachingTeacherSubscriptionComponent); const component = fixture.componentInstance;
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+
+    expect(component.isSmallerPlan(plan('teacher-3', 3))).toBe(true);
+    expect(component.isSmallerPlan(plan('teacher-10', 10))).toBe(false);
+    expect((fixture.nativeElement.querySelector('[data-testid="teacher-plan-teacher-3"]') as HTMLInputElement).disabled).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Yükseltme');
+
+    component.startEdit(component.requests()[0]); component.editReference = ' EFT-FIXED '; component.editPayerName = ''; component.editNote = '';
+    await component.saveEdit();
+    expect(subscriptionService.updateBankTransferRequest).toHaveBeenCalledWith('request-1', { paymentReference: 'EFT-FIXED', payerName: null, note: null });
+    await component.withdraw(component.requests()[0]);
+    expect(subscriptionService.withdrawBankTransferRequest).toHaveBeenCalledWith('request-1');
+    expect(component.statusLabel('Withdrawn')).toBe('Geri çekildi'); expect(component.statusLabel('Expired')).toBe('Süresi doldu');
+  });
+
   it('submits the selected teacher plan and payment reference through the teacher endpoint', async () => {
     const subscriptionService = {
       getTeacherPlans: vi.fn(() => of([{
