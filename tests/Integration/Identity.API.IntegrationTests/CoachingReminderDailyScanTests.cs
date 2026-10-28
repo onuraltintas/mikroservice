@@ -20,16 +20,16 @@ public sealed partial class CoachingReminderTests
         try
         {
             var date = DateOnly.FromDateTime(clock.Now.UtcDateTime); var state = new CoachingReminderScanState();
-            StudyPlanRevision Plan(Guid student, DateOnly day)
+            void Plan(Guid student, params DateOnly[] days)
             {
                 var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan"); plan.Activate();
-                db.AddRange(plan, StudyPlanTask.Create(plan, day, "Görev", 30)); return plan;
+                db.Add(plan); foreach (var day in days) db.Add(StudyPlanTask.Create(plan, day, "Görev", 30));
             }
             Plan(Guid.NewGuid(), date); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             var processor = new CoachingReminderProcessor(db, new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), clock, state);
             Assert.Equal(1, await processor.ProcessAsync());
 
-            var late = Guid.NewGuid(); Plan(late, date); Plan(late, date.AddDays(1)); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var late = Guid.NewGuid(); Plan(late, date, date.AddDays(1)); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             clock.Now = clock.Now.AddMinutes(5);
             Assert.Equal(0, await processor.ProcessAsync());
             Assert.False(await db.CoachingReminderReceipts.AnyAsync(x => x.RecipientUserId == late));

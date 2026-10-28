@@ -157,6 +157,8 @@ builder.Services.AddRateLimiter(options =>
 
 // Add Infrastructure (DbContext, Repositories)
 builder.Services.AddInfrastructure(builder.Configuration);
+// Roadmap D1: short-lived memory of allowed subscription access (CoachingSubscriptionAccessMiddleware).
+builder.Services.AddMemoryCache();
 
 // Add Shared Infrastructure (Validators, Redis, RabbitMQ)
 builder.Services.AddSharedInfrastructure(

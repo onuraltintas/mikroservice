@@ -183,6 +183,7 @@ public static class DependencyInjection
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ICoachingEventPublisher, MassTransitCoachingEventPublisher>();
+        services.AddSingleton<Coaching.Infrastructure.Reminders.CoachingReminderScanState>();
         services.AddScoped<Coaching.Infrastructure.Reminders.CoachingReminderProcessor>();
         services.AddScoped<CoachingSubscriptionLifecycleProcessor>();
         if (configuration.GetValue("Coaching:Subscriptions:LifecycleEnabled", true))

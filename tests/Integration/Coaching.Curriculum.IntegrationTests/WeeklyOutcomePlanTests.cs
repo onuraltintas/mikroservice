@@ -154,7 +154,7 @@ public sealed class WeeklyOutcomePlanTests
         {
             var creating=service.CreateAsync(new("Eşzamanlı plan",Input,preview.Fingerprint),default);
             Assert.Same(creating,await Task.WhenAny(creating,Task.Delay(TimeSpan.FromSeconds(20))));
-            Assert.True((await creating).Version>0);
+            Assert.True(await pg.Db.StudyPlanRevisions.AnyAsync(x=>x.Id==creating.Result.Id));
         }
         finally { await other.Database.ExecuteSqlRawAsync("SELECT pg_advisory_unlock_all()"); }
     }

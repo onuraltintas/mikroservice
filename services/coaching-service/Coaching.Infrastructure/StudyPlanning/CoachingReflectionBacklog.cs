@@ -22,6 +22,9 @@ public static class CoachingReflectionBacklog
             var day=DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(start,DateTimeKind.Utc),zone));
             return new {profile.UserId,Week=day.AddDays(-((int)day.DayOfWeek+6)%7)};
         }).ToArray();
+        // Roadmap D1: gaps are counted from the school year (the week of 1 September), not from enrollment.
+        var schoolYear=SchoolYearWeek(today);
+        firstWeeks=firstWeeks.Select(x=>x.Week<schoolYear?new {x.UserId,Week=schoolYear}:x).ToArray();
         if(firstWeeks.Length==0||firstWeeks.Min(x=>x.Week)>lastEnd.AddDays(-6))return [];
         var firstWeek=firstWeeks.Min(x=>x.Week);
         var saved=await db.Set<WeeklyReflection>().AsNoTracking().Where(x=>Enumerable.Contains(students,x.StudentId)&&x.WeekStart>=firstWeek&&x.WeekStart<=lastEnd)
@@ -30,9 +33,16 @@ public static class CoachingReflectionBacklog
         foreach(var profile in firstWeeks) {
             for(var week=profile.Week;week<=lastEnd.AddDays(-6);week=week.AddDays(7)) {
                 if(!keys.Contains((profile.UserId,week)))result.Add(new(profile.UserId,week));
-                if(result.Count>10000)throw new ArgumentException("Eksik değerlendirmeler takip sınırını aşıyor. Daha erken bir bitiş tarihi veya daha dar öğrenci kapsamı seçin.");
+                // Callers refuse more than 10.000 rows with a clear message; one extra row is enough to tell.
+                if(result.Count>10000)return result.ToArray();
             }
         }
         return result.OrderBy(x=>x.WeekStart).ThenBy(x=>x.StudentId).ToArray();
+    }
+    /// <summary>Monday of the week holding 1 September of the school year that <paramref name="today"/> belongs to.</summary>
+    public static DateOnly SchoolYearWeek(DateOnly today)
+    {
+        var first=new DateOnly(today.Month>=9?today.Year:today.Year-1,9,1);
+        return first.AddDays(-(((int)first.DayOfWeek+6)%7));
     }
 }
