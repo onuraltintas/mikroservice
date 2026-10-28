@@ -10,11 +10,14 @@ import { StudentDailyAgendaComponent } from './student-daily-agenda.component';
 import { CoachingIconComponent } from '../coaching-icon.component';
 import { LearningSetupEntryComponent } from './learning-setup-entry.component';
 import { StudentWeeklyHomeComponent } from './student-weekly-home.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+import { CoachingMotivationApi, CoachingMotivationComponent } from '../../../../../shared/coaching-motivation.component';
 
 @Component({
   selector: 'app-coaching-portal-home',
   standalone: true,
-  imports: [StudentHomeGoalComponent, CommonModule, RouterLink, StudentDailyAgendaComponent, CoachingIconComponent, LearningSetupEntryComponent, StudentWeeklyHomeComponent],
+  imports: [StudentHomeGoalComponent, CommonModule, RouterLink, StudentDailyAgendaComponent, CoachingIconComponent, LearningSetupEntryComponent, StudentWeeklyHomeComponent, CoachingMotivationComponent],
   templateUrl: './coaching-portal-home.component.html',
   styleUrl: './coaching-portal-home.component.scss'
 })
@@ -27,6 +30,8 @@ export class CoachingPortalHomeComponent implements OnInit {
   readonly isStudent = signal(false);
   readonly isTeacher = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  // Roadmap D5: daily study streak, badges and goal celebration.
+  readonly motivationApi = new CoachingMotivationApi(inject(HttpClient), environment.apiUrl);
 
   ngOnInit() {
     const profile = this.user();

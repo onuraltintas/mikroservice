@@ -18,6 +18,7 @@ import { apiMessage } from './parent-home.component';
 import { StudentScoreEstimateComponent } from '../pages/student-score-estimate.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingCheckoutComponent } from '../../../../../shared/coaching-checkout.component';
+import { CoachingMotivationApi, CoachingMotivationComponent } from '../../../../../shared/coaching-motivation.component';
 import { CoachingMyPaymentsComponent } from '../../../../../shared/coaching-my-payments.component';
 import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../../../../shared/coaching-sales.api';
 
@@ -28,7 +29,7 @@ import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../.
 @Component({
   selector: 'app-parent-child',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingCheckoutComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMyPaymentsComponent, StudentScoreEstimateComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CoachingCheckoutComponent, CoachingMotivationComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMyPaymentsComponent, StudentScoreEstimateComponent],
   template: `
     <main class="space-y-6" aria-labelledby="parent-child-title">
       <div class="no-print flex flex-wrap items-center justify-between gap-2">
@@ -49,6 +50,9 @@ import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../.
             <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Denemeler</p><strong class="text-xl">{{ p.totalExams }}</strong><p class="text-xs text-slate-500">kayıtlı sonuç</p></div>
           </section>
         }
+
+        <!-- Roadmap D5: the child's study streak and badges. -->
+        <edu-coaching-motivation [api]="motivationApi" [student]="childId" />
 
         <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="exams-heading">
           <h2 id="exams-heading" class="font-semibold">Son denemeler</h2>
@@ -137,6 +141,7 @@ export class ParentChildComponent implements OnInit {
   /** Roadmap O10: discount code and contract acceptance from the checkout. */
   checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
   readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
+  readonly motivationApi = new CoachingMotivationApi(inject(HttpClient), environment.apiUrl);
   readonly money = coachingMoney;
   private readonly checkoutForm = viewChild(CoachingCheckoutComponent);
 

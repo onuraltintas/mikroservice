@@ -37,7 +37,8 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  // Roadmap D5: the motivation card loads on its own; its request is not part of these report checks.
+  afterEach(() => { http.match(request => request.url.endsWith('/motivation')); http.verify(); });
   afterEach(() => vi.restoreAllMocks());
   afterEach(() => vi.unstubAllGlobals());
 

@@ -9,6 +9,9 @@ import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
 import {CoachingTeacherStudentProfileComponent} from './coaching-teacher-student-profile.component';
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 import { finalize } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+import { CoachingMotivationApi, CoachingMotivationComponent } from '../../../../../../shared/coaching-motivation.component';
 import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-portal/coaching-labels';
 import {
   coachingHistoryCsv,
@@ -29,11 +32,13 @@ import {
 @Component({
   selector: 'staff-coaching-teacher-student-detail',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent,CoachingTeacherStudentProfileComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent,CoachingTeacherStudentProfileComponent, CoachingMotivationComponent],
   templateUrl: './coaching-teacher-student-detail.component.html',
   styleUrl: './coaching-teacher-student-detail.component.scss'
 })
 export class CoachingTeacherStudentDetailComponent implements OnInit {
+  // Roadmap D5: the student's study streak and badges.
+  readonly motivationApi = new CoachingMotivationApi(inject(HttpClient), environment.apiUrl);
   readonly moveTabFocus = moveTabFocus;
   private readonly studentsService = inject(CoachingTeacherStudentsService);
   private readonly destroyRef = inject(DestroyRef);

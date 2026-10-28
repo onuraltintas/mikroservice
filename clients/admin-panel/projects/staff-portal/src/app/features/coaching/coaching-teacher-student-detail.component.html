@@ -16,6 +16,7 @@
     <span class="student-avatar" aria-hidden="true">{{ student.firstName.charAt(0) }}{{ student.lastName.charAt(0) }}</span>
   </header>
 
+  <edu-coaching-motivation [api]="motivationApi" [student]="student.userId" />
   <button type="button" (click)="toggleProfile()" [attr.aria-expanded]="profileVisible()">Öğrenci profili</button>
   @if(profileVisible()){<staff-coaching-student-profile [studentId]="student.userId" />}
   <section class="summary-section" aria-label="Öğrenci ilerleme özeti">
