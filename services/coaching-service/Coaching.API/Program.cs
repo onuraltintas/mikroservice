@@ -157,6 +157,9 @@ builder.Services.AddRateLimiter(options =>
 
 // Add Infrastructure (DbContext, Repositories)
 builder.Services.AddInfrastructure(builder.Configuration);
+// Roadmap D3: links in e-mails must point at the live site; production and staging refuse to start without it.
+Coaching.Infrastructure.CoachingPublicUrl.Require(builder.Configuration,
+    builder.Environment.IsProduction() || builder.Environment.IsStaging());
 // Roadmap D1: short-lived memory of allowed subscription access (CoachingSubscriptionAccessMiddleware).
 builder.Services.AddMemoryCache();
 

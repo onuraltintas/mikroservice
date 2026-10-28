@@ -69,6 +69,12 @@ Aşağıdaki veritabanları otomatik oluşturulur:
   okuduğu iç API adresi.
 - `robots.txt` ve `sitemap.xml` istek yapılan alan adına göre üretilir (izinli alan adları listesinden).
 
+## Koçluk bağlantı adresi (D3)
+
+- Koçluk e-postalarındaki bağlantılar (davet, bülten) `PUBLIC_APP_BASE_URL` adresine gider; compose bunu `Coaching__PublicBaseUrl` olarak koçluk servisine verir (boşsa `https://eduivme.com`).
+- Production ve Staging'de adres `https` olmalıdır; değilse koçluk servisi başlamaz. Yayından önce sunucudaki `.env` değerini kontrol edin.
+- Eski `CoachingNewsletter__PublicBaseUrl` ayarı yalnız `Coaching__PublicBaseUrl` yoksa okunur.
+
 ## Güvenlik Notları
 
 ⚠️ **ÖNEMLİ:**
