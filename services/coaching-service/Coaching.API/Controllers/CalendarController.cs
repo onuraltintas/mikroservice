@@ -1,3 +1,4 @@
+using Coaching.Domain;
 using System.Text;
 using Coaching.Application.Authorization;
 using Coaching.Application.Queries.GetCalendarFeed;
@@ -32,7 +33,7 @@ public sealed class CalendarController(
         try
         {
             var feed = await mediator.Send(
-                new GetTeacherCalendarFeedQuery(teacherId.Value, fromDate, toDate),
+                new GetTeacherCalendarFeedQuery(teacherId.Value, CoachingTime.RangeStart(fromDate), CoachingTime.RangeEnd(toDate)),
                 cancellationToken);
             return File(
                 Encoding.UTF8.GetBytes(feed.Content),
@@ -69,7 +70,7 @@ public sealed class CalendarController(
         try
         {
             var feed = await mediator.Send(
-                new GetStudentCalendarFeedQuery(studentId.Value, fromDate, toDate),
+                new GetStudentCalendarFeedQuery(studentId.Value, CoachingTime.RangeStart(fromDate), CoachingTime.RangeEnd(toDate)),
                 cancellationToken);
             return File(
                 Encoding.UTF8.GetBytes(feed.Content),

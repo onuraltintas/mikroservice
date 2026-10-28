@@ -85,7 +85,7 @@ import {
       <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="requests-heading">
         <h2 id="requests-heading" class="font-semibold">Ödeme bildirimlerim</h2>
         @for (request of requests(); track request.id) {
-          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800"><div><strong>{{ request.plan.name }}</strong><p class="text-slate-500">{{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>@if (request.reviewNote) {<p class="text-slate-500">İnceleme notu: {{ request.reviewNote }}</p>}</div><span>{{ request.status === 'Pending' ? 'İnceleniyor' : request.status === 'Approved' ? 'Onaylandı' : request.status === 'Rejected' ? 'Reddedildi' : request.status }}</span></div>
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800"><div><strong>{{ request.plan.name }}</strong><p class="text-slate-500">{{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>@if (request.reviewNote) {<p class="text-slate-500">İnceleme notu: {{ request.reviewNote }}</p>}</div><span>{{ request.status === 'Pending' ? 'İnceleniyor' : request.status === 'Approved' ? 'Onaylandı' : request.status === 'Rejected' ? 'Reddedildi' : request.status === 'Cancelled' ? 'İptal edildi' : request.status }}</span></div>
         } @empty { <p class="mt-2 text-sm text-slate-500">Henüz ödeme bildirimin yok.</p> }
       </section>
     </main>

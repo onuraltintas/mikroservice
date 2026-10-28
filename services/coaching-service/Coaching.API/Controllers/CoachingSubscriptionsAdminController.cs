@@ -110,6 +110,24 @@ public sealed class CoachingSubscriptionsAdminController(ICoachingSubscription s
             : Ok(new { success = true, data = result });
     }
 
+    [HttpPost("transfer-requests/{id:guid}/cancel")]
+    public async Task<IActionResult> CancelApprovedTransfer(Guid id, [FromBody] CoachingBankTransferCancelRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var actorId)) return Unauthorized();
+        try
+        {
+            var result = await subscriptions.CancelApprovedBankTransferAsync(id, request.Reason, actorId, cancellationToken);
+            return result is null
+                ? Conflict(new { success = false, message = "Yalnız onaylanmış bir ödeme bildirimi iptal edilebilir." })
+                : Ok(new { success = true, data = result });
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { success = false, message = exception.Message });
+        }
+    }
+
     [HttpDelete("transfer-requests/{id:guid}")]
     public async Task<IActionResult> DeleteTransferRequest(Guid id, CancellationToken cancellationToken = default)
     {

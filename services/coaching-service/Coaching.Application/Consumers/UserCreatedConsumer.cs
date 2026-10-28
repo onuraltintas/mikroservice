@@ -23,41 +23,16 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Consume(ConsumeContext<UserCreatedEvent> context)
+    public Task Consume(ConsumeContext<UserCreatedEvent> context) => HandleAsync(context.Message, context.CancellationToken);
+
+    public async Task HandleAsync(UserCreatedEvent message, CancellationToken cancellationToken)
     {
-        var message = context.Message;
         if (message.Product is not null && !string.Equals(message.Product, "coaching", StringComparison.OrdinalIgnoreCase))
             return;
-        _logger.LogInformation("UserCreatedEvent received for User: {Email} ({Role})", message.Email, message.Role);
-
-        // Eğer yeni kullanıcı bir Öğrenci ise, ona otomatik bir "Hoşgeldin Hedefi" ata.
-        if (message.Role.Equals("Student", StringComparison.OrdinalIgnoreCase))
-        {
-            try
-            {
-                var welcomeGoal = AcademicGoal.Create(
-                    studentId: message.UserId,
-                    title: "Profilini Tamamla ve İlk Koçunu Bul",
-                    category: GoalCategory.StudyHabits,
-                    setByTeacherId: null
-                );
-
-                welcomeGoal.UpdateDetails(description: "Platforma hoşgeldin! İlk adım olarak profil bilgilerini doldur ve kendine uygun bir koç aramaya başla.");
-                
-                // Hedef tarihi 7 gün sonrası
-                welcomeGoal.SetTarget(targetDate: DateTime.UtcNow.AddDays(7), targetScore: null);
-
-                await _goalRepository.AddAsync(welcomeGoal, context.CancellationToken);
-                await _unitOfWork.SaveChangesAsync(context.CancellationToken);
-
-                _logger.LogInformation("Welcome goal created for Student: {UserId}", message.UserId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create welcome goal for Student: {UserId}", message.UserId);
-                // Hata durumunda mesajı tekrar kuyruğa atmak veya Dead Letter Queue'ya yollamak MassTransit tarafından yönetilir.
-                throw; 
-            }
-        }
+        if (!message.Role.Equals("Student", StringComparison.OrdinalIgnoreCase))
+            return;
+        // Idempotent: redelivery or the e-mail confirmation event never adds a second welcome goal.
+        if (await WelcomeGoal.EnsureAsync(_goalRepository, _unitOfWork, message.UserId, cancellationToken))
+            _logger.LogInformation("Welcome goal created for Student: {UserId}", message.UserId);
     }
 }

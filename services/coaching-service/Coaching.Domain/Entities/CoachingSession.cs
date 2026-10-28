@@ -43,7 +43,7 @@ public class CoachingSession : AggregateRoot
         {
             TeacherId = teacherId,
             Title = title ?? throw new ArgumentNullException(nameof(title)),
-            ScheduledDate = scheduledDate,
+            ScheduledDate = CoachingTime.ToUtc(scheduledDate),
             SessionType = sessionType,
             DurationMinutes = durationMinutes > 0 ? durationMinutes : throw new ArgumentException("Duration must be greater than 0"),
             Status = SessionStatus.Scheduled,
@@ -61,7 +61,7 @@ public class CoachingSession : AggregateRoot
     {
         if (title != null) Title = title;
         if (description != null) Description = description;
-        if (scheduledDate.HasValue) ScheduledDate = scheduledDate.Value;
+        if (scheduledDate.HasValue) ScheduledDate = CoachingTime.ToUtc(scheduledDate.Value);
         if (durationMinutes.HasValue && durationMinutes > 0) DurationMinutes = durationMinutes.Value;
 
         UpdatedAt = DateTime.UtcNow;
@@ -99,7 +99,7 @@ public class CoachingSession : AggregateRoot
 
         Title = title.Trim();
         Description = NormalizeOptional(description);
-        ScheduledDate = scheduledDate;
+        ScheduledDate = CoachingTime.ToUtc(scheduledDate);
         DurationMinutes = durationMinutes;
         MeetingLink = NormalizeOptional(meetingLink);
         TeacherNotes = NormalizeOptional(teacherNotes);
