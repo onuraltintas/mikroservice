@@ -132,7 +132,18 @@ export interface CoachingSubscription {
   notes: string | null;
   createdAt: string;
   paymentReference?: string | null;
+  /** Roadmap O10b: seats bought on top of the plan. */
+  extraSeats?: number;
 }
+
+/** Roadmap D6: a license in the ending / ended lists or after an edit. */
+export interface CoachingLicenseRow {
+  id: string; audience: string; planName: string; ownerName: string | null; ownerEmail: string | null;
+  userId: string | null; institutionId: string | null; status: string; startDate: string; endDate: string;
+  daysLeft: number; seatCapacity: number | null; assignedSeats: number;
+}
+
+export interface CoachingChurnRow { month: string; audience: string; ended: number; renewed: number; notRenewed: number; pending: number; churnRate: number | null; }
 
 export interface CoachingSubscriptionSeat {
   studentId: string;
@@ -516,6 +527,30 @@ export class CoachingManagementService {
 
   changeStudentSeat(subscriptionId: string, studentId: string, isSuspended: boolean, reason: string | null) {
     return this.http.put<void>(`${this.coachingSubscriptionsAdminUrl}/${encodeURIComponent(subscriptionId)}/students/${encodeURIComponent(studentId)}/suspension`, { isSuspended, reason });
+  }
+
+  /** Roadmap D6: end date (Türkiye wall-clock time, e.g. 2027-06-30T23:59:00) and/or seat capacity of an institution license. */
+  updateLicense(id: string, change: { endDate?: string | null; seatCapacity?: number | null }) {
+    return this.http.put<{ data: CoachingLicenseRow }>(`${this.coachingSubscriptionsAdminUrl}/${encodeURIComponent(id)}/license`, change)
+      .pipe(map(response => response.data));
+  }
+
+  licenseWindow(window: 'ending' | 'ended') {
+    return this.http.get<{ data: CoachingLicenseRow[] }>(`${this.coachingSubscriptionsAdminUrl}/window`, { params: { window } })
+      .pipe(map(response => response.data));
+  }
+
+  exportPayments(fromDate: string, toDate: string, status = '') {
+    let params = new HttpParams();
+    if (fromDate) params = params.set('fromDate', fromDate);
+    if (toDate) params = params.set('toDate', toDate);
+    if (status) params = params.set('status', status);
+    return this.http.get(`${this.coachingSubscriptionsAdminUrl}/payments/export`, { params, responseType: 'blob' });
+  }
+
+  churn(months = 12) {
+    return this.http.get<{ data: CoachingChurnRow[] }>(`${this.coachingSubscriptionsAdminUrl}/churn`, { params: { months } })
+      .pipe(map(response => response.data));
   }
 
   getPayments(pageNumber = 1, pageSize = 25, search = '', status = '') {
