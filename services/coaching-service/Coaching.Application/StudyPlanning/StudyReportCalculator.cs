@@ -4,7 +4,27 @@ using Coaching.Domain.Enums;
 namespace Coaching.Application.StudyPlanning;
 
 public sealed record StudyReportTask(StudyPlanStatus Status, DateOnly PlannedDate, Guid? TopicId,
-    int PlannedMinutes, bool IsCompleted, int? ActualMinutes, int? PlannedQuestions = null, int? ActualQuestions = null, bool WasPublished = false, Guid? WorkId = null, IReadOnlyList<StudyWorkDay>? WorkDays = null);
+    int PlannedMinutes, bool IsCompleted, int? ActualMinutes, int? PlannedQuestions = null, int? ActualQuestions = null, bool WasPublished = false, Guid? WorkId = null, IReadOnlyList<StudyWorkDay>? WorkDays = null,
+    DateOnly? SupersededOn = null);
+
+/// <summary>The local date from which a replaced (archived) plan's unfinished work belongs to the plan that replaced it.</summary>
+public static class StudyPlanSupersession
+{
+    public static DateOnly? LocalDate(DateTime? archivedAt, string? timeZoneId)
+    {
+        if (archivedAt is not { } at) return null;
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(string.IsNullOrWhiteSpace(timeZoneId) ? "Europe/Istanbul" : timeZoneId);
+        return DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(at, DateTimeKind.Utc), zone));
+    }
+
+    /// <summary>
+    /// Active work always counts. A published plan that was replaced keeps the work it scheduled before it was replaced
+    /// and everything completed on it; its later unfinished days were re-planned and are counted by the new plan.
+    /// </summary>
+    public static bool CountsAsScheduled(StudyPlanStatus status, bool wasPublished, bool isCompleted, DateOnly plannedDate, DateOnly? supersededOn) =>
+        status == StudyPlanStatus.Active
+        || status == StudyPlanStatus.Archived && (isCompleted || wasPublished && (supersededOn is null || plannedDate < supersededOn));
+}
 public sealed record StudyTopicReport(Guid? TopicId, int ScheduledTasks, int CompletedTasks,
     long PlannedMinutes, long? ActualMinutes, string? TopicName = null,
     long? PlannedQuestions = null, long? ActualQuestions = null, int PlannedQuestionTasks = 0, int ActualQuestionTasks = 0);
@@ -40,7 +60,7 @@ public static class StudyReportCalculator
         var reportable=tasks.Where(x=>x.Status==StudyPlanStatus.Active || x.Status==StudyPlanStatus.Archived&&(x.WasPublished||x.IsCompleted)).ToArray();
         // Current completion state of work scheduled in the period; this is not a historical as-of snapshot.
         var eligible = tasks.Where(x => x.PlannedDate >= from && x.PlannedDate <= to
-            && (x.Status == StudyPlanStatus.Active || x.Status == StudyPlanStatus.Archived && (x.WasPublished || x.IsCompleted)))
+            && StudyPlanSupersession.CountsAsScheduled(x.Status, x.WasPublished, x.IsCompleted, x.PlannedDate, x.SupersededOn))
             .Select((task, index) => new { Task = task, Unique = task.WorkId.HasValue ? -1 : index })
             .GroupBy(x => (x.Task.WorkId, x.Task.PlannedDate, x.Unique))
             .Select(g => {

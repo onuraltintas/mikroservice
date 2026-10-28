@@ -60,7 +60,7 @@ public sealed class CoachingTeacherTrackingController(CoachingDbContext db, ICoa
                 .Select(x => new { x.Id, x.StudentId, x.WeeklySource }).ToArrayAsync(ct);
             var planIds = plans.Select(x => x.Id).ToArray();
             var tasks = await db.StudyPlanTasks.AsNoTracking().Where(x => Enumerable.Contains(planIds, x.RevisionId)
-                && Enumerable.Contains(allowed, x.StudentId) && !x.IsCompleted && x.PlannedDate >= fromDate && x.PlannedDate <= toDate)
+                && Enumerable.Contains(allowed, x.StudentId) && !x.IsCompleted && x.SkippedAt == null && x.PlannedDate >= fromDate && x.PlannedDate <= toDate)
                 .Select(x => new { x.Id, x.RevisionId, x.StudentId, x.Title, x.PlannedDate, x.PlannedStartMinute, x.PlannedMinutes })
                 .Take(10001).ToArrayAsync(ct);
 

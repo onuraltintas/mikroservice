@@ -33,6 +33,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     public Task<ManualStudyPlanView> ArchiveForStudentAsync(Guid student, Guid id, int version, CancellationToken ct = default) => ArchiveCoreAsync(id, version, ct, student);
     public Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid task, int version, DateOnly date, CancellationToken ct = default) => RescheduleCoreAsync(id, task, version, date, ct);
     public Task<ManualStudyPlanView> RescheduleForStudentAsync(Guid student, Guid id, Guid task, int version, DateOnly date, CancellationToken ct = default) => RescheduleCoreAsync(id, task, version, date, ct, student);
+    public Task<ManualStudyPlanView> SkipTaskAsync(Guid id, Guid task, int version, CancellationToken ct = default) => SkipCoreAsync(id, task, version, ct);
+    public Task<ManualStudyPlanView> SkipForStudentAsync(Guid student, Guid id, Guid task, int version, CancellationToken ct = default) => SkipCoreAsync(id, task, version, ct, student);
     public Task<ManualStudyPlanView> MoveTasksAsync(Guid id, StudyTasksMoveInput request, CancellationToken ct = default) => MoveCoreAsync(id, request, ct);
     public Task<ManualStudyPlanView> MoveForStudentAsync(Guid student, Guid id, StudyTasksMoveInput request, CancellationToken ct = default) => MoveCoreAsync(id, request, ct, student);
     public Task<ManualStudyPlanView> SaveCalendarTaskAsync(Guid id,Guid? taskId,CalendarTaskSaveInput request,CancellationToken ct=default)
@@ -456,6 +458,22 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken, targetStudent, true);
 
+    // Missed work the student will not do is closed without pretending it was done; it stays in history and reports.
+    private Task<ManualStudyPlanView> SkipCoreAsync(Guid id, Guid taskId, int expectedVersion, CancellationToken cancellationToken, Guid? targetStudent = null)
+        => LockedAsync(async student =>
+        {
+            var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
+            var task = await ActiveTaskAsync(revision, taskId, cancellationToken);
+            if (task.IsCompleted) throw Conflict("Tamamlanan çalışma atlanamaz.");
+            if (task.SkippedAt.HasValue) return await ViewAsync(revision, cancellationToken);
+            task.Skip();
+            revision.RecordTaskChange();
+            if (targetStudent.HasValue)
+                await NotifyPlanChangedAsync(revision, FormattableString.Invariant($"{task.Title}: {task.PlannedDate:dd.MM.yyyy} atlandı."), cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+            return await ViewAsync(revision, cancellationToken);
+        }, cancellationToken, targetStudent, true);
+
     private Task NotifyPlanChangedAsync(StudyPlanRevision revision,string description,CancellationToken ct)
         => events.PublishAsync(new StudyPlanUpdatedEvent(revision.Id,revision.StudentId,description),ct);
 
@@ -512,7 +530,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             .ToListAsync(cancellationToken);
         var history = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == revision.Id && x.StudentId == revision.StudentId)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
-        tasks = tasks.Select(x => x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId }).ToList();
+        tasks = tasks.Select(x => x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId,SkippedAt=history[x.Id].SkippedAt }).ToList();
         if(revision.Status==StudyPlanStatus.Archived&&revision.WasPublished)
         {
             var roots=history.Values.Select(x=>x.OriginalTaskId??x.Id).ToArray();

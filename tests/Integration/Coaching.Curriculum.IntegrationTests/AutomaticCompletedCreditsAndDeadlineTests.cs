@@ -136,7 +136,7 @@ public sealed class AutomaticCompletedCreditsAndDeadlineTests
     {
         const string previous="20261024232232_StudyProgressReconciliation";
         await using var pg=await CurriculumPostgresTests.Pg.Create(previous);await pg.Data.Seed(legacyPlanSchema:true);
-        async Task<string> Row()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(p)-'AutomaticOutcomeEvidence')::text AS "Value" FROM coaching.study_plan_revisions p""").SingleAsync();
+        async Task<string> Row()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(p)-'ArchivedAt'-'AutomaticOutcomeEvidence')::text AS "Value" FROM coaching.study_plan_revisions p""").SingleAsync();
         var before=await Row();await pg.Db.Database.MigrateAsync();await pg.Db.Database.MigrateAsync();Assert.Equal(before,await Row());Assert.False(pg.Db.Database.HasPendingModelChanges());
         var input=await Input(pg.Data);var preview=await Preview(pg.Data,input);await Manual(pg.Data).CreateAutomaticDraftAsync(new("Kalan kapsam",input,preview.ActiveRevisionId,preview.ActiveRevisionVersion,preview.EvidenceFingerprint));
         await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.GetService<IMigrator>().MigrateAsync(previous));

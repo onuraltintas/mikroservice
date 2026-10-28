@@ -19,6 +19,8 @@ public sealed class StudyPlanRevision : AggregateRoot
     public int? AutomaticSourceRevisionVersion { get; private set; }
     public AutomaticOutcomeEvidence? AutomaticOutcomeEvidence { get; private set; }
     public WeeklyPlanSource? WeeklySource { get; private set; }
+    // When the plan stopped being current. Its unfinished work from that day on belongs to the plan that replaced it.
+    public DateTime? ArchivedAt { get; private set; }
     private StudyPlanRevision() { }
 
     public static StudyPlanRevision Create(Guid studentId, Guid planId, int revisionNumber, string title, Guid? createdByTeacherId = null)
@@ -82,6 +84,7 @@ public sealed class StudyPlanRevision : AggregateRoot
         Status = StudyPlanStatus.Archived;
         IsActive = false;
         UpdatedAt = DateTime.UtcNow;
+        ArchivedAt = UpdatedAt;
     }
 
     public void RecordRealizationChange() { UpdatedAt = DateTime.UtcNow; }
@@ -107,6 +110,7 @@ public sealed class StudyPlanRevision : AggregateRoot
         IsActive = true;
         WasPublished = true;
         UpdatedAt = DateTime.UtcNow;
+        ArchivedAt = null;
     }
 
     public void RecordScheduleChange()
@@ -150,6 +154,9 @@ public sealed class StudyPlanTask : AggregateRoot
     public int? PlannedStartMinute { get; private set; }
     public Guid? WeeklyLessonId { get; private set; }
     public string? LessonNameSnapshot { get; private set; }
+    // Missed work the student or teacher decided not to do: it stays in history but is no longer overdue.
+    // Moving it to another day or recording work on it reopens it.
+    public DateTime? SkippedAt { get; private set; }
     private StudyPlanTask() { }
 
     public static StudyPlanTask Create(StudyPlanRevision revision, DateOnly plannedDate, string title,
@@ -267,7 +274,7 @@ public sealed class StudyPlanTask : AggregateRoot
         RemainingMinutes = nextRemaining; RemainingQuestions = nextQuestions;
         ActualMinutes = recordedMinutes; ActualQuestions = questions;
         CompletedAt = completed ? (IsCompleted ? CompletedAt : at) : null;
-        IsCompleted = completed; UpdatedAt = at;
+        IsCompleted = completed; UpdatedAt = at; SkippedAt = null;
         if(!completed)CompletionSourceTaskId=null;
     }
 
@@ -302,6 +309,14 @@ public sealed class StudyPlanTask : AggregateRoot
         if (plannedDate == default) throw new ArgumentException("Valid task date is required.");
         FreezeLegacyWorkDate();
         PlannedDate = plannedDate;
+        SkippedAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Skip()
+    {
+        if (IsCompleted) throw new InvalidOperationException("Completed work cannot be skipped.");
+        SkippedAt ??= DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -311,7 +326,7 @@ public sealed class StudyPlanTask : AggregateRoot
         if (plannedDate == default || startMinute is <0 or >1439 || startMinute+PlannedMinutes>1440)
             throw new ArgumentException("Çalışmanın tarihi ve saat aralığı geçerli olmalıdır.");
         FreezeLegacyWorkDate();
-        PlannedDate=plannedDate; PlannedStartMinute=startMinute; UpdatedAt=DateTime.UtcNow;
+        PlannedDate=plannedDate; PlannedStartMinute=startMinute; SkippedAt=null; UpdatedAt=DateTime.UtcNow;
     }
 
     public void CorrectPlanning(string title, DateOnly plannedDate, int plannedMinutes)

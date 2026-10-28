@@ -33,7 +33,7 @@ public sealed record ManualStudyTaskView(Guid Id, DateOnly PlannedDate, string T
     Guid? TopicId, bool IsPinned, bool IsCompleted, int? ActualMinutes, DateTime? CompletedAt = null,
     string? SourceName = null, int? PlannedQuestions = null, int? ActualQuestions = null,
     IReadOnlyList<StudyTaskOutcomeView>? Outcomes = null,int? PlannedStartMinute=null,Guid? WeeklyLessonId=null,string? LessonName=null, IReadOnlyList<StudyRealizationChange>? RealizationHistory=null, int? RemainingMinutes=null, int? RemainingQuestions=null, Guid? OriginalTaskId=null, Guid? PredecessorTaskId=null, IReadOnlyList<StudyWorkDay>? WorkDays=null,
-    Guid? CompletionSourceTaskId=null,StudyContinuationView? Continuation=null);
+    Guid? CompletionSourceTaskId=null,StudyContinuationView? Continuation=null,DateTime? SkippedAt=null);
 public sealed record StudyTaskOutcomeView(Guid OutcomeId, string Code, string Name, Guid EstimateId, int EstimateNumber,
     int AllocatedMinutes, string Origin);
 public sealed record ManualStudyPlanView(Guid Id, int Version, string Title, StudyPlanStatus Status,
@@ -61,5 +61,6 @@ public interface IManualStudyPlanService
     Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, int? actualQuestions, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid taskId, int expectedVersion, DateOnly plannedDate, CancellationToken cancellationToken = default);
+    Task<ManualStudyPlanView> SkipTaskAsync(Guid id, Guid taskId, int expectedVersion, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> MoveTasksAsync(Guid id, StudyTasksMoveInput request, CancellationToken cancellationToken = default);
 }

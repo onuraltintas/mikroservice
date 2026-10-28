@@ -118,8 +118,8 @@ public sealed class PlanHistoryAndCompletedCreditTests
             UPDATE coaching.study_plan_revisions SET "AutomaticSourceRevisionId"={referenced},"AutomaticSourceRevisionVersion"=0
             WHERE "Id"={active}
             """);
-        async Task<string[]> PlanRows()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(p)-'WasPublished'-'AutomaticOutcomeEvidence')::text AS "Value" FROM coaching.study_plan_revisions p ORDER BY "Id" """).ToArrayAsync();
-        async Task<string[]> TaskRows()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'OriginalTaskId'-'RealizationHistoryJson'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t ORDER BY "Id" """).ToArrayAsync();
+        async Task<string[]> PlanRows()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(p)-'ArchivedAt'-'WasPublished'-'AutomaticOutcomeEvidence')::text AS "Value" FROM coaching.study_plan_revisions p ORDER BY "Id" """).ToArrayAsync();
+        async Task<string[]> TaskRows()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'SkippedAt'-'OriginalTaskId'-'RealizationHistoryJson'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t ORDER BY "Id" """).ToArrayAsync();
         var plansBefore=await PlanRows();var tasksBefore=await TaskRows();
         await pg.Db.Database.MigrateAsync();await pg.Db.Database.MigrateAsync();
         Assert.Equal(plansBefore,await PlanRows());Assert.Equal(tasksBefore,await TaskRows());

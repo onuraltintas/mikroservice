@@ -12,7 +12,7 @@ public sealed record ProtectedStudyTask(Guid TaskId, DateOnly PlannedDate, strin
 public sealed record AutomaticStudyPreview(int AvailabilityVersion, string TimeZoneId,
     Guid? ActiveRevisionId, int? ActiveRevisionVersion,
     IReadOnlyList<ProtectedStudyTask> ProtectedTasks, StudyDraftSchedule Schedule, IReadOnlyList<ResolvedStudyOutcome>? Outcomes = null, IReadOnlyList<StudyContinuationPreview>? Continuations = null,
-    string? EvidenceFingerprint = null,int CompletedOutcomeMinutes = 0);
+    string? EvidenceFingerprint = null,int CompletedOutcomeMinutes = 0, int CompletedTopicMinutes = 0);
 
 public interface IAutomaticStudyPlanPreviewService
 {

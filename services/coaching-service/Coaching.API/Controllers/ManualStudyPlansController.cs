@@ -96,6 +96,10 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
     public Task<IActionResult> Reschedule(Guid id, Guid taskId, [FromBody] StudyTaskRescheduleInput request, CancellationToken cancellationToken = default)
         => Respond(async () => Ok(new { success = true, data = await plans.RescheduleTaskAsync(id, taskId, request.ExpectedVersion, request.PlannedDate, cancellationToken) }));
 
+    [HttpPut("{id:guid}/tasks/{taskId:guid}/skip"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> Skip(Guid id, Guid taskId, [FromBody] StudyPlanPublishInput request, CancellationToken ct)
+        => Respond(async () => Ok(new { success = true, data = await plans.SkipTaskAsync(id, taskId, request.ExpectedVersion, ct) }));
+
     [HttpPut("{id:guid}/calendar-move"), RequestSizeLimit(32768), EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Move(Guid id, StudyTasksMoveInput request, CancellationToken ct)
         => Respond(async()=>Ok(new {success=true,data=await plans.MoveTasksAsync(id,request,ct)}));

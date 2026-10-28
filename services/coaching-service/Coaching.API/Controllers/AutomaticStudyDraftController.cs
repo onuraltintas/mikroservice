@@ -29,6 +29,8 @@ public sealed class AutomaticStudyDraftController(IAutomaticStudyPlanDraftServic
         { return Conflict(new { success = false, code = ex.Code, message = ex.Message }); }
         catch (KeyNotFoundException)
         { return NotFound(new { success = false, message = "Önce çalışma saatlerinizi belirleyin." }); }
+        catch (StudyPlanValidationException ex)
+        { return BadRequest(new { success = false, code = "StudyPlanning.Validation", message = ex.Message }); }
         catch (ArgumentException)
         { return BadRequest(new { success = false, message = "Başlığı, tarihleri, konuları ve süreleri kontrol edin. Korunan işler dahil en fazla 500 çalışma kaydedilebilir." }); }
     }

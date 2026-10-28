@@ -35,12 +35,12 @@ public sealed class StudentPrimaryGoalController(CoachingDbContext db, ICoaching
         if (context?.Purpose == LearningPurpose.Yks && goal.TargetUniversityProgramId is { } programId)
         {
             var score = await db.TargetUniversityPrograms.Where(x => x.Id == programId).Select(x => x.ScoreType).SingleAsync(ct);
-            if (context.PrimaryScoreType is { } expected && score != expected && score != "TYT")
+            if (!YksScoreTypes.ProgramFitsProfile(context.PrimaryScoreType, score))
                 return BadRequest(new { message = "Programın puan türü profilindeki alanla eşleşmiyor." });
         }
         if (context?.Purpose is not (LearningPurpose.Lgs or LearningPurpose.Yks))
             return BadRequest(new { message = "Önce profilinde sınav hazırlığını belirle." });
-        var advanced = context.PrimaryScoreType switch { "SAY" => "AYT_SAY", "EA" => "AYT_EA", "SOZ" => "AYT_SOZ", "YDT" => "YDT_EN", _ => "TYT" };
+        var advanced = YksScoreTypes.AdvancedNetExam(context.PrimaryScoreType);
         if (goal.NetTargets.Any(x => context.Purpose == LearningPurpose.Lgs ? x.ExamCode != "LGS" : x.ExamCode != "TYT" && x.ExamCode != advanced))
             return BadRequest(new { message = "Net hedefinin sınav kapsamı profilinle eşleşmiyor." });
         var current = await db.Set<StudentPrimaryGoal>().SingleOrDefaultAsync(x => x.StudentId == student, ct);

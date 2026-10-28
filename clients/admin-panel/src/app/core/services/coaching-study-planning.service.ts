@@ -28,6 +28,8 @@ export interface StudyTask extends StudyTaskInput {
   realizationHistory?: StudyRealizationChange[];remainingMinutes?:number|null;remainingQuestions?:number|null;originalTaskId?:string|null;predecessorTaskId?:string|null;
   outcomes?: { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; allocatedMinutes: number; origin: string }[];
   plannedStartMinute?:number|null;weeklyLessonId?:string|null;lessonName?:string|null;
+  /** Missed work closed without being done; moving it or recording work reopens it. */
+  skippedAt?:string|null;
 }
 export interface StudyPlanSummary { id: string; version: number; title: string; status: StudyPlanStatus }
 export interface WeeklyPlanSource {draftVersion:number;learningContextVersion:number|null;startDate:string;endDate:string;reuseFreedSlots:boolean;fingerprint:string;activeRevisionId:string|null;activeRevisionVersion:number|null;timeZoneId?:string}
@@ -35,7 +37,7 @@ export interface StudyPlan extends StudyPlanSummary { tasks: StudyTask[];weeklyS
 export interface StudyPlanInput { title: string; tasks: StudyTaskInput[] }
 export interface StudyPlanPage { items: StudyPlanSummary[]; totalCount: number; pageNumber: number; pageSize: number }
 export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
-export interface TeacherStudyWork {taskId:string;planId:string;title:string;plannedDate:string;plannedStartMinute:number|null;plannedMinutes:number;isCompleted:boolean;isOverdue:boolean;actualMinutes:number|null}
+export interface TeacherStudyWork {taskId:string;planId:string;title:string;plannedDate:string;plannedStartMinute:number|null;plannedMinutes:number;isCompleted:boolean;isOverdue:boolean;actualMinutes:number|null;isSkipped?:boolean}
 export interface TeacherStudyStudent {studentId:string;fullName:string;hasActivePlan:boolean;hasDraft:boolean;completedTasks:number;pendingTasks:number;overdueTasks:number;actualMinutes:number;tasks?:TeacherStudyWork[];progressShared?:boolean}
 export interface TeacherStudyOverview {items:TeacherStudyStudent[];totalCount:number;pageNumber:number;pageSize:number}
 export type StudyDay = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
@@ -153,6 +155,10 @@ export class CoachingStudyPlanningService {
   reschedule(id: string, taskId: string, expectedVersion: number, plannedDate: string, studentId: string | null = null) {
     return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/schedule`,
       { expectedVersion, plannedDate }).pipe(map(result => result.data));
+  }
+  skip(id: string, taskId: string, expectedVersion: number, studentId: string | null = null) {
+    return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/skip`,
+      { expectedVersion }).pipe(map(result => result.data));
   }
   move(id:string,expectedVersion:number,taskIds:string[],plannedDate:string,startMinute:number,studentId:string|null=null){
     return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/calendar-move`,

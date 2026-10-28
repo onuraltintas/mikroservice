@@ -73,6 +73,11 @@ describe('CoachingStudyPlanningService', () => {
     const move = http.expectOne('/api/coaching/study-planning/plans/plan/tasks/task/schedule');
     expect(move.request.body).toEqual({ expectedVersion: 8, plannedDate: '2026-10-07' });
     move.flush({ success: true, data: {} });
+    service.skip('plan', 'task', 9).subscribe();
+    const skip = http.expectOne('/api/coaching/study-planning/plans/plan/tasks/task/skip');
+    expect(skip.request.method).toBe('PUT');
+    expect(skip.request.body).toEqual({ expectedVersion: 9 });
+    skip.flush({ success: true, data: {} });
     http.verify();
   });
 });

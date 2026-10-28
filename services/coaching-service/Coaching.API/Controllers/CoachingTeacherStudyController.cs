@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.API.Controllers;
 
-public sealed record TeacherStudyWork(Guid TaskId,Guid PlanId,string Title,DateOnly PlannedDate,int? PlannedStartMinute,int PlannedMinutes,bool IsCompleted,bool IsOverdue,int? ActualMinutes);
+public sealed record TeacherStudyWork(Guid TaskId,Guid PlanId,string Title,DateOnly PlannedDate,int? PlannedStartMinute,int PlannedMinutes,bool IsCompleted,bool IsOverdue,int? ActualMinutes,bool IsSkipped=false);
 public sealed record TeacherStudyStudent(Guid StudentId,string FullName,bool HasActivePlan,bool HasDraft,
     int CompletedTasks,int PendingTasks,int OverdueTasks,int ActualMinutes,IReadOnlyList<TeacherStudyWork>? Tasks=null,bool ProgressShared=true);
 public sealed record TeacherStudyOverview(IReadOnlyList<TeacherStudyStudent> Items,int TotalCount,int PageNumber,int PageSize);
@@ -37,13 +37,15 @@ public sealed class CoachingTeacherStudyController(CoachingDbContext db,OwnedCoa
             var rows=await (from task in db.StudyPlanTasks.AsNoTracking() join plan in db.StudyPlanRevisions.AsNoTracking() on task.RevisionId equals plan.Id
                 where Enumerable.Contains(ids,task.StudentId)&&plan.StudentId==task.StudentId&&task.PlannedDate>=fromDate&&task.PlannedDate<=toDate
                     &&(plan.Status==StudyPlanStatus.Active||plan.Status==StudyPlanStatus.Archived&&(plan.WasPublished||task.IsCompleted))
-                select new{task.Id,task.Title,task.StudentId,task.RevisionId,task.PlannedDate,task.PlannedStartMinute,task.PlannedMinutes,task.IsCompleted,task.ActualMinutes,plan.Status,plan.WeeklySource,WorkId=task.OriginalTaskId??task.Id}).Take(10001).ToArrayAsync(ct);
+                select new{task.Id,task.Title,task.StudentId,task.RevisionId,task.PlannedDate,task.PlannedStartMinute,task.PlannedMinutes,task.IsCompleted,task.ActualMinutes,task.SkippedAt,plan.Status,plan.WasPublished,plan.ArchivedAt,plan.WeeklySource,WorkId=task.OriginalTaskId??task.Id}).Take(10001).ToArrayAsync(ct);
             if(rows.Length>10000)return UnprocessableEntity(new{message="Dönem çok fazla çalışma içeriyor. Daha kısa bir tarih aralığı seçin."});
+            // A replaced plan's unfinished later days were re-planned; the new plan carries them.
+            rows=rows.Where(x=>StudyPlanSupersession.CountsAsScheduled(x.Status,x.WasPublished,x.IsCompleted,x.PlannedDate,StudyPlanSupersession.LocalDate(x.ArchivedAt,x.WeeklySource?.TimeZoneId))).ToArray();
             var now=(clock??TimeProvider.System).GetUtcNow();
             var localTimes=rows.DistinctBy(t=>t.RevisionId).ToDictionary(t=>t.RevisionId,t=>TimeZoneInfo.ConvertTime(now,TimeZoneInfo.FindSystemTimeZoneById(t.WeeklySource?.TimeZoneId??"Europe/Istanbul")));
             var realized=rows.GroupBy(x=>(x.StudentId,x.WorkId,x.PlannedDate)).ToDictionary(g=>g.Key,g=>g.Any(x=>x.ActualMinutes.HasValue)?(int?)g.Sum(x=>x.ActualMinutes??0):null);
             var grouped=rows.GroupBy(x=>new{x.StudentId,x.WorkId,x.PlannedDate}).Select(g=>g.OrderByDescending(x=>x.IsCompleted).ThenByDescending(x=>x.Status==StudyPlanStatus.Active).First()).ToLookup(x=>x.StudentId);
-            var items=students.Select(student=>{var work=grouped[student.UserId].Select(t=>new TeacherStudyWork(t.Id,t.RevisionId,t.Title,t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,t.IsCompleted,!t.IsCompleted&&IsOverdue(t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,localTimes[t.RevisionId]),realized[(t.StudentId,t.WorkId,t.PlannedDate)])).ToArray();return new TeacherStudyStudent(student.UserId,student.FullName,
+            var items=students.Select(student=>{var work=grouped[student.UserId].Select(t=>new TeacherStudyWork(t.Id,t.RevisionId,t.Title,t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,t.IsCompleted,!t.IsCompleted&&t.SkippedAt==null&&IsOverdue(t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,localTimes[t.RevisionId]),realized[(t.StudentId,t.WorkId,t.PlannedDate)],t.SkippedAt!=null)).ToArray();return new TeacherStudyStudent(student.UserId,student.FullName,
                 plans.Any(p=>p.StudentId==student.UserId&&p.Status==StudyPlanStatus.Active),plans.Any(p=>p.StudentId==student.UserId&&p.Status==StudyPlanStatus.Draft),
                 work.Count(t=>t.IsCompleted),work.Count(t=>!t.IsCompleted),work.Count(t=>t.IsOverdue),work.Sum(t=>t.ActualMinutes??0),work,ids.Contains(student.UserId));}).ToArray();
             return Ok(new TeacherStudyOverview(items,roster.TotalCount,pageNumber,pageSize));
