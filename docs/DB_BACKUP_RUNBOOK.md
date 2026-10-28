@@ -28,7 +28,7 @@ Her gece 03:17'de (Türkiye saati) sunucudaki her PostgreSQL veritabanının yed
    - Özel anahtarı parola yöneticisinde sakla; sunucuya **koyma**. Açık anahtar (`age1…`) sunucuya yazılır.
 3. Ayar dosyasını hazırla:
    - `sudo mkdir -p /etc/eduivme`
-   - `sudo cp infrastructure/backup/db-backup.env.example /etc/eduivme/db-backup.env`
+   - `sudo cp infrastructure/backup/db-backup.conf.example /etc/eduivme/db-backup.env`
    - `sudo chmod 600 /etc/eduivme/db-backup.env`
    - `BACKUP_RCLONE_REMOTE` ve `BACKUP_AGE_RECIPIENT` değerlerini doldur. İstersen `BACKUP_HEALTHCHECK_URL` de ekle; ör. healthchecks.io, yedek gelmezse e-posta atar.
 4. Birimleri kur ve zamanlayıcıları aç. Kurs yönetimi veritabanı ayrı konteynerdedir; adını `docker ps` ile kontrol et.
