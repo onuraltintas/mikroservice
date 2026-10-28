@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { HttpClient } from '@angular/common/http';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
@@ -20,6 +20,19 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../../existing-product-join.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
+
+/** A past calendar date between 3 and 100 years ago (same rule as the API). */
+export function birthDateValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as string | null;
+    if (!value) return null;
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (!match) return { birthDate: true };
+    const date = new Date(Date.UTC(+match[1], +match[2] - 1, +match[3]));
+    const today = new Date();
+    const latest = Date.UTC(today.getUTCFullYear() - 3, today.getUTCMonth(), today.getUTCDate());
+    const earliest = Date.UTC(today.getUTCFullYear() - 100, today.getUTCMonth(), today.getUTCDate());
+    return date.getTime() > latest || date.getTime() < earliest ? { birthDate: true } : null;
+}
 
 @Component({
     selector: 'app-student-register',
@@ -55,7 +68,9 @@ export class StudentRegisterComponent implements OnInit {
         lastName: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, strongPasswordValidator()]],
-        confirmPassword: ['', Validators.required]
+        confirmPassword: ['', Validators.required],
+        // Roadmap Y8: the student's birth date (yyyy-MM-dd from the date input).
+        birthDate: ['', [Validators.required, birthDateValidator]]
     }, { validators: passwordMatchValidator });
 
     constructor() {
@@ -101,9 +116,7 @@ export class StudentRegisterComponent implements OnInit {
             email: formData.email,
             password: formData.password,
             legalAcceptances: this.legalAcceptances,
-            // Öğrenciye özel otomatik alanlar
-            studentNumber: 'ST-' + Math.floor(Math.random() * 100000),
-            dateOfBirth: new Date().toISOString() // İleride tarih seçici eklenirse değiştirilir
+            birthDate: formData.birthDate
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/student`, payload).subscribe({

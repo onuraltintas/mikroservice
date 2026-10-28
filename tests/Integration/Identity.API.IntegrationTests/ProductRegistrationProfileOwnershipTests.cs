@@ -78,6 +78,46 @@ public sealed class ProductRegistrationProfileOwnershipTests
         else Assert.Empty(events);
     }
 
+    // Roadmap Y8: the birth date given at registration reaches the Coaching profile.
+    [Fact]
+    public async Task CoachingStudentRegistration_CarriesTheBirthDateToTheCoachingProfile()
+    {
+        var userId = Guid.NewGuid();
+        var user = User.Create(userId, "student@example.test");
+        var publisher = DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>();
+        var handler = new RegisterStudentCommandHandler(
+            CreateIdentityService(userId),
+            CreateUserRepository(user),
+            DispatchProxy.Create<IStudentRepository, StudentRepositoryProxy>(),
+            DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
+            publisher,
+            DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
+            new AcceptingLegalConsentService(), null!);
+
+        var result = await handler.Handle(new RegisterStudentCommand("student@example.test", "StrongPassword1!", "Test", "Student", null,
+            PlatformProduct.Coaching, null, new DateOnly(2011, 5, 3)), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var message = Assert.Single(((PublishEndpointProxy)(object)publisher).Messages.OfType<CoachingProfileProvisioningRequested>());
+        Assert.Equal(new DateOnly(2011, 5, 3), message.BirthDate);
+    }
+
+    [Fact]
+    public void CoachingStudentRegistration_RequiresAPlausibleBirthDate()
+    {
+        var validator = new Identity.Application.Commands.RegisterStudent.RegisterStudentCommandValidator();
+        RegisterStudentCommand Command(DateOnly? birthDate, PlatformProduct product = PlatformProduct.Coaching) =>
+            new("student@example.test", "StrongPassword1!", "Test", "Student", null, product, null, birthDate);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        Assert.True(validator.Validate(Command(new DateOnly(2011, 5, 3))).IsValid);
+        Assert.False(validator.Validate(Command(null)).IsValid);
+        Assert.False(validator.Validate(Command(today.AddDays(1))).IsValid);
+        Assert.False(validator.Validate(Command(today.AddYears(-2))).IsValid);
+        Assert.False(validator.Validate(Command(today.AddYears(-101))).IsValid);
+        Assert.True(validator.Validate(Command(null, PlatformProduct.SpeedReading)).IsValid, "speed reading does not ask for it yet");
+    }
+
     [Theory]
     [InlineData(PlatformProduct.SpeedReading)]
     [InlineData(PlatformProduct.Coaching)]

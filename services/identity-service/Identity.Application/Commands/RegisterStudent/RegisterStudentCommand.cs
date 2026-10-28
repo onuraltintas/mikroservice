@@ -12,5 +12,7 @@ public record RegisterStudentCommand(
     string LastName,
     string? Phone,
     PlatformProduct? Product = null,
-    IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null
+    IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null,
+    /// <summary>Roadmap Y8: asked at Coaching registration; kept on the Coaching student profile.</summary>
+    DateOnly? BirthDate = null
 ) : IRequest<Result<Guid>>;

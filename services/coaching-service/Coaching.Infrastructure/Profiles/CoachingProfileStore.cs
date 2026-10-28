@@ -18,14 +18,17 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
     public Task<CoachingTeacherProfile?> GetTeacherAsync(Guid userId, CancellationToken ct) =>
         db.CoachingTeacherProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == userId, ct);
 
-    public async Task ProvisionAsync(Guid userId, string role, CancellationToken ct)
+    public async Task ProvisionAsync(Guid userId, string role, CancellationToken ct, DateOnly? birthDate = null)
     {
         if (role is not ("Student" or "Teacher")) throw new ArgumentException("Geçersiz profil rolü.");
         await RequireAccountAsync(userId, role, ct);
         if (role == "Student")
         {
             if (await db.CoachingStudentProfiles.AnyAsync(x => x.UserId == userId, ct)) return;
-            db.CoachingStudentProfiles.Add(CoachingStudentProfile.Create(userId));
+            var created = CoachingStudentProfile.Create(userId);
+            // Roadmap Y8: the birth date given at registration; a later provisioning never overwrites the profile.
+            if (birthDate.HasValue) created.UpdatePersonal(birthDate, created.Bio, created.AvatarUrl, created.ShareProgressWithTeachers);
+            db.CoachingStudentProfiles.Add(created);
         }
         else
         {

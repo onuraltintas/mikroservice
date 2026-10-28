@@ -17,4 +17,6 @@ public sealed record CoachingProfileProvisioningRequested(Guid UserId, string Ro
 {
     public string Product { get; init; } = "coaching";
     public int SchemaVersion { get; init; } = 1;
+    /// <summary>Roadmap Y8: the student's birth date given at registration, when there was one.</summary>
+    public DateOnly? BirthDate { get; init; }
 }
