@@ -143,7 +143,7 @@
     "clients/speed-reading/.postcssrc.json": "6c96a7becce80948b52897a8968a815644d70dbe647227ae627a9cca0edcbabb",
     "clients/speed-reading/Dockerfile": "aa9c5392b9849b29c0ec2df4167f1abe05acb429053378d1ff722d05aebc9863",
     "clients/speed-reading/README.md": "8775f876b25cd50a8a1c2026099df8fdf0ddc8997675fded56b71772dcc3eba9",
-    "clients/speed-reading/angular.json": "42b4603ebb8757dbfcead2e53b1dd0ab42186b6dc97dbb5bbdf0c0d9ead1fd6b",
+    "clients/speed-reading/angular.json": "ceb6238f361096070b7288dab5d88dda47a64b3b0f693288dc69f3fcf9eb96bf",
     "clients/speed-reading/backend_logic_summary.txt": "cde89e255b43de6e6ad0571fd4c6d34e06fe05bb157aa6c9d7c3ce9215b2619a",
     "clients/speed-reading/build-release.txt": "91668d4bad10bd0358c08c81127e35fba9605dc75b952cee1ae780026dec68e1",
     "clients/speed-reading/generate-sitemap.js": "d987b8ebd30790f9aa991c74ae59f9a938ca3c65cf91ea6ffa3972342c6bd90a",
@@ -807,7 +807,7 @@
     "clients/speed-reading/template-contracts/subscription-expiry-access.test.mjs": "b092baf1ac7884ba3abc0bfe5dec9ac35e14077a05f3cf12ca0b501a9bf5ee9c",
     "clients/speed-reading/template-contracts/tachistoscope-validation.test.mjs": "b23237dd69cb0e63ae507deb20ea00ab66dca17dab219dc8207c259a6316d5e5",
     "clients/speed-reading/tsconfig.app.json": "b46615438d1762cd73feff332253962848b2e7f28cd0a61ad7e5f634cf480a17",
-    "clients/speed-reading/tsconfig.json": "20b96bd7aa6e9d6005f29760323085d77480249ca5ae7d0e79bfe164d1ee5d01",
+    "clients/speed-reading/tsconfig.json": "7970ec0b3b64e48f2fa0119c5769b42c270f13f628f321342c67c6e003ca625c",
     "clients/speed-reading/tsconfig.spec.json": "e152888a28f664ba59eef9583fd7377df22e6e4d6de5bfcd577c0d6456a0229f",
     "services/coaching-service/Coaching.API/Coaching.API.csproj": "6e9611a4422703526cf44817d5acdaa884db5d59f49cfc14a3140d17a7bafb22",
     "services/coaching-service/Coaching.API/Coaching.API.http": "b0cfd5d12465a915f9d4373b583cb91714454a66bf752d8755186046d39e57be",
@@ -2619,7 +2619,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "D7 coaching follow-up windows",
+    "purpose": "P3 Angular cleanup: extended template diagnostics as errors and measured speed reading style budget",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2667,7 +2667,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "19908c81",
+    "previousBaselineCommit": "9d88bf64",
     "removedSincePreviousBaseline": []
   }
 }
