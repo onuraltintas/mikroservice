@@ -2,7 +2,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NEVER, of } from 'rxjs';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { AssignmentDetail, CoachingPortalService } from '../../../core/services/coaching-portal.service';
@@ -39,13 +39,6 @@ describe('StudentAssignmentDetailComponent navigation', () => {
     expect(component.assignmentStatusLabel('Graded')).toBe('Değerlendirildi');
   });
 
-  it('returns the teacher assignment list for a teacher', () => {
-    profile.set(user('Teacher'));
-    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
-
-    expect(component.backRoute()).toBe('/coaching-portal/teacher/assignments');
-  });
-
   it('shows book instructions for mixed assignments as well as book-only assignments', () => {
     const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
     const mixed = { source: 'Mixed' } as AssignmentDetail;
@@ -54,13 +47,12 @@ describe('StudentAssignmentDetailComponent navigation', () => {
     expect(component.hasBookReference({ source: 'Digital' } as AssignmentDetail)).toBe(false);
   });
 
-  it('uses the authorized teacher role when the profile has multiple roles', () => {
+  it('offers a teacher no grading here; grading lives in the staff portal (Roadmap D3)', () => {
     profile.set({ ...user('InstitutionAdmin'), roles: ['InstitutionAdmin', 'Teacher'] });
-    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
-
-    expect(component.isTeacher()).toBe(true);
-    expect(component.isStudent()).toBe(false);
-    expect(component.backRoute()).toBe('/coaching-portal/teacher/assignments');
+    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance as unknown as Record<string, unknown>;
+    expect(component['isStudent'] instanceof Function && (component['isStudent'] as () => boolean)()).toBe(false);
+    expect(component['grade']).toBeUndefined();
+    expect(component['isTeacher']).toBeUndefined();
   });
 
   it('lets a dual-role user submit their own assignment in student view', () => {
@@ -69,47 +61,11 @@ describe('StudentAssignmentDetailComponent navigation', () => {
     view.select('Student');
     const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
     expect(component.isStudent()).toBe(true);
-    expect(component.isTeacher()).toBe(false);
     expect(component.backRoute()).toBe('/coaching-portal/assignments');
   });
 });
 
-describe('StudentAssignmentDetailComponent teacher attachments', () => {
-  it('downloads a clean attachment for its assigned student and ignores unscanned attachments', async () => {
-    const profile = signal<UserProfile | null>(user('Teacher'));
-    const attachment = {
-      id: 'attachment-1', originalFileName: 'homework.jpg', contentType: 'image/jpeg',
-      sizeBytes: 2048, status: 'Clean'
-    };
-    const service = {
-      getAssignment: vi.fn(() => of({
-        id: 'assignment-1', assignedStudents: [{ studentId: 'student-1', status: 'Submitted', attachments: [attachment] }]
-      } as AssignmentDetail)),
-      getTeacherStudents: vi.fn(() => of({
-        items: [{ userId: 'student-1', fullName: 'Ada Yılmaz' }],
-        pageNumber: 1, pageSize: 1, totalCount: 1, totalPages: 1
-      })),
-      downloadAttachment: vi.fn(() => NEVER)
-    };
-    TestBed.configureTestingModule({
-      imports: [StudentAssignmentDetailComponent],
-      providers: [
-        { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'assignment-1' } } } }
-      ]
-    });
-    const fixture = TestBed.createComponent(StudentAssignmentDetailComponent);
-    fixture.detectChanges(); await fixture.whenStable();
-    const component = fixture.componentInstance;
-
-    component.downloadTeacherAttachment('student-1', attachment);
-    component.downloadTeacherAttachment('student-1', { ...attachment, status: 'Pending' });
-
-    expect(service.downloadAttachment).toHaveBeenCalledTimes(1);
-    expect(service.downloadAttachment).toHaveBeenCalledWith('assignment-1', 'student-1', 'attachment-1');
-  });
-
+describe('StudentAssignmentDetailComponent attachments', () => {
   it('lets the student upload a Markdown document with an empty browser MIME type', async () => {
     const profile = signal<UserProfile | null>(user('Student'));
     const service = {

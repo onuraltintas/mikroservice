@@ -72,224 +72,28 @@ describe('CoachingSessionsComponent', () => {
     );
   });
 
-  it('loads student reflections for a teacher session without enabling student editing', async () => {
-    const profile = signal<UserProfile | null>(user('Teacher'));
-    const session: CoachingSession = {
-      id: 'session-2',
-      studentId: 'student-1',
-      startTime: '2030-01-01T10:00:00Z',
-      endTime: '2030-01-01T11:00:00Z',
-      durationMinutes: 60,
-      status: 'Completed',
-      type: 'OneOnOne',
-      studentIds: ['student-1'],
-      studentReflections: [{
-        studentId: 'student-1',
-        note: 'Bu hafta deneme analizini tamamladım.',
-        attendanceStatus: 'Present'
-      }]
-    };
-    const service = {
-      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
-      getTeacherStudents: vi.fn(() => of({
-        items: [{ userId: 'student-1', fullName: 'Ada Yılmaz' }],
-        pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1
-      })),
-      calendarFeedUrl: vi.fn(() => '/api/calendar/teacher.ics')
-    };
-
-    TestBed.configureTestingModule({
-      imports: [CoachingSessionsComponent],
-      providers: [
-        { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service },
-        { provide: ActivatedRoute, useValue: {} }
-      ]
-    });
+  it('shows no teacher tools to a teacher who reaches the student calendar (Roadmap D3)', async () => {
+    const service = { getStudentSessions: vi.fn() };
+    TestBed.configureTestingModule({ imports: [CoachingSessionsComponent], providers: [
+      { provide: AuthService, useValue: { userProfile: signal<UserProfile | null>(user('Teacher')) } },
+      { provide: CoachingPortalService, useValue: service },
+      { provide: ActivatedRoute, useValue: {} }
+    ] });
     const fixture = TestBed.createComponent(CoachingSessionsComponent);
-    fixture.detectChanges(); await fixture.whenStable();
-
-    expect(fixture.nativeElement.textContent).toContain('Öğrenci yansımaları');
-    expect(fixture.nativeElement.textContent).toContain('Ada Yılmaz');
-    expect(fixture.nativeElement.textContent).toContain('Bu hafta deneme analizini tamamladım.');
-    expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
-  });
-
-  it('exposes a teacher iCalendar export link', async () => {
-    const profile = signal<UserProfile | null>(user('Teacher'));
-    const service = {
-      getTeacherSessions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
-      downloadCalendarFeed: vi.fn(() => of(new Blob(['BEGIN:VCALENDAR'], { type: 'text/calendar' })))
-    };
-
-    TestBed.configureTestingModule({
-      imports: [CoachingSessionsComponent],
-      providers: [
-        { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service },
-        { provide: ActivatedRoute, useValue: {} }
-      ]
-    });
-    const fixture = TestBed.createComponent(CoachingSessionsComponent);
-    fixture.detectChanges(); await fixture.whenStable();
-
-    const button = fixture.nativeElement.querySelector('[data-testid="calendar-export"]') as HTMLButtonElement;
-    expect(button).not.toBeNull();
-    fixture.componentInstance.exportCalendar();
-    expect(service.downloadCalendarFeed).toHaveBeenCalledWith('teacher');
-  });
-
-  it('lets a teacher update attendance for an assigned session student', async () => {
-    const profile = signal<UserProfile | null>(user('Teacher'));
-    const reflection = {
-      studentId: 'student-1',
-      note: 'Not',
-      attendanceStatus: 'Present'
-    };
-    const session: CoachingSession = {
-      id: 'session-3',
-      studentId: 'student-1',
-      startTime: '2030-01-01T10:00:00Z',
-      endTime: '2030-01-01T11:00:00Z',
-      durationMinutes: 60,
-      status: 'Scheduled',
-      type: 'OneOnOne',
-      studentIds: ['student-1'],
-      studentReflections: [reflection]
-    };
-    const service = {
-      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
-      getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
-      updateSessionAttendance: vi.fn(() => of({ message: 'Attendance updated successfully' }))
-    };
-
-    TestBed.configureTestingModule({
-      imports: [CoachingSessionsComponent],
-      providers: [
-        { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service },
-        { provide: ActivatedRoute, useValue: {} }
-      ]
-    });
-    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
-    await component.ngOnInit();
-    component.saveAttendance(session, reflection, false);
-
-    expect(service.updateSessionAttendance).toHaveBeenCalledWith('session-3', 'student-1', false);
-    expect(session.studentReflections?.[0].attendanceStatus).toBe('Absent');
-  });
-
-  it('shows attendance controls even when the student has not submitted a reflection', async () => {
-    const profile = signal<UserProfile | null>(user('Teacher'));
-    const session: CoachingSession = {
-      id: 'session-no-note', studentId: 'student-no-note', startTime: '2030-01-01T10:00:00Z',
-      endTime: '2030-01-01T11:00:00Z', durationMinutes: 60, status: 'Scheduled', type: 'Group',
-      studentIds: ['student-no-note'],
-      studentReflections: [{ studentId: 'student-no-note', note: null, attendanceStatus: 'Pending' }]
-    };
-    const service = {
-      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 })),
-      getTeacherStudents: vi.fn(() => of({
-        items: [{ userId: 'student-no-note', fullName: 'Deniz Öğrenci' }],
-        pageNumber: 1, pageSize: 1, totalCount: 1, totalPages: 1
-      })),
-      updateSessionAttendance: vi.fn(() => of({ message: 'Attendance updated successfully' }))
-    };
-
-    TestBed.configureTestingModule({
-      imports: [CoachingSessionsComponent],
-      providers: [
-        { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service },
-        { provide: ActivatedRoute, useValue: {} }
-      ]
-    });
-    const fixture = TestBed.createComponent(CoachingSessionsComponent);
-    fixture.detectChanges(); await fixture.whenStable();
-
-    expect(fixture.nativeElement.textContent).toContain('Deniz Öğrenci');
-    expect(fixture.nativeElement.textContent).toContain('Henüz yansıma paylaşılmadı');
-    expect(fixture.nativeElement.textContent).toContain('Katıldı');
-    expect(fixture.nativeElement.textContent).toContain('Katılmadı');
-  });
-
-  it('lets a teacher cancel a scheduled session and updates the local status', async () => {
-    const profile = signal<UserProfile | null>(user('Teacher'));
-    const session: CoachingSession = {
-      id: 'session-4',
-      studentId: 'student-1',
-      startTime: '2030-01-01T10:00:00Z',
-      endTime: '2030-01-01T11:00:00Z',
-      durationMinutes: 60,
-      status: 'Scheduled',
-      type: 'OneOnOne',
-      studentIds: ['student-1']
-    };
-    const service = {
-      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
-      getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
-      cancelTeacherSession: vi.fn(() => of({ message: 'Session cancelled successfully' }))
-    };
-
-    TestBed.configureTestingModule({
-      imports: [CoachingSessionsComponent],
-      providers: [
-        { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service },
-        { provide: ActivatedRoute, useValue: {} }
-      ]
-    });
-    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
-    await component.ngOnInit();
-    component.cancelSession(session);
-
-    expect(service.cancelTeacherSession).toHaveBeenCalledWith('session-4');
-    expect(component.sessions()[0].status).toBe('Cancelled');
-  });
-
-  it('clears the cancellation busy state when the API rejects the request', async () => {
-    const profile = signal<UserProfile | null>(user('Teacher'));
-    const session: CoachingSession = {
-      id: 'session-5',
-      studentId: 'student-1',
-      startTime: '2030-01-01T10:00:00Z',
-      endTime: '2030-01-01T11:00:00Z',
-      durationMinutes: 60,
-      status: 'Scheduled',
-      type: 'OneOnOne',
-      studentIds: ['student-1']
-    };
-    const service = {
-      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
-      getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
-      cancelTeacherSession: vi.fn(() => throwError(() => new Error('conflict')))
-    };
-
-    TestBed.configureTestingModule({
-      imports: [CoachingSessionsComponent],
-      providers: [
-        { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service },
-        { provide: ActivatedRoute, useValue: {} }
-      ]
-    });
-    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
-    await component.ngOnInit();
-    component.cancelSession(session);
-
-    expect(component.savingCancellationId()).toBeNull();
-    expect(component.errorMessage()).toBe('Seans iptal edilemedi.');
+    await fixture.componentInstance.ngOnInit(); fixture.detectChanges();
+    expect(service.getStudentSessions).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.errorMessage()).toContain('öğrenci profili');
+    expect(fixture.nativeElement.querySelector('[data-testid="calendar-export"]')).toBeNull();
   });
 
   it('loads additional session pages without replacing the first page', async () => {
-    const profile = signal<UserProfile | null>(user('Teacher'));
+    const profile = signal<UserProfile | null>(user('Student'));
     const firstSession = { ...sessionFor('session-page-1'), subject: 'Matematik' };
     const secondSession = { ...sessionFor('session-page-2'), subject: 'Fizik' };
     const service = {
-      getTeacherSessions: vi.fn()
+      getStudentSessions: vi.fn()
         .mockReturnValueOnce(of({ items: [firstSession], pageNumber: 1, pageSize: 1, totalCount: 2, totalPages: 2 }))
-        .mockReturnValueOnce(of({ items: [secondSession], pageNumber: 2, pageSize: 1, totalCount: 2, totalPages: 2 })),
-      getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 }))
+        .mockReturnValueOnce(of({ items: [secondSession], pageNumber: 2, pageSize: 1, totalCount: 2, totalPages: 2 }))
     };
 
     TestBed.configureTestingModule({
@@ -304,7 +108,7 @@ describe('CoachingSessionsComponent', () => {
     await component.ngOnInit();
     component.loadMore();
 
-    expect(service.getTeacherSessions).toHaveBeenNthCalledWith(2, 'user-1', 2, 25);
+    expect(service.getStudentSessions).toHaveBeenNthCalledWith(2, 'user-1', 2, 25);
     expect(component.sessions().map(session => session.id)).toEqual(['session-page-1', 'session-page-2']);
     expect(component.totalCount()).toBe(2);
   });

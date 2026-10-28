@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom, forkJoin } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { CoachingLabelPipe } from '../coaching-labels';
@@ -11,8 +11,7 @@ import {
   AssignmentAttachment,
   AssignmentDetail,
   AssignedStudent,
-  CoachingPortalService,
-  TeacherStudent
+  CoachingPortalService
 } from '../../../core/services/coaching-portal.service';
 
 @Component({
@@ -34,17 +33,11 @@ export class StudentAssignmentDetailComponent implements OnInit {
   readonly isUploading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
-  readonly gradingStudentId = signal<string | null>(null);
-  readonly gradeDrafts = signal<Record<string, { score: number | null; feedback: string }>>({});
-  readonly assignedStudentNames = signal<Record<string, string>>({});
   readonly studentNote = signal('');
   readonly studentId = computed(() => this.authService.userProfile()?.id ?? '');
-  readonly isTeacher = computed(() => this.views.current() === 'Teacher');
+  // Roadmap D3: teachers grade in the staff portal; this page is the student's own assignment.
   readonly isStudent = computed(() => this.views.current() === 'Student');
-  readonly backRoute = computed(() => {
-    if (this.isTeacher()) return '/coaching-portal/teacher/assignments';
-    return '/coaching-portal/assignments';
-  });
+  readonly backRoute = computed(() => '/coaching-portal/assignments');
   readonly studentRecord = computed<AssignedStudent | undefined>(() => {
     const assignment = this.assignment();
     const studentId = this.studentId();
@@ -97,57 +90,12 @@ export class StudentAssignmentDetailComponent implements OnInit {
     this.coachingService.getAssignment(assignmentId).subscribe({
       next: assignment => {
         this.assignment.set(assignment);
-        this.gradeDrafts.set(Object.fromEntries(assignment.assignedStudents.map(student => [student.studentId, {
-          score: student.score ?? null,
-          feedback: student.teacherFeedback ?? ''
-        }])));
-        if (this.isTeacher()) this.loadAssignedStudentNames(assignment.assignedStudents);
       },
       error: error => {
         this.errorMessage.set(error.status === 404 ? 'Ödev bulunamadı.' : 'Ödev detayı yüklenemedi.');
         this.isLoading.set(false);
       },
       complete: () => this.isLoading.set(false)
-    });
-  }
-
-  gradeDraft(studentId: string) {
-    return this.gradeDrafts()[studentId] ?? { score: null, feedback: '' };
-  }
-
-  updateGradeDraft(studentId: string, field: 'score' | 'feedback', value: number | string | null) {
-    const current = this.gradeDraft(studentId);
-    this.gradeDrafts.update(drafts => ({
-      ...drafts,
-      [studentId]: {
-        ...current,
-        [field]: field === 'score' ? (value === null || value === '' ? null : Number(value)) : String(value ?? '')
-      }
-    }));
-  }
-
-  grade(studentId: string) {
-    const assignmentId = this.assignment()?.id;
-    const maxScore = this.assignment()?.maxScore;
-    const draft = this.gradeDraft(studentId);
-    if (!assignmentId || draft.score === null || !Number.isFinite(draft.score) || draft.score < 0 || (maxScore !== null && maxScore !== undefined && draft.score > maxScore)) {
-      this.errorMessage.set('Geçerli bir puan gir.');
-      return;
-    }
-
-    this.gradingStudentId.set(studentId);
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
-    this.coachingService.gradeAssignment(assignmentId, studentId, draft.score, draft.feedback).subscribe({
-      next: () => {
-        this.successMessage.set('Değerlendirme kaydedildi.');
-        this.load();
-      },
-      error: () => {
-        this.errorMessage.set('Değerlendirme kaydedilemedi.');
-        this.gradingStudentId.set(null);
-      },
-      complete: () => this.gradingStudentId.set(null)
     });
   }
 
@@ -256,11 +204,6 @@ export class StudentAssignmentDetailComponent implements OnInit {
     this.downloadAttachmentForStudent(studentId, attachment);
   }
 
-  downloadTeacherAttachment(studentId: string, attachment: AssignmentAttachment) {
-    if (!this.isTeacher() || attachment.status !== 'Clean') return;
-    this.downloadAttachmentForStudent(studentId, attachment);
-  }
-
   downloadInstructionAttachment(attachment: AssignmentAttachment) {
     const assignmentId = this.assignment()?.id;
     if (!assignmentId || attachment.status !== 'Clean') return;
@@ -275,10 +218,6 @@ export class StudentAssignmentDetailComponent implements OnInit {
       },
       error: () => this.errorMessage.set('Öğretmenin eklediği dosya indirilemedi.')
     });
-  }
-
-  assignedStudentLabel(studentId: string) {
-    return this.assignedStudentNames()[studentId] ?? 'Öğrenci bilgisi yüklenemedi';
   }
 
   private downloadAttachmentForStudent(studentId: string, attachment: AssignmentAttachment) {
@@ -298,25 +237,5 @@ export class StudentAssignmentDetailComponent implements OnInit {
     });
   }
 
-  private loadAssignedStudentNames(students: readonly AssignedStudent[]) {
-    const studentIds = students.map(student => student.studentId);
-    if (studentIds.length === 0) return;
-
-    const batches: string[][] = [];
-    for (let index = 0; index < studentIds.length; index += 100) {
-      batches.push(studentIds.slice(index, index + 100));
-    }
-
-    forkJoin(batches.map(ids => this.coachingService.getTeacherStudents(1, ids.length, undefined, ids)))
-      .subscribe({
-        next: pages => {
-          const names = Object.fromEntries(pages.flatMap(page =>
-            page.items.map((student: TeacherStudent) => [student.userId, student.fullName] as const)
-          ));
-          this.assignedStudentNames.set(names);
-        },
-        error: () => this.assignedStudentNames.set({})
-      });
-  }
   private readonly feedback = coachingFeedback(this.successMessage, this.errorMessage);
 }

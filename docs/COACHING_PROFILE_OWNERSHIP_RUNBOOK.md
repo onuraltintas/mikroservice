@@ -64,7 +64,7 @@ Ortak hesap düzenleyicisindeki eğitim/kurum alanları kaldırıldı. Ad, soyad
 
 Okuma isteği profil oluşturmaz. Şifreyle kayıt, diğer üründen Koçluğa katılım, yönetici hesabı oluşturma ve Google ile yeni kayıt Koçluk profilini ürün bilgisi taşıyan `CoachingProfileProvisioningRequested` olayıyla ister. Consumer ürün, şema sürümü, rol ve güncel ortak hesap erişimini doğrular; tekrar gelen olay mevcut profili yeniden oluşturmaz veya pasif profili açmaz. Eksik profil, profil ekranındaki açık oluşturma işlemiyle de tamamlanabilir.
 
-Eğitim durumunda öğrenci seçilmişse sınıf 1–12 gerekir. Mezunda sınıf boştur; mezuniyet yılı isteğe bağlıdır. Okul, şehir, doğum tarihi ve biyografi planlama için zorunlu yapılmamıştır. Bu aşamada profil eksikliğini bütün uygulamada zorunlu bir ilk giriş sihirbazına bağlayan yeni akış eklenmemiştir; hedef ve plan sihirbazları sonraki aşamadır.
+Eğitim durumunda öğrenci seçilmişse sınıf 1–12 gerekir. Mezunda sınıf boştur; mezuniyet yılı isteğe bağlıdır. Okul, şehir, doğum tarihi ve biyografi planlama için zorunlu yapılmamıştır. Bu aşamada profil eksikliğini bütün uygulamada zorunlu bir ilk giriş sihirbazına bağlayan yeni akış eklenmemiştir; hedef ve plan sihirbazları sonraki aşamadır. *(Güncel durum: hedefler `/coaching-portal/goals`, Plan sihirbazı `/coaching-portal/automatic-plan` ekranındadır; bkz. `COACHING_STUDY_PLAN_ASSISTANT.md`.)*
 
 ## Yetkilendirme ve veri koruma
 
@@ -143,4 +143,4 @@ node node_modules/@angular/cli/bin/ng.js build admin-panel --configuration=produ
 node node_modules/@angular/cli/bin/ng.js build staff-portal --configuration=production
 ```
 
-Bu testler yük testi veya canlı dağıtım doğrulaması değildir. Hedef oluşturma, otomatik planlama algoritması ve müfredat/kazanım veri kataloğunun genişletilmesi bu aşamanın kapsamı dışındadır.
+Bu testler yük testi veya canlı dağıtım doğrulaması değildir. Hedef oluşturma, otomatik planlama algoritması ve müfredat/kazanım veri kataloğunun genişletilmesi bu aşamanın kapsamı dışındadır. *(Sonradan eklendi: hedefler, kural tabanlı plan motoru sürüm 2 ve kazanım kataloğu.)*

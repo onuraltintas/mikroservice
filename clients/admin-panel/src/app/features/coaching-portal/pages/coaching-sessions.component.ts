@@ -1,17 +1,16 @@
 import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
-import { CoachingPortalService, CoachingSession, CoachingStudentReflection } from '../../../core/services/coaching-portal.service';
+import { CoachingPortalService, CoachingSession } from '../../../core/services/coaching-portal.service';
 
 import { CoachingLabelPipe } from '../coaching-labels';
 @Component({
   selector: 'app-coaching-sessions',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, RouterLink],
+  imports: [CoachingLabelPipe, CommonModule],
   templateUrl: './coaching-sessions.component.html',
   styleUrl: './coaching-sessions.component.scss'
 })
@@ -21,16 +20,11 @@ export class CoachingSessionsComponent implements OnInit {
   private readonly coachingService = inject(CoachingPortalService);
 
   readonly sessions = signal<CoachingSession[]>([]);
-  readonly studentNames = signal<Record<string, string>>({});
-  readonly studentNameLookupFailed = signal(false);
-  readonly isTeacher = signal(false);
   readonly isStudent = signal(false);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly noteDrafts = signal<Record<string, string>>({});
   readonly savingNoteId = signal<string | null>(null);
-  readonly savingAttendanceKey = signal<string | null>(null);
-  readonly savingCancellationId = signal<string | null>(null);
   readonly pageNumber = signal(1);
   readonly totalPages = signal(1);
   readonly totalCount = signal(0);
@@ -38,26 +32,21 @@ export class CoachingSessionsComponent implements OnInit {
 
   ngOnInit() {
     const profile = this.authService.userProfile();
-    this.isTeacher.set(this.views.current() === 'Teacher');
+    // Roadmap D3: teachers use the staff portal; this page is the student's own calendar.
     this.isStudent.set(this.views.current() === 'Student');
-    if (!profile?.id || (!this.isStudent() && !this.isTeacher())) {
+    if (!profile?.id || !this.isStudent()) {
       this.isLoading.set(false);
-      this.errorMessage.set('Seans bilgisi için öğrenci veya öğretmen profili bulunamadı.');
+      this.errorMessage.set('Seans bilgisi için öğrenci profili bulunamadı.');
       return;
     }
 
-    const request = this.isTeacher()
-      ? this.coachingService.getTeacherSessions(profile.id, 1, 25)
-      : this.coachingService.getStudentSessions(profile.id, 1, 25);
-
-    request.subscribe({
+    this.coachingService.getStudentSessions(profile.id, 1, 25).subscribe({
       next: page => {
         this.sessions.set(page.items);
         this.pageNumber.set(page.pageNumber);
         this.totalCount.set(page.totalCount);
         this.totalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
         this.noteDrafts.set(Object.fromEntries(page.items.map(session => [session.id, session.studentNote ?? ''])));
-        this.loadStudentNames(page.items);
       },
       error: () => {
         this.errorMessage.set('Seanslar yüklenemedi. Tekrar dene.');
@@ -73,10 +62,7 @@ export class CoachingSessionsComponent implements OnInit {
 
     const nextPage = this.pageNumber() + 1;
     this.loadingMore.set(true);
-    const request = this.isTeacher()
-      ? this.coachingService.getTeacherSessions(profile.id, nextPage, 25)
-      : this.coachingService.getStudentSessions(profile.id, nextPage, 25);
-    request.pipe(finalize(() => this.loadingMore.set(false))).subscribe({
+    this.coachingService.getStudentSessions(profile.id, nextPage, 25).pipe(finalize(() => this.loadingMore.set(false))).subscribe({
       next: page => {
         this.sessions.update(items => [...items, ...page.items]);
         this.pageNumber.set(page.pageNumber);
@@ -86,7 +72,6 @@ export class CoachingSessionsComponent implements OnInit {
           ...notes,
           ...Object.fromEntries(page.items.map(session => [session.id, session.studentNote ?? '']))
         }));
-        this.loadStudentNames(page.items);
       },
       error: () => this.errorMessage.set('Daha fazla seans yüklenemedi.')
     });
@@ -108,38 +93,8 @@ export class CoachingSessionsComponent implements OnInit {
     this.noteDrafts.update(notes => ({ ...notes, [sessionId]: note }));
   }
 
-  studentLabel(studentId: string) {
-    return this.studentNames()[studentId]
-      ?? (this.studentNameLookupFailed() ? 'Öğrenci adı yüklenemedi' : 'Öğrenci adı yükleniyor');
-  }
-
-  private loadStudentNames(sessions: readonly CoachingSession[]) {
-    if (!this.isTeacher()) return;
-
-    const missingIds = [...new Set(sessions.flatMap(session => session.studentIds))]
-      .filter(studentId => !this.studentNames()[studentId]);
-    if (missingIds.length === 0) return;
-
-    const batches: string[][] = [];
-    for (let index = 0; index < missingIds.length; index += 100) {
-      batches.push(missingIds.slice(index, index + 100));
-    }
-
-    forkJoin(batches.map(ids =>
-      this.coachingService.getTeacherStudents(1, ids.length, undefined, ids)
-    )).subscribe({
-      next: pages => {
-        const names = Object.fromEntries(pages.flatMap(page =>
-          page.items.map(student => [student.userId, student.fullName] as const)
-        ));
-        this.studentNames.update(current => ({ ...current, ...names }));
-      },
-      error: () => this.studentNameLookupFailed.set(true)
-    });
-  }
-
   exportCalendar() {
-    const audience = this.isTeacher() ? 'teacher' : 'student';
+    const audience = 'student';
     this.coachingService.downloadCalendarFeed(audience).subscribe({
       next: blob => {
         if (typeof URL.createObjectURL !== 'function') {
@@ -172,43 +127,5 @@ export class CoachingSessionsComponent implements OnInit {
     });
   }
 
-  saveAttendance(session: CoachingSession, reflection: CoachingStudentReflection, attended: boolean) {
-    if (!this.isTeacher()) return;
-
-    const key = this.attendanceKey(session.id, reflection.studentId);
-    this.savingAttendanceKey.set(key);
-    this.coachingService.updateSessionAttendance(session.id, reflection.studentId, attended).subscribe({
-      next: () => {
-        reflection.attendanceStatus = attended ? 'Present' : 'Absent';
-        this.sessions.update(items => [...items]);
-      },
-      error: () => this.errorMessage.set('Yoklama kaydedilemedi.'),
-      complete: () => this.savingAttendanceKey.set(null)
-    });
-  }
-
-  canCancel(session: CoachingSession) {
-    return this.isTeacher()
-      && !['Cancelled', 'Completed'].includes(session.status)
-      && new Date(session.startTime).getTime() > Date.now();
-  }
-
-  cancelSession(session: CoachingSession) {
-    if (!this.canCancel(session)) return;
-
-    this.savingCancellationId.set(session.id);
-    this.coachingService.cancelTeacherSession(session.id).pipe(
-      finalize(() => this.savingCancellationId.set(null))
-    ).subscribe({
-      next: () => this.sessions.update(items => items.map(item => item.id === session.id
-        ? { ...item, status: 'Cancelled' }
-        : item)),
-      error: () => this.errorMessage.set('Seans iptal edilemedi.')
-    });
-  }
-
-  attendanceKey(sessionId: string, studentId: string) {
-    return `${sessionId}:${studentId}`;
-  }
   private readonly feedback = coachingFeedback(undefined, this.errorMessage);
 }
