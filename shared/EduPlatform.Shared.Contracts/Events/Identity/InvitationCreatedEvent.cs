@@ -9,4 +9,8 @@ public record InvitationCreatedEvent(
     string? Message,
     string? Link,
     DateTime CreatedAt
-);
+)
+{
+    /// <summary>"coaching" for Coaching invitations; empty for the speed-reading workspace invitations.</summary>
+    public string? Product { get; init; }
+}

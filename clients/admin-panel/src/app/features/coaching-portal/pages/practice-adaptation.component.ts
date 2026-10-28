@@ -9,7 +9,8 @@ import { AdaptationReport, AdjustmentPreview, AdjustmentRequest, AnalysisExam, C
 import { StudyPlan } from '../../../core/services/coaching-study-planning.service';
 import { StudyPlanCalendarComponent } from './study-plan-calendar.component';
 
-@Component({ selector: 'app-practice-adaptation', standalone: true, imports: [CommonModule, FormsModule, StudyPlanCalendarComponent],
+import { CoachingDatePipe } from '../coaching-labels';
+@Component({ selector: 'app-practice-adaptation', standalone: true, imports: [CoachingDatePipe, CommonModule, FormsModule, StudyPlanCalendarComponent],
   styles: [`:host{display:block} article{border-top:1px solid #cbd5d8;padding:1rem 0} p{line-height:1.6} label{display:grid;gap:.3rem;margin:.5rem 0} input,select,button{font:inherit;padding:.5rem;border:1px solid #a8bcbc;border-radius:.4rem;color:inherit;background:transparent} button{cursor:pointer;margin:.3rem}button:disabled{opacity:.5;cursor:default} .table{overflow-x:auto}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:.4rem;border-bottom:1px solid #dce3e5}td input{width:4rem} .error{color:#b42318}.preview{border:2px solid #5b8c77;border-radius:.6rem;padding:1rem}.row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:end}`],
   template: `
     <h3>Deneme konu analizi ve plan uyarlama</h3>
@@ -77,7 +78,7 @@ import { StudyPlanCalendarComponent } from './study-plan-calendar.component';
             <p>{{view.message}}</p><p>{{view.previousDeadline ? 'Plan bitişi' : 'Tekrar ufku'}}: {{view.previousDeadline || 'Belirtilmemiş'}} → {{view.proposedDeadline}}.</p>
             <p>Tamamlanan ve sabitlenen çalışmalar korunacak; mevcut çalışmaların gün ve saatleri değişmeyecek.</p>
             @if (calendarPlan(); as plan) { <p>Takvimde “Öneri” yazan kartlar eklenecek tekrarlardır. Diğer kartlar mevcut çalışmalardır.</p><app-study-plan-calendar [plan]="plan" [editable]="false" /> }
-            @for (slot of view.slots; track slot.topicId + slot.date + slot.startMinute) { <p>{{slot.date}} {{time(slot.startMinute)}}–{{time(slot.startMinute + slot.minutes)}} · {{slot.lessonName}} / {{slot.topicName}} · {{slot.minutes}} dk tekrar</p> }
+            @for (slot of view.slots; track slot.topicId + slot.date + slot.startMinute) { <p>{{ slot.date | coachingDate }} {{time(slot.startMinute)}}–{{time(slot.startMinute + slot.minutes)}} · {{slot.lessonName}} / {{slot.topicName}} · {{slot.minutes}} dk tekrar</p> }
             <div class="table"><table><thead><tr><th>Ders</th><th>Önceki son çalışma</th><th>Önerilen son çalışma</th><th>Ek süre</th></tr></thead><tbody>@for (impact of view.impact; track impact.lessonName) { <tr><th>{{impact.lessonName}}</th><td>{{impact.previousFinish || 'Planlanmamış'}}</td><td>{{impact.proposedFinish}}</td><td>{{impact.addedMinutes}} dk</td></tr> }</tbody></table></div>
             @for (item of view.unscheduled; track item.topicId) { <p class="error">{{topicName(item.topicId)}}: {{item.minutes}} dk sığmadı. Kısmi uygulama yapılmayacak.</p> }
             @if (view.canApply && !readOnly) { <label><span><input type="checkbox" [(ngModel)]="approved" [disabled]="saving()">Yukarıdaki ek çalışmaları ve tarih etkisini onaylıyorum.</span></label><button (click)="apply()" [disabled]="saving() || !approved">Onayla ve planı güncelle</button> }

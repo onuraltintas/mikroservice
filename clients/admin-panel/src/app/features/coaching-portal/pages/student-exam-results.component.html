@@ -9,7 +9,7 @@
     @if (busy()) { <p role="status">İşlem sürüyor…</p> }
     @if (!busy() && !error() && !page().items.length) { <p>Henüz kendi girdiğin bir sonuç yok.</p> }
     @for (exam of page().items; track exam.id) { <button type="button" class="plan-row" (click)="open(exam.id)" [disabled]="busy()">
-      <strong>{{ exam.title }}</strong><span>{{exam.netSummary?.name || exam.examType}} · {{exam.examDate}}</span><span>{{ exam.score }} / {{ exam.maxScore }} @if (exam.netSummary) { · {{exam.netSummary.net | number:'1.2-2'}} net }</span></button> }
+      <strong>{{ exam.title }}</strong><span>{{exam.netSummary?.name || exam.examType}} · {{ exam.examDate | coachingDate }}</span><span>{{ exam.score }} / {{ exam.maxScore }} @if (exam.netSummary) { · {{exam.netSummary.net | number:'1.2-2'}} net }</span></button> }
     <div class="pagination"><button type="button" (click)="loadList(page().pageNumber - 1)" [disabled]="busy() || page().pageNumber <= 1">Önceki</button>
       <span>{{ page().pageNumber }} · {{ page().totalCount }} sonuç</span>
       <button type="button" (click)="loadList(page().pageNumber + 1)" [disabled]="busy() || page().pageNumber * page().pageSize >= page().totalCount">Sonraki</button></div>

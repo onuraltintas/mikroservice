@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 import { finalize } from 'rxjs';
+import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-portal/coaching-labels';
 import {
   CoachingInstitutionHistoryType,
   CoachingInstitutionService,
@@ -16,7 +17,7 @@ import {
 @Component({
   selector: 'staff-coaching-institution-student-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent],
   templateUrl: './coaching-institution-student-report.component.html',
   styleUrl: './coaching-institution-student-report.component.scss'
 })

@@ -38,7 +38,7 @@
     <div role="tabpanel" [id]="panelId('exams')" [attr.aria-labelledby]="tabbed ? tabId('exams') : null" [hidden]="tabbed && activeTab() !== 'exams'" tabindex="0">
       <ng-content select="[developmentExams]" />
       @if (report(); as data) {
-<p>{{data.fromDate}} – {{data.toDate}}. Her kapsam ve kayıt kaynağının son altı denemesi ayrı değerlendirilir.</p>
+<p>{{ data.fromDate | coachingDate }} – {{ data.toDate | coachingDate }}. Her kapsam ve kayıt kaynağının son altı denemesi ayrı değerlendirilir.</p>
       @if (!data.trends.length) { <p>Bu dönemde kapsamı belirlenmiş deneme sonucu yok. Deneme sonucu ekleyerek gelişimini izleyebilirsin.</p> }
       @for (trend of data.trends; track trend.examCode + trend.source) {
         <article><h3>{{trend.name}} · {{source(trend.source)}}</h3>
@@ -69,12 +69,12 @@
       @if (report(); as data) {
       <h3>Çalışma planı</h3><p>Aktif planın seçilen döneminde {{data.completedTasks}} / {{data.scheduledTasks}} çalışma tamamlandı. Aktif planda {{data.overdueTasks}} günü geçmiş çalışma var; {{data.pinnedOverdueTasks}} tanesi sabit.</p>
       <p>{{reason(data.recoveryReason)}}</p>
-      @for (proposal of data.recovery; track proposal.taskIds[0]) { <article><strong>{{proposal.title}}</strong><p>{{proposal.previousDate}} {{time(proposal.previousStartMinute)}} → {{proposal.plannedDate}} {{time(proposal.startMinute)}} · {{proposal.minutes}} dk</p>
+      @for (proposal of data.recovery; track proposal.taskIds[0]) { <article><strong>{{proposal.title}}</strong><p>{{ proposal.previousDate | coachingDate }} {{time(proposal.previousStartMinute)}} → {{ proposal.plannedDate | coachingDate }} {{time(proposal.startMinute)}} · {{proposal.minutes}} dk</p>
         @if (!readOnly) { <button type="button" (click)="review(proposal)" [disabled]="saving() || busy()">Öneriyi incele</button> }
       </article> }
       @if (selected(); as proposal) {
         <div class="summary" role="region" aria-label="Plan değişikliği onayı"><h4>Telafi saatini onayla</h4>
-          <p>{{proposal.title}}: {{proposal.previousDate}} {{time(proposal.previousStartMinute)}} yerine {{proposal.plannedDate}} {{time(proposal.startMinute)}}. Süre ve kazanım bağlantıları korunacak.</p>
+          <p>{{proposal.title}}: {{ proposal.previousDate | coachingDate }} {{time(proposal.previousStartMinute)}} yerine {{ proposal.plannedDate | coachingDate }} {{time(proposal.startMinute)}}. Süre ve kazanım bağlantıları korunacak.</p>
           <label><span><input type="checkbox" [(ngModel)]="approved" [disabled]="saving()">Bu tarih ve saat değişikliğini onaylıyorum.</span></label>
           <div class="actions"><button type="button" (click)="apply()" [disabled]="!approved || saving() || stale()">Onayla ve plana uygula</button><button type="button" (click)="selected.set(null)" [disabled]="saving()">Vazgeç</button></div>
         </div>

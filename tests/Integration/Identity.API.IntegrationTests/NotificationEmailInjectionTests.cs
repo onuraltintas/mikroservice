@@ -47,6 +47,23 @@ public sealed class NotificationEmailInjectionTests
         body.Should().Contain("Hoş geldin &amp; başarılar");
     }
 
+    // Roadmap Y6: a Coaching invitation is not branded as the speed-reading product.
+    [Theory]
+    [InlineData("StudentToTeacher", "öğrencisi olarak")]
+    [InlineData("StudentToInstitution", "kurumuna öğrenci olarak")]
+    [InlineData("TeacherToInstitution", "kurumuna öğretmen olarak")]
+    public async Task CoachingInvitations_UseTheCoachingName(string type, string role)
+    {
+        var queue = await RunAsync<InvitationCreatedConsumer>(new InvitationCreatedEvent(
+            Guid.NewGuid(), "koc@example.test", "student@example.test", null, type, null,
+            "https://app.example.test/coaching-portal/profile", DateTime.UtcNow) { Product = "coaching" });
+
+        var mail = queue.Single();
+        mail.Subject.Should().Contain("Koçluk").And.NotContain("Hızlı Okuma");
+        mail.Body.Should().Contain("Eduİvme Koçluk").And.Contain(role).And.NotContain("Hızlı Okuma");
+        mail.Body.Should().Contain("href='https://app.example.test/coaching-portal/profile'");
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

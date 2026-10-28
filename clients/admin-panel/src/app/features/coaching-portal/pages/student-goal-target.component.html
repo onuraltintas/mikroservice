@@ -28,7 +28,7 @@
         <p *ngIf="current.scoreTarget?.subject" class="mt-2 text-xs text-amber-700 dark:text-amber-300">Ders hedefi, toplam sınav puanıyla otomatik karşılaştırılmaz.</p>
         <form *ngIf="current.canEdit; else readonlyScore" (ngSubmit)="saveScore()" class="mt-3">
           <fieldset [disabled]="busy() || saving() || stale()" class="grid gap-3 sm:grid-cols-3">
-            <label class="text-sm">Sınav türü<select [(ngModel)]="examType" name="examType" required class="mt-1 w-full rounded-lg border bg-transparent p-2"><option value="">Seçin</option><option *ngFor="let type of examTypes" [value]="type">{{ type }}</option></select></label>
+            <label class="text-sm">Sınav türü<select [(ngModel)]="examType" name="examType" required class="mt-1 w-full rounded-lg border bg-transparent p-2"><option value="">Seçin</option><option *ngFor="let type of examTypes" [value]="type">{{ type | coachingLabel:'examType' }}</option></select></label>
             <label class="text-sm">Hedef puan<input type="number" [(ngModel)]="score" name="score" required min="0.01" max="999.99" step="0.01" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
             <label class="text-sm">En yüksek puan (ölçek)<input type="number" [(ngModel)]="maxScore" name="maxScore" required min="0.01" max="999.99" step="0.01" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
             <div class="flex flex-wrap gap-3 sm:col-span-3"><button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">Puan hedefini kaydet</button><button type="button" (click)="clearScore()" class="text-sm underline">Puan hedefini kaldır</button></div>

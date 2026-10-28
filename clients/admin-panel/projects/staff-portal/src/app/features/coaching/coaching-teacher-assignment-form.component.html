@@ -119,7 +119,7 @@
         @if (existingAttachments().length > 0) {
           <ul class="attachment-list" aria-label="Mevcut ödev dosyaları">
             @for (attachment of existingAttachments(); track attachment.id) {
-              <li><span>{{ attachment.originalFileName }} · {{ attachment.status }}</span>
+              <li><span>{{ attachment.originalFileName }} · {{ attachment.status | coachingLabel }}</span>
                 <button type="button" class="secondary-button" (click)="downloadInstructionAttachment(attachment)" [disabled]="attachment.status !== 'Clean'">İndir</button>
               </li>
             }

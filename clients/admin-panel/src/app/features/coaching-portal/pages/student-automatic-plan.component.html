@@ -63,8 +63,8 @@
       @if(result.completedOutcomeMinutes){<p>Tamamlanan kazanımların {{result.completedOutcomeMinutes}} dakikalık kapsamı kalan yükten düşüldü. Geçmiş gerçekleşmeler yerinde korunur.</p>}
       @if(!hasPendingWork() && result.schedule.unscheduledMinutes === 0){<p>Seçilen kapsamda planlanacak yeni veya devreden çalışma kalmadı.</p>}
       <h3>Korunan çalışmalar</h3>
-      @for (task of result.protectedTasks; track task.taskId) { <p>{{ task.plannedDate }} — {{ task.title }} · {{ task.plannedMinutes }} dk ({{ task.isCompleted ? 'tamamlanmış' : task.isPinned ? 'sabitlenmiş' : 'devam çalışması' }})</p> }
-      @for (task of result.schedule.tasks; track $index) { <div class="task"><strong>{{ task.plannedDate }} — {{ topicName(task.topicId) }}</strong><p>{{ task.plannedMinutes }} dk</p></div> }
+      @for (task of result.protectedTasks; track task.taskId) { <p>{{ task.plannedDate | coachingDate }} — {{ task.title }} · {{ task.plannedMinutes }} dk ({{ task.isCompleted ? 'tamamlanmış' : task.isPinned ? 'sabitlenmiş' : 'devam çalışması' }})</p> }
+      @for (task of result.schedule.tasks; track $index) { <div class="task"><strong>{{ task.plannedDate | coachingDate }} — {{ topicName(task.topicId) }}</strong><p>{{ task.plannedMinutes }} dk</p></div> }
       @if (result.schedule.unscheduledMinutes > 0) {
         <h3>Plana sığmayan çalışmalar</h3><p>Süreyi veya müsaitlik saatlerini artırarak yeniden önizleyebilirsin. Görev sınırı 500'dür.</p>
         @for (topic of result.schedule.unscheduledTopics; track topic.topicId) { <p>{{ topicName(topic.topicId) }} — {{ topic.remainingMinutes }} dk</p> }

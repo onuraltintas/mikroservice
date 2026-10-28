@@ -8,9 +8,10 @@ import { finalize, map } from 'rxjs';
 import { AutomaticStudyPreview, CoachingStudyPlanningService, StudyAvailability, StudyPlan, StudyTopic, TargetPage, PublishedStudyOutcome } from '../../../core/services/coaching-study-planning.service';
 import { CoachingLearningSetupService, LearningLesson } from '../../../core/services/coaching-learning-setup.service';
 
+import { CoachingDatePipe } from '../coaching-labels';
 @Component({
   selector: 'app-student-automatic-plan', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CoachingDatePipe, CommonModule, FormsModule, RouterLink],
   templateUrl: './student-automatic-plan.component.html',
   styleUrl: './student-study-plans.component.scss'
 })

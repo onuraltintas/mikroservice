@@ -93,7 +93,7 @@
                   <thead><tr><th>Ödev</th><th>Durum</th><th>Son tarih</th><th>Gönderim</th></tr></thead>
                   <tbody>
                     @for (assignment of summary.recentAssignments; track assignment.id) {
-                      <tr><td class="primary-cell">{{ assignment.title }}</td><td><span class="status-chip">{{ assignment.status }}</span></td><td>{{ assignment.dueDate | date:'d MMM y' }}</td><td>{{ assignment.submittedStudentCount }} / {{ assignment.studentCount }}</td></tr>
+                      <tr><td class="primary-cell">{{ assignment.title }}</td><td><span class="status-chip">{{ assignment.status | coachingLabel }}</span></td><td>{{ assignment.dueDate | date:'d MMM y' }}</td><td>{{ assignment.submittedStudentCount }} / {{ assignment.studentCount }}</td></tr>
                     }
                   </tbody>
                 </table>

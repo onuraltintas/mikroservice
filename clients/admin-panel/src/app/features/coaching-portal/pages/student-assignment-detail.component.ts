@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
+import { CoachingLabelPipe } from '../coaching-labels';
 import {
   AssignmentAttachment,
   AssignmentDetail,
@@ -17,7 +18,7 @@ import {
 @Component({
   selector: 'app-student-assignment-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterLink],
   templateUrl: './student-assignment-detail.component.html',
   styleUrl: './student-assignment-detail.component.scss'
 })

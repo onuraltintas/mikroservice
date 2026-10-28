@@ -7,7 +7,8 @@ import { CoachingCatalogService, CoachingCatalogRow } from '../../../core/servic
 import { CurriculumVersion } from '../../../core/services/coaching-learning-setup.service';
 import { environment } from '../../../../environments/environment';
 
-@Component({ selector: 'app-coaching-curriculum', standalone: true, imports: [FormsModule],
+import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
+@Component({ selector: 'app-coaching-curriculum', standalone: true, imports: [CoachingLabelPipe, FormsModule],
   template: `<section class="curriculum"><h2>Müfredat ve program sürümleri</h2>
     <p>Programın kaynağını ve geçerlilik yıllarını kaydedin. Dersler yalnız bir sürüme bağlanır; yeni program sürümünde yeni ders kayıtları kullanın. Eski planlar değişmez.</p>
     @if (error()) { <p role="alert">{{ error() }}</p> }
@@ -30,7 +31,7 @@ import { environment } from '../../../../environments/environment';
       <button type="submit" [disabled]="form.invalid || !selected.length">Taslak program oluştur</button>
     </fieldset></form>
     <p>Yayın için işlem gerekçesini doldurun. Ders, ünite ve konuların aktifliğini ve konu sürelerini ortak katalogdan kontrol edin.</p>
-    @for (version of versions(); track version.id) { <article><strong>{{ version.name }} · {{ version.versionLabel }}</strong><p>{{ version.validFromYear }}–{{ version.validToYear }} eğitim yılı başlangıçları · {{ version.source }} · {{ version.isPublished ? 'Yayında' : 'Taslak / yayında değil' }}</p>
+    @for (version of versions(); track version.id) { <article><strong>{{ version.name }} · {{ version.versionLabel }}</strong><p>{{ version.validFromYear }}–{{ version.validToYear }} eğitim yılı başlangıçları · {{ version.source | coachingLabel }} · {{ version.isPublished ? 'Yayında' : 'Taslak / yayında değil' }}</p>
       <button type="button" [disabled]="saving() || loading() || reason.trim().length < 5" (click)="publish(version)">{{ version.isPublished ? 'Yayından kaldır' : 'Yayınla' }}</button></article> }
   </section>`, styles: [`.curriculum{padding:1rem;border:1px solid #d6deea;border-radius:.75rem}fieldset{border:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;padding:0}label{display:grid;gap:.3rem}.lessons{grid-column:1/-1}.check{display:flex;align-items:center}input,textarea,button{font:inherit;border:1px solid #b8c5d5;border-radius:.4rem;padding:.5rem;max-width:100%;box-sizing:border-box}button{cursor:pointer;margin:.3rem}button:disabled{opacity:.5}article{border-top:1px solid #d6deea;padding-top:1rem;margin-top:1rem}[role=alert]{color:#a21825}`]
 })

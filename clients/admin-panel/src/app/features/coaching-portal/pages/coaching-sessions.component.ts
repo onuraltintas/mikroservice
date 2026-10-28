@@ -7,10 +7,11 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { CoachingPortalService, CoachingSession, CoachingStudentReflection } from '../../../core/services/coaching-portal.service';
 
+import { CoachingLabelPipe } from '../coaching-labels';
 @Component({
   selector: 'app-coaching-sessions',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CoachingLabelPipe, CommonModule, RouterLink],
   templateUrl: './coaching-sessions.component.html',
   styleUrl: './coaching-sessions.component.scss'
 })

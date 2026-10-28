@@ -76,7 +76,7 @@
           <tbody>
             @for (item of history(); track trackById($index, item)) {
               <tr>
-                <td class="primary-cell">{{ item.title }}@if (item.category) { <small class="record-category">{{ item.category }}</small> }</td>
+                <td class="primary-cell">{{ item.title }}@if (item.category) { <small class="record-category">{{ item.category | coachingLabel }}</small> }</td>
                 <td>{{ formatDate(item.eventDate) }}</td>
                 <td><span class="status-chip">{{ statusLabel(item.status) }}</span></td>
                 <td>{{ item.score != null ? item.score : item.progress != null ? '%' + item.progress : '—' }}@if (item.maxScore != null) { <span> / {{ item.maxScore }}</span> }</td>

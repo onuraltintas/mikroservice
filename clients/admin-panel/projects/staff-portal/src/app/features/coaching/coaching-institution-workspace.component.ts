@@ -19,12 +19,13 @@ import { CoachingInstitutionTeacherReportComponent } from './coaching-institutio
 import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 
+import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-portal/coaching-labels';
 type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'subscription' | 'finance';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })

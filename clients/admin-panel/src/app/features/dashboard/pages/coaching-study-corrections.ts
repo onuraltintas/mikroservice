@@ -8,9 +8,10 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { StudyPlan } from '../../../core/services/coaching-study-planning.service';
 import { environment } from '../../../../environments/environment';
 
+import { CoachingLabelPipe, CoachingDatePipe } from '../../coaching-portal/coaching-labels';
 interface Goal { id:string;version:number;title:string;description:string|null;targetDate:string|null;targetScore:number|null;currentProgress:number; }
 interface Audit { id:string;occurredAt:string;actorUserId:string;resourceType:string;changedFieldsJson:string; }
-@Component({selector:'app-coaching-study-corrections',standalone:true,imports:[FormsModule],template:`
+@Component({selector:'app-coaching-study-corrections',standalone:true,imports:[CoachingLabelPipe, CoachingDatePipe, FormsModule],template:`
   @if(permitted()) {
     <section class="space-y-3 rounded-xl border p-4" aria-labelledby="correction-heading">
       <h4 id="correction-heading" class="font-semibold">Gerekçeli düzeltme ve işlem geçmişi</h4>
@@ -45,7 +46,7 @@ interface Audit { id:string;occurredAt:string;actorUserId:string;resourceType:st
         <button type="button" (click)="loadHistory(1)" class="rounded border px-3 py-2">İşlem geçmişini yükle</button>
       </fieldset>
       @if(history();as result) {
-        <ul class="space-y-2 text-sm">@for(row of result.items;track row.id) {<li class="rounded border p-2"><p>{{row.occurredAt}} — Yönetici: {{row.actorUserId}} — {{row.resourceType}}</p><pre class="whitespace-pre-wrap break-all">{{row.changedFieldsJson}}</pre></li>} @empty {<li>Düzeltme kaydı yok.</li>}</ul>
+        <ul class="space-y-2 text-sm">@for(row of result.items;track row.id) {<li class="rounded border p-2"><p>{{ row.occurredAt | coachingDate }} — Yönetici: {{row.actorUserId}} — {{ row.resourceType | coachingLabel }}</p><pre class="whitespace-pre-wrap break-all">{{row.changedFieldsJson}}</pre></li>} @empty {<li>Düzeltme kaydı yok.</li>}</ul>
         <button type="button" (click)="loadHistory(historyPage-1)" [disabled]="busy()||historyPage<=1">Önceki işlemler</button><button type="button" (click)="loadHistory(historyPage+1)" [disabled]="busy()||historyPage*25>=result.totalCount">Sonraki işlemler</button>
       }
     </section>

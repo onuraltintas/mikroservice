@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { CoachingLabelPipe } from '../coaching-labels';
 import {
   CoachingBankTransferRequest,
   CoachingManagementService,
@@ -16,7 +17,7 @@ import {
 @Component({
   selector: 'app-coaching-subscription',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule],
   template: `
     <main class="space-y-6" aria-labelledby="coaching-subscription-title">
       <header>
@@ -58,7 +59,7 @@ import {
             <article class="rounded-2xl border p-5 shadow-sm" [class.border-indigo-500]="selectedPlanId() === plan.id" [class.bg-indigo-50]="selectedPlanId() === plan.id" [class.dark:bg-indigo-950\/20]="selectedPlanId() === plan.id">
               <h3 class="text-lg font-semibold">{{ plan.name }}</h3><p class="mt-2 min-h-10 text-sm text-slate-600 dark:text-slate-300">{{ plan.description }}</p>
               <p class="mt-4 text-2xl font-bold">{{ plan.isContactOnly ? 'İletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (settings()?.currency || 'TRY') }}</p>
-              <p class="mt-1 text-sm text-slate-500">{{ plan.durationDays }} gün erişim · {{ plan.billingPeriod }}</p>
+              <p class="mt-1 text-sm text-slate-500">{{ plan.durationDays }} gün erişim · {{ plan.billingPeriod | coachingLabel:'billingPeriod' }}</p>
               @if (plan.features.length) { <ul class="mt-4 list-disc space-y-1 pl-5 text-sm">@for (feature of plan.features; track feature) { <li>{{ feature }}</li> }</ul> }
               @if (plan.isContactOnly) { <p class="mt-4 text-sm text-slate-500">Bu plan için fiyat bilgisi Koçluk yönetiminden alınır.</p> }
               <button type="button" class="mt-5 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="plan.isContactOnly" (click)="selectPlan(plan)">{{ plan.isContactOnly ? 'Şu an çevrimiçi satın alınamıyor' : (selectedPlanId() === plan.id ? 'Seçildi' : 'Bu planı seç') }}</button>

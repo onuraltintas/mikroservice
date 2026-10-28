@@ -22,10 +22,11 @@ import {
 } from '../../../core/services/coaching-portal.service';
 import { coachingReportCsv, collectCoachingReportPages, downloadCoachingHistoryCsv, renderCoachingReportPrint } from '../../coaching-portal/coaching-history-export';
 
+import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
 @Component({
   selector: 'app-coaching-overview',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterLink],
   template: `
     <section class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -171,7 +172,7 @@ import { coachingReportCsv, collectCoachingReportPages, downloadCoachingHistoryC
                   <p>Hedef: {{ progress.completedGoals }}/{{ progress.totalGoals }} tamamlandı · ilerleme {{ progress.averageGoalProgress }}%</p>
                 </div>
                 <div class="mt-4 grid gap-4 lg:grid-cols-3 text-sm">
-                  <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }} · {{ assignment.status }} · {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
+                  <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }} · {{ assignment.status | coachingLabel }} · {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
                   <div><h4 class="font-semibold">Sınav sonuçları</h4>@for (exam of studentExams(); track exam.examId) { <p class="mt-2">{{ exam.examTitle }} · {{ exam.score }}/{{ exam.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
                   <div><h4 class="font-semibold">Hedefler</h4>@for (goal of studentGoals(); track goal.id) { <p class="mt-2">{{ goal.title }} · {{ goal.progress }}%</p> } @empty { <p class="mt-2 text-gray-500">Hedef yok.</p> }</div>
                 </div>
@@ -206,7 +207,7 @@ import { coachingReportCsv, collectCoachingReportPages, downloadCoachingHistoryC
               </thead>
               <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @for (assignment of data.recentAssignments; track assignment.id) {
-                  <tr><td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ assignment.title }}</td><td class="px-5 py-3">{{ assignment.status }}</td><td class="px-5 py-3">{{ assignment.studentCount }}</td><td class="px-5 py-3">{{ assignment.submittedStudentCount }}</td><td class="px-5 py-3">{{ assignment.dueDate | date:'shortDate' }}</td></tr>
+                  <tr><td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ assignment.title }}</td><td class="px-5 py-3">{{ assignment.status | coachingLabel }}</td><td class="px-5 py-3">{{ assignment.studentCount }}</td><td class="px-5 py-3">{{ assignment.submittedStudentCount }}</td><td class="px-5 py-3">{{ assignment.dueDate | date:'shortDate' }}</td></tr>
                 } @empty {
                   <tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">Kayıt bulunamadı.</td></tr>
                 }

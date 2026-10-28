@@ -11,9 +11,10 @@ import { CoachingStudyPlanningService } from '../../../core/services/coaching-st
 import { WeeklyReviewComponent } from './weekly-review.component';
 import type { WeeklyDestination } from '../../../../../shared/coaching-notification-target';
 
+import { CoachingDatePipe } from '../coaching-labels';
 type DevelopmentTab = 'goals' | 'exams' | 'analysis' | 'work' | 'plan';
 
-@Component({ selector: 'app-practice-progress', standalone: true, imports: [CommonModule, FormsModule, PracticeAdaptationComponent, WeeklyReviewComponent], styles: [`
+@Component({ selector: 'app-practice-progress', standalone: true, imports: [CoachingDatePipe, CommonModule, FormsModule, PracticeAdaptationComponent, WeeklyReviewComponent], styles: [`
   :host { display:block; } section { border:1px solid #cbd5d8; border-radius:1rem; padding:1.2rem; margin:1rem 0; }
   [hidden] { display:none !important; }
   .development-tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0; border-bottom:1px solid #cbd5d8; padding-bottom:.75rem; }
