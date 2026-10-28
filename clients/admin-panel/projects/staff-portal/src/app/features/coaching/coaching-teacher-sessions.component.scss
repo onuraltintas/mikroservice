@@ -57,3 +57,22 @@
   .session-facts { grid-template-columns: 1fr; }
   .reflection-row { flex-direction: column; }
 }
+
+/* Roadmap O6: weekly agenda */
+.view-toggle { display: inline-flex; gap: 0; }
+.view-toggle button { border-radius: 0; }
+.view-toggle button:first-child { border-radius: 8px 0 0 8px; }
+.view-toggle button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
+.view-toggle button[aria-pressed="true"] { color: #fff; background: var(--ui-brand); }
+.agenda { display: grid; gap: 12px; }
+.agenda-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.agenda-heading h4 { margin: 0; font-size: 15px; }
+.agenda-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.agenda-nav button, .agenda-item button { min-height: 32px; padding: 0 10px; border: 1px solid var(--ui-border); border-radius: 7px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.agenda-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.agenda-day { min-width: 0; padding: 10px; border: 1px solid var(--ui-border); border-radius: 10px; background: var(--ui-surface); display: grid; align-content: start; gap: 6px; }
+.agenda-day h5 { margin: 0; font-size: 13px; text-transform: capitalize; }
+.agenda-item { display: grid; gap: 3px; padding: 8px; border-radius: 8px; background: var(--ui-surface-muted); font-size: 12px; overflow-wrap: anywhere; }
+.agenda-item[data-status="Cancelled"] { opacity: .6; text-decoration: line-through; }
+.agenda-status { color: var(--ui-text-muted); }
+.agenda-empty { margin: 0; color: var(--ui-text-muted); font-size: 12px; }

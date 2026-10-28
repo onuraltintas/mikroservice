@@ -3,7 +3,7 @@
   <header class="form-heading">
     <p class="form-eyebrow">KOÇLUK · SEANS YÖNETİMİ</p>
     <h3 id="session-form-title">{{ isEditing ? 'Seansı düzenle' : 'Yeni seans planla' }}</h3>
-    <p>{{ isEditing ? 'Seans zamanı ve notları güncellenebilir; katılımcı listesi değiştirilemez.' : 'Yalnızca size bağlı aktif öğrencilerle seans planlayın.' }}</p>
+    <p>{{ isEditing ? 'Seans zamanı, notları ve katılımcıları güncellenebilir.' : 'Yalnızca size bağlı aktif öğrencilerle seans planlayın.' }}</p>
   </header>
 
   @if (errorMessage()) { <div class="form-error" role="alert">{{ errorMessage() }}</div> }
@@ -36,6 +36,29 @@
         </label>
       </div>
 
+      @if (!isEditing) {
+        <fieldset class="recurrence-fieldset">
+          <legend>Tekrar</legend>
+          <div class="form-grid two-columns">
+            <label>Seans tekrarı
+              <select [(ngModel)]="recurrence.mode" name="recurrenceMode" data-testid="recurrence-mode">
+                <option value="none">Tek seferlik</option>
+                <option value="weekly">Her hafta</option>
+                <option value="biweekly">İki haftada bir</option>
+              </select>
+            </label>
+            @if (recurrence.mode !== 'none') {
+              <label>Toplam seans sayısı
+                <input [(ngModel)]="recurrence.count" name="recurrenceCount" type="number" min="2" [max]="maxSeriesSessions" required data-testid="recurrence-count">
+              </label>
+            }
+          </div>
+          @if (recurrence.mode !== 'none') {
+            <small class="participant-hint">Seanslar aynı gün ve saatte (Türkiye saati) planlanır. Çakışan bir tarih varsa seri hiç oluşturulmaz; başka bir saat seçin.</small>
+          }
+        </fieldset>
+      }
+
       <label class="notes-field">Koç notu (opsiyonel)
         <textarea [(ngModel)]="form.notes" name="notes" maxlength="2000" rows="3"></textarea>
       </label>
@@ -53,16 +76,27 @@
       @if (isEditing) {
         <fieldset class="participants-fieldset">
           <legend>Mevcut katılımcılar · {{ selectedStudentIds().length }}</legend>
-          <p class="read-only-participants">Katılımcılar düzenleme sırasında değiştirilemez.</p>
           <ul class="selected-students">
             @for (studentId of selectedStudentIds(); track studentId) {
-              <li>{{ studentLabel(studentId) }}</li>
+              <li>{{ studentLabel(studentId) }}
+                <button type="button" class="remove-student" [attr.data-testid]="'remove-student-' + studentId"
+                  [attr.aria-label]="studentLabel(studentId) + ' seanstan çıkar'" (click)="removeStudent(studentId)">Çıkar</button>
+              </li>
+            } @empty {
+              <li class="no-students">Katılımcı seçilmedi.</li>
             }
           </ul>
+          @if (seriesId()) {
+            <label class="following-option">
+              <input type="checkbox" [(ngModel)]="applyParticipantsToFollowing" name="applyParticipantsToFollowing" data-testid="participants-following">
+              Katılımcı listesini serinin sonraki planlı seanslarına da uygula
+            </label>
+          }
+          <small class="participant-hint">Çıkarılan öğrenci bilgilendirilir; eklenen öğrenciye yeni seans bildirimi gider.</small>
         </fieldset>
-      } @else {
-        <fieldset class="participants-fieldset">
-          <legend>Katılımcı öğrenciler · {{ selectedStudentIds().length }} seçili</legend>
+      }
+      <fieldset class="participants-fieldset">
+          <legend>{{ isEditing ? 'Öğrenci ekle' : 'Katılımcı öğrenciler · ' + selectedStudentIds().length + ' seçili' }}</legend>
           <div class="student-search" role="search">
             <label class="visually-hidden" for="session-student-search">Öğrenci ara</label>
             <input #studentSearchInput id="session-student-search" type="search" [value]="studentSearchTerm()" placeholder="Öğrenci adıyla ara">
@@ -85,9 +119,9 @@
               <button type="button" (click)="nextStudentsPage()" [disabled]="studentPageNumber() >= studentTotalPages() || isLoadingStudents()">Sonraki</button>
             </div>
           }
-          @if (form.type === 'Group') { <small class="participant-hint">Grup seansında 2–100 öğrenci seçilmelidir.</small> }
-        </fieldset>
-      }
+          @if (form.type === 'Group' && !isEditing) { <small class="participant-hint">Grup seansında 2–100 öğrenci seçilmelidir.</small> }
+          @if (form.type === 'OneOnOne' && isEditing) { <small class="participant-hint">Birebir seansta yeni öğrenci seçmek mevcut öğrencinin yerine geçer.</small> }
+      </fieldset>
 
       <div class="form-actions">
         <button type="button" class="cancel-form" (click)="closeForm()">Vazgeç</button>

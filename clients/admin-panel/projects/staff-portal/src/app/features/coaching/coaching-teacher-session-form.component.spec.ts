@@ -1,10 +1,10 @@
 import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
-import { CoachingTeacherSessionsService } from './coaching-teacher-sessions.service';
+import { CoachingTeacherSession, CoachingTeacherSessionsService } from './coaching-teacher-sessions.service';
 import { CoachingTeacherSessionFormComponent } from './coaching-teacher-session-form.component';
 
 describe('CoachingTeacherSessionFormComponent', () => {
@@ -77,7 +77,7 @@ describe('CoachingTeacherSessionFormComponent', () => {
     expect(component.errorMessage()).toContain('2 ile 100');
   });
 
-  it('loads an existing session and keeps its participants read-only during edit', () => {
+  it('loads an existing session and saves details without touching unchanged participants', () => {
     const service = sessionsService();
     const fixture = createFixture(service, studentService(), 'session-1');
     fixture.detectChanges();
@@ -85,7 +85,6 @@ describe('CoachingTeacherSessionFormComponent', () => {
 
     expect(service.getSession).toHaveBeenCalledWith('session-1');
     expect(component.form.subject).toBe('Matematik');
-    expect(fixture.nativeElement.textContent).toContain('Katılımcılar düzenleme sırasında değiştirilemez');
     expect(fixture.nativeElement.textContent).toContain('Ada Yılmaz');
 
     component.form.startTime = '2030-01-05T10:00';
@@ -96,7 +95,92 @@ describe('CoachingTeacherSessionFormComponent', () => {
     expect(updatedId).toBe('session-1');
     expect(request).toMatchObject({ title: 'Matematik', teacherNotesVisibility: 'StudentVisible' });
     expect(request['studentIds']).toBeUndefined();
+    expect(service.updateParticipants).not.toHaveBeenCalled();
     expect(service.createSession).not.toHaveBeenCalled();
+  });
+
+  it('changes the participants of a group session and optionally the rest of its series (roadmap O6)', () => {
+    const service = sessionsService();
+    service.getSession.mockReturnValue(of({
+      id: 'session-1', studentId: 'student-1', startTime: '2030-01-04T10:00:00Z', endTime: '2030-01-04T10:45:00Z',
+      durationMinutes: 45, subject: 'Grup', status: 'Scheduled', type: 'Group', studentIds: ['student-1', 'student-2'],
+      teacherNotes: '', teacherNotesVisibility: 'CoachPrivate', seriesId: 'series-1'
+    }));
+    const saved = vi.fn();
+    const fixture = createFixture(service, studentService(), 'session-1');
+    fixture.componentInstance.saved.subscribe(saved);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    expect(fixture.nativeElement.querySelector('[data-testid="participants-following"]')).not.toBeNull();
+
+    component.toggleStudent('student-2');
+    component.toggleStudent('student-3');
+    component.applyParticipantsToFollowing = true;
+    component.submit();
+
+    expect(service.updateSession).toHaveBeenCalledOnce();
+    expect(service.updateParticipants).toHaveBeenCalledWith('session-1', ['student-1', 'student-3'], true);
+    expect(saved).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the form open when the participant change is refused', () => {
+    const service = sessionsService();
+    service.updateParticipants.mockReturnValue(throwError(() => ({ status: 400, error: { error: 'Geçmiş seansın katılımcıları değiştirilemez.' } })));
+    const fixture = createFixture(service, studentService(), 'session-1');
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const saved = vi.spyOn(component.saved, 'emit');
+    component.toggleStudent('student-3');
+    component.submit();
+    expect(service.updateParticipants).toHaveBeenCalledWith('session-1', ['student-3'], false);
+    expect(component.errorMessage()).toContain('Geçmiş seansın katılımcıları değiştirilemez.');
+    expect(saved).not.toHaveBeenCalled();
+  });
+
+  it('requires a participant when editing a one-on-one session', () => {
+    const service = sessionsService();
+    const fixture = createFixture(service, studentService(), 'session-1');
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.toggleStudent('student-1');
+    component.submit();
+    expect(component.errorMessage()).toContain('tam olarak bir');
+    expect(service.updateSession).not.toHaveBeenCalled();
+  });
+
+  it('plans a weekly or every-two-weeks series of 2 to 26 sessions (roadmap O6)', () => {
+    const service = sessionsService();
+    service.createSession.mockReturnValue(of({ sessionId: 'session-new', seriesId: 'series-1', count: 6 }));
+    const fixture = createFixture(service);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.form.startTime = '2030-01-04T10:00';
+    component.toggleStudent('student-1');
+
+    component.recurrence.mode = 'weekly';
+    component.recurrence.count = 27;
+    component.submit();
+    expect(component.errorMessage()).toContain('2 ile 26');
+    expect(service.createSession).not.toHaveBeenCalled();
+
+    component.recurrence.mode = 'biweekly';
+    component.recurrence.count = 6;
+    component.submit();
+    const [request] = service.createSession.mock.calls[0] as unknown as [Record<string, unknown>];
+    expect(request['recurrence']).toEqual({ intervalWeeks: 2, count: 6 });
+    expect(component.successMessage()).toBe('6 seanslık seri planlandı.');
+  });
+
+  it('sends no recurrence for a single session', () => {
+    const service = sessionsService();
+    const fixture = createFixture(service);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.form.startTime = '2030-01-04T10:00';
+    component.toggleStudent('student-1');
+    component.submit();
+    const [request] = service.createSession.mock.calls[0] as unknown as [Record<string, unknown>];
+    expect(request['recurrence']).toBeNull();
   });
 
   it('paginates and searches the authenticated teacher roster', () => {
@@ -131,14 +215,15 @@ function createFixture(service = sessionsService(), students = studentService(),
 
 function sessionsService() {
   return {
-    getSession: vi.fn(() => of({
+    getSession: vi.fn((): Observable<CoachingTeacherSession> => of({
       id: 'session-1', studentId: 'student-1', startTime: '2030-01-04T10:00:00Z',
       endTime: '2030-01-04T10:45:00Z', durationMinutes: 45, subject: 'Matematik',
       status: 'Scheduled', type: 'OneOnOne', studentIds: ['student-1'],
       teacherNotes: 'Koç notu korunmalı', teacherNotesVisibility: 'StudentVisible'
     })),
-    createSession: vi.fn(() => of({ sessionId: 'session-new' })),
-    updateSession: vi.fn(() => of({ sessionId: 'session-1', scheduledDate: '2030-01-05T10:00:00Z' }))
+    createSession: vi.fn((): Observable<{ sessionId: string; seriesId?: string | null; count?: number }> => of({ sessionId: 'session-new' })),
+    updateSession: vi.fn(() => of({ sessionId: 'session-1', scheduledDate: '2030-01-05T10:00:00Z' })),
+    updateParticipants: vi.fn((): Observable<{ message: string }> => of({ message: 'ok' }))
   };
 }
 

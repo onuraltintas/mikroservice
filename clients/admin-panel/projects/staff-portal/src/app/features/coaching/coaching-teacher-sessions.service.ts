@@ -25,6 +25,25 @@ export interface CoachingTeacherSession {
   studentReflections?: CoachingTeacherSessionReflection[];
   teacherNotes?: string;
   teacherNotesVisibility?: string;
+  /** Roadmap O6: sessions created together as a weekly series share this id. */
+  seriesId?: string | null;
+}
+
+export interface CoachingTeacherAgenda {
+  weekStart: string;
+  sessions: CoachingTeacherSession[];
+}
+
+/** Roadmap O6: the same local time every week or every two weeks, 2-26 sessions in total. */
+export interface CoachingSessionRecurrence {
+  intervalWeeks: 1 | 2;
+  count: number;
+}
+
+export interface CoachingSessionCreateResult {
+  sessionId: string;
+  seriesId?: string | null;
+  count?: number;
 }
 
 export interface PagedCoachingTeacherSessions {
@@ -48,6 +67,7 @@ export interface CoachingTeacherSessionCreateRequest {
   studentIds: string[];
   meetingLink: string | null;
   teacherNotesVisibility: CoachingNoteVisibility;
+  recurrence?: CoachingSessionRecurrence | null;
 }
 
 export interface CoachingTeacherSessionUpdateRequest {
@@ -88,14 +108,15 @@ export class CoachingTeacherSessionsService {
   createSession(
     request: CoachingTeacherSessionCreateRequest,
     idempotencyKey: string
-  ): Observable<{ sessionId: string }> {
+  ): Observable<CoachingSessionCreateResult> {
     const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
-    return this.http.post<{ sessionId: string }>(this.url, {
+    return this.http.post<CoachingSessionCreateResult>(this.url, {
       ...request,
       subject: request.subject?.trim() || null,
       notes: request.notes?.trim() || null,
       meetingLink: request.meetingLink?.trim() || null,
-      studentIds: [...new Set(request.studentIds.map(studentId => studentId.trim()).filter(Boolean))]
+      studentIds: [...new Set(request.studentIds.map(studentId => studentId.trim()).filter(Boolean))],
+      recurrence: request.recurrence ?? null
     }, { headers });
   }
 
@@ -116,10 +137,29 @@ export class CoachingTeacherSessionsService {
     );
   }
 
-  cancelSession(sessionId: string): Observable<{ message: string }> {
+  /** With includeFollowing the later planned sessions of the same series are cancelled too. */
+  cancelSession(sessionId: string, includeFollowing = false): Observable<{ message: string }> {
+    const options = includeFollowing ? { params: new HttpParams().set('following', 'true') } : {};
     return this.http.post<{ message: string }>(
       `${this.url}/${encodeURIComponent(sessionId)}/cancel`,
-      {}
+      {},
+      options
+    );
+  }
+
+  /** Roadmap O6: replaces the participant list of a planned future session (optionally the rest of its series). */
+  updateParticipants(sessionId: string, studentIds: readonly string[], includeFollowing = false): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(
+      `${this.url}/${encodeURIComponent(sessionId)}/participants`,
+      { studentIds: [...new Set(studentIds.map(id => id.trim()).filter(Boolean))], includeFollowing }
+    );
+  }
+
+  /** Roadmap O6: the teacher's sessions in the week that starts on weekStart (yyyy-MM-dd, a Monday). */
+  getTeacherAgenda(teacherId: string, weekStart: string): Observable<CoachingTeacherAgenda> {
+    return this.http.get<CoachingTeacherAgenda>(
+      `${this.url}/teacher/${encodeURIComponent(teacherId)}/agenda`,
+      { params: new HttpParams().set('weekStart', weekStart) }
     );
   }
 

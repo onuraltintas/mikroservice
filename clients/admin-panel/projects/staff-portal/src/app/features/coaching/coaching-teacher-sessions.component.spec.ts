@@ -1,6 +1,8 @@
 import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
@@ -68,7 +70,7 @@ describe('CoachingTeacherSessionsComponent', () => {
     component.requestCancellation(scheduled.id);
     expect(sessions.cancelSession).not.toHaveBeenCalled();
     component.confirmCancellation(scheduled);
-    expect(sessions.cancelSession).toHaveBeenCalledWith('session-1');
+    expect(sessions.cancelSession).toHaveBeenCalledWith('session-1', false);
     expect(component.sessions()[0].status).toBe('Cancelled');
     expect(component.canCancel(component.sessions()[0])).toBe(false);
     expect(component.canCancel({ ...scheduled, startTime: '2020-01-01T10:00:00Z' })).toBe(false);
@@ -111,6 +113,92 @@ describe('CoachingTeacherSessionsComponent', () => {
     expect(fixture.componentInstance.sessions().map(item => item.id)).toEqual(['session-1', 'session-2']);
   });
 
+  it('cancels this and the following planned sessions of a series (roadmap O6)', () => {
+    const first = { ...session('session-1'), seriesId: 'series-1' };
+    const second = { ...session('session-2'), seriesId: 'series-1', startTime: '2030-01-08T10:00:00Z' };
+    const earlier = { ...session('session-0'), seriesId: 'series-1', startTime: '2029-12-25T10:00:00Z' };
+    const other = session('session-3');
+    const sessions = sessionService([earlier, first, second, other]);
+    const fixture = createFixture(sessions, studentService());
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    expect(fixture.nativeElement.textContent).toContain('Tekrarlı');
+
+    component.requestCancellation('session-1');
+    fixture.detectChanges();
+    const following = fixture.nativeElement.querySelector('[data-testid="cancel-following-session-1"]') as HTMLButtonElement;
+    expect(following).not.toBeNull();
+    following.click();
+
+    expect(sessions.cancelSession).toHaveBeenCalledWith('session-1', true);
+    expect(component.sessions().map(item => [item.id, item.status])).toEqual([
+      ['session-0', 'Scheduled'], ['session-1', 'Cancelled'], ['session-2', 'Cancelled'], ['session-3', 'Scheduled']
+    ]);
+  });
+
+  it('offers the following-sessions cancel only for series sessions', () => {
+    const sessions = sessionService([session('session-1')]);
+    const fixture = createFixture(sessions, studentService());
+    fixture.detectChanges();
+    fixture.componentInstance.requestCancellation('session-1');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="cancel-following-session-1"]')).toBeNull();
+  });
+
+  it('shows a Monday-based weekly agenda grouped by day and moves between weeks (roadmap O6)', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2030-01-03T09:00:00Z')); // Thursday
+    try {
+      const sessions = sessionService([session('session-1')]);
+      sessions.getTeacherAgenda.mockReturnValue(of({ weekStart: '2029-12-30', sessions: [
+        { ...session('a'), startTime: '2029-12-31T07:00:00Z' },
+        { ...session('b'), startTime: '2030-01-02T21:30:00Z', subject: 'Gece etüdü' }
+      ] }));
+      const fixture = createFixture(sessions, studentService());
+      fixture.detectChanges();
+      const component = fixture.componentInstance;
+
+      component.showAgenda();
+      fixture.detectChanges();
+      expect(sessions.getTeacherAgenda).toHaveBeenCalledWith('teacher-1', '2029-12-31');
+      const days = component.agendaDays();
+      expect(days.map(day => day.date)).toEqual(['2029-12-31', '2030-01-01', '2030-01-02', '2030-01-03', '2030-01-04', '2030-01-05', '2030-01-06']);
+      expect(days[0].sessions.map(item => item.id)).toEqual(['a']);
+      // 21:30 UTC on 2 January is 00:30 on 3 January in Turkey.
+      expect(days[3].sessions.map(item => item.id)).toEqual(['b']);
+      expect(fixture.nativeElement.textContent).toContain('Gece etüdü');
+
+      component.shiftAgendaWeek(1);
+      expect(sessions.getTeacherAgenda).toHaveBeenLastCalledWith('teacher-1', '2030-01-07');
+      component.shiftAgendaWeek(-2);
+      expect(sessions.getTeacherAgenda).toHaveBeenLastCalledWith('teacher-1', '2029-12-24');
+      component.showList();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.session-list')).not.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows an agenda error without losing the list', () => {
+    const sessions = sessionService([session('session-1')]);
+    sessions.getTeacherAgenda.mockReturnValue(throwError(() => new Error('down')));
+    const fixture = createFixture(sessions, studentService());
+    fixture.detectChanges();
+    fixture.componentInstance.showAgenda();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.agendaError()).toContain('yüklenemedi');
+    expect(fixture.componentInstance.sessions().length).toBe(1);
+  });
+
+  it('offers the personal calendar subscription for the teacher role (roadmap O6)', () => {
+    const fixture = createFixture(sessionService([session('session-1')]), studentService());
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('edu-coaching-calendar-subscription')).not.toBeNull();
+    const request = TestBed.inject(HttpTestingController).expectOne(r => r.url === '/api/calendar/subscription');
+    expect(request.request.params.get('role')).toBe('teacher');
+  });
+
   it('opens the create and edit forms from the teacher session list', () => {
     const sessions = sessionService([session('session-1')]);
     const fixture = createFixture(sessions, studentService());
@@ -137,6 +225,8 @@ function createFixture(
   TestBed.configureTestingModule({
     imports: [CoachingTeacherSessionsComponent],
     providers: [
+      provideHttpClient(),
+      provideHttpClientTesting(),
       { provide: StaffAuthService, useValue: { getCurrentUserId: () => teacherId } },
       { provide: CoachingTeacherSessionsService, useValue: sessions },
       { provide: CoachingTeacherStudentsService, useValue: students }
@@ -172,7 +262,8 @@ function sessionService(items: CoachingTeacherSession[]) {
     getSession: vi.fn(() => of(session('session-1'))),
     createSession: vi.fn(() => of({ sessionId: 'session-new' })),
     updateSession: vi.fn(() => of({ sessionId: 'session-1', scheduledDate: '2030-01-02T10:00:00Z' })),
-    cancelSession: vi.fn(() => of({ message: 'ok' })),
+    cancelSession: vi.fn((_id: string, _following?: boolean) => of({ message: 'ok' })),
+    getTeacherAgenda: vi.fn((): Observable<{ weekStart: string; sessions: CoachingTeacherSession[] }> => of({ weekStart: '2030-01-01', sessions: [] })),
     updateAttendance: vi.fn(() => of({ message: 'ok' })),
     downloadCalendarFeed: vi.fn(() => of(new Blob(['BEGIN:VCALENDAR'], { type: 'text/calendar' })))
   };

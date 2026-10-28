@@ -2,6 +2,8 @@ import { CoachingParentService } from '../parent/coaching-parent.service';
 import { CoachingStudentTeachersService } from '../../../core/services/coaching-student-teachers.service';
 import { CoachingDataExportService } from '../../../core/services/coaching-data-export.service';
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { CoachingTimeZoneService } from '../../../core/services/coaching-time-zone.service';
 import { StudentSettingsComponent } from './student-settings.component';
@@ -9,7 +11,7 @@ import { StudentSettingsComponent } from './student-settings.component';
 describe('StudentSettingsComponent', () => {
   async function setup(zone: string | null = 'Europe/Berlin') {
     const api = { get: vi.fn(() => of({timeZoneId:zone,availabilityVersion:3,draftVersion:4})), save: vi.fn(() => of({timeZoneId:'Europe/London',availabilityVersion:4,draftVersion:5})) };
-    TestBed.configureTestingModule({imports:[StudentSettingsComponent],providers:[{provide:CoachingTimeZoneService,useValue:api},{provide:CoachingParentService,useValue:{getLinks:()=>of([])}},{provide:CoachingStudentTeachersService,useValue:{list:()=>of([])}},{provide:CoachingDataExportService,useValue:{}}]});
+    TestBed.configureTestingModule({imports:[StudentSettingsComponent],providers:[provideHttpClient(),provideHttpClientTesting(),{provide:CoachingTimeZoneService,useValue:api},{provide:CoachingParentService,useValue:{getLinks:()=>of([])}},{provide:CoachingStudentTeachersService,useValue:{list:()=>of([])}},{provide:CoachingDataExportService,useValue:{}}]});
     const fixture=TestBed.createComponent(StudentSettingsComponent); fixture.detectChanges(); await fixture.whenStable();
     return {fixture,component:fixture.componentInstance,api};
   }
@@ -25,5 +27,11 @@ describe('StudentSettingsComponent', () => {
     component.save(); expect(component.zone).toBe('Europe/London');expect(component.dirty).toBe(true);
     expect(api.save).toHaveBeenCalledWith({timeZoneId:'Europe/London',availabilityVersion:3,draftVersion:4});
     component.save();expect(component.dirty).toBe(false);
+  });
+  it('offers the personal calendar subscription for the student role (roadmap O6)',async()=>{
+    const {fixture}=await setup();
+    expect(fixture.nativeElement.querySelector('edu-coaching-calendar-subscription')).not.toBeNull();
+    const request=TestBed.inject(HttpTestingController).expectOne(r=>r.url==='/api/calendar/subscription');
+    expect(request.request.params.get('role')).toBe('student');
   });
 });
