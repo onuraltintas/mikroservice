@@ -3,24 +3,29 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 export interface StaffSectionItem { value: string; label: string; testId?: string }
 export interface StaffSectionGroup { label: string; items: StaffSectionItem[] }
 
-/** Roadmap O2: sections in labelled groups; on the phone the same choices are a single menu. */
+/**
+ * Roadmap O2: sections in labelled groups; on the phone the same choices are a single menu.
+ * Roadmap D4: the buttons follow the ARIA tabs pattern: one tab stop, arrow keys / Home / End move and select,
+ * each tab controls the workspace's panel (`<div role="tabpanel" [id]="panelId" ...>`).
+ */
 @Component({
   selector: 'staff-section-nav',
   standalone: true,
   template: `
-    <nav class="section-nav" [attr.aria-label]="label">
+    <div class="section-nav" role="tablist" [attr.aria-label]="label" (keydown)="move($event)">
       @for (group of groups; track group.label) {
-        <div class="section-group" role="group" [attr.aria-label]="group.label">
+        <div class="section-group" role="none">
           <span class="section-group-label" aria-hidden="true">{{ group.label }}</span>
-          <div class="section-group-items">
+          <div class="section-group-items" role="none">
             @for (item of group.items; track item.value) {
-              <button type="button" [attr.data-testid]="item.testId ?? null" [attr.aria-pressed]="active === item.value"
-                [attr.aria-current]="active === item.value ? 'page' : null" [class.active]="active === item.value" (click)="select.emit(item.value)">{{ item.label }}</button>
+              <button type="button" role="tab" [id]="tabId(item.value)" [attr.data-testid]="item.testId ?? null"
+                [attr.aria-selected]="active === item.value" [attr.aria-controls]="panelId" [attr.tabindex]="active === item.value ? 0 : -1"
+                [class.active]="active === item.value" (click)="select.emit(item.value)">{{ item.label }}</button>
             }
           </div>
         </div>
       }
-    </nav>
+    </div>
     <label class="section-select"><span>{{ label }}</span>
       <select [value]="active" (change)="choose($event)">
         @for (group of groups; track group.label) {
@@ -48,7 +53,24 @@ export class StaffSectionNavComponent {
   @Input({ required: true }) groups: StaffSectionGroup[] = [];
   @Input() active = '';
   @Input() label = 'Bölüm';
+  /** Prefix of the tab ids; the workspace's panel has the id `${idPrefix}-panel`. */
+  @Input() idPrefix = 'section';
+  get panelId(): string { return `${this.idPrefix}-panel`; }
+  tabId(value: string): string { return `${this.idPrefix}-tab-${value}`; }
   @Output() readonly select = new EventEmitter<string>();
+
+  /** Arrow keys, Home and End move to the neighbouring section and select it (automatic activation). */
+  move(event: KeyboardEvent): void {
+    const values = this.groups.flatMap(group => group.items.map(item => item.value));
+    const at = values.indexOf(this.active);
+    if (!values.length) return;
+    const next = ({ ArrowRight: at + 1, ArrowDown: at + 1, ArrowLeft: at - 1, ArrowUp: at - 1, Home: 0, End: values.length - 1 } as Record<string, number>)[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    const value = values[(next + values.length) % values.length];
+    (event.currentTarget as HTMLElement | null)?.ownerDocument.getElementById(this.tabId(value))?.focus();
+    this.select.emit(value);
+  }
 
   choose(event: Event): void {
     const element = event.target as HTMLSelectElement;

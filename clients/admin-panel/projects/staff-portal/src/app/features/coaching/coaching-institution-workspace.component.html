@@ -26,7 +26,8 @@
       </div>
     }
 
-    <staff-section-nav label="Kurum bölümleri" [groups]="sectionGroups" [active]="activeSection()" (select)="chooseSection($event)" />
+    <staff-section-nav label="Kurum bölümleri" idPrefix="institution-section" [groups]="sectionGroups" [active]="activeSection()" (select)="chooseSection($event)" />
+    <div role="tabpanel" id="institution-section-panel" [attr.aria-labelledby]="'institution-section-tab-' + activeSection()">
 
     @if (activeSection() === 'subscription') {
       <staff-coaching-institution-subscription [institutionId]="institutionId()!" />
@@ -192,5 +193,6 @@
         }
       </section>
     }
+    </div>
   }
 </section>

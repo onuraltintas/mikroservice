@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { moveTabFocus } from '../../navigation/staff-tablist';
 import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -22,6 +23,7 @@ import {
   styleUrl: './coaching-institution-student-report.component.scss'
 })
 export class CoachingInstitutionStudentReportComponent implements OnInit {
+  readonly moveTabFocus = moveTabFocus;
   private readonly institutionService = inject(CoachingInstitutionService);
   private readonly destroyRef = inject(DestroyRef);
   private detailRequestId = 0;

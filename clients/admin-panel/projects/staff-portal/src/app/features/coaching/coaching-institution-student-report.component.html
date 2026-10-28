@@ -45,13 +45,14 @@
       <span class="history-scope">{{ historyTotalCount() }} kayıt · tüm Koçluk geçmişi</span>
     </header>
 
-    <nav class="history-tabs" role="tablist" aria-label="Geçmiş kayıt kategorisi">
+    <div class="history-tabs" role="tablist" aria-label="Geçmiş kayıt kategorisi" (keydown)="moveTabFocus($event)">
       @for (type of historyTypes; track type) {
-        <button type="button" role="tab" [attr.data-history-type]="type"
-          [attr.aria-selected]="historyType() === type" [class.active]="historyType() === type"
+        <button type="button" role="tab" [attr.data-history-type]="type" [id]="'institution-history-tab-' + type" aria-controls="institution-history-panel"
+          [attr.aria-selected]="historyType() === type" [attr.tabindex]="historyType() === type ? 0 : -1" [class.active]="historyType() === type"
           (click)="selectHistoryType(type)">{{ historyLabels[type] }}</button>
       }
-    </nav>
+    </div>
+    <div role="tabpanel" id="institution-history-panel" [attr.aria-labelledby]="'institution-history-tab-' + historyType()">
 
     <form class="history-filters" (ngSubmit)="applyFilters()">
       <label>Başlangıç tarihi<input name="historyFromDate" type="date" [(ngModel)]="historyFromDate"></label>
@@ -93,5 +94,6 @@
         <div><button type="button" (click)="previousPage()" [disabled]="historyPage() <= 1 || isHistoryLoading()">Önceki</button><button type="button" (click)="nextPage()" [disabled]="historyPage() >= historyTotalPages() || isHistoryLoading()">Sonraki</button></div>
       </footer>
     }
+    </div>
   </section>
 </section>

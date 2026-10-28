@@ -98,15 +98,40 @@ describe('O2 grouped section menu', () => {
   it('shows labelled groups as buttons and the same choices as a menu for the phone', () => {
     const fixture = TestBed.createComponent(Host); fixture.detectChanges();
     const page = fixture.nativeElement as HTMLElement;
-    expect([...page.querySelectorAll('[role=group]')].map(x => x.getAttribute('aria-label'))).toEqual(['Günlük takip', 'Hesabım']);
+    expect([...page.querySelectorAll('.section-group-label')].map(x => x.textContent?.trim())).toEqual(['Günlük takip', 'Hesabım']);
     expect(page.querySelector('[data-testid=a-tab]')).not.toBeNull();
-    expect(page.querySelector('button[aria-current=page]')?.textContent?.trim()).toBe('B');
+    expect(page.querySelector('[role=tab][aria-selected=true]')?.textContent?.trim()).toBe('B');
     const select = page.querySelector('select') as HTMLSelectElement;
     expect([...select.querySelectorAll('optgroup')].map(x => x.label)).toEqual(['Günlük takip', 'Hesabım']);
     expect(select.value).toBe('b');
     (page.querySelector('[data-testid=a-tab]') as HTMLButtonElement).click();
     select.value = 'c'; select.dispatchEvent(new Event('change'));
     expect(fixture.componentInstance.picked).toEqual(['a', 'c']);
+  });
+});
+
+describe('D4 section tabs', () => {
+  @Component({ standalone: true, imports: [StaffSectionNavComponent], template: `<staff-section-nav label="Bölüm" idPrefix="demo" [groups]="groups" [active]="active()" (select)="active.set($event); picked.push($event)" />` })
+  class Host {
+    readonly active = signal('b'); readonly picked: string[] = [];
+    readonly groups = [{ label: 'Günlük takip', items: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] }, { label: 'Hesabım', items: [{ value: 'c', label: 'C' }] }];
+  }
+
+  it('is one tab stop with arrow, Home and End keys and points at the workspace panel', () => {
+    const fixture = TestBed.createComponent(Host); fixture.detectChanges();
+    const page = fixture.nativeElement as HTMLElement; document.body.appendChild(page);
+    const list = page.querySelector('[role=tablist]') as HTMLElement;
+    expect(list.getAttribute('aria-label')).toBe('Bölüm');
+    const tabs = [...page.querySelectorAll<HTMLButtonElement>('[role=tab]')];
+    expect(tabs.map(x => x.tabIndex)).toEqual([-1, 0, -1]);
+    expect(tabs.every(x => x.getAttribute('aria-controls') === 'demo-panel')).toBe(true);
+    expect(tabs[1].id).toBe('demo-tab-b');
+    const key = (k: string) => { list.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })); fixture.detectChanges(); };
+    key('ArrowRight'); expect(document.activeElement?.id).toBe('demo-tab-c');
+    key('ArrowRight'); key('End'); key('Home'); key('ArrowLeft');
+    expect(fixture.componentInstance.picked).toEqual(['c', 'a', 'c', 'a', 'c']);
+    expect(page.querySelector('[role=tab][aria-selected=true]')?.id).toBe('demo-tab-c');
+    page.remove();
   });
 });
 
