@@ -32,6 +32,7 @@
       <staff-coaching-institution-subscription [institutionId]="institutionId()!" />
     }
     @if (activeSection() === 'finance') { <app-coaching-finance mode="staff" [cashView]="true" /> }
+    @if (activeSection() === 'exams') { <staff-coaching-institution-exams /> }
 
     @if (activeSection() === 'analytics') {
       <div class="analytics-container" [hidden]="!!selectedStudent() || !!selectedTeacher()">

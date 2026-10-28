@@ -1,3 +1,4 @@
+import { CoachingInstitutionExamRanksService } from '../../../core/services/coaching-institution-exam-ranks.service';
 import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
@@ -11,7 +12,7 @@ describe('StudentExamResultsComponent', () => {
     const service = { profiles: vi.fn(() => of([])), list: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 })),
       create: vi.fn(() => of({ id: 'exam', version: 1 })), replace: vi.fn(), delete: vi.fn(), get: vi.fn() };
     const topics = { searchTopics: vi.fn(() => of({ items: [{ id: 'topic', lessonId: 'lesson', name: 'Fractions', lessonName: 'Math' }], totalCount: 1, pageNumber: 1, pageSize: 20 })) };
-    TestBed.configureTestingModule({ imports: [StudentExamResultsComponent], providers: [
+    TestBed.configureTestingModule({ imports: [StudentExamResultsComponent], providers: [{ provide: CoachingInstitutionExamRanksService, useValue: { mine: () => of([]) } },
       { provide: CoachingStudentExamsService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: topics }] });
     const fixture = TestBed.createComponent(StudentExamResultsComponent); fixture.detectChanges(); await fixture.whenStable();
     return { component: fixture.componentInstance, fixture, service };

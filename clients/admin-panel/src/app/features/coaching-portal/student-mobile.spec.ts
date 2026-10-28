@@ -1,3 +1,4 @@
+import { CoachingInstitutionExamRanksService } from '../../core/services/coaching-institution-exam-ranks.service';
 import { Component, signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -151,7 +152,7 @@ describe('O1 practice exam form', () => {
 
   it('names and dates a new practice exam result for the student', async () => {
     const service = { profiles: vi.fn(() => of(profiles)), list: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 })), create: vi.fn(), replace: vi.fn(), delete: vi.fn(), get: vi.fn() };
-    TestBed.configureTestingModule({ imports: [StudentExamResultsComponent], providers: [
+    TestBed.configureTestingModule({ imports: [StudentExamResultsComponent], providers: [{ provide: CoachingInstitutionExamRanksService, useValue: { mine: () => of([]) } },
       { provide: CoachingStudentExamsService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: { searchTopics: vi.fn() } },
       { provide: CoachingLearningSetupService, useValue: { get: () => of({ context: null }) } }] });
     const fixture = TestBed.createComponent(StudentExamResultsComponent); fixture.detectChanges(); await fixture.whenStable();

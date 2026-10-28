@@ -12,6 +12,11 @@ public class Exam : AggregateRoot
     public Guid? InstitutionId { get; private set; }
     public Guid? CreatedByTeacherId { get; private set; }
     public Guid? StudentOwnerId { get; private set; }
+    /// <summary>Roadmap O4: set for an exam the institution runs for all its students (no single teacher owns it).</summary>
+    public Guid? CreatedByAdminId { get; private set; }
+    /// <summary>Roadmap O4: the practice exam scope (LGS, TYT, ...) of an institution-wide exam.</summary>
+    public string? PracticeExamCode { get; private set; }
+    public bool IsInstitutionWide => CreatedByAdminId.HasValue;
 
     public string Title { get; private set; } = string.Empty;
     public ExamType ExamType { get; private set; }
@@ -37,10 +42,14 @@ public class Exam : AggregateRoot
         DateTime examDate,
         decimal maxScore,
         Guid? institutionId = null,
-        string? description = null)
+        string? description = null,
+        int? targetGradeLevel = null)
     {
+        if (targetGradeLevel is < 1 or > 12)
+            throw new ArgumentOutOfRangeException(nameof(targetGradeLevel), "Grade level must be between 1 and 12");
         var exam = new Exam
         {
+            TargetGradeLevel = targetGradeLevel,
             CreatedByTeacherId = createdByTeacherId,
             Title = title ?? throw new ArgumentNullException(nameof(title)),
             ExamType = examType,
@@ -83,6 +92,44 @@ public class Exam : AggregateRoot
         if (maxScore is <= 0 or > 999.99m) throw new ArgumentOutOfRangeException(nameof(maxScore));
         return new Exam { StudentOwnerId = studentId, Title = title.Trim(), ExamType = examType,
             ExamDate = examDate, MaxScore = maxScore };
+    }
+
+    /// <summary>Roadmap O4: an institution-wide practice exam. Its type follows the scope (LGS or YKS).</summary>
+    public static Exam CreateInstitutionWide(Guid adminUserId, Guid institutionId, string title, string practiceExamCode,
+        DateTime examDate, decimal maxScore, int? targetGradeLevel)
+    {
+        if (adminUserId == Guid.Empty || institutionId == Guid.Empty) throw new ArgumentException("Kurum ve yönetici gereklidir.");
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200) throw new ArgumentException("Deneme adı 1-200 karakter olmalıdır.");
+        var profile = PracticeExamRules.Profiles.SingleOrDefault(x => x.Code == practiceExamCode)
+            ?? throw new ArgumentException("Geçerli bir deneme kapsamı seçin.");
+        if (examDate == DateTime.MinValue || examDate.Kind != DateTimeKind.Utc) throw new ArgumentException("Deneme tarihi gereklidir.");
+        if (maxScore is <= 0 or > 999.99m) throw new ArgumentOutOfRangeException(nameof(maxScore));
+        if (targetGradeLevel is < 1 or > 12) throw new ArgumentOutOfRangeException(nameof(targetGradeLevel));
+        return new Exam
+        {
+            CreatedByAdminId = adminUserId, InstitutionId = institutionId, Title = title.Trim(), PracticeExamCode = profile.Code,
+            ExamType = profile.Code == "LGS" ? ExamType.LGS : ExamType.YKS, ExamDate = examDate, MaxScore = maxScore,
+            TargetGradeLevel = targetGradeLevel
+        };
+    }
+
+    /// <summary>Roadmap O4: adds or replaces one student's imported result.</summary>
+    public bool ImportResult(Guid studentId, decimal score, PracticeExamInput practice)
+    {
+        if (!IsInstitutionWide) throw new BusinessRuleException("Exam.NotInstitutionWide", "Yalnız kurum denemelerine sonuç aktarılabilir.");
+        if (practice.ExamCode != PracticeExamCode) throw new ArgumentException("Sonuç bu denemenin kapsamına ait değil.");
+        var totals = PracticeExamRules.Summarize(practice);
+        var existing = _results.FirstOrDefault(x => x.StudentId == studentId);
+        if (existing is not null)
+        {
+            UpdateResult(existing.Id, score, totals.Correct, totals.Wrong, totals.Empty, null, null, existing.TeacherNotes, practice);
+            return true;
+        }
+        var result = ExamResult.Create(Id, studentId, score);
+        result.SetAnswerStatistics(totals.Correct, totals.Wrong, totals.Empty);
+        result.SetPracticeExam(practice, ExamType);
+        AddResult(result);
+        return false;
     }
 
     public Guid RequireTeacherCreator() => CreatedByTeacherId

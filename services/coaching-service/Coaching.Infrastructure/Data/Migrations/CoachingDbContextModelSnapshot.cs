@@ -2114,6 +2114,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("CreatedByAdminId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_admin_id");
+
                     b.Property<Guid?>("CreatedByTeacherId")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_teacher_id");
@@ -2145,6 +2149,11 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("max_score");
+
+                    b.Property<string>("PracticeExamCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("practice_exam_code");
 
                     b.Property<Guid?>("StudentOwnerId")
                         .HasColumnType("uuid")
@@ -2194,7 +2203,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("exams", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_exams_creator", "(created_by_teacher_id IS NOT NULL AND student_owner_id IS NULL) OR (created_by_teacher_id IS NULL AND student_owner_id IS NOT NULL AND institution_id IS NULL)");
+                            t.HasCheckConstraint("ck_exams_creator", "(created_by_teacher_id IS NOT NULL AND student_owner_id IS NULL AND created_by_admin_id IS NULL) OR (created_by_teacher_id IS NULL AND student_owner_id IS NOT NULL AND institution_id IS NULL AND created_by_admin_id IS NULL) OR (created_by_admin_id IS NOT NULL AND created_by_teacher_id IS NULL AND student_owner_id IS NULL AND institution_id IS NOT NULL AND practice_exam_code IS NOT NULL)");
                         });
                 });
 

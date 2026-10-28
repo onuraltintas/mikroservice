@@ -1,0 +1,59 @@
+<section class="institution-exams" aria-labelledby="institution-exams-title">
+  <header class="section-heading"><div><h3 id="institution-exams-title">Kurum denemeleri</h3>
+    <p>Tüm öğrencileriniz için ortak deneme açın, sonuçları CSV dosyasıyla yükleyin; sıralama, yüzdelik ve şube analizi otomatik hesaplanır.</p></div></header>
+  @if (error()) { <p class="workspace-alert error" role="alert">{{ error() }}</p> }
+  @if (message()) { <p class="workspace-alert success" role="status">{{ message() }}</p> }
+
+  <form class="exam-create" (ngSubmit)="create()">
+    <label>Deneme adı<input name="title" [(ngModel)]="form.title" maxlength="200" required></label>
+    <label>Kapsam<select name="examCode" [(ngModel)]="form.examCode">@for (scope of scopes; track scope.code) { <option [value]="scope.code">{{ scope.name }}</option> }</select></label>
+    <label>Tarih<input name="examDate" type="date" [(ngModel)]="form.examDate" required></label>
+    <label>Sınıf<select name="gradeLevel" [(ngModel)]="form.gradeLevel"><option [ngValue]="null">Tüm sınıflar</option>@for (grade of grades; track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }</select></label>
+    <label>Puan ölçeği<input name="maxScore" type="number" min="1" max="999.99" step="0.01" [(ngModel)]="form.maxScore"></label>
+    <button type="submit" [disabled]="busy()">Deneme oluştur</button>
+  </form>
+
+  <div class="exam-list">
+    @for (exam of exams().items; track exam.id) {
+      <button type="button" class="exam-row" [class.active]="selected()?.id === exam.id" (click)="open(exam)">
+        <strong>{{ exam.title }}</strong><span>{{ exam.examName }} · {{ exam.examDate | date:'dd.MM.yyyy' }}{{ exam.gradeLevel ? ' · ' + exam.gradeLevel + '. sınıf' : '' }} · {{ exam.participants }} öğrenci</span>
+      </button>
+    } @empty { <p>Henüz kurum denemesi yok.</p> }
+  </div>
+
+  @if (selected(); as exam) {
+    <section class="exam-detail" aria-labelledby="exam-detail-title">
+      <h4 id="exam-detail-title">{{ exam.title }}</h4>
+      <div class="exam-import">
+        <button type="button" class="outline-button" (click)="downloadTemplate()">CSV şablonunu indir</button>
+        <label class="file-button">Sonuç dosyası yükle (CSV)<input type="file" accept=".csv,text/csv" (change)="chooseFile($event)" [disabled]="busy()"></label>
+        <p class="hint">Her satırda öğrencinin e-postası, puanı ve her ders için doğru ile yanlış sayısı olur. Boşlar kendiliğinden hesaplanır.</p>
+      </div>
+      @if (preview(); as check) {
+        <div class="import-preview" role="status">
+          <p>{{ check.rows }} satır okundu · {{ check.accepted.length }} uygun · {{ check.errors.length }} hatalı</p>
+          @if (check.errors.length) { <ul class="import-errors">@for (problem of check.errors; track problem.line) { <li>{{ problem.line }}. satır: {{ problem.message }}</li> }</ul> }
+          @if (check.accepted.length && !check.errors.length) {
+            <p>{{ check.accepted.length }} sonuç kaydedilecek{{ replacesAny(check) ? '; mevcut sonuçlar güncellenir' : '' }}.</p>
+          }
+          <button type="button" [disabled]="!canApply()" (click)="applyImport()">Sonuçları kaydet</button>
+        </div>
+      }
+      @if (report(); as data) {
+        <div class="branch-filter"><label>Şube<select [ngModel]="branch()" (ngModelChange)="filterBranch($event)" name="branch">
+          <option [ngValue]="null">Tüm şubeler</option>@for (group of data.branches; track group.branch) { <option [ngValue]="group.branch">{{ group.branch }}</option> }</select></label></div>
+        <h5>Şube karşılaştırması</h5>
+        <table><thead><tr><th>Şube</th><th>Öğrenci</th><th>Ortalama net</th><th>En yüksek net</th></tr></thead>
+          <tbody>@for (group of data.branches; track group.branch) { <tr><td>{{ group.branch }}</td><td>{{ group.participants }}</td><td>{{ net(group.averageNet) }}</td><td>{{ net(group.bestNet) }}</td></tr> }</tbody></table>
+        <h5>Ders ortalamaları</h5>
+        <table><thead><tr><th>Ders</th><th>Ortalama net</th></tr></thead>
+          <tbody>@for (section of data.sections; track section.code) { <tr><td>{{ section.name }}</td><td>{{ net(section.averageNet) }}</td></tr> }</tbody></table>
+        <h5>Sıralama</h5>
+        <table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Şube</th><th>Net</th><th>Puan</th><th>Dilim</th></tr></thead>
+          <tbody>@for (row of data.results; track row.studentId) {
+            <tr><td>{{ row.rank }}</td><td>{{ row.studentName }}</td><td>{{ row.classBranch || '—' }}</td><td>{{ net(row.net) }}</td><td>{{ row.score }}</td><td>İlk {{ percent(row.topPercent) }}</td></tr>
+          } @empty { <tr><td colspan="6">Henüz sonuç yok. Sonuç dosyasını yükleyin.</td></tr> }</tbody></table>
+      }
+    </section>
+  }
+</section>
