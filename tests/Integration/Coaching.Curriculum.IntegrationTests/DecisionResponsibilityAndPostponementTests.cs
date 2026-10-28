@@ -80,7 +80,9 @@ public sealed class DecisionResponsibilityAndPostponementTests
         await Assert.ThrowsAsync<ArgumentException>(()=>reviews.PostponeAsync(s.Student,Week,row.Id,new(closed.Version,new(2026,11,5),"Geçerli gerekçe"),default));
         Assert.Equal(1,await pg.Db.Set<WeeklyDecision>().CountAsync());
         await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.GetService<IMigrator>().MigrateAsync("20261024202303_PreservePublishedPlanHistory"));
-        Assert.Equal(new DateOnly(2026,10,28),(await pg.Db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).DueOn);
+        // EF Core 10 commits each rolled-back migration on its own, so a refused downgrade can leave newer columns removed;
+        // the kept data is therefore read with SQL that does not depend on the current model.
+        Assert.Equal("2026-10-28",await pg.Db.Database.SqlQueryRaw<string>("""SELECT "DueOn"::text AS "Value" FROM coaching.weekly_decisions""").SingleAsync());
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
