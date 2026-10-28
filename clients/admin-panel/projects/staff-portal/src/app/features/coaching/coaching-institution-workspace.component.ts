@@ -24,12 +24,13 @@ import { StaffLocationService, StaffPlace } from '../../navigation/staff-locatio
 import { StaffSectionGroup, StaffSectionNavComponent } from '../../navigation/staff-section-nav.component';
 import { CoachingInstitutionExamsComponent } from './coaching-institution-exams.component';
 import { CoachingInstitutionMessagesComponent } from './coaching-institution-messages.component';
+import { CoachingInstitutionBranchesComponent, CoachingInstitutionBulkImportComponent, CoachingInstitutionWorkloadComponent } from './coaching-institution-reports';
 type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'exams' | 'messages' | 'subscription' | 'finance';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent, StaffSectionNavComponent, CoachingInstitutionExamsComponent, CoachingInstitutionMessagesComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent, StaffSectionNavComponent, CoachingInstitutionExamsComponent, CoachingInstitutionMessagesComponent, CoachingInstitutionBranchesComponent, CoachingInstitutionWorkloadComponent, CoachingInstitutionBulkImportComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
@@ -260,6 +261,37 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
       },
       error: () => this.errorMessage.set('Kurum yetkiniz doğrulanamadı. Lütfen oturumunuzu yenileyip tekrar deneyin.')
     });
+  }
+
+  readonly bulkImportVisible = signal(false);
+  @ViewChild(CoachingInstitutionWorkloadComponent) workloadPanel?: Pick<CoachingInstitutionWorkloadComponent, 'load'>;
+  @ViewChild(CoachingInstitutionBranchesComponent) branchesPanel?: Pick<CoachingInstitutionBranchesComponent, 'load'>;
+
+  /** Roadmap O13: the browser's print dialog, where the page can also be saved as PDF. */
+  print(): void { window.print(); }
+
+  refreshOverview(): void {
+    this.loadOverview(); this.workloadPanel?.load(); this.branchesPanel?.load();
+  }
+
+  /** Roadmap O13: after a bulk upload the roster, pending invitations and workload are reloaded. */
+  bulkApplied(): void {
+    this.invitationRefreshKey.update(value => value + 1);
+    this.loadOverview();
+    void this.loadStudents();
+  }
+
+  /** Roadmap O13: the chosen branch is sent with every coaching call, so the workspace starts over for it. */
+  async switchBranch(): Promise<void> {
+    this.cancelStudentEdit();
+    this.selectedStudent.set(null); this.selectedTeacher.set(null);
+    this.overview.set(null); this.students.set([]); this.teachers.set([]); this.teacherFilterOptions.set([]);
+    this.studentPageNumber.set(1); this.teacherPageNumber.set(1); this.studentTotalCount.set(0); this.teacherTotalCount.set(0);
+    this.studentTeacherFilter.set(''); this.studentInviteTeacherUserId = ''; this.handoverTeacherIds = {};
+    this.membershipSuccess.set(null); this.membershipError.set(null); this.bulkImportVisible.set(false);
+    this.institutionId.set(null);
+    this.activeSection.set('overview'); this.rememberSection(true);
+    this.loadScope();
   }
 
   loadOverview(): void {

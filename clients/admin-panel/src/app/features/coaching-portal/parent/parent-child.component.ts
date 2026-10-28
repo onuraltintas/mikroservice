@@ -31,7 +31,10 @@ import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../.
   imports: [CommonModule, FormsModule, RouterLink, CoachingCheckoutComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMyPaymentsComponent, StudentScoreEstimateComponent],
   template: `
     <main class="space-y-6" aria-labelledby="parent-child-title">
-      <a routerLink="/coaching-portal/parent" class="text-sm text-indigo-600 dark:text-indigo-300">← Çocuklarım</a>
+      <div class="no-print flex flex-wrap items-center justify-between gap-2">
+        <a routerLink="/coaching-portal/parent" class="text-sm text-indigo-600 dark:text-indigo-300">← Çocuklarım</a>
+        @if (link()) { <button type="button" data-testid="print-child" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium dark:border-slate-700" (click)="print()">Yazdır / PDF</button> }
+      </div>
       @if (notLinked()) {
         <div role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">Bu öğrenciyle doğrulanmış bir veli bağlantın yok. Çocuğunun bağlantı isteğini onaylamasını bekle.</div>
       } @else if (link(); as child) {
@@ -108,6 +111,8 @@ export class ParentChildComponent implements OnInit {
   private readonly management = inject(CoachingManagementService);
   private readonly studentId = inject(ActivatedRoute).snapshot.paramMap.get('studentId') ?? '';
   get childId(): string { return this.studentId; }
+  /** Roadmap O13: the browser's print dialog, where the page can also be saved as PDF. */
+  print(): void { window.print(); }
   readonly link = signal<ParentLink | null>(null);
   readonly notLinked = signal(false);
   readonly loaded = signal(false);

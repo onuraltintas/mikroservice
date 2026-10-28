@@ -47,6 +47,13 @@ describe('CoachingInstitutionStudentReportComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Geçmiş kayıtlar');
   });
 
+  it('Roadmap O13: prints the report from the browser', () => {
+    const fixture = createFixture(reportService()); fixture.detectChanges();
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    (fixture.nativeElement.querySelector('[data-testid="print-student-report"]') as HTMLButtonElement).click();
+    expect(print).toHaveBeenCalled(); print.mockRestore();
+  });
+
   it('switches record types and requests full history for the selected student', () => {
     const service = reportService({ history: [historyItem('goal-1', 'Goals')] });
     const fixture = createFixture(service);

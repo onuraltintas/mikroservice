@@ -1,4 +1,5 @@
 .student-report { display: grid; gap: 1rem; margin-top: 1.35rem; color: #253244; }
+.report-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; }
 .back-link { justify-self: start; padding: .35rem 0; border: 0; background: transparent; color: #3d6f57; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
 .report-identity, .history-heading, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .report-identity, .summary-panel, .history-panel { padding: 1rem; border: 1px solid #e2e8df; border-radius: .9rem; background: #fffefa; }

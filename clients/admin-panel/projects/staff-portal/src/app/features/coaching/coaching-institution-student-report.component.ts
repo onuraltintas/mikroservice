@@ -29,6 +29,8 @@ export class CoachingInstitutionStudentReportComponent implements OnInit {
 
   @Input({ required: true }) student!: CoachingInstitutionStudent;
   @Output() readonly back = new EventEmitter<void>();
+  /** Roadmap O13: the browser's print dialog, where the report can also be saved as PDF. */
+  print(): void { window.print(); }
   @ViewChild(CoachingStaffStudyComponent) private study?: CoachingStaffStudyComponent;
   @ViewChild(CoachingFinanceComponent) private finance?: CoachingFinanceComponent;
   readonly financeVisible = signal(false);

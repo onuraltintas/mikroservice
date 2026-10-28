@@ -10,6 +10,27 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
 import { CoachingInstitutionWorkspaceComponent } from './coaching-institution-workspace.component';
 
 describe('CoachingInstitutionWorkspaceComponent', () => {
+  it('Roadmap O13: shows workload, prints and starts over after a branch switch or bulk upload', async () => {
+    const service = institutionService({ students: [student('student-1')] }); const fixture = await createFixture(service); fixture.detectChanges();
+    const component = fixture.componentInstance; const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('staff-coaching-institution-workload')).toBeTruthy();
+    expect(element.querySelector('staff-coaching-institution-branches')).toBeTruthy();
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    (element.querySelector('[data-testid="print-overview"]') as HTMLButtonElement).click(); expect(print).toHaveBeenCalled();
+
+    await component.selectSection('students'); fixture.detectChanges();
+    (element.querySelector('[data-testid="toggle-bulk-import"]') as HTMLButtonElement).click(); fixture.detectChanges();
+    expect(element.querySelector('staff-coaching-institution-bulk-import')).toBeTruthy();
+    component.bulkApplied();
+    await vi.waitFor(() => expect(service.getStudentRoster).toHaveBeenCalledTimes(2));
+    expect(component.invitationRefreshKey()).toBe(1);
+
+    await component.switchBranch();
+    expect(service.getReadScope).toHaveBeenCalledTimes(2);
+    expect(component.activeSection()).toBe('overview'); expect(component.students()).toEqual([]);
+    expect(component.institutionId()).toBe('institution-1'); expect(component.bulkImportVisible()).toBe(false);
+  });
+
   it('retains the student report and section while a financial operation is pending', async () => {
     const fixture = await createFixture(institutionService()); fixture.detectChanges();
     const component = fixture.componentInstance; const selected = student('student-1'); (await component.openStudentReport(selected));

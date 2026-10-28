@@ -44,6 +44,12 @@ describe('ParentChildComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="parent-subscription"]')?.textContent).toContain('etkin bir Koçluk aboneliği yok');
   });
 
+  it('prints the child page from the browser (O13)', () => {
+    const fixture = setup(parent()); const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    (fixture.nativeElement.querySelector('[data-testid="print-child"]') as HTMLButtonElement).click();
+    expect(print).toHaveBeenCalled(); print.mockRestore();
+  });
+
   it('sends a transfer notice for the child only with the adult payer declaration', async () => {
     const service = parent(); const fixture = setup(service); const component = fixture.componentInstance;
     component.planId = 'plan-1'; component.paymentReference = ' EFT-VELI-1 '; component.payerName = 'Ayşe Veli';

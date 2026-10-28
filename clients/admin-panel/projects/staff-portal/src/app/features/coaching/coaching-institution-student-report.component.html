@@ -1,7 +1,10 @@
 <section class="student-report" aria-labelledby="student-report-title">
-  <button class="back-link" type="button" data-testid="back-to-roster" (click)="back.emit()">
-    <span aria-hidden="true">←</span> Öğrenci listesine dön
-  </button>
+  <div class="report-actions no-print">
+    <button class="back-link" type="button" data-testid="back-to-roster" (click)="back.emit()">
+      <span aria-hidden="true">←</span> Öğrenci listesine dön
+    </button>
+    <button class="back-link" type="button" data-testid="print-student-report" (click)="print()">Yazdır / PDF</button>
+  </div>
 
   <header class="report-identity">
     <div>
