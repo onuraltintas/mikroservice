@@ -4,6 +4,9 @@ using EduPlatform.Shared.Contracts.Coaching;
 
 namespace Coaching.Application.Profiles;
 
+/// <summary>Roadmap O12: one of the student's active teacher links. Only independent links can be ended by the student.</summary>
+public sealed record CoachingStudentTeacherLink(Guid TeacherUserId, string TeacherName, Guid? InstitutionId, DateTime Since, bool CanLeave);
+
 public interface ICoachingAccountDirectory
 {
     Task<IReadOnlyList<CoachingAccount>> GetAccountsAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);

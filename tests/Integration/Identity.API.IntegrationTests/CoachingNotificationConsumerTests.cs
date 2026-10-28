@@ -202,6 +202,25 @@ public sealed class CoachingNotificationConsumerTests
         finally { await harness.Stop(); }
     }
 
+    // Roadmap O12: a teacher removing a student tells the student.
+    [Fact]
+    public async Task StudentsAreToldWhenTheirTeacherEndsTheLink()
+    {
+        var dispatcher = new RecordingDispatcher(); var teacher = Guid.NewGuid(); var student = Guid.NewGuid();
+        var services = new ServiceCollection(); services.AddSingleton<ICoachingNotificationDispatcher>(dispatcher);
+        services.AddMassTransitTestHarness(x => { x.UseSuiteTimeouts(); x.AddConsumer<CoachingTeacherLinkEndedConsumer>(); x.UsingInMemory((context, config) => config.ConfigureEndpoints(context)); });
+        await using var provider = services.BuildServiceProvider(); var harness = provider.GetRequiredService<ITestHarness>(); await harness.Start();
+        try
+        {
+            await harness.Bus.Publish(new CoachingTeacherLinkEndedEvent(teacher, student, "Ada Yılmaz", CoachingTeacherLinkEndedReasons.TeacherRemoved) { TeacherName = "Can Öğretmen" });
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 1);
+            var call = dispatcher.Calls.Single();
+            call.RecipientIds.Should().Equal(student); call.Type.Should().Be("TeacherLinkEnded"); call.RelatedEntityId.Should().Be(teacher.ToString());
+            (call.Title + " " + call.Message).Should().Contain("Can Öğretmen").And.NotContain("Ada Yılmaz");
+        }
+        finally { await harness.Stop(); }
+    }
+
     private sealed class RecordingDispatcher : ICoachingNotificationDispatcher
     {
         public ConcurrentQueue<DispatchCall> Calls { get; } = new();

@@ -101,6 +101,16 @@ public sealed class CoachingTeacherLinkEndedConsumer(ICoachingNotificationDispat
     public Task Consume(ConsumeContext<CoachingTeacherLinkEndedEvent> context)
     {
         var message = context.Message;
+        // Roadmap O12: when the teacher ends the link, the student is the one to tell.
+        if (message.Reason == CoachingTeacherLinkEndedReasons.TeacherRemoved)
+            return dispatcher.SendAsync(
+                MessageIds.Require(context),
+                new[] { message.StudentUserId },
+                "Öğretmen bağlantısı sona erdi",
+                $"{(string.IsNullOrWhiteSpace(message.TeacherName) ? "Öğretmenin" : message.TeacherName)} koçluk bağlantını sonlandırdı. Geçmiş kayıtların korunuyor.",
+                "TeacherLinkEnded",
+                message.TeacherUserId.ToString(),
+                context.CancellationToken);
         var text = message.Reason == CoachingTeacherLinkEndedReasons.JoinedInstitution
             ? $"{message.StudentName} bir kuruma katıldı; bireysel koçluk bağlantınız sona erdi."
             : $"{message.StudentName} koçluk bağlantınızı sonlandırdı.";

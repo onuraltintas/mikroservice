@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Observable, Subscription, finalize } from 'rxjs';
 import { CoachingCashStatement, CoachingFee, CoachingFeeAccount, CoachingFeeCancelInput, CoachingFeeCreateInput, CoachingFeePayment, CoachingFeePaymentInput, CoachingFeeReverseInput, CoachingFinanceMode, CoachingFinanceService, CoachingPaymentMethod, CoachingPaymentPage, CoachingReceivables } from '../../../core/services/coaching-finance.service';
 
@@ -16,6 +17,9 @@ type FinanceInput = CoachingFeeCreateInput | CoachingFeePaymentInput | CoachingF
 export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
   private readonly toaster = coachingToaster();
   private readonly api = inject(CoachingFinanceService);
+  private readonly router = inject(Router, { optional: true });
+  /** Roadmap O12: the student opens one fee on its own screen. */
+  openFee(fee: CoachingFee): void { void this.router?.navigate(['/coaching-portal/finance', fee.id]); }
   @Input() mode: CoachingFinanceMode = 'student';
   @Input() studentId = '';
   @Input() cashView = false;

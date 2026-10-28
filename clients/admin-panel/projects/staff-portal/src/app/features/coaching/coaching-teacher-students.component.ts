@@ -1,8 +1,9 @@
-import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
+import { coachingFeedback, coachingToaster } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
 import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-student-detail.component';
 import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
@@ -34,6 +35,23 @@ export class CoachingTeacherStudentsComponent implements OnInit {
   readonly invitationSuccessMessage = signal<string | null>(null);
   readonly pendingInvitationsVisible = signal(false);
   readonly invitationRefreshKey = signal(0);
+  readonly removingId = signal<string | null>(null);
+  private readonly toaster = coachingToaster();
+
+  /** Roadmap O12: an independent teacher removes a student after confirming; the student is told. */
+  async removeStudent(student: CoachingTeacherStudent): Promise<void> {
+    if (student.institutionId || this.removingId()) return;
+    if (!await this.toaster.confirm(`${student.fullName} öğrencisiyle koçluk bağlantınız sona erecek. Öğrenci bilgilendirilir; geçmiş kayıtlar korunur. Devam edilsin mi?`)) return;
+    this.removingId.set(student.userId); this.errorMessage.set(null);
+    try {
+      await firstValueFrom(this.studentsService.removeStudent(student.userId));
+      if (this.selectedStudent()?.userId === student.userId) this.selectedStudent.set(null);
+      this.load();
+    } catch (error) {
+      const body = (error as HttpErrorResponse)?.error as { message?: string } | null;
+      this.errorMessage.set(body?.message ?? 'Öğrenci listeden çıkarılamadı. Lütfen tekrar deneyin.');
+    } finally { this.removingId.set(null); }
+  }
   studentInviteEmail = '';
   searchInput = '';
 

@@ -55,14 +55,14 @@ public sealed class DecisionHandoffOutboxTests
         services.AddMassTransit(x=>{x.AddEntityFrameworkOutbox<CoachingDbContext>(o=>{o.UsePostgres();o.UseBusOutbox();});x.UsingInMemory((ctx,cfg)=>cfg.ConfigureEndpoints(ctx));});
         await using var provider=services.BuildServiceProvider();await using var scope=provider.CreateAsyncScope();var db=scope.ServiceProvider.GetRequiredService<CoachingDbContext>();
         var publisher=new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>());var clock=new DecisionResponsibilityAndPostponementTests.Clock();
-        var profiles=new CoachingProfileStore(db,s.Accounts,publisher,clock);await profiles.EndAssignmentAsync(s.Old,s.Old,s.Student,false,default);
+        var profiles=new CoachingProfileStore(db,s.Accounts,publisher,clock);await profiles.EndAssignmentAsync(s.Old,s.Old,s.Student,false,default);// O12: the student is told (one outbox message).
         var invites=new CoachingInvitationStore(db,s.Accounts,profiles,clock,publisher,new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
-        var invitation=await invites.SendTeacherAsync(s.Next,"test@example.test",null,default);Assert.Equal(1,await db.Set<OutboxMessage>().CountAsync());
+        var invitation=await invites.SendTeacherAsync(s.Next,"test@example.test",null,default);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
         failure.Enabled=true;await Assert.ThrowsAsync<InvalidOperationException>(()=>invites.AcceptAsync(s.Student,invitation.Id,default));
         Assert.Equal(Coaching.Domain.Profiles.CoachingInvitationStatus.Pending,(await db.CoachingInvitations.AsNoTracking().SingleAsync()).Status);
-        Assert.Equal(s.Old,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);Assert.Equal(1,await db.Set<OutboxMessage>().CountAsync());
+        Assert.Equal(s.Old,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
         failure.Enabled=false;await invites.AcceptAsync(s.Student,invitation.Id,default);Assert.Equal(s.Next,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);
-        Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());await invites.AcceptAsync(s.Student,invitation.Id,default);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
+        Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());await invites.AcceptAsync(s.Student,invitation.Id,default);Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());
     }
 
     private sealed class Failure:SaveChangesInterceptor
