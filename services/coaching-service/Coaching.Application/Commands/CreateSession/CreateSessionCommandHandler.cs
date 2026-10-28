@@ -54,6 +54,8 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
             });
         }
 
+        var starts = SeriesStarts(command.StartTime, command.Recurrence);
+
         var key = command.IdempotencyKey?.Trim();
         EnsureKey(key);
         var requestHash = IdempotencyRequestHasher.Create(
@@ -66,7 +68,8 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
             command.Notes,
             command.Type.ToString(),
             command.MeetingLink,
-            command.TeacherNotesVisibility.ToString());
+            command.TeacherNotesVisibility.ToString(),
+            command.Recurrence is { } recurrence ? $"{recurrence.IntervalWeeks}x{recurrence.Count}" : null);
         var existing = await _idempotencyRepository.GetAsync(IdempotencyScope, key!, cancellationToken);
         if (existing is not null)
         {
@@ -83,28 +86,29 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
             _accessPolicy.IsSystemAdministrator,
             cancellationToken);
 
-        var session = CoachingSession.Create(
-            command.TeacherId,
-            command.Subject ?? "Coaching Session", // Use subject as Title
-            command.StartTime,
-            command.Type,
-            command.DurationMinutes,
-            institutionId
-        );
-
-        session.AddStudents(studentIds);
-
-        if (!string.IsNullOrEmpty(command.Notes))
+        // Roadmap O6: a recurring series is created as separate sessions sharing a series id, all or none.
+        var seriesId = command.Recurrence is null ? (Guid?)null : Guid.NewGuid();
+        CoachingSession? session = null;
+        foreach (var start in starts)
         {
-            session.AddTeacherNotes(command.Notes, command.TeacherNotesVisibility);
+            var occurrence = CoachingSession.Create(
+                command.TeacherId,
+                command.Subject ?? "Coaching Session", // Use subject as Title
+                start,
+                command.Type,
+                command.DurationMinutes,
+                institutionId
+            );
+            occurrence.AddStudents(studentIds);
+            if (!string.IsNullOrEmpty(command.Notes))
+                occurrence.AddTeacherNotes(command.Notes, command.TeacherNotesVisibility);
+            if (!string.IsNullOrWhiteSpace(command.MeetingLink))
+                occurrence.SetMeetingLink(command.MeetingLink.Trim());
+            if (seriesId is { } id) occurrence.AssignSeries(id);
+            await _repository.AddAsync(occurrence, cancellationToken);
+            session ??= occurrence;
         }
-
-        if (!string.IsNullOrWhiteSpace(command.MeetingLink))
-        {
-            session.SetMeetingLink(command.MeetingLink.Trim());
-        }
-
-        await _repository.AddAsync(session, cancellationToken);
+        if (session is null) throw new InvalidOperationException("No session was created.");
         await _idempotencyRepository.AddAsync(
             IdempotencyRecord.Create(IdempotencyScope, key!, requestHash, session.Id),
             cancellationToken);
@@ -130,19 +134,43 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
             throw IdempotencyConflict();
         }
 
-        return new CreateSessionResponse(session.Id);
+        return new CreateSessionResponse(session.Id, seriesId, starts.Count);
+    }
+
+    /// <summary>
+    /// The start of every session: the same local (Türkiye) weekday and time every one or two weeks, so a series keeps
+    /// "Tuesday 18:00" even if the offset of the time zone changes.
+    /// </summary>
+    internal static IReadOnlyList<DateTime> SeriesStarts(DateTime start, SessionRecurrence? recurrence)
+    {
+        var first = Coaching.Domain.CoachingTime.ToUtc(start);
+        if (recurrence is null) return [first];
+        var errors = new Dictionary<string, string[]>();
+        if (recurrence.IntervalWeeks is not (1 or 2))
+            errors[nameof(SessionRecurrence.IntervalWeeks)] = ["Tekrar her hafta ya da iki haftada bir olabilir."];
+        if (recurrence.Count is < 2 or > SessionRecurrence.MaxCount)
+            errors[nameof(SessionRecurrence.Count)] = [$"Tekrarlayan seans 2–{SessionRecurrence.MaxCount} seans olabilir."];
+        if (errors.Count > 0) throw new ValidationException(errors);
+        var local = TimeZoneInfo.ConvertTimeFromUtc(first, Coaching.Domain.CoachingTime.Turkey);
+        return Enumerable.Range(0, recurrence.Count)
+            .Select(index => TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(local.AddDays(7 * recurrence.IntervalWeeks * index), DateTimeKind.Unspecified),
+                Coaching.Domain.CoachingTime.Turkey))
+            .ToArray();
     }
 
     private async Task<CreateSessionResponse> ReplayAsync(Guid sessionId, CancellationToken cancellationToken)
     {
-        if (await _repository.GetByIdAsync(sessionId, cancellationToken) is null)
+        var session = await _repository.GetByIdAsync(sessionId, cancellationToken);
+        if (session is null)
         {
             throw new BusinessRuleException(
                 "Idempotency.ResourceMissing",
                 "Idempotency kaydına ait seans bulunamadı; yeni bir anahtar kullanın.");
         }
 
-        return new CreateSessionResponse(sessionId);
+        return session.SeriesId is { } seriesId
+            ? new CreateSessionResponse(sessionId, seriesId, (await _repository.GetSeriesAsync(seriesId, cancellationToken)).Count)
+            : new CreateSessionResponse(sessionId);
     }
 
     private static void EnsureKey(string? key)

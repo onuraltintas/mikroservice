@@ -7,6 +7,7 @@ import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService, CoachingTeacherStudent } from './coaching-teacher-students.service';
 import {
   CoachingNoteVisibility,
+  CoachingSessionRecurrence,
   CoachingTeacherSession,
   CoachingTeacherSessionCreateRequest,
   CoachingTeacherSessionUpdateRequest,
@@ -22,6 +23,14 @@ interface SessionForm {
   type: 'OneOnOne' | 'Group';
   notesVisibility: CoachingNoteVisibility;
 }
+
+/** Roadmap O6: a new session can repeat at the same local time every week or every two weeks. */
+export interface SessionRecurrenceForm {
+  mode: 'none' | 'weekly' | 'biweekly';
+  count: number;
+}
+
+const MaxSeriesSessions = 26;
 
 @Component({
   selector: 'staff-coaching-teacher-session-form',
@@ -50,6 +59,11 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
   readonly studentPageNumber = signal(1);
   readonly studentTotalPages = signal(1);
   readonly studentSearchTerm = signal('');
+  readonly seriesId = signal<string | null>(null);
+  readonly maxSeriesSessions = MaxSeriesSessions;
+  private originalStudentIds: string[] = [];
+  applyParticipantsToFollowing = false;
+  recurrence: SessionRecurrenceForm = { mode: 'none', count: 4 };
 
   form: SessionForm = {
     startTime: this.defaultStartTime(),
@@ -154,8 +168,18 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
       this.errorMessage.set('Grup seansı için 2 ile 100 arasında aktif öğrenci seçilmelidir.');
       return;
     }
-    if (!this.isEditing && this.form.type === 'OneOnOne' && studentIds.length !== 1) {
+    // An existing group may shrink to a single student; the server applies the same 1-100 rule.
+    if (this.isEditing && this.form.type === 'Group' && (studentIds.length < 1 || studentIds.length > 100)) {
+      this.errorMessage.set('Grup seansında 1 ile 100 arasında öğrenci kalmalıdır.');
+      return;
+    }
+    if (this.form.type === 'OneOnOne' && studentIds.length !== 1) {
       this.errorMessage.set('Birebir seans için tam olarak bir aktif öğrenci seçilmelidir.');
+      return;
+    }
+    const recurrence = this.isEditing ? null : this.recurrenceRequest();
+    if (recurrence === undefined) {
+      this.errorMessage.set(`Tekrarlı seans sayısı 2 ile ${MaxSeriesSessions} arasında olmalıdır.`);
       return;
     }
     if (!Number.isInteger(this.form.durationMinutes) || this.form.durationMinutes < 1 || this.form.durationMinutes > 240) {
@@ -187,10 +211,15 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
         teacherNotes: this.form.notes.trim() || null,
         teacherNotesVisibility: this.form.notesVisibility
       };
-      this.sessionsService.updateSession(this.sessionId, request).pipe(
+      const sessionId = this.sessionId;
+      this.sessionsService.updateSession(sessionId, request).pipe(
         finalize(() => this.isSaving.set(false))
       ).subscribe({
         next: () => {
+          if (this.participantsChanged(studentIds)) {
+            this.saveParticipants(sessionId, studentIds);
+            return;
+          }
           this.successMessage.set('Seans güncellendi.');
           this.saved.emit();
         },
@@ -211,18 +240,57 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
       notes: this.form.notes.trim() || null,
       meetingLink: meetingLink || null,
       type: this.form.type,
-      teacherNotesVisibility: this.form.notesVisibility
+      teacherNotesVisibility: this.form.notesVisibility,
+      recurrence
     };
     this.sessionsService.createSession(request, this.idempotencyKey()).pipe(
       finalize(() => this.isSaving.set(false))
     ).subscribe({
-      next: () => {
-        this.successMessage.set('Seans planlandı.');
+      next: result => {
+        this.successMessage.set(result.seriesId && (result.count ?? 0) > 1
+          ? `${result.count} seanslık seri planlandı.`
+          : 'Seans planlandı.');
         this.saved.emit();
       },
       error: error => this.errorMessage.set(error.status === 409 && error.error?.code === 'Session.Conflict'
         ? 'Öğretmen veya öğrencinin bu saat aralığında başka bir seansı var. Başka bir saat seçin.'
         : 'Seans oluşturulamadı. Alanları ve öğrenci atamalarını kontrol edin.')
+    });
+  }
+
+  removeStudent(studentId: string): void {
+    this.selectedStudentIds.update(selected => selected.filter(id => id !== studentId));
+  }
+
+  /** The recurrence to send: null for a single session, undefined when the count is out of range. */
+  private recurrenceRequest(): CoachingSessionRecurrence | null | undefined {
+    if (this.recurrence.mode === 'none') return null;
+    const count = Number(this.recurrence.count);
+    if (!Number.isInteger(count) || count < 2 || count > MaxSeriesSessions) return undefined;
+    return { intervalWeeks: this.recurrence.mode === 'weekly' ? 1 : 2, count };
+  }
+
+  private participantsChanged(studentIds: readonly string[]): boolean {
+    if (this.applyParticipantsToFollowing && this.seriesId()) return true;
+    const original = new Set(this.originalStudentIds);
+    return studentIds.length !== original.size || studentIds.some(id => !original.has(id));
+  }
+
+  private saveParticipants(sessionId: string, studentIds: string[]): void {
+    const includeFollowing = this.applyParticipantsToFollowing && !!this.seriesId();
+    this.isSaving.set(true);
+    this.sessionsService.updateParticipants(sessionId, studentIds, includeFollowing).pipe(
+      finalize(() => this.isSaving.set(false))
+    ).subscribe({
+      next: () => {
+        this.originalStudentIds = [...studentIds];
+        this.successMessage.set('Seans ve katılımcılar güncellendi.');
+        this.saved.emit();
+      },
+      error: (error: { status?: number; error?: { error?: string; code?: string } }) => this.errorMessage.set(
+        error?.status === 409 && error.error?.code === 'Session.Conflict'
+          ? 'Seans bilgileri kaydedildi; ancak eklenen öğrencinin bu saatte başka bir seansı var.'
+          : `Seans bilgileri kaydedildi; katılımcılar güncellenemedi. ${error?.error?.error ?? 'Lütfen tekrar deneyin.'}`.trim())
     });
   }
 
@@ -236,17 +304,22 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
         this.fillForm(session);
         const studentIds = session.studentIds.slice(0, 100);
         if (studentIds.length === 0) {
-          this.isLoading.set(false);
+          this.loadStudents();
           return;
         }
-        this.studentsService.getMyStudents(1, studentIds.length, undefined, studentIds).pipe(
-          finalize(() => this.isLoading.set(false))
-        ).subscribe({
+        this.studentsService.getMyStudents(1, studentIds.length, undefined, studentIds).subscribe({
           next: page => {
-            this.students.set(page.items);
-            this.studentNames.set(Object.fromEntries(page.items.map(student => [student.userId, student.fullName])));
+            this.studentNames.update(current => ({
+              ...current,
+              ...Object.fromEntries(page.items.map(student => [student.userId, student.fullName]))
+            }));
+            // Roadmap O6: the roster is loaded too so participants can be added while editing.
+            this.loadStudents();
           },
-          error: () => this.errorMessage.set('Seans katılımcı adları yüklenemedi; düzenleme yine de yapılabilir.')
+          error: () => {
+            this.errorMessage.set('Seans katılımcı adları yüklenemedi; düzenleme yine de yapılabilir.');
+            this.loadStudents();
+          }
         });
       },
       error: () => {
@@ -267,6 +340,8 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
       notesVisibility: (session.teacherNotesVisibility as CoachingNoteVisibility | undefined) ?? 'CoachPrivate'
     };
     this.selectedStudentIds.set([...session.studentIds]);
+    this.originalStudentIds = [...session.studentIds];
+    this.seriesId.set(session.seriesId ?? null);
   }
 
   private loadStudentsAtCurrentPage(): void {

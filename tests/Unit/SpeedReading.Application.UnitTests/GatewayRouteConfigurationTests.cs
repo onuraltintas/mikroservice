@@ -14,6 +14,7 @@ public sealed class GatewayRouteConfigurationTests
     [InlineData("coaching-cms-public-route", "/api/coaching/cms/{**catch-all}")]
     [InlineData("coaching-subscription-plans-public-route", "/api/coaching/subscription-plans/{**catch-all}")]
     [InlineData("coaching-bank-transfer-settings-public-route", "/api/coaching/subscriptions/bank-transfer-settings")]
+    [InlineData("coaching-calendar-feed-public-route", "/api/calendar/feed/{token}")]
     [InlineData("identity-platform-legal-pages-public-route", "/api/platform/legal-pages/{**catch-all}")]
     [InlineData("identity-platform-legal-pages-public-root-route", "/api/platform/legal-pages")]
     public void Public_content_and_pricing_routes_bypass_gateway_fallback_authorization(

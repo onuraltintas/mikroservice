@@ -91,6 +91,36 @@ describe('CoachingTeacherSessionsService', () => {
     request.flush({ message: 'Attendance updated successfully' });
   });
 
+  it('cancels the following series sessions, changes participants and loads the weekly agenda (roadmap O6)', () => {
+    service.cancelSession('session-1', true).subscribe();
+    const cancel = http.expectOne(r => r.url === '/api/sessions/session-1/cancel');
+    expect(cancel.request.params.get('following')).toBe('true');
+    cancel.flush({ message: 'ok' });
+
+    service.updateParticipants('session-1', [' student-1 ', 'student-2', 'student-1'], true).subscribe();
+    const participants = http.expectOne('/api/sessions/session-1/participants');
+    expect(participants.request.method).toBe('PUT');
+    expect(participants.request.body).toEqual({ studentIds: ['student-1', 'student-2'], includeFollowing: true });
+    participants.flush({ message: 'ok' });
+
+    service.getTeacherAgenda('teacher-1', '2030-01-07').subscribe();
+    const agenda = http.expectOne('/api/sessions/teacher/teacher-1/agenda?weekStart=2030-01-07');
+    expect(agenda.request.method).toBe('GET');
+    agenda.flush({ weekStart: '2030-01-07', sessions: [] });
+  });
+
+  it('sends the recurrence of a new series', () => {
+    service.createSession({
+      teacherId: 't', studentId: 's', studentIds: ['s'], startTime: '2030-01-07T10:00:00Z', durationMinutes: 45,
+      subject: null, notes: null, type: 'OneOnOne', meetingLink: null, teacherNotesVisibility: 'CoachPrivate',
+      recurrence: { intervalWeeks: 1, count: 8 }
+    }, 'key-1').subscribe();
+    const request = http.expectOne('/api/sessions');
+    expect(request.request.body.recurrence).toEqual({ intervalWeeks: 1, count: 8 });
+    expect(request.request.headers.get('Idempotency-Key')).toBe('key-1');
+    request.flush({ sessionId: 'x', seriesId: 'y', count: 8 });
+  });
+
   it('downloads the teacher calendar as a calendar file', () => {
     service.downloadCalendarFeed().subscribe();
 

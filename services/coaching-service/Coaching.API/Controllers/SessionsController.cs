@@ -130,13 +130,14 @@ public class SessionsController : ControllerBase
     [HttpPost("{id}/cancel")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CancelSession(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> CancelSession(Guid id, CancellationToken cancellationToken, [FromQuery] bool following = false)
     {
         _logger.LogInformation("Cancelling session: {SessionId}", id);
 
         try
         {
-            await _mediator.Send(new CancelSessionCommand(id), cancellationToken);
+            // Roadmap O6: following=true also cancels the later planned sessions of the same series.
+            await _mediator.Send(new CancelSessionCommand(id) { IncludeFollowing = following }, cancellationToken);
             return Ok(new { message = "Session cancelled successfully" });
         }
         catch (InvalidOperationException ex)
@@ -156,6 +157,33 @@ public class SessionsController : ControllerBase
             _logger.LogError(ex, "Error cancelling session: {SessionId}", id);
             return StatusCode(500, new { error = "An error occurred" });
         }
+    }
+
+    /// <summary>Roadmap O6: changes who takes part in a planned session, optionally also in the later sessions of its series.</summary>
+    [HttpPut("{id:guid}/participants")]
+    [RequestSizeLimit(16_384)]
+    public async Task<IActionResult> UpdateParticipants(Guid id, [FromBody] SessionParticipantsRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _mediator.Send(new Coaching.Application.Commands.UpdateSessionParticipants.UpdateSessionParticipantsCommand(
+                id, request.StudentIds ?? [], request.IncludeFollowing), cancellationToken);
+            return Ok(new { message = "Katılımcılar güncellendi." });
+        }
+        catch (InvalidOperationException ex) { return NotFound(new { error = ex.Message }); }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        { return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message }); }
+        catch (BusinessRuleException ex) { return Conflict(new { error = ex.Message, code = ex.Code }); }
+        catch (ValidationException ex) { return BadRequest(new { error = ex.Message, details = ex.Errors }); }
+    }
+
+    /// <summary>Roadmap O6: the teacher's sessions in the week starting on <paramref name="weekStart"/> (Türkiye time).</summary>
+    [HttpGet("teacher/{teacherId:guid}/agenda")]
+    public async Task<IActionResult> GetTeacherAgenda(Guid teacherId, [FromQuery] DateOnly weekStart, CancellationToken cancellationToken)
+    {
+        try { return Ok(await _mediator.Send(new Coaching.Application.Queries.GetSessions.GetTeacherAgendaQuery(teacherId, weekStart), cancellationToken)); }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        { return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message }); }
     }
 
     /// <summary>
@@ -353,3 +381,6 @@ public class SessionsController : ControllerBase
         return Ok(result);
     }
 }
+
+/// <summary>Roadmap O6: the students of a planned session; IncludeFollowing applies it to the rest of the series.</summary>
+public sealed record SessionParticipantsRequest(IReadOnlyCollection<Guid>? StudentIds, bool IncludeFollowing = false);

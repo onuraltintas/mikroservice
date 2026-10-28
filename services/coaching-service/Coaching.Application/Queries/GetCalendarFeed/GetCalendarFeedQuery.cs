@@ -137,7 +137,7 @@ public sealed class GetCalendarFeedQueryHandler(
 
 public static class CalendarFeedFormatter
 {
-    public static string Format(IReadOnlyCollection<CoachingCalendarSession> sessions)
+    public static string Format(IReadOnlyCollection<CoachingCalendarSession> sessions, string? calendarName = null)
     {
         var builder = new StringBuilder()
             .AppendLine("BEGIN:VCALENDAR")
@@ -145,6 +145,13 @@ public static class CalendarFeedFormatter
             .AppendLine("PRODID:-//EduPlatform//Coaching//EN")
             .AppendLine("CALSCALE:GREGORIAN")
             .AppendLine("METHOD:PUBLISH");
+        if (calendarName is not null)
+        {
+            // Roadmap O6: a subscribed calendar shows this name and is refreshed about every hour.
+            builder.AppendLine($"X-WR-CALNAME:{Escape(calendarName)}")
+                .AppendLine("REFRESH-INTERVAL;VALUE=DURATION:PT1H")
+                .AppendLine("X-PUBLISHED-TTL:PT1H");
+        }
 
         foreach (var session in sessions.OrderBy(item => item.StartTime).ThenBy(item => item.Id))
         {

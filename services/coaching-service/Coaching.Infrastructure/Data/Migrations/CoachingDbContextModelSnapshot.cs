@@ -833,6 +833,45 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingCalendarFeed", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Role")
+                        .IsUnique();
+
+                    b.ToTable("calendar_feeds", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_calendar_feed_role", "\"Role\" IN ('Teacher', 'Student')");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingCoupon", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2212,6 +2251,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("scheduled_date");
 
+                    b.Property<Guid?>("SeriesId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("series_id");
+
                     b.Property<string>("SessionType")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -2261,6 +2304,10 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasIndex("ScheduledDate")
                         .HasDatabaseName("ix_coaching_sessions_scheduled_date");
+
+                    b.HasIndex("SeriesId", "ScheduledDate")
+                        .HasDatabaseName("ix_coaching_sessions_series_scheduled")
+                        .HasFilter("series_id IS NOT NULL");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_coaching_sessions_status");

@@ -29,7 +29,11 @@
 .student-pagination button:disabled { opacity: .45; cursor: not-allowed; }
 .read-only-participants { margin: 0 0 8px; color: var(--ui-text); font-size: 13px; }
 .selected-students { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.selected-students li { padding: 6px 9px; border-radius: 999px; color: var(--ui-text); background: var(--ui-surface-muted); font-size: 13px; font-weight: 700; }
+.selected-students li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 999px; color: var(--ui-text); background: var(--ui-surface-muted); font-size: 13px; font-weight: 700; }
+.remove-student { min-height: 24px; padding: 0 8px; border: 1px solid var(--ui-border); border-radius: 999px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.following-option { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 650; }
+.recurrence-fieldset { min-width: 0; margin: 0; padding: 12px; border: 1px solid var(--ui-border); border-radius: 10px; display: grid; gap: 8px; }
+.recurrence-fieldset legend { padding: 0 5px; color: var(--ui-text); font-size: 13px; font-weight: 800; }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .form-actions button { min-height: 37px; padding: 0 13px; border: 1px solid var(--ui-border); border-radius: 8px; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
 .cancel-form { color: var(--ui-text); background: var(--ui-surface); }

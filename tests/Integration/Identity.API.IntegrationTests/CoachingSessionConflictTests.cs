@@ -23,6 +23,9 @@ public sealed class CoachingSessionConflictTests(PostgresFixture postgres)
         const string previous = "20261013121249_AddStudyTaskQuestionTracking";
         const string current = "20261013123111_GuardCoachingSessionOverlap";
         await migrator.MigrateAsync(previous);
+        // The rows are written with today's model; columns added to sessions by later migrations (O6 series_id) are
+        // created by hand so the old schema can take them. These two migrations do not touch that column.
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE coaching.coaching_sessions ADD COLUMN IF NOT EXISTS series_id uuid");
         try
         {
             var teacher = Guid.NewGuid(); var student = Guid.NewGuid(); var start = DateTime.UtcNow.AddDays(2);

@@ -97,6 +97,13 @@ public class CoachingSessionConfiguration : IEntityTypeConfiguration<CoachingSes
 
         builder.HasIndex(x => x.Status)
             .HasDatabaseName("ix_coaching_sessions_status");
+
+        // Roadmap O6: recurring series.
+        builder.Property(x => x.SeriesId)
+            .HasColumnName("series_id");
+        builder.HasIndex(x => new { x.SeriesId, x.ScheduledDate })
+            .HasDatabaseName("ix_coaching_sessions_series_scheduled")
+            .HasFilter("series_id IS NOT NULL");
     }
 }
 
