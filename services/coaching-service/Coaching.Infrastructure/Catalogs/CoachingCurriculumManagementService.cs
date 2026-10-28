@@ -18,7 +18,7 @@ public sealed record CurriculumSaveRequest(string Name, string Reason, string? F
     int? GradeNumber = null, string? ExamCode = null, int? DisplayOrder = null, int? EstimatedMinutes = null,
     string? Code = null, Guid? OfficialTopicId = null, int? SourcePage = null, string? Notes = null, bool MoveParentOutcomes = false,
     int? AcademicYearStart = null, int? AcademicYearEnd = null, string? SourceUrl = null, string? DocumentSha256 = null,
-    string? ScopeEvidenceUrl = null, int? OutcomeCount = null, int? LessonPeriods = null, Guid? CurriculumVersionId = null, DateOnly? ExamDate = null);
+    string? ScopeEvidenceUrl = null, int? OutcomeCount = null, int? LessonPeriods = null, Guid? CurriculumVersionId = null, DateOnly? ExamDate = null, int? YieldWeight = null);
 public sealed record CurriculumMoveRequest(Guid? DestinationId, string Fingerprint, string Reason, Guid? SourceTopicId = null);
 public sealed record CurriculumDeleteRequest(string Fingerprint, string Reason, Guid ConfirmId);
 public sealed record CurriculumStatusRequest(string Fingerprint, string Reason, bool IsActive);
@@ -45,6 +45,8 @@ public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? Par
     public string SourceKind { get; init; } = "Official";
     public Guid? CurriculumVersionId { get; init; }
     public DateOnly? ExamDate { get; init; }
+    /// <summary>Roadmap O7: topic exam weight 1-5 used when a plan does not fit.</summary>
+    public int? YieldWeight { get; init; }
 }
 public sealed record CurriculumMapping(Guid TopicId, string Path, bool IsApproved, string Evidence);
 
@@ -120,7 +122,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                         await CoachingOutcomeCatalogService.ValidateLessonScopeAsync(db,l.Id,r.Name,r.GradeNumber,r.ExamCode,ct);
                         l.Edit(r.Name,r.GradeNumber,r.ExamCode); await AssignCurriculum(l,r.CurriculumVersionId,ct); break;
                     case StudyCatalogUnit u: u.Edit(r.Name,r.DisplayOrder); break;
-                    case StudyCatalogTopic t: t.Edit(r.Name,r.DisplayOrder,r.EstimatedMinutes); break;
+                    case StudyCatalogTopic t: t.Edit(r.Name,r.DisplayOrder,r.EstimatedMinutes); if (r.YieldWeight is {} weight) t.SetYieldWeight(weight); break;
                     case StudyCatalogOutcome o:
                         await Snapshot(o,ct);
                         if (r.OfficialTopicId.HasValue && r.OfficialTopicId != o.OfficialTopicId) throw new ArgumentException("Resmî program bağlantısını değiştirmek için yeni kazanım oluşturun.");
@@ -156,6 +158,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 case "topics":
                     var parent = await TopicParent(Required(r.ParentId),ct,r.MoveParentOutcomes);
                     var added = Add(StudyCatalogTopic.Create("admin-manual",Guid.NewGuid().ToString("N"),parent.LessonId,parent.UnitId,r.Name,parent.ParentId,r.DisplayOrder,r.EstimatedMinutes));
+                    if (r.YieldWeight is {} addedWeight) added.SetYieldWeight(addedWeight);
                     if (parent.ParentId.HasValue && r.MoveParentOutcomes)
                     {
                         var mappings = await db.Set<StudyCatalogTopicOutcome>().Where(x => x.TopicId == parent.ParentId).ToArrayAsync(ct);
@@ -344,7 +347,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             OfficialCurriculumTopic t => new("programTopics",t.Id,t.Name,t.EditionId,"programs",true,Code:t.Code) { OutcomeCount=t.OutcomeCount,LessonPeriods=t.LessonPeriods },
             StudyCatalogLesson l => new("lessons",l.Id,l.Name,null,"exams",l.IsActive,GradeNumber:l.GradeNumber,ExamCode:l.ExamCode) { CurriculumVersionId=l.CurriculumVersionId },
             StudyCatalogUnit u => new("units",u.Id,u.Name,u.LessonId,"lessons",u.IsActive,u.DisplayOrder),
-            StudyCatalogTopic t => new("topics",t.Id,t.Name,t.ParentId ?? t.UnitId,t.ParentId.HasValue ? "topics" : "units",t.IsActive,t.DisplayOrder,t.EstimatedMinutes),
+            StudyCatalogTopic t => new("topics",t.Id,t.Name,t.ParentId ?? t.UnitId,t.ParentId.HasValue ? "topics" : "units",t.IsActive,t.DisplayOrder,t.EstimatedMinutes) { YieldWeight=t.YieldWeight },
             StudyCatalogOutcome o => new("outcomes",o.Id,o.Name,null,"topics",!o.IsArchived,o.DisplayOrder,Code:o.Code,OfficialTopicId:o.OfficialTopicId,SourcePage:o.SourcePage,Notes:o.Notes) {SourceKind=o.SourceKind,SourceUrl=o.SourceUrl},
             _ => throw new ArgumentException("Geçersiz katalog kaydı.")
         };
@@ -463,6 +466,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
     private async Task<StudyCatalogTopic> CopyTopic(StudyCatalogTopic old,Guid lesson,Guid unit,Guid? parent,StudyCatalogTopic[] descendants,CancellationToken ct)
     {
         var copy = Add(StudyCatalogTopic.Create("admin-manual",Guid.NewGuid().ToString("N"),lesson,unit,old.Name,parent,old.DisplayOrder,old.EstimatedMinutes));
+        copy.SetYieldWeight(old.YieldWeight);
         copy.SetActive(old.IsActive); old.SetActive(false);
         foreach (var m in await db.Set<StudyCatalogTopicOutcome>().Where(x => x.TopicId == old.Id).ToArrayAsync(ct))
         { var link = StudyCatalogTopicOutcome.Create(copy.Id,m.OutcomeId,m.Evidence); if (m.IsApproved) link.Review(true,m.Evidence,user.UserId!.Value); db.Add(link); }

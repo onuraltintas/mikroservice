@@ -16,6 +16,9 @@ public sealed class WeeklyOutcomePlansController(IWeeklyOutcomePlanService servi
     public Task<IActionResult> Preview(WeeklyOutcomePlanRequest request,CancellationToken ct)=>Respond(async()=>Ok(new{success=true,data=await service.PreviewAsync(request,ct)}));
     [HttpPost("drafts"),RequestSizeLimit(65536),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Create(WeeklyOutcomePlanSave request,CancellationToken ct)=>Respond(async()=>{var plan=await service.CreateAsync(request,ct);return CreatedAtAction(nameof(ManualStudyPlansController.Get),"ManualStudyPlans",new{id=plan.Id},new{success=true,data=plan});});
+    /// <summary>Roadmap O7: the student's own exam date; null returns to the date the admin set for the exam.</summary>
+    [HttpPut("exam-date"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> SetExamDate(WeeklyExamDateRequest request,CancellationToken ct)=>Respond(async()=>Ok(new{success=true,data=await service.SetExamDateAsync(request,ct)}));
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {
         try{return await action();}

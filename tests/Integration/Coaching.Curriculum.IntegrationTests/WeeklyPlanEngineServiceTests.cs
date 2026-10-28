@@ -32,12 +32,12 @@ public sealed class WeeklyPlanEngineServiceTests
 
         var context = await f.Db.StudentLearningContexts.SingleAsync(); var topic = await f.Db.StudyCatalogTopics.SingleAsync();
         context.ReplaceSelections(context.CoursePreferences, [StudentTopicState.Create(context.Id, topic.Id, DeclaredTopicStatus.Studied, f.User.UserId!.Value)], true);
-        f.Db.RemoveRange(f.Db.StudyPlanRevisions.Where(x => x.Id == created.Id));
-        f.Db.RemoveRange(f.Db.StudyPlanTasks.Where(x => x.RevisionId == created.Id)); f.Db.RemoveRange(links);
-        await f.Db.SaveChangesAsync();
+        f.Db.RemoveRange(links); f.Db.RemoveRange(f.Db.StudyPlanTasks.Where(x => x.RevisionId == created.Id)); await f.Db.SaveChangesAsync();
+        f.Db.RemoveRange(f.Db.StudyPlanRevisions.Where(x => x.Id == created.Id)); await f.Db.SaveChangesAsync();
         var refresh = await service.PreviewAsync(Input, default);
         var light = Assert.Single(refresh.Schedule.Tasks.Where(x => x.Kind == "Refresh"));
-        Assert.Equal(10, light.Minutes);
+        // A quarter of the 60-minute estimate; earlier completed work does not cancel the refresh.
+        Assert.Equal(15, light.Minutes);
         Assert.Contains("Çalıştım", light.Reason);
         var legacy = await service.PreviewAsync(Input with { EngineVersion = 1 }, default);
         Assert.Empty(legacy.Schedule.Tasks);
