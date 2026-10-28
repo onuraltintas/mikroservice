@@ -96,6 +96,25 @@ public sealed class AssignmentCancelledConsumer(ICoachingNotificationDispatcher 
     }
 }
 
+public sealed class CoachingTeacherLinkEndedConsumer(ICoachingNotificationDispatcher dispatcher) : IConsumer<CoachingTeacherLinkEndedEvent>
+{
+    public Task Consume(ConsumeContext<CoachingTeacherLinkEndedEvent> context)
+    {
+        var message = context.Message;
+        var text = message.Reason == CoachingTeacherLinkEndedReasons.JoinedInstitution
+            ? $"{message.StudentName} bir kuruma katıldı; bireysel koçluk bağlantınız sona erdi."
+            : $"{message.StudentName} koçluk bağlantınızı sonlandırdı.";
+        return dispatcher.SendAsync(
+            MessageIds.Require(context),
+            new[] { message.TeacherUserId },
+            "Öğrenci bağlantısı sona erdi",
+            text,
+            "TeacherLinkEnded",
+            message.StudentUserId.ToString(),
+            context.CancellationToken);
+    }
+}
+
 public sealed class AssignmentGradedConsumer : IConsumer<AssignmentGradedEvent>
 {
     private readonly ICoachingNotificationDispatcher _dispatcher;

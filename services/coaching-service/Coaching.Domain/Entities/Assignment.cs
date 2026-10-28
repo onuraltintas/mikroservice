@@ -287,6 +287,14 @@ public class Assignment : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>Hands the assignment to the teacher who takes over the students of a departing teacher.</summary>
+    public void TransferToTeacher(Guid teacherId)
+    {
+        if (teacherId == Guid.Empty) throw new ArgumentException("Öğretmen gereklidir.", nameof(teacherId));
+        TeacherId = teacherId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Cancel()
     {
         Status = AssignmentStatus.Cancelled;

@@ -132,3 +132,14 @@ public sealed record AssignmentCancelledEvent(
     Guid? InstitutionId,
     string Title,
     Guid[] StudentIds);
+
+/// <summary>A coach's link with a student ended without the coach's own action; the coach is told.</summary>
+public sealed record CoachingTeacherLinkEndedEvent(Guid TeacherUserId, Guid StudentUserId, string StudentName, string Reason);
+
+public static class CoachingTeacherLinkEndedReasons
+{
+    /// <summary>The student joined an institution; an independent coach link cannot continue alongside it.</summary>
+    public const string JoinedInstitution = "JoinedInstitution";
+    /// <summary>The student ended the link themselves.</summary>
+    public const string StudentLeft = "StudentLeft";
+}

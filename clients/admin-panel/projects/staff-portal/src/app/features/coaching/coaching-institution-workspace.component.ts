@@ -9,6 +9,7 @@ import {
   CoachingInstitutionOverview,
   CoachingInstitutionService,
   CoachingInstitutionStudent,
+  CoachingInstitutionStudentTeacher,
   CoachingInstitutionTeacher
 } from './coaching-institution.service';
 import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
@@ -51,7 +52,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   async startStudentEdit(student: CoachingInstitutionStudent): Promise<void> {
     if (!this.students().some(item => item.userId === student.userId) || !await this.canLeavePage()) return;
     this.editingStudentId.set(student.userId); this.editStudentGrade = student.gradeLevel ?? null;
-    this.editStudentTeacherId = student.teacherUserId ?? ''; this.membershipDirty = false; this.membershipError.set(null);
+    // The teacher choice adds a teacher; existing links are listed in the row and ended one by one.
+    this.editStudentTeacherId = ''; this.membershipDirty = false; this.membershipError.set(null);
   }
   cancelStudentEdit(): void {
     this.editingStudentId.set(null); this.membershipDirty = false;
@@ -68,7 +70,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
       && !this.teacherFilterOptions().some(teacher => teacher.userId === this.editStudentTeacherId)) {
       this.membershipError.set('Kurum öğretmenlerinden birini seçin.'); return;
     }
-    this.changeMembership(this.institutionService.updateStudent(id, grade, this.editStudentTeacherId || null), 'Öğrenci sınıfı ve öğretmen ataması güncellendi.', async () => {
+    this.changeMembership(this.institutionService.updateStudent(id, grade, this.editStudentTeacherId || null),
+      this.editStudentTeacherId ? 'Öğrenci sınıfı güncellendi ve öğretmen eklendi.' : 'Öğrenci sınıfı güncellendi.', async () => {
       this.cancelStudentEdit(); await this.loadStudents();
     });
   }
@@ -77,10 +80,32 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     if (!await this.toaster.confirm(`${student.firstName} ${student.lastName} kurumdan çıkarılsın mı? Kurum ve öğretmen erişimi sona erer; geçmiş koçluk kayıtları silinmez.`)) return;
     this.changeMembership(this.institutionService.removeStudent(student.userId), 'Öğrencinin kurum ilişkisi sona erdi.', async () => await this.loadStudents());
   }
+  /** Teacher chosen to take over each leaving teacher's students, keyed by the leaving teacher. */
+  handoverTeacherIds: Record<string, string> = {};
+  handoverOptions(teacher: CoachingInstitutionTeacher): CoachingInstitutionTeacher[] {
+    return this.teachers().filter(item => item.userId !== teacher.userId);
+  }
+  teacherLinks(student: CoachingInstitutionStudent): CoachingInstitutionStudentTeacher[] {
+    if (student.teachers?.length) return student.teachers;
+    return student.teacherUserId ? [{ userId: student.teacherUserId, name: student.teacherName || 'Öğretmen' }] : [];
+  }
+  async removeStudentTeacher(student: CoachingInstitutionStudent, link: CoachingInstitutionStudentTeacher): Promise<void> {
+    if (this.isMembershipSaving() || this.editingStudentId() || !this.students().some(item => item.userId === student.userId)) return;
+    if (!await this.toaster.confirm(`${link.name} ile ${student.firstName} ${student.lastName} arasındaki öğretmen ataması sona ersin mi? Öğrencinin diğer öğretmenleri değişmez.`)) return;
+    this.changeMembership(this.institutionService.removeStudentTeacher(student.userId, link.userId), 'Öğretmen ataması sona erdi.', async () => await this.loadStudents());
+  }
   async removeTeacher(teacher: CoachingInstitutionTeacher): Promise<void> {
     if (this.isMembershipSaving() || this.editingStudentId() || !this.teachers().some(item => item.userId === teacher.userId)) return;
-    if (!await this.toaster.confirm(`${teacher.firstName} ${teacher.lastName} kurumdan çıkarılsın mı? Bu kurumdaki öğrenci atamaları sona erer; geçmiş koçluk kayıtları silinmez.`)) return;
-    this.changeMembership(this.institutionService.removeTeacher(teacher.userId), 'Öğretmenin kurum ilişkisi sona erdi.', async () => {
+    const replacement = this.handoverOptions(teacher).find(item => item.userId === this.handoverTeacherIds[teacher.userId]);
+    const consequence = replacement
+      ? `Öğrencileri ve açık ödevleri ${replacement.firstName} ${replacement.lastName} öğretmene devredilir; ileri tarihli seansları iptal edilir.`
+      : 'Bu kurumdaki öğrenci atamaları sona erer ve ileri tarihli seansları iptal edilir.';
+    if (!await this.toaster.confirm(`${teacher.firstName} ${teacher.lastName} kurumdan çıkarılsın mı? ${consequence} Geçmiş koçluk kayıtları silinmez.`)) return;
+    const operation = replacement
+      ? this.institutionService.removeTeacher(teacher.userId, replacement.userId)
+      : this.institutionService.removeTeacher(teacher.userId);
+    this.changeMembership(operation, replacement ? 'Öğretmen kurumdan çıkarıldı; öğrencileri devredildi.' : 'Öğretmenin kurum ilişkisi sona erdi.', async () => {
+      delete this.handoverTeacherIds[teacher.userId];
       this.teachers.update(current => current.filter(item => item.userId !== teacher.userId));
       this.teacherFilterOptions.update(current => current.filter(item => item.userId !== teacher.userId));
       if (this.studentTeacherFilter() === teacher.userId) this.studentTeacherFilter.set('');
@@ -100,7 +125,6 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     if (!await this.canLeavePage()) return false;
     this.cancelStudentEdit(); return true;
   }
-  hasTeacherOption(id: string): boolean { return this.teacherFilterOptions().some(teacher => teacher.userId === id); }
   private studentRequestId = 0;
   private teacherRequestId = 0;
   private filterTeacherRequestId = 0;

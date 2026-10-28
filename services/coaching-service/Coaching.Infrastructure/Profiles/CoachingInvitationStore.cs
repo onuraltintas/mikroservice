@@ -90,6 +90,9 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         var role = invitation.Role == "Teacher" ? CoachingMemberRole.Teacher : CoachingMemberRole.Student;
         var currentInstitution = await db.CoachingInstitutionMemberships.Where(x => x.UserId == actor && x.Role == role && x.IsActive)
             .Select(x => (Guid?)x.InstitutionId).SingleOrDefaultAsync(ct);
+        // A closed institution's membership no longer binds its members; the new institution's membership replaces it.
+        if (invitation.IsInstitutionInvitation && currentInstitution is { } held && held != invitation.InstitutionId
+            && !await accounts.IsActiveInstitutionAsync(held, ct)) currentInstitution = null;
         if (currentInstitution.HasValue && currentInstitution != invitation.InstitutionId
             || !invitation.IsInstitutionInvitation && currentInstitution != invitation.InstitutionId)
             throw CoachingProfileStore.Conflict("Davet mevcut kurum Ã¼yeliÄŸinizle uyuÅŸmuyor.");

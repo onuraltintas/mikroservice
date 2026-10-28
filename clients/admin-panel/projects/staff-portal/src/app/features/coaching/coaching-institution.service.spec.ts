@@ -28,6 +28,15 @@ describe('CoachingInstitutionService', () => {
     service.removeTeacher('teacher').subscribe();
     const teacher = http.expectOne('/api/coaching/institution/teachers/teacher'); expect(teacher.request.method).toBe('DELETE'); teacher.flush(null);
   });
+
+  it('hands a leaving teacher over to a replacement and ends a single student-teacher link', () => {
+    service.removeTeacher('teacher-1', 'teacher/2').subscribe();
+    const handover = http.expectOne(request => request.url === '/api/coaching/institution/teachers/teacher-1');
+    expect(handover.request.method).toBe('DELETE'); expect(handover.request.params.get('replacementTeacherUserId')).toBe('teacher/2'); handover.flush(null);
+    service.removeStudentTeacher('student/1', 'teacher/1').subscribe();
+    const link = http.expectOne('/api/coaching/institution/students/student%2F1/teachers/teacher%2F1');
+    expect(link.request.method).toBe('DELETE'); link.flush(null);
+  });
   let http: HttpTestingController;
   let service: CoachingInstitutionService;
 
