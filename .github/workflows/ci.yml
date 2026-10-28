@@ -162,6 +162,7 @@ jobs:
           dotnet test tests/Integration/Coaching.Curriculum.IntegrationTests/Coaching.Curriculum.IntegrationTests.csproj
           --configuration Release
           --logger 'trx;LogFileName=coaching-development.trx'
+          -- xUnit.MaxParallelThreads=2
       - name: Coaching profile PostgreSQL tests
         run: >-
           dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
