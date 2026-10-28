@@ -192,7 +192,7 @@ public sealed class StudyContinuationTests
     public async Task AdditiveMigrationPreservesOldTaskColumnsAndDoesNotGuessRemainingScope()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create("20261024213209_WeeklyReviewResultEvidence");await pg.Data.Seed(legacyPlanSchema:true);
-        async Task<string> Row()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'SkippedAt'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t""").SingleAsync();
+        async Task<string> Row()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'PlanKind'-'PlanReason'-'SkippedAt'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t""").SingleAsync();
         var before=await Row();await pg.Db.Database.MigrateAsync();Assert.Equal(before,await Row());Assert.False(pg.Db.Database.HasPendingModelChanges());
         var task=await pg.Db.StudyPlanTasks.SingleAsync();Assert.Null(task.RemainingMinutes);Assert.Null(task.PredecessorTaskId);
     }

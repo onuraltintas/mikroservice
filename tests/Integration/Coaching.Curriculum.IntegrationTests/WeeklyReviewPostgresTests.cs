@@ -197,7 +197,7 @@ public sealed class WeeklyReviewPostgresTests
     }
     private static async Task<string> Snapshot(CurriculumPostgresTests.Pg pg) => JsonSerializer.Serialize(new {
         Plans = await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(p)-'ArchivedAt'-'WasPublished'-'AutomaticOutcomeEvidence')::text AS "Value" FROM coaching.study_plan_revisions p ORDER BY "Id" """).ToArrayAsync(),
-        Tasks = await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'SkippedAt'-'OriginalTaskId'-'RealizationHistoryJson'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t ORDER BY "Id" """).ToArrayAsync(),
+        Tasks = await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'PlanKind'-'PlanReason'-'SkippedAt'-'OriginalTaskId'-'RealizationHistoryJson'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t ORDER BY "Id" """).ToArrayAsync(),
         Links = await pg.Db.Set<StudyPlanTaskOutcome>().AsNoTracking().OrderBy(x => x.TaskId).ToArrayAsync()
     });
 }
