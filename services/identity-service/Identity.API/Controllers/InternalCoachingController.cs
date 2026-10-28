@@ -135,13 +135,15 @@ public sealed class InternalCoachingController : ControllerBase
 
         var authorization = await _institutionRepository.AuthorizeCoachingAdminAsync(
             request.ViewerUserId,
+            request.PreferredInstitutionId,
             cancellationToken);
 
         return authorization is null
             ? Forbid()
             : Ok(new CoachingAdminAuthorizationResponse(
                 authorization.IsGlobal,
-                authorization.InstitutionId));
+                authorization.InstitutionId,
+                authorization.Institutions));
     }
 
     /// <summary>Verified parents who want the weekly Coaching summary of their child (roadmap Y7).</summary>
@@ -329,10 +331,11 @@ public sealed record CoachingAgreementRepresentativeAuthorizationResponse(
     Guid RelationshipId,
     string PartyRole);
 
-public sealed record CoachingAdminAuthorizationRequest(Guid ViewerUserId);
+public sealed record CoachingAdminAuthorizationRequest(Guid ViewerUserId, Guid? PreferredInstitutionId = null);
 public sealed record CoachingInstitutionStudentRequest(Guid InstitutionId, Guid StudentId);
 
-public sealed record CoachingAdminAuthorizationResponse(bool IsGlobal, Guid? InstitutionId);
+public sealed record CoachingAdminAuthorizationResponse(bool IsGlobal, Guid? InstitutionId,
+    IReadOnlyList<Identity.Application.Interfaces.CoachingAdminInstitution>? Institutions = null);
 
 public sealed record CoachingStudentReadRequest(
     Guid ViewerUserId,

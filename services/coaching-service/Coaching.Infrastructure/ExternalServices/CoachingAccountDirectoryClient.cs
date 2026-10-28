@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 namespace Coaching.Infrastructure.ExternalServices;
 
 public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfiguration configuration,
-    ICoachingAgreementRepresentativeAuthorizationClient representatives) : ICoachingAccountDirectory
+    ICoachingAgreementRepresentativeAuthorizationClient representatives, ICoachingInstitutionSelection? selection = null) : ICoachingAccountDirectory
 {
     private readonly string baseUrl = (configuration["Services:IdentityService"] ?? "http://localhost:5001").TrimEnd('/');
     private readonly string? key = configuration["INTERNAL_SERVICE_API_KEY"] ?? configuration["Internal:ServiceApiKey"];
@@ -34,8 +34,10 @@ public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfigurati
 
     public async Task<CoachingAdminAccessScope?> AuthorizeAdminAsync(Guid userId, CancellationToken ct)
     {
-        var response = await SendAsync<AdminScope>(HttpMethod.Post, "authorize-admin", new { viewerUserId = userId }, ct);
-        return response is null ? null : new(response.IsGlobal, response.InstitutionId);
+        var response = await SendAsync<AdminScope>(HttpMethod.Post, "authorize-admin",
+            new { viewerUserId = userId, preferredInstitutionId = selection?.PreferredInstitutionId }, ct);
+        return response is null ? null : new(response.IsGlobal, response.InstitutionId)
+            { Institutions = response.Institutions?.Select(x => new CoachingAdminInstitutionRef(x.Id, x.Name)).ToArray() ?? [] };
     }
 
     public async Task<bool> IsActiveInstitutionAsync(Guid institutionId, CancellationToken ct) =>
@@ -57,6 +59,7 @@ public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfigurati
             ?? throw new InvalidOperationException("Identity response was empty.");
     }
 
-    private sealed record AdminScope(bool IsGlobal, Guid? InstitutionId);
+    private sealed record AdminScope(bool IsGlobal, Guid? InstitutionId, InstitutionRow[]? Institutions = null);
+    private sealed record InstitutionRow(Guid Id, string Name);
     private sealed record InstitutionState(bool IsActive);
 }
