@@ -13,7 +13,7 @@ using FluentAssertions;
 
 namespace Identity.API.IntegrationTests;
 
-public sealed class CoachingWriteIdempotencyTests
+public sealed partial class CoachingWriteIdempotencyTests
 {
     [Fact]
     public async Task CreateExam_IsIdempotentPerKey()
@@ -496,6 +496,13 @@ public sealed class CoachingWriteIdempotencyTests
         }
 
         public Task UpdateAsync(CoachingSession session, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<IReadOnlyList<CoachingSession>> GetSeriesAsync(Guid seriesId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<CoachingSession>>(Items.Where(item => item.SeriesId == seriesId).OrderBy(item => item.ScheduledDate).ToList());
+
+        public Task<IReadOnlyList<CoachingSession>> GetByTeacherIdInRangeAsync(Guid teacherId, DateTime from, DateTime to, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<CoachingSession>>(Items.Where(item => item.TeacherId == teacherId && item.ScheduledDate >= from && item.ScheduledDate < to)
+                .OrderBy(item => item.ScheduledDate).ToList());
 
         public Task DeleteAsync(CoachingSession session, CancellationToken cancellationToken = default)
         {
