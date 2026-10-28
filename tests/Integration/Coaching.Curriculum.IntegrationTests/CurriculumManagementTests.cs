@@ -230,7 +230,7 @@ public sealed class CurriculumManagementTests
 
     // Historical schema snapshots synthesize the fields absent from their original shape.
     internal static IQueryable<StudyPlanTask> LegacyStudyTasks(CoachingDbContext db) => db.StudyPlanTasks.FromSqlRaw(
-        """SELECT task.*, NULL::uuid AS "CompletionSourceTaskId", NULL::uuid AS "OriginalTaskId", '[]'::jsonb AS "RealizationHistoryJson",NULL::integer AS "RemainingMinutes",NULL::integer AS "RemainingQuestions",NULL::uuid AS "PredecessorTaskId",NULL::integer AS "PredecessorVersion",NULL::jsonb AS "ActualWorkJson",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkFromDate",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkToDate",NULL::timestamptz AS "SkippedAt" FROM coaching.study_plan_tasks AS task""");
+        """SELECT task.*, NULL::uuid AS "CompletionSourceTaskId", NULL::uuid AS "OriginalTaskId", '[]'::jsonb AS "RealizationHistoryJson",NULL::integer AS "RemainingMinutes",NULL::integer AS "RemainingQuestions",NULL::uuid AS "PredecessorTaskId",NULL::integer AS "PredecessorVersion",NULL::jsonb AS "ActualWorkJson",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkFromDate",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkToDate",NULL::timestamptz AS "SkippedAt",NULL::varchar AS "PlanKind",NULL::varchar AS "PlanReason" FROM coaching.study_plan_tasks AS task""");
 
     internal sealed class Fixture : IAsyncDisposable
     {
@@ -264,7 +264,11 @@ public sealed class CurriculumManagementTests
             {
                 // Historical migration tests must insert the historical shape, rather than
                 // ask the current model to write columns introduced by later migrations.
+                // Catalog rows go through the model, so a later catalog column (O7 YieldWeight) exists only while they are written.
+                var addedYield = !await Db.Database.SqlQueryRaw<bool>("SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='coaching' AND table_name='study_catalog_topics' AND column_name='YieldWeight') AS \"Value\"").SingleAsync();
+                if (addedYield) await Db.Database.ExecuteSqlRawAsync("ALTER TABLE coaching.study_catalog_topics ADD COLUMN \"YieldWeight\" integer NOT NULL DEFAULT 3");
                 await Db.SaveChangesAsync();
+                if (addedYield) await Db.Database.ExecuteSqlRawAsync("ALTER TABLE coaching.study_catalog_topics DROP COLUMN \"YieldWeight\"");
                 await Db.Database.ExecuteSqlInterpolatedAsync($"""
                     INSERT INTO coaching.study_plan_revisions ("Id","StudentId","PlanId","RevisionNumber","Title","Status","IsActive","Version","CreatedAt")
                     VALUES ({plan.Id},{plan.StudentId},{plan.PlanId},1,{plan.Title},1,true,0,{plan.CreatedAt})
