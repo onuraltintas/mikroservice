@@ -464,72 +464,6 @@ export class CoachingPortalService {
     );
   }
 
-  getTeacherAssignments(
-    teacherId: string,
-    pageNumber = 1,
-    pageSize = 25,
-    status?: string
-  ): Observable<PagedResponse<TeacherAssignment>> {
-    let params = this.paging(pageNumber, pageSize);
-    if (status) params = params.set('status', status);
-    return this.http.get<PagedResponse<TeacherAssignment>>(
-      `${this.url}/teacher/${this.id(teacherId)}`,
-      { params }
-    );
-  }
-
-  createTeacherAssignment(
-    request: TeacherAssignmentCreateRequest,
-    idempotencyKey: string
-  ): Observable<TeacherAssignmentMutationResponse> {
-    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
-    const body = this.normalizeAssignmentRequest(request);
-    return this.http.post<TeacherAssignmentMutationResponse>(
-      `${this.url}`,
-      body,
-      { headers }
-    );
-  }
-
-  updateTeacherAssignment(
-    assignmentId: string,
-    request: TeacherAssignmentUpdateRequest
-  ): Observable<TeacherAssignmentMutationResponse> {
-    const body = { ...this.normalizeAssignmentRequest(request), assignmentId };
-    return this.http.put<TeacherAssignmentMutationResponse>(
-      `${this.url}/${this.id(assignmentId)}`,
-      body
-    );
-  }
-
-  cancelTeacherAssignment(assignmentId: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(
-      `${this.url}/${this.id(assignmentId)}/cancel`,
-      {}
-    );
-  }
-
-  getTeacherStudents(
-    pageNumber = 1,
-    pageSize = 25,
-    searchTerm?: string,
-    studentUserIds?: readonly string[]
-  ): Observable<PagedResponse<TeacherStudent>> {
-    let params = this.paging(pageNumber, pageSize);
-    const search = searchTerm?.trim();
-    if (search) {
-      params = params.set('searchTerm', search);
-    }
-    for (const studentUserId of studentUserIds ?? []) {
-      params = params.append('studentUserIds', studentUserId);
-    }
-
-    return this.http.get<PagedResponse<TeacherStudent>>(
-      `${environment.apiUrl}/coaching/teachers/me/students`,
-      { params }
-    );
-  }
-
   getAssignment(assignmentId: string): Observable<AssignmentDetail> {
     return this.http.get<AssignmentDetail>(`${this.url}/${this.id(assignmentId)}`);
   }
@@ -546,24 +480,6 @@ export class CoachingPortalService {
         assignmentId,
         studentId,
         studentNote: note || null
-      }
-    );
-  }
-
-  gradeAssignment(
-    assignmentId: string,
-    studentId: string,
-    score: number,
-    teacherFeedback?: string
-  ): Observable<GradeAssignmentResponse> {
-    const feedback = teacherFeedback?.trim();
-    return this.http.post<GradeAssignmentResponse>(
-      `${this.url}/${this.id(assignmentId)}/grade`,
-      {
-        assignmentId,
-        studentId,
-        score,
-        teacherFeedback: feedback || null
       }
     );
   }
@@ -647,24 +563,6 @@ export class CoachingPortalService {
     );
   }
 
-  getTeacherStudentHistory(
-    studentId: string,
-    type: CoachingStudentHistoryType,
-    pageNumber = 1,
-    pageSize = 10,
-    filter?: { fromDate?: string; toDate?: string; status?: string; search?: string }
-  ): Observable<PagedResponse<CoachingStudentHistoryItem>> {
-    let params = this.paging(pageNumber, pageSize).set('type', type);
-    if (filter?.fromDate) params = params.set('fromDate', filter.fromDate);
-    if (filter?.toDate) params = params.set('toDate', filter.toDate);
-    if (filter?.status) params = params.set('status', filter.status);
-    if (filter?.search?.trim()) params = params.set('search', filter.search.trim());
-    return this.http.get<PagedResponse<CoachingStudentHistoryItem>>(
-      `${environment.apiUrl}/reports/student/${this.id(studentId)}/history`,
-      { params }
-    );
-  }
-
   createStudentGoal(
     studentId: string,
     request: CreateStudentGoalRequest,
@@ -715,213 +613,6 @@ export class CoachingPortalService {
     );
   }
 
-  getTeacherExams(
-    teacherId: string,
-    pageNumber = 1,
-    pageSize = 25
-  ): Observable<PagedResponse<TeacherExam>> {
-    return this.http.get<PagedResponse<TeacherExam>>(
-      `${environment.apiUrl}/exams/teacher/${this.id(teacherId)}`,
-      { params: this.paging(pageNumber, pageSize) }
-    );
-  }
-
-  createTeacherExam(
-    request: TeacherExamCreateRequest,
-    idempotencyKey: string
-  ): Observable<{ examId: string }> {
-    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
-    return this.http.post<{ examId: string }>(
-      `${environment.apiUrl}/exams`,
-      {
-        ...request,
-        title: request.title.trim(),
-        institutionId: request.institutionId || null,
-        description: request.description?.trim() || null
-      },
-      { headers }
-    );
-  }
-
-  updateTeacherExam(
-    examId: string,
-    request: TeacherExamUpdateRequest
-  ): Observable<{ examId: string; examDate: string; maxScore: number }> {
-    return this.http.put<{ examId: string; examDate: string; maxScore: number }>(
-      `${environment.apiUrl}/exams/${this.id(examId)}`,
-      {
-        ...request,
-        examId,
-        title: request.title.trim(),
-        subject: request.subject?.trim() || null,
-        description: request.description?.trim() || null
-      }
-    );
-  }
-
-  getTeacherExamDetail(examId: string, pageNumber = 1, pageSize = 25): Observable<TeacherExamDetail> {
-    return this.http.get<TeacherExamDetail>(
-      `${environment.apiUrl}/exams/${this.id(examId)}/teacher-detail`,
-      { params: this.paging(pageNumber, pageSize) }
-    );
-  }
-
-  addTeacherExamResult(
-    examId: string,
-    request: TeacherExamResultMutationRequest,
-    idempotencyKey: string
-  ): Observable<{ message: string }> {
-    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
-    return this.http.post<{ message: string }>(
-      `${environment.apiUrl}/exams/${this.id(examId)}/results`,
-      {
-        ...request,
-        examId,
-        notes: request.notes?.trim() || null
-      },
-      { headers }
-    );
-  }
-
-  updateTeacherExamResult(
-    examId: string,
-    resultId: string,
-    request: TeacherExamResultMutationRequest
-  ): Observable<{ examId: string; resultId: string; score: number }> {
-    return this.http.put<{ examId: string; resultId: string; score: number }>(
-      `${environment.apiUrl}/exams/${this.id(examId)}/results/${this.id(resultId)}`,
-      {
-        ...request,
-        examId,
-        resultId,
-        notes: request.notes?.trim() || null
-      }
-    );
-  }
-
-  getTeacherGoals(
-    teacherId: string,
-    pageNumber = 1,
-    pageSize = 25
-  ): Observable<PagedResponse<TeacherGoal>> {
-    return this.http.get<PagedResponse<TeacherGoal>>(
-      `${environment.apiUrl}/goals/teacher/${this.id(teacherId)}`,
-      { params: this.paging(pageNumber, pageSize) }
-    );
-  }
-
-  createTeacherGoal(
-    request: TeacherGoalCreateRequest,
-    idempotencyKey: string
-  ): Observable<{ goalId: string }> {
-    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
-    return this.http.post<{ goalId: string }>(
-      `${environment.apiUrl}/goals`,
-      {
-        ...request,
-        title: request.title.trim(),
-        description: request.description?.trim() || null,
-        targetDate: request.targetDate || null,
-        targetScore: request.targetScore ?? null
-      },
-      { headers }
-    );
-  }
-
-  updateTeacherGoal(
-    goalId: string,
-    request: TeacherGoalUpdateRequest
-  ): Observable<{ goalId: string; title: string }> {
-    return this.http.put<{ goalId: string; title: string }>(
-      `${environment.apiUrl}/goals/${this.id(goalId)}`,
-      {
-        ...request,
-        goalId,
-        title: request.title.trim(),
-        description: request.description?.trim() || null,
-        targetDate: request.targetDate || null,
-        targetScore: request.targetScore ?? null,
-        targetSubject: request.targetSubject?.trim() || null
-      }
-    );
-  }
-
-  getTeacherSessions(
-    teacherId: string,
-    pageNumber = 1,
-    pageSize = 25
-  ): Observable<PagedResponse<CoachingSession>> {
-    return this.http.get<PagedResponse<CoachingSession>>(
-      `${environment.apiUrl}/sessions/teacher/${this.id(teacherId)}`,
-      { params: this.paging(pageNumber, pageSize) }
-    );
-  }
-
-  getTeacherSession(sessionId: string): Observable<CoachingSession> {
-    return this.http.get<CoachingSession>(
-      `${environment.apiUrl}/sessions/${this.id(sessionId)}`
-    );
-  }
-
-  createTeacherSession(
-    request: TeacherSessionCreateRequest,
-    idempotencyKey: string
-  ): Observable<{ sessionId: string }> {
-    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
-    return this.http.post<{ sessionId: string }>(
-      `${environment.apiUrl}/sessions`,
-      {
-        ...request,
-        subject: request.subject?.trim() || null,
-        notes: request.notes?.trim() || null,
-        meetingLink: request.meetingLink?.trim() || null,
-        studentIds: request.studentIds?.length ? [...new Set(request.studentIds)] : null
-      },
-      { headers }
-    );
-  }
-
-  updateTeacherSession(
-    sessionId: string,
-    request: TeacherSessionUpdateRequest
-  ): Observable<TeacherSessionMutationResponse> {
-    return this.http.put<TeacherSessionMutationResponse>(
-      `${environment.apiUrl}/sessions/${this.id(sessionId)}`,
-      {
-        ...request,
-        sessionId,
-        title: request.title.trim(),
-        description: request.description?.trim() || null,
-        meetingLink: request.meetingLink?.trim() || null,
-        teacherNotes: request.teacherNotes?.trim() || null
-      }
-    );
-  }
-
-  updateSessionAttendance(
-    sessionId: string,
-    studentId: string,
-    attended: boolean,
-    notes?: string
-  ): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(
-      `${environment.apiUrl}/sessions/${this.id(sessionId)}/attendance`,
-      {
-        sessionId,
-        studentId,
-        attended,
-        notes: notes?.trim() || null
-      }
-    );
-  }
-
-  cancelTeacherSession(sessionId: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(
-      `${environment.apiUrl}/sessions/${this.id(sessionId)}/cancel`,
-      {}
-    );
-  }
-
   getStudentSessions(
     studentId: string,
     pageNumber = 1,
@@ -941,31 +632,6 @@ export class CoachingPortalService {
     return this.http.get(this.calendarFeedUrl(audience), { responseType: 'blob' });
   }
 
-  getCurrentRepresentativeAgreement(studentId: string): Observable<RepresentativeCoachingAgreement> {
-    return this.http.get<RepresentativeCoachingAgreement>(
-      `${environment.apiUrl}/coaching-agreements/current/representative-status`,
-      { params: new HttpParams().set('studentId', this.id(studentId)).set('locale', 'tr-TR') }
-    );
-  }
-
-  acknowledgeAgreementAsRepresentative(
-    agreementDocumentId: string,
-    studentId: string
-  ): Observable<CoachingAgreementAcknowledgement> {
-    return this.http.post<CoachingAgreementAcknowledgement>(
-      `${environment.apiUrl}/coaching-agreements/current/representative-acknowledgements`,
-      { agreementDocumentId, studentId }
-    );
-  }
-
-  withdrawRepresentativeAcknowledgement(
-    acknowledgementId: string
-  ): Observable<CoachingAgreementAcknowledgement> {
-    return this.http.delete<CoachingAgreementAcknowledgement>(
-      `${environment.apiUrl}/coaching-agreements/representative-acknowledgements/${this.id(acknowledgementId)}`
-    );
-  }
-
   async calculateSha256(file: File): Promise<string> {
     const digest = await globalThis.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
     return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
@@ -979,30 +645,5 @@ export class CoachingPortalService {
 
   private id(value: string): string {
     return encodeURIComponent(value);
-  }
-
-  private normalizeAssignmentRequest(
-    request: TeacherAssignmentCreateRequest | TeacherAssignmentUpdateRequest
-  ) {
-    const body: Record<string, unknown> = {
-      ...request,
-      title: request.title.trim(),
-      description: request.description?.trim() || null,
-      subject: request.subject?.trim() || null,
-      studentIds: request.studentIds
-        ? [...new Set(request.studentIds.map(studentId => studentId.trim()).filter(Boolean))]
-        : null
-    };
-
-    for (const field of ['bookTitle', 'bookIsbn', 'bookEdition', 'bookChapter']) {
-      const value = request[field as keyof typeof request];
-      if (value === undefined) {
-        delete body[field];
-      } else {
-        body[field] = typeof value === 'string' ? value.trim() || null : value;
-      }
-    }
-
-    return body;
   }
 }

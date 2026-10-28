@@ -172,7 +172,7 @@ public static class DependencyInjection
             provider.GetRequiredService<CoachingDbContext>(),
             provider.GetRequiredService<ICoachingNewsletterEmailDelivery>(),
             provider.GetRequiredService<ICoachingSharedLegalPageVersionProvider>(),
-            configuration["CoachingNewsletter:PublicBaseUrl"] ?? "https://onuraltintas.net"));
+            CoachingPublicUrl.Get(configuration)));
         services.AddSingleton<ICoachingCmsMediaStorage, LocalCoachingCmsMediaStorage>();
         services.AddSingleton<IAssignmentAttachmentStorage, LocalAssignmentAttachmentStorage>();
         if (scanOptions.Provider.Equals("ClamAv", StringComparison.OrdinalIgnoreCase))

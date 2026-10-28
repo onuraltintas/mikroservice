@@ -1,11 +1,11 @@
 # Coaching kullanıcı portalı
 
-`clients/admin-panel` içindeki `/coaching-portal` alanı öğrenci panelidir.
+`clients/admin-panel` içindeki `/coaching-portal` alanı öğrenci ve veli panelidir.
 Öğretmen ve kurum yöneticileri ortak personel portalını
-`https://onuraltintas.net/staff/?product=coaching` adresinde kullanır. Eski
-`/coaching-portal/teacher/**` adresleri bu portala yönlendirilir. Veli paneli
-kaldırılmıştır; veli rolü, hesaplar ve veli-öğrenci ilişki kayıtları silinmemiş,
-yalnızca kullanıcı portalı erişimi kaldırılmıştır. Kimlik doğrulama ortak kalır;
+`https://eduivme.com/staff/?product=coaching` adresinde kullanır (adres
+`PUBLIC_APP_BASE_URL` ayarından gelir). Eski `/coaching-portal/teacher/**` adresleri
+bu portala yönlendirilir. Veliler bağlı çocuklarının salt okunur panelini
+`/coaching-portal/parent` altında görür (roadmap Y7). Kimlik doğrulama ortak kalır;
 yetkiyi Coaching ve Identity servisleri kendi kaynaklarında tekrar doğrular.
 
 ## Rol akışları
@@ -13,38 +13,44 @@ yetkiyi Coaching ve Identity servisleri kendi kaynaklarında tekrar doğrular.
 | Rol | Ekranlar | Yazma yetkisi |
 | --- | --- | --- |
 | Student | Ödev listesi/detayı, teslim, fotoğraf eki, hedefler, seanslar ve sınav sonuçları | Yalnızca kendi ödev teslimi/ekleri ve kendi hedef oluşturma-ilerleme güncellemesi |
-| Teacher | Yeni personel portalında kendi ödevleri, öğrenci teslimleri, puan/geri bildirim, seanslar, öğrenci listesi ve akademik takip | Yalnızca bağlı aktif öğrencilerine ödev/seans/sınav/hedef yönetimi; kendi seanslarında yoklama ve geri bildirim |
+| Parent | Çocuklarım, çocuğun özeti, deneme, ödev, seans, ücret ve abonelik ekranları; öğretmenle yazışma | Çocuk adına havale bildirimi ve yazışma; çocuğun kayıtlarını değiştiremez |
+| Teacher | Yalnız personel portalında: ödevler, teslimler, puan/geri bildirim, seanslar, öğrenci listesi ve akademik takip | Yalnızca bağlı aktif öğrencilerine ödev/seans/sınav/hedef yönetimi; kendi seanslarında yoklama ve geri bildirim |
 
-Yalnız öğrenci rolü olan kullanıcılar `/coaching-portal` alanına erişir.
-Veli-only kullanıcılar bu portala alınmaz; Öğrenci rolü de varsa yalnızca
-öğrenci görünümünü kullanabilirler. Öğretmen/kurum kullanıcıları ortak personel
+Öğrenci ve veli rolleri `/coaching-portal` alanına erişir; veli yalnız veli
+ekranlarını görür. Öğrenci portalında öğretmen ekranı ya da öğretmen işlemi
+yoktur (D3'te kalan kod kaldırıldı). Öğretmen/kurum kullanıcıları ortak personel
 portalına, yönetim rolleri `/dashboard`a yönlendirilir. Eski öğretmen ekranları
 uygulama route'larında sunulmaz; eski
 adresler uyumluluk için yeni portala aktarılır. Asıl veri yetkisi servislerdeki
 JWT + ürün/tenant/ilişki kontrollerindedir.
 
-## Teslim ve fotoğraf eki
+## Teslim ve ekler
 
-Öğrenci fotoğrafı iki aşamalı yüklenir:
+Öğrenci eki iki aşamalı yüklenir:
 
 1. `POST /api/assignments/{assignmentId}/students/{studentId}/attachments`
    ile dosya adı, MIME, boyut ve SHA-256 metadata'sı kaydedilir.
-2. Dönen kısa ömürlü path'e `PUT` ile ham fotoğraf gönderilir ve
+2. Dönen kısa ömürlü path'e `PUT` ile ham dosya gönderilir ve
    `X-Content-SHA256` header'ı tekrar verilir.
 
-Yalnız JPEG, PNG ve WebP kabul edilir; maksimum boyut 10 MiB'dir. Coaching
+Kabul edilen türler: JPEG, PNG, WebP, PDF, Word (.doc, .docx) ve Markdown (.md).
+Dosya başına en çok 10 MiB; öğrenci başına ödev başına en çok 10 ek ve toplam 50 MiB.
+Öğretmenin ödeve eklediği yönerge dosyaları ödev başına en çok 10 adettir
+(`AssignmentAttachmentPolicy`). "Fotoğraf çek" kamerayı açar ve yalnız görsel kabul
+eder. Coaching
 servisi dosyayı ClamAV taramasından geçirmeden temiz kabul etmez. Frontend
 kontrolleri kullanıcı deneyimi içindir; güvenlik doğrulaması her zaman API'de
 tekrarlanır.
 
 ## Veli ilişkileri ve API kapsamı
 
-Veli paneli ve panelin frontend istemcisi kaldırılmıştır. Veli hesapları ve
-ilişki kayıtları korunur. `GET /api/users/me/children` sunucu tarafında yalnız
+Veli, öğrencinin verdiği 7 günlük tek kullanımlık kodla bağlanır; öğrenci onaylar
+ve iki taraf da bağı kaldırabilir (`/api/users/me/parent-links`). Pazar akşamı
+veliye haftalık özet e-postası gider. `GET /api/users/me/children` sunucu tarafında yalnız
 `Parent` rolüyle kullanılabilir; Identity servisi aktif veli profilini, aktif
 öğrenci kullanıcısını, aktif öğrenci profilini ve varsa aktif kurumu birlikte
 kontrol eder. Koçluk okuma API'leri de ürün ve ilişki kapsamını sunucuda tekrar
-doğrular; panelin kaldırılması bu API/veri kurallarını veya kayıtları silmez.
+doğrular.
 
 ## Seans ve öğrenci hedefi akışları
 
@@ -57,13 +63,13 @@ alanı da döner; öğrenci ve öğretmen bu bağlantıyı portalın seans kart�
 açabilir. Öğrenci seans sonrası `PUT /api/sessions/{sessionId}/student-note`
 ile yalnız kendi attendance kaydına en fazla 2.000 karakterlik yansıma notu
 ekleyebilir ve okuyabilir; veli/öğretmen bu özel notu göremez ve bu endpoint ile
-yazamaz. Veli arayüzü kaldırılmış olsa da, bu veri erişim kuralları API tarafında
-geçerlidir.
+yazamaz.
 
 Öğretmen response'unda yalnızca Identity tarafından yetkilendirilen ve boş
 olmayan öğrenci yansımaları `studentReflections` alanında görünür; öğretmen bu
-alanı değiştiremez. Portal ayrıca `GET /api/calendar/teacher.ics` veya
-`GET /api/calendar/student.ics` ile standart iCalendar dışa aktarımı sunar.
+alanı değiştiremez. Öğrenci portalı `GET /api/calendar/student.ics`, personel
+portalı `GET /api/calendar/teacher.ics` ile standart iCalendar dışa aktarımı sunar;
+ikisi de kişisel abonelik adresi de verir (`GET /api/calendar/feed/{token}.ics`, O6).
 Feed 366 günle sınırlıdır, seans kimlikleri ve toplantı bağlantısı dışındaki
 öğrenci verilerini içermez ve erişim JWT rolüyle tekrar doğrulanır.
 
@@ -75,8 +81,7 @@ oluşturabilir. İstek `Idempotency-Key` header'ı taşır; istemci aynı ağ
 zaman aşımı için aynı anahtarı, yeni hedef için yeni anahtarı kullanır.
 İlerleme yalnız öğrencinin kendi hedefi için `PUT
 /api/goals/{goalId}/progress` ile 0–100 arasında güncellenebilir. Öğretmen ve
-veli rolleri bu endpoint ile başkasının hedef ilerlemesini değiştiremez; veli
-paneli kaldırıldığı için veli arayüzünden hedef takibi sunulmaz.
+veli rolleri bu endpoint ile başkasının hedef ilerlemesini değiştiremez.
 öğretmen/admin yönetimi ayrı, MFA ve `Permissions.Coaching.Manage` korumalı
 admin API'sinde kalır.
 
@@ -100,7 +105,7 @@ sonuç eklenemez.
 
 Öğrenci ilerleme ekranı son altı sınavı kronolojik trend olarak, puan/sıralama,
 doğru-yanlış-boş ve ders kırılımıyla gösterir ve sonuçları 25'lik sayfalarla
-yükler. Veli paneli kaldırıldığı için bu ekran veli kullanıcısına sunulmaz.
+yükler. Veli çocuğun son denemelerini kendi panelinde görür.
 
 Seans listeleri 25'lik sayfalarla yüklenir ve toplam kayıt sayısı API'nin
 `totalCount` alanından gösterilir. Gelecekteki planlanmış seans iptal

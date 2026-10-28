@@ -65,6 +65,7 @@ Kataloglar varsayılan pasiftir, fiziksel silme öğrenci geçmişini bozmamalı
    tek aktif sürüm/taslak, optimistic concurrency ve çakışma testleri.
 6. Otomatik plan: sunucuda kural tabanlı taslak; sabitlenmiş görevleri ve tamamlanan geçmişi koru;
    uygun süre yetmiyorsa açıklama ver, kullanıcı onaylamadan yayımlama.
+   *Tamamlandı:* `WeeklyPlanEngine` sürüm 2 (roadmap O7), Plan sihirbazı `/coaching-portal/automatic-plan`.
 7. Sonuç girişi: doğru/yanlış/boş ve ders/konu sonuçları; sınav türüne göre kurallar;
    öğrenci beyanını ölçülmüş değerlendirmeden ayır.
 8. Raporlar: plan uyumu, konu/deneme/hedef; veri yokluğunu sıfır başarı sayma;

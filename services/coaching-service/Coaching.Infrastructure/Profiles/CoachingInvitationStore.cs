@@ -41,7 +41,7 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         var sender = (await accounts.GetAccountsAsync([actor], ct)).Single(x => x.UserId == actor);
         var recipient = await accounts.FindByEmailAsync(invitation.RecipientEmail, ct);
         db.CoachingInvitations.Add(invitation);
-        var publicUrl = (configuration["Coaching:PublicBaseUrl"] ?? "https://eduivme.com").TrimEnd('/');
+        var publicUrl = CoachingPublicUrl.Get(configuration);
         if (!Uri.TryCreate(publicUrl, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http"))
             throw new InvalidOperationException("Coaching public base URL is invalid.");
         await events.PublishAsync(new InvitationCreatedEvent(invitation.Id, sender.Email, invitation.RecipientEmail,
