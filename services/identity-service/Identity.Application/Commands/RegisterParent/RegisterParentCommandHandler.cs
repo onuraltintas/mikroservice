@@ -112,6 +112,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
             user.GenerateEmailVerificationToken();
             _registrationLegalConsentService.TrackAcceptedDocuments(
                 userId, PlatformProduct.Coaching, legalValidation.Value, "password");
+            _registrationLegalConsentService.TrackSource(userId, PlatformProduct.Coaching, request.Utm, "password");
 
             await _parentRepository.AddAsync(parent, cancellationToken);
 

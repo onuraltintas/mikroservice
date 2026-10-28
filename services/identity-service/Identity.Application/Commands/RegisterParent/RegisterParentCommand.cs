@@ -12,5 +12,7 @@ public record RegisterParentCommand(
     string LastName,
     string? PhoneNumber,
     PlatformProduct? Product = null,
-    IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null
+    IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null,
+    /// <summary>Roadmap O11: campaign tags of the landing page, stored with a new account.</summary>
+    Identity.Application.Registration.RegistrationUtm? Utm = null
 ) : IRequest<Result<Guid>>;

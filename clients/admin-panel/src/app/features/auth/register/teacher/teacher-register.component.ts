@@ -14,6 +14,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { environment } from '../../../../../environments/environment.development';
+import { SiteAnalyticsService } from '../../../../core/services/site-analytics.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../../existing-product-join.component';
@@ -34,6 +35,7 @@ export class TeacherRegisterComponent implements OnInit {
     private fb = inject(FormBuilder);
     private http = inject(HttpClient);
     private router = inject(Router);
+    private analytics = inject(SiteAnalyticsService);
     private toaster = inject(ToasterService);
     private configService = inject(ConfigurationService);
     private platformId = inject(PLATFORM_ID);
@@ -83,12 +85,14 @@ export class TeacherRegisterComponent implements OnInit {
             email: formData.email,
             password: formData.password,
             branch: formData.branch,
-            legalAcceptances: this.legalAcceptances
+            legalAcceptances: this.legalAcceptances,
+            utm: this.analytics.registrationUtm()
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/teacher`, payload).subscribe({
             next: () => {
                 this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
+                this.analytics.track('sign_up', { method: 'password', role: 'teacher' });
                 this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'teacher' } });
             },
             error: (err) => {

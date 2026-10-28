@@ -116,6 +116,7 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
             user.GenerateEmailVerificationToken();
             _registrationLegalConsentService.TrackAcceptedDocuments(
                 userId, product, legalValidation.Value, "password");
+            _registrationLegalConsentService.TrackSource(userId, product, request.Utm, "password");
 
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
             if (product == PlatformProduct.Coaching)

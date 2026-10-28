@@ -8,6 +8,7 @@ import { BehaviorSubject, filter, firstValueFrom, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { RegistrationLegalAcceptance } from '../services/identity.service';
+import { SiteAnalyticsService } from '../services/site-analytics.service';
 
 export interface UserProfile {
     id: string;
@@ -84,6 +85,7 @@ export class AuthService implements OnDestroy {
     private router = inject(Router);
     private platformId = inject(PLATFORM_ID);
     private httpClient = inject(HttpClient);
+    private siteAnalytics = inject(SiteAnalyticsService);
 
     private _userProfile = signal<UserProfile | null>(null);
     userProfile = this._userProfile.asReadonly();
@@ -141,7 +143,7 @@ export class AuthService implements OnDestroy {
     async loginWithGoogle(idToken: string, legalAcceptances: RegistrationLegalAcceptance[] = []): Promise<AuthLoginResult> {
         const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
             `${environment.apiUrl}/auth/coaching/google-login`,
-            { idToken, legalAcceptances },
+            { idToken, legalAcceptances, utm: this.siteAnalytics.registrationUtm() },
             { withCredentials: true }));
         return this.handleLoginResponse(response);
     }
@@ -149,7 +151,7 @@ export class AuthService implements OnDestroy {
     async completeGoogleRegistration(registrationToken: string, legalAcceptances: RegistrationLegalAcceptance[]): Promise<AuthLoginResult> {
         const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
             `${environment.apiUrl}/auth/coaching/google-register-complete`,
-            { registrationToken, legalAcceptances }, { withCredentials: true }));
+            { registrationToken, legalAcceptances, utm: this.siteAnalytics.registrationUtm() }, { withCredentials: true }));
         return this.handleLoginResponse(response);
     }
 

@@ -4,7 +4,7 @@ import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
 
@@ -15,6 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { environment } from '../../../../../environments/environment';
+import { SiteAnalyticsService } from '../../../../core/services/site-analytics.service';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
@@ -49,6 +50,8 @@ export class StudentRegisterComponent implements OnInit {
     private fb = inject(FormBuilder);
     private http = inject(HttpClient);
     private router = inject(Router);
+    private route = inject(ActivatedRoute, { optional: true });
+    private analytics = inject(SiteAnalyticsService);
     private toaster = inject(ToasterService);
     private configService = inject(ConfigurationService);
     private platformId = inject(PLATFORM_ID);
@@ -116,13 +119,15 @@ export class StudentRegisterComponent implements OnInit {
             email: formData.email,
             password: formData.password,
             legalAcceptances: this.legalAcceptances,
-            birthDate: formData.birthDate
+            birthDate: formData.birthDate,
+            utm: this.analytics.registrationUtm()
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/student`, payload).subscribe({
             next: () => {
                 this.toaster.success('Koçluk kaydınız tamamlandı. Yeni hesaplarda e-posta adresinizi gönderilen bağlantıyla doğrulayın; mevcut doğrulanmış hesabınız varsa giriş yapabilirsiniz.');
-                this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'student' } });
+                this.analytics.track('sign_up', { method: 'password', role: 'student' });
+                this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'student', ...this.safeReturnUrl() } });
             },
             error: (err) => {
                 this.isLoading.set(false);
@@ -134,6 +139,12 @@ export class StudentRegisterComponent implements OnInit {
                 this.errorMessage.set(msg);
             }
         });
+    }
+
+    /** A plan chosen on the public site brings the student back to the subscription page after login. */
+    private safeReturnUrl(): { returnUrl?: string } {
+        const value = this.route?.snapshot.queryParamMap.get('returnUrl') ?? '';
+        return /^\/coaching-portal(?:\/[A-Za-z0-9/_?=&-]*)?$/.test(value) ? { returnUrl: value } : {};
     }
 
     private async handleGoogleRegistration(idToken: string) {

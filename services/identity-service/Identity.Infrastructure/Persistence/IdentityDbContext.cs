@@ -48,6 +48,7 @@ public class IdentityDbContext : DbContext
     public DbSet<PlatformLegalPage> PlatformLegalPages => Set<PlatformLegalPage>();
     public DbSet<PlatformLegalPageRevision> PlatformLegalPageRevisions => Set<PlatformLegalPageRevision>();
     public DbSet<RegistrationLegalDocumentAcceptance> RegistrationLegalDocumentAcceptances => Set<RegistrationLegalDocumentAcceptance>();
+    public DbSet<RegistrationSource> RegistrationSources => Set<RegistrationSource>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -59,6 +60,7 @@ public class IdentityDbContext : DbContext
         ConfigureIdempotency(modelBuilder);
         ConfigurePlatformLegalPages(modelBuilder);
         ConfigureRegistrationLegalDocumentAcceptances(modelBuilder);
+        ConfigureRegistrationSources(modelBuilder);
 
         // Set default schema
         modelBuilder.HasDefaultSchema("identity");
@@ -125,6 +127,21 @@ public class IdentityDbContext : DbContext
             .HasForeignKey(revision => revision.PageId)
             .OnDelete(DeleteBehavior.Cascade);
         revisions.HasIndex(revision => new { revision.PageId, revision.Version }).IsUnique();
+    }
+
+    // Roadmap O11: campaign tags of a registration; removed with the account.
+    private static void ConfigureRegistrationSources(ModelBuilder modelBuilder)
+    {
+        var sources = modelBuilder.Entity<RegistrationSource>();
+        sources.ToTable("RegistrationSources");
+        sources.HasKey(source => source.Id);
+        sources.Property(source => source.UtmSource).HasMaxLength(100);
+        sources.Property(source => source.UtmMedium).HasMaxLength(100);
+        sources.Property(source => source.UtmCampaign).HasMaxLength(100);
+        sources.Property(source => source.RegistrationMethod).HasMaxLength(32).IsRequired();
+        sources.HasOne<User>().WithMany().HasForeignKey(source => source.UserId).OnDelete(DeleteBehavior.Cascade);
+        sources.HasIndex(source => new { source.UserId, source.Product }).IsUnique();
+        sources.HasIndex(source => new { source.Product, source.CreatedAt });
     }
 
     private static void ConfigureRegistrationLegalDocumentAcceptances(ModelBuilder modelBuilder)

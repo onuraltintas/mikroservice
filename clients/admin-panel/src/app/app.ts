@@ -2,10 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DarkModeService } from './core/services/dark-mode.service';
+import { CookieConsentComponent } from './shared/components/cookie-consent.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, MatSnackBarModule],
+  imports: [RouterOutlet, MatSnackBarModule, CookieConsentComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

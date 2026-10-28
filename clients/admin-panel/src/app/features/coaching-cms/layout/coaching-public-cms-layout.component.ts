@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { CoachingCmsEntry, CoachingCmsNavigationItem, CoachingManagementService } from '../../../core/services/coaching-management.service';
+import { SiteAnalyticsService } from '../../../core/services/site-analytics.service';
 
 @Component({
   selector: 'app-coaching-public-cms-layout',
@@ -27,7 +28,7 @@ import { CoachingCmsEntry, CoachingCmsNavigationItem, CoachingManagementService 
       <footer class="mt-10 border-t border-[var(--ui-border)] bg-[var(--ui-surface)]">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:grid-cols-[1fr_auto] sm:px-6 lg:px-8">
           <div><p class="text-sm font-bold">{{ branding()?.title || 'Eduİvme' }} {{ branding()?.eyebrow || 'Koçluk' }}</p><p class="mt-2 max-w-xl text-xs leading-5 text-slate-500 dark:text-slate-400">{{ branding()?.summary || 'Hedef belirleme, çalışma planı ve ilerleme değerlendirmesi için öğrenci, öğretmen ve kurumlara özel koçluk alanı.' }}</p></div>
-          <nav class="flex flex-wrap items-start gap-x-5 gap-y-2 text-xs font-medium text-slate-600 dark:text-slate-300" aria-label="Alt menü">@for (item of footerNavigation(); track item.id) {<a [href]="item.url" [target]="item.openInNewTab ? '_blank' : null" [rel]="item.openInNewTab ? 'noopener noreferrer' : null" class="hover:text-indigo-700 dark:hover:text-indigo-300">{{ item.label }}</a>}<a routerLink="/coaching/newsletter" class="hover:text-indigo-700 dark:hover:text-indigo-300">Bültene abone ol</a><a routerLink="/legal/privacy" class="hover:text-indigo-700 dark:hover:text-indigo-300">Gizlilik politikası</a><a routerLink="/legal/kvkk" class="hover:text-indigo-700 dark:hover:text-indigo-300">KVKK aydınlatma metni</a></nav>
+          <nav class="flex flex-wrap items-start gap-x-5 gap-y-2 text-xs font-medium text-slate-600 dark:text-slate-300" aria-label="Alt menü">@for (item of footerNavigation(); track item.id) {<a [href]="item.url" [target]="item.openInNewTab ? '_blank' : null" [rel]="item.openInNewTab ? 'noopener noreferrer' : null" class="hover:text-indigo-700 dark:hover:text-indigo-300">{{ item.label }}</a>}<a routerLink="/coaching/newsletter" class="hover:text-indigo-700 dark:hover:text-indigo-300">Bültene abone ol</a><a routerLink="/legal/privacy" class="hover:text-indigo-700 dark:hover:text-indigo-300">Gizlilik politikası</a><a routerLink="/legal/kvkk" class="hover:text-indigo-700 dark:hover:text-indigo-300">KVKK aydınlatma metni</a>@if (analytics.measurementId()) {<button type="button" data-testid="cookie-preferences" class="text-left hover:text-indigo-700 dark:hover:text-indigo-300" (click)="analytics.reopen()">Çerez tercihleri</button>}</nav>
           <p class="border-t border-[var(--ui-border)] pt-4 text-xs text-slate-500 dark:text-slate-400 sm:col-span-2">© {{ currentYear }} {{ branding()?.title || 'Eduİvme' }} {{ branding()?.eyebrow || 'Koçluk' }}</p>
         </div>
       </footer>
@@ -39,6 +40,7 @@ import { CoachingCmsEntry, CoachingCmsNavigationItem, CoachingManagementService 
 })
 export class CoachingPublicCmsLayoutComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
+  readonly analytics = inject(SiteAnalyticsService);
   readonly navigation = signal<CoachingCmsNavigationItem[]>([]);
   readonly footerNavigation = signal<CoachingCmsNavigationItem[]>([]);
   readonly branding = signal<CoachingCmsEntry | null>(null);

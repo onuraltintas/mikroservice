@@ -14,6 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
 import { environment } from '../../../../../environments/environment';
+import { SiteAnalyticsService } from '../../../../core/services/site-analytics.service';
 import { LocationService, ProvinceOption, DistrictOption } from '../../../../core/services/location.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
@@ -35,6 +36,7 @@ export class InstitutionRegisterComponent implements OnInit {
     private fb = inject(FormBuilder);
     private http = inject(HttpClient);
     private router = inject(Router);
+    private analytics = inject(SiteAnalyticsService);
     private toaster = inject(ToasterService);
     private configService = inject(ConfigurationService);
     private platformId = inject(PLATFORM_ID);
@@ -110,12 +112,14 @@ export class InstitutionRegisterComponent implements OnInit {
             lastName: formData.lastName,
             email: formData.email,
             password: formData.password,
-            legalAcceptances: this.legalAcceptances
+            legalAcceptances: this.legalAcceptances,
+            utm: this.analytics.registrationUtm()
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/institution`, payload).subscribe({
             next: () => {
                 this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
+                this.analytics.track('sign_up', { method: 'password', role: 'institution' });
                 this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'institution' } });
             },
             error: (err) => {

@@ -61,6 +61,14 @@ Aşağıdaki veritabanları otomatik oluşturulur:
 - `speedreading_owned_db` - Speed Reading Service
 - `blog_db`, `content_db`, `exam_db`, `analytics_db` - Gelecek servisler
 
+## Tanıtım sitesi ve ölçüm (O11)
+
+- `GA4_MEASUREMENT_ID`: Google Analytics 4 ölçüm kimliği (`G-` ile başlar). Boşsa analitik yüklenmez ve çerez bandı görünmez.
+  Doluysa ziyaretçi çerez bandında onay verdikten sonra GA4 yüklenir; yalnız tanıtım sitesi, kayıt ve giriş sayfaları ölçülür.
+- `SITE_API_ORIGIN` (compose içinde `http://api-gateway:8080`): web sunucusunun `sitemap.xml` ve blog/sayfa bağlantı önizlemeleri için
+  okuduğu iç API adresi.
+- `robots.txt` ve `sitemap.xml` istek yapılan alan adına göre üretilir (izinli alan adları listesinden).
+
 ## Güvenlik Notları
 
 ⚠️ **ÖNEMLİ:**

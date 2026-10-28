@@ -2,7 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import { SiteAnalyticsService } from '../../../../core/services/site-analytics.service';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
@@ -28,6 +29,34 @@ describe('StudentRegisterComponent registration', () => {
     expect(request.request.body.dateOfBirth).toBeUndefined();
     request.flush({ userId: 'new-user' });
     http.verify();
+  });
+
+  // Roadmap O11: the landing page's campaign tags go with the registration and a plan chosen on the site is kept.
+  it('sends the campaign tags and returns to the chosen plan after login', async () => {
+    const router = { navigate: vi.fn().mockResolvedValue(true) };
+    const component = createComponent(new Subject(), {}, { success: vi.fn(), error: vi.fn() }, router,
+      { returnUrl: '/coaching-portal/subscription?plan=ogrenci-yillik' });
+    TestBed.inject(SiteAnalyticsService).utm.set({ utmSource: 'instagram', utmMedium: 'social', utmCampaign: 'lgs-ekim' });
+    component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!',
+      confirmPassword: 'NewPassword1!', birthDate: '2011-05-03' });
+    await component.onSubmit();
+    const http = TestBed.inject(HttpTestingController);
+    const request = http.expectOne(candidate => candidate.url.endsWith('/auth/coaching/register/student'));
+    expect(request.request.body.utm).toEqual({ utmSource: 'instagram', utmMedium: 'social', utmCampaign: 'lgs-ekim' });
+    request.flush({ userId: 'new-user' });
+    expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], { queryParams: { registered: 'true', role: 'student',
+      returnUrl: '/coaching-portal/subscription?plan=ogrenci-yillik' } });
+    http.verify();
+  });
+
+  it('ignores a return address outside the Coaching portal', async () => {
+    const router = { navigate: vi.fn().mockResolvedValue(true) };
+    const component = createComponent(new Subject(), {}, { success: vi.fn(), error: vi.fn() }, router, { returnUrl: 'https://evil.example' });
+    component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!',
+      confirmPassword: 'NewPassword1!', birthDate: '2011-05-03' });
+    await component.onSubmit();
+    TestBed.inject(HttpTestingController).expectOne(candidate => candidate.url.endsWith('/auth/coaching/register/student')).flush({});
+    expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], { queryParams: { registered: 'true', role: 'student' } });
   });
 
   it('shows the actionable API conflict description instead of a generic registration error', async () => {
@@ -142,7 +171,8 @@ describe('StudentRegisterComponent registration', () => {
     authState: Subject<{ idToken?: string }>,
     authService: Record<string, unknown>,
     toaster: Record<string, unknown>,
-    router: Record<string, unknown> = { navigate: vi.fn().mockResolvedValue(true) }
+    router: Record<string, unknown> = { navigate: vi.fn().mockResolvedValue(true) },
+    query: Record<string, string> = {}
   ): StudentRegisterComponent {
     TestBed.configureTestingModule({
       imports: [ReactiveFormsModule],
@@ -152,6 +182,7 @@ describe('StudentRegisterComponent registration', () => {
         { provide: AuthService, useValue: authService },
         { provide: SocialAuthService, useValue: { authState } },
         { provide: Router, useValue: router },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
         { provide: ToasterService, useValue: toaster },
         { provide: ConfigurationService, useValue: {} }
       ]

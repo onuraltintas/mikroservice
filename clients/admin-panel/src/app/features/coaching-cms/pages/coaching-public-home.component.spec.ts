@@ -1,10 +1,10 @@
 import { provideRouter } from '@angular/router';
-import { Meta, Title } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingCmsEntry, CoachingSubscriptionPlan, CoachingManagementService } from '../../../core/services/coaching-management.service';
 import { CoachingPublicHomeComponent } from './coaching-public-home.component';
+import { SiteAnalyticsService } from '../../../core/services/site-analytics.service';
 
 describe('CoachingPublicHomeComponent', () => {
   it('loads the hero and the editorial sections from the Coaching CMS', () => {
@@ -55,7 +55,55 @@ describe('CoachingPublicHomeComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Planımı takip etmek artık daha kolay.');
   });
 
-  function setup() {
+  // Roadmap O11
+  it('sends priced student and teacher plans to registration with the campaign tags and always shows the price', () => {
+    const fixture = setup([
+      { ...basePlan('ogrenci-yillik', 'Öğrenci yıllık', 'Individual'), isContactOnly: false, price: 2400, trialDays: 7 },
+      { ...basePlan('ogretmen-10', 'Öğretmen 10', 'Teacher'), isContactOnly: false, price: 5000, includedStudentSeats: 10 }
+    ], { currency: null });
+    const analytics = TestBed.inject(SiteAnalyticsService);
+    analytics.utm.set({ utmSource: 'instagram', utmMedium: 'social', utmCampaign: null });
+    fixture.detectChanges();
+
+    const student = fixture.nativeElement.querySelector('[data-testid="plan-register-ogrenci-yillik"]') as HTMLAnchorElement;
+    expect(student.getAttribute('href')).toContain('/auth/register/student?');
+    expect(student.getAttribute('href')).toContain('utm_source=instagram');
+    expect(student.getAttribute('href')).toContain('plan=ogrenci-yillik');
+    expect(student.textContent).toContain('ücretsiz dene');
+    const teacher = fixture.nativeElement.querySelector('[data-testid="plan-register-ogretmen-10"]') as HTMLAnchorElement;
+    expect(teacher.getAttribute('href')).toContain('/auth/register/teacher');
+    const card = fixture.nativeElement.querySelector('[data-testid="plan-ogretmen-10"]').textContent as string;
+    expect(card).toContain('Öğretmenler için'); expect(card).toContain('10 öğrenci koltuğu');
+    expect(fixture.nativeElement.textContent).toContain('2.400');
+    expect(fixture.nativeElement.textContent).not.toContain('Ücret bilgisi için giriş yapın');
+  });
+
+  it('shows a load error with a retry instead of "no plans" when the plan service fails', () => {
+    const fixture = setup([]);
+    const service = TestBed.inject(CoachingManagementService) as unknown as { getPublicSubscriptionPlans: ReturnType<typeof vi.fn> };
+    service.getPublicSubscriptionPlans.mockReturnValueOnce(throwError(() => new Error('503')));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="plans-error"]')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).not.toContain('Yayınlanmış koçluk planı henüz yok');
+    fixture.componentInstance.loadPlans(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="plans-error"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Yayınlanmış koçluk planı henüz yok');
+  });
+
+  it('describes the page for search engines and link previews', () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    expect(document.querySelector('meta[property="og:title"]')?.getAttribute('content')).toContain('Hedefinden başla');
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toMatch(/\/coaching$/);
+    expect(JSON.parse(document.getElementById('site-jsonld')!.textContent!)[0]['@type']).toBe('Organization');
+  });
+
+  function basePlan(id: string, name: string, audience: 'Individual' | 'Institution' | 'Teacher'): CoachingSubscriptionPlan {
+    return { id, slug: id, name, description: 'Plan', audience, price: 0, isContactOnly: true, billingPeriod: 'Annual', durationDays: 365,
+      includedStudentSeats: null, features: [], isActive: true, isPublic: true, sortOrder: 0 };
+  }
+
+  function setup(plans?: CoachingSubscriptionPlan[], settings: { currency: string | null } = { currency: 'TRY' }) {
     const hero = entry('hero', 'Block', 'HomeHero', 'Hedefinden başla, adım adım ilerle.');
     const section = entry('student-section', 'Block', 'HomePage', 'Öğrenciler için görünür ilerleme');
     const plan = (id: string, name: string, audience: 'Individual' | 'Institution', isPublic = true): CoachingSubscriptionPlan => ({
@@ -66,12 +114,12 @@ describe('CoachingPublicHomeComponent', () => {
     });
     const service = {
       getPublicCmsBlocks: vi.fn((group: string) => of(group === 'HomeHero' ? [hero] : [section])),
-      getPublicSubscriptionPlans: vi.fn(() => of([
+      getPublicSubscriptionPlans: vi.fn(() => of(plans ?? [
         plan('student-plan', 'Öğrenci planı', 'Individual'),
         plan('institution-plan', 'Kurum planı', 'Institution'),
         plan('hidden-plan', 'Gizli plan', 'Individual', false)
       ])),
-      getPublicBankTransferSettings: vi.fn(() => of({ currency: 'TRY' })),
+      getPublicBankTransferSettings: vi.fn(() => of(settings)),
       getPublicCmsBlog: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 3, totalCount: 0 }))
     };
     TestBed.configureTestingModule({
@@ -79,8 +127,6 @@ describe('CoachingPublicHomeComponent', () => {
       providers: [
         provideRouter([]),
         { provide: CoachingManagementService, useValue: service },
-        { provide: Title, useValue: { setTitle: vi.fn() } },
-        { provide: Meta, useValue: { updateTag: vi.fn() } }
       ]
     });
     return TestBed.createComponent(CoachingPublicHomeComponent);

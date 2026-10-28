@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Meta, Title } from '@angular/platform-browser';
+import { SiteSeoService } from '../../../core/services/site-seo.service';
 import { CoachingCmsEntry, CoachingManagementService } from '../../../core/services/coaching-management.service';
 import { parseCoachingCmsContent } from '../coaching-cms-content';
 
@@ -24,8 +24,7 @@ import { parseCoachingCmsContent } from '../coaching-cms-content';
 })
 export class CoachingPublicFaqComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+  private readonly seo = inject(SiteSeoService);
   readonly heading = signal<CoachingCmsEntry | null>(null);
   readonly entries = signal<CoachingCmsEntry[]>([]);
   readonly loading = signal(true);
@@ -37,14 +36,28 @@ export class CoachingPublicFaqComponent implements OnInit {
       next: blocks => {
         const heading = blocks[0] ?? null;
         this.heading.set(heading);
-        this.title.setTitle(heading?.seoTitle || `${heading?.title || 'Sıkça sorulan sorular'} | Eduİvme Koçluk`);
-        if (heading?.seoDescription) this.meta.updateTag({ name: 'description', content: heading.seoDescription });
+        this.applySeo();
       },
       error: () => this.heading.set(null)
     });
     this.service.getPublicCmsBlocks('HomeFaq').subscribe({
-      next: entries => { this.entries.set(entries); this.loading.set(false); },
+      next: entries => { this.entries.set(entries); this.loading.set(false); this.applySeo(); },
       error: () => { this.error.set('Sıkça sorulan sorular yüklenemedi.'); this.loading.set(false); }
+    });
+  }
+
+  /** Title, description and FAQPage structured data from the heading and the published questions. */
+  private applySeo(): void {
+    const heading = this.heading();
+    const questions = this.entries().slice(0, 50).map(item => ({
+      '@type': 'Question', name: item.title,
+      acceptedAnswer: { '@type': 'Answer', text: item.content.replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/[#*_>`]/g, '').trim().slice(0, 1000) }
+    }));
+    this.seo.apply({
+      title: heading?.seoTitle || `${heading?.title || 'Sıkça sorulan sorular'} | Eduİvme Koçluk`,
+      description: heading?.seoDescription || heading?.summary || 'Eduİvme Koçluk hakkında sıkça sorulan sorular.',
+      path: '/coaching/faq',
+      jsonLd: questions.length ? { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: questions } : null
     });
   }
 }

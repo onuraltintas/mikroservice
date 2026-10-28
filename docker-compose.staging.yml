@@ -221,6 +221,9 @@ services:
       dockerfile: admin-panel/Dockerfile
     environment:
       NODE_ENV: production
+      # Roadmap O11: internal API for sitemap.xml and link previews; GA4 id turns analytics on (after cookie consent).
+      SITE_API_ORIGIN: http://api-gateway:8080
+      GA4_MEASUREMENT_ID: ${GA4_MEASUREMENT_ID:-}
       PORT: 4000
       ADMIN_PANEL_ADDITIONAL_ALLOWED_HOSTS: staging.onuraltintas.net
     expose:

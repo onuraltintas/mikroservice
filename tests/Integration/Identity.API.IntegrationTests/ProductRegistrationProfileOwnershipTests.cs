@@ -275,8 +275,35 @@ public sealed class ProductRegistrationProfileOwnershipTests
         };
     }
 
+    // Roadmap O11: the landing page's campaign tags travel with the registration and are stored with the new account.
+    [Fact]
+    public async Task StudentRegistration_RecordsTheCampaignTags()
+    {
+        var userId = Guid.NewGuid();
+        var consent = new AcceptingLegalConsentService();
+        var handler = new RegisterStudentCommandHandler(
+            CreateIdentityService(userId),
+            CreateUserRepository(User.Create(userId, "student@example.test")),
+            DispatchProxy.Create<IStudentRepository, StudentRepositoryProxy>(),
+            DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
+            DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
+            DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
+            consent, null!);
+
+        var result = await handler.Handle(new RegisterStudentCommand("student@example.test", "StrongPassword1!", "Test", "Student", null,
+            PlatformProduct.Coaching, null, new DateOnly(2011, 5, 3), new Identity.Application.Registration.RegistrationUtm(" Instagram ", "social", null)), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var tracked = Assert.Single(consent.Sources);
+        Assert.Equal((userId, PlatformProduct.Coaching, "instagram", "social"), (tracked.UserId, tracked.Product, tracked.Utm!.UtmSource, tracked.Utm.UtmMedium));
+    }
+
     private sealed class AcceptingLegalConsentService : IRegistrationLegalConsentService
     {
+        public List<(Guid UserId, PlatformProduct Product, Identity.Application.Registration.RegistrationUtm? Utm)> Sources { get; } = [];
+        public void TrackSource(Guid userId, PlatformProduct product, Identity.Application.Registration.RegistrationUtm? utm, string registrationMethod) =>
+            Sources.Add((userId, product, Identity.Application.Registration.RegistrationUtm.Normalize(utm)));
+
         public Task<Result<IReadOnlyList<PlatformLegalPageDto>>> ValidateAsync(
             PlatformProduct product,
             IEnumerable<LegalPageAcceptance>? acceptances,
