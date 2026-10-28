@@ -161,7 +161,7 @@ describe('CoachingSubscriptionsComponent', () => {
     expect(toaster.warning).toHaveBeenCalledWith('EFT bildirimi için ret gerekçesi zorunludur.');
   });
 
-  it('warns that deleting an approved EFT request preserves access and payment history', async () => {
+  it('never deletes an approved EFT request and confirms other deletions', async () => {
     const service = {
       getPlans: vi.fn(() => of([])), getSubscriptionSettings: vi.fn(() => of({ requireActiveSubscription: false, currency: 'TRY', accountHolder: null, bankName: null, iban: null, paymentInstructions: null, bankTransferEnabled: false, isPubliclyAvailable: false, updatedAt: null })),
       getTransferRequests: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 })),
@@ -184,9 +184,13 @@ describe('CoachingSubscriptionsComponent', () => {
 
     const fixture = TestBed.createComponent(CoachingSubscriptionsComponent);
     fixture.detectChanges();
+    // An approved transfer is a payment record: the page never asks to delete it.
     await fixture.componentInstance.deleteRequest({ id: 'request-1', status: 'Approved' } as CoachingBankTransferRequest);
+    expect(toaster.confirm).not.toHaveBeenCalled();
+    expect(service.deleteTransferRequest).not.toHaveBeenCalled();
 
-    expect(toaster.confirm.mock.calls[0][0]).toContain('Açılmış abonelik ve ödeme geçmişi korunur; erişim kapanmaz.');
-    expect(service.deleteTransferRequest).toHaveBeenCalledWith('request-1');
+    await fixture.componentInstance.deleteRequest({ id: 'request-2', status: 'Rejected' } as CoachingBankTransferRequest);
+    expect(toaster.confirm.mock.calls[0][0]).toContain('kalıcı olarak silinecek');
+    expect(service.deleteTransferRequest).toHaveBeenCalledWith('request-2');
   });
 });

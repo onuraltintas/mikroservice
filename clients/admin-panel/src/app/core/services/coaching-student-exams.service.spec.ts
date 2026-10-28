@@ -12,9 +12,10 @@ describe('CoachingStudentExamsService', () => {
       correctAnswers: 8, wrongAnswers: 1, emptyAnswers: 1, lessons: [] };
     service.list(2).subscribe();
     http.expectOne('/api/coaching/study-planning/exams?pageNumber=2&pageSize=20').flush({ success: true, data: {} });
-    service.create(input).subscribe();
+    service.create(input, 'exam-create-key').subscribe();
     const create = http.expectOne('/api/coaching/study-planning/exams');
     expect(create.request.method).toBe('POST'); expect(create.request.body).toEqual(input);
+    expect(create.request.headers.get('Idempotency-Key')).toBe('exam-create-key');
     create.flush({ success: true, data: {} });
     service.replace('exam', 7, input).subscribe();
     const replace = http.expectOne('/api/coaching/study-planning/exams/exam');

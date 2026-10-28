@@ -104,6 +104,33 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
         finally { await db.Database.EnsureDeletedAsync(); }
     }
 
+    [Fact]
+    public async Task StudentExam_RepeatedCreateWithTheSameKeyReturnsTheFirstResult()
+    {
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var actor = new Actor(); var service = new CoachingStudentExamService(db, new CoachingAccessPolicy(actor));
+            var request = new StudentExamInput("Deneme", ExamType.Mock, new(2026, 10, 1), 80, 100, 8, 1, 1, []);
+
+            var first = await service.CreateAsync(request, "student-exam-key-0001");
+            db.ChangeTracker.Clear();
+            var retry = await service.CreateAsync(request, "student-exam-key-0001");
+
+            Assert.Equal(first.Id, retry.Id);
+            Assert.Equal(1, await db.Exams.CountAsync(x => x.StudentOwnerId == actor.UserId));
+            var reused = await Assert.ThrowsAsync<BusinessRuleException>(() =>
+                service.CreateAsync(request with { Score = 70 }, "student-exam-key-0001"));
+            Assert.Equal("Idempotency.Conflict", reused.Code);
+            await service.CreateAsync(request, "student-exam-key-0002");
+            await service.CreateAsync(request);
+            Assert.Equal(3, await db.Exams.CountAsync(x => x.StudentOwnerId == actor.UserId));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     private sealed class Actor : ICurrentUserService
     {
         public Guid? UserId { get; } = Guid.NewGuid();

@@ -27,8 +27,9 @@ public sealed class StudentExamsController(IStudentExamService exams) : Controll
     [HttpPost]
     [RequestSizeLimit(64 * 1024)]
     [EnableRateLimiting("study-planning-write")]
-    public Task<IActionResult> Create([FromBody] StudentExamInput request, CancellationToken cancellationToken = default) => Respond(async () => {
-        var result = await exams.CreateAsync(request, cancellationToken);
+    public Task<IActionResult> Create([FromBody] StudentExamInput request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null, CancellationToken cancellationToken = default) => Respond(async () => {
+        var result = await exams.CreateAsync(request, idempotencyKey, cancellationToken);
         return CreatedAtAction(nameof(Get), new { id = result.Id }, new { success = true, data = result });
     });
 
@@ -48,7 +49,7 @@ public sealed class StudentExamsController(IStudentExamService exams) : Controll
         try { return await action(); }
         catch (BusinessRuleException ex) when (ex.Code == "Authorization.Forbidden")
         { return new ObjectResult(new { success = false, message = ex.Message, code = ex.Code }) { StatusCode = 403 }; }
-        catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.Conflict")
+        catch (BusinessRuleException ex) when (ex.Code is "StudyPlanning.Conflict" or "Idempotency.Conflict")
         { return new ConflictObjectResult(new { success = false, message = ex.Message, code = ex.Code }); }
         catch (ConcurrencyException)
         { return new ConflictObjectResult(new { success = false, message = "Sonuç değişti. Yeniden yükleyin." }); }

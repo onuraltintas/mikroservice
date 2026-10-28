@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { map } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -21,7 +21,11 @@ export class CoachingStudentExamsService {
     return this.http.get<ApiResult<TargetPage<StudentExam>>>(this.url, { params }).pipe(map(x => x.data));
   }
   get(id: string) { return this.http.get<ApiResult<StudentExam>>(`${this.url}/${encodeURIComponent(id)}`).pipe(map(x => x.data)); }
-  create(exam: StudentExamInput) { return this.http.post<ApiResult<StudentExam>>(this.url, exam).pipe(map(x => x.data)); }
+  // The same key is reused for retries of one form, so a repeated tap or a retried request cannot create a second result.
+  create(exam: StudentExamInput, idempotencyKey: string) {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<ApiResult<StudentExam>>(this.url, exam, { headers }).pipe(map(x => x.data));
+  }
   replace(id: string, expectedVersion: number, exam: StudentExamInput) {
     return this.http.put<ApiResult<StudentExam>>(`${this.url}/${encodeURIComponent(id)}`, { expectedVersion, exam }).pipe(map(x => x.data));
   }

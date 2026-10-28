@@ -15,6 +15,9 @@ public sealed record StudentExamView(Guid Id, int Version, string Title, ExamTyp
 public interface IStudentExamService
 {
     Task<StudentExamView> CreateAsync(StudentExamInput request, CancellationToken cancellationToken = default);
+    /// <summary>With an Idempotency-Key a retried or repeated create returns the first result instead of a second exam.</summary>
+    Task<StudentExamView> CreateAsync(StudentExamInput request, string? idempotencyKey, CancellationToken cancellationToken = default)
+        => CreateAsync(request, cancellationToken);
     Task<StudentExamView?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<TargetSearchPage<StudentExamView>> ListAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<StudentExamView> ReplaceAsync(Guid id, ReplaceStudentExamRequest request, CancellationToken cancellationToken = default);

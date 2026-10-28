@@ -3,6 +3,7 @@ using Asp.Versioning;
 using Coaching.Application.Subscriptions;
 using EduPlatform.Shared.Contracts.Authorization;
 using EduPlatform.Shared.Security.Authorization;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -108,10 +109,19 @@ public sealed class CoachingSubscriptionsAdminController(ICoachingSubscription s
     }
 
     [HttpDelete("transfer-requests/{id:guid}")]
-    public async Task<IActionResult> DeleteTransferRequest(Guid id, CancellationToken cancellationToken = default) =>
-        await subscriptions.DeleteBankTransferRequestAsync(id, cancellationToken)
-            ? NoContent()
-            : NotFound();
+    public async Task<IActionResult> DeleteTransferRequest(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await subscriptions.DeleteBankTransferRequestAsync(id, cancellationToken)
+                ? NoContent()
+                : NotFound();
+        }
+        catch (BusinessRuleException ex) when (ex.Code == "Subscription.TransferApproved")
+        {
+            return Conflict(new { success = false, message = ex.Message, code = ex.Code });
+        }
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetSubscriptions(
