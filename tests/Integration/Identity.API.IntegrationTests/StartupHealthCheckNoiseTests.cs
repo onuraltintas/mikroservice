@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Infrastructure.Logging;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Serilog.Events;
 using Serilog.Parsing;
 using Xunit;
@@ -42,5 +43,28 @@ public class StartupHealthCheckNoiseTests
         StartupHealthCheckNoise.Window.Should().Be(TimeSpan.FromSeconds(90));
         StartupHealthCheckNoise.ShouldDrop(Event(LogEventLevel.Error, HealthChecks)).Should().Be(
             StartupHealthCheckNoise.Uptime < StartupHealthCheckNoise.Window);
+    }
+
+    private static HttpContext Request(string path, int status)
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = path;
+        context.Response.StatusCode = status;
+        return context;
+    }
+
+    [Fact]
+    public void ReadinessFailuresDuringStartupAreLoggedBelowTheMinimumLevel()
+    {
+        StartupHealthCheckNoise.RequestLevel(Request("/health/ready", 503), null, TimeSpan.FromSeconds(20))
+            .Should().Be(LogEventLevel.Debug, "the request log must not print ERR while dependencies connect");
+        StartupHealthCheckNoise.RequestLevel(Request("/health/ready", 503), null, TimeSpan.FromSeconds(120))
+            .Should().Be(LogEventLevel.Error, "an unready service after startup is a fault");
+        StartupHealthCheckNoise.RequestLevel(Request("/api/auth/login", 503), null, TimeSpan.FromSeconds(20))
+            .Should().Be(LogEventLevel.Error, "other endpoints keep the normal level");
+        StartupHealthCheckNoise.RequestLevel(Request("/health/ready", 200), null, TimeSpan.FromSeconds(20))
+            .Should().Be(LogEventLevel.Information);
+        StartupHealthCheckNoise.RequestLevel(Request("/health/ready", 503), new InvalidOperationException(), TimeSpan.FromSeconds(20))
+            .Should().Be(LogEventLevel.Error, "an exception is never hidden");
     }
 }
