@@ -49,6 +49,10 @@ export class StudentAssignmentDetailComponent implements OnInit {
     const studentId = this.studentId();
     return assignment?.assignedStudents.find(item => item.studentId === studentId);
   });
+  // Files can be removed until the work is graded, while the assignment still accepts work.
+  readonly canRemoveAttachments = computed(() =>
+    this.isStudent() && this.assignment()?.status.toLowerCase() === 'active'
+    && !!this.studentRecord() && this.studentRecord()?.status.toLowerCase() !== 'graded');
   readonly canSubmit = computed(() => {
     const status = this.studentRecord()?.status.toLowerCase();
     const assignmentStatus = this.assignment()?.status.toLowerCase();
@@ -205,7 +209,10 @@ export class StudentAssignmentDetailComponent implements OnInit {
       this.successMessage.set('Dosya yüklendi ve güvenlik taramasına alındı.');
       this.load();
     } catch (error: any) {
-      this.errorMessage.set(error?.status === 400 ? 'Dosya yükleme koşulları sağlanmadı.' : 'Dosya yüklenemedi.');
+      this.errorMessage.set(
+        error?.status === 503 ? 'Dosya güvenlik taraması şu an yapılamıyor. Birkaç dakika sonra tekrar deneyin.'
+        : error?.error?.code === 'Attachment.LimitReached' ? 'Bir ödeve en çok 10 dosya ve toplam 50 MB yükleyebilirsin. Gerekirse önce bir dosyayı kaldır.'
+        : error?.status === 400 ? 'Dosya yükleme koşulları sağlanmadı.' : 'Dosya yüklenemedi.');
     } finally {
       this.isUploading.set(false);
     }
@@ -221,6 +228,24 @@ export class StudentAssignmentDetailComponent implements OnInit {
       case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       case 'md': return 'text/markdown';
       default: return '';
+    }
+  }
+
+  async removeAttachment(attachment: AssignmentAttachment) {
+    const assignmentId = this.assignment()?.id;
+    const studentId = this.studentRecord()?.studentId;
+    if (!assignmentId || !studentId || !this.canRemoveAttachments() || this.isUploading()) return;
+    this.isUploading.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    try {
+      await firstValueFrom(this.coachingService.deleteAttachment(assignmentId, studentId, attachment.id));
+      this.successMessage.set('Dosya kaldırıldı.');
+      this.load();
+    } catch {
+      this.errorMessage.set('Dosya kaldırılamadı. Ödev notlandırılmış olabilir.');
+    } finally {
+      this.isUploading.set(false);
     }
   }
 

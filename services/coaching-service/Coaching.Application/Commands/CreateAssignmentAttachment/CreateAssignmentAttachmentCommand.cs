@@ -1,3 +1,4 @@
+using EduPlatform.Shared.Kernel.Exceptions;
 using Coaching.Application.Attachments;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
@@ -72,6 +73,14 @@ public sealed class CreateAssignmentAttachmentCommandHandler(
         var studentAssignment = assignment.AssignedStudents
             .FirstOrDefault(student => student.StudentId == command.StudentId)
             ?? throw new InvalidOperationException("Student is not assigned to this assignment.");
+        var now = DateTime.UtcNow;
+        var live = studentAssignment.SubmissionAttachments.Where(item =>
+            item.Status is Coaching.Domain.Enums.AttachmentScanStatus.Clean or Coaching.Domain.Enums.AttachmentScanStatus.PendingScan
+            || item.IsUploadWindowOpen(now)).ToArray();
+        if (live.Length >= AssignmentAttachmentPolicy.MaxSubmissionAttachmentsPerStudent
+            || live.Sum(item => item.SizeBytes) + command.SizeBytes > AssignmentAttachmentPolicy.MaxSubmissionBytesPerStudent)
+            throw new BusinessRuleException("Attachment.LimitReached",
+                "Bir ödeve en çok 10 dosya ve toplam 50 MB yükleyebilirsiniz. Gerekirse önce bir dosyayı kaldırın.");
 
         var storageKey = $"assignments/{assignment.Id:N}/students/{command.StudentId:N}/objects/{Guid.NewGuid():N}";
         var attachment = studentAssignment.AddSubmissionAttachment(

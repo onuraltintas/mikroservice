@@ -11,7 +11,9 @@ public sealed record UploadAssignmentInstructionAttachmentCommand(
     Guid AssignmentId,
     string FileName,
     string ContentType,
-    byte[] Content) : IRequest<AssignmentInstructionAttachmentResponse>;
+    byte[]? Content,
+    // Reads the request body only after the caller is authorized (the controller passes this instead of Content).
+    Func<CancellationToken, Task<byte[]>>? ReadContent = null) : IRequest<AssignmentInstructionAttachmentResponse>;
 
 public sealed record AssignmentInstructionAttachmentResponse(
     Guid Id,
@@ -44,20 +46,34 @@ public sealed class UploadAssignmentInstructionAttachmentCommandHandler(
         if (teacherId != assignment.TeacherId)
             throw new BusinessRuleException("Authorization.Forbidden", "Only the assignment owner can attach files.");
 
-        var sizeBytes = command.Content.LongLength;
+        if (assignment.InstructionAttachments.Count >= AssignmentAttachmentPolicy.MaxInstructionAttachmentsPerAssignment)
+            throw new BusinessRuleException("Attachment.LimitReached", "Bir ödeve en çok 10 öğretmen dosyası eklenebilir.");
+        var bytes = command.Content ?? await (command.ReadContent
+            ?? throw new ArgumentException("Dosya içeriği gerekli."))(cancellationToken);
+        var sizeBytes = bytes.LongLength;
         AssignmentAttachmentPolicy.ValidateMetadata(command.FileName, command.ContentType, sizeBytes);
-        var sha256 = Convert.ToHexString(SHA256.HashData(command.Content));
+        var sha256 = Convert.ToHexString(SHA256.HashData(bytes));
         var storageKey = $"assignments/{assignment.Id:N}/instructions/{Guid.NewGuid():N}";
 
-        await using (var content = new MemoryStream(command.Content, writable: false))
+        await using (var content = new MemoryStream(bytes, writable: false))
         {
             await storage.StoreAsync(storageKey, content, command.ContentType, sizeBytes, sha256, cancellationToken);
         }
 
         try
         {
-            await using var storedContent = await storage.OpenReadAsync(storageKey, cancellationToken);
-            var scanResult = await scanner.ScanAsync(storedContent, cancellationToken);
+            AttachmentScanResult scanResult;
+            try
+            {
+                await using var storedContent = await storage.OpenReadAsync(storageKey, cancellationToken);
+                scanResult = await scanner.ScanAsync(storedContent, cancellationToken);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
+            {
+                throw new BusinessRuleException(
+                    "Attachment.ScannerUnavailable",
+                    "Dosya güvenlik taraması şu an yapılamıyor. Birkaç dakika sonra tekrar deneyin.");
+            }
             if (!scanResult.IsClean)
                 throw new BusinessRuleException("Attachment.Rejected", "Dosya güvenlik taramasını geçemedi.");
 

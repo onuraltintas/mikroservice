@@ -81,10 +81,13 @@
       <h2 class="font-semibold">Yüklediğin dosyalar</h2>
       <div *ngIf="!record.attachments?.length" class="mt-4 text-sm text-slate-500 dark:text-slate-400">Henüz dosya eklenmedi.</div>
       <div *ngIf="record.attachments?.length" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <button *ngFor="let attachment of record.attachments" type="button" (click)="downloadAttachment(attachment)" [disabled]="attachment.status !== 'Clean'" class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left hover:border-indigo-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:border-indigo-700">
-          <span class="min-w-0"><span class="block truncate text-sm font-medium">{{ attachment.originalFileName }}</span><span class="mt-1 block text-xs text-slate-500">{{ attachment.status }} · {{ attachment.sizeBytes / 1024 / 1024 | number:'1.1-1' }} MB</span></span>
-          <span aria-hidden="true" class="text-indigo-600 dark:text-indigo-300">↓</span>
-        </button>
+        <div *ngFor="let attachment of record.attachments" class="flex items-stretch gap-2">
+          <button type="button" (click)="downloadAttachment(attachment)" [disabled]="attachment.status !== 'Clean'" class="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left hover:border-indigo-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:border-indigo-700">
+            <span class="min-w-0"><span class="block truncate text-sm font-medium">{{ attachment.originalFileName }}</span><span class="mt-1 block text-xs text-slate-500">{{ attachment.status }} · {{ attachment.sizeBytes / 1024 / 1024 | number:'1.1-1' }} MB</span></span>
+            <span aria-hidden="true" class="text-indigo-600 dark:text-indigo-300">↓</span>
+          </button>
+          <button *ngIf="canRemoveAttachments()" type="button" (click)="removeAttachment(attachment)" [disabled]="isUploading()" [attr.aria-label]="attachment.originalFileName + ' dosyasını kaldır'" class="rounded-xl border border-slate-200 px-3 text-sm text-rose-600 hover:border-rose-300 disabled:opacity-60 dark:border-slate-700">Kaldır</button>
+        </div>
       </div>
     </div>
 

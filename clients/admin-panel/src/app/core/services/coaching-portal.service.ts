@@ -600,6 +600,12 @@ export class CoachingPortalService {
     );
   }
 
+  deleteAttachment(assignmentId: string, studentId: string, attachmentId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.url}/${this.id(assignmentId)}/students/${this.id(studentId)}/attachments/${this.id(attachmentId)}`
+    );
+  }
+
   downloadAttachment(
     assignmentId: string,
     studentId: string,

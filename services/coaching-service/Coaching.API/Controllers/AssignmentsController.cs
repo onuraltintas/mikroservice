@@ -264,9 +264,13 @@ public class AssignmentsController : ControllerBase
             var result = await _mediator.Send(command, cancellationToken);
             return Ok(result);
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
-            return NotFound(new { error = ex.Message });
+            return NotFound(new { error = "Ödev, öğrenci veya dosya kaydı bulunamadı." });
+        }
+        catch (BusinessRuleException ex) when (ex.Code == "Attachment.ScannerUnavailable")
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = ex.Message, code = ex.Code });
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
@@ -283,6 +287,36 @@ public class AssignmentsController : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Removes the student's own submission file while the work is not graded.
+    /// </summary>
+    [HttpDelete("{id}/students/{studentId}/attachments/{attachmentId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeleteAttachment(Guid id, Guid studentId, Guid attachmentId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _mediator.Send(new Coaching.Application.Commands.DeleteAssignmentAttachment.DeleteAssignmentAttachmentCommand(
+                id, studentId, attachmentId), cancellationToken);
+            return NoContent();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound(new { error = "Ödev, öğrenci veya dosya kaydı bulunamadı." });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
         }
     }
 
@@ -343,24 +377,36 @@ public class AssignmentsController : ControllerBase
     {
         try
         {
-            await using var memory = new MemoryStream();
-            await Request.Body.CopyToAsync(memory, cancellationToken);
-            var fileBytes = memory.ToArray();
             var contentType = (Request.ContentType ?? string.Empty).Split(';', 2)[0].Trim();
             if (string.IsNullOrWhiteSpace(contentType) || contentType == "application/octet-stream")
                 contentType = AssignmentAttachmentPolicy.ContentTypeForFileName(fileName);
 
+            // The body is read only after the handler has authorized the teacher.
             var result = await _mediator.Send(new UploadAssignmentInstructionAttachmentCommand(
-                id, fileName, contentType, fileBytes), cancellationToken);
+                id, fileName, contentType, null, async ct =>
+                {
+                    await using var memory = new MemoryStream();
+                    await Request.Body.CopyToAsync(memory, ct);
+                    return memory.ToArray();
+                }), cancellationToken);
             return CreatedAtAction(nameof(GetAssignment), new { id }, result);
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
         }
-        catch (BusinessRuleException ex) when (ex.Code.Equals("Attachment.Rejected", StringComparison.OrdinalIgnoreCase))
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Attachment.Rejected", StringComparison.OrdinalIgnoreCase)
+            || ex.Code.Equals("Attachment.LimitReached", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex) when (ex.Code == "Attachment.ScannerUnavailable")
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = ex.Message, code = ex.Code });
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound(new { error = "Ödev bulunamadı." });
         }
         catch (ArgumentException ex)
         {

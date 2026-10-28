@@ -180,6 +180,9 @@ public static class DependencyInjection
         services.AddScoped<Coaching.Infrastructure.Reminders.CoachingReminderProcessor>();
         if (configuration.GetValue("Coaching:Reminders:Enabled", true))
             services.AddHostedService<Coaching.Infrastructure.Reminders.CoachingReminderWorker>();
+        services.AddScoped<Coaching.Infrastructure.Attachments.CoachingAttachmentCleanupProcessor>();
+        if (configuration.GetValue("Coaching:Attachments:CleanupEnabled", true))
+            services.AddHostedService<Coaching.Infrastructure.Attachments.CoachingAttachmentCleanupWorker>();
         services.AddSingleton<IAdminAuditWriter, CoachingAdminAuditWriter>();
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingAdminCatalogReader, Coaching.Infrastructure.Catalogs.CoachingAdminCatalogReader>();
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingCatalogDeletionService, Coaching.Infrastructure.Catalogs.CoachingCatalogDeletionService>();

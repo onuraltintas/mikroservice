@@ -17,6 +17,9 @@ public class CreateAssignmentCommandValidator : AbstractValidator<CreateAssignme
             .NotEmpty().WithMessage("Title is required")
             .MaximumLength(200).WithMessage("Title cannot exceed 200 characters");
 
+        // Stored as text and returned on every student read; the column for Subject is 100 characters.
+        RuleFor(x => x.Description).MaximumLength(20000);
+        RuleFor(x => x.Subject).MaximumLength(100);
         RuleFor(x => x.DueDate)
             .GreaterThan(DateTime.UtcNow).WithMessage("Due date must be in the future");
 

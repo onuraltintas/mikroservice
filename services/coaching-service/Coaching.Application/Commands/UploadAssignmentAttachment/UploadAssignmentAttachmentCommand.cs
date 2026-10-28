@@ -74,14 +74,24 @@ public sealed class UploadAssignmentAttachmentCommandHandler(
             attachment.Sha256,
             cancellationToken);
 
-        attachment.MarkUploaded();
-        await repository.UpdateAsync(assignment, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        // Scan before anything is recorded. If the scanner cannot answer, the stored bytes are removed and
+        // the attachment stays awaiting upload, so the student can retry within the upload window instead
+        // of being left with a file stuck "in scan" forever.
+        AttachmentScanResult scanResult;
+        try
+        {
+            await using var storedContent = await storage.OpenReadAsync(attachment.StorageKey, cancellationToken);
+            scanResult = await scanner.ScanAsync(storedContent, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
+        {
+            await storage.DeleteAsync(attachment.StorageKey, CancellationToken.None);
+            throw new BusinessRuleException(
+                "Attachment.ScannerUnavailable",
+                "Dosya güvenlik taraması şu an yapılamıyor. Birkaç dakika sonra tekrar deneyin.");
+        }
 
-        await using var storedContent = await storage.OpenReadAsync(
-            attachment.StorageKey,
-            cancellationToken);
-        var scanResult = await scanner.ScanAsync(storedContent, cancellationToken);
+        attachment.MarkUploaded();
         if (!scanResult.IsClean)
         {
             attachment.Reject(scanResult.ThreatName ?? "Attachment rejected by malware scanner.");

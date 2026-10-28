@@ -45,8 +45,12 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
         await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, assignment.TeacherId, assignment.InstitutionId,
             command.IsInstitutionAdminOperation, cancellationToken);
 
+        // Teacher files are removed with the assignment as well; their rows cascade and nothing else
+        // points to them.
         var attachments = assignment.AssignedStudents
             .SelectMany(student => student.SubmissionAttachments)
+            .Select(attachment => (attachment.Id, attachment.StorageKey))
+            .Concat(assignment.InstructionAttachments.Select(attachment => (attachment.Id, attachment.StorageKey)))
             .ToArray();
         foreach (var attachment in attachments)
         {

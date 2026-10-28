@@ -407,6 +407,19 @@ public class AssignmentStudent : Entity
         return attachment;
     }
 
+    /// <summary>The student may remove an own file until the work is graded.</summary>
+    public AssignmentSubmissionAttachment RemoveSubmissionAttachment(Guid attachmentId)
+    {
+        if (Status == StudentAssignmentStatus.Graded)
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
+                "Attachment.Locked", "Notlandırılmış bir teslimden dosya kaldırılamaz.");
+        var attachment = _submissionAttachments.FirstOrDefault(item => item.Id == attachmentId)
+            ?? throw new InvalidOperationException("Attachment not found.");
+        _submissionAttachments.Remove(attachment);
+        UpdatedAt = DateTime.UtcNow;
+        return attachment;
+    }
+
     public void Grade(decimal score, string? feedback = null)
     {
         if(Status==StudentAssignmentStatus.Graded && Score==score && TeacherFeedback==feedback)return;
