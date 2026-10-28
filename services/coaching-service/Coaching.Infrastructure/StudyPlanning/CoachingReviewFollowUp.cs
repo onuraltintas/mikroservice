@@ -34,10 +34,13 @@ public static class CoachingReviewFollowUp
 
     // Keyset batches include only queue metadata, not the student's text or saved evidence JSON.
     // A reviewed row is skipped only after comparing its live results with the last immutable review.
+    // Live results are read per student over its whole reviewed history (in 26-week chunks), not once per
+    // keyset batch: a long history otherwise repeats the same per-student reads for every 256 reflections.
     public static async IAsyncEnumerable<Pending> ScanPendingAsync(CoachingDbContext db,Guid[] students,Guid teacher,DateOnly through,
         TimeProvider clock,[System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct=default)
     {
         if(students.Length==0)yield break;
+        var queue=new List<(ReflectionKey Reflection,ReviewEvidence? Latest)>();
         ReflectionKey? cursor=null;
         while(true)
         {
@@ -48,24 +51,25 @@ public static class CoachingReviewFollowUp
             }
             var reflections=await query.OrderBy(x=>x.WeekStart).ThenBy(x=>x.Id).Take(256)
                 .Select(x=>new ReflectionKey(x.Id,x.StudentId,x.WeekStart,x.Version)).ToArrayAsync(ct);
-            if(reflections.Length==0)yield break;
+            if(reflections.Length==0)break;
             var ids=reflections.Select(x=>x.Id).ToArray();
             var reviews=await db.Set<WeeklyReflectionReview>().AsNoTracking().Where(x=>x.TeacherId==teacher&&Enumerable.Contains(ids,x.ReflectionId))
                 .GroupBy(x=>x.ReflectionId).Select(g=>g.OrderByDescending(x=>x.CreatedAt).ThenByDescending(x=>x.Id)
                     .Select(x=>new ReviewEvidence(x.ReflectionId,x.ReflectionVersion,x.EvidenceFingerprint)).First())
                 .ToDictionaryAsync(x=>x.ReflectionId,ct);
-            var current=new Dictionary<(Guid Student,DateOnly Week),string>();
-            var comparable=reflections.Where(x=>reviews.TryGetValue(x.Id,out var latest)&&latest.ReflectionVersion==x.Version&&latest.EvidenceFingerprint is not null);
-            foreach(var group in comparable.GroupBy(x=>x.StudentId))
-                foreach(var batch in group.Chunk(26))
-                    await ReadFingerprintsAsync(db,clock,group.Key,batch.Select(x=>x.WeekStart).ToArray(),current,ct);
-            foreach(var reflection in reflections) {
-                ct.ThrowIfCancellationRequested();
-                reviews.TryGetValue(reflection.Id,out var latest);current.TryGetValue((reflection.StudentId,reflection.WeekStart),out var fingerprint);
-                if(Reason(reflection.Version,latest?.ReflectionVersion,latest?.EvidenceFingerprint,fingerprint) is {} reason)
-                    yield return new(reflection.Id,reflection.StudentId,reflection.WeekStart,reason);
-            }
+            foreach(var reflection in reflections)queue.Add((reflection,reviews.GetValueOrDefault(reflection.Id)));
             cursor=reflections[^1];
+        }
+        var current=new Dictionary<(Guid Student,DateOnly Week),string>();
+        var comparable=queue.Where(x=>x.Latest is {} latest&&latest.ReflectionVersion==x.Reflection.Version&&latest.EvidenceFingerprint is not null);
+        foreach(var group in comparable.GroupBy(x=>x.Reflection.StudentId))
+            foreach(var batch in group.Select(x=>x.Reflection.WeekStart).Distinct().Order().Chunk(26))
+                await ReadFingerprintsAsync(db,clock,group.Key,batch,current,ct);
+        foreach(var (reflection,latest) in queue) {
+            ct.ThrowIfCancellationRequested();
+            current.TryGetValue((reflection.StudentId,reflection.WeekStart),out var fingerprint);
+            if(Reason(reflection.Version,latest?.ReflectionVersion,latest?.EvidenceFingerprint,fingerprint) is {} reason)
+                yield return new(reflection.Id,reflection.StudentId,reflection.WeekStart,reason);
         }
     }
     private static async Task ReadFingerprintsAsync(CoachingDbContext db,TimeProvider clock,Guid student,DateOnly[] weeks,

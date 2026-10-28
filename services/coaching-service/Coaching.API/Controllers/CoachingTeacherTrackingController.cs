@@ -42,7 +42,8 @@ public sealed class CoachingTeacherTrackingController(CoachingDbContext db, ICoa
                 || pageNumber < 1 || pageSize is < 1 or > 100)
                 return BadRequest(new { message = "Filtre ve sayfa bilgilerini kontrol edin." });
 
-            await using var snapshot=await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead,ct);
+            // Authorization and names come from Identity over HTTP. Resolve them before the snapshot so a slow
+            // Identity response never holds a pooled connection inside an open transaction.
             var institution = await directory.AuthorizeTeacherTargetsAsync(teacher, [], null, false, ct);
             var candidates = await db.CoachingTeacherStudentAssignments.AsNoTracking()
                 .Where(x => x.TeacherUserId == teacher && x.IsActive && x.InstitutionId == institution)
@@ -52,6 +53,7 @@ public sealed class CoachingTeacherTrackingController(CoachingDbContext db, ICoa
                 : (await accounts.GetAccountsAsync(allowed, ct)).Where(x => x.IsEligible("Student"))
                     .ToDictionary(x => x.UserId, x => (x.FirstName + " " + x.LastName).Trim());
             allowed = names.Keys.ToArray();
+            await using var snapshot=await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead,ct);
             var now = (clock ?? TimeProvider.System).GetUtcNow();
             var plans = await db.StudyPlanRevisions.AsNoTracking()
                 .Where(x => Enumerable.Contains(allowed, x.StudentId) && x.Status == StudyPlanStatus.Active)

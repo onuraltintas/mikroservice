@@ -12,13 +12,25 @@ namespace Coaching.Infrastructure.Profiles;
 public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccountDirectory accounts, ICurrentUserService actor)
     : ICoachingIdentityAuthorizationClient, ICoachingIdentityReportClient
 {
+    // Scoped per request: an institution's activity is asked once, not once per student, so one page
+    // does not make dozens of Identity calls while a transaction or advisory lock is held.
+    private readonly Dictionary<Guid, bool> activeInstitutions = [];
+
+    private async Task<bool> IsActiveInstitutionAsync(Guid institutionId, CancellationToken ct)
+    {
+        if (activeInstitutions.TryGetValue(institutionId, out var active)) return active;
+        active = await accounts.IsActiveInstitutionAsync(institutionId, ct);
+        activeInstitutions[institutionId] = active;
+        return active;
+    }
+
     public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken ct) =>
         accounts.AuthorizeAdminAsync(viewerUserId, ct);
 
     public async Task<bool> IsActiveInstitutionStudentAsync(Guid institutionId, Guid studentId, CancellationToken ct)
     {
         if (institutionId == Guid.Empty || studentId == Guid.Empty) return false;
-        if (!await accounts.IsActiveInstitutionAsync(institutionId, ct)) return false;
+        if (!await IsActiveInstitutionAsync(institutionId, ct)) return false;
         var account = (await accounts.GetAccountsAsync([studentId], ct)).SingleOrDefault(x => x.UserId == studentId);
         return account?.IsEligible("Student") == true
             && await db.CoachingStudentProfiles.AnyAsync(x => x.UserId == studentId && x.IsActive, ct)
@@ -43,15 +55,15 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
         if (requestedInstitutionId.HasValue && requestedInstitutionId != teacherInstitution)
             throw CoachingProfileStore.Forbidden();
         var institutionId = requestedInstitutionId ?? teacherInstitution;
-        if (institutionId.HasValue && !await accounts.IsActiveInstitutionAsync(institutionId.Value, ct))
+        if (institutionId.HasValue && !await IsActiveInstitutionAsync(institutionId.Value, ct))
             throw CoachingProfileStore.Forbidden();
         var profiles = await db.CoachingStudentProfiles.AsNoTracking()
             .Where(x => Enumerable.Contains(ids, x.UserId) && x.IsActive).Select(x => x.UserId).ToArrayAsync(ct);
         if (profiles.Length != ids.Length || ids.Any(x => !directory.TryGetValue(x, out var user) || !user.IsEligible("Student")))
             throw CoachingProfileStore.Forbidden();
-        foreach (var studentId in ids)
-            if (await InstitutionForAsync(studentId, CoachingMemberRole.Student, ct) != institutionId)
-                throw CoachingProfileStore.Forbidden();
+        var studentInstitutions = await InstitutionsForAsync(ids, CoachingMemberRole.Student, ct);
+        if (ids.Any(studentId => studentInstitutions[studentId] != institutionId))
+            throw CoachingProfileStore.Forbidden();
         if (!global)
         {
             var assigned = await db.CoachingTeacherStudentAssignments.AsNoTracking()
@@ -82,11 +94,12 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
         var assignments = teacher is null ? [] : await db.CoachingTeacherStudentAssignments.AsNoTracking()
             .Where(x => x.TeacherUserId == viewerUserId && Enumerable.Contains(ids, x.StudentUserId) && x.IsActive).ToArrayAsync(ct);
         var allowed = new List<Guid>();
+        var studentInstitutions = await InstitutionsForAsync(profiles.Select(x => x.UserId).ToArray(), CoachingMemberRole.Student, ct);
         foreach (var student in profiles)
         {
             if (!directory.TryGetValue(student.UserId, out var account) || !account.IsEligible("Student")) continue;
-            var institution = await InstitutionForAsync(student.UserId, CoachingMemberRole.Student, ct);
-            if (institution.HasValue && !await accounts.IsActiveInstitutionAsync(institution.Value, ct)) continue;
+            var institution = studentInstitutions[student.UserId];
+            if (institution.HasValue && !await IsActiveInstitutionAsync(institution.Value, ct)) continue;
             if (viewer.IsSystemAdministrator || viewer.IsEligible("Student") && viewerUserId == student.UserId)
             { allowed.Add(student.UserId); continue; }
             if (viewer.IsEligible("Parent") && await accounts.AuthorizeRepresentativeAsync(viewerUserId, student.UserId, ct) is not null)
@@ -200,6 +213,20 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
             && member.IsActive && profile.IsActive && (!gradeLevel.HasValue || profile.GradeLevel == gradeLevel)
         select member.UserId;
 
+    // Same result as InstitutionForAsync for each user (including the error for duplicate active
+    // memberships), in one query.
+    private async Task<Dictionary<Guid, Guid?>> InstitutionsForAsync(IReadOnlyCollection<Guid> userIds, CoachingMemberRole role, CancellationToken ct)
+    {
+        var ids = userIds.Distinct().ToArray();
+        var rows = ids.Length == 0 ? [] : await db.CoachingInstitutionMemberships.AsNoTracking()
+            .Where(x => Enumerable.Contains(ids, x.UserId) && x.Role == role && x.IsActive)
+            .Select(x => new { x.UserId, x.InstitutionId }).ToArrayAsync(ct);
+        var result = ids.ToDictionary(id => id, _ => (Guid?)null);
+        foreach (var user in rows.GroupBy(x => x.UserId))
+            result[user.Key] = user.Single().InstitutionId;
+        return result;
+    }
+
     private Task<Guid?> InstitutionForAsync(Guid userId, CoachingMemberRole role, CancellationToken ct) =>
         db.CoachingInstitutionMemberships.AsNoTracking().Where(x => x.UserId == userId && x.Role == role && x.IsActive)
             .Select(x => (Guid?)x.InstitutionId).SingleOrDefaultAsync(ct);
@@ -208,7 +235,7 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
     {
         var scope = await accounts.AuthorizeAdminAsync(viewerUserId, ct);
         if (scope is null || institutionId == Guid.Empty || !scope.IsGlobal && scope.InstitutionId != institutionId
-            || !await accounts.IsActiveInstitutionAsync(institutionId, ct)) throw CoachingProfileStore.Forbidden();
+            || !await IsActiveInstitutionAsync(institutionId, ct)) throw CoachingProfileStore.Forbidden();
         return scope;
     }
 
