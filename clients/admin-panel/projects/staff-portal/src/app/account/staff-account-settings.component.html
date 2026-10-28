@@ -29,6 +29,9 @@
           <button class="primary-button" type="submit" [disabled]="isChangingPassword()">{{ isChangingPassword() ? 'Güncelleniyor…' : 'Şifreyi güncelle' }}</button>
         </form>
       </section>
+      @if (showNotificationPreferences()) {
+        <edu-notification-preferences class="account-card" [api]="notificationApi" [formal]="true" />
+      }
     </div>
   }
 </section>

@@ -21,7 +21,8 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
         var studyCount = await LockedAsync(() => StudyDaysAsync(now, ct), false, ct);
         var overdueCount = await LockedAsync(() => StudyDaysAsync(now, ct, true), false, ct);
         var feeCount = await LockedAsync(() => OverdueFeesAsync(now, ct), false, ct);
-        return studyCount + overdueCount + feeCount + await LockedAsync(() => SessionsAsync(now, ct), true, ct);
+        var assignmentCount = await LockedAsync(() => AssignmentsDueAsync(now, ct), false, ct);
+        return studyCount + overdueCount + feeCount + assignmentCount + await LockedAsync(() => SessionsAsync(now, ct), true, ct);
     }
 
     private async Task<int> StudyDaysAsync(DateTimeOffset now, CancellationToken ct, bool overdue = false)
@@ -89,6 +90,32 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
         return count;
     }
 
+    /// <summary>
+    /// Roadmap O8: once per student and due date, within the last 24 hours before an active assignment is due,
+    /// a student who has not handed it in is reminded. A moved due date is a new occurrence.
+    /// </summary>
+    private async Task<int> AssignmentsDueAsync(DateTimeOffset now, CancellationToken ct)
+    {
+        var start = now.UtcDateTime; var until = start.AddHours(24); var count = 0;
+        var waiting = await (from link in db.AssignmentStudents.AsNoTracking()
+                join assignment in db.Assignments.AsNoTracking() on link.AssignmentId equals assignment.Id
+                where assignment.Status == AssignmentStatus.Active && assignment.DueDate > start && assignment.DueDate <= until
+                    && (link.Status == StudentAssignmentStatus.Assigned || link.Status == StudentAssignmentStatus.InProgress)
+                    && !db.CoachingReminderReceipts.Any(receipt => receipt.Kind == "AssignmentDue" && receipt.SourceId == assignment.Id
+                        && receipt.RecipientUserId == link.StudentId && receipt.DueAt == assignment.DueDate)
+                orderby assignment.DueDate, assignment.Id, link.StudentId
+                select new { assignment.Id, assignment.Title, assignment.DueDate, link.StudentId })
+            .Take(BatchSize).ToListAsync(ct);
+        foreach (var item in waiting)
+        {
+            var due = DateTime.SpecifyKind(item.DueDate, DateTimeKind.Utc);
+            var receipt = CoachingReminderReceipt.Create(item.StudentId, item.Id, "AssignmentDue",
+                due.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture), due, now.UtcDateTime);
+            if (await QueueAsync(receipt, ct, item.Title)) count++;
+        }
+        return count;
+    }
+
     private async Task<int> OverdueFeesAsync(DateTimeOffset now, CancellationToken ct)
     {
         var count = 0;
@@ -123,12 +150,12 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
         return count;
     }
 
-    private async Task<bool> QueueAsync(CoachingReminderReceipt receipt, CancellationToken ct)
+    private async Task<bool> QueueAsync(CoachingReminderReceipt receipt, CancellationToken ct, string? subjectTitle = null)
     {
         if (db.CoachingReminderReceipts.Local.Any(x => x.Id == receipt.Id)
             || await db.CoachingReminderReceipts.AnyAsync(x => x.Id == receipt.Id, ct)) return false;
         db.CoachingReminderReceipts.Add(receipt);
-        await events.PublishAsync(new CoachingReminderDueEvent(receipt.Id, receipt.RecipientUserId, receipt.SourceId, receipt.Kind, receipt.DueAt), ct);
+        await events.PublishAsync(new CoachingReminderDueEvent(receipt.Id, receipt.RecipientUserId, receipt.SourceId, receipt.Kind, receipt.DueAt) { SubjectTitle = subjectTitle }, ct);
         return true;
     }
 

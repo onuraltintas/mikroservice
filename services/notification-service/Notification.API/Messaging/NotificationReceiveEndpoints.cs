@@ -19,6 +19,7 @@ public static class NotificationReceiveEndpoints
     public static IReadOnlyList<Endpoint> All { get; } =
     [
         new("invitation-created", typeof(InvitationCreatedConsumer)),
+        new("invitation-accepted", typeof(InvitationAcceptedConsumer)),
         new("user-registered", typeof(UserRegisteredConsumer)),
         new("user-email-confirmed", typeof(UserEmailConfirmedConsumer)),
         new("user-created", typeof(UserCreatedConsumer)),

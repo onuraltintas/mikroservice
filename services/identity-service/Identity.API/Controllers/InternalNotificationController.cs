@@ -18,6 +18,23 @@ public class InternalNotificationController : ControllerBase
         _mediator = mediator;
     }
 
+    public sealed record RecipientsRequest(IReadOnlyCollection<Guid>? UserIds);
+
+    /// <summary>Roadmap O8: names and usable e-mail addresses of up to 200 notification recipients.</summary>
+    [HttpPost("recipients")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(16_384)]
+    public async Task<IActionResult> Recipients(
+        [FromServices] Identity.Application.Notifications.INotificationRecipientDirectory directory,
+        [FromBody] RecipientsRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.UserIds is null || request.UserIds.Count > Identity.Application.Notifications.INotificationRecipientDirectory.MaxUsers)
+            return BadRequest("The recipient lookup is invalid.");
+        return Ok(await directory.GetAsync(request.UserIds, cancellationToken));
+    }
+
     [HttpPost("forward-support")]
     [AllowAnonymous]
     [InternalServiceKey]

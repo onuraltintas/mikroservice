@@ -20,7 +20,7 @@ using Shared.IntegrationTests.Fixtures;
 namespace Identity.API.IntegrationTests;
 
 [Collection("Database")]
-public sealed class CoachingReminderTests(PostgresFixture postgres)
+public sealed partial class CoachingReminderTests(PostgresFixture postgres)
 {
     [Fact]
     public async Task OverdueFeesProduceOnePrivateStudentReminderPerLocalDayAndStopAfterSettlement()

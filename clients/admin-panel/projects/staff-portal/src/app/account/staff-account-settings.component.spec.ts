@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { vi } from 'vitest';
+import { StaffAuthService } from '../auth/staff-auth.service';
 import { StaffAccountSettingsComponent } from './staff-account-settings.component';
 
 describe('StaffAccountSettingsComponent', () => {
@@ -55,5 +57,16 @@ describe('StaffAccountSettingsComponent', () => {
 
     http.expectNone('/api/users/me/change-password');
     expect(fixture.componentInstance.passwordErrorMessage()).toContain('en az 8 karakter');
+  });
+  it('shows notification preferences only in the coaching workspace (roadmap O8)', () => {
+    vi.spyOn(TestBed.inject(StaffAuthService), 'activeProduct').mockReturnValue('coaching');
+    const fixture = TestBed.createComponent(StaffAccountSettingsComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/users/me').flush({ userId: 'user-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'ayse@example.test', role: 'Teacher', phoneNumber: null });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('edu-notification-preferences')).not.toBeNull();
+    http.expectOne('/api/notifications/preferences').flush({ data: [{ category: 'Sessions', label: 'Koçluk seansları', inApp: true, email: true }] });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Bildirim tercihleri');
   });
 });

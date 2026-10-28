@@ -34,4 +34,9 @@ describe('StudentSettingsComponent', () => {
     const request=TestBed.inject(HttpTestingController).expectOne(r=>r.url==='/api/calendar/subscription');
     expect(request.request.params.get('role')).toBe('student');
   });
+  it('offers the notification preferences (roadmap O8)',async()=>{
+    const {fixture}=await setup();
+    expect(fixture.nativeElement.querySelector('edu-notification-preferences')).not.toBeNull();
+    TestBed.inject(HttpTestingController).expectOne(r=>r.url==='/api/notifications/preferences');
+  });
 });

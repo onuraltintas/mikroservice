@@ -61,7 +61,7 @@ public class GradeAssignmentCommandHandler : IRequestHandler<GradeAssignmentComm
                 command.StudentId,
                 command.Score,
                 command.TeacherFeedback,
-                gradedAt),
+                gradedAt) { AssignmentTitle = assignment.Title },
             cancellationToken);
 
         // Save the aggregate and its outbox message in one transaction.

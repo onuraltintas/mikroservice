@@ -65,7 +65,7 @@ public class SubmitAssignmentCommandHandler : IRequestHandler<SubmitAssignmentCo
                 assignment.Id,
                 command.StudentId,
                 studentAssignment.SubmittedAt!.Value,
-                assignment.TeacherId),
+                assignment.TeacherId) { AssignmentTitle = assignment.Title },
             cancellationToken);
 
         // Save the aggregate and its outbox message in one transaction.
