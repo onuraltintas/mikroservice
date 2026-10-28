@@ -33,7 +33,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
 
         var feed = await service.FeedAsync(token, default);
         feed.Should().NotBeNull();
-        feed!.Should().Contain("BEGIN:VCALENDAR").And.Contain("SUMMARY:Matematik\; etüt").And.Contain("X-WR-CALNAME:Eduİvme Koçluk").And.NotContain("Başka öğretmen");
+        feed!.Should().Contain("BEGIN:VCALENDAR").And.Contain(@"SUMMARY:Matematik\; etüt").And.Contain("X-WR-CALNAME:Eduİvme Koçluk").And.NotContain("Başka öğretmen");
         (await service.GetAsync(teacher, "Teacher", default)).LastUsedAt.Should().NotBeNull();
         db.CoachingCalendarFeeds.Single().TokenHash.Should().NotContain(token, "only a hash of the token is stored");
 

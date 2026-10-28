@@ -77,6 +77,12 @@ public interface ICoachingSessionRepository
     Task<CoachingSession> AddAsync(CoachingSession session, CancellationToken cancellationToken = default);
     Task UpdateAsync(CoachingSession session, CancellationToken cancellationToken = default);
     Task DeleteAsync(CoachingSession session, CancellationToken cancellationToken = default);
+    /// <summary>Roadmap O6: every session of a recurring series, earliest first.</summary>
+    Task<IReadOnlyList<CoachingSession>> GetSeriesAsync(Guid seriesId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<CoachingSession>>([]);
+    /// <summary>Roadmap O6: a teacher's sessions starting in [from, to), earliest first, for the weekly agenda.</summary>
+    Task<IReadOnlyList<CoachingSession>> GetByTeacherIdInRangeAsync(Guid teacherId, DateTime from, DateTime to, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<CoachingSession>>([]);
 }
 
 public interface IAcademicGoalRepository

@@ -8,7 +8,8 @@ namespace Coaching.Application.Queries.GetSessions;
 public class GetSessionsQueryHandler : 
     IRequestHandler<GetTeacherSessionsQuery, PagedResponse<SessionDto>>,
     IRequestHandler<GetStudentSessionsQuery, PagedResponse<SessionDto>>,
-    IRequestHandler<GetUpcomingSessionsQuery, PagedResponse<SessionDto>>
+    IRequestHandler<GetUpcomingSessionsQuery, PagedResponse<SessionDto>>,
+    IRequestHandler<GetTeacherAgendaQuery, TeacherAgendaDto>
 {
     private readonly ICoachingSessionRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
@@ -53,6 +54,20 @@ public class GetSessionsQueryHandler :
             query.PageSize,
             visibleStudentIds.ToHashSet(),
             includeStudentReflections: true);
+    }
+
+    public async Task<TeacherAgendaDto> Handle(GetTeacherAgendaQuery query, CancellationToken cancellationToken)
+    {
+        _accessPolicy.RequireTeacher(query.TeacherId);
+        var from = TimeZoneInfo.ConvertTimeToUtc(query.WeekStart.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), Coaching.Domain.CoachingTime.Turkey);
+        var to = TimeZoneInfo.ConvertTimeToUtc(query.WeekStart.AddDays(7).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), Coaching.Domain.CoachingTime.Turkey);
+        var sessions = await _repository.GetByTeacherIdInRangeAsync(query.TeacherId, from, to, cancellationToken);
+        var studentIds = sessions.SelectMany(session => session.Attendances).Select(attendance => attendance.StudentId).Distinct().ToArray();
+        var visible = studentIds.Length == 0 ? Array.Empty<Guid>()
+            : await _identityAuthorizationClient.AuthorizeStudentReadAsync(_accessPolicy.CurrentUserId ?? query.TeacherId, studentIds, cancellationToken);
+        var page = MapToDto(new PagedRepositoryResult<Domain.Entities.CoachingSession>(sessions.Take(200).ToList(), sessions.Count), 1, 200,
+            visible.ToHashSet(), includeStudentReflections: true);
+        return new TeacherAgendaDto(query.WeekStart, page.Items.ToArray());
     }
 
     public async Task<PagedResponse<SessionDto>> Handle(
@@ -149,7 +164,8 @@ public class GetSessionsQueryHandler :
                 SharedNotes: sharedNotesAudience == s.TeacherNotesVisibility ? s.TeacherNotes : null,
                 SharedNotesVisibility: sharedNotesAudience == s.TeacherNotesVisibility
                     ? s.TeacherNotesVisibility.ToString()
-                    : null);
+                    : null,
+                SeriesId: s.SeriesId);
         }).ToList();
 
         return new PagedResponse<SessionDto>(sessions, pageNumber, pageSize, page.TotalCount);

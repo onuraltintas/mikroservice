@@ -67,5 +67,11 @@ public record SessionDto(
     string? TeacherNotes = null,
     string? TeacherNotesVisibility = null,
     string? SharedNotes = null,
-    string? SharedNotesVisibility = null
+    string? SharedNotesVisibility = null,
+    /// <summary>Roadmap O6: the recurring series of the session, if any.</summary>
+    Guid? SeriesId = null
 );
+
+/// <summary>Roadmap O6: a teacher's sessions in the week starting on <paramref name="WeekStart"/> (Türkiye time).</summary>
+public sealed record GetTeacherAgendaQuery(Guid TeacherId, DateOnly WeekStart) : IRequest<TeacherAgendaDto>;
+public sealed record TeacherAgendaDto(DateOnly WeekStart, IReadOnlyList<SessionDto> Sessions);

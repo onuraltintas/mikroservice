@@ -75,3 +75,18 @@ public sealed class CoachingSeatRequest
     public Guid? PaymentRecordId { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+
+/// <summary>
+/// Roadmap O6: a private calendar link (Google / Apple Calendar subscription) for one user and role. Only the SHA-256
+/// hash of the secret token is stored; a new link replaces the old one.
+/// </summary>
+public sealed class CoachingCalendarFeed
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    /// <summary>Teacher or Student.</summary>
+    public string Role { get; set; } = "Student";
+    public string TokenHash { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastUsedAt { get; set; }
+}

@@ -425,6 +425,16 @@ public class CoachingSessionRepository : ICoachingSessionRepository
         return Task.CompletedTask;
     }
 
+    public async Task<IReadOnlyList<CoachingSession>> GetSeriesAsync(Guid seriesId, CancellationToken cancellationToken = default) =>
+        await _context.CoachingSessions.Include(s => s.Attendances)
+            .Where(s => s.SeriesId == seriesId).OrderBy(s => s.ScheduledDate).Take(200).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<CoachingSession>> GetByTeacherIdInRangeAsync(Guid teacherId, DateTime from, DateTime to,
+        CancellationToken cancellationToken = default) =>
+        await _context.CoachingSessions.AsNoTracking().Include(s => s.Attendances)
+            .Where(s => s.TeacherId == teacherId && s.ScheduledDate >= from && s.ScheduledDate < to)
+            .OrderBy(s => s.ScheduledDate).ThenBy(s => s.Id).Take(500).ToListAsync(cancellationToken);
+
     public Task DeleteAsync(CoachingSession session, CancellationToken cancellationToken = default)
     {
         _context.CoachingSessions.Remove(session);

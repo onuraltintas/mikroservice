@@ -51,6 +51,7 @@ public class CoachingDbContext : DbContext
     public DbSet<ExamResult> ExamResults => Set<ExamResult>();
     public DbSet<CoachingSession> CoachingSessions => Set<CoachingSession>();
     public DbSet<SessionAttendance> SessionAttendances => Set<SessionAttendance>();
+    public DbSet<CoachingCalendarFeed> CoachingCalendarFeeds => Set<CoachingCalendarFeed>();
     public DbSet<AcademicGoal> AcademicGoals => Set<AcademicGoal>();
     public DbSet<CoachingAgreementDocument> CoachingAgreementDocuments => Set<CoachingAgreementDocument>();
     public DbSet<CoachingAgreementAcknowledgement> CoachingAgreementAcknowledgements => Set<CoachingAgreementAcknowledgement>();
@@ -363,6 +364,15 @@ public class CoachingDbContext : DbContext
         invoices.HasIndex(invoice => invoice.PaymentRecordId).IsUnique();
         invoices.HasIndex(invoice => invoice.InvoiceNumber).IsUnique();
         invoices.HasIndex(invoice => invoice.StorageKey).IsUnique();
+
+        // Roadmap O6: private calendar subscription links.
+        var feeds = modelBuilder.Entity<CoachingCalendarFeed>();
+        feeds.ToTable("calendar_feeds", table => table.HasCheckConstraint("ck_coaching_calendar_feed_role", "\"Role\" IN ('Teacher', 'Student')"));
+        feeds.HasKey(feed => feed.Id);
+        feeds.Property(feed => feed.Role).HasMaxLength(10).IsRequired();
+        feeds.Property(feed => feed.TokenHash).HasMaxLength(64).IsRequired();
+        feeds.HasIndex(feed => new { feed.UserId, feed.Role }).IsUnique();
+        feeds.HasIndex(feed => feed.TokenHash).IsUnique();
 
         // Roadmap O10b: an institution's request for extra seats on a running license.
         var seatRequests = modelBuilder.Entity<CoachingSeatRequest>();

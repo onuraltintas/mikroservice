@@ -147,6 +147,8 @@ public sealed class CoachingErasureExecutionService(
             foreach (var file in conversationFiles)
                 await events.PublishAsync(new AssignmentAttachmentDeletionRequested(file.ConversationId, file.Id, file.StorageKey), cancellationToken);
         var reminders = await context.CoachingReminderReceipts.Where(x => x.RecipientUserId == message.SubjectUserId).ToListAsync(cancellationToken);
+        // Roadmap O6: the user's private calendar links stop working.
+        context.CoachingCalendarFeeds.RemoveRange(await context.CoachingCalendarFeeds.Where(x => x.UserId == message.SubjectUserId).ToListAsync(cancellationToken));
         var fees = await context.CoachingFeeAgreements.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var financeCount = fees.Count
             + await context.CoachingFeeInstallments.CountAsync(x => context.CoachingFeeAgreements.Any(fee => fee.Id == x.AgreementId && fee.StudentId == message.SubjectUserId), cancellationToken)

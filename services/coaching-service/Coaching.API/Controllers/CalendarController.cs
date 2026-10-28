@@ -15,8 +15,51 @@ namespace Coaching.API.Controllers;
 [Route("api/calendar")]
 public sealed class CalendarController(
     IMediator mediator,
-    ICoachingAccessPolicy accessPolicy) : ControllerBase
+    ICoachingAccessPolicy accessPolicy,
+    Coaching.Infrastructure.Management.CoachingCalendarSubscriptionService subscriptions) : ControllerBase
 {
+    // ---- Roadmap O6: private calendar link for Google / Apple Calendar ------------------------------------------------
+
+    [HttpGet("subscription")]
+    public async Task<IActionResult> GetSubscription([FromQuery] string role, CancellationToken cancellationToken) =>
+        await ForRole(role, async userId => Ok(await subscriptions.GetAsync(userId, role, cancellationToken)));
+
+    /// <summary>Creates a new link (the previous one stops working); the path is returned only now.</summary>
+    [HttpPost("subscription")]
+    public async Task<IActionResult> CreateSubscription([FromQuery] string role, CancellationToken cancellationToken) =>
+        await ForRole(role, async userId => Ok(await subscriptions.CreateAsync(userId, role, cancellationToken)));
+
+    [HttpDelete("subscription")]
+    public async Task<IActionResult> RevokeSubscription([FromQuery] string role, CancellationToken cancellationToken) =>
+        await ForRole(role, async userId => { await subscriptions.RevokeAsync(userId, role, cancellationToken); return NoContent(); });
+
+    /// <summary>The calendar a subscribed app downloads. The secret token in the link is the only credential.</summary>
+    [HttpGet("feed/{token}")]
+    [AllowAnonymous]
+    [Produces("text/calendar")]
+    public async Task<IActionResult> Feed(string token, CancellationToken cancellationToken)
+    {
+        var content = await subscriptions.FeedAsync(token, cancellationToken);
+        if (content is null) return NotFound();
+        Response.Headers.CacheControl = "private, max-age=900";
+        Response.Headers["X-Robots-Tag"] = "noindex";
+        return File(Encoding.UTF8.GetBytes(content), "text/calendar; charset=utf-8");
+    }
+
+    private async Task<IActionResult> ForRole(string? role, Func<Guid, Task<IActionResult>> action)
+    {
+        var userId = accessPolicy.CurrentUserId;
+        if (!userId.HasValue) return Unauthorized();
+        var allowed = role?.Trim().ToLowerInvariant() switch
+        {
+            "teacher" => User.IsInRole("Teacher"),
+            "student" => User.IsInRole("Student"),
+            _ => false
+        };
+        if (!allowed) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Bu rol için takvim bağlantısı oluşturulamaz." });
+        return await action(userId.Value);
+    }
+
     [HttpGet("teacher.ics")]
     [Produces("text/calendar")]
     public async Task<IActionResult> GetTeacherCalendar(

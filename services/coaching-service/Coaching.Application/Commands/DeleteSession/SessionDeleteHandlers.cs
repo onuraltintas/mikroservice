@@ -40,6 +40,17 @@ public class SessionDeleteHandlers :
             command.IsInstitutionAdminOperation, cancellationToken);
 
         session.Cancel();
+        // Roadmap O6: "this and the following ones" ends the rest of a recurring series; students get one notice.
+        if (command.IncludeFollowing && session.SeriesId is { } seriesId)
+        {
+            foreach (var later in (await _repository.GetSeriesAsync(seriesId, cancellationToken))
+                         .Where(item => item.Id != session.Id && item.ScheduledDate > session.ScheduledDate
+                             && item.Status == SessionStatus.Scheduled && item.ScheduledDate > DateTime.UtcNow))
+            {
+                later.Cancel();
+                await _repository.UpdateAsync(later, cancellationToken);
+            }
+        }
 
         await _eventPublisher.PublishAsync(
             new SessionCancelledEvent(

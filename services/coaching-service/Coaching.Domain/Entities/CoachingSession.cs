@@ -25,6 +25,9 @@ public class CoachingSession : AggregateRoot
     public string? TeacherNotes { get; private set; }
     public CoachingNoteVisibility TeacherNotesVisibility { get; private set; } = CoachingNoteVisibility.CoachPrivate;
 
+    /// <summary>Roadmap O6: the recurring series this session belongs to (for example every Tuesday 18:00).</summary>
+    public Guid? SeriesId { get; private set; }
+
     // Navigation
     private readonly List<SessionAttendance> _attendances = new();
     public IReadOnlyCollection<SessionAttendance> Attendances => _attendances.AsReadOnly();
@@ -109,6 +112,31 @@ public class CoachingSession : AggregateRoot
                 ? teacherNotesVisibility
                 : throw new ArgumentOutOfRangeException(nameof(teacherNotesVisibility));
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void AssignSeries(Guid seriesId)
+    {
+        if (seriesId == Guid.Empty) throw new ArgumentException("Series id is required.", nameof(seriesId));
+        SeriesId = seriesId;
+    }
+
+    /// <summary>
+    /// Roadmap O6: who takes part in a planned future session. Students without a recorded attendance can be removed;
+    /// returns who was added and who was removed.
+    /// </summary>
+    public (Guid[] Added, Guid[] Removed) SetParticipants(IReadOnlyCollection<Guid> studentIds, DateTime now)
+    {
+        if (Status != SessionStatus.Scheduled || ScheduledDate <= now)
+            throw new BusinessRuleException("Session.NotEditable", "Katılımcılar yalnız gelecekteki planlanmış seanslarda değiştirilebilir.");
+        var wanted = studentIds.Where(id => id != Guid.Empty).Distinct().ToHashSet();
+        var removed = _attendances.Where(attendance => !wanted.Contains(attendance.StudentId)).ToArray();
+        if (removed.Any(attendance => attendance.AttendanceStatus != AttendanceStatus.NotRecorded))
+            throw new BusinessRuleException("Session.NotEditable", "Katılımı girilmiş öğrenci seanstan çıkarılamaz.");
+        foreach (var attendance in removed) _attendances.Remove(attendance);
+        var added = wanted.Where(id => _attendances.All(attendance => attendance.StudentId != id)).ToArray();
+        foreach (var studentId in added) _attendances.Add(SessionAttendance.Create(Id, studentId));
+        if (added.Length > 0 || removed.Length > 0) UpdatedAt = DateTime.UtcNow;
+        return (added, removed.Select(attendance => attendance.StudentId).ToArray());
     }
 
     public void SetMeetingLink(string meetingLink)

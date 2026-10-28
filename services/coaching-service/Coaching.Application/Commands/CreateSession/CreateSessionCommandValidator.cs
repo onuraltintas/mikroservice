@@ -30,6 +30,10 @@ public class CreateSessionCommandValidator : AbstractValidator<CreateSessionComm
                 && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
             .When(x => !string.IsNullOrWhiteSpace(x.MeetingLink))
             .WithMessage("Meeting link must be an absolute HTTP(S) URL.");
+        RuleFor(x => x.Recurrence!.IntervalWeeks).InclusiveBetween(1, 2).When(x => x.Recurrence is not null)
+            .WithMessage("Tekrar her hafta ya da iki haftada bir olabilir.");
+        RuleFor(x => x.Recurrence!.Count).InclusiveBetween(2, SessionRecurrence.MaxCount).When(x => x.Recurrence is not null)
+            .WithMessage($"Tekrarlayan seans 2–{SessionRecurrence.MaxCount} seans olabilir.");
         RuleFor(x => x.IdempotencyKey)
             .NotEmpty()
             .Matches("^[A-Za-z0-9._~-]{16,128}$")
