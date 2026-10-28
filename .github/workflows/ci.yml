@@ -118,13 +118,18 @@ jobs:
       - name: Verify Course Management student and staff panels
         run: node --test ../../tests/E2E/course-management-panels.smoke.test.mjs
 
+      # Roadmap D4: automated accessibility check (axe-core) and photo assignment submission in the student portal.
+      - name: Verify the student coaching portal (accessibility and photo submission)
+        run: node --test ../../tests/E2E/coaching-student.smoke.test.mjs
+
   coaching-development-regression:
     name: Coaching development regression
     runs-on: ubuntu-latest
     needs: [source-safety]
     services:
       postgres:
-        image: postgres:18-alpine
+        # Same major version as production (docker-compose.yml); the migration rollback tests depend on it.
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: coaching_test
           POSTGRES_PASSWORD: coaching_test
@@ -135,6 +140,7 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       COACHING_CURRICULUM_TEST_POSTGRES: Host=127.0.0.1;Port=5432;Database=postgres;Username=coaching_test;Password=coaching_test
+      COACHING_PROFILE_TEST_POSTGRES: Host=127.0.0.1;Port=5432;Database=postgres;Username=coaching_test;Password=coaching_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -151,16 +157,40 @@ jobs:
       - name: Student and teacher tabs, notifications and six-exam recommendation matrix
         run: npm run test:coaching-development
         working-directory: clients/admin-panel
-      - name: Recommendation, calendar conflict and record preservation regressions
+      # Roadmap D4: every PostgreSQL-backed coaching test runs here (before only a filtered subset did).
+      - name: All coaching PostgreSQL tests (plans, reviews, calendar, privacy, sales and record preservation)
         run: >-
           dotnet test tests/Integration/Coaching.Curriculum.IntegrationTests/Coaching.Curriculum.IntegrationTests.csproj
-          --configuration Release --filter 'FullyQualifiedName~Practice|FullyQualifiedName~AssignmentInstructionPersistence|FullyQualifiedName~TeacherTracking|FullyQualifiedName~CoachingFollowUp|FullyQualifiedName~WeeklyReview|FullyQualifiedName~WeeklyFollowUp|FullyQualifiedName~WeeklyDecisionWork|FullyQualifiedName~StudentDailyAgenda'
+          --configuration Release
           --logger 'trx;LogFileName=coaching-development.trx'
+          -- xUnit.MaxParallelThreads=2
+      - name: Coaching profile PostgreSQL tests
+        run: >-
+          dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
+          --configuration Release --filter 'FullyQualifiedName~CoachingLearningSetupPostgresTests|FullyQualifiedName~CoachingOutcomePostgresTests|FullyQualifiedName~CoachingOwnedProfilePostgresTests'
+          --logger 'trx;LogFileName=coaching-profile-postgres.trx'
+      # Failed test names and messages as annotations, readable without downloading the job log.
+      - name: Report failed coaching tests
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+          for path in glob.glob('tests/Integration/**/TestResults/*.trx', recursive=True):
+              for result in ET.parse(path).getroot().iterfind('.//t:UnitTestResult', ns):
+                  if result.get('outcome') == 'Failed':
+                      message = ' '.join((result.findtext('.//t:Message', default='', namespaces=ns) or '').split())[:500]
+                      stack = result.findtext('.//t:StackTrace', default='', namespaces=ns) or ''
+                      frames = ' | '.join(line.strip() for line in stack.splitlines() if '.cs:line' in line)[:700]
+                      print(f"::error title={result.get('testName')[:200]}::{message} AT {frames}")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coaching-development-test-results
-          path: tests/Integration/Coaching.Curriculum.IntegrationTests/TestResults/*.trx
+          path: |
+            tests/Integration/Coaching.Curriculum.IntegrationTests/TestResults/*.trx
+            tests/Integration/Identity.API.IntegrationTests/TestResults/coaching-profile-postgres.trx
           if-no-files-found: ignore
 
   speed-reading-frontend:

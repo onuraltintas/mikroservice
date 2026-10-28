@@ -195,7 +195,7 @@ const ACTION_LABELS: Record<string, string> = {
       ? 'Sütunlar: eposta; ogretmen_eposta (isteğe bağlı). Kurumda olmayan her adrese davet gider.'
       : 'Sütunlar: ogrenci_eposta; ogretmen_eposta. İkisi de kurum üyesi olmalı; mevcut atamalar değişmez.' }}</p>
     <div class="row">
-      <input type="file" accept=".csv,.xlsx,text/csv" data-testid="bulk-file" [disabled]="busy()" (change)="choose($event)">
+      <label>CSV ya da Excel dosyası <input type="file" accept=".csv,.xlsx,text/csv" data-testid="bulk-file" [disabled]="busy()" (change)="choose($event)"></label>
       <button type="button" data-testid="bulk-template" [disabled]="busy()" (click)="downloadTemplate()">Şablonu indir</button>
     </div>
     @if (error()) { <p class="err" role="alert">{{ error() }}</p> }

@@ -1,5 +1,6 @@
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
+import { moveTabFocus } from '../../navigation/staff-tablist';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -33,6 +34,7 @@ import {
   styleUrl: './coaching-teacher-student-detail.component.scss'
 })
 export class CoachingTeacherStudentDetailComponent implements OnInit {
+  readonly moveTabFocus = moveTabFocus;
   private readonly studentsService = inject(CoachingTeacherStudentsService);
   private readonly destroyRef = inject(DestroyRef);
   private progressRequestId = 0;

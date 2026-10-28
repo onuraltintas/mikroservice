@@ -42,10 +42,10 @@ import { CoachingDatePipe } from '../coaching-labels';
           @if (sectionCode && !topicBusy() && !options().length) { <p>Bu ders için etkin ve eşleştirilmiş alt konu bulunamadı. Başka dersin konuları kullanılmaz.</p> }
           <div class="table"><table><thead><tr><th>Konu</th><th>Doğru</th><th>Yanlış</th><th>Boş</th><th>Neden</th><th></th></tr></thead><tbody>
             @for (row of analysis.topics; track row.sectionCode + row.topicId; let i = $index) {
-              <tr><th>{{row.lessonName || editing()?.sectionNames?.[row.sectionCode] || row.sectionCode}} / {{row.topicName || topicName(row.topicId)}}</th><td><input type="number" min="0" max="120" [(ngModel)]="row.correct" (ngModelChange)="dirty=true" [disabled]="saving() || !canEdit()" aria-label="Konu doğru"></td>
-              <td><input type="number" min="0" max="120" [(ngModel)]="row.wrong" (ngModelChange)="dirty=true" [disabled]="saving() || !canEdit()" aria-label="Konu yanlış"></td>
-              <td><input type="number" min="0" max="120" [(ngModel)]="row.empty" (ngModelChange)="dirty=true" [disabled]="saving() || !canEdit()" aria-label="Konu boş"></td>
-              <td><select [(ngModel)]="row.reason" (ngModelChange)="dirty=true" [disabled]="saving() || !canEdit()"><option [ngValue]="null">Belirtilmemiş</option><option value="Knowledge">Konu bilgisi</option><option value="Calculation">İşlem / dikkat</option><option value="Interpretation">Yorumlama</option><option value="Time">Süre yetmedi</option></select></td>
+              <tr><th>{{ rowName(row) }}</th><td><input type="number" min="0" max="120" [(ngModel)]="row.correct" (ngModelChange)="dirty=true" [disabled]="saving() || !canEdit()" [attr.aria-label]="rowName(row) + ' doğru'"></td>
+              <td><input type="number" min="0" max="120" [(ngModel)]="row.wrong" (ngModelChange)="dirty=true" [disabled]="saving() || !canEdit()" [attr.aria-label]="rowName(row) + ' yanlış'"></td>
+              <td><input type="number" min="0" max="120" [(ngModel)]="row.empty" (ngModelChange)="dirty=true" [disabled]="saving() || !canEdit()" [attr.aria-label]="rowName(row) + ' boş'"></td>
+              <td><select [(ngModel)]="row.reason" [attr.aria-label]="rowName(row) + ' yanlış nedeni'" (ngModelChange)="dirty=true" [disabled]="saving() || !canEdit()"><option [ngValue]="null">Belirtilmemiş</option><option value="Knowledge">Konu bilgisi</option><option value="Calculation">İşlem / dikkat</option><option value="Interpretation">Yorumlama</option><option value="Time">Süre yetmedi</option></select></td>
               <td><button (click)="remove(i)" [disabled]="saving() || !canEdit()">Kaldır</button></td></tr>
             }
           </tbody></table></div>
@@ -143,6 +143,10 @@ export class PracticeAdaptationComponent implements OnChanges {
   }
   filteredTopics() { const search = this.topicSearch.toLocaleLowerCase('tr'); return this.options().filter(x => (x.lessonName + ' ' + x.name).toLocaleLowerCase('tr').includes(search)); }
   topicName(id: string) { return this.names.get(id) || 'Konu adını görmek için ilgili dersi seç'; }
+  /** Roadmap D4: each row's inputs are named after its lesson and topic, not a generic "Konu". */
+  rowName(row: { lessonName?: string | null; sectionCode: string; topicName?: string | null; topicId: string }): string {
+    return `${row.lessonName || this.editing()?.sectionNames?.[row.sectionCode] || row.sectionCode} / ${row.topicName || this.topicName(row.topicId)}`;
+  }
   add(topicId: string) {
     if (!this.canEdit() || this.saving() || !this.options().some(x => x.id === topicId) || this.analysis.topics.length >= 120
       || this.analysis.topics.some(x => x.topicId === topicId && x.sectionCode === this.sectionCode)) return;

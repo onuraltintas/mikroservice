@@ -2,7 +2,7 @@
   <a class="coaching-skip" href="#coaching-main">İçeriğe geç</a>
   <button *ngIf="menuOpen()" class="coaching-scrim" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"></button>
   <aside id="coaching-navigation" class="coaching-sidebar" [cdkTrapFocus]="menuOpen()" [cdkTrapFocusAutoCapture]="menuOpen()" [attr.role]="menuOpen() ? 'dialog' : null" [attr.aria-modal]="menuOpen() ? true : null" aria-label="Öğrenci çalışma alanı">
-    <a routerLink="/coaching-portal" class="coaching-brand" aria-label="Koçluk ana sayfası" (click)="closeMenu()">
+    <a routerLink="/coaching-portal" class="coaching-brand" aria-label="eduivme Öğrenci Koçluğu ana sayfa" (click)="closeMenu()">
       <span class="brand-symbol">E<span></span></span><span><strong>eduivme<span>.</span></strong><small>Öğrenci Koçluğu</small></span>
     </a>
     <button class="coaching-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"><app-coaching-icon name="close" /></button>
@@ -29,12 +29,12 @@
     <header class="coaching-topbar">
       <button #menuToggle class="coaching-menu-toggle" type="button" [attr.aria-expanded]="menuOpen()" aria-controls="coaching-navigation" aria-label="Koçluk menüsünü aç" (click)="menuOpen() ? closeMenu() : menuOpen.set(true)"><app-coaching-icon name="menu" /></button>
       <div class="coaching-breadcrumb"><span>Çalışma alanım</span><span aria-hidden="true">/</span><strong>{{ pageLabel() }}</strong></div>
-      <div class="coaching-topbar-actions"><span class="coaching-product-label">Kendi hızında, kendi yolunda.</span><button type="button" class="coaching-icon-button coaching-theme-toggle" (click)="theme.toggle()" [attr.aria-label]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" [attr.title]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'"><app-coaching-icon [name]="theme.isDarkMode() ? 'sun' : 'moon'" /></button><a routerLink="/coaching-portal/notifications" class="coaching-icon-button coaching-bell" [attr.aria-label]="notificationLabel()"><app-coaching-icon name="bell" />@if (unreadCount()) { <span class="coaching-badge" aria-hidden="true">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span> }</a><span class="coaching-avatar compact" aria-label="Öğrenci hesabı">{{ initials() }}</span></div>
+      <div class="coaching-topbar-actions"><span class="coaching-product-label">Kendi hızında, kendi yolunda.</span><button type="button" class="coaching-icon-button coaching-theme-toggle" (click)="theme.toggle()" [attr.aria-label]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" [attr.title]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'"><app-coaching-icon [name]="theme.isDarkMode() ? 'sun' : 'moon'" /></button><a routerLink="/coaching-portal/notifications" class="coaching-icon-button coaching-bell" [attr.aria-label]="notificationLabel()"><app-coaching-icon name="bell" />@if (unreadCount()) { <span class="coaching-badge" aria-hidden="true">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span> }</a><span class="coaching-avatar compact" aria-hidden="true">{{ initials() }}</span></div>
     </header>
     <main id="coaching-main" class="coaching-content" tabindex="-1"><router-outlet /></main>
     <footer class="coaching-footer"><span>Eduİvme · Öğrenci Koçluğu</span><span>Bugünkü emeğin, yarının temeli.</span></footer>
   </div>
   <nav *ngIf="isStudent()" class="coaching-mobile-nav" aria-label="Hızlı erişim">
-    <a *ngFor="let link of mobileLinks()" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" [attr.aria-label]="link.badge ? link.label + ' (' + link.badge + ' okunmamış)' : link.label"><app-coaching-icon [name]="link.icon" /><span>{{ link.short }}</span>@if (link.badge) { <span class="coaching-badge" aria-hidden="true">{{ link.badge > 99 ? '99+' : link.badge }}</span> }</a>
+    <a *ngFor="let link of mobileLinks()" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" [attr.title]="link.label" [attr.aria-label]="link.badge ? link.short + ' (' + link.badge + ' okunmamış)' : null"><app-coaching-icon [name]="link.icon" /><span>{{ link.short }}</span>@if (link.badge) { <span class="coaching-badge" aria-hidden="true">{{ link.badge > 99 ? '99+' : link.badge }}</span> }</a>
   </nav>
 </div>

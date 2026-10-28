@@ -80,13 +80,14 @@
       </div>
     </header>
 
-    <nav class="history-tabs" role="tablist" aria-label="Geçmiş kayıt kategorisi">
+    <div class="history-tabs" role="tablist" aria-label="Geçmiş kayıt kategorisi" (keydown)="moveTabFocus($event)">
       @for (type of historyTypes; track type) {
-        <button type="button" role="tab" [attr.data-history-type]="type"
-          [attr.aria-selected]="historyType() === type" [class.active]="historyType() === type"
+        <button type="button" role="tab" [attr.data-history-type]="type" [id]="'teacher-history-tab-' + type" aria-controls="teacher-history-panel"
+          [attr.aria-selected]="historyType() === type" [attr.tabindex]="historyType() === type ? 0 : -1" [class.active]="historyType() === type"
           (click)="selectHistoryType(type)">{{ historyLabels[type] }}</button>
       }
-    </nav>
+    </div>
+    <div role="tabpanel" id="teacher-history-panel" [attr.aria-labelledby]="'teacher-history-tab-' + historyType()">
 
     <form class="history-filters" (ngSubmit)="applyFilters()">
       <label>Başlangıç tarihi<input name="historyFromDate" type="date" [(ngModel)]="historyFromDate"></label>
@@ -113,7 +114,7 @@
     } @else if (history().length === 0) {
       <div class="history-empty"><strong>Bu kategoride kayıt bulunmuyor.</strong><span>Filtreleri değiştirebilir veya başka bir kategori seçebilirsiniz.</span></div>
     } @else {
-      <div class="history-list" role="tabpanel" [attr.aria-label]="historyLabels[historyType()] + ' geçmişi'">
+      <div class="history-list">
         @for (item of history(); track trackById($index, item)) {
           <article class="history-row">
             <div class="history-item-copy">
@@ -144,5 +145,6 @@
         </nav>
       }
     }
+    </div>
   </section>
 </section>
