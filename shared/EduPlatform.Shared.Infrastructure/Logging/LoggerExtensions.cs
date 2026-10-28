@@ -35,6 +35,8 @@ public static class LoggerExtensions
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
+                // Roadmap P4: readiness errors while the bus is still connecting are not faults.
+                .Filter.ByExcluding(StartupHealthCheckNoise.ShouldDrop)
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Application", appName)
                 .Enrich.WithProperty("Environment", env.EnvironmentName);
