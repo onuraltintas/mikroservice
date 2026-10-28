@@ -26,9 +26,12 @@ export class CoachingInstitutionExamsService {
     const params = branch ? new HttpParams().set('branch', branch) : new HttpParams();
     return this.http.get<InstitutionExamReport>(`${this.url}/${encodeURIComponent(examId)}`, { params });
   }
-  preview(examId: string, csv: string) { return this.http.post<InstitutionExamPreview>(`${this.url}/${encodeURIComponent(examId)}/import/preview`, { csv }); }
-  apply(examId: string, csv: string, fingerprint: string) {
-    return this.http.post<{ applied: number }>(`${this.url}/${encodeURIComponent(examId)}/import`, { csv, fingerprint });
+  /** CSV text, or an Excel workbook as base64 (same columns as the template). */
+  preview(examId: string, csv: string | null, xlsxBase64?: string) {
+    return this.http.post<InstitutionExamPreview>(`${this.url}/${encodeURIComponent(examId)}/import/preview`, xlsxBase64 ? { xlsxBase64 } : { csv });
+  }
+  apply(examId: string, csv: string | null, fingerprint: string, xlsxBase64?: string) {
+    return this.http.post<{ applied: number }>(`${this.url}/${encodeURIComponent(examId)}/import`, xlsxBase64 ? { xlsxBase64, fingerprint } : { csv, fingerprint });
   }
   template(examCode: string) { return this.http.get(`${this.url}/template`, { params: new HttpParams().set('examCode', examCode), responseType: 'blob' }); }
 }

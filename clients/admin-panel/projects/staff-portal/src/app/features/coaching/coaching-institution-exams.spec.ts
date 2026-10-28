@@ -71,6 +71,22 @@ describe('O4 institution exams', () => {
     expect(service.apply).toHaveBeenCalledWith('exam-1', 'eposta;puan\nx', 'fp');
   });
 
+  // Roadmap O4 follow-up: an Excel workbook goes to the server as base64 and is applied the same way.
+  it('previews and applies an Excel file', async () => {
+    const { component, service } = setup();
+    await component.open(exam);
+    await component.previewFile(new File([new Uint8Array([80, 75, 3, 4])], 'sonuclar.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    expect(service.preview).toHaveBeenCalledWith('exam-1', null, 'UEsDBA==');
+    component.preview.set({ fingerprint: 'fp', rows: 1, accepted: [{ line: 2, studentId: 'a', studentName: 'Ada Y', net: 72, replaces: false }], errors: [] });
+    await component.applyImport();
+    expect(service.apply).toHaveBeenCalledWith('exam-1', null, 'fp', 'UEsDBA==');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const api = TestBed.inject(CoachingInstitutionExamsService); const http = TestBed.inject(HttpTestingController);
+    api.preview('exam-1', null, 'UEsDBA==').subscribe();
+    expect(http.expectOne(r => r.url.endsWith('/import/preview')).request.body).toEqual({ xlsxBase64: 'UEsDBA==' });
+  });
+
   it('calls the institution exam API', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const api = TestBed.inject(CoachingInstitutionExamsService); const http = TestBed.inject(HttpTestingController);
