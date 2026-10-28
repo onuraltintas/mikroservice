@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import {
@@ -13,7 +14,7 @@ import {
 @Component({
   selector: 'staff-coaching-institution-teacher-report',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './coaching-institution-teacher-report.component.html',
   styleUrl: './coaching-institution-teacher-report.component.scss'
 })
@@ -31,6 +32,25 @@ export class CoachingInstitutionTeacherReportComponent implements OnInit {
 
   readonly overview = signal<CoachingInstitutionTeacherOverview | null>(null);
   readonly analytics = signal<CoachingInstitutionTeacherAnalytics | null>(null);
+  /** Roadmap D7: the analysed period; empty means the last 30 days. */
+  readonly analyticsRange = signal<{ fromDate: string; toDate: string } | null>(null);
+  readonly analyticsRangeError = signal<string | null>(null);
+  analyticsFrom = '';
+  analyticsTo = '';
+  readonly periodLabel = computed(() => {
+    const range = this.analyticsRange();
+    return range ? `${formatDay(range.fromDate)} – ${formatDay(range.toDate)}` : 'Son 30 gün';
+  });
+  applyAnalyticsRange(): void {
+    this.analyticsRangeError.set(null);
+    if (!this.analyticsFrom && !this.analyticsTo) { this.analyticsRange.set(null); this.loadAnalytics(); return; }
+    const from = Date.parse(this.analyticsFrom); const to = Date.parse(this.analyticsTo);
+    if (Number.isNaN(from) || Number.isNaN(to) || to < from || (to - from) / 86400000 + 1 > 366) {
+      this.analyticsRangeError.set('Başlangıç ve bitiş tarihi seçin; aralık en çok 366 gün olabilir.'); return;
+    }
+    this.analyticsRange.set({ fromDate: this.analyticsFrom, toDate: this.analyticsTo }); this.loadAnalytics();
+  }
+  clearAnalyticsRange(): void { this.analyticsFrom = ''; this.analyticsTo = ''; this.analyticsRangeError.set(null); this.analyticsRange.set(null); this.loadAnalytics(); }
   readonly students = signal<CoachingInstitutionStudent[]>([]);
   readonly studentSearch = signal('');
   readonly gradeFilter = signal<number | null>(null);
@@ -72,7 +92,7 @@ export class CoachingInstitutionTeacherReportComponent implements OnInit {
     const requestId = ++this.analyticsRequestId;
     this.isAnalyticsLoading.set(true);
     this.analyticsError.set(null);
-    this.institutionService.getTeacherAnalytics(this.teacher.userId).pipe(
+    this.institutionService.getTeacherAnalytics(this.teacher.userId, this.analyticsRange()).pipe(
       takeUntilDestroyed(this.destroyRef),
       finalize(() => { if (requestId === this.analyticsRequestId) this.isAnalyticsLoading.set(false); })
     ).subscribe({
@@ -133,4 +153,9 @@ export class CoachingInstitutionTeacherReportComponent implements OnInit {
   openStudentReport(student: CoachingInstitutionStudent): void {
     this.studentSelected.emit(student);
   }
+}
+
+function formatDay(value: string): string {
+  const [year, month, day] = value.split('-');
+  return `${day}.${month}.${year}`;
 }

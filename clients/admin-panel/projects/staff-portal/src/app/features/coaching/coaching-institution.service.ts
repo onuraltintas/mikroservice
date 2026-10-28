@@ -285,9 +285,11 @@ export class CoachingInstitutionService {
     );
   }
 
-  getTeacherAnalytics(teacherId: string): Observable<CoachingInstitutionTeacherAnalytics> {
+  /** Roadmap D7: optional date range (yyyy-MM-dd, Türkiye days); without it the last 30 days. */
+  getTeacherAnalytics(teacherId: string, range?: { fromDate: string; toDate: string } | null): Observable<CoachingInstitutionTeacherAnalytics> {
     return this.http.get<CoachingInstitutionTeacherAnalytics>(
-      `${this.url}/teachers/${encodeURIComponent(teacherId)}/analytics`
+      `${this.url}/teachers/${encodeURIComponent(teacherId)}/analytics`,
+      range ? { params: { fromDate: range.fromDate, toDate: range.toDate } } : {}
     );
   }
 
