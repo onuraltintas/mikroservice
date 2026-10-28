@@ -36,13 +36,15 @@ public sealed class PracticeExamTests
     }
 
     [Fact]
-    public void NegativeNetsArePreservedAndTotalIsRoundedOnlyAfterSumming()
+    // Roadmap D2: the total net is the sum of the rounded section nets, so the report card adds up.
+    public void NegativeNetsArePreservedAndTotalIsTheSumOfSectionNets()
     {
         var profile = PracticeExamRules.Profiles.Single(x => x.Code == "LGS");
         var input = Blank(profile) with { Sections = profile.Sections.Select(s => new PracticeSectionAnswers(s.Code, 0, 1, s.QuestionCount - 1)).ToArray() };
         var summary = PracticeExamRules.Summarize(input);
-        Assert.Equal(-2m, summary.Net);
         Assert.All(summary.Sections, s => Assert.Equal(-0.33m, s.Net));
+        Assert.Equal(-1.98m, summary.Net);
+        Assert.Equal(summary.Sections.Sum(s => s.Net), summary.Net);
     }
 
     [Fact]

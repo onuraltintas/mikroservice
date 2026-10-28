@@ -1,3 +1,4 @@
+using Coaching.Domain;
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
@@ -66,7 +67,7 @@ public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, I
                                  join assignment in db.Assignments.AsNoTracking() on row.AssignmentId equals assignment.Id
                                  where row.StudentId == student && assignment.Status != AssignmentStatus.Cancelled
                                      && assignment.DueDate >= rangeStart && assignment.DueDate < rangeEnd
-                                 select new { row.SubmittedAt, assignment.DueDate }).ToListAsync(ct);
+                                 select new { row.Status, AssignmentStatus = assignment.Status, assignment.DueDate }).ToListAsync(ct);
         var sessions = await (from attendance in db.SessionAttendances.AsNoTracking()
                               join session in db.CoachingSessions.AsNoTracking() on attendance.SessionId equals session.Id
                               where attendance.StudentId == student && session.Status != SessionStatus.Cancelled
@@ -82,7 +83,8 @@ public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, I
         if (tasks.Count == 0 && assignments.Count == 0 && held.Length == 0 && upcoming == 0 && exam is null) return null;
         return new CoachingParentWeeklySummaryV1(id, recipient.ParentUserId, recipient.ParentEmail, recipient.ParentName, student,
             recipient.StudentName, weekStart, weekEnd, tasks.Count, tasks.Count(x => x),
-            assignments.Count, assignments.Count(x => x.SubmittedAt != null), assignments.Count(x => x.SubmittedAt == null && x.DueDate < now),
+            assignments.Count, assignments.Count(x => AssignmentProgress.IsDone(x.Status)),
+            assignments.Count(x => AssignmentProgress.IsOverdue(x.AssignmentStatus, x.Status, x.DueDate, now)),
             held.Length, held.Count(x => x.AttendanceStatus is AttendanceStatus.Present or AttendanceStatus.Late), upcoming,
             exam?.Title, exam?.Score);
     }

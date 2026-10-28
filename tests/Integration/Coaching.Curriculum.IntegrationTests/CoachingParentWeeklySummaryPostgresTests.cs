@@ -51,6 +51,22 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
         Assert.Equal(("TYT Deneme 3", 87.5m), (summary.LatestExamTitle, summary.LatestExamScore));
     }
 
+    // Roadmap D2: one rule for "done" (submitted or graded) and "overdue" (open work of an active assignment past its due time).
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task GradedWorkCountsAsDoneAndClosedAssignmentsAreNotOverdue()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var student = Guid.NewGuid(); var teacher = Guid.NewGuid(); var parent = Guid.NewGuid();
+        var paper = Assignment.Create(teacher, "Kâğıtta teslim", At(Monday.AddDays(1), 18)); paper.AssignToStudents([student]); paper.GradeAssignment(student, 80);
+        var closed = Assignment.Create(teacher, "Kapatılan", At(Monday.AddDays(2), 18)); closed.AssignToStudents([student]); closed.Complete();
+        var missed = Assignment.Create(teacher, "Kaçırılan", At(Monday.AddDays(3), 18)); missed.AssignToStudents([student]);
+        pg.Db.AddRange(paper, closed, missed); await pg.Db.SaveChangesAsync();
+        var events = new Publisher();
+        await Run(pg, new Parents(new CoachingParentSummaryRecipient(parent, "veli@example.test", "Veli", student, "Öğrenci")), events, At(Monday.AddDays(6), 19));
+        var summary = Assert.Single(events.Summaries);
+        Assert.Equal((3, 1, 1), (summary.AssignmentsDue, summary.AssignmentsSubmitted, summary.AssignmentsOverdue));
+    }
+
     // Istanbul local time on the given day.
     private static DateTime At(DateOnly day, int hour) => day.ToDateTime(new TimeOnly(hour, 0), DateTimeKind.Utc).AddHours(-3);
 
