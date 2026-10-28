@@ -240,6 +240,8 @@ public sealed class StudyProgressReconciliationTests
         pg.Db.Entry(copy).Property(x=>x.OriginalTaskId).CurrentValue=source.Id;
         copy.ReconcileProgress(source,plan.StudentId,"Eski ilerlemeyi koruma testi");pg.Db.Add(copy);await pg.Db.SaveChangesAsync();
         await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.GetService<IMigrator>().MigrateAsync(previous));
-        Assert.True((await pg.Db.StudyPlanTasks.AsNoTracking().SingleAsync(x=>x.Id==copy.Id)).IsCompleted);
+        // EF Core 10 commits each rolled-back migration on its own, so a refused downgrade can leave newer columns removed;
+        // the kept data is therefore read with SQL that does not depend on the current model.
+        Assert.True(await pg.Db.Database.SqlQueryRaw<bool>("""SELECT "IsCompleted" AS "Value" FROM coaching.study_plan_tasks WHERE "Id" = {0}""",copy.Id).SingleAsync());
     }
 }

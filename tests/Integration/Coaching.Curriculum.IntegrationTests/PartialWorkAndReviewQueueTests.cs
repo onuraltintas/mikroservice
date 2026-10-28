@@ -131,7 +131,11 @@ public sealed class PartialWorkAndReviewQueueTests
         var row=await pg.Db.StudyPlanTasks.SingleAsync();Assert.Empty(row.RealizationHistory);
         row.RecordRealization(40,null,true,student,"Eski süre düzeltiliyor");await pg.Db.SaveChangesAsync();
         await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.GetService<IMigrator>().MigrateAsync("20261024203951_DecisionResponsibilityAndPostponement"));
-        pg.Db.ChangeTracker.Clear();row=await pg.Db.StudyPlanTasks.SingleAsync();Assert.Single(row.RealizationHistory);Assert.Equal(45,row.RealizationHistory[0].PreviousMinutes);Assert.Equal(DateTime.UnixEpoch.AddTicks((now.Ticks-DateTime.UnixEpoch.Ticks)/10*10),row.CompletedAt);
+        // EF Core 10 commits each rolled-back migration on its own, so a refused downgrade can leave newer columns removed;
+        // the kept data is therefore read with SQL that does not depend on the current model.
+        var history=JsonDocument.Parse(await pg.Db.Database.SqlQueryRaw<string>("""SELECT "RealizationHistoryJson"::text AS "Value" FROM coaching.study_plan_tasks""").SingleAsync()).RootElement;
+        Assert.Equal(1,history.GetArrayLength());Assert.Equal(45,history[0].GetProperty("PreviousMinutes").GetInt32());
+        Assert.Equal(DateTime.UnixEpoch.AddTicks((now.Ticks-DateTime.UnixEpoch.Ticks)/10*10),await pg.Db.Database.SqlQueryRaw<DateTime>("""SELECT "CompletedAt" AS "Value" FROM coaching.study_plan_tasks""").SingleAsync());
     }
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task FailedProgressAndReviewWritesRollbackAndRetryInSameScopeWithoutDuplicateHistory()

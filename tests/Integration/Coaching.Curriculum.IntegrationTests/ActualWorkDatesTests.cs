@@ -77,6 +77,9 @@ public sealed class ActualWorkDatesTests
         task.RecordRealization(25,8,true,student,"Fiili çalışma günü belirtildi",workedOn:Second,reassignFromDate:task.PlannedDate);await pg.Db.SaveChangesAsync();
         Assert.False(Assert.Single(task.WorkDays).IsLegacyDate);Assert.Equal(Second,task.WorkFromDate);
         await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.GetService<IMigrator>().MigrateAsync("20261024220155_StudyContinuationScope"));
-        Assert.Equal(Second,(await pg.Db.StudyPlanTasks.AsNoTracking().SingleAsync()).WorkDays.Single().WorkedOn);
+        // EF Core 10 commits each rolled-back migration on its own, so a refused downgrade can leave newer columns removed;
+        // the kept data is therefore read with SQL that does not depend on the current model.
+        var days=JsonDocument.Parse(await pg.Db.Database.SqlQueryRaw<string>("""SELECT "ActualWorkJson"::text AS "Value" FROM coaching.study_plan_tasks""").SingleAsync()).RootElement;
+        Assert.Equal(Second.ToString("yyyy-MM-dd"),Assert.Single(days.EnumerateArray()).GetProperty("WorkedOn").GetString());
     }
 }
