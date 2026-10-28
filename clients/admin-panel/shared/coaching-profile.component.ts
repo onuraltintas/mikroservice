@@ -74,6 +74,9 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
       @for (invite of invitations(); track invite.id) {
         <article><strong>{{ invite.inviterEmail }}</strong><p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
           @if (invite.message) { <p>{{ invite.message }}</p> }
+          @if (role === 'Student' && invite.type !== 'TeacherToInstitution') {
+            <p class="history-notice">{{ invite.type === 'StudentToInstitution' ? 'Kabul edersen bu kurumun yöneticileri ve öğretmenleri' : 'Kabul edersen bu öğretmen' }} önceki öğretmen ve kurumlarındaki çalışma geçmişini (ödevler, denemeler, seanslar, hedefler) görebilir.</p>
+          }
           <p>Son tarih: {{ invite.expiresAt | date:'dd.MM.yyyy' }}</p>
           <button type="button" [disabled]="working()" (click)="respond(invite.id, 'accept')">Kabul et</button>
           <button type="button" [disabled]="working()" (click)="respond(invite.id, 'reject')">Reddet</button>

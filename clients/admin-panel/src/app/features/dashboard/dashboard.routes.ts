@@ -16,6 +16,13 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('./pages/coaching-curriculum-manager.component').then(m => m.CoachingCurriculumManagerComponent)
     },
     {
+        // Roadmap O5: yearly LGS and YKS score models for the students' estimates.
+        path: 'coaching/score-models',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingContentManage, role: 'SystemAdmin' },
+        loadComponent: () => import('./pages/coaching-score-models').then(m => m.CoachingScoreModelsComponent)
+    },
+    {
         path: 'coaching/catalog',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingView, role: 'SystemAdmin' },

@@ -85,8 +85,10 @@ public sealed class CoachingOutcomePostgresTests
             var unit = StudyCatalogUnit.Create("approved-catalog", "math-unit", lesson.Id, "Matematik (LGS)", 1); unit.SetActive(true);
             var topic = StudyCatalogTopic.Create("approved-catalog", "topic:factors", lesson.Id, unit.Id, "Çarpanlar ve Katlar", null, 1); topic.SetActive(true);
             db.AddRange(oldPlan, oldWork, lesson, unit, topic); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
-            // Seed with the current model, then restore the old schema before exercising the upgrade.
-            await db.GetService<IMigrator>().MigrateAsync("20261016144923_StudentLearningSetup");
+            // This test used to restore the StudentLearningSetup schema and replay the outcome migrations over existing work.
+            // That replay is no longer possible: UnifiedTargetCatalog (2026-10-20) cannot be reversed by design (restore the
+            // pre-migration backup instead), and later migrations refuse to drop dated or partial work. The upgrade was verified
+            // when those migrations were written; here the work survives re-running the migrations and the outcome import.
             await db.Database.MigrateAsync(); await db.Database.MigrateAsync();
             await using var f = await CoachingOutcomePilotTests.Fixture.Create();
             var service = new CoachingOutcomeCatalogService(db, f.Scope, f.Inner.Actor);

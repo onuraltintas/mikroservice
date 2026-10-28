@@ -1854,6 +1854,66 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingScoreModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("BaseScore")
+                        .HasPrecision(8, 3)
+                        .HasColumnType("numeric(8,3)");
+
+                    b.Property<string>("CoefficientsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("DiplomaWeight")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)");
+
+                    b.Property<DateTime>("ImportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RanksJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ScoreType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScoreType", "Year")
+                        .IsUnique();
+
+                    b.ToTable("score_models", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_score_model_type", "\"ScoreType\" IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL')");
+
+                            t.HasCheckConstraint("ck_score_model_year", "\"Year\" BETWEEN 2018 AND 2100");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSession", b =>
                 {
                     b.Property<Guid>("Id")
