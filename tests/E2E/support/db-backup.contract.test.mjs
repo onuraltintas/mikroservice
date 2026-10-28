@@ -76,6 +76,8 @@ test('encrypts the off-site copy for the configured recipient and uploads only e
     const staged = join(box.backups, 'offsite', '2026-11-01');
     assert.ok(!existsSync(staged), 'encrypted staging copy is removed after upload');
     assert.doesNotMatch(calls, /rclone copy [^\n]*daily/, 'plain dumps are never uploaded');
+    await backup(box, '2026-11-02', { BACKUP_RCLONE_REMOTE: 'offsite:eduivme-backups', BACKUP_AGE_RECIPIENT: 'age1examplerecipientkey', BACKUP_REMOTE_PREFIX: 'postgres' });
+    assert.match(await readFile(box.log, 'utf8'), /rclone copy .*offsite:eduivme-backups\/postgres\/2026-11-02/, 'each container has its own folder');
   } finally { await rm(box.dir, { recursive: true, force: true }); }
 });
 
