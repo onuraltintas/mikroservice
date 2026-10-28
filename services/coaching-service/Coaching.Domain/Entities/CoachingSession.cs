@@ -166,20 +166,32 @@ public class CoachingSession : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RecordAttendance(Guid studentId, bool attended, string? notes = null)
+    /// <summary>
+    /// Records one student's attendance once the session has started. A cancelled session has no attendance.
+    /// When every student is recorded, whatever the status, the session is held and becomes Completed.
+    /// </summary>
+    public void RecordAttendance(Guid studentId, AttendanceStatus status, string? notes, DateTime now)
     {
-        var attendance = _attendances.FirstOrDefault(a => a.StudentId == studentId);
-        if (attendance == null) 
-            throw new InvalidOperationException($"Student {studentId} is not added to this session.");
+        if (Status == SessionStatus.Cancelled)
+            throw new BusinessRuleException("Session.AttendanceNotAllowed", "İptal edilmiş seansa katılım girilemez.");
+        if (ScheduledDate > now)
+            throw new BusinessRuleException("Session.AttendanceNotAllowed", "Seans başlamadan katılım girilemez.");
+        if (status is not (AttendanceStatus.Present or AttendanceStatus.Absent or AttendanceStatus.Late or AttendanceStatus.Excused))
+            throw new ArgumentOutOfRangeException(nameof(status));
+        var attendance = _attendances.FirstOrDefault(a => a.StudentId == studentId)
+            ?? throw new InvalidOperationException($"Student {studentId} is not added to this session.");
 
-        var status = attended ? AttendanceStatus.Present : AttendanceStatus.Absent;
         attendance.MarkAttendance(status);
-        
         if (notes != null)
             attendance.AddTeacherNote(notes);
-            
+        if (Status == SessionStatus.Scheduled && _attendances.All(a => a.AttendanceStatus != AttendanceStatus.NotRecorded))
+            Status = SessionStatus.Completed;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>A session that has been held keeps its record; only unheld sessions can be removed.</summary>
+    public bool HasAttendanceHistory =>
+        Status == SessionStatus.Completed || _attendances.Any(a => a.AttendanceStatus != AttendanceStatus.NotRecorded);
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();

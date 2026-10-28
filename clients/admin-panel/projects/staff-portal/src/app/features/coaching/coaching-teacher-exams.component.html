@@ -227,7 +227,9 @@
                     </td>
                     <td>{{ result.ranking ?? '—' }}</td>
                     <td class="result-note">{{ result.teacherNotes || '—' }}</td>
-                    <td><button type="button" class="text-button" (click)="editExamResult(result)">Düzelt</button></td>
+                    <td><button type="button" class="text-button" (click)="editExamResult(result)">Düzelt</button>
+                      <button type="button" class="text-button danger" (click)="removeExamResult(result)" [disabled]="removingResultId() !== null"
+                        [attr.aria-label]="studentLabel(result.studentId) + ' sonucunu sil'">Sil</button></td>
                   </tr>
                 }
               </tbody>

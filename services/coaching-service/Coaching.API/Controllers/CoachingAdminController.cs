@@ -386,6 +386,11 @@ public sealed class CoachingAdminController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
         }
+        catch (BusinessRuleException ex)
+        {
+            // A rule about the record itself, e.g. a held session or submitted work that cannot be deleted.
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
     }
 
     /// <summary>Grades an assigned student's work on behalf of a system administrator.</summary>
@@ -568,6 +573,11 @@ public sealed class CoachingAdminController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
         }
+        catch (BusinessRuleException ex)
+        {
+            // A rule about the record itself, e.g. a held session or submitted work that cannot be deleted.
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
         catch (ValidationException ex)
         {
             return BadRequest(new { error = ex.Message, details = ex.Errors });
@@ -666,6 +676,11 @@ public sealed class CoachingAdminController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            // A rule about the record itself, e.g. a held session or submitted work that cannot be deleted.
+            return Conflict(new { error = ex.Message, code = ex.Code });
         }
     }
 
@@ -905,6 +920,11 @@ public sealed class CoachingAdminController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            // A rule about the record itself, e.g. a held session or submitted work that cannot be deleted.
+            return Conflict(new { error = ex.Message, code = ex.Code });
         }
     }
 

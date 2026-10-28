@@ -80,12 +80,18 @@
                       <p class="no-reflection">Henüz yansıma paylaşılmadı.</p>
                     }
                   </div>
-                  <div class="attendance-actions">
-                    <button type="button" (click)="saveAttendance(session, reflection, true)"
-                      [disabled]="savingAttendanceKey() === attendanceKey(session.id, reflection.studentId)">Katıldı</button>
-                    <button type="button" class="absent" (click)="saveAttendance(session, reflection, false)"
-                      [disabled]="savingAttendanceKey() === attendanceKey(session.id, reflection.studentId)">Katılmadı</button>
-                  </div>
+                  @if (canRecordAttendance(session)) {
+                    <div class="attendance-actions" role="group" [attr.aria-label]="studentLabel(reflection.studentId) + ' yoklaması'">
+                      <button type="button" (click)="saveAttendance(session, reflection, 'Present')"
+                        [disabled]="savingAttendanceKey() === attendanceKey(session.id, reflection.studentId)">Katıldı</button>
+                      <button type="button" (click)="saveAttendance(session, reflection, 'Late')"
+                        [disabled]="savingAttendanceKey() === attendanceKey(session.id, reflection.studentId)">Geç geldi</button>
+                      <button type="button" (click)="saveAttendance(session, reflection, 'Excused')"
+                        [disabled]="savingAttendanceKey() === attendanceKey(session.id, reflection.studentId)">Mazeretli</button>
+                      <button type="button" class="absent" (click)="saveAttendance(session, reflection, 'Absent')"
+                        [disabled]="savingAttendanceKey() === attendanceKey(session.id, reflection.studentId)">Katılmadı</button>
+                    </div>
+                  }
                 </div>
               }
             </div>

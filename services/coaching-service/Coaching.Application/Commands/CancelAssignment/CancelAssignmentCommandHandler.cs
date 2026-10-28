@@ -1,5 +1,7 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
+using Coaching.Domain.Enums;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 
 using MediatR;
 
@@ -11,13 +13,16 @@ public class CancelAssignmentCommandHandler : IRequestHandler<CancelAssignmentCo
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
     private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
+    private readonly ICoachingEventPublisher _eventPublisher;
 
     public CancelAssignmentCommandHandler(
         IAssignmentRepository repository,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
-        ICoachingIdentityAuthorizationClient teacherRecords)
+        ICoachingIdentityAuthorizationClient teacherRecords,
+        ICoachingEventPublisher eventPublisher)
     {
+        _eventPublisher = eventPublisher;
         _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
@@ -34,7 +39,10 @@ public class CancelAssignmentCommandHandler : IRequestHandler<CancelAssignmentCo
         await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, assignment.TeacherId, assignment.InstitutionId,
             command.IsInstitutionAdminOperation, cancellationToken);
 
-        // Domain logic: Cancel (Soft delete logic)
+        // Domain logic: Cancel (Soft delete logic). Submitted work stays; every assigned student is told.
+        if (assignment.Status != AssignmentStatus.Cancelled)
+            await _eventPublisher.PublishAsync(new AssignmentCancelledEvent(assignment.Id, assignment.TeacherId, assignment.InstitutionId,
+                assignment.Title, assignment.AssignedStudents.Select(student => student.StudentId).ToArray()), cancellationToken);
         assignment.Cancel();
 
         await _repository.UpdateAsync(assignment, cancellationToken);

@@ -37,10 +37,10 @@ describe('CoachingTeacherSessionsComponent', () => {
     fixture.detectChanges();
     const reflection = fixture.componentInstance.sessions()[0].studentReflections![0];
 
-    fixture.componentInstance.saveAttendance(fixture.componentInstance.sessions()[0], reflection, false);
+    fixture.componentInstance.saveAttendance(fixture.componentInstance.sessions()[0], reflection, 'Excused');
 
-    expect(sessions.updateAttendance).toHaveBeenCalledWith('session-1', 'student-1', false);
-    expect(fixture.componentInstance.sessions()[0].studentReflections![0].attendanceStatus).toBe('Absent');
+    expect(sessions.updateAttendance).toHaveBeenCalledWith('session-1', 'student-1', 'Excused');
+    expect(fixture.componentInstance.sessions()[0].studentReflections![0].attendanceStatus).toBe('Excused');
     expect(fixture.componentInstance.sessions()[0].status).toBe('Completed');
   });
 
@@ -51,7 +51,7 @@ describe('CoachingTeacherSessionsComponent', () => {
     fixture.detectChanges();
     const current = fixture.componentInstance.sessions()[0];
 
-    fixture.componentInstance.saveAttendance(current, current.studentReflections![0], false);
+    fixture.componentInstance.saveAttendance(current, current.studentReflections![0], 'Absent');
 
     expect(fixture.componentInstance.sessions()[0].studentReflections![0].attendanceStatus).toBe('Present');
     expect(fixture.componentInstance.errorMessage()).toBe('Yoklama kaydedilemedi. Lütfen tekrar deneyin.');
@@ -73,6 +73,28 @@ describe('CoachingTeacherSessionsComponent', () => {
     expect(component.canCancel(component.sessions()[0])).toBe(false);
     expect(component.canCancel({ ...scheduled, startTime: '2020-01-01T10:00:00Z' })).toBe(false);
     expect(component.canCancel({ ...scheduled, status: 'Completed' })).toBe(false);
+  });
+
+  it('offers attendance with late and excused only for sessions that have started and were not cancelled', () => {
+    const past = { ...session('session-1'), startTime: '2020-01-01T10:00:00Z', endTime: '2020-01-01T10:45:00Z' };
+    const sessions = sessionService([past, { ...session('session-2'), status: 'Cancelled', startTime: '2020-01-02T10:00:00Z' }, session('session-3')]);
+    const fixture = createFixture(sessions, studentService());
+    fixture.detectChanges();
+    const groups = fixture.nativeElement.querySelectorAll('.attendance-actions');
+    expect(groups.length).toBe(1);
+    expect(groups[0].textContent).toContain('Geç geldi');
+    expect(groups[0].textContent).toContain('Mazeretli');
+    expect(fixture.componentInstance.canRecordAttendance(fixture.componentInstance.sessions()[2])).toBe(false);
+  });
+
+  it('shows the server explanation when attendance is refused', () => {
+    const sessions = sessionService([session('session-1')]);
+    sessions.updateAttendance.mockReturnValue(throwError(() => ({ status: 409, error: { error: 'Seans başlamadan katılım girilemez.' } })));
+    const fixture = createFixture(sessions, studentService());
+    fixture.detectChanges();
+    const current = fixture.componentInstance.sessions()[0];
+    fixture.componentInstance.saveAttendance(current, current.studentReflections![0], 'Present');
+    expect(fixture.componentInstance.errorMessage()).toBe('Seans başlamadan katılım girilemez.');
   });
 
   it('appends later pages without losing the first page', () => {

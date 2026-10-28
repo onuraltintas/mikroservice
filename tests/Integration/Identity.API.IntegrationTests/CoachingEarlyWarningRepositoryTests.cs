@@ -47,7 +47,7 @@ public sealed class CoachingEarlyWarningRepositoryTests
             SessionType.OneOnOne,
             institutionId: institutionId);
         session.AddStudent(studentId);
-        session.RecordAttendance(studentId, attended: true);
+        session.RecordAttendance(studentId, AttendanceStatus.Present, null, session.ScheduledDate);
 
         var goal = AcademicGoal.Create(
             studentId,

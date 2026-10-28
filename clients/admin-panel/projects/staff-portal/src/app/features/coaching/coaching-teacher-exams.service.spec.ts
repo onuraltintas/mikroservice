@@ -82,6 +82,13 @@ describe('CoachingTeacherExamsService', () => {
     expect(request.request.body['studentId']).toBeUndefined();
     request.flush({ examId: 'exam-1', resultId: 'result-1', score: 82 });
   });
+
+  it('removes a single result', () => {
+    service.deleteExamResult('exam-1', 'result-1').subscribe();
+    const request = http.expectOne('/api/exams/exam-1/results/result-1');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+  });
 });
 
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

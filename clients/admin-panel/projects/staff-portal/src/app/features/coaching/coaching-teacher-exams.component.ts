@@ -1,4 +1,4 @@
-import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
+import { coachingFeedback, coachingToaster } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -51,6 +51,7 @@ export class CoachingTeacherExamsComponent implements OnInit {
   private readonly authService = inject(StaffAuthService);
   private readonly examsService = inject(CoachingTeacherExamsService);
   private readonly studentsService = inject(CoachingTeacherStudentsService);
+  private readonly toaster = coachingToaster();
   private studentsRequestId = 0;
   private resultsRequestId = 0;
 
@@ -78,6 +79,7 @@ export class CoachingTeacherExamsComponent implements OnInit {
   readonly examTotalPages = signal(1);
   readonly examTotalCount = signal(0);
   readonly resultPageNumber = signal(1);
+  readonly removingResultId = signal<string | null>(null);
   readonly resultTotalPages = signal(1);
   readonly studentPageNumber = signal(1);
   readonly studentTotalPages = signal(1);
@@ -301,6 +303,24 @@ export class CoachingTeacherExamsComponent implements OnInit {
     const exam = this.selectedExam();
     if (!exam || this.isLoadingResults() || this.resultPageNumber() >= this.resultTotalPages()) return;
     this.loadResults(exam, this.resultPageNumber() + 1, true);
+  }
+
+  /** Removes a result entered for the wrong student or by mistake; the exam and the other results stay. */
+  async removeExamResult(result: CoachingTeacherExamResult): Promise<void> {
+    const exam = this.selectedExam();
+    if (!exam || this.removingResultId()) return;
+    if (!await this.toaster.confirm(`${this.studentLabel(result.studentId)} için girilen sonuç silinsin mi? Bu işlem geri alınamaz.`)) return;
+    this.removingResultId.set(result.id);
+    this.errorMessage.set(null);
+    this.examsService.deleteExamResult(exam.id, result.id).pipe(finalize(() => this.removingResultId.set(null))).subscribe({
+      next: () => {
+        this.examDetail.update(detail => detail ? { ...detail, results: detail.results.filter(item => item.id !== result.id) } : detail);
+        this.exams.update(items => items.map(item => item.id === exam.id ? { ...item, resultCount: Math.max(0, item.resultCount - 1) } : item));
+        if (this.editingResultId() === result.id) this.cancelExamResultEdit();
+        this.successMessage.set('Sonuç silindi.');
+      },
+      error: () => this.errorMessage.set('Sonuç silinemedi. Lütfen tekrar deneyin.')
+    });
   }
 
   editExamResult(result: CoachingTeacherExamResult): void {

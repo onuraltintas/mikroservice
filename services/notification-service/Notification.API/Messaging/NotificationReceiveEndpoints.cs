@@ -29,6 +29,7 @@ public static class NotificationReceiveEndpoints
         new("coaching-assignment-updated", typeof(AssignmentUpdatedConsumer)),
         new("coaching-assignment-submitted", typeof(AssignmentSubmittedConsumer)),
         new("coaching-assignment-graded", typeof(AssignmentGradedConsumer)),
+        new("coaching-assignment-cancelled", typeof(AssignmentCancelledConsumer)),
         new("coaching-exam-updated", typeof(ExamUpdatedConsumer)),
         new("coaching-exam-result-added", typeof(ExamResultAddedConsumer)),
         new("coaching-exam-result-updated", typeof(ExamResultUpdatedConsumer)),

@@ -162,6 +162,26 @@ public sealed class CoachingNotificationConsumerTests
         } finally { await harness.Stop(); }
     }
 
+    [Fact]
+    public async Task CancelledAssignmentsTellEveryAssignedStudent()
+    {
+        var dispatcher = new RecordingDispatcher(); var first = Guid.NewGuid(); var second = Guid.NewGuid(); var assignment = Guid.NewGuid();
+        var services = new ServiceCollection(); services.AddSingleton<ICoachingNotificationDispatcher>(dispatcher);
+        services.AddMassTransitTestHarness(x => { x.UseSuiteTimeouts(); x.AddConsumer<AssignmentCancelledConsumer>(); x.UsingInMemory((context, config) => config.ConfigureEndpoints(context)); });
+        await using var provider = services.BuildServiceProvider(); var harness = provider.GetRequiredService<ITestHarness>(); await harness.Start();
+        try
+        {
+            var messageId = Guid.NewGuid();
+            await harness.Bus.Publish(new AssignmentCancelledEvent(assignment, Guid.NewGuid(), null, "Fonksiyonlar testi", [first, second]), x => x.MessageId = messageId);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 1);
+            var call = dispatcher.Calls.Single();
+            (call.EventMessageId, call.Type, call.RelatedEntityId).Should().Be((messageId, "AssignmentCancelled", assignment.ToString()));
+            call.RecipientIds.Should().BeEquivalentTo([first, second]);
+            call.Title.Should().Contain("iptal"); call.Message.Should().Contain("Fonksiyonlar testi");
+        }
+        finally { await harness.Stop(); }
+    }
+
     private sealed class RecordingDispatcher : ICoachingNotificationDispatcher
     {
         public ConcurrentQueue<DispatchCall> Calls { get; } = new();

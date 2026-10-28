@@ -542,6 +542,11 @@ public class AssignmentsController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
+        catch (BusinessRuleException ex)
+        {
+            // A rule about the record itself, e.g. a held session or submitted work that cannot be deleted.
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting assignment: {AssignmentId}", id);

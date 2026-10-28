@@ -124,3 +124,11 @@ public static class CoachingSubscriptionNoticeKinds
     public const string InstitutionExpiring = "InstitutionExpiring";
     public const string InstitutionExpired = "InstitutionExpired";
 }
+
+/// <summary>An assignment was called off (cancelled, or deleted before anyone submitted); its students are told.</summary>
+public sealed record AssignmentCancelledEvent(
+    Guid AssignmentId,
+    Guid TeacherId,
+    Guid? InstitutionId,
+    string Title,
+    Guid[] StudentIds);

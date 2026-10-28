@@ -1,6 +1,9 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
 using Coaching.Application.Attachments;
+using Coaching.Domain.Enums;
+using EduPlatform.Shared.Contracts.Events.Coaching;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.Extensions.Logging;
 
 using MediatR;
@@ -59,6 +62,15 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
                     assignment.Id, attachment.Id, attachment.StorageKey),
                 cancellationToken);
         }
+
+        // Submitted or graded work is part of the student's record: such an assignment is cancelled, not deleted.
+        if (assignment.AssignedStudents.Any(student => student.SubmittedAt.HasValue
+                || student.Status is StudentAssignmentStatus.Submitted or StudentAssignmentStatus.Graded))
+            throw new BusinessRuleException("Assignment.HasSubmissions",
+                "Teslim alınmış ödev silinemez. Ödevi iptal edin; öğrencilerin teslimleri korunur.");
+        if (assignment.Status == AssignmentStatus.Active && assignment.AssignedStudents.Count > 0)
+            await _eventPublisher.PublishAsync(new AssignmentCancelledEvent(assignment.Id, assignment.TeacherId, assignment.InstitutionId,
+                assignment.Title, assignment.AssignedStudents.Select(student => student.StudentId).ToArray()), cancellationToken);
 
         // Hard Delete
         await _repository.DeleteAsync(assignment, cancellationToken);

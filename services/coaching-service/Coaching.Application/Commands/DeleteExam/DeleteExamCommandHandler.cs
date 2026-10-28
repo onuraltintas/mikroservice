@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
+using EduPlatform.Shared.Kernel.Exceptions;
 
 using MediatR;
 
@@ -31,6 +32,11 @@ public class DeleteExamCommandHandler : IRequestHandler<DeleteExamCommand>
 
         await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, exam.RequireTeacherCreator(), exam.InstitutionId,
             command.IsInstitutionAdminOperation, cancellationToken);
+
+        // Results are the students' record of the exam; a wrong one is removed on its own.
+        if (exam.Results.Count > 0)
+            throw new BusinessRuleException("Exam.HasResults",
+                "Sonuç girilmiş deneme silinemez. Hatalı sonuçları tek tek silebilirsiniz.");
 
         await _repository.DeleteAsync(exam, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

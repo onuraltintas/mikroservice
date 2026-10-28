@@ -153,7 +153,7 @@ export class CoachingAssignmentDetailComponent implements OnInit {
     this.actionLoading.set(true);
     this.service.deleteAssignment(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.router.navigate(['/dashboard/coaching/assignments']),
-      error: () => this.error.set('Ödev silinemedi.')
+      error: (e: { status?: number; error?: { error?: string } }) => this.error.set(e?.status === 409 && e.error?.error ? e.error.error : 'Ödev silinemedi.')
     });
   }
 
