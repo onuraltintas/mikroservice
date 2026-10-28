@@ -19,7 +19,7 @@ public class CreateSessionCommandValidator : AbstractValidator<CreateSessionComm
             .Must(ids => ids is not null && ids.All(id => id != Guid.Empty) && ids.Distinct().Count() == ids.Count)
             .WithMessage("Group student IDs must be non-empty and unique.")
             .When(x => x.Type == Coaching.Domain.Enums.SessionType.Group);
-        RuleFor(x => x.StartTime).GreaterThan(DateTime.UtcNow).WithMessage("Session start time must be in the future");
+        RuleFor(x => x.StartTime).Must(start => Coaching.Domain.CoachingTime.ToUtc(start) > DateTime.UtcNow).WithMessage("Session start time must be in the future");
         RuleFor(x => x.DurationMinutes).GreaterThan(0).LessThanOrEqualTo(240); // Max 4 hours
         RuleFor(x => x.Subject).MaximumLength(200);
         RuleFor(x => x.Notes).MaximumLength(2000);

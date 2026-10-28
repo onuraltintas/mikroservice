@@ -60,6 +60,10 @@ public class CreateGoalCommandHandler : IRequestHandler<CreateGoalCommand, Creat
         else
         {
             _accessPolicy.RequireStudent(command.StudentId, command.IsInstitutionAdminOperation);
+            // Roadmap D2: a student's own goal may carry only an institution the student actively belongs to.
+            if (command.InstitutionId is { } requested && !command.IsInstitutionAdminOperation
+                && !await _identityAuthorizationClient.IsActiveInstitutionStudentAsync(requested, command.StudentId, cancellationToken))
+                throw new BusinessRuleException("Authorization.Forbidden", "Öğrenci belirtilen kurumun üyesi değil.");
         }
 
         var key = command.IdempotencyKey?.Trim();

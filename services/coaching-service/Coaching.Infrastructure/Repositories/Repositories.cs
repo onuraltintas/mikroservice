@@ -659,7 +659,7 @@ public sealed class CoachingStudentProgressRepository(CoachingDbContext context)
         return new StudentProgressSummaryDto(
             studentId,
             assignments.Count,
-            assignments.Count(item => item.SubmittedAt.HasValue),
+            assignments.Count(item => /* Roadmap D2: submitted or graded */ item.Status == Domain.Enums.StudentAssignmentStatus.Submitted || item.Status == Domain.Enums.StudentAssignmentStatus.Graded),
             assignments.Count(item => item.Status == Domain.Enums.StudentAssignmentStatus.Graded),
             AveragePercentage(assignmentPercentages),
             exams.Count,
@@ -772,7 +772,7 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
             studentIdList.Count,
             assignmentRows.Select(item => item.AssignmentId).Distinct().Count(),
             assignmentRows.Count,
-            assignmentRows.Count(item => item.SubmittedAt.HasValue),
+            assignmentRows.Count(item => /* Roadmap D2: submitted or graded */ item.Status == Domain.Enums.StudentAssignmentStatus.Submitted || item.Status == Domain.Enums.StudentAssignmentStatus.Graded),
             assignmentRows.Count(item => item.Status == Domain.Enums.StudentAssignmentStatus.Graded),
             AveragePercentage(assignmentPercentages),
             examRows.Select(item => item.ExamId).Distinct().Count(),
@@ -1020,7 +1020,7 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         return new CoachingAdminStudentDetailDto(
             studentId,
             await assignments.CountAsync(cancellationToken),
-            await assignments.CountAsync(item => item.SubmittedAt.HasValue, cancellationToken),
+            await assignments.CountAsync(item => item.Status == Domain.Enums.StudentAssignmentStatus.Submitted || item.Status == Domain.Enums.StudentAssignmentStatus.Graded, cancellationToken),
             await exams.CountAsync(cancellationToken),
             await sessions.CountAsync(cancellationToken),
             await _context.AcademicGoals.AsNoTracking()
@@ -1298,8 +1298,12 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         var totalAssignments = await assignments.CountAsync(cancellationToken);
         var activeAssignments = await assignments
             .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Active, cancellationToken);
+        // Roadmap D2: closed by the teacher, or every assigned student has submitted or been graded.
         var completedAssignments = await assignments
-            .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Completed, cancellationToken);
+            .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Completed
+                || item.Status == Domain.Enums.AssignmentStatus.Active && item.AssignedStudents.Any()
+                    && item.AssignedStudents.All(student => student.Status == Domain.Enums.StudentAssignmentStatus.Submitted
+                        || student.Status == Domain.Enums.StudentAssignmentStatus.Graded), cancellationToken);
         var cancelledAssignments = await assignments
             .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Cancelled, cancellationToken);
         var totalAssignmentStudents = await assignmentStudents.CountAsync(cancellationToken);

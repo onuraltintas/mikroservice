@@ -29,15 +29,16 @@ public sealed class StudentDailyAgendaController(CoachingDbContext db, ICoaching
         return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () => {
             await using var tx = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, ct);
             var now = clock.GetUtcNow();
-            var turkey = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, turkey).DateTime);
-            var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(today.AddDays(1).ToDateTime(TimeOnly.MinValue), turkey);
-            var horizonUtc = TimeZoneInfo.ConvertTimeToUtc(today.AddDays(8).ToDateTime(TimeOnly.MinValue), turkey);
             var utcNow = now.UtcDateTime;
             var plan = await db.StudyPlanRevisions.AsNoTracking().Where(x => x.StudentId == student && x.Status == StudyPlanStatus.Active)
                 .Select(x => new { x.Id, x.WeeklySource }).SingleOrDefaultAsync(ct);
-            var zone = plan?.WeeklySource?.TimeZoneId ?? "Europe/Istanbul";
-            var local = TimeZoneInfo.ConvertTime(now, TimeZoneInfo.FindSystemTimeZoneById(zone));
+            // Roadmap D2: one "today" for study, assignments and decisions, in the student's own time zone.
+            var zone = await Coaching.Infrastructure.StudyPlanning.CoachingStudentZone.IdAsync(db, student, ct);
+            var studentZone = TimeZoneInfo.FindSystemTimeZoneById(zone);
+            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, studentZone).DateTime);
+            var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(today.AddDays(1).ToDateTime(TimeOnly.MinValue), studentZone);
+            var horizonUtc = TimeZoneInfo.ConvertTimeToUtc(today.AddDays(8).ToDateTime(TimeOnly.MinValue), studentZone);
+            var local = TimeZoneInfo.ConvertTime(now, studentZone);
             var studyToday = DateOnly.FromDateTime(local.DateTime); var studyEnd = studyToday.AddDays(7);
             var minute = local.Hour * 60 + local.Minute; var planId = plan?.Id ?? Guid.Empty;
 
@@ -69,13 +70,13 @@ public sealed class StudentDailyAgendaController(CoachingDbContext db, ICoaching
                 .Select(x => new { x.Row.AssignmentId, x.Row.Assignment.Title, x.Row.Assignment.DueDate, x.Row.Assignment.EstimatedDurationMinutes }).ToArrayAsync(ct);
             foreach (var row in dueRows)
             {
-                var due = TimeZoneInfo.ConvertTimeFromUtc(row.DueDate, turkey);
+                var due = TimeZoneInfo.ConvertTimeFromUtc(row.DueDate, studentZone);
                 items.Add(new("assignment", row.AssignmentId, row.Title, DateOnly.FromDateTime(due), due.Hour * 60 + due.Minute,
-                    row.EstimatedDurationMinutes, "Europe/Istanbul", DueAt: row.DueDate));
+                    row.EstimatedDurationMinutes, zone, DueAt: row.DueDate));
             }
             items.AddRange(await decisions.Where(x => x.Mode == mode).OrderBy(x => x.Row.DueOn).ThenBy(x => x.Row.Id).Take(take)
                 .Select(x => new StudentDailyAgendaItem("decision", x.Row.Id, x.Row.Title, x.Row.DueOn, null, null,
-                    "Europe/Istanbul", null, x.Row.ReviewWeekStart, null)).ToArrayAsync(ct));
+                    zone, null, x.Row.ReviewWeekStart, null)).ToArrayAsync(ct));
             var rows = items.OrderBy(SortTime).ThenBy(x => x.Kind, StringComparer.Ordinal).ThenBy(x => x.RecordId)
                 .Skip((page - 1) * pageSize).Take(pageSize).ToArray();
             await tx.CommitAsync(ct);

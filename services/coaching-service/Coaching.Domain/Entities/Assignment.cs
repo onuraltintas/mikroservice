@@ -381,6 +381,10 @@ public class AssignmentStudent : Entity
 
     public void Submit(string? note = null)
     {
+        // Roadmap D2: graded work is closed; the grade would otherwise sit on a different submission.
+        if (Status == StudentAssignmentStatus.Graded)
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
+                "Assignment.AlreadyGraded", "Puanlanmış ödev yeniden teslim edilemez.");
         if (_submissionAttachments.Any(attachment => attachment.Status != AttachmentScanStatus.Clean))
             throw new InvalidOperationException("All submission attachments must pass the security scan before submission.");
 

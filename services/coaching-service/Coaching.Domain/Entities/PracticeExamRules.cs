@@ -68,8 +68,8 @@ public static class PracticeExamRules
                 decimal.Round(row.Correct - row.Wrong / (decimal)profile.WrongAnswerDivisor, 2, MidpointRounding.AwayFromZero));
         }).ToArray();
         var correct = summaries.Sum(x => x.Correct); var wrong = summaries.Sum(x => x.Wrong);
-        return new(profile.Code, profile.Name, correct, wrong, summaries.Sum(x => x.Empty),
-            decimal.Round(correct - wrong / (decimal)profile.WrongAnswerDivisor, 2, MidpointRounding.AwayFromZero), summaries);
+        // Roadmap D2: the total is the sum of the rounded section nets, so a report card adds up.
+        return new(profile.Code, profile.Name, correct, wrong, summaries.Sum(x => x.Empty), summaries.Sum(x => x.Net), summaries);
     }
 
     public static void Validate(PracticeExamInput input, ExamType examType, int correct, int wrong, int empty)

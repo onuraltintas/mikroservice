@@ -19,11 +19,17 @@ export function practiceTotals(input: PracticeExamInput | null, profiles: Practi
   })) return null;
   const correct = input.sections.reduce((sum, row) => sum + row.correct, 0);
   const wrong = input.sections.reduce((sum, row) => sum + row.wrong, 0);
-  return { correct, wrong, empty: input.sections.reduce((sum, row) => sum + row.empty, 0),
-    net: correct - wrong / profile.wrongAnswerDivisor };
+  // Roadmap D2: like the server, the total net is the sum of the section nets rounded to two decimals.
+  const cents = input.sections.reduce((sum, row) => sum + roundCents(row.correct - row.wrong / profile.wrongAnswerDivisor), 0);
+  return { correct, wrong, empty: input.sections.reduce((sum, row) => sum + row.empty, 0), net: cents / 100 };
 }
 
 export function practiceExamName(code: string | null | undefined): string {
   return ({LGS:'LGS', TYT:'TYT', AYT_SAY:'AYT Sayısal', AYT_EA:'AYT Eşit Ağırlık',
     AYT_SOZ:'AYT Sözel', YDT_EN:'YDT İngilizce'} as Record<string,string>)[code ?? ''] ?? code ?? 'Sınav kapsamı belirtilmemiş';
+}
+
+/** Hundredths of a net, rounded half away from zero like decimal.Round(..., 2, AwayFromZero) on the server. */
+function roundCents(net: number): number {
+  return Math.sign(net) * Math.round(Math.abs(net) * 100 + 1e-9);
 }

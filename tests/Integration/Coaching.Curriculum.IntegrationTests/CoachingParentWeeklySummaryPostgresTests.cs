@@ -62,7 +62,7 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
         var missed = Assignment.Create(teacher, "Kaçırılan", At(Monday.AddDays(3), 18)); missed.AssignToStudents([student]);
         pg.Db.AddRange(paper, closed, missed); await pg.Db.SaveChangesAsync();
         var events = new Publisher();
-        await Run(pg, new Parents(new(parent, "veli@example.test", "Veli", student, "Öğrenci")), events, At(Monday.AddDays(6), 19));
+        await Run(pg, new Parents(new CoachingParentSummaryRecipient(parent, "veli@example.test", "Veli", student, "Öğrenci")), events, At(Monday.AddDays(6), 19));
         var summary = Assert.Single(events.Summaries);
         Assert.Equal((3, 1, 1), (summary.AssignmentsDue, summary.AssignmentsSubmitted, summary.AssignmentsOverdue));
     }

@@ -53,7 +53,7 @@ public class Exam : AggregateRoot
             CreatedByTeacherId = createdByTeacherId,
             Title = title ?? throw new ArgumentNullException(nameof(title)),
             ExamType = examType,
-            ExamDate = examDate,
+            ExamDate = CoachingTime.ToUtc(examDate),
             MaxScore = maxScore is > 0 and <= 999.99m
                 ? maxScore
                 : throw new ArgumentOutOfRangeException(nameof(maxScore), "Max score must be between 0 and 999.99"),
@@ -74,7 +74,7 @@ public class Exam : AggregateRoot
         if (title != null) Title = title;
         if (subject != null) Subject = subject;
         if (description != null) Description = description;
-        if (examDate.HasValue) ExamDate = examDate.Value;
+        if (examDate.HasValue) ExamDate = CoachingTime.ToUtc(examDate.Value);
         if (durationMinutes.HasValue) DurationMinutes = durationMinutes;
 
         UpdatedAt = DateTime.UtcNow;
@@ -188,7 +188,7 @@ public class Exam : AggregateRoot
         ExamType = examType;
         Subject = NormalizeOptional(subject);
         Description = NormalizeOptional(description);
-        ExamDate = examDate;
+        ExamDate = CoachingTime.ToUtc(examDate);
         DurationMinutes = durationMinutes;
         MaxScore = maxScore;
         TargetGradeLevel = targetGradeLevel;

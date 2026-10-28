@@ -1,3 +1,4 @@
+using Coaching.Domain;
 using Coaching.Application.StudyPlanning;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
@@ -26,7 +27,7 @@ internal static class CoachingWeeklyWorkReader
             select new {Task=task,Plan=plan}).ToArrayAsync(ct);
         var assignments = await db.AssignmentStudents.AsNoTracking().Include(x=>x.Assignment)
             .Where(x=>x.StudentId==student && Enumerable.Contains(assignmentIds,x.AssignmentId)).ToDictionaryAsync(x=>x.AssignmentId,ct);
-        var now=clock.GetUtcNow();
+        var now=clock.GetUtcNow();var studentZone=CoachingStudentZone.Find(await CoachingStudentZone.IdAsync(db,student,ct));
         return views.Select(view=> {
             var study=view.Work?.Study;var assignment=view.Work?.Assignment;
             if(study is not null && tasks.TryGetValue(study.Id,out var found)) {
@@ -40,9 +41,10 @@ internal static class CoachingWeeklyWorkReader
                     true,task.RevisionId,task.PlannedDate,task.PlannedStartMinute,task.PlannedMinutes,task.ActualMinutes,ActualQuestions:task.ActualQuestions,CompletedAt:task.CompletedAt,ResultRevision:CoachingReviewFollowUp.StudyRevision(task));
             }
             if(assignment is not null && assignments.TryGetValue(assignment.Id,out var row)) {
-                var cancelled=row.Assignment.Status==AssignmentStatus.Cancelled;var done=!cancelled && row.Status is StudentAssignmentStatus.Submitted or StudentAssignmentStatus.Graded;
-                assignment=new(row.AssignmentId,row.Assignment.Title,cancelled?"Cancelled":row.Status.ToString(),done,!cancelled&&!done&&row.Assignment.DueDate<now.UtcDateTime,
-                    !cancelled,Date:DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(row.Assignment.DueDate,TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul"))),Score:row.Score,Feedback:row.TeacherFeedback,SubmittedAt:row.SubmittedAt,ResultRevision:row.GradeRevision);
+                // Roadmap D2: the shared done/overdue rule; the due day in the student's own time zone.
+                var cancelled=row.Assignment.Status==AssignmentStatus.Cancelled;var done=!cancelled && AssignmentProgress.IsDone(row.Status);
+                assignment=new(row.AssignmentId,row.Assignment.Title,cancelled?"Cancelled":row.Status.ToString(),done,AssignmentProgress.IsOverdue(row.Assignment.Status,row.Status,row.Assignment.DueDate,now.UtcDateTime),
+                    !cancelled,Date:DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(row.Assignment.DueDate,studentZone)),Score:row.Score,Feedback:row.TeacherFeedback,SubmittedAt:row.SubmittedAt,ResultRevision:row.GradeRevision);
             }
             return view with { Work=new(study,assignment) };
         }).ToArray();
