@@ -187,6 +187,7 @@ public static class DependencyInjection
         if (configuration.GetValue("Coaching:Privacy:FinancialRetentionEnabled", true))
             services.AddHostedService<Coaching.Infrastructure.Privacy.CoachingFinancialRetentionWorker>();
         services.AddSingleton<IAdminAuditWriter, CoachingAdminAuditWriter>();
+        services.AddAdminAuditClientDataRetention<CoachingAdminAuditClientDataPurger>(configuration);
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingAdminCatalogReader, Coaching.Infrastructure.Catalogs.CoachingAdminCatalogReader>();
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingCatalogDeletionService, Coaching.Infrastructure.Catalogs.CoachingCatalogDeletionService>();
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingCatalogManagementService, Coaching.Infrastructure.Catalogs.CoachingCatalogManagementService>();

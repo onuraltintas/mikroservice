@@ -103,6 +103,19 @@ public sealed class CoachingNewsletterService : ICoachingNewsletter
 
         var confirmationToken = CreateToken();
         var unsubscribeToken = CreateToken();
+        // Links in e-mails sent earlier keep working: the previous token is kept next to the new one.
+        if (subscriber.UnsubscribeTokenHash is { } previousHash
+            && !await _db.CoachingNewsletterUnsubscribeTokens.AnyAsync(item => item.TokenHash == previousHash, cancellationToken))
+        {
+            _db.CoachingNewsletterUnsubscribeTokens.Add(new CoachingNewsletterUnsubscribeToken
+            {
+                SubscriberId = subscriber.Id, TokenHash = previousHash, CreatedAt = subscriber.UpdatedAt ?? subscriber.CreatedAt
+            });
+        }
+        _db.CoachingNewsletterUnsubscribeTokens.Add(new CoachingNewsletterUnsubscribeToken
+        {
+            SubscriberId = subscriber.Id, TokenHash = HashToken(unsubscribeToken), CreatedAt = now
+        });
         subscriber.Status = CoachingNewsletterStatuses.PendingConfirmation;
         subscriber.Source = SourceName;
         subscriber.ConsentTextVersion = CoachingNewsletterPolicy.ConsentTextVersion(
@@ -168,7 +181,9 @@ public sealed class CoachingNewsletterService : ICoachingNewsletter
         }
 
         var subscriber = await _db.CoachingNewsletterSubscribers
-            .SingleOrDefaultAsync(item => item.UnsubscribeTokenHash == tokenHash, cancellationToken);
+            .SingleOrDefaultAsync(item => item.UnsubscribeTokenHash == tokenHash
+                || _db.CoachingNewsletterUnsubscribeTokens.Any(token => token.SubscriberId == item.Id && token.TokenHash == tokenHash),
+                cancellationToken);
         if (subscriber is null)
         {
             return false;

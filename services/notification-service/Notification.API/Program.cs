@@ -134,6 +134,7 @@ builder.Services.AddHealthChecks()
 builder.Services.AddScoped<INotificationDbContext>(provider => 
     provider.GetRequiredService<NotificationDbContext>());
 builder.Services.AddSingleton<IAdminAuditWriter, NotificationAdminAuditWriter>();
+builder.Services.AddAdminAuditClientDataRetention<Notification.Infrastructure.Persistence.NotificationAdminAuditClientDataPurger>(builder.Configuration);
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationErasureAssessmentService, NotificationErasureAssessmentService>();

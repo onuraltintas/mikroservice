@@ -109,6 +109,7 @@ public static class DependencyInjection
         services.AddHostedService<Security.RefreshTokenRetentionService>();
         services.AddScoped<IUserAccessManagementService, Services.UserAccessManagementService>();
         services.AddSingleton<IAdminAuditWriter, IdentityAdminAuditWriter>();
+        services.AddAdminAuditClientDataRetention<IdentityAdminAuditClientDataPurger>(configuration);
 
         // Repositories
         services.AddScoped<IUserRepository,Repositories.UserRepository>();
