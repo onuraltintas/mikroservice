@@ -1,0 +1,19 @@
+# Roadmap P1: nightly backup of the PostgreSQL databases in one container.
+# Instance = container name, e.g. eduivme-db-backup@postgres.service and
+# eduivme-db-backup@eduivme-production-course-management-db-1.service.
+[Unit]
+Description=Eduivme PostgreSQL backup (%i)
+Requires=docker.service
+After=docker.service
+ConditionPathExists=/opt/eduivme/infrastructure/backup/eduivme-db-backup.sh
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/eduivme/db-backup.env
+Environment=POSTGRES_CONTAINER=%i
+Environment=BACKUP_DIR=/var/backups/eduivme-db/%i
+Environment=BACKUP_REMOTE_PREFIX=%i
+ExecStart=/opt/eduivme/infrastructure/backup/eduivme-db-backup.sh
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=2h

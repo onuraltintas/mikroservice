@@ -1,0 +1,11 @@
+# Roadmap P1: every night at 03:17 Türkiye time (server clock), up to 10 minutes later at random.
+[Unit]
+Description=Nightly Eduivme PostgreSQL backup (%i)
+
+[Timer]
+OnCalendar=*-*-* 03:17:00 Europe/Istanbul
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
