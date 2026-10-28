@@ -116,6 +116,11 @@ public interface IInstitutionRepository
     Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
         Guid viewerUserId,
         CancellationToken cancellationToken);
+    /// <summary>Roadmap O13: an admin of several institutions may pick one (it must be theirs); the list is returned too.</summary>
+    Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
+        Guid viewerUserId,
+        Guid? preferredInstitutionId,
+        CancellationToken cancellationToken) => AuthorizeCoachingAdminAsync(viewerUserId, cancellationToken);
     Task<SpeedReadingStudentSearch?> SearchSpeedReadingStudentsAsync(
         Guid viewerUserId,
         string searchTerm,
@@ -174,7 +179,12 @@ public interface ILocationRepository
 }
 
 public sealed record CoachingTeacherAuthorization(Guid? InstitutionId);
-public sealed record CoachingAdminAccessAuthorization(bool IsGlobal, Guid? InstitutionId);
+public sealed record CoachingAdminAccessAuthorization(bool IsGlobal, Guid? InstitutionId)
+{
+    public IReadOnlyList<CoachingAdminInstitution> Institutions { get; init; } = [];
+}
+
+public sealed record CoachingAdminInstitution(Guid Id, string Name);
 public sealed record SpeedReadingStudentSearch(IReadOnlyCollection<Guid> StudentUserIds, bool HasMore);
 public sealed record CoachingStudentReadAuthorization(IReadOnlyCollection<Guid> AllowedStudentUserIds);
 public sealed record CoachingReportStudentPage(

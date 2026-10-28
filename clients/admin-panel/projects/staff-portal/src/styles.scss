@@ -51,3 +51,14 @@ body {
     .teacher-scrim { display: block; position: fixed; inset: 0; z-index: 89; background: #071b15a8; border: 0; }
   }
 }
+
+/* Roadmap O13: institution and student reports are printed from the browser (print or "save as PDF") without the portal chrome. */
+@media print {
+  .sidebar, .topbar, .teacher-skip, .teacher-scrim, .teacher-menu-toggle, staff-section-nav, .no-print { display: none !important; }
+  .portal-shell { display: block !important; }
+  .main-area { margin: 0 !important; padding: 0 !important; }
+  html, body { background: #fff !important; color: #111 !important; }
+  .metric-card, article, tr { break-inside: avoid; }
+  .table-scroll { overflow: visible !important; }
+  @page { margin: 12mm; }
+}

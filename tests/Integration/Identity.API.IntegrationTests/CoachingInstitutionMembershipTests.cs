@@ -149,7 +149,7 @@ public sealed class CoachingInstitutionMembershipTests
     private static Task<Guid[]> ActiveTeachers(CoachingOwnedProfilePersistenceTests.Fixture f, Guid student) =>
         f.Db.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == student && x.IsActive).Select(x => x.TeacherUserId).ToArrayAsync();
 
-    private sealed class Events : ICoachingEventPublisher
+    internal sealed class Events : ICoachingEventPublisher
     {
         public List<object> Messages { get; } = [];
         public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default) where T : class { Messages.Add(message); return Task.CompletedTask; }

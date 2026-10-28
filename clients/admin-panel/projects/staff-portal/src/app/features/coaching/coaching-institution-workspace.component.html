@@ -57,8 +57,13 @@
       <section class="overview-section" aria-labelledby="institution-overview-title">
         <div class="section-heading">
           <div><h3 id="institution-overview-title">Kurumunuzun Koçluk özeti</h3><p>Sunucu tarafından kurum kapsamınıza göre hesaplanan güncel operasyon özeti.</p></div>
-          <button type="button" class="outline-button" (click)="loadOverview()" [disabled]="isLoadingOverview()">Yenile</button>
+          <div class="heading-actions no-print">
+            <button type="button" class="outline-button" data-testid="print-overview" (click)="print()">Yazdır / PDF</button>
+            <button type="button" class="outline-button" (click)="refreshOverview()" [disabled]="isLoadingOverview()">Yenile</button>
+          </div>
         </div>
+        <staff-coaching-institution-branches (switched)="switchBranch()" />
+        <staff-coaching-institution-workload />
         @if (isLoadingOverview()) {
           <p class="workspace-state" role="status">Kurum özeti yükleniyor…</p>
         } @else if (overview(); as summary) {
@@ -108,6 +113,8 @@
         </form>
         @if (studentInvitationError()) { <p class="workspace-alert error" role="alert">{{ studentInvitationError() }}</p> }
         @if (studentInvitationSuccess()) { <p class="workspace-alert success" role="status">{{ studentInvitationSuccess() }}</p> }
+        <button type="button" class="outline-button" data-testid="toggle-bulk-import" [attr.aria-expanded]="bulkImportVisible()" (click)="bulkImportVisible.set(!bulkImportVisible())">{{ bulkImportVisible() ? 'Toplu yüklemeyi kapat' : 'CSV / Excel ile toplu yükle' }}</button>
+        @if (bulkImportVisible()) { <staff-coaching-institution-bulk-import (applied)="bulkApplied()" /> }
         <button type="button" class="outline-button" data-testid="toggle-pending-invitations" [attr.aria-expanded]="pendingInvitationsVisible()" (click)="togglePendingInvitations()">{{ pendingInvitationsVisible() ? 'Bekleyen davetleri gizle' : 'Bekleyen davetleri yönet' }}</button>
         @if (pendingInvitationsVisible()) { <staff-pending-invitations [product]="'coaching'" [refreshKey]="invitationRefreshKey()" /> }
 

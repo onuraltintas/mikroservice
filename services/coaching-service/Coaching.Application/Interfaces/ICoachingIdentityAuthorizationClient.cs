@@ -34,7 +34,19 @@ public interface ICoachingIdentityAuthorizationClient
 /// reserved for a global SystemAdmin scope; tenant administrators always carry
 /// an active institution id.
 /// </summary>
-public sealed record CoachingAdminAccessScope(bool IsGlobal, Guid? InstitutionId);
+public sealed record CoachingAdminAccessScope(bool IsGlobal, Guid? InstitutionId)
+{
+    /// <summary>Roadmap O13: every institution (branch) the admin manages; InstitutionId is the selected one.</summary>
+    public IReadOnlyList<CoachingAdminInstitutionRef> Institutions { get; init; } = [];
+}
+
+public sealed record CoachingAdminInstitutionRef(Guid Id, string Name);
+
+/// <summary>Roadmap O13: the branch an admin of several institutions chose for this request (header X-Coaching-Institution).</summary>
+public interface ICoachingInstitutionSelection
+{
+    Guid? PreferredInstitutionId { get; }
+}
 
 public interface ICoachingAgreementRepresentativeAuthorizationClient
 {

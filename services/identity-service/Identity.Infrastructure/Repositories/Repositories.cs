@@ -1075,8 +1075,13 @@ public class InstitutionRepository : IInstitutionRepository
         return new PagedList<InstitutionStudentRosterItem>(items, totalCount, pageNumber, pageSize);
     }
 
+    public Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
+        Guid viewerUserId,
+        CancellationToken cancellationToken) => AuthorizeCoachingAdminAsync(viewerUserId, null, cancellationToken);
+
     public async Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
         Guid viewerUserId,
+        Guid? preferredInstitutionId,
         CancellationToken cancellationToken)
     {
         var viewer = await _context.Users
@@ -1111,7 +1116,7 @@ public class InstitutionRepository : IInstitutionRepository
             return null;
         }
 
-        var institutionId = await _context.InstitutionAdmins
+        var institutions = await _context.InstitutionAdmins
             .AsNoTracking()
             .Where(admin => admin.UserId == viewerUserId
                 && admin.Product == PlatformProduct.Coaching
@@ -1120,12 +1125,15 @@ public class InstitutionRepository : IInstitutionRepository
                 && admin.Institution.IsActive)
             .OrderBy(admin => admin.CreatedAt)
             .ThenBy(admin => admin.Id)
-            .Select(admin => (Guid?)admin.InstitutionId)
-            .FirstOrDefaultAsync(cancellationToken);
+            .Select(admin => new CoachingAdminInstitution(admin.InstitutionId, admin.Institution.Name))
+            .Take(50)
+            .ToListAsync(cancellationToken);
+        if (institutions.Count == 0) return null;
 
-        return institutionId.HasValue
-            ? new CoachingAdminAccessAuthorization(IsGlobal: false, institutionId)
-            : null;
+        // Roadmap O13: the selected branch when it is one of the admin's institutions, otherwise the earliest.
+        var selected = institutions.FirstOrDefault(x => x.Id == preferredInstitutionId) ?? institutions[0];
+        return new CoachingAdminAccessAuthorization(IsGlobal: false, selected.Id)
+            { Institutions = institutions.DistinctBy(x => x.Id).ToArray() };
     }
 
     public async Task<SpeedReadingStudentSearch?> SearchSpeedReadingStudentsAsync(

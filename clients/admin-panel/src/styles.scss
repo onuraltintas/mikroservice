@@ -127,3 +127,13 @@ html.dark body {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Roadmap O13: reports are printed from the browser (print or "save as PDF") without the portal chrome. */
+@media print {
+    .coaching-sidebar, .coaching-topbar, .coaching-footer, .coaching-mobile-nav, .coaching-skip, .coaching-scrim, .no-print { display: none !important; }
+    .coaching-shell, .coaching-body, .coaching-content { display: block !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+    html, body { background: #fff !important; color: #111 !important; }
+    article, tr { break-inside: avoid; }
+    a[href]::after { content: none !important; }
+    @page { margin: 12mm; }
+}

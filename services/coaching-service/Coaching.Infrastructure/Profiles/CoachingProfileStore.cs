@@ -194,6 +194,22 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         }, ct);
     }
 
+    /// <summary>Roadmap O13: adds one teacher link for a member student without touching the grade (bulk links).</summary>
+    public async Task AddInstitutionTeacherLinkAsync(Guid actorUserId, Guid institutionId, Guid studentUserId, Guid teacherUserId, CancellationToken ct)
+    {
+        await MutateStudentAsync(studentUserId, async () =>
+        {
+            await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
+            await RequireAccountAsync(studentUserId, "Student", ct);
+            if (!await HasMembershipAsync(studentUserId, institutionId, CoachingMemberRole.Student, ct)) throw Forbidden();
+            await RequireAssignmentAccountsAsync(teacherUserId, studentUserId, institutionId, ct);
+            if (!await db.CoachingTeacherStudentAssignments.AnyAsync(x => x.StudentUserId == studentUserId && x.TeacherUserId == teacherUserId
+                    && x.InstitutionId == institutionId && x.IsActive, ct))
+                await UpsertAssignmentAsync(teacherUserId, studentUserId, institutionId, null, true, actorUserId, ct);
+            await db.SaveChangesAsync(ct);
+        }, ct);
+    }
+
     public async Task EndAssignmentAsync(Guid actorUserId, Guid teacherUserId, Guid studentUserId,
         bool studentInitiated, CancellationToken ct)
     {

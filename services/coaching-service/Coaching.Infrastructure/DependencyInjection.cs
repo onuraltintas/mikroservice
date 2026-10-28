@@ -219,6 +219,11 @@ public static class DependencyInjection
         services.AddScoped<Profiles.OwnedCoachingDirectory>();
         services.AddScoped<ICoachingIdentityAuthorizationClient>(sp => sp.GetRequiredService<Profiles.OwnedCoachingDirectory>());
         services.AddScoped<ICoachingIdentityReportClient>(sp => sp.GetRequiredService<Profiles.OwnedCoachingDirectory>());
+        // Roadmap O13: an admin of several branches picks one per request.
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICoachingInstitutionSelection, Coaching.Infrastructure.ExternalServices.HttpCoachingInstitutionSelection>();
+        services.AddScoped<Coaching.Infrastructure.Management.CoachingInstitutionWorkloadService>();
+        services.AddScoped<Coaching.Infrastructure.Management.CoachingInstitutionBulkService>();
         services.AddHttpClient<Coaching.Application.Profiles.ICoachingAccountDirectory, CoachingAccountDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
