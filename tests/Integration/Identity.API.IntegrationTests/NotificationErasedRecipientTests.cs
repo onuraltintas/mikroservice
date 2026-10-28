@@ -94,8 +94,8 @@ public sealed class NotificationErasedRecipientTests(PostgresFixture postgres)
         await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
         try
         {
-            var migrations = (await db.Database.GetAppliedMigrationsAsync()).ToArray();
-            var previous = migrations[^2]; var migrator = db.GetService<IMigrator>();
+            // The migration before the erased-recipient table, not "the second to last": later migrations follow it.
+            const string previous = "20260921184130_AddNotificationSubjectUserLinks"; var migrator = db.GetService<IMigrator>();
             await migrator.MigrateAsync(previous); await migrator.MigrateAsync();
             db.ErasedRecipients.Add(NotificationErasedRecipient.Create(Guid.NewGuid(), DateTime.UtcNow)); await db.SaveChangesAsync();
             await Assert.ThrowsAsync<Npgsql.PostgresException>(() => migrator.MigrateAsync(previous));
