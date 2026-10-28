@@ -29,13 +29,13 @@
         <div class="pager"><button type="button" (click)="loadParents(parentPage - 1)" [disabled]="busy() || parentLoading() || parentPage <= 1">Önceki seçenekler</button><button type="button" (click)="loadParents(parentPage + 1)" [disabled]="busy() || parentLoading() || parentPage * 25 >= parentTotal()">Sonraki seçenekler</button></div> }
       }
       <form class="tree-search" (ngSubmit)="loadRoot()"><label class="sr-only" for="curriculum-tree-search">Kayıt ara</label><input id="curriculum-tree-search" [(ngModel)]="rootSearch" name="rootSearch" placeholder="Bu sekmede ara…" maxlength="200"><button type="submit" [disabled]="busy()">Ara</button></form>
-      <div class="record-list">@for (n of branch()?.rows || []; track n.kind + n.id) {
+      <div class="record-list">@for (n of branch().rows || []; track n.kind + n.id) {
         <button type="button" class="record-row" [class.selected]="selected()?.id === n.id && !creating()" [attr.aria-label]="n.name + ' düzenle'" (click)="select(n)" [disabled]="busy()"><strong>{{ n.name }}</strong><small>{{ n.path || nodeType(n) }}{{ n.code ? ' · ' + n.code : '' }}@if (n.kind === 'exams') { · {{ n.examDate ? (n.examDate | date:'dd.MM.yyyy') : 'Tarih belirtilmedi' }} }</small><span class="badge" [class.passive]="!n.isActive">{{ n.isActive ? 'Aktif' : 'Pasif' }}</span></button>
       }</div>
-      @if (branch()?.loading) { <p role="status">Kayıtlar yükleniyor…</p> }
-      @if (branch()?.error) { <p role="alert">{{ branch()?.error }}</p><button type="button" (click)="loadRoot()">Yeniden dene</button> }
-      @if (!branch()?.loading && !branch()?.error && !branch()?.rows?.length) { <p class="empty">Henüz kayıt yok. “{{ createLabel() }} ekle” ile başlayın.</p> }
-      @if ((branch()?.page || 1) * 25 < (branch()?.total || 0)) { <button type="button" (click)="loadRoot((branch()?.page || 1) + 1)">Daha fazla kayıt</button> }
+      @if (branch().loading) { <p role="status">Kayıtlar yükleniyor…</p> }
+      @if (branch().error) { <p role="alert">{{ branch().error }}</p><button type="button" (click)="loadRoot()">Yeniden dene</button> }
+      @if (!branch().loading && !branch().error && !branch().rows.length) { <p class="empty">Henüz kayıt yok. “{{ createLabel() }} ekle” ile başlayın.</p> }
+      @if ((branch().page || 1) * 25 < (branch().total || 0)) { <button type="button" (click)="loadRoot((branch().page || 1) + 1)">Daha fazla kayıt</button> }
     </aside>
     <section class="editor-pane" aria-label="Seçilen kaydı düzenle">
       @if (detailLoading()) { <p role="status">Güncel kayıt yükleniyor…</p> }

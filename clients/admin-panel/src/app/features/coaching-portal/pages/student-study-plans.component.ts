@@ -134,7 +134,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   restore(){const plan=this.selected();if(!plan||plan.status!=='Archived'||!this.restoreConfirmed||this.readOnly||this.busy())return;
     this.mutate(this.service.list(1,'Active',...this.studentArgument).pipe(switchMap(page=>this.service.restore(plan.id,plan.version,page.items[0]??null,...this.studentArgument))),'Plan yeniden etkinleştirildi. Önceki aktif plan ve çalışmalar arşivde korundu.');}
   readonly today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  workDates:Record<string,string>={};
+  workDates:Record<string,string|undefined>={};
   actualMinutes: Record<string, number> = {};
   actualQuestions: Record<string, number | null> = {};
   moveCalendar(move:CalendarMove){const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived')return;

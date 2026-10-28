@@ -30,7 +30,8 @@ type StaffWorkspaceRole = 'teacher' | 'institution';
 })
 export class AppComponent implements AfterViewInit {
   @ViewChild('coachingTeacherWorkspace') coachingTeacherWorkspace?: CoachingTeacherWorkspaceComponent;
-  @ViewChild(CoachingInstitutionWorkspaceComponent) coachingInstitutionWorkspace?: Pick<CoachingInstitutionWorkspaceComponent, 'canLeavePage'>;
+  // A template reference (not the class) keeps the deferred institution workspace out of the first download (roadmap P3).
+  @ViewChild('coachingInstitutionWorkspace') coachingInstitutionWorkspace?: Pick<CoachingInstitutionWorkspaceComponent, 'canLeavePage'>;
   private async canLeaveCoachingWorkspace(): Promise<boolean> {
     return (await this.coachingTeacherWorkspace?.canLeavePage() ?? true) && (await this.coachingInstitutionWorkspace?.canLeavePage() ?? true);
   }

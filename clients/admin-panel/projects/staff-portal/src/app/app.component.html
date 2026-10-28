@@ -108,7 +108,9 @@
         </section>
 
         }
-        @if (accountSettingsVisible && auth.activeProduct() !== 'course-management') { <staff-account-settings /> }
+        @if (accountSettingsVisible && auth.activeProduct() !== 'course-management') {
+          @defer (on immediate) { <staff-account-settings /> } @placeholder { <p role="status">Hesap ayarları hazırlanıyor…</p> }
+        }
         @if (notificationsVisible) {
           @defer (on immediate) {
             <staff-notification-center [product]="auth.activeProduct() === 'speed-reading' ? 'speed-reading' : auth.activeProduct() === 'course-management' ? 'course-management' : 'coaching'"
@@ -132,7 +134,7 @@
 
         @if (isInstitutionWorkspaceSelected) {
           @defer (on immediate) {
-            <staff-coaching-institution-workspace />
+            <staff-coaching-institution-workspace #coachingInstitutionWorkspace />
           } @placeholder {
             <p class="migration-note" role="status">Koçluk kurum alanı hazırlanıyor…</p>
           }
