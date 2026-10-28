@@ -19,6 +19,20 @@ export interface CoachingInstitutionSubscription {
   startsAt?: string | null;
   /** A renewal bought ahead of time, starting after this license. */
   upcoming?: CoachingInstitutionUpcomingSubscription | null;
+  /** Roadmap O10b: seats bought on top of the plan (already in includedStudentSeats) and the yearly per-seat price. */
+  extraSeats?: number;
+  extraSeatPrice?: number | null;
+}
+
+/** Roadmap O10b: the prorated price of extra seats and the bank details to pay it. */
+export interface CoachingSeatQuote {
+  subscriptionId: string; seats: number; unitPrice: number; remainingDays: number; durationDays: number; amount: number; currency: string;
+  accountHolder: string | null; bankName: string | null; iban: string | null; paymentInstructions: string | null;
+}
+export interface CoachingSeatRequest {
+  id: string; subscriptionId: string; institutionId: string; planName: string; seats: number; unitPrice: number; remainingDays: number; amount: number;
+  currency: string; paymentReference: string; note: string | null; status: 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn'; createdAt: string;
+  reviewedAt: string | null; reviewNote: string | null; paymentRecordId: string | null; licenseEndsAt: string;
 }
 
 export interface CoachingInstitutionUpcomingSubscription {
@@ -165,6 +179,20 @@ export interface CoachingInvitationResponse {
 export class CoachingInstitutionService {
   getSubscription(): Observable<CoachingInstitutionSubscription | null> {
     return this.http.get<CoachingInstitutionSubscription | null>(`${environment.apiUrl}/coaching/institution-subscription`);
+  }
+  getSeatQuote(subscriptionId: string, seats: number): Observable<CoachingSeatQuote> {
+    return this.http.get<CoachingSeatQuote>(`${environment.apiUrl}/coaching/institution-subscription/${encodeURIComponent(subscriptionId)}/seat-quote`,
+      { params: new HttpParams().set('seats', seats) });
+  }
+  getSeatRequests(): Observable<CoachingSeatRequest[]> {
+    return this.http.get<CoachingSeatRequest[]>(`${environment.apiUrl}/coaching/institution-subscription/seat-requests`);
+  }
+  createSeatRequest(request: { subscriptionId: string; seats: number; paymentReference: string; note: string | null }): Observable<CoachingSeatRequest> {
+    return this.http.post<CoachingSeatRequest>(`${environment.apiUrl}/coaching/institution-subscription/seat-requests`,
+      { ...request, paymentReference: request.paymentReference.trim(), note: request.note?.trim() || null });
+  }
+  withdrawSeatRequest(id: string): Observable<CoachingSeatRequest> {
+    return this.http.post<CoachingSeatRequest>(`${environment.apiUrl}/coaching/institution-subscription/seat-requests/${encodeURIComponent(id)}/withdraw`, {});
   }
   setSubscriptionSeat(subscriptionId: string, studentId: string, isSuspended: boolean): Observable<void> {
     return this.http.put<void>(`${environment.apiUrl}/coaching/institution-subscription/${encodeURIComponent(subscriptionId)}/students/${encodeURIComponent(studentId)}`, { isSuspended });

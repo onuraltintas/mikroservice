@@ -80,7 +80,7 @@ public sealed class CoachingSalesController(CoachingSalesService sales) : Contro
 [HasPermission(PlatformPermissions.Coaching.SubscriptionManage)]
 [RequireGlobalCoachingAdmin]
 [MfaCategory(MfaOperationCategories.Coaching)]
-public sealed class CoachingSalesAdminController(CoachingSalesService sales) : ControllerBase
+public sealed class CoachingSalesAdminController(CoachingSalesService sales, CoachingSeatRequestService seatRequests) : ControllerBase
 {
     [HttpGet("coupons")]
     public async Task<IActionResult> Coupons(CancellationToken ct) => Ok(new { success = true, data = await sales.ListCouponsAsync(ct) });
@@ -141,6 +141,21 @@ public sealed class CoachingSalesAdminController(CoachingSalesService sales) : C
     [HttpGet("invoices")]
     public async Task<IActionResult> Invoices([FromQuery] Guid[] paymentIds, CancellationToken ct) =>
         Ok(new { success = true, data = (await sales.InvoicesForAsync(paymentIds.Take(200).ToArray(), ct)).Values });
+
+    // ---- Roadmap O10b: institution extra seats ---------------------------------------------------------------------
+
+    [HttpGet("seat-requests")]
+    public async Task<IActionResult> SeatRequests([FromQuery] string? status, CancellationToken ct) =>
+        Ok(new { success = true, data = await seatRequests.ListAsync(status, ct) });
+
+    [HttpPost("seat-requests/{id:guid}/review"), RequestSizeLimit(4_096)]
+    public async Task<IActionResult> ReviewSeatRequest(Guid id, [FromBody] CoachingWithdrawalReview request, CancellationToken ct)
+    {
+        try { await seatRequests.ReviewAsync(ActorId, id, request.Approve, request.Note, ct); return Ok(new { success = true }); }
+        catch (KeyNotFoundException) { return NotFound(new { success = false, message = "Bekleyen ek koltuk talebi bulunamadı." }); }
+        catch (BusinessRuleException error) when (error.Code.StartsWith("Sales.", StringComparison.Ordinal))
+        { return Conflict(new { success = false, code = error.Code, message = error.Message }); }
+    }
 
     private Guid ActorId => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"), out var id)
         ? id : throw new BusinessRuleException("Authorization.Forbidden", "Oturum açın.");

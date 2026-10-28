@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CoachingManagementService, CoachingPayment, CoachingSubscriptionPlan } from '../../../core/services/coaching-management.service';
+import { InstitutionService } from '../../../core/services/institution.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { saveCoachingMessageFile } from '../../../../../shared/coaching-messages.api';
 import { coachingErrorMessage, coachingMoney, normalizeCoachingCoupon, COACHING_COUPON_PATTERN } from '../../../../../shared/coaching-sales.api';
@@ -20,6 +21,12 @@ export interface CoachingSellerInfo { title: string | null; address: string | nu
 export interface CoachingWithdrawal {
   transferId: string; userName: string; userEmail: string; planName: string; amount: number; currency: string; approvedAt: string | null;
   withdrawalStatus: string | null; reason: string | null; requestedAt: string | null; reviewNote: string | null; reviewedAt: string | null;
+}
+/** Roadmap O10b: an institution's request for extra seats on a running license. */
+export interface CoachingSeatRequest {
+  id: string; subscriptionId: string; institutionId: string; planName: string; seats: number; unitPrice: number; remainingDays: number; amount: number;
+  currency: string; paymentReference: string; note: string | null; status: 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn'; createdAt: string;
+  reviewedAt: string | null; reviewNote: string | null; paymentRecordId: string | null; licenseEndsAt: string;
 }
 export interface CoachingInvoice { id: string; paymentId: string; invoiceNumber: string; issuedOn: string; fileName: string; sizeBytes: number }
 
@@ -48,11 +55,18 @@ export class CoachingSalesAdminApi {
     return this.http.post<{ data: CoachingInvoice }>(`${this.url}/payments/${encodeURIComponent(paymentId)}/invoice`, file,
       { params, headers: { 'Content-Type': 'application/pdf' } }).pipe(map(r => r.data));
   }
+  seatRequests(status: string) {
+    const params = status ? new HttpParams().set('status', status) : undefined;
+    return this.http.get<{ data: CoachingSeatRequest[] }>(`${this.url}/seat-requests`, { params }).pipe(map(r => r.data));
+  }
+  reviewSeatRequest(id: string, approve: boolean, note: string | null) {
+    return this.http.post<{ success: boolean }>(`${this.url}/seat-requests/${encodeURIComponent(id)}/review`, { approve, note });
+  }
   invoice(paymentId: string) { return this.http.get(`${this.url}/payments/${encodeURIComponent(paymentId)}/invoice`, { responseType: 'blob' }); }
   removeInvoice(paymentId: string) { return this.http.delete<{ success: boolean }>(`${this.url}/payments/${encodeURIComponent(paymentId)}/invoice`); }
 }
 
-type SalesTab = 'coupons' | 'seller' | 'withdrawals' | 'invoices';
+type SalesTab = 'coupons' | 'seller' | 'withdrawals' | 'seats' | 'invoices';
 
 /**
  * Roadmap O10: discount codes, the seller details printed on the pre-information form and distance-sales contract,
@@ -171,6 +185,26 @@ type SalesTab = 'coupons' | 'seller' | 'withdrawals' | 'invoices';
           </tbody></table>
         </section>
       }
+      @case ('seats') {
+        <section aria-labelledby="seats-heading">
+          <h2 id="seats-heading" class="mb-3 font-semibold">Ek koltuk talepleri</h2>
+          <p class="muted mb-2">Kurumlar lisans ortasında ek koltuk ister; tutar, planın koltuk başı yıllık fiyatının lisansın kalan gününe oranıdır. Havaleyi bankada gördükten sonra onaylayın:
+            koltuklar lisansa eklenir ve ödeme kaydı oluşur (faturasını Faturalar sekmesinden ekleyebilirsiniz). Ek koltuklar yenilemeye taşınmaz.</p>
+          <div class="actions mb-2"><select name="seatStatus" [(ngModel)]="seatStatus" (ngModelChange)="loadSeatRequests()"><option value="Pending">Bekleyenler</option><option value="">Tümü</option></select></div>
+          <table><thead><tr><th>Kurum / lisans</th><th>Koltuk ve tutar</th><th>Referans</th><th>Durum</th><th></th></tr></thead><tbody>
+            @for (item of seatRequests(); track item.id) {
+              <tr [attr.data-testid]="'seat-request-' + item.id"><td><strong>{{ institutionName(item.institutionId) }}</strong><div class="muted">{{ item.planName }} · bitiş {{ item.licenseEndsAt | date:'dd.MM.yyyy' }}</div></td>
+                <td>{{ item.seats }} koltuk · {{ money(item.amount) }} {{ item.currency }}<div class="muted">{{ money(item.unitPrice) }} × {{ item.seats }} × {{ item.remainingDays }} gün</div></td>
+                <td>{{ item.paymentReference }}<div class="muted">{{ item.createdAt | date:'dd.MM.yyyy HH:mm' }}@if (item.note) { · {{ item.note }} }</div></td>
+                <td>{{ seatStatusLabel(item.status) }}@if (item.reviewNote) { <div class="muted">{{ item.reviewNote }}</div> }</td>
+                <td>@if (item.status === 'Pending') {
+                  <div class="actions"><button type="button" class="secondary" [attr.data-testid]="'approve-seats-' + item.id" [disabled]="working()" (click)="reviewSeatRequest(item, true)">Onayla</button>
+                    <button type="button" class="secondary" [attr.data-testid]="'reject-seats-' + item.id" [disabled]="working()" (click)="reviewSeatRequest(item, false)">Reddet</button></div>
+                }</td></tr>
+            } @empty { <tr><td colspan="5" class="muted">Ek koltuk talebi yok.</td></tr> }
+          </tbody></table>
+        </section>
+      }
       @case ('invoices') {
         <section aria-labelledby="invoices-heading">
           <h2 id="invoices-heading" class="mb-3 font-semibold">Faturalar</h2>
@@ -211,7 +245,7 @@ export class CoachingSalesComponent implements OnInit {
   readonly money = coachingMoney;
   readonly tabs: { id: SalesTab; label: string }[] = [
     { id: 'coupons', label: 'İndirim kodları' }, { id: 'seller', label: 'Satıcı ve sözleşmeler' },
-    { id: 'withdrawals', label: 'Cayma talepleri' }, { id: 'invoices', label: 'Faturalar' }
+    { id: 'withdrawals', label: 'Cayma talepleri' }, { id: 'seats', label: 'Ek koltuk talepleri' }, { id: 'invoices', label: 'Faturalar' }
   ];
   readonly tab = signal<SalesTab>('coupons');
   readonly error = signal<string | null>(null);
@@ -253,6 +287,7 @@ export class CoachingSalesComponent implements OnInit {
     this.tab.set(tab); this.error.set(null); this.success.set(null);
     if (tab === 'seller') void this.loadSeller();
     if (tab === 'withdrawals') void this.loadWithdrawals();
+    if (tab === 'seats') { void this.loadSeatRequests(); this.loadInstitutions(); }
     if (tab === 'invoices') void this.loadPayments(this.paymentPage());
   }
 
@@ -352,6 +387,47 @@ export class CoachingSalesComponent implements OnInit {
       await this.loadWithdrawals();
       return approve ? 'Cayma onaylandı; abonelik sona erdi. İadeyi bankadan yapmayı unutmayın.' : 'Cayma talebi reddedildi.';
     }, 'Cayma talebi işlenemedi.');
+  }
+
+  // ---- Extra seats (O10b) -------------------------------------------------------------------------------------------
+
+  readonly seatRequests = signal<CoachingSeatRequest[]>([]);
+  private readonly institutions = signal<Record<string, string>>({});
+  private readonly institutionService = inject(InstitutionService);
+  seatStatus = 'Pending';
+
+  async loadSeatRequests(): Promise<void> {
+    try { this.seatRequests.set(await firstValueFrom(this.api.seatRequests(this.seatStatus))); }
+    catch { this.error.set('Ek koltuk talepleri yüklenemedi.'); }
+  }
+
+  institutionName(id: string): string { return this.institutions()[id] ?? `Kurum ${id.slice(0, 8)}`; }
+
+  seatStatusLabel(status: CoachingSeatRequest['status']): string {
+    return ({ Pending: 'Bekliyor', Approved: 'Onaylandı', Rejected: 'Reddedildi', Withdrawn: 'Kurum geri çekti' } as const)[status] ?? status;
+  }
+
+  async reviewSeatRequest(item: CoachingSeatRequest, approve: boolean): Promise<void> {
+    let note: string | null = null;
+    if (approve) {
+      if (!await this.toaster.confirm(`${this.institutionName(item.institutionId)} için ${item.seats} ek koltuk onaylansın mı? ${item.paymentReference} referanslı ${coachingMoney(item.amount)} ${item.currency} havaleyi bankada gördüğünüzden emin olun.`)) return;
+    } else {
+      note = (await this.toaster.prompt('Ret gerekçesi (kuruma gösterilir)', ''))?.trim() || null;
+      if (!note) { this.error.set('Talebi reddetmek için gerekçe yazın.'); return; }
+    }
+    await this.run(async () => {
+      await firstValueFrom(this.api.reviewSeatRequest(item.id, approve, note));
+      await this.loadSeatRequests();
+      return approve ? `${item.seats} ek koltuk lisansa eklendi; ödeme kaydı oluştu.` : 'Ek koltuk talebi reddedildi.';
+    }, 'Ek koltuk talebi işlenemedi.');
+  }
+
+  private loadInstitutions(): void {
+    if (Object.keys(this.institutions()).length) return;
+    this.institutionService.getAll(1, 100, '', true).subscribe({
+      next: result => this.institutions.set(Object.fromEntries((result.items ?? []).map(item => [item.id, item.name]))),
+      error: () => undefined
+    });
   }
 
   // ---- Invoices ----------------------------------------------------------------------------------------------------

@@ -212,6 +212,7 @@ public class CoachingDbContext : DbContext
         {
             table.HasCheckConstraint("ck_coaching_subscription_plans_price", "\"Price\" >= 0");
             table.HasCheckConstraint("ck_coaching_subscription_plans_trial", "\"TrialDays\" BETWEEN 0 AND 90 AND (\"TrialDays\" = 0 OR \"Audience\" <> 'Institution')");
+            table.HasCheckConstraint("ck_coaching_subscription_plans_extra_seat", "\"ExtraSeatPrice\" IS NULL OR (\"ExtraSeatPrice\" > 0 AND \"Audience\" = 'Institution')");
         });
         plans.HasKey(plan => plan.Id);
         plans.Property(plan => plan.Slug).HasMaxLength(80).IsRequired();
@@ -219,6 +220,7 @@ public class CoachingDbContext : DbContext
         plans.Property(plan => plan.Description).HasMaxLength(1000).IsRequired();
         plans.Property(plan => plan.Audience).HasMaxLength(20).IsRequired();
         plans.Property(plan => plan.Price).HasPrecision(12, 2);
+        plans.Property(plan => plan.ExtraSeatPrice).HasPrecision(12, 2);
         plans.Property(plan => plan.BillingPeriod).HasMaxLength(20).IsRequired();
         plans.Property(plan => plan.FeaturesJson).HasColumnType("jsonb").IsRequired();
         plans.HasIndex(plan => plan.Slug).IsUnique();
@@ -229,6 +231,7 @@ public class CoachingDbContext : DbContext
         {
             table.HasCheckConstraint("ck_coaching_subscription_owner", "((\"UserId\" IS NOT NULL)::int + (\"InstitutionId\" IS NOT NULL)::int) = 1");
             table.HasCheckConstraint("ck_coaching_subscription_dates", "\"EndDate\" >= \"StartDate\"");
+            table.HasCheckConstraint("ck_coaching_subscription_extra_seats", "\"ExtraSeats\" >= 0 AND (\"ExtraSeats\" = 0 OR \"InstitutionId\" IS NOT NULL)");
         });
         subscriptions.HasKey(subscription => subscription.Id);
         subscriptions.Property(subscription => subscription.Status).HasMaxLength(20).IsRequired();
@@ -360,6 +363,28 @@ public class CoachingDbContext : DbContext
         invoices.HasIndex(invoice => invoice.PaymentRecordId).IsUnique();
         invoices.HasIndex(invoice => invoice.InvoiceNumber).IsUnique();
         invoices.HasIndex(invoice => invoice.StorageKey).IsUnique();
+
+        // Roadmap O10b: an institution's request for extra seats on a running license.
+        var seatRequests = modelBuilder.Entity<CoachingSeatRequest>();
+        seatRequests.ToTable("seat_requests", table =>
+        {
+            table.HasCheckConstraint("ck_coaching_seat_request_status", "\"Status\" IN ('Pending', 'Approved', 'Rejected', 'Withdrawn')");
+            table.HasCheckConstraint("ck_coaching_seat_request_amounts", "\"Seats\" BETWEEN 1 AND 1000 AND \"UnitPrice\" > 0 AND \"Amount\" >= 0 AND \"RemainingDays\" > 0 AND \"DurationDays\" > 0");
+        });
+        seatRequests.HasKey(request => request.Id);
+        seatRequests.Property(request => request.UnitPrice).HasPrecision(12, 2);
+        seatRequests.Property(request => request.Amount).HasPrecision(12, 2);
+        seatRequests.Property(request => request.Currency).HasMaxLength(3).IsRequired();
+        seatRequests.Property(request => request.PaymentReference).HasMaxLength(120).IsRequired();
+        seatRequests.Property(request => request.Note).HasMaxLength(1000);
+        seatRequests.Property(request => request.Status).HasMaxLength(20).IsRequired();
+        seatRequests.Property(request => request.ReviewNote).HasMaxLength(1000);
+        seatRequests.HasOne<CoachingSubscription>().WithMany().HasForeignKey(request => request.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
+        seatRequests.HasOne<CoachingPaymentRecord>().WithMany().HasForeignKey(request => request.PaymentRecordId).OnDelete(DeleteBehavior.Restrict);
+        seatRequests.HasIndex(request => request.SubscriptionId).IsUnique().HasFilter("\"Status\" = 'Pending'").HasDatabaseName("ux_coaching_seat_requests_one_pending");
+        seatRequests.HasIndex(request => new { request.Status, request.CreatedAt });
+        seatRequests.HasIndex(request => request.InstitutionId);
+        seatRequests.HasIndex(request => request.PaymentRecordId).IsUnique();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
