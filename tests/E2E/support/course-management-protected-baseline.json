@@ -13,10 +13,10 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-teacher-report.component.scss": "d27f27e94acb26c17c3d1ae0a0ad8ff29d33320487ee52cc6714b5e818d996d0",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-teacher-report.component.spec.ts": "ce7740cbe9639d8a5215897fd7a6dcdec2eba70ec06417878d4df11451059a02",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-teacher-report.component.ts": "191cdfb9e7119c7f94f98c2dfef6402428908008f0ada449ae500d42ed938b5c",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.html": "9dbc94cebdb68656bd98421a3de2836b1134b37b4cd60e1419f315db844e6e32",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.html": "36e52e5a439165574b0fac4ed7165cbd560bd6aed00d72f64c7f660525645899",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.scss": "7d1cd74a963c2578826f51e0b01d7fe716687a7ac52cd9e3f29015c1dab390ef",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.spec.ts": "16b1fe3c3fa43c29a3866fa8dc216cf167a8075314894049ef3d13beabb5a1e4",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.ts": "04d561e1899d702b6eb25297931a2929abcdfe43b77f7bad49bb28c765e3b993",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.ts": "81e20950560ab31087173bf5868e18f1f89b5dad2617f097b13b8ade78f6a721",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution.service.spec.ts": "0e8359357edb4e8d186c00540200e45a3a5423540ad5a4c80f01b68ab896f829",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution.service.ts": "d923c8c14b3290afdb97efa999033a07dd46a82130880a965104ab17d6e40ebe",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-staff-study.component.ts": "513a6a3ee81a86d61ad1988a3803b6b4c14a890ffcb55b2346597d2a26da74d0",
@@ -89,10 +89,10 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-tracking.component.ts": "bafc88c4727aa659ed8243a29d83599fc9e50a20c3d8fc2a3492143cff135aa5",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-tracking.service.spec.ts": "e29c701fe726aec84210ef76e613806a306a3eae84db2f4026a6b588cd8818c8",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-tracking.service.ts": "76572adf0febbb0fb53fa740fe7df89bad1245176c03e2aab7eaa738b500ab6b",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.html": "703a55201f454b5a9354d437af5e41832a99a6e5152888c0c7b028e4c7b5697f",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.html": "9e2887296c66bb1eef252839b90a6aa37443089a7bef8603fb0e8c379b863fb6",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.scss": "e855b7fcb63758b66e54f0b3b68b102f79277780dfa86960f57d005c08042ed5",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.spec.ts": "2f19bb83bd5790fc2ff8e216dc0d0ebacabf0379b36a55eb5b9284fa90501e19",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.ts": "0c7a793cc0e93f67ec290439a392b71bb5e01896157f47b2227282d2c5cb3b35",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.spec.ts": "25c22fe9316ff1b83755c4c4351143f80bc44f179dac68224bd4fde05e456d90",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.ts": "eed4be83bef5b792657252ddf422d181b5b951ab4eae539331453e564280245c",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-weekly-review.spec.ts": "172c45ce278bc55988263ef8f59987702469c7a3c75c84cb7d1627457fecf677",
     "clients/admin-panel/projects/staff-portal/src/app/features/speed-reading/program-recommendation-panel.component.spec.ts": "8e00d72a3152a41c38612b570f700a71096f8ddd96aa027bba342e81e644b3d0",
     "clients/admin-panel/projects/staff-portal/src/app/features/speed-reading/program-recommendation-panel.component.ts": "7996834d09ebbff484415ed4557b88650b05dc3e4abb166e559369adb03f3eb8",
@@ -2557,7 +2557,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "O1 student screens on the phone",
+    "purpose": "O2 staff portal addresses and phone layout",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2605,7 +2605,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "b538fbf8",
+    "previousBaselineCommit": "3e1fe1ac",
     "removedSincePreviousBaseline": []
   }
 }

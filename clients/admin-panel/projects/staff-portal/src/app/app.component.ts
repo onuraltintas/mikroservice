@@ -1,4 +1,6 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, ViewChild, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { StaffLocationService, StaffPlace, labelTableCells } from './navigation/staff-location.service';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { DarkModeService } from '../../../../src/app/core/services/dark-mode.service';
 import { CoachingIconComponent } from '../../../../src/app/features/coaching-portal/coaching-icon.component';
@@ -26,7 +28,7 @@ type StaffWorkspaceRole = 'teacher' | 'institution';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
   @ViewChild('coachingTeacherWorkspace') coachingTeacherWorkspace?: CoachingTeacherWorkspaceComponent;
   @ViewChild(CoachingInstitutionWorkspaceComponent) coachingInstitutionWorkspace?: Pick<CoachingInstitutionWorkspaceComponent, 'canLeavePage'>;
   private async canLeaveCoachingWorkspace(): Promise<boolean> {
@@ -41,11 +43,17 @@ export class AppComponent {
   async chooseProductFromMenu(product: StaffProduct): Promise<void> { this.closeTeacherMenu(); await this.switchProduct(product); }
   private readonly document = inject(DOCUMENT);
   private readonly changeDetector = inject(ChangeDetectorRef);
+  // Roadmap O2: product and workspace are kept in the address (see StaffLocationService).
+  private readonly staffLocation = inject(StaffLocationService, { optional: true });
+  private readonly startPlace: StaffPlace | null = this.staffLocation?.place() ?? null;
+  private readonly host = inject(ElementRef, { optional: true }) as ElementRef<HTMLElement> | null;
+  private readonly destroyRef = inject(DestroyRef);
   readonly currentYear = new Date().getFullYear();
   readonly hasCourseAccess = (access: StaffProductAccess): boolean => access.product === 'course-management';
   selectedProduct: StaffProduct = this.initialProduct();
 
   private initialProduct(): StaffProduct {
+    if (this.startPlace) return this.startPlace.product;
     const product = new URLSearchParams(this.document.defaultView?.location.search ?? '').get('product');
     return product === 'speed-reading' || product === 'course-management' ? product : 'coaching';
   }
@@ -73,7 +81,52 @@ export class AppComponent {
   }
   errorMessage = '';
   switchError = '';
-  private readonly selectedWorkspaceRoles: Partial<Record<StaffProduct, StaffWorkspaceRole>> = {};
+  private readonly selectedWorkspaceRoles: Partial<Record<StaffProduct, StaffWorkspaceRole>> =
+    this.startPlace?.role ? { [this.startPlace.product]: this.startPlace.role } : {};
+  private readonly addressSync = effect(() => {
+    const product = this.auth.activeProduct?.();
+    if (product && this.auth.isAuthenticated?.()) this.rememberWorkspace(true);
+  });
+
+  constructor() {
+    this.staffLocation?.pops.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(place => void this.followAddress(place));
+  }
+
+  /** The teacher and institution workspaces both get the phone menu. */
+  get hasPhoneMenu(): boolean { return this.isTeacherWorkspaceSelected || this.isInstitutionWorkspaceSelected; }
+
+  ngAfterViewInit(): void {
+    // Roadmap O2: table cells carry their column name so rows can be shown as cards on the phone.
+    const root = this.host?.nativeElement;
+    if (!root || typeof MutationObserver === 'undefined') return;
+    let queued = false;
+    const observer = new MutationObserver(() => {
+      if (queued) return; queued = true;
+      queueMicrotask(() => { queued = false; labelTableCells(root); });
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    this.destroyRef.onDestroy(() => observer.disconnect());
+  }
+
+  private rememberWorkspace(replace = false): void {
+    const product = this.auth.activeProduct?.();
+    if (!this.staffLocation || !product) return;
+    const current = this.staffLocation.place();
+    // Only the Coaching workspaces keep their place in the address; other products stay on the portal root.
+    if (product !== 'coaching') { if (current) this.staffLocation.goRoot(); return; }
+    const role = this.activeWorkspaceRole;
+    if (current?.product === product && current.role === role) return;
+    this.staffLocation.go({ product, role, section: null, id: null, week: null }, replace);
+  }
+
+  private async followAddress(place: StaffPlace | null): Promise<void> {
+    if (!place || !this.auth.isAuthenticated?.()) return;
+    if (place.product !== this.auth.activeProduct()) {
+      if (!this.auth.products().some(access => access.product === place.product)) return;
+      await this.switchProduct(place.product);
+    }
+    if (place.role && place.role !== this.activeWorkspaceRole) await this.selectWorkspaceRole(place.role);
+  }
 
   get activeAccess() {
     return this.auth.products().find(access => access.product === this.auth.activeProduct()) ?? null;
@@ -124,6 +177,7 @@ export class AppComponent {
     if (role !== this.activeWorkspaceRole && !await this.canLeaveCoachingWorkspace()) return;
     const product = this.auth.activeProduct();
     if (product) this.selectedWorkspaceRoles[product] = role;
+    this.rememberWorkspace();
   }
 
   get currentProductLabel(): string {
@@ -240,6 +294,7 @@ export class AppComponent {
     this.switchError = '';
     try {
       await this.auth.switchProduct(product);
+      this.rememberWorkspace();
     } catch (error) {
       const message = this.getErrorMessage(error);
       const code = error instanceof HttpErrorResponse

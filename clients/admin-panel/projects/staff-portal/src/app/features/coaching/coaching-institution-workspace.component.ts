@@ -20,12 +20,14 @@ import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.c
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 
 import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-portal/coaching-labels';
+import { StaffLocationService, StaffPlace } from '../../navigation/staff-location.service';
+import { StaffSectionGroup, StaffSectionNavComponent } from '../../navigation/staff-section-nav.component';
 type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'subscription' | 'finance';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent, StaffSectionNavComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
@@ -145,6 +147,35 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   readonly selectedStudent = signal<CoachingInstitutionStudent | null>(null);
   readonly selectedTeacher = signal<CoachingInstitutionTeacher | null>(null);
   readonly activeSection = signal<InstitutionSection>('overview');
+  // Roadmap O2: grouped sections, a phone menu and the section kept in the address.
+  readonly sectionGroups: StaffSectionGroup[] = [
+    { label: 'Kurum', items: [
+      { value: 'overview', label: 'Genel bakış', testId: 'institution-overview-tab' },
+      { value: 'analytics', label: 'Analiz ve uyarılar', testId: 'institution-analytics-tab' }] },
+    { label: 'Kişiler', items: [
+      { value: 'students', label: 'Öğrenciler', testId: 'institution-students-tab' },
+      { value: 'teachers', label: 'Öğretmenler', testId: 'institution-teachers-tab' }] },
+    { label: 'Ödeme', items: [
+      { value: 'subscription', label: 'Abonelik ve kontenjan', testId: 'institution-subscription-tab' },
+      { value: 'finance', label: 'Tahsilat hareketleri', testId: 'institution-finance-tab' }] }
+  ];
+  private readonly staffLocation = inject(StaffLocationService, { optional: true });
+  constructor() {
+    const place = this.staffLocation?.place();
+    if (this.isMine(place) && place!.section) this.activeSection.set(place!.section as InstitutionSection);
+    this.staffLocation?.pops.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(next => {
+      if (!this.isMine(next)) return;
+      const section = (next!.section ?? 'overview') as InstitutionSection;
+      if (section !== this.activeSection()) void this.selectSection(section).then(() => {
+        if (this.activeSection() !== section) this.rememberSection(true);
+      });
+    });
+  }
+  chooseSection(section: string): void { void this.selectSection(section as InstitutionSection); }
+  private isMine(place: StaffPlace | null | undefined): boolean { return place?.product === 'coaching' && place.role === 'institution'; }
+  private rememberSection(replace = false): void {
+    this.staffLocation?.go({ product: 'coaching', role: 'institution', section: this.activeSection(), id: null, week: null }, replace);
+  }
   readonly isLoadingScope = signal(true);
   readonly isLoadingOverview = signal(false);
   readonly isLoadingStudents = signal(false);
@@ -177,6 +208,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     if (!await this.canLeavePage()) return;
     this.cancelStudentEdit();
     this.activeSection.set(section);
+    this.rememberSection();
     this.selectedStudent.set(null);
     this.selectedTeacher.set(null);
     this.teacherInvitationError.set(null);

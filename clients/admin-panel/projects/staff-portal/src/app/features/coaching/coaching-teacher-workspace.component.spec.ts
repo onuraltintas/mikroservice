@@ -89,6 +89,9 @@ describe('CoachingTeacherWorkspaceComponent', () => {
     }).compileComponents();
     const fixture = TestBed.createComponent(CoachingTeacherWorkspaceComponent);
     fixture.detectChanges();
+    expect(fixture.componentInstance.activeSection()).toBe('tracking');
+    await fixture.componentInstance.selectSection('students');
+    fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Öğrencilerim');
     expect(assignments.getTeacherAssignments).not.toHaveBeenCalled();
