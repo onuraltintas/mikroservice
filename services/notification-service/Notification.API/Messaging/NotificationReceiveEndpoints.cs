@@ -22,6 +22,7 @@ public static class NotificationReceiveEndpoints
         new("user-registered", typeof(UserRegisteredConsumer)),
         new("user-email-confirmed", typeof(UserEmailConfirmedConsumer)),
         new("user-created", typeof(UserCreatedConsumer)),
+        new("user-password-setup-requested", typeof(UserPasswordSetupRequestedConsumer)),
         new("send-notification", typeof(SendNotificationConsumer)),
         new("user-forgot-password", typeof(UserForgotPasswordConsumer)),
         new("coaching-assignment-created", typeof(AssignmentCreatedConsumer)),

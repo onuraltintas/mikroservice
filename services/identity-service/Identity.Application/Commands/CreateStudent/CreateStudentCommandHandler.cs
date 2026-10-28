@@ -125,18 +125,8 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
             }
             
             // Publish UserCreated Event
-            var eventMessage = new EduPlatform.Shared.Contracts.Events.Identity.UserCreatedEvent(
-                UserId: studentUserId,
-                Email: request.Email,
-                FirstName: request.FirstName,
-                LastName: request.LastName,
-                Role: "Student",
-                PasswordSetupToken: provisionedUser.PasswordSetupToken,
-                PasswordSetupTokenExpiresAt: provisionedUser.PasswordSetupTokenExpiresAt,
-                CreatedAt: DateTime.UtcNow
-            );
-
-            await _publishEndpoint.Publish(eventMessage, cancellationToken);
+            await Identity.Application.Services.AccountCreatedEvents.PublishAsync(_publishEndpoint, provisionedUser,
+                request.Email, request.FirstName, request.LastName, "Student", product: null, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Coaching uses the Identity user id as StudentId. Keep the profile id

@@ -101,8 +101,9 @@ public sealed class NotificationEndpointWiringTests
         queues.Should().Contain(ExistingQueues);
         queues.Except(ExistingQueues).Should().BeEquivalentTo(
             ["coaching-assignment-updated", "coaching-exam-updated", "coaching-exam-result-updated",
-             "coaching-session-updated", "coaching-goal-updated", "notification-realtime"],
-            "five update notifications were registered without a queue; realtime pushes now run after commit");
+             "coaching-session-updated", "coaching-goal-updated", "notification-realtime", "user-password-setup-requested"],
+            "five update notifications were registered without a queue; realtime pushes now run after commit; " +
+            "the password-setup e-mail no longer rides on user-created");
     }
 
     [Fact]

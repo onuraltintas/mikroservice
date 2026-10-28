@@ -113,6 +113,21 @@ public sealed class AdminUserProductProvisioningTests
     }
 
     [Fact]
+    public async Task Password_setup_token_only_travels_in_the_notification_event()
+    {
+        var fixture = new Fixture();
+        Assert.True((await fixture.Handler.Handle(Command("Student", PlatformProduct.Coaching), CancellationToken.None)).IsSuccess);
+
+        var created = fixture.Publisher.Event!;
+        Assert.Null(created.PasswordSetupToken);
+        Assert.DoesNotContain("one-time-setup-token", System.Text.Json.JsonSerializer.Serialize(created));
+        var setup = fixture.Publisher.PasswordSetup!;
+        Assert.Equal(("one-time-setup-token", created.UserId, "user@example.test", "Student", "coaching"),
+            (setup.PasswordSetupToken, setup.UserId, setup.Email, setup.Role, setup.Product));
+        Assert.Equal(created.PasswordSetupTokenExpiresAt, setup.PasswordSetupTokenExpiresAt);
+    }
+
+    [Fact]
     public async Task SystemAdmin_is_global_even_with_a_previous_product_selection()
     {
         var fixture = new Fixture();
@@ -201,6 +216,7 @@ public sealed class AdminUserProductProvisioningTests
     public class PublisherProxy : DispatchProxy
     {
         public UserCreatedEvent? Event { get; private set; }
+        public UserPasswordSetupRequestedV1? PasswordSetup { get; private set; }
         public List<EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested> CoachingProfiles { get; } = [];
         public bool Fail { get; set; }
         public int UserCreatedCount { get; private set; }
@@ -210,6 +226,7 @@ public sealed class AdminUserProductProvisioningTests
             switch (args![0])
             {
                 case UserCreatedEvent created: UserCreatedCount++; Event = created; break;
+                case UserPasswordSetupRequestedV1 setup: PasswordSetup = setup; break;
                 case EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested profile: CoachingProfiles.Add(profile); break;
                 default: throw new NotSupportedException(args[0]?.GetType().Name);
             }

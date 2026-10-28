@@ -126,16 +126,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
             // 6. Queue the event in the EF bus outbox before the single commit.
             // If the database is unavailable, neither the access grant nor the event
             // is reported as successfully created.
-            await _publishEndpoint.Publish(new UserCreatedEvent(
-                userId,
-                request.Email,
-                request.FirstName,
-                request.LastName,
-                roleName,
-                provisionedUser.PasswordSetupToken,
-                provisionedUser.PasswordSetupTokenExpiresAt,
-                DateTime.UtcNow
-            ) { Product = product?.ToRouteValue() }, cancellationToken);
+            await Identity.Application.Services.AccountCreatedEvents.PublishAsync(_publishEndpoint, provisionedUser,
+                request.Email, request.FirstName, request.LastName, roleName, product?.ToRouteValue(), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success(new CreateUserResponse(userId));
