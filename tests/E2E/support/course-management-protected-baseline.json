@@ -834,6 +834,7 @@
     "services/coaching-service/Coaching.API/Controllers/CoachingInstitutionReportsController.cs": "f578a43f2210811de77b37f7edc03bafe97eac285eb4323e2dff0db48d6cc4f3",
     "services/coaching-service/Coaching.API/Controllers/CoachingInstitutionSubscriptionsController.cs": "757896bc3d0e9bd0893b7b796197040997bfd84d8d9efb803ace22083d8bdf42",
     "services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs": "bbf7743fb1cc3c06207b683fb4f45f0ed47e3ad8c72d6907c1a48a63513c2ab1",
+    "services/coaching-service/Coaching.API/Controllers/CoachingLicenseToolsAdminController.cs": "e334a3479cfb523b743378c85fb8d4cdb57f48eccfc1e8b00f09984e1f59cb14",
     "services/coaching-service/Coaching.API/Controllers/CoachingMembershipsController.cs": "17422acbd415e87ef5b05cdcceac6ba102a982a830953aaf90fbef91450b5bd3",
     "services/coaching-service/Coaching.API/Controllers/CoachingMessagesController.cs": "9fb73383520e358b80cf71058e31cfabb0a922530298103298288b94b53b8a82",
     "services/coaching-service/Coaching.API/Controllers/CoachingMotivationController.cs": "69b0510156552902878c8b7fc71ac926774a62b1b169f7711367a4a45676d803",
@@ -1316,7 +1317,7 @@
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261105100000_AssignmentDueReminders.Designer.cs": "872cfa30d0fa01c56df49cfb84001d89dae95d12273a980a10dcc360e97441d7",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261105100000_AssignmentDueReminders.cs": "0bdd5323efb5ddd410d0eca21cbcb0309eefcce52d3c8b220c76282702328019",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/CoachingDbContextModelSnapshot.cs": "634fa414f84d2070953af797d9bbc8358696d5bd6e7927c37d827a3043ec8e1a",
-    "services/coaching-service/Coaching.Infrastructure/DependencyInjection.cs": "7e9f602b7c4c8bdf4be7daead0af03d57478586a3fb1dfacb5856de72574ee88",
+    "services/coaching-service/Coaching.Infrastructure/DependencyInjection.cs": "8c8be3333727c41a94bca663854d02d3efa67f4c12689689f2dde47a848998a5",
     "services/coaching-service/Coaching.Infrastructure/ExternalServices/CoachingAccountDirectoryClient.cs": "f55a710408092331b341355bc0683eca7843418583384cb26c5a42df0f1a6014",
     "services/coaching-service/Coaching.Infrastructure/ExternalServices/CoachingNewsletterEmailClient.cs": "caafe4ca0a3e71b11f0dc774c0fe7f56b33f2f96c98b6604148ebb58662b851a",
     "services/coaching-service/Coaching.Infrastructure/ExternalServices/HttpCoachingInstitutionSelection.cs": "ba48856eb6004864c2530caf10ea3455d967ef4aac8e88c6b8f3b69262f8a199",
@@ -1325,6 +1326,7 @@
     "services/coaching-service/Coaching.Infrastructure/ExternalServices/IdentityParentDirectoryClient.cs": "11d3079cefd70cf960a5274d7b5e94690661a00e02f419673d0a43bfcbf092df",
     "services/coaching-service/Coaching.Infrastructure/ExternalServices/IdentitySharedLegalPageVersionClient.cs": "3eb24dfb693537b178f92fda4ea5fc20d45d5772a447603dad0f0462d4b98d4c",
     "services/coaching-service/Coaching.Infrastructure/Finance/CoachingFeeService.cs": "6452026156397c5bed360f52308738a1487cacab7f008fe1488c3612e99a8797",
+    "services/coaching-service/Coaching.Infrastructure/Management/CoachingAdminToolsService.cs": "869e02020f496bff3a9433e55baca7ae7a10ace03597d23e5339e6725e5190aa",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingCalendarSubscriptionService.cs": "e00872d963ab9282436284dfe74789c056f52090514ea4cdb02816140d13ffe4",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingCmsService.cs": "a92265b6aa97ff4efc2d047b0355a9704184ba32f4f49e635a9da9e6a2c2245c",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingCoupons.cs": "928d268436b7c0f55be96f2eec8fe1a5519e88c5df7d96da3da529ae0153ce2f",
@@ -2616,7 +2618,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "D5 coaching motivation",
+    "purpose": "D6 coaching admin tools",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2664,7 +2666,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "67ca13fe",
+    "previousBaselineCommit": "9de984eb",
     "removedSincePreviousBaseline": []
   }
 }
