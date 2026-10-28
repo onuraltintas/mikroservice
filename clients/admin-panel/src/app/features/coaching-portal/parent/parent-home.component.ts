@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ParentLink, ParentRelationship, CoachingParentService } from './coaching-parent.service';
-import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
+import { CoachingDatePipe } from '../coaching-labels';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { NotificationPreferencesApi, NotificationPreferencesComponent } from '../../../../../shared/notification-preferences.component';
@@ -13,7 +13,7 @@ import { NotificationPreferencesApi, NotificationPreferencesComponent } from '..
 @Component({
   selector: 'app-parent-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, CoachingLabelPipe, NotificationPreferencesComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, NotificationPreferencesComponent],
   template: `
     <main class="space-y-6" aria-labelledby="parent-home-title">
       <header>
