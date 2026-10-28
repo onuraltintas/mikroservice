@@ -27,6 +27,8 @@ public static class SerilogConfiguration
         app.UseSerilogRequestLogging(options =>
         {
             options.MessageTemplate = "HTTP {Operation} responded {StatusCode} in {Elapsed:0.0000} ms";
+            // Roadmap P4: /health/ready answers 503 until dependencies connect; not an ERR.
+            options.GetLevel = StartupHealthCheckNoise.RequestLevel;
             options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
             {
                 var safePath = CreateSafePath(httpContext);

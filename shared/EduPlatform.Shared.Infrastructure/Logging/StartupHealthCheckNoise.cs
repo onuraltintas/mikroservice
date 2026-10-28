@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Serilog.Events;
 
 namespace EduPlatform.Shared.Infrastructure.Logging;
@@ -28,5 +29,24 @@ public static class StartupHealthCheckNoise
         return logEvent.Properties.TryGetValue("SourceContext", out var source)
             && source is ScalarValue { Value: string context }
             && context.StartsWith(HealthChecksSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Level for the request log line ("HTTP GET /health/ready responded 503"): a failing
+    /// health endpoint during the startup window is logged at Debug, below the minimum
+    /// level; everything else keeps Serilog's default (5xx or exception = Error).
+    /// </summary>
+    public static LogEventLevel RequestLevel(HttpContext context, double elapsedMs, Exception? exception) =>
+        RequestLevel(context, exception, Uptime);
+
+    public static LogEventLevel RequestLevel(HttpContext context, Exception? exception, TimeSpan uptime)
+    {
+        var failed = exception is not null || context.Response.StatusCode > 499;
+        if (!failed) return LogEventLevel.Information;
+
+        var startupHealthCheck = exception is null
+            && uptime < Window
+            && context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase);
+        return startupHealthCheck ? LogEventLevel.Debug : LogEventLevel.Error;
     }
 }
