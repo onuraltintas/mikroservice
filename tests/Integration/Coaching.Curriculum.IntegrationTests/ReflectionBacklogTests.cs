@@ -25,11 +25,13 @@ public sealed class ReflectionBacklogTests
         var first=await Page();Assert.Equal(3,first.AwaitingReflectionCount);Assert.Equal(new DateOnly(2026,9,28),Assert.Single(first.Items).WeekStart);
         var second=await Page(number:2);Assert.Equal(new DateOnly(2026,10,5),Assert.Single(second.Items).WeekStart);
         Assert.Equal(first.Items[0].RecordId,second.Items[0].RecordId);Assert.NotEqual(first.Items[0].WeekStart,second.Items[0].WeekStart);
-        user.UserId=student;user.Roles=["Student"];var home=await reviews.HomeAsync(default);Assert.Equal(3,home.MissingReflectionCount);Assert.Equal(new DateOnly(2026,9,28),home.WeekStart);
-        var saved=await reviews.SaveReflectionAsync(home.WeekStart,new(null,"Eski haftayı tamamladım","","Devam",4),default);
+        user.UserId=student;user.Roles=["Student"];var home=await reviews.HomeAsync(default);Assert.Equal(3,home.MissingReflectionCount);
+        // Roadmap D7: without any reflection yet the student starts with last week; the old gap is still listed.
+        Assert.Equal(new DateOnly(2026,10,12),home.WeekStart);var oldest=new DateOnly(2026,9,28);
+        var saved=await reviews.SaveReflectionAsync(oldest,new(null,"Eski haftayı tamamladım","","Devam",4),default);
         user.UserId=teacher;user.Roles=["Teacher"];Assert.Equal(2,(await Page()).AwaitingReflectionCount);
         var pending=await Page("weekly-review");Assert.Equal(new DateOnly(2026,9,28),Assert.Single(pending.Items).WeekStart);Assert.Equal(1,pending.AwaitingWeeklyReviewCount);
-        await reviews.ReviewReflectionAsync(student,home.WeekStart,new(saved.Version,"İnceledim, takip edeceğim"),default);Assert.Empty((await Page("weekly-review")).Items);
+        await reviews.ReviewReflectionAsync(student,oldest,new(saved.Version,"İnceledim, takip edeceğim"),default);Assert.Empty((await Page("weekly-review")).Items);
         var next=Guid.NewGuid();assignment.SetActive(false,teacher);pg.Db.AddRange(CoachingTeacherProfile.Create(next),CoachingTeacherStudentAssignment.Create(next,student,null,null,next));await pg.Db.SaveChangesAsync();
         user.UserId=next;var nextAccounts=new WeeklyFollowUpPostgresTests.Accounts(next);api=new(pg.Db,policy,new OwnedCoachingDirectory(pg.Db,nextAccounts,user),nextAccounts,new WeeklyFollowUpPostgresTests.Clock());
         var inherited=await Page(size:25);Assert.Equal(2,inherited.AwaitingReflectionCount);Assert.Equal(new DateOnly(2026,10,5),inherited.Items[0].WeekStart);
@@ -59,5 +61,38 @@ public sealed class ReflectionBacklogTests
         // Before September the previous school year is still the open one.
         var summer=await CoachingReflectionBacklog.MissingAsync(pg.Db,[student],new(2026,7,6),new(2026,7,5),default);
         Assert.Equal(new DateOnly(2025,9,1),summer[0].WeekStart);
+    }
+    // Roadmap D7: an ungraded submission stays in the teacher's follow-up even when it is older than the chosen window.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task UngradedSubmissionsOutsideTheWindowStayInTheReviewQueue()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var student=Guid.NewGuid();var teacher=Guid.NewGuid();
+        await WeeklyReviewPostgresTests.Setup(pg,student,teacher);var user=pg.Data.User;
+        var old=Assignment.Create(teacher,"Eski deneme ödevi",new DateTime(2026,8,20,9,0,0,DateTimeKind.Utc));old.AssignToStudent(student);old.SubmitAssignment(student,"Bitti");
+        var graded=Assignment.Create(teacher,"Puanlanmış",new DateTime(2026,8,21,9,0,0,DateTimeKind.Utc));graded.AssignToStudent(student);graded.SubmitAssignment(student);graded.GradeAssignment(student,70);
+        pg.Db.AddRange(old,graded);await pg.Db.SaveChangesAsync();
+        foreach(var row in await pg.Db.AssignmentStudents.ToArrayAsync())pg.Db.Entry(row).Property(x=>x.SubmittedAt).CurrentValue=new DateTime(2026,8,25,9,0,0,DateTimeKind.Utc);
+        await pg.Db.SaveChangesAsync();
+        var accounts=new WeeklyFollowUpPostgresTests.Accounts(teacher);var policy=new CoachingAccessPolicy(user);
+        var api=new CoachingTeacherTrackingController(pg.Db,policy,new OwnedCoachingDirectory(pg.Db,accounts,user),accounts,new WeeklyFollowUpPostgresTests.Clock());
+        user.UserId=teacher;user.Roles=["Teacher"];
+        var page=Assert.IsType<TeacherTrackingPage>(Assert.IsType<OkObjectResult>(await api.Get(new(2026,9,21),new(2026,10,20),"review",pageSize:25)).Value);
+        var item=Assert.Single(page.Items);Assert.Equal(old.Id,item.RecordId);Assert.Equal(1,page.AwaitingReviewCount);
+    }
+    // Roadmap D7: a student who has never written a weekly reflection starts with last week, not the oldest gap.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task AStudentWithoutAnyReflectionStartsWithLastWeek()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var student=Guid.NewGuid();var teacher=Guid.NewGuid();
+        var reviews=await WeeklyReviewPostgresTests.Setup(pg,student,teacher);var user=pg.Data.User;
+        var profile=await pg.Db.CoachingStudentProfiles.SingleAsync();var assignment=await pg.Db.CoachingTeacherStudentAssignments.SingleAsync();
+        pg.Db.Entry(profile).Property(x=>x.CreatedAt).CurrentValue=new DateTime(2026,9,29,0,0,0,DateTimeKind.Utc);
+        pg.Db.Entry(assignment).Property(x=>x.StartDate).CurrentValue=new DateTime(2026,9,29,0,0,0,DateTimeKind.Utc);await pg.Db.SaveChangesAsync();
+        user.UserId=student;user.Roles=["Student"];
+        var home=await reviews.HomeAsync(default);
+        Assert.Equal(new DateOnly(2026,10,12),home.WeekStart);Assert.Equal(3,home.MissingReflectionCount);
+        await reviews.SaveReflectionAsync(home.WeekStart,new(null,"Geçen hafta","","Devam",4),default);
+        // Once the student has written one, the oldest remaining gap comes next.
+        Assert.Equal(new DateOnly(2026,9,28),(await reviews.HomeAsync(default)).WeekStart);
     }
 }
