@@ -38,7 +38,7 @@ describe('Notification preferences (roadmap O8)', () => {
     expect((el('pref-save') as unknown as HTMLButtonElement).disabled).toBe(true);
     el('pref-email-Exams').click(); fixture.detectChanges();
     (el('pref-save') as unknown as HTMLButtonElement).click(); fixture.detectChanges();
-    expect(api.save).toHaveBeenCalledWith([{ category: 'Exams', inApp: true, email: true }]);
+    expect(api.save).toHaveBeenCalledWith([{ category: 'Exams', inApp: true, email: true, sms: false, whatsApp: false }]);
     expect(fixture.nativeElement.textContent).toContain('kaydedildi');
     expect(fixture.componentInstance.dirty()).toBe(false);
   });
@@ -50,5 +50,29 @@ describe('Notification preferences (roadmap O8)', () => {
     expect(fixture.nativeElement.textContent).toContain('kaydedilemedi');
     expect(fixture.componentInstance.items().find(x => x.category === 'Sessions')!.inApp).toBe(false);
     fixture.componentInstance.reset(); expect(fixture.componentInstance.dirty()).toBe(false);
+  });
+  it('offers SMS and WhatsApp only where available, keeps locked e-mail on, and stores commercial consent (roadmap O9)', () => {
+    const textRows = [
+      { category: 'Sessions', label: 'Koçluk seansları', inApp: true, email: true, emailEditable: true, textAvailable: true, sms: false, whatsApp: false },
+      { category: 'Subscription', label: 'Abonelik bitişi', inApp: true, email: true, emailEditable: false, textAvailable: true, sms: false, whatsApp: false },
+      { category: 'Exams', label: 'Sınavlar', inApp: true, email: false, emailEditable: true, textAvailable: false }
+    ];
+    const consents = [{ channel: 'Sms', label: "Kampanya SMS'leri", granted: false, iysStatus: 'NotRecorded', changedAt: null }];
+    const api = {
+      list: vi.fn(() => of(textRows)), save: vi.fn(() => of(textRows)),
+      consents: vi.fn(() => of(consents)), saveConsents: vi.fn(() => of([{ ...consents[0], granted: true, iysStatus: 'Pending' }]))
+    };
+    TestBed.configureTestingModule({ imports: [NotificationPreferencesComponent] });
+    const fixture = TestBed.createComponent(NotificationPreferencesComponent);
+    fixture.componentRef.setInput('api', api); fixture.detectChanges();
+    const el = (id: string) => fixture.nativeElement.querySelector(`[data-testid="${id}"]`) as HTMLInputElement | null;
+    expect(el('pref-sms-Sessions')).not.toBeNull(); expect(el('pref-sms-Exams')).toBeNull();
+    expect(el('pref-email-Subscription')!.disabled).toBe(true);
+    expect(el('text-note')!.textContent).toContain('henüz açılmadı');
+    el('pref-sms-Sessions')!.click(); fixture.detectChanges(); fixture.componentInstance.save();
+    expect(api.save).toHaveBeenCalledWith([{ category: 'Sessions', inApp: true, email: true, sms: true, whatsApp: false }]);
+    el('consent-box-Sms')!.click(); fixture.detectChanges();
+    expect(api.saveConsents).toHaveBeenCalledWith([{ channel: 'Sms', granted: true }]);
+    expect(fixture.nativeElement.textContent).toContain("İYS'ye aktarılmayı bekliyor");
   });
 });

@@ -34,6 +34,10 @@ public abstract class RecipientNotificationDispatcher(INotificationService notif
         }
         var email = plan?.Where(x => x.Value.Email).Select(x => x.Key).ToArray() ?? [];
         if (email.Length > 0) await channels!.EmailAsync(eventMessageId, email, title, message, type, cancellationToken);
+        // Roadmap O9: SMS / WhatsApp copies for those who opted in.
+        if (plan is not null && plan.Values.Any(x => x.Sms || x.WhatsApp))
+            await channels!.TextAsync(eventMessageId, plan.Where(x => x.Value.Sms || x.Value.WhatsApp).ToDictionary(x => x.Key, x => x.Value),
+                title, message, type, cancellationToken);
     }
 
     public Guid RecipientMessageId(Guid eventMessageId, Guid recipientId) =>

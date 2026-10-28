@@ -264,6 +264,8 @@ services:
       PublicApp__SpeedReadingBaseUrl: ${SPEED_READING_PUBLIC_BASE_URL:-https://masterhizliokuma.com}
       # New bank-transfer notices and institution expiries are e-mailed here; empty sends none.
       CoachingNotices__AdminAlertEmail: ${COACHING_ADMIN_ALERT_EMAIL:-}
+      TextMessaging__Enabled: ${TEXT_MESSAGING_ENABLED:-false}
+      TextMessaging__Provider: ${TEXT_MESSAGING_PROVIDER:-}
       Email__Host: ${SMTP_HOST:?SMTP_HOST must be set to a production SMTP host}
       Email__Port: ${SMTP_PORT:?SMTP_PORT must be set to a production SMTP port}
       Email__From: ${SMTP_FROM_EMAIL:?SMTP_FROM_EMAIL must be set}

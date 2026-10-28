@@ -22,6 +22,8 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     public DbSet<NotificationErasureExecutionReceipt> ErasureExecutions => Set<NotificationErasureExecutionReceipt>();
     public DbSet<NotificationErasedRecipient> ErasedRecipients => Set<NotificationErasedRecipient>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<TextMessageDelivery> TextMessageDeliveries => Set<TextMessageDelivery>();
+    public DbSet<CommercialMessageConsent> CommercialMessageConsents => Set<CommercialMessageConsent>();
 
     public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
         CancellationToken cancellationToken)
@@ -69,6 +71,29 @@ public class NotificationDbContext : DbContext, INotificationDbContext
             entity.ToTable("NotificationPreferences");
             entity.HasKey(x => new { x.UserId, x.Category });
             entity.Property(x => x.Category).HasMaxLength(40);
+        });
+        // Roadmap O9: SMS / WhatsApp outbox and commercial-message consent (İYS).
+        modelBuilder.Entity<TextMessageDelivery>(entity =>
+        {
+            entity.ToTable("TextMessageDeliveries");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.MessageId, x.Channel }).IsUnique();
+            entity.HasIndex(x => new { x.Status, x.CreatedAt });
+            entity.HasIndex(x => x.SubjectUserId);
+            entity.Property(x => x.Channel).HasMaxLength(20);
+            entity.Property(x => x.ConsumerType).HasMaxLength(200);
+            entity.Property(x => x.Recipient).HasMaxLength(32);
+            entity.Property(x => x.Body).HasMaxLength(320);
+            entity.Property(x => x.Provider).HasMaxLength(40);
+            entity.Property(x => x.LastError).HasMaxLength(500);
+        });
+        modelBuilder.Entity<CommercialMessageConsent>(entity =>
+        {
+            entity.ToTable("CommercialMessageConsents");
+            entity.HasKey(x => new { x.UserId, x.Channel });
+            entity.Property(x => x.Channel).HasMaxLength(10);
+            entity.Property(x => x.Source).HasMaxLength(40);
+            entity.Property(x => x.IysStatus).HasMaxLength(20);
         });
 
         // Email Template

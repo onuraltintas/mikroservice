@@ -14,7 +14,7 @@ public sealed class IdentityRecipientDirectory(HttpClient http, IConfiguration c
     private readonly string baseUrl = configuration["Services:IdentityService"] ?? "http://localhost:5001";
     private readonly string? key = configuration["INTERNAL_SERVICE_API_KEY"] ?? configuration["Internal:ServiceApiKey"];
 
-    private sealed record Row(Guid UserId, string? Email, string? FirstName, string? LastName);
+    private sealed record Row(Guid UserId, string? Email, string? FirstName, string? LastName, string? Phone = null);
 
     public async Task<IReadOnlyDictionary<Guid, RecipientContact>> GetAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct)
     {
@@ -29,7 +29,7 @@ public sealed class IdentityRecipientDirectory(HttpClient http, IConfiguration c
             using var response = await http.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
             foreach (var row in await response.Content.ReadFromJsonAsync<Row[]>(cancellationToken: ct) ?? [])
-                result[row.UserId] = new RecipientContact(row.UserId, row.Email, row.FirstName ?? "", row.LastName ?? "");
+                result[row.UserId] = new RecipientContact(row.UserId, row.Email, row.FirstName ?? "", row.LastName ?? "") { Phone = row.Phone };
         }
         return result;
     }
