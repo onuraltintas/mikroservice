@@ -4,7 +4,7 @@
     @if (hasPhoneMenu && menuOpen()) { <button class="teacher-scrim" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"></button> }
     <aside class="sidebar" aria-label="Personel portalı" [attr.role]="hasPhoneMenu && menuOpen() ? 'dialog' : null" [attr.aria-modal]="hasPhoneMenu && menuOpen() ? 'true' : null" [cdkTrapFocus]="hasPhoneMenu && menuOpen()" [cdkTrapFocusAutoCapture]="hasPhoneMenu && menuOpen()">
       @if (hasPhoneMenu && menuOpen()) { <button class="teacher-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"><app-coaching-icon name="close" /></button> }
-      <a class="brand" href="/staff/" aria-label="Eduİvme personel portalı ana sayfa">
+      <a class="brand" href="/staff/" aria-label="eduivme personel alanı ana sayfa">
         <span class="brand-symbol">İ</span>
         <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
       </a>
@@ -161,7 +161,7 @@
 } @else {
   <main class="login-page">
     <section class="login-story" aria-label="Eduİvme personel portalı hakkında">
-      <a class="brand light-brand" href="/staff/" aria-label="Personel portalı ana sayfa">
+      <a class="brand light-brand" href="/staff/" aria-label="eduivme personel alanı ana sayfa">
         <span class="brand-symbol">İ</span>
         <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
       </a>

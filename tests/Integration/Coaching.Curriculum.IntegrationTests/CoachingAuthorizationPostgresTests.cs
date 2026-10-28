@@ -25,10 +25,10 @@ public sealed class CoachingAuthorizationPostgresTests
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create();
         var world = await World.Create(pg);
-        var session = CoachingSession.Create(world.Teacher, "Hafta görüşmesi", new DateTime(2026, 10, 28, 9, 0, 0, DateTimeKind.Utc),
+        var session = CoachingSession.Create(world.Teacher, "Hafta görüşmesi", DateTime.UtcNow.Date.AddDays(2).AddHours(9),
             SessionType.OneOnOne, 60, world.Institution);
         session.AddStudent(world.Student);
-        var assignment = Assignment.Create(world.Teacher, "Paragraf", new DateTime(2026, 10, 30, 9, 0, 0, DateTimeKind.Utc), institutionId: world.Institution);
+        var assignment = Assignment.Create(world.Teacher, "Paragraf", DateTime.UtcNow.Date.AddDays(4).AddHours(9), institutionId: world.Institution);
         assignment.AssignToStudent(world.Student); assignment.SubmitAssignment(world.Student, "Bitti");
         pg.Db.AddRange(session, assignment); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
         world.ActAs(world.Teacher, "Teacher");
@@ -152,7 +152,7 @@ public sealed class CoachingAuthorizationPostgresTests
         public Task UpdateSession(Guid session, string link) =>
             new UpdateSessionCommandHandler(new CoachingSessionRepository(pg.Db), new UnitOfWork(pg.Db), new CoachingAccessPolicy(pg.Data.User),
                 new CurriculumManagementTests.NoopPublisher(), FreshDirectory())
-            .Handle(new UpdateSessionCommand(session, "Hafta görüşmesi", null, new DateTime(2026, 10, 28, 9, 0, 0, DateTimeKind.Utc), 60, link,
+            .Handle(new UpdateSessionCommand(session, "Hafta görüşmesi", null, DateTime.UtcNow.Date.AddDays(2).AddHours(9), 60, link,
                 "Not", CoachingNoteVisibility.StudentVisible), default);
         public Task Grade(Guid assignment, decimal score) =>
             new GradeAssignmentCommandHandler(new AssignmentRepository(pg.Db), new UnitOfWork(pg.Db), new CoachingAccessPolicy(pg.Data.User),

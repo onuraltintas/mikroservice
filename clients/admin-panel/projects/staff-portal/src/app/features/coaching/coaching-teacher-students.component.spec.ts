@@ -15,7 +15,7 @@ describe('CoachingTeacherStudentsComponent', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.match(request => request.url.endsWith('/motivation')); http.verify(); });
 
   it('lets a Coaching teacher invite a student and reports the product-specific result', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);

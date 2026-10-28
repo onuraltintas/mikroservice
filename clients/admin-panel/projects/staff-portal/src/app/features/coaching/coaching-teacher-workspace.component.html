@@ -7,7 +7,8 @@
     </div>
   </div>
 
-  <staff-section-nav label="Öğretmen bölümleri" [groups]="sectionGroups" [active]="activeSection()" (select)="chooseSection($event)" />
+  <staff-section-nav label="Öğretmen bölümleri" idPrefix="teacher-section" [groups]="sectionGroups" [active]="activeSection()" (select)="chooseSection($event)" />
+  <div role="tabpanel" id="teacher-section-panel" [attr.aria-labelledby]="'teacher-section-tab-' + activeSection()">
 
   @if(activeSection()==='tracking'){
     @defer (on immediate) {
@@ -42,4 +43,5 @@
   } @else {
     <staff-coaching-teacher-subscription />
   }
+  </div>
 </section>
