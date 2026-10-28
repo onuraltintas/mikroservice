@@ -2,6 +2,7 @@ using System.Text.Json;
 using Coaching.Application.Authorization;
 using Coaching.Application.StudyPlanning;
 using Coaching.Domain.Entities;
+using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.StudyPlanning;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -140,6 +141,22 @@ public sealed class WeeklyOutcomePlanTests
         await Assert.ThrowsAsync<ArgumentException>(()=>service.CreateAsync(new("Eksik plan",shortRequest,preview.Fingerprint),default));
         var extended=await service.PreviewAsync(shortRequest with {EndDate=preview.Schedule.RecommendedEndDate!.Value},default);Assert.True(extended.CanCreate);
         f.User.Roles=["Teacher"];await Assert.ThrowsAsync<BusinessRuleException>(()=>service.PreviewAsync(Input,default));
+    }
+    // Roadmap D1: creating a plan shares the catalog lock with other plans (only catalog changes take it exclusively),
+    // so one student's plan no longer waits for every other student's plan.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task PlansOfDifferentStudentsDoNotQueueBehindEachOther()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var service=await Seed(f);var preview=await service.PreviewAsync(Input,default);
+        await using var other=new CoachingDbContext(pg.Options);await other.Database.OpenConnectionAsync();
+        await other.Database.ExecuteSqlRawAsync("SELECT pg_advisory_lock_shared(4188, 100)");
+        try
+        {
+            var creating=service.CreateAsync(new("Eşzamanlı plan",Input,preview.Fingerprint),default);
+            Assert.Same(creating,await Task.WhenAny(creating,Task.Delay(TimeSpan.FromSeconds(20))));
+            Assert.True(await pg.Db.StudyPlanRevisions.AnyAsync(x=>x.Id==creating.Result.Id));
+        }
+        finally { await other.Database.ExecuteSqlRawAsync("SELECT pg_advisory_unlock_all()"); }
     }
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task ChangedCalendarCannotBePublished_AndWeeklyPlanCannotBeFlattenedByManualReplacement()

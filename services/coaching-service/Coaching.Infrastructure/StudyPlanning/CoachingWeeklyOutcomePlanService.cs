@@ -252,7 +252,8 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             await using var transaction=await db.Database.BeginTransactionAsync(ct);
             try
             {
-                await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(4188, 100)",ct);
+                // Roadmap D1: plans only read the catalog, so they share its lock; catalog changes take it exclusively.
+                await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock_shared(4188, 100)",ct);
                 var key="coaching-study-plan:"+student;await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key},0))",ct);
                 var result=await Save();await transaction.CommitAsync(ct);return result;
             }

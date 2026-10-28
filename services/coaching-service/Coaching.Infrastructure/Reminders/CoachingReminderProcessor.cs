@@ -9,8 +9,12 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Coaching.Infrastructure.Reminders;
 
-public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEventPublisher events, TimeProvider clock)
+public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEventPublisher events, TimeProvider clock,
+    CoachingReminderScanState? scans = null)
 {
+    // Scans that found nothing more to send; recorded only after their transaction committed.
+    private readonly List<(string Kind, string Zone, DateOnly Date)> finishedScans = [];
+
     private const int BatchSize = 100;
     // A missed task is mentioned for this many days; after that the student has seen it and the reminder would only nag.
     private const int OverdueReminderDays = 3;
@@ -18,15 +22,22 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
     public async Task<int> ProcessAsync(CancellationToken ct = default)
     {
         var now = clock.GetUtcNow();
-        var studyCount = await LockedAsync(() => StudyDaysAsync(now, ct), false, ct);
-        var overdueCount = await LockedAsync(() => StudyDaysAsync(now, ct, true), false, ct);
+        var studyCount = await LockedAsync(() => StudyDaysAsync(now, ct), false, ct); RememberFinishedScans();
+        var overdueCount = await LockedAsync(() => StudyDaysAsync(now, ct, true), false, ct); RememberFinishedScans();
         var feeCount = await LockedAsync(() => OverdueFeesAsync(now, ct), false, ct);
         var assignmentCount = await LockedAsync(() => AssignmentsDueAsync(now, ct), false, ct);
         return studyCount + overdueCount + feeCount + assignmentCount + await LockedAsync(() => SessionsAsync(now, ct), true, ct);
     }
 
+    private void RememberFinishedScans()
+    {
+        foreach (var scan in finishedScans) scans?.Finish(scan.Kind, scan.Zone, scan.Date);
+        finishedScans.Clear();
+    }
+
     private async Task<int> StudyDaysAsync(DateTimeOffset now, CancellationToken ct, bool overdue = false)
     {
+        finishedScans.Clear();
         var count = 0;
         var kind = overdue ? "StudyOverdue" : "StudyDay";
         var zones = (await db.StudyAvailability.AsNoTracking().Select(x => x.TimeZoneId).Distinct().ToListAsync(ct))
@@ -36,6 +47,8 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
             var zone = TimeZoneInfo.FindSystemTimeZoneById(zoneId); var local = TimeZoneInfo.ConvertTime(now, zone);
             if (local.Hour < 9) continue;
             var date = DateOnly.FromDateTime(local.DateTime); var since = date.AddDays(-OverdueReminderDays);
+            if (scans?.IsFinished(kind, zoneId, date) == true) continue;
+            var limit = BatchSize - count;
             var occurrence = date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
             var due = TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(new TimeOnly(9, 0)), zone);
             var plans = await (from plan in db.StudyPlanRevisions.AsNoTracking()
@@ -48,7 +61,7 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
                         && receipt.RecipientUserId == plan.StudentId && receipt.OccurrenceKey == occurrence)
                 orderby plan.StudentId, plan.Id
                 select new { plan.Id, plan.StudentId })
-                .Take(BatchSize - count).ToListAsync(ct);
+                .Take(limit).ToListAsync(ct);
             foreach (var plan in plans)
             {
                 var key = "coaching-study-plan:" + plan.StudentId;
@@ -58,6 +71,7 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
                 if (await QueueAsync(CoachingReminderReceipt.Create(plan.StudentId, plan.Id, kind, occurrence, due, now.UtcDateTime), ct)) count++;
                 if (count == BatchSize) break;
             }
+            if (plans.Count < limit) finishedScans.Add((kind, zoneId, date));
             if (count == BatchSize) break;
         }
         return count;
