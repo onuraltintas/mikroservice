@@ -8,12 +8,13 @@ import { finalize } from 'rxjs';
 import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingLearningSetupService, LearningCatalog, LearningContext, TopicDeclaration } from '../../../core/services/coaching-learning-setup.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
+import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
 import { clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
 import { createStudyPlanProposal } from './study-plan-wizard';
 
 @Component({
   selector: 'app-student-study-plan-assistant', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, StudentWeeklyOutcomePlanComponent], templateUrl: './student-study-plan-assistant.component.html',
+  imports: [CommonModule, FormsModule, RouterLink, StudentWeeklyOutcomePlanComponent, StudentAutomaticPlanComponent], templateUrl: './student-study-plan-assistant.component.html',
   styleUrl: './student-study-plan-assistant.component.scss'
 })
 export class StudentStudyPlanAssistantComponent implements OnInit {
@@ -29,6 +30,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly startTime = signal('18:00');
   readonly minutesPerDay = signal<30 | 60 | 90 | 120>(60);
   readonly annualReview = signal(false);
+  /** Roadmap O1: the topic-based plan is part of the one plan wizard. */
+  readonly topicPlanOpen = signal(false);
   readonly busy = signal(true);
   readonly error = signal('');
   readonly saved = signal(false);
@@ -56,7 +59,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
         this.version = page.draft?.version ?? null;
         this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul';
         this.busy.set(false);
-        if (!page.lessons.length) this.error.set(this.staffStudentId ? 'Bu öğrenci henüz eğitim bağlamını tamamlamamış. Önce öğrenci kurulumunu tamamlayın.' : 'Önce çalışma düzeninden ders seçmelisin.');
+        if (!page.lessons.length) this.error.set(this.staffStudentId ? 'Bu öğrenci henüz eğitim bağlamını tamamlamamış. Önce öğrenci kurulumunu tamamla.' : 'Önce çalışma düzeninden ders seçmelisin.');
       },
       error: () => { this.busy.set(false); this.error.set('Haftalık ders düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
     });
@@ -184,7 +187,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
 
   dayName(day: string) { return this.weekDays.find(x => x.value === day)?.label ?? day; }
   ceil(value: number) { return Math.ceil(value); }
-  async canLeavePage() { return this.annualReview() ? (await this.annualPlan?.canLeavePage() ?? true) : !this.busy(); }
+  @ViewChild(StudentAutomaticPlanComponent) private topicPlan?: StudentAutomaticPlanComponent;
+  async canLeavePage() { return this.annualReview() ? (await this.annualPlan?.canLeavePage() ?? true) : !this.busy() && (await this.topicPlan?.canLeavePage() ?? true); }
   onPlanCreated(id: string) { this.planCreated.emit(id); }
 
   private readonly feedback = coachingFeedback(undefined, this.error);

@@ -159,7 +159,7 @@ export class StudentStudyReportComponent implements OnChanges {
   scoreReason(reason: string) {
     return reason === 'NoMatchingResults' ? 'Seçilen dönemde aynı tür ve puan ölçeğinde uyumlu sınav sonucu yok.'
       : reason === 'SubjectTargetNotComparable' ? 'Ders hedefi toplam sınav puanıyla karşılaştırılamaz.'
-      : 'Otomatik karşılaştırma için hedef puanı, sınav türü ve puan ölçeğini birlikte belirleyin.';
+      : 'Otomatik karşılaştırma için hedef puanı, sınav türü ve puan ölçeğini birlikte belirle.';
   }
   load() {
     if (this.busy()) return;

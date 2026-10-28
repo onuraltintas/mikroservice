@@ -59,7 +59,7 @@ describe('CoachingSessionsComponent', () => {
     const component = fixture.componentInstance;
     await component.ngOnInit();
     fixture.detectChanges(); await fixture.whenStable();
-    expect(fixture.nativeElement.textContent).toContain('Seninle paylaşılan koç notu');
+    expect(fixture.nativeElement.textContent).toContain('Seninle paylaşılan öğretmen notu');
     expect(fixture.nativeElement.textContent).toContain('Bu hafta çalışma planını ailene göster.');
     component.setNote('session-1', 'Bugün hedefimi netleştirdim.');
 

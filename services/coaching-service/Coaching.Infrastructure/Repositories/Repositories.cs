@@ -121,6 +121,39 @@ public class AssignmentRepository : IAssignmentRepository
         return new PagedRepositoryResult<Assignment>(items, totalCount);
     }
 
+    public async Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(
+        Guid studentId, Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter filter, DateTime now,
+        int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    {
+        if (filter == Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter.All)
+            return await GetByStudentIdAsync(studentId, pageNumber, pageSize, cancellationToken);
+        var query = _context.Assignments.Where(a => a.AssignedStudents.Any(s => s.StudentId == studentId));
+        query = filter switch
+        {
+            Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter.Open => query.Where(a => a.Status == AssignmentStatus.Active
+                && a.AssignedStudents.Any(s => s.StudentId == studentId && (s.Status == StudentAssignmentStatus.Assigned || s.Status == StudentAssignmentStatus.InProgress))),
+            Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter.Pending => query.Where(a => a.Status == AssignmentStatus.Active && a.DueDate >= now
+                && a.AssignedStudents.Any(s => s.StudentId == studentId && (s.Status == StudentAssignmentStatus.Assigned || s.Status == StudentAssignmentStatus.InProgress))),
+            Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter.Overdue => query.Where(a => a.Status == AssignmentStatus.Active && a.DueDate < now
+                && a.AssignedStudents.Any(s => s.StudentId == studentId && (s.Status == StudentAssignmentStatus.Assigned || s.Status == StudentAssignmentStatus.InProgress))),
+            Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter.Submitted => query.Where(a =>
+                a.AssignedStudents.Any(s => s.StudentId == studentId && (s.Status == StudentAssignmentStatus.Submitted || s.Status == StudentAssignmentStatus.Graded))),
+            _ => query.Where(a => a.Status == AssignmentStatus.Cancelled)
+        };
+        var ordered = filter is Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter.Submitted
+            or Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter.Cancelled
+            ? query.OrderByDescending(a => a.CreatedAt).ThenByDescending(a => a.Id)
+            : query.OrderBy(a => a.DueDate).ThenBy(a => a.Id);
+        var totalCount = await ordered.CountAsync(cancellationToken);
+        var items = await ordered
+            .Include(a => a.AssignedStudents.Where(s => s.StudentId == studentId))
+                .ThenInclude(student => student.SubmissionAttachments)
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+        return new PagedRepositoryResult<Assignment>(items, totalCount);
+    }
+
     public async Task<Assignment> AddAsync(Assignment assignment, CancellationToken cancellationToken = default)
     {
         await _context.Assignments.AddAsync(assignment, cancellationToken);

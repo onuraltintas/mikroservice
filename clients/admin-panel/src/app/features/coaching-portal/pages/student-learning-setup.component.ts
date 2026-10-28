@@ -8,13 +8,12 @@ import { finalize } from 'rxjs';
 import { CoachingLearningSetupService, LearningCatalog, LearningCourse, LearningPurpose, LearningSetupUpdate, LearningSetupView, LearningTopic, TopicDeclaration } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingProfileComponent } from '../../../../../shared/coaching-profile.component';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
-import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingStudyPlanningService, PublishedStudyOutcome, StudyTopic } from '../../../core/services/coaching-study-planning.service';
 
 @Component({
   selector: 'app-student-learning-setup', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingProfileComponent, StudentStudyAvailabilityComponent, StudentAutomaticPlanComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CoachingProfileComponent, StudentStudyAvailabilityComponent],
   templateUrl: './student-learning-setup.component.html', styleUrl: './student-study-plans.component.scss'
 })
 export class StudentLearningSetupComponent implements OnInit {
@@ -33,7 +32,6 @@ export class StudentLearningSetupComponent implements OnInit {
     { value: 'Lgs', label: 'LGS hazırlığı' }, { value: 'Yks', label: 'YKS hazırlığı' }, { value: 'General', label: 'Genel çalışma' }, { value: 'Undecided', label: 'Henüz karar vermedim' }];
   @ViewChild(CoachingProfileComponent) profile?: CoachingProfileComponent;
   @ViewChild(StudentStudyAvailabilityComponent) hours?: StudentStudyAvailabilityComponent;
-  @ViewChild(StudentAutomaticPlanComponent) preview?: StudentAutomaticPlanComponent;
   academicYearStart = new Date().getMonth() >= 8 ? new Date().getFullYear() : new Date().getFullYear() - 1;
   purpose: LearningPurpose = 'Undecided'; targetExamYear: number | null = null; primaryScoreType = 'TYT'; foreignLanguage = '';
   courses: LearningCourse[] = []; topics: LearningTopic[] = []; startingStatusReviewed = false;
@@ -49,7 +47,7 @@ export class StudentLearningSetupComponent implements OnInit {
     this.loading.set(true); this.ready.set(false); this.error.set(null);
     this.service.get().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
       next: state => { this.apply(state); this.ready.set(true); this.step.set(state.nextStep === 'Catalog' ? 'Courses' : state.nextStep); if (this.step() === 'Courses' || this.step() === 'Starting') this.loadCatalog(); },
-      error: e => { if (e?.status === 404) this.step.set('Profile'); this.error.set(e?.status === 404 ? 'Koçluk profiliniz henüz hazırlanmadı. Eğitim bilgileri adımından profilinizi oluşturabilirsiniz.' : 'Kurulum bilgileri yüklenemedi. Yeniden deneyin.'); }
+      error: e => { if (e?.status === 404) this.step.set('Profile'); this.error.set(e?.status === 404 ? 'Koçluk profilin henüz hazırlanmadı. Eğitim bilgileri adımından profilini oluşturabilirsin.' : 'Kurulum bilgileri yüklenemedi. Yeniden dene.'); }
     });
   }
   private apply(state: LearningSetupView) {
@@ -64,7 +62,7 @@ export class StudentLearningSetupComponent implements OnInit {
   async goTo(step: string) {
     if (this.saving() || this.loading() || this.catalogLoading()) return;
     if (!await this.canLeaveChildren()) return;
-    if (this.dirty) { this.error.set('Adım değiştirmeden önce seçimlerinizi kaydedin veya yeniden yükleyin.'); return; }
+    if (this.dirty) { this.error.set('Adım değiştirmeden önce seçimlerini kaydet veya yeniden yükle.'); return; }
     this.step.set(step); this.error.set(null);
     if (step === 'Courses' || step === 'Starting') this.loadCatalog();
   }
@@ -74,7 +72,7 @@ export class StudentLearningSetupComponent implements OnInit {
     if (!Number.isInteger(this.academicYearStart) || this.academicYearStart < 2000 || this.academicYearStart > 2200
       || (this.purpose === 'Lgs' || this.purpose === 'Yks') && (!Number.isInteger(this.targetExamYear) || this.targetExamYear! < this.academicYearStart || this.targetExamYear! > this.academicYearStart + 5)
       || this.purpose === 'Yks' && this.primaryScoreType === 'DIL' && !this.foreignLanguage) {
-      this.error.set('Eğitim yılını ve seçtiğiniz amaca ait sınav bilgilerini tamamlayın.'); return;
+      this.error.set('Eğitim yılını ve seçtiğin amaca ait sınav bilgilerini tamamla.'); return;
     }
     const previous = this.state()?.context;
     const sameScope = previous && !this.state()?.missingFields.some(x => x === 'Purpose' || x === 'Catalog')
@@ -95,7 +93,7 @@ export class StudentLearningSetupComponent implements OnInit {
     this.saving.set(true); this.error.set(null);
     this.service.save(request).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false))).subscribe({
       next: state => { this.apply(state); this.step.set(next); if (next === 'Starting' || next === 'Courses') this.loadCatalog(); },
-      error: e => this.error.set(e?.status === 409 ? 'Kurulum başka bir oturumda değişti. Seçimleriniz korundu; güncel bilgileri yeniden yükleyin.' : e?.error?.message ?? 'Kurulum kaydedilemedi. Seçimleriniz ekranda korundu.')
+      error: e => this.error.set(e?.status === 409 ? 'Kurulum başka bir oturumda değişti. Seçimlerin korundu; güncel bilgileri yeniden yükle.' : e?.error?.message ?? 'Kurulum kaydedilemedi. Seçimlerin ekranda korundu.')
     });
   }
   async afterProfileSaved() { await this.load(); }
@@ -104,7 +102,7 @@ export class StudentLearningSetupComponent implements OnInit {
     if (this.catalogLoading()) return;
     this.catalogLoading.set(true); this.catalogError.set(null);
     this.service.catalog(this.selectedLesson || null, page).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.catalogLoading.set(false))).subscribe({
-      next: catalog => { this.catalog.set(catalog); this.topicPage = page; }, error: () => this.catalogError.set('Ders kataloğu yüklenemedi. Tekrar deneyin.')
+      next: catalog => { this.catalog.set(catalog); this.topicPage = page; }, error: () => this.catalogError.set('Ders kataloğu yüklenemedi. Tekrar dene.')
     });
   }
   topicGroups() {
@@ -139,13 +137,13 @@ export class StudentLearningSetupComponent implements OnInit {
     } else this.courses = [...this.courses, { lessonId: id, priority: 3, selfReportedDifficulty: null }];
     this.startingStatusReviewed = false; this.changed();
   }
-  saveCourses() { if (!this.courses.length) { this.error.set('En az bir ders seçin.'); return; } this.persist(this.request(), 'Starting'); }
+  saveCourses() { if (!this.courses.length) { this.error.set('En az bir ders seç.'); return; } this.persist(this.request(), 'Starting'); }
   declaration(id: string) { return this.topics.find(x => x.topicId === id)?.declaredStatus ?? ''; }
   setDeclaration(id: string, status: TopicDeclaration | '') {
     this.topics = this.topics.filter(x => x.topicId !== id); if (status) this.topics.push({ topicId: id, declaredStatus: status }); this.changed();
   }
-  finishStarting() { if (!this.startingStatusReviewed) { this.error.set('Başlangıç bilgilerini gözden geçirdiğinizi onaylayın.'); return; } this.persist(this.request(), 'Preview'); }
-  private async canLeaveChildren() { return (await this.profile?.canLeavePage() ?? true) && (await this.hours?.canLeavePage() ?? true) && (await this.preview?.canLeavePage() ?? true); }
+  finishStarting() { if (!this.startingStatusReviewed) { this.error.set('Başlangıç bilgilerini gözden geçirdiğini onayla.'); return; } this.persist(this.request(), 'Preview'); }
+  private async canLeaveChildren() { return (await this.profile?.canLeavePage() ?? true) && (await this.hours?.canLeavePage() ?? true); }
   async canLeavePage() { return !this.saving() && await this.canLeaveChildren() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş kurulum seçimlerinden vazgeçilsin mi?')); }
   private readonly feedback = coachingFeedback(undefined, this.error);
 }

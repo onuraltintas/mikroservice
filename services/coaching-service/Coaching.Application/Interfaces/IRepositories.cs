@@ -32,6 +32,11 @@ public interface IAssignmentRepository
             page.TotalCount);
     }
     Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
+    /// <summary>Roadmap O1: filtered before counting and paging. Open, pending and late work is ordered by due date.</summary>
+    Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(
+        Guid studentId, Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListFilter filter, DateTime now,
+        int pageNumber, int pageSize, CancellationToken cancellationToken = default) =>
+        GetByStudentIdAsync(studentId, pageNumber, pageSize, cancellationToken);
     Task<Assignment> AddAsync(Assignment assignment, CancellationToken cancellationToken = default);
     Task UpdateAsync(Assignment assignment, CancellationToken cancellationToken = default);
     Task DeleteAsync(Assignment assignment, CancellationToken cancellationToken = default);

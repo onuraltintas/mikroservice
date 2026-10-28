@@ -78,7 +78,7 @@ export class CoachingPortalProgressComponent implements OnInit {
       if (!week) return;
       if (!validWeeklyDate(week) || decision !== null && !validCoachingId(decision)) { this.errorMessage.set('Haftalık kayıt bağlantısı geçersiz.'); return; }
       if (this.weeklyTarget()?.weekStart === week && this.weeklyTarget()?.decisionId === decision) return;
-      if (this.practiceProgress && !await this.canLeavePage()) { this.errorMessage.set('Kaydedilmemiş girdileriniz korunuyor. Haftalık kaydı açmadan önce kaydedin veya düzenlemeyi kapatın.'); return; }
+      if (this.practiceProgress && !await this.canLeavePage()) { this.errorMessage.set('Kaydedilmemiş girdilerin korunuyor. Haftalık kaydı açmadan önce kaydet veya düzenlemeyi kapat.'); return; }
       if (navigationVersion !== this.weeklyNavigationVersion) return;
       this.weeklyTarget.set({studentId:this.authService.userProfile()?.id ?? '',weekStart:week,decisionId:decision});
     });
@@ -155,7 +155,7 @@ export class CoachingPortalProgressComponent implements OnInit {
         this.retrySummary();
       },
       error: () => {
-        this.goalFormError.set('Hedef oluşturulamadı. Bilgileri kontrol edip tekrar deneyin.');
+        this.goalFormError.set('Hedef oluşturulamadı. Bilgileri kontrol edip tekrar dene.');
         this.isSavingGoal.set(false);
       },
       complete: () => this.isSavingGoal.set(false)
@@ -215,7 +215,7 @@ export class CoachingPortalProgressComponent implements OnInit {
     this.loadingSummary.set(true);
     this.coachingService.getStudentProgress(studentId).pipe(finalize(() => this.loadingSummary.set(false))).subscribe({
       next: summary => { this.summary.set(summary); this.summaryError.set(null); },
-      error: () => this.summaryError.set('İlerleme özeti yüklenemedi. Yeniden deneyebilirsiniz.')
+      error: () => this.summaryError.set('İlerleme özeti yüklenemedi. Yeniden deneyebilirsin.')
     });
   }
 
@@ -230,7 +230,7 @@ export class CoachingPortalProgressComponent implements OnInit {
         this.goals.update(items => [...items, ...page.items]);
         this.goalPageNumber.set(page.pageNumber);
       },
-      error: () => this.goalFormError.set('Hedeflerin devamı yüklenemedi. Yeniden deneyebilirsiniz.')
+      error: () => this.goalFormError.set('Hedeflerin devamı yüklenemedi. Yeniden deneyebilirsin.')
     });
   }
 

@@ -1,4 +1,4 @@
-import { DestroyRef, effect, inject, Injector, Signal } from '@angular/core';
+import { afterNextRender, DestroyRef, effect, ElementRef, inject, Injector, Signal } from '@angular/core';
 import type { ToasterService } from '../../core/services/toaster.service';
 
 function feedbackLoader() {
@@ -19,11 +19,20 @@ export function coachingToaster(): Pick<ToasterService,'confirm'|'success'|'erro
   };
 }
 
-/** Keep field-level messages visible while announcing outcomes through the shared toaster. */
+/**
+ * Roadmap O1: a message is shown once, in the page next to what it is about (role="alert" / role="status").
+ * On a phone that place can be off screen, so the newest message is brought into view instead of being
+ * repeated as a pop-up.
+ */
 export function coachingFeedback(success?: Signal<string | null>, error?: Signal<string | null>): void {
-  const load=feedbackLoader();
-  for(const [source,kind] of [[success,'success'],[error,'error']] as const) if(source) effect(onCleanup=>{
-    const message=source();let cancelled=false;onCleanup(()=>{cancelled=true;});
-    if(message) void load().then(toaster=>{if(!cancelled)toaster?.[kind](message);});
+  const host=inject(ElementRef) as ElementRef<HTMLElement>, injector=inject(Injector);
+  for(const [source,role] of [[success,'status'],[error,'alert']] as const) if(source) effect(()=>{
+    const message=source();
+    if(!message) return;
+    afterNextRender(()=>{
+      const nodes=[...host.nativeElement.querySelectorAll<HTMLElement>(`[role="${role}"]`)];
+      const node=nodes.find(item=>item.textContent?.includes(message))??nodes[0];
+      node?.scrollIntoView?.({block:'nearest',behavior:'smooth'});
+    },{injector});
   });
 }

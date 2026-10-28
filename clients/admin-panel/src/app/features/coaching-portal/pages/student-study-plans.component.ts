@@ -47,7 +47,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
         const setup=this.injector.get(CoachingLearningSetupService),student=this.staffStudentId;
         const catalog=await firstValueFrom((student?setup.catalogForStudent(student):setup.catalog()).pipe(takeUntil(this.scopeChanged),takeUntilDestroyed(this.destroyRef)),{defaultValue:null});
         if(this.calendarForm?.kind==='add'&&catalog){this.calendarLessons=catalog.lessons;this.calendarForm.lessonId=catalog.lessons[0]?.id??null;}
-      }catch(error){this.showError(error,'Dersler yüklenemedi. Tekrar deneyin.');}
+      }catch(error){this.showError(error,'Dersler yüklenemedi. Tekrar dene.');}
       finally{this.calendarLessonsLoading=false;this.changeDetector.markForCheck();}
     }
   }
@@ -90,8 +90,12 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   @Input() autoOpenActive=false;
   @Input() initialPlanId:string|null=null;
   @Input() initialTaskId:string|null=null;
-  @Input() taskFilter:'all'|'pending'|'completed'|'overdue'='all';
-  filteredTasks(){return this.selected()?.tasks.filter(t=>this.taskFilter==='all'||this.taskFilter==='completed'&&t.isCompleted||this.taskFilter==='pending'&&!t.isCompleted||this.taskFilter==='overdue'&&this.isOverdue(t))??[];}
+  @Input() taskFilter:'all'|'today'|'pending'|'completed'|'overdue'='all';
+  filteredTasks(){const today=this.planToday();return this.selected()?.tasks.filter(t=>this.taskFilter==='all'||this.taskFilter==='today'&&t.plannedDate===today||this.taskFilter==='completed'&&t.isCompleted||this.taskFilter==='pending'&&!t.isCompleted||this.taskFilter==='overdue'&&this.isOverdue(t))??[];}
+  /** Today's date in the plan's time zone. */
+  planToday(){const zone=this.selected()?.weeklySource?.timeZoneId||'Europe/Istanbul';try{return new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch{return this.today;}}
+  private openedOnToday=false;
+  openWizard(){void this.router?.navigate(['/coaching-portal/automatic-plan']);}
   isOverdue(task:StudyTask){return this.selected()?.status==='Active'&&calendarTaskOverdue(task,this.selected()?.weeklySource?.timeZoneId);}
   changeTaskFilter(){this.taskPage=1;this.planView.set('list');this.selectedTaskIds.set([]);}
   taskTitles:Record<string,string>={};
@@ -147,8 +151,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   }
 
   async canLeavePage() {
-    if (this.busy()) { this.error.set('İşlem sürüyor. Tamamlanmasını bekleyin.'); return false; }
-    return !(this.dirty || !!this.calendarForm || !!this.correction || this.hasUnsavedTaskInputs()) || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş değişiklikleriniz var. Değişikliklerden vazgeçerek ayrılmak istiyor musunuz?'));
+    if (this.busy()) { this.error.set('İşlem sürüyor. Tamamlanmasını bekle.'); return false; }
+    return !(this.dirty || !!this.calendarForm || !!this.correction || this.hasUnsavedTaskInputs()) || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş değişikliklerin var. Değişikliklerden vazgeçerek ayrılmak istiyor musun?'));
   }
 
   async refreshAfterExternalChange() {
@@ -174,12 +178,12 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
         if (active) await this.open(active.id);
         else if (!this.filter) this.service.list(1, 'Active',...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef))
           .subscribe({ next: async plans => { if (plans.items.length && !this.selected() && !this.editing) await this.open(plans.items[0].id); },
-            error: error => this.showError(error, 'Aktif plan yüklenemedi. Lütfen tekrar deneyin.') });
+            error: error => this.showError(error, 'Aktif plan yüklenemedi. Tekrar dene.') });
       }
       if (pageNumber === 1 && (!this.filter || this.filter === 'Draft')) {
         this.knownDraftId.set(page.items.find(plan => plan.status === 'Draft')?.id ?? null);
       }
-    }, error: error => this.showError(error, 'Planlar yüklenemedi. Lütfen tekrar deneyin.') });
+    }, error: error => this.showError(error, 'Planlar yüklenemedi. Tekrar dene.') });
   }
 
   async open(id: string) {
@@ -203,7 +207,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
         if (!drafts || this.destroyRef.destroyed) return;
         draftId = drafts.items.find(plan => plan.status === 'Draft')?.id ?? null;
         this.knownDraftId.set(draftId);
-      } catch (error) { this.showError(error, 'Taslak kontrol edilemedi. Lütfen tekrar deneyin.'); return; }
+      } catch (error) { this.showError(error, 'Taslak kontrol edilemedi. Tekrar dene.'); return; }
     }
     if (draftId) { await this.open(draftId); return; }
     this.selected.set(null);
@@ -249,7 +253,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       || task.plannedMinutes < 1 || task.plannedMinutes > 1440 || (task.sourceName?.trim().length ?? 0) > 300
       || (task.plannedStartMinute!=null&&(!Number.isInteger(task.plannedStartMinute)||task.plannedStartMinute<0||task.plannedStartMinute+task.plannedMinutes>1440))
       || (task.plannedQuestions != null && (!Number.isInteger(task.plannedQuestions) || task.plannedQuestions < 0 || task.plannedQuestions > 100000)))) {
-      this.error.set('Başlık, tarih, süre, kaynak ve soru sayılarını kontrol edin. Süre 1–1440 dakika, soru sayısı 0–100000 olmalıdır.');
+      this.error.set('Başlık, tarih, süre, kaynak ve soru sayılarını kontrol et. Süre 1–1440 dakika, soru sayısı 0–100000 olmalıdır.');
       return;
     }
     const input = { title: this.editTitle.trim(), tasks: this.editTasks.map(task => ({ ...task, title: task.title.trim(), sourceName: task.sourceName?.trim() || null })) };
@@ -266,7 +270,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     if (this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Draft' || this.busy() || this.dirty || typeof window === 'undefined') return;
-    if (!await this.toaster.confirm('Taslak arşivlensin mi? Çalışmalar geçmişte korunacak; yeni bir taslak hazırlayabileceksiniz.')) return;
+    if (!await this.toaster.confirm('Taslak arşivlensin mi? Çalışmalar geçmişte korunacak; yeni bir taslak hazırlayabileceksin.')) return;
     this.mutate(this.service.archive(plan.id, plan.version, ...this.studentArgument), 'Taslak arşivlendi. Geçmiş korundu; yeni taslak hazırlayabilirsin.');
   }
 
@@ -276,13 +280,13 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   saveRemainingScope(task:StudyTask){
     const plan=this.selected(),minutes=this.remainingMinutes[task.id],questions=this.remainingQuestions[task.id]??null;
     if(!plan||plan.status==='Draft'||this.readOnly||task.isCompleted||this.busy())return;
-    if(!Number.isInteger(minutes)||minutes!<1||minutes!>1440||questions!=null&&(!Number.isInteger(questions)||questions<0||questions>100000)){this.error.set('Kalan süreyi ve soru sayısını kontrol edin.');return;}
+    if(!Number.isInteger(minutes)||minutes!<1||minutes!>1440||questions!=null&&(!Number.isInteger(questions)||questions<0||questions>100000)){this.error.set('Kalan süreyi ve soru sayısını kontrol et.');return;}
     this.mutate(this.service.setRemainingScope(plan.id,task.id,plan.version,minutes!,questions,this.staffStudentId),'Kalan kapsam kaydedildi. Gerçekleşme toplamı korundu.');
   }
   partial(task:StudyTask) {
     const plan=this.selected(); if(!plan||plan.status!=='Active'||this.staffStudentId||this.readOnly||task.isCompleted||this.busy())return;
     const minutes=this.actualMinutes[task.id],questions=this.actualQuestions[task.id]??null;
-    if(!Number.isInteger(minutes)||minutes<1||minutes>1440||questions!=null&&(!Number.isInteger(questions)||questions<0||questions>100000)) {this.error.set('Süreyi ve soru sayısını kontrol edin.');return;}
+    if(!Number.isInteger(minutes)||minutes<1||minutes>1440||questions!=null&&(!Number.isInteger(questions)||questions<0||questions>100000)) {this.error.set('Süreyi ve soru sayısını kontrol et.');return;}
     const remainingMinutes=this.remainingMinutes[task.id],remainingQuestions=this.remainingQuestions[task.id]??null;
     if(!Number.isInteger(remainingMinutes)||remainingMinutes!<1||remainingMinutes!>1440||remainingQuestions!=null&&(!Number.isInteger(remainingQuestions)||remainingQuestions<0||remainingQuestions>100000)){this.error.set('Kısmi çalışma için kalan süreyi 1–1440 dakika olarak belirt. Bu süre yeni plana devredilecek iş miktarıdır.');return;}
     this.mutate(this.service.recordRealization(plan.id,task.id,{expectedVersion:plan.version,actualMinutes:minutes,actualQuestions:questions,isCompleted:false,remainingMinutes:remainingMinutes!,remainingQuestions,...(this.workDates[task.id]?{workedOn:this.workDates[task.id]}:{})}),'Kısmi çalışma toplamı kaydedildi.');
@@ -301,8 +305,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   saveCorrection() {
     const plan=this.selected(),form=this.correction;
     if(!plan||!form||this.staffStudentId||this.readOnly||this.busy())return;
-    if(!Number.isInteger(form.minutes)||form.minutes<0||form.minutes>1440||form.minutes===0&&(form.completed||(form.questions??0)>0)||form.questions!=null&&(!Number.isInteger(form.questions)||form.questions<0||form.questions>100000)||form.reason.trim().length<5||form.reason.trim().length>1000){this.error.set('Süreyi, soru sayısını ve en az 5 karakterlik gerekçeyi kontrol edin.');return;}
-    if(!form.completed&&form.minutes>0&&form.remainingMinutes!=null&&(!Number.isInteger(form.remainingMinutes)||form.remainingMinutes<1||form.remainingMinutes>1440)){this.error.set('Kalan süreyi kontrol edin.');return;}
+    if(!Number.isInteger(form.minutes)||form.minutes<0||form.minutes>1440||form.minutes===0&&(form.completed||(form.questions??0)>0)||form.questions!=null&&(!Number.isInteger(form.questions)||form.questions<0||form.questions>100000)||form.reason.trim().length<5||form.reason.trim().length>1000){this.error.set('Süreyi, soru sayısını ve en az 5 karakterlik gerekçeyi kontrol et.');return;}
+    if(!form.completed&&form.minutes>0&&form.remainingMinutes!=null&&(!Number.isInteger(form.remainingMinutes)||form.remainingMinutes<1||form.remainingMinutes>1440)){this.error.set('Kalan süreyi kontrol et.');return;}
     const task=plan.tasks.find(x=>x.id===form.taskId);
     const active=task?.continuation;
     const reconcile=!!task&&this.continuationScopeRequired(task);
@@ -317,11 +321,11 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     const plan = this.selected();
     if (!plan || plan.status !== 'Active' || task.isCompleted || this.busy()) return;
     if (!Number.isInteger(actualMinutes) || actualMinutes < 1 || actualMinutes > 1440) {
-      this.completionError.set({ taskId: task.id, field: 'minutes', message: 'Gerçek çalışma süresini 1–1440 dakika arasında girin.' });
+      this.completionError.set({ taskId: task.id, field: 'minutes', message: 'Gerçek çalışma süresini 1–1440 dakika arasında gir.' });
       return;
     }
     if (actualQuestions != null && (!Number.isInteger(actualQuestions) || actualQuestions < 0 || actualQuestions > 100000)) {
-      this.completionError.set({ taskId: task.id, field: 'questions', message: 'Gerçek soru sayısını 0–100000 arasında tam sayı olarak girin.' }); return;
+      this.completionError.set({ taskId: task.id, field: 'questions', message: 'Gerçek soru sayısını 0–100000 arasında tam sayı olarak gir.' }); return;
     }
     this.completionError.set(null);
     this.mutate(this.service.complete(plan.id, task.id, plan.version, actualMinutes, actualQuestions,...(this.workDates[task.id]?[this.workDates[task.id]]:[])), 'Çalışma tamamlandı.');
@@ -331,7 +335,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     if (this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Active' || task.isCompleted || this.busy()) return;
-    if (!plannedDate) { this.error.set('Yeni çalışma tarihini seçin.'); return; }
+    if (!plannedDate) { this.error.set('Yeni çalışma tarihini seç.'); return; }
     this.mutate(this.service.reschedule(plan.id, task.id, plan.version, plannedDate, ...this.studentArgument), 'Çalışma tarihi güncellendi.');
   }
 
@@ -341,6 +345,12 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     const previous = this.selected();
     if(!preserveInputs||previous?.id!==plan.id)this.workDates={};
     if(previous?.id!==plan.id||!!previous?.weeklySource!==!!plan.weeklySource){this.planView.set(this.taskFilter!=='all'?'list':plan.weeklySource?'calendar':'list');this.selectedTaskIds.set([]);}
+    // Roadmap O1: the student's active plan opens on today's work when there is any.
+    if(!this.openedOnToday&&!this.staffStudentId&&!this.readOnly&&!this.requestedTaskId&&previous?.id!==plan.id&&plan.status==='Active'&&this.taskFilter==='all'){
+      this.openedOnToday=true;const zone=plan.weeklySource?.timeZoneId||'Europe/Istanbul';let today=this.today;
+      try{today=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch{/* keep Istanbul */}
+      if(plan.tasks.some(t=>t.plannedDate===today)){this.taskFilter='today';this.planView.set('list');this.selectedTaskIds.set([]);}
+    }
     const keepInputs = preserveInputs && previous?.id === plan.id && plan.status === 'Active';
     const minutes = this.actualMinutes; const questions = this.actualQuestions; const dates = this.targetDates;
     const titles=this.taskTitles;
@@ -388,8 +398,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
 
   private async canLeaveEditor() {
     if (this.busy()) return false;
-    if (this.dirty) { this.error.set('Önce taslağınızı kaydedin veya değişikliklerden vazgeçin.'); return false; }
-    if ((this.calendarForm || this.correction || this.hasUnsavedTaskInputs()) && (typeof window === 'undefined' || !await this.toaster.confirm('Kaydedilmemiş çalışma bilgileriniz var. Değişikliklerden vazgeçmek istiyor musunuz?'))) return false;
+    if (this.dirty) { this.error.set('Önce taslağını kaydet veya değişikliklerden vazgeç.'); return false; }
+    if ((this.calendarForm || this.correction || this.hasUnsavedTaskInputs()) && (typeof window === 'undefined' || !await this.toaster.confirm('Kaydedilmemiş çalışma bilgilerin var. Değişikliklerden vazgeçmek istiyor musun?'))) return false;
     this.success.set(null);
     return true;
   }
@@ -400,7 +410,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.success.set(null);
     request.pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
       next: plan => { this.calendarForm=null;this.applyPlan(plan, true); this.success.set(message); this.loadList(this.page().pageNumber); },
-      error: error => this.showError(error, 'İşlem tamamlanamadı. Lütfen tekrar deneyin.')
+      error: error => this.showError(error, 'İşlem tamamlanamadı. Tekrar dene.')
     });
   }
 
@@ -408,7 +418,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     const response = error as { status?: number; error?: { message?: unknown } };
     const message = response?.error?.message;
     this.error.set(typeof message === 'string' ? message : fallback);
-    if (response?.status === 409) this.error.update(value => `${value} Planı yeniden açarak güncel durumu kontrol edin.`);
+    if (response?.status === 409) this.error.update(value => `${value} Planı yeniden açarak güncel durumu kontrol et.`);
   }
   private readonly feedback = coachingFeedback(this.success, this.error);
 }

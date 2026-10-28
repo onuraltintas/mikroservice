@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingPortalService, StudentAssignment } from '../../../core/services/coaching-portal.service';
+import { CoachingPortalService, StudentAssignment, StudentAssignmentFilter } from '../../../core/services/coaching-portal.service';
 
 @Component({
   selector: 'app-student-assignments',
@@ -21,14 +21,24 @@ export class StudentAssignmentsComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly pageNumber = signal(1);
   readonly totalPages = signal(1);
-  readonly filter = signal<'all' | 'pending' | 'submitted' | 'overdue' | 'cancelled'>('all');
-  readonly filters = [
-    { label: 'Tümü', value: 'all' as const },
-    { label: 'Bekleyen', value: 'pending' as const },
-    { label: 'Teslim', value: 'submitted' as const },
-    { label: 'Geciken', value: 'overdue' as const },
-    { label: 'İptal edilen', value: 'cancelled' as const }
+  // Roadmap O1: the list opens on work still waiting (late first) and every filter runs on the server.
+  readonly filter = signal<StudentAssignmentFilter>('open');
+  readonly filters: { label: string; value: StudentAssignmentFilter }[] = [
+    { label: 'Yapılacaklar', value: 'open' },
+    { label: 'Geciken', value: 'overdue' },
+    { label: 'Bekleyen', value: 'pending' },
+    { label: 'Teslim ettiklerim', value: 'submitted' },
+    { label: 'İptal edilen', value: 'cancelled' },
+    { label: 'Tümü', value: 'all' }
   ];
+  readonly emptyMessage: Record<StudentAssignmentFilter, string> = {
+    open: 'Yapılacak ödevin yok. Yeni ödev gelince burada görünür.',
+    overdue: 'Geciken ödevin yok.',
+    pending: 'Son tarihi gelmemiş bekleyen ödevin yok.',
+    submitted: 'Henüz teslim ettiğin ödev yok.',
+    cancelled: 'İptal edilen ödev yok.',
+    all: 'Henüz sana verilmiş bir ödev yok.'
+  };
 
   ngOnInit() {
     this.load();
@@ -44,27 +54,16 @@ export class StudentAssignmentsComponent implements OnInit {
 
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.coachingService.getStudentAssignments(studentId, this.pageNumber(), 25).subscribe({
+    this.coachingService.getStudentAssignments(studentId, this.pageNumber(), 25, this.filter()).subscribe({
       next: page => {
         this.assignments.set(page.items);
         this.totalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
       },
       error: () => {
-        this.errorMessage.set('Ödevler yüklenemedi. Lütfen tekrar deneyin.');
+        this.errorMessage.set('Ödevler yüklenemedi. Bağlantını kontrol edip yeniden dene.');
         this.isLoading.set(false);
       },
       complete: () => this.isLoading.set(false)
-    });
-  }
-
-  visibleAssignments() {
-    const currentFilter = this.filter();
-    return this.assignments().filter(assignment => {
-      if (currentFilter === 'cancelled') return assignment.assignmentStatus === 'Cancelled';
-      if (currentFilter === 'overdue') return (!assignment.assignmentStatus || assignment.assignmentStatus === 'Active') && assignment.isOverdue;
-      if (currentFilter === 'submitted') return !!assignment.submittedAt;
-      if (currentFilter === 'pending') return (!assignment.assignmentStatus || assignment.assignmentStatus === 'Active') && !assignment.submittedAt && !assignment.isOverdue;
-      return true;
     });
   }
 
@@ -76,8 +75,10 @@ export class StudentAssignmentsComponent implements OnInit {
     return assignment.isOverdue ? 'Gecikti' : 'Çalışmanı bekliyor';
   }
 
-  setFilter(value: 'all' | 'pending' | 'submitted' | 'overdue' | 'cancelled') {
+  setFilter(value: StudentAssignmentFilter) {
     this.filter.set(value);
+    this.pageNumber.set(1);
+    this.load();
   }
 
   previousPage() {

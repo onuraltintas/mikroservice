@@ -60,7 +60,7 @@ export class CoachingSessionsComponent implements OnInit {
         this.loadStudentNames(page.items);
       },
       error: () => {
-        this.errorMessage.set('Seanslar yüklenemedi. Lütfen tekrar deneyin.');
+        this.errorMessage.set('Seanslar yüklenemedi. Tekrar dene.');
         this.isLoading.set(false);
       },
       complete: () => this.isLoading.set(false)

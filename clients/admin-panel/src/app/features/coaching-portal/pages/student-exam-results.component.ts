@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { CoachingStudentExamsService, LessonAnswers, StudentExam, StudentExamType } from '../../../core/services/coaching-student-exams.service';
 import { CoachingStudyPlanningService, StudyTopic, TargetPage } from '../../../core/services/coaching-study-planning.service';
-import { PracticeExamInput, PracticeExamProfile, practiceTotals } from '../../../core/models/practice-exam';
+import { PracticeExamInput, PracticeExamProfile, practiceExamName, practiceTotals } from '../../../core/models/practice-exam';
 import { PracticeExamEditorComponent } from './practice-exam-editor.component';
 
 import { CoachingDatePipe } from '../coaching-labels';
@@ -30,6 +30,7 @@ export class StudentExamResultsComponent {
   readonly busy = signal(false); readonly stale = signal(false);
   readonly error = signal<string | null>(null); readonly success = signal<string | null>(null);
   selected: StudentExam | null = null;
+  private autoTitle = '';
   title = ''; examType: StudentExamType = 'Mock'; examDate = ''; score: number | null = null; maxScore = 100;
   correctAnswers = 0; wrongAnswers = 0; emptyAnswers = 0;
   lessons: LessonAnswers[] = []; search = ''; grade: number | null = null; examCode = '';
@@ -46,7 +47,7 @@ export class StudentExamResultsComponent {
       this.profileWarning.set('Profil tercihlerin yüklenemedi; deneme kapsamını kendin seçebilirsin.');return of({context:null});
     }))}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({profiles,setup}) => {this.profiles.set(profiles);this.learningContext.set(setup.context);this.suggestScope();},
-      error: () => this.error.set('Deneme kapsamları yüklenemedi. Sayfayı yenileyip tekrar deneyin.')
+      error: () => this.error.set('Deneme kapsamları yüklenemedi. Sayfayı yenileyip tekrar dene.')
     });
   }
   availableProfiles(): PracticeExamProfile[] {
@@ -58,13 +59,20 @@ export class StudentExamResultsComponent {
     const code=contextExamCodes(this.learningContext())[0];const profile=this.profiles().find(x=>x.code===code);if(!profile)return;
     this.examType=code==='LGS'?'LGS':'YKS';
     this.practiceExam={examCode:code,sections:profile.sections.map(x=>({sectionCode:x.code,correct:0,wrong:0,empty:x.questionCount}))};
+    if(!this.title.trim()){this.autoTitle=`${practiceExamName(code)} denemesi`;this.title=this.autoTitle;}
+    if(!this.examDate)this.examDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   }
 
   async practiceChanged(value: PracticeExamInput | null) {
     if (this.busy()) return;
     if (value && this.lessons.length && !await this.toaster.confirm('Deneme kapsamına geçmek mevcut serbest ders/konu satırlarını kaldıracak. Devam edilsin mi?')) return;
     this.practiceExam = value;
-    if (value) { this.lessons = []; this.examType = value.examCode === 'LGS' ? 'LGS' : 'YKS'; }
+    if (value) {
+      this.lessons = []; this.examType = value.examCode === 'LGS' ? 'LGS' : 'YKS';
+      // Roadmap O1: a new result is named after its scope and dated today until the student changes them.
+      if (!this.title.trim() || this.title === this.autoTitle) { this.autoTitle = `${practiceExamName(value.examCode)} denemesi`; this.title = this.autoTitle; }
+      if (!this.examDate) this.examDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    }
     this.changed();
   }
   changed() { if (!this.busy()) { this.dirty = true; this.confirmed = false; this.success.set(null); } }
@@ -72,14 +80,14 @@ export class StudentExamResultsComponent {
     if (this.busy()) return;
     this.busy.set(true); this.error.set(null);
     this.service.list(pageNumber).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
-      .subscribe({ next: page => this.page.set(page), error: () => this.error.set('Sonuçlar yüklenemedi. Yeniden deneyin.') });
+      .subscribe({ next: page => this.page.set(page), error: () => this.error.set('Sonuçlar yüklenemedi. Yeniden dene.') });
   }
   searchTopics(pageNumber = 1) {
     if (this.busy()) return;
     this.busy.set(true);
     this.catalog.searchTopics(this.search, this.grade, this.examCode, pageNumber)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
-      .subscribe({ next: page => this.topics.set(page), error: () => this.error.set('Konu listesi yüklenemedi. Seçimleriniz korundu.') });
+      .subscribe({ next: page => this.topics.set(page), error: () => this.error.set('Konu listesi yüklenemedi. Seçimlerin korundu.') });
   }
   addTopic(id: string) {
     if (this.busy() || this.lessons.length >= 50) return;
@@ -108,7 +116,7 @@ export class StudentExamResultsComponent {
     if (!await this.canLeavePage()) return;
     this.busy.set(true);
     this.service.get(id).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
-      .subscribe({ next: exam => this.apply(exam), error: () => this.error.set('Sonuç yüklenemedi. Mevcut formunuz korundu.') });
+      .subscribe({ next: exam => this.apply(exam), error: () => this.error.set('Sonuç yüklenemedi. Mevcut formun korundu.') });
   }
   private apply(exam: StudentExam) {
     this.selected = exam; this.title = exam.title; this.examType = exam.examType; this.examDate = exam.examDate;
@@ -119,9 +127,9 @@ export class StudentExamResultsComponent {
   }
   save() {
     if (this.busy() || this.stale() || !this.confirmed) return;
-    if (['LGS','YKS'].includes(this.examType) && !this.practiceExam) { this.error.set('Deneme kapsamını ve ders cevaplarını girin.'); return; }
+    if (['LGS','YKS'].includes(this.examType) && !this.practiceExam) { this.error.set('Deneme kapsamını ve ders cevaplarını gir.'); return; }
     const totals = practiceTotals(this.practiceExam, this.profiles());
-    if (this.practiceExam && !totals) { this.error.set('Deneme derslerinin doğru/yanlış/boş sayılarını kontrol edin.'); return; }
+    if (this.practiceExam && !totals) { this.error.set('Deneme derslerinin doğru/yanlış/boş sayılarını kontrol et.'); return; }
     const date = /^\d{4}-\d{2}-\d{2}$/.test(this.examDate) ? new Date(`${this.examDate}T00:00:00Z`) : new Date(NaN);
     const counts = totals ? [totals.correct, totals.wrong, totals.empty] : this.lessons.length ? [this.lessons.reduce((a, x) => a + x.correct, 0), this.lessons.reduce((a, x) => a + x.wrong, 0), this.lessons.reduce((a, x) => a + x.empty, 0)]
       : [this.correctAnswers, this.wrongAnswers, this.emptyAnswers];
@@ -132,7 +140,7 @@ export class StudentExamResultsComponent {
       || counts.some(x => !Number.isInteger(x) || x < 0) || counts.reduce((a, x) => a + x, 0) > 1000
       || this.lessons.some(x => !Number.isInteger(x.questionCount) || x.questionCount < 1 || x.questionCount > 1000
         || [x.correct, x.wrong, x.empty].some(n => !Number.isInteger(n) || n < 0) || x.correct + x.wrong + x.empty !== x.questionCount)) {
-      this.error.set('Başlık, tarih, puan ve doğru/yanlış/boş sayılarını kontrol edin. Ders/konu toplamları soru sayısıyla eşleşmeli.'); return;
+      this.error.set('Başlık, tarih, puan ve doğru/yanlış/boş sayılarını kontrol et. Ders/konu toplamları soru sayısıyla eşleşmeli.'); return;
     }
     const input = { title: this.title.trim(), examType: this.examType, examDate: this.examDate, score: this.score,
       maxScore: this.maxScore, correctAnswers: counts[0], wrongAnswers: counts[1], emptyAnswers: counts[2], lessons: this.lessons.map(x => ({ ...x })), practiceExam: this.practiceExam };

@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { CoachingPortalLayoutComponent } from './coaching-portal-layout.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 describe('CoachingPortalLayoutComponent multi-role view', () => {
   it('exposes every student destination and closes the mobile drawer with Escape', async () => {
@@ -52,6 +53,8 @@ describe('CoachingPortalLayoutComponent multi-role view', () => {
 });
 
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });
+
+beforeEach(() => TestBed.overrideProvider(NotificationService, { useValue: { unreadCount: signal(0) } }));
 
 beforeEach(() => TestBed.overrideProvider(CoachingStudentNavigationService, { useValue: { showAssignments: () => true, showSessions: () => true, refresh: () => {} } }));
 

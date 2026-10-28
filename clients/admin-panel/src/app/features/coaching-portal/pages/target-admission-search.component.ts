@@ -138,7 +138,7 @@ export class TargetAdmissionSearchComponent implements OnChanges {
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
       .subscribe({
         next: result => { this.items.set(result.data.items); this.total.set(result.data.totalCount); this.page = result.data.pageNumber; this.searched.set(true); },
-        error: () => this.error.set('Arama başarısız. Filtreleri kontrol edin.')
+        error: () => this.error.set('Arama başarısız. Filtreleri kontrol et.')
       });
   }
 

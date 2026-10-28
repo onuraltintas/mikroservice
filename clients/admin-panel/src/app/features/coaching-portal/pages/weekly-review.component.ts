@@ -56,7 +56,7 @@ export class WeeklyReviewComponent implements OnChanges {
   }
   private initialized = false;
   canRefresh() { return !this.saving() && !this.dirty && (this.workEditor?.canRefresh() ?? true); }
-  async canLeavePage() { return !this.saving() && (await this.workEditor?.canLeavePage() ?? true) && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş haftalık değerlendirmeniz veya kararınız var. Kaydetmeden ayrılmak istiyor musunuz?')); }
+  async canLeavePage() { return !this.saving() && (await this.workEditor?.canLeavePage() ?? true) && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş haftalık değerlendirmeniz veya kararın var. Kaydetmeden ayrılmak istiyor musun?')); }
   async changeWeek(day: string) {
     if (!day || !await this.canLeavePage()) return;
     this.reviewNote=""; this.week = mondayOf(day); this.pendingDecisionId = null; this.focusedDecision.set(null); this.editor = null; this.postponement = null; this.workDecision.set(null); this.dirty = false; this.success.set(''); this.load();
@@ -80,7 +80,7 @@ export class WeeklyReviewComponent implements OnChanges {
           return [row.decisionId,{effect:saved?.effect??'',note:saved?.effectNote??''}];
         }));
         this.reflection = { expectedVersion: value.reflection?.version ?? null, successes: value.reflection?.successes ?? '', obstacles: value.reflection?.obstacles ?? '', nextFocus: value.reflection?.nextFocus ?? '', rating: value.reflection?.rating ?? null };
-      }, error: e => { this.data.set(null); this.error.set(e.error?.message ?? 'Haftalık değerlendirme yüklenemedi. Tekrar deneyin.'); }
+      }, error: e => { this.data.set(null); this.error.set(e.error?.message ?? 'Haftalık değerlendirme yüklenemedi. Tekrar dene.'); }
     });
   }
   acknowledgeReflection() {
@@ -149,7 +149,7 @@ export class WeeklyReviewComponent implements OnChanges {
   savePostponement() {
     const form=this.postponement;
     if (!form || !this.staffStudentId || !this.data()?.canDecide || this.readOnly || this.saving() || this.stale()) return;
-    if(form.reason.trim().length<5||form.reason.trim().length>1000||form.dueOn<=this.data()!.today||form.dueOn<shiftWeek(form.row.reviewWeekStart,7)||form.dueOn===form.row.dueOn){this.error.set('Gelecekteki farklı bir son tarih ve en az 5 karakterlik değişiklik gerekçesi girin.');return;}
+    if(form.reason.trim().length<5||form.reason.trim().length>1000||form.dueOn<=this.data()!.today||form.dueOn<shiftWeek(form.row.reviewWeekStart,7)||form.dueOn===form.row.dueOn){this.error.set('Gelecekteki farklı bir son tarih ve en az 5 karakterlik değişiklik gerekçesi gir.');return;}
     this.saving.set(true); this.error.set(''); this.success.set('');
     const change=form.row.isOverdue?this.api.postpone.bind(this.api):this.api.changeDeadline.bind(this.api);
     change(this.staffStudentId,form.row.reviewWeekStart,form.row.id,

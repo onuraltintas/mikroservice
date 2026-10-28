@@ -38,7 +38,7 @@ export class CoachingPortalHomeComponent implements OnInit {
     }
 
     if (!profile?.id) {
-      this.errorMessage.set('Oturum profili yüklenemedi. Lütfen tekrar giriş yapın.');
+      this.errorMessage.set('Oturum profili yüklenemedi. Yeniden giriş yap.');
       return;
     }
 

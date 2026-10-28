@@ -4,21 +4,21 @@
 } @else {
 <section class="study-plans assistant-page" aria-labelledby="assistant-title">
   <header class="page-heading">
-    <div><p class="eyebrow">{{ staffStudentId ? 'ÖĞRENCİ İÇİN ÇALIŞMA SİHİRBAZI' : 'KİŞİSEL ÇALIŞMA SİHİRBAZI' }}</p><h1 id="assistant-title">{{ staffStudentId ? 'Öğrenci için plan hazırla' : 'Planını adım adım hazırla' }}</h1>
+    <div><p class="eyebrow">{{ staffStudentId ? 'ÖĞRENCİ İÇİN PLAN SİHİRBAZI' : 'PLAN SİHİRBAZI' }}</p><h1 id="assistant-title">{{ staffStudentId ? 'Öğrenci için plan hazırla' : 'Planını adım adım hazırla' }}</h1>
       <p>{{ staffStudentId ? 'Öğrencinin eğitim bağlamını, kazanımlarını ve haftalık taslağını kullanarak plan önerisi hazırla.' : 'Uygun günlerini ve süreni seç; haftalık ders düzenini önizleyip kendin onayla.' }}</p></div>
     @if (!staffStudentId) { <a routerLink="/coaching-portal/weekly-plan">Takvimde kendim düzenle ↗</a> }
   </header>
   <div class="assistant-layout">
-    <section class="panel conversation" aria-label="Çalışma planı sihirbazı">
+    <section class="panel conversation" aria-label="Plan sihirbazı">
       <div class="privacy-note">Seçimlerin bu tarayıcıda kurallı olarak değerlendirilir. Yapay zekâ servisine veya sohbet sağlayıcısına veri gönderilmez.</div>
       <div class="messages" aria-live="polite" aria-relevant="additions">
         @for (item of messages(); track $index) {
           <article class="chat-message assistant-message">
-            <strong>Çalışma sihirbazı</strong><p>{{ item.content }}</p>
+            <strong>Plan sihirbazı</strong><p>{{ item.content }}</p>
           </article>
         }
       </div>
-      @if (error()) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a href="/coaching-portal/setup">Çalışma düzenini tamamla →</a> }</p> }
+      @if (error()) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/setup">Çalışma düzenini tamamla →</a> }</p> }
       @if (saved()) { <p class="notice success" role="status">Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }
       <div class="composer wizard-form">
         <fieldset [disabled]="busy() || !lessons().length">
@@ -100,5 +100,13 @@
     </aside>
   </div>
   <p class="muted plan-safety">Bu adım yalnızca haftalık taslağı düzenler. Kazanımlara göre yıllık planı ayrıca önizlersin; yayımlama ayrı bir onaydır.</p>
+  @if (!staffStudentId) {
+    <section class="panel topic-plan" aria-labelledby="topic-plan-title">
+      <h2 id="topic-plan-title">Konulardan plan</h2>
+      <p class="muted">Seçtiğin konuları çalışma saatlerine yerleştiren bir taslak hazırla. Taslak, sen yayımlayana kadar mevcut planını değiştirmez.</p>
+      @if (topicPlanOpen()) { <app-student-automatic-plan [learningContextVersion]="learningContext()?.version ?? null" /> }
+      @else { <button type="button" class="secondary" (click)="topicPlanOpen.set(true)">Konulardan plan hazırla</button> }
+    </section>
+  }
 </section>
 }

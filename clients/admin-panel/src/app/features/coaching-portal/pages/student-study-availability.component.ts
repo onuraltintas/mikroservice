@@ -40,7 +40,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
 
   load() {
     if (this.loading() || this.saving()) return;
-    if (this.dirty) { this.error.set('Önce değişiklikleri kaydedin veya değişikliklerden vazgeçin.'); return; }
+    if (this.dirty) { this.error.set('Önce değişiklikleri kaydet veya değişikliklerden vazgeç.'); return; }
     this.loading.set(true);
     this.ready.set(false);
     this.error.set(null);
@@ -50,7 +50,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
         next: preferences => { this.apply(preferences); this.ready.set(true); },
         error: error => {
           if (error?.status === 404) { this.apply(null); this.ready.set(true); }
-          else this.showError(error, 'Çalışma saatleri yüklenemedi. Kaydetmeden önce yeniden yükleyin.');
+          else this.showError(error, 'Çalışma saatleri yüklenemedi. Kaydetmeden önce yeniden yükle.');
         }
       });
   }
@@ -93,7 +93,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     if (!this.ready() || this.saving() || this.loading()) return;
     let windows: StudyWindow[];
     try { windows = this.validatedWindows(); }
-    catch (error) { this.error.set(error instanceof Error ? error.message : 'Çalışma saatlerini kontrol edin.'); return; }
+    catch (error) { this.error.set(error instanceof Error ? error.message : 'Çalışma saatlerini kontrol et.'); return; }
     this.saving.set(true);
     this.error.set(null);
     this.success.set(null);
@@ -104,17 +104,17 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   }
 
   async canLeavePage() {
-    if (this.saving()) { this.error.set('Kaydetme işleminin tamamlanmasını bekleyin.'); return false; }
-    return !this.dirty || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş çalışma saatleriniz var. Değişikliklerden vazgeçerek ayrılmak istiyor musunuz?'));
+    if (this.saving()) { this.error.set('Kaydetme işleminin tamamlanmasını bekle.'); return false; }
+    return !this.dirty || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş çalışma saatlerin var. Değişikliklerden vazgeçerek ayrılmak istiyor musun?'));
   }
 
   private validatedWindows(): StudyWindow[] {
-    if (!this.timeZoneId.trim() || this.timeZoneId.length > 100) throw new Error('Geçerli bir saat dilimi girin.');
+    if (!this.timeZoneId.trim() || this.timeZoneId.length > 100) throw new Error('Geçerli bir saat dilimi gir.');
     if (this.rows.length > 42) throw new Error('En fazla 42 saat aralığı eklenebilir.');
     const windows = this.rows.map(row => ({ day: row.day, startMinute: this.minute(row.start), endMinute: row.endOfDay ? 1440 : this.minute(row.end) }));
     if (windows.some(row => !this.days.some(day => day.value === row.day) || !Number.isFinite(row.startMinute)
       || !Number.isFinite(row.endMinute) || row.endMinute <= row.startMinute))
-      throw new Error('Gün ve saatleri kontrol edin. Bitiş saati başlangıçtan sonra olmalıdır.');
+      throw new Error('Gün ve saatleri kontrol et. Bitiş saati başlangıçtan sonra olmalıdır.');
     for (const day of this.days) {
       const sorted = windows.filter(row => row.day === day.value).sort((a, b) => a.startMinute - b.startMinute);
       if (sorted.some((row, index) => index > 0 && row.startMinute < sorted[index - 1].endMinute))

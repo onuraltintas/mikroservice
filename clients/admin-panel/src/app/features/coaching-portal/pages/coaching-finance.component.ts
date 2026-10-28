@@ -73,8 +73,8 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
   ngOnDestroy(): void { ++this.generation; this.reads.unsubscribe(); this.historyRead?.unsubscribe(); this.receivablesRead?.unsubscribe(); this.write?.unsubscribe(); }
   private subjectId(): string { return this.cashStudentId || this.studentId; }
   async canLeavePage(): Promise<boolean> {
-    if (this.pending()) { this.error.set('İşlem sürüyor. Tamamlanmasını bekleyin.'); return false; }
-    return !this.form() || await this.toaster.confirm('Kaydedilmemiş ücret işleminden ayrılmak istiyor musunuz?');
+    if (this.pending()) { this.error.set('İşlem sürüyor. Tamamlanmasını bekle.'); return false; }
+    return !this.form() || await this.toaster.confirm('Kaydedilmemiş ücret işleminden ayrılmak istiyor musun?');
   }
   async loadAccount(page = 1, preserveForm = false): Promise<void> {
     const scope = this.generation;
@@ -89,7 +89,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
       this.account.set(account);
       if (preserveForm && this.fee) {
         const current = account.agreements.find(item => item.id === this.fee?.id);
-        if (!current) { this.error.set('Ücret bu sayfada bulunamadı. İşlemden çıkıp ilgili kaydı yeniden açın.'); return; }
+        if (!current) { this.error.set('Ücret bu sayfada bulunamadı. İşlemden çıkıp ilgili kaydı yeniden aç.'); return; }
         this.fee = current; this.retryInput = null; this.attempted.set(false); this.conflict.set(false);
         if (this.historyFee()?.id === current.id) this.loadHistory(current);
       }
@@ -101,7 +101,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
     if (scope !== this.generation || this.pending()) return;
     const from = Date.parse(this.fromDate), to = Date.parse(this.toDate);
     if (!this.validDate(this.fromDate) || !this.validDate(this.toDate) || to < from || (to - from) / 86400000 > 366) {
-      this.error.set('Geçerli bir tarih aralığı seçin (en fazla 367 gün).'); return;
+      this.error.set('Geçerli bir tarih aralığı seç (en fazla 367 gün).'); return;
     }
     const generation = this.generation; this.loading.set(true); this.error.set(null);
     this.reads.add(this.api.cash(this.mode, this.fromDate, this.toDate, page).pipe(finalize(() => {
@@ -126,7 +126,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
     this.receivablesRead = this.api.receivables(this.mode, page).pipe(finalize(() => {
       if (generation === this.generation) this.receivablesLoading.set(false);
     })).subscribe({ next: value => { if (generation === this.generation) this.receivables.set(value); },
-      error: error => { if (generation === this.generation) { this.receivables.set(null); this.receivablesError.set('Açık ücretler yüklenemedi. Yeniden deneyin.'); if (error instanceof HttpErrorResponse && error.status === 403) this.fail(error); } } });
+      error: error => { if (generation === this.generation) { this.receivables.set(null); this.receivablesError.set('Açık ücretler yüklenemedi. Yeniden dene.'); if (error instanceof HttpErrorResponse && error.status === 403) this.fail(error); } } });
   }
   loadHistory(fee: CoachingFee, page = 1): void {
     if (this.pending()) return;
@@ -135,7 +135,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
     this.historyRead = this.api.payments(this.mode, this.subjectId(), fee.id, page).pipe(finalize(() => {
       if (generation === this.generation) this.historyLoading.set(false);
     })).subscribe({ next: value => { if (generation === this.generation) this.history.set(value); },
-      error: error => { if (generation === this.generation) { this.historyError.set('Tahsilat geçmişi yüklenemedi. Yeniden deneyin.'); if (error instanceof HttpErrorResponse && error.status === 403) this.fail(error); } } });
+      error: error => { if (generation === this.generation) { this.historyError.set('Tahsilat geçmişi yüklenemedi. Yeniden dene.'); if (error instanceof HttpErrorResponse && error.status === 403) this.fail(error); } } });
   }
   async openCreate(): Promise<void> { if (this.canCreate() && await this.startForm('create')) this.installments = [{ dueOn: this.today(), amount: null }]; }
   async openPayment(fee: CoachingFee): Promise<void> { if (this.canManage() && !fee.isCancelled && fee.balance > 0 && await this.startForm('payment', fee)) this.amount = fee.balance; }
@@ -183,7 +183,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
       if (!this.title.trim() || this.title.trim().length > 200 || !this.money(this.amount) || parts.length < 1 || parts.length > 24 ||
         parts.some(part => !this.validDate(part.dueOn) || !this.money(part.amount)) ||
         parts.reduce((sum, part) => sum + Math.round(part.amount * 100), 0) !== Math.round(this.amount! * 100)) {
-        this.error.set('Başlık, toplam ücret ve 1–24 taksidi kontrol edin. Taksit toplamı ücrete eşit olmalıdır.'); return null;
+        this.error.set('Başlık, toplam ücret ve 1–24 taksidi kontrol et. Taksit toplamı ücrete eşit olmalıdır.'); return null;
       }
       return { requestId: this.requestId, title: this.title.trim(), totalAmount: this.amount!, installments: parts };
     }
@@ -196,7 +196,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
       }
       return { requestId: this.requestId, expectedVersion: version, amount: this.amount!, method: this.method, receivedOn: this.receivedOn, reference: this.reference.trim() || null };
     }
-    if (!this.reason.trim() || this.reason.trim().length > 300 || !this.confirmed) { this.error.set('Gerekçe girin ve işlemi onaylayın.'); return null; }
+    if (!this.reason.trim() || this.reason.trim().length > 300 || !this.confirmed) { this.error.set('Gerekçe gir ve işlemi onayla.'); return null; }
     return kind === 'reverse' ? { requestId: this.requestId, expectedVersion: version, receivedOn: this.receivedOn, reason: this.reason.trim() } : { expectedVersion: version, reason: this.reason.trim() };
   }
   private fail(error: unknown): void {
@@ -205,10 +205,10 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
       ++this.generation; this.reads.unsubscribe(); this.reads = new Subscription(); this.historyRead?.unsubscribe(); this.receivablesRead?.unsubscribe();
       this.pending.set(false); this.loading.set(false); this.historyLoading.set(false); this.receivablesLoading.set(false);
       this.account.set(null); this.cash.set(null); this.receivables.set(null); this.history.set(null); this.historyFee.set(null); this.resetForm();
-      this.error.set('Bu ücret kayıtlarına erişim yetkiniz doğrulanamadı. Oturumunuzu yenileyin.');
+      this.error.set('Bu ücret kayıtlarına erişim yetkin doğrulanamadı. Oturumunu yenile.');
     }
-    else if (status === 409) { this.conflict.set(true); this.error.set('Ücret kaydı değişti. Güncel kaydı yükleyip tutarı kontrol ederek yeniden deneyin.'); }
-    else this.error.set(this.attempted() ? 'İşlem doğrulanamadı. Yeniden dene aynı işlemi güvenli biçimde kontrol eder. Alanları değiştirmek için önce işlemden çıkın.' : 'Ücret kayıtları yüklenemedi. Yeniden deneyin.');
+    else if (status === 409) { this.conflict.set(true); this.error.set('Ücret kaydı değişti. Güncel kaydı yükleyip tutarı kontrol ederek yeniden dene.'); }
+    else this.error.set(this.attempted() ? 'İşlem doğrulanamadı. Yeniden dene aynı işlemi güvenli biçimde kontrol eder. Alanları değiştirmek için önce işlemden çık.' : 'Ücret kayıtları yüklenemedi. Yeniden dene.');
   }
   private money(value: number | null): boolean { return value !== null && Number.isFinite(value) && value >= 0.01 && value <= 999999999.99 && /^\d+(?:\.\d{1,2})?$/.test(String(value)); }
   private validDate(value: string): boolean { const date = new Date(`${value}T00:00:00Z`); return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value && value.slice(0, 4) !== '0000'; }
