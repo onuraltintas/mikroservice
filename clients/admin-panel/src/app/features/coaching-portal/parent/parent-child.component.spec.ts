@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -24,7 +26,7 @@ describe('ParentChildComponent', () => {
     };
   }
   function setup(service: object, id = 'child-1') {
-    TestBed.configureTestingModule({ imports: [ParentChildComponent], providers: [provideRouter([]),
+    TestBed.configureTestingModule({ imports: [ParentChildComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ studentId: id }) } } },
       { provide: CoachingParentService, useValue: service },
       { provide: CoachingManagementService, useValue: {
@@ -48,8 +50,17 @@ describe('ParentChildComponent', () => {
     await component.sendTransfer();
     expect(service.sendTransfer).not.toHaveBeenCalled(); expect(component.error()).toContain('18 yaş');
     component.adultPayerDeclaration = true; await component.sendTransfer();
-    expect(service.sendTransfer).toHaveBeenCalledWith('child-1', { planId: 'plan-1', paymentReference: 'EFT-VELI-1', payerName: 'Ayşe Veli', note: null, adultPayerDeclaration: true });
+    expect(service.sendTransfer).not.toHaveBeenCalled(); expect(component.error()).toContain('mesafeli satış sözleşmesini');
+    component.checkout = { couponCode: 'VELI-10', acceptSalesContract: true }; await component.sendTransfer();
+    expect(service.sendTransfer).toHaveBeenCalledWith('child-1', { planId: 'plan-1', paymentReference: 'EFT-VELI-1', payerName: 'Ayşe Veli', note: null,
+      adultPayerDeclaration: true, couponCode: 'VELI-10', acceptSalesContract: true });
     expect(component.transfers()[0].id).toBe('transfer-1');
+  });
+
+  it('shows the checkout and the parent payments (O10)', () => {
+    const fixture = setup(parent());
+    expect(fixture.nativeElement.querySelector('edu-coaching-checkout')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Veli olarak yaptığın ödemeler');
   });
 
   it('does not show a child the parent is not linked to', () => {

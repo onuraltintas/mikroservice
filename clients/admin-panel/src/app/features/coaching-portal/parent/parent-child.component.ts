@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, catchError, firstValueFrom, forkJoin, of } from 'rxjs';
@@ -15,6 +16,10 @@ import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
 import { CoachingParentService, ParentFeeAccount, ParentLink } from './coaching-parent.service';
 import { apiMessage } from './parent-home.component';
 import { StudentScoreEstimateComponent } from '../pages/student-score-estimate.component';
+import { environment } from '../../../../environments/environment';
+import { CoachingCheckoutComponent } from '../../../../../shared/coaching-checkout.component';
+import { CoachingMyPaymentsComponent } from '../../../../../shared/coaching-my-payments.component';
+import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../../../../shared/coaching-sales.api';
 
 /**
  * Roadmap Y7: a parent's read-only view of one linked child — progress, exams, assignments, sessions, fees and the
@@ -23,7 +28,7 @@ import { StudentScoreEstimateComponent } from '../pages/student-score-estimate.c
 @Component({
   selector: 'app-parent-child',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, CoachingLabelPipe, StudentScoreEstimateComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CoachingCheckoutComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMyPaymentsComponent, StudentScoreEstimateComponent],
   template: `
     <main class="space-y-6" aria-labelledby="parent-child-title">
       <a routerLink="/coaching-portal/parent" class="text-sm text-indigo-600 dark:text-indigo-300">← Çocuklarım</a>
@@ -75,7 +80,7 @@ import { StudentScoreEstimateComponent } from '../pages/student-score-estimate.c
               <p class="mt-2 text-sm text-amber-800 dark:text-amber-200">Çocuğunun etkin bir Koçluk aboneliği yok. Aşağıdan onun adına ödeme bildirimi gönderebilirsin.</p>
             } @else { <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Koçluk erişimi açık; abonelik zorunluluğu şu an etkin değil.</p> }
           } @else { <p class="mt-2 text-sm text-slate-500">{{ sectionError()['access'] || 'Abonelik bilgisi yükleniyor…' }}</p> }
-          @for (transfer of transfers(); track transfer.id) { <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ transfer.plan.name }} · {{ transfer.paymentReference }} · {{ transfer.status | coachingLabel }}</p> }
+          @for (transfer of transfers(); track transfer.id) { <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ transfer.plan.name }} · {{ transfer.paymentReference }} · {{ transfer.status | coachingLabel }}@if (transfer.couponCode) { · {{ transfer.couponCode }} ile {{ money(transfer.discountAmount) }} {{ transfer.currency }} indirim }</p> }
 
           @if (plans().length && settings()) {
             <form class="mt-4 grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2 dark:border-slate-800" (ngSubmit)="sendTransfer()">
@@ -84,10 +89,15 @@ import { StudentScoreEstimateComponent } from '../pages/student-score-estimate.c
               <label class="text-sm">Banka işlem referansı<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="paymentReference" name="paymentReference" maxlength="120" required autocomplete="off" /></label>
               <label class="text-sm">Ödemeyi yapan<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" /></label>
               <label class="text-sm">Not<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="note" name="note" maxlength="1000" /></label>
+              <div class="sm:col-span-2"><edu-coaching-checkout [api]="sales" [planId]="planId" [price]="selectedPlanPrice()" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" /></div>
               <label class="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum.</label>
-              <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-2" [disabled]="sending()">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
+              <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-2" [disabled]="sending() || !checkout.acceptSalesContract">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
             </form>
           }
+        </section>
+
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-label="Veli olarak yaptığın ödemeler">
+          <edu-coaching-my-payments [api]="sales" heading="Veli olarak yaptığın ödemeler" />
         </section>
       }
     </main>
@@ -119,6 +129,13 @@ export class ParentChildComponent implements OnInit {
   payerName = '';
   note = '';
   adultPayerDeclaration = false;
+  /** Roadmap O10: discount code and contract acceptance from the checkout. */
+  checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
+  readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
+  readonly money = coachingMoney;
+  private readonly checkoutForm = viewChild(CoachingCheckoutComponent);
+
+  selectedPlanPrice(): number { return this.plans().find(plan => plan.id === this.planId)?.price ?? 0; }
 
   ngOnInit(): void {
     this.service.getLinks().subscribe({
@@ -135,14 +152,15 @@ export class ParentChildComponent implements OnInit {
     const reference = this.paymentReference.trim();
     if (!this.planId || !reference) { this.error.set('Plan ve banka işlem referansı gerekli.'); return; }
     if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunu beyan etmeniz gerekir.'); return; }
+    if (!this.checkout.acceptSalesContract) { this.error.set('Ödeme bildiriminden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini açıp onaylaman gerekir.'); return; }
     this.sending.set(true); this.error.set(null); this.success.set(null);
     try {
       const sent = await firstValueFrom(this.service.sendTransfer(this.studentId, {
         planId: this.planId, paymentReference: reference, payerName: this.payerName.trim() || null, note: this.note.trim() || null,
-        adultPayerDeclaration: true
+        adultPayerDeclaration: true, couponCode: this.checkout.couponCode, acceptSalesContract: true
       }));
       this.transfers.update(items => [sent, ...items.filter(item => item.id !== sent.id)]);
-      this.paymentReference = ''; this.note = ''; this.adultPayerDeclaration = false;
+      this.paymentReference = ''; this.note = ''; this.adultPayerDeclaration = false; this.checkoutForm()?.reset();
       this.success.set('Ödeme bildirimin incelemeye alındı. Onaylanınca çocuğunun erişimi açılır.');
     } catch (response) {
       this.error.set(apiMessage(response, 'Ödeme bildirimi gönderilemedi.'));

@@ -43,7 +43,14 @@ public sealed class AdultPayerDeclarationTests
         {
             var property = type.GetProperty("AdultPayerDeclaration");
             property.Should().NotBeNull("payment requests must explicitly carry the payer declaration");
-            var request = Activator.CreateInstance(type, Guid.NewGuid(), "REF", "Payer", null, accepted)!;
+            // O10 added optional parameters (discount code, contract acceptance); fill them so only the declaration varies.
+            var parameters = type.GetConstructors().Single().GetParameters();
+            var arguments = parameters.Select((parameter, index) => index switch
+            {
+                0 => Guid.NewGuid(), 1 => "REF", 2 => "Payer", 3 => null, 4 => accepted,
+                _ => parameter.Name == "AcceptSalesContract" ? true : parameter.HasDefaultValue ? parameter.DefaultValue : null
+            }).ToArray();
+            var request = Activator.CreateInstance(type, arguments)!;
             var services = new ServiceCollection();
             services.AddLogging();
             services.AddControllers();

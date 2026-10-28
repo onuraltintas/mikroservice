@@ -1,12 +1,16 @@
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { CoachingTeacherStudentsService, CoachingTeacherStudent } from './coaching-teacher-students.service';
 import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
+import { environment } from '../../../environments/environment';
+import { CoachingCheckoutComponent } from '../../../../../../shared/coaching-checkout.component';
+import { CoachingMyPaymentsComponent } from '../../../../../../shared/coaching-my-payments.component';
+import { CoachingCheckoutChoice, CoachingSalesApi, coachingErrorMessage, coachingMoney } from '../../../../../../shared/coaching-sales.api';
 import {
   CoachingTeacherBankTransferRequest,
   CoachingTeacherBankTransferSettings,
@@ -18,7 +22,7 @@ import {
 @Component({
   selector: 'staff-coaching-teacher-subscription',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CoachingCheckoutComponent, CoachingMyPaymentsComponent, CommonModule, FormsModule],
   template: `
     <section class="teacher-plan" aria-labelledby="teacher-plan-title">
       <header class="plan-heading">
@@ -75,6 +79,9 @@ import {
                 <label><input type="radio" name="teacherPlan" [attr.data-testid]="'teacher-plan-' + plan.id" [value]="plan.id" [(ngModel)]="selectedPlanId" [disabled]="savingRequest() || isSmallerPlan(plan)" />
                   <span><strong>{{ plan.name }}</strong>@if (planChangeLabel(plan); as change) { <em class="plan-tag">{{ change }}</em> }<small>{{ plan.description }}</small><small>{{ plan.includedStudentSeats }} öğrenci koltuğu · {{ plan.durationDays }} gün · {{ plan.isContactOnly ? 'Fiyat için iletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (settings()?.currency || 'TRY') }}</small></span>
                 </label>
+                @if ((plan.trialDays ?? 0) > 0 && !plan.isContactOnly && !seatSummary()) {
+                  <button type="button" class="secondary trial" [attr.data-testid]="'teacher-trial-' + plan.id" [disabled]="trialPlanId() !== null" (click)="startTrial(plan)">{{ trialPlanId() === plan.id ? 'Başlatılıyor…' : plan.trialDays + ' gün ücretsiz deneyin' }}</button>
+                }
               </li>
             }
           </ul>
@@ -92,8 +99,9 @@ import {
             <label>Ödeme referansı<input name="paymentReference" [(ngModel)]="paymentReference" required maxlength="120" autocomplete="off" /></label>
             <label>Ödeyen adı<input name="payerName" [(ngModel)]="payerName" maxlength="200" autocomplete="name" /></label>
             <label>Not<textarea name="paymentNote" [(ngModel)]="paymentNote" maxlength="1000" rows="2"></textarea></label>
+            <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId" [price]="selectedPlan?.price ?? 0" [currency]="settings()?.currency || 'TRY'" [formal]="true" (choiceChange)="checkout = $event" />
             <label><input type="checkbox" name="adultPayerDeclaration" [(ngModel)]="adultPayerDeclaration" required />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum. Bu beyan yaş doğrulaması değildir.</label>
-            <button type="submit" [disabled]="savingRequest() || !selectedPlanId || selectedPlan?.isContactOnly || !paymentReference.trim() || !settings()?.bankTransferEnabled || !adultPayerDeclaration">{{ savingRequest() ? 'Gönderiliyor…' : 'Ödeme bildirimi gönder' }}</button>
+            <button type="submit" [disabled]="savingRequest() || !selectedPlanId || selectedPlan?.isContactOnly || !paymentReference.trim() || !settings()?.bankTransferEnabled || !adultPayerDeclaration || !checkout.acceptSalesContract">{{ savingRequest() ? 'Gönderiliyor…' : 'Ödeme bildirimi gönder' }}</button>
           </form>
         } @else {
           <p class="muted">Havale / EFT bilgileri şu anda yayımlanmıyor; ödeme bildirimi gönderilemez.</p>
@@ -103,7 +111,7 @@ import {
       <section class="card" aria-labelledby="teacher-payment-history-title">
         <h3 id="teacher-payment-history-title">Ödeme bildirimlerim</h3>
         @for (request of requests(); track request.id) {
-          <div class="request-row"><span><strong>{{ request.plan.name }}</strong><small>{{ request.amount | number:'1.2-2' }} {{ request.currency }} · {{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</small></span><span>{{ statusLabel(request.status) }} @if (request.reviewNote) {<small>{{ request.reviewNote }}</small>}
+          <div class="request-row"><span><strong>{{ request.plan.name }}</strong><small>{{ request.amount | number:'1.2-2' }} {{ request.currency }} · {{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}@if (request.couponCode) { · {{ request.couponCode }} ile {{ money(request.discountAmount) }} {{ request.currency }} indirim }</small></span><span>{{ statusLabel(request.status) }} @if (request.reviewNote) {<small>{{ request.reviewNote }}</small>}
             @if (request.status === 'Pending' && editingRequestId() !== request.id) { <span class="request-actions"><button type="button" class="secondary" [attr.data-testid]="'edit-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="startEdit(request)">Düzelt</button><button type="button" class="secondary" [attr.data-testid]="'withdraw-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="withdraw(request)">Geri çek</button></span> }</span></div>
           @if (editingRequestId() === request.id) {
             <form class="payment-form" (ngSubmit)="saveEdit()">
@@ -114,6 +122,10 @@ import {
             </form>
           }
         } @empty { <p class="muted">Henüz ödeme bildiriminiz yok.</p> }
+      </section>
+
+      <section class="card" aria-label="Onaylanan ödemelerim">
+        <edu-coaching-my-payments [api]="sales" [formal]="true" heading="Ödemelerim, faturalar ve cayma" />
       </section>
     </section>
   `,
@@ -146,6 +158,7 @@ import {
     .error { border: 1px solid var(--ui-border); background: var(--coaching-danger-soft); color: var(--ui-danger); }
     .success { border: 1px solid var(--ui-border); background: var(--ui-brand-soft); color: var(--ui-success); }
     .plan-tag { margin-left: .4rem; padding: .05rem .4rem; border-radius: 999px; background: var(--ui-surface-muted); font-size: .72rem; font-style: normal; font-weight: 700; }
+    .plans .trial { margin: .5rem 0 0 1.6rem; }
     .request-actions { display: inline-flex; flex-wrap: wrap; gap: .4rem; margin-left: .5rem; }
     @media (max-width: 640px) { .plan-heading, .student-list li, .request-row { align-items: stretch; flex-direction: column; } }
   `]
@@ -172,6 +185,12 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
   payerName = '';
   paymentNote = '';
   adultPayerDeclaration = false;
+  /** Roadmap O10: discount code and contract acceptance from the checkout. */
+  checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
+  readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
+  readonly money = coachingMoney;
+  readonly trialPlanId = signal<string | null>(null);
+  private readonly checkoutForm = viewChild(CoachingCheckoutComponent);
   private readonly toaster = inject(ToasterService);
   readonly editingRequestId = signal<string | null>(null);
   readonly busyRequestId = signal<string | null>(null);
@@ -239,6 +258,7 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
   async submitRequest(): Promise<void> {
     if (!this.selectedPlanId || this.selectedPlan?.isContactOnly || !this.paymentReference.trim() || !this.settings()?.bankTransferEnabled || this.savingRequest()) return;
     if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.'); return; }
+    if (!this.checkout.acceptSalesContract) { this.error.set('Ödeme bildiriminden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini açıp onaylamanız gerekir.'); return; }
     this.savingRequest.set(true);
     this.error.set(null);
     this.success.set(null);
@@ -248,12 +268,15 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
         paymentReference: this.paymentReference,
         payerName: this.payerName,
         note: this.paymentNote,
-        adultPayerDeclaration: this.adultPayerDeclaration
+        adultPayerDeclaration: this.adultPayerDeclaration,
+        couponCode: this.checkout.couponCode,
+        acceptSalesContract: this.checkout.acceptSalesContract
       }));
       this.paymentReference = '';
       this.payerName = '';
       this.paymentNote = '';
       this.adultPayerDeclaration = false;
+      this.checkoutForm()?.reset();
       this.success.set('Ödeme bildiriminiz alındı. Onay sonrasında öğretmen planınız etkinleşir.');
       this.subscriptions.getMyBankTransferRequests().subscribe({ next: requests => this.requests.set(requests) });
     } catch (error) {
@@ -272,6 +295,19 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
   async removeStudent(student: CoachingTeacherStudent): Promise<void> {
     if (this.isStudentBusy(student.userId)) return;
     await this.updateSeat(student, () => this.subscriptions.removeStudent(student.userId), 'Öğrenci için öğretmen planı koltuğu kaldırıldı.');
+  }
+
+  /** Roadmap O10: a teacher plan with trial days opens the plan right away, once per account. */
+  async startTrial(plan: CoachingTeacherSubscriptionPlan): Promise<void> {
+    if (this.trialPlanId() || !(plan.trialDays ?? 0)) return;
+    this.trialPlanId.set(plan.id); this.error.set(null); this.success.set(null);
+    try {
+      const trial = await firstValueFrom(this.sales.startTrial(plan.id, 'Teacher'));
+      this.success.set(`${plan.trialDays} günlük ücretsiz denemeniz başladı. Planınız ${new Date(trial.endDate).toLocaleDateString('tr-TR')} tarihine kadar açık.`);
+      this.load();
+    } catch (error) {
+      this.error.set(coachingErrorMessage(error, 'Ücretsiz deneme başlatılamadı.'));
+    } finally { this.trialPlanId.set(null); }
   }
 
   statusLabel(status: string): string {

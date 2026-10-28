@@ -16,6 +16,8 @@ export interface CoachingTeacherSubscriptionPlan {
   features: string[];
   isActive: boolean;
   isPublic: boolean;
+  /** Roadmap O10: free trial length; 0 means no trial. */
+  trialDays?: number;
 }
 
 export interface CoachingTeacherBankTransferSettings {
@@ -39,6 +41,8 @@ export interface CoachingTeacherBankTransferRequest {
   status: string;
   reviewNote: string | null;
   createdAt: string;
+  couponCode?: string | null;
+  discountAmount?: number;
 }
 
 export interface CoachingTeacherSubscriptionSeat {
@@ -77,7 +81,7 @@ export class CoachingTeacherSubscriptionService {
       .pipe(map(response => response.data.filter(request => request.plan.audience === 'Teacher')));
   }
 
-  createBankTransferRequest(request: { planId: string; paymentReference: string; payerName: string | null; note: string | null; adultPayerDeclaration: boolean }, idempotencyKey?: string) {
+  createBankTransferRequest(request: { planId: string; paymentReference: string; payerName: string | null; note: string | null; adultPayerDeclaration: boolean; couponCode?: string | null; acceptSalesContract?: boolean }, idempotencyKey?: string) {
     return this.http.post<{ data: CoachingTeacherBankTransferRequest }>(`${this.subscriptionsUrl}/teacher-bank-transfer-requests`, {
       ...request,
       paymentReference: request.paymentReference.trim(),
