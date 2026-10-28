@@ -96,3 +96,31 @@ public sealed record GoalUpdatedEvent(
     Guid StudentId,
     Guid? SetByTeacherId,
     string Title);
+
+/// <summary>
+/// A subscription or bank-transfer event the payer (or the platform admin) is told about in-app and by e-mail.
+/// <see cref="RecipientUserId"/> is null for platform-admin notices (<see cref="CoachingSubscriptionNoticeKinds.TransferSubmitted"/>)
+/// and for institution notices, whose contact address (if any) is <see cref="RecipientEmail"/>.
+/// </summary>
+public sealed record CoachingSubscriptionNoticeV1(
+    Guid NoticeId,
+    Guid? RecipientUserId,
+    string? RecipientEmail,
+    string Kind,
+    string Audience,
+    string PlanName,
+    DateTime? EndsAt,
+    string? Detail,
+    DateTime OccurredAt);
+
+public static class CoachingSubscriptionNoticeKinds
+{
+    public const string TransferSubmitted = "TransferSubmitted";
+    public const string TransferApproved = "TransferApproved";
+    public const string TransferRejected = "TransferRejected";
+    public const string ApprovalCancelled = "ApprovalCancelled";
+    public const string Expiring = "Expiring";
+    public const string Expired = "Expired";
+    public const string InstitutionExpiring = "InstitutionExpiring";
+    public const string InstitutionExpired = "InstitutionExpired";
+}

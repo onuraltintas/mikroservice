@@ -93,6 +93,13 @@ public sealed class CoachingCmsAndSubscriptionRulesTests
     [InlineData("/api/reports/student/123/progress", true)]
     [InlineData("/api/calendar/student.ics", true)]
     [InlineData("/api/coaching/study-planning/plans", true)]
+    // A student joins a teacher or institution (and gets a funded seat) before having any subscription.
+    [InlineData("/api/coaching/invitations/my-invitations", false)]
+    [InlineData("/api/coaching/invitations/00000000-0000-0000-0000-000000000001/accept", false)]
+    [InlineData("/api/coaching/profiles/me", false)]
+    [InlineData("/api/coaching/profiles/me/time-zone", false)]
+    [InlineData("/api/coaching/students/me/teachers/00000000-0000-0000-0000-000000000001", false)]
+    [InlineData("/api/coaching/catalog/exams", false)]
     [InlineData("/api/coaching-agreements", false)]
     [InlineData("/api/data-privacy/export", false)]
     [InlineData("/api/coaching-admin/subscriptions", false)]

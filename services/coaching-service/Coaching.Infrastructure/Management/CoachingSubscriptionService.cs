@@ -9,6 +9,7 @@ using Coaching.Application.Interfaces;
 using Coaching.Application.Subscriptions;
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,8 @@ namespace Coaching.Infrastructure.Management;
 
 public sealed class CoachingSubscriptionService(
     CoachingDbContext db,
-    ICoachingIdentityAuthorizationClient identityAuthorizationClient) : ICoachingSubscription
+    ICoachingIdentityAuthorizationClient identityAuthorizationClient,
+    ICoachingEventPublisher? events = null) : ICoachingSubscription
 {
     private const string SettingsIdempotencyScope = "coaching.subscription.settings.update";
     private const string TransferCreateIdempotencyScope = "coaching.bank-transfer.create";
@@ -365,6 +367,8 @@ public sealed class CoachingSubscriptionService(
             AdultPayerDeclaredAt = DateTime.UtcNow
         };
         db.CoachingBankTransferRequests.Add(requestEntity);
+        await NoticeAsync(null, null, CoachingSubscriptionNoticeKinds.TransferSubmitted, plan.Audience, plan.Name, null,
+            $"{requestEntity.UserName} · {reference} · {requestEntity.Amount:0.00} {requestEntity.Currency}", cancellationToken);
         db.IdempotencyRecords.Add(IdempotencyRecord.Create(
             TransferCreateIdempotencyScope, key, requestHash, requestEntity.Id));
         try
@@ -536,7 +540,8 @@ public sealed class CoachingSubscriptionService(
                 renewalSubscription = await db.CoachingSubscriptions
                     .Where(item => item.UserId == transfer.UserId
                         && item.PlanId == approvedPlan.Id
-                        && item.Status == "Active"
+                        // The lifecycle job marks a lapsed subscription Expired; renewing it keeps its seats.
+                        && (item.Status == "Active" || item.Status == "Expired")
                         && item.StartDate <= now)
                     .OrderByDescending(item => item.EndDate)
                     .FirstOrDefaultAsync(cancellationToken);
@@ -600,6 +605,8 @@ public sealed class CoachingSubscriptionService(
             }
 
             transfer.SubscriptionId = subscription.Id;
+            await NoticeAsync(transfer.UserId, transfer.UserEmail, CoachingSubscriptionNoticeKinds.TransferApproved, plan.Audience,
+                plan.Name, subscription.EndDate, null, cancellationToken);
             db.CoachingPaymentRecords.Add(new CoachingPaymentRecord
             {
                 UserId = transfer.UserId,
@@ -614,6 +621,13 @@ public sealed class CoachingSubscriptionService(
                 Provider = "BankTransfer",
                 Reference = transfer.PaymentReference
             });
+        }
+
+        else if (await db.CoachingSubscriptionPlans.AsNoTracking().SingleOrDefaultAsync(item => item.Id == transfer.PlanId, cancellationToken)
+            is { } rejectedPlan)
+        {
+            await NoticeAsync(transfer.UserId, transfer.UserEmail, CoachingSubscriptionNoticeKinds.TransferRejected, rejectedPlan.Audience,
+                rejectedPlan.Name, null, reviewNote, cancellationToken);
         }
 
         transfer.Status = status;
@@ -692,6 +706,12 @@ public sealed class CoachingSubscriptionService(
 
         foreach (var payment in await db.CoachingPaymentRecords.Where(item => item.BankTransferRequestId == transfer.Id).ToListAsync(cancellationToken))
             payment.Status = "Cancelled";
+
+        if (plan is not null)
+        {
+            await NoticeAsync(transfer.UserId, transfer.UserEmail, CoachingSubscriptionNoticeKinds.ApprovalCancelled, plan.Audience,
+                plan.Name, null, note, cancellationToken);
+        }
 
         transfer.Status = "Cancelled";
         transfer.ReviewNote = string.IsNullOrWhiteSpace(transfer.ReviewNote)
@@ -1492,6 +1512,14 @@ public sealed class CoachingSubscriptionService(
 
         return false;
     }
+
+    // Published before SaveChanges so the bus outbox stores the notice in the same transaction as the change.
+    private Task NoticeAsync(Guid? userId, string? email, string kind, string audience, string planName, DateTime? endsAt,
+        string? detail, CancellationToken cancellationToken) =>
+        events is null
+            ? Task.CompletedTask
+            : events.PublishAsync(new CoachingSubscriptionNoticeV1(Guid.NewGuid(), userId, string.IsNullOrWhiteSpace(email) ? null : email,
+                kind, audience, planName, endsAt, detail, DateTime.UtcNow), cancellationToken);
 
     private Task<T> ExecuteWithRetryAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
     {
