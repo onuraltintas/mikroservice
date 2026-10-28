@@ -18,7 +18,8 @@ describe('CoachingPortalLayoutComponent multi-role view', () => {
     const fixture = TestBed.createComponent(CoachingPortalLayoutComponent);
     fixture.detectChanges(); await fixture.whenStable();
     const links = [...fixture.nativeElement.querySelectorAll('.coaching-navigation a')] as HTMLAnchorElement[];
-    expect(links).toHaveLength(14);
+    expect(links).toHaveLength(15);
+    expect(links.some(link => link.getAttribute('href') === '/coaching-portal/messages')).toBe(true); // roadmap O3
     expect(links.some(link => link.getAttribute('href') === '/coaching-portal/goals')).toBe(true);
     expect(links.some(link => link.getAttribute('href') === '/coaching-portal/weekly-plan')).toBe(true);
     expect(links.some(link => link.getAttribute('href') === '/coaching-portal/setup')).toBe(true);

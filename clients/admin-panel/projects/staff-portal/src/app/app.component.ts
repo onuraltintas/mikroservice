@@ -76,6 +76,9 @@ export class AppComponent implements AfterViewInit {
       this.notificationsVisible = false;
     }
   }
+  async openCoachingMessage(id: string): Promise<void> {
+    if (this.isTeacherWorkspaceSelected && await this.coachingTeacherWorkspace?.openMessageFromNotification(id)) this.notificationsVisible = false;
+  }
   async openCoachingWeekly(target: WeeklyDestination): Promise<void> {
     if (this.isTeacherWorkspaceSelected && await this.coachingTeacherWorkspace?.openWeeklyFromNotification(target)) this.notificationsVisible = false;
   }

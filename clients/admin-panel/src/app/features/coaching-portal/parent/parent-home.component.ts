@@ -17,6 +17,9 @@ import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
         <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Veli paneli</p>
         <h1 id="parent-home-title" class="mt-1 text-2xl font-bold">Çocuklarım</h1>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Çocuğunun çalışmasını, ödevlerini, seanslarını, denemelerini ve ücretlerini buradan izleyebilirsin. Bu ekran yalnızca okumak içindir; değişiklikleri öğrenci ve öğretmeni yapar.</p>
+        @if (verified().length) {
+          <a routerLink="/coaching-portal/messages" class="mt-3 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Öğretmenlere mesaj yaz</a>
+        }
       </header>
       @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
       @if (success()) { <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{{ success() }}</div> }

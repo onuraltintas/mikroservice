@@ -64,6 +64,8 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
     {
         public Task<CoachingParentSummaryRecipientPage> GetWeeklySummaryRecipientsAsync(int pageNumber, int pageSize, CancellationToken ct) =>
             Task.FromResult(new CoachingParentSummaryRecipientPage(recipients.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToArray(), recipients.Length));
+        public Task<IReadOnlyList<CoachingParentLink>> GetParentLinksAsync(IReadOnlyCollection<Guid> studentUserIds, Guid? parentUserId, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<CoachingParentLink>>([]);
     }
 
     private sealed class Publisher : ICoachingEventPublisher

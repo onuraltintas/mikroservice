@@ -338,3 +338,20 @@ public sealed class GoalUpdatedConsumer : IConsumer<GoalUpdatedEvent>
     }
 }
 
+/// <summary>Roadmap O3: tells the recipient who wrote, never what was written.</summary>
+public sealed class CoachingMessageReceivedConsumer(ICoachingNotificationDispatcher dispatcher) : IConsumer<CoachingMessageReceivedEvent>
+{
+    public Task Consume(ConsumeContext<CoachingMessageReceivedEvent> context)
+    {
+        var message = context.Message;
+        var sender = string.IsNullOrWhiteSpace(message.SenderName) ? "Koçluk" : message.SenderName.Trim();
+        return dispatcher.SendAsync(
+            MessageIds.Require(context),
+            new[] { message.RecipientUserId },
+            $"Yeni mesaj: {sender}",
+            message.HasAttachments ? $"{sender} sana dosya ekli bir mesaj gönderdi." : $"{sender} sana mesaj gönderdi.",
+            "CoachingMessage",
+            message.ConversationId.ToString(),
+            context.CancellationToken);
+    }
+}

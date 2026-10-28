@@ -129,6 +129,15 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/coaching-sessions.component').then(m => m.CoachingSessionsComponent)
   },
+  // Roadmap O3: messages with teachers, for students and parents.
+  {
+    path: 'messages', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student', 'Parent'] },
+    loadComponent: () => import('./pages/coaching-messages-page.component').then(m => m.CoachingMessagesPageComponent)
+  },
+  {
+    path: 'messages/:conversationId', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student', 'Parent'] },
+    loadComponent: () => import('./pages/coaching-messages-page.component').then(m => m.CoachingMessagesPageComponent)
+  },
   {
     path: 'notifications',
     canActivate: [coachingRoleGuard],

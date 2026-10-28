@@ -221,6 +221,28 @@ public sealed class CoachingNotificationConsumerTests
         finally { await harness.Stop(); }
     }
 
+    // Roadmap O3: a new message is announced without its text; the link opens the conversation.
+    [Theory]
+    [InlineData("Teacher")]
+    [InlineData("Student")]
+    [InlineData("Parent")]
+    public async Task ANewMessageIsAnnouncedWithoutItsText(string role)
+    {
+        var dispatcher = new RecordingDispatcher(); var conversation = Guid.NewGuid(); var recipient = Guid.NewGuid();
+        var services = new ServiceCollection(); services.AddSingleton<ICoachingNotificationDispatcher>(dispatcher);
+        services.AddMassTransitTestHarness(x => { x.UseSuiteTimeouts(); x.AddConsumer<CoachingMessageReceivedConsumer>(); x.UsingInMemory((context, config) => config.ConfigureEndpoints(context)); });
+        await using var provider = services.BuildServiceProvider(); var harness = provider.GetRequiredService<ITestHarness>(); await harness.Start();
+        try
+        {
+            await harness.Bus.Publish(new CoachingMessageReceivedEvent(conversation, recipient, role, "Can Öğretmen", HasAttachments: true));
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 1);
+            var call = dispatcher.Calls.Single();
+            call.RecipientIds.Should().Equal(recipient); call.Type.Should().Be("CoachingMessage"); call.RelatedEntityId.Should().Be(conversation.ToString());
+            call.Title.Should().Contain("Can Öğretmen"); call.Message.Should().Contain("dosya");
+        }
+        finally { await harness.Stop(); }
+    }
+
     private sealed class RecordingDispatcher : ICoachingNotificationDispatcher
     {
         public ConcurrentQueue<DispatchCall> Calls { get; } = new();

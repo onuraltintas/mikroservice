@@ -23,12 +23,13 @@ import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-p
 import { StaffLocationService, StaffPlace } from '../../navigation/staff-location.service';
 import { StaffSectionGroup, StaffSectionNavComponent } from '../../navigation/staff-section-nav.component';
 import { CoachingInstitutionExamsComponent } from './coaching-institution-exams.component';
-type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'exams' | 'subscription' | 'finance';
+import { CoachingInstitutionMessagesComponent } from './coaching-institution-messages.component';
+type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'exams' | 'messages' | 'subscription' | 'finance';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent, StaffSectionNavComponent, CoachingInstitutionExamsComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent, StaffSectionNavComponent, CoachingInstitutionExamsComponent, CoachingInstitutionMessagesComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
@@ -156,7 +157,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
       { value: 'exams', label: 'Denemeler', testId: 'institution-exams-tab' }] },
     { label: 'Kişiler', items: [
       { value: 'students', label: 'Öğrenciler', testId: 'institution-students-tab' },
-      { value: 'teachers', label: 'Öğretmenler', testId: 'institution-teachers-tab' }] },
+      { value: 'teachers', label: 'Öğretmenler', testId: 'institution-teachers-tab' },
+      { value: 'messages', label: 'Yazışmalar', testId: 'institution-messages-tab' }] },
     { label: 'Ödeme', items: [
       { value: 'subscription', label: 'Abonelik ve kontenjan', testId: 'institution-subscription-tab' },
       { value: 'finance', label: 'Tahsilat hareketleri', testId: 'institution-finance-tab' }] }

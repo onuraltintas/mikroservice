@@ -10,6 +10,7 @@ import { CoachingTeacherExamsComponent } from './coaching-teacher-exams.componen
 import { CoachingTeacherSubscriptionComponent } from './coaching-teacher-subscription.component';
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 import { CoachingProfileComponent } from '../../../../../../shared/coaching-profile.component';
+import { CoachingMessagesComponent } from '../../../../../../shared/coaching-messages.component';
 import { environment } from '../../../environments/environment';
 import {CoachingTeacherStudyOverviewComponent} from './coaching-teacher-study-overview.component';
 
@@ -17,13 +18,13 @@ import { CoachingTeacherTrackingComponent } from './coaching-teacher-tracking.co
 import { CoachingTeacherTrackingContext } from './coaching-teacher-tracking.service';
 import type { WeeklyDestination } from '../../../../../../shared/coaching-notification-target';
 
-type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' | 'exams' | 'subscription' | 'finance' | 'profile' | 'study' | 'tracking';
+type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' | 'exams' | 'subscription' | 'finance' | 'profile' | 'study' | 'tracking' | 'messages';
 
 @Component({
   selector: 'staff-coaching-teacher-workspace',
   standalone: true,
   providers: [CoachingTeacherTrackingContext],
-  imports: [CoachingTeacherStudentsComponent, CoachingTeacherAssignmentsComponent, CoachingTeacherSessionsComponent, CoachingTeacherGoalsComponent, CoachingTeacherExamsComponent, CoachingTeacherSubscriptionComponent, CoachingFinanceComponent, CoachingProfileComponent,CoachingTeacherStudyOverviewComponent, CoachingTeacherTrackingComponent, StaffSectionNavComponent],
+  imports: [CoachingTeacherStudentsComponent, CoachingTeacherAssignmentsComponent, CoachingTeacherSessionsComponent, CoachingTeacherGoalsComponent, CoachingTeacherExamsComponent, CoachingTeacherSubscriptionComponent, CoachingFinanceComponent, CoachingProfileComponent,CoachingTeacherStudyOverviewComponent, CoachingTeacherTrackingComponent, StaffSectionNavComponent, CoachingMessagesComponent],
   templateUrl: './coaching-teacher-workspace.component.html',
   styleUrl: './coaching-teacher-workspace.component.scss'
 })
@@ -60,6 +61,20 @@ export class CoachingTeacherWorkspaceComponent {
     this.remember({ section: 'assignments', id });
     return true;
   }
+  /** Roadmap O3: a message notification opens its conversation. */
+  async openMessageFromNotification(id: string): Promise<boolean> {
+    if (this.activeSection() !== 'messages' && !await this.canLeavePage()) return false;
+    this.notificationAssignmentId.set(id); this.notificationWeeklyTarget.set(null);
+    this.activeSection.set('messages');
+    this.remember({ section: 'messages', id });
+    return true;
+  }
+  /** The open conversation is kept in the address. */
+  rememberConversation(id: string | null): void {
+    if (this.activeSection() !== 'messages' || id === this.notificationAssignmentId()) return;
+    this.notificationAssignmentId.set(id);
+    this.remember({ section: 'messages', id });
+  }
   @ViewChild(CoachingFinanceComponent) financePanel?: Pick<CoachingFinanceComponent, 'canLeavePage'>;
   async canLeavePage(): Promise<boolean> { return (await this.tracking?.canLeavePage() ?? true) && (await this.study?.canLeavePage()??true) && (await this.profile?.canLeavePage() ?? true) && (await this.financePanel?.canLeavePage() ?? true) && (await this.students?.canLeavePage() ?? true) && (await this.goals?.canLeavePage() ?? true) && (await this.assignments?.canLeavePage() ?? true); }
   // Roadmap O2: the teacher starts on the tracking centre; sections are grouped and kept in the address.
@@ -68,6 +83,7 @@ export class CoachingTeacherWorkspaceComponent {
     { label: 'Günlük takip', items: [
       { value: 'tracking', label: 'Takip merkezi', testId: 'tracking-tab' },
       { value: 'study', label: 'Çalışma takibi', testId: 'study-tab' },
+      { value: 'messages', label: 'Mesajlar', testId: 'messages-tab' },
       { value: 'assignments', label: 'Ödevler', testId: 'assignments-tab' },
       { value: 'sessions', label: 'Seanslar', testId: 'sessions-tab' }] },
     { label: 'Öğrenciler', items: [

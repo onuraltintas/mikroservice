@@ -21,9 +21,11 @@ export class StaffNotificationCenterComponent implements OnChanges, OnInit {
   @Input() canOpenCoachingAssignments = false;
   @Output() readonly openCoachingAssignment = new EventEmitter<string>();
   @Output() readonly openCoachingWeekly = new EventEmitter<WeeklyDestination>();
+  @Output() readonly openCoachingMessage = new EventEmitter<string>();
   openTarget(target: CoachingNotificationTarget) {
     if (target.kind === 'weekly') this.openCoachingWeekly.emit(target);
     else if (target.kind === 'assignment') this.openCoachingAssignment.emit(target.id);
+    else if (target.kind === 'message') this.openCoachingMessage.emit(target.id);
   }
   target(notification: StaffNotification) {
     return this.product === 'coaching' && this.canOpenCoachingAssignments ? coachingNotificationTarget(notification, 'teacher') : null;

@@ -56,7 +56,7 @@ public sealed class WeeklyResultEvidenceTests
         await service.ReviewReflectionAsync(student,Week,new(revised.Version,"Sonuçlara göre planı izleyelim"),default);
         var acknowledgement=await pg.Db.Set<WeeklyReflectionReview>().SingleAsync();Assert.Contains("PartlyHelped",acknowledgement.ReflectionSnapshotJson);
         var export=await new CoachingDataExportRepository(pg.Db).ExportStudentDataAsync(student,DateTimeOffset.UtcNow,default);
-        Assert.Equal("1.9",export.SchemaVersion);Assert.NotNull(Assert.Single(export.WeeklyReflections!).ResultsJson);
+        Assert.Equal("1.10",export.SchemaVersion);Assert.NotNull(Assert.Single(export.WeeklyReflections!).ResultsJson);
         Assert.NotEqual(frozen,(await pg.Db.Set<WeeklyReflection>().SingleAsync()).ResultsJson);
     }
 

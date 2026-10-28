@@ -138,6 +138,14 @@ public sealed class CoachingErasureExecutionService(
         var weeklyDecisions = await context.Set<WeeklyDecision>().Where(x => x.StudentId == message.SubjectUserId || x.TeacherId == message.SubjectUserId || x.ResponsibleTeacherId == message.SubjectUserId).ToListAsync(cancellationToken);
         var decisionWorkRequests = await CoachingStudyPlanErasureMessages.DecisionWorkRequests(context, message.SubjectUserId).ToListAsync(cancellationToken);
         var studyMessages = await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).ToListAsync(cancellationToken);
+        // Roadmap O3: a conversation belongs to its two participants; erasing either removes it with its messages and files.
+        var conversations = await context.Set<CoachingConversation>()
+            .Where(x => x.TeacherUserId == message.SubjectUserId || x.CounterpartUserId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var (conversationRecords, conversationFiles) = await Coaching.Infrastructure.Management.CoachingMessagingService
+            .RemoveConversationsAsync(context, conversations, cancellationToken);
+        if (events is not null)
+            foreach (var file in conversationFiles)
+                await events.PublishAsync(new AssignmentAttachmentDeletionRequested(file.ConversationId, file.Id, file.StorageKey), cancellationToken);
         var reminders = await context.CoachingReminderReceipts.Where(x => x.RecipientUserId == message.SubjectUserId).ToListAsync(cancellationToken);
         var fees = await context.CoachingFeeAgreements.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var financeCount = fees.Count
@@ -170,7 +178,8 @@ public sealed class CoachingErasureExecutionService(
             + studentExams.Count + studyTasks.Count + studyPlans.Count + practiceApprovals.Count + studyAvailability.Count + weeklyDrafts.Count + weeklyReflectionReviews.Count + weeklyReflections.Count + weeklyDecisions.Count + decisionWorkRequests.Count + studyMessages.Count + reminders.Count + financeCount
             + goals.Count + primaryGoals.Count
             + attendances.Count
-            + acknowledgements.Count;
+            + acknowledgements.Count
+            + conversationRecords;
         var execution = CoachingErasureExecution.Complete(
             message.RequestId, deletedRecordCount, completedAt, message.SubjectUserId, retainedFinancialRecords);
 
@@ -203,7 +212,8 @@ public sealed class CoachingErasureExecutionService(
         context.CoachingErasureAssessments.Remove(assessment);
         context.CoachingErasureExecutions.Add(execution);
         await context.SaveChangesAsync(cancellationToken);
-        if (events is null) filesToDeleteAfterCommit.AddRange(attachments.Select(attachment => attachment.StorageKey));
+        if (events is null) filesToDeleteAfterCommit.AddRange(attachments.Select(attachment => attachment.StorageKey)
+            .Concat(conversationFiles.Select(file => file.StorageKey)));
         return execution;
     }
 }

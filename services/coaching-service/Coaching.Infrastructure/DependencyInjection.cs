@@ -162,6 +162,7 @@ public static class DependencyInjection
         services.AddScoped<ICoachingSubscription, CoachingSubscriptionService>();
         services.AddScoped<CoachingInstitutionSubscriptionService>();
         services.AddScoped<CoachingInstitutionExamService>();
+        services.AddScoped<CoachingMessagingService>();
         services.AddScoped<Coaching.Infrastructure.Finance.CoachingFeeService>();
         services.AddScoped<ICoachingNewsletter>(provider => new CoachingNewsletterService(
             provider.GetRequiredService<CoachingDbContext>(),
@@ -194,6 +195,8 @@ public static class DependencyInjection
         services.AddScoped<Coaching.Infrastructure.Attachments.CoachingAttachmentCleanupProcessor>();
         if (configuration.GetValue("Coaching:Attachments:CleanupEnabled", true))
             services.AddHostedService<Coaching.Infrastructure.Attachments.CoachingAttachmentCleanupWorker>();
+        if (configuration.GetValue("Coaching:Messages:RetentionEnabled", true))
+            services.AddHostedService<CoachingMessagingRetentionWorker>();
         services.AddScoped<Coaching.Infrastructure.Privacy.CoachingFinancialRetentionProcessor>();
         if (configuration.GetValue("Coaching:Privacy:FinancialRetentionEnabled", true))
             services.AddHostedService<Coaching.Infrastructure.Privacy.CoachingFinancialRetentionWorker>();

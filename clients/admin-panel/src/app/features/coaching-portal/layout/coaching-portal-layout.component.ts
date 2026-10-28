@@ -39,6 +39,7 @@ export class CoachingPortalLayoutComponent {
   readonly isParent = computed(() => !!this.user()?.roles?.includes('Parent') && !this.user()?.roles?.includes('Student'));
   readonly parentLinks: PortalLink[] = [
     { label: 'Çocuklarım', path: '/coaching-portal/parent', icon: 'home', exact: true },
+    { label: 'Mesajlar', path: '/coaching-portal/messages', icon: 'chat' },
   ];
   readonly menuOpen = signal(false);
   readonly pageLabel = signal('Genel Bakış');
@@ -48,6 +49,7 @@ export class CoachingPortalLayoutComponent {
       { label: 'Genel Bakış', path: '/coaching-portal', icon: 'home', exact: true },
       { label: 'Çalışma planlarım', path: '/coaching-portal/study-plans', icon: 'plan' },
       ...(this.studentNavigation.showAssignments() ? [{ label: 'Ödevlerim', path: '/coaching-portal/assignments', icon: 'book' as const }] : []),
+      { label: 'Mesajlar', path: '/coaching-portal/messages', icon: 'chat' },
       { label: 'Plan sihirbazı', path: '/coaching-portal/automatic-plan', icon: 'spark' },
       { label: 'Haftalık düzenim', path: '/coaching-portal/weekly-plan', icon: 'calendar' }
     ] },
@@ -93,7 +95,7 @@ export class CoachingPortalLayoutComponent {
   private updatePageLabel(): void {
     const currentPath = this.router.url.split(/[?#]/)[0];
     const path = currentPath === '/coaching-portal/profile' ? '/coaching-portal/setup' : currentPath === '/coaching-portal/study-availability' ? '/coaching-portal/weekly-plan' : currentPath;
-    if (this.isParent()) { this.pageLabel.set(path.startsWith('/coaching-portal/parent/children/') ? 'Çocuğumun haftası' : 'Çocuklarım'); return; }
+    if (this.isParent()) { this.pageLabel.set(path.startsWith('/coaching-portal/messages') ? 'Mesajlar' : path.startsWith('/coaching-portal/parent/children/') ? 'Çocuğumun haftası' : 'Çocuklarım'); return; }
     const link = this.navigation().flatMap(group => group.links).find(item => item.exact ? path === item.path : path.startsWith(item.path));
     this.pageLabel.set(link?.label ?? 'Çalışma alanın');
   }
