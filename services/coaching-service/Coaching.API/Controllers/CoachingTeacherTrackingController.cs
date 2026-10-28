@@ -81,7 +81,8 @@ public sealed class CoachingTeacherTrackingController(CoachingDbContext db, ICoa
                     && (x.Assignment.Status == AssignmentStatus.Active && x.SubmittedAt == null
                         && (x.Status == StudentAssignmentStatus.Assigned || x.Status == StudentAssignmentStatus.InProgress)
                         && x.Assignment.DueDate < utcNow && x.Assignment.DueDate >= fromUtc && x.Assignment.DueDate < toUtc
-                        || x.Status == StudentAssignmentStatus.Submitted && x.SubmittedAt >= fromUtc && x.SubmittedAt < toUtc))
+                        // Roadmap D7: ungraded submissions stay listed even when they are older than the chosen window.
+                        || x.Status == StudentAssignmentStatus.Submitted && x.SubmittedAt < toUtc))
                 .Select(x => new { x.AssignmentId, x.StudentId, x.Assignment.Title, x.Assignment.DueDate, x.SubmittedAt, x.Status })
                 .Take(10001).ToArrayAsync(ct);
             // Never show truncated totals as a complete result. The same bound is used by study overview.

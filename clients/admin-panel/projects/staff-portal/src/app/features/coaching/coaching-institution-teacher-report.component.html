@@ -27,7 +27,14 @@
   </section>
 
   <section class="report-panel" aria-labelledby="teacher-analytics-title">
-    <div class="section-heading"><div><p class="report-eyebrow">DÖNEMSEL KARŞILAŞTIRMA</p><h3 id="teacher-analytics-title">Son 30 gün ve önceki dönem</h3></div><button type="button" class="outline-button" (click)="retryAnalytics()" [disabled]="isAnalyticsLoading()">Yenile</button></div>
+    <div class="section-heading"><div><p class="report-eyebrow">DÖNEMSEL KARŞILAŞTIRMA</p><h3 id="teacher-analytics-title">{{ periodLabel() }} ve önceki dönem</h3></div><button type="button" class="outline-button" (click)="retryAnalytics()" [disabled]="isAnalyticsLoading()">Yenile</button></div>
+    <form class="period-range" (ngSubmit)="applyAnalyticsRange()" aria-label="Analiz tarih aralığı">
+      <label>Başlangıç <input type="date" name="analyticsFrom" [(ngModel)]="analyticsFrom" data-testid="analytics-from"></label>
+      <label>Bitiş <input type="date" name="analyticsTo" [(ngModel)]="analyticsTo" data-testid="analytics-to"></label>
+      <button type="submit" class="outline-button" [disabled]="isAnalyticsLoading()">Uygula</button>
+      @if (analyticsRange()) { <button type="button" class="outline-button" (click)="clearAnalyticsRange()">Son 30 güne dön</button> }
+    </form>
+    @if (analyticsRangeError()) { <p class="report-error" role="alert">{{ analyticsRangeError() }}</p> }
     @if (isAnalyticsLoading()) {
       <p class="inline-status" role="status">Dönem analizi yükleniyor…</p>
     } @else if (analyticsError()) {
@@ -37,12 +44,12 @@
         <table class="period-table">
           <thead><tr><th>Dönem</th><th>Ödev</th><th>Sınav</th><th>Seans</th></tr></thead>
           <tbody>
-            <tr><th>Son 30 gün</th><td>{{ period.currentPeriod.assignments }}</td><td>{{ period.currentPeriod.exams }}</td><td>{{ period.currentPeriod.sessions }}</td></tr>
-            <tr><th>Önceki 30 gün</th><td>{{ period.previousPeriod.assignments }}</td><td>{{ period.previousPeriod.exams }}</td><td>{{ period.previousPeriod.sessions }}</td></tr>
+            <tr><th>{{ periodLabel() }}</th><td>{{ period.currentPeriod.assignments }}</td><td>{{ period.currentPeriod.exams }}</td><td>{{ period.currentPeriod.sessions }}</td></tr>
+            <tr><th>Önceki eşit dönem</th><td>{{ period.previousPeriod.assignments }}</td><td>{{ period.previousPeriod.exams }}</td><td>{{ period.previousPeriod.sessions }}</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="result-distribution" aria-label="Son 30 gündeki sınav sonuç dağılımı">
+      <div class="result-distribution" [attr.aria-label]="periodLabel() + ' sınav sonuç dağılımı'">
         <span>Sınav sonucu dağılımı</span><strong class="low-result">Düşük {{ period.lowResults }}</strong><strong class="medium-result">Orta {{ period.mediumResults }}</strong><strong class="high-result">Yüksek {{ period.highResults }}</strong>
       </div>
     }

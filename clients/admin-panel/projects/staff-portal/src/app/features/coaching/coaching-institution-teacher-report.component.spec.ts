@@ -19,11 +19,25 @@ describe('CoachingInstitutionTeacherReportComponent', () => {
     fixture.detectChanges();
 
     expect(service.getTeacherOverview).toHaveBeenCalledWith('teacher-1');
-    expect(service.getTeacherAnalytics).toHaveBeenCalledWith('teacher-1');
+    expect(service.getTeacherAnalytics).toHaveBeenCalledWith('teacher-1', null);
     expect(service.getStudentRoster).toHaveBeenCalledWith('institution-1', 1, '', 'teacher-1', null);
     expect(fixture.nativeElement.textContent).toContain('Zeynep Koç');
     expect(fixture.nativeElement.textContent).toContain('Son 30 gün');
     expect(fixture.nativeElement.textContent).toContain('Ada Yılmaz');
+  });
+
+  it('Roadmap D7: analyses a chosen date range and returns to the last 30 days', async () => {
+    const service = teacherService();
+    const fixture = await createFixture(service); fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.analyticsFrom = '2026-10-01'; component.analyticsTo = '2026-09-01'; component.applyAnalyticsRange();
+    expect(component.analyticsRangeError()).toContain('366');
+    component.analyticsFrom = '2026-09-01'; component.analyticsTo = '2026-09-30'; component.applyAnalyticsRange(); fixture.detectChanges();
+    expect(service.getTeacherAnalytics).toHaveBeenLastCalledWith('teacher-1', { fromDate: '2026-09-01', toDate: '2026-09-30' });
+    expect(fixture.nativeElement.textContent).toContain('01.09.2026 – 30.09.2026');
+    component.clearAnalyticsRange(); fixture.detectChanges();
+    expect(service.getTeacherAnalytics).toHaveBeenLastCalledWith('teacher-1', null);
+    expect(fixture.nativeElement.textContent).toContain('Son 30 gün');
   });
 
   it('searches and pages only this teacher’s current-institution students', async () => {

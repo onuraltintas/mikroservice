@@ -203,12 +203,16 @@ public sealed class CoachingAdminController : ControllerBase
     public async Task<ActionResult<TeacherCoachingAnalyticsDto>> GetTeacherAnalytics(
         Guid teacherId,
         [FromServices] ICoachingAdminRepository repository,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        [FromQuery] DateOnly? fromDate = null,
+        [FromQuery] DateOnly? toDate = null)
     {
         var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
-        var toDate = DateTime.UtcNow;
-        return Ok(await repository.GetTeacherAnalyticsAsync(
-            teacherId, scope.InstitutionId, toDate.AddDays(-30), toDate, cancellationToken));
+        // Roadmap D7: a chosen date range (whole Türkiye days), otherwise the last 30 days.
+        DateTime from, to;
+        try { (from, to) = Coaching.Application.Queries.CoachingAnalyticsPeriod.Resolve(fromDate, toDate, DateTime.UtcNow); }
+        catch (ArgumentException error) { return BadRequest(new { message = error.Message }); }
+        return Ok(await repository.GetTeacherAnalyticsAsync(teacherId, scope.InstitutionId, from, to, cancellationToken));
     }
 
     [HttpGet("assignments/{id:guid}")]

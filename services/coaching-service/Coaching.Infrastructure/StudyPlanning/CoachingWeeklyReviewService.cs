@@ -40,7 +40,9 @@ public sealed partial class CoachingWeeklyReviewService(CoachingDbContext db, IC
         var student = await Require(null, false, ct); var today = Today; var current = today.AddDays(-((int)today.DayOfWeek + 6) % 7); var week = current.AddDays(-7);
         var missing = await CoachingReflectionBacklog.MissingAsync(db,[student],today,today,ct);
         var needs = missing.Length>0;
-        if(needs)week=missing[0].WeekStart;
+        // Roadmap D7: a student who has never written a weekly reflection starts with the latest missing week
+        // (normally last week); after the first one the oldest gap comes next.
+        if(needs)week=await db.Set<WeeklyReflection>().AsNoTracking().AnyAsync(x=>x.StudentId==student,ct)?missing[0].WeekStart:missing[^1].WeekStart;
         var open = db.Set<WeeklyDecision>().AsNoTracking().Where(x => x.StudentId == student && (x.Status == "Planned" || x.Status == "InProgress"));
         var total = await open.CountAsync(ct); var overdue = await open.CountAsync(x => x.DueOn < today, ct);
         var rows = await open.OrderBy(x => x.DueOn).ThenBy(x => x.Id).Take(5).Select(x => new WeeklyHomeDecision(x.Id, x.ReviewWeekStart, x.Title, x.DueOn, x.DueOn < today)).ToArrayAsync(ct);
