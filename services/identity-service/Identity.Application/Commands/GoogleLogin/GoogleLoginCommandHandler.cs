@@ -161,6 +161,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                        acceptedLegalPages,
                        "google");
                }
+               if (user is not null && request.Product is { } registeredProduct)
+                   _registrationLegalConsentService.TrackSource(userId, registeredProduct, request.Utm, "google");
             }
             
             // 2b-bis. Post-Creation Setup (Only if we have a user now)

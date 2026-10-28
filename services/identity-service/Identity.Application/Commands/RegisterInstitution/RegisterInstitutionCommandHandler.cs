@@ -140,6 +140,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         user.GenerateEmailVerificationToken();
         _registrationLegalConsentService.TrackAcceptedDocuments(
             userId, product, legalValidation.Value, "password");
+        _registrationLegalConsentService.TrackSource(userId, product, request.Utm, "password");
 
         var institution = Institution.Create(
             request.InstitutionName,

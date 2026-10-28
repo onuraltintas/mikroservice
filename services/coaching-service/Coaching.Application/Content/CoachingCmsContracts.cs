@@ -152,6 +152,9 @@ public static class CoachingCmsMediaPolicy
     };
 }
 
+/// <summary>Roadmap O11: one public URL of the CMS for the sitemap; Kind is Page or Blog.</summary>
+public sealed record CoachingCmsSitemapEntry(string Kind, string Slug, DateTime LastModified);
+
 public interface ICoachingCms
 {
     Task<PagedResponse<CoachingCmsEntrySummary>> GetEntriesAsync(
@@ -169,6 +172,8 @@ public interface ICoachingCms
     Task<CoachingCmsEntrySummary?> GetPublishedPageAsync(string slug, CancellationToken cancellationToken = default);
     Task<PagedResponse<CoachingCmsEntrySummary>> GetPublishedBlogAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<CoachingCmsEntrySummary?> GetPublishedBlogPostAsync(string slug, CancellationToken cancellationToken = default);
+    /// <summary>Roadmap O11: published pages and blog posts for the public sitemap.</summary>
+    Task<IReadOnlyList<CoachingCmsSitemapEntry>> GetSitemapAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<CoachingCmsRevisionSummary>> GetRevisionsAsync(Guid entryId, CancellationToken cancellationToken = default);
     Task<bool> RestoreRevisionAsync(Guid entryId, Guid revisionId, Guid actorId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<CoachingCmsNavigationItemSummary>> GetNavigationAsync(string menu, bool includeHidden, CancellationToken cancellationToken = default);

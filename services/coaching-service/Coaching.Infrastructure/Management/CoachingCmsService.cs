@@ -175,6 +175,19 @@ public sealed class CoachingCmsService(CoachingDbContext db, ICoachingCmsMediaSt
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<CoachingCmsSitemapEntry>> GetSitemapAsync(CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        var rows = await db.CoachingCmsEntries.AsNoTracking()
+            .Where(entry => (entry.Kind == "Page" || entry.Kind == "Blog") && entry.IsPublished
+                && (!entry.ScheduledPublishAt.HasValue || entry.ScheduledPublishAt <= now))
+            .OrderBy(entry => entry.Kind).ThenBy(entry => entry.Slug)
+            .Select(entry => new { entry.Kind, entry.Slug, entry.UpdatedAt, entry.PublishedAt, entry.ScheduledPublishAt, entry.CreatedAt })
+            .Take(5000).ToListAsync(cancellationToken);
+        return rows.Select(row => new CoachingCmsSitemapEntry(row.Kind, row.Slug,
+            new[] { row.UpdatedAt, row.PublishedAt, row.ScheduledPublishAt }.Max() ?? row.CreatedAt)).ToArray();
+    }
+
     public async Task<CoachingCmsEntrySummary?> GetPublishedPageAsync(string slug, CancellationToken cancellationToken = default)
     {
         var normalizedSlug = CoachingManagementRules.NormalizeSlug(slug);

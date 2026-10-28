@@ -40,6 +40,11 @@ public sealed class CoachingCmsController(ICoachingCms cms) : ControllerBase
             : Ok(new { success = true, data = post });
     }
 
+    /// <summary>Roadmap O11: published pages and posts, read by the web server to build /sitemap.xml.</summary>
+    [HttpGet("sitemap")]
+    public async Task<IActionResult> GetSitemap(CancellationToken cancellationToken = default) =>
+        Ok(new { success = true, data = await cms.GetSitemapAsync(cancellationToken) });
+
     [HttpGet("navigation")]
     public async Task<IActionResult> GetNavigation([FromQuery] string menu = "Main", CancellationToken cancellationToken = default) =>
         Ok(new { success = true, data = await cms.GetNavigationAsync(menu, includeHidden: false, cancellationToken) });

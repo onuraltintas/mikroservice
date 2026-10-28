@@ -54,4 +54,7 @@ public interface IRegistrationLegalConsentService
         Identity.Domain.Enums.PlatformProduct product,
         IReadOnlyList<PlatformLegalPageDto> documents,
         string registrationMethod);
+
+    /// <summary>Roadmap O11: keeps the campaign tags a new account registered with; nothing is stored without tags.</summary>
+    void TrackSource(Guid userId, Identity.Domain.Enums.PlatformProduct product, Identity.Application.Registration.RegistrationUtm? utm, string registrationMethod) { }
 }

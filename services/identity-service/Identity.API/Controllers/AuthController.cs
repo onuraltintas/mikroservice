@@ -249,7 +249,8 @@ public class AuthController : ControllerBase
             request.IdToken!,
             ipAddress,
             product,
-            request.LegalAcceptances);
+            request.LegalAcceptances,
+            request.Utm);
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -293,7 +294,7 @@ public class AuthController : ControllerBase
         if (idToken is null)
             return BadRequest(new Error("Auth.GoogleRegistrationExpired", "Kayıt işleminizin süresi doldu. Lütfen Google ile tekrar devam edin."));
 
-        return await GoogleLoginAsync(new GoogleLoginRequest(idToken, request.LegalAcceptances), platformProduct);
+        return await GoogleLoginAsync(new GoogleLoginRequest(idToken, request.LegalAcceptances, request.Utm), platformProduct);
     }
 
     [HttpPost("google-link")]
@@ -492,10 +493,12 @@ public sealed record GoogleLoginRequest(
     [param: Required]
     [param: StringLength(16_384, MinimumLength = 1)]
     string? IdToken,
-    IReadOnlyList<Identity.Application.LegalPages.LegalPageAcceptance>? LegalAcceptances = null);
+    IReadOnlyList<Identity.Application.LegalPages.LegalPageAcceptance>? LegalAcceptances = null,
+    Identity.Application.Registration.RegistrationUtm? Utm = null);
 public sealed record CompleteGoogleRegistrationRequest(
     [param: Required, StringLength(64, MinimumLength = 64)] string RegistrationToken,
-    IReadOnlyList<Identity.Application.LegalPages.LegalPageAcceptance>? LegalAcceptances);
+    IReadOnlyList<Identity.Application.LegalPages.LegalPageAcceptance>? LegalAcceptances,
+    Identity.Application.Registration.RegistrationUtm? Utm = null);
 public record RefreshTokenRequest(string? RefreshToken = null);
 public record RevokeTokenRequest(string? Token = null);
 public sealed record MfaSetupRequest(string ChallengeToken);

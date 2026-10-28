@@ -52,4 +52,16 @@ public sealed class RegistrationLegalConsentService(
                 AcceptedAt = acceptedAt
             }));
     }
+
+    public void TrackSource(Guid userId, PlatformProduct product, Identity.Application.Registration.RegistrationUtm? utm, string registrationMethod)
+    {
+        var normalized = Identity.Application.Registration.RegistrationUtm.Normalize(utm);
+        if (normalized is null || userId == Guid.Empty) return;
+        db.RegistrationSources.Add(new RegistrationSource
+        {
+            UserId = userId, Product = product, UtmSource = normalized.UtmSource, UtmMedium = normalized.UtmMedium,
+            UtmCampaign = normalized.UtmCampaign, RegistrationMethod = registrationMethod.Length > 32 ? registrationMethod[..32] : registrationMethod,
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+    }
 }

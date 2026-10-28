@@ -1089,6 +1089,48 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("RegistrationLegalDocumentAcceptances", "identity");
                 });
 
+            modelBuilder.Entity("Identity.Domain.Entities.RegistrationSource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Product")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RegistrationMethod")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UtmCampaign")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("UtmMedium")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("UtmSource")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Product", "CreatedAt");
+
+                    b.HasIndex("UserId", "Product")
+                        .IsUnique();
+
+                    b.ToTable("RegistrationSources", "identity");
+                });
+
             modelBuilder.Entity("Identity.Domain.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1980,6 +2022,15 @@ namespace Identity.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.RegistrationLegalDocumentAcceptance", b =>
+                {
+                    b.HasOne("Identity.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Identity.Domain.Entities.RegistrationSource", b =>
                 {
                     b.HasOne("Identity.Domain.Entities.User", null)
                         .WithMany()
