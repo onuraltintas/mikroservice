@@ -60,6 +60,7 @@ public sealed class StudyCatalogTopicConfiguration : IEntityTypeConfiguration<St
             table.HasCheckConstraint("ck_catalog_topic_parent", "\"ParentId\" IS NULL OR \"ParentId\" <> \"Id\"");
             table.HasCheckConstraint("ck_catalog_topic_minutes", "\"EstimatedMinutes\" IS NULL OR \"EstimatedMinutes\" > 0");
             table.HasCheckConstraint("ck_catalog_topic_order", "\"DisplayOrder\" IS NULL OR \"DisplayOrder\" >= 0");
+            table.HasCheckConstraint("ck_catalog_topic_yield", "\"YieldWeight\" BETWEEN 1 AND 5");
         });
         builder.HasKey(x => x.Id);
         builder.HasAlternateKey(x => new { x.Id, x.UnitId, x.LessonId });
@@ -67,6 +68,7 @@ public sealed class StudyCatalogTopicConfiguration : IEntityTypeConfiguration<St
         builder.Property(x => x.SourceId).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(300).IsRequired();
         builder.HasIndex(x => new { x.Source, x.SourceId }).IsUnique();
+        builder.Property(x => x.YieldWeight).HasDefaultValue(3);
         builder.HasIndex(x => new { x.LessonId, x.IsActive, x.DisplayOrder });
         builder.HasOne<StudyCatalogUnit>().WithMany().HasForeignKey(x => new { x.UnitId, x.LessonId })
             .HasPrincipalKey(x => new { x.Id, x.LessonId }).OnDelete(DeleteBehavior.Restrict);

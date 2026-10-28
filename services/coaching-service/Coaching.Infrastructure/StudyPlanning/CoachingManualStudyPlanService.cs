@@ -530,7 +530,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             .ToListAsync(cancellationToken);
         var history = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == revision.Id && x.StudentId == revision.StudentId)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
-        tasks = tasks.Select(x => x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId,SkippedAt=history[x.Id].SkippedAt }).ToList();
+        tasks = tasks.Select(x => x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId,SkippedAt=history[x.Id].SkippedAt,PlanKind=history[x.Id].PlanKind,PlanReason=history[x.Id].PlanReason }).ToList();
         if(revision.Status==StudyPlanStatus.Archived&&revision.WasPublished)
         {
             var roots=history.Values.Select(x=>x.OriginalTaskId??x.Id).ToArray();

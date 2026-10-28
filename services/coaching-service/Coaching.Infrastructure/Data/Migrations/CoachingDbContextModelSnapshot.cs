@@ -3302,6 +3302,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<Guid>("StudentUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateOnly?>("TargetExamDate")
+                        .HasColumnType("date");
+
                     b.Property<int?>("TargetExamYear")
                         .HasColumnType("integer");
 
@@ -3700,6 +3703,11 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<Guid>("UnitId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("YieldWeight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(3);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Source", "SourceId")
@@ -3718,6 +3726,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_catalog_topic_order", "\"DisplayOrder\" IS NULL OR \"DisplayOrder\" >= 0");
 
                             t.HasCheckConstraint("ck_catalog_topic_parent", "\"ParentId\" IS NULL OR \"ParentId\" <> \"Id\"");
+
+                            t.HasCheckConstraint("ck_catalog_topic_yield", "\"YieldWeight\" BETWEEN 1 AND 5");
                         });
                 });
 
@@ -4001,6 +4011,14 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<DateOnly>("PlannedDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("PlanKind")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("PlanReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
                     b.Property<int>("PlannedMinutes")
                         .HasColumnType("integer");
 
@@ -4083,6 +4101,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_study_task_completion", "(\"IsCompleted\" AND (\"ActualMinutes\" IS NOT NULL OR \"CompletionSourceTaskId\" IS NOT NULL) AND \"CompletedAt\" IS NOT NULL) OR (NOT \"IsCompleted\" AND \"CompletedAt\" IS NULL AND \"CompletionSourceTaskId\" IS NULL)");
 
                             t.HasCheckConstraint("ck_study_task_minutes", "\"PlannedMinutes\" BETWEEN 1 AND 1440 AND (\"ActualMinutes\" IS NULL OR \"ActualMinutes\" BETWEEN 1 AND 1440)");
+
+                            t.HasCheckConstraint("ck_study_task_plan_kind", "\"PlanKind\" IS NULL OR \"PlanKind\" IN ('Learn','Review','Refresh','Spaced')");
 
                             t.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualMinutes\" IS NOT NULL)");
 

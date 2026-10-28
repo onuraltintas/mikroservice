@@ -157,7 +157,19 @@ public sealed class StudyPlanTask : AggregateRoot
     // Missed work the student or teacher decided not to do: it stays in history but is no longer overdue.
     // Moving it to another day or recording work on it reopens it.
     public DateTime? SkippedAt { get; private set; }
+    // Roadmap O7: what kind of work the plan engine chose (Learn, Review, Refresh, Spaced) and why.
+    public string? PlanKind { get; private set; }
+    public string? PlanReason { get; private set; }
+    public static readonly IReadOnlySet<string> PlanKinds = new HashSet<string>(StringComparer.Ordinal) { "Learn", "Review", "Refresh", "Spaced" };
     private StudyPlanTask() { }
+
+    public void SetPlanDecision(string kind, string? reason)
+    {
+        if (!PlanKinds.Contains(kind)) throw new ArgumentException("Geçersiz plan görevi türü.", nameof(kind));
+        reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+        if (reason is { Length: > 300 }) reason = reason[..300];
+        PlanKind = kind; PlanReason = reason;
+    }
 
     public static StudyPlanTask Create(StudyPlanRevision revision, DateOnly plannedDate, string title,
         int plannedMinutes, Guid? topicId = null, bool isPinned = false, string? sourceName = null, int? plannedQuestions = null)

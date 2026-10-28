@@ -36,6 +36,7 @@ public sealed class StudyPlanTaskConfiguration : IEntityTypeConfiguration<StudyP
         builder.ToTable("study_plan_tasks", table =>
         {
             table.HasCheckConstraint("ck_study_task_remaining", "(\"RemainingMinutes\" IS NULL OR (NOT \"IsCompleted\" AND \"RemainingMinutes\" BETWEEN 1 AND 1440)) AND (\"RemainingQuestions\" IS NULL OR (\"RemainingMinutes\" IS NOT NULL AND \"RemainingQuestions\" BETWEEN 0 AND 100000)) AND ((\"PredecessorTaskId\" IS NULL AND \"PredecessorVersion\" IS NULL) OR (\"PredecessorTaskId\" IS NOT NULL AND \"PredecessorVersion\" >= 0 AND \"OriginalTaskId\" IS NOT NULL))");
+            table.HasCheckConstraint("ck_study_task_plan_kind", "\"PlanKind\" IS NULL OR \"PlanKind\" IN ('Learn','Review','Refresh','Spaced')");
             table.HasCheckConstraint("ck_study_task_minutes", "\"PlannedMinutes\" BETWEEN 1 AND 1440 AND (\"ActualMinutes\" IS NULL OR \"ActualMinutes\" BETWEEN 1 AND 1440)");
             table.HasCheckConstraint("ck_study_task_completion", "(\"IsCompleted\" AND (\"ActualMinutes\" IS NOT NULL OR \"CompletionSourceTaskId\" IS NOT NULL) AND \"CompletedAt\" IS NOT NULL) OR (NOT \"IsCompleted\" AND \"CompletedAt\" IS NULL AND \"CompletionSourceTaskId\" IS NULL)");
             table.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualMinutes\" IS NOT NULL)");
@@ -50,6 +51,8 @@ public sealed class StudyPlanTaskConfiguration : IEntityTypeConfiguration<StudyP
         builder.HasIndex(x=>new { x.StudentId,x.WorkFromDate,x.WorkToDate });
         builder.Property(x => x.SourceName).HasMaxLength(300);
         builder.Property(x=>x.LessonNameSnapshot).HasMaxLength(300);
+        builder.Property(x=>x.PlanKind).HasMaxLength(20);
+        builder.Property(x=>x.PlanReason).HasMaxLength(300);
         builder.Property(x => x.Version).IsConcurrencyToken();
         builder.HasOne<StudyPlanRevision>().WithMany().HasForeignKey(x => new { x.RevisionId, x.StudentId })
             .HasPrincipalKey(x => new { x.Id, x.StudentId }).OnDelete(DeleteBehavior.Restrict);

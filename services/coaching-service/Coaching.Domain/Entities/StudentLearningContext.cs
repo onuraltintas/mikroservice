@@ -38,6 +38,8 @@ public sealed class StudentLearningContext : AggregateRoot
     public int AcademicYearStart { get; private set; }
     public LearningPurpose Purpose { get; private set; }
     public int? TargetExamYear { get; private set; }
+    /// <summary>Roadmap O7: the student's own exam date; when empty the plan uses the date the admin set for the exam.</summary>
+    public DateOnly? TargetExamDate { get; private set; }
     public string? PrimaryScoreType { get; private set; }
     public string? ForeignLanguage { get; private set; }
     public Guid? CurriculumVersionId { get; private set; }
@@ -54,6 +56,13 @@ public sealed class StudentLearningContext : AggregateRoot
         if (student == Guid.Empty) throw new ArgumentException("Öğrenci gereklidir.");
         var context = new StudentLearningContext { StudentUserId = student, CreatedBy = student.ToString() };
         context.SetScope(year, purpose, examYear, scoreType, language); return context;
+    }
+
+    public void SetTargetExamDate(DateOnly? date, DateOnly today)
+    {
+        if (date.HasValue && (date.Value <= today || date.Value > today.AddYears(4)))
+            throw new ArgumentException("Sınav tarihi bugünden sonra ve en çok dört yıl ileride olmalıdır.");
+        TargetExamDate = date; UpdatedAt = DateTime.UtcNow; UpdatedBy = StudentUserId.ToString();
     }
 
     public void SetScope(int year, LearningPurpose purpose, int? examYear, string? scoreType, string? language)

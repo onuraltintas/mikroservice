@@ -1,4 +1,5 @@
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
+import { weeklyPlanKindLabel } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { CommonModule } from '@angular/common';
 import { Component, ChangeDetectorRef, DestroyRef, ElementRef, Injector, Input, OnChanges, OnInit, ViewChild, afterNextRender, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,6 +24,7 @@ import {CalendarMove,calendarTaskOverdue} from './study-plan-calendar';
 export class StudentStudyPlansComponent implements OnInit, OnChanges {
   private readonly toaster = coachingToaster();
   readonly clock=clock;taskPage=1;
+  readonly planKindLabel=weeklyPlanKindLabel;
   readonly planView=signal<'calendar'|'list'>('list');readonly selectedTaskIds=signal<string[]>([]);
   private readonly injector=inject(Injector);
   private readonly changeDetector=inject(ChangeDetectorRef);

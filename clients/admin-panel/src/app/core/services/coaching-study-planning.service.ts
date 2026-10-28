@@ -30,6 +30,8 @@ export interface StudyTask extends StudyTaskInput {
   plannedStartMinute?:number|null;weeklyLessonId?:string|null;lessonName?:string|null;
   /** Missed work closed without being done; moving it or recording work reopens it. */
   skippedAt?:string|null;
+  /** Roadmap O7: what the plan engine chose (Learn, Review, Refresh, Spaced) and why. */
+  planKind?:string|null;planReason?:string|null;
 }
 export interface StudyPlanSummary { id: string; version: number; title: string; status: StudyPlanStatus }
 export interface WeeklyPlanSource {draftVersion:number;learningContextVersion:number|null;startDate:string;endDate:string;reuseFreedSlots:boolean;fingerprint:string;activeRevisionId:string|null;activeRevisionVersion:number|null;timeZoneId?:string}

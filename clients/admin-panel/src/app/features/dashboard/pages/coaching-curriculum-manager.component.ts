@@ -11,11 +11,11 @@ type Kind = 'exams' | 'programs' | 'programTopics' | 'lessons' | 'units' | 'topi
 interface Estimate { id: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; confidence: string; evidence: string; isPublished: boolean; method?: string }
 interface Mapping { topicId: string; path: string; isApproved: boolean; evidence: string }
 interface Node { kind: Kind; id: string; name: string; parentId: string | null; parentKind: Kind | null; isActive: boolean; path: string; fingerprint: string; canDelete: boolean; blockers: string[];
-  examDate?: string | null; code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number | null; sourceKind?: string; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number;
+  examDate?: string | null; code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; yieldWeight?: number | null; officialTopicId?: string; sourcePage?: number | null; sourceKind?: string; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number;
   academicYearStart?: number; academicYearEnd?: number; sourceUrl?: string; documentSha256?: string; scopeEvidenceUrl?: string; outcomeCount?: number; lessonPeriods?: number | null; curriculumVersionId?: string | null }
 interface Page { items: Node[]; totalCount: number; pageNumber: number; pageSize: number }
 interface Listing { rows: Node[]; page: number; total: number; loading: boolean; error?: string }
-interface Form { examDate: string; name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; code: string; officialTopicId: string | null; sourcePage: number | null; notes: string; moveParentOutcomes: boolean;
+interface Form { examDate: string; name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; yieldWeight: number; code: string; officialTopicId: string | null; sourcePage: number | null; notes: string; moveParentOutcomes: boolean;
   academicYearStart: number; academicYearEnd: number; sourceUrl: string; documentSha256: string; scopeEvidenceUrl: string; outcomeCount: number; lessonPeriods: number | null; curriculumVersionId: string | null }
 interface Edition { id: string; code: string; subjectName: string; academicYearStart: number; academicYearEnd: number }
 
@@ -53,7 +53,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind];
   }
   branch() { return this.listing(); }
-  empty(): Form { return { examDate:'',name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:null,notes:'',moveParentOutcomes:false,
+  empty(): Form { return { examDate:'',name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,yieldWeight:3,code:'',officialTopicId:null,sourcePage:null,notes:'',moveParentOutcomes:false,
     academicYearStart:new Date().getFullYear(),academicYearEnd:new Date().getFullYear(),sourceUrl:'',documentSha256:'',scopeEvidenceUrl:'',outcomeCount:1,lessonPeriods:null,curriculumVersionId:null }; }
   dirty() { return this.editing() && (JSON.stringify(this.form) !== this.initial || this.durationDirty()); }
   private durationFields() { return {learningMinutes:this.learningMinutes,practiceMinutes:this.practiceMinutes,checkMinutes:this.checkMinutes,confidence:this.confidence,durationEvidence:this.durationEvidence,publishDuration:this.publishDuration}; }
@@ -138,7 +138,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   private apply(n: Node,preserveDuration = false) {
     const unsaved = preserveDuration && this.durationDirty() ? this.durationFields() : null;
     this.selected.set(n); this.kind = n.kind; this.creating.set(false); this.editing.set(true);
-    this.form = { ...this.empty(),name:n.name,parentId:n.parentId,gradeNumber:n.gradeNumber ?? null,examCode:n.examCode ?? null,displayOrder:n.displayOrder ?? null,estimatedMinutes:n.estimatedMinutes ?? null,
+    this.form = { ...this.empty(),name:n.name,parentId:n.parentId,gradeNumber:n.gradeNumber ?? null,examCode:n.examCode ?? null,displayOrder:n.displayOrder ?? null,estimatedMinutes:n.estimatedMinutes ?? null,yieldWeight:n.yieldWeight ?? 3,
       examDate:n.examDate ?? '',code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourceKind === 'ExamSkill' ? null : n.sourcePage ?? 1,notes:n.notes ?? '',
       academicYearStart:n.academicYearStart ?? new Date().getFullYear(),academicYearEnd:n.academicYearEnd ?? new Date().getFullYear(),sourceUrl:n.sourceUrl ?? '',documentSha256:n.documentSha256 ?? '',scopeEvidenceUrl:n.scopeEvidenceUrl ?? '',outcomeCount:n.outcomeCount ?? 1,lessonPeriods:n.lessonPeriods ?? null,curriculumVersionId:n.curriculumVersionId ?? null };
     this.initial = JSON.stringify(this.form); this.moveConfirmed = false; this.statusConfirmed = false; this.deleteConfirmation = ''; this.estimateConfirmation = ''; this.destinationId = ''; this.destinations.set([]);

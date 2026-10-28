@@ -83,9 +83,17 @@ public sealed class StudyCatalogTopic
     public int? DisplayOrder { get; private set; }
     public int? EstimatedMinutes { get; private set; }
     public bool IsActive { get; private set; }
+    /// <summary>Roadmap O7: how often the topic appears in the exam, 1 (rarely) to 5 (very often); 3 when unknown.</summary>
+    public int YieldWeight { get; private set; } = 3;
     private StudyCatalogTopic() { }
 
     public void SetActive(bool active) => IsActive = active;
+
+    public void SetYieldWeight(int weight)
+    {
+        if (weight is < 1 or > 5) throw new ArgumentOutOfRangeException(nameof(weight), "Sınav ağırlığı 1 ile 5 arasında olmalıdır.");
+        YieldWeight = weight;
+    }
 
     public void Edit(string name, int? displayOrder, int? estimatedMinutes)
     {
