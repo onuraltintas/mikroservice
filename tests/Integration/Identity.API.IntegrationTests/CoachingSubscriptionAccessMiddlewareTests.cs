@@ -49,12 +49,37 @@ public sealed class CoachingSubscriptionAccessMiddlewareTests
         }
     }
 
+    // Roadmap D1: an allowed student is not re-checked for a minute; a refused one is checked on every request so a
+    // payment that was just approved opens access at once.
+    [Fact]
+    public async Task AllowedAccessIsRememberedBrieflyButRefusalIsNot()
+    {
+        var services = new ServiceCollection().AddLogging().AddMemoryCache().BuildServiceProvider();
+        var user = Guid.NewGuid().ToString();
+        var subscription = DispatchProxy.Create<ICoachingSubscription, SubscriptionProxy>(); var proxy = (SubscriptionProxy)subscription;
+        async Task<int> Request()
+        {
+            var context = new DefaultHttpContext { RequestServices = services };
+            context.Request.Path = "/api/assignments/student/123"; context.Response.Body = new MemoryStream();
+            context.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user), new Claim(ClaimTypes.Role, "Student")], "test"));
+            await new CoachingSubscriptionAccessMiddleware(_ => Task.CompletedTask).InvokeAsync(context, subscription);
+            return context.Response.StatusCode;
+        }
+        proxy.Active = false;
+        Assert.Equal(403, await Request()); Assert.Equal(403, await Request()); Assert.Equal(2, proxy.Calls);
+        proxy.Active = true;
+        Assert.Equal(200, await Request()); Assert.Equal(200, await Request()); Assert.Equal(3, proxy.Calls);
+    }
+
     public class SubscriptionProxy : DispatchProxy
     {
         public bool Active { get; set; }
-        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
-            targetMethod?.Name == nameof(ICoachingSubscription.GetMyAccessAsync)
-                ? Task.FromResult(new CoachingSubscriptionAccessSummary(Active, true, null, null, null, []))
-                : throw new NotSupportedException(targetMethod?.Name);
+        public int Calls { get; private set; }
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            if (targetMethod?.Name != nameof(ICoachingSubscription.GetMyAccessAsync)) throw new NotSupportedException(targetMethod?.Name);
+            Calls++;
+            return Task.FromResult(new CoachingSubscriptionAccessSummary(Active, true, null, null, null, []));
+        }
     }
 }

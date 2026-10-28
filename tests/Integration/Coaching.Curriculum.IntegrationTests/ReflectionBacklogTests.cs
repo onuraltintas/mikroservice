@@ -46,4 +46,18 @@ public sealed class ReflectionBacklogTests
         Assert.Single(await CoachingReflectionBacklog.MissingAsync(pg.Db,[student],new(2026,10,26),new(2026,10,25),default));
         Assert.Empty(await CoachingReflectionBacklog.MissingAsync(pg.Db,[student],new(2026,10,26),new(2026,10,24),default));
     }
+    // Roadmap D1: the backlog starts at the school year (the week of 1 September); older gaps of long-time students no longer pile up.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task MissingWeeksStartAtTheSchoolYearInsteadOfEnrollment()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var student=Guid.NewGuid();await WeeklyReviewPostgresTests.Setup(pg,student,Guid.NewGuid());
+        foreach(var profile in await pg.Db.CoachingStudentProfiles.ToArrayAsync())pg.Db.Entry(profile).Property(x=>x.CreatedAt).CurrentValue=new DateTime(2025,1,6,0,0,0,DateTimeKind.Utc);
+        foreach(var assignment in await pg.Db.CoachingTeacherStudentAssignments.ToArrayAsync())pg.Db.Entry(assignment).Property(x=>x.StartDate).CurrentValue=new DateTime(2025,1,6,0,0,0,DateTimeKind.Utc);
+        await pg.Db.SaveChangesAsync();
+        var missing=await CoachingReflectionBacklog.MissingAsync(pg.Db,[student],new(2026,10,26),new(2026,10,25),default);
+        Assert.Equal(new DateOnly(2026,8,31),missing[0].WeekStart);Assert.Equal(new DateOnly(2026,10,19),missing[^1].WeekStart);Assert.Equal(8,missing.Length);
+        // Before September the previous school year is still the open one.
+        var summer=await CoachingReflectionBacklog.MissingAsync(pg.Db,[student],new(2026,7,6),new(2026,7,5),default);
+        Assert.Equal(new DateOnly(2025,9,1),summer[0].WeekStart);
+    }
 }
