@@ -128,7 +128,8 @@ jobs:
     needs: [source-safety]
     services:
       postgres:
-        image: postgres:18-alpine
+        # Same major version as production (docker-compose.yml); the migration rollback tests depend on it.
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: coaching_test
           POSTGRES_PASSWORD: coaching_test
