@@ -148,6 +148,13 @@ builder.Services.AddScoped<INotificationErasureExecutionService, NotificationEra
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
+// Roadmap O8: per-user channel choices and the e-mail copy of important coaching notifications.
+builder.Services.AddScoped<INotificationChannelPolicy, Notification.Infrastructure.Services.NotificationChannelPolicy>();
+builder.Services.AddScoped<INotificationPreferenceService, Notification.Infrastructure.Services.NotificationPreferenceService>();
+builder.Services.AddHttpClient<IRecipientDirectory, Notification.Infrastructure.ExternalServices.IdentityRecipientDirectory>()
+    .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(10))
+    .AddResiliency()
+    .AddCorrelationIdPropagation();
 builder.Services.AddScoped<ICoachingNotificationDispatcher, CoachingNotificationDispatcher>();
 builder.Services.AddScoped<ICourseManagementNotificationDispatcher, CourseManagementNotificationDispatcher>();
 builder.Services.AddHostedService<EmailDeliveryWorker>();

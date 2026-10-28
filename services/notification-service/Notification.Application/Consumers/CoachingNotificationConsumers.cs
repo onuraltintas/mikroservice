@@ -22,7 +22,7 @@ public sealed class AssignmentCreatedConsumer : IConsumer<AssignmentCreatedEvent
             MessageIds.Require(context),
             message.StudentIds,
             $"Yeni ödev: {message.Title}",
-            $"Ödevin son teslim tarihi: {TurkeyTime.Format(message.DueDate)}",
+            $"\"{message.Title}\" ödevinin son teslim tarihi: {TurkeyTime.Format(message.DueDate)}",
             "AssignmentCreated",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -32,25 +32,31 @@ public sealed class AssignmentCreatedConsumer : IConsumer<AssignmentCreatedEvent
 public sealed class AssignmentSubmittedConsumer : IConsumer<AssignmentSubmittedEvent>
 {
     private readonly ICoachingNotificationDispatcher _dispatcher;
+    private readonly IRecipientDirectory? _directory;
 
-    public AssignmentSubmittedConsumer(ICoachingNotificationDispatcher dispatcher)
+    public AssignmentSubmittedConsumer(ICoachingNotificationDispatcher dispatcher, IRecipientDirectory? directory = null)
     {
         _dispatcher = dispatcher;
+        _directory = directory;
     }
 
-    public Task Consume(ConsumeContext<AssignmentSubmittedEvent> context)
+    public async Task Consume(ConsumeContext<AssignmentSubmittedEvent> context)
     {
         var message = context.Message;
         if (!message.TeacherId.HasValue || message.TeacherId.Value == Guid.Empty)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        return _dispatcher.SendAsync(
+        // Roadmap O8: the teacher sees who handed in which assignment.
+        var student = _directory is null ? null
+            : (await _directory.GetAsync([message.StudentId], context.CancellationToken)).GetValueOrDefault(message.StudentId)?.DisplayName;
+        var text = Notification.Application.Services.CoachingNotificationTexts.AssignmentSubmitted(student, message.AssignmentTitle, message.SubmittedAt);
+        await _dispatcher.SendAsync(
             MessageIds.Require(context),
             new[] { message.TeacherId.Value },
-            "Ödev teslim edildi",
-            $"Bir öğrenci ödevini teslim etti: {TurkeyTime.Format(message.SubmittedAt)}",
+            text.Title,
+            text.Message,
             "AssignmentSubmitted",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -72,8 +78,8 @@ public sealed class AssignmentUpdatedConsumer : IConsumer<AssignmentUpdatedEvent
         return _dispatcher.SendAsync(
             MessageIds.Require(context),
             message.StudentIds,
-            "Ödev güncellendi",
-            $"Ödevin yeni son teslim tarihi: {TurkeyTime.Format(message.DueDate)}",
+            $"Ödev güncellendi: {message.Title}",
+            $"\"{message.Title}\" ödevinin yeni son teslim tarihi: {TurkeyTime.Format(message.DueDate)}",
             "AssignmentUpdated",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -137,15 +143,13 @@ public sealed class AssignmentGradedConsumer : IConsumer<AssignmentGradedEvent>
     public Task Consume(ConsumeContext<AssignmentGradedEvent> context)
     {
         var message = context.Message;
-        var feedback = string.IsNullOrWhiteSpace(message.TeacherFeedback)
-            ? string.Empty
-            : $" Geri bildirim: {message.TeacherFeedback}";
+        var text = Notification.Application.Services.CoachingNotificationTexts.AssignmentGraded(message.AssignmentTitle, message.Score, message.TeacherFeedback);
 
         return _dispatcher.SendAsync(
             MessageIds.Require(context),
             new[] { message.StudentId },
-            "Ödev değerlendirildi",
-            $"Ödev puanın: {message.Score:0.##}.{feedback}",
+            text.Title,
+            text.Message,
             "AssignmentGraded",
             message.AssignmentId.ToString(),
             context.CancellationToken);
@@ -353,5 +357,19 @@ public sealed class CoachingMessageReceivedConsumer(ICoachingNotificationDispatc
             "CoachingMessage",
             message.ConversationId.ToString(),
             context.CancellationToken);
+    }
+}
+
+/// <summary>Roadmap O8: the inviter learns that the invitation was accepted and who joined.</summary>
+public sealed class InvitationAcceptedConsumer(ICoachingNotificationDispatcher dispatcher)
+    : IConsumer<EduPlatform.Shared.Contracts.Events.Identity.InvitationAcceptedEvent>
+{
+    public Task Consume(ConsumeContext<EduPlatform.Shared.Contracts.Events.Identity.InvitationAcceptedEvent> context)
+    {
+        var message = context.Message;
+        if (message.InviterId == Guid.Empty || message.InviterId == message.InviteeId) return Task.CompletedTask;
+        var text = Notification.Application.Services.CoachingNotificationTexts.InvitationAccepted(message.InviteeName, message.InvitationType);
+        return dispatcher.SendAsync(MessageIds.Require(context), [message.InviterId], text.Title, text.Message,
+            "InvitationAccepted", message.InvitationId.ToString(), context.CancellationToken);
     }
 }

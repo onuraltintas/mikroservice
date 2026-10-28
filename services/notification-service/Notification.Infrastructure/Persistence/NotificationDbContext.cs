@@ -21,6 +21,7 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
     public DbSet<NotificationErasureExecutionReceipt> ErasureExecutions => Set<NotificationErasureExecutionReceipt>();
     public DbSet<NotificationErasedRecipient> ErasedRecipients => Set<NotificationErasedRecipient>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
 
     public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
         CancellationToken cancellationToken)
@@ -61,6 +62,14 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         modelBuilder.Entity<NotificationItem>().Property(x => x.UserId).IsRequired();
         modelBuilder.Entity<NotificationItem>()
             .HasIndex(x => new { x.UserId, x.CreatedAt, x.Id });
+
+        // Roadmap O8: per-category channel choices; a missing row means the category defaults.
+        modelBuilder.Entity<NotificationPreference>(entity =>
+        {
+            entity.ToTable("NotificationPreferences");
+            entity.HasKey(x => new { x.UserId, x.Category });
+            entity.Property(x => x.Category).HasMaxLength(40);
+        });
 
         // Email Template
         modelBuilder.Entity<EmailTemplate>().HasKey(x => x.Id);

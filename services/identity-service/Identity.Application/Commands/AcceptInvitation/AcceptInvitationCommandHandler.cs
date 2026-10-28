@@ -18,6 +18,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<AcceptInvitationCommandHandler> _logger;
+    private readonly MassTransit.IPublishEndpoint? _publishEndpoint;
 
     public AcceptInvitationCommandHandler(
         IInvitationRepository invitationRepository,
@@ -26,8 +27,10 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         IStudentRepository studentRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
-        ILogger<AcceptInvitationCommandHandler> logger)
+        ILogger<AcceptInvitationCommandHandler> logger,
+        MassTransit.IPublishEndpoint? publishEndpoint = null)
     {
+        _publishEndpoint = publishEndpoint;
         _invitationRepository = invitationRepository;
         _userRepository = userRepository;
         _teacherRepository = teacherRepository;
@@ -106,6 +109,9 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
                     break;
             }
 
+            // Roadmap O8: the inviter is told who accepted (saved with the acceptance through the outbox).
+            if (_publishEndpoint is not null)
+                await _publishEndpoint.Publish(Identity.Application.Notifications.InvitationAcceptedMessages.From(invitation, user), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }

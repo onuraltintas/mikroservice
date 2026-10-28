@@ -4,7 +4,11 @@ public sealed record StudyPlanPublishedEvent(Guid RevisionId, Guid StudentId);
 public sealed record StudyPlanUpdatedEvent(Guid RevisionId, Guid StudentId, string ChangeDescription);
 public sealed record WeeklyReflectionSavedEvent(Guid ReflectionId, Guid StudentId, DateOnly WeekStart, Guid[] TeacherIds);
 public sealed record WeeklyDecisionChangedEvent(Guid DecisionId, Guid StudentId, Guid TeacherId, DateOnly WeekStart, bool Created, bool ResponsibilityTransferred = false);
-public sealed record CoachingReminderDueEvent(Guid ReminderId, Guid RecipientUserId, Guid SourceId, string Kind, DateTime DueAt);
+public sealed record CoachingReminderDueEvent(Guid ReminderId, Guid RecipientUserId, Guid SourceId, string Kind, DateTime DueAt)
+{
+    /// <summary>Roadmap O8: the assignment title of an "AssignmentDue" reminder; empty for other kinds.</summary>
+    public string? SubjectTitle { get; init; }
+}
 
 public sealed record AssignmentCreatedEvent(
     Guid AssignmentId,
@@ -26,14 +30,22 @@ public sealed record AssignmentSubmittedEvent(
     Guid AssignmentId,
     Guid StudentId,
     DateTime SubmittedAt,
-    Guid? TeacherId = null);
+    Guid? TeacherId = null)
+{
+    /// <summary>Roadmap O8: lets the teacher's notification name the assignment.</summary>
+    public string? AssignmentTitle { get; init; }
+}
 
 public sealed record AssignmentGradedEvent(
     Guid AssignmentId,
     Guid StudentId,
     decimal Score,
     string? TeacherFeedback,
-    DateTime GradedAt);
+    DateTime GradedAt)
+{
+    /// <summary>Roadmap O8: lets the student's notification name the assignment.</summary>
+    public string? AssignmentTitle { get; init; }
+}
 
 public sealed record ExamCreatedEvent(
     Guid ExamId,
