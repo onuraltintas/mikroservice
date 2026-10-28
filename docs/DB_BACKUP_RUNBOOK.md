@@ -21,7 +21,10 @@ Her gece 03:17'de (Türkiye saati) sunucudaki her PostgreSQL veritabanının yed
 
 ## Kurulum (sunucuda, bir kez)
 
-1. Araçları kur: `sudo apt install age rclone` (`curl` zaten var).
+1. Araçları kur (`curl` zaten var). Dağıtımı `cat /etc/os-release` ile kontrol et:
+   - AlmaLinux / Rocky / RHEL: `sudo dnf install -y epel-release && sudo dnf install -y age rclone`
+   - Ubuntu / Debian: `sudo apt install age rclone`
+   - Paket bulunamazsa rclone için `curl https://rclone.org/install.sh | sudo bash`; age için GitHub sürüm sayfasındaki `age-*-linux-amd64.tar.gz` (`age` ve `age-keygen` → `/usr/local/bin`).
 2. Sunucu dışı depo için:
    - `rclone config` ile bir remote tanımla (ör. Backblaze B2 ya da Cloudflare R2), ör. `offsite:eduivme-yedek`.
    - Şifre anahtarını **kendi bilgisayarında** üret: `age-keygen -o eduivme-yedek.key`.
