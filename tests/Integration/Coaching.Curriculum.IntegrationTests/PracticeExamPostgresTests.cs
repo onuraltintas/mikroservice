@@ -93,7 +93,7 @@ public sealed class PracticeExamPostgresTests
         var result = (await detailHandler.Handle(new(exam.Id), default))!.Results.Single();
         Assert.Equal(57, result.NetSummary!.Net);
         await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => handler.Handle(create with { PracticeExam = practice with { Sections = [new("ENG", 61, 11, 8)] } }, default));
-        var edit = new UpdateExamResultCommandHandler(repository, unit, access, new CurriculumManagementTests.NoopPublisher());
+        var edit = new UpdateExamResultCommandHandler(repository, unit, access, new CurriculumManagementTests.NoopPublisher(), new Identity());
         var changed = practice with { Sections = [new("ENG", 64, 8, 8)] };
         await edit.Handle(new(exam.Id, result.Id, 370, 64, 8, 8, null, null, "Düzeltildi", changed), default);
         f.Db.ChangeTracker.Clear();

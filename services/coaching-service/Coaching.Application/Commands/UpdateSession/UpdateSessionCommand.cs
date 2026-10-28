@@ -53,14 +53,17 @@ public sealed class UpdateSessionCommandHandler
     private readonly ICoachingSessionRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
     private readonly ICoachingEventPublisher _eventPublisher;
 
     public UpdateSessionCommandHandler(
         ICoachingSessionRepository repository,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
-        ICoachingEventPublisher eventPublisher)
+        ICoachingEventPublisher eventPublisher,
+        ICoachingIdentityAuthorizationClient teacherRecords)
     {
+        _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
@@ -74,7 +77,8 @@ public sealed class UpdateSessionCommandHandler
         var session = await _repository.GetByIdAsync(command.SessionId, cancellationToken)
             ?? throw new InvalidOperationException($"Session {command.SessionId} not found");
 
-        _accessPolicy.RequireTeacher(session.TeacherId, command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, session.TeacherId, session.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken);
         session.UpdateEditableDetails(
             command.Title,
             command.Description,

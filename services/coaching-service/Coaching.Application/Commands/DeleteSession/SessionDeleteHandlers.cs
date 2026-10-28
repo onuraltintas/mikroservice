@@ -12,14 +12,17 @@ public class SessionDeleteHandlers :
     private readonly ICoachingSessionRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _teacherRecords;
     private readonly ICoachingEventPublisher _eventPublisher;
 
     public SessionDeleteHandlers(
         ICoachingSessionRepository repository,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
-        ICoachingEventPublisher eventPublisher)
+        ICoachingEventPublisher eventPublisher,
+        ICoachingIdentityAuthorizationClient teacherRecords)
     {
+        _teacherRecords = teacherRecords;
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
@@ -31,7 +34,8 @@ public class SessionDeleteHandlers :
         var session = await _repository.GetByIdAsync(command.SessionId, cancellationToken);
         if (session == null) throw new InvalidOperationException("Session not found");
 
-        _accessPolicy.RequireTeacher(session.TeacherId, command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, session.TeacherId, session.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken);
 
         session.Cancel();
 
@@ -53,7 +57,8 @@ public class SessionDeleteHandlers :
         var session = await _repository.GetByIdAsync(command.SessionId, cancellationToken);
         if (session == null) throw new InvalidOperationException("Session not found");
 
-        _accessPolicy.RequireTeacher(session.TeacherId, command.IsInstitutionAdminOperation);
+        await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, session.TeacherId, session.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken);
 
         await _repository.DeleteAsync(session, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

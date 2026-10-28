@@ -10,7 +10,7 @@ public sealed class CoachingStudyPlanAccess(ICoachingAccessPolicy access,
     {
         if (studentId == Guid.Empty || access.CurrentUserId is not { } actor || !access.IsCurrentTeacher(actor))
             throw Forbidden();
-        await identity.AuthorizeTeacherTargetsAsync(actor, [studentId], null, false, ct);
+        await identity.AuthorizeTeacherStudyAccessAsync(actor, [studentId], ct);
         return studentId;
     }
 
@@ -27,7 +27,7 @@ public sealed class CoachingStudyPlanAccess(ICoachingAccessPolicy access,
         }
         if (access.IsCurrentTeacher(actor))
         {
-            await identity.AuthorizeTeacherTargetsAsync(actor, [studentId], null, false, ct);
+            await identity.AuthorizeTeacherStudyAccessAsync(actor, [studentId], ct);
             return studentId;
         }
         throw Forbidden();

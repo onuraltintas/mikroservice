@@ -13,7 +13,7 @@ namespace Coaching.API.Controllers;
 
 public sealed record TeacherStudyWork(Guid TaskId,Guid PlanId,string Title,DateOnly PlannedDate,int? PlannedStartMinute,int PlannedMinutes,bool IsCompleted,bool IsOverdue,int? ActualMinutes);
 public sealed record TeacherStudyStudent(Guid StudentId,string FullName,bool HasActivePlan,bool HasDraft,
-    int CompletedTasks,int PendingTasks,int OverdueTasks,int ActualMinutes,IReadOnlyList<TeacherStudyWork>? Tasks=null);
+    int CompletedTasks,int PendingTasks,int OverdueTasks,int ActualMinutes,IReadOnlyList<TeacherStudyWork>? Tasks=null,bool ProgressShared=true);
 public sealed record TeacherStudyOverview(IReadOnlyList<TeacherStudyStudent> Items,int TotalCount,int PageNumber,int PageSize);
 
 [ApiController,ApiVersion(1.0),Authorize(Roles="Teacher")]
@@ -30,7 +30,9 @@ public sealed class CoachingTeacherStudyController(CoachingDbContext db,OwnedCoa
             if(actor.UserId is not {} teacher || !actor.Roles.Contains("Teacher",StringComparer.OrdinalIgnoreCase))return Forbid();
             StudyReportCalculator.ValidatePeriod(fromDate,toDate);
             var roster=await directory.GetTeacherRosterAsync(teacher,pageNumber,pageSize,search,null,true,null,ct);
-            var students=roster.Items.DistinctBy(x=>x.UserId).ToArray();var ids=students.Select(x=>x.UserId).ToArray();
+            var students=roster.Items.DistinctBy(x=>x.UserId).ToArray();var rosterIds=students.Select(x=>x.UserId).ToArray();
+            // A student who does not share progress with teachers stays on the roster without plan or work data.
+            var ids=await db.CoachingStudentProfiles.AsNoTracking().Where(x=>Enumerable.Contains(rosterIds,x.UserId)&&x.ShareProgressWithTeachers).Select(x=>x.UserId).ToArrayAsync(ct);
             var plans=await db.StudyPlanRevisions.AsNoTracking().Where(x=>Enumerable.Contains(ids,x.StudentId)).Select(x=>new{x.Id,x.StudentId,x.Status,x.WeeklySource}).ToArrayAsync(ct);
             var rows=await (from task in db.StudyPlanTasks.AsNoTracking() join plan in db.StudyPlanRevisions.AsNoTracking() on task.RevisionId equals plan.Id
                 where Enumerable.Contains(ids,task.StudentId)&&plan.StudentId==task.StudentId&&task.PlannedDate>=fromDate&&task.PlannedDate<=toDate
@@ -43,7 +45,7 @@ public sealed class CoachingTeacherStudyController(CoachingDbContext db,OwnedCoa
             var grouped=rows.GroupBy(x=>new{x.StudentId,x.WorkId,x.PlannedDate}).Select(g=>g.OrderByDescending(x=>x.IsCompleted).ThenByDescending(x=>x.Status==StudyPlanStatus.Active).First()).ToLookup(x=>x.StudentId);
             var items=students.Select(student=>{var work=grouped[student.UserId].Select(t=>new TeacherStudyWork(t.Id,t.RevisionId,t.Title,t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,t.IsCompleted,!t.IsCompleted&&IsOverdue(t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,localTimes[t.RevisionId]),realized[(t.StudentId,t.WorkId,t.PlannedDate)])).ToArray();return new TeacherStudyStudent(student.UserId,student.FullName,
                 plans.Any(p=>p.StudentId==student.UserId&&p.Status==StudyPlanStatus.Active),plans.Any(p=>p.StudentId==student.UserId&&p.Status==StudyPlanStatus.Draft),
-                work.Count(t=>t.IsCompleted),work.Count(t=>!t.IsCompleted),work.Count(t=>t.IsOverdue),work.Sum(t=>t.ActualMinutes??0),work);}).ToArray();
+                work.Count(t=>t.IsCompleted),work.Count(t=>!t.IsCompleted),work.Count(t=>t.IsOverdue),work.Sum(t=>t.ActualMinutes??0),work,ids.Contains(student.UserId));}).ToArray();
             return Ok(new TeacherStudyOverview(items,roster.TotalCount,pageNumber,pageSize));
         }
         catch(BusinessRuleException ex) when(ex.Code.StartsWith("Authorization.",StringComparison.Ordinal)){return StatusCode(403,new{message=ex.Message});}

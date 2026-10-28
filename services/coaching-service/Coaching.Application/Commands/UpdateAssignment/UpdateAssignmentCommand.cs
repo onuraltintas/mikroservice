@@ -143,7 +143,8 @@ public sealed class UpdateAssignmentCommandHandler
         var assignment = await _repository.GetByIdAsync(command.AssignmentId, cancellationToken)
             ?? throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
 
-        _accessPolicy.RequireTeacher(assignment.TeacherId, command.IsInstitutionAdminOperation);
+        await _identityAuthorizationClient.RequireCurrentTeacherAsync(_accessPolicy, assignment.TeacherId, assignment.InstitutionId,
+            command.IsInstitutionAdminOperation, cancellationToken);
         assignment.UpdateEditableDetails(
             command.Title,
             command.Description,

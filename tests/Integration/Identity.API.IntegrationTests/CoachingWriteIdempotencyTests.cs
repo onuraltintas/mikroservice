@@ -251,7 +251,8 @@ public sealed class CoachingWriteIdempotencyTests
             repository,
             unitOfWork,
             new AllowTeacherPolicy(),
-            publisher);
+            publisher,
+            new AllowIdentityAuthorizationClient());
 
         await handler.Handle(new Coaching.Application.Commands.DeleteSession.CancelSessionCommand(session.Id), CancellationToken.None);
 

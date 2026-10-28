@@ -75,6 +75,16 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
         return institutionId;
     }
 
+    public async Task<Guid?> AuthorizeTeacherStudyAccessAsync(Guid teacherId, IReadOnlyCollection<Guid> studentIds, CancellationToken ct)
+    {
+        var institution = await AuthorizeTeacherTargetsAsync(teacherId, studentIds, null, false, ct);
+        var ids = studentIds.Distinct().ToArray();
+        if (await db.CoachingStudentProfiles.AsNoTracking().AnyAsync(x => Enumerable.Contains(ids, x.UserId) && !x.ShareProgressWithTeachers, ct))
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException("Authorization.Forbidden",
+                "Öğrenci çalışma planı ve ilerlemesini öğretmenleriyle paylaşmıyor.");
+        return institution;
+    }
+
     public async Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewerUserId,
         IReadOnlyCollection<Guid> studentIds, CancellationToken ct)
     {
@@ -99,11 +109,13 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
         {
             if (!directory.TryGetValue(student.UserId, out var account) || !account.IsEligible("Student")) continue;
             var institution = studentInstitutions[student.UserId];
-            if (institution.HasValue && !await IsActiveInstitutionAsync(institution.Value, ct)) continue;
+            // The student, a linked parent and the platform administrator keep access to the student's own
+            // records (including the data export) when the student's institution is deactivated.
             if (viewer.IsSystemAdministrator || viewer.IsEligible("Student") && viewerUserId == student.UserId)
             { allowed.Add(student.UserId); continue; }
             if (viewer.IsEligible("Parent") && await accounts.AuthorizeRepresentativeAsync(viewerUserId, student.UserId, ct) is not null)
             { allowed.Add(student.UserId); continue; }
+            if (institution.HasValue && !await IsActiveInstitutionAsync(institution.Value, ct)) continue;
             if (!student.ShareProgressWithTeachers) continue;
             if (admin is not null && institution.HasValue && (admin.IsGlobal || admin.InstitutionId == institution)
                 || teacher is not null && teacherInstitution == institution

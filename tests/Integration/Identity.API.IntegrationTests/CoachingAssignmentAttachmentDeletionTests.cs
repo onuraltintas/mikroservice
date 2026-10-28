@@ -43,7 +43,8 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
                 new TeacherAccessPolicy(teacherId),
                 new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })),
                 new RecordingPublisher(),
-                NullLogger<DeleteAssignmentCommandHandler>.Instance);
+                NullLogger<DeleteAssignmentCommandHandler>.Instance,
+                new AllowTeacherRecords());
 
             var act = () => handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
 
@@ -78,7 +79,8 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
             new TeacherAccessPolicy(teacherId),
             new FailingStorage(),
             publisher,
-            NullLogger<DeleteAssignmentCommandHandler>.Instance);
+            NullLogger<DeleteAssignmentCommandHandler>.Instance,
+                new AllowTeacherRecords());
 
         var act = () => handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
 
@@ -124,7 +126,8 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
                 new TeacherAccessPolicy(teacherId),
                 new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })),
                 publisher,
-                NullLogger<DeleteAssignmentCommandHandler>.Instance);
+                NullLogger<DeleteAssignmentCommandHandler>.Instance,
+                new AllowTeacherRecords());
 
             await handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
 
@@ -184,5 +187,16 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
                 Messages.Add(deletion);
             return Task.CompletedTask;
         }
+    }
+
+    // The teacher still teaches the assignment's students; these tests are about attachment cleanup.
+    private sealed class AllowTeacherRecords : Coaching.Application.Interfaces.ICoachingIdentityAuthorizationClient
+    {
+        public Task<Coaching.Application.Interfaces.CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) =>
+            Task.FromResult<Coaching.Application.Interfaces.CoachingAdminAccessScope?>(null);
+        public Task<Guid?> AuthorizeTeacherTargetsAsync(Guid teacherId, IReadOnlyCollection<Guid> studentIds, Guid? requestedInstitutionId,
+            bool isSystemAdministrator, CancellationToken cancellationToken) => Task.FromResult(requestedInstitutionId);
+        public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewerUserId, IReadOnlyCollection<Guid> studentIds, CancellationToken cancellationToken) =>
+            Task.FromResult(studentIds);
     }
 }

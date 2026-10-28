@@ -1,3 +1,4 @@
+using Coaching.API.Security;
 using System.Globalization;
 using System.Security.Claims;
 using System.Text;
@@ -15,6 +16,7 @@ namespace Coaching.API.Controllers;
 [Route("api/coaching-admin/cms/newsletter/subscribers")]
 [Authorize]
 [HasPermission(PlatformPermissions.Coaching.ContentManage)]
+[RequireGlobalCoachingAdmin]
 [MfaCategory(MfaOperationCategories.Coaching)]
 public sealed class CoachingNewsletterAdminController(ICoachingNewsletter newsletter) : ControllerBase
 {
