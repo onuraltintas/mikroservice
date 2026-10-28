@@ -321,6 +321,13 @@ describe('StudentStudyPlansComponent', () => {
     component.dirty = true; component.saveDraft();
     expect(service.replace).toHaveBeenCalledWith('plan', 4, { title: 'Planım', tasks: [expect.objectContaining({ sourceName: 'Kitap s.20', plannedQuestions: 25 })] });
   });
+  it('shows why the plan engine chose a task (roadmap O7)', async () => {
+    const { fixture, component, service } = await setup();
+    service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], planKind: 'Spaced', planReason: 'Aralıklı tekrar: konuyu bitirdikten 7 gün sonra' }] }));
+    await component.open('plan'); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const text = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="plan-reason"]')).map((x: any) => x.textContent).join(' ');
+    expect(text).toContain('Aralıklı tekrar · Aralıklı tekrar: konuyu bitirdikten 7 gün sonra');
+  });
   it('submits explicit zero questions and rejects negative and fractional counts', async () => {
     const { component, service } = await setup(); await component.open('plan');
     component.complete(active.tasks[0], 25, -1); component.complete(active.tasks[0], 25, 1.5);

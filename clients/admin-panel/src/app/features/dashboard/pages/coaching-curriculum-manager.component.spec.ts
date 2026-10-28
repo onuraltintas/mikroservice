@@ -42,6 +42,15 @@ describe('Coaching curriculum manager', () => {
     const req=http.expectOne(r=>r.method==='POST');expect(req.request.body.examDate).toBe('2027-06-20');
     req.flush({message:'Örnek çakışma'},{status:409,statusText:'Conflict'});http.verify();
   });
+  it('edits the topic exam weight used when a plan does not fit (roadmap O7)', () => {
+    const { fixture, http, c } = setup(); c.select({ ...topic } as never);
+    http.expectOne(r => r.url.endsWith('/topics/topic')).flush({ data: { ...topic, yieldWeight: 4 } }); fixture.detectChanges();
+    expect(c.form.yieldWeight).toBe(4);
+    expect(fixture.nativeElement.querySelector('select[name="yieldWeight"]')).not.toBeNull();
+    c.form.yieldWeight = 5; c.form.reason = 'Sınav ağırlığı'; c.save();
+    const req = http.expectOne(r => r.method === 'PUT'); expect(req.request.body.yieldWeight).toBe(5);
+    req.flush({ message: 'Çakışma' }, { status: 409, statusText: 'Conflict' }); http.verify();
+  });
   it('retains entered values on conflict and sends the version being edited', () => {
     const { fixture, http, c } = setup(); c.select({ ...topic } as never); http.expectOne(r => r.url.endsWith('/topics/topic')).flush({ data: topic });
     c.form.name = 'Yeni konu adı'; c.form.reason = 'Yazım düzeltmesi'; c.save();

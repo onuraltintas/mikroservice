@@ -6,9 +6,9 @@ import {CoachingWeeklyOutcomePlanService} from '../../../core/services/coaching-
 import {StudentWeeklyOutcomePlanComponent} from './student-weekly-outcome-plan.component';
 
 describe('weekly outcome plan preview',()=>{
-  const request={startDate:'2027-05-24',endDate:'2027-06-01',expectedWeeklyDraftVersion:2,reuseFreedSlots:false};
+  const request={startDate:'2027-05-24',endDate:'2027-06-01',expectedWeeklyDraftVersion:2,reuseFreedSlots:false,engineVersion:2,prioritizeWhenShort:false};
   const short={request,timeZoneId:'Europe/Istanbul',fingerprint:'abc',canCreate:false,protectedTaskCount:0,issues:[],schedule:{tasks:[],freeMinutes:0,recommendedEndDate:'2027-06-07',lessons:[{lessonId:'math',lessonName:'Matematik',outcomeCount:3,weeklyMinutes:30,requiredMinutes:80,scheduledMinutes:60,remainingMinutes:20,finishDate:'2027-06-07',extraWeeklyMinutes:30}]}};
-  async function setup(studentId?:string){const service={options:vi.fn(()=>of({startDate:request.startDate,endDate:request.endDate,weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[]})),preview:vi.fn(()=>of(short)),create:vi.fn(()=>of({id:'new',version:0}))};TestBed.configureTestingModule({imports:[StudentWeeklyOutcomePlanComponent],providers:[provideRouter([]),{provide:CoachingWeeklyOutcomePlanService,useValue:service}]});vi.spyOn(TestBed.inject(Router),'navigate').mockResolvedValue(true);const fixture=TestBed.createComponent(StudentWeeklyOutcomePlanComponent);fixture.componentRef.setInput('studentId',studentId);fixture.detectChanges(); await fixture.whenStable();return{fixture,c:fixture.componentInstance,service};}
+  async function setup(studentId?:string){const service={options:vi.fn(()=>of({startDate:request.startDate,endDate:request.endDate,weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[]})),preview:vi.fn(()=>of(short)),create:vi.fn(()=>of({id:'new',version:0})),setExamDate:vi.fn((date:string|null)=>of({startDate:request.startDate,endDate:date?'2027-06-19':'2027-06-12',weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[],examDate:date??'2027-06-13',endDateSource:date?'Student':'Catalog',catalogExamDate:'2027-06-13'}))};TestBed.configureTestingModule({imports:[StudentWeeklyOutcomePlanComponent],providers:[provideRouter([]),{provide:CoachingWeeklyOutcomePlanService,useValue:service}]});vi.spyOn(TestBed.inject(Router),'navigate').mockResolvedValue(true);const fixture=TestBed.createComponent(StudentWeeklyOutcomePlanComponent);fixture.componentRef.setInput('studentId',studentId);fixture.detectChanges(); await fixture.whenStable();return{fixture,c:fixture.componentInstance,service};}
   it('shows the default June deadline and course finish detail without writing a plan',async ()=>{
     const{fixture,c,service}=await setup();expect(c.endDate).toBe('2027-06-01');c.generatePreview();fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.textContent).toContain('Matematik');expect(fixture.nativeElement.textContent).toContain('07.06.2027');expect(service.create).not.toHaveBeenCalled();expect(fixture.nativeElement.textContent).toContain('30 dk/hafta');
   });
@@ -50,6 +50,35 @@ describe('weekly outcome plan preview',()=>{
   });
   it('filters and pages dated work without changing its schedule',async ()=>{
     const{c,service}=await setup();const task={date:'2027-05-24',startMinute:1080,lessonId:'math',lessonName:'Matematik',minutes:30,reusedSlot:false,outcome:{topicName:'Konu',code:'K.1',name:'Kazanım'}};service.preview.mockReturnValue(of({...short,schedule:{...short.schedule,tasks:Array.from({length:30},()=>task)}}) as any);c.generatePreview();expect(c.visibleTasks()).toHaveLength(25);c.page.set(2);expect(c.visibleTasks()).toHaveLength(5);c.filter('other');expect(c.page()).toBe(1);expect(c.visibleTasks()).toHaveLength(0);c.filter('math');expect(c.totalMinutes()).toBe(900);
+  });
+  it('uses engine version 2 and shows each task kind, reason and question target (roadmap O7)',async ()=>{
+    const{fixture,c,service}=await setup();const task={date:'2027-05-24',startMinute:1080,lessonId:'math',lessonName:'Matematik',minutes:30,reusedSlot:false,kind:'Spaced',reason:'Aralıklı tekrar: konuyu bitirdikten 7 gün sonra',plannedQuestions:14,outcome:{topicName:'Konu',code:'K.1',name:'Kazanım'}};
+    service.preview.mockReturnValue(of({...short,canCreate:true,schedule:{...short.schedule,tasks:[task]},leftOutTopics:[{lessonId:'math',lessonName:'Matematik',topicId:'t2',topicName:'Olasılık',minutes:45}]}) as any);
+    c.generatePreview();fixture.detectChanges();
+    expect(service.preview).toHaveBeenLastCalledWith(expect.objectContaining({engineVersion:2}),undefined);
+    const text=fixture.nativeElement.textContent as string;
+    expect(text).toContain('Aralıklı tekrar: konuyu bitirdikten 7 gün sonra');expect(text).toContain('~14 soru');
+    expect(fixture.nativeElement.querySelector('[data-testid="left-out"]').textContent).toContain('Olasılık');
+  });
+  it('offers to plan the important topics first when time is short',async ()=>{
+    const{fixture,c,service}=await setup();c.generatePreview();fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="prioritize-short"]') as HTMLButtonElement).click();
+    expect(c.prioritizeWhenShort).toBe(true);
+    expect(service.preview).toHaveBeenLastCalledWith(expect.objectContaining({prioritizeWhenShort:true}),undefined);
+  });
+  it('lets the student set her own exam date, which moves the default end, and return to the official date',async ()=>{
+    const{fixture,c,service}=await setup();
+    c.saveExamDate('2027-06-20');fixture.detectChanges();
+    expect(service.setExamDate).toHaveBeenCalledWith('2027-06-20');expect(c.endDate).toBe('2027-06-19');
+    expect(fixture.nativeElement.querySelector('[data-testid="exam-date-note"]').textContent).toContain('senin seçtiğin');
+    c.saveExamDate(null);fixture.detectChanges();
+    expect(c.endDate).toBe('2027-06-12');expect(fixture.nativeElement.textContent).toContain('resmî tarih');
+    c.saveExamDate('bad');expect(service.setExamDate).toHaveBeenCalledTimes(2);expect(c.error()).toContain('tarih');
+  });
+  it('keeps the exam date control off the teacher view',async ()=>{
+    const{fixture,c,service}=await setup('student-42');
+    expect(fixture.nativeElement.querySelector('[data-testid="exam-date-input"]')).toBeNull();
+    c.saveExamDate('2027-06-20');expect(service.setExamDate).not.toHaveBeenCalled();
   });
 });
 

@@ -100,6 +100,7 @@
             @if(task.remainingMinutes!=null){<p>Beyan edilen kalan kapsam: {{task.remainingMinutes}} dk · {{task.remainingQuestions ?? 'Belirtilmedi'}} soru</p>}
             @if(task.completionSourceTaskId){<p>Tamamlanma aynı çalışma zincirindeki kayıtla doğrulandı. Fiili süre ve sorular yapıldıkları kayıtta korunur.</p>}
             @for(day of task.workDays ?? [];track day.workedOn){<p>{{day.workedOn | date:'dd.MM.yyyy'}} · {{day.minutes}} dk · {{day.questions ?? 'Belirtilmedi'}} soru @if(day.isLegacyDate){ · Eski kaydın plan tarihi; fiili tarih bilinmiyor }</p>}
+            @if (task.planReason) { <p class="plan-reason" data-testid="plan-reason">{{ planKindLabel(task.planKind) }} · {{ task.planReason }}</p> }
             <p>Planlanan soru: {{ task.plannedQuestions ?? 'Kayıt yok' }}</p>
             @if (!task.isCompleted && task.actualMinutes != null) { <p>Kısmi çalışma · {{task.actualMinutes}} dk · {{task.actualQuestions ?? 'Belirtilmedi'}} soru</p> }
             @if (task.isCompleted) {

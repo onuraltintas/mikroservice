@@ -5,7 +5,7 @@ import {FormsModule} from '@angular/forms';
 import {Router,RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {finalize} from 'rxjs';
-import {CoachingWeeklyOutcomePlanService,WeeklyOutcomeOptions,WeeklyOutcomePreview,WeeklyOutcomeRequest} from '../../../core/services/coaching-weekly-outcome-plan.service';
+import {CoachingWeeklyOutcomePlanService,WeeklyOutcomeOptions,WeeklyOutcomePreview,WeeklyOutcomeRequest,weeklyPlanKindLabel} from '../../../core/services/coaching-weekly-outcome-plan.service';
 import {clock} from './weekly-calendar';
 
 @Component({selector:'app-student-weekly-outcome-plan',standalone:true,imports:[CommonModule,FormsModule,RouterLink],templateUrl:'./student-weekly-outcome-plan.component.html',styleUrl:'./student-weekly-outcome-plan.component.scss'})
@@ -19,17 +19,30 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   readonly visibleTasks=computed(()=>this.filteredTasks().slice((this.page()-1)*this.pageSize,this.page()*this.pageSize));
   readonly remaining=computed(()=>this.preview()?.schedule.lessons.reduce((sum,x)=>sum+x.remainingMinutes,0)??0);
   readonly totalMinutes=computed(()=>(this.preview()?.schedule.tasks.reduce((sum,x)=>sum+x.minutes,0)??0)+(this.preview()?.protectedTasks?.reduce((sum,x)=>sum+x.minutes,0)??0));
+  readonly kindLabel=weeklyPlanKindLabel;readonly savingExamDate=signal(false);
+  // Roadmap O7: the rule-based engine (version 2) is always used by this screen.
+  readonly engineVersion=2;prioritizeWhenShort=false;examDateInput='';
   startDate='';endDate='';reuseFreedSlots=false;title='Haftalık derslerimden çalışma planım';confirmed=false;private defaultEnd=true;
   ngOnInit(){this.load();}
-  busy(){return this.loading()||this.generating()||this.saving();}
+  busy(){return this.loading()||this.generating()||this.saving()||this.savingExamDate();}
   canLeavePage(){return !this.busy();}
   load(){if(this.busy())return;this.loading.set(true);this.error.set('');this.service.options(this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.loading.set(false))).subscribe({next:r=>{
-    if(!this.options()){this.startDate=r.startDate;this.endDate=r.endDate;}this.options.set(r);this.changed();this.stale.set(false);
+    if(!this.options()){this.startDate=r.startDate;this.endDate=r.endDate;}this.options.set(r);this.examDateInput=r.examDate??'';this.changed();this.stale.set(false);
   },error:e=>this.fail(e,'Haftalık taslak yüklenemedi. Önce takvimini kaydet.')} );}
   changed(){this.preview.set(null);this.confirmed=false;this.page.set(1);this.lessonFilter.set('');this.error.set('');}
-  startChanged(){if(this.defaultEnd&&/^\d{4}-\d{2}-\d{2}$/.test(this.startDate)){const [y,m,d]=this.startDate.split('-').map(Number);this.endDate=`${m<6||m===6&&d===1?y:y+1}-06-01`;}this.changed();}
+  startChanged(){if(this.defaultEnd&&!this.options()?.examDate&&/^\d{4}-\d{2}-\d{2}$/.test(this.startDate)){const [y,m,d]=this.startDate.split('-').map(Number);this.endDate=`${m<6||m===6&&d===1?y:y+1}-06-01`;}this.changed();}
   endChanged(){this.defaultEnd=false;this.changed();}
-  private request():WeeklyOutcomeRequest{return{startDate:this.startDate,endDate:this.endDate,expectedWeeklyDraftVersion:this.options()!.weeklyDraftVersion,reuseFreedSlots:this.reuseFreedSlots};}
+  private request():WeeklyOutcomeRequest{return{startDate:this.startDate,endDate:this.endDate,expectedWeeklyDraftVersion:this.options()!.weeklyDraftVersion,reuseFreedSlots:this.reuseFreedSlots,engineVersion:this.engineVersion,prioritizeWhenShort:this.prioritizeWhenShort};}
+  /** Student only: her own exam date moves the default end to the day before it; null returns to the admin's date. */
+  saveExamDate(value:string|null){
+    if(this.busy()||this.studentId)return;
+    if(value!==null&&!/^\d{4}-\d{2}-\d{2}$/.test(value)){this.error.set('Geçerli bir sınav tarihi seç.');return;}
+    this.savingExamDate.set(true);this.error.set('');
+    this.service.setExamDate(value).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.savingExamDate.set(false))).subscribe({next:r=>{
+      this.options.set(r);this.examDateInput=r.examDate??'';if(this.defaultEnd)this.endDate=r.endDate;this.changed();
+    },error:e=>this.fail(e,'Sınav tarihi kaydedilemedi.')});
+  }
+  prioritizeAndPreview(){if(this.busy())return;this.prioritizeWhenShort=true;this.generatePreview();}
   generatePreview(){
     if(this.busy()||!this.options())return;if(!this.startDate||!this.endDate||this.endDate<this.startDate){this.error.set('Başlangıç ve bitiş tarihlerini kontrol et.');return;}
     this.generating.set(true);this.error.set('');this.confirmed=false;this.preview.set(null);this.stale.set(false);
@@ -37,7 +50,7 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   }
   extendDeadline(){const end=this.preview()?.schedule.recommendedEndDate;if(!end||end<=this.endDate||this.busy())return;this.endDate=end;this.defaultEnd=false;this.generatePreview();}
   useFreedSlots(){if(this.busy())return;this.reuseFreedSlots=true;this.generatePreview();}
-  isCurrent(){const p=this.preview();return !!p&&!!this.options()&&p.request.startDate===this.startDate&&p.request.endDate===this.endDate&&p.request.expectedWeeklyDraftVersion===this.options()!.weeklyDraftVersion&&p.request.reuseFreedSlots===this.reuseFreedSlots;}
+  isCurrent(){const p=this.preview();return !!p&&!!this.options()&&p.request.startDate===this.startDate&&p.request.endDate===this.endDate&&p.request.expectedWeeklyDraftVersion===this.options()!.weeklyDraftVersion&&p.request.reuseFreedSlots===this.reuseFreedSlots&&!!p.request.prioritizeWhenShort===this.prioritizeWhenShort;}
   save(){
     const p=this.preview();if(this.busy()||!p?.canCreate||!this.confirmed||this.stale()||!this.isCurrent())return;
     if(!this.title.trim()||this.title.trim().length>200){this.error.set('Plan için en fazla 200 karakterlik bir başlık gir.');return;}
