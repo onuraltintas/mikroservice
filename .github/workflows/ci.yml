@@ -128,7 +128,8 @@ jobs:
     needs: [source-safety]
     services:
       postgres:
-        image: postgres:18-alpine
+        # Same major version as production (docker-compose.yml); the migration rollback tests depend on it.
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: coaching_test
           POSTGRES_PASSWORD: coaching_test
@@ -168,6 +169,21 @@ jobs:
           dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
           --configuration Release --filter 'FullyQualifiedName~CoachingLearningSetupPostgresTests|FullyQualifiedName~CoachingOutcomePostgresTests|FullyQualifiedName~CoachingOwnedProfilePostgresTests'
           --logger 'trx;LogFileName=coaching-profile-postgres.trx'
+      # Failed test names and messages as annotations, readable without downloading the job log.
+      - name: Report failed coaching tests
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+          for path in glob.glob('tests/Integration/**/TestResults/*.trx', recursive=True):
+              for result in ET.parse(path).getroot().iterfind('.//t:UnitTestResult', ns):
+                  if result.get('outcome') == 'Failed':
+                      message = ' '.join((result.findtext('.//t:Message', default='', namespaces=ns) or '').split())[:500]
+                      stack = result.findtext('.//t:StackTrace', default='', namespaces=ns) or ''
+                      frames = ' | '.join(line.strip() for line in stack.splitlines() if '.cs:line' in line)[:700]
+                      print(f"::error title={result.get('testName')[:200]}::{message} AT {frames}")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
