@@ -4,7 +4,8 @@ using Identity.Domain.Entities;
 namespace Identity.Application.Notifications;
 
 /// <summary>Roadmap O8: names and usable e-mail addresses of notification recipients (inactive accounts get no address).</summary>
-public sealed record NotificationRecipient(Guid UserId, string? Email, string FirstName, string LastName);
+/// <param name="Phone">Roadmap O9: only a confirmed number of an active account, in E.164 form.</param>
+public sealed record NotificationRecipient(Guid UserId, string? Email, string FirstName, string LastName, string? Phone = null);
 
 public interface INotificationRecipientDirectory
 {

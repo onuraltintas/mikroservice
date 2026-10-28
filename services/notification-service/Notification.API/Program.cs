@@ -151,6 +151,10 @@ builder.Services.AddScoped<INotificationService, Notification.API.Services.Notif
 // Roadmap O8: per-user channel choices and the e-mail copy of important coaching notifications.
 builder.Services.AddScoped<INotificationChannelPolicy, Notification.Infrastructure.Services.NotificationChannelPolicy>();
 builder.Services.AddScoped<INotificationPreferenceService, Notification.Infrastructure.Services.NotificationPreferenceService>();
+// Roadmap O9: SMS / WhatsApp outbox (sending is off until a provider is connected) and İYS commercial consent.
+builder.Services.Configure<Notification.Application.Configuration.TextMessagingOptions>(builder.Configuration.GetSection(Notification.Application.Configuration.TextMessagingOptions.SectionName));
+builder.Services.AddScoped<ITextMessageQueue, Notification.Infrastructure.Services.TextMessageQueue>();
+builder.Services.AddScoped<ICommercialConsentService, Notification.Infrastructure.Services.CommercialConsentService>();
 builder.Services.AddHttpClient<IRecipientDirectory, Notification.Infrastructure.ExternalServices.IdentityRecipientDirectory>()
     .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(10))
     .AddResiliency()

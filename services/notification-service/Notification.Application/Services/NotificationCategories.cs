@@ -6,12 +6,20 @@ namespace Notification.Application.Services;
 /// </summary>
 public static class NotificationCategories
 {
-    public sealed record Category(string Key, string Label, bool EmailByDefault, IReadOnlyList<string> Types);
+    /// <param name="OwnEmail">The category's consumer writes its own e-mail (it reads the choice); the generic channel must not add one.</param>
+    /// <param name="EmailEditable">False for billing notices that are always e-mailed.</param>
+    /// <param name="TextTypes">Roadmap O9: the types that may also go by SMS / WhatsApp when the user opts in.</param>
+    public sealed record Category(string Key, string Label, bool EmailByDefault, IReadOnlyList<string> Types,
+        bool OwnEmail = false, bool EmailEditable = true, IReadOnlyList<string>? TextTypes = null)
+    {
+        public bool TextAvailable => TextTypes is { Count: > 0 };
+        public bool AllowsText(string type) => TextTypes?.Contains(type) == true;
+    }
 
     public static IReadOnlyList<Category> All { get; } =
     [
         new("Sessions", "Koçluk seansları (planlama, değişiklik, iptal, yaklaşan seans)", true,
-            ["SessionScheduled", "SessionUpdated", "SessionCancelled", "SessionReminder"]),
+            ["SessionScheduled", "SessionUpdated", "SessionCancelled", "SessionReminder"], TextTypes: ["SessionReminder"]),
         new("Assignments", "Ödevler (yeni, değişen, iptal, teslim ve değerlendirme)", true,
             ["AssignmentCreated", "AssignmentUpdated", "AssignmentCancelled", "AssignmentSubmitted", "AssignmentGraded"]),
         new("AssignmentReminders", "Ödev teslim hatırlatması (teslimden bir gün önce)", true, ["AssignmentDueReminder"]),
@@ -21,6 +29,9 @@ public static class NotificationCategories
         new("Exams", "Deneme ve sınav sonuçları", false, ["ExamResultAdded", "ExamResultUpdated", "ExamUpdated"]),
         new("Goals", "Akademik hedefler", false, ["GoalCreated", "GoalUpdated"]),
         new("StudyPlan", "Çalışma planı hatırlatmaları", false, ["StudyPlanReminder", "StudyPlanOverdueReminder"]),
+        new("ParentSummary", "Haftalık veli özeti", true, ["ParentWeeklySummary"], OwnEmail: true, TextTypes: ["ParentWeeklySummary"]),
+        new("Subscription", "Abonelik bitiş hatırlatmaları (e-posta her zaman gönderilir)", true, ["SubscriptionExpiring", "SubscriptionExpired"],
+            OwnEmail: true, EmailEditable: false, TextTypes: ["SubscriptionExpiring", "SubscriptionExpired"]),
     ];
 
     private static readonly Dictionary<string, Category> ByType =

@@ -12,7 +12,8 @@ namespace Notification.Application.Consumers;
 public sealed class CoachingParentWeeklySummaryConsumer(
     ICoachingNotificationDispatcher dispatcher,
     IEmailDeliveryQueue emailDeliveryQueue,
-    IOptions<PublicAppUrlOptions> publicAppUrlOptions) : IConsumer<CoachingParentWeeklySummaryV1>
+    IOptions<PublicAppUrlOptions> publicAppUrlOptions,
+    INotificationChannelPolicy? channels = null) : IConsumer<CoachingParentWeeklySummaryV1>
 {
     private const string Product = "Eduİvme Koçluk";
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
@@ -44,6 +45,8 @@ public sealed class CoachingParentWeeklySummaryConsumer(
         await dispatcher.SendAsync(s.SummaryId, [s.ParentUserId], title, message, "ParentWeeklySummary", s.StudentUserId.ToString(), context.CancellationToken);
 
         if (string.IsNullOrWhiteSpace(s.ParentEmail)) return;
+        // Roadmap O9: the parent may turn the summary e-mail off in the notification preferences.
+        if (channels is not null && !(await channels.PlanAsync([s.ParentUserId], "ParentWeeklySummary", context.CancellationToken))[s.ParentUserId].Email) return;
         var link = $"{publicAppUrlOptions.Value.ResolveBaseUrl(null, "coaching")}/coaching-portal/parent";
         var body = $"<h1>{Product}</h1><p>Merhaba {EmailContent.Html(s.ParentName)},</p>"
             + $"<p><strong>{EmailContent.Html(s.StudentName)}</strong> için {week} haftasının özeti:</p><ul>"

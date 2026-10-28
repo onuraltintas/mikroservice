@@ -49,7 +49,7 @@ public sealed class CoachingTextMessagingTests
 
         var rows = await f.Db.TextMessageDeliveries.AsNoTracking().ToListAsync();
         rows.Select(x => x.Channel).Should().BeEquivalentTo(new[] { "Sms", "WhatsApp" });
-        rows.Should().OnlyContain(x => x.Status == TextMessageStatus.Suppressed && x.Body == "" && x.Recipient == "+90*******67" && x.SubjectUserId == Parent);
+        rows.Should().OnlyContain(x => x.Status == TextMessageStatus.Suppressed && x.Body == "" && x.Recipient == "+90********67" && x.SubjectUserId == Parent);
 
         // Only reminders go by text; a newly planned session does not.
         await f.Dispatcher.SendAsync(Guid.NewGuid(), [Parent], "Yeni koçluk seansı", "Planlandı", "SessionScheduled", "s2", default);
@@ -67,7 +67,7 @@ public sealed class CoachingTextMessagingTests
         var row = (await f.Db.TextMessageDeliveries.AsNoTracking().ToListAsync()).Should().ContainSingle().Subject;
         row.Status.Should().Be(TextMessageStatus.Pending);
         row.Recipient.Should().Be("+905321234567");
-        row.Body.Should().StartWith("Eduİvme: Ada için haftalık özet").And.HaveLength(c => c <= TextMessageQueue.MaxBodyLength);
+        row.Body.Should().StartWith("Eduİvme: Ada için haftalık özet"); row.Body.Length.Should().BeLessThanOrEqualTo(TextMessageQueue.MaxBodyLength);
     }
 
     [Fact]
@@ -106,6 +106,6 @@ public sealed class CoachingTextMessagingTests
         saved.Single(x => x.Channel == "Sms").Should().BeEquivalentTo(new { Granted = true, IysStatus = "Pending" });
         saved.Single(x => x.Channel == "Email").Should().BeEquivalentTo(new { Granted = false, IysStatus = "Pending" });
         await f.Invoking(x => consents.SaveAsync(Parent, [new("Fax", true)], default)).Should().ThrowAsync<ArgumentException>();
-        TextMessageQueue.Mask("+905321234567").Should().Be("+90*******67");
+        TextMessageQueue.Mask("+905321234567").Should().Be("+90********67");
     }
 }

@@ -92,3 +92,19 @@ docker compose --env-file .env config --quiet
 docker-compose -f docker-compose.infra.yml down
 docker-compose -f docker-compose.infra.yml up -d
 ```
+
+## Bildirimler: e-posta, SMS ve WhatsApp (O8, O9)
+
+- Önemli koçluk bildirimleri kullanıcının tercihine göre e-postayla da gönderilir. Bunun için ek ayar gerekmez; mevcut SMTP ayarları kullanılır.
+  Bildirim servisi alıcı adlarını ve adreslerini Identity'nin iç ucundan (`api/internal/notification/recipients`) okur.
+  Bu çağrı `INTERNAL_SERVICE_API_KEY` ile yapılır.
+- `TEXT_MESSAGING_ENABLED` (varsayılan `false`): SMS / WhatsApp gönderimi.
+  - Kapalıyken kullanıcıların seçtiği SMS / WhatsApp iletileri gönderilmez.
+  - Yalnız maskeli numarayla "gönderilmedi" kaydı tutulur; metin tutulmaz.
+- `TEXT_MESSAGING_PROVIDER`: sağlayıcı adı (ör. `Netgsm`). Henüz bağlı bir sağlayıcı yok.
+  - Sağlayıcı seçildiğinde `ITextMessageProvider` uyarlaması eklenir.
+  - Gönderim ancak ondan sonra açılmalıdır.
+- Ticari ileti izinleri (kampanya/duyuru; SMS, e-posta, arama) kullanıcı ayarlarında saklanır ve "İYS'ye aktarılmayı bekliyor" durumunda kalır.
+  - İleti Yönetim Sistemi bağlantısı açılınca aktarılır.
+  - Bilgilendirme amaçlı iletiler (seans hatırlatması, abonelik bitişi, veli özeti) için İYS izni gerekmez.
+
