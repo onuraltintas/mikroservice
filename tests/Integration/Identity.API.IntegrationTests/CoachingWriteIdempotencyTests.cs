@@ -575,6 +575,22 @@ public sealed partial class CoachingWriteIdempotencyTests
         public Task RollbackTransactionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
+    // Roadmap D2: a student's own goal may name an institution only if the student is its active member.
+    [Fact]
+    public async Task CreateGoal_StudentCannotTagAnotherInstitution()
+    {
+        var repository = new InMemoryGoalRepository();
+        var handler = new CreateGoalCommandHandler(repository, new CountingUnitOfWork(), new AllowTeacherPolicy(),
+            new AllowIdentityAuthorizationClient(), new InMemoryIdempotencyRepository(), new NoopCoachingEventPublisher());
+        var command = new CreateGoalCommand(Guid.NewGuid(), "Kendi hedefim", GoalCategory.ExamPreparation, null, null, null, null,
+            "student-goal-key-2026") { InstitutionId = Guid.NewGuid() };
+        var error = await Assert.ThrowsAsync<BusinessRuleException>(() => handler.Handle(command, CancellationToken.None));
+        Assert.Equal("Authorization.Forbidden", error.Code);
+        repository.Items.Should().BeEmpty();
+        await handler.Handle(command with { IdempotencyKey = "student-goal-key-2027", InstitutionId = null }, CancellationToken.None);
+        repository.Items.Should().ContainSingle();
+    }
+
     private sealed class AllowIdentityAuthorizationClient : ICoachingIdentityAuthorizationClient
     {
         public List<Guid?> RequestedInstitutions { get; } = [];
