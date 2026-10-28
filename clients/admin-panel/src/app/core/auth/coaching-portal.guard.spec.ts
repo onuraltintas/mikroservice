@@ -8,10 +8,12 @@ import { COACHING_PORTAL_ROUTES } from '../../features/coaching-portal/coaching-
 import { vi } from 'vitest';
 
 describe('hasCoachingPortalRole', () => {
-  it('allows student and teacher identities but not parent-only identities', () => {
+  // Roadmap Y7: parents have their own read-only panel inside the Coaching portal.
+  it('allows student, teacher and parent identities', () => {
     expect(hasCoachingPortalRole({ roles: ['Student'], product: 'coaching' })).toBe(true);
     expect(hasCoachingPortalRole({ roles: ['Teacher'], product: 'coaching' })).toBe(true);
-    expect(hasCoachingPortalRole({ roles: ['Parent'], product: 'coaching' })).toBe(false);
+    expect(hasCoachingPortalRole({ roles: ['Parent'], product: 'coaching' })).toBe(true);
+    expect(hasCoachingPortalRole({ roles: ['Parent'], product: 'speed-reading' })).toBe(false);
     expect(hasCoachingPortalRole({ roles: ['Parent', 'Student'], product: 'coaching' })).toBe(true);
   });
 
@@ -47,6 +49,8 @@ describe('coaching portal route role contract', () => {
     expect(route('children')).toBeUndefined();
     expect(route('notifications')?.data?.['coachingRoles']).toEqual(['Student']);
     expect(route('assignments/:id')?.data?.['coachingRoles']).toEqual(['Student']);
+    expect(route('parent')?.data?.['coachingRoles']).toEqual(['Parent']);
+    expect(route('parent/children/:studentId')?.data?.['coachingRoles']).toEqual(['Parent']);
   });
 
   it('routes Teacher users away from a student-only page to the new staff portal', async () => {
@@ -70,7 +74,7 @@ describe('coaching portal route role contract', () => {
     expect(navigate).toHaveBeenCalledWith(['/coaching-portal/teacher']);
   });
 
-  it('denies parent-only users access to the Coaching portal without changing their account', async () => {
+  it('lets parents into the portal and sends them from student pages to their own panel', async () => {
     const profile = signal({ id: 'parent-1', roles: ['Parent'], role: 'Parent', product: 'coaching' });
     TestBed.configureTestingModule({
       providers: [
@@ -83,13 +87,14 @@ describe('coaching portal route role contract', () => {
     });
     const router = TestBed.inject(Router);
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    const result = await TestBed.runInInjectionContext(() => coachingPortalGuard(
-      {} as never,
-      { url: '/coaching-portal' } as never
+    expect(await TestBed.runInInjectionContext(() => coachingPortalGuard({} as never, { url: '/coaching-portal' } as never))).toBe(true);
+    const result = await TestBed.runInInjectionContext(() => coachingRoleGuard(
+      { data: { coachingRoles: ['Student'] } } as never,
+      { url: '/coaching-portal/sessions' } as never
     ));
 
     expect(result).toBe(false);
     expect(profile()?.roles).toEqual(['Parent']);
-    expect(navigate).toHaveBeenCalledWith(['/dashboard'], { queryParams: { forbidden: 'true' } });
+    expect(navigate).toHaveBeenCalledWith(['/coaching-portal/parent']);
   });
 });

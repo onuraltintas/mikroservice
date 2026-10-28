@@ -81,6 +81,30 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
         finally { await harness.Stop(); await provider.DisposeAsync(); }
     }
 
+    // Roadmap Y7: the parent's weekly summary arrives by e-mail and in the app, with a link to the parent panel.
+    [Fact]
+    public async Task ParentWeeklySummary_IsEmailedAndShownToTheParent()
+    {
+        var parent = Guid.NewGuid(); var student = Guid.NewGuid();
+        var (provider, dispatcher, mail) = await StartAsync("finans@example.test");
+        var harness = provider.GetRequiredService<ITestHarness>();
+        try
+        {
+            var summary = new CoachingParentWeeklySummaryV1(Guid.NewGuid(), parent, "veli@example.test", "Ayşe <b>Veli</b>", student, "Ada Öğrenci",
+                new DateOnly(2026, 11, 2), new DateOnly(2026, 11, 8), 5, 4, 2, 1, 1, 1, 1, 2, "TYT Deneme 3", 87.5m);
+            await harness.Bus.Publish(summary);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 1 && mail.Messages.Count >= 1);
+            var inApp = dispatcher.Calls.Single();
+            (inApp.RecipientIds.Single(), inApp.Type, inApp.RelatedEntityId).Should().Be((parent, "ParentWeeklySummary", student.ToString()));
+            var message = mail.Messages.Single();
+            message.Recipient.Should().Be("veli@example.test");
+            message.Subject.Should().Contain("Ada Öğrenci").And.Contain("haftalık");
+            message.Body.Should().Contain("5 çalışmanın 4").And.Contain("TYT Deneme 3").And.Contain("87,5")
+                .And.Contain("https://app.example.test/coaching-portal/parent").And.NotContain("<b>Veli</b>");
+        }
+        finally { await harness.Stop(); await provider.DisposeAsync(); }
+    }
+
     [Fact]
     public async Task AdminNotices_AreSkippedWhenNoAlertAddressIsConfigured()
     {
@@ -111,6 +135,7 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
         {
             x.UseSuiteTimeouts();
             x.AddConsumer<CoachingSubscriptionNoticeConsumer>();
+            x.AddConsumer<CoachingParentWeeklySummaryConsumer>();
             x.UsingInMemory((context, config) => config.ConfigureEndpoints(context));
         });
         var provider = services.BuildServiceProvider();

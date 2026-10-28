@@ -145,3 +145,24 @@ public static class CoachingTeacherLinkEndedReasons
     /// <summary>The student ended the link themselves.</summary>
     public const string StudentLeft = "StudentLeft";
 }
+
+/// <summary>Roadmap Y7: one week of a child's Coaching activity, e-mailed to a linked parent on Sunday evening.</summary>
+public sealed record CoachingParentWeeklySummaryV1(
+    Guid SummaryId,
+    Guid ParentUserId,
+    string ParentEmail,
+    string ParentName,
+    Guid StudentUserId,
+    string StudentName,
+    DateOnly WeekStart,
+    DateOnly WeekEnd,
+    int StudyTasksPlanned,
+    int StudyTasksCompleted,
+    int AssignmentsDue,
+    int AssignmentsSubmitted,
+    int AssignmentsOverdue,
+    int SessionsHeld,
+    int SessionsAttended,
+    int SessionsUpcoming,
+    string? LatestExamTitle,
+    decimal? LatestExamScore);

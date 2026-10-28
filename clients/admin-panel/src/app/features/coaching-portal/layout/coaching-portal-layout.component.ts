@@ -32,6 +32,11 @@ export class CoachingPortalLayoutComponent {
   readonly user = this.authService.userProfile;
   @ViewChild('menuToggle') private menuToggle?: ElementRef<HTMLButtonElement>;
   readonly isStudent = computed(() => this.views.current() === 'Student');
+  // Roadmap Y7: a parent who is not also a student sees the parent panel menu.
+  readonly isParent = computed(() => !!this.user()?.roles?.includes('Parent') && !this.user()?.roles?.includes('Student'));
+  readonly parentLinks: PortalLink[] = [
+    { label: 'Çocuklarım', path: '/coaching-portal/parent', icon: 'home', exact: true },
+  ];
   readonly menuOpen = signal(false);
   readonly pageLabel = signal('Genel Bakış');
   readonly initials = computed(() => (this.user()?.firstName?.charAt(0) || 'Ö') + (this.user()?.lastName?.charAt(0) || ''));
@@ -60,10 +65,10 @@ export class CoachingPortalLayoutComponent {
   readonly mobileLinks = computed(() => [this.navigation()[0].links[0], this.navigation()[0].links[1], this.navigation()[1].links[0]]);
 
   constructor() {
-    this.studentNavigation.refresh(true);
+    if (!this.isParent()) this.studentNavigation.refresh(true);
     this.updatePageLabel();
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed(inject(DestroyRef)))
-      .subscribe(() => { this.closeMenu(); this.updatePageLabel(); this.studentNavigation.refresh(); });
+      .subscribe(() => { this.closeMenu(); this.updatePageLabel(); if (!this.isParent()) this.studentNavigation.refresh(); });
   }
 
   @HostListener('document:keydown.escape')
@@ -76,6 +81,7 @@ export class CoachingPortalLayoutComponent {
   private updatePageLabel(): void {
     const currentPath = this.router.url.split(/[?#]/)[0];
     const path = currentPath === '/coaching-portal/profile' ? '/coaching-portal/setup' : currentPath === '/coaching-portal/study-availability' ? '/coaching-portal/weekly-plan' : currentPath;
+    if (this.isParent()) { this.pageLabel.set(path.startsWith('/coaching-portal/parent/children/') ? 'Çocuğumun haftası' : 'Çocuklarım'); return; }
     const link = this.navigation().flatMap(group => group.links).find(item => item.exact ? path === item.path : path.startsWith(item.path));
     this.pageLabel.set(link?.label ?? 'Çalışma alanın');
   }

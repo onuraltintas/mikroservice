@@ -241,9 +241,30 @@ public sealed class CoachingSubscriptionService(
 
     private Task<CoachingBankTransferRequestSummary?> CreateBankTransferRequestAsync(
         Guid userId, string? userName, string? userEmail, CoachingBankTransferRequestCreate request,
-        string expectedAudience, string idempotencyKey, CancellationToken cancellationToken) =>
+        string expectedAudience, string idempotencyKey, CancellationToken cancellationToken, Guid? submittedBy = null, string? submitterName = null) =>
         ExecuteWithRetryAsync(() => CreateBankTransferRequestCoreAsync(
-            userId, userName, userEmail, request, expectedAudience, idempotencyKey, cancellationToken), cancellationToken);
+            userId, userName, userEmail, request, expectedAudience, idempotencyKey, cancellationToken, submittedBy, submitterName), cancellationToken);
+
+    // Roadmap Y7: a verified parent (Identity decides) acts for the child; the subscription belongs to the child.
+    private async Task<bool> IsLinkedParentAsync(Guid parentId, Guid studentId, CancellationToken cancellationToken) =>
+        parentId != Guid.Empty && studentId != Guid.Empty && parentId != studentId
+        && (await identityAuthorizationClient.AuthorizeStudentReadAsync(parentId, [studentId], cancellationToken)).Contains(studentId);
+
+    public async Task<CoachingSubscriptionAccessSummary?> GetChildAccessAsync(Guid parentId, Guid studentId, CancellationToken cancellationToken = default) =>
+        await IsLinkedParentAsync(parentId, studentId, cancellationToken) ? await GetMyAccessAsync(studentId, cancellationToken) : null;
+
+    public async Task<IReadOnlyList<CoachingBankTransferRequestSummary>?> GetChildBankTransferRequestsAsync(Guid parentId, Guid studentId,
+        CancellationToken cancellationToken = default) =>
+        await IsLinkedParentAsync(parentId, studentId, cancellationToken) ? await GetMyBankTransferRequestsAsync(studentId, cancellationToken) : null;
+
+    public async Task<CoachingBankTransferRequestSummary?> CreateChildBankTransferRequestAsync(Guid parentId, string? parentName, string? parentEmail,
+        Guid studentId, string? studentName, string? studentEmail, CoachingBankTransferRequestCreate request, string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await IsLinkedParentAsync(parentId, studentId, cancellationToken)) return null;
+        return await CreateBankTransferRequestAsync(studentId, studentName, studentEmail, request, "Individual", idempotencyKey,
+            cancellationToken, parentId, NormalizeOptional(parentName, 200));
+    }
 
     private async Task<CoachingBankTransferRequestSummary?> CreateBankTransferRequestCoreAsync(
         Guid userId,
@@ -252,7 +273,9 @@ public sealed class CoachingSubscriptionService(
         CoachingBankTransferRequestCreate request,
         string expectedAudience,
         string idempotencyKey,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? submittedBy = null,
+        string? submitterName = null)
     {
         if (!request.AdultPayerDeclaration) return null;
         var key = ValidateIdempotencyKey(userId, idempotencyKey);
@@ -266,7 +289,7 @@ public sealed class CoachingSubscriptionService(
 
         var requestHash = CreateRequestHash(
             userId.ToString("D"), TransferCreateIdempotencyScope, expectedAudience, request.PlanId.ToString("D"),
-            reference, payerName, note, "adult-payer-v1");
+            reference, payerName, note, "adult-payer-v1", submittedBy?.ToString("D"));
         var replay = await GetIdempotencyRecordAsync(TransferCreateIdempotencyScope, key, cancellationToken);
         if (replay is not null)
         {
@@ -374,8 +397,9 @@ public sealed class CoachingSubscriptionService(
             Amount = plan.Price,
             Currency = settings.Currency,
             DurationDays = plan.DurationDays,
+            SubmittedByUserId = submittedBy,
             PaymentReference = reference,
-            PayerName = payerName,
+            PayerName = payerName ?? submitterName,
             Note = note,
             AdultPayerDeclarationVersion = 1,
             AdultPayerDeclaredAt = DateTime.UtcNow
@@ -431,12 +455,13 @@ public sealed class CoachingSubscriptionService(
     public async Task<CoachingBankTransferRequestSummary?> UpdateMyBankTransferRequestAsync(Guid userId, Guid id,
         CoachingBankTransferRequestUpdate request, CancellationToken cancellationToken = default)
     {
-        var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+        var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id
+            && (item.UserId == userId || item.SubmittedByUserId == userId), cancellationToken);
         if (transfer is null) return null;
         RequirePending(transfer);
         var reference = NormalizePaymentReference(request.PaymentReference)
             ?? throw new ArgumentException("Banka işlem referansı 6-100 harf, rakam veya tire içermelidir.");
-        if (await db.CoachingBankTransferRequests.AnyAsync(item => item.UserId == userId && item.Id != id
+        if (await db.CoachingBankTransferRequests.AnyAsync(item => item.UserId == transfer.UserId && item.Id != id
                 && item.PaymentReference == reference, cancellationToken))
             throw new BusinessRuleException("Subscription.TransferReferenceUsed", "Bu işlem referansıyla daha önce ödeme bildirimi gönderdin.");
         transfer.PaymentReference = reference;
@@ -456,7 +481,8 @@ public sealed class CoachingSubscriptionService(
     public async Task<CoachingBankTransferRequestSummary?> WithdrawMyBankTransferRequestAsync(Guid userId, Guid id,
         CancellationToken cancellationToken = default)
     {
-        var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+        var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id
+            && (item.UserId == userId || item.SubmittedByUserId == userId), cancellationToken);
         if (transfer is null) return null;
         if (transfer.Status == "Withdrawn") return await GetBankTransferSummaryAsync(transfer, cancellationToken);
         RequirePending(transfer);
@@ -1885,7 +1911,8 @@ public sealed class CoachingSubscriptionService(
             request.AdultPayerDeclarationVersion,
             request.AdultPayerDeclaredAt,
             request.DurationDays ?? plan.DurationDays,
-            duplicateReferenceCount);
+            duplicateReferenceCount,
+            request.SubmittedByUserId);
 
     private static CoachingSubscriptionSummary ToSubscriptionSummary(
         CoachingSubscription subscription,

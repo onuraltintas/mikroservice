@@ -27,6 +27,13 @@ public sealed class CoachingFeesController(CoachingFeeService fees, ICurrentUser
     [HttpGet("me/fees/{feeId:guid}/payments"), Authorize(Roles = "Student")]
     public Task<IActionResult> MyPayments(Guid feeId, int pageNumber = 1, int pageSize = 25, CancellationToken ct = default) => Respond(async () =>
         Ok(new { success = true, data = await fees.GetPaymentsAsync(actor.UserId ?? Guid.Empty, feeId, pageNumber, pageSize, ct, studentView: true) }));
+    // Roadmap Y7: a linked parent reads the child's fee account as the child sees it.
+    [HttpGet("children/{studentId:guid}"), Authorize(Roles = "Parent")]
+    public Task<IActionResult> ChildAccount(Guid studentId, int pageNumber = 1, int pageSize = 25, CancellationToken ct = default) => Respond(async () =>
+        Ok(new { success = true, data = await fees.GetStudentAsync(studentId, pageNumber, pageSize, ct, studentView: true) }));
+    [HttpGet("children/{studentId:guid}/fees/{feeId:guid}/payments"), Authorize(Roles = "Parent")]
+    public Task<IActionResult> ChildPayments(Guid studentId, Guid feeId, int pageNumber = 1, int pageSize = 25, CancellationToken ct = default) => Respond(async () =>
+        Ok(new { success = true, data = await fees.GetPaymentsAsync(studentId, feeId, pageNumber, pageSize, ct, studentView: true) }));
     [HttpGet("students/{studentId:guid}"), Authorize(Roles = StaffRoles)]
     public Task<IActionResult> Account(Guid studentId, int pageNumber = 1, int pageSize = 25, CancellationToken ct = default) => Respond(async () =>
         Ok(new { success = true, data = await fees.GetStudentAsync(studentId, pageNumber, pageSize, ct) }));

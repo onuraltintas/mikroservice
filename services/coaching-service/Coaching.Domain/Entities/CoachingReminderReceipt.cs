@@ -15,7 +15,7 @@ public sealed class CoachingReminderReceipt : Entity
 
     public static CoachingReminderReceipt Create(Guid recipient, Guid source, string kind, string occurrenceKey, DateTime dueAt, DateTime queuedAt)
     {
-        if (recipient == Guid.Empty || source == Guid.Empty || kind is not ("StudyDay" or "StudyOverdue" or "Session" or "FeeOverdue" or "SubscriptionExpiring" or "SubscriptionExpired") || dueAt.Kind != DateTimeKind.Utc || queuedAt.Kind != DateTimeKind.Utc)
+        if (recipient == Guid.Empty || source == Guid.Empty || kind is not ("StudyDay" or "StudyOverdue" or "Session" or "FeeOverdue" or "SubscriptionExpiring" or "SubscriptionExpired" or "ParentWeeklySummary") || dueAt.Kind != DateTimeKind.Utc || queuedAt.Kind != DateTimeKind.Utc)
             throw new ArgumentException("A reminder requires valid ownership, kind and UTC dates.");
         var occurrence = StudyCatalogText.Require(occurrenceKey, 64);
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"coaching-reminder:{kind}:{source:N}:{recipient:N}:{occurrence}"));

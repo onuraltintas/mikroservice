@@ -71,7 +71,9 @@ public sealed record CoachingBankTransferRequestSummary(
     DateTime? AdultPayerDeclaredAt = null,
     int? DurationDays = null,
     /// <summary>How many other payers sent a notice with the same receipt number (admin list only).</summary>
-    int DuplicateReferenceCount = 0);
+    int DuplicateReferenceCount = 0,
+    /// <summary>The linked parent who sent the notice for the child, if any.</summary>
+    Guid? SubmittedByUserId = null);
 
 public sealed record CoachingBankTransferRequestCreate(
     Guid PlanId,
@@ -169,6 +171,11 @@ public interface ICoachingSubscription
     Task<IReadOnlyList<CoachingBankTransferRequestSummary>> GetMyBankTransferRequestsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<CoachingBankTransferRequestSummary?> UpdateMyBankTransferRequestAsync(Guid userId, Guid id, CoachingBankTransferRequestUpdate request, CancellationToken cancellationToken = default);
     Task<CoachingBankTransferRequestSummary?> WithdrawMyBankTransferRequestAsync(Guid userId, Guid id, CancellationToken cancellationToken = default);
+    Task<CoachingSubscriptionAccessSummary?> GetChildAccessAsync(Guid parentId, Guid studentId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CoachingBankTransferRequestSummary>?> GetChildBankTransferRequestsAsync(Guid parentId, Guid studentId, CancellationToken cancellationToken = default);
+    Task<CoachingBankTransferRequestSummary?> CreateChildBankTransferRequestAsync(Guid parentId, string? parentName, string? parentEmail,
+        Guid studentId, string? studentName, string? studentEmail, CoachingBankTransferRequestCreate request, string idempotencyKey,
+        CancellationToken cancellationToken = default);
     Task<PagedResponse<CoachingBankTransferRequestSummary>> GetBankTransferRequestsAsync(string? search, string? status, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<CoachingBankTransferRequestSummary?> ReviewBankTransferRequestAsync(Guid id, CoachingBankTransferReviewRequest request, Guid actorId, string idempotencyKey, CancellationToken cancellationToken = default);
     Task<bool> DeleteBankTransferRequestAsync(Guid id, CancellationToken cancellationToken = default);

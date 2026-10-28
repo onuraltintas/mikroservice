@@ -1,3 +1,4 @@
+import { CoachingParentService } from '../parent/coaching-parent.service';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { CoachingTimeZoneService } from '../../../core/services/coaching-time-zone.service';
@@ -6,7 +7,7 @@ import { StudentSettingsComponent } from './student-settings.component';
 describe('StudentSettingsComponent', () => {
   async function setup(zone: string | null = 'Europe/Berlin') {
     const api = { get: vi.fn(() => of({timeZoneId:zone,availabilityVersion:3,draftVersion:4})), save: vi.fn(() => of({timeZoneId:'Europe/London',availabilityVersion:4,draftVersion:5})) };
-    TestBed.configureTestingModule({imports:[StudentSettingsComponent],providers:[{provide:CoachingTimeZoneService,useValue:api}]});
+    TestBed.configureTestingModule({imports:[StudentSettingsComponent],providers:[{provide:CoachingTimeZoneService,useValue:api},{provide:CoachingParentService,useValue:{getLinks:()=>of([])}}]});
     const fixture=TestBed.createComponent(StudentSettingsComponent); fixture.detectChanges(); await fixture.whenStable();
     return {fixture,component:fixture.componentInstance,api};
   }

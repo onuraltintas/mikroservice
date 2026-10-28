@@ -148,8 +148,12 @@ public sealed class CoachingFeeService(CoachingDbContext db, ICurrentUserService
         if (!actor.IsAuthenticated || actor.UserId is not { } user || user == Guid.Empty || student == Guid.Empty) throw Forbidden();
         bool Role(string role) => actor.Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
         if (studentView) {
-            if (write || !Role("Student") || student != user) throw Forbidden();
-            return new(null, null, true, false, false);
+            if (write || student is not { } child) throw Forbidden();
+            if (Role("Student") && child == user) return new(null, null, true, false, false);
+            // Roadmap Y7: a verified parent sees what the child sees, read-only.
+            if (Role("Parent") && child != user && (await identity.AuthorizeStudentReadAsync(user, [child], ct)).Contains(child))
+                return new(null, null, true, false, false);
+            throw Forbidden();
         }
         if (Role("SystemAdmin")) { if (write) throw Forbidden(); return new(null, null, true, false, false); }
         if (Role("InstitutionAdmin") || Role("InstitutionOwner")) {

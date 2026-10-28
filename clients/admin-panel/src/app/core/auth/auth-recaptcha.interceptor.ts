@@ -6,9 +6,18 @@ import { AuthRecaptchaService } from './auth-recaptcha.service';
 
 export const AUTH_RECAPTCHA_TOKEN_HEADER = 'X-Auth-Recaptcha-Token';
 
+// A linked parent's notice for the child: /coaching/subscriptions/children/{id}/bank-transfer-requests (roadmap Y7).
+function isChildTransferNotice(url: string): boolean {
+  const prefix = `${environment.apiUrl}/coaching/subscriptions/children/`;
+  if (!url.startsWith(prefix)) return false;
+  const rest = url.slice(prefix.length).split('/');
+  return rest.length === 2 && rest[0].length > 0 && rest[1] === 'bank-transfer-requests';
+}
+
 export function getAuthRecaptchaAction(request: HttpRequest<unknown>): string | null {
   if (request.method === 'POST'
-      && request.url === `${environment.apiUrl}/coaching/subscriptions/bank-transfer-requests`) {
+      && (request.url === `${environment.apiUrl}/coaching/subscriptions/bank-transfer-requests`
+        || isChildTransferNotice(request.url))) {
     return 'coaching_eft_submit';
   }
   // Anonymous support form: Notification has Identity check the token (same site key).

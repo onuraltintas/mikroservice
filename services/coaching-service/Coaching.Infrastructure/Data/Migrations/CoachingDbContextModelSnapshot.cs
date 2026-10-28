@@ -739,6 +739,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<Guid?>("SubmittedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("SubscriptionId")
                         .HasColumnType("uuid");
 
@@ -763,6 +766,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SubmittedByUserId");
 
                     b.HasIndex("Status", "CreatedAt");
 
@@ -1634,7 +1639,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("reminder_receipts", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'StudyOverdue', 'Session', 'FeeOverdue', 'SubscriptionExpiring', 'SubscriptionExpired')");
+                            t.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'StudyOverdue', 'Session', 'FeeOverdue', 'SubscriptionExpiring', 'SubscriptionExpired', 'ParentWeeklySummary')");
                         });
                 });
 

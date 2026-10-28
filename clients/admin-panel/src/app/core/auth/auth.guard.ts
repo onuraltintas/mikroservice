@@ -3,7 +3,8 @@ import { isPlatformServer } from '@angular/common';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService, hasRequiredRole, hasRole } from './auth.service';
 
-export const COACHING_PORTAL_ROLES = ['Student', 'Teacher'] as const;
+// Parents have a read-only panel of their linked children (roadmap Y7).
+export const COACHING_PORTAL_ROLES = ['Student', 'Teacher', 'Parent'] as const;
 
 export function hasCoachingPortalRole(user: { roles: string[]; product?: string } | null): boolean {
     return user?.product === 'coaching' && COACHING_PORTAL_ROLES.some(role => user.roles.includes(role));
@@ -127,6 +128,11 @@ export const coachingRoleGuard: CanActivateFn = async (route, state) => {
 
     if (authService.userProfile()?.product === 'coaching' && hasRole(authService.userProfile(), 'Teacher')) {
         await router.navigate(['/coaching-portal/teacher']);
+        return false;
+    }
+
+    if (authService.userProfile()?.product === 'coaching' && hasRole(authService.userProfile(), 'Parent')) {
+        await router.navigate(['/coaching-portal/parent']);
         return false;
     }
 
