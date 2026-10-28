@@ -5,12 +5,15 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ParentLink, ParentRelationship, CoachingParentService } from './coaching-parent.service';
 import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+import { NotificationPreferencesApi, NotificationPreferencesComponent } from '../../../../../shared/notification-preferences.component';
 
 /** Roadmap Y7: the parent's start page — linked children, waiting requests and the code form. */
 @Component({
   selector: 'app-parent-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, CoachingLabelPipe],
+  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, CoachingLabelPipe, NotificationPreferencesComponent],
   template: `
     <main class="space-y-6" aria-labelledby="parent-home-title">
       <header>
@@ -55,11 +58,14 @@ import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
         </div>
         <button type="submit" class="mt-4 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50" [disabled]="submitting() || !code.trim()">{{ submitting() ? 'Gönderiliyor…' : 'Bağlantı isteği gönder' }}</button>
       </form>
+      <edu-notification-preferences [api]="notificationApi" />
     </main>
   `
 })
 export class ParentHomeComponent implements OnInit {
   private readonly service = inject(CoachingParentService);
+  // Roadmap O8: the parent chooses which notifications also come by e-mail.
+  readonly notificationApi = new NotificationPreferencesApi(inject(HttpClient), environment.apiUrl);
   readonly links = signal<ParentLink[]>([]);
   readonly verified = computed(() => this.links().filter(link => link.status === 'Verified'));
   readonly pending = computed(() => this.links().filter(link => link.status === 'Pending'));

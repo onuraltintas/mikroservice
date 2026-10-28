@@ -4,16 +4,24 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { StaffAccountProfile, StaffAccountService } from './staff-account.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { StaffAuthService } from '../auth/staff-auth.service';
+import { NotificationPreferencesApi, NotificationPreferencesComponent } from '../../../../../shared/notification-preferences.component';
 
 @Component({
   selector: 'staff-account-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NotificationPreferencesComponent],
   templateUrl: './staff-account-settings.component.html',
   styleUrl: './staff-account-settings.component.scss',
 })
 export class StaffAccountSettingsComponent implements OnInit {
   private readonly service = inject(StaffAccountService);
+  // Roadmap O8: coaching staff choose their notification channels here.
+  private readonly auth = inject(StaffAuthService);
+  readonly notificationApi = new NotificationPreferencesApi(inject(HttpClient), environment.apiUrl);
+  readonly showNotificationPreferences = () => this.auth.activeProduct() === 'coaching';
   readonly profile = signal<StaffAccountProfile | null>(null);
   readonly isLoading = signal(true);
   readonly isSavingProfile = signal(false);

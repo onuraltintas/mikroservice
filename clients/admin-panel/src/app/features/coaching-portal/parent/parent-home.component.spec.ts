@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -10,7 +12,7 @@ describe('ParentHomeComponent', () => {
   const verified = { id: 'link-1', studentUserId: 'child-1', studentName: 'Ada Öğrenci', parentName: 'Ayşe Veli', relationship: 'Mother', status: 'Verified', requestedAt: '2026-11-01T00:00:00Z' };
   const pending = { ...verified, id: 'link-2', studentUserId: 'child-2', studentName: 'Can Öğrenci', status: 'Pending' };
   function setup(service: object) {
-    TestBed.configureTestingModule({ imports: [ParentHomeComponent], providers: [provideRouter([]), { provide: CoachingParentService, useValue: service },
+    TestBed.configureTestingModule({ imports: [ParentHomeComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: CoachingParentService, useValue: service },
       { provide: ToasterService, useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } }] });
     const fixture = TestBed.createComponent(ParentHomeComponent); fixture.detectChanges(); return fixture;
   }
@@ -33,5 +35,10 @@ describe('ParentHomeComponent', () => {
     service.requestLink.mockReturnValueOnce(throwError(() => ({ error: { error: { description: 'Kod geçersiz veya süresi dolmuş.' } } })) as never);
     component.code = 'WXYZ-9999'; await component.submit();
     expect(component.error()).toContain('Kod geçersiz');
+  });
+  it('lets the parent choose notification channels (roadmap O8)', () => {
+    const fixture = setup({ getLinks: vi.fn(() => of([verified])) });
+    expect(fixture.nativeElement.querySelector('edu-notification-preferences')).not.toBeNull();
+    TestBed.inject(HttpTestingController).expectOne(r => r.url === '/api/notifications/preferences');
   });
 });
