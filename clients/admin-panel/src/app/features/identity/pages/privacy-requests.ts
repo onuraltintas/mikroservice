@@ -21,7 +21,7 @@ import {
       @if (error()) { <div class="rounded border border-red-300 bg-red-50 p-3 text-red-800" role="alert">{{ error() }}</div> }
       <div class="overflow-x-auto rounded border bg-white">
         <table class="w-full text-left text-sm"><thead><tr><th class="p-3">Gönderim</th><th class="p-3">Kullanıcı</th><th class="p-3">Kapsam</th><th class="p-3">Durum</th><th class="p-3">İşlem</th></tr></thead>
-          <tbody>@for (item of items(); track item.id) { <tr class="border-t"><td class="p-3">{{ item.submittedAt | date:'medium' }}</td><td class="p-3 font-mono">{{ item.requesterUserId }}</td><td class="p-3">{{ scopeLabel(item.scope) }}</td><td class="p-3">{{ item.status }}</td><td class="p-3"><button class="rounded bg-blue-700 px-3 py-2 text-white" (click)="select(item)">Değerlendirmeyi gör</button></td></tr> }
+          <tbody>@for (item of items(); track item.id) { <tr class="border-t"><td class="p-3">{{ item.submittedAt | date:'medium' }}</td><td class="p-3 font-mono">{{ item.requesterUserId }}</td><td class="p-3">{{ scopeLabel(item.scope) }}</td><td class="p-3">{{ item.status }}@if (item.failureReason) { <div class="mt-1 text-xs text-red-700">{{ item.failureReason }}</div> }</td><td class="p-3"><button class="rounded bg-blue-700 px-3 py-2 text-white" (click)="select(item)">Değerlendirmeyi gör</button></td></tr> }
           @if (!loading() && items().length === 0) { <tr><td colspan="5" class="p-6 text-center text-gray-500">Talep bulunamadı.</td></tr> }</tbody></table>
       </div>
       @if (detail(); as selected) { <section class="rounded border bg-white p-5" aria-live="polite">

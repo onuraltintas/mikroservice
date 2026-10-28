@@ -217,7 +217,13 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
             'Other exam secret', '${now}');
         COMMIT;`);
 
-      assert.equal((await request(config, token(config, studentId, 'Teacher'))).status, 403);
+      // A teacher exports only their own coaching data, never the records of their students.
+      const teacherResponse = await request(config, token(config, teacherId, 'Teacher'));
+      assert.equal(teacherResponse.status, 200, `teacher export returned ${teacherResponse.status}`);
+      const teacherExport = await teacherResponse.json();
+      assert.equal(teacherExport.studentId.toLowerCase(), teacherId);
+      assert.deepEqual([teacherExport.goals, teacherExport.assignments, teacherExport.exams, teacherExport.sessions], [[], [], [], []]);
+      assert.doesNotMatch(JSON.stringify(teacherExport), /Own export goal|My assignment note|Teacher feedback for me|My reflection/);
       assert.equal((await request(config, token(config, unrelatedId, 'Student'))).status, 403);
       const response = await request(config, token(config, studentId, 'Student'));
       if (response.status !== 200) {

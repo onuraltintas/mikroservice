@@ -183,6 +183,9 @@ public static class DependencyInjection
         services.AddScoped<Coaching.Infrastructure.Attachments.CoachingAttachmentCleanupProcessor>();
         if (configuration.GetValue("Coaching:Attachments:CleanupEnabled", true))
             services.AddHostedService<Coaching.Infrastructure.Attachments.CoachingAttachmentCleanupWorker>();
+        services.AddScoped<Coaching.Infrastructure.Privacy.CoachingFinancialRetentionProcessor>();
+        if (configuration.GetValue("Coaching:Privacy:FinancialRetentionEnabled", true))
+            services.AddHostedService<Coaching.Infrastructure.Privacy.CoachingFinancialRetentionWorker>();
         services.AddSingleton<IAdminAuditWriter, CoachingAdminAuditWriter>();
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingAdminCatalogReader, Coaching.Infrastructure.Catalogs.CoachingAdminCatalogReader>();
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingCatalogDeletionService, Coaching.Infrastructure.Catalogs.CoachingCatalogDeletionService>();

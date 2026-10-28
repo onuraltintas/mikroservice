@@ -27,7 +27,11 @@ public sealed record CoachingDataExportDto(
     Coaching.Application.StudyPlanning.WeeklyDraftView? WeeklyDraft = null,
     IReadOnlyList<Coaching.Domain.Entities.WeeklyReflection>? WeeklyReflections = null,
     IReadOnlyList<Coaching.Domain.Entities.WeeklyDecision>? WeeklyDecisions = null,
-    IReadOnlyList<Coaching.Domain.Entities.WeeklyReflectionReview>? WeeklyReflectionReviews = null)
+    IReadOnlyList<Coaching.Domain.Entities.WeeklyReflectionReview>? WeeklyReflectionReviews = null,
+    IReadOnlyList<CoachingDataSubscriptionDto>? Subscriptions = null,
+    IReadOnlyList<CoachingDataSeatDto>? SubscriptionSeats = null,
+    IReadOnlyList<CoachingDataBankTransferDto>? BankTransfers = null,
+    IReadOnlyList<CoachingDataPaymentDto>? Payments = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
@@ -60,6 +64,13 @@ public sealed record CoachingDataAgreementDto(
     Guid AcknowledgementId, Guid DocumentId, string DocumentVersion, string Locale,
     string Title, string DocumentReference, string ContentSha256, string PartyRole,
     DateTime AcknowledgedAt, DateTime? WithdrawnAt);
+public sealed record CoachingDataSubscriptionDto(Guid Id, Guid PlanId, string? PlanName, Guid? InstitutionId, string Status,
+    DateTime StartDate, DateTime EndDate, string? PaymentReference, Guid? BankTransferRequestId, DateTime CreatedAt);
+public sealed record CoachingDataSeatDto(Guid Id, Guid SubscriptionId, bool IsSuspended, string? SuspensionReason, DateTime AssignedAt);
+public sealed record CoachingDataBankTransferDto(Guid Id, Guid PlanId, decimal Amount, string Currency, string PaymentReference,
+    string? PayerName, string? Note, string Status, Guid? SubscriptionId, DateTime? ReviewedAt, string? ReviewNote, DateTime CreatedAt);
+public sealed record CoachingDataPaymentDto(Guid Id, Guid PlanId, string PlanName, Guid? SubscriptionId, Guid? BankTransferRequestId,
+    decimal Amount, string Currency, string Status, string Provider, string? Reference, DateTime CreatedAt);
 public sealed record CoachingDataReminderDto(Guid Id, Guid SourceId, string Kind, DateTime DueAt, DateTime QueuedAt);
 public sealed record CoachingDataFeeInstallmentDto(Guid Id, int Sequence, DateOnly DueOn, decimal Amount);
 public sealed record CoachingDataFeeDto(Guid Id, Guid? InstitutionId, Guid? CoachId, Guid CreatedByUserId, string Title,
@@ -77,23 +88,30 @@ public sealed class ExportCoachingDataQueryHandler(
         ExportCoachingDataQuery request,
         CancellationToken cancellationToken)
     {
+        // Every coaching user exports only their own data; the id always comes from the token.
         var studentId = accessPolicy.CurrentUserId;
-        if (studentId is null || !accessPolicy.IsCurrentStudent(studentId.Value))
+        if (studentId is null)
+            throw Forbidden();
+        if (accessPolicy.IsCurrentStudent(studentId.Value))
         {
-            throw new BusinessRuleException(
-                "Authorization.Forbidden",
-                "Koçluk veri dışa aktarımı yalnızca ilgili öğrenci hesabı tarafından başlatılabilir.");
+            await CoachingStudentReadAuthorization.RequireAsync(
+                accessPolicy,
+                identityAuthorizationClient,
+                [studentId.Value],
+                cancellationToken);
         }
-
-        await CoachingStudentReadAuthorization.RequireAsync(
-            accessPolicy,
-            identityAuthorizationClient,
-            [studentId.Value],
-            cancellationToken);
+        else if (!accessPolicy.IsCurrentTeacher(studentId.Value))
+        {
+            throw Forbidden();
+        }
 
         return await repository.ExportStudentDataAsync(
             studentId.Value,
             timeProvider.GetUtcNow(),
             cancellationToken);
     }
+
+    private static BusinessRuleException Forbidden() => new(
+        "Authorization.Forbidden",
+        "Koçluk veri dışa aktarımı yalnızca ilgili öğrenci veya öğretmen hesabı tarafından başlatılabilir.");
 }

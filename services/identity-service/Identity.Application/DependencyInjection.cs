@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<Services.MfaAuthenticationCoordinator>();
         services.AddScoped<Services.ExistingAccountEnrollment>();
         services.AddScoped<DataSubjectRequests.DataSubjectRequestErasureCompletionHandler>();
+        services.AddScoped<DataSubjectRequests.DataSubjectRequestErasureBlockedHandler>();
         
         return services;
     }

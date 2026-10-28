@@ -7,7 +7,7 @@ namespace Coaching.API.Controllers;
 
 [ApiController]
 [ApiVersion(1.0)]
-[Authorize(Roles = "Student")]
+[Authorize(Roles = "Student,Teacher")]
 [Route("api/data-privacy")]
 [Produces("application/json")]
 public sealed class DataPrivacyController(IMediator mediator) : ControllerBase

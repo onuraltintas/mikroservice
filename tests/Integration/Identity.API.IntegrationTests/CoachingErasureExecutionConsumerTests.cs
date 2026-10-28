@@ -23,6 +23,7 @@ public sealed class CoachingErasureExecutionConsumerTests
         var service = new StubExecutionService(requestId);
         var services = new ServiceCollection();
         services.AddSingleton<ICoachingErasureExecutionService>(service);
+        services.AddSingleton(TimeProvider.System);
         services.AddMassTransitTestHarness(configurator =>
         {
             configurator.UseSuiteTimeouts();
@@ -55,7 +56,44 @@ public sealed class CoachingErasureExecutionConsumerTests
         }
     }
 
-    private sealed class StubExecutionService(Guid requestId) : ICoachingErasureExecutionService
+    [Fact]
+    public async Task Consumer_ShouldReportABlockedErasureInsteadOfFailing()
+    {
+        var requestId = Guid.NewGuid();
+        var services = new ServiceCollection();
+        services.AddSingleton<ICoachingErasureExecutionService>(new StubExecutionService(requestId,
+            new CoachingErasureBlockedException(CoachingErasureBlockedException.LegalHold)));
+        services.AddSingleton(TimeProvider.System);
+        services.AddMassTransitTestHarness(configurator =>
+        {
+            configurator.UseSuiteTimeouts();
+            configurator.AddConsumer<PersonalDataErasureExecutionRequestedConsumer>();
+            configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
+        });
+
+        await using var provider = services.BuildServiceProvider();
+        var harness = provider.GetRequiredService<ITestHarness>();
+        await harness.Start();
+        try
+        {
+            await harness.Bus.Publish(new PersonalDataErasureExecutionRequestedV1(
+                requestId, requestId, Guid.NewGuid(), DateTime.UtcNow, PersonalDataScope.Account));
+
+            (await harness.Consumed.Any<PersonalDataErasureExecutionRequestedV1>()).Should().BeTrue();
+            (await harness.Consumed.Any<PersonalDataErasureExecutionRequestedV1>(x => x.Exception is not null)).Should().BeFalse();
+            var blocked = (await harness.PublishedMessagesAsync<PersonalDataErasureExecutionBlockedV1>()).Should().ContainSingle().Subject;
+            blocked.RequestId.Should().Be(requestId);
+            blocked.ServiceName.Should().Be("Coaching");
+            blocked.ReasonCode.Should().Be("LegalHold");
+            (await harness.PublishedMessagesAsync<PersonalDataErasureExecutionCompletedV1>()).Should().BeEmpty();
+        }
+        finally
+        {
+            await harness.Stop();
+        }
+    }
+
+    private sealed class StubExecutionService(Guid requestId, Exception? failure = null) : ICoachingErasureExecutionService
     {
         public int CallCount { get; private set; }
 
@@ -64,6 +102,7 @@ public sealed class CoachingErasureExecutionConsumerTests
             CancellationToken cancellationToken)
         {
             CallCount++;
+            if (failure is not null) throw failure;
             return Task.FromResult(CoachingErasureExecution.Complete(
                 requestId, deletedRecordCount: 6, DateTime.UtcNow));
         }

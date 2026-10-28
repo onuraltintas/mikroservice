@@ -82,6 +82,36 @@ public sealed class DataSubjectRequestErasureCompletionTests
         request.Status.Should().Be(DataSubjectRequestStatus.Completed);
     }
 
+    [Fact]
+    public async Task Blocked_ShouldFailTheRequestWithAReadableReasonOnce()
+    {
+        var request = ProcessingRequest(PersonalDataScope.Account);
+        var repository = new StubRequestRepository(request);
+        var handler = new DataSubjectRequestErasureBlockedHandler(repository);
+        var message = new PersonalDataErasureExecutionBlockedV1(Guid.NewGuid(), request.Id, "Coaching", "LegalHold", Utc(14));
+
+        await handler.HandleAsync(message, CancellationToken.None);
+        await handler.HandleAsync(message, CancellationToken.None);
+
+        request.Status.Should().Be(DataSubjectRequestStatus.Failed);
+        request.FailureReason.Should().Contain("Coaching").And.Contain("hukuki saklama");
+        repository.SaveCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Blocked_ShouldRejectServiceOutsideRequestScope()
+    {
+        var request = ProcessingRequest(PersonalDataScope.Coaching);
+        var handler = new DataSubjectRequestErasureBlockedHandler(new StubRequestRepository(request));
+
+        var action = () => handler.HandleAsync(
+            new PersonalDataErasureExecutionBlockedV1(Guid.NewGuid(), request.Id, "SpeedReading", "LegalHold", Utc(14)),
+            CancellationToken.None);
+
+        await action.Should().ThrowAsync<InvalidOperationException>().WithMessage("*scope*");
+        request.Status.Should().Be(DataSubjectRequestStatus.Processing);
+    }
+
     private static DataSubjectRequest ProcessingRequest(PersonalDataScope scope)
     {
         var request = DataSubjectRequest.Create(

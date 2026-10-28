@@ -1,4 +1,5 @@
 using Coaching.Application.Attachments;
+using Coaching.Application.Interfaces;
 using Coaching.Application.Privacy;
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
@@ -10,8 +11,12 @@ namespace Coaching.Infrastructure.Privacy;
 public sealed class CoachingErasureExecutionService(
     CoachingDbContext context,
     IAssignmentAttachmentStorage attachmentStorage,
-    TimeProvider timeProvider) : ICoachingErasureExecutionService
+    TimeProvider timeProvider,
+    ICoachingEventPublisher? events = null) : ICoachingErasureExecutionService
 {
+    // Without the outbox publisher (tests, tools) the files are deleted right after this service's own commit.
+    private readonly List<string> filesToDeleteAfterCommit = [];
+
     public async Task<CoachingErasureExecution> ExecuteAsync(
         PersonalDataErasureExecutionRequestedV1 message,
         CancellationToken cancellationToken)
@@ -19,7 +24,12 @@ public sealed class CoachingErasureExecutionService(
         if (message.Scope is not (PersonalDataScope.Account or PersonalDataScope.Coaching))
             throw new InvalidOperationException("The erasure scope does not include Coaching.");
 
-        if (!context.Database.IsRelational()) return await ExecuteLockedAsync(message, cancellationToken);
+        if (!context.Database.IsRelational())
+        {
+            var inMemory = await ExecuteLockedAsync(message, cancellationToken);
+            await DeleteFilesAfterCommitAsync(cancellationToken);
+            return inMemory;
+        }
         async Task<CoachingErasureExecution> RunAsync()
         {
             var key = "coaching-study-plan:" + message.SubjectUserId;
@@ -29,8 +39,15 @@ public sealed class CoachingErasureExecutionService(
             await context.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended('coaching-session-scheduling', 0))", cancellationToken);
             return await ExecuteLockedAsync(message, cancellationToken);
         }
-        if (context.Database.CurrentTransaction is not null) return await RunAsync();
-        return await context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        // Inside a caller's transaction (the consumer outbox) the files are removed by the deletion events,
+        // which the outbox only delivers once that transaction has committed.
+        if (context.Database.CurrentTransaction is not null)
+        {
+            var result = await RunAsync();
+            await DeleteFilesAfterCommitAsync(cancellationToken); // only without a publisher (tests and tools)
+            return result;
+        }
+        var execution = await context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
             try
@@ -41,11 +58,21 @@ public sealed class CoachingErasureExecutionService(
             }
             finally { context.ChangeTracker.Clear(); }
         });
+        await DeleteFilesAfterCommitAsync(cancellationToken);
+        return execution;
+    }
+
+    private async Task DeleteFilesAfterCommitAsync(CancellationToken cancellationToken)
+    {
+        foreach (var key in filesToDeleteAfterCommit.ToArray())
+            await attachmentStorage.DeleteAsync(key, cancellationToken);
+        filesToDeleteAfterCommit.Clear();
     }
 
     private async Task<CoachingErasureExecution> ExecuteLockedAsync(
         PersonalDataErasureExecutionRequestedV1 message, CancellationToken cancellationToken)
     {
+        filesToDeleteAfterCommit.Clear(); // a retried attempt starts over
 
         var existing = await context.CoachingErasureExecutions
             .SingleOrDefaultAsync(execution => execution.RequestId == message.RequestId, cancellationToken);
@@ -54,9 +81,11 @@ public sealed class CoachingErasureExecutionService(
 
         var assessment = await context.CoachingErasureAssessments
             .SingleOrDefaultAsync(candidate => candidate.RequestId == message.RequestId, cancellationToken)
-            ?? throw new InvalidOperationException("A completed Coaching erasure assessment is required.");
+            ?? throw new CoachingErasureBlockedException(CoachingErasureBlockedException.AssessmentMissing);
         if (assessment.SubjectUserId != message.SubjectUserId || !assessment.CanProceed)
-            throw new InvalidOperationException("The Coaching erasure assessment does not authorize deletion.");
+            throw new CoachingErasureBlockedException(assessment.HasActiveLegalHold
+                ? CoachingErasureBlockedException.LegalHold
+                : CoachingErasureBlockedException.AssessmentDenied);
 
         var completedAt = timeProvider.GetUtcNow().UtcDateTime;
         var hasActiveLegalHold = await context.CoachingLegalHolds.AnyAsync(
@@ -65,13 +94,30 @@ public sealed class CoachingErasureExecutionService(
                 && (!hold.ReleasedAt.HasValue || hold.ReleasedAt > completedAt),
             cancellationToken);
         if (hasActiveLegalHold)
-            throw new InvalidOperationException("Coaching erasure is blocked by an active legal hold.");
+            throw new CoachingErasureBlockedException(CoachingErasureBlockedException.LegalHold);
 
         var attachments = await context.AssignmentSubmissionAttachments
+            .Include(attachment => attachment.AssignmentStudent)
             .Where(attachment => attachment.AssignmentStudent.StudentId == message.SubjectUserId)
             .ToListAsync(cancellationToken);
-        foreach (var attachment in attachments)
-            await attachmentStorage.DeleteAsync(attachment.StorageKey, cancellationToken);
+        // Files are only removed once the rows are gone for good: a rolled-back erasure keeps both.
+        if (events is not null)
+        {
+            foreach (var attachment in attachments)
+                await events.PublishAsync(new AssignmentAttachmentDeletionRequested(
+                    attachment.AssignmentStudent.AssignmentId, attachment.Id, attachment.StorageKey), cancellationToken);
+        }
+
+        // Financial records are kept unchanged for the retention period and anonymized afterwards.
+        var retainedFinancialRecords = await CoachingFinancialRetention.CountAsync(context, message.SubjectUserId, cancellationToken);
+        var seatsToRelease = await context.CoachingSubscriptionSeats
+            .Where(seat => seat.StudentId == message.SubjectUserId && !seat.IsSuspended)
+            .ToListAsync(cancellationToken);
+        foreach (var seat in seatsToRelease)
+        {
+            seat.IsSuspended = true;
+            seat.SuspensionReason = CoachingFinancialRetention.ErasedSeatReason;
+        }
 
         var assignmentStudents = await context.AssignmentStudents
             .Where(row => row.StudentId == message.SubjectUserId)
@@ -126,7 +172,7 @@ public sealed class CoachingErasureExecutionService(
             + attendances.Count
             + acknowledgements.Count;
         var execution = CoachingErasureExecution.Complete(
-            message.RequestId, deletedRecordCount, completedAt);
+            message.RequestId, deletedRecordCount, completedAt, message.SubjectUserId, retainedFinancialRecords);
 
         context.CoachingTeacherStudentAssignments.RemoveRange(ownedAssignments);
         context.CoachingInstitutionMemberships.RemoveRange(ownedMembers);
@@ -157,6 +203,7 @@ public sealed class CoachingErasureExecutionService(
         context.CoachingErasureAssessments.Remove(assessment);
         context.CoachingErasureExecutions.Add(execution);
         await context.SaveChangesAsync(cancellationToken);
+        if (events is null) filesToDeleteAfterCommit.AddRange(attachments.Select(attachment => attachment.StorageKey));
         return execution;
     }
 }
