@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { CoachingCmsEntry, CoachingManagementPage, CoachingManagementService, CoachingSubscriptionPlan } from '../../../core/services/coaching-management.service';
 import { parseCoachingCmsContent } from '../coaching-cms-content';
+import { SiteAnalyticsService } from '../../../core/services/site-analytics.service';
+import { SiteSeoService } from '../../../core/services/site-seo.service';
 
 @Component({
   selector: 'app-coaching-public-home',
@@ -91,28 +92,30 @@ import { parseCoachingCmsContent } from '../coaching-cms-content';
 
       <section id="planlar" class="mx-auto w-full max-w-6xl scroll-mt-8" aria-labelledby="public-plans-title">
         <div class="section-heading"><div><p class="section-kicker">{{ plansHeading()?.eyebrow || 'Koçluk için erişim seçenekleri' }}</p><h2 id="public-plans-title" class="mt-2 text-3xl font-semibold tracking-tight">{{ plansHeading()?.title || 'Size uygun planı bulun' }}</h2><p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">{{ plansHeading()?.summary || 'Koçluk planları ve erişim seçenekleri.' }}</p></div></div>
-        @if (plans().length) {
+        @if (plansError()) {
+          <div class="mt-7 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100" role="alert" data-testid="plans-error">Planlar şu anda yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin.
+            <button type="button" class="ml-2 font-semibold underline" (click)="loadPlans()">Yeniden dene</button></div>
+        } @else if (plans().length) {
           <div class="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             @for (plan of plans(); track plan.id) {
-              <article class="plan-card" [class.plan-card-featured]="plan.audience === 'Institution'">
-                <p class="plan-audience">{{ plan.audience === 'Institution' ? 'Kurumlar için' : 'Bireysel kullanım' }}</p>
+              <article class="plan-card" [class.plan-card-featured]="plan.audience === 'Institution'" [attr.data-testid]="'plan-' + plan.slug">
+                <p class="plan-audience">{{ audienceLabel(plan) }}</p>
                 <h3 class="mt-2 text-xl font-semibold">{{ plan.name }}</h3>
                 <p class="mt-2 min-h-12 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ plan.description }}</p>
-                <p class="mt-5 text-2xl font-semibold tracking-tight">{{ plan.isContactOnly ? 'Kurumunuza özel' : currency() ? (plan.price | currency:(currency() || 'TRY'):'symbol':'1.0-2':'tr-TR') : 'Ücret bilgisi için giriş yapın' }}</p>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ plan.isContactOnly ? 'Kurum çözümleri için bilgi alın' : currency() ? plan.durationDays + ' gün erişim' : 'Hesabınızda plan ayrıntılarını görüntüleyin' }}</p>
+                <p class="mt-5 text-2xl font-semibold tracking-tight">{{ plan.isContactOnly ? (plan.audience === 'Institution' ? 'Kurumunuza özel' : 'Teklif alın') : priceText(plan) }}</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ plan.isContactOnly ? 'Fiyat ve koşullar için bizimle iletişime geçin' : plan.durationDays + ' gün erişim' }}@if ((plan.trialDays ?? 0) > 0 && !plan.isContactOnly) { · {{ plan.trialDays }} gün ücretsiz deneme }</p>
                 @if (plan.includedStudentSeats) { <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">{{ plan.includedStudentSeats }} öğrenci koltuğu</p> }
                 @if (plan.features.length) { <ul class="mt-5 space-y-2 text-sm text-slate-700 dark:text-slate-200">@for (feature of plan.features; track feature) { <li class="flex gap-2"><span class="text-emerald-600" aria-hidden="true">✓</span><span>{{ feature }}</span></li> }</ul> }
-                @if (plan.audience === 'Institution') {
-                  <a routerLink="/coaching/pages/kurumlar" class="mt-auto inline-flex w-full justify-center rounded-xl border border-indigo-200 px-4 py-3 text-sm font-semibold text-indigo-800 transition hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-200 dark:hover:bg-indigo-950">Kurum çözümlerini incele</a>
-                } @else if (!plan.isContactOnly) {
-                  <a routerLink="/auth/login" [queryParams]="{ returnUrl: '/coaching-portal/subscription' }" class="mt-auto inline-flex w-full justify-center rounded-xl bg-indigo-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-800">Planı incele ve devam et</a>
+                @if (plan.audience === 'Institution' || plan.isContactOnly) {
+                  <a routerLink="/coaching/pages/kurumlar" [queryParams]="campaign()" class="mt-auto inline-flex w-full justify-center rounded-xl border border-indigo-200 px-4 py-3 text-sm font-semibold text-indigo-800 transition hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-200 dark:hover:bg-indigo-950">{{ plan.audience === 'Institution' ? 'Kurum çözümlerini incele' : 'Bilgi al' }}</a>
                 } @else {
-                  <a routerLink="/auth/login" [queryParams]="{ returnUrl: '/coaching-portal/subscription' }" class="mt-auto inline-flex w-full justify-center rounded-xl bg-indigo-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-800">Koçluk hesabına giriş yap</a>
+                  <a [routerLink]="registerLink(plan)" [queryParams]="registerParams(plan)" [attr.data-testid]="'plan-register-' + plan.slug" (click)="selectPlan(plan)" class="mt-auto inline-flex w-full justify-center rounded-xl bg-indigo-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-800">{{ plan.audience === 'Teacher' ? 'Öğretmen olarak kayıt ol' : ((plan.trialDays ?? 0) > 0 ? 'Kayıt ol ve ücretsiz dene' : 'Kayıt ol ve başla') }}</a>
+                  <a routerLink="/auth/login" [queryParams]="{ returnUrl: plan.audience === 'Teacher' ? '/coaching-portal' : '/coaching-portal/subscription' }" class="mt-2 text-center text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-300">Hesabım var, giriş yap</a>
                 }
               </article>
             }
           </div>
-        } @else {
+        } @else if (plansLoaded()) {
           <div class="mt-7 rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">Yayınlanmış koçluk planı henüz yok. Planlar yayınlandığında burada görüntülenir.</div>
         }
       </section>
@@ -180,8 +183,10 @@ import { parseCoachingCmsContent } from '../coaching-cms-content';
 })
 export class CoachingPublicHomeComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+  private readonly seo = inject(SiteSeoService);
+  private readonly analytics = inject(SiteAnalyticsService);
+  readonly plansError = signal(false);
+  readonly plansLoaded = signal(false);
   readonly hero = signal<CoachingCmsEntry | null>(null);
   readonly areaHeading = signal<CoachingCmsEntry | null>(null);
   readonly blocks = signal<CoachingCmsEntry[]>([]);
@@ -208,10 +213,10 @@ export class CoachingPublicHomeComponent implements OnInit {
       next: blocks => {
         const hero = blocks[0] ?? null;
         this.hero.set(hero);
-        this.title.setTitle(hero?.seoTitle || `${hero?.title || 'Öğrenci Koçluğu'} | Eduİvme`);
-        if (hero?.seoDescription) this.meta.updateTag({ name: 'description', content: hero.seoDescription });
+        this.seo.apply({ title: hero?.seoTitle || `${hero?.title || 'Öğrenci Koçluğu'} | Eduİvme`, description: hero?.seoDescription || hero?.summary,
+          path: '/coaching', jsonLd: this.seo.organization() });
       },
-      error: () => this.hero.set(null)
+      error: () => { this.hero.set(null); this.seo.apply({ title: 'Öğrenci Koçluğu | Eduİvme', path: '/coaching', jsonLd: this.seo.organization() }); }
     });
     this.loadSingleBlock('HomeAreaHeading', this.areaHeading);
     this.loadSingleBlock('HomeProcessHeading', this.processHeading);
@@ -224,9 +229,50 @@ export class CoachingPublicHomeComponent implements OnInit {
     this.service.getPublicCmsBlocks('HomeHowItWorks').subscribe({ next: blocks => this.processBlocks.set(blocks), error: () => this.processBlocks.set([]) });
     this.service.getPublicCmsBlocks('HomeFaq').subscribe({ next: blocks => this.faq.set(blocks), error: () => this.faq.set([]) });
     this.service.getPublicCmsBlocks('HomeTestimonials').subscribe({ next: blocks => this.testimonials.set(blocks), error: () => this.testimonials.set([]) });
-    this.service.getPublicSubscriptionPlans().subscribe({ next: plans => this.plans.set(plans.filter(plan => plan.isActive && plan.isPublic)), error: () => this.plans.set([]) });
+    this.loadPlans();
     this.service.getPublicBankTransferSettings().subscribe({ next: settings => this.currency.set(settings.currency), error: () => this.currency.set(null) });
     this.service.getPublicCmsBlog(1, 3).subscribe({ next: page => this.blog.set(page), error: () => this.blog.set({ items: [], pageNumber: 1, pageSize: 3, totalCount: 0 }) });
+  }
+
+  /** A failed request is not shown as "no plans": the visitor gets an error and a retry. */
+  loadPlans(): void {
+    this.plansError.set(false);
+    this.service.getPublicSubscriptionPlans().subscribe({
+      next: plans => { this.plans.set(plans.filter(plan => plan.isActive && plan.isPublic)); this.plansLoaded.set(true); },
+      error: () => { this.plans.set([]); this.plansError.set(true); }
+    });
+  }
+
+  /** Formatted with Intl so no Angular locale data is needed ("2.400 ₺"). */
+  priceText(plan: CoachingSubscriptionPlan): string {
+    const currency = /^[A-Z]{3}$/.test(this.currency() ?? '') ? this.currency()! : 'TRY';
+    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(plan.price);
+  }
+
+  audienceLabel(plan: CoachingSubscriptionPlan): string {
+    return plan.audience === 'Institution' ? 'Kurumlar için' : plan.audience === 'Teacher' ? 'Öğretmenler için' : 'Öğrenciler için';
+  }
+
+  registerLink(plan: CoachingSubscriptionPlan): string {
+    return plan.audience === 'Teacher' ? '/auth/register/teacher' : '/auth/register/student';
+  }
+
+  /** Students come back to the subscription page with the plan chosen; campaign tags travel with the link. */
+  registerParams(plan: CoachingSubscriptionPlan): Record<string, string> {
+    return { ...this.campaign(), plan: plan.slug, ...(plan.audience === 'Teacher' ? {} : { returnUrl: `/coaching-portal/subscription?plan=${plan.slug}` }) };
+  }
+
+  campaign(): Record<string, string> {
+    const utm = this.analytics.registrationUtm();
+    const params: Record<string, string> = {};
+    if (utm?.utmSource) params['utm_source'] = utm.utmSource;
+    if (utm?.utmMedium) params['utm_medium'] = utm.utmMedium;
+    if (utm?.utmCampaign) params['utm_campaign'] = utm.utmCampaign;
+    return params;
+  }
+
+  selectPlan(plan: CoachingSubscriptionPlan): void {
+    this.analytics.track('select_item', { item_list_name: 'coaching_plans', item_id: plan.slug, item_name: plan.name });
   }
 
   private loadSingleBlock(group: string, target: { set(value: CoachingCmsEntry | null): void }): void {

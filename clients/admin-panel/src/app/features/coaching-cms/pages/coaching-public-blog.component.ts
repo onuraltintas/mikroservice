@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Meta, Title } from '@angular/platform-browser';
+import { SiteSeoService } from '../../../core/services/site-seo.service';
 import { RouterLink } from '@angular/router';
 import { CoachingCmsEntry, CoachingManagementPage, CoachingManagementService } from '../../../core/services/coaching-management.service';
 
@@ -27,8 +27,7 @@ import { CoachingCmsEntry, CoachingManagementPage, CoachingManagementService } f
 })
 export class CoachingPublicBlogComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+  private readonly seo = inject(SiteSeoService);
   readonly heading = signal<CoachingCmsEntry | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -39,8 +38,8 @@ export class CoachingPublicBlogComponent implements OnInit {
       next: blocks => {
         const heading = blocks[0] ?? null;
         this.heading.set(heading);
-        this.title.setTitle(heading?.seoTitle || `${heading?.title || 'Koçluk yazıları'} | Eduİvme Koçluk`);
-        if (heading?.seoDescription) this.meta.updateTag({ name: 'description', content: heading.seoDescription });
+        this.seo.apply({ title: heading?.seoTitle || `${heading?.title || 'Koçluk yazıları'} | Eduİvme Koçluk`,
+          description: heading?.seoDescription || heading?.summary || 'LGS, YKS ve planlı çalışma üzerine koçluk yazıları.', path: '/coaching/blog' });
       },
       error: () => this.heading.set(null)
     });

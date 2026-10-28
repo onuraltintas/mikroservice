@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Meta, Title } from '@angular/platform-browser';
+import { SiteSeoService } from '../../../core/services/site-seo.service';
 import { switchMap } from 'rxjs';
 import { CoachingCmsEntry, CoachingManagementService } from '../../../core/services/coaching-management.service';
 import { parseCoachingCmsContent } from '../coaching-cms-content';
@@ -19,8 +19,7 @@ import { parseCoachingCmsContent } from '../coaching-cms-content';
 export class CoachingPublicPageComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
   private readonly route = inject(ActivatedRoute);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+  private readonly seo = inject(SiteSeoService);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly page = signal<CoachingCmsEntry | null>(null);
@@ -30,8 +29,9 @@ export class CoachingPublicPageComponent implements OnInit {
     this.route.paramMap.pipe(switchMap(params => this.service.getPublicCmsPage(params.get('slug') ?? ''))).subscribe({
       next: page => {
         this.page.set(page); this.error.set(null); this.loading.set(false);
-        this.title.setTitle(page.seoTitle || `${page.title} | Eduİvme Koçluk`);
-        if (page.seoDescription) this.meta.updateTag({ name: 'description', content: page.seoDescription });
+        this.seo.apply({ title: page.seoTitle || `${page.title} | Eduİvme Koçluk`, description: page.seoDescription || page.summary,
+          path: `/coaching/pages/${page.slug}`, jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: page.title,
+            description: page.seoDescription || page.summary || undefined, inLanguage: 'tr-TR' } });
       },
       error: () => { this.page.set(null); this.error.set('Yayınlanan Koçluk sayfası bulunamadı.'); this.loading.set(false); }
     });

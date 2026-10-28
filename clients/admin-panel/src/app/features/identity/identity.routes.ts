@@ -23,6 +23,12 @@ export const IDENTITY_ROUTES: Routes = [
         loadComponent: () => import('./pages/bulk-user-operations').then(m => m.BulkUserOperationsComponent)
     },
     {
+        // Roadmap O11: registrations by campaign (utm tags).
+        path: 'registration-sources',
+        data: { permission: ADMIN_PERMISSIONS.usersView },
+        loadComponent: () => import('./pages/registration-sources').then(m => m.RegistrationSourcesComponent)
+    },
+    {
         path: 'parent-student-relationships',
         data: { permission: ADMIN_PERMISSIONS.usersView, role: 'SystemAdmin' },
         loadComponent: () => import('./pages/parent-student-relationships').then(m => m.ParentStudentRelationshipsComponent)

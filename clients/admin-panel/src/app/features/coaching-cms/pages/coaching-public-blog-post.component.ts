@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Meta, Title } from '@angular/platform-browser';
+import { SiteSeoService } from '../../../core/services/site-seo.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { CoachingCmsEntry, CoachingManagementService } from '../../../core/services/coaching-management.service';
@@ -19,8 +19,7 @@ import { parseCoachingCmsContent } from '../coaching-cms-content';
 export class CoachingPublicBlogPostComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
   private readonly route = inject(ActivatedRoute);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+  private readonly seo = inject(SiteSeoService);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly post = signal<CoachingCmsEntry | null>(null);
@@ -34,8 +33,15 @@ export class CoachingPublicBlogPostComponent implements OnInit {
     this.route.paramMap.pipe(switchMap(params => this.service.getPublicCmsBlogPost(params.get('slug') ?? ''))).subscribe({
       next: post => {
         this.post.set(post); this.error.set(null); this.loading.set(false);
-        this.title.setTitle(post.seoTitle || `${post.title} | Eduİvme Koçluk`);
-        if (post.seoDescription) this.meta.updateTag({ name: 'description', content: post.seoDescription });
+        const published = post.publishedAt || post.scheduledPublishAt || post.createdAt;
+        const image = this.isCoachingMediaUrl(post.coverImageUrl) ? post.coverImageUrl : null;
+        this.seo.apply({ title: post.seoTitle || `${post.title} | Eduİvme Koçluk`, description: post.seoDescription || post.summary,
+          path: `/coaching/blog/${post.slug}`, image, type: 'article', jsonLd: {
+            '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title, description: post.seoDescription || post.summary || undefined,
+            datePublished: published, dateModified: post.updatedAt || published, inLanguage: 'tr-TR',
+            author: post.author ? { '@type': 'Person', name: post.author } : { '@type': 'Organization', name: 'Eduİvme' },
+            publisher: { '@type': 'Organization', name: 'Eduİvme' }, mainEntityOfPage: this.seo.absolute(`/coaching/blog/${post.slug}`),
+            ...(image ? { image: this.seo.absolute(image) } : {}) } });
       },
       error: () => { this.post.set(null); this.error.set('Yayınlanan Koçluk yazısı bulunamadı.'); this.loading.set(false); }
     });
