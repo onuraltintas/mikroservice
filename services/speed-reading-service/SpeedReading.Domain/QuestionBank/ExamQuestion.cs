@@ -203,6 +203,6 @@ public sealed class ExamQuestion : AggregateRoot
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    private static int CountWords(string value) => value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+    private static int CountWords(string value) => SpeedReading.Domain.Catalog.ReadingText.CalculateWordCount(value);
     private static DateTime EnsureUtc(DateTime value) => value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
 }

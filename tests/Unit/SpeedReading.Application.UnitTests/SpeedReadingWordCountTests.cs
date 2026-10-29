@@ -21,8 +21,9 @@ public sealed class SpeedReadingWordCountTests
     [Fact]
     public void An_existing_text_is_recounted_with_the_new_rule()
     {
-        var text = ReadingText.Create(Guid.NewGuid(), "Başlık", "Merhaba dünya");
-        typeof(ReadingText).GetProperty(nameof(ReadingText.Content))!.SetValue(text, "Merhaba – dünya — !");
+        var text = ReadingText.Create(Guid.NewGuid(), "Başlık", "Merhaba – dünya — !");
+        // A count stored under the old rule, which counted every whitespace-separated token.
+        typeof(ReadingText).GetProperty(nameof(ReadingText.WordCount))!.SetValue(text, 5);
 
         text.RecalculateWordCount().Should().BeTrue();
         text.WordCount.Should().Be(2);

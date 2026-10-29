@@ -76,9 +76,11 @@ public sealed class EmailCampaignsController(ISpeedReadingEmailCampaigns campaig
                 ? NotFound()
                 : Accepted(new
                 {
-                    message = result.FailedCount > 0
-                        ? "Kampanya kısmen kuyruğa alındı; başarısız kayıtları inceleyip yeniden deneyin. Kuyruğa alınması teslim edildiği anlamına gelmez."
-                        : "Kampanya Notification e-posta kuyruğuna alındı. Bu, e-postanın teslim edildiği anlamına gelmez.",
+                    message = result.Status == 1
+                        ? "Kampanya gönderim sırasına alındı; alıcılar birkaç saniye içinde Notification e-posta kuyruğuna eklenecek. Bu, e-postanın teslim edildiği anlamına gelmez."
+                        : result.FailedCount > 0
+                            ? "Kampanya kısmen kuyruğa alındı; başarısız kayıtları inceleyip yeniden deneyin. Kuyruğa alınması teslim edildiği anlamına gelmez."
+                            : "Kampanya Notification e-posta kuyruğuna alındı. Bu, e-postanın teslim edildiği anlamına gelmez.",
                     totalRecipients = result.TotalRecipients,
                     queuedCount = result.QueuedCount,
                     campaign = result
