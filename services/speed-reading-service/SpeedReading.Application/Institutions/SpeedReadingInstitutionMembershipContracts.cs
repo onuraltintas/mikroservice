@@ -58,7 +58,11 @@ public interface ISpeedReadingInstitutionMemberships
         Guid? teacherUserId = null,
         Guid? memberUserId = null);
 
-    Task<bool> SetMembershipAsync(
+    /// <summary>
+    /// Re-activates or removes an existing membership. Review H3 (finding 6, decision 28.10.2026): new members join only
+    /// by accepting an invitation, so this never creates one.
+    /// </summary>
+    Task<SpeedReadingMembershipChange> SetMembershipAsync(
         Guid institutionId,
         Guid userId,
         SpeedReadingInstitutionMemberRole role,
@@ -66,6 +70,16 @@ public interface ISpeedReadingInstitutionMemberships
         Guid actorId,
         DateTime at,
         CancellationToken cancellationToken = default);
+}
+
+public enum SpeedReadingMembershipChange
+{
+    Updated,
+    NotFound,
+    /// <summary>The person is not a member of this institution; they must accept an invitation.</summary>
+    InvitationRequired,
+    /// <summary>A former member is now active in another institution with the same role.</summary>
+    ActiveElsewhere
 }
 
 public enum SpeedReadingInstitutionStudentUpdateResult

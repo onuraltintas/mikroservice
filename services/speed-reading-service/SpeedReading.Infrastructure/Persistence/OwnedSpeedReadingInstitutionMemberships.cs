@@ -126,7 +126,7 @@ public sealed class OwnedSpeedReadingInstitutionMemberships(OwnedSpeedReadingDbC
         return new SpeedReadingInstitutionMembershipPage(records, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<bool> SetMembershipAsync(
+    public async Task<SpeedReadingMembershipChange> SetMembershipAsync(
         Guid institutionId,
         Guid userId,
         SpeedReadingInstitutionMemberRole role,
@@ -149,33 +149,23 @@ public sealed class OwnedSpeedReadingInstitutionMemberships(OwnedSpeedReadingDbC
                 && item.Role == role,
             cancellationToken);
         if (membership is null)
-        {
-            if (!isActive)
-                return false;
+            return isActive ? SpeedReadingMembershipChange.InvitationRequired : SpeedReadingMembershipChange.NotFound;
+        if (membership.IsActive == isActive)
+            return SpeedReadingMembershipChange.Updated;
 
-            await db.InstitutionMemberships.AddAsync(
-                SpeedReadingInstitutionMembership.Create(institutionId, userId, role, actorId, at),
-                cancellationToken);
-            await db.SaveChangesAsync(cancellationToken);
-            return true;
+        if (isActive && await db.InstitutionMemberships.AnyAsync(
+                item => item.UserId == userId
+                    && item.Role == role
+                    && item.IsActive
+                    && item.InstitutionId != institutionId,
+                cancellationToken))
+        {
+            return SpeedReadingMembershipChange.ActiveElsewhere;
         }
 
-        var changed = false;
-        if (membership.Role != role)
-        {
-            membership.ChangeRole(role, actorId, at);
-            changed = true;
-        }
-        if (membership.IsActive != isActive)
-        {
-            membership.SetActive(isActive, actorId, at);
-            changed = true;
-        }
-
-        if (changed)
-            await db.SaveChangesAsync(cancellationToken);
-
-        return true;
+        membership.SetActive(isActive, actorId, at);
+        await db.SaveChangesAsync(cancellationToken);
+        return SpeedReadingMembershipChange.Updated;
     }
 
     private static void EnsureInstitutionId(Guid institutionId)
