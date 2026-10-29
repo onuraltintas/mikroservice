@@ -7009,12 +7009,23 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.Property<int>("DeletedRecordCount")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("FinancialAnonymizedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FinancialRetentionUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("RequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SubjectUserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CompletedAt");
+
+                    b.HasIndex("FinancialRetentionUntil");
 
                     b.HasIndex("RequestId")
                         .IsUnique();

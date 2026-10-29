@@ -126,6 +126,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.RequestId).IsUnique();
             entity.HasIndex(item => item.CompletedAt);
+            entity.HasIndex(item => item.FinancialRetentionUntil);
         });
 
         ConfigureEntity(modelBuilder.Entity<Exercise>());

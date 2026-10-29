@@ -52,13 +52,18 @@ public sealed class SpeedReadingErasureAssessmentService(
         var counts = await inventoryRepository.CountByUserAsync(
             message.SubjectUserId,
             cancellationToken);
-        var hasFinancialRetention = counts.GetValueOrDefault("financialRecords") > 0;
+        // Review H2b (decision 28.10.2026, same as coaching): paid records do not block erasure. They are kept
+        // unchanged for a year and then anonymised; the assessment reports how many will be kept.
+        var reported = new Dictionary<string, int>(counts)
+        {
+            ["RetainedFinancialRecords"] = counts.GetValueOrDefault("financialRecords")
+        };
         return new SpeedReadingErasureAssessment(
             message.RequestId,
             message.SubjectUserId,
-            CanProceed: !hasFinancialRetention,
-            HasActiveLegalHold: hasFinancialRetention,
-            counts,
+            CanProceed: true,
+            HasActiveLegalHold: false,
+            reported,
             timeProvider.GetUtcNow().UtcDateTime);
     }
 }

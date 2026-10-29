@@ -7,8 +7,10 @@ namespace Identity.API.IntegrationTests;
 public sealed class SpeedReadingErasureAssessmentServiceTests
 {
     [Fact]
-    public async Task Assess_ShouldBlockErasureWhenFinancialRecordsRequireRetention()
+    public async Task Assess_ProceedsAndReportsTheFinancialRecordsKeptForAYear()
     {
+        // Review H2b (decision 28.10.2026, same as coaching): financial records do not block erasure; they are kept
+        // unchanged for a year and then anonymised, everything else is erased.
         var repository = new StubInventoryRepository(new Dictionary<string, int>
         {
             ["profiles"] = 1,
@@ -24,9 +26,10 @@ public sealed class SpeedReadingErasureAssessmentServiceTests
 
         var result = await service.AssessAsync(message, CancellationToken.None);
 
-        result.HasActiveLegalHold.Should().BeTrue();
-        result.CanProceed.Should().BeFalse();
+        result.HasActiveLegalHold.Should().BeFalse();
+        result.CanProceed.Should().BeTrue();
         result.RecordCounts.Should().Contain("exerciseSessions", 5);
+        result.RecordCounts.Should().Contain("RetainedFinancialRecords", 2);
     }
 
     [Fact]

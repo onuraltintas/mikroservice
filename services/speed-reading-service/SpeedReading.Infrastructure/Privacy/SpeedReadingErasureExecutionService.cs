@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Privacy;
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Privacy;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -7,7 +8,7 @@ namespace SpeedReading.Infrastructure.Privacy;
 
 public sealed class SpeedReadingErasureExecutionService(
     OwnedSpeedReadingDbContext context,
-    ISpeedReadingPrivacyInventoryRepository inventoryRepository,
+    ISpeedReadingUserDirectory userDirectory,
     TimeProvider timeProvider) : ISpeedReadingErasureExecutionService
 {
     public async Task<SpeedReadingErasureExecutionResult> ExecuteAsync(
@@ -22,12 +23,12 @@ public sealed class SpeedReadingErasureExecutionService(
         if (existing is not null)
             return ToResult(existing);
 
-        var inventory = await inventoryRepository.CountByUserAsync(
-            message.SubjectUserId, cancellationToken);
-        if (inventory.GetValueOrDefault("financialRecords") > 0)
-            throw new InvalidOperationException("SpeedReading erasure is blocked by financial retention.");
-
+        // Review H2b: rows keyed only by e-mail (newsletter, contact form, campaign log) are found through the
+        // account's address; Identity keeps the account until every service has finished.
         var userId = message.SubjectUserId;
+        var directory = await userDirectory.GetUsersAsync([userId], cancellationToken);
+        var email = directory.Users.FirstOrDefault(user => user.UserId == userId)?.Email?.Trim().ToLowerInvariant();
+        var invitationEmail = email is null ? null : SpeedReading.Domain.Institutions.SpeedReadingInvitation.NormalizeEmail(email);
         var deleted = 0;
         deleted += await RemoveAsync(context.ProgramProgressionPolicies.Where(item => userId != Guid.Empty && item.UserId == userId), cancellationToken);
         deleted += await RemoveAsync(context.ProgramContinuations.Where(item => item.StudentId == userId), cancellationToken);
@@ -70,11 +71,27 @@ public sealed class SpeedReadingErasureExecutionService(
         deleted += await RemoveAsync(legacy.NotificationPreferences.Where(item => item.UserId == userId), cancellationToken);
         deleted += await RemoveAsync(legacy.PushSubscriptions.Where(item => item.UserId == userId), cancellationToken);
         deleted += await RemoveAsync(legacy.InstitutionAccessActions.Where(item => item.StudentId == userId), cancellationToken);
-        deleted += await RemoveAsync(legacy.UserSubscriptions.Where(item => item.UserId == userId), cancellationToken);
+        deleted += await RemoveAsync(legacy.RsvpSessions.Where(item => item.UserId == userId), cancellationToken);
+        deleted += await RemoveAsync(context.InstitutionMemberships.Where(item => item.UserId == userId), cancellationToken);
+        deleted += await RemoveAsync(context.TeacherStudentAssignments
+            .Where(item => item.StudentUserId == userId || item.TeacherUserId == userId), cancellationToken);
+        deleted += await RemoveAsync(context.Invitations.Where(item => item.AcceptedByUserId == userId
+            || item.InvitedByUserId == userId
+            || (invitationEmail != null && item.NormalizedEmail == invitationEmail)), cancellationToken);
+        if (email is not null)
+        {
+            deleted += await RemoveAsync(legacy.NewsletterSubscribers.Where(item => item.Email.ToLower() == email), cancellationToken);
+            deleted += await RemoveAsync(legacy.ContactMessages.Where(item => item.Email.ToLower() == email), cancellationToken);
+            deleted += await RemoveAsync(legacy.EmailCampaignLogs.Where(item => item.RecipientEmail.ToLower() == email), cancellationToken);
+        }
+        // Review H2b: attempts that moved no money (failed, pending, rejected) are erased. Paid records stay (below).
+        deleted += await RemoveAsync(SpeedReadingFinancialRetention.UnpaidPayments(legacy, userId), cancellationToken);
+        deleted += await RemoveAsync(SpeedReadingFinancialRetention.UnapprovedTransfers(legacy, userId), cancellationToken);
         deleted += await RemoveAsync(context.UserProfiles.Where(item => item.UserId == userId), cancellationToken);
 
+        var retained = await SpeedReadingFinancialRetention.CountAsync(legacy, userId, cancellationToken);
         var execution = SpeedReadingErasureExecutionReceipt.Complete(
-            message.RequestId, deleted, timeProvider.GetUtcNow().UtcDateTime);
+            message.RequestId, deleted, timeProvider.GetUtcNow().UtcDateTime, userId, Math.Max(0, retained));
         context.ErasureExecutions.Add(execution);
         await context.SaveChangesAsync(cancellationToken);
         return ToResult(execution);
