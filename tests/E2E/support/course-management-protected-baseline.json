@@ -1606,7 +1606,7 @@
     "services/speed-reading-service/SpeedReading.Domain/Visualization/VisualizationScene.cs": "543698f93ff6f8fb8f7aecfce3b4466fff074819d55dd0823bc86628337677a8",
     "services/speed-reading-service/SpeedReading.Domain/Vocabulary/UserVocabularyProgress.cs": "74014056f7e875d4f43d8e2742cff72f936f54466b74bb92d6927b5d159d7613",
     "services/speed-reading-service/SpeedReading.Domain/Vocabulary/VocabularyItem.cs": "1373ace8237bb0db3eef279afb0e0bd98cdf444061caf1a965636300020b801a",
-    "services/speed-reading-service/SpeedReading.Infrastructure/DependencyInjection.cs": "ffd352c51ca459c741e0f15f9bc343ab7fef750bfac1da338d5d8cea98b937aa",
+    "services/speed-reading-service/SpeedReading.Infrastructure/DependencyInjection.cs": "3999c7ba7c991d13dad63b8073aa551b9d418fe72797b27201789f5ab870747c",
     "services/speed-reading-service/SpeedReading.Infrastructure/Exports/ReadingTextExportService.cs": "2244bcb09d05fb4e4e338c591cf4d07935dc158b134aed553ab0d6712d4d70f3",
     "services/speed-reading-service/SpeedReading.Infrastructure/Exports/ReportExportService.cs": "0aad206850b62e1ffe735b11b94686d9ac6aff39d1f9c1dee7cf439f9578802d",
     "services/speed-reading-service/SpeedReading.Infrastructure/ExternalServices/IdentityInstitutionDirectoryClient.cs": "81064b1e711453e990bf007d1f9f82c6901c163c0987a7632dbc8322bbfe8a72",
@@ -1826,6 +1826,7 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/program-learning-path-separation.contract.test.mjs": "3f63a11ca02bdbe7248ae8db949bed0812b200cda08ee0914034fdfbc60863a4",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/program-schedule.contract.test.mjs": "2c863c75a24d9bf9e5c1e7451b5c65002f37063214c206d047e3610d8580b7d1",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/program-template-validation.contract.test.mjs": "519d4bcffa641dd238b9cf86dc43bd2856b21a4a698bf55afc09f72c6c422fe9",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingDataRetention.cs": "e0cb15aecbdb535ee9aeb418c5f93791940be3841be39980057bd3d702c51a46",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingErasureExecutionService.cs": "9edaa5d8677b4aa28c78b489363d25556acb0b25fa6ecc93f7195755b757361f",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingFinancialRetention.cs": "cedecaf397d28aae88fbf5bae36629714ded0b4182f6949f6196beb2aaa04c74",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingPersonalDataExportService.cs": "1c92b19276c7cef2cdd880b10736ae201196cb097f72dd68b43ace6047ee8646",
@@ -2630,7 +2631,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "merge fix/h3b-speed-reading-permissions into fix/h4-speed-reading-performance",
+    "purpose": "merge fix/h4-speed-reading-performance into fix/h4b-speed-reading-retention",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2678,7 +2679,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "32b7f294",
+    "previousBaselineCommit": "bd99c6fc",
     "removedSincePreviousBaseline": []
   }
 }
