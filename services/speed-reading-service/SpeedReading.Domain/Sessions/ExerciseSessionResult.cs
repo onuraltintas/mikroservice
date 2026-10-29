@@ -25,6 +25,10 @@ public sealed class ExerciseSessionResult : Entity
     public string QuestionAnswersJson { get; private set; } = "[]";
     public string ReadingMovementsJson { get; private set; } = "[]";
     public DateTime CompletedAt { get; private set; }
+    /// <summary>XP awarded at completion (review H5, finding 18); null for results recorded before it was stored.</summary>
+    public int? GamificationXp { get; private set; }
+    /// <summary>Whether the completion counted for gamification (verified, not an incomplete reading); null = unknown.</summary>
+    public bool? CountsForGamification { get; private set; }
 
     public static ExerciseSessionResult Create(
         Guid id,
@@ -131,5 +135,11 @@ public sealed class ExerciseSessionResult : Entity
             throw new ArgumentOutOfRangeException(nameof(wordsRead));
 
         return result;
+    }
+
+    public void RecordGamification(bool countsForGamification, int xpAwarded)
+    {
+        CountsForGamification = countsForGamification;
+        GamificationXp = countsForGamification ? Math.Max(xpAwarded, 0) : 0;
     }
 }

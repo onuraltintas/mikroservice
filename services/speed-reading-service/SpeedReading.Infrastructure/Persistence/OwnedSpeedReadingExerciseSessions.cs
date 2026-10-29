@@ -895,6 +895,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         var isVerifiedCompletion = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
             && (state.VocabularyWords.Count == 0 || state.VocabularyMode == "quiz");
+        // Review H5 (finding 18): remember what this completion was worth so a later rebuild gives the same XP.
+        result.RecordGamification(!isAssessmentSession && isVerifiedCompletion, xpAwarded);
         if (!isAssessmentSession && isVerifiedCompletion)
         {
             var stats = await GetOrCreateGamificationAsync(studentId, now, cancellationToken);

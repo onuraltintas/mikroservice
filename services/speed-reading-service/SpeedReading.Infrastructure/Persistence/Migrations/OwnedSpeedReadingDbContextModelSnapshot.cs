@@ -3443,6 +3443,14 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("assessment_attempt_id");
 
+                    b.Property<bool?>("CountsForGamification")
+                        .HasColumnType("boolean")
+                        .HasColumnName("counts_for_gamification");
+
+                    b.Property<int?>("GamificationXp")
+                        .HasColumnType("integer")
+                        .HasColumnName("gamification_xp");
+
                     b.Property<DateTime>("CompletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("completed_at");
