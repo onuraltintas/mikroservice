@@ -263,7 +263,22 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         DateTime? dateTo,
         string? category,
         CancellationToken cancellationToken) =>
-        await GetHistoryAsync(userId, readingTextId, dateFrom, dateTo, category, true, cancellationToken);
+        await GetHistoryAsync(userId, readingTextId, dateFrom, dateTo, category, 50, cancellationToken);
+
+    private IQueryable<HistoryRow> HistoryRows(Guid userId) =>
+        from session in db.ReadingSessions.AsNoTracking()
+        join text in db.ReadingTexts.AsNoTracking()
+            on session.ReadingTextId equals text.Id
+        where session.UserId == userId && !text.IsDeleted
+        // Review H4 (finding 23): only the text's title and category, never its full content.
+        select new HistoryRow { Session = session, Title = text.Title, Category = text.Category };
+
+    private sealed class HistoryRow
+    {
+        public ReadingSession Session { get; init; } = null!;
+        public string Title { get; init; } = string.Empty;
+        public string Category { get; init; } = string.Empty;
+    }
 
     private async Task<IReadOnlyList<StudentReadingHistoryItem>> GetHistoryAsync(
         Guid userId,
@@ -271,16 +286,12 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         DateTime? dateFrom,
         DateTime? dateTo,
         string? category,
-        bool limitResults,
+        int take,
         CancellationToken cancellationToken)
     {
         dateFrom = SpeedReadingQueryDates.Utc(dateFrom);
         dateTo = SpeedReadingQueryDates.Utc(dateTo);
-        var query = from session in db.ReadingSessions.AsNoTracking()
-                    join text in db.ReadingTexts.AsNoTracking()
-                        on session.ReadingTextId equals text.Id
-                    where session.UserId == userId && !text.IsDeleted
-                    select new { Session = session, Text = text };
+        var query = HistoryRows(userId);
         if (readingTextId.HasValue)
             query = query.Where(item => item.Session.ReadingTextId == readingTextId.Value);
         if (dateFrom.HasValue)
@@ -288,13 +299,12 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         if (dateTo.HasValue)
             query = query.Where(item => item.Session.CompletedAt <= dateTo.Value);
         if (!string.IsNullOrWhiteSpace(category))
-            query = query.Where(item => item.Text.Category == category);
+            query = query.Where(item => item.Category == category);
 
-        var orderedQuery = query.OrderByDescending(item => item.Session.CompletedAt);
-        var rows = limitResults
-            ? await orderedQuery.Take(50).ToListAsync(cancellationToken)
-            : await orderedQuery.ToListAsync(cancellationToken);
-        return rows.Select(item => ToHistory(item.Session, item.Text)).ToList();
+        var rows = await query.OrderByDescending(item => item.Session.CompletedAt)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+        return rows.Select(item => ToHistory(item.Session, item.Title, item.Category)).ToList();
     }
 
     public async Task<StudentReadingSessionDetails?> GetSessionDetailsAsync(
@@ -337,30 +347,41 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         Guid userId,
         CancellationToken cancellationToken)
     {
-        var sessions = await GetHistoryAsync(userId, null, null, null, null, false, cancellationToken);
-        if (sessions.Count == 0)
+        // Review H4 (finding 23): totals and averages are computed by the database instead of loading every session
+        // (and every text) of the student.
+        var sessions = HistoryRows(userId).Select(item => item.Session);
+        var totals = await sessions
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                Count = group.Count(),
+                AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0).Average(item => (decimal?)item.CalculatedWpm),
+                AverageComprehension = group.Where(item => item.TotalQuestions > 0).Average(item => (decimal?)item.ComprehensionRate),
+                AverageEfficiency = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0).Average(item => (decimal?)item.EfficiencyScore),
+                ReadingSeconds = group.Sum(item => item.ReadingTimeSeconds)
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (totals is null || totals.Count == 0)
             return new StudentReadingStatistics(0, 0, 0, 0, 0, 0, [], []);
 
-        var measuredSessions = sessions
-            .Where(item => item.IsMeasured && item.CalculatedWPM > 0)
-            .ToList();
-        var comprehensionSessions = sessions.Where(item => item.TotalQuestions > 0).ToList();
+        var distinctTexts = await sessions.Select(item => item.ReadingTextId).Distinct().CountAsync(cancellationToken);
+        var categories = await HistoryRows(userId)
+            .Where(item => item.Category != "")
+            .Select(item => item.Category)
+            .Distinct()
+            .OrderBy(item => item)
+            .ToListAsync(cancellationToken);
+        var recent = await GetHistoryAsync(userId, null, null, null, null, 10, cancellationToken);
 
         return new StudentReadingStatistics(
-            sessions.Count,
-            measuredSessions.Count == 0
-                ? 0
-                : Math.Round(measuredSessions.Average(item => (decimal)item.CalculatedWPM), 1),
-            comprehensionSessions.Count == 0
-                ? 0
-                : Math.Round(comprehensionSessions.Average(item => item.ComprehensionRate), 1),
-            measuredSessions.Count == 0
-                ? 0
-                : Math.Round(measuredSessions.Average(item => item.EfficiencyScore), 1),
-            sessions.Select(item => item.ReadingTextId).Distinct().Count(),
-            sessions.Sum(item => item.ReadingTimeSeconds) / 60,
-            sessions.Select(item => item.Category).Where(item => !string.IsNullOrWhiteSpace(item)).Distinct().OrderBy(item => item).ToList(),
-            sessions.Take(10).ToList());
+            totals.Count,
+            Math.Round(totals.AverageWpm ?? 0, 1),
+            Math.Round(totals.AverageComprehension ?? 0, 1),
+            Math.Round(totals.AverageEfficiency ?? 0, 1),
+            distinctTexts,
+            totals.ReadingSeconds / 60,
+            categories,
+            recent.ToList());
     }
 
     public async Task<IReadOnlyList<StudentReadingWpmPoint>> GetWpmProgressionAsync(
@@ -397,12 +418,12 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
             .Select(item => item.AgeGroupConfigurationId)
             .SingleOrDefaultAsync(cancellationToken);
 
-    private static StudentReadingHistoryItem ToHistory(ReadingSession session, ReadingText text) =>
+    private static StudentReadingHistoryItem ToHistory(ReadingSession session, string title, string category) =>
         new(
             session.Id,
             session.ReadingTextId,
-            text.Title,
-            text.Category,
+            title,
+            category,
             session.ReadingTimeSeconds,
             session.CalculatedWpm,
             session.CorrectAnswers,

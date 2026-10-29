@@ -19,3 +19,8 @@ public sealed record SpeedReadingInstitutionManagerAuthorizationRequest(
 
 public sealed record SpeedReadingInstitutionManagerAuthorizationResponse(
     bool CanManage);
+
+/// <summary>Review H4 (finding 8): every Speed Reading institution the user currently manages, in one call.</summary>
+public sealed record SpeedReadingManagedInstitutionsRequest(Guid UserId);
+
+public sealed record SpeedReadingManagedInstitutionsResponse(IReadOnlyList<Guid> InstitutionIds);

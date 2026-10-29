@@ -26,7 +26,7 @@ internal sealed class OwnedSpeedReadingCalibrationAnalytics(OwnedSpeedReadingDbC
         if (attempts.Count == 0)
             return Report([]);
 
-        var attemptIds = attempts.Select(item => item.Id).ToArray();
+        var attemptIds = attempts.Select(item => item.Id).ToList();
         var resultRows = await db.ExerciseSessionResults
             .AsNoTracking()
             .Where(item => item.AssessmentAttemptId.HasValue
@@ -50,7 +50,7 @@ internal sealed class OwnedSpeedReadingCalibrationAnalytics(OwnedSpeedReadingDbC
             .Where(item => item.AgeGroupConfigurationId.HasValue)
             .Select(item => item.AgeGroupConfigurationId!.Value)
             .Distinct()
-            .ToArray();
+            .ToList();
         var ageGroups = await db.AgeGroupConfigurations
             .AsNoTracking()
             .Where(item => ageGroupIds.Contains(item.Id))

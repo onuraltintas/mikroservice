@@ -114,4 +114,19 @@ public sealed class InternalReportingController : ControllerBase
             cancellationToken);
         return Ok(new SpeedReadingInstitutionManagerAuthorizationResponse(canManage));
     }
+
+    [HttpPost("speed-reading/managed-institutions")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(4_096)]
+    public async Task<ActionResult<SpeedReadingManagedInstitutionsResponse>> GetManagedSpeedReadingInstitutions(
+        [FromBody] SpeedReadingManagedInstitutionsRequest? request,
+        CancellationToken cancellationToken)
+    {
+        if (request is null || request.UserId == Guid.Empty)
+            return BadRequest("An active user is required.");
+
+        return Ok(new SpeedReadingManagedInstitutionsResponse(
+            await institutionRepository.GetManagedSpeedReadingInstitutionIdsAsync(request.UserId, cancellationToken)));
+    }
 }

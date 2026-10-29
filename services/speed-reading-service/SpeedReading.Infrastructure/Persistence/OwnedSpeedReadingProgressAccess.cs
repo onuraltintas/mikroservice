@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Security.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
@@ -11,12 +12,18 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 public sealed class OwnedSpeedReadingProgressAccess(
     OwnedSpeedReadingDbContext db,
-    ISpeedReadingInstitutionDirectory institutions,
     ISpeedReadingInstitutionAdministrationAuthorization authorization,
     ISpeedReadingUserDirectory users,
     ICurrentUserService currentUser,
-    IdentityProgressAccessClient globalAuthorization) : ISpeedReadingProgressAccess
+    IdentityProgressAccessClient globalAuthorization,
+    IMemoryCache cache) : ISpeedReadingProgressAccess
 {
+    /// <summary>
+    /// Short enough that a revoked administrator loses access within a minute; long enough that one page (scope +
+    /// search + several widgets) asks Identity once.
+    /// </summary>
+    internal static readonly TimeSpan ManagedInstitutionsCacheDuration = TimeSpan.FromSeconds(60);
+
     public async Task<SpeedReadingProgressAccessScope?> GetScopeAsync(Guid viewerUserId, CancellationToken cancellationToken = default)
     {
         if (!currentUser.IsAuthenticated || viewerUserId == Guid.Empty || currentUser.UserId != viewerUserId)
@@ -30,17 +37,25 @@ public sealed class OwnedSpeedReadingProgressAccess(
             || !currentUser.Roles.Any(role => role is "InstitutionAdmin" or "InstitutionOwner"))
             return null;
 
-        var activeInstitutions = (await institutions.GetInstitutionsAsync(cancellationToken)).Institutions
-            .Where(item => item.IsActive).Select(item => item.InstitutionId).ToHashSet();
-        var memberships = await db.InstitutionMemberships.AsNoTracking()
-            .Where(item => item.IsActive && item.Role == SpeedReadingInstitutionMemberRole.Student)
-            .Select(item => new { item.InstitutionId, item.UserId }).ToArrayAsync(cancellationToken);
-        var allowed = new HashSet<Guid>();
-        foreach (var institutionId in memberships.Select(item => item.InstitutionId).Distinct().Where(activeInstitutions.Contains))
-            if (await authorization.CanManageAsync(viewerUserId, institutionId, cancellationToken))
-                allowed.Add(institutionId);
-        return new(viewerUserId, false, memberships.Where(item => allowed.Contains(item.InstitutionId))
-            .Select(item => item.UserId).Distinct().ToArray());
+        // Review H4 (finding 8): one Identity call for the admin's institutions (cached briefly), then only those
+        // institutions' student memberships — not every membership on the platform.
+        var managed = await cache.GetOrCreateAsync(("speed-reading:managed-institutions", viewerUserId), async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = ManagedInstitutionsCacheDuration;
+            entry.Size = 1;
+            return (await authorization.GetManagedInstitutionIdsAsync(viewerUserId, cancellationToken)).ToArray();
+        }) ?? [];
+        if (managed.Length == 0)
+            return new(viewerUserId, false, Array.Empty<Guid>());
+
+        var studentIds = await db.InstitutionMemberships.AsNoTracking()
+            .Where(item => item.IsActive
+                && item.Role == SpeedReadingInstitutionMemberRole.Student
+                && Enumerable.Contains(managed, item.InstitutionId))
+            .Select(item => item.UserId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+        return new(viewerUserId, false, studentIds);
     }
 
     public async Task<IReadOnlyCollection<Guid>> SearchStudentUserIdsAsync(Guid viewerUserId, string searchTerm, CancellationToken cancellationToken = default)

@@ -107,8 +107,8 @@ internal sealed class OwnedSpeedReadingPrograms(
 
         if (!accessScope.IsGlobal)
         {
-            var allowedStudentIds = accessScope.StudentUserIds.Distinct().ToArray();
-            if (allowedStudentIds.Length == 0)
+            var allowedStudentIds = accessScope.StudentUserIds.Distinct().ToList();
+            if (allowedStudentIds.Count == 0)
                 return new SpeedReadingPage<AdminStudentProgressSummary>([], page, size, 0);
             query = query.Where(row => allowedStudentIds.Contains(row.Progress.UserId));
         }

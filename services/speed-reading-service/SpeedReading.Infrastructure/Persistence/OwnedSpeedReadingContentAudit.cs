@@ -30,7 +30,7 @@ public sealed class OwnedSpeedReadingContentAudit(OwnedSpeedReadingDbContext db)
             .Where(item => !item.IsDeleted)
             .Select(item => new SceneAuditRow(item.Id, item.ExerciseId, item.Description, item.Mode))
             .ToListAsync(cancellationToken);
-        var sceneIds = scenes.Select(item => item.Id).ToArray();
+        var sceneIds = scenes.Select(item => item.Id).ToList();
         var allVisualizationQuestions = await db.VisualizationQuestions.AsNoTracking()
             .Where(item => !item.IsDeleted)
             .Select(item => new VisualizationQuestionAuditRow(item.Id, item.SceneId, item.QuestionText,

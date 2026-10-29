@@ -8,6 +8,7 @@ namespace SpeedReading.Infrastructure.Persistence;
 internal interface ISpeedReadingDataContext
 {
     DatabaseFacade Database { get; }
+    DbSet<SpeedReading.Domain.Institutions.SpeedReadingInstitutionMembership> InstitutionMemberships { get; }
     DbSet<LegacyContentBlock> ContentBlocks { get; }
     DbSet<LegacyPage> Pages { get; }
     DbSet<LegacyBlogPost> BlogPosts { get; }

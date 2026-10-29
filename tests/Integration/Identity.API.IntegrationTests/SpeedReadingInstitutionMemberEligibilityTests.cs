@@ -85,6 +85,11 @@ public sealed class SpeedReadingInstitutionMemberEligibilityTests
             inactiveAdmin.Id,
             institution.Id,
             CancellationToken.None));
+
+        // Review H4 (finding 8): Speed Reading asks once for every institution the admin manages.
+        Assert.Equal([institution.Id], await repository.GetManagedSpeedReadingInstitutionIdsAsync(speedReadingAdmin.Id, CancellationToken.None));
+        Assert.Empty(await repository.GetManagedSpeedReadingInstitutionIdsAsync(coachingAdmin.Id, CancellationToken.None));
+        Assert.Empty(await repository.GetManagedSpeedReadingInstitutionIdsAsync(inactiveAdmin.Id, CancellationToken.None));
     }
 
     private static void AddRole(User user, string roleName, PlatformProduct product)

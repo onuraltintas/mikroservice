@@ -189,7 +189,7 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         {
             PublicMarketingCopyRules.EnsureSafe(homePageConfig.Value);
         }
-        var keys = blocks.Keys.ToArray();
+        var keys = blocks.Keys.ToList();
         var existing = await db.ContentBlocks
             .Where(item => !item.IsDeleted && item.Group == normalizedGroup && keys.Contains(item.Key))
             .ToListAsync(cancellationToken);

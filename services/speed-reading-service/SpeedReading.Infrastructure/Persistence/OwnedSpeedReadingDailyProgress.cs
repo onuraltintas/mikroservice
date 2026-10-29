@@ -595,18 +595,17 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         if (program is null)
             return null;
 
-        var logs = await db.DailyExerciseLogs
-            .AsNoTracking()
-            .Where(item => item.UserId == userId)
-            .ToListAsync(cancellationToken);
-        var completed = logs.Where(item => item.IsPassed).ToList();
-        var results = await db.ExerciseSessionResults
-            .AsNoTracking()
-            .Where(item => item.StudentId == userId && item.IsMeasured)
-            .OrderBy(item => item.CreatedAt)
-            .Select(item => new { item.RawWpm, item.ComprehensionScore })
-            .ToListAsync(cancellationToken);
-        var wpmResults = results.Where(item => item.RawWpm > 0).ToList();
+        // Review H4 (finding 23): counts and averages come from the database, not from the whole history.
+        var logs = db.DailyExerciseLogs.AsNoTracking().Where(item => item.UserId == userId);
+        var logCount = await logs.CountAsync(cancellationToken);
+        var passedCount = await logs.CountAsync(item => item.IsPassed, cancellationToken);
+        var results = db.ExerciseSessionResults.AsNoTracking().Where(item => item.StudentId == userId && item.IsMeasured);
+        var averageComprehension = await results.AverageAsync(item => (decimal?)item.ComprehensionScore, cancellationToken) ?? 0;
+        var wpmResults = results.Where(item => item.RawWpm > 0);
+        var latestWpm = await wpmResults.OrderByDescending(item => item.CreatedAt).Take(5)
+            .Select(item => item.RawWpm).ToListAsync(cancellationToken);
+        var firstWpm = await wpmResults.OrderBy(item => item.CreatedAt).Take(5)
+            .Select(item => item.RawWpm).ToListAsync(cancellationToken);
 
         return new DailyProgressSummary(
             program.Value.Progress.Id,
@@ -615,12 +614,12 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays))).Day,
             program.Value.Progress.DaysCompleted,
             program.Value.Progress.ExercisesCompleted,
-            logs.Count,
-            completed.Count,
+            logCount,
+            passedCount,
             program.Value.Progress.AssignedDate,
-            wpmResults.Count == 0 ? 0 : wpmResults.TakeLast(5).Average(item => item.RawWpm),
-            wpmResults.Count == 0 ? 0 : wpmResults.Take(5).Average(item => item.RawWpm),
-            results.Count == 0 ? 0 : results.Average(item => item.ComprehensionScore),
+            latestWpm.Count == 0 ? 0 : latestWpm.Average(),
+            firstWpm.Count == 0 ? 0 : firstWpm.Average(),
+            averageComprehension,
             SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Min(
                 ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
                 SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays))).Week);
