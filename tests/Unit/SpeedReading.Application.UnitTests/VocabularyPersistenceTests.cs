@@ -246,7 +246,7 @@ public sealed class VocabularyPersistenceTests
         var originalStats = await db.UserGamifications.AsNoTracking().SingleOrDefaultAsync();
         var originalJson = JsonSerializer.Serialize(originalStats);
         var service = Service(db); var started = await service.StartAsync(student, new() { ExerciseId = exercise });
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "vocabulary_review" }));
+        await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "vocabulary_review" }));
         foreach (var word in started.InitialData.GetProperty("vocabularyWords").EnumerateArray()) {
             var custom = new Dictionary<string, JsonElement> {
                 ["vocabularyItemId"] = JsonSerializer.SerializeToElement(word.GetProperty("id").GetGuid()),

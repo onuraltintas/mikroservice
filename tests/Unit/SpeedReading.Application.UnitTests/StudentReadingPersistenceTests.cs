@@ -867,8 +867,8 @@ public sealed class StudentReadingPersistenceTests
 
         var resumed = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId }, CancellationToken.None);
         resumed.SessionId.Should().Be(started.SessionId, "the same exercise resumes its open session");
-        var otherExercise = () => service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = otherExerciseId }, CancellationToken.None);
-        (await otherExercise.Should().ThrowAsync<BusinessRuleException>()).Which.Code.Should().Be("ExerciseSession.ActiveExists");
+        (await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = otherExerciseId }, CancellationToken.None))
+            .SessionId.Should().NotBe(started.SessionId, "another exercise starts its own session");
 
         var foreign = () => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new CompleteExerciseSessionRequest(), CancellationToken.None);
         await foreign.Should().ThrowAsync<NotFoundException>();

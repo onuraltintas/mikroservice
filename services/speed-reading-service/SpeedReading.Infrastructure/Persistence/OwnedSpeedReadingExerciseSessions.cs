@@ -250,7 +250,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                         && item.IsAssessmentMode,
                         token);
                 if (alreadyCompleted)
-                    throw new InvalidOperationException("Assessment exercise has already been completed.");
+                    throw new BusinessRuleException("Assessment.ExerciseCompleted", "Bu değerlendirme alıştırması zaten tamamlandı.");
             }
 
             // Reuse the same session when the request carries the identical
@@ -340,7 +340,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                         : RemoveAssessmentKeys(existingConfiguration));
             }
             if (activeSession is not null)
-                throw new InvalidOperationException("An active session already exists for this exercise.");
+                throw new BusinessRuleException("ExerciseSession.ActiveExists", "Bu alıştırma başka bir görev için zaten açık. Önce onu bitir ya da birkaç dakika sonra tekrar dene.");
             if (deferExplicitTextValidation)
                 await ValidateExplicitReadingTextAsync(token);
 
@@ -486,7 +486,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             catch (DbUpdateException exception) when (IsAssessmentSessionConflict(exception))
             {
                 db.ChangeTracker.Clear();
-                throw new InvalidOperationException("Assessment exercise has already been started.");
+                throw new BusinessRuleException("Assessment.ExerciseStarted", "Bu değerlendirme alıştırması zaten başlatıldı.");
             }
 
             if (startTransaction is not null)
@@ -530,11 +530,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             session.MarkTimedOut(now);
             await db.SaveChangesAsync(cancellationToken);
-            throw new InvalidOperationException("This exercise session has timed out.");
+            throw new BusinessRuleException("ExerciseSession.TimedOut", "Alıştırmanın süresi doldu. Lütfen yeniden başla.");
         }
 
         if (session.Status != OwnedExerciseSessionStatus.Active)
-            throw new InvalidOperationException("Actions can only be submitted to an active session.");
+            throw new BusinessRuleException("ExerciseSession.NotActive", "Bu alıştırma artık açık değil. Lütfen yeniden başla.");
 
         var actionName = request.Action?.Trim().ToLowerInvariant();
         var response = IsErrorAnalysis(state)
@@ -634,14 +634,14 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         var isAssessmentSession = session.AssessmentAttemptId.HasValue;
         if (request.IsAssessmentMode != isAssessmentSession)
-            throw new InvalidOperationException("Assessment mode must match the server-owned session.");
+            throw new BusinessRuleException("ExerciseSession.AssessmentModeMismatch", "Bu oturum değerlendirme türüyle uyuşmuyor. Lütfen sayfayı yenile.");
         var state = DeserializeState(session.SessionDataJson);
         var now = DateTime.UtcNow;
         if (IsTimedOut(session, state, now))
         {
             session.MarkTimedOut(now);
             await db.SaveChangesAsync(cancellationToken);
-            throw new InvalidOperationException("This exercise session has timed out.");
+            throw new BusinessRuleException("ExerciseSession.TimedOut", "Alıştırmanın süresi doldu. Lütfen yeniden başla.");
         }
 
         var existingResult = await db.ExerciseSessionResults
@@ -1378,7 +1378,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         await db.ExerciseSessions.SingleOrDefaultAsync(item => item.Id == sessionId
             && item.StudentId == studentId,
             cancellationToken)
-        ?? throw new KeyNotFoundException("Exercise session not found.");
+        ?? throw new NotFoundException("ExerciseSession", sessionId);
 
     private async Task<Guid?> GetAgeGroupIdAsync(
         Guid studentId,
@@ -3709,12 +3709,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var questionMap = state.Questions.ToDictionary(item => item.QuestionId);
         var ids = submittedAnswers.Select(item => item.QuestionId).ToList();
         if (ids.Count != ids.Distinct().Count())
-            throw new InvalidOperationException("A question cannot be submitted more than once.");
+            throw new BusinessRuleException("ExerciseSession.QuestionRepeated", "Bir soru yalnız bir kez cevaplanabilir.");
 
         var resolved = submittedAnswers.Select(answer =>
         {
             if (!questionMap.TryGetValue(answer.QuestionId, out var question))
-                throw new InvalidOperationException("Submitted question does not belong to this session.");
+                throw new BusinessRuleException("ExerciseSession.QuestionForeign", "Gönderilen soru bu alıştırmaya ait değil.");
             var normalizedAnswer = NormalizeCompletedAnswer(answer.Answer);
             return new SessionAnswer
             {
@@ -3735,7 +3735,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             if (existing is not null)
             {
                 if (!string.Equals(existing.Answer.Trim(), answer.Answer, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("A submitted answer cannot change after it is recorded.");
+                    throw new BusinessRuleException("ExerciseSession.AnswerLocked", "Kaydedilen bir cevap değiştirilemez.");
                 continue;
             }
 

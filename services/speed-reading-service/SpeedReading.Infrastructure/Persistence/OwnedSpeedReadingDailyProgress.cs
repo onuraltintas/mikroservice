@@ -118,7 +118,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             return await ReplayAsync(existing, userId, requestHash, cancellationToken);
 
         var program = await GetActiveProgramAsync(userId, cancellationToken)
-            ?? throw new InvalidOperationException("Aktif program bulunamadı.");
+            ?? throw new BusinessRuleException("DailyProgress.NoActiveProgram", "Aktif program bulunamadı.");
 
         var progress = program.Progress;
         var template = program.Template;
@@ -186,7 +186,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 && item.StudentId == userId
                 && item.ExerciseId == exerciseId,
                 cancellationToken)
-            ?? throw new KeyNotFoundException("Completed exercise session result not found.");
+            ?? throw new BusinessRuleException("DailyProgress.ResultNotReady", "Alıştırma sonucu henüz kaydedilmedi; birkaç saniye sonra tekrar dene.");
         if (sessionResult.IsAssessmentMode || sessionResult.AssessmentAttemptId.HasValue)
         {
             throw new BusinessRuleException(
@@ -196,7 +196,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var authoritativeSession = await db.ExerciseSessions
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == sessionId && item.StudentId == userId, cancellationToken)
-            ?? throw new KeyNotFoundException("Completed exercise session not found.");
+            ?? throw new BusinessRuleException("DailyProgress.ResultNotReady", "Alıştırma sonucu henüz kaydedilmedi; birkaç saniye sonra tekrar dene.");
         using var sessionState = JsonDocument.Parse(authoritativeSession.SessionDataJson);
         if (sessionState.RootElement.TryGetProperty("readingIncomplete", out var incomplete)
             && incomplete.ValueKind == JsonValueKind.True)

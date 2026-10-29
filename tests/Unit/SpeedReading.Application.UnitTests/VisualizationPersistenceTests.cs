@@ -172,7 +172,7 @@ public sealed class VisualizationPersistenceTests
         await db.SaveChangesAsync(); var service = Service(db);
         var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
         Assert.DoesNotContain("correctAnswer", started.InitialData.GetRawText(), StringComparison.OrdinalIgnoreCase);
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId,
+        await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId,
             new() { Action = "answer_question", QuestionId = question.Id, Answer = "A" }));
         var request = new ExerciseActionRequest { Action = "answer_question", QuestionId = question.Id, Answer = "A" };
         Assert.True((await service.ValidateActionAsync(student, started.SessionId, request)).IsCorrect);
