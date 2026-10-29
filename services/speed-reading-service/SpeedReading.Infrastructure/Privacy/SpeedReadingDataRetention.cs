@@ -20,7 +20,7 @@ public sealed class SpeedReadingDataRetentionProcessor(OwnedSpeedReadingDbContex
     public const int SessionStateDays = 90;
     public const int MessageDays = 365;
     public const int BatchSize = 200;
-    private const int CompactStateMaxLength = 200;
+    private const string CompactedMarker = "retentionCompacted";
     private static readonly string[] KeptStateFlags = ["comprehensionMode", "readingIncomplete"];
 
     public async Task<SpeedReadingRetentionResult> RunAsync(CancellationToken ct)
@@ -44,12 +44,17 @@ public sealed class SpeedReadingDataRetentionProcessor(OwnedSpeedReadingDbContex
 
     private async Task<int> CompactSessionsAsync(DateTime cutoff, CancellationToken ct)
     {
-        var due = await db.ExerciseSessions
+        var finished = db.ExerciseSessions
             .Where(item => (item.Status == ExerciseSessionStatus.Completed
                     || item.Status == ExerciseSessionStatus.Timeout
                     || item.Status == ExerciseSessionStatus.Abandoned)
-                && item.EndTime != null && item.EndTime < cutoff
-                && (item.SessionDataJson.Length > CompactStateMaxLength || item.ProcessedActionsJson != "{}"))
+                && item.EndTime != null && item.EndTime < cutoff);
+        // The state columns are jsonb on PostgreSQL; a compacted state carries a marker key.
+        finished = db.Database.IsNpgsql()
+            ? finished.Where(item => !EF.Functions.JsonExists(item.SessionDataJson, CompactedMarker)
+                || !EF.Functions.JsonContained(item.ProcessedActionsJson, "{}"))
+            : finished.Where(item => !item.SessionDataJson.Contains(CompactedMarker) || item.ProcessedActionsJson != "{}");
+        var due = await finished
             .OrderBy(item => item.EndTime).ThenBy(item => item.Id)
             .Take(BatchSize)
             .ToListAsync(ct);
@@ -65,7 +70,7 @@ public sealed class SpeedReadingDataRetentionProcessor(OwnedSpeedReadingDbContex
 
     internal static string CompactState(string stateJson)
     {
-        var compact = new JsonObject();
+        var compact = new JsonObject { [CompactedMarker] = true };
         try
         {
             if (JsonNode.Parse(stateJson) is JsonObject state)

@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Shared.IntegrationTests.Fixtures;
+using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
 using SpeedReading.Infrastructure.Privacy;
 
@@ -19,8 +21,24 @@ public sealed class SpeedReadingDataRetentionPostgresTests(PostgresFixture postg
         try
         {
             await db.Database.EnsureCreatedAsync();
-            var result = await new SpeedReadingDataRetentionProcessor(db, TimeProvider.System).RunAsync(CancellationToken.None);
-            result.Should().Be(new SpeedReadingRetentionResult(0, 0, 0));
+            var type = ExerciseType.Create(Guid.NewGuid(), "RSVP", "RSVP", "text_stream");
+            var exercise = Exercise.Create("Okuma", "rsvp", "{}", 1, Guid.NewGuid(), type.Id);
+            db.ExerciseTypes.Add(type);
+            db.Exercises.Add(exercise);
+            var ended = DateTime.UtcNow.AddDays(-120);
+            var session = ExerciseSession.Import(Guid.NewGuid(), Guid.NewGuid(), exercise.Id, null, null, ExerciseSessionStatus.Completed, ended.AddMinutes(-5), ended,
+                0, null, null, 1, 1, 1, 0, "{\"comprehensionMode\":\"learning\",\"text\":\"uzun metin\"}", null, "{\"a\":{}}", ended, null, null, null);
+            db.ExerciseSessions.Add(session);
+            await db.SaveChangesAsync();
+
+            var first = await new SpeedReadingDataRetentionProcessor(db, TimeProvider.System).RunAsync(CancellationToken.None);
+            var second = await new SpeedReadingDataRetentionProcessor(db, TimeProvider.System).RunAsync(CancellationToken.None);
+
+            first.CompactedSessions.Should().Be(1);
+            second.CompactedSessions.Should().Be(0);
+            db.ChangeTracker.Clear();
+            var stored = await db.ExerciseSessions.SingleAsync();
+            stored.SessionDataJson.Should().Contain("learning").And.NotContain("uzun metin");
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
