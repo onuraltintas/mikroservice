@@ -3616,6 +3616,9 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompletedAt")
+                        .HasDatabaseName("ix_reading_sessions_completed_at");
+
                     b.HasIndex("ReadingTextId");
 
                     b.HasIndex("UserId", "CompletedAt");

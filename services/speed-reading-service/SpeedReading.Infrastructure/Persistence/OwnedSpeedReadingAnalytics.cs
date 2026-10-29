@@ -669,9 +669,13 @@ internal sealed class OwnedSpeedReadingAnalytics(
         // Without an explicit report scope, only an unambiguous current membership is comparable.
         institutionId = institutions.Length == 1 ? institutions[0] : null;
         var metric = useComprehension ? "comprehension" : "wpm";
-        var rangeKey = $"{start.Ticks}-{end.Ticks}";
+        // Review H4 (finding 21): the comparison group is computed over whole UTC days so every report of the day
+        // shares one cache entry; the student's own figures keep the exact range.
+        var dayStart = start.Date;
+        var dayEnd = end.Date.AddDays(1);
+        var rangeKey = $"{dayStart:yyyyMMdd}-{dayEnd:yyyyMMdd}";
         var sessions = db.ReadingSessions.AsNoTracking()
-            .Where(item => item.CompletedAt >= start && item.CompletedAt <= end);
+            .Where(item => item.CompletedAt >= dayStart && item.CompletedAt < dayEnd);
         var platformAverage = await AverageAsync($"speed-reading:benchmark:v2:{metric}:platform:{rangeKey}", sessions);
         decimal? institutionAverage = null;
         if (institutionId.HasValue)
@@ -690,7 +694,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
 
         Task<decimal?> AverageAsync(string key, IQueryable<ReadingSession> query) => cache.GetOrCreateAsync<decimal?>(key, entry =>
         {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5); entry.Size = 1;
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30); entry.Size = 1;
             return useComprehension
                 ? query.Where(item => item.TotalQuestions > 0).Select(item => (decimal?)item.ComprehensionRate).AverageAsync(cancellationToken)
                 : query.Where(item => item.IsMeasured && item.CalculatedWpm > 0).Select(item => (decimal?)item.CalculatedWpm).AverageAsync(cancellationToken);

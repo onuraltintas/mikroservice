@@ -155,6 +155,8 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => new { item.UserId, item.CompletedAt });
+            // Review H4 (finding 21): platform-wide benchmark over a date range.
+            entity.HasIndex(item => item.CompletedAt).HasDatabaseName("ix_reading_sessions_completed_at");
             entity.HasOne<ReadingText>()
                 .WithMany()
                 .HasForeignKey(item => item.ReadingTextId)
