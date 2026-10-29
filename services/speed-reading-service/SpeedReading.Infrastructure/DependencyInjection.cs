@@ -68,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingPrivacyInventoryRepository, SpeedReadingPrivacyInventoryRepository>();
         services.AddScoped<ISpeedReadingErasureAssessmentService, SpeedReadingErasureAssessmentService>();
         services.AddScoped<ISpeedReadingErasureExecutionService, SpeedReadingErasureExecutionService>();
+        services.AddScoped<ISpeedReadingPersonalDataExport, SpeedReadingPersonalDataExportService>();
         services.AddScoped<SpeedReadingFinancialRetentionProcessor>();
         services.AddSingleton(TimeProvider.System);
 
