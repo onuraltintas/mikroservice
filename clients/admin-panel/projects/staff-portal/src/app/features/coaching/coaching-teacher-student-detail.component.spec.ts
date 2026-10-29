@@ -17,6 +17,21 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     const back = vi.spyOn(component.back, 'emit'); (await component.toggleFinance()); (await component.goBack());
     expect(component.financeVisible()).toBe(true); expect(back).not.toHaveBeenCalled(); expect((await component.canLeavePage())).toBe(false);
   });
+  it('Roadmap F1: shows the student score and rank estimate on request', () => {
+    const fixture = createDetail(); flushInitialReport();
+    http.expectNone(request => request.url.endsWith('/score-estimate'));
+    (fixture.nativeElement.querySelector('[data-testid="toggle-score-estimate"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    http.expectOne(request => request.url === '/api/coaching/students/student-1/score-estimate').flush({
+      estimates: [{ scoreType: 'LGS', name: 'LGS', modelYear: 2026, score: 412.5, scoreLow: 400, scoreHigh: 425, rank: 52000, rankBest: 48000, rankWorst: 56000,
+        percentile: 4.1, examsUsed: 3, lastExamDate: '2026-10-20T00:00:00Z', includesDiplomaGrade: false }],
+      target: null, notice: null
+    });
+    fixture.detectChanges();
+    const card = fixture.nativeElement.querySelector('[data-testid="score-estimate"]') as HTMLElement;
+    expect(card.textContent).toContain('Puan ve sıralama tahmini');
+    expect(card.textContent).toContain('412,5');
+  });
   let http: HttpTestingController;
   const student: CoachingTeacherStudent = {
     userId: 'student-1',
