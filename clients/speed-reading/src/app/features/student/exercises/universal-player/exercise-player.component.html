@@ -673,9 +673,10 @@
                 <div class="answer-prompt">Gördüğünüz uyaranları konumlarına göre yazın:</div>
                 <div class="answer-inputs">
                     <input *ngFor="let index of getExpansionAnswerSlots(); trackBy: trackByIdx" type="text"
-                        class="char-input" [(ngModel)]="expansionAnswers[index]"
+                        class="char-input" [value]="expansionAnswers[index] || ''"
                         (input)="onExpansionAnswerInput(index, $event)"
-                        [attr.maxlength]="getExpansionAnswerMaxLength(index)"
+                        (compositionend)="onExpansionAnswerInput(index, $event)"
+                        (keydown.backspace)="onExpansionAnswerBackspace(index, $event)"
                         [attr.aria-label]="getExpansionAnswerLabel(index)" [placeholder]="getExpansionAnswerLabel(index)"
                         [disabled]="engineState.isPaused" (keydown.enter)="submitExpansionAnswer()"
                         autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">

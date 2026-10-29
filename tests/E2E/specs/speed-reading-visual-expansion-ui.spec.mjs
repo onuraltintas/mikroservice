@@ -204,3 +204,40 @@ test('custom rounds and optional break preserve completed progress', async ({ pa
   await expect(completed.locator('.stat-value')).toHaveText('16 / 16');
   expect(errors).toEqual([]); expect(writes).toEqual([]);
 });
+
+// Reported 29.10.2026: on phones the answer did not move to the next box and letters sometimes vanished, so the
+// answer could not be sent. Android keyboards deliver every letter as an IME composition; this replays that.
+test('android keyboard composition moves through the boxes and the answer can be sent', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'IME composition is replayed through the Chromium DevTools protocol');
+  const { errors } = await prepare(page, 'Admin', 'horizontal', 'letter', { engineType: 'visual_expansion',
+    rounds: 2, startDegrees: 30, targetDegrees: 40,
+    engineConfig: { expansion: { pattern: 'horizontal', stimulusType: 'letter' },
+      visuals: { centerPoint: 'circle', stimulusSize: '2rem' }, timing: { durationMs: 600, intervalMs: 100 } } });
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await page.locator('.start-button-large').click();
+  const inputs = page.locator('.expansion-answer-area input');
+  await expect(inputs).toHaveCount(2);
+  await expect(inputs.nth(0)).toBeFocused();
+  const cdp = await page.context().newCDPSession(page);
+  const submit = page.getByRole('button', { name: /Onayla/ });
+
+  await cdp.send('Input.imeSetComposition', { text: 'k', selectionStart: 1, selectionEnd: 1 });
+  await expect(inputs.nth(1)).toBeFocused();
+  await cdp.send('Input.imeSetComposition', { text: 'm', selectionStart: 1, selectionEnd: 1 });
+  await expect(inputs.nth(0)).toHaveValue('k');
+  await expect(inputs.nth(1)).toHaveValue('m');
+  await expect(submit).toBeEnabled();
+
+  // A letter typed past a full box is carried over instead of being cut by the box limit.
+  await submit.click();
+  await expect(page.locator('.expansion-stimulus').first()).toBeVisible();
+  await expect(inputs).toHaveCount(2);
+  await expect(inputs.nth(0)).toBeFocused();
+  await expect(inputs.nth(0)).toHaveValue('');
+  await inputs.nth(0).evaluate(input => { input.value = 'km'; input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true, data: 'km' })); });
+  await expect(inputs.nth(0)).toHaveValue('k');
+  await expect(inputs.nth(1)).toHaveValue('m');
+  await expect(submit).toBeEnabled();
+  expect(errors).toEqual([]);
+});
