@@ -13,6 +13,7 @@ import {
   CoachingInstitutionService
 } from './coaching-institution.service';
 import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
+import { CoachingScoreEstimateService } from '../../../../../../src/app/core/services/coaching-score-estimate.service';
 
 describe('CoachingInstitutionStudentReportComponent', () => {
   it('opens the same scoped session briefing read-only with a refreshed institution summary', async () => {
@@ -35,6 +36,23 @@ describe('CoachingInstitutionStudentReportComponent', () => {
       source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
     http.verify();
   });
+  it('Roadmap F1: shows the student score and rank estimate on request', () => {
+    const estimate = vi.fn(() => of({ estimates: [{ scoreType: 'TYT', name: 'TYT', modelYear: 2026, score: 301.25, scoreLow: 290, scoreHigh: 310, rank: 410000,
+      rankBest: 380000, rankWorst: 440000, percentile: null, examsUsed: 2, lastExamDate: '2026-10-20T00:00:00Z', includesDiplomaGrade: false }], target: null, notice: null }));
+    TestBed.configureTestingModule({
+      imports: [CoachingInstitutionStudentReportComponent],
+      providers: [{ provide: CoachingInstitutionService, useValue: reportService() }, { provide: CoachingScoreEstimateService, useValue: { estimate } }]
+    });
+    const fixture = TestBed.createComponent(CoachingInstitutionStudentReportComponent);
+    fixture.componentRef.setInput('student', student());
+    fixture.detectChanges();
+    expect(estimate).not.toHaveBeenCalled();
+    (fixture.nativeElement.querySelector('[data-testid="toggle-score-estimate"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(estimate).toHaveBeenCalledWith('student-1', null);
+    expect((fixture.nativeElement.querySelector('[data-testid="score-estimate"]') as HTMLElement).textContent).toContain('301,25');
+  });
+
   it('loads the student summary and the first page of assignment history', () => {
     const service = reportService();
     const fixture = createFixture(service);
