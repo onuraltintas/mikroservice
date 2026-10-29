@@ -57,8 +57,8 @@
                 </p>
                 <ng-container *ngIf="engine.engineType === 'target_hunt' && asTargetHunt as hunt">
                     <p class="description">
-                        Ekranda satır satır harfler var. Süre bitmeden gördüğün her
-                        <strong class="target-hunt-chip">{{ hunt.getTarget() }}</strong>'ye dokun;
+                        Ekranda satır satır harfler var. Süre bitmeden her
+                        <strong class="target-hunt-chip">{{ hunt.getTarget() }}</strong> gördüğünde ona dokun;
                         benzer görünenlere dokunma. Toplam {{ hunt.getTargetCount() }} hedef var, süre {{ hunt.getTimeLimitSeconds() }} saniye.
                         Yanlış dokunuş puanı düşürür. Hepsini bulduğunda egzersiz kendiliğinden biter.
                     </p>
@@ -788,7 +788,7 @@
         <div class="target-hunt-instruction">
             <span>Her</span>
             <strong class="target-hunt-chip">{{ hunt.getTarget() }}</strong>
-            <span>'ye dokun</span>
+            <span>gördüğünde dokun</span>
             <span class="target-hunt-instruction__stats">
                 <span class="target-hunt-stat target-hunt-stat--wrong">Yanlış dokunuş: {{ hunt.getFalseTapCount() }}</span>
                 <span class="target-hunt-stat" [class.target-hunt-stat--urgent]="hunt.getRemainingSeconds() <= 10">
@@ -798,7 +798,7 @@
         </div>
 
         <div class="target-hunt-grid" [class.paused]="engineState.isPaused"
-            [style.grid-template-columns]="'repeat(' + hunt.getColumns() + ', minmax(0, 1fr))'"
+            [style.--target-hunt-columns]="hunt.getColumns()"
             role="group" [attr.aria-label]="'Hedef: ' + hunt.getTarget()">
             <button type="button" *ngFor="let item of hunt.getItems(); let index = index; trackBy: trackByIdx"
                 class="target-hunt-cell" [class.is-hit]="hunt.isHit(index)" [class.is-wrong]="hunt.isFalseTap(index)"

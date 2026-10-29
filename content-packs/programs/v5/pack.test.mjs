@@ -33,7 +33,9 @@ test('every Focus slot becomes TargetHunt in place and nothing else changes', ()
       assert.deepEqual(day.map(slot => stage(slot.type)), day.map(slot => stage(slot.type)).toSorted());
     });
   }
-  assert.ok(replaced >= 560, `expected at least one attention slot per day, got ${replaced}`);
+  const focusSlots = source.flatMap(program => days(program).flat()).filter(slot => slot.type === 'Focus').length;
+  assert.ok(focusSlots > 0);
+  assert.equal(replaced, focusSlots);
 });
 
 test('assigned schedules keep started days and switch other Focus tasks to the same age and level', () => {

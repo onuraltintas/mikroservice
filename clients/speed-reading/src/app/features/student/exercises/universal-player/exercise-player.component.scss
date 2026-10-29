@@ -8388,8 +8388,15 @@ h1 {
 
 .target-hunt-grid {
   display: grid;
+  grid-template-columns: repeat(var(--target-hunt-columns, 10), minmax(0, 1fr));
   gap: 6px;
   user-select: none;
+
+  // Phones keep the 44px touch targets required app-wide; rows then reflow to the screen width.
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+    gap: 4px;
+  }
 
   &.paused { filter: blur(6px); pointer-events: none; }
 }
@@ -8401,7 +8408,8 @@ h1 {
   border-radius: 8px;
   background: var(--sp-surface, #ffffff);
   color: var(--sp-text-1, #1e293b);
-  font-size: clamp(1rem, 2.6vw, 1.4rem);
+  font-size: clamp(0.95rem, 2.6vw, 1.4rem);
+  overflow: hidden;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.15s ease;
