@@ -57,8 +57,9 @@ public sealed class SpeedReadingDailyProgressRulesTests
     {
         var completionDate = new DateTime(2026, 8, 26, 14, 0, 0, DateTimeKind.Utc);
 
+        // Istanbul days (review H5): 25 Aug 21:00 Istanbul is the previous day.
         SpeedReadingDailyProgressRules.CalculateNextStreak(
-            new DateTime(2026, 8, 25, 23, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 8, 25, 18, 0, 0, DateTimeKind.Utc),
             completionDate,
             3).Should().Be(4);
 

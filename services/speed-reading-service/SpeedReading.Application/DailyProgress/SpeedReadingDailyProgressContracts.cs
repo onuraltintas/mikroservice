@@ -294,25 +294,17 @@ public static class SpeedReadingDailyProgressRules
     public static int CalculateNextStreak(
         DateTime? lastCompletionDate,
         DateTime completionDate,
-        int currentStreak)
-    {
-        if (!lastCompletionDate.HasValue)
-        {
-            return 1;
-        }
+        int currentStreak) =>
+        SpeedReading.Domain.Gamification.GamificationRules.CalculateNextStreak(lastCompletionDate, completionDate, currentStreak);
 
-        var previousDate = lastCompletionDate.Value.ToUniversalTime().Date;
-        var currentDate = completionDate.ToUniversalTime().Date;
+    public const decimal PassingScore = 70m;
 
-        if (previousDate == currentDate)
-        {
-            return Math.Max(currentStreak, 1);
-        }
-
-        return previousDate == currentDate.AddDays(-1)
-            ? Math.Max(currentStreak, 1) + 1
-            : 1;
-    }
+    /// <summary>
+    /// Review H5 (finding 16): the one "passed" rule. Unmeasured or free-reading work is done (not failed); measured
+    /// work passes at <see cref="PassingScore"/>.
+    /// </summary>
+    public static bool IsPassed(bool isMeasured, decimal score, bool isFreeReadingPractice) =>
+        !isMeasured || isFreeReadingPractice || score >= PassingScore;
 
     public static (int Week, int Day) GetWeekAndDay(int cumulativeDay)
     {

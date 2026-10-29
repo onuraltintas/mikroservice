@@ -23,7 +23,6 @@ internal sealed class OwnedSpeedReadingDailyProgress(
     ILegacySpeedReadingLearningPaths learningPaths)
     : ISpeedReadingDailyProgress
 {
-    private const decimal PassingScore = 70m;
     private const string IdempotencyScope = "speed-reading.daily-progress.complete-exercise";
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -275,7 +274,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 now,
                 duration,
                 score,
-                !isMeasured || score >= PassingScore,
+                SpeedReadingDailyProgressRules.IsPassed(isMeasured, score, isFreeReadingPractice),
                 "{}",
                 attemptNumber,
                 attemptNumber > 1,
@@ -314,7 +313,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             now,
             duration,
             score,
-            score >= PassingScore || isFreeReadingPractice,
+            SpeedReadingDailyProgressRules.IsPassed(isMeasured, score, isFreeReadingPractice),
             authoritativeResultData,
             request.DevicePlatform,
             authoritativeCorrectCount,

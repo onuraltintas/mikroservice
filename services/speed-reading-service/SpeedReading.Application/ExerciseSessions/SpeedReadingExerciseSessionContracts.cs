@@ -231,7 +231,11 @@ public static class SpeedReadingExerciseSessionRules
         return Math.Max(0, (int)Math.Round(elapsed));
     }
 
-    public static decimal CalculateCompositeScore(decimal comprehensionScore, decimal? rawWpm)
+    /// <summary>
+    /// 60% comprehension + 40% speed. Review H5 (finding 15, decision 28.10.2026): speed counts in full once the
+    /// student reaches their age group's target speed; without one, the former 500 WPM scale applies.
+    /// </summary>
+    public static decimal CalculateCompositeScore(decimal comprehensionScore, decimal? rawWpm, int? targetWpm = null)
     {
         var comprehension = Math.Clamp(comprehensionScore, 0, 100);
         if (rawWpm is not > 0)
@@ -239,7 +243,8 @@ public static class SpeedReadingExerciseSessionRules
             return comprehension;
         }
 
-        var speedComponent = Math.Min(rawWpm.Value / 5, 100) * 0.4m;
+        var target = targetWpm is > 0 ? targetWpm.Value : 500m;
+        var speedComponent = Math.Min(rawWpm.Value / target * 100, 100) * 0.4m;
         return Math.Round(Math.Clamp((comprehension * 0.6m) + speedComponent, 0, 100), 2);
     }
 

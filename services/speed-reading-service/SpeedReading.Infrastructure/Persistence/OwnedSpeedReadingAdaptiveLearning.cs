@@ -412,7 +412,8 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             ? (Wpm: 0m, Comprehension: 0m)
             : (Wpm: measuredSpeedActivities.Count == 0 ? 0 : measuredSpeedActivities.Average(item => item.Wpm),
                 Comprehension: comprehensionActivities.Count == 0 ? 0 : comprehensionActivities.Average(item => item.ComprehensionScore));
-        var activeDates = activities.Select(item => item.CompletedAt.Date).Distinct().OrderByDescending(item => item).ToList();
+        var activeDates = activities.Select(item => SpeedReading.Domain.Gamification.GamificationRules.IstanbulDate(item.CompletedAt))
+            .Distinct().OrderByDescending(item => item).ToList();
         var bloomPerformance = CalculateBloomPerformance(snapshot.ExerciseResults, snapshot.ReadingSessionAnswers);
         return new AdaptiveProfileSummary(
             snapshot.Profile?.Id ?? Guid.Empty,
@@ -512,7 +513,10 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
 
     private static int CalculateCurrentStreak(IReadOnlyList<DateTime> activeDates)
     {
-        if (activeDates.Count == 0 || activeDates[0] != DateTime.UtcNow.Date)
+        // Review H5 (finding 17): Istanbul days; a streak is still alive if the last active day is today or
+        // yesterday (same rule as gamification).
+        var today = SpeedReading.Domain.Gamification.GamificationRules.IstanbulDate(DateTime.UtcNow);
+        if (activeDates.Count == 0 || activeDates[0] < today.AddDays(-1))
             return 0;
         var streak = 1;
         for (var index = 1; index < activeDates.Count && activeDates[index] == activeDates[index - 1].AddDays(-1); index++)

@@ -2,11 +2,14 @@ namespace SpeedReading.Domain.Gamification;
 
 public static class GamificationRules
 {
+    public const int XpPerLevel = 100;
+
+    /// <summary>Review H5 (finding 14, decision 29.10.2026): every level is 100 XP (0–99 is level 1).</summary>
     public static int CalculateLevel(long totalXp) =>
-        Math.Max(1, checked((int)(totalXp / 100)));
+        checked((int)(Math.Max(totalXp, 0) / XpPerLevel)) + 1;
 
     public static int GetCurrentLevelXp(long totalXp, int level) =>
-        Math.Clamp(checked((int)(totalXp - ((long)Math.Max(level, 1) - 1) * 100)), 0, 100);
+        Math.Clamp(checked((int)(Math.Max(totalXp, 0) - ((long)Math.Max(level, 1) - 1) * XpPerLevel)), 0, XpPerLevel - 1);
 
     public static int GetTier(int level) => level switch
     {
@@ -32,6 +35,10 @@ public static class GamificationRules
         _ => "📕"
     };
 
+    /// <summary>
+    /// Review H5 (finding 17): the one streak rule. Days are Istanbul calendar days; activity on the next day extends
+    /// the streak, the same day keeps it, a gap restarts it at 1.
+    /// </summary>
     public static int CalculateNextStreak(
         DateTime? lastActivityDate,
         DateTime activityDate,
@@ -39,12 +46,41 @@ public static class GamificationRules
     {
         if (!lastActivityDate.HasValue)
             return 1;
-        var lastDate = lastActivityDate.Value.ToUniversalTime().Date;
-        var currentDate = activityDate.ToUniversalTime().Date;
+        var lastDate = IstanbulDate(lastActivityDate.Value);
+        var currentDate = IstanbulDate(activityDate);
         if (lastDate == currentDate)
             return Math.Max(currentStreak, 1);
         return lastDate == currentDate.AddDays(-1)
             ? Math.Max(currentStreak, 1) + 1
             : 1;
+    }
+
+    /// <summary>The streak to show now: a stored streak whose last day is before yesterday has ended.</summary>
+    public static int CurrentStreak(DateTime? lastActivityDate, int storedStreak, DateTime now) =>
+        lastActivityDate.HasValue && IstanbulDate(lastActivityDate.Value) >= IstanbulDate(now).AddDays(-1)
+            ? Math.Max(storedStreak, 0)
+            : 0;
+
+    /// <summary>Earliest UTC instant whose activity still keeps a streak alive at <paramref name="now"/>.</summary>
+    public static DateTime StreakAliveSinceUtc(DateTime now) =>
+        TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(IstanbulDate(now).AddDays(-1), DateTimeKind.Unspecified), Istanbul);
+
+    public static DateTime IstanbulDate(DateTime value)
+    {
+        var utc = value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
+        return TimeZoneInfo.ConvertTimeFromUtc(utc, Istanbul).Date;
+    }
+
+    private static readonly TimeZoneInfo Istanbul = ResolveIstanbul();
+
+    private static TimeZoneInfo ResolveIstanbul()
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul"); }
+        catch (TimeZoneNotFoundException) { return TimeZoneInfo.CreateCustomTimeZone("Europe/Istanbul", TimeSpan.FromHours(3), "Istanbul", "Istanbul"); }
     }
 }

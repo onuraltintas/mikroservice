@@ -835,7 +835,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             ? (decimal?)null
             : state.Questions.Count > 0
             ? IsEngineType(state.EngineType, "reading_comprehension") ? comprehension
-                : SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
+                : SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm,
+                    rawWpm.HasValue ? await GetTargetWpmAsync(session.StudentId, cancellationToken) : null)
             : IsErrorAnalysis(state) ? ErrorAnalysisScore(state)
             : IsScanning(state) ? Math.Max(0, accuracy - session.IncorrectCount * 10m) : accuracy;
         var weightedKdp = rawWpm.HasValue && !IsFreeReadingPractice(state) && !state.AssessmentTextReviewAllowed
@@ -1379,6 +1380,18 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             && item.StudentId == studentId,
             cancellationToken)
         ?? throw new NotFoundException("ExerciseSession", sessionId);
+
+    /// <summary>Review H5 (finding 15): the student's age group target speed for the composite score.</summary>
+    private async Task<int?> GetTargetWpmAsync(Guid studentId, CancellationToken cancellationToken)
+    {
+        var ageGroupId = await GetAgeGroupIdAsync(studentId, cancellationToken);
+        if (!ageGroupId.HasValue)
+            return null;
+        return await db.AgeGroupConfigurations.AsNoTracking()
+            .Where(item => item.Id == ageGroupId.Value)
+            .Select(item => (int?)item.RecommendedWPM)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
 
     private async Task<Guid?> GetAgeGroupIdAsync(
         Guid studentId,
