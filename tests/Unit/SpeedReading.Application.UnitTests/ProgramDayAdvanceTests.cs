@@ -123,13 +123,21 @@ public sealed class ProgramDayAdvanceTests
         await fixture.Service.UpdatePreferenceAsync(other, "deny", fixture.Actor);
         var inventory = new SpeedReadingPrivacyInventoryRepository(fixture.Db);
         (await inventory.CountByUserAsync(fixture.User, default)).GetValueOrDefault("programProgressionPreferences").Should().Be(1);
-        var erasure = new SpeedReadingErasureExecutionService(fixture.Db, inventory, TimeProvider.System);
+        var erasure = new SpeedReadingErasureExecutionService(fixture.Db, new NoDirectory(), TimeProvider.System);
         var requestId = Guid.NewGuid();
         await erasure.ExecuteAsync(new PersonalDataErasureExecutionRequestedV1(requestId, requestId, fixture.User,
             DateTime.UtcNow, PersonalDataScope.SpeedReading), default);
         (await fixture.Db.ProgramProgressionPolicies.AnyAsync(item => item.UserId == fixture.User)).Should().BeFalse();
         (await fixture.Service.GetSettingsAsync()).AllowEarlyAdvance.Should().BeTrue();
         (await fixture.Service.GetPreferenceAsync(other)).Mode.Should().Be("deny");
+    }
+
+    private sealed class NoDirectory : SpeedReading.Application.Assignments.ISpeedReadingUserDirectory
+    {
+        public Task<EduPlatform.Shared.Contracts.Reporting.SpeedReadingUserDirectoryResponse> GetUsersAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new EduPlatform.Shared.Contracts.Reporting.SpeedReadingUserDirectoryResponse([]));
+        public Task<IReadOnlyList<Guid>> GetAudienceUserIdsAsync(string? role, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 
     private sealed class Fixture : IAsyncDisposable
