@@ -68,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingPrivacyInventoryRepository, SpeedReadingPrivacyInventoryRepository>();
         services.AddScoped<ISpeedReadingErasureAssessmentService, SpeedReadingErasureAssessmentService>();
         services.AddScoped<ISpeedReadingErasureExecutionService, SpeedReadingErasureExecutionService>();
+        services.AddScoped<SpeedReadingFinancialRetentionProcessor>();
         services.AddSingleton(TimeProvider.System);
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -122,6 +123,8 @@ public static class DependencyInjection
                 configuration["PublicApp:BaseUrl"] ?? "https://masterhizliokuma.com",
                 serviceProvider.GetRequiredService<ILogger<LegacySpeedReadingEmailCampaigns>>()));
         services.AddHostedService<SpeedReadingNewsletterCampaignScheduler>();
+        // Review H2b: anonymises paid records of erased accounts once their year has passed.
+        services.AddHostedService<SpeedReadingFinancialRetentionWorker>();
         services.AddScoped<ISpeedReadingRsvp, LegacySpeedReadingRsvp>();
 
         services.AddScoped<ILegacySpeedReadingCatalog, OwnedSpeedReadingCatalog>();
