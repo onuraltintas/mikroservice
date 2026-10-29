@@ -223,7 +223,8 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
             userId.ToString(),
             null,
             null,
-            isMeasured: calculatedWpm > 0);
+            isMeasured: calculatedWpm > 0,
+            isRejected: wordCount > 0 && calculatedWpm == 0);
         attempt.Complete(now);
         db.ReadingSessions.Add(session);
         db.ReadingSessionAnswers.AddRange(answerRows.Select(item => ReadingSessionAnswer.Import(
@@ -356,7 +357,7 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
             {
                 Count = group.Count(),
                 AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0).Average(item => (decimal?)item.CalculatedWpm),
-                AverageComprehension = group.Where(item => item.TotalQuestions > 0).Average(item => (decimal?)item.ComprehensionRate),
+                AverageComprehension = group.Where(item => item.TotalQuestions > 0 && !item.IsRejected).Average(item => (decimal?)item.ComprehensionRate),
                 AverageEfficiency = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0).Average(item => (decimal?)item.EfficiencyScore),
                 ReadingSeconds = group.Sum(item => item.ReadingTimeSeconds)
             })
@@ -399,7 +400,7 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         CancellationToken cancellationToken) =>
         await db.ReadingSessions
             .AsNoTracking()
-            .Where(item => item.UserId == userId && item.TotalQuestions > 0)
+            .Where(item => item.UserId == userId && item.TotalQuestions > 0 && !item.IsRejected)
             .OrderBy(item => item.CompletedAt)
             .Select(item => new StudentReadingComprehensionPoint(item.CompletedAt, item.ComprehensionRate))
             .ToListAsync(cancellationToken);

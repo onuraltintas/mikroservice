@@ -3593,6 +3593,12 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("efficiency_score");
 
+                    b.Property<bool>("IsRejected")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_rejected");
+
                     b.Property<bool>("IsMeasured")
                         .HasColumnType("boolean")
                         .HasColumnName("is_measured");

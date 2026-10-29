@@ -152,6 +152,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.ComprehensionRate).HasColumnName("comprehension_rate");
             entity.Property(item => item.EfficiencyScore).HasColumnName("efficiency_score");
             entity.Property(item => item.IsMeasured).HasColumnName("is_measured").IsRequired();
+            entity.Property(item => item.IsRejected).HasColumnName("is_rejected").HasDefaultValue(false).IsRequired();
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => new { item.UserId, item.CompletedAt });
