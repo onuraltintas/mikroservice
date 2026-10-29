@@ -38,13 +38,13 @@ public sealed class BankTransferPaymentsController(
 
     [HttpGet("settings")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> GetSettings(CancellationToken cancellationToken = default) =>
         Ok(new { success = true, data = await subscriptions.GetBankTransferSettingsAsync(cancellationToken), message = "Bank transfer settings retrieved" });
 
     [HttpPut("settings")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> UpdateSettings(
         [FromBody] UpdateBankTransferPaymentSettingsRequest request,
         [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
@@ -107,7 +107,7 @@ public sealed class BankTransferPaymentsController(
 
     [HttpGet("requests")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> GetRequests(
         [FromQuery] string? search = null,
         [FromQuery] string? status = null,
@@ -126,7 +126,7 @@ public sealed class BankTransferPaymentsController(
 
     [HttpPut("requests/{id:guid}/review")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> ReviewRequest(
         Guid id,
         [FromBody] ReviewBankTransferPaymentRequest request,
@@ -147,7 +147,7 @@ public sealed class BankTransferPaymentsController(
 
     [HttpDelete("requests/{id:guid}")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> DeleteRequest(
         Guid id,
         CancellationToken cancellationToken = default)

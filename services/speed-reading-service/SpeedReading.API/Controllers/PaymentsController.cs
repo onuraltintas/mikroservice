@@ -117,7 +117,7 @@ public sealed class PaymentsController(
 
     [HttpGet]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,

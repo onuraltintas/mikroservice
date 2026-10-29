@@ -33,6 +33,7 @@ export const ADMIN_PERMISSIONS = {
   speedReadingGamificationManage: 'Permissions.SpeedReading.GamificationManage',
   speedReadingSettingsManage: 'Permissions.SpeedReading.SettingsManage',
   speedReadingCommunicationsManage: 'Permissions.SpeedReading.CommunicationsManage',
+  speedReadingSubscriptionManage: 'Permissions.SpeedReading.SubscriptionManage',
   supportView: 'Permissions.Support.View',
   supportReply: 'Permissions.Support.Reply',
   supportDelete: 'Permissions.Support.Delete',
