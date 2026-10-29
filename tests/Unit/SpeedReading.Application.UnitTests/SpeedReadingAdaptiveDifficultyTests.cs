@@ -17,10 +17,10 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class SpeedReadingAdaptiveDifficultyTests
 {
     [Theory]
-    [InlineData(85, 1)]
-    [InlineData(80, 1)]
-    [InlineData(70, 0)]
-    [InlineData(60, 0)]
+    [InlineData(85.0, 1)]
+    [InlineData(80.0, 1)]
+    [InlineData(70.0, 0)]
+    [InlineData(60.0, 0)]
     [InlineData(59.9, -1)]
     [InlineData(null, 0)]
     public void The_week_average_decides_the_step(double? average, int expected) =>
@@ -45,7 +45,7 @@ public sealed class SpeedReadingAdaptiveDifficultyTests
         db.ProgramTemplates.Add(template);
         await db.SaveChangesAsync();
         var schedule = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingProgramSchedule")!;
-        var build = (Task<string>)schedule.GetMethod("BuildAsync")!.Invoke(null, [db, template, null, CancellationToken.None, 0])!;
+        var build = (Task<string>)schedule.GetMethod("BuildAsync")!.Invoke(null, [db, template, null, CancellationToken.None])!;
         var progress = StudentProgramProgress.Start(Guid.NewGuid(), actor, template, 0, 0, actor, DateTime.UtcNow);
         progress.SetSchedule(await build, actor, DateTime.UtcNow);
         for (var day = 1; day <= 7; day++)

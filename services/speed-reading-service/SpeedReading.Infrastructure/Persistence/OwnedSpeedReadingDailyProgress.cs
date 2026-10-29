@@ -358,6 +358,13 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 .Select(item => ((item.WeekNumber - 1) * 7) + item.DayNumber)
                 .DefaultIfEmpty(template.TotalDays)
                 .Max());
+        if (completion.WeekChanged)
+        {
+            // Review H5 (finding 19): the finished week's results set the difficulty of the weeks ahead.
+            var finishedWeek = allLogs.Where(item => item.WeekNumber == completion.OldWeek && item.IsMeasured).ToList();
+            await OwnedSpeedReadingProgramSchedule.AdaptAfterWeekAsync(db, progress, template,
+                finishedWeek.Count == 0 ? null : finishedWeek.Average(item => item.SuccessRate), userId, now, cancellationToken);
+        }
         var adaptivePlanUpdated = isMeasured
             && await learningPaths.RefreshAdaptiveProgressionAsync(userId, cancellationToken);
 
