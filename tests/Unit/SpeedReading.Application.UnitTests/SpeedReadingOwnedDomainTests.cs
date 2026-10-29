@@ -1473,8 +1473,10 @@ public sealed class SpeedReadingOwnedDomainTests
         stats.AwardXp(250, userId, DateTime.UtcNow);
 
         stats.TotalXP.Should().Be(250);
-        stats.CurrentLevel.Should().Be(2);
-        stats.CurrentLevelXP.Should().Be(100);
+        // Review H5 (finding 14): 100 XP per level, the bar shows 50 of 100.
+        stats.CurrentLevel.Should().Be(3);
+        stats.CurrentLevelXP.Should().Be(50);
+        stats.NextLevelXP.Should().Be(100);
         stats.LevelTitle.Should().Be("Başlangıç Okuyucu");
     }
 

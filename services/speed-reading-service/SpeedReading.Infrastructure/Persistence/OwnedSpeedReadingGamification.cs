@@ -203,11 +203,13 @@ internal sealed class OwnedSpeedReadingGamification(
                 && institutionIds.Contains(membership.InstitutionId)));
         }
 
+        var streakAliveSince = GamificationRules.StreakAliveSinceUtc(DateTime.UtcNow);
         query = normalizedType.ToLowerInvariant() switch
         {
             "totalxp" => query.OrderByDescending(item => item.TotalXP).ThenBy(item => item.UserId),
             "currentlevel" => query.OrderByDescending(item => item.CurrentLevel).ThenByDescending(item => item.TotalXP).ThenBy(item => item.UserId),
-            "currentstreak" => query.OrderByDescending(item => item.CurrentStreak).ThenByDescending(item => item.TotalXP).ThenBy(item => item.UserId),
+            "currentstreak" => query.OrderByDescending(item => item.LastActivityDate >= streakAliveSince ? item.CurrentStreak : 0)
+                .ThenByDescending(item => item.TotalXP).ThenBy(item => item.UserId),
             "longeststreak" => query.OrderByDescending(item => item.LongestStreak).ThenByDescending(item => item.TotalXP).ThenBy(item => item.UserId),
             "totalactivities" => query.OrderByDescending(item => item.TotalActivitiesCompleted).ThenByDescending(item => item.TotalXP).ThenBy(item => item.UserId),
             "readingminutes" => query.OrderByDescending(item => item.TotalReadingMinutes).ThenByDescending(item => item.TotalXP).ThenBy(item => item.UserId),
@@ -218,7 +220,7 @@ internal sealed class OwnedSpeedReadingGamification(
             item.UserId,
             item.TotalXP,
             item.CurrentLevel,
-            item.CurrentStreak,
+            item.LastActivityDate >= streakAliveSince ? item.CurrentStreak : 0,
             item.LongestStreak,
             item.TotalActivitiesCompleted,
             item.TotalReadingMinutes,
@@ -361,7 +363,10 @@ internal sealed class OwnedSpeedReadingGamification(
 
     private static GamificationSummary ToSummary(UserGamification item) => new(
         item.UserId, item.TotalXP, item.CurrentLevel, item.CurrentLevelXP, item.NextLevelXP,
-        item.LevelTitle, item.LevelIcon, item.CurrentStreak, item.LongestStreak, item.LastActivityDate,
+        item.LevelTitle, item.LevelIcon,
+        // Review H5 (finding 17): a streak whose last day is before yesterday (Istanbul) has ended.
+        GamificationRules.CurrentStreak(item.LastActivityDate, item.CurrentStreak, DateTime.UtcNow),
+        item.LongestStreak, item.LastActivityDate,
         item.StreakFreezeCount, item.TotalActivitiesCompleted, item.TotalReadingMinutes,
         item.CreatedAt, item.UpdatedAt);
 

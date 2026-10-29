@@ -31,6 +31,7 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
             join exercise in db.Exercises.AsNoTracking() on result.ExerciseId equals exercise.Id
             join exerciseType in db.ExerciseTypes.AsNoTracking() on exercise.ExerciseTypeId equals exerciseType.Id
             where !result.IsAssessmentMode && result.AssessmentAttemptId == null
+                && result.CountsForGamification != false
             select new SessionHistoryRow(
                 result.StudentId,
                 exerciseType.Name,
@@ -40,7 +41,8 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
                 result.ComprehensionScore,
                 result.Score,
                 result.IsMeasured,
-                result.QuestionAnswersJson))
+                result.QuestionAnswersJson,
+                result.GamificationXp))
             .ToListAsync(cancellationToken);
 
         var historyByUser = rows
@@ -121,12 +123,12 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
             rawWpm,
             row.IsMeasured ? Math.Clamp(row.ComprehensionScore, 0, 100) : null,
             rawWpm.HasValue,
-            row.IsMeasured
+            row.GamificationXp ?? (row.IsMeasured
                 ? SpeedReadingExerciseSessionRules.CalculateXp(
                     Math.Clamp(row.Score, 0, 100),
                     accuracy,
                     Math.Max(row.TimeSpentSeconds, 0))
-                : 0);
+                : 0));
     }
 
     private static decimal CalculateAccuracy(string json, decimal fallback)
@@ -155,7 +157,8 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
         decimal ComprehensionScore,
         decimal Score,
         bool IsMeasured,
-        string QuestionAnswersJson);
+        string QuestionAnswersJson,
+        int? GamificationXp);
 
     private sealed class StoredAnswer
     {

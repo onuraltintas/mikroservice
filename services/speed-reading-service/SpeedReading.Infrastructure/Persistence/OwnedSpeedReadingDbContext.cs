@@ -1402,6 +1402,8 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.ReadingMovementsJson).HasColumnName("reading_movements_json");
             entity.Property(item => item.ReadingMovementsJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
+            entity.Property(item => item.GamificationXp).HasColumnName("gamification_xp");
+            entity.Property(item => item.CountsForGamification).HasColumnName("counts_for_gamification");
             entity.HasIndex(item => item.SessionId).IsUnique();
             entity.HasIndex(item => item.LegacySessionId);
             entity.HasIndex(item => new { item.StudentId, item.CompletedAt });

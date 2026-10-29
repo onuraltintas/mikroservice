@@ -72,6 +72,17 @@ public sealed class SpeedReadingExerciseSessionRulesTests
         SpeedReadingExerciseSessionRules.CalculateCompositeScore(80, -10).Should().Be(80);
     }
 
+    [Fact]
+    public void Speed_part_is_measured_against_the_age_groups_target_speed()
+    {
+        // Review H5 (finding 15, decision 28.10.2026): a child reading at their age group's target speed with full
+        // comprehension passes (formerly 100% + 120 WPM = 69.6, "geçmedi").
+        SpeedReadingExerciseSessionRules.CalculateCompositeScore(100, 120, targetWpm: 120).Should().Be(100);
+        SpeedReadingExerciseSessionRules.CalculateCompositeScore(80, 60, targetWpm: 120).Should().Be(68);
+        SpeedReadingExerciseSessionRules.CalculateCompositeScore(80, 400, targetWpm: 120).Should().Be(88);
+        SpeedReadingExerciseSessionRules.CalculateCompositeScore(80, 200, targetWpm: null).Should().Be(64);
+    }
+
     [Theory]
     [InlineData(300, 60, 300)]
     [InlineData(300, 2, null)]

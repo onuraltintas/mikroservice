@@ -300,20 +300,8 @@ public sealed class StudentProgramProgress : AggregateRoot
     private static int CalculateNextStreak(
         DateTime? lastCompletionDate,
         DateTime completionDate,
-        int currentStreak)
-    {
-        if (!lastCompletionDate.HasValue)
-            return 1;
-
-        var previousDate = lastCompletionDate.Value.ToUniversalTime().Date;
-        var currentDate = completionDate.ToUniversalTime().Date;
-        if (previousDate == currentDate)
-            return Math.Max(currentStreak, 1);
-
-        return previousDate == currentDate.AddDays(-1)
-            ? Math.Max(currentStreak, 1) + 1
-            : 1;
-    }
+        int currentStreak) =>
+        SpeedReading.Domain.Gamification.GamificationRules.CalculateNextStreak(lastCompletionDate, completionDate, currentStreak);
 
     private static DateTime EnsureUtc(DateTime value) =>
         value.Kind == DateTimeKind.Utc

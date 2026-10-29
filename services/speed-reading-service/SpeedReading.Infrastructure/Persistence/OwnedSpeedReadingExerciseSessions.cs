@@ -81,7 +81,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
         if (request.StudentAssignmentId.HasValue)
         {
-            var assignmentMatches = await (
+            var assignmentMatch = await (
                 from studentAssignment in db.StudentAssignments.AsNoTracking()
                 join assignment in db.Assignments.AsNoTracking()
                     on studentAssignment.AssignmentId equals assignment.Id
@@ -90,12 +90,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && studentAssignment.IsActive
                     && assignment.IsActive
                     && assignment.ExerciseId == request.ExerciseId
-                select studentAssignment.Id)
-                .AnyAsync(cancellationToken);
-            if (!assignmentMatches)
-            {
-                throw new KeyNotFoundException("Assignment not found or does not belong to the student.");
-            }
+                select new { assignment.ReadingTextId, assignment.DueDate, studentAssignment.IsCompleted })
+                .SingleOrDefaultAsync(cancellationToken)
+                ?? throw new KeyNotFoundException("Assignment not found or does not belong to the student.");
+            // Review H5 (finding 20): the due date closes the assignment, and the teacher's chosen text is used
+            // whatever text the client asks for.
+            if (!assignmentMatch.IsCompleted && assignmentMatch.DueDate < DateTime.UtcNow)
+                throw new BusinessRuleException("Assignment.Overdue", "Bu ödevin teslim tarihi geçti. Öğretmeninden yeni bir tarih isteyebilirsin.");
+            if (assignmentMatch.ReadingTextId.HasValue && assessmentSnapshot is null)
+                pinnedReadingTextId = assignmentMatch.ReadingTextId;
         }
 
         string exerciseTypeName;
@@ -835,7 +838,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             ? (decimal?)null
             : state.Questions.Count > 0
             ? IsEngineType(state.EngineType, "reading_comprehension") ? comprehension
-                : SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
+                : SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm,
+                    rawWpm.HasValue ? await GetTargetWpmAsync(session.StudentId, cancellationToken) : null)
             : IsErrorAnalysis(state) ? ErrorAnalysisScore(state)
             : IsScanning(state) ? Math.Max(0, accuracy - session.IncorrectCount * 10m) : accuracy;
         var weightedKdp = rawWpm.HasValue && !IsFreeReadingPractice(state) && !state.AssessmentTextReviewAllowed
@@ -894,6 +898,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         var isVerifiedCompletion = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
             && (state.VocabularyWords.Count == 0 || state.VocabularyMode == "quiz");
+        // Review H5 (finding 18): remember what this completion was worth so a later rebuild gives the same XP.
+        result.RecordGamification(!isAssessmentSession && isVerifiedCompletion, xpAwarded);
         if (!isAssessmentSession && isVerifiedCompletion)
         {
             var stats = await GetOrCreateGamificationAsync(studentId, now, cancellationToken);
@@ -1379,6 +1385,18 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             && item.StudentId == studentId,
             cancellationToken)
         ?? throw new NotFoundException("ExerciseSession", sessionId);
+
+    /// <summary>Review H5 (finding 15): the student's age group target speed for the composite score.</summary>
+    private async Task<int?> GetTargetWpmAsync(Guid studentId, CancellationToken cancellationToken)
+    {
+        var ageGroupId = await GetAgeGroupIdAsync(studentId, cancellationToken);
+        if (!ageGroupId.HasValue)
+            return null;
+        return await db.AgeGroupConfigurations.AsNoTracking()
+            .Where(item => item.Id == ageGroupId.Value)
+            .Select(item => (int?)item.RecommendedWPM)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
 
     private async Task<Guid?> GetAgeGroupIdAsync(
         Guid studentId,
