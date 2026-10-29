@@ -81,7 +81,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
         if (request.StudentAssignmentId.HasValue)
         {
-            var assignmentMatches = await (
+            var assignmentMatch = await (
                 from studentAssignment in db.StudentAssignments.AsNoTracking()
                 join assignment in db.Assignments.AsNoTracking()
                     on studentAssignment.AssignmentId equals assignment.Id
@@ -90,12 +90,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && studentAssignment.IsActive
                     && assignment.IsActive
                     && assignment.ExerciseId == request.ExerciseId
-                select studentAssignment.Id)
-                .AnyAsync(cancellationToken);
-            if (!assignmentMatches)
-            {
-                throw new KeyNotFoundException("Assignment not found or does not belong to the student.");
-            }
+                select new { assignment.ReadingTextId, assignment.DueDate, studentAssignment.IsCompleted })
+                .SingleOrDefaultAsync(cancellationToken)
+                ?? throw new KeyNotFoundException("Assignment not found or does not belong to the student.");
+            // Review H5 (finding 20): the due date closes the assignment, and the teacher's chosen text is used
+            // whatever text the client asks for.
+            if (!assignmentMatch.IsCompleted && assignmentMatch.DueDate < DateTime.UtcNow)
+                throw new BusinessRuleException("Assignment.Overdue", "Bu ödevin teslim tarihi geçti. Öğretmeninden yeni bir tarih isteyebilirsin.");
+            if (assignmentMatch.ReadingTextId.HasValue && assessmentSnapshot is null)
+                pinnedReadingTextId = assignmentMatch.ReadingTextId;
         }
 
         string exerciseTypeName;
