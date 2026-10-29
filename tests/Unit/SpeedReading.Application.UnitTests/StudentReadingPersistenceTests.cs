@@ -299,6 +299,45 @@ public sealed class StudentReadingPersistenceTests
         result.RawWPM.Should().Be(200);
     }
 
+    [Fact]
+    public async Task An_assignment_uses_the_teachers_text_and_closes_at_its_due_date()
+    {
+        // Review H5 (finding 20): the client used to send the exercise's own text, so the teacher's choice was lost;
+        // the due date was never applied.
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var exerciseText = Guid.NewGuid();
+        var teacherText = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "reading_comprehension", "Reading", "reading_comprehension"));
+        context.Exercises.Add(Exercise.Create("Reading", "reading_comprehension", "{}", 1, studentId, typeId, id: exerciseId));
+        foreach (var textId in new[] { exerciseText, teacherText })
+        {
+            context.ReadingTexts.Add(ReadingText.Create(textId, "Text", string.Join(" ", Enumerable.Repeat("word", 100)),
+                difficultyLevel: 1, exerciseId: exerciseId));
+            context.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), textId, "Question", "A",
+                orderIndex: 0, type: 1, bloomLevel: 1, optionA: "Yes", optionB: "No", optionC: "Other", optionD: "None"));
+        }
+        var open = Assignment.Create(Guid.NewGuid(), exerciseId, teacherText, "Ödev", null, DateTime.UtcNow.AddDays(1));
+        var openAssignment = StudentAssignment.Assign(open.Id, studentId);
+        var overdue = Assignment.Create(Guid.NewGuid(), exerciseId, teacherText, "Geçmiş ödev", null, DateTime.UtcNow.AddDays(1));
+        var overdueAssignment = StudentAssignment.Assign(overdue.Id, studentId);
+        context.Assignments.AddRange(open, overdue);
+        context.StudentAssignments.AddRange(openAssignment, overdueAssignment);
+        await context.SaveChangesAsync();
+        context.Entry(overdue).Property(nameof(Assignment.DueDate)).CurrentValue = DateTime.UtcNow.AddHours(-1);
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+
+        await service.StartAsync(studentId, new StartExerciseSessionRequest
+            { ExerciseId = exerciseId, ReadingTextId = exerciseText, StudentAssignmentId = openAssignment.Id });
+        (await context.ExerciseSessions.SingleAsync()).ReadingTextId.Should().Be(teacherText);
+
+        var late = () => service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId, StudentAssignmentId = overdueAssignment.Id });
+        (await late.Should().ThrowAsync<BusinessRuleException>()).Which.Code.Should().Be("Assignment.Overdue");
+    }
+
     [Theory]
     [InlineData("word_highlight", false)]
     [InlineData("text_fade", false)]
