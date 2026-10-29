@@ -16,6 +16,13 @@ const testConnection = process.env.COURSE_MANAGEMENT_TEST_CONNECTION_STRING;
 const testContainer = process.env.COURSE_MANAGEMENT_TEST_DB_CONTAINER;
 const eicarSignature = 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
 
+function utcDayOffset(days) {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 async function countFiles(directory) {
   let count = 0;
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -1245,16 +1252,19 @@ test('live API enforces product and subject boundaries before database access', 
       const secondInstallmentId = '0c13d873-336a-4e0c-a53c-c3891cc4ccfa';
       const createInstallment = (id, amount, dueOn) => request(termInstallmentsPath, teacherToken, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, label: 'Taksit', amount, dueOn }) });
-      assert.equal((await createInstallment(firstInstallmentId, 600, '2026-11-01')).status, 201);
-      assert.equal((await createInstallment(secondInstallmentId, 400, '2026-12-01')).status, 201);
+      // Dates are relative to today: a fixed due date makes the "3 days before" reminder fall into the past and the
+      // scheduler (correctly) skips it, which broke this test from 29.10.2026 06:00 UTC.
+      const firstDueOn = utcDayOffset(40);
+      assert.equal((await createInstallment(firstInstallmentId, 600, firstDueOn)).status, 201);
+      assert.equal((await createInstallment(secondInstallmentId, 400, utcDayOffset(70))).status, 201);
       const firstInstallmentReminders = readReminders(firstInstallmentId);
       assert.equal(firstInstallmentReminders.length, 2);
       assert.deepEqual(firstInstallmentReminders.map(item => item.type).sort(), [3, 4]);
       assert.ok(firstInstallmentReminders.every(item => item.status === 1));
-      assert.ok(firstInstallmentReminders.every(item => Date.parse(item.targetAt) === Date.parse('2026-11-01T06:00:00.000Z')),
+      assert.ok(firstInstallmentReminders.every(item => Date.parse(item.targetAt) === Date.parse(`${firstDueOn}T06:00:00.000Z`)),
         'date-only installment reminders use the Europe/Istanbul 09:00 due-day anchor');
-      assert.equal(Date.parse(firstInstallmentReminders.find(item => item.type === 3).notifyAt), Date.parse('2026-10-29T06:00:00.000Z'));
-      assert.equal(Date.parse(firstInstallmentReminders.find(item => item.type === 4).notifyAt), Date.parse('2026-11-01T06:00:00.000Z'));
+      assert.equal(Date.parse(firstInstallmentReminders.find(item => item.type === 3).notifyAt), Date.parse(`${utcDayOffset(37)}T06:00:00.000Z`));
+      assert.equal(Date.parse(firstInstallmentReminders.find(item => item.type === 4).notifyAt), Date.parse(`${firstDueOn}T06:00:00.000Z`));
       const paymentId = '13acc6cd-4e09-46e3-b434-b17d08b50f22';
       const paymentRequest = { id: paymentId, studentId: linkedStudentId, method: 1, amount: 650,
         receivedAt: new Date().toISOString(), note: 'Kısmi tahsilat', allocations: [
@@ -1323,16 +1333,16 @@ test('live API enforces product and subject boundaries before database access', 
         'monthly plans do not create prorated or automatic charges');
       assert.equal((await request(`${feeAgreementsPath}/${monthlyAgreementId}/installments`, teacherToken, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'd6c01777-11b8-4f21-a4c8-504e64ccbc33',
-          label: 'Kasım', amount: 1200, dueOn: '2026-11-05' }) })).status, 201);
+          label: 'Kasım', amount: 1200, dueOn: utcDayOffset(45) }) })).status, 201);
       const afterMonthlyInstallment = await (await request(monthlyAccountPath, teacherToken)).json();
       assert.equal(afterMonthlyInstallment.installments.filter(item => item.feeAgreementId === monthlyAgreementId).length, 1);
       assert.equal(afterMonthlyInstallment.balance, 1600);
       assert.equal((await request(`${feeAgreementsPath}/${monthlyAgreementId}/installments`, teacherToken, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: '2ff798be-b035-4b33-bc01-676d9eb84910',
-          label: 'Aralık', amount: 1200, dueOn: '2026-12-05' }) })).status, 201);
+          label: 'Aralık', amount: 1200, dueOn: utcDayOffset(75) }) })).status, 201);
       const twoMonthsAccount = await (await request(monthlyAccountPath, teacherToken)).json();
       assert.deepEqual(twoMonthsAccount.installments.filter(item => item.feeAgreementId === monthlyAgreementId)
-        .map(item => item.dueOn), ['2026-11-05', '2026-12-05']);
+        .map(item => item.dueOn), [utcDayOffset(45), utcDayOffset(75)]);
       assert.equal(twoMonthsAccount.balance, 2800, 'the owner sets each full monthly amount and due date; no partial-month proration is applied');
 
       const hourlyCourseId = '655260df-c630-4450-b96d-8c0dbeb29d78';
@@ -1392,7 +1402,7 @@ test('live API enforces product and subject boundaries before database access', 
           amount: 1500, packageSessions: 5, packageExpiresAt: new Date(Date.now() + 365 * 86400000).toISOString() }) })).status, 201);
       assert.equal((await request(`${feeAgreementsPath}/${packageAgreementId}/installments`, teacherToken, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'cd9507f6-339d-40a0-a03e-690e0ffba862',
-          label: '5 ders paketi', amount: 1500, dueOn: '2026-11-10' }) })).status, 201);
+          label: '5 ders paketi', amount: 1500, dueOn: utcDayOffset(50) }) })).status, 201);
       const packageLessonId = '3d32939d-1f5b-48ba-9d08-7652ab57a323';
       const packageStartsAt = scheduledAt(110);
       assert.equal((await request(lessonPath, teacherToken, { method: 'POST', headers: { 'Content-Type': 'application/json' },
