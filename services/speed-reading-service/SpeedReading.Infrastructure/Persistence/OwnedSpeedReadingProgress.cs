@@ -18,6 +18,8 @@ internal sealed class OwnedSpeedReadingProgress(OwnedSpeedReadingDbContext db)
         DateTime? dateTo,
         CancellationToken cancellationToken = default)
     {
+        dateFrom = SpeedReadingQueryDates.Utc(dateFrom);
+        dateTo = SpeedReadingQueryDates.Utc(dateTo);
         var query = db.ReadingSessions
             .AsNoTracking()
             .Where(item => item.UserId == userId);

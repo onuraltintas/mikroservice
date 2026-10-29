@@ -274,6 +274,8 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         bool limitResults,
         CancellationToken cancellationToken)
     {
+        dateFrom = SpeedReadingQueryDates.Utc(dateFrom);
+        dateTo = SpeedReadingQueryDates.Utc(dateTo);
         var query = from session in db.ReadingSessions.AsNoTracking()
                     join text in db.ReadingTexts.AsNoTracking()
                         on session.ReadingTextId equals text.Id
