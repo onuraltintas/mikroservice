@@ -123,28 +123,9 @@ describe('SpeedReadingSubscriptionsComponent', () => {
     expect(service.getUserSubscriptions).toHaveBeenCalledTimes(1);
   });
 
-  it('permanently deletes a bank transfer request after confirmation', async () => {
+  it('permanently deletes a pending or rejected bank transfer request after confirmation', async () => {
     const { component, service, toaster } = createComponent();
-    const request = {
-      id: 'request-1',
-      userId: 'user-1',
-      userName: 'Ada',
-      userEmail: 'ada@example.test',
-      planId: 'plan-1',
-      planName: 'Bireysel',
-      amount: 1000,
-      currency: 'TRY',
-      paymentReference: 'EFT-1',
-      payerName: null,
-      note: null,
-      status: 'Approved',
-      subscriptionId: 'subscription-1',
-      reviewedBy: 'admin-1',
-      reviewedAt: '2026-09-21T00:00:00Z',
-      reviewNote: null,
-      createdAt: '2026-09-21T00:00:00Z',
-      updatedAt: '2026-09-21T00:00:00Z'
-    } as any;
+    const request = bankTransferRequest('Rejected');
 
     await component.deleteBankTransferRequest(request);
 
@@ -152,6 +133,25 @@ describe('SpeedReadingSubscriptionsComponent', () => {
     expect(service.deleteBankTransferRequest).toHaveBeenCalledWith('request-1');
     expect(toaster.success).toHaveBeenCalledWith('EFT talebi kalıcı olarak silindi.');
   });
+
+  it('Review H2a: keeps an approved bank transfer as a financial record', async () => {
+    const { component, service, toaster } = createComponent();
+
+    await component.deleteBankTransferRequest(bankTransferRequest('Approved'));
+
+    expect(toaster.confirm).not.toHaveBeenCalled();
+    expect(service.deleteBankTransferRequest).not.toHaveBeenCalled();
+    expect(toaster.error).toHaveBeenCalledWith('Onaylanmış havale kaydı silinemez; mali kayıt olarak saklanır.');
+  });
+
+  function bankTransferRequest(status: string) {
+    return {
+      id: 'request-1', userId: 'user-1', userName: 'Ada', userEmail: 'ada@example.test', planId: 'plan-1', planName: 'Bireysel',
+      amount: 1000, currency: 'TRY', paymentReference: 'EFT-1', payerName: null, note: null, status,
+      subscriptionId: status === 'Approved' ? 'subscription-1' : null, reviewedBy: 'admin-1', reviewedAt: '2026-09-21T00:00:00Z',
+      reviewNote: status === 'Rejected' ? 'Tutar eksik' : null, createdAt: '2026-09-21T00:00:00Z', updatedAt: '2026-09-21T00:00:00Z'
+    } as any;
+  }
 
   it('updates an existing manual subscription with editable fields', () => {
     const { component, service } = createComponent();
