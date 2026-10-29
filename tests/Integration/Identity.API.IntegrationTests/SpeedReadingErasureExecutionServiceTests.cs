@@ -77,6 +77,13 @@ public sealed class SpeedReadingErasureExecutionServiceTests
         Add(context, "LegacyPayment", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Amount = 100m, Status = "Failed", Provider = "Iyzico", CreatedAt = now, UpdatedAt = now });
         Add(context, "LegacyBankTransferPaymentRequest", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Amount = 100m,
             PaymentReference = "EFT-1", Status = "Approved", PayerName = "Veli Ada", CreatedAt = now, UpdatedAt = now });
+        // Decision 28.10.2026: only money that actually moved (Success / Approved) is kept; unfinished or refused
+        // attempts are erased with everything else.
+        Add(context, "LegacyPayment", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Amount = 100m, Status = "Pending", Provider = "Iyzico", CreatedAt = now, UpdatedAt = now });
+        Add(context, "LegacyBankTransferPaymentRequest", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Amount = 100m,
+            PaymentReference = "EFT-2", Status = "Pending", PayerName = "Veli Ada", CreatedAt = now, UpdatedAt = now });
+        Add(context, "LegacyBankTransferPaymentRequest", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Amount = 100m,
+            PaymentReference = "EFT-3", Status = "Rejected", PayerName = "Veli Ada", CreatedAt = now, UpdatedAt = now });
         Add(context, "LegacyUserSubscription", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Status = "Active",
             StartDate = now, EndDate = (DateTime?)now.AddDays(30), CreatedAt = now });
         await context.SaveChangesAsync();
@@ -92,7 +99,7 @@ public sealed class SpeedReadingErasureExecutionServiceTests
         Rows(context, "LegacyNewsletterSubscriber").Should().BeEmpty();
         Rows(context, "LegacyContactMessage").Select(row => Get(row, "Name")).Should().Equal("Başkası");
         Rows(context, "LegacyPayment").Select(row => Get(row, "Status")).Should().Equal("Success");
-        Rows(context, "LegacyBankTransferPaymentRequest").Should().ContainSingle();
+        Rows(context, "LegacyBankTransferPaymentRequest").Select(row => Get(row, "PaymentReference")).Should().Equal("EFT-1");
         Rows(context, "LegacyUserSubscription").Should().ContainSingle();
         var receipt = await context.ErasureExecutions.SingleAsync();
         receipt.SubjectUserId.Should().Be(subject);
