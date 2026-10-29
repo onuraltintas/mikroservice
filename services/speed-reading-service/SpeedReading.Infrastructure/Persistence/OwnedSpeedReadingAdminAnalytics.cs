@@ -91,7 +91,7 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
             from session in reading
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
             where text.IsActive && !text.IsDeleted
-            select new { session.CompletedAt, session.CalculatedWpm, session.IsMeasured, session.ComprehensionRate, session.TotalQuestions, text.Id, text.Title, text.Category, text.DifficultyLevel })
+            select new { session.CompletedAt, session.CalculatedWpm, session.IsMeasured, session.ComprehensionRate, TotalQuestions = session.IsRejected ? 0 : session.TotalQuestions, text.Id, text.Title, text.Category, text.DifficultyLevel })
             .ToListAsync(cancellationToken);
         var exerciseRows = await (
             from log in exercises
@@ -152,7 +152,7 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
         var (start, end) = NormalizeRange(dateFrom, dateTo);
         var readings = await db.ReadingSessions.AsNoTracking()
             .Where(item => item.CompletedAt >= start && item.CompletedAt <= end)
-            .Select(item => new { item.CompletedAt, item.CalculatedWpm, item.IsMeasured, item.ComprehensionRate, item.TotalQuestions, item.CorrectAnswers }).ToListAsync(cancellationToken);
+            .Select(item => new { item.CompletedAt, item.CalculatedWpm, item.IsMeasured, item.ComprehensionRate, TotalQuestions = item.IsRejected ? 0 : item.TotalQuestions, item.CorrectAnswers }).ToListAsync(cancellationToken);
         var exercises = await db.DailyExerciseLogs.AsNoTracking().Where(item => item.CompletedDate >= start && item.CompletedDate <= end)
             .Select(item => new { item.CompletedDate, item.SuccessRate, item.TotalAttempts, item.CorrectCount }).ToListAsync(cancellationToken);
         var totalActivities = readings.Count + exercises.Count;
@@ -188,7 +188,7 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
             .ToListAsync(cancellationToken);
         var reading = await db.ReadingSessions.AsNoTracking()
             .Where(item => item.CompletedAt >= start && item.CompletedAt <= end)
-            .Select(item => new { item.UserId, item.CalculatedWpm, item.IsMeasured, item.TotalQuestions, item.ComprehensionRate }).ToListAsync(cancellationToken);
+            .Select(item => new { item.UserId, item.CalculatedWpm, item.IsMeasured, TotalQuestions = item.IsRejected ? 0 : item.TotalQuestions, item.ComprehensionRate }).ToListAsync(cancellationToken);
         var exercises = await db.DailyExerciseLogs.AsNoTracking().Where(item => item.CompletedDate >= start && item.CompletedDate <= end)
             .Select(item => new { item.UserId }).ToListAsync(cancellationToken);
         var comparisons = new List<AdminInstitutionComparison>();

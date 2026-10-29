@@ -237,7 +237,7 @@ internal sealed class OwnedSpeedReadingPrograms(
                 from answer in db.ReadingSessionAnswers.AsNoTracking()
                 join session in db.ReadingSessions.AsNoTracking()
                     on answer.SessionId equals session.Id
-                where session.UserId == progress.UserId && session.TotalQuestions > 0
+                where session.UserId == progress.UserId && session.TotalQuestions > 0 && !session.IsRejected
                 select new
                 {
                     answer.QuestionType,

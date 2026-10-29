@@ -100,7 +100,7 @@ internal sealed class OwnedSpeedReadingAdaptiveText(OwnedSpeedReadingDbContext d
         var measuredSessions = sessions
             .Where(item => item.IsMeasured && item.CalculatedWpm > 0)
             .ToList();
-        var comprehensionSessions = sessions.Where(item => item.TotalQuestions > 0).ToList();
+        var comprehensionSessions = sessions.Where(item => item.TotalQuestions > 0 && !item.IsRejected).ToList();
         var textIds = sessions.Select(item => item.ReadingTextId).Distinct().ToList();
         var texts = await db.ReadingTexts
             .AsNoTracking()

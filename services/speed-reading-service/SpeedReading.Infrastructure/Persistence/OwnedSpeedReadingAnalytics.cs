@@ -29,7 +29,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
                     .Select(item => (decimal?)item.CalculatedWpm)
                     .Average() ?? 0,
-                AverageComprehension = group.Where(item => item.TotalQuestions > 0)
+                AverageComprehension = group.Where(item => item.TotalQuestions > 0 && !item.IsRejected)
                     .Select(item => (decimal?)item.ComprehensionRate)
                     .Average() ?? 0,
                 TotalSeconds = group.Sum(item => (long)item.ReadingTimeSeconds),
@@ -46,11 +46,11 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 Date = group.Key,
                 ReadingSessions = group.Count(),
                 ReadingSeconds = group.Sum(item => (long)item.ReadingTimeSeconds),
-                HasComprehension = group.Any(item => item.TotalQuestions > 0),
+                HasComprehension = group.Any(item => item.TotalQuestions > 0 && !item.IsRejected),
                 AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
                     .Select(item => (decimal?)item.CalculatedWpm)
                     .Average() ?? 0,
-                AverageComprehension = group.Where(item => item.TotalQuestions > 0)
+                AverageComprehension = group.Where(item => item.TotalQuestions > 0 && !item.IsRejected)
                     .Select(item => (decimal?)item.ComprehensionRate)
                     .Average() ?? 0
             })
@@ -61,7 +61,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             .Select(item => (decimal?)item.CalculatedWpm)
             .FirstOrDefaultAsync(cancellationToken);
         var latestMeasuredComprehension = await readingQuery
-            .Where(item => item.TotalQuestions > 0)
+            .Where(item => item.TotalQuestions > 0 && !item.IsRejected)
             .OrderByDescending(item => item.CompletedAt)
             .Select(item => (decimal?)item.ComprehensionRate)
             .FirstOrDefaultAsync(cancellationToken);
@@ -307,7 +307,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
         var query = ReadingSessionsFor(userId, start, end)
-            .Where(item => item.TotalQuestions > 0);
+            .Where(item => item.TotalQuestions > 0 && !item.IsRejected);
         var aggregate = await query.GroupBy(_ => 1).Select(group => new
         {
             Count = group.Count(),
@@ -560,8 +560,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.ReadingTextId,
                 item.ReadingTimeSeconds,
                 item.IsMeasured && item.CalculatedWpm > 0 ? (int?)item.CalculatedWpm : null,
-                item.TotalQuestions > 0 ? (decimal?)item.ComprehensionRate : null,
-                item.TotalQuestions,
+                item.TotalQuestions > 0 && !item.IsRejected ? (decimal?)item.ComprehensionRate : null,
+                item.IsRejected ? 0 : item.TotalQuestions,
                 item.IsMeasured && item.CalculatedWpm > 0))
             .ToListAsync(cancellationToken);
         var recentExerciseRows = await exerciseQuery
@@ -696,7 +696,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30); entry.Size = 1;
             return useComprehension
-                ? query.Where(item => item.TotalQuestions > 0).Select(item => (decimal?)item.ComprehensionRate).AverageAsync(cancellationToken)
+                ? query.Where(item => item.TotalQuestions > 0 && !item.IsRejected).Select(item => (decimal?)item.ComprehensionRate).AverageAsync(cancellationToken)
                 : query.Where(item => item.IsMeasured && item.CalculatedWpm > 0).Select(item => (decimal?)item.CalculatedWpm).AverageAsync(cancellationToken);
         });
     }
@@ -707,7 +707,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             .AverageAsync(cancellationToken) ?? 0;
 
     private static async Task<decimal> AverageComprehensionAsync(IQueryable<ReadingSession> query, CancellationToken cancellationToken) =>
-        await query.Where(item => item.TotalQuestions > 0)
+        await query.Where(item => item.TotalQuestions > 0 && !item.IsRejected)
             .Select(item => (decimal?)item.ComprehensionRate)
             .AverageAsync(cancellationToken) ?? 0;
 

@@ -33,10 +33,10 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
                     .Select(item => (decimal?)item.CalculatedWpm)
                     .Average() ?? 0,
-                group.Where(item => item.TotalQuestions > 0)
+                group.Where(item => item.TotalQuestions > 0 && !item.IsRejected)
                     .Select(item => (decimal?)item.ComprehensionRate)
                     .Average() ?? 0,
-                group.Count(item => item.TotalQuestions > 0),
+                group.Count(item => item.TotalQuestions > 0 && !item.IsRejected),
                 group.Sum(item => item.ReadingTimeSeconds)))
             .ToListAsync(cancellationToken);
         var exercises = await OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
@@ -352,7 +352,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
             where studentIds.Contains(session.UserId)
                 && session.CompletedAt >= start && session.CompletedAt <= end
-            select new { session.CompletedAt, session.CalculatedWpm, session.IsMeasured, session.ComprehensionRate, session.TotalQuestions, text.DifficultyLevel })
+            select new { session.CompletedAt, session.CalculatedWpm, session.IsMeasured, session.ComprehensionRate, TotalQuestions = session.IsRejected ? 0 : session.TotalQuestions, text.DifficultyLevel })
             .ToListAsync(cancellationToken);
         var readingAnalysis = readingRows
             .GroupBy(item => item.DifficultyLevel)
@@ -404,7 +404,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 item.ReadingTimeSeconds,
                 item.ComprehensionRate,
                 IsReading: true,
-                HasComprehension: item.TotalQuestions > 0))
+                HasComprehension: item.TotalQuestions > 0 && !item.IsRejected))
             .ToListAsync(cancellationToken);
         var exercise = await OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
             .Where(item => studentIds.Contains(item.UserId) && item.CompletedDate >= start && item.CompletedDate <= end)

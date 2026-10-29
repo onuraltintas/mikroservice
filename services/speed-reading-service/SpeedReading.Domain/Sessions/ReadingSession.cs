@@ -17,6 +17,8 @@ public sealed class ReadingSession : Entity
     public decimal ComprehensionRate { get; private set; }
     public decimal EfficiencyScore { get; private set; }
     public bool IsMeasured { get; private set; }
+    /// <summary>Read too fast or too slow to give a valid speed (review H5, finding 16); left out of averages.</summary>
+    public bool IsRejected { get; private set; }
     public DateTime CompletedAt { get; private set; }
 
     public static ReadingSession Import(
@@ -34,7 +36,8 @@ public sealed class ReadingSession : Entity
         string? createdBy,
         DateTime? updatedAt,
         string? updatedBy,
-        bool isMeasured = true)
+        bool isMeasured = true,
+        bool isRejected = false)
     {
         if (id == Guid.Empty || userId == Guid.Empty || readingTextId == Guid.Empty)
             throw new ArgumentException("Reading session identifiers are required.");
@@ -57,6 +60,7 @@ public sealed class ReadingSession : Entity
             ComprehensionRate = comprehensionRate,
             EfficiencyScore = efficiencyScore,
             IsMeasured = isMeasured,
+            IsRejected = isRejected,
             CompletedAt = EnsureUtc(completedAt),
             CreatedAt = EnsureUtc(createdAt),
             CreatedBy = createdBy,

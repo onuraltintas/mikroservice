@@ -61,7 +61,7 @@ internal sealed class OwnedSpeedReadingProgress(OwnedSpeedReadingDbContext db)
                 AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
                     .Select(item => (decimal?)item.CalculatedWpm)
                     .Average() ?? 0,
-                AverageComprehension = group.Where(item => item.TotalQuestions > 0)
+                AverageComprehension = group.Where(item => item.TotalQuestions > 0 && !item.IsRejected)
                     .Select(item => (decimal?)item.ComprehensionRate)
                     .Average() ?? 0,
                 TotalSeconds = group.Sum(item => item.ReadingTimeSeconds),
