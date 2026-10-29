@@ -160,8 +160,27 @@ public sealed class ReadingText : AggregateRoot
         UpdatedBy = actorId.ToString();
     }
 
-    public static int CalculateWordCount(string content) =>
-        content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+    /// <summary>
+    /// Counts whitespace-separated tokens that contain at least one letter or digit; stand-alone punctuation such as
+    /// dashes, ellipses and quote marks is not a word (review H8).
+    /// </summary>
+    public static int CalculateWordCount(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return 0;
+        var count = 0;
+        foreach (var token in content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            if (HasLetterOrDigit(token))
+                count++;
+        return count;
+    }
+
+    private static bool HasLetterOrDigit(string token)
+    {
+        foreach (var character in token)
+            if (char.IsLetterOrDigit(character))
+                return true;
+        return false;
+    }
 
     public bool RecalculateWordCount()
     {

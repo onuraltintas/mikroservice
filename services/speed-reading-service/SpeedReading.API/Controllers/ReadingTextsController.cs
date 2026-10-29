@@ -453,7 +453,7 @@ public sealed class ReadingTextsController(
                     new CreateReadingTextRequest(
                         row.Title,
                         row.Content,
-                        row.Content.Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length,
+                        SpeedReading.Domain.Catalog.ReadingText.CalculateWordCount(row.Content),
                         row.Category,
                         row.DifficultyLevel,
                         null,
@@ -494,7 +494,7 @@ public sealed class ReadingTextsController(
                     new UpdateReadingTextRequest(
                         row.Title,
                         row.Content,
-                        row.Content.Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length,
+                        SpeedReading.Domain.Catalog.ReadingText.CalculateWordCount(row.Content),
                         row.Category,
                         row.DifficultyLevel,
                         null,

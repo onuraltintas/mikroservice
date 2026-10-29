@@ -9,6 +9,33 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class SpeedReadingInvitationTests
 {
     [Fact]
+    public async Task A_teacher_sends_at_most_fifty_invitations_a_day_and_keeps_at_most_two_hundred_pending()
+    {
+        // Decision 29.10.2026: a teacher account cannot be used to e-mail thousands of addresses.
+        await using var context = CreateContext();
+        var invitations = new OwnedSpeedReadingInvitations(context, new AllowAllSpeedReadingMembers());
+        var teacherId = Guid.NewGuid();
+        var start = DateTime.UtcNow;
+
+        for (var index = 0; index < 50; index++)
+            (await invitations.CreateAsync($"ogrenci{index}@example.com", SpeedReadingInstitutionMemberRole.Student,
+                null, teacherId, teacherId, start)).Result.Should().Be(SpeedReadingInvitationCreateResult.Created);
+        var overDaily = () => invitations.CreateAsync("fazla@example.com", SpeedReadingInstitutionMemberRole.Student,
+            null, teacherId, teacherId, start.AddHours(1));
+        (await overDaily.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()).Which.Code
+            .Should().Be("Invitation.DailyLimit");
+
+        for (var day = 1; day <= 3; day++)
+            for (var index = 0; index < 50; index++)
+                await invitations.CreateAsync($"gun{day}-{index}@example.com", SpeedReadingInstitutionMemberRole.Student,
+                    null, teacherId, teacherId, start.AddDays(day));
+        var overPending = () => invitations.CreateAsync("bekleyen@example.com", SpeedReadingInstitutionMemberRole.Student,
+            null, teacherId, teacherId, start.AddDays(4));
+        (await overPending.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()).Which.Code
+            .Should().Be("Invitation.PendingLimit");
+    }
+
+    [Fact]
     public async Task Standalone_teacher_invitation_is_idempotent_and_acceptance_creates_only_local_relationship()
     {
         await using var context = CreateContext();

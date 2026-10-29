@@ -268,7 +268,35 @@ internal sealed class LegacySpeedReadingEmailCampaigns(
             return ToSummary(scheduled);
         }
 
-        return await QueueCampaignAsync(id, forceNow: true, cancellationToken);
+        // Review H8: building the recipient list and dispatching it can take long for a large audience, so the
+        // request only marks the campaign due now; the newsletter scheduler (every 15 seconds) queues it.
+        var campaign = await db.EmailCampaigns.SingleOrDefaultAsync(
+            item => item.Id == id && !item.IsDeleted,
+            cancellationToken);
+        if (campaign is null) return null;
+        if (campaign.Status is "Sending" or "Queued" or "Sent") return ToSummary(campaign);
+        if (campaign.Status is not ("Draft" or "Scheduled" or "Failed"))
+            throw new InvalidOperationException("This campaign cannot be queued in its current state.");
+        ValidateAudience(campaign.TargetRoles, campaign.TargetInstitutionId, campaign.IncludeAllUsers, campaign.IncludeSubscribers);
+
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        if (campaign.Status == "Failed")
+        {
+            var failedLogs = await db.EmailCampaignLogs
+                .Where(item => item.CampaignId == id && !item.IsDeleted && item.Status == "QueueFailed")
+                .ToListAsync(cancellationToken);
+            foreach (var failedLog in failedLogs)
+            {
+                failedLog.Status = "Pending";
+                failedLog.ErrorMessage = null;
+            }
+        }
+
+        campaign.Status = "Scheduled";
+        campaign.ScheduledFor = now;
+        campaign.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+        return ToSummary(campaign);
     }
 
     public async Task<EmailCampaignStats?> GetStatsAsync(Guid id, CancellationToken cancellationToken)
@@ -303,7 +331,7 @@ internal sealed class LegacySpeedReadingEmailCampaigns(
         {
             try
             {
-                await QueueCampaignAsync(id, forceNow: false, cancellationToken);
+                await QueueCampaignAsync(id, cancellationToken);
                 processed++;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -321,7 +349,6 @@ internal sealed class LegacySpeedReadingEmailCampaigns(
 
     private async Task<EmailCampaignSummary?> QueueCampaignAsync(
         Guid id,
-        bool forceNow,
         CancellationToken cancellationToken)
     {
         var campaign = await db.EmailCampaigns.SingleOrDefaultAsync(
@@ -331,7 +358,7 @@ internal sealed class LegacySpeedReadingEmailCampaigns(
         if (campaign.Status is "Queued" or "Sent") return ToSummary(campaign);
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        if (!forceNow && campaign.Status == "Scheduled" && campaign.ScheduledFor > now)
+        if (campaign.Status == "Scheduled" && campaign.ScheduledFor > now)
             return ToSummary(campaign);
         if (campaign.Status is not ("Draft" or "Scheduled" or "Failed" or "Sending"))
             throw new InvalidOperationException("This campaign cannot be queued in its current state.");
@@ -378,8 +405,7 @@ internal sealed class LegacySpeedReadingEmailCampaigns(
             db.EmailCampaignLogs.AddRange(logs);
         }
 
-        campaign.ScheduledFor = forceNow ? null : campaign.ScheduledFor;
-        campaign.Status = "Sending";
+                campaign.Status = "Sending";
         campaign.TotalRecipients = logs.Count;
         campaign.QueuedCount = logs.Count(item => item.Status == "Queued");
         campaign.FailedCount = logs.Count(item => item.Status == "QueueFailed");

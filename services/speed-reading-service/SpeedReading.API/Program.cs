@@ -120,6 +120,10 @@ if (migrationOnly)
     await using var migrationScope = migrationApp.Services.CreateAsyncScope();
     var migrationDb = migrationScope.ServiceProvider.GetRequiredService<OwnedSpeedReadingDbContext>();
     await migrationDb.Database.MigrateAsync();
+    // Review H8: word counts follow the current rule; the recount is idempotent and only rewrites texts whose
+    // stored count differs, so every deploy keeps existing texts in step with the rule.
+    var wordCounts = await migrationScope.ServiceProvider.GetRequiredService<OwnedSpeedReadingReadingTextWordCountBackfill>().RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(new { readingTextWordCounts = wordCounts }));
     return;
 }
 

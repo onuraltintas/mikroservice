@@ -1,3 +1,4 @@
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Institutions;
 using SpeedReading.Domain.Institutions;
@@ -8,6 +9,29 @@ public sealed class OwnedSpeedReadingInvitations(
     OwnedSpeedReadingDbContext db,
     ISpeedReadingInstitutionMemberEligibility memberEligibility) : ISpeedReadingInvitations
 {
+    /// <summary>Decision 29.10.2026: a standalone teacher cannot use invitations to e-mail addresses in bulk.</summary>
+    public const int TeacherDailyInvitationLimit = 50;
+    public const int TeacherPendingInvitationLimit = 200;
+
+    private async Task EnsureTeacherInvitationLimitsAsync(Guid teacherId, DateTime now, CancellationToken cancellationToken)
+    {
+        var dayAgo = now.AddDays(-1);
+        var sentToday = await db.Invitations.CountAsync(item => item.InvitedByUserId == teacherId
+            && item.InstitutionId == null
+            && item.CreatedAt > dayAgo, cancellationToken);
+        if (sentToday >= TeacherDailyInvitationLimit)
+            throw new BusinessRuleException("Invitation.DailyLimit",
+                $"Son 24 saatte en fazla {TeacherDailyInvitationLimit} davet gönderebilirsiniz. Lütfen daha sonra tekrar deneyin.");
+
+        var pending = await db.Invitations.CountAsync(item => item.InvitedByUserId == teacherId
+            && item.InstitutionId == null
+            && item.Status == SpeedReadingInvitationStatus.Pending
+            && item.ExpiresAt > now, cancellationToken);
+        if (pending >= TeacherPendingInvitationLimit)
+            throw new BusinessRuleException("Invitation.PendingLimit",
+                $"Yanıt bekleyen en fazla {TeacherPendingInvitationLimit} davetiniz olabilir. Yeni davet göndermeden önce bekleyen davetlerin kabul edilmesini ya da süresinin dolmasını bekleyin veya bazılarını iptal edin.");
+    }
+
     public async Task<SpeedReadingInvitationCreateResponse> CreateAsync(
         string email,
         SpeedReadingInstitutionMemberRole role,
@@ -73,6 +97,9 @@ public sealed class OwnedSpeedReadingInvitations(
             existing.MarkExpired(now);
             await db.SaveChangesAsync(cancellationToken);
         }
+
+        if (!institutionId.HasValue)
+            await EnsureTeacherInvitationLimitsAsync(invitedByUserId, now, cancellationToken);
 
         db.Invitations.Add(invitation);
         try

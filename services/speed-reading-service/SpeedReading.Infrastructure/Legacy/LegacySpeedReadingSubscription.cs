@@ -418,6 +418,13 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             return await GetBankTransferPaymentRequestAsync(existing.Id, userId, cancellationToken);
         }
 
+        // Review H8: one transfer reference belongs to one account; a rejected claim frees it again.
+        if (await db.BankTransferPaymentRequests.AsNoTracking().AnyAsync(item => item.UserId != userId
+                && item.PaymentReference == paymentReference
+                && item.Status != BankTransferPaymentRules.RejectedStatus, cancellationToken))
+            throw new BusinessRuleException("BankTransfer.ReferenceInUse",
+                "Bu havale açıklaması başka bir hesap tarafından kullanılıyor. Lütfen dekonttaki açıklamayı kontrol edin veya destekle iletişime geçin.");
+
         var user = (await userDirectory.GetUsersAsync([userId], cancellationToken)).Users
             .SingleOrDefault(item => item.UserId == userId);
         if (user is null || string.IsNullOrWhiteSpace(user.Email))
@@ -544,6 +551,14 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         {
             return null;
         }
+
+        // Review H8: the same transfer cannot activate two accounts (older duplicates predate the create check).
+        if (string.Equals(targetStatus, BankTransferPaymentRules.ApprovedStatus, StringComparison.OrdinalIgnoreCase)
+            && await db.BankTransferPaymentRequests.AsNoTracking().AnyAsync(item => item.Id != row.paymentRequest.Id
+                && item.PaymentReference == row.paymentRequest.PaymentReference
+                && item.Status == BankTransferPaymentRules.ApprovedStatus, cancellationToken))
+            throw new BusinessRuleException("BankTransfer.ReferenceAlreadyApproved",
+                "Bu havale açıklamasıyla başka bir ödeme zaten onaylanmış. Aynı havale iki kez onaylanamaz.");
 
         var now = DateTime.UtcNow;
         // Review H2a: store the canonical value so filters and reports find it whatever casing the client sent.

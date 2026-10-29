@@ -29,10 +29,17 @@ public sealed class EmailCampaignDeliveryTests
             Guid.NewGuid(),
             CreateRequest(),
             default);
-        var result = await service.SendAsync(draft.Id, new SendEmailCampaignRequest(true), default);
+        var accepted = await service.SendAsync(draft.Id, new SendEmailCampaignRequest(true), default);
 
-        result.Should().NotBeNull();
-        result!.Status.Should().Be(2);
+        // Review H8: "send now" only hands the campaign to the background scheduler; the request itself does not
+        // build or dispatch the recipient list.
+        accepted.Should().NotBeNull();
+        accepted!.Status.Should().Be(1);
+        email.Messages.Should().BeEmpty();
+        (await service.ProcessDueAsync(default)).Should().Be(1);
+        var result = (await service.GetAsync(draft.Id, default))!.Campaign;
+
+        result.Status.Should().Be(2);
         result.TotalRecipients.Should().Be(1);
         result.QueuedCount.Should().Be(1);
         result.SentCount.Should().Be(0);

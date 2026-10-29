@@ -759,19 +759,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         if (IsVocabularyState(state))
         {
-            foreach (var answer in state.Answers)
-            {
-                var review = await OwnedVocabularyProgressRecorder.RecordAsync(
-                    db,
-                    studentId,
-                    answer.QuestionId,
-                    answer.IsCorrect,
-                    now,
-                    awardVerifiedGamification: state.VocabularyMode == "quiz",
-                    cancellationToken);
-                if (!review.Found)
-                    throw IncompleteSession("Kelime egzersizindeki bir kelime artık kullanılamıyor. Egzersizi yeniden başlatın.");
-            }
+            var recorded = await OwnedVocabularyProgressRecorder.RecordManyAsync(
+                db,
+                studentId,
+                state.Answers.Select(answer => (answer.QuestionId, answer.IsCorrect)).ToList(),
+                now,
+                awardVerifiedGamification: state.VocabularyMode == "quiz",
+                cancellationToken);
+            if (!recorded)
+                throw IncompleteSession("Kelime egzersizindeki bir kelime artık kullanılamıyor. Egzersizi yeniden başlatın.");
         }
 
         session.Complete(now);
