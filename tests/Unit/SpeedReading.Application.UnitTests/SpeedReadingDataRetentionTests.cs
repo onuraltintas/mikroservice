@@ -26,9 +26,9 @@ public sealed class SpeedReadingDataRetentionTests
         var recent = Session(ExerciseSessionStatus.Completed, Now.AddDays(-10), bigState);
         var active = Session(ExerciseSessionStatus.Active, null, bigState, Now.AddDays(-200));
         db.ExerciseSessions.AddRange(old, recent, active);
-        Add(db, "LegacyUserNotification", new { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Title = "eski okunmuş", Message = "m", IsRead = true, CreatedAt = Now.AddDays(-400) });
-        Add(db, "LegacyUserNotification", new { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Title = "eski okunmamış", Message = "m", IsRead = false, CreatedAt = Now.AddDays(-400) });
-        Add(db, "LegacyUserNotification", new { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Title = "yeni okunmuş", Message = "m", IsRead = true, CreatedAt = Now.AddDays(-100) });
+        Add(db, "LegacyUserNotification", new { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Title = "eski okunmuş", Message = "m", ReadAt = (DateTime?)Now.AddDays(-399), CreatedAt = Now.AddDays(-400) });
+        Add(db, "LegacyUserNotification", new { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Title = "eski okunmamış", Message = "m", ReadAt = (DateTime?)null, CreatedAt = Now.AddDays(-400) });
+        Add(db, "LegacyUserNotification", new { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Title = "yeni okunmuş", Message = "m", ReadAt = (DateTime?)Now.AddDays(-99), CreatedAt = Now.AddDays(-100) });
         Add(db, "LegacyEmailCampaignLog", new { Id = Guid.NewGuid(), CampaignId = Guid.NewGuid(), RecipientEmail = "a@example.test", Status = "Sent", CreatedAt = Now.AddDays(-400) });
         Add(db, "LegacyEmailCampaignLog", new { Id = Guid.NewGuid(), CampaignId = Guid.NewGuid(), RecipientEmail = "b@example.test", Status = "Sent", CreatedAt = Now.AddDays(-100) });
         await db.SaveChangesAsync();

@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingErasureExecutionService, SpeedReadingErasureExecutionService>();
         services.AddScoped<ISpeedReadingPersonalDataExport, SpeedReadingPersonalDataExportService>();
         services.AddScoped<SpeedReadingFinancialRetentionProcessor>();
+        services.AddScoped<SpeedReadingDataRetentionProcessor>();
         services.AddSingleton(TimeProvider.System);
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -126,6 +127,7 @@ public static class DependencyInjection
         services.AddHostedService<SpeedReadingNewsletterCampaignScheduler>();
         // Review H2b: anonymises paid records of erased accounts once their year has passed.
         services.AddHostedService<SpeedReadingFinancialRetentionWorker>();
+        services.AddHostedService<SpeedReadingDataRetentionWorker>();
         services.AddScoped<ISpeedReadingRsvp, LegacySpeedReadingRsvp>();
 
         services.AddScoped<ILegacySpeedReadingCatalog, OwnedSpeedReadingCatalog>();
