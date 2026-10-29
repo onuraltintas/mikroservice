@@ -1,3 +1,4 @@
+import { StudentScoreEstimateComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-score-estimate.component';
 import { CommonModule } from '@angular/common';
 import { moveTabFocus } from '../../navigation/staff-tablist';
 import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
@@ -18,7 +19,7 @@ import {
 @Component({
   selector: 'staff-coaching-institution-student-report',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent, StudentScoreEstimateComponent],
   templateUrl: './coaching-institution-student-report.component.html',
   styleUrl: './coaching-institution-student-report.component.scss'
 })
@@ -36,6 +37,8 @@ export class CoachingInstitutionStudentReportComponent implements OnInit {
   @ViewChild(CoachingStaffStudyComponent) private study?: CoachingStaffStudyComponent;
   @ViewChild(CoachingFinanceComponent) private finance?: CoachingFinanceComponent;
   readonly financeVisible = signal(false);
+  /** Roadmap F1: the score and rank estimate the student and parent see, opened on request. */
+  readonly scoreVisible = signal(false);
   async canLeavePage(): Promise<boolean> { return await this.finance?.canLeavePage() ?? true; }
   async toggleFinance(): Promise<void> {
     if (this.financeVisible() && !await this.canLeavePage()) return;
