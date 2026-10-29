@@ -244,6 +244,9 @@ public sealed class SpeedReadingTeacherAccessTests
     {
         public List<Guid> CheckedInstitutions { get; } = [];
 
+        public Task<IReadOnlyList<Guid>> GetManagedInstitutionIdsAsync(Guid userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Guid>>(managedInstitutions);
+
         public Task<bool> CanManageAsync(
             Guid userId,
             Guid institutionId,

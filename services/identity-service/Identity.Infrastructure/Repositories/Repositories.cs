@@ -806,9 +806,26 @@ public class InstitutionRepository : IInstitutionRepository
         if (userId == Guid.Empty || institutionId == Guid.Empty)
             return Task.FromResult(false);
 
-        return _context.InstitutionAdmins.AsNoTracking().AnyAsync(admin =>
+        return ActiveSpeedReadingAdministrations(userId)
+            .AnyAsync(admin => admin.InstitutionId == institutionId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetManagedSpeedReadingInstitutionIdsAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            return [];
+
+        return await ActiveSpeedReadingAdministrations(userId)
+            .Select(admin => admin.InstitutionId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
+    private IQueryable<InstitutionAdmin> ActiveSpeedReadingAdministrations(Guid userId) =>
+        _context.InstitutionAdmins.AsNoTracking().Where(admin =>
             admin.UserId == userId
-            && admin.InstitutionId == institutionId
             && admin.Product == PlatformProduct.SpeedReading
             && admin.IsActive
             && admin.User.IsActive
@@ -819,9 +836,7 @@ public class InstitutionRepository : IInstitutionRepository
                 && !userRole.Role.IsDeleted
                 && (userRole.Role.Name == Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString()
                     || userRole.Role.Name == Identity.Domain.Enums.UserRole.InstitutionOwner.ToString()))
-            && admin.Institution.IsActive,
-            cancellationToken);
-    }
+            && admin.Institution.IsActive);
 
     public async Task<IReadOnlyList<InstitutionAdminDto>> GetAdminsAsync(
         Guid institutionId,

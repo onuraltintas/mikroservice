@@ -118,4 +118,9 @@ public interface ISpeedReadingInstitutionAdministrationAuthorization
         Guid userId,
         Guid institutionId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Every Speed Reading institution the user currently manages (review H4, finding 8).</summary>
+    Task<IReadOnlyList<Guid>> GetManagedInstitutionIdsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

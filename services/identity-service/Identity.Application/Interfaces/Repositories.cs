@@ -95,6 +95,10 @@ public interface IInstitutionRepository
     Task<InstitutionDto?> GetDtoByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<Institution?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> HasAdminAsync(Guid institutionId, Guid userId, PlatformProduct product, CancellationToken cancellationToken);
+    Task<IReadOnlyList<Guid>> GetManagedSpeedReadingInstitutionIdsAsync(
+        Guid userId,
+        CancellationToken cancellationToken);
+
     Task<bool> CanManageSpeedReadingInstitutionAsync(
         Guid userId,
         Guid institutionId,

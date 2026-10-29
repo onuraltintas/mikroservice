@@ -110,4 +110,44 @@ public sealed class IdentitySpeedReadingMemberEligibilityClient :
             throw new InvalidOperationException("Identity institution authorization timed out.", ex);
         }
     }
+
+    public async Task<IReadOnlyList<Guid>> GetManagedInstitutionIdsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty)
+            return [];
+        if (string.IsNullOrWhiteSpace(serviceApiKey))
+            throw new InvalidOperationException("Internal service API key is not configured.");
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{baseUrl.TrimEnd('/')}/api/internal/reporting/speed-reading/managed-institutions")
+        {
+            Content = JsonContent.Create(new SpeedReadingManagedInstitutionsRequest(userId))
+        };
+        request.Headers.Add(InternalServiceAuthentication.HeaderName, serviceApiKey);
+
+        try
+        {
+            using var response = await httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<SpeedReadingManagedInstitutionsResponse>(
+                cancellationToken: cancellationToken);
+            return result?.InstitutionIds ?? [];
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Speed Reading managed institutions lookup failed for {UserId}", userId);
+            throw new InvalidOperationException("Identity institution authorization is unavailable.", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Speed Reading managed institutions lookup timed out for {UserId}", userId);
+            throw new InvalidOperationException("Identity institution authorization timed out.", ex);
+        }
+    }
 }
