@@ -599,7 +599,7 @@
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/tachistoscope.engine.spec.ts": "72d1df7f06ad78ae04af139cde56bcb753e2ff30b282f630cb5561abb7292adb",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/text-fade.engine.spec.ts": "8acd6d405ae4d207dcf8f2a9cad797d81d1a7256715df33715762081fa637dd2",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/text-fade.engine.ts": "fae908e40543f6248a9674d455b1e55639fc4143e919d18795cbbb4d6f52b9df",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/text-stream.engine.ts": "addc925dee310549c88b4ff92f3b2f2875fad22c64dfde64f81a5d0bd1b10bb9",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/text-stream.engine.ts": "56f9f3d4cf25d0c53bd47e0f7fbc3962802a86a4d50ced8783ebb2d86407d998",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/tracking.engine.spec.ts": "850216a87fe91d5794e2a2754f57d0076429b0fda71081344360ef294f4f8a74",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/visual-expansion-position.ts": "a9a320fa33977167ed06924535ddf5b0ad7e31ecb4d612b4e06ced6ab6b06eab",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/visual-expansion-safety.spec.ts": "a5611c9c5c46c85b24b6f750b004d74b911ab85b4ddf0b7b6144f9aa9af814e2",
@@ -620,7 +620,7 @@
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-action-queue.ts": "3d002aa57bec17e5c95b1bdaf6c9ae2d3dc471ca6ac5f49681dc53264b6de472",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.html": "a334dfb500c0e99eebab1c39361022898aebc391b5174de0233ffe1b1e1ea855",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.scss": "d617968d7069b558dd99b6a56f3719156b4aefa0562ae7cfdd7dfeed2cab162f",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.ts": "aea8bf36521a054c3a07431c0f09772ebd4f7c81f778114de51d14b21ada83a5",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.ts": "d0efa06f6361d2c18cad45828a0491573a369fddcb294d6cd0b4400d0c8415e4",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-preview-role.spec.ts": "6b042fcfaa60487736a38b0d68836717397a3cd270b27049a3144aa1566f7f65",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-input-focus.spec.ts": "634069276d934e2b7aa2e3a4df56f958ad8dbbf7b5c7c1da63c4ee64ff1eab70",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/fixation-player.spec.ts": "3a36fd8272875bf3eed0f0d9ac6d13c34b16798d2703baaa7c8de895d26e74f9",
@@ -642,7 +642,7 @@
     "clients/speed-reading/src/app/features/student/exercises/universal-player/schulte-settings.ts": "f1417c6777c5b28fd0fd7289fe13835d0e27b3ee2db6b0ca2b43479dbbb7f988",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/skimming-preview.spec.ts": "4ce29f1e4059400a6086cead4a761c2b35c9400ceccb4960736f7d718b52c0cc",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/subvocalization-player.spec.ts": "c0c5c4003502879275f9958a90f9ba0dec6b5df090d2379c8fe96d76d022d4c3",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/tachistoscope-feedback.spec.ts": "4cb5cd89ab5ecf7fade694c57820bf098f2f2d0a76eb2841c2f9d2cce26abec1",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/tachistoscope-feedback.spec.ts": "9b8f302281a1253bb8683730c9d4c4155a07be10933f3cc7c71b6f3779ae053d",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/tracking-settings.spec.ts": "5f28224f76ceb764c7363dd6407a2d09f474604a14142465293a0029f12fbeb5",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/visual-expansion-player.spec.ts": "d074c0e786f026cbf2f0847b9734a52aa1ba6bc1d0bbd867fa7a6bbc9c2e57f9",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/visualization-player.spec.ts": "f8641de4ecd68bc4aa0618fb9809a86103f88cad018500aeb2a4eb847f435f50",
@@ -2637,7 +2637,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "merge fix/h7-speed-reading-adaptive-difficulty into fix/h8-speed-reading-small-items",
+    "purpose": "merge fix/h8-speed-reading-small-items into fix/h9-tachistoscope-feedback",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2685,7 +2685,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "0b8f0003",
+    "previousBaselineCommit": "4249f0ff",
     "removedSincePreviousBaseline": []
   }
 }
