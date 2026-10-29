@@ -13,6 +13,18 @@ namespace Identity.API.IntegrationTests;
 public sealed partial class CoachingCmsAndSubscriptionServiceTests
 {
     [Fact]
+    public void TheCalendarFeedAnswersHeadRequestsAnonymouslyLikeGet()
+    {
+        // Roadmap F1: the gateway lets HEAD through for calendar apps; the service must answer it, not fall back to 401.
+        var feed = typeof(Coaching.API.Controllers.CalendarController).GetMethod("Feed")!;
+        feed.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute), false)
+            .Cast<Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute>()
+            .SelectMany(attribute => attribute.HttpMethods)
+            .Should().BeEquivalentTo(["GET", "HEAD"]);
+        feed.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), false).Should().ContainSingle();
+    }
+
+    [Fact]
     public async Task ACalendarLinkServesTheUsersSessionsUntilItIsReplacedOrTurnedOff()
     {
         await using var db = CreateDbContext();
