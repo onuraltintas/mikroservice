@@ -8,6 +8,7 @@ import { ThemeService, Theme } from '../../../core/services/theme.service';
 import { BaseComponent } from '../../../core/components/base.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { UsersService } from '../../../core/services/users.service';
+import { PersonalDataService } from '../../../core/services/personal-data.service';
 
 @Component({
   selector: 'app-settings',
@@ -23,10 +24,26 @@ export class SettingsComponent extends BaseComponent implements OnInit, OnDestro
   private settingsService = inject(SettingsService);
   private authService = inject(AuthService);
   private usersService = inject(UsersService);
+  private personalData = inject(PersonalDataService);
   readonly themeService   = inject(ThemeService);
   // toaster inherited from BaseComponent
 
   activeTab = 0;
+  downloadingData = false;
+
+  async downloadMyData(): Promise<void> {
+    if (this.downloadingData) return;
+    this.downloadingData = true;
+    try {
+      await this.personalData.downloadMyData();
+      this.toaster.success('Kişisel verileriniz indirildi', 3000);
+    } catch (error) {
+      console.error('Personal data export failed:', error);
+      this.toaster.error('Kişisel veriler indirilemedi, lütfen tekrar deneyin', 3000);
+    } finally {
+      this.downloadingData = false;
+    }
+  }
 
   settings: UserSettings = {
     fontSize: 16,
