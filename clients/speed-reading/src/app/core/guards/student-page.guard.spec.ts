@@ -48,8 +48,8 @@ describe('studentPageGuard', () => {
     expect(permits('exercises/universal-player/:exerciseId', ['Teacher'])).toBeTrue();
   });
 
-  it('allows the read-only attention prototype through the student shell', () => {
-    expect(permits('attention-preview', ['Teacher'])).toBeTrue();
+  it('no longer treats the removed attention prototype as a staff preview page', () => {
+    expect(permits('attention-preview', ['Teacher'])).toBeFalse();
   });
 
   it('preserves every student page for an account with both roles', () => {
