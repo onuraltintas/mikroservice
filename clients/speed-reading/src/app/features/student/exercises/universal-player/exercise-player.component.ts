@@ -43,6 +43,7 @@ import { visualAngleToOffsetPercent } from './engines/visual-expansion-position'
 import { MotionPathEngine } from './engines/motion-path.engine';
 import { ScanFindEngine } from './engines/scan-find.engine';
 import { ErrorAnalysisEngine } from './engines/error-analysis.engine';
+import { TargetHuntEngine } from './engines/target-hunt.engine';
 import { RegressionReductionEngine } from './engines/regression-reduction.engine';
 import { SubvocalizationReductionEngine } from './engines/subvocalization-reduction.engine';
 import { VisualizationEngine } from './engines/visualization.engine';
@@ -151,6 +152,38 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   @HostListener('document:mouseleave', ['$event'])
   onMouseLeave(event: MouseEvent): void {
     // Existing mouse leave logic if any
+  }
+
+  // --- Target Hunt (Hedef Avı) Helpers ---
+
+  get asTargetHunt(): TargetHuntEngine | null {
+    return this.engine?.engineType === 'target_hunt' ? this.engine as TargetHuntEngine : null;
+  }
+
+  /** A short sample row for the ready screen, built from the exercise's own target and distractors. */
+  getTargetHuntExample(): { text: string; isTarget: boolean }[] {
+    const hunt = this.asTargetHunt;
+    if (!hunt) return [];
+    const target = hunt.getTarget();
+    const distractors = [...new Set(hunt.getItems().filter(item => item !== target))];
+    if (!target || distractors.length === 0) return [];
+    const pattern = [false, true, false, false, true, false, true, false];
+    let next = 0;
+    return pattern.map(isTarget => ({ text: isTarget ? target : distractors[next++ % distractors.length], isTarget }));
+  }
+
+  onTargetHuntTap(index: number): void {
+    this.asTargetHunt?.handleInput({ type: 'tap', index });
+    this.cdr.detectChanges();
+  }
+
+  finishTargetHunt(): void {
+    this.asTargetHunt?.forceComplete();
+    this.cdr.detectChanges();
+  }
+
+  retryTargetHuntAction(): void {
+    this.asTargetHunt?.retryServerAction();
   }
 
   // --- Mental Registration (Focus) Helpers ---
@@ -1398,7 +1431,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.waitForPendingActions(() => this.finishReadingTracking(finalizeCompletion, result.details?.timedOut === true));
         },
         onError: (error) => {
-          if (this.engine?.engineType === 'error_analysis' && this.engine.state.isRunning) {
+          if ((this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'target_hunt') && this.engine.state.isRunning) {
             this.toaster.error(error); this.cdr.detectChanges(); return;
           }
           this.error = error;
@@ -1446,6 +1479,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             const errorEngine = this.engine as ErrorAnalysisEngine;
             void this.enqueueAction(action as ActionData, response => errorEngine.reconcileServerResponse(action, response), false)
               .catch(() => errorEngine.reconcileServerResponse(action, { isValid: false }));
+            return;
+          }
+          if (this.engine?.engineType === 'target_hunt') {
+            const huntEngine = this.engine as TargetHuntEngine;
+            void this.enqueueAction(action as ActionData, response => huntEngine.reconcileServerResponse(action, response), false)
+              .catch(() => huntEngine.reconcileServerResponse(action, { isValid: false }));
             return;
           }
           // Backend motoruna aksiyonu bildir
@@ -1990,7 +2029,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
     if (this.isPauseTransitionPending) return;
     if (this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer()) return;
-    if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
+    if (this.engine?.engineType === 'target_hunt' && (this.engine as TargetHuntEngine).isAwaitingServer()) return;
+    if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'target_hunt' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
       this.isPauseTransitionPending = true;
       const resuming = this.engineState.isPaused;
       if (!resuming) this.engine?.pause();
@@ -3699,6 +3739,13 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               falseAlarms: sessionResult.detailedResults.errorAnalysisFalseAlarms?.length ?? 0,
               hintUsedCount: sessionResult.detailedResults.errorAnalysisHints ?? 0,
               assisted: (sessionResult.detailedResults.errorAnalysisHints ?? 0) > 0
+            } : {}),
+            ...(this.engine?.engineType === 'target_hunt' && Array.isArray(sessionResult.detailedResults?.targetHuntHits) ? {
+              target: sessionResult.detailedResults.targetHuntTarget,
+              totalTargets: sessionResult.detailedResults.totalSteps,
+              found: sessionResult.detailedResults.targetHuntHits.length,
+              missed: Math.max(0, sessionResult.detailedResults.totalSteps - sessionResult.detailedResults.targetHuntHits.length),
+              falseTaps: sessionResult.detailedResults.targetHuntFalseTaps?.length ?? 0
             } : {}),
             ...(tachistoscope ? {
               trials,

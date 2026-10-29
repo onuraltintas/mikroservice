@@ -257,6 +257,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
     // Odaklanma (Orange/Amber)
     'TextFading': 'linear-gradient(135deg, #f57c00 0%, #ffb74d 100%)',
     'Focus': 'linear-gradient(135deg, #f57c00 0%, #ffb74d 100%)',
+    'TargetHunt': 'linear-gradient(135deg, #f57c00 0%, #ffb74d 100%)',
     'SubvocalizationReduction': 'linear-gradient(135deg, #ef6c00 0%, #ff9800 100%)',
     'RegressionReduction': 'linear-gradient(135deg, #ef6c00 0%, #ff9800 100%)',
 
@@ -315,6 +316,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
       'RegressionReduction': 'arrow_forward',
       'SubvocalizationReduction': 'volume_off',
       'Fixation': 'center_focus_strong',
+      'TargetHunt': 'ads_click',
       'Chunking': 'view_module',
       'VocabularyBuilder': 'school',
       'Vocabulary': 'school',

@@ -248,6 +248,8 @@ public static class SpeedReadingDailyProgressRules
             var seconds = Number(timing, "durationSeconds");
             if (engine.GetString() == "focus")
                 seconds = Number(settings, "speedMs") * Number(settings, "totalSteps") / 1000;
+            else if (engine.GetString() == "target_hunt")
+                seconds = Number(settings, "timeLimit");
             else if (engine.GetString() == "free_reading")
                 seconds = Number(timing, "suggestedMaxReadingTimeMs") / 1000;
             else if (engine.GetString() is "word_highlight" or "text_fade" or "regression_reduction" or "subvocalization_reduction")

@@ -22,6 +22,7 @@ public static class ExerciseTaxonomy
         ExerciseConfigurationRules.NormalizeEngineType(engineType) switch
         {
             "grid_interaction" or "motion_path" or "visual_expansion" or "attention_training" or "focus"
+                or "target_hunt"
                 => "attention-and-eye-movement",
             "text_stream" or "text_fade" or "word_highlight" or "free_reading"
                 or "regression_reduction" or "subvocalization_reduction" or "adaptive_fluency"

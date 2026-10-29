@@ -15,7 +15,7 @@ public static class ExerciseConfigurationRules
         "visual_expansion", "scan_find", "reading_comprehension", "exam_simulation",
         "free_reading", "regression_reduction", "subvocalization_reduction", "visualization",
         "attention_training", "focus", "vocabulary_builder", "error_analysis",
-        "adaptive_fluency", "scanning", "skimming"
+        "adaptive_fluency", "scanning", "skimming", "target_hunt"
     };
 
     private static readonly IReadOnlyDictionary<string, string> LegacyAliases =
@@ -46,7 +46,8 @@ public static class ExerciseConfigurationRules
             ["vocabulary"] = "vocabulary_builder",
             ["vocabularybuilder"] = "vocabulary_builder",
             ["erroranalysis"] = "error_analysis",
-            ["adaptivefluency"] = "adaptive_fluency"
+            ["adaptivefluency"] = "adaptive_fluency",
+            ["targethunt"] = "target_hunt"
         };
 
     public static IReadOnlyList<string> GetSupportedEngineTypes() =>
@@ -137,6 +138,8 @@ public static class ExerciseConfigurationRules
                     ValidateVisualExpansionConfiguration(nested.Value);
                 ValidateEffectiveVisualExpansionConfiguration(root, nested);
             }
+            if (configured == SpeedReading.Domain.Sessions.TargetHuntRules.EngineType)
+                SpeedReading.Domain.Sessions.TargetHuntRules.Read(nested ?? root);
             if (configured is "focus" or "attention_training")
             {
                 ValidateFocusConfiguration(root);

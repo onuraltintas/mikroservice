@@ -8313,3 +8313,141 @@ h1 {
     > .subvoc-footer > div { padding: 6px; gap: 6px; font-size: 12px; }
   }
 }
+
+// Hedef Avı (target hunt) — decision 29.10.2026
+.target-hunt-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 0 0.5rem;
+  border-radius: 8px;
+  background: var(--sp-success, #10b981);
+  color: #fff;
+  font-size: 1.15em;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.target-hunt-example {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 12px;
+
+  &__label { font-weight: 600; color: var(--sp-text-2, #64748b); }
+  &__hint { width: 100%; font-size: 0.875rem; color: var(--sp-text-2, #64748b); }
+
+  &__item {
+    min-width: 2.25rem;
+    padding: 4px 8px;
+    border: 1px solid var(--sp-border, #e5e7eb);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.1rem;
+
+    &.is-target {
+      border-color: var(--sp-success, #10b981);
+      background: color-mix(in srgb, var(--sp-success, #10b981) 18%, transparent);
+      font-weight: 700;
+    }
+  }
+}
+
+.target-hunt-container {
+  max-width: 880px;
+}
+
+.target-hunt-instruction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+
+  &__stats {
+    display: inline-flex;
+    gap: 12px;
+    margin-left: auto;
+    font-size: 0.95rem;
+  }
+}
+
+.target-hunt-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--sp-text-2, #64748b);
+
+  .material-icons { font-size: 18px; }
+  &--wrong { color: var(--sp-danger, #ef4444); }
+  &--urgent { color: var(--sp-danger, #ef4444); font-weight: 700; }
+}
+
+.target-hunt-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--target-hunt-columns, 10), minmax(0, 1fr));
+  gap: 6px;
+  user-select: none;
+
+  // Phones keep the 44px touch targets required app-wide; rows then reflow to the screen width.
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+    gap: 4px;
+  }
+
+  &.paused { filter: blur(6px); pointer-events: none; }
+}
+
+.target-hunt-cell {
+  min-height: 44px;
+  padding: 6px 2px;
+  border: 1px solid var(--sp-border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--sp-surface, #ffffff);
+  color: var(--sp-text-1, #1e293b);
+  font-size: clamp(0.95rem, 2.6vw, 1.4rem);
+  overflow: hidden;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  &:hover:not(:disabled) { background: var(--sp-surface-3, #f3f4f6); }
+  &:focus-visible { outline: 3px solid var(--sp-primary, #6366f1); outline-offset: 1px; }
+  &:disabled { cursor: default; }
+
+  &.is-hit {
+    border-color: var(--sp-success, #10b981);
+    background: color-mix(in srgb, var(--sp-success, #10b981) 22%, transparent);
+    font-weight: 700;
+  }
+
+  &.is-wrong {
+    border-color: var(--sp-danger, #ef4444);
+    background: color-mix(in srgb, var(--sp-danger, #ef4444) 18%, transparent);
+    text-decoration: line-through;
+  }
+
+  &.is-last { transform: scale(1.06); }
+}
+
+.target-hunt-feedback {
+  min-height: 1.5em;
+  margin: 10px 0 0;
+  font-weight: 600;
+
+  &--correct { color: var(--sp-success, #10b981); }
+  &--wrong { color: var(--sp-danger, #ef4444); }
+}
+
+.target-hunt-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .target-hunt-cell { transition: none; &.is-last { transform: none; } }
+}
