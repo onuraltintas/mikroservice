@@ -3269,6 +3269,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (!this.engine || this.engine.engineType !== 'text_stream') return;
 
     const answer = this.tachistoscopeAnswer.trim();
+    // The previous round's result must not stay on screen while this answer is checked (reported 29.10.2026).
+    this.tachistoscopeFeedback = null;
 
     // Submit to engine
     (this.engine as TextStreamEngine).handleInput({ answer });
@@ -3301,7 +3303,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   isShowingTachistoscopeFeedback(): boolean {
     return !!this.tachistoscopeFeedback && !this.isAssessmentMode
-      && !this.isShowingFixation() && !this.isShowingStimulus() && !this.isWaitingForAnswer();
+      && !this.isShowingFixation() && !this.isShowingStimulus() && !this.isWaitingForAnswer()
+      && !(this.engine as TextStreamEngine)?.isAwaitingServer?.();
   }
 
   getTachistoscopeCorrectCount(): number {

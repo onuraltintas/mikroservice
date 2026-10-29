@@ -860,6 +860,11 @@ export class TextStreamEngine implements BaseEngine {
             + Math.max(0, count - 1) * (this.config.timing?.intervalMs || 0);
     }
 
+    /** True while an answer is being checked or the next stimulus is being fetched from the server. */
+    isAwaitingServer(): boolean {
+        return this.awaitingServer;
+    }
+
     getLastTrialResult(): TrialRecord | null {
         return this.trials.length > 0 ? this.trials[this.trials.length - 1] : null;
     }
