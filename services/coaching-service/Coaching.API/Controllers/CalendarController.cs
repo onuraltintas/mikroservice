@@ -35,6 +35,7 @@ public sealed class CalendarController(
 
     /// <summary>The calendar a subscribed app downloads. The secret token in the link is the only credential.</summary>
     [HttpGet("feed/{token}")]
+    [HttpHead("feed/{token}")] // Roadmap F1: calendar apps may check the link with HEAD; the gateway already lets it through.
     [AllowAnonymous]
     [Produces("text/calendar")]
     public async Task<IActionResult> Feed(string token, CancellationToken cancellationToken)
