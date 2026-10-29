@@ -1755,7 +1755,7 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedExerciseTaxonomyBootstrap.cs": "ce9bcd8c1a8a8fadfda31a83f2b758bf6ebcb45f719e600f43f24314b71a4d2c",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedGamificationAchievementEvaluator.cs": "14ab350eab023748108f925ea3b12924409e8bc16da891fdb08df7e52c33cd79",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedIdempotencyRecord.cs": "90401beee4d1c64adc0112f3f64d722dfc6f7fc4af2fef3840f957c9489f3c69",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingAdaptiveLearning.cs": "18cb517553949d8924592ae538caa3511f5755a002904b3d6442257840761469",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingAdaptiveLearning.cs": "75b8aa4a33abe77cd9ee66e6a58a53cf2e2d74455437359d30146e2d1435a026",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingAdaptiveText.cs": "c5672755e1bb24368985eb48d916b4aa1fcf2abf57512164854e45abe2117975",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingAdminAnalytics.cs": "cc8d57953c1a1e112a417a39815119d5f983cc81e396bff0c53e2e7857a47840",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingAdminAuditWriter.cs": "b4208a09da9c13cef63dfe64e7abe86edff92764373e0af0a65cfaab6af7b61f",
@@ -2630,7 +2630,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "H4 speed reading performance",
+    "purpose": "H4 speed reading performance (jsonb filter)",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2678,7 +2678,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "cd1dd5a2",
+    "previousBaselineCommit": "38cedfe6",
     "removedSincePreviousBaseline": []
   }
 }
