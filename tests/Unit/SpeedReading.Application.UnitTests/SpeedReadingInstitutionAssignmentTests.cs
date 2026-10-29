@@ -40,7 +40,7 @@ public sealed class SpeedReadingInstitutionAssignmentTests
         await db.SaveChangesAsync();
         var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
             "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssignments")!;
-        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null)!;
+        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null, null)!;
 
         var page = await service.GetInstitutionAssignmentsAsync(
             institutionId, 1, 25, null, null, null, null);
@@ -58,7 +58,7 @@ public sealed class SpeedReadingInstitutionAssignmentTests
                 .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
             "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssignments")!;
-        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null)!;
+        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null, null)!;
 
         var id = await service.CreateForInstitutionAsync(institutionId, teacherId,
             Guid.NewGuid(), new CreateAssignmentRequest(Guid.NewGuid(), null, [],
@@ -80,7 +80,7 @@ public sealed class SpeedReadingInstitutionAssignmentTests
         await db.SaveChangesAsync();
         var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
             "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssignments")!;
-        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null)!;
+        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null, null)!;
 
         var deleted = await service.DeleteInstitutionAsync(
             institutionId, assignment.Id, CancellationToken.None);
@@ -112,7 +112,7 @@ public sealed class SpeedReadingInstitutionAssignmentTests
         var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
             "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssignments")!;
         var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db,
-            new TestDirectory(studentId))!;
+            new TestDirectory(studentId), null)!;
 
         var id = await service.CreateForInstitutionAsync(institutionId, teacherId,
             actorId, new CreateAssignmentRequest(exercise.Id, null, [studentId],
