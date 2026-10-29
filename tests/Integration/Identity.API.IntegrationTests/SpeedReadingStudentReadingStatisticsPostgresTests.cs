@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Shared.IntegrationTests.Fixtures;
+using SpeedReading.Application.AdaptiveLearning;
+using SpeedReading.Application.Review;
 using SpeedReading.Application.StudentReading;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Sessions;
@@ -44,6 +46,13 @@ public sealed class SpeedReadingStudentReadingStatisticsPostgresTests(PostgresFi
             statistics.CategoriesRead.Should().Equal("Bilim");
             statistics.RecentSessions.Should().HaveCount(2);
             history.Should().HaveCount(2).And.OnlyContain(item => item.ReadingTextTitle == "Göç");
+
+            var review = (ISpeedReadingReview)Activator.CreateInstance(
+                typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingReview")!, db)!;
+            (await review.GetStatisticsAsync(user, null, CancellationToken.None)).Should().NotBeNull();
+            var adaptive = (ISpeedReadingAdaptiveLearning)Activator.CreateInstance(
+                typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAdaptiveLearning")!, db)!;
+            (await adaptive.GetProfileAsync(user, CancellationToken.None)).TotalReadingSessions.Should().Be(2);
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }

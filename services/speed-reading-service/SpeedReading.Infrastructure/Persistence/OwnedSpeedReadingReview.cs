@@ -76,11 +76,12 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
         var todayEnd = now.Date.AddDays(1);
         var dueToday = items.Count(item => !item.IsMastered && item.NextReviewDate <= todayEnd);
         var overdue = items.Count(item => !item.IsMastered && item.NextReviewDate < now);
-        var completions = await db.ReviewCompletions.AsNoTracking()
+        // Review H4 (finding 23): completion count and average score come from the database.
+        var completions = db.ReviewCompletions.AsNoTracking()
             .Where(item => item.UserId == userId && (!seriesId.HasValue || db.ReviewItems
-                .Any(reviewItem => reviewItem.Id == item.ReviewItemId && reviewItem.ProgramTemplateId == seriesId)))
-            .ToListAsync(cancellationToken);
-        var scores = completions.Select(item => item.Score).ToList();
+                .Any(reviewItem => reviewItem.Id == item.ReviewItemId && reviewItem.ProgramTemplateId == seriesId)));
+        var completionCount = await completions.CountAsync(cancellationToken);
+        var averageScore = completionCount == 0 ? 0 : await completions.AverageAsync(item => item.Score, cancellationToken);
 
         return new ReviewStatisticsSummary(
             items.Count,
@@ -90,10 +91,10 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
             items.Count(item => item.UpdatedAt.HasValue && item.UpdatedAt.Value >= now.Date),
             items.Count(item => item.IsMastered),
             items.Count(item => !item.IsMastered && item.NextReviewDate <= now.AddDays(7)),
-            Math.Round(scores.DefaultIfEmpty(0).Average(), 1),
+            Math.Round(averageScore, 1),
             Math.Round(items.Count == 0 ? 0 : items.Average(item => item.IntervalDays), 1),
             0,
-            completions.Count,
+            completionCount,
             items.Where(item => !item.IsMastered)
                 .OrderBy(item => item.NextReviewDate)
                 .Select(item => (DateTime?)item.NextReviewDate)

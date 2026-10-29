@@ -257,8 +257,11 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             .Select(item => item.SessionId!.Value).ToList();
         if (resultSessionIds.Count > 0)
         {
+            // Review H4 (finding 23): only sessions whose saved state mentions learning mode are read and parsed,
+            // instead of every session's full state (which carries the whole text).
             var sessionStates = await db.ExerciseSessions.AsNoTracking()
-                .Where(item => item.StudentId == userId && resultSessionIds.Contains(item.Id))
+                .Where(item => item.StudentId == userId && resultSessionIds.Contains(item.Id)
+                    && EF.Functions.Like(item.SessionDataJson, "%comprehensionMode%learning%"))
                 .Select(item => new { item.Id, item.SessionDataJson }).ToListAsync(cancellationToken);
             var learningIds = sessionStates.Where(item => IsComprehensionLearning(item.SessionDataJson))
                 .Select(item => item.Id).ToHashSet();
