@@ -44,6 +44,7 @@ import { MotionPathEngine } from './engines/motion-path.engine';
 import { ScanFindEngine } from './engines/scan-find.engine';
 import { ErrorAnalysisEngine } from './engines/error-analysis.engine';
 import { TargetHuntEngine } from './engines/target-hunt.engine';
+import { distributeExpansionAnswer } from './expansion-answer-input';
 import { RegressionReductionEngine } from './engines/regression-reduction.engine';
 import { SubvocalizationReductionEngine } from './engines/subvocalization-reduction.engine';
 import { VisualizationEngine } from './engines/visualization.engine';
@@ -3491,11 +3492,30 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       && this.getExpansionAnswerSlots().every(index => !!this.expansionAnswers[index]?.trim());
   }
 
+  /**
+   * Reported 29.10.2026 (phones): Android keyboards compose every letter, so the old "wait for the composition to end"
+   * rule never moved on, and a second letter typed into the full box was cut by maxlength. The box limit is applied
+   * here; extra letters move on to the next boxes and focus follows, also while the keyboard is still composing.
+   */
   onExpansionAnswerInput(index: number, event: Event): void {
     const input = event.target as HTMLInputElement;
-    if ((event as InputEvent).isComposing || this.engineState.isPaused
-      || input.value.length < this.getExpansionAnswerMaxLength(index)) return;
-    this.visualExpansionArea?.nativeElement.querySelectorAll<HTMLInputElement>('.char-input')[index + 1]?.focus();
+    if (this.engineState.isPaused) return;
+    const slots = this.getExpansionAnswerSlots();
+    const { values, focusIndex } = distributeExpansionAnswer(this.expansionAnswers, index, input.value,
+      slots.map(slot => this.getExpansionAnswerMaxLength(slot)));
+    this.expansionAnswers = values;
+    const inputs = this.visualExpansionArea?.nativeElement.querySelectorAll<HTMLInputElement>('.char-input');
+    // Only rewrite boxes whose text changed, so an ongoing composition in a box that fits is left alone.
+    inputs?.forEach((box, position) => { if (position < values.length && box.value !== values[position]) box.value = values[position]; });
+    if (focusIndex !== null) inputs?.[focusIndex]?.focus();
+    this.cdr.detectChanges();
+  }
+
+  onExpansionAnswerBackspace(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (index === 0 || input.value) return;
+    event.preventDefault();
+    this.visualExpansionArea?.nativeElement.querySelectorAll<HTMLInputElement>('.char-input')[index - 1]?.focus();
   }
 
   submitExpansionAnswer(): void {
