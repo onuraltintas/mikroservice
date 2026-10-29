@@ -259,9 +259,13 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
         {
             // Review H4 (finding 23): only sessions whose saved state mentions learning mode are read and parsed,
             // instead of every session's full state (which carries the whole text).
-            var sessionStates = await db.ExerciseSessions.AsNoTracking()
-                .Where(item => item.StudentId == userId && resultSessionIds.Contains(item.Id)
-                    && EF.Functions.Like(item.SessionDataJson, "%comprehensionMode%learning%"))
+            // The state column is jsonb on PostgreSQL, so the filter uses jsonb containment there.
+            var candidates = db.ExerciseSessions.AsNoTracking()
+                .Where(item => item.StudentId == userId && resultSessionIds.Contains(item.Id));
+            candidates = db.Database.IsNpgsql()
+                ? candidates.Where(item => EF.Functions.JsonContains(item.SessionDataJson, LearningModeJson))
+                : candidates.Where(item => item.SessionDataJson.Contains("learning"));
+            var sessionStates = await candidates
                 .Select(item => new { item.Id, item.SessionDataJson }).ToListAsync(cancellationToken);
             var learningIds = sessionStates.Where(item => IsComprehensionLearning(item.SessionDataJson))
                 .Select(item => item.Id).ToHashSet();
@@ -326,6 +330,8 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
 
         return new AdaptiveSnapshot(profile, userProfile, canonicalExerciseResults, readingSessions, readingSessionAnswers, activities);
     }
+
+    private const string LearningModeJson = "{\"comprehensionMode\":\"learning\"}";
 
     private static bool IsComprehensionLearning(string stateJson)
     {
