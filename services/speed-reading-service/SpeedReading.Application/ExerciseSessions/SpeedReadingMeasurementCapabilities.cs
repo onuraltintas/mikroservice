@@ -15,6 +15,7 @@ public static class SpeedReadingMeasurementCapabilities
         new("visual_expansion", "Görsel genişleme", "ValidatedInteraction", true, "Sunucu uyaranı, tur sırası, cevap ve tepki penceresi"),
         new("fixation", "Göz sabitleme", "ValidatedInteraction", true, "Sunucu harfleri, tur sırası ve doğrulanan yanıt"),
         new("focus", "Odak ve dikkat", "ValidatedInteraction", true, "Sunucu uyaran akışı, N-back hedefi ve cevap penceresi"),
+        new("target_hunt", "Hedef avı", "ValidatedInteraction", false, "Sunucu yerleşimi, her dokunuşun doğrulanması ve sunucu süresi"),
         new("schulte", "Schulte ve grid", "ValidatedInteraction", true, "Sunucu yerleşimi ve beklenen tıklama sırası"),
         new("visualization", "Görselleştirme", "ValidatedQuestion", true, "Sunucu soru bankası ve cevap anahtarı"),
         new("motion_path", "Hareket yolu ve göz takibi", "NotMeasured", false, "Doğrulanmış göz izleme donanımı veya sunucu sinyali yok")

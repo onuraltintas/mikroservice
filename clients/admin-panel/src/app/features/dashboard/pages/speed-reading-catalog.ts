@@ -377,7 +377,8 @@ export class SpeedReadingCatalogComponent implements OnInit, OnDestroy {
     { value: 'visualization', label: 'Görselleştirme' }, { value: 'attention_training', label: 'Dikkat eğitimi' },
     { value: 'focus', label: 'Odak eğitimi' }, { value: 'vocabulary_builder', label: 'Kelime geliştirme' },
     { value: 'error_analysis', label: 'Hata analizi' }, { value: 'adaptive_fluency', label: 'Adaptif akıcılık' },
-    { value: 'scanning', label: 'Hızlı tarama' }, { value: 'skimming', label: 'Göz gezdirme' }
+    { value: 'scanning', label: 'Hızlı tarama' }, { value: 'skimming', label: 'Göz gezdirme' },
+    { value: 'target_hunt', label: 'Hedef avı' }
   ] as const;
   readonly achievementCriteria: AchievementCriteriaDefinition[] = [
     { value: 'activity_count', label: 'Tamamlanan çalışma sayısı', property: 'count', input: 'number', min: 1, help: 'Öğrencinin tamamladığı doğrulanmış çalışma sayısı.' },
@@ -723,7 +724,7 @@ export class SpeedReadingCatalogComponent implements OnInit, OnDestroy {
     }
     return JSON.stringify(plan);
   }
-  private normalizeEngineType(value: string): string { const aliases: Record<string, string> = { schultetable: 'grid_interaction', eyetracking: 'motion_path', eye_tracking: 'motion_path', fixation: 'motion_path', saccade: 'motion_path', tachistoscope: 'text_stream', rsvp: 'text_stream', textfading: 'text_fade', text_fading: 'text_fade', speedreading: 'word_highlight', speed_reading: 'word_highlight', chunking: 'word_highlight', word_group: 'word_highlight', visualexpansion: 'visual_expansion', comprehension: 'reading_comprehension', examsimulation: 'exam_simulation', freereading: 'free_reading', regressionreduction: 'regression_reduction', subvocalizationreduction: 'subvocalization_reduction', attentiontraining: 'attention_training', vocabulary: 'vocabulary_builder', vocabularybuilder: 'vocabulary_builder', erroranalysis: 'error_analysis', adaptivefluency: 'adaptive_fluency' }; const normalized = value.trim().replace(/-/g, '_').replace(/ /g, '_').toLowerCase(); return aliases[normalized] ?? normalized; }
+  private normalizeEngineType(value: string): string { const aliases: Record<string, string> = { schultetable: 'grid_interaction', eyetracking: 'motion_path', eye_tracking: 'motion_path', fixation: 'motion_path', saccade: 'motion_path', tachistoscope: 'text_stream', rsvp: 'text_stream', textfading: 'text_fade', text_fading: 'text_fade', speedreading: 'word_highlight', speed_reading: 'word_highlight', chunking: 'word_highlight', word_group: 'word_highlight', visualexpansion: 'visual_expansion', comprehension: 'reading_comprehension', examsimulation: 'exam_simulation', freereading: 'free_reading', regressionreduction: 'regression_reduction', subvocalizationreduction: 'subvocalization_reduction', attentiontraining: 'attention_training', vocabulary: 'vocabulary_builder', vocabularybuilder: 'vocabulary_builder', erroranalysis: 'error_analysis', adaptivefluency: 'adaptive_fluency', targethunt: 'target_hunt' }; const normalized = value.trim().replace(/-/g, '_').replace(/ /g, '_').toLowerCase(); return aliases[normalized] ?? normalized; }
   private emptyLearningPath(): SpeedReadingLearningPathTemplateRequest { return { name: '', targetAgeGroupConfigurationId: null, description: '', estimatedDays: 1, isActive: true }; }
   private emptyNode(templateId: string): SpeedReadingLearningPathNodeRequest { return { templateId, parentNodeId: null, nodeType: 'Exercise', title: '', contentType: null, contentId: null, order: 0 }; }
   private emptyNodeContent(nodeId: string): SpeedReadingLearningPathNodeContentRequest { return { nodeId, exerciseId: null, readingTextId: null, description: '' }; }

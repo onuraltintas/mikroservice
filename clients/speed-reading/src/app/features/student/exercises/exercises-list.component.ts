@@ -70,6 +70,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
     'RegressionReduction': 'Hız Geliştirme',
     'TextFading': 'Odaklanma',
     'Focus': 'Odaklanma',
+    'TargetHunt': 'Odaklanma',
     'Comprehension': 'Kavrama',
     'Chunking': 'Kavrama',
     'Vocabulary': 'Kavrama',

@@ -55,6 +55,21 @@
                     Süre dolarsa sorulara geçilir; çalışma eksik sayılır ve kayıtlı oturumda program/ödev ilerlemesi verilmez.
                     Soruları cevaplama süresi inceleme sınırına dahil değildir. Okuma hızı ölçülmez.
                 </p>
+                <ng-container *ngIf="engine.engineType === 'target_hunt' && asTargetHunt as hunt">
+                    <p class="description">
+                        Ekranda satır satır harfler var. Süre bitmeden gördüğün her
+                        <strong class="target-hunt-chip">{{ hunt.getTarget() }}</strong>'ye dokun;
+                        benzer görünenlere dokunma. Toplam {{ hunt.getTargetCount() }} hedef var, süre {{ hunt.getTimeLimitSeconds() }} saniye.
+                        Yanlış dokunuş puanı düşürür. Hepsini bulduğunda egzersiz kendiliğinden biter.
+                    </p>
+                    <div class="target-hunt-example" role="img"
+                        [attr.aria-label]="'Örnek satır: ' + hunt.getTarget() + ' olanlara dokunulur'">
+                        <span class="target-hunt-example__label">Örnek:</span>
+                        <span *ngFor="let item of getTargetHuntExample()" class="target-hunt-example__item"
+                            [class.is-target]="item.isTarget">{{ item.text }}</span>
+                        <span class="target-hunt-example__hint">Yeşil olanlar dokunulacak hedefler.</span>
+                    </div>
+                </ng-container>
                 <p class="description" *ngIf="canPracticeFocus">
                     <span *ngIf="!asFocusEngine?.isDualMode">{{ asFocusEngine?.nLevel }} adım önceki
                         {{ asFocusEngine?.isWordMode ? 'kelime' : 'konum' }} aynıysa eşleşme düğmesine basın; farklıysa bekleyin.</span>
@@ -742,6 +757,67 @@
                 [class.missed]="word.isTarget && !word.found && engineState.isCompleted">
                 {{ word.text }}
             </span>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Target Hunt (Hedef Avı) -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'target_hunt' && asTargetHunt as hunt"
+        class="game-container target-hunt-container">
+        <p *ngIf="hunt.hasFailedAction()" role="alert">Dokunuşunuz kaydedilemedi.
+            <button type="button" class="ep-btn ep-btn--ghost" (click)="retryTargetHuntAction()"
+                [disabled]="engineState.isPaused || hunt.isAwaitingServer()">Tekrar gönder</button>
+        </p>
+        <div class="game-header">
+            <div class="timer">
+                <span class="material-icons">search</span>
+                Hedef Avı
+            </div>
+            <div class="progress-info">
+                <span>Bulunan: {{ hunt.getFoundCount() }} / {{ hunt.getTargetCount() }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill"
+                    [style.width.%]="hunt.getTargetCount() ? (hunt.getFoundCount() / hunt.getTargetCount()) * 100 : 0"></div></div>
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Çık">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="target-hunt-instruction">
+            <span>Her</span>
+            <strong class="target-hunt-chip">{{ hunt.getTarget() }}</strong>
+            <span>'ye dokun</span>
+            <span class="target-hunt-instruction__stats">
+                <span class="target-hunt-stat target-hunt-stat--wrong">Yanlış dokunuş: {{ hunt.getFalseTapCount() }}</span>
+                <span class="target-hunt-stat" [class.target-hunt-stat--urgent]="hunt.getRemainingSeconds() <= 10">
+                    <span class="material-icons">timer</span> {{ hunt.getRemainingSeconds() }} sn
+                </span>
+            </span>
+        </div>
+
+        <div class="target-hunt-grid" [class.paused]="engineState.isPaused"
+            [style.grid-template-columns]="'repeat(' + hunt.getColumns() + ', minmax(0, 1fr))'"
+            role="group" [attr.aria-label]="'Hedef: ' + hunt.getTarget()">
+            <button type="button" *ngFor="let item of hunt.getItems(); let index = index; trackBy: trackByIdx"
+                class="target-hunt-cell" [class.is-hit]="hunt.isHit(index)" [class.is-wrong]="hunt.isFalseTap(index)"
+                [class.is-last]="hunt.getLastFeedback()?.index === index"
+                (click)="onTargetHuntTap(index)"
+                [disabled]="engineState.isPaused || hunt.isHit(index) || hunt.isFalseTap(index) || hunt.isAwaitingServer()"
+                [attr.aria-pressed]="hunt.isHit(index) || hunt.isFalseTap(index)">{{ item }}</button>
+        </div>
+
+        <p class="target-hunt-feedback" role="status" aria-live="polite">
+            <ng-container *ngIf="hunt.getLastFeedback() as feedback">
+                <span *ngIf="feedback.correct" class="target-hunt-feedback--correct">Doğru!</span>
+                <span *ngIf="!feedback.correct" class="target-hunt-feedback--wrong">Bu {{ hunt.getTarget() }} değil.</span>
+            </ng-container>
+        </p>
+
+        <div class="target-hunt-footer">
+            <button type="button" class="ep-btn ep-btn--ghost" (click)="finishTargetHunt()"
+                [disabled]="engineState.isPaused || hunt.isAwaitingServer()">Bitirdim, sonucu göster</button>
         </div>
     </div>
 
@@ -1742,6 +1818,14 @@
                     <div class="stat-value">{{ result?.details?.comprehensionScore }}%</div>
                     <div class="stat-label">Anlama</div>
                 </div>
+            </div>
+            <div *ngIf="engine?.engineType === 'target_hunt'">
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-value">{{ result?.details?.found }} / {{ result?.details?.totalTargets }}</div><div class="stat-label">Bulunan hedef</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ result?.details?.missed }}</div><div class="stat-label">Kaçırılan hedef</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ result?.details?.falseTaps }}</div><div class="stat-label">Yanlış dokunuş</div></div>
+                </div>
+                <p class="measurement-not-available">Dikkat ve görsel ayırt etme alıştırmasıdır; puan, bulunan hedef yüzdesinden yanlış dokunuş başına 5 puan (en fazla 30) düşülerek hesaplanır. Okuma hızı ve anlama ölçülmez.</p>
             </div>
             <div *ngIf="engine?.engineType === 'error_analysis'">
                 <div class="stats-row">
