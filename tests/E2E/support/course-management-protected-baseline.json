@@ -1824,8 +1824,8 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/program-learning-path-separation.contract.test.mjs": "3f63a11ca02bdbe7248ae8db949bed0812b200cda08ee0914034fdfbc60863a4",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/program-schedule.contract.test.mjs": "2c863c75a24d9bf9e5c1e7451b5c65002f37063214c206d047e3610d8580b7d1",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/program-template-validation.contract.test.mjs": "519d4bcffa641dd238b9cf86dc43bd2856b21a4a698bf55afc09f72c6c422fe9",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingErasureExecutionService.cs": "b2bccb21c637725147f65ac78ad2f9ee9c07916228c08802dcc50adda7351cc5",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingFinancialRetention.cs": "b1cc3df37aa85da9f8e45c45e66749539137943d472d25b5c7b7485eac59f9b4",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingErasureExecutionService.cs": "9edaa5d8677b4aa28c78b489363d25556acb0b25fa6ecc93f7195755b757361f",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingFinancialRetention.cs": "cedecaf397d28aae88fbf5bae36629714ded0b4182f6949f6196beb2aaa04c74",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingPersonalDataExportService.cs": "1c92b19276c7cef2cdd880b10736ae201196cb097f72dd68b43ace6047ee8646",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingPrivacyInventoryRepository.cs": "732dab0a9656dadaf3914caf30c02f2061feefd95c2970293353f4fa36361b89",
     "services/speed-reading-service/SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj": "387260a58adf1b34f8d4ed88b1658cf74fa24b108b715937c14404c37ee39b37",
@@ -2676,7 +2676,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "087be149",
+    "previousBaselineCommit": "a397e97f",
     "removedSincePreviousBaseline": []
   }
 }
