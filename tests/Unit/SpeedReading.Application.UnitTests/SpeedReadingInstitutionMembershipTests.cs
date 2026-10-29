@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Application.Institutions;
 using SpeedReading.Infrastructure.Persistence;
 using SpeedReading.Domain.Institutions;
 
@@ -127,7 +128,7 @@ public sealed class SpeedReadingInstitutionMembershipTests
             isActive: false,
             actorId,
             DateTime.UtcNow,
-            CancellationToken.None)).Should().BeFalse();
+            CancellationToken.None)).Should().Be(SpeedReadingMembershipChange.NotFound);
         var missingActor = () => store.SetMembershipAsync(
             firstInstitutionId,
             userId,
@@ -138,30 +139,9 @@ public sealed class SpeedReadingInstitutionMembershipTests
             CancellationToken.None);
         await missingActor.Should().ThrowAsync<ArgumentException>();
 
-        (await store.SetMembershipAsync(
-            firstInstitutionId,
-            userId,
-            SpeedReadingInstitutionMemberRole.Student,
-            isActive: true,
-            actorId,
-            DateTime.UtcNow,
-            CancellationToken.None)).Should().BeTrue();
-        (await store.SetMembershipAsync(
-            firstInstitutionId,
-            userId,
-            SpeedReadingInstitutionMemberRole.Teacher,
-            isActive: true,
-            actorId,
-            DateTime.UtcNow.AddMinutes(1),
-            CancellationToken.None)).Should().BeTrue();
-        (await store.SetMembershipAsync(
-            secondInstitutionId,
-            userId,
-            SpeedReadingInstitutionMemberRole.Student,
-            isActive: true,
-            actorId,
-            DateTime.UtcNow.AddMinutes(2),
-            CancellationToken.None)).Should().BeTrue();
+        await Seed(context, firstInstitutionId, userId, SpeedReadingInstitutionMemberRole.Student, actorId, DateTime.UtcNow);
+        await Seed(context, firstInstitutionId, userId, SpeedReadingInstitutionMemberRole.Teacher, actorId, DateTime.UtcNow.AddMinutes(1));
+        await Seed(context, secondInstitutionId, userId, SpeedReadingInstitutionMemberRole.Student, actorId, DateTime.UtcNow.AddMinutes(2));
 
         var firstMembers = await store.GetMembersAsync(firstInstitutionId, 1, 25, CancellationToken.None);
         var secondMembers = await store.GetMembersAsync(secondInstitutionId, 1, 25, CancellationToken.None);
@@ -187,22 +167,8 @@ public sealed class SpeedReadingInstitutionMembershipTests
         var userId = Guid.NewGuid();
         var actorId = Guid.NewGuid();
 
-        (await store.SetMembershipAsync(
-            institutionId,
-            userId,
-            SpeedReadingInstitutionMemberRole.Student,
-            isActive: true,
-            actorId,
-            DateTime.UtcNow,
-            CancellationToken.None)).Should().BeTrue();
-        (await store.SetMembershipAsync(
-            institutionId,
-            userId,
-            SpeedReadingInstitutionMemberRole.Teacher,
-            isActive: true,
-            actorId,
-            DateTime.UtcNow.AddMinutes(1),
-            CancellationToken.None)).Should().BeTrue();
+        await Seed(context, institutionId, userId, SpeedReadingInstitutionMemberRole.Student, actorId, DateTime.UtcNow);
+        await Seed(context, institutionId, userId, SpeedReadingInstitutionMemberRole.Teacher, actorId, DateTime.UtcNow.AddMinutes(1));
 
         var members = await store.GetMembersAsync(institutionId, 1, 25, CancellationToken.None);
         members.TotalCount.Should().Be(2);
@@ -238,12 +204,9 @@ public sealed class SpeedReadingInstitutionMembershipTests
         var inactiveStudentId = Guid.NewGuid();
         var activeTeacherId = Guid.NewGuid();
 
-        await store.SetMembershipAsync(institutionId, activeStudentId, SpeedReadingInstitutionMemberRole.Student,
-            true, actorId, DateTime.UtcNow, CancellationToken.None);
-        await store.SetMembershipAsync(institutionId, inactiveStudentId, SpeedReadingInstitutionMemberRole.Student,
-            true, actorId, DateTime.UtcNow, CancellationToken.None);
-        await store.SetMembershipAsync(institutionId, activeTeacherId, SpeedReadingInstitutionMemberRole.Teacher,
-            true, actorId, DateTime.UtcNow, CancellationToken.None);
+        await Seed(context, institutionId, activeStudentId, SpeedReadingInstitutionMemberRole.Student, actorId, DateTime.UtcNow);
+        await Seed(context, institutionId, inactiveStudentId, SpeedReadingInstitutionMemberRole.Student, actorId, DateTime.UtcNow);
+        await Seed(context, institutionId, activeTeacherId, SpeedReadingInstitutionMemberRole.Teacher, actorId, DateTime.UtcNow);
         await store.SetMembershipAsync(institutionId, inactiveStudentId, SpeedReadingInstitutionMemberRole.Student,
             false, actorId, DateTime.UtcNow.AddMinutes(1), CancellationToken.None);
 
@@ -314,5 +277,46 @@ public sealed class SpeedReadingInstitutionMembershipTests
 
         page.TotalCount.Should().Be(1);
         page.Items.Should().ContainSingle(item => item.UserId == requestedStudentId);
+    }
+
+    [Fact]
+    public async Task Members_join_only_by_invitation_and_a_former_member_active_elsewhere_is_not_pulled_back()
+    {
+        // Review H3 (finding 6, decision 28.10.2026): an institution admin cannot add an existing Speed Reading user
+        // directly; the person accepts an e-mailed invitation. Re-activating the institution's own former member is
+        // allowed unless that person is now active in another institution with the same role.
+        await using var context = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options);
+        var store = new OwnedSpeedReadingInstitutionMemberships(context);
+        var institutionId = Guid.NewGuid();
+        var otherInstitutionId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        var former = Guid.NewGuid();
+        var moved = Guid.NewGuid();
+        await Seed(context, institutionId, former, SpeedReadingInstitutionMemberRole.Student, actorId, DateTime.UtcNow);
+        await Seed(context, institutionId, moved, SpeedReadingInstitutionMemberRole.Student, actorId, DateTime.UtcNow);
+        await store.SetMembershipAsync(institutionId, former, SpeedReadingInstitutionMemberRole.Student, false, actorId, DateTime.UtcNow, CancellationToken.None);
+        await store.SetMembershipAsync(institutionId, moved, SpeedReadingInstitutionMemberRole.Student, false, actorId, DateTime.UtcNow, CancellationToken.None);
+        await Seed(context, otherInstitutionId, moved, SpeedReadingInstitutionMemberRole.Student, Guid.NewGuid(), DateTime.UtcNow);
+
+        (await store.SetMembershipAsync(institutionId, stranger, SpeedReadingInstitutionMemberRole.Student, true, actorId, DateTime.UtcNow, CancellationToken.None))
+            .Should().Be(SpeedReadingMembershipChange.InvitationRequired);
+        (await store.SetMembershipAsync(institutionId, moved, SpeedReadingInstitutionMemberRole.Student, true, actorId, DateTime.UtcNow, CancellationToken.None))
+            .Should().Be(SpeedReadingMembershipChange.ActiveElsewhere);
+        (await store.SetMembershipAsync(institutionId, former, SpeedReadingInstitutionMemberRole.Student, true, actorId, DateTime.UtcNow, CancellationToken.None))
+            .Should().Be(SpeedReadingMembershipChange.Updated);
+
+        (await context.InstitutionMemberships.CountAsync(item => item.UserId == stranger)).Should().Be(0);
+        (await context.InstitutionMemberships.SingleAsync(item => item.UserId == moved && item.InstitutionId == institutionId)).IsActive.Should().BeFalse();
+    }
+
+    private static async Task Seed(OwnedSpeedReadingDbContext context, Guid institutionId, Guid userId,
+        SpeedReadingInstitutionMemberRole role, Guid actorId, DateTime at)
+    {
+        context.InstitutionMemberships.Add(SpeedReadingInstitutionMembership.Create(institutionId, userId, role, actorId, at));
+        await context.SaveChangesAsync();
     }
 }

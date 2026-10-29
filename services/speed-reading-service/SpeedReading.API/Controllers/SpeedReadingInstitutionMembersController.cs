@@ -247,7 +247,7 @@ public sealed class SpeedReadingInstitutionMembersController(
             });
         }
 
-        var updated = await memberships.SetMembershipAsync(
+        var change = await memberships.SetMembershipAsync(
             institutionId,
             userId,
             request.Role,
@@ -255,9 +255,21 @@ public sealed class SpeedReadingInstitutionMembersController(
             actorId,
             DateTime.UtcNow,
             cancellationToken);
-        return updated
-            ? NoContent()
-            : NotFound(new { code = "InstitutionMember.NotFound", message = "Etkinleştirilecek kurum üyeliği bulunamadı." });
+        return change switch
+        {
+            SpeedReadingMembershipChange.Updated => NoContent(),
+            SpeedReadingMembershipChange.InvitationRequired => Conflict(new
+            {
+                code = "InstitutionMember.InvitationRequired",
+                message = "Kuruma yeni öğrenci veya öğretmen yalnız davetle eklenir. Kişiye davet gönderin; e-postasındaki bağlantıyla kabul ettiğinde kurumunuza katılır."
+            }),
+            SpeedReadingMembershipChange.ActiveElsewhere => Conflict(new
+            {
+                code = "InstitutionMember.ActiveElsewhere",
+                message = "Bu kişi şu anda başka bir kurumda etkin. Yeniden kurumunuza katılması için davet gönderin."
+            }),
+            _ => NotFound(new { code = "InstitutionMember.NotFound", message = "Kurum üyeliği bulunamadı." })
+        };
     }
 
     private async Task<bool> CanManageInstitutionAsync(Guid institutionId, CancellationToken cancellationToken)

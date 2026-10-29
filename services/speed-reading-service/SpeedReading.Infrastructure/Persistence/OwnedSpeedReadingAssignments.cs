@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
 using SpeedReading.Domain.Assignments;
@@ -13,13 +14,37 @@ namespace SpeedReading.Infrastructure.Persistence;
 /// </summary>
 internal sealed class OwnedSpeedReadingAssignments(
     OwnedSpeedReadingDbContext db,
-    ISpeedReadingUserDirectory userDirectory) : ISpeedReadingAssignments
+    ISpeedReadingUserDirectory userDirectory,
+    ISpeedReadingTeacherAccess teacherAccess) : ISpeedReadingAssignments
 {
     public async Task<Guid?> CreateAsync(
         Guid teacherId,
         CreateAssignmentRequest request,
-        CancellationToken cancellationToken = default) =>
-        await CreateCoreAsync(teacherId, teacherId, null, request, cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        // Review H3 (finding 10): a teacher assigns work only to students they currently teach.
+        var studentIds = SpeedReadingAssignmentRules.NormalizeStudentIds(request.StudentIds);
+        if (studentIds.Count > 0 && studentIds.Count <= 500
+            && (await teacherAccess.GetReadableStudentIdsAsync(teacherId, studentIds, cancellationToken: cancellationToken)).Count != studentIds.Count)
+        {
+            return null;
+        }
+
+        return await CreateCoreAsync(teacherId, teacherId, null, request, cancellationToken);
+    }
+
+    /// <summary>
+    /// Review H3 (finding 10): the teacher's own assignments, minus those of an institution the teacher no longer
+    /// actively teaches in.
+    /// </summary>
+    private IQueryable<Assignment> TeacherAssignments(Guid? teacherId) =>
+        db.Assignments.Where(assignment => assignment.TeacherId == teacherId
+            && (assignment.InstitutionId == null
+                || db.InstitutionMemberships.Any(membership =>
+                    membership.InstitutionId == assignment.InstitutionId
+                    && membership.UserId == teacherId
+                    && membership.Role == SpeedReadingInstitutionMemberRole.Teacher
+                    && membership.IsActive)));
 
     public async Task<Guid?> CreateForInstitutionAsync(
         Guid institutionId,
@@ -183,8 +208,12 @@ internal sealed class OwnedSpeedReadingAssignments(
         CancellationToken cancellationToken)
     {
         var (page, size) = NormalizePage(pageNumber, pageSize);
+        var assignments = institutionId.HasValue
+            ? db.Assignments.Where(assignment => assignment.InstitutionId == institutionId
+                && (!teacherId.HasValue || assignment.TeacherId == teacherId))
+            : TeacherAssignments(teacherId);
         var query =
-            from assignment in db.Assignments.AsNoTracking()
+            from assignment in assignments.AsNoTracking()
             join exercise in db.Exercises.AsNoTracking()
                 on assignment.ExerciseId equals exercise.Id into exerciseRows
             from exercise in exerciseRows.DefaultIfEmpty()
@@ -194,10 +223,6 @@ internal sealed class OwnedSpeedReadingAssignments(
             join readingText in db.ReadingTexts.AsNoTracking()
                 on assignment.ReadingTextId equals readingText.Id into readingTextRows
             from readingText in readingTextRows.DefaultIfEmpty()
-            where (institutionId.HasValue
-                ? assignment.InstitutionId == institutionId
-                    && (!teacherId.HasValue || assignment.TeacherId == teacherId)
-                : assignment.TeacherId == teacherId)
             select new { assignment, exercise, exerciseType, readingText };
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -259,15 +284,15 @@ internal sealed class OwnedSpeedReadingAssignments(
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
+        var assignments = institutionId.HasValue
+            ? db.Assignments.Where(assignment => assignment.InstitutionId == institutionId)
+            : TeacherAssignments(teacherId);
         var row = await (
-            from assignment in db.Assignments.AsNoTracking()
+            from assignment in assignments.AsNoTracking()
             join exercise in db.Exercises.AsNoTracking()
                 on assignment.ExerciseId equals exercise.Id into exerciseRows
             from exercise in exerciseRows.DefaultIfEmpty()
             where assignment.Id == assignmentId
-                && (institutionId.HasValue
-                    ? assignment.InstitutionId == institutionId
-                    : assignment.TeacherId == teacherId)
             select new { assignment, exercise })
             .SingleOrDefaultAsync(cancellationToken);
         if (row is null)
@@ -278,6 +303,13 @@ internal sealed class OwnedSpeedReadingAssignments(
             .Where(item => item.AssignmentId == assignmentId && item.IsActive)
             .OrderBy(item => item.StudentId)
             .ToListAsync(cancellationToken);
+        if (teacherId.HasValue && studentRows.Count > 0)
+        {
+            // A teacher sees names and scores only of students they still teach.
+            var readable = await teacherAccess.GetReadableStudentIdsAsync(
+                teacherId.Value, studentRows.Select(item => item.StudentId).ToArray(), cancellationToken: cancellationToken);
+            studentRows = studentRows.Where(item => readable.Contains(item.StudentId)).ToList();
+        }
         var users = await userDirectory.GetUsersAsync(
             studentRows.Select(item => item.StudentId).ToArray(),
             cancellationToken);
@@ -328,12 +360,11 @@ internal sealed class OwnedSpeedReadingAssignments(
         Guid? teacherId, Guid? institutionId, Guid assignmentId,
         CancellationToken cancellationToken)
     {
-        var assignment = await db.Assignments.SingleOrDefaultAsync(
-            item => item.Id == assignmentId
-                && (institutionId.HasValue
-                    ? item.InstitutionId == institutionId
-                    : item.TeacherId == teacherId)
-                && item.IsActive,
+        var assignments = institutionId.HasValue
+            ? db.Assignments.Where(item => item.InstitutionId == institutionId)
+            : TeacherAssignments(teacherId);
+        var assignment = await assignments.SingleOrDefaultAsync(
+            item => item.Id == assignmentId && item.IsActive,
             cancellationToken);
         if (assignment is null)
             return false;
@@ -352,11 +383,13 @@ internal sealed class OwnedSpeedReadingAssignments(
         if (studentId == Guid.Empty)
             return AssignmentStudentMutationStatus.StudentNotFound;
 
-        var assignmentExists = await db.Assignments.AnyAsync(
-            item => item.Id == assignmentId && item.TeacherId == teacherId && item.IsActive,
+        var assignmentExists = await TeacherAssignments(teacherId).AnyAsync(
+            item => item.Id == assignmentId && item.IsActive,
             cancellationToken);
         if (!assignmentExists)
             return AssignmentStudentMutationStatus.AssignmentNotFound;
+        if (!(await teacherAccess.GetReadableStudentIdsAsync(teacherId, [studentId], cancellationToken: cancellationToken)).Contains(studentId))
+            return AssignmentStudentMutationStatus.StudentNotFound;
 
         var users = await userDirectory.GetUsersAsync([studentId], cancellationToken);
         if (users.Users.Count != 1 || !users.Users[0].IsActive)
@@ -368,11 +401,25 @@ internal sealed class OwnedSpeedReadingAssignments(
         if (alreadyAssigned)
             return AssignmentStudentMutationStatus.AlreadyAssigned;
 
-        db.StudentAssignments.Add(StudentAssignment.Assign(
+        var added = StudentAssignment.Assign(
             assignmentId,
             studentId,
-            createdBy: teacherId.ToString()));
-        await db.SaveChangesAsync(cancellationToken);
+            createdBy: teacherId.ToString());
+        db.StudentAssignments.Add(added);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // A concurrent click added the same student; the unique index kept one row.
+            db.Entry(added).State = EntityState.Detached;
+            if (await db.StudentAssignments.AsNoTracking().AnyAsync(
+                    item => item.AssignmentId == assignmentId && item.StudentId == studentId && item.IsActive,
+                    CancellationToken.None))
+                return AssignmentStudentMutationStatus.AlreadyAssigned;
+            throw;
+        }
         return AssignmentStudentMutationStatus.Success;
     }
 
@@ -382,8 +429,8 @@ internal sealed class OwnedSpeedReadingAssignments(
         Guid studentId,
         CancellationToken cancellationToken = default)
     {
-        var assignmentExists = await db.Assignments.AnyAsync(
-            item => item.Id == assignmentId && item.TeacherId == teacherId && item.IsActive,
+        var assignmentExists = await TeacherAssignments(teacherId).AnyAsync(
+            item => item.Id == assignmentId && item.IsActive,
             cancellationToken);
         if (!assignmentExists)
             return AssignmentStudentMutationStatus.AssignmentNotFound;
