@@ -241,6 +241,8 @@ public sealed class SpeedReadingInstitutionMembersControllerTests
     private sealed class StubAdministrationAuthorization : ISpeedReadingInstitutionAdministrationAuthorization
     {
         public Task<bool> CanManageAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken = default) => Task.FromResult(true);
+        public Task<IReadOnlyList<Guid>> GetManagedInstitutionIdsAsync(Guid userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 
     private sealed class StubInstitutionDirectory(Guid institutionId) : ISpeedReadingInstitutionDirectory
