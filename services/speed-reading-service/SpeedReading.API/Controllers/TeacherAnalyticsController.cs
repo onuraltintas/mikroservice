@@ -11,6 +11,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/analytics/teacher")]
 [Authorize]
 [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
+[MfaCategory(MfaOperationCategories.SpeedReading)]
 public sealed class TeacherAnalyticsController(
     ILegacySpeedReadingAnalytics analytics,
     ILegacySpeedReadingTeacherReports teacherReports,

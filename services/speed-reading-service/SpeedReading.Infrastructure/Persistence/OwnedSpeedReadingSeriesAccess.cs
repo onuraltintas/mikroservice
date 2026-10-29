@@ -1,3 +1,4 @@
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.SeriesAccess;
 using SpeedReading.Domain.Programs;
@@ -80,72 +81,28 @@ internal sealed class OwnedSpeedReadingSeriesAccess(OwnedSpeedReadingDbContext d
             hasCompletedSomething ? 100 : 0);
     }
 
+    /// <summary>
+    /// Review H3 (finding 12): series are no longer opened by the student. New programs start only through the program
+    /// flow (placement or post-training measurement and, where the institution requires it, staff approval), which
+    /// also keeps the current program. This only confirms a series the student already has.
+    /// </summary>
     public async Task<UnlockSeriesResult?> UnlockAsync(
         Guid userId,
         Guid seriesId,
         CancellationToken cancellationToken)
     {
-        var template = await db.ProgramTemplates
-            .SingleOrDefaultAsync(item => item.Id == seriesId
-                && !item.IsAssessment
-                && item.IsActive
-                , cancellationToken);
-        if (template is null)
+        var exists = await db.ProgramTemplates
+            .AsNoTracking()
+            .AnyAsync(item => item.Id == seriesId && !item.IsAssessment && item.IsActive, cancellationToken);
+        if (!exists)
             return null;
 
-        var existing = await db.StudentProgramProgresses
-            .FirstOrDefaultAsync(item => item.ProgramTemplateId == seriesId
-                && item.UserId == userId
-                , cancellationToken);
-        if (existing is not null)
+        if (await db.StudentProgramProgresses.AsNoTracking()
+                .AnyAsync(item => item.ProgramTemplateId == seriesId && item.UserId == userId, cancellationToken))
             return new UnlockSeriesResult(true, "Seri zaten açık.", seriesId);
 
-        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
-            db,
-            async () =>
-            {
-                await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
-                    db,
-                    userId,
-                    cancellationToken);
-
-                // Re-check after acquiring the per-student lock so two tabs cannot
-                // unlock the same series or leave two active programs behind.
-                existing = await db.StudentProgramProgresses
-                    .FirstOrDefaultAsync(item => item.ProgramTemplateId == seriesId
-                        && item.UserId == userId,
-                        cancellationToken);
-                if (existing is not null)
-                    return new UnlockSeriesResult(true, "Seri zaten açık.", seriesId);
-
-                var activePrograms = await db.StudentProgramProgresses
-                    .Where(item => item.UserId == userId
-                        && item.IsActive
-                        && item.CompletedDate == null)
-                    .ToListAsync(cancellationToken);
-                var previous = activePrograms.FirstOrDefault();
-                var now = DateTime.UtcNow;
-                foreach (var activeProgram in activePrograms)
-                    activeProgram.Deactivate(userId, now);
-
-                var progress = StudentProgramProgress.Start(
-                    Guid.NewGuid(),
-                    userId,
-                    template,
-                    previous?.CurrentStreak ?? 0,
-                    previous?.LongestStreak ?? 0,
-                    userId,
-                    now);
-                progress.SetSchedule(
-                    await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken),
-                    userId,
-                    now);
-                db.StudentProgramProgresses.Add(progress);
-                await db.SaveChangesAsync(cancellationToken);
-                if (transaction is not null)
-                    await transaction.CommitAsync(cancellationToken);
-                return new UnlockSeriesResult(true, "Seri başarıyla açıldı.", seriesId);
-            });
+        throw new BusinessRuleException("Series.ProgramFlowRequired",
+            "Yeni seriler program ilerleyişiyle açılır: mevcut programını tamamla, ölçümünü yap; gerekiyorsa öğretmenin onaylar.");
     }
 
     private static SeriesAccessSummary ToSummary(

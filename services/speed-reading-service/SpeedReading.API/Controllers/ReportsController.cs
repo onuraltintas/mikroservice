@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using System.Text.Json;
 using EduPlatform.Shared.Contracts.Authorization;
@@ -193,6 +194,7 @@ public sealed class ReportsController(
 
     [HttpPost("export/pdf")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
+    [EnableRateLimiting("document-export")]
     public IActionResult ExportPdf([FromBody] JsonElement? reportData)
     {
         try
@@ -211,6 +213,7 @@ public sealed class ReportsController(
 
     [HttpPost("export/excel")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
+    [EnableRateLimiting("document-export")]
     public IActionResult ExportExcel([FromBody] JsonElement? reportData)
     {
         try

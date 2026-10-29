@@ -24,8 +24,8 @@ internal sealed class OwnedSpeedReadingAdaptiveText(OwnedSpeedReadingDbContext d
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.StudentId == studentId && !item.IsDeleted, cancellationToken);
         var criteria = ParseCriteria(selectionCriteria);
-        var query = db.ReadingTexts
-            .AsNoTracking()
+        // Review H3 (finding 13): error-analysis originals are answer material, never suggestions.
+        var query = ReadingTextVisibility.IndependentReading(db)
             .Where(item => item.IsActive && !item.IsDeleted);
         if (!string.IsNullOrWhiteSpace(criteria.Category))
             query = query.Where(item => item.Category == criteria.Category);
@@ -37,11 +37,15 @@ internal sealed class OwnedSpeedReadingAdaptiveText(OwnedSpeedReadingDbContext d
             query = query.Where(item => item.WordCount <= criteria.MaxWordCount.Value);
         if (criteria.TargetAgeGroupId.HasValue)
             query = query.Where(item => item.TargetAgeGroupId == criteria.TargetAgeGroupId.Value);
+        else if (studentProfile.AgeGroupConfigurationId is { } ageGroupId)
+            query = query.Where(item => item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId);
 
+        // Candidates nearest to the student's level first; comprehension only breaks ties.
+        var level = Math.Clamp(studentProfile.CurrentLevel, 1, 10);
         var boundedCount = Math.Clamp(count, 1, 50);
         var texts = await query
-            .OrderByDescending(item => item.AverageComprehensionScore)
-            .ThenBy(item => item.DifficultyLevel)
+            .OrderBy(item => item.DifficultyLevel > level ? item.DifficultyLevel - level : level - item.DifficultyLevel)
+            .ThenByDescending(item => item.AverageComprehensionScore)
             .Take(boundedCount * 10)
             .ToListAsync(cancellationToken);
         var preferredCategories = profile?.PreferredCategories ?? [];
