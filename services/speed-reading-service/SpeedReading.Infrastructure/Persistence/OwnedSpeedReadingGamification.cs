@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Domain.Institutions;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Gamification;
@@ -186,16 +187,20 @@ internal sealed class OwnedSpeedReadingGamification(
         var query = db.UserGamifications.AsNoTracking().Where(item => !item.IsDeleted);
         if (!isGlobalAdministrator)
         {
-            var institutionId = await db.UserProfiles.AsNoTracking()
+            // Review H4 (finding 25): the institution comes from today's memberships (the profile field was only
+            // filled by the old import).
+            var institutionIds = await db.InstitutionMemberships.AsNoTracking()
                 .Where(item => item.UserId == requestingUserId && item.IsActive)
                 .Select(item => item.InstitutionId)
-                .SingleOrDefaultAsync(cancellationToken);
-            if (!institutionId.HasValue)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+            if (institutionIds.Count == 0)
                 return [];
-            query = query.Where(item => db.UserProfiles.Any(profile =>
-                profile.UserId == item.UserId
-                && profile.InstitutionId == institutionId
-                && profile.IsActive));
+            query = query.Where(item => db.InstitutionMemberships.Any(membership =>
+                membership.UserId == item.UserId
+                && membership.IsActive
+                && membership.Role == SpeedReadingInstitutionMemberRole.Student
+                && institutionIds.Contains(membership.InstitutionId)));
         }
 
         query = normalizedType.ToLowerInvariant() switch
@@ -219,7 +224,7 @@ internal sealed class OwnedSpeedReadingGamification(
             item.TotalReadingMinutes,
             item.LevelTitle,
             item.LevelIcon)).ToListAsync(cancellationToken);
-        var userIds = rows.Select(item => item.UserId).ToArray();
+        var userIds = rows.Select(item => item.UserId).ToList();
         var directory = (await userDirectory.GetUsersAsync(userIds, cancellationToken)).Users
             .ToDictionary(item => item.UserId);
         var showcased = await (

@@ -27,7 +27,15 @@ internal sealed class LegacySpeedReadingAnnouncements(ISpeedReadingDataContext d
             .ThenByDescending(item => item.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        rows = rows.Where(item => AudienceMatches(item, roles, institutionId)).ToList();
+        // Review H4 (finding 25): institution announcements reach the user's current institutions (the token has no
+        // institution claim for Speed Reading members).
+        var institutionIds = await db.InstitutionMemberships.AsNoTracking()
+            .Where(item => item.UserId == userId && item.IsActive)
+            .Select(item => item.InstitutionId)
+            .ToListAsync(cancellationToken);
+        if (institutionId.HasValue)
+            institutionIds.Add(institutionId.Value);
+        rows = rows.Where(item => AudienceMatches(item, roles, institutionIds)).ToList();
         var ids = rows.Select(item => item.Id).ToList();
         var interactions = await db.AnnouncementUserInteractions
             .AsNoTracking()
@@ -294,11 +302,11 @@ internal sealed class LegacySpeedReadingAnnouncements(ISpeedReadingDataContext d
             row.CreatedByUserId);
     }
 
-    private static bool AudienceMatches(LegacyAnnouncement row, IReadOnlyCollection<string> roles, Guid? institutionId)
+    private static bool AudienceMatches(LegacyAnnouncement row, IReadOnlyCollection<string> roles, IReadOnlyCollection<Guid> institutionIds)
     {
         var audience = ParseAudience(row.TargetAudience);
         if (audience == 1) return true;
-        if (audience == 5) return row.TargetInstitutionId.HasValue && row.TargetInstitutionId == institutionId;
+        if (audience == 5) return row.TargetInstitutionId.HasValue && institutionIds.Contains(row.TargetInstitutionId.Value);
         if (audience == 2) return roles.Contains("Student", StringComparer.OrdinalIgnoreCase);
         if (audience == 3) return roles.Contains("Teacher", StringComparer.OrdinalIgnoreCase);
         if (audience == 4) return roles.Any(role => role.Equals("Admin", StringComparison.OrdinalIgnoreCase)
