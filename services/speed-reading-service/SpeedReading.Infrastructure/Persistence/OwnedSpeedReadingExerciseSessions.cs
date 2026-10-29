@@ -3846,9 +3846,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             actions = [];
         }
 
+        actions.Remove(actionId);
         actions[actionId] = response;
+        // Review H4 (finding 22): retries come seconds after the original action; keeping the latest answers is
+        // enough and stops the row from growing with every step of a long exercise.
+        if (actions.Count > MaxCachedActions)
+            actions = actions.Skip(actions.Count - MaxCachedActions).ToDictionary(item => item.Key, item => item.Value);
         return JsonSerializer.Serialize(actions, JsonOptions);
     }
+
+    private const int MaxCachedActions = 50;
 
     private static SessionState DeserializeState(string json)
     {
