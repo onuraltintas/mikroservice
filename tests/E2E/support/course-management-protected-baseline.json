@@ -620,11 +620,13 @@
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-action-policy.ts": "9cb37be887c6e3aa31432c318165bede63e5dff32bbede2c91ec38740fbebb99",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-action-queue.spec.ts": "e7fcfcab7aa41322212e964725bb5a8f49401c963076cf21e125fc7c4ed10144",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-action-queue.ts": "3d002aa57bec17e5c95b1bdaf6c9ae2d3dc471ca6ac5f49681dc53264b6de472",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.html": "1e6cb14685f4ab296506424c568e44447a505bf456f1af1dcd04adc93037877e",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.html": "2a71425d86960273842b4b591736d887504ddf5c5f8e1227fcfea877c2860df6",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.scss": "fc7448ef7f677dc4c08f7c85d23e957254873e6bdcff186c67f0a572e1ea1851",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.ts": "b218d97a2fda680613ffa7f2e3ea85cfdb5c8818b3852eb44fdaca0e648eb82f",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.ts": "5856121cfc0b683a081e679ea82f5bc45ccb3b026137cff445d60f6268427750",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-preview-role.spec.ts": "6b042fcfaa60487736a38b0d68836717397a3cd270b27049a3144aa1566f7f65",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-input-focus.spec.ts": "634069276d934e2b7aa2e3a4df56f958ad8dbbf7b5c7c1da63c4ee64ff1eab70",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-answer-input.spec.ts": "f651cd09cfd52050b93b684f6bb244ee3185ac5a3f3ed7dbda265c4ad83dc1b3",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-answer-input.ts": "f434cc2872cd0f0eea36f6fa9975647d285f050ff9602f4b032c14e16a868f5d",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-input-focus.spec.ts": "e36ea706595f8eaa25fb2789c65c944305533771239f88ecd1cdea5709aa519e",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/fixation-player.spec.ts": "3a36fd8272875bf3eed0f0d9ac6d13c34b16798d2703baaa7c8de895d26e74f9",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/free-reading-player.spec.ts": "5703b8ca6ca4d25e47f287ec1888f821db99d1d940d284e6a6c0ca4284deacfd",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/preview-age-contract.spec.ts": "48d24b917442cac944a81de2268f449de6e3310b95288ae9f92184d14b5d6c12",
@@ -2641,7 +2643,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "merge fix/h9-tachistoscope-feedback into feat/h10-target-hunt",
+    "purpose": "H11 visual expansion mobile input",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2689,7 +2691,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "cd6b4c87",
+    "previousBaselineCommit": "23693309",
     "removedSincePreviousBaseline": []
   }
 }
