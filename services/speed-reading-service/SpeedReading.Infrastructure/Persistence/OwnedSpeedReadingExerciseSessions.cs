@@ -1343,11 +1343,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     || item.Status == OwnedExerciseSessionStatus.Paused))
             .OrderByDescending(item => item.StartTime)
             .ToListAsync(cancellationToken);
-        var exerciseIds = sessions.Select(item => item.ExerciseId).Distinct().ToArray();
+        var exerciseIds = sessions.Select(item => item.ExerciseId).Distinct().ToList();
         var exercises = await db.Exercises.AsNoTracking()
             .Where(item => exerciseIds.Contains(item.Id) && !item.IsDeleted)
             .ToDictionaryAsync(item => item.Id, cancellationToken);
-        var typeIds = exercises.Values.Select(item => item.ExerciseTypeId).Distinct().ToArray();
+        var typeIds = exercises.Values.Select(item => item.ExerciseTypeId).Distinct().ToList();
         var types = await db.ExerciseTypes.AsNoTracking()
             .Where(item => typeIds.Contains(item.Id) && !item.IsDeleted)
             .ToDictionaryAsync(item => item.Id, cancellationToken);

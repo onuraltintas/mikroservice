@@ -134,7 +134,7 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             .ThenByDescending(item => item.CreatedAt)
             .Take(boundedCount)
             .ToListAsync(cancellationToken);
-        var readingTextIds = recommendations.Select(item => item.ReadingTextId).Distinct().ToArray();
+        var readingTextIds = recommendations.Select(item => item.ReadingTextId).Distinct().ToList();
         var texts = await db.ReadingTexts
             .AsNoTracking()
             .Where(item => readingTextIds.Contains(item.Id) && !item.IsDeleted && item.IsActive)
