@@ -121,6 +121,19 @@ public sealed class ErrorAnalysisPreparedContentTests
 
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    [Fact]
+    public async Task The_active_session_list_works_once_a_session_is_open()
+    {
+        // Found during review H4: an array Contains in the query made this list fail with 500 for any open session.
+        await using var db = Context(); var user = Guid.NewGuid();
+        var (exercise, _) = await Seed(db, user);
+        await Service(db).StartAsync(user, new() { ExerciseId = exercise.Id });
+
+        var active = await Service(db).GetActiveAsync(user);
+
+        Assert.Single(active);
+    }
+
     private static ISpeedReadingExerciseSessions Service(OwnedSpeedReadingDbContext db) => (ISpeedReadingExerciseSessions)Activator.CreateInstance(
         typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!,
         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
