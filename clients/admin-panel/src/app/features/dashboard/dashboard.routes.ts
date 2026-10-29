@@ -99,7 +99,7 @@ export const DASHBOARD_ROUTES: Routes = [
     {
       path: 'speed-reading/subscriptions',
       canActivate: [permissionGuard],
-      data: { permission: ADMIN_PERMISSIONS.speedReadingContentManage },
+      data: { permission: ADMIN_PERMISSIONS.speedReadingSubscriptionManage },
       loadComponent: () => import('./pages/speed-reading-subscriptions').then(m => m.SpeedReadingSubscriptionsComponent)
     },
     {

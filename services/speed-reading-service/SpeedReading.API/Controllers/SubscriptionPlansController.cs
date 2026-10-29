@@ -19,7 +19,7 @@ public sealed class SubscriptionPlansController(ISpeedReadingSubscription subscr
 
     [HttpGet("all")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default) =>
         Ok(new { success = true, data = await subscriptions.GetPlansAsync(true, cancellationToken), message = "All plans retrieved" });
 
@@ -35,7 +35,7 @@ public sealed class SubscriptionPlansController(ISpeedReadingSubscription subscr
 
     [HttpPost]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Create([FromBody] CreateSubscriptionPlanRequest request, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();
@@ -47,7 +47,7 @@ public sealed class SubscriptionPlansController(ISpeedReadingSubscription subscr
 
     [HttpPut("{id:guid}")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSubscriptionPlanRequest request, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();
@@ -59,7 +59,7 @@ public sealed class SubscriptionPlansController(ISpeedReadingSubscription subscr
 
     [HttpDelete("{id:guid}")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();

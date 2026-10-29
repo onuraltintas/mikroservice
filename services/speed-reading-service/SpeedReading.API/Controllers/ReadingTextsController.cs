@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Asp.Versioning;
 using EduPlatform.Shared.Contracts.Authorization;
 using EduPlatform.Shared.Security.Authorization;
@@ -201,6 +202,7 @@ public sealed class ReadingTextsController(
 
     [HttpGet("{id:guid}/export/pdf")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [EnableRateLimiting("document-export")]
     public async Task<IActionResult> ExportToPdf(
         Guid id,
         CancellationToken cancellationToken = default)
@@ -219,6 +221,7 @@ public sealed class ReadingTextsController(
 
     [HttpGet("{id:guid}/export/docx")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [EnableRateLimiting("document-export")]
     public async Task<IActionResult> ExportToDocx(
         Guid id,
         CancellationToken cancellationToken = default)
@@ -240,6 +243,7 @@ public sealed class ReadingTextsController(
 
     [HttpPost("export/pdf")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [EnableRateLimiting("document-export")]
     public async Task<IActionResult> ExportMultipleToPdf(
         [FromBody] ExportReadingTextsRequest? request,
         CancellationToken cancellationToken = default)
@@ -258,6 +262,7 @@ public sealed class ReadingTextsController(
 
     [HttpPost("export/docx")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [EnableRateLimiting("document-export")]
     public async Task<IActionResult> ExportMultipleToDocx(
         [FromBody] ExportReadingTextsRequest? request,
         CancellationToken cancellationToken = default)

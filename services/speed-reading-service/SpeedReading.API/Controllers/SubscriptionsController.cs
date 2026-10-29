@@ -17,13 +17,13 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
 {
     [HttpGet("settings")]
     [Authorize(Roles = "Admin,SystemAdmin")]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> GetSettings(CancellationToken cancellationToken = default) =>
         Ok(new { success = true, data = await subscriptions.GetSubscriptionRequirementAsync(cancellationToken) });
 
     [HttpPut("settings")]
     [Authorize(Roles = "Admin,SystemAdmin")]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> UpdateSettings([FromBody] UpdateSubscriptionRequirementRequest request,
         [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey, CancellationToken cancellationToken = default)
     {
@@ -35,7 +35,7 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
     }
 
     [HttpGet]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? search = null,
         [FromQuery] string? status = null,
@@ -48,12 +48,12 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
     }
 
     [HttpGet("user/{userId:guid}")]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> GetByUser(Guid userId, CancellationToken cancellationToken = default) =>
         Ok(new { success = true, data = await subscriptions.GetUserSubscriptionsAsync(userId, cancellationToken), message = "User subscriptions retrieved" });
 
     [HttpPost]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Create([FromBody] CreateUserSubscriptionRequest request, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();
@@ -64,7 +64,7 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
     }
 
     [HttpPost("institution-access")]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> CreateInstitutionAccess(
         [FromBody] CreateInstitutionAccessRequest request,
         CancellationToken cancellationToken = default)
@@ -106,7 +106,7 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
     }
 
     [HttpPut("{id:guid}")]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserSubscriptionRequest request, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();
@@ -117,7 +117,7 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
     }
 
     [HttpDelete("{id:guid}")]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();

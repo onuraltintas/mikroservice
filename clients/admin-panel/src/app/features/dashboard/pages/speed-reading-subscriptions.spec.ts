@@ -11,8 +11,16 @@ import { IdentityService } from '../../../core/services/identity.service';
 import { InstitutionService } from '../../../core/services/institution.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { SpeedReadingSubscriptionsComponent } from './speed-reading-subscriptions';
+import { DASHBOARD_ROUTES } from '../dashboard.routes';
+import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 
 describe('SpeedReadingSubscriptionsComponent', () => {
+  it('needs the subscription permission, not content editing (review H3, finding 11)', () => {
+    const route = DASHBOARD_ROUTES.find(item => item.path === 'speed-reading/subscriptions');
+    expect(route?.data?.['permission']).toBe('Permissions.SpeedReading.SubscriptionManage');
+    expect(ADMIN_PERMISSIONS.speedReadingSubscriptionManage).toBe('Permissions.SpeedReading.SubscriptionManage');
+  });
+
   it('distinguishes historical requests from an adult payer self-declaration', () => {
     const { component } = createComponent();
     expect(component.adultPayerLabel({ adultPayerDeclarationVersion: null, adultPayerDeclaredAt: null })).toBe('Yetişkin beyanı kaydı yok (eski talep)');

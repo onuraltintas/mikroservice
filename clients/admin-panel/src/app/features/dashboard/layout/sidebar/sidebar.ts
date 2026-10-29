@@ -57,7 +57,8 @@ export class SidebarComponent {
       ADMIN_PERMISSIONS.speedReadingPlatformAnalytics,
       ADMIN_PERMISSIONS.speedReadingGamificationManage,
       ADMIN_PERMISSIONS.speedReadingSettingsManage,
-      ADMIN_PERMISSIONS.speedReadingCommunicationsManage
+      ADMIN_PERMISSIONS.speedReadingCommunicationsManage,
+      ADMIN_PERMISSIONS.speedReadingSubscriptionManage
     ].some(permission => permissions.includes(permission));
     const items: any[] = [
       {
@@ -292,7 +293,7 @@ export class SidebarComponent {
             {
               label: 'Ürün ve abonelikler',
               route: '/dashboard/speed-reading/subscriptions',
-              permission: ADMIN_PERMISSIONS.speedReadingContentManage,
+              permission: ADMIN_PERMISSIONS.speedReadingSubscriptionManage,
               icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M3 6h18a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 21 18H3a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 3 6Z" /></svg>'
             },
             {
@@ -408,7 +409,7 @@ export class SidebarComponent {
       '/dashboard/speed-reading': ADMIN_PERMISSIONS.speedReadingView,
       '/dashboard/speed-reading/analytics': ADMIN_PERMISSIONS.speedReadingPlatformAnalytics,
       '/dashboard/speed-reading/progress': ADMIN_PERMISSIONS.speedReadingProgressView,
-      '/dashboard/speed-reading/subscriptions': ADMIN_PERMISSIONS.speedReadingContentManage,
+      '/dashboard/speed-reading/subscriptions': ADMIN_PERMISSIONS.speedReadingSubscriptionManage,
       '/dashboard/speed-reading/content-configuration': ADMIN_PERMISSIONS.speedReadingSettingsManage,
       '/dashboard/speed-reading/program-progression': ADMIN_PERMISSIONS.speedReadingSettingsManage,
       '/dashboard/speed-reading/visualization-scenes': ADMIN_PERMISSIONS.speedReadingContentManage,

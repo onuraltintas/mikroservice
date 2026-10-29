@@ -20,7 +20,7 @@ public sealed class SubscriptionProductsController(ISpeedReadingSubscription sub
 
     [HttpGet("all")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default) =>
         Ok(new { success = true, data = await subscriptions.GetProductsAsync(true, cancellationToken), message = "All products retrieved" });
 
@@ -36,7 +36,7 @@ public sealed class SubscriptionProductsController(ISpeedReadingSubscription sub
 
     [HttpPost]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Create([FromBody] CreateProductRequest request, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();
@@ -47,7 +47,7 @@ public sealed class SubscriptionProductsController(ISpeedReadingSubscription sub
 
     [HttpPut("{id:guid}")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();
@@ -59,7 +59,7 @@ public sealed class SubscriptionProductsController(ISpeedReadingSubscription sub
 
     [HttpDelete("{id:guid}")]
     [Authorize]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var actorId)) return Unauthorized();

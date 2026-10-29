@@ -34,6 +34,8 @@ public static class PlatformPermissions
         public const string GamificationManage = "Permissions.SpeedReading.GamificationManage";
         public const string SettingsManage = "Permissions.SpeedReading.SettingsManage";
         public const string CommunicationsManage = "Permissions.SpeedReading.CommunicationsManage";
+        /// <summary>Prices, subscriptions, payments, bank transfer review and IBAN (review H3, finding 11).</summary>
+        public const string SubscriptionManage = "Permissions.SpeedReading.SubscriptionManage";
     }
 
     public static class Support
@@ -79,6 +81,7 @@ public static class PlatformPermissions
         SpeedReading.GamificationManage,
         SpeedReading.SettingsManage,
         SpeedReading.CommunicationsManage,
+        SpeedReading.SubscriptionManage,
         Support.View,
         Support.Reply,
         Support.Delete,

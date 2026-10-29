@@ -46,6 +46,16 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 
+    // Review H3 (finding 27): PDF/Word/Excel generation is CPU-heavy on the 2-core server. All exports share one
+    // queue: two run at a time, a few wait, the rest get 429 instead of slowing everyone down.
+    options.AddPolicy("document-export", _ => RateLimitPartition.GetConcurrencyLimiter("document-export",
+        _ => new ConcurrencyLimiterOptions
+        {
+            PermitLimit = 2,
+            QueueLimit = 8,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+        }));
+
     options.AddPolicy("payment-request", context =>
     {
         var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value

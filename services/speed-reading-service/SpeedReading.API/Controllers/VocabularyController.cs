@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using EduPlatform.Shared.Contracts.Authorization;
 using EduPlatform.Shared.Security.Authorization;
@@ -192,6 +193,7 @@ public sealed class VocabularyController(ISpeedReadingVocabulary vocabulary) : C
 
     [HttpGet("export")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    [EnableRateLimiting("document-export")]
     public async Task<IActionResult> Export(
         [FromQuery] string? category = null,
         [FromQuery] int? difficultyLevel = null,
