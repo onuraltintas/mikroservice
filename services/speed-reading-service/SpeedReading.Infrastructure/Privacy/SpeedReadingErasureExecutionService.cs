@@ -84,14 +84,12 @@ public sealed class SpeedReadingErasureExecutionService(
             deleted += await RemoveAsync(legacy.ContactMessages.Where(item => item.Email.ToLower() == email), cancellationToken);
             deleted += await RemoveAsync(legacy.EmailCampaignLogs.Where(item => item.RecipientEmail.ToLower() == email), cancellationToken);
         }
-        // Review H2b: a card attempt that failed moved no money; it is erased. Paid records stay (below).
-        deleted += await RemoveAsync(legacy.Payments.Where(item => item.UserId == userId
-            && item.Status == SpeedReading.Application.Subscription.SpeedReadingPaymentRules.FailedStatus), cancellationToken);
+        // Review H2b: attempts that moved no money (failed, pending, rejected) are erased. Paid records stay (below).
+        deleted += await RemoveAsync(SpeedReadingFinancialRetention.UnpaidPayments(legacy, userId), cancellationToken);
+        deleted += await RemoveAsync(SpeedReadingFinancialRetention.UnapprovedTransfers(legacy, userId), cancellationToken);
         deleted += await RemoveAsync(context.UserProfiles.Where(item => item.UserId == userId), cancellationToken);
 
-        var retained = await SpeedReadingFinancialRetention.CountAsync(legacy, userId, cancellationToken)
-            - await legacy.Payments.CountAsync(item => item.UserId == userId
-                && item.Status == SpeedReading.Application.Subscription.SpeedReadingPaymentRules.FailedStatus, cancellationToken);
+        var retained = await SpeedReadingFinancialRetention.CountAsync(legacy, userId, cancellationToken);
         var execution = SpeedReadingErasureExecutionReceipt.Complete(
             message.RequestId, deleted, timeProvider.GetUtcNow().UtcDateTime, userId, Math.Max(0, retained));
         context.ErasureExecutions.Add(execution);
