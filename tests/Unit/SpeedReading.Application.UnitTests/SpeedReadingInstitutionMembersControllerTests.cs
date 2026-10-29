@@ -112,6 +112,23 @@ public sealed class SpeedReadingInstitutionMembersControllerTests
         items.Should().OnlyContain(item => !item.IsActive);
     }
 
+    [Theory]
+    [InlineData(SpeedReadingMembershipChange.InvitationRequired, "InstitutionMember.InvitationRequired")]
+    [InlineData(SpeedReadingMembershipChange.ActiveElsewhere, "InstitutionMember.ActiveElsewhere")]
+    public async Task Adding_someone_directly_is_refused_with_a_hint_to_send_an_invitation(SpeedReadingMembershipChange change, string code)
+    {
+        // Review H3 (finding 6): members join by accepting an invitation; the endpoint only re-activates or removes.
+        var institutionId = Guid.NewGuid();
+        var controller = CreateController(institutionId, new StubMemberships { NextChange = change }, new StubUserDirectory());
+
+        var response = await controller.SetMember(institutionId, Guid.NewGuid(),
+            new SetSpeedReadingInstitutionMembershipRequest(SpeedReadingInstitutionMemberRole.Student, true));
+
+        var conflict = response.Should().BeOfType<ConflictObjectResult>().Subject;
+        conflict.Value!.GetType().GetProperty("code")!.GetValue(conflict.Value).Should().Be(code);
+        conflict.Value!.GetType().GetProperty("message")!.GetValue(conflict.Value).Should().BeOfType<string>().Which.Should().Contain("davet");
+    }
+
     private static SpeedReadingInstitutionMembersController CreateController(
         Guid institutionId,
         StubMemberships memberships,
@@ -171,6 +188,7 @@ public sealed class SpeedReadingInstitutionMembersControllerTests
     private sealed class StubMemberships(params SpeedReadingInstitutionMembershipRecord[] records)
         : ISpeedReadingInstitutionMemberships
     {
+        public SpeedReadingMembershipChange NextChange { get; init; } = SpeedReadingMembershipChange.NotFound;
         public bool? LastRequestedActiveFilter { get; private set; }
 
         public Task<SpeedReadingInstitutionMembershipPage> GetMembersAsync(
@@ -197,7 +215,7 @@ public sealed class SpeedReadingInstitutionMembersControllerTests
                 pageSize));
         }
 
-        public Task<bool> SetMembershipAsync(Guid institutionId, Guid userId, SpeedReadingInstitutionMemberRole role, bool isActive, Guid actorId, DateTime at, CancellationToken cancellationToken = default) => Task.FromResult(false);
+        public Task<SpeedReadingMembershipChange> SetMembershipAsync(Guid institutionId, Guid userId, SpeedReadingInstitutionMemberRole role, bool isActive, Guid actorId, DateTime at, CancellationToken cancellationToken = default) => Task.FromResult(NextChange);
     }
 
     private sealed class StubUserDirectory(params SpeedReadingUserDirectoryItem[] users) : ISpeedReadingUserDirectory
