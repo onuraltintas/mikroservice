@@ -39,7 +39,7 @@ public sealed class SpeedReadingRegressionPostgresTests(PostgresFixture postgres
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(owned,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId,
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId,
                 new() { Action = "start_reading" }));
             Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" })).IsValid);
             Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" })).IsValid);

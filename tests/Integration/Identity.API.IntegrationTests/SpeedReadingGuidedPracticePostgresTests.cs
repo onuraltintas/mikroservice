@@ -46,7 +46,7 @@ public sealed class SpeedReadingGuidedPracticePostgresTests(PostgresFixture post
                 Assert.Equal(Guid.Parse(item["ageGroupId"]!.GetValue<string>()), text.TargetAgeGroupId);
                 Assert.Equal(item["level"]!.GetValue<int>(), text.DifficultyLevel);
                 Assert.Equal(1, started.InitialData.GetProperty("groupingChunkSize").GetInt32());
-                await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), session.Id, new() { Action = "start_reading" }));
+                await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), session.Id, new() { Action = "start_reading" }));
                 Assert.True((await service.ValidateActionAsync(student, session.Id, new() { Action = "start_reading" })).IsValid);
                 Assert.False((await service.ValidateActionAsync(student, session.Id, new() { Action = "finish_reading" })).IsValid);
                 await service.PauseAsync(student, session.Id);

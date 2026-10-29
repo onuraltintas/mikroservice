@@ -118,7 +118,7 @@ public sealed class SpeedReadingSubvocalizationCatalogPostgresTests(PostgresFixt
                 var started = await service.StartAsync(student, new() { ExerciseId = exerciseId });
                 Assert.Equal(5, started.InitialData.GetProperty("questions").GetArrayLength());
                 Assert.DoesNotContain("correctAnswer", started.InitialData.ToString(), StringComparison.OrdinalIgnoreCase);
-                await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "start_reading" }));
+                await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "start_reading" }));
                 Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" })).IsValid);
                 var session = await db.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
                 var state = JsonNode.Parse(session.SessionDataJson)!;

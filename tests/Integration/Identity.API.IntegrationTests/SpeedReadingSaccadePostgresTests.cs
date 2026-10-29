@@ -30,7 +30,7 @@ public sealed class SpeedReadingSaccadePostgresTests(PostgresFixture postgres)
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(implementation,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var start = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), start.SessionId, new()));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), start.SessionId, new()));
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteAsync(student, start.SessionId, new()));
             Assert.True((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "tracking_start" })).IsValid);
             var session = await db.ExerciseSessions.SingleAsync();

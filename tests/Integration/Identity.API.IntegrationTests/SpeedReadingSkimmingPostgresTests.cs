@@ -46,7 +46,7 @@ public sealed class SpeedReadingSkimmingPostgresTests(PostgresFixture postgres)
             var start = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
             Assert.Equal(1, start.InitialData.GetProperty("questions").GetArrayLength());
             Assert.Throws<KeyNotFoundException>(() => start.InitialData.GetProperty("questions")[0].GetProperty("correctAnswer"));
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), start.SessionId, new() { Action = "start_reading" }));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), start.SessionId, new() { Action = "start_reading" }));
             Assert.True((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "start_reading" })).IsValid);
             Assert.False((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "finish_reading", IsTimeout = true })).IsValid);
             var session = await db.ExerciseSessions.SingleAsync(); var textId = session.ReadingTextId!.Value;

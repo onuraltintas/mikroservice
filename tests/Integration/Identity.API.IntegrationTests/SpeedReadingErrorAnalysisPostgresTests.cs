@@ -28,7 +28,7 @@ public sealed class SpeedReadingErrorAnalysisPostgresTests(PostgresFixture postg
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(user, new() { ExerciseId = exercise.Id });
             Assert.DoesNotContain("originalWord", started.InitialData.GetRawText());
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "error_analysis_select", Index = 3 }));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "error_analysis_select", Index = 3 }));
             await service.ValidateActionAsync(user, started.SessionId, new() { Action = "error_analysis_start" });
             var hint = new ExerciseActionRequest { Action = "error_analysis_hint", ActionId = Guid.NewGuid() };
             await service.ValidateActionAsync(user, started.SessionId, hint); await service.ValidateActionAsync(user, started.SessionId, hint);

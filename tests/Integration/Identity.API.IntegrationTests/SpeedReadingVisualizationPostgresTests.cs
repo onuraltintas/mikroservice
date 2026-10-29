@@ -243,7 +243,7 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
             var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
             Assert.Single(started.InitialData.GetProperty("visualizationScenes").EnumerateArray());
             Assert.DoesNotContain("correctAnswer", started.InitialData.GetRawText(), StringComparison.OrdinalIgnoreCase);
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
             if (questions)
             {
                 var request = new ExerciseActionRequest { Action = "answer_question", QuestionId = question.Id, Answer = "A" };

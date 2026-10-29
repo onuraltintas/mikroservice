@@ -75,7 +75,7 @@ public sealed class SpeedReadingFocusPostgresTests(PostgresFixture postgres)
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
             Assert.DoesNotContain("targetIndices", started.InitialData.GetRawText(), StringComparison.OrdinalIgnoreCase);
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
             Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "focus_start" })).IsValid);
             Assert.False((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "complete" })).IsValid);
             var session = await db.ExerciseSessions.SingleAsync(); var state = JsonNode.Parse(session.SessionDataJson)!;

@@ -57,7 +57,7 @@ public sealed class SpeedReadingVocabularyPostgresTests(PostgresFixture postgres
                 Assert.Equal("quiz", resumed.InitialData.GetProperty("vocabularyMode").GetString());
                 Assert.Equal(selected.GetRawText(), resumed.InitialData.GetProperty("vocabularyWords").GetRawText());
             }
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
             foreach (var word in selected.EnumerateArray()) {
                 var custom = new Dictionary<string, JsonElement> {
                     ["vocabularyItemId"] = word.GetProperty("id").Clone(), ["reviewKind"] = JsonSerializer.SerializeToElement(mode == "quiz" || learnThenQuiz ? "quiz" : "known"),

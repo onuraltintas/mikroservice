@@ -112,7 +112,7 @@ public sealed class SpeedReadingComprehensionContentPostgresTests(PostgresFixtur
                 Assert.InRange(text.WordCount, expected.GetProperty("minWordCount").GetInt32(), expected.GetProperty("maxWordCount").GetInt32());
                 Assert.Equal(expected.GetProperty("questionCount").GetInt32(), started.InitialData.GetProperty("questions").GetArrayLength());
                 Assert.All(started.InitialData.GetProperty("questions").EnumerateArray(), q => Assert.False(q.TryGetProperty("correctAnswer", out _)));
-                await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "start_reading" }));
+                await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "start_reading" }));
                 await service.ValidateActionAsync(user, started.SessionId, new() { Action = "start_reading" });
                 var state = JsonNode.Parse(session.SessionDataJson)!;
                 state["readingStartTime"] = DateTime.UtcNow.AddMinutes(-3);
