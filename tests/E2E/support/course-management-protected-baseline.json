@@ -1630,7 +1630,7 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySpeedReadingEmail.cs": "d322b33ff489988f982b7c5d68f6a27ed3c6926b29988bc0afe679d0cde30a01",
     "services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySpeedReadingNotifications.cs": "af0bd22fb020970de3efcee0f94b5a3255edc7bd09fe76fd7196d054897cb24f",
     "services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySpeedReadingRsvp.cs": "83313385ce06bcfcb7b2bd3b905046b08de1f0d66e20031aed49b50388bdd32b",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySpeedReadingSubscription.cs": "d302f2d6d79d1d4988c5a8a523b367b00bef327cfaf3f83c245da55a830e7200",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySpeedReadingSubscription.cs": "d4f13f1d8ba22ab2ea5e4ff3a0dedcd45fe0e965da1b0c36afe2cacd836af703",
     "services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySubscriptionEntities.cs": "cc91eb10ba5fc29f7a298491ee08968c31ec5e13ce309b19728c95389f46c66d",
     "services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacyVisualizationEntities.cs": "db359586e6dd9d1ca4f0a4e1fc7ac97fba1d9f899bf974552bd5662f5bf76db4",
     "services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacyVocabularyEntities.cs": "2d0e9388dc17b004d7cc95ce2006d8415b250e79827577b5d1e9f16a61c5b5e5",
@@ -2620,7 +2620,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "merge main into H1",
+    "purpose": "merge fix/h1-speed-reading-stability into fix/h2a-speed-reading-money",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2668,7 +2668,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "e5d5e13e",
+    "previousBaselineCommit": "dfa0302e",
     "removedSincePreviousBaseline": []
   }
 }

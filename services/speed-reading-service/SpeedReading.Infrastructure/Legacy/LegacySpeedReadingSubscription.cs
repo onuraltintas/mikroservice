@@ -546,7 +546,10 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         }
 
         var now = DateTime.UtcNow;
-        row.paymentRequest.Status = targetStatus!;
+        // Review H2a: store the canonical value so filters and reports find it whatever casing the client sent.
+        row.paymentRequest.Status = string.Equals(targetStatus, BankTransferPaymentRules.ApprovedStatus, StringComparison.OrdinalIgnoreCase)
+            ? BankTransferPaymentRules.ApprovedStatus
+            : BankTransferPaymentRules.RejectedStatus;
         row.paymentRequest.ReviewedBy = actorId;
         row.paymentRequest.ReviewedAt = now;
         row.paymentRequest.ReviewNote = reviewNote;
@@ -565,6 +568,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
                 .FirstOrDefaultAsync(cancellationToken);
             if (subscription is null)
             {
+                var startDate = await RenewalStartAsync(row.paymentRequest.UserId, row.plan.ProductId, now, cancellationToken);
                 subscription = new LegacyUserSubscription
                 {
                     Id = Guid.NewGuid(),
@@ -574,8 +578,8 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
                     PlanId = row.plan.Id,
                     ProductId = row.plan.ProductId,
                     Status = "Active",
-                    StartDate = now,
-                    EndDate = SpeedReadingAccessRules.ResolveEndDate(now, null, row.plan.DurationDays),
+                    StartDate = startDate,
+                    EndDate = SpeedReadingAccessRules.ResolveEndDate(startDate, null, row.plan.DurationDays),
                     Notes = subscriptionNote,
                     CreatedBy = actorId,
                     CreatedAt = now
@@ -610,6 +614,10 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         var paymentRequest = await db.BankTransferPaymentRequests
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (paymentRequest is null) return false;
+        // Review H2a: an approved transfer is a financial record; deleting it would also free its payment reference
+        // so the same transfer could be credited twice.
+        if (string.Equals(paymentRequest.Status, BankTransferPaymentRules.ApprovedStatus, StringComparison.OrdinalIgnoreCase))
+            throw new BusinessRuleException("BankTransfer.ApprovedIsPermanent", "Onaylanmış havale kaydı silinemez; mali kayıt olarak saklanır.");
 
         var idempotencyRecords = await ownedDb.IdempotencyRecords
             .Where(item => item.ResourceId == id
@@ -731,14 +739,20 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         }
 
         var recipientIds = recipients.Select(item => item.UserId).ToList();
-        var activeUserIds = await db.UserSubscriptions.AsNoTracking()
+        // Review H2a: a renewal paid before expiry continues each student's access after their current end date;
+        // only students already covered for the whole new period are skipped.
+        var currentEnds = (await db.UserSubscriptions.AsNoTracking()
             .Where(item => !item.IsDeleted
                 && item.PlanId == institutionPlan.Id
                 && (item.Status == "Active" || item.Status == "Paused")
                 && recipientIds.Contains(item.UserId)
                 && (!item.EndDate.HasValue || item.EndDate > now))
-            .Select(item => item.UserId)
-            .ToHashSetAsync(cancellationToken);
+            .Select(item => new { item.UserId, item.EndDate })
+            .ToListAsync(cancellationToken))
+            .GroupBy(item => item.UserId)
+            .ToDictionary(group => group.Key, group => group.Any(item => !item.EndDate.HasValue)
+                ? (DateTime?)null
+                : group.Max(item => item.EndDate));
 
         var startDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc);
         var endDate = SpeedReadingAccessRules.ResolveEndDate(startDate, null, institutionPlan.DurationDays);
@@ -747,18 +761,27 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             return null;
         }
         var newSubscriptions = recipients
-            .Where(recipient => !activeUserIds.Contains(recipient.UserId))
-            .Select(recipient => new LegacyUserSubscription
+            .Where(recipient => !currentEnds.TryGetValue(recipient.UserId, out var currentEnd)
+                || (currentEnd.HasValue && currentEnd.Value < endDate.Value))
+            .Select(recipient =>
+            {
+                var recipientStart = currentEnds.TryGetValue(recipient.UserId, out var currentEnd) && currentEnd > startDate
+                    ? currentEnd.Value
+                    : startDate;
+                return (Recipient: recipient, Start: recipientStart,
+                    End: SpeedReadingAccessRules.ResolveEndDate(recipientStart, null, institutionPlan.DurationDays)!.Value);
+            })
+            .Select(item => new LegacyUserSubscription
             {
                 Id = Guid.NewGuid(),
-                UserId = recipient.UserId,
-                UserName = recipient.UserName,
-                UserEmail = recipient.UserEmail,
+                UserId = item.Recipient.UserId,
+                UserName = item.Recipient.UserName,
+                UserEmail = item.Recipient.UserEmail,
                 PlanId = institutionPlan.Id,
                 ProductId = institutionPlan.ProductId,
                 Status = "Active",
-                StartDate = startDate,
-                EndDate = endDate,
+                StartDate = item.Start,
+                EndDate = item.End,
                 Notes = request.Notes,
                 CreatedBy = actorId,
                 CreatedAt = now
@@ -778,7 +801,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             Status = "Active",
             SeatCount = newSubscriptions.Count,
             StartDate = startDate,
-            EndDate = endDate.Value,
+            EndDate = newSubscriptions.Max(item => item.EndDate!.Value),
             PaymentReference = paymentReference,
             Notes = request.Notes?.Trim(),
             ApprovedBy = actorId,
@@ -1229,6 +1252,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         if (existingSubscription is null)
         {
             var now = DateTime.UtcNow;
+            var startDate = await RenewalStartAsync(payment.UserId, plan.ProductId, now, cancellationToken);
             existingSubscription = new LegacyUserSubscription
             {
                 Id = Guid.NewGuid(),
@@ -1238,8 +1262,8 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
                 PlanId = plan.Id,
                 ProductId = plan.ProductId,
                 Status = "Active",
-                StartDate = now,
-                EndDate = SpeedReadingPaymentRules.ResolveEndDate(now, plan.DurationDays),
+                StartDate = startDate,
+                EndDate = SpeedReadingPaymentRules.ResolveEndDate(startDate, plan.DurationDays),
                 Notes = $"Iyzico payment {payment.Id:N}",
                 CreatedBy = payment.UserId,
                 CreatedAt = now
@@ -1256,6 +1280,21 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return SuccessVerification(plan.Name, payment.Amount, existingSubscription.Id);
+    }
+
+    /// <summary>
+    /// Review H2a: a renewal bought before the current access ends starts when it ends, so no paid day is lost.
+    /// </summary>
+    private async Task<DateTime> RenewalStartAsync(Guid userId, Guid productId, DateTime now, CancellationToken cancellationToken)
+    {
+        var currentEnd = await db.UserSubscriptions.AsNoTracking()
+            .Where(item => item.UserId == userId
+                && item.ProductId == productId
+                && !item.IsDeleted
+                && item.Status == "Active"
+                && item.EndDate > now)
+            .MaxAsync(item => item.EndDate, cancellationToken);
+        return currentEnd ?? now;
     }
 
     private async Task<PaymentVerificationResult> MarkPendingAsync(
