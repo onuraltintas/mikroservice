@@ -177,7 +177,7 @@ public sealed class SpeedReadingTextFadePostgresTests(PostgresFixture postgres)
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
             Assert.Equal(1500, started.InitialData.GetProperty("readingMinimumMs").GetInt32());
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "start_reading" }));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "start_reading" }));
             Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" })).IsValid);
             await service.PauseAsync(student, started.SessionId);
             await service.ResumeAsync(student, started.SessionId);

@@ -1184,17 +1184,36 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             return new(true, false, resolvedStatus, plan.Name, payment.Amount, null, providerResult.ErrorMessage);
         }
 
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        // Review H1: the context retries on failure, so the transaction runs inside the execution strategy as one
+        // retriable unit; otherwise EF refuses it after the customer has paid and no subscription is created.
+        var paymentId = payment.Id;
+        var providerPaymentId = providerResult.PaymentId;
+        var providerResponse = providerResult.RawResponse;
         db.Entry(payment).State = EntityState.Detached;
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(
+            token => AttachSubscriptionAsync(paymentId, payment.Amount, providerPaymentId, providerResponse, plan, token),
+            cancellationToken);
+    }
+
+    private async Task<PaymentVerificationResult> AttachSubscriptionAsync(
+        Guid paymentId,
+        decimal amount,
+        string? providerPaymentId,
+        string providerResponse,
+        LegacySubscriptionPlan plan,
+        CancellationToken cancellationToken)
+    {
+        ownedDb.ChangeTracker.Clear();
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var persistedPayment = await db.Payments
-            .SingleOrDefaultAsync(item => item.Id == payment.Id, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == paymentId, cancellationToken);
         if (persistedPayment is null)
         {
             await transaction.RollbackAsync(cancellationToken);
-            return FailedVerification("Payment could not be found.", plan.Name, payment.Amount);
+            return FailedVerification("Payment could not be found.", plan.Name, amount);
         }
 
-        payment = persistedPayment;
+        var payment = persistedPayment;
         if (string.Equals(payment.Status, SpeedReadingPaymentRules.SuccessStatus, StringComparison.OrdinalIgnoreCase)
             && payment.SubscriptionId.HasValue)
         {
@@ -1230,6 +1249,8 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
 
         payment.SubscriptionId = existingSubscription.Id;
         payment.Status = SpeedReadingPaymentRules.SuccessStatus;
+        payment.ProviderPaymentId = providerPaymentId;
+        payment.ProviderResponse = providerResponse;
         payment.ErrorMessage = null;
         payment.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);

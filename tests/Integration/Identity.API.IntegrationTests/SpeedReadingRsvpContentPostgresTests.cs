@@ -89,7 +89,7 @@ public sealed class SpeedReadingRsvpContentPostgresTests(PostgresFixture postgre
                 Assert.InRange(text.WordCount, band.GetProperty("minWordCount").GetInt32(), band.GetProperty("maxWordCount").GetInt32());
                 var minimumMs = 300 + text.WordCount * config.GetProperty("timing").GetProperty("durationMs").GetInt32();
                 Assert.Equal(minimumMs, started.InitialData.GetProperty("readingMinimumMs").GetInt32());
-                await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), session.Id, new() { Action = "start_reading" }));
+                await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), session.Id, new() { Action = "start_reading" }));
                 Assert.True((await service.ValidateActionAsync(user, session.Id, new() { Action = "start_reading" })).IsValid);
                 Assert.False((await service.ValidateActionAsync(user, session.Id, new() { Action = "finish_reading" })).IsValid);
                 await service.PauseAsync(user, session.Id); await service.ResumeAsync(user, session.Id);

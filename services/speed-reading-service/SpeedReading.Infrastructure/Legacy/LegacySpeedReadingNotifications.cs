@@ -19,6 +19,8 @@ internal sealed class LegacySpeedReadingNotifications(
         int pageSize,
         CancellationToken cancellationToken)
     {
+        fromDate = SpeedReadingQueryDates.Utc(fromDate);
+        toDate = SpeedReadingQueryDates.Utc(toDate);
         var query = db.Notifications
             .AsNoTracking()
             .Where(item => item.UserId == userId && !item.IsDeleted);
@@ -260,6 +262,8 @@ internal sealed class LegacySpeedReadingNotifications(
         int pageSize,
         CancellationToken cancellationToken)
     {
+        fromDate = SpeedReadingQueryDates.Utc(fromDate);
+        toDate = SpeedReadingQueryDates.Utc(toDate);
         var query = db.Notifications
             .AsNoTracking()
             .Where(item => !item.IsDeleted);

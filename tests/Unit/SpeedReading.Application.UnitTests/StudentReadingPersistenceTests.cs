@@ -835,6 +835,53 @@ public sealed class StudentReadingPersistenceTests
         session.CurrentStep.Should().Be(0);
     }
 
+    [Fact]
+    public async Task Expected_session_states_are_business_rules_not_server_errors()
+    {
+        // Review H1: a second tab, an unknown or foreign session id and actions on a closed session answer 4xx.
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Schulte", "Grid", "grid_interaction"));
+        context.Exercises.Add(Exercise.Create(
+            "Grid",
+            "grid_interaction",
+            "{\"engineType\":\"grid_interaction\",\"engineConfig\":{\"engineType\":\"grid_interaction\",\"gridSize\":5,\"sequenceType\":\"numeric\"}}",
+            1,
+            studentId,
+            typeId,
+            id: exerciseId));
+        var otherExerciseId = Guid.NewGuid();
+        context.Exercises.Add(Exercise.Create(
+            "Grid 2",
+            "grid_interaction",
+            "{\"engineType\":\"grid_interaction\",\"engineConfig\":{\"engineType\":\"grid_interaction\",\"gridSize\":5,\"sequenceType\":\"numeric\"}}",
+            1,
+            studentId,
+            typeId,
+            id: otherExerciseId));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId }, CancellationToken.None);
+
+        var resumed = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId }, CancellationToken.None);
+        resumed.SessionId.Should().Be(started.SessionId, "the same exercise resumes its open session");
+        (await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = otherExerciseId }, CancellationToken.None))
+            .SessionId.Should().NotBe(started.SessionId, "another exercise starts its own session");
+
+        var foreign = () => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new CompleteExerciseSessionRequest(), CancellationToken.None);
+        await foreign.Should().ThrowAsync<NotFoundException>();
+        var unknown = () => service.ValidateActionAsync(studentId, Guid.NewGuid(), new ExerciseActionRequest { Action = "tap" }, CancellationToken.None);
+        await unknown.Should().ThrowAsync<NotFoundException>();
+
+        var session = await context.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
+        session.Abandon(DateTime.UtcNow);
+        await context.SaveChangesAsync();
+        var closed = () => service.ValidateActionAsync(studentId, started.SessionId, new ExerciseActionRequest { Action = "tap" }, CancellationToken.None);
+        (await closed.Should().ThrowAsync<BusinessRuleException>()).Which.Code.Should().Be("ExerciseSession.NotActive");
+    }
+
     [Theory]
     [InlineData("\"rules\":{\"timeLimit\":90}")]
     [InlineData("\"timing\":{\"maxReadingTimeMs\":90000}")]
@@ -874,8 +921,8 @@ public sealed class StudentReadingPersistenceTests
         await context.SaveChangesAsync();
         var complete = () => service.CompleteAsync(studentId, started.SessionId,
             new CompleteExerciseSessionRequest(), CancellationToken.None);
-        await complete.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("This exercise session has timed out.");
+        // Review H1: an expected state is a business rule (4xx with a Turkish message), not a server error.
+        (await complete.Should().ThrowAsync<BusinessRuleException>()).Which.Code.Should().Be("ExerciseSession.TimedOut");
         session.Status.Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Timeout);
         (await context.ExerciseSessionResults.CountAsync()).Should().Be(0);
     }

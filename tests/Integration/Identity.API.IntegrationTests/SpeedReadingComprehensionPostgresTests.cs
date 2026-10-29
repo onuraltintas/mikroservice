@@ -66,7 +66,7 @@ public sealed class SpeedReadingComprehensionPostgresTests(PostgresFixture postg
                     new() { Action = "answer_question", QuestionId = question.GetProperty("questionId").GetGuid(), Answer = "A" });
                 Assert.Equal(mode == "learning" ? true : null, answer.IsCorrect);
             }
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), session.Id, new()));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), session.Id, new()));
             var result = await service.CompleteAsync(user, session.Id, new());
             Assert.Equal(100m, result.Score);
             Assert.Equal(mode, result.DetailedResults.GetProperty("comprehensionMode").GetString());

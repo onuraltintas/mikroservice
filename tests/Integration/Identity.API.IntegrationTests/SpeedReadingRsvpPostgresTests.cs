@@ -51,7 +51,7 @@ public sealed class SpeedReadingRsvpPostgresTests(PostgresFixture postgres)
             Assert.Equal(1100, started.InitialData.GetProperty("readingMinimumMs").GetInt32());
             Assert.Equal(evaluation ? 1 : 0, started.InitialData.GetProperty("questions").GetArrayLength());
             if (evaluation) Assert.Throws<KeyNotFoundException>(() => started.InitialData.GetProperty("questions")[0].GetProperty("correctAnswer"));
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "start_reading" }));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "start_reading" }));
             Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" })).IsValid);
             Assert.False((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" })).IsValid);
             var session = await db.ExerciseSessions.SingleAsync();

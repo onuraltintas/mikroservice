@@ -310,6 +310,8 @@ internal sealed class OwnedSpeedReadingPrograms(
         int limit,
         CancellationToken cancellationToken = default)
     {
+        dateFrom = SpeedReadingQueryDates.Utc(dateFrom);
+        dateTo = SpeedReadingQueryDates.Utc(dateTo);
         var query = db.DailyExerciseLogs
             .AsNoTracking()
             .Where(item => item.UserId == userId);

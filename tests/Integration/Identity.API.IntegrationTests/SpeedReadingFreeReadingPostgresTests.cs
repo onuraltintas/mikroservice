@@ -36,7 +36,7 @@ public sealed class SpeedReadingFreeReadingPostgresTests(PostgresFixture postgre
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(user, new() { ExerciseId = exercise.Id });
             Assert.Equal(0, started.InitialData.GetProperty("questions").GetArrayLength());
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
             await service.ValidateActionAsync(user, started.SessionId, new() { Action = "start_reading" });
             Assert.False((await service.ValidateActionAsync(user, started.SessionId, new() { Action = "finish_reading" })).IsValid);
             var session = await db.ExerciseSessions.SingleAsync(); var firstText = session.ReadingTextId;

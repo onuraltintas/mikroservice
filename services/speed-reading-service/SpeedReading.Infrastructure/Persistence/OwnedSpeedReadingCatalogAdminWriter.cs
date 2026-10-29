@@ -165,6 +165,20 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
                 ?? throw MissingResource(existing.ResourceId, "Exercise");
         }
 
+        // Review H1: the title lock is a transaction; with EnableRetryOnFailure it must run inside the
+        // execution strategy as one retriable unit, or EF refuses it and the admin gets a 500.
+        return await InTitleLockUnitAsync(request.IsActive, () => CreateExerciseCoreAsync(
+            actorId, request, scope, key, hash, cancellationToken), cancellationToken);
+    }
+
+    private async Task<ExerciseSummary> CreateExerciseCoreAsync(
+        Guid actorId,
+        CreateExerciseRequest request,
+        string scope,
+        string key,
+        string hash,
+        CancellationToken cancellationToken)
+    {
         var type = await GetExerciseTypeAsync(request.ExerciseTypeId, cancellationToken);
         await using var titleLock = request.IsActive
             ? await BeginExerciseTitleLockAsync(request.Title, cancellationToken)
@@ -223,6 +237,19 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
                 ?? throw MissingResource(existing.ResourceId, "Exercise");
         }
 
+        return await InTitleLockUnitAsync(request.IsActive, () => UpdateExerciseCoreAsync(
+            actorId, exerciseId, request, scope, key, hash, cancellationToken), cancellationToken);
+    }
+
+    private async Task<ExerciseSummary> UpdateExerciseCoreAsync(
+        Guid actorId,
+        Guid exerciseId,
+        UpdateExerciseRequest request,
+        string scope,
+        string key,
+        string hash,
+        CancellationToken cancellationToken)
+    {
         var exercise = await db.Exercises
             .SingleOrDefaultAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken)
             ?? throw new NotFoundException("Exercise", exerciseId);
@@ -653,6 +680,19 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
             cancellationToken);
         if (duplicateExists)
             throw new BusinessRuleException("Exercise.DuplicateTitle", "Aynı başlığa sahip aktif bir egzersiz zaten mevcut.");
+    }
+
+    private async Task<T> InTitleLockUnitAsync<T>(bool locked, Func<Task<T>> work, CancellationToken cancellationToken)
+    {
+        if (!locked || !db.Database.IsNpgsql())
+            return await work();
+
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async token =>
+        {
+            // A retried attempt starts from a clean context; nothing was saved by the failed one.
+            db.ChangeTracker.Clear();
+            return await work();
+        }, cancellationToken);
     }
 
     private async Task<IDbContextTransaction?> BeginExerciseTitleLockAsync(

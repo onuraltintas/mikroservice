@@ -37,7 +37,7 @@ public sealed class SpeedReadingFixationPostgresTests(PostgresFixture postgres)
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
             Assert.Equal(maximumLetters, started.InitialData.GetProperty("fixationPeripheralCount").GetInt32());
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "fixation_present" }));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "fixation_present" }));
             await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.CompleteAsync(student, started.SessionId, new()));
             List<string>? previous = null;
             for (var round = 0; round < 2; round++) {

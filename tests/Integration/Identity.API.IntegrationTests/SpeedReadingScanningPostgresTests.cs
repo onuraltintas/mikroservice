@@ -96,7 +96,7 @@ public sealed class SpeedReadingScanningPostgresTests(PostgresFixture postgres)
             var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(serviceType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "scan_start" }));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "scan_start" }));
             await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
             var click = new ExerciseActionRequest { ActionId = Guid.NewGuid(), Action = "scan_click", Index = 0, Number = 0 };
             await service.ValidateActionAsync(student, started.SessionId, click);

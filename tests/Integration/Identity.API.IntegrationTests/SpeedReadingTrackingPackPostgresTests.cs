@@ -89,7 +89,7 @@ public sealed class SpeedReadingTrackingPackPostgresTests(PostgresFixture postgr
                 Assert.Equal("tracking", start.InitialData.GetProperty("textStreamMode").GetString());
                 Assert.True(JsonNode.DeepEquals(JsonNode.Parse(row.GetProperty("configuration").GetRawText()), JsonNode.Parse(start.Configuration.GetRawText())));
                 await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteAsync(user, start.SessionId, new()));
-                await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), start.SessionId, new()));
+                await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), start.SessionId, new()));
                 Assert.True((await service.ValidateActionAsync(user, start.SessionId, new() { Action = "tracking_start" })).IsValid);
                 var session = await db.ExerciseSessions.SingleAsync(item => item.Id == start.SessionId);
                 var seconds = row.GetProperty("configuration").GetProperty("engineConfig").GetProperty("timing").GetProperty("durationSeconds").GetInt32();
