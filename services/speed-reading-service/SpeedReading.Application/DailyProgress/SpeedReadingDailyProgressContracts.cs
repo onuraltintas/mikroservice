@@ -316,6 +316,18 @@ public static class SpeedReadingDailyProgressRules
         return (((cumulativeDay - 1) / 7) + 1, ((cumulativeDay - 1) % 7) + 1);
     }
 
+    /// <summary>
+    /// Review H5 (finding 19, decision 29.10.2026): a finished program week moves the next weeks' difficulty by its
+    /// measured average — 80 or more up one, under 60 down one, otherwise unchanged (no measurement: unchanged).
+    /// </summary>
+    public static int WeeklyDifficultyStep(decimal? weekAverage) => weekAverage switch
+    {
+        null => 0,
+        >= 80 => 1,
+        < 60 => -1,
+        _ => 0
+    };
+
     public static int ResolveExerciseDifficulty(
         int configuredDifficulty,
         int currentDifficulty,

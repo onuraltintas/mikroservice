@@ -173,6 +173,16 @@ public sealed class StudentProgramProgress : AggregateRoot
         UpdatedBy = actorId.ToString();
     }
 
+    /// <summary>Replaces the schedule after a difficulty change; the caller keeps finished weeks unchanged.</summary>
+    public void ReplaceSchedule(string scheduleJson, Guid actorId, DateTime at)
+    {
+        if (string.IsNullOrWhiteSpace(scheduleJson) || actorId == Guid.Empty)
+            throw new ArgumentException("A program schedule and actor are required.");
+        ScheduleJson = scheduleJson;
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = actorId.ToString();
+    }
+
     public bool ApplyAdaptiveDifficultyAdjustment(
         int difficultyAdjustment,
         ProgramTemplate template,

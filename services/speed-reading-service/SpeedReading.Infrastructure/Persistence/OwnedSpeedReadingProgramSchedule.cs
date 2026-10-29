@@ -20,10 +20,18 @@ internal static class OwnedSpeedReadingProgramSchedule
             ? []
             : JsonSerializer.Deserialize<List<ScheduledProgramExercise>>(json, JsonOptions) ?? [];
 
-    public static async Task<string> BuildAsync(
+    public static Task<string> BuildAsync(
         OwnedSpeedReadingDbContext db,
         ProgramTemplate template,
         Guid? existingProgressId,
+        CancellationToken cancellationToken) =>
+        BuildWithOffsetAsync(db, template, existingProgressId, 0, cancellationToken);
+
+    private static async Task<string> BuildWithOffsetAsync(
+        OwnedSpeedReadingDbContext db,
+        ProgramTemplate template,
+        Guid? existingProgressId,
+        int difficultyOffset,
         CancellationToken cancellationToken)
     {
         var exerciseTypes = await db.ExerciseTypes.AsNoTracking()
@@ -71,9 +79,11 @@ internal static class OwnedSpeedReadingProgramSchedule
                         $"'{template.Name}' programındaki '{pattern.Type}' egzersiz türü bulunamadı.");
                 var difficulty = SpeedReadingDailyProgressRules.ResolveExerciseDifficulty(
                     pattern.Difficulty,
-                    template.InitialDifficultyLevel,
+                    template.InitialDifficultyLevel + difficultyOffset,
                     template.InitialDifficultyLevel,
                     template.MaxDifficultyLevel);
+                if (difficultyOffset < 0 && pattern.Difficulty > 0)
+                    difficulty = Math.Max(difficulty, 1);
                 var available = exercises
                     .Where(item => item.IsActive && item.ExerciseTypeId == exerciseType.Id
                         && item.DifficultyLevel <= difficulty
@@ -116,6 +126,36 @@ internal static class OwnedSpeedReadingProgramSchedule
         }
 
         return JsonSerializer.Serialize(schedule);
+    }
+
+    /// <summary>
+    /// Review H5 (finding 19): after a finished week, moves the difficulty by the week's measured average and
+    /// re-selects the exercises of the remaining weeks. Finished weeks keep their exercises.
+    /// </summary>
+    public static async Task<bool> AdaptAfterWeekAsync(
+        OwnedSpeedReadingDbContext db,
+        StudentProgramProgress progress,
+        ProgramTemplate template,
+        decimal? finishedWeekAverage,
+        Guid actorId,
+        DateTime at,
+        CancellationToken cancellationToken)
+    {
+        var step = SpeedReadingDailyProgressRules.WeeklyDifficultyStep(finishedWeekAverage);
+        if (step == 0 || progress.CompletedDate.HasValue || !progress.IsActive
+            || !progress.ApplyAdaptiveDifficultyAdjustment(step, template, actorId, at))
+            return false;
+
+        var current = Parse(progress.ScheduleJson);
+        var assignedDays = current.Select(item => (item.WeekNumber, item.DayNumber)).ToHashSet();
+        var rebuilt = Parse(await BuildWithOffsetAsync(db, template, progress.Id, progress.AdaptiveDifficultyOffset, cancellationToken));
+        var schedule = current.Where(item => item.WeekNumber < progress.CurrentWeek)
+            .Concat(rebuilt.Where(item => item.WeekNumber >= progress.CurrentWeek
+                && (assignedDays.Count == 0 || assignedDays.Contains((item.WeekNumber, item.DayNumber)))))
+            .OrderBy(item => item.WeekNumber).ThenBy(item => item.DayNumber).ThenBy(item => item.Order)
+            .ToList();
+        progress.ReplaceSchedule(JsonSerializer.Serialize(schedule), actorId, at);
+        return true;
     }
 
     private sealed class SchedulePattern
