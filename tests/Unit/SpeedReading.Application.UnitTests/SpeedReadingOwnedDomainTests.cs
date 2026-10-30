@@ -1895,8 +1895,11 @@ public sealed class SpeedReadingOwnedDomainTests
             updatedAt: null,
             updatedBy: null);
 
-        progress.Reset(Guid.NewGuid(), DateTime.UtcNow);
+        var template = ProgramTemplate.Import(progress.ProgramTemplateId, "Program", "", Guid.NewGuid(), 0, 100, "{}", 2, 0, 5, 4, 28,
+            true, 1, 1, null, false, DateTime.UtcNow, null, null, null);
+        progress.Reset(template, Guid.NewGuid(), DateTime.UtcNow);
 
+        progress.CurrentDifficultyLevel.Should().Be(2);
         progress.CurrentDay.Should().Be(1);
         progress.CurrentWeek.Should().Be(1);
         progress.DaysCompleted.Should().Be(0);
@@ -2043,7 +2046,7 @@ public sealed class SpeedReadingOwnedDomainTests
 
         progress.ApplyAdaptiveDifficultyAdjustment(-5, template, actorId, at).Should().BeTrue();
         progress.CurrentDifficultyLevel.Should().Be(1);
-        progress.AdaptiveDifficultyOffset.Should().Be(-4);
+        progress.AdaptiveDifficultyOffset.Should().Be(0);
         progress.ApplyAdaptiveDifficultyAdjustment(-1, template, actorId, at).Should().BeFalse();
     }
 

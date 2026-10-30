@@ -79,7 +79,9 @@ public sealed record CompleteDailyExerciseResponse(
     bool ProgramCompleted,
     RecommendedProgramSummary? RecommendedNextProgram,
     ProgramCompletionStats? CompletionStats,
-    bool AdaptationUpdated = false);
+    bool AdaptationUpdated = false,
+    bool DifficultyDecreased = false,
+    bool LearningPathCreated = false);
 
 public sealed record StudentProgressSummary(
     int CurrentWeek,
@@ -322,13 +324,34 @@ public static class SpeedReadingDailyProgressRules
     /// Review H5 (finding 19, decision 29.10.2026): a finished program week moves the next weeks' difficulty by its
     /// measured average — 80 or more up one, under 60 down one, otherwise unchanged (no measurement: unchanged).
     /// </summary>
-    public static int WeeklyDifficultyStep(decimal? weekAverage) => weekAverage switch
+    /// <summary>
+    /// Weekly difficulty step (H7; comprehension gate decided 30.10.2026): a week moves the program up only when its
+    /// measured average and the comprehension of its question-bearing sessions are both at least 80. A week without
+    /// any question-bearing session has no comprehension evidence and therefore never moves up. Below 60 moves down.
+    /// </summary>
+    public static int WeeklyDifficultyStep(decimal? weekAverage, decimal? weekComprehension) => weekAverage switch
     {
         null => 0,
-        >= 80 => 1,
         < 60 => -1,
+        >= 80 when weekComprehension >= 80 => 1,
         _ => 0
     };
+
+    /// <summary>H18 (finding 8): the completion message names what actually changed — the weekly level step and/or a new
+    /// support path — instead of one message for both.</summary>
+    public static string CompletionMessage(bool programCompleted, int oldLevel, int newLevel, bool learningPathCreated)
+    {
+        if (programCompleted)
+            return "Program başarıyla tamamlandı.";
+        var changes = new List<string>();
+        if (newLevel > oldLevel)
+            changes.Add($"Geçen haftaki başarına göre seviyen {newLevel} oldu.");
+        else if (newLevel < oldLevel)
+            changes.Add($"Geçen haftaki sonuçlarına göre seviyen {newLevel} olarak ayarlandı.");
+        if (learningPathCreated)
+            changes.Add("Son anlama sonuçlarına göre sana destek çalışmaları hazırlandı.");
+        return changes.Count == 0 ? "Egzersiz başarıyla tamamlandı." : "Egzersiz tamamlandı. " + string.Join(" ", changes);
+    }
 
     public static int ResolveExerciseDifficulty(
         int configuredDifficulty,
