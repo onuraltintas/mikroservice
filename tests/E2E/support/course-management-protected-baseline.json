@@ -482,7 +482,7 @@
     "clients/speed-reading/src/app/features/student/achievements/achievements.component.scss": "1a8adb9436406a257cb90591739b4dfd386c34e89a23698b3f7153760bb3f32c",
     "clients/speed-reading/src/app/features/student/achievements/achievements.component.spec.ts": "5ea2926c355457ef690bc241e1a27b59713bafb3bb082bc88c1fc9edd4b227dd",
     "clients/speed-reading/src/app/features/student/achievements/achievements.component.ts": "782f2572d859625b00cb180233b62ce70ade1cee5e2e3326089a91e6bb0c53f6",
-    "clients/speed-reading/src/app/features/student/assessment/assessment-intro.component.html": "59279d6feb232a01d7f47ad228836b5e5d607aa0bbb5e34c10bdb999340d93be",
+    "clients/speed-reading/src/app/features/student/assessment/assessment-intro.component.html": "c165fa9bc2945a4a329696f698836a19ee4f87d2ef3dee214ca7a91309d37fdf",
     "clients/speed-reading/src/app/features/student/assessment/assessment-intro.component.scss": "fb096704587fce8e6b3a170a0478ae01e546f5ab045f43b6bf07fa1bc03d5f18",
     "clients/speed-reading/src/app/features/student/assessment/assessment-intro.component.spec.ts": "ef16a8819e94aec8ac26de9b6abfdd11b46290ee6bfa7f05caaaef46a3d3e98d",
     "clients/speed-reading/src/app/features/student/assessment/assessment-intro.component.ts": "dbd30631131d6017a3b020d371c27930145133f71082969a66d4054119d35385",
@@ -607,7 +607,7 @@
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/visualization.engine.ts": "36dd694952cce49026a78003fe2522b27142df4af7f4cc876f19b897062f2006",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/vocabulary-builder.engine.spec.ts": "bbeddef94d71cce7eea4ced78873a76d5a0306adf8cb2d700796facf2e8c5086",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/vocabulary-builder.engine.ts": "e3f96f3ed6b4ba054ae6e81d8826555e27b818047edd11a320853ea352a01337",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/word-highlight.engine.ts": "349409ad625fa84d42378b3ba0808e0cff640a01af885890ee07738c551b5b22",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/engines/word-highlight.engine.ts": "fa144dc3de82d6bea949f095ad7f0255a821a5f2d5a5ce0956f1b37d5003b621",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/error-analysis-player.spec.ts": "60de83f0cd4695217636cbe3b0fe66c4ed8da8fd1bb1d1cbdfb892ce6406e54b",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exam-presentation.spec.ts": "9114c5bc1efd9fb587fadbe57abb88ff657ed767c31a8f6e6e49e8202fd6c541",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-action-policy.spec.ts": "d78680502d0f785f7a925d6e5da11f69ab466c0fe9987e3463ac6f3760b33ab4",
@@ -616,7 +616,7 @@
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-action-queue.ts": "3d002aa57bec17e5c95b1bdaf6c9ae2d3dc471ca6ac5f49681dc53264b6de472",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.html": "2a71425d86960273842b4b591736d887504ddf5c5f8e1227fcfea877c2860df6",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.scss": "fc7448ef7f677dc4c08f7c85d23e957254873e6bdcff186c67f0a572e1ea1851",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.ts": "5856121cfc0b683a081e679ea82f5bc45ccb3b026137cff445d60f6268427750",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.ts": "62e63c21316b1ffb8dab6343d2f628cd9f44e5d15c1ab254b453ed27d27aaf0c",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-preview-role.spec.ts": "6b042fcfaa60487736a38b0d68836717397a3cd270b27049a3144aa1566f7f65",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-answer-input.spec.ts": "f651cd09cfd52050b93b684f6bb244ee3185ac5a3f3ed7dbda265c4ad83dc1b3",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-answer-input.ts": "f434cc2872cd0f0eea36f6fa9975647d285f050ff9602f4b032c14e16a868f5d",
@@ -684,7 +684,7 @@
     "clients/speed-reading/src/app/features/student/reviews/review-exercises.component.scss": "f6c03c081eefa00a26ac2cb6bf114c599a6562a821ed180cf8a2fd2c9bef7512",
     "clients/speed-reading/src/app/features/student/reviews/review-exercises.component.spec.ts": "159c9ef251f7f3f65a288ccd54fc7020f6ed9e58844430fb296ae52568e4d317",
     "clients/speed-reading/src/app/features/student/reviews/review-exercises.component.ts": "cea20a7d3af3bc7605b046ffb2df9b6ab24ea1c29a39e0d4634a12f49a4f3456",
-    "clients/speed-reading/src/app/features/student/settings/settings.component.html": "a48dc2adfad3a20c2ac2475420379e038faa5e99d00116353e1deea2b47a1737",
+    "clients/speed-reading/src/app/features/student/settings/settings.component.html": "798e9866fa4e15bd5f17b2978a2b851fef170d8efe1593311978176fc5007b2b",
     "clients/speed-reading/src/app/features/student/settings/settings.component.scss": "2c59f6375827ebc5f70eef11d8daf88d36f4d559bc928f26f82dd01cface9faf",
     "clients/speed-reading/src/app/features/student/settings/settings.component.ts": "be8c142db6acdeba508199a485c46b076921e88e0042d4d9c9943464842dc8d9",
     "clients/speed-reading/src/app/features/student/shell/staff-training-menu.spec.ts": "3f8224ec9a26d30b05b7a5b13b3316cecfa97ea71ee3b9d4107defaa14973941",
@@ -2637,7 +2637,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "H12 remove attention prototype",
+    "purpose": "H17 exercise texts",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2685,14 +2685,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "c938694a",
-    "removedSincePreviousBaseline": [
-      "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-game.spec.ts",
-      "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-game.ts",
-      "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-preview.component.html",
-      "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-preview.component.scss",
-      "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-preview.component.spec.ts",
-      "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-preview.component.ts"
-    ]
+    "previousBaselineCommit": "8c08569d",
+    "removedSincePreviousBaseline": []
   }
 }

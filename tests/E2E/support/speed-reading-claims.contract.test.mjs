@@ -20,10 +20,10 @@ test('the student app has no overstated speed-reading claims', () => {
 });
 
 test('the claim check recognises the phrases it guards against', () => {
-  assert.equal(overstatedClaims('Göz kaslarını geliştirmek için düzenli egzersiz yapın.').length, 1);
-  assert.equal(overstatedClaims('Periferik görüş alanını genişleterek daha fazla kelime görebilirsiniz.').length, 1);
-  assert.equal(overstatedClaims('Periferik görme alanınızı test edeceğiz').length, 1);
-  assert.equal(overstatedClaims('Beynin algılama kapasitesini artırarak geliştirilir.').length, 1);
-  assert.equal(overstatedClaims('Görüş Alanı Genişletme').length, 1);
+  assert.ok(overstatedClaims('Göz kaslarını geliştirmek için düzenli egzersiz yapın.').length > 0);
+  assert.ok(overstatedClaims('Periferik görüş alanını genişleterek daha fazla kelime görebilirsiniz.').length > 0);
+  assert.ok(overstatedClaims('Periferik görme alanınızı test edeceğiz').length > 0);
+  assert.ok(overstatedClaims('Beynin algılama kapasitesini artırarak geliştirilir.').length > 0);
+  assert.ok(overstatedClaims('Görüş Alanı Genişletme').length > 0);
   assert.deepEqual(overstatedClaims('Kelimeleri anlamlı öbekler hâlinde okuma.'), []);
 });

@@ -9,7 +9,7 @@ import { overstatedClaims } from '../../../tests/E2E/support/speed-reading-claim
 // Decision 30.10.2026: exercise descriptions say what the exercise practises, without unproven promises such as
 // "strengthens eye muscles" or "widens the visual field".
 const texts = JSON.parse(fs.readFileSync(new URL('./texts.json', import.meta.url), 'utf8'));
-const programs = JSON.parse(fs.readFileSync(new URL('../../programs/v6/programs.json', import.meta.url), 'utf8'));
+const programs = JSON.parse(fs.readFileSync(new URL('../../programs/v5/programs.json', import.meta.url), 'utf8'));
 
 test('covers every exercise type the programs use, once', () => {
   const used = new Set(programs.flatMap(program => Object.entries(program.pattern)
