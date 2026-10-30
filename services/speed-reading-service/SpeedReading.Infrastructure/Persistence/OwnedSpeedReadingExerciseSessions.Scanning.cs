@@ -116,6 +116,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         return new ScanningRound { TextContent = content, Targets = requested, TargetLabels = labels };
     }
 
+    // H21 (decision 30.10.2026): a search that runs out of time is a finished, measured attempt scored by the targets
+    // found. Sessions started before this release stored the time-out as an incomplete reading; move it over.
+    private static void NormalizeScanningTimeout(SessionState state)
+    {
+        if (!IsScanning(state) || !state.ReadingIncomplete) return;
+        state.ReadingIncomplete = false;
+        state.ScanningTimedOut = true;
+    }
+
     private static bool ScanningComplete(SessionState state) =>
         state.ScanningRounds.Count > 0 && state.CurrentRound >= state.ScanningRounds.Count;
 
@@ -145,7 +154,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         var action = request.Action?.Trim().ToLowerInvariant();
         if (action is not ("scan_start" or "scan_click" or "scan_timeout"))
             return Invalid("Tarama yalnız doğrulanmış hedef tıklamalarıyla ilerler.");
-        if (ScanningComplete(state) || state.ReadingIncomplete)
+        NormalizeScanningTimeout(state);
+        if (ScanningComplete(state) || state.ScanningTimedOut)
             return action == "scan_start" ? ScanningResponse(session, state, now) : Invalid("Tarama zaten tamamlandı.");
         if (action == "scan_start")
         {
@@ -157,7 +167,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         if (ScanningExpired(session, state, now))
         {
             UpdateScanningTime(session, state, now);
-            state.ReadingIncomplete = true;
+            state.ScanningTimedOut = true;
             return ScanningResponse(session, state, now);
         }
         if (action == "scan_timeout") return Invalid("Tarama süresi henüz dolmadı.");
@@ -184,11 +194,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
 
     private static ExerciseActionValidationResponse ScanningResponse(ExerciseSession session, SessionState state, DateTime now, bool? correct = null) =>
         Valid("Tarama durumu doğrulandı.", nextStep: session.CurrentStep,
-            isCompleted: ScanningComplete(state) || state.ReadingIncomplete, isCorrect: correct,
+            isCompleted: ScanningComplete(state) || state.ScanningTimedOut, isCorrect: correct,
             feedbackData: JsonSerializer.SerializeToElement(new {
                 state.ScanningRounds, state.CurrentRound, state.ScanningCaseSensitive, state.ScanningFindAny,
                 state.TotalSteps, session.CorrectCount, session.IncorrectCount,
-                timedOut = state.ReadingIncomplete,
+                timedOut = state.ScanningTimedOut,
                 searchTimeMs = state.ScanningElapsedMs ?? 0
             }, JsonOptions));
 

@@ -200,6 +200,14 @@ public static class SpeedReadingExerciseSessionRules
         return total == 0 ? 0 : Math.Round((decimal)Math.Max(correctCount, 0) / total * 100, 2);
     }
 
+    /// <summary>H21: adaptive fluency is judged on the transfer text, not on the baseline answers counted with it.</summary>
+    public static decimal CalculateResultAccuracy(int correctCount, int incorrectCount, decimal? transferComprehension) =>
+        transferComprehension ?? CalculateAccuracy(correctCount, incorrectCount);
+
+    /// <summary>H21: scanning loses 10 points per wrong tap, at most 30, like Hedef Avı and error analysis.</summary>
+    public static decimal CalculateScanningScore(decimal accuracy, int incorrectCount) =>
+        Math.Max(0, accuracy - Math.Min(30m, Math.Max(0, incorrectCount) * 10m));
+
     public static int CalculateActiveSeconds(
         DateTime startTime,
         DateTime endTime,

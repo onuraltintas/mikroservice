@@ -6,7 +6,7 @@ using SpeedReading.Application.Content;
 using SpeedReading.Application.DailyProgress;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Programs;
-using SpeedReading.Domain.Sessions;
+using ExerciseSessionResult = SpeedReading.Domain.Sessions.ExerciseSessionResult;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
