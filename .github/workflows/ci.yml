@@ -66,6 +66,8 @@ jobs:
           node --test tests/E2E/support/staff-portal-hosting.contract.test.mjs
           node --test tests/E2E/support/non-root-runtime.contract.test.mjs
           node --test tests/E2E/support/db-backup.contract.test.mjs
+          node --test tests/E2E/support/speed-reading-claims.contract.test.mjs
+          node --test content-packs/exercise-type-texts/v1/pack.test.mjs
           node --test tests/E2E/support/production-images.contract.test.mjs
           node --test tests/E2E/support/ci-failure-report.contract.test.mjs
           node --test tests/E2E/course-management-foundation.contract.test.mjs
