@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { vi } from 'vitest';
+import { onTestFinished, vi } from 'vitest';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { CreateUserModalComponent } from './create-user-modal';
 
@@ -102,6 +102,9 @@ describe('CreateUserModalComponent', () => {
     'creates $role in service $product and preserves its selection on error', ({ role, product }) => {
       TestBed.configureTestingModule({ imports: [CreateUserModalComponent], providers: [provideHttpClient(), provideHttpClientTesting(),
         { provide: ToasterService, useValue: { success: vi.fn(), error: vi.fn() } }] });
+      // The component logs failed requests; keep the expected 400 out of the CI log and check it was reported.
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      onTestFinished(() => consoleError.mockRestore());
       const component = TestBed.createComponent(CreateUserModalComponent).componentInstance;
       component.form.patchValue({ firstName: 'Test', lastName: 'User', email: 'user@example.test', role, coaching: product === 1 || product === 0, speedReading: product === 2 || product === 0 });
       component.save();
@@ -110,6 +113,7 @@ describe('CreateUserModalComponent', () => {
       const request = http.expectOne('/api/users');
       expect(request.request.body).toMatchObject({ role, product: product === 0 ? null : product, products: product === 0 ? [1, 2] : [product] });
       request.flush({ message: 'Test error' }, { status: 400, statusText: 'Bad request' });
+      expect(consoleError).toHaveBeenCalledWith('API Error:', expect.objectContaining({ status: 400, url: '/api/users' }));
       expect(component.form.value.coaching).toBe(product === 1 || product === 0);
       expect(component.form.value.speedReading).toBe(product === 2 || product === 0);
       expect(component.createdUser()).toBeNull();
