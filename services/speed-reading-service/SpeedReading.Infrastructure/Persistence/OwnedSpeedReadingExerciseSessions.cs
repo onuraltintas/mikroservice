@@ -681,12 +681,13 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             if (state.ScanningRounds.Count == 0)
                 throw IncompleteSession("Bu tarama oturumu doğrulanmış hedef içermiyor. Egzersizi yeniden açın.");
+            NormalizeScanningTimeout(state);
             if (ScanningExpired(session, state, now))
             {
                 UpdateScanningTime(session, state, now);
-                state.ReadingIncomplete = true;
+                state.ScanningTimedOut = true;
             }
-            if (!ScanningComplete(state) && !state.ReadingIncomplete)
+            if (!ScanningComplete(state) && !state.ScanningTimedOut)
                 throw IncompleteSession("Tarama hedefleri doğrulanmadan oturum tamamlanamaz.");
             state.Questions.Clear();
         }
@@ -807,10 +808,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             pausedReadingSeconds);
         if (IsEngineType(state.EngineType, "exam_simulation") && state.ExamProtocolVersion == 1)
             timeSpent = (int)Math.Round(state.ExamReadingTimeMs / 1000d) + state.Answers.Sum(answer => answer.TimeSpentSeconds);
-        var accuracy = IsTargetHunt(state) ? TargetHuntAccuracy(state)
-            : IsErrorAnalysis(state) ? ErrorAnalysisAccuracy(state)
-            : IsScanning(state) ? ScanningAccuracy(state)
-            : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
+        var accuracy = ResultAccuracy(session, state);
         var wordsRead = state.Tachistoscope is not null || IsScanning(state) || IsTextFade(state)
             || IsRsvp(state) || IsSkimming(state) || IsErrorAnalysis(state) || IsVocabularyState(state)
             || IsFocusExercise(state) || IsTargetHunt(state)
@@ -822,12 +820,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             : null;
         var rawWpmCandidate = IsErrorAnalysis(state) || IsTargetHunt(state) || state.ComprehensionMode == "learning" ? null : adaptiveTransferResult?.Wpm
             ?? CalculateReadingWpm(state, timeSpent);
-        var measurementStatus = SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(
+        var measurementStatus = IsSelfReportedVocabulary(state)
+            // H21 (decision 30.10.2026): learning/review cards are the student's own report; only the quiz measures.
+            ? SpeedReadingMeasurementStatus.NotMeasured
+            : SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(
             state.Questions.Count,
             session.CorrectCount,
             session.IncorrectCount,
             hasValidWpm: (IsErrorAnalysis(state) && state.ErrorAnalysisCompleted)
                 || (IsTargetHunt(state) && state.TargetHuntCompleted)
+                || (IsScanning(state) && (ScanningComplete(state) || state.ScanningTimedOut))
                 || (rawWpmCandidate.HasValue && SupportsServerReadingMeasurement(state) && !IsFreeReadingPractice(state))
                 || (IsFocusExercise(state) && state.FocusCompleted && HasFocusStimulus(state))
                 || (IsVisualExpansionExercise(state) && state.VisualExpansionRound >= state.TotalSteps
@@ -849,7 +851,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     rawWpm.HasValue ? await GetTargetWpmAsync(session.StudentId, cancellationToken) : null)
             : IsTargetHunt(state) ? TargetHuntScore(state)
             : IsErrorAnalysis(state) ? ErrorAnalysisScore(state)
-            : IsScanning(state) ? Math.Max(0, accuracy - session.IncorrectCount * 10m) : accuracy;
+            : IsScanning(state) ? SpeedReadingExerciseSessionRules.CalculateScanningScore(accuracy, session.IncorrectCount) : accuracy;
         var weightedKdp = rawWpm.HasValue && !IsFreeReadingPractice(state) && !state.AssessmentTextReviewAllowed
             ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
         var xpAwarded = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
@@ -3880,6 +3882,17 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             ?? throw new ArgumentException("Cevap A, B, C veya D olmalıdır.", nameof(answer));
     }
 
+    /// <summary>H21: one accuracy for the result, the stored XP and the result screen.</summary>
+    private static decimal ResultAccuracy(ExerciseSession session, SessionState state) =>
+        IsTargetHunt(state) ? TargetHuntAccuracy(state)
+            : IsErrorAnalysis(state) ? ErrorAnalysisAccuracy(state)
+            : IsScanning(state) ? ScanningAccuracy(state)
+            : SpeedReadingExerciseSessionRules.CalculateResultAccuracy(session.CorrectCount, session.IncorrectCount,
+                IsAdaptiveFluency(state) ? state.AdaptiveTransferComprehension : null);
+
+    private static bool IsSelfReportedVocabulary(SessionState state) =>
+        IsVocabularyState(state) && state.VocabularyWords.Count > 0 && state.VocabularyMode != "quiz";
+
     private static bool IsFreeReadingPractice(SessionState state) =>
         IsEngineType(state.EngineType, "free_reading") && state.ReadingPurpose == "practice";
 
@@ -3899,10 +3912,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             result.ExerciseId,
             session.CorrectCount,
             session.IncorrectCount,
-            result.IsMeasured
-                ? IsTargetHunt(state) ? TargetHuntAccuracy(state) : IsErrorAnalysis(state) ? ErrorAnalysisAccuracy(state) : IsScanning(state) ? ScanningAccuracy(state)
-                    : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount)
-                : null,
+            result.IsMeasured ? ResultAccuracy(session, state) : null,
             result.TimeSpentSeconds,
             result.IsMeasured ? score ?? result.Score : null,
             IsVocabularyState(state) || IsScanning(state) || IsFocusExercise(state) || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization") || result.WordsRead == 0 ? null : result.WordsRead,
@@ -3915,7 +3925,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : result.IsMeasured && !state.ReadingIncomplete && !result.IsAssessmentMode
                     ? SpeedReadingExerciseSessionRules.CalculateXp(
                         score ?? result.Score,
-                        IsTargetHunt(state) ? TargetHuntAccuracy(state) : IsErrorAnalysis(state) ? ErrorAnalysisAccuracy(state) : result.ComprehensionScore,
+                        ResultAccuracy(session, state),
                         result.TimeSpentSeconds)
                     : 0),
             unlockedBadges ?? [],
@@ -4059,6 +4069,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 shortestCorrectDisplayDurationMs = correctRounds.Length == 0 ? (int?)null : correctRounds.Min(round => round.DisplayDurationMs)
             }, JsonOptions);
         }
+        // H21: the result screen shows the server's final focus counts (including misses added at completion).
+        if (completedResult && IsFocusExercise(state) && !state.IsAssessmentMode && state.FocusCompleted)
+            sanitized["focusSummary"] = JsonSerializer.SerializeToNode(BuildFocusFeedback(state), JsonOptions);
         sanitized.Remove("visualExpansionPreviousStimuli");
         if (state.IsAssessmentMode) sanitized.Remove("visualExpansionRoundResults");
         if (completedResult && state.AssessmentProtocol is { } plan)
@@ -4308,6 +4321,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
         public bool ReadingIncomplete { get; set; }
+        public bool ScanningTimedOut { get; set; }
         public string TextStreamMode { get; set; } = string.Empty;
         public int TrackingDurationSeconds { get; set; }
         public int RsvpProtocolVersion { get; set; }

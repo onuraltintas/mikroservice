@@ -54,7 +54,9 @@ internal static class VocabularyScoringScenario
         }
         SpeedReading.Application.ExerciseSessions.ExerciseSessionResult result;
         await using (var db = open()) result = await Service(db).CompleteAsync(user, started.SessionId, new());
-        Require(result.Accuracy == 100 && result.RawWPM is null && result.WordsRead is null, "Invalid vocabulary result");
+        // H21: learning cards are self-reports, so only the quiz has an accuracy.
+        Require((mode == "quiz" ? result.Accuracy == 100 : result.Accuracy is null && result.MeasurementStatus == "NotMeasured")
+            && result.RawWPM is null && result.WordsRead is null, "Invalid vocabulary result");
         string completedStats;
         await using (var db = open())
         {

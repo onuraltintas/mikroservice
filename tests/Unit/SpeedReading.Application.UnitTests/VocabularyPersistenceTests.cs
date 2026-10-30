@@ -261,7 +261,14 @@ public sealed class VocabularyPersistenceTests
             Assert.False((await service.ValidateActionAsync(student, started.SessionId, new() { ActionId = Guid.NewGuid(), Action = action.Action, CustomData = custom })).IsValid);
         }
         var result = await service.CompleteAsync(student, started.SessionId, new());
-        Assert.Null(result.RawWPM); Assert.Null(result.WordsRead); Assert.Equal(100m, result.Accuracy);
+        Assert.Null(result.RawWPM); Assert.Null(result.WordsRead);
+        // H21 (decision 30.10.2026): only the quiz is a measurement; "biliyorum/bilmiyorum" is the student's own report.
+        if (mode == "quiz") { Assert.Equal(100m, result.Accuracy); Assert.Equal("Measured", result.MeasurementStatus); }
+        else
+        {
+            Assert.Null(result.Accuracy); Assert.Null(result.Score); Assert.Equal("NotMeasured", result.MeasurementStatus);
+            Assert.False((await db.ExerciseSessionResults.SingleAsync()).IsMeasured);
+        }
         Assert.Equal(4, await db.UserVocabularyProgresses.CountAsync());
         if (mode == "quiz")
         {

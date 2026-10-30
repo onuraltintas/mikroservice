@@ -588,9 +588,13 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 : nameof(SpeedReadingMeasurementStatus.NotMeasured),
             score = isMeasured ? score : (decimal?)null,
             rawWpm = isMeasured && result.RawWpm > 0 ? result.RawWpm : (decimal?)null,
-            comprehensionScore = isMeasured ? result.ComprehensionScore : (decimal?)null,
+            // H21: comprehension exists only when questions about a text were answered (never 0 for other exercises).
+            comprehensionScore = isMeasured && AskedQuestions(result) ? result.ComprehensionScore : (decimal?)null,
             weightedKdp = isMeasured && result.RawWpm > 0 ? result.WeightedKdp : (decimal?)null
         }, JsonOptions);
+
+    private static readonly Func<OwnedSessionResult, bool> AskedQuestions =
+        OwnedSpeedReadingComprehensionEvidence.AskedQuestions.Compile();
 
     private static bool IsIdempotencyConflict(DbUpdateException exception) =>
         exception.InnerException is PostgresException postgres
@@ -637,7 +641,9 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var logCount = await logs.CountAsync(cancellationToken);
         var passedCount = await logs.CountAsync(item => item.IsPassed, cancellationToken);
         var results = db.ExerciseSessionResults.AsNoTracking().Where(item => item.StudentId == userId && item.IsMeasured);
-        var averageComprehension = await results.AverageAsync(item => (decimal?)item.ComprehensionScore, cancellationToken) ?? 0;
+        // H21: only sessions that asked questions about a text measure comprehension; assessments are excluded.
+        var averageComprehension = await results.Where(OwnedSpeedReadingComprehensionEvidence.AskedQuestions)
+            .AverageAsync(item => (decimal?)item.ComprehensionScore, cancellationToken) ?? 0;
         var wpmResults = results.Where(item => item.RawWpm > 0);
         var latestWpm = await wpmResults.OrderByDescending(item => item.CreatedAt).Take(5)
             .Select(item => item.RawWpm).ToListAsync(cancellationToken);

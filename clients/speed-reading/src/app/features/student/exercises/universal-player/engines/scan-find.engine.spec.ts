@@ -166,11 +166,12 @@ describe('ScanFindEngine', () => {
       callbacks(result => results.push(result)));
     engine.start();
     tick(1100);
-    expect(results[0].details.incomplete).toBeTrue();
+    expect(results[0].details.timedOut).toBeTrue();
+    expect(results[0].details.incomplete).toBeFalse();
     engine.reset();
     engine.start();
     engine.handleWordClick(0);
-    expect(results[1].details.incomplete).toBeFalse();
+    expect(results[1].details.timedOut).toBeFalse();
     engine.destroy();
   }));
   it('waits for server acknowledgement before counting or completing a target', () => {
