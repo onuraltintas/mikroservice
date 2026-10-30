@@ -1918,7 +1918,10 @@
                 <div *ngIf="result?.details?.inspectionTimeMs != null">İnceleme süresi: {{ formatTime(result?.details?.inspectionTimeMs) }}</div>
                 <div *ngIf="result?.details?.comprehensionScore != null">Ana fikir başarısı: {{ result?.details?.comprehensionScore }}%</div>
             </div>
-            <div class="measurement-not-available" *ngIf="result?.details?.timedOut">
+            <div class="measurement-not-available" *ngIf="engine?.engineType === 'scan_find' && result?.details?.measurementStatus === 'Measured'">
+                {{ scanningResultMessage() }}
+            </div>
+            <div class="measurement-not-available" *ngIf="result?.details?.timedOut && engine?.engineType !== 'scan_find'">
                 Okuma süresi doldu. Anlama cevapları kaydedildi; okuma hızı ölçülmedi ve program/ödev ilerlemesi verilmedi.
             </div>
             <div class="rewards-row" *ngIf="engine?.engineType !== 'grid_interaction' && (sessionResult?.xpGained || sessionResult?.leveledUp)">
@@ -1973,6 +1976,12 @@
                     <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }} WPM</div>
                     <div class="result-label">Okuma temposu (kelime/dakika)</div>
                     <p *ngIf="result?.details?.comprehensionScore == null">Anlama ölçülmedi; tempo, okumayı bitirdiğiniz beyanına dayanır.</p>
+                </div>
+                <!-- H21: free reading with questions also shows its comprehension. -->
+                <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore != null && result?.details?.measurementStatus === 'Measured'">
+                    <span class="material-icons">psychology</span>
+                    <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="result-label">Anlama Oranı</div>
                 </div>
             </div>
             <div class="stats-row" *ngIf="isFreeReadingPractice()">
@@ -2098,7 +2107,7 @@
                             </span>
                             <span class="correct-answer" *ngIf="!answer.isCorrect">
                                 <span class="label">Doğru:</span>
-                                <span class="value">{{ getCorrectAnswerForIndex(i) }}</span>
+                                <span class="value">{{ examCorrectAnswer(answer, i) }}</span>
                             </span>
                         </div>
                         <div class="time-info">{{ answer.timeSpent }}sn</div>

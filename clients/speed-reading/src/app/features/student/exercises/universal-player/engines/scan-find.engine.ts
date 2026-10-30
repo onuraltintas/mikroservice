@@ -473,7 +473,8 @@ export class ScanFindEngine implements BaseEngine {
         this.state.accuracy = this.totalTargetCountAcrossRounds > 0
             ? Math.round(foundTargets / this.totalTargetCountAcrossRounds * 100)
             : 0;
-        this.state.score = Math.max(0, this.state.accuracy - (this.state.errors * 10));
+        // H21: like the server, at most 30 points are lost for wrong taps.
+        this.state.score = Math.max(0, this.state.accuracy - Math.min(30, this.state.errors * 10));
         this.state.currentStep = foundTargets;
 
         clearInterval(this.timerInterval);
@@ -489,7 +490,8 @@ export class ScanFindEngine implements BaseEngine {
                 foundCount: foundTargets,
                 roundsCompleted: this.currentRoundIndex,
                 timedOut: this.timedOut,
-                incomplete: this.timedOut,
+                // H21 (decision 30.10.2026): a time-out is a finished attempt scored by the targets found.
+                incomplete: false,
                 searchTimeMs: this.state.timeElapsed
             }
         };
