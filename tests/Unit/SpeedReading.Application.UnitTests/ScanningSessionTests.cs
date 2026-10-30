@@ -47,25 +47,28 @@ public sealed class ScanningSessionTests
         db.ReadingSessions.Should().BeEmpty();
     }
 
+    // H21 (decision 30.10.2026): when the time runs out, the search is a finished, measured attempt scored by the
+    // targets found; the program task and the learning path item complete.
     [Fact]
-    public async Task Deadline_keeps_partial_results_without_awarding_xp()
+    public async Task Deadline_is_a_measured_attempt_scored_by_targets_found()
     {
         await using var db = Context();
         var (service, student, started) = await Start(db);
         await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
         await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_click", Index = 0, Number = 0 });
-        var session = await db.ExerciseSessions.SingleAsync();
-        var state = JsonNode.Parse(session.SessionDataJson)!;
-        state["timingStartedAt"] = DateTime.UtcNow.AddSeconds(-20);
-        session.SetState(state.ToJsonString());
-        await db.SaveChangesAsync();
+        await Expire(db);
         var finished = await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_timeout" });
         finished.IsCompleted.Should().BeTrue();
+        finished.FeedbackData!.Value.GetProperty("timedOut").GetBoolean().Should().BeTrue();
         var result = await service.CompleteAsync(student, started.SessionId, new());
+        result.MeasurementStatus.Should().Be("Measured");
         result.CorrectCount.Should().Be(1);
-        result.XpGained.Should().Be(0);
         result.Accuracy.Should().Be(50);
-        (await service.CompleteAsync(student, started.SessionId, new())).XpGained.Should().Be(0);
+        result.Score.Should().Be(50);
+        result.XpGained.Should().BeGreaterThan(0);
+        var stored = await db.ExerciseSessionResults.SingleAsync();
+        stored.IsMeasured.Should().BeTrue();
+        result.DetailedResults.GetProperty("readingIncomplete").GetBoolean().Should().BeFalse();
         var now = DateTime.UtcNow;
         var template = ProgramTemplate.Import(Guid.NewGuid(), "Program", "", Guid.NewGuid(), 0, 100,
             "{}", 1, 2, 5, 1, 2, true, 1, 0, null, false, now, null, null, null);
@@ -79,9 +82,32 @@ public sealed class ScanningSessionTests
         await db.SaveChangesAsync();
         var pathType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingLearningPaths")!;
         var paths = (ILegacySpeedReadingLearningPaths)Activator.CreateInstance(pathType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
-        var advance = () => paths.CompletePersonalizedPathItemAsync(student, item.Id, started.SessionId);
-        (await advance.Should().ThrowAsync<BusinessRuleException>()).Which.Code.Should().Be("LearningPath.IncompleteSession");
-        item.IsCompleted.Should().BeFalse();
+        await paths.CompletePersonalizedPathItemAsync(student, item.Id, started.SessionId);
+        item.IsCompleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Deadline_without_a_found_target_is_measured_as_zero()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        await Expire(db);
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_timeout" })).IsCompleted.Should().BeTrue();
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        result.MeasurementStatus.Should().Be("Measured");
+        result.Score.Should().Be(0);
+        result.Accuracy.Should().Be(0);
+        result.XpGained.Should().Be(0);
+    }
+
+    private static async Task Expire(OwnedSpeedReadingDbContext db)
+    {
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(session.SessionDataJson)!;
+        state["timingStartedAt"] = DateTime.UtcNow.AddSeconds(-20);
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
     }
 
     [Fact]

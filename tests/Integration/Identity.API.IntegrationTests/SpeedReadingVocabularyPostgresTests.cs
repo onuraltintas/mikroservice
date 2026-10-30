@@ -69,7 +69,10 @@ public sealed class SpeedReadingVocabularyPostgresTests(PostgresFixture postgres
                 Assert.True((await service.ValidateActionAsync(student, started.SessionId, action)).IsValid);
             }
             var result = await service.CompleteAsync(student, started.SessionId, new());
-            Assert.Equal(100m, result.Accuracy); Assert.Null(result.RawWPM); Assert.Null(result.WordsRead);
+            // H21: learning/review cards are self-reports; only the quiz (also after learning) is measured.
+            if (mode == "quiz" || learnThenQuiz) Assert.Equal(100m, result.Accuracy);
+            else { Assert.Null(result.Accuracy); Assert.Equal("NotMeasured", result.MeasurementStatus); }
+            Assert.Null(result.RawWPM); Assert.Null(result.WordsRead);
             db.ChangeTracker.Clear(); Assert.Equal(4, await db.UserVocabularyProgresses.CountAsync());
             Assert.All(await db.UserVocabularyProgresses.ToListAsync(), p => { Assert.Equal(2, p.Box); Assert.True(p.NextReviewDate > DateTime.UtcNow.AddDays(2)); });
             Assert.Null((await service.CompleteAsync(student, started.SessionId, new())).RawWPM);

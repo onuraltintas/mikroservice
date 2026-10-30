@@ -20,8 +20,14 @@ describe('CoachingInstitutionStudentReportComponent', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const service = reportService(); const fixture = createFixture(service); fixture.detectChanges();
     (await fixture.componentInstance.openSessionBrief()); fixture.detectChanges();
+    // The brief opens on the weekly work tab, whose weekly review is a lazily loaded `@defer` block: wait for it so the
+    // test does not depend on whether an earlier spec on the same Vitest worker already loaded that chunk.
+    await fixture.whenStable(); fixture.detectChanges();
     expect(service.getStudentDetail).toHaveBeenCalledTimes(2);
     const http = TestBed.inject(HttpTestingController);
+    http.expectOne(r => r.url === '/api/coaching/staff/students/student-1/study/weekly-review').flush({ data: { weekStart: '2026-10-19', today: '2026-10-20',
+      reflection: null, summary: { scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null }, decisions: [], decisionPage: 1, totalDecisions: 0,
+      canReflect: false, canDecide: false } });
     http.match(r => r.url.endsWith('/study/practice-progress')).forEach(r=>r.flush({data:{fromDate:'2026-10-01',toDate:'2026-10-20',trends:[],goals:[],recovery:[]}}));
     const reports = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report'); expect(reports.length).toBe(2);
     for (const report of reports) report.flush({ success: true, data: { fromDate: report.request.params.get('fromDate'), toDate: report.request.params.get('toDate'),

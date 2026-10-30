@@ -120,7 +120,9 @@ public sealed class SpeedReadingScanningPostgresTests(PostgresFixture postgres)
             Assert.Equal(timeout ? 50m : 100m, result.Accuracy);
             Assert.Null(result.RawWPM);
             Assert.Null(result.WordsRead);
-            if (timeout) Assert.Equal(0, result.XpGained);
+            // H21: a time-out is a finished, measured attempt scored by the targets found.
+            Assert.Equal("Measured", result.MeasurementStatus);
+            if (timeout) Assert.Equal(50m, result.Score);
             db.ChangeTracker.Clear();
             var repeated = await service.CompleteAsync(student, started.SessionId, new());
             Assert.Equal(result.Accuracy, repeated.Accuracy);

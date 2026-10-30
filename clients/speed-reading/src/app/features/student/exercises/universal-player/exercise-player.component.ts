@@ -5,6 +5,7 @@
  * Kullanım: /student/exercises/universal-player/:exerciseId
  */
 
+import { awaitsServerResult, examCorrectAnswer, focusSummary, resultPerformanceLevel, scanningResultMessage, serverErrorCount } from './result-display';
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -433,9 +434,21 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return this.isAssessmentMode || this.engine?.engineType === 'exam_simulation' || (this.engine?.engineType === 'reading_comprehension' && !this.isComprehensionLearning());
   }
 
+  // H21: hidden-feedback and server-scored results (comprehension evaluation, exam, Schulte, N-back, assessments) are
+  // shown only once the server has scored them, never as a browser estimate.
   comprehensionResultPending(): boolean {
-    return this.engine?.engineType === 'reading_comprehension'
-      && !['saved', 'preview'].includes(this.resultSaveStatus);
+    return awaitsServerResult({ engineType: this.engine?.engineType, isAssessment: this.isAssessmentMode,
+      saveStatus: this.resultSaveStatus });
+  }
+
+  examCorrectAnswer(answer: { correctAnswer?: string | null }, index: number): string {
+    return examCorrectAnswer(answer, this.getCorrectAnswerForIndex(index));
+  }
+
+  scanningResultMessage(): string {
+    return scanningResultMessage({ timedOut: this.result?.details?.timedOut === true,
+      found: this.result?.details?.foundCount ?? this.sessionResult?.correctCount ?? 0,
+      total: this.result?.totalSteps ?? this.engineState.totalSteps ?? 0 });
   }
 
   // Question Timer (for Exam Simulation)
@@ -1357,7 +1370,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         },
         onComplete: (result) => {
           this.stopTimer();
-          this.readingIncomplete = result.details?.timedOut === true;
+          // H21: a scanning time-out is a finished, measured attempt, not an incomplete reading.
+          this.readingIncomplete = result.details?.timedOut === true && this.engine?.engineType !== 'scan_find';
 
           if (this.engine?.engineType === 'adaptive_fluency') {
             this.handleAdaptiveReadingCompleted(result);
@@ -2545,13 +2559,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private getPerformanceLevel(wpm: number, comprehension: number): string {
-    if (this.engine?.engineType === 'reading_comprehension')
-      return this.isComprehensionLearning() ? 'Anlama çalışması' : 'Anlama değerlendirmesi';
-    if (comprehension >= 80 && wpm >= 300) return 'Mükemmel!';
-    if (comprehension >= 70 && wpm >= 250) return 'Çok İyi!';
-    if (comprehension >= 60 && wpm >= 200) return 'İyi!';
-    if (comprehension >= 50) return 'Gelişiyor';
-    return 'Pratik Gerekli';
+    // H21: paced exercises are rated on comprehension only; the server's WPM replaces this estimate after saving.
+    return resultPerformanceLevel({ engineType: this.engine?.engineType || '', rawWpm: wpm, comprehension,
+      learning: this.isComprehensionLearning() });
   }
 
   // Get correct answer for a specific question by index
@@ -3731,8 +3741,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         this.sessionResult = sessionResult;
         const tachistoscope = this.isTachistoscopeMode() ? sessionResult.detailedResults?.tachistoscope : undefined;
         const trials: Array<{ responseTimeMs: number }> = tachistoscope?.trials || [];
+        const engineType = this.engine?.engineType || '';
+        const serverFocus = focusSummary(sessionResult.detailedResults);
+        const ratedByServer = (this.result || result).details?.totalQuestions > 0
+          && !['exam_simulation', 'skimming'].includes(engineType) && !this.readingIncomplete;
         this.result = {
           ...(this.result || result),
+          // H21: the error count and the rating come from the server's result, not the browser's estimate.
+          errors: serverErrorCount(sessionResult, (this.result || result).errors),
           score: sessionResult.score ?? 0,
           accuracy: sessionResult.accuracy ?? 0,
           details: {
@@ -3780,6 +3796,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             comprehensionScore: sessionResult.comprehensionScore ?? null,
             weightedKDP: sessionResult.weightedKDP ?? null,
             measurementStatus: sessionResult.measurementStatus,
+            ...(ratedByServer ? {
+              performanceLevel: resultPerformanceLevel({ engineType, rawWpm: sessionResult.rawWPM ?? null,
+                comprehension: sessionResult.comprehensionScore ?? null, learning: this.isComprehensionLearning() })
+            } : {}),
+            ...(serverFocus ?? {}),
+            ...(engineType === 'scan_find' ? {
+              foundCount: sessionResult.correctCount,
+              timedOut: sessionResult.detailedResults?.scanningTimedOut === true,
+              incomplete: false
+            } : {}),
             ...(this.engine?.engineType === 'skimming' ? {
               inspectionTimeMs: sessionResult.detailedResults?.skimmingInspectionMs,
               incomplete: sessionResult.detailedResults?.readingIncomplete === true,
