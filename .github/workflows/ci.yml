@@ -66,6 +66,10 @@ jobs:
           node --test tests/E2E/support/staff-portal-hosting.contract.test.mjs
           node --test tests/E2E/support/non-root-runtime.contract.test.mjs
           node --test tests/E2E/support/db-backup.contract.test.mjs
+          node --test tests/E2E/support/speed-reading-claims.contract.test.mjs
+          node --test content-packs/exercise-type-texts/v1/pack.test.mjs
+          node --test tests/E2E/support/production-images.contract.test.mjs
+          node --test tests/E2E/support/ci-failure-report.contract.test.mjs
           node --test tests/E2E/course-management-foundation.contract.test.mjs
 
   frontend:
@@ -105,26 +109,11 @@ jobs:
           npm test -- --project staff-portal --watch=false --progress=false 2>&1 | tee "$RUNNER_TEMP/staff-portal-unit-tests.log"
 
       - name: Report failed frontend tests
-        # Job logs are not always reachable from review tooling; failing tests are repeated as annotations.
+        # Job logs are not always reachable from review tooling; failing tests and unhandled errors are repeated as
+        # annotations (logged "API Error" noise from passing tests is ignored).
         if: failure()
         shell: bash
-        run: |
-          python3 - "$RUNNER_TEMP"/frontend-unit-tests.log "$RUNNER_TEMP"/staff-portal-unit-tests.log <<'PY'
-          import re, sys, os
-          ansi = re.compile(r"\x1b\[[0-9;]*m")
-          shown = 0
-          for path in sys.argv[1:]:
-              if not os.path.exists(path):
-                  continue
-              lines = [ansi.sub("", line.rstrip()) for line in open(path, encoding="utf-8", errors="replace")]
-              for index, line in enumerate(lines):
-                  if shown >= 10:
-                      break
-                  if re.search(r"(FAIL |×|✗|Error:|ERROR)", line):
-                      block = " | ".join(item.strip() for item in lines[index:index + 12] if item.strip())[:1800]
-                      print(f"::error title=Frontend test ({os.path.basename(path)})::{block}")
-                      shown += 1
-          PY
+        run: node ../../tools/ci/report-failed-tests.mjs "$RUNNER_TEMP"/frontend-unit-tests.log "$RUNNER_TEMP"/staff-portal-unit-tests.log
 
       - name: Build browser and SSR bundles
         run: npm run build

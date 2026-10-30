@@ -1,0 +1,22 @@
+[
+  { "name": "EyeTracking", "description": "Gözlerin hareket eden bir hedefi düzgün ve rahat izlemesi için kısa bir ısınma. Okumaya başlamadan önce odaklanmayı kolaylaştırır." },
+  { "name": "Saccade", "description": "Bakışı bir noktadan diğerine hızlı ve isabetli geçirme çalışması. Satır içindeki ve satır başına dönüşteki göz geçişlerine benzeyen kısa bir ısınmadır." },
+  { "name": "Fixation", "description": "Bakışı bir noktada kısa süre tutup çevresindeki harfleri fark etme çalışması. Dikkati toplayan kısa bir ısınmadır." },
+  { "name": "SchulteTable", "description": "Karışık yerleştirilmiş sayıları sırayla bulma. Dikkati ve tabloyu düzenli tarama alışkanlığını çalıştırır." },
+  { "name": "TargetHunt", "description": "Satırlardaki hedef harf veya kelimeyi süre bitmeden bulma; benzer görünenlere dokunmama. Seçici dikkati çalıştırır." },
+  { "name": "Tachistoscope", "description": "Çok kısa süre gösterilen harf, kelime ve kelime gruplarını tanıma. Kelimeleri hızlı ve doğru tanıma becerisini çalıştırır." },
+  { "name": "VisualExpansion", "description": "Bakışını ortadaki noktada tutarken yanlarda beliren harfleri fark etme. Odak noktasının çevresindeki bilgiye dikkat etmeyi çalıştırır." },
+  { "name": "Chunking", "description": "Kelimeleri tek tek değil, anlamlı öbekler hâlinde görme ve okuma. Akıcı okumanın temel çalışmalarından biridir." },
+  { "name": "SpeedReading", "description": "Vurgulanan kelimeleri belirlenen tempoda izleyerek okuma. Düzenli bir tempoyla, takılmadan ilerlemeyi çalıştırır." },
+  { "name": "FreeReading", "description": "Bir metni kendi temponda baştan sona okursun; okuma hızın ölçülür. Bol ve düzenli okuma, okuma becerisini en çok geliştiren çalışmadır." },
+  { "name": "Scanning", "description": "Metinde aranan bir bilgiyi (isim, sayı, tarih) hızla bulma. Bütün metni okumadan doğru yere ulaşmayı çalıştırır." },
+  { "name": "Skimming", "description": "Metnin ana fikrini yakalamak için önemli yerlerine göz gezdirme. Genel fikir için kullanılır; ayrıntılı anlama gereken metinlerde dikkatli okuma gerekir." },
+  { "name": "RSVP", "description": "Kelimeler ekranın aynı yerinde art arda gösterilir. Belirli bir tempoda kelime tanımayı ve anlamayı birlikte çalıştırır." },
+  { "name": "TextFading", "description": "Okuduğun satırlar belirli bir tempoda silinir. Geri dönmeden ileriye doğru okumayı çalıştırır." },
+  { "name": "RegressionReduction", "description": "Okurken gereksiz geri dönüşleri fark edip azaltmaya yönelik tempolu okuma. Anlamak için gerekli geri dönüşler doğaldır; amaç alışkanlık hâline gelenleri azaltmaktır." },
+  { "name": "SubvocalizationReduction", "description": "Kelime gruplarını tempolu okuyarak her kelimeyi içinden tek tek seslendirme alışkanlığını azaltma. İç ses tamamen kaybolmaz; amaç ona takılmadan akıcı okumaktır." },
+  { "name": "Visualization", "description": "Okuduğunu zihninde canlandırma. Metni anlamayı ve hatırlamayı destekleyen bir okuma stratejisidir." },
+  { "name": "ErrorAnalysis", "description": "Metindeki yazım hatalarını bulma. Dikkatli ve doğru okumayı çalıştırır." },
+  { "name": "Vocabulary", "description": "Yeni kelimelerin anlamını bağlam içinde öğrenme ve tekrar etme. Kelime bilgisi hem anlamayı hem okuma hızını doğrudan destekler." },
+  { "name": "Comprehension", "description": "Metni okuyup sorularla ne kadar anladığını kontrol etme. Hızlı okumada amaç, anlamayı kaybetmeden hızlanmaktır." }
+]
