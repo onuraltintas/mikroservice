@@ -58,7 +58,7 @@ export class AchievementsComponent implements OnInit, OnDestroy {
           const achList = Array.isArray(allAchievements) ? allAchievements : [];
           const uaList = Array.isArray(userAchievements) ? userAchievements : [];
           // Map user achievements to all achievements
-          this.achievements = achList.map(achievement => {
+          const withStatus: AchievementWithStatus[] = achList.map(achievement => {
             const userAchievement = uaList.find(
               ua => ua.achievementId === achievement.id
             );
@@ -66,7 +66,14 @@ export class AchievementsComponent implements OnInit, OnDestroy {
               ...achievement,
               userAchievement
             };
-          }).sort((a, b) => {
+          });
+          // H19 (audit 30.10.2026): a badge that was deactivated later stays visible for the students who earned it.
+          for (const userAchievement of uaList) {
+            if (userAchievement.achievement && !withStatus.some(item => item.id === userAchievement.achievementId)) {
+              withStatus.push({ ...userAchievement.achievement, userAchievement });
+            }
+          }
+          this.achievements = withStatus.sort((a, b) => {
             // Define tier order
             const tierOrder: { [key: string]: number } = {
               'Bronze': 1,

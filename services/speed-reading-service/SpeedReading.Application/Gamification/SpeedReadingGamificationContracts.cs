@@ -170,6 +170,14 @@ public interface ILegacySpeedReadingGamification
     Task<IReadOnlyList<AchievementSummary>> GetAchievementsAsync(
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// H19 (audit 30.10.2026): the active badges a student can see — badges that need an exercise type their age
+    /// group has no active exercise for are hidden, unless the student already earned them.
+    /// </summary>
+    Task<IReadOnlyList<AchievementSummary>> GetAchievementsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<UserAchievementSummary>> GetUserAchievementsAsync(
         Guid userId,
         CancellationToken cancellationToken = default);

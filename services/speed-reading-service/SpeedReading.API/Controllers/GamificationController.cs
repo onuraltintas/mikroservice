@@ -27,7 +27,10 @@ public sealed class GamificationController(ILegacySpeedReadingGamification gamif
     [HttpGet("achievements")]
     public async Task<ActionResult<IReadOnlyList<AchievementSummary>>> GetAchievements(
         CancellationToken cancellationToken = default) =>
-        Ok(await gamification.GetAchievementsAsync(cancellationToken));
+        // H19: a signed-in student only sees badges their age group can earn (plus those already earned).
+        Ok(TryGetCurrentUserId(out var userId)
+            ? await gamification.GetAchievementsAsync(userId, cancellationToken)
+            : await gamification.GetAchievementsAsync(cancellationToken));
 
     [HttpGet("achievements/user")]
     public async Task<ActionResult<IReadOnlyList<UserAchievementSummary>>> GetUserAchievements(

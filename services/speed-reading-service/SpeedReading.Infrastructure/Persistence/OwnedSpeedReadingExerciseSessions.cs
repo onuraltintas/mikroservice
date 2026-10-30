@@ -906,30 +906,58 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         var isVerifiedCompletion = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
             && (state.VocabularyWords.Count == 0 || state.VocabularyMode == "quiz");
+        var countsForGamification = !isAssessmentSession && isVerifiedCompletion;
+        // H19 (decision 30.10.2026): only the first verified completion of an exercise on an Istanbul day earns XP;
+        // replays that day still count as activity and keep the streak.
+        if (countsForGamification && xpAwarded > 0)
+        {
+            var dayStart = SpeedReading.Domain.Gamification.GamificationRules.IstanbulDayStartUtc(now);
+            var dayEnd = dayStart.AddDays(1);
+            var alreadyEarnedToday = await db.ExerciseSessionResults.AnyAsync(item => item.StudentId == studentId
+                && item.ExerciseId == session.ExerciseId
+                && item.SessionId != session.Id
+                && item.CountsForGamification == true
+                && item.CompletedAt >= dayStart && item.CompletedAt < dayEnd, cancellationToken);
+            if (alreadyEarnedToday)
+                xpAwarded = 0;
+        }
+        var creditedXp = countsForGamification ? xpAwarded : 0;
         // Review H5 (finding 18): remember what this completion was worth so a later rebuild gives the same XP.
-        result.RecordGamification(!isAssessmentSession && isVerifiedCompletion, xpAwarded);
-        if (!isAssessmentSession && isVerifiedCompletion)
+        result.RecordGamification(countsForGamification, creditedXp);
+        IReadOnlyList<string> unlockedBadges = [];
+        var leveledUp = false;
+        int? newLevel = null;
+        if (countsForGamification)
         {
             var stats = await GetOrCreateGamificationAsync(studentId, now, cancellationToken);
+            var levelBefore = stats.CurrentLevel;
             var gamificationWpm = rawWpm.HasValue
                 ? (int?)Math.Round(rawWpm.Value, MidpointRounding.AwayFromZero)
                 : null;
             stats.RecordVerifiedExerciseCompletion(
-                state.ExerciseTypeName,
-                now,
-                timeSpent,
-                gamificationWpm,
-                measurementStatus == SpeedReadingMeasurementStatus.Measured ? comprehension : null,
-                gamificationWpm.HasValue,
-                xpAwarded,
+                new SpeedReading.Domain.Gamification.VerifiedExerciseCompletion(
+                    state.ExerciseTypeName,
+                    now,
+                    timeSpent,
+                    gamificationWpm,
+                    // H19: comprehension is only evidence when the session asked questions.
+                    state.Questions.Count > 0 ? comprehension : null,
+                    gamificationWpm.HasValue,
+                    creditedXp,
+                    CountsForComprehensionBadge: CountsForComprehensionBadge(state),
+                    RsvpPaceWpm: RsvpBadgePace(state)),
                 studentId,
                 now);
-            await OwnedGamificationAchievementEvaluator.UnlockEligibleAsync(
+            var unlocked = await OwnedGamificationAchievementEvaluator.UnlockEligibleAsync(
                 db,
                 stats,
                 studentId,
                 now,
                 cancellationToken);
+            unlockedBadges = unlocked.Select(item => item.Name).ToList();
+            leveledUp = stats.CurrentLevel > levelBefore;
+            newLevel = leveledUp ? stats.CurrentLevel : null;
+            await AddAchievementNotificationsAsync(studentId, unlocked, now, cancellationToken);
         }
         try
         {
@@ -978,8 +1006,65 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             session,
             state,
             score,
-            xpAwarded,
-            feedback: "Egzersiz tamamlandı.");
+            creditedXp,
+            feedback: countsForGamification && creditedXp == 0 && measurementStatus == SpeedReadingMeasurementStatus.Measured
+                && SpeedReadingExerciseSessionRules.CalculateXp(score ?? 0, accuracy, timeSpent) > 0
+                    ? "Egzersiz tamamlandı. Bu egzersizden bugün XP aldın; aynı gün tekrarlar XP vermez."
+                    : "Egzersiz tamamlandı.",
+            unlockedBadges: unlockedBadges,
+            leveledUp: leveledUp,
+            newLevel: newLevel);
+    }
+
+    /// <summary>H19 (audit 30.10.2026): the comprehension badge needs a real comprehension text — at least three
+    /// questions, not a learning-mode text whose answers are explained.</summary>
+    private static bool CountsForComprehensionBadge(SessionState state) =>
+        IsEngineType(state.EngineType, "reading_comprehension")
+        && state.Questions.Count >= 3
+        && state.ComprehensionMode != "learning";
+
+    /// <summary>H19: the RSVP speed badge uses the server display pace of a fully shown text.</summary>
+    private static int? RsvpBadgePace(SessionState state) =>
+        IsRsvp(state) && !state.ReadingIncomplete && state.RsvpDisplayPaceWpm > 0
+            && (state.RsvpCompletionPercent >= 100 || state.RsvpPresentedWords >= state.WordCount)
+            ? (int)Math.Round(state.RsvpDisplayPaceWpm, MidpointRounding.AwayFromZero)
+            : null;
+
+    private const int AchievementUnlockedNotificationType = 11;
+
+    /// <summary>H19 (audit 30.10.2026): tell the student about a new badge unless they switched these notices off.</summary>
+    private async Task AddAchievementNotificationsAsync(
+        Guid studentId,
+        IReadOnlyList<SpeedReading.Domain.Gamification.Achievement> unlocked,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        if (unlocked.Count == 0)
+            return;
+        var data = (ISpeedReadingDataContext)db;
+        var disabled = await data.NotificationTypePreferences.AnyAsync(item => item.UserId == studentId
+            && item.NotificationType == AchievementUnlockedNotificationType && !item.EnableInApp, cancellationToken);
+        if (disabled)
+            return;
+        foreach (var achievement in unlocked)
+        {
+            data.Notifications.Add(new SpeedReading.Infrastructure.Legacy.LegacyUserNotification
+            {
+                Id = Guid.NewGuid(),
+                UserId = studentId,
+                Title = "Yeni rozet kazandın",
+                Message = $"\"{achievement.Name}\" rozetini kazandın. {achievement.Description}".Trim(),
+                Type = AchievementUnlockedNotificationType,
+                Priority = 1,
+                Channel = 3,
+                Status = 2,
+                ActionUrl = "/student/achievements",
+                SentAt = now,
+                CreatedAt = now,
+                RelatedEntityId = achievement.Id,
+                RelatedEntityType = "Achievement"
+            });
+        }
     }
 
     private void AddReadingSessionRecord(
@@ -3804,7 +3889,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         SessionState state,
         decimal? score = null,
         int? xp = null,
-        string? feedback = null) =>
+        string? feedback = null,
+        IReadOnlyList<string>? unlockedBadges = null,
+        bool leveledUp = false,
+        int? newLevel = null) =>
         new(
             session.Id,
             result.StudentId,
@@ -3821,15 +3909,18 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && (result.IsMeasured || IsFreeReadingPractice(state)) && result.RawWpm > 0 ? result.RawWpm : null,
             result.IsMeasured && state.Questions.Count > 0 ? result.ComprehensionScore : null,
             !state.AssessmentTextReviewAllowed && !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
-            xp ?? (result.IsMeasured && !state.ReadingIncomplete
-                ? SpeedReadingExerciseSessionRules.CalculateXp(
-                    score ?? result.Score,
-                    IsTargetHunt(state) ? TargetHuntAccuracy(state) : IsErrorAnalysis(state) ? ErrorAnalysisAccuracy(state) : result.ComprehensionScore,
-                    result.TimeSpentSeconds)
-                : 0),
-            [],
-            false,
-            null,
+            // H19 (audit 30.10.2026): report the XP actually credited (stored with the result), never a recomputed amount.
+            xp ?? (result.CountsForGamification == true ? result.GamificationXp ?? 0
+                : result.CountsForGamification == false ? 0
+                : result.IsMeasured && !state.ReadingIncomplete && !result.IsAssessmentMode
+                    ? SpeedReadingExerciseSessionRules.CalculateXp(
+                        score ?? result.Score,
+                        IsTargetHunt(state) ? TargetHuntAccuracy(state) : IsErrorAnalysis(state) ? ErrorAnalysisAccuracy(state) : result.ComprehensionScore,
+                        result.TimeSpentSeconds)
+                    : 0),
+            unlockedBadges ?? [],
+            leveledUp,
+            newLevel,
             SerializePublicState(state, completedResult: true),
             feedback ?? (score.HasValue ? "Egzersiz tamamlandı." : "Bu oturum daha önce tamamlandı."),
             null,

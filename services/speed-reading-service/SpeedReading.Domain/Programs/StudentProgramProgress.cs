@@ -223,7 +223,8 @@ public sealed class StudentProgramProgress : AggregateRoot
         ProgramTemplate template,
         Guid actorId,
         DateTime at,
-        int? assignedTotalDays = null)
+        int? assignedTotalDays = null,
+        DateTime? previousDayCompletedAt = null)
     {
         if (actorId == Guid.Empty)
             throw new ArgumentException("Completion actor is required.", nameof(actorId));
@@ -262,7 +263,9 @@ public sealed class StudentProgramProgress : AggregateRoot
         if (dayCompleted && oldDay == CurrentDay && oldWeek == CurrentWeek)
         {
             DaysCompleted++;
-            CurrentStreak = CalculateNextStreak(previousCompletionDate, now, CurrentStreak);
+            // H19 (audit 30.10.2026): the program streak counts calendar days on which a program day was finished, so the
+            // gap is measured from when the previous program day was finished, not from this day's earlier tasks.
+            CurrentStreak = CalculateNextStreak(previousDayCompletedAt ?? previousCompletionDate, now, CurrentStreak);
             LongestStreak = Math.Max(LongestStreak, CurrentStreak);
 
             var completedCumulativeDay = ((CurrentWeek - 1) * 7) + CurrentDay;

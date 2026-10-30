@@ -232,7 +232,8 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
 
         var snapshot = await LoadSnapshotAsync(userId, cancellationToken);
         var goal = await GetOrCreateDailyGoalAsync(userId, snapshot.UserProfile, cancellationToken);
-        goal.ActualMinutes += request.MinutesSpent;
+        // H19 (audit 30.10.2026): minutes come from the client, so one update adds at most two hours and a day at most 24.
+        goal.ActualMinutes = SpeedReading.Domain.Gamification.GamificationRules.ClampDailyMinutes(goal.ActualMinutes, request.MinutesSpent);
         goal.IsCompleted = goal.ActualMinutes >= goal.TargetMinutes;
         goal.UpdatedAt = DateTime.UtcNow;
         goal.UpdatedBy = userId;
@@ -350,7 +351,8 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
         SpeedReadingUserProfile? userProfile,
         CancellationToken cancellationToken)
     {
-        var today = DateTime.UtcNow.Date;
+        // H19: daily goals follow the Istanbul calendar day, like streaks.
+        var today = SpeedReading.Domain.Gamification.GamificationRules.IstanbulDayStartUtc(DateTime.UtcNow);
         var goal = await db.AdaptiveDailyGoals
             .FirstOrDefaultAsync(item => item.StudentId == userId
                 && item.Date >= today
@@ -375,7 +377,8 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
 
     private static AdaptiveDailyGoalSummary BuildGoalSummary(LegacyDailyGoal goal, AdaptiveSnapshot snapshot)
     {
-        var today = DateTime.UtcNow.Date;
+        // H19: daily goals follow the Istanbul calendar day, like streaks.
+        var today = SpeedReading.Domain.Gamification.GamificationRules.IstanbulDayStartUtc(DateTime.UtcNow);
         var todayActivities = snapshot.Activities
             .Where(item => item.CompletedAt >= today && item.CompletedAt < today.AddDays(1))
             .ToList();

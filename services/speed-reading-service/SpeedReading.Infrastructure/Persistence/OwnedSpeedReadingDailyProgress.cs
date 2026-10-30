@@ -358,6 +358,10 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             assignedTotalDays: OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson)
                 .Select(item => ((item.WeekNumber - 1) * 7) + item.DayNumber)
                 .DefaultIfEmpty(template.TotalDays)
+                .Max(),
+            previousDayCompletedAt: allLogs
+                .Where(item => (item.WeekNumber - 1) * 7 + item.DayNumber < (week - 1) * 7 + day)
+                .Select(item => (DateTime?)item.CompletedDate)
                 .Max());
         var levelBeforeWeeklyStep = progress.CurrentDifficultyLevel;
         if (completion.WeekChanged)

@@ -145,6 +145,8 @@ public sealed class Achievement : Entity
         DateTime updatedAt)
     {
         Validate(name, description, category, tier, iconEmoji, criteriaType, criteriaValue, triggerValue, xpReward, sortOrder);
+        // H19 (audit 30.10.2026): an edit is checked like a new badge, so it can never become impossible to earn.
+        AchievementCriteriaRules.Validate(criteriaType, criteriaValue, isRepeatable);
         if (actorId == Guid.Empty)
             throw new ArgumentException("Achievement actor is required.", nameof(actorId));
         Name = name.Trim();

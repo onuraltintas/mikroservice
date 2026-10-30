@@ -14,6 +14,9 @@ public sealed record OwnedSpeedReadingGamificationRecalculationResult(
 /// <summary>
 /// Rebuilds only exercise-derived statistics from immutable, verified session
 /// results. Vocabulary progress and existing badge ownership are retained.
+/// H19 (audit 30.10.2026): the rebuild applies the live rules. A result counts when it was recorded as counting; a
+/// legacy result without that flag counts only if it was measured, the reading was complete and a vocabulary session
+/// was a quiz. XP is paid for the first counted completion of an exercise per Istanbul day only.
 /// </summary>
 public sealed class OwnedSpeedReadingGamificationRecalculation(
     OwnedSpeedReadingDbContext db)
@@ -26,15 +29,19 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
     public async Task<OwnedSpeedReadingGamificationRecalculationResult> RunAsync(
         CancellationToken cancellationToken = default)
     {
-        var rows = await (
+        var candidates = await (
             from result in db.ExerciseSessionResults.AsNoTracking()
             join exercise in db.Exercises.AsNoTracking() on result.ExerciseId equals exercise.Id
             join exerciseType in db.ExerciseTypes.AsNoTracking() on exercise.ExerciseTypeId equals exerciseType.Id
+            join session in db.ExerciseSessions.AsNoTracking() on result.SessionId equals session.Id into sessions
+            from session in sessions.DefaultIfEmpty()
             where !result.IsAssessmentMode && result.AssessmentAttemptId == null
-                && result.CountsForGamification != false
+                && (result.CountsForGamification == true || (result.CountsForGamification == null && result.IsMeasured))
             select new SessionHistoryRow(
                 result.StudentId,
+                result.ExerciseId,
                 exerciseType.Name,
+                exerciseType.EngineType,
                 result.CompletedAt,
                 result.TimeSpentSeconds,
                 result.RawWpm,
@@ -42,14 +49,24 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
                 result.Score,
                 result.IsMeasured,
                 result.QuestionAnswersJson,
-                result.GamificationXp))
+                result.GamificationXp,
+                result.CountsForGamification,
+                session == null ? null : session.SessionDataJson))
             .ToListAsync(cancellationToken);
+        var rows = candidates
+            .Select(row => (Row: row, State: ReadState(row.SessionDataJson)))
+            .Where(item => item.Row.CountsForGamification == true || CountsLegacy(item.State))
+            .OrderBy(item => item.Row.CompletedAt)
+            .ToList();
 
+        var paidToday = new HashSet<(Guid StudentId, Guid ExerciseId, DateTime Day)>();
         var historyByUser = rows
-            .GroupBy(row => row.StudentId)
+            .Select(item => (item.Row, Completion: ToCompletion(item.Row, item.State,
+                paidToday.Add((item.Row.StudentId, item.Row.ExerciseId, GamificationRules.IstanbulDate(item.Row.CompletedAt))))))
+            .GroupBy(item => item.Row.StudentId)
             .ToDictionary(
                 group => group.Key,
-                group => group.Select(ToCompletion).ToList());
+                group => group.Select(item => item.Completion).ToList());
         if (historyByUser.Count == 0)
         {
             return new OwnedSpeedReadingGamificationRecalculationResult(
@@ -110,25 +127,65 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
             now);
     }
 
-    private static VerifiedExerciseCompletion ToCompletion(SessionHistoryRow row)
+    private static VerifiedExerciseCompletion ToCompletion(SessionHistoryRow row, StoredState state, bool firstToday)
     {
         var rawWpm = row.IsMeasured && row.RawWpm > 0
             ? (int?)Math.Round(row.RawWpm, MidpointRounding.AwayFromZero)
             : null;
         var accuracy = CalculateAccuracy(row.QuestionAnswersJson, row.ComprehensionScore);
+        var questionCount = CountAnswers(row.QuestionAnswersJson);
+        var xp = row.GamificationXp ?? (row.IsMeasured
+            ? SpeedReadingExerciseSessionRules.CalculateXp(
+                Math.Clamp(row.Score, 0, 100),
+                accuracy,
+                Math.Max(row.TimeSpentSeconds, 0))
+            : 0);
+        var isRsvp = row.ExerciseType.Trim().Equals("RSVP", StringComparison.OrdinalIgnoreCase);
         return new VerifiedExerciseCompletion(
             row.ExerciseType,
             row.CompletedAt,
             Math.Max(row.TimeSpentSeconds, 0),
             rawWpm,
-            row.IsMeasured ? Math.Clamp(row.ComprehensionScore, 0, 100) : null,
+            row.IsMeasured && questionCount > 0 ? Math.Clamp(row.ComprehensionScore, 0, 100) : null,
             rawWpm.HasValue,
-            row.GamificationXp ?? (row.IsMeasured
-                ? SpeedReadingExerciseSessionRules.CalculateXp(
-                    Math.Clamp(row.Score, 0, 100),
-                    accuracy,
-                    Math.Max(row.TimeSpentSeconds, 0))
-                : 0));
+            firstToday ? xp : 0,
+            CountsForComprehensionBadge: row.IsMeasured && questionCount >= 3
+                && string.Equals(row.EngineType, "reading_comprehension", StringComparison.OrdinalIgnoreCase)
+                && state.ComprehensionMode != "learning",
+            RsvpPaceWpm: isRsvp && !state.ReadingIncomplete && state.RsvpDisplayPaceWpm > 0
+                && state.RsvpCompletionPercent >= 100
+                    ? (int)Math.Round(state.RsvpDisplayPaceWpm, MidpointRounding.AwayFromZero)
+                    : null);
+    }
+
+    /// <summary>Live rule for results recorded before the counting flag existed.</summary>
+    private static bool CountsLegacy(StoredState state) =>
+        !state.ReadingIncomplete && (state.VocabularyWords.Count == 0 || state.VocabularyMode == "quiz");
+
+    private static StoredState ReadState(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return new StoredState();
+        try
+        {
+            return JsonSerializer.Deserialize<StoredState>(json, JsonOptions) ?? new StoredState();
+        }
+        catch (JsonException)
+        {
+            return new StoredState();
+        }
+    }
+
+    private static int CountAnswers(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<StoredAnswer>>(json, JsonOptions)?.Count ?? 0;
+        }
+        catch (JsonException)
+        {
+            return 0;
+        }
     }
 
     private static decimal CalculateAccuracy(string json, decimal fallback)
@@ -150,7 +207,9 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
 
     private sealed record SessionHistoryRow(
         Guid StudentId,
+        Guid ExerciseId,
         string ExerciseType,
+        string EngineType,
         DateTime CompletedAt,
         int TimeSpentSeconds,
         decimal RawWpm,
@@ -158,7 +217,19 @@ public sealed class OwnedSpeedReadingGamificationRecalculation(
         decimal Score,
         bool IsMeasured,
         string QuestionAnswersJson,
-        int? GamificationXp);
+        int? GamificationXp,
+        bool? CountsForGamification,
+        string? SessionDataJson);
+
+    private sealed class StoredState
+    {
+        public bool ReadingIncomplete { get; init; }
+        public List<JsonElement> VocabularyWords { get; init; } = [];
+        public string? VocabularyMode { get; init; }
+        public string? ComprehensionMode { get; init; }
+        public decimal RsvpDisplayPaceWpm { get; init; }
+        public decimal RsvpCompletionPercent { get; init; }
+    }
 
     private sealed class StoredAnswer
     {

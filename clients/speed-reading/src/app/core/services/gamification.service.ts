@@ -70,8 +70,13 @@ export class GamificationService {
     return Math.min((current / target) * 100, 100);
   }
 
+  /** H19: levels 1–5, 6–10, 11–15 and 16+ (as on the server); higher levels stay in the top tier. */
+  private tierOf(level: number): number {
+    return Math.min(4, Math.max(1, Math.ceil(level / 5)));
+  }
+
   getTierColor(level: number): string {
-    const tier = Math.ceil(level / 5);
+    const tier = this.tierOf(level);
     switch (tier) {
       case 1: return '#9E9E9E'; // Gri
       case 2: return '#4CAF50'; // Yeşil
@@ -82,7 +87,7 @@ export class GamificationService {
   }
 
   getTierName(level: number): string {
-    const tier = Math.ceil(level / 5);
+    const tier = this.tierOf(level);
     switch (tier) {
       case 1: return 'Başlangıç Okuyucu';
       case 2: return 'Gelişen Okuyucu';
@@ -93,7 +98,7 @@ export class GamificationService {
   }
 
   getTierIcon(level: number): string {
-    const tier = Math.ceil(level / 5);
+    const tier = this.tierOf(level);
     switch (tier) {
       case 1: return '📖';
       case 2: return '📗';

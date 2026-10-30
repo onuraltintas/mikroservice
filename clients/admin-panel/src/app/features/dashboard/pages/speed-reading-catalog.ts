@@ -387,13 +387,13 @@ export class SpeedReadingCatalogComponent implements OnInit, OnDestroy {
     { value: 'level_reached', label: 'Seviye', property: 'level', input: 'number', min: 1, help: 'Öğrencinin ulaştığı oyunlaştırma seviyesi.' },
     { value: 'total_xp', label: 'Toplam XP', property: 'xp', input: 'number', min: 1, help: 'Doğrulanmış çalışmalardan kazanılan toplam XP.' },
     { value: 'reading_minutes', label: 'Okuma süresi', property: 'minutes', input: 'number', min: 1, help: 'Doğrulanmış çalışmalardaki toplam dakika.' },
-    { value: 'wpm_reached', label: 'En yüksek okuma hızı', property: 'wpm', input: 'number', min: 1, help: 'Ölçülen en yüksek kelime/dakika değeri.' },
-    { value: 'comprehension_score', label: 'En yüksek anlama puanı', property: 'score', input: 'number', min: 0, max: 100, allowDecimal: true, help: 'Ölçülen en yüksek anlama yüzdesi.' },
+    { value: 'wpm_reached', label: 'En yüksek okuma hızı', property: 'wpm', input: 'number', min: 1, help: 'Sorulu bir okumada en az %60 anlamayla ölçülen en yüksek kelime/dakika değeri.' },
+    { value: 'comprehension_score', label: 'En yüksek anlama puanı', property: 'score', input: 'number', min: 0, max: 100, allowDecimal: true, help: 'En az üç sorulu anlama metinlerinde (öğrenme modu hariç) ölçülen en yüksek anlama yüzdesi.' },
     { value: 'reading_count', label: 'Okuma oturumu sayısı', property: 'count', input: 'number', min: 1, help: 'Ölçülen okuma oturumlarının toplamı.' },
     { value: 'rsvp_count', label: 'RSVP oturumu sayısı', property: 'count', input: 'number', min: 1, help: 'Ölçülen RSVP oturumlarının toplamı.' },
-    { value: 'rsvp_wpm', label: 'RSVP hızı', property: 'wpm', input: 'number', min: 1, help: 'Ölçülen en yüksek RSVP kelime/dakika değeri.' },
+    { value: 'rsvp_wpm', label: 'RSVP hızı', property: 'wpm', input: 'number', min: 1, help: 'Metnin tamamı gösterilip en az %60 anlamayla tamamlanan en hızlı RSVP gösterim temposu (kelime/dakika).' },
     { value: 'rsvp_comprehension', label: 'RSVP anlama puanı', property: 'score', input: 'number', min: 0, max: 100, allowDecimal: true, help: 'Ölçülen en yüksek RSVP anlama yüzdesi.' },
-    { value: 'exercise_type_first', label: 'Egzersiz türünü ilk kez tamamlama', property: 'type', input: 'text', help: 'Egzersiz türünün sistemdeki adı; örneğin RSVP veya SchulteTable.' },
+    { value: 'exercise_type_first', label: 'Egzersiz türünü ilk kez tamamlama', property: 'type', input: 'text', help: 'Egzersiz türünün sistemdeki adı; örneğin RSVP veya SchulteTable. Göz ısınmaları (EyeTracking, Saccade), gruplama (Chunking), tempolu okuma (SpeedReading) ve N-back (Focus) ölçülmediği için kabul edilmez.' },
     { value: 'exercise_variety', label: 'Farklı egzersiz türü sayısı', property: 'types', input: 'number', min: 1, help: 'En az bir kez tamamlanmış farklı egzersiz türü sayısı.' }
   ];
   achievementCriteriaTarget = '1';

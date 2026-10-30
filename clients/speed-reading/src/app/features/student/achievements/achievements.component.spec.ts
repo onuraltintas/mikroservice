@@ -56,4 +56,27 @@ describe('AchievementsComponent', () => {
     expect(fixture.componentInstance.loading).toBeFalse();
     expect(fixture.nativeElement.textContent).toContain('Başarımlar yüklenemedi');
   }));
+
+  // H19 (audit 30.10.2026): a badge an administrator deactivated stays on the page of the students who earned it, and the
+  // headline sums the XP of earned badges under an honest label.
+  it('keeps earned badges that were later deactivated and labels the badge XP correctly', () => {
+    const active = { id: 'a', name: 'Seri', tier: 'Bronze', category: 'Streak', xpReward: 10, isActive: true };
+    const retired = { id: 'r', name: 'Eski Rozet', tier: 'Gold', category: 'Special', xpReward: 50, isActive: false };
+    TestBed.configureTestingModule({
+      imports: [AchievementsComponent],
+      providers: [{ provide: GamificationService, useValue: {
+        getAllAchievements: () => of([active]),
+        getUserAchievements: () => of([{ id: 'u', userId: 's', achievementId: 'r', achievement: retired, unlockedAt: new Date(), isShowcased: false }])
+      } }]
+    });
+    const fixture = TestBed.createComponent(AchievementsComponent);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    expect(component.achievements.map(item => item.name)).toEqual(['Seri', 'Eski Rozet']);
+    expect(component.unlockedCount).toBe(1);
+    expect(component.totalXPEarned).toBe(50);
+    expect(fixture.nativeElement.textContent).toContain('Rozet XP');
+    expect(fixture.nativeElement.textContent).not.toContain('Toplam XP');
+  });
 });

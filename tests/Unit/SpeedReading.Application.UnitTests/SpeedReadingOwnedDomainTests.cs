@@ -126,8 +126,10 @@ public sealed class SpeedReadingOwnedDomainTests
         stats.TotalRsvpSessionsCompleted.Should().Be(1);
         stats.TotalReadingMinutes.Should().Be(2);
         stats.MaxWPM.Should().Be(280);
-        stats.MaxComprehensionScore.Should().Be(86);
-        stats.MaxRSVPWPM.Should().Be(280);
+        // H19 (audit 30.10.2026): the comprehension badge only counts comprehension texts, and the RSVP speed badge the
+        // server display pace — neither comes from this legacy-shaped call.
+        stats.MaxComprehensionScore.Should().Be(0);
+        stats.MaxRSVPWPM.Should().Be(0);
         stats.MaxRSVPComprehension.Should().Be(86);
         stats.CurrentStreak.Should().Be(1);
         stats.TotalXP.Should().Be(25);

@@ -65,6 +65,17 @@ public static class GamificationRules
     public static DateTime StreakAliveSinceUtc(DateTime now) =>
         TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(IstanbulDate(now).AddDays(-1), DateTimeKind.Unspecified), Istanbul);
 
+    /// <summary>H19: the UTC instant at which the Istanbul calendar day of <paramref name="value"/> starts.</summary>
+    public static DateTime IstanbulDayStartUtc(DateTime value) =>
+        TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(IstanbulDate(value), DateTimeKind.Unspecified), Istanbul);
+
+    /// <summary>H19 (decision 30.10.2026): speed badges only count a session with questions and at least this comprehension.</summary>
+    public const decimal SpeedBadgeMinimumComprehension = 60;
+
+    /// <summary>H19: a daily-goal update adds at most two hours, and a day never holds more than 24 hours.</summary>
+    public static int ClampDailyMinutes(int currentMinutes, int addedMinutes) =>
+        Math.Min(24 * 60, Math.Max(currentMinutes, 0) + Math.Clamp(addedMinutes, 0, 120));
+
     public static DateTime IstanbulDate(DateTime value)
     {
         var utc = value.Kind switch
