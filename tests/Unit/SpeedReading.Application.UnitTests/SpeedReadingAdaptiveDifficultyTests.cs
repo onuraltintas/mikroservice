@@ -24,7 +24,7 @@ public sealed class SpeedReadingAdaptiveDifficultyTests
     [InlineData(59.9, -1)]
     [InlineData(null, 0)]
     public void The_week_average_decides_the_step(double? average, int expected) =>
-        SpeedReadingDailyProgressRules.WeeklyDifficultyStep((decimal?)average).Should().Be(expected);
+        SpeedReadingDailyProgressRules.WeeklyDifficultyStep((decimal?)average, 90m).Should().Be(expected);
 
     [Theory]
     [InlineData(90, 1)]
@@ -53,7 +53,7 @@ public sealed class SpeedReadingAdaptiveDifficultyTests
         progress.CurrentWeek.Should().Be(2);
 
         var adapt = (Task<bool>)schedule.GetMethod("AdaptAfterWeekAsync")!.Invoke(null,
-            [db, progress, template, (decimal?)average, actor, DateTime.UtcNow, CancellationToken.None])!;
+            [db, progress, template, (decimal?)average, (decimal?)90m, actor, DateTime.UtcNow, CancellationToken.None])!;
 
         (await adapt).Should().BeTrue();
         progress.AdaptiveDifficultyOffset.Should().Be(direction);

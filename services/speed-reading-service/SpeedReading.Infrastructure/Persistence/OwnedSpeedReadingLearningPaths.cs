@@ -437,14 +437,9 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         if (decision.Kind != AdaptiveProgressionDecisionKind.Support)
             return 0;
 
-        var userLevel = await db.UserProfiles
-            .AsNoTracking()
-            .Where(item => item.UserId == studentId && item.IsActive)
-            .Select(item => (int?)item.CurrentLevel)
-            .SingleOrDefaultAsync(cancellationToken) ?? 1;
         return await CreatePersonalizedPathAsync(
             studentId,
-            userLevel,
+            await ResolveTrainingLevelAsync(studentId, cancellationToken),
             "Son ölçümlerde destek ihtiyacı görüldü.",
             cancellationToken,
             await GetWeakBloomLevelsAsync(studentId, cancellationToken));
@@ -465,8 +460,9 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .Select(item => item.ContentId!.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
+        // A support path reinforces at the training level or one below it; it never hands out harder material.
         var minDifficulty = Math.Max(1, userLevel - 1);
-        var maxDifficulty = userLevel + 2;
+        var maxDifficulty = Math.Max(1, userLevel);
         var ageGroupId = await db.UserProfiles.AsNoTracking()
             .Where(profile => profile.UserId == studentId && profile.IsActive)
             .Select(profile => profile.AgeGroupConfigurationId)
@@ -502,6 +498,7 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .AsNoTracking()
             .Where(item => !item.IsDeleted
                 && item.IsActive
+                && !item.IsAssessmentOnly
                 && !completedContentIds.Contains(item.Id)
                 && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId)
                 && item.DifficultyLevel >= minDifficulty
@@ -514,9 +511,11 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .ThenBy(item => item.Id)
             .Take(3)
             .ToListAsync(cancellationToken);
-        var readingTextsQuery = db.ReadingTexts
-            .AsNoTracking()
-            .Where(item => !item.IsDeleted
+        // H15 (finding C): texts that belong to an exercise (error-analysis originals, scanning lists…) are exercise
+        // material, not independent reading.
+        var readingTextsQuery = ReadingTextVisibility.IndependentReading(db)
+            .Where(item => item.ExerciseId == null
+                && !item.IsDeleted
                 && item.IsActive
                 && !completedContentIds.Contains(item.Id)
                 && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId)
@@ -680,12 +679,11 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         if (!(await GetPersonalizedAvailabilityAsync(studentId, cancellationToken)).IsAvailable)
             return false;
         var policy = await ResolveProgressionPolicyAsync(studentId, cancellationToken);
+        // H15 (finding A): only sessions that asked questions are comprehension evidence.
         var measuredSessionCount = await db.ExerciseSessionResults
             .AsNoTracking()
-            .CountAsync(result => result.StudentId == studentId
-                && result.IsMeasured
-                && !result.IsAssessmentMode,
-                cancellationToken);
+            .Where(OwnedSpeedReadingComprehensionEvidence.AskedQuestions)
+            .CountAsync(result => result.StudentId == studentId, cancellationToken);
         if (measuredSessionCount < policy.MinimumMeasuredSessions
             || measuredSessionCount % policy.MinimumMeasuredSessions != 0)
         {
@@ -700,18 +698,42 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .AnyAsync(path => path.StudentId == studentId && !path.IsDeleted && !path.IsCompleted, cancellationToken))
             return false;
 
-        var profile = await db.UserProfiles
-            .SingleOrDefaultAsync(profile => profile.UserId == studentId && profile.IsActive, cancellationToken);
-        if (profile is null)
+        if (!await db.UserProfiles.AsNoTracking()
+            .AnyAsync(profile => profile.UserId == studentId && profile.IsActive, cancellationToken))
             return false;
 
         var created = await CreatePersonalizedPathAsync(
             studentId,
-            profile.CurrentLevel,
+            await ResolveTrainingLevelAsync(studentId, cancellationToken),
             "Son ölçümlerde destek ihtiyacı görüldü.",
             cancellationToken,
             await GetWeakBloomLevelsAsync(studentId, cancellationToken));
         return created > 0;
+    }
+
+    /// <summary>
+    /// H15 (finding B): learning-path content follows the level the student currently trains at — the active program's
+    /// level including the weekly adjustment (1–5) — not the assessment level (1–8). Without an active program the
+    /// assessment level is clamped to the program range, as program placement does.
+    /// </summary>
+    private async Task<int> ResolveTrainingLevelAsync(Guid studentId, CancellationToken cancellationToken)
+    {
+        var program = await (
+                from progress in db.StudentProgramProgresses.AsNoTracking()
+                join template in db.ProgramTemplates.AsNoTracking()
+                    on progress.ProgramTemplateId equals template.Id
+                where progress.UserId == studentId && progress.IsActive && !template.IsDeleted && !template.IsAssessment
+                orderby progress.CreatedAt descending
+                select new { template.InitialDifficultyLevel, template.MaxDifficultyLevel, progress.AdaptiveDifficultyOffset })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (program is not null && program.InitialDifficultyLevel > 0)
+            return Math.Clamp(program.InitialDifficultyLevel + program.AdaptiveDifficultyOffset, 1,
+                Math.Max(1, program.MaxDifficultyLevel));
+        var assessed = await db.UserProfiles.AsNoTracking()
+            .Where(item => item.UserId == studentId && item.IsActive)
+            .Select(item => (int?)item.CurrentLevel)
+            .SingleOrDefaultAsync(cancellationToken) ?? 1;
+        return Math.Clamp(assessed, 1, 5);
     }
 
     private async Task<AdaptiveProgressionDecision> EvaluateProgressionAsync(
@@ -722,9 +744,8 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
     {
         var recentMeasuredResults = await db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(result => result.StudentId == studentId
-                && result.IsMeasured
-                && !result.IsAssessmentMode)
+            .Where(OwnedSpeedReadingComprehensionEvidence.AskedQuestions)
+            .Where(result => result.StudentId == studentId)
             .OrderByDescending(result => result.CompletedAt)
             .Take(policy.MinimumMeasuredSessions)
             .Select(result => new AdaptiveProgressionEvidence(

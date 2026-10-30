@@ -1518,7 +1518,7 @@
     "services/speed-reading-service/SpeedReading.Application/Content/TurkishReadingTextQualityAnalyzer.cs": "e8cc5a027e8cebcf231010f332e64678b4e5905b5f43c34af6948a1d60ee0dcc",
     "services/speed-reading-service/SpeedReading.Application/ContentFeedback/SpeedReadingContentFeedbackContracts.cs": "0b4b76e7eb9ceca67b8c9f983647d5fbe9e725411ed2319906e56b6cc359e639",
     "services/speed-reading-service/SpeedReading.Application/DailyProgress/ProgramProgressionContracts.cs": "bdb18f7d18e9a4519b52f7a654482336bd249fc728a9258f6cd694c67c1ba10b",
-    "services/speed-reading-service/SpeedReading.Application/DailyProgress/SpeedReadingDailyProgressContracts.cs": "e7a6cbc3cedd29b0c4b545e747d0d285ad4eb4a497ad44eb5f6e5888264a81d9",
+    "services/speed-reading-service/SpeedReading.Application/DailyProgress/SpeedReadingDailyProgressContracts.cs": "7611ca7bf441c06b963ade36818631592af9d161d76d87320d0d177e998f6ea6",
     "services/speed-reading-service/SpeedReading.Application/ExerciseSessions/ExercisePreviewRules.cs": "33e8cc26daed6ef1b7b627fdded5e3e6a70f16e658e137262d72a6b47ddfbaf7",
     "services/speed-reading-service/SpeedReading.Application/ExerciseSessions/FocusTrialTimingRules.cs": "ec2f3f95e66e4859c4e5ab107d7469599b60aa25f0a9ae25e9e1888549e510f1",
     "services/speed-reading-service/SpeedReading.Application/ExerciseSessions/SpeedReadingExerciseSessionContracts.cs": "20111d06ebe7402a2a7ba1d382346fd4e1d3bc2d17c3dbaeb526256c0038a3dc",
@@ -1586,7 +1586,7 @@
     "services/speed-reading-service/SpeedReading.Domain/Programs/ProgramProgressionPolicy.cs": "d47552b932f316829ccc68afd4faa1447a3fc7ce5dffa8b2fe19143c48758a7c",
     "services/speed-reading-service/SpeedReading.Domain/Programs/ProgramTemplate.cs": "a667d51bdd31b74c089a24529860255a08d7c6bceb21d9eb1c3bb174785659f0",
     "services/speed-reading-service/SpeedReading.Domain/Programs/ProgramWeeklyPatternRules.cs": "c0d8231599fb3f4fd2b2608e2b13d221e020030b5e090eb9ad2165d59e4e8e90",
-    "services/speed-reading-service/SpeedReading.Domain/Programs/StudentProgramProgress.cs": "9087c085f2d180641f762b05a22bee8bf4e6baf07159c87c7d68e5c9ee690da8",
+    "services/speed-reading-service/SpeedReading.Domain/Programs/StudentProgramProgress.cs": "d7419e7fad15115235804d27d7ffed1937338cb1b67eb211117cda8a16f156e5",
     "services/speed-reading-service/SpeedReading.Domain/QuestionBank/ExamQuestion.cs": "2dbcc446e0050a3dd22252372a3a2059bf5c4aa6481c73c7e164db1a91aa4671",
     "services/speed-reading-service/SpeedReading.Domain/Review/ReviewCompletion.cs": "b6fd1b5f459630c349f286867b726310e679e0eb09ef9d20a690df2f2eb43658",
     "services/speed-reading-service/SpeedReading.Domain/Review/ReviewItem.cs": "5934fa35a75ffea0232d9e0622f4766b80b740543062fb93763be866b97be1c5",
@@ -1771,10 +1771,11 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingCalibrationAnalytics.cs": "e52a30e09172818be1421404659d97705e006f58055044012b5e8176cb2d3578",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingCatalog.cs": "dcdddf86e0f3a3992cc370e946fe59306ba90857359d9c5545e485e87134afb2",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingCatalogAdminWriter.cs": "4028526239e3d41c4030b824d2b24f536968bd6483b48baae6d7f99edd46915c",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingComprehensionEvidence.cs": "18cf927d592b6c1cb0739e5b162dbe02b5fab495b696a4aa5e89f0644c327a24",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingContentAdminWriter.cs": "ec2a9055622a611710cc8c21e14b818c7f76d4d2bf97252928132243b71b1559",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingContentAudit.cs": "0fe98c2ad9ecd31a518844dd557f42c085bba9c88fdb401ddff8e066113e9f1c",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingContentFeedback.cs": "27634efeb9078d00a9999260ccb46f20525bafad354ff2a4bf22cdb403a6ce79",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingDailyProgress.cs": "7e282edafc31e68f26278ef1c6a01d87254b201ec7c3ff8cea59ccde282f32e4",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingDailyProgress.cs": "4b5435c6343eddcda54617da7d40e6b77ca98356ca1b420e929520911aea2d4a",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingDbContext.cs": "22ecdd0f8e51992e676ed26584dc836a8ef5770b9fc77783c9057aae4c771a07",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingDbContextFactory.cs": "a772650fc1baab1eb2159d59eeb4990afd663dfe798798a02908552bd4777157",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingExerciseSessions.ErrorAnalysis.cs": "2c4586ee47b140a263a8aa49554d67091707dc9d3b0fd5e9b32dc0280f59e28b",
@@ -1791,12 +1792,12 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingInstitutionStudentManagement.cs": "0dcc59db9f7877788a6d59307d12e7df7bf9b1e0a472c7c33d436426b35cde60",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingInvitations.cs": "c0341f7b42e9438736b65d3b4c5417dff566c4eb34b00d957a1a4b9de936010b",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingLearningPathAdminWriter.cs": "802645396012a0c69a5d6b0133c934c2f2fcedfc3ebe7ae930da04655161ddaa",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingLearningPaths.cs": "3615f295b6eb0afd42acd0f16daa16a252dc0a2f157428e714012153e02a18f0",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingLearningPaths.cs": "1f3711c3c8ae043616bc118aa9e8321febb6bf1dd566e3840951935c9be4c2c2",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingLevelCatalog.cs": "51ab15b6be608c42d7e0264b7f7ad70e49e09fa45de36dffa4696025b3eba8ba",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingProgramAdminWriter.cs": "419454a43ab8659e1ff69e806c931b2155f9ddbc8d4ec0b4ae962a71d8a10fbd",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingProgramAssignmentLock.cs": "6ad768b8e85733c0ebcfb0bdaade0161f33f606fcc817782c216d26b9fbf988b",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingProgramProgression.cs": "cac0e02dda40011b77e8da98683cdf2f7303586941dc03bb09beda444bbb704d",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingProgramSchedule.cs": "c0875e899a30cd156990ed860cbe6181782319e75734fa4e34a2be1bfa48d9f8",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingProgramSchedule.cs": "bc7b1bc1206116d666f4c904e80b1fe4fc6568fed4504d7fe4916ac851e84850",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingPrograms.cs": "e310b848ab2bae7a18d09770661fa9d9de7130ca36b67db9267ad65440233213",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingProgress.cs": "ec58163ecc5be920045d746dc5a62add3ac4390fd4d10103c802e62449d233b3",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingProgressAccess.cs": "4bc183e09a923a728608ced63248c7cedfa8bcb07d333d79aff297ac9aa326e5",
@@ -2637,7 +2638,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "merge main into fix/h20-staff-portal-teardown",
+    "purpose": "merge main into fix/h15-speed-reading-comprehension-gate",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2685,7 +2686,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "98ea5621",
+    "previousBaselineCommit": "a11b67b9",
     "removedSincePreviousBaseline": []
   }
 }

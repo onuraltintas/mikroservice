@@ -362,8 +362,14 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         {
             // Review H5 (finding 19): the finished week's results set the difficulty of the weeks ahead.
             var finishedWeek = allLogs.Where(item => item.WeekNumber == completion.OldWeek && item.IsMeasured).ToList();
+            // H15: moving up also needs ≥80 comprehension in the week's sessions that asked questions.
+            var finishedWeekComprehension = await OwnedSpeedReadingComprehensionEvidence.AverageAskedComprehensionAsync(
+                db, userId,
+                finishedWeek.Where(item => item.SessionId.HasValue).Select(item => item.SessionId!.Value).Distinct().ToList(),
+                cancellationToken);
             await OwnedSpeedReadingProgramSchedule.AdaptAfterWeekAsync(db, progress, template,
-                finishedWeek.Count == 0 ? null : finishedWeek.Average(item => item.SuccessRate), userId, now, cancellationToken);
+                finishedWeek.Count == 0 ? null : finishedWeek.Average(item => item.SuccessRate), finishedWeekComprehension,
+                userId, now, cancellationToken);
         }
         var adaptivePlanUpdated = isMeasured
             && await learningPaths.RefreshAdaptiveProgressionAsync(userId, cancellationToken);
