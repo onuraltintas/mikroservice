@@ -8,6 +8,7 @@ using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Sessions;
+using ExerciseSessionResult = SpeedReading.Domain.Sessions.ExerciseSessionResult;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
@@ -70,7 +71,7 @@ public sealed class SpeedReadingGamificationFixesTests
     {
         await using var db = Context(); var user = Guid.NewGuid(); var id = await SeedTargetHunt(db, user);
         db.Achievements.Add(Achievement.Create(Guid.NewGuid(), "İlk Adım", "İlk egzersizini tamamla.", "Exercise", "Bronze",
-            null, "🎯", "exercise_count", "{\"count\":1}", null, null, false, 200, true, 1));
+            null, "🎯", "exercise_count", "{\"count\":1}", null, null, false, 200, true, 1, Actor, DateTime.UtcNow));
         await db.SaveChangesAsync();
 
         var result = await PlayTargetHunt(Service(db), user, id);
@@ -78,9 +79,13 @@ public sealed class SpeedReadingGamificationFixesTests
         Assert.Equal(["İlk Adım"], result.UnlockedBadges);
         Assert.True(result.LeveledUp);
         Assert.Equal(GamificationRules.CalculateLevel(result.XpGained + 200), result.NewLevel);
-        var notification = Assert.Single(((ISpeedReadingDataContext)db).Notifications.Where(item => item.UserId == user));
-        Assert.Equal(11, notification.Type);
-        Assert.Contains("İlk Adım", notification.Message);
+        var notificationType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Legacy.LegacyUserNotification")!;
+        var notifications = ((IQueryable<object>)typeof(DbContext).GetMethod(nameof(DbContext.Set), Type.EmptyTypes)!
+            .MakeGenericMethod(notificationType).Invoke(db, null)!).ToList();
+        var notification = Assert.Single(notifications);
+        Assert.Equal(user, notificationType.GetProperty("UserId")!.GetValue(notification));
+        Assert.Equal(11, notificationType.GetProperty("Type")!.GetValue(notification));
+        Assert.Contains("İlk Adım", (string)notificationType.GetProperty("Message")!.GetValue(notification)!);
     }
 
     // ---- HIGH 1 / MEDIUM 6 / MEDIUM 7: what feeds badge statistics ----
@@ -164,7 +169,7 @@ public sealed class SpeedReadingGamificationFixesTests
     {
         AchievementCriteriaRules.Validate("exercise_type_first", "{\"type\":\"Tachistoscope\"}", false);
         var badge = Achievement.Create(Guid.NewGuid(), "Seri", "5 gün", "Streak", "Bronze", null, "🔥", "streak", "{\"days\":5}",
-            null, null, false, 10, true, 1);
+            null, null, false, 10, true, 1, Actor, DateTime.UtcNow);
 
         Assert.ThrowsAny<ArgumentException>(() => badge.Update("Seri", "5 gün", "Streak", "Bronze", null, "🔥", "streak",
             "{\"count\":5}", null, null, false, 10, true, 1, Actor, DateTime.UtcNow));
@@ -182,9 +187,9 @@ public sealed class SpeedReadingGamificationFixesTests
         typeof(Exercise).GetProperty(nameof(Exercise.TargetAgeGroupId))!.SetValue(vocabulary, childAge);
         db.ExerciseTypes.Add(vocabularyType); db.Exercises.Add(vocabulary);
         var words = Achievement.Create(Guid.NewGuid(), "Kelime Avcısı", "10 kelime", "Special", "Bronze", null, "📚",
-            "vocabulary_learned", "{\"count\":10}", null, null, false, 10, true, 1);
+            "vocabulary_learned", "{\"count\":10}", null, null, false, 10, true, 1, Actor, DateTime.UtcNow);
         var streak = Achievement.Create(Guid.NewGuid(), "Seri", "3 gün", "Streak", "Bronze", null, "🔥", "streak",
-            "{\"days\":3}", null, null, false, 10, true, 2);
+            "{\"days\":3}", null, null, false, 10, true, 2, Actor, DateTime.UtcNow);
         db.Achievements.AddRange(words, streak);
         db.UserProfiles.Add(Profile(adult, adultAge));
         await db.SaveChangesAsync();
@@ -232,7 +237,7 @@ public sealed class SpeedReadingGamificationFixesTests
         var yesterday = new DateTime(2026, 10, 29, 15, 0, 0, DateTimeKind.Utc);
         var today = yesterday.AddDays(1);
         var template = ProgramTemplate.Create("Program", "Açıklama", Guid.NewGuid(), 0, 100, "{}", 1, 4, 5, 1, 7,
-            true, 1, 0, null, false, Actor, yesterday.AddDays(-1));
+            false, 1, 0, null, false, Actor, yesterday.AddDays(-1));
         var progress = StudentProgramProgress.Start(Guid.NewGuid(), Guid.NewGuid(), template, 0, 0, Actor, yesterday.AddHours(-1));
         progress.ApplyExerciseCompletion(80, false, 1, 1, template, Actor, yesterday);
         // Two tasks today: the first one moves the last completion time to today, the second finishes the day.
@@ -281,7 +286,7 @@ public sealed class SpeedReadingGamificationFixesTests
         return profile;
     }
 
-    private static async Task<Application.ExerciseSessions.ExerciseSessionResult> PlayTargetHunt(
+    private static async Task<SpeedReading.Application.ExerciseSessions.ExerciseSessionResult> PlayTargetHunt(
         ISpeedReadingExerciseSessions service, Guid user, Guid id)
     {
         var started = await service.StartAsync(user, new() { ExerciseId = id });

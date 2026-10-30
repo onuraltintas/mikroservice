@@ -169,42 +169,63 @@ public sealed class UserGamification : Entity
         bool isReadingSession,
         int xpAwarded,
         Guid actorId,
-        DateTime updatedAt)
+        DateTime updatedAt) =>
+        RecordVerifiedExerciseCompletion(
+            new VerifiedExerciseCompletion(exerciseType, completedAt, durationSeconds, rawWpm, comprehensionScore,
+                isReadingSession, xpAwarded),
+            actorId,
+            updatedAt);
+
+    /// <summary>
+    /// H19 (audit 30.10.2026): what a verified completion adds to the badge statistics.
+    /// <list type="bullet">
+    /// <item>Speed (MaxWPM) only counts a measured reading whose questions were answered with ≥60% comprehension;
+    /// <paramref name="completion"/>.ComprehensionScore is null when the session asked no questions.</item>
+    /// <item>The comprehension badge only counts full comprehension texts (<c>CountsForComprehensionBadge</c>).</item>
+    /// <item>Every verified RSVP completion counts as an RSVP session; the RSVP speed is the server display pace of a
+    /// fully shown text answered with ≥60% comprehension.</item>
+    /// </list>
+    /// </summary>
+    public void RecordVerifiedExerciseCompletion(VerifiedExerciseCompletion completion, Guid actorId, DateTime updatedAt)
     {
+        ArgumentNullException.ThrowIfNull(completion);
+        var exerciseType = completion.ExerciseType;
         if (string.IsNullOrWhiteSpace(exerciseType)
-            || durationSeconds < 0
-            || xpAwarded < 0
+            || completion.DurationSeconds < 0
+            || completion.XpAwarded < 0
             || actorId == Guid.Empty)
         {
             throw new ArgumentException("Verified exercise completion is invalid.");
         }
 
+        var isRsvp = exerciseType.Trim().Equals("RSVP", StringComparison.OrdinalIgnoreCase);
+        var comprehension = completion.ComprehensionScore.HasValue
+            ? Math.Clamp(completion.ComprehensionScore.Value, 0, 100)
+            : (decimal?)null;
+        var understood = comprehension >= GamificationRules.SpeedBadgeMinimumComprehension;
+
         TotalActivitiesCompleted = checked(TotalActivitiesCompleted + 1);
         TotalExercisesCompleted = checked(TotalExercisesCompleted + 1);
-        if (isReadingSession)
+        if (completion.IsReadingSession)
             TotalReadingSessionsCompleted = checked(TotalReadingSessionsCompleted + 1);
-        if (exerciseType.Equals("RSVP", StringComparison.OrdinalIgnoreCase) && isReadingSession)
+        if (isRsvp)
             TotalRsvpSessionsCompleted = checked(TotalRsvpSessionsCompleted + 1);
 
         var durationMinutes = (int)Math.Round(
-            durationSeconds / 60m,
+            completion.DurationSeconds / 60m,
             MidpointRounding.AwayFromZero);
-        UpdateStreak(completedAt, durationMinutes, actorId, updatedAt);
+        UpdateStreak(completion.CompletedAt, durationMinutes, actorId, updatedAt);
 
-        if (rawWpm.HasValue)
-            MaxWPM = Math.Max(MaxWPM, Math.Max(rawWpm.Value, 0));
-        if (comprehensionScore.HasValue)
-            MaxComprehensionScore = Math.Max(
-                MaxComprehensionScore,
-                Math.Clamp(comprehensionScore.Value, 0, 100));
-        if (exerciseType.Equals("RSVP", StringComparison.OrdinalIgnoreCase))
+        if (completion.RawWpm.HasValue && understood)
+            MaxWPM = Math.Max(MaxWPM, Math.Max(completion.RawWpm.Value, 0));
+        if (completion.CountsForComprehensionBadge && comprehension.HasValue)
+            MaxComprehensionScore = Math.Max(MaxComprehensionScore, comprehension.Value);
+        if (isRsvp)
         {
-            if (rawWpm.HasValue)
-                MaxRSVPWPM = Math.Max(MaxRSVPWPM, Math.Max(rawWpm.Value, 0));
-            if (comprehensionScore.HasValue)
-                MaxRSVPComprehension = Math.Max(
-                    MaxRSVPComprehension,
-                    Math.Clamp(comprehensionScore.Value, 0, 100));
+            if (completion.RsvpPaceWpm is > 0 && understood)
+                MaxRSVPWPM = Math.Max(MaxRSVPWPM, completion.RsvpPaceWpm.Value);
+            if (comprehension.HasValue)
+                MaxRSVPComprehension = Math.Max(MaxRSVPComprehension, comprehension.Value);
         }
 
         var completedTypes = DeserializeCompletedExerciseTypes();
@@ -212,7 +233,7 @@ public sealed class UserGamification : Entity
             completedTypes.Add(exerciseType.Trim());
         CompletedExerciseTypesJson = JsonSerializer.Serialize(completedTypes);
 
-        AwardXp(xpAwarded, actorId, updatedAt);
+        AwardXp(completion.XpAwarded, actorId, updatedAt);
     }
 
     public void RecordVerifiedVocabularyReview(
@@ -286,30 +307,26 @@ public sealed class UserGamification : Entity
         RecalculateLevel();
 
         foreach (var completion in completions.OrderBy(item => item.CompletedAt))
-        {
-            RecordVerifiedExerciseCompletion(
-                completion.ExerciseType,
-                completion.CompletedAt,
-                completion.DurationSeconds,
-                completion.RawWpm,
-                completion.ComprehensionScore,
-                completion.IsReadingSession,
-                completion.XpAwarded,
-                actorId,
-                updatedAt);
-        }
+            RecordVerifiedExerciseCompletion(completion, actorId, updatedAt);
 
         if (achievementXp > 0)
             AwardXp(achievementXp, actorId, updatedAt);
         Touch(actorId, updatedAt);
     }
 
+    /// <summary>
+    /// H19 (audit 30.10.2026): a freeze bridges exactly one missed Istanbul day — the last activity was the day before
+    /// yesterday. It marks yesterday as active, so today's activity continues the streak; an older streak stays ended.
+    /// </summary>
     public void UseStreakFreeze(Guid actorId, DateTime at)
     {
         if (actorId == Guid.Empty || StreakFreezeCount <= 0)
-            throw new InvalidOperationException("No streak freezes available.");
+            throw new InvalidOperationException("Kullanılabilir seri dondurma hakkın kalmadı.");
+        var today = GamificationRules.IstanbulDate(at);
+        if (!LastActivityDate.HasValue || GamificationRules.IstanbulDate(LastActivityDate.Value) != today.AddDays(-2))
+            throw new InvalidOperationException("Seri dondurma yalnızca serin tek bir gün kaçırıldığında kullanılabilir.");
         StreakFreezeCount--;
-        LastActivityDate = EnsureUtc(at);
+        LastActivityDate = GamificationRules.IstanbulDayStartUtc(at).AddSeconds(-1);
         Touch(actorId, at);
     }
 
@@ -394,4 +411,6 @@ public sealed record VerifiedExerciseCompletion(
     int? RawWpm,
     decimal? ComprehensionScore,
     bool IsReadingSession,
-    int XpAwarded);
+    int XpAwarded,
+    bool CountsForComprehensionBadge = false,
+    int? RsvpPaceWpm = null);

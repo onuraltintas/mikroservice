@@ -4,6 +4,18 @@ namespace SpeedReading.Domain.Gamification;
 
 public static class AchievementCriteriaRules
 {
+    /// <summary>
+    /// H19 (audit 30.10.2026): exercise types whose completion can be verified and therefore recorded for badges.
+    /// Eye-movement warm-ups, grouping and paced highlight reading are never measured, and N-back is no longer in the
+    /// programs, so a "first exercise" badge for them could never be earned.
+    /// </summary>
+    public static readonly IReadOnlySet<string> VerifiableExerciseTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "Comprehension", "FreeReading", "Tachistoscope", "SchulteTable", "TargetHunt", "VisualExpansion", "Fixation",
+        "Scanning", "Skimming", "RSVP", "TextFading", "RegressionReduction", "SubvocalizationReduction", "Visualization",
+        "ErrorAnalysis", "Vocabulary", "ExamSimulation"
+    };
+
     public static void Validate(string criteriaType, string criteriaValue, bool isRepeatable)
     {
         if (isRepeatable)
@@ -37,7 +49,13 @@ public static class AchievementCriteriaRules
                 case "comprehension_score":
                 case "rsvp_comprehension": RequireDecimal(criteria, "score", 0, 100); break;
                 case "vocabulary_box": RequireInt(criteria, "box", 1, 5); break;
-                case "exercise_type_first": RequireText(criteria, "type"); break;
+                case "exercise_type_first":
+                    RequireText(criteria, "type");
+                    if (!VerifiableExerciseTypes.Contains(criteria.GetProperty("type").GetString()!.Trim()))
+                        throw new ArgumentException(
+                            "Bu egzersiz türünün tamamlanması doğrulanamıyor; rozet hiçbir zaman kazanılamaz. Geçerli türler: "
+                            + string.Join(", ", VerifiableExerciseTypes.Order()) + ".");
+                    break;
                 case "exercise_variety": RequireInt(criteria, "types", 1, int.MaxValue); break;
                 default:
                     throw new ArgumentException("Başarı kriter türü desteklenmiyor.", nameof(criteriaType));

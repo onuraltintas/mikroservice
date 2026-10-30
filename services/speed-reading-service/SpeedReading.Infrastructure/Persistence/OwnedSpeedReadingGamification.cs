@@ -146,6 +146,64 @@ internal sealed class OwnedSpeedReadingGamification(
         .Select(ToSummary)
         .ToList();
 
+    public async Task<IReadOnlyList<AchievementSummary>> GetAchievementsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var achievements = await db.Achievements.AsNoTracking()
+            .Where(item => !item.IsDeleted && item.IsActive)
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.Name)
+            .ToListAsync(cancellationToken);
+        var ageGroupId = await db.UserProfiles.AsNoTracking()
+            .Where(item => item.UserId == userId)
+            .Select(item => item.AgeGroupConfigurationId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (ageGroupId is null)
+            return achievements.Select(ToSummary).ToList();
+
+        var earned = (await db.UserAchievements.AsNoTracking()
+            .Where(item => item.UserId == userId && !item.IsDeleted)
+            .Select(item => item.AchievementId)
+            .ToListAsync(cancellationToken)).ToHashSet();
+        var availableTypes = (await (
+            from exercise in db.Exercises.AsNoTracking()
+            join type in db.ExerciseTypes.AsNoTracking() on exercise.ExerciseTypeId equals type.Id
+            where exercise.IsActive && !exercise.IsDeleted && !exercise.IsAssessmentOnly
+                && type.IsActive && !type.IsDeleted
+                && (exercise.TargetAgeGroupId == null || exercise.TargetAgeGroupId == ageGroupId)
+            select type.Name)
+            .Distinct()
+            .ToListAsync(cancellationToken)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return achievements
+            .Where(item => earned.Contains(item.Id) || IsAchievableWith(item, availableTypes))
+            .Select(ToSummary)
+            .ToList();
+    }
+
+    /// <summary>Which exercise type a badge criterion depends on; other criteria every student can reach.</summary>
+    private static bool IsAchievableWith(Achievement achievement, IReadOnlySet<string> availableTypes)
+    {
+        var criteria = achievement.CriteriaType.Trim().ToLowerInvariant();
+        if (criteria.StartsWith("vocabulary_", StringComparison.Ordinal))
+            return availableTypes.Contains("Vocabulary");
+        if (criteria.StartsWith("rsvp_", StringComparison.Ordinal))
+            return availableTypes.Contains("RSVP");
+        if (criteria != "exercise_type_first")
+            return true;
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(achievement.CriteriaValue);
+            return document.RootElement.TryGetProperty("type", out var type)
+                && type.ValueKind == System.Text.Json.JsonValueKind.String
+                && availableTypes.Contains(type.GetString()!.Trim());
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
+    }
+
     public async Task<IReadOnlyList<UserAchievementSummary>> GetUserAchievementsAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
