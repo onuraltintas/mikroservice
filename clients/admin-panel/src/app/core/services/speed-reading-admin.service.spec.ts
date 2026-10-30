@@ -461,16 +461,16 @@ describe('SpeedReadingAdminService', () => {
     expect(statusRequest.request.method).toBe('PATCH');
     statusRequest.flush({ id: 'schedule-1' });
 
-    service.exportReport('pdf', { title: 'İlerleme', data: { completed: 3 } }).subscribe();
-    const pdfRequest = http.expectOne('/api/speed-reading/reports/export/pdf');
-    expect(pdfRequest.request.method).toBe('POST');
-    expect(pdfRequest.request.body).toEqual({ title: 'İlerleme', data: { completed: 3 } });
+    // H22: files are made on the server from the stored snapshot; the client sends no report content.
+    service.exportReportSnapshot('snapshot-1', 'pdf').subscribe();
+    const pdfRequest = http.expectOne('/api/speed-reading/reports/snapshots/snapshot-1/export/pdf');
+    expect(pdfRequest.request.method).toBe('GET');
+    expect(pdfRequest.request.body).toBeNull();
     pdfRequest.flush(new Blob(['pdf'], { type: 'application/pdf' }));
 
-    service.exportReport('excel', { title: 'İlerleme', data: { completed: 3 } }).subscribe();
-    const excelRequest = http.expectOne('/api/speed-reading/reports/export/excel');
-    expect(excelRequest.request.method).toBe('POST');
-    expect(excelRequest.request.body).toEqual({ title: 'İlerleme', data: { completed: 3 } });
+    service.exportReportSnapshot('snapshot-1', 'excel').subscribe();
+    const excelRequest = http.expectOne('/api/speed-reading/reports/snapshots/snapshot-1/export/excel');
+    expect(excelRequest.request.method).toBe('GET');
     excelRequest.flush(new Blob(['xlsx'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   });
 

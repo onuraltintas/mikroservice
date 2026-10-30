@@ -422,7 +422,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             : await db.DailyExerciseLogs.AsNoTracking()
                 .Where(item => Enumerable.Contains(progressIds, item.StudentProgramProgressId)
                     && item.CompletedDate >= start && item.CompletedDate <= end)
-                .Select(item => new StudentSeriesLogRow(item.StudentProgramProgressId, item.CompletedDate, item.DayNumber))
+                .Select(item => new StudentSeriesLogRow(item.StudentProgramProgressId, item.CompletedDate, item.WeekNumber, item.DayNumber))
                 .ToListAsync(cancellationToken);
 
         var activeSeries = progressRows.Where(item => item.IsActive && !item.CompletedDate.HasValue)
@@ -443,10 +443,14 @@ internal sealed class OwnedSpeedReadingAnalytics(
             })
             .OrderByDescending(item => item.LastActivityAt ?? item.StartedAt).ToList();
 
+        // H22: a log's DayNumber is the weekday (1–7); progress uses the program day (week - 1) * 7 + day reached that date,
+        // per program, averaged over the programs worked on that day.
         var timeline = dailyProgressRows.GroupBy(item => SpeedReadingReportCalendar.LocalDate(item.CompletedDate))
             .OrderBy(group => group.Key)
             .Select(group => new StudentAnalyticsTrendPoint(group.Key, Math.Round(group
-                .Select(item => GetProgramProgress(item.DayNumber, item.ProgressId, progressRows, templates))
+                .GroupBy(item => item.ProgressId)
+                .Select(program => GetProgramProgress(program.Max(item => (item.WeekNumber - 1) * 7 + item.DayNumber), program.Key,
+                    progressRows, templates))
                 .DefaultIfEmpty(0).Average(), 2))).ToList();
         if (timeline.Count == 0)
         {
@@ -720,16 +724,9 @@ internal sealed class OwnedSpeedReadingAnalytics(
         return middle.Count == 0 ? 0 : middle.Average();
     }
 
-    private static (DateTime Start, DateTime End) NormalizeRange(DateTime? dateFrom, DateTime? dateTo)
-    {
-        var end = NormalizeUtc(dateTo ?? DateTime.UtcNow);
-        var start = NormalizeUtc(dateFrom ?? end.AddDays(-30));
-        if (start > end)
-            throw new BusinessRuleException("SpeedReading.Analytics.DateRange.Invalid", "Başlangıç tarihi bitiş tarihinden sonra olamaz.");
-        if ((end - start).TotalDays > MaxRangeDays)
-            throw new BusinessRuleException("SpeedReading.Analytics.DateRange.TooLarge", $"Analitik tarih aralığı en fazla {MaxRangeDays} gün olabilir.");
-        return (start, end);
-    }
+    private static (DateTime Start, DateTime End) NormalizeRange(DateTime? dateFrom, DateTime? dateTo) =>
+        // H22: calendar-day picks are whole Europe/Istanbul days.
+        SpeedReadingReportCalendar.ResolveRange(dateFrom, dateTo, DateTime.UtcNow, 30, MaxRangeDays);
 
     private static DateTime NormalizeUtc(DateTime value) => value.Kind switch
     {
@@ -864,7 +861,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
         decimal AverageSuccessRate,
         int CurrentStreak);
 
-    private sealed record StudentSeriesLogRow(Guid ProgressId, DateTime CompletedDate, int DayNumber);
+    private sealed record StudentSeriesLogRow(Guid ProgressId, DateTime CompletedDate, int WeekNumber, int DayNumber);
 
     private sealed record ReadingActivityRow(
         DateTime CompletedAt,

@@ -9,7 +9,7 @@ import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { SpeedReadingAdminService, AdminStudentProgressSummary } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { IdentityService, SpeedReadingTeacherDirectoryItem } from '../../../core/services/identity.service';
-import { SpeedReadingAnalyticsComponent, combineDailyPlatformMetrics, measurementStatusLabel, progressStudentLabel } from './speed-reading-analytics';
+import { SpeedReadingAnalyticsComponent, combineDailyPlatformMetrics, exerciseScoreLabel, localIsoDate, measurementStatusLabel, programDayLabel, progressStudentLabel } from './speed-reading-analytics';
 
 describe('combineDailyPlatformMetrics', () => {
   it('merges the API series by date, keeps zeroes for missing values and sorts chronologically', () => {
@@ -27,6 +27,26 @@ describe('combineDailyPlatformMetrics', () => {
       { date: '2026-09-02', activeUsers: 4, activities: 9 },
       { date: '2026-09-03', activeUsers: 0, activities: 1 }
     ]);
+  });
+});
+
+// H22 (report audit 30.10.2026).
+describe('report display helpers', () => {
+  it('shows the program day out of the program length instead of the weekday', () => {
+    expect(programDayLabel({ programDay: 17, totalDays: 28 })).toBe('17 / 28');
+    expect(programDayLabel({ programDay: 5, totalDays: 0 })).toBe('5');
+    expect(programDayLabel({ programDay: 0, totalDays: 28 })).toBe('—');
+  });
+
+  it('uses the local calendar day for date filters', () => {
+    expect(localIsoDate(new Date(2026, 9, 30, 0, 30))).toBe('2026-10-30');
+    expect(localIsoDate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
+  });
+
+  it('marks exercise types without measured results instead of showing 0', () => {
+    expect(exerciseScoreLabel(null)).toBe('Ölçülmedi');
+    expect(exerciseScoreLabel(80)).toBe('80%');
+    expect(exerciseScoreLabel(0)).toBe('0%');
   });
 });
 

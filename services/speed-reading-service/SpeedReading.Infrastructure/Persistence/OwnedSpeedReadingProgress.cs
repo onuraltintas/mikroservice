@@ -90,7 +90,8 @@ internal sealed class OwnedSpeedReadingProgress(OwnedSpeedReadingDbContext db)
         var (page, size) = NormalizePage(pageNumber, pageSize);
         var query = db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == studentId);
+            // H22: assessment results belong to the placement report, not to the exercise history.
+            .Where(item => item.StudentId == studentId && !item.IsAssessmentMode);
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
             .OrderByDescending(item => item.CompletedAt)
@@ -104,7 +105,8 @@ internal sealed class OwnedSpeedReadingProgress(OwnedSpeedReadingDbContext db)
                 item.WordsRead,
                 item.TimeSpentSeconds,
                 item.IsMeasured && item.RawWpm > 0 ? item.RawWpm : null,
-                item.IsMeasured && item.ReadingTextId.HasValue ? item.ComprehensionScore : null,
+                // H22: comprehension only exists when questions were answered (same rule as the reports).
+                item.IsMeasured && item.ReadingTextId.HasValue && item.QuestionAnswersJson != "[]" ? item.ComprehensionScore : null,
                 item.IsMeasured && item.RawWpm > 0 ? item.WeightedKdp : null,
                 item.CompletedAt,
                 item.IsMeasured ? "Measured" : "NotMeasured"))

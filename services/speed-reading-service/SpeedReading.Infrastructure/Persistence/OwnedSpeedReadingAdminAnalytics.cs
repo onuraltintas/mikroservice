@@ -23,24 +23,36 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
         var previousStart = start - (end - start);
         var reading = db.ReadingSessions.AsNoTracking()
             .Where(item => item.CompletedAt >= start && item.CompletedAt <= end);
-        var exercises = db.DailyExerciseLogs.AsNoTracking().Where(item => item.CompletedDate >= start && item.CompletedDate <= end);
+        // H22: the same exercise source as student and teacher reports (saved results, older daily records without a result,
+        // reading-flow exercises counted once as readings).
+        var readingRows = await reading
+            .Select(item => new ActivityPoint(item.UserId, item.CompletedAt, item.ReadingTimeSeconds))
+            .ToListAsync(cancellationToken);
+        var exerciseRows = await ReportExercises(start, end)
+            .Select(item => new ActivityPoint(item.UserId, item.CompletedDate, item.TimeSpentSeconds))
+            .ToListAsync(cancellationToken);
         var totalUsers = await db.UserProfiles.AsNoTracking().CountAsync(item => item.IsActive, cancellationToken);
-        var activeUserIds = await reading.Select(item => item.UserId).Concat(exercises.Select(item => item.UserId)).Distinct().ToListAsync(cancellationToken);
-        var previousActiveUserIds = await db.ReadingSessions.AsNoTracking().Where(item => item.CompletedAt >= previousStart && item.CompletedAt < start)
-            .Select(item => item.UserId).Concat(db.DailyExerciseLogs.AsNoTracking().Where(item => item.CompletedDate >= previousStart && item.CompletedDate < start)
-                .Select(item => item.UserId)).Distinct().ToListAsync(cancellationToken);
-        var totalReadingSessions = await reading.CountAsync(cancellationToken);
-        var totalExerciseActivities = await exercises.CountAsync(cancellationToken);
-        var totalReadingSeconds = await reading.Select(item => (long?)item.ReadingTimeSeconds).SumAsync(cancellationToken) ?? 0;
-        var dailyActiveUsers = await reading.Select(item => new { Date = item.CompletedAt.Date, item.UserId })
-            .Concat(exercises.Select(item => new { Date = item.CompletedDate.Date, item.UserId })).Distinct()
-            .GroupBy(item => item.Date).Select(group => new { group.Key, Count = group.Count() }).OrderBy(item => item.Key).ToListAsync(cancellationToken);
-        var activityVolume = await reading.Select(item => new { Date = item.CompletedAt.Date, Count = 1 })
-            .Concat(exercises.Select(item => new { Date = item.CompletedDate.Date, Count = 1 })).GroupBy(item => item.Date)
-            .Select(group => new { group.Key, Count = group.Count() }).OrderBy(item => item.Key).ToListAsync(cancellationToken);
-        var hourlyActivity = await reading.Select(item => new { Hour = item.CompletedAt.Hour, Count = 1 })
-            .Concat(exercises.Select(item => new { Hour = item.CompletedDate.Hour, Count = 1 })).GroupBy(item => item.Hour)
-            .Select(group => new { group.Key, Count = group.Count() }).OrderBy(item => item.Key).ToListAsync(cancellationToken);
+        var activeUserIds = readingRows.Concat(exerciseRows).Select(item => item.UserId).Distinct().ToList();
+        var previousActiveUserIds = (await db.ReadingSessions.AsNoTracking()
+                .Where(item => item.CompletedAt >= previousStart && item.CompletedAt < start)
+                .Select(item => item.UserId).Distinct().ToListAsync(cancellationToken))
+            .Concat(await OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
+                .Where(item => item.CompletedDate >= previousStart && item.CompletedDate < start)
+                .Select(item => item.UserId).Distinct().ToListAsync(cancellationToken))
+            .Distinct().ToList();
+        var totalReadingSessions = readingRows.Count;
+        var totalExerciseActivities = exerciseRows.Count;
+        var totalReadingSeconds = readingRows.Sum(item => (long)item.Seconds);
+        // H22: days and hours are Europe/Istanbul, as in student and teacher reports.
+        var activities = readingRows.Concat(exerciseRows)
+            .Select(item => new { item.UserId, Local = SpeedReadingReportCalendar.LocalTime(item.At) })
+            .ToList();
+        var dailyActiveUsers = activities.GroupBy(item => item.Local.Date).OrderBy(group => group.Key)
+            .Select(group => new { group.Key, Count = group.Select(item => item.UserId).Distinct().Count() }).ToList();
+        var activityVolume = activities.GroupBy(item => item.Local.Date).OrderBy(group => group.Key)
+            .Select(group => new { group.Key, Count = group.Count() }).ToList();
+        var hourlyActivity = activities.GroupBy(item => item.Local.Hour).OrderBy(group => group.Key)
+            .Select(group => new { group.Key, Count = group.Count() }).ToList();
         var popularContent = await (
             from session in reading
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
@@ -86,18 +98,14 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
         var (start, end) = NormalizeRange(dateFrom, dateTo);
         var reading = db.ReadingSessions.AsNoTracking()
             .Where(item => item.CompletedAt >= start && item.CompletedAt <= end);
-        var exercises = db.DailyExerciseLogs.AsNoTracking().Where(item => item.CompletedDate >= start && item.CompletedDate <= end);
         var readingRows = await (
             from session in reading
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
             where text.IsActive && !text.IsDeleted
             select new { session.CompletedAt, session.CalculatedWpm, session.IsMeasured, session.ComprehensionRate, TotalQuestions = session.IsRejected ? 0 : session.TotalQuestions, text.Id, text.Title, text.Category, text.DifficultyLevel })
             .ToListAsync(cancellationToken);
-        var exerciseRows = await (
-            from log in exercises
-            join type in db.ExerciseTypes.AsNoTracking() on log.ExerciseTypeId equals type.Id
-            where type.IsActive && !type.IsDeleted
-            select new { log.CompletedDate, log.UserId, log.SuccessRate, type.Name, type.DisplayName })
+        var exerciseRows = await ReportExercises(start, end)
+            .Select(item => new { item.CompletedDate, item.UserId, Score = item.IsMeasured ? (decimal?)item.SuccessRate : null, item.TypeName })
             .ToListAsync(cancellationToken);
         var mostUsed = readingRows.GroupBy(item => new { item.Id, item.Title })
             .OrderByDescending(group => group.Count()).Take(10)
@@ -111,16 +119,19 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
             .Select(group => new AdminReadingLevelAnalysis(group.Key, group.Count(),
                 AverageMeasuredWpm(group, item => item.IsMeasured, item => item.CalculatedWpm), AverageComprehension(group, item => item.TotalQuestions, item => item.ComprehensionRate))
                 { ComprehensionDataAvailable = group.Any(item => item.TotalQuestions > 0) }).ToList();
-        var exerciseAnalysis = exerciseRows.GroupBy(item => new { item.Name, item.DisplayName }).OrderByDescending(group => group.Count())
-            .Select(group => new AdminExerciseTypeAnalysis(
-                string.IsNullOrWhiteSpace(group.Key.DisplayName) ? group.Key.Name : group.Key.DisplayName,
-                group.Count(), group.Select(item => item.UserId).Distinct().Count(), group.Average(item => item.SuccessRate),
-                PerformanceLevel(group.Average(item => item.SuccessRate)))).ToList();
-        var readingChart = readingRows.GroupBy(item => item.CompletedAt.Date).OrderBy(group => group.Key)
+        // H22: only measured completions make up a type's average; a type without any is "not-measured".
+        var exerciseAnalysis = exerciseRows.GroupBy(item => item.TypeName).OrderByDescending(group => group.Count())
+            .Select(group =>
+            {
+                var average = group.Average(item => item.Score);
+                return new AdminExerciseTypeAnalysis(group.Key, group.Count(), group.Select(item => item.UserId).Distinct().Count(),
+                    average is null ? null : Math.Round(average.Value, 2), average is null ? "not-measured" : PerformanceLevel(average.Value));
+            }).ToList();
+        var readingChart = readingRows.GroupBy(item => SpeedReadingReportCalendar.LocalTime(item.CompletedAt).Date).OrderBy(group => group.Key)
             .Select(group => new AdminAnalyticsChartData(group.Key.ToString("yyyy-MM-dd"), [
                 new AdminAnalyticsChartSeries("WPM", AverageMeasuredWpm(group, item => item.IsMeasured, item => item.CalculatedWpm)),
                 new AdminAnalyticsChartSeries("Anlama", AverageComprehension(group, item => item.TotalQuestions, item => item.ComprehensionRate))])).ToList();
-        var exerciseChart = exerciseRows.GroupBy(item => item.CompletedDate.Date).OrderBy(group => group.Key)
+        var exerciseChart = exerciseRows.GroupBy(item => SpeedReadingReportCalendar.LocalTime(item.CompletedDate).Date).OrderBy(group => group.Key)
             .Select(group => Chart(group.Key, "Egzersiz", group.Count())).ToList();
 
         return new AdminContentAnalysisAnalytics(
@@ -153,12 +164,14 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
         var readings = await db.ReadingSessions.AsNoTracking()
             .Where(item => item.CompletedAt >= start && item.CompletedAt <= end)
             .Select(item => new { item.CompletedAt, item.CalculatedWpm, item.IsMeasured, item.ComprehensionRate, TotalQuestions = item.IsRejected ? 0 : item.TotalQuestions, item.CorrectAnswers }).ToListAsync(cancellationToken);
-        var exercises = await db.DailyExerciseLogs.AsNoTracking().Where(item => item.CompletedDate >= start && item.CompletedDate <= end)
-            .Select(item => new { item.CompletedDate, item.SuccessRate, item.TotalAttempts, item.CorrectCount }).ToListAsync(cancellationToken);
+        // H22: shared exercise source; unmeasured completions have no score and are left out of the success rate.
+        var exercises = await ReportExercises(start, end)
+            .Select(item => new { item.IsMeasured, item.SuccessRate }).ToListAsync(cancellationToken);
         var totalActivities = readings.Count + exercises.Count;
-        var totalQuestions = readings.Sum(item => item.TotalQuestions) + exercises.Sum(item => item.TotalAttempts);
-        var correctAnswers = readings.Sum(item => item.CorrectAnswers) + exercises.Sum(item => item.CorrectCount);
-        var successRate = totalQuestions == 0 ? 0 : Math.Round((decimal)correctAnswers / totalQuestions * 100, 2);
+        var totalQuestions = readings.Sum(item => item.TotalQuestions);
+        var scores = readings.Where(item => item.TotalQuestions > 0).Select(item => item.ComprehensionRate)
+            .Concat(exercises.Where(item => item.IsMeasured).Select(item => item.SuccessRate)).ToList();
+        var successRate = scores.Count == 0 ? 0 : Math.Round(scores.Average(), 2);
         var measuredReadings = readings
             .Where(item => item.IsMeasured && item.CalculatedWpm > 0)
             .ToList();
@@ -186,11 +199,22 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
             .Where(item => item.IsActive)
             .Select(item => new { item.InstitutionId, item.UserId, item.Role })
             .ToListAsync(cancellationToken);
-        var reading = await db.ReadingSessions.AsNoTracking()
+        // H22: per-user totals are aggregated in the database; institutions are then summed from their members.
+        var readingByUser = await db.ReadingSessions.AsNoTracking()
             .Where(item => item.CompletedAt >= start && item.CompletedAt <= end)
-            .Select(item => new { item.UserId, item.CalculatedWpm, item.IsMeasured, TotalQuestions = item.IsRejected ? 0 : item.TotalQuestions, item.ComprehensionRate }).ToListAsync(cancellationToken);
-        var exercises = await db.DailyExerciseLogs.AsNoTracking().Where(item => item.CompletedDate >= start && item.CompletedDate <= end)
-            .Select(item => new { item.UserId }).ToListAsync(cancellationToken);
+            .GroupBy(item => item.UserId)
+            .Select(group => new UserTotals(
+                group.Key,
+                group.Count(),
+                group.Where(item => item.IsMeasured && item.CalculatedWpm > 0).Sum(item => (decimal)item.CalculatedWpm),
+                group.Count(item => item.IsMeasured && item.CalculatedWpm > 0),
+                group.Where(item => item.TotalQuestions > 0 && !item.IsRejected).Sum(item => item.ComprehensionRate),
+                group.Count(item => item.TotalQuestions > 0 && !item.IsRejected)))
+            .ToDictionaryAsync(item => item.UserId, cancellationToken);
+        var exercisesByUser = await ReportExercises(start, end)
+            .GroupBy(item => item.UserId)
+            .Select(group => new { UserId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.UserId, item => item.Count, cancellationToken);
         var comparisons = new List<AdminInstitutionComparison>();
         foreach (var institution in directory.Institutions)
         {
@@ -209,18 +233,17 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
                 .Distinct()
                 .Count();
             var totalUsers = totalStudents + totalTeachers;
-            var institutionReadings = reading.Where(item => studentIds.Contains(item.UserId)).ToList();
-            var activityCount = reading.Count(item => memberIds.Contains(item.UserId))
-                + exercises.Count(item => memberIds.Contains(item.UserId));
-            var activeUsers = reading.Where(item => memberIds.Contains(item.UserId)).Select(item => item.UserId)
-                .Concat(exercises.Where(item => memberIds.Contains(item.UserId)).Select(item => item.UserId)).Distinct().Count();
-            var averageWpm = AverageMeasuredWpm(institutionReadings, item => item.IsMeasured, item => item.CalculatedWpm);
-            var hasWpm = institutionReadings.Any(item => item.IsMeasured && item.CalculatedWpm > 0);
-            var averageComprehension = AverageComprehension(institutionReadings, item => item.TotalQuestions, item => item.ComprehensionRate);
-            var hasComprehension = institutionReadings.Any(item => item.TotalQuestions > 0);
-            var averagePerformance = hasWpm && hasComprehension
-                ? (averageWpm + averageComprehension) / 2
-                : hasWpm ? averageWpm : hasComprehension ? averageComprehension : 0;
+            var studentReading = studentIds.Select(id => readingByUser.GetValueOrDefault(id)).OfType<UserTotals>().ToList();
+            var activityCount = memberIds.Sum(id => (readingByUser.GetValueOrDefault(id)?.Count ?? 0) + exercisesByUser.GetValueOrDefault(id));
+            var activeUsers = memberIds.Count(id => readingByUser.ContainsKey(id) || exercisesByUser.ContainsKey(id));
+            var wpmCount = studentReading.Sum(item => item.WpmCount);
+            var comprehensionCount = studentReading.Sum(item => item.ComprehensionCount);
+            var hasWpm = wpmCount > 0;
+            var hasComprehension = comprehensionCount > 0;
+            var averageWpm = hasWpm ? studentReading.Sum(item => item.WpmSum) / wpmCount : 0;
+            var averageComprehension = hasComprehension ? studentReading.Sum(item => item.ComprehensionSum) / comprehensionCount : 0;
+            // H22 (decision 30.10.2026): institutions are compared by average comprehension; WPM stays a separate column.
+            var averagePerformance = averageComprehension;
             comparisons.Add(new AdminInstitutionComparison(
                 institution.InstitutionId,
                 institution.InstitutionName,
@@ -236,8 +259,11 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
                 Math.Round(averagePerformance, 2),
                 totalUsers == 0 ? 0 : Math.Round((decimal)activeUsers / totalUsers * 100, 2)));
         }
-        var comparisonChart = new AdminAnalyticsChartData("Kurumlar", comparisons.Select(item => new AdminAnalyticsChartSeries(item.InstitutionName, item.AveragePerformance)).ToList());
-        var top = comparisons.OrderByDescending(item => item.AveragePerformance).Take(10)
+        var comparisonChart = new AdminAnalyticsChartData("Ortalama anlama (%)", comparisons
+            .Where(item => item.AverageComprehensionDataAvailable)
+            .Select(item => new AdminAnalyticsChartSeries(item.InstitutionName, item.AverageComprehension)).ToList());
+        var top = comparisons.Where(item => item.AverageComprehensionDataAvailable)
+            .OrderByDescending(item => item.AverageComprehension).ThenByDescending(item => item.AverageWpm).Take(10)
             .Select(item => new AdminTopInstitution(item.InstitutionName, item.AverageWpm, item.AverageWpmDataAvailable,
                 item.AverageComprehension, item.AverageComprehensionDataAvailable, item.TotalStudents, item.TotalStudents > 0, item.TotalActivities)).ToList();
         return new AdminInstitutionAnalytics(
@@ -260,6 +286,10 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
                 progress.UserId,
                 progress.ProgramTemplateId,
                 ProgramName = template == null ? string.Empty : template.Name,
+                TotalDays = template == null ? 0 : template.TotalDays,
+                progress.AssignedDate,
+                progress.IsStaffTraining,
+                progress.EarlyAdvanceDays,
                 progress.CurrentWeek,
                 progress.CurrentDay,
                 progress.CurrentStreak,
@@ -292,9 +322,29 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
                 item.LastActivityDate,
                 item.DaysCompleted,
                 item.ExercisesCompleted,
-                item.IsActive);
+                item.IsActive,
+                ProgramDay(item.CurrentWeek, item.CurrentDay, item.TotalDays, item.AssignedDate, item.IsStaffTraining, item.EarlyAdvanceDays),
+                item.TotalDays);
         }).ToList());
     }
+
+    // H22: the program day students see: (week - 1) * 7 + day, never past the day the calendar has opened or the program length.
+    internal static int ProgramDay(int week, int day, int totalDays, DateTime assignedDate, bool isStaffTraining, int earlyAdvanceDays)
+    {
+        var stored = Math.Max(1, (week - 1) * 7 + day);
+        var available = SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetAvailableDay(
+            assignedDate, DateTime.UtcNow, isStaffTraining, earlyAdvanceDays);
+        var visible = Math.Min(stored, Math.Max(1, available));
+        return totalDays > 0 ? Math.Min(visible, totalDays) : visible;
+    }
+
+    private IQueryable<ReportedExercise> ReportExercises(DateTime start, DateTime end) =>
+        OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
+            .Where(item => item.CompletedDate >= start && item.CompletedDate <= end);
+
+    private sealed record ActivityPoint(Guid UserId, DateTime At, int Seconds);
+
+    private sealed record UserTotals(Guid UserId, int Count, decimal WpmSum, int WpmCount, decimal ComprehensionSum, int ComprehensionCount);
 
     private static AdminAnalyticsChartData Chart(DateTime date, string label, decimal value) =>
         new(date.ToString("yyyy-MM-dd"), [new AdminAnalyticsChartSeries(label, value)]);
@@ -327,16 +377,9 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
         _ => "low"
     };
 
-    private static (DateTime Start, DateTime End) NormalizeRange(DateTime? dateFrom, DateTime? dateTo)
-    {
-        var end = NormalizeUtc(dateTo ?? DateTime.UtcNow);
-        var start = NormalizeUtc(dateFrom ?? end.AddDays(-30));
-        if (start > end)
-            throw new BusinessRuleException("SpeedReading.Analytics.DateRange.Invalid", "Başlangıç tarihi bitiş tarihinden sonra olamaz.");
-        if ((end - start).TotalDays > MaxRangeDays)
-            throw new BusinessRuleException("SpeedReading.Analytics.DateRange.TooLarge", $"Analitik tarih aralığı en fazla {MaxRangeDays} gün olabilir.");
-        return (start, end);
-    }
+    private static (DateTime Start, DateTime End) NormalizeRange(DateTime? dateFrom, DateTime? dateTo) =>
+        // H22: calendar-day picks are whole Europe/Istanbul days.
+        SpeedReadingReportCalendar.ResolveRange(dateFrom, dateTo, DateTime.UtcNow, 30, MaxRangeDays);
 
     private static DateTime NormalizeUtc(DateTime value) => value.Kind switch
     {

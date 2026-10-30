@@ -30,8 +30,9 @@ public sealed class SpeedReadingProgramAnalyticsTests
         result.PlatformStats.TotalCompletedExercises.Should().Be(7);
         result.ProgramDistribution.Should().ContainSingle(item =>
             item.ProgramName == "Odak Programı" && item.StudentCount == 2 && item.Percentage == 100);
+        // H22: 7-day weeks; week 2 has 3 of 7 and 1 of 7 days done (28.6%).
         result.WeeklyProgress.Should().ContainSingle(item =>
-            item.WeekNumber == 2 && item.AverageProgress == 70 && item.CompletionRate == 50);
+            item.WeekNumber == 2 && item.AverageProgress == 70 && item.CompletionRate == 28.6m);
     }
 
     [Fact]

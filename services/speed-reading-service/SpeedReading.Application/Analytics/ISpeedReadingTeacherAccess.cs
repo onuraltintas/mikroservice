@@ -41,4 +41,13 @@ public interface ISpeedReadingTeacherAccess
         Guid studentUserId,
         bool isSystemAdmin = false,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// H22 (KVKK decision 30.10.2026): when the student's active membership in the institution started (UTC). Institution
+    /// reports never show activity from before it. Null when there is no active membership.
+    /// </summary>
+    Task<DateTime?> GetInstitutionMemberSinceAsync(
+        Guid institutionId,
+        Guid studentUserId,
+        CancellationToken cancellationToken = default) => Task.FromResult<DateTime?>(null);
 }

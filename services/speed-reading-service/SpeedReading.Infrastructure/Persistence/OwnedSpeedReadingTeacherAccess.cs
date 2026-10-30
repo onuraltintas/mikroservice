@@ -221,6 +221,18 @@ public sealed class OwnedSpeedReadingTeacherAccess(
             && item.IsActive, cancellationToken);
     }
 
+    public async Task<DateTime?> GetInstitutionMemberSinceAsync(
+        Guid institutionId,
+        Guid studentUserId,
+        CancellationToken cancellationToken = default) =>
+        await db.InstitutionMemberships.AsNoTracking()
+            .Where(item => item.InstitutionId == institutionId
+                && item.UserId == studentUserId
+                && item.Role == SpeedReadingInstitutionMemberRole.Student
+                && item.IsActive)
+            .Select(item => (DateTime?)item.CreatedAt)
+            .MinAsync(cancellationToken);
+
     private async Task<bool> CanManageInstitutionAsync(
         Guid viewerUserId,
         Guid institutionId,

@@ -81,9 +81,11 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
   loadOverview(): void {
     const requestVersion = ++this.overviewRequestVersion;
     const dateTo = new Date();
-    const dateFrom = new Date(dateTo);
-    dateFrom.setUTCDate(dateFrom.getUTCDate() - 29);
-    dateFrom.setUTCHours(0, 0, 0, 0);
+    // H22: the 30-day window starts at 00:00 Europe/Istanbul (UTC+3), not 00:00 UTC.
+    const istanbulNow = new Date(dateTo.getTime() + 3 * 3_600_000);
+    istanbulNow.setUTCDate(istanbulNow.getUTCDate() - 29);
+    istanbulNow.setUTCHours(0, 0, 0, 0);
+    const dateFrom = new Date(istanbulNow.getTime() - 3 * 3_600_000);
     this.isOverviewLoading.set(true);
     this.overviewErrorMessage.set(null);
     this.service.getClassOverview(dateFrom, dateTo).subscribe({

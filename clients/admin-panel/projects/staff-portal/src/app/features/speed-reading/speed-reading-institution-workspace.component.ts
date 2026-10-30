@@ -29,10 +29,13 @@ type MemberStatusChange = {
 };
 type InstitutionReportTab = 'assignments' | 'content' | 'progress';
 
+// H22 (report audit 30.10.2026): report days are Europe/Istanbul days (UTC+3 all year since 2016).
+const ISTANBUL_DATE = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' });
+
 function utcDateInput(daysAgo: number): string {
   const date = new Date();
   date.setUTCDate(date.getUTCDate() - daysAgo);
-  return date.toISOString().slice(0, 10);
+  return ISTANBUL_DATE.format(date);
 }
 
 @Component({
@@ -383,8 +386,8 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
 
   private parseUtcDate(value: string, endOfDay: boolean): Date | null {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-    const date = new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`);
-    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : null;
+    const date = new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}+03:00`);
+    return !Number.isNaN(date.getTime()) && ISTANBUL_DATE.format(date) === value ? date : null;
   }
 
   searchInstitutionTeachers(): void {

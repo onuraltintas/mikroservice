@@ -84,6 +84,7 @@ public sealed class InstitutionAnalyticsController(
     {
         if (!await CanReadStudentAsync(institutionId, studentId, cancellationToken))
             return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        dateFrom = await MembershipStartAsync(institutionId, studentId, dateFrom, cancellationToken);
 
         return Ok(await analytics.GetStudentSummaryAsync(studentId, dateFrom, dateTo, cancellationToken));
     }
@@ -98,6 +99,7 @@ public sealed class InstitutionAnalyticsController(
     {
         if (!await CanReadStudentAsync(institutionId, studentId, cancellationToken))
             return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        dateFrom = await MembershipStartAsync(institutionId, studentId, dateFrom, cancellationToken);
 
         return Ok(await analytics.GetStudentSeriesAsync(studentId, dateFrom, dateTo, cancellationToken));
     }
@@ -112,6 +114,7 @@ public sealed class InstitutionAnalyticsController(
     {
         if (!await CanReadStudentAsync(institutionId, studentId, cancellationToken))
             return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        dateFrom = await MembershipStartAsync(institutionId, studentId, dateFrom, cancellationToken);
 
         return Ok(await analytics.GetStudentReadingSpeedAsync(studentId, dateFrom, dateTo, institutionId, cancellationToken));
     }
@@ -126,6 +129,7 @@ public sealed class InstitutionAnalyticsController(
     {
         if (!await CanReadStudentAsync(institutionId, studentId, cancellationToken))
             return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        dateFrom = await MembershipStartAsync(institutionId, studentId, dateFrom, cancellationToken);
 
         return Ok(await analytics.GetStudentComprehensionAsync(studentId, dateFrom, dateTo, institutionId, cancellationToken));
     }
@@ -140,6 +144,7 @@ public sealed class InstitutionAnalyticsController(
     {
         if (!await CanReadStudentAsync(institutionId, studentId, cancellationToken))
             return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        dateFrom = await MembershipStartAsync(institutionId, studentId, dateFrom, cancellationToken);
 
         return Ok(await analytics.GetStudentActivityAsync(studentId, dateFrom, dateTo, cancellationToken));
     }
@@ -171,6 +176,17 @@ public sealed class InstitutionAnalyticsController(
                 studentId,
                 User.IsInRole("SystemAdmin"),
                 cancellationToken);
+    }
+
+    // H22 (KVKK decision 30.10.2026): institution reports cover only the student's membership period in this institution.
+    private async Task<DateTime?> MembershipStartAsync(
+        Guid institutionId,
+        Guid studentId,
+        DateTime? dateFrom,
+        CancellationToken cancellationToken)
+    {
+        var since = await teacherAccess.GetInstitutionMemberSinceAsync(institutionId, studentId, cancellationToken);
+        return since is null ? dateFrom : SpeedReadingReportCalendar.NotBefore(dateFrom, since.Value, DateTime.UtcNow, 30);
     }
 
     private Guid? GetCurrentUserId()
