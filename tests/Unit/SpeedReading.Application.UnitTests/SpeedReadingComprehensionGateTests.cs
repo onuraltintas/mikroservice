@@ -109,7 +109,7 @@ public sealed class SpeedReadingComprehensionGateTests
 
         await Paths(db).GeneratePersonalizedPathAsync(student);
 
-        (await db.PersonalizedLearningPathItems.Select(item => item.Title).ToListAsync()).Should().Equal("Bağımsız");
+        (await db.PersonalizedLearningPathItems.Select(item => item.ContentTitle).ToListAsync()).Should().Equal("Bağımsız");
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public sealed class SpeedReadingComprehensionGateTests
 
         await Paths(db).GeneratePersonalizedPathAsync(student);
 
-        (await db.PersonalizedLearningPathItems.Select(item => item.Title).ToListAsync()).Should().Equal("Normal anlama");
+        (await db.PersonalizedLearningPathItems.Select(item => item.ContentTitle).ToListAsync()).Should().Equal("Normal anlama");
     }
 
     [Fact]
