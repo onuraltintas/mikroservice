@@ -3,7 +3,7 @@ import { CanActivateChildFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { canUseStaffTraining } from './staff-training.guard';
 
-const previewPaths = new Set(['exercises', 'exercises/universal-player/:exerciseId', 'attention-preview']);
+const previewPaths = new Set(['exercises', 'exercises/universal-player/:exerciseId']);
 
 export const studentPageGuard: CanActivateChildFn = child => {
   const auth = inject(AuthService);
