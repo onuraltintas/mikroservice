@@ -70,8 +70,8 @@ export class WordHighlightEngine implements BaseEngine {
 
     private static readonly TEXT_POOL = [
         "Hızlı okuma becerisi, bilgi çağında hayati bir yetenektir.",
-        "Göz kaslarını geliştirmek için düzenli egzersiz yapmak gerekir.",
-        "Periferik görüş alanını genişleterek daha fazla kelime görebilirsiniz.",
+        "Kelimeleri anlamlı öbekler hâlinde okumak akıcılığı artırır.",
+        "Bol ve düzenli okumak kelime bilgisini ve anlamayı geliştirir.",
         "Odaklanma süresini artırmak, okuma verimliliğini doğrudan etkiler.",
         "Beyin, görsel bilgiyi işleme konusunda olağanüstü bir kapasiteye sahiptir."
     ];
