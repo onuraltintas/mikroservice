@@ -71,6 +71,30 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
         Assert.NotEmpty((await analytics.GetStudentSeriesAsync(user, now.AddDays(-1), now.AddDays(1))).ActiveSeries);
     }
 
+    // H15: the comprehension gate reads question-bearing sessions through the jsonb answer column.
+    [Fact]
+    public async Task Week_comprehension_reads_only_sessions_that_asked_questions_on_postgres()
+    {
+        await using var db = Open(); await Reset(db);
+        var user = Guid.NewGuid(); var now = DateTime.UtcNow;
+        var type = ExerciseType.Create(Guid.NewGuid(), "Comprehension", "Anlama", "reading_comprehension");
+        var exercise = Exercise.Create("Anlama", "reading_comprehension", "{}", 1, user, type.Id);
+        var text = ReadingText.Create(Guid.NewGuid(), "Metin", "Bir metin burada okunur.", difficultyLevel: 1);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); db.ReadingTexts.Add(text);
+        var sessions = new List<Guid>();
+        foreach (var (comprehension, answers, withText) in new[] { (90m, """[{"IsCorrect":true}]""", true), (70m, """[{"IsCorrect":false}]""", true), (0m, "[]", true), (0m, "[]", false) })
+        {
+            var session = ExerciseSession.Start(user, exercise.Id, null, 1, now.AddMinutes(-1), null);
+            session.Complete(now); db.ExerciseSessions.Add(session); sessions.Add(session.Id);
+            db.ExerciseSessionResults.Add(ExerciseSessionResult.Create(Guid.NewGuid(), session.Id, user, exercise.Id,
+                withText ? text.Id : null, 10, 60, 100, comprehension, 0, comprehension, now, answers));
+        }
+        await db.SaveChangesAsync();
+        var evidence = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingComprehensionEvidence")!;
+        var average = await (Task<decimal?>)evidence.GetMethod("AverageAskedComprehensionAsync")!.Invoke(null, [db, user, sessions, CancellationToken.None])!;
+        Assert.Equal(80m, average);
+    }
+
     private static async Task Reset(OwnedSpeedReadingDbContext db)
     {
         await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
