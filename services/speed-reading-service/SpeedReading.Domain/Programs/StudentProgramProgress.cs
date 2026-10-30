@@ -194,14 +194,17 @@ public sealed class StudentProgramProgress : AggregateRoot
         if (actorId == Guid.Empty)
             throw new ArgumentException("Student program actor is required.", nameof(actorId));
 
-        var adjustedDifficulty = Math.Clamp(
-            CurrentDifficultyLevel + difficultyAdjustment,
-            template.InitialDifficultyLevel,
-            template.MaxDifficultyLevel);
+        // H15 (finding D): the offset stays inside the program's real range (level 1 … max), so a step down after earlier
+        // steps up is never swallowed, and the shown level is the level the exercises are actually chosen at.
+        var lowestOffset = Math.Min(0, 1 - template.InitialDifficultyLevel);
+        var highestOffset = Math.Max(0, template.MaxDifficultyLevel - template.InitialDifficultyLevel);
         var adjustedOffset = Math.Clamp(
-            AdaptiveDifficultyOffset + difficultyAdjustment,
-            -template.MaxDifficultyLevel,
-            template.MaxDifficultyLevel);
+            Math.Clamp(AdaptiveDifficultyOffset, lowestOffset, highestOffset) + difficultyAdjustment,
+            lowestOffset,
+            highestOffset);
+        var adjustedDifficulty = template.WeeksPerDifficultyIncrease > 0
+            ? Math.Clamp(CurrentDifficultyLevel + (adjustedOffset - AdaptiveDifficultyOffset), 1, Math.Max(1, template.MaxDifficultyLevel))
+            : Math.Clamp(template.InitialDifficultyLevel + adjustedOffset, 1, Math.Max(1, template.MaxDifficultyLevel));
         if (adjustedDifficulty == CurrentDifficultyLevel
             && adjustedOffset == AdaptiveDifficultyOffset)
             return false;
