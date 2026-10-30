@@ -295,7 +295,12 @@ internal sealed class OwnedSpeedReadingPrograms(
                 foreach (var activeProgram in activePrograms)
                     activeProgram.Deactivate(actorId, now);
 
-                progress.Reset(actorId, now);
+                var template = await db.ProgramTemplates.SingleAsync(item => item.Id == progress.ProgramTemplateId, cancellationToken);
+                progress.Reset(template, actorId, now);
+                // H18 (finding 10): the schedule starts again at the program's own level.
+                if (progress.ScheduleJson is not null)
+                    progress.ReplaceSchedule(await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken),
+                        actorId, now);
                 await db.SaveChangesAsync(cancellationToken);
                 if (transaction is not null)
                     await transaction.CommitAsync(cancellationToken);

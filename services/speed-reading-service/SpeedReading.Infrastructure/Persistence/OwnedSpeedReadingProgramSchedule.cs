@@ -129,19 +129,21 @@ internal static class OwnedSpeedReadingProgramSchedule
     }
 
     /// <summary>
-    /// Review H5 (finding 19): after a finished week, moves the difficulty by the week's measured average and
-    /// re-selects the exercises of the remaining weeks. Finished weeks keep their exercises.
+    /// Review H5 (finding 19): after a finished week, moves the difficulty by the week's measured average (up only when
+    /// comprehension held, H15) and re-selects the exercises of the remaining weeks. Finished weeks keep their exercises;
+    /// the remaining days take the template's current task list, so a revised template's daily count applies.
     /// </summary>
     public static async Task<bool> AdaptAfterWeekAsync(
         OwnedSpeedReadingDbContext db,
         StudentProgramProgress progress,
         ProgramTemplate template,
         decimal? finishedWeekAverage,
+        decimal? finishedWeekComprehension,
         Guid actorId,
         DateTime at,
         CancellationToken cancellationToken)
     {
-        var step = SpeedReadingDailyProgressRules.WeeklyDifficultyStep(finishedWeekAverage);
+        var step = SpeedReadingDailyProgressRules.WeeklyDifficultyStep(finishedWeekAverage, finishedWeekComprehension);
         if (step == 0 || progress.CompletedDate.HasValue || !progress.IsActive
             || !progress.ApplyAdaptiveDifficultyAdjustment(step, template, actorId, at))
             return false;

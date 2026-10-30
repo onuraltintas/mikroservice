@@ -142,6 +142,29 @@ public sealed class ComprehensionModesTests
         Assert.Equal(0m, (await adaptive.GetProfileAsync(user)).AverageComprehension);
     }
 
+    // Decision 30.10.2026 (2b): learning-mode texts count toward the ≥80 comprehension gate and the learning path, scored on
+    // the student's first answer — the answer given before the correct answer and explanation are shown.
+    [Fact]
+    public async Task Learning_mode_is_comprehension_evidence_scored_on_the_first_answer()
+    {
+        await using var db = Context();
+        var (service, user, exercise) = await Seed(db, "learning");
+        var started = await service.StartAsync(user, new() { ExerciseId = exercise });
+        await FinishReading(db, service, user, started.SessionId);
+        var id = started.InitialData.GetProperty("questions")[0].GetProperty("questionId").GetGuid();
+        var first = await service.ValidateActionAsync(user, started.SessionId,
+            new() { Action = "answer_question", QuestionId = id, Answer = "B" });
+        Assert.Equal("A", first.CorrectAnswer);
+        await service.ValidateActionAsync(user, started.SessionId, new() { Action = "answer_question", QuestionId = id, Answer = "A" });
+        await service.CompleteAsync(user, started.SessionId, new());
+
+        var evidence = typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingComprehensionEvidence")!;
+        var average = await (Task<decimal?>)evidence.GetMethod("AverageAskedComprehensionAsync")!
+            .Invoke(null, [db, user, new List<Guid> { started.SessionId }, CancellationToken.None])!;
+        Assert.Equal(0m, average);
+    }
+
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 

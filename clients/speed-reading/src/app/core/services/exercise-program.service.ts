@@ -67,6 +67,8 @@ export interface CompleteExerciseResponse {
   recommendedNextProgram?: RecommendedProgramDto;
   completionStats?: ProgramCompletionStats;
   adaptationUpdated?: boolean;
+  difficultyDecreased?: boolean;
+  learningPathCreated?: boolean;
 }
 
 export interface RecommendedProgramDto {
