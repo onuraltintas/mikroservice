@@ -288,6 +288,21 @@ docker compose --env-file .env \
   up -d --no-build
 ```
 
+### İmajlar GitHub'da derlenir (30.10.2026)
+
+2 çekirdekli sunucuda admin-panel derlemesi belleğin %87'sine çıktığı için imajlar artık sunucuda derlenmez.
+
+- `.github/workflows/production-images.yml`, `main` üzerindeki her başarılı CI çalışmasından sonra 8 uygulama imajını derler. İmajlar GHCR'ye `ghcr.io/<owner>/eduivme/<servis>:<7 karakterli commit>` adıyla gönderilir.
+- Sunucu imajları yalnız çeker. Bunun için:
+  - bir kez `docker login ghcr.io` yapılır (yalnız `read:packages` yetkili bir token ile);
+  - `.env` içinde `PRODUCTION_IMAGE_REPOSITORY=ghcr.io/<owner>/eduivme` tanımlanır.
+- Yayın akışı:
+  1. CI ve "Production images" iş akışının yeşil olduğu görülür.
+  2. `infrastructure/scripts/pull-release-images.sh <tag>` çalıştırılır. Betik 8 imajın hepsini ve her birinin hangi commit'ten derlendiğini doğrular; eksik ya da yanlış commit'te durur ve hiçbir container'a dokunmaz.
+  3. Migration'lar `run --rm` ile çalıştırılır.
+  4. Servisler `up -d --no-deps --no-build --pull never <servis>` ile değiştirilir.
+- Yukarıdaki sunucuda `build --pull` adımı yalnız GHCR'ye erişilemediğinde, son çare olarak kullanılır.
+
 Deploy öncesinde yalnızca Eduİvme vhost ve edge dosyalarının yedeğini alın;
 diğer sitelerin vhost/listener dosyalarına dokunmayın. Geri alma sırasında
 önceki vhost yedeğini geri yükleyip `lshttpd -t` ve `lswsctrl reload` çalıştırın.

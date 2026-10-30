@@ -3090,7 +3090,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
 
     if (engineType === 'visual_expansion') {
-      return 'Görüş Alanı Genişletme';
+      return 'Görsel Genişleme';
     }
 
     if (engineType === 'scan_find') {
