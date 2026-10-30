@@ -731,8 +731,9 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     const request = http.expectOne(
       (candidate) =>
         candidate.url === '/api/speed-reading/analytics/institutions/institution-1/assignments' &&
-        candidate.params.get('dateFrom') === '2026-09-01T00:00:00.000Z' &&
-        candidate.params.get('dateTo') === '2026-09-30T23:59:59.999Z',
+        // H22: picked days are whole Europe/Istanbul days (UTC+3).
+        candidate.params.get('dateFrom') === '2026-08-31T21:00:00.000Z' &&
+        candidate.params.get('dateTo') === '2026-09-30T20:59:59.999Z',
     );
     expect(request.request.method).toBe('GET');
     request.flush({

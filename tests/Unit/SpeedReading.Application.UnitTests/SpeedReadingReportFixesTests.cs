@@ -285,16 +285,14 @@ public sealed class SpeedReadingReportFixesTests
     }
 
     [Fact]
-    public void The_unused_client_supplied_report_export_endpoint_is_removed()
+    public void Report_files_are_made_only_from_stored_snapshots_not_client_supplied_data()
     {
-        var controller = typeof(OwnedSpeedReadingDbContext).Assembly.GetReferencedAssemblies()
-            .Select(Assembly.Load).Concat([typeof(InstitutionAnalyticsController).Assembly])
-            .SelectMany(assembly => assembly.GetTypes())
-            .FirstOrDefault(type => type.Name == "ReportsController");
-        if (controller is null) return;
-        controller.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
-            .Select(method => method.Name)
-            .Should().NotContain(name => name.Contains("Export", StringComparison.OrdinalIgnoreCase));
+        var actions = typeof(ReportsController).GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+        actions.Select(method => method.Name).Should().NotContain(["ExportPdf", "ExportExcel"]);
+        actions.Should().NotContain(method => method.GetParameters().Any(parameter =>
+            parameter.ParameterType == typeof(System.Text.Json.JsonElement?)
+            && parameter.GetCustomAttribute<FromBodyAttribute>() != null));
+        actions.Should().Contain(method => method.Name == "ExportSnapshot");
     }
 
     [Fact]

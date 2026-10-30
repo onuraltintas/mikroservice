@@ -6,16 +6,13 @@ import { SpeedReadingAdminService, SpeedReadingReportSnapshot } from '../../../c
 import { SpeedReadingReportsComponent } from './speed-reading-reports';
 
 describe('SpeedReadingReportsComponent', () => {
-  it('loads snapshot data and exports it in the selected format', () => {
+  it('exports the stored snapshot on the server in the selected format', () => {
     const service = {
       getReportTemplates: vi.fn(() => of([])),
       getScheduledReports: vi.fn(() => of([])),
       getReportSnapshots: vi.fn(() => of([])),
-      getReportSnapshot: vi.fn(() => of({
-        dataJson: JSON.stringify({ completedExercises: 4 }),
-        dataJsonTruncated: false
-      })),
-      exportReport: vi.fn(() => of(new Blob(['pdf'], { type: 'application/pdf' })))
+      getReportSnapshot: vi.fn(),
+      exportReportSnapshot: vi.fn(() => of(new Blob(['pdf'], { type: 'application/pdf' })))
     };
     const auth = { hasPermission: vi.fn(() => true) };
 
@@ -44,13 +41,8 @@ describe('SpeedReadingReportsComponent', () => {
 
     component.exportSnapshot(snapshot, 'pdf');
 
-    expect(service.getReportSnapshot).toHaveBeenCalledWith('snapshot-1');
-    expect(service.exportReport).toHaveBeenCalledWith('pdf', {
-      reportType: 'İlerleme',
-      title: 'İlerleme',
-      startDate: '2026-08-01T00:00:00Z',
-      endDate: '2026-09-01T00:00:00Z',
-      data: { completedExercises: 4 }
-    });
+    expect(service.exportReportSnapshot).toHaveBeenCalledWith('snapshot-1', 'pdf');
+    expect(service.getReportSnapshot).not.toHaveBeenCalled();
+    expect(component.downloadBlob).toHaveBeenCalled();
   });
 });

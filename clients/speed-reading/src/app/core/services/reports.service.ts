@@ -33,7 +33,6 @@ import {
 export class ReportsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/v1/reports`;
-  private reportExportApiUrl = `${environment.speedReadingApiUrl}/reports`;
   private speedReadingApiUrl = `${environment.speedReadingApiUrl}/analytics`;
 
   // ==================== STUDENT REPORTS ====================
@@ -301,16 +300,6 @@ export class ReportsService {
       `${this.speedReadingApiUrl}/admin/system-health`,
       { params })
       .pipe(map(value => this.toAdminSystemHealthReport(value)));
-  }
-
-  // ==================== EXPORT ====================
-
-  exportReportToPdf(reportData: any): Observable<Blob> {
-    return this.http.post(`${this.reportExportApiUrl}/export/pdf`, reportData, { responseType: 'blob' });
-  }
-
-  exportReportToExcel(reportData: any): Observable<Blob> {
-    return this.http.post(`${this.reportExportApiUrl}/export/excel`, reportData, { responseType: 'blob' });
   }
 
   private normalizeAnalyticsStart(startDate: Date, endDate: Date): Date {
