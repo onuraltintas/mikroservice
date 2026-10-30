@@ -79,7 +79,9 @@ public sealed record CompleteDailyExerciseResponse(
     bool ProgramCompleted,
     RecommendedProgramSummary? RecommendedNextProgram,
     ProgramCompletionStats? CompletionStats,
-    bool AdaptationUpdated = false);
+    bool AdaptationUpdated = false,
+    bool DifficultyDecreased = false,
+    bool LearningPathCreated = false);
 
 public sealed record StudentProgressSummary(
     int CurrentWeek,
@@ -334,6 +336,22 @@ public static class SpeedReadingDailyProgressRules
         >= 80 when weekComprehension >= 80 => 1,
         _ => 0
     };
+
+    /// <summary>H18 (finding 8): the completion message names what actually changed — the weekly level step and/or a new
+    /// support path — instead of one message for both.</summary>
+    public static string CompletionMessage(bool programCompleted, int oldLevel, int newLevel, bool learningPathCreated)
+    {
+        if (programCompleted)
+            return "Program başarıyla tamamlandı.";
+        var changes = new List<string>();
+        if (newLevel > oldLevel)
+            changes.Add($"Geçen haftaki başarına göre seviyen {newLevel} oldu.");
+        else if (newLevel < oldLevel)
+            changes.Add($"Geçen haftaki sonuçlarına göre seviyen {newLevel} olarak ayarlandı.");
+        if (learningPathCreated)
+            changes.Add("Son anlama sonuçlarına göre sana destek çalışmaları hazırlandı.");
+        return changes.Count == 0 ? "Egzersiz başarıyla tamamlandı." : "Egzersiz tamamlandı. " + string.Join(" ", changes);
+    }
 
     public static int ResolveExerciseDifficulty(
         int configuredDifficulty,

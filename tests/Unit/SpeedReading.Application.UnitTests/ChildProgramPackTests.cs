@@ -60,6 +60,8 @@ public sealed class ChildProgramPackTests
         for (var day = 1; day <= 14; day++)
             progress.ApplyExerciseCompletion(80, false, 1, 1, template, actor, DateTime.UtcNow.AddDays(day));
         Assert.Equal(3, progress.CurrentWeek);
-        Assert.Equal(Math.Min(level + 1, 5), progress.CurrentDifficultyLevel);
+        // H18 (finding 7): the week-3 step of this historical pack comes from its pattern (asserted above); the program level
+        // shown to the student moves only with the weekly result, not with the calendar.
+        Assert.Equal(level, progress.CurrentDifficultyLevel);
     }
 }

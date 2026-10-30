@@ -95,7 +95,8 @@ public sealed class SpeedReadingAssessmentProgramCyclePostgresTests(PostgresFixt
                 // The decision must wait until the concurrently held assignment lock is released.
                 Assert.NotSame(pending, await Task.WhenAny(pending, Task.Delay(500)));
                 var changedProgram = await assignmentDb.StudentProgramProgresses.SingleAsync(item => item.Id == latest.Id);
-                changedProgram.Reset(user, DateTime.UtcNow);
+                changedProgram.Reset(await assignmentDb.ProgramTemplates.SingleAsync(item => item.Id == changedProgram.ProgramTemplateId),
+                    user, DateTime.UtcNow);
                 await assignmentDb.SaveChangesAsync();
                 await assignmentTransaction.CommitAsync();
                 await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => pending);

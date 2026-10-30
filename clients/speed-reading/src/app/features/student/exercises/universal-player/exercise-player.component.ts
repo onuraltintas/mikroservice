@@ -63,6 +63,7 @@ import {
   ValidationResponse
 } from '../../../../core/models/exercise-session.model';
 import { toCompleteSessionRequest } from '../../../../core/services/exercise-session-completion';
+import { completionLevelToast } from './completion-toasts';
 
 interface ExerciseData {
   id: string;
@@ -3949,10 +3950,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           }, 2000);
         }
 
-        if (response.adaptationUpdated) {
+        const levelToast = completionLevelToast(response);
+        if (levelToast) {
+          setTimeout(() => this.showToast(levelToast, 'info', 5000), 2000);
+        }
+        if (response.learningPathCreated ?? response.adaptationUpdated) {
           setTimeout(() => {
-            this.showToast('Son ölçümlerinize göre egzersiz seviyeniz ve öğrenme yolunuz güncellendi.', 'info', 5000);
-          }, 2000);
+            this.showToast('Son anlama sonuçlarına göre sana destek çalışmaları hazırlandı. Öğrenme yolundan ulaşabilirsin.', 'info', 5000);
+          }, 4000);
         }
       },
       error: (err) => {

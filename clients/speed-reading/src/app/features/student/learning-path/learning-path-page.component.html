@@ -15,8 +15,13 @@
     @if (!loading && !availability?.isAvailable && !error) {
     <div class="sp-card empty-state"><div class="sp-card-content">
         <span class="material-icons">lock_clock</span>
+        @if (availability?.hasProgram === false) {
+        <h2>Önce bir programa başla</h2>
+        <p>Kişisel öğrenme yolu, bir hızlı okuma programında 7 gün tamamlandıktan sonra açılır. Henüz bir programın yok.</p>
+        } @else {
         <h2>İlk haftanı tamamla</h2>
         <p>Kişisel öğrenme yolu, ana programında 7 gün tamamlandıktan sonra açılır. Şu ana kadar {{ availability?.completedProgramDays ?? 0 }} gün tamamladın.</p>
+        }
     </div></div>
     }
     @if (!loading && error) {
