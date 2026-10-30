@@ -18,8 +18,7 @@ public sealed class SpeedReadingExportAndMfaMetadataTests
     }
 
     [Theory]
-    [InlineData(typeof(ReportsController), "ExportPdf")]
-    [InlineData(typeof(ReportsController), "ExportExcel")]
+    [InlineData(typeof(ReportsController), "ExportSnapshot")]
     [InlineData(typeof(ReadingTextsController), "ExportToPdf")]
     [InlineData(typeof(ReadingTextsController), "ExportToDocx")]
     [InlineData(typeof(ReadingTextsController), "ExportMultipleToPdf")]

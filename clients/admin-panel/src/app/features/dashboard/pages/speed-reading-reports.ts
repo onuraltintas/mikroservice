@@ -2,13 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, finalize, switchMap } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import {
   SpeedReadingAdminService,
   SpeedReadingReportSnapshot,
-  SpeedReadingReportSnapshotDetail,
   SpeedReadingReportTemplate,
   SpeedReadingReportTemplateCreateRequest,
   SpeedReadingReportTemplateUpdateRequest,
@@ -162,14 +161,7 @@ export class SpeedReadingReportsComponent implements OnInit {
   exportSnapshot(snapshot: SpeedReadingReportSnapshot, format: 'pdf' | 'excel'): void {
     this.saving.set(true);
     this.error.set('');
-    this.service.getReportSnapshot(snapshot.id).pipe(
-      switchMap(detail => this.service.exportReport(format, {
-        reportType: snapshot.reportTemplateName,
-        title: snapshot.reportTemplateName,
-        startDate: snapshot.reportStartDate,
-        endDate: snapshot.reportEndDate,
-        data: this.parseSnapshotData(detail)
-      })),
+    this.service.exportReportSnapshot(snapshot.id, format).pipe(
       finalize(() => this.saving.set(false))
     ).subscribe({
       next: blob => this.downloadBlob(blob, `hizli-okuma-${format}-${new Date().toISOString().slice(0, 10)}.${format === 'pdf' ? 'pdf' : 'xlsx'}`),
@@ -185,15 +177,6 @@ export class SpeedReadingReportsComponent implements OnInit {
     link.download = fileName;
     link.click();
     URL.revokeObjectURL(url);
-  }
-
-  private parseSnapshotData(detail: SpeedReadingReportSnapshotDetail): unknown {
-    if (detail.dataJsonTruncated || !detail.dataJson.trim()) return {};
-    try {
-      return JSON.parse(detail.dataJson);
-    } catch {
-      return { rawData: detail.dataJson };
-    }
   }
 
   private reportTypeValue(type: string): number {

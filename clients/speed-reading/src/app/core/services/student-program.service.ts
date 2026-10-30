@@ -195,13 +195,12 @@ export class StudentProgramService {
   }
 
   /**
-   * Helper: Calculate progress percentage
+   * Weekly progress: the share of this program week's 7 days already completed (H22, report audit 30.10.2026).
    */
   getProgressPercentage(program: StudentProgramInfo): number {
-    // Assuming each week has 7 days
-    const estimatedTotalDays = program.currentWeek * 7;
-    if (estimatedTotalDays === 0) return 0;
-    return Math.min(100, Math.round((program.totalDaysCompleted / estimatedTotalDays) * 100));
+    const week = Math.max(1, program.currentWeek || 1);
+    const doneThisWeek = Math.min(7, Math.max(0, (program.totalDaysCompleted || 0) - (week - 1) * 7));
+    return Math.round((doneThisWeek / 7) * 100);
   }
 
   /**

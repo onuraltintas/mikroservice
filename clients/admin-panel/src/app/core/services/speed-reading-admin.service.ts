@@ -72,7 +72,7 @@ export interface AdminContentAnalysisAnalytics {
   contentGaps: string[];
   popularTopics: string[];
   readingAnalysis: { difficultyLevel: number; totalReads: number; averageWpm: number; averageComprehension: number }[];
-  exerciseAnalysis: { exerciseTypeName: string; totalCompletions: number; activeStudents: number; averageScore: number; performanceLevel: string }[];
+  exerciseAnalysis: { exerciseTypeName: string; totalCompletions: number; activeStudents: number; averageScore: number | null; performanceLevel: string }[];
   readingPerformanceChart: AdminAnalyticsChartData[];
   exerciseFrequencyChart: AdminAnalyticsChartData[];
 }
@@ -132,7 +132,7 @@ export interface SpeedReadingProgramAnalytics {
   platformStats: { totalActiveStudents: number; averageSuccessRate: number; averageCurrentStreak: number; totalCompletedExercises: number };
   programDistribution: { programName: string; studentCount: number; percentage: number }[];
   weeklyProgress: { weekNumber: number; averageProgress: number; completionRate: number }[];
-  recentStudentProgress: { studentName: string; studentEmail: string; programName: string; currentWeek: number; currentDay: number; currentStreak: number; longestStreak: number; successRate: number; difficultyLevel: number; lastActivityDate: string }[];
+  recentStudentProgress: { studentName: string; studentEmail: string; programName: string; currentWeek: number; currentDay: number; currentStreak: number; longestStreak: number; successRate: number; difficultyLevel: number; lastActivityDate: string; programDay?: number; totalDays?: number }[];
 }
 
 export interface SpeedReadingTeacherStudentPerformance {
@@ -178,7 +178,7 @@ export interface SpeedReadingTeacherAssignmentAnalytics {
 export interface SpeedReadingTeacherContentAnalysisAnalytics {
   dateFrom: string;
   dateTo: string;
-  exerciseAnalysis: { exerciseTypeName: string; totalCompletions: number; activeStudents: number; averageScore: number; performanceLevel: string }[];
+  exerciseAnalysis: { exerciseTypeName: string; totalCompletions: number; activeStudents: number; averageScore: number | null; performanceLevel: string }[];
   exerciseFrequencyChart: AdminAnalyticsChartData[];
   readingAnalysis: { difficultyLevel: number; totalReads: number; averageWpm: number; averageComprehension: number }[];
   readingPerformanceChart: AdminAnalyticsChartData[];
@@ -205,6 +205,8 @@ export interface AdminStudentProgressSummary {
   studentName?: string | null;
   studentEmail?: string | null;
   programTemplateName?: string | null;
+  programDay?: number;
+  totalDays?: number;
 }
 
 export interface AdminStudentProgressDetails {
@@ -223,6 +225,7 @@ export interface AdminStudentProgressDetails {
     averageSuccessRate: number;
     currentStreak: number;
     longestStreak: number;
+    totalDays?: number;
   };
   recentLogs: {
     id: string;
@@ -238,6 +241,7 @@ export interface AdminStudentProgressDetails {
     attemptNumber: number;
     isRetry: boolean;
     devicePlatform: string;
+    programDay?: number;
     correctCount: number;
     incorrectCount: number;
     totalAttempts: number;
@@ -2158,8 +2162,9 @@ export class SpeedReadingAdminService {
     );
   }
 
-  exportReport(format: 'pdf' | 'excel', data: unknown) {
-    return this.http.post(`${this.url}/reports/export/${format}`, data, { responseType: 'blob' });
+  /** H22: the file is made on the server from the stored snapshot; no report content is sent. */
+  exportReportSnapshot(snapshotId: string, format: 'pdf' | 'excel') {
+    return this.http.get(`${this.url}/reports/snapshots/${encodeURIComponent(snapshotId)}/export/${format}`, { responseType: 'blob' });
   }
 
   getCapabilities() {

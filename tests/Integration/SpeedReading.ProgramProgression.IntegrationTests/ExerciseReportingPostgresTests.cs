@@ -128,4 +128,11 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
         await using var db = Open(); await Reset(db);
         await ExerciseReportingScenario.LegacyAndAdaptive(db);
     }
+
+    [Fact]
+    public async Task Admin_and_institution_reports_run_with_istanbul_days_shared_sources_and_membership_floor_on_postgres()
+    {
+        await using var db = Open(); await Reset(db);
+        await ReportFixesScenario.Run(db);
+    }
 }

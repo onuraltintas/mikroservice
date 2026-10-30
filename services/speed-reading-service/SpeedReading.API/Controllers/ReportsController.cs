@@ -192,42 +192,56 @@ public sealed class ReportsController(
         return NoContent();
     }
 
-    [HttpPost("export/pdf")]
+    // H22 (decision 30.10.2026): files are made only from a report snapshot stored on the server for this user. The former
+    // export endpoints rendered whatever JSON the client posted, so a file could disagree with the real report.
+    [HttpGet("snapshots/{snapshotId:guid}/export/{format}")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
     [EnableRateLimiting("document-export")]
-    public IActionResult ExportPdf([FromBody] JsonElement? reportData)
+    public async Task<IActionResult> ExportSnapshot(
+        Guid snapshotId,
+        string format,
+        CancellationToken cancellationToken = default)
     {
-        try
+        if (!TryGetCurrentUserId(out var userId))
         {
-            var request = SpeedReadingReportExportRules.Normalize(reportData);
-            return File(
-                exporter.GeneratePdf(request),
-                "application/pdf",
-                $"speed-reading-report-{DateTime.UtcNow:yyyyMMdd}.pdf");
+            return Unauthorized();
         }
-        catch (ArgumentOutOfRangeException exception)
-        {
-            return BadRequest(new { success = false, message = exception.Message });
-        }
-    }
 
-    [HttpPost("export/excel")]
-    [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
-    [EnableRateLimiting("document-export")]
-    public IActionResult ExportExcel([FromBody] JsonElement? reportData)
-    {
-        try
+        var pdf = string.Equals(format, "pdf", StringComparison.OrdinalIgnoreCase);
+        if (!pdf && !string.Equals(format, "excel", StringComparison.OrdinalIgnoreCase))
         {
-            var request = SpeedReadingReportExportRules.Normalize(reportData);
-            return File(
-                exporter.GenerateExcel(request),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                $"speed-reading-report-{DateTime.UtcNow:yyyyMMdd}.xlsx");
+            return BadRequest(new { success = false, message = "Dışa aktarma biçimi pdf veya excel olmalıdır." });
         }
-        catch (ArgumentOutOfRangeException exception)
+
+        var snapshot = await reports.GetUserSnapshotAsync(userId, snapshotId, cancellationToken);
+        if (snapshot is null)
         {
-            return BadRequest(new { success = false, message = exception.Message });
+            return NotFound();
         }
+
+        if (snapshot.DataJsonTruncated)
+        {
+            return BadRequest(new { success = false, message = "Rapor verisi dışa aktarma sınırını aşıyor." });
+        }
+
+        JsonElement? data = null;
+        if (!string.IsNullOrWhiteSpace(snapshot.DataJson))
+        {
+            using var document = JsonDocument.Parse(snapshot.DataJson);
+            data = document.RootElement.Clone();
+        }
+
+        var request = new ReportExportRequest(
+            snapshot.ReportTemplateName,
+            snapshot.ReportTemplateName,
+            snapshot.ReportStartDate,
+            snapshot.ReportEndDate,
+            data);
+        var stamp = DateTime.UtcNow.ToString("yyyyMMdd");
+        return pdf
+            ? File(exporter.GeneratePdf(request), "application/pdf", $"speed-reading-report-{stamp}.pdf")
+            : File(exporter.GenerateExcel(request), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"speed-reading-report-{stamp}.xlsx");
     }
 
     [HttpGet("scheduled")]

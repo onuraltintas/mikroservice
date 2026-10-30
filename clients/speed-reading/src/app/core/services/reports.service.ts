@@ -769,10 +769,12 @@ export class ReportsService {
     const daily = summary.daily ?? [];
     const metadataStart = new Date(summary.dateFrom);
     const metadataEnd = new Date(summary.dateTo);
-    const activityTrend = daily.map(point => ({
-      name: point.date,
-      series: [{ name: 'Aktivite', value: point.readingSessions + point.exerciseCount }]
-    }));
+    // H22: every day of the range is shown, inactive days as 0, so the line does not join active days directly.
+    const activityTrend = fillDailyActivity(
+      daily.map(point => ({ date: point.date, value: point.readingSessions + point.exerciseCount })),
+      istanbulDate(summary.dateFrom),
+      istanbulDate(summary.dateTo))
+      .map(point => ({ name: point.date, series: [{ name: 'Aktivite', value: point.value }] }));
     const wpmProgress = daily.filter(point => point.averageWpm > 0).map(point => ({
       name: point.date,
       series: [{ name: 'WPM', value: point.averageWpm }]
@@ -1315,4 +1317,28 @@ interface StudentAnalyticsDailyPoint {
   exerciseCount: number;
   averageWpm: number;
   averageComprehension: number;
+}
+
+const ISTANBUL_DATE = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' });
+
+/** Istanbul calendar day (yyyy-MM-dd) of an instant. */
+function istanbulDate(value: string | Date): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : ISTANBUL_DATE.format(date);
+}
+
+/** Daily values for every day from `from` to `to` (yyyy-MM-dd), with 0 where nothing happened. */
+export function fillDailyActivity(points: { date: string; value: number }[], from: string, to: string): { date: string; value: number }[] {
+  const byDate = new Map(points.map(point => [point.date, point.value]));
+  const pattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!pattern.test(from) || !pattern.test(to) || from > to) return [...points].sort((left, right) => left.date.localeCompare(right.date));
+  const result: { date: string; value: number }[] = [];
+  const cursor = new Date(`${from}T00:00:00Z`);
+  const last = new Date(`${to}T00:00:00Z`);
+  for (let guard = 0; cursor <= last && guard < 400; guard++) {
+    const day = cursor.toISOString().slice(0, 10);
+    result.push({ date: day, value: byDate.get(day) ?? 0 });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return result;
 }

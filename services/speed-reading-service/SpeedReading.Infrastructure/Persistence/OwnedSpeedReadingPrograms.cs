@@ -60,24 +60,27 @@ internal sealed class OwnedSpeedReadingPrograms(
         var templates = await db.ProgramTemplates.AsNoTracking()
             .Where(item => templateIds.Contains(item.Id))
             .ToDictionaryAsync(item => item.Id, cancellationToken);
-        return rows.Select(progress =>
+        return rows.Select(progress => WithVisibleDay(progress, templates.GetValueOrDefault(progress.ProgramTemplateId))).ToList();
+    }
+
+    // The program position the student sees: template name and length, and the day the calendar has opened.
+    private static StudentProgramProgressSummary WithVisibleDay(StudentProgramProgress progress, ProgramTemplate? template)
+    {
+        var item = ToProgressSummary(progress);
+        if (template is not null)
         {
-            var item = ToProgressSummary(progress);
-            if (templates.TryGetValue(progress.ProgramTemplateId, out var template))
-            {
-                var schedule = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson);
-                var days = schedule.Count > 0
-                    ? schedule.Max(slot => (slot.WeekNumber - 1) * 7 + slot.DayNumber)
-                    : template.TotalDays;
-                item = item with { TemplateName = template.Name, TotalDays = days,
-                    TotalWeeks = (days + 6) / 7 };
-            }
-            if (!item.IsActive || item.CompletedDate.HasValue) return item;
-            var visibleDay = Math.Min(((item.CurrentWeek - 1) * 7) + item.CurrentDay,
-                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetAvailableDay(item.AssignedDate, DateTime.UtcNow, progress.IsStaffTraining, progress.EarlyAdvanceDays));
-            var (week, day) = SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetWeekAndDay(visibleDay);
-            return item with { CurrentWeek = week, CurrentDay = day };
-        }).ToList();
+            var schedule = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson);
+            var days = schedule.Count > 0
+                ? schedule.Max(slot => (slot.WeekNumber - 1) * 7 + slot.DayNumber)
+                : template.TotalDays;
+            item = item with { TemplateName = template.Name, TotalDays = days,
+                TotalWeeks = (days + 6) / 7 };
+        }
+        if (!item.IsActive || item.CompletedDate.HasValue) return item;
+        var visibleDay = Math.Min(((item.CurrentWeek - 1) * 7) + item.CurrentDay,
+            SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetAvailableDay(item.AssignedDate, DateTime.UtcNow, progress.IsStaffTraining, progress.EarlyAdvanceDays));
+        var (week, day) = SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetWeekAndDay(visibleDay);
+        return item with { CurrentWeek = week, CurrentDay = day };
     }
 
     public async Task<SpeedReadingPage<AdminStudentProgressSummary>> GetAdminStudentProgressAsync(
@@ -101,6 +104,7 @@ internal sealed class OwnedSpeedReadingPrograms(
             {
                 Progress = progress,
                 TemplateName = template == null ? string.Empty : template.Name,
+                TotalDays = template == null ? 0 : template.TotalDays,
                 HistoricalDisplayName = profile == null ? null : profile.HistoricalDisplayName,
                 HistoricalEmail = profile == null ? null : profile.HistoricalEmail
             };
@@ -128,7 +132,7 @@ internal sealed class OwnedSpeedReadingPrograms(
                 cancellationToken);
             var pageUsersById = pageUsers.Users.ToDictionary(item => item.UserId);
             var items = pageRows
-                .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, row.HistoricalDisplayName, row.HistoricalEmail, pageUsersById))
+                .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, row.TotalDays, row.HistoricalDisplayName, row.HistoricalEmail, pageUsersById))
                 .ToList();
 
             return new SpeedReadingPage<AdminStudentProgressSummary>(items, page, size, totalCount);
@@ -162,7 +166,7 @@ internal sealed class OwnedSpeedReadingPrograms(
             cancellationToken);
         var searchPageUsersById = searchPageUsers.Users.ToDictionary(item => item.UserId);
         var filteredItems = searchPageRows
-            .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, row.HistoricalDisplayName, row.HistoricalEmail, searchPageUsersById))
+            .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, row.TotalDays, row.HistoricalDisplayName, row.HistoricalEmail, searchPageUsersById))
             .ToList();
 
         return new SpeedReadingPage<AdminStudentProgressSummary>(
@@ -224,12 +228,16 @@ internal sealed class OwnedSpeedReadingPrograms(
                     sessionResult != null && sessionResult.IsMeasured && sessionResult.RawWpm > 0
                         ? sessionResult.RawWpm
                         : log.AverageWPM,
-                    sessionResult != null && sessionResult.IsMeasured
-                        ? sessionResult.ComprehensionScore
+                    // H22: a result without answered questions has no comprehension (not 0%).
+                    sessionResult != null
+                        ? sessionResult.IsMeasured && sessionResult.ReadingTextId != null && sessionResult.QuestionAnswersJson != "[]"
+                            ? sessionResult.ComprehensionScore
+                            : null
                         : log.AverageComprehension,
                     log.IsMeasured ? "Measured" : "NotMeasured",
                     exercise == null ? null : exercise.Title,
-                    exerciseType == null ? null : exerciseType.DisplayName))
+                    exerciseType == null ? null : exerciseType.DisplayName,
+                    (log.WeekNumber - 1) * 7 + log.DayNumber))
             .Take(30)
             .ToListAsync(cancellationToken);
 
@@ -251,7 +259,9 @@ internal sealed class OwnedSpeedReadingPrograms(
                 item.BloomLevel,
                 item.IsCorrect)));
 
-        return new AdminStudentProgressDetails(ToProgressSummary(progress), recentLogs, readingQuestionAnalytics);
+        var detailTemplate = await db.ProgramTemplates.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == progress.ProgramTemplateId, cancellationToken);
+        return new AdminStudentProgressDetails(WithVisibleDay(progress, detailTemplate), recentLogs, readingQuestionAnalytics);
     }
 
     public async Task<bool> ResetStudentProgressAsync(
@@ -407,6 +417,7 @@ internal sealed class OwnedSpeedReadingPrograms(
     private static AdminStudentProgressSummary ToAdminProgressSummary(
         StudentProgramProgress progress,
         string templateName,
+        int totalDays,
         string? historicalDisplayName,
         string? historicalEmail,
         IReadOnlyDictionary<Guid, EduPlatform.Shared.Contracts.Reporting.SpeedReadingUserDirectoryItem> usersById)
@@ -423,7 +434,11 @@ internal sealed class OwnedSpeedReadingPrograms(
             progress.AssignedDate,
             string.IsNullOrWhiteSpace(studentName) ? historicalDisplayName : studentName,
             string.IsNullOrWhiteSpace(user?.Email) ? historicalEmail : user.Email,
-            templateName);
+            templateName,
+            // H22: the program day (1–TotalDays) instead of the weekday shown as "Gün".
+            OwnedSpeedReadingAdminAnalytics.ProgramDay(progress.CurrentWeek, progress.CurrentDay, totalDays, progress.AssignedDate,
+                progress.IsStaffTraining, progress.EarlyAdvanceDays),
+            totalDays);
     }
 
     private static System.Linq.Expressions.Expression<Func<DailyExerciseLog, DailyExerciseLogSummary>> ToDailyLogSummary() =>

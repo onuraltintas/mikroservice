@@ -354,7 +354,9 @@ public sealed record AdminStudentProgressSummary(
     DateTime AssignedDate,
     string? StudentName = null,
     string? StudentEmail = null,
-    string? ProgramTemplateName = null);
+    string? ProgramTemplateName = null,
+    int ProgramDay = 0,
+    int TotalDays = 0);
 
 public sealed record AdminStudentProgressDetails(
     StudentProgramProgressSummary Progress,
@@ -382,7 +384,8 @@ public sealed record DailyExerciseLogSummary(
     decimal? AverageComprehension,
     string MeasurementStatus,
     string? ExerciseTitle,
-    string? ExerciseTypeDisplayName);
+    string? ExerciseTypeDisplayName,
+    int ProgramDay = 0);
 
 public sealed record LearningPathTemplateSummary(
     Guid Id,

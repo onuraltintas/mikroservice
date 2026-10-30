@@ -21,10 +21,17 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         CancellationToken cancellationToken = default)
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
-        var studentIds = await ScopedStudentIdsAsync(scope, cancellationToken);
-        var reading = await db.ReadingSessions.AsNoTracking()
+        var scoped = await ScopedStudentsAsync(scope, cancellationToken);
+        var studentIds = scoped.Ids;
+        var readingRows = (await db.ReadingSessions.AsNoTracking()
             .Where(item => studentIds.Contains(item.UserId)
                 && item.CompletedAt >= start && item.CompletedAt <= end)
+            .Select(item => new { item.UserId, item.CompletedAt, item.IsMeasured, item.CalculatedWpm, item.TotalQuestions, item.IsRejected,
+                item.ComprehensionRate, item.ReadingTimeSeconds })
+            .ToListAsync(cancellationToken))
+            .Where(item => scoped.Allows(item.UserId, item.CompletedAt))
+            .ToList();
+        var reading = readingRows
             .GroupBy(item => item.UserId)
             .Select(group => new StudentMetrics(
                 group.Key,
@@ -38,9 +45,12 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                     .Average() ?? 0,
                 group.Count(item => item.TotalQuestions > 0 && !item.IsRejected),
                 group.Sum(item => item.ReadingTimeSeconds)))
-            .ToListAsync(cancellationToken);
-        var exercises = await OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
+            .ToList();
+        var exercises = (await OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
             .Where(item => studentIds.Contains(item.UserId) && item.CompletedDate >= start && item.CompletedDate <= end)
+            .Select(item => new { item.UserId, item.CompletedDate, item.IsMeasured, item.SuccessRate, item.TimeSpentSeconds })
+            .ToListAsync(cancellationToken))
+            .Where(item => scoped.Allows(item.UserId, item.CompletedDate))
             .GroupBy(item => item.UserId)
             .Select(group => new StudentMetrics(
                 group.Key,
@@ -50,7 +60,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Where(item => item.IsMeasured).Select(item => (decimal?)item.SuccessRate).Average() ?? 0,
                 0,
                 group.Sum(item => item.TimeSpentSeconds)))
-            .ToListAsync(cancellationToken);
+            .ToList();
         var summary = TeacherAnalyticsRules.Summarize(
             reading.Select(item => new TeacherMetricSample(
                 item.StudentId, item.ActivityCount, item.AverageWpm, item.AverageComprehension,
@@ -65,18 +75,19 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         var names = await GetNamesAsync(summary.ReadingStudents.Select(item => item.StudentId), cancellationToken);
         var top = summary.ReadingStudents
             .Where(item => item.MeasuredReadingActivities > 0 || item.ComprehensionActivities > 0)
-            .OrderByDescending(item => item.MeasuredReadingActivities > 0
-                ? item.AverageWpm
-                : item.AverageComprehension)
+            // H22 (decision 30.10.2026): ranked by comprehension; WPM only breaks ties, units are never mixed.
+            .OrderByDescending(item => item.ComprehensionActivities > 0)
+            .ThenByDescending(item => item.AverageComprehension)
+            .ThenByDescending(item => item.MeasuredReadingActivities > 0 ? item.AverageWpm : 0)
             .ThenBy(item => item.StudentId)
             .Take(10)
             .ToList();
         var support = summary.ReadingStudents
             .Where(item => (item.MeasuredReadingActivities > 0 && item.AverageWpm < summary.ClassAverageWpm)
                 || (item.ComprehensionActivities > 0 && item.AverageComprehension < 60))
-            .OrderBy(item => item.MeasuredReadingActivities > 0
-                ? item.AverageWpm
-                : item.AverageComprehension)
+            .OrderByDescending(item => item.ComprehensionActivities > 0)
+            .ThenBy(item => item.ComprehensionActivities > 0 ? item.AverageComprehension : 100)
+            .ThenBy(item => item.MeasuredReadingActivities > 0 ? item.AverageWpm : 0)
             .ThenBy(item => item.StudentId)
             .Take(10)
             .ToList();
@@ -112,8 +123,14 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         if (studentIds.Count == 0)
             return UnavailableAssignments(start, end, "Bu rapor kapsamına bağlı öğrenci bulunamadı.");
 
+        // H22: an assignment belongs to the range when it was given, still open (due) or completed inside it, not only when it
+        // was created there.
         var assignments = db.Assignments.AsNoTracking()
-            .Where(item => item.IsActive && item.CreatedAt >= start && item.CreatedAt <= end);
+            .Where(item => item.IsActive && item.CreatedAt <= end
+                && (item.CreatedAt >= start
+                    || item.DueDate >= start
+                    || db.StudentAssignments.Any(row => row.AssignmentId == item.Id && row.IsActive
+                        && row.CompletionDate >= start && row.CompletionDate <= end)));
         if (scope.InstitutionIds.Count > 0)
         {
             var institutionIds = scope.InstitutionIds.Where(item => item != Guid.Empty).ToHashSet();
@@ -324,13 +341,16 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         CancellationToken cancellationToken = default)
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
-        var studentIds = await ScopedStudentIdsAsync(scope, cancellationToken);
-        var exerciseRows = await (
+        var scoped = await ScopedStudentsAsync(scope, cancellationToken);
+        var studentIds = scoped.Ids;
+        var exerciseRows = (await (
             from log in OwnedSpeedReadingReportExercises.All(db)
             where studentIds.Contains(log.UserId)
                 && log.CompletedDate >= start && log.CompletedDate <= end
             select new { log.UserId, log.CompletedDate, Score = log.IsMeasured ? (decimal?)log.SuccessRate : null, log.ExerciseTypeId, log.TypeName })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .Where(item => scoped.Allows(item.UserId, item.CompletedDate))
+            .ToList();
         var exerciseAnalysis = exerciseRows
             .GroupBy(item => new { item.ExerciseTypeId, item.TypeName })
             .OrderByDescending(group => group.Count())
@@ -338,7 +358,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Key.TypeName,
                 group.Count(),
                 group.Select(item => item.UserId).Distinct().Count(),
-                group.Average(item => item.Score) ?? 0,
+                group.Average(item => item.Score) is { } average ? Math.Round(average, 2) : null,
                 group.Any(item => item.Score.HasValue) ? PerformanceLevel(group.Average(item => item.Score) ?? 0) : "not-measured"))
             .ToList();
         var exerciseFrequency = exerciseRows
@@ -347,13 +367,15 @@ internal sealed class OwnedSpeedReadingTeacherReports(
             .Select(group => Chart(group.Key, "Egzersiz", group.Count()))
             .ToList();
 
-        var readingRows = await (
+        var readingRows = (await (
             from session in db.ReadingSessions.AsNoTracking()
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
             where studentIds.Contains(session.UserId)
                 && session.CompletedAt >= start && session.CompletedAt <= end
-            select new { session.CompletedAt, session.CalculatedWpm, session.IsMeasured, session.ComprehensionRate, TotalQuestions = session.IsRejected ? 0 : session.TotalQuestions, text.DifficultyLevel })
-            .ToListAsync(cancellationToken);
+            select new { session.UserId, session.CompletedAt, session.CalculatedWpm, session.IsMeasured, session.ComprehensionRate, TotalQuestions = session.IsRejected ? 0 : session.TotalQuestions, text.DifficultyLevel })
+            .ToListAsync(cancellationToken))
+            .Where(item => scoped.Allows(item.UserId, item.CompletedAt))
+            .ToList();
         var readingAnalysis = readingRows
             .GroupBy(item => item.DifficultyLevel)
             .OrderBy(group => group.Key)
@@ -394,7 +416,8 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         CancellationToken cancellationToken = default)
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
-        var studentIds = await ScopedStudentIdsAsync(scope, cancellationToken);
+        var scoped = await ScopedStudentsAsync(scope, cancellationToken);
+        var studentIds = scoped.Ids;
         var reading = await db.ReadingSessions.AsNoTracking()
             .Where(item => studentIds.Contains(item.UserId) && item.CompletedAt >= start && item.CompletedAt <= end)
             .Select(item => new ActivityRow(
@@ -417,7 +440,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 IsReading: false,
                 HasComprehension: item.IsMeasured))
             .ToListAsync(cancellationToken);
-        var daily = reading.Concat(exercise).ToList();
+        var daily = reading.Concat(exercise).Where(item => scoped.Allows(item.StudentId, item.Date)).ToList();
         var weekly = daily.GroupBy(item => StartOfWeek(SpeedReadingReportCalendar.LocalTime(item.Date))).OrderBy(group => group.Key)
             .Select(group => Chart(group.Key, "Aktivite", group.Sum(item => item.ActivityCount))).ToList();
         var monthly = daily.GroupBy(item => new { SpeedReadingReportCalendar.LocalTime(item.Date).Year, SpeedReadingReportCalendar.LocalTime(item.Date).Month })
@@ -447,18 +470,35 @@ internal sealed class OwnedSpeedReadingTeacherReports(
 
     private async Task<HashSet<Guid>> ScopedStudentIdsAsync(
         SpeedReadingTeacherStudentScopeResponse scope,
+        CancellationToken cancellationToken) =>
+        (await ScopedStudentsAsync(scope, cancellationToken)).Ids;
+
+    /// <summary>
+    /// H22 (KVKK decision 30.10.2026): a student reached only through an institution membership is reported from the day the
+    /// membership started. Activity from before, from another institution or from a personal subscription stays private.
+    /// Students on the teacher's own roster have no such floor.
+    /// </summary>
+    private async Task<ScopedStudents> ScopedStudentsAsync(
+        SpeedReadingTeacherStudentScopeResponse scope,
         CancellationToken cancellationToken)
     {
         var ids = scope.StudentUserIds.Where(item => item != Guid.Empty).ToHashSet();
+        var floors = new Dictionary<Guid, DateTime>();
         if (scope.InstitutionIds.Count > 0)
         {
-            var institutionIds = await db.InstitutionMemberships.AsNoTracking()
+            var memberships = await db.InstitutionMemberships.AsNoTracking()
                 .Where(item => item.IsActive
                     && item.Role == SpeedReadingInstitutionMemberRole.Student
                     && scope.InstitutionIds.Contains(item.InstitutionId))
-                .Select(item => item.UserId)
+                .Select(item => new { item.UserId, item.CreatedAt })
                 .ToListAsync(cancellationToken);
-            ids.UnionWith(institutionIds);
+            foreach (var membership in memberships.GroupBy(item => item.UserId))
+            {
+                if (ids.TryGetValue(membership.Key, out _))
+                    continue;
+                floors[membership.Key] = membership.Min(item => item.CreatedAt);
+            }
+            ids.UnionWith(floors.Keys);
         }
 
         if (scope.RestrictedStudentUserIds is { Count: > 0 })
@@ -466,7 +506,13 @@ internal sealed class OwnedSpeedReadingTeacherReports(
             ids.ExceptWith(scope.RestrictedStudentUserIds.Where(item => item != Guid.Empty));
         }
 
-        return ids;
+        return new ScopedStudents(ids, floors);
+    }
+
+    private sealed record ScopedStudents(HashSet<Guid> Ids, IReadOnlyDictionary<Guid, DateTime> Floors)
+    {
+        public bool Allows(Guid studentId, DateTime at) =>
+            Ids.Contains(studentId) && (!Floors.TryGetValue(studentId, out var floor) || at >= floor);
     }
 
     private async Task<IReadOnlyDictionary<Guid, SpeedReadingUserDirectoryItem>> GetNamesAsync(
@@ -527,16 +573,9 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         return date.Date.AddDays(-diff);
     }
 
-    private static (DateTime Start, DateTime End) NormalizeRange(DateTime? dateFrom, DateTime? dateTo)
-    {
-        var end = NormalizeUtc(dateTo ?? DateTime.UtcNow);
-        var start = NormalizeUtc(dateFrom ?? end.AddDays(-30));
-        if (start > end)
-            throw new BusinessRuleException("SpeedReading.Analytics.DateRange.Invalid", "Başlangıç tarihi bitiş tarihinden sonra olamaz.");
-        if ((end - start).TotalDays > MaxRangeDays)
-            throw new BusinessRuleException("SpeedReading.Analytics.DateRange.TooLarge", $"Analitik tarih aralığı en fazla {MaxRangeDays} gün olabilir.");
-        return (start, end);
-    }
+    private static (DateTime Start, DateTime End) NormalizeRange(DateTime? dateFrom, DateTime? dateTo) =>
+        // H22: calendar-day picks are whole Europe/Istanbul days.
+        SpeedReadingReportCalendar.ResolveRange(dateFrom, dateTo, DateTime.UtcNow, 30, MaxRangeDays);
 
     private static DateTime NormalizeUtc(DateTime value) => value.Kind switch
     {

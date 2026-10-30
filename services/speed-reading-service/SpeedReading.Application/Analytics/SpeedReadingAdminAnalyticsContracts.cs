@@ -63,7 +63,7 @@ public sealed record AdminExerciseTypeAnalysis(
     string ExerciseTypeName,
     int TotalCompletions,
     int ActiveStudents,
-    decimal AverageScore,
+    decimal? AverageScore,
     string PerformanceLevel);
 
 public sealed record AdminContentAnalysisAnalytics(
@@ -178,7 +178,9 @@ public sealed record SpeedReadingRecentStudentProgress(
     int LongestStreak,
     decimal SuccessRate,
     int DifficultyLevel,
-    DateTime LastActivityDate);
+    DateTime LastActivityDate,
+    int ProgramDay = 0,
+    int TotalDays = 0);
 
 public sealed record SpeedReadingProgramAnalytics(
     SpeedReadingProgramPlatformStats PlatformStats,
@@ -295,7 +297,9 @@ public sealed record SpeedReadingProgramAnalyticsRow(
     DateTime LastActivityDate,
     int DaysCompleted,
     int ExercisesCompleted,
-    bool IsActive);
+    bool IsActive,
+    int ProgramDay = 0,
+    int TotalDays = 0);
 
 public static class SpeedReadingProgramAnalyticsCalculator
 {
@@ -327,7 +331,8 @@ public static class SpeedReadingProgramAnalyticsCalculator
             .Select(group => new SpeedReadingWeeklyProgress(
                 group.Key,
                 Round(group.Select(item => item.SuccessRate).Average()),
-                Math.Round((decimal)group.Count(item => item.DaysCompleted >= item.CurrentWeek * 5) / group.Count() * 100, 1)))
+                // H22: weeks have 7 days; the rate is the share of the current week's days already completed.
+                Math.Round(group.Average(item => (decimal)Math.Clamp(item.DaysCompleted - (item.CurrentWeek - 1) * 7, 0, 7) / 7) * 100, 1)))
             .ToArray();
 
         var recentStudentProgress = activeRows
@@ -343,7 +348,9 @@ public static class SpeedReadingProgramAnalyticsCalculator
                 item.LongestStreak,
                 item.SuccessRate,
                 item.DifficultyLevel,
-                item.LastActivityDate))
+                item.LastActivityDate,
+                item.ProgramDay > 0 ? item.ProgramDay : (item.CurrentWeek - 1) * 7 + item.CurrentDay,
+                item.TotalDays))
             .ToArray();
 
         return new SpeedReadingProgramAnalytics(

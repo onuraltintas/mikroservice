@@ -89,7 +89,7 @@ public sealed class GatewayResilienceTests
     [InlineData("GET", "/api/speed-reading/reading-texts/7d0a9f53-6f43-4bdb-8f6c-b4d4a7a2f0aa/export/pdf")]
     [InlineData("POST", "/api/speed-reading/reading-texts/export/docx")]
     [InlineData("POST", "/api/speed-reading/reading-texts/import/excel")]
-    [InlineData("POST", "/api/speed-reading/reports/export/pdf")]
+    [InlineData("GET", "/api/speed-reading/reports/snapshots/7d0a9f53-6f43-4bdb-8f6c-b4d4a7a2f0aa/export/pdf")]
     [InlineData("POST", "/api/users/bulk/import")]
     [InlineData("GET", "/api/users/bulk/export")]
     [InlineData("POST", "/api/coaching-admin/catalog-imports")]

@@ -49,6 +49,8 @@ const reportLabels: Readonly<Record<string, string>> = {
   'error analysis': 'Hata analizi',
   'exam simulation': 'Sınav simülasyonu',
   'adaptive fluency': 'Uyarlanabilir akıcılık',
+  'target hunt': 'Hedef avı',
+  'eye tracking exercise': 'Göz takibi',
   reading: 'Okuma',
   exercise: 'Egzersiz',
   science: 'Bilim',
@@ -89,6 +91,10 @@ const reportLabels: Readonly<Record<string, string>> = {
 /** Translate known report codes at display time; preserve institution-defined category names. */
 export function speedReadingReportLabel(value: string | null | undefined): string {
   if (!value) return '—';
-  const key = value.trim().toLowerCase().replace(/[_-]/g, ' ');
-  return Object.hasOwn(reportLabels, key) ? reportLabels[key] : value;
+  const trimmed = value.trim();
+  const key = trimmed.toLowerCase().replace(/[_-]/g, ' ');
+  if (Object.hasOwn(reportLabels, key)) return reportLabels[key];
+  // Type names arrive as CamelCase when no display name is stored (e.g. "SchulteTable").
+  const spaced = trimmed.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/[_-]/g, ' ');
+  return Object.hasOwn(reportLabels, spaced) ? reportLabels[spaced] : value;
 }
