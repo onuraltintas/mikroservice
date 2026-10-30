@@ -191,8 +191,8 @@
     "clients/speed-reading/src/app/core/guards/staff-onboarding.guard.spec.ts": "2d537a4bc597002ba3b3b18b61e5a1e0c67f8176ef278720fb782d5829d7c2df",
     "clients/speed-reading/src/app/core/guards/staff-onboarding.guard.ts": "f6e5b2545e155ba1fcbc237010c04efffb3c5eb7f01dc7041deb4a0a01d16c85",
     "clients/speed-reading/src/app/core/guards/staff-training.guard.ts": "cb1909f35023e6d25050384db1ef9be34b865268a21eb1c2201b2f34ebee13e2",
-    "clients/speed-reading/src/app/core/guards/student-page.guard.spec.ts": "dcbf712502047808b53406c34c08ec0ecf8c177762f7b2686167b284b4d8eb6a",
-    "clients/speed-reading/src/app/core/guards/student-page.guard.ts": "01ec581a25be7d470204b476a3ea354b7f43b27b3312a0f057b658da1379359f",
+    "clients/speed-reading/src/app/core/guards/student-page.guard.spec.ts": "8bdb6920d5deff5f9019fefe349e051b3d46e05235ac438cc2c3c2d1cb3cbf2c",
+    "clients/speed-reading/src/app/core/guards/student-page.guard.ts": "563dc22c81b7c12b483c946409a62d06df0355d599e3ccffbc23c2a182249241",
     "clients/speed-reading/src/app/core/guards/student-prerequisite.guard.spec.ts": "fad09305b999ef9714acb07e6584edb521ecc73101f819b102322effde3aa8d0",
     "clients/speed-reading/src/app/core/guards/subscription.guard.spec.ts": "e72571a145e1a5887b3e556607cc7d0fee4b959308b9bdb98fd3a95f1f5e2d75",
     "clients/speed-reading/src/app/core/guards/subscription.guard.ts": "e7b869e24adbc5f59119e12ce7a750fcb43c6f8ef63c1ef9d0827aac52cd0867",
@@ -536,13 +536,7 @@
     "clients/speed-reading/src/app/features/student/dashboard/widgets/streak-widget.component.scss": "2db32386f6a53fea1e7b4106fc9c1a3451f5399fb3fa42dc9e86537a3aca4755",
     "clients/speed-reading/src/app/features/student/dashboard/widgets/streak-widget.component.spec.ts": "bf8fb35967780c6c3308eedf0a6d1c353d6f3870b47c1985a85e2906d506c0bb",
     "clients/speed-reading/src/app/features/student/dashboard/widgets/streak-widget.component.ts": "1d7f3935b678c7aacb9c4aa25402a1c9dd598c4cd49fc97f31374fc1812aa738",
-    "clients/speed-reading/src/app/features/student/exercises/attention-catalogue.spec.ts": "be1de9e7489c5efb465ad8c186ea34e539dc7c5b04221bf40fc013469a2da4b0",
-    "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-game.spec.ts": "5aa1eef08d0d7d91c75407f0198448a5837c4d902751353610c832e9e7c6844b",
-    "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-game.ts": "a505f6496e82b723e1bfea1e0a11a274035f239ad221ca17598e3f8eb98acd03",
-    "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-preview.component.html": "1275360fa631e134ffaa88f7b4a6a693cbf0595562bef6ec6ed9199b8515397e",
-    "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-preview.component.scss": "73198e7b2827b61193ce94325196c2be0e735eb3bc0bc832c082daa8abcfc023",
-    "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-preview.component.spec.ts": "d2f9617098ba65b8ec217afef4132d1258a81b352c5ef22ca5cd93818fd8f12c",
-    "clients/speed-reading/src/app/features/student/exercises/attention-preview/attention-preview.component.ts": "95dedfa36a57846443ed625f53fa71aa72dab1aa7c05ef140d35b7f07d1bfd3d",
+    "clients/speed-reading/src/app/features/student/exercises/attention-catalogue.spec.ts": "4ccefe02663d92c60b7080370619b152cee9843e0a20e8dcc0b2888735fb5a6c",
     "clients/speed-reading/src/app/features/student/exercises/custom-preview-catalogue.spec.ts": "de55eb1fe926eb5b451145fa1086405d0a3e76285767780e7baa07a120ce7d95",
     "clients/speed-reading/src/app/features/student/exercises/exercise-level-dialog/exercise-level-dialog.component.html": "9687047edeee7fd58d1837127ed0e72d3dc3bf8d9deae59a557e328fb493ea88",
     "clients/speed-reading/src/app/features/student/exercises/exercise-level-dialog/exercise-level-dialog.component.scss": "371a418350360799eacdec5972b6e4f4cecd54e3a2b44deb5e91811f036ba3da",
@@ -550,7 +544,7 @@
     "clients/speed-reading/src/app/features/student/exercises/exercise-level-dialog/exercise-level-dialog.component.ts": "74c6b161957136807c2bd32944cc06733d05c5e7cc16a822d22dc9e277438f71",
     "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.html": "41c825114baa90fe8c7fcba45aa3e48ba63f23f8de2253b3ec3e926e81f3af21",
     "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.scss": "f8019c27302de5b1a69effb74821b26546b7ce060e715599e685e32b1d236623",
-    "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.ts": "e71ac5c12585b2cc9cff36fd9886ed8e0dc5364a83faaee9b4e2db3f7bd9544d",
+    "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.ts": "4b318766ef565339ae1305d5c27426864eeb5610e8f1fb79b8a07fd4facbfa69",
     "clients/speed-reading/src/app/features/student/exercises/reading-catalog-progress.spec.ts": "e02cd8b1c1349e3aadd80b47aa9e7affd0eea2535dfa6b6a3bbce098ef705924",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/assessment-blocks.spec.ts": "308b0c5f9c6e810313dc88282eca1a8c8e04175a44032f23ce808e70f2bdcca4",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/assessment-loading.contract.test.mjs": "4a39cf2f8c1e7ccd83b14bcb53412582b91caae8432fb262b68fe1861a44d34c",
@@ -698,7 +692,7 @@
     "clients/speed-reading/src/app/features/student/shell/student-shell.component.scss": "8bf6c6c9012f4e930c51d7eb798e837a6374a4c669b5ae9c7724512fd9d31daa",
     "clients/speed-reading/src/app/features/student/shell/student-shell.component.ts": "45835c0a84de2dd00dcba5e82cddc66d73287151682ef2ead5d5a8efe5ff8b62",
     "clients/speed-reading/src/app/features/student/student-layout.component.ts": "f4d81a6d58155f91e8c05bdfdcbb2b611b69915032e4ca89430c9ca65d3b9caa",
-    "clients/speed-reading/src/app/features/student/student.routes.ts": "60c134a6ac504340f28ec33a939bb7870fb1af4047f2c6552a7d94adfaa6f93d",
+    "clients/speed-reading/src/app/features/student/student.routes.ts": "edf19f74d5547687bd2c3cbd5b0de423f6cc3da62ab97764e9cc186c51a775e8",
     "clients/speed-reading/src/app/features/student/training-programs/training-programs.component.spec.ts": "2641ee82b59c944726f5b9ce9ecc4d55fe25bdf8d690a19ea6c41476d1d81ae0",
     "clients/speed-reading/src/app/features/student/training-programs/training-programs.component.ts": "e0ba4d623f8c53f9d6d115eb5033c447629b8f33e28b25e4e3264f9d5162e8af",
     "clients/speed-reading/src/app/features/student/ui/index.ts": "301f93a640d5657c343c85dd7fcd048dda1e6017d1a70c101d594c4e571b33d2",
@@ -2643,7 +2637,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "H13 CI failure report",
+    "purpose": "merge main into chore/h13-ci-failure-report",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2691,7 +2685,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "c938694a",
+    "previousBaselineCommit": "7ef2d876",
     "removedSincePreviousBaseline": []
   }
 }
