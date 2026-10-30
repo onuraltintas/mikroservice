@@ -448,7 +448,8 @@ public sealed record PersonalizedLearningPathProgressSummary(
 public sealed record PersonalizedPathAvailability(
     bool IsAvailable,
     int CompletedProgramDays,
-    int RequiredProgramDays);
+    int RequiredProgramDays,
+    bool HasProgram = true);
 
 public sealed record StartLearningPathRequest(Guid TemplateId);
 

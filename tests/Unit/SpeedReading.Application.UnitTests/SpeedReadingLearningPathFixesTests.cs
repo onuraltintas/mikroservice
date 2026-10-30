@@ -110,8 +110,8 @@ public sealed class SpeedReadingLearningPathFixesTests
         // A warm-up or Schulte task triggers the check again: still the same three results, so no new path.
         (await paths.RefreshAdaptiveProgressionAsync(student)).Should().BeFalse();
 
-        // Three new weak comprehension results are new evidence.
-        await WeakEvidence(db, student, DateTime.UtcNow.AddMinutes(-30), bloom: 2);
+        // Three new weak comprehension results, after the path, are new evidence.
+        await WeakEvidence(db, student, DateTime.UtcNow, bloom: 2);
         (await paths.RefreshAdaptiveProgressionAsync(student)).Should().BeTrue();
     }
 

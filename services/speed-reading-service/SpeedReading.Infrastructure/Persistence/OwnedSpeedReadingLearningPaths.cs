@@ -15,14 +15,23 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         Guid studentId,
         CancellationToken cancellationToken = default)
     {
-        var progress = await db.StudentProgramProgresses
-            .AsNoTracking()
-            .Where(item => item.UserId == studentId)
+        // H18 (finding 5): the path opens once any training program reached 7 days; starting a new program or a reset
+        // does not lock it again. Assessment programs do not count.
+        var programs = await (
+                from item in db.StudentProgramProgresses.AsNoTracking()
+                join template in db.ProgramTemplates.AsNoTracking() on item.ProgramTemplateId equals template.Id
+                where item.UserId == studentId && !template.IsAssessment
+                select item)
+            .ToListAsync(cancellationToken);
+        if (programs.Count == 0)
+            return new PersonalizedPathAvailability(false, 0, 7, HasProgram: false);
+        var earlier = programs.Max(item => item.DaysCompleted);
+        if (earlier >= 7)
+            return new PersonalizedPathAvailability(true, 7, 7);
+        var progress = programs
             .OrderByDescending(item => item.IsActive)
             .ThenByDescending(item => item.AssignedDate)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (progress is null)
-            return new PersonalizedPathAvailability(false, 0, 7);
+            .First();
 
         var scheduled = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson)
             .Select(item => (item.WeekNumber, item.DayNumber, item.ExerciseId))
@@ -437,13 +446,19 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         if (decision.Kind != AdaptiveProgressionDecisionKind.Support)
             return 0;
 
-        return await CreatePersonalizedPathAsync(
+        var created = await CreatePersonalizedPathAsync(
             studentId,
             await ResolveTrainingLevelAsync(studentId, cancellationToken),
-            "Son ölçümlerde destek ihtiyacı görüldü.",
+            SupportReason,
             cancellationToken,
             await GetWeakBloomLevelsAsync(studentId, cancellationToken));
+        // H18 (finding 1): the manual check is its own request; nothing else saves what it creates.
+        if (created > 0)
+            await db.SaveChangesAsync(cancellationToken);
+        return created;
     }
+
+    private const string SupportReason = "Son anlama sonuçlarında destek ihtiyacı görüldü.";
 
     private async Task<int> CreatePersonalizedPathAsync(
         Guid studentId,
@@ -476,14 +491,15 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 .Distinct()
                 .ToListAsync(cancellationToken)
             : [];
-        var recentWeakExerciseResults = supportTextIds.Count == 0
-            ? await db.ExerciseSessionResults.AsNoTracking()
-                .Where(result => result.StudentId == studentId && result.IsMeasured && !result.IsAssessmentMode)
-                .OrderByDescending(result => result.CompletedAt)
-                .Take(3)
-                .Select(result => new { result.ExerciseId, result.Score })
-                .ToListAsync(cancellationToken)
-            : [];
+        // H18 (finding 6): the weak exercise is chosen among the sessions that asked questions — the evidence the support
+        // decision was made on — never among warm-ups such as Schulte or Hedef Avı.
+        var recentWeakExerciseResults = await db.ExerciseSessionResults.AsNoTracking()
+            .Where(OwnedSpeedReadingComprehensionEvidence.AskedQuestions)
+            .Where(result => result.StudentId == studentId)
+            .OrderByDescending(result => result.CompletedAt)
+            .Take(3)
+            .Select(result => new { result.ExerciseId, result.Score })
+            .ToListAsync(cancellationToken);
         var weakExerciseId = recentWeakExerciseResults
             .OrderBy(result => result.Score)
             .Select(result => (Guid?)result.ExerciseId)
@@ -503,7 +519,6 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId)
                 && item.DifficultyLevel >= minDifficulty
                 && item.DifficultyLevel <= maxDifficulty
-                && supportTextIds.Count == 0
                 && weakTypeCode != null
                 && item.TypeCode == weakTypeCode);
         var exercises = await exercisesQuery
@@ -521,12 +536,15 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId)
                 && item.DifficultyLevel >= minDifficulty
                 && item.DifficultyLevel <= maxDifficulty
-                && supportTextIds.Contains(item.Id));
-        var readingTexts = await readingTextsQuery
-            .OrderBy(item => item.DifficultyLevel)
-            .ThenBy(item => item.Id)
-            .Take(2)
-            .ToListAsync(cancellationToken);
+                && db.ReadingQuestions.Any(question => question.ReadingTextId == item.Id && !question.IsDeleted));
+        // Texts with questions at the weak Bloom levels first; when none fits the level band, any text with questions.
+        var readingTexts = supportTextIds.Count > 0
+            ? await readingTextsQuery.Where(item => supportTextIds.Contains(item.Id))
+                .OrderBy(item => item.DifficultyLevel).ThenBy(item => item.Id).Take(2).ToListAsync(cancellationToken)
+            : [];
+        if (readingTexts.Count == 0)
+            readingTexts = await readingTextsQuery
+                .OrderBy(item => item.DifficultyLevel).ThenBy(item => item.Id).Take(2).ToListAsync(cancellationToken);
 
         var pathItems = new List<PersonalizedLearningPathItem>();
         var exerciseIndex = 0;
@@ -690,12 +708,29 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             return false;
         }
 
-        var decision = await EvaluateProgressionAsync(studentId, [], policy, cancellationToken);
-        if (decision.Kind != AdaptiveProgressionDecisionKind.Support)
-            return false;
-
         if (await db.PersonalizedLearningPathItems.AsNoTracking()
             .AnyAsync(path => path.StudentId == studentId && !path.IsDeleted && !path.IsCompleted, cancellationToken))
+            return false;
+
+        // H18 (finding 3): most daily tasks ask no questions, so the evidence count stays on the same multiple of three
+        // for many completions. A path is built only from evidence newer than the last path.
+        var lastPathAt = await db.PersonalizedLearningPathItems.AsNoTracking()
+            .Where(path => path.StudentId == studentId && !path.IsDeleted)
+            .Select(path => (DateTime?)path.CreatedAt)
+            .MaxAsync(cancellationToken);
+        if (lastPathAt.HasValue)
+        {
+            var newestEvidenceAt = await db.ExerciseSessionResults.AsNoTracking()
+                .Where(OwnedSpeedReadingComprehensionEvidence.AskedQuestions)
+                .Where(result => result.StudentId == studentId)
+                .Select(result => (DateTime?)result.CompletedAt)
+                .MaxAsync(cancellationToken);
+            if (!newestEvidenceAt.HasValue || newestEvidenceAt.Value <= lastPathAt.Value)
+                return false;
+        }
+
+        var decision = await EvaluateProgressionAsync(studentId, [], policy, cancellationToken);
+        if (decision.Kind != AdaptiveProgressionDecisionKind.Support)
             return false;
 
         if (!await db.UserProfiles.AsNoTracking()
@@ -705,7 +740,7 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         var created = await CreatePersonalizedPathAsync(
             studentId,
             await ResolveTrainingLevelAsync(studentId, cancellationToken),
-            "Son ölçümlerde destek ihtiyacı görüldü.",
+            SupportReason,
             cancellationToken,
             await GetWeakBloomLevelsAsync(studentId, cancellationToken));
         return created > 0;

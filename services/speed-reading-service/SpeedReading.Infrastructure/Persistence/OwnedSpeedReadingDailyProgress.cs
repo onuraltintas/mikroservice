@@ -8,6 +8,7 @@ using SpeedReading.Application.DailyProgress;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Progress;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.LearningPaths;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Sessions;
 using OwnedSessionResult = SpeedReading.Domain.Sessions.ExerciseSessionResult;
@@ -358,6 +359,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 .Select(item => ((item.WeekNumber - 1) * 7) + item.DayNumber)
                 .DefaultIfEmpty(template.TotalDays)
                 .Max());
+        var levelBeforeWeeklyStep = progress.CurrentDifficultyLevel;
         if (completion.WeekChanged)
         {
             // Review H5 (finding 19): the finished week's results set the difficulty of the weeks ahead.
@@ -386,7 +388,20 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         try
         {
-            await db.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException exception) when (adaptivePlanUpdated && IsLearningPathConflict(exception))
+            {
+                // H18 (finding 9): a concurrent completion created the support path first; keep this completion without
+                // a second path.
+                foreach (var entry in db.ChangeTracker.Entries<PersonalizedLearningPathItem>()
+                             .Where(entry => entry.State == EntityState.Added).ToList())
+                    entry.State = EntityState.Detached;
+                adaptivePlanUpdated = false;
+                await db.SaveChangesAsync(cancellationToken);
+            }
         }
         catch (DbUpdateException exception) when (IsIdempotencyConflict(exception))
         {
@@ -432,18 +447,14 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         return new CompleteDailyExerciseResponse(
             true,
-            completion.ProgramCompleted
-                ? "Program başarıyla tamamlandı."
-                : adaptivePlanUpdated
-                    ? "Egzersiz tamamlandı; yeni ölçümlere göre planınız güncellendi."
-                    : "Egzersiz başarıyla tamamlandı.",
+            SpeedReadingDailyProgressRules.CompletionMessage(completion.ProgramCompleted, levelBeforeWeeklyStep,
+                progress.CurrentDifficultyLevel, adaptivePlanUpdated),
             completion.DayCompleted,
             progress.CurrentDay,
             progress.CurrentWeek,
             progress.CurrentDifficultyLevel,
-            completion.DifficultyIncreased
-                || (adaptivePlanUpdated && progress.CurrentDifficultyLevel > completion.OldDifficultyLevel),
-            completion.OldDifficultyLevel,
+            progress.CurrentDifficultyLevel > levelBeforeWeeklyStep,
+            levelBeforeWeeklyStep,
             completion.WeekChanged,
             completion.OldWeek,
             progress.CurrentDifficultyLevel,
@@ -458,7 +469,9 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                     progress.LongestStreak,
                     progress.ExercisesCompleted)
             : null,
-            AdaptationUpdated: adaptivePlanUpdated);
+            AdaptationUpdated: adaptivePlanUpdated,
+            DifficultyDecreased: progress.CurrentDifficultyLevel < levelBeforeWeeklyStep,
+            LearningPathCreated: adaptivePlanUpdated);
     }
 
     private async Task<CompleteDailyExerciseResponse> ReplayCompletedSessionAsync(
@@ -581,6 +594,14 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         && string.Equals(
             postgres.ConstraintName,
             "ix_idempotency_records_scope_key",
+            StringComparison.Ordinal);
+
+    private static bool IsLearningPathConflict(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgres
+        && postgres.SqlState == PostgresErrorCodes.UniqueViolation
+        && string.Equals(
+            postgres.ConstraintName,
+            "ix_personalized_learning_path_items_student_id_path_index_is_deleted",
             StringComparison.Ordinal);
 
     private static bool IsSessionConflict(DbUpdateException exception) =>

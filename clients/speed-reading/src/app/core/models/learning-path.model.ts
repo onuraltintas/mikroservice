@@ -214,6 +214,8 @@ export interface PersonalizedPathAvailabilityDto {
   isAvailable: boolean;
   completedProgramDays: number;
   requiredDays: number;
+  /** False when the student has no training program yet (assessment only). */
+  hasProgram?: boolean;
 }
 
 export interface LearningPathNextItemDto {
