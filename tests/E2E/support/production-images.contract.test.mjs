@@ -24,7 +24,7 @@ function composeBuilds(...files) {
 }
 
 function workflowImages() {
-  return [...workflow.matchAll(/-\s*\{\s*name:\s*([a-z0-9-]+),\s*context:\s*(\S+),\s*dockerfile:\s*([^\s,}]+)/g)]
+  return [...workflow.matchAll(/-\s*\{\s*name:\s*([a-z0-9-]+),\s*context:\s*([^\s,]+),\s*dockerfile:\s*([^\s,}]+)/g)]
     .map(match => ({ name: match[1], context: match[2].replace(/^\.\/?$/, '.'), dockerfile: match[3] }));
 }
 
