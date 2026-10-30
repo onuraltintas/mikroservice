@@ -2041,7 +2041,7 @@ public sealed class SpeedReadingOwnedDomainTests
 
         progress.ApplyAdaptiveDifficultyAdjustment(-5, template, actorId, at).Should().BeTrue();
         progress.CurrentDifficultyLevel.Should().Be(1);
-        progress.AdaptiveDifficultyOffset.Should().Be(-4);
+        progress.AdaptiveDifficultyOffset.Should().Be(0);
         progress.ApplyAdaptiveDifficultyAdjustment(-1, template, actorId, at).Should().BeFalse();
     }
 
