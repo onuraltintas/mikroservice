@@ -160,17 +160,6 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
       this.exercises.push(card);
     });
 
-    if (this.canTryAttentionPrototype) {
-      this.exercises.push({
-        name: 'Hedefi Yakala', route: '/student/attention-preview',
-        exerciseTypeId: 'attention-prototype', icon: 'stars',
-        color: 'linear-gradient(135deg, #0d766e 0%, #164e63 100%)',
-        description: 'Üstte gösterilen sembolü şekiller arasında bulun. Yaş grubu ve seviyeyi seçip üç alıştırmanın ardından başlayın. Sonuçlar kaydedilmez.',
-        difficulty: 'Prototip', category: 'Odaklanma', estimatedTime: 'Yanıt hızınıza göre',
-        benefits: ['Hedef seçme alıştırması', 'Doğru, yanlış ve kaçırılan hedef dönütü']
-      });
-    }
-
     // Extract unique categories for dynamic filtering
     const uniqueCategories = new Set<string>(this.exercises.map(e => e.category));
     this.categories = ['all', ...Array.from(uniqueCategories).sort()];
@@ -190,10 +179,6 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   get canCustomizePreview(): boolean {
     const roles = this.authService.currentUserValue?.roles ?? [];
     return !roles.includes('Student') && roles.some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role));
-  }
-
-  get canTryAttentionPrototype(): boolean {
-    return (this.authService.currentUserValue?.roles ?? []).some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role));
   }
 
   openCustomPreview(exercise: Exercise): void {
@@ -233,10 +218,6 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   }
 
   startExercise(exerciseCard: ExerciseCard, custom = false): void {
-    if (exerciseCard.route === '/student/attention-preview') {
-      if (this.canTryAttentionPrototype) this.router.navigate([exerciseCard.route]);
-      return;
-    }
     if (!exerciseCard.exercises || exerciseCard.exercises.length === 0) {
       this.toaster.error('Bu kategoride aktif egzersiz bulunamadı.');
       return;

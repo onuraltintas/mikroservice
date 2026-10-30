@@ -14,12 +14,6 @@ export const studentRoutes: Routes = [
     loadComponent: () => import('./student-layout.component').then(m => m.StudentLayoutComponent),
     children: [
       {
-        path: 'attention-preview',
-        canActivate: [authGuard],
-        data: { role: ['Admin', 'SystemAdmin', 'Teacher', 'Editor'] },
-        loadComponent: () => import('./exercises/attention-preview/attention-preview.component').then(m => m.AttentionPreviewComponent)
-      },
-      {
         path: 'training-programs',
         canActivate: [authGuard, staffTrainingGuard],
         loadComponent: () => import('./training-programs/training-programs.component').then(m => m.TrainingProgramsComponent)
