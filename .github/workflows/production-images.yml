@@ -1,0 +1,116 @@
+name: Production images
+
+# Decision 30.10.2026: production images are built here instead of on the 2-core server, whose admin-panel build
+# reached 87% memory. Images are pushed to GHCR only for green CI runs on main and tagged with the 7-character commit
+# id the server already uses as RELEASE_TAG. The server pulls them with infrastructure/scripts/pull-release-images.sh.
+on:
+  workflow_run:
+    workflows: ["EduPlatform CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Full commit id on main to build (defaults to the commit the run starts from)
+        required: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: production-images-${{ github.event.workflow_run.head_sha || inputs.ref || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: identity-service, context: ., dockerfile: services/identity-service/Dockerfile }
+          - { name: coaching-service, context: ., dockerfile: services/coaching-service/Dockerfile }
+          - { name: speed-reading-service, context: ., dockerfile: services/speed-reading-service/Dockerfile }
+          - { name: notification-service, context: ., dockerfile: services/notification-service/Dockerfile }
+          - { name: api-gateway, context: ., dockerfile: services/api-gateway/Dockerfile }
+          - { name: speed-reading-frontend, context: ./clients, dockerfile: speed-reading/Dockerfile }
+          - { name: admin-panel, context: ./clients, dockerfile: admin-panel/Dockerfile }
+          - { name: staff-portal, context: ./clients, dockerfile: admin-panel/Dockerfile.staff-portal }
+    steps:
+      - name: Resolve commit and tag
+        id: meta
+        shell: bash
+        env:
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          sha="${RUN_SHA:-${INPUT_REF:-$GITHUB_SHA}}"
+          if ! echo "$sha" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::ref must be a full 40-character commit id on main"; exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tag=$(echo "$sha" | cut -c1-7)" >> "$GITHUB_OUTPUT"
+          echo "repository=ghcr.io/$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')/eduivme" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.sha }}
+
+      - name: Refuse commits that are not on main
+        shell: bash
+        run: |
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "${{ steps.meta.outputs.sha }}" origin/main
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          build-args: |
+            RELEASE_TAG=${{ steps.meta.outputs.tag }}
+          tags: ${{ steps.meta.outputs.repository }}/${{ matrix.name }}:${{ steps.meta.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ steps.meta.outputs.sha }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  summary:
+    name: Release tag summary
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write the release tag
+        shell: bash
+        env:
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          sha="${RUN_SHA:-${INPUT_REF:-$GITHUB_SHA}}"
+          tag=$(echo "$sha" | cut -c1-7)
+          {
+            echo "### Production images ready"
+            echo "RELEASE_TAG=$tag (commit $sha)"
+            echo "On the server: infrastructure/scripts/pull-release-images.sh $tag"
+          } >> "$GITHUB_STEP_SUMMARY"

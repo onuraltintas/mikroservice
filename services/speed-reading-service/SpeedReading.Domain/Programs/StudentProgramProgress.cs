@@ -130,8 +130,10 @@ public sealed class StudentProgramProgress : AggregateRoot
         };
     }
 
-    public void Reset(Guid actorId, DateTime at)
+    public void Reset(ProgramTemplate template, Guid actorId, DateTime at)
     {
+        if (template is null)
+            throw new ArgumentNullException(nameof(template));
         if (actorId == Guid.Empty)
             throw new ArgumentException("Reset actor is required.", nameof(actorId));
 
@@ -139,6 +141,8 @@ public sealed class StudentProgramProgress : AggregateRoot
         CurrentWeek = 1;
         EarlyAdvanceDays = 0;
         AdaptiveDifficultyOffset = 0;
+        // H18 (finding 10): a reset starts again at the program's own level.
+        CurrentDifficultyLevel = template.InitialDifficultyLevel;
         DaysCompleted = 0;
         ExercisesCompleted = 0;
         AverageSuccessRate = 0;
@@ -194,14 +198,12 @@ public sealed class StudentProgramProgress : AggregateRoot
         if (actorId == Guid.Empty)
             throw new ArgumentException("Student program actor is required.", nameof(actorId));
 
-        var adjustedDifficulty = Math.Clamp(
-            CurrentDifficultyLevel + difficultyAdjustment,
-            template.InitialDifficultyLevel,
-            template.MaxDifficultyLevel);
-        var adjustedOffset = Math.Clamp(
-            AdaptiveDifficultyOffset + difficultyAdjustment,
-            -template.MaxDifficultyLevel,
-            template.MaxDifficultyLevel);
+        // H15 (finding D): the offset stays inside the program's real range (level 1 … max), so a step down after earlier
+        // steps up is never swallowed. H18 (findings 2 and 7): the step starts from the stored offset brought into that range
+        // (rows from before H15 may hold −5 … +5), and the shown level is always initial + offset — the level the schedule
+        // chooses exercises at — so it can neither jump nor drift.
+        var adjustedOffset = ClampOffset(template, ClampOffset(template, AdaptiveDifficultyOffset) + difficultyAdjustment);
+        var adjustedDifficulty = LevelFor(template, adjustedOffset);
         if (adjustedDifficulty == CurrentDifficultyLevel
             && adjustedOffset == AdaptiveDifficultyOffset)
             return false;
@@ -246,6 +248,9 @@ public sealed class StudentProgramProgress : AggregateRoot
             ExercisesCompleted++;
 
         AverageSuccessRate = averageSuccessRate;
+        // H18 (finding 7): rows whose shown level drifted (calendar increases before H18) show the real level again.
+        if (template.InitialDifficultyLevel > 0)
+            CurrentDifficultyLevel = LevelFor(template, ClampOffset(template, AdaptiveDifficultyOffset));
         LastCompletionDate = now;
         UpdatedAt = now;
         UpdatedBy = actorId.ToString();
@@ -281,13 +286,8 @@ public sealed class StudentProgramProgress : AggregateRoot
                 CurrentDay = 1;
                 weekChanged = true;
 
-                if (template.WeeksPerDifficultyIncrease > 0
-                    && (CurrentWeek - 1) % template.WeeksPerDifficultyIncrease == 0
-                    && CurrentDifficultyLevel < template.MaxDifficultyLevel)
-                {
-                    CurrentDifficultyLevel++;
-                    difficultyIncreased = true;
-                }
+                // H18 (finding 7): no calendar increase. The schedule is built at initial + offset only, so a calendar
+                // step changed nothing but the shown level; the weekly result (AdaptAfterWeekAsync) moves the level.
             }
         }
 
@@ -309,6 +309,14 @@ public sealed class StudentProgramProgress : AggregateRoot
         UpdatedAt = EnsureUtc(at);
         UpdatedBy = actorId.ToString();
     }
+
+    private static int ClampOffset(ProgramTemplate template, int offset) => Math.Clamp(
+        offset,
+        Math.Min(0, 1 - template.InitialDifficultyLevel),
+        Math.Max(0, template.MaxDifficultyLevel - template.InitialDifficultyLevel));
+
+    private static int LevelFor(ProgramTemplate template, int offset) =>
+        Math.Clamp(template.InitialDifficultyLevel + offset, 1, Math.Max(1, template.MaxDifficultyLevel));
 
     private static int CalculateNextStreak(
         DateTime? lastCompletionDate,
