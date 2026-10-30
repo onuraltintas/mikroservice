@@ -139,5 +139,8 @@ test('active schedules keep protected days and rebuild the other days from v6 at
   assert.equal(updated.length, 6 + 27 * 6);
   assert.deepEqual(reviseAssignedSchedule({ ...progress, schedule: updated }, program, exercises), updated, 'idempotent');
   assert.equal(reviseAssignedSchedule({ schedule: null, protectedDays: [] }, program, exercises), null);
-  assert.throws(() => reviseAssignedSchedule(progress, program, exercises.filter(item => item.type !== 'Chunking')), /Missing exercise/);
+  // An open day-8 schedule without chunking in it, rebuilt against a catalogue that has no chunking exercise.
+  const noChunking = exercises.filter(item => item.type !== 'Chunking');
+  const day8 = schedule.filter(inDay(1)).map(slot => ({ ...slot, WeekNumber: 2, DayNumber: 1 }));
+  assert.throws(() => reviseAssignedSchedule({ schedule: day8, protectedDays: [] }, program, noChunking), /Missing exercise/);
 });
