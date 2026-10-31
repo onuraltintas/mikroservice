@@ -118,14 +118,60 @@ describe('CoachingPortalLayoutComponent (T2 menu)', () => {
     expect(document.activeElement).toBe(toggle);
   });
 
-  it('keeps the parent menu and hides the student bell and account pages for a parent', async () => {
+  // V4 (01.11.2026): the parent shell — its own brand, three destinations, the bell and a parent account menu.
+  it('gives a parent the Veli paneli shell with children, messages and notifications', async () => {
     const fixture = create(['Parent']); await fixture.whenStable();
-    expect(hrefs(fixture.nativeElement, '.coaching-navigation a')).toEqual(['/coaching-portal/parent', '/coaching-portal/messages']);
-    expect(fixture.nativeElement.querySelector('button.coaching-bell')).toBeNull();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('.coaching-brand')?.textContent).toContain('Veli paneli');
+    expect(root.textContent).not.toContain('Öğrenci Koçluğu');
+    expect(root.querySelector('.coaching-brand')?.getAttribute('href')).toBe('/coaching-portal/parent');
+    expect(hrefs(root, '.coaching-navigation a')).toEqual(['/coaching-portal/parent', '/coaching-portal/messages', '/coaching-portal/parent/notifications']);
+    const labels = [...root.querySelectorAll('.coaching-navigation a span:not(.coaching-badge)')].map((s: any) => s.textContent.trim());
+    expect(labels).toEqual(['Çocuklarım', 'Mesajlar', 'Bildirimler']);
+    expect(hrefs(root, '.coaching-mobile-nav a')).toEqual(['/coaching-portal/parent', '/coaching-portal/messages', '/coaching-portal/parent/notifications']);
+    expect(root.querySelector('.coaching-navigation a[href="/coaching-portal/messages"]')?.textContent).toContain('3');
+    expect(root.querySelector('.coaching-sidebar')?.getAttribute('aria-label')).toBe('Veli paneli');
+  });
+
+  it('shows the bell with the unread count for a parent and opens the panel', async () => {
+    unread.set(2);
+    const fixture = create(['Parent']); await fixture.whenStable();
+    const bell = fixture.nativeElement.querySelector('button.coaching-bell') as HTMLButtonElement;
+    expect(bell).toBeTruthy();
+    expect(bell.getAttribute('aria-label')).toContain('2 okunmamış');
+    expect(fixture.nativeElement.querySelector('.coaching-mobile-nav a[href="/coaching-portal/parent/notifications"]')?.textContent).toContain('2');
+    bell.click(); fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('app-coaching-notification-panel a.all')?.getAttribute('href')).toBe('/coaching-portal/parent/notifications');
+    unread.set(0);
+  });
+
+  it('refreshes the unread message count for a parent too', async () => {
+    messagesUnread.refresh.mockClear();
+    create(['Parent']);
+    expect(messagesUnread.refresh).toHaveBeenCalled();
+  });
+
+  it('gives a parent notification choices, personal data and sign-out in the account menu', async () => {
+    const fixture = create(['Parent']); await fixture.whenStable();
     (fixture.nativeElement.querySelector('button.coaching-account-toggle') as HTMLButtonElement).click(); fixture.detectChanges();
     const menu = fixture.nativeElement.querySelector('[role=menu]') as HTMLElement;
-    expect(hrefs(menu, 'a')).toEqual([]);
+    expect(hrefs(menu, 'a')).toEqual(['/coaching-portal/parent/account/notifications', '/coaching-portal/parent/account/data']);
+    expect(menu.textContent).toContain('Bildirim tercihleri');
+    expect(menu.textContent).toContain('Kişisel verilerim');
+    expect(menu.textContent).toContain('Veli hesabı');
     expect(menu.textContent).toContain('Çıkış');
+  });
+
+  it('names the parent pages in the header', async () => {
+    const fixture = create(['Parent']); await fixture.whenStable();
+    const router = TestBed.inject(Router);
+    const label = (url: string) => { vi.spyOn(router, 'url', 'get').mockReturnValue(url); (fixture.componentInstance as any).updatePageLabel(); return fixture.componentInstance.pageLabel(); };
+    expect(label('/coaching-portal/parent')).toBe('Çocuklarım');
+    expect(label('/coaching-portal/parent/children/x?urun=kocluk')).toBe('Çocuğum');
+    expect(label('/coaching-portal/parent/notifications')).toBe('Bildirimler');
+    expect(label('/coaching-portal/parent/account/notifications')).toBe('Bildirim tercihleri');
+    expect(label('/coaching-portal/parent/account/data')).toBe('Kişisel verilerim');
+    expect(label('/coaching-portal/messages/abc')).toBe('Mesajlar');
   });
 
   it('keeps dual-role users in the student experience', async () => {
