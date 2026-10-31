@@ -6,7 +6,6 @@ import { CoachingTimeZone, CoachingTimeZoneService, detectedTimeZone } from '../
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { StudentParentLinksComponent } from './student-parent-links.component';
 import { StudentTeachersComponent } from './student-teachers.component';
-import { StudentDataExportComponent } from './student-data-export.component';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { CoachingCalendarSubscriptionApi, CoachingCalendarSubscriptionComponent } from '../../../../../shared/coaching-calendar-subscription.component';
@@ -24,7 +23,7 @@ export function timeZoneOptions(ids:string[]):{id:string;label:string}[]{
   });
 }
 
-@Component({selector:'app-student-settings',standalone:true,imports:[FormsModule, StudentParentLinksComponent, StudentTeachersComponent, StudentDataExportComponent, CoachingCalendarSubscriptionComponent, NotificationPreferencesComponent],styleUrl:'./student-study-plans.component.scss',
+@Component({selector:'app-student-settings',standalone:true,imports:[FormsModule, StudentParentLinksComponent, StudentTeachersComponent, CoachingCalendarSubscriptionComponent, NotificationPreferencesComponent],styleUrl:'./student-study-plans.component.scss',
   template:`<section class="study-plans" aria-labelledby="settings-title">
     <header class="page-heading"><div><p class="eyebrow">Çalışma tercihlerim</p><h1 id="settings-title">Ayarlar</h1></div></header>
     @if(error()){<p role="alert" class="notice error">{{error()}}</p>}
@@ -46,7 +45,6 @@ export function timeZoneOptions(ids:string[]):{id:string;label:string}[]{
     <edu-coaching-calendar-subscription [api]="calendar" role="student" />
     <edu-notification-preferences [api]="notifications" />
     <app-student-parent-links />
-    <app-student-data-export />
   </section>`})
 export class StudentSettingsComponent implements OnInit {
   // Roadmap O6: personal calendar subscription link for the student's sessions.

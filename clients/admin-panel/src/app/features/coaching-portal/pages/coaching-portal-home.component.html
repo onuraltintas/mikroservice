@@ -1,7 +1,7 @@
 <section class="student-home">
   <header class="home-welcome">
     <div><p class="home-eyebrow">BUGÜN SENİN GÜNÜN</p><h1>{{ user()?.firstName ? 'Merhaba, ' + user()?.firstName + '.' : 'Tekrar hoş geldin.' }}</h1><p>Hedefine giden yol, bugün atacağın küçük bir adımla başlar.</p></div>
-    <a routerLink="/coaching-portal/progress" class="home-progress-link">Gelişimimi gör <app-coaching-icon name="arrow" /></a>
+    <a routerLink="/coaching-portal/growth/week" class="home-progress-link">Gelişimimi gör <app-coaching-icon name="arrow" /></a>
   </header>
   @if (isStudent()) { <app-learning-setup-entry /><edu-coaching-motivation [api]="motivationApi" /> }
   <div class="home-grid" *ngIf="isStudent()">
@@ -9,9 +9,9 @@
     <aside class="home-next-steps" aria-label="Çalışma kısayolları">
       <app-student-home-goal />
       <nav aria-label="Çalışma kısayolları">
-        <a routerLink="/coaching-portal/weekly-plan"><app-coaching-icon name="calendar" /><span>Haftalık düzenim</span></a>
-        <a routerLink="/coaching-portal/automatic-plan"><app-coaching-icon name="spark" /><span>Plan sihirbazı</span></a>
-        <a routerLink="/coaching-portal/exam-results"><app-coaching-icon name="target" /><span>Deneme sonucu ekle</span></a>
+        <a routerLink="/coaching-portal/plan/weekly"><app-coaching-icon name="calendar" /><span>Haftalık düzenim</span></a>
+        <a routerLink="/coaching-portal/plan/wizard"><app-coaching-icon name="spark" /><span>Plan sihirbazı</span></a>
+        <a routerLink="/coaching-portal/growth/exams"><app-coaching-icon name="target" /><span>Deneme sonucu ekle</span></a>
       </nav>
     </aside>
   </div>

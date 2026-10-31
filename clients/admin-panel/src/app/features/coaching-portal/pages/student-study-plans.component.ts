@@ -97,7 +97,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   /** Today's date in the plan's time zone. */
   planToday(){const zone=this.selected()?.weeklySource?.timeZoneId||'Europe/Istanbul';try{return new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch{return this.today;}}
   private openedOnToday=false;
-  openWizard(){void this.router?.navigate(['/coaching-portal/automatic-plan']);}
+  openWizard(){void this.router?.navigate(['/coaching-portal/plan/wizard']);}
   isOverdue(task:StudyTask){return this.selected()?.status==='Active'&&calendarTaskOverdue(task,this.selected()?.weeklySource?.timeZoneId);}
   changeTaskFilter(){this.taskPage=1;this.planView.set('list');this.selectedTaskIds.set([]);}
   taskTitles:Record<string,string>={};

@@ -35,7 +35,7 @@ describe('StudentRegisterComponent registration', () => {
   it('sends the campaign tags and returns to the chosen plan after login', async () => {
     const router = { navigate: vi.fn().mockResolvedValue(true) };
     const component = createComponent(new Subject(), {}, { success: vi.fn(), error: vi.fn() }, router,
-      { returnUrl: '/coaching-portal/subscription?plan=ogrenci-yillik' });
+      { returnUrl: '/coaching-portal/account/payments?plan=ogrenci-yillik' });
     TestBed.inject(SiteAnalyticsService).utm.set({ utmSource: 'instagram', utmMedium: 'social', utmCampaign: 'lgs-ekim' });
     component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!',
       confirmPassword: 'NewPassword1!', birthDate: '2011-05-03' });
@@ -45,7 +45,7 @@ describe('StudentRegisterComponent registration', () => {
     expect(request.request.body.utm).toEqual({ utmSource: 'instagram', utmMedium: 'social', utmCampaign: 'lgs-ekim' });
     request.flush({ userId: 'new-user' });
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], { queryParams: { registered: 'true', role: 'student',
-      returnUrl: '/coaching-portal/subscription?plan=ogrenci-yillik' } });
+      returnUrl: '/coaching-portal/account/payments?plan=ogrenci-yillik' } });
     http.verify();
   });
 

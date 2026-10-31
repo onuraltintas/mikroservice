@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
-const SUBSCRIPTION_PAGE = '/coaching-portal/subscription';
+const SUBSCRIPTION_PAGE = '/coaching-portal/account/payments';
 
 /**
  * Coaching answers 403 `CoachingSubscriptionRequired` when a student without an active subscription opens a learning

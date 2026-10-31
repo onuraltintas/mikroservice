@@ -20,6 +20,8 @@ import { CoachingStudentTeachersService } from '../../core/services/coaching-stu
 import { CoachingDataExportService } from '../../core/services/coaching-data-export.service';
 import { coachingFeedback } from './coaching-feedback';
 import { CoachingPortalLayoutComponent } from './layout/coaching-portal-layout.component';
+import { CoachingWhatsNewService } from './layout/coaching-whats-new.service';
+import { CoachingMessagesUnreadService } from '../../core/services/coaching-messages-unread.service';
 import { StudentAssignmentsComponent } from './pages/student-assignments.component';
 import { StudentSettingsComponent } from './pages/student-settings.component';
 import { PracticeExamEditorComponent } from './pages/practice-exam-editor.component';
@@ -35,37 +37,41 @@ const student: UserProfile = { id: 'student-1', email: 's@example.test', firstNa
   username: 's@example.test', roles: ['Student'], role: 'Student', permissions: [] };
 const istanbulToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
+// T2 (31.10.2026): the phone bar is Bugün · Planım · Ödevler · Gelişimim · Mesajlar; notifications live behind the bell.
 describe('O1 bottom navigation', () => {
-  async function layout(showAssignments = true, unread = 3) {
+  async function layout(showAssignments = true, unread = 3, messages = 2) {
     TestBed.configureTestingModule({ imports: [CoachingPortalLayoutComponent], providers: [provideRouter([]),
       { provide: AuthService, useValue: { userProfile: signal<any>({ roles: ['Student'], product: 'coaching', firstName: 'Ada' }) } },
       { provide: NotificationService, useValue: { unreadCount: signal(unread) } },
+      { provide: CoachingMessagesUnreadService, useValue: { count: signal(messages), refresh: () => {} } },
+      { provide: CoachingWhatsNewService, useValue: { visible: () => false, dismiss: () => {} } },
       { provide: CoachingStudentNavigationService, useValue: { showAssignments: () => showAssignments, showSessions: () => true, showFees: () => true, refresh: () => {} } }] });
     const fixture = TestBed.createComponent(CoachingPortalLayoutComponent); fixture.detectChanges(); await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('puts today, the plan, assignments and notifications under the thumb with the unread count', async () => {
+  it('puts today, the plan, assignments, growth and messages under the thumb with the unread message count', async () => {
     const page = await layout();
     const links = [...page.querySelectorAll('.coaching-mobile-nav a')] as HTMLAnchorElement[];
-    expect(links.map(a => a.getAttribute('href'))).toEqual(['/coaching-portal', '/coaching-portal/study-plans', '/coaching-portal/assignments', '/coaching-portal/notifications']);
-    expect(links.map(a => a.textContent?.replace(/\d+/g, '').trim())).toEqual(['Bugün', 'Planım', 'Ödevlerim', 'Bildirimler']);
-    expect(page.querySelector('.coaching-mobile-nav .coaching-badge')?.textContent?.trim()).toBe('3');
-    expect(page.querySelector('.coaching-topbar a[href="/coaching-portal/notifications"]')?.getAttribute('aria-label')).toBe('Bildirimlerimi aç (3 okunmamış)');
-    expect(links[3].getAttribute('aria-label')).toBe('Bildirimler (3 okunmamış)');
+    expect(links.map(a => a.getAttribute('href'))).toEqual(['/coaching-portal', '/coaching-portal/plan', '/coaching-portal/assignments', '/coaching-portal/growth', '/coaching-portal/messages']);
+    expect(links.map(a => a.textContent?.replace(/\d+/g, '').trim())).toEqual(['Bugün', 'Planım', 'Ödevler', 'Gelişimim', 'Mesajlar']);
+    expect(page.querySelector('.coaching-mobile-nav .coaching-badge')?.textContent?.trim()).toBe('2');
+    expect(links[4].getAttribute('aria-label')).toBe('Mesajlar (2 okunmamış)');
+    expect(page.querySelector('.coaching-bell')?.getAttribute('aria-label')).toBe('Bildirimler (3 okunmamış)');
+    expect(page.querySelector('.coaching-mobile-nav a[href="/coaching-portal/notifications"]')).toBeNull();
   });
 
-  it('keeps the goal in the bar when the student has no assignments and hides an empty badge', async () => {
-    const page = await layout(false, 0);
+  it('drops assignments from the bar when the student has none and hides an empty badge', async () => {
+    const page = await layout(false, 0, 0);
     const hrefs = [...page.querySelectorAll('.coaching-mobile-nav a')].map(a => a.getAttribute('href'));
-    expect(hrefs).toEqual(['/coaching-portal', '/coaching-portal/study-plans', '/coaching-portal/goals', '/coaching-portal/notifications']);
+    expect(hrefs).toEqual(['/coaching-portal', '/coaching-portal/plan', '/coaching-portal/growth', '/coaching-portal/messages']);
     expect(page.querySelector('.coaching-badge')).toBeNull();
   });
 
-  it('calls the plan wizard by one name in the menu', async () => {
+  it('keeps the plan wizard out of the menu; it is a tab under Planım', async () => {
     const page = await layout();
-    const labels = [...page.querySelectorAll('.coaching-navigation a')].map(a => a.textContent?.trim());
-    expect(labels).toContain('Plan sihirbazı');
+    const labels = [...page.querySelectorAll('.coaching-navigation a')].map(a => a.textContent?.replace(/\d+/g, '').trim());
+    expect(labels).toEqual(['Bugün', 'Planım', 'Ödevlerim', 'Gelişimim', 'Mesajlar', 'Seanslar']);
     expect(labels).not.toContain('Otomatik plan');
   });
 });

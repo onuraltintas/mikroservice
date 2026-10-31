@@ -14,13 +14,13 @@ import { coachingFeedback } from '../coaching-feedback';
 @Component({selector:'app-student-primary-goal',standalone:true,imports:[CommonModule,RouterLink,StudentGoalTargetComponent],
  styleUrl:'./student-study-plans.component.scss',template:`
  <section class="study-plans" aria-labelledby="primary-goal-title">
-  <header class="page-heading"><div><p class="eyebrow">Hedefine odaklan</p><h1 id="primary-goal-title">Hedefim</h1><p>Bir ana okul veya program seç; net hedeflerini onun altında takip et.</p></div><a routerLink="/coaching-portal/progress">Çalışma hedeflerim ve gelişimim →</a></header>
+  <header class="page-heading"><div><p class="eyebrow">Hedefine odaklan</p><h1 id="primary-goal-title">Hedefim</h1><p>Bir ana okul veya program seç; net hedeflerini onun altında takip et.</p></div><a routerLink="/coaching-portal/growth/week">Çalışma hedeflerim ve gelişimim →</a></header>
   @if(error()){<p role="alert" class="notice error">{{error()}}</p>}
   @if(message()){<p role="status" class="notice success">{{message()}}</p>}
   @if(loading()){<p role="status">Hedefin yükleniyor…</p>}
   @if(!loading() && ready()){
    @if(context()?.purpose !== 'Lgs' && context()?.purpose !== 'Yks'){
-    <div class="panel"><h2>Önce sınavını belirle</h2><p>Profil ve tercihlerinden LGS veya YKS hazırlığını seçerek sana uygun hedefleri açabilirsin.</p><a routerLink="/coaching-portal/setup">Profil ve tercihlerime git →</a></div>
+    <div class="panel"><h2>Önce sınavını belirle</h2><p>Profil ve tercihlerinden LGS veya YKS hazırlığını seçerek sana uygun hedefleri açabilirsin.</p><a routerLink="/coaching-portal/account/settings">Profil ve tercihlerime git →</a></div>
    }@else{
     <div class="panel"><h2>{{context()?.purpose === 'Lgs' ? 'LGS okul hedefim' : 'YKS program hedefim'}}</h2>
      @if(current();as goal){<p><strong>{{goal.target.catalogTarget?.name || goal.title}}</strong></p>

@@ -19,7 +19,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
   private readonly api = inject(CoachingFinanceService);
   private readonly router = inject(Router, { optional: true });
   /** Roadmap O12: the student opens one fee on its own screen. */
-  openFee(fee: CoachingFee): void { void this.router?.navigate(['/coaching-portal/finance', fee.id]); }
+  openFee(fee: CoachingFee): void { void this.router?.navigate(['/coaching-portal/account/payments/fees', fee.id]); }
   @Input() mode: CoachingFinanceMode = 'student';
   @Input() studentId = '';
   @Input() cashView = false;

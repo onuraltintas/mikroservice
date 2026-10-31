@@ -12,11 +12,11 @@ import { CoachingWeeklyReviewService, WeeklyHome } from '../../../core/services/
   @if(loading()){<p role="status">Haftalık bilgiler yükleniyor…</p>}
   @if(error()){<p role="alert" class="error">{{error()}}</p>}
   @if(data();as view){<p>{{view.weekStart | date:'dd.MM.yyyy'}} haftası · {{view.needsReflection ? 'Değerlendirmen bekleniyor.' : 'Değerlendirme beklemiyor.'}}</p>
-    @if(view.missingReflectionCount){<p>{{view.missingReflectionCount}} haftanın değerlendirmesi eksik. En eski eksik haftadan başlayabilirsin.</p>}<a routerLink="/coaching-portal/progress" [queryParams]="{week:view.weekStart}">{{view.needsReflection ? 'Haftanı değerlendir' : 'Haftalık değerlendirmeyi aç'}}</a>
+    @if(view.missingReflectionCount){<p>{{view.missingReflectionCount}} haftanın değerlendirmesi eksik. En eski eksik haftadan başlayabilirsin.</p>}<a routerLink="/coaching-portal/growth/week" [queryParams]="{week:view.weekStart}">{{view.needsReflection ? 'Haftanı değerlendir' : 'Haftalık değerlendirmeyi aç'}}</a>
     @if(showDecisions){<p>{{view.openDecisions}} açık karar · {{view.overdueDecisions}} kararın tarihi geçti. Önce en yakın tarihli beş karar gösterilir.</p>
-    @for(decision of view.decisions;track decision.id){<article><strong>{{decision.title}}</strong><p>Son tarih: {{decision.dueOn | date:'dd.MM.yyyy'}} @if(decision.isOverdue){<span class="error"> · Tarihi geçti</span>}</p><a routerLink="/coaching-portal/progress" [queryParams]="{week:decision.weekStart,decision:decision.id}">Kararı aç</a></article>}
+    @for(decision of view.decisions;track decision.id){<article><strong>{{decision.title}}</strong><p>Son tarih: {{decision.dueOn | date:'dd.MM.yyyy'}} @if(decision.isOverdue){<span class="error"> · Tarihi geçti</span>}</p><a routerLink="/coaching-portal/growth/week" [queryParams]="{week:decision.weekStart,decision:decision.id}">Kararı aç</a></article>}
     @if(!view.decisions.length){<p>Açık kararın bulunmuyor.</p>}
-    <a routerLink="/coaching-portal/progress" [queryParams]="{week:view.currentWeekStart}">Bu haftanın tüm kararlarını aç</a>}
+    <a routerLink="/coaching-portal/growth/week" [queryParams]="{week:view.currentWeekStart}">Bu haftanın tüm kararlarını aç</a>}
   }</section>`})
 export class StudentWeeklyHomeComponent {
   @Input() showDecisions = true;

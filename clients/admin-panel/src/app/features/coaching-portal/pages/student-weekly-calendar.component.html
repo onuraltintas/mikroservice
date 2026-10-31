@@ -1,5 +1,5 @@
 <section class="weekly-page" aria-labelledby="weekly-title">
-  <header class="page-heading"><div><p class="eyebrow">KENDİ ÇALIŞMA RİTMİN</p><h1 id="weekly-title">Haftalık programım</h1><p>Derslerini haftaya yerleştir. Konuları planlamadan önce sana uygun düzeni hazırla.</p></div><div><a routerLink="/coaching-portal/automatic-plan">Plan sihirbazı ↗</a>　<a routerLink="/coaching-portal/study-plans">Mevcut planlarım ↗</a></div></header>
+  <header class="page-heading"><div><p class="eyebrow">KENDİ ÇALIŞMA RİTMİN</p><h1 id="weekly-title">Haftalık programım</h1><p>Derslerini haftaya yerleştir. Konuları planlamadan önce sana uygun düzeni hazırla.</p></div><div><a routerLink="/coaching-portal/plan/wizard">Plan sihirbazı ↗</a>　<a routerLink="/coaching-portal/plan">Mevcut planlarım ↗</a></div></header>
   <div class="draft-strip"><span class="draft-badge">Haftalık taslak</span><span>Bu düzen her hafta tekrar eder. Mevcut planın ve çalışma kayıtların korunur.</span><strong>{{ weeklyMinutes() }} dk / hafta</strong></div>
   @if(error()){<div role="alert" class="notice error">{{ error() }}</div>}
   @if(message()){<p role="status" class="notice success">{{ message() }}</p>}
@@ -12,7 +12,7 @@
       <div class="toolbar-actions"><button type="button" (click)="add()" [disabled]="busy()||!lessons().length">+ Ders ekle</button><button type="button" class="primary" (click)="save()" [disabled]="busy()||!dirty()||conflict()||!!form">{{ saving()?'Kaydediliyor…':'Taslağı kaydet' }}</button></div>
     </div>
     <div class="calendar-help"><span>Boş saate sağ tıkla veya dokun. Kartı taşı; üst ve alt tutamaçlarla 30 / 60 dk olarak ayarla.</span><span aria-live="polite">{{ dirty()?'Kaydedilmemiş değişiklikler':'Kaydedilen düzen' }}</span></div>
-    @if(!lessons().length){<p class="notice">Takvime ders eklemek için <a routerLink="/coaching-portal/setup">çalışma düzeninden derslerini seç</a>. Kaydedilmiş kartların burada korunur.</p>}
+    @if(!lessons().length){<p class="notice">Takvime ders eklemek için <a routerLink="/coaching-portal/account/settings">çalışma düzeninden derslerini seç</a>. Kaydedilmiş kartların burada korunur.</p>}
     @if(preview()){<p role="status" class="gesture-status" [class.invalid]="!!previewError()">{{ previewError()||preview()!.lessonName+' · '+clock(preview()!.startMinute)+'–'+clock(preview()!.startMinute+preview()!.durationMinutes) }}</p>}
     @if(view()==='month'){
       <div class="month-grid" aria-label="Aylık haftalık düzen önizlemesi">
@@ -46,7 +46,7 @@
         </div>
       </div>
     }
-    <footer class="calendar-footer"><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button><button type="button" data-testid="weekly-preview-link" class="primary" routerLink="/coaching-portal/weekly-plan-preview" [disabled]="busy()||dirty()||version===null||!slots().length||!!form">Çalışma planı oluştur →</button></footer>
+    <footer class="calendar-footer"><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button><button type="button" data-testid="weekly-preview-link" class="primary" routerLink="/coaching-portal/plan/preview" [disabled]="busy()||dirty()||version===null||!slots().length||!!form">Çalışma planı oluştur →</button></footer>
     <p class="muted">Önce haftalık taslağını kaydet. Sonra kazanımların ders saatlerine ve hedef tarihine nasıl yerleşeceğini önizleyebilirsin.</p>
   }
 </section>

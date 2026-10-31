@@ -6,7 +6,7 @@
   <header class="page-heading">
     <div><p class="eyebrow">{{ staffStudentId ? 'ÖĞRENCİ İÇİN PLAN SİHİRBAZI' : 'PLAN SİHİRBAZI' }}</p><h1 id="assistant-title">{{ staffStudentId ? 'Öğrenci için plan hazırla' : 'Planını adım adım hazırla' }}</h1>
       <p>{{ staffStudentId ? 'Öğrencinin eğitim bağlamını, kazanımlarını ve haftalık taslağını kullanarak plan önerisi hazırla.' : 'Uygun günlerini ve süreni seç; haftalık ders düzenini önizleyip kendin onayla.' }}</p></div>
-    @if (!staffStudentId) { <a routerLink="/coaching-portal/weekly-plan">Takvimde kendim düzenle ↗</a> }
+    @if (!staffStudentId) { <a routerLink="/coaching-portal/plan/weekly">Takvimde kendim düzenle ↗</a> }
   </header>
   <div class="assistant-layout">
     <section class="panel conversation" aria-label="Plan sihirbazı">
@@ -18,7 +18,7 @@
           </article>
         }
       </div>
-      @if (error()) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/setup">Çalışma düzenini tamamla →</a> }</p> }
+      @if (error()) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Çalışma düzenini tamamla →</a> }</p> }
       @if (saved()) { <p class="notice success" role="status">Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }
       <div class="composer wizard-form">
         <fieldset [disabled]="busy() || !lessons().length">
@@ -45,7 +45,7 @@
       <section class="topic-statuses" aria-labelledby="topic-status-title">
         <h2 id="topic-status-title">Daha önce çalıştığın konular</h2>
         @if (!learningContext()) {
-          @if(staffStudentId){<p class="muted">Öğrencinin eğitim bağlamını tamamlaması gerekiyor.</p>}@else{<p class="muted">Derslerini seçmek için önce <a routerLink="/coaching-portal/setup">çalışma düzenini tamamla</a>.</p>}
+          @if(staffStudentId){<p class="muted">Öğrencinin eğitim bağlamını tamamlaması gerekiyor.</p>}@else{<p class="muted">Derslerini seçmek için önce <a routerLink="/coaching-portal/account/settings">çalışma düzenini tamamla</a>.</p>}
         } @else {
           <p class="muted">“Çalıştım” seçtiklerin yeni yıllık plan önizlemesinden çıkar. “Tekrar etmek istiyorum” ve boş bıraktıkların plana dahil kalır. Bu işlem mevcut planları değiştirmez.</p>
           <label for="topic-lesson">Ders</label>
@@ -95,7 +95,7 @@
           @if (topicDirty()) { <p class="muted">Önce konu durumlarını kaydet, sonra yıllık plan önizlemesine geç.</p> }
           <button type="button" (click)="continueToAnnualReview()" [disabled]="busy() || topicDirty() || proposal().length > 0">Yıllık plan önizlemesine geç →</button>
         }
-        @if (saved() && !staffStudentId) { <a class="calendar-link" routerLink="/coaching-portal/weekly-plan">Haftalık takvimi aç →</a> }
+        @if (saved() && !staffStudentId) { <a class="calendar-link" routerLink="/coaching-portal/plan/weekly">Haftalık takvimi aç →</a> }
       }
     </aside>
   </div>

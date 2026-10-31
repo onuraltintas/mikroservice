@@ -33,9 +33,13 @@ function routerWith(routes: Route[]) {
 }
 
 describe('student route redirects', () => {
-  it('lists exactly the old student addresses', () => {
-    expect(Object.fromEntries(LEGACY_STUDENT_REDIRECTS.map(r => [r.path, r.redirectTo]))).toEqual(
-      Object.fromEntries(Object.entries(expected).map(([from, to]) => [from, `/coaching-portal/${to}`])));
+  it('lists exactly the old student addresses and sends each to its new home', async () => {
+    expect(LEGACY_STUDENT_REDIRECTS.map(r => r.path)).toEqual(Object.keys(expected));
+    const router = routerWith([...LEGACY_STUDENT_REDIRECTS, { path: '**', component: Blank }]);
+    for (const [from, to] of Object.entries(expected)) {
+      await router.navigateByUrl(`/coaching-portal/${from.replace(':feeId', 'f1')}`);
+      expect(router.url).toBe(`/coaching-portal/${to.replace(':feeId', 'f1')}`);
+    }
   });
 
   it('keeps every redirect in the portal routes, ahead of the pages', () => {

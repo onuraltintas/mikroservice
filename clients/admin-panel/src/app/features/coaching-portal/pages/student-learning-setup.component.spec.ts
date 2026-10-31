@@ -20,8 +20,8 @@ describe('StudentLearningSetupComponent', () => {
   }
   it('keeps profile, routine and existing plan entry points available without completing setup', async () => {
     const { fixture } = await setup();
-    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/study-plans"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/profile"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/plan"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/account/settings/profile"]')).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Çalışma amacım');
   });
   it('requires conditional exam fields and preserves input on save failure', async () => {
