@@ -14,8 +14,10 @@ export const formatNet = (value: number) => decimal.format(value);
 export const formatDay = (iso: string) => shortDate.format(new Date(iso));
 
 const sourceLabels: Record<StudentExamSource, string> = { Student: 'Ben', Teacher: 'Öğretmen', Institution: 'Kurum' };
+/** V4: on the parent page the child's own entries carry the child's name instead of "Ben". */
+function sourceName(source: StudentExamSource, childName?: string | null) { return source === 'Student' && childName ? childName : sourceLabels[source] ?? ''; }
 const sourceTones: Record<StudentExamSource, CsTone> = { Student: 'brand', Teacher: 'info', Institution: 'accent' };
-export function examSourceLabel(item: Pick<StudentExamOverviewItem, 'source'>): string { return sourceLabels[item.source] ?? 'Diğer'; }
+export function examSourceLabel(item: Pick<StudentExamOverviewItem, 'source'>, childName?: string | null): string { return sourceName(item.source, childName) || 'Diğer'; }
 export function examSourceTone(source: StudentExamSource): CsTone { return sourceTones[source] ?? 'neutral'; }
 /** "31 kişide 2." for an institution exam with a place; empty otherwise. */
 export function examPlace(item: Pick<StudentExamOverviewItem, 'rank' | 'participants'>): string {
@@ -27,7 +29,7 @@ export interface TrendChart { width: number; height: number; line: string; area:
   change: number; summary: string; baseline: number; left: number; right: number }
 
 /** Lays the trend points out evenly from left (oldest) to right; the y axis starts at 0 and ends at a round value. */
-export function trendChart(trend: StudentExamTrend, width: number, height: number): TrendChart {
+export function trendChart(trend: StudentExamTrend, width: number, height: number, childName?: string | null): TrendChart {
   const left = 34, right = width - 12, top = 12, bottom = height - 24;
   const points = trend.points;
   const highest = Math.max(10, ...points.map(x => x.net));
@@ -37,13 +39,16 @@ export function trendChart(trend: StudentExamTrend, width: number, height: numbe
   const y = (net: number) => bottom - ((net - lowest) / (ceiling - lowest || 1)) * (bottom - top);
   const x = (index: number) => points.length === 1 ? (left + right) / 2 : left + (index / (points.length - 1)) * (right - left);
   const dots = points.map((point, index) => ({ x: round(x(index)), y: round(y(point.net)), net: point.net, date: point.examDate, source: point.source,
-    label: `${formatDay(point.examDate)}: ${formatNet(point.net)} net (${sourceLabels[point.source] ?? ''})` }));
+    label: `${formatDay(point.examDate)}: ${formatNet(point.net)} net (${sourceName(point.source, childName)})` }));
   const line = dots.map((dot, index) => `${index ? 'L' : 'M'}${dot.x} ${dot.y}`).join(' ');
   const area = dots.length > 1 ? `${line} L${dots.at(-1)!.x} ${bottom} L${dots[0].x} ${bottom} Z` : '';
   const ticks = [];
   for (let value = 0; value <= ceiling; value += step) ticks.push({ y: round(y(value)), value });
   const change = points.length ? points.at(-1)!.net - points[0].net : 0;
-  const summary = points.length === 0 ? 'Henüz net hesaplanan denemen yok.'
+  const summary = childName ? (points.length === 0 ? 'Henüz net hesaplanan deneme yok.'
+    : points.length === 1 ? `İlk denemesi: ${formatNet(points[0].net)} net.`
+    : `${childName} ${points.length} denemede ${formatNet(points[0].net)} netten ${formatNet(points.at(-1)!.net)} nete ${change >= 0 ? 'çıktı' : 'indi'}.`)
+    : points.length === 0 ? 'Henüz net hesaplanan denemen yok.'
     : points.length === 1 ? `İlk denemen: ${formatNet(points[0].net)} net. Bir deneme daha gir, gidişatını görelim.`
     : `${points.length} denemede ${formatNet(points[0].net)} netten ${formatNet(points.at(-1)!.net)} nete ${change >= 0 ? 'çıktın' : 'indin'}.`;
   return { width, height, line, area, dots, ticks, change, summary, baseline: bottom, left, right };
@@ -67,7 +72,7 @@ export interface GaugeRow { label: string; current: string; target: string; perc
 export interface GoalGauge { targetName: string; scoreType: string; headline: string; rows: GaugeRow[]; reached: boolean; missingData: boolean }
 
 /** Now → target from the score estimate. A rank is better when lower, so its share is target / current. */
-export function goalGauge(estimate: ScoreEstimate): GoalGauge | null {
+export function goalGauge(estimate: ScoreEstimate, childName: string | null = null): GoalGauge | null {
   const target = estimate.target;
   if (!target) return null;
   const now = estimate.estimates.find(x => x.scoreType === target.scoreType) ?? null;
@@ -80,8 +85,8 @@ export function goalGauge(estimate: ScoreEstimate): GoalGauge | null {
       percent: share(target.targetRank, now.rank), text: `Şu an ${whole.format(now.rank)}., hedef ${whole.format(target.targetRank)}.` });
   }
   const headline = missingData ? 'Bu hedefin taban puanı ya da sıralaması yok; farkı hesaplayamıyoruz.'
-    : !now ? 'Bu puan türünde deneme gir; hedefe ne kadar kaldığını hesaplayalım.'
-    : target.reached ? 'Tahmini puanın hedefe ulaşıyor. Bu çizgiyi koru.'
+    : !now ? (childName ? 'Bu puan türünde deneme sonucu girildiğinde hedefe ne kadar kaldığı burada görünür.' : 'Bu puan türünde deneme gir; hedefe ne kadar kaldığını hesaplayalım.')
+    : target.reached ? (childName ? `${childName} için tahmini puan hedefe ulaşıyor.` : 'Tahmini puanın hedefe ulaşıyor. Bu çizgiyi koru.')
     : target.netGap !== null ? `Hedefe ${decimal.format(target.netGap)} net kaldı`
     : target.rankGap !== null ? `Hedef sıralamaya ${whole.format(target.rankGap)} kişi kaldı` : 'Hedefe olan farkı henüz hesaplayamıyoruz.';
   return { targetName: target.targetName, scoreType: target.scoreType, headline, rows, reached: target.reached, missingData };

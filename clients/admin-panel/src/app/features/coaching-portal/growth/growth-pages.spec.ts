@@ -103,6 +103,42 @@ describe('T6 Gelişimim', () => {
     expect(el.querySelectorAll('[data-testid="estimate-card"]')).toHaveLength(1);
   });
 
+  // V4 (01.11.2026): on the parent page the same views talk about the child by name.
+  it('the parent goal view names the child instead of speaking to them', () => {
+    TestBed.configureTestingModule({ imports: [StudentGoalSummaryComponent], providers: [provideRouter([]),
+      { provide: CoachingScoreEstimateService, useValue: { estimate: vi.fn(() => of({ ...estimate, target: { ...estimate.target!, reached: true } })) } }] });
+    const fixture = TestBed.createComponent(StudentGoalSummaryComponent);
+    fixture.componentRef.setInput('studentId', 'child'); fixture.componentRef.setInput('readonly', true);
+    fixture.componentRef.setInput('audience', 'parent'); fixture.componentRef.setInput('childName', 'Elif'); fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent!;
+    expect(text).toContain("Elif'in hedefi"); expect(text).toContain('Puan tahmini');
+    expect(text).not.toContain('Hedefin'); expect(text).not.toContain('Puan tahminin'); expect(text).not.toContain('puanın');
+  });
+
+  it('the parent goal view explains a missing target', () => {
+    TestBed.configureTestingModule({ imports: [StudentGoalSummaryComponent], providers: [provideRouter([]),
+      { provide: CoachingScoreEstimateService, useValue: { estimate: vi.fn(() => of({ estimates: [], target: null, notice: null })) } }] });
+    const fixture = TestBed.createComponent(StudentGoalSummaryComponent);
+    fixture.componentRef.setInput('studentId', 'child'); fixture.componentRef.setInput('readonly', true);
+    fixture.componentRef.setInput('audience', 'parent'); fixture.componentRef.setInput('childName', 'Can'); fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Can henüz bir hedef seçmedi');
+  });
+
+  it('the parent exam view names the child in the trend, subjects and sources', () => {
+    TestBed.configureTestingModule({ imports: [StudentExamOverviewComponent], providers: [{ provide: CoachingStudentExamOverviewService, useValue: { get: vi.fn(() => of(overview)) } }] });
+    const fixture = TestBed.createComponent(StudentExamOverviewComponent);
+    fixture.componentRef.setInput('studentId', 'child'); fixture.componentRef.setInput('readonly', true);
+    fixture.componentRef.setInput('audience', 'parent'); fixture.componentRef.setInput('childName', 'Elif'); fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const text = el.textContent!;
+    expect(text).toContain("Elif'in net gidişatı"); expect(text).toContain('Dersleri');
+    expect(text).not.toContain('Net gidişatın'); expect(text).not.toContain('Derslerin'); expect(text).not.toContain('zorlandığın');
+    expect(text).not.toContain('İlk denemene');
+    const rows = [...el.querySelectorAll('[data-testid="exam-row"]')].map(x => x.textContent!.replace(/\s+/g, ' '));
+    expect(rows[2]).toContain('Elif'); expect(rows[2]).not.toMatch(/(^|\s)Ben(\s|$)/);
+    expect(el.querySelector('svg[role="img"]')!.getAttribute('aria-label')).not.toMatch(/çıktın|indin/);
+  });
+
   it('Hedefim explains a target without taban or rank (K4)', () => {
     const el = goal({ ...estimate, target: { ...estimate.target!, targetScore: null, targetRank: null, scoreGap: null, netGap: null, rankGap: null } });
     expect(el.querySelectorAll('[role="meter"]')).toHaveLength(0);

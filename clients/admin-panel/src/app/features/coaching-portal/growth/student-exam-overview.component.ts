@@ -7,6 +7,7 @@ import { CsCardComponent, CsEmptyStateComponent, CsSegmentedTabsComponent, CsSta
 import { ExamSubjectBarsComponent } from './exam-subject-bars.component';
 import { ExamTrendChartComponent } from './exam-trend-chart.component';
 import { examPlace, examSourceLabel, examSourceTone, formatDay, formatNet } from './growth-model';
+import { possessive } from '../parent/parent-model';
 
 /**
  * T6 (31.10.2026): the student's exams in one place — net trend per scope, subject averages and one list with where each
@@ -20,7 +21,7 @@ import { examPlace, examSourceLabel, examSourceTone, formatDay, formatNet } from
   host: { class: 'cs-growth-exams' },
   template: `
     @if (error()) { <p class="cs-growth-alert" role="alert">{{ error() }} <button type="button" (click)="reload()">Yeniden dene</button></p> }
-    @if (loading() && !data()) { <div class="cs-growth-skeleton" role="status" aria-label="Denemelerin yükleniyor"></div> }
+    @if (loading() && !data()) { <div class="cs-growth-skeleton" role="status" [attr.aria-label]="parent() ? 'Denemeler yükleniyor' : 'Denemelerin yükleniyor'"></div> }
     @if (data(); as view) {
       @if (!view.exams.length) {
         <cs-empty-state [title]="readonly() ? 'Henüz deneme yok' : 'İlk denemeni ekle'"
@@ -31,18 +32,18 @@ import { examPlace, examSourceLabel, examSourceTone, formatDay, formatNet } from
         @if (view.trends.length) {
           <div class="cs-growth-pair">
             <cs-card tone="raised" class="cs-growth-trend">
-              <div class="cs-growth-card-head"><h2>Net gidişatın</h2>
+              <div class="cs-growth-card-head"><h2>{{ parent() ? possessive(name()) + ' net gidişatı' : 'Net gidişatın' }}</h2>
                 @if (scopeOptions().length > 1) { <cs-segmented-tabs label="Sınav türü" [options]="scopeOptions()" [(value)]="scope" /> }
                 @else { <cs-status-chip [label]="trend()!.examName" tone="brand" /> }
               </div>
               @if (trend(); as current) {
                 <p class="cs-growth-lead"><strong>{{ last(current) }}</strong> net <span>/ {{ current.maxNet }}</span>
                   @if (current.points.length > 1) { <cs-status-chip [label]="changeText(current)" [tone]="change(current) >= 0 ? 'success' : 'warning'" /> }</p>
-                <cs-exam-trend-chart [trend]="current" />
+                <cs-exam-trend-chart [trend]="current" [childName]="parent() ? name() : ''" />
               }
             </cs-card>
-            <cs-card class="cs-growth-subjects"><h2>Derslerin</h2><p class="cs-growth-muted">Son {{ subjectExamCount() }} denemenin ortalaması</p>
-              <cs-exam-subject-bars [subjects]="view.subjects" [examCode]="scope()" />
+            <cs-card class="cs-growth-subjects"><h2>{{ parent() ? 'Dersleri' : 'Derslerin' }}</h2><p class="cs-growth-muted">Son {{ subjectExamCount() }} denemenin ortalaması</p>
+              <cs-exam-subject-bars [subjects]="view.subjects" [examCode]="scope()" [childName]="parent() ? name() : ''" />
             </cs-card>
           </div>
         }
@@ -74,6 +75,12 @@ export class StudentExamOverviewComponent implements OnInit {
   /** null: the signed-in student. */
   readonly studentId = input<string | null>(null);
   readonly readonly = input(false);
+  /** V4: 'parent' talks about the child by name ("Elif'in net gidişatı") instead of to the student. */
+  readonly audience = input<'student' | 'parent'>('student');
+  readonly childName = input('');
+  readonly parent = computed(() => this.audience() === 'parent');
+  readonly name = computed(() => this.childName() || 'Çocuğun');
+  readonly possessive = possessive;
   readonly add = output<void>();
   readonly edit = output<string>();
   readonly data = signal<StudentExamOverview | null>(null);
@@ -93,11 +100,11 @@ export class StudentExamOverviewComponent implements OnInit {
         this.data.set(data); this.loading.set(false);
         if (!data.trends.some(x => x.examCode === this.scope())) this.scope.set(data.trends[0]?.examCode ?? '');
       },
-      error: () => { this.loading.set(false); this.error.set('Denemelerin yüklenemedi. Bağlantını kontrol edip yeniden dene.'); }
+      error: () => { this.loading.set(false); this.error.set(this.parent() ? 'Denemeler yüklenemedi. Bağlantını kontrol edip yeniden dene.' : 'Denemelerin yüklenemedi. Bağlantını kontrol edip yeniden dene.'); }
     });
   }
 
-  source(exam: StudentExamOverviewItem) { return examSourceLabel(exam); }
+  source(exam: StudentExamOverviewItem) { return examSourceLabel(exam, this.parent() ? this.name() : null); }
   tone(exam: StudentExamOverviewItem) { return examSourceTone(exam.source); }
   place(exam: StudentExamOverviewItem) { return examPlace(exam); }
   kind(exam: StudentExamOverviewItem) { return exam.examName ?? coachingLabel(exam.examType, 'examType'); }
@@ -107,6 +114,6 @@ export class StudentExamOverviewComponent implements OnInit {
   change(trend: { points: { net: number }[] }) { return (trend.points.at(-1)?.net ?? 0) - (trend.points[0]?.net ?? 0); }
   changeText(trend: { points: { net: number }[] }) {
     const value = this.change(trend);
-    return `İlk denemene göre ${value >= 0 ? '+' : '−'}${formatNet(Math.abs(value))} net`;
+    return `${this.parent() ? 'İlk denemesine' : 'İlk denemene'} göre ${value >= 0 ? '+' : '−'}${formatNet(Math.abs(value))} net`;
   }
 }

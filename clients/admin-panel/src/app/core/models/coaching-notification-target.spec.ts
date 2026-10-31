@@ -43,3 +43,13 @@ it('opens the actual plan for daily and overdue study summaries',()=>{
   const id='a4cea155-5485-4db6-9f52-1ec4df8080c3';
   for(const type of ['StudyPlanReminder','StudyPlanOverdueReminder'])expect(coachingNotificationTarget({type,relatedEntityId:id},'student')).toMatchObject({kind:'plan',id});
 });
+
+// V1/V4 (01.11.2026): parent-link notices take a student to Profil ve ayarlar › Profilim, where the parent link lives.
+it('opens the parent link settings from a parent-link notice for a student',()=>{
+  const id='a4cea155-5485-4db6-9f52-1ec4df8080c3';
+  for(const type of ['ParentLinkRequested','ParentLinkApproved','ParentLinkRevoked']) {
+    expect(coachingNotificationTarget({type,relatedEntityId:id},'student')).toEqual({kind:'profile',id,label:'Veli bağlantısını aç'});
+    expect(coachingNotificationTarget({type,relatedEntityId:id},'teacher')).toBeNull();
+    expect(coachingNotificationLabel(type)).not.toBe(type);
+  }
+});
