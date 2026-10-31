@@ -36,9 +36,15 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
             .Include(row => row.Assignment)
             .OrderBy(row => row.CreatedAt)
             .ToListAsync(cancellationToken);
+        var assignmentStudentIds = assignmentRows.Select(row => row.Id).ToList();
+        var submissionFiles = await context.AssignmentSubmissionAttachments.AsNoTracking()
+            .Where(file => assignmentStudentIds.Contains(file.AssignmentStudentId))
+            .OrderBy(file => file.CreatedAt).ThenBy(file => file.Id).ToListAsync(cancellationToken);
         var assignments = assignmentRows.Select(row => new CoachingDataAssignmentDto(
             row.AssignmentId, row.Assignment.Title, row.Assignment.Subject, row.Assignment.DueDate,
-            row.Status.ToString(), row.SubmittedAt, row.Score, row.StudentNote, row.TeacherFeedback)).ToArray();
+            row.Status.ToString(), row.SubmittedAt, row.Score, row.StudentNote, row.TeacherFeedback,
+            submissionFiles.Where(file => file.AssignmentStudentId == row.Id).Select(file => new CoachingDataSubmissionFileDto(file.Id,
+                file.OriginalFileName, file.ContentType, file.SizeBytes, file.Sha256, file.Status.ToString(), file.UploadedAt, file.RejectionReason)).ToArray())).ToArray();
 
         var examRows = await context.ExamResults
             .AsNoTracking()
@@ -49,7 +55,8 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var exams = examRows.Select(row => new CoachingDataExamDto(
             row.ExamId, row.Exam.Title, row.Exam.Subject, row.Exam.ExamDate, row.Exam.MaxScore,
             row.Score, row.CorrectAnswers, row.WrongAnswers, row.EmptyAnswers,
-            row.SubjectScoresJson, row.Ranking, row.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", row.GetLessonAnswers())).ToArray();
+            row.SubjectScoresJson, row.Ranking, row.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", row.GetLessonAnswers(),
+            row.GetPracticeExam(), row.TopicAnalysisJson is null ? null : row.GetTopicAnalysis())).ToArray();
 
         var goalRows = await context.AcademicGoals.AsNoTracking()
             .Where(goal => goal.StudentId == studentId)
@@ -58,7 +65,7 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var goals = goalRows.Select(goal => new CoachingDataGoalDto(
             goal.Id, goal.Title, goal.Description, goal.Category.ToString(), goal.CurrentProgress,
             goal.IsCompleted, goal.TargetDate, goal.TargetScore, goal.TargetSchoolId, goal.TargetUniversityProgramId,
-            goal.TargetMaxScore, goal.TargetExamType?.ToString(), goal.TargetSubject)).ToArray();
+            goal.TargetMaxScore, goal.TargetExamType?.ToString(), goal.TargetSubject, goal.NetTargets)).ToArray();
 
         var sessionRows = await context.SessionAttendances.AsNoTracking()
             .Where(attendance => attendance.StudentId == studentId)
@@ -128,16 +135,21 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var seats = await context.CoachingSubscriptionSeats.AsNoTracking().Where(x => x.StudentId == studentId)
             .OrderBy(x => x.AssignedAt).ThenBy(x => x.Id)
             .Select(x => new CoachingDataSeatDto(x.Id, x.SubscriptionId, x.IsSuspended, x.SuspensionReason, x.AssignedAt)).ToArrayAsync(cancellationToken);
-        var transfers = await context.CoachingBankTransferRequests.AsNoTracking().Where(x => x.UserId == studentId)
+        // Coaching audit K1: the user's own purchases and those they sent for a child, with everything the purchase recorded.
+        var transfers = await context.CoachingBankTransferRequests.AsNoTracking().Where(x => x.UserId == studentId || x.SubmittedByUserId == studentId)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
             .Select(x => new CoachingDataBankTransferDto(x.Id, x.PlanId, x.Amount, x.Currency, x.PaymentReference, x.PayerName, x.Note,
-                x.Status, x.SubscriptionId, x.ReviewedAt, x.ReviewNote, x.CreatedAt)).ToArrayAsync(cancellationToken);
+                x.Status, x.SubscriptionId, x.ReviewedAt, x.ReviewNote, x.CreatedAt, x.UserId, x.SubmittedByUserId, x.ListPrice, x.CouponCode,
+                x.DiscountAmount, x.DurationDays, x.SalesContractVersion, x.SalesContractAcceptedAt, x.SalesDocumentsJson,
+                x.AdultPayerDeclarationVersion, x.AdultPayerDeclaredAt, x.WithdrawalStatus, x.WithdrawalReason, x.WithdrawalRequestedAt,
+                x.WithdrawalReviewNote, x.WithdrawalReviewedAt)).ToArrayAsync(cancellationToken);
         var payments = await context.CoachingPaymentRecords.AsNoTracking().Where(x => x.UserId == studentId)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
             .Select(x => new CoachingDataPaymentDto(x.Id, x.PlanId, x.PlanName, x.SubscriptionId, x.BankTransferRequestId,
                 x.Amount, x.Currency, x.Status, x.Provider, x.Reference, x.CreatedAt)).ToArrayAsync(cancellationToken);
+        // The user's own conversations: as the student or parent writing with a teacher, or as the teacher.
         var conversationRows = await context.Set<Coaching.Domain.Entities.CoachingConversation>().AsNoTracking()
-            .Where(x => x.CounterpartUserId == studentId && x.StudentUserId == studentId)
+            .Where(x => x.CounterpartUserId == studentId || x.TeacherUserId == studentId)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(cancellationToken);
         var conversationIds = conversationRows.Select(x => x.Id).ToList();
         var chatMessages = await context.Set<Coaching.Domain.Entities.CoachingMessage>().AsNoTracking()
@@ -147,14 +159,28 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var conversations = conversationRows.Select(x => new CoachingDataConversationDto(x.Id, x.TeacherUserId, x.CreatedAt,
             chatMessages.Where(m => m.ConversationId == x.Id).Select(m => new CoachingDataMessageDto(m.Id, m.SenderUserId, m.Body, m.SentAt,
                 chatFiles.Where(f => f.MessageId == m.Id).OrderBy(f => f.CreatedAt).Select(f => f.FileName).ToArray())).ToArray())).ToArray();
+        var subscriptionIds = subscriptionRows.Select(x => x.Id).ToList();
+        var periods = await context.CoachingSubscriptionPeriods.AsNoTracking().Where(x => subscriptionIds.Contains(x.SubscriptionId))
+            .OrderBy(x => x.StartDate).ThenBy(x => x.Id)
+            .Select(x => new CoachingDataSubscriptionPeriodDto(x.Id, x.SubscriptionId, x.StartDate, x.EndDate, x.DurationDays, x.Source, x.Status,
+                x.BankTransferRequestId, x.CreatedAt, x.CancelledAt)).ToArrayAsync(cancellationToken);
+        var trials = await context.Set<Coaching.Domain.Entities.CoachingSubscriptionTrial>().AsNoTracking().Where(x => x.UserId == studentId)
+            .OrderBy(x => x.StartedAt).Select(x => new CoachingDataTrialDto(x.Id, x.Audience, x.PlanId, x.SubscriptionId, x.StartedAt, x.EndsAt))
+            .ToArrayAsync(cancellationToken);
+        var paymentIds = payments.Select(x => x.Id).ToList();
+        var invoices = await context.Set<Coaching.Domain.Entities.CoachingInvoice>().AsNoTracking().Where(x => paymentIds.Contains(x.PaymentRecordId))
+            .OrderBy(x => x.IssuedOn).Select(x => new CoachingDataInvoiceDto(x.Id, x.PaymentRecordId, x.InvoiceNumber, x.IssuedOn, x.FileName, x.SizeBytes))
+            .ToArrayAsync(cancellationToken);
+        var primaryGoal = await context.Set<Coaching.Domain.Entities.StudentPrimaryGoal>().AsNoTracking()
+            .Where(x => x.StudentId == studentId).Select(x => (Guid?)x.GoalId).SingleOrDefaultAsync(cancellationToken);
         return new CoachingDataExportDto(
-            "1.10", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments,
+            "1.11", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments,
             await context.StudentLearningContexts.AsNoTracking().Include(x => x.CoursePreferences).Include(x => x.TopicStates)
                 .SingleOrDefaultAsync(x => x.StudentUserId == studentId, cancellationToken),
             weeklyDraft is null ? null : Coaching.Infrastructure.StudyPlanning.CoachingWeeklyStudyDraftService.View(weeklyDraft),
             await context.Set<Coaching.Domain.Entities.WeeklyReflection>().AsNoTracking().Where(x => x.StudentId == studentId).OrderBy(x => x.WeekStart).ToArrayAsync(cancellationToken),
             await context.Set<Coaching.Domain.Entities.WeeklyDecision>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId || x.ResponsibleTeacherId == studentId).OrderBy(x => x.DueOn).ThenBy(x => x.Id).ToArrayAsync(cancellationToken),
             await context.Set<Coaching.Domain.Entities.WeeklyReflectionReview>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId).OrderBy(x => x.CreatedAt).ToArrayAsync(cancellationToken),
-            subscriptions, seats, transfers, payments, conversations);
+            subscriptions, seats, transfers, payments, conversations, primaryGoal, trials, periods, invoices);
     }
 }

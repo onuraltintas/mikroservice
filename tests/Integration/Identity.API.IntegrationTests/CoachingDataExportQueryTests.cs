@@ -16,13 +16,13 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingDataExportQueryTests
 {
     [Fact]
-    public void ExportEndpoint_ShouldAllowStudentsAndTeachers()
+    public void ExportEndpoint_ShouldAllowStudentsTeachersAndParents()
     {
         typeof(DataPrivacyController)
             .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
             .Cast<AuthorizeAttribute>()
             .Should()
-            .Contain(attribute => attribute.Roles == "Student,Teacher");
+            .Contain(attribute => attribute.Roles == "Student,Teacher,Parent");
     }
 
     [Fact]

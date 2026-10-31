@@ -63,9 +63,11 @@ public sealed class CoachingErasureAssessmentService(
             + await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).CountAsync(cancellationToken)
             + await context.CoachingReminderReceipts.CountAsync(x => x.RecipientUserId == message.SubjectUserId, cancellationToken)
             // Roadmap O3: conversations of the subject and their messages.
-            + await context.Set<Coaching.Domain.Entities.CoachingConversation>().CountAsync(x => x.TeacherUserId == message.SubjectUserId || x.CounterpartUserId == message.SubjectUserId, cancellationToken)
+            + await context.Set<Coaching.Domain.Entities.CoachingConversation>().CountAsync(x => x.TeacherUserId == message.SubjectUserId || x.CounterpartUserId == message.SubjectUserId
+                || x.StudentUserId == message.SubjectUserId, cancellationToken)
             + await context.Set<Coaching.Domain.Entities.CoachingMessage>().CountAsync(x => context.Set<Coaching.Domain.Entities.CoachingConversation>()
-                .Any(c => c.Id == x.ConversationId && (c.TeacherUserId == message.SubjectUserId || c.CounterpartUserId == message.SubjectUserId)), cancellationToken);
+                .Any(c => c.Id == x.ConversationId && (c.TeacherUserId == message.SubjectUserId || c.CounterpartUserId == message.SubjectUserId
+                    || c.StudentUserId == message.SubjectUserId)), cancellationToken);
 
         var financeCount = await context.CoachingFeeAgreements.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.CoachingFeeInstallments.CountAsync(x => context.CoachingFeeAgreements.Any(fee => fee.Id == x.AgreementId && fee.StudentId == message.SubjectUserId), cancellationToken)

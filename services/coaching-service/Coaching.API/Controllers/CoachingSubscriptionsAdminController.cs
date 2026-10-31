@@ -17,6 +17,7 @@ namespace Coaching.API.Controllers;
 [HasPermission(PlatformPermissions.Coaching.SubscriptionManage)]
 [RequireGlobalCoachingAdmin]
 [MfaCategory(MfaOperationCategories.Coaching)]
+[Coaching.API.Security.CoachingPaymentExceptionFilter]
 public sealed class CoachingSubscriptionsAdminController(ICoachingSubscription subscriptions) : ControllerBase
 {
     [HttpGet("plans")]

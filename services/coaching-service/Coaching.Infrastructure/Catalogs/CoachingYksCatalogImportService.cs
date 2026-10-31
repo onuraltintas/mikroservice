@@ -90,6 +90,12 @@ public sealed class CoachingYksCatalogImportService(CoachingDbContext db,ICoachi
         var sourceIds=aliases.Select(x=>x.SourceId).ToArray();
         if(await db.Set<StudyCatalogOutcomeSource>().AnyAsync(x=>x.Source=="mebi-yks"&&Enumerable.Contains(sourceIds,x.SourceId),ct))
             throw new ArgumentException("Kaynak kimlikleri başka bir YKS paketine bağlı.");
+        // Coaching audit K1: production retries transient failures and refuses a transaction opened outside its execution
+        // strategy. The import is not replayed automatically (its tracked edits are gone after a rollback).
+        var attempt=0;
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async()=>
+        {
+        if(attempt++>0)throw new InvalidOperationException("YKS paketi aktarımı geçici bir veritabanı hatasıyla yarıda kaldı; aktarımı yeniden başlatın.");
         await using var transaction=await db.Database.BeginTransactionAsync(ct);
         try
         {
@@ -110,6 +116,7 @@ public sealed class CoachingYksCatalogImportService(CoachingDbContext db,ICoachi
             await db.SaveChangesAsync(ct);await transaction.CommitAsync(ct);return expected;
         }
         catch{await transaction.RollbackAsync(ct);db.ChangeTracker.Clear();throw;}
+        });
     }
 
     public static void Validate(YksDataPackage p)

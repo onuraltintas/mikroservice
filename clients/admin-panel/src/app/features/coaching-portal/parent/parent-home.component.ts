@@ -8,12 +8,13 @@ import { CoachingDatePipe } from '../coaching-labels';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { NotificationPreferencesApi, NotificationPreferencesComponent } from '../../../../../shared/notification-preferences.component';
+import { StudentDataExportComponent } from '../pages/student-data-export.component';
 
 /** Roadmap Y7: the parent's start page — linked children, waiting requests and the code form. */
 @Component({
   selector: 'app-parent-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, NotificationPreferencesComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, NotificationPreferencesComponent, StudentDataExportComponent],
   template: `
     <main class="space-y-6" aria-labelledby="parent-home-title">
       <header>
@@ -59,6 +60,8 @@ import { NotificationPreferencesApi, NotificationPreferencesComponent } from '..
         <button type="submit" class="mt-4 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50" [disabled]="submitting() || !code.trim()">{{ submitting() ? 'Gönderiliyor…' : 'Bağlantı isteği gönder' }}</button>
       </form>
       <edu-notification-preferences [api]="notificationApi" />
+      <!-- Coaching audit K1: the parent downloads the data they created themselves (KVKK). -->
+      <app-student-data-export audience="parent" />
     </main>
   `
 })

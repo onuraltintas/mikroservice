@@ -53,6 +53,9 @@ public sealed class CoachingSalesService(CoachingDbContext db, ICoachingSubscrip
         if (userId == Guid.Empty || audience is null || plan.Audience != audience)
             throw new BusinessRuleException("Authorization.Forbidden", "Bu planın denemesini başlatamazsınız.");
         if (plan.TrialDays <= 0) throw new ArgumentException("Bu planda ücretsiz deneme yok.");
+        // Coaching audit K1: a teacher plan is for teachers who work on their own, as for a paid teacher plan.
+        if (audience == "Teacher" && !await subscriptions.IsIndependentTeacherAsync(userId, ct))
+            throw new BusinessRuleException("Authorization.Forbidden", "Kurumda çalışan öğretmenler öğretmen planı denemesi başlatamaz; lisansı kurumunuz yönetir.");
         if (await db.Set<CoachingSubscriptionTrial>().AnyAsync(x => x.UserId == userId && x.Audience == audience, ct)
             || await db.CoachingSubscriptions.AnyAsync(x => x.UserId == userId
                 && db.CoachingSubscriptionPlans.Any(p => p.Id == x.PlanId && p.Audience == audience), ct))
@@ -203,12 +206,12 @@ public sealed class CoachingSalesService(CoachingDbContext db, ICoachingSubscrip
             ?? throw new KeyNotFoundException();
         if (approve)
         {
-            if (await subscriptions.CancelApprovedBankTransferAsync(transferId, $"Cayma: {text}", actor, ct) is null)
+            // Coaching audit K1: the payment is cancelled and the request closed in one transaction.
+            if (await subscriptions.CancelApprovedBankTransferAsync(transferId, $"Cayma: {text}", actor, text, ct) is null)
                 throw new BusinessRuleException("Sales.NotWithdrawable", "Bu ödeme artık onaylı değil.");
-            db.ChangeTracker.Clear();
-            transfer = await db.CoachingBankTransferRequests.SingleAsync(x => x.Id == transferId, ct);
+            return;
         }
-        transfer.WithdrawalStatus = approve ? "Approved" : "Rejected";
+        transfer.WithdrawalStatus = "Rejected";
         transfer.WithdrawalReviewNote = text; transfer.WithdrawalReviewedAt = Now; transfer.WithdrawalReviewedBy = actor; transfer.UpdatedAt = Now;
         await db.SaveChangesAsync(ct);
     }
@@ -282,7 +285,14 @@ public sealed class CoachingSalesService(CoachingDbContext db, ICoachingSubscrip
     /// <summary>The invoice of one of the viewer's payments (or, with <paramref name="asAdmin"/>, any payment).</summary>
     public async Task<CoachingInvoiceFile> OpenInvoiceAsync(Guid viewer, Guid paymentId, CancellationToken ct, bool asAdmin = false)
     {
-        if (!asAdmin && (await ListMyPaymentsAsync(viewer, ct)).All(x => x.Id != paymentId)) throw new KeyNotFoundException();
+        // Coaching audit K1: any of the viewer's payments, however old (the list shows only the latest 100).
+        if (!asAdmin && !await (from payment in db.CoachingPaymentRecords.AsNoTracking()
+                                join t in db.CoachingBankTransferRequests.AsNoTracking() on payment.BankTransferRequestId equals t.Id into transfers
+                                from transfer in transfers.DefaultIfEmpty()
+                                where payment.Id == paymentId && payment.InstitutionId == null
+                                    && (payment.UserId == viewer || transfer != null && transfer.SubmittedByUserId == viewer)
+                                select payment.Id).AnyAsync(ct))
+            throw new KeyNotFoundException();
         var invoice = await db.Set<CoachingInvoice>().AsNoTracking().SingleOrDefaultAsync(x => x.PaymentRecordId == paymentId, ct) ?? throw new KeyNotFoundException();
         return new(await storage.OpenReadAsync(invoice.StorageKey, ct), invoice.FileName);
     }

@@ -183,7 +183,7 @@ public sealed class CoachingPrivacyRetentionPostgresTests
 
         var export = await new CoachingDataExportRepository(pg.Db).ExportStudentDataAsync(subject, Start, default);
 
-        Assert.Equal("1.10", export.SchemaVersion);
+        Assert.Equal("1.11", export.SchemaVersion);
         var subscription = Assert.Single(export.Subscriptions!);
         Assert.Equal<(Guid, string?)>((mine.Subscription, "Bireysel aylık"), (subscription.Id, subscription.PlanName));
         Assert.Equal(mine.Seat, Assert.Single(export.SubscriptionSeats!).Id);

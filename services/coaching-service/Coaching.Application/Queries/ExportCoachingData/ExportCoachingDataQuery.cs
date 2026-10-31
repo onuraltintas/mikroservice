@@ -32,7 +32,12 @@ public sealed record CoachingDataExportDto(
     IReadOnlyList<CoachingDataSeatDto>? SubscriptionSeats = null,
     IReadOnlyList<CoachingDataBankTransferDto>? BankTransfers = null,
     IReadOnlyList<CoachingDataPaymentDto>? Payments = null,
-    IReadOnlyList<CoachingDataConversationDto>? Conversations = null)
+    IReadOnlyList<CoachingDataConversationDto>? Conversations = null,
+    // Schema 1.11 (coaching audit K1).
+    Guid? PrimaryGoalId = null,
+    IReadOnlyList<CoachingDataTrialDto>? Trials = null,
+    IReadOnlyList<CoachingDataSubscriptionPeriodDto>? SubscriptionPeriods = null,
+    IReadOnlyList<CoachingDataInvoiceDto>? Invoices = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
@@ -40,13 +45,20 @@ public sealed record CoachingDataExportDto(
 
 public sealed record CoachingDataAssignmentDto(
     Guid AssignmentId, string Title, string? Subject, DateTime DueDate, string Status,
-    DateTime? SubmittedAt, decimal? Score, string? StudentNote, string? TeacherFeedback);
+    DateTime? SubmittedAt, decimal? Score, string? StudentNote, string? TeacherFeedback,
+    IReadOnlyList<CoachingDataSubmissionFileDto>? Attachments = null);
+
+/// <summary>A file the student handed in; the stored file itself is not part of the export.</summary>
+public sealed record CoachingDataSubmissionFileDto(Guid Id, string FileName, string ContentType, long SizeBytes, string Sha256, string Status,
+    DateTime? UploadedAt, string? RejectionReason);
 
 public sealed record CoachingDataExamDto(
     Guid ExamId, string Title, string? Subject, DateTime ExamDate, decimal MaxScore,
     decimal Score, int? CorrectAnswers, int? WrongAnswers, int? EmptyAnswers,
     string? SubjectScoresJson, int? Ranking, string Source = "TeacherRecorded",
-    IReadOnlyList<Coaching.Domain.Entities.LessonAnswerStatistics>? LessonAnswers = null);
+    IReadOnlyList<Coaching.Domain.Entities.LessonAnswerStatistics>? LessonAnswers = null,
+    Coaching.Domain.Entities.PracticeExamInput? PracticeExam = null,
+    Coaching.Domain.Entities.PracticeTopicAnalysis? TopicAnalysis = null);
 
 public sealed record CoachingDataStudyPlanDto(Guid Id, Guid PlanId, int RevisionNumber, int Version, string Title,
     string Status, int? AutomaticAvailabilityVersion, Guid? AutomaticSourceRevisionId, int? AutomaticSourceRevisionVersion,
@@ -55,7 +67,8 @@ public sealed record CoachingDataStudyPlanDto(Guid Id, Guid PlanId, int Revision
 public sealed record CoachingDataGoalDto(
     Guid GoalId, string Title, string? Description, string Category, int CurrentProgress,
     bool IsCompleted, DateTime? TargetDate, decimal? TargetScore, Guid? TargetSchoolId = null, Guid? TargetUniversityProgramId = null,
-    decimal? TargetMaxScore = null, string? TargetExamType = null, string? TargetSubject = null);
+    decimal? TargetMaxScore = null, string? TargetExamType = null, string? TargetSubject = null,
+    IReadOnlyList<Coaching.Domain.Entities.AcademicNetTarget>? NetTargets = null);
 
 public sealed record CoachingDataSessionDto(
     Guid SessionId, string Title, DateTime ScheduledDate, int DurationMinutes, string Status,
@@ -69,10 +82,19 @@ public sealed record CoachingDataSubscriptionDto(Guid Id, Guid PlanId, string? P
     DateTime StartDate, DateTime EndDate, string? PaymentReference, Guid? BankTransferRequestId, DateTime CreatedAt);
 public sealed record CoachingDataSeatDto(Guid Id, Guid SubscriptionId, bool IsSuspended, string? SuspensionReason, DateTime AssignedAt);
 public sealed record CoachingDataBankTransferDto(Guid Id, Guid PlanId, decimal Amount, string Currency, string PaymentReference,
-    string? PayerName, string? Note, string Status, Guid? SubscriptionId, DateTime? ReviewedAt, string? ReviewNote, DateTime CreatedAt);
+    string? PayerName, string? Note, string Status, Guid? SubscriptionId, DateTime? ReviewedAt, string? ReviewNote, DateTime CreatedAt,
+    // Schema 1.11 (coaching audit K1): the full purchase record.
+    Guid? ForUserId = null, Guid? SubmittedByUserId = null, decimal? ListPrice = null, string? CouponCode = null, decimal DiscountAmount = 0,
+    int? DurationDays = null, string? SalesContractVersion = null, DateTime? SalesContractAcceptedAt = null, string? SalesDocumentsJson = null,
+    int? AdultPayerDeclarationVersion = null, DateTime? AdultPayerDeclaredAt = null, string? WithdrawalStatus = null, string? WithdrawalReason = null,
+    DateTime? WithdrawalRequestedAt = null, string? WithdrawalReviewNote = null, DateTime? WithdrawalReviewedAt = null);
+public sealed record CoachingDataTrialDto(Guid Id, string Audience, Guid PlanId, Guid SubscriptionId, DateTime StartedAt, DateTime EndsAt);
+public sealed record CoachingDataSubscriptionPeriodDto(Guid Id, Guid SubscriptionId, DateTime StartDate, DateTime EndDate, int DurationDays,
+    string Source, string Status, Guid? BankTransferRequestId, DateTime CreatedAt, DateTime? CancelledAt);
+public sealed record CoachingDataInvoiceDto(Guid Id, Guid PaymentId, string InvoiceNumber, DateOnly IssuedOn, string FileName, long SizeBytes);
 public sealed record CoachingDataPaymentDto(Guid Id, Guid PlanId, string PlanName, Guid? SubscriptionId, Guid? BankTransferRequestId,
     decimal Amount, string Currency, string Status, string Provider, string? Reference, DateTime CreatedAt);
-/// <summary>Roadmap O3: the student's own conversations with their teachers (a parent's conversations are the parent's data).</summary>
+/// <summary>Roadmap O3: the user's own conversations — a student's or parent's with teachers, a teacher's with students and parents.</summary>
 public sealed record CoachingDataConversationDto(Guid Id, Guid TeacherUserId, DateTime CreatedAt, IReadOnlyList<CoachingDataMessageDto> Messages);
 public sealed record CoachingDataMessageDto(Guid Id, Guid SenderUserId, string Body, DateTime SentAt, IReadOnlyList<string> AttachmentNames);
 public sealed record CoachingDataReminderDto(Guid Id, Guid SourceId, string Kind, DateTime DueAt, DateTime QueuedAt);
@@ -104,7 +126,9 @@ public sealed class ExportCoachingDataQueryHandler(
                 [studentId.Value],
                 cancellationToken);
         }
-        else if (!accessPolicy.IsCurrentTeacher(studentId.Value))
+        // Coaching audit K1: a parent exports what they created themselves (their messages, the payments they sent for a
+        // child); the child's own data is in the child's export.
+        else if (!accessPolicy.IsCurrentTeacher(studentId.Value) && !accessPolicy.IsParent)
         {
             throw Forbidden();
         }
@@ -117,5 +141,5 @@ public sealed class ExportCoachingDataQueryHandler(
 
     private static BusinessRuleException Forbidden() => new(
         "Authorization.Forbidden",
-        "Koçluk veri dışa aktarımı yalnızca ilgili öğrenci veya öğretmen hesabı tarafından başlatılabilir.");
+        "Koçluk veri dışa aktarımı yalnızca ilgili öğrenci, öğretmen veya veli hesabı tarafından başlatılabilir.");
 }

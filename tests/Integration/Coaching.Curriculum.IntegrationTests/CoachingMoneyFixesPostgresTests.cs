@@ -97,7 +97,7 @@ public sealed class CoachingMoneyFixesPostgresTests
         var plan = await Setup(f.Db, "Individual");
         var user = Guid.NewGuid();
         var withoutContract = await Assert.ThrowsAsync<BusinessRuleException>(() => Service(f.Db).CreateBankTransferRequestAsync(user, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-K1-NOCONTRACT", "Ada", null, true), "contract-0001"));
+            new CoachingBankTransferRequestCreate(plan, "EFT-K1-NOCONTRACT", "Ada", null, true), "k1-contract-0001"));
         Assert.Equal("Sales.ContractRequired", withoutContract.Code);
 
         await Create(f.Db, plan, user, "EFT-K1-PENDING-1", "pending-0001");
@@ -182,7 +182,7 @@ public sealed class CoachingMoneyFixesPostgresTests
         var plan = await Setup(f.Db, "Individual");
         var events = new Publisher();
         await new CoachingSubscriptionService(f.Db, new Identity(), events).CreateBankTransferRequestAsync(Guid.NewGuid(), "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-K1-FORMAT-1", "Ada", null, true, AcceptSalesContract: true), "format-0001");
+            new CoachingBankTransferRequestCreate(plan, "EFT-K1-FORMAT-1", "Ada", null, true, AcceptSalesContract: true), "k1-format-notice-0001");
         Assert.Contains("1.200,00 TRY", Assert.Single(events.Notices).Detail);
     }
 
@@ -352,7 +352,7 @@ public sealed class CoachingMoneyFixesPostgresTests
         f.Db.Add(AcademicGoal.Create(child, "Çocuğun hedefi", Coaching.Domain.Enums.GoalCategory.Other));
         await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
 
-        var handler = new ExportCoachingDataQueryHandler(new CoachingDataExportRepository(f.Db), new CoachingAccessPolicy(new User(parent, "Parent")),
+        var handler = new ExportCoachingDataQueryHandler(new CoachingDataExportRepository(f.Db), new CoachingAccessPolicy(new Viewer(parent, "Parent")),
             new Identity(), TimeProvider.System);
         var export = await handler.Handle(new ExportCoachingDataQuery(), default);
 
@@ -393,7 +393,7 @@ public sealed class CoachingMoneyFixesPostgresTests
         string? coupon = null, string name = "Ada", string email = "ada@example.test")
     {
         var result = await Service(db).CreateBankTransferRequestAsync(user, name, email,
-            new CoachingBankTransferRequestCreate(plan, reference, name, null, true, coupon, AcceptSalesContract: true), key);
+            new CoachingBankTransferRequestCreate(plan, reference, name, null, true, coupon, AcceptSalesContract: true), "k1-create-" + key);
         Assert.NotNull(result);
         return result!;
     }
@@ -455,7 +455,7 @@ public sealed class CoachingMoneyFixesPostgresTests
         public bool IsAuthenticated => true; public ClaimsPrincipal? User => null;
     }
 
-    private sealed class User(Guid id, string role) : ICurrentUserService
+    private sealed class Viewer(Guid id, string role) : ICurrentUserService
     {
         public Guid? UserId => id;
         public IEnumerable<string> Roles => [role];

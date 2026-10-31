@@ -222,8 +222,7 @@ public sealed class CoachingMessagingTests
 
         var remaining = await s.F.Db.Set<CoachingConversation>().Select(x => x.Id).ToListAsync();
         if (erased == "Parent") remaining.Should().Equal(withStudent.Id);
-        else if (erased == "Student") remaining.Should().Equal(new[] { withParent.Id }, "the parent's own conversation about the child is the parent's data");
-        else remaining.Should().BeEmpty();
+        else remaining.Should().BeEmpty("erasing the student also removes the teacher–parent conversations about the student");
         (await s.F.Db.Set<CoachingMessage>().CountAsync()).Should().Be(remaining.Count);
         (await s.F.Db.Set<CoachingMessageAttachment>().AnyAsync()).Should().Be(erased == "Parent");
         Directory.EnumerateFiles(s.Root, "*", SearchOption.AllDirectories).Any().Should().Be(erased == "Parent");
@@ -241,7 +240,7 @@ public sealed class CoachingMessagingTests
 
         var export = await new CoachingDataExportRepository(s.F.Db).ExportStudentDataAsync(s.Student, DateTimeOffset.UtcNow, default);
 
-        export.SchemaVersion.Should().Be("1.10");
+        export.SchemaVersion.Should().Be("1.11");
         var conversation = export.Conversations.Should().ContainSingle().Subject;
         (conversation.Id, conversation.TeacherUserId).Should().Be((own.Id, s.Teacher));
         conversation.Messages.Should().ContainSingle(x => x.Body == "Benim mesajım" && x.SenderUserId == s.Student);
