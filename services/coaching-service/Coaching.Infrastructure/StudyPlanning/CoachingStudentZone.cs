@@ -26,6 +26,20 @@ public static class CoachingStudentZone
         return Usable(zone);
     }
 
+    /// <summary>The same rule as <see cref="IdAsync"/> for many students in three queries (V3: the weekly parent summary).</summary>
+    public static async Task<IReadOnlyDictionary<Guid, string>> IdsAsync(CoachingDbContext db, IReadOnlyCollection<Guid> students, CancellationToken ct)
+    {
+        var ids = students.Distinct().ToArray();
+        var plans = (await db.StudyPlanRevisions.AsNoTracking().Where(x => Enumerable.Contains(ids, x.StudentId) && x.Status == StudyPlanStatus.Active)
+            .Select(x => new { x.StudentId, x.WeeklySource }).ToListAsync(ct))
+            .Where(x => x.WeeklySource?.TimeZoneId is not null).GroupBy(x => x.StudentId).ToDictionary(x => x.Key, x => x.First().WeeklySource!.TimeZoneId);
+        var hours = (await db.StudyAvailability.AsNoTracking().Where(x => Enumerable.Contains(ids, x.StudentId))
+            .Select(x => new { x.StudentId, x.TimeZoneId }).ToListAsync(ct)).GroupBy(x => x.StudentId).ToDictionary(x => x.Key, x => x.First().TimeZoneId);
+        var drafts = (await db.Set<WeeklyStudyDraft>().AsNoTracking().Where(x => Enumerable.Contains(ids, x.StudentId))
+            .Select(x => new { x.StudentId, x.TimeZoneId }).ToListAsync(ct)).GroupBy(x => x.StudentId).ToDictionary(x => x.Key, x => x.First().TimeZoneId);
+        return ids.ToDictionary(id => id, id => Usable(plans.GetValueOrDefault(id) ?? hours.GetValueOrDefault(id) ?? drafts.GetValueOrDefault(id)));
+    }
+
     public static TimeZoneInfo Find(string? zoneId) => TimeZoneInfo.FindSystemTimeZoneById(Usable(zoneId));
 
     private static string Usable(string? zoneId) =>

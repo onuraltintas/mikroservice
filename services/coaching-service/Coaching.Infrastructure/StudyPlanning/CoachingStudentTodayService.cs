@@ -12,7 +12,8 @@ public sealed record StudentTodayGoal(Guid GoalId, string Title, string ExamCode
 public sealed record StudentTodayReview(bool Needed, DateOnly WeekStart);
 public sealed record StudentTodaySession(Guid Id, string Title, DateTime ScheduledDate, int DurationMinutes, string? MeetingLink);
 public sealed record StudentTodayFacts(DateOnly Today, string TimeZoneId, StudentTodayExam? Exam, StudentTodayStreak Streak,
-    StudentTodayWeek Week, StudentTodayGoal? Goal, StudentTodayReview WeeklyReview, StudentTodaySession? NextSession, bool HasActivePlan);
+    StudentTodayWeek Week, StudentTodayGoal? Goal, StudentTodayReview WeeklyReview, StudentTodaySession? NextSession, bool HasActivePlan,
+    DateOnly? LastActiveDay = null);
 
 /// <summary>
 /// T3 (31.10.2026): everything the student's "Bugün" screen shows besides the agenda, read for the student's own day:
@@ -56,7 +57,8 @@ public sealed class CoachingStudentTodayService(CoachingDbContext db, CoachingMo
 
         return new(today, zoneId, await ExamAsync(student, today, ct),
             new(streak.CurrentStreak, streak.LongestStreak, streak.ActiveToday), week,
-            await GoalAsync(student, now.UtcDateTime, ct), new(missing.Length > 0, reviewWeek), session, plan.HasValue);
+            await GoalAsync(student, now.UtcDateTime, ct), new(missing.Length > 0, reviewWeek), session, plan.HasValue,
+            streak.LastActiveDay);
     }
 
     private async Task<StudentTodayExam?> ExamAsync(Guid student, DateOnly today, CancellationToken ct)

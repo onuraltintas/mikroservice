@@ -112,7 +112,8 @@ public class GetSessionsQueryHandler :
                     ? CoachingNoteVisibility.GuardianVisible
                     : _accessPolicy.IsInstitutionAdministrator
                         ? CoachingNoteVisibility.InstitutionVisible
-                        : null);
+                        : null,
+            attendanceOf: query.StudentId);
     }
 
     private static PagedResponse<SessionDto> MapToDto(
@@ -122,7 +123,8 @@ public class GetSessionsQueryHandler :
         IReadOnlySet<Guid>? visibleStudentIds = null,
         bool includeStudentNote = false,
         bool includeStudentReflections = false,
-        CoachingNoteVisibility? sharedNotesAudience = null)
+        CoachingNoteVisibility? sharedNotesAudience = null,
+        Guid? attendanceOf = null)
     {
         var sessions = page.Items.Select(s =>
         {
@@ -165,7 +167,11 @@ public class GetSessionsQueryHandler :
                 SharedNotesVisibility: sharedNotesAudience == s.TeacherNotesVisibility
                     ? s.TeacherNotesVisibility.ToString()
                     : null,
-                SeriesId: s.SeriesId);
+                SeriesId: s.SeriesId,
+                // V3 (parent panel): on a student's own list, that student's attendance only.
+                AttendanceStatus: attendanceOf is { } own
+                    ? s.Attendances.FirstOrDefault(attendance => attendance.StudentId == own)?.AttendanceStatus.ToString()
+                    : null);
         }).ToList();
 
         return new PagedResponse<SessionDto>(sessions, pageNumber, pageSize, page.TotalCount);

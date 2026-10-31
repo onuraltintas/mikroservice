@@ -199,6 +199,12 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(10);
         }).AddCorrelationIdPropagation();
+        // V3 (parent panel): the speed-reading section of the weekly parent e-mail (Services:SpeedReadingService).
+        services.AddHttpClient<ISpeedReadingParentSummaryClient, SpeedReadingParentSummaryClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        }).AddCorrelationIdPropagation();
+        services.AddScoped<CoachingParentChildService>();
         if (configuration.GetValue("Coaching:Reminders:Enabled", true))
             services.AddHostedService<Coaching.Infrastructure.Reminders.CoachingReminderWorker>();
         services.AddScoped<Coaching.Infrastructure.Attachments.CoachingAttachmentCleanupProcessor>();

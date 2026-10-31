@@ -89,15 +89,17 @@ public sealed class CoachingParentChildPostgresTests
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create();
         var f = await Family.Create(pg);
+        // Work dates may not lie ahead of the real clock: this test reads the week of Monday 26 October.
+        var week = new DateOnly(2026, 10, 26);
         var plan = StudyPlanRevision.Create(f.Student, Guid.NewGuid(), 1, "Plan"); plan.Activate();
-        var thisWeek = StudyPlanTask.Create(plan, Monday, "Matematik", 30); thisWeek.Complete(25, workedOn: Monday);
-        var lastWeek = StudyPlanTask.Create(plan, Monday.AddDays(-6), "Türkçe", 40);
-        var old = StudyPlanTask.Create(plan, Monday.AddDays(-49), "Fen", 20); old.Complete(20, workedOn: Monday.AddDays(-49));
+        var thisWeek = StudyPlanTask.Create(plan, week, "Matematik", 30); thisWeek.Complete(25, workedOn: week);
+        var lastWeek = StudyPlanTask.Create(plan, week.AddDays(-6), "Türkçe", 40);
+        var old = StudyPlanTask.Create(plan, week.AddDays(-49), "Fen", 20); old.Complete(20, workedOn: week.AddDays(-49));
         pg.Db.AddRange(plan, thisWeek, lastWeek, old); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
 
-        var weeks = Data<IReadOnlyList<ParentChildAdherenceWeek>>(await f.Api().Adherence(f.Student));
+        var weeks = Data<IReadOnlyList<ParentChildAdherenceWeek>>(await f.Api(new DateTimeOffset(2026, 10, 29, 9, 0, 0, TimeSpan.Zero)).Adherence(f.Student));
 
-        Assert.Equal(Enumerable.Range(0, 8).Select(i => Monday.AddDays(-7 * (7 - i))), weeks.Select(x => x.WeekStart));
+        Assert.Equal(Enumerable.Range(0, 8).Select(i => week.AddDays(-7 * (7 - i))), weeks.Select(x => x.WeekStart));
         Assert.Equal((1, 1, 20L), (weeks[0].Planned, weeks[0].Completed, weeks[0].Minutes));
         Assert.Equal((1, 0), (weeks[6].Planned, weeks[6].Completed));
         Assert.Equal((1, 1, 25L), (weeks[7].Planned, weeks[7].Completed, weeks[7].Minutes));

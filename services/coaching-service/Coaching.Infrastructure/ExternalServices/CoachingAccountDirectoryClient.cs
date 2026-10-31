@@ -46,13 +46,22 @@ public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfigurati
     public Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeRepresentativeAsync(Guid viewerUserId, Guid studentUserId, CancellationToken ct) =>
         representatives.AuthorizeAsync(viewerUserId, studentUserId, ct);
 
-    public Task<CoachingParentReadAuthorization?> AuthorizeParentReadAsync(Guid parentUserId, Guid studentUserId, CancellationToken ct) =>
-        throw new NotImplementedException();
+    /// <summary>V3 (parent panel): Identity's authorize-read for product Coaching; 403 (or 404) means no.</summary>
+    public async Task<CoachingParentReadAuthorization?> AuthorizeParentReadAsync(Guid parentUserId, Guid studentUserId, CancellationToken ct)
+    {
+        var response = await SendToAsync<ParentRead>(HttpMethod.Post, "api/internal/parents/authorize-read",
+            new { parentUserId, studentUserId, product = "Coaching" }, ct);
+        return response is null ? null : new(response.RelationshipId, response.Relationship.ValueKind == System.Text.Json.JsonValueKind.String
+            ? response.Relationship.GetString() ?? "" : response.Relationship.ToString());
+    }
 
-    private async Task<T?> SendAsync<T>(HttpMethod method, string path, object? body, CancellationToken ct)
+    private Task<T?> SendAsync<T>(HttpMethod method, string path, object? body, CancellationToken ct) =>
+        SendToAsync<T>(method, $"api/internal/coaching/{path}", body, ct);
+
+    private async Task<T?> SendToAsync<T>(HttpMethod method, string path, object? body, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(key)) throw new InvalidOperationException("Internal service key is required.");
-        using var request = new HttpRequestMessage(method, $"{baseUrl}/api/internal/coaching/{path}");
+        using var request = new HttpRequestMessage(method, $"{baseUrl}/{path}");
         if (body is not null) request.Content = JsonContent.Create(body);
         request.Headers.Add(InternalServiceAuthentication.HeaderName, key);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
@@ -65,4 +74,6 @@ public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfigurati
     private sealed record AdminScope(bool IsGlobal, Guid? InstitutionId, InstitutionRow[]? Institutions = null);
     private sealed record InstitutionRow(Guid Id, string Name);
     private sealed record InstitutionState(bool IsActive);
+    // The relationship is informational here; accept it as a name or a number.
+    private sealed record ParentRead(Guid RelationshipId, System.Text.Json.JsonElement Relationship);
 }
