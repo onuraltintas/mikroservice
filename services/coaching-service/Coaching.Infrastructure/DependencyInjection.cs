@@ -169,6 +169,7 @@ public static class DependencyInjection
         services.AddScoped<CoachingCalendarSubscriptionService>();
         services.AddScoped<CoachingAdminToolsService>();
         services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingMotivationService>();
+        services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingStudentTodayService>();
         services.AddScoped<Coaching.Infrastructure.Finance.CoachingFeeService>();
         services.AddScoped<ICoachingNewsletter>(provider => new CoachingNewsletterService(
             provider.GetRequiredService<CoachingDbContext>(),
