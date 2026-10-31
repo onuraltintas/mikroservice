@@ -128,6 +128,25 @@ public sealed class CoachingInstitutionExamTests
         (await s.Exams.GetAsync(s.Admin, s.Institution, exam.Id, "8-A", default)).Results.Should().HaveCount(2).And.OnlyContain(x => x.ClassBranch == "8-A");
     }
 
+    // K2 (31.10.2026): the "Şube yok" group can be chosen as a filter and branches differing only in case are one group.
+    [Fact]
+    public async Task TheNoBranchGroupCanBeFilteredAndBranchCaseDoesNotSplitAGroup()
+    {
+        await using var s = await Setup.CreateAsync();
+        var noBranch = await s.AddStudentAsync(8, null); var lowerCase = await s.AddStudentAsync(8, "8-a");
+        var exam = await s.Exams.CreateAsync(s.Admin, s.Institution, new("LGS denemesi", "LGS", Day, 8, 500), default);
+        var csv = s.LgsCsv((s.Ada, 15, 3, 400m), (s.Bora, 18, 0, 470m), (noBranch, 10, 2, 300m), (lowerCase, 12, 2, 350m));
+        var preview = await s.Exams.PreviewImportAsync(s.Admin, s.Institution, exam.Id, csv, default);
+        await s.Exams.ApplyImportAsync(s.Admin, s.Institution, exam.Id, csv, preview.Fingerprint, default);
+
+        var report = await s.Exams.GetAsync(s.Admin, s.Institution, exam.Id, null, default);
+        report.Branches.Select(x => (x.Branch, x.Count)).Should().BeEquivalentTo(new[] { ("8-A", 2), ("8-B", 1), ("Şube yok", 1) });
+        (await s.Exams.GetAsync(s.Admin, s.Institution, exam.Id, "Şube yok", default)).Results.Should().ContainSingle()
+            .Which.StudentId.Should().Be(noBranch);
+        (await s.Exams.GetAsync(s.Admin, s.Institution, exam.Id, "8-A", default)).Results.Select(x => x.StudentId)
+            .Should().BeEquivalentTo(new[] { s.Ada, lowerCase });
+    }
+
     [Fact]
     public async Task ImportingAgainReplacesResultsInsteadOfDuplicating()
     {
@@ -232,7 +251,9 @@ public sealed class CoachingInstitutionExamTests
             return s;
         }
 
-        private async Task<Guid> Student(int grade, string branch)
+        public Task<Guid> AddStudentAsync(int grade, string? branch) => Student(grade, branch);
+
+        private async Task<Guid> Student(int grade, string? branch)
         {
             var id = F.AddAccount("Student");
             await F.Store.SetMembershipAsync(Admin, Institution, id, CoachingMemberRole.Student, true, default);
