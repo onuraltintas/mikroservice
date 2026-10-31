@@ -13,7 +13,8 @@ describe('StudentStudyPlansComponent', () => {
     expect(component.filter).toBe('Active'); expect(service.list).toHaveBeenCalledWith(1, 'Active');
     expect(component.selected()?.id).toBe('plan');
     expect(fixture.nativeElement.querySelector('.workspace > aside')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.plan-toolbar')).not.toBeNull();
+    // T4: the plan picker lives in the "Plan işlemleri" menu on the student page.
+    expect(fixture.nativeElement.querySelector('details.plan-menu .plan-picker')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.plan-picker').open).toBe(false);
   });
   it('finds the existing draft while the default active filter hides it', async () => {
@@ -67,7 +68,7 @@ describe('StudentStudyPlansComponent', () => {
   });
   it('shows dated work and legacy provenance and corrects a work date with its old date and reason',async()=>{
     const{component,fixture,service}=await setup();const task={...component.selected()!.tasks[0],actualMinutes:20,actualQuestions:8,workDays:[{workedOn:'2026-09-28',minutes:20,questions:8,isLegacyDate:true}]};
-    component.selected.set({...active,tasks:[task]});fixture.detectChanges();
+    component.selected.set({...active,tasks:[task]});component.openTask(task.id);fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('fiili tarih bilinmiyor');
     component.startCorrection(task);component.correction!.reassignFromDate='2026-09-28';component.correction!.workedOn='2026-10-05';component.correction!.reason='Fiili gün yanlış seçilmiş';component.saveCorrection();
     expect(service.recordRealization).toHaveBeenCalledWith('plan','task',expect.objectContaining({actualMinutes:20,actualQuestions:8,workedOn:'2026-10-05',reassignFromDate:'2026-09-28',reason:'Fiili gün yanlış seçilmiş'}),true);
@@ -94,7 +95,7 @@ describe('StudentStudyPlansComponent', () => {
     const {component,service,fixture}=await setup();const task=component.selected()!.tasks[0];
     component.actualMinutes[task.id]=12;component.remainingMinutes[task.id]=null;component.partial(task);expect(service.recordRealization).not.toHaveBeenCalled();
     expect(component.error()).toContain('kalan süreyi');
-    component.selected.set({...active,tasks:[{...task,predecessorTaskId:'old-task',originalTaskId:'root',plannedMinutes:18,actualMinutes:null}]});fixture.detectChanges();
+    component.selected.set({...active,tasks:[{...task,predecessorTaskId:'old-task',originalTaskId:'root',plannedMinutes:18,actualMinutes:null}]});component.openTask(task.id);fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('önceki gerçekleşmeler kaynak görevde korunur');
   });
   it('can withdraw an erroneous realization with a reason while preserving its history',async()=>{
@@ -112,7 +113,7 @@ describe('StudentStudyPlansComponent', () => {
     const task={...active.tasks[0],actualMinutes:20,remainingMinutes:40,remainingQuestions:12,continuation:{revisionId:'current',revisionVersion:7,taskId:'copy',isCompleted:false,hasOwnCompletion:false,remainingMinutes:15,remainingQuestions:5,requiresExplicitScope:true}};
     component.selected.set({...active,status:'Archived',tasks:[task]});component.startCorrection(task);
     Object.assign(component.correction!,{remainingMinutes:30,remainingQuestions:9,reason:'Kalan kapsam yanlış girilmiş'});
-    fixture.detectChanges();expect(fixture.nativeElement.textContent).toContain('Aktif devamda güncel kalan süre');
+    component.openTask(task.id);fixture.detectChanges();expect(fixture.nativeElement.textContent).toContain('Aktif devamda güncel kalan süre');
     component.saveCorrection();expect(service.recordRealization).not.toHaveBeenCalled();
     Object.assign(component.correction!,{continuationMinutes:10,continuationQuestions:3});component.saveCorrection();
     expect(service.recordRealization).toHaveBeenCalledWith('plan','task',expect.objectContaining({remainingMinutes:30,continuationScope:{revisionId:'current',expectedVersion:7,remainingMinutes:10,remainingQuestions:3}}),true);
@@ -129,7 +130,7 @@ describe('StudentStudyPlansComponent', () => {
   it('explains inherited completion without fabricating effort and labels reconciliation history',async()=>{
     const{component,fixture}=await setup();
     component.selected.set({...active,tasks:[{...active.tasks[0],isCompleted:true,actualMinutes:null,completionSourceTaskId:'source',realizationHistory:[{at:'2026-10-24T12:00:00Z',actorUserId:'student',action:'ContinuationReconciliation',previousMinutes:null,previousQuestions:null,previouslyCompleted:false,previousCompletedAt:null,minutes:0,questions:null,completed:true,reason:'Geçmiş düzeltmeyle uzlaştırıldı'}]}]});
-    fixture.detectChanges();expect(fixture.nativeElement.textContent).toContain('Fiili süre ve sorular yapıldıkları kayıtta korunur');expect(fixture.nativeElement.textContent).toContain('Devam ilerlemesi uzlaştırıldı');
+    component.openTask(active.tasks[0].id);fixture.detectChanges();expect(fixture.nativeElement.textContent).toContain('Fiili süre ve sorular yapıldıkları kayıtta korunur');expect(fixture.nativeElement.textContent).toContain('Devam ilerlemesi uzlaştırıldı');
   });
   it('creates a calendar study with the chosen time and dynamic lesson, keeping the modal on a conflict',async()=>{
     const {component,service,fixture}=await setup();
@@ -197,20 +198,22 @@ describe('StudentStudyPlansComponent', () => {
     const {component,service,fixture}=await setup();
     const generated:StudyPlan={...active,weeklySource:{draftVersion:1,learningContextVersion:2,startDate:'2026-10-01',endDate:'2027-06-01',reuseFreedSlots:false,fingerprint:'saved',activeRevisionId:null,activeRevisionVersion:null,timeZoneId:'Europe/Istanbul'},tasks:[{...active.tasks[0],plannedStartMinute:1080,weeklyLessonId:'math',lessonName:'Matematik'}]};
     const before=JSON.stringify(generated);service.get.mockReturnValue(of(generated));await component.open('plan');fixture.detectChanges(); await fixture.whenStable();
-    expect(fixture.nativeElement.querySelector('app-study-plan-calendar')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[aria-label="Plan görünümü"]')).not.toBeNull();
+    // T4: on the student page the full weekly calendar is the "Haftalık tablo" from the plan menu.
+    component.boardOpen.set(true);fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('app-study-plan-calendar')).not.toBeNull();
     expect(JSON.stringify(generated)).toBe(before);expect(service.replace).not.toHaveBeenCalled();expect(service.complete).not.toHaveBeenCalled();
   });
   it('uses existing completion inputs from calendar details and preserves unrelated unsaved work on updates',async ()=>{
     const{component,service,fixture}=await setup();const generated:StudyPlan={...active,weeklySource:{draftVersion:1,learningContextVersion:2,startDate:'2026-10-01',endDate:'2027-06-01',reuseFreedSlots:false,fingerprint:'saved',activeRevisionId:null,activeRevisionVersion:null},tasks:[active.tasks[0],{...active.tasks[0],id:'second'}]};
-    service.get.mockReturnValue(of(generated));await component.open('plan');component.selectCalendarTasks(['task','second']);fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.querySelectorAll('article.task')).toHaveLength(2);
+    service.get.mockReturnValue(of(generated));await component.open('plan');component.boardOpen.set(true);component.selectCalendarTasks(['task','second']);fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.querySelectorAll('.board-detail app-plan-task-row')).toHaveLength(2);
     component.actualMinutes['second']=17;component.actualQuestions['second']=0;service.complete.mockReturnValue(of({...generated,version:5,tasks:generated.tasks.map(t=>t.id==='task'?{...t,isCompleted:true,actualMinutes:25}:t)}));
     component.complete(generated.tasks[0],25,0);fixture.detectChanges(); await fixture.whenStable();expect(component.planView()).toBe('calendar');expect(component.actualMinutes['second']).toBe(17);expect(component.actualQuestions['second']).toBe(0);expect(component.selectedTaskIds()).toEqual(['task','second']);
     expect(service.complete).toHaveBeenCalledWith('plan','task',4,25,0);expect(component.selected()?.tasks[0].isCompleted).toBe(true);expect(service.replace).not.toHaveBeenCalled();
   });
   it('focuses the details again when another calendar card is selected',async()=>{
-    const{component,fixture}=await setup();component.planView.set('calendar');component.selectCalendarTasks(['task']);fixture.detectChanges(); await fixture.whenStable();
-    const detail=fixture.nativeElement.querySelector('.calendar-task-detail') as HTMLElement;expect(document.activeElement).toBe(detail);detail.blur();
+    const{component,fixture}=await setup();component.planView.set('calendar');component.boardOpen.set(true);component.selectCalendarTasks(['task']);fixture.detectChanges(); await fixture.whenStable();
+    const detail=fixture.nativeElement.querySelector('.board-detail') as HTMLElement;expect(document.activeElement).toBe(detail);detail.blur();
     component.selectCalendarTasks(['task']);fixture.detectChanges(); await fixture.whenStable();expect(document.activeElement).toBe(detail);
   });
   it('shows generated weekly drafts with their times and publish controls without a manual editor',async ()=>{
@@ -220,7 +223,7 @@ describe('StudentStudyPlansComponent', () => {
   it('shows the saved outcome and estimate version to students and staff', async () => {
     const { component, service, fixture } = await setup();
     service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], outcomes: [{ outcomeId: 'o', code: 'M.8.1.1.1', name: 'Çarpanları bulur', estimateId: 'e', estimateNumber: 2, allocatedMinutes: 30, origin: 'Catalog' }] }] } as any));
-    await component.open('plan'); fixture.detectChanges(); await fixture.whenStable();
+    await component.open('plan'); component.openTask(active.tasks[0].id); fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('M.8.1.1.1');
     expect(fixture.nativeElement.textContent).toContain('süre sürümü 2');
   });
@@ -289,7 +292,7 @@ describe('StudentStudyPlansComponent', () => {
   });
   it('lists plans, opens detail and offers active task controls', async () => {
     const { fixture, component, service } = await setup();
-    await component.open('plan');
+    await component.open('plan'); component.openTask(active.tasks[0].id);
     fixture.detectChanges(); await fixture.whenStable();
     expect(service.get).toHaveBeenCalledWith('plan');
     expect(fixture.nativeElement.textContent).toContain('Matematik');
@@ -324,7 +327,7 @@ describe('StudentStudyPlansComponent', () => {
   it('shows why the plan engine chose a task (roadmap O7)', async () => {
     const { fixture, component, service } = await setup();
     service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], planKind: 'Spaced', planReason: 'Aralıklı tekrar: konuyu bitirdikten 7 gün sonra' }] }));
-    await component.open('plan'); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    await component.open('plan'); component.openTask(active.tasks[0].id); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     const text = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="plan-reason"]')).map((x: any) => x.textContent).join(' ');
     expect(text).toContain('Aralıklı tekrar · Aralıklı tekrar: konuyu bitirdikten 7 gün sonra');
   });

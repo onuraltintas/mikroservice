@@ -34,6 +34,18 @@ describe('weekly outcome plan preview',()=>{
     const calls=service.preview.mock.calls.length;c.extendDeadline();
     expect(service.preview.mock.calls.length).toBe(calls);expect(c.canExtendDeadline()).toBe(false);
   });
+  it('shows the K4 date rules on the fields and blocks a past start or an end after the exam (T4)',async ()=>{
+    const{c,fixture,service}=await setup();c.options.set({...c.options()!,examDate:'2027-06-01'});fixture.detectChanges();
+    const el=fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('input[name=start]')?.getAttribute('min')).toBe(c.todayIso);
+    expect(el.querySelector('input[name=end]')?.getAttribute('max')).toBe('2027-05-31');
+    expect(el.querySelector('#date-rules')?.textContent).toContain('sınavdan bir gün önce');
+    const calls=service.preview.mock.calls.length;
+    c.startDate='2020-01-01';c.generatePreview();expect(c.error()).toContain('bugünden önce');
+    c.startDate=request.startDate;c.endDate='2027-06-01';c.generatePreview();expect(c.error()).toContain('31.05.2027');
+    expect(service.preview.mock.calls.length).toBe(calls);fixture.detectChanges();
+    expect(el.querySelector('#date-rules')?.getAttribute('role')).toBe('alert');
+  });
   it('requires a complete current preview and confirmation before creating a separate draft',async ()=>{
     const{c,service}=await setup();c.title='Yıllık plan';c.generatePreview();c.confirmed=true;c.save();expect(service.create).not.toHaveBeenCalled();
     service.preview.mockReturnValue(of({...short,canCreate:true}) as any);c.generatePreview();c.save();expect(service.create).not.toHaveBeenCalled();c.confirmed=true;c.save();expect(service.create).toHaveBeenCalledWith({title:'Yıllık plan',preview:request,fingerprint:'abc'},undefined);

@@ -89,7 +89,7 @@ describe('student route redirects', () => {
   });
 
   it('describes each hub with tabs that point inside it', () => {
-    expect(STUDENT_HUBS.plan.tabs.map(t => t.label)).toEqual(['Planım', 'Haftalık düzen', 'Plan sihirbazı']);
+    expect(STUDENT_HUBS.plan.tabs.map(t => t.label)).toEqual(['Planım', 'Planı düzenle']);
     expect(STUDENT_HUBS.growth.tabs.map(t => t.label)).toEqual(['Denemeler', 'Hedefim', 'Haftam']);
     expect(STUDENT_HUBS.settings.tabs.map(t => t.label)).toEqual(['Tercihlerim', 'Profilim', 'Ayarlar', 'Görünüm']);
     expect(STUDENT_HUBS.payments.tabs.map(t => t.label)).toEqual(['Abonelik', 'Ücretlerim']);

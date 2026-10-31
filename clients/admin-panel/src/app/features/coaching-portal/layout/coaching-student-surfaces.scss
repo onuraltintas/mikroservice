@@ -23,9 +23,10 @@
     aside.panel { align-self: start; max-height: calc(100dvh - 130px); overflow: auto; scrollbar-gutter: stable; }
     .eyebrow { color: var(--ui-success); letter-spacing: 1.2px; font-size: 11px; }
     .page-heading > div > p:last-child { color: var(--ui-text-muted); max-width: 65ch; }
-    button:not(.secondary):not(.plan-row):not(:where(.plan-calendar *)) { background: var(--ui-brand); color: var(--ui-brand-contrast); }
+    // T4: the student Planım styles its own controls (week strip, rows, sheet); this treatment stays for staff views.
+    &:not(.student) button:not(.secondary):not(.plan-row):not(:where(.plan-calendar *)) { background: var(--ui-brand); color: var(--ui-brand-contrast); }
     .plan-row { padding: 16px; border-radius: 13px; margin-top: 10px; .badge { font-size: 10px; } &.selected { border-color: var(--ui-brand); background: var(--ui-brand-soft); box-shadow: inset 3px 0 var(--ui-brand); } }
-    .task { border: 1px solid var(--ui-border); border-radius: 16px; padding: 22px; margin-top: 16px; > h3 { font-size: 17px; margin-bottom: 8px; } > p { margin-top: 6px; opacity: 1; color: var(--ui-text-muted); } &.completed { background: var(--ui-brand-soft); border-left: 4px solid var(--ui-brand); } .completion { color: var(--ui-success); font-weight: 650; } }
+    &:not(.student) .task { border: 1px solid var(--ui-border); border-radius: 16px; padding: 22px; margin-top: 16px; > h3 { font-size: 17px; margin-bottom: 8px; } > p { margin-top: 6px; opacity: 1; color: var(--ui-text-muted); } &.completed { background: var(--ui-brand-soft); border-left: 4px solid var(--ui-brand); } .completion { color: var(--ui-success); font-weight: 650; } }
     .fields { margin-top: 18px; } .publish-box { border-color: var(--ui-brand); border-radius: 0 16px 16px 0; }
     .draft-task { padding: 20px; border: 1px solid var(--ui-border); border-radius: 16px; margin: 20px 0; background: var(--ui-surface-muted); }
   }
