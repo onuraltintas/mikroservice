@@ -113,7 +113,8 @@ describe('CoachingPortalProgressComponent', () => {
       examDate: '2026-10-01T00:00:00Z', score: 80, maxScore: 100, source: 'StudentReported' }], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 }));
     const fixture = TestBed.createComponent(CoachingPortalProgressComponent); fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Öğrenci beyanı');
-    expect(fixture.nativeElement.textContent).toContain('Öğretmen sınavı sayısı');
+    // T7: the old summary tiles are gone; Haftan's week summary replaces them.
+    expect(fixture.nativeElement.textContent).not.toContain('Öğretmen sınavı sayısı');
     expect(fixture.nativeElement.querySelector('app-practice-progress')).not.toBeNull();
   });
 
@@ -137,7 +138,8 @@ describe('CoachingPortalProgressComponent', () => {
       expect.any(String)
     );
     expect(component.showGoalForm()).toBe(false);
-    expect(service.getStudentProgress).toHaveBeenCalledTimes(2);
+    // T7: the page no longer reads the old progress summary.
+    expect(service.getStudentProgress).not.toHaveBeenCalled();
   });
 
   it('localizes named goal categories returned by the API and keeps legacy numeric categories readable', () => {
@@ -156,46 +158,6 @@ describe('CoachingPortalProgressComponent', () => {
     await component.updateProgress(goal, { target: input } as unknown as Event);
     expect(component.updatingGoalId()).toBeNull();
     expect(input.value).toBe('20');
-  });
-
-  it('does not present a partial exam page as the overall average after summary failure', async () => {
-    const component = TestBed.createComponent(CoachingPortalProgressComponent).componentInstance;
-    service.getStudentProgress.mockReturnValue(throwError(() => new Error('offline')));
-    service.getStudentExamResults.mockReturnValue(of({ items: [{ examId: 'exam', score: 80, maxScore: 100 }], pageNumber: 1, pageSize: 25, totalCount: 50, totalPages: 2 }));
-    await component.ngOnInit();
-    expect(component.averageScore()).toBeNull();
-    expect(component.summaryError()).toBeTruthy();
-    service.getStudentProgress.mockReturnValue(of({ totalExams: 1, averageExamPercentage: 60 }));
-    component.retrySummary();
-    expect(component.averageScore()).toBe(60);
-    expect(component.summaryError()).toBeNull();
-  });
-
-  it('shows no-data instead of zero achievement when there are no teacher exam results', async () => {
-    service.getStudentProgress.mockReturnValue(of({ studentId: 'user-1', totalAssignments: 0, submittedAssignments: 0, gradedAssignments: 0,
-      totalExams: 0, averageExamPercentage: 0, totalGoals: 0, completedGoals: 0, averageGoalProgress: 0,
-      totalSessions: 0, upcomingSessions: 0, attendedSessions: 0 }));
-    service.getStudentExamResults.mockReturnValue(of({ items: [{ examId: 'self', examTitle: 'Kendi denemem', examType: 'Mock',
-      examDate: '2026-10-01T00:00:00Z', score: 80, maxScore: 100, source: 'StudentReported' }], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 }));
-    const fixture = TestBed.createComponent(CoachingPortalProgressComponent); fixture.detectChanges(); await fixture.whenStable();
-    expect(fixture.componentInstance.averageScore()).toBeNull();
-    expect(fixture.nativeElement.querySelectorAll('.text-3xl')[1].textContent.trim()).toBe('—');
-    expect(fixture.nativeElement.textContent).toContain('Henüz öğretmen sınavı sonucu yok');
-    expect(fixture.nativeElement.textContent).toContain('Kendi denemem');
-    fixture.componentInstance.summary.update(summary => ({ ...summary!, totalExams: 1, averageExamPercentage: 0 }));
-    fixture.detectChanges(); await fixture.whenStable();
-    expect(fixture.componentInstance.averageScore()).toBe(0);
-    expect(fixture.nativeElement.querySelectorAll('.text-3xl')[1].textContent.trim()).toBe('%0');
-  });
-
-  it('does not label loaded-page counts as global totals after summary failure', async () => {
-    service.getStudentProgress.mockReturnValue(throwError(() => new Error('offline')));
-    service.getStudentGoals.mockReturnValue(of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 200, totalPages: 2 }));
-    const fixture = TestBed.createComponent(CoachingPortalProgressComponent);
-    fixture.detectChanges(); await fixture.whenStable();
-    const cards = fixture.nativeElement.querySelectorAll('.text-3xl');
-    expect(cards[0].textContent.trim()).toBe('— / —');
-    expect(cards[2].textContent.trim()).toBe('—');
   });
 
   it('loads the next goal page without losing previously loaded goals', async () => {

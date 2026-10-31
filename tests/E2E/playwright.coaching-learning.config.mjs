@@ -5,5 +5,5 @@ export default defineConfig({
   reporter: [['list'], ['json', { outputFile: '../../artifacts/coaching-learning-setup-tests/browser.json' }]],
   use: { baseURL: 'http://127.0.0.1:4317', channel: 'chrome', screenshot: 'only-on-failure', trace: 'retain-on-failure' },
   projects: [{ name: 'desktop', use: { ...devices['Desktop Chrome'] } }, { name: 'mobile', use: { ...devices['Pixel 7'] } }],
-  webServer: { command: 'node support/coaching-learning-ui-server.mjs', url: 'http://127.0.0.1:4317/coaching-portal/setup', reuseExistingServer: false }
+  webServer: { command: 'node support/coaching-learning-ui-server.mjs', url: 'http://127.0.0.1:4317/coaching-portal/account/settings', reuseExistingServer: false }
 });

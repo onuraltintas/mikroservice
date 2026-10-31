@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.spec.json",
-  "files": ["src/app/features/coaching-portal/pages/student-learning-setup.component.spec.ts", "src/app/features/coaching-portal/pages/learning-setup-entry.component.spec.ts", "src/app/features/dashboard/pages/coaching-curriculum.component.spec.ts", "src/app/core/services/coaching-learning-setup.service.spec.ts"],
+  "files": ["src/app/features/coaching-portal/pages/student-learning-setup.component.spec.ts", "src/app/features/dashboard/pages/coaching-curriculum.component.spec.ts", "src/app/core/services/coaching-learning-setup.service.spec.ts"],
   "include": []
 }

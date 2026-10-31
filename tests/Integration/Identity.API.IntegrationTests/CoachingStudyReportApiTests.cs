@@ -28,6 +28,18 @@ public sealed class CoachingStudyReportApiTests
         Assert.DoesNotContain("Internal detail", System.Text.Json.JsonSerializer.Serialize(response.Value));
     }
 
+    [Theory]
+    [InlineData(false, 200)]
+    [InlineData(true, 403)]
+    public async Task Weeks_ReturnsConsecutiveWeeksOrHidesDetails(bool forbidden, int status)
+    {
+        var api = new StudentStudyReportsController(new Stub { Error = forbidden ? new BusinessRuleException("Authorization.Forbidden", "Denied") : null });
+        var response = Assert.IsAssignableFrom<ObjectResult>(await api.GetWeeks(new(2026, 9, 21), 6));
+        Assert.Equal(status, response.StatusCode ?? 200);
+        var bad = Assert.IsAssignableFrom<ObjectResult>(await new StudentStudyReportsController(new Stub { Error = new ArgumentOutOfRangeException("weeks") }).GetWeeks(new(2026, 9, 21), 13));
+        Assert.Equal(400, bad.StatusCode);
+    }
+
     [Fact]
     public async Task ReportVolumeLimit_ExplainsHowToNarrowValidPeriod()
     {
@@ -42,5 +54,9 @@ public sealed class CoachingStudyReportApiTests
         public Exception? Error;
         public Task<StudentStudyReport> GetAsync(DateOnly fromDate, DateOnly toDate, CancellationToken cancellationToken = default)
             => Error is null ? Task.FromResult(StudyReportCalculator.Calculate(fromDate, toDate, [])) : Task.FromException<StudentStudyReport>(Error);
+        public Task<IReadOnlyList<StudyWeekTotals>> GetWeeksAsync(DateOnly fromDate, int weeks, CancellationToken cancellationToken = default)
+            => Error is null ? Task.FromResult<IReadOnlyList<StudyWeekTotals>>(Enumerable.Range(0, weeks)
+                .Select(i => new StudyWeekTotals(fromDate.AddDays(i * 7), fromDate.AddDays(i * 7 + 6), 0, 0, null)).ToArray())
+                : Task.FromException<IReadOnlyList<StudyWeekTotals>>(Error);
     }
 }

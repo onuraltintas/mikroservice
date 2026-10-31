@@ -49,9 +49,6 @@
   :is(.weekly-review, .profile-card, .panel) { border-radius: 18px; }
   .weekly-review h2 { font-size: 23px; }
   :is(.eyebrow, .home-eyebrow, .today-eyebrow) { color: var(--ui-success); font-size: 12px; }
-  app-student-weekly-home section { background: var(--ui-surface); color: var(--ui-text); border-color: var(--ui-border); border-radius: 18px; }
-  app-student-weekly-home h2 { font-size: 23px; }
-  app-student-weekly-home :is(article, button, a) { border-color: var(--ui-border); }
   app-practice-progress :is(section, article, .points > div, .development-tabs) { border-color: var(--ui-border); }
   app-practice-progress .summary { background: var(--ui-brand-soft); color: var(--ui-text); }
   :is(.weekly-review dt, .weekly-review small, .weekly-review .muted, .calendar-help, .calendar-note, .context-menu small, .move-tools span) { color: var(--ui-text-muted); }

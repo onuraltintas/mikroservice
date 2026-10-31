@@ -23,7 +23,7 @@
 
     @if (successMessage()) { <div class="sessions-success" role="status">{{ successMessage() }}</div> }
     @if (errorMessage()) { <div class="sessions-error" role="alert">{{ errorMessage() }}</div> }
-    <edu-coaching-calendar-subscription [api]="calendarApi" role="teacher" [formal]="true" />
+    <edu-coaching-calendar-subscription [api]="calendarApi" [role]="'teacher'" [formal]="true" />
     @if (view() === 'agenda') {
       <section class="agenda" aria-labelledby="agenda-title">
         <header class="agenda-heading">

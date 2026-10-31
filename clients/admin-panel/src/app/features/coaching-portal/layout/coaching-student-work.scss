@@ -109,6 +109,26 @@
   :is(app-student-teachers, app-student-parent-links, edu-notification-preferences, edu-coaching-calendar-subscription, app-student-data-export, app-student-settings) {
     display: block; :is(.panel, section) { margin: 0; padding: 0; border: 0; box-shadow: none; background: transparent; } }
   app-student-learning-setup .study-plans > :is(.page-heading, nav[aria-label="Profil ve çalışma düzeni"]) { display: none; }
+  // T7: the setup wizard inside Çalışma tercihlerim — numbered steps first, one filled primary action per step.
+  app-student-learning-setup .study-plans {
+    display: flex; flex-direction: column; align-items: stretch; gap: var(--coaching-space-4);
+    > nav[aria-label="Kurulum adımları"] { order: -1; display: flex; flex-wrap: wrap; gap: var(--coaching-space-2); margin: 0; padding: 0; counter-reset: setup-step;
+      > button { counter-increment: setup-step; display: inline-flex; align-items: center; gap: var(--coaching-space-2); min-height: 40px; margin: 0; padding: 0 var(--coaching-space-4) 0 6px;
+        border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-pill); background: var(--ui-surface); color: var(--ui-text-muted); font-size: var(--coaching-text-sm); font-weight: 650; box-shadow: none; cursor: pointer;
+        &::before { content: counter(setup-step); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ui-surface-muted); color: var(--ui-text); font-weight: 800; }
+        &:hover:not(:disabled) { border-color: var(--ui-brand); color: var(--ui-text); }
+        &[aria-current=step] { border-color: var(--ui-brand); background: var(--ui-brand-soft); color: var(--ui-text);
+          &::before { background: var(--ui-brand); color: var(--ui-brand-contrast); } }
+        &:disabled { opacity: .55; cursor: not-allowed; } } }
+    > button.secondary:first-of-type { order: 99; align-self: flex-start; min-height: 40px; padding: 0; border: 0; background: none; box-shadow: none; color: var(--ui-brand-text); font-size: var(--coaching-text-sm); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+    :is(form, .panel) { margin: 0; }
+    button[type=submit], :is(.panel, fieldset) > button:not(.secondary), > button:not(.secondary) {
+      min-height: 44px; padding: 0 var(--coaching-space-5); border: 1px solid var(--ui-brand); border-radius: var(--coaching-radius-control);
+      background: var(--ui-brand); color: var(--ui-brand-contrast); font-weight: 700; box-shadow: var(--coaching-action-shadow); cursor: pointer;
+      &:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; } }
+    :is(.panel, fieldset) button.secondary, > button.secondary:not(:first-of-type) { min-height: 40px; border-radius: var(--coaching-radius-control); }
+    .notice { margin: 0; padding: var(--coaching-space-3) var(--coaching-space-4); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-control); background: var(--ui-surface-muted); color: var(--ui-text); }
+  }
 }
 @media (max-width: 600px) { .coaching-shell .coaching-body .coaching-content .cs-account > section, .coaching-shell .coaching-body .coaching-content .cs-account .cs-account-section { padding: var(--coaching-space-4); } }
 

@@ -29,4 +29,19 @@ public sealed class StudentStudyReportsController(IStudentStudyReportService rep
         catch (ArgumentException)
         { return BadRequest(new { success = false, message = "Başlangıç ve bitiş tarihlerini kontrol edin. En fazla 366 günlük dönem seçilebilir." }); }
     }
+
+    /// <summary>T7: Gelişimim › Haftan reads the last weeks' totals in one request.</summary>
+    [HttpGet("weeks")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetWeeks([FromQuery, BindRequired] DateOnly fromDate,
+        [FromQuery] int weeks = 6, CancellationToken cancellationToken = default)
+    {
+        try { return Ok(new { success = true, data = await reports.GetWeeksAsync(fromDate, weeks, cancellationToken) }); }
+        catch (BusinessRuleException ex) when (ex.Code == "Authorization.Forbidden")
+        { return StatusCode(403, new { success = false, message = ex.Message, code = ex.Code }); }
+        catch (ArgumentException)
+        { return BadRequest(new { success = false, message = "Hafta sayısı 1 ile 12 arasında olmalı." }); }
+    }
 }

@@ -11,40 +11,12 @@
   <div *ngIf="goalFormError()" role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
     {{ goalFormError() }}
   </div>
-  <div *ngIf="summaryError()" role="alert" class="rounded-xl border border-amber-200 p-4 text-sm">
-    {{ summaryError() }}
-    <button type="button" (click)="retrySummary()" [disabled]="loadingSummary()" class="ml-3 underline disabled:opacity-50">Özeti yeniden yükle</button>
-  </div>
 
   <div *ngIf="isLoading()" class="grid gap-4 sm:grid-cols-3">
     <div *ngFor="let item of [1,2,3]" class="h-28 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
   </div>
 
   <ng-container *ngIf="!isLoading()">
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500">Tamamlanan hedef</p>
-        <p class="mt-2 text-3xl font-bold">{{ summary()?.completedGoals ?? '—' }}<span class="text-base font-medium text-slate-400"> / {{ summary()?.totalGoals ?? '—' }}</span></p>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500">Ortalama başarı</p>
-        <p class="mt-2 text-3xl font-bold">{{ averageScore() === null ? '—' : '%' + averageScore() }}</p>
-        <p *ngIf="summary()?.totalExams === 0" class="mt-1 text-sm text-slate-500">Henüz öğretmen sınavı sonucu yok.</p>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500">Öğretmen sınavı sayısı</p>
-        <p class="mt-2 text-3xl font-bold">{{ summary()?.totalExams ?? '—' }}</p>
-      </div>
-      <div *ngIf="navigation.showAssignments()" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500">Ödev teslim oranı</p>
-        <p class="mt-2 text-3xl font-bold">{{ assignmentCompletion() === null ? '—' : '%' + assignmentCompletion() }}</p>
-      </div>
-      <div *ngIf="navigation.showSessions()" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500">Seans katılımı</p>
-        <p class="mt-2 text-3xl font-bold">{{ attendancePercentage() === null ? '—' : '%' + attendancePercentage() }}</p>
-      </div>
-    </div>
-
     <app-practice-progress id="haftalik-degerlendirme" [tabbed]="true" [weeklyTarget]="weeklyTarget()">
       <app-student-study-report developmentReport />
       <div developmentGoals>

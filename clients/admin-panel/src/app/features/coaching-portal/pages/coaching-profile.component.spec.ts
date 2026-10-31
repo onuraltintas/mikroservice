@@ -25,7 +25,20 @@ describe('Coaching owned profile', () => {
     expect(request.request.body.gradeLevel).toBe(11); expect(request.request.body.birthDate).toBe('2008-01-02');
     expect(request.request.body.shareProgressWithTeachers).toBe(false);
     request.flush({ data: { ...student, ...request.request.body, version: 2 } }); fixture.detectChanges(); await fixture.whenStable();
-    expect(fixture.nativeElement.textContent).toContain('Koçluk profiliniz kaydedildi.'); http.verify();
+    expect(fixture.nativeElement.textContent).toContain('Profilin kaydedildi.'); http.verify();
+  });
+  it('speaks to students with "sen" and to teachers with "siz" (T7)', async () => {
+    const student = await setup('Student');
+    student.http.expectOne('/api/coaching/profiles/me').flush({ data: { student: null, teacher: null } });
+    student.fixture.detectChanges(); await student.fixture.whenStable();
+    expect(student.fixture.nativeElement.textContent).toContain('Koçluk profilin henüz oluşturulmamış.');
+    expect(student.fixture.nativeElement.textContent).toContain('Bekleyen koçluk davetin yok.');
+    expect(student.fixture.nativeElement.textContent).not.toMatch(/niz\b|nız\b|bilirsiniz/);
+    TestBed.resetTestingModule();
+    const teacher = await setup('Teacher');
+    teacher.http.expectOne('/api/coaching/profiles/me').flush({ data: { student: null, teacher: null } });
+    teacher.fixture.detectChanges(); await teacher.fixture.whenStable();
+    expect(teacher.fixture.nativeElement.textContent).toContain('Koçluk profiliniz henüz oluşturulmamış.');
   });
   async function setup(role: 'Student' | 'Teacher' = 'Student', invitations: object[] = []) {
     TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
@@ -111,7 +124,7 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'student', gradeLevel: 10, isActive: true } } });
     fixture.detectChanges(); await fixture.whenStable();
     component.dirty = true; component.respond('invite-1', 'accept');
-    expect(component.invitationError()).toContain('profil değişikliklerini kaydedin');
+    expect(component.invitationError()).toContain('profil değişikliklerini kaydet');
     http.expectNone('/api/coaching/invitations/invite-1/accept');
     const confirm = vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
     expect(await component.canLeavePage()).toBe(false); await component.reload();

@@ -6,43 +6,16 @@ body .coaching-shell .coaching-body {
 body .coaching-shell .coaching-body .coaching-content {
   :is(h1, h2, h3, h4) { text-wrap: balance; }
   h1 { font-weight: 800; letter-spacing: -.035em; }
-  :is(.home-welcome, .coaching-page-heading) {
+  .coaching-page-heading {
     padding: 24px 28px; border: 1px solid var(--ui-border); border-radius: 22px;
     background: linear-gradient(115deg, var(--coaching-mint-tint), var(--ui-surface) 75%);
   }
-  :is(.home-eyebrow, .today-eyebrow) {
-    display: inline-flex; align-items: center; gap: 8px; font-weight: 750; letter-spacing: .1em;
-    &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  }
-  :is(.today-focus, .home-next-steps, .home-assignments, .weekly-review, .profile-card, .panel, .finance, .rounded-2xl),
-  app-student-weekly-home > section {
+  :is(.weekly-review, .panel, .finance, .rounded-2xl) {
     border-radius: 22px; box-shadow: var(--coaching-card-shadow);
   }
-  .today-focus {
-    background: linear-gradient(135deg, var(--coaching-mint-tint), var(--ui-surface) 55%);
-    border-top: 3px solid var(--ui-brand); box-shadow: var(--coaching-raised-shadow);
-  }
-  .home-next-steps { background: linear-gradient(155deg, var(--coaching-honey-tint), var(--ui-surface) 65%); }
-  app-student-weekly-home > section { background: linear-gradient(125deg, var(--coaching-blue-tint), var(--ui-surface) 70%); }
-  .home-assignments > header { background: linear-gradient(110deg, var(--coaching-mint-tint), var(--ui-surface)); }
-  :is(.today-focus > header h2, .home-next-steps h2, .home-assignments h2) { font-size: 23px; letter-spacing: -.025em; }
-  .today-overview-copy h3 { font-size: 19px; letter-spacing: -.02em; }
-  .daily-ring { box-shadow: 0 0 0 6px var(--ui-surface), var(--coaching-card-shadow); }
-  :is(.today-date, .today-duration) { font-weight: 650; font-variant-numeric: tabular-nums; }
-  .today-task { padding: 14px 0; }
-  .today-task strong { font-size: 15px; font-weight: 650; }
-  .step-icon { box-shadow: var(--coaching-card-shadow); }
-  .step-icon.amber { background: var(--coaching-warm); color: var(--coaching-warning); }
-  .step-icon.blue { background: var(--coaching-lesson-1); color: var(--coaching-lesson-text-1); }
-  .home-hero {
-    background: linear-gradient(120deg, var(--ui-brand-soft), var(--coaching-mint-tint));
-    border-color: var(--ui-border); box-shadow: var(--coaching-card-shadow);
-  }
-  :is(.today-primary, .home-hero a, .profile-card button[type=submit], .assistant-page button:not(.secondary)) {
-    box-shadow: var(--coaching-action-shadow); font-weight: 700;
-  }
-  :is(.home-progress-link, .plan-row, .home-assignment-row) { transition: background .18s, border-color .18s, box-shadow .18s; }
-  :is(.home-progress-link, .plan-row):hover { box-shadow: var(--coaching-card-shadow); }
+  .assistant-page button:not(.secondary) { box-shadow: var(--coaching-action-shadow); font-weight: 700; }
+  .plan-row { transition: background .18s, border-color .18s, box-shadow .18s; }
+  .plan-row:hover { box-shadow: var(--coaching-card-shadow); }
   .plan-calendar { border-radius: 18px; }
   :is(.weekly-review .summary, .outcome-page .totals > div) { border-radius: 14px; }
 }
@@ -74,11 +47,11 @@ body .coaching-shell.coaching-staff-shell {
 }
 
 @media (max-width: 600px) {
-  body .coaching-shell .coaching-body .coaching-content :is(.home-welcome, .coaching-page-heading),
+  body .coaching-shell .coaching-body .coaching-content .coaching-page-heading,
   body .coaching-shell.coaching-staff-shell .welcome-block { padding: 20px; border-radius: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  body .coaching-shell :is(.home-progress-link, .plan-row, .home-assignment-row) { transition: none; }
+  body .coaching-shell .plan-row { transition: none; }
 }
 
 // Shared forms and reports also appear inside the teacher workspace.

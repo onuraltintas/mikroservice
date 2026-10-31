@@ -14,7 +14,7 @@ import { StudentTeachersComponent } from './student-teachers.component';
       <h1 id="profile-title">Profilim</h1>
       <p>Öğretmenlerin seni bu bilgilerle tanır.</p>
     </header>
-    <edu-coaching-profile [apiUrl]="apiUrl" role="Student" />
+    <edu-coaching-profile [apiUrl]="apiUrl" [role]="'Student'" />
     <section aria-label="Öğretmenlerim"><app-student-teachers /></section>
     <section aria-label="Veli bağlantıları"><app-student-parent-links /></section>
   </div>`
