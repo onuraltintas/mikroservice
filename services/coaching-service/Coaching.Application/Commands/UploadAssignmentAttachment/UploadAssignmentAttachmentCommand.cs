@@ -36,7 +36,7 @@ public sealed class UploadAssignmentAttachmentCommandHandler(
         CancellationToken cancellationToken)
     {
         accessPolicy.RequireStudent(command.StudentId);
-        await CoachingStudentReadAuthorization.RequireAsync(
+        await CoachingStudentReadAuthorization.RequireWorkAsync(
             accessPolicy, identityAuthorizationClient, [command.StudentId], cancellationToken);
         AssignmentAttachmentPolicy.ValidateContentMetadata(command.ContentType, command.SizeBytes);
 

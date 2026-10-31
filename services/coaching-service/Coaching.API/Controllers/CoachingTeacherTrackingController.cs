@@ -48,11 +48,15 @@ public sealed class CoachingTeacherTrackingController(CoachingDbContext db, ICoa
             var candidates = await db.CoachingTeacherStudentAssignments.AsNoTracking()
                 .Where(x => x.TeacherUserId == teacher && x.IsActive && x.InstitutionId == institution)
                 .Select(x => x.StudentUserId).Distinct().ToArrayAsync(ct);
-            var allowed = (await CoachingStudentReadAuthorization.GetAuthorizedStudentIdsAsync(access, directory, candidates, ct)).ToArray();
-            var names = allowed.Length == 0 ? new Dictionary<Guid, string>()
-                : (await accounts.GetAccountsAsync(allowed, ct)).Where(x => x.IsEligible("Student"))
+            // K2: assignments and submissions stay listed for a student who stopped sharing progress; plans, reflections,
+            // decisions and weekly reviews follow the sharing setting.
+            var work = (await CoachingStudentReadAuthorization.GetAuthorizedWorkStudentIdsAsync(access, directory, candidates, ct)).ToArray();
+            var sharing = (await CoachingStudentReadAuthorization.GetAuthorizedStudentIdsAsync(access, directory, work, ct)).ToHashSet();
+            var names = work.Length == 0 ? new Dictionary<Guid, string>()
+                : (await accounts.GetAccountsAsync(work, ct)).Where(x => x.IsEligible("Student"))
                     .ToDictionary(x => x.UserId, x => (x.FirstName + " " + x.LastName).Trim());
-            allowed = names.Keys.ToArray();
+            work = names.Keys.ToArray();
+            var allowed = work.Where(sharing.Contains).ToArray();
             await using var snapshot=await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead,ct);
             var now = (clock ?? TimeProvider.System).GetUtcNow();
             var plans = await db.StudyPlanRevisions.AsNoTracking()
@@ -76,7 +80,7 @@ public sealed class CoachingTeacherTrackingController(CoachingDbContext db, ICoa
                 && (x.Status == "Planned" || x.Status == "InProgress") && x.DueOn < today && x.DueOn >= fromDate && x.DueOn <= toDate)
                 .Select(x => new { x.Id, x.StudentId, x.Title, x.DueOn, x.ReviewWeekStart }).Take(10001).ToArrayAsync(ct);
             var assignments = await db.AssignmentStudents.AsNoTracking()
-                .Where(x => Enumerable.Contains(allowed, x.StudentId) && x.Assignment.TeacherId == teacher
+                .Where(x => Enumerable.Contains(work, x.StudentId) && x.Assignment.TeacherId == teacher
                     && x.Assignment.InstitutionId == institution && x.Assignment.Status != AssignmentStatus.Cancelled
                     && (x.Assignment.Status == AssignmentStatus.Active && x.SubmittedAt == null
                         && (x.Status == StudentAssignmentStatus.Assigned || x.Status == StudentAssignmentStatus.InProgress)

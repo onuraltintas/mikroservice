@@ -43,7 +43,7 @@ public class GetSessionsQueryHandler :
             .ToArray();
         var visibleStudentIds = studentIds.Length == 0
             ? Array.Empty<Guid>()
-            : await _identityAuthorizationClient.AuthorizeStudentReadAsync(
+            : await _identityAuthorizationClient.AuthorizeStudentWorkReadAsync(
                 _accessPolicy.CurrentUserId ?? query.TeacherId,
                 studentIds,
                 cancellationToken);
@@ -64,7 +64,7 @@ public class GetSessionsQueryHandler :
         var sessions = await _repository.GetByTeacherIdInRangeAsync(query.TeacherId, from, to, cancellationToken);
         var studentIds = sessions.SelectMany(session => session.Attendances).Select(attendance => attendance.StudentId).Distinct().ToArray();
         var visible = studentIds.Length == 0 ? Array.Empty<Guid>()
-            : await _identityAuthorizationClient.AuthorizeStudentReadAsync(_accessPolicy.CurrentUserId ?? query.TeacherId, studentIds, cancellationToken);
+            : await _identityAuthorizationClient.AuthorizeStudentWorkReadAsync(_accessPolicy.CurrentUserId ?? query.TeacherId, studentIds, cancellationToken);
         var page = MapToDto(new PagedRepositoryResult<Domain.Entities.CoachingSession>(sessions.Take(200).ToList(), sessions.Count), 1, 200,
             visible.ToHashSet(), includeStudentReflections: true);
         return new TeacherAgendaDto(query.WeekStart, page.Items.ToArray());
@@ -89,7 +89,7 @@ public class GetSessionsQueryHandler :
         GetStudentSessionsQuery query,
         CancellationToken cancellationToken)
     {
-        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireAsync(
+        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireWorkAsync(
             _accessPolicy,
             _identityAuthorizationClient,
             new[] { query.StudentId },

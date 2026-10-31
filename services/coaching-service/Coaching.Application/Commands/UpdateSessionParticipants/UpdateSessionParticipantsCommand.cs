@@ -47,16 +47,17 @@ public sealed class UpdateSessionParticipantsCommandHandler(
             accessPolicy.IsSystemAdministrator, cancellationToken);
 
         var now = DateTime.UtcNow;
+        var viewer = accessPolicy.CurrentUserId ?? session.TeacherId;
         // The sessions are tracked: saving inserts the new attendances and deletes the removed ones. Calling Update would
         // mark the new attendances (with their own ids) as modified instead of added.
-        var (added, removed) = session.SetParticipants(studentIds, now);
+        var (added, removed) = session.SetParticipants(await KeepHiddenAsync(session, studentIds, viewer, cancellationToken), now);
         if (command.IncludeFollowing && session.SeriesId is { } seriesId)
         {
             foreach (var later in (await repository.GetSeriesAsync(seriesId, cancellationToken))
                          .Where(item => item.Id != session.Id && item.ScheduledDate > session.ScheduledDate
                              && item.Status == SessionStatus.Scheduled && item.ScheduledDate > now))
             {
-                later.SetParticipants(studentIds, now);
+                later.SetParticipants(await KeepHiddenAsync(later, studentIds, viewer, cancellationToken), now);
             }
         }
 
@@ -65,5 +66,19 @@ public sealed class UpdateSessionParticipantsCommandHandler(
         if (removed.Length > 0)
             await events.PublishAsync(new SessionCancelledEvent(session.Id, session.TeacherId, session.InstitutionId, removed, session.ScheduledDate), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// K2 (31.10.2026): the caller only sends the participants they can see. Students already in a group session whom the
+    /// caller cannot see stay in it; a one-to-one session is replaced as asked.
+    /// </summary>
+    private async Task<IReadOnlyCollection<Guid>> KeepHiddenAsync(CoachingSession session, IReadOnlyCollection<Guid> requested,
+        Guid viewer, CancellationToken cancellationToken)
+    {
+        if (session.SessionType == SessionType.OneOnOne) return requested;
+        var present = session.Attendances.Select(attendance => attendance.StudentId).Where(id => !requested.Contains(id)).Distinct().ToArray();
+        if (present.Length == 0) return requested;
+        var visible = (await identity.AuthorizeStudentWorkReadAsync(viewer, present, cancellationToken)).ToHashSet();
+        return requested.Concat(present.Where(id => !visible.Contains(id))).ToArray();
     }
 }

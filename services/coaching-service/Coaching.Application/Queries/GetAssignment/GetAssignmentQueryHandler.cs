@@ -107,7 +107,7 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
         Domain.Entities.Assignment assignment,
         CancellationToken cancellationToken)
     {
-        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireAsync(
+        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireWorkAsync(
             _accessPolicy,
             _identityAuthorizationClient,
             assignment.AssignedStudents.Select(student => student.StudentId).ToArray(),

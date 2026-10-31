@@ -19,7 +19,7 @@ public sealed class GetSessionQueryHandler(
         var studentIds = session.Attendances.Select(attendance => attendance.StudentId).Distinct().ToArray();
         var visibleStudentIds = studentIds.Length == 0
             ? Array.Empty<Guid>()
-            : await identityAuthorizationClient.AuthorizeStudentReadAsync(
+            : await identityAuthorizationClient.AuthorizeStudentWorkReadAsync(
                 accessPolicy.CurrentUserId ?? session.TeacherId,
                 studentIds,
                 cancellationToken);

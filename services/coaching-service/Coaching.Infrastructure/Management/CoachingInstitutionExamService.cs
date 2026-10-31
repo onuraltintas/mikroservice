@@ -94,7 +94,8 @@ public sealed class CoachingInstitutionExamService(CoachingDbContext db, ICoachi
                 profile?.ClassBranch, Net(result, summaries), result.Score, place.Rank, place.TopPercent,
                 summaries[result.StudentId]?.Sections.ToArray() ?? []);
         }).OrderBy(x => x.Rank).ThenBy(x => x.StudentName, StringComparer.Create(Turkish, true)).ToArray();
-        var branches = rows.GroupBy(x => string.IsNullOrWhiteSpace(x.ClassBranch) ? "Şube yok" : x.ClassBranch!)
+        // K2: branches differing only in case are one group; "Şube yok" can be chosen as a filter.
+        var branches = rows.GroupBy(BranchOf, StringComparer.Create(Turkish, true))
             .Select(group => new InstitutionExamGroup(group.Key, group.Count(), Math.Round(group.Average(x => x.Net), 2), group.Max(x => x.Net)))
             .OrderBy(x => x.Branch, StringComparer.Create(Turkish, true)).ToArray();
         var profile = Profile(exam);
@@ -103,9 +104,13 @@ public sealed class CoachingInstitutionExamService(CoachingDbContext db, ICoachi
             var nets = summaries.Values.Where(x => x is not null).SelectMany(x => x!.Sections).Where(x => x.SectionCode == section.Code).Select(x => x.Net).ToArray();
             return new InstitutionExamSectionAverage(section.Code, section.Name, nets.Length == 0 ? 0 : Math.Round(nets.Average(), 2));
         }).ToArray();
-        var visible = string.IsNullOrWhiteSpace(branch) ? rows : rows.Where(x => string.Equals(x.ClassBranch, branch.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
+        var visible = string.IsNullOrWhiteSpace(branch) ? rows
+            : rows.Where(x => StringComparer.Create(Turkish, true).Equals(BranchOf(x), branch.Trim())).ToArray();
         return new(Item(exam, rows.Length), visible, branches, sections);
     }
+
+    private const string NoBranch = "Şube yok";
+    private static string BranchOf(InstitutionExamRow row) => string.IsNullOrWhiteSpace(row.ClassBranch) ? NoBranch : row.ClassBranch.Trim();
 
     /// <summary>The CSV header for an exam scope: e-mail, score and correct/wrong per section.</summary>
     public static string Template(string examCode)

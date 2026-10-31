@@ -104,12 +104,30 @@ public sealed class AssignmentCancelledConsumer(ICoachingNotificationDispatcher 
 
 public sealed class CoachingTeacherLinkEndedConsumer(ICoachingNotificationDispatcher dispatcher) : IConsumer<CoachingTeacherLinkEndedEvent>
 {
-    public Task Consume(ConsumeContext<CoachingTeacherLinkEndedEvent> context)
+    public async Task Consume(ConsumeContext<CoachingTeacherLinkEndedEvent> context)
     {
         var message = context.Message;
+        // K2 (31.10.2026): the institution ended the link; the student, the teacher and the institution admin are told what closed.
+        if (message.Reason == CoachingTeacherLinkEndedReasons.InstitutionEnded)
+        {
+            var id = MessageIds.Require(context);
+            var teacher = string.IsNullOrWhiteSpace(message.TeacherName) ? "Öğretmenin" : message.TeacherName;
+            await dispatcher.SendAsync(id, new[] { message.StudentUserId }, "Öğretmen bağlantısı sona erdi",
+                $"Kurumun, {teacher} ile koçluk bağlantını sonlandırdı.{Closed(message, true)} Geçmiş kayıtların korunuyor.",
+                "TeacherLinkEnded", message.TeacherUserId.ToString(), context.CancellationToken);
+            await dispatcher.SendAsync(id, new[] { message.TeacherUserId }, "Öğrenci bağlantısı sona erdi",
+                $"Kurum, {message.StudentName} ile koçluk bağlantınızı sonlandırdı.{Closed(message, false)}",
+                "TeacherLinkEnded", message.StudentUserId.ToString(), context.CancellationToken);
+            if (message.InstitutionActorUserId is { } admin && admin != Guid.Empty)
+                await dispatcher.SendAsync(id, new[] { admin }, "Koçluk bağlantısı sonlandırıldı",
+                    $"{message.StudentName} ile {(string.IsNullOrWhiteSpace(message.TeacherName) ? "öğretmeni" : message.TeacherName)} arasındaki bağlantı sonlandırıldı.{Closed(message, false)}",
+                    "TeacherLinkEnded", message.StudentUserId.ToString(), context.CancellationToken);
+            return;
+        }
         // Roadmap O12: when the teacher ends the link, the student is the one to tell.
         if (message.Reason == CoachingTeacherLinkEndedReasons.TeacherRemoved)
-            return dispatcher.SendAsync(
+        {
+            await dispatcher.SendAsync(
                 MessageIds.Require(context),
                 new[] { message.StudentUserId },
                 "Öğretmen bağlantısı sona erdi",
@@ -117,10 +135,13 @@ public sealed class CoachingTeacherLinkEndedConsumer(ICoachingNotificationDispat
                 "TeacherLinkEnded",
                 message.TeacherUserId.ToString(),
                 context.CancellationToken);
+            return;
+        }
         var text = message.Reason == CoachingTeacherLinkEndedReasons.JoinedInstitution
             ? $"{message.StudentName} bir kuruma katıldı; bireysel koçluk bağlantınız sona erdi."
             : $"{message.StudentName} koçluk bağlantınızı sonlandırdı.";
-        return dispatcher.SendAsync(
+        text += Closed(message, false);
+        await dispatcher.SendAsync(
             MessageIds.Require(context),
             new[] { message.TeacherUserId },
             "Öğrenci bağlantısı sona erdi",
@@ -128,6 +149,16 @@ public sealed class CoachingTeacherLinkEndedConsumer(ICoachingNotificationDispat
             "TeacherLinkEnded",
             message.StudentUserId.ToString(),
             context.CancellationToken);
+    }
+
+    /// <summary>What closed with the link: open assignments withdrawn and coming sessions left.</summary>
+    private static string Closed(CoachingTeacherLinkEndedEvent message, bool forStudent)
+    {
+        var parts = new List<string>();
+        if (message.CancelledAssignments > 0) parts.Add($"{message.CancelledAssignments} ödev iptal edildi");
+        if (message.RemovedSessions > 0)
+            parts.Add(forStudent ? $"{message.RemovedSessions} seanstan çıkarıldın" : $"{message.RemovedSessions} seans kapatıldı");
+        return parts.Count == 0 ? string.Empty : $" {string.Join(", ", parts)}.";
     }
 }
 

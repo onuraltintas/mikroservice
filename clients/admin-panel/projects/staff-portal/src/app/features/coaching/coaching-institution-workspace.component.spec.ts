@@ -111,6 +111,32 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(service.removeTeacher).toHaveBeenCalledWith('teacher-1', 'teacher-2');
   });
 
+  // Decision 31.10.2026 (a): handed-in work waiting for a grade needs a successor before the teacher can leave.
+  it('asks for a successor when the leaving teacher has ungraded submissions', async () => {
+    const service = institutionService({ teachers: [teacher('teacher-1'), teacher('teacher-2')] });
+    service.getTeacherRemovalPreview.mockReturnValue(of({ ungradedSubmissionCount: 2 }));
+    const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
+    (await component.selectSection('teachers')); fixture.detectChanges();
+    const confirm = vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(true);
+    (await component.removeTeacher(teacher('teacher-1'))); fixture.detectChanges();
+    expect(service.getTeacherRemovalPreview).toHaveBeenCalledWith('teacher-1');
+    expect(service.removeTeacher).not.toHaveBeenCalled(); expect(confirm).not.toHaveBeenCalled();
+    expect(component.membershipError()).toBe('2 teslim edilmiş iş notlanmayı bekliyor; devralacak öğretmen seçin.');
+    expect(fixture.nativeElement.textContent).toContain('2 teslim edilmiş iş notlanmayı bekliyor');
+    component.handoverTeacherIds['teacher-1'] = 'teacher-2';
+    (await component.removeTeacher(teacher('teacher-1')));
+    expect(service.removeTeacher).toHaveBeenCalledWith('teacher-1', 'teacher-2');
+  });
+  it('shows the server reason when a teacher removal is refused', async () => {
+    const service = institutionService({ teachers: [teacher('teacher-1')] });
+    service.removeTeacher.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 409,
+      error: { code: 'Profiles.SuccessorRequired', message: '1 teslim edilmiş iş notlanmayı bekliyor; devralacak öğretmen seçin.' } })));
+    const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
+    (await component.selectSection('teachers'));
+    vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(true); (await component.removeTeacher(teacher('teacher-1')));
+    await vi.waitFor(() => expect(component.membershipError()).toBe('1 teslim edilmiş iş notlanmayı bekliyor; devralacak öğretmen seçin.'));
+    expect(component.teachers().length).toBe(1);
+  });
   it('drops removed teachers from fresh assignment filter options', async () => {
     const service = institutionService({ teachers: [teacher('teacher-1')] });
     const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
@@ -364,6 +390,7 @@ function institutionService(options: { students?: CoachingInstitutionStudent[]; 
     updateStudent: vi.fn(() => of(void 0)),
     removeStudent: vi.fn(() => of(void 0)),
     removeTeacher: vi.fn(() => of(void 0)),
+    getTeacherRemovalPreview: vi.fn(() => of({ ungradedSubmissionCount: 0 })),
     removeStudentTeacher: vi.fn(() => of(void 0)),
     getOverview: vi.fn(() => of({
       totalAssignments: 12, activeAssignments: 4, completedAssignments: 8, cancelledAssignments: 0,

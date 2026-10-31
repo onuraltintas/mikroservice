@@ -33,7 +33,8 @@ describe('institution coaching analytics', () => {
 
   it('uses the verified institution and local date bounds for comparison and paged warnings', async () => {
     const { component, fixture, service } = setup();
-    const dates = { fromDate: new Date(2026, 9, 1).toISOString(), toDate: new Date(new Date(2026, 9, 14).getTime() - 1).toISOString() };
+    // K2: plain dates; the server reads them as whole Europe/Istanbul days whatever the browser's time zone is.
+    const dates = { fromDate: '2026-10-01', toDate: '2026-10-13' };
     expect(service.getInstitutionComparison).toHaveBeenCalledWith('institution', dates);
     expect(service.getInstitutionEarlyWarnings).toHaveBeenCalledWith('institution', { ...dates, pageNumber: 1, pageSize: 25 });
     expect(fixture.nativeElement.textContent).toContain('Ada Test');

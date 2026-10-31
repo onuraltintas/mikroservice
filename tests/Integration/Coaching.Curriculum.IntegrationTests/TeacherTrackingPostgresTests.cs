@@ -91,7 +91,8 @@ public sealed class TeacherTrackingPostgresTests
         async Task<TeacherTrackingPage> Page() => Assert.IsType<TeacherTrackingPage>(Assert.IsType<OkObjectResult>(await api.Get(today.AddDays(-2), today)).Value);
         Assert.Equal(student, Assert.Single((await Page()).Items).StudentId);
         (await f.Db.CoachingStudentProfiles.SingleAsync(x => x.UserId == student)).UpdatePersonal(null, null, null, false);
-        await f.Db.SaveChangesAsync(); Assert.Empty((await Page()).Items);
+        // K2 (31.10.2026): not sharing progress hides study work, not the assignments the teacher gave.
+        await f.Db.SaveChangesAsync(); Assert.Equal("assignment", Assert.Single((await Page()).Items).Kind);
         Assert.IsType<BadRequestObjectResult>(await api.Get(today, today.AddDays(-1)));
         Assert.IsType<BadRequestObjectResult>(await api.Get(today, today, "invalid"));
         Assert.IsType<BadRequestObjectResult>(await api.Get(today, today, pageNumber: 0));
@@ -121,12 +122,13 @@ public sealed class TeacherTrackingPostgresTests
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         async Task<TeacherTrackingPage> Page(string mode = "all", string? search = null, int page = 1) =>
             Assert.IsType<TeacherTrackingPage>(Assert.IsType<OkObjectResult>(await api.Get(today.AddDays(-2), today.AddDays(1), mode, search, page)).Value);
-        Assert.Equal(102, (await Page()).TotalCount);
-        Assert.Equal(2, (await Page(page: 5)).Items.Count);
+        // K2: the student who does not share progress still has their assignment listed.
+        Assert.Equal(103, (await Page()).TotalCount);
+        Assert.Equal(3, (await Page(page: 5)).Items.Count);
         Assert.Equal(last!.Id, Assert.Single((await Page(search: "Son öğrenci")).Items).RecordId);
         var student = last.AssignedStudents.Single().StudentId;
         last.SubmitAssignment(student, "Teslim"); await f.Db.SaveChangesAsync();
-        Assert.Equal(101, (await Page("assignment")).TotalCount);
+        Assert.Equal(102, (await Page("assignment")).TotalCount);
         Assert.Equal(last.Id, Assert.Single((await Page("review")).Items).RecordId);
         last.GradeAssignment(student, 95, "Geri bildirim"); await f.Db.SaveChangesAsync();
         Assert.Empty((await Page("review")).Items);

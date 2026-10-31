@@ -29,6 +29,12 @@ describe('CoachingInstitutionService', () => {
     const teacher = http.expectOne('/api/coaching/institution/teachers/teacher'); expect(teacher.request.method).toBe('DELETE'); teacher.flush(null);
   });
 
+  it('asks how much handed-in work waits for the leaving teacher', () => {
+    let count = -1; service.getTeacherRemovalPreview('teacher/1').subscribe(value => count = value.ungradedSubmissionCount);
+    const preview = http.expectOne('/api/coaching/institution/teachers/teacher%2F1/removal-preview');
+    expect(preview.request.method).toBe('GET'); preview.flush({ ungradedSubmissionCount: 3 }); expect(count).toBe(3);
+  });
+
   it('hands a leaving teacher over to a replacement and ends a single student-teacher link', () => {
     service.removeTeacher('teacher-1', 'teacher/2').subscribe();
     const handover = http.expectOne(request => request.url === '/api/coaching/institution/teachers/teacher-1');

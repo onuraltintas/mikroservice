@@ -33,9 +33,13 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         session.AddStudent(student);
         var foreign = CoachingSession.Create(Guid.NewGuid(), "Başka öğretmen", DateTime.UtcNow.AddDays(3), SessionType.OneOnOne, 60);
         foreign.AddStudent(other);
-        db.AddRange(session, foreign);
+        db.AddRange(session, foreign, Coaching.Domain.Profiles.CoachingTeacherProfile.Create(teacher),
+            Coaching.Domain.Profiles.CoachingStudentProfile.Create(student));
         await db.SaveChangesAsync();
-        var service = new CoachingCalendarSubscriptionService(db, new CoachingCalendarRepository(db), TimeProvider.System);
+        var accounts = new CoachingOwnedProfilePersistenceTests.FakeAccounts();
+        accounts.Users[teacher] = new(teacher, "Can", "Öğretmen", "can@example.test", true, true, ["Teacher"], null);
+        accounts.Users[student] = new(student, "Ada", "Yılmaz", "ada@example.test", true, true, ["Student"], null);
+        var service = new CoachingCalendarSubscriptionService(db, new CoachingCalendarRepository(db), TimeProvider.System, accounts);
 
         (await service.GetAsync(teacher, "Teacher", default)).Active.Should().BeFalse();
         var link = await service.CreateAsync(teacher, "Teacher", default);
