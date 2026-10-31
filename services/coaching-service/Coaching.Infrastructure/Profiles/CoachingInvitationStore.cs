@@ -30,6 +30,7 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
     private async Task<CoachingInvitation> Send(Guid actor, string email, string role, Guid? institution,
         Guid? teacher, bool institutionInvitation, string? message, CancellationToken ct)
     {
+        await RequireActiveSubscriptionAsync(institution, teacher, false, ct);
         var now = clock.GetUtcNow().UtcDateTime;
         var invitation = CoachingInvitation.Create(actor, email, role, institution, teacher, institutionInvitation, message, now);
         var duplicates = await db.CoachingInvitations.Where(x => x.RecipientEmail == invitation.RecipientEmail
@@ -45,7 +46,8 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         if (!Uri.TryCreate(publicUrl, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http"))
             throw new InvalidOperationException("Coaching public base URL is invalid.");
         await events.PublishAsync(new InvitationCreatedEvent(invitation.Id, sender.Email, invitation.RecipientEmail,
-            recipient?.UserId, invitation.Type, invitation.Message, invitation.Role == "Teacher" ? $"{publicUrl}/staff/?product=coaching" : $"{publicUrl}/coaching-portal/profile", now) { Product = "coaching" }, ct);
+            recipient?.UserId, invitation.Type, invitation.Message,
+            invitation.Role == "Teacher" ? CoachingPublicUrl.StaffPortalLink(configuration) : $"{publicUrl}/coaching-portal/profile", now) { Product = "coaching" }, ct);
         await db.SaveChangesAsync(ct);
         return invitation;
     }
@@ -87,6 +89,7 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         if (invitation.IsInstitutionInvitation)
             await profiles.RequireInstitutionAdminAsync(invitation.InviterUserId, invitation.InstitutionId!.Value, ct);
         if (invitation.TeacherUserId.HasValue) await RequireTeacher(invitation.TeacherUserId.Value, invitation.InstitutionId, ct);
+        await RequireActiveSubscriptionAsync(invitation.InstitutionId, invitation.TeacherUserId, true, ct);
         var role = invitation.Role == "Teacher" ? CoachingMemberRole.Teacher : CoachingMemberRole.Student;
         var currentInstitution = await db.CoachingInstitutionMemberships.Where(x => x.UserId == actor && x.Role == role && x.IsActive)
             .Select(x => (Guid?)x.InstitutionId).SingleOrDefaultAsync(ct);
@@ -104,8 +107,36 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
             await profiles.RequireAssignmentAccountsAsync(invitation.TeacherUserId.Value, actor, invitation.InstitutionId, ct);
             await profiles.UpsertAssignmentAsync(invitation.TeacherUserId.Value, actor, invitation.InstitutionId, null, true, actor, ct);
         }
-        invitation.Finish(CoachingInvitationStatus.Accepted, actor, clock.GetUtcNow().UtcDateTime);
+        var acceptedAt = clock.GetUtcNow().UtcDateTime;
+        invitation.Finish(CoachingInvitationStatus.Accepted, actor, acceptedAt);
+        // Coaching audit K3: the inviter learns who joined (published in the same transaction through the outbox).
+        await events.PublishAsync(new InvitationAcceptedEvent(invitation.Id, invitation.InviterUserId, actor,
+            $"{user.FirstName} {user.LastName}".Trim(), invitation.Type, acceptedAt) { Product = "coaching" }, ct);
         await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Coaching audit K3: while subscriptions are enforced, a teacher or institution whose subscription has ended can
+    /// neither send invitations nor have a pending invitation accepted (the funded seat is what admits the student).
+    /// An institution's subscription covers its teachers; an independent teacher needs a teacher subscription.
+    /// </summary>
+    private async Task RequireActiveSubscriptionAsync(Guid? institution, Guid? teacher, bool accepting, CancellationToken ct)
+    {
+        var enforced = await db.CoachingSubscriptionSettings.AsNoTracking().Select(x => (bool?)x.RequireActiveSubscription).FirstOrDefaultAsync(ct) ?? false;
+        if (!enforced) return;
+        var now = clock.GetUtcNow().UtcDateTime;
+        var active = from subscription in db.CoachingSubscriptions.AsNoTracking()
+                     join plan in db.CoachingSubscriptionPlans.AsNoTracking() on subscription.PlanId equals plan.Id
+                     where subscription.Status == "Active" && subscription.StartDate <= now && subscription.EndDate >= now
+                     select new { subscription.UserId, subscription.InstitutionId, plan.Audience };
+        bool ok;
+        if (institution is { } id) ok = await active.AnyAsync(x => x.InstitutionId == id && x.Audience == "Institution", ct);
+        else if (teacher is { } owner) ok = await active.AnyAsync(x => x.UserId == owner && x.Audience == "Teacher", ct);
+        else return;
+        if (ok) return;
+        throw CoachingProfileStore.Conflict(accepting
+            ? "Davet eden öğretmenin ya da kurumun aboneliği sona erdiği için bu davet şu an kabul edilemiyor. Davet edenle iletişime geç."
+            : "Aboneliğin sona erdiği için yeni davet gönderilemez. Davet göndermek için aboneliğini yenile.");
     }
 
     public async Task CancelAsync(Guid actor, Guid invitationId, CancellationToken ct)

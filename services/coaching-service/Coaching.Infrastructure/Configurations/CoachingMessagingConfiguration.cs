@@ -18,6 +18,8 @@ public sealed class CoachingConversationConfiguration : IEntityTypeConfiguration
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20).IsRequired();
+        // Coaching audit K3: every send increments the count, so concurrent sends conflict instead of losing an update.
+        builder.Property(x => x.MessageCount).IsConcurrencyToken();
         builder.HasIndex(x => new { x.TeacherUserId, x.CounterpartUserId, x.StudentUserId }).IsUnique();
         builder.HasIndex(x => new { x.TeacherUserId, x.LastMessageAt });
         builder.HasIndex(x => new { x.CounterpartUserId, x.LastMessageAt });

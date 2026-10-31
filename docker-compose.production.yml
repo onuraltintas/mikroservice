@@ -113,6 +113,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       COACHING_NEWSLETTER_RECAPTCHA_ENABLED: ${COACHING_NEWSLETTER_RECAPTCHA_ENABLED:-false}
       Coaching__PublicBaseUrl: ${PUBLIC_APP_BASE_URL:-https://eduivme.com}
+      Coaching__StaffPortalUrl: ${PUBLIC_STAFF_PORTAL_URL:-https://onuraltintas.net/staff}
       COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY: ${COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY:-}
       COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY: ${COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY:-}
       COACHING_NEWSLETTER_RECAPTCHA_MINIMUM_SCORE: ${COACHING_NEWSLETTER_RECAPTCHA_MINIMUM_SCORE:-0.5}
@@ -263,6 +264,8 @@ services:
       # roles use SPEED_READING_PUBLIC_BASE_URL; central roles use PUBLIC_APP_BASE_URL.
       PublicApp__BaseUrl: ${PUBLIC_APP_BASE_URL:-https://eduivme.com}
       PublicApp__SpeedReadingBaseUrl: ${SPEED_READING_PUBLIC_BASE_URL:-https://masterhizliokuma.com}
+      PublicApp__StaffPortalUrl: ${PUBLIC_STAFF_PORTAL_URL:-https://onuraltintas.net/staff}
+      PublicApp__AdminPanelUrl: ${PUBLIC_ADMIN_PANEL_URL:-https://eduivme.com}
       # New bank-transfer notices and institution expiries are e-mailed here; empty sends none.
       CoachingNotices__AdminAlertEmail: ${COACHING_ADMIN_ALERT_EMAIL:-}
       TextMessaging__Enabled: ${TEXT_MESSAGING_ENABLED:-false}

@@ -6,8 +6,9 @@ using Notification.Application.Interfaces;
 namespace Notification.Infrastructure.ExternalServices;
 
 /// <summary>
-/// Roadmap O8: asks Identity for recipients' names and usable e-mail addresses. A failure throws so the
-/// consuming message is retried; notification and e-mail ids are idempotent.
+/// Roadmap O8: asks Identity for recipients' names and usable e-mail addresses. Coaching audit K3: an unreachable or
+/// failing Identity raises <see cref="RecipientDirectoryUnavailableException"/>, so callers can keep the in-app notice
+/// and look the address up later instead of failing the message.
 /// </summary>
 public sealed class IdentityRecipientDirectory(HttpClient http, IConfiguration configuration) : IRecipientDirectory
 {
@@ -26,9 +27,18 @@ public sealed class IdentityRecipientDirectory(HttpClient http, IConfiguration c
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/internal/notification/recipients") { Content = JsonContent.Create(new { userIds = chunk }) };
             request.Headers.Add(InternalServiceAuthentication.HeaderName, key);
-            using var response = await http.SendAsync(request, ct);
-            response.EnsureSuccessStatusCode();
-            foreach (var row in await response.Content.ReadFromJsonAsync<Row[]>(cancellationToken: ct) ?? [])
+            Row[] rows;
+            try
+            {
+                using var response = await http.SendAsync(request, ct);
+                if (!response.IsSuccessStatusCode)
+                    throw new RecipientDirectoryUnavailableException($"Identity answered {(int)response.StatusCode} to the recipient lookup.");
+                rows = await response.Content.ReadFromJsonAsync<Row[]>(cancellationToken: ct) ?? [];
+            }
+            catch (HttpRequestException error) { throw new RecipientDirectoryUnavailableException("Identity could not be reached.", error); }
+            catch (TaskCanceledException error) when (!ct.IsCancellationRequested)
+            { throw new RecipientDirectoryUnavailableException("The recipient lookup timed out.", error); }
+            foreach (var row in rows)
                 result[row.UserId] = new RecipientContact(row.UserId, row.Email, row.FirstName ?? "", row.LastName ?? "") { Phone = row.Phone };
         }
         return result;

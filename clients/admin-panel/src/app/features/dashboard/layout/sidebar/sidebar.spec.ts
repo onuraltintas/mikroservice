@@ -5,6 +5,7 @@ import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { LayoutService } from '../../services/layout.service';
 import { SidebarComponent } from './sidebar';
+import { IDENTITY_ROUTES } from '../../../identity/identity.routes';
 
 describe('SidebarComponent', () => {
   it('offers curriculum management only to global content managers', () => {
@@ -21,6 +22,21 @@ describe('SidebarComponent', () => {
     profile.set({roles:['SystemAdmin'],permissions:[ADMIN_PERMISSIONS.coachingView]});expect(visible()).toBe(false);
   });
   afterEach(() => TestBed.resetTestingModule());
+
+  // Coaching audit K3 (31.10.2026): the old parent–student page had no gateway route; parents link through the parent panel.
+  it('no longer offers the removed parent–student relationships page', () => {
+    const profile = signal({ roles: ['SystemAdmin'], permissions: Object.values(ADMIN_PERMISSIONS) as string[] });
+    TestBed.configureTestingModule({ imports: [SidebarComponent], providers: [
+      { provide: AuthService, useValue: { userProfile: profile, hasPermission: () => true } },
+      { provide: ToasterService, useValue: { confirm: vi.fn() } },
+      { provide: LayoutService, useValue: { isSidebarCollapsed: signal(false), toggleSidebar: vi.fn() } }
+    ] });
+    const component = TestBed.createComponent(SidebarComponent).componentInstance;
+    const routes = component.menuItems().flatMap(menu => (menu.children ?? []).map((child: { route?: string }) => child.route));
+    expect(routes).not.toContain('/dashboard/identity/parent-student-relationships');
+    const children = IDENTITY_ROUTES.flatMap(route => route.children ?? [route]);
+    expect(children.some(route => route.path === 'parent-student-relationships')).toBe(false);
+  });
 
   it('shows the shared coaching catalog only to a permitted global admin', () => {
     const profile = signal<{ roles: string[]; permissions: string[] }>({ roles: ['SystemAdmin'], permissions: [ADMIN_PERMISSIONS.coachingView] });

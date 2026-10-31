@@ -14,6 +14,25 @@ public sealed class PublicAppUrlOptions
     /// </summary>
     public string SpeedReadingBaseUrl { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Coaching audit K3: the coaching staff portal (teachers and institutions), e.g. https://onuraltintas.net/staff.
+    /// Empty means "{BaseUrl}/staff".
+    /// </summary>
+    public string StaffPortalUrl { get; set; } = string.Empty;
+
+    /// <summary>Coaching audit K3: the admin panel origin, e.g. https://eduivme.com. Empty means BaseUrl.</summary>
+    public string AdminPanelUrl { get; set; } = string.Empty;
+
+    public string StaffPortalLink() =>
+        $"{(IsValidBaseUrl(StaffPortalUrl) ? StaffPortalUrl.TrimEnd('/') : ResolveBaseUrl(null, "coaching") + "/staff")}/?product=coaching";
+
+    public string AdminPanelLink(string path) =>
+        (IsValidBaseUrl(AdminPanelUrl) ? AdminPanelUrl.TrimEnd('/') : ResolveBaseUrl(null, "coaching")) + "/" + path.TrimStart('/');
+
+    /// <summary>Optional addresses: empty, or valid for the environment.</summary>
+    public static bool IsValidOptionalForEnvironment(string? value, bool isProduction) =>
+        string.IsNullOrWhiteSpace(value) || IsValidForEnvironment(value, isProduction);
+
     private static readonly HashSet<string> SpeedReadingRoles = new(StringComparer.OrdinalIgnoreCase)
     {
         "Student",
@@ -49,7 +68,9 @@ public sealed class PublicAppUrlOptions
             return true;
         }
 
-        return !string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase)
+        // Coaching audit K3: links in production e-mails must be https (Coaching:PublicBaseUrl already requires it).
+        return uri.Scheme == Uri.UriSchemeHttps
+            && !string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase)
             && (!IPAddress.TryParse(uri.Host, out var address) || !IPAddress.IsLoopback(address));
     }
 

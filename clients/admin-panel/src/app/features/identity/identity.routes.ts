@@ -29,11 +29,6 @@ export const IDENTITY_ROUTES: Routes = [
         loadComponent: () => import('./pages/registration-sources').then(m => m.RegistrationSourcesComponent)
     },
     {
-        path: 'parent-student-relationships',
-        data: { permission: ADMIN_PERMISSIONS.usersView, role: 'SystemAdmin' },
-        loadComponent: () => import('./pages/parent-student-relationships').then(m => m.ParentStudentRelationshipsComponent)
-    },
-    {
         path: 'institutions',
         data: { permission: ADMIN_PERMISSIONS.institutionsView },
         loadComponent: () => import('./pages/institution-list').then(m => m.InstitutionListComponent)

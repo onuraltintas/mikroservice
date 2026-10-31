@@ -39,6 +39,8 @@ public sealed class RateLimitRuleSetTests
     [InlineData("/api/speed-reading/cms/contact", "POST", "speed-reading-public-write", 8, 600)]
     [InlineData("/api/speed-reading/cms/newsletter/subscribe", "POST", "speed-reading-public-write", 8, 600)]
     [InlineData("/api/coaching/cms/newsletter/subscriptions", "POST", "coaching-newsletter-public-write", 8, 600)]
+    [InlineData("/api/calendar/feed/0123456789abcdef.ics", "GET", "coaching-calendar-feed", 60, 60)]
+    [InlineData("/api/calendar/feed/0123456789abcdef.ics", "HEAD", "coaching-calendar-feed", 60, 60)]
     [InlineData("/api/speed-reading/bank-transfer/requests", "POST", "bank-transfer-request", 5, 600)]
     public void Shipped_rules_resolve_the_expected_limit(string path, string method, string name, int limit, int windowSeconds)
     {

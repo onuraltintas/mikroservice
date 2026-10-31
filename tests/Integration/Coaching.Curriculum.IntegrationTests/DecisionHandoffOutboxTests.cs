@@ -65,7 +65,8 @@ public sealed class DecisionHandoffOutboxTests
         Assert.Equal(Coaching.Domain.Profiles.CoachingInvitationStatus.Pending,(await db.CoachingInvitations.AsNoTracking().SingleAsync()).Status);
         Assert.Equal(s.Old,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
         failure.Enabled=false;await invites.AcceptAsync(s.Student,invitation.Id,default);Assert.Equal(s.Next,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).ResponsibleTeacherId);
-        Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());await invites.AcceptAsync(s.Student,invitation.Id,default);Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());
+        // Coaching audit K3: the accepted invitation also tells the inviter (one more outbox message), only once.
+        Assert.Equal(4,await db.Set<OutboxMessage>().CountAsync());await invites.AcceptAsync(s.Student,invitation.Id,default);Assert.Equal(4,await db.Set<OutboxMessage>().CountAsync());
     }
 
     private sealed class Failure:SaveChangesInterceptor

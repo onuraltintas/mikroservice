@@ -36,7 +36,8 @@ public sealed class CoachingSubscriptionNoticeConsumer(
 
         if (!string.IsNullOrWhiteSpace(notice.RecipientEmail) && notice.Kind != CoachingSubscriptionNoticeKinds.TransferSubmitted)
         {
-            var link = notice.Audience == "Individual" ? $"{baseUrl}/coaching-portal/subscription" : urls.BuildLoginLink("Teacher");
+            // Coaching audit K3: teachers and institutions manage billing in the coaching staff portal.
+            var link = notice.Audience == "Individual" ? $"{baseUrl}/coaching-portal/subscription" : urls.StaffPortalLink();
             await emailDeliveryQueue.QueueAsync(messageId, nameof(CoachingSubscriptionNoticeConsumer), notice.RecipientEmail.Trim(),
                 $"{Product}: {EmailContent.SubjectText(text.Title)}", Body(text.Message, link, "Aboneliğini görüntüle"),
                 notice.RecipientUserId, context.CancellationToken);
@@ -47,7 +48,7 @@ public sealed class CoachingSubscriptionNoticeConsumer(
         {
             await emailDeliveryQueue.QueueAsync(messageId, nameof(CoachingSubscriptionNoticeConsumer) + ".Admin", adminEmail,
                 $"{Product}: {EmailContent.SubjectText(text.Title)}",
-                Body(text.Message, $"{baseUrl}/dashboard/coaching/subscriptions", "Abonelik yönetimini aç"),
+                Body(text.Message, urls.AdminPanelLink("/dashboard/coaching/subscriptions"), "Abonelik yönetimini aç"),
                 null, context.CancellationToken);
         }
     }
