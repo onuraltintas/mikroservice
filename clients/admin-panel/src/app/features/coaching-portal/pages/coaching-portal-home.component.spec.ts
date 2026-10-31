@@ -44,7 +44,7 @@ describe('CoachingPortalHomeComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Bekleyen işin yok');
     expect(fixture.nativeElement.textContent).not.toContain('Son ödevlerin');
     expect(fixture.nativeElement.querySelector('.home-hero')).toBeNull();
-    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/goals"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/growth/goals"]')).not.toBeNull();
   });
   it('sends teacher-only users to the new staff portal instead of rendering the legacy dashboard', async () => {
     const profile = signal<UserProfile | null>({

@@ -11,7 +11,7 @@ describe('Learning setup entry', () => {
       useValue: { get: () => of({ context: { id: 'context' }, isReady: false, nextStep: 'Availability' }) } }] });
     const fixture = TestBed.createComponent(LearningSetupEntryComponent); fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Kuruluma devam et');
-    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/study-plans"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/plan"]')).toBeTruthy();
   });
   it('shows service errors separately from incomplete setup and supports retry', async () => {
     const get = vi.fn().mockReturnValueOnce(throwError(() => ({ status: 503 }))).mockReturnValue(of({ isReady: true }));

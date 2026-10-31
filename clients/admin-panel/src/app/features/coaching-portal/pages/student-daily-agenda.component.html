@@ -16,12 +16,12 @@
     @else if (data(); as page) {
       <p class="result-note" role="status">{{ page.totalCount }} bekleyen iş · Son yenileme {{ page.generatedAt | date:'HH:mm':'+0300' }} (Türkiye)</p>
       @if (!page.items.length) {
-        <div class="empty"><app-coaching-icon name="check" /><h3>Bekleyen işin yok</h3><p>{{ mode() === 'today' ? 'Bugün için açık iş bulunmuyor. Yaklaşan veya geciken işlerine de göz atabilirsin.' : 'Bu dönemde açık çalışma, ödev veya karar bulunmuyor.' }}</p><a routerLink="/coaching-portal/study-plans">Çalışma planımı aç <app-coaching-icon name="arrow" /></a></div>
+        <div class="empty"><app-coaching-icon name="check" /><h3>Bekleyen işin yok</h3><p>{{ mode() === 'today' ? 'Bugün için açık iş bulunmuyor. Yaklaşan veya geciken işlerine de göz atabilirsin.' : 'Bu dönemde açık çalışma, ödev veya karar bulunmuyor.' }}</p><a routerLink="/coaching-portal/plan">Çalışma planımı aç <app-coaching-icon name="arrow" /></a></div>
       }
       <div class="agenda-list">
         @for (item of page.items; track item.kind + ':' + item.recordId) {
           <a class="agenda-item" [class.is-overdue]="mode() === 'overdue'"
-             [routerLink]="item.kind === 'study' ? '/coaching-portal/study-plans' : item.kind === 'assignment' ? ['/coaching-portal/assignments', item.recordId] : '/coaching-portal/progress'"
+             [routerLink]="item.kind === 'study' ? '/coaching-portal/plan' : item.kind === 'assignment' ? ['/coaching-portal/assignments', item.recordId] : '/coaching-portal/growth/week'"
              [queryParams]="item.kind === 'study' ? {plan: item.planId, task: item.recordId} : item.kind === 'decision' ? {week: item.weekStart, decision: item.recordId} : null">
             <span class="kind-icon" [class.assignment]="item.kind === 'assignment'" [class.decision]="item.kind === 'decision'"><app-coaching-icon [name]="item.kind === 'study' ? 'plan' : item.kind === 'assignment' ? 'book' : 'target'" /></span>
             <span class="item-copy"><span class="item-kind">{{ labels[item.kind] }} · {{ mode() === 'overdue' ? 'Gecikti' : 'Bekliyor' }}</span><strong>{{ item.title }}</strong><small>{{ item.date | date:'dd.MM.yyyy' }} · {{ item.startMinute == null ? 'Gün içinde' : clock(item.startMinute) }}@if (item.minutes != null) { · {{ item.minutes }} dk }</small></span>
@@ -34,5 +34,5 @@
       }
     }
   </div>
-  <footer><a routerLink="/coaching-portal/study-plans">Planım</a>@if(navigation.showAssignments()){<a routerLink="/coaching-portal/assignments">Ödevlerim</a>}<a routerLink="/coaching-portal/progress">Değerlendirme ve kararlarım</a></footer>
+  <footer><a routerLink="/coaching-portal/plan">Planım</a>@if(navigation.showAssignments()){<a routerLink="/coaching-portal/assignments">Ödevlerim</a>}<a routerLink="/coaching-portal/growth/week">Değerlendirme ve kararlarım</a></footer>
 </section>

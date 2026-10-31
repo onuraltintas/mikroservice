@@ -52,9 +52,11 @@ test('The plan wizard has one name and one entry point', async () => {
   const oldNames = await findAll(/Otomatik plan|Çalışma sihirbazı|ÇALIŞMA SİHİRBAZI|Sihirbazla plan|Sihirbazla planla|Plan asistanı/g);
   assert.deepEqual(oldNames, [], `call it "Plan sihirbazı":\n${oldNames.join('\n')}`);
   const oldEntry = (await findAll(/(?<![\w-])study-plan-assistant['"]/g)).filter(hit => !hit.includes('coaching-portal.routes.ts'));
-  assert.deepEqual(oldEntry, [], `link to /coaching-portal/automatic-plan:\n${oldEntry.join('\n')}`);
+  assert.deepEqual(oldEntry, [], `link to /coaching-portal/plan/wizard:\n${oldEntry.join('\n')}`);
   const routes = await read(`${portal}/coaching-portal.routes.ts`);
-  assert.match(routes, /path:\s*'study-plan-assistant',\s*redirectTo:\s*'automatic-plan'/, 'the old address redirects to the single entry');
+  // T2: the wizard is a tab under Planım; both old addresses lead there.
+  assert.match(routes, /\['study-plan-assistant',\s*'plan\/wizard'\]/, 'the old address redirects to the single entry');
+  assert.match(routes, /\['automatic-plan',\s*'plan\/wizard'\]/, 'the previous entry redirects to the wizard tab');
   const setup = await read(`${portal}/pages/student-learning-setup.component.html`);
   assert.doesNotMatch(setup, /<app-student-automatic-plan/, 'the setup page links to the wizard instead of hosting a second one');
   const wizard = await read(`${portal}/pages/student-study-plan-assistant.component.html`);

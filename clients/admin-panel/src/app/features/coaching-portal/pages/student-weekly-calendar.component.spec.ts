@@ -16,7 +16,7 @@ describe('weekly draft calendar',()=>{
   it('opens three views and a separate draft with a link to existing plans',async ()=>{
     const{fixture,c,service}=await setup();expect(service.get).toHaveBeenCalledTimes(1);expect(c.slots()).toEqual([]);
     expect(fixture.nativeElement.querySelectorAll('.view-switch button')).toHaveLength(3);
-    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/study-plans"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/plan"]')).not.toBeNull();
     c.changeView('month');fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.querySelector('.month-grid')).not.toBeNull();expect(c.dirty()).toBe(false);
   });
   it('opens saved evening cards instead of empty morning hours and preserves scroll while editing',async ()=>{

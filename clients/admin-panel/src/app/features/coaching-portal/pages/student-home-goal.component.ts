@@ -11,7 +11,7 @@ import { goalFitsContext } from './student-goal-context';
  @if(loading()){<p role="status">Hedefin yükleniyor…</p>}@else if(error()){<p role="alert">Hedef özeti yüklenemedi.</p><button type="button" (click)="load()">Yeniden dene</button>}
  @else if(target();as goal){<p><strong>{{goal.catalogTarget?.name || 'Okul veya programını seç'}}</strong></p><div class="metrics">@for(metric of goal.netTargets || [];track metric.examCode){<span>{{(metric.examCode || '').replace('AYT_','AYT ').replace('YDT_EN','YDT İngilizce')}} · <strong>{{metric.targetNet}} net</strong></span>}</div>}
  @else{<p>Okul veya program hedefini belirleyerek başlayabilirsin.</p>}
- <a routerLink="/coaching-portal/goals">Hedefimi aç →</a></section>`})
+ <a routerLink="/coaching-portal/growth/goals">Hedefimi aç →</a></section>`})
 export class StudentHomeGoalComponent implements OnInit {
  private readonly api=inject(CoachingStudyPlanningService);private readonly setup=inject(CoachingLearningSetupService);private readonly destroy=inject(DestroyRef);
  readonly target=signal<GoalTarget|null>(null);readonly loading=signal(false);readonly error=signal(false);

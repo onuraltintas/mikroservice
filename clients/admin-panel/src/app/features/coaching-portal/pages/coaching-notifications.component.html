@@ -37,7 +37,7 @@
       </div>
       <div class="flex gap-2">
         @if (target(notification); as destination) {
-          <a [routerLink]="destination.kind === 'weekly' ? '/coaching-portal/progress' : destination.kind === 'plan' ? '/coaching-portal/study-plans' : destination.kind === 'message' ? '/coaching-portal/messages/' + destination.id : '/coaching-portal/assignments/' + destination.id"
+          <a [routerLink]="destination.kind === 'weekly' ? '/coaching-portal/growth/week' : destination.kind === 'plan' ? '/coaching-portal/plan' : destination.kind === 'message' ? '/coaching-portal/messages/' + destination.id : '/coaching-portal/assignments/' + destination.id"
             [queryParams]="destination.kind === 'weekly' ? {week: destination.weekStart, decision: destination.decisionId} : destination.kind === 'plan' ? {plan: destination.id} : null"
             class="rounded-lg bg-(--ui-brand) px-3 py-2 text-xs font-semibold text-white hover:bg-(--ui-brand-strong)">{{destination.label}}</a>
         }

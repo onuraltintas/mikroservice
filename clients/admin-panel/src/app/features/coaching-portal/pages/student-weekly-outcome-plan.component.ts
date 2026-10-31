@@ -62,7 +62,7 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
     const p=this.preview();if(this.busy()||!p?.canCreate||!this.confirmed||this.stale()||!this.isCurrent())return;
     if(!this.title.trim()||this.title.trim().length>200){this.error.set('Plan için en fazla 200 karakterlik bir başlık gir.');return;}
     this.saving.set(true);this.error.set('');this.service.create({title:this.title.trim(),preview:p.request,fingerprint:p.fingerprint},this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving.set(false)))
-      .subscribe({next:r=>this.studentId?this.planCreated.emit(r.id):void this.router.navigate(['/coaching-portal/study-plans'],{queryParams:{plan:r.id}}),error:e=>this.fail(e,'Plan taslağı kaydedilemedi. Yeniden deneyebilirsin.')});
+      .subscribe({next:r=>this.studentId?this.planCreated.emit(r.id):void this.router.navigate(['/coaching-portal/plan'],{queryParams:{plan:r.id}}),error:e=>this.fail(e,'Plan taslağı kaydedilemedi. Yeniden deneyebilirsin.')});
   }
   private fail(e:{status?:number;error?:{message?:string}},fallback:string){if(e.status===409){this.stale.set(true);this.confirmed=false;}this.error.set(e.error?.message??fallback);}
   filter(value:string){this.lessonFilter.set(value);this.page.set(1);}

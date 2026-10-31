@@ -21,7 +21,7 @@ describe('CoachingNotificationsComponent', () => {
     const fixture=TestBed.createComponent(CoachingNotificationsComponent);fixture.detectChanges(); await fixture.whenStable();
     const links=Array.from(fixture.nativeElement.querySelectorAll('article a')) as HTMLAnchorElement[];
     expect(links.map(link=>link.getAttribute('href'))).toEqual([
-      `/coaching-portal/study-plans?plan=${plan}`,`/coaching-portal/assignments/${assignment}`
+      `/coaching-portal/plan?plan=${plan}`,`/coaching-portal/assignments/${assignment}`
     ]);
     expect(fixture.nativeElement.textContent).toContain('Ödev değerlendirildi');
     expect(fixture.nativeElement.querySelector('[data-notification-id="old"] a')).toBeNull();
