@@ -103,7 +103,7 @@
         @if (v.weeklyReview.needed) {
           <cs-card class="side-card" tone="accent" data-home-block="review" data-testid="weekly-review">
             <h2>Geçen hafta nasıl geçti?</h2>
-            <p>Birkaç soruyla haftanı değerlendir; koçun da görsün.</p>
+            <p>Birkaç soruyla haftanı değerlendir; öğretmenin de görsün.</p>
             <a routerLink="/coaching-portal/growth/week" [queryParams]="{ week: v.weeklyReview.weekStart }">Haftanı değerlendir</a>
           </cs-card>
         }
