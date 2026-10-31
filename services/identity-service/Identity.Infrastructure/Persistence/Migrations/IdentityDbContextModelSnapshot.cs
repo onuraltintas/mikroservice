@@ -712,6 +712,10 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<bool>("CoachingVisible")
+                        .HasColumnType("boolean")
+                        .HasColumnName("coaching_visible");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -751,6 +755,10 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("RevokedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("revoked_by_user_id");
+
+                    b.Property<bool>("SpeedReadingVisible")
+                        .HasColumnType("boolean")
+                        .HasColumnName("speed_reading_visible");
 
                     b.Property<string>("Status")
                         .IsRequired()
