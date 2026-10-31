@@ -178,6 +178,17 @@
                   <span class="material-icons sp-dropdown__item-icon">settings</span>
                   Ayarlar
                 </a>
+                @if (isStudent()) {
+                  <a
+                    routerLink="/veli-baglantisi"
+                    class="sp-dropdown__item"
+                    role="menuitem"
+                    data-testid="parent-link-menu"
+                    (click)="closeUserMenu()">
+                    <span class="material-icons sp-dropdown__item-icon">family_restroom</span>
+                    Veli bağlantısı
+                  </a>
+                }
 
                 <div class="sp-dropdown__divider"></div>
 

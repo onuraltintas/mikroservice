@@ -270,7 +270,12 @@ var app = builder.Build();
 app.UseRequestLogging();
 app.UseExceptionHandler();
 app.UseAuthentication();
-app.UseMiddleware<ProductScopeMiddleware>("speed-reading");
+// V2 (parent panel, decision 01.11.2026): parents sign in to the Coaching portal; their Coaching token is accepted here only
+// for the Parent role and only on the parent read routes (each read is still authorized by Identity).
+app.UseMiddleware<ProductScopeMiddleware>("speed-reading", new[]
+{
+    new ProductScopeException("coaching", "Parent", "/api/speed-reading/parents/")
+});
 app.UseMiddleware<SpeedReading.API.Security.ExercisePreviewMiddleware>();
 app.UseRateLimiter();
 app.UseMiddleware<SpeedReading.API.Security.SpeedReadingSubscriptionAccessMiddleware>();
