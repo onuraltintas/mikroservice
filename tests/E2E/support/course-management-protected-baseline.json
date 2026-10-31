@@ -845,7 +845,7 @@
     "services/coaching-service/Coaching.API/Controllers/CoachingNewsletterAdminController.cs": "18927943730f8218831a8747139be59403ffcedc71fd4226b50425f094ca1f18",
     "services/coaching-service/Coaching.API/Controllers/CoachingNewsletterController.cs": "94570ab9d0b4eaa52805dc4a8555f09b40aeab086bec2b30ee2ee5abe1a013c4",
     "services/coaching-service/Coaching.API/Controllers/CoachingOutcomeAdminController.cs": "f745ccf1409e4e93c10aad139aa0ddd55c038cd954ff01696fb26389102d1871",
-    "services/coaching-service/Coaching.API/Controllers/CoachingParentChildrenController.cs": "734669d0d271e60de2eea4993f05f2f7b8d8aaafa87b7596f39f9b162838b387",
+    "services/coaching-service/Coaching.API/Controllers/CoachingParentChildrenController.cs": "380bfa8f634d73082ab9baec34ebeeac97776f01d0f33a737884f77c45b004ea",
     "services/coaching-service/Coaching.API/Controllers/CoachingProfilesController.cs": "a940a72a4a06114144ab889dfadf08968daa2cb83cd20a35590b36f9634e771c",
     "services/coaching-service/Coaching.API/Controllers/CoachingRosterController.cs": "adbd8c1212fc0a4bad8ee47fa5f64d1206fdfab0ee03c28e1165df7428e3501a",
     "services/coaching-service/Coaching.API/Controllers/CoachingSalesController.cs": "50cfda7bf150577fbb4925741b17be517229c40ce6afef4ac0b0175619873413",
@@ -1016,7 +1016,7 @@
     "services/coaching-service/Coaching.Application/Queries/GetInstitutionEarlyWarnings/GetInstitutionEarlyWarningsQuery.cs": "a4ce9ff282f1b4263bae5779f13280f3a110dbf1c188df63e47716498fb9e24b",
     "services/coaching-service/Coaching.Application/Queries/GetSessions/GetSessionQueryHandler.cs": "6f2d14e031c56ff1cf3f810402c6c3d393f6f03fe2145daa7b96f23ee0ad794a",
     "services/coaching-service/Coaching.Application/Queries/GetSessions/GetSessionsQuery.cs": "6ee65a2a16bc364d808ec424f50e805bddab161483105abbf0c8261841f65850",
-    "services/coaching-service/Coaching.Application/Queries/GetSessions/GetSessionsQueryHandler.cs": "9df7a5560f484767abdbd43df1e35624b9810926c68b5be02c9adb1234f5a6d3",
+    "services/coaching-service/Coaching.Application/Queries/GetSessions/GetSessionsQueryHandler.cs": "382337cec48776bc052d22f177375a94f2819fa3ea6791f2895967519185cf18",
     "services/coaching-service/Coaching.Application/Queries/GetStudentAssignments/GetStudentAssignmentsQuery.cs": "bc4ad6e270171de1887b155363c9d46fff5d73ad5c4fbaff2c46fadbbe62835c",
     "services/coaching-service/Coaching.Application/Queries/GetStudentAssignments/GetStudentAssignmentsQueryHandler.cs": "af119520d1d16fc4f8608fb5ffa0da237c4526f153133494ed8584a0ff39bc5a",
     "services/coaching-service/Coaching.Application/Queries/GetStudentProgress/GetStudentProgressQuery.cs": "34bad18c218918ed3be1f76c627d8a6615a23c44ed181df582353cf50c2a2161",
@@ -1350,7 +1350,7 @@
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingInstitutionWorkloadService.cs": "75c6e37a1ab4e237ad4430fc9dc101faffea7272cb7a135f5e6a173596b8314b",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingMessagingService.cs": "ce46631b1c1876a21ab2e3260f2d08cf19f9be4d6d1b1896084b987a2fd6ef2b",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingNewsletterService.cs": "50f0a545615ed7627973bc5ca69bdab60306cb3ac62264bf248e7b3ac2262d79",
-    "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentChildService.cs": "74665143a32c76e0e4867851229e86ea58e57713c189abf7cb6e924a0d5b5f64",
+    "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentChildService.cs": "7b65443efa0d55c70a33a12a569ddc659d5bd085fb2aefa0fec92010f55695d1",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentWeeklySummary.cs": "f7a5fc88f0aaad16904e7ea6c165a073e4b8cc9a15be2f79d4be76a35b7b45b3",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesDocuments.cs": "facfa2ace568d6d5200d52ef100199b21f1478010d65660308b9dfcbc51f8efc",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesService.cs": "4d2be80288a3b040dbc37913a335e95c73d746d753be7f5c447901b3f0bec207",
@@ -2654,7 +2654,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "V3 parent coaching reads and two-section weekly summary",
+    "purpose": "V3 parent weekly-review and attendance",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2702,7 +2702,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "98ee48f8",
+    "previousBaselineCommit": "dc2daaee",
     "removedSincePreviousBaseline": []
   }
 }
