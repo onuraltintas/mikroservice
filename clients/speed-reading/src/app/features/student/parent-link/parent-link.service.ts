@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -43,25 +43,31 @@ export interface ParentLinkVisibility {
 export class ParentLinkService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/users/me`;
+  // The page shows every failure inline (role="alert"); no global toast or error-page redirect.
+  private readonly headers = new HttpHeaders({
+    'X-Skip-Error-Toast': 'true',
+    'X-Skip-Forbidden-Redirect': 'true',
+    'X-Skip-Error-Redirect': 'true'
+  });
 
   getLinks(): Observable<ParentLink[]> {
-    return this.http.get<ParentLink[]>(`${this.base}/parent-links`);
+    return this.http.get<ParentLink[]>(`${this.base}/parent-links`, { headers: this.headers });
   }
 
   createCode(): Observable<ParentLinkCode> {
-    return this.http.post<ParentLinkCode>(`${this.base}/parent-link-codes`, {});
+    return this.http.post<ParentLinkCode>(`${this.base}/parent-link-codes`, {}, { headers: this.headers });
   }
 
   approve(id: string): Observable<void> {
-    return this.http.post<void>(`${this.base}/parent-links/${encodeURIComponent(id)}/approve`, {});
+    return this.http.post<void>(`${this.base}/parent-links/${encodeURIComponent(id)}/approve`, {}, { headers: this.headers });
   }
 
   revoke(id: string): Observable<void> {
-    return this.http.post<void>(`${this.base}/parent-links/${encodeURIComponent(id)}/revoke`, {});
+    return this.http.post<void>(`${this.base}/parent-links/${encodeURIComponent(id)}/revoke`, {}, { headers: this.headers });
   }
 
   setVisibility(id: string, visibility: ParentLinkVisibility): Observable<void> {
-    return this.http.put<void>(`${this.base}/parent-links/${encodeURIComponent(id)}/products`, visibility);
+    return this.http.put<void>(`${this.base}/parent-links/${encodeURIComponent(id)}/products`, visibility, { headers: this.headers });
   }
 }
 

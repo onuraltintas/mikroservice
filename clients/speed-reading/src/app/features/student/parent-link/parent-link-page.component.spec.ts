@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { ParentLinkPageComponent } from './parent-link-page.component';
 import { ParentLink } from './parent-link.service';
+import { routes } from '../../../app.routes';
 
 const LINKS = '/api/users/me/parent-links';
 
@@ -59,7 +60,7 @@ describe('ParentLinkPageComponent (Veli bağlantısı)', () => {
 
   it('creates a one-time code and shows it with its expiry', async () => {
     await load([]);
-    el<HTMLButtonElement>('[data-testid="create-code"]').click();
+    el<HTMLButtonElement>('[data-testid="create-code"] button').click();
     const request = http.expectOne('/api/users/me/parent-link-codes');
     expect(request.request.method).toBe('POST');
     request.flush({ code: 'ABCD-EFGH', expiresAt: '2026-11-03T21:00:00Z' });
@@ -69,13 +70,13 @@ describe('ParentLinkPageComponent (Veli bağlantısı)', () => {
     expect(el('[data-testid="parent-code"]').textContent).toContain('ABCD-EFGH');
     expect(el('[data-testid="parent-code-expiry"]').textContent).toContain('2026');
     expect(el('[role="status"]').textContent).toContain('Kod oluşturuldu');
-    expect(el<HTMLButtonElement>('[data-testid="create-code"]').textContent).toContain('Yeni kod oluştur');
+    expect(el<HTMLButtonElement>('[data-testid="create-code"] button').textContent).toContain('Yeni kod oluştur');
   });
 
   it('approves a pending request after the student confirms and reloads the list', async () => {
     await load([link({ status: 'Pending', verifiedAt: null })]);
     expect(page().querySelector('[data-testid="speed-reading-visibility"]')).toBeNull();
-    el<HTMLButtonElement>('[data-testid="approve-link"]').click();
+    el<HTMLButtonElement>('[data-testid="approve-link"] button').click();
     await fixture.whenStable();
 
     expect(toaster.confirm).toHaveBeenCalled();
@@ -92,12 +93,12 @@ describe('ParentLinkPageComponent (Veli bağlantısı)', () => {
   it('removes a link only after confirmation', async () => {
     await load([link()]);
     toaster.confirm.and.resolveTo(false);
-    el<HTMLButtonElement>('[data-testid="revoke-link"]').click();
+    el<HTMLButtonElement>('[data-testid="revoke-link"] button').click();
     await fixture.whenStable();
     http.expectNone(`${LINKS}/link-1/revoke`);
 
     toaster.confirm.and.resolveTo(true);
-    el<HTMLButtonElement>('[data-testid="revoke-link"]').click();
+    el<HTMLButtonElement>('[data-testid="revoke-link"] button').click();
     await fixture.whenStable();
     const revoke = http.expectOne(`${LINKS}/link-1/revoke`);
     expect(revoke.request.method).toBe('POST');
@@ -139,6 +140,13 @@ describe('ParentLinkPageComponent (Veli bağlantısı)', () => {
 
     expect(el<HTMLInputElement>('[data-testid="speed-reading-visibility"]').checked).toBeTrue();
     expect(el('[role="alert"]').textContent).toContain('Veli bağlantısı bulunamadı.');
+  });
+
+  it('is routed at /veli-baglantisi for students, before the public catch-all', () => {
+    const index = routes.findIndex(route => route.path === 'veli-baglantisi');
+    expect(index).toBeGreaterThan(-1);
+    expect(index).toBeLessThan(routes.findIndex(route => route.path === ''));
+    expect(routes[index].data?.['role']).toEqual(['Student']);
   });
 
   it('shows an error when the links cannot be loaded', async () => {
