@@ -13,13 +13,13 @@ using Microsoft.Extensions.Options;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
-// Package 6 of claude/coaching-fix-plan.md (decision: all financial records stay unchanged for one year).
+// Package 6 of claude/coaching-fix-plan.md; retention period five years since the coaching audit of 31.10.2026.
 public sealed class CoachingPrivacyRetentionPostgresTests
 {
     private static readonly DateTime Start = new(2026, 10, 1, 9, 0, 0, DateTimeKind.Utc);
 
     [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task ErasureKeepsFinancialRecordsForOneYearThenRemovesOnlyThePersonalFields()
+    public async Task ErasureKeepsFinancialRecordsForFiveYearsThenRemovesOnlyThePersonalFields()
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create(); await using var files = new Files();
         var clock = new Clock(Start); var subject = Guid.NewGuid(); var other = Guid.NewGuid();
@@ -36,9 +36,9 @@ public sealed class CoachingPrivacyRetentionPostgresTests
         var execution = await new CoachingErasureExecutionService(pg.Db, files.Storage, clock)
             .ExecuteAsync(new(Guid.NewGuid(), requestId, subject, Start, PersonalDataScope.Account), default);
         Assert.Equal(4, execution.RetainedFinancialRecordCount);
-        Assert.Equal<DateTime?>(Start.AddYears(1), execution.FinancialRetentionUntil);
+        Assert.Equal<DateTime?>(Start.AddYears(5), execution.FinancialRetentionUntil);
 
-        // During the year everything stays as it was; only the institution seat is released.
+        // During the retention period everything stays as it was; only the institution seat is released.
         pg.Db.ChangeTracker.Clear();
         var keptTransfer = await pg.Db.CoachingBankTransferRequests.SingleAsync(x => x.Id == mine.Transfer);
         Assert.Equal<(string, string, string?, string?)>(("Ayşe Yılmaz", "ayse@example.test", "Ayşe Yılmaz (veli)", "Açıklama"),
@@ -47,9 +47,9 @@ public sealed class CoachingPrivacyRetentionPostgresTests
         var seat = await pg.Db.CoachingSubscriptionSeats.SingleAsync(x => x.Id == mine.Seat);
         Assert.True(seat.IsSuspended); Assert.Equal(subject, seat.StudentId);
 
-        clock.Now = Start.AddYears(1).AddMinutes(-1);
+        clock.Now = Start.AddYears(5).AddMinutes(-1);
         Assert.Equal(0, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
-        clock.Now = Start.AddYears(1).AddMinutes(1);
+        clock.Now = Start.AddYears(5).AddMinutes(1);
         Assert.Equal(1, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
         Assert.Equal(0, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
 
@@ -77,7 +77,7 @@ public sealed class CoachingPrivacyRetentionPostgresTests
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task ALegalHoldPlacedDuringTheYearPostponesAnonymization()
+    public async Task ALegalHoldPlacedDuringRetentionPostponesAnonymization()
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create(); await using var files = new Files();
         var clock = new Clock(Start); var subject = Guid.NewGuid();
@@ -87,13 +87,13 @@ public sealed class CoachingPrivacyRetentionPostgresTests
 
         var hold = CoachingLegalHold.Place(subject, "Vergi incelemesi", Guid.NewGuid(), Start.AddMonths(6));
         pg.Db.Add(hold); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
-        clock.Now = Start.AddYears(1).AddDays(1);
+        clock.Now = Start.AddYears(5).AddDays(1);
         Assert.Equal(0, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
         Assert.Equal("ayse@example.test", (await pg.Db.CoachingPaymentRecords.SingleAsync(x => x.Id == mine.Payment)).UserEmail);
 
         var stored = await pg.Db.CoachingLegalHolds.SingleAsync();
-        stored.Release(Guid.NewGuid(), Start.AddYears(1).AddDays(2)); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
-        clock.Now = Start.AddYears(1).AddDays(3);
+        stored.Release(Guid.NewGuid(), Start.AddYears(5).AddDays(2)); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
+        clock.Now = Start.AddYears(5).AddDays(3);
         Assert.Equal(1, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
         pg.Db.ChangeTracker.Clear();
         Assert.Equal("", (await pg.Db.CoachingPaymentRecords.SingleAsync(x => x.Id == mine.Payment)).UserEmail);
@@ -136,23 +136,25 @@ public sealed class CoachingPrivacyRetentionPostgresTests
         var message = new PersonalDataErasureExecutionRequestedV1(Guid.NewGuid(), requestId, subject, Start, PersonalDataScope.Coaching);
         var outbox = new CapturingPublisher();
 
-        // The consumer outbox owns the transaction; here it fails to commit.
-        await using (var transaction = await pg.Db.Database.BeginTransactionAsync())
+        // The consumer outbox owns the transaction (inside the retry strategy, as the bus does); here it fails to commit.
+        await pg.Db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
+            await using var transaction = await pg.Db.Database.BeginTransactionAsync();
             await new CoachingErasureExecutionService(pg.Db, files.Storage, clock, outbox).ExecuteAsync(message, default);
             await transaction.RollbackAsync();
-        }
+        });
         pg.Db.ChangeTracker.Clear();
         Assert.True(File.Exists(files.PathOf(key)));
         Assert.Equal(1, await pg.Db.AssignmentSubmissionAttachments.CountAsync());
 
         // Committed: the file goes with the outbox message, which is only delivered after the commit.
         outbox.Messages.Clear();
-        await using (var transaction = await pg.Db.Database.BeginTransactionAsync())
+        await pg.Db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
+            await using var transaction = await pg.Db.Database.BeginTransactionAsync();
             await new CoachingErasureExecutionService(pg.Db, files.Storage, clock, outbox).ExecuteAsync(message, default);
             await transaction.CommitAsync();
-        }
+        });
         pg.Db.ChangeTracker.Clear();
         Assert.Equal(0, await pg.Db.AssignmentSubmissionAttachments.CountAsync());
         Assert.True(File.Exists(files.PathOf(key)));
