@@ -275,4 +275,50 @@ public sealed class CoachingStaffFixesTests
 
         w.Events.Messages.OfType<AssignmentGradedEvent>().Select(x => x.Score).Should().Equal(80m, 90m);
     }
+    // Decision 31.10.2026 (a): handed-in work that is not graded yet must not be left without a teacher, so a teacher who
+    // still has some can only leave with a successor; the removal screen asks for the count first.
+    [Fact]
+    public async Task ATeacherWithUngradedSubmissionsCanOnlyBeRemovedWithASuccessor()
+    {
+        await using var w = await World.CreateAsync();
+        var handedIn = Assignment.Create(w.Teacher, "Teslim edilen", Now.AddDays(5), institutionId: w.Institution);
+        handedIn.AssignToStudents([w.Student, w.Other]); handedIn.SubmitAssignment(w.Student, "Bitti"); handedIn.SubmitAssignment(w.Other, "Tamam");
+        var graded = Assignment.Create(w.Teacher, "Notlanan", Now.AddDays(5), institutionId: w.Institution);
+        graded.AssignToStudent(w.Student); graded.SubmitAssignment(w.Student, "Bitti"); graded.GradeAssignment(w.Student, 90, "İyi");
+        w.F.Db.AddRange(handedIn, graded); await w.F.Db.SaveChangesAsync(); w.F.Db.ChangeTracker.Clear();
+
+        (await w.Store.CountUngradedSubmissionsAsync(w.Admin, w.Institution, w.Teacher, default)).Should().Be(2);
+        var refused = await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(
+            () => w.Store.RemoveInstitutionTeacherAsync(w.Admin, w.Institution, w.Teacher, null, default));
+        refused.Code.Should().Be("Profiles.SuccessorRequired");
+        refused.Message.Should().Be("2 teslim edilmiş iş notlanmayı bekliyor; devralacak öğretmen seçin.");
+        refused.Data[CoachingProfileStore.UngradedSubmissionCountKey].Should().Be(2);
+        w.F.Db.ChangeTracker.Clear();
+        (await w.F.Db.CoachingInstitutionMemberships.SingleAsync(x => x.UserId == w.Teacher)).IsActive.Should().BeTrue("nothing changed");
+
+        var successor = w.F.AddAccount("Teacher");
+        await w.F.Store.SetMembershipAsync(w.Admin, w.Institution, successor, CoachingMemberRole.Teacher, true, default);
+        await w.Store.RemoveInstitutionTeacherAsync(w.Admin, w.Institution, w.Teacher, successor, default);
+
+        w.F.Db.ChangeTracker.Clear();
+        var moved = await w.F.Db.Assignments.Include(x => x.AssignedStudents).SingleAsync(x => x.Id == handedIn.Id);
+        moved.TeacherId.Should().Be(successor);
+        moved.AssignedStudents.Should().OnlyContain(x => x.Status == StudentAssignmentStatus.Submitted);
+    }
+
+    [Fact]
+    public async Task OnlyGradedOrUnsubmittedWorkDoesNotNeedASuccessor()
+    {
+        await using var w = await World.CreateAsync();
+        var graded = Assignment.Create(w.Teacher, "Notlanan", Now.AddDays(5), institutionId: w.Institution);
+        graded.AssignToStudent(w.Student); graded.SubmitAssignment(w.Student, "Bitti"); graded.GradeAssignment(w.Student, 90, "İyi");
+        w.F.Db.Add(graded); await w.F.Db.SaveChangesAsync(); w.F.Db.ChangeTracker.Clear();
+        await w.AssignmentAsync("Açık ödev", w.Other);
+
+        (await w.Store.CountUngradedSubmissionsAsync(w.Admin, w.Institution, w.Teacher, default)).Should().Be(0);
+        await w.Store.RemoveInstitutionTeacherAsync(w.Admin, w.Institution, w.Teacher, null, default);
+
+        w.F.Db.ChangeTracker.Clear();
+        (await w.F.Db.CoachingInstitutionMemberships.SingleAsync(x => x.UserId == w.Teacher)).IsActive.Should().BeFalse();
+    }
 }

@@ -62,6 +62,11 @@ public sealed class CoachingMembershipsController(CoachingProfileStore profiles,
         return NoContent();
     }
 
+    /// <summary>How much handed-in work waits for a grade; when there is any, removal needs a replacement teacher.</summary>
+    [HttpGet("teachers/{teacherUserId:guid}/removal-preview")]
+    public async Task<IActionResult> TeacherRemovalPreview(Guid teacherUserId, Guid? institutionId, CancellationToken ct) =>
+        Ok(new { ungradedSubmissionCount = await profiles.CountUngradedSubmissionsAsync(UserId, await Resolve(institutionId, ct), teacherUserId, ct) });
+
     /// <summary>Removes a teacher; with a replacement their students and open assignments move to that teacher.</summary>
     [HttpDelete("teachers/{teacherUserId:guid}")]
     public async Task<IActionResult> RemoveTeacher(Guid teacherUserId, Guid? institutionId,

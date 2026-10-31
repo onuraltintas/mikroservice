@@ -4,7 +4,7 @@ import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Observable, finalize } from 'rxjs';
+import { Observable, finalize, firstValueFrom } from 'rxjs';
 import {
   CoachingInstitutionOverview,
   CoachingInstitutionService,
@@ -100,9 +100,23 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     if (!await this.toaster.confirm(`${link.name} ile ${student.firstName} ${student.lastName} arasındaki öğretmen ataması sona ersin mi? Öğrencinin diğer öğretmenleri değişmez.`)) return;
     this.changeMembership(this.institutionService.removeStudentTeacher(student.userId, link.userId), 'Öğretmen ataması sona erdi.', async () => await this.loadStudents());
   }
+  /** Decision 31.10.2026 (a): ungraded handed-in work per teacher, known before removal so a successor can be required. */
+  readonly ungradedByTeacher = signal<Partial<Record<string, number>>>({});
   async removeTeacher(teacher: CoachingInstitutionTeacher): Promise<void> {
     if (this.isMembershipSaving() || this.editingStudentId() || !this.teachers().some(item => item.userId === teacher.userId)) return;
     const replacement = this.handoverOptions(teacher).find(item => item.userId === this.handoverTeacherIds[teacher.userId]);
+    if (!replacement) {
+      this.membershipError.set(null); this.membershipSuccess.set(null);
+      let ungraded = 0;
+      try { ungraded = (await firstValueFrom(this.institutionService.getTeacherRemovalPreview(teacher.userId))).ungradedSubmissionCount; }
+      catch { this.membershipError.set('Öğretmenin bekleyen işleri kontrol edilemedi. Biraz sonra yeniden deneyin.'); return; }
+      this.ungradedByTeacher.update(current => ({ ...current, [teacher.userId]: ungraded }));
+      if (ungraded > 0) {
+        this.membershipError.set(`${ungraded} teslim edilmiş iş notlanmayı bekliyor; devralacak öğretmen seçin.`
+          + (this.handoverOptions(teacher).length ? '' : ' Önce kuruma başka bir öğretmen ekleyin.'));
+        return;
+      }
+    }
     const consequence = replacement
       ? `Öğrencileri ve açık ödevleri ${replacement.firstName} ${replacement.lastName} öğretmene devredilir; ileri tarihli seansları iptal edilir.`
       : 'Bu kurumdaki öğrenci atamaları sona erer ve ileri tarihli seansları iptal edilir.';
@@ -124,7 +138,9 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     this.isMembershipSaving.set(true); this.membershipError.set(null); this.membershipSuccess.set(null);
     operation.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.isMembershipSaving.set(false))).subscribe({
       next: () => { this.isMembershipSaving.set(false); this.membershipSuccess.set(message); refresh(); this.loadOverview(); },
-      error: error => this.membershipError.set(error.status === 403 ? 'Kurum yetkiniz doğrulanamadı. Oturumunuzu yenileyin.' : 'Üye işlemi kaydedilemedi. Kurum ilişkisini ve alanları kontrol edip yeniden deneyin.')
+      error: error => this.membershipError.set(error.status === 403 ? 'Kurum yetkiniz doğrulanamadı. Oturumunuzu yenileyin.'
+        : error.status === 409 && typeof error.error?.message === 'string' ? error.error.message
+        : 'Üye işlemi kaydedilemedi. Kurum ilişkisini ve alanları kontrol edip yeniden deneyin.')
     });
   }
   private async prepareMemberNavigation(): Promise<boolean> {
