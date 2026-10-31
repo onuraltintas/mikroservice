@@ -60,7 +60,8 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
                 IsOverdue: a.DueDate < now
                           && a.Status == AssignmentStatus.Active
                           && studentAssignment.Status is StudentAssignmentStatus.Assigned or StudentAssignmentStatus.InProgress,
-                AssignmentStatus: a.Status.ToString()
+                AssignmentStatus: a.Status.ToString(),
+                LastSubmittedAt: studentAssignment.LastSubmittedAt
             );
         }).ToList();
 

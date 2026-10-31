@@ -58,6 +58,11 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var v2=request.EngineVersion==WeeklyPlanEngine.CurrentVersion;
         var draft=await Draft(student,ct);
         if(request.ExpectedWeeklyDraftVersion<0||request.ExpectedWeeklyDraftVersion!=draft.Version||draft.Slots.Count==0)throw Conflict("Haftalık taslak boş veya değişmiş. Takvimi yeniden yükleyin.");
+        // K4 (31.10.2026): the plan starts no earlier than the student's today and ends before the exam day.
+        var window=await Options(student,ct);
+        if(request.StartDate<window.StartDate)throw new ArgumentException("Plan bugünden önce başlayamaz. Başlangıç tarihini bugün ya da sonrası seçin.");
+        if(window.ExamDate is {} examDate&&request.EndDate>=examDate)
+            throw new ArgumentException($"Plan sınav gününden önce bitmeli. En geç {examDate.AddDays(-1):dd.MM.yyyy} tarihini seçin.");
         var choices=(staffAccess is not null && access.CurrentUserId != student
             ? await setup.GetCatalogForStudentAsync(student,null,1,ct)
             : await setup.GetCatalogAsync(null,1,ct)).Lessons.ToDictionary(x=>x.Id);

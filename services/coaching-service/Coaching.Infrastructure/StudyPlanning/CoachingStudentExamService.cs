@@ -81,7 +81,8 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         var exam = await OwnedAsync(id, student, request.ExpectedVersion, cancellationToken);
         var lessons = await ValidateAsync(request.Exam, cancellationToken);
         var input = request.Exam;
-        var practice = input.PracticeExam ?? exam.Results.Single().GetPracticeExam();
+        // K4 (31.10.2026): the request decides the deneme scope; leaving it out removes the old one (LGS/YKS still require it).
+        var practice = input.PracticeExam;
         if (practice is not null && input.Lessons.Count > 0) throw new ArgumentException("Deneme kapsamı ile serbest ders/konu satırları birlikte girilemez.");
         if (practice is not null) PracticeExamRules.Validate(practice, input.ExamType, input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers);
         // Validate a detached result first, so rejected lesson totals cannot partially mutate the tracked aggregate.
@@ -89,6 +90,7 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         check.SetAnswerStatistics(input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers);
         check.SetLessonAnswers(lessons);
         var result = exam.Results.Single();
+        if (practice is null) result.ClearPracticeExam();
         result.UpdateEditableDetails(input.Score, input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers, null, null, null, input.MaxScore, practice);
         result.SetLessonAnswers(lessons);
         exam.UpdateEditableDetails(input.Title, input.ExamType, null, null,

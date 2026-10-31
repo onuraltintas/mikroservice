@@ -369,7 +369,10 @@ public class AssignmentStudent : Entity
 
     public Guid StudentId { get; private set; }
 
+    /// <summary>The first hand-in; a later resubmission does not move it (K4, 31.10.2026).</summary>
     public DateTime? SubmittedAt { get; private set; }
+    /// <summary>The latest hand-in, equal to <see cref="SubmittedAt"/> until the student resubmits.</summary>
+    public DateTime? LastSubmittedAt { get; private set; }
     public decimal? Score { get; private set; }
     public long? GradeRevision { get; private set; }
     public string? TeacherFeedback { get; private set; }
@@ -404,10 +407,16 @@ public class AssignmentStudent : Entity
         if (Status == StudentAssignmentStatus.Graded)
             throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
                 "Assignment.AlreadyGraded", "Puanlanmış ödev yeniden teslim edilemez.");
-        if (_submissionAttachments.Any(attachment => attachment.Status != AttachmentScanStatus.Clean))
-            throw new InvalidOperationException("All submission attachments must pass the security scan before submission.");
+        // K4 (31.10.2026): a rejected file and an upload that was never finished do not count as part of the work; a file that
+        // is still uploading or being scanned stops the hand-in with a message the student can act on.
+        var now = DateTime.UtcNow;
+        if (_submissionAttachments.Any(attachment => attachment.Status == AttachmentScanStatus.PendingScan
+                || attachment.Status == AttachmentScanStatus.PendingUpload && attachment.IsUploadWindowOpen(now)))
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException("Attachment.NotClean",
+                "Bir dosya henüz yükleniyor ya da güvenlik taramasından geçiyor. Biraz bekleyip yeniden dene ya da o dosyayı kaldır.");
 
-        SubmittedAt = DateTime.UtcNow;
+        SubmittedAt ??= now;
+        LastSubmittedAt = now;
         StudentNote = note;
         Status = StudentAssignmentStatus.Submitted;
     }
@@ -423,6 +432,7 @@ public class AssignmentStudent : Entity
         long sizeBytes,
         string sha256)
     {
+        EnsureAcceptingAttachments();
         if (string.IsNullOrWhiteSpace(storageKey))
             throw new ArgumentException("Storage key is required.", nameof(storageKey));
 
@@ -436,6 +446,14 @@ public class AssignmentStudent : Entity
         _submissionAttachments.Add(attachment);
         UpdatedAt = DateTime.UtcNow;
         return attachment;
+    }
+
+    /// <summary>Graded work is closed: no new file can be added or uploaded (K4, roadmap D2).</summary>
+    public void EnsureAcceptingAttachments()
+    {
+        if (Status == StudentAssignmentStatus.Graded)
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
+                "Attachment.Locked", "Notlandırılmış bir teslime dosya eklenemez.");
     }
 
     /// <summary>The student may remove an own file until the work is graded.</summary>

@@ -46,6 +46,7 @@ public sealed class UploadAssignmentAttachmentCommandHandler(
         var studentAssignment = assignment.AssignedStudents
             .FirstOrDefault(student => student.StudentId == command.StudentId)
             ?? throw new InvalidOperationException("Student is not assigned to this assignment.");
+        studentAssignment.EnsureAcceptingAttachments();
         var attachment = studentAssignment.SubmissionAttachments
             .FirstOrDefault(item => item.Id == command.AttachmentId)
             ?? throw new InvalidOperationException("Attachment not found.");

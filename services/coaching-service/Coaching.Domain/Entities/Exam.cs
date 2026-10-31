@@ -448,6 +448,14 @@ public class ExamResult : Entity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>K4: a self-reported result whose exam is no longer an LGS/YKS deneme drops its deneme answers and topic analysis.</summary>
+    public void ClearPracticeExam()
+    {
+        PracticeExamJson = null;
+        TopicAnalysisJson = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public Dictionary<string, decimal>? GetSubjectScores()
     {
         if (string.IsNullOrWhiteSpace(SubjectScoresJson))

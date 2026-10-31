@@ -89,7 +89,8 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
                     attachment.Status.ToString(),
                     attachment.UploadedAt,
                     attachment.ScannedAt)).ToList(),
-                StudentNote: s.StudentNote
+                StudentNote: s.StudentNote,
+                LastSubmittedAt: s.LastSubmittedAt
             )).ToList(),
             InstructionAttachments: assignment.InstructionAttachments.Select(attachment => new AssignmentInstructionAttachmentDto(
                 attachment.Id,

@@ -114,7 +114,9 @@ export class StudentAssignmentDetailComponent implements OnInit {
         this.load();
       },
       error: error => {
-        this.errorMessage.set(error.status === 400 ? 'Ödev teslimi kabul edilmedi. Teslim koşullarını kontrol et.' : 'Ödev teslim edilemedi.');
+        // K4 (31.10.2026): show the server's own reason (for example a file that is still being scanned).
+        const reason = typeof error?.error?.error === 'string' && error.error.code ? error.error.error : null;
+        this.errorMessage.set(error.status === 400 ? reason ?? 'Ödev teslimi kabul edilmedi. Teslim koşullarını kontrol et.' : 'Ödev teslim edilemedi.');
         this.isSubmitting.set(false);
       },
       complete: () => this.isSubmitting.set(false)

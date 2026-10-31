@@ -48,7 +48,14 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
     this.generating.set(true);this.error.set('');this.confirmed=false;this.preview.set(null);this.stale.set(false);
     this.service.preview(this.request(),this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.generating.set(false))).subscribe({next:r=>{this.preview.set(r);this.page.set(1);this.lessonFilter.set('');},error:e=>this.fail(e,'Önizleme hazırlanamadı.')});
   }
-  extendDeadline(){const end=this.preview()?.schedule.recommendedEndDate;if(!end||end<=this.endDate||this.busy())return;this.endDate=end;this.defaultEnd=false;this.generatePreview();}
+  /** K4 (31.10.2026): the longest deadline is the day before the exam; the server rejects anything later. */
+  extendedDeadline():string|null{
+    const end=this.preview()?.schedule.recommendedEndDate;if(!end)return null;
+    const exam=this.options()?.examDate;const last=exam?dayBefore(exam):null;
+    const target=last&&end>last?last:end;return target>this.endDate?target:null;
+  }
+  canExtendDeadline(){return !!this.extendedDeadline();}
+  extendDeadline(){const end=this.extendedDeadline();if(!end||this.busy())return;this.endDate=end;this.defaultEnd=false;this.generatePreview();}
   useFreedSlots(){if(this.busy())return;this.reuseFreedSlots=true;this.generatePreview();}
   isCurrent(){const p=this.preview();return !!p&&!!this.options()&&p.request.startDate===this.startDate&&p.request.endDate===this.endDate&&p.request.expectedWeeklyDraftVersion===this.options()!.weeklyDraftVersion&&p.request.reuseFreedSlots===this.reuseFreedSlots&&!!p.request.prioritizeWhenShort===this.prioritizeWhenShort;}
   save(){
@@ -60,4 +67,9 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   private fail(e:{status?:number;error?:{message?:string}},fallback:string){if(e.status===409){this.stale.set(true);this.confirmed=false;}this.error.set(e.error?.message??fallback);}
   filter(value:string){this.lessonFilter.set(value);this.page.set(1);}
   private readonly feedback = coachingFeedback(undefined, this.error);
+}
+
+function dayBefore(date:string):string{
+  const [y,m,d]=date.split('-').map(Number);const day=new Date(Date.UTC(y,m-1,d-1));
+  return `${day.getUTCFullYear()}-${String(day.getUTCMonth()+1).padStart(2,'0')}-${String(day.getUTCDate()).padStart(2,'0')}`;
 }
