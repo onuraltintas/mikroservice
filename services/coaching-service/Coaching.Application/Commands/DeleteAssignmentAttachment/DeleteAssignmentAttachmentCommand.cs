@@ -20,7 +20,7 @@ public sealed class DeleteAssignmentAttachmentCommandHandler(
     public async Task Handle(DeleteAssignmentAttachmentCommand command, CancellationToken cancellationToken)
     {
         accessPolicy.RequireStudent(command.StudentId);
-        await CoachingStudentReadAuthorization.RequireAsync(
+        await CoachingStudentReadAuthorization.RequireWorkAsync(
             accessPolicy, identityAuthorizationClient, [command.StudentId], cancellationToken);
         var assignment = await repository.GetByIdAsync(command.AssignmentId, cancellationToken)
             ?? throw new InvalidOperationException("Assignment not found.");

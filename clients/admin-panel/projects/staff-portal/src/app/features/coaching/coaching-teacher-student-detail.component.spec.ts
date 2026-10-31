@@ -169,8 +169,8 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     fixture.componentInstance.historyFromDate = '2026-09-01';
     fixture.componentInstance.historyToDate = '2026-09-02';
     fixture.componentInstance.applyFilters();
-    const expectedFromDate = new Date(2026, 8, 1).toISOString();
-    const expectedToDate = new Date(new Date(2026, 8, 3).getTime() - 1).toISOString();
+    const expectedFromDate = '2026-09-01';
+    const expectedToDate = '2026-09-02';
 
     const filteredRequest = http.expectOne(request =>
       request.url === '/api/reports/student/student-1/history'
@@ -252,7 +252,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     fixture.componentInstance.historySearch = '  Fen  ';
     fixture.componentInstance.historyStatus = 'Result';
     fixture.componentInstance.historyFromDate = '2026-09-01';
-    const expectedFromDate = new Date(2026, 8, 1).toISOString();
+    const expectedFromDate = '2026-09-01';
     const createObjectURL = vi.fn(() => 'blob:coaching-history');
     vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
     const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);

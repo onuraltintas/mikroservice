@@ -30,20 +30,23 @@ public sealed class DecisionHandoffOutboxTests
         Assert.True(await db.CoachingTeacherStudentAssignments.AsNoTracking().AnyAsync(x=>x.TeacherUserId==s.Old&&x.IsActive));Assert.Empty(await db.Set<OutboxMessage>().AsNoTracking().ToArrayAsync());
         failure.Enabled=false;await store.EndInstitutionTeacherLinkAsync(s.Admin,s.Institution,s.Student,s.Old,default);
         var transferred=await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync();Assert.Equal(s.Next,transferred.ResponsibleTeacherId);Assert.Equal(original.History.Count+1,transferred.History.Count);
-        var message=Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToArrayAsync());Assert.Contains("responsibilityTransferred",message.Body);Assert.DoesNotContain("Korunan karar",message.Body);
-        await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,9,s.Next,default);Assert.Equal(1,await db.Set<OutboxMessage>().CountAsync());
+        // K2 (31.10.2026): ending the link also tells the student, the teacher and the institution (one more outbox message).
+        var messages=await db.Set<OutboxMessage>().AsNoTracking().ToArrayAsync();Assert.Equal(2,messages.Length);
+        var message=Assert.Single(messages,x=>x.DestinationAddress!.ToString().Contains("WeeklyDecisionChangedEvent"));Assert.Contains("responsibilityTransferred",message.Body);Assert.DoesNotContain("Korunan karar",message.Body);
+        Assert.Single(messages,x=>x.DestinationAddress!.ToString().Contains("CoachingTeacherLinkEndedEvent"));
+        await store.UpdateInstitutionStudentAsync(s.Admin,s.Institution,s.Student,9,s.Next,default);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
         s.User.UserId=s.Next;var reviews=DecisionResponsibilityAndPostponementTests.Reviews(db,s.User,s.Accounts,publisher);
         var request=new Coaching.Application.StudyPlanning.WeeklyDecisionPostpone(transferred.Version,new(2026,10,28),"Gerekçeli erteleme");
         failure.Enabled=true;await Assert.ThrowsAsync<InvalidOperationException>(()=>reviews.PostponeAsync(s.Student,week,transferred.Id,request,default));
-        Assert.Equal(transferred.DueOn,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).DueOn);Assert.Equal(1,await db.Set<OutboxMessage>().CountAsync());
-        failure.Enabled=false;var saved=await reviews.PostponeAsync(s.Student,week,transferred.Id,request,default);Assert.Equal(request.DueOn,saved.DueOn);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
-        await reviews.PostponeAsync(s.Student,week,transferred.Id,request,default);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
+        Assert.Equal(transferred.DueOn,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).DueOn);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
+        failure.Enabled=false;var saved=await reviews.PostponeAsync(s.Student,week,transferred.Id,request,default);Assert.Equal(request.DueOn,saved.DueOn);Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());
+        await reviews.PostponeAsync(s.Student,week,transferred.Id,request,default);Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());
         var future=new Coaching.Application.StudyPlanning.WeeklyDecisionPostpone(saved.Version,new(2026,10,30),"Gelecek tarihli takvim değişikliği");
         failure.Enabled=true;await Assert.ThrowsAsync<InvalidOperationException>(()=>reviews.ChangeDeadlineAsync(s.Student,week,saved.Id,future,default));
-        Assert.Equal(saved.DueOn,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).DueOn);Assert.Equal(2,await db.Set<OutboxMessage>().CountAsync());
+        Assert.Equal(saved.DueOn,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).DueOn);Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());
         failure.Enabled=false;await reviews.ChangeDeadlineAsync(s.Student,week,saved.Id,future,default);
-        Assert.Equal(future.DueOn,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).DueOn);Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());
-        await reviews.ChangeDeadlineAsync(s.Student,week,saved.Id,future,default);Assert.Equal(3,await db.Set<OutboxMessage>().CountAsync());
+        Assert.Equal(future.DueOn,(await db.Set<WeeklyDecision>().AsNoTracking().SingleAsync()).DueOn);Assert.Equal(4,await db.Set<OutboxMessage>().CountAsync());
+        await reviews.ChangeDeadlineAsync(s.Student,week,saved.Id,future,default);Assert.Equal(4,await db.Set<OutboxMessage>().CountAsync());
     }
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task InvitationHandoffFailureCanRetryInTheSameScopeWithoutLosingThePendingInvitation()

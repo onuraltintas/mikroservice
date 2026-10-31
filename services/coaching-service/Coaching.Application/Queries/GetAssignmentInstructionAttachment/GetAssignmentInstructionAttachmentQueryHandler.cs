@@ -32,7 +32,7 @@ public sealed class GetAssignmentInstructionAttachmentQueryHandler(
         }
         else
         {
-            var allowedStudentIds = await CoachingStudentReadAuthorization.RequireAsync(
+            var allowedStudentIds = await CoachingStudentReadAuthorization.RequireWorkAsync(
             accessPolicy,
             identityAuthorizationClient,
             assignment.AssignedStudents.Select(student => student.StudentId).ToArray(),

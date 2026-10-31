@@ -281,6 +281,23 @@ public class Assignment : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// K2 (31.10.2026): the teacher–student link ended. Work the student has not handed in (and has no uploaded file for)
+    /// is withdrawn; when nobody else is left, the whole assignment is cancelled. Returns whether anything changed.
+    /// </summary>
+    public bool WithdrawStudent(Guid studentId)
+    {
+        var entry = _assignedStudents.SingleOrDefault(student => student.StudentId == studentId);
+        if (Status != AssignmentStatus.Active || entry is null
+            || entry.Status is not (StudentAssignmentStatus.Assigned or StudentAssignmentStatus.InProgress)
+            || entry.SubmissionAttachments.Count > 0)
+            return false;
+        if (_assignedStudents.Count == 1) { Cancel(); return true; }
+        _assignedStudents.Remove(entry);
+        UpdatedAt = DateTime.UtcNow;
+        return true;
+    }
+
     public void Complete()
     {
         Status = AssignmentStatus.Completed;
@@ -323,7 +340,8 @@ public class Assignment : AggregateRoot
         }
     }
 
-    public void GradeAssignment(Guid studentId, decimal score, string? feedback = null)
+    /// <summary>Returns false when the student already had exactly this grade and feedback (nothing to announce).</summary>
+    public bool GradeAssignment(Guid studentId, decimal score, string? feedback = null)
     {
         var studentAssignment = _assignedStudents.FirstOrDefault(s => s.StudentId == studentId);
         if (studentAssignment == null)
@@ -332,8 +350,9 @@ public class Assignment : AggregateRoot
         if (MaxScore.HasValue && score > MaxScore.Value)
             throw new ArgumentException($"Score {score} exceeds maximum score {MaxScore.Value}");
 
-        studentAssignment.Grade(score, feedback);
+        if (!studentAssignment.Grade(score, feedback)) return false;
         UpdatedAt = DateTime.UtcNow;
+        return true;
     }
 
     private static string? NormalizeOptional(string? value) =>
@@ -432,12 +451,13 @@ public class AssignmentStudent : Entity
         return attachment;
     }
 
-    public void Grade(decimal score, string? feedback = null)
+    public bool Grade(decimal score, string? feedback = null)
     {
-        if(Status==StudentAssignmentStatus.Graded && Score==score && TeacherFeedback==feedback)return;
+        if(Status==StudentAssignmentStatus.Graded && Score==score && TeacherFeedback==feedback)return false;
         GradeRevision=checked((GradeRevision??0)+1);
         Score = score;
         TeacherFeedback = feedback;
         Status = StudentAssignmentStatus.Graded;
+        return true;
     }
 }

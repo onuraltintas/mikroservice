@@ -31,7 +31,7 @@ public sealed class CoachingTeacherAssignmentFollowUpController(CoachingDbContex
        &&s.Assignment.Status==AssignmentStatus.Active&&s.SubmittedAt==null
        &&(s.Status==StudentAssignmentStatus.Assigned||s.Status==StudentAssignmentStatus.InProgress));
    var studentIds=await waiting.Select(s=>s.StudentId).Distinct().ToArrayAsync(ct);
-   var allowed=(await CoachingStudentReadAuthorization.GetAuthorizedStudentIdsAsync(access,directory,studentIds,ct)).ToArray();
+   var allowed=(await CoachingStudentReadAuthorization.GetAuthorizedWorkStudentIdsAsync(access,directory,studentIds,ct)).ToArray();
    waiting=waiting.Where(s=>Enumerable.Contains(allowed,s.StudentId));
    var now=(clock??TimeProvider.System).GetUtcNow().UtcDateTime;
    var pendingCount=await waiting.CountAsync(ct);var overdueCount=await waiting.CountAsync(s=>s.Assignment.DueDate<now,ct);

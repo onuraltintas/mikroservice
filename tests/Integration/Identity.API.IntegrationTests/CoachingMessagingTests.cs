@@ -186,6 +186,30 @@ public sealed class CoachingMessagingTests
         await Assert.ThrowsAsync<KeyNotFoundException>(() => s.Messages.ReviewAsync(otherAdmin, otherInstitution, conversation.Id, "Merak ettim, bakıyorum", default));
     }
 
+    // K2 (31.10.2026): when the pair moves to another institution, that institution reviews only messages from its own period.
+    [Fact]
+    public async Task ANewInstitutionReviewsOnlyTheMessagesSentSinceTheLinkWasMadeThere()
+    {
+        await using var s = await Setup.CreateAsync(institution: true);
+        var conversation = await s.Messages.StartAsync(s.Student, new(s.Teacher, s.Student), default);
+        await s.Messages.SendAsync(s.Student, conversation.Id, new("Eski kurumdaki mesaj", null), default);
+
+        var oldLink = await s.F.Db.CoachingTeacherStudentAssignments.SingleAsync();
+        oldLink.SetActive(false, s.Admin);
+        var next = Guid.NewGuid(); s.F.Accounts.Institutions.Add(next);
+        var nextAdmin = s.Person("InstitutionAdmin", "Yeni", "Yönetici"); s.F.Accounts.Admins[nextAdmin] = new(false, next);
+        var newLink = CoachingTeacherStudentAssignment.Create(s.Teacher, s.Student, next, null, nextAdmin);
+        s.F.Db.Add(newLink);
+        s.F.Db.Entry(newLink).Property(x => x.StartDate).CurrentValue = s.Clock.GetUtcNow().UtcDateTime.AddHours(1);
+        await s.F.Db.SaveChangesAsync();
+        s.Clock.Advance(TimeSpan.FromHours(2));
+        await s.Messages.SendAsync(s.Student, conversation.Id, new("Yeni kurumdaki mesaj", null), default);
+
+        var reviewed = await s.Messages.ReviewAsync(nextAdmin, next, conversation.Id, "Veli şikâyeti üzerine inceleme", default);
+
+        reviewed.Messages.Select(x => x.Body).Should().Equal("Yeni kurumdaki mesaj");
+    }
+
     [Fact]
     public async Task IndependentCoachingConversationsAreNotVisibleToAnyInstitution()
     {
@@ -305,7 +329,10 @@ public sealed class CoachingMessagingTests
                 s.Institution = Guid.NewGuid(); s.F.Accounts.Institutions.Add(s.Institution.Value);
                 s.Admin = s.Person("InstitutionAdmin", "Kurum", "Yönetici"); s.F.Accounts.Admins[s.Admin] = new(false, s.Institution.Value);
             }
-            s.F.Db.CoachingTeacherStudentAssignments.Add(CoachingTeacherStudentAssignment.Create(s.Teacher, s.Student, s.Institution, null, s.Teacher));
+            var link = CoachingTeacherStudentAssignment.Create(s.Teacher, s.Student, s.Institution, null, s.Teacher);
+            s.F.Db.CoachingTeacherStudentAssignments.Add(link);
+            // The link exists before the conversation (an institution reviews messages from its link onward).
+            s.F.Db.Entry(link).Property(x => x.StartDate).CurrentValue = s.Clock.GetUtcNow().UtcDateTime.AddDays(-1);
             await s.F.Db.SaveChangesAsync();
             return s;
         }

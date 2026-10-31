@@ -10,6 +10,9 @@ public sealed class CoachingProfileExceptionFilter : ExceptionFilterAttribute
     {
         if (context.Exception is BusinessRuleException { Code: "Profiles.Conflict" } error)
             context.Result = new ConflictObjectResult(new { code = error.Code, message = error.Message });
+        else if (context.Exception is BusinessRuleException { Code: "Profiles.SuccessorRequired" } required)
+            context.Result = new ConflictObjectResult(new { code = required.Code, message = required.Message,
+                ungradedSubmissionCount = required.Data["ungradedSubmissionCount"] });
         else if (context.Exception is KeyNotFoundException)
             context.Result = new NotFoundObjectResult(new { code = "Profiles.NotFound", message = "Koçluk kaydı bulunamadı." });
         else return;

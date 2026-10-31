@@ -221,6 +221,29 @@ public sealed class CoachingNotificationConsumerTests
         finally { await harness.Stop(); }
     }
 
+    // K2 (31.10.2026): when the institution ends a link, the student, the teacher and the institution are told what closed.
+    [Fact]
+    public async Task AnInstitutionEndingALinkTellsTheStudentTheTeacherAndTheInstitution()
+    {
+        var dispatcher = new RecordingDispatcher(); var teacher = Guid.NewGuid(); var student = Guid.NewGuid(); var admin = Guid.NewGuid();
+        var services = new ServiceCollection(); services.AddSingleton<ICoachingNotificationDispatcher>(dispatcher);
+        services.AddMassTransitTestHarness(x => { x.UseSuiteTimeouts(); x.AddConsumer<CoachingTeacherLinkEndedConsumer>(); x.UsingInMemory((context, config) => config.ConfigureEndpoints(context)); });
+        await using var provider = services.BuildServiceProvider(); var harness = provider.GetRequiredService<ITestHarness>(); await harness.Start();
+        try
+        {
+            await harness.Bus.Publish(new CoachingTeacherLinkEndedEvent(teacher, student, "Ada Yılmaz", CoachingTeacherLinkEndedReasons.InstitutionEnded)
+                { TeacherName = "Can Öğretmen", InstitutionId = Guid.NewGuid(), InstitutionActorUserId = admin, CancelledAssignments = 2, RemovedSessions = 1 });
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 3);
+            dispatcher.Calls.SelectMany(x => x.RecipientIds).Should().BeEquivalentTo(new[] { student, teacher, admin });
+            dispatcher.Calls.Should().OnlyContain(x => x.Type == "TeacherLinkEnded");
+            var toStudent = dispatcher.Calls.Single(x => x.RecipientIds.Contains(student));
+            (toStudent.Title + " " + toStudent.Message).Should().Contain("Can Öğretmen").And.Contain("2 ödev").And.Contain("1 seans");
+            var toInstitution = dispatcher.Calls.Single(x => x.RecipientIds.Contains(admin));
+            toInstitution.Message.Should().Contain("Ada Yılmaz").And.Contain("Can Öğretmen").And.Contain("2 ödev");
+        }
+        finally { await harness.Stop(); }
+    }
+
     // Roadmap O3: a new message is announced without its text; the link opens the conversation.
     [Theory]
     [InlineData("Teacher")]

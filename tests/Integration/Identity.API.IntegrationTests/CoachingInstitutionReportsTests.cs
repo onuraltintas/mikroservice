@@ -53,8 +53,9 @@ public sealed class CoachingInstitutionReportsTests
         var late = Assignment.Create(busy, "Geciken", Now.AddDays(1), institutionId: inst); late.AssignToStudents([a]);
         var otherInstitution = Assignment.Create(calm, "Başka kurum", Now.AddDays(1), institutionId: Guid.NewGuid()); otherInstitution.AssignToStudents([b]); otherInstitution.SubmitAssignment(b);
         var conversation = CoachingConversation.Create(calm, b, b, CoachingConversationKind.TeacherStudent, inst, Now.AddHours(-2));
+        var message = CoachingMessage.Create(conversation.Id, b, "Merhaba", false, Now.AddHours(-1)); conversation.Record(message, inst);
         var session = CoachingSession.Create(busy, "Seans", Now.AddDays(2), SessionType.OneOnOne); session.AddStudent(a);
-        f.Db.AddRange(graded, late, otherInstitution, conversation, session); await f.Db.SaveChangesAsync();
+        f.Db.AddRange(graded, late, otherInstitution, conversation, message, session); await f.Db.SaveChangesAsync();
         f.Db.Entry(late).Property(x => x.DueDate).CurrentValue = Now.AddDays(-1); await f.Db.SaveChangesAsync();
 
         var report = await Workload(f).GetAsync(admin, inst, default);

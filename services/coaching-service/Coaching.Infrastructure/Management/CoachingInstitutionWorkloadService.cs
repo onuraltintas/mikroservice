@@ -34,13 +34,15 @@ public sealed class CoachingInstitutionWorkloadService(CoachingDbContext db, ICo
         var links = await db.CoachingTeacherStudentAssignments.AsNoTracking()
             .Where(x => x.InstitutionId == institutionId && x.IsActive && Enumerable.Contains(studentIds, x.StudentUserId))
             .Select(x => new { x.TeacherUserId, x.StudentUserId }).ToListAsync(ct);
-        var work = await (from link in db.AssignmentStudents.AsNoTracking()
+        // K2 (31.10.2026): only work of students the teacher still teaches here, as on the teacher's own screens.
+        var linked = links.Select(x => (x.TeacherUserId, x.StudentUserId)).ToHashSet();
+        var work = (await (from link in db.AssignmentStudents.AsNoTracking()
                 join assignment in db.Assignments.AsNoTracking() on link.AssignmentId equals assignment.Id
                 where assignment.InstitutionId == institutionId && assignment.Status == AssignmentStatus.Active
-                select new { assignment.TeacherId, link.Status, assignment.DueDate })
-            .ToListAsync(ct);
+                select new { assignment.TeacherId, link.StudentId, link.Status, assignment.DueDate })
+            .ToListAsync(ct)).Where(x => linked.Contains((x.TeacherId, x.StudentId))).ToList();
         var unread = await db.Set<Coaching.Domain.Entities.CoachingConversation>().AsNoTracking()
-            .Where(x => x.InstitutionId == institutionId && (x.TeacherReadAt == null || x.LastMessageAt > x.TeacherReadAt))
+            .Where(x => x.InstitutionId == institutionId && x.MessageCount > 0 && (x.TeacherReadAt == null || x.LastMessageAt > x.TeacherReadAt))
             .GroupBy(x => x.TeacherUserId).Select(x => new { Teacher = x.Key, Count = x.Count() }).ToListAsync(ct);
         var until = now.AddDays(7);
         var sessions = await db.CoachingSessions.AsNoTracking()
@@ -94,7 +96,7 @@ public sealed class CoachingInstitutionWorkloadService(CoachingDbContext db, ICo
     private async Task RequireAdminAsync(Guid actor, Guid institutionId, CancellationToken ct)
     {
         var scope = await accounts.AuthorizeAdminAsync(actor, ct);
-        if (institutionId == Guid.Empty || scope is null || !scope.IsGlobal && scope.InstitutionId != institutionId
+        if (institutionId == Guid.Empty || scope is null || !scope.IsGlobal && !scope.Manages(institutionId)
             || !await accounts.IsActiveInstitutionAsync(institutionId, ct)) throw Forbidden();
     }
 

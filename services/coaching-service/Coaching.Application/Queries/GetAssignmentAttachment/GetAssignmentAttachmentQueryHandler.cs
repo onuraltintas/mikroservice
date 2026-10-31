@@ -31,7 +31,7 @@ public sealed class GetAssignmentAttachmentQueryHandler(
         if (attachment is null)
             return null;
 
-        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireAsync(
+        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireWorkAsync(
             accessPolicy,
             identityAuthorizationClient,
             [query.StudentId],

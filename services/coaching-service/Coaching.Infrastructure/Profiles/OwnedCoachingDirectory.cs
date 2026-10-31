@@ -85,8 +85,15 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
         return institution;
     }
 
-    public async Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewerUserId,
-        IReadOnlyCollection<Guid> studentIds, CancellationToken ct)
+    public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentIds, CancellationToken ct) => AuthorizeStudentReadCoreAsync(viewerUserId, studentIds, true, ct);
+
+    /// <summary>K2: teaching work (assignments, submissions, sessions, attendance) ignores the progress-sharing setting.</summary>
+    public Task<IReadOnlyCollection<Guid>> AuthorizeStudentWorkReadAsync(Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentIds, CancellationToken ct) => AuthorizeStudentReadCoreAsync(viewerUserId, studentIds, false, ct);
+
+    private async Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadCoreAsync(Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentIds, bool requireProgressShare, CancellationToken ct)
     {
         if (viewerUserId == Guid.Empty || studentIds.Count is < 1 or > 100 || studentIds.Any(x => x == Guid.Empty))
             throw CoachingProfileStore.Forbidden();
@@ -116,7 +123,7 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
             if (viewer.IsEligible("Parent") && await accounts.AuthorizeRepresentativeAsync(viewerUserId, student.UserId, ct) is not null)
             { allowed.Add(student.UserId); continue; }
             if (institution.HasValue && !await IsActiveInstitutionAsync(institution.Value, ct)) continue;
-            if (!student.ShareProgressWithTeachers) continue;
+            if (requireProgressShare && !student.ShareProgressWithTeachers) continue;
             if (admin is not null && institution.HasValue && (admin.IsGlobal || admin.InstitutionId == institution)
                 || teacher is not null && teacherInstitution == institution
                     && (teacher.CanViewAllInstitutionStudents && institution.HasValue
@@ -267,7 +274,7 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
     private async Task<CoachingAdminAccessScope> RequireReportScopeAsync(Guid viewerUserId, Guid institutionId, CancellationToken ct)
     {
         var scope = await accounts.AuthorizeAdminAsync(viewerUserId, ct);
-        if (scope is null || institutionId == Guid.Empty || !scope.IsGlobal && scope.InstitutionId != institutionId
+        if (scope is null || institutionId == Guid.Empty || !scope.IsGlobal && !scope.Manages(institutionId)
             || !await IsActiveInstitutionAsync(institutionId, ct)) throw CoachingProfileStore.Forbidden();
         return scope;
     }

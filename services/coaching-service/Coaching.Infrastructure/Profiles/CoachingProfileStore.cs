@@ -130,6 +130,10 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             var assignments = await db.CoachingTeacherStudentAssignments.Where(x => x.InstitutionId == institutionId && x.IsActive
                 && (role == CoachingMemberRole.Student ? x.StudentUserId == userId : x.TeacherUserId == userId)).ToListAsync(ct);
             foreach (var assignment in assignments) assignment.SetActive(false, actorUserId);
+            // K2: a student leaving the institution leaves its teachers' coming sessions and open assignments.
+            if (role == CoachingMemberRole.Student)
+                foreach (var linkedTeacher in assignments.Select(x => x.TeacherUserId).Distinct())
+                    await EndLinkWorkAsync(linkedTeacher, userId, institutionId, actorUserId, ct);
             if (role == CoachingMemberRole.Student)
                 await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.InstitutionId == institutionId), userId,
                     "Öğrenci kurumdan ayrıldı.", ct);
@@ -228,6 +232,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
                 throw Conflict("Kurum üzerinden kurulan öğretmen bağlantısını yalnız kurum yönetimi değiştirebilir.");
             var ended = rows.Where(x => x.IsActive && x.InstitutionId == null).ToArray();
             foreach (var row in ended) row.SetActive(false, actorUserId);
+            var closed = ended.Length > 0 ? await CloseTeachingWorkAsync(teacherUserId, studentUserId, null, ct) : (Assignments: 0, Sessions: 0);
             if (ended.Any(x => x.InstitutionId == null))
                 await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.UserId == teacherUserId), studentUserId,
                     "Öğretmen bağlantısı sona erdi.", ct);
@@ -235,7 +240,8 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
                 await events.PublishAsync(new CoachingTeacherLinkEndedEvent(teacherUserId, studentUserId,
                     await StudentNameAsync(studentUserId, ct),
                     studentInitiated ? CoachingTeacherLinkEndedReasons.StudentLeft : CoachingTeacherLinkEndedReasons.TeacherRemoved)
-                    { TeacherName = studentInitiated ? null : await StudentNameAsync(teacherUserId, ct) }, ct);
+                    { TeacherName = studentInitiated ? null : await StudentNameAsync(teacherUserId, ct),
+                      CancelledAssignments = closed.Assignments, RemovedSessions = closed.Sessions }, ct);
             await db.SaveChangesAsync(ct);
         }, ct);
     }
@@ -252,6 +258,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             if (rows.Count == 0) throw new KeyNotFoundException("Öğretmen ataması bulunamadı.");
             foreach (var row in rows) row.SetActive(false, actorUserId);
             await HandOpenDecisionsToRemainingTeacherAsync(studentUserId, institutionId, actorUserId, ct);
+            await EndLinkWorkAsync(teacherUserId, studentUserId, institutionId, actorUserId, ct);
             await db.SaveChangesAsync(ct);
         }, ct);
     }
@@ -260,6 +267,21 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
     /// Removes a teacher from the institution. Their students are linked to the replacement (when one is chosen) and
     /// their open assignments move to the replacement; coming sessions are cancelled and their students are told.
     /// </summary>
+    public const string UngradedSubmissionCountKey = "ungradedSubmissionCount";
+
+    /// <summary>Handed-in, not yet graded work of a teacher in the institution; the removal screen asks before leaving.</summary>
+    public async Task<int> CountUngradedSubmissionsAsync(Guid actorUserId, Guid institutionId, Guid teacherUserId, CancellationToken ct)
+    {
+        await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
+        return await UngradedSubmissionsAsync(institutionId, teacherUserId, ct);
+    }
+
+    private Task<int> UngradedSubmissionsAsync(Guid institutionId, Guid teacherUserId, CancellationToken ct) =>
+        db.Assignments.Where(x => x.TeacherId == teacherUserId && x.InstitutionId == institutionId
+                && x.Status == Coaching.Domain.Enums.AssignmentStatus.Active)
+            .SelectMany(x => x.AssignedStudents)
+            .CountAsync(x => x.Status == Coaching.Domain.Enums.StudentAssignmentStatus.Submitted, ct);
+
     public async Task RemoveInstitutionTeacherAsync(Guid actorUserId, Guid institutionId, Guid teacherUserId,
         Guid? replacementTeacherUserId, CancellationToken ct)
     {
@@ -272,6 +294,14 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             throw Conflict("Devralacak öğretmen bu kurumun aktif öğretmeni olmalıdır.");
         await InTransactionAsync(async () =>
         {
+            // Decision 31.10.2026 (a): handed-in work waiting for a grade would be left with nobody to grade it.
+            if (replacementTeacherUserId is null && await UngradedSubmissionsAsync(institutionId, teacherUserId, ct) is var ungraded and > 0)
+            {
+                var refused = new BusinessRuleException("Profiles.SuccessorRequired",
+                    $"{ungraded} teslim edilmiş iş notlanmayı bekliyor; devralacak öğretmen seçin.");
+                refused.Data[UngradedSubmissionCountKey] = ungraded;
+                throw refused;
+            }
             var students = await db.CoachingTeacherStudentAssignments.Where(x => x.TeacherUserId == teacherUserId
                 && x.InstitutionId == institutionId && x.IsActive).Select(x => x.StudentUserId).Distinct().ToArrayAsync(ct);
             // Leave first, so the open weekly decisions of the leaving teacher move to the successor with the links.
@@ -287,19 +317,45 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
                     && x.Status == Coaching.Domain.Enums.AssignmentStatus.Active).ToListAsync(ct))
                     assignment.TransferToTeacher(successor);
             }
-            else
+            var cancelledFor = new Dictionary<Guid, int>();
+            if (replacementTeacherUserId is null)
             {
                 // Without a successor, a student who has another teacher here keeps their open decisions with that teacher.
                 foreach (var student in students) await HandOpenDecisionsToRemainingTeacherAsync(student, institutionId, actorUserId, ct);
+                // K2: nobody can grade the departing teacher's open assignments any more; they are cancelled.
+                foreach (var assignment in await db.Assignments.Include(x => x.AssignedStudents).Where(x => x.TeacherId == teacherUserId
+                    && x.InstitutionId == institutionId && x.Status == Coaching.Domain.Enums.AssignmentStatus.Active).ToListAsync(ct))
+                {
+                    var open = assignment.AssignedStudents.Where(x => x.Status is Coaching.Domain.Enums.StudentAssignmentStatus.Assigned
+                        or Coaching.Domain.Enums.StudentAssignmentStatus.InProgress).Select(x => x.StudentId).ToArray();
+                    assignment.Cancel();
+                    foreach (var student in open) cancelledFor[student] = cancelledFor.GetValueOrDefault(student) + 1;
+                    if (open.Length > 0 && events is not null)
+                        await events.PublishAsync(new AssignmentCancelledEvent(assignment.Id, teacherUserId, institutionId, assignment.Title, open), ct);
+                }
             }
             var now = (clock ?? TimeProvider.System).GetUtcNow().UtcDateTime;
+            var removedFor = new Dictionary<Guid, int>();
             foreach (var session in await db.CoachingSessions.Include(x => x.Attendances).Where(x => x.TeacherId == teacherUserId
                 && x.InstitutionId == institutionId && x.Status == Coaching.Domain.Enums.SessionStatus.Scheduled && x.ScheduledDate > now).ToListAsync(ct))
             {
                 session.Cancel();
+                foreach (var student in session.Attendances.Select(x => x.StudentId)) removedFor[student] = removedFor.GetValueOrDefault(student) + 1;
                 if (events is not null)
                     await events.PublishAsync(new SessionCancelledEvent(session.Id, session.TeacherId, session.InstitutionId,
                         session.Attendances.Select(x => x.StudentId).ToArray(), session.ScheduledDate), ct);
+            }
+            // K2: each student hears that the link ended; the institution hears what was closed.
+            if (replacementTeacherUserId is null && events is not null)
+            {
+                var teacherName = await StudentNameAsync(teacherUserId, ct);
+                foreach (var student in students)
+                    await events.PublishAsync(new CoachingTeacherLinkEndedEvent(teacherUserId, student, await StudentNameAsync(student, ct),
+                        CoachingTeacherLinkEndedReasons.InstitutionEnded)
+                    {
+                        TeacherName = teacherName, InstitutionId = institutionId, InstitutionActorUserId = actorUserId,
+                        CancelledAssignments = cancelledFor.GetValueOrDefault(student), RemovedSessions = removedFor.GetValueOrDefault(student)
+                    }, ct);
             }
             await db.SaveChangesAsync(ct);
         }, ct);
@@ -324,12 +380,60 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         foreach (var link in independent)
         {
             link.SetActive(false, actorUserId);
+            var closed = await CloseTeachingWorkAsync(link.TeacherUserId, studentUserId, null, ct);
             await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.UserId == link.TeacherUserId), studentUserId,
                 "Öğrenci bir kuruma katıldı.", ct);
             if (events is not null)
                 await events.PublishAsync(new CoachingTeacherLinkEndedEvent(link.TeacherUserId, studentUserId, name,
-                    CoachingTeacherLinkEndedReasons.JoinedInstitution), ct);
+                    CoachingTeacherLinkEndedReasons.JoinedInstitution)
+                    { CancelledAssignments = closed.Assignments, RemovedSessions = closed.Sessions }, ct);
         }
+    }
+
+    /// <summary>K2: closes an institution link's coming work and tells the student, the teacher and the institution.</summary>
+    private async Task EndLinkWorkAsync(Guid teacherUserId, Guid studentUserId, Guid institutionId, Guid actorUserId, CancellationToken ct)
+    {
+        var closed = await CloseTeachingWorkAsync(teacherUserId, studentUserId, institutionId, ct);
+        if (events is null) return;
+        await events.PublishAsync(new CoachingTeacherLinkEndedEvent(teacherUserId, studentUserId, await StudentNameAsync(studentUserId, ct),
+            CoachingTeacherLinkEndedReasons.InstitutionEnded)
+        {
+            TeacherName = await StudentNameAsync(teacherUserId, ct), InstitutionId = institutionId, InstitutionActorUserId = actorUserId,
+            CancelledAssignments = closed.Assignments, RemovedSessions = closed.Sessions
+        }, ct);
+    }
+
+    /// <summary>
+    /// K2 (31.10.2026): when a teacher–student link ends, nobody can grade or hold that teacher's coming work with the
+    /// student. The student leaves the teacher's coming sessions (a session with nobody left is cancelled) and their open
+    /// assignments (an assignment with nobody left is cancelled). Handed-in work and past sessions stay as history.
+    /// </summary>
+    private async Task<(int Assignments, int Sessions)> CloseTeachingWorkAsync(Guid teacherUserId, Guid studentUserId, Guid? institutionId,
+        CancellationToken ct)
+    {
+        var now = (clock ?? TimeProvider.System).GetUtcNow().UtcDateTime;
+        var sessions = await db.CoachingSessions.Include(x => x.Attendances).Where(x => x.TeacherId == teacherUserId
+            && x.InstitutionId == institutionId && x.Status == Coaching.Domain.Enums.SessionStatus.Scheduled && x.ScheduledDate > now
+            && x.Attendances.Any(a => a.StudentId == studentUserId)).ToListAsync(ct);
+        foreach (var session in sessions)
+        {
+            var others = session.Attendances.Select(x => x.StudentId).Where(x => x != studentUserId).Distinct().ToArray();
+            if (others.Length == 0) session.Cancel();
+            else session.SetParticipants(others, now);
+            if (events is not null)
+                await events.PublishAsync(new SessionCancelledEvent(session.Id, teacherUserId, institutionId, [studentUserId], session.ScheduledDate), ct);
+        }
+        var assignments = await db.Assignments.Include(x => x.AssignedStudents).ThenInclude(x => x.SubmissionAttachments)
+            .Where(x => x.TeacherId == teacherUserId && x.InstitutionId == institutionId && x.Status == Coaching.Domain.Enums.AssignmentStatus.Active
+                && x.AssignedStudents.Any(s => s.StudentId == studentUserId)).ToListAsync(ct);
+        var withdrawn = 0;
+        foreach (var assignment in assignments.Where(x => x.WithdrawStudent(studentUserId)))
+        {
+            withdrawn++;
+            if (events is not null)
+                await events.PublishAsync(new AssignmentCancelledEvent(assignment.Id, teacherUserId, institutionId, assignment.Title, [studentUserId]), ct);
+        }
+        return (withdrawn, sessions.Count);
     }
 
     // A student who leaves frees the seat they held on that license, so it can be given to someone else.
@@ -397,7 +501,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
     {
         if (institutionId == Guid.Empty || actorUserId == Guid.Empty) throw Forbidden();
         var scope = await accounts.AuthorizeAdminAsync(actorUserId, ct);
-        if (scope is null || !scope.IsGlobal && scope.InstitutionId != institutionId
+        if (scope is null || !scope.IsGlobal && !scope.Manages(institutionId)
             || !await accounts.IsActiveInstitutionAsync(institutionId, ct)) throw Forbidden();
         return institutionId;
     }

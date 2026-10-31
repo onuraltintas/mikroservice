@@ -252,6 +252,13 @@ public sealed class CoachingMessagingService(CoachingDbContext db, ICoachingAcco
         var file = await db.Set<CoachingMessageAttachment>().AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == attachmentId && x.ConversationId == conversation.Id && (x.MessageId != null || x.UploaderUserId == actor), ct)
             ?? throw new KeyNotFoundException();
+        // K2: a reviewing institution opens only files of messages sent while the pair was linked there.
+        if (!conversation.IsParticipant(actor) && conversation.InstitutionId is { } reviewed)
+        {
+            var since = await InstitutionSinceAsync(conversation, reviewed, ct);
+            if (!await db.Set<CoachingMessage>().AsNoTracking().AnyAsync(x => x.Id == file.MessageId && x.SentAt >= since, ct))
+                throw new KeyNotFoundException();
+        }
         return new(await storage.OpenReadAsync(file.StorageKey, ct), file.FileName, file.ContentType);
     }
 
@@ -279,7 +286,7 @@ public sealed class CoachingMessagingService(CoachingDbContext db, ICoachingAcco
             .SingleOrDefaultAsync(x => x.Id == conversationId && x.InstitutionId == institutionId, ct) ?? throw new KeyNotFoundException();
         db.Add(CoachingConversationAccess.Create(conversation.Id, actor, reason, Now));
         await db.SaveChangesAsync(ct);
-        return await ThreadAsync(conversation, null, null, ct);
+        return await ThreadAsync(conversation, null, null, ct, await InstitutionSinceAsync(conversation, institutionId, ct));
     }
 
     /// <summary>Removes files that were uploaded but never sent (after a day) and conversations past the retention period.</summary>
@@ -355,10 +362,20 @@ public sealed class CoachingMessagingService(CoachingDbContext db, ICoachingAcco
         catch (BusinessRuleException) { return false; }
     }
 
-    private async Task<CoachingConversationThread> ThreadAsync(CoachingConversation conversation, Guid? viewer, DateTime? before, CancellationToken ct)
+    /// <summary>
+    /// K2 (31.10.2026): a conversation follows the pair when they move to another institution. That institution may only
+    /// review messages sent since the pair was first linked there.
+    /// </summary>
+    private async Task<DateTime> InstitutionSinceAsync(CoachingConversation conversation, Guid institutionId, CancellationToken ct) =>
+        await db.CoachingTeacherStudentAssignments.AsNoTracking()
+            .Where(x => x.TeacherUserId == conversation.TeacherUserId && x.StudentUserId == conversation.StudentUserId && x.InstitutionId == institutionId)
+            .Select(x => (DateTime?)x.StartDate).MinAsync(ct) ?? DateTime.MaxValue;
+
+    private async Task<CoachingConversationThread> ThreadAsync(CoachingConversation conversation, Guid? viewer, DateTime? before, CancellationToken ct,
+        DateTime? notBefore = null)
     {
         var rows = await db.Set<CoachingMessage>().AsNoTracking()
-            .Where(x => x.ConversationId == conversation.Id && (before == null || x.SentAt < before))
+            .Where(x => x.ConversationId == conversation.Id && (before == null || x.SentAt < before) && (notBefore == null || x.SentAt >= notBefore))
             .OrderByDescending(x => x.SentAt).ThenByDescending(x => x.Id).Take(ThreadPage + 1).ToListAsync(ct);
         var hasOlder = rows.Count > ThreadPage;
         var messages = rows.Take(ThreadPage).Reverse().ToList();

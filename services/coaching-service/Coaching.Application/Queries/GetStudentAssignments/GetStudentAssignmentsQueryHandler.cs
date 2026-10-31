@@ -27,7 +27,7 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
         GetStudentAssignmentsQuery query,
         CancellationToken cancellationToken)
     {
-        await CoachingStudentReadAuthorization.RequireAsync(
+        await CoachingStudentReadAuthorization.RequireWorkAsync(
             _accessPolicy,
             _identityAuthorizationClient,
             new[] { query.StudentId },
