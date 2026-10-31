@@ -18,6 +18,7 @@ using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Gamification;
 using SpeedReading.Application.Institutions;
 using SpeedReading.Application.Notifications;
+using SpeedReading.Application.Parents;
 using SpeedReading.Application.Progress;
 using SpeedReading.Application.QuestionBank;
 using SpeedReading.Application.Reports;
@@ -171,6 +172,12 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
+        // V2 (parent panel): parent reads ask Identity on every request; the reports read the owned store.
+        services.AddHttpClient<ISpeedReadingParentAccess, IdentityParentAccessClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
+        services.AddScoped<ISpeedReadingParentReports, OwnedSpeedReadingParentReports>();
         services.AddHttpClient<ISpeedReadingUserDirectory, IdentityUserDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
