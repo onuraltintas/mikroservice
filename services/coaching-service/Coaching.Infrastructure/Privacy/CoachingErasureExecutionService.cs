@@ -138,9 +138,11 @@ public sealed class CoachingErasureExecutionService(
         var weeklyDecisions = await context.Set<WeeklyDecision>().Where(x => x.StudentId == message.SubjectUserId || x.TeacherId == message.SubjectUserId || x.ResponsibleTeacherId == message.SubjectUserId).ToListAsync(cancellationToken);
         var decisionWorkRequests = await CoachingStudyPlanErasureMessages.DecisionWorkRequests(context, message.SubjectUserId).ToListAsync(cancellationToken);
         var studyMessages = await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).ToListAsync(cancellationToken);
-        // Roadmap O3: a conversation belongs to its two participants; erasing either removes it with its messages and files.
+        // Roadmap O3: a conversation belongs to its two participants (and the student it is about); erasing any of them removes it.
         var conversations = await context.Set<CoachingConversation>()
-            .Where(x => x.TeacherUserId == message.SubjectUserId || x.CounterpartUserId == message.SubjectUserId).ToListAsync(cancellationToken);
+            // Coaching audit K1: a teacher–parent conversation about the erased student goes with the student.
+            .Where(x => x.TeacherUserId == message.SubjectUserId || x.CounterpartUserId == message.SubjectUserId
+                || x.StudentUserId == message.SubjectUserId).ToListAsync(cancellationToken);
         var (conversationRecords, conversationFiles) = await Coaching.Infrastructure.Management.CoachingMessagingService
             .RemoveConversationsAsync(context, conversations, cancellationToken);
         if (events is not null)

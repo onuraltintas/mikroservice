@@ -12,6 +12,7 @@ namespace Coaching.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/coaching/subscriptions")]
 [Authorize]
+[Coaching.API.Security.CoachingPaymentExceptionFilter]
 public sealed class CoachingSubscriptionsController(
     ICoachingSubscription subscriptions,
     ICoachingNewsletterRecaptchaValidator recaptcha,

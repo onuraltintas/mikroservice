@@ -8,21 +8,37 @@ using Microsoft.Extensions.Logging;
 namespace Coaching.Infrastructure.Privacy;
 
 /// <summary>
-/// Subscription, seat, bank transfer and payment records of an erased user are kept unchanged for
-/// <see cref="CoachingErasureExecution.FinancialRetentionYears"/> year(s) after the erasure. After that the
-/// personal fields (name, e-mail, payer name, notes) are removed and the user id is replaced by a random
-/// id; amounts, dates, plans and payment references stay for the accounts.
+/// Subscription, seat, trial, bank transfer and payment records of an erased user (and the notices a parent sent for a
+/// child) are kept unchanged for <see cref="CoachingErasureExecution.FinancialRetentionYears"/> years after the erasure.
+/// After that the personal fields (name, e-mail, payer name, notes, withdrawal reasons, the buyer in the accepted
+/// documents) are removed and the user id is replaced by a random id; amounts, dates, plans and payment references stay
+/// for the accounts.
 /// </summary>
 public static class CoachingFinancialRetention
 {
     public const string ErasedSeatReason = "Hesap silindi";
     public const string AnonymizedName = "Silinmiş kullanıcı";
 
+    /// <summary>Replaces the given names and addresses in the stored document texts.</summary>
+    private static string? Redact(string? json, params string?[] values)
+    {
+        if (json is null) return null;
+        foreach (var value in values.Where(x => !string.IsNullOrWhiteSpace(x) && x != AnonymizedName).Select(x => x!.Trim()).Distinct()
+                     .OrderByDescending(x => x.Length))
+        {
+            json = json.Replace(value, AnonymizedName, StringComparison.Ordinal)
+                .Replace(System.Text.Json.JsonEncodedText.Encode(value).ToString(), AnonymizedName, StringComparison.Ordinal);
+        }
+        return json;
+    }
+
     public static async Task<int> CountAsync(CoachingDbContext db, Guid subjectUserId, CancellationToken ct) =>
         await db.CoachingSubscriptions.CountAsync(x => x.UserId == subjectUserId, ct)
         + await db.CoachingSubscriptionSeats.CountAsync(x => x.StudentId == subjectUserId, ct)
-        + await db.CoachingBankTransferRequests.CountAsync(x => x.UserId == subjectUserId, ct)
-        + await db.CoachingPaymentRecords.CountAsync(x => x.UserId == subjectUserId, ct);
+        // Coaching audit K1: notices a parent sent for a child are the parent's financial records too.
+        + await db.CoachingBankTransferRequests.CountAsync(x => x.UserId == subjectUserId || x.SubmittedByUserId == subjectUserId, ct)
+        + await db.CoachingPaymentRecords.CountAsync(x => x.UserId == subjectUserId, ct)
+        + await db.Set<CoachingSubscriptionTrial>().CountAsync(x => x.UserId == subjectUserId, ct);
 
     internal static async Task AnonymizeAsync(CoachingDbContext db, Guid subjectUserId, DateTime now, CancellationToken ct)
     {
@@ -40,15 +56,34 @@ public static class CoachingFinancialRetention
             seat.StudentId = surrogate;
         foreach (var transfer in await db.CoachingBankTransferRequests.Where(x => x.UserId == subjectUserId).ToListAsync(ct))
         {
+            // The accepted documents name the buyer; that name and address go as well (coaching audit K1).
+            transfer.SalesDocumentsJson = Redact(transfer.SalesDocumentsJson, transfer.UserName, transfer.UserEmail, transfer.PayerName);
             transfer.UserId = surrogate;
             transfer.UserName = AnonymizedName;
             transfer.UserEmail = string.Empty;
             transfer.PayerName = null;
             transfer.Note = null;
             transfer.ReviewNote = null;
+            transfer.WithdrawalReason = null;
+            transfer.WithdrawalReviewNote = null;
             transfer.UpdatedAt = now;
             transfer.Version++;
         }
+        // A parent's notices for a child: the child's purchase stays, the parent's identity and words go.
+        var parentSurrogate = Guid.NewGuid();
+        foreach (var transfer in await db.CoachingBankTransferRequests.Where(x => x.SubmittedByUserId == subjectUserId).ToListAsync(ct))
+        {
+            transfer.SalesDocumentsJson = Redact(transfer.SalesDocumentsJson, transfer.PayerName);
+            transfer.SubmittedByUserId = parentSurrogate;
+            transfer.PayerName = null;
+            transfer.Note = null;
+            transfer.WithdrawalReason = null;
+            transfer.WithdrawalReviewNote = null;
+            transfer.UpdatedAt = now;
+            transfer.Version++;
+        }
+        foreach (var trial in await db.Set<CoachingSubscriptionTrial>().Where(x => x.UserId == subjectUserId).ToListAsync(ct))
+            trial.UserId = surrogate;
         foreach (var payment in await db.CoachingPaymentRecords.Where(x => x.UserId == subjectUserId).ToListAsync(ct))
         {
             payment.UserId = surrogate;

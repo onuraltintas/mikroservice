@@ -41,4 +41,13 @@ describe('ParentHomeComponent', () => {
     expect(fixture.nativeElement.querySelector('edu-notification-preferences')).not.toBeNull();
     TestBed.inject(HttpTestingController).expectOne(r => r.url === '/api/notifications/preferences');
   });
+
+  // Coaching audit 31.10.2026 (K1): a parent downloads the Coaching data they created themselves (KVKK).
+  it('lets the parent download their own Coaching data', () => {
+    const fixture = setup({ getLinks: vi.fn(() => of([verified])) });
+    const section = fixture.nativeElement.querySelector('app-student-data-export') as HTMLElement;
+    expect(section).not.toBeNull();
+    expect(section.textContent).toContain('kendi');
+    expect(section.textContent).not.toContain('ödevlerin');
+  });
 });

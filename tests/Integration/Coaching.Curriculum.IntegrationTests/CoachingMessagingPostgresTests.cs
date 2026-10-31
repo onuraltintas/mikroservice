@@ -90,11 +90,13 @@ public sealed class CoachingMessagingPostgresTests
             await new CoachingErasureExecutionService(f.Db, new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })), TimeProvider.System)
                 .ExecuteAsync(request, default);
             f.Db.ChangeTracker.Clear();
-            Assert.Equal([withParent.Id], await f.Db.Set<CoachingConversation>().Select(x => x.Id).ToListAsync());
+            // Coaching audit K1: the teacher–parent conversation about the erased student goes with the student.
+            Assert.Empty(await f.Db.Set<CoachingConversation>().Where(x => x.Id == withParent.Id).ToListAsync());
+            Assert.Empty(await f.Db.Set<CoachingConversation>().ToListAsync());
             Assert.False(Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Any());
 
             clock.Advance(TimeSpan.FromDays(CoachingMessagingService.RetentionDays + 1));
-            Assert.Equal(1, await Service().CleanupAsync(default));
+            Assert.Equal(0, await Service().CleanupAsync(default));
             Assert.False(await f.Db.Set<CoachingMessage>().AnyAsync());
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }

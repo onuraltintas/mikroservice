@@ -125,13 +125,15 @@ public sealed class CoachingSeatRequestService(CoachingDbContext db, ICoachingAd
 
     private sealed record SeatPrice(int Seats, decimal UnitPrice, int RemainingDays, int DurationDays, decimal Amount);
 
-    /// <summary>Per-seat yearly price × seats × the days left of the license (counted from its start if it has not begun) ÷ the plan length.</summary>
+    /// <summary>Per-seat yearly price × seats × the days left of the license (counted from its start if it has not begun, at most the plan length) ÷ the plan length.</summary>
     private SeatPrice Price(CoachingSubscription subscription, CoachingSubscriptionPlan plan, int seats)
     {
         if (plan.ExtraSeatPrice is not { } unit || unit <= 0 || plan.DurationDays <= 0)
             throw new BusinessRuleException("Sales.ExtraSeatsUnavailable", "Bu lisans için ek koltuk satışı açık değil; Koçluk yönetimiyle iletişime geçin.");
         var from = subscription.StartDate > Now ? subscription.StartDate : Now;
-        var remaining = Math.Max(1, (int)Math.Ceiling((subscription.EndDate - from).TotalDays));
+        // Coaching audit K1: a license lengthened by an admin can have more days left than the plan has; a seat never costs
+        // more than its full yearly price.
+        var remaining = Math.Clamp((int)Math.Ceiling((subscription.EndDate - from).TotalDays), 1, plan.DurationDays);
         var amount = Math.Round(unit * seats * remaining / plan.DurationDays, 2, MidpointRounding.AwayFromZero);
         return new(seats, unit, remaining, plan.DurationDays, amount);
     }
@@ -162,7 +164,7 @@ public sealed class CoachingSeatRequestService(CoachingDbContext db, ICoachingAd
 
     private static CoachingSeatRequestSummary ToSummary(CoachingSeatRequest x, string planName, DateTime licenseEndsAt) => new(
         x.Id, x.SubscriptionId, x.InstitutionId, planName, x.Seats, x.UnitPrice, x.RemainingDays, x.Amount, x.Currency, x.PaymentReference, x.Note,
-        x.Status, x.CreatedAt, x.ReviewedAt, x.ReviewNote, x.PaymentRecordId, licenseEndsAt);
+        x.Status, x.CreatedAt, x.ReviewedAt, x.ReviewNote, x.PaymentRecordId, licenseEndsAt, x.DurationDays);
 
     private async Task<Guid> RequireInstitutionAsync(CancellationToken ct)
     {

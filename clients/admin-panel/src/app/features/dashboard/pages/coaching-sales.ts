@@ -27,6 +27,8 @@ export interface CoachingSeatRequest {
   id: string; subscriptionId: string; institutionId: string; planName: string; seats: number; unitPrice: number; remainingDays: number; amount: number;
   currency: string; paymentReference: string; note: string | null; status: 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn'; createdAt: string;
   reviewedAt: string | null; reviewNote: string | null; paymentRecordId: string | null; licenseEndsAt: string;
+  /** The plan length the price is divided by (coaching audit K1). */
+  durationDays?: number;
 }
 export interface CoachingInvoice { id: string; paymentId: string; invoiceNumber: string; issuedOn: string; fileName: string; sizeBytes: number }
 
@@ -116,7 +118,7 @@ type SalesTab = 'coupons' | 'seller' | 'withdrawals' | 'seats' | 'invoices';
           <form (ngSubmit)="saveCoupon()">
             <div class="grid">
               <label>Kod<input name="couponCode" [(ngModel)]="couponDraft.code" maxlength="30" required data-testid="coupon-code" /><span class="muted">3–30 harf, rakam ya da tire. Büyük harfe çevrilir.</span></label>
-              <label>Tür<select name="couponKind" [(ngModel)]="couponDraft.kind"><option value="Percent">Yüzde (%)</option><option value="Amount">Tutar (TRY)</option></select></label>
+              <label>Tür<select name="couponKind" [(ngModel)]="couponDraft.kind"><option value="Percent">Yüzde (%)</option><option value="Amount">Tutar (ödeme para biriminde)</option></select></label>
               <label>{{ couponDraft.kind === 'Percent' ? 'İndirim yüzdesi' : 'İndirim tutarı' }}<input type="number" name="couponValue" [(ngModel)]="couponDraft.value" min="0.01" [max]="couponDraft.kind === 'Percent' ? 100 : 1000000" step="0.01" required /></label>
               <label>Başlangıç (isteğe bağlı)<input type="date" name="couponFrom" [(ngModel)]="couponFrom" /></label>
               <label>Bitiş (isteğe bağlı)<input type="date" name="couponUntil" [(ngModel)]="couponUntil" /></label>
@@ -194,7 +196,7 @@ type SalesTab = 'coupons' | 'seller' | 'withdrawals' | 'seats' | 'invoices';
           <table><thead><tr><th>Kurum / lisans</th><th>Koltuk ve tutar</th><th>Referans</th><th>Durum</th><th></th></tr></thead><tbody>
             @for (item of seatRequests(); track item.id) {
               <tr [attr.data-testid]="'seat-request-' + item.id"><td><strong>{{ institutionName(item.institutionId) }}</strong><div class="muted">{{ item.planName }} · bitiş {{ item.licenseEndsAt | date:'dd.MM.yyyy' }}</div></td>
-                <td>{{ item.seats }} koltuk · {{ money(item.amount) }} {{ item.currency }}<div class="muted">{{ money(item.unitPrice) }} × {{ item.seats }} × {{ item.remainingDays }} gün</div></td>
+                <td>{{ item.seats }} koltuk · {{ money(item.amount) }} {{ item.currency }}<div class="muted">{{ money(item.unitPrice) }} × {{ item.seats }} × {{ item.remainingDays }}@if (item.durationDays) { / {{ item.durationDays }}} gün</div></td>
                 <td>{{ item.paymentReference }}<div class="muted">{{ item.createdAt | date:'dd.MM.yyyy HH:mm' }}@if (item.note) { · {{ item.note }} }</div></td>
                 <td>{{ seatStatusLabel(item.status) }}@if (item.reviewNote) { <div class="muted">{{ item.reviewNote }}</div> }</td>
                 <td>@if (item.status === 'Pending') {
@@ -304,7 +306,8 @@ export class CoachingSalesComponent implements OnInit {
     this.editingCouponId.set(coupon.id);
     this.couponDraft = { code: coupon.code, kind: coupon.kind, value: coupon.value, validFrom: coupon.validFrom, validUntil: coupon.validUntil,
       maxUses: coupon.maxUses, planIds: [...coupon.planIds], isActive: coupon.isActive };
-    this.couponFrom = coupon.validFrom?.slice(0, 10) ?? ''; this.couponUntil = coupon.validUntil?.slice(0, 10) ?? '';
+    // Coaching audit K1: the stored instants are Turkish midnights (21:00 UTC the day before); show the Turkish day.
+    this.couponFrom = turkeyDay(coupon.validFrom); this.couponUntil = turkeyDay(coupon.validUntil);
   }
 
   togglePlan(planId: string): void {
@@ -492,4 +495,13 @@ export class CoachingSalesComponent implements OnInit {
   private emptyCoupon(): CoachingCouponRequest {
     return { code: '', kind: 'Percent', value: 10, validFrom: null, validUntil: null, maxUses: null, planIds: [], isActive: true };
   }
+}
+
+/** The calendar day (yyyy-MM-dd) an instant falls on in Turkey. */
+export function turkeyDay(value: string | null | undefined): string {
+  if (!value) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' })
+    .formatToParts(new Date(value));
+  const part = (type: string) => parts.find(item => item.type === type)?.value ?? '';
+  return `${part('year')}-${part('month')}-${part('day')}`;
 }
