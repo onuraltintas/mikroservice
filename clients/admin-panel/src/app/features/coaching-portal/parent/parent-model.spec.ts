@@ -70,4 +70,11 @@ describe('parent model', () => {
     expect(parentNotificationLabel('ParentWeeklySummary')).toBe('Haftalık özet');
     expect(parentNotificationLabel('SomethingNew')).toBe('Bildirim');
   });
+
+  it('labels and opens every Identity V1 parent-link notice on Çocuklarım', () => {
+    for (const type of ['ParentLinkRequested', 'ParentLinkApproved', 'ParentLinkRevoked']) {
+      expect(parentNotificationTarget({ type, relatedEntityId: 'a4cea155-5485-4db6-9f52-1ec4df8080c3' })).toEqual({ path: '/coaching-portal/parent', label: 'Çocuklarım' });
+      expect(parentNotificationLabel(type)).toBe('Veli bağlantısı');
+    }
+  });
 });
