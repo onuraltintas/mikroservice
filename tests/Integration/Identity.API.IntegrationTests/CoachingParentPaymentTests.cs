@@ -22,7 +22,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
 
         (await subscriptions.GetChildAccessAsync(stranger, child)).Should().BeNull();
         (await subscriptions.GetChildAccessAsync(parent, child))!.HasAccess.Should().BeFalse();
-        var notice = new CoachingBankTransferRequestCreate(plan, "EFT-VELI-0001", null, "Annesi ödedi", true);
+        var notice = new CoachingBankTransferRequestCreate(plan, "EFT-VELI-0001", null, "Annesi ödedi", true, AcceptSalesContract: true);
         (await subscriptions.CreateChildBankTransferRequestAsync(stranger, "Yabancı", "x@example.test", child, "Ada Öğrenci", "ada@example.test",
             notice, "create-parent-pays-0001")).Should().BeNull();
         var sent = await subscriptions.CreateChildBankTransferRequestAsync(parent, "Ayşe Veli", "veli@example.test", child, "Ada Öğrenci",

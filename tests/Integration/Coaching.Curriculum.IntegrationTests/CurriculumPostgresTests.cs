@@ -152,7 +152,10 @@ public sealed class CurriculumPostgresTests
             var admin=new NpgsqlConnection(connection.ConnectionString);await admin.OpenAsync();
             await using(var cmd=new NpgsqlCommand($"CREATE DATABASE \"{database}\"",admin)) await cmd.ExecuteNonQueryAsync();
             connection.Database=database;
-            var f=new Pg(admin,database,new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(connection.ConnectionString,x => x.MigrationsHistoryTable("__ef_migrations_history","coaching")).Options);
+            var f=new Pg(admin,database,new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(connection.ConnectionString,x => x.MigrationsHistoryTable("__ef_migrations_history","coaching")
+                // Same retry strategy as production (Coaching.Infrastructure DependencyInjection): a service that opens its own
+                // transaction outside the execution strategy fails here as it would live.
+                .EnableRetryOnFailure(3,TimeSpan.FromSeconds(5),null)).Options);
             if (targetMigration is null) await f.Db.Database.MigrateAsync();
             else await f.Db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>().MigrateAsync(targetMigration);
             return f;

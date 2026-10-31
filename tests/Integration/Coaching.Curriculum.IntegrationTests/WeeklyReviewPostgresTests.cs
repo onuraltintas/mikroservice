@@ -172,7 +172,7 @@ public sealed class WeeklyReviewPostgresTests
         await service.SaveDecisionAsync(student, Week, Guid.NewGuid(), new(null, "Tekrar", "", Week.AddDays(7), "Planned"), default);
         var export = new CoachingDataExportRepository(pg.Db);
         var studentData = await export.ExportStudentDataAsync(student, Now, default);
-        Assert.Equal("1.10", studentData.SchemaVersion); Assert.Single(studentData.WeeklyReflections!); Assert.Single(studentData.WeeklyDecisions!);
+        Assert.Equal("1.11", studentData.SchemaVersion); Assert.Single(studentData.WeeklyReflections!); Assert.Single(studentData.WeeklyDecisions!);
         Assert.Single((await export.ExportStudentDataAsync(teacher, Now, default)).WeeklyDecisions!);
         await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.GetService<IMigrator>().MigrateAsync("20261020100033_PracticeTopicAdaptation"));
         Assert.Equal(before, await Snapshot(pg));

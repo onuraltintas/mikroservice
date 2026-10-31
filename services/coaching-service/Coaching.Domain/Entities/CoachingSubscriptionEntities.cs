@@ -62,6 +62,11 @@ public sealed class CoachingSubscriptionPeriod
     /// <summary>BankTransfer, Manual or (roadmap O10) Trial.</summary>
     public string Source { get; set; } = "BankTransfer";
     public Guid? BankTransferRequestId { get; set; }
+    /// <summary>
+    /// Coaching audit K1: the plan the subscription had before this period's payment upgraded it; cancelling the payment
+    /// puts the subscription back on that plan.
+    /// </summary>
+    public Guid? PreviousPlanId { get; set; }
     /// <summary>Active or Cancelled.</summary>
     public string Status { get; set; } = "Active";
     public Guid CreatedBy { get; set; }

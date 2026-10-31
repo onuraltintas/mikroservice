@@ -203,6 +203,11 @@ public interface ICoachingSubscription
     /// as a record marked "Cancelled" with the reason. Returns null when the transfer is not approved.
     /// </summary>
     Task<CoachingBankTransferRequestSummary?> CancelApprovedBankTransferAsync(Guid id, string reason, Guid actorId, CancellationToken cancellationToken = default);
+    /// <summary>Cancels an approved payment and settles a waiting withdrawal request with <paramref name="withdrawalNote"/> in one transaction.</summary>
+    Task<CoachingBankTransferRequestSummary?> CancelApprovedBankTransferAsync(Guid id, string reason, Guid actorId, string? withdrawalNote,
+        CancellationToken cancellationToken = default);
+    /// <summary>Whether the teacher works on their own (not as an institution teacher).</summary>
+    Task<bool> IsIndependentTeacherAsync(Guid teacherId, CancellationToken cancellationToken = default);
     Task<PagedResponse<CoachingSubscriptionSummary>> GetSubscriptionsAsync(string? search, string? status, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<CoachingSubscriptionSummary?> CreateSubscriptionAsync(CoachingSubscriptionCreateRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<CoachingSubscriptionSummary?> UpdateSubscriptionAsync(Guid id, CoachingSubscriptionUpdateRequest request, Guid actorId, CancellationToken cancellationToken = default);

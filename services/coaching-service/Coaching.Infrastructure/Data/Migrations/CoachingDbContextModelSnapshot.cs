@@ -819,7 +819,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "CreatedAt");
 
                     b.HasIndex("UserId", "PaymentReference")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"Status\" IN ('Pending', 'Approved')");
 
                     b.HasIndex("UserId", "Status");
 
@@ -2428,6 +2429,9 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("PreviousPlanId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Source")
                         .IsRequired()
