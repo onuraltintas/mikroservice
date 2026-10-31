@@ -37,13 +37,20 @@ public sealed class StudentTodayPostgresTests
     private static PracticeExamInput Tyt() => new("TYT", [new("TUR", 30, 4, 6), new("MAT", 25, 8, 7), new("TAR", 4, 0, 1), new("COG", 4, 1, 0),
         new("FEL", 4, 0, 1), new("DIN", 5, 0, 0), new("FIZ", 4, 2, 1), new("KIM", 4, 1, 2), new("BIO", 4, 0, 2)]);
 
+    private static void Practice(ExamResult result, PracticeExamInput input)
+    {
+        var totals = PracticeExamRules.Summarize(input);
+        result.SetAnswerStatistics(totals.Correct, totals.Wrong, totals.Empty);
+        result.SetPracticeExam(input, ExamType.YKS);
+    }
+
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task CombinesNextStepTodayOverdueCountdownWeekGoalReviewAndSession()
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create();
         var student = Guid.NewGuid(); var teacher = Guid.NewGuid();
         pg.Data.User.UserId = student; pg.Data.User.Roles = ["Student"];
-        pg.Db.Add(CoachingStudentProfile.Create(student));
+        var profile = CoachingStudentProfile.Create(student); pg.Db.Add(profile);
         var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Aktif plan"); plan.Activate(); pg.Db.Add(plan);
         var morning = StudyPlanTask.Create(plan, Today, "Paragraf", 30); morning.Schedule(Today, 14 * 60);
         var tomorrow = StudyPlanTask.Create(plan, Today.AddDays(1), "Problemler", 45);
@@ -57,16 +64,19 @@ public sealed class StudentTodayPostgresTests
         context.SetTargetExamDate(new DateOnly(2027, 6, 19), Today); pg.Db.Add(context);
         var goal = AcademicGoal.Create(student, "ODTÜ Bilgisayar", GoalCategory.ExamPreparation); goal.SetNetTarget("TYT", 90m); pg.Db.Add(goal);
         var exam = Exam.CreateStudentReported(student, "TYT Deneme 4", ExamType.YKS, Now.UtcDateTime.AddDays(-3), 500m);
-        var result = ExamResult.Create(exam.Id, student, 300m); result.SetPracticeExam(Tyt(), ExamType.YKS); exam.AddResult(result); pg.Db.Add(exam);
+        var result = ExamResult.Create(exam.Id, student, 300m); Practice(result, Tyt()); exam.AddResult(result); pg.Db.Add(exam);
         var future = Exam.CreateStudentReported(student, "Gelecek deneme", ExamType.YKS, Now.UtcDateTime.AddDays(3), 500m);
-        var futureResult = ExamResult.Create(future.Id, student, 450m); futureResult.SetPracticeExam(Tyt() with { Sections = [new("TUR", 40, 0, 0), new("MAT", 40, 0, 0),
-            new("TAR", 5, 0, 0), new("COG", 5, 0, 0), new("FEL", 5, 0, 0), new("DIN", 5, 0, 0), new("FIZ", 7, 0, 0), new("KIM", 7, 0, 0), new("BIO", 6, 0, 0)] }, ExamType.YKS);
+        var futureResult = ExamResult.Create(future.Id, student, 450m); Practice(futureResult, Tyt() with { Sections = [new("TUR", 40, 0, 0), new("MAT", 40, 0, 0),
+            new("TAR", 5, 0, 0), new("COG", 5, 0, 0), new("FEL", 5, 0, 0), new("DIN", 5, 0, 0), new("FIZ", 7, 0, 0), new("KIM", 7, 0, 0), new("BIO", 6, 0, 0)] });
         future.AddResult(futureResult); pg.Db.Add(future);
         var session = CoachingSession.Create(teacher, "Haftalık görüşme", Now.UtcDateTime.AddDays(1), SessionType.OneOnOne); session.AddStudent(student);
         var other = CoachingSession.Create(teacher, "Başka öğrenci", Now.UtcDateTime.AddHours(2), SessionType.OneOnOne); other.AddStudent(Guid.NewGuid());
         pg.Db.AddRange(session, other);
         await pg.Db.SaveChangesAsync();
-        pg.Db.Entry(monday).Property(x => x.CompletedAt).CurrentValue = Now.UtcDateTime.AddDays(-2); await pg.Db.SaveChangesAsync();
+        pg.Db.Entry(monday).Property(x => x.CompletedAt).CurrentValue = Now.UtcDateTime.AddDays(-2);
+        // A student enrolled at the start of the school year owes last week's reflection.
+        pg.Db.Entry(profile).Property(x => x.CreatedAt).CurrentValue = new DateTime(2026, 9, 7, 9, 0, 0, DateTimeKind.Utc);
+        await pg.Db.SaveChangesAsync();
 
         var view = await Read(Api(pg, Now));
 
@@ -75,7 +85,7 @@ public sealed class StudentTodayPostgresTests
         Assert.Equal(("assignment", late.Id, true), (view.NextStep!.Item.Kind, view.NextStep.Item.RecordId, view.NextStep.Overdue));
         Assert.Equal([late.Id], view.Overdue.Select(x => x.RecordId));
         Assert.Equal([morning.Id, due.Id], view.Items.Select(x => x.RecordId));
-        Assert.Equal((2, 1, 1), (view.TodayCount, view.OverdueCount, view.UpcomingCount));
+        Assert.Equal((2, 1, 2), (view.TodayCount, view.OverdueCount, view.UpcomingCount));
         Assert.Equal(("Sınavın", new DateOnly(2027, 6, 19), 241), (view.Exam!.Name, view.Exam.Date, view.Exam.DaysLeft));
         // This week (Monday 19 October – Sunday 25 October): Geometri done, Paragraf and Problemler planned.
         Assert.Equal((new DateOnly(2026, 10, 19), 3, 1), (view.Week.WeekStart, view.Week.Planned, view.Week.Completed));
