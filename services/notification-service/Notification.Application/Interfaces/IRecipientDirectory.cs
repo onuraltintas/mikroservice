@@ -8,6 +8,12 @@ public sealed record RecipientContact(Guid UserId, string? Email, string FirstNa
     public string DisplayName => $"{FirstName} {LastName}".Trim();
 }
 
+/// <summary>
+/// Coaching audit K3: Identity could not be asked (down, timing out or answering 5xx). Callers keep the in-app notice and
+/// defer the contact lookup instead of failing the whole message.
+/// </summary>
+public sealed class RecipientDirectoryUnavailableException(string message, Exception? inner = null) : Exception(message, inner);
+
 public interface IRecipientDirectory
 {
     Task<IReadOnlyDictionary<Guid, RecipientContact>> GetAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct);

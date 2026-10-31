@@ -224,6 +224,12 @@ artifact store, RPO/RTO ölçümü ve erişim onayıyla tekrarlanmalıdır.
 - `PUBLIC_APP_BASE_URL` merkezi Eduİvme rollerinin, `SPEED_READING_PUBLIC_BASE_URL`
   ise hızlı okuma rollerinin doğrulanmış public HTTPS frontend origin'idir;
   kayıt, parola ve davet e-postelerindeki bağlantılar alıcı rolüne göre seçilir.
+- Koçluk incelemesi K3: `PUBLIC_STAFF_PORTAL_URL` (üretimde `https://onuraltintas.net/staff`) öğretmen ve kurum
+  e-postalarındaki koçluk personel portalı bağlantısını, `PUBLIC_ADMIN_PANEL_URL` (üretimde `https://eduivme.com`)
+  yönetici uyarılarındaki panel bağlantısını belirler. Boş bırakılırsa compose varsayılanları kullanılır. Üretimde
+  bütün public adresler `https` olmalıdır; değilse notification servisi açılmaz.
+- Identity'ye ulaşılamadığında uygulama içi bildirim kaybolmaz; e-posta/SMS kopyası `PendingContactDeliveries`
+  tablosunda bekler, her dakika yeniden denenir ve iki gün içinde gönderilemezse bırakılır.
 - Eski değerler revoke edilmeden önce iki replica'da health/readiness ve
   service-to-service çağrı smoke testi alınır. Değişkenler loglanmaz.
 

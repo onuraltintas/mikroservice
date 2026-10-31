@@ -27,6 +27,22 @@ public static class CoachingPublicUrl
         return value;
     }
 
+    /// <summary>
+    /// Coaching audit K3: the coaching staff portal for teachers and institutions. It is served on its own origin
+    /// (onuraltintas.net/staff), so it has its own setting; without it the portal is assumed under the public address.
+    /// </summary>
+    public static string StaffPortal(IConfiguration configuration)
+    {
+        var value = configuration["Coaching:StaffPortalUrl"];
+        if (string.IsNullOrWhiteSpace(value)) return Get(configuration) + "/staff";
+        value = value.Trim().TrimEnd('/');
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http"))
+            throw new InvalidOperationException("Coaching:StaffPortalUrl must be an absolute http(s) address.");
+        return value;
+    }
+
+    public static string StaffPortalLink(IConfiguration configuration) => StaffPortal(configuration) + "/?product=coaching";
+
     private static string? Configured(IConfiguration configuration)
     {
         var value = configuration["Coaching:PublicBaseUrl"];

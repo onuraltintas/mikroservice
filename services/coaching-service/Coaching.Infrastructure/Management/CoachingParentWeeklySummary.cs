@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace Coaching.Infrastructure.Management;
 
 /// <summary>
-/// Roadmap Y7: from Sunday 18:00 until Monday ends (Istanbul time) each verified parent gets one summary of their child's
+/// Roadmap Y7: from Sunday 18:00 until Monday ends (in the student's time zone; Istanbul by default) each verified parent gets one summary of their child's
 /// week (Monday–Sunday): planned and completed study, assignments due, sessions and the latest exam. A reminder receipt
 /// keeps it to one per parent, child and week; a child with no activity at all produces no e-mail.
 /// </summary>
@@ -27,31 +27,74 @@ public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, I
     {
         if (!db.Database.IsRelational()) return 0;
         var now = clock.GetUtcNow().UtcDateTime;
-        var local = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, Istanbul));
-        var localHour = TimeZoneInfo.ConvertTimeFromUtc(now, Istanbul).Hour;
-        DateOnly weekEnd;
-        if (local.DayOfWeek == DayOfWeek.Sunday && localHour >= 18) weekEnd = local;
-        else if (local.DayOfWeek == DayOfWeek.Monday) weekEnd = local.AddDays(-1);
-        else return 0;
-        var weekStart = weekEnd.AddDays(-6);
-        var rangeStart = Utc(weekStart); var rangeEnd = Utc(weekEnd.AddDays(1));
         var sent = 0;
         for (var page = 1; ; page++)
         {
             var recipients = await parents.GetWeeklySummaryRecipientsAsync(page, PageSize, ct);
+            var students = recipients.Items.Select(x => x.StudentUserId).Distinct().ToArray();
+            // Coaching audit K3: the week and the Sunday-evening send follow the student's own time zone, as the study
+            // reminders do; students without study hours use Istanbul.
+            var zones = await db.StudyAvailability.AsNoTracking().Where(x => Enumerable.Contains(students, x.StudentId))
+                .ToDictionaryAsync(x => x.StudentId, x => x.TimeZoneId, ct);
             foreach (var recipient in recipients.Items)
             {
+                var zone = Zone(zones.GetValueOrDefault(recipient.StudentUserId));
+                var local = TimeZoneInfo.ConvertTimeFromUtc(now, zone);
+                var today = DateOnly.FromDateTime(local);
+                DateOnly weekEnd;
+                if (today.DayOfWeek == DayOfWeek.Sunday && local.Hour >= 18) weekEnd = today;
+                else if (today.DayOfWeek == DayOfWeek.Monday) weekEnd = today.AddDays(-1);
+                else continue;
+                var weekStart = weekEnd.AddDays(-6);
+                var rangeStart = Utc(weekStart, zone); var rangeEnd = Utc(weekEnd.AddDays(1), zone);
                 var receipt = CoachingReminderReceipt.Create(recipient.ParentUserId, recipient.StudentUserId, ReceiptKind,
                     weekStart.ToString("yyyy-MM-dd"), rangeEnd, now);
                 if (await db.CoachingReminderReceipts.AnyAsync(x => x.Id == receipt.Id, ct)) continue;
-                var summary = await SummarizeAsync(receipt.Id, recipient, weekStart, weekEnd, rangeStart, rangeEnd, now, ct);
-                db.CoachingReminderReceipts.Add(receipt);
-                if (summary is not null) { await events.PublishAsync(summary, ct); sent++; }
-                await db.SaveChangesAsync(ct);
+                if (await SendOnceAsync(receipt, recipient, weekStart, weekEnd, rangeStart, rangeEnd, now, ct)) sent++;
             }
             if (recipients.Items.Count < PageSize || page * PageSize >= recipients.TotalCount) break;
         }
         return sent;
+    }
+
+    /// <summary>
+    /// Coaching audit K3: one summary per parent, child and week even when several instances run at once. The receipt is
+    /// checked again under a lock for that receipt, and receipt and event are committed together.
+    /// </summary>
+    private async Task<bool> SendOnceAsync(CoachingReminderReceipt receipt, CoachingParentSummaryRecipient recipient, DateOnly weekStart,
+        DateOnly weekEnd, DateTime rangeStart, DateTime rangeEnd, DateTime now, CancellationToken ct)
+    {
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            var committed = false;
+            try
+            {
+                var key = $"coaching-parent-summary:{receipt.Id:N}";
+                await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", ct);
+                if (await db.CoachingReminderReceipts.AnyAsync(x => x.Id == receipt.Id, ct)) return false;
+                var summary = await SummarizeAsync(receipt.Id, recipient, weekStart, weekEnd, rangeStart, rangeEnd, now, ct);
+                db.CoachingReminderReceipts.Add(receipt);
+                if (summary is not null) await events.PublishAsync(summary, ct);
+                await db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct); committed = true;
+                return summary is not null;
+            }
+            finally
+            {
+                foreach (var entry in db.ChangeTracker.Entries<CoachingReminderReceipt>().ToArray()) entry.State = EntityState.Detached;
+                if (!committed)
+                    foreach (var entry in db.ChangeTracker.Entries().Where(x => x.Entity is MassTransit.EntityFrameworkCoreIntegration.OutboxMessage).ToArray())
+                        entry.State = EntityState.Detached;
+            }
+        });
+    }
+
+    private static TimeZoneInfo Zone(string? id)
+    {
+        if (!string.IsNullOrWhiteSpace(id))
+            try { return TimeZoneInfo.FindSystemTimeZoneById(id); } catch (TimeZoneNotFoundException) { } catch (InvalidTimeZoneException) { }
+        return Istanbul;
     }
 
     private async Task<CoachingParentWeeklySummaryV1?> SummarizeAsync(Guid id, CoachingParentSummaryRecipient recipient, DateOnly weekStart,
@@ -89,7 +132,7 @@ public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, I
             exam?.Title, exam?.Score);
     }
 
-    private static DateTime Utc(DateOnly day) => TimeZoneInfo.ConvertTimeToUtc(day.ToDateTime(TimeOnly.MinValue), Istanbul);
+    private static DateTime Utc(DateOnly day, TimeZoneInfo zone) => TimeZoneInfo.ConvertTimeToUtc(day.ToDateTime(TimeOnly.MinValue), zone);
 }
 
 public sealed class CoachingParentWeeklySummaryWorker(IServiceScopeFactory scopes, TimeProvider clock,

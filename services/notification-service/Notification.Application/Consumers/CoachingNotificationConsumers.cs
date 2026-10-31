@@ -49,8 +49,11 @@ public sealed class AssignmentSubmittedConsumer : IConsumer<AssignmentSubmittedE
         }
 
         // Roadmap O8: the teacher sees who handed in which assignment.
-        var student = _directory is null ? null
-            : (await _directory.GetAsync([message.StudentId], context.CancellationToken)).GetValueOrDefault(message.StudentId)?.DisplayName;
+        string? student = null;
+        // Coaching audit K3: without Identity the teacher still hears about the hand-in, just without the name.
+        if (_directory is not null)
+            try { student = (await _directory.GetAsync([message.StudentId], context.CancellationToken)).GetValueOrDefault(message.StudentId)?.DisplayName; }
+            catch (RecipientDirectoryUnavailableException) { }
         var text = Notification.Application.Services.CoachingNotificationTexts.AssignmentSubmitted(student, message.AssignmentTitle, message.SubmittedAt);
         await _dispatcher.SendAsync(
             MessageIds.Require(context),

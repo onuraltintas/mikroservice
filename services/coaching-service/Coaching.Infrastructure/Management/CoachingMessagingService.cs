@@ -164,6 +164,22 @@ public sealed class CoachingMessagingService(CoachingDbContext db, ICoachingAcco
 
     public async Task<CoachingMessageView> SendAsync(Guid actor, Guid conversationId, CoachingMessageSend request, CancellationToken ct)
     {
+        // Coaching audit K3: two messages sent at the same moment both used to read "no unread" (two notifications) and
+        // one message count was lost. MessageCount is the conversation's concurrency token; the loser retries on fresh data.
+        for (var attempt = 1; ; attempt++)
+        {
+            try { return await SendOnceAsync(actor, conversationId, request, ct); }
+            catch (DbUpdateConcurrencyException) when (attempt < 3)
+            {
+                foreach (var entry in db.ChangeTracker.Entries().Where(x => x.Entity is CoachingMessage or CoachingConversation
+                    or CoachingMessageAttachment or MassTransit.EntityFrameworkCoreIntegration.OutboxMessage).ToArray())
+                    entry.State = EntityState.Detached;
+            }
+        }
+    }
+
+    private async Task<CoachingMessageView> SendOnceAsync(Guid actor, Guid conversationId, CoachingMessageSend request, CancellationToken ct)
+    {
         var account = await RequireAccountAsync(actor, ct);
         var conversation = await ParticipantConversationAsync(actor, conversationId, ct);
         var link = await RequireOpenAsync(conversation, ct);

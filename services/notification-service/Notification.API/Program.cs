@@ -78,12 +78,16 @@ builder.Services.AddOptions<PublicAppUrlOptions>()
         options => PublicAppUrlOptions.IsValidForEnvironment(
             options.BaseUrl,
             builder.Environment.IsProduction()),
-        "PublicApp:BaseUrl must be an absolute HTTP(S) URL without credentials, query, or fragment; production cannot use loopback.")
+        "PublicApp:BaseUrl must be an absolute URL without credentials, query, or fragment; production requires https and cannot use loopback.")
     .Validate(
         options => PublicAppUrlOptions.IsValidForEnvironment(
             options.SpeedReadingBaseUrl,
             builder.Environment.IsProduction()),
-        "PublicApp:SpeedReadingBaseUrl must be an absolute HTTP(S) URL without credentials, query, or fragment; production cannot use loopback.")
+        "PublicApp:SpeedReadingBaseUrl must be an absolute URL without credentials, query, or fragment; production requires https and cannot use loopback.")
+    .Validate(
+        options => PublicAppUrlOptions.IsValidOptionalForEnvironment(options.StaffPortalUrl, builder.Environment.IsProduction())
+            && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.AdminPanelUrl, builder.Environment.IsProduction()),
+        "PublicApp:StaffPortalUrl and PublicApp:AdminPanelUrl must be empty or absolute https URLs in production.")
     .ValidateOnStart();
 
 // Add services
@@ -149,7 +153,11 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
 // Roadmap O8: per-user channel choices and the e-mail copy of important coaching notifications.
-builder.Services.AddScoped<INotificationChannelPolicy, Notification.Infrastructure.Services.NotificationChannelPolicy>();
+builder.Services.AddScoped<Notification.Infrastructure.Services.NotificationChannelPolicy>();
+builder.Services.AddScoped<INotificationChannelPolicy>(provider =>
+    provider.GetRequiredService<Notification.Infrastructure.Services.NotificationChannelPolicy>());
+// Coaching audit K3: copies whose address lookup failed during an Identity outage are sent later.
+builder.Services.AddScoped<Notification.Infrastructure.Services.PendingContactDeliveryProcessor>();
 builder.Services.AddScoped<INotificationPreferenceService, Notification.Infrastructure.Services.NotificationPreferenceService>();
 // Roadmap O9: SMS / WhatsApp outbox (sending is off until a provider is connected) and İYS commercial consent.
 builder.Services.Configure<Notification.Application.Configuration.TextMessagingOptions>(builder.Configuration.GetSection(Notification.Application.Configuration.TextMessagingOptions.SectionName));
@@ -162,6 +170,7 @@ builder.Services.AddHttpClient<IRecipientDirectory, Notification.Infrastructure.
 builder.Services.AddScoped<ICoachingNotificationDispatcher, CoachingNotificationDispatcher>();
 builder.Services.AddScoped<ICourseManagementNotificationDispatcher, CourseManagementNotificationDispatcher>();
 builder.Services.AddHostedService<EmailDeliveryWorker>();
+builder.Services.AddHostedService<Notification.Infrastructure.Services.PendingContactDeliveryWorker>();
 builder.Services.AddHostedService<SupportForwardDeliveryWorker>();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddHttpClient<Notification.Application.Interfaces.IIdentityInternalService, Notification.Infrastructure.ExternalServices.IdentityInternalService>()

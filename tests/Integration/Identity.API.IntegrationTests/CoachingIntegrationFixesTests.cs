@@ -172,7 +172,7 @@ public sealed class CoachingIntegrationFixesTests
         services.AddMassTransitTestHarness(x =>
         {
             x.UseSuiteTimeouts();
-            x.AddConsumer<UserCreatedConsumer>();
+            x.AddConsumer<UserPasswordSetupRequestedConsumer>();
             x.UsingInMemory((context, config) => config.ConfigureEndpoints(context));
         });
         await using var provider = services.BuildServiceProvider();
@@ -290,6 +290,15 @@ public sealed class CoachingIntegrationFixesTests
         await f.Db.SaveChangesAsync();
         var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System, new Events(), new ConfigurationBuilder().Build());
         (await service.SendTeacherAsync(teacher, "ogrenci@example.test", null, default)).Should().NotBeNull();
+    }
+
+    // LOW 11: two messages sent at once conflict on the conversation instead of losing a count (and notifying twice).
+    [Fact]
+    public async Task ConversationCountIsAConcurrencyToken()
+    {
+        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
+        f.Db.Model.FindEntityType(typeof(CoachingConversation))!.FindProperty(nameof(CoachingConversation.MessageCount))!
+            .IsConcurrencyToken.Should().BeTrue();
     }
 
     private static CoachingSubscriptionNoticeV1 Notice(string kind, Guid? user, string? email, string audience, string? detail = null) =>

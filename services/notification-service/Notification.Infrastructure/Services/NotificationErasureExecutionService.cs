@@ -56,6 +56,7 @@ public sealed class NotificationErasureExecutionService(
         // Roadmap O8: the user's notification choices go with the account.
         context.NotificationPreferences.RemoveRange(await context.NotificationPreferences.Where(item => item.UserId == message.SubjectUserId).ToListAsync(cancellationToken));
         context.TextMessageDeliveries.RemoveRange(await context.TextMessageDeliveries.Where(item => item.SubjectUserId == message.SubjectUserId).ToListAsync(cancellationToken));
+        context.PendingContactDeliveries.RemoveRange(await context.PendingContactDeliveries.Where(item => item.UserId == message.SubjectUserId).ToListAsync(cancellationToken));
         context.CommercialMessageConsents.RemoveRange(await context.CommercialMessageConsents.Where(item => item.UserId == message.SubjectUserId).ToListAsync(cancellationToken));
         var receipt = NotificationErasureExecutionReceipt.Complete(
             message.RequestId,

@@ -26,7 +26,8 @@ public static class CoachingNotificationTexts
     public static Text AssignmentDue(string? title, DateTime dueAt)
     {
         var assignment = Clean(title);
-        return new("Ödev teslimine bir gün kaldı",
+        // Coaching audit K3: an assignment given less than a day ahead gets the reminder too, so the title gives no count.
+        return new("Ödev teslim tarihi yaklaşıyor",
             assignment is null ? $"Teslim etmediğin bir ödevin son tarihi {TurkeyTime.Format(dueAt)}."
                 : $"\"{assignment}\" ödevinin son teslim tarihi {TurkeyTime.Format(dueAt)}. Henüz teslim etmedin.");
     }

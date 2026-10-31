@@ -24,6 +24,7 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<TextMessageDelivery> TextMessageDeliveries => Set<TextMessageDelivery>();
     public DbSet<CommercialMessageConsent> CommercialMessageConsents => Set<CommercialMessageConsent>();
+    public DbSet<PendingContactDelivery> PendingContactDeliveries => Set<PendingContactDelivery>();
 
     public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
         CancellationToken cancellationToken)
@@ -87,6 +88,20 @@ public class NotificationDbContext : DbContext, INotificationDbContext
             entity.Property(x => x.Provider).HasMaxLength(40);
             entity.Property(x => x.LastError).HasMaxLength(500);
         });
+        modelBuilder.Entity<PendingContactDelivery>(entity =>
+        {
+            entity.ToTable("PendingContactDeliveries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.HasIndex(x => x.NextAttemptAt);
+            entity.HasIndex(x => x.UserId);
+            entity.Property(x => x.Channel).HasMaxLength(10);
+            entity.Property(x => x.Type).HasMaxLength(100);
+            entity.Property(x => x.Title).HasMaxLength(500);
+            entity.Property(x => x.Message).HasMaxLength(4000);
+            entity.Property(x => x.LastError).HasMaxLength(500);
+        });
+
         modelBuilder.Entity<CommercialMessageConsent>(entity =>
         {
             entity.ToTable("CommercialMessageConsents");

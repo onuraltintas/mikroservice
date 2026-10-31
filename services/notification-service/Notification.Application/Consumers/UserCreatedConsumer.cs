@@ -106,7 +106,7 @@ internal static class AccountSetupEmail
             // Fallback (Safe Mode)
             var appName = PublicAppUrlOptions.GetApplicationName(role, product);
             return ($"{appName} hesabınız hazır, {EmailContent.SubjectText(firstName)}!",
-                $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(firstName)}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {passwordSetupTokenExpiresAt:O}.</p>");
+                $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(firstName)}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {TurkeyTime.Format(passwordSetupTokenExpiresAt)} (Türkiye saati).</p>");
         }
 
         var subject = template.Subject
@@ -117,7 +117,7 @@ internal static class AccountSetupEmail
             .Replace("{{LastName}}", EmailContent.Html(lastName))
             .Replace("{{Role}}", EmailContent.Html(role))
             .Replace("{{PasswordSetupUrl}}", passwordSetupUrl)
-            .Replace("{{PasswordSetupTokenExpiresAt}}", passwordSetupTokenExpiresAt.ToString("O"))
+            .Replace("{{PasswordSetupTokenExpiresAt}}", TurkeyTime.Format(passwordSetupTokenExpiresAt) + " (Türkiye saati)")
             .Replace("{{Email}}", EmailContent.Html(email));
         return (PublicAppUrlOptions.ApplySpeedReadingBranding(subject, role, product),
             PublicAppUrlOptions.ApplySpeedReadingBranding(body, role, product));

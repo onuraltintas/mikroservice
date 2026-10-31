@@ -4,6 +4,7 @@ using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
 using Notification.Application.Messaging;
 using Notification.Application.Services;
+using Notification.Domain.Entities;
 using Notification.Infrastructure.Persistence;
 
 namespace Notification.Infrastructure.Services;
@@ -17,7 +18,8 @@ public sealed class NotificationChannelPolicy(
     IRecipientDirectory directory,
     IEmailDeliveryQueue mail,
     IOptions<PublicAppUrlOptions> urls,
-    ITextMessageQueue? text = null) : INotificationChannelPolicy
+    ITextMessageQueue? text = null,
+    TimeProvider? clock = null) : INotificationChannelPolicy
 {
     public const string EmailConsumerType = "CoachingNotificationEmail";
     public const string TextConsumerType = "CoachingNotificationText";
@@ -40,7 +42,21 @@ public sealed class NotificationChannelPolicy(
         var category = NotificationCategories.ForType(type);
         // Categories whose consumer writes its own e-mail (parent summary, subscription) read the choice themselves.
         if (category is null || category.OwnEmail || userIds.Count == 0) return;
-        var contacts = await directory.GetAsync(userIds, ct);
+        IReadOnlyDictionary<Guid, RecipientContact> contacts;
+        try { contacts = await directory.GetAsync(userIds, ct); }
+        catch (RecipientDirectoryUnavailableException)
+        {
+            // Coaching audit K3: keep the in-app notice; the address is looked up again by PendingContactDeliveryProcessor.
+            await DeferAsync(userIds.Select(user => PendingContactDelivery.Create(eventMessageId, user, PendingContactDelivery.EmailChannel,
+                type, title, message, Now)), ct);
+            return;
+        }
+        await EmailContactsAsync(eventMessageId, userIds, contacts, title, message, category, ct);
+    }
+
+    private async Task EmailContactsAsync(Guid eventMessageId, IReadOnlyCollection<Guid> userIds, IReadOnlyDictionary<Guid, RecipientContact> contacts,
+        string title, string message, NotificationCategories.Category category, CancellationToken ct)
+    {
         var link = urls.Value.ResolveBaseUrl(null, "coaching");
         foreach (var userId in userIds)
         {
@@ -59,7 +75,22 @@ public sealed class NotificationChannelPolicy(
     {
         var category = NotificationCategories.ForType(type);
         if (text is null || category is null || !category.AllowsText(type) || plan.Count == 0) return;
-        var contacts = await directory.GetAsync(plan.Keys.ToArray(), ct);
+        if (!plan.Values.Any(x => x.Sms || x.WhatsApp)) return;
+        IReadOnlyDictionary<Guid, RecipientContact> contacts;
+        try { contacts = await directory.GetAsync(plan.Keys.ToArray(), ct); }
+        catch (RecipientDirectoryUnavailableException)
+        {
+            await DeferAsync(plan.Where(x => x.Value.Sms || x.Value.WhatsApp).Select(x => PendingContactDelivery.Create(eventMessageId, x.Key,
+                PendingContactDelivery.TextChannel, type, title, message, Now, x.Value.Sms, x.Value.WhatsApp)), ct);
+            return;
+        }
+        await TextContactsAsync(eventMessageId, plan, contacts, title, message, ct);
+    }
+
+    private async Task TextContactsAsync(Guid eventMessageId, IReadOnlyDictionary<Guid, NotificationChannels> plan,
+        IReadOnlyDictionary<Guid, RecipientContact> contacts, string title, string message, CancellationToken ct)
+    {
+        if (text is null) return;
         var body = $"Eduİvme: {title}. {message}";
         foreach (var (userId, chosen) in plan)
         {
@@ -68,6 +99,37 @@ public sealed class NotificationChannelPolicy(
                 await text.QueueAsync(MessageIds.Derive($"coaching-notification-text:{eventMessageId:N}:{userId:N}:{channel}"), channel,
                     TextConsumerType, contact.Phone.Trim(), body, userId, ct);
         }
+    }
+
+    private DateTime Now => (clock ?? TimeProvider.System).GetUtcNow().UtcDateTime;
+
+    /// <summary>Coaching audit K3: sends a copy whose address lookup was deferred during an Identity outage.</summary>
+    public async Task DeliverPendingAsync(PendingContactDelivery pending, IReadOnlyDictionary<Guid, RecipientContact> contacts, CancellationToken ct)
+    {
+        if (pending.Channel == PendingContactDelivery.EmailChannel)
+        {
+            var category = NotificationCategories.ForType(pending.Type);
+            if (category is null || category.OwnEmail) return;
+            await EmailContactsAsync(pending.EventMessageId, [pending.UserId], contacts, pending.Title, pending.Message, category, ct);
+        }
+        else
+            await TextContactsAsync(pending.EventMessageId,
+                new Dictionary<Guid, NotificationChannels> { [pending.UserId] = new(false, false, pending.Sms, pending.WhatsApp) },
+                contacts, pending.Title, pending.Message, ct);
+    }
+
+    private async Task DeferAsync(IEnumerable<PendingContactDelivery> rows, CancellationToken ct)
+    {
+        var added = false;
+        foreach (var row in rows)
+        {
+            if (db.PendingContactDeliveries.Local.Any(x => x.Id == row.Id)
+                || await db.PendingContactDeliveries.AnyAsync(x => x.Id == row.Id, ct)
+                || await db.ErasedRecipients.AnyAsync(x => x.UserId == row.UserId, ct)) continue;
+            db.PendingContactDeliveries.Add(row); added = true;
+        }
+        // Inside a consumer the MassTransit outbox owns the transaction and saves; outside it the rows are saved here.
+        if (added && db.Database.CurrentTransaction is null) await db.SaveChangesAsync(ct);
     }
 }
 
