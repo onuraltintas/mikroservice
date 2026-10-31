@@ -17,14 +17,33 @@ public interface IParentLinkService
     Task<ParentSummaryRecipientPage> GetWeeklySummaryRecipientsAsync(int pageNumber, int pageSize, CancellationToken ct);
     /// <summary>Roadmap O3: verified links of the given children, and of the given parent (for Coaching messaging).</summary>
     Task<IReadOnlyList<VerifiedParentLink>> GetVerifiedLinksAsync(IReadOnlyCollection<Guid> studentUserIds, Guid? parentUserId, CancellationToken ct);
+    /// <summary>V1: the student chooses per product what the parent sees (pending or verified links only).</summary>
+    Task<Result> SetProductVisibilityAsync(Guid studentUserId, Guid linkId, bool coaching, bool speedReading, CancellationToken ct);
+    /// <summary>
+    /// V1: may this parent read this child's data of this product? Needs a verified Mother/Father/Guardian link, both users
+    /// active, the child's active access to the product and the product left visible. Null means no.
+    /// </summary>
+    Task<ParentReadAuthorization?> AuthorizeReadAsync(Guid parentUserId, Guid studentUserId, PlatformProduct product, CancellationToken ct);
 }
 
 public sealed record ParentLinkCodeIssued(string Code, DateTime ExpiresAt);
 
 public sealed record ParentLinkView(Guid Id, Guid ParentUserId, string ParentName, Guid StudentUserId, string StudentName,
-    string Relationship, string Status, DateTime RequestedAt, DateTime? VerifiedAt);
+    string Relationship, string Status, DateTime RequestedAt, DateTime? VerifiedAt, IReadOnlyList<ParentLinkProductView> Products);
 
-public sealed record ParentSummaryRecipient(Guid ParentUserId, string ParentEmail, string ParentName, Guid StudentUserId, string StudentName);
+/// <summary>V1: always both products, Coaching first. Product is "Coaching" or "SpeedReading".</summary>
+public sealed record ParentLinkProductView(string Product, bool StudentHasAccess, bool VisibleToParent);
+
+public sealed record ParentReadAuthorization(Guid RelationshipId, string Relationship);
+
+public sealed record ParentSummaryRecipient(Guid ParentUserId, string ParentEmail, string ParentName, Guid StudentUserId, string StudentName,
+    bool CoachingVisible, bool SpeedReadingVisible, bool StudentHasCoaching, bool StudentHasSpeedReading);
+
+/// <summary>V1: tells the other side of a link what happened (outbox, consumed by Notification).</summary>
+public interface IParentLinkEventPublisher
+{
+    Task PublishAsync(EduPlatform.Shared.Contracts.Events.Identity.ParentLinkNotificationV1 message, CancellationToken ct);
+}
 public sealed record VerifiedParentLink(Guid ParentUserId, string ParentName, Guid StudentUserId, string StudentName, string Relationship);
 public sealed record ParentSummaryRecipientPage(IReadOnlyList<ParentSummaryRecipient> Items, int TotalCount);
 

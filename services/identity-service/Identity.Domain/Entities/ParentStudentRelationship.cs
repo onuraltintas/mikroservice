@@ -23,6 +23,9 @@ public sealed class ParentStudentRelationship : AggregateRoot
     public Guid? RevokedByUserId { get; private set; }
     public DateTime? RevokedAt { get; private set; }
     public string? RevocationReason { get; private set; }
+    /// <summary>V1 (parent panel): the student decides per product what the parent may see; both start visible.</summary>
+    public bool CoachingVisible { get; private set; } = true;
+    public bool SpeedReadingVisible { get; private set; } = true;
 
     private ParentStudentRelationship() { }
 
@@ -91,6 +94,12 @@ public sealed class ParentStudentRelationship : AggregateRoot
         RevokedAt = revokedAt;
         RevocationReason = reason.Trim();
         UpdatedAt = revokedAt;
+    }
+
+    /// <summary>Only the link's own student chooses which products the parent sees; an ended link cannot change.</summary>
+    public void SetProductVisibility(bool coaching, bool speedReading, Guid byStudent, DateTime at)
+    {
+        throw new NotImplementedException();
     }
 
     private static void EnsureUserId(Guid value, string parameterName)

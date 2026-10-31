@@ -10,8 +10,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Infrastructure.Services;
 
-public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock) : IParentLinkService
+public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock, IParentLinkEventPublisher? events = null) : IParentLinkService
 {
+    public Task<Result> SetProductVisibilityAsync(Guid studentUserId, Guid linkId, bool coaching, bool speedReading, CancellationToken ct) =>
+        throw new NotImplementedException();
+
+    public Task<ParentReadAuthorization?> AuthorizeReadAsync(Guid parentUserId, Guid studentUserId, PlatformProduct product, CancellationToken ct) =>
+        throw new NotImplementedException();
+
+    public static Guid EventId(Guid linkId, string change, Guid recipientUserId) => throw new NotImplementedException();
+
     // No 0/O, 1/I/L: the code is read aloud or typed from a phone screen.
     private const string Alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
@@ -100,7 +108,8 @@ public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock) 
                        };
         var rows = (await verified.ToListAsync(ct)).Where(x => WantsWeeklySummary(x.Preferences)).ToArray();
         var page = rows.Skip((pageNumber - 1) * pageSize).Take(pageSize)
-            .Select(x => new ParentSummaryRecipient(x.ParentUserId, x.Email, Name(x.ParentFirst, x.ParentLast), x.StudentUserId, Name(x.StudentFirst, x.StudentLast)))
+            .Select(x => new ParentSummaryRecipient(x.ParentUserId, x.Email, Name(x.ParentFirst, x.ParentLast), x.StudentUserId, Name(x.StudentFirst, x.StudentLast),
+                false, false, false, false))
             .ToArray();
         return new ParentSummaryRecipientPage(page, rows.Length);
     }
@@ -132,7 +141,7 @@ public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock) 
                           select new { link, ParentFirst = parent.FirstName, ParentLast = parent.LastName, StudentFirst = student.FirstName, StudentLast = student.LastName })
             .ToListAsync(ct);
         return rows.Select(x => new ParentLinkView(x.link.Id, x.link.ParentUserId, Name(x.ParentFirst, x.ParentLast), x.link.StudentUserId,
-            Name(x.StudentFirst, x.StudentLast), x.link.Relationship.ToString(), x.link.Status.ToString(), x.link.RequestedAt, x.link.VerifiedAt)).ToArray();
+            Name(x.StudentFirst, x.StudentLast), x.link.Relationship.ToString(), x.link.Status.ToString(), x.link.RequestedAt, x.link.VerifiedAt, [])).ToArray();
     }
 
     private Task<bool> HasActiveRoleAsync(Guid userId, string role, CancellationToken ct) =>
