@@ -11,9 +11,7 @@ const parentHomeRedirect: CanActivateFn = () => {
 };
 import type { StudentStudyPlansComponent } from './pages/student-study-plans.component';
 import type { StudentStudyRoutineComponent } from './pages/student-study-routine.component';
-import type { CoachingPortalProgressComponent } from './pages/coaching-portal-progress.component';
 import type { StudentStudyPlanAssistantComponent } from './pages/student-study-plan-assistant.component';
-import type { StudentExamResultsComponent } from './pages/student-exam-results.component';
 
 const student = { coachingRoles: ['Student'] };
 const hub = (name: string) => () => import('./layout/student-hub.component').then(m => m.StudentHubComponent);
@@ -87,18 +85,19 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     path: 'growth', canActivate: [coachingRoleGuard], data: { ...student, hub: 'growth' }, loadComponent: hub('growth'),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'exams' },
+      // T6: the growth tabs are built on one exam overview, the goal gauge and the week summary.
       {
-        path: 'exams', canDeactivate: [async (component: StudentExamResultsComponent) => await component.canLeavePage()],
-        loadComponent: () => import('./pages/student-exam-results.component').then(m => m.StudentExamResultsComponent)
+        path: 'exams', canDeactivate: [async (component: import('./growth/student-growth-exams.component').StudentGrowthExamsComponent) => await component.canLeavePage()],
+        loadComponent: () => import('./growth/student-growth-exams.component').then(m => m.StudentGrowthExamsComponent)
       },
       {
         path: 'goals',
-        canDeactivate: [(component: import('./pages/student-primary-goal.component').StudentPrimaryGoalComponent) => component.canLeavePage()],
-        loadComponent: () => import('./pages/student-primary-goal.component').then(m => m.StudentPrimaryGoalComponent)
+        canDeactivate: [(component: import('./growth/student-growth-goal.component').StudentGrowthGoalComponent) => component.canLeavePage()],
+        loadComponent: () => import('./growth/student-growth-goal.component').then(m => m.StudentGrowthGoalComponent)
       },
       {
-        path: 'week', canDeactivate: [async (component: CoachingPortalProgressComponent) => await component.canLeavePage()],
-        loadComponent: () => import('./pages/coaching-portal-progress.component').then(m => m.CoachingPortalProgressComponent)
+        path: 'week', canDeactivate: [async (component: import('./growth/student-growth-week.component').StudentGrowthWeekComponent) => await component.canLeavePage()],
+        loadComponent: () => import('./growth/student-growth-week.component').then(m => m.StudentGrowthWeekComponent)
       }
     ]
   },

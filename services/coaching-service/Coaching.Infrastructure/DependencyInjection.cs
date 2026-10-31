@@ -164,6 +164,7 @@ public static class DependencyInjection
         services.AddScoped<CoachingInstitutionExamService>();
         services.AddScoped<CoachingMessagingService>();
         services.AddScoped<CoachingScoreEstimateService>();
+        services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingStudentExamOverviewService>();
         services.AddScoped<CoachingSalesService>();
         services.AddScoped<CoachingSeatRequestService>();
         services.AddScoped<CoachingCalendarSubscriptionService>();

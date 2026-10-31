@@ -1,5 +1,5 @@
 <section class="space-y-5">
-  <div class="coaching-page-heading">
+  <div class="coaching-page-heading" *ngIf="!embedded()">
     <p class="text-sm font-medium text-(--ui-brand-text) ">Gelişim takibi</p>
     <h1 class="mt-1 text-2xl font-bold tracking-tight">İlerlemem</h1>
     <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Öğretmeninle belirlediğin hedefleri ve sınav sonuçlarını tek yerde gör.</p>
@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <app-practice-progress [tabbed]="true" [weeklyTarget]="weeklyTarget()">
+    <app-practice-progress id="haftalik-degerlendirme" [tabbed]="true" [weeklyTarget]="weeklyTarget()">
       <app-student-study-report developmentReport />
       <div developmentGoals>
 

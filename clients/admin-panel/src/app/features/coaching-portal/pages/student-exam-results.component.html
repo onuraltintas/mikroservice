@@ -1,13 +1,15 @@
-<section class="study-plans" aria-labelledby="student-results-title">
+<section class="study-plans" [class.form-only]="formOnly()" aria-labelledby="student-results-title">
+  @if (!formOnly()) {
   <header class="page-heading"><div><p class="eyebrow">Gelişimini kaydet</p><h1 id="student-results-title">Sınav sonuçlarım</h1>
     <p>Kendi sonuçlarını gir, ders ve konu dağılımını takip et. Bu kayıtlar öğrenci beyanıdır; resmî puan veya öğretmen ölçümü değildir.</p></div>
     <button type="button" (click)="newExam()" [disabled]="busy()">Yeni sonuç</button></header>
   <app-student-institution-exams />
   <app-student-score-estimate />
+  }
   @if(profileWarning()){<p class="notice" role="status">{{profileWarning()}}</p>}
   @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
   @if (success()) { <p class="notice success" role="status">{{ success() }}</p> }
-  <div class="workspace"><aside class="panel" aria-label="Sonuç listesi">
+  <div class="workspace">@if (!formOnly()) {<aside class="panel" aria-label="Sonuç listesi">
     @if (busy()) { <p role="status">İşlem sürüyor…</p> }
     @if (!busy() && !error() && !page().items.length) { <p>Henüz kendi girdiğin bir sonuç yok.</p> }
     @for (exam of page().items; track exam.id) { <button type="button" class="plan-row" (click)="open(exam.id)" [disabled]="busy()">
@@ -16,8 +18,8 @@
       <span>{{ page().pageNumber }} · {{ page().totalCount }} sonuç</span>
       <button type="button" (click)="loadList(page().pageNumber + 1)" [disabled]="busy() || page().pageNumber * page().pageSize >= page().totalCount">Sonraki</button></div>
     <button type="button" class="secondary" (click)="loadList(page().pageNumber)" [disabled]="busy()">Listeyi yenile</button>
-  </aside><div class="panel" [attr.aria-busy]="busy()">
-    <h2>{{ selected ? 'Sonucunu düzenle' : 'Yeni sonuç ekle' }}</h2>
+  </aside>}<div class="panel" [attr.aria-busy]="busy()">
+    <h2 [id]="formOnly() ? 'student-results-title' : null">{{ selected ? 'Sonucunu düzenle' : 'Yeni sonuç ekle' }}</h2>
     <form (ngSubmit)="save()"><fieldset [disabled]="busy()">
       <label>Başlık<input name="title" [(ngModel)]="title" (ngModelChange)="changed()" maxlength="200" required></label>
       <div class="fields"><label>Sınav türü<select name="examType" [(ngModel)]="examType" (ngModelChange)="changed()" [disabled]="!!practiceExam">

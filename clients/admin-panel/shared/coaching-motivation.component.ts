@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, Input, OnChanges, computed, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 
-export interface MotivationBadge { code: string; label: string; description: string; earnedOn: string | null; }
+export interface MotivationBadge { code: string; label: string; description: string; earnedOn: string | null; progress?: number; target?: number; }
 export interface MotivationCelebration { goalId: string; goalTitle: string; completedAt: string; }
 export interface StudentMotivation {
   studentId: string; currentStreak: number; longestStreak: number; activeToday: boolean; lastActiveDay: string | null;
