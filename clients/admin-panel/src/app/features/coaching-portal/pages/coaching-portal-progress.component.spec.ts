@@ -10,7 +10,7 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { CoachingPortalService, ExamResult, Goal } from '../../../core/services/coaching-portal.service';
-import { CoachingPortalProgressComponent } from './coaching-portal-progress.component';
+import { CoachingPortalProgressComponent, tomorrowInTurkey } from './coaching-portal-progress.component';
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 import { StudentGoalTargetComponent } from './student-goal-target.component';
 import { By } from '@angular/platform-browser';
@@ -261,3 +261,12 @@ function user(role: string): UserProfile {
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });
 
 beforeEach(() => TestBed.overrideProvider(CoachingStudentNavigationService, { useValue: { showAssignments: () => true, showSessions: () => true, refresh: () => {} } }));
+
+// K4 (31.10.2026): the earliest goal date is tomorrow in Türkiye, also between 00:00 and 03:00 when UTC is still yesterday.
+describe('goal date minimum', () => {
+  it('counts tomorrow in Türkiye time', () => {
+    expect(tomorrowInTurkey(new Date('2026-10-31T22:30:00Z'))).toBe('2026-11-02');
+    expect(tomorrowInTurkey(new Date('2026-10-31T12:00:00Z'))).toBe('2026-11-01');
+    expect(tomorrowInTurkey(new Date('2026-12-31T21:30:00Z'))).toBe('2027-01-02');
+  });
+});

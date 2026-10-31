@@ -40,6 +40,15 @@ describe('O5 score estimate', () => {
     expect(text()).toContain('Bu bir tahmindir');
   });
 
+  // K4 (31.10.2026): a target without a taban or rank is not a missing estimate; the student is told why there is no gap.
+  it('explains when the target itself has no base score or rank data', () => {
+    const { component } = setup();
+    TestBed.inject(HttpTestingController).match(() => true);
+    const noData = { targetName: 'Yeni Bölüm', scoreType: 'DIL', targetScore: null, targetRank: null, targetPercentile: null, scoreGap: null, netGap: null, rankGap: null, reached: false };
+    expect(component.targetText(noData)).toContain('taban puanı ya da sıralama verisi yok');
+    expect(component.targetText({ ...noData, targetScore: 400 })).toContain('henüz tahmin yok');
+  });
+
   it('adds the diploma grade for YKS and remembers it on this device', () => {
     const { fixture, component, http } = setup();
     http.expectOne(r => r.url.endsWith('/score-estimate')).flush(estimate); fixture.detectChanges();

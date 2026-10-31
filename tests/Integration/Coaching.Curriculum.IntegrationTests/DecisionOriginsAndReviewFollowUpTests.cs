@@ -138,7 +138,7 @@ public sealed class DecisionOriginsAndReviewFollowUpTests
         await using var pg=await CurriculumPostgresTests.Pg.Create("20261024225038_DecisionOriginsAndReviewEvidence");var teacher=Guid.NewGuid();var student=Guid.NewGuid();
         var assignment=Assignment.Create(teacher,"Eski ödev",DateTime.UtcNow);pg.Db.Add(assignment);await pg.Db.SaveChangesAsync();var id=Guid.NewGuid();var at=DateTime.UtcNow;
         await pg.Db.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO coaching.assignment_students (id,assignment_id,student_id,status,score,teacher_feedback,submitted_at,created_at) VALUES ({id},{assignment.Id},{student},'Graded',80,'Eski geri bildirim',{at},{at})""");
-        async Task<string> Old()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(s)-'GradeRevision')::text AS "Value" FROM coaching.assignment_students s""").SingleAsync();
+        async Task<string> Old()=>await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(s)-'GradeRevision'-'last_submitted_at')::text AS "Value" FROM coaching.assignment_students s""").SingleAsync();
         var before=await Old();await pg.Db.Database.MigrateAsync();Assert.Equal(before,await Old());Assert.False(pg.Db.Database.HasPendingModelChanges());
         pg.Db.ChangeTracker.Clear();assignment=await pg.Db.Assignments.Include(x=>x.AssignedStudents).SingleAsync();Assert.Null(assignment.AssignedStudents.Single().GradeRevision);
         assignment.GradeAssignment(student,80,"Eski geri bildirim");await pg.Db.SaveChangesAsync();Assert.Equal(before,await Old());Assert.Null(assignment.AssignedStudents.Single().GradeRevision);

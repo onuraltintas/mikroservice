@@ -67,6 +67,28 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
         Assert.Equal((3, 1, 1), (summary.AssignmentsDue, summary.AssignmentsSubmitted, summary.AssignmentsOverdue));
     }
 
+    // K4 (31.10.2026): the summary goes out from Sunday 18:00; Sunday tasks still ahead of that moment are not missed yet.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task SundayTasksStillAheadAreNotCountedAsMissed()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var student = Guid.NewGuid(); var parent = Guid.NewGuid();
+        var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Haftalık plan"); plan.Activate();
+        var sunday = Monday.AddDays(6);
+        var morning = StudyPlanTask.Create(plan, sunday, "Sabah", 30); morning.SetWeeklyPlacement(Guid.NewGuid(), "Matematik", 10 * 60);
+        var evening = StudyPlanTask.Create(plan, sunday, "Akşam", 30); evening.SetWeeklyPlacement(Guid.NewGuid(), "Türkçe", 20 * 60);
+        var eveningDone = StudyPlanTask.Create(plan, sunday, "Akşam erken bitti", 30); eveningDone.SetWeeklyPlacement(Guid.NewGuid(), "Fen", 21 * 60);
+        eveningDone.Complete(30);
+        var tuesday = StudyPlanTask.Create(plan, Monday.AddDays(1), "Salı", 30);
+        pg.Db.AddRange(plan, morning, evening, eveningDone, tuesday); await pg.Db.SaveChangesAsync();
+        var events = new Publisher();
+
+        await Run(pg, new Parents(new CoachingParentSummaryRecipient(parent, "veli@example.test", "Veli", student, "Öğrenci")), events, At(sunday, 19));
+
+        var summary = Assert.Single(events.Summaries);
+        Assert.Equal((3, 1), (summary.StudyTasksPlanned, summary.StudyTasksCompleted));
+    }
+
     // Istanbul local time on the given day.
     private static DateTime At(DateOnly day, int hour) => day.ToDateTime(new TimeOnly(hour, 0), DateTimeKind.Utc).AddHours(-3);
 

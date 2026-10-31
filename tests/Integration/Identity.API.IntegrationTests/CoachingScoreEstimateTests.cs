@@ -161,6 +161,44 @@ public sealed class CoachingScoreEstimateTests
         await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.EstimateAsync(stranger, s.Student, null, default));
     }
 
+    // K4 (31.10.2026): the university catalog stores Dil programmes as "YDT"; the estimate's score type for them is DIL.
+    [Theory]
+    [InlineData("YDT", "DIL")]
+    [InlineData("ydt", "DIL")]
+    [InlineData("DİL", "DIL")]
+    [InlineData("SÖZ", "SOZ")]
+    public void CatalogScoreTypesMapToTheEstimateScoreTypes(string catalog, string expected) =>
+        ScoreModelRules.Normalize(catalog).Should().Be(expected);
+
+    // K4 (31.10.2026): an exam dated in the future is not part of "the last three exams".
+    [Fact]
+    public async Task FutureDatedExamsAreLeftOut()
+    {
+        await using var s = await Setup.CreateAsync(models: true);
+        s.Exam("LGS", new(2026, 10, 1), turkish: 20, math: 20, science: 15, others: 5);
+        s.Exam("LGS", DateTime.UtcNow.Date.AddDays(30), turkish: 0, math: 0);
+        await s.F.Db.SaveChangesAsync();
+
+        var lgs = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Estimates.Single();
+
+        (lgs.Score, lgs.ExamsUsed).Should().Be((450m, 1));
+    }
+
+    // K4 (31.10.2026): the same deneme recorded by the institution and entered again by the student counts once.
+    [Fact]
+    public async Task TheSameDenemeEnteredByTheInstitutionAndTheStudentCountsOnce()
+    {
+        await using var s = await Setup.CreateAsync(models: true);
+        s.Exam("LGS", new(2026, 10, 1, 7, 0, 0), turkish: 20, math: 20, science: 15, others: 5, institution: true);
+        s.Exam("LGS", new(2026, 10, 1, 12, 0, 0), turkish: 20, math: 20, science: 15, others: 5);
+        s.Exam("LGS", new(2026, 9, 1), turkish: 10, math: 10, science: 5, others: 5);
+        await s.F.Db.SaveChangesAsync();
+
+        var lgs = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Estimates.Single();
+
+        lgs.ExamsUsed.Should().Be(2, "the student's own copy of the institution's deneme on the same day is a duplicate");
+    }
+
     [Fact]
     public void UploadingModelsIsForThePlatformAdministrator()
     {
@@ -191,7 +229,7 @@ public sealed class CoachingScoreEstimateTests
         }
 
         /// <summary>A practice exam with the given correct answers and no wrong answers (the rest are blank).</summary>
-        public void Exam(string code, DateTime date, int turkish = 0, int math = 0, int science = 0, int others = 0)
+        public void Exam(string code, DateTime date, int turkish = 0, int math = 0, int science = 0, int others = 0, bool institution = false)
         {
             var profile = PracticeExamRules.Profiles.Single(x => x.Code == code);
             var sections = profile.Sections.Select(section =>
@@ -200,7 +238,9 @@ public sealed class CoachingScoreEstimateTests
                 return new PracticeSectionAnswers(section.Code, correct, 0, section.QuestionCount - correct);
             }).ToArray();
             var type = code == "LGS" ? ExamType.LGS : ExamType.YKS;
-            var exam = Coaching.Domain.Entities.Exam.CreateStudentReported(Student, $"{code} denemesi", type, DateTime.SpecifyKind(date, DateTimeKind.Utc), 500);
+            var exam = institution
+                ? Coaching.Domain.Entities.Exam.CreateInstitutionWide(Admin, Guid.NewGuid(), $"{code} kurum denemesi", code, DateTime.SpecifyKind(date, DateTimeKind.Utc), 500, null)
+                : Coaching.Domain.Entities.Exam.CreateStudentReported(Student, $"{code} denemesi", type, DateTime.SpecifyKind(date, DateTimeKind.Utc), 500);
             var result = ExamResult.Create(exam.Id, Student, 0);
             result.SetAnswerStatistics(sections.Sum(x => x.Correct), 0, sections.Sum(x => x.Empty));
             result.SetPracticeExam(new(code, sections), type);

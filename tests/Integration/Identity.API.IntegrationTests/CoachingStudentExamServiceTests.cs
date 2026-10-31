@@ -10,6 +10,7 @@ using Coaching.Infrastructure.StudyPlanning;
 using Coaching.Infrastructure.Repositories;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Interfaces;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Shared.IntegrationTests.Fixtures;
 
@@ -127,6 +128,34 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
             await service.CreateAsync(request, "student-exam-key-0002");
             await service.CreateAsync(request);
             Assert.Equal(3, await db.Exams.CountAsync(x => x.StudentOwnerId == actor.UserId));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    // K4 (31.10.2026): changing an LGS deneme into a plain mock removes its deneme scope instead of keeping the old one.
+    [Fact]
+    public async Task StudentExam_ChangingAnLgsDenemeToAMockDropsTheDenemeScope()
+    {
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var actor = new Actor(); var service = new CoachingStudentExamService(db, new CoachingAccessPolicy(actor));
+            var profile = PracticeExamRules.Profiles.Single(x => x.Code == "LGS");
+            var sections = profile.Sections.Select(x => new PracticeSectionAnswers(x.Code, 0, 0, x.QuestionCount)).ToArray();
+            var total = sections.Sum(x => x.Empty);
+            var lgs = new StudentExamInput("LGS denemesi", ExamType.LGS, new(2026, 10, 1), 0, 500, 0, 0, total, [], new("LGS", sections));
+            var created = await service.CreateAsync(lgs);
+            created.PracticeExam.Should().NotBeNull();
+            db.ChangeTracker.Clear();
+
+            var mock = new StudentExamInput("Serbest deneme", ExamType.Mock, new(2026, 10, 1), 60, 100, 6, 2, 2, []);
+            var replaced = await service.ReplaceAsync(created.Id, new(mock, created.Version));
+
+            replaced.ExamType.Should().Be(ExamType.Mock);
+            replaced.PracticeExam.Should().BeNull();
+            replaced.NetSummary.Should().BeNull();
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
