@@ -14,7 +14,17 @@ public interface ICoachingAccountDirectory
     Task<CoachingAdminAccessScope?> AuthorizeAdminAsync(Guid userId, CancellationToken cancellationToken);
     Task<bool> IsActiveInstitutionAsync(Guid institutionId, CancellationToken cancellationToken);
     Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeRepresentativeAsync(Guid viewerUserId, Guid studentUserId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// V3 (parent panel): may this parent read the child's Coaching data? Identity answers from the verified link, the
+    /// child's Coaching access and the child's "visible to my parent" switch; null means no. Agreements and payments keep
+    /// <see cref="AuthorizeRepresentativeAsync"/>.
+    /// </summary>
+    Task<CoachingParentReadAuthorization?> AuthorizeParentReadAsync(Guid parentUserId, Guid studentUserId, CancellationToken cancellationToken)
+        => throw new NotSupportedException("This account directory cannot authorize parent reads.");
 }
+
+public sealed record CoachingParentReadAuthorization(Guid RelationshipId, string Relationship);
 
 public sealed record UpdateCoachingStudentProfile(int ExpectedVersion, CoachingEducationStatus EducationStatus,
     int? GradeLevel, string? SchoolName, string? SchoolCity, string? SchoolDistrict, string? SchoolType,
