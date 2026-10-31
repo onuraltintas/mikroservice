@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Notification, NotificationService } from '../../../core/services/notification.service';
@@ -55,7 +55,7 @@ export function groupNotificationsByDay(items: Notification[], now = new Date())
     } @else {
       <p class="empty">Yeni bildirimin yok. Bir şey olduğunda burada göreceksin.</p>
     }
-    <a class="all" routerLink="/coaching-portal/notifications" (click)="closed.emit()">Tümünü gör</a>
+    <a class="all" [routerLink]="allLink()" (click)="closed.emit()">Tümünü gör</a>
   </section>`,
   styles: [`.panel{position:fixed;z-index:70;top:72px;right:24px;width:min(380px,calc(100vw - 32px));max-height:min(560px,calc(100dvh - 96px));overflow:auto;padding:var(--coaching-space-4);border:1px solid var(--ui-border);border-radius:var(--coaching-radius-card);background:var(--ui-surface);color:var(--ui-text);box-shadow:var(--coaching-raised-shadow)}
     header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--coaching-space-2)}
@@ -79,6 +79,8 @@ export class CoachingNotificationPanelComponent {
   private readonly notifications = inject(NotificationService);
   private readonly host = inject(ElementRef<HTMLElement>);
   readonly closed = output<void>();
+  /** V4: parents have their own Bildirimler page. */
+  readonly allLink = input('/coaching-portal/notifications');
   readonly typeLabel = coachingNotificationLabel;
   readonly groups = computed(() => groupNotificationsByDay([...this.notifications.notifications()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10)));
 

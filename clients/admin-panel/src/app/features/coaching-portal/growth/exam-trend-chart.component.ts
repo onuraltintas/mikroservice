@@ -42,9 +42,11 @@ import { formatNet, trendChart } from './growth-model';
 })
 export class ExamTrendChartComponent {
   readonly trend = input.required<StudentExamTrend>();
+  /** V4: set on the parent page so the summary names the child. */
+  readonly childName = input('');
   // Drawn at the real width so the labels keep their size on a phone and on a wide screen.
   private readonly width = signal(320);
-  readonly chart = computed(() => trendChart(this.trend(), this.width(), this.width() < 480 ? 170 : 210));
+  readonly chart = computed(() => trendChart(this.trend(), this.width(), this.width() < 480 ? 170 : 210, this.childName() || null));
 
   constructor() {
     const host = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;

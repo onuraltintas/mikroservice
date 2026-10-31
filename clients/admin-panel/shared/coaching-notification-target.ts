@@ -21,7 +21,7 @@ const labels: Record<string, string> = {
   AssignmentCreated: 'Yeni ödev', AssignmentUpdated: 'Ödev güncellendi',
   AssignmentSubmitted: 'Ödev teslim edildi', AssignmentGraded: 'Ödev değerlendirildi',
   WeeklyReflectionSaved: 'Haftalık değerlendirme kaydedildi', WeeklyDecisionCreated: 'Yeni haftalık karar', WeeklyDecisionUpdated: 'Haftalık karar güncellendi',
-  CoachingMessage: 'Yeni mesaj'
+  CoachingMessage: 'Yeni mesaj', ParentWeeklySummary: 'Haftalık özet'
 };
 
 export function coachingNotificationLabel(type: string): string {

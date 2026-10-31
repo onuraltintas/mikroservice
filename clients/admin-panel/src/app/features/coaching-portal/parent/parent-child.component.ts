@@ -1,207 +1,85 @@
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Observable, catchError, firstValueFrom, forkJoin, of } from 'rxjs';
-import {
-  CoachingBankTransferRequest,
-  CoachingManagementService,
-  CoachingSubscriptionAccess,
-  CoachingSubscriptionPlan,
-  CoachingSubscriptionSettings
-} from '../../../core/services/coaching-management.service';
-import { CoachingSession, StudentAssignment, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
-import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
-import { CoachingParentService, ParentFeeAccount, ParentLink } from './coaching-parent.service';
-import { apiMessage } from './parent-home.component';
-import { StudentExamOverviewComponent } from '../growth/student-exam-overview.component';
-import { StudentGoalSummaryComponent } from '../growth/student-goal-summary.component';
-import { environment } from '../../../../environments/environment';
-import { CoachingCheckoutComponent } from '../../../../../shared/coaching-checkout.component';
-import { CoachingMotivationApi, CoachingMotivationComponent } from '../../../../../shared/coaching-motivation.component';
-import { CoachingMyPaymentsComponent } from '../../../../../shared/coaching-my-payments.component';
-import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../../../../shared/coaching-sales.api';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CoachingDatePipe } from '../coaching-labels';
+import { CsSegmentedTabsComponent, CsTabOption } from '../ui';
+import { CoachingParentService, ParentLink } from './coaching-parent.service';
+import { ParentCoachingTabComponent } from './parent-coaching-tab.component';
+import { parentRelationshipLabel } from './parent-home.component';
+import { PRODUCT_LABELS, ParentProduct, firstName, hiddenProductsText, productFromSlug, productSlug, visibleProducts } from './parent-model';
+import { ParentSpeedReadingTabComponent } from './parent-speed-reading-tab.component';
 
 /**
- * Roadmap Y7: a parent's read-only view of one linked child — progress, exams, assignments, sessions, fees and the
- * Coaching subscription, plus a bank-transfer notice the parent can send for the child.
+ * V4 (01.11.2026): one linked child. A tab per product the child uses and shares (`?urun=kocluk|hizli-okuma`); with one
+ * product there is no tab strip, with none the page says why.
  */
 @Component({
   selector: 'app-parent-child',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingCheckoutComponent, CoachingMotivationComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMyPaymentsComponent, StudentExamOverviewComponent, StudentGoalSummaryComponent],
+  imports: [RouterLink, CoachingDatePipe, CsSegmentedTabsComponent, ParentCoachingTabComponent, ParentSpeedReadingTabComponent],
   template: `
-    <main class="space-y-6" aria-labelledby="parent-child-title">
-      <div class="no-print flex flex-wrap items-center justify-between gap-2">
-        <a routerLink="/coaching-portal/parent" class="text-sm text-(--ui-brand-text) ">← Çocuklarım</a>
-        @if (link()) { <button type="button" data-testid="print-child" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium dark:border-slate-700" (click)="print()">Yazdır / PDF</button> }
+    <div class="cp-page" aria-labelledby="parent-child-title">
+      <div class="cp-toolbar no-print">
+        <a routerLink="/coaching-portal/parent" class="cp-back">← Çocuklarım</a>
+        @if (link()) { <button type="button" data-testid="print-child" class="cp-secondary" (click)="print()">Yazdır / PDF</button> }
       </div>
+      @if (error()) { <p class="cp-alert" role="alert">{{ error() }}</p> }
       @if (notLinked()) {
-        <div role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">Bu öğrenciyle doğrulanmış bir veli bağlantın yok. Çocuğunun bağlantı isteğini onaylamasını bekle.</div>
+        <p class="cp-notice" role="alert">Bu öğrenciyle doğrulanmış bir veli bağlantın yok. Çocuğunun bağlantı isteğini onaylamasını bekle.</p>
       } @else if (link(); as child) {
-        <header><p class="text-sm font-medium text-(--ui-brand-text) ">Veli paneli · salt okunur</p><h1 id="parent-child-title" class="mt-1 text-2xl font-bold">{{ child.studentName }}</h1></header>
-        @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
-        @if (success()) { <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{{ success() }}</div> }
-
-        @if (progress(); as p) {
-          <section class="grid gap-3 sm:grid-cols-3" aria-label="Özet">
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Ödevler</p><strong class="text-xl">{{ p.submittedAssignments }} / {{ p.totalAssignments }}</strong><p class="text-xs text-slate-500">teslim edildi</p></div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Seanslar</p><strong class="text-xl">{{ p.attendedSessions }} / {{ p.totalSessions }}</strong><p class="text-xs text-slate-500">katıldı · {{ p.upcomingSessions }} yaklaşan</p></div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Denemeler</p><strong class="text-xl">{{ p.totalExams }}</strong><p class="text-xs text-slate-500">kayıtlı sonuç</p></div>
-          </section>
-        }
-
-        <!-- Roadmap D5: the child's study streak and badges. -->
-        <edu-coaching-motivation [api]="motivationApi" [student]="childId" />
-
-        <!-- T6: the same exam overview and goal gauge the child sees, read-only. -->
-        <section class="cs-growth-parent" aria-labelledby="goal-heading">
-          <h2 id="goal-heading" class="cs-growth-section-title">Hedefi</h2>
-          <app-student-goal-summary [studentId]="childId" [readonly]="true" />
-        </section>
-        <section class="cs-growth-parent" aria-labelledby="exams-heading">
-          <h2 id="exams-heading" class="cs-growth-section-title">Denemeleri</h2>
-          <app-student-exam-overview [studentId]="childId" [readonly]="true" />
-        </section>
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="assignments-heading">
-          <h2 id="assignments-heading" class="font-semibold">Ödevler</h2>
-          @for (assignment of assignments(); track assignment.id) { <p class="mt-2 text-sm"><strong>{{ assignment.title }}</strong> · son gün {{ assignment.dueDate | coachingDate }} · {{ assignment.status | coachingLabel }}@if (assignment.isOverdue) { · <span class="text-red-600">gecikti</span> }</p> }
-          @empty { <p class="mt-2 text-sm text-slate-500">{{ sectionError()['assignments'] || 'Ödev yok.' }}</p> }
-        </section>
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="sessions-heading">
-          <h2 id="sessions-heading" class="font-semibold">Seanslar</h2>
-          @for (session of sessions(); track session.id) { <p class="mt-2 text-sm"><strong>{{ session.subject || 'Koçluk seansı' }}</strong> · {{ session.startTime | coachingDate }} · {{ session.type | coachingLabel }} · {{ session.status | coachingLabel }}</p> }
-          @empty { <p class="mt-2 text-sm text-slate-500">{{ sectionError()['sessions'] || 'Seans yok.' }}</p> }
-        </section>
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="fees-heading">
-          <h2 id="fees-heading" class="font-semibold">Koçluk ücretleri</h2>
-          @if (fees(); as account) {
-            <p class="mt-2 text-sm">Kalan borç: <strong>{{ account.balance | number:'1.2-2' }} TL</strong>@if (account.overdueAmount > 0) { · gecikmiş: <strong class="text-red-600">{{ account.overdueAmount | number:'1.2-2' }} TL</strong> }</p>
-            @for (fee of account.agreements; track fee.id) { <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ fee.title }} · {{ fee.totalAmount | number:'1.2-2' }} TL</p> }
-          } @else { <p class="mt-2 text-sm text-slate-500">{{ sectionError()['fees'] || 'Ücret kaydı yok.' }}</p> }
-        </section>
-
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="subscription-heading" data-testid="parent-subscription">
-          <h2 id="subscription-heading" class="font-semibold">Koçluk aboneliği</h2>
-          @if (access(); as current) {
-            @if (current.subscriptions.length) {
-              @for (subscription of current.subscriptions; track subscription.id) { <p class="mt-2 text-sm"><strong>{{ subscription.plan.name }}</strong> · {{ subscription.endDate | coachingDate }} tarihine kadar</p> }
-            } @else if (current.enforcementEnabled) {
-              <p class="mt-2 text-sm text-amber-800 dark:text-amber-200">Çocuğunun etkin bir Koçluk aboneliği yok. Aşağıdan onun adına ödeme bildirimi gönderebilirsin.</p>
-            } @else { <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Koçluk erişimi açık; abonelik zorunluluğu şu an etkin değil.</p> }
-          } @else { <p class="mt-2 text-sm text-slate-500">{{ sectionError()['access'] || 'Abonelik bilgisi yükleniyor…' }}</p> }
-          @for (transfer of transfers(); track transfer.id) { <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ transfer.plan.name }} · {{ transfer.paymentReference }} · {{ transfer.status | coachingLabel }}@if (transfer.couponCode) { · {{ transfer.couponCode }} ile {{ money(transfer.discountAmount) }} {{ transfer.currency }} indirim }</p> }
-
-          @if (plans().length && settings()) {
-            <form class="mt-4 grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2 dark:border-slate-800" (ngSubmit)="sendTransfer()">
-              <p class="text-sm sm:col-span-2">Havale/EFT: <strong>{{ settings()?.accountHolder }}</strong> · {{ settings()?.bankName }} · <span class="font-mono">{{ settings()?.iban }}</span></p>
-              <label class="text-sm">Plan<select class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="planId" name="planId" required>@for (plan of plans(); track plan.id) { <option [value]="plan.id">{{ plan.name }} · {{ plan.price | number:'1.2-2' }} {{ settings()?.currency || 'TRY' }}</option> }</select></label>
-              <label class="text-sm">Banka işlem referansı<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="paymentReference" name="paymentReference" maxlength="120" required autocomplete="off" /></label>
-              <label class="text-sm">Ödemeyi yapan<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" /></label>
-              <label class="text-sm">Not<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="note" name="note" maxlength="1000" /></label>
-              <div class="sm:col-span-2"><edu-coaching-checkout [api]="sales" [planId]="planId" [price]="selectedPlanPrice()" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" /></div>
-              <label class="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum.</label>
-              <button type="submit" class="rounded-lg bg-(--ui-brand) px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-2" [disabled]="sending() || !checkout.acceptSalesContract">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
-            </form>
+        <header class="cp-header">
+          <h1 id="parent-child-title">{{ child.studentName }}</h1>
+          <p>{{ relationship(child.relationship) }}@if (child.verifiedAt) { · {{ child.verifiedAt | coachingDate }} tarihinden beri bağlı }</p>
+        </header>
+        @if (!products().length) {
+          <p class="cp-notice" data-testid="no-products">{{ hiddenText() }}</p>
+        } @else {
+          @if (products().length > 1) {
+            <cs-segmented-tabs class="cp-tabs" label="Ürün" [options]="tabs()" [value]="tabSlug()" (valueChange)="select($event)" />
           }
-        </section>
-
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-label="Veli olarak yaptığın ödemeler">
-          <edu-coaching-my-payments [api]="sales" heading="Veli olarak yaptığın ödemeler" />
-        </section>
+          <div [attr.role]="products().length > 1 ? 'tabpanel' : null" [attr.aria-label]="label(active())" class="cp-panel">
+            @if (active() === 'Coaching') { <app-parent-coaching-tab [studentId]="studentId" [childName]="child.studentName" /> }
+            @else { <app-parent-speed-reading-tab [studentId]="studentId" [childName]="child.studentName" /> }
+          </div>
+        }
       }
-    </main>
-  `
+    </div>`
 })
 export class ParentChildComponent implements OnInit {
   private readonly service = inject(CoachingParentService);
-  private readonly management = inject(CoachingManagementService);
-  private readonly studentId = inject(ActivatedRoute).snapshot.paramMap.get('studentId') ?? '';
-  get childId(): string { return this.studentId; }
-  /** Roadmap O13: the browser's print dialog, where the page can also be saved as PDF. */
-  print(): void { window.print(); }
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  readonly studentId = this.route.snapshot.paramMap.get('studentId') ?? '';
   readonly link = signal<ParentLink | null>(null);
   readonly notLinked = signal(false);
-  readonly loaded = signal(false);
-  readonly progress = signal<StudentProgressSummary | null>(null);
-  readonly assignments = signal<StudentAssignment[]>([]);
-  readonly sessions = signal<CoachingSession[]>([]);
-  readonly fees = signal<ParentFeeAccount | null>(null);
-  readonly access = signal<CoachingSubscriptionAccess | null>(null);
-  readonly transfers = signal<CoachingBankTransferRequest[]>([]);
-  readonly plans = signal<CoachingSubscriptionPlan[]>([]);
-  readonly settings = signal<CoachingSubscriptionSettings | null>(null);
-  readonly sectionError = signal<Record<string, string>>({});
   readonly error = signal<string | null>(null);
-  readonly success = signal<string | null>(null);
-  readonly sending = signal(false);
-  planId = '';
-  paymentReference = '';
-  payerName = '';
-  note = '';
-  adultPayerDeclaration = false;
-  /** Roadmap O10: discount code and contract acceptance from the checkout. */
-  checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
-  readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
-  readonly motivationApi = new CoachingMotivationApi(inject(HttpClient), environment.apiUrl);
-  readonly money = coachingMoney;
-  private readonly checkoutForm = viewChild(CoachingCheckoutComponent);
-
-  selectedPlanPrice(): number { return this.plans().find(plan => plan.id === this.planId)?.price ?? 0; }
+  readonly products = computed<ParentProduct[]>(() => { const link = this.link(); return link ? visibleProducts(link) : []; });
+  readonly tabs = computed<CsTabOption[]>(() => this.products().map(product => ({ value: productSlug(product), label: PRODUCT_LABELS[product] })));
+  private readonly requested = signal<ParentProduct | null>(productFromSlug(this.route.snapshot.queryParamMap?.get('urun')));
+  /** The asked-for product when the child shares it, otherwise the first one. */
+  readonly active = computed<ParentProduct | null>(() => { const products = this.products(); const asked = this.requested();
+    return asked && products.includes(asked) ? asked : products[0] ?? null; });
+  readonly tabSlug = computed(() => { const active = this.active(); return active ? productSlug(active) : ''; });
+  readonly hiddenText = computed(() => { const link = this.link(); return link ? hiddenProductsText(link) : ''; });
 
   ngOnInit(): void {
     this.service.getLinks().subscribe({
       next: links => {
         const link = links.find(item => item.studentUserId === this.studentId && item.status === 'Verified') ?? null;
         this.link.set(link); this.notLinked.set(!link);
-        if (link) this.loadChild();
       },
-      error: () => this.error.set('Veli bağlantıların yüklenemedi.')
+      error: () => this.error.set('Veli bağlantıların yüklenemedi. Sayfayı yenileyip yeniden dene.')
     });
   }
 
-  async sendTransfer(): Promise<void> {
-    const reference = this.paymentReference.trim();
-    if (!this.planId || !reference) { this.error.set('Plan ve banka işlem referansı gerekli.'); return; }
-    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunu beyan etmeniz gerekir.'); return; }
-    if (!this.checkout.acceptSalesContract) { this.error.set('Ödeme bildiriminden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini açıp onaylaman gerekir.'); return; }
-    this.sending.set(true); this.error.set(null); this.success.set(null);
-    try {
-      const sent = await firstValueFrom(this.service.sendTransfer(this.studentId, {
-        planId: this.planId, paymentReference: reference, payerName: this.payerName.trim() || null, note: this.note.trim() || null,
-        adultPayerDeclaration: true, couponCode: this.checkout.couponCode, acceptSalesContract: true
-      }));
-      this.transfers.update(items => [sent, ...items.filter(item => item.id !== sent.id)]);
-      this.paymentReference = ''; this.note = ''; this.adultPayerDeclaration = false; this.checkoutForm()?.reset();
-      this.success.set('Ödeme bildirimin incelemeye alındı. Onaylanınca çocuğunun erişimi açılır.');
-    } catch (response) {
-      this.error.set(apiMessage(response, 'Ödeme bildirimi gönderilemedi.'));
-    } finally { this.sending.set(false); }
+  select(slug: string) {
+    const product = productFromSlug(slug);
+    if (!product || product === this.active()) return;
+    this.requested.set(product);
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { urun: slug }, replaceUrl: true });
   }
 
-  private loadChild(): void {
-    const id = this.studentId;
-    const safe = <T>(name: string, message: string, source: Observable<T>, fallback: T) => source.pipe(catchError(() => {
-      this.sectionError.update(errors => ({ ...errors, [name]: message })); return of(fallback);
-    }));
-    forkJoin({
-      progress: safe('progress', 'Özet yüklenemedi.', this.service.getProgress(id), null),
-      assignments: safe('assignments', 'Ödevler yüklenemedi.', this.service.getAssignments(id), { items: [] as StudentAssignment[] }),
-      sessions: safe('sessions', 'Seanslar yüklenemedi.', this.service.getSessions(id), { items: [] as CoachingSession[] }),
-      fees: safe('fees', 'Ücret bilgisi yüklenemedi.', this.service.getFees(id), null),
-      access: safe('access', 'Abonelik bilgisi yüklenemedi.', this.service.getAccess(id), null),
-      transfers: safe('transfers', 'Ödeme bildirimleri yüklenemedi.', this.service.getTransfers(id), [] as CoachingBankTransferRequest[]),
-      plans: safe('plans', '', this.management.getPublicSubscriptionPlans(), [] as CoachingSubscriptionPlan[]),
-      settings: safe('settings', '', this.management.getPublicBankTransferSettings(), null)
-    }).subscribe(result => {
-      this.progress.set(result.progress as StudentProgressSummary | null);
-      this.assignments.set(result.assignments.items); this.sessions.set(result.sessions.items);
-      this.fees.set(result.fees); this.access.set(result.access); this.transfers.set(result.transfers);
-      const plans = result.plans.filter(plan => plan.audience === 'Individual' && plan.isActive && plan.isPublic && !plan.isContactOnly);
-      this.plans.set(plans); this.settings.set(result.settings as CoachingSubscriptionSettings | null);
-      if (!this.planId && plans.length) this.planId = plans[0].id;
-      this.loaded.set(true);
-    });
-  }
+  label(product: ParentProduct | null) { return product ? `${firstName(this.link()?.studentName)} · ${PRODUCT_LABELS[product]}` : ''; }
+  relationship(value: string) { return parentRelationshipLabel(value); }
+  /** Roadmap O13: the browser's print dialog, where the page can also be saved as PDF. */
+  print(): void { window.print(); }
 }

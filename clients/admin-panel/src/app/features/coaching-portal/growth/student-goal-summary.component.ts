@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CoachingScoreEstimateService, ScoreEstimate } from '../../../core/services/coaching-score-estimate.service';
 import { CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent } from '../ui';
 import { goalGauge } from './growth-model';
+import { possessive } from '../parent/parent-model';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
 const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
@@ -21,11 +22,11 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
   host: { class: 'cs-growth-goal' },
   template: `
     @if (error()) { <p class="cs-growth-alert" role="alert">{{ error() }} <button type="button" (click)="load()">Yeniden dene</button></p> }
-    @if (loading() && !data()) { <div class="cs-growth-skeleton" role="status" aria-label="Hedefin yükleniyor"></div> }
+    @if (loading() && !data()) { <div class="cs-growth-skeleton" role="status" [attr.aria-label]="parent() ? 'Hedef yükleniyor' : 'Hedefin yükleniyor'"></div> }
     @if (data(); as result) {
       @if (gauge(); as goal) {
         <cs-card tone="raised" class="cs-goal-hero" [attr.data-reached]="goal.reached">
-          <p class="cs-goal-kicker">Hedefin · {{ goal.scoreType }}</p>
+          <p class="cs-goal-kicker">{{ parent() ? possessive(name()) + ' hedefi' : 'Hedefin' }} · {{ goal.scoreType }}</p>
           <h2>{{ goal.targetName }}</h2>
           <p class="cs-goal-headline" [class.is-muted]="goal.missingData">{{ goal.headline }}</p>
           @for (row of goal.rows; track row.label) {
@@ -37,12 +38,14 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
             </div>
           }
         </cs-card>
+      } @else if (parent()) {
+        <cs-empty-state [title]="name() + ' henüz bir hedef seçmedi'" text="Hedef okul ya da bölüm seçildiğinde ona ne kadar kaldığı burada görünür." />
       } @else if (!readonly()) {
         <cs-empty-state title="Bir hedef seç" text="Okulunu ya da bölümünü seçtiğinde ona ne kadar kaldığını burada gösteririz." />
       }
       @if (result.notice) { <p class="cs-growth-muted">{{ result.notice }}</p> }
       @if (result.estimates.length) {
-        <h2 class="cs-growth-section-title">Puan tahminin</h2>
+        <h2 class="cs-growth-section-title">{{ parent() ? 'Puan tahmini' : 'Puan tahminin' }}</h2>
         <div class="cs-estimate-grid">
           @for (item of result.estimates; track item.scoreType) {
             <cs-card data-testid="estimate-card" class="cs-estimate">
@@ -71,10 +74,16 @@ export class StudentGoalSummaryComponent implements OnInit {
   /** null: the signed-in student. */
   readonly studentId = input<string | null>(null);
   readonly readonly = input(false);
+  /** V4: 'parent' talks about the child by name ("Elif'in hedefi") instead of to the student. */
+  readonly audience = input<'student' | 'parent'>('student');
+  readonly childName = input('');
+  readonly parent = computed(() => this.audience() === 'parent');
+  readonly name = computed(() => this.childName() || 'Çocuğun');
+  readonly possessive = possessive;
   readonly data = signal<ScoreEstimate | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
-  readonly gauge = computed(() => { const data = this.data(); return data ? goalGauge(data) : null; });
+  readonly gauge = computed(() => { const data = this.data(); return data ? goalGauge(data, this.parent() ? this.name() : null) : null; });
   readonly hasYks = computed(() => this.data()?.estimates.some(x => x.scoreType !== 'LGS') ?? false);
   diploma: number | null = null;
 

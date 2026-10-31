@@ -1,79 +1,98 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { ParentLink, ParentRelationship, CoachingParentService } from './coaching-parent.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingDatePipe } from '../coaching-labels';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-import { NotificationPreferencesApi, NotificationPreferencesComponent } from '../../../../../shared/notification-preferences.component';
-import { StudentDataExportComponent } from '../pages/student-data-export.component';
+import { ParentLink, ParentRelationship, CoachingParentService } from './coaching-parent.service';
+import { PRODUCT_LABELS, ParentProduct, coachingStatusLine, firstName, hiddenProductsText, productSlug, speedReadingStatusLine, visibleProducts } from './parent-model';
 
-/** Roadmap Y7: the parent's start page — linked children, waiting requests and the code form. */
+type Status = { text: string; failed?: boolean };
+
+/**
+ * Roadmap Y7 / V4 (01.11.2026): the parent's start page — one card per linked child with the products the child shares
+ * and a one-line status for each, waiting requests, removing a link and the code form.
+ */
 @Component({
   selector: 'app-parent-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingDatePipe, NotificationPreferencesComponent, StudentDataExportComponent],
+  imports: [FormsModule, RouterLink, CoachingDatePipe],
   template: `
-    <main class="space-y-6" aria-labelledby="parent-home-title">
-      <header>
-        <p class="text-sm font-medium text-(--ui-brand-text) ">Veli paneli</p>
-        <h1 id="parent-home-title" class="mt-1 text-2xl font-bold">Çocuklarım</h1>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Çocuğunun çalışmasını, ödevlerini, seanslarını, denemelerini ve ücretlerini buradan izleyebilirsin. Bu ekran yalnızca okumak içindir; değişiklikleri öğrenci ve öğretmeni yapar.</p>
-        @if (verified().length) {
-          <a routerLink="/coaching-portal/messages" class="mt-3 inline-block rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-white hover:bg-(--ui-brand-strong)">Öğretmenlere mesaj yaz</a>
-        }
+    <div class="cp-page" aria-labelledby="parent-home-title">
+      <header class="cp-header">
+        <h1 id="parent-home-title">Çocuklarım</h1>
+        <p>Çocuğunun Koçluk ve Hızlı Okuma ilerlemesini buradan izleyebilirsin. Yalnızca çocuğunun seninle paylaştığı bölümleri görürsün; değişiklikleri çocuğun ve öğretmeni yapar.</p>
       </header>
-      @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
-      @if (success()) { <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{{ success() }}</div> }
+      @if (error()) { <p class="cp-alert" role="alert">{{ error() }}</p> }
+      @if (success()) { <p class="cp-success" role="status">{{ success() }}</p> }
 
-      <section class="grid gap-4 md:grid-cols-2" aria-labelledby="children-heading">
-        <h2 id="children-heading" class="sr-only">Bağlı çocuklar</h2>
+      <section class="cp-children" aria-labelledby="children-heading">
+        <h2 id="children-heading" class="cp-sr-only">Bağlı çocuklar</h2>
         @for (link of verified(); track link.id) {
-          <a [routerLink]="['/coaching-portal/parent/children', link.studentUserId]" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-(--ui-brand) dark:border-slate-800 dark:bg-slate-900">
-            <strong class="text-lg">{{ link.studentName }}</strong>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ relationshipLabel(link.relationship) }} · {{ link.verifiedAt | coachingDate }} tarihinden beri bağlı</p>
-            <span class="mt-3 inline-block text-sm font-medium text-(--ui-brand-text) ">Haftayı görüntüle →</span>
-          </a>
+          <article class="cp-child" data-testid="child-card" [attr.aria-labelledby]="'child-' + link.id">
+            <header>
+              <span class="cp-child-avatar" aria-hidden="true">{{ initial(link.studentName) }}</span>
+              <div><h3 [id]="'child-' + link.id">{{ link.studentName }}</h3>
+                <p class="cp-muted">{{ relationshipLabel(link.relationship) }}@if (link.verifiedAt) { · {{ link.verifiedAt | coachingDate }} tarihinden beri bağlı }</p></div>
+            </header>
+            @if (productsOf(link).length) {
+              <ul class="cp-child-products">
+                @for (product of productsOf(link); track product) {
+                  <li>
+                    <span class="cp-product-badge" data-testid="product-badge" [attr.data-product]="product">{{ productLabel(product) }}</span>
+                    <span class="cp-child-status" data-testid="child-status" [class.is-muted]="status(link, product)?.failed">{{ status(link, product)?.text ?? 'Yükleniyor…' }}</span>
+                    <a class="cp-child-open" [routerLink]="['/coaching-portal/parent/children', link.studentUserId]" [queryParams]="{ urun: slug(product) }"
+                      [attr.aria-label]="first(link.studentName) + ' · ' + productLabel(product) + ' ayrıntıları'">Ayrıntılar →</a>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="cp-notice">{{ hiddenText(link) }}</p>
+            }
+            <footer><button type="button" class="cp-link-button" data-testid="remove-link" [disabled]="busy() === link.id" (click)="remove(link)">Bağlantıyı kaldır</button></footer>
+          </article>
         } @empty {
-          @if (!loading()) { <p class="rounded-xl border border-slate-200 p-5 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300 md:col-span-2">Henüz bağlı bir çocuğun yok. Çocuğunun Koçluk hesabındaki Ayarlar sayfasından bir veli kodu oluşturmasını iste ve aşağıya gir.</p> }
+          @if (!loading()) {
+            <p class="cp-empty">Henüz bağlı bir çocuğun yok. Çocuğundan bir veli kodu oluşturmasını iste: Koçluk'ta <strong>Profil ve ayarlar › Profilim</strong> bölümünden,
+              Hızlı Okuma'da <strong>Veli bağlantısı</strong> sayfasından. Kodu aşağıya gir.</p>
+          }
         }
       </section>
 
       @if (pending().length) {
-        <section class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm dark:border-amber-900/50 dark:bg-amber-950/20" aria-labelledby="pending-heading">
-          <h2 id="pending-heading" class="font-semibold">Bekleyen istekler</h2>
-          @for (link of pending(); track link.id) {
-            <p class="mt-2"><strong>{{ link.studentName }}</strong> — öğrencinin onayını bekliyor ({{ link.requestedAt | coachingDate }}).</p>
-          }
+        <section class="cp-section cp-pending" aria-labelledby="pending-heading" data-testid="pending-links">
+          <h2 id="pending-heading">Bekleyen istekler</h2>
+          <ul class="cp-rows">
+            @for (link of pending(); track link.id) {
+              <li><span class="cp-row-main"><strong>{{ link.studentName }}</strong><small>Çocuğunun onayını bekliyor · {{ link.requestedAt | coachingDate }}</small></span>
+                <button type="button" class="cp-link-button" [disabled]="busy() === link.id" (click)="remove(link)">İsteği geri al</button></li>
+            }
+          </ul>
         </section>
       }
 
-      <form class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" (ngSubmit)="submit()" aria-labelledby="link-heading">
-        <h2 id="link-heading" class="font-semibold">Çocuğunla bağlan</h2>
-        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Kod 7 gün geçerlidir ve bir kez kullanılır. Gönderdikten sonra çocuğun isteği kendi hesabından onaylar.</p>
-        <div class="mt-4 grid gap-3 sm:grid-cols-3">
-          <label class="text-sm sm:col-span-2">Veli kodu<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 font-mono uppercase tracking-widest dark:border-slate-700" [(ngModel)]="code" name="code" maxlength="12" required autocomplete="off" placeholder="ABCD-2345" /></label>
-          <label class="text-sm">Yakınlığın<select class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="relationship" name="relationship"><option value="Mother">Anne</option><option value="Father">Baba</option><option value="Guardian">Vasi</option></select></label>
+      <form class="cp-section cp-card cp-link-form" (ngSubmit)="submit()" aria-labelledby="link-heading">
+        <h2 id="link-heading">Çocuğunla bağlan</h2>
+        <p class="cp-muted">Kod 7 gün geçerlidir ve bir kez kullanılır. Gönderdikten sonra çocuğun isteği kendi hesabından onaylar.</p>
+        <div class="cp-form">
+          <label>Veli kodu<input class="cp-code" [(ngModel)]="code" name="code" maxlength="12" required autocomplete="off" placeholder="ABCD-2345" /></label>
+          <label>Yakınlığın<select [(ngModel)]="relationship" name="relationship"><option value="Mother">Anne</option><option value="Father">Baba</option><option value="Guardian">Vasi</option></select></label>
+          <button type="submit" class="cp-primary cp-span" [disabled]="submitting() || !code.trim()">{{ submitting() ? 'Gönderiliyor…' : 'Bağlantı isteği gönder' }}</button>
         </div>
-        <button type="submit" class="mt-4 rounded-lg bg-(--ui-brand) px-4 py-2 font-medium text-white disabled:opacity-50" [disabled]="submitting() || !code.trim()">{{ submitting() ? 'Gönderiliyor…' : 'Bağlantı isteği gönder' }}</button>
       </form>
-      <edu-notification-preferences [api]="notificationApi" />
-      <!-- Coaching audit K1: the parent downloads the data they created themselves (KVKK). -->
-      <app-student-data-export audience="parent" />
-    </main>
+    </div>
   `
 })
 export class ParentHomeComponent implements OnInit {
   private readonly service = inject(CoachingParentService);
-  // Roadmap O8: the parent chooses which notifications also come by e-mail.
-  readonly notificationApi = new NotificationPreferencesApi(inject(HttpClient), environment.apiUrl);
+  private readonly toaster = inject(ToasterService);
   readonly links = signal<ParentLink[]>([]);
   readonly verified = computed(() => this.links().filter(link => link.status === 'Verified'));
   readonly pending = computed(() => this.links().filter(link => link.status === 'Pending'));
+  readonly statuses = signal<Record<string, Status>>({});
   readonly loading = signal(true);
   readonly submitting = signal(false);
+  readonly busy = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
   code = '';
@@ -82,6 +101,13 @@ export class ParentHomeComponent implements OnInit {
   ngOnInit(): void { this.load(); }
 
   relationshipLabel(value: string): string { return parentRelationshipLabel(value); }
+  productsOf(link: ParentLink) { return visibleProducts(link); }
+  productLabel(product: ParentProduct) { return PRODUCT_LABELS[product]; }
+  slug(product: ParentProduct) { return productSlug(product); }
+  hiddenText(link: ParentLink) { return hiddenProductsText(link); }
+  first(name: string) { return firstName(name); }
+  initial(name: string) { return (name?.trim().charAt(0) || '?').toLocaleUpperCase('tr-TR'); }
+  status(link: ParentLink, product: ParentProduct): Status | undefined { return this.statuses()[`${link.studentUserId}:${product}`]; }
 
   async submit(): Promise<void> {
     const code = this.code.trim();
@@ -97,12 +123,42 @@ export class ParentHomeComponent implements OnInit {
     } finally { this.submitting.set(false); }
   }
 
+  /** Removes a verified link or withdraws a pending request, after confirmation. */
+  async remove(link: ParentLink): Promise<void> {
+    const pending = link.status === 'Pending';
+    const ok = await this.toaster.confirm(pending
+      ? `${link.studentName} için gönderdiğin bağlantı isteği geri alınsın mı?`
+      : `${link.studentName} ile bağlantın kaldırılsın mı? Artık ilerlemesini göremezsin; yeniden bağlanmak için çocuğunun yeni bir kod oluşturması gerekir.`,
+      { title: pending ? 'İsteği geri al' : 'Bağlantıyı kaldır', confirmText: pending ? 'Geri al' : 'Kaldır', cancelText: 'Vazgeç' });
+    if (!ok) return;
+    this.busy.set(link.id); this.error.set(null); this.success.set(null);
+    try {
+      await firstValueFrom(this.service.revokeLink(link.id));
+      this.success.set(pending ? 'Bağlantı isteğin geri alındı.' : `${link.studentName} ile bağlantın kaldırıldı.`);
+      this.load();
+    } catch (response) {
+      this.error.set(apiMessage(response, 'Bağlantı kaldırılamadı. Yeniden dene.'));
+    } finally { this.busy.set(null); }
+  }
+
   private load(): void {
     this.loading.set(true);
     this.service.getLinks().subscribe({
-      next: links => { this.links.set(links); this.loading.set(false); },
+      next: links => { this.links.set(links); this.loading.set(false); this.loadStatuses(); },
       error: () => { this.error.set('Bağlantıların yüklenemedi.'); this.loading.set(false); }
     });
+  }
+
+  private loadStatuses(): void {
+    const set = (key: string, status: Status) => this.statuses.update(all => ({ ...all, [key]: status }));
+    const failed = { text: 'Durum şu an alınamadı', failed: true };
+    for (const link of this.verified()) {
+      for (const product of visibleProducts(link)) {
+        const key = `${link.studentUserId}:${product}`;
+        if (product === 'Coaching') this.service.getCoachingWeek(link.studentUserId).subscribe({ next: week => set(key, { text: coachingStatusLine(week) }), error: () => set(key, failed) });
+        else this.service.getSpeedReadingOverview(link.studentUserId).subscribe({ next: view => set(key, { text: speedReadingStatusLine(view) }), error: () => set(key, failed) });
+      }
+    }
   }
 }
 

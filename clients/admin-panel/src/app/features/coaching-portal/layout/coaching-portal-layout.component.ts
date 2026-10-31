@@ -13,7 +13,7 @@ import { CoachingMessagesUnreadService } from '../../../core/services/coaching-m
 import { NotificationService } from '../../../core/services/notification.service';
 import { CoachingNotificationPanelComponent } from './coaching-notification-panel.component';
 
-interface PortalLink { label: string; path: string; icon: CoachingIcon; exact?: boolean; short?: string; badge?: number }
+interface PortalLink { label: string; path: string; icon: CoachingIcon; exact?: boolean; short?: string; badge?: number; matches?: (path: string) => boolean }
 
 const ROOT = '/coaching-portal';
 /** Header titles for the sections (T2, 31.10.2026). Longest prefix wins. */
@@ -21,6 +21,11 @@ const PAGE_LABELS: [string, string][] = [
   [`${ROOT}/account/settings`, 'Profil ve ayarlar'], [`${ROOT}/account/payments`, 'Ödemeler'], [`${ROOT}/account/data`, 'Kişisel verilerim'],
   [`${ROOT}/plan`, 'Planım'], [`${ROOT}/growth`, 'Gelişimim'], [`${ROOT}/assignments`, 'Ödevlerim'], [`${ROOT}/messages`, 'Mesajlar'],
   [`${ROOT}/sessions`, 'Seanslar'], [`${ROOT}/notifications`, 'Bildirimler']
+];
+/** V4 (01.11.2026): header titles in the parent shell. Longest prefix wins. */
+const PARENT_PAGE_LABELS: [string, string][] = [
+  [`${ROOT}/parent/account/notifications`, 'Bildirim tercihleri'], [`${ROOT}/parent/account/data`, 'Kişisel verilerim'],
+  [`${ROOT}/parent/notifications`, 'Bildirimler'], [`${ROOT}/parent/children`, 'Çocuğum'], [`${ROOT}/messages`, 'Mesajlar'], [`${ROOT}/parent`, 'Çocuklarım']
 ];
 
 /**
@@ -53,10 +58,15 @@ export class CoachingPortalLayoutComponent {
   readonly isStudent = computed(() => this.views.current() === 'Student');
   // Roadmap Y7: a parent who is not also a student sees the parent panel menu.
   readonly isParent = computed(() => !!this.user()?.roles?.includes('Parent') && !this.user()?.roles?.includes('Student'));
-  readonly parentLinks: PortalLink[] = [
-    { label: 'Çocuklarım', path: `${ROOT}/parent`, icon: 'home', exact: true },
-    { label: 'Mesajlar', path: `${ROOT}/messages`, icon: 'chat' },
-  ];
+  /** V4: Çocuklarım (with the child pages), Mesajlar and Bildirimler, each with its unread count. */
+  readonly parentLinks = computed<PortalLink[]>(() => [
+    { label: 'Çocuklarım', path: `${ROOT}/parent`, icon: 'home',
+      matches: path => path === `${ROOT}/parent` || path.startsWith(`${ROOT}/parent/children/`) },
+    { label: 'Mesajlar', path: `${ROOT}/messages`, icon: 'chat', badge: this.unreadMessages(), matches: path => path === `${ROOT}/messages` || path.startsWith(`${ROOT}/messages/`) },
+    { label: 'Bildirimler', path: `${ROOT}/parent/notifications`, icon: 'bell', badge: this.unreadCount(), matches: path => path === `${ROOT}/parent/notifications` }
+  ]);
+  readonly currentPath = signal('');
+  readonly notificationsPage = computed(() => this.isParent() ? `${ROOT}/parent/notifications` : `${ROOT}/notifications`);
   readonly menuOpen = signal(false);
   readonly accountOpen = signal(false);
   readonly notificationsOpen = signal(false);
@@ -78,16 +88,20 @@ export class CoachingPortalLayoutComponent {
   readonly notificationLabel = computed(() => this.unreadCount() ? `Bildirimler (${this.unreadCount()} okunmamış)` : 'Bildirimler');
 
   constructor() {
-    if (!this.isParent()) { this.studentNavigation.refresh(true); this.messagesUnread.refresh(); }
+    if (!this.isParent()) this.studentNavigation.refresh(true);
+    this.messagesUnread.refresh();
     this.updatePageLabel();
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed(inject(DestroyRef)))
       .subscribe(() => {
         this.closeMenu(); this.accountOpen.set(false); this.notificationsOpen.set(false); this.updatePageLabel();
-        if (!this.isParent()) { this.studentNavigation.refresh(); this.messagesUnread.refresh(); }
+        if (!this.isParent()) this.studentNavigation.refresh();
+        this.messagesUnread.refresh();
       });
   }
 
   badgeText(count: number): string { return count > 99 ? '99+' : String(count); }
+  isActive(link: PortalLink): boolean { return !!link.matches?.(this.currentPath()); }
+  linkLabel(link: PortalLink): string | null { return link.badge ? `${link.short || link.label} (${link.badge} okunmamış)` : null; }
 
   @HostListener('document:keydown.escape')
   closeMenu(): void {
@@ -113,7 +127,11 @@ export class CoachingPortalLayoutComponent {
 
   private updatePageLabel(): void {
     const path = this.router.url.split(/[?#]/)[0];
-    if (this.isParent()) { this.pageLabel.set(path.startsWith(`${ROOT}/messages`) ? 'Mesajlar' : path.startsWith(`${ROOT}/parent/children/`) ? 'Çocuğumun haftası' : 'Çocuklarım'); return; }
+    this.currentPath.set(path);
+    if (this.isParent()) {
+      this.pageLabel.set(PARENT_PAGE_LABELS.find(([prefix]) => path === prefix || path.startsWith(prefix + '/'))?.[1] ?? 'Çocuklarım');
+      return;
+    }
     const match = PAGE_LABELS.find(([prefix]) => path === prefix || path.startsWith(prefix + '/'));
     this.pageLabel.set(match?.[1] ?? 'Bugün');
   }

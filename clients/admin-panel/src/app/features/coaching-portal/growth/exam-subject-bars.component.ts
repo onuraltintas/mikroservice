@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { StudentExamSubject } from '../../../core/services/coaching-student-exam-overview.service';
 import { subjectBars } from './growth-model';
+import { possessive } from '../parent/parent-model';
 
 /** T6: average net per subject over the last three exams of a scope; the weakest subject is called out in words too. */
 @Component({
@@ -8,7 +9,7 @@ import { subjectBars } from './growth-model';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (weakest(); as weak) { <p class="hint">En çok zorlandığın ders <strong>{{ weak.name }}</strong>: {{ weak.questionCount }} soruda ortalama {{ weak.averageNet }} net.</p> }
+    @if (weakest(); as weak) { <p class="hint">{{ childName() ? possessive(childName()) + ' en çok zorlandığı ders' : 'En çok zorlandığın ders' }} <strong>{{ weak.name }}</strong>: {{ weak.questionCount }} soruda ortalama {{ weak.averageNet }} net.</p> }
     <ul>
       @for (bar of bars(); track bar.code) {
         <li [attr.data-weakest]="bar.weakest" [style.--tone]="'var(--coaching-lesson-' + bar.tone + ')'" [style.--tone-text]="'var(--coaching-lesson-text-' + bar.tone + ')'">
@@ -35,6 +36,9 @@ import { subjectBars } from './growth-model';
 export class ExamSubjectBarsComponent {
   readonly subjects = input.required<StudentExamSubject[]>();
   readonly examCode = input.required<string>();
+  /** V4: set on the parent page so the hint names the child. */
+  readonly childName = input('');
+  readonly possessive = possessive;
   readonly bars = computed(() => subjectBars(this.subjects(), this.examCode()));
   readonly weakest = computed(() => this.bars().find(x => x.weakest) ?? null);
 }
