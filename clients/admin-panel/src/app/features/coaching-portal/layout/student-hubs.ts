@@ -18,14 +18,13 @@ export const STUDENT_HUBS: Record<'plan' | 'growth' | 'settings' | 'payments', S
     { label: 'Hedefim', path: `${root}/growth/goals` },
     { label: 'Haftam', path: `${root}/growth/week` }
   ] },
+  // T5 (31.10.2026): four sections; Çalışma tercihlerim keeps the hub's own address (the setup reminders link there).
   settings: { label: 'Profil ve ayarlar', tabs: [
-    { label: 'Tercihlerim', path: `${root}/account/settings`, exact: true },
     { label: 'Profilim', path: `${root}/account/settings/profile` },
-    { label: 'Ayarlar', path: `${root}/account/settings/general` },
+    { label: 'Çalışma tercihlerim', path: `${root}/account/settings`, exact: true },
+    { label: 'Bildirimler', path: `${root}/account/settings/notifications` },
     { label: 'Görünüm', path: `${root}/account/settings/theme` }
   ] },
-  payments: { label: 'Ödemeler', tabs: [
-    { label: 'Abonelik', path: `${root}/account/payments`, exact: true },
-    { label: 'Ücretlerim', path: `${root}/account/payments/fees`, needsFees: true }
-  ] }
+  // T5: Ödemeler is one page (Abonelik durumu, Havale bildirimleri, Ücretler, Faturalar), so it has no tabs.
+  payments: { label: 'Ödemeler', tabs: [] }
 };

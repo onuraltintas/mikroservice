@@ -11,11 +11,13 @@ import { STUDENT_HUBS, StudentHubTab } from './student-hubs';
   standalone: true,
   imports: [RouterLink, RouterOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<nav class="hub-tabs" [attr.aria-label]="hub.label + ' bölümleri'">
-      @for (tab of tabs(); track tab.path) {
-        <a [routerLink]="tab.path" [class.is-active]="isActive(tab)" [attr.aria-current]="isActive(tab) ? 'page' : null">{{ tab.label }}</a>
-      }
-    </nav>
+  template: `@if (tabs().length > 1) {
+      <nav class="hub-tabs" [attr.aria-label]="hub.label + ' bölümleri'">
+        @for (tab of tabs(); track tab.path) {
+          <a [routerLink]="tab.path" [class.is-active]="isActive(tab)" [attr.aria-current]="isActive(tab) ? 'page' : null">{{ tab.label }}</a>
+        }
+      </nav>
+    }
     <router-outlet />`,
   styles: [`:host{display:block}
     .hub-tabs{display:flex;gap:4px;max-width:100%;overflow-x:auto;margin:0 0 var(--coaching-space-6);padding:4px;border-radius:var(--coaching-radius-pill);background:var(--ui-surface-muted);width:fit-content;scrollbar-width:none}

@@ -14,7 +14,9 @@ export function groupNotificationsByDay(items: Notification[], now = new Date())
   const today = dayKey(now);
   const yesterday = dayKey(new Date(now.getTime() - 86_400_000));
   const groups = new Map<string, NotificationDay>();
-  for (const item of items) {
+  // T5: newest day first, newest notification first within the day, whatever order the list arrived in.
+  const newestFirst = [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  for (const item of newestFirst) {
     const created = new Date(item.createdAt);
     const key = dayKey(created);
     const label = key === today ? 'Bugün' : key === yesterday ? 'Dün'
@@ -78,7 +80,7 @@ export class CoachingNotificationPanelComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
   readonly closed = output<void>();
   readonly typeLabel = coachingNotificationLabel;
-  readonly groups = computed(() => groupNotificationsByDay(this.notifications.notifications().slice(0, 10)));
+  readonly groups = computed(() => groupNotificationsByDay([...this.notifications.notifications()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10)));
 
   constructor() {
     queueMicrotask(() => (this.host.nativeElement.querySelector('.close') as HTMLElement | null)?.focus());

@@ -1,6 +1,6 @@
 import { coachingFeedback } from '../coaching-feedback';
-import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -13,13 +13,16 @@ import {
   AssignedStudent,
   CoachingPortalService
 } from '../../../core/services/coaching-portal.service';
+import { CsStatusChipComponent, CsTone } from '../ui';
+import { assignmentAttachmentError, assignmentDate, assignmentDateTime } from './student-assignment-view';
 
 @Component({
   selector: 'app-student-assignment-detail',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterLink],
+  imports: [CoachingLabelPipe, CsStatusChipComponent, DecimalPipe, FormsModule, RouterLink],
   templateUrl: './student-assignment-detail.component.html',
-  styleUrl: './student-assignment-detail.component.scss'
+  styleUrl: './student-assignment-detail.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentAssignmentDetailComponent implements OnInit {
   private readonly authService = inject(AuthService);
@@ -43,19 +46,51 @@ export class StudentAssignmentDetailComponent implements OnInit {
     const studentId = this.studentId();
     return assignment?.assignedStudents.find(item => item.studentId === studentId);
   });
+  /** T5: the student opened the form again to change a hand-in the teacher has not graded yet. */
+  readonly editing = signal(false);
+  private readonly recordStatus = computed(() => this.studentRecord()?.status.toLowerCase() ?? '');
+  private readonly isActive = computed(() => this.assignment()?.status.toLowerCase() === 'active');
+  readonly isSubmitted = computed(() => this.recordStatus() === 'submitted' || this.recordStatus() === 'graded');
+  readonly isGraded = computed(() => this.recordStatus() === 'graded');
   // Files can be removed until the work is graded, while the assignment still accepts work.
   readonly canRemoveAttachments = computed(() =>
-    this.isStudent() && this.assignment()?.status.toLowerCase() === 'active'
-    && !!this.studentRecord() && this.studentRecord()?.status.toLowerCase() !== 'graded');
-  readonly canSubmit = computed(() => {
-    const status = this.studentRecord()?.status.toLowerCase();
-    const assignmentStatus = this.assignment()?.status.toLowerCase();
-    return this.isStudent()
-      && !!this.studentRecord()
-      && assignmentStatus === 'active'
-      && status !== 'submitted'
-      && status !== 'graded';
+    this.isStudent() && this.isActive() && !!this.studentRecord() && !this.isGraded() && (!this.isSubmitted() || this.editing()));
+  /** The server accepts a new hand-in while the work is submitted but not graded and the assignment is still active. */
+  readonly canResubmit = computed(() => this.isStudent() && this.isActive() && this.recordStatus() === 'submitted');
+  readonly canSubmit = computed(() => this.isStudent() && !!this.studentRecord() && this.isActive() && !this.isGraded()
+    && (!this.isSubmitted() || this.editing()));
+  /** One status label for the page: the student's own state once handed in, otherwise how the work stands. */
+  readonly status = computed<{ label: string; tone: CsTone }>(() => {
+    const item = this.assignment();
+    const record = this.studentRecord() ?? item?.assignedStudents[0];
+    const own = record?.status.toLowerCase();
+    if (item?.status === 'Cancelled') return { label: 'İptal edildi', tone: 'neutral' };
+    if (own === 'graded') return { label: 'Değerlendirildi', tone: 'brand' };
+    if (own === 'submitted') return { label: 'Teslim edildi', tone: 'success' };
+    if (item?.status === 'Completed') return { label: 'Kapandı', tone: 'neutral' };
+    if (item && new Date(item.dueDate) < new Date()) return { label: 'Gecikti', tone: 'danger' };
+    return { label: 'Yapılacak', tone: 'neutral' };
   });
+  /** "Puan: 85 / 100" once graded, otherwise "100 puan üzerinden". */
+  readonly scoreLine = computed(() => {
+    const item = this.assignment();
+    const record = this.studentRecord() ?? (this.isStudent() ? undefined : item?.assignedStudents[0]);
+    if (record?.status === 'Graded' && record.score !== undefined && record.score !== null)
+      return item?.maxScore ? `Puan: ${record.score} / ${item.maxScore}` : `Puan: ${record.score}`;
+    return item?.maxScore ? `${item.maxScore} puan üzerinden` : null;
+  });
+  readonly submittedOn = computed(() => {
+    const record = this.studentRecord();
+    const at = record?.lastSubmittedAt ?? record?.submittedAt;
+    return at ? assignmentDate(at) : '';
+  });
+  readonly dateTime = assignmentDateTime;
+
+  startEditing() {
+    if (!this.canResubmit()) return;
+    this.studentNote.set(this.studentRecord()?.studentNote ?? '');
+    this.editing.set(true);
+  }
 
   hasBookReference(assignment: AssignmentDetail) {
     return assignment.source === 'Book' || assignment.source === 'Mixed';
@@ -66,7 +101,7 @@ export class StudentAssignmentDetailComponent implements OnInit {
       case 'Active': return 'Aktif';
       case 'Completed': return 'Tamamlandı';
       case 'Cancelled': return 'İptal edildi';
-      case 'Assigned': return 'Çalışmanı bekliyor';
+      case 'Assigned': return 'Yapılacak';
       case 'Submitted': return 'Teslim edildi';
       case 'Graded': return 'Değerlendirildi';
       default: return status;
@@ -109,14 +144,16 @@ export class StudentAssignmentDetailComponent implements OnInit {
     this.successMessage.set(null);
     this.coachingService.submitAssignment(assignmentId, studentId, this.studentNote()).subscribe({
       next: () => {
-        this.successMessage.set('Ödevin teslim edildi. Öğretmenin değerlendirdiğinde puanını burada göreceksin.');
+        this.successMessage.set('Ödevin teslim edildi. Öğretmenin puan verince burada görürsün.');
         this.studentNote.set('');
+        this.editing.set(false);
         this.load();
       },
       error: error => {
         // K4 (31.10.2026): show the server's own reason (for example a file that is still being scanned).
         const reason = typeof error?.error?.error === 'string' && error.error.code ? error.error.error : null;
-        this.errorMessage.set(error.status === 400 ? reason ?? 'Ödev teslimi kabul edilmedi. Teslim koşullarını kontrol et.' : 'Ödev teslim edilemedi.');
+        this.errorMessage.set(reason ?? assignmentAttachmentError(error)
+          ?? (error.status === 400 ? 'Ödev teslim edilemedi. Dosyalarını ve son tarihi kontrol et.' : 'Ödev teslim edilemedi. Yeniden dene.'));
         this.isSubmitting.set(false);
       },
       complete: () => this.isSubmitting.set(false)
@@ -137,11 +174,11 @@ export class StudentAssignmentDetailComponent implements OnInit {
       'text/markdown', 'text/plain', 'text/x-markdown'
     ];
     if (!allowedTypes.includes(contentType)) {
-      this.errorMessage.set('JPEG, PNG, WebP, PDF, Word veya Markdown dosyası yükleyebilirsin.');
+      this.errorMessage.set('Fotoğraf (JPEG, PNG, WebP), PDF, Word ya da Markdown dosyası yükleyebilirsin.');
       return;
     }
     if (file.size < 1 || file.size > 10 * 1024 * 1024) {
-      this.errorMessage.set('Dosya 10 MB sınırını aşmamalıdır.');
+      this.errorMessage.set('Dosya en fazla 10 MB olabilir.');
       return;
     }
 
@@ -157,13 +194,11 @@ export class StudentAssignmentDetailComponent implements OnInit {
       const uploadFile = contentType === file.type ? file : new File([file], file.name, { type: contentType });
       const metadata = await firstValueFrom(this.coachingService.createAttachment(assignmentId, studentId, uploadFile, sha256));
       await firstValueFrom(this.coachingService.uploadAttachment(assignmentId, studentId, metadata.attachmentId, uploadFile, sha256));
-      this.successMessage.set('Dosya yüklendi ve güvenlik taramasına alındı.');
+      this.successMessage.set('Dosya yüklendi. Güvenlik taramasından geçince indirilebilir.');
       this.load();
     } catch (error: any) {
-      this.errorMessage.set(
-        error?.status === 503 ? 'Dosya güvenlik taraması şu an yapılamıyor. Birkaç dakika sonra tekrar dene.'
-        : error?.error?.code === 'Attachment.LimitReached' ? 'Bir ödeve en çok 10 dosya ve toplam 50 MB yükleyebilirsin. Gerekirse önce bir dosyayı kaldır.'
-        : error?.status === 400 ? 'Dosya yükleme koşulları sağlanmadı.' : 'Dosya yüklenemedi.');
+      this.errorMessage.set(assignmentAttachmentError(error)
+        ?? (error?.status === 400 ? 'Bu dosya yüklenemedi. Türünü ve boyutunu kontrol et.' : 'Dosya yüklenemedi. Yeniden dene.'));
     } finally {
       this.isUploading.set(false);
     }
@@ -193,8 +228,8 @@ export class StudentAssignmentDetailComponent implements OnInit {
       await firstValueFrom(this.coachingService.deleteAttachment(assignmentId, studentId, attachment.id));
       this.successMessage.set('Dosya kaldırıldı.');
       this.load();
-    } catch {
-      this.errorMessage.set('Dosya kaldırılamadı. Ödev notlandırılmış olabilir.');
+    } catch (error) {
+      this.errorMessage.set(assignmentAttachmentError(error) ?? 'Dosya kaldırılamadı. Yeniden dene.');
     } finally {
       this.isUploading.set(false);
     }

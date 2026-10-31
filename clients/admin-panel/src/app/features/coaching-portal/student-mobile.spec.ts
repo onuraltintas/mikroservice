@@ -91,7 +91,8 @@ describe('O1 assignment list', () => {
     expect(service.getStudentAssignments).toHaveBeenCalledWith('student-1', 1, 25, 'open');
     component.pageNumber.set(3); component.setFilter('submitted');
     expect(service.getStudentAssignments).toHaveBeenLastCalledWith('student-1', 1, 25, 'submitted');
-    expect(component.filters.map(x => x.value)).toEqual(['open', 'overdue', 'pending', 'submitted', 'cancelled', 'all']);
+    // T5: three filters; late work is part of open work and graded work part of submitted work on the server.
+    expect(component.filters.map(x => x.value)).toEqual(['open', 'submitted', 'all']);
   });
 
   it('sends the filter to the API and leaves it out for the full list', () => {

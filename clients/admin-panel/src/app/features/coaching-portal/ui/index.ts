@@ -151,7 +151,7 @@ export interface CsTabOption { value: string; label: string; count?: number | nu
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<div role="tablist" [attr.aria-label]="label()" (keydown)="onKey($event)">
     @for (option of options(); track option.value) {
-      <button type="button" role="tab" [attr.aria-selected]="option.value === value()" [attr.tabindex]="option.value === value() ? 0 : -1"
+      <button type="button" class="tab" role="tab" [attr.aria-selected]="option.value === value()" [attr.tabindex]="option.value === value() ? 0 : -1"
         (click)="value.set(option.value)">{{ option.label }}@if (option.count !== undefined && option.count !== null) {<span class="count">{{ option.count }}</span>}</button>
     }</div>`,
   styles: [`:host{display:block;max-width:100%;overflow-x:auto}
@@ -203,11 +203,8 @@ export class CsBottomSheetComponent {
   constructor() {
     effect(() => {
       if (!this.open()) return;
-      queueMicrotask(() => {
-        const body = this.host.nativeElement.querySelector('.body') as HTMLElement | null;
-        const first = body?.querySelector('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])') as HTMLElement | null;
-        (first ?? this.host.nativeElement.querySelector('.close') as HTMLElement | null)?.focus();
-      });
+      // T5: start on the close button so a phone does not open its keyboard on the first field.
+      queueMicrotask(() => (this.host.nativeElement.querySelector('.close') as HTMLElement | null)?.focus());
     });
   }
 }

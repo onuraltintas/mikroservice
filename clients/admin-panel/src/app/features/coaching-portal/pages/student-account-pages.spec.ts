@@ -1,4 +1,4 @@
-import { Component, Input, signal } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, Component, Input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -93,7 +93,7 @@ describe('Ödemeler page', () => {
 describe('Kişisel verilerim', () => {
   it('keeps a short heading and intro', () => {
     TestBed.configureTestingModule({ imports: [StudentPersonalDataComponent] });
-    TestBed.overrideComponent(StudentPersonalDataComponent, { set: { imports: [] } });
+    TestBed.overrideComponent(StudentPersonalDataComponent, { set: { imports: [], schemas: [CUSTOM_ELEMENTS_SCHEMA] } });
     const fixture = TestBed.createComponent(StudentPersonalDataComponent); fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('h1')?.textContent?.trim()).toBe('Kişisel verilerim');

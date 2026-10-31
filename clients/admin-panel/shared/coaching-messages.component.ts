@@ -12,28 +12,59 @@ import {
 const dateTime = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 export const coachingMessageTime = (value: string) => dateTime.format(new Date(value));
 
+const dayFormat = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', weekday: 'long' });
+const dayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' });
+const clock = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' });
+export type CoachingMessageEntry = { key: string; day: string; message?: undefined } | { key: string; day?: undefined; message: CoachingMessage };
+/** T5: messages with a separator before each new Türkiye day ("1 Kasım Pazar"). */
+export function coachingMessageEntries(messages: CoachingMessage[]): CoachingMessageEntry[] {
+  const entries: CoachingMessageEntry[] = [];
+  let last = '';
+  for (const message of messages) {
+    const date = new Date(message.sentAt);
+    const key = dayKey.format(date);
+    if (key !== last) { entries.push({ key: `day-${key}`, day: dayFormat.format(date) }); last = key; }
+    entries.push({ key: message.id, message });
+  }
+  return entries;
+}
+
 /** Roadmap O3: the messages of one conversation, oldest first. Used by participants and by the institution review. */
 @Component({
   selector: 'edu-coaching-message-list', standalone: true,
-  styles: [`.msg-list{list-style:none;margin:0;display:grid;gap:.6rem;max-height:60vh;overflow-y:auto;padding:.25rem}.msg{justify-self:start;max-width:85%;border-radius:.75rem;background:var(--ui-surface-muted);padding:.5rem .75rem}.msg.mine{justify-self:end;background:var(--ui-surface-muted)}.msg p{margin:.2rem 0;white-space:pre-wrap;overflow-wrap:anywhere}.who,.seen{color:var(--ui-text-muted);font-size:.75rem}.seen{display:block;text-align:right}.file{display:block;border:0;background:none;color:var(--ui-brand-text);padding:.15rem 0;text-align:left;overflow-wrap:anywhere;font:inherit;cursor:pointer}.empty{color:var(--ui-text-muted);font-size:.9rem;padding:.5rem}@media (max-width:720px){.msg-list{max-height:none}}:host-context(.dark) .msg{background:var(--ui-brand)}:host-context(.dark) .msg.mine{background:var(--ui-brand)}`],
+  styles: [`:host{display:block}
+    .msg-list{list-style:none;margin:0;display:grid;gap:6px;max-height:60vh;overflow-y:auto;padding:4px 2px}
+    .day{justify-self:center;margin:10px 0 4px;padding:2px 12px;border-radius:999px;background:var(--ui-surface-muted);color:var(--ui-text-muted);font-size:12px;font-weight:650}
+    .msg{justify-self:start;max-width:min(85%,560px);border-radius:16px 16px 16px 4px;background:var(--ui-surface-muted);color:var(--ui-text);padding:8px 12px}
+    .msg.mine{justify-self:end;border-radius:16px 16px 4px 16px;background:var(--ui-brand-soft)}
+    .msg p{margin:2px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+    .who{display:block;color:var(--ui-text-muted);font-size:12px;font-weight:650}
+    .meta{display:block;color:var(--ui-text-muted);font-size:11px;text-align:right}
+    .file{display:flex;align-items:center;gap:6px;min-height:36px;border:0;background:none;color:var(--ui-brand-text);padding:2px 0;text-align:left;overflow-wrap:anywhere;font:inherit;font-weight:600;cursor:pointer}
+    .file small{color:var(--ui-text-muted);font-weight:400}
+    .empty{color:var(--ui-text-muted);font-size:14px;padding:8px}
+    @media (max-width:720px){.msg-list{max-height:none}}`],
   template: `
     <ol class="msg-list" aria-label="Mesajlar">
-      @for (message of messages(); track message.id) {
-        <li class="msg" [class.mine]="message.mine">
-          <span class="who">{{ message.mine ? 'Sen' : message.senderName }} · <time [attr.datetime]="message.sentAt">{{ time(message.sentAt) }}</time></span>
-          @if (message.body) { <p>{{ message.body }}</p> }
-          @for (file of message.attachments; track file.id) {
-            <button type="button" class="file" (click)="download.emit(file)">📎 {{ file.fileName }} <small>({{ size(file.sizeBytes) }})</small></button>
-          }
-          @if (message.mine) { <small class="seen">{{ message.readByOther ? 'Okundu' : 'Gönderildi' }}</small> }
-        </li>
-      } @empty { <li class="empty">Henüz mesaj yok.</li> }
+      @for (entry of entries(); track entry.key) {
+        @if (entry.message; as message) {
+          <li class="msg" [class.mine]="message.mine">
+            @if (!message.mine) { <span class="who">{{ message.senderName }}</span> }
+            @if (message.body) { <p>{{ message.body }}</p> }
+            @for (file of message.attachments; track file.id) {
+              <button type="button" class="file" (click)="download.emit(file)">{{ file.fileName }} <small>{{ size(file.sizeBytes) }}</small></button>
+            }
+            <small class="meta"><time [attr.datetime]="message.sentAt">{{ clock(message.sentAt) }}</time>@if (message.mine) {, {{ message.readByOther ? 'Okundu' : 'Gönderildi' }}}</small>
+          </li>
+        } @else { <li class="day">{{ entry.day }}</li> }
+      } @empty { <li class="empty">Henüz mesaj yok. İlk mesajı sen yaz.</li> }
     </ol>`
 })
 export class CoachingMessageListComponent {
   readonly messages = input.required<CoachingMessage[]>();
   readonly download = output<CoachingMessageFile>();
-  readonly time = coachingMessageTime;
+  readonly entries = computed(() => coachingMessageEntries(this.messages()));
+  readonly clock = (value: string) => clock.format(new Date(value));
   readonly size = coachingFileSize;
 }
 
@@ -50,6 +81,7 @@ export class CoachingMessageListComponent {
       <div class="inbox">
         <header>
           <h2 id="coaching-messages-title">Mesajlar</h2>
+          @if (unreadMessages()) { <span class="unread-total">{{ unreadMessages() }} okunmamış</span> }
           <button type="button" class="primary" (click)="togglePicker()" [attr.aria-expanded]="picking()">Yeni mesaj</button>
         </header>
         @if (error()) { <p role="alert" class="error">{{ error() }}</p> }
@@ -63,28 +95,32 @@ export class CoachingMessageListComponent {
                 </select>
               </label>
               <button type="submit" class="primary" [disabled]="!contactKey || working()">Yazışmayı aç</button>
-            } @else if (!loading()) { <p>Yazışabileceğin kimse yok. Mesajlaşma, öğretmen–öğrenci ya da veli bağlantısı olanlar arasındadır.</p> }
+            } @else if (!loading()) { <p>Yazabileceğin kimse yok. Mesajlaşma, öğretmen, öğrenci ve veli arasında bağlantı varken açılır.</p> }
           </form>
         }
-        @if (loading() && !conversations().length) { <p role="status">Yazışmalar yükleniyor…</p> }
+        @if (loading() && !conversations().length) { <p role="status" class="empty">Yazışmalar yükleniyor…</p> }
         <ul class="conversations" aria-label="Yazışmalar">
           @for (item of conversations(); track item.id) {
             <li>
-              <button type="button" [class.active]="item.id === thread()?.conversation?.id" (click)="open(item.id)" [attr.aria-current]="item.id === thread()?.conversation?.id ? 'true' : null">
-                <strong>{{ item.otherName }}</strong>
-                <small>{{ roleLine(item) }} · {{ time(item.lastMessageAt) }}</small>
-                @if (item.lastMessagePreview) { <span class="preview">{{ item.lastMessagePreview }}</span> }
+              <button type="button" class="conversation" [class.active]="item.id === thread()?.conversation?.id" [class.unread]="item.unreadCount > 0" (click)="open(item.id)" [attr.aria-current]="item.id === thread()?.conversation?.id ? 'true' : null">
+                <span class="avatar" aria-hidden="true">{{ initial(item.otherName) }}</span>
+                <span class="text">
+                  <span class="line"><strong>{{ item.otherName }}</strong><time [attr.datetime]="item.lastMessageAt">{{ time(item.lastMessageAt) }}</time></span>
+                  <small>{{ roleLine(item) }}</small>
+                  @if (item.lastMessagePreview) { <span class="preview">{{ item.lastMessagePreview }}</span> }
+                </span>
                 @if (item.unreadCount) { <span class="badge" [attr.aria-label]="item.unreadCount + ' okunmamış mesaj'">{{ item.unreadCount }}</span> }
               </button>
             </li>
-          } @empty { @if (!loading()) { <li class="empty">Henüz yazışma yok.</li> } }
+          } @empty { @if (!loading()) { <li class="empty">Henüz yazışman yok. Yeni mesajla başla.</li> } }
         </ul>
       </div>
 
       @if (thread(); as current) {
         <div class="thread">
           <header>
-            <button type="button" class="back" (click)="close()">← Yazışmalar</button>
+            <button type="button" class="back" (click)="close()" aria-label="Yazışmalara dön"></button>
+            <span class="avatar" aria-hidden="true">{{ initial(current.conversation.otherName) }}</span>
             <h3>{{ current.conversation.otherName }} <small>{{ roleLine(current.conversation) }}</small></h3>
           </header>
           @if (current.lastInstitutionReviewAt) {
@@ -94,8 +130,8 @@ export class CoachingMessageListComponent {
           <edu-coaching-message-list [messages]="current.messages" (download)="download($event)" />
           @if (current.conversation.canSend) {
             <form class="composer" (ngSubmit)="send()">
-              <label for="coaching-message-text">Mesajın</label>
-              <textarea id="coaching-message-text" name="body" rows="3" [(ngModel)]="draft" [maxlength]="maxLength" [disabled]="working()"></textarea>
+              <label for="coaching-message-text" class="sr-only">Mesajın</label>
+              <textarea id="coaching-message-text" name="body" rows="2" placeholder="Mesajını yaz" [(ngModel)]="draft" [maxlength]="maxLength" [disabled]="working()"></textarea>
               <div class="row">
                 <label class="attach">Dosya ekle
                   <input type="file" multiple [accept]="fileTypes" (change)="addFiles($event)" [disabled]="working() || files().length >= maxFiles">
@@ -106,13 +142,13 @@ export class CoachingMessageListComponent {
               @if (files().length) {
                 <ul class="chosen" aria-label="Eklenecek dosyalar">
                   @for (file of files(); track $index) {
-                    <li>{{ file.name }} <button type="button" (click)="removeFile($index)" [attr.aria-label]="file.name + ' dosyasını çıkar'">×</button></li>
+                    <li>{{ file.name }} <button type="button" class="remove" (click)="removeFile($index)" [attr.aria-label]="file.name + ' dosyasını çıkar'">×</button></li>
                   }
                 </ul>
               }
             </form>
           } @else {
-            <p class="note">Bağlantı sona erdiği için bu yazışma kapandı. Eski mesajları okuyabilirsin.</p>
+            <p class="note">Bu yazışma kapandı, çünkü aranızdaki bağlantı sona erdi. Eski mesajları okuyabilirsin.</p>
           }
         </div>
       }
@@ -144,6 +180,8 @@ export class CoachingMessagesComponent implements OnInit {
   readonly picking = signal(false);
   readonly error = signal<string | null>(null);
   readonly unread = computed(() => this.conversations().filter(x => x.unreadCount > 0).length);
+  /** T5: the number of unread messages across all conversations, shown next to the inbox title. */
+  readonly unreadMessages = computed(() => this.conversations().reduce((sum, x) => sum + (x.unreadCount || 0), 0));
   draft = '';
   contactKey = '';
 
@@ -171,6 +209,7 @@ export class CoachingMessagesComponent implements OnInit {
     } finally { this.loading.set(false); this.ready = true; }
   }
 
+  initial(name: string) { return (name.trim()[0] ?? '?').toLocaleUpperCase('tr-TR'); }
   key(contact: CoachingMessageContact) { return `${contact.userId}|${contact.studentId}`; }
   contactLabel(contact: CoachingMessageContact) {
     return contact.role === 'Parent' ? `${contact.name} (${contact.studentName} velisi)`
@@ -178,7 +217,7 @@ export class CoachingMessagesComponent implements OnInit {
       : this.viewerRole === 'Parent' ? `${contact.name} (${contact.studentName} öğretmeni)` : `${contact.name} (öğretmen)`;
   }
   roleLine(item: CoachingConversation) {
-    return item.otherRole === 'Parent' ? `${item.studentName} velisi` : item.otherRole === 'Teacher' && item.kind === 'TeacherParent' ? `Öğretmen · ${item.studentName}` : coachingMessageRoleLabel(item.otherRole);
+    return item.otherRole === 'Parent' ? `${item.studentName} velisi` : item.otherRole === 'Teacher' && item.kind === 'TeacherParent' ? `${item.studentName} öğretmeni` : coachingMessageRoleLabel(item.otherRole);
   }
   canSend() { return !this.working() && (this.draft.trim().length > 0 || this.files().length > 0) && this.draft.length <= this.maxLength; }
 
@@ -224,8 +263,8 @@ export class CoachingMessagesComponent implements OnInit {
     const chosen = [...(input.files ?? [])]; input.value = '';
     const allowed = this.fileTypes.split(',');
     const bad = chosen.find(file => file.size > COACHING_MESSAGE_MAX_FILE_BYTES || !allowed.includes('.' + (file.name.split('.').pop() ?? '').toLowerCase()));
-    if (bad) { this.error.set(`${bad.name}: yalnız 10 MB'a kadar fotoğraf, PDF, Word ya da Markdown dosyası eklenebilir.`); return; }
-    if (this.files().length + chosen.length > this.maxFiles) { this.error.set(`Bir mesaja en fazla ${this.maxFiles} dosya eklenebilir.`); return; }
+    if (bad) { this.error.set(`${bad.name} eklenemedi. En fazla 10 MB fotoğraf, PDF, Word ya da Markdown dosyası ekleyebilirsin.`); return; }
+    if (this.files().length + chosen.length > this.maxFiles) { this.error.set(`Bir mesaja en fazla ${this.maxFiles} dosya ekleyebilirsin.`); return; }
     this.error.set(null); this.files.update(list => [...list, ...chosen]);
   }
 
