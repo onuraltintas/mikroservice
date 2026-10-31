@@ -1118,12 +1118,12 @@
     "services/coaching-service/Coaching.Infrastructure/Catalogs/OutcomeImportPackage.cs": "0dd265dd78a997a17aa32972561dc50b7f58c4c5081183841053f2c3000457b2",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/TargetCatalogImporter.cs": "285c80968e724d58a1405464d06885736a87a16b4945353d40b9e27e8c21ebca",
     "services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj": "92d80bb685e0dd190804d6bd396ce6b37298e84695f9c681003bd15add2df756",
-    "services/coaching-service/Coaching.Infrastructure/CoachingPublicUrl.cs": "3d25ea7fca96155f5ace9965191fe8936d207495a271e58d809ad2c1b0e0f096",
+    "services/coaching-service/Coaching.Infrastructure/CoachingPublicUrl.cs": "0e03801eda2c586e32877d1389b3afece10e180afa5f28e5cc27dbdc35a91404",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AcademicGoalConfiguration.cs": "398b24bdef9df2c6dfc8f3adc055ab25a438646abdf5c0af41fc7d0f4bbc0fd3",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AssignmentConfiguration.cs": "8ff902355a8414bdb1c623eeb9e34f89c0a55b5d1bb946460e50abf5f1f4e3f9",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AssignmentInstructionAttachmentConfiguration.cs": "8af5909e285bdcffe163f5e47e28eb422a330b2ca57c58b957e97cc556f163d9",
     "services/coaching-service/Coaching.Infrastructure/Configurations/CoachingAgreementConfiguration.cs": "83cfb9716f9c79d7e213458fee03edc610d9c398ce850ae305440cba7917f4cd",
-    "services/coaching-service/Coaching.Infrastructure/Configurations/CoachingMessagingConfiguration.cs": "354e44e3a35abb724eeadf81887aab5da77128ff64465c899a1b36a99900411c",
+    "services/coaching-service/Coaching.Infrastructure/Configurations/CoachingMessagingConfiguration.cs": "ccfe866b976caf82d828423dc3ec4ec01b251dd34e2b9626fac65f46400e1e10",
     "services/coaching-service/Coaching.Infrastructure/Configurations/CoachingPrivacyConfiguration.cs": "00610598330aa553beee65e6ba34026cf3966a56c736335c566cbc13f0bd0434",
     "services/coaching-service/Coaching.Infrastructure/Configurations/CoachingScoreModelConfiguration.cs": "cb89792b9c83f782af90cf773d7ee197068431384bdff0c50a4b3764f72a20e9",
     "services/coaching-service/Coaching.Infrastructure/Configurations/CoachingSessionConfiguration.cs": "0a4a4a656dcbf9f03680b38a380acdb303255f141c7c59923a5f2a2592a03ed3",
@@ -1321,7 +1321,7 @@
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261104090000_RuleBasedPlanEngine.cs": "40f85790940763f2d6e6f9e7295d2a1d96028f9cad90bf14c930faa8f3931cba",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261105100000_AssignmentDueReminders.Designer.cs": "872cfa30d0fa01c56df49cfb84001d89dae95d12273a980a10dcc360e97441d7",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261105100000_AssignmentDueReminders.cs": "0bdd5323efb5ddd410d0eca21cbcb0309eefcce52d3c8b220c76282702328019",
-    "services/coaching-service/Coaching.Infrastructure/Data/Migrations/CoachingDbContextModelSnapshot.cs": "634fa414f84d2070953af797d9bbc8358696d5bd6e7927c37d827a3043ec8e1a",
+    "services/coaching-service/Coaching.Infrastructure/Data/Migrations/CoachingDbContextModelSnapshot.cs": "9d890e04a6eb22ab7a89c243dcc3fc2b27c0da3f662570118b3b13d4466a89e4",
     "services/coaching-service/Coaching.Infrastructure/DependencyInjection.cs": "8c8be3333727c41a94bca663854d02d3efa67f4c12689689f2dde47a848998a5",
     "services/coaching-service/Coaching.Infrastructure/ExternalServices/CoachingAccountDirectoryClient.cs": "f55a710408092331b341355bc0683eca7843418583384cb26c5a42df0f1a6014",
     "services/coaching-service/Coaching.Infrastructure/ExternalServices/CoachingNewsletterEmailClient.cs": "caafe4ca0a3e71b11f0dc774c0fe7f56b33f2f96c98b6604148ebb58662b851a",
@@ -1339,9 +1339,9 @@
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingInstitutionExamService.cs": "19a1f307dcf1c045251e2640ae560731872c64c44ea380a36807c46e1ef9ea9a",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingInstitutionSubscriptionService.cs": "64218580732865f0d812dcb88b1a7e4733e38992cd8141ea5bd6b5abc5aa8eeb",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingInstitutionWorkloadService.cs": "75c6e37a1ab4e237ad4430fc9dc101faffea7272cb7a135f5e6a173596b8314b",
-    "services/coaching-service/Coaching.Infrastructure/Management/CoachingMessagingService.cs": "5dbec116ed12707b4a0aa166ea9f2cdc2ddd466a82b5a31de6a46fd184c3ca84",
+    "services/coaching-service/Coaching.Infrastructure/Management/CoachingMessagingService.cs": "ce46631b1c1876a21ab2e3260f2d08cf19f9be4d6d1b1896084b987a2fd6ef2b",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingNewsletterService.cs": "50f0a545615ed7627973bc5ca69bdab60306cb3ac62264bf248e7b3ac2262d79",
-    "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentWeeklySummary.cs": "4b7064f736e6758f20f965729a3963b143ef4e9cdc2eb4b72d3ac49177018c07",
+    "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentWeeklySummary.cs": "c4f2d6ecc0d72d7fe1f267d1195ddd34aa1a7d8a23d6badd9f17ea4a31e87043",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesDocuments.cs": "041414ced4dbaa57ff228dbc8f7247a43aac757e52547c48ac44f4da2fe1140f",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesService.cs": "974463d13b5e82458743a554782a6eeacf0edfbcf8ffdbcbca7b26b46492f8d4",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingScoreEstimateService.cs": "3e3cffdab4bc171c4c039ea089a0fc2463f4596d4f58168e91597679bd593829",
@@ -1356,7 +1356,7 @@
     "services/coaching-service/Coaching.Infrastructure/Privacy/CoachingFinancialRetention.cs": "d71c85f386c848d0bb3cb528c33b74a09a5c89a1907834a1ff6a783b7d7684e4",
     "services/coaching-service/Coaching.Infrastructure/Privacy/CoachingStudyPlanErasureMessages.cs": "fbf64d66e53b44c5c12119c8de202d7c23a9e60f384b32f67726b0ffde353d1f",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingDecisionResponsibility.cs": "120a22fe6de29bc2e3c10f33a3c27f699c62dba8158578d73954d7f35bdab436",
-    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingInvitationStore.cs": "c4aa517861fa211541690e58069145d7f1f67155da4f473a6f6651fcdea752df",
+    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingInvitationStore.cs": "061c5fec48f61fe524f1a9dceef2c0462038d31707c115ba0e44b5bf9a0c463a",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileImporter.cs": "1213ccca7bf48a88e56226c0f51f84489d880a6ac5894b1edbacfc339e0a44e1",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs": "1fb24945265e8ce68d8e00138e97106ea00310ec017ebeb797d980622e63b1e2",
     "services/coaching-service/Coaching.Infrastructure/Profiles/OwnedCoachingDirectory.cs": "e887e8090f818838feadc0a7cb7f223f47a04772ea557ee7daa9f17d63ebe17a",
@@ -2642,7 +2642,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "K2 coaching teacher and institution fixes",
+    "purpose": "K3 coaching notifications and integration fixes",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2690,7 +2690,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "98ea5621",
+    "previousBaselineCommit": "c0533a43",
     "removedSincePreviousBaseline": []
   }
 }
