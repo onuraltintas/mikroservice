@@ -92,7 +92,8 @@ body .coaching-shell .coaching-body .coaching-content {
   :is([class*="bg-red-"], [class*="bg-rose-"]) { background: var(--coaching-danger-soft); }
   fieldset { min-width: 0; border-color: var(--ui-border); }
   legend { color: var(--ui-text); font-size: 14px; font-weight: 650; }
-  button:where(:not([class]), [class=""]), button[class*="text-slate-"] {
+  // T4: tab buttons (cs-segmented-tabs, the Planım week strip) carry their own pill/selected styling.
+  button:where(:not([class]), [class=""]):not(:where([role=tab])), button[class*="text-slate-"] {
     padding: 10px 14px; border: 1px solid var(--ui-border); border-radius: 10px;
     background: var(--ui-surface); color: var(--ui-text); font: 600 14px/1.5 var(--ui-font-body);
   }

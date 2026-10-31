@@ -57,11 +57,12 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 /* T4 (31.10.2026): Planım for students — status line, overflow menu, week strip, day groups, compact rows. */
 .student { display: grid; gap: var(--coaching-space-4); max-width: 760px; }
 .student .notice { margin: 0; }
+.student .week-arrow, .student .filter-chips button { box-shadow: none; }
 .plan-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--coaching-space-3); position: relative; }
 .plan-status { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--coaching-space-2); margin: 0; font-size: var(--coaching-text-body); }
 .plan-status strong { font-size: var(--coaching-text-md); }
 .plan-status .progress { color: var(--ui-text-muted); font-size: var(--coaching-text-sm); width: 100%; }
-.plan-menu > summary { display: inline-flex; align-items: center; gap: var(--coaching-space-2); min-height: 44px; padding: 0 var(--coaching-space-3); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-pill); background: var(--ui-surface); color: var(--ui-text); font-weight: 700; cursor: pointer; list-style: none; }
+.plan-menu > summary { white-space: nowrap; display: inline-flex; align-items: center; gap: var(--coaching-space-2); min-height: 44px; padding: 0 var(--coaching-space-3); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-pill); background: var(--ui-surface); color: var(--ui-text); font-weight: 700; cursor: pointer; list-style: none; }
 .plan-menu > summary::-webkit-details-marker { display: none; }
 .plan-menu > summary:focus-visible { outline: 3px solid var(--coaching-focus); outline-offset: 2px; }
 .plan-menu > summary [aria-hidden] { font-size: 1.2rem; line-height: 1; }
@@ -101,4 +102,4 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 cs-bottom-sheet .task { margin: 0; padding: 0; border: 0; box-shadow: none; background: transparent; }
 cs-bottom-sheet .task > h3 { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-@media (max-width: 560px) { .week-strip [role=tab] { min-height: 58px; border-radius: 12px; } .menu-actions { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .plan-menu > summary { width: 44px; padding: 0; justify-content: center; } .plan-menu > summary .menu-label { display: none; } .week-strip [role=tab] { min-height: 58px; border-radius: 12px; } .menu-actions { grid-template-columns: 1fr; } }
