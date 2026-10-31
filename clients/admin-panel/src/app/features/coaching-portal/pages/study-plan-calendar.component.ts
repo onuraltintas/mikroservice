@@ -67,7 +67,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
   done(block:PlanCalendarBlock){return block.tasks.filter(t=>t.isCompleted).length;}
   status(block:PlanCalendarBlock){const done=this.done(block);if(done===block.tasks.length)return 'Tamamlandı';const overdue=block.tasks.some(task=>calendarTaskOverdue(task,this.zone));if(done)return `Kısmen tamamlandı · ${done}/${block.tasks.length}${overdue?' · gecikti':''}`;const minutes=block.tasks.reduce((sum,t)=>sum+(t.actualMinutes??0),0);if(minutes)return `Kısmi çalışma · ${minutes} dk${overdue?' · gecikti':''}`;return overdue?'Gecikti · tamamlanmadı':'Bekliyor';}
   statusClass(block:PlanCalendarBlock){const done=this.done(block);return done===block.tasks.length?'ui-status--success':done?'ui-status--info':block.tasks.some(task=>calendarTaskOverdue(task,this.zone))?'ui-status--danger':'ui-status--warning';}
-  color(block:PlanCalendarBlock){return this.colors.get(block.lessonKey)??'hsl(160 62% 44%)';}
+  color(block:PlanCalendarBlock){return this.colors.get(block.lessonKey)??'var(--coaching-lesson-text-0)';}
   writable(){return this.editable&&!this.disabled&&this.plan.status!=='Archived';}
   context(event:MouseEvent,day:Date,block:PlanCalendarBlock|null=null){
     if(this.disabled)return;

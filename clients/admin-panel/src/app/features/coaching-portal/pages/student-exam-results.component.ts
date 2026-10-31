@@ -13,8 +13,8 @@ import { PracticeExamEditorComponent } from './practice-exam-editor.component';
 import { StudentScoreEstimateComponent } from './student-score-estimate.component';
 import { StudentInstitutionExamsComponent } from './student-institution-exams.component';
 
-import { CoachingDatePipe } from '../coaching-labels';
-@Component({ selector: 'app-student-exam-results', standalone: true, imports: [CoachingDatePipe, CommonModule, FormsModule, PracticeExamEditorComponent, StudentInstitutionExamsComponent, StudentScoreEstimateComponent],
+import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
+@Component({ selector: 'app-student-exam-results', standalone: true, imports: [CoachingDatePipe, CoachingLabelPipe, CommonModule, FormsModule, PracticeExamEditorComponent, StudentInstitutionExamsComponent, StudentScoreEstimateComponent],
   templateUrl: './student-exam-results.component.html', styleUrl: './student-study-plans.component.scss' })
 export class StudentExamResultsComponent {
   private readonly learningSetup = inject(CoachingLearningSetupService);

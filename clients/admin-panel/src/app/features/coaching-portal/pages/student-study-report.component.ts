@@ -27,15 +27,15 @@ interface StudyReport {
   styles: [`
     :host-context(staff-coaching-study) { display: block; margin-top: 1.25rem; min-width: 0; }
     :host-context(staff-coaching-study) .overflow-x-auto { overflow-x: auto; max-width: 100%; }
-    :host-context(staff-coaching-study) section { padding: 1rem; border: 1px solid #e2e7dd; border-radius: .75rem; }
+    :host-context(staff-coaching-study) section { padding: 1rem; border: 1px solid var(--ui-border); border-radius: .75rem; }
     :host-context(staff-coaching-study) .flex { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin: 1rem 0; }
     :host-context(staff-coaching-study) label { display: grid; gap: .3rem; }
-    :host-context(staff-coaching-study) input, :host-context(staff-coaching-study) button { padding: .6rem .8rem; border: 1px solid #d5dfd2; border-radius: .5rem; background: white; color: #355348; font: inherit; }
-    :host-context(staff-coaching-study) button { cursor: pointer; background: #f5f8f1; }
+    :host-context(staff-coaching-study) input, :host-context(staff-coaching-study) button { padding: .6rem .8rem; border: 1px solid var(--ui-border); border-radius: .5rem; background: var(--ui-surface); color: var(--ui-text-muted); font: inherit; }
+    :host-context(staff-coaching-study) button { cursor: pointer; background: var(--ui-brand-soft); }
     :host-context(staff-coaching-study) dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; }
     :host-context(staff-coaching-study) dd { margin: .3rem 0 0; font-weight: 700; }
     :host-context(staff-coaching-study) table { width: 100%; border-collapse: collapse; text-align: left; }
-    :host-context(staff-coaching-study) th, :host-context(staff-coaching-study) td { padding: .6rem; border-bottom: 1px solid #e2e7dd; }
+    :host-context(staff-coaching-study) th, :host-context(staff-coaching-study) td { padding: .6rem; border-bottom: 1px solid var(--ui-border); }
   `],
   template: `
     <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="study-report-title">
@@ -45,7 +45,7 @@ interface StudyReport {
         <button type="button" (click)="useLastWeek()" [disabled]="busy()">Son iki haftayı karşılaştır</button>
         <label class="text-sm">Başlangıç<input class="mt-1 block rounded-lg border p-2 dark:bg-slate-800" type="date" [(ngModel)]="fromDate" [disabled]="busy()"></label>
         <label class="text-sm">Bitiş<input class="mt-1 block rounded-lg border p-2 dark:bg-slate-800" type="date" [(ngModel)]="toDate" [disabled]="busy()"></label>
-        <button class="rounded-lg bg-indigo-600 px-4 py-2 text-white disabled:opacity-50" type="button" (click)="load()" [disabled]="busy()">{{ busy() ? 'Yükleniyor…' : 'Raporu göster' }}</button>
+        <button class="rounded-lg bg-(--ui-brand) px-4 py-2 text-white disabled:opacity-50" type="button" (click)="load()" [disabled]="busy()">{{ busy() ? 'Yükleniyor…' : 'Raporu göster' }}</button>
       </div>
       <label class="text-sm"><input type="checkbox" [(ngModel)]="compareWeekly" [disabled]="busy()"> Önceki haftayla karşılaştır (7 günlük dönem seç)</label>
       <p *ngIf="error()" role="alert" class="text-sm text-red-600">{{ error() }}</p>
@@ -111,7 +111,7 @@ interface StudyReport {
             <p *ngIf="goal.targetDate">Hedef tarihi: {{ goal.targetDate | date:'dd.MM.yyyy':'UTC' }}</p>
             <p *ngIf="goal.targetScore !== null && goal.targetScore !== undefined">Hedef puanı: {{ goal.targetScore }}<span *ngIf="goal.targetExamType"> · {{ goal.targetExamType }}</span></p>
             <p *ngIf="goal.targetSubject">Hedef ders: {{ goal.targetSubject }}</p>
-            <div class="mt-3 rounded-lg bg-indigo-50 p-3 dark:bg-indigo-950/30" *ngIf="goal.scoreAssessment as assessment">
+            <div class="mt-3 rounded-lg bg-(--ui-brand-soft) p-3 " *ngIf="goal.scoreAssessment as assessment">
               <h5 class="font-semibold">Otomatik puan karşılaştırması</h5>
               <p class="mt-1 text-xs text-slate-500">Dönemdeki son uyumlu sonuç / hedef puanı. Öğrenme artışı veya yerleşme olasılığı değildir; hedefi otomatik tamamlamaz.</p>
               <p *ngIf="!assessment.comparisons.length" class="mt-2">{{ scoreReason(assessment.reason) }}</p>

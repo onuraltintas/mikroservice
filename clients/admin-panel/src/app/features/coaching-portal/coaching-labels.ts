@@ -13,7 +13,7 @@ const labels: Record<string, string> = {
   Individual: 'Bireysel', Digital: 'Dijital', Book: 'Kitap', Mixed: 'Karma',
   PendingUpload: 'Yükleniyor', PendingScan: 'Taranıyor', Clean: 'Hazır', Rejected: 'Reddedildi',
   // Exams and goals
-  Mock: 'Deneme', Weekly: 'Haftalık test', MidTerm: 'Ara sınav', Final: 'Final', Quiz: 'Kısa sınav',
+  Mock: 'Deneme sınavı', Weekly: 'Haftalık test', MidTerm: 'Ara sınav', Final: 'Final', Quiz: 'Kısa sınav',
   StudentReported: 'Öğrencinin girdiği', TeacherRecorded: 'Öğretmenin girdiği',
   ExamPreparation: 'Sınav hazırlığı', SubjectMastery: 'Ders hakimiyeti', GradeImprovement: 'Not yükseltme',
   StudyHabits: 'Çalışma alışkanlıkları', TimeManagement: 'Zaman yönetimi', Other: 'Diğer',
@@ -27,7 +27,7 @@ const labels: Record<string, string> = {
 
 const byKind: Record<string, Record<string, string>> = {
   billingPeriod: { Monthly: 'Aylık', Quarterly: '3 aylık', Annual: 'Yıllık', OneTime: 'Tek seferlik' },
-  examType: { Monthly: 'Aylık değerlendirme', Weekly: 'Haftalık test', Mock: 'Deneme', YDT: 'YDT (Dil)' }
+  examType: { Monthly: 'Aylık değerlendirme', Weekly: 'Haftalık test', Mock: 'Deneme sınavı', YDT: 'YDT (Dil)' }
 };
 
 export type CoachingLabelKind = keyof typeof byKind;

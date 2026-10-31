@@ -17,7 +17,7 @@ import { CoachingDataExportService, saveCoachingExport } from '../../../core/ser
       }
       @if (error()) { <p role="alert" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ error() }}</p> }
       @if (done()) { <p role="status" class="mt-3 text-sm text-emerald-700 dark:text-emerald-300">Dosyan indirildi.</p> }
-      <button type="button" class="mt-4 rounded-lg border border-indigo-300 px-4 py-2 text-sm font-medium text-indigo-700 disabled:opacity-50 dark:border-indigo-800 dark:text-indigo-200" [disabled]="busy()" (click)="download()">{{ busy() ? 'Hazırlanıyor…' : 'Verilerimi indir' }}</button>
+      <button type="button" class="mt-4 rounded-lg border border-(--ui-border) px-4 py-2 text-sm font-medium text-(--ui-brand-text) disabled:opacity-50 " [disabled]="busy()" (click)="download()">{{ busy() ? 'Hazırlanıyor…' : 'Verilerimi indir' }}</button>
     </section>
   `
 })

@@ -55,7 +55,10 @@ const textPairs = [['--ui-text', '--ui-page'], ['--ui-text', '--ui-surface'], ['
   ['--ui-brand-contrast', '--ui-brand'], ['--ui-brand-contrast', '--ui-brand-strong'],
   ['--ui-accent-text', '--ui-surface'], ['--ui-accent-text', '--ui-accent-soft'],
   ...['success', 'warning', 'danger', 'info'].flatMap(kind => [[`--ui-${kind}`, '--ui-surface'], [`--ui-${kind}`, `--ui-${kind}-soft`]]),
-  ...Array.from({ length: 8 }, (_, i) => [`--coaching-lesson-text-${i}`, `--coaching-lesson-${i}`])];
+  ...Array.from({ length: 8 }, (_, i) => [`--coaching-lesson-text-${i}`, `--coaching-lesson-${i}`]),
+  ...['--coaching-sidebar', '--coaching-sidebar-raised'].flatMap(bg => ['--coaching-sidebar-text', '--coaching-sidebar-muted',
+    '--coaching-sidebar-active'].map(fg => [fg, bg])),
+  ['--coaching-avatar-text', '--coaching-avatar'], ['--coaching-badge-text', '--coaching-badge']];
 const uiPairs = [['--coaching-focus', '--ui-surface'], ['--coaching-focus', '--ui-page'], ['--ui-border-strong', '--ui-surface'],
   ['--ui-brand', '--ui-surface'], ['--ui-accent', '--ui-surface']];
 
@@ -85,7 +88,8 @@ const walk = dir => { for (const entry of fs.readdirSync(dir, { withFileTypes: t
 walk(path.join(root, 'src/app/features/coaching-portal'));
 scanned.push(path.join(root, 'shared/coaching-messages.component.ts'), path.join(root, 'shared/coaching-messages.component.scss'));
 const banned = [[/(?<![&\w])#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?(?:[0-9a-fA-F]{2})?\b(?!\s*[-\w]*=)/g, 'hex colour'],
-  [/\b(?:rgba?|hsla?)\(/g, 'colour function'], [/\b[\w:-]*(?:indigo|violet|purple)-\d{2,3}\b/g, 'indigo/violet class']];
+  [/\b(?:rgba?|hsla?)\(/g, 'colour function'], [/\b[\w:-]*(?:indigo|violet|purple)-\d{2,3}\b/g, 'indigo/violet class'],
+  [/(?:\b(?:color|background(?:-color)?|border(?:-color)?|fill|stroke)\s*:\s*|,\s*)(?:white|black)\b(?![-\w])/g, 'named colour']];
 
 test('student portal files carry no hard-coded colours or indigo classes', () => {
   const found = [];

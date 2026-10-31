@@ -1,3 +1,4 @@
+import { CoachingLabelPipe } from '../coaching-labels';
 import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal, ViewChild, computed } from '@angular/core';
@@ -15,7 +16,7 @@ import { CoachingStudentNavigationService } from '../../../core/services/coachin
 @Component({
   selector: 'app-coaching-portal-progress',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, StudentStudyReportComponent, PracticeProgressComponent],
+  imports: [CoachingLabelPipe, CommonModule, ReactiveFormsModule, StudentStudyReportComponent, PracticeProgressComponent],
   templateUrl: './coaching-portal-progress.component.html',
   styleUrl: './coaching-portal-progress.component.scss'
 })
