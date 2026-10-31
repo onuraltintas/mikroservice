@@ -62,7 +62,8 @@ export class CoachingPortalProgressComponent implements OnInit {
     { value: 5, apiName: 'TimeManagement', label: 'Zaman yönetimi' },
     { value: 99, apiName: 'Other', label: 'Diğer' }
   ];
-  readonly minTargetDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  // K4 (31.10.2026): "tomorrow" is counted in Türkiye time, not from the UTC date.
+  readonly minTargetDate = tomorrowInTurkey(new Date());
   readonly goalForm = this.formBuilder.group({
     title: ['', [Validators.required, Validators.maxLength(200)]],
     category: [4, [Validators.required]],
@@ -268,4 +269,11 @@ export class CoachingPortalProgressComponent implements OnInit {
     });
   }
   private readonly feedback = coachingFeedback(undefined, this.errorMessage);
+}
+
+/** The day after today in Europe/Istanbul as yyyy-MM-dd. */
+export function tomorrowInTurkey(now: Date): string {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const [y, m, d] = today.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
 }

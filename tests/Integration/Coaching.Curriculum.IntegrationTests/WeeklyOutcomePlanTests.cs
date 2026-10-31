@@ -72,6 +72,22 @@ public sealed class WeeklyOutcomePlanTests
         f.User.Roles=["Teacher"];Assert.Equal(403,Assert.IsType<Microsoft.AspNetCore.Mvc.ObjectResult>(await api.Options(default)).StatusCode);
         f.User.Roles=["Student"];f.User.UserId=Guid.NewGuid();Assert.IsType<Microsoft.AspNetCore.Mvc.NotFoundObjectResult>(await api.Options(default));
     }
+    // K4 (31.10.2026): a plan cannot start before the student's today or reach the exam day.
+    [Fact]
+    public async Task ThePlanWindowStartsTodayAndEndsBeforeTheExam()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();await Seed(f);
+        var service=new CoachingWeeklyOutcomePlanService(f.Db,new CoachingAccessPolicy(f.User),new WeeklyStudyDraftTests.Catalog(f.Db),new FixedClock(new(2027,5,25,6,0,0,TimeSpan.Zero)));
+        var past=await Assert.ThrowsAsync<ArgumentException>(()=>service.PreviewAsync(Input,default));
+        Assert.Contains("bugün",past.Message);
+        var fromToday=Input with {StartDate=new(2027,5,25)};
+        Assert.True((await service.PreviewAsync(fromToday,default)).CanCreate);
+        await service.SetExamDateAsync(new(new DateOnly(2027,6,1)),default);
+        var examDay=await Assert.ThrowsAsync<ArgumentException>(()=>service.PreviewAsync(fromToday,default));
+        Assert.Contains("sınav",examDay.Message);
+        Assert.True((await service.PreviewAsync(fromToday with {EndDate=new(2027,5,31)},default)).CanCreate);
+    }
+    private sealed class FixedClock(DateTimeOffset now):TimeProvider{public override DateTimeOffset GetUtcNow()=>now;}
     private static readonly WeeklyOutcomePlanRequest Input=new(new(2027,5,24),new(2027,6,1),0,false);
     internal static async Task<CoachingWeeklyOutcomePlanService> Seed(CurriculumManagementTests.Fixture f)
     {

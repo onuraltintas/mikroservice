@@ -25,6 +25,15 @@ describe('weekly outcome plan preview',()=>{
     const{c,service}=await setup();c.generatePreview();expect(c.endDate).toBe('2027-06-01');c.extendDeadline();expect(c.endDate).toBe('2027-06-07');expect(service.preview).toHaveBeenLastCalledWith(expect.objectContaining({endDate:'2027-06-07'}),undefined);
     c.useFreedSlots();expect(service.preview).toHaveBeenLastCalledWith(expect.objectContaining({reuseFreedSlots:true}),undefined);
   });
+  // K4 (31.10.2026): extending the deadline never reaches the exam day.
+  it('caps the extended deadline at the day before the exam',async ()=>{
+    const{c,service}=await setup();
+    c.options.set({...c.options()!,examDate:'2027-06-05'});
+    c.generatePreview();c.extendDeadline();
+    expect(c.endDate).toBe('2027-06-04');expect(service.preview).toHaveBeenLastCalledWith(expect.objectContaining({endDate:'2027-06-04'}),undefined);
+    const calls=service.preview.mock.calls.length;c.extendDeadline();
+    expect(service.preview.mock.calls.length).toBe(calls);expect(c.canExtendDeadline()).toBe(false);
+  });
   it('requires a complete current preview and confirmation before creating a separate draft',async ()=>{
     const{c,service}=await setup();c.title='Yıllık plan';c.generatePreview();c.confirmed=true;c.save();expect(service.create).not.toHaveBeenCalled();
     service.preview.mockReturnValue(of({...short,canCreate:true}) as any);c.generatePreview();c.save();expect(service.create).not.toHaveBeenCalled();c.confirmed=true;c.save();expect(service.create).toHaveBeenCalledWith({title:'Yıllık plan',preview:request,fingerprint:'abc'},undefined);

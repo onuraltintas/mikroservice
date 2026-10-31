@@ -63,7 +63,7 @@ public sealed class YksFullImportPostgresTests
         context.ReplaceSelections(soz.Lessons.Select(l=>StudentCoursePreference.Create(context.Id,l.Id,3,null)),[],true);
         var weekly=WeeklyStudyDraft.Create(student);weekly.Replace("Europe/Istanbul",Cards(soz.Lessons));f.Db.Add(weekly);await f.Db.SaveChangesAsync();
         var sozRequest=new WeeklyOutcomePlanRequest(new(2026,10,19),new(2027,6,1),weekly.Version,true);
-        var sozPreview=await new CoachingWeeklyOutcomePlanService(f.Db,access,setup,TimeProvider.System).PreviewAsync(sozRequest,default);
+        var sozPreview=await new CoachingWeeklyOutcomePlanService(f.Db,access,setup,PlanClock).PreviewAsync(sozRequest,default);
         var sozOutcome=await (from o in f.Db.Set<StudyCatalogOutcome>() join e in f.Db.Set<OfficialCurriculumEdition>() on o.EditionId equals e.Id where e.SubjectName.StartsWith("Coğrafya")&&o.Code=="11.2.8" select o.Id).SingleAsync();
         Assert.Contains(sozPreview.Schedule.Tasks,t=>t.Outcome.OutcomeId==sozOutcome);
         context.SetScope(2026,LearningPurpose.Yks,2027,"EA",null);await f.Db.SaveChangesAsync();
@@ -71,13 +71,13 @@ public sealed class YksFullImportPostgresTests
         context.ReplaceSelections(ea.Lessons.Select(l=>StudentCoursePreference.Create(context.Id,l.Id,3,null)),[],true);
         weekly.Replace("Europe/Istanbul",Cards(ea.Lessons));await f.Db.SaveChangesAsync();
         var request=new WeeklyOutcomePlanRequest(new(2026,10,19),new(2027,6,1),weekly.Version,true);
-        var studentService=new CoachingWeeklyOutcomePlanService(f.Db,access,setup,TimeProvider.System);
+        var studentService=new CoachingWeeklyOutcomePlanService(f.Db,access,setup,PlanClock);
         var preview=await studentService.PreviewAsync(request,default);Assert.Empty(preview.Issues);Assert.True(preview.CanCreate);
         Assert.All(preview.Schedule.Tasks,t=>Assert.InRange(t.Date,request.StartDate,request.EndDate));
         var teacherUser=new CurriculumManagementTests.Actor{UserId=teacher,Roles=["Teacher"]};var teacherPolicy=new CoachingAccessPolicy(teacherUser);
         var teacherAccess=new CoachingStudyPlanAccess(teacherPolicy,new OwnedCoachingDirectory(f.Db,accounts,teacherUser),f.Scope);
         var teacherSetup=new CoachingLearningSetupService(f.Db,teacherPolicy,accounts,teacherAccess);
-        var teacherService=new CoachingWeeklyOutcomePlanService(f.Db,teacherPolicy,teacherSetup,TimeProvider.System,teacherAccess);
+        var teacherService=new CoachingWeeklyOutcomePlanService(f.Db,teacherPolicy,teacherSetup,PlanClock,teacherAccess);
         var teacherPreview=await teacherService.PreviewForStudentAsync(student,request,default);
         Assert.Equal(preview.Fingerprint,teacherPreview.Fingerprint);Assert.True(teacherPreview.CanCreate);
         var created=await teacherService.CreateForStudentAsync(student,new("Öğretmen EA planı",request,teacherPreview.Fingerprint),default);
@@ -97,4 +97,7 @@ public sealed class YksFullImportPostgresTests
         public Task<bool> IsActiveInstitutionAsync(Guid id,CancellationToken ct)=>Task.FromResult(true);
         public Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeRepresentativeAsync(Guid viewer,Guid target,CancellationToken ct)=>throw new NotSupportedException();
     }
+    // The plan below starts on 19.10.2026; K4 rejects plans that start before the student's today.
+    private static readonly TimeProvider PlanClock=new FixedClock(new(2026,10,19,6,0,0,TimeSpan.Zero));
+    private sealed class FixedClock(DateTimeOffset now):TimeProvider{public override DateTimeOffset GetUtcNow()=>now;}
 }

@@ -399,6 +399,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<long?>("GradeRevision")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("LastSubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_submitted_at");
+
                     b.Property<decimal?>("Score")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")

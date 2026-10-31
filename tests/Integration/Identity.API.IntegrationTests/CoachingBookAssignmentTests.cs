@@ -86,7 +86,8 @@ public sealed class CoachingBookAssignmentTests
         attachment.SetUploadExpiry(DateTime.UtcNow.AddMinutes(5));
 
         var submitBeforeScan = () => student.Submit();
-        submitBeforeScan.Should().Throw<InvalidOperationException>();
+        // K4 (31.10.2026): a Turkish business-rule error (400) instead of an English InvalidOperationException (404).
+        submitBeforeScan.Should().Throw<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>().Which.Code.Should().Be("Attachment.NotClean");
 
         attachment.MarkUploaded();
         attachment.MarkClean();

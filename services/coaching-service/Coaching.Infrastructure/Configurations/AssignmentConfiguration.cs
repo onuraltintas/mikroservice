@@ -151,6 +151,9 @@ public class AssignmentStudentConfiguration : IEntityTypeConfiguration<Assignmen
         builder.Property(x => x.SubmittedAt)
             .HasColumnName("submitted_at");
 
+        builder.Property(x => x.LastSubmittedAt)
+            .HasColumnName("last_submitted_at");
+
         builder.Property(x => x.Score)
             .HasColumnName("score")
             .HasPrecision(5, 2);

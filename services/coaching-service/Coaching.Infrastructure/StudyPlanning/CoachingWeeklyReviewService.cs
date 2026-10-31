@@ -18,12 +18,20 @@ public sealed partial class CoachingWeeklyReviewService(CoachingDbContext db, IC
 {
     private static BusinessRuleException Conflict() => new("WeeklyReview.Conflict", "Haftalık kayıt değişti. Girdileriniz korunuyor; güncel kaydı yükleyip tekrar inceleyin.");
     private static BusinessRuleException Forbidden() => new("Authorization.Forbidden", "Bu haftalık kayıt için yetkiniz yok.");
-    private DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul")).DateTime);
+    // K4 (31.10.2026): "today" is the student's own day (CoachingStudentZone), the same as in Bugün; set once the student is known.
+    private TimeZoneInfo zone = CoachingStudentZone.Find(null);
+    private DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), zone).DateTime);
     private void ValidateWeek(DateOnly week)
     {
         if (week == default || week.DayOfWeek != DayOfWeek.Monday || week > Today) throw new ArgumentException("Başlamış bir haftanın pazartesi tarihini seçin.");
     }
     private async Task<Guid> Require(Guid? requested, bool write, CancellationToken ct)
+    {
+        var student = await RequireCore(requested, write, ct);
+        zone = CoachingStudentZone.Find(await CoachingStudentZone.IdAsync(db, student, ct));
+        return student;
+    }
+    private async Task<Guid> RequireCore(Guid? requested, bool write, CancellationToken ct)
     {
         if (requested is { } student)
         {

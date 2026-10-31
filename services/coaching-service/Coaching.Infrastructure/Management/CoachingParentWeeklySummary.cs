@@ -62,7 +62,14 @@ public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, I
                            join plan in db.StudyPlanRevisions.AsNoTracking() on task.RevisionId equals plan.Id
                            where task.StudentId == student && plan.Status == StudyPlanStatus.Active && task.SkippedAt == null
                                && task.PlannedDate >= weekStart && task.PlannedDate <= weekEnd
-                           select task.IsCompleted).ToListAsync(ct);
+                           select new { task.IsCompleted, task.PlannedDate, task.PlannedStartMinute }).ToListAsync(ct);
+        // K4 (31.10.2026): the e-mail can leave on Sunday evening; an unfinished task of that day that has not started yet (or
+        // has no time) is still ahead, so it is neither counted as planned-and-missed nor shown as left undone.
+        var localNow = TimeZoneInfo.ConvertTimeFromUtc(now, Istanbul);
+        var today = DateOnly.FromDateTime(localNow);
+        var minute = localNow.Hour * 60 + localNow.Minute;
+        var counted = tasks.Where(x => x.IsCompleted || x.PlannedDate < today
+            || x.PlannedDate == today && x.PlannedStartMinute is { } start && start <= minute).Select(x => x.IsCompleted).ToList();
         var assignments = await (from row in db.AssignmentStudents.AsNoTracking()
                                  join assignment in db.Assignments.AsNoTracking() on row.AssignmentId equals assignment.Id
                                  where row.StudentId == student && assignment.Status != AssignmentStatus.Cancelled
@@ -80,9 +87,9 @@ public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, I
                           select new { item.Title, result.Score }).FirstOrDefaultAsync(ct);
         var held = sessions.Where(x => x.ScheduledDate < rangeEnd && x.ScheduledDate <= now).ToArray();
         var upcoming = sessions.Count(x => x.ScheduledDate > now && x.Status == SessionStatus.Scheduled);
-        if (tasks.Count == 0 && assignments.Count == 0 && held.Length == 0 && upcoming == 0 && exam is null) return null;
+        if (counted.Count == 0 && assignments.Count == 0 && held.Length == 0 && upcoming == 0 && exam is null) return null;
         return new CoachingParentWeeklySummaryV1(id, recipient.ParentUserId, recipient.ParentEmail, recipient.ParentName, student,
-            recipient.StudentName, weekStart, weekEnd, tasks.Count, tasks.Count(x => x),
+            recipient.StudentName, weekStart, weekEnd, counted.Count, counted.Count(x => x),
             assignments.Count, assignments.Count(x => AssignmentProgress.IsDone(x.Status)),
             assignments.Count(x => AssignmentProgress.IsOverdue(x.AssignmentStatus, x.Status, x.DueDate, now)),
             held.Length, held.Count(x => x.AttendanceStatus is AttendanceStatus.Present or AttendanceStatus.Late), upcoming,

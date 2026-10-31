@@ -45,5 +45,6 @@ public record StudentAssignmentDto(
     decimal? MaxScore,
     string? TeacherFeedback,
     bool IsOverdue,
-    string AssignmentStatus = "Active"
+    string AssignmentStatus = "Active",
+    DateTime? LastSubmittedAt = null
 );
