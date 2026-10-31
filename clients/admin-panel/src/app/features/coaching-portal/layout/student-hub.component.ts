@@ -4,18 +4,20 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 import { STUDENT_HUBS, StudentHubTab } from './student-hubs';
+import { StudentPlanEditStepsComponent } from './student-plan-edit-steps.component';
 
 /** T2 (31.10.2026): one menu item, several pages — the hub shows its sections as tabs above the current page. */
 @Component({
   selector: 'app-student-hub',
   standalone: true,
-  imports: [RouterLink, RouterOutlet],
+  imports: [RouterLink, RouterOutlet, StudentPlanEditStepsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<nav class="hub-tabs" [attr.aria-label]="hub.label + ' bölümleri'">
       @for (tab of tabs(); track tab.path) {
         <a [routerLink]="tab.path" [class.is-active]="isActive(tab)" [attr.aria-current]="isActive(tab) ? 'page' : null">{{ tab.label }}</a>
       }
     </nav>
+    @if (hub === plan) { <app-student-plan-edit-steps /> }
     <router-outlet />`,
   styles: [`:host{display:block}
     .hub-tabs{display:flex;gap:4px;max-width:100%;overflow-x:auto;margin:0 0 var(--coaching-space-6);padding:4px;border-radius:var(--coaching-radius-pill);background:var(--ui-surface-muted);width:fit-content;scrollbar-width:none}
@@ -29,6 +31,7 @@ export class StudentHubComponent {
   private readonly router = inject(Router);
   private readonly navigation = inject(CoachingStudentNavigationService);
   readonly hub = STUDENT_HUBS[inject(ActivatedRoute).snapshot.data['hub'] as keyof typeof STUDENT_HUBS];
+  protected readonly plan = STUDENT_HUBS.plan;
   readonly tabs = computed(() => this.hub.tabs.filter(tab => !tab.needsFees || (this.navigation.showFees?.() ?? true)));
   private readonly url = toSignal(this.router.events.pipe(filter(event => event instanceof NavigationEnd), map(() => this.router.url), startWith(this.router.url)), { initialValue: '' });
 
