@@ -37,6 +37,11 @@ const hrefs = (root: HTMLElement, selector: string) =>
   [...root.querySelectorAll(selector)].map(a => a.getAttribute('href'));
 
 describe('CoachingPortalLayoutComponent (T2 menu)', () => {
+  it('leaves the one-time intro card to the Bugün page (T3)', async () => {
+    const fixture = create(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('app-coaching-whats-new-card')).toBeNull();
+  });
+
   it('shows the six student destinations in order', async () => {
     const fixture = create(); await fixture.whenStable();
     expect(hrefs(fixture.nativeElement, '.coaching-navigation a')).toEqual([
