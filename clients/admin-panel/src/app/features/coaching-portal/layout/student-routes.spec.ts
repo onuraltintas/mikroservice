@@ -21,9 +21,9 @@ const expected: Record<string, string> = {
   'exam-results': 'growth/exams',
   'setup': 'account/settings',
   'profile': 'account/settings/profile',
-  'settings': 'account/settings/general',
+  'settings': 'account/settings',
   'subscription': 'account/payments',
-  'finance': 'account/payments/fees',
+  'finance': 'account/payments',
   'finance/:feeId': 'account/payments/fees/:feeId'
 };
 
@@ -74,15 +74,18 @@ describe('student route redirects', () => {
     const growth = COACHING_PORTAL_ROUTES.find(r => r.path === 'growth')!;
     expect(growth.children!.map(c => c.path)).toEqual(['', 'exams', 'goals', 'week']);
     const settings = COACHING_PORTAL_ROUTES.find(r => r.path === 'account/settings')!;
-    expect(settings.children!.map(c => c.path)).toEqual(['', 'profile', 'general', 'theme']);
+    expect(settings.children!.map(c => c.path)).toEqual(['', 'profile', 'notifications', 'theme', 'general']);
     const payments = COACHING_PORTAL_ROUTES.find(r => r.path === 'account/payments')!;
     expect(payments.children!.map(c => c.path)).toEqual(['', 'fees', 'fees/:feeId']);
+    // T5: Ayarlar and Ücretlerim were folded into the new pages; their old addresses still open them.
+    expect(settings.children!.find(c => c.path === 'general')!.redirectTo).toBe('');
+    expect(payments.children!.find(c => c.path === 'fees')!.redirectTo).toBe('');
   });
 
   it('keeps the unsaved-change guards on the moved pages', () => {
     const child = (parent: string, path: string) => COACHING_PORTAL_ROUTES.find(r => r.path === parent)!.children!.find(c => c.path === path)!;
     for (const [parent, path] of [['plan', ''], ['plan', 'weekly'], ['plan', 'hours'], ['plan', 'wizard'], ['plan', 'preview'],
-      ['growth', 'exams'], ['growth', 'goals'], ['growth', 'week'], ['account/settings', ''], ['account/settings', 'profile'], ['account/settings', 'general']]) {
+      ['growth', 'exams'], ['growth', 'goals'], ['growth', 'week'], ['account/settings', ''], ['account/settings', 'profile']]) {
       expect(child(parent, path).canDeactivate?.length, `${parent}/${path}`).toBe(1);
     }
     expect(child('plan', 'hours').data?.['initialTab']).toBe('hours');
@@ -91,8 +94,8 @@ describe('student route redirects', () => {
   it('describes each hub with tabs that point inside it', () => {
     expect(STUDENT_HUBS.plan.tabs.map(t => t.label)).toEqual(['Planım', 'Haftalık düzen', 'Plan sihirbazı']);
     expect(STUDENT_HUBS.growth.tabs.map(t => t.label)).toEqual(['Denemeler', 'Hedefim', 'Haftam']);
-    expect(STUDENT_HUBS.settings.tabs.map(t => t.label)).toEqual(['Tercihlerim', 'Profilim', 'Ayarlar', 'Görünüm']);
-    expect(STUDENT_HUBS.payments.tabs.map(t => t.label)).toEqual(['Abonelik', 'Ücretlerim']);
+    expect(STUDENT_HUBS.settings.tabs.map(t => t.label)).toEqual(['Profilim', 'Çalışma tercihlerim', 'Bildirimler', 'Görünüm']);
+    expect(STUDENT_HUBS.payments.tabs).toEqual([]);
     for (const hub of Object.values(STUDENT_HUBS)) for (const tab of hub.tabs) expect(tab.path.startsWith('/coaching-portal/')).toBe(true);
   });
 });
