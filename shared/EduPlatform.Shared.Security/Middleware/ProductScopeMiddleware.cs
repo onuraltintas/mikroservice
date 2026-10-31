@@ -5,7 +5,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace EduPlatform.Shared.Security.Middleware;
 
-public sealed class ProductScopeMiddleware(RequestDelegate next, string product)
+public sealed record ProductScopeException(string Product, string Role, string PathPrefix);
+
+public sealed class ProductScopeMiddleware(RequestDelegate next, string product, ProductScopeException[]? exceptions = null)
 {
     public async Task InvokeAsync(HttpContext context, IConfiguration configuration)
     {
