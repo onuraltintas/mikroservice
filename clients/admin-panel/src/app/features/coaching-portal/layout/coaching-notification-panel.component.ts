@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Notification, NotificationService } from '../../../core/services/notification.service';
 import { coachingNotificationLabel } from '../../../../../shared/coaching-notification-target';
+import { parentNotificationLabel } from '../parent/parent-model';
 
 export interface NotificationDay { label: string; items: Notification[] }
 
@@ -81,7 +82,8 @@ export class CoachingNotificationPanelComponent {
   readonly closed = output<void>();
   /** V4: parents have their own Bildirimler page. */
   readonly allLink = input('/coaching-portal/notifications');
-  readonly typeLabel = coachingNotificationLabel;
+  /** Unknown types (e.g. parent link notices) read "Bildirim" or their parent label, never the raw code. */
+  readonly typeLabel = (type: string) => { const label = coachingNotificationLabel(type); return label === type ? parentNotificationLabel(type) : label; };
   readonly groups = computed(() => groupNotificationsByDay([...this.notifications.notifications()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10)));
 
   constructor() {

@@ -34,7 +34,8 @@ export interface ParentSpeedReadingOverview {
   weeks: { weekStart: string; minutes: number; activeDays: number }[];
   reading: { latestWpm: number | null; firstWpm: number | null; latestComprehension: number | null;
     trend: { date: string; wpm: number | null; comprehension: number | null }[] };
-  gamification: { level: number; xp: number; streakDays: number; badgesEarned: number; recentBadges: { name: string; earnedAt: string }[] };
+  /** null when the child has no XP and no badge yet; recentBadges holds at most 5. */
+  gamification: { level: number; xp: number; streakDays: number; badgesEarned: number; recentBadges: { name: string; earnedAt: string }[] } | null;
   recentResults: { date: string; exerciseType: string; exerciseName: string; score: number | null; wpm: number | null; comprehension: number | null }[];
 }
 
@@ -81,6 +82,7 @@ export function coachingStatusLine(week: Pick<ParentCoachingWeek, 'planned' | 'c
   return week.planned > 0 ? `Bu hafta ${week.completed}/${week.planned} görev` : 'Bu hafta planlı görev yok';
 }
 export function speedReadingStatusLine(view: Pick<ParentSpeedReadingOverview, 'program' | 'thisWeek'>): string {
+  if (view.program?.status?.toLowerCase() === 'completed') return 'Program tamamlandı';
   if (view.program) return `Program ${view.program.currentDay}/${view.program.totalDays}. gün`;
   return view.thisWeek?.minutes > 0 ? `Bu hafta ${view.thisWeek.minutes} dk okuma` : 'Bu hafta henüz çalışmadı';
 }

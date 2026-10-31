@@ -29,6 +29,7 @@ export class ParentWeekBarsComponent {
 
 export interface ReadingPoint { date: string; wpm: number | null; comprehension: number | null }
 
+const percentFormat = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 });
 const W = 560, H = 200, LEFT = 40, RIGHT = W - 40, TOP = 14, BOTTOM = H - 26;
 
 /**
@@ -60,7 +61,7 @@ const W = 560, H = 200, LEFT = 40, RIGHT = W - 40, TOP = 14, BOTTOM = H - 26;
     <details class="cp-trend-table"><summary>Sayıları tablo olarak göster</summary>
       <table><caption class="cp-sr-only">Ölçülen okuma sonuçları</caption>
         <thead><tr><th scope="col">Tarih</th><th scope="col">Hız (kelime/dk)</th><th scope="col">Anlama</th></tr></thead>
-        <tbody>@for (point of points(); track $index) { <tr><td>{{ day(point.date) }}</td><td>{{ point.wpm ?? '—' }}</td><td>{{ point.comprehension === null ? '—' : '%' + point.comprehension }}</td></tr> }</tbody>
+        <tbody>@for (point of points(); track $index) { <tr><td>{{ day(point.date) }}</td><td>{{ point.wpm ?? '—' }}</td><td>{{ pct(point.comprehension) }}</td></tr> }</tbody>
       </table>
     </details>`
 })
@@ -69,6 +70,7 @@ export class ParentReadingTrendComponent {
   readonly childName = input('');
   readonly width = W; readonly height = H; readonly left = LEFT; readonly right = RIGHT; readonly bottom = BOTTOM;
   readonly day = shortDate;
+  pct(value: number | null) { return value === null || value === undefined ? '—' : '%' + percentFormat.format(value); }
 
   readonly chart = computed(() => {
     const points = this.points();
