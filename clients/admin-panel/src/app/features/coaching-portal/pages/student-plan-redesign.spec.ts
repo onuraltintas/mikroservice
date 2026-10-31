@@ -9,13 +9,15 @@ import { StudentStudyPlansComponent } from './student-study-plans.component';
 // everything else (partial work, remaining work, new date, correction) lives in a bottom sheet. Staff keep the full view.
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const addDays = (iso: string, days: number) => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); };
+// Another day inside the strip's week (Monday–Sunday): on a Sunday that is Saturday, otherwise tomorrow.
+const otherDay = addDays(today, new Date(`${today}T12:00:00Z`).getUTCDay() === 0 ? -1 : 1);
 const task = (id: string, plannedDate: string, extra: Partial<StudyTask> = {}): StudyTask => ({
   id, plannedDate, title: `Çalışma ${id}`, plannedMinutes: 40, topicId: null, isPinned: false, isCompleted: false,
   actualMinutes: null, completedAt: null, lessonName: 'Matematik', plannedStartMinute: 600, ...extra
 });
 const plan: StudyPlan = { id: 'plan', version: 4, title: 'Ekim planı', status: 'Active', tasks: [
   task('a', today), task('b', today, { plannedStartMinute: 720, lessonName: 'Fizik' }),
-  task('c', addDays(today, 1)), task('d', addDays(today, 2), { isCompleted: true, actualMinutes: 40, completedAt: `${today}T10:00:00Z` })
+  task('c', otherDay), task('d', addDays(today, 2), { isCompleted: true, actualMinutes: 40, completedAt: `${today}T10:00:00Z` })
 ] };
 
 async function setup(staffStudentId: string | null = null, requestedTaskId: string | null = null) {
@@ -55,7 +57,7 @@ describe('Planım for students (T4)', () => {
 
   it('switches to another day from the strip', async () => {
     const { el, fixture } = await setup();
-    (el.querySelector(`.week-strip [data-date="${addDays(today, 1)}"]`) as HTMLButtonElement).click();
+    (el.querySelector(`.week-strip [data-date="${otherDay}"]`) as HTMLButtonElement).click();
     fixture.detectChanges();
     expect([...el.querySelectorAll('app-plan-task-row .title')].map(n => n.textContent?.trim())).toEqual(['Çalışma c']);
   });
@@ -64,7 +66,7 @@ describe('Planım for students (T4)', () => {
     const { el, fixture, component } = await setup();
     component.studentView.set('list'); component.taskFilter = 'all'; fixture.detectChanges();
     const headings = [...el.querySelectorAll('.day-group h3')].map(h => h.getAttribute('data-date'));
-    expect(headings).toEqual([today, addDays(today, 1), addDays(today, 2)]);
+    expect(headings).toEqual([today, otherDay, addDays(today, 2)].sort());
   });
 
   it('completes a task with one tap using its planned minutes and can undo it', async () => {
@@ -99,7 +101,7 @@ describe('Planım for students (T4)', () => {
 
   it('opens the linked task of a decision in the sheet on its day', async () => {
     const { el, component } = await setup(null, 'c');
-    expect(component.selectedDay()).toBe(addDays(today, 1));
+    expect(component.selectedDay()).toBe(otherDay);
     expect(el.querySelector('cs-bottom-sheet [role=dialog]')?.getAttribute('aria-label')).toBe('Çalışma c');
   });
 
