@@ -33,13 +33,13 @@ import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../.
   template: `
     <main class="space-y-6" aria-labelledby="parent-child-title">
       <div class="no-print flex flex-wrap items-center justify-between gap-2">
-        <a routerLink="/coaching-portal/parent" class="text-sm text-indigo-600 dark:text-indigo-300">← Çocuklarım</a>
+        <a routerLink="/coaching-portal/parent" class="text-sm text-(--ui-brand-text) ">← Çocuklarım</a>
         @if (link()) { <button type="button" data-testid="print-child" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium dark:border-slate-700" (click)="print()">Yazdır / PDF</button> }
       </div>
       @if (notLinked()) {
         <div role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">Bu öğrenciyle doğrulanmış bir veli bağlantın yok. Çocuğunun bağlantı isteğini onaylamasını bekle.</div>
       } @else if (link(); as child) {
-        <header><p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Veli paneli · salt okunur</p><h1 id="parent-child-title" class="mt-1 text-2xl font-bold">{{ child.studentName }}</h1></header>
+        <header><p class="text-sm font-medium text-(--ui-brand-text) ">Veli paneli · salt okunur</p><h1 id="parent-child-title" class="mt-1 text-2xl font-bold">{{ child.studentName }}</h1></header>
         @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
         @if (success()) { <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{{ success() }}</div> }
 
@@ -98,7 +98,7 @@ import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../.
               <label class="text-sm">Not<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="note" name="note" maxlength="1000" /></label>
               <div class="sm:col-span-2"><edu-coaching-checkout [api]="sales" [planId]="planId" [price]="selectedPlanPrice()" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" /></div>
               <label class="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum.</label>
-              <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-2" [disabled]="sending() || !checkout.acceptSalesContract">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
+              <button type="submit" class="rounded-lg bg-(--ui-brand) px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-2" [disabled]="sending() || !checkout.acceptSalesContract">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
             </form>
           }
         </section>

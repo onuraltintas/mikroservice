@@ -5,7 +5,7 @@
 h1 { font-size: 1.8rem; font-weight: 750; margin: .2rem 0 .5rem; }
 h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: .6rem; }
 h3 { font-weight: 650; }
-.eyebrow { color: #4f46e5; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; }
+.eyebrow { color: var(--ui-brand-text); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
 .plan-toolbar { padding: 1rem 1.25rem; }
 .plan-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1rem; }
@@ -19,13 +19,13 @@ h3 { font-weight: 650; }
 .panel { background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: 1rem; padding: 1.25rem; min-width: 0; }
 label { display: block; font-size: .9rem; font-weight: 550; }
 input:not([type=checkbox]), select { display: block; width: 100%; margin: .4rem 0 .8rem; border: 1px solid var(--ui-border); border-radius: .5rem; padding: .6rem; background: var(--ui-page); color: inherit; }
-button { background: #4338ca; color: white; border-radius: .5rem; padding: .65rem .9rem; font-size: .9rem; font-weight: 600; }
+button { background: var(--ui-brand); color: var(--ui-brand-contrast); border-radius: .5rem; padding: .65rem .9rem; font-size: .9rem; font-weight: 600; }
 button:disabled { opacity: .5; cursor: not-allowed; }
-button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #6366f1; outline-offset: 3px; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--coaching-focus); outline-offset: 3px; }
 .secondary { background: var(--ui-page); color: inherit; border: 1px solid var(--ui-border); }
 .plan-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: .7rem; text-align: left; margin-top: .7rem; background: var(--ui-page); color: inherit; border: 1px solid var(--ui-border); }
 .plan-row strong { overflow-wrap: anywhere; }
-.plan-row.selected { border-color: #6366f1; }
+.plan-row.selected { border-color: var(--ui-brand); }
 .badge { font-size: .75rem; border: 1px solid var(--ui-border); border-radius: 99px; padding: .2rem .6rem; white-space: nowrap; }
 .pagination { align-items: center; justify-content: space-between; font-size: .75rem; margin: 1rem 0; gap: .4rem; }
 .pagination button { padding: .4rem .5rem; font-size: .75rem; }
@@ -35,21 +35,21 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .fields > button { margin-bottom: .8rem; }
 .check { display: flex; align-items: center; gap: .5rem; margin: .8rem 0; }
 .check input { width: 1rem; height: 1rem; flex-shrink: 0; }
-.publish-box { border-left: 3px solid #6366f1; background: var(--ui-page); padding: 1rem; margin-top: 1.5rem; }
+.publish-box { border-left: 3px solid var(--ui-brand); background: var(--ui-page); padding: 1rem; margin-top: 1.5rem; }
 .muted, .task > p { opacity: .75; font-size: .9rem; }
 .topic-unit{margin:1rem 0;padding:1rem;border:1px solid var(--ui-border);border-radius:14px;background:color-mix(in srgb,var(--ui-accent) 4%,var(--ui-surface))}.topic-unit h3{margin:0 0 .7rem;color:var(--ui-text);font-size:1rem}.topic-entry{padding:.8rem 0;border-top:1px solid var(--ui-border)}.topic-entry-heading,.topic-entry-fields{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}.topic-entry-heading strong{font-weight:700}.topic-entry-fields{margin-top:.55rem;justify-content:flex-start}.topic-entry-fields .topic-status{display:flex;align-items:center;gap:.6rem;max-width:100%;font-size:.8rem}.topic-entry-fields select{min-width:180px}.topic-outcomes{margin:.7rem 0 0;padding:.75rem 1rem;border-radius:10px;background:var(--ui-surface);border:1px solid var(--ui-border)}.topic-outcomes ul{margin:.2rem 0;padding-left:1.2rem}.topic-outcomes li{padding:.35rem 0;line-height:1.5}.topic-outcomes small{display:block;color:var(--ui-text-muted)}
-.completed { border-left: 3px solid #10b981; padding-left: 1rem; }
-.completion { color: #047857; }
+.completed { border-left: 3px solid var(--ui-border-strong); padding-left: 1rem; }
+.completion { color: var(--ui-brand-text); }
 .notice { padding: 1rem; border-radius: .5rem; margin-bottom: 1rem; border: 1px solid; }
-.error { color: #b91c1c; border-color: #fca5a5; }
-.success { color: #047857; border-color: #6ee7b7; }
+.error { color: var(--ui-danger); border-color: var(--ui-danger); }
+.success { color: var(--ui-brand-text); border-color: var(--ui-border); }
 .empty { padding: 3rem 1rem; text-align: center; }
 fieldset { border: 0; padding: 0; min-width: 0; }
-.plan-view-switch{display:flex;gap:6px;margin:18px 0}.plan-view-switch button[aria-pressed=true]{background:#356c60;color:white;border-color:#356c60}.calendar-task-detail{margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:8px;scroll-margin-top:20px}.calendar-task-detail:focus{outline:2px solid #527f6e;outline-offset:5px}
+.plan-view-switch{display:flex;gap:6px;margin:18px 0}.plan-view-switch button[aria-pressed=true]{background:var(--ui-brand);color:var(--ui-brand-contrast);border-color:var(--ui-brand)}.calendar-task-detail{margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:8px;scroll-margin-top:20px}.calendar-task-detail:focus{outline:2px solid var(--ui-border-strong);outline-offset:5px}
 @media (max-width: 760px) { .workspace { grid-template-columns: 1fr; } .panel { padding: 1rem; } }
 
-.task{--lesson-color:var(--ui-brand,#277868);margin-top:16px;padding:20px;border:1px solid color-mix(in srgb,var(--lesson-color) 25%,var(--ui-border));border-left:5px solid var(--lesson-color);border-radius:16px;background:linear-gradient(120deg,color-mix(in srgb,var(--lesson-color) 8%,var(--ui-surface)),var(--ui-surface));box-shadow:0 5px 18px color-mix(in srgb,var(--lesson-color) 10%,transparent)}
+.task{--lesson-color:var(--ui-brand);margin-top:16px;padding:20px;border:1px solid color-mix(in srgb,var(--lesson-color) 25%,var(--ui-border));border-left:5px solid var(--lesson-color);border-radius:16px;background:linear-gradient(120deg,color-mix(in srgb,var(--lesson-color) 8%,var(--ui-surface)),var(--ui-surface));box-shadow:0 5px 18px color-mix(in srgb,var(--lesson-color) 10%,transparent)}
 .task-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.lesson-badge,.task-status{border-radius:99px;padding:5px 10px;font-size:12px;font-weight:650;background:color-mix(in srgb,var(--lesson-color) 15%,var(--ui-surface));color:var(--ui-text)}.task-status{background:var(--ui-surface-muted)}.task h3{font-size:18px;line-height:1.5;margin:8px 0}.task>p{opacity:1;color:var(--ui-text-muted);line-height:1.7}.task.completed{border-left-color:var(--ui-success)}.task .completion{color:var(--ui-success);font-weight:650}
-.calendar-dialog-backdrop{position:fixed;inset:0;z-index:900;display:grid;place-items:center;padding:16px;background:#0d202870}.calendar-dialog{width:min(620px,100%);box-sizing:border-box;max-height:calc(100dvh - 32px);overflow:auto;padding:24px;border:1px solid var(--ui-border);border-radius:20px;background:var(--ui-surface);color:var(--ui-text);box-shadow:0 24px 80px #09172245}.dialog-heading{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:16px}.dialog-heading h2{margin:0}.calendar-dialog .fields{align-items:start}.calendar-dialog .actions{margin-top:20px}
+.calendar-dialog-backdrop{position:fixed;inset:0;z-index:900;display:grid;place-items:center;padding:16px;background:var(--coaching-scrim)}.calendar-dialog{width:min(620px,100%);box-sizing:border-box;max-height:calc(100dvh - 32px);overflow:auto;padding:24px;border:1px solid var(--ui-border);border-radius:20px;background:var(--ui-surface);color:var(--ui-text);box-shadow:var(--coaching-card-shadow)}.dialog-heading{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:16px}.dialog-heading h2{margin:0}.calendar-dialog .fields{align-items:start}.calendar-dialog .actions{margin-top:20px}
 @media(max-width:600px){.task{padding:16px}.calendar-dialog{padding:18px}.calendar-dialog .fields>label{min-width:100%}}
-.plan-reason{color:#1f5a40;font-weight:600}
+.plan-reason{color:var(--ui-brand-text);font-weight:600}

@@ -1,5 +1,5 @@
 <section class="space-y-5">
-  <a [routerLink]="backRoute()" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-300">← Geri dön</a>
+  <a [routerLink]="backRoute()" class="inline-flex items-center gap-2 text-sm font-semibold text-(--ui-brand-text) hover:text-(--ui-brand-text) ">← Geri dön</a>
 
   <div *ngIf="isLoading()" class="space-y-4" aria-label="Ödev detayı yükleniyor">
     <div class="h-10 w-2/3 animate-pulse rounded bg-slate-200 dark:bg-slate-800"></div>
@@ -13,33 +13,33 @@
     <div class="assignment-heading rounded-2xl p-6 sm:p-8">
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p class="text-sm text-indigo-100">{{ item.subject || 'Koçluk ödevi' }} · {{ item.source | coachingLabel }}</p>
+          <p class="text-sm text-(--ui-brand-contrast)">{{ item.subject || 'Koçluk ödevi' }} · {{ item.source | coachingLabel }}</p>
           <h1 class="mt-2 text-2xl font-bold sm:text-3xl">{{ item.title }}</h1>
         </div>
         <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{{ assignmentStatusLabel(item.status) }}</span>
       </div>
-      <p *ngIf="item.description" class="mt-5 max-w-3xl whitespace-pre-line text-sm leading-6 text-indigo-50">{{ item.description }}</p>
+      <p *ngIf="item.description" class="mt-5 max-w-3xl whitespace-pre-line text-sm leading-6 text-(--ui-brand-contrast)">{{ item.description }}</p>
       <div class="mt-6 grid gap-4 text-sm sm:grid-cols-3">
-        <div><p class="text-indigo-200">Son tarih</p><p class="mt-1 font-semibold">{{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p></div>
-        <div><p class="text-indigo-200">Tahmini süre</p><p class="mt-1 font-semibold">{{ item.estimatedDurationMinutes ? item.estimatedDurationMinutes + ' dk' : 'Belirtilmedi' }}</p></div>
-        <div><p class="text-indigo-200">Puan</p><p class="mt-1 font-semibold">{{ item.maxScore ?? 'Değerlendirme' }}</p></div>
+        <div><p class="text-(--ui-brand-contrast)">Son tarih</p><p class="mt-1 font-semibold">{{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p></div>
+        <div><p class="text-(--ui-brand-contrast)">Tahmini süre</p><p class="mt-1 font-semibold">{{ item.estimatedDurationMinutes ? item.estimatedDurationMinutes + ' dk' : 'Belirtilmedi' }}</p></div>
+        <div><p class="text-(--ui-brand-contrast)">Puan</p><p class="mt-1 font-semibold">{{ item.maxScore ?? 'Değerlendirme' }}</p></div>
       </div>
     </div>
 
-    <div *ngIf="hasBookReference(item) && (item.bookTitle || item.bookStartPage || item.bookStartQuestion)" class="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
-      <h2 class="font-semibold text-amber-950 dark:text-amber-100">Kitap / kaynak görevi</h2>
+    <div *ngIf="hasBookReference(item) && (item.bookTitle || item.bookStartPage || item.bookStartQuestion)" class="rounded-2xl border border-(--ui-border) bg-(--ui-warning-soft) p-5">
+      <h2 class="font-semibold text-(--ui-text)">Kitap / kaynak görevi</h2>
       <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-        <div *ngIf="item.bookTitle"><dt class="text-amber-800/70 dark:text-amber-200/70">Kitap</dt><dd class="mt-1 font-medium">{{ item.bookTitle }}</dd></div>
-        <div *ngIf="item.bookChapter"><dt class="text-amber-800/70 dark:text-amber-200/70">Bölüm</dt><dd class="mt-1 font-medium">{{ item.bookChapter }}</dd></div>
-        <div *ngIf="item.bookStartPage || item.bookEndPage"><dt class="text-amber-800/70 dark:text-amber-200/70">Sayfalar</dt><dd class="mt-1 font-medium">{{ item.bookStartPage || '?' }} – {{ item.bookEndPage || '?' }}</dd></div>
-        <div *ngIf="item.bookStartQuestion || item.bookEndQuestion"><dt class="text-amber-800/70 dark:text-amber-200/70">Sorular</dt><dd class="mt-1 font-medium">{{ item.bookStartQuestion || '?' }} – {{ item.bookEndQuestion || '?' }}</dd></div>
+        <div *ngIf="item.bookTitle"><dt class="text-(--ui-text-muted)">Kitap</dt><dd class="mt-1 font-medium">{{ item.bookTitle }}</dd></div>
+        <div *ngIf="item.bookChapter"><dt class="text-(--ui-text-muted)">Bölüm</dt><dd class="mt-1 font-medium">{{ item.bookChapter }}</dd></div>
+        <div *ngIf="item.bookStartPage || item.bookEndPage"><dt class="text-(--ui-text-muted)">Sayfalar</dt><dd class="mt-1 font-medium">{{ item.bookStartPage || '?' }} – {{ item.bookEndPage || '?' }}</dd></div>
+        <div *ngIf="item.bookStartQuestion || item.bookEndQuestion"><dt class="text-(--ui-text-muted)">Sorular</dt><dd class="mt-1 font-medium">{{ item.bookStartQuestion || '?' }} – {{ item.bookEndQuestion || '?' }}</dd></div>
       </dl>
     </div>
 
     <div *ngIf="item.instructionAttachments?.length" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h2 class="font-semibold">Öğretmenin eklediği dosyalar</h2>
       <div class="mt-4 flex flex-wrap gap-2">
-        <button *ngFor="let attachment of item.instructionAttachments" type="button" (click)="downloadInstructionAttachment(attachment)" [disabled]="attachment.status !== 'Clean'" class="rounded-full bg-slate-100 px-3 py-2 text-sm text-slate-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:text-slate-200">{{ attachment.originalFileName }} · {{ attachment.sizeBytes / 1024 / 1024 | number:'1.1-1' }} MB</button>
+        <button *ngFor="let attachment of item.instructionAttachments" type="button" (click)="downloadInstructionAttachment(attachment)" [disabled]="attachment.status !== 'Clean'" class="rounded-full bg-slate-100 px-3 py-2 text-sm text-slate-700 hover:bg-(--ui-brand-soft) disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:text-slate-200">{{ attachment.originalFileName }} · {{ attachment.sizeBytes / 1024 / 1024 | number:'1.1-1' }} MB</button>
       </div>
     </div>
 
@@ -52,15 +52,15 @@
         </div>
         <label class="mt-5 block text-sm font-medium" for="student-note">Öğretmene notun</label>
         <textarea id="student-note" [ngModel]="studentNote()" (ngModelChange)="studentNote.set($event)" rows="4" maxlength="1000" [disabled]="!canSubmit()"
-          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-indigo-500 focus:ring-2 dark:border-slate-700 dark:bg-slate-950" placeholder="Çalışırken zorlandığın noktaları yazabilirsin."></textarea>
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-(--coaching-focus) focus:ring-2 dark:border-slate-700 dark:bg-slate-950" placeholder="Çalışırken zorlandığın noktaları yazabilirsin."></textarea>
         <div class="mt-4 flex flex-wrap gap-3">
           <button type="button" (click)="submit()" [disabled]="!canSubmit() || isSubmitting() || isUploading()"
-            class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">{{ isSubmitting() ? 'Teslim ediliyor…' : 'Ödevi teslim et' }}</button>
-          <label class="cursor-pointer camera-capture rounded-xl border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-200 dark:hover:bg-indigo-950/30" [class.pointer-events-none]="!canSubmit() || isUploading()" [class.opacity-50]="!canSubmit() || isUploading()">
+            class="rounded-xl bg-(--ui-brand) px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-(--ui-brand-strong) disabled:cursor-not-allowed disabled:opacity-50">{{ isSubmitting() ? 'Teslim ediliyor…' : 'Ödevi teslim et' }}</button>
+          <label class="cursor-pointer camera-capture rounded-xl border border-(--ui-border) px-4 py-2.5 text-sm font-semibold text-(--ui-brand-text) transition hover:bg-(--ui-brand-soft) " [class.pointer-events-none]="!canSubmit() || isUploading()" [class.opacity-50]="!canSubmit() || isUploading()">
             {{ isUploading() ? 'Fotoğraf yükleniyor…' : 'Fotoğraf çek' }}
             <input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" capture="environment" (change)="onFileSelected($event)" [disabled]="!canSubmit() || isUploading()" />
           </label>
-          <label class="cursor-pointer rounded-xl border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-200 dark:hover:bg-indigo-950/30" [class.pointer-events-none]="!canSubmit() || isUploading()" [class.opacity-50]="!canSubmit() || isUploading()">
+          <label class="cursor-pointer rounded-xl border border-(--ui-border) px-4 py-2.5 text-sm font-semibold text-(--ui-brand-text) transition hover:bg-(--ui-brand-soft) " [class.pointer-events-none]="!canSubmit() || isUploading()" [class.opacity-50]="!canSubmit() || isUploading()">
             {{ isUploading() ? 'Dosya yükleniyor…' : 'Dosya ekle' }}
             <input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,.md,.doc,.docx,.pdf" (change)="onFileSelected($event)" [disabled]="!canSubmit() || isUploading()" />
           </label>
@@ -86,9 +86,9 @@
       <div *ngIf="!record.attachments?.length" class="mt-4 text-sm text-slate-500 dark:text-slate-400">Henüz dosya eklenmedi.</div>
       <div *ngIf="record.attachments?.length" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div *ngFor="let attachment of record.attachments" class="flex items-stretch gap-2">
-          <button type="button" (click)="downloadAttachment(attachment)" [disabled]="attachment.status !== 'Clean'" class="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left hover:border-indigo-300 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:border-indigo-700">
+          <button type="button" (click)="downloadAttachment(attachment)" [disabled]="attachment.status !== 'Clean'" class="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left hover:border-(--ui-brand) disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 ">
             <span class="min-w-0"><span class="block truncate text-sm font-medium">{{ attachment.originalFileName }}</span><span class="mt-1 block text-xs text-slate-500">{{ attachment.status | coachingLabel }} · {{ attachment.sizeBytes / 1024 / 1024 | number:'1.1-1' }} MB</span></span>
-            <span aria-hidden="true" class="text-indigo-600 dark:text-indigo-300">↓</span>
+            <span aria-hidden="true" class="text-(--ui-brand-text) ">↓</span>
           </button>
           <button *ngIf="canRemoveAttachments()" type="button" (click)="removeAttachment(attachment)" [disabled]="isUploading()" [attr.aria-label]="attachment.originalFileName + ' dosyasını kaldır'" class="rounded-xl border border-slate-200 px-3 text-sm text-rose-600 hover:border-rose-300 disabled:opacity-60 dark:border-slate-700">Kaldır</button>
         </div>
@@ -98,7 +98,7 @@
     <div *ngIf="!isStudent()" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h2 class="font-semibold">Çocuğun teslim durumu</h2>
       <div *ngFor="let student of item.assignedStudents" class="mt-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
-        <div class="flex flex-wrap items-center justify-between gap-3"><span class="text-sm font-semibold">Durum</span><span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">{{ student.status | coachingLabel }}</span></div>
+        <div class="flex flex-wrap items-center justify-between gap-3"><span class="text-sm font-semibold">Durum</span><span class="rounded-full bg-(--ui-brand-soft) px-3 py-1 text-xs font-semibold text-(--ui-brand-text) ">{{ student.status | coachingLabel }}</span></div>
         <div class="mt-4 grid gap-4 sm:grid-cols-2"><div><p class="text-xs text-slate-500">Puan</p><p class="mt-1 text-xl font-bold">{{ student.score ?? '—' }}<span *ngIf="item.maxScore" class="text-sm font-medium text-slate-400"> / {{ item.maxScore }}</span></p></div><div><p class="text-xs text-slate-500">Öğretmen geri bildirimi</p><p class="mt-1 whitespace-pre-line text-sm">{{ student.teacherFeedback || 'Henüz geri bildirim yok.' }}</p></div></div>
       </div>
     </div>

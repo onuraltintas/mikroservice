@@ -1,23 +1,4 @@
 // Decorative treatment is shared; lesson and completion colours remain semantic.
-.coaching-shell {
-  --coaching-card-shadow: 0 2px 5px #193e3105, 0 12px 32px #193e310a;
-  --coaching-raised-shadow: 0 4px 10px #193e3108, 0 18px 40px #193e3112;
-  --coaching-mint-tint: #eef8f3;
-  --coaching-honey-tint: #fff9ed;
-  --coaching-blue-tint: #f0f6fc;
-  --coaching-page-glow: #dcefe566;
-  --coaching-action-shadow: 0 4px 10px #08766b24;
-}
-.dark .coaching-shell {
-  --coaching-card-shadow: 0 2px 5px #00000010, 0 12px 32px #00000020;
-  --coaching-raised-shadow: 0 4px 10px #00000018, 0 18px 40px #00000030;
-  --coaching-mint-tint: #203b32;
-  --coaching-honey-tint: #333127;
-  --coaching-blue-tint: #23343e;
-  --coaching-page-glow: #28584633;
-  --coaching-action-shadow: 0 4px 12px #00000024;
-}
-
 body .coaching-shell .coaching-body {
   background: radial-gradient(ellipse 75% 500px at 90% 0, var(--coaching-page-glow), transparent), var(--ui-page);
 }
@@ -50,7 +31,7 @@ body .coaching-shell .coaching-body .coaching-content {
   :is(.today-date, .today-duration) { font-weight: 650; font-variant-numeric: tabular-nums; }
   .today-task { padding: 14px 0; }
   .today-task strong { font-size: 15px; font-weight: 650; }
-  .step-icon { box-shadow: inset 0 1px 0 #ffffff30, 0 3px 8px #193e3108; }
+  .step-icon { box-shadow: var(--coaching-card-shadow); }
   .step-icon.amber { background: var(--coaching-warm); color: var(--coaching-warning); }
   .step-icon.blue { background: var(--coaching-lesson-1); color: var(--coaching-lesson-text-1); }
   .home-hero {
@@ -82,7 +63,7 @@ body .coaching-shell.coaching-staff-shell {
     .workspace-tabs button.active { box-shadow: var(--coaching-action-shadow); }
     :is(.student-list, .assignment-card, .session-card, .exam-card, .goal-form) { border-radius: 20px; }
     .student-row { background: linear-gradient(110deg, var(--coaching-mint-tint), var(--ui-surface) 38%); padding: 20px; }
-    .student-avatar { width: 44px; height: 44px; border-radius: 15px; box-shadow: inset 0 1px 0 #ffffff30; }
+    .student-avatar { width: 44px; height: 44px; border-radius: 15px;  }
     .student-name-block h3 { font-size: 18px; }
     .tracking .totals > div { background: linear-gradient(135deg, var(--coaching-mint-tint), var(--ui-surface)); box-shadow: var(--coaching-card-shadow); border-radius: 18px; }
     .tracking .totals > div:nth-child(3) { background: linear-gradient(135deg, var(--coaching-blue-tint), var(--ui-surface)); }
@@ -118,8 +99,8 @@ body .coaching-shell .coaching-body .coaching-content {
   :is(app-student-goal-target, app-target-admission-search, app-student-study-report) button {
     border-color: var(--ui-border); background: var(--ui-surface); color: var(--ui-text); border-radius: 10px;
   }
-  :is(app-target-admission-search button[type=submit], app-student-study-report .bg-indigo-600) {
-    background: var(--ui-brand); color: #fff; border-color: var(--ui-brand);
+  :is(app-target-admission-search button[type=submit], app-student-study-report .bg-\(--ui-brand\)) {
+    background: var(--ui-brand); color: var(--ui-brand-contrast); border-color: var(--ui-brand);
   }
   :is(app-target-admission-search, app-practice-progress, app-practice-exam-editor, app-student-study-report) > :is(section, form) {
     border: 1px solid var(--ui-border); border-radius: 20px; background: var(--ui-surface); box-shadow: var(--coaching-card-shadow);
@@ -153,5 +134,4 @@ body .coaching-shell.coaching-staff-shell .coaching-body .coaching-content {
   :is(app-student-goal-target, app-student-study-report) button {
     color: var(--ui-text); background: var(--ui-surface); border-color: var(--ui-border);
   }
-  app-student-study-report .bg-indigo-600 { color: #fff; background: var(--ui-brand); border-color: var(--ui-brand); }
 }

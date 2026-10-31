@@ -26,7 +26,7 @@ import {
   template: `
     <main class="space-y-6" aria-labelledby="coaching-subscription-title">
       <header>
-        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Koçluk hesabım</p>
+        <p class="text-sm font-medium text-(--ui-brand-text) ">Koçluk hesabım</p>
         <h1 id="coaching-subscription-title" class="mt-1 text-2xl font-bold">Platform aboneliğim</h1>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Eduİvme Koçluk erişim paketini ve abonelik ödeme bildirimlerini buradan takip et. Öğretmen veya kurum koçluk ücretlerin ayrı tutulur.</p>
       </header>
@@ -61,16 +61,16 @@ import {
         @if (!loading() && plans().length === 0) { <div class="rounded-xl border border-slate-200 p-6 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">Şu anda satışa açık bireysel plan bulunmuyor.</div> }
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           @for (plan of plans(); track plan.id) {
-            <article class="rounded-2xl border p-5 shadow-sm" [class.border-indigo-500]="selectedPlanId() === plan.id" [class.bg-indigo-50]="selectedPlanId() === plan.id" [class.dark:bg-indigo-950\/20]="selectedPlanId() === plan.id">
+            <article class="rounded-2xl border p-5 shadow-sm" [class.is-selected-plan]="selectedPlanId() === plan.id">
               <h3 class="text-lg font-semibold">{{ plan.name }}</h3><p class="mt-2 min-h-10 text-sm text-slate-600 dark:text-slate-300">{{ plan.description }}</p>
               <p class="mt-4 text-2xl font-bold">{{ plan.isContactOnly ? 'İletişime geç' : (plan.price | number:'1.2-2') + ' ' + (settings()?.currency || 'TRY') }}</p>
               <p class="mt-1 text-sm text-slate-500">{{ plan.durationDays }} gün erişim · {{ plan.billingPeriod | coachingLabel:'billingPeriod' }}</p>
               @if (plan.features.length) { <ul class="mt-4 list-disc space-y-1 pl-5 text-sm">@for (feature of plan.features; track feature) { <li>{{ feature }}</li> }</ul> }
               @if (plan.isContactOnly) { <p class="mt-4 text-sm text-slate-500">Bu plan için fiyat bilgisi Koçluk yönetiminden alınır.</p> }
               @if ((plan.trialDays ?? 0) > 0 && !plan.isContactOnly && !hasSubscription()) {
-                <button type="button" class="mt-5 w-full rounded-lg border border-indigo-600 px-4 py-2 font-medium text-indigo-700 disabled:opacity-50 dark:text-indigo-200" [attr.data-testid]="'trial-' + plan.id" [disabled]="trialPlanId() !== null" (click)="startTrial(plan)">{{ trialPlanId() === plan.id ? 'Başlatılıyor…' : plan.trialDays + ' gün ücretsiz dene' }}</button>
+                <button type="button" class="mt-5 w-full rounded-lg border border-(--ui-brand) px-4 py-2 font-medium text-(--ui-brand-text) disabled:opacity-50 " [attr.data-testid]="'trial-' + plan.id" [disabled]="trialPlanId() !== null" (click)="startTrial(plan)">{{ trialPlanId() === plan.id ? 'Başlatılıyor…' : plan.trialDays + ' gün ücretsiz dene' }}</button>
               }
-              <button type="button" class="mt-2 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="plan.isContactOnly" (click)="selectPlan(plan)">{{ plan.isContactOnly ? 'Şu an çevrimiçi satın alınamıyor' : (selectedPlanId() === plan.id ? 'Seçildi' : 'Bu planı seç') }}</button>
+              <button type="button" class="mt-2 w-full rounded-lg bg-(--ui-brand) px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="plan.isContactOnly" (click)="selectPlan(plan)">{{ plan.isContactOnly ? 'Şu an çevrimiçi satın alınamıyor' : (selectedPlanId() === plan.id ? 'Seçildi' : 'Bu planı seç') }}</button>
             </article>
           }
         </div>
@@ -92,7 +92,7 @@ import {
             <label class="mt-3 block text-sm">Not (isteğe bağlı)<textarea class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="note" name="paymentNote" maxlength="1000" rows="3"></textarea></label>
             <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId()" [price]="selectedPlan()?.price ?? 0" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" />
             <label class="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" required />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum. Bu beyan yaş doğrulaması değildir.</label>
-            <button class="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50" type="submit" [disabled]="submitting() || !settings() || !adultPayerDeclaration || !checkout.acceptSalesContract">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
+            <button class="mt-4 w-full rounded-lg bg-(--ui-brand) px-4 py-2 font-medium text-white disabled:opacity-50" type="submit" [disabled]="submitting() || !settings() || !adultPayerDeclaration || !checkout.acceptSalesContract">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
             <p class="mt-2 text-xs text-slate-500">Erişim, yönetici banka hareketini doğruladıktan sonra açılır. Bu ekran kart bilgisi almaz.</p>
           </form>
         </section>
@@ -113,7 +113,7 @@ import {
                 <label class="text-sm">Banka işlem referansı<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="editReference" name="editReference" maxlength="120" required autocomplete="off" /></label>
                 <label class="text-sm">Ödemeyi yapan kişi<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="editPayerName" name="editPayerName" maxlength="200" autocomplete="name" /></label>
                 <label class="text-sm">Not<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="editNote" name="editNote" maxlength="1000" /></label>
-                <div class="flex gap-2 sm:col-span-3"><button type="submit" class="rounded-lg bg-indigo-600 px-3 py-1 font-medium text-white disabled:opacity-50" [disabled]="busyRequestId() === request.id">Kaydet</button><button type="button" class="rounded-lg border border-slate-300 px-3 py-1 dark:border-slate-700" (click)="editingRequestId.set(null)">Vazgeç</button></div>
+                <div class="flex gap-2 sm:col-span-3"><button type="submit" class="rounded-lg bg-(--ui-brand) px-3 py-1 font-medium text-white disabled:opacity-50" [disabled]="busyRequestId() === request.id">Kaydet</button><button type="button" class="rounded-lg border border-slate-300 px-3 py-1 dark:border-slate-700" (click)="editingRequestId.set(null)">Vazgeç</button></div>
               </form>
             }
           </div>

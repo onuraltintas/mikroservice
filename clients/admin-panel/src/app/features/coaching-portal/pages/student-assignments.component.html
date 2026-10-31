@@ -1,7 +1,7 @@
 <section class="space-y-5">
   <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
     <div>
-      <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Çalışma planın</p>
+      <p class="text-sm font-medium text-(--ui-brand-text) ">Çalışma planın</p>
       <h1 class="mt-1 text-2xl font-bold tracking-tight">Ödevlerim</h1>
       <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Ders, kitap ve dış kaynak ödevlerini buradan takip edip teslim edebilirsin.</p>
     </div>
@@ -9,7 +9,7 @@
       <button *ngFor="let item of filters" type="button" (click)="setFilter(item.value)"
         class="shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition"
         [attr.aria-pressed]="filter() === item.value"
-        [ngClass]="filter() === item.value ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-slate-600 hover:border-indigo-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'">
+        [ngClass]="filter() === item.value ? 'border-(--ui-brand) bg-(--ui-brand) text-white' : 'border-slate-300 bg-white text-slate-600 hover:border-(--ui-brand) dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'">
         {{ item.label }}
       </button>
     </div>

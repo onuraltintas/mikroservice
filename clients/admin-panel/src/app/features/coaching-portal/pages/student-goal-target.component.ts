@@ -16,11 +16,11 @@ import { CoachingLabelPipe } from '../coaching-labels';
   templateUrl: './student-goal-target.component.html',
   styles: [`
     :host-context(staff-coaching-teacher-goals) { display: block; margin-top: 1rem; }
-    :host-context(staff-coaching-teacher-goals) button { padding: .55rem .8rem; border: 1px solid #d5dfd2; border-radius: .5rem; background: #f5f8f1; color: #355348; font: inherit; cursor: pointer; }
+    :host-context(staff-coaching-teacher-goals) button { padding: .55rem .8rem; border: 1px solid var(--ui-border); border-radius: .5rem; background: var(--ui-brand-soft); color: var(--ui-text-muted); font: inherit; cursor: pointer; }
     :host-context(staff-coaching-teacher-goals) button:disabled { opacity: .5; cursor: default; }
     :host-context(staff-coaching-teacher-goals) fieldset { display: grid; gap: .75rem; border: 0; padding: .75rem 0; }
     :host-context(staff-coaching-teacher-goals) label { display: grid; gap: .3rem; }
-    :host-context(staff-coaching-teacher-goals) input, :host-context(staff-coaching-teacher-goals) select { width: 100%; box-sizing: border-box; padding: .6rem; border: 1px solid #d5dfd2; border-radius: .5rem; background: white; font: inherit; }
+    :host-context(staff-coaching-teacher-goals) input, :host-context(staff-coaching-teacher-goals) select { width: 100%; box-sizing: border-box; padding: .6rem; border: 1px solid var(--ui-border); border-radius: .5rem; background: var(--ui-surface); font: inherit; }
   `]
 })
 export class StudentGoalTargetComponent implements OnChanges {

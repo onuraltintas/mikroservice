@@ -18,11 +18,11 @@ import { StudentDataExportComponent } from '../pages/student-data-export.compone
   template: `
     <main class="space-y-6" aria-labelledby="parent-home-title">
       <header>
-        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Veli paneli</p>
+        <p class="text-sm font-medium text-(--ui-brand-text) ">Veli paneli</p>
         <h1 id="parent-home-title" class="mt-1 text-2xl font-bold">Çocuklarım</h1>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Çocuğunun çalışmasını, ödevlerini, seanslarını, denemelerini ve ücretlerini buradan izleyebilirsin. Bu ekran yalnızca okumak içindir; değişiklikleri öğrenci ve öğretmeni yapar.</p>
         @if (verified().length) {
-          <a routerLink="/coaching-portal/messages" class="mt-3 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Öğretmenlere mesaj yaz</a>
+          <a routerLink="/coaching-portal/messages" class="mt-3 inline-block rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-white hover:bg-(--ui-brand-strong)">Öğretmenlere mesaj yaz</a>
         }
       </header>
       @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
@@ -31,10 +31,10 @@ import { StudentDataExportComponent } from '../pages/student-data-export.compone
       <section class="grid gap-4 md:grid-cols-2" aria-labelledby="children-heading">
         <h2 id="children-heading" class="sr-only">Bağlı çocuklar</h2>
         @for (link of verified(); track link.id) {
-          <a [routerLink]="['/coaching-portal/parent/children', link.studentUserId]" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-400 dark:border-slate-800 dark:bg-slate-900">
+          <a [routerLink]="['/coaching-portal/parent/children', link.studentUserId]" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-(--ui-brand) dark:border-slate-800 dark:bg-slate-900">
             <strong class="text-lg">{{ link.studentName }}</strong>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ relationshipLabel(link.relationship) }} · {{ link.verifiedAt | coachingDate }} tarihinden beri bağlı</p>
-            <span class="mt-3 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-300">Haftayı görüntüle →</span>
+            <span class="mt-3 inline-block text-sm font-medium text-(--ui-brand-text) ">Haftayı görüntüle →</span>
           </a>
         } @empty {
           @if (!loading()) { <p class="rounded-xl border border-slate-200 p-5 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300 md:col-span-2">Henüz bağlı bir çocuğun yok. Çocuğunun Koçluk hesabındaki Ayarlar sayfasından bir veli kodu oluşturmasını iste ve aşağıya gir.</p> }
@@ -57,7 +57,7 @@ import { StudentDataExportComponent } from '../pages/student-data-export.compone
           <label class="text-sm sm:col-span-2">Veli kodu<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 font-mono uppercase tracking-widest dark:border-slate-700" [(ngModel)]="code" name="code" maxlength="12" required autocomplete="off" placeholder="ABCD-2345" /></label>
           <label class="text-sm">Yakınlığın<select class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="relationship" name="relationship"><option value="Mother">Anne</option><option value="Father">Baba</option><option value="Guardian">Vasi</option></select></label>
         </div>
-        <button type="submit" class="mt-4 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50" [disabled]="submitting() || !code.trim()">{{ submitting() ? 'Gönderiliyor…' : 'Bağlantı isteği gönder' }}</button>
+        <button type="submit" class="mt-4 rounded-lg bg-(--ui-brand) px-4 py-2 font-medium text-white disabled:opacity-50" [disabled]="submitting() || !code.trim()">{{ submitting() ? 'Gönderiliyor…' : 'Bağlantı isteği gönder' }}</button>
       </form>
       <edu-notification-preferences [api]="notificationApi" />
       <!-- Coaching audit K1: the parent downloads the data they created themselves (KVKK). -->

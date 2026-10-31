@@ -12,7 +12,7 @@ import { CoachingLearningSetupService, LearningSetupView } from '../../../core/s
     @else if (state()?.isReady) { <p>Eğitim bilgilerin ve çalışma tercihlerin hazır.</p><a routerLink="/coaching-portal/setup">Tercihlerimi gözden geçir</a> }
     @else { <p>Eğitim bilgilerini, çalışacağın dersleri ve müsaitliğini küçük adımlarla belirle. İstediğin zaman devam edebilirsin.</p><a routerLink="/coaching-portal/setup">{{ state()?.context ? 'Kuruluma devam et' : 'Çalışma düzenimi kur' }}</a> }
     <a routerLink="/coaching-portal/study-plans">Mevcut planımı aç</a>
-  </section>`, styles: [`.setup-entry{border:1px solid #d4dfd5;background:#f5faf5;border-radius:1rem;padding:1.25rem;margin:1rem 0;color:#204739}h2{font-size:1.15rem;margin:0 0 .5rem}p{margin:.5rem 0}a,button{display:inline-block;margin:.5rem 1rem .25rem 0;font:inherit}a{color:inherit;font-weight:600;text-underline-offset:3px}`]
+  </section>`, styles: [`.setup-entry{border:1px solid var(--ui-border);background:var(--ui-brand-soft);border-radius:1rem;padding:1.25rem;margin:1rem 0;color:var(--ui-text)}h2{font-size:1.15rem;margin:0 0 .5rem}p{margin:.5rem 0}a,button{display:inline-block;margin:.5rem 1rem .25rem 0;font:inherit}a{color:inherit;font-weight:600;text-underline-offset:3px}`]
 })
 export class LearningSetupEntryComponent implements OnInit {
   private readonly service = inject(CoachingLearningSetupService); private readonly destroyRef = inject(DestroyRef);

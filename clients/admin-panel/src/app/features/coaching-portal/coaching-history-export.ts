@@ -95,7 +95,7 @@ export function renderCoachingReportPrint(
   const doc = target.document;
   doc.title = title;
   const style = doc.createElement('style');
-  style.textContent = 'body{font:14px Arial,sans-serif;margin:24px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:6px;text-align:left}h1{font-size:20px}';
+  style.textContent = 'body{font:14px Arial,sans-serif;margin:24px}table{border-collapse:collapse;width:100%}th,td{border:1px solid gray;padding:6px;text-align:left}h1{font-size:20px}';
   const heading = doc.createElement('h1');
   heading.textContent = title;
   const count = doc.createElement('p');

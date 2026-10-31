@@ -1,21 +1,83 @@
+// Student coaching portal design tokens (T1, 31.10.2026). The only file in the student portal that names colours:
+// pages and components use these variables, so light and dark mode change in one place. Palette: İznik turquoise as the
+// brand, coral for energy (streaks, highlights), saffron, cobalt and leaf green for states and lessons, on cool
+// porcelain (light) or deep sea ink (dark). tests/E2E/support/coaching-student-design.contract.test.mjs checks every
+// text pair for WCAG AA (4.5:1) and interface parts for 3:1 in both themes.
 body:has(.coaching-shell), .coaching-shell {
-  --ui-page: #f4f7f6; --ui-surface: #fff; --ui-surface-muted: #edf3f1; --ui-border: #cbdad4; --ui-text: #19332f; --ui-text-muted: #506860; --ui-text-subtle: #506860;
-  --ui-brand: #08766b; --ui-brand-strong: #055c54; --ui-brand-hover: #055c54; --ui-brand-soft: #e4f3ed; --ui-success: #126748;
-  --ui-danger: #a02d31; --coaching-danger-soft: #fff0ef; --coaching-warning: #7b530d; --coaching-warm: #fff2d8; --coaching-focus: #008577;
-  --coaching-lesson-0: #e5eedc; --coaching-lesson-1: #e3eff9; --coaching-lesson-2: #fbecd9; --coaching-lesson-3: #eee7f7; --coaching-lesson-4: #def0e9;
-  --coaching-lesson-text-0: #365225; --coaching-lesson-text-1: #264f70; --coaching-lesson-text-2: #785423; --coaching-lesson-text-3: #60447c; --coaching-lesson-text-4: #275c49;
+  --ui-page: #f2f7f8; --ui-surface: #ffffff; --ui-surface-muted: #e8f1f3; --ui-surface-raised: #ffffff;
+  --ui-border: #c5d6db; --ui-border-strong: #7a949d;
+  --ui-text: #0f2730; --ui-text-muted: #45606a; --ui-text-subtle: #45606a;
+  --ui-brand: #0a7b8a; --ui-brand-strong: #075e6a; --ui-brand-hover: #075e6a; --ui-brand-soft: #d8f1f3; --ui-brand-text: #086e7b;
+  --ui-brand-contrast: #ffffff; --ui-brand-spark: #1fc7d4;
+  --ui-accent: #e4573f; --ui-accent-soft: #fde7e2; --ui-accent-text: #b13a25;
+  --ui-success: #16794a; --ui-success-soft: #ddf4e7;
+  --ui-warning: #8a5700; --ui-warning-soft: #fff1cf;
+  --ui-danger: #b4232a; --ui-danger-soft: #fde4e3;
+  --ui-info: #2952c4; --ui-info-soft: #e3eafd;
+  --coaching-focus: #0a7b8a; --coaching-scrim: #0b1c24b3;
+  // Legacy aliases still read by older page styles.
+  --coaching-danger-soft: var(--ui-danger-soft); --coaching-warning: var(--ui-warning); --coaching-warm: var(--ui-warning-soft);
+  // Lessons: a soft background and its text colour, cycled by lesson.
+  --coaching-lesson-0: #ddf3f5; --coaching-lesson-text-0: #08606b;
+  --coaching-lesson-1: #fde6e0; --coaching-lesson-text-1: #9e3420;
+  --coaching-lesson-2: #e3eafd; --coaching-lesson-text-2: #2448ac;
+  --coaching-lesson-3: #fff0c8; --coaching-lesson-text-3: #7a4e00;
+  --coaching-lesson-4: #dff4e6; --coaching-lesson-text-4: #17663f;
+  --coaching-lesson-5: #fce4ee; --coaching-lesson-text-5: #9b2457;
+  --coaching-lesson-6: #ddf0fd; --coaching-lesson-text-6: #12577f;
+  --coaching-lesson-7: #eef1d8; --coaching-lesson-text-7: #566015;
+  // Depth and decoration.
+  --coaching-card-shadow: 0 1px 2px #0f27300a, 0 10px 28px #0f27300f;
+  --coaching-raised-shadow: 0 2px 6px #0f273012, 0 16px 36px #0f273017;
+  --coaching-action-shadow: 0 4px 12px #0a7b8a33;
+  --coaching-mint-tint: #e6f6f7; --coaching-honey-tint: #fff6e2; --coaching-blue-tint: #edf2fe; --coaching-coral-tint: #fff0ec;
+  --coaching-page-glow: #bfeef266;
+  --coaching-sidebar: #0d3a42; --coaching-sidebar-raised: #13505a; --coaching-sidebar-border: #2b6872;
+  --coaching-sidebar-text: #e9f8fa; --coaching-sidebar-muted: #a9d6dc; --coaching-sidebar-active: #52dce6;
+  --coaching-avatar: #fde7e2; --coaching-avatar-text: #9e3420; --coaching-badge: #c2410c; --coaching-badge-text: #ffffff;
+  // Shape and type.
+  --ui-font-body: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --coaching-radius-card: 16px; --coaching-radius-control: 12px; --coaching-radius-pill: 999px;
+  --coaching-space-1: 4px; --coaching-space-2: 8px; --coaching-space-3: 12px; --coaching-space-4: 16px; --coaching-space-5: 20px;
+  --coaching-space-6: 24px; --coaching-space-8: 32px;
+  --coaching-text-xl: 22px; --coaching-text-lg: 18px; --coaching-text-md: 16px; --coaching-text-body: 15px; --coaching-text-sm: 13px;
+  // Names older shared components read.
   --text-primary: var(--ui-text); --text-secondary: var(--ui-text-muted); --bg-card: var(--ui-surface); --bg-secondary: var(--ui-surface-muted); --border-color: var(--ui-border);
 }
 .dark body:has(.coaching-shell), .dark .coaching-shell {
-  --ui-page: #101c1b; --ui-surface: #192a27; --ui-surface-muted: #223731; --ui-border: #425b52; --ui-text: #edf5f1; --ui-text-muted: #bdcfc6; --ui-text-subtle: #bdcfc6;
-  --ui-brand: #157c6e; --ui-brand-strong: #116b5f; --ui-brand-hover: #116b5f; --ui-brand-soft: #21473c; --ui-success: #98e0be;
-  --ui-danger: #ffb5b5; --coaching-danger-soft: #442a2c; --coaching-warning: #f1ce8c; --coaching-warm: #423a28; --coaching-focus: #85e3c4;
-  --coaching-lesson-0: #30422b; --coaching-lesson-1: #263f52; --coaching-lesson-2: #473a29; --coaching-lesson-3: #3c314d; --coaching-lesson-4: #28453b;
-  --coaching-lesson-text-0: #d2e6c2; --coaching-lesson-text-1: #cce5fa; --coaching-lesson-text-2: #f3d9b5; --coaching-lesson-text-3: #e2d0f5; --coaching-lesson-text-4: #c6eadb;
+  --ui-page: #0b1c24; --ui-surface: #12272f; --ui-surface-muted: #1a3540; --ui-surface-raised: #183039;
+  --ui-border: #2f4f5b; --ui-border-strong: #5e8591;
+  --ui-text: #e6f2f5; --ui-text-muted: #a7c0c8; --ui-text-subtle: #a7c0c8;
+  --ui-brand: #0d7e8c; --ui-brand-strong: #0a6a76; --ui-brand-hover: #0a6a76; --ui-brand-soft: #133c45; --ui-brand-text: #5dd3de;
+  --ui-brand-contrast: #ffffff; --ui-brand-spark: #3fd6e1;
+  --ui-accent: #ff7a5c; --ui-accent-soft: #3e2622; --ui-accent-text: #ff9e86;
+  --ui-success: #6fd9a0; --ui-success-soft: #173a2b;
+  --ui-warning: #f2c14e; --ui-warning-soft: #3a3017;
+  --ui-danger: #ff8f8a; --ui-danger-soft: #3f2124;
+  --ui-info: #93b1ff; --ui-info-soft: #1e2a4d;
+  --coaching-focus: #6ee0e9; --coaching-scrim: #02090cc7;
+  --coaching-lesson-0: #11404a; --coaching-lesson-text-0: #a8eef3;
+  --coaching-lesson-1: #47251e; --coaching-lesson-text-1: #ffc4b4;
+  --coaching-lesson-2: #1f2c55; --coaching-lesson-text-2: #c3d3ff;
+  --coaching-lesson-3: #44361a; --coaching-lesson-text-3: #fbdc94;
+  --coaching-lesson-4: #183f2c; --coaching-lesson-text-4: #aee9c5;
+  --coaching-lesson-5: #47213a; --coaching-lesson-text-5: #ffbfd8;
+  --coaching-lesson-6: #163a52; --coaching-lesson-text-6: #b5ddfa;
+  --coaching-lesson-7: #333a19; --coaching-lesson-text-7: #dde59c;
+  --coaching-card-shadow: 0 1px 2px #00000033, 0 10px 28px #00000038;
+  --coaching-raised-shadow: 0 2px 6px #0000003d, 0 16px 36px #00000047;
+  --coaching-action-shadow: 0 4px 14px #00000047;
+  --coaching-mint-tint: #143840; --coaching-honey-tint: #2e2a1a; --coaching-blue-tint: #1a2a46; --coaching-coral-tint: #36211e;
+  --coaching-page-glow: #0d7e8c33;
+  --coaching-sidebar: #08171d; --coaching-sidebar-raised: #12303a; --coaching-sidebar-border: #24434e;
+  --coaching-sidebar-text: #e6f2f5; --coaching-sidebar-muted: #9fbcc5; --coaching-sidebar-active: #5dd3de;
+  --coaching-avatar: #3e2622; --coaching-avatar-text: #ffc4b4; --coaching-badge: #ff7a5c; --coaching-badge-text: #08171d;
 }
+// Material's body background matches the shell so loading and overscroll show one colour.
+html.dark body:has(.coaching-shell) { background-color: var(--ui-page); }
 
 body:has(.coaching-shell) .ui-toast { margin-top: 12px; }
 body:has(.coaching-shell) .ui-confirm-dialog :is(button, a):focus-visible { outline: 3px solid var(--coaching-focus); outline-offset: 3px; }
 body:has(.coaching-shell) .ui-confirm-dialog button { font-family: var(--ui-font-body); font-size: 15px; border-radius: 10px; }
-body:has(.coaching-shell) .ui-confirm-dialog .confirm-btn { background: var(--ui-brand); color: #fff; }
+body:has(.coaching-shell) .ui-confirm-dialog .confirm-btn { background: var(--ui-brand); color: var(--ui-brand-contrast); }
 body:has(.coaching-shell) .ui-confirm-dialog .cancel-btn { background: var(--ui-surface-muted); color: var(--ui-text); border-color: var(--ui-border); }
