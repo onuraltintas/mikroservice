@@ -1,7 +1,7 @@
 import { CoachingLabelPipe } from '../coaching-labels';
 import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit, signal, ViewChild, computed } from '@angular/core';
+import { Component, DestroyRef, inject, input, OnInit, signal, ViewChild, computed } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { validCoachingId, validWeeklyDate, WeeklyDestination } from '../../../../../shared/coaching-notification-target';
@@ -21,6 +21,8 @@ import { CoachingStudentNavigationService } from '../../../core/services/coachin
   styleUrl: './coaching-portal-progress.component.scss'
 })
 export class CoachingPortalProgressComponent implements OnInit {
+  /** T6: under Haftam's summary the page drops its own heading. */
+  readonly embedded = input(false);
   readonly navigation = inject(CoachingStudentNavigationService);
   private readonly route = inject(ActivatedRoute, {optional:true});
   private readonly destroyRef = inject(DestroyRef);

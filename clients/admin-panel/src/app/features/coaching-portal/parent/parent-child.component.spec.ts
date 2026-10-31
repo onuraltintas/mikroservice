@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingManagementService } from '../../../core/services/coaching-management.service';
 import { CoachingParentService } from './coaching-parent.service';
+import { CoachingStudentExamOverviewService } from '../../../core/services/coaching-student-exam-overview.service';
 import { ParentChildComponent } from './parent-child.component';
 
 describe('ParentChildComponent', () => {
@@ -29,6 +30,10 @@ describe('ParentChildComponent', () => {
     TestBed.configureTestingModule({ imports: [ParentChildComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ studentId: id }) } } },
       { provide: CoachingParentService, useValue: service },
+      // T6: the child's exams come from the shared overview, the same list the child sees.
+      { provide: CoachingStudentExamOverviewService, useValue: { get: vi.fn(() => of({ trends: [], subjects: [], exams: [{ examId: 'e-1', resultId: 'r-1', source: 'Teacher',
+        title: 'TYT Deneme 3', examDate: '2026-10-07T06:00:00Z', examType: 'Mock', examCode: null, examName: null, net: null, score: 87.5, maxScore: 120, sections: [],
+        rank: null, participants: null, topPercent: null }] })) } },
       { provide: CoachingManagementService, useValue: {
         getPublicSubscriptionPlans: () => of([{ id: 'plan-1', name: 'Bireysel yıllık', audience: 'Individual', price: 1200, isContactOnly: false, isActive: true, isPublic: true, durationDays: 365, billingPeriod: 'Annual', features: [] }]),
         getPublicBankTransferSettings: () => of({ currency: 'TRY', accountHolder: 'Edu İvme', bankName: 'Banka', iban: 'TR…', paymentInstructions: null }) } },

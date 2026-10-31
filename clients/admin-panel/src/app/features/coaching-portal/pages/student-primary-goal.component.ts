@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, expand, finalize, forkJoin, map, of, reduce, switchMap } from 'rxjs';
@@ -13,8 +13,8 @@ import { coachingFeedback } from '../coaching-feedback';
 
 @Component({selector:'app-student-primary-goal',standalone:true,imports:[CommonModule,RouterLink,StudentGoalTargetComponent],
  styleUrl:'./student-study-plans.component.scss',template:`
- <section class="study-plans" aria-labelledby="primary-goal-title">
-  <header class="page-heading"><div><p class="eyebrow">Hedefine odaklan</p><h1 id="primary-goal-title">Hedefim</h1><p>Bir ana okul veya program seç; net hedeflerini onun altında takip et.</p></div><a routerLink="/coaching-portal/growth/week">Çalışma hedeflerim ve gelişimim →</a></header>
+ <section class="study-plans" [class.embedded]="embedded()" aria-labelledby="primary-goal-title">
+  @if(embedded()){<h2 id="primary-goal-title" class="sr-only">Hedefini düzenle</h2>}@else{<header class="page-heading"><div><p class="eyebrow">Hedefine odaklan</p><h1 id="primary-goal-title">Hedefim</h1><p>Bir ana okul veya program seç; net hedeflerini onun altında takip et.</p></div><a routerLink="/coaching-portal/growth/week">Çalışma hedeflerim ve gelişimim →</a></header>}
   @if(error()){<p role="alert" class="notice error">{{error()}}</p>}
   @if(message()){<p role="status" class="notice success">{{message()}}</p>}
   @if(loading()){<p role="status">Hedefin yükleniyor…</p>}
@@ -36,6 +36,10 @@ import { coachingFeedback } from '../coaching-feedback';
   <button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving() || creating()">Yeniden yükle</button>
  </section>`})
 export class StudentPrimaryGoalComponent implements OnInit {
+ /** T6: shown inside Hedefim's edit section, without its own page heading. */
+ readonly embedded=input(false);
+ /** T6: the main goal or its target changed, so the summary above can reload. */
+ readonly changed=output<void>();
  private readonly auth=inject(AuthService);private readonly api=inject(CoachingStudyPlanningService);
  private readonly goals=inject(CoachingPortalService);private readonly setup=inject(CoachingLearningSetupService);private readonly destroy=inject(DestroyRef);
  @ViewChild(StudentGoalTargetComponent) private picker?:StudentGoalTargetComponent;
@@ -60,7 +64,7 @@ export class StudentPrimaryGoalComponent implements OnInit {
   },error:()=>this.error.set('Hedefler yüklenemedi. Mevcut kayıtların korunuyor; yeniden deneyebilirsin.')});
  }
  select(id:string){if(this.saving()||this.creating()||!this.canLeavePage())return;this.selectCore(id);}
- private selectCore(id:string){this.saving.set(true);this.error.set('');this.api.selectPrimaryGoal(id,this.version).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving.set(false))).subscribe({next:value=>{this.version=value.version;this.current.set(this.choices().find(x=>x.id===id)??null);this.message.set('Ana hedefin kaydedildi.');},error:e=>this.error.set(e?.error?.message??'Ana hedef kaydedilemedi. Yeniden yükleyip tekrar deneyebilirsin.')});}
+ private selectCore(id:string){this.saving.set(true);this.error.set('');this.api.selectPrimaryGoal(id,this.version).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving.set(false))).subscribe({next:value=>{this.version=value.version;this.current.set(this.choices().find(x=>x.id===id)??null);this.message.set('Ana hedefin kaydedildi.');this.changed.emit();},error:e=>this.error.set(e?.error?.message??'Ana hedef kaydedilemedi. Yeniden yükleyip tekrar deneyebilirsin.')});}
  create(){
   const id=this.auth.userProfile()?.id;if(!id||this.creating()||this.saving()||!this.canLeavePage())return;
   this.creating.set(true);this.error.set('');const title=this.context()?.purpose==='Lgs'?'LGS okul hedefim':'YKS program hedefim';
@@ -68,7 +72,7 @@ export class StudentPrimaryGoalComponent implements OnInit {
    this.choices.update(rows=>[...rows,{id:target.goalId,title,category:'ExamPreparation',progress:0,isCompleted:false,target}]);this.selectCore(target.goalId);
   },error:()=>this.error.set('Hedef oluşturulamadı. Yeniden yükleyerek mevcut hedeflerini kontrol et.')});
  }
- targetUpdated(target:GoalTarget){this.choices.update(rows=>rows.map(g=>g.id===target.goalId?{...g,target}:g));this.current.set(this.choices().find(g=>g.id===target.goalId)??null);}
+ targetUpdated(target:GoalTarget){this.choices.update(rows=>rows.map(g=>g.id===target.goalId?{...g,target}:g));this.current.set(this.choices().find(g=>g.id===target.goalId)??null);this.changed.emit();}
  canLeavePage(){return !this.saving()&&!this.creating()&&(this.picker?.canLeavePage()??true);}
  private readonly feedback=coachingFeedback(this.message,this.error);
 }

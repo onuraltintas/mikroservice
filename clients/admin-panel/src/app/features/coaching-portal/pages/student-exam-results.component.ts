@@ -2,7 +2,7 @@ import { CoachingLearningSetupService, LearningContext } from '../../../core/ser
 import { contextExamCodes } from './student-goal-context';
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
@@ -17,6 +17,11 @@ import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
 @Component({ selector: 'app-student-exam-results', standalone: true, imports: [CoachingDatePipe, CoachingLabelPipe, CommonModule, FormsModule, PracticeExamEditorComponent, StudentInstitutionExamsComponent, StudentScoreEstimateComponent],
   templateUrl: './student-exam-results.component.html', styleUrl: './student-study-plans.component.scss' })
 export class StudentExamResultsComponent {
+  /** T6: inside the Denemeler sheet only the entry form is shown; `editId` opens one of the student's own results. */
+  readonly formOnly = input(false);
+  readonly editId = input<string | null>(null);
+  /** T6: a result was saved or deleted, so the overview can reload. */
+  readonly saved = output<void>();
   private readonly learningSetup = inject(CoachingLearningSetupService);
   readonly learningContext = signal<LearningContext|null>(null);
   readonly profileWarning = signal('');
@@ -44,7 +49,9 @@ export class StudentExamResultsComponent {
     { value: 'Weekly', label: 'Haftalık' }, { value: 'Monthly', label: 'Aylık' }, { value: 'MidTerm', label: 'Ara sınav' },
     { value: 'Final', label: 'Final' }, { value: 'Quiz', label: 'Kısa sınav' } ];
   ngOnInit() {
-    this.loadList();
+    if (!this.formOnly()) this.loadList();
+    const editId = this.editId();
+    if (editId) void this.open(editId);
     forkJoin({profiles:this.service.profiles(),setup:this.learningSetup.get().pipe(catchError(()=>{
       this.profileWarning.set('Profil tercihlerin yüklenemedi; deneme kapsamını kendin seçebilirsin.');return of({context:null});
     }))}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -151,7 +158,7 @@ export class StudentExamResultsComponent {
     this.busy.set(true); this.error.set(null);
     write.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({ next: exam => {
       if (isNew) this.createKey = crypto.randomUUID();
-      this.apply(exam); this.success.set('Sonucun kaydedildi. Öğrenci beyanı olarak raporlanacak.');
+      this.apply(exam); this.success.set('Sonucun kaydedildi. Öğrenci beyanı olarak raporlanacak.'); this.saved.emit();
       this.page.update(page => ({ ...page, totalCount: page.totalCount + (isNew ? 1 : 0), items: [exam, ...page.items.filter(x => x.id !== exam.id)].slice(0, 20) }));
     }, error: error => { this.confirmed = false; if (error?.status === 409) this.stale.set(true);
       this.error.set(error?.status === 409 ? 'Sonuç değişti. Kaydı yeniden yükle; formun henüz kaydedilmedi.' : 'Sonuç kaydedilemedi. Bilgilerin korundu; kontrol edip yeniden dene.'); } });
@@ -161,7 +168,7 @@ export class StudentExamResultsComponent {
     const exam = this.selected; this.busy.set(true);
     this.service.delete(exam.id, exam.version).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
       .subscribe({ next: () => { this.selected = null; this.lessons = []; this.practiceExam = null; this.title = ''; this.score = null; this.confirmed = false;
-          this.page.update(page => ({ ...page, items: page.items.filter(x => x.id !== exam.id), totalCount: Math.max(0, page.totalCount - 1) })); this.success.set('Sonuç silindi.'); },
+          this.page.update(page => ({ ...page, items: page.items.filter(x => x.id !== exam.id), totalCount: Math.max(0, page.totalCount - 1) })); this.success.set('Sonuç silindi.'); this.saved.emit(); },
         error: error => { if (error?.status === 409) this.stale.set(true); this.error.set('Sonuç silinemedi. Güncel kaydı yükleyip tekrar dene.'); } });
   }
   async canLeavePage() { return !this.busy() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş değişiklikleri bırakmak istiyor musun?')); }
