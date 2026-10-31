@@ -62,6 +62,7 @@ public sealed class CoachingParentChildPostgresTests
         Assert.Equal("Elif son 7 günde 1 seansa katılmadı.", attention["missedSessions"]);
         Assert.Equal("Vadesi geçmiş 1.250,00 TL ödeme var.", attention["overdueFees"]);
         Assert.Equal("Elif geçen haftanın değerlendirmesini henüz yazmadı.", attention["weeklyReviewWaiting"]);
+        Assert.All(week.Attention, x => Assert.Equal($"/coaching-portal/parent/children/{f.Student}", x.Link));
     }
 
     // The student's own time zone decides "today" and the week.
@@ -129,6 +130,16 @@ public sealed class CoachingParentChildPostgresTests
             (Assert.Single(last.Decisions).Title, last.Decisions[0].Note, last.Decisions[0].DueOn, last.Decisions[0].Status, last.Decisions[0].IsOverdue));
         Assert.False(weeks[0].ReflectionWritten); Assert.Empty(weeks[0].TeacherNotes);
         Assert.DoesNotContain("Düzenli çalıştım", System.Text.Json.JsonSerializer.Serialize(weeks));
+
+        // One week: by default the newest recent week with a note or decision; or a chosen Monday of the last 12 weeks.
+        var single = Data<ParentChildSingleWeeklyReview>(await f.Api().WeeklyReview(f.Student));
+        Assert.Equal(Monday.AddDays(-7), single.WeekStart);
+        Assert.Equal(("Güzel bir hafta, paragrafa devam.", "Can Öğretmen"), (Assert.Single(single.Reviews).Note, single.Reviews[0].TeacherName));
+        Assert.Equal(("Paragraf tekrarı", true), (Assert.Single(single.Decisions).Title, single.Decisions[0].IsOverdue));
+        var empty = Data<ParentChildSingleWeeklyReview>(await f.Api().WeeklyReview(f.Student, Monday.AddDays(-14)));
+        Assert.Equal(Monday.AddDays(-14), empty.WeekStart); Assert.Empty(empty.Reviews); Assert.Empty(empty.Decisions);
+        Assert.IsType<BadRequestObjectResult>(await f.Api().WeeklyReview(f.Student, Monday.AddDays(1)));
+        Assert.IsType<BadRequestObjectResult>(await f.Api().WeeklyReview(f.Student, Monday.AddDays(7)));
     }
 
     // Coaching hidden from the parent, a revoked link and another parent's child: 403 on every endpoint.
@@ -146,6 +157,7 @@ public sealed class CoachingParentChildPostgresTests
         Assert.Equal(403, Assert.IsType<ObjectResult>(await f.Api().Week(f.Student)).StatusCode);
         Assert.Equal(403, Assert.IsType<ObjectResult>(await f.Api().Adherence(f.Student)).StatusCode);
         Assert.Equal(403, Assert.IsType<ObjectResult>(await f.Api().WeeklyReviews(f.Student)).StatusCode);
+        Assert.Equal(403, Assert.IsType<ObjectResult>(await f.Api().WeeklyReview(f.Student)).StatusCode);
 
         f.Accounts.ParentReads.Add((f.Parent, f.Student));
         pg.Data.User.Roles = ["Teacher"];   // only the Parent role reads through these endpoints

@@ -198,10 +198,42 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
         new(Guid.NewGuid(), user, email, kind, audience, audience == "Institution" ? "Kurum yıllık" : "Bireysel aylık",
             new DateTime(2026, 11, 3, 9, 0, 0, DateTimeKind.Utc), detail, DateTime.UtcNow);
 
-    private static async Task<(ServiceProvider, RecordingDispatcher, RecordingEmailQueue)> StartAsync(string? adminEmail)
+    // V3: the parent's "Haftalık veli özeti" (ParentSummary) e-mail switch still governs the two-section summary.
+    [Fact]
+    public async Task ParentWeeklySummaryV2_RespectsTheParentSummaryEmailChoice()
+    {
+        var parent = Guid.NewGuid();
+        var policy = new EmailOff();
+        var (provider, dispatcher, mail) = await StartAsync("finans@example.test", policy);
+        var harness = provider.GetRequiredService<ITestHarness>();
+        try
+        {
+            await harness.Bus.Publish(new CoachingParentWeeklySummaryV2(Guid.NewGuid(), parent, "veli@example.test", "Veli", Guid.NewGuid(), "Ada",
+                new DateOnly(2026, 11, 2), new DateOnly(2026, 11, 8), null, new CoachingParentWeeklySpeedReadingSection(10, 1, 1, null, null, null, null, null, 0)));
+            (await harness.Consumed.Any<CoachingParentWeeklySummaryV2>(x => x.Exception is null)).Should().BeTrue();
+            dispatcher.Calls.Should().ContainSingle();
+            mail.Messages.Should().BeEmpty();
+            policy.Types.Should().Equal("ParentWeeklySummary");
+        }
+        finally { await harness.Stop(); await provider.DisposeAsync(); }
+    }
+
+    private sealed class EmailOff : INotificationChannelPolicy
+    {
+        public ConcurrentQueue<string> Types { get; } = new();
+        public Task<IReadOnlyDictionary<Guid, NotificationChannels>> PlanAsync(IReadOnlyCollection<Guid> userIds, string type, CancellationToken ct)
+        {
+            Types.Enqueue(type);
+            return Task.FromResult<IReadOnlyDictionary<Guid, NotificationChannels>>(userIds.ToDictionary(x => x, _ => new NotificationChannels(true, false)));
+        }
+        public Task EmailAsync(Guid eventMessageId, IReadOnlyCollection<Guid> userIds, string title, string message, string type, CancellationToken ct) => Task.CompletedTask;
+    }
+
+    private static async Task<(ServiceProvider, RecordingDispatcher, RecordingEmailQueue)> StartAsync(string? adminEmail, INotificationChannelPolicy? policy = null)
     {
         var dispatcher = new RecordingDispatcher(); var mail = new RecordingEmailQueue();
         var services = new ServiceCollection();
+        if (policy is not null) services.AddSingleton(policy);
         services.AddSingleton<ICoachingNotificationDispatcher>(dispatcher);
         services.AddSingleton<IEmailDeliveryQueue>(mail);
         services.Configure<PublicAppUrlOptions>(options => options.BaseUrl = "https://app.example.test");

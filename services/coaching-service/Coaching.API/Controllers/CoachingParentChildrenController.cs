@@ -43,6 +43,11 @@ public sealed class CoachingParentChildrenController(CoachingDbContext db, Coach
     public Task<IActionResult> WeeklyReviews(Guid studentId, int weeks = 4, CancellationToken ct = default) => Run(async () =>
         await parents.GetWeeklyReviewsAsync(await parents.RequireAsync(studentId, ct), weeks, ct));
 
+    /// <summary>One week of the above: the given Monday, else the newest recent week with a teacher note or decision, else last week.</summary>
+    [HttpGet("weekly-review")]
+    public Task<IActionResult> WeeklyReview(Guid studentId, DateOnly? weekStart = null, CancellationToken ct = default) => Run(async () =>
+        await parents.GetWeeklyReviewAsync(await parents.RequireAsync(studentId, ct), weekStart, ct));
+
     private async Task<IActionResult> Run<T>(Func<Task<T>> read)
     {
         try { return Ok(new { success = true, data = await read() }); }

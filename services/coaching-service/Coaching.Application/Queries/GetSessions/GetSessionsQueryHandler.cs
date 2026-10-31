@@ -144,7 +144,11 @@ public class GetSessionsQueryHandler :
                         attendance.StudentNote,
                         attendance.AttendanceStatus.ToString()))
                     .ToArray()
-                : Array.Empty<SessionStudentReflectionDto>();
+                // V3 (parent panel): a student's own list carries that student's attendance as its one reflection row;
+                // the note to the teacher only for the student.
+                : attendanceOf is { } self && s.Attendances.FirstOrDefault(attendance => attendance.StudentId == self) is { } mine
+                    ? new[] { new SessionStudentReflectionDto(mine.StudentId, includeStudentNote ? mine.StudentNote : null, mine.AttendanceStatus.ToString()) }
+                    : Array.Empty<SessionStudentReflectionDto>();
 
             return new SessionDto(
                 Id: s.Id,

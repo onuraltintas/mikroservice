@@ -20,6 +20,8 @@ public sealed record ParentChildWeek(DateOnly WeekStart, int Planned, int Comple
 public sealed record ParentChildAdherenceWeek(DateOnly WeekStart, int Planned, int Completed, long? Minutes);
 public sealed record ParentChildTeacherNote(string TeacherName, string Note, DateTime ReviewedAt);
 public sealed record ParentChildDecision(string Title, string Note, DateOnly DueOn, string Status, bool IsOverdue, DateTime? CompletedAt);
+public sealed record ParentChildReviewNote(string Note, DateTime ReviewedAt, string TeacherName);
+public sealed record ParentChildSingleWeeklyReview(DateOnly WeekStart, IReadOnlyList<ParentChildReviewNote> Reviews, IReadOnlyList<ParentChildDecision> Decisions);
 public sealed record ParentChildWeeklyReview(DateOnly WeekStart, int Planned, int Completed, long? Minutes, bool ReflectionWritten,
     IReadOnlyList<ParentChildTeacherNote> TeacherNotes, IReadOnlyList<ParentChildDecision> Decisions);
 
@@ -69,27 +71,29 @@ public sealed class CoachingParentChildService(CoachingDbContext db, ICoachingAc
             ? new ParentChildExamCountdown(e.Source == "Student" ? $"{Possessive(name)} sınavı" : e.Name, e.Date, e.DaysLeft) : null;
 
         var attention = new List<ParentChildAttentionItem>();
+        // Every item opens the child's page in the parent panel (Koçluk tab).
+        var page = $"/coaching-portal/parent/children/{student}";
         var lateWork = await db.AssignmentStudents.AsNoTracking().CountAsync(x => x.StudentId == student
             && x.Assignment.Status == AssignmentStatus.Active && x.SubmittedAt == null
             && (x.Status == StudentAssignmentStatus.Assigned || x.Status == StudentAssignmentStatus.InProgress)
             && x.Assignment.DueDate < now, ct);
-        if (lateWork > 0) attention.Add(new("overdueAssignments", $"{Possessive(name)} teslim tarihi geçmiş {lateWork} ödevi var."));
+        if (lateWork > 0) attention.Add(new("overdueAssignments", $"{Possessive(name)} teslim tarihi geçmiş {lateWork} ödevi var.", page));
         var weekAgo = now.AddDays(-7);
         var missed = await db.SessionAttendances.AsNoTracking().CountAsync(x => x.StudentId == student
             && x.AttendanceStatus == AttendanceStatus.Absent && x.Session.Status != SessionStatus.Cancelled
             && x.Session.ScheduledDate >= weekAgo && x.Session.ScheduledDate <= now, ct);
-        if (missed > 0) attention.Add(new("missedSessions", $"{name} son 7 günde {missed} seansa katılmadı."));
+        if (missed > 0) attention.Add(new("missedSessions", $"{name} son 7 günde {missed} seansa katılmadı.", page));
         var day = facts.Today;
         var overdueFees = await db.CoachingFeeAgreements.AsNoTracking().Where(x => x.StudentId == student && !x.IsCancelled)
             .SumAsync(x => Math.Max(0m, (x.Installments.Where(i => i.DueOn < day).Sum(i => (decimal?)i.Amount) ?? 0m) - x.PaidAmount), ct);
-        if (overdueFees > 0) attention.Add(new("overdueFees", $"Vadesi geçmiş {overdueFees.ToString("N2", Turkish)} TL ödeme var."));
+        if (overdueFees > 0) attention.Add(new("overdueFees", $"Vadesi geçmiş {overdueFees.ToString("N2", Turkish)} TL ödeme var.", page));
         if (facts.HasActivePlan)
         {
-            if (facts.LastActiveDay is not { } last) attention.Add(new("noStudy", $"{name} henüz hiç çalışma kaydetmedi."));
+            if (facts.LastActiveDay is not { } last) attention.Add(new("noStudy", $"{name} henüz hiç çalışma kaydetmedi.", page));
             else if (day.DayNumber - last.DayNumber - 1 is var quiet && quiet >= QuietDays)
-                attention.Add(new("noStudy", $"{name} {quiet} gündür çalışma kaydetmedi."));
+                attention.Add(new("noStudy", $"{name} {quiet} gündür çalışma kaydetmedi.", page));
         }
-        if (facts.WeeklyReview.Needed) attention.Add(new("weeklyReviewWaiting", $"{name} geçen haftanın değerlendirmesini henüz yazmadı."));
+        if (facts.WeeklyReview.Needed) attention.Add(new("weeklyReviewWaiting", $"{name} geçen haftanın değerlendirmesini henüz yazmadı.", page));
         return new(facts.Week.WeekStart, facts.Week.Planned, facts.Week.Completed, overdue, next, exam, attention);
     }
 
@@ -109,10 +113,36 @@ public sealed class CoachingParentChildService(CoachingDbContext db, ICoachingAc
     public async Task<IReadOnlyList<ParentChildWeeklyReview>> GetWeeklyReviewsAsync(ParentChildScope child, int weeks, CancellationToken ct)
     {
         Validate(weeks);
-        var student = child.StudentId;
+        return await ReadReviewsAsync(child.StudentId, null, weeks, ct);
+    }
+
+    /// <summary>
+    /// One week of <see cref="GetWeeklyReviewsAsync"/>: the given Monday (one of the last 12 weeks), else the newest of the
+    /// last 4 weeks with a teacher note or decision, else last week.
+    /// </summary>
+    public async Task<ParentChildSingleWeeklyReview> GetWeeklyReviewAsync(ParentChildScope child, DateOnly? weekStart, CancellationToken ct)
+    {
+        var current = await CurrentWeekAsync(child.StudentId, ct);
+        ParentChildWeeklyReview week;
+        if (weekStart is { } requested)
+        {
+            if (requested.DayOfWeek != DayOfWeek.Monday || requested > current || requested < current.AddDays(-7 * (MaxWeeks - 1)))
+                throw new ArgumentException("Son 12 haftadan birinin pazartesi tarihini seçin.");
+            week = (await ReadReviewsAsync(child.StudentId, requested, 1, ct))[0];
+        }
+        else
+        {
+            var recent = await ReadReviewsAsync(child.StudentId, null, 4, ct);
+            week = recent.FirstOrDefault(x => x.TeacherNotes.Count > 0 || x.Decisions.Count > 0) ?? recent[1];
+        }
+        return new(week.WeekStart, week.TeacherNotes.Select(x => new ParentChildReviewNote(x.Note, x.ReviewedAt, x.TeacherName)).ToArray(), week.Decisions);
+    }
+
+    private async Task<IReadOnlyList<ParentChildWeeklyReview>> ReadReviewsAsync(Guid student, DateOnly? newest, int weeks, CancellationToken ct)
+    {
         var zoneId = await CoachingStudentZone.IdAsync(db, student, ct);
         var day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), CoachingStudentZone.Find(zoneId)).DateTime);
-        var current = Monday(day); var first = current.AddDays(-7 * (weeks - 1));
+        var current = newest ?? Monday(day); var first = current.AddDays(-7 * (weeks - 1));
         var totals = (await CoachingStudentStudyReportService.WeeksAsync(db, student, first, weeks, ct)).ToDictionary(x => x.FromDate);
         var reflections = await db.Set<WeeklyReflection>().AsNoTracking()
             .Where(x => x.StudentId == student && x.WeekStart >= first && x.WeekStart <= current)
