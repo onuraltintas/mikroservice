@@ -98,7 +98,6 @@
   p { margin: 0 0 var(--coaching-space-3); color: var(--ui-text-muted); font-size: var(--coaching-text-sm); }
   .session-title { margin-bottom: 2px; color: var(--ui-text); font-size: var(--coaching-text-body); font-weight: 700; }
   a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 800; color: var(--ui-brand-text); }
-  &[data-tone=accent] a { color: var(--ui-accent-text); }
 }
 
 .loading { display: grid; gap: var(--coaching-space-4); span:not(.sr) { height: 120px; border-radius: 22px; background: var(--ui-surface-muted); } span:last-of-type:not(.sr) { height: 240px; } }
@@ -116,8 +115,9 @@
     & + & { padding-left: var(--coaching-space-2); }
     > strong { font-size: 20px; }
     > span { font-size: 12px; }
-    small { font-size: 11px; }
-    cs-progress-ring { --cs-ring-size: 40px; }
+    small { display: none; }
+    &:first-child small { display: block; font-size: 11px; }
+    cs-progress-ring { --cs-ring-size: 50px; }
   }
   .next { padding: var(--coaching-space-5); gap: var(--coaching-space-2); &::after { width: 120px; height: 120px; right: -44px; top: -44px; border-width: 10px; } }
   .next-action { min-height: 44px; }

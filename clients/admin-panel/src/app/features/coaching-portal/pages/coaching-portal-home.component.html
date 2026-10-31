@@ -17,10 +17,12 @@
           <strong>{{ v.streak.currentStreak }}</strong>
           <span>günlük seri<small>{{ v.streak.currentStreak === 0 ? 'Bugün başlat' : v.streak.activeToday ? 'Bugün de çalıştın' : 'Bugün sürdür' }}</small></span>
         </div>
+        @if (v.week.planned > 0) {
         <div class="fact week">
           <cs-progress-ring [value]="v.week.completed" [max]="v.week.planned" [label]="'Bu hafta ' + v.week.planned + ' görevin ' + v.week.completed + ' tanesi bitti'" />
           <span>bu hafta<small>tamamlanan görev</small></span>
         </div>
+        }
       </div>
     }
   </header>
@@ -101,7 +103,7 @@
         }
 
         @if (v.weeklyReview.needed) {
-          <cs-card class="side-card" tone="accent" data-home-block="review" data-testid="weekly-review">
+          <cs-card class="side-card review" data-home-block="review" data-testid="weekly-review">
             <h2>Geçen hafta nasıl geçti?</h2>
             <p>Birkaç soruyla haftanı değerlendir; öğretmenin de görsün.</p>
             <a routerLink="/coaching-portal/growth/week" [queryParams]="{ week: v.weeklyReview.weekStart }">Haftanı değerlendir</a>
