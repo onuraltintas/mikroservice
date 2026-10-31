@@ -46,6 +46,9 @@ public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfigurati
     public Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeRepresentativeAsync(Guid viewerUserId, Guid studentUserId, CancellationToken ct) =>
         representatives.AuthorizeAsync(viewerUserId, studentUserId, ct);
 
+    public Task<CoachingParentReadAuthorization?> AuthorizeParentReadAsync(Guid parentUserId, Guid studentUserId, CancellationToken ct) =>
+        throw new NotImplementedException();
+
     private async Task<T?> SendAsync<T>(HttpMethod method, string path, object? body, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(key)) throw new InvalidOperationException("Internal service key is required.");

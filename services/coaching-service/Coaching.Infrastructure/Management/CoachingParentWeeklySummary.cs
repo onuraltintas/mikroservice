@@ -17,7 +17,8 @@ namespace Coaching.Infrastructure.Management;
 /// keeps it to one per parent, child and week; a child with no activity at all produces no e-mail.
 /// </summary>
 public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, ICoachingParentDirectory parents,
-    ICoachingEventPublisher events, TimeProvider clock)
+    ICoachingEventPublisher events, TimeProvider clock, ISpeedReadingParentSummaryClient? speedReading = null,
+    ILogger<CoachingParentWeeklySummaryProcessor>? logger = null)
 {
     public const string ReceiptKind = "ParentWeeklySummary";
     private const int PageSize = 200;

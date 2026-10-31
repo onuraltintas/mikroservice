@@ -196,6 +196,48 @@ public sealed record CoachingParentWeeklySummaryV1(
     decimal? LatestExamScore);
 
 /// <summary>
+/// V3 (parent panel): the weekly parent e-mail with one optional section per product. A section is present only when the
+/// child uses that product, left it visible to the parent and has something to report for the week; a summary is never
+/// published with both sections empty. Replaces <see cref="CoachingParentWeeklySummaryV1"/>, which the notification
+/// service still accepts for messages already in flight.
+/// </summary>
+public sealed record CoachingParentWeeklySummaryV2(
+    Guid SummaryId,
+    Guid ParentUserId,
+    string ParentEmail,
+    string ParentName,
+    Guid StudentUserId,
+    string StudentName,
+    DateOnly WeekStart,
+    DateOnly WeekEnd,
+    CoachingParentWeeklyCoachingSection? Coaching,
+    CoachingParentWeeklySpeedReadingSection? SpeedReading);
+
+public sealed record CoachingParentWeeklyCoachingSection(
+    int StudyTasksPlanned,
+    int StudyTasksCompleted,
+    int AssignmentsDue,
+    int AssignmentsSubmitted,
+    int AssignmentsOverdue,
+    int SessionsHeld,
+    int SessionsAttended,
+    int SessionsUpcoming,
+    string? LatestExamTitle,
+    decimal? LatestExamScore);
+
+/// <summary>The speed-reading week as the speed-reading service reports it (internal parent-weekly-summary endpoint).</summary>
+public sealed record CoachingParentWeeklySpeedReadingSection(
+    int Minutes,
+    int ActiveDays,
+    int ExercisesCompleted,
+    decimal? LatestWpm,
+    decimal? WpmChange,
+    decimal? AverageComprehension,
+    int? ProgramDay,
+    int? ProgramTotalDays,
+    int BadgesEarnedThisWeek);
+
+/// <summary>
 /// Roadmap O3: a conversation has a new message for the recipient. Sent once per unread batch and without the text,
 /// so the notification never carries the message itself. RecipientRole is Teacher, Student or Parent.
 /// </summary>

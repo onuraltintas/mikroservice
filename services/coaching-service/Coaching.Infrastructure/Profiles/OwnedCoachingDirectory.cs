@@ -92,6 +92,8 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
     public Task<IReadOnlyCollection<Guid>> AuthorizeStudentWorkReadAsync(Guid viewerUserId,
         IReadOnlyCollection<Guid> studentIds, CancellationToken ct) => AuthorizeStudentReadCoreAsync(viewerUserId, studentIds, false, ct);
 
+    public Task RequireParentReadAsync(Guid parentUserId, Guid studentUserId, CancellationToken ct) => throw new NotImplementedException();
+
     private async Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadCoreAsync(Guid viewerUserId,
         IReadOnlyCollection<Guid> studentIds, bool requireProgressShare, CancellationToken ct)
     {

@@ -106,6 +106,80 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
         finally { await harness.Stop(); await provider.DisposeAsync(); }
     }
 
+    // V3 (parent panel): one e-mail with a "Koçluk" and a "Hızlı okuma" section and a link to the child's page; one in-app note.
+    [Fact]
+    public async Task ParentWeeklySummaryV2_HasOneSectionPerProduct()
+    {
+        var parent = Guid.NewGuid(); var student = Guid.NewGuid();
+        var (provider, dispatcher, mail) = await StartAsync("finans@example.test");
+        var harness = provider.GetRequiredService<ITestHarness>();
+        try
+        {
+            var summary = new CoachingParentWeeklySummaryV2(Guid.NewGuid(), parent, "veli@example.test", "Ayşe Veli", student, "Ada Öğrenci",
+                new DateOnly(2026, 11, 2), new DateOnly(2026, 11, 8),
+                new CoachingParentWeeklyCoachingSection(5, 4, 2, 1, 1, 1, 1, 2, "TYT Deneme 3", 87.5m),
+                new CoachingParentWeeklySpeedReadingSection(95, 4, 12, 260m, 25m, 78.4m, 9, 21, 1));
+            await harness.Bus.Publish(summary);
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 1 && mail.Messages.Count >= 1);
+
+            var inApp = dispatcher.Calls.Single();
+            (inApp.EventMessageId, inApp.RecipientIds.Single(), inApp.Type, inApp.RelatedEntityId)
+                .Should().Be((summary.SummaryId, parent, "ParentWeeklySummary", student.ToString()));
+            inApp.Message.Should().Contain("Koçluk").And.Contain("Hızlı okuma").And.Contain("95 dakika");
+            var message = mail.Messages.Single();
+            message.Subject.Should().Contain("Ada Öğrenci").And.Contain("haftalık");
+            var body = message.Body;
+            body.Should().Contain("<h2>Koçluk</h2>").And.Contain("<h2>Hızlı okuma</h2>");
+            body.IndexOf("<h2>Koçluk</h2>", StringComparison.Ordinal).Should().BeLessThan(body.IndexOf("<h2>Hızlı okuma</h2>", StringComparison.Ordinal));
+            body.Should().Contain("5 çalışmanın 4").And.Contain("TYT Deneme 3").And.Contain("87,5");
+            body.Should().Contain("95 dakika").And.Contain("4 gün").And.Contain("12 egzersiz").And.Contain("260 kelime/dk")
+                .And.Contain("+25").And.Contain("%78").And.Contain("21 günlük programın 9. günü").And.Contain("1 yeni rozet");
+            body.Should().Contain($"href=\"https://app.example.test/coaching-portal/parent/children/{student}\"");
+        }
+        finally { await harness.Stop(); await provider.DisposeAsync(); }
+    }
+
+    // V3: a child who only uses speed reading (or hid Coaching) gets only the speed-reading section; names are text.
+    [Fact]
+    public async Task ParentWeeklySummaryV2_ShowsOnlyThePresentSectionAndEncodesNames()
+    {
+        var parent = Guid.NewGuid(); var student = Guid.NewGuid();
+        var (provider, dispatcher, mail) = await StartAsync("finans@example.test");
+        var harness = provider.GetRequiredService<ITestHarness>();
+        try
+        {
+            const string payload = "<a href=\"https://evil.example\">x</a>";
+            await harness.Bus.Publish(new CoachingParentWeeklySummaryV2(Guid.NewGuid(), parent, "veli@example.test", payload, student, "Ada " + payload,
+                new DateOnly(2026, 11, 2), new DateOnly(2026, 11, 8), null,
+                new CoachingParentWeeklySpeedReadingSection(0, 0, 0, null, null, null, null, null, 0)));
+            await TestHarnessTimeouts.UntilAsync(() => dispatcher.Calls.Count >= 1 && mail.Messages.Count >= 1);
+
+            var message = mail.Messages.Single();
+            message.Body.Should().Contain("<h2>Hızlı okuma</h2>").And.NotContain("Koçluk</h2>")
+                .And.Contain("Bu hafta hızlı okuma çalışması yapılmadı.")
+                .And.NotContain("<a href=\"https://evil.example\"").And.Contain("&lt;a href=");
+            message.Subject.Should().NotContain("\n");
+            dispatcher.Calls.Single().Message.Should().NotContain("Koçluk");
+        }
+        finally { await harness.Stop(); await provider.DisposeAsync(); }
+    }
+
+    // V3: a summary without any section is never e-mailed (the coaching service does not publish one, but be safe).
+    [Fact]
+    public async Task ParentWeeklySummaryV2_WithoutSectionsSendsNothing()
+    {
+        var (provider, dispatcher, mail) = await StartAsync("finans@example.test");
+        var harness = provider.GetRequiredService<ITestHarness>();
+        try
+        {
+            await harness.Bus.Publish(new CoachingParentWeeklySummaryV2(Guid.NewGuid(), Guid.NewGuid(), "veli@example.test", "Veli", Guid.NewGuid(), "Ada",
+                new DateOnly(2026, 11, 2), new DateOnly(2026, 11, 8), null, null));
+            (await harness.Consumed.Any<CoachingParentWeeklySummaryV2>(x => x.Exception is null)).Should().BeTrue();
+            mail.Messages.Should().BeEmpty(); dispatcher.Calls.Should().BeEmpty();
+        }
+        finally { await harness.Stop(); await provider.DisposeAsync(); }
+    }
+
     [Fact]
     public async Task AdminNotices_AreSkippedWhenNoAlertAddressIsConfigured()
     {
