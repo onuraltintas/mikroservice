@@ -67,6 +67,50 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
         Assert.Equal((3, 1, 1), (summary.AssignmentsDue, summary.AssignmentsSubmitted, summary.AssignmentsOverdue));
     }
 
+    // Coaching audit K3: the summary follows the student's own time zone (as the study reminders do).
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TheSummaryWaitsForSundayEveningInTheStudentsOwnTimeZone()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var student = Guid.NewGuid(); var parent = Guid.NewGuid();
+        var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Haftalık plan"); plan.Activate();
+        var task = StudyPlanTask.Create(plan, Monday.AddDays(1), "Matematik", 30);
+        pg.Db.AddRange(plan, task, StudyAvailability.Create(student, "America/New_York"));
+        await pg.Db.SaveChangesAsync();
+        var parents = new Parents(new CoachingParentSummaryRecipient(parent, "veli@example.test", "Veli", student, "Öğrenci"));
+        var events = new Publisher();
+
+        // Sunday 19:00 in Istanbul is Sunday 11:00 in New York: too early.
+        await Run(pg, parents, events, At(Monday.AddDays(6), 19));
+        Assert.Empty(events.Summaries);
+        // Sunday 18:30 in New York (EST, UTC-5).
+        await Run(pg, parents, events, Monday.AddDays(6).ToDateTime(new TimeOnly(23, 30), DateTimeKind.Utc));
+        var summary = Assert.Single(events.Summaries);
+        Assert.Equal((Monday, Monday.AddDays(6), 1), (summary.WeekStart, summary.WeekEnd, summary.StudyTasksPlanned));
+    }
+
+    // Coaching audit K3: two service instances running at the same moment send one summary and neither run fails.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TwoInstancesAtOnceSendOneSummary()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var parentIds = Enumerable.Range(0, 20).Select(_ => Guid.NewGuid()).ToArray();
+        var recipients = new List<CoachingParentSummaryRecipient>();
+        foreach (var parent in parentIds)
+        {
+            var student = Guid.NewGuid();
+            var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan"); plan.Activate();
+            pg.Db.AddRange(plan, StudyPlanTask.Create(plan, Monday.AddDays(2), "Türkçe", 20));
+            recipients.Add(new(parent, $"{parent:N}@example.test", "Veli", student, "Öğrenci"));
+        }
+        await pg.Db.SaveChangesAsync();
+        var parents = new Parents(recipients.ToArray());
+        var events = new Publisher();
+        await Task.WhenAll(Run(pg, parents, events, At(Monday.AddDays(6), 19)), Run(pg, parents, events, At(Monday.AddDays(6), 19)));
+        Assert.Equal(20, events.Summaries.Count);
+        Assert.Equal(20, events.Summaries.Select(x => x.ParentUserId).Distinct().Count());
+    }
+
     // Istanbul local time on the given day.
     private static DateTime At(DateOnly day, int hour) => day.ToDateTime(new TimeOnly(hour, 0), DateTimeKind.Utc).AddHours(-3);
 
@@ -89,7 +133,7 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
         public List<CoachingParentWeeklySummaryV1> Summaries { get; } = [];
         public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default) where T : class
         {
-            if (message is CoachingParentWeeklySummaryV1 summary) Summaries.Add(summary);
+            if (message is CoachingParentWeeklySummaryV1 summary) lock (Summaries) Summaries.Add(summary);
             return Task.CompletedTask;
         }
     }

@@ -34,7 +34,8 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
             studentMail.SubjectUserId.Should().Be(student);
             var teacherMail = mail.Messages.Single(x => x.Recipient == "ogretmen@example.test");
             teacherMail.Subject.Should().Contain("sona eriyor");
-            teacherMail.Body.Should().Contain("https://app.example.test/auth/login").And.NotContain("coaching-portal");
+            // Coaching audit K3: teachers manage billing in the coaching staff portal, not on the speed-reading login.
+            teacherMail.Body.Should().Contain("https://app.example.test/staff/?product=coaching").And.NotContain("coaching-portal");
             dispatcher.Calls.Single(x => x.RecipientIds.SequenceEqual([teacher])).Type.Should().Be("SubscriptionExpiring");
         }
         finally { await harness.Stop(); await provider.DisposeAsync(); }
