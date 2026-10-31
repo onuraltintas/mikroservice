@@ -12,7 +12,6 @@ import { CoachingStudentNavigationService } from '../../../core/services/coachin
 import { CoachingMessagesUnreadService } from '../../../core/services/coaching-messages-unread.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CoachingNotificationPanelComponent } from './coaching-notification-panel.component';
-import { CoachingWhatsNewCardComponent } from './coaching-whats-new-card.component';
 
 interface PortalLink { label: string; path: string; icon: CoachingIcon; exact?: boolean; short?: string; badge?: number }
 
@@ -32,7 +31,7 @@ const PAGE_LABELS: [string, string][] = [
 @Component({
   selector: 'app-coaching-portal-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, CoachingIconComponent, CdkTrapFocus, CoachingNotificationPanelComponent, CoachingWhatsNewCardComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, CoachingIconComponent, CdkTrapFocus, CoachingNotificationPanelComponent],
   templateUrl: './coaching-portal-layout.component.html',
   styleUrl: './coaching-portal-layout.component.scss',
   encapsulation: ViewEncapsulation.None

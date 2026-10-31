@@ -39,7 +39,6 @@
     </header>
     <app-coaching-notification-panel *ngIf="notificationsOpen()" (closed)="closeNotifications()" />
     <main id="coaching-main" class="coaching-content" tabindex="-1">
-      <app-coaching-whats-new-card *ngIf="isStudent() && !isParent()" />
       <router-outlet />
     </main>
     <footer class="coaching-footer"><span>Eduİvme · Öğrenci Koçluğu</span><span>Bugünkü emeğin, yarının temeli.</span></footer>

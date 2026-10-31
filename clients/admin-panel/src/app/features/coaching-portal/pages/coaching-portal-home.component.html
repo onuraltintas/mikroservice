@@ -1,20 +1,123 @@
-<section class="student-home">
-  <header class="home-welcome">
-    <div><p class="home-eyebrow">BUGÜN SENİN GÜNÜN</p><h1>{{ user()?.firstName ? 'Merhaba, ' + user()?.firstName + '.' : 'Tekrar hoş geldin.' }}</h1><p>Hedefine giden yol, bugün atacağın küçük bir adımla başlar.</p></div>
-    <a routerLink="/coaching-portal/growth/week" class="home-progress-link">Gelişimimi gör <app-coaching-icon name="arrow" /></a>
+<section class="today" aria-labelledby="today-title">
+  @if (isStudent()) { <app-coaching-whats-new-card /> }
+  <header class="today-head">
+    <div class="today-title">
+      <h1 id="today-title">Bugün</h1>
+      @if (view(); as v) { <p>{{ v.today | date: 'd MMMM EEEE' }}</p> }
+    </div>
+    @if (view(); as v) {
+      <div class="strip" data-testid="today-strip">
+        @if (v.exam; as exam) {
+          <div class="fact" [attr.aria-label]="exam.daysLeft + ' gün sonra ' + (exam.source === 'Student' ? 'sınavın var' : exam.name)">
+            <strong>{{ exam.daysLeft }}</strong>
+            <span>gün kaldı<small>{{ exam.source === 'Student' ? 'Sınavına' : exam.name }}</small></span>
+          </div>
+        }
+        <div class="fact streak" [class.is-on]="v.streak.currentStreak > 0">
+          <strong>{{ v.streak.currentStreak }}</strong>
+          <span>günlük seri<small>{{ v.streak.currentStreak === 0 ? 'Bugün başlat' : v.streak.activeToday ? 'Bugün de çalıştın' : 'Bugün sürdür' }}</small></span>
+        </div>
+        <div class="fact week">
+          <cs-progress-ring [value]="v.week.completed" [max]="v.week.planned" [label]="'Bu hafta ' + v.week.planned + ' görevin ' + v.week.completed + ' tanesi bitti'" />
+          <span>bu hafta<small>tamamlanan görev</small></span>
+        </div>
+      </div>
+    }
   </header>
-  @if (isStudent()) { <app-learning-setup-entry /><edu-coaching-motivation [api]="motivationApi" /> }
-  <div class="home-grid" *ngIf="isStudent()">
-    <app-student-daily-agenda />
-    <aside class="home-next-steps" aria-label="Çalışma kısayolları">
-      <app-student-home-goal />
-      <nav aria-label="Çalışma kısayolları">
-        <a routerLink="/coaching-portal/plan/weekly"><app-coaching-icon name="calendar" /><span>Haftalık düzenim</span></a>
-        <a routerLink="/coaching-portal/plan/wizard"><app-coaching-icon name="spark" /><span>Plan sihirbazı</span></a>
-        <a routerLink="/coaching-portal/growth/exams"><app-coaching-icon name="target" /><span>Deneme sonucu ekle</span></a>
-      </nav>
-    </aside>
-  </div>
-  @if (isStudent()) { @defer (on immediate) { <app-student-weekly-home [showDecisions]="false" /> } @placeholder { <p role="status">Haftalık bölüm hazırlanıyor…</p> } }
-  <div *ngIf="errorMessage()" role="alert" class="home-error">{{ errorMessage() }}</div>
+
+  @if (loading()) {
+    <div class="loading" role="status" aria-live="polite"><span></span><span></span><span class="sr">Bugünün özeti yükleniyor</span></div>
+  } @else if (errorMessage()) {
+    <div class="error" role="alert"><p>{{ errorMessage() }}</p>@if (isStudent()) { <button type="button" (click)="load()">Tekrar dene</button> }</div>
+  } @else if (view(); as v) {
+    <div class="today-grid">
+      <div class="today-main">
+        @if (v.nextStep; as next) {
+          <section class="next" data-home-block="next-step" data-testid="next-step" aria-labelledby="next-title">
+            <p class="next-label">Sıradaki adım</p>
+            <h2 id="next-title">{{ next.item.title }}</h2>
+            <p class="next-meta">
+              @if (next.overdue) { <cs-status-chip label="Gecikti" tone="accent" /> }
+              <span>{{ meta({ item: next.item, overdue: next.overdue }, (next.item.date | date: 'd MMMM')) }}</span>
+            </p>
+            <a class="next-action" [routerLink]="link(next.item).path" [queryParams]="link(next.item).query">{{ actionLabel(next.item) }}</a>
+          </section>
+        }
+
+        @if (!setupReady() || !v.hasActivePlan) {
+          <cs-card class="setup" data-home-block="setup">
+            <h2>{{ setupReady() ? 'İlk planını oluştur' : 'Çalışma düzenini kur' }}</h2>
+            <p>{{ setupReady() ? 'Derslerine ve boş saatlerine göre haftalık planını birkaç adımda hazırla.' : 'Sınıfını, derslerini ve boş saatlerini yaz; planın bunlara göre hazırlansın.' }}</p>
+            <div class="setup-actions">
+              @if (!setupReady()) { <a class="primary" routerLink="/coaching-portal/account/settings">Bilgilerini tamamla</a> }
+              @if (!v.hasActivePlan) { <a [class.primary]="setupReady()" routerLink="/coaching-portal/plan/wizard">Planını oluştur</a> }
+            </div>
+          </cs-card>
+        }
+
+        <section class="list" data-home-block="today" data-testid="today-list" aria-labelledby="list-title">
+          <div class="list-head">
+            <h2 id="list-title">Bugünün işleri</h2>
+            <span>{{ v.todayCount }} iş@if (v.overdueCount) {, {{ v.overdueCount }} gecikmiş}</span>
+          </div>
+          @for (row of rows(); track row.item.kind + row.item.recordId) {
+            <a class="row" [class.is-late]="row.overdue" [attr.data-record]="row.item.recordId" [routerLink]="link(row.item).path" [queryParams]="link(row.item).query">
+              <span class="row-time">{{ row.overdue ? (row.item.date | date: 'd MMM') : (clock(row.item.startMinute) || 'Gün içi') }}</span>
+              <span class="row-main"><strong>{{ row.item.title }}</strong><small>{{ meta(row, null) }}</small></span>
+              @if (row.overdue) { <cs-status-chip label="Gecikti" tone="accent" /> }
+            </a>
+          } @empty {
+            <p class="empty">{{ v.hasActivePlan ? 'Bugün için işin yok. Yaklaşanlara göz atabilir ya da planına bakabilirsin.' : 'Planın olunca günün işleri burada sıralanır.' }}</p>
+          }
+          @if (moreToday()) { <a class="more" routerLink="/coaching-portal/plan">{{ moreToday() }} iş daha planında</a> }
+          @if (v.upcomingCount) {
+            <details class="upcoming" (toggle)="toggleUpcoming($event)">
+              <summary>Yaklaşan <span class="count">{{ v.upcomingCount }}</span></summary>
+              @if (upcomingError()) { <p class="empty">Yaklaşan işler yüklenemedi. Bölümü kapatıp yeniden aç.</p> }
+              @else if (upcoming(); as list) {
+                @for (item of list; track item.kind + item.recordId) {
+                  <a class="row" [routerLink]="link(item).path" [queryParams]="link(item).query">
+                    <span class="row-time">{{ item.date | date: 'd MMM' }}</span>
+                    <span class="row-main"><strong>{{ item.title }}</strong><small>{{ meta({ item, overdue: false }, null) }}</small></span>
+                  </a>
+                }
+                @if (v.upcomingCount > list.length) { <a class="more" routerLink="/coaching-portal/plan">Tümünü planında gör</a> }
+              } @else { <p class="empty" role="status">Yükleniyor…</p> }
+            </details>
+          }
+        </section>
+      </div>
+
+      <aside class="today-side" aria-label="Haftan ve hedefin">
+        @if (v.goal; as goal) {
+          <a class="goal" data-home-block="goal" routerLink="/coaching-portal/growth/goals">
+            <strong>{{ goal.remainingNet > 0 ? 'Hedefine ' + (goal.remainingNet | number: '1.0-2') + ' net kaldı' : 'Hedef netine ulaştın' }}</strong>
+            <small>{{ goal.title }}, {{ goal.examCode }} son deneme {{ goal.latestNet | number: '1.0-2' }} / hedef {{ goal.targetNet | number: '1.0-2' }} net</small>
+          </a>
+        } @else {
+          <a class="goal is-quiet" data-home-block="goal" routerLink="/coaching-portal/growth/goals">
+            <strong>Hedefini belirle</strong><small>Hedef net ve deneme sonuçların olunca kalan farkı burada görürsün.</small>
+          </a>
+        }
+
+        @if (v.weeklyReview.needed) {
+          <cs-card class="side-card" tone="accent" data-home-block="review" data-testid="weekly-review">
+            <h2>Geçen hafta nasıl geçti?</h2>
+            <p>Birkaç soruyla haftanı değerlendir; koçun da görsün.</p>
+            <a routerLink="/coaching-portal/growth/week" [queryParams]="{ week: v.weeklyReview.weekStart }">Haftanı değerlendir</a>
+          </cs-card>
+        }
+
+        @if (v.nextSession; as session) {
+          <cs-card class="side-card" data-home-block="session" data-testid="next-session">
+            <h2>Sıradaki görüşme</h2>
+            <p class="session-title">{{ session.title }}</p>
+            <p>{{ session.scheduledDate | date: 'd MMMM EEEE, HH:mm' }}, {{ session.durationMinutes }} dk</p>
+            @if (session.meetingLink) { <a [href]="session.meetingLink" target="_blank" rel="noopener">Görüşmeye katıl</a> }
+            @else { <a routerLink="/coaching-portal/sessions">Görüşmelerim</a> }
+          </cs-card>
+        }
+      </aside>
+    </div>
+  }
 </section>
