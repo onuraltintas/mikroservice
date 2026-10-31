@@ -1,0 +1,22 @@
+// Shell navigation, header and account menu (moved out of the layout component so its style budget stays under 10 kB; every selector is scoped by .coaching-shell).
+/* T2 (31.10.2026): one flat menu, a page title in the header, the account menu and the notification bell. */
+.coaching-shell .coaching-navigation { display: grid; gap: 4px; margin-bottom: 22px;
+  a { position: relative; display: flex; align-items: center; gap: 13px; padding: 11px 14px; border-radius: 11px; min-height: 48px; color: var(--coaching-sidebar-text); font-size: 15px; font-weight: 550; transition: background .18s, color .18s;
+    app-coaching-icon { opacity: .9; font-size: 18px; }
+    &:hover { background: var(--coaching-sidebar-raised); }
+    &.is-active { color: var(--coaching-sidebar-active); background: var(--coaching-sidebar-raised); box-shadow: inset 3px 0 var(--coaching-sidebar-active); font-weight: 700; }
+    .coaching-badge { position: static; margin-left: auto; } } }
+.coaching-shell .coaching-page-title { flex: 1; margin: 0; min-width: 0; font-size: 18px; font-weight: 800; color: var(--ui-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.coaching-shell .coaching-topbar-actions { gap: 12px; }
+.coaching-shell .coaching-bell { position: relative; background: var(--ui-surface); }
+.coaching-shell .coaching-account { position: relative; }
+.coaching-shell .coaching-account-toggle { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; }
+.coaching-shell .coaching-account-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 70; display: grid; min-width: 240px; padding: 8px; border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-card); background: var(--ui-surface); box-shadow: var(--coaching-raised-shadow);
+  .coaching-account-name { display: grid; margin: 0; padding: 8px 12px 12px; border-bottom: 1px solid var(--ui-border); strong { font-size: 15px; color: var(--ui-text); } small { font-size: 13px; color: var(--ui-text-muted); } }
+  a, button { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border: 0; border-radius: var(--coaching-radius-control); background: transparent; color: var(--ui-text); font: inherit; font-size: 15px; text-align: left;
+    &:hover { background: var(--ui-surface-muted); } app-coaching-icon { color: var(--ui-text-muted); } }
+  button { color: var(--ui-danger); app-coaching-icon { color: var(--ui-danger); } } }
+@media (max-width: 800px) {
+  .coaching-shell .coaching-page-title { font-size: 16px; }
+  .coaching-shell .coaching-topbar-actions { gap: 8px; }
+}
