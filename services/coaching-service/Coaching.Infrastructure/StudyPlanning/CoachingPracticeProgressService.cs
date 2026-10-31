@@ -24,8 +24,8 @@ public sealed class CoachingPracticeProgressService(CoachingDbContext db, ICoach
         var active = await db.StudyPlanRevisions.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == student && x.Status == StudyPlanStatus.Active, ct);
         var availability = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == student, ct);
         var weekly = await db.Set<WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == student, ct);
-        var zoneId = active?.WeeklySource?.TimeZoneId ?? availability?.TimeZoneId ?? weekly?.TimeZoneId ?? "Europe/Istanbul";
-        var zone = TimeZoneInfo.FindSystemTimeZoneById(zoneId);
+        var zoneId = await CoachingStudentZone.IdAsync(db, student, ct);
+        var zone = CoachingStudentZone.Find(zoneId);
         var now = (clock ?? TimeProvider.System).GetUtcNow();
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
         var from = fromDate ?? today.AddDays(-89); var to = toDate ?? today;

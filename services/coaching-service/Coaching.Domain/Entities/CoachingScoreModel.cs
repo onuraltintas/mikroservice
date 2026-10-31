@@ -20,11 +20,13 @@ public static class ScoreModelRules
         new("DIL", "YKS Dil", ["TYT", "YDT_EN"], 560, true)
     });
 
-    /// <summary>Catalog and file spellings (SÖZ, DİL, say) become the codes above; unknown values give null.</summary>
+    /// <summary>Catalog and file spellings (SÖZ, DİL, YDT, say) become the codes above; unknown values give null.</summary>
     public static string? Normalize(string? scoreType)
     {
         if (string.IsNullOrWhiteSpace(scoreType)) return null;
         var code = scoreType.Trim().ToUpperInvariant().Replace('Ö', 'O').Replace('İ', 'I').Replace('Ü', 'U');
+        // K4 (31.10.2026): the university catalog stores Dil programmes as YDT (YksScoreTypes.ProgramScoreType).
+        if (code == "YDT") code = "DIL";
         return Types.Any(x => x.Code == code) ? code : null;
     }
 

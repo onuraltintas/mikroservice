@@ -64,7 +64,7 @@ public class SubmitAssignmentCommandHandler : IRequestHandler<SubmitAssignmentCo
             new AssignmentSubmittedEvent(
                 assignment.Id,
                 command.StudentId,
-                studentAssignment.SubmittedAt!.Value,
+                studentAssignment.LastSubmittedAt!.Value,
                 assignment.TeacherId) { AssignmentTitle = assignment.Title },
             cancellationToken);
 

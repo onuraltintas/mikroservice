@@ -27,7 +27,10 @@ public static partial class CoachingCoupons
         var coupon = await db.Set<CoachingCoupon>().AsNoTracking().SingleOrDefaultAsync(x => x.Code == normalized, ct);
         if (coupon is null || !coupon.IsActive) throw new ArgumentException("Bu indirim kodu geçerli değil.");
         if (coupon.ValidFrom > now || coupon.ValidUntil < now) throw new ArgumentException("Bu indirim kodunun geçerlilik süresi dışındasınız.");
-        if (coupon.MaxUses is { } max && coupon.UsedCount >= max) throw new ArgumentException("Bu indirim kodunun kullanım sınırı doldu.");
+        // Coaching audit K1: notices waiting for review hold a use too, so more buyers than the limit cannot send one.
+        if (coupon.MaxUses is { } max && coupon.UsedCount + await db.CoachingBankTransferRequests.AsNoTracking()
+                .CountAsync(x => x.CouponCode == normalized && x.Status == "Pending", ct) >= max)
+            throw new ArgumentException("Bu indirim kodunun kullanım sınırı doldu.");
         var plans = PlanIds(coupon);
         if (plans.Count > 0 && !plans.Contains(plan.Id)) throw new ArgumentException("Bu indirim kodu seçilen planda geçerli değil.");
         if (await db.CoachingBankTransferRequests.AsNoTracking().AnyAsync(x => x.UserId == userId && x.CouponCode == normalized

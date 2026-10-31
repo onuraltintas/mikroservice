@@ -18,4 +18,4 @@ public sealed record CoachingSeatRequestCreate(Guid SubscriptionId, int Seats, s
 
 public sealed record CoachingSeatRequestSummary(Guid Id, Guid SubscriptionId, Guid InstitutionId, string PlanName, int Seats, decimal UnitPrice,
     int RemainingDays, decimal Amount, string Currency, string PaymentReference, string? Note, string Status, DateTime CreatedAt,
-    DateTime? ReviewedAt, string? ReviewNote, Guid? PaymentRecordId, DateTime LicenseEndsAt);
+    DateTime? ReviewedAt, string? ReviewNote, Guid? PaymentRecordId, DateTime LicenseEndsAt, int DurationDays = 0);

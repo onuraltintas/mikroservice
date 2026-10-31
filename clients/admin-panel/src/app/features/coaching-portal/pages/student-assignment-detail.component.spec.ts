@@ -2,7 +2,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { AssignmentDetail, CoachingPortalService } from '../../../core/services/coaching-portal.service';
@@ -121,6 +121,31 @@ describe('StudentAssignmentDetailComponent cancelled assignment', () => {
     expect(component.canSubmit()).toBe(false);
     expect(service.submitAssignment).not.toHaveBeenCalled();
     expect(service.createAttachment).not.toHaveBeenCalled();
+  });
+});
+
+// K4 (31.10.2026): a file still uploading or being scanned stops the hand-in; the student sees the server's reason.
+describe('StudentAssignmentDetailComponent blocked submission', () => {
+  it('shows the server message when a file is not ready yet', () => {
+    const profile = signal<UserProfile | null>(user('Student'));
+    const message = 'Bir dosya henüz yükleniyor ya da güvenlik taramasından geçiyor. Biraz bekleyip yeniden dene ya da o dosyayı kaldır.';
+    const service = {
+      submitAssignment: vi.fn(() => throwError(() => ({ status: 400, error: { error: message, code: 'Attachment.NotClean' } })))
+    };
+    TestBed.configureTestingModule({
+      imports: [StudentAssignmentDetailComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'assignment-1' } } } }
+      ]
+    });
+    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
+    component.assignment.set({ id: 'assignment-1', status: 'Active', assignedStudents: [{ studentId: 'user-1', status: 'Assigned' }] } as AssignmentDetail);
+
+    component.submit();
+
+    expect(component.errorMessage()).toBe(message);
   });
 });
 

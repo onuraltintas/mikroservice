@@ -399,6 +399,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<long?>("GradeRevision")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("LastSubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_submitted_at");
+
                     b.Property<decimal?>("Score")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
@@ -815,7 +819,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "CreatedAt");
 
                     b.HasIndex("UserId", "PaymentReference")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"Status\" IN ('Pending', 'Approved')");
 
                     b.HasIndex("UserId", "Status");
 
@@ -2425,6 +2430,9 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("PreviousPlanId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Source")
                         .IsRequired()

@@ -17,7 +17,7 @@ public sealed record CoachingSalesTerms(CoachingSubscriptionSettings Seller, str
 /// </summary>
 public static class CoachingSalesDocumentTexts
 {
-    public const string Version = "2026-10-28";
+    public const string Version = "2026-10-31";
     private static readonly CultureInfo Turkish = new("tr-TR");
 
     public static CoachingSalesDocuments Render(CoachingSalesTerms terms)
@@ -35,7 +35,9 @@ public static class CoachingSalesDocumentTexts
         var price = terms.Discount > 0
             ? $"Liste fiyatı {Money(terms.ListPrice)}, {terms.CouponCode} indirim kodu ile {Money(terms.Discount)} indirim; ödenecek toplam tutar {Money(terms.Amount)} (vergiler dahil)."
             : $"Ödenecek toplam tutar {Money(terms.Amount)} (vergiler dahil).";
-        var date = terms.Date.ToString("dd.MM.yyyy", Turkish);
+        // Coaching audit K1: the contract is dated on the Turkish calendar day, not the UTC one.
+        var date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(terms.Date, DateTimeKind.Utc), Coaching.Domain.CoachingTime.Turkey)
+            .ToString("dd.MM.yyyy", Turkish);
         var buyer = $"Ad soyad: {terms.BuyerName}\nE-posta: {(string.IsNullOrWhiteSpace(terms.BuyerEmail) ? "-" : terms.BuyerEmail)}";
 
         var preInformation = $"""
@@ -50,6 +52,8 @@ public static class CoachingSalesDocumentTexts
 
             3. Hizmet
             "{terms.PlanName}" koçluk aboneliği: çevrim içi koçluk platformuna {terms.DurationDays} gün süreyle erişim. Hizmet, ödemenin satıcı tarafından onaylandığı gün başlar.
+            Süren bir abonelik bitmeden yapılan yenilemede (ya da aynı türde yeni bir planda) yeni dönem, mevcut dönemin bittiği gün başlar; öğretmen
+            planında daha büyük plana geçişte yeni plan onay günü geçerli olur ve ödenen gün sayısı mevcut dönemin sonuna eklenir.
 
             4. Fiyat ve ödeme
             {price}
@@ -88,8 +92,10 @@ public static class CoachingSalesDocumentTexts
             Ödeme banka havalesi / EFT ile yapılır ve satıcının onayıyla kesinleşir.
 
             Madde 4 – İfa
-            Abonelik, ödemenin onaylandığı gün başlar ve {terms.DurationDays} gün sürer. Satıcı hizmeti platform üzerinden sunar; bakım ve zorunlu
-            kesintiler dışında erişimi açık tutar.
+            Abonelik, ödemenin onaylandığı gün başlar ve {terms.DurationDays} gün sürer. Süren bir abonelik bitmeden yapılan yenilemede (ya da aynı
+            türde yeni bir planda) yeni dönem, mevcut dönemin bittiği gün başlar ve {terms.DurationDays} gün sürer; öğretmen planında daha büyük plana
+            geçişte yeni plan onay günü geçerli olur ve ödenen gün sayısı mevcut dönemin sonuna eklenir. Satıcı hizmeti platform üzerinden sunar;
+            bakım ve zorunlu kesintiler dışında erişimi açık tutar.
 
             Madde 5 – Cayma hakkı
             Alıcı, ödemenin onaylandığı günden başlayarak 14 gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Talep platformdaki

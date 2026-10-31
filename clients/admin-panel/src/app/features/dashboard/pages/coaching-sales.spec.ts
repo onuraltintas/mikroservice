@@ -71,6 +71,26 @@ describe('CoachingSalesComponent (O10)', () => {
     expect(component.success()).toContain('KIS-50');
   });
 
+  // Coaching audit 31.10.2026 (K1): a code starting at Turkish midnight is stored as 21:00 UTC of the day before; editing it
+  // must show and save the same Turkish day instead of moving it back one day on every save.
+  it('keeps the Turkish start and end day when a code is edited', async () => {
+    const { component } = await setup();
+    component.editCoupon(coupon({ validFrom: '2026-10-31T21:00:00Z', validUntil: '2026-11-30T20:59:59Z' }));
+    expect([component.couponFrom, component.couponUntil]).toEqual(['2026-11-01', '2026-11-30']);
+    const saving = component.saveCoupon();
+    const request = http.expectOne(r => r.method === 'PUT' && r.url === '/api/coaching-admin/sales/coupons/c1');
+    expect([request.request.body.validFrom, request.request.body.validUntil]).toEqual(['2026-10-31T21:00:00.000Z', '2026-11-30T20:59:59.000Z']);
+    request.flush({ data: coupon() });
+    await saving;
+  });
+
+  it('labels an amount code with the payment currency', async () => {
+    const { fixture } = await setup();
+    const kind = fixture.nativeElement.querySelector('select[name="couponKind"]').textContent as string;
+    expect(kind).not.toContain('TRY');
+    expect(kind).toContain('Tutar');
+  });
+
   it('refuses an invalid code or a percent above 100 before calling the server', async () => {
     const { component } = await setup();
     component.couponDraft = { ...component.couponDraft, code: 'x' };
@@ -174,7 +194,7 @@ describe('CoachingSalesComponent (O10)', () => {
   it('approves an institution extra-seat request after confirmation and rejects one only with a reason (O10b)', async () => {
     const request = (id: string, status = 'Pending') => ({ id, subscriptionId: 'sub-1', institutionId: 'inst-1', planName: 'Kurum yıllık', seats: 5, unitPrice: 120,
       remainingDays: 183, amount: 300.82, currency: 'TRY', paymentReference: 'EFT-K' + id, note: null, status, createdAt: '2026-11-01T09:00:00Z',
-      reviewedAt: null, reviewNote: null, paymentRecordId: null, licenseEndsAt: '2027-06-01T00:00:00Z' });
+      reviewedAt: null, reviewNote: null, paymentRecordId: null, licenseEndsAt: '2027-06-01T00:00:00Z', durationDays: 365 });
     const { fixture, component } = await setup();
     component.select('seats');
     const list = http.expectOne(r => r.url === '/api/coaching-admin/sales/seat-requests');
@@ -182,7 +202,7 @@ describe('CoachingSalesComponent (O10)', () => {
     list.flush({ data: [request('s1'), request('s2')] });
     await flush(); fixture.detectChanges();
     const row = fixture.nativeElement.querySelector('[data-testid="seat-request-s1"]').textContent as string;
-    expect(row).toContain('Işık Dershanesi'); expect(row).toContain('300,82 TRY'); expect(row).toContain('183 gün');
+    expect(row).toContain('Işık Dershanesi'); expect(row).toContain('300,82 TRY'); expect(row).toContain('183 / 365 gün');
 
     const approving = component.reviewSeatRequest(component.seatRequests()[0], true);
     await flush();

@@ -68,6 +68,9 @@ export class StudentScoreEstimateComponent implements OnInit {
   hasYks(result: ScoreEstimate): boolean { return result.estimates.some((x: ScoreTypeEstimate) => x.scoreType !== 'LGS'); }
 
   targetText(target: NonNullable<ScoreEstimate['target']>): string {
+    // K4 (31.10.2026): without a taban or a rank on the target no gap can be shown, whatever the estimate.
+    if (target.targetScore === null && target.targetRank === null)
+      return 'Bu hedefin taban puanı ya da sıralama verisi yok; bu yüzden hedefe olan fark hesaplanamıyor.';
     if (target.scoreGap === null && target.rankGap === null) return 'Bu hedefin puan türü için henüz tahmin yok; o puan türünde bir deneme gir.';
     if (target.reached) return 'Tahmini puanın hedefin tabanına ulaşıyor. Bu çizgiyi korumaya çalış.';
     if (target.scoreGap !== null) return `Hedefe yaklaşık ${this.num(target.netGap ?? 0)} net (${this.num(target.scoreGap)} puan) kaldı.`;

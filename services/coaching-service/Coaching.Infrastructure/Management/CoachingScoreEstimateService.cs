@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Coaching.Application.Interfaces;
+using Coaching.Domain;
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Kernel.Exceptions;
@@ -88,11 +89,18 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             .GroupBy(x => x.ScoreType).Select(x => x.OrderByDescending(y => y.Year).First()).ToDictionary(x => x.ScoreType);
         if (models.Count == 0) return new([], null, "Puan tahmini verisi henüz yüklenmedi.");
 
+        // K4 (31.10.2026): exams dated in the future do not count, and a student's own copy of a deneme that their institution
+        // or teacher recorded on the same Türkiye day for the same scope is a duplicate.
+        var now = clock.GetUtcNow().UtcDateTime;
         var rows = await (from result in db.ExamResults.AsNoTracking()
                           join exam in db.Exams.AsNoTracking() on result.ExamId equals exam.Id
-                          where result.StudentId == studentId && result.PracticeExamJson != null
-                          select new { exam.ExamDate, result.PracticeExamJson }).ToListAsync(ct);
-        var exams = rows.Select(x => (x.ExamDate, Summary: PracticeExamRules.Summarize(System.Text.Json.JsonSerializer.Deserialize<PracticeExamInput>(x.PracticeExamJson!)!)))
+                          where result.StudentId == studentId && result.PracticeExamJson != null && exam.ExamDate <= now
+                          select new { exam.ExamDate, SelfReported = exam.StudentOwnerId != null, result.PracticeExamJson }).ToListAsync(ct);
+        var parsed = rows.Select(x => (x.ExamDate, x.SelfReported, Day: DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(x.ExamDate, DateTimeKind.Utc), CoachingTime.Turkey)),
+            Summary: PracticeExamRules.Summarize(System.Text.Json.JsonSerializer.Deserialize<PracticeExamInput>(x.PracticeExamJson!)!))).ToArray();
+        var recorded = parsed.Where(x => !x.SelfReported).Select(x => (x.Summary.ExamCode, x.Day)).ToHashSet();
+        var exams = parsed.Where(x => !x.SelfReported || !recorded.Contains((x.Summary.ExamCode, x.Day)))
+            .Select(x => (x.ExamDate, x.Summary))
             .GroupBy(x => x.Summary.ExamCode)
             .ToDictionary(x => x.Key, x => x.OrderByDescending(y => y.ExamDate).Take(ExamsPerScope).ToArray());
 

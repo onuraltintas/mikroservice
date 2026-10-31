@@ -37,7 +37,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await Assert.ThrowsAsync<BusinessRuleException>(() => s.Sales.StartTrialAsync(Guid.NewGuid(), "Can", null, "Teacher", plan, default));
 
         var paid = await s.Subscriptions.CreateBankTransferRequestAsync(s.User, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-AFTER-TRIAL", "Ada", null, true), "create-after-trial-01");
+            new CoachingBankTransferRequestCreate(plan, "EFT-AFTER-TRIAL", "Ada", null, true, AcceptSalesContract: true), "create-after-trial-01");
         await s.Subscriptions.ReviewBankTransferRequestAsync(paid!.Id, new("Approved", null), s.Admin, "review-after-trial-01");
         (await s.Db.CoachingSubscriptions.SingleAsync()).EndDate.Should().BeCloseTo(trial.EndDate.AddDays(365), TimeSpan.FromMinutes(1),
             "the paid year starts when the trial ends");
@@ -62,7 +62,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await Assert.ThrowsAsync<ArgumentException>(() => s.Sales.QuoteAsync(s.User, "YOK", plan, default));
 
         var transfer = await s.Subscriptions.CreateBankTransferRequestAsync(s.User, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-COUPON-01", "Ada", null, true, "ekim20"), "create-coupon-0001");
+            new CoachingBankTransferRequestCreate(plan, "EFT-COUPON-01", "Ada", null, true, "ekim20", AcceptSalesContract: true), "create-coupon-0001");
         (transfer!.Amount, transfer.ListPrice, transfer.CouponCode, transfer.DiscountAmount).Should().Be((960m, 1200m, "EKIM20", 240m));
         await s.Subscriptions.ReviewBankTransferRequestAsync(transfer.Id, new("Approved", null), s.Admin, "review-coupon-0001");
 
@@ -77,7 +77,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await Assert.ThrowsAsync<ArgumentException>(() => s.Sales.CreateCouponAsync(s.Admin, new("EKIM20", "Amount", 10m, null, null, null, [], true), default));
         await Assert.ThrowsAsync<ArgumentException>(() => s.Sales.CreateCouponAsync(s.Admin, new("YUZDE", "Percent", 120m, null, null, null, [], true), default));
         await Assert.ThrowsAsync<ArgumentException>(() => s.Subscriptions.CreateBankTransferRequestAsync(s.User, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-COUPON-02", "Ada", null, true, "YOK"), "create-coupon-0002"));
+            new CoachingBankTransferRequestCreate(plan, "EFT-COUPON-02", "Ada", null, true, "YOK", AcceptSalesContract: true), "create-coupon-0002"));
     }
 
     [Fact]

@@ -48,7 +48,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         var plan = (await subscriptions.CreatePlanAsync(Plan("fixed-terms", "Bireysel yıllık", "Individual", 1200m, null), actor))!.Value;
         await Settings(subscriptions, actor, "settings-fixed-terms-1");
         var transfer = await subscriptions.CreateBankTransferRequestAsync(user, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-FIXED-01", "Ada", null, true), "create-fixed-terms-01");
+            new CoachingBankTransferRequestCreate(plan, "EFT-FIXED-01", "Ada", null, true, AcceptSalesContract: true), "create-fixed-terms-01");
         transfer!.DurationDays.Should().Be(365);
 
         await subscriptions.UpdatePlanAsync(plan, Plan("fixed-terms", "Bireysel yıllık", "Individual", 1500m, null) with { DurationDays = 30 }, actor);
@@ -79,9 +79,9 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
 
         // A smaller plan cannot be bought while a plan runs: the payer would pay for seats they lose.
         (await subscriptions.CreateTeacherBankTransferRequestAsync(teacher, "Öğretmen", "teacher@example.test",
-            new CoachingBankTransferRequestCreate(tiny, "TEACHER-DOWN-01", "Öğretmen", null, true), "create-downgrade-0001")).Should().BeNull();
+            new CoachingBankTransferRequestCreate(tiny, "TEACHER-DOWN-01", "Öğretmen", null, true, AcceptSalesContract: true), "create-downgrade-0001")).Should().BeNull();
         var upgrade = await subscriptions.CreateTeacherBankTransferRequestAsync(teacher, "Öğretmen", "teacher@example.test",
-            new CoachingBankTransferRequestCreate(large, "TEACHER-UP-0001", "Öğretmen", null, true), "create-upgrade-00001");
+            new CoachingBankTransferRequestCreate(large, "TEACHER-UP-0001", "Öğretmen", null, true, AcceptSalesContract: true), "create-upgrade-00001");
         (await subscriptions.ReviewBankTransferRequestAsync(upgrade!.Id, new CoachingBankTransferReviewRequest("Approved", null), actor,
             "review-upgrade-00001"))!.Status.Should().Be("Approved");
 
@@ -168,7 +168,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         var plan = (await subscriptions.CreatePlanAsync(Plan("pending-edit", "Bireysel yıllık", "Individual", 1200m, null), actor))!.Value;
         await Settings(subscriptions, actor, "settings-pending-001");
         var transfer = await subscriptions.CreateBankTransferRequestAsync(user, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-TYPO-001", "Ada", null, true), "create-pending-0001");
+            new CoachingBankTransferRequestCreate(plan, "EFT-TYPO-001", "Ada", null, true, AcceptSalesContract: true), "create-pending-0001");
 
         (await subscriptions.UpdateMyBankTransferRequestAsync(stranger, transfer!.Id,
             new CoachingBankTransferRequestUpdate("EFT-OTHER-01", null, null))).Should().BeNull();
@@ -186,7 +186,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
 
         // Withdrawing frees the plan for a new notice instead of returning the withdrawn one.
         var again = await subscriptions.CreateBankTransferRequestAsync(user, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-NEW-0001", "Ada", null, true), "create-pending-0002");
+            new CoachingBankTransferRequestCreate(plan, "EFT-NEW-0001", "Ada", null, true, AcceptSalesContract: true), "create-pending-0002");
         again!.Id.Should().NotBe(transfer.Id); again.Status.Should().Be("Pending");
     }
 
@@ -200,9 +200,9 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         var plan = (await subscriptions.CreatePlanAsync(Plan("duplicate-receipt", "Bireysel yıllık", "Individual", 1200m, null), actor))!.Value;
         await Settings(subscriptions, actor, "settings-duplicate-01");
         await subscriptions.CreateBankTransferRequestAsync(Guid.NewGuid(), "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-SAME-0001", "Ada", null, true), "create-duplicate-0001");
+            new CoachingBankTransferRequestCreate(plan, "EFT-SAME-0001", "Ada", null, true, AcceptSalesContract: true), "create-duplicate-0001");
         await subscriptions.CreateBankTransferRequestAsync(Guid.NewGuid(), "Can", "can@example.test",
-            new CoachingBankTransferRequestCreate(plan, "EFT-SAME-0001", "Can", null, true), "create-duplicate-0002");
+            new CoachingBankTransferRequestCreate(plan, "EFT-SAME-0001", "Can", null, true, AcceptSalesContract: true), "create-duplicate-0002");
 
         var notices = events.Of<CoachingSubscriptionNoticeV1>().Where(x => x.Kind == CoachingSubscriptionNoticeKinds.TransferSubmitted).ToArray();
         notices.Should().HaveCount(2);
@@ -218,7 +218,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
     private static async Task<Guid> Approve(CoachingSubscriptionService subscriptions, Guid user, Guid plan, string reference, Guid actor, string key)
     {
         var transfer = await subscriptions.CreateBankTransferRequestAsync(user, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(plan, reference, "Ada", null, true), "create-" + key + "-key");
+            new CoachingBankTransferRequestCreate(plan, reference, "Ada", null, true, AcceptSalesContract: true), "create-" + key + "-key");
         (await subscriptions.ReviewBankTransferRequestAsync(transfer!.Id, new CoachingBankTransferReviewRequest("Approved", null), actor,
             "review-" + key + "-key"))!.Status.Should().Be("Approved");
         return transfer.Id;

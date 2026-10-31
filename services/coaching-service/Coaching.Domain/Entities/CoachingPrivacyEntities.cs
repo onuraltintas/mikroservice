@@ -126,7 +126,7 @@ public sealed class CoachingErasureAssessment : AggregateRoot
 public sealed class CoachingErasureExecution : AggregateRoot
 {
     /// <summary>Subscription, seat, bank transfer and payment records are kept unchanged for this many years after erasure.</summary>
-    public const int FinancialRetentionYears = 1;
+    public const int FinancialRetentionYears = 5;
 
     public Guid RequestId { get; private set; }
     public int DeletedRecordCount { get; private set; }

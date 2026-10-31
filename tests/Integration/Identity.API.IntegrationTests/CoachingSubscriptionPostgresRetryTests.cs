@@ -59,7 +59,7 @@ public sealed class CoachingSubscriptionPostgresRetryTests(PostgresFixture postg
             switch (operation)
             {
                 case "create-transfer":
-                    var request = new CoachingBankTransferRequestCreate(individualPlan.Id, "POSTGRES-CREATE", "Test", null, true);
+                    var request = new CoachingBankTransferRequestCreate(individualPlan.Id, "POSTGRES-CREATE", "Test", null, true, AcceptSalesContract: true);
                     var denied = await service.CreateBankTransferRequestAsync(user, "Test", "test@example.invalid", request with { AdultPayerDeclaration = false }, "postgres-denied-key-01");
                     denied.Should().BeNull();
                     var before = DateTime.UtcNow;

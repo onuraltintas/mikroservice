@@ -18,16 +18,20 @@ otomatik imha etkinleştirilmez.
 | Hedef ve ilerleme | Coaching | öğrenci ve yetkili koç/veli | ilişki + 2 yıl | anonimleştir veya sil |
 | Anlaşma/onam kanıtı | Coaching | ilgili kişi; denetimde yetkili roller | hukuken gerekli süre | içerik değişmez, erişim kısıtlı tutulur |
 | Admin audit | Coaching | MFA'lı operasyon yetkisi | güvenlik politikası | append-only arşiv/imha süreci |
-| Abonelik, koltuk, banka transferi, ödeme kaydı | Coaching | kullanıcı (export), global yönetici | silme talebinden itibaren 1 yıl, değişmeden | ad, e-posta, ödeyen adı ve notlar silinir; kullanıcı kimliği rastgele bir kimlikle değişir; tutar, tarih, plan ve banka referansı kalır |
+| Abonelik, koltuk, deneme, banka transferi (velinin gönderdikleri dahil), ödeme kaydı | Coaching | kullanıcı (export), global yönetici | silme talebinden itibaren 5 yıl, değişmeden (31.10.2026 kararı; avukat kontrolü bekliyor) | ad, e-posta, ödeyen adı, notlar, cayma gerekçesi/notu ve sözleşme metinlerindeki alıcı adı/e-postası silinir; kullanıcı kimliği (veli gönderdiyse velinin kimliği de) rastgele bir kimlikle değişir; tutar, tarih, plan ve banka referansı kalır |
 
 ## İlgili kişi akışları
 
-1. **Export:** `GET /api/data-privacy/export` Student veya Teacher JWT'siyle
+1. **Export:** `GET /api/data-privacy/export` Student, Teacher veya Parent JWT'siyle
    çalışır ve her zaman yalnız token sahibinin verisini döndürür. Öğrencide
-   Identity servisi aktif öğrenci kapsamını tekrar doğrular. JSON çıktısı
-   `schemaVersion` (şu an `1.9`) içerir; abonelik, koltuk, banka transferi ve
-   ödeme kayıtları da dahildir; koçun özel notlarını, yönetici notlarını ve
-   storage anahtarlarını içermez.
+   Identity servisi aktif öğrenci kapsamını tekrar doğrular. Veli yalnız kendi
+   oluşturduğu verileri alır (kendi yazışmaları, çocuğu için gönderdiği ödeme
+   bildirimleri); çocuğun verisi çocuğun dışa aktarımındadır. JSON çıktısı
+   `schemaVersion` (şu an `1.11`) içerir; abonelik, ücretsiz deneme, ödenen dönemler,
+   koltuk, banka transferi (liste fiyatı, indirim, sözleşme sürümü ve onayı, cayma),
+   ödeme ve fatura kayıtları, deneme bölüm cevapları ve konu analizi, net hedefleri,
+   ana hedef ve teslim dosyalarının bilgileri de dahildir; koçun özel notlarını,
+   yönetici notlarını ve storage anahtarlarını içermez.
 2. **Düzeltme:** veri sahibi mevcut alan bazlı güncelleme akışlarını kullanır;
    değişiklikler yetki ve concurrency kontrollerinden geçer.
 3. **Silme/anonimleştirme talebi:** Identity talebin kimliğini doğrular, yasal

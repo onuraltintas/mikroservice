@@ -222,7 +222,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
             userId,
             "Öğrenci Adı",
             "student@example.com",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-2026-001", "Öğrenci Adı", null, true),
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-2026-001", "Öğrenci Adı", null, true, AcceptSalesContract: true),
             "create-approved-test-key-0001");
         transfer.Should().NotBeNull();
 
@@ -268,7 +268,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         (await subscriptions.UpdateSettingsAsync(settings, actorId, "settings-idempotency-key-0001"))
             .BankTransferEnabled.Should().BeTrue();
 
-        var createRequest = new CoachingBankTransferRequestCreate(planId!.Value, "eft 2026-01", "Ada Öğrenci", null, true);
+        var createRequest = new CoachingBankTransferRequestCreate(planId!.Value, "eft 2026-01", "Ada Öğrenci", null, true, AcceptSalesContract: true);
         var denied = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
             createRequest with { AdultPayerDeclaration = false }, "create-denied-key-0001");
         denied.Should().BeNull();
@@ -308,7 +308,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
             actorId, "settings-review-key-0001");
         var transfer = await subscriptions.CreateBankTransferRequestAsync(
             userId, "Ada Öğrenci", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-2026-03", "Ada Öğrenci", null, true),
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-2026-03", "Ada Öğrenci", null, true, AcceptSalesContract: true),
             "create-review-key-0001");
 
         var noReason = await subscriptions.ReviewBankTransferRequestAsync(
@@ -413,7 +413,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
 
         var transfer = await subscriptions.CreateTeacherBankTransferRequestAsync(
             teacherId, "Öğretmen", "teacher@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "TEACHER-EFT-1", "Öğretmen", null, true),
+            new CoachingBankTransferRequestCreate(planId!.Value, "TEACHER-EFT-1", "Öğretmen", null, true, AcceptSalesContract: true),
             "create-teacher-test-key-0001");
         transfer.Should().NotBeNull();
         var reviewed = await subscriptions.ReviewBankTransferRequestAsync(
@@ -463,7 +463,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
 
         var transfer = await subscriptions.CreateTeacherBankTransferRequestAsync(
             teacherId, "Öğretmen", "teacher@example.test",
-            new CoachingBankTransferRequestCreate(planId.Value, "TEACHER-EFT-RENEW", "Öğretmen", null, true),
+            new CoachingBankTransferRequestCreate(planId.Value, "TEACHER-EFT-RENEW", "Öğretmen", null, true, AcceptSalesContract: true),
             "create-teacher-renewal-key-01");
         transfer.Should().NotBeNull();
         (await subscriptions.ReviewBankTransferRequestAsync(
@@ -490,12 +490,12 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
             true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-individual-renew-01");
         var first = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-RENEW-1", "Ada", null, true), "create-individual-renew-01");
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-RENEW-1", "Ada", null, true, AcceptSalesContract: true), "create-individual-renew-01");
         await subscriptions.ReviewBankTransferRequestAsync(first!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-individual-renew-01");
         var paidUntil = (await db.CoachingSubscriptions.SingleAsync()).EndDate;
 
         var second = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId.Value, "EFT-RENEW-2", "Ada", null, true), "create-individual-renew-02");
+            new CoachingBankTransferRequestCreate(planId.Value, "EFT-RENEW-2", "Ada", null, true, AcceptSalesContract: true), "create-individual-renew-02");
         (await subscriptions.ReviewBankTransferRequestAsync(second!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId,
             "review-individual-renew-02"))!.Status.Should().Be("Approved");
 
@@ -516,12 +516,12 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
             true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-individual-change-1");
         var first = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(annual!.Value, "EFT-CHANGE-1", "Ada", null, true), "create-individual-change-01");
+            new CoachingBankTransferRequestCreate(annual!.Value, "EFT-CHANGE-1", "Ada", null, true, AcceptSalesContract: true), "create-individual-change-01");
         await subscriptions.ReviewBankTransferRequestAsync(first!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-individual-change-01");
         var paidUntil = (await db.CoachingSubscriptions.SingleAsync()).EndDate;
 
         var second = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(other!.Value, "EFT-CHANGE-2", "Ada", null, true), "create-individual-change-02");
+            new CoachingBankTransferRequestCreate(other!.Value, "EFT-CHANGE-2", "Ada", null, true, AcceptSalesContract: true), "create-individual-change-02");
         await subscriptions.ReviewBankTransferRequestAsync(second!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-individual-change-02");
 
         var next = await db.CoachingSubscriptions.SingleAsync(x => x.PlanId == other.Value);
@@ -540,7 +540,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
             true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-approved-delete-01");
         var transfer = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-APPROVED-DEL", "Ada", null, true), "create-approved-delete-01");
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-APPROVED-DEL", "Ada", null, true, AcceptSalesContract: true), "create-approved-delete-01");
         await subscriptions.ReviewBankTransferRequestAsync(transfer!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-approved-delete-01");
 
         var delete = () => subscriptions.DeleteBankTransferRequestAsync(transfer.Id);
@@ -560,7 +560,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
             true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-cancel-approved-01");
         var transfer = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-CANCEL-1", "Ada", null, true), "create-cancel-approved-01");
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-CANCEL-1", "Ada", null, true, AcceptSalesContract: true), "create-cancel-approved-01");
         await subscriptions.ReviewBankTransferRequestAsync(transfer!.Id, new CoachingBankTransferReviewRequest("Approved", "Doğrulandı"), actorId, "review-cancel-approved-01");
         (await subscriptions.GetMyAccessAsync(userId)).HasAccess.Should().BeTrue();
 
@@ -588,11 +588,11 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
             true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-cancel-renewal-01");
         var first = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-CR-1", "Ada", null, true), "create-cancel-renewal-01");
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-CR-1", "Ada", null, true, AcceptSalesContract: true), "create-cancel-renewal-01");
         await subscriptions.ReviewBankTransferRequestAsync(first!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-cancel-renewal-01");
         var paidUntil = (await db.CoachingSubscriptions.SingleAsync()).EndDate;
         var second = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId.Value, "EFT-CR-2", "Ada", null, true), "create-cancel-renewal-02");
+            new CoachingBankTransferRequestCreate(planId.Value, "EFT-CR-2", "Ada", null, true, AcceptSalesContract: true), "create-cancel-renewal-02");
         await subscriptions.ReviewBankTransferRequestAsync(second!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId, "review-cancel-renewal-02");
 
         await subscriptions.CancelApprovedBankTransferAsync(second.Id, "Mükerrer ödeme iade edildi", actorId);
@@ -691,7 +691,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
             true, "TRY", "Edu İvme", "Örnek Banka", "TR33 0006 1005 1978 6457 8413 26", null, true), actorId, "settings-notice-test-0001");
 
         var first = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-NOTICE-1", "Ada Veli", null, true), "create-notice-test-00001");
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-NOTICE-1", "Ada Veli", null, true, AcceptSalesContract: true), "create-notice-test-00001");
         var submitted = notices.Of<CoachingSubscriptionNoticeV1>().Should().ContainSingle().Subject;
         submitted.Kind.Should().Be(CoachingSubscriptionNoticeKinds.TransferSubmitted);
         submitted.RecipientUserId.Should().BeNull();
@@ -710,7 +710,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
             x.Kind == CoachingSubscriptionNoticeKinds.ApprovalCancelled && x.Detail == "Yanlış hesaba onaylandı" && x.RecipientUserId == userId);
 
         var second = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId.Value, "EFT-NOTICE-2", "Ada Veli", null, true), "create-notice-test-00002");
+            new CoachingBankTransferRequestCreate(planId.Value, "EFT-NOTICE-2", "Ada Veli", null, true, AcceptSalesContract: true), "create-notice-test-00002");
         await subscriptions.ReviewBankTransferRequestAsync(second!.Id,
             new CoachingBankTransferReviewRequest("Rejected", "Tutar eksik geldi"), actorId, "review-notice-test-00002");
         notices.Of<CoachingSubscriptionNoticeV1>().Last().Should().Match<CoachingSubscriptionNoticeV1>(x =>
@@ -739,7 +739,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         await db.SaveChangesAsync();
 
         var transfer = await subscriptions.CreateTeacherBankTransferRequestAsync(teacherId, "Öğretmen", "teacher@example.test",
-            new CoachingBankTransferRequestCreate(planId.Value, "TEACHER-EFT-LAPSED", "Öğretmen", null, true), "create-expired-renewal-01");
+            new CoachingBankTransferRequestCreate(planId.Value, "TEACHER-EFT-LAPSED", "Öğretmen", null, true, AcceptSalesContract: true), "create-expired-renewal-01");
         (await subscriptions.ReviewBankTransferRequestAsync(transfer!.Id, new CoachingBankTransferReviewRequest("Approved", null), actorId,
             "review-expired-renewal-01"))!.Status.Should().Be("Approved");
 

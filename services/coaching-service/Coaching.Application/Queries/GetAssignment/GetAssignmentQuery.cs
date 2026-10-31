@@ -58,7 +58,8 @@ public record AssignedStudentDto(
     string? TeacherFeedback,
     string Status,
     IReadOnlyList<AssignmentAttachmentDto>? Attachments = null,
-    string? StudentNote = null
+    string? StudentNote = null,
+    DateTime? LastSubmittedAt = null
 );
 
 public record AssignmentAttachmentDto(

@@ -310,7 +310,10 @@ public class CoachingDbContext : DbContext
         requests.Property(request => request.WithdrawalReviewNote).HasMaxLength(500);
         requests.HasIndex(request => new { request.WithdrawalStatus, request.WithdrawalRequestedAt }).HasFilter("\"WithdrawalStatus\" IS NOT NULL");
         requests.HasIndex(request => new { request.UserId, request.CouponCode }).HasFilter("\"CouponCode\" IS NOT NULL");
-        requests.HasIndex(request => new { request.UserId, request.PaymentReference }).IsUnique();
+        // Coaching audit K1: only a notice still waiting or approved holds its receipt number; after a withdrawal, rejection
+        // or expiry the payer can send the same bank receipt again.
+        requests.HasIndex(request => new { request.UserId, request.PaymentReference }).IsUnique()
+            .HasFilter("\"Status\" IN ('Pending', 'Approved')");
         requests.HasIndex(request => new { request.Status, request.CreatedAt });
         requests.HasIndex(request => new { request.UserId, request.Status });
         requests.HasIndex(request => request.SubmittedByUserId);
