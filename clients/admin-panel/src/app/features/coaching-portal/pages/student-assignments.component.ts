@@ -1,16 +1,18 @@
 import { coachingFeedback } from '../coaching-feedback';
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalService, StudentAssignment, StudentAssignmentFilter } from '../../../core/services/coaching-portal.service';
+import { CsEmptyStateComponent, CsSegmentedTabsComponent, CsStatusChipComponent } from '../ui';
+import { STUDENT_ASSIGNMENT_FILTERS, assignmentCardState, assignmentDateTime, assignmentScore } from './student-assignment-view';
 
 @Component({
   selector: 'app-student-assignments',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink, CsEmptyStateComponent, CsSegmentedTabsComponent, CsStatusChipComponent],
   templateUrl: './student-assignments.component.html',
-  styleUrl: './student-assignments.component.scss'
+  styleUrl: './student-assignments.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentAssignmentsComponent implements OnInit {
   private readonly authService = inject(AuthService);
@@ -21,24 +23,16 @@ export class StudentAssignmentsComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly pageNumber = signal(1);
   readonly totalPages = signal(1);
-  // Roadmap O1: the list opens on work still waiting (late first) and every filter runs on the server.
+  // Roadmap O1 / T5: the list opens on work still to do (late first); every filter runs on the server.
   readonly filter = signal<StudentAssignmentFilter>('open');
-  readonly filters: { label: string; value: StudentAssignmentFilter }[] = [
-    { label: 'Yapılacaklar', value: 'open' },
-    { label: 'Geciken', value: 'overdue' },
-    { label: 'Bekleyen', value: 'pending' },
-    { label: 'Teslim ettiklerim', value: 'submitted' },
-    { label: 'İptal edilen', value: 'cancelled' },
-    { label: 'Tümü', value: 'all' }
-  ];
-  readonly emptyMessage: Record<StudentAssignmentFilter, string> = {
-    open: 'Yapılacak ödevin yok. Yeni ödev gelince burada görünür.',
-    overdue: 'Geciken ödevin yok.',
-    pending: 'Son tarihi gelmemiş bekleyen ödevin yok.',
-    submitted: 'Henüz teslim ettiğin ödev yok.',
-    cancelled: 'İptal edilen ödev yok.',
-    all: 'Henüz sana verilmiş bir ödev yok.'
-  };
+  readonly filters = STUDENT_ASSIGNMENT_FILTERS;
+  readonly empty = computed(() => this.filter() === 'submitted'
+    ? { title: 'Henüz teslim ettiğin ödev yok', text: 'Teslim ettiğin ödevler ve puanların burada toplanır.' }
+    : this.filter() === 'all'
+      ? { title: 'Henüz ödevin yok', text: 'Öğretmenin ödev verdiğinde burada görürsün.' }
+      : { title: 'Yapılacak ödevin yok', text: 'Yeni ödev gelince burada görürsün.' });
+  readonly cardState = (assignment: StudentAssignment) => assignmentCardState(assignment);
+  readonly score = assignmentScore;
 
   ngOnInit() {
     this.load();
@@ -68,11 +62,13 @@ export class StudentAssignmentsComponent implements OnInit {
   }
 
   assignmentStatusLabel(assignment: StudentAssignment) {
-    if (assignment.assignmentStatus === 'Cancelled') return 'İptal edildi';
-    if (assignment.assignmentStatus === 'Completed') return 'Tamamlandı';
-    if (assignment.status === 'Graded') return 'Değerlendirildi';
-    if (assignment.submittedAt || assignment.status === 'Submitted') return 'Teslim edildi';
-    return assignment.isOverdue ? 'Gecikti' : 'Çalışmanı bekliyor';
+    return assignmentCardState(assignment).label;
+  }
+
+  /** "Son tarih 2 Kasım, 20:00" — or when it was handed in. */
+  dueLine(assignment: StudentAssignment) {
+    if (assignment.submittedAt) return `Teslim ettin: ${assignmentDateTime(assignment.submittedAt)}`;
+    return `Son tarih ${assignmentDateTime(assignment.dueDate)}`;
   }
 
   setFilter(value: StudentAssignmentFilter) {
@@ -93,8 +89,5 @@ export class StudentAssignmentsComponent implements OnInit {
     this.load();
   }
 
-  trackById(_: number, item: StudentAssignment) {
-    return item.id;
-  }
   private readonly feedback = coachingFeedback(undefined, this.errorMessage);
 }

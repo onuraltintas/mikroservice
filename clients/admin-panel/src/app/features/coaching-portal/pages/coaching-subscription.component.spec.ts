@@ -41,6 +41,15 @@ describe('CoachingSubscriptionComponent', () => {
     TestBed.inject(HttpTestingController).expectOne('/api/coaching/subscriptions/my-payments').flush({ data: [] });
   });
 
+  it('groups the page into Abonelik durumu, Havale bildirimleri and Faturalar (T5)', async () => {
+    const fixture = setup();
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const headings = [...fixture.nativeElement.querySelectorAll('h2')].map((h: Element) => h.textContent?.trim());
+    expect(headings.filter((h: string) => ['Abonelik durumu', 'Havale bildirimleri', 'Faturalar'].includes(h)))
+      .toEqual(['Abonelik durumu', 'Havale bildirimleri', 'Faturalar']);
+    TestBed.inject(HttpTestingController).match(() => true);
+  });
+
   it('starts a free trial on a plan that has one and refreshes the access (O10)', async () => {
     const fixture = setup({}, [], 7);
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();

@@ -34,9 +34,9 @@ export const LEGACY_STUDENT_REDIRECTS: Route[] = [
   ['exam-results', 'growth/exams'],
   ['setup', 'account/settings'],
   ['profile', 'account/settings/profile'],
-  ['settings', 'account/settings/general'],
+  ['settings', 'account/settings'],
   ['subscription', 'account/payments'],
-  ['finance', 'account/payments/fees'],
+  ['finance', 'account/payments'],
   ['finance/:feeId', 'account/payments/fees/:feeId']
 ].map(([path, to]) => ({
   path, pathMatch: 'full' as const,
@@ -127,33 +127,32 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     path: 'notifications', canActivate: [coachingRoleGuard], data: student,
     loadComponent: () => import('./pages/coaching-notifications.component').then(m => m.CoachingNotificationsComponent)
   },
-  // Account menu: Profil ve ayarlar (preferences, profile, settings, theme), Ödemeler, Kişisel verilerim.
+  // Account menu: Profil ve ayarlar (T5: Profilim, Çalışma tercihlerim, Bildirimler, Görünüm), Ödemeler (one page), Kişisel verilerim.
   {
     path: 'account/settings', canActivate: [coachingRoleGuard], data: { ...student, hub: 'settings' }, loadComponent: hub('settings'),
     children: [
       {
         path: '',
-        canDeactivate: [async (component: import('./pages/student-learning-setup.component').StudentLearningSetupComponent) => await component.canLeavePage()],
-        loadComponent: () => import('./pages/student-learning-setup.component').then(m => m.StudentLearningSetupComponent)
+        canDeactivate: [async (component: import('./pages/student-study-preferences.component').StudentStudyPreferencesComponent) => await component.canLeavePage()],
+        loadComponent: () => import('./pages/student-study-preferences.component').then(m => m.StudentStudyPreferencesComponent)
       },
       {
         path: 'profile',
         canDeactivate: [async (component: import('./pages/student-coaching-profile.component').StudentCoachingProfileComponent) => await component.canLeavePage()],
         loadComponent: () => import('./pages/student-coaching-profile.component').then(m => m.StudentCoachingProfileComponent)
       },
-      {
-        path: 'general',
-        canDeactivate: [async (component: import('./pages/student-settings.component').StudentSettingsComponent) => await component.canLeavePage()],
-        loadComponent: () => import('./pages/student-settings.component').then(m => m.StudentSettingsComponent)
-      },
-      { path: 'theme', loadComponent: () => import('./layout/student-theme-setting.component').then(m => m.StudentThemeSettingComponent) }
+      { path: 'notifications', loadComponent: () => import('./pages/student-notification-settings.component').then(m => m.StudentNotificationSettingsComponent) },
+      { path: 'theme', loadComponent: () => import('./layout/student-theme-setting.component').then(m => m.StudentThemeSettingComponent) },
+      // The old Ayarlar tab: its time zone now sits under Çalışma tercihlerim.
+      { path: 'general', redirectTo: '' }
     ]
   },
   {
     path: 'account/payments', canActivate: [coachingRoleGuard], data: { ...student, hub: 'payments' }, loadComponent: hub('payments'),
     children: [
-      { path: '', loadComponent: () => import('./pages/coaching-subscription.component').then(m => m.CoachingSubscriptionComponent) },
-      { path: 'fees', loadComponent: () => import('./pages/coaching-finance.component').then(m => m.CoachingFinanceComponent) },
+      { path: '', loadComponent: () => import('./pages/student-payments.component').then(m => m.StudentPaymentsComponent) },
+      // The old Ücretlerim tab: fees are a section of the Ödemeler page now.
+      { path: 'fees', redirectTo: '' },
       // Roadmap O12: one fee with its instalments and payments.
       { path: 'fees/:feeId', loadComponent: () => import('./pages/student-fee-detail.component').then(m => m.StudentFeeDetailComponent) }
     ]

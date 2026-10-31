@@ -12,7 +12,7 @@ import { CoachingDatePipe } from '../coaching-labels';
   imports: [CommonModule, RouterLink, CoachingDatePipe],
   template: `
     <section class="space-y-4" aria-labelledby="fee-detail-title">
-      <a routerLink="/coaching-portal/account/payments/fees" class="text-sm font-medium text-(--ui-brand-text) ">← Koçluk ücretlerim</a>
+      <a routerLink="/coaching-portal/account/payments" fragment="ucretler" class="cs-back">Ödemeler</a>
       @if (error()) { <p role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</p> }
       @if (loading()) { <p role="status">Ücret yükleniyor…</p> }
       @if (fee(); as item) {

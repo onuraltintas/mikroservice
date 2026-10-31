@@ -69,14 +69,15 @@ describe('student coaching UI kit', () => {
     expect(document.activeElement).toBe(tabs[2]);
   });
 
-  it('bottom sheet opens as a dialog, focuses its content and closes with Escape', async () => {
+  it('bottom sheet opens as a dialog, focuses its close button and closes with Escape', async () => {
     const { fixture, el } = await render();
     expect(el.querySelector('cs-bottom-sheet [role=dialog]')).toBeNull();
     fixture.componentInstance.sheet.set(true); fixture.detectChanges(); await fixture.whenStable();
     const dialog = el.querySelector('cs-bottom-sheet [role=dialog]') as HTMLElement;
     expect(dialog.getAttribute('aria-modal')).toBe('true');
     expect(dialog.getAttribute('aria-label')).toBe('Görev ayrıntısı');
-    expect(document.activeElement?.classList.contains('first')).toBe(true);
+    // T5: focus lands on the close button, not on the first field, so the keyboard does not pop up on a phone.
+    expect(document.activeElement?.classList.contains('close')).toBe(true);
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); fixture.detectChanges();
     expect(fixture.componentInstance.sheet()).toBe(false);
   });

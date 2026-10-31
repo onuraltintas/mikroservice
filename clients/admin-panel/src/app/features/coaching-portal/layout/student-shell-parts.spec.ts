@@ -72,6 +72,17 @@ describe('CoachingNotificationPanelComponent', () => {
     expect(groups.map(g => [g.label, g.items.map(i => i.id)])).toEqual([['Bugün', ['a']], ['Dün', ['b']], ['28 Ekim Çarşamba', ['c']]]);
   });
 
+  it('puts the newest day first and the newest notification first within a day', () => {
+    const now = new Date('2026-10-31T15:00:00+03:00');
+    const groups = groupNotificationsByDay([
+      { id: 'old', title: 'A', message: '', type: 'X', isRead: true, createdAt: new Date('2026-10-30T08:00:00+03:00') },
+      { id: 'morning', title: 'B', message: '', type: 'X', isRead: true, createdAt: new Date('2026-10-31T08:00:00+03:00') },
+      { id: 'late', title: 'C', message: '', type: 'X', isRead: true, createdAt: new Date('2026-10-30T21:00:00+03:00') },
+      { id: 'noon', title: 'D', message: '', type: 'X', isRead: false, createdAt: new Date('2026-10-31T12:00:00+03:00') }
+    ] as any, now);
+    expect(groups.map(g => [g.label, g.items.map(i => i.id)])).toEqual([['Bugün', ['noon', 'morning']], ['Dün', ['late', 'old']]]);
+  });
+
   it('lists at most ten, links to the full page and emits close', () => {
     const items = Array.from({ length: 12 }, (_, i) => ({ id: `n${i}`, title: `Bildirim ${i}`, message: 'm', type: 'X', isRead: i > 2, createdAt: new Date() }));
     TestBed.configureTestingModule({ imports: [CoachingNotificationPanelComponent], providers: [provideRouter([]),
@@ -111,9 +122,10 @@ describe('StudentHubComponent', () => {
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
   });
 
-  it('hides the fees tab when the student has no coaching fees', () => {
-    const fixture = hub('payments', { showFees: () => false });
-    expect([...fixture.nativeElement.querySelectorAll('nav a')].map((a: any) => a.textContent.trim())).toEqual(['Abonelik']);
+  it('shows no tab strip for a hub that is one page (Ödemeler)', () => {
+    const fixture = hub('payments');
+    expect(fixture.nativeElement.querySelector('nav')).toBeNull();
+    expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
   });
 });
 

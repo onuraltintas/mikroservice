@@ -12,11 +12,13 @@ import { StudentPlanEditStepsComponent } from './student-plan-edit-steps.compone
   standalone: true,
   imports: [RouterLink, RouterOutlet, StudentPlanEditStepsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<nav class="hub-tabs" [attr.aria-label]="hub.label + ' bölümleri'">
-      @for (tab of tabs(); track tab.path) {
-        <a [routerLink]="tab.path" [class.is-active]="isActive(tab)" [attr.aria-current]="isActive(tab) ? 'page' : null">{{ tab.label }}</a>
-      }
-    </nav>
+  template: `@if (tabs().length > 1) {
+      <nav class="hub-tabs" [attr.aria-label]="hub.label + ' bölümleri'">
+        @for (tab of tabs(); track tab.path) {
+          <a [routerLink]="tab.path" [class.is-active]="isActive(tab)" [attr.aria-current]="isActive(tab) ? 'page' : null">{{ tab.label }}</a>
+        }
+      </nav>
+    }
     @if (hub === plan) { <app-student-plan-edit-steps /> }
     <router-outlet />`,
   styles: [`:host{display:block}
