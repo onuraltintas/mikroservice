@@ -4,7 +4,7 @@ export interface CoachingNotificationReference {
 }
 
 export interface WeeklyDestination { studentId: string; weekStart: string; decisionId: string | null }
-export type CoachingNotificationTarget = { kind: 'plan' | 'assignment' | 'message'; id: string; label: string }
+export type CoachingNotificationTarget = { kind: 'plan' | 'assignment' | 'message' | 'profile'; id: string; label: string }
   | ({ kind: 'weekly'; id: string; label: string } & WeeklyDestination);
 export function validCoachingId(value: string | null | undefined): value is string {
   return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) && value !== '00000000-0000-0000-0000-000000000000';
@@ -21,7 +21,8 @@ const labels: Record<string, string> = {
   AssignmentCreated: 'Yeni ödev', AssignmentUpdated: 'Ödev güncellendi',
   AssignmentSubmitted: 'Ödev teslim edildi', AssignmentGraded: 'Ödev değerlendirildi',
   WeeklyReflectionSaved: 'Haftalık değerlendirme kaydedildi', WeeklyDecisionCreated: 'Yeni haftalık karar', WeeklyDecisionUpdated: 'Haftalık karar güncellendi',
-  CoachingMessage: 'Yeni mesaj', ParentWeeklySummary: 'Haftalık özet'
+  CoachingMessage: 'Yeni mesaj', ParentWeeklySummary: 'Haftalık özet',
+  ParentLinkRequested: 'Veli bağlantı isteği', ParentLinkApproved: 'Veli bağlantısı onaylandı', ParentLinkRevoked: 'Veli bağlantısı kaldırıldı'
 };
 
 export function coachingNotificationLabel(type: string): string {
@@ -40,6 +41,9 @@ export function coachingNotificationTarget(notification: CoachingNotificationRef
     return { kind: 'weekly', id: parts[1], studentId: parts[1], weekStart: parts[2], decisionId: decision,
       label: role === 'teacher' ? 'Haftalık değerlendirmeyi aç' : 'Haftalık kararı aç' };
   }
+  // V1/V4: parent-link notices (the link id is the reference) open the student's parent link under Profilim.
+  if (role === 'student' && typeof notification.type === 'string' && ['ParentLinkRequested','ParentLinkApproved','ParentLinkRevoked'].includes(notification.type))
+    return { kind: 'profile', id: validCoachingId(id) ? id : '', label: 'Veli bağlantısını aç' };
   if (!validCoachingId(id)) return null;
   // Roadmap O3: a new message opens its conversation.
   if (notification.type === 'CoachingMessage') return { kind: 'message', id, label: 'Mesajı aç' };
