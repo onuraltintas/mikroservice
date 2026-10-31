@@ -267,6 +267,21 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
     /// Removes a teacher from the institution. Their students are linked to the replacement (when one is chosen) and
     /// their open assignments move to the replacement; coming sessions are cancelled and their students are told.
     /// </summary>
+    public const string UngradedSubmissionCountKey = "ungradedSubmissionCount";
+
+    /// <summary>Handed-in, not yet graded work of a teacher in the institution; the removal screen asks before leaving.</summary>
+    public async Task<int> CountUngradedSubmissionsAsync(Guid actorUserId, Guid institutionId, Guid teacherUserId, CancellationToken ct)
+    {
+        await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
+        return await UngradedSubmissionsAsync(institutionId, teacherUserId, ct);
+    }
+
+    private Task<int> UngradedSubmissionsAsync(Guid institutionId, Guid teacherUserId, CancellationToken ct) =>
+        db.Assignments.Where(x => x.TeacherId == teacherUserId && x.InstitutionId == institutionId
+                && x.Status == Coaching.Domain.Enums.AssignmentStatus.Active)
+            .SelectMany(x => x.AssignedStudents)
+            .CountAsync(x => x.Status == Coaching.Domain.Enums.StudentAssignmentStatus.Submitted, ct);
+
     public async Task RemoveInstitutionTeacherAsync(Guid actorUserId, Guid institutionId, Guid teacherUserId,
         Guid? replacementTeacherUserId, CancellationToken ct)
     {
@@ -279,6 +294,14 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             throw Conflict("Devralacak öğretmen bu kurumun aktif öğretmeni olmalıdır.");
         await InTransactionAsync(async () =>
         {
+            // Decision 31.10.2026 (a): handed-in work waiting for a grade would be left with nobody to grade it.
+            if (replacementTeacherUserId is null && await UngradedSubmissionsAsync(institutionId, teacherUserId, ct) is var ungraded and > 0)
+            {
+                var refused = new BusinessRuleException("Profiles.SuccessorRequired",
+                    $"{ungraded} teslim edilmiş iş notlanmayı bekliyor; devralacak öğretmen seçin.");
+                refused.Data[UngradedSubmissionCountKey] = ungraded;
+                throw refused;
+            }
             var students = await db.CoachingTeacherStudentAssignments.Where(x => x.TeacherUserId == teacherUserId
                 && x.InstitutionId == institutionId && x.IsActive).Select(x => x.StudentUserId).Distinct().ToArrayAsync(ct);
             // Leave first, so the open weekly decisions of the leaving teacher move to the successor with the links.

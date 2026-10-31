@@ -205,6 +205,12 @@ export class CoachingInstitutionService {
     return this.http.delete<void>(`${environment.apiUrl}/coaching/institution/students/${encodeURIComponent(studentId)}`);
   }
 
+  /** Handed-in work waiting for a grade; when there is any, a teacher can only leave with a replacement. */
+  getTeacherRemovalPreview(teacherId: string): Observable<{ ungradedSubmissionCount: number }> {
+    return this.http.get<{ ungradedSubmissionCount: number }>(
+      `${environment.apiUrl}/coaching/institution/teachers/${encodeURIComponent(teacherId)}/removal-preview`);
+  }
+
   /** Removes a teacher; a replacement takes over their students and open assignments. */
   removeTeacher(teacherId: string, replacementTeacherUserId?: string | null): Observable<void> {
     const url = `${environment.apiUrl}/coaching/institution/teachers/${encodeURIComponent(teacherId)}`;
