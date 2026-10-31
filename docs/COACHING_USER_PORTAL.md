@@ -118,6 +118,24 @@ başlamış seanslar domain kuralıyla yeniden planlanamaz/iptal edilemez ve API
 pasif atama varsa öğretmene açık uyarı gösterir ve güvenli ilişki doğrulaması
 tamamlanmadan güncellemeyi engeller.
 
+### Paylaşım ayarı, bağın bitmesi ve geçmiş (K2, 31.10.2026)
+
+- **"İlerlemeyi öğretmenlerle paylaş" kapalıysa** öğretmenden yalnız çalışma planı, raporlar, geçmiş ve ilerleme
+  gizlenir. Öğretmenin verdiği ödevler, teslimler, ekler, seanslar ve yoklama bağ sürdükçe görünür; öğretmen
+  teslimi notlandırır ve yoklama alır (`AuthorizeStudentWorkReadAsync`).
+- **Katılımcı düzenleme:** istemci yalnız görebildiği öğrencileri gönderir; grup seansında arayanın göremediği
+  öğrenciler sunucuda korunur, sessizce silinmez.
+- **Bağ bitince** (kurum bağı sonlandırma, öğrencinin kurumdan ayrılması, bağımsız koçla bağın bitmesi, halefsiz
+  öğretmen çıkarma) o öğretmenin öğrenciyle gelecekteki seanslarından öğrenci çıkarılır (kimse kalmazsa seans
+  iptal edilir) ve teslim edilmemiş açık ödevleri geri çekilir (kimse kalmazsa ödev iptal edilir). Teslim
+  edilmiş, notlanmış ya da dosya yüklenmiş çalışma ve geçmiş seanslar kayıt olarak kalır. Öğrenciye, öğretmene
+  ve kurum yöneticisine neyin kapandığı bildirilir (`CoachingTeacherLinkEndedEvent`, `InstitutionEnded`).
+- **Geçmiş öğrenciyi izler** (kullanıcı kararı 28.10 ve 31.10.2026: "hepsi görünsün"): yeni kurum ve öğretmenler
+  öğrencinin önceki kurumlarındaki ve bağımsız koçuyla yaptığı ödev, deneme, seans ve hedef geçmişini görür.
+  Öğrenci bunu davet kabulünden önce ve "Kişisel verilerim" sayfasında okur.
+- **Mesaj incelemesi:** öğretmen–öğrenci çifti başka bir kuruma geçerse yazışma onlarla gider; yeni kurum yalnız
+  o kurumdaki bağın başladığı andan sonraki mesajları ve dosyaları inceleyebilir.
+
 ## SSR ve güvenlik
 
 Kimlik gerektiren `/coaching-portal/**` rotaları Angular SSR'da client render

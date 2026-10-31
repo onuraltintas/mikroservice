@@ -44,8 +44,8 @@ public class GradeAssignmentCommandHandler : IRequestHandler<GradeAssignmentComm
         await _teacherRecords.RequireCurrentTeacherAsync(_accessPolicy, assignment.TeacherId, assignment.InstitutionId,
             command.IsInstitutionAdminOperation, cancellationToken, [command.StudentId]);
 
-        // Grade assignment (domain logic)
-        assignment.GradeAssignment(
+        // Grade assignment (domain logic). K2: an unchanged grade is not announced again.
+        var changed = assignment.GradeAssignment(
             command.StudentId,
             command.Score,
             command.TeacherFeedback);
@@ -55,7 +55,8 @@ public class GradeAssignmentCommandHandler : IRequestHandler<GradeAssignmentComm
             .First(s => s.StudentId == command.StudentId);
         var gradedAt = DateTime.UtcNow;
 
-        await _eventPublisher.PublishAsync(
+        if (changed)
+            await _eventPublisher.PublishAsync(
             new AssignmentGradedEvent(
                 assignment.Id,
                 command.StudentId,

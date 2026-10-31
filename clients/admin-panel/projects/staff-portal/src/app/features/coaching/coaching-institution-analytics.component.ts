@@ -84,7 +84,8 @@ export class CoachingInstitutionAnalyticsComponent implements OnChanges {
       || (this.gradeLevel !== null && (!Number.isInteger(this.gradeLevel) || this.gradeLevel < 1 || this.gradeLevel > 12))) {
       this.error.set('Geçerli bir sınıf ve en fazla 366 günlük tarih aralığı seçin.'); return;
     }
-    const filters = { fromDate: from.toISOString(), toDate: to.toISOString(), ...(this.gradeLevel !== null ? { gradeLevel: this.gradeLevel } : {}) };
+    // K2: plain dates; the server reads them as whole Europe/Istanbul days whatever the browser's time zone is.
+    const filters = { fromDate: this.fromDate, toDate: this.toDate, ...(this.gradeLevel !== null ? { gradeLevel: this.gradeLevel } : {}) };
     this.loading.set(true);
     forkJoin({ comparison: this.service.getInstitutionComparison(this.institutionId, filters),
       warnings: this.service.getInstitutionEarlyWarnings(this.institutionId, { ...filters, pageNumber, pageSize: 25 }) })

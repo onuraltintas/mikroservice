@@ -27,6 +27,17 @@ public interface ICoachingIdentityAuthorizationClient
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// K2 (31.10.2026): read access to the teaching work itself (assignments, submissions, attachments, sessions and
+    /// attendance). The student's "share progress with teachers" setting hides plans, reports and progress only; it
+    /// never hides the work a teacher assigned while the teaching link is active.
+    /// </summary>
+    Task<IReadOnlyCollection<Guid>> AuthorizeStudentWorkReadAsync(
+        Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentIds,
+        CancellationToken cancellationToken) =>
+        AuthorizeStudentReadAsync(viewerUserId, studentIds, cancellationToken);
 }
 
 /// <summary>
@@ -38,6 +49,10 @@ public sealed record CoachingAdminAccessScope(bool IsGlobal, Guid? InstitutionId
 {
     /// <summary>Roadmap O13: every institution (branch) the admin manages; InstitutionId is the selected one.</summary>
     public IReadOnlyList<CoachingAdminInstitutionRef> Institutions { get; init; } = [];
+
+    /// <summary>K2: the selected institution or any other branch this admin manages (an explicit id may name either).</summary>
+    public bool Manages(Guid institutionId) =>
+        institutionId != Guid.Empty && (InstitutionId == institutionId || Institutions.Any(x => x.Id == institutionId));
 }
 
 public sealed record CoachingAdminInstitutionRef(Guid Id, string Name);

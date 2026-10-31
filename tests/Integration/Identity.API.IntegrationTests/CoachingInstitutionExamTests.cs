@@ -140,7 +140,7 @@ public sealed class CoachingInstitutionExamTests
         await s.Exams.ApplyImportAsync(s.Admin, s.Institution, exam.Id, csv, preview.Fingerprint, default);
 
         var report = await s.Exams.GetAsync(s.Admin, s.Institution, exam.Id, null, default);
-        report.Branches.Select(x => (x.Branch, x.Count)).Should().BeEquivalentTo(new[] { ("8-A", 2), ("8-B", 1), ("Şube yok", 1) });
+        report.Branches.Select(x => (x.Branch, x.Participants)).Should().BeEquivalentTo(new[] { ("8-A", 2), ("8-B", 1), ("Şube yok", 1) });
         (await s.Exams.GetAsync(s.Admin, s.Institution, exam.Id, "Şube yok", default)).Results.Should().ContainSingle()
             .Which.StudentId.Should().Be(noBranch);
         (await s.Exams.GetAsync(s.Admin, s.Institution, exam.Id, "8-A", default)).Results.Select(x => x.StudentId)

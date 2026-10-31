@@ -1,4 +1,5 @@
 using Coaching.Application.Authorization;
+using Coaching.Application.Interfaces;
 using Coaching.Application.Commands.GradeAssignment;
 using Coaching.Application.Commands.UpdateSessionParticipants;
 using Coaching.Application.Queries.GetAssignment;
@@ -150,7 +151,7 @@ public sealed class CoachingStaffFixesTests
         sessions[oneToOne.Id].Status.Should().Be(SessionStatus.Cancelled);
         sessions[group.Id].Status.Should().Be(SessionStatus.Scheduled);
         sessions[group.Id].Attendances.Select(x => x.StudentId).Should().Equal(w.Other);
-        sessions[past.Id].Attendances.Select(x => x.StudentId).Should().Equal(w.Student, "past sessions are history");
+        sessions[past.Id].Attendances.Select(x => x.StudentId).Should().Equal(new[] { w.Student }, "past sessions are history");
         var assignments = await w.F.Db.Assignments.Include(x => x.AssignedStudents).ToDictionaryAsync(x => x.Id);
         assignments[own.Id].Status.Should().Be(AssignmentStatus.Cancelled);
         assignments[shared.Id].Status.Should().Be(AssignmentStatus.Active);

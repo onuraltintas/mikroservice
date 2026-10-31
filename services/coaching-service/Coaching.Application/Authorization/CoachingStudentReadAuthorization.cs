@@ -5,11 +5,24 @@ namespace Coaching.Application.Authorization;
 
 public static class CoachingStudentReadAuthorization
 {
+    /// <summary>K2: teaching work (assignments, submissions, attachments, sessions) — not hidden by progress sharing.</summary>
+    public static Task<HashSet<Guid>> RequireWorkAsync(ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient, IReadOnlyCollection<Guid> studentIds,
+        CancellationToken cancellationToken) =>
+        RequireAsync(accessPolicy, identityAuthorizationClient, studentIds, cancellationToken, work: true);
+
+    /// <summary>K2: teaching work (assignments, submissions, attachments, sessions) — not hidden by progress sharing.</summary>
+    public static Task<HashSet<Guid>> GetAuthorizedWorkStudentIdsAsync(ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient, IReadOnlyCollection<Guid> studentIds,
+        CancellationToken cancellationToken) =>
+        GetAuthorizedStudentIdsAsync(accessPolicy, identityAuthorizationClient, studentIds, cancellationToken, work: true);
+
     public static async Task<HashSet<Guid>> RequireAsync(
         ICoachingAccessPolicy accessPolicy,
         ICoachingIdentityAuthorizationClient identityAuthorizationClient,
         IReadOnlyCollection<Guid> studentIds,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool work = false)
     {
         var distinctStudentIds = studentIds.Distinct().ToArray();
         if (distinctStudentIds.Length == 0)
@@ -23,7 +36,8 @@ public static class CoachingStudentReadAuthorization
             accessPolicy,
             identityAuthorizationClient,
             distinctStudentIds,
-            cancellationToken);
+            cancellationToken,
+            work);
 
         if (allowedStudentIds.Count == 0)
         {
@@ -39,7 +53,8 @@ public static class CoachingStudentReadAuthorization
         ICoachingAccessPolicy accessPolicy,
         ICoachingIdentityAuthorizationClient identityAuthorizationClient,
         IReadOnlyCollection<Guid> studentIds,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool work = false)
     {
         var distinctStudentIds = studentIds.Distinct().ToArray();
         if (distinctStudentIds.Length == 0)
@@ -53,10 +68,9 @@ public static class CoachingStudentReadAuthorization
         foreach (var batch in distinctStudentIds.Chunk(100))
         {
             var requestedBatch = batch.ToHashSet();
-            var allowedBatch = await identityAuthorizationClient.AuthorizeStudentReadAsync(
-                currentUserId,
-                batch,
-                cancellationToken);
+            var allowedBatch = work
+                ? await identityAuthorizationClient.AuthorizeStudentWorkReadAsync(currentUserId, batch, cancellationToken)
+                : await identityAuthorizationClient.AuthorizeStudentReadAsync(currentUserId, batch, cancellationToken);
             allowedStudentIds.UnionWith(allowedBatch.Where(requestedBatch.Contains));
         }
 

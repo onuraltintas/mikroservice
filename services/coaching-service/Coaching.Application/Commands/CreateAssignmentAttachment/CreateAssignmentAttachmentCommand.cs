@@ -60,7 +60,7 @@ public sealed class CreateAssignmentAttachmentCommandHandler(
         CancellationToken cancellationToken)
     {
         accessPolicy.RequireStudent(command.StudentId);
-        await CoachingStudentReadAuthorization.RequireAsync(
+        await CoachingStudentReadAuthorization.RequireWorkAsync(
             accessPolicy, identityAuthorizationClient, [command.StudentId], cancellationToken);
         AssignmentAttachmentPolicy.ValidateMetadata(
             command.FileName,

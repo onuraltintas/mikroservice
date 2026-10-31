@@ -152,6 +152,14 @@ public sealed record CoachingTeacherLinkEndedEvent(Guid TeacherUserId, Guid Stud
 {
     /// <summary>Roadmap O12: set when the teacher ended the link, so the student can be told who.</summary>
     public string? TeacherName { get; init; }
+    /// <summary>K2: the institution whose link ended (null for an independent coach).</summary>
+    public Guid? InstitutionId { get; init; }
+    /// <summary>K2: the institution administrator who ended the link; told what was closed.</summary>
+    public Guid? InstitutionActorUserId { get; init; }
+    /// <summary>K2: open assignments of this teacher withdrawn from the student.</summary>
+    public int CancelledAssignments { get; init; }
+    /// <summary>K2: coming sessions of this teacher the student left (cancelled when nobody else remained).</summary>
+    public int RemovedSessions { get; init; }
 }
 
 public static class CoachingTeacherLinkEndedReasons
@@ -162,6 +170,8 @@ public static class CoachingTeacherLinkEndedReasons
     public const string StudentLeft = "StudentLeft";
     /// <summary>Roadmap O12: an independent teacher removed the student.</summary>
     public const string TeacherRemoved = "TeacherRemoved";
+    /// <summary>K2: the institution ended the link (a link ended, the teacher or the student left the institution).</summary>
+    public const string InstitutionEnded = "InstitutionEnded";
 }
 
 /// <summary>Roadmap Y7: one week of a child's Coaching activity, e-mailed to a linked parent on Sunday evening.</summary>

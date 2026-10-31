@@ -329,7 +329,10 @@ public sealed class CoachingMessagingTests
                 s.Institution = Guid.NewGuid(); s.F.Accounts.Institutions.Add(s.Institution.Value);
                 s.Admin = s.Person("InstitutionAdmin", "Kurum", "Yönetici"); s.F.Accounts.Admins[s.Admin] = new(false, s.Institution.Value);
             }
-            s.F.Db.CoachingTeacherStudentAssignments.Add(CoachingTeacherStudentAssignment.Create(s.Teacher, s.Student, s.Institution, null, s.Teacher));
+            var link = CoachingTeacherStudentAssignment.Create(s.Teacher, s.Student, s.Institution, null, s.Teacher);
+            s.F.Db.CoachingTeacherStudentAssignments.Add(link);
+            // The link exists before the conversation (an institution reviews messages from its link onward).
+            s.F.Db.Entry(link).Property(x => x.StartDate).CurrentValue = s.Clock.GetUtcNow().UtcDateTime.AddDays(-1);
             await s.F.Db.SaveChangesAsync();
             return s;
         }

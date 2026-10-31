@@ -63,7 +63,8 @@ public sealed class CoachingFollowUpTests
   var literal=Assert.IsType<TeacherAssignmentFollowUpPage>(Assert.IsType<OkObjectResult>(await api.Get("pending",1,25,"%",default)).Value);Assert.Equal(future.Id,Assert.Single(literal.Items).AssignmentId);
   Assert.IsType<BadRequestObjectResult>(await api.Get("bad",1,25,null,default));Assert.IsType<BadRequestObjectResult>(await api.Get("pending",0,25,null,default));
   var profile=await f.Db.CoachingStudentProfiles.SingleAsync(x=>x.UserId==student);profile.UpdatePersonal(null,null,null,false);await f.Db.SaveChangesAsync();
-  var privatePage=Assert.IsType<TeacherAssignmentFollowUpPage>(Assert.IsType<OkObjectResult>(await api.Get("pending",1,25,null,default)).Value);Assert.Empty(privatePage.Items);
+  // K2 (31.10.2026): not sharing progress hides plans and reports, not the assignments the teacher gave.
+  var privatePage=Assert.IsType<TeacherAssignmentFollowUpPage>(Assert.IsType<OkObjectResult>(await api.Get("pending",1,25,null,default)).Value);Assert.Equal(3,privatePage.TotalCount);
   Assert.Equal(before,JsonSerializer.Serialize(await f.Db.AssignmentStudents.AsNoTracking().OrderBy(x=>x.Id).ToArrayAsync()));
   f.User.Roles=["Student"];Assert.Equal(403,Assert.IsType<ObjectResult>(await api.Get("pending",1,25,null,default)).StatusCode);
  }

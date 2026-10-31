@@ -16,7 +16,8 @@ public sealed record CoachingCalendarSubscriptionLink(string Role, string Path, 
 /// Roadmap O6: a private calendar link Google or Apple Calendar subscribes to. The link holds a random 256-bit token;
 /// only its SHA-256 hash is stored. Creating a link replaces the previous one; turning it off deletes it.
 /// </summary>
-public sealed class CoachingCalendarSubscriptionService(CoachingDbContext db, ICoachingCalendarRepository calendar, TimeProvider clock)
+public sealed class CoachingCalendarSubscriptionService(CoachingDbContext db, ICoachingCalendarRepository calendar, TimeProvider clock,
+    Coaching.Application.Profiles.ICoachingAccountDirectory accounts)
 {
     public const string FeedPathPrefix = "/api/calendar/feed/";
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
@@ -57,7 +58,7 @@ public sealed class CoachingCalendarSubscriptionService(CoachingDbContext db, IC
         if (token.Length != 43 || token.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))) return null;
         var hash = Hash(token);
         var feed = await db.CoachingCalendarFeeds.SingleOrDefaultAsync(x => x.TokenHash == hash, ct);
-        if (feed is null) return null;
+        if (feed is null || !await OwnerIsActiveAsync(feed, ct)) return null;
         var from = Now.AddDays(-30); var to = Now.AddDays(180);
         var sessions = feed.Role == "Teacher"
             ? await calendar.GetByTeacherIdAsync(feed.UserId, from, to, 500, ct)
@@ -69,6 +70,19 @@ public sealed class CoachingCalendarSubscriptionService(CoachingDbContext db, IC
             await db.SaveChangesAsync(ct);
         }
         return CalendarFeedFormatter.Format(sessions, "Eduİvme Koçluk");
+    }
+
+    /// <summary>
+    /// K2 (31.10.2026): a link only works while its owner is still an active coaching teacher or student; a deactivated or
+    /// removed account stops receiving session titles and meeting links.
+    /// </summary>
+    private async Task<bool> OwnerIsActiveAsync(CoachingCalendarFeed feed, CancellationToken ct)
+    {
+        var account = (await accounts.GetAccountsAsync([feed.UserId], ct)).SingleOrDefault(x => x.UserId == feed.UserId);
+        if (account is null || !account.IsEligible(feed.Role)) return false;
+        return feed.Role == "Teacher"
+            ? await db.CoachingTeacherProfiles.AsNoTracking().AnyAsync(x => x.UserId == feed.UserId && x.IsActive, ct)
+            : await db.CoachingStudentProfiles.AsNoTracking().AnyAsync(x => x.UserId == feed.UserId && x.IsActive, ct);
     }
 
     private static string Role(string role) => role?.Trim().ToLowerInvariant() switch
