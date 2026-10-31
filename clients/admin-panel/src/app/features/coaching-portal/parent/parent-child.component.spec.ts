@@ -309,7 +309,24 @@ describe('ParentSpeedReadingTabComponent', () => {
   });
 
   it('explains when the overview cannot be read', () => {
-    const fixture = setup(parentServiceMock({ getSpeedReadingOverview: vi.fn(() => throwError(() => ({ status: 403 }))) }));
+    const fixture = setup(parentServiceMock({ getSpeedReadingOverview: vi.fn(() => throwError(() => ({ status: 500 }))) }));
     expect(fixture.nativeElement.textContent).toContain('Hızlı okuma ilerlemesi şu an görüntülenemiyor');
+  });
+
+  // V2 final shape (PR #88): 403 ParentReadForbidden, nullable gamification, lowercase program status, 1-decimal comprehension.
+  it('says the child stopped sharing when the read is forbidden', () => {
+    const fixture = setup(parentServiceMock({ getSpeedReadingOverview: vi.fn(() => throwError(() => ({ status: 403, error: { code: 'ParentReadForbidden', message: 'x' } }))) }));
+    expect(fixture.nativeElement.textContent).toContain('Elif hızlı okuma ilerlemesini şu an seninle paylaşmıyor');
+  });
+
+  it('shows no zeros when there is no XP or badge yet, and formats comprehension and status', () => {
+    const fixture = setup(parentServiceMock({ getSpeedReadingOverview: vi.fn(() => of({ ...readingOverview, gamification: null,
+      program: { ...readingOverview.program, status: 'completed' },
+      reading: { ...readingOverview.reading, latestComprehension: 80.5 },
+      recentResults: [{ date: '2026-10-29', exerciseType: 'Okuma', exerciseName: 'Kutup ayıları', score: null, wpm: 305, comprehension: 72.5 }] })) }));
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Henüz XP ya da rozet yok'); expect(text).not.toContain('Puan (XP)');
+    expect(text).toContain('%80,5'); expect(text).toContain('%72,5'); expect(text).toContain('Tamamlandı');
+    expect(text).toContain('Kutup ayıları'); expect(text).toContain('Okuma');
   });
 });

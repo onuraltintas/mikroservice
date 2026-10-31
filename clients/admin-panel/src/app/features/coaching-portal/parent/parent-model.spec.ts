@@ -56,6 +56,7 @@ describe('parent model', () => {
     expect(coachingStatusLine({ planned: 14, completed: 9 } as never)).toBe('Bu hafta 9/14 görev');
     expect(coachingStatusLine({ planned: 0, completed: 0 } as never)).toBe('Bu hafta planlı görev yok');
     expect(speedReadingStatusLine({ program: { currentDay: 12, totalDays: 28 }, thisWeek: { minutes: 40 } } as never)).toBe('Program 12/28. gün');
+    expect(speedReadingStatusLine({ program: { currentDay: 28, totalDays: 28, status: 'completed' }, thisWeek: { minutes: 0 } } as never)).toBe('Program tamamlandı');
     expect(speedReadingStatusLine({ program: null, thisWeek: { minutes: 35 } } as never)).toBe('Bu hafta 35 dk okuma');
     expect(speedReadingStatusLine({ program: null, thisWeek: { minutes: 0 } } as never)).toBe('Bu hafta henüz çalışmadı');
   });
