@@ -53,6 +53,8 @@ public sealed class ParentStudentRelationship : AggregateRoot
             Status = ParentStudentRelationshipStatus.Pending,
             RequestedByUserId = requestedByUserId,
             RequestedAt = requestedAt,
+            CoachingVisible = true,
+            SpeedReadingVisible = true,
             CreatedAt = requestedAt
         };
     }
@@ -99,7 +101,16 @@ public sealed class ParentStudentRelationship : AggregateRoot
     /// <summary>Only the link's own student chooses which products the parent sees; an ended link cannot change.</summary>
     public void SetProductVisibility(bool coaching, bool speedReading, Guid byStudent, DateTime at)
     {
-        throw new NotImplementedException();
+        if (Status == ParentStudentRelationshipStatus.Revoked)
+            throw new InvalidOperationException("An ended parent-student relationship cannot change.");
+        EnsureUserId(byStudent, nameof(byStudent));
+        if (byStudent != StudentUserId)
+            throw new InvalidOperationException("Only the link's student chooses what the parent sees.");
+        EnsureUtc(at, nameof(at));
+
+        CoachingVisible = coaching;
+        SpeedReadingVisible = speedReading;
+        UpdatedAt = at;
     }
 
     private static void EnsureUserId(Guid value, string parameterName)
