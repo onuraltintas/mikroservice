@@ -96,9 +96,12 @@ public sealed class InstitutionManagementTests
             .Handle(new SetInstitutionActiveCommand(institution.Id, false), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        (await context.RefreshTokens.Where(token => token.UserId != unrelatedUser.Id).ToListAsync())
+        (await context.RefreshTokens.Where(token => token.UserId != unrelatedUser.Id && token.UserId != parent.Id).ToListAsync())
             .Should().OnlyContain(token => token.IsRevoked);
         (await context.RefreshTokens.SingleAsync(token => token.Id == unrelatedToken.Id)).IsRevoked.Should().BeFalse();
+        // V1 (01.11.2026): a parent is not an institution member; the legacy StudentProfile.ParentId no longer ends
+        // the parent's sessions when the child's institution is deactivated.
+        (await context.RefreshTokens.SingleAsync(token => token.UserId == parent.Id)).IsRevoked.Should().BeFalse();
     }
 
     [Fact]
