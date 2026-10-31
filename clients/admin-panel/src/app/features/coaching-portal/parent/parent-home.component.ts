@@ -39,8 +39,10 @@ type Status = { text: string; failed?: boolean };
               <ul class="cp-child-products">
                 @for (product of productsOf(link); track product) {
                   <li>
-                    <span class="cp-product-badge" data-testid="product-badge" [attr.data-product]="product">{{ productLabel(product) }}</span>
-                    <span class="cp-child-status" data-testid="child-status" [class.is-muted]="status(link, product)?.failed">{{ status(link, product)?.text ?? 'Yükleniyor…' }}</span>
+                    <span class="cp-child-info">
+                      <span class="cp-product-badge" data-testid="product-badge" [attr.data-product]="product">{{ productLabel(product) }}</span>
+                      <span class="cp-child-status" data-testid="child-status" [class.is-muted]="status(link, product)?.failed">{{ status(link, product)?.text ?? 'Yükleniyor…' }}</span>
+                    </span>
                     <a class="cp-child-open" [routerLink]="['/coaching-portal/parent/children', link.studentUserId]" [queryParams]="{ urun: slug(product) }"
                       [attr.aria-label]="first(link.studentName) + ' · ' + productLabel(product) + ' ayrıntıları'">Ayrıntılar →</a>
                   </li>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, inject, input, signal } from '@angular/core';
 import { shortDate } from './parent-model';
 
 export interface ParentBar { label: string; value: number; max: number; text: string; detail?: string }
@@ -30,7 +30,7 @@ export class ParentWeekBarsComponent {
 export interface ReadingPoint { date: string; wpm: number | null; comprehension: number | null }
 
 const percentFormat = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 });
-const W = 560, H = 200, LEFT = 40, RIGHT = W - 40, TOP = 14, BOTTOM = H - 26;
+const H = 200, LEFT = 40, TOP = 14, BOTTOM = H - 26;
 
 /**
  * V4: reading speed (solid line, left axis, words per minute) and comprehension (dashed line, right axis, percent) over
@@ -41,11 +41,11 @@ const W = 560, H = 200, LEFT = 40, RIGHT = W - 40, TOP = 14, BOTTOM = H - 26;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <svg class="cp-trend" role="img" [attr.viewBox]="'0 0 ' + width + ' ' + height" [attr.aria-label]="summary()" preserveAspectRatio="xMidYMid meet">
+    <svg class="cp-trend" role="img" [attr.viewBox]="'0 0 ' + width() + ' ' + height" [attr.aria-label]="summary()" preserveAspectRatio="xMidYMid meet">
       @for (tick of chart().ticks; track tick.label) {
-        <line class="cp-trend-grid" [attr.x1]="left" [attr.x2]="right" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+        <line class="cp-trend-grid" [attr.x1]="left" [attr.x2]="right()" [attr.y1]="tick.y" [attr.y2]="tick.y" />
         <text class="cp-trend-tick" [attr.x]="left - 6" [attr.y]="tick.y + 4" text-anchor="end">{{ tick.label }}</text>
-        <text class="cp-trend-tick" [attr.x]="right + 6" [attr.y]="tick.y + 4">%{{ tick.percent }}</text>
+        <text class="cp-trend-tick" [attr.x]="right() + 6" [attr.y]="tick.y + 4">%{{ tick.percent }}</text>
       }
       @if (chart().comprehension) { <path class="cp-trend-comprehension" [attr.d]="chart().comprehension" /> }
       @if (chart().wpm) { <path class="cp-trend-wpm" [attr.d]="chart().wpm" /> }
@@ -68,7 +68,19 @@ const W = 560, H = 200, LEFT = 40, RIGHT = W - 40, TOP = 14, BOTTOM = H - 26;
 export class ParentReadingTrendComponent {
   readonly points = input.required<ReadingPoint[]>();
   readonly childName = input('');
-  readonly width = W; readonly height = H; readonly left = LEFT; readonly right = RIGHT; readonly bottom = BOTTOM;
+  // Drawn at the real width (like the exam trend chart) so the labels keep their size on a phone and a wide screen.
+  readonly width = signal(560); readonly height = H; readonly left = LEFT; readonly bottom = BOTTOM;
+  readonly right = computed(() => this.width() - 40);
+
+  constructor() {
+    const host = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      if (typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(entries => { const width = Math.round(entries[0]?.contentRect.width ?? 0); if (width > 200) this.width.set(width); });
+      observer.observe(host); destroyRef.onDestroy(() => observer.disconnect());
+    });
+  }
   readonly day = shortDate;
   pct(value: number | null) { return value === null || value === undefined ? '—' : '%' + percentFormat.format(value); }
 
@@ -77,8 +89,9 @@ export class ParentReadingTrendComponent {
     const speeds = points.map(p => p.wpm).filter((x): x is number => x !== null);
     const top = Math.max(100, Math.ceil((Math.max(0, ...speeds) * 1.15) / 50) * 50);
     const y = (value: number, max: number) => BOTTOM - (Math.max(0, Math.min(max, value)) / max) * (BOTTOM - TOP);
+    const RIGHT = this.right();
     const x = (index: number) => points.length === 1 ? (LEFT + RIGHT) / 2 : LEFT + (index / (points.length - 1)) * (RIGHT - LEFT);
-    const every = Math.max(1, Math.ceil(points.length / 6));
+    const every = Math.max(1, Math.ceil(points.length / (this.width() < 480 ? 4 : 6)));
     const dots = points.map((p, i) => ({ x: round(x(i)), wpmY: p.wpm === null ? null : round(y(p.wpm, top)), compY: p.comprehension === null ? null : round(y(p.comprehension, 100)),
       label: shortDate(p.date), showLabel: i % every === 0 || i === points.length - 1 }));
     const path = (key: 'wpmY' | 'compY') => dots.filter(d => d[key] !== null).map((d, i) => `${i ? 'L' : 'M'}${d.x} ${d[key]}`).join(' ');

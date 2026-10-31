@@ -57,7 +57,9 @@
   .cp-feedback { display: block; margin-top: var(--coaching-space-1); padding-left: var(--coaching-space-3); border-left: 3px solid var(--ui-brand); color: var(--ui-text); font-size: var(--coaching-text-sm); quotes: none; }
   .cp-quote { margin: 0 0 var(--coaching-space-3); padding: var(--coaching-space-3) var(--coaching-space-4); border-left: 4px solid var(--ui-brand); border-radius: var(--coaching-radius-control); background: var(--ui-brand-soft);
     p { margin: 0 0 var(--coaching-space-1); white-space: pre-line; } }
-  .cp-tabs { justify-self: start; }
+  .cp-tabs { justify-self: start; [role=tab] { min-height: 44px; } }
+  :is(app-parent-coaching-tab, app-parent-speed-reading-tab, app-parent-payments) { display: grid; gap: var(--coaching-space-6); min-width: 0; }
+  cp-reading-trend, cp-week-bars { display: block; min-width: 0; }
   .cp-panel { display: grid; gap: var(--coaching-space-6); min-width: 0; }
 
   // Çocuklarım
@@ -69,8 +71,9 @@
     > footer { display: flex; justify-content: flex-end; border-top: 1px solid var(--ui-border); padding-top: var(--coaching-space-1); } }
   .cp-child-avatar { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; background: var(--ui-brand-soft); color: var(--ui-brand-text); font-weight: 800; font-size: var(--coaching-text-lg); }
   .cp-child-products { display: grid; gap: var(--coaching-space-2); margin: 0; padding: 0; list-style: none;
-    li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--coaching-space-2) var(--coaching-space-3); padding: var(--coaching-space-2) var(--coaching-space-3);
+    li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--coaching-space-1) var(--coaching-space-3); padding: var(--coaching-space-2) var(--coaching-space-3);
       border-radius: var(--coaching-radius-control); background: var(--ui-surface-muted); } }
+  .cp-child-info { display: grid; justify-items: start; gap: 4px; min-width: 0; flex: 1 1 10rem; }
   .cp-product-badge { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: var(--coaching-radius-pill); background: var(--ui-brand-soft); color: var(--ui-brand-text);
     font-size: var(--coaching-text-sm); font-weight: 800; white-space: nowrap;
     &[data-product=SpeedReading] { background: var(--ui-accent-soft); color: var(--ui-accent-text); } }
@@ -149,7 +152,6 @@
     .cp-top { grid-template-columns: minmax(0, 1fr); }
     .cp-form { grid-template-columns: minmax(0, 1fr); }
     .cp-bars { gap: 4px; padding: var(--coaching-space-3) var(--coaching-space-2); li { grid-template-rows: auto 80px auto; } .cp-bar-value { font-size: 11px; } .cp-bar-label { font-size: 10px; small { display: none; } } }
-    .cp-child-products li { grid-template-columns: auto minmax(0, 1fr); .cp-child-open { grid-column: 1 / -1; justify-self: start; padding: 0; } }
   }
 }
 @media (prefers-reduced-motion: reduce) { .coaching-shell .cp-switch input, .coaching-shell .cp-switch input::after { transition: none; } }
