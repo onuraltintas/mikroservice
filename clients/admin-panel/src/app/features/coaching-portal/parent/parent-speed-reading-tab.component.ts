@@ -18,7 +18,7 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
   standalone: true,
   imports: [CsCardComponent, CsProgressBarComponent, CsStatusChipComponent, ParentReadingTrendComponent, ParentWeekBarsComponent],
   template: `
-    @if (forbidden()) { <p class="cp-notice" role="status">{{ name() }} hızlı okuma ilerlemesini şu an seninle paylaşmıyor ya da bağlantınız artık geçerli değil. Çocuklarım sayfasından durumu görebilirsin.</p> }
+    @if (forbidden()) { <p class="cp-notice" role="status">{{ name() }} hızlı okuma ilerlemesini şu an seninle paylaşmıyor ya da veli bağlantısı artık geçerli değil. Çocuklarım sayfasından durumu görebilirsin.</p> }
     @else if (error()) { <p class="cp-alert" role="alert">Hızlı okuma ilerlemesi şu an görüntülenemiyor. Biraz sonra yeniden dene.</p> }
     @else if (view(); as v) {
       <div class="cp-top">

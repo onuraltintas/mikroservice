@@ -81,7 +81,7 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
 
     @if (hasReview()) {
       <section class="cp-section" aria-labelledby="cp-review-title" data-testid="parent-review">
-        <h2 id="cp-review-title">Koçun haftalık değerlendirmesi</h2>
+        <h2 id="cp-review-title">Öğretmenin haftalık değerlendirmesi</h2>
         <div class="cp-card">
           @for (item of review()!.reviews; track $index) { <blockquote class="cp-quote"><p>{{ item.note }}</p><footer class="cp-muted">{{ item.reviewedAt | coachingDate }}</footer></blockquote> }
           @if (review()!.decisions.length) {
