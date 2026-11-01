@@ -71,6 +71,13 @@ TDP_COMPARABLES = {
     'topic:e24af3c3-891b-4df1-2764-08dce39258cc': ['topic:882d753d-9925-4933-5695-08dc0b6b5532', 'topic:82820b04-9d79-437b-2287-08dc0b6af052'],
     'topic:02f16954-3c61-42de-2763-08dce39258cc': ['topic:37f2cb9e-1454-4941-228a-08dc0b6af052', 'topic:0fcde9db-2137-44cc-569c-08dc0b6b5532'],
 }
+# Review decisions that replace the comparable median (content review 01.11.2026, B1; production was set the same way in
+# the admin panel). Value: (minutes, reason recorded in the CSV).
+TDP_OVERRIDES = {
+    # Yüzdeler: its two comparable TYT leaves are both "problem" leaves (115). Oran-Orantı and Kesirler also have a
+    # problem leaf in their comparison set and got 90; a 7th-grade support topic is not harder than those.
+    'topic:8ac577e3-be34-40be-274a-08dce39258cc': (90, 'tutarlılık: karşılaştırma kümesinde problem yaprağı olan diğer konular gibi 90'),
+}
 # Reference only (not used for the proposal): the LGS Matematik leaves for the same 8th-grade MEB unit.
 TDP_LGS_REFERENCE = {
     'topic:b4029917-0e6a-4ec8-274b-08dce39258cc': ['topic:ad650afa-ca7c-4716-91ce-08dd3ad55a15'],
@@ -151,16 +158,18 @@ def build(snapshot, out):
     fallback = lower_median(list(tyt_math.values()))
     tdp_rows = []
     tdp_leaves = sorted(leaves('tdp_matematik'), key=lambda t: t['SourceId'])
-    if {t['SourceId'] for t in tdp_leaves} != set(TDP_COMPARABLES):
+    if {t['SourceId'] for t in tdp_leaves} != set(TDP_COMPARABLES) or not set(TDP_OVERRIDES) <= set(TDP_COMPARABLES):
         raise SystemExit('TDP Matematik leaves differ from the reviewed mapping.')
     for topic in tdp_leaves:
         comparable = TDP_COMPARABLES[topic['SourceId']]
         minutes = [tyt_math[source_id] for source_id in comparable]
         reference = TDP_LGS_REFERENCE.get(topic['SourceId'], [])
+        override = TDP_OVERRIDES.get(topic['SourceId'])
         tdp_rows.append({'topic_source_id': topic['SourceId'],
-                         'proposed_minutes': lower_median(minutes) if minutes else fallback,
+                         'proposed_minutes': override[0] if override else lower_median(minutes) if minutes else fallback,
                          'yield_weight': 3,
-                         'method': 'comparable-tyt-median' if minutes else 'tyt-matematik-median-fallback',
+                         'method': 'review-decision' if override else 'comparable-tyt-median' if minutes else 'tyt-matematik-median-fallback',
+                         'method_note': override[1] if override else '',
                          'comparable_tyt_source_ids': ' '.join(comparable),
                          'comparable_minutes': ' '.join(map(str, minutes)),
                          'lgs_reference_minutes': sum(int(by_source[s]['EstimatedMinutes']) for s in reference) if reference else '',

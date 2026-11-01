@@ -9,13 +9,26 @@
     "source": "KM3 taslak paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; ekip onayı bekliyor.",
     "sourceUrl": "https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf"
   },
+  "previousRelease": {
+    "note": "Üretimde 01.11.2026'da uygulanan sürüm (c1ce79c). Sonraki düzeltmeler üretimde yönetim panelinden yapıldı; koruma, panelde değiştirilmemiş bir kayıtta yalnız bu sürümün tam değerlerini kabul eder.",
+    "commit": "c1ce79c1",
+    "packageSha256": "f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab",
+    "topicNames": {
+      "OABT_OKUL.2.01": "Erken Çocukluk Fen Eğitimi",
+      "OABT_OKUL.2.02": "Erken Çocukluk Matematik Eğitimi",
+      "OABT_OKUL.2.03": "Erken Çocukluk Güzel Sanatlar Eğitimi",
+      "OABT_OKUL.2.04": "Erken Çocukluk Müzik Eğitimi"
+    }
+  },
   "documents": {
     "AGS2026": {
       "url": "https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf",
+      "sha256": "9be6d1849644f0c7bbabf81b67c59cc655147cd1e18fb46d7313b095ecb55f1a",
       "title": "ÖSYM, Akademi Giriş Sınavı (AGS) Konu Dağılımı ve ÖABT Özel Eğitim Alanı Konu Dağılımı (08.01.2026)"
     },
     "AGS2025": {
       "url": "https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf",
+      "sha256": "a5a3c422f94073924c04663256889084ad73610a2547476b5e93d5eeb8468472",
       "title": "ÖSYM, MEB-AGS: AGS ve ÖABT Sınavına İlişkin Açıklama ve Konu Dağılımları (16.01.2025) — Özel Eğitim dışındaki 16 alanın en güncel resmî dağılımı"
     },
     "GUIDE2026": {
@@ -24,6 +37,7 @@
     },
     "YDS2026_1": {
       "url": "https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf",
+      "sha256": "fd815d7a4941a94110038d895a40cb74728acc3b769b5f8c34d3f2bb6a3ae057",
       "title": "2026-YDS/1 İngilizce temel soru kitapçığı (05.04.2026), yönerge aralıkları sayıldı"
     },
     "YDS2025_2": {
@@ -32,14 +46,17 @@
     },
     "YOKDIL2026_2_FEN": {
       "url": "https://dokuman.osym.gov.tr/web/2026/8/ngilizce-fen-bilimleri-testi-ve-cevap-anahtari-10-4ehn8t-09134606.pdf",
+      "sha256": "362908e4eaf6e4693473cf949570adee626e834e8576ce838f11380aff0e935b",
       "title": "2026-YÖKDİL/2 İngilizce Fen Bilimleri temel soru kitapçığı (09.08.2026), yönerge aralıkları sayıldı"
     },
     "YOKDIL2026_2_SAG": {
       "url": "https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf",
+      "sha256": "2f8f1d1aef6e592c3000f5ca537995170df3d11fb08cdb87cb1fd7d1978f3bcb",
       "title": "2026-YÖKDİL/2 İngilizce Sağlık Bilimleri temel soru kitapçığı (09.08.2026), yönerge aralıkları sayıldı"
     },
     "YOKDIL2026_2_SOS": {
       "url": "https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf",
+      "sha256": "f5e3dd68aa4ccbc91988ee674093d7d216f18e57d177008d0b225babc19c9866",
       "title": "2026-YÖKDİL/2 İngilizce Sosyal Bilimler temel soru kitapçığı (09.08.2026), yönerge aralıkları sayıldı"
     }
   },
@@ -206,7 +223,7 @@
         { "name": "Dalgalar ve Optik", "pct": 16 },
         { "name": "Modern Fizik", "pct": 20 }
       ] }] },
-    { "code": "OABT_KIM", "exam": "OABT", "field": "Kimya/Kimya Teknolojisi", "name": "Kimya / Kimya Teknolojisi (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
+    { "code": "OABT_KIM", "exam": "OABT", "field": "Kimya/Kimya Teknolojisi", "examName": "ÖABT · Kimya / Kimya Teknolojisi", "name": "Kimya / Kimya Teknolojisi (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
       "units": [{ "name": "Alan Bilgisi Testi", "topics": [
         { "name": "Temel Kimya", "pct": 32 },
         { "name": "Analitik Kimya", "pct": 20 },
@@ -224,6 +241,7 @@
         { "name": "Genetik", "pct": 20 }
       ] }] },
     { "code": "OABT_DIN", "exam": "OABT", "field": "Din Kültürü ve Ahlâk Bilgisi / İmam-Hatip Lisesi Meslek Dersleri",
+      "examName": "ÖABT · Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri",
       "name": "Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
       "note": "Belgedeki tablo üç sütunlu (Ortak Alan Bilgisi; Temel İslam Bilimleri; İslam Tarihi, Felsefe ve Din Bilimleri) ve toplam satırı %20 / %80; sütun yerleşimi metinden kesin okunamadığı için konular tek ünitede, satırdaki değerlerin toplamıyla verildi (Fıkıh: %4 + %10).",
       "units": [{ "name": "Alan Bilgisi Testi", "topics": [
@@ -291,10 +309,10 @@
           { "name": "Çocuk Hakları", "pct": 4 }
         ] },
         { "name": "Alan Eğitimi Testi", "sectionPct": 40, "openList": true, "topics": [
-          { "name": "Erken Çocukluk Fen Eğitimi" },
-          { "name": "Erken Çocukluk Matematik Eğitimi" },
-          { "name": "Erken Çocukluk Güzel Sanatlar Eğitimi" },
-          { "name": "Erken Çocukluk Müzik Eğitimi" },
+          { "name": "Erken Çocuklukta Fen Eğitimi" },
+          { "name": "Erken Çocuklukta Matematik Eğitimi" },
+          { "name": "Erken Çocuklukta Güzel Sanatlar Eğitimi" },
+          { "name": "Erken Çocuklukta Müzik Eğitimi" },
           { "name": "Erken Çocukluk Eğitiminde Oyun" },
           { "name": "Erken Çocukluk Eğitiminde Drama" },
           { "name": "Erken Çocukluk Eğitiminde Öğrenme Yaklaşımları" },

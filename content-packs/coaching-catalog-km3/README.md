@@ -10,7 +10,7 @@ for:
 
 **Everything is passive and pending approval.** Lessons, units and topics are `IsActive = false`, every topic–outcome link is
 `IsApproved = false`, and all lessons sit in a new, **unpublished** curriculum version `coaching-exam-prep-km3-2026`
-(2026–2027). Students see nothing until the team approves it. Nothing has been applied to production.
+(2026–2027). Students see nothing until the team approves it. Production state: see "Production state (01.11.2026)" below.
 
 ## Files
 
@@ -133,10 +133,10 @@ planned in several rounds. Each outcome note spells out its own calculation.
 
 ## Gaps and things to check before approval
 
-- **Document hashes.** The PDFs could not be downloaded from the authoring environment (ÖSYM is reachable only through a
-  text reader), so `official_curriculum_editions."DocumentSha256"` holds the placeholder `000…0` (64 zeros). `verify.sql`
-  prints `pending PDF hashes: N editions`. Download each PDF, `sha256sum` it and set the hash in the admin panel
-  (edition edit) before publishing.
+- **Document hashes.** `catalog.json` → `documents.*.sha256` holds the SHA-256 of each ÖSYM PDF (computed on the server,
+  see "Production state"), and `apply.sql` writes it into `official_curriculum_editions."DocumentSha256"`. A document
+  without a recorded hash would get the placeholder `000…0` (64 zeros); `verify.sql` prints `pending PDF hashes: N editions`
+  (0 for this pack).
 - **ÖABT topics are the official areas, not finer units.** ÖSYM publishes 3–19 rows per field (e.g. İlköğretim Matematik:
   Analiz, Cebir, Geometri, Uygulamalı Matematik). No finer official list exists, so none was invented; 35 broad ÖABT topics
   hit the 1440-minute planner limit.
@@ -151,6 +151,49 @@ planned in several rounds. Each outcome note spells out its own calculation.
 - No outcome duration estimates (`outcome_duration_estimates`) are created: the planner uses the topic minutes. The team can
   add estimates per outcome later in the admin panel.
 
+## Production state (01.11.2026)
+
+Release c1ce79c applied this pack to production (package hash `f1713ce2…68c8ab`, `catalog.json` → `previousRelease`).
+After the content review (Y1, O3, D1, D2) the team made these changes **in the admin panel**, and this pack now writes the
+same values:
+
+- Okul Öncesi topics `OABT_OKUL.2.01`–`2.04`: "Erken Çocuklukta Fen Eğitimi", "Erken Çocuklukta Matematik Eğitimi",
+  "Erken Çocuklukta Güzel Sanatlar Eğitimi", "Erken Çocuklukta Müzik Eğitimi" (as in the official document).
+- Outcome names with a range detail read "…, 17–26. sorular (iki paragraf × 5)" instead of "…, 17–26 (iki paragraf × 5).
+  sorular" (`YDS_EN.3.01`, `YDS_EN.6.01`, `YOKDIL_FEN|SAG|SOS.2.01` and `.7.01`).
+- Field exams: `OABT_DIN` "ÖABT · Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri", `OABT_KIM`
+  "ÖABT · Kimya / Kimya Teknolojisi" (`catalog.json` → `examName`; `field` stays the KM1 profile name).
+
+The document hashes **cannot be set in the admin panel**: `CoachingCurriculumManagementService.EditProgram` refuses source
+changes on an edition that already has outcomes. They were written on the server by a guarded SQL step (release c1ce79c,
+step G1: only `km3-*` editions whose `DocumentSha256` was 64 zeros and whose `SourceUrl` matched; one admin audit record
+per edition). The PDFs were downloaded from ÖSYM on the server and hashed with `sha256sum`:
+
+| Document | Editions | SHA-256 |
+| --- | --- | --- |
+| https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf | AGS (6), ÖABT Özel Eğitim | `9be6d1849644f0c7bbabf81b67c59cc655147cd1e18fb46d7313b095ecb55f1a` |
+| https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf | the other 16 ÖABT fields | `a5a3c422f94073924c04663256889084ad73610a2547476b5e93d5eeb8468472` |
+| https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf | YDS İngilizce | `fd815d7a4941a94110038d895a40cb74728acc3b769b5f8c34d3f2bb6a3ae057` |
+| https://dokuman.osym.gov.tr/web/2026/8/ngilizce-fen-bilimleri-testi-ve-cevap-anahtari-10-4ehn8t-09134606.pdf | YÖKDİL Fen | `362908e4eaf6e4693473cf949570adee626e834e8576ce838f11380aff0e935b` |
+| https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf | YÖKDİL Sağlık | `2f8f1d1aef6e592c3000f5ca537995170df3d11fb08cdb87cb1fd7d1978f3bcb` |
+| https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf | YÖKDİL Sosyal | `f5e3dd68aa4ccbc91988ee674093d7d216f18e57d177008d0b225babc19c9866` |
+
+A fresh install now gets these hashes directly. **Rerun in production:** the guard compares every stored row with this pack.
+Two kinds of stored value count as equal and are left as they are: the c1ce79c package hash on the 27 editions (every
+edit of `catalog.json` changes the package hash) and, for a record the panel did not rename, exactly the name c1ce79c wrote
+(`previousRelease.topicNames` and the old outcome-name template). The guard does not compare `DocumentSha256`. Any other
+difference still stops the pack with nothing changed.
+
+### Open follow-up: the 1440-minute topic cap (review O1)
+
+The planner refuses more than 1440 minutes per topic, so 35 ÖABT topics, 1 YDS and 3 YÖKDİL topics are stored at 1440 while
+their estimate is higher (see the totals table: ÖABT 2.056 h planned vs 2.700 h estimated). In İlköğretim Matematik,
+Matematik, TDE and Coğrafya every topic hits the cap, so a %36 topic gets the same time as a %16 one, and the 90-minute
+İlköğretim Matematik and Matematik tests get 96 h planned against 150 h for 70-minute tests such as Beden Eğitimi. The outcome notes say "konu birden çok turda planlanmalı", but the
+planner does not do that. Not fixed here; the team has to choose: (a) split capped topics into rounds ("… (1. tur)",
+"… (2. tur)") keeping the official name, or (b) apply the cap per weekly slice instead of per topic in the planner. Until
+then the distortion is an accepted, known gap.
+
 ## Running it
 
 Prerequisite: KM1's exams `AGS`, `OABT`, `YDS`, `YOKDIL` (`content-packs/exam-calendar/2027/apply.sql`). Otherwise the pack
@@ -164,14 +207,15 @@ stops with `KM1 exams missing` and changes nothing.
 
 Guards: one transaction with a 5 s lock timeout and the same advisory lock as the catalog importer; stops if the team
 permanently deleted a record of this source; stops (changing nothing) if a stored row with one of the pack's ids or keys has
-different content. A rerun inserts only what is missing and keeps every activation and approval the team made.
+different content (values written by the previous release count as equal, see "Production state"). A rerun inserts only what
+is missing and keeps every activation and approval the team made; it never updates an existing row.
 
 ## Approval in the admin panel
 
 "Ders ve Müfredat Yönetimi": review the lessons, units and topics (names, minutes, weights) and activate them; approve the
-topic–outcome links; activate the exams (`AGS`, `OABT`, `YDS`, `YOKDIL` from KM1 and the `OABT_*` field exams); set the
-document hashes; then publish the curriculum version `coaching-exam-prep-km3-2026`. Before approval, records can simply be
-left passive or permanently deleted in the panel; the pack will not bring deleted records back.
+topic–outcome links; activate the exams (`AGS`, `OABT`, `YDS`, `YOKDIL` from KM1 and the `OABT_*` field exams); then publish
+the curriculum version `coaching-exam-prep-km3-2026`. Before approval, records can simply be left passive or permanently
+deleted in the panel; the pack will not bring deleted records back.
 
 ## Tests
 

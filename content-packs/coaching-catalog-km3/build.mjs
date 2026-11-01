@@ -13,7 +13,10 @@ const raw = readFileSync(dir + 'catalog.json', 'utf8');
 const data = JSON.parse(raw);
 const SOURCE = data.source;
 const PACKAGE_SHA = createHash('sha256').update(raw).digest('hex');
-const PENDING_PDF_SHA = '0'.repeat(64); // the PDF bytes were not reachable from the authoring environment (README)
+const PENDING_PDF_SHA = '0'.repeat(64); // placeholder for a document without a recorded hash (README)
+// The release that production runs (README "Production state"): its package hash and the names it wrote. The guard treats
+// exactly these stored values as equal to this pack's, so a rerun neither stops on them nor changes them.
+const PREVIOUS = data.previousRelease;
 const uuid = key => { const h = createHash('md5').update(`${SOURCE}:${key}`).digest('hex');
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`; };
 const examLabel = { AGS: 'AGS', OABT: 'ÖABT', YDS: 'YDS', YOKDIL: 'YÖKDİL' };
@@ -70,11 +73,22 @@ for (const lesson of lessons) for (const unit of lesson.units) for (const topic 
   topic.sourceUrl = lesson.doc.url;
 }
 
-const outcomeName = (lesson, unit, topic) => {
-  if (topic.scope) return `${topic.name} (${topic.scope})`;
-  if (unit.range) return `${topic.name} — ${lesson.doc.title.split(' temel soru')[0]}, ${unit.range}. sorular`;
-  return topic.name;
+// "17–26 (iki paragraf × 5)" → "…, 17–26. sorular (iki paragraf × 5)" (review O3; production was renamed the same way).
+const outcomeName = (lesson, unit, topic, name = topic.name) => {
+  if (topic.scope) return `${name} (${topic.scope})`;
+  if (unit.range) {
+    const [, numbers, detail] = unit.range.match(/^(\S+)(?: \((.+)\))?$/);
+    return `${name} — ${lesson.doc.title.split(' temel soru')[0]}, ${numbers}. sorular${detail ? ` (${detail})` : ''}`;
+  }
+  return name;
 };
+// The outcome name the previous release wrote (old template "<range>. sorular", previous topic names).
+const previousOutcomeName = (lesson, unit, topic) => {
+  const name = PREVIOUS.topicNames[topic.code] ?? topic.name;
+  if (!topic.scope && unit.range) return `${name} — ${lesson.doc.title.split(' temel soru')[0]}, ${unit.range}. sorular`;
+  return outcomeName(lesson, unit, topic, name);
+};
+const previousName = (current, previous) => previous === undefined || previous === current ? null : previous;
 const outcomeNotes = (lesson, unit, topic) => [
   `Kaynak: ${lesson.doc.title}.`,
   lesson.exam === 'OABT' && lesson.doc === data.documents.AGS2025
@@ -123,18 +137,20 @@ for (const l of lessons) {
   const editionCode = `km3-${l.code.toLowerCase().replace(/_/g, '-')}-2026`;
   const scopeUrl = (l.evidenceDoc ? data.documents[l.evidenceDoc] : l.exam === 'OABT' ? data.documents.GUIDE2026 : l.doc).url;
   const examCode = l.exam === 'OABT' ? l.code : l.exam; // KM1: ÖABT lessons carry their field code (OABT_IMAT, …)
-  if (l.exam === 'OABT') rows.exams.push([uuid(`exam:${l.code}`), l.code, `ÖABT · ${l.field}`, 20 + rows.exams.length]);
+  if (l.exam === 'OABT') rows.exams.push([uuid(`exam:${l.code}`), l.code, l.examName ?? `ÖABT · ${l.field}`, 20 + rows.exams.length]);
   rows.lessons.push([lessonId, l.code, l.name, examCode]);
-  rows.editions.push([editionId, editionCode, examCode, `${l.name} — sınav hazırlık kapsamı`, l.doc.url, scopeUrl]);
+  rows.editions.push([editionId, editionCode, examCode, `${l.name} — sınav hazırlık kapsamı`, l.doc.url, scopeUrl, l.doc.sha256 ?? PENDING_PDF_SHA]);
   rows.bindings.push([editionId, lessonId]);
   for (const u of l.units) {
     const unitId = uuid(`unit:${u.code}`);
     rows.units.push([unitId, u.code, lessonId, u.name, u.order]);
     for (const t of u.topics) {
       const topicId = uuid(`topic:${t.code}`), officialId = uuid(`official:${t.code}`), outcomeId = uuid(`outcome:${t.code}`);
-      rows.topics.push([topicId, t.code, lessonId, unitId, t.name, t.order, t.minutes, t.yieldWeight]);
-      rows.official.push([officialId, editionId, t.code, t.name]);
-      rows.outcomes.push([outcomeId, editionId, officialId, t.code, outcomeName(l, u, t), outcomeNotes(l, u, t), t.order, t.sourceUrl]);
+      const previousTopicName = previousName(t.name, PREVIOUS.topicNames[t.code]), current = outcomeName(l, u, t);
+      rows.topics.push([topicId, t.code, lessonId, unitId, t.name, t.order, t.minutes, t.yieldWeight, previousTopicName]);
+      rows.official.push([officialId, editionId, t.code, t.name, previousTopicName]);
+      rows.outcomes.push([outcomeId, editionId, officialId, t.code, current, outcomeNotes(l, u, t), t.order, t.sourceUrl,
+        previousName(current, previousOutcomeName(l, u, t))]);
       rows.sources.push([uuid(`outcome-source:${t.code}`), outcomeId, t.code]);
       rows.maps.push([topicId, outcomeId]);
     }
@@ -151,7 +167,8 @@ const apply = `-- KM3 coaching catalog pack (01.11.2026): AGS, ÖABT (17 fields)
 --
 -- Needs the KM1 exams AGS, OABT, YDS and YOKDIL (content-packs/exam-calendar/2027) and stops otherwise.
 -- Idempotent: rows are keyed by fixed ids; a rerun inserts only what is missing, keeps the team's activation and approval
--- decisions and stops (changing nothing) when a stored row's content differs from this pack.
+-- decisions and stops (changing nothing) when a stored row's content differs from this pack. Stored values that are
+-- exactly what release ${PREVIOUS.commit} wrote (its package hash, the names in "previous_name") count as equal and are kept.
 --   psql -X -qAt -v ON_ERROR_STOP=1 -f apply.sql      (Coaching database; prints before/inserted/after NOTICEs)
 BEGIN;
 SET LOCAL lock_timeout = '5s';
@@ -194,17 +211,18 @@ CREATE TEMP TABLE km3_units (id uuid PRIMARY KEY, source_id text, lesson_id uuid
 INSERT INTO km3_units VALUES
 ${values(rows.units)};
 CREATE TEMP TABLE km3_topics (id uuid PRIMARY KEY, source_id text, lesson_id uuid, unit_id uuid, name text, display_order int,
-    minutes int, yield_weight int) ON COMMIT DROP;
+    minutes int, yield_weight int, previous_name text) ON COMMIT DROP;
 INSERT INTO km3_topics VALUES
 ${values(rows.topics)};
-CREATE TEMP TABLE km3_editions (id uuid PRIMARY KEY, code text, exam text, subject text, source_url text, scope_url text) ON COMMIT DROP;
+CREATE TEMP TABLE km3_editions (id uuid PRIMARY KEY, code text, exam text, subject text, source_url text, scope_url text,
+    document_sha text) ON COMMIT DROP;
 INSERT INTO km3_editions VALUES
 ${values(rows.editions)};
-CREATE TEMP TABLE km3_official (id uuid PRIMARY KEY, edition_id uuid, code text, name text) ON COMMIT DROP;
+CREATE TEMP TABLE km3_official (id uuid PRIMARY KEY, edition_id uuid, code text, name text, previous_name text) ON COMMIT DROP;
 INSERT INTO km3_official VALUES
 ${values(rows.official)};
 CREATE TEMP TABLE km3_outcomes (id uuid PRIMARY KEY, edition_id uuid, official_id uuid, code text, name text, notes text,
-    display_order int, source_url text) ON COMMIT DROP;
+    display_order int, source_url text, previous_name text) ON COMMIT DROP;
 INSERT INTO km3_outcomes VALUES
 ${values(rows.outcomes)};
 CREATE TEMP TABLE km3_outcome_sources (id uuid PRIMARY KEY, outcome_id uuid, source_id text) ON COMMIT DROP;
@@ -245,21 +263,23 @@ BEGIN
         UNION ALL SELECT 'topic ' || t."SourceId" FROM coaching.study_catalog_topics t
         LEFT JOIN km3_topics k ON k.id = t."Id"
         WHERE (t."Source" = '${SOURCE}' OR k.id IS NOT NULL)
-          AND (k.id IS NULL OR (t."Source", t."SourceId", t."LessonId", t."UnitId", t."ParentId", t."Name", t."DisplayOrder", t."EstimatedMinutes", t."YieldWeight")
+          AND (k.id IS NULL OR (t."Source", t."SourceId", t."LessonId", t."UnitId", t."ParentId",
+                  CASE WHEN t."Name" = k.previous_name THEN k.name ELSE t."Name" END, t."DisplayOrder", t."EstimatedMinutes", t."YieldWeight")
               IS DISTINCT FROM ('${SOURCE}'::varchar, k.source_id::varchar, k.lesson_id, k.unit_id, NULL::uuid, k.name::varchar, k.display_order, k.minutes, k.yield_weight))
         UNION ALL SELECT 'edition ' || e."Code" FROM coaching.official_curriculum_editions e
         LEFT JOIN km3_editions k ON k.id = e."Id"
         WHERE (e."Code" IN (SELECT code FROM km3_editions) OR k.id IS NOT NULL)
           AND (k.id IS NULL OR (e."Code", e."ExamCode", e."GradeNumber", e."SubjectName", e."AcademicYearStart", e."AcademicYearEnd", e."SourceUrl",
-                  e."ScopeEvidenceUrl", e."PackageSha256")
+                  e."ScopeEvidenceUrl", CASE WHEN e."PackageSha256" = '${PREVIOUS.packageSha256}' THEN '${PACKAGE_SHA}' ELSE e."PackageSha256" END)
               IS DISTINCT FROM (k.code::varchar, k.exam::varchar, NULL::int, k.subject::varchar, 2026, 2027, k.source_url::varchar, k.scope_url::varchar, '${PACKAGE_SHA}'::varchar))
         UNION ALL SELECT 'official topic ' || o."Code" FROM coaching.official_curriculum_topics o
         JOIN km3_official k ON k.id = o."Id"
-        WHERE (o."EditionId", o."Code", o."Name", o."OutcomeCount", o."LessonPeriods")
+        WHERE (o."EditionId", o."Code", CASE WHEN o."Name" = k.previous_name THEN k.name ELSE o."Name" END, o."OutcomeCount", o."LessonPeriods")
               IS DISTINCT FROM (k.edition_id, k.code::varchar, k.name::varchar, 1, NULL::int)
         UNION ALL SELECT 'outcome ' || o."Code" FROM coaching.study_catalog_outcomes o
         JOIN km3_outcomes k ON k.id = o."Id"
-        WHERE (o."EditionId", o."OfficialTopicId", o."Code", o."Name", o."Notes", o."SourcePage", o."DisplayOrder", o."SourceKind", o."SourceUrl")
+        WHERE (o."EditionId", o."OfficialTopicId", o."Code", CASE WHEN o."Name" = k.previous_name THEN k.name ELSE o."Name" END, o."Notes",
+                  o."SourcePage", o."DisplayOrder", o."SourceKind", o."SourceUrl")
               IS DISTINCT FROM (k.edition_id, k.official_id, k.code::varchar, k.name::varchar, k.notes::varchar, NULL::int, k.display_order, 'ExamSkill'::varchar, k.source_url::varchar)
         UNION ALL SELECT 'outcome source ' || s."SourceId" FROM coaching.study_catalog_outcome_sources s
         LEFT JOIN km3_outcome_sources k ON k.id = s."Id"
@@ -297,7 +317,7 @@ WITH x AS (INSERT INTO coaching.study_catalog_topics ("Id", "Source", "SourceId"
 INSERT INTO km3_inserted SELECT 'topics', count(*) FROM x;
 WITH x AS (INSERT INTO coaching.official_curriculum_editions ("Id", "Code", "ExamCode", "GradeNumber", "SubjectName", "AcademicYearStart",
         "AcademicYearEnd", "SourceUrl", "DocumentSha256", "ScopeEvidenceUrl", "PackageSha256")
-    SELECT k.id, k.code, k.exam, NULL, k.subject, 2026, 2027, k.source_url, '${PENDING_PDF_SHA}', k.scope_url, '${PACKAGE_SHA}' FROM km3_editions k
+    SELECT k.id, k.code, k.exam, NULL, k.subject, 2026, 2027, k.source_url, k.document_sha, k.scope_url, '${PACKAGE_SHA}' FROM km3_editions k
     WHERE NOT EXISTS (SELECT 1 FROM coaching.official_curriculum_editions e WHERE e."Id" = k.id) RETURNING 1)
 INSERT INTO km3_inserted SELECT 'editions', count(*) FROM x;
 INSERT INTO coaching.official_curriculum_lesson_bindings ("EditionId", "LessonId")

@@ -40,7 +40,7 @@ INSERT INTO km2_tdp VALUES
   ('topic:7ba52936-6505-43e9-2752-08dce39258cc', 90),
   ('topic:802cb490-0b67-4e65-2760-08dce39258cc', 90),
   ('topic:86678d89-c314-42ec-2761-08dce39258cc', 90),
-  ('topic:8ac577e3-be34-40be-274a-08dce39258cc', 115),
+  ('topic:8ac577e3-be34-40be-274a-08dce39258cc', 90),
   ('topic:8e62586f-0f5e-41bf-2755-08dce39258cc', 90),
   ('topic:942328dc-2e5a-4f03-275c-08dce39258cc', 90),
   ('topic:9c2c87e9-ef7b-4939-2758-08dce39258cc', 90),
