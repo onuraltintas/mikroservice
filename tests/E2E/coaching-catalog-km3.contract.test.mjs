@@ -136,7 +136,8 @@ test('Okul Öncesi Alan Eğitimi topic names are written as in the official docu
 
 test('outcome names put the parenthetical after "sorular" (review O3), as production now reads', () => {
   const sql = read('apply.sql');
-  assert.doesNotMatch(sql, /\)\. sorular/);
+  // The current name follows the outcome code; the c1ce79c name may only appear as the guard's previous_name (last column).
+  assert.doesNotMatch(sql, /'[A-Z_]+\.\d+\.\d+', '[^']*\)\. sorular'/);
   const expected = {
     'YDS_EN.3.01': 'Cloze test (paragrafta boşluk doldurma) — 2026-YDS/1 İngilizce, 17–26. sorular (iki paragraf × 5)',
     'YDS_EN.6.01': 'Okuduğunu anlama (paragraf soruları) — 2026-YDS/1 İngilizce, 43–62. sorular (beş paragraf × 4)',
