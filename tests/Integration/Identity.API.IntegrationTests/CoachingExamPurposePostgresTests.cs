@@ -38,14 +38,17 @@ public sealed class CoachingExamPurposePostgresTests
             var yokdil = StudyCatalogExam.Create("YOKDIL", "Yükseköğretim Kurumları Yabancı Dil Sınavı"); yokdil.SetActive(false);
             yokdil.ReplaceSessions([new(null, new(2027, 2, 28), "2027/1", null, null)]);
             var ags = StudyCatalogExam.Create("AGS", "Akademi Giriş Sınavı"); var oabt = StudyCatalogExam.Create("OABT", "Öğretmenlik Alan Bilgisi Testi");
+            // KM6: ÖABT lessons carry their field code as ExamCode (content pack KM3), one catalog exam per field.
+            var oabtOzel = StudyCatalogExam.Create("OABT_OZEL", "ÖABT · Özel Eğitim"); var oabtTur = StudyCatalogExam.Create("OABT_TUR", "ÖABT · Türkçe");
             ags.ReplaceSessions([new(null, new(2027, 5, 8), "2027", null, null)]);
-            db.AddRange(profile, curriculum, yds, yokdil, ags, oabt); await db.SaveChangesAsync();
+            db.AddRange(profile, curriculum, yds, yokdil, ags, oabt, oabtOzel, oabtTur); await db.SaveChangesAsync();
             StudyCatalogLesson Lesson(string id, string name, string exam)
             { var lesson = StudyCatalogLesson.Create("test", id, name, null, exam); lesson.AssignCurriculum(curriculum.Id); lesson.SetActive(true); return lesson; }
             var english = Lesson("yds-en", "YDS İngilizce", "YDS"); var general = Lesson("ags-gy", "Sözel Yetenek", "AGS");
-            var field = Lesson("oabt-ozel", "Özel Eğitim Alan Bilgisi", "OABT"); var lgs = Lesson("lgs-mat", "Matematik", "LGS");
-            db.AddRange(english, general, field, lgs); await db.SaveChangesAsync();
-            foreach (var lesson in new[] { english, general, field, lgs })
+            var field = Lesson("oabt-ozel", "Özel Eğitim Alan Bilgisi", "OABT_OZEL"); var lgs = Lesson("lgs-mat", "Matematik", "LGS");
+            var otherField = Lesson("oabt-tur", "Türkçe Alan Bilgisi", "OABT_TUR");
+            db.AddRange(english, general, field, otherField, lgs); await db.SaveChangesAsync();
+            foreach (var lesson in new[] { english, general, field, otherField, lgs })
             {
                 var unit = StudyCatalogUnit.Create("test", lesson.SourceId + "-u", lesson.Id, "Ünite", 1); unit.SetActive(true);
                 var topic = StudyCatalogTopic.Create("test", lesson.SourceId + "-t", lesson.Id, unit.Id, "Konu", null, 1, 30); topic.SetActive(true);
@@ -80,6 +83,7 @@ public sealed class CoachingExamPurposePostgresTests
 
             var agsSaved = await service.SaveAsync(new(version, 2026, LearningPurpose.Ags, 2027, "OABT_OZEL", null, [], [], false), default);
             Assert.Null(agsSaved.Context!.TargetExamSessionId);
+            // Only the AGS lessons and the student's own ÖABT field; the Türkçe field stays hidden.
             Assert.Equal(new[] { "Sözel Yetenek", "Özel Eğitim Alan Bilgisi" }, (await service.GetCatalogAsync(null, 1, default)).Lessons.Select(x => x.Name).Order(StringComparer.Ordinal).ToArray());
             db.ChangeTracker.Clear();
 

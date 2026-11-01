@@ -117,7 +117,10 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             LearningPurpose.School => query.Where(x => x.GradeNumber == p.GradeLevel && x.ExamCode == null),
             LearningPurpose.Lgs => query.Where(x => x.ExamCode == "LGS"),
             LearningPurpose.Yks => query.Where(x => yksTopics.Any(t=>t.LessonId==x.Id&&t.IsActive)),
-            LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil => ByExam(query, LearningPurposes.LessonExamCodes(c.Purpose)),
+            LearningPurpose.Ags or LearningPurpose.Yds => ByExam(query, LearningPurposes.LessonExamCodes(c.Purpose, c.PrimaryScoreType)),
+            // KM6: a YÖKDİL student sees the lesson of their own field (source id = field code) and any shared lesson.
+            LearningPurpose.Yokdil => ByExam(query, LearningPurposes.LessonExamCodes(c.Purpose))
+                .Where(x => c.PrimaryScoreType == null || x.SourceId == c.PrimaryScoreType || !x.SourceId.StartsWith("YOKDIL_")),
             _ when p.GradeLevel.HasValue => query.Where(x => x.GradeNumber == p.GradeLevel || x.GradeNumber == null),
             _ => query
         };

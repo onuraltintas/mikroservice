@@ -1084,7 +1084,7 @@
     "services/coaching-service/Coaching.Domain/Entities/Exam.cs": "9d4cc98b86fa379698dca38f3293ef7988c530f9c4b62cd78849216ada7f2eb2",
     "services/coaching-service/Coaching.Domain/Entities/IdempotencyRecord.cs": "f1e2178df798fc85d21d773c21f324cb6b0d63a260c91b7ce4737696c561a116",
     "services/coaching-service/Coaching.Domain/Entities/PracticeExamRules.cs": "7f7ff80dfde60de4b55b557eee244c526804d0366efcb70fccdf0d5872dcb673",
-    "services/coaching-service/Coaching.Domain/Entities/StudentLearningContext.cs": "cc7403a488728eace2363d11c4c0bf619e00fcdbb7963c213a1d6b91a8200e33",
+    "services/coaching-service/Coaching.Domain/Entities/StudentLearningContext.cs": "c9fe9f734e9872f14ff6b2e146efba3e4aabc4cb56256f8ff74d68999f1dc3c3",
     "services/coaching-service/Coaching.Domain/Entities/StudentPrimaryGoal.cs": "918a8a41670e74a481bc58d177e8d2378b2beb13e26e22f6df9fabc8e41e6ecb",
     "services/coaching-service/Coaching.Domain/Entities/StudyAvailability.cs": "f62ba62ce4b0ebea898ac5e46465477ee2494dd52553f7116be40958a434405d",
     "services/coaching-service/Coaching.Domain/Entities/StudyCatalog.cs": "65ba05d815d548dbb954c91635e591a3f2030fed7f02d9692b2bd409eedf0eb0",
@@ -1394,7 +1394,7 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingCompletedOutcomeCredits.cs": "f3cb7936acb03bfdf3f628637f87ba5c6b46c28439add36596622186d5cd33f6",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingExamSessions.cs": "bd0439fd893b96caac4663df1a383dd0ac94a82faa57135e148988fd7f150ad0",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingGoalTargetService.cs": "b7045bde87e6f5c007dadef8f97f1943f08a0b86ff0e7498590dd7f515de3258",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingLearningSetupService.cs": "d65e21fdf440bce3d1e9e717f8ac2a9d44ae2c721ad1bd845939ae6f27924031",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingLearningSetupService.cs": "22c3c2b5da2b02694e67b8530a4575b57a22609d3c4df90ae038a007f2fd8694",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingManualStudyPlanService.cs": "cd38fa9a33cd7e7ed92d93d4ee06397c58025da6ae3c7b98f1d7179e64d566ef",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingMotivationService.cs": "19e44ec768f4cc773388edde4080931ef6ea2392c484b53c6befc28d28888c92",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingPracticeAdaptationService.cs": "e53a624fe5e711b4d4a257bb59fc063b5ab77af5ef38e2d338d575a73acbc79a",
@@ -2671,7 +2671,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "merge KM1–KM4 curriculum",
+    "purpose": "KM6 ÖABT/YÖKDİL field lessons",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",

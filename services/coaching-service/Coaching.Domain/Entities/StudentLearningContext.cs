@@ -16,11 +16,16 @@ public static class LearningPurposes
         LearningPurpose.Yds => "YDS", LearningPurpose.Yokdil => "YOKDIL", _ => null
     };
 
-    /// <summary>Catalog lessons (study_catalog_lessons.ExamCode) of the AGS, YDS and YÖKDİL purposes.</summary>
-    public static IReadOnlyList<string> LessonExamCodes(LearningPurpose purpose) => purpose switch
+    /// <summary>
+    /// Catalog lessons (study_catalog_lessons.ExamCode) of the AGS, YDS and YÖKDİL purposes. KM6: an ÖABT lesson carries its
+    /// field code (OABT_IMAT, …) as ExamCode, so AGS students see the AGS lessons plus only their own ÖABT field.
+    /// </summary>
+    public static IReadOnlyList<string> LessonExamCodes(LearningPurpose purpose, string? scoreType = null) => purpose switch
     {
-        LearningPurpose.Ags => ["AGS", "OABT"], LearningPurpose.Yds => ["YDS"], LearningPurpose.Yokdil => ["YOKDIL"], _ => []
+        LearningPurpose.Ags => scoreType is not null && scoreType.StartsWith("OABT_", StringComparison.Ordinal) ? ["AGS", scoreType] : ["AGS"],
+        LearningPurpose.Yds => ["YDS"], LearningPurpose.Yokdil => ["YOKDIL"], _ => []
     };
+
 
     public static bool IsExamPreparation(LearningPurpose purpose) => CatalogExamCode(purpose) is not null;
 
