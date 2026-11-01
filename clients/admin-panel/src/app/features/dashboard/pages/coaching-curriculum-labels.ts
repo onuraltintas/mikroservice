@@ -4,9 +4,9 @@
  */
 export const CONFIDENCE_LABELS: Record<string, string> = { Low: 'Düşük', Medium: 'Orta', High: 'Yüksek' };
 export const METHOD_LABELS: Record<string, string> = { ReviewedStudy: 'İncelenmiş çalışma süresi', OfficialBudgetDraft: 'Resmî ders saatinden ilk dağılım', ImportedCatalog: 'Katalog aktarımı' };
-export const MAPPING_STATUS_LABELS: Record<string, string> = { pending: 'İnceleme bekliyor', approved: 'Onaylı', rejected: 'Reddedildi', all: 'Tümü' };
+export const MAPPING_STATUS_LABELS: Record<string, string> = { pending: 'Onay bekliyor', approved: 'Onaylı', rejected: 'Reddedildi', all: 'Tümü' };
 export const QUALITY_ISSUE_LABELS: Record<string, string> = {
-  noMinutes: 'Süresi yok', noOutcomes: 'Kazanımı yok', noYksScope: 'YKS kapsamı yok', inactiveParent: 'Üst kaydı pasif', pendingLinks: 'Bekleyen bağlantı'
+  noMinutes: 'Süresi yok', noOutcomes: 'Kazanımı yok', noYksScope: 'YKS kapsamı yok', inactiveParent: 'Üst kaydı pasif', pendingLinks: 'Onay bekleyen bağlantı'
 };
 export const SOURCE_KIND_LABELS: Record<string, string> = { Official: 'Resmî program kazanımı', ExamSkill: 'Sınav hazırlık becerisi' };
 export const SOURCE_LABELS: Record<string, string> = {

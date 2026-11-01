@@ -4,6 +4,7 @@ import { provideHttpClientTesting, HttpTestingController, TestRequest } from '@a
 import { provideRouter } from '@angular/router';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingCurriculumManagerComponent } from './coaching-curriculum-manager.component';
+import { KM7A_REAL, KM7A_STUBS } from './coaching-km7a-embeds.testing';
 
 // KM7 (01.11.2026): Müfredat Yönetimi is the single curriculum editor (filters, Turkish search, inline minutes/weight,
 // bulk status, link approval, quality view, YKS scope and outcome source editors, topic shares, Turkish labels).
@@ -18,6 +19,7 @@ describe('Müfredat Yönetimi (KM7)', () => {
     confirm.mockClear();
     TestBed.configureTestingModule({ imports: [CoachingCurriculumManagerComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
       { provide: ToasterService, useValue: { confirm, success: vi.fn(), error: vi.fn(), info: vi.fn() } }] });
+    TestBed.overrideComponent(CoachingCurriculumManagerComponent, { remove: { imports: KM7A_REAL }, add: { imports: KM7A_STUBS } });
     const fixture = TestBed.createComponent(CoachingCurriculumManagerComponent); fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
     http.expectOne(r => r.url.endsWith('/curriculum-management/children')).flush(page([]));
@@ -45,7 +47,7 @@ describe('Müfredat Yönetimi (KM7)', () => {
   it('filters by exam (ÖABT fields grouped), lesson and state and sends the search to the API unchanged', async () => {
     const env = setup(); const { c, http, el, fixture } = env;
     await topicsTab(env, []);
-    const group = el.querySelector('#curriculum-exam-filter optgroup') as HTMLOptGroupElement;
+    const group = el.querySelector('#curriculum-exam-filter optgroup[label="ÖABT"]') as HTMLOptGroupElement;
     expect(group.label).toBe('ÖABT'); expect(group.querySelectorAll('option').length).toBe(2);
     expect(text(el)).not.toContain('OABT_TURKCE');
     c.filters.examCode = 'AYT'; c.examFilterChanged();

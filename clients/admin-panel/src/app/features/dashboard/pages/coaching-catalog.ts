@@ -10,7 +10,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
 import { DistrictOption, LocationService, ProvinceOption } from '../../../core/services/location.service';
 import { RouterLink } from '@angular/router';
-import { CoachingTargetProgramsComponent } from './coaching-km7a-embeds';
+import { CoachingTargetProgramsComponent } from './coaching-target-programs';
 import { sourceLabel } from './coaching-curriculum-labels';
 
 type CatalogTab = 'schools' | 'programs';

@@ -9,7 +9,10 @@ import { environment } from '../../../../environments/environment';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { BULK_LIMIT, BulkKind, BulkResult, CoachingCurriculumManagerService, MappingDecision, PATCH_LIMIT, QualityIssue, QualityReport, Skipped, TopicPatch, chunk } from './coaching-curriculum-manager.service';
 import { CONFIDENCE_LABELS, MAPPING_STATUS_LABELS, METHOD_LABELS, QUALITY_ISSUE_LABELS, SOURCE_KIND_LABELS, YIELD_LABELS, examLabel, label } from './coaching-curriculum-labels';
-import { CoachingExamSessionsEditorComponent, CoachingOutcomeSourceEditorComponent, CoachingYksScopeEditorComponent, groupExamsForSelect } from './coaching-km7a-embeds';
+import { examDisplayName, groupExamsForSelect } from './coaching-exam-groups';
+import { CoachingExamSessionsEditorComponent } from './coaching-exam-sessions-editor';
+import { CoachingOutcomeSourceEditorComponent } from './coaching-outcome-source-editor';
+import { CoachingYksScopeEditorComponent } from './coaching-yks-scope-editor';
 import { CoachingCatalogImportComponent } from './coaching-catalog-import';
 import { CoachingCurriculumComponent } from './coaching-curriculum.component';
 import { CoachingOutcomesComponent } from './coaching-outcomes.component';
@@ -90,11 +93,12 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   }
   // ---- labels ----
   examName(code: string | null | undefined) { return examLabel(code, this.exams()); }
+  examOptionName(e: { code: string; name: string }) { return e.code.startsWith('OABT_') ? this.examName(e.code) : examDisplayName(e); }
   confidenceLabel(value: string) { return label(CONFIDENCE_LABELS, value); }
   methodLabel(value: string | undefined) { return label(METHOD_LABELS, value, 'Süre sürümü'); }
   sourceKindLabel(value: string | undefined) { return label(SOURCE_KIND_LABELS, value, 'Kazanım'); }
   mappingStatus(m: Mapping) { return m.status ?? (m.isApproved ? 'approved' : 'pending'); }
-  mappingLabel(m: Mapping) { return MAPPING_STATUS_LABELS[this.mappingStatus(m)] ?? 'İnceleme bekliyor'; }
+  mappingLabel(m: Mapping) { return MAPPING_STATUS_LABELS[this.mappingStatus(m)] ?? 'Onay bekliyor'; }
   issueLabel(issue: string) { return QUALITY_ISSUE_LABELS[issue] ?? 'Eksik bilgi'; }
   yieldLabel(weight: number | null | undefined) { return YIELD_LABELS[weight ?? 3] ?? 'Orta'; }
   nodeType(n: Node) {

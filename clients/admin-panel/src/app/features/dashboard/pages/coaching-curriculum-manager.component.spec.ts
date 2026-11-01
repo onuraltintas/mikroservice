@@ -3,12 +3,14 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { CoachingCurriculumManagerComponent } from './coaching-curriculum-manager.component';
+import { KM7A_REAL, KM7A_STUBS } from './coaching-km7a-embeds.testing';
 
 describe('Coaching curriculum manager', () => {
   const topic = { kind: 'topics', id: 'topic', name: 'Çarpanlar', path: 'Sayısal / Matematik / Sayılar / Çarpanlar', parentId: 'unit', parentKind: 'units', isActive: true,
     fingerprint: 'current', estimatedMinutes: 60, canDelete: false, blockers: ['1 çalışma kaydı'], children: 0, outcomes: [], estimates: [] };
   function setup() {
     TestBed.configureTestingModule({ imports: [CoachingCurriculumManagerComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    TestBed.overrideComponent(CoachingCurriculumManagerComponent, { remove: { imports: KM7A_REAL }, add: { imports: KM7A_STUBS } });
     const fixture = TestBed.createComponent(CoachingCurriculumManagerComponent); fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
     http.expectOne(r => r.url.endsWith('/curriculum-management/children')).flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 25 } });

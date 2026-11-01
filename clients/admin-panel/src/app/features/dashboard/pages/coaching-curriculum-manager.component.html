@@ -29,8 +29,7 @@
       <label for="curriculum-exam-filter">Sınav<select id="curriculum-exam-filter" [(ngModel)]="filters.examCode" (ngModelChange)="examFilterChanged()" [disabled]="busy()">
         <option value="">Tüm sınavlar</option>
         @for (group of examGroups(); track group.label) {
-          @if (group.label) { <optgroup [label]="group.label">@for (e of group.exams; track e.code) { <option [value]="e.code">{{ examName(e.code) }}</option> }</optgroup> }
-          @else { @for (e of group.exams; track e.code) { <option [value]="e.code">{{ e.name }} ({{ examName(e.code) }})</option> } }
+          <optgroup [label]="group.label">@for (e of group.exams; track e.code) { <option [value]="e.code">{{ examOptionName(e) }}</option> }</optgroup>
         }
       </select></label>
       <label for="curriculum-lesson-filter">Ders<select id="curriculum-lesson-filter" [(ngModel)]="filters.lessonId" (ngModelChange)="applyFilters()" [disabled]="busy() || !filters.examCode || tab === 'lessons'">
@@ -135,7 +134,7 @@
           <fieldset [disabled]="busy()" class="edit-fields">
             @if (creating()) { @if (parentKind(); as pk) { <label class="full">{{ labels[pk] }}<select aria-label="Bağlanacağı üst kayıt" name="parent" [ngModel]="form.parentId" (ngModelChange)="selectFormParent($event)" required><option [ngValue]="null">Üst kayıt seçin</option>@for (p of parentChoices(); track p.id) { <option [value]="p.id">{{ p.path || p.name }}</option> }</select><small>Seçenekleri soldaki üst kayıt aramasından bulabilirsiniz.</small></label> } }
             @if (kind === 'exams') { <label>Sınav kodu<input aria-label="Sınav kodu" name="examCode" [(ngModel)]="form.code" required maxlength="10" pattern="[A-Za-z0-9_]+" [readonly]="!creating()"><small>Örneğin LGS, KPSS veya ALES. Kaydettikten sonra kod korunur; adını değiştirebilirsiniz.</small></label>
-              <div class="full exam-sessions"><app-exam-sessions-editor [(sessions)]="form.sessions" (valid)="sessionsValid.set($event)" /></div>
+              <div class="full exam-sessions"><app-exam-sessions-editor [(sessions)]="form.sessions" (validChange)="sessionsValid.set($event)" /></div>
             }
             <label class="full">{{ kind === 'outcomes' ? 'Kazanım metni' : 'Ad' }}<textarea *ngIf="kind === 'outcomes'; else nameInput" name="name" [(ngModel)]="form.name" required maxlength="2000" rows="3"></textarea><ng-template #nameInput><input name="name" [(ngModel)]="form.name" required maxlength="300"></ng-template></label>
             @if (kind === 'lessons') {

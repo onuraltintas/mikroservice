@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingCatalogPage, CoachingCatalogService } from '../../../core/services/coaching-catalog.service';
 import { CoachingCatalogComponent } from './coaching-catalog';
+import { TARGET_PROGRAMS_REAL, TARGET_PROGRAMS_STUB } from './coaching-km7a-embeds.testing';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { LocationService } from '../../../core/services/location.service';
 
@@ -29,6 +30,7 @@ describe('CoachingCatalogComponent (target catalog)', () => {
         { provide: CoachingCatalogService, useValue: service }
       ]
     });
+    TestBed.overrideComponent(CoachingCatalogComponent, { remove: { imports: [TARGET_PROGRAMS_REAL] }, add: { imports: [TARGET_PROGRAMS_STUB] } });
     const fixture = TestBed.createComponent(CoachingCatalogComponent);
     return { fixture, component: fixture.componentInstance, service, toaster };
   }
