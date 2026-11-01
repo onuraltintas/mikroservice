@@ -151,3 +151,15 @@ test('after the team activates and approves records, a rerun keeps their decisio
   assert.match(conflict.stderr, /differs/);
   assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_topics WHERE "Source" = 'coaching-catalog-km3' AND "SourceId" = 'YDS_EN.1.01'`), 'Elle değiştirilmiş');
 });
+
+test('stops without changing anything after the team permanently deleted one of its records', { skip }, () => {
+  run(`CREATE TABLE IF NOT EXISTS coaching."AdminAuditRecords" ("Id" uuid PRIMARY KEY, "ServiceName" text, "Action" text, "ChangedFieldsJson" text);
+    INSERT INTO coaching."AdminAuditRecords" VALUES ('f0ca1000-0000-4000-8000-0000000000aa', 'Coaching', 'CatalogPermanentDelete',
+      '{"reason":"Yanlış konu","source":"coaching-catalog-km3","sourceId":"x"}');`);
+  const lessons = run(`SELECT count(*) FROM coaching.study_catalog_lessons`);
+  const result = psql(pack('apply.sql'));
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /permanently deleted 1 record/);
+  assert.equal(run(`SELECT count(*) FROM coaching.study_catalog_lessons`), lessons);
+  run(`DROP TABLE coaching."AdminAuditRecords";`);
+});
