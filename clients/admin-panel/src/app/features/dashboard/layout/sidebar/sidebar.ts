@@ -234,7 +234,7 @@ export class SidebarComponent {
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l4-4 3 3 5-6" /></svg>'
           },
           {
-            label: 'Ders ve hedef katalogları',
+            label: 'Okul ve program katalogları',
             route: '/dashboard/coaching/catalog',
             permission: ADMIN_PERMISSIONS.coachingView,
             role: 'SystemAdmin',
