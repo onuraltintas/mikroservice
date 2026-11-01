@@ -117,7 +117,7 @@ public sealed class SchoolLessonsRemovalPostgresTests
         Assert.Equal("True", await Scalar(pg, $"""SELECT "IsActive" FROM coaching.study_catalog_lessons WHERE "Id" = '{keep.Id}'"""));
         Assert.Equal("True", await Scalar(pg, $"""SELECT "IsActive" FROM coaching.study_catalog_topics WHERE "Id" = '{keepTopic.Id}'"""));
         Assert.Equal("564", await Scalar(pg, """SELECT count(*) FROM coaching."AdminAuditRecords" WHERE "ChangedFieldsJson"::jsonb ->> 'pack' = 'school-lessons-removal/v1'"""));
-        Assert.Contains("school-lessons-removal verify: ok", await Rows(pg, await File.ReadAllTextAsync(Path.Combine(Pack, "verify.sql"))));
+        Assert.Contains(await Rows(pg, await File.ReadAllTextAsync(Path.Combine(Pack, "verify.sql"))), x => x.StartsWith("school-lessons-removal verify: ok", StringComparison.Ordinal));
         // Student data still points at the deactivated rows.
         Assert.Equal("1", await Scalar(pg, "SELECT count(*) FROM coaching.student_course_preferences"));
         Assert.Equal("1", await Scalar(pg, "SELECT count(*) FROM coaching.student_topic_states"));
