@@ -135,6 +135,32 @@ test('loads the AGS, ÖABT, YDS and YÖKDİL drafts once, passive and pending ap
   assert.deepEqual(counts(), { AGS: '6/6/29/29', OABT: '17/20/146/146', YDS: '1/10/22/22', YOKDIL: '3/21/60/60' });
 });
 
+test('a rerun over the state production reached (c1ce79c pack, admin-panel renames, server-side hashes) changes nothing', { skip }, () => {
+  // Fresh install: the real ÖSYM hashes, the corrected names and no pending hash.
+  assert.equal(run(`SELECT "DocumentSha256" FROM coaching.official_curriculum_editions WHERE "Code" = 'km3-yds-en-2026'`),
+    'fd815d7a4941a94110038d895a40cb74728acc3b769b5f8c34d3f2bb6a3ae057');
+  assert.match(run(pack('verify.sql')), /pending PDF hashes: 0 editions/);
+  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_exams WHERE "Code" = 'OABT_KIM'`), 'ÖABT · Kimya / Kimya Teknolojisi');
+  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_topics WHERE "SourceId" = 'OABT_OKUL.2.01' AND "Source" = 'coaching-catalog-km3'`),
+    'Erken Çocuklukta Fen Eğitimi');
+  // What production holds: the 27 editions were written by the c1ce79c pack (its package hash); records the admin panel
+  // did not rename (here: the program topics and one outcome) may still carry the c1ce79c names.
+  run(`UPDATE coaching.official_curriculum_editions SET "PackageSha256" = 'f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab' WHERE "Code" LIKE 'km3-%';
+    UPDATE coaching.official_curriculum_topics SET "Name" = replace("Name", 'Erken Çocuklukta ', 'Erken Çocukluk ')
+      WHERE "Code" IN ('OABT_OKUL.2.01', 'OABT_OKUL.2.02', 'OABT_OKUL.2.03', 'OABT_OKUL.2.04');
+    UPDATE coaching.study_catalog_outcomes SET "Name" = 'Cloze test (paragrafta boşluk doldurma) — 2026-YDS/1 İngilizce, 17–26 (iki paragraf × 5). sorular'
+      WHERE "Code" = 'YDS_EN.3.01';`);
+  const rerun = psql(pack('apply.sql'));
+  assert.equal(rerun.status, 0, rerun.stderr);
+  assert.ok(notices(rerun).some(x => /^inserted: lessons 0, units 0, topics 0, outcomes 0, editions 0, mappings 0, ÖABT field exams 0/.test(x)), notices(rerun).join('\n'));
+  // Only the exact c1ce79c values are tolerated: any other stored name still stops the pack.
+  run(`UPDATE coaching.official_curriculum_topics SET "Name" = 'Başka bir ad' WHERE "Code" = 'OABT_OKUL.2.01'`);
+  const conflict = psql(pack('apply.sql'));
+  assert.notEqual(conflict.status, 0);
+  assert.match(conflict.stderr, /differs/);
+  run(`UPDATE coaching.official_curriculum_topics SET "Name" = 'Erken Çocuklukta Fen Eğitimi' WHERE "Code" = 'OABT_OKUL.2.01'`);
+});
+
 test('after the team activates and approves records, a rerun keeps their decisions; changed content stops it', { skip }, () => {
   run(`UPDATE coaching.study_catalog_lessons SET "IsActive" = true WHERE "Source" = 'coaching-catalog-km3' AND "SourceId" = 'AGS_SOZ';
     UPDATE coaching.study_catalog_topic_outcomes m SET "IsApproved" = true, "ReviewedAt" = now()
