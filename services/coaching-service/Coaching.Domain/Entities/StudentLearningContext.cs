@@ -29,6 +29,14 @@ public static class LearningPurposes
 
     public static bool IsExamPreparation(LearningPurpose purpose) => CatalogExamCode(purpose) is not null;
 
+    /// <summary>
+    /// KM8 (user decision 01.11.2026): the catalog keeps only exam lessons, so only exam purposes can be saved. School,
+    /// General and Undecided keep their numbers for existing rows; such a student chooses an exam before continuing.
+    /// </summary>
+    public static bool IsSelectable(LearningPurpose purpose) => IsExamPreparation(purpose);
+    public static bool IsRetired(LearningPurpose purpose) => Enum.IsDefined(purpose) && !IsSelectable(purpose);
+    public const string RetiredPurposeNotice = "Çalışma amacın artık desteklenmiyor; hazırlandığın sınavı seç.";
+
     /// <summary>Practice scopes a net target of this purpose may use.</summary>
     public static IReadOnlyList<string> NetExamCodes(LearningPurpose purpose, string? scoreType) => purpose switch
     {

@@ -36,7 +36,7 @@ public sealed class CoachingLearningSetupPostgresTests
             db.Add(profile); await db.SaveChangesAsync(); await CoachingLegacyPlanSeed.InsertAsync(db,plan,task); db.ChangeTracker.Clear();
             await db.Database.MigrateAsync();
             var curriculum = CurriculumVersion.Create("test-2026", "Test", "v1", 2026, 2026, "Test", null); curriculum.SetPublished(true);
-            var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 12, null); lesson.AssignCurriculum(curriculum.Id); lesson.SetActive(true);
+            var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 8, "LGS"); lesson.AssignCurriculum(curriculum.Id); lesson.SetActive(true);
             var unit = StudyCatalogUnit.Create("test", "unit", lesson.Id, "Sayılar", 1); unit.SetActive(true);
             var topic = StudyCatalogTopic.Create("test", "topic", lesson.Id, unit.Id, "Sayılar", null, 1, 30); topic.SetActive(true);
             var hours = StudyAvailability.Create(student, "Europe/Istanbul"); hours.ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]);
@@ -45,14 +45,14 @@ public sealed class CoachingLearningSetupPostgresTests
             var accounts = new CoachingOwnedProfilePersistenceTests.FakeAccounts();
             accounts.Users[student] = new(student, "Test", "Student", "test@example.test", true, true, ["Student"], null);
             var service = new CoachingLearningSetupService(db, new CoachingAccessPolicy(actor), accounts);
-            var saved = await service.SaveAsync(new(null, 2026, LearningPurpose.School, null, null, null,
+            var saved = await service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null,
                 [new(lesson.Id, 1, 3)], [new(topic.Id, DeclaredTopicStatus.NeedsReview)], true), default);
             Assert.True(saved.IsReady); db.ChangeTracker.Clear();
             var catalog = await service.GetCatalogAsync(lesson.Id, 1, default); Assert.Single(catalog.Topics.Items);
             await using var second = new CoachingDbContext(options);
             var resumedService = new CoachingLearningSetupService(second, new CoachingAccessPolicy(actor), accounts);
             var resumed = await resumedService.GetAsync(default); Assert.True(resumed.IsReady);
-            var updated = await resumedService.SaveAsync(new(resumed.Context!.Version, 2026, LearningPurpose.School, null, null, null,
+            var updated = await resumedService.SaveAsync(new(resumed.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,
                 [new(lesson.Id, 2, null)], [new(topic.Id, DeclaredTopicStatus.Studied)], true), default);
             Assert.True(updated.Context!.Version > resumed.Context.Version);
             second.ChangeTracker.Clear();

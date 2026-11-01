@@ -20,8 +20,8 @@ public sealed class CoachingLearningSetupApiTests
         Assert.Equal("Student", typeof(LearningSetupController).GetCustomAttributes(typeof(AuthorizeAttribute), true).Cast<AuthorizeAttribute>().Single().Roles);
         Assert.IsType<OkObjectResult>(await controller.Get(default));
         Assert.IsType<BadRequestObjectResult>(await controller.Save(new(null, 2026, LearningPurpose.Yks, null, null, null, [], [], false), default));
-        Assert.IsType<OkObjectResult>(await controller.Save(new(null, 2026, LearningPurpose.School, null, null, null, [], [], false), default));
-        Assert.IsType<ConflictObjectResult>(await controller.Save(new(null, 2026, LearningPurpose.School, null, null, null, [], [], false), default));
+        Assert.IsType<OkObjectResult>(await controller.Save(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default));
+        Assert.IsType<ConflictObjectResult>(await controller.Save(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default));
         f.Actor.Roles = ["Teacher"];
         Assert.Equal(403, Assert.IsType<ObjectResult>(await controller.Get(default)).StatusCode);
     }

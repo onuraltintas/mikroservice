@@ -43,7 +43,7 @@ describe('StudentLearningSetupComponent', () => {
   it('prevents repeated saves and leaving during a pending request', async () => {
     const { component, service } = await setup();
     const pending = new Subject<LearningSetupView>(); service.save.mockReturnValueOnce(pending);
-    component.purpose = 'School'; component.savePurpose(); component.savePurpose();
+    component.purpose = 'Lgs'; component.targetExamYear = 2027; component.savePurpose(); component.savePurpose();
     expect(service.save).toHaveBeenCalledTimes(1); expect(await component.canLeavePage()).toBe(false);
     pending.next(empty); pending.complete(); expect(component.saving()).toBe(false);
   });
@@ -53,7 +53,7 @@ describe('StudentLearningSetupComponent', () => {
     await component.load(); fixture.detectChanges(); await fixture.whenStable();
     expect(component.ready()).toBe(false); expect(fixture.nativeElement.textContent).toContain('yüklenemedi');
   });
-  const context = { id: 'ctx', version: 3, academicYearStart: 2026, purpose: 'School' as const, targetExamYear: null,
+  const context = { id: 'ctx', version: 3, academicYearStart: 2026, purpose: 'Lgs' as const, targetExamYear: 2027,
     primaryScoreType: null, foreignLanguage: null, curriculumVersionId: 'program', coursePreferences: [{ lessonId: 'lesson', priority: 1, selfReportedDifficulty: 3 }], topicStates: [], startingStatusReviewed: false };
   it('prefills existing fields and saves course priorities before starting topics', async () => {
     const { component, service } = await setup({ ...empty, context, nextStep: 'Courses' });
@@ -94,8 +94,8 @@ describe('StudentLearningSetupComponent', () => {
   });
   it('saves purpose changes with empty old scope and keeps optional school goals absent', async () => {
     const { component, service } = await setup({ ...empty, context });
-    component.purpose = 'General'; component.savePurpose();
-    expect(service.save.mock.calls[0][0]).toMatchObject({ courses: [], topics: [], primaryScoreType: null, targetExamYear: null });
+    component.purpose = 'Yds'; component.savePurpose();
+    expect(service.save.mock.calls[0][0]).toMatchObject({ purpose: 'Yds', courses: [], topics: [], primaryScoreType: null, targetExamYear: 2027 });
   });
   it('requires at least one course and resets reviewed state when the course scope changes', async () => {
     const { component, service } = await setup();

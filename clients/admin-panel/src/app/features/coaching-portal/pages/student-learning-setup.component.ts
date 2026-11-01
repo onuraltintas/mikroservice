@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { CoachingLearningSetupService, LearningCatalog, LearningCourse, LearningExamSession, LearningPurpose, LearningSetupUpdate, LearningSetupView, LearningTopic, TopicDeclaration } from '../../../core/services/coaching-learning-setup.service';
+import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningExamSession, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
 import { CoachingProfileComponent } from '../../../../../shared/coaching-profile.component';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
@@ -29,18 +29,19 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly catalog = signal<LearningCatalog | null>(null);
   readonly steps = [{ id: 'Profile', label: 'Eğitim bilgilerim' }, { id: 'Purpose', label: 'Çalışma amacım' },
     { id: 'Availability', label: 'Müsaitliğim' }, { id: 'Courses', label: 'Derslerim' }, { id: 'Starting', label: 'Başlangıç durumum' }, { id: 'Preview', label: 'Plan önizlemesi' }];
-  readonly purposes: { value: LearningPurpose; label: string }[] = [{ value: 'School', label: 'Okul derslerimi desteklemek' },
+  // KM8 (01.11.2026): only exam purposes; the catalog keeps only exam lessons. KM1 added AGS (+ÖABT), YDS and YÖKDİL
+  // (the language exams are prepared in English only).
+  readonly purposes: { value: ExamLearningPurpose; label: string }[] = [
     { value: 'Lgs', label: 'LGS hazırlığı' }, { value: 'Yks', label: 'YKS hazırlığı' },
-    // KM1 (01.11.2026): AGS (+ÖABT), YDS and YÖKDİL preparation; the language exams are prepared in English only.
-    { value: 'Ags', label: 'AGS / ÖABT hazırlığı' }, { value: 'Yds', label: 'YDS hazırlığı' }, { value: 'Yokdil', label: 'YÖKDİL hazırlığı' },
-    { value: 'General', label: 'Genel çalışma' }, { value: 'Undecided', label: 'Henüz karar vermedim' }];
+    { value: 'Ags', label: 'AGS / ÖABT hazırlığı' }, { value: 'Yds', label: 'YDS hazırlığı' }, { value: 'Yokdil', label: 'YÖKDİL hazırlığı' }];
+  readonly retiredPurposeNotice = RETIRED_PURPOSE_NOTICE;
   readonly oabtFields = Object.entries(OABT_FIELDS);
   readonly yokdilFields = Object.entries(YOKDIL_FIELDS);
-  private static readonly examCodes: Partial<Record<LearningPurpose, string>> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
+  private static readonly examCodes: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
   @ViewChild(CoachingProfileComponent) profile?: CoachingProfileComponent;
   @ViewChild(StudentStudyAvailabilityComponent) hours?: StudentStudyAvailabilityComponent;
   academicYearStart = new Date().getMonth() >= 8 ? new Date().getFullYear() : new Date().getFullYear() - 1;
-  purpose: LearningPurpose = 'Undecided'; targetExamYear: number | null = null; primaryScoreType = 'TYT'; foreignLanguage = '';
+  purpose: ExamLearningPurpose | '' = ''; targetExamYear: number | null = null; primaryScoreType = 'TYT'; foreignLanguage = '';
   targetExamSessionId: string | null = null; oabtField = ''; yokdilField = '';
   courses: LearningCourse[] = []; topics: LearningTopic[] = []; startingStatusReviewed = false;
   readonly expandedTopicId = signal<string | null>(null);
@@ -61,7 +62,8 @@ export class StudentLearningSetupComponent implements OnInit {
   private apply(state: LearningSetupView) {
     this.state.set(state); const c = state.context;
     if (c) {
-      this.academicYearStart = c.academicYearStart; this.purpose = c.purpose; this.targetExamYear = c.targetExamYear;
+      // KM8: a retired purpose (School, General, Undecided) is not preselected; the student chooses an exam.
+      this.academicYearStart = c.academicYearStart; this.purpose = isRetiredPurpose(c.purpose) ? '' : c.purpose as ExamLearningPurpose; this.targetExamYear = c.targetExamYear;
       this.primaryScoreType = c.purpose === 'Yks' ? c.primaryScoreType ?? 'TYT' : 'TYT'; this.foreignLanguage = c.purpose === 'Yks' ? c.foreignLanguage ?? '' : '';
       this.oabtField = c.purpose === 'Ags' ? c.primaryScoreType ?? '' : ''; this.yokdilField = c.purpose === 'Yokdil' ? c.primaryScoreType ?? '' : '';
       this.targetExamSessionId = c.targetExamSessionId ?? null;
@@ -77,10 +79,12 @@ export class StudentLearningSetupComponent implements OnInit {
     if (step === 'Courses' || step === 'Starting') this.loadCatalog();
   }
   changed() { this.dirty = true; }
-  examPurpose() { return !!StudentLearningSetupComponent.examCodes[this.purpose]; }
+  examPurpose() { return !!this.purpose; }
+  /** KM8: the saved purpose can no longer be chosen; only Profile and Purpose stay open until an exam is saved. */
+  purposeRetired() { const state = this.state(); return !!state?.purposeRetired || isRetiredPurpose(state?.context?.purpose); }
   /** KM1: upcoming sessions of the purpose's exam; the student picks one only when there are several. */
   sessionChoices(): LearningExamSession[] {
-    const code = StudentLearningSetupComponent.examCodes[this.purpose];
+    const code = this.purpose ? StudentLearningSetupComponent.examCodes[this.purpose] : null;
     return code ? (this.state()?.examSessions ?? []).filter(x => x.examCode === code) : [];
   }
   selectSession(id: string | null) {
@@ -96,6 +100,7 @@ export class StudentLearningSetupComponent implements OnInit {
   }
   savePurpose() {
     if (this.loading() || this.saving() || !this.ready()) return;
+    if (!this.purpose) { this.error.set('Hazırlandığın sınavı seç.'); return; }
     if (!Number.isInteger(this.academicYearStart) || this.academicYearStart < 2000 || this.academicYearStart > 2200
       || this.examPurpose() && (!Number.isInteger(this.targetExamYear) || this.targetExamYear! < this.academicYearStart || this.targetExamYear! > this.academicYearStart + 5)
       || this.purpose === 'Yks' && this.primaryScoreType === 'DIL' && !this.foreignLanguage
@@ -109,7 +114,7 @@ export class StudentLearningSetupComponent implements OnInit {
     this.persist(this.request(sameScope ? this.courses : [], sameScope ? this.topics : [], !!sameScope && this.startingStatusReviewed), 'Availability');
   }
   private request(courses = this.courses, topics = this.topics, reviewed = this.startingStatusReviewed): LearningSetupUpdate {
-    return { expectedVersion: this.state()?.context?.version ?? null, academicYearStart: this.academicYearStart, purpose: this.purpose,
+    return { expectedVersion: this.state()?.context?.version ?? null, academicYearStart: this.academicYearStart, purpose: this.purpose as ExamLearningPurpose,
       targetExamYear: this.examPurpose() ? this.targetExamYear : null,
       primaryScoreType: this.purpose === 'Yks' ? this.primaryScoreType : this.purpose === 'Ags' ? this.oabtField || null : this.purpose === 'Yokdil' ? this.yokdilField || null : null,
       foreignLanguage: this.purpose === 'Yks' && this.primaryScoreType === 'DIL' ? this.foreignLanguage : this.purpose === 'Yds' || this.purpose === 'Yokdil' ? 'English' : null,

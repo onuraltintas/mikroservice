@@ -28,8 +28,8 @@ LOCK TABLE coaching.study_catalog_lessons, coaching.study_catalog_units, coachin
 DO $$
 DECLARE deleted integer;
 BEGIN
-    IF to_regclass('coaching.admin_audit_records') IS NOT NULL THEN
-        EXECUTE $q$SELECT count(*) FROM coaching.admin_audit_records WHERE "ServiceName" = 'Coaching'
+    IF to_regclass('coaching."AdminAuditRecords"') IS NOT NULL THEN
+        EXECUTE $q$SELECT count(*) FROM coaching."AdminAuditRecords" WHERE "ServiceName" = 'Coaching'
             AND "Action" = 'CatalogPermanentDelete' AND ("ChangedFieldsJson")::jsonb ->> 'source' = 'coaching-catalog-km3'$q$ INTO deleted;
         IF deleted > 0 THEN
             RAISE EXCEPTION 'The team permanently deleted % record(s) of source coaching-catalog-km3; this pack would bring them back. Nothing changed.', deleted;

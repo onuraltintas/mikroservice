@@ -13,6 +13,8 @@ public sealed record LearningSetupView(StudentLearningContext? Context, string N
 {
     /// <summary>KM1: upcoming sessions of the active exams a purpose can aim for (LGS, TYT, AGS, YDS, YOKDIL).</summary>
     public IReadOnlyList<LearningExamSessionView> ExamSessions { get; init; } = [];
+    /// <summary>KM8: the saved purpose (School, General, Undecided) can no longer be chosen; the student must pick an exam.</summary>
+    public bool PurposeRetired => Context is not null && LearningPurposes.IsRetired(Context.Purpose);
 }
 public sealed record LearningExamSessionView(Guid Id, string ExamCode, string ExamName, DateOnly Date, string Label,
     DateOnly? ApplicationStart, DateOnly? ApplicationEnd);

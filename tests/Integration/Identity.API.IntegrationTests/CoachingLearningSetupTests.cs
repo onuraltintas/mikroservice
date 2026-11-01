@@ -33,7 +33,7 @@ public sealed class CoachingLearningSetupTests
         f.Db.ChangeTracker.Clear();
         var resumed = await f.Service.GetAsync(default);
         Assert.Equal("English", resumed.Context!.ForeignLanguage);
-        await Assert.ThrowsAsync<BusinessRuleException>(() => f.Service.SaveAsync(new(null, 2026, LearningPurpose.School, null, null, null, [], [], false), default));
+        await Assert.ThrowsAsync<BusinessRuleException>(() => f.Service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default));
         await Assert.ThrowsAsync<ArgumentException>(() => f.Service.SaveAsync(new(result.Context!.Version, 2026, LearningPurpose.Yks, 2027, "DIL", null, [], [], false), default));
         await Assert.ThrowsAsync<ArgumentException>(() => f.Service.SaveAsync(new(result.Context!.Version, 2026, LearningPurpose.Lgs, null, null, null, [], [], false), default));
         Assert.Single(f.Db.StudentLearningContexts);
@@ -45,22 +45,23 @@ public sealed class CoachingLearningSetupTests
         await using var f = await Fixture.Create();
         var catalog = CurriculumVersion.Create("test-2026", "Test programı", "v1", 2026, 2026, "Test kaynağı", null);
         catalog.SetPublished(true);
-        var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 12, null);
+        // KM8: only exam lessons; a lesson of another exam is out of scope.
+        var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 8, "LGS");
         lesson.AssignCurriculum(catalog.Id); lesson.SetActive(true);
-        var wrongGrade = StudyCatalogLesson.Create("test", "wrong", "11. sınıf", 11, null);
+        var wrongGrade = StudyCatalogLesson.Create("test", "wrong", "TYT Matematik", null, "TYT");
         wrongGrade.AssignCurriculum(catalog.Id); wrongGrade.SetActive(true);
         var unit = StudyCatalogUnit.Create("test", "unit", lesson.Id, "Sayılar", 1); unit.SetActive(true);
         var topic = StudyCatalogTopic.Create("test", "topic", lesson.Id, unit.Id, "Doğal sayılar", null, 1); topic.SetActive(true);
         f.Db.AddRange(catalog, lesson, wrongGrade, unit, topic); await f.Db.SaveChangesAsync();
-        var saved = await f.Service.SaveAsync(new(null, 2026, LearningPurpose.School, null, null, null, [], [], false), default);
+        var saved = await f.Service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default);
         var choices = await f.Service.GetCatalogAsync(lesson.Id, 1, default);
         Assert.Single(choices.Lessons); Assert.Equal(1, choices.MissingDurationCount);
         Assert.Null(Assert.Single(choices.Topics.Items).EstimatedMinutes);
-        await Assert.ThrowsAsync<ArgumentException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.School, null, null, null,
+        await Assert.ThrowsAsync<ArgumentException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,
             [new(wrongGrade.Id, 1, null)], [], false), default));
         var hours = StudyAvailability.Create(f.Student, "Europe/Istanbul");
         hours.ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]); f.Db.Add(hours); await f.Db.SaveChangesAsync();
-        var ready = await f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.School, null, null, null,
+        var ready = await f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,
             [new(lesson.Id, 1, 3)], [new(topic.Id, DeclaredTopicStatus.Studied)], true), default);
         Assert.True(ready.IsReady); Assert.Equal("Preview", ready.NextStep);
         Assert.Equal("StudentDeclaration", Assert.Single(ready.Context!.TopicStates).Source);

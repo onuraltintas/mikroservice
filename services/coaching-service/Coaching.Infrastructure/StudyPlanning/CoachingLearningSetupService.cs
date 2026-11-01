@@ -36,14 +36,14 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             || r.Courses.Select(x => x.LessonId).Distinct().Count() != r.Courses.Count
             || r.Topics.Select(x => x.TopicId).Distinct().Count() != r.Topics.Count)
             throw new ArgumentException("Ders ve konu seçimlerini kontrol edin.");
+        // KM8: new saves take exam purposes only; a School/General/Undecided row stays readable until the student re-chooses.
+        if (!LearningPurposes.IsSelectable(r.Purpose)) throw new ArgumentException(LearningPurposes.RetiredPurposeNotice);
         var candidate = StudentLearningContext.Create(profile.UserId, r.AcademicYearStart, r.Purpose, r.TargetExamYear, r.PrimaryScoreType, r.ForeignLanguage);
-        if (r.Purpose == LearningPurpose.School && profile.EducationStatus == CoachingEducationStatus.Graduate)
-            throw new ArgumentException("Mezun öğrenci için genel çalışma veya sınav hazırlığı seçin.");
         var context = await Context(profile.UserId).SingleOrDefaultAsync(ct);
         if (context is null ? r.ExpectedVersion.HasValue : r.ExpectedVersion != context.Version) throw Conflict();
         await ValidateSessionAsync(r, ct);
-        var curriculum = await ResolveCurriculum(candidate, profile, ct);
-        var lessonQuery = Lessons(candidate, profile).Where(x => x.CurriculumVersionId == (curriculum == null ? (Guid?)null : curriculum.Id) && x.CurriculumVersionId != null);
+        var curriculum = await ResolveCurriculum(candidate, ct);
+        var lessonQuery = Lessons(candidate).Where(x => x.CurriculumVersionId == (curriculum == null ? (Guid?)null : curriculum.Id) && x.CurriculumVersionId != null);
         var ids = r.Courses.Select(x => x.LessonId).ToArray();
         if (await lessonQuery.CountAsync(x => Enumerable.Contains(ids, x.Id), ct) != ids.Length)
             throw new ArgumentException("Eğitim bağlamına uygun aktif dersleri seçin.");
@@ -85,9 +85,10 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
     private async Task<LearningCatalogView> GetCatalog(CoachingStudentProfile profile, StudentLearningContext? context, Guid? lessonId, int pageNumber, CancellationToken ct)
     {
         if (context is null) return new(null, [], new([], 0, pageNumber, 50), 0, ["Önce çalışma amacınızı kaydedin."]);
-        var curriculum = await ResolveCurriculum(context, profile, ct);
+        if (LearningPurposes.IsRetired(context.Purpose)) return new(null, [], new([], 0, pageNumber, 50), 0, [LearningPurposes.RetiredPurposeNotice]);
+        var curriculum = await ResolveCurriculum(context, ct);
         var curriculumId = curriculum?.Id;
-        var lessons = Lessons(context, profile).Where(x => curriculumId != null && x.CurriculumVersionId == curriculumId);
+        var lessons = Lessons(context).Where(x => curriculumId != null && x.CurriculumVersionId == curriculumId);
         var eligibleTopics = Topics(lessons,context);
         var choices = await lessons.OrderBy(x => x.Name).ThenBy(x => x.Id).Select(x => new LearningLessonView(x.Id, x.Name, x.GradeNumber, x.ExamCode,
             eligibleTopics.Count(t => t.LessonId == x.Id), eligibleTopics.Count(t => t.LessonId == x.Id && t.EstimatedMinutes == null))).ToArrayAsync(ct);
@@ -108,21 +109,20 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
     private IQueryable<StudentLearningContext> Context(Guid student) => db.StudentLearningContexts
         .Include(x => x.CoursePreferences).Include(x => x.TopicStates).Where(x => x.StudentUserId == student);
 
-    private IQueryable<StudyCatalogLesson> Lessons(StudentLearningContext c, CoachingStudentProfile p)
+    // KM8: only exam purposes have lessons; the grade-based School/General branches are gone with the school lessons.
+    private IQueryable<StudyCatalogLesson> Lessons(StudentLearningContext c)
     {
         var query = db.StudyCatalogLessons.AsNoTracking().Where(x => x.IsActive);
         var yksTopics=YksCatalogEligibility.Topics(db,c);
         return c.Purpose switch
         {
-            LearningPurpose.School => query.Where(x => x.GradeNumber == p.GradeLevel && x.ExamCode == null),
             LearningPurpose.Lgs => query.Where(x => x.ExamCode == "LGS"),
             LearningPurpose.Yks => query.Where(x => yksTopics.Any(t=>t.LessonId==x.Id&&t.IsActive)),
             LearningPurpose.Ags or LearningPurpose.Yds => ByExam(query, LearningPurposes.LessonExamCodes(c.Purpose, c.PrimaryScoreType)),
             // KM6: a YÖKDİL student sees the lesson of their own field (source id = field code) and any shared lesson.
             LearningPurpose.Yokdil => ByExam(query, LearningPurposes.LessonExamCodes(c.Purpose))
                 .Where(x => c.PrimaryScoreType == null || x.SourceId == c.PrimaryScoreType || !x.SourceId.StartsWith("YOKDIL_")),
-            _ when p.GradeLevel.HasValue => query.Where(x => x.GradeNumber == p.GradeLevel || x.GradeNumber == null),
-            _ => query
+            _ => query.Where(x => false)
         };
     }
 
@@ -164,9 +164,9 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             && (t.ParentId == null || db.StudyCatalogTopics.Any(parent => parent.Id == t.ParentId && parent.IsActive))
         select t;
 
-    private Task<CurriculumVersion?> ResolveCurriculum(StudentLearningContext c, CoachingStudentProfile p, CancellationToken ct)
+    private Task<CurriculumVersion?> ResolveCurriculum(StudentLearningContext c, CancellationToken ct)
     {
-        var lessons = Lessons(c, p);
+        var lessons = Lessons(c);
         return db.CurriculumVersions.AsNoTracking().Where(x => x.IsPublished && x.ValidFromYear <= c.AcademicYearStart
             && x.ValidToYear >= c.AcademicYearStart && lessons.Any(l => l.CurriculumVersionId == x.Id))
             .OrderByDescending(x => x.ValidFromYear).ThenBy(x => x.Code).FirstOrDefaultAsync(ct);
@@ -178,12 +178,12 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         if (!p.IsEducationComplete) missing.Add("Profile");
         var sessions = await SessionsAsync(ct);
         if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions }; }
-        if (p.EducationStatus != c.EducationStatus || p.GradeLevel != c.GradeLevel) missing.Add("Purpose");
+        if (LearningPurposes.IsRetired(c.Purpose) || p.EducationStatus != c.EducationStatus || p.GradeLevel != c.GradeLevel) missing.Add("Purpose");
         var hours = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == p.UserId, ct);
         if (hours is null || hours.Windows.Count == 0) missing.Add("Availability");
-        var curriculum = await ResolveCurriculum(c, p, ct);
+        var curriculum = await ResolveCurriculum(c, ct);
         if (curriculum is null || curriculum.Id != c.CurriculumVersionId) missing.Add("Catalog");
-        var lessonQuery = Lessons(c, p).Where(x => x.CurriculumVersionId == c.CurriculumVersionId && x.CurriculumVersionId != null);
+        var lessonQuery = Lessons(c).Where(x => x.CurriculumVersionId == c.CurriculumVersionId && x.CurriculumVersionId != null);
         var ids = c.CoursePreferences.Select(x => x.LessonId).ToArray();
         var eligibleTopics = Topics(lessonQuery,c);
         if (ids.Length == 0 || await lessonQuery.CountAsync(x => Enumerable.Contains(ids, x.Id), ct) != ids.Length
