@@ -31,8 +31,10 @@ async function fixture(context){
     if(req.method()!=='GET')writes.push({path});return ok([]);
   });return{writes,old,setMissing:value=>missing=value,setConflict:value=>conflict=value};
 }
-async function open(page){await page.goto('/coaching-portal/weekly-plan');await page.getByTestId('weekly-preview-link').click();await expect(page.getByRole('heading',{name:'Çalışma planını önizle',exact:true})).toBeVisible();await expect(page.getByLabel('Hedef bitiş tarihi',{exact:true})).toHaveValue('2027-06-01');await page.getByRole('button',{name:'Önizleme oluştur',exact:true}).click();await expect(page.getByRole('heading',{name:'Dersler ne zaman bitecek?',exact:true})).toBeVisible();}
-async function create(page){await page.getByRole('checkbox',{name:'Tarihleri, ders bitişlerini ve süreleri kontrol ettim.',exact:true}).check();await page.getByRole('button',{name:'Çalışma planı taslağını oluştur',exact:true}).click();await expect(page.getByRole('heading',{name:'Haftalık derslerimden çalışma planım',exact:true})).toBeVisible();}
+async function open(page){await page.goto('/coaching-portal/plan/weekly');await page.getByTestId('weekly-preview-link').click();await expect(page.getByRole('heading',{name:'Çalışma planını önizle',exact:true})).toBeVisible();await expect(page.getByLabel('Hedef bitiş tarihi',{exact:true})).toHaveValue('2027-06-01');await page.getByRole('button',{name:'Önizleme oluştur',exact:true}).click();await expect(page.getByRole('heading',{name:'Dersler ne zaman bitecek?',exact:true})).toBeVisible();}
+async function create(page){await page.getByRole('checkbox',{name:'Tarihleri, ders bitişlerini ve süreleri kontrol ettim.',exact:true}).check();await page.getByRole('button',{name:'Çalışma planı taslağını oluştur',exact:true}).click();
+  // T4: the new draft opens on Planım (?plan=…) as its status line instead of a page heading.
+  await expect(page).toHaveURL(/\/coaching-portal\/plan\?plan=generated$/);await expect(page.locator('.plan-head .plan-status')).toContainText('Haftalık derslerimden çalışma planım');await expect(page.locator('.plan-head .plan-status')).toContainText('Taslak');}
 
 test('weekly draft previews course finish dates and requires choosing extension before creating a separate plan',async({context,page})=>{
   const f=await fixture(context);await open(page);await expect(page.getByText('07.06.2027',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Çalışma planı taslağını oluştur',exact:true})).toBeDisabled();expect(f.writes).toHaveLength(0);
