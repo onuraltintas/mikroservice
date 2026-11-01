@@ -47,7 +47,7 @@ export interface ScoreModelHistoryItem {
             @for (item of p.errors; track $index) { <li>{{ item.line ? item.line + '. satır: ' : '' }}{{ item.message }}</li> }
           </ul>
         }
-        <div class="overflow-x-auto"><table class="mt-2 w-full text-sm">
+        <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Önizleme tablosu"><table class="mt-2 w-full text-sm">
           <thead><tr><th class="text-left">Puan türü</th><th class="text-left">Taban</th><th class="text-left">Katsayı</th><th class="text-left">Sıralama satırı</th><th class="text-left">Durum</th></tr></thead>
           <tbody>
             @for (model of p.models; track model.scoreType) {
@@ -62,7 +62,7 @@ export interface ScoreModelHistoryItem {
     <section class="mb-6 rounded-xl border border-slate-200 p-4 dark:border-slate-700" aria-labelledby="score-models-heading">
       <h2 id="score-models-heading" class="mb-3 font-semibold">Yüklü veriler</h2>
       <label class="mb-3 grid max-w-xl gap-1 text-sm">Silme veya geri yükleme gerekçesi (5–500 karakter)<input name="changeReason" [(ngModel)]="changeReason" maxlength="500" class="rounded border px-2 py-1 dark:bg-slate-900"></label>
-      <div class="overflow-x-auto"><table class="w-full text-sm">
+      <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Yüklü veriler tablosu"><table class="w-full text-sm">
         <thead><tr><th class="text-left">Yıl</th><th class="text-left">Puan türü</th><th class="text-left">Taban</th><th class="text-left">Sıralama satırı</th><th class="text-left">Yüklenme</th><th class="text-left"><span class="sr-only">İşlem</span></th></tr></thead>
         <tbody>
           @for (model of models(); track model.id) {
@@ -75,7 +75,7 @@ export interface ScoreModelHistoryItem {
     <section class="rounded-xl border border-slate-200 p-4 dark:border-slate-700" aria-labelledby="score-history-heading">
       <h2 id="score-history-heading" class="mb-3 font-semibold">Geçmiş</h2>
       <label class="mb-3 grid w-40 gap-1 text-sm">Yıl<input type="number" name="historyYear" min="2018" max="2100" [(ngModel)]="historyYear" (ngModelChange)="loadHistory()" class="rounded border px-2 py-1 dark:bg-slate-900" placeholder="Tümü"></label>
-      <div class="overflow-x-auto"><table class="w-full text-sm">
+      <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Geçmiş tablosu"><table class="w-full text-sm">
         <thead><tr><th class="text-left">Tarih</th><th class="text-left">İşlem</th><th class="text-left">Yıl</th><th class="text-left">Puan türü</th><th class="text-left">Taban</th><th class="text-left">Sıralama satırı</th><th class="text-left">Dosya özeti</th><th class="text-left">Gerekçe</th><th class="text-left"><span class="sr-only">İşlem</span></th></tr></thead>
         <tbody>
           @for (item of history(); track item.id) {

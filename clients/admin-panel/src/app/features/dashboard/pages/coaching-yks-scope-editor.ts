@@ -34,15 +34,15 @@ export const YKS_SCORE_TYPES: Record<string, string[]> = { TYT: ['TYT', 'SAY', '
         @for (scope of drafts(); track $index; let i = $index) {
           <div class="grid gap-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700 sm:grid-cols-3" role="group" [attr.aria-label]="(i + 1) + '. YKS kapsamı'">
             <label class="grid gap-1 text-sm">Oturum
-              <select [name]="'yks-exam-' + i" [(ngModel)]="scope.examCode" (ngModelChange)="examChanged(scope)" class="rounded-lg border p-2 dark:bg-gray-800">
+              <select [name]="'yks-exam-' + i" [attr.name]="'yks-exam-' + i" [(ngModel)]="scope.examCode" (ngModelChange)="examChanged(scope)" class="rounded-lg border p-2 dark:bg-gray-800">
                 <option value="TYT">TYT</option><option value="AYT">AYT</option><option value="YDT">YDT</option>
               </select></label>
             <label class="grid gap-1 text-sm">Puan türü
-              <select [name]="'yks-score-' + i" [(ngModel)]="scope.scoreType" class="rounded-lg border p-2 dark:bg-gray-800">
+              <select [name]="'yks-score-' + i" [attr.name]="'yks-score-' + i" [(ngModel)]="scope.scoreType" class="rounded-lg border p-2 dark:bg-gray-800">
                 @for (type of scoreTypes(scope.examCode); track type) { <option [value]="type">{{ scoreName(type) }}</option> }
               </select></label>
             <label class="grid gap-1 text-sm">Test
-              <select [name]="'yks-test-' + i" [(ngModel)]="scope.testCode" class="rounded-lg border p-2 dark:bg-gray-800">
+              <select [name]="'yks-test-' + i" [attr.name]="'yks-test-' + i" [(ngModel)]="scope.testCode" class="rounded-lg border p-2 dark:bg-gray-800">
                 @for (test of tests(scope.examCode); track test.code) { <option [value]="test.code">{{ test.label }}</option> }
               </select></label>
             @if (outcomes().length) {

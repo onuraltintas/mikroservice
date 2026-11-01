@@ -37,9 +37,9 @@ export function validSourceUrl(value: string): boolean {
           @if (!ids().length) { <p class="text-sm text-gray-600 dark:text-gray-300">Kaynak kimliği yok.</p> }
           @for (item of ids(); track $index; let i = $index) {
             <div class="grid gap-2 sm:grid-cols-[1fr_1fr_auto]" role="group" [attr.aria-label]="(i + 1) + '. kaynak kimliği'">
-              <label class="grid gap-1 text-sm">Kaynak<input [name]="'source-' + i" [(ngModel)]="item.source" maxlength="100" class="rounded-lg border p-2 dark:bg-gray-800">
+              <label class="grid gap-1 text-sm">Kaynak<input [name]="'source-' + i" [attr.name]="'source-' + i" [(ngModel)]="item.source" maxlength="100" class="rounded-lg border p-2 dark:bg-gray-800">
                 <span class="text-xs text-gray-600 dark:text-gray-300">{{ label(item.source) }}</span></label>
-              <label class="grid gap-1 text-sm">Kimlik<input [name]="'source-id-' + i" [(ngModel)]="item.sourceId" maxlength="100" class="rounded-lg border p-2 dark:bg-gray-800"></label>
+              <label class="grid gap-1 text-sm">Kimlik<input [name]="'source-id-' + i" [attr.name]="'source-id-' + i" [(ngModel)]="item.sourceId" maxlength="100" class="rounded-lg border p-2 dark:bg-gray-800"></label>
               <button type="button" (click)="remove(i)" class="self-end rounded-lg border px-3 py-2 text-sm">Kaldır</button>
             </div>
           }
