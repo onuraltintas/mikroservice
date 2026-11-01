@@ -97,7 +97,7 @@
           </div>
         </section>
       }
-      @if (bulkMessage()) { <div class="notice success" role="status"><p>{{ bulkMessage() }}</p>@if (bulkSkipped().length) { <ul class="skipped">@for (s of bulkSkipped(); track $index) { <li><strong>{{ skippedName(s) }}:</strong> {{ s.reason }}</li> }</ul> }</div> }
+      @if (bulkMessage()) { <div class="notice success" role="status"><p>{{ bulkMessage() }}</p>@if (bulkSkipped().length) { <ul class="skipped">@for (s of bulkSkipped().slice(0, 10); track $index) { <li><strong>{{ skippedName(s) }}:</strong> {{ s.reason }}</li> }@if (bulkSkipped().length > 10) { <li>ve {{ bulkSkipped().length - 10 }} kayıt daha</li> }</ul> }</div> }
       @if (inlineCount()) {
         <section class="bulk-bar inline-bar" aria-label="Satır içi değişiklikler">
           <p><strong>{{ inlineCount() }} konuda kaydedilmemiş süre/sıklık değişikliği</strong></p>
@@ -184,7 +184,7 @@
               <button type="button" (click)="approveTopicLinks()" [disabled]="busy() || form.reason.trim().length < 5">Bağlantıları onayla</button>
               <details class="topic-outcomes" (toggle)="$any($event.target).open && !topicOutcomes().length && loadTopicOutcomes()"><summary>Bağlı kazanımları göster</summary>
                 @if (topicOutcomesLoading()) { <p role="status">Kazanımlar yükleniyor…</p> }
-                <ul>@for (o of topicOutcomes(); track o.id) { <li><button type="button" class="link-button" (click)="select(o)" [disabled]="busy()">{{ o.code }} · {{ o.name }}</button><button type="button" class="danger-button" (click)="removeTopicLink(o)" [disabled]="busy() || form.reason.trim().length < 5" [attr.aria-label]="o.name + ' bağlantısını kaldır'">Bağlantıyı kaldır</button></li> }
+                <ul>@for (o of topicOutcomes(); track o.id) { <li><button type="button" class="link-button" (click)="select(o)" [disabled]="busy()">{{ o.code }} · {{ o.name }}</button><span class="mapping-actions"><button type="button" (click)="rejectTopicLink(o)" [disabled]="busy() || form.reason.trim().length < 5" [attr.aria-label]="o.name + ' bağlantısını reddet'">Reddet</button><button type="button" class="danger-button" (click)="removeTopicLink(o)" [disabled]="busy() || form.reason.trim().length < 5" [attr.aria-label]="o.name + ' bağlantısını kaldır'">Bağlantıyı kaldır</button></span></li> }
                   @empty { @if (!topicOutcomesLoading()) { <li class="empty">Bağlı kazanım yok.</li> } }</ul>
               </details></section>
             <section class="section-block"><h3>YKS kapsamı</h3><app-yks-scope-editor [topicId]="n.id" (saved)="embeddedSaved('YKS kapsamı kaydedildi.')" /></section>

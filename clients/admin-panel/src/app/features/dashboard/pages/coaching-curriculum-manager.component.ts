@@ -4,7 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, Subscription, catchError, concatMap, finalize, from, map, of, switchMap, throwError, toArray } from 'rxjs';
+import { Observable, Subscription, catchError, concatMap, finalize, mergeMap, from, map, of, switchMap, throwError, toArray } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { BULK_LIMIT, BulkKind, BulkResult, CoachingCurriculumManagerService, MappingDecision, PATCH_LIMIT, QualityIssue, QualityReport, Skipped, TopicPatch, chunk } from './coaching-curriculum-manager.service';
@@ -252,13 +252,15 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   }
   /** KM7: approves every link of the selected topics (e.g. a page of AYT Tarih topics) with the bulk reason. */
   async approveSelectedTopicLinks() {
-    const ids=[...this.selectedIds()]; const reason=this.bulkReason.trim();
-    if (!ids.length || this.busy() || !this.isTopicTab() || reason.length < 5 || reason.length > 500) return;
+    // Rows report their pending link count; topics without pending links need no request.
+    const ids=[...this.selectedIds()].filter(id => (this.listing().rows.find(x => x.id === id)?.pendingLinkCount ?? 1) > 0); const reason=this.bulkReason.trim();
+    if (!ids.length) { this.bulkMessage.set('Seçili konularda onay bekleyen bağlantı yok.'); this.bulkSkipped.set([]); return; }
+    if (this.busy() || !this.isTopicTab() || reason.length < 5 || reason.length > 500) return;
     if (!await this.toaster.confirm(`${ids.length} konunun bekleyen kazanım bağlantıları onaylansın mı?`,{title:'Bağlantıları onayla',confirmText:'Onayla',cancelText:'Vazgeç'}) || this.destroy.destroyed) return;
     this.busy.set(true); this.error.set(''); this.bulkSkipped.set([]); this.bulkMessage.set('');
     const outcomesOf=(topicId: string) => this.http.get<{data:Page}>(`${this.base}/children`,{params:new HttpParams().set('kind','outcomes').set('parentId',topicId).set('page',1).set('pageSize',200)})
       .pipe(map(r => r.data.items.map(o => ({topicId,outcomeId:o.id}))));
-    from(ids).pipe(concatMap(outcomesOf),toArray(),map(rows => rows.flat()),switchMap(keys => keys.length ? from(chunk(keys,BULK_LIMIT)).pipe(concatMap(part => this.api.reviewMappings(part,'approve',reason)),toArray()) : of([] as BulkResult[])),
+    from(ids).pipe(mergeMap(outcomesOf,6),toArray(),map(rows => rows.flat()),switchMap(keys => keys.length ? from(chunk(keys,BULK_LIMIT)).pipe(concatMap(part => this.api.reviewMappings(part,'approve',reason)),toArray()) : of([] as BulkResult[])),
       takeUntilDestroyed(this.destroy),finalize(() => this.busy.set(false))).subscribe({next:results => {
         const total=this.merge(results); this.bulkMessage.set(`${total.changed} bağlantı onaylandı${total.skipped.length ? `, ${total.skipped.length} bağlantı atlandı` : ''}.`);
         this.bulkSkipped.set(total.skipped); this.bulkReason=''; this.loadRoot(); this.refreshPending();
@@ -441,6 +443,11 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     const params=new HttpParams().set('kind','outcomes').set('parentId',n.id).set('page',1).set('pageSize',200);
     this.http.get<{data:Page}>(`${this.base}/children`,{params}).pipe(takeUntilDestroyed(this.destroy),finalize(() => this.topicOutcomesLoading.set(false)))
       .subscribe({next:r => { if (this.selected()?.id === n.id) this.topicOutcomes.set(r.data.items); },error:e => this.fail(e)});
+  }
+  async rejectTopicLink(o: Node) {
+    const n=this.selected(); if (!n || n.kind !== 'topics' || !this.reasonReady()) return;
+    if (!await this.toaster.confirm(`“${o.name}” bağlantısı reddedilsin mi? Kayıt geçmiş için saklanır; planlamada kullanılmaz ve konunun silinmesini engellemez.`,{title:'Bağlantıyı reddet',confirmText:'Reddet',cancelText:'Vazgeç'}) || this.destroy.destroyed) return;
+    this.reviewKeys([{topicId:n.id,outcomeId:o.id}],'reject',r => { if (r.changed) this.topicOutcomes.update(rows => rows.filter(x => x.id !== o.id)); return r.changed ? 'Bağlantı reddedildi.' : 'Bağlantı değişmedi.'; });
   }
   async removeTopicLink(o: Node) {
     const n=this.selected(); if (!n || n.kind !== 'topics' || !this.reasonReady()) return;
