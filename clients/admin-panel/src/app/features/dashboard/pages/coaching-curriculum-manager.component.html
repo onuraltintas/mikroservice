@@ -112,7 +112,7 @@
           <div class="row-meta">
             <span class="badge" [class.passive]="!n.isActive">{{ n.isActive ? 'Aktif' : 'Pasif' }}</span>
             @if (n.kind === 'topics') {
-              <label class="inline-field">Süre (dk)<input type="number" name="rowMinutes" min="1" step="1" inputmode="numeric" [value]="inlineValue(n).estimatedMinutes ?? ''" (input)="editMinutes(n, $any($event.target).value)" [disabled]="busy()" [attr.aria-label]="n.name + ' çalışma süresi (dk)'"></label>
+              <label class="inline-field">Süre (dk)<input type="number" name="rowMinutes" min="1" [max]="maxTopicMinutes" step="1" inputmode="numeric" [value]="inlineValue(n).estimatedMinutes ?? ''" (input)="editMinutes(n, $any($event.target).value)" [disabled]="busy()" [attr.aria-label]="n.name + ' çalışma süresi (dk)'"></label>
               <label class="inline-field">Sıklık<select name="rowWeight" (change)="editWeight(n, $any($event.target).value)" [disabled]="busy()" [attr.aria-label]="n.name + ' sınavda çıkma sıklığı'">@for (w of [1,2,3,4,5]; track w) { <option [value]="w" [selected]="inlineValue(n).yieldWeight === w">{{ w }} · {{ yieldLabels[w] }}</option> }</select></label>
             }
             @if (n.outcomeCount !== undefined && n.outcomeCount !== null && n.kind !== 'programTopics') { <span class="meta">{{ n.outcomeCount }} kazanım</span> }
@@ -158,7 +158,7 @@
               <label>Kazanım sayısı<input name="count" type="number" min="1" max="500" step="1" [(ngModel)]="form.outcomeCount" required></label>
               <label>Programdaki ders saati (varsa)<input aria-label="Programdaki ders saati" name="periods" type="number" min="1" max="500" step="1" [(ngModel)]="form.lessonPeriods"><small>Kaynakta belirtilmiyorsa boş bırakın. Bireysel çalışma dakikasından farklıdır.</small></label>
             }
-            @if (kind === 'topics') { <label>Konu çalışma süresi (dk)<input aria-label="Konu çalışma süresi (dk)" aria-describedby="topic-duration-help" name="minutes" type="number" min="1" step="1" [(ngModel)]="form.estimatedMinutes"><small id="topic-duration-help">Kazanım seçilmeden yapılan planlamanın önerisi. Boş bırakılabilir.</small></label>
+            @if (kind === 'topics') { <label>Konu çalışma süresi (dk)<input aria-label="Konu çalışma süresi (dk)" aria-describedby="topic-duration-help" name="minutes" type="number" min="1" [max]="maxTopicMinutes" step="1" [(ngModel)]="form.estimatedMinutes"><small id="topic-duration-help">Kazanım seçilmeden yapılan planlamanın önerisi; en fazla {{ maxTopicMinutes }} dk. Plan bir günü aşan konuyu birkaç güne böler. Boş bırakılabilir.</small></label>
               <label>Sınavda çıkma sıklığı<select aria-label="Sınavda çıkma sıklığı" aria-describedby="topic-yield-help" name="yieldWeight" [(ngModel)]="form.yieldWeight"><option [ngValue]="1">1 · Nadiren</option><option [ngValue]="2">2 · Az</option><option [ngValue]="3">3 · Orta (varsayılan)</option><option [ngValue]="4">4 · Sık</option><option [ngValue]="5">5 · Çok sık</option></select><small id="topic-yield-help">Öğrencinin süresi yetmediğinde plan motoru sık çıkan konuları öne alır.</small></label> }
             @if (creating() && kind === 'topics' && selected()?.kind === 'topics' && selected()?.topicOutcomeCount) { <label class="checkbox full"><input type="checkbox" name="inherit" [(ngModel)]="form.moveParentOutcomes" required> Üst konudaki {{ selected()?.topicOutcomeCount }} kazanımı bu alt konuya taşımayı onaylıyorum. Eski planlar korunacak; yeni bağlantılar kapsam onayı bekleyecek.</label> }
             @if (kind === 'outcomes') {
@@ -201,7 +201,7 @@
                 </div><small>{{ m.evidence }}</small></div> } @empty { <p>Bu kazanım henüz bir konuya bağlı değil.</p> }</section>
             <section class="section-block"><h3>Kazanım çalışma süresi</h3><p>Net bireysel çalışma dakikasıdır. Resmî ders saati ve video süresi ayrı kavramlardır. Önceki süreler ve planlar korunur.</p>
               <form #durationForm="ngForm" (ngSubmit)="saveDuration()"><fieldset [disabled]="busy()" class="edit-fields three">
-                <label>Öğrenme (dk)<input name="learning" type="number" min="0" max="1440" step="1" [(ngModel)]="learningMinutes" required></label><label>Alıştırma (dk)<input name="practice" type="number" min="0" max="1440" step="1" [(ngModel)]="practiceMinutes" required></label><label>Kısa kontrol (dk)<input name="check" type="number" min="0" max="1440" step="1" [(ngModel)]="checkMinutes" required></label>
+                <label>Öğrenme (dk)<input name="learning" type="number" min="0" [max]="maxTopicMinutes" step="1" [(ngModel)]="learningMinutes" required></label><label>Alıştırma (dk)<input name="practice" type="number" min="0" [max]="maxTopicMinutes" step="1" [(ngModel)]="practiceMinutes" required></label><label>Kısa kontrol (dk)<input name="check" type="number" min="0" [max]="maxTopicMinutes" step="1" [(ngModel)]="checkMinutes" required></label>
                 <label>Güven düzeyi<select name="confidence" [(ngModel)]="confidence"><option value="Low">Düşük</option><option value="Medium">Orta</option><option value="High">Yüksek</option></select></label><p class="duration-total">Toplam <strong>{{ learningMinutes + practiceMinutes + checkMinutes }} dk</strong></p>
                 @if (needsShares()) {
                   <fieldset class="full shares"><legend>Konu payları</legend>

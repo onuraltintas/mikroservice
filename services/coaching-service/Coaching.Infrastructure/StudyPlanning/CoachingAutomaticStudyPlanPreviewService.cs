@@ -19,11 +19,11 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
             || request.StartDate.DayNumber > DateOnly.MaxValue.DayNumber - request.Days + 1
             || request.ExpectedAvailabilityVersion < 0 || request.Topics is null
             || request.Topics.Count is < 1 or > 500
-            || request.Topics.Any(x => x is null || x.TopicId == Guid.Empty || x.RequiredMinutes is < 1 or > 1440)
+            || request.Topics.Any(x => x is null || x.TopicId == Guid.Empty || x.RequiredMinutes is < 1 or > StudyLimits.MaxTopicMinutes)
             || request.Topics.Select(x => x.TopicId).Distinct().Count() != request.Topics.Count)
             throw new ArgumentException("Geçerli tarih, konu ve çalışma süreleri seçin.");
         if (request.Topics.Any(t => t.Outcomes is not null && (t.RequiredMinutes.HasValue || t.Outcomes.Count is < 1 or > 100
-            || t.Outcomes.Any(o => o is null || o.OutcomeId == Guid.Empty || o.EstimateId == Guid.Empty || o.RequiredMinutes is < 1 or > 1440)
+            || t.Outcomes.Any(o => o is null || o.OutcomeId == Guid.Empty || o.EstimateId == Guid.Empty || o.RequiredMinutes is < 1 or > StudyLimits.MaxTopicMinutes)
             || t.Outcomes.Select(o => o.OutcomeId).Distinct().Count() != t.Outcomes.Count))
             || request.Topics.Sum(t => t.Outcomes?.Count ?? 0) > 500)
             throw new ArgumentException("Konu süresi veya en fazla 500 sürümlü kazanım seçin; ikisini aynı anda göndermeyin.");
@@ -93,7 +93,9 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
             var minutes = selection.Outcomes is not null ? resolved.Where(x => x.TopicId == selection.TopicId).Sum(x => x.Minutes)
                 : selection.RequiredMinutes ?? catalog[selection.TopicId].EstimatedMinutes
                     ?? throw new ArgumentException("Süresi tanımlanmamış konu için çalışma süresi belirtin.");
-            if (minutes > 1440) throw new ArgumentException("Bir konu için toplam süre 1440 dakikayı geçemez; kazanım seçimini azaltın.");
+            // A topic may need several days; the scheduler splits it into tasks of at most one day each.
+            if (minutes > StudyLimits.MaxTopicMinutes)
+                throw new ArgumentException($"Bir konu için toplam süre {StudyLimits.MaxTopicMinutes} dakikayı geçemez; kazanım seçimini azaltın.");
             if (minutes > 0) topics.Add(new(selection.TopicId, minutes));
         }
         var revision = await db.StudyPlanRevisions.AsNoTracking()

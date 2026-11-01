@@ -9,6 +9,7 @@ import { AutomaticStudyPreview, CoachingStudyPlanningService, StudyAvailability,
 import { CoachingLearningSetupService, LearningLesson } from '../../../core/services/coaching-learning-setup.service';
 
 import { CoachingDatePipe } from '../coaching-labels';
+import { MAX_TOPIC_MINUTES } from '../../../shared/coaching-study-limits';
 @Component({
   selector: 'app-student-automatic-plan', standalone: true,
   imports: [CoachingDatePipe, CommonModule, FormsModule, RouterLink],
@@ -16,6 +17,7 @@ import { CoachingDatePipe } from '../coaching-labels';
   styleUrl: './student-study-plans.component.scss'
 })
 export class StudentAutomaticPlanComponent implements OnInit {
+  readonly maxTopicMinutes = MAX_TOPIC_MINUTES;
   private readonly toaster = coachingToaster();
   @Input() learningContextVersion: number | null = null;
   private readonly injector = inject(Injector);
@@ -78,7 +80,7 @@ export class StudentAutomaticPlanComponent implements OnInit {
     const topic = this.results()?.items.find(x => x.id === id);
     if (!topic) return;
     const minutes = topic.estimatedMinutes;
-    this.selected = [...this.selected, { topic, minutes: minutes !== null && minutes >= 1 && minutes <= 1440 ? minutes : null }];
+    this.selected = [...this.selected, { topic, minutes: minutes !== null && minutes >= 1 && minutes <= MAX_TOPIC_MINUTES ? minutes : null }];
     this.changed();
   }
   removeTopic(id: string) {
@@ -111,10 +113,10 @@ export class StudentAutomaticPlanComponent implements OnInit {
       || !Number.isInteger(this.days) || this.days < 1 || this.days > 90 || lastDate.getUTCFullYear() > 9999
       || this.selected.length < 1 || this.selected.length > 500
       || this.selected.some(x => x.outcomes ? !x.outcomes.some(o => o.included)
-        || x.outcomes.filter(o => o.included).some(o => !Number.isInteger(o.minutes) || o.minutes! < 1 || o.minutes! > 1440)
-        || x.outcomes.filter(o => o.included).reduce((sum, o) => sum + (o.minutes ?? 0), 0) > 1440
-        : !Number.isInteger(x.minutes) || x.minutes! < 1 || x.minutes! > 1440)) {
-      this.error.set('Geçerli bir başlangıç tarihi, 1-90 gün ve her konu için 1-1440 dakika belirt.'); return;
+        || x.outcomes.filter(o => o.included).some(o => !Number.isInteger(o.minutes) || o.minutes! < 1 || o.minutes! > MAX_TOPIC_MINUTES)
+        || x.outcomes.filter(o => o.included).reduce((sum, o) => sum + (o.minutes ?? 0), 0) > MAX_TOPIC_MINUTES
+        : !Number.isInteger(x.minutes) || x.minutes! < 1 || x.minutes! > MAX_TOPIC_MINUTES)) {
+      this.error.set(`Geçerli bir başlangıç tarihi, 1-90 gün ve her konu için 1-${MAX_TOPIC_MINUTES} dakika belirt. Bir günü aşan konu birkaç güne bölünür.`); return;
     }
     this.saveConfirmed = false;
     this.generating.set(true); this.preview.set(null); this.error.set(null);

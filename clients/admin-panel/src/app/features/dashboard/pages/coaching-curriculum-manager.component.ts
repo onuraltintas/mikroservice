@@ -16,6 +16,7 @@ import { CoachingYksScopeEditorComponent } from './coaching-yks-scope-editor';
 import { CoachingCatalogImportComponent } from './coaching-catalog-import';
 import { CoachingCurriculumComponent } from './coaching-curriculum.component';
 import { CoachingOutcomesComponent } from './coaching-outcomes.component';
+import { MAX_TOPIC_MINUTES } from '../../../shared/coaching-study-limits';
 
 type Kind = 'exams' | 'programs' | 'programTopics' | 'lessons' | 'units' | 'topics' | 'outcomes';
 interface Estimate { id: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; confidence: string; evidence: string; isPublished: boolean; method?: string }
@@ -52,6 +53,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   private readonly outcomeBase = `${environment.apiUrl}/coaching-admin/outcomes`;
   private detailRequest?: Subscription; private destinationRequest?: Subscription; private listRequest?: Subscription; private lessonRequest?: Subscription; private qualityRequest?: Subscription;
   private initial = ''; private initialDuration = ''; private editionRequest?: Subscription;
+  readonly maxTopicMinutes = MAX_TOPIC_MINUTES;
   readonly listing = signal<Listing>({rows:[],page:1,total:0,loading:false}); readonly selected = signal<Node | null>(null);
   readonly busy = signal(false); readonly detailLoading = signal(false); readonly error = signal(''); readonly message = signal('');
   readonly editing = signal(false); readonly creating = signal(false); readonly pending = signal<Node | null>(null);
@@ -286,11 +288,11 @@ export class CoachingCurriculumManagerComponent implements OnInit {
       if (edit.estimatedMinutes === (n.estimatedMinutes ?? null) && edit.yieldWeight === (n.yieldWeight ?? 3)) delete next[n.id]; else next[n.id]=edit; return next; });
   }
   discardInline() { this.inlineEdits.set({}); }
-  inlineInvalid() { return Object.values(this.inlineEdits()).some(x => (x.estimatedMinutes !== null && (!Number.isInteger(x.estimatedMinutes) || x.estimatedMinutes < 1 || x.estimatedMinutes > 100000)) || !Number.isInteger(x.yieldWeight) || x.yieldWeight < 1 || x.yieldWeight > 5); }
+  inlineInvalid() { return Object.values(this.inlineEdits()).some(x => (x.estimatedMinutes !== null && (!Number.isInteger(x.estimatedMinutes) || x.estimatedMinutes < 1 || x.estimatedMinutes > MAX_TOPIC_MINUTES)) || !Number.isInteger(x.yieldWeight) || x.yieldWeight < 1 || x.yieldWeight > 5); }
   async saveInline() {
     const edits=this.inlineEdits(); const reason=this.inlineReason.trim(); const rows=this.listing().rows;
     if (!this.inlineCount() || this.busy() || reason.length < 5 || reason.length > 500) return;
-    if (this.inlineInvalid()) { this.error.set('Süre 1 veya daha büyük tam sayı, sıklık 1–5 olmalıdır.'); return; }
+    if (this.inlineInvalid()) { this.error.set(`Konu süresi 1–${MAX_TOPIC_MINUTES} dakika arasında tam sayı, sıklık 1–5 olmalıdır.`); return; }
     const items: TopicPatch[]=rows.filter(x => edits[x.id]).map(x => ({id:x.id,version:x.version ?? x.fingerprint,estimatedMinutes:edits[x.id].estimatedMinutes,yieldWeight:edits[x.id].yieldWeight}));
     if (!await this.toaster.confirm(`${items.length} konunun süre ve sıklık değeri kaydedilsin mi?`,{title:'Toplu düzenleme',confirmText:'Kaydet',cancelText:'Vazgeç'}) || this.destroy.destroyed) return;
     this.busy.set(true); this.error.set(''); this.message.set('');
@@ -352,6 +354,10 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     const sessions = this.kind === 'exams' ? this.form.sessions.map(s => ({id:s.id,date:s.date,label:s.label.trim(),applicationStart:s.applicationStart || null,applicationEnd:s.applicationEnd || null})) : undefined;
     const r = {...this.form,sessions,name:this.form.name.trim(),reason:this.form.reason.trim(),...(!this.creating() && n ? {fingerprint:n.fingerprint} : {})};
     if (this.creating() && this.parentKind() && !r.parentId) { this.error.set('Önce üst kaydı seçin.'); return; }
+    if (this.kind === 'topics' && r.estimatedMinutes !== null && r.estimatedMinutes !== undefined
+      && (!Number.isInteger(r.estimatedMinutes) || r.estimatedMinutes < 1 || r.estimatedMinutes > MAX_TOPIC_MINUTES)) {
+      this.error.set(`Konu çalışma süresi 1–${MAX_TOPIC_MINUTES} dakika olmalıdır.`); return;
+    }
     let request=this.creating() ? this.http.post<{data:Node}>(`${this.base}/${this.kind}`,r) : this.http.put<{data:Node}>(`${this.base}/${this.kind}/${n!.id}`,r);
     if (this.creating() && this.activateAfterCreate && ['lessons','units','topics'].includes(this.kind)) request=request.pipe(switchMap(created =>
       this.http.put<{data:Node}>(`${this.base}/${created.data.kind}/${created.data.id}/status`,{fingerprint:created.data.fingerprint,reason:r.reason,isActive:true}).pipe(catchError(() => {
@@ -495,7 +501,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     const n = this.selected(); const parts = [this.learningMinutes,this.practiceMinutes,this.checkMinutes]; const total = parts.reduce((s,x) => s+x,0);
     if (!n || this.busy() || this.form.reason.trim().length < 5 || this.durationEvidence.trim().length < 5) return;
     if (this.dirtyFields()) { this.error.set('Önce kazanım metni ve alan değişikliklerini kaydedin. Süre girişleriniz korunacak.'); return; }
-    if (parts.some(x => !Number.isInteger(x) || x < 0) || total < 1 || total > 1440) { this.error.set('Toplam süre 1–1440 dakika olmalıdır.'); return; }
+    if (parts.some(x => !Number.isInteger(x) || x < 0) || total < 1 || total > MAX_TOPIC_MINUTES) { this.error.set(`Toplam süre 1–${MAX_TOPIC_MINUTES} dakika olmalıdır.`); return; }
     if (this.publishDuration && !n.mappings.some(x => this.mappingStatus(x) === 'approved')) { this.error.set('Önce en az bir konu eşleştirmesini onaylayın.'); return; }
     if (!this.sharesValid()) { this.error.set('Konu payları her süre bileşeninin toplamına eşit olmalı ve her konuya en az 1 dakika ayrılmalıdır.'); return; }
     const topicShares = this.needsShares() ? this.shares.map(s => ({topicId:s.topicId,learningMinutes:s.learningMinutes,practiceMinutes:s.practiceMinutes,checkMinutes:s.checkMinutes,scopeDescription:s.scopeDescription.trim()})) : undefined;

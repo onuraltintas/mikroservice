@@ -201,11 +201,17 @@ public sealed class TopicMinutesCapTests
             """);
         await Assert.ThrowsAsync<Npgsql.PostgresException>(() => migrator.MigrateAsync(Previous));
 
-        // Without such rows Down restores the 1440 limit, and Up raises it again.
+        // A topic planned with more than 1440 minutes (the KM3 minutes pack) also keeps the old release out.
         await f.Db.Database.ExecuteSqlInterpolatedAsync($"""
             UPDATE coaching.study_catalog_topic_outcome_shares SET "LearningMinutes" = 600 WHERE "EstimateId" = {big};
             UPDATE coaching.outcome_duration_estimates SET "LearningMinutes" = 600 WHERE "Id" = {big};
+            UPDATE coaching.study_catalog_topics SET "EstimatedMinutes" = 3890 WHERE "Id" = {topic.Id};
             """);
+        Assert.Contains("1 topic", (await Assert.ThrowsAsync<Npgsql.PostgresException>(() => migrator.MigrateAsync(Previous))).MessageText);
+        Assert.Contains("4320", await Constraint(f.Db, "ck_outcome_minutes"));
+        await f.Db.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.study_catalog_topics SET \"EstimatedMinutes\" = 60 WHERE \"Id\" = {topic.Id}");
+
+        // Without such rows Down restores the 1440 limit, and Up raises it again.
         await migrator.MigrateAsync(Previous);
         Assert.Contains("1440", await Constraint(f.Db, "ck_outcome_minutes"));
         Assert.Contains("1440", await Constraint(f.Db, "ck_topic_outcome_share_minutes"));

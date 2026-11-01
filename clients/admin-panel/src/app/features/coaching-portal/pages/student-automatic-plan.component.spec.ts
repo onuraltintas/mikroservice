@@ -111,7 +111,7 @@ describe('StudentAutomaticPlanComponent', () => {
   // User decision 01.11.2026: a topic may need up to 4320 minutes; the planner places it on several days.
   it('keeps catalog topic minutes up to 4320 and refuses more', async () => {
     const { component, service, fixture, topic } = await setup();
-    service.searchTopics.mockReturnValue(of({ items: [{ ...topic, estimatedMinutes: 3960 }], totalCount: 1, pageNumber: 1, pageSize: 20 }));
+    service.searchTopics.mockReturnValue(of({ items: [{ ...topic, estimatedMinutes: 3960 as never }], totalCount: 1, pageNumber: 1, pageSize: 20 }));
     component.searchTopics(); component.addTopic('topic'); expect(component.selected[0].minutes).toBe(3960);
     component.startDate = '2026-10-05'; component.days = 14; component.generate();
     expect(service.previewAutomatic).toHaveBeenCalledWith(expect.objectContaining({ topics: [{ topicId: 'topic', requiredMinutes: 3960 }] }));
@@ -125,8 +125,9 @@ describe('StudentAutomaticPlanComponent', () => {
     component.searchTopics(); component.addTopic('topic'); component.startDate = '2026-10-05';
     component.selected[0].outcomes = [{ outcomeId: 'o1', estimateId: 'e1', code: 'K1', name: 'Analiz', totalMinutes: 3000, included: true, minutes: 3000 },
       { outcomeId: 'o2', estimateId: 'e2', code: 'K2', name: 'Cebir', totalMinutes: 1320, included: true, minutes: 1320 }] as never;
+    const outcomes = component.selected[0].outcomes as unknown as { minutes: number }[];
     component.changed(); component.generate(); expect(service.previewAutomatic).toHaveBeenCalled();
-    service.previewAutomatic.mockClear(); component.selected[0].outcomes![1].minutes = 1321; component.changed(); component.generate();
+    service.previewAutomatic.mockClear(); outcomes[1].minutes = 1321; component.changed(); component.generate();
     expect(service.previewAutomatic).not.toHaveBeenCalled();
   });
 });
