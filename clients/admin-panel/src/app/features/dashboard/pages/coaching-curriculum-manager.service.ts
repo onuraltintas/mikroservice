@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { CoachingCatalogAdminService, MappingFilter } from '../../../core/services/coaching-catalog-admin.service';
 
 /** KM7 (01.11.2026): API contract of the single curriculum editor (Müfredat Yönetimi). Routes live under api/coaching-admin. */
 export type BulkKind = 'lessons' | 'units' | 'topics' | 'outcomes' | 'exams';
@@ -35,23 +36,25 @@ function params(query: object) {
 }
 const unwrap = <T>(source: Observable<{ data: T }>) => source.pipe(map(r => r.data));
 
+/**
+ * Müfredat Yönetimi's API surface. Link review, bulk status and outcome topics go through KM7a's shared
+ * CoachingCatalogAdminService; only the calls it does not have (quality report, inline topic patch) are made here.
+ */
 @Injectable({ providedIn: 'root' })
 export class CoachingCurriculumManagerService {
   private readonly http = inject(HttpClient);
-  private readonly admin = `${environment.apiUrl}/coaching-admin`;
-  private readonly cm = `${this.admin}/curriculum-management`;
+  private readonly admin = inject(CoachingCatalogAdminService);
+  private readonly cm = `${environment.apiUrl}/coaching-admin/curriculum-management`;
 
-  bulkStatus(request: BulkStatusRequest) { return unwrap(this.http.post<{ data: BulkResult }>(`${this.cm}/bulk/status`, request)); }
+  bulkStatus(request: BulkStatusRequest): Observable<BulkResult> { return this.admin.bulkStatus(request); }
   patchTopics(items: TopicPatch[], reason: string) { return unwrap(this.http.patch<{ data: TopicPatchResult }>(`${this.cm}/topics/bulk`, { items, reason })); }
   quality(query: QualityQuery) { return unwrap(this.http.get<{ data: QualityReport }>(`${this.cm}/quality`, { params: params(query) })); }
   qualityCsv(query: QualityQuery) { return this.http.get(`${this.cm}/quality/export.csv`, { params: params({ ...query, page: undefined, pageSize: undefined }), responseType: 'blob' }); }
-  mappings(query: MappingQuery) { return unwrap(this.http.get<{ data: { items: MappingRow[]; totalCount: number } }>(`${this.admin}/outcomes/mappings`, { params: params(query) })); }
+  mappings(query: MappingQuery) { return this.admin.mappings(query as MappingFilter); }
   pendingCount() { return this.mappings({ status: 'pending', page: 1, pageSize: 1 }).pipe(map(r => r.totalCount)); }
-  reviewMappings(items: MappingKey[], decision: MappingDecision, reason: string) {
-    return unwrap(this.http.post<{ data: BulkResult }>(`${this.admin}/outcomes/mappings/bulk`, { items, decision, reason }));
-  }
-  deleteMapping(key: MappingKey, reason: string) { return this.http.delete(`${this.admin}/outcomes/mappings/${key.topicId}/${key.outcomeId}`, { body: { reason } }); }
-  outcomeTopics(outcomeId: string) { return unwrap(this.http.get<{ data: OutcomeTopic[] }>(`${this.admin}/outcomes/${outcomeId}/topics`)); }
+  reviewMappings(items: MappingKey[], decision: MappingDecision, reason: string): Observable<BulkResult> { return this.admin.reviewMappings(items, decision, reason); }
+  deleteMapping(key: MappingKey, reason: string) { return this.admin.deleteMapping(key.topicId, key.outcomeId, reason); }
+  outcomeTopics(outcomeId: string): Observable<OutcomeTopic[]> { return this.admin.outcomeTopics(outcomeId); }
 }
 
 /** Splits a list into request-sized chunks. */
