@@ -211,4 +211,25 @@ describe('Müfredat Yönetimi (KM7)', () => {
     http.match(() => true).forEach(r => r.flush(page([])));
     expect(c.message()).toContain('kullanımda olduğu için');
   });
+
+  it('lists the outcomes of a topic on demand and removes a link from the topic side', async () => {
+    const { c, http } = setup(); c.select(row('a') as never); http.expectOne(r => r.url.endsWith('/topics/a')).flush({ data: row('a') });
+    c.loadTopicOutcomes();
+    http.expectOne(r => r.url.endsWith('/children') && r.params.get('kind') === 'outcomes' && r.params.get('parentId') === 'a')
+      .flush(page([{ kind: 'outcomes', id: 'o1', name: 'Türev kuralları', code: 'MAT.12.3.1', isActive: true }]));
+    expect(c.topicOutcomes().map(o => o.id)).toEqual(['o1']);
+    c.form.reason = 'Yanlış bağlantı'; await c.removeTopicLink(c.topicOutcomes()[0]);
+    expect(confirm).toHaveBeenCalled();
+    http.expectOne(r => r.method === 'DELETE' && r.url.endsWith('/outcomes/mappings/a/o1')).flush({ data: { deleted: true } });
+    http.expectOne(r => r.url.endsWith('/topics/a')).flush({ data: row('a') });
+    expect(c.message()).toContain('Bağlantı kaldırıldı');
+  });
+  it('filters the exam list by state so passive exams can be selected together', () => {
+    const { c, http, fixture } = setup();
+    c.filters.active = 'false'; c.applyFilters();
+    http.expectOne(r => r.url.endsWith('/children') && r.params.get('kind') === 'exams' && r.params.get('active') === 'false')
+      .flush(page([{ ...row('x'), kind: 'exams', id: 'e1', isActive: false }, { ...row('y'), kind: 'exams', id: 'e2', isActive: true }]));
+    fixture.detectChanges(); expect(c.listing().rows.map(r => r.id)).toEqual(['e1']);
+    c.selectPage(); expect([...c.selectedIds()]).toEqual(['e1']);
+  });
 });
