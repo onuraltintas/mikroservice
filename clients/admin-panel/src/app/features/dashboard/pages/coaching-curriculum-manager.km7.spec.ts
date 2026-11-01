@@ -13,7 +13,7 @@ describe('Müfredat Yönetimi (KM7)', () => {
     { id: 'e-o1', code: 'OABT_TURKCE', name: 'ÖABT · Türkçe Öğretmenliği', isActive: false }, { id: 'e-o2', code: 'OABT_MAT', name: 'ÖABT · İlköğretim Matematik', isActive: false }];
   const row = (id: string, extra: object = {}) => ({ kind: 'topics', id, name: 'Türev ' + id, parentId: 'unit', parentKind: 'units', isActive: true, path: 'Matematik (AYT) / Türev / Türev ' + id,
     fingerprint: 'fp-' + id, version: 'v-' + id, canDelete: false, blockers: [], estimates: [], mappings: [], estimatedMinutes: 60, yieldWeight: 3, outcomeCount: 2, pendingLinkCount: 1, ...extra });
-  const confirm = vi.fn(async () => true);
+  const confirm = vi.fn(async (_message: string, _options?: unknown) => true);
   function setup() {
     confirm.mockClear();
     TestBed.configureTestingModule({ imports: [CoachingCurriculumManagerComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
@@ -133,12 +133,14 @@ describe('Müfredat Yönetimi (KM7)', () => {
     expect(bulk.request.body.items).toEqual([{ topicId: 't1', outcomeId: 'o' }, { topicId: 't2', outcomeId: 'o' }]); expect(bulk.request.body.decision).toBe('approve');
     bulk.flush({ data: { changed: 2, skipped: [] } });
     http.match(() => true).forEach(r => r.flush(r.request.url.endsWith('/outcomes/o') ? { data: outcome } : r.request.url.endsWith('/topics') ? { data: [] } : page([])));
-    await c.reviewMapping(outcome.mappings[0] as never, 'reject');
+    http.match(() => true).forEach(r => r.flush(page([])));
+    c.form.reason = 'KM2 önerileri incelendi'; await c.reviewMapping(outcome.mappings[0] as never, 'reject');
     expect(confirm).toHaveBeenCalled();
     const reject = http.expectOne(r => r.url.endsWith('/outcomes/mappings/bulk')); expect(reject.request.body.decision).toBe('reject');
     reject.flush({ data: { changed: 1, skipped: [] } });
     http.match(() => true).forEach(r => r.flush(r.request.url.endsWith('/outcomes/o') ? { data: outcome } : r.request.url.endsWith('/topics') ? { data: [] } : page([])));
-    await c.removeMapping(outcome.mappings[2] as never);
+    http.match(() => true).forEach(r => r.flush(page([])));
+    c.form.reason = 'KM2 önerileri incelendi'; await c.removeMapping(outcome.mappings[2] as never);
     const del = http.expectOne(r => r.method === 'DELETE' && r.url.endsWith('/outcomes/mappings/t3/o'));
     expect(del.request.body).toEqual({ reason: 'KM2 önerileri incelendi' });
     del.flush({ message: 'Bu bağlantı yayınlanmış bir süre payında kullanılıyor.' }, { status: 409, statusText: 'Conflict' });

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { CONFIDENCE_LABELS, label } from './coaching-curriculum-labels';
 
 interface Edition { id: string; code: string; subjectName: string; academicYearStart: number; academicYearEnd: number; sourceUrl: string; documentSha256: string }
 interface Outcome { id: string; code: string; name: string; officialTopicId: string; sourcePage: number | null; sourceKind?: string }
@@ -48,13 +49,13 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
           <label>Süre inceleme dayanağı<textarea [(ngModel)]="durationEvidence" maxlength="500"></textarea></label>
           <button type="button" [disabled]="durationEvidence.trim().length < 5 || reason.trim().length < 5" (click)="saveEstimate()">İncelenmiş süre sürümü oluştur</button>
           @for (e of estimates(); track e.id) { <article><strong>Sürüm {{ e.number }} · {{ e.learningMinutes + e.practiceMinutes + e.checkMinutes }} dk · {{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</strong>
-            <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · {{ e.confidence }}</p><p>{{ e.evidence }}</p>
+            <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ confidenceLabel(e.confidence) }}</p><p>{{ e.evidence }}</p>
             @if (e.method === 'ReviewedStudy' && !e.isPublished) { <button type="button" [disabled]="reason.trim().length < 5" (click)="publish(e.id)">İncelenmiş süreyi yayınla</button> }
           </article> }
         }
       }
     </fieldset></section>`,
-  styles: [`fieldset{border:0;padding:0;display:grid;gap:.8rem}label{display:grid;gap:.3rem}input,select,textarea,button{font:inherit;padding:.55rem;border:1px solid #b8c5d5;border-radius:.4rem;max-width:100%;box-sizing:border-box}button{cursor:pointer;justify-self:start}button:disabled{opacity:.5}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem}article{border-top:1px solid #d6deea;padding:.7rem 0}p{overflow-wrap:anywhere}[role=alert]{color:#a21825}`]
+  styles: [`:host{display:block;min-width:0;max-width:100%}section{min-width:0}fieldset{border:0;padding:0;margin:0;min-width:0;display:grid;gap:.8rem}label{display:grid;gap:.3rem;min-width:0}input,select,textarea,button{font:inherit;padding:.55rem;border:1px solid #b8c5d5;border-radius:.4rem;max-width:100%;box-sizing:border-box}select,textarea,input:not([type=file]){width:100%;min-width:0}button{cursor:pointer;justify-self:start}button:disabled{opacity:.5}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem}article{border-top:1px solid #d6deea;padding:.7rem 0}p{overflow-wrap:anywhere}[role=alert]{color:#a21825}`]
 })
 export class CoachingOutcomesComponent implements OnInit {
   private readonly http = inject(HttpClient); private readonly destroy = inject(DestroyRef);
@@ -65,6 +66,7 @@ export class CoachingOutcomesComponent implements OnInit {
   learningMinutes = 0; practiceMinutes = 0; checkMinutes = 0; private reviewedText = '';
   private requestNumber = 0;
   ngOnInit() { this.load(); }
+  confidenceLabel(value: string) { return label(CONFIDENCE_LABELS, value); }
   load() { if (this.busy()) return; this.read(this.http.get<{ data: Edition[] }>(this.url), r => this.editions.set(r.data)); }
   openEdition() { if (this.busy() || !this.editionId) { if (!this.editionId) this.catalog.set(null); return; }
     this.read(this.http.get<{ data: Catalog }>(`${this.url}/${this.editionId}`), r => this.catalog.set(r.data)); }
