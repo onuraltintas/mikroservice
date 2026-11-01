@@ -13,6 +13,26 @@ export interface ScoreTargetGap {
 }
 export interface ScoreEstimate { estimates: ScoreTypeEstimate[]; target: ScoreTargetGap | null; notice: string | null }
 
+/** KM4 (01.11.2026): the yearly models are derived from official statistics, so every view labels the estimate approximate. */
+export const ESTIMATE_LABEL = 'Yaklaşık tahmin';
+
+/** One line on how the estimate is made: whose statistics (ÖSYM for YKS, MEB for LGS) and which years. */
+export function estimateMethodNote(estimates: readonly ScoreTypeEstimate[]): string | null {
+  if (!estimates.length) return null;
+  const lgs = estimates.some(x => x.scoreType === 'LGS'), yks = estimates.some(x => x.scoreType !== 'LGS');
+  const source = lgs && yks ? "ÖSYM ve MEB'in" : lgs ? "MEB'in" : "ÖSYM'nin";
+  const years = estimates.map(x => x.modelYear);
+  const from = Math.min(...years), to = Math.max(...years);
+  const year = from === to ? `${to}` : `${from}–${to}`;
+  return `Yöntem: netler ${source} ${year} sınav istatistikleriyle puana, puan da ${year} yerleştirme sonuçlarıyla sıralamaya çevrilir. Resmî hesap değildir.`;
+}
+
+/** YKS ranks are read from placement scores (with OBP); without the diploma grade they look worse than they are. */
+export function diplomaRankNote(estimates: readonly ScoreTypeEstimate[]): string | null {
+  return estimates.some(x => x.scoreType !== 'LGS' && !x.includesDiplomaGrade)
+    ? 'Diploma notu eklenmediği için YKS sıralaması olduğundan geride görünebilir.' : null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingScoreEstimateService {
   private readonly http = inject(HttpClient);

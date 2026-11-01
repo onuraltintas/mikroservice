@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CoachingScoreEstimateService, ScoreEstimate, ScoreTypeEstimate } from '../../../core/services/coaching-score-estimate.service';
+import { CoachingScoreEstimateService, ESTIMATE_LABEL, ScoreEstimate, ScoreTypeEstimate, diplomaRankNote, estimateMethodNote } from '../../../core/services/coaching-score-estimate.service';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
 
@@ -19,7 +19,8 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         @if (result.notice) { <p>{{ result.notice }}</p> }
         @for (item of result.estimates; track item.scoreType) {
           <div class="plan-row">
-            <strong>{{ item.name }}: yaklaşık {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})<br>
+            <strong>{{ item.name }}: yaklaşık {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})
+            <span class="badge" data-testid="estimate-approximate">{{ label }}</span><br>
             Tahmini sıralama: {{ int(item.rankBest) }}–{{ int(item.rankWorst) }}
             @if (item.percentile !== null) { · Yüzdelik dilim: %{{ num(item.percentile) }} }
             <br><small>{{ item.modelYear }} verisiyle, son {{ item.examsUsed }} denemeye göre{{ item.includesDiplomaGrade ? ' · diploma notu dahil' : '' }}.</small>
@@ -41,7 +42,11 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
             <button type="submit">Hesapla</button>
           </form>
         }
-        @if (result.estimates.length) { <p><small>Bu bir tahmindir. Gerçek puan ve sıralama her yıl adayların sonuçlarına göre değişir.</small></p> }
+        @if (result.estimates.length) {
+          <p data-testid="estimate-method"><small>{{ method(result) }}</small></p>
+          @if (diplomaNote(result); as note) { <p><small>{{ note }}</small></p> }
+          <p><small>Bu bir tahmindir. Gerçek puan ve sıralama her yıl adayların sonuçlarına göre değişir.</small></p>
+        }
       }
     </section>`
 })
@@ -64,6 +69,10 @@ export class StudentScoreEstimateComponent implements OnInit {
     try { this.diploma == null ? localStorage.removeItem(this.key) : localStorage.setItem(this.key, String(this.diploma)); } catch { /* storage unavailable */ }
     this.load();
   }
+
+  readonly label = ESTIMATE_LABEL;
+  method(result: ScoreEstimate): string | null { return estimateMethodNote(result.estimates); }
+  diplomaNote(result: ScoreEstimate): string | null { return diplomaRankNote(result.estimates); }
 
   hasYks(result: ScoreEstimate): boolean { return result.estimates.some((x: ScoreTypeEstimate) => x.scoreType !== 'LGS'); }
 
