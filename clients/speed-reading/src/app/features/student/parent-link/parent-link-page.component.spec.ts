@@ -36,7 +36,8 @@ describe('ParentLinkPageComponent (Veli bağlantısı)', () => {
     TestBed.configureTestingModule({
       imports: [ParentLinkPageComponent],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: ToasterService, useValue: toaster },
-        { provide: SHARE_NAVIGATOR, useFactory: () => nav }]
+        // A live view of `nav` so a test can swap the browser before the first render.
+        { provide: SHARE_NAVIGATOR, useValue: { get clipboard() { return nav.clipboard; }, get share() { return nav.share; } } }]
     });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ParentLinkPageComponent);

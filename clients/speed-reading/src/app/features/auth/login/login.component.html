@@ -138,5 +138,8 @@
         }
       </mat-card-content>
     </mat-card>
+    @if (mfaStage === 'none') {
+    <app-parent-panel-entry />
+    }
 </div>
 </app-registration-shell>

@@ -38,11 +38,11 @@ import { RouterModule } from '@angular/router';
       @if (loading) {
         <span class="sp-btn__spinner" aria-hidden="true"></span>
       } @else if (icon && iconPosition === 'left') {
-        <span class="material-icons sp-btn__icon">{{ icon }}</span>
+        <span class="material-icons sp-btn__icon" aria-hidden="true">{{ icon }}</span>
       }
       <span><ng-content /></span>
       @if (!loading && icon && iconPosition === 'right') {
-        <span class="material-icons sp-btn__icon">{{ icon }}</span>
+        <span class="material-icons sp-btn__icon" aria-hidden="true">{{ icon }}</span>
       }
     </ng-template>
   `,
@@ -79,10 +79,10 @@ import { RouterModule } from '@angular/router';
     // Variants
     .sp-btn--primary {
       background: var(--sp-primary);
-      color: #fff;
+      color: var(--sp-on-primary, #fff);
       box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
       &:hover:not(:disabled) {
-        background: var(--sp-primary-dark);
+        background: var(--sp-primary-hover, var(--sp-primary-dark));
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         transform: translateY(-1px);
       }

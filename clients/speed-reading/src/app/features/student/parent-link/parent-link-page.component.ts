@@ -1,8 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { SpButtonComponent, SpCardComponent, SpEmptyStateComponent } from '../ui';
+import { parentPanelLinks } from '../../../core/utils/parent-panel-links';
 import { ParentLink, ParentLinkCode, ParentLinkService, productVisible } from './parent-link.service';
+import { SHARE_NAVIGATOR } from './share-navigator';
+
+const DAY_MS = 86_400_000;
 
 const RELATIONSHIPS: Record<string, string> = { Mother: 'Anne', Father: 'Baba', Guardian: 'Vasi', Other: 'Yakın' };
 
@@ -49,6 +54,16 @@ const RELATIONSHIPS: Record<string, string> = { Mother: 'Anne', Father: 'Baba', 
               <span class="plp__code-label">Kodun</span>
               <strong class="plp__code-value" data-testid="parent-code">{{ issued.code }}</strong>
               <span class="plp__code-expiry" data-testid="parent-code-expiry">{{ dateTime(issued.expiresAt) }} tarihine kadar geçerli, bir kez kullanılabilir.</span>
+            </div>
+            <div class="plp__share" data-testid="parent-share">
+              <p class="plp__share-label">Velinle paylaşacağın mesaj</p>
+              <p class="plp__share-text" data-testid="parent-share-message">{{ shareMessage() }}</p>
+              <div class="plp__share-actions">
+                <sp-button data-testid="copy-share" size="sm" variant="secondary" icon="content_copy" (clicked)="copyShare()">Mesajı kopyala</sp-button>
+                @if (canShare) {
+                  <sp-button data-testid="native-share" size="sm" variant="secondary" icon="share" (clicked)="share()">Paylaş</sp-button>
+                }
+              </div>
             </div>
           }
           <sp-button data-testid="create-code" [variant]="code() ? 'secondary' : 'primary'" icon="key" [disabled]="busy()"
@@ -109,12 +124,16 @@ const RELATIONSHIPS: Record<string, string> = { Mother: 'Anne', Father: 'Baba', 
     .plp__code { display: grid; gap: 4px; margin: 12px 0; padding: 14px 16px; border-radius: var(--sp-radius-md); background: var(--sp-primary-ghost); }
     .plp__code-label, .plp__code-expiry { font-size: .875rem; color: var(--sp-text-2); }
     .plp__code-value { font-family: var(--sp-font-mono); font-size: 1.5rem; letter-spacing: .15em; color: var(--sp-text-1); }
-    .plp__text + sp-button, .plp__code + sp-button { margin-top: 12px; }
+    .plp__text + sp-button, .plp__share + sp-button { margin-top: 12px; }
+    .plp__share { display: grid; gap: 8px; margin: 0; padding: 14px 16px; border-radius: var(--sp-radius-md); border: 1px solid var(--sp-border); }
+    .plp__share-label { margin: 0; font-size: .875rem; font-weight: 600; color: var(--sp-text-2); }
+    .plp__share-text { margin: 0; color: var(--sp-text-1); line-height: 1.5; overflow-wrap: anywhere; user-select: all; }
+    .plp__share-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .plp__links { list-style: none; margin: 0; padding: 0; }
     .plp__link { display: grid; gap: 10px; padding: 14px 0; border-top: 1px solid var(--sp-border); }
     .plp__link:first-child { border-top: 0; }
     .plp__who { display: grid; gap: 2px; }
-    .plp__meta, .plp__hint { font-size: .875rem; color: var(--sp-text-3); }
+    .plp__meta, .plp__hint { font-size: .875rem; color: var(--sp-text-2); }
     .plp__switch { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .plp__switch label { font-weight: 500; cursor: pointer; }
     .plp__toggle { appearance: none; width: 44px; height: 24px; border-radius: 999px; background: var(--sp-surface-4); border: 1px solid var(--sp-border-strong);
@@ -136,6 +155,9 @@ const RELATIONSHIPS: Record<string, string> = { Mother: 'Anne', Father: 'Baba', 
 export class ParentLinkPageComponent implements OnInit {
   private readonly service = inject(ParentLinkService);
   private readonly toaster = inject(ToasterService);
+  private readonly document = inject(DOCUMENT);
+  private readonly nav = inject(SHARE_NAVIGATOR);
+  private readonly panel = parentPanelLinks();
 
   readonly links = signal<ParentLink[]>([]);
   readonly loaded = signal(false);
@@ -143,6 +165,14 @@ export class ParentLinkPageComponent implements OnInit {
   readonly busy = signal(false);
   readonly status = signal('');
   readonly error = signal<string | null>(null);
+  /** Native sharing only where the browser offers it (mostly phones); the button is hidden otherwise. */
+  get canShare(): boolean { return typeof this.nav?.share === 'function'; }
+  readonly shareMessage = computed(() => {
+    const issued = this.code();
+    if (!issued) return '';
+    const days = Math.max(1, Math.ceil((new Date(issued.expiresAt).getTime() - Date.now()) / DAY_MS));
+    return `Veli panelinden beni ekle: ${this.panel.register} · Kod: ${issued.code} (${days} gün geçerli)`;
+  });
 
   ngOnInit(): void {
     void this.load();
@@ -167,6 +197,31 @@ export class ParentLinkPageComponent implements OnInit {
       this.code.set(issued);
       this.status.set(`Kod oluşturuldu: ${issued.code}. Velinle paylaşabilirsin.`);
     }, 'Veli kodu oluşturulamadı.');
+  }
+
+  async copyShare(): Promise<void> {
+    const text = this.shareMessage();
+    if (!text) return;
+    this.error.set(null);
+    if (await this.copy(text)) {
+      this.status.set('Mesaj kopyalandı. Velinle paylaşabilirsin.');
+    } else {
+      this.status.set('');
+      this.error.set('Mesaj kopyalanamadı. Mesajı seçip kendin kopyalayabilirsin.');
+    }
+  }
+
+  async share(): Promise<void> {
+    const text = this.shareMessage();
+    if (!text || !this.nav?.share) return;
+    this.error.set(null);
+    try {
+      await this.nav.share({ title: 'Veli bağlantı kodu', text });
+    } catch (failure) {
+      // The student closing the share sheet is not an error.
+      if ((failure as { name?: string } | null)?.name === 'AbortError') return;
+      this.error.set('Paylaşım açılamadı. Mesajı kopyalayıp velinle paylaşabilirsin.');
+    }
   }
 
   async approve(link: ParentLink): Promise<void> {
@@ -204,6 +259,30 @@ export class ParentLinkPageComponent implements OnInit {
         : `${link.parentName} artık hızlı okuma ilerlemeni görmeyecek.`);
     }, 'Görünürlük ayarı kaydedilemedi.');
     if (!ok) input.checked = previous;
+  }
+
+  private async copy(text: string): Promise<boolean> {
+    if (this.nav?.clipboard?.writeText) {
+      try {
+        await this.nav.clipboard.writeText(text);
+        return true;
+      } catch { /* insecure context or denied: fall back below */ }
+    }
+    const area = this.document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.setAttribute('data-share-fallback', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    this.document.body.appendChild(area);
+    try {
+      area.select();
+      return this.document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      area.remove();
+    }
   }
 
   private async load(): Promise<void> {
