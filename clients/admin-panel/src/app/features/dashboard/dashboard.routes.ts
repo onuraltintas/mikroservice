@@ -23,6 +23,13 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('./pages/coaching-score-models').then(m => m.CoachingScoreModelsComponent)
     },
     {
+        // KM7 (01.11.2026): the topic–outcome link review queue.
+        path: 'coaching/outcome-approvals',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingContentManage, role: 'SystemAdmin' },
+        loadComponent: () => import('./pages/coaching-outcome-approvals').then(m => m.CoachingOutcomeApprovalsComponent)
+    },
+    {
         path: 'coaching/catalog',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingView, role: 'SystemAdmin' },

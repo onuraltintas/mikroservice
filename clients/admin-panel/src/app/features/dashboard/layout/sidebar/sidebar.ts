@@ -220,6 +220,13 @@ export class SidebarComponent {
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" /></svg>'
           },
           {
+            label: 'Kazanım onay kuyruğu',
+            route: '/dashboard/coaching/outcome-approvals',
+            permission: ADMIN_PERMISSIONS.coachingContentManage,
+            role: 'SystemAdmin',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>'
+          },
+          {
             label: 'Puan tahmini verileri',
             route: '/dashboard/coaching/score-models',
             permission: ADMIN_PERMISSIONS.coachingContentManage,
@@ -394,6 +401,7 @@ export class SidebarComponent {
       '/dashboard/coaching/cms': ADMIN_PERMISSIONS.coachingContentManage,
       '/dashboard/coaching/catalog': ADMIN_PERMISSIONS.coachingView,
       '/dashboard/coaching/score-models': ADMIN_PERMISSIONS.coachingContentManage,
+      '/dashboard/coaching/outcome-approvals': ADMIN_PERMISSIONS.coachingContentManage,
       '/dashboard/coaching/curriculum': ADMIN_PERMISSIONS.coachingContentManage,
       '/dashboard/coaching/subscriptions': ADMIN_PERMISSIONS.coachingSubscriptionManage,
       '/dashboard/coaching/sales': ADMIN_PERMISSIONS.coachingSubscriptionManage,
