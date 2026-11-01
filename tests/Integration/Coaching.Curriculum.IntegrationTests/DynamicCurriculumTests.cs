@@ -14,16 +14,42 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class DynamicCurriculumTests
 {
     [Fact]
-    public async Task ExamDateIsOptionalAndCanBeSetChangedAndClearedWithoutChangingExamCode()
+    // KM1 (01.11.2026): the single exam date became a list of sessions; ExamDate on the node is the next session's date.
+    public async Task ExamSessionsAreOptionalAndCanBeSetChangedAndClearedWithoutChangingExamCode()
     {
         await using var f=new CurriculumManagementTests.Fixture();
-        var exam=await f.Service.SaveAsync("exams",null,Request(new {Name="Tarihli sınav",Reason="Sınav tarihi ekle",Code="DATE",ExamDate="2027-06-20"}),default);
+        var exam=await f.Service.SaveAsync("exams",null,Request(new {Name="Tarihli sınav",Reason="Sınav tarihi ekle",Code="DATE",Sessions=new[]{new{Date="2027-06-20",Label="2027"}}}),default);
         Assert.Equal("2027-06-20",Date(exam));
-        exam=await f.Service.SaveAsync("exams",exam.Id,Request(new {Name=exam.Name,Reason="Sınav tarihini güncelle",exam.Fingerprint,Code="DATE",ExamDate="2027-06-27"}),default);
+        var session=Assert.Single(exam.Sessions);
+        exam=await f.Service.SaveAsync("exams",exam.Id,Request(new {Name=exam.Name,Reason="Sınav tarihini güncelle",exam.Fingerprint,Code="DATE",
+            Sessions=new object[]{new{Id=session.Id,Date="2027-06-27",Label="2027",ApplicationStart="2027-02-04",ApplicationEnd="2027-03-02"},new{Date="2027-11-21",Label="2027/2"}}}),default);
+        Assert.Equal(session.Id,exam.Sessions[0].Id);Assert.Equal(new DateOnly(2027,3,2),exam.Sessions[0].ApplicationEnd);
         Assert.Equal("2027-06-27",Date(await f.Service.GetAsync("exams",exam.Id,default)));
         Assert.Equal("2027-06-27",Date(Assert.Single((await f.Service.ChildrenAsync("exams",null,"Tarihli",1,default)).Items)));
-        exam=await f.Service.SaveAsync("exams",exam.Id,new(exam.Name,"Tarihi daha sonra belirle",Fingerprint:exam.Fingerprint,Code:"DATE"),default);
-        Assert.Null(Date(exam));Assert.Equal("DATE",exam.Code);
+        // Leaving the sessions out keeps them; an empty list clears them.
+        exam=await f.Service.SaveAsync("exams",exam.Id,new(exam.Name+" (yeni ad)","Sınavın adını düzelt",Fingerprint:exam.Fingerprint,Code:"DATE"),default);
+        Assert.Equal(2,exam.Sessions.Count);
+        exam=await f.Service.SaveAsync("exams",exam.Id,new(exam.Name,"Tarihi daha sonra belirle",Fingerprint:exam.Fingerprint,Code:"DATE",Sessions:[]),default);
+        Assert.Null(Date(exam));Assert.Empty(exam.Sessions);Assert.Equal("DATE",exam.Code);
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SaveAsync("exams",exam.Id,new(exam.Name,"Aynı tarih iki kez",Fingerprint:exam.Fingerprint,Code:"DATE",
+            Sessions:[new(null,new(2027,6,20),"A",null,null),new(null,new(2027,6,20),"B",null,null)]),default));
+    }
+
+    [Fact]
+    public async Task ASessionAStudentAimsForCannotBeRemoved()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();
+        var exam=await f.Service.SaveAsync("exams",null,new("YDS","Sınav türü ekle",Code:"YDS",Sessions:[new(null,new(2027,3,28),"2027/1",null,null),new(null,new(2027,11,21),"2027/2",null,null)]),default);
+        var context=StudentLearningContext.Create(Guid.NewGuid(),2026,LearningPurpose.Yds,2027,null,null);context.SetTargetExamSession(exam.Sessions[1].Id);
+        f.Db.Add(context);await f.Db.SaveChangesAsync();
+        exam=await f.Service.GetAsync("exams",exam.Id,default);
+        var error=await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SaveAsync("exams",exam.Id,new(exam.Name,"Güz oturumunu kaldır",Fingerprint:exam.Fingerprint,Code:"YDS",
+            Sessions:[new(exam.Sessions[0].Id,new(2027,3,28),"2027/1",null,null)]),default));
+        Assert.Contains("1 öğrenci",error.Message);
+        // Its date may still change.
+        exam=await f.Service.SaveAsync("exams",exam.Id,new(exam.Name,"Güz oturumu tarihi değişti",Fingerprint:exam.Fingerprint,Code:"YDS",
+            Sessions:[new(exam.Sessions[0].Id,new(2027,3,28),"2027/1",null,null),new(exam.Sessions[1].Id,new(2027,11,28),"2027/2",null,null)]),default);
+        Assert.Contains("1 öğrencinin hedef oturumu",string.Join(" ",exam.Blockers));
     }
     private static string? Date(CurriculumNode node)
     {
@@ -35,7 +61,7 @@ public sealed class DynamicCurriculumTests
     public async Task ExamLookupReturnsDatabaseEntriesRatherThanAFixedList()
     {
         await using var f=new CurriculumManagementTests.Fixture();
-        await f.Service.SaveAsync("exams",null,new("KPSS Genel Yetenek","Sınav türü ekle",Code:"KPSS",ExamDate:new(2027,6,20)),default);
+        await f.Service.SaveAsync("exams",null,new("KPSS Genel Yetenek","Sınav türü ekle",Code:"KPSS",Sessions:[new(null,new(2027,6,20),"2027",null,null)]),default);
         var result=Assert.IsType<OkObjectResult>(await new CoachingCatalogLookupsController(f.Db).Exams(default));
         using var json=JsonDocument.Parse(JsonSerializer.Serialize(result.Value));
         var exam=Assert.Single(json.RootElement.GetProperty("data").EnumerateArray(),x=>x.GetProperty("Code").GetString()=="KPSS");

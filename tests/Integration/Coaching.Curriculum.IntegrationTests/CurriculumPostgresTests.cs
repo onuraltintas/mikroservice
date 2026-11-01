@@ -22,17 +22,17 @@ public sealed class CurriculumPostgresTests
         var taskBefore=JsonSerializer.Serialize(await CurriculumManagementTests.LegacyStudyTasks(f.Db).AsNoTracking().SingleAsync());
         await f.Db.GetService<IMigrator>().MigrateAsync("20261016201006_GradeIndependentCurriculum");
         await f.Db.Database.MigrateAsync();await f.Db.Database.MigrateAsync();f.Db.ChangeTracker.Clear();
-        Assert.All(await f.Db.Set<StudyCatalogExam>().ToArrayAsync(),x=>Assert.Null(x.ExamDate));
+        Assert.All(await f.Db.Set<StudyCatalogExam>().Include(x=>x.Sessions).ToArrayAsync(),x=>Assert.Empty(x.Sessions));
         var exam=await f.Db.Set<StudyCatalogExam>().SingleAsync(x=>x.Code=="LGS");
         var doc=await f.Service.GetAsync("exams",exam.Id,default);
-        await f.Service.SaveAsync("exams",doc.Id,new(doc.Name,"Sınav tarihini belirle",Fingerprint:doc.Fingerprint,Code:"LGS",ExamDate:new(2027,6,20)),default);
+        await f.Service.SaveAsync("exams",doc.Id,new(doc.Name,"Sınav tarihini belirle",Fingerprint:doc.Fingerprint,Code:"LGS",Sessions:[new(null,new(2027,6,20),"2027",null,null)]),default);
         f.Db.ChangeTracker.Clear();
-        Assert.Equal(new DateOnly(2027,6,20),(await f.Db.Set<StudyCatalogExam>().SingleAsync(x=>x.Id==exam.Id)).ExamDate);
-        await Assert.ThrowsAsync<BusinessRuleException>(()=>f.Service.SaveAsync("exams",doc.Id,new(doc.Name,"Eski tarih formunu kaydet",Fingerprint:doc.Fingerprint,Code:"LGS",ExamDate:new(2027,6,27)),default));
+        Assert.Equal(new DateOnly(2027,6,20),(await f.Db.Set<StudyCatalogExam>().Include(x=>x.Sessions).SingleAsync(x=>x.Id==exam.Id)).Sessions.Single().Date);
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>f.Service.SaveAsync("exams",doc.Id,new(doc.Name,"Eski tarih formunu kaydet",Fingerprint:doc.Fingerprint,Code:"LGS",Sessions:[new(null,new(2027,6,27),"2027",null,null)]),default));
         var listed=Assert.Single((await f.Service.ChildrenAsync("exams",null,"Liselere",1,default)).Items);
         Assert.Equal(new DateOnly(2027,6,20),listed.ExamDate);
-        await f.Service.SaveAsync("exams",listed.Id,new(listed.Name,"Sınav tarihini temizle",Fingerprint:(await f.Service.GetAsync("exams",listed.Id,default)).Fingerprint,Code:"LGS"),default);
-        Assert.Null((await f.Db.Set<StudyCatalogExam>().AsNoTracking().SingleAsync(x=>x.Id==exam.Id)).ExamDate);
+        await f.Service.SaveAsync("exams",listed.Id,new(listed.Name,"Sınav tarihini temizle",Fingerprint:(await f.Service.GetAsync("exams",listed.Id,default)).Fingerprint,Code:"LGS",Sessions:[]),default);
+        Assert.Empty((await f.Db.Set<StudyCatalogExam>().AsNoTracking().Include(x=>x.Sessions).SingleAsync(x=>x.Id==exam.Id)).Sessions);
         Assert.Equal(taskBefore,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync()));
     }
 
