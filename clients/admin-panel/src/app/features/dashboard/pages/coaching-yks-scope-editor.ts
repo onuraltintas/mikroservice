@@ -33,16 +33,16 @@ export const YKS_SCORE_TYPES: Record<string, string[]> = { TYT: ['TYT', 'SAY', '
         @if (!drafts().length) { <p class="text-sm text-gray-600 dark:text-gray-300">Bu konu henüz hiçbir YKS kapsamında değil.</p> }
         @for (scope of drafts(); track $index; let i = $index) {
           <div class="grid gap-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700 sm:grid-cols-3" role="group" [attr.aria-label]="(i + 1) + '. YKS kapsamı'">
-            <label class="grid gap-1 text-sm">Oturum
-              <select [name]="'yks-exam-' + i" [attr.name]="'yks-exam-' + i" [(ngModel)]="scope.examCode" (ngModelChange)="examChanged(scope)" class="rounded-lg border p-2 dark:bg-gray-800">
+            <label class="grid min-w-0 gap-1 text-sm">Oturum
+              <select [name]="'yks-exam-' + i" [attr.name]="'yks-exam-' + i" [(ngModel)]="scope.examCode" (ngModelChange)="examChanged(scope)" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
                 <option value="TYT">TYT</option><option value="AYT">AYT</option><option value="YDT">YDT</option>
               </select></label>
-            <label class="grid gap-1 text-sm">Puan türü
-              <select [name]="'yks-score-' + i" [attr.name]="'yks-score-' + i" [(ngModel)]="scope.scoreType" class="rounded-lg border p-2 dark:bg-gray-800">
+            <label class="grid min-w-0 gap-1 text-sm">Puan türü
+              <select [name]="'yks-score-' + i" [attr.name]="'yks-score-' + i" [(ngModel)]="scope.scoreType" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
                 @for (type of scoreTypes(scope.examCode); track type) { <option [value]="type">{{ scoreName(type) }}</option> }
               </select></label>
-            <label class="grid gap-1 text-sm">Test
-              <select [name]="'yks-test-' + i" [attr.name]="'yks-test-' + i" [(ngModel)]="scope.testCode" class="rounded-lg border p-2 dark:bg-gray-800">
+            <label class="grid min-w-0 gap-1 text-sm">Test
+              <select [name]="'yks-test-' + i" [attr.name]="'yks-test-' + i" [(ngModel)]="scope.testCode" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
                 @for (test of tests(scope.examCode); track test.code) { <option [value]="test.code">{{ test.label }}</option> }
               </select></label>
             @if (outcomes().length) {
@@ -58,8 +58,8 @@ export const YKS_SCORE_TYPES: Record<string, string[]> = { TYT: ['TYT', 'SAY', '
           </div>
         }
         <button type="button" (click)="add()" class="justify-self-start rounded-lg border px-3 py-2 text-sm">Kapsam ekle</button>
-        <label class="grid gap-1 text-sm font-medium">Değişiklik gerekçesi (5–500 karakter)
-          <input name="yks-reason" [(ngModel)]="reason" maxlength="500" class="rounded-lg border p-2 dark:bg-gray-800"></label>
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Değişiklik gerekçesi (5–500 karakter)
+          <input name="yks-reason" [(ngModel)]="reason" maxlength="500" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
         <button type="button" (click)="save()" [disabled]="reason.trim().length < 5" class="justify-self-start rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">YKS kapsamını kaydet</button>
       }
     </fieldset>`

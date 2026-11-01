@@ -39,25 +39,25 @@ const decisionText: Record<LinkDecision, { verb: string; done: string }> = {
       </div>
 
       <form (ngSubmit)="search(1)" class="grid gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-5" aria-label="Kuyruk filtreleri">
-        <label class="grid gap-1 text-sm font-medium">Durum
-          <select name="status" [(ngModel)]="status" class="rounded-lg border p-2 dark:bg-gray-800">
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Durum
+          <select name="status" [(ngModel)]="status" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
             <option value="pending">Onay bekliyor</option><option value="approved">Onaylı</option><option value="rejected">Reddedildi</option><option value="all">Tümü</option>
           </select></label>
-        <label class="grid gap-1 text-sm font-medium">Sınav
-          <select name="exam" [(ngModel)]="examCode" (ngModelChange)="examChanged()" class="rounded-lg border p-2 dark:bg-gray-800">
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Sınav
+          <select name="exam" [(ngModel)]="examCode" (ngModelChange)="examChanged()" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
             <option value="">Tümü</option>
             @for (group of examGroups(); track group.label) { <optgroup [label]="group.label">@for (exam of group.exams; track exam.code) { <option [value]="exam.code">{{ exam.name }}</option> }</optgroup> }
           </select></label>
-        <label class="grid gap-1 text-sm font-medium">Ders
-          <select name="lesson" [(ngModel)]="lessonId" class="rounded-lg border p-2 dark:bg-gray-800">
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Ders
+          <select name="lesson" [(ngModel)]="lessonId" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
             <option value="">Tümü</option>@for (lesson of lessons(); track lesson.id) { <option [value]="lesson.id">{{ lesson.name }}</option> }
           </select></label>
-        <label class="grid gap-1 text-sm font-medium">Kaynak
-          <select name="source" [(ngModel)]="source" class="rounded-lg border p-2 dark:bg-gray-800">
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Kaynak
+          <select name="source" [(ngModel)]="source" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
             <option value="">Tümü</option>@for (item of sources(); track item) { <option [value]="item">{{ sourceName(item) }}</option> }
           </select></label>
-        <label class="grid gap-1 text-sm font-medium">Ara
-          <input name="search" [(ngModel)]="term" maxlength="200" placeholder="Konu, kazanım kodu veya metni" class="rounded-lg border p-2 dark:bg-gray-800"></label>
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Ara
+          <input name="search" [(ngModel)]="term" maxlength="200" placeholder="Konu, kazanım kodu veya metni" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
         <div class="flex items-end"><button type="submit" [disabled]="busy()" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50">Listele</button></div>
       </form>
 
@@ -77,8 +77,8 @@ const decisionText: Record<LinkDecision, { verb: string; done: string }> = {
           <button type="button" (click)="selectAllMatching()" [disabled]="busy() || !total()" class="rounded-lg border px-3 py-2 text-sm disabled:opacity-50">Eşleşen tümünü seç ({{ total() }})</button>
           <button type="button" (click)="clearSelection()" [disabled]="busy() || !selectedCount()" class="rounded-lg border px-3 py-2 text-sm disabled:opacity-50">Seçimi temizle</button>
         </div>
-        <label class="grid gap-1 text-sm font-medium">İşlem gerekçesi (5–500 karakter)
-          <textarea name="reason" [(ngModel)]="reason" maxlength="500" rows="2" class="rounded-lg border p-2 dark:bg-gray-800" placeholder="Örn. ÖSYM 2026 kılavuzuyla karşılaştırıldı"></textarea></label>
+        <label class="grid min-w-0 gap-1 text-sm font-medium">İşlem gerekçesi (5–500 karakter)
+          <textarea name="reason" [(ngModel)]="reason" maxlength="500" rows="2" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800" placeholder="Örn. ÖSYM 2026 kılavuzuyla karşılaştırıldı"></textarea></label>
         <div class="flex flex-wrap gap-2">
           <button type="button" (click)="decide('approve')" [disabled]="!canDecide()" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Onayla</button>
           <button type="button" (click)="decide('unapprove')" [disabled]="!canDecide()" class="rounded-lg border px-4 py-2 text-sm font-semibold disabled:opacity-50">Onayı kaldır</button>
