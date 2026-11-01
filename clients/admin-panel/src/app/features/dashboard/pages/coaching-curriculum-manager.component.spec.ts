@@ -3,20 +3,25 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { CoachingCurriculumManagerComponent } from './coaching-curriculum-manager.component';
+import { KM7A_REAL, KM7A_STUBS } from './coaching-km7a-embeds.testing';
 
 describe('Coaching curriculum manager', () => {
   const topic = { kind: 'topics', id: 'topic', name: 'Çarpanlar', path: 'Sayısal / Matematik / Sayılar / Çarpanlar', parentId: 'unit', parentKind: 'units', isActive: true,
     fingerprint: 'current', estimatedMinutes: 60, canDelete: false, blockers: ['1 çalışma kaydı'], children: 0, outcomes: [], estimates: [] };
   function setup() {
     TestBed.configureTestingModule({ imports: [CoachingCurriculumManagerComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    TestBed.overrideComponent(CoachingCurriculumManagerComponent, { remove: { imports: KM7A_REAL }, add: { imports: KM7A_STUBS } });
     const fixture = TestBed.createComponent(CoachingCurriculumManagerComponent); fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
     http.expectOne(r => r.url.endsWith('/curriculum-management/children')).flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 25 } });
+    // KM7: the filter bar loads the exams and the header shows the pending link count.
+    http.expectOne(r => r.url.endsWith('/coaching/catalog/exams')).flush({ data: [] });
+    http.expectOne(r => r.url.endsWith('/outcomes/mappings')).flush({ data: { items: [], totalCount: 0 } });
     return { fixture, http, c: fixture.componentInstance };
   }
   it('shows separate catalog tabs with a direct exam create action and no lesson groups', () => {
     const { fixture, http } = setup(); fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Ders ve Müfredat Yönetimi');
+    expect(fixture.nativeElement.textContent).toContain('Müfredat Yönetimi');
     expect(fixture.nativeElement.textContent).toContain('Henüz kayıt yok');
     expect(fixture.nativeElement.querySelector('[role="tablist"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[aria-label="Müfredat hiyerarşisi"]')).not.toBeNull();
@@ -34,16 +39,12 @@ describe('Coaching curriculum manager', () => {
     expect(button?.disabled).toBe(true); c.remove(); http.expectNone(r => r.method === 'DELETE'); http.verify();
   });
   // KM1 (01.11.2026): an exam has dated sessions (YDS twice a year, e-YDS many times) instead of one optional date.
-  it('adds exam sessions with application windows and sends them as calendar dates', async () => {
+  // KM1 (01.11.2026): an exam has dated sessions; KM7 moves their editing into KM7a's <app-exam-sessions-editor>.
+  it('embeds the exam sessions editor and sends its sessions as calendar dates', async () => {
     const {fixture,http,c}=setup();c.create('exams');fixture.detectChanges();await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('input[name="examDate"]')).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Henüz oturum yok');
-    const add=Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(x=>x.textContent?.trim()==='Oturum ekle')!;
-    add.click();add.click();fixture.detectChanges();await fixture.whenStable();
-    const dates=fixture.nativeElement.querySelectorAll('input[name^="sessionDate"]') as NodeListOf<HTMLInputElement>;
-    expect(dates.length).toBe(2);expect(dates[0].type).toBe('date');
-    c.form.sessions[0]={id:null,date:'2027-03-28',label:'2027/1',applicationStart:'2027-02-03',applicationEnd:'2027-02-11'};
-    c.form.sessions[1]={id:null,date:'2027-11-21',label:'2027/2',applicationStart:'',applicationEnd:''};
+    expect(fixture.nativeElement.querySelector('app-exam-sessions-editor')).not.toBeNull();
+    c.form.sessions=[{id:null,date:'2027-03-28',label:'2027/1',applicationStart:'2027-02-03',applicationEnd:'2027-02-11'},{id:null,date:'2027-11-21',label:'2027/2',applicationStart:'',applicationEnd:''}];
     c.form.name='Yabancı Dil Bilgisi Seviye Tespit Sınavı';c.form.code='YDS';c.form.reason='YDS oturumları';c.save();
     const req=http.expectOne(r=>r.method==='POST');
     expect(req.request.body.examDate).toBeUndefined();
@@ -51,14 +52,18 @@ describe('Coaching curriculum manager', () => {
       {id:null,date:'2027-11-21',label:'2027/2',applicationStart:null,applicationEnd:null}]);
     req.flush({message:'Örnek çakışma'},{status:409,statusText:'Conflict'});http.verify();
   });
+  it('does not save an exam while the sessions editor reports invalid dates', () => {
+    const {http,c}=setup();c.create('exams');c.sessionsValid.set(false);
+    c.form.name='YDS';c.form.code='YDS';c.form.reason='YDS oturumları';c.save();http.expectNone(r=>r.method==='POST');http.verify();
+  });
   it('loads the sessions of an exam, removes one and keeps the others with their ids', () => {
     const {fixture,http,c}=setup();
     const exam={kind:'exams',id:'yds',name:'YDS',code:'YDS',path:'YDS',isActive:false,fingerprint:'v1',canDelete:true,blockers:[],estimates:[],mappings:[],examDate:'2027-03-28',
       sessions:[{id:'s1',date:'2027-03-28',label:'2027/1',applicationStart:'2027-02-03',applicationEnd:'2027-02-11'},{id:'s2',date:'2027-11-21',label:'2027/2',applicationStart:null,applicationEnd:null}]};
     c.select({...exam} as never);http.expectOne(r=>r.url.endsWith('/exams/yds')).flush({data:exam});fixture.detectChanges();
     expect(c.form.sessions.map(x=>x.label)).toEqual(['2027/1','2027/2']);
-    expect(fixture.nativeElement.textContent).toContain('Sınav oturumları');
-    c.removeSession(0);c.form.reason='Bahar oturumu iptal';c.save();
+    expect(fixture.nativeElement.querySelector('app-exam-sessions-editor')).not.toBeNull();
+    c.form.sessions=c.form.sessions.slice(1);c.form.reason='Bahar oturumu iptal';c.save();
     const req=http.expectOne(r=>r.method==='PUT');
     expect(req.request.body.sessions).toEqual([{id:'s2',date:'2027-11-21',label:'2027/2',applicationStart:null,applicationEnd:null}]);
     req.flush({message:'Çakışma'},{status:409,statusText:'Conflict'});http.verify();
