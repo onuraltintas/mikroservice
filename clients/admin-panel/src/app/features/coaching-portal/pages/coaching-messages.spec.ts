@@ -138,5 +138,38 @@ describe('O3 messages', () => {
     const page = TestBed.runInInjectionContext(() => new CoachingMessagesPageComponent());
     expect(page.role).toBe('Parent');
   });
+  // T5 (31.10.2026): restyled inbox — initials, unread totals, day separators in the thread, a full-screen thread on a phone.
+  it('shows each contact with an initial, the unread total and a bold unread row', () => {
+    const { fixture, http } = setup();
+    flushList(http, [conversation, { ...conversation, id: 'c2', otherName: 'Ece Hoca', unreadCount: 0 }]);
+    return vi.waitFor(() => {
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('.unread-total')?.textContent?.trim()).toBe('2 okunmamış');
+      const rows = [...el.querySelectorAll('.conversations button')] as HTMLButtonElement[];
+      expect(rows.map(row => row.querySelector('.avatar')?.textContent?.trim())).toEqual(['C', 'E']);
+      expect(rows[0].classList.contains('unread')).toBe(true);
+      expect(rows[1].classList.contains('unread')).toBe(false);
+    });
+  });
+
+  it('separates the thread by day and keeps the full-screen thread class for phones', async () => {
+    const { fixture, component, http } = setup(); flushList(http);
+    const opening = component.open('c1');
+    http.expectOne('/api/coaching/messages/conversations/c1').flush(thread({ messages: [
+      { id: 'm1', senderUserId: 't1', senderName: 'Can Öğretmen', mine: false, body: 'Dün', sentAt: '2026-11-01T09:00:00Z', readByOther: false, attachments: [] },
+      { id: 'm2', senderUserId: 's1', senderName: 'Ada', mine: true, body: 'Bugün', sentAt: '2026-11-02T09:00:00Z', readByOther: false, attachments: [] }] }));
+    await opening; fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.messages')?.classList.contains('has-thread')).toBe(true);
+    expect([...el.querySelectorAll('.day')].map(day => day.textContent?.trim())).toEqual(['1 Kasım Pazar', '2 Kasım Pazartesi']);
+    expect(el.querySelector('.msg.mine .who')).toBeNull();
+  });
+
+  it('keeps the page intro to one short sentence about who reads the messages', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: AuthService, useValue: { userProfile: () => ({ roles: ['Student'] }) } }] });
+    const page = TestBed.runInInjectionContext(() => new CoachingMessagesPageComponent());
+    expect(page.intro).toBe('Öğretmenlerine buradan yaz. Mesajlar 2 yıl saklanır, kurumun gerekirse okuyabilir.');
+  });
 });
 

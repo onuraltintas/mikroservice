@@ -19,12 +19,12 @@ describe('coaching subscription required interceptor', () => {
     const error = new HttpErrorResponse({ status: 403, error: { code: 'CoachingSubscriptionRequired', message: 'Abonelik gerekli' } });
     const { navigate, result } = run(error);
     await expect(result).rejects.toBe(error);
-    expect(navigate).toHaveBeenCalledWith(['/coaching-portal/subscription'], { queryParams: { required: 1 } });
+    expect(navigate).toHaveBeenCalledWith(['/coaching-portal/account/payments'], { queryParams: { required: 1 } });
   });
 
   it('does not navigate again from the subscription page itself', async () => {
     const error = new HttpErrorResponse({ status: 403, error: { code: 'CoachingSubscriptionRequired' } });
-    const { navigate, result } = run(error, '/coaching-portal/subscription?required=1');
+    const { navigate, result } = run(error, '/coaching-portal/account/payments?required=1');
     await expect(result).rejects.toBe(error);
     expect(navigate).not.toHaveBeenCalled();
   });

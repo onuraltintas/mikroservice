@@ -7,11 +7,11 @@ import { PracticeExamInput, PracticeExamProfile, PracticeSection, practiceTotals
   styles: [`
     :host { display:block; margin:1rem 0; }
     label { display:flex; flex-direction:column; gap:.4rem; }
-    input,select { box-sizing:border-box; min-height:2.5rem; width:100%; padding:.5rem; font:inherit; color:inherit; background:transparent; border:1px solid #b9c7cb; border-radius:.4rem; }
-    .table-wrap { overflow-x:auto; margin-top:1rem; } table { width:100%; border-collapse:collapse; } th,td { text-align:left; padding:.5rem; border-bottom:1px solid #d6dfe2; } td input { min-width:4rem; } th:first-child { min-width:9rem; }
-    .summary { padding:.8rem; border:1px solid #b9c7cb; border-radius:.5rem; } .error { color:#b42318; } tr.invalid td.net { color:#b42318; }
+    input,select { box-sizing:border-box; min-height:2.5rem; width:100%; padding:.5rem; font:inherit; color:inherit; background:transparent; border:1px solid var(--ui-border); border-radius:.4rem; }
+    .table-wrap { overflow-x:auto; margin-top:1rem; } table { width:100%; border-collapse:collapse; } th,td { text-align:left; padding:.5rem; border-bottom:1px solid var(--ui-border); } td input { min-width:4rem; } th:first-child { min-width:9rem; }
+    .summary { padding:.8rem; border:1px solid var(--ui-border); border-radius:.5rem; } .error { color:var(--ui-danger); } tr.invalid td.net { color:var(--ui-danger); }
     @media (max-width: 640px) {
-      thead { display:none; } table, tbody, tr, th, td { display:block; } tr { display:grid; grid-template-columns:repeat(4,1fr); gap:.35rem .5rem; padding:.6rem 0; border-bottom:1px solid #d6dfe2; }
+      thead { display:none; } table, tbody, tr, th, td { display:block; } tr { display:grid; grid-template-columns:repeat(4,1fr); gap:.35rem .5rem; padding:.6rem 0; border-bottom:1px solid var(--ui-border); }
       th[scope=row] { grid-column:1 / -1; border:0; padding:0; } td { border:0; padding:0; font-size:.85rem; } td::before { content:attr(data-label); display:block; font-size:.7rem; opacity:.7; }
       td input { min-width:0; }
     }

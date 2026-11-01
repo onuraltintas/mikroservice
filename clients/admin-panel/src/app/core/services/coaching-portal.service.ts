@@ -61,6 +61,9 @@ export interface AssignedStudent {
   teacherFeedback?: string;
   status: string;
   attachments?: AssignmentAttachment[];
+  studentNote?: string | null;
+  /** K4: the latest hand-in when the student handed in again before grading. */
+  lastSubmittedAt?: string | null;
 }
 
 export interface AssignmentDetail {

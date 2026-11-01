@@ -64,6 +64,12 @@ public sealed class ActualWorkDatesTests
         Assert.Null((await reports.GetAsync(First,First.AddDays(6))).ActualMinutes);
         Assert.Equal(20,(await reports.GetAsync(First.AddDays(-7),First.AddDays(-1))).ActualMinutes);
         Assert.Equal(snapshot,JsonSerializer.Serialize((await reviews.GetAsync(null,First,1,default)).Reflection!.Results));
+        // T7: Haftan reads six weeks in one request; every week matches the single-week report of the same dates.
+        var weeks=await reports.GetWeeksAsync(First.AddDays(-7),6);Assert.Equal(6,weeks.Count);
+        foreach(var week in weeks){var one=await reports.GetAsync(week.FromDate,week.ToDate);Assert.Equal(week.FromDate.AddDays(6),week.ToDate);
+            Assert.Equal((one.ScheduledTasks,one.CompletedTasks,one.ActualMinutes),(week.ScheduledTasks,week.CompletedTasks,week.ActualMinutes));}
+        Assert.Equal(20,weeks[0].ActualMinutes);Assert.Equal(15,weeks[2].ActualMinutes);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(()=>reports.GetWeeksAsync(First,13));
     }
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task MigrationFreezesLegacyAttributionWithoutChangingOldColumnsAndBlocksLossyDowngradeAfterDateChange()

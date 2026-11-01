@@ -1,4 +1,6 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeTr from '@angular/common/locales/tr';
 import { provideRouter, withNavigationErrorHandler } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
@@ -12,8 +14,12 @@ import { SOCIAL_AUTH_CONFIG, SocialAuthServiceConfig, GoogleLoginProvider } from
 import { environment } from '../environments/environment';
 import { recoverMissingRouteChunk } from './core/auth/route-chunk-recovery';
 
+// Dates and numbers render in Turkish ("21 Eki 2026", "12,5") across the app (T1, 31.10.2026).
+registerLocaleData(localeTr);
+
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: LOCALE_ID, useValue: 'tr' },
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withNavigationErrorHandler(recoverMissingRouteChunk)),
     provideClientHydration(withEventReplay()),

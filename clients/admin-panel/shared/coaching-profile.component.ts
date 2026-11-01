@@ -21,21 +21,21 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
   template: `
     <section aria-labelledby="coaching-profile-title" class="profile-card">
       <h2 id="coaching-profile-title">Koçluk profilim</h2>
-      <p>Eğitim ve uzmanlık bilgilerinizi burada düzenleyebilirsiniz. Ad, e-posta ve şifre ortak hesap ayarlarınızdadır.</p>
+      <p>{{ t('Eğitim ve uzmanlık bilgilerinizi burada düzenleyebilirsiniz. Ad, e-posta ve şifre ortak hesap ayarlarınızdadır.', 'Okul ve sınıf bilgilerini burada düzenle. Ad, e-posta ve şifre hesap ayarlarında.') }}</p>
       @if (error()) { <p role="alert" class="error">{{ error() }}</p> }
       @if (success()) { <p role="status">{{ success() }}</p> }
       @if (loading()) { <p role="status">Profil yükleniyor…</p> }
       @if (ready() && !student && role === 'Student' || ready() && !teacher && role === 'Teacher') {
-        <p>Koçluk profiliniz henüz oluşturulmamış.</p>
+        <p>{{ t('Koçluk profiliniz henüz oluşturulmamış.', 'Koçluk profilin henüz oluşturulmamış.') }}</p>
         <button type="button" [disabled]="working()" (click)="provision()">Koçluk profilimi oluştur</button>
       }
       @if (ready() && (role === 'Student' ? student : teacher); as profile) {
-        @if (!profile.isActive) { <p role="alert">Koçluk profiliniz pasif. Yöneticinizle görüşün.</p> }
+        @if (!profile.isActive) { <p role="alert">{{ t('Koçluk profiliniz pasif. Yöneticinizle görüşün.', 'Koçluk profilin pasif. Öğretmeninle ya da kurumunla görüş.') }}</p> }
         <form #profileForm="ngForm" (ngSubmit)="profileForm.valid && save()" (ngModelChange)="dirty = true">
           <fieldset [disabled]="working() || !profile.isActive">
             @if (role === 'Student' && student; as s) {
               <label>Eğitim durumu <select name="educationStatus" [(ngModel)]="s.educationStatus" (ngModelChange)="dirty = true" required>
-                <option value="unknown">Seçin</option><option value="student">Öğrenci</option><option value="graduate">Mezun</option>
+                <option value="unknown">{{ t('Seçin', 'Seç') }}</option><option value="student">Öğrenci</option><option value="graduate">Mezun</option>
               </select></label>
               @if (s.educationStatus === 'student') {
                 <label>Sınıf <input name="gradeLevel" type="number" min="1" max="12" required [(ngModel)]="s.gradeLevel" (ngModelChange)="dirty = true"></label>
@@ -70,7 +70,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
       <h2 id="coaching-invitations-title">Koçluk davetlerim</h2>
       @if (invitationError()) { <p role="alert" class="error">{{ invitationError() }}</p> }
       @if (invitationLoading()) { <p role="status">Davetler yükleniyor…</p> }
-      @else if (!invitations().length && !invitationError()) { <p>Bekleyen Koçluk davetiniz yok.</p> }
+      @else if (!invitations().length && !invitationError()) { <p>{{ t('Bekleyen koçluk davetiniz yok.', 'Bekleyen koçluk davetin yok.') }}</p> }
       @for (invite of invitations(); track invite.id) {
         <article><strong>{{ invite.inviterEmail }}</strong><p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
           @if (invite.message) { <p>{{ invite.message }}</p> }
@@ -105,7 +105,7 @@ export class CoachingProfileComponent implements OnInit {
   private loadProfile() {
     this.loading.set(true); this.ready.set(false); this.error.set(null);
     this.http.get<{ data: OwnProfile }>(`${this.base}/profiles/me`).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading.set(false)))
-      .subscribe({ next: response => { this.apply(response.data); this.ready.set(true); }, error: e => this.error.set(this.message(e, 'Koçluk profili yüklenemedi. Yeniden deneyin.')) });
+      .subscribe({ next: response => { this.apply(response.data); this.ready.set(true); }, error: e => this.error.set(this.message(e, this.t('Koçluk profili yüklenemedi. Yeniden deneyin.', 'Profilin yüklenemedi. Yeniden dene.'))) });
   }
   private apply(profile: OwnProfile) {
     this.student = profile.student ? { ...profile.student, educationStatus: profile.student.educationStatus.toLowerCase() } : null;
@@ -123,7 +123,7 @@ export class CoachingProfileComponent implements OnInit {
     let payload: object;
     if (this.role === 'Student' && this.student) {
       const s = this.student;
-      if (s.educationStatus === 'unknown' || s.educationStatus === 'student' && (!s.gradeLevel || s.gradeLevel < 1 || s.gradeLevel > 12)) { this.error.set('Eğitim durumunu ve öğrenciyseniz sınıfınızı seçin.'); return; }
+      if (s.educationStatus === 'unknown' || s.educationStatus === 'student' && (!s.gradeLevel || s.gradeLevel < 1 || s.gradeLevel > 12)) { this.error.set('Eğitim durumunu ve öğrenciysen sınıfını seç.'); return; }
       payload = { expectedVersion: s.version, educationStatus: s.educationStatus, gradeLevel: s.educationStatus === 'student' ? s.gradeLevel : null,
         graduationYear: s.educationStatus === 'graduate' ? s.graduationYear || null : null, schoolName: s.schoolName || null, schoolCity: s.schoolCity || null,
         schoolDistrict: s.schoolDistrict || null, schoolType: s.schoolType || null, classBranch: s.classBranch || null, birthDate: s.birthDate || null,
@@ -137,8 +137,8 @@ export class CoachingProfileComponent implements OnInit {
     this.http.put<{ data: StudentProfile | TeacherProfile }>(`${this.base}/profiles/me/${this.role.toLowerCase()}`, payload)
       .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false))).subscribe({ next: response => {
         this.apply({ student: this.role === 'Student' ? response.data as StudentProfile : this.student,
-          teacher: this.role === 'Teacher' ? response.data as TeacherProfile : this.teacher }); this.success.set('Koçluk profiliniz kaydedildi.'); this.saved.emit();
-      }, error: e => this.error.set(this.message(e, 'Profil kaydedilemedi. Bilgilerinizi kontrol edin.')) });
+          teacher: this.role === 'Teacher' ? response.data as TeacherProfile : this.teacher }); this.success.set(this.t('Koçluk profiliniz kaydedildi.', 'Profilin kaydedildi.')); this.saved.emit();
+      }, error: e => this.error.set(this.message(e, this.t('Profil kaydedilemedi. Bilgilerinizi kontrol edin.', 'Profil kaydedilemedi. Bilgilerini kontrol et.'))) });
   }
   loadInvitations() {
     this.invitationLoading.set(true); this.invitationError.set(null);
@@ -147,12 +147,14 @@ export class CoachingProfileComponent implements OnInit {
   }
   respond(id: string, action: 'accept' | 'reject') {
     if (this.working()) return;
-    if (this.dirty) { this.invitationError.set('Davet işlemi öncesinde profil değişikliklerini kaydedin.'); return; }
+    if (this.dirty) { this.invitationError.set(this.t('Davet işlemi öncesinde profil değişikliklerini kaydedin.', 'Daveti yanıtlamadan önce profil değişikliklerini kaydet.')); return; }
     this.working.set(true); this.invitationError.set(null);
     this.http.post(`${this.base}/invitations/${encodeURIComponent(id)}/${action}`, {}).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false)))
-      .subscribe({ next: () => { this.loadInvitations(); if (action === 'accept') this.loadProfile(); }, error: e => this.invitationError.set(this.message(e, 'Davet işlenemedi. Koçluk rolünüzü ve davetin geçerliliğini kontrol edin.')) });
+      .subscribe({ next: () => { this.loadInvitations(); if (action === 'accept') this.loadProfile(); }, error: e => this.invitationError.set(this.message(e, this.t('Davet işlenemedi. Koçluk rolünüzü ve davetin geçerliliğini kontrol edin.', 'Davet yanıtlanamadı. Davetin süresi dolmuş olabilir.'))) });
   }
   async canLeavePage() { return !this.working() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş Koçluk profil değişikliklerinden vazgeçilsin mi?')); }
+  /** Teachers are addressed formally (siz), students informally (sen). */
+  t(formal: string, informal: string) { return this.role === 'Student' ? informal : formal; }
   private message(e: { error?: { message?: unknown; detail?: unknown } }, fallback: string) {
     const text = e.error?.message ?? e.error?.detail; return typeof text === 'string' ? text : fallback;
   }

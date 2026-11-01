@@ -4,7 +4,7 @@ import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
 @Component({
   selector: 'app-legacy-teacher-redirect',
   standalone: true,
-  template: `<main class="p-8"><h1 class="text-xl font-semibold">Öğretmen paneli taşındı</h1><p class="mt-2">Öğretmen ve kurum işlemleri yeni personel portalında.</p><a class="mt-4 inline-block font-semibold text-indigo-700" [href]="destination">Yeni personel portalını aç</a></main>`
+  template: `<main class="p-8"><h1 class="text-xl font-semibold">Öğretmen paneli taşındı</h1><p class="mt-2">Öğretmen ve kurum işlemleri yeni personel portalında.</p><a class="mt-4 inline-block font-semibold text-(--ui-brand-text)" [href]="destination">Yeni personel portalını aç</a></main>`
 })
 export class LegacyTeacherRedirectComponent implements OnInit {
   private readonly redirectService = inject(StaffPortalRedirectService);

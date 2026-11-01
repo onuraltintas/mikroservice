@@ -28,15 +28,10 @@ describe('StudentSettingsComponent', () => {
     expect(api.save).toHaveBeenCalledWith({timeZoneId:'Europe/London',availabilityVersion:3,draftVersion:4});
     component.save();expect(component.dirty).toBe(false);
   });
-  it('offers the personal calendar subscription for the student role (roadmap O6)',async()=>{
+  it('is only the time zone now; notifications and the calendar moved to Bildirimler (T5)',async()=>{
     const {fixture}=await setup();
-    expect(fixture.nativeElement.querySelector('edu-coaching-calendar-subscription')).not.toBeNull();
-    const request=TestBed.inject(HttpTestingController).expectOne(r=>r.url==='/api/calendar/subscription');
-    expect(request.request.params.get('role')).toBe('student');
-  });
-  it('offers the notification preferences (roadmap O8)',async()=>{
-    const {fixture}=await setup();
-    expect(fixture.nativeElement.querySelector('edu-notification-preferences')).not.toBeNull();
-    TestBed.inject(HttpTestingController).expectOne(r=>r.url==='/api/notifications/preferences');
+    expect(fixture.nativeElement.querySelector('edu-notification-preferences')).toBeNull();
+    expect(fixture.nativeElement.querySelector('edu-coaching-calendar-subscription')).toBeNull();
+    expect(fixture.nativeElement.querySelector('h2')?.textContent?.trim()).toBe('Saat dilimi');
   });
 });

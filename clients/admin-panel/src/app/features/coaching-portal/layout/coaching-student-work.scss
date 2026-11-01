@@ -1,0 +1,157 @@
+// T5 (31.10.2026): Ödevlerim, an assignment, and the account pages. Global so the page components stay under the
+// 10 kB component style budget; every selector is scoped by .coaching-shell and a page class.
+
+// Shared bits for these pages.
+.coaching-shell .coaching-body .coaching-content {
+  .cs-work-header { margin-bottom: var(--coaching-space-5);
+    h1 { margin: 0; font-size: var(--coaching-text-xl); font-weight: 800; letter-spacing: -.5px; color: var(--ui-text); }
+    > p { margin: var(--coaching-space-1) 0 0; max-width: 60ch; color: var(--ui-text-muted); font-size: var(--coaching-text-body); } }
+  .cs-work-alert { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--coaching-space-3);
+    margin: var(--coaching-space-4) 0; padding: var(--coaching-space-3) var(--coaching-space-4); border-radius: var(--coaching-radius-control);
+    font-size: var(--coaching-text-body);
+    &.is-danger { background: var(--ui-danger-soft); color: var(--ui-danger); }
+    &.is-success { background: var(--ui-success-soft); color: var(--ui-success); }
+    button { min-height: 40px; padding: 0 var(--coaching-space-4); border: 1px solid currentColor; border-radius: var(--coaching-radius-pill); background: transparent; color: inherit; font: inherit; font-weight: 650; } }
+  .cs-work-note { margin: 0; padding: var(--coaching-space-3) var(--coaching-space-4); border-radius: var(--coaching-radius-control); background: var(--ui-warning-soft); color: var(--ui-warning); font-size: var(--coaching-text-body); }
+  .cs-back { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; margin-bottom: var(--coaching-space-3); color: var(--ui-brand-text); font-weight: 650; font-size: var(--coaching-text-body); text-decoration: none;
+    &::before { content: ''; width: 8px; height: 8px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); } }
+  :is(.cs-button-primary, .cs-button-secondary, .cs-button-ghost, .cs-file-button) { display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+    padding: 0 var(--coaching-space-5); border-radius: var(--coaching-radius-pill); font: inherit; font-size: var(--coaching-text-body); font-weight: 700; cursor: pointer; text-decoration: none; }
+  .cs-button-primary { border: 0; background: var(--ui-brand); color: var(--ui-brand-contrast); &:hover:not(:disabled) { background: var(--ui-brand-strong); } }
+  :is(.cs-button-secondary, .cs-file-button) { border: 1px solid var(--ui-border-strong); background: var(--ui-surface); color: var(--ui-text); &:hover { background: var(--ui-surface-muted); } }
+  .cs-button-ghost { border: 0; background: transparent; color: var(--ui-text-muted); }
+  .cs-file-button { position: relative; &.is-disabled { opacity: .55; pointer-events: none; } &:focus-within { outline: 2px solid var(--coaching-focus); outline-offset: 2px; } }
+}
+
+// Ödevlerim: one card per assignment with a coloured edge that carries its state.
+.coaching-shell .coaching-body .coaching-content .cs-assignments {
+  max-width: 820px;
+  cs-segmented-tabs { margin-bottom: var(--coaching-space-5); }
+  .cs-assignment-list { display: grid; gap: var(--coaching-space-3); margin: 0; padding: 0; list-style: none; }
+  .cs-assignment-skeleton { height: 88px; border-radius: var(--coaching-radius-card); background: var(--ui-surface-muted); }
+  .assignment-card { --edge: var(--ui-border-strong); position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--coaching-space-4);
+    min-height: 88px; padding: var(--coaching-space-4) var(--coaching-space-5) var(--coaching-space-4) calc(var(--coaching-space-5) + 4px);
+    border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-card); background: var(--ui-surface); color: var(--ui-text); text-decoration: none; overflow: hidden;
+    &::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--edge); }
+    &:hover { border-color: var(--ui-border-strong); box-shadow: var(--coaching-card-shadow); }
+    &.tone-danger { --edge: var(--ui-danger); } &.tone-warning { --edge: var(--ui-warning); } &.tone-success { --edge: var(--ui-success); } &.tone-brand { --edge: var(--ui-brand); }
+    .main { display: grid; gap: 2px; min-width: 0; }
+    .subject { color: var(--ui-brand-text); font-size: var(--coaching-text-sm); font-weight: 700; }
+    h2 { margin: 0; font-size: var(--coaching-text-md); font-weight: 700; line-height: 1.35; color: var(--ui-text); }
+    .due { color: var(--ui-text-muted); font-size: var(--coaching-text-sm); }
+    .side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--coaching-space-2); flex-shrink: 0; }
+    .score { font-size: var(--coaching-text-lg); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ui-text); }
+    .feedback-mark { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ui-brand-soft); color: var(--ui-brand-text); } }
+  .cs-work-pager { display: flex; align-items: center; justify-content: space-between; gap: var(--coaching-space-3); margin-top: var(--coaching-space-5); color: var(--ui-text-muted);
+    button { min-height: 44px; padding: 0 var(--coaching-space-4); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-pill); background: var(--ui-surface); color: var(--ui-text); font: inherit; } }
+}
+
+// One assignment: status, the result once graded, the brief, then the hand-in.
+.coaching-shell .coaching-body .coaching-content .cs-assignment {
+  display: grid; gap: var(--coaching-space-4); max-width: 820px;
+  > * { margin: 0; }
+  .cs-back { justify-self: start; margin: 0; }
+  .cs-assignment-skeleton { height: 220px; border-radius: var(--coaching-radius-card); background: var(--ui-surface-muted); }
+  :is(.cs-assignment-head, .cs-assignment-result, .cs-assignment-brief, .cs-assignment-submission) {
+    padding: var(--coaching-space-5); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-card); background: var(--ui-surface); color: var(--ui-text);
+    h2 { margin: 0 0 var(--coaching-space-3); font-size: var(--coaching-text-lg); font-weight: 750; }
+    h3 { margin: var(--coaching-space-4) 0 var(--coaching-space-2); font-size: var(--coaching-text-body); font-weight: 700; }
+    .muted { color: var(--ui-text-muted); font-size: var(--coaching-text-sm); } }
+  .cs-assignment-head {
+    .top { display: flex; align-items: center; justify-content: space-between; gap: var(--coaching-space-3); }
+    .subject { color: var(--ui-brand-text); font-weight: 700; font-size: var(--coaching-text-body); }
+    h1 { margin: var(--coaching-space-2) 0 var(--coaching-space-4); font-size: var(--coaching-text-xl); font-weight: 800; letter-spacing: -.5px; line-height: 1.25; }
+    .facts { display: flex; flex-wrap: wrap; gap: var(--coaching-space-2) var(--coaching-space-6); margin: 0;
+      div { display: grid; gap: 2px; } dt { color: var(--ui-text-muted); font-size: var(--coaching-text-sm); } dd { margin: 0; font-weight: 700; }
+      .score { align-self: end; dd { color: var(--ui-text-muted); font-weight: 600; } &.is-graded dd { padding: 4px 12px; border-radius: var(--coaching-radius-pill); background: var(--ui-brand-soft); color: var(--ui-brand-text); font-weight: 750; } } } }
+  .cs-assignment-result { background: var(--ui-brand-soft); border-color: transparent;
+    h2 { font-size: var(--coaching-text-body); color: var(--ui-brand-text); }
+    .big-score { margin: 0 0 var(--coaching-space-3); color: var(--ui-text); strong { font-size: 44px; font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; } span { font-size: var(--coaching-text-lg); font-weight: 700; color: var(--ui-text-muted); } } }
+  blockquote { margin: 0; padding: var(--coaching-space-3) var(--coaching-space-4); border-left: 3px solid var(--ui-brand); border-radius: 0 var(--coaching-radius-control) var(--coaching-radius-control) 0;
+    background: var(--ui-surface); color: var(--ui-text); white-space: pre-line; line-height: 1.6; }
+  .cs-assignment-brief {
+    .description { margin: 0; white-space: pre-line; line-height: 1.65; }
+    .book { display: flex; flex-wrap: wrap; gap: var(--coaching-space-3) var(--coaching-space-6); margin: var(--coaching-space-4) 0 0; padding: var(--coaching-space-3) var(--coaching-space-4); border-radius: var(--coaching-radius-control); background: var(--ui-surface-muted);
+      dt { color: var(--ui-text-muted); font-size: var(--coaching-text-sm); } dd { margin: 0; font-weight: 650; } } }
+  .files { display: grid; gap: var(--coaching-space-2); margin: 0; padding: 0; list-style: none;
+    li { display: flex; gap: var(--coaching-space-2); }
+    button { display: flex; align-items: center; justify-content: space-between; gap: var(--coaching-space-3); flex: 1; min-width: 0; min-height: 48px; padding: var(--coaching-space-2) var(--coaching-space-4);
+      border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-control); background: var(--ui-surface); color: var(--ui-text); font: inherit; text-align: left; cursor: pointer;
+      &:hover:not(:disabled) { border-color: var(--ui-brand); } }
+    .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+    small { flex-shrink: 0; color: var(--ui-text-muted); }
+    .remove { flex: 0 0 auto; color: var(--ui-danger); font-weight: 650; } }
+  .cs-assignment-submission {
+    label[for] { display: block; margin-bottom: var(--coaching-space-2); font-weight: 650; }
+    textarea { width: 100%; box-sizing: border-box; }
+    .actions { display: flex; flex-wrap: wrap; gap: var(--coaching-space-2); margin: var(--coaching-space-3) 0 var(--coaching-space-2); .cs-button-primary { margin-left: auto; } }
+    .done { margin: 0 0 var(--coaching-space-3); color: var(--ui-success); font-weight: 650; }
+    .note-preview { margin: 0 0 var(--coaching-space-3); color: var(--ui-text-muted); white-space: pre-line; }
+    > p { margin: 0 0 var(--coaching-space-2); } }
+}
+@media (max-width: 600px) {
+  .coaching-shell .coaching-body .coaching-content .cs-assignments .assignment-card { align-items: flex-start; padding: var(--coaching-space-4) var(--coaching-space-4) var(--coaching-space-4) calc(var(--coaching-space-4) + 4px); }
+  .coaching-shell .coaching-body .coaching-content .cs-assignment {
+    :is(.cs-assignment-head, .cs-assignment-result, .cs-assignment-brief, .cs-assignment-submission) { padding: var(--coaching-space-4); }
+    .cs-assignment-submission .actions { > * { flex: 1 1 calc(50% - var(--coaching-space-2)); } .cs-button-primary { flex-basis: 100%; margin-left: 0; order: 3; } }
+  }
+}
+
+// Account pages (Profil ve ayarlar, Ödemeler, Kişisel verilerim): the same narrow column and section rhythm.
+.coaching-shell .coaching-body .coaching-content .cs-account {
+  display: grid; gap: var(--coaching-space-5); max-width: 820px;
+  > header { h1 { margin: 0; font-size: var(--coaching-text-xl); font-weight: 800; letter-spacing: -.5px; color: var(--ui-text); }
+    p { margin: var(--coaching-space-1) 0 0; max-width: 60ch; color: var(--ui-text-muted); font-size: var(--coaching-text-body); } }
+  > section, .cs-account-section { padding: var(--coaching-space-5); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-card); background: var(--ui-surface); color: var(--ui-text);
+    > h2 { margin: 0 0 var(--coaching-space-1); font-size: var(--coaching-text-lg); font-weight: 750; }
+    > h2 + p { margin: 0 0 var(--coaching-space-4); color: var(--ui-text-muted); font-size: var(--coaching-text-body); } }
+  // Embedded components bring their own panels; inside a section they sit flat.
+  :is(app-student-teachers, app-student-parent-links, edu-notification-preferences, edu-coaching-calendar-subscription, app-student-data-export, app-student-settings) {
+    display: block; :is(.panel, section) { margin: 0; padding: 0; border: 0; box-shadow: none; background: transparent; } }
+  app-student-learning-setup .study-plans > :is(.page-heading, nav[aria-label="Profil ve çalışma düzeni"]) { display: none; }
+  // T7: the setup wizard inside Çalışma tercihlerim — numbered steps first, one filled primary action per step.
+  app-student-learning-setup .study-plans {
+    display: flex; flex-direction: column; align-items: stretch; gap: var(--coaching-space-4);
+    > nav[aria-label="Kurulum adımları"] { order: -1; display: flex; flex-wrap: wrap; gap: var(--coaching-space-2); margin: 0; padding: 0; counter-reset: setup-step;
+      > button { counter-increment: setup-step; display: inline-flex; align-items: center; gap: var(--coaching-space-2); min-height: 40px; margin: 0; padding: 0 var(--coaching-space-4) 0 6px;
+        border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-pill); background: var(--ui-surface); color: var(--ui-text-muted); font-size: var(--coaching-text-sm); font-weight: 650; box-shadow: none; cursor: pointer;
+        &::before { content: counter(setup-step); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ui-surface-muted); color: var(--ui-text); font-weight: 800; }
+        &:hover:not(:disabled) { border-color: var(--ui-brand); color: var(--ui-text); }
+        &[aria-current=step] { border-color: var(--ui-brand); background: var(--ui-brand-soft); color: var(--ui-text);
+          &::before { background: var(--ui-brand); color: var(--ui-brand-contrast); } }
+        &:disabled { opacity: .55; cursor: not-allowed; } } }
+    > button.secondary:first-of-type { order: 99; align-self: flex-start; min-height: 40px; padding: 0; border: 0; background: none; box-shadow: none; color: var(--ui-brand-text); font-size: var(--coaching-text-sm); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+    :is(form, .panel) { margin: 0; }
+    button[type=submit], :is(.panel, fieldset) > button:not(.secondary), > button:not(.secondary) {
+      min-height: 44px; padding: 0 var(--coaching-space-5); border: 1px solid var(--ui-brand); border-radius: var(--coaching-radius-control);
+      background: var(--ui-brand); color: var(--ui-brand-contrast); font-weight: 700; box-shadow: var(--coaching-action-shadow); cursor: pointer;
+      &:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; } }
+    :is(.panel, fieldset) button.secondary, > button.secondary:not(:first-of-type) { min-height: 40px; border-radius: var(--coaching-radius-control); }
+    .notice { margin: 0; padding: var(--coaching-space-3) var(--coaching-space-4); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-control); background: var(--ui-surface-muted); color: var(--ui-text); }
+  }
+}
+@media (max-width: 600px) { .coaching-shell .coaching-body .coaching-content .cs-account > section, .coaching-shell .coaching-body .coaching-content .cs-account .cs-account-section { padding: var(--coaching-space-4); } }
+
+// Ödemeler: lists of subscriptions and transfer notices, the plan cards and the transfer form.
+.coaching-shell .coaching-body .coaching-content .cs-payments {
+  h3 { margin: var(--coaching-space-5) 0 var(--coaching-space-3); font-size: var(--coaching-text-md); font-weight: 700; }
+  section > p { margin: 0 0 var(--coaching-space-3); color: var(--ui-text-muted); }
+  .cs-payments-list { display: grid; margin: var(--coaching-space-3) 0 0; padding: 0; list-style: none;
+    > li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--coaching-space-2) var(--coaching-space-3); padding: var(--coaching-space-3) 0; border-top: 1px solid var(--ui-border);
+      > span:first-child { display: grid; gap: 2px; min-width: 0; } small { color: var(--ui-text-muted); } }
+    .request-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--coaching-space-1); }
+    .empty { border-top: 0; }
+    .edit { display: grid; gap: var(--coaching-space-2); flex-basis: 100%; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      label { display: grid; gap: 4px; font-size: var(--coaching-text-sm); } .row { display: flex; gap: var(--coaching-space-2); grid-column: 1 / -1; } } }
+  .cs-plans { display: grid; gap: var(--coaching-space-3); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .cs-plan { display: grid; align-content: start; gap: var(--coaching-space-2); padding: var(--coaching-space-4); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-card); background: var(--ui-surface);
+    h4 { margin: 0; font-size: var(--coaching-text-md); font-weight: 750; } p { margin: 0; } .price { font-size: var(--coaching-text-lg); font-weight: 800; }
+    ul { margin: 0; padding-left: 18px; font-size: var(--coaching-text-sm); } button { width: 100%; } }
+  .cs-transfer { display: grid; gap: var(--coaching-space-4); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: var(--coaching-space-4);
+    h3 { margin-top: 0; }
+    .bank { padding: var(--coaching-space-4); border-radius: var(--coaching-radius-control); background: var(--ui-surface-muted);
+      dl { display: grid; gap: var(--coaching-space-2); margin: 0; } dt { color: var(--ui-text-muted); font-size: var(--coaching-text-sm); } dd { margin: 0; font-weight: 650; } .iban { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; } }
+    form { display: grid; gap: var(--coaching-space-3); label { display: grid; gap: 4px; } .check { display: flex; align-items: flex-start; gap: var(--coaching-space-2); font-size: var(--coaching-text-sm); } } }
+  .cs-fees app-coaching-finance .finance { padding: 0; border: 0; box-shadow: none; background: transparent; > header :is(h2, p) { display: none; } }
+  edu-coaching-my-payments { display: block; }
+}

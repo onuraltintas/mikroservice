@@ -11,11 +11,12 @@ import {
   CoachingSubscriptionPlan,
   CoachingSubscriptionSettings
 } from '../../../core/services/coaching-management.service';
-import { CoachingSession, ExamResult, StudentAssignment, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
+import { CoachingSession, StudentAssignment, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
 import { CoachingDatePipe, CoachingLabelPipe } from '../coaching-labels';
 import { CoachingParentService, ParentFeeAccount, ParentLink } from './coaching-parent.service';
 import { apiMessage } from './parent-home.component';
-import { StudentScoreEstimateComponent } from '../pages/student-score-estimate.component';
+import { StudentExamOverviewComponent } from '../growth/student-exam-overview.component';
+import { StudentGoalSummaryComponent } from '../growth/student-goal-summary.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingCheckoutComponent } from '../../../../../shared/coaching-checkout.component';
 import { CoachingMotivationApi, CoachingMotivationComponent } from '../../../../../shared/coaching-motivation.component';
@@ -29,17 +30,17 @@ import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../.
 @Component({
   selector: 'app-parent-child',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingCheckoutComponent, CoachingMotivationComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMyPaymentsComponent, StudentScoreEstimateComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CoachingCheckoutComponent, CoachingMotivationComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMyPaymentsComponent, StudentExamOverviewComponent, StudentGoalSummaryComponent],
   template: `
     <main class="space-y-6" aria-labelledby="parent-child-title">
       <div class="no-print flex flex-wrap items-center justify-between gap-2">
-        <a routerLink="/coaching-portal/parent" class="text-sm text-indigo-600 dark:text-indigo-300">← Çocuklarım</a>
+        <a routerLink="/coaching-portal/parent" class="text-sm text-(--ui-brand-text) ">← Çocuklarım</a>
         @if (link()) { <button type="button" data-testid="print-child" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium dark:border-slate-700" (click)="print()">Yazdır / PDF</button> }
       </div>
       @if (notLinked()) {
         <div role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">Bu öğrenciyle doğrulanmış bir veli bağlantın yok. Çocuğunun bağlantı isteğini onaylamasını bekle.</div>
       } @else if (link(); as child) {
-        <header><p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Veli paneli · salt okunur</p><h1 id="parent-child-title" class="mt-1 text-2xl font-bold">{{ child.studentName }}</h1></header>
+        <header><p class="text-sm font-medium text-(--ui-brand-text) ">Veli paneli · salt okunur</p><h1 id="parent-child-title" class="mt-1 text-2xl font-bold">{{ child.studentName }}</h1></header>
         @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
         @if (success()) { <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{{ success() }}</div> }
 
@@ -54,12 +55,15 @@ import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../.
         <!-- Roadmap D5: the child's study streak and badges. -->
         <edu-coaching-motivation [api]="motivationApi" [student]="childId" />
 
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="exams-heading">
-          <h2 id="exams-heading" class="font-semibold">Son denemeler</h2>
-          @for (exam of exams(); track exam.examId) { <p class="mt-2 text-sm"><strong>{{ exam.examTitle }}</strong> · {{ exam.examDate | coachingDate }} · {{ exam.score }} / {{ exam.maxScore }}</p> }
-          @empty { <p class="mt-2 text-sm text-slate-500">{{ sectionError()['exams'] || 'Henüz deneme sonucu yok.' }}</p> }
+        <!-- T6: the same exam overview and goal gauge the child sees, read-only. -->
+        <section class="cs-growth-parent" aria-labelledby="goal-heading">
+          <h2 id="goal-heading" class="cs-growth-section-title">Hedefi</h2>
+          <app-student-goal-summary [studentId]="childId" [readonly]="true" />
         </section>
-        <app-student-score-estimate [studentId]="childId" />
+        <section class="cs-growth-parent" aria-labelledby="exams-heading">
+          <h2 id="exams-heading" class="cs-growth-section-title">Denemeleri</h2>
+          <app-student-exam-overview [studentId]="childId" [readonly]="true" />
+        </section>
         <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="assignments-heading">
           <h2 id="assignments-heading" class="font-semibold">Ödevler</h2>
           @for (assignment of assignments(); track assignment.id) { <p class="mt-2 text-sm"><strong>{{ assignment.title }}</strong> · son gün {{ assignment.dueDate | coachingDate }} · {{ assignment.status | coachingLabel }}@if (assignment.isOverdue) { · <span class="text-red-600">gecikti</span> }</p> }
@@ -98,7 +102,7 @@ import { CoachingCheckoutChoice, CoachingSalesApi, coachingMoney } from '../../.
               <label class="text-sm">Not<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="note" name="note" maxlength="1000" /></label>
               <div class="sm:col-span-2"><edu-coaching-checkout [api]="sales" [planId]="planId" [price]="selectedPlanPrice()" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" /></div>
               <label class="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum.</label>
-              <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-2" [disabled]="sending() || !checkout.acceptSalesContract">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
+              <button type="submit" class="rounded-lg bg-(--ui-brand) px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-2" [disabled]="sending() || !checkout.acceptSalesContract">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
             </form>
           }
         </section>
@@ -121,7 +125,6 @@ export class ParentChildComponent implements OnInit {
   readonly notLinked = signal(false);
   readonly loaded = signal(false);
   readonly progress = signal<StudentProgressSummary | null>(null);
-  readonly exams = signal<ExamResult[]>([]);
   readonly assignments = signal<StudentAssignment[]>([]);
   readonly sessions = signal<CoachingSession[]>([]);
   readonly fees = signal<ParentFeeAccount | null>(null);
@@ -184,7 +187,6 @@ export class ParentChildComponent implements OnInit {
     }));
     forkJoin({
       progress: safe('progress', 'Özet yüklenemedi.', this.service.getProgress(id), null),
-      exams: safe('exams', 'Deneme sonuçları yüklenemedi.', this.service.getExams(id), { items: [] as ExamResult[] }),
       assignments: safe('assignments', 'Ödevler yüklenemedi.', this.service.getAssignments(id), { items: [] as StudentAssignment[] }),
       sessions: safe('sessions', 'Seanslar yüklenemedi.', this.service.getSessions(id), { items: [] as CoachingSession[] }),
       fees: safe('fees', 'Ücret bilgisi yüklenemedi.', this.service.getFees(id), null),
@@ -194,7 +196,7 @@ export class ParentChildComponent implements OnInit {
       settings: safe('settings', '', this.management.getPublicBankTransferSettings(), null)
     }).subscribe(result => {
       this.progress.set(result.progress as StudentProgressSummary | null);
-      this.exams.set(result.exams.items); this.assignments.set(result.assignments.items); this.sessions.set(result.sessions.items);
+      this.assignments.set(result.assignments.items); this.sessions.set(result.sessions.items);
       this.fees.set(result.fees); this.access.set(result.access); this.transfers.set(result.transfers);
       const plans = result.plans.filter(plan => plan.audience === 'Individual' && plan.isActive && plan.isPublic && !plan.isContactOnly);
       this.plans.set(plans); this.settings.set(result.settings as CoachingSubscriptionSettings | null);

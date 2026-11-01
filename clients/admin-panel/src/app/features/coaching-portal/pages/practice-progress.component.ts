@@ -15,16 +15,16 @@ import { CoachingDatePipe } from '../coaching-labels';
 type DevelopmentTab = 'goals' | 'exams' | 'analysis' | 'work' | 'plan';
 
 @Component({ selector: 'app-practice-progress', standalone: true, imports: [CoachingDatePipe, CommonModule, FormsModule, PracticeAdaptationComponent, WeeklyReviewComponent], styles: [`
-  :host { display:block; } section { border:1px solid #cbd5d8; border-radius:1rem; padding:1.2rem; margin:1rem 0; }
+  :host { display:block; } section { border:1px solid var(--ui-border); border-radius:1rem; padding:1.2rem; margin:1rem 0; }
   [hidden] { display:none !important; }
-  .development-tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0; border-bottom:1px solid #cbd5d8; padding-bottom:.75rem; }
-  .development-tabs button[aria-selected="true"] { background:#3349a5; color:white; border-color:#3349a5; }
-  button:focus-visible, [role="tabpanel"]:focus-visible { outline:3px solid #6366f1; outline-offset:3px; }
+  .development-tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0; border-bottom:1px solid var(--ui-border); padding-bottom:.75rem; }
+  .development-tabs button[aria-selected="true"] { background:var(--ui-brand); color:var(--ui-brand-contrast); border-color:var(--ui-brand); }
+  button:focus-visible, [role="tabpanel"]:focus-visible { outline:3px solid var(--coaching-focus); outline-offset:3px; }
   h2,h3,h4 { margin:.4rem 0; } p { line-height:1.6; } .filters,.points,.actions { display:flex; flex-wrap:wrap; gap:.75rem; align-items:end; }
-  label { display:grid; gap:.3rem; } input,button { font:inherit; padding:.55rem .75rem; border:1px solid #a8bcbc; border-radius:.5rem; color:inherit; background:transparent; }
-  button { cursor:pointer; } button:disabled { opacity:.5; cursor:default; } article { padding:1rem 0; border-top:1px solid #dce3e5; }
-  .points > div { padding:.6rem; border:1px solid #dce3e5; border-radius:.5rem; } .points small { display:block; }
-  .summary { padding:.8rem; background:#eaf3ef; color:#23483b; border-radius:.5rem; } .error { color:#b42318; } .table { overflow-x:auto; } td,th { text-align:left; padding:.5rem; border-bottom:1px solid #dce3e5; }
+  label { display:grid; gap:.3rem; } input,button { font:inherit; padding:.55rem .75rem; border:1px solid var(--ui-border); border-radius:.5rem; color:inherit; background:transparent; }
+  button { cursor:pointer; } button:disabled { opacity:.5; cursor:default; } article { padding:1rem 0; border-top:1px solid var(--ui-border); }
+  .points > div { padding:.6rem; border:1px solid var(--ui-border); border-radius:.5rem; } .points small { display:block; }
+  .summary { padding:.8rem; background:var(--ui-brand-soft); color:var(--ui-text); border-radius:.5rem; } .error { color:var(--ui-danger); } .table { overflow-x:auto; } td,th { text-align:left; padding:.5rem; border-bottom:1px solid var(--ui-border); }
 `], templateUrl: './practice-progress.component.html' })
 export class PracticeProgressComponent implements OnChanges {
   @Input() tabbed = false;

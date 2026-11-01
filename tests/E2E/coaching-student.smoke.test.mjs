@@ -95,10 +95,10 @@ test('student assignment page passes the automated accessibility check and a pho
 
     const photo = Buffer.from('/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==', 'base64');
     await page.getByLabel('Fotoğraf çek').setInputFiles({ name: 'odev.jpg', mimeType: 'image/jpeg', buffer: photo });
-    await page.getByText('Dosya yüklendi ve güvenlik taramasına alındı.').waitFor();
+    await page.getByText('Dosya yüklendi. Güvenlik taramasından geçince indirilebilir.').waitFor();
     await page.getByText('odev.jpg').first().waitFor();
-    await page.getByLabel('Öğretmene notun').fill('Son soruda zorlandım.');
-    await page.getByRole('button', { name: 'Ödevi teslim et' }).click();
+    await page.getByLabel('Öğretmenine not').fill('Son soruda zorlandım.');
+    await page.getByRole('button', { name: 'Teslim et', exact: true }).click();
     await page.getByText('Ödevin teslim edildi.', { exact: false }).waitFor();
     const writes = api.calls.filter(call => !call.startsWith('GET'));
     assert.deepEqual(writes.filter(call => !call.includes('refresh-token')), [

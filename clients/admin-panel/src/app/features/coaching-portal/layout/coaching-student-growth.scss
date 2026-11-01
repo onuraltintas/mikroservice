@@ -1,0 +1,121 @@
+// T6 (31.10.2026): Gelişimim — Denemeler, Hedefim, Haftam and the parent's read-only copy. Kept out of the components so
+// their style budgets stay small; every selector is scoped by .coaching-shell and uses the student tokens only.
+
+.coaching-shell {
+  .cs-growth-primary, .cs-growth-secondary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 var(--coaching-space-5);
+    border-radius: var(--coaching-radius-pill); font: inherit; font-size: var(--coaching-text-body); font-weight: 750; white-space: nowrap; cursor: pointer;
+  }
+  .cs-growth-primary { border: 0; background: var(--ui-brand); color: var(--ui-brand-contrast); box-shadow: var(--coaching-action-shadow);
+    &:hover { background: var(--ui-brand-strong); } }
+  .cs-growth-secondary { border: 1px solid var(--ui-border-strong); background: var(--ui-surface); color: var(--ui-text);
+    &:hover { background: var(--ui-surface-muted); } }
+  .cs-growth-alert { display: flex; flex-wrap: wrap; align-items: center; gap: var(--coaching-space-3); margin: 0 0 var(--coaching-space-4);
+    padding: var(--coaching-space-3) var(--coaching-space-4); border-radius: var(--coaching-radius-control); background: var(--ui-danger-soft); color: var(--ui-danger); font-weight: 650;
+    button { min-height: 36px; padding: 0 var(--coaching-space-3); border: 1px solid currentColor; border-radius: var(--coaching-radius-pill); background: transparent; color: inherit; font: inherit; cursor: pointer; } }
+  .cs-growth-skeleton { height: 220px; border-radius: var(--coaching-radius-card); background: var(--ui-surface-muted); animation: cs-growth-pulse 1.4s ease-in-out infinite; }
+  .cs-growth-muted { margin: 0; color: var(--ui-text-muted); font-size: var(--coaching-text-sm); }
+  .cs-growth-section-title { margin: var(--coaching-space-6) 0 var(--coaching-space-3); font-size: var(--coaching-text-md); font-weight: 800; color: var(--ui-text); }
+  .cs-growth-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--coaching-space-2); margin-bottom: var(--coaching-space-3);
+    h2 { margin: 0; font-size: var(--coaching-text-md); font-weight: 800; } }
+  .cs-growth-lead { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--coaching-space-2); margin: 0 0 var(--coaching-space-2); color: var(--ui-text-muted);
+    strong { font-size: 2.25rem; line-height: 1; font-weight: 850; letter-spacing: -.02em; color: var(--ui-text); font-variant-numeric: tabular-nums; }
+    cs-status-chip { align-self: center; } }
+  .cs-growth-pair { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; gap: var(--coaching-space-4); margin-bottom: var(--coaching-space-4);
+    h2 { margin: 0 0 var(--coaching-space-1); font-size: var(--coaching-text-md); font-weight: 800; } }
+  .cs-growth-subjects > .cs-growth-muted { margin-bottom: var(--coaching-space-3); }
+
+  // Denemeler list
+  .cs-growth-list {
+    ul { display: grid; margin: 0; padding: 0; list-style: none; }
+    li + li { border-top: 1px solid var(--ui-border); }
+    .exam-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto 104px; align-items: center; gap: var(--coaching-space-3); width: 100%;
+      min-height: 64px; padding: var(--coaching-space-3) var(--coaching-space-2); border: 0; border-radius: var(--coaching-radius-control); background: transparent;
+      color: var(--ui-text); font: inherit; text-align: left; }
+    button.exam-row { cursor: pointer; &:hover { background: var(--ui-surface-muted); } }
+    .when strong { font-size: var(--coaching-text-sm); font-weight: 750; color: var(--ui-text-muted); }
+    .what { display: grid; gap: 2px; min-width: 0; strong { font-weight: 750; overflow-wrap: anywhere; } small { color: var(--ui-text-muted); font-size: var(--coaching-text-sm); } }
+    .result { display: grid; justify-items: end; strong { font-weight: 850; font-variant-numeric: tabular-nums; } small { color: var(--ui-text-muted); font-size: 12px; } }
+  }
+
+  // Bottom sheet holding the existing entry form
+  .cs-growth-sheet .study-plans.form-only { padding: 0; .workspace { display: block; } .workspace > .panel { margin: 0; padding: 0; border: 0; box-shadow: none; background: transparent; }
+    // The sheet already names the form.
+    .workspace > .panel > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } }
+
+  // Hedefim
+  .cs-goal-hero { position: relative; overflow: hidden; display: grid; gap: var(--coaching-space-3); margin-bottom: var(--coaching-space-4);
+    background: linear-gradient(135deg, var(--ui-brand-soft), var(--ui-surface-raised) 70%);
+    h2 { margin: 0; font-size: var(--coaching-text-xl); font-weight: 850; line-height: 1.2; overflow-wrap: anywhere; } }
+  .cs-goal-hero[data-reached=true] { background: linear-gradient(135deg, var(--ui-success-soft), var(--ui-surface-raised) 70%); }
+  .cs-goal-kicker { margin: 0; color: var(--ui-brand-text); font-size: var(--coaching-text-sm); font-weight: 750; }
+  .cs-goal-headline { margin: 0; font-size: var(--coaching-text-lg); font-weight: 800; color: var(--ui-text); &.is-muted { font-size: var(--coaching-text-body); font-weight: 650; color: var(--ui-text-muted); } }
+  .cs-gauge { display: grid; gap: 6px; }
+  .cs-gauge-labels { display: grid; grid-template-columns: 1fr auto auto; gap: var(--coaching-space-3); font-size: var(--coaching-text-sm); color: var(--ui-text-muted);
+    span:first-child { font-weight: 750; color: var(--ui-text); } b { color: var(--ui-text); font-variant-numeric: tabular-nums; } }
+  .cs-gauge-track { position: relative; height: 14px; border-radius: var(--coaching-radius-pill); background: var(--ui-surface-muted); box-shadow: inset 0 0 0 1px var(--ui-border); }
+  .cs-gauge-fill { display: block; height: 100%; border-radius: inherit; background: var(--ui-brand); }
+  .cs-gauge-goal { position: absolute; right: -2px; top: -4px; width: 4px; height: 22px; border-radius: 2px; background: var(--ui-text); }
+  .cs-estimate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--coaching-space-3); margin-bottom: var(--coaching-space-3);
+    p { margin: 0 0 4px; } }
+  .cs-estimate-score { font-size: 2rem; font-weight: 850; line-height: 1.1; color: var(--ui-text); font-variant-numeric: tabular-nums; small { font-size: var(--coaching-text-sm); font-weight: 650; color: var(--ui-text-muted); } }
+  .cs-diploma { display: flex; flex-wrap: wrap; align-items: end; gap: var(--coaching-space-3); margin-top: var(--coaching-space-4);
+    label { display: grid; flex: 1 1 100%; font-weight: 700; color: var(--ui-text); small { font-weight: 500; color: var(--ui-text-muted); } }
+    input { width: 140px; min-height: 44px; padding: 0 var(--coaching-space-3); border: 1px solid var(--ui-border-strong); border-radius: var(--coaching-radius-control); background: var(--ui-surface); color: var(--ui-text); font: inherit; } }
+  .cs-goal-edit { margin-top: var(--coaching-space-6); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-card); background: var(--ui-surface);
+    > summary { display: grid; gap: 2px; padding: var(--coaching-space-4) var(--coaching-space-5); cursor: pointer; list-style: none; min-height: 56px;
+      span { font-weight: 800; color: var(--ui-text); } small { color: var(--ui-text-muted); }
+      &::-webkit-details-marker { display: none; }
+      &::after { content: '+'; position: absolute; right: var(--coaching-space-5); top: var(--coaching-space-4); font-size: 22px; font-weight: 600; color: var(--ui-text-muted); } }
+    position: relative;
+    &[open] > summary { border-bottom: 1px solid var(--ui-border); &::after { content: '−'; } }
+    > app-student-primary-goal { display: block; padding: var(--coaching-space-4) var(--coaching-space-5); }
+    // The legacy goal editor sets its own panels; let its rows wrap so no button is cut off on a phone.
+    .draft-task, .actions, .fields { display: flex; flex-wrap: wrap; gap: var(--coaching-space-2); align-items: center; }
+    .draft-task > strong { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+    button { max-width: 100%; white-space: normal; text-align: center; }
+    // Panels inside panels read as boxes in boxes here; keep only the outer frame.
+    .study-plans.embedded .panel .panel, .study-plans.embedded .panel .draft-task { border: 0; padding-inline: 0; background: transparent; box-shadow: none; }
+  }
+
+  // Haftam
+  .cs-week-chart { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--coaching-space-2); margin: var(--coaching-space-3) 0 0; padding: 0; list-style: none;
+    li { display: grid; grid-template-rows: auto 120px auto auto; justify-items: center; gap: 4px; text-align: center; }
+    .cs-week-value { font-size: 12px; font-weight: 800; color: var(--ui-text); font-variant-numeric: tabular-nums; }
+    .cs-week-column { display: flex; align-items: flex-end; width: min(36px, 100%); height: 100%; border-radius: 8px; background: var(--ui-surface-muted);
+      span { display: block; width: 100%; border-radius: 8px; background: var(--ui-brand-soft); box-shadow: inset 0 0 0 1px var(--ui-brand); } }
+    li.is-now .cs-week-column span { background: var(--ui-brand); }
+    .cs-week-label { font-size: 12px; font-weight: 700; color: var(--ui-text-muted); white-space: nowrap; }
+    .cs-week-tasks { font-size: 11px; color: var(--ui-text-muted); }
+    li.is-now .cs-week-label { color: var(--ui-brand-text); } }
+  .cs-week-review { h3 { display: flex; align-items: center; gap: var(--coaching-space-2); margin: var(--coaching-space-4) 0 var(--coaching-space-2); font-size: var(--coaching-text-body); font-weight: 800; } }
+  .cs-growth-callout { display: grid; gap: 2px; margin-top: var(--coaching-space-2); padding: var(--coaching-space-3) var(--coaching-space-4); border-radius: var(--coaching-radius-control);
+    background: var(--ui-accent-soft); color: var(--ui-accent-text); font-weight: 800; text-decoration: none;
+    small { font-weight: 550; } &:hover { text-decoration: underline; } }
+  .cs-decision { display: grid; gap: 2px; margin: 0; padding: var(--coaching-space-2) 0; border-top: 1px solid var(--ui-border);
+    strong { font-weight: 700; overflow-wrap: anywhere; } small { color: var(--ui-text-muted); }
+    &.is-late small { color: var(--ui-danger); font-weight: 700; } }
+  .cs-badges { margin-bottom: var(--coaching-space-4);
+    ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--coaching-space-3) var(--coaching-space-5); margin: 0; padding: 0; list-style: none; }
+    li { display: grid; gap: 6px; }
+    .cs-badge-text { font-size: var(--coaching-text-sm); font-weight: 750; color: var(--ui-text); }
+    li.is-earned .cs-badge-text { color: var(--ui-success); } }
+  app-student-growth-week > app-coaching-portal-progress { display: block; margin-top: var(--coaching-space-6); }
+
+  .cs-growth-parent { margin-top: var(--coaching-space-2); }
+  .cs-growth-parent .cs-growth-section-title { margin-top: 0; }
+}
+
+@keyframes cs-growth-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .coaching-shell .cs-growth-skeleton { animation: none; } }
+
+@media (max-width: 800px) {
+  .coaching-shell {
+    .cs-growth-pair { grid-template-columns: minmax(0, 1fr); }
+    .cs-growth-list .exam-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'what result' 'when chip';
+      .when { grid-area: when; } .what { grid-area: what; } cs-status-chip { grid-area: chip; justify-self: end; } .result { grid-area: result; } }
+    .cs-goal-hero h2 { font-size: var(--coaching-text-lg); }
+    .cs-week-chart li { grid-template-rows: auto 96px auto auto; }
+    .cs-week-chart .cs-week-tasks { display: none; }
+  }
+}

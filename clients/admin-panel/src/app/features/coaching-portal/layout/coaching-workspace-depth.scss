@@ -1,23 +1,4 @@
 // Decorative treatment is shared; lesson and completion colours remain semantic.
-.coaching-shell {
-  --coaching-card-shadow: 0 2px 5px #193e3105, 0 12px 32px #193e310a;
-  --coaching-raised-shadow: 0 4px 10px #193e3108, 0 18px 40px #193e3112;
-  --coaching-mint-tint: #eef8f3;
-  --coaching-honey-tint: #fff9ed;
-  --coaching-blue-tint: #f0f6fc;
-  --coaching-page-glow: #dcefe566;
-  --coaching-action-shadow: 0 4px 10px #08766b24;
-}
-.dark .coaching-shell {
-  --coaching-card-shadow: 0 2px 5px #00000010, 0 12px 32px #00000020;
-  --coaching-raised-shadow: 0 4px 10px #00000018, 0 18px 40px #00000030;
-  --coaching-mint-tint: #203b32;
-  --coaching-honey-tint: #333127;
-  --coaching-blue-tint: #23343e;
-  --coaching-page-glow: #28584633;
-  --coaching-action-shadow: 0 4px 12px #00000024;
-}
-
 body .coaching-shell .coaching-body {
   background: radial-gradient(ellipse 75% 500px at 90% 0, var(--coaching-page-glow), transparent), var(--ui-page);
 }
@@ -25,43 +6,16 @@ body .coaching-shell .coaching-body {
 body .coaching-shell .coaching-body .coaching-content {
   :is(h1, h2, h3, h4) { text-wrap: balance; }
   h1 { font-weight: 800; letter-spacing: -.035em; }
-  :is(.home-welcome, .coaching-page-heading) {
+  .coaching-page-heading {
     padding: 24px 28px; border: 1px solid var(--ui-border); border-radius: 22px;
     background: linear-gradient(115deg, var(--coaching-mint-tint), var(--ui-surface) 75%);
   }
-  :is(.home-eyebrow, .today-eyebrow) {
-    display: inline-flex; align-items: center; gap: 8px; font-weight: 750; letter-spacing: .1em;
-    &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  }
-  :is(.today-focus, .home-next-steps, .home-assignments, .weekly-review, .profile-card, .panel, .finance, .rounded-2xl),
-  app-student-weekly-home > section {
+  :is(.weekly-review, .panel, .finance, .rounded-2xl) {
     border-radius: 22px; box-shadow: var(--coaching-card-shadow);
   }
-  .today-focus {
-    background: linear-gradient(135deg, var(--coaching-mint-tint), var(--ui-surface) 55%);
-    border-top: 3px solid var(--ui-brand); box-shadow: var(--coaching-raised-shadow);
-  }
-  .home-next-steps { background: linear-gradient(155deg, var(--coaching-honey-tint), var(--ui-surface) 65%); }
-  app-student-weekly-home > section { background: linear-gradient(125deg, var(--coaching-blue-tint), var(--ui-surface) 70%); }
-  .home-assignments > header { background: linear-gradient(110deg, var(--coaching-mint-tint), var(--ui-surface)); }
-  :is(.today-focus > header h2, .home-next-steps h2, .home-assignments h2) { font-size: 23px; letter-spacing: -.025em; }
-  .today-overview-copy h3 { font-size: 19px; letter-spacing: -.02em; }
-  .daily-ring { box-shadow: 0 0 0 6px var(--ui-surface), var(--coaching-card-shadow); }
-  :is(.today-date, .today-duration) { font-weight: 650; font-variant-numeric: tabular-nums; }
-  .today-task { padding: 14px 0; }
-  .today-task strong { font-size: 15px; font-weight: 650; }
-  .step-icon { box-shadow: inset 0 1px 0 #ffffff30, 0 3px 8px #193e3108; }
-  .step-icon.amber { background: var(--coaching-warm); color: var(--coaching-warning); }
-  .step-icon.blue { background: var(--coaching-lesson-1); color: var(--coaching-lesson-text-1); }
-  .home-hero {
-    background: linear-gradient(120deg, var(--ui-brand-soft), var(--coaching-mint-tint));
-    border-color: var(--ui-border); box-shadow: var(--coaching-card-shadow);
-  }
-  :is(.today-primary, .home-hero a, .profile-card button[type=submit], .assistant-page button:not(.secondary)) {
-    box-shadow: var(--coaching-action-shadow); font-weight: 700;
-  }
-  :is(.home-progress-link, .plan-row, .home-assignment-row) { transition: background .18s, border-color .18s, box-shadow .18s; }
-  :is(.home-progress-link, .plan-row):hover { box-shadow: var(--coaching-card-shadow); }
+  .assistant-page button:not(.secondary) { box-shadow: var(--coaching-action-shadow); font-weight: 700; }
+  .plan-row { transition: background .18s, border-color .18s, box-shadow .18s; }
+  .plan-row:hover { box-shadow: var(--coaching-card-shadow); }
   .plan-calendar { border-radius: 18px; }
   :is(.weekly-review .summary, .outcome-page .totals > div) { border-radius: 14px; }
 }
@@ -82,7 +36,7 @@ body .coaching-shell.coaching-staff-shell {
     .workspace-tabs button.active { box-shadow: var(--coaching-action-shadow); }
     :is(.student-list, .assignment-card, .session-card, .exam-card, .goal-form) { border-radius: 20px; }
     .student-row { background: linear-gradient(110deg, var(--coaching-mint-tint), var(--ui-surface) 38%); padding: 20px; }
-    .student-avatar { width: 44px; height: 44px; border-radius: 15px; box-shadow: inset 0 1px 0 #ffffff30; }
+    .student-avatar { width: 44px; height: 44px; border-radius: 15px;  }
     .student-name-block h3 { font-size: 18px; }
     .tracking .totals > div { background: linear-gradient(135deg, var(--coaching-mint-tint), var(--ui-surface)); box-shadow: var(--coaching-card-shadow); border-radius: 18px; }
     .tracking .totals > div:nth-child(3) { background: linear-gradient(135deg, var(--coaching-blue-tint), var(--ui-surface)); }
@@ -93,11 +47,11 @@ body .coaching-shell.coaching-staff-shell {
 }
 
 @media (max-width: 600px) {
-  body .coaching-shell .coaching-body .coaching-content :is(.home-welcome, .coaching-page-heading),
+  body .coaching-shell .coaching-body .coaching-content .coaching-page-heading,
   body .coaching-shell.coaching-staff-shell .welcome-block { padding: 20px; border-radius: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  body .coaching-shell :is(.home-progress-link, .plan-row, .home-assignment-row) { transition: none; }
+  body .coaching-shell .plan-row { transition: none; }
 }
 
 // Shared forms and reports also appear inside the teacher workspace.
@@ -111,15 +65,16 @@ body .coaching-shell .coaching-body .coaching-content {
   :is([class*="bg-red-"], [class*="bg-rose-"]) { background: var(--coaching-danger-soft); }
   fieldset { min-width: 0; border-color: var(--ui-border); }
   legend { color: var(--ui-text); font-size: 14px; font-weight: 650; }
-  button:where(:not([class]), [class=""]), button[class*="text-slate-"] {
+  // T4: tab buttons (cs-segmented-tabs, the Planım week strip) carry their own pill/selected styling.
+  button:where(:not([class]), [class=""]):not(:where([role=tab])), button[class*="text-slate-"] {
     padding: 10px 14px; border: 1px solid var(--ui-border); border-radius: 10px;
     background: var(--ui-surface); color: var(--ui-text); font: 600 14px/1.5 var(--ui-font-body);
   }
   :is(app-student-goal-target, app-target-admission-search, app-student-study-report) button {
     border-color: var(--ui-border); background: var(--ui-surface); color: var(--ui-text); border-radius: 10px;
   }
-  :is(app-target-admission-search button[type=submit], app-student-study-report .bg-indigo-600) {
-    background: var(--ui-brand); color: #fff; border-color: var(--ui-brand);
+  :is(app-target-admission-search button[type=submit], app-student-study-report .bg-\(--ui-brand\)) {
+    background: var(--ui-brand); color: var(--ui-brand-contrast); border-color: var(--ui-brand);
   }
   :is(app-target-admission-search, app-practice-progress, app-practice-exam-editor, app-student-study-report) > :is(section, form) {
     border: 1px solid var(--ui-border); border-radius: 20px; background: var(--ui-surface); box-shadow: var(--coaching-card-shadow);
@@ -153,5 +108,4 @@ body .coaching-shell.coaching-staff-shell .coaching-body .coaching-content {
   :is(app-student-goal-target, app-student-study-report) button {
     color: var(--ui-text); background: var(--ui-surface); border-color: var(--ui-border);
   }
-  app-student-study-report .bg-indigo-600 { color: #fff; background: var(--ui-brand); border-color: var(--ui-brand); }
 }

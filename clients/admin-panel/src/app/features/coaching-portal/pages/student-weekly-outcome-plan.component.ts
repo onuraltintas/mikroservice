@@ -44,10 +44,14 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   }
   prioritizeAndPreview(){if(this.busy())return;this.prioritizeWhenShort=true;this.generatePreview();}
   generatePreview(){
-    if(this.busy()||!this.options())return;if(!this.startDate||!this.endDate||this.endDate<this.startDate){this.error.set('Başlangıç ve bitiş tarihlerini kontrol et.');return;}
+    if(this.busy()||!this.options())return;if(!this.startDate||!this.endDate||this.endDate<this.startDate){this.error.set('Başlangıç ve bitiş tarihlerini kontrol et.');return;}const dateIssue=this.dateIssue();if(dateIssue){this.error.set(dateIssue);return;}
     this.generating.set(true);this.error.set('');this.confirmed=false;this.preview.set(null);this.stale.set(false);
     this.service.preview(this.request(),this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.generating.set(false))).subscribe({next:r=>{this.preview.set(r);this.page.set(1);this.lessonFilter.set('');},error:e=>this.fail(e,'Önizleme hazırlanamadı.')});
   }
+  /** T4: K4 date rules shown on the fields — start from today, finish at the latest on the day before the exam. */
+  readonly todayIso=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  lastDay(){const exam=this.options()?.examDate;return exam?dayBefore(exam):null;}
+  dateIssue(){if(this.startDate&&this.startDate<this.todayIso)return'Başlangıç tarihi bugünden önce olamaz.';const last=this.lastDay();if(last&&this.endDate>last)return`Bitiş en geç sınavdan bir gün önce olabilir (${last.split('-').reverse().join('.')}).`;return null;}
   /** K4 (31.10.2026): the longest deadline is the day before the exam; the server rejects anything later. */
   extendedDeadline():string|null{
     const end=this.preview()?.schedule.recommendedEndDate;if(!end)return null;
@@ -62,7 +66,7 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
     const p=this.preview();if(this.busy()||!p?.canCreate||!this.confirmed||this.stale()||!this.isCurrent())return;
     if(!this.title.trim()||this.title.trim().length>200){this.error.set('Plan için en fazla 200 karakterlik bir başlık gir.');return;}
     this.saving.set(true);this.error.set('');this.service.create({title:this.title.trim(),preview:p.request,fingerprint:p.fingerprint},this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving.set(false)))
-      .subscribe({next:r=>this.studentId?this.planCreated.emit(r.id):void this.router.navigate(['/coaching-portal/study-plans'],{queryParams:{plan:r.id}}),error:e=>this.fail(e,'Plan taslağı kaydedilemedi. Yeniden deneyebilirsin.')});
+      .subscribe({next:r=>this.studentId?this.planCreated.emit(r.id):void this.router.navigate(['/coaching-portal/plan'],{queryParams:{plan:r.id}}),error:e=>this.fail(e,'Plan taslağı kaydedilemedi. Yeniden deneyebilirsin.')});
   }
   private fail(e:{status?:number;error?:{message?:string}},fallback:string){if(e.status===409){this.stale.set(true);this.confirmed=false;}this.error.set(e.error?.message??fallback);}
   filter(value:string){this.lessonFilter.set(value);this.page.set(1);}

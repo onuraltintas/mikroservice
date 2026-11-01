@@ -1,5 +1,5 @@
 <div class="mt-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-  <button *ngIf="!expanded()" type="button" (click)="open()" class="text-sm font-semibold text-indigo-600 dark:text-indigo-300">Okul / üniversite hedefini görüntüle</button>
+  <button *ngIf="!expanded()" type="button" (click)="open()" class="text-sm font-semibold text-(--ui-brand-text) ">Okul / üniversite hedefini görüntüle</button>
   <ng-container *ngIf="expanded()">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h3 class="text-sm font-semibold">Okul / üniversite hedefi</h3>
@@ -31,13 +31,13 @@
             <label class="text-sm">Sınav türü<select [(ngModel)]="examType" name="examType" required class="mt-1 w-full rounded-lg border bg-transparent p-2"><option value="">Seç</option><option *ngFor="let type of examTypes" [value]="type">{{ type | coachingLabel:'examType' }}</option></select></label>
             <label class="text-sm">Hedef puan<input type="number" [(ngModel)]="score" name="score" required min="0.01" max="999.99" step="0.01" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
             <label class="text-sm">En yüksek puan (ölçek)<input type="number" [(ngModel)]="maxScore" name="maxScore" required min="0.01" max="999.99" step="0.01" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
-            <div class="flex flex-wrap gap-3 sm:col-span-3"><button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">Puan hedefini kaydet</button><button type="button" (click)="clearScore()" class="text-sm underline">Puan hedefini kaldır</button></div>
+            <div class="flex flex-wrap gap-3 sm:col-span-3"><button type="submit" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-white">Puan hedefini kaydet</button><button type="button" (click)="clearScore()" class="text-sm underline">Puan hedefini kaldır</button></div>
           </fieldset>
         </form>
         <ng-template #readonlyScore><p class="mt-2 text-sm">Öğretmenin belirlediği puan hedefi: {{ current.scoreTarget?.targetScore ?? 'Belirtilmemiş' }} / {{ current.scoreTarget?.maxScore ?? 'Ölçek belirtilmemiş' }} · {{ current.scoreTarget?.examType ?? 'Sınav türü belirtilmemiş' }}</p></ng-template>
       </section>
       <p class="mt-2 text-sm text-slate-500">{{ current.targetSchoolId ? 'Bir okul hedefi bağlı.' : current.targetUniversityProgramId ? 'Bir üniversite programı bağlı.' : 'Henüz okul veya üniversite programı bağlanmadı.' }}</p>
-      <div *ngIf="current.catalogTarget as linked" class="mt-2 rounded-lg bg-indigo-50 p-3 dark:bg-indigo-950/30">
+      <div *ngIf="current.catalogTarget as linked" class="mt-2 rounded-lg bg-(--ui-brand-soft) p-3 ">
         <p class="text-sm font-semibold">{{ linked.name }}</p>
         <p class="mt-1 text-xs text-slate-500">{{ linked.detail }}</p>
         <p *ngIf="!linked.isActive" class="mt-2 text-xs text-amber-700 dark:text-amber-300">Bu katalog kaydı pasif. Mevcut hedef bağlantın korunur; yeni seçim için aktif kayıtları kullan.</p>

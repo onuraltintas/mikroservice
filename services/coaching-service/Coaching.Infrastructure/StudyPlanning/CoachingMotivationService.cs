@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.Infrastructure.StudyPlanning;
 
-public sealed record MotivationBadge(string Code, string Label, string Description, DateOnly? EarnedOn);
+/// <summary>T6 (31.10.2026): <see cref="Progress"/> of <see cref="Target"/> shows how close an unearned badge is ("5 deneme: 3/5").</summary>
+public sealed record MotivationBadge(string Code, string Label, string Description, DateOnly? EarnedOn, int Progress = 0, int Target = 1);
 
 public sealed record MotivationCelebration(Guid GoalId, string GoalTitle, DateTime CompletedAt);
 
@@ -22,6 +23,7 @@ public sealed record StudentMotivation(Guid StudentId, int CurrentStreak, int Lo
 public sealed class CoachingMotivationService(CoachingDbContext db, ICoachingIdentityAuthorizationClient authorization, TimeProvider clock)
 {
     private const int CelebrationDays = 7;
+    private const int ExamBadgeTarget = 5;
     private static readonly (string Code, string Label, string Description, int Days)[] StreakBadges =
     [
         ("streak-3", "3 günlük seri", "Üç gün üst üste çalıştın.", 3),
@@ -73,15 +75,23 @@ public sealed class CoachingMotivationService(CoachingDbContext db, ICoachingIde
 
         var submissions = submitted.Order().Select(Day).ToArray();
         var firstGoal = goals.OrderBy(x => x.CompletedAt).FirstOrDefault();
+        // T6: practice exams of any source that already took place count towards the deneme badge.
+        var exams = await (from result in db.ExamResults.AsNoTracking()
+                           join exam in db.Exams.AsNoTracking() on result.ExamId equals exam.Id
+                           where result.StudentId == student && exam.ExamDate <= now
+                           orderby exam.ExamDate
+                           select exam.ExamDate).Take(ExamBadgeTarget).ToListAsync(ct);
         var badges = new List<MotivationBadge>
         {
-            new("first-day", "İlk adım", "İlk çalışma gününü tamamladın.", days.Length > 0 ? days[0] : null)
+            new("first-day", "İlk adım", "İlk çalışma gününü tamamladın.", days.Length > 0 ? days[0] : null, Math.Min(days.Length, 1))
         };
         badges.AddRange(StreakBadges.Select(x => new MotivationBadge(x.Code, x.Label, x.Description,
-            streakEarned.TryGetValue(x.Code, out var on) ? on : null)));
-        badges.Add(new("first-submission", "İlk teslim", "İlk ödevini teslim ettin.", submissions.Length > 0 ? submissions[0] : null));
-        badges.Add(new("ten-submissions", "10 teslim", "On ödev teslim ettin.", submissions.Length >= 10 ? submissions[9] : null));
-        badges.Add(new("goal-reached", "Hedefe ulaştın", "Bir hedefini tamamladın.", firstGoal is null ? null : Day(firstGoal.CompletedAt)));
+            streakEarned.TryGetValue(x.Code, out var on) ? on : null, Math.Min(Math.Max(longest, current), x.Days), x.Days)));
+        badges.Add(new("first-submission", "İlk teslim", "İlk ödevini teslim ettin.", submissions.Length > 0 ? submissions[0] : null, Math.Min(submissions.Length, 1)));
+        badges.Add(new("ten-submissions", "10 teslim", "On ödev teslim ettin.", submissions.Length >= 10 ? submissions[9] : null, Math.Min(submissions.Length, 10), 10));
+        badges.Add(new("five-exams", "5 deneme", "Beş deneme çözdün.", exams.Count >= ExamBadgeTarget ? Day(exams[ExamBadgeTarget - 1]) : null,
+            exams.Count, ExamBadgeTarget));
+        badges.Add(new("goal-reached", "Hedefe ulaştın", "Bir hedefini tamamladın.", firstGoal is null ? null : Day(firstGoal.CompletedAt), Math.Min(goals.Count, 1)));
 
         var recent = goals.Where(x => x.CompletedAt > now.AddDays(-CelebrationDays) && x.CompletedAt <= now)
             .OrderByDescending(x => x.CompletedAt).FirstOrDefault();

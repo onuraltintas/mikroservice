@@ -150,7 +150,7 @@ describe('WeeklyReviewComponent', () => {
     const row={...decision,canEdit:false,work:{study:{id:'task',title:'Tekrar çalışması',status:'Completed',isDone:true,isOverdue:false,canOpen:true,planId:'plan',actualMinutes:25},assignment:{id:'assignment',title:'Teslimim',status:'Graded',isDone:true,isOverdue:false,canOpen:true,score:90}}};
     const {fixture}=await setup(false,{decisions:[row]});fixture.detectChanges(); await fixture.whenStable();
     const html=fixture.nativeElement as HTMLElement;expect(html.textContent).toContain('Değerlendirildi');expect(html.textContent).toContain('25 dk kaydedildi');
-    expect(html.querySelector('a[href*="study-plans"]')?.getAttribute('href')).toBe('/coaching-portal/study-plans?plan=plan&task=task');
+    expect(html.querySelector('a[href^="/coaching-portal/plan?"]')?.getAttribute('href')).toBe('/coaching-portal/plan?plan=plan&task=task');
     expect(html.querySelector('a[href*="assignments"]')?.getAttribute('href')).toBe('/coaching-portal/assignments/assignment');
     expect(html.textContent).not.toContain('Çalışma ve ödevleri bağla / takip et');
   });

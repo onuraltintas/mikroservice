@@ -3,14 +3,14 @@
   a { text-decoration: none; } button, a { -webkit-tap-highlight-color: transparent; } button { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
   :is(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid var(--coaching-focus); outline-offset: 3px; }
-  .coaching-skip { position: fixed; left: 16px; top: -100px; padding: 12px 20px; z-index: 80; background: white; color: #19332f; border-radius: 12px; &:focus { top: 12px; } }
-  .coaching-sidebar { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; padding: 28px 18px 18px; background: #142e2b; color: #eaf5f0; overflow-y: auto; overscroll-behavior: contain; }
-  .coaching-brand { display: flex; align-items: center; gap: 12px; padding: 0 12px 26px; color: white; strong { font-size: 25px; letter-spacing: -.9px; } strong span { color: #6ce6c3; } small { display: block; font-size: 11px; color: #b4cdc5; letter-spacing: .8px; } }
-  .brand-symbol { position: relative; display: grid; place-items: center; height: 42px; width: 42px; border: 1px solid #53746b; border-radius: 14px; font-size: 23px; font-weight: 800; background: #24483f; span { position: absolute; width: 8px; height: 8px; right: -3px; bottom: -3px; border-radius: 50%; background: #f1c374; border: 2px solid #142e2b; } }
-  .coaching-nav-group { margin-bottom: 22px; h2 { font-size: 10px; letter-spacing: 1.7px; text-transform: uppercase; color: #afc8bf; font-weight: 600; padding: 0 14px; margin-bottom: 8px; } a { display: flex; align-items: center; gap: 13px; padding: 11px 14px; border-radius: 11px; min-height: 44px; color: #d5e6df; font-size: 13px; font-weight: 500; transition: background .18s, color .18s; app-coaching-icon { opacity: .85; font-size: 16px; } &:hover { background: #25483f; color: white; } &.is-active { color: #b2ffe4; background: #285448; box-shadow: inset 3px 0 #82e8c5; } } }
-  .coaching-sidebar-note { border: 1px solid #416055; border-radius: 16px; margin: auto 8px 20px; padding: 16px; background: linear-gradient(130deg, #284a3f, #1c382f); > app-coaching-icon { color: #edcb86; margin-bottom: 8px; } p { font-size: 13px; margin: 0 0 12px; color: #d0e2d8; } strong { color: white; } a { font-size: 11px; color: #a7ebcc; display: flex; align-items: center; justify-content: space-between; min-height: 32px; } }
-  .coaching-profile { display: flex; align-items: center; gap: 10px; border-top: 1px solid #365047; padding: 18px 4px 0; > span:nth-child(2) { min-width: 0; flex: 1; } strong { font-size: 12px; display: block; overflow-wrap: anywhere; } small { color: #b4cdc5; display: block; font-size: 10px; } button { padding: 10px; color: #d5e6df; border-radius: 9px; &:hover { background: #25483f; } } }
-  .coaching-avatar { width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; background: #e5eddf; color: #254c3b; display: grid; place-items: center; font-weight: 700; font-size: 12px; &.compact { width: 36px; height: 36px; background: #e0eae6; } }
+  .coaching-skip { position: fixed; left: 16px; top: -100px; padding: 12px 20px; z-index: 80; background: var(--ui-surface); color: var(--ui-text); border-radius: 12px; &:focus { top: 12px; } }
+  .coaching-sidebar { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; padding: 28px 18px 18px; background: var(--coaching-sidebar); color: var(--coaching-sidebar-text); overflow-y: auto; overscroll-behavior: contain; }
+  .coaching-brand { display: flex; align-items: center; gap: 12px; padding: 0 12px 26px; color: var(--coaching-sidebar-text); strong { font-size: 25px; letter-spacing: -.9px; } strong span { color: var(--coaching-sidebar-active); } small { display: block; font-size: 11px; color: var(--coaching-sidebar-muted); letter-spacing: .8px; } }
+  .brand-symbol { position: relative; display: grid; place-items: center; height: 42px; width: 42px; border: 1px solid var(--coaching-sidebar-border); border-radius: 14px; font-size: 23px; font-weight: 800; background: var(--coaching-sidebar-raised); span { position: absolute; width: 8px; height: 8px; right: -3px; bottom: -3px; border-radius: 50%; background: var(--ui-accent); border: 2px solid var(--coaching-sidebar); } }
+  .coaching-nav-group { margin-bottom: 22px; h2 { font-size: 10px; letter-spacing: 1.7px; text-transform: uppercase; color: var(--coaching-sidebar-muted); font-weight: 600; padding: 0 14px; margin-bottom: 8px; } a { display: flex; align-items: center; gap: 13px; padding: 11px 14px; border-radius: 11px; min-height: 44px; color: var(--coaching-sidebar-text); font-size: 13px; font-weight: 500; transition: background .18s, color .18s; app-coaching-icon { opacity: .85; font-size: 16px; } &:hover { background: var(--coaching-sidebar-raised); color: var(--coaching-sidebar-text); } &.is-active { color: var(--coaching-sidebar-active); background: var(--coaching-sidebar-raised); box-shadow: inset 3px 0 var(--coaching-sidebar-active); font-weight: 650; } } }
+  .coaching-sidebar-note { border: 1px solid var(--coaching-sidebar-border); border-radius: 16px; margin: auto 8px 20px; padding: 16px; background: var(--coaching-sidebar-raised); > app-coaching-icon { color: var(--coaching-sidebar-active); margin-bottom: 8px; } p { font-size: 13px; margin: 0 0 12px; color: var(--coaching-sidebar-muted); } strong { color: var(--coaching-sidebar-text); } a { font-size: 11px; color: var(--coaching-sidebar-active); display: flex; align-items: center; justify-content: space-between; min-height: 32px; } }
+  .coaching-profile { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--coaching-sidebar-border); padding: 18px 4px 0; > span:nth-child(2) { min-width: 0; flex: 1; } strong { font-size: 12px; display: block; overflow-wrap: anywhere; } small { color: var(--coaching-sidebar-muted); display: block; font-size: 10px; } button { padding: 10px; color: var(--coaching-sidebar-text); border-radius: 9px; &:hover { background: var(--coaching-sidebar-raised); } } }
+  .coaching-avatar { width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; background: var(--coaching-avatar); color: var(--coaching-avatar-text); display: grid; place-items: center; font-weight: 700; font-size: 12px; &.compact { width: 36px; height: 36px; } }
   .coaching-body { min-width: 0; }
   .coaching-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 78px; padding: 18px 40px; border-bottom: 1px solid var(--ui-border); background: var(--ui-surface); }
   .coaching-breadcrumb { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--ui-text-muted); strong { color: var(--ui-text); font-weight: 600; } }
@@ -22,19 +22,17 @@
   .coaching-menu-toggle, .coaching-drawer-close, .coaching-mobile-nav, .coaching-scrim { display: none; }
 }
 .dark .coaching-shell { color-scheme: dark; }
-.coaching-shell .coaching-theme-toggle { background: var(--ui-surface); }
 .coaching-shell .coaching-menu-toggle { background: var(--ui-surface); color: var(--ui-text); }
 .coaching-shell .coaching-nav-group a { font-size: 14px; }
 .coaching-shell .coaching-nav-group h2, .coaching-shell .coaching-footer { font-size: 12px; }
 .coaching-shell .coaching-profile :is(strong, small) { font-size: 13px; }
 .coaching-shell .coaching-breadcrumb { font-size: 14px; }
-@media (max-width: 420px) { .coaching-shell .coaching-avatar.compact { display: none; } }
 @media (max-width: 1100px) { .coaching-shell { grid-template-columns: 220px minmax(0, 1fr); .coaching-content { padding: 28px 24px; } .coaching-topbar { padding: 16px 24px; } .coaching-product-label { display: none; } } }
 @media (max-width: 800px) {
   .coaching-shell { display: block; padding-bottom: calc(72px + env(safe-area-inset-bottom));
     .coaching-sidebar { display: none; position: fixed; inset: 0 auto 0 0; width: min(290px, 88vw); z-index: 60; }
     &.menu-open .coaching-sidebar { display: flex; }
-    .coaching-scrim { display: block; position: fixed; inset: 0; background: #10231fb3; z-index: 50; }
+    .coaching-scrim { display: block; position: fixed; inset: 0; background: var(--coaching-scrim); z-index: 50; }
     .coaching-drawer-close { display: grid; place-items: center; position: absolute; right: 16px; top: 76px; width: 44px; height: 44px; }
     .coaching-menu-toggle { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 1px solid var(--ui-border); border-radius: 12px; }
     .coaching-topbar { gap: 10px; padding: 10px 16px; min-height: 68px; }
@@ -42,7 +40,8 @@
     .coaching-topbar-actions { gap: 8px; }
     .coaching-content { padding: 22px 16px 28px; min-height: calc(100dvh - 190px); }
     .coaching-footer { padding: 8px 16px; font-size: 10px; span:last-child { display: none; } }
-    .coaching-mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ui-border); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--ui-surface); box-shadow: 0 -4px 24px #19332f08; a { position: relative; display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 3px; min-height: 48px; border-radius: 12px; color: var(--ui-text-muted); font-size: 10px; app-coaching-icon { font-size: 18px; } &.is-active { background: var(--ui-brand-soft); color: var(--ui-success); font-weight: 700; } } }
+    .coaching-mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: grid; grid-template-columns: repeat(var(--mobile-items, 5), 1fr); border-top: 1px solid var(--ui-border); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--ui-surface); box-shadow: var(--coaching-card-shadow); a { position: relative; display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 3px; min-height: 48px; border-radius: 12px; color: var(--ui-text-muted); font-size: 10px; app-coaching-icon { font-size: 18px; } &.is-active { background: var(--ui-brand-soft); color: var(--ui-brand-text); font-weight: 700; } } }
   }
 }
 @media (prefers-reduced-motion: reduce) { .coaching-shell *, .coaching-shell *::before, .coaching-shell *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+

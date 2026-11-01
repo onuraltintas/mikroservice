@@ -25,6 +25,23 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
         return await ReadAsync(db, student, fromDate, toDate, cancellationToken);
     }
 
+    public const int MaxWeeks = 12;
+    public async Task<IReadOnlyList<StudyWeekTotals>> GetWeeksAsync(DateOnly fromDate, int weeks, CancellationToken cancellationToken = default)
+    {
+        if (access.CurrentUserId is not { } student || !access.IsCurrentStudent(student))
+            throw new BusinessRuleException("Authorization.Forbidden", "Bu rapor yalnız öğrencinin kendi hesabında kullanılabilir.");
+        if (weeks is < 1 or > MaxWeeks) throw new ArgumentOutOfRangeException(nameof(weeks));
+        var toDate = fromDate.AddDays(weeks * 7 - 1);
+        // One read for the whole span; each week is calculated exactly like a single-week report of the same rows.
+        var rows = await CoachingStudyWorkReports.ReadAsync(db, student, fromDate, toDate, cancellationToken);
+        return Enumerable.Range(0, weeks).Select(index =>
+        {
+            var from = fromDate.AddDays(index * 7); var to = from.AddDays(6);
+            var report = CoachingStudyWorkReports.Calculate(from, to, rows);
+            return new StudyWeekTotals(from, to, report.ScheduledTasks, report.CompletedTasks, report.ActualMinutes);
+        }).ToArray();
+    }
+
     internal static async Task<StudentStudyReport> ReadAsync(CoachingDbContext db, Guid student,
         DateOnly fromDate, DateOnly toDate, CancellationToken cancellationToken)
     {

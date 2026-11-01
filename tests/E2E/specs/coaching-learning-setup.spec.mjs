@@ -42,8 +42,8 @@ async function fixtures(context) {
 
 test('student resumes setup after reload and previews a plan from selected courses', async ({ page, context }) => {
   const { previews } = await fixtures(context);
-  await page.goto('/coaching-portal/setup');
-  await expect(page.getByRole('heading', { name: 'Çalışma düzenimi kur', exact: true })).toBeVisible();
+  await page.goto('/coaching-portal/account/settings');
+  await expect(page.getByRole('heading', { name: 'Çalışma tercihlerim', exact: true })).toBeVisible();
   await expect(page.getByLabel('Okul adı (isteğe bağlı)')).toHaveCount(0);
   await page.getByRole('combobox', { name: 'Eğitim durumu', exact: true }).selectOption('student');
   await page.getByLabel('Sınıf', { exact: true }).fill('12');
@@ -51,16 +51,16 @@ test('student resumes setup after reload and previews a plan from selected cours
   await expect(page.getByRole('heading', { name: 'Çalışma amacım', exact: true })).toBeVisible();
   await page.getByRole('combobox', { name: 'Çalışma amacım', exact: true }).selectOption('School');
   await page.getByRole('button', { name: 'Kaydet ve devam et', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Çalışma saatlerim', exact: true })).toBeVisible();
+  await expect(page.locator('nav[aria-label="Kurulum adımları"] [aria-current=step]')).toHaveText('Müsaitliğim');
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Çalışma saatlerim', exact: true })).toBeVisible();
+  await expect(page.locator('nav[aria-label="Kurulum adımları"] [aria-current=step]')).toHaveText('Müsaitliğim');
   await page.getByRole('button', { name: 'Saat aralığı ekle', exact: true }).click();
   await page.getByRole('button', { name: 'Çalışma saatlerini kaydet', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Çalışacağım dersler', exact: true })).toBeVisible();
   await page.getByRole('checkbox', { name: /Matematik/ }).check();
   await page.getByRole('button', { name: 'Dersleri kaydet ve devam et', exact: true }).click();
   await page.getByRole('combobox', { name: 'Ders', exact: true }).selectOption('lesson-1');
-  await page.getByRole('combobox', { name: 'Sayılar / Doğal sayılar', exact: true }).selectOption('NeedsReview');
+  await page.getByRole('region', { name: 'Sayılar ünitesi' }).getByRole('combobox', { name: 'Başlangıç durumu', exact: true }).selectOption({ label: 'Tekrar etmek istiyorum' });
   await page.getByRole('checkbox', { name: 'Başlangıç bilgilerimi gözden geçirdim.' }).check();
   await page.getByRole('button', { name: 'Kaydet ve önizlemeye geç', exact: true }).click();
   await page.getByRole('combobox', { name: 'Seçtiğim ders', exact: true }).selectOption('lesson-1');
@@ -76,7 +76,7 @@ test('student resumes setup after reload and previews a plan from selected cours
 
 test('incomplete setup leaves the existing active plan accessible', async ({ page, context }) => {
   await fixtures(context);
-  await page.goto('/coaching-portal/setup');
+  await page.goto('/coaching-portal/account/settings');
   await page.getByRole('link', { name: 'Mevcut planlarım', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Çalışma planlarım', exact: true })).toBeVisible();
   await page.getByRole('button', { name: /Mevcut koç planı/ }).click();

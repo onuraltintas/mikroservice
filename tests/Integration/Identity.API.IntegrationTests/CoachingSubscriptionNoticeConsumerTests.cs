@@ -30,7 +30,7 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
                 .Should().Be((approved.NoticeId, "SubscriptionTransferApproved", approved.NoticeId.ToString()));
             inApp.Title.Should().Contain("onaylandı");
             var studentMail = mail.Messages.Single(x => x.Recipient == "ada@example.test");
-            studentMail.Body.Should().Contain("https://app.example.test/coaching-portal/subscription").And.Contain("Bireysel aylık");
+            studentMail.Body.Should().Contain("https://app.example.test/coaching-portal/account/payments").And.Contain("Bireysel aylık");
             studentMail.SubjectUserId.Should().Be(student);
             var teacherMail = mail.Messages.Single(x => x.Recipient == "ogretmen@example.test");
             teacherMail.Subject.Should().Contain("sona eriyor");

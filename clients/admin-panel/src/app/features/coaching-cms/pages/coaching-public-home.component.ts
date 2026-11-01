@@ -110,7 +110,7 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
                   <a routerLink="/coaching/pages/kurumlar" [queryParams]="campaign()" class="mt-auto inline-flex w-full justify-center rounded-xl border border-indigo-200 px-4 py-3 text-sm font-semibold text-indigo-800 transition hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-200 dark:hover:bg-indigo-950">{{ plan.audience === 'Institution' ? 'Kurum çözümlerini incele' : 'Bilgi al' }}</a>
                 } @else {
                   <a [routerLink]="registerLink(plan)" [queryParams]="registerParams(plan)" [attr.data-testid]="'plan-register-' + plan.slug" (click)="selectPlan(plan)" class="mt-auto inline-flex w-full justify-center rounded-xl bg-indigo-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-800">{{ plan.audience === 'Teacher' ? 'Öğretmen olarak kayıt ol' : ((plan.trialDays ?? 0) > 0 ? 'Kayıt ol ve ücretsiz dene' : 'Kayıt ol ve başla') }}</a>
-                  <a routerLink="/auth/login" [queryParams]="{ returnUrl: plan.audience === 'Teacher' ? '/coaching-portal' : '/coaching-portal/subscription' }" class="mt-2 text-center text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-300">Hesabım var, giriş yap</a>
+                  <a routerLink="/auth/login" [queryParams]="{ returnUrl: plan.audience === 'Teacher' ? '/coaching-portal' : '/coaching-portal/account/payments' }" class="mt-2 text-center text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-300">Hesabım var, giriş yap</a>
                 }
               </article>
             }
@@ -259,7 +259,7 @@ export class CoachingPublicHomeComponent implements OnInit {
 
   /** Students come back to the subscription page with the plan chosen; campaign tags travel with the link. */
   registerParams(plan: CoachingSubscriptionPlan): Record<string, string> {
-    return { ...this.campaign(), plan: plan.slug, ...(plan.audience === 'Teacher' ? {} : { returnUrl: `/coaching-portal/subscription?plan=${plan.slug}` }) };
+    return { ...this.campaign(), plan: plan.slug, ...(plan.audience === 'Teacher' ? {} : { returnUrl: `/coaching-portal/account/payments?plan=${plan.slug}` }) };
   }
 
   campaign(): Record<string, string> {

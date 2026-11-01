@@ -1,19 +1,19 @@
 <section class="space-y-5">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
-      <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Koçluk iletişimi</p>
+      <p class="text-sm font-medium text-(--ui-brand-text) ">Koçluk iletişimi</p>
       <h1 class="mt-1 text-2xl font-bold tracking-tight">Bildirimler</h1>
       <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Ödev, seans ve hesap güncellemelerini buradan takip et.</p>
     </div>
     <div class="flex gap-2">
-      <button type="button" (click)="refresh()" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-200">Yenile</button>
-      <button type="button" (click)="markAllAsRead()" [disabled]="unreadCount() === 0 || isUpdating()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">Tümünü okundu yap</button>
+      <button type="button" (click)="refresh()" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-(--ui-brand) hover:text-(--ui-brand-text) dark:border-slate-700 dark:text-slate-200">Yenile</button>
+      <button type="button" (click)="markAllAsRead()" [disabled]="unreadCount() === 0 || isUpdating()" class="rounded-lg bg-(--ui-brand) px-3 py-2 text-sm font-semibold text-white hover:bg-(--ui-brand-strong) disabled:cursor-not-allowed disabled:opacity-50">Tümünü okundu yap</button>
     </div>
   </div>
 
   <div class="grid gap-4 sm:grid-cols-3">
     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Gösterilen bildirim</p><p class="mt-2 text-3xl font-bold">{{ notifications().length }}</p><p class="text-xs text-slate-500">En son 100 bildirim gösterilir.</p></div>
-    <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30"><p class="text-sm text-indigo-700 dark:text-indigo-200">Okunmamış</p><p class="mt-2 text-3xl font-bold text-indigo-700 dark:text-indigo-200">{{ unreadCount() }}</p></div>
+    <div class="rounded-2xl border border-(--ui-border) bg-(--ui-brand-soft) p-5 shadow-sm "><p class="text-sm text-(--ui-brand-text) ">Okunmamış</p><p class="mt-2 text-3xl font-bold text-(--ui-brand-text) ">{{ unreadCount() }}</p></div>
     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Bildirim ayrıntıları</p><p class="mt-2 text-sm">Plan veya ödev bağlantısından ilgili kaydı açabilirsin.</p></div>
   </div>
 
@@ -28,20 +28,20 @@
   @if(successMessage()){<p role="status" class="rounded-xl border border-emerald-200 p-4">{{successMessage()}}</p>}
   <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
     <div *ngIf="notifications().length === 0" class="p-10 text-center text-sm text-slate-500 dark:text-slate-400">Henüz bildirimin yok.</div>
-    <article *ngFor="let notification of notifications(); trackBy: trackById" [attr.data-notification-id]="notification.id" class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 p-5 last:border-0 dark:border-slate-800/70" [ngClass]="!notification.isRead ? 'bg-indigo-50/40 dark:bg-indigo-950/10' : ''">
+    <article *ngFor="let notification of notifications(); trackBy: trackById" [attr.data-notification-id]="notification.id" class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 p-5 last:border-0 dark:border-slate-800/70" [ngClass]="!notification.isRead ? 'bg-(--ui-brand-soft) ' : ''">
       <input type="checkbox" [checked]="selectedIds().has(notification.id)" [disabled]="isUpdating()" (change)="toggleSelection(notification.id)" [attr.aria-label]="notification.title + ' bildirimini seç'">
       <div class="min-w-0 flex-1">
-        <div class="flex flex-wrap items-center gap-2"><h2 class="font-semibold">{{ notification.title }}</h2><span class="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ typeLabel(notification.type) }}</span><span *ngIf="!notification.isRead" class="rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-200">Yeni</span></div>
+        <div class="flex flex-wrap items-center gap-2"><h2 class="font-semibold">{{ notification.title }}</h2><span class="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ typeLabel(notification.type) }}</span><span *ngIf="!notification.isRead" class="rounded-full bg-(--ui-brand-soft) px-2 py-1 text-[11px] font-semibold text-(--ui-brand-text) ">Yeni</span></div>
         <p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600 dark:text-slate-300">{{ notification.message }}</p>
         <p class="mt-2 text-xs text-slate-400">{{ notification.createdAt | date:'d MMM y, HH:mm' }}</p>
       </div>
       <div class="flex gap-2">
         @if (target(notification); as destination) {
-          <a [routerLink]="destination.kind === 'weekly' ? '/coaching-portal/progress' : destination.kind === 'plan' ? '/coaching-portal/study-plans' : destination.kind === 'message' ? '/coaching-portal/messages/' + destination.id : '/coaching-portal/assignments/' + destination.id"
+          <a [routerLink]="destination.kind === 'weekly' ? '/coaching-portal/growth/week' : destination.kind === 'plan' ? '/coaching-portal/plan' : destination.kind === 'message' ? '/coaching-portal/messages/' + destination.id : '/coaching-portal/assignments/' + destination.id"
             [queryParams]="destination.kind === 'weekly' ? {week: destination.weekStart, decision: destination.decisionId} : destination.kind === 'plan' ? {plan: destination.id} : null"
-            class="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-500">{{destination.label}}</a>
+            class="rounded-lg bg-(--ui-brand) px-3 py-2 text-xs font-semibold text-white hover:bg-(--ui-brand-strong)">{{destination.label}}</a>
         }
-        <button *ngIf="!notification.isRead" type="button" (click)="markAsRead(notification.id)" [disabled]="isUpdating()" class="rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-900/50 dark:text-indigo-200">Okundu</button>
+        <button *ngIf="!notification.isRead" type="button" (click)="markAsRead(notification.id)" [disabled]="isUpdating()" class="rounded-lg border border-(--ui-border) px-3 py-2 text-xs font-semibold text-(--ui-brand-text) hover:bg-(--ui-brand-soft) disabled:opacity-50 ">Okundu</button>
         <button type="button" (click)="deleteNotification(notification.id)" [disabled]="isUpdating()" class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:border-red-300 hover:text-red-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300">Sil</button>
       </div>
     </article>

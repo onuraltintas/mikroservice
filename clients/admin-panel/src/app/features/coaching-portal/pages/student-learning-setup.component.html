@@ -1,7 +1,7 @@
 <section class="study-plans" aria-labelledby="setup-title">
   <header class="page-heading"><div><p class="eyebrow">Kendi ritmine göre</p><h1 id="setup-title">Profil ve tercihlerim</h1>
     <p>Bilgilerini adım adım kaydet. İstediğin zaman ayrılıp başka cihazda kaldığın yerden devam edebilirsin.</p></div></header>
-  <nav class="actions" aria-label="Profil ve çalışma düzeni"><a routerLink="/coaching-portal/profile">Profil ayrıntılarını düzenle</a><a routerLink="/coaching-portal/weekly-plan">Haftalık düzenime geç</a><a routerLink="/coaching-portal/study-plans">Mevcut planım</a></nav>
+  <nav class="actions" aria-label="Profil ve çalışma düzeni"><a routerLink="/coaching-portal/account/settings/profile">Profil ayrıntılarını düzenle</a><a routerLink="/coaching-portal/plan/weekly">Haftalık düzenime geç</a><a routerLink="/coaching-portal/plan">Mevcut planım</a></nav>
   @if (loading()) { <p role="status">Kurulum yükleniyor…</p> }
   @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
   <button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving()">Bilgileri yeniden yükle</button>
@@ -12,7 +12,7 @@
   }
   @if (step() === 'Profile') {
     <p class="notice">Öğrenciysen sınıfın, mezunsan eğitim durumun yeterli. Okul adı ve doğum tarihi isteğe bağlıdır.</p>
-    <edu-coaching-profile [apiUrl]="apiUrl" role="Student" [setupMode]="true" (saved)="afterProfileSaved()" />
+    <edu-coaching-profile [apiUrl]="apiUrl" [role]="'Student'" [setupMode]="true" (saved)="afterProfileSaved()" />
     <button type="button" (click)="load()">Kaydedilen bilgilerle devam et</button>
   }
   @if (ready() && step() === 'Purpose') {
@@ -75,7 +75,7 @@
             </section>
           }
           <div class="actions"><button type="button" class="secondary" [disabled]="topicPage <= 1" (click)="loadCatalog(topicPage - 1)">Önceki konular</button><button type="button" class="secondary" [disabled]="topicPage * 50 >= (catalog()?.topics?.totalCount ?? 0)" (click)="loadCatalog(topicPage + 1)">Sonraki konular</button></div>
-          <a routerLink="/coaching-portal/exam-results">Deneme sonucumu ekle (isteğe bağlı)</a>
+          <a routerLink="/coaching-portal/growth/exams">Deneme sonucumu ekle (isteğe bağlı)</a>
           <label class="check"><input type="checkbox" [(ngModel)]="startingStatusReviewed" (ngModelChange)="changed()">Başlangıç bilgilerimi gözden geçirdim.</label>
           <button type="button" (click)="finishStarting()">Kaydet ve önizlemeye geç</button>
         </fieldset>
@@ -86,7 +86,7 @@
     @for (warning of state()?.warnings ?? []; track warning) { <p class="notice">{{ warning }}</p> }
     @if (state()?.isReady) {
       <p class="notice success">Eğitim bilgilerin hazır. Plan sihirbazında seçtiğin derslerden konuları ekleyip planı önizleyebilirsin. Mevcut planın, yeni taslağı açıkça yayımlayana kadar korunur.</p>
-      <a routerLink="/coaching-portal/automatic-plan">Plan sihirbazını aç</a>
+      <a routerLink="/coaching-portal/plan/wizard">Plan sihirbazını aç</a>
     } @else { <p class="notice">Önizleme için eksik adımları tamamla.</p><button type="button" (click)="load()">Eksik adıma devam et</button> }
   }
 </section>

@@ -20,15 +20,15 @@ import { apiMessage, parentRelationshipLabel } from '../parent/parent-home.compo
         <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800">
           <span><strong>{{ link.parentName }}</strong> · {{ relationshipLabel(link.relationship) }} · {{ link.status === 'Pending' ? 'onayını bekliyor' : (link.verifiedAt | coachingDate) + ' tarihinden beri bağlı' }}</span>
           <span class="flex gap-2">
-            @if (link.status === 'Pending') { <button type="button" class="rounded-lg bg-indigo-600 px-3 py-1 font-medium text-white disabled:opacity-50" [disabled]="busy()" (click)="approve(link)">Onayla</button> }
+            @if (link.status === 'Pending') { <button type="button" class="rounded-lg bg-(--ui-brand) px-3 py-1 font-medium text-white disabled:opacity-50" [disabled]="busy()" (click)="approve(link)">Onayla</button> }
             <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 disabled:opacity-50 dark:border-slate-700" [disabled]="busy()" (click)="revoke(link)">{{ link.status === 'Pending' ? 'Reddet' : 'Bağlantıyı kaldır' }}</button>
           </span>
         </div>
       }
       @if (code(); as issued) {
-        <p class="mt-4 rounded-xl bg-indigo-50 p-4 text-sm dark:bg-indigo-950/30">Velinle paylaş: <strong class="font-mono text-lg tracking-widest">{{ issued.code }}</strong><br>{{ issued.expiresAt | coachingDate }} tarihine kadar, bir kez kullanılabilir. Velin kodu girdiğinde isteği burada onaylarsın.</p>
+        <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm ">Velinle paylaş: <strong class="font-mono text-lg tracking-widest">{{ issued.code }}</strong><br>{{ issued.expiresAt | coachingDate }} tarihine kadar, bir kez kullanılabilir. Velin kodu girdiğinde isteği burada onaylarsın.</p>
       }
-      <button type="button" class="mt-4 rounded-lg border border-indigo-300 px-4 py-2 text-sm font-medium text-indigo-700 disabled:opacity-50 dark:border-indigo-800 dark:text-indigo-200" [disabled]="busy()" (click)="createCode()">{{ code() ? 'Yeni kod oluştur' : 'Veli kodu oluştur' }}</button>
+      <button type="button" class="mt-4 rounded-lg border border-(--ui-border) px-4 py-2 text-sm font-medium text-(--ui-brand-text) disabled:opacity-50 " [disabled]="busy()" (click)="createCode()">{{ code() ? 'Yeni kod oluştur' : 'Veli kodu oluştur' }}</button>
     </section>
   `
 })

@@ -1,26 +1,27 @@
+import { CoachingLabelPipe } from '../coaching-labels';
 import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit, signal, ViewChild, computed } from '@angular/core';
+import { Component, DestroyRef, inject, input, OnInit, signal, ViewChild, computed } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { validCoachingId, validWeeklyDate, WeeklyDestination } from '../../../../../shared/coaching-notification-target';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingPortalService, ExamResult, Goal, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
+import { CoachingPortalService, ExamResult, Goal } from '../../../core/services/coaching-portal.service';
 import { StudentStudyReportComponent } from './student-study-report.component';
 import { PracticeProgressComponent } from './practice-progress.component';
-import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 @Component({
   selector: 'app-coaching-portal-progress',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, StudentStudyReportComponent, PracticeProgressComponent],
+  imports: [CoachingLabelPipe, CommonModule, ReactiveFormsModule, StudentStudyReportComponent, PracticeProgressComponent],
   templateUrl: './coaching-portal-progress.component.html',
   styleUrl: './coaching-portal-progress.component.scss'
 })
 export class CoachingPortalProgressComponent implements OnInit {
-  readonly navigation = inject(CoachingStudentNavigationService);
+  /** T6: under Haftam's summary the page drops its own heading. */
+  readonly embedded = input(false);
   private readonly route = inject(ActivatedRoute, {optional:true});
   private readonly destroyRef = inject(DestroyRef);
   readonly weeklyTarget = signal<WeeklyDestination | null>(null);
@@ -42,13 +43,10 @@ export class CoachingPortalProgressComponent implements OnInit {
   readonly goalPageNumber = signal(1);
   readonly goalTotalPages = signal(1);
   readonly loadingMoreGoals = signal(false);
-  readonly summaryError = signal<string | null>(null);
-  readonly loadingSummary = signal(false);
   readonly examResults = signal<ExamResult[]>([]);
   readonly examPageNumber = signal(1);
   readonly examTotalPages = signal(1);
   readonly loadingMoreExams = signal(false);
-  readonly summary = signal<StudentProgressSummary | null>(null);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly showGoalForm = signal(false);
@@ -91,15 +89,10 @@ export class CoachingPortalProgressComponent implements OnInit {
     }
 
     forkJoin({
-      summary: this.coachingService.getStudentProgress(studentId).pipe(catchError(() => {
-        this.summaryError.set('İlerleme özeti yüklenemedi. Genel istatistikler şu anda gösterilemiyor.');
-        return of(null);
-      })),
       goals: this.coachingService.getStudentGoals(studentId, 1, 100),
       exams: this.coachingService.getStudentExamResults(studentId, 1, 25)
     }).subscribe({
       next: result => {
-        this.summary.set(result.summary);
         this.goals.set(result.goals.items);
         this.goalPageNumber.set(result.goals.pageNumber);
         this.goalTotalPages.set(result.goals.totalPages ?? Math.max(1, Math.ceil(result.goals.totalCount / result.goals.pageSize)));
@@ -153,7 +146,6 @@ export class CoachingPortalProgressComponent implements OnInit {
         this.showGoalForm.set(false);
         this.goalForm.reset({ title: '', category: 1, description: '', targetDate: '', targetScore: null });
         this.loadGoals(studentId);
-        this.retrySummary();
       },
       error: () => {
         this.goalFormError.set('Hedef oluşturulamadı. Bilgileri kontrol edip tekrar dene.');
@@ -204,21 +196,7 @@ export class CoachingPortalProgressComponent implements OnInit {
     return globalThis.crypto.randomUUID();
   }
 
-  averageScore() {
-    const summary = this.summary();
-    if (summary && summary.totalExams > 0 && summary.averageExamPercentage != null) return Math.round(summary.averageExamPercentage);
-    return null;
-  }
 
-  retrySummary() {
-    const studentId = this.authService.userProfile()?.id;
-    if (!studentId || this.loadingSummary()) return;
-    this.loadingSummary.set(true);
-    this.coachingService.getStudentProgress(studentId).pipe(finalize(() => this.loadingSummary.set(false))).subscribe({
-      next: summary => { this.summary.set(summary); this.summaryError.set(null); },
-      error: () => this.summaryError.set('İlerleme özeti yüklenemedi. Yeniden deneyebilirsin.')
-    });
-  }
 
   loadMoreGoals() {
     const studentId = this.authService.userProfile()?.id;
@@ -235,15 +213,7 @@ export class CoachingPortalProgressComponent implements OnInit {
     });
   }
 
-  assignmentCompletion() {
-    const summary = this.summary();
-    if (!summary || summary.totalAssignments === 0) return null;
-    return Math.round(summary.submittedAssignments / summary.totalAssignments * 100);
-  }
 
-  attendancePercentage() {
-    return this.summary()?.attendancePercentage ?? null;
-  }
 
   scorePercentage(result: ExamResult) {
     return result.maxScore > 0 ? Math.round(result.score / result.maxScore * 100) : null;

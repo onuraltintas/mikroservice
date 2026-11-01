@@ -47,7 +47,7 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
             throw new InvalidOperationException("Coaching public base URL is invalid.");
         await events.PublishAsync(new InvitationCreatedEvent(invitation.Id, sender.Email, invitation.RecipientEmail,
             recipient?.UserId, invitation.Type, invitation.Message,
-            invitation.Role == "Teacher" ? CoachingPublicUrl.StaffPortalLink(configuration) : $"{publicUrl}/coaching-portal/profile", now) { Product = "coaching" }, ct);
+            invitation.Role == "Teacher" ? CoachingPublicUrl.StaffPortalLink(configuration) : $"{publicUrl}/coaching-portal/account/settings/profile", now) { Product = "coaching" }, ct);
         await db.SaveChangesAsync(ct);
         return invitation;
     }

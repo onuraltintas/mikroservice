@@ -13,11 +13,18 @@ import {lessonColors,lessonKey} from './study-plan-colors';
 import {computed} from '@angular/core';
 import {CalendarAction,StudyPlanCalendarComponent} from './study-plan-calendar.component';
 import {CalendarMove,calendarTaskOverdue} from './study-plan-calendar';
+import {effect} from '@angular/core';
+import {PlanTaskRowComponent} from './plan-task-row.component';
+import {CsBottomSheetComponent,CsSegmentedTabsComponent,CsTabOption} from '../ui';
+
+const WEEKDAYS=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+const isoDay=(date:Date)=>date.toISOString().slice(0,10);
+const shiftDays=(iso:string,days:number)=>{const d=new Date(`${iso}T12:00:00Z`);d.setUTCDate(d.getUTCDate()+days);return isoDay(d);};
 
 @Component({
   selector: 'app-student-study-plans',
   standalone: true,
-  imports: [CommonModule, FormsModule, StudyPlanCalendarComponent],
+  imports: [CommonModule, FormsModule, StudyPlanCalendarComponent, PlanTaskRowComponent, CsBottomSheetComponent, CsSegmentedTabsComponent],
   templateUrl: './student-study-plans.component.html',
   styleUrl: './student-study-plans.component.scss'
 })
@@ -25,6 +32,53 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   private readonly toaster = coachingToaster();
   readonly clock=clock;taskPage=1;
   readonly planKindLabel=weeklyPlanKindLabel;
+  // T4 (31.10.2026): the student page shows a week strip or a list of compact rows; details open in a bottom sheet.
+  readonly studentView=signal<'week'|'list'>('week');
+  readonly studentViews:CsTabOption[]=[{value:'week',label:'Takvim'},{value:'list',label:'Liste'}];
+  readonly listFilters:{value:'all'|'today'|'pending'|'overdue'|'completed';label:string}[]=[{value:'all',label:'Tümü'},{value:'today',label:'Bugün'},{value:'pending',label:'Bekleyen'},{value:'overdue',label:'Geciken'},{value:'completed',label:'Tamamlanan'}];
+  readonly boardOpen=signal(false);
+  readonly selectedDay=signal<string|null>(null);
+  readonly sheetTaskId=signal<string|null>(null);
+  readonly lastCompletedId=signal<string|null>(null);
+  get studentMode(){return !this.staffStudentId;}
+  readonly sheetTask=computed(()=>{const id=this.sheetTaskId();return id?this.selected()?.tasks.find(t=>t.id===id)??null:null;});
+  readonly weekDays=computed(()=>{
+    const plan=this.selected(),day=this.selectedDay()??this.planToday();if(!plan)return[];
+    const start=shiftDays(day,-((new Date(`${day}T12:00:00Z`).getUTCDay()+6)%7)),today=this.planToday();
+    return Array.from({length:7},(_,i)=>{const date=shiftDays(start,i),tasks=plan.tasks.filter(t=>t.plannedDate===date);
+      return{date,label:WEEKDAYS[i],number:Number(date.slice(8)),count:tasks.length,open:tasks.filter(t=>!t.isCompleted).length,late:tasks.some(t=>this.isOverdue(t)),isToday:date===today,colors:[...new Set(tasks.map(t=>this.taskColor(t)))].slice(0,3)};});
+  });
+  readonly dayTasks=computed(()=>{const day=this.selectedDay();return(this.selected()?.tasks??[]).filter(t=>t.plannedDate===day).sort((a,b)=>(a.plannedStartMinute??1440)-(b.plannedStartMinute??1440));});
+  dayGroups(){const groups=new Map<string,StudyTask[]>();
+    for(const task of [...this.filteredTasks()].sort((a,b)=>a.plannedDate.localeCompare(b.plannedDate)||(a.plannedStartMinute??1440)-(b.plannedStartMinute??1440))){const list=groups.get(task.plannedDate)??[];list.push(task);groups.set(task.plannedDate,list);}
+    return[...groups].map(([date,tasks])=>({date,tasks}));}
+  dayTitle(date:string){const today=this.planToday();if(date===today)return'Bugün';if(date===shiftDays(today,1))return'Yarın';if(date===shiftDays(today,-1))return'Dün';
+    return new Intl.DateTimeFormat('tr-TR',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(`${date}T12:00:00Z`));}
+  planProgress(){const tasks=this.selected()?.tasks??[];return{done:tasks.filter(t=>t.isCompleted).length,total:tasks.length};}
+  selectDay(date:string){this.selectedDay.set(date);}
+  shiftWeek(weeks:number){this.selectedDay.set(shiftDays(this.selectedDay()??this.planToday(),weeks*7));}
+  setListFilter(value:'all'|'today'|'pending'|'overdue'|'completed'){this.taskFilter=value;this.taskPage=1;}
+  readonly listDays=signal(14);
+  get remainingLabel(){return this.staffStudentId?'Yalnız kalan kapsamı kaydet':'Yalnız kalan işi kaydet';}
+  openEditFlow(){void this.router?.navigate(['/coaching-portal/plan/weekly']);}
+  openTask(id:string){this.sheetTaskId.set(id);}
+  closeTask(){this.sheetTaskId.set(null);this.completionError.set(null);}
+  canQuickComplete(task:StudyTask){return this.selected()?.status==='Active'&&!this.readOnly&&!task.isCompleted;}
+  quickComplete(task:StudyTask){this.lastCompletedId.set(task.id);this.complete(task,this.actualMinutes[task.id]??task.plannedMinutes,this.actualQuestions[task.id]??null);}
+  undoComplete(task:StudyTask){
+    const current=this.selected()?.tasks.find(t=>t.id===task.id)??task;
+    this.startCorrection(current);const form=this.correction;if(!form)return;
+    Object.assign(form,{minutes:0,questions:null,completed:false,remainingMinutes:null,remainingQuestions:null,reason:'Yanlışlıkla tamamlandı olarak işaretledim.'});
+    if(this.continuationScopeRequired(current)){this.openTask(current.id);return;}
+    this.lastCompletedId.set(null);this.saveCorrection();
+  }
+  private readonly openSheetOnError=effect(()=>{const failure=this.completionError();if(failure&&!this.staffStudentId)this.sheetTaskId.set(failure.taskId);});
+  private pickStudentDay(plan:StudyPlan,focus:string|null){
+    const today=this.planToday(),dates=plan.tasks.map(t=>t.plannedDate).sort();
+    const target=focus?plan.tasks.find(t=>t.id===focus)?.plannedDate:undefined;
+    this.selectedDay.set(target??(dates.includes(today)||!dates.length?today:plan.tasks.filter(t=>!t.isCompleted&&t.plannedDate>=today).map(t=>t.plannedDate).sort()[0]??dates.at(-1)!));
+    if(focus&&target)this.sheetTaskId.set(focus);
+  }
   readonly planView=signal<'calendar'|'list'>('list');readonly selectedTaskIds=signal<string[]>([]);
   private readonly injector=inject(Injector);
   private readonly changeDetector=inject(ChangeDetectorRef);
@@ -97,7 +151,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   /** Today's date in the plan's time zone. */
   planToday(){const zone=this.selected()?.weeklySource?.timeZoneId||'Europe/Istanbul';try{return new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch{return this.today;}}
   private openedOnToday=false;
-  openWizard(){void this.router?.navigate(['/coaching-portal/automatic-plan']);}
+  openWizard(){void this.router?.navigate(['/coaching-portal/plan/wizard']);}
   isOverdue(task:StudyTask){return this.selected()?.status==='Active'&&calendarTaskOverdue(task,this.selected()?.weeklySource?.timeZoneId);}
   changeTaskFilter(){this.taskPage=1;this.planView.set('list');this.selectedTaskIds.set([]);}
   taskTitles:Record<string,string>={};
@@ -362,6 +416,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       this.planView.set('calendar');
       this.selectCalendarTasks([focusTask]);
     }
+    if (previous?.id !== plan.id && !this.staffStudentId) this.pickStudentDay(plan, focusTask);
     this.editing = plan.status === 'Draft' && !this.readOnly && !plan.weeklySource;
     this.taskPage=1;
     this.editTitle = plan.title;

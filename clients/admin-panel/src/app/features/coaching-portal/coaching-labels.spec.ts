@@ -16,6 +16,7 @@ describe('coachingLabel', () => {
   it('uses the kind when the same code means different things', () => {
     expect(coachingLabel('Monthly', 'billingPeriod')).toBe('Aylık');
     expect(coachingLabel('Monthly', 'examType')).toBe('Aylık değerlendirme');
+    expect(coachingLabel('Mock', 'examType')).toBe('Deneme sınavı');
     expect(coachingLabel('Annual', 'billingPeriod')).toBe('Yıllık');
   });
 
