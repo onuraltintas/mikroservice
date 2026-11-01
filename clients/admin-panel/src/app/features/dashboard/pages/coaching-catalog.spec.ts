@@ -9,55 +9,12 @@ import { CoachingCatalogComponent } from './coaching-catalog';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { LocationService } from '../../../core/services/location.service';
 
-describe('CoachingCatalogComponent', () => {
-  it('provides the controlled import screen to global catalog managers', () => {
-    const { fixture } = create(); fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('app-coaching-catalog-import')).not.toBeNull();
-  });
-  it('filters topics by hierarchy and clears downstream choices before the next query', () => {
-    const { component, service } = create();
-    component.changeKind('topics');
-    component.lessonId = 'lesson'; component.unitId = 'old';
-    component.lessonFilterChanged();
-    expect(component.unitId).toBe('');
-    component.unitId = 'unit'; component.load();
-    expect(service.list).toHaveBeenLastCalledWith('topics', expect.objectContaining({ lessonId: 'lesson', unitId: 'unit' }));
-    component.changeKind('schools');
-    expect(component.lessonId).toBe('');
-    expect(component.unitId).toBe('');
-  });
-  it('filters schools by verified location and clears dependent choices on province change', () => {
-    const { component, service } = create();
-    component.changeKind('schools');
-    component.provinceId = '66';
-    component.districtId = 'old';
-    component.provinceChanged();
-    expect(component.districtId).toBe('');
-    component.districtId = '1';
-    component.load();
-    expect(service.list).toHaveBeenLastCalledWith('schools', expect.objectContaining({ provinceId: '66', districtId: '1' }));
-    component.changeKind('lessons');
-    expect(component.provinceId).toBe('');
-    expect(component.districtId).toBe('');
-  });
-  it('opens the editor only for global managers and does not switch its catalog underneath it', () => {
-    const { component } = create();
-    component.openEditor(null);
-    expect(component.editorOpen()).toBe(true);
-    component.changeKind('schools');
-    expect(component.kind).toBe('lessons');
-    component.closeEditor();
-    expect(component.editorOpen()).toBe(false);
-  });
-  it('never opens shared catalog editing for an institution administrator', () => {
-    const { component } = create(['InstitutionAdmin']);
-    component.openEditor('record');
-    expect(component.editorOpen()).toBe(false);
-  });
+// KM7 (01.11.2026): the Katalog page keeps only the target catalog (LGS schools, university programs).
+describe('CoachingCatalogComponent (target catalog)', () => {
   function create(roles = ['SystemAdmin']) {
-    const service = { exams: vi.fn(() => of([{code: "KPSS", name: "KPSS Genel Yetenek", isActive: true}])),
+    const service = { exams: vi.fn(() => of([])),
       list: vi.fn(() => of<CoachingCatalogPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })),
-      usage: vi.fn(() => of({ id: 'record', name: 'Math', fingerprint: 'fingerprint', canDelete: true, catalogReferences: 0, planReferences: 0, goalReferences: 0, examReferences: 0 })),
+      usage: vi.fn(() => of({ id: 'record', name: 'Ankara Fen Lisesi', fingerprint: 'fingerprint', canDelete: true, catalogReferences: 0, planReferences: 0, goalReferences: 0, examReferences: 0 })),
       delete: vi.fn(() => of({ success: true }))
     };
     const toaster = { confirm: vi.fn(async (_message: string, _options?: unknown) => true), success: vi.fn(), error: vi.fn() };
@@ -76,95 +33,74 @@ describe('CoachingCatalogComponent', () => {
     return { fixture, component: fixture.componentInstance, service, toaster };
   }
 
-  it('does not fetch shared catalogs for an institution administrator', () => {
-    const { component, service } = create(['InstitutionAdmin']);
-    component.ngOnInit();
-    expect(service.list).not.toHaveBeenCalled();
-    expect(component.error()).toContain('global');
+  it('shows the LGS schools and university programs tabs and no lesson, unit or topic editing', () => {
+    const { fixture } = create(); fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const tabs = Array.from(el.querySelectorAll('[role="tab"]')).map(x => x.textContent!.trim());
+    expect(tabs).toEqual(['LGS okulları', 'Üniversite programları']);
+    expect(el.querySelector('#catalog-kind')).toBeNull();
+    expect(el.querySelector('app-coaching-catalog-import')).toBeNull();
+    expect(el.querySelector('app-coaching-outcomes')).toBeNull();
+    expect(el.querySelector('main')).toBeNull();
+    expect(el.textContent).toContain('Müfredat Yönetimi');
   });
-
+  it('renders the university programs component in its tab', () => {
+    const { fixture, component, service } = create(); fixture.detectChanges(); service.list.mockClear();
+    component.chooseTab('programs'); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-coaching-target-programs')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('#catalog-search')).toBeNull();
+    expect(service.list).not.toHaveBeenCalled();
+  });
+  it('lists schools by verified location and clears the district when the province changes', () => {
+    const { component, service } = create(); component.ngOnInit();
+    component.provinceId = '66'; component.districtId = 'old'; component.provinceChanged();
+    expect(component.districtId).toBe('');
+    component.districtId = '1'; component.load();
+    expect(service.list).toHaveBeenLastCalledWith('schools', expect.objectContaining({ provinceId: '66', districtId: '1' }));
+  });
+  it('never opens shared catalog editing for an institution administrator', () => {
+    const { component, service } = create(['InstitutionAdmin']);
+    component.openEditor('record'); expect(component.editorOpen()).toBe(false);
+    component.ngOnInit(); expect(service.list).not.toHaveBeenCalled(); expect(component.error()).toContain('global');
+  });
   it('searches and pages on the server', () => {
     const { component, service } = create();
-    component.search = 'Matematik';
-    component.load(2);
-    expect(service.list).toHaveBeenLastCalledWith('lessons', expect.objectContaining({ search: 'Matematik', pageNumber: 2, pageSize: 25 }));
+    component.search = 'Fen Lisesi'; component.load(2);
+    expect(service.list).toHaveBeenLastCalledWith('schools', expect.objectContaining({ search: 'Fen Lisesi', pageNumber: 2, pageSize: 25 }));
   });
-
   it('clears old results and shows a recoverable failure', () => {
     const { component, service } = create();
-    service.list.mockReturnValue(throwError(() => new Error('Unavailable')));
-    component.load();
-    expect(component.items()).toEqual([]);
-    expect(component.loading()).toBe(false);
-    expect(component.error()).toContain('yeniden');
+    service.list.mockReturnValue(throwError(() => new Error('Unavailable'))); component.load();
+    expect(component.items()).toEqual([]); expect(component.loading()).toBe(false); expect(component.error()).toContain('yeniden');
   });
-
-  it('cancels an old request when changing catalog type', () => {
+  it('cancels an old request when the page reloads', () => {
     const { component, service } = create();
-    const first = new Subject<CoachingCatalogPage>();
-    service.list.mockReturnValueOnce(first);
-    component.load();
-    component.changeKind('schools');
-    first.next({ items: [{ id: 'old', name: 'Old lesson', source: 'test', sourceId: '1', isActive: false }], totalCount: 1, pageNumber: 1, pageSize: 25 });
+    const first = new Subject<CoachingCatalogPage>(); service.list.mockReturnValueOnce(first);
+    component.load(); component.load(2);
+    first.next({ items: [{ id: 'old', name: 'Eski', source: 'mebi-lgs', sourceId: '1', isActive: false }], totalCount: 1, pageNumber: 1, pageSize: 25 });
     expect(component.items()).toEqual([]);
-    expect(service.list).toHaveBeenLastCalledWith('schools', expect.objectContaining({ pageNumber: 1 }));
   });
-
-  it('renders labels for empty results and accessible filters', () => {
-    const { fixture } = create();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Kayıt bulunamadı');
-    expect(fixture.nativeElement.querySelector('label[for="catalog-search"]')).not.toBeNull();
-  });
-
-  it('rejects invalid numeric filters before sending an API request', () => {
+  it('rejects an invalid score year before sending a request', () => {
     const { component, service } = create();
-    component.gradeNumber = 13;
-    component.load();
-    expect(service.list).not.toHaveBeenCalled();
-    expect(component.error()).toContain('Sınıf');
-    component.kind = 'schools';
-    component.scoreYear = 2025.5;
-    component.load();
-    expect(service.list).not.toHaveBeenCalled();
-    expect(component.error()).toContain('Puan yılı');
+    component.scoreYear = 2025.5; component.load();
+    expect(service.list).not.toHaveBeenCalled(); expect(component.error()).toContain('Puan yılı');
   });
-
+  it('shows source codes as Turkish labels', () => {
+    const { fixture, component } = create(); fixture.detectChanges();
+    component.items.set([{ id: 'record', name: 'Ankara Fen Lisesi', source: 'mebi-lgs', sourceId: '06-123', isActive: true }]); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('MEBİ LGS okul verisi'); expect(fixture.nativeElement.textContent).not.toContain('mebi-lgs');
+  });
   it('requires a reason and explicit confirmation before permanent deletion', async () => {
     const { component, service, toaster } = create();
-    component.inspectUsage('record');
-    await component.deleteSelected();
-    expect(service.delete).not.toHaveBeenCalled();
-    component.deleteReason = 'Unused duplicate';
-    component.deleteConfirmation = 'SİL';
-    await component.deleteSelected();
-    expect(toaster.confirm).toHaveBeenCalled();
-    expect(toaster.confirm.mock.calls[0][0]).toContain('Dersler');
-    expect(toaster.confirm.mock.calls[0][0]).toContain('record');
-    expect(service.delete).toHaveBeenCalledWith('lessons', 'record', { fingerprint: 'fingerprint', reason: 'Unused duplicate', confirmId: 'record' });
-    expect(component.selectedUsage()).toBeNull();
+    component.inspectUsage('record'); await component.deleteSelected(); expect(service.delete).not.toHaveBeenCalled();
+    component.deleteReason = 'Kullanılmayan kopya'; component.deleteConfirmation = 'SİL'; await component.deleteSelected();
+    expect(toaster.confirm.mock.calls[0][0]).toContain('LGS okulu');
+    expect(service.delete).toHaveBeenCalledWith('schools', 'record', { fingerprint: 'fingerprint', reason: 'Kullanılmayan kopya', confirmId: 'record' });
   });
-
   it('never offers deletion for a used record', async () => {
     const { component, service, toaster } = create();
-    service.usage.mockReturnValue(of({ id: 'record', name: 'Math', fingerprint: 'fingerprint', canDelete: false, catalogReferences: 0, planReferences: 1, goalReferences: 0, examReferences: 0 }));
-    component.inspectUsage('record');
-    component.deleteReason = 'Unused duplicate';
-    component.deleteConfirmation = 'SİL';
-    await component.deleteSelected();
-    expect(service.delete).not.toHaveBeenCalled();
-    expect(toaster.confirm).not.toHaveBeenCalled();
-  });
-
-  it('announces loaded usage and labels each record action distinctly', () => {
-    const { fixture, component } = create();
-    fixture.detectChanges();
-    component.items.set([{ id: 'record', name: 'Math', source: 'admin', sourceId: '1', isActive: false }, { id: 'other', name: 'Math', source: 'admin', sourceId: '2', isActive: false }]);
-    component.inspectUsage('record');
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[aria-label="Dersler: Math (record) kullanımını incele"]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('[aria-label="Dersler: Math (other) kullanımını incele"]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('[aria-live="polite"][aria-atomic="true"]').textContent).toContain('Math');
-    expect(fixture.nativeElement.querySelector('[aria-live="polite"][aria-atomic="true"]').textContent).toContain('record');
+    service.usage.mockReturnValue(of({ id: 'record', name: 'Okul', fingerprint: 'fingerprint', canDelete: false, catalogReferences: 0, planReferences: 0, goalReferences: 1, examReferences: 0 }));
+    component.inspectUsage('record'); component.deleteReason = 'Kullanılmayan kopya'; component.deleteConfirmation = 'SİL'; await component.deleteSelected();
+    expect(service.delete).not.toHaveBeenCalled(); expect(toaster.confirm).not.toHaveBeenCalled();
   });
 });
