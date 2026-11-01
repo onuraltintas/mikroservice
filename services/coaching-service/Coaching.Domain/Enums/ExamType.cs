@@ -12,5 +12,8 @@ public enum ExamType
     YKS = 5,            // Yükseköğretim Kurumları Sınavı
     MidTerm = 6,        // Ara sınav
     Final = 7,          // Final
-    Quiz = 8            // Kısa sınav
+    Quiz = 8,           // Kısa sınav
+    AGS = 9,            // KM1: MEB Akademi Giriş Sınavı ve ÖABT
+    YDS = 10,           // KM1: Yabancı Dil Bilgisi Seviye Tespit Sınavı
+    YOKDIL = 11         // KM1: Yükseköğretim Kurumları Yabancı Dil Sınavı
 }

@@ -37,6 +37,45 @@ public sealed class CoachingScoreEstimatePostgresTests
         Assert.Equal(80000, lgs.Rank);
     }
 
+    [CurriculumPostgresTests.LocalPostgresFact]
+    // KM1 (01.11.2026): YDS and YÖKDİL scores need no uploaded model: the ÖSYM guides add up the correct answers out of 100
+    // (80 questions, so 1.25 points each). AGS has no estimate yet and says so. The countdown uses the session the student chose.
+    public async Task LanguageScoresAreTheCorrectAnswersOutOfAHundredAndAgsHasAClearEmptyState()
+    {
+        await using var f = await CurriculumPostgresTests.Pg.Create();
+        var student = Guid.NewGuid();
+        var service = new CoachingScoreEstimateService(f.Db, new Reader(student), TimeProvider.System);
+        void Add(string code, ExamType type, int correct, int wrong, int daysAgo)
+        {
+            var exam = Exam.CreateStudentReported(student, code + " denemesi", type, DateTime.UtcNow.Date.AddDays(-daysAgo), 100);
+            var result = ExamResult.Create(exam.Id, student, 0);
+            result.SetAnswerStatistics(correct, wrong, 80 - correct - wrong);
+            result.SetPracticeExam(new(code, [new("ENG", correct, wrong, 80 - correct - wrong)]), type);
+            exam.AddResult(result); f.Db.Add(exam);
+        }
+        Add("YDS_EN", ExamType.YDS, 60, 20, 10); Add("YDS_EN", ExamType.YDS, 64, 10, 5); Add("YOKDIL_SAG", ExamType.YOKDIL, 70, 2, 1);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Coaching.Domain.CoachingTime.Turkey));
+        var yds = StudyCatalogExam.Create("YDS", "YDS");
+        yds.ReplaceSessions([new(null, today.AddDays(30), "Bahar", null, null), new(null, today.AddDays(200), "Güz", null, null)]);
+        f.Db.Add(yds); await f.Db.SaveChangesAsync();
+        var context = StudentLearningContext.Create(student, 2026, LearningPurpose.Yds, today.AddDays(200).Year, null, null);
+        context.SetTargetExamSession(yds.Sessions[1].Id); f.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student), context);
+        await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
+
+        var estimate = await service.EstimateAsync(student, student, null, default);
+        Assert.Empty(estimate.Estimates);
+        Assert.Null(estimate.Notice);
+        Assert.Equal(new[] { ("YDS_EN", 77.5m, 75m, 80m, 2), ("YOKDIL_SAG", 87.5m, 87.5m, 87.5m, 1) },
+            estimate.LanguageScores.Select(x => (x.ExamCode, x.Score, x.ScoreLow, x.ScoreHigh, x.ExamsUsed)).ToArray());
+        Assert.Equal(("YDS · Güz", 200), (estimate.TargetExam!.Name, estimate.TargetExam.DaysLeft));
+
+        await f.Db.StudentLearningContexts.ExecuteDeleteAsync(); await f.Db.ExamResults.ExecuteDeleteAsync();
+        f.Db.Add(StudentLearningContext.Create(student, 2026, LearningPurpose.Ags, DateTime.UtcNow.Year + 1, "OABT_OZEL", null)); await f.Db.SaveChangesAsync();
+        estimate = await service.EstimateAsync(student, student, null, default);
+        Assert.Empty(estimate.LanguageScores);
+        Assert.Equal("AGS ve ÖABT için puan tahmini henüz yok. Netlerini Denemeler bölümünden izleyebilirsin.", estimate.Notice);
+    }
+
     private sealed class Reader(Guid student) : ICoachingIdentityAuthorizationClient
     {
         public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken ct) => Task.FromResult<CoachingAdminAccessScope?>(null);

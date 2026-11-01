@@ -39,7 +39,7 @@
             <!-- Logo Text -->
             <div class="flex flex-col">
                 <span class="text-lg font-bold text-gray-900 dark:text-white tracking-tight">Eduİvme</span>
-                <span class="text-[10px] text-indigo-500 dark:text-indigo-300/70 font-medium -mt-0.5">Admin Panel</span>
+                <span class="text-[10px] text-indigo-700 dark:text-indigo-200 font-medium -mt-0.5">Admin Panel</span>
             </div>
         </div>
 
@@ -61,7 +61,7 @@
         <!-- Section Label -->
         <div *ngIf="!layoutService.isSidebarCollapsed()" class="px-3 pt-2 pb-3">
             <span
-                class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Menü</span>
+                class="text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-300">Menü</span>
         </div>
 
         @for (item of menuItems(); track item.label) {
@@ -74,7 +74,7 @@
             [class.justify-center]="layoutService.isSidebarCollapsed()">
 
             <span
-                class="flex-shrink-0 h-5 w-5 transition-all duration-200 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 group-hover:scale-110 transform"
+                class="flex-shrink-0 h-5 w-5 transition-all duration-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-400 group-hover:scale-110 transform"
                 [innerHTML]="item.iconHtml"></span>
 
             <span *ngIf="!layoutService.isSidebarCollapsed()"
@@ -103,8 +103,8 @@
                 [class.justify-center]="layoutService.isSidebarCollapsed()">
 
                 <span
-                    class="flex-shrink-0 h-5 w-5 transition-all duration-200 group-hover:text-indigo-500 dark:group-hover:text-indigo-400"
-                    [class.text-indigo-500]="isExpanded(item.label)"
+                    class="flex-shrink-0 h-5 w-5 transition-all duration-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-400"
+                    [class.text-indigo-700]="isExpanded(item.label)"
                     [class.dark:text-indigo-400]="isExpanded(item.label)" [innerHTML]="item.iconHtml"></span>
 
                 @if (!layoutService.isSidebarCollapsed()) {
@@ -114,7 +114,7 @@
                 <!-- Chevron Icon -->
                 <svg xmlns="http://www.w3.org/2000/svg"
                     class="h-4 w-4 transition-transform duration-300 ml-auto text-gray-400 dark:text-slate-500"
-                    [class.rotate-90]="isExpanded(item.label)" [class.text-indigo-500]="isExpanded(item.label)"
+                    [class.rotate-90]="isExpanded(item.label)" [class.text-indigo-700]="isExpanded(item.label)"
                     [class.dark:text-indigo-400]="isExpanded(item.label)" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -140,7 +140,7 @@
                     class="group flex items-center px-3 py-2 text-[13px] text-gray-500 dark:text-slate-500 rounded-lg hover:text-indigo-600 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200">
 
                     <span
-                        class="flex-shrink-0 h-4 w-4 mr-2.5 transition-transform group-hover:scale-110 group-hover:text-indigo-500 dark:group-hover:text-indigo-400"
+                        class="flex-shrink-0 h-4 w-4 mr-2.5 transition-transform group-hover:scale-110 group-hover:text-indigo-700 dark:group-hover:text-indigo-400"
                         [innerHTML]="child.iconHtml"></span>
 
                     <span class="truncate">{{ child.label }}</span>

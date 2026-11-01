@@ -7,6 +7,7 @@ import { GoalTarget } from '../../../../../../src/app/core/services/coaching-stu
 import { finalize, forkJoin } from 'rxjs';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
+import { coachingExamTypeOptions } from './coaching-enum-contract';
 import {
   CoachingTeacherGoal,
   CoachingTeacherGoalCreateRequest,
@@ -81,16 +82,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
     { value: 5, key: 'TimeManagement', label: 'Zaman yönetimi' },
     { value: 99, key: 'Other', label: 'Diğer' }
   ];
-  readonly examTypes = [
-    { value: 1, key: 'Mock', label: 'Deneme' },
-    { value: 2, key: 'Weekly', label: 'Haftalık test' },
-    { value: 3, key: 'Monthly', label: 'Aylık değerlendirme' },
-    { value: 4, key: 'LGS', label: 'LGS' },
-    { value: 5, key: 'YKS', label: 'YKS' },
-    { value: 6, key: 'MidTerm', label: 'Ara sınav' },
-    { value: 7, key: 'Final', label: 'Final' },
-    { value: 8, key: 'Quiz', label: 'Kısa sınav' }
-  ];
+  readonly examTypes = coachingExamTypeOptions;
 
   form = this.emptyForm();
 

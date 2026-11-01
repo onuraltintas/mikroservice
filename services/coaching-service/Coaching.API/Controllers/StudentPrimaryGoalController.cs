@@ -38,10 +38,13 @@ public sealed class StudentPrimaryGoalController(CoachingDbContext db, ICoaching
             if (!YksScoreTypes.ProgramFitsProfile(context.PrimaryScoreType, score))
                 return BadRequest(new { message = "Programın puan türü profilindeki alanla eşleşmiyor." });
         }
-        if (context?.Purpose is not (LearningPurpose.Lgs or LearningPurpose.Yks))
+        if (context is null || !LearningPurposes.IsExamPreparation(context.Purpose))
             return BadRequest(new { message = "Önce profilinde sınav hazırlığını belirle." });
-        var advanced = YksScoreTypes.AdvancedNetExam(context.PrimaryScoreType);
-        if (goal.NetTargets.Any(x => context.Purpose == LearningPurpose.Lgs ? x.ExamCode != "LGS" : x.ExamCode != "TYT" && x.ExamCode != advanced))
+        // KM1: AGS/ÖABT, YDS and YÖKDİL goals have net targets but no school or programme target.
+        if (context.Purpose is not (LearningPurpose.Lgs or LearningPurpose.Yks) && (goal.TargetSchoolId.HasValue || goal.TargetUniversityProgramId.HasValue))
+            return BadRequest(new { message = "Hedef eğitim bağlamındaki sınavla eşleşmiyor." });
+        var scopes = LearningPurposes.NetExamCodes(context.Purpose, context.PrimaryScoreType);
+        if (goal.NetTargets.Any(x => !scopes.Contains(x.ExamCode)))
             return BadRequest(new { message = "Net hedefinin sınav kapsamı profilinle eşleşmiyor." });
         var current = await db.Set<StudentPrimaryGoal>().SingleOrDefaultAsync(x => x.StudentId == student, ct);
         if (request.ExpectedVersion != current?.Version) return Conflict(new { message = "Ana hedef değişti. Sayfayı yeniden yükleyin." });

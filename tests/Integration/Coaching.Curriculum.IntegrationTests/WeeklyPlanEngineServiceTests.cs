@@ -48,7 +48,7 @@ public sealed class WeeklyPlanEngineServiceTests
     {
         await using var f = new CurriculumManagementTests.Fixture(); var service = await WeeklyOutcomePlanTests.Seed(f);
         var exam = await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "LGS");
-        exam.Edit(exam.Name, exam.DisplayOrder, new DateOnly(2027, 6, 13)); await f.Db.SaveChangesAsync();
+        exam.ReplaceSessions([new(null, new DateOnly(2027, 6, 13), "2027", null, null)]); await f.Db.SaveChangesAsync();
         var options = await service.OptionsAsync(default);
         Assert.Equal((new DateOnly(2027, 6, 12), (DateOnly?)new DateOnly(2027, 6, 13), "Catalog"), (options.EndDate, options.ExamDate, options.EndDateSource));
 
@@ -61,9 +61,35 @@ public sealed class WeeklyPlanEngineServiceTests
         await service.SetExamDateAsync(new(null), default);
         Assert.Equal("Catalog", (await service.OptionsAsync(default)).EndDateSource);
 
-        exam.Edit(exam.Name, exam.DisplayOrder, null); await f.Db.SaveChangesAsync();
+        exam.ReplaceSessions([]); await f.Db.SaveChangesAsync();
         options = await service.OptionsAsync(default);
         Assert.Equal((WeeklyOutcomeScheduler.DefaultEnd(options.StartDate), "Default"), (options.EndDate, options.EndDateSource));
+    }
+
+    [Fact]
+    // KM1 (01.11.2026): a student who picked one of several sessions plans up to that session; an own date still wins.
+    public async Task PlanEndsBeforeTheChosenSession()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var service = await WeeklyOutcomePlanTests.Seed(f);
+        var lgs = await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "LGS");
+        lgs.ReplaceSessions([new(null, new DateOnly(2027, 6, 13), "2027", null, null)]);
+        var yds = StudyCatalogExam.Create("YDS", "YDS");
+        yds.ReplaceSessions([new(null, new DateOnly(2027, 3, 28), "2027/1", null, null), new(null, new DateOnly(2027, 11, 21), "2027/2", null, null)]);
+        f.Db.Add(yds); await f.Db.SaveChangesAsync();
+        var context = await f.Db.StudentLearningContexts.SingleAsync();
+        context.SetTargetExamSession(yds.Sessions.Single(x => x.Label == "2027/2").Id); await f.Db.SaveChangesAsync();
+        var options = await service.OptionsAsync(default);
+        Assert.Equal((new DateOnly(2027, 11, 20), (DateOnly?)new DateOnly(2027, 11, 21), "Session", (DateOnly?)new DateOnly(2027, 6, 13)),
+            (options.EndDate, options.ExamDate, options.EndDateSource, options.CatalogExamDate));
+        await service.SetExamDateAsync(new(new DateOnly(2027, 6, 20)), default);
+        options = await service.OptionsAsync(default);
+        Assert.Equal(("Student", (Guid?)null), (options.EndDateSource, (await f.Db.StudentLearningContexts.AsNoTracking().SingleAsync()).TargetExamSessionId));
+        // The admin moves the chosen session into the past: the plan falls back to the catalog date.
+        context = await f.Db.StudentLearningContexts.SingleAsync(); context.SetTargetExamDate(null, new DateOnly(2026, 11, 1));
+        context.SetTargetExamSession(yds.Sessions.Single(x => x.Label == "2027/1").Id);
+        yds.ReplaceSessions([new(yds.Sessions.Single(x => x.Label == "2027/1").Id, new DateOnly(2026, 3, 28), "2026/1", null, null)]);
+        await f.Db.SaveChangesAsync();
+        Assert.Equal("Catalog", (await service.OptionsAsync(default)).EndDateSource);
     }
 
     [Fact]

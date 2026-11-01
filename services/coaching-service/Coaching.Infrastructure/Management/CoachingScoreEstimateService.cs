@@ -10,7 +10,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.Infrastructure.Management;
 
-public sealed record ScoreModelImportRequest(int Year, string Csv, string? Fingerprint);
+public sealed record ScoreModelImportRequest(int Year, string Csv, string? Fingerprint, string? Reason = null);
+/// <summary>KM7: one row of the score model history (an upload, restore or delete of one score type).</summary>
+public sealed record ScoreModelHistoryItem(Guid Id, Guid UploadId, int Year, string ScoreType, string Name, string Action, decimal BaseScore, int RankRows,
+    int Coefficients, string? FileSha256, string? Reason, Guid ActorUserId, DateTime CreatedAt, bool IsCurrent);
+public sealed record ScoreModelReasonRequest(string Reason);
 public sealed record ScoreModelPreviewItem(string ScoreType, string Name, decimal BaseScore, int Coefficients, int RankRows, bool Replaces);
 public sealed record ScoreModelImportError(int Line, string Message);
 public sealed record ScoreModelPreview(string Fingerprint, int Year, IReadOnlyList<ScoreModelPreviewItem> Models, IReadOnlyList<ScoreModelImportError> Errors);
@@ -19,7 +23,15 @@ public sealed record ScoreTypeEstimate(string ScoreType, string Name, int ModelY
     int Rank, int RankBest, int RankWorst, decimal? Percentile, int ExamsUsed, DateTime LastExamDate, bool IncludesDiplomaGrade);
 public sealed record ScoreTargetGap(string TargetName, string ScoreType, decimal? TargetScore, int? TargetRank, decimal? TargetPercentile,
     decimal? ScoreGap, decimal? NetGap, int? RankGap, bool Reached);
-public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, ScoreTargetGap? Target, string? Notice);
+public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, ScoreTargetGap? Target, string? Notice)
+{
+    /// <summary>KM1: YDS and YÖKDİL scores (correct answers out of 100), one per practice scope.</summary>
+    public IReadOnlyList<LanguageScoreEstimate> LanguageScores { get; init; } = [];
+    /// <summary>KM1: for AGS, YDS and YÖKDİL students, the exam date they work towards (own date, chosen session or next session).</summary>
+    public ScoreTargetExam? TargetExam { get; init; }
+}
+public sealed record LanguageScoreEstimate(string ExamCode, string Name, decimal Score, decimal ScoreLow, decimal ScoreHigh, int ExamsUsed, DateTime LastExamDate);
+public sealed record ScoreTargetExam(string Name, DateOnly Date, int DaysLeft, string Source);
 
 /// <summary>
 /// Roadmap O5: LGS and YKS score and rank estimates. The platform administrator uploads each year's models (coefficients and a
@@ -62,18 +74,104 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
         if (!string.Equals(parsed.Fingerprint, request.Fingerprint, StringComparison.OrdinalIgnoreCase))
             throw new BusinessRuleException("ScoreModel.Changed", "Dosya önizlemeden sonra değişti; yeniden önizleyin.");
         if (parsed.Errors.Count > 0 || parsed.Models.Count == 0) throw new ArgumentException("Dosyadaki hataları düzeltip yeniden yükleyin.");
+        var reason = OptionalReason(request.Reason);
         var now = clock.GetUtcNow().UtcDateTime;
         var types = parsed.Models.Select(x => x.ScoreType).ToList();
-        var existing = await db.Set<CoachingScoreModel>().Where(x => x.Year == request.Year && types.Contains(x.ScoreType)).ToListAsync(ct);
-        foreach (var model in parsed.Models)
+        await InTransaction(async () =>
         {
-            var current = existing.SingleOrDefault(x => x.ScoreType == model.ScoreType);
-            if (current is null) db.Add(CoachingScoreModel.Create(request.Year, model.ScoreType, model.BaseScore, model.DiplomaWeight, model.Coefficients, model.Ranks, actor, now));
-            else current.Replace(model.BaseScore, model.DiplomaWeight, model.Coefficients, model.Ranks, actor, now);
-        }
-        await db.SaveChangesAsync(ct);
+            var existing = await db.Set<CoachingScoreModel>().Where(x => x.Year == request.Year && types.Contains(x.ScoreType)).ToListAsync(ct);
+            // KM7: the version being replaced stays restorable; a model from before the history has no version yet.
+            foreach (var old in existing)
+                if (!await db.Set<CoachingScoreModelVersion>().AnyAsync(x => x.Year == old.Year && x.ScoreType == old.ScoreType && x.CoefficientsJson == old.CoefficientsJson
+                        && x.RanksJson == old.RanksJson && x.BaseScore == old.BaseScore && x.DiplomaWeight == old.DiplomaWeight, ct))
+                    db.Add(CoachingScoreModelVersion.Of(old, Guid.NewGuid(), "Upload", null, null, old.ImportedByUserId, DateTime.SpecifyKind(old.ImportedAt, DateTimeKind.Utc)));
+            var upload = Guid.NewGuid();
+            foreach (var model in parsed.Models)
+            {
+                var current = existing.SingleOrDefault(x => x.ScoreType == model.ScoreType);
+                if (current is null) db.Add(current = CoachingScoreModel.Create(request.Year, model.ScoreType, model.BaseScore, model.DiplomaWeight, model.Coefficients, model.Ranks, actor, now));
+                else current.Replace(model.BaseScore, model.DiplomaWeight, model.Coefficients, model.Ranks, actor, now);
+                db.Add(CoachingScoreModelVersion.Of(current, upload, "Upload", parsed.Fingerprint, reason, actor, now));
+            }
+            Audit(actor, "ScoreModelApply", $"{request.Year}", new { reason, year = request.Year, scoreTypes = types, fileSha256 = parsed.Fingerprint.ToLowerInvariant(), uploadId = upload });
+            await db.SaveChangesAsync(ct);
+        }, ct);
         return parsed.Models.Count;
     }
+
+    /// <summary>KM7: uploads, restores and deletes, newest first; IsCurrent marks the version in use now.</summary>
+    public async Task<IReadOnlyList<ScoreModelHistoryItem>> HistoryAsync(int? year, CancellationToken ct)
+    {
+        if (year is < 2018 or > 2100) throw new ArgumentException("Yıl 2018 ile 2100 arasında olmalıdır.");
+        var versions = await db.Set<CoachingScoreModelVersion>().AsNoTracking().Where(x => year == null || x.Year == year)
+            .OrderByDescending(x => x.CreatedAt).ThenBy(x => x.ScoreType).Take(500).ToListAsync(ct);
+        var current = await db.Set<CoachingScoreModel>().AsNoTracking().Where(x => year == null || x.Year == year).ToListAsync(ct);
+        // The current version is the newest non-delete version whose content equals the stored model.
+        var currentIds = current.Select(m => versions.Where(v => v.Year == m.Year && v.ScoreType == m.ScoreType && v.Action != "Delete"
+            && v.CoefficientsJson == m.CoefficientsJson && v.RanksJson == m.RanksJson && v.BaseScore == m.BaseScore && v.DiplomaWeight == m.DiplomaWeight)
+            .Select(v => (Guid?)v.Id).FirstOrDefault()).Where(x => x.HasValue).Select(x => x!.Value).ToHashSet();
+        return versions.Select(x => new ScoreModelHistoryItem(x.Id, x.UploadId, x.Year, x.ScoreType, ScoreModelRules.Get(x.ScoreType).Name, x.Action, x.BaseScore,
+            x.RankRows, x.Coefficients().Count, x.FileSha256, x.Reason, x.ActorUserId, x.CreatedAt, currentIds.Contains(x.Id))).ToArray();
+    }
+
+    /// <summary>KM7: puts an earlier version back as the year's model for its score type.</summary>
+    public async Task<ScoreModelItem> RestoreAsync(Guid actor, Guid versionId, string reason, CancellationToken ct)
+    {
+        reason = RequiredReason(reason);
+        var now = clock.GetUtcNow().UtcDateTime;
+        CoachingScoreModel? model = null;
+        await InTransaction(async () =>
+        {
+            var version = await db.Set<CoachingScoreModelVersion>().SingleOrDefaultAsync(x => x.Id == versionId, ct) ?? throw new KeyNotFoundException("Puan modeli sürümü bulunamadı.");
+            if (version.Action == "Delete") throw new ArgumentException("Silme kaydı geri yüklenemez; silinmeden önceki yüklemeyi seçin.");
+            model = await db.Set<CoachingScoreModel>().SingleOrDefaultAsync(x => x.Year == version.Year && x.ScoreType == version.ScoreType, ct);
+            if (model is null) db.Add(model = CoachingScoreModel.Create(version.Year, version.ScoreType, version.BaseScore, version.DiplomaWeight, version.Coefficients(), version.Ranks(), actor, now));
+            else model.Replace(version.BaseScore, version.DiplomaWeight, version.Coefficients(), version.Ranks(), actor, now);
+            db.Add(CoachingScoreModelVersion.Of(model, Guid.NewGuid(), "Restore", version.FileSha256, reason, actor, now, version.Id));
+            Audit(actor, "ScoreModelRestore", $"{version.Year}:{version.ScoreType}", new { reason, year = version.Year, scoreType = version.ScoreType, restoredFrom = version.Id });
+            await db.SaveChangesAsync(ct);
+        }, ct);
+        return new(model!.Id, model.Year, model.ScoreType, ScoreModelRules.Get(model.ScoreType).Name, model.BaseScore, model.Ranks().Count, model.ImportedAt);
+    }
+
+    /// <summary>KM7: removes a year's model for one score type; the history keeps it for restore.</summary>
+    public async Task DeleteAsync(Guid actor, int year, string scoreType, string reason, CancellationToken ct)
+    {
+        reason = RequiredReason(reason);
+        var type = ScoreModelRules.Normalize(scoreType) ?? throw new ArgumentException("Bilinmeyen puan türü.");
+        var now = clock.GetUtcNow().UtcDateTime;
+        await InTransaction(async () =>
+        {
+            var model = await db.Set<CoachingScoreModel>().SingleOrDefaultAsync(x => x.Year == year && x.ScoreType == type, ct)
+                ?? throw new KeyNotFoundException("Bu yıl ve puan türü için yüklü veri yok.");
+            db.Add(CoachingScoreModelVersion.Of(model, Guid.NewGuid(), "Delete", null, reason, actor, now));
+            db.Remove(model);
+            Audit(actor, "ScoreModelDelete", $"{year}:{type}", new { reason, year, scoreType = type });
+            await db.SaveChangesAsync(ct);
+        }, ct);
+    }
+
+    private async Task InTransaction(Func<Task> action, CancellationToken ct) =>
+        await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var tx = db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(ct) : null;
+            try
+            {
+                if (db.Database.IsRelational()) await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(4188, 501)", ct);
+                await action();
+                if (tx is not null) await tx.CommitAsync(ct);
+            }
+            catch { db.ChangeTracker.Clear(); throw; }
+        });
+
+    private void Audit(Guid actor, string action, string id, object payload) =>
+        db.AdminAuditRecords.Add(new EduPlatform.Shared.Infrastructure.Middleware.AdminAuditRecord(Guid.NewGuid(), DateTimeOffset.UtcNow, "Coaching", actor.ToString(), "SystemAdmin", null,
+            "COMMAND", "/api/coaching-admin/score-models", 200, Guid.NewGuid().ToString(), null, null, action, "ScoreModel", id,
+            System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping })));
+
+    private static string RequiredReason(string? reason) =>
+        string.IsNullOrWhiteSpace(reason) || reason.Trim().Length is < 5 or > 500 ? throw new ArgumentException("5–500 karakterlik işlem gerekçesi girin.") : reason.Trim();
+    private static string OptionalReason(string? reason) => reason is null ? "Puan modeli dosyası uygulandı." : RequiredReason(reason);
 
     public async Task<IReadOnlyList<ScoreModelItem>> ListAsync(CancellationToken ct) =>
         (await db.Set<CoachingScoreModel>().AsNoTracking().OrderByDescending(x => x.Year).ThenBy(x => x.ScoreType).ToListAsync(ct))
@@ -87,7 +185,20 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
 
         var models = (await db.Set<CoachingScoreModel>().AsNoTracking().ToListAsync(ct))
             .GroupBy(x => x.ScoreType).Select(x => x.OrderByDescending(y => y.Year).First()).ToDictionary(x => x.ScoreType);
-        if (models.Count == 0) return new([], null, "Puan tahmini verisi henüz yüklenmedi.");
+        var context = await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == studentId)
+            .Select(x => new { x.Purpose, x.TargetExamDate, x.TargetExamSessionId }).SingleOrDefaultAsync(ct);
+        var purpose = context?.Purpose;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(clock.GetUtcNow().UtcDateTime, CoachingTime.Turkey));
+        ScoreTargetExam? targetExam = null;
+        if (purpose is LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil)
+        {
+            var target = context!.TargetExamDate is { } own && own > today ? new StudyPlanning.CoachingExamSessions.Target("Sınavın", own, "Student")
+                : await StudyPlanning.CoachingExamSessions.ChosenAsync(db, context.TargetExamSessionId, today, ct)
+                  ?? await StudyPlanning.CoachingExamSessions.NextCatalogAsync(db, [LearningPurposes.CatalogExamCode(purpose.Value)!], today, ct);
+            targetExam = target is null ? null : new(target.Name, target.Date, target.Date.DayNumber - today.DayNumber, target.Source);
+        }
+        if (models.Count == 0 && purpose is not (LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil))
+            return new([], null, "Puan tahmini verisi henüz yüklenmedi.");
 
         // K4 (31.10.2026): exams dated in the future do not count, and a student's own copy of a deneme that their institution
         // or teacher recorded on the same Türkiye day for the same scope is a duplicate.
@@ -104,6 +215,13 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             .GroupBy(x => x.Summary.ExamCode)
             .ToDictionary(x => x.Key, x => x.OrderByDescending(y => y.ExamDate).Take(ExamsPerScope).ToArray());
 
+        // KM1: YDS and YÖKDİL need no model: the average of the last three scores, from the weakest to the strongest.
+        var language = exams.Where(x => LanguageScoreRules.IsLanguageExam(x.Key)).OrderBy(x => x.Key, StringComparer.Ordinal).Select(group =>
+        {
+            var scores = group.Value.Select(x => LanguageScoreRules.Score(x.Summary)).ToArray();
+            return new LanguageScoreEstimate(group.Key, group.Value[0].Summary.Name, decimal.Round(scores.Average(), 2, MidpointRounding.AwayFromZero),
+                scores.Min(), scores.Max(), scores.Length, group.Value[0].ExamDate);
+        }).ToArray();
         var estimates = new List<ScoreTypeEstimate>();
         foreach (var type in ScoreModelRules.Types)
         {
@@ -121,8 +239,13 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
                 type.Exams.Min(exam => exams[exam].Length), type.Exams.Max(exam => exams[exam][0].ExamDate),
                 type.UsesDiplomaGrade && diplomaGrade is not null));
         }
-        var target = await TargetAsync(studentId, estimates, models, ct);
-        return new(estimates, target, estimates.Count == 0 ? "Tahmin için en az bir LGS ya da YKS denemesini ders ders gir." : null);
+        var goalTarget = await TargetAsync(studentId, estimates, models, ct);
+        var notice = estimates.Count > 0 || language.Length > 0 ? null
+            : purpose == LearningPurpose.Ags ? "AGS ve ÖABT için puan tahmini henüz yok. Netlerini Denemeler bölümünden izleyebilirsin."
+            : purpose is LearningPurpose.Yds or LearningPurpose.Yokdil ? "Puanını görmek için bir YDS ya da YÖKDİL denemesini gir."
+            : models.Count == 0 ? "Puan tahmini verisi henüz yüklenmedi."
+            : "Tahmin için en az bir LGS ya da YKS denemesini ders ders gir.";
+        return new(estimates, goalTarget, notice) { LanguageScores = language, TargetExam = targetExam };
     }
 
     private async Task<ScoreTargetGap?> TargetAsync(Guid studentId, IReadOnlyList<ScoreTypeEstimate> estimates,

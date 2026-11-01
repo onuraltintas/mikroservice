@@ -37,9 +37,10 @@ public sealed class CoachingCatalogImportAdminController(CoachingDbContext db, I
     {
         if (!(await scope.RequireReadScopeAsync(ct)).IsGlobal || user.UserId is not { } actor)
             throw new BusinessRuleException("Authorization.Forbidden", "Ortak katalog aktarımı yalnız global yöneticiye açıktır.");
-        if (request.Files is null || request.Files.Count != 6 || request.Files.Any(x => x.Value is null)
+        // The import reads exactly the preflight's file set (five files); the old check asked for six and refused every request.
+        if (!CatalogPreflight.HasRequiredFiles(request.Files)
             || request.Files.Sum(x => (long)Encoding.UTF8.GetByteCount(x.Value)) > 40 * 1024 * 1024)
-            return BadRequest(new { success = false, message = "Altı katalog JSON dosyasını toplam 40 MiB sınırı içinde seçin." });
+            return BadRequest(new { success = false, message = $"{string.Join(", ", CatalogPreflight.RequiredFileNames)} dosyalarını toplam 40 MiB sınırı içinde seçin." });
         try
         {
             var importer = new CoachingCatalogImporter(db);

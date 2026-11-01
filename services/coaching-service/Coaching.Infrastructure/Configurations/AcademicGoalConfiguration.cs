@@ -14,7 +14,9 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
         builder.ToTable("academic_goals", table =>
         {
             table.HasCheckConstraint("ck_goal_single_catalog_target", "target_university_program_id IS NULL OR target_school_id IS NULL");
-            table.HasCheckConstraint("ck_goal_net_target", "(target_net IS NULL AND target_practice_exam_code IS NULL) OR (target_net IS NOT NULL AND target_practice_exam_code IS NOT NULL AND target_net >= 0 AND target_net <= CASE target_practice_exam_code WHEN 'LGS' THEN 90 WHEN 'TYT' THEN 120 WHEN 'AYT_SAY' THEN 80 WHEN 'AYT_EA' THEN 80 WHEN 'AYT_SOZ' THEN 80 WHEN 'YDT_EN' THEN 80 ELSE -1 END)");
+            // KM1: the net limit of every practice scope is its question count, generated from PracticeExamRules.Profiles.
+            table.HasCheckConstraint("ck_goal_net_target", "(target_net IS NULL AND target_practice_exam_code IS NULL) OR (target_net IS NOT NULL AND target_practice_exam_code IS NOT NULL AND target_net >= 0 AND target_net <= CASE target_practice_exam_code "
+                + string.Join(" ", PracticeExamRules.Profiles.Select(p => $"WHEN '{p.Code}' THEN {p.Sections.Sum(s => s.QuestionCount)}")) + " ELSE -1 END)");
             table.HasCheckConstraint("ck_goal_score_scale", "target_max_score IS NULL OR (target_max_score > 0 AND target_max_score <= 999.99 AND target_score IS NOT NULL AND target_score > 0 AND target_score <= target_max_score AND target_exam_type IS NOT NULL)");
         });
 

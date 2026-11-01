@@ -55,7 +55,7 @@ public sealed class PracticeExamPostgresTests
             var first = practice.Sections[0];
             practice = practice with { Sections = [first with { Correct = first.Empty - 4, Wrong = 4, Empty = 0 }, .. practice.Sections.Skip(1)] };
             var total = PracticeExamRules.Summarize(practice);
-            var request = new StudentExamInput(profile.Name, profile.Code == "LGS" ? ExamType.LGS : ExamType.YKS,
+            var request = new StudentExamInput(profile.Name, PracticeExamRules.ExamTypeFor(profile.Code),
                 DateOnly.FromDateTime(DateTime.UtcNow), 350, 500, total.Correct, total.Wrong, total.Empty, [], practice);
             var created = await service.CreateAsync(request); f.Db.ChangeTracker.Clear();
             var read = (await service.GetAsync(created.Id))!;
@@ -73,11 +73,11 @@ public sealed class PracticeExamPostgresTests
             f.Db.ChangeTracker.Clear(); Assert.Equal(changedTotal.Net, (await service.GetAsync(updated.Id))!.NetSummary!.Net);
         }
         var history = await new GetStudentExamResultsQueryHandler(new ExamRepository(f.Db), access, new Identity())
-            .Handle(new(student), default);
-        Assert.Equal(6, history.Items.Count(x => x.NetSummary is not null));
+            .Handle(new(student, PageSize: 50), default);
+        Assert.Equal(PracticeExamRules.Profiles.Count, history.Items.Count(x => x.NetSummary is not null));
         Assert.Null(history.Items.Single(x => x.ExamId == legacy.Id).NetSummary);
-        var teacherHistory = await new CoachingAdminRepository(f.Db).GetStudentHistoryAsync(student, CoachingStudentHistoryType.Exams, 1, 20);
-        Assert.Equal(6, teacherHistory.Items.Count(x => x.NetSummary is not null));
+        var teacherHistory = await new CoachingAdminRepository(f.Db).GetStudentHistoryAsync(student, CoachingStudentHistoryType.Exams, 1, 50);
+        Assert.Equal(PracticeExamRules.Profiles.Count, teacherHistory.Items.Count(x => x.NetSummary is not null));
         Assert.All(teacherHistory.Items.Where(x => x.NetSummary is not null), x => Assert.Equal("StudentReported", x.Source));
         Assert.Equal(taskBefore, JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync()));
         Assert.Equal(linksBefore, JsonSerializer.Serialize(await f.Db.Set<StudyPlanTaskOutcome>().AsNoTracking().ToArrayAsync()));

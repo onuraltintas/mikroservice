@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PracticeExamInput, PracticeExamProfile, PracticeSection, practiceTotals } from '../../../core/models/practice-exam';
+import { PracticeExamInput, PracticeExamProfile, PracticeSection, examTypeForProfile, practiceNet, practiceTotals } from '../../../core/models/practice-exam';
 
 @Component({ selector: 'app-practice-exam-editor', standalone: true, imports: [CommonModule, FormsModule],
   styles: [`
@@ -9,9 +9,9 @@ import { PracticeExamInput, PracticeExamProfile, PracticeSection, practiceTotals
     label { display:flex; flex-direction:column; gap:.4rem; }
     input,select { box-sizing:border-box; min-height:2.5rem; width:100%; padding:.5rem; font:inherit; color:inherit; background:transparent; border:1px solid var(--ui-border); border-radius:.4rem; }
     .table-wrap { overflow-x:auto; margin-top:1rem; } table { width:100%; border-collapse:collapse; } th,td { text-align:left; padding:.5rem; border-bottom:1px solid var(--ui-border); } td input { min-width:4rem; } th:first-child { min-width:9rem; }
-    .summary { padding:.8rem; border:1px solid var(--ui-border); border-radius:.5rem; } .error { color:var(--ui-danger); } tr.invalid td.net { color:var(--ui-danger); }
+    .summary { padding:.8rem; border:1px solid var(--ui-border); border-radius:.5rem; } .error { color:var(--ui-danger); } tr.invalid td.net { color:var(--ui-danger); } td.net { white-space:nowrap; font-variant-numeric:tabular-nums; }
     @media (max-width: 640px) {
-      thead { display:none; } table, tbody, tr, th, td { display:block; } tr { display:grid; grid-template-columns:repeat(4,1fr); gap:.35rem .5rem; padding:.6rem 0; border-bottom:1px solid var(--ui-border); }
+      thead { display:none; } table, tbody, tr, th, td { display:block; } tr { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.35rem .5rem; padding:.6rem 0; border-bottom:1px solid var(--ui-border); }
       th[scope=row] { grid-column:1 / -1; border:0; padding:0; } td { border:0; padding:0; font-size:.85rem; } td::before { content:attr(data-label); display:block; font-size:.7rem; opacity:.7; }
       td input { min-width:0; }
     }
@@ -22,14 +22,16 @@ import { PracticeExamInput, PracticeExamProfile, PracticeSection, practiceTotals
     </select></label>
     @if (!profiles.length) { <p role="status">Deneme kapsamları henüz hazır değil. Liste gelmezse sayfayı yenile.</p> }
     @if (value; as input) {
-      <p>Doğru ve yanlış sayını gir; boş kalanlar kendiliğinden hesaplanır. Net = doğru − yanlış / {{profile()?.wrongAnswerDivisor}}. Puan ve sıralama hesaplanmaz.</p>
+      <p>Doğru ve yanlış sayını gir; boş kalanlar kendiliğinden hesaplanır.
+        @if (profile()?.wrongAnswerDivisor) { Net = doğru − yanlış / {{profile()?.wrongAnswerDivisor}}. Puan ve sıralama hesaplanmaz. }
+        @else { Yanlışlar doğruları götürmez; net, doğru sayındır. }</p>
       <div class="table-wrap"><table><thead><tr><th>Ders / test</th><th>Soru</th><th>Doğru</th><th>Yanlış</th><th>Boş</th><th>Net</th></tr></thead>
         <tbody>@for (section of profile()?.sections || []; track section.code) {
           @if (row(section.code); as answers) { <tr [class.invalid]="!rowValid(section)"><th scope="row">{{section.name}}</th><td data-label="Soru">{{section.questionCount}}</td>
             <td data-label="Doğru"><input type="number" inputmode="numeric" [attr.aria-label]="section.name + ' doğru'" [ngModel]="answers.correct" (ngModelChange)="edit(section.code, 'correct', $event)" [disabled]="disabled" min="0" [max]="section.questionCount" step="1"></td>
             <td data-label="Yanlış"><input type="number" inputmode="numeric" [attr.aria-label]="section.name + ' yanlış'" [ngModel]="answers.wrong" (ngModelChange)="edit(section.code, 'wrong', $event)" [disabled]="disabled" min="0" [max]="section.questionCount" step="1"></td>
             <td data-label="Boş">{{rowValid(section) ? answers.empty : '—'}}</td>
-            <td data-label="Net" class="net">{{rowValid(section) ? ((answers.correct - answers.wrong / (profile()?.wrongAnswerDivisor || 1)) | number:'1.2-2') : '—'}}</td>
+            <td data-label="Net" class="net">{{rowValid(section) ? (net(answers.correct, answers.wrong) | number:'1.2-2') : '—'}}</td>
           </tr> }
         }</tbody></table></div>
       @if (totals(); as total) { <p class="summary" role="status">Toplam: {{total.correct}} doğru · {{total.wrong}} yanlış · {{total.empty}} boş · <strong>{{total.net | number:'1.2-2'}} net</strong></p> }
@@ -43,7 +45,9 @@ export class PracticeExamEditorComponent {
   @Input() disabled = false;
   @Input() locked = false;
   @Output() valueChange = new EventEmitter<PracticeExamInput | null>();
-  availableProfiles() { return this.profiles.filter(x => !this.examType || (this.examType === 'LGS' ? x.code === 'LGS' : this.examType === 'YKS' && x.code !== 'LGS')); }
+  /** KM1: an exam type offers only its own scopes (YKS: TYT/AYT/YDT; AGS: AGS and the ÖABT fields; YDS; YÖKDİL). */
+  availableProfiles() { return this.profiles.filter(x => !this.examType || examTypeForProfile(x.code) === this.examType); }
+  net(correct: number, wrong: number) { return practiceNet(correct, wrong, this.profile()?.wrongAnswerDivisor ?? 0); }
   profile() { return this.profiles.find(x => x.code === this.value?.examCode); }
   row(code: string) { return this.value?.sections.find(x => x.sectionCode === code); }
   totals() { return practiceTotals(this.value, this.profiles); }

@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin, map } from 'rxjs';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
-import { PracticeExamInput, PracticeExamProfile, practiceTotals } from '../../../../../../src/app/core/models/practice-exam';
+import { PracticeExamInput, PracticeExamProfile, practiceTotals, requiresSections } from '../../../../../../src/app/core/models/practice-exam';
+import { coachingExamTypeOptions } from './coaching-enum-contract';
 import { PracticeExamEditorComponent } from '../../../../../../src/app/features/coaching-portal/pages/practice-exam-editor.component';
 import {
   CoachingTeacherExam,
@@ -85,16 +86,7 @@ export class CoachingTeacherExamsComponent implements OnInit {
   readonly studentTotalPages = signal(1);
   readonly studentSearchTerm = signal('');
 
-  readonly examTypes = [
-    { value: 1, key: 'Mock', label: 'Deneme' },
-    { value: 2, key: 'Weekly', label: 'Haftalık test' },
-    { value: 3, key: 'Monthly', label: 'Aylık değerlendirme' },
-    { value: 4, key: 'LGS', label: 'LGS' },
-    { value: 5, key: 'YKS', label: 'YKS' },
-    { value: 6, key: 'MidTerm', label: 'Ara sınav' },
-    { value: 7, key: 'Final', label: 'Final' },
-    { value: 8, key: 'Quiz', label: 'Kısa sınav' }
-  ];
+  readonly examTypes = coachingExamTypeOptions;
 
   form = this.emptyExamForm();
   resultForm = this.emptyResultForm();
@@ -355,7 +347,7 @@ export class CoachingTeacherExamsComponent implements OnInit {
       this.errorMessage.set('Yeni sonuç için aktif öğrencilerinizden birini seçin.');
       return;
     }
-    if (['LGS','YKS'].includes(exam.examType) && !this.resultForm.practiceExam) { this.errorMessage.set('Deneme kapsamını ve ders cevaplarını girin.'); return; }
+    if (requiresSections(exam.examType) && !this.resultForm.practiceExam) { this.errorMessage.set('Deneme kapsamını ve ders cevaplarını girin.'); return; }
     if (!Number.isFinite(this.resultForm.score) || this.resultForm.score < 0 || this.resultForm.score > exam.maxScore) {
       this.errorMessage.set(`Puan 0 ile ${exam.maxScore} arasında olmalıdır.`);
       return;

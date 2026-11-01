@@ -10,6 +10,14 @@ public static class CatalogPreflight
     private static readonly string[] FileNames = ["lessons.json", "units-derived.json", "upper-subjects.json",
         "subjects.json", "lgs-programs.json"];
 
+    /// <summary>The catalog files an import must contain, exactly once each (the admin page sends the same five).</summary>
+    public static IReadOnlyList<string> RequiredFileNames => FileNames;
+
+    /// <summary>True when the request carries exactly the required files, each with content.</summary>
+    public static bool HasRequiredFiles(IReadOnlyDictionary<string, string>? files) =>
+        files is not null && files.Count == FileNames.Length && files.Values.All(x => x is not null)
+        && FileNames.All(name => files.ContainsKey(name));
+
     public static async Task<CatalogPreflightReport> ReadAsync(string directory, CancellationToken cancellationToken = default)
         => Validate(await ReadFilesAsync(directory, cancellationToken));
 

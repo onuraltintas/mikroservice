@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { CoachingScoreEstimateService, ScoreEstimate } from '../../../core/services/coaching-score-estimate.service';
+import { CoachingScoreEstimateService, ESTIMATE_LABEL, ScoreEstimate, diplomaRankNote, estimateMethodNote } from '../../../core/services/coaching-score-estimate.service';
 import { CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent } from '../ui';
 import { goalGauge } from './growth-model';
 import { possessive } from '../parent/parent-model';
@@ -53,10 +53,12 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
               <p class="cs-estimate-score">{{ num(item.score) }}<small> puan</small></p>
               <p class="cs-growth-muted">{{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }} arası</p>
               <p>Sıralama <b>{{ int(item.rankBest) }}–{{ int(item.rankWorst) }}</b>@if (item.percentile !== null) { · ilk %{{ num(item.percentile) }} }</p>
-              <p class="cs-growth-muted"><small>{{ item.modelYear }} verisiyle{{ item.includesDiplomaGrade ? ', diploma notu dahil' : '' }}</small></p>
+              <p class="cs-growth-muted"><small><span data-testid="estimate-approximate">{{ label }}</span> · {{ item.modelYear }} verisiyle{{ item.includesDiplomaGrade ? ', diploma notu dahil' : '' }}</small></p>
             </cs-card>
           }
         </div>
+        <p class="cs-growth-muted" data-testid="estimate-method"><small>{{ methodNote() }}</small></p>
+        @if (diplomaNote(); as note) { <p class="cs-growth-muted"><small>{{ note }}</small></p> }
         <p class="cs-growth-muted"><small>Bu bir tahmin. Gerçek puan ve sıralama her yıl adayların sonuçlarına göre değişir.</small></p>
       }
       @if (!readonly() && hasYks()) {
@@ -84,6 +86,9 @@ export class StudentGoalSummaryComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly gauge = computed(() => { const data = this.data(); return data ? goalGauge(data, this.parent() ? this.name() : null) : null; });
+  readonly label = ESTIMATE_LABEL;
+  readonly methodNote = computed(() => estimateMethodNote(this.data()?.estimates ?? []));
+  readonly diplomaNote = computed(() => diplomaRankNote(this.data()?.estimates ?? []));
   readonly hasYks = computed(() => this.data()?.estimates.some(x => x.scoreType !== 'LGS') ?? false);
   diploma: number | null = null;
 

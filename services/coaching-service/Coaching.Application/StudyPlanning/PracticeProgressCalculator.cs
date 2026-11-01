@@ -27,7 +27,7 @@ public static class PracticeProgressCalculator
             var profile = PracticeExamRules.Profiles.Single(x => x.Code == group.Key.ExamCode);
             var sections = profile.Sections.Select(section => {
                 var rows = recent.Select(x => x.Input.Sections.Single(s => s.SectionCode == section.Code)).ToArray();
-                var net = rows.Sum(x => x.Correct) - rows.Sum(x => x.Wrong) / (decimal)profile.WrongAnswerDivisor;
+                var net = rows.Sum(x => x.Correct) - (profile.WrongAnswerDivisor == 0 ? 0 : rows.Sum(x => x.Wrong) / (decimal)profile.WrongAnswerDivisor);
                 var percentage = 100m * net / (rows.Length * section.QuestionCount);
                 return new PracticeSectionTrend(section.Code, section.Name, section.QuestionCount,
                     decimal.Round(net / rows.Length, 2), decimal.Round(percentage, 1), percentage < 50);

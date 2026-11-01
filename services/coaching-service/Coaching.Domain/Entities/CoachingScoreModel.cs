@@ -96,3 +96,45 @@ public sealed class CoachingScoreModel : Entity
         return (rank, percentile);
     }
 }
+
+/// <summary>
+/// KM7: every applied, restored or deleted score model is kept as a version so an administrator can see who changed which
+/// year's data and put an earlier version back. Action is Upload, Restore or Delete.
+/// </summary>
+public sealed class CoachingScoreModelVersion
+{
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public Guid UploadId { get; private set; }
+    public int Year { get; private set; }
+    public string ScoreType { get; private set; } = string.Empty;
+    public string Action { get; private set; } = "Upload";
+    public decimal BaseScore { get; private set; }
+    public decimal DiplomaWeight { get; private set; }
+    public string CoefficientsJson { get; private set; } = "[]";
+    public string RanksJson { get; private set; } = "[]";
+    public int RankRows { get; private set; }
+    public string? FileSha256 { get; private set; }
+    public string? Reason { get; private set; }
+    public Guid ActorUserId { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public Guid? RestoredFromId { get; private set; }
+
+    private CoachingScoreModelVersion() { }
+
+    public static CoachingScoreModelVersion Of(CoachingScoreModel model, Guid uploadId, string action, string? fileSha256, string? reason,
+        Guid actor, DateTime now, Guid? restoredFrom = null)
+    {
+        if (action is not ("Upload" or "Restore" or "Delete") || actor == Guid.Empty || now.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("Puan modeli sürümü geçersiz.");
+        return new()
+        {
+            UploadId = uploadId, Year = model.Year, ScoreType = model.ScoreType, Action = action, BaseScore = model.BaseScore,
+            DiplomaWeight = model.DiplomaWeight, CoefficientsJson = model.CoefficientsJson, RanksJson = model.RanksJson,
+            RankRows = model.Ranks().Count, FileSha256 = fileSha256?.ToLowerInvariant(), Reason = reason?.Trim(),
+            ActorUserId = actor, CreatedAt = now, RestoredFromId = restoredFrom
+        };
+    }
+
+    public IReadOnlyList<ScoreModelCoefficient> Coefficients() => JsonSerializer.Deserialize<ScoreModelCoefficient[]>(CoefficientsJson) ?? [];
+    public IReadOnlyList<ScoreModelRank> Ranks() => JsonSerializer.Deserialize<ScoreModelRank[]>(RanksJson) ?? [];
+}

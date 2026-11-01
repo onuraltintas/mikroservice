@@ -22,12 +22,14 @@ public sealed class StudentLearningContextConfiguration : IEntityTypeConfigurati
         b.ToTable("student_learning_contexts", t =>
         {
             t.HasCheckConstraint("ck_learning_year", "\"AcademicYearStart\" BETWEEN 2000 AND 2200");
-            t.HasCheckConstraint("ck_learning_purpose", "\"Purpose\" BETWEEN 0 AND 4");
+            t.HasCheckConstraint("ck_learning_purpose", "\"Purpose\" BETWEEN 0 AND 7");
         });
         b.HasKey(x => x.Id); b.HasIndex(x => x.StudentUserId).IsUnique(); b.Property(x => x.Version).IsConcurrencyToken();
         b.Property(x => x.PrimaryScoreType).HasMaxLength(10); b.Property(x => x.ForeignLanguage).HasMaxLength(30);
         b.HasOne<CoachingStudentProfile>().WithMany().HasForeignKey(x => x.StudentUserId).HasPrincipalKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<CurriculumVersion>().WithMany().HasForeignKey(x => x.CurriculumVersionId).OnDelete(DeleteBehavior.Restrict);
+        // KM1: a session a student aims for cannot be deleted under them (the admin editor says how many chose it).
+        b.HasOne<StudyCatalogExamSession>().WithMany().HasForeignKey(x => x.TargetExamSessionId).OnDelete(DeleteBehavior.Restrict);
         b.HasMany(x => x.CoursePreferences).WithOne().HasForeignKey(x => x.ContextId).OnDelete(DeleteBehavior.Cascade);
         b.HasMany(x => x.TopicStates).WithOne().HasForeignKey(x => x.ContextId).OnDelete(DeleteBehavior.Cascade);
     }

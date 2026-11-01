@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { CoachingStudentExamsService, LessonAnswers, StudentExam, StudentExamType } from '../../../core/services/coaching-student-exams.service';
 import { CoachingStudyPlanningService, StudyTopic, TargetPage } from '../../../core/services/coaching-study-planning.service';
-import { PracticeExamInput, PracticeExamProfile, practiceExamName, practiceTotals } from '../../../core/models/practice-exam';
+import { PracticeExamInput, PracticeExamProfile, examTypeForProfile, practiceExamName, practiceTotals, requiresSections } from '../../../core/models/practice-exam';
 import { PracticeExamEditorComponent } from './practice-exam-editor.component';
 import { StudentScoreEstimateComponent } from './student-score-estimate.component';
 import { StudentInstitutionExamsComponent } from './student-institution-exams.component';
@@ -46,6 +46,7 @@ export class StudentExamResultsComponent {
   practiceExam: PracticeExamInput | null = null;
   readonly examTypes: { value: StudentExamType; label: string }[] = [
     { value: 'Mock', label: 'Deneme' }, { value: 'LGS', label: 'LGS denemesi' }, { value: 'YKS', label: 'YKS denemesi' },
+    { value: 'AGS', label: 'AGS / ÖABT denemesi' }, { value: 'YDS', label: 'YDS denemesi' }, { value: 'YOKDIL', label: 'YÖKDİL denemesi' },
     { value: 'Weekly', label: 'Haftalık' }, { value: 'Monthly', label: 'Aylık' }, { value: 'MidTerm', label: 'Ara sınav' },
     { value: 'Final', label: 'Final' }, { value: 'Quiz', label: 'Kısa sınav' } ];
   ngOnInit() {
@@ -66,7 +67,7 @@ export class StudentExamResultsComponent {
   private suggestScope(){
     if(this.selected || this.dirty || this.practiceExam)return;
     const code=contextExamCodes(this.learningContext())[0];const profile=this.profiles().find(x=>x.code===code);if(!profile)return;
-    this.examType=code==='LGS'?'LGS':'YKS';
+    this.examType=examTypeForProfile(code);
     this.practiceExam={examCode:code,sections:profile.sections.map(x=>({sectionCode:x.code,correct:0,wrong:0,empty:x.questionCount}))};
     if(!this.title.trim()){this.autoTitle=`${practiceExamName(code)} denemesi`;this.title=this.autoTitle;}
     if(!this.examDate)this.examDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -77,7 +78,7 @@ export class StudentExamResultsComponent {
     if (value && this.lessons.length && !await this.toaster.confirm('Deneme kapsamına geçmek mevcut serbest ders/konu satırlarını kaldıracak. Devam edilsin mi?')) return;
     this.practiceExam = value;
     if (value) {
-      this.lessons = []; this.examType = value.examCode === 'LGS' ? 'LGS' : 'YKS';
+      this.lessons = []; this.examType = examTypeForProfile(value.examCode);
       // Roadmap O1: a new result is named after its scope and dated today until the student changes them.
       if (!this.title.trim() || this.title === this.autoTitle) { this.autoTitle = `${practiceExamName(value.examCode)} denemesi`; this.title = this.autoTitle; }
       if (!this.examDate) this.examDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -136,7 +137,7 @@ export class StudentExamResultsComponent {
   }
   save() {
     if (this.busy() || this.stale() || !this.confirmed) return;
-    if (['LGS','YKS'].includes(this.examType) && !this.practiceExam) { this.error.set('Deneme kapsamını ve ders cevaplarını gir.'); return; }
+    if (requiresSections(this.examType) && !this.practiceExam) { this.error.set('Deneme kapsamını ve ders cevaplarını gir.'); return; }
     const totals = practiceTotals(this.practiceExam, this.profiles());
     if (this.practiceExam && !totals) { this.error.set('Deneme derslerinin doğru/yanlış/boş sayılarını kontrol et.'); return; }
     const date = /^\d{4}-\d{2}-\d{2}$/.test(this.examDate) ? new Date(`${this.examDate}T00:00:00Z`) : new Date(NaN);

@@ -27,7 +27,7 @@ const labels: Record<string, string> = {
 
 const byKind: Record<string, Record<string, string>> = {
   billingPeriod: { Monthly: 'Aylık', Quarterly: '3 aylık', Annual: 'Yıllık', OneTime: 'Tek seferlik' },
-  examType: { Monthly: 'Aylık değerlendirme', Weekly: 'Haftalık test', Mock: 'Deneme sınavı', YDT: 'YDT (Dil)' }
+  examType: { Monthly: 'Aylık değerlendirme', Weekly: 'Haftalık test', Mock: 'Deneme sınavı', YDT: 'YDT (Dil)', AGS: 'AGS / ÖABT', YOKDIL: 'YÖKDİL' }
 };
 
 export type CoachingLabelKind = keyof typeof byKind;

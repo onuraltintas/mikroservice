@@ -96,7 +96,7 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
         }
 
         var result = ExamResult.Create(command.ExamId, command.StudentId, command.Score);
-        if (exam.ExamType is Coaching.Domain.Enums.ExamType.LGS or Coaching.Domain.Enums.ExamType.YKS && command.PracticeExam is null)
+        if (Coaching.Domain.Entities.PracticeExamRules.RequiresSections(exam.ExamType) && command.PracticeExam is null)
             throw new ArgumentException("LGS/YKS denemesinde sınav kapsamı ve ders cevapları zorunludur.");
         
         result.SetAnswerStatistics(command.CorrectAnswers, command.WrongAnswers, command.EmptyAnswers);

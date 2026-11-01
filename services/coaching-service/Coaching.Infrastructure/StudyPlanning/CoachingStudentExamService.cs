@@ -118,7 +118,7 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
     private async Task<IReadOnlyList<LessonAnswerStatistics>> ValidateAsync(StudentExamInput request, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (request.ExamType is Coaching.Domain.Enums.ExamType.LGS or Coaching.Domain.Enums.ExamType.YKS && request.PracticeExam is null)
+        if (PracticeExamRules.RequiresSections(request.ExamType) && request.PracticeExam is null)
             throw new ArgumentException("LGS/YKS denemesinde sınav kapsamı ve ders cevapları zorunludur.");
         if (string.IsNullOrWhiteSpace(request.Title) || request.Title.Trim().Length > 200
             || !Enum.IsDefined(request.ExamType) || request.ExamDate == DateOnly.MinValue

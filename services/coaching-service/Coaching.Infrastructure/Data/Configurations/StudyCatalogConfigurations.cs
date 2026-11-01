@@ -15,6 +15,23 @@ public sealed class StudyCatalogExamConfiguration : IEntityTypeConfiguration<Stu
         var names = new[] { "Liselere Geçiş Sistemi", "Temel Yeterlilik Testi", "Alan Yeterlilik Testleri", "Yabancı Dil Testi", "Temel Destek Paketleri" };
         for (var i = 0; i < codes.Length; i++)
             b.HasData(new { Id = Guid.Parse($"f0ca1000-0000-4000-8000-{i+1:000000000000}"), Code = codes[i], Name = names[i], DisplayOrder = i, IsActive = true });
+        b.HasMany(x => x.Sessions).WithOne().HasForeignKey(x => x.ExamId).OnDelete(DeleteBehavior.Cascade);
+        b.Navigation(x => x.Sessions).HasField("_sessions").UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+/// <summary>KM1 (01.11.2026): dated sessions of an exam; one date and one label per exam.</summary>
+public sealed class StudyCatalogExamSessionConfiguration : IEntityTypeConfiguration<StudyCatalogExamSession>
+{
+    public void Configure(EntityTypeBuilder<StudyCatalogExamSession> b)
+    {
+        b.ToTable("study_catalog_exam_sessions", t => t.HasCheckConstraint("ck_exam_session_application",
+            "(\"ApplicationStart\" IS NULL) = (\"ApplicationEnd\" IS NULL) AND (\"ApplicationEnd\" IS NULL OR (\"ApplicationStart\" <= \"ApplicationEnd\" AND \"ApplicationEnd\" < \"Date\"))"));
+        // The domain creates the id; a new session added to a loaded exam must be inserted, not updated.
+        b.HasKey(x => x.Id); b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Label).HasMaxLength(100).IsRequired();
+        b.HasIndex(x => new { x.ExamId, x.Date }).IsUnique();
+        b.HasIndex(x => new { x.ExamId, x.Label }).IsUnique();
     }
 }
 

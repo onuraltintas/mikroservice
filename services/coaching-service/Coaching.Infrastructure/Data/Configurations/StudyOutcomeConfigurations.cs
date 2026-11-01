@@ -51,7 +51,9 @@ public sealed class StudyCatalogTopicOutcomeConfiguration : IEntityTypeConfigura
 {
     public void Configure(EntityTypeBuilder<StudyCatalogTopicOutcome> b)
     {
-        b.ToTable("study_catalog_topic_outcomes"); b.HasKey(x => new { x.TopicId, x.OutcomeId }); b.Property(x => x.Evidence).HasMaxLength(2000);
+        b.ToTable("study_catalog_topic_outcomes", t => t.HasCheckConstraint("ck_topic_outcome_review_state", "NOT (\"IsApproved\" AND \"IsRejected\")"));
+        b.HasKey(x => new { x.TopicId, x.OutcomeId }); b.Property(x => x.Evidence).HasMaxLength(2000);
+        b.Ignore(x => x.Status);
         b.HasOne<StudyCatalogTopic>().WithMany().HasForeignKey(x => x.TopicId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<StudyCatalogOutcome>().WithMany().HasForeignKey(x => x.OutcomeId).OnDelete(DeleteBehavior.Restrict);
     }

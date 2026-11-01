@@ -155,7 +155,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("academic_goals", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_goal_net_target", "(target_net IS NULL AND target_practice_exam_code IS NULL) OR (target_net IS NOT NULL AND target_practice_exam_code IS NOT NULL AND target_net >= 0 AND target_net <= CASE target_practice_exam_code WHEN 'LGS' THEN 90 WHEN 'TYT' THEN 120 WHEN 'AYT_SAY' THEN 80 WHEN 'AYT_EA' THEN 80 WHEN 'AYT_SOZ' THEN 80 WHEN 'YDT_EN' THEN 80 ELSE -1 END)");
+                            t.HasCheckConstraint("ck_goal_net_target", "(target_net IS NULL AND target_practice_exam_code IS NULL) OR (target_net IS NOT NULL AND target_practice_exam_code IS NOT NULL AND target_net >= 0 AND target_net <= CASE target_practice_exam_code WHEN 'LGS' THEN 90 WHEN 'TYT' THEN 120 WHEN 'AYT_SAY' THEN 80 WHEN 'AYT_EA' THEN 80 WHEN 'AYT_SOZ' THEN 80 WHEN 'YDT_EN' THEN 80 WHEN 'AGS' THEN 80 WHEN 'OABT_TUR' THEN 50 WHEN 'OABT_IMAT' THEN 50 WHEN 'OABT_FEN' THEN 50 WHEN 'OABT_SOS' THEN 50 WHEN 'OABT_TDE' THEN 50 WHEN 'OABT_TAR' THEN 50 WHEN 'OABT_COG' THEN 50 WHEN 'OABT_MAT' THEN 50 WHEN 'OABT_FIZ' THEN 50 WHEN 'OABT_KIM' THEN 50 WHEN 'OABT_BIO' THEN 50 WHEN 'OABT_DIN' THEN 50 WHEN 'OABT_REH' THEN 50 WHEN 'OABT_SINIF' THEN 50 WHEN 'OABT_OKUL' THEN 50 WHEN 'OABT_BED' THEN 50 WHEN 'OABT_OZEL' THEN 50 WHEN 'YDS_EN' THEN 80 WHEN 'YOKDIL_FEN' THEN 80 WHEN 'YOKDIL_SAG' THEN 80 WHEN 'YOKDIL_SOS' THEN 80 ELSE -1 END)");
 
                             t.HasCheckConstraint("ck_goal_score_scale", "target_max_score IS NULL OR (target_max_score > 0 AND target_max_score <= 999.99 AND target_score IS NOT NULL AND target_score > 0 AND target_score <= target_max_score AND target_exam_type IS NOT NULL)");
 
@@ -2134,6 +2134,79 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingScoreModelVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("BaseScore")
+                        .HasPrecision(8, 3)
+                        .HasColumnType("numeric(8,3)");
+
+                    b.Property<string>("CoefficientsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DiplomaWeight")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)");
+
+                    b.Property<string>("FileSha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("RankRows")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RanksJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("RestoredFromId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScoreType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("UploadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadId");
+
+                    b.HasIndex("Year", "ScoreType", "CreatedAt");
+
+                    b.ToTable("score_model_versions", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_score_model_version_action", "\"Action\" IN ('Upload', 'Restore', 'Delete')");
+
+                            t.HasCheckConstraint("ck_score_model_version_type", "\"ScoreType\" IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL')");
+
+                            t.HasCheckConstraint("ck_score_model_version_year", "\"Year\" BETWEEN 2018 AND 2100");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSeatRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3314,6 +3387,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<DateOnly?>("TargetExamDate")
                         .HasColumnType("date");
 
+                    b.Property<Guid?>("TargetExamSessionId")
+                        .HasColumnType("uuid");
+
                     b.Property<int?>("TargetExamYear")
                         .HasColumnType("integer");
 
@@ -3334,9 +3410,11 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("StudentUserId")
                         .IsUnique();
 
+                    b.HasIndex("TargetExamSessionId");
+
                     b.ToTable("student_learning_contexts", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_learning_purpose", "\"Purpose\" BETWEEN 0 AND 4");
+                            t.HasCheckConstraint("ck_learning_purpose", "\"Purpose\" BETWEEN 0 AND 7");
 
                             t.HasCheckConstraint("ck_learning_year", "\"AcademicYearStart\" BETWEEN 2000 AND 2200");
                         });
@@ -3471,9 +3549,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("integer");
 
-                    b.Property<DateOnly?>("ExamDate")
-                        .HasColumnType("date");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -3529,6 +3604,42 @@ namespace Coaching.Infrastructure.Data.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             Name = "Temel Destek Paketleri"
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogExamSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("ApplicationEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("ApplicationStart")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId", "Date")
+                        .IsUnique();
+
+                    b.HasIndex("ExamId", "Label")
+                        .IsUnique();
+
+                    b.ToTable("study_catalog_exam_sessions", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_exam_session_application", "(\"ApplicationStart\" IS NULL) = (\"ApplicationEnd\" IS NULL) AND (\"ApplicationEnd\" IS NULL OR (\"ApplicationStart\" <= \"ApplicationEnd\" AND \"ApplicationEnd\" < \"Date\"))");
                         });
                 });
 
@@ -3756,6 +3867,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<bool>("IsApproved")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsRejected")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("ReviewedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -3766,7 +3880,10 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasIndex("OutcomeId");
 
-                    b.ToTable("study_catalog_topic_outcomes", "coaching");
+                    b.ToTable("study_catalog_topic_outcomes", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_topic_outcome_review_state", "NOT (\"IsApproved\" AND \"IsRejected\")");
+                        });
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopicOutcomeShare", b =>
@@ -5470,6 +5587,11 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasPrincipalKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogExamSession", null)
+                        .WithMany()
+                        .HasForeignKey("TargetExamSessionId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.StudentPrimaryGoal", b =>
@@ -5493,6 +5615,15 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogExamSession", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogExam", null)
+                        .WithMany("Sessions")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -5704,6 +5835,11 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Navigation("CoursePreferences");
 
                     b.Navigation("TopicStates");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogExam", b =>
+                {
+                    b.Navigation("Sessions");
                 });
 #pragma warning restore 612, 618
         }
