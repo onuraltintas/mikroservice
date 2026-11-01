@@ -43,6 +43,12 @@ public sealed class ExamSessionsPostgresTests
         void Collect(object? sender, NpgsqlNoticeEventArgs e) => notices.Add(e.Notice.MessageText);
         connection.Notice += Collect;
         try { await using var command = new NpgsqlCommand(sql, connection); await command.ExecuteNonQueryAsync(); }
+        catch (PostgresException)
+        {
+            // The pack opens its own transaction; leave the connection usable for the next check, as psql would.
+            await using var rollback = new NpgsqlCommand("ROLLBACK", connection); await rollback.ExecuteNonQueryAsync();
+            throw;
+        }
         finally { connection.Notice -= Collect; }
         return notices;
     }
@@ -70,7 +76,7 @@ public sealed class ExamSessionsPostgresTests
 
         // The new purposes are allowed by the database; a student on one of them blocks the rollback.
         var student = Guid.NewGuid();
-        pg.Db.Add(StudentLearningContext.Create(student, 2026, LearningPurpose.Yokdil, 2027, "YOKDIL_SOS", null));
+        pg.Db.AddRange(CoachingStudentProfile.Create(student), StudentLearningContext.Create(student, 2026, LearningPurpose.Yokdil, 2027, "YOKDIL_SOS", null));
         await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
         await Assert.ThrowsAsync<PostgresException>(() => migrator.MigrateAsync(Previous));
         await Run(pg, $"DELETE FROM coaching.student_learning_contexts WHERE \"StudentUserId\" = '{student}'");
@@ -103,7 +109,7 @@ public sealed class ExamSessionsPostgresTests
             + "TYT:2027:2027-06-19:2027-02-04:2027-03-02,YDS:2027/1:2027-03-28:2027-02-03:2027-02-11,YDS:2027/2:2027-11-21:2027-10-05:2027-10-13,"
             + "YDT:2027:2027-06-20:2027-02-04:2027-03-02,YOKDIL:2027/1:2027-02-28:2027-01-12:2027-01-20,YOKDIL:2027/2:2027-07-25:2027-06-08:2027-06-16",
             await Sessions(pg));
-        Assert.Equal("AGS:f,LGS:t,OABT:f,TDP:t,TYT:t,YDS:f,YDT:t,YOKDIL:f,AYT:t".Split(',').Order().ToArray(),
+        Assert.Equal("AGS:false,LGS:true,OABT:false,TDP:true,TYT:true,YDS:false,YDT:true,YOKDIL:false,AYT:true".Split(',').Order().ToArray(),
             (await Scalar(pg, "SELECT string_agg(\"Code\" || ':' || \"IsActive\", ',') FROM coaching.study_catalog_exams")).Split(',').Order().ToArray());
         var snapshot = await Sessions(pg);
         var second = await Run(pg, apply);

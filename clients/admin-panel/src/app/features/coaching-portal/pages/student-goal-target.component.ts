@@ -46,7 +46,7 @@ export class StudentGoalTargetComponent implements OnChanges {
   score: number | null = null;
   maxScore: number | null = null;
   examType = '';
-  readonly examTypes = ['Mock', 'Weekly', 'Monthly', 'LGS', 'YKS', 'MidTerm', 'Final', 'Quiz'];
+  readonly examTypes = ['Mock', 'Weekly', 'Monthly', 'LGS', 'YKS', 'AGS', 'YDS', 'YOKDIL', 'MidTerm', 'Final', 'Quiz'];
 
   private get studentArgument(): [] | [string] { return this.staffStudentId ? [this.staffStudentId] : []; }
 

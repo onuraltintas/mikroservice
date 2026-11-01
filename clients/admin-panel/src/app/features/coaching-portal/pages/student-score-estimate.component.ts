@@ -25,6 +25,15 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
             <br><small>{{ item.modelYear }} verisiyle, son {{ item.examsUsed }} denemeye göre{{ item.includesDiplomaGrade ? ' · diploma notu dahil' : '' }}.</small>
           </div>
         }
+        @for (item of result.languageScores ?? []; track item.examCode) {
+          <div class="plan-row" data-testid="language-score">
+            <strong>{{ item.name }}: yaklaşık {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})<br>
+            <small>Son {{ item.examsUsed }} denemene göre. Her doğru 1,25 puan; yanlışlar puanı düşürmez.</small>
+          </div>
+        }
+        @if (result.targetExam; as exam) {
+          <p class="plan-row" data-testid="score-target-exam">{{ exam.source === 'Student' ? 'Sınavına' : exam.name + ' sınavına' }} {{ int(exam.daysLeft) }} gün kaldı.</p>
+        }
         @if (result.target; as target) {
           <p class="plan-row" data-testid="score-target">
             <strong>Hedef: {{ target.targetName }}</strong>

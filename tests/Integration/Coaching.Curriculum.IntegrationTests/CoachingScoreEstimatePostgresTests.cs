@@ -59,7 +59,7 @@ public sealed class CoachingScoreEstimatePostgresTests
         yds.ReplaceSessions([new(null, today.AddDays(30), "Bahar", null, null), new(null, today.AddDays(200), "Güz", null, null)]);
         f.Db.Add(yds); await f.Db.SaveChangesAsync();
         var context = StudentLearningContext.Create(student, 2026, LearningPurpose.Yds, today.AddDays(200).Year, null, null);
-        context.SetTargetExamSession(yds.Sessions[1].Id); f.Db.Add(context);
+        context.SetTargetExamSession(yds.Sessions[1].Id); f.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student), context);
         await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
 
         var estimate = await service.EstimateAsync(student, student, null, default);

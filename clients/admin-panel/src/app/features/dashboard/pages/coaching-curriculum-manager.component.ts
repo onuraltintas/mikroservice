@@ -10,12 +10,15 @@ import { environment } from '../../../../environments/environment';
 type Kind = 'exams' | 'programs' | 'programTopics' | 'lessons' | 'units' | 'topics' | 'outcomes';
 interface Estimate { id: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; confidence: string; evidence: string; isPublished: boolean; method?: string }
 interface Mapping { topicId: string; path: string; isApproved: boolean; evidence: string }
+/** KM1 (01.11.2026): a dated session of an exam (YDS 2027/1, e-YDS …) with its optional application window. */
+interface ExamSession { id: string; date: string; label: string; applicationStart: string | null; applicationEnd: string | null }
+interface SessionDraft { id: string | null; date: string; label: string; applicationStart: string; applicationEnd: string }
 interface Node { kind: Kind; id: string; name: string; parentId: string | null; parentKind: Kind | null; isActive: boolean; path: string; fingerprint: string; canDelete: boolean; blockers: string[];
-  examDate?: string | null; code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; yieldWeight?: number | null; officialTopicId?: string; sourcePage?: number | null; sourceKind?: string; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number;
+  examDate?: string | null; sessions?: ExamSession[]; code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; yieldWeight?: number | null; officialTopicId?: string; sourcePage?: number | null; sourceKind?: string; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number;
   academicYearStart?: number; academicYearEnd?: number; sourceUrl?: string; documentSha256?: string; scopeEvidenceUrl?: string; outcomeCount?: number; lessonPeriods?: number | null; curriculumVersionId?: string | null }
 interface Page { items: Node[]; totalCount: number; pageNumber: number; pageSize: number }
 interface Listing { rows: Node[]; page: number; total: number; loading: boolean; error?: string }
-interface Form { examDate: string; name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; yieldWeight: number; code: string; officialTopicId: string | null; sourcePage: number | null; notes: string; moveParentOutcomes: boolean;
+interface Form { sessions: SessionDraft[]; name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; yieldWeight: number; code: string; officialTopicId: string | null; sourcePage: number | null; notes: string; moveParentOutcomes: boolean;
   academicYearStart: number; academicYearEnd: number; sourceUrl: string; documentSha256: string; scopeEvidenceUrl: string; outcomeCount: number; lessonPeriods: number | null; curriculumVersionId: string | null }
 interface Edition { id: string; code: string; subjectName: string; academicYearStart: number; academicYearEnd: number }
 
@@ -53,7 +56,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind];
   }
   branch() { return this.listing(); }
-  empty(): Form { return { examDate:'',name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,yieldWeight:3,code:'',officialTopicId:null,sourcePage:null,notes:'',moveParentOutcomes:false,
+  empty(): Form { return { sessions:[],name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,yieldWeight:3,code:'',officialTopicId:null,sourcePage:null,notes:'',moveParentOutcomes:false,
     academicYearStart:new Date().getFullYear(),academicYearEnd:new Date().getFullYear(),sourceUrl:'',documentSha256:'',scopeEvidenceUrl:'',outcomeCount:1,lessonPeriods:null,curriculumVersionId:null }; }
   dirty() { return this.editing() && (JSON.stringify(this.form) !== this.initial || this.durationDirty()); }
   private durationFields() { return {learningMinutes:this.learningMinutes,practiceMinutes:this.practiceMinutes,checkMinutes:this.checkMinutes,confidence:this.confidence,durationEvidence:this.durationEvidence,publishDuration:this.publishDuration}; }
@@ -139,7 +142,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     const unsaved = preserveDuration && this.durationDirty() ? this.durationFields() : null;
     this.selected.set(n); this.kind = n.kind; this.creating.set(false); this.editing.set(true);
     this.form = { ...this.empty(),name:n.name,parentId:n.parentId,gradeNumber:n.gradeNumber ?? null,examCode:n.examCode ?? null,displayOrder:n.displayOrder ?? null,estimatedMinutes:n.estimatedMinutes ?? null,yieldWeight:n.yieldWeight ?? 3,
-      examDate:n.examDate ?? '',code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourceKind === 'ExamSkill' ? null : n.sourcePage ?? 1,notes:n.notes ?? '',
+      sessions:(n.sessions ?? []).map(s => ({id:s.id,date:s.date,label:s.label,applicationStart:s.applicationStart ?? '',applicationEnd:s.applicationEnd ?? ''})),code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourceKind === 'ExamSkill' ? null : n.sourcePage ?? 1,notes:n.notes ?? '',
       academicYearStart:n.academicYearStart ?? new Date().getFullYear(),academicYearEnd:n.academicYearEnd ?? new Date().getFullYear(),sourceUrl:n.sourceUrl ?? '',documentSha256:n.documentSha256 ?? '',scopeEvidenceUrl:n.scopeEvidenceUrl ?? '',outcomeCount:n.outcomeCount ?? 1,lessonPeriods:n.lessonPeriods ?? null,curriculumVersionId:n.curriculumVersionId ?? null };
     this.initial = JSON.stringify(this.form); this.moveConfirmed = false; this.statusConfirmed = false; this.deleteConfirmation = ''; this.estimateConfirmation = ''; this.destinationId = ''; this.destinations.set([]);
     this.sourceTopicId = n.mappings?.[0]?.topicId ?? ''; this.destinationKind = n.kind === 'lessons' ? 'exams' : n.kind === 'units' ? 'lessons' : n.kind === 'outcomes' ? 'topics' : 'units';
@@ -168,7 +171,9 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   cancel() { this.detailRequest?.unsubscribe(); this.detailLoading.set(false); this.editing.set(false); this.creating.set(false); this.error.set(''); this.pending.set(null); this.pendingTab=''; }
   save() {
     if (this.busy() || !this.editing() || !this.form.name.trim() || this.form.reason.trim().length < 5) return;
-    const n = this.selected(); const r = {...this.form,examDate:this.form.examDate || null,name:this.form.name.trim(),reason:this.form.reason.trim(),...(!this.creating() && n ? {fingerprint:n.fingerprint} : {})};
+    const n = this.selected();
+    const sessions = this.kind === 'exams' ? this.form.sessions.map(s => ({id:s.id,date:s.date,label:s.label.trim(),applicationStart:s.applicationStart || null,applicationEnd:s.applicationEnd || null})) : undefined;
+    const r = {...this.form,sessions,name:this.form.name.trim(),reason:this.form.reason.trim(),...(!this.creating() && n ? {fingerprint:n.fingerprint} : {})};
     if (this.creating() && this.parentKind() && !r.parentId) { this.error.set('Önce üst kaydı seçin.'); return; }
     let request=this.creating() ? this.http.post<{data:Node}>(`${this.base}/${this.kind}`,r) : this.http.put<{data:Node}>(`${this.base}/${this.kind}/${n!.id}`,r);
     if (this.creating() && this.activateAfterCreate && ['lessons','units','topics'].includes(this.kind)) request=request.pipe(switchMap(created =>
@@ -177,6 +182,8 @@ export class CoachingCurriculumManagerComponent implements OnInit {
       }))));
     this.write(request,'Kayıt kaydedildi.',true);
   }
+  addSession() { this.form.sessions = [...this.form.sessions, {id:null,date:'',label:'',applicationStart:'',applicationEnd:''}]; }
+  removeSession(index: number) { this.form.sessions = this.form.sessions.filter((_,i) => i !== index); }
   searchDestinations(page = 1) {
     this.destinationRequest?.unsubscribe(); this.destinationPage = page; this.destinationId = ''; this.moveConfirmed = false; this.destinationLoading.set(true);
     const params = this.params(this.destinationKind,null,page,this.destinationSearch).set('all','true');

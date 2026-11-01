@@ -94,7 +94,7 @@ public class Exam : AggregateRoot
             ExamDate = examDate, MaxScore = maxScore };
     }
 
-    /// <summary>Roadmap O4: an institution-wide practice exam. Its type follows the scope (LGS or YKS).</summary>
+    /// <summary>Roadmap O4: an institution-wide practice exam. Its type follows the scope (LGS, YKS, AGS, YDS or YÖKDİL).</summary>
     public static Exam CreateInstitutionWide(Guid adminUserId, Guid institutionId, string title, string practiceExamCode,
         DateTime examDate, decimal maxScore, int? targetGradeLevel)
     {
@@ -108,7 +108,7 @@ public class Exam : AggregateRoot
         return new Exam
         {
             CreatedByAdminId = adminUserId, InstitutionId = institutionId, Title = title.Trim(), PracticeExamCode = profile.Code,
-            ExamType = profile.Code == "LGS" ? ExamType.LGS : ExamType.YKS, ExamDate = examDate, MaxScore = maxScore,
+            ExamType = PracticeExamRules.ExamTypeFor(profile.Code), ExamDate = examDate, MaxScore = maxScore,
             TargetGradeLevel = targetGradeLevel
         };
     }
@@ -181,8 +181,8 @@ public class Exam : AggregateRoot
         foreach (var result in _results.Where(x => x.GetPracticeExam() is not null))
             PracticeExamRules.Validate(result.GetPracticeExam()!, examType,
                 result.CorrectAnswers ?? 0, result.WrongAnswers ?? 0, result.EmptyAnswers ?? 0);
-        if (examType is ExamType.LGS or ExamType.YKS && _results.Any(x => x.GetPracticeExam() is null))
-            throw new ArgumentException("Sonuçlar ders cevapları olmadan LGS/YKS kapsamına çevrilemez.");
+        if (PracticeExamRules.RequiresSections(examType) && _results.Any(x => x.GetPracticeExam() is null))
+            throw new ArgumentException("Sonuçlar ders cevapları olmadan LGS/YKS/AGS/YDS/YÖKDİL kapsamına çevrilemez.");
 
         Title = title.Trim();
         ExamType = examType;
@@ -242,8 +242,8 @@ public class Exam : AggregateRoot
             throw new InvalidOperationException($"Exam result {resultId} not found.");
 
         var practice = practiceExam ?? result.GetPracticeExam();
-        if (ExamType is ExamType.LGS or ExamType.YKS && practice is null)
-            throw new ArgumentException("LGS/YKS denemesinde ders cevapları zorunludur.");
+        if (PracticeExamRules.RequiresSections(ExamType) && practice is null)
+            throw new ArgumentException("LGS/YKS/AGS/YDS/YÖKDİL denemesinde ders cevapları zorunludur.");
         if (practice is not null)
             PracticeExamRules.Validate(practice, ExamType, correctAnswers, wrongAnswers, emptyAnswers);
 

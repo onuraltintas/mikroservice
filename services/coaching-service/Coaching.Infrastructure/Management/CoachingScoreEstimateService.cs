@@ -19,7 +19,15 @@ public sealed record ScoreTypeEstimate(string ScoreType, string Name, int ModelY
     int Rank, int RankBest, int RankWorst, decimal? Percentile, int ExamsUsed, DateTime LastExamDate, bool IncludesDiplomaGrade);
 public sealed record ScoreTargetGap(string TargetName, string ScoreType, decimal? TargetScore, int? TargetRank, decimal? TargetPercentile,
     decimal? ScoreGap, decimal? NetGap, int? RankGap, bool Reached);
-public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, ScoreTargetGap? Target, string? Notice);
+public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, ScoreTargetGap? Target, string? Notice)
+{
+    /// <summary>KM1: YDS and YÖKDİL scores (correct answers out of 100), one per practice scope.</summary>
+    public IReadOnlyList<LanguageScoreEstimate> LanguageScores { get; init; } = [];
+    /// <summary>KM1: for AGS, YDS and YÖKDİL students, the exam date they work towards (own date, chosen session or next session).</summary>
+    public ScoreTargetExam? TargetExam { get; init; }
+}
+public sealed record LanguageScoreEstimate(string ExamCode, string Name, decimal Score, decimal ScoreLow, decimal ScoreHigh, int ExamsUsed, DateTime LastExamDate);
+public sealed record ScoreTargetExam(string Name, DateOnly Date, int DaysLeft, string Source);
 
 /// <summary>
 /// Roadmap O5: LGS and YKS score and rank estimates. The platform administrator uploads each year's models (coefficients and a
@@ -87,7 +95,20 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
 
         var models = (await db.Set<CoachingScoreModel>().AsNoTracking().ToListAsync(ct))
             .GroupBy(x => x.ScoreType).Select(x => x.OrderByDescending(y => y.Year).First()).ToDictionary(x => x.ScoreType);
-        if (models.Count == 0) return new([], null, "Puan tahmini verisi henüz yüklenmedi.");
+        var context = await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == studentId)
+            .Select(x => new { x.Purpose, x.TargetExamDate, x.TargetExamSessionId }).SingleOrDefaultAsync(ct);
+        var purpose = context?.Purpose;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(clock.GetUtcNow().UtcDateTime, CoachingTime.Turkey));
+        ScoreTargetExam? targetExam = null;
+        if (purpose is LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil)
+        {
+            var target = context!.TargetExamDate is { } own && own > today ? new StudyPlanning.CoachingExamSessions.Target("Sınavın", own, "Student")
+                : await StudyPlanning.CoachingExamSessions.ChosenAsync(db, context.TargetExamSessionId, today, ct)
+                  ?? await StudyPlanning.CoachingExamSessions.NextCatalogAsync(db, [LearningPurposes.CatalogExamCode(purpose.Value)!], today, ct);
+            targetExam = target is null ? null : new(target.Name, target.Date, target.Date.DayNumber - today.DayNumber, target.Source);
+        }
+        if (models.Count == 0 && purpose is not (LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil))
+            return new([], null, "Puan tahmini verisi henüz yüklenmedi.");
 
         // K4 (31.10.2026): exams dated in the future do not count, and a student's own copy of a deneme that their institution
         // or teacher recorded on the same Türkiye day for the same scope is a duplicate.
@@ -104,6 +125,13 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             .GroupBy(x => x.Summary.ExamCode)
             .ToDictionary(x => x.Key, x => x.OrderByDescending(y => y.ExamDate).Take(ExamsPerScope).ToArray());
 
+        // KM1: YDS and YÖKDİL need no model: the average of the last three scores, from the weakest to the strongest.
+        var language = exams.Where(x => LanguageScoreRules.IsLanguageExam(x.Key)).OrderBy(x => x.Key, StringComparer.Ordinal).Select(group =>
+        {
+            var scores = group.Value.Select(x => LanguageScoreRules.Score(x.Summary)).ToArray();
+            return new LanguageScoreEstimate(group.Key, group.Value[0].Summary.Name, decimal.Round(scores.Average(), 2, MidpointRounding.AwayFromZero),
+                scores.Min(), scores.Max(), scores.Length, group.Value[0].ExamDate);
+        }).ToArray();
         var estimates = new List<ScoreTypeEstimate>();
         foreach (var type in ScoreModelRules.Types)
         {
@@ -121,8 +149,13 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
                 type.Exams.Min(exam => exams[exam].Length), type.Exams.Max(exam => exams[exam][0].ExamDate),
                 type.UsesDiplomaGrade && diplomaGrade is not null));
         }
-        var target = await TargetAsync(studentId, estimates, models, ct);
-        return new(estimates, target, estimates.Count == 0 ? "Tahmin için en az bir LGS ya da YKS denemesini ders ders gir." : null);
+        var goalTarget = await TargetAsync(studentId, estimates, models, ct);
+        var notice = estimates.Count > 0 || language.Length > 0 ? null
+            : purpose == LearningPurpose.Ags ? "AGS ve ÖABT için puan tahmini henüz yok. Netlerini Denemeler bölümünden izleyebilirsin."
+            : purpose is LearningPurpose.Yds or LearningPurpose.Yokdil ? "Puanını görmek için bir YDS ya da YÖKDİL denemesini gir."
+            : models.Count == 0 ? "Puan tahmini verisi henüz yüklenmedi."
+            : "Tahmin için en az bir LGS ya da YKS denemesini ders ders gir.";
+        return new(estimates, goalTarget, notice) { LanguageScores = language, TargetExam = targetExam };
     }
 
     private async Task<ScoreTargetGap?> TargetAsync(Guid studentId, IReadOnlyList<ScoreTypeEstimate> estimates,

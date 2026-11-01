@@ -122,7 +122,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     const request = { expectedVersion: context.version, academicYearStart: context.academicYearStart, purpose: context.purpose,
       targetExamYear: context.targetExamYear, primaryScoreType: context.primaryScoreType, foreignLanguage: context.foreignLanguage,
       courses: context.coursePreferences, topics: [...current].map(([topicId, declaredStatus]) => ({ topicId, declaredStatus })),
-      startingStatusReviewed: context.startingStatusReviewed };
+      startingStatusReviewed: context.startingStatusReviewed, targetExamSessionId: context.targetExamSessionId ?? null };
     this.topicSaving.set(true); this.topicError.set('');
     this.learningSetup.save(request).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.topicSaving.set(false))).subscribe({
       next: view => {

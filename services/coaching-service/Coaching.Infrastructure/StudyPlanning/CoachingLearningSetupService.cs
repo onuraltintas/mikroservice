@@ -41,6 +41,7 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             throw new ArgumentException("Mezun öğrenci için genel çalışma veya sınav hazırlığı seçin.");
         var context = await Context(profile.UserId).SingleOrDefaultAsync(ct);
         if (context is null ? r.ExpectedVersion.HasValue : r.ExpectedVersion != context.Version) throw Conflict();
+        await ValidateSessionAsync(r, ct);
         var curriculum = await ResolveCurriculum(candidate, profile, ct);
         var lessonQuery = Lessons(candidate, profile).Where(x => x.CurriculumVersionId == (curriculum == null ? (Guid?)null : curriculum.Id) && x.CurriculumVersionId != null);
         var ids = r.Courses.Select(x => x.LessonId).ToArray();
@@ -54,6 +55,7 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var courses = r.Courses.Select(x => StudentCoursePreference.Create(target.Id, x.LessonId, x.Priority, x.SelfReportedDifficulty)).ToArray();
         var topics = r.Topics.Select(x => StudentTopicState.Create(target.Id, x.TopicId, x.DeclaredStatus, profile.UserId)).ToArray();
         target.SetScope(r.AcademicYearStart, r.Purpose, r.TargetExamYear, r.PrimaryScoreType, r.ForeignLanguage);
+        if (r.TargetExamSessionId != target.TargetExamSessionId) target.SetTargetExamSession(r.TargetExamSessionId);
         target.SetEducation(profile.EducationStatus, profile.GradeLevel, curriculum?.Id);
         target.ReplaceSelections(courses, topics, r.StartingStatusReviewed);
         if (context is null) db.StudentLearningContexts.Add(target);
@@ -115,9 +117,40 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             LearningPurpose.School => query.Where(x => x.GradeNumber == p.GradeLevel && x.ExamCode == null),
             LearningPurpose.Lgs => query.Where(x => x.ExamCode == "LGS"),
             LearningPurpose.Yks => query.Where(x => yksTopics.Any(t=>t.LessonId==x.Id&&t.IsActive)),
+            LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil => ByExam(query, LearningPurposes.LessonExamCodes(c.Purpose)),
             _ when p.GradeLevel.HasValue => query.Where(x => x.GradeNumber == p.GradeLevel || x.GradeNumber == null),
             _ => query
         };
+    }
+
+    private static IQueryable<StudyCatalogLesson> ByExam(IQueryable<StudyCatalogLesson> query, IReadOnlyList<string> codes)
+    { var exams = codes.ToArray(); return query.Where(x => x.ExamCode != null && Enumerable.Contains(exams, x.ExamCode)); }
+
+    /// <summary>KM1: the chosen session must be an upcoming session of the purpose's own, active exam in the target year.</summary>
+    private async Task ValidateSessionAsync(LearningSetupUpdate r, CancellationToken ct)
+    {
+        if (r.TargetExamSessionId is not { } id) return;
+        var code = LearningPurposes.CatalogExamCode(r.Purpose) ?? throw new ArgumentException("Sınav oturumu yalnız sınav hazırlığında seçilir.");
+        var session = await (from s in db.Set<StudyCatalogExamSession>().AsNoTracking()
+                             join e in db.Set<StudyCatalogExam>().AsNoTracking() on s.ExamId equals e.Id
+                             where s.Id == id && e.Code == code && e.IsActive
+                             select s).SingleOrDefaultAsync(ct)
+            ?? throw new ArgumentException("Seçilen oturum bu sınava ait değil veya artık sunulmuyor.");
+        if (session.Date <= CoachingTodayInTurkey() || session.Date.Year != r.TargetExamYear)
+            throw new ArgumentException("Hedef oturum gelecekte ve hedef sınav yılında olmalıdır.");
+    }
+
+    private static DateOnly CoachingTodayInTurkey() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Coaching.Domain.CoachingTime.Turkey));
+
+    private async Task<IReadOnlyList<LearningExamSessionView>> SessionsAsync(CancellationToken ct)
+    {
+        var today = CoachingTodayInTurkey();
+        var codes = Enum.GetValues<LearningPurpose>().Select(LearningPurposes.CatalogExamCode).OfType<string>().ToArray();
+        return await (from s in db.Set<StudyCatalogExamSession>().AsNoTracking()
+                      join e in db.Set<StudyCatalogExam>().AsNoTracking() on s.ExamId equals e.Id
+                      where e.IsActive && Enumerable.Contains(codes, e.Code) && s.Date > today
+                      orderby e.Code, s.Date
+                      select new LearningExamSessionView(s.Id, e.Code, e.Name, s.Date, s.Label, s.ApplicationStart, s.ApplicationEnd)).ToArrayAsync(ct);
     }
 
     private IQueryable<StudyCatalogTopic> Topics(IQueryable<StudyCatalogLesson> lessons,StudentLearningContext? context) =>
@@ -140,7 +173,8 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
     {
         var missing = new List<string>(); var warnings = new List<string>();
         if (!p.IsEducationComplete) missing.Add("Profile");
-        if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings); }
+        var sessions = await SessionsAsync(ct);
+        if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions }; }
         if (p.EducationStatus != c.EducationStatus || p.GradeLevel != c.GradeLevel) missing.Add("Purpose");
         var hours = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == p.UserId, ct);
         if (hours is null || hours.Windows.Count == 0) missing.Add("Availability");
@@ -155,7 +189,7 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         if (await Topics(lessonQuery,c).AnyAsync(x => Enumerable.Contains(ids, x.LessonId) && x.EstimatedMinutes == null, ct))
             warnings.Add("Seçilen derslerde çalışma süresi eksik konular var; önizlemede süre girin.");
         if (missing.Contains("Catalog")) warnings.Add("Uygun yayımlanmış katalog eksik veya değişmiş. Mevcut planlarınıza erişebilirsiniz.");
-        return new(c, missing.FirstOrDefault() ?? "Preview", missing.Count == 0, missing, warnings);
+        return new(c, missing.FirstOrDefault() ?? "Preview", missing.Count == 0, missing, warnings) { ExamSessions = sessions };
     }
 
     private async Task<CoachingStudentProfile> RequireStudent(CancellationToken ct)

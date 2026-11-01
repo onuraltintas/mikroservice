@@ -18,7 +18,9 @@ public sealed record CurriculumSaveRequest(string Name, string Reason, string? F
     int? GradeNumber = null, string? ExamCode = null, int? DisplayOrder = null, int? EstimatedMinutes = null,
     string? Code = null, Guid? OfficialTopicId = null, int? SourcePage = null, string? Notes = null, bool MoveParentOutcomes = false,
     int? AcademicYearStart = null, int? AcademicYearEnd = null, string? SourceUrl = null, string? DocumentSha256 = null,
-    string? ScopeEvidenceUrl = null, int? OutcomeCount = null, int? LessonPeriods = null, Guid? CurriculumVersionId = null, DateOnly? ExamDate = null, int? YieldWeight = null);
+    string? ScopeEvidenceUrl = null, int? OutcomeCount = null, int? LessonPeriods = null, Guid? CurriculumVersionId = null, int? YieldWeight = null,
+    // KM1 (01.11.2026): an exam's sessions replace its single date. Null keeps them; a list (even empty) replaces them.
+    IReadOnlyList<StudyCatalogExamSessionInput>? Sessions = null);
 public sealed record CurriculumMoveRequest(Guid? DestinationId, string Fingerprint, string Reason, Guid? SourceTopicId = null);
 public sealed record CurriculumDeleteRequest(string Fingerprint, string Reason, Guid ConfirmId);
 public sealed record CurriculumStatusRequest(string Fingerprint, string Reason, bool IsActive);
@@ -44,7 +46,10 @@ public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? Par
     public int? LessonPeriods { get; init; }
     public string SourceKind { get; init; } = "Official";
     public Guid? CurriculumVersionId { get; init; }
+    /// <summary>KM1: for exams, the next upcoming session's date (else the latest one); read-only.</summary>
     public DateOnly? ExamDate { get; init; }
+    /// <summary>KM1: an exam's dated sessions, earliest first.</summary>
+    public IReadOnlyList<StudyCatalogExamSession> Sessions { get; init; } = [];
     /// <summary>Roadmap O7: topic exam weight 1-5 used when a plan does not fit.</summary>
     public int? YieldWeight { get; init; }
 }
@@ -62,7 +67,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         switch (kind)
         {
             case "exams":
-                query = db.Set<StudyCatalogExam>().AsNoTracking().Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,Code=x.Code,IsActive=x.IsActive,DisplayOrder=x.DisplayOrder,ExamDate=x.ExamDate }); break;
+                var today = Today();
+                query = db.Set<StudyCatalogExam>().AsNoTracking().Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,Code=x.Code,IsActive=x.IsActive,DisplayOrder=x.DisplayOrder,
+                    ExamDate=x.Sessions.Where(s => s.Date > today).Select(s => (DateOnly?)s.Date).Min() ?? x.Sessions.Select(s => (DateOnly?)s.Date).Max() }); break;
             case "programs":
                 query = db.Set<OfficialCurriculumEdition>().AsNoTracking().Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.SubjectName,Code=x.Code,ExamCode=x.ExamCode,GradeNumber=x.GradeNumber,IsActive=true,DisplayOrder=null,AcademicYearStart=x.AcademicYearStart,AcademicYearEnd=x.AcademicYearEnd }); break;
             case "programTopics":
@@ -111,7 +118,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 {
                     case StudyCatalogExam exam:
                         if (StudyCatalogExam.NormalizeCode(r.Code!) != exam.Code) throw new ArgumentException("Sınav kodu tarihsel bağlantıları korumak için değiştirilemez. Yeni sınav türü ekleyin.");
-                        exam.Edit(r.Name,r.DisplayOrder ?? 0,r.ExamDate); break;
+                        exam.Edit(r.Name,r.DisplayOrder ?? 0);
+                        if (r.Sessions is not null) await ReplaceSessionsAsync(exam,r.Sessions,ct);
+                        break;
                     case OfficialCurriculumEdition edition:
                         await EditProgram(edition,r,ct); break;
                     case OfficialCurriculumTopic officialTopic:
@@ -136,7 +145,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 case "exams":
                     var code = StudyCatalogExam.NormalizeCode(r.Code!);
                     if (await db.Set<StudyCatalogExam>().AnyAsync(x => x.Code == code,ct)) throw new ArgumentException("Bu sınav kodu zaten var.");
-                    return Add(StudyCatalogExam.Create(code,r.Name,r.DisplayOrder ?? 0,r.ExamDate));
+                    var created = StudyCatalogExam.Create(code,r.Name,r.DisplayOrder ?? 0);
+                    if (r.Sessions is not null) created.ReplaceSessions(r.Sessions);
+                    return Add(created);
                 case "programs":
                     await ValidateExam(r.ExamCode,ct);
                     if (await db.Set<OfficialCurriculumEdition>().AnyAsync(x => x.Code == r.Code,ct)) throw new ArgumentException("Program kodu zaten var.");
@@ -307,7 +318,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                           coaching.target_catalog, coaching.student_course_preferences,
                           coaching.student_topic_states, coaching.study_catalog_topic_outcomes, coaching.study_catalog_outcomes,
                           coaching.outcome_duration_estimates, coaching.study_plan_task_outcomes,
-                          coaching.study_catalog_exams, coaching.official_curriculum_editions, coaching.official_curriculum_topics,
+                          coaching.study_catalog_exams, coaching.study_catalog_exam_sessions, coaching.official_curriculum_editions, coaching.official_curriculum_topics,
                           coaching.curriculum_versions
                         IN SHARE ROW EXCLUSIVE MODE
                         """,ct);
@@ -315,6 +326,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 if (id.HasValue)
                 {
                     var current = await Load(kind,id.Value,ct); await db.Entry(current).ReloadAsync(ct);
+                    if (current is StudyCatalogExam reloaded) await db.Entry(reloaded).Collection(x => x.Sessions).LoadAsync(ct);
                     if (string.IsNullOrEmpty(fingerprint) || (await Describe(current,ct)).Fingerprint != fingerprint)
                         throw new BusinessRuleException("Catalog.Stale","Kayıt veya bağlantıları değişmiş. Güncel kaydı yeniden açın.");
                 }
@@ -337,11 +349,23 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         return result!;
     }
 
+    private static DateOnly Today() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,Coaching.Domain.CoachingTime.Turkey));
+
+    /// <summary>KM1: sessions a student aims for may be edited but not removed.</summary>
+    private async Task ReplaceSessionsAsync(StudyCatalogExam exam,IReadOnlyList<StudyCatalogExamSessionInput> sessions,CancellationToken ct)
+    {
+        var kept = sessions.Where(x => x?.Id is not null).Select(x => x.Id!.Value).ToArray();
+        var removed = exam.Sessions.Where(x => !kept.Contains(x.Id)).Select(x => x.Id).ToArray();
+        var students = removed.Length == 0 ? 0 : await db.StudentLearningContexts.CountAsync(x => x.TargetExamSessionId != null && Enumerable.Contains(removed,x.TargetExamSessionId.Value),ct);
+        if (students > 0) throw new ArgumentException($"Kaldırmak istediğiniz oturumu {students} öğrenci hedef olarak seçti. Tarihini veya adını düzenleyebilirsiniz; oturumu kaldıramazsınız.");
+        exam.ReplaceSessions(sessions);
+    }
+
     private async Task<CurriculumNode> Describe(object entity,CancellationToken ct)
     {
         CurriculumNode node = entity switch
         {
-            StudyCatalogExam e => new("exams",e.Id,e.Name,null,null,e.IsActive,e.DisplayOrder,Code:e.Code) { ExamDate=e.ExamDate },
+            StudyCatalogExam e => new("exams",e.Id,e.Name,null,null,e.IsActive,e.DisplayOrder,Code:e.Code) { ExamDate=e.NextSessionDate(Today()),Sessions=e.Sessions },
             OfficialCurriculumEdition p => new("programs",p.Id,p.SubjectName,null,null,true,GradeNumber:p.GradeNumber,ExamCode:p.ExamCode,Code:p.Code)
                 { AcademicYearStart=p.AcademicYearStart,AcademicYearEnd=p.AcademicYearEnd,SourceUrl=p.SourceUrl,DocumentSha256=p.DocumentSha256,ScopeEvidenceUrl=p.ScopeEvidenceUrl },
             OfficialCurriculumTopic t => new("programTopics",t.Id,t.Name,t.EditionId,"programs",true,Code:t.Code) { OutcomeCount=t.OutcomeCount,LessonPeriods=t.LessonPeriods },
@@ -362,6 +386,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             var count = await db.StudyCatalogLessons.CountAsync(x => x.ExamCode == exam.Code,ct)
                 + await db.Set<OfficialCurriculumEdition>().CountAsync(x => x.ExamCode == exam.Code,ct);
             if (count > 0) blockers.Add($"{count} ders / kaynak program bağlantısı");
+            var sessionIds = exam.Sessions.Select(x => x.Id).ToArray();
+            var students = sessionIds.Length == 0 ? 0 : await db.StudentLearningContexts.CountAsync(x => x.TargetExamSessionId != null && Enumerable.Contains(sessionIds,x.TargetExamSessionId.Value),ct);
+            if (students > 0) blockers.Add($"{students} öğrencinin hedef oturumu");
         }
         else if (entity is OfficialCurriculumEdition edition)
         { var count = await db.Set<OfficialCurriculumTopic>().CountAsync(x => x.EditionId == edition.Id,ct); if (count > 0) blockers.Add($"{count} program konu grubu"); }
@@ -430,7 +457,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
     {
         Kind(kind); object? entity = kind switch
         {
-            "exams" => await db.Set<StudyCatalogExam>().FindAsync([id],ct),
+            "exams" => await db.Set<StudyCatalogExam>().Include(x => x.Sessions).SingleOrDefaultAsync(x => x.Id == id,ct),
             "programs" => await db.Set<OfficialCurriculumEdition>().FindAsync([id],ct),
             "programTopics" => await db.Set<OfficialCurriculumTopic>().FindAsync([id],ct),
             "lessons" => await db.StudyCatalogLessons.FindAsync([id],ct),

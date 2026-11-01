@@ -30,7 +30,7 @@
       }
       <form class="tree-search" (ngSubmit)="loadRoot()"><label class="sr-only" for="curriculum-tree-search">Kayıt ara</label><input id="curriculum-tree-search" [(ngModel)]="rootSearch" name="rootSearch" placeholder="Bu sekmede ara…" maxlength="200"><button type="submit" [disabled]="busy()">Ara</button></form>
       <div class="record-list">@for (n of branch().rows || []; track n.kind + n.id) {
-        <button type="button" class="record-row" [class.selected]="selected()?.id === n.id && !creating()" [attr.aria-label]="n.name + ' düzenle'" (click)="select(n)" [disabled]="busy()"><strong>{{ n.name }}</strong><small>{{ n.path || nodeType(n) }}{{ n.code ? ' · ' + n.code : '' }}@if (n.kind === 'exams') { · {{ n.examDate ? (n.examDate | date:'dd.MM.yyyy') : 'Tarih belirtilmedi' }} }</small><span class="badge" [class.passive]="!n.isActive">{{ n.isActive ? 'Aktif' : 'Pasif' }}</span></button>
+        <button type="button" class="record-row" [class.selected]="selected()?.id === n.id && !creating()" [attr.aria-label]="n.name + ' düzenle'" (click)="select(n)" [disabled]="busy()"><strong>{{ n.name }}</strong><small>{{ n.path || nodeType(n) }}{{ n.code ? ' · ' + n.code : '' }}@if (n.kind === 'exams') { · {{ n.examDate ? 'Sıradaki oturum ' + (n.examDate | date:'dd.MM.yyyy') : 'Oturum belirtilmedi' }} }</small><span class="badge" [class.passive]="!n.isActive">{{ n.isActive ? 'Aktif' : 'Pasif' }}</span></button>
       }</div>
       @if (branch().loading) { <p role="status">Kayıtlar yükleniyor…</p> }
       @if (branch().error) { <p role="alert">{{ branch().error }}</p><button type="button" (click)="loadRoot()">Yeniden dene</button> }
@@ -45,7 +45,22 @@
         <form #editForm="ngForm" (ngSubmit)="save()">
           <fieldset [disabled]="busy()" class="edit-fields">
             @if (creating()) { @if (parentKind(); as pk) { <label class="full">{{ labels[pk] }}<select aria-label="Bağlanacağı üst kayıt" name="parent" [ngModel]="form.parentId" (ngModelChange)="selectFormParent($event)" required><option [ngValue]="null">Üst kayıt seçin</option>@for (p of parentChoices(); track p.id) { <option [value]="p.id">{{ p.path || p.name }}</option> }</select><small>Seçenekleri soldaki üst kayıt aramasından bulabilirsiniz.</small></label> } }
-            @if (kind === 'exams') { <label>Sınav tarihi<input aria-label="Sınav tarihi" name="examDate" type="date" [(ngModel)]="form.examDate"><small>İsteğe bağlı. Sınavın yapılacağı tarihi girin; henüz belli değilse boş bırakın.</small></label><label>Sınav kodu<input aria-label="Sınav kodu" name="examCode" [(ngModel)]="form.code" required maxlength="10" pattern="[A-Za-z0-9_]+" [readonly]="!creating()"><small>Örneğin LGS, KPSS veya ALES. Kaydettikten sonra kod korunur; adını değiştirebilirsiniz.</small></label> }
+            @if (kind === 'exams') { <label>Sınav kodu<input aria-label="Sınav kodu" name="examCode" [(ngModel)]="form.code" required maxlength="10" pattern="[A-Za-z0-9_]+" [readonly]="!creating()"><small>Örneğin LGS, KPSS veya ALES. Kaydettikten sonra kod korunur; adını değiştirebilirsiniz.</small></label>
+              <fieldset class="full exam-sessions"><legend>Sınav oturumları</legend>
+                @if (!form.sessions.length) { <p class="empty">Henüz oturum yok. Tarih belli olunca “Oturum ekle” ile ekleyin.</p> }
+                @for (session of form.sessions; track $index) {
+                  <div class="session-row" role="group" [attr.aria-label]="(session.label || 'Yeni oturum') + ' oturumu'">
+                    <label>Oturum adı<input [name]="'sessionLabel' + $index" [attr.name]="'sessionLabel' + $index" [(ngModel)]="session.label" required maxlength="100" placeholder="2027/1"></label>
+                    <label>Sınav tarihi<input [name]="'sessionDate' + $index" [attr.name]="'sessionDate' + $index" type="date" [(ngModel)]="session.date" required></label>
+                    <label>Başvuru başlangıcı<input [name]="'sessionApplicationStart' + $index" [attr.name]="'sessionApplicationStart' + $index" type="date" [(ngModel)]="session.applicationStart"></label>
+                    <label>Başvuru bitişi<input [name]="'sessionApplicationEnd' + $index" [attr.name]="'sessionApplicationEnd' + $index" type="date" [(ngModel)]="session.applicationEnd"></label>
+                    <button type="button" (click)="removeSession($index)" [attr.aria-label]="(session.label || 'Yeni oturum') + ' oturumunu kaldır'">Oturumu kaldır</button>
+                  </div>
+                }
+                <button type="button" (click)="addSession()">Oturum ekle</button>
+                <small>YDS ve YÖKDİL yılda iki kez, e-YDS daha sık yapılır. Başvuru dönemi isteğe bağlıdır. Öğrencinin hedef olarak seçtiği oturumu kaldıramazsınız; tarihini düzenleyebilirsiniz.</small>
+              </fieldset>
+            }
 
             <label class="full">{{ kind === 'outcomes' ? 'Kazanım metni' : 'Ad' }}<textarea *ngIf="kind === 'outcomes'; else nameInput" name="name" [(ngModel)]="form.name" required maxlength="2000" rows="3"></textarea><ng-template #nameInput><input name="name" [(ngModel)]="form.name" required maxlength="300"></ng-template></label>
             @if (kind === 'lessons') {
