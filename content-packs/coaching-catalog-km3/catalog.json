@@ -2,17 +2,22 @@
   "source": "coaching-catalog-km3",
   "curriculum": {
     "code": "coaching-exam-prep-km3-2026",
-    "name": "AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu (taslak)",
-    "versionLabel": "2026.11-taslak",
+    "name": "AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu",
+    "versionLabel": "2026.11",
     "validFrom": 2026,
     "validTo": 2027,
-    "source": "KM3 taslak paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; ekip onayı bekliyor.",
+    "source": "KM3 paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; 01.11.2026'da incelenip yayımlandı.",
     "sourceUrl": "https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf"
   },
   "previousRelease": {
     "note": "Üretimde 01.11.2026'da uygulanan sürüm (c1ce79c). Sonraki düzeltmeler üretimde yönetim panelinden yapıldı; koruma, panelde değiştirilmemiş bir kayıtta yalnız bu sürümün tam değerlerini kabul eder.",
     "commit": "c1ce79c1",
     "packageSha256": "f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab",
+    "curriculum": {
+      "name": "AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu (taslak)",
+      "versionLabel": "2026.11-taslak",
+      "source": "KM3 taslak paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; ekip onayı bekliyor."
+    },
     "topicNames": {
       "OABT_OKUL.2.01": "Erken Çocukluk Fen Eğitimi",
       "OABT_OKUL.2.02": "Erken Çocukluk Matematik Eğitimi",

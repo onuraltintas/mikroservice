@@ -163,6 +163,10 @@ same values:
   sorular" (`YDS_EN.3.01`, `YDS_EN.6.01`, `YOKDIL_FEN|SAG|SOS.2.01` and `.7.01`).
 - Field exams: `OABT_DIN` "ÖABT · Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri", `OABT_KIM`
   "ÖABT · Kimya / Kimya Teknolojisi" (`catalog.json` → `examName`; `field` stays the KM1 profile name).
+- Curriculum version `coaching-exam-prep-km3-2026` (published): name "AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu", label
+  `2026.11`, source "KM3 paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; 01.11.2026'da incelenip
+  yayımlandı." This rename is a server SQL step (code, years and source URL unchanged); the guard accepts the renamed values
+  and, as one set, the exact c1ce79c values (`previousRelease.curriculum`), so a rerun passes before and after it.
 
 The document hashes **cannot be set in the admin panel**: `CoachingCurriculumManagementService.EditProgram` refuses source
 changes on an edition that already has outcomes. They were written on the server by a guarded SQL step (release c1ce79c,

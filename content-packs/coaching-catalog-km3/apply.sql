@@ -1519,6 +1519,9 @@ BEGIN
         SELECT 'curriculum version ' || v."Code" x FROM coaching.curriculum_versions v
         WHERE (v."Id" = '80d32c5a-cd82-4496-5f37-1c96041942b4' OR v."Code" = 'coaching-exam-prep-km3-2026')
           AND (v."Id", v."Code", v."Name", v."VersionLabel", v."ValidFromYear", v."ValidToYear", v."Source", v."SourceUrl")
+              IS DISTINCT FROM ('80d32c5a-cd82-4496-5f37-1c96041942b4'::uuid, 'coaching-exam-prep-km3-2026'::varchar, 'AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu'::varchar, '2026.11'::varchar, 2026, 2027, 'KM3 paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; 01.11.2026''da incelenip yayımlandı.'::varchar, 'https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf'::varchar)
+          -- the exact name, label and source release c1ce79c1 wrote (before the server renamed the version) count as equal
+          AND (v."Id", v."Code", v."Name", v."VersionLabel", v."ValidFromYear", v."ValidToYear", v."Source", v."SourceUrl")
               IS DISTINCT FROM ('80d32c5a-cd82-4496-5f37-1c96041942b4'::uuid, 'coaching-exam-prep-km3-2026'::varchar, 'AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu (taslak)'::varchar, '2026.11-taslak'::varchar, 2026, 2027, 'KM3 taslak paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; ekip onayı bekliyor.'::varchar, 'https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf'::varchar)
         UNION ALL SELECT 'lesson ' || l."SourceId" FROM coaching.study_catalog_lessons l
         LEFT JOIN km3_lessons k ON k.id = l."Id"
@@ -1540,8 +1543,8 @@ BEGIN
         LEFT JOIN km3_editions k ON k.id = e."Id"
         WHERE (e."Code" IN (SELECT code FROM km3_editions) OR k.id IS NOT NULL)
           AND (k.id IS NULL OR (e."Code", e."ExamCode", e."GradeNumber", e."SubjectName", e."AcademicYearStart", e."AcademicYearEnd", e."SourceUrl",
-                  e."ScopeEvidenceUrl", CASE WHEN e."PackageSha256" = 'f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab' THEN '4a7e70439bac68fa9b138a4dc41480bfae45ef864e09c0a4da3b60739b120ebf' ELSE e."PackageSha256" END)
-              IS DISTINCT FROM (k.code::varchar, k.exam::varchar, NULL::int, k.subject::varchar, 2026, 2027, k.source_url::varchar, k.scope_url::varchar, '4a7e70439bac68fa9b138a4dc41480bfae45ef864e09c0a4da3b60739b120ebf'::varchar))
+                  e."ScopeEvidenceUrl", CASE WHEN e."PackageSha256" = 'f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab' THEN 'e7c92b1910de085bac0aee0d1979721de104a18582e05422d4ac78335ac3838c' ELSE e."PackageSha256" END)
+              IS DISTINCT FROM (k.code::varchar, k.exam::varchar, NULL::int, k.subject::varchar, 2026, 2027, k.source_url::varchar, k.scope_url::varchar, 'e7c92b1910de085bac0aee0d1979721de104a18582e05422d4ac78335ac3838c'::varchar))
         UNION ALL SELECT 'official topic ' || o."Code" FROM coaching.official_curriculum_topics o
         JOIN km3_official k ON k.id = o."Id"
         WHERE (o."EditionId", o."Code", CASE WHEN o."Name" = k.previous_name THEN k.name ELSE o."Name" END, o."OutcomeCount", o."LessonPeriods")
@@ -1563,7 +1566,7 @@ END $$;
 
 INSERT INTO coaching.curriculum_versions ("Id", "Code", "Name", "VersionLabel", "ValidFromYear", "ValidToYear", "Source", "SourceUrl",
     "IsPublished", "CreatedAt", "CreatedBy", "Version")
-SELECT '80d32c5a-cd82-4496-5f37-1c96041942b4', 'coaching-exam-prep-km3-2026', 'AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu (taslak)', '2026.11-taslak', 2026, 2027, 'KM3 taslak paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; ekip onayı bekliyor.', 'https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf',
+SELECT '80d32c5a-cd82-4496-5f37-1c96041942b4', 'coaching-exam-prep-km3-2026', 'AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu', '2026.11', 2026, 2027, 'KM3 paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; 01.11.2026''da incelenip yayımlandı.', 'https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf',
     false, now(), 'content-pack:coaching-catalog-km3', 1
 WHERE NOT EXISTS (SELECT 1 FROM coaching.curriculum_versions WHERE "Id" = '80d32c5a-cd82-4496-5f37-1c96041942b4');
 
@@ -1587,7 +1590,7 @@ WITH x AS (INSERT INTO coaching.study_catalog_topics ("Id", "Source", "SourceId"
 INSERT INTO km3_inserted SELECT 'topics', count(*) FROM x;
 WITH x AS (INSERT INTO coaching.official_curriculum_editions ("Id", "Code", "ExamCode", "GradeNumber", "SubjectName", "AcademicYearStart",
         "AcademicYearEnd", "SourceUrl", "DocumentSha256", "ScopeEvidenceUrl", "PackageSha256")
-    SELECT k.id, k.code, k.exam, NULL, k.subject, 2026, 2027, k.source_url, k.document_sha, k.scope_url, '4a7e70439bac68fa9b138a4dc41480bfae45ef864e09c0a4da3b60739b120ebf' FROM km3_editions k
+    SELECT k.id, k.code, k.exam, NULL, k.subject, 2026, 2027, k.source_url, k.document_sha, k.scope_url, 'e7c92b1910de085bac0aee0d1979721de104a18582e05422d4ac78335ac3838c' FROM km3_editions k
     WHERE NOT EXISTS (SELECT 1 FROM coaching.official_curriculum_editions e WHERE e."Id" = k.id) RETURNING 1)
 INSERT INTO km3_inserted SELECT 'editions', count(*) FROM x;
 INSERT INTO coaching.official_curriculum_lesson_bindings ("EditionId", "LessonId")

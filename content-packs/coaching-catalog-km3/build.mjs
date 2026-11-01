@@ -250,6 +250,9 @@ BEGIN
         WHERE (v."Id" = ${q(cvId)} OR v."Code" = ${q(cv.code)})
           AND (v."Id", v."Code", v."Name", v."VersionLabel", v."ValidFromYear", v."ValidToYear", v."Source", v."SourceUrl")
               IS DISTINCT FROM (${q(cvId)}::uuid, ${q(cv.code)}::varchar, ${q(cv.name)}::varchar, ${q(cv.versionLabel)}::varchar, ${cv.validFrom}, ${cv.validTo}, ${q(cv.source)}::varchar, ${q(cv.sourceUrl)}::varchar)
+          -- the exact name, label and source release ${PREVIOUS.commit} wrote (before the server renamed the version) count as equal
+          AND (v."Id", v."Code", v."Name", v."VersionLabel", v."ValidFromYear", v."ValidToYear", v."Source", v."SourceUrl")
+              IS DISTINCT FROM (${q(cvId)}::uuid, ${q(cv.code)}::varchar, ${q(PREVIOUS.curriculum.name)}::varchar, ${q(PREVIOUS.curriculum.versionLabel)}::varchar, ${cv.validFrom}, ${cv.validTo}, ${q(PREVIOUS.curriculum.source)}::varchar, ${q(cv.sourceUrl)}::varchar)
         UNION ALL SELECT 'lesson ' || l."SourceId" FROM coaching.study_catalog_lessons l
         LEFT JOIN km3_lessons k ON k.id = l."Id"
         WHERE (l."Source" = '${SOURCE}' OR k.id IS NOT NULL)
