@@ -70,7 +70,7 @@ test('institution fee installments, safe retry, learner/admin read, scoped cash 
     const view = (await data.json()).data; expect(view.paidAmount).toBe(250); expect(view.overdueAmount).toBe(150);
     expect((await request.post(`${base}/students/${planningStudent}/fees/${feeId}/payments`, { headers: learner, data: sentBodies[0] })).status()).toBe(403);
     expect((await request.get(`${base}/students/${planningStudent}/fees/${feeId}`, { headers: headers(planningTeacher, 'Teacher') })).status()).toBe(404);
-    const learnerPage = await learnerContext.newPage(); await login(learnerPage, planningStudent, 'Student'); await learnerPage.goto('http://127.0.0.1:4300/coaching-portal/finance');
+    const learnerPage = await learnerContext.newPage(); await login(learnerPage, planningStudent, 'Student'); await learnerPage.goto('http://127.0.0.1:4300/coaching-portal/account/payments');
     const learnerPanel = learnerPage.locator('app-coaching-finance'); await expect(learnerPanel.locator(`[data-fee-id="${feeId}"]`)).toBeVisible();
     await expect(learnerPanel.locator('[data-pay-fee], [data-create-fee]')).toHaveCount(0);
     expect(Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', hour: '2-digit', hourCycle: 'h23' }).format(new Date()))).toBeGreaterThanOrEqual(9);

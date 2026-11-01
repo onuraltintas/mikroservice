@@ -32,7 +32,7 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   expect((await page.request.put(`http://127.0.0.1:5006/api/goals/${goalId}/progress`, {
     headers, data: { goalId, progress: 30 }
   })).ok()).toBeTruthy();
-  await page.goto('/coaching-portal/progress');
+  await page.goto('/coaching-portal/growth/goals');
   const goalPicker = page.locator('app-student-goal-target');
   await goalPicker.getByRole('button', { name: 'Okul / üniversite hedefini görüntüle' }).click();
   await goalPicker.getByRole('combobox', { name: 'Sınav türü', exact: true }).selectOption('Mock');
@@ -40,7 +40,7 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   await goalPicker.getByLabel('En yüksek puan (ölçek)', { exact: true }).fill('100');
   await goalPicker.getByRole('button', { name: 'Puan hedefini kaydet', exact: true }).click();
   await expect(goalPicker.getByText(/Puan hedefi kaydedildi/)).toBeVisible();
-  await page.goto('/coaching-portal/study-plans');
+  await page.goto('/coaching-portal/plan');
   await expect(page.getByRole('heading', { name: 'Çalışma planlarım', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Yeni taslak', exact: true }).click();
   const title = `Browser plan ${randomUUID()}`;
@@ -56,7 +56,7 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   await page.getByLabel('Gerçek süre (dk)', { exact: true }).fill('25');
   await page.getByRole('button', { name: 'Tamamla', exact: true }).click();
   await expect(page.getByText(/Tamamlandı · 25 dk/)).toBeVisible();
-  await page.goto('/coaching-portal/exam-results');
+  await page.goto('/coaching-portal/growth/exams');
   await page.getByLabel('Başlık', { exact: true }).fill(`Browser exam ${randomUUID()}`);
   await page.getByLabel('Tarih', { exact: true }).fill('2026-10-02');
   await page.getByLabel('Aldığın puan', { exact: true }).fill('80');
@@ -76,7 +76,7 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   expect(data.goals).toHaveLength(1);
   expect(data.goals[0]).toMatchObject({ goalId, recordedProgress: 30, source: 'Unspecified' });
   expect(data.goals[0].scoreAssessment.comparisons[0]).toMatchObject({ source: 'StudentReported', targetAttainmentPercentage: 88.9, remainingScore: 10 });
-  await page.goto('/coaching-portal/progress');
+  await page.goto('/coaching-portal/growth/week');
   const studyReport = page.locator('app-student-study-report');
   await studyReport.getByLabel('Başlangıç', { exact: true }).fill('2026-10-02');
   await studyReport.getByLabel('Bitiş', { exact: true }).fill('2026-10-02');
@@ -99,7 +99,7 @@ test('student links a school target and publishes an automatic topic plan within
   } });
   expect(created.ok(), await created.text()).toBeTruthy();
   const goalId = (await created.json()).goalId;
-  await page.goto('/coaching-portal/progress');
+  await page.goto('/coaching-portal/growth/goals');
   const picker = page.locator('app-student-goal-target');
   await picker.getByRole('button', { name: 'Okul / üniversite hedefini görüntüle' }).click();
   await picker.getByLabel('Okul adı', { exact: true }).fill('E2E Okul');
@@ -109,14 +109,14 @@ test('student links a school target and publishes an automatic topic plan within
   await expect(picker.getByText('Hedef bağlantısı kaydedildi.', { exact: true })).toBeVisible();
   const target = await page.request.get(`http://127.0.0.1:5006/api/coaching/study-planning/goals/${goalId}/target`, { headers });
   expect((await target.json()).data.catalogTarget.name).toBe('E2E Okul');
-  await page.goto('/coaching-portal/study-availability');
+  await page.goto('/coaching-portal/plan/hours');
   await page.getByRole('button', { name: 'Saat aralığı ekle', exact: true }).click();
   await page.getByRole('combobox', { name: 'Gün', exact: true }).selectOption('Friday');
   await page.getByLabel('Başlangıç', { exact: true }).fill('09:00');
   await page.getByLabel('Bitiş', { exact: true }).fill('10:00');
   await page.getByRole('button', { name: 'Çalışma saatlerini kaydet', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Yeniden yükle', exact: true })).toBeEnabled();
-  await page.goto('/coaching-portal/automatic-plan');
+  await page.goto('/coaching-portal/plan/wizard');
   await page.getByLabel('Konu, ders veya ünite', { exact: true }).fill('E2E Kesirler');
   await page.getByRole('combobox', { name: 'Sınıf', exact: true }).selectOption({ label: '8' });
   await page.getByRole('button', { name: 'Konuları ara', exact: true }).click();
