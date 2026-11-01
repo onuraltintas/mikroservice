@@ -33,6 +33,12 @@ test('lesson codes: six AGS sections, the 17 KM1 ÖABT fields, YDS_EN and the th
     ['AGS_SOZ', 'AGS_SAY', 'AGS_TAR', 'AGS_COG', 'AGS_EGT', 'AGS_MEV']);
   assert.deepEqual(lessons.filter(x => x.exam === 'OABT').map(x => x.code).sort(), Object.keys(oabtFields).sort());
   for (const lesson of lessons.filter(x => x.exam === 'OABT')) assert.equal(lesson.field, oabtFields[lesson.code], lesson.code);
+  // KM1 decision (01.11.2026): an ÖABT lesson's ExamCode is its field code (≤ 10 characters).
+  const sql = read('apply.sql');
+  for (const code of Object.keys(oabtFields)) {
+    assert.ok(code.length <= 10);
+    assert.match(sql, new RegExp(`'${code}', '[^']+ \\(ÖABT\\)', '${code}'\\)`), code);
+  }
   assert.deepEqual(lessons.filter(x => x.exam === 'YDS').map(x => x.code), ['YDS_EN']);
   assert.deepEqual(lessons.filter(x => x.exam === 'YOKDIL').map(x => x.code), ['YOKDIL_FEN', 'YOKDIL_SAG', 'YOKDIL_SOS']);
   assert.equal(new Set(lessons.map(x => x.code)).size, lessons.length);

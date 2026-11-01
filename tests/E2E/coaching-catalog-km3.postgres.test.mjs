@@ -34,15 +34,15 @@ const foreignRows = () => run(`
     UNION ALL SELECT o::text FROM coaching.study_catalog_outcomes o JOIN coaching.official_curriculum_editions e ON e."Id" = o."EditionId" WHERE e."Code" NOT LIKE 'km3-%'
     UNION ALL SELECT e::text FROM coaching.official_curriculum_editions e WHERE e."Code" NOT LIKE 'km3-%'
     UNION ALL SELECT c::text FROM coaching.curriculum_versions c WHERE c."Code" <> 'coaching-exam-prep-km3-2026'
-    UNION ALL SELECT x::text FROM coaching.study_catalog_exams x) rows;`);
+    UNION ALL SELECT x::text FROM coaching.study_catalog_exams x WHERE "Code" NOT LIKE 'OABT\\_%') rows;`);
 
 const counts = () => Object.fromEntries(run(`
-  SELECT l."ExamCode", count(DISTINCT l."Id") || '/' || count(DISTINCT u."Id") || '/' || count(DISTINCT t."Id") || '/' || count(DISTINCT m."OutcomeId")
+  SELECT CASE WHEN l."ExamCode" LIKE 'OABT\\_%' THEN 'OABT' ELSE l."ExamCode" END, count(DISTINCT l."Id") || '/' || count(DISTINCT u."Id") || '/' || count(DISTINCT t."Id") || '/' || count(DISTINCT m."OutcomeId")
   FROM coaching.study_catalog_lessons l
   JOIN coaching.study_catalog_units u ON u."LessonId" = l."Id"
   JOIN coaching.study_catalog_topics t ON t."UnitId" = u."Id"
   LEFT JOIN coaching.study_catalog_topic_outcomes m ON m."TopicId" = t."Id"
-  WHERE l."Source" = 'coaching-catalog-km3' GROUP BY l."ExamCode" ORDER BY 1;`).split('\n').filter(Boolean).map(x => x.split('|')));
+  WHERE l."Source" = 'coaching-catalog-km3' GROUP BY 1 ORDER BY 1;`).split('\n').filter(Boolean).map(x => x.split('|')));
 
 let work;
 before(() => {
@@ -94,10 +94,16 @@ test('loads the AGS, ÖABT, YDS and YÖKDİL drafts once, passive and pending ap
   const first = psql(pack('apply.sql'));
   assert.equal(first.status, 0, first.stderr);
   const firstNotices = notices(first);
-  assert.ok(firstNotices.some(x => /^before: lessons 169, units 768, topics 5220, outcomes 6637/.test(x)), firstNotices.join('\n'));
+  assert.ok(firstNotices.some(x => /^before: lessons 169, units 768, topics 5220, outcomes 3453/.test(x)), firstNotices.join('\n'));
   assert.ok(firstNotices.some(x => /^after: lessons 196, units 825, topics 5477, /.test(x)), firstNotices.join('\n'));
   // lessons / units / leaf+group topics / outcomes per exam
   assert.deepEqual(counts(), { AGS: '6/6/29/29', OABT: '17/20/146/146', YDS: '1/10/22/22', YOKDIL: '3/21/60/60' });
+  // KM1 decision: an ÖABT lesson's ExamCode is its field code; the 17 codes are added as passive exams (FK).
+  assert.equal(run(`SELECT string_agg(e."Code" || ':' || e."IsActive" || ':' || l."SourceId", ',' ORDER BY e."Code") FROM coaching.study_catalog_exams e
+    JOIN coaching.study_catalog_lessons l ON l."ExamCode" = e."Code" AND l."Source" = 'coaching-catalog-km3' WHERE e."Code" LIKE 'OABT\\_%'`),
+    ['OABT_BED', 'OABT_BIO', 'OABT_COG', 'OABT_DIN', 'OABT_FEN', 'OABT_FIZ', 'OABT_IMAT', 'OABT_KIM', 'OABT_MAT', 'OABT_OKUL', 'OABT_OZEL',
+      'OABT_REH', 'OABT_SINIF', 'OABT_SOS', 'OABT_TAR', 'OABT_TDE', 'OABT_TUR'].map(x => `${x}:false:${x}`).join(','));
+  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_exams WHERE "Code" = 'OABT_OZEL'`), 'ÖABT · Özel Eğitim');
   assert.equal(foreignRows(), foreign, 'existing lessons, units, topics, outcomes, editions, versions and exams are unchanged');
 
   // Passive: nothing a student can see until the team approves it in the admin panel.
@@ -106,7 +112,7 @@ test('loads the AGS, ÖABT, YDS and YÖKDİL drafts once, passive and pending ap
   assert.equal(run(`SELECT count(*) FILTER (WHERE "IsActive") FROM coaching.study_catalog_topics WHERE "Source" = 'coaching-catalog-km3'`), '0');
   assert.equal(run(`SELECT count(*) FILTER (WHERE m."IsApproved") FROM coaching.study_catalog_topic_outcomes m
     JOIN coaching.study_catalog_topics t ON t."Id" = m."TopicId" WHERE t."Source" = 'coaching-catalog-km3'`), '0');
-  assert.equal(run(`SELECT "IsPublished" || ':' || "ValidFromYear" || '-' || "ValidToYear" FROM coaching.curriculum_versions WHERE "Code" = 'coaching-exam-prep-km3-2026'`), 'f:2026-2027');
+  assert.equal(run(`SELECT "IsPublished" || ':' || "ValidFromYear" || '-' || "ValidToYear" FROM coaching.curriculum_versions WHERE "Code" = 'coaching-exam-prep-km3-2026'`), 'false:2026-2027');
   assert.equal(run(`SELECT count(*) FROM coaching.study_catalog_lessons WHERE "Source" = 'coaching-catalog-km3'
     AND "CurriculumVersionId" = (SELECT "Id" FROM coaching.curriculum_versions WHERE "Code" = 'coaching-exam-prep-km3-2026')`), '27');
   // Sources on every outcome; weights and planner limits on every topic.
@@ -125,7 +131,7 @@ test('loads the AGS, ÖABT, YDS and YÖKDİL drafts once, passive and pending ap
   // Running it again changes nothing.
   const again = psql(pack('apply.sql'));
   assert.equal(again.status, 0, again.stderr);
-  assert.ok(notices(again).some(x => /^inserted: lessons 0, units 0, topics 0, outcomes 0/.test(x)), notices(again).join('\n'));
+  assert.ok(notices(again).some(x => /^inserted: lessons 0, units 0, topics 0, outcomes 0, editions 0, mappings 0, ÖABT field exams 0/.test(x)), notices(again).join('\n'));
   assert.deepEqual(counts(), { AGS: '6/6/29/29', OABT: '17/20/146/146', YDS: '1/10/22/22', YOKDIL: '3/21/60/60' });
 });
 
