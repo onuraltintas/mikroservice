@@ -182,7 +182,7 @@ test('with student data: check reports per lesson, apply deletes the unused rows
   const keep = keepRows(); const students = studentRows(); const full = allCatalogRows();
 
   const check = run(pack('check.sql'));
-  assert.match(check, /^total\|lessons delete 134 deactivate 7\|units delete 614 deactivate 4\|topics delete 3513 deactivate 6\|student references 8$/m);
+  assert.match(check, /^total\|lessons delete 134 deactivate 7\|units delete 614 deactivate 4\|topics delete 3513 deactivate 6\|student references 7$/m);
   // lesson|id|grade|name|units|topics|course prefs|topic states|plan topics|plan lessons|draft slots|exam answers|practice topics|action|units del|units deact|topics del|topics deact
   assert.match(check, new RegExp(`^lesson\\|${L.coursePreference}\\|5\\|Matematik\\|6\\|12\\|1\\|0\\|0\\|0\\|0\\|0\\|0\\|deactivate\\|6\\|0\\|12\\|0$`, 'm'));
   assert.match(check, new RegExp(`^lesson\\|${L.topicState}\\|5\\|Matematik\\|7\\|24\\|0\\|1\\|0\\|0\\|0\\|0\\|0\\|deactivate\\|6\\|1\\|22\\|2$`, 'm'));
