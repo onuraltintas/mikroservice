@@ -27,9 +27,9 @@ export function validSourceUrl(value: string): boolean {
       @if (message()) { <p role="status" class="rounded-lg bg-emerald-50 p-2 text-sm text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">{{ message() }}</p> }
       @if (loading()) { <p role="status" class="text-sm">Kaynak yükleniyor…</p> }
       @else {
-        <label class="grid gap-1 text-sm font-medium">Kaynak belge adresi (https)
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Kaynak belge adresi (https)
           <input name="source-url" type="url" [(ngModel)]="url" maxlength="1000" placeholder="https://mufredat.meb.gov.tr/…" [attr.aria-invalid]="!urlValid()"
-            [attr.aria-describedby]="!urlValid() ? 'source-url-error' : null" class="rounded-lg border p-2 dark:bg-gray-800"></label>
+            [attr.aria-describedby]="!urlValid() ? 'source-url-error' : null" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
         @if (!urlValid()) { <p id="source-url-error" class="text-sm text-red-700 dark:text-red-300">Adres https:// ile başlamalı ve en fazla 1000 karakter olmalıdır.</p> }
         @if (sourceKind() === 'ExamSkill') { <p class="text-sm text-gray-600 dark:text-gray-300">Sınav becerisi kazanımlarında kaynak adresi zorunludur.</p> }
         <div class="grid gap-2">
@@ -37,16 +37,16 @@ export function validSourceUrl(value: string): boolean {
           @if (!ids().length) { <p class="text-sm text-gray-600 dark:text-gray-300">Kaynak kimliği yok.</p> }
           @for (item of ids(); track $index; let i = $index) {
             <div class="grid gap-2 sm:grid-cols-[1fr_1fr_auto]" role="group" [attr.aria-label]="(i + 1) + '. kaynak kimliği'">
-              <label class="grid gap-1 text-sm">Kaynak<input [name]="'source-' + i" [(ngModel)]="item.source" maxlength="100" class="rounded-lg border p-2 dark:bg-gray-800">
+              <label class="grid min-w-0 gap-1 text-sm">Kaynak<input [name]="'source-' + i" [attr.name]="'source-' + i" [(ngModel)]="item.source" maxlength="100" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
                 <span class="text-xs text-gray-600 dark:text-gray-300">{{ label(item.source) }}</span></label>
-              <label class="grid gap-1 text-sm">Kimlik<input [name]="'source-id-' + i" [(ngModel)]="item.sourceId" maxlength="100" class="rounded-lg border p-2 dark:bg-gray-800"></label>
+              <label class="grid min-w-0 gap-1 text-sm">Kimlik<input [name]="'source-id-' + i" [attr.name]="'source-id-' + i" [(ngModel)]="item.sourceId" maxlength="100" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
               <button type="button" (click)="remove(i)" class="self-end rounded-lg border px-3 py-2 text-sm">Kaldır</button>
             </div>
           }
           <button type="button" (click)="add()" class="justify-self-start rounded-lg border px-3 py-2 text-sm">Kaynak kimliği ekle</button>
         </div>
-        <label class="grid gap-1 text-sm font-medium">Değişiklik gerekçesi (5–500 karakter)
-          <input name="source-reason" [(ngModel)]="reason" maxlength="500" class="rounded-lg border p-2 dark:bg-gray-800"></label>
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Değişiklik gerekçesi (5–500 karakter)
+          <input name="source-reason" [(ngModel)]="reason" maxlength="500" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
         <button type="button" (click)="save()" [disabled]="!canSave()" class="justify-self-start rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Kaynağı kaydet</button>
       }
     </fieldset>`

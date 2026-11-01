@@ -34,12 +34,12 @@ const emptyForm = (): ProgramForm => ({ universityName: '', name: '', programCod
         @if (canManage()) { <button type="button" (click)="openCreate()" [disabled]="busy()" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Program ekle</button> }
       </div>
       <form (ngSubmit)="load(1)" class="grid gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-6" aria-label="Program filtreleri">
-        <label class="grid gap-1 text-sm font-medium lg:col-span-2">Ara<input name="search" [(ngModel)]="search" maxlength="200" placeholder="Üniversite, program adı veya kodu" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-        <label class="grid gap-1 text-sm font-medium">Puan türü<select name="scoreType" [(ngModel)]="scoreType" class="rounded-lg border p-2 dark:bg-gray-800">
+        <label class="grid min-w-0 gap-1 text-sm font-medium lg:col-span-2">Ara<input name="search" [(ngModel)]="search" maxlength="200" placeholder="Üniversite, program adı veya kodu" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Puan türü<select name="scoreType" [(ngModel)]="scoreType" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
           <option value="">Tümü</option>@for (type of scoreTypes; track type) { <option [value]="type">{{ scoreName(type) }}</option> }</select></label>
-        <label class="grid gap-1 text-sm font-medium">Şehir<input name="city" [(ngModel)]="city" maxlength="100" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-        <label class="grid gap-1 text-sm font-medium">Puan yılı<input name="year" type="number" min="1900" max="2100" [(ngModel)]="year" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-        <label class="grid gap-1 text-sm font-medium">Durum<select name="active" [(ngModel)]="active" class="rounded-lg border p-2 dark:bg-gray-800">
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Şehir<input name="city" [(ngModel)]="city" maxlength="100" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Puan yılı<input name="year" type="number" min="1900" max="2100" [(ngModel)]="year" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+        <label class="grid min-w-0 gap-1 text-sm font-medium">Durum<select name="active" [(ngModel)]="active" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
           <option value="">Tümü</option><option value="true">Etkin</option><option value="false">Pasif</option></select></label>
         <div class="flex items-end"><button type="submit" [disabled]="busy()" class="rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-50">Listele</button></div>
       </form>
@@ -51,23 +51,23 @@ const emptyForm = (): ProgramForm => ({ universityName: '', name: '', programCod
           <h3 class="font-semibold sm:col-span-2 lg:col-span-4">{{ e.doc ? e.doc.data.universityName + ' · ' + e.doc.data.name : 'Yeni program' }}</h3>
           @if (e.doc) { <p class="text-sm text-gray-600 dark:text-gray-300 sm:col-span-2 lg:col-span-4">{{ sourceName(e.doc.data.source) }} · {{ e.doc.goalCount }} öğrenci hedefinde kullanılıyor</p> }
           @if (!e.doc) {
-            <label class="grid gap-1 text-sm font-medium sm:col-span-2">Üniversite<input name="universityName" [(ngModel)]="form.universityName" required maxlength="300" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-            <label class="grid gap-1 text-sm font-medium">Program kodu (isteğe bağlı)<input name="programCode" [(ngModel)]="form.programCode" maxlength="50" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-            <label class="grid gap-1 text-sm font-medium">Şehir<input name="programCity" [(ngModel)]="form.city" maxlength="100" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-            <label class="grid gap-1 text-sm font-medium">Puan türü<select name="formScoreType" [(ngModel)]="form.scoreType" class="rounded-lg border p-2 dark:bg-gray-800">@for (type of scoreTypes; track type) { <option [value]="type">{{ scoreName(type) }}</option> }</select></label>
-            <label class="grid gap-1 text-sm font-medium">Program türü<select name="programType" [(ngModel)]="form.programType" class="rounded-lg border p-2 dark:bg-gray-800"><option value="Bachelor">Lisans</option><option value="Associate">Önlisans</option></select></label>
+            <label class="grid min-w-0 gap-1 text-sm font-medium sm:col-span-2">Üniversite<input name="universityName" [(ngModel)]="form.universityName" required maxlength="300" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+            <label class="grid min-w-0 gap-1 text-sm font-medium">Program kodu (isteğe bağlı)<input name="programCode" [(ngModel)]="form.programCode" maxlength="50" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+            <label class="grid min-w-0 gap-1 text-sm font-medium">Şehir<input name="programCity" [(ngModel)]="form.city" maxlength="100" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+            <label class="grid min-w-0 gap-1 text-sm font-medium">Puan türü<select name="formScoreType" [(ngModel)]="form.scoreType" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">@for (type of scoreTypes; track type) { <option [value]="type">{{ scoreName(type) }}</option> }</select></label>
+            <label class="grid min-w-0 gap-1 text-sm font-medium">Program türü<select name="programType" [(ngModel)]="form.programType" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"><option value="Bachelor">Lisans</option><option value="Associate">Önlisans</option></select></label>
           }
-          <label class="grid gap-1 text-sm font-medium sm:col-span-2">Program adı<input name="programName" [(ngModel)]="form.name" required maxlength="300" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-          <label class="grid gap-1 text-sm font-medium sm:col-span-2">Fakülte / yüksekokul<input name="faculty" [(ngModel)]="form.facultyName" maxlength="300" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-          <label class="grid gap-1 text-sm font-medium">Taban puan<input name="minimumScore" type="number" step="0.00001" min="0" max="1000" [(ngModel)]="form.minimumScore" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-          <label class="grid gap-1 text-sm font-medium">Tavan puan<input name="maximumScore" type="number" step="0.00001" min="0" max="1000" [(ngModel)]="form.maximumScore" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-          <label class="grid gap-1 text-sm font-medium">Başarı sırası<input name="rank" type="number" min="1" [(ngModel)]="form.rank" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-          <label class="grid gap-1 text-sm font-medium">Puan yılı<input name="formYear" type="number" min="1900" max="2100" [(ngModel)]="form.year" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-          <label class="grid gap-1 text-sm font-medium">Kontenjan<input name="quota" type="number" min="0" [(ngModel)]="form.quota" class="rounded-lg border p-2 dark:bg-gray-800"></label>
-          <label class="grid gap-1 text-sm font-medium">Yerleşen<input name="placed" type="number" min="0" [(ngModel)]="form.placed" class="rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium sm:col-span-2">Program adı<input name="programName" [(ngModel)]="form.name" required maxlength="300" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium sm:col-span-2">Fakülte / yüksekokul<input name="faculty" [(ngModel)]="form.facultyName" maxlength="300" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium">Taban puan<input name="minimumScore" type="number" step="0.00001" min="0" max="1000" [(ngModel)]="form.minimumScore" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium">Tavan puan<input name="maximumScore" type="number" step="0.00001" min="0" max="1000" [(ngModel)]="form.maximumScore" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium">Başarı sırası<input name="rank" type="number" min="1" [(ngModel)]="form.rank" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium">Puan yılı<input name="formYear" type="number" min="1900" max="2100" [(ngModel)]="form.year" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium">Kontenjan<input name="quota" type="number" min="0" [(ngModel)]="form.quota" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium">Yerleşen<input name="placed" type="number" min="0" [(ngModel)]="form.placed" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
           <label class="flex items-center gap-2 text-sm font-medium"><input name="isActive" type="checkbox" [(ngModel)]="form.isActive"> Öğrencilere göster (etkin)</label>
           @if (formError()) { <p class="text-sm text-red-700 dark:text-red-300 sm:col-span-2 lg:col-span-4">{{ formError() }}</p> }
-          <label class="grid gap-1 text-sm font-medium sm:col-span-2 lg:col-span-4">Değişiklik gerekçesi (5–500 karakter)<input name="programReason" [(ngModel)]="reason" maxlength="500" class="rounded-lg border p-2 dark:bg-gray-800"></label>
+          <label class="grid min-w-0 gap-1 text-sm font-medium sm:col-span-2 lg:col-span-4">Değişiklik gerekçesi (5–500 karakter)<input name="programReason" [(ngModel)]="reason" maxlength="500" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
           <div class="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-4">
             <button type="submit" [disabled]="busy() || reason.trim().length < 5 || !!formError()" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Kaydet</button>
             <button type="button" (click)="closeEditor()" [disabled]="busy()" class="rounded-lg border px-4 py-2 text-sm">Vazgeç</button>
