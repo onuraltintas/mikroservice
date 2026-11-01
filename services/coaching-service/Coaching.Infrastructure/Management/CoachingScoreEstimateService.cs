@@ -22,14 +22,23 @@ public sealed record ScoreModelItem(Guid Id, int Year, string ScoreType, string 
 public sealed record ScoreTypeEstimate(string ScoreType, string Name, int ModelYear, decimal Score, decimal ScoreLow, decimal ScoreHigh,
     int Rank, int RankBest, int RankWorst, decimal? Percentile, int ExamsUsed, DateTime LastExamDate, bool IncludesDiplomaGrade);
 public sealed record ScoreTargetGap(string TargetName, string ScoreType, decimal? TargetScore, int? TargetRank, decimal? TargetPercentile,
-    decimal? ScoreGap, decimal? NetGap, int? RankGap, bool Reached);
+    decimal? ScoreGap, decimal? NetGap, int? RankGap, bool Reached)
+{
+    /// <summary>01.11.2026: "minRawScore" when the target's score type is not computed (see ScoreEstimate.NotComputed).</summary>
+    public string? NotComputedReason { get; init; }
+}
 public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, ScoreTargetGap? Target, string? Notice)
 {
     /// <summary>KM1: YDS and YÖKDİL scores (correct answers out of 100), one per practice scope.</summary>
     public IReadOnlyList<LanguageScoreEstimate> LanguageScores { get; init; } = [];
     /// <summary>KM1: for AGS, YDS and YÖKDİL students, the exam date they work towards (own date, chosen session or next session).</summary>
     public ScoreTargetExam? TargetExam { get; init; }
+    /// <summary>01.11.2026: score types ÖSYM would not compute (NotComputedReason "minRawScore"); they have no score or rank.</summary>
+    public IReadOnlyList<ScoreTypeNotComputed> NotComputed { get; init; } = [];
 }
+/// <summary>01.11.2026: a score type with a model and practice exams that ÖSYM does not compute, and the conditions that fail.</summary>
+public sealed record ScoreTypeNotComputed(string ScoreType, string Name, int ModelYear, string NotComputedReason,
+    IReadOnlyList<RawScoreCondition> FailedConditions, int ExamsUsed, DateTime LastExamDate);
 public sealed record LanguageScoreEstimate(string ExamCode, string Name, decimal Score, decimal ScoreLow, decimal ScoreHigh, int ExamsUsed, DateTime LastExamDate);
 public sealed record ScoreTargetExam(string Name, DateOnly Date, int DaysLeft, string Source);
 

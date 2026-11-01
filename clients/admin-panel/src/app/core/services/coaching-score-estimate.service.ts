@@ -10,6 +10,16 @@ export interface ScoreTypeEstimate {
 export interface ScoreTargetGap {
   targetName: string; scoreType: string; targetScore: number | null; targetRank: number | null; targetPercentile: number | null;
   scoreGap: number | null; netGap: number | null; rankGap: number | null; reached: boolean;
+  /** 01.11.2026: 'minRawScore' when the target's score type is not computed (see ScoreEstimate.notComputed). */
+  notComputedReason?: string | null;
+}
+/** 01.11.2026: a test's ham puan (doğru − yanlış/4), cut to hundredths, e.g. Türkçe or AYT Fen Bilimleri. */
+export interface RawScoreValue { code: string; name: string; rawScore: number }
+/** A failing condition: none of these tests reached 0,5 ham puan; one of them would have been enough. */
+export interface RawScoreCondition { anyOf: RawScoreValue[] }
+/** 01.11.2026: a score type ÖSYM would not compute (2026 YKS Kılavuzu, Tablo 1D); it has no score or rank. */
+export interface ScoreTypeNotComputed {
+  scoreType: string; name: string; modelYear: number; notComputedReason: string; failedConditions: RawScoreCondition[]; examsUsed: number; lastExamDate: string;
 }
 /** KM1: YDS and YÖKDİL scores are the correct answers out of 100 (1.25 per correct answer), no yearly model. */
 export interface LanguageScoreEstimate { examCode: string; name: string; score: number; scoreLow: number; scoreHigh: number; examsUsed: number; lastExamDate: string }
@@ -18,6 +28,8 @@ export interface ScoreTargetExam { name: string; date: string; daysLeft: number;
 export interface ScoreEstimate {
   estimates: ScoreTypeEstimate[]; target: ScoreTargetGap | null; notice: string | null;
   languageScores?: LanguageScoreEstimate[]; targetExam?: ScoreTargetExam | null;
+  /** 01.11.2026: absent in older responses. */
+  notComputed?: ScoreTypeNotComputed[];
 }
 
 /** KM4 (01.11.2026): the yearly models are derived from official statistics, so every view labels the estimate approximate. */
@@ -33,6 +45,8 @@ export function estimateMethodNote(estimates: readonly ScoreTypeEstimate[]): str
   const year = from === to ? `${to}` : `${from}–${to}`;
   return `Yöntem: netler ${source} ${year} sınav istatistikleriyle puana, puan da ${year} yerleştirme sonuçlarıyla sıralamaya çevrilir. Resmî hesap değildir.`;
 }
+
+export function notComputedText(_item: ScoreTypeNotComputed): string { return ''; }
 
 /** YKS ranks are read from placement scores (with OBP); without the diploma grade they look worse than they are. */
 export function diplomaRankNote(estimates: readonly ScoreTypeEstimate[]): string | null {
