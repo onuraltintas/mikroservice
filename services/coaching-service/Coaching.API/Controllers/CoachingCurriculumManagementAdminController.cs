@@ -17,8 +17,9 @@ namespace Coaching.API.Controllers;
 public sealed class CoachingCurriculumManagementAdminController(CoachingCurriculumManagementService service) : ControllerBase
 {
     [HttpGet("children")]
-    public Task<IActionResult> Children(string kind = "exams", Guid? parentId = null, string? search = null, int page = 1, bool all = false, CancellationToken ct = default, string? level = null)
-        => Execute(async () => await service.ChildrenAsync(kind,parentId,search,page,ct,all,level));
+    public Task<IActionResult> Children(string kind = "exams", Guid? parentId = null, string? search = null, int page = 1, bool all = false, CancellationToken ct = default, string? level = null,
+        string? examCode = null, Guid? lessonId = null, bool? active = null, int? pageSize = null)
+        => Execute(async () => await service.ChildrenAsync(kind,parentId,search,page,new CurriculumChildrenFilter(examCode,lessonId,active,pageSize),ct,all,level));
     [HttpGet("{kind}/{id:guid}")]
     public Task<IActionResult> Get(string kind,Guid id,CancellationToken ct) => Execute(async () => await service.GetAsync(kind,id,ct));
     [HttpPost("{kind}"), HasPermission(PlatformPermissions.Coaching.ContentManage), RequestSizeLimit(16384)]

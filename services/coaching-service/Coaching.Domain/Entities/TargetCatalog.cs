@@ -73,6 +73,35 @@ public sealed class TargetUniversityProgram : TargetCatalogEntry
         ScoreType = validated.ScoreType;
     }
 
+    /// <summary>KM7: a program the administrator adds by hand (not from the official MEBİ/YÖK Atlas import).</summary>
+    public static TargetUniversityProgram CreateManual(string universityName, string name, string? programCode,
+        string? facultyName, string? programType, string scoreType, string? city)
+    {
+        if (string.IsNullOrWhiteSpace(scoreType)) throw new ArgumentException("Puan türü seçin.", nameof(scoreType));
+        return new TargetUniversityProgram
+        {
+            Source = "admin-manual", SourceId = Guid.NewGuid().ToString("N"),
+            UniversityName = StudyCatalogText.Require(universityName, 300), Name = StudyCatalogText.Require(name, 300),
+            ProgramCode = string.IsNullOrWhiteSpace(programCode) ? null : StudyCatalogText.Require(programCode, 50),
+            FacultyName = string.IsNullOrWhiteSpace(facultyName) ? null : StudyCatalogText.Require(facultyName, 300),
+            ProgramType = NormalizeProgramType(programType), ScoreType = NormalizeScoreType(scoreType),
+            City = string.IsNullOrWhiteSpace(city) ? null : StudyCatalogText.Require(city, 300), UpdatedAt = DateTimeOffset.UtcNow
+        };
+    }
+
+    /// <summary>KM7: the fields an administrator may correct; other admission data stays as imported.</summary>
+    public void EditAdmin(string name, string? facultyName, decimal? minimumScore, decimal? maximumScore, int? rank,
+        int? quota, int? placed, int? year)
+    {
+        if (minimumScore is < 0 or > 1000 || maximumScore is < 0 or > 1000 || minimumScore > maximumScore || rank <= 0
+            || quota < 0 || placed < 0 || year is < 1900 or > 2100)
+            throw new ArgumentException("Puan, sıralama, kontenjan ve yılı kontrol edin.");
+        Name = StudyCatalogText.Require(name, 300);
+        FacultyName = string.IsNullOrWhiteSpace(facultyName) ? null : StudyCatalogText.Require(facultyName, 300);
+        MinimumScore = minimumScore; MaximumScore = maximumScore; Rank = rank; Quota = quota; Placed = placed; ScoreYear = year;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
     public static TargetUniversityProgram Create(string programCode, string universityName, string name,
         string? facultyName, string? programType, string? scoreType)
     {

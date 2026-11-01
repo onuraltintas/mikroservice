@@ -52,17 +52,41 @@ public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? Par
     public IReadOnlyList<StudyCatalogExamSession> Sessions { get; init; } = [];
     /// <summary>Roadmap O7: topic exam weight 1-5 used when a plan does not fit.</summary>
     public int? YieldWeight { get; init; }
+    /// <summary>KM7: links of the row (topic, outcome or everything under a lesson/unit) that wait for review.</summary>
+    public int? PendingLinkCount { get; init; }
+    /// <summary>KM7: topics only; the version the inline bulk update compares (PATCH topics/bulk).</summary>
+    public string? Version { get; init; }
+    /// <summary>KM7: outcomes only; the source aliases (MEB/ÖSYM ids) of the outcome.</summary>
+    public IReadOnlyList<OutcomeSourceId>? SourceIds { get; init; }
 }
-public sealed record CurriculumMapping(Guid TopicId, string Path, bool IsApproved, string Evidence);
+public sealed record CurriculumMapping(Guid TopicId, string Path, bool IsApproved, string Evidence)
+{
+    /// <summary>KM7: pending, approved or rejected.</summary>
+    public string Status { get; init; } = IsApproved ? "approved" : "pending";
+}
+/// <summary>KM7: the optional list filters of curriculum-management children.</summary>
+public sealed record CurriculumChildrenFilter(string? ExamCode = null, Guid? LessonId = null, bool? Active = null, int? PageSize = null);
+public sealed record OutcomeSourceId(string Source, string SourceId);
 
 public sealed class CoachingCurriculumManagementService(CoachingDbContext db, ICoachingAdminScopeAuthorization scope, ICurrentUserService user)
 {
     private static readonly string[] Kinds = ["exams", "programs", "programTopics", "lessons", "units", "topics", "outcomes"];
 
-    public async Task<TargetSearchPage<CurriculumNode>> ChildrenAsync(string kind, Guid? parent, string? search, int page, CancellationToken ct, bool all = false, string? level = null)
+    public Task<TargetSearchPage<CurriculumNode>> ChildrenAsync(string kind, Guid? parent, string? search, int page, CancellationToken ct, bool all = false, string? level = null)
+        => ChildrenAsync(kind,parent,search,page,new CurriculumChildrenFilter(),ct,all,level);
+
+    /// <summary>
+    /// KM7: Turkish case-insensitive search, optional exam / lesson / state filters for lessons, units, topics and outcomes, a page
+    /// size up to 200, and rows with minutes, weight, state, linked outcome count and pending link count.
+    /// </summary>
+    public async Task<TargetSearchPage<CurriculumNode>> ChildrenAsync(string kind, Guid? parent, string? search, int page, CurriculumChildrenFilter filter, CancellationToken ct, bool all = false, string? level = null)
     {
         await Require(ct); Kind(kind);
-        if (page is < 1 or > 10000 || search?.Length > 200 || parent == Guid.Empty || level is not (null or "root" or "sub" or "leaf")) throw new ArgumentException("Arama ve sayfayı kontrol edin.");
+        var size = filter.PageSize ?? 25;
+        if (page is < 1 or > 10000 || search?.Length > 200 || parent == Guid.Empty || level is not (null or "root" or "sub" or "leaf")
+            || size is < 1 or > 200 || filter.LessonId == Guid.Empty || filter.ExamCode?.Length > 20) throw new ArgumentException("Arama ve sayfayı kontrol edin.");
+        var examFilter = string.IsNullOrWhiteSpace(filter.ExamCode) ? null : StudyCatalogExam.NormalizeCode(filter.ExamCode);
+        var links = db.Set<StudyCatalogTopicOutcome>().Where(m => !m.IsRejected);
         IQueryable<CurriculumNode> query;
         switch (kind)
         {
@@ -77,31 +101,51 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             case "lessons":
                 var exam = await db.Set<StudyCatalogExam>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == parent,ct);
                 query = db.StudyCatalogLessons.AsNoTracking().Where(x => all || (exam != null ? x.ExamCode == exam.Code : parent == null && x.ExamCode == null))
-                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=exam == null ? null : exam.Id,ParentKind="exams",IsActive=x.IsActive,DisplayOrder=null,GradeNumber=x.GradeNumber,ExamCode=x.ExamCode,CurriculumVersionId=x.CurriculumVersionId }); break;
+                    .Where(x => (examFilter == null || x.ExamCode == examFilter) && (filter.LessonId == null || x.Id == filter.LessonId) && (filter.Active == null || x.IsActive == filter.Active))
+                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=exam == null ? null : exam.Id,ParentKind="exams",IsActive=x.IsActive,DisplayOrder=null,GradeNumber=x.GradeNumber,ExamCode=x.ExamCode,CurriculumVersionId=x.CurriculumVersionId,
+                        OutcomeCount=links.Count(m => db.StudyCatalogTopics.Any(t => t.Id == m.TopicId && t.LessonId == x.Id)),
+                        PendingLinkCount=links.Count(m => !m.IsApproved && db.StudyCatalogTopics.Any(t => t.Id == m.TopicId && t.LessonId == x.Id)) }); break;
             case "units":
-                query = db.StudyCatalogUnits.AsNoTracking().Where(x => all || x.LessonId == parent).Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=x.LessonId,ParentKind="lessons",IsActive=x.IsActive,DisplayOrder=x.DisplayOrder }); break;
+                query = (from x in db.StudyCatalogUnits.AsNoTracking() join l in db.StudyCatalogLessons on x.LessonId equals l.Id
+                         where (all || x.LessonId == parent) && (examFilter == null || l.ExamCode == examFilter) && (filter.LessonId == null || x.LessonId == filter.LessonId) && (filter.Active == null || x.IsActive == filter.Active)
+                         select new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=x.LessonId,ParentKind="lessons",IsActive=x.IsActive,DisplayOrder=x.DisplayOrder,ExamCode=l.ExamCode,
+                             OutcomeCount=links.Count(m => db.StudyCatalogTopics.Any(t => t.Id == m.TopicId && t.UnitId == x.Id)),
+                             PendingLinkCount=links.Count(m => !m.IsApproved && db.StudyCatalogTopics.Any(t => t.Id == m.TopicId && t.UnitId == x.Id)) }); break;
             case "topics":
                 var isUnit = await db.StudyCatalogUnits.AnyAsync(x => x.Id == parent, ct);
-                query = db.StudyCatalogTopics.AsNoTracking().Where(x => (all || (isUnit ? x.UnitId == parent && x.ParentId == null : x.ParentId == parent))
-                    && (level != "root" || x.ParentId == null) && (level != "sub" || x.ParentId != null)
-                    && (level != "leaf" || !db.StudyCatalogTopics.Any(child => child.ParentId == x.Id)))
-                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=x.ParentId ?? x.UnitId,ParentKind=x.ParentId == null ? "units" : "topics",IsActive=x.IsActive,DisplayOrder=x.DisplayOrder,EstimatedMinutes=x.EstimatedMinutes }); break;
+                query = (from x in db.StudyCatalogTopics.AsNoTracking() join l in db.StudyCatalogLessons on x.LessonId equals l.Id
+                         where (all || (isUnit ? x.UnitId == parent && x.ParentId == null : x.ParentId == parent))
+                            && (level != "root" || x.ParentId == null) && (level != "sub" || x.ParentId != null)
+                            && (level != "leaf" || !db.StudyCatalogTopics.Any(child => child.ParentId == x.Id))
+                            && (examFilter == null || l.ExamCode == examFilter) && (filter.LessonId == null || x.LessonId == filter.LessonId) && (filter.Active == null || x.IsActive == filter.Active)
+                         select new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=x.ParentId ?? x.UnitId,ParentKind=x.ParentId == null ? "units" : "topics",IsActive=x.IsActive,DisplayOrder=x.DisplayOrder,EstimatedMinutes=x.EstimatedMinutes,
+                             ExamCode=l.ExamCode,YieldWeight=x.YieldWeight,OutcomeCount=links.Count(m => m.TopicId == x.Id),PendingLinkCount=links.Count(m => m.TopicId == x.Id && !m.IsApproved) }); break;
             default:
                 query = db.Set<StudyCatalogOutcome>().AsNoTracking()
-                    .Where(x => all || (parent == null ? !db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id) : db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id && m.TopicId == parent)))
-                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=parent,ParentKind="topics",IsActive=!x.IsArchived,DisplayOrder=x.DisplayOrder,Code=x.Code,OfficialTopicId=x.OfficialTopicId,SourcePage=x.SourcePage,Notes=x.Notes,SourceKind=x.SourceKind,SourceUrl=x.SourceUrl }); break;
+                    .Where(x => all || (parent == null ? !links.Any(m => m.OutcomeId == x.Id) : db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id && m.TopicId == parent)))
+                    .Where(x => (examFilter == null || db.Set<OfficialCurriculumEdition>().Any(e => e.Id == x.EditionId && e.ExamCode == examFilter))
+                        && (filter.LessonId == null || links.Any(m => m.OutcomeId == x.Id && db.StudyCatalogTopics.Any(t => t.Id == m.TopicId && t.LessonId == filter.LessonId)))
+                        && (filter.Active == null || x.IsArchived != filter.Active))
+                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=parent,ParentKind="topics",IsActive=!x.IsArchived,DisplayOrder=x.DisplayOrder,Code=x.Code,OfficialTopicId=x.OfficialTopicId,SourcePage=x.SourcePage,Notes=x.Notes,SourceKind=x.SourceKind,SourceUrl=x.SourceUrl,
+                        PendingLinkCount=links.Count(m => m.OutcomeId == x.Id && !m.IsApproved) }); break;
         }
-        // Filter after the bounded parent scope; Contains is parameterized by EF, not interpolated SQL.
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            query = kind == "outcomes" ? query.Where(x => x.Name.Contains(term) || (x.Code != null && x.Code.Contains(term))) : query.Where(x => x.Name.Contains(term));
-        }
+        // Filter after the bounded parent scope; the term is a parameter, never interpolated SQL.
+        query = kind == "outcomes" ? query.WhereContains(search,x => x.Name,x => x.Code) : query.WhereContains(search,x => x.Name);
         var count = await query.CountAsync(ct);
-        var items = await query.OrderBy(x => x.DisplayOrder ?? 0).ThenBy(x => x.Name).ThenBy(x => x.Id).Skip((page-1)*25).Take(25).ToArrayAsync(ct);
+        var items = await query.OrderBy(x => x.DisplayOrder ?? 0).ThenBy(x => x.Name).ThenBy(x => x.Id).Skip((page-1)*size).Take(size).ToArrayAsync(ct);
+        if (kind == "topics" && items.Length > 0)
+        {
+            var ids = items.Select(x => x.Id).ToArray();
+            var versions = (await db.StudyCatalogTopics.AsNoTracking().Where(x => Enumerable.Contains(ids,x.Id)).ToArrayAsync(ct)).ToDictionary(x => x.Id,TopicVersion);
+            for (var i = 0; i < items.Length; i++) items[i] = items[i] with { Version = versions[items[i].Id] };
+        }
         if (all) for (var i = 0; i < items.Length; i++) items[i] = items[i] with { Path = await Path(items[i].Kind,items[i].Id,ct) };
-        return new(items,count,page,25);
+        return new(items,count,page,size);
     }
+
+    /// <summary>KM7: the inline-edit version of a topic (changes whenever an admin-visible field of the topic changes).</summary>
+    internal static string TopicVersion(StudyCatalogTopic t) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(
+        string.Join("|",t.Name,t.DisplayOrder,t.EstimatedMinutes,t.YieldWeight,t.IsActive,t.UnitId,t.ParentId,t.LessonId))))[..16];
 
     public async Task<CurriculumNode> GetAsync(string kind, Guid id, CancellationToken ct)
     {
@@ -216,6 +260,19 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 if (unit.IsActive && !target.IsActive) throw new ArgumentException("Aktif üniteyi pasif derse taşıyamazsınız.");
                 if (target.Id == unit.LessonId) throw new ArgumentException("Farklı hedef ders seçin.");
                 await Compatible(unit.LessonId,target.Id,ct);
+                var branch = await db.StudyCatalogTopics.Where(x => x.UnitId == unit.Id).ToArrayAsync(ct);
+                // KM7: an unused unit moves in place (same ids); a used one keeps history as copy + deactivate.
+                if (db.Database.IsRelational() && !await UsedAsync(branch.Select(x => x.Id).ToArray(),ct))
+                {
+                    // The unit and its topics change together in one statement: their composite keys reference each other.
+                    await db.Database.ExecuteSqlInterpolatedAsync($"""
+                        WITH moved AS (UPDATE coaching.study_catalog_units SET "LessonId" = {target.Id} WHERE "Id" = {unit.Id} RETURNING "Id")
+                        UPDATE coaching.study_catalog_topics SET "LessonId" = {target.Id} WHERE "UnitId" IN (SELECT "Id" FROM moved)
+                        """,ct);
+                    // Key values changed in the database: track fresh copies instead of reloading.
+                    db.Entry(unit).State = EntityState.Detached; foreach (var t in branch) db.Entry(t).State = EntityState.Detached;
+                    return await db.StudyCatalogUnits.SingleAsync(x => x.Id == unit.Id,ct);
+                }
                 var copy = Add(StudyCatalogUnit.Create("admin-manual",Guid.NewGuid().ToString("N"),target.Id,unit.Name,unit.DisplayOrder)); copy.SetActive(unit.IsActive && target.IsActive);
                 var all = await db.StudyCatalogTopics.Where(x => x.UnitId == unit.Id).ToArrayAsync(ct);
                 foreach (var root in all.Where(x => x.ParentId == null)) await CopyTopic(root,target.Id,copy.Id,null,all,ct);
@@ -232,6 +289,18 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 var descendants = await db.StudyCatalogTopics.Where(x => x.ParentId == source.Id).ToArrayAsync(ct);
                 if (parent.ParentId.HasValue && descendants.Length > 0) throw new ArgumentException("Alt konuları olan konu yalnız üniteye taşınabilir.");
                 await Compatible(source.LessonId,parent.LessonId,ct);
+                // KM7: an unused topic moves in place (same id); a used one keeps history as copy + deactivate.
+                if (db.Database.IsRelational() && !await UsedAsync([source.Id,..descendants.Select(x => x.Id)],ct))
+                {
+                    // One statement, so the sub topics' composite parent key never points at a half-moved row.
+                    await db.Database.ExecuteSqlInterpolatedAsync($"""
+                        UPDATE coaching.study_catalog_topics SET "LessonId" = {parent.LessonId}, "UnitId" = {parent.UnitId},
+                            "ParentId" = CASE WHEN "Id" = {source.Id} THEN {parent.ParentId}::uuid ELSE "ParentId" END
+                        WHERE "Id" = {source.Id} OR "ParentId" = {source.Id}
+                        """,ct);
+                    db.Entry(source).State = EntityState.Detached; foreach (var child in descendants) db.Entry(child).State = EntityState.Detached;
+                    return await db.StudyCatalogTopics.SingleAsync(x => x.Id == source.Id,ct);
+                }
                 return await CopyTopic(source,parent.LessonId,parent.UnitId,parent.ParentId,descendants,ct);
             }
             throw new ArgumentException("Ders grubu kök kayıttır; taşınmaz.");
@@ -262,6 +331,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         {
             var entity = await Load(kind,id,ct); var doc = await Describe(entity,ct);
             if (!doc.CanDelete) throw new BusinessRuleException("Catalog.InUse","Kayıt kullanımda; silinemez. " + string.Join(" · ",doc.Blockers));
+            // KM7: rejected links stay only for audit; they go with the topic.
+            if (entity is StudyCatalogTopic rejectedOwner)
+                db.RemoveRange(await db.Set<StudyCatalogTopicOutcome>().Where(x => x.TopicId == rejectedOwner.Id && x.IsRejected).ToArrayAsync(ct));
             if (entity is StudyCatalogOutcome o)
             {
                 db.RemoveRange(await db.Set<StudyCatalogTopicOutcome>().Where(x => x.OutcomeId == id).ToArrayAsync(ct));
@@ -401,8 +473,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             if(shares>0)blockers.Add($"{shares} onaylı kapsam süre payı; geçmişi korumak için arşivleyebilirsiniz");
             var mappings = await db.Set<StudyCatalogTopicOutcome>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderBy(x => x.TopicId).ToArrayAsync(ct);
             var paths = new List<CurriculumMapping>();
-            foreach (var m in mappings) paths.Add(new(m.TopicId,await Path("topics",m.TopicId,ct),m.IsApproved,m.Evidence));
-            node = node with { Estimates = await db.Set<OutcomeDurationEstimate>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderByDescending(x => x.Number).ToArrayAsync(ct), Mappings = paths,
+            foreach (var m in mappings) paths.Add(new(m.TopicId,await Path("topics",m.TopicId,ct),m.IsApproved,m.Evidence) { Status = m.Status });
+            node = node with { SourceIds = await db.Set<StudyCatalogOutcomeSource>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderBy(x => x.Source).ThenBy(x => x.SourceId)
+                    .Select(x => new OutcomeSourceId(x.Source,x.SourceId)).ToArrayAsync(ct), Estimates = await db.Set<OutcomeDurationEstimate>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderByDescending(x => x.Number).ToArrayAsync(ct), Mappings = paths,
                 UsedEstimateIds = await db.Set<StudyPlanTaskOutcome>().Where(x => x.OutcomeId == outcome.Id).Select(x => x.EstimateId).Distinct().ToArrayAsync(ct) };
         }
         else
@@ -424,7 +497,15 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         var displayName = entity is StudyCatalogLesson lesson ? LessonLabel(lesson) : node.Name;
         var path = node.ParentId.HasValue ? await Path(node.ParentKind!,node.ParentId.Value,ct) + " / " + displayName : displayName;
         return node with { Path = path,Fingerprint = fingerprint,CanDelete = blockers.Count == 0,Blockers = blockers,
-            TopicOutcomeCount = entity is StudyCatalogTopic ? await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == node.Id,ct) : 0 };
+            TopicOutcomeCount = entity is StudyCatalogTopic ? await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == node.Id && !x.IsRejected,ct) : 0,
+            OutcomeCount = entity is StudyCatalogTopic ? await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == node.Id && !x.IsRejected,ct) : node.OutcomeCount,
+            PendingLinkCount = entity switch
+            {
+                StudyCatalogTopic => await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == node.Id && !x.IsRejected && !x.IsApproved,ct),
+                StudyCatalogOutcome => await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.OutcomeId == node.Id && !x.IsRejected && !x.IsApproved,ct),
+                _ => null
+            },
+            Version = entity is StudyCatalogTopic topicEntity ? TopicVersion(topicEntity) : null };
     }
 
     private async Task<string> Path(string kind,Guid id,CancellationToken ct)
@@ -432,7 +513,8 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         var entity = await Load(kind,id,ct);
         return entity switch
         {
-            StudyCatalogExam e => e.Name + " · " + e.Code,
+            // KM7: no "YDS · YDS" when the exam's name is its code.
+            StudyCatalogExam e => string.Equals(e.Name.Trim(),e.Code,StringComparison.OrdinalIgnoreCase) ? e.Name : e.Name + " · " + e.Code,
             OfficialCurriculumEdition p => p.SubjectName + " · " + p.Code,
             OfficialCurriculumTopic t => await Path("programs",t.EditionId,ct) + " / " + t.Name,
             StudyCatalogLesson l => LessonLabel(l),
@@ -449,7 +531,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         {
             CatalogKind.Lessons => await db.StudyCatalogUnits.CountAsync(x => x.LessonId == id,ct) + await db.StudentCoursePreferences.CountAsync(x => x.LessonId == id,ct),
             CatalogKind.Units => await db.StudyCatalogTopics.CountAsync(x => x.UnitId == id,ct),
-            _ => await db.StudyCatalogTopics.CountAsync(x => x.ParentId == id,ct) + await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == id,ct) + await db.StudentTopicStates.CountAsync(x => x.TopicId == id,ct)
+            _ => await db.StudyCatalogTopics.CountAsync(x => x.ParentId == id,ct) + await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == id && !x.IsRejected,ct) + await db.StudentTopicStates.CountAsync(x => x.TopicId == id,ct)
         };
         return new(id,"","",catalog,kind == CatalogKind.Topics ? await db.StudyPlanTasks.CountAsync(x => x.TopicId == id,ct) : 0,0,0);
     }
@@ -500,6 +582,12 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         foreach (var child in descendants.Where(x => x.ParentId == old.Id)) await CopyTopic(child,lesson,unit,copy.Id,[],ct);
         return copy;
     }
+    /// <summary>KM7: a topic is "used" when plans, student topic states or published duration shares point to it.</summary>
+    private async Task<bool> UsedAsync(Guid[] topics,CancellationToken ct)
+        => await db.StudyPlanTasks.AnyAsync(x => x.TopicId != null && Enumerable.Contains(topics,x.TopicId.Value),ct)
+            || await db.StudentTopicStates.AnyAsync(x => Enumerable.Contains(topics,x.TopicId),ct)
+            || await (from share in db.Set<StudyCatalogTopicOutcomeShare>() join estimate in db.Set<OutcomeDurationEstimate>() on share.EstimateId equals estimate.Id
+                      where Enumerable.Contains(topics,share.TopicId) && estimate.IsPublished select share).AnyAsync(ct);
     private async Task Snapshot(StudyCatalogOutcome outcome,CancellationToken ct)
     { foreach (var link in await db.Set<StudyPlanTaskOutcome>().Where(x => x.OutcomeId == outcome.Id).ToArrayAsync(ct)) link.CaptureText(outcome.Code,outcome.Name); }
     private async Task UniqueOutcome(Guid edition,string? code,Guid? id,CancellationToken ct)

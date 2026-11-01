@@ -54,9 +54,32 @@ public sealed class CoachingScoreModelsAdminController(CoachingScoreEstimateServ
     [RequestSizeLimit(1_048_576), EnableRateLimiting("study-planning-write")]
     public async Task<IActionResult> Apply([FromBody] ScoreModelImportRequest request, CancellationToken ct)
     {
+        // KM7: every write takes a 5–500 character reason and writes an audit row.
+        if (string.IsNullOrWhiteSpace(request.Reason) || request.Reason.Trim().Length is < 5 or > 500)
+            return BadRequest(new { message = "5–500 karakterlik işlem gerekçesi girin." });
         try { return Ok(new { applied = await models.ApplyAsync(UserId, request, ct) }); }
         catch (BusinessRuleException error) when (error.Code == "ScoreModel.Changed")
         { return Conflict(new { code = error.Code, message = error.Message }); }
+    }
+
+    /// <summary>KM7: uploads, restores and deletes, newest first.</summary>
+    [HttpGet("history")]
+    public async Task<IActionResult> History([FromQuery] int? year, CancellationToken ct) => Ok(await models.HistoryAsync(year, ct));
+
+    [HttpPost("history/{id:guid}/restore"), HasPermission(PlatformPermissions.Coaching.ContentManage)]
+    [RequestSizeLimit(4096), EnableRateLimiting("study-planning-write")]
+    public async Task<IActionResult> Restore(Guid id, [FromBody] ScoreModelReasonRequest request, CancellationToken ct)
+    {
+        try { return Ok(await models.RestoreAsync(UserId, id, request.Reason, ct)); }
+        catch (KeyNotFoundException error) { return NotFound(new { message = error.Message }); }
+    }
+
+    [HttpDelete("{year:int}/{scoreType}"), HasPermission(PlatformPermissions.Coaching.ContentManage)]
+    [RequestSizeLimit(4096), EnableRateLimiting("study-planning-write")]
+    public async Task<IActionResult> Delete(int year, string scoreType, [FromBody] ScoreModelReasonRequest request, CancellationToken ct)
+    {
+        try { await models.DeleteAsync(UserId, year, scoreType, request.Reason, ct); return Ok(new { deleted = true }); }
+        catch (KeyNotFoundException error) { return NotFound(new { message = error.Message }); }
     }
 
     private Guid UserId => actor.UserId ?? throw new BusinessRuleException("Authorization.Forbidden", "Oturum açın.");

@@ -267,8 +267,12 @@ public sealed class CurriculumManagementTests
                 // Catalog rows go through the model, so a later catalog column (O7 YieldWeight) exists only while they are written.
                 var addedYield = !await Db.Database.SqlQueryRaw<bool>("SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='coaching' AND table_name='study_catalog_topics' AND column_name='YieldWeight') AS \"Value\"").SingleAsync();
                 if (addedYield) await Db.Database.ExecuteSqlRawAsync("ALTER TABLE coaching.study_catalog_topics ADD COLUMN \"YieldWeight\" integer NOT NULL DEFAULT 3");
+                // KM7: the same for the rejected state of topic–outcome links.
+                var addedRejected = !await Db.Database.SqlQueryRaw<bool>("SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='coaching' AND table_name='study_catalog_topic_outcomes' AND column_name='IsRejected') AS \"Value\"").SingleAsync();
+                if (addedRejected) await Db.Database.ExecuteSqlRawAsync("ALTER TABLE coaching.study_catalog_topic_outcomes ADD COLUMN \"IsRejected\" boolean NOT NULL DEFAULT false");
                 await Db.SaveChangesAsync();
                 if (addedYield) await Db.Database.ExecuteSqlRawAsync("ALTER TABLE coaching.study_catalog_topics DROP COLUMN \"YieldWeight\"");
+                if (addedRejected) await Db.Database.ExecuteSqlRawAsync("ALTER TABLE coaching.study_catalog_topic_outcomes DROP COLUMN \"IsRejected\"");
                 await Db.Database.ExecuteSqlInterpolatedAsync($"""
                     INSERT INTO coaching.study_plan_revisions ("Id","StudentId","PlanId","RevisionNumber","Title","Status","IsActive","Version","CreatedAt")
                     VALUES ({plan.Id},{plan.StudentId},{plan.PlanId},1,{plan.Title},1,true,0,{plan.CreatedAt})

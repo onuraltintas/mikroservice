@@ -2134,6 +2134,79 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingScoreModelVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("BaseScore")
+                        .HasPrecision(8, 3)
+                        .HasColumnType("numeric(8,3)");
+
+                    b.Property<string>("CoefficientsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DiplomaWeight")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)");
+
+                    b.Property<string>("FileSha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("RankRows")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RanksJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("RestoredFromId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScoreType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("UploadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadId");
+
+                    b.HasIndex("Year", "ScoreType", "CreatedAt");
+
+                    b.ToTable("score_model_versions", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_score_model_version_action", "\"Action\" IN ('Upload', 'Restore', 'Delete')");
+
+                            t.HasCheckConstraint("ck_score_model_version_type", "\"ScoreType\" IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL')");
+
+                            t.HasCheckConstraint("ck_score_model_version_year", "\"Year\" BETWEEN 2018 AND 2100");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSeatRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3794,6 +3867,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<bool>("IsApproved")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsRejected")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("ReviewedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -3804,7 +3880,10 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasIndex("OutcomeId");
 
-                    b.ToTable("study_catalog_topic_outcomes", "coaching");
+                    b.ToTable("study_catalog_topic_outcomes", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_topic_outcome_review_state", "NOT (\"IsApproved\" AND \"IsRejected\")");
+                        });
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopicOutcomeShare", b =>

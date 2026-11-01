@@ -54,6 +54,8 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
                 throw new BusinessRuleException("Catalog.Stale", "Kayıt değişmiş. Güncel kaydı inceleyip yeniden onaylayın.");
             if (!usage.CanDelete)
                 throw new BusinessRuleException("Catalog.InUse", "Kayıt kullanımda; geçmişi korumak için kalıcı silinemez. Pasife alabilirsiniz.");
+            if (kind == CatalogKind.Topics)
+                db.RemoveRange(await db.Set<Coaching.Domain.Entities.StudyCatalogTopicOutcome>().Where(x => x.TopicId == id && x.IsRejected).ToArrayAsync(cancellationToken));
             db.Remove(entity);
             var snapshot = JsonSerializer.SerializeToElement(entity, entity.GetType());
             audit = new(auditId, DateTimeOffset.UtcNow, "Coaching",
@@ -108,7 +110,8 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
             CatalogKind.Units => await db.StudyCatalogTopics.CountAsync(x => x.UnitId == id, cancellationToken),
             CatalogKind.Topics => await db.StudyCatalogTopics.CountAsync(x => x.ParentId == id, cancellationToken)
                 + await db.StudentTopicStates.CountAsync(x => x.TopicId == id, cancellationToken)
-                + await db.Set<Coaching.Domain.Entities.StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == id, cancellationToken),
+                // KM7: rejected links are kept for audit only and do not block deleting the topic.
+                + await db.Set<Coaching.Domain.Entities.StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == id && !x.IsRejected, cancellationToken),
             _ => 0
         };
         var plans = kind == CatalogKind.Topics
