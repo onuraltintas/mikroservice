@@ -16,12 +16,7 @@ public class ParentProfile : AggregateRoot
     public string? PhoneNumber { get; private set; }
     public ParentRelationship? Relationship { get; private set; }
 
-    public string NotificationPreferences { get; private set; } = @"{
-        ""dailyReport"": false,
-        ""weeklyProgress"": true,
-        ""examResults"": true,
-        ""lowActivityAlert"": true
-    }"; // JSON
+    // V6a (01.11.2026): the weekly-summary switch is the notification-service category ParentSummary, not a profile field.
 
     public bool IsActive { get; private set; } = true;
 
@@ -56,12 +51,6 @@ public class ParentProfile : AggregateRoot
         if (lastName != null) LastName = lastName;
         if (phoneNumber != null) PhoneNumber = phoneNumber;
         if (relationship.HasValue) Relationship = relationship;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void UpdateNotificationPreferences(string preferencesJson)
-    {
-        NotificationPreferences = preferencesJson;
         UpdatedAt = DateTime.UtcNow;
     }
 

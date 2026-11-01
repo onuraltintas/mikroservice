@@ -15,9 +15,6 @@ public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock, 
     // No 0/O, 1/I/L: the code is read aloud or typed from a phone screen.
     private const string Alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
-    /// <summary>The parent's own weekly-summary switch (ParentProfile.NotificationPreferences is jsonb).</summary>
-    private const string WeeklySummaryOff = "{\"weeklyProgress\": false}";
-
     // Where each side acts on a link (V1 brief): the student's account settings on the product they use, the parent panel.
     private const string CoachingStudentPath = "/coaching-portal/account/settings/profile";
     private const string SpeedReadingStudentPath = "/veli-baglantisi";
@@ -125,15 +122,13 @@ public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock, 
     }
 
     /// <summary>
-    /// Verified Mother/Father/Guardian links whose child uses at least one product the child left visible, and whose parent
-    /// did not turn the weekly summary off. Filtered, counted and paged in the database: the preference is a jsonb
-    /// containment test, which matches the old rule exactly (only an explicit <c>"weeklyProgress": false</c> mutes).
+    /// Verified Mother/Father/Guardian links whose child uses at least one product the child left visible. Filtered,
+    /// counted and paged in the database. V6a (01.11.2026): whether the parent wants the e-mail is the notification-service
+    /// category ParentSummary, which the weekly-summary consumer applies; Identity no longer keeps its own switch.
     /// </summary>
     public async Task<ParentSummaryRecipientPage> GetWeeklySummaryRecipientsAsync(int pageNumber, int pageSize, CancellationToken ct)
     {
         if (pageNumber < 1 || pageSize is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(pageSize));
-        var muted = db.ParentProfiles.Where(profile => EF.Functions.JsonContains(profile.NotificationPreferences, WeeklySummaryOff))
-            .Select(profile => profile.UserId);
         var recipients = from link in db.ParentStudentRelationships.AsNoTracking()
                          join parent in db.Users.AsNoTracking() on link.ParentUserId equals parent.Id
                          join student in db.Users.AsNoTracking() on link.StudentUserId equals student.Id
@@ -141,7 +136,6 @@ public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock, 
                              && (link.Relationship == ParentRelationship.Mother || link.Relationship == ParentRelationship.Father
                                  || link.Relationship == ParentRelationship.Guardian)
                              && parent.IsActive && student.IsActive
-                             && !muted.Contains(link.ParentUserId)
                          let hasCoaching = db.UserProductAccesses.Any(a => a.UserId == link.StudentUserId && a.Product == PlatformProduct.Coaching && a.IsActive)
                          let hasSpeedReading = db.UserProductAccesses.Any(a => a.UserId == link.StudentUserId && a.Product == PlatformProduct.SpeedReading && a.IsActive)
                          where hasCoaching && link.CoachingVisible || hasSpeedReading && link.SpeedReadingVisible

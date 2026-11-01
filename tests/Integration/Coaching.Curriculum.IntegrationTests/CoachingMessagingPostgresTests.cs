@@ -11,6 +11,7 @@ using Coaching.Infrastructure.Profiles;
 using Coaching.Infrastructure.Repositories;
 using EduPlatform.Shared.Contracts.Coaching;
 using EduPlatform.Shared.Contracts.Events.Privacy;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -102,6 +103,50 @@ public sealed class CoachingMessagingPostgresTests
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }
 
+    // V6a (user decision 01.11.2026): messaging is not a Coaching progress read. A parent whose child hid Coaching progress
+    // (Identity's authorize-read says no) keeps the TeacherParent conversation while the representative link is valid; once
+    // the link is revoked the parent can neither start nor send.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task AParentKeepsMessagingTheTeacherWhileCoachingIsHiddenButNotAfterTheLinkIsRevoked()
+    {
+        await using var f = await CurriculumPostgresTests.Pg.Create();
+        var root = Path.Combine(Path.GetTempPath(), "coaching-messages-pg-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var institution = Guid.NewGuid();
+            var accounts = new Accounts(institution);
+            var teacher = accounts.Add("Teacher", "Can"); var student = accounts.Add("Student", "Ada"); var parent = accounts.Add("Parent", "Ayşe");
+            accounts.Representatives.Add((parent, student));
+            var links = new List<CoachingParentLink> { new(parent, "Ayşe Test", student, "Ada Test", "Mother") };
+            var store = new CoachingProfileStore(f.Db, accounts);
+            await store.ProvisionAsync(teacher, "Teacher", default); await store.ProvisionAsync(student, "Student", default, new DateOnly(2010, 5, 1));
+            f.Db.CoachingTeacherStudentAssignments.Add(CoachingTeacherStudentAssignment.Create(teacher, student, institution, null, teacher));
+            await f.Db.SaveChangesAsync();
+            CoachingMessagingService Service() => new(f.Db, accounts, new Parents(links), new CoachingProfileStore(f.Db, accounts),
+                new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })), new DevelopmentAttachmentScanner(), new Clock());
+
+            Assert.Null(await accounts.AuthorizeParentReadAsync(parent, student, default)); // Coaching hidden: authorize-read 403
+            Assert.Contains(await Service().ContactsAsync(parent, default), x => x.UserId == teacher && x.StudentId == student);
+            var conversation = await Service().StartAsync(parent, new(teacher, student), default);
+            Assert.Equal("TeacherParent", conversation.Kind);
+            await Service().SendAsync(parent, conversation.Id, new("Merhaba hocam", null), default);
+            f.Db.ChangeTracker.Clear();
+            Assert.Equal(["Merhaba hocam"], (await Service().GetAsync(parent, conversation.Id, null, default)).Messages.Select(x => x.Body));
+            Assert.True((await Service().ListAsync(parent, 1, 20, default)).Items.Single().CanSend);
+            Assert.Equal(1, accounts.ParentReadCalls); // only the check above: messaging never asks authorize-read
+
+            accounts.Representatives.Remove((parent, student)); links.Clear(); // the link is revoked
+            f.Db.ChangeTracker.Clear();
+            var closed = await Assert.ThrowsAsync<BusinessRuleException>(() => Service().SendAsync(parent, conversation.Id, new("Bir şey daha", null), default));
+            Assert.Equal("Messaging.Closed", closed.Code);
+            var forbidden = await Assert.ThrowsAsync<BusinessRuleException>(() => Service().StartAsync(parent, new(teacher, student), default));
+            Assert.Equal("Authorization.Forbidden", forbidden.Code);
+            Assert.False((await Service().ListAsync(parent, 1, 20, default)).Items.Single().CanSend);
+            Assert.DoesNotContain(await Service().ContactsAsync(parent, default), x => x.UserId == teacher);
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
     private sealed class Clock : TimeProvider
     {
         private DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -125,6 +170,10 @@ public sealed class CoachingMessagingPostgresTests
         public Task<bool> IsActiveInstitutionAsync(Guid id, CancellationToken ct) => Task.FromResult(id == institution);
         public Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeRepresentativeAsync(Guid viewer, Guid target, CancellationToken ct) =>
             Task.FromResult(Representatives.Contains((viewer, target)) ? new CoachingAgreementRepresentativeAuthorization(Guid.NewGuid(), "Mother") : null);
+        /// <summary>The child hid Coaching progress from the parent: Identity's authorize-read (product Coaching) always says no here.</summary>
+        public int ParentReadCalls { get; private set; }
+        public Task<CoachingParentReadAuthorization?> AuthorizeParentReadAsync(Guid parentUserId, Guid studentUserId, CancellationToken ct)
+        { ParentReadCalls++; return Task.FromResult<CoachingParentReadAuthorization?>(null); }
     }
 
     private sealed class Parents(IReadOnlyList<CoachingParentLink> links) : ICoachingParentDirectory
