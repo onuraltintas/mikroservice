@@ -64,6 +64,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   readonly parentOptions = signal<Node[]>([]); readonly parentLoading = signal(false); readonly parentTotal = signal(0);
   readonly curricula = signal<{id:string;name:string;versionLabel:string;isPublished:boolean}[]>([]);
   readonly pendingLinks = signal<number | null>(null);
+  readonly topicOutcomes = signal<Node[]>([]); readonly topicOutcomesLoading = signal(false);
   // KM7 bulk selection, inline edits and their results.
   readonly selectedIds = signal<Set<string>>(new Set()); readonly inlineEdits = signal<Record<string, InlineEdit>>({});
   readonly inlineCount = computed(() => Object.keys(this.inlineEdits()).length);
@@ -103,7 +104,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   branch() { return this.listing(); }
   isListTab() { return LIST_TABS.includes(this.tab); }
   isTopicTab() { return this.tab === 'topics' || this.tab === 'subtopics'; }
-  hasFilterBar() { return ['lessons','units','topics','subtopics','outcomes'].includes(this.tab); }
+  hasFilterBar() { return ['exams','lessons','units','topics','subtopics','outcomes'].includes(this.tab); }
   canBulk() { return ['exams','lessons','units','topics','subtopics','outcomes'].includes(this.tab); }
   empty(): Form { return { sessions:[],name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,yieldWeight:3,code:'',officialTopicId:null,sourcePage:null,notes:'',moveParentOutcomes:false,
     academicYearStart:new Date().getFullYear(),academicYearEnd:new Date().getFullYear(),sourceUrl:'',documentSha256:'',scopeEvidenceUrl:'',outcomeCount:1,lessonPeriods:null,curriculumVersionId:null }; }
@@ -124,12 +125,16 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     if (this.tab === 'exams') params=params.set('pageSize',200);
     params=this.filterParams(params);
     this.listRequest=this.http.get<{data:Page}>(`${this.base}/children`,{params}).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r => {
-      this.listing.update(previous => ({rows:[...(page > 1 ? previous.rows : []),...r.data.items],page,total:r.data.totalCount,loading:false}));
+      // The exam list is loaded whole (pageSize 200); its state filter also applies here in case the API ignores it.
+      const items=this.tab === 'exams' && this.filters.active ? r.data.items.filter(x => String(x.isActive) === this.filters.active) : r.data.items;
+      const total=this.tab === 'exams' && this.filters.active ? items.length : r.data.totalCount;
+      this.listing.update(previous => ({rows:[...(page > 1 ? previous.rows : []),...items],page,total,loading:false}));
     },error:() => this.listing.update(previous => ({...previous,loading:false,error:'Liste alınamadı. Yeniden deneyin.'}))});
   }
   /** KM7: exam, lesson and state filters for the lists that support them (topics, units, outcomes, lessons). */
   private filterParams(params: HttpParams) {
     if (!this.hasFilterBar()) return params;
+    if (this.tab === 'exams') return this.filters.active ? params.set('active',this.filters.active) : params;
     if (this.filters.examCode && this.tab !== 'lessons') params=params.set('examCode',this.filters.examCode);
     if (this.filters.lessonId && this.tab !== 'lessons') params=params.set('lessonId',this.filters.lessonId);
     if (this.filters.active) params=params.set('active',this.filters.active);
@@ -259,7 +264,12 @@ export class CoachingCurriculumManagerComponent implements OnInit {
         this.bulkSkipped.set(total.skipped); this.bulkReason=''; this.loadRoot(); this.refreshPending();
       },error:e => this.fail(e)});
   }
-  skippedName(s: Skipped) { return this.listing().rows.find(x => x.id === s.id)?.name ?? 'Seçilen kayıt'; }
+  skippedName(s: Skipped) {
+    const id=s.id ?? s.topicId; const row=this.listing().rows.find(x => x.id === id);
+    if (row) return row.name;
+    const m=this.selected()?.mappings?.find(x => x.topicId === s.topicId);
+    return m?.path ?? (s.topicId ? 'Bağlantı' : 'Seçilen kayıt');
+  }
   private merge(results: BulkResult[]): BulkResult { return {changed:results.reduce((s,x) => s+x.changed,0),skipped:results.flatMap(x => x.skipped ?? [])}; }
   // ---- inline minutes / weight (KM7) ----
   inlineValue(n: Node): InlineEdit { return this.inlineEdits()[n.id] ?? {estimatedMinutes:n.estimatedMinutes ?? null,yieldWeight:n.yieldWeight ?? 3}; }
@@ -297,6 +307,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   private apply(n: Node,preserveDuration = false) {
     const unsaved = preserveDuration && this.durationDirty() ? this.durationFields() : null;
     const sameOutcome = this.selected()?.id === n.id && n.kind === 'outcomes';
+    const sameTopic = this.selected()?.id === n.id && n.kind === 'topics';
     this.selected.set(n); this.kind = n.kind; this.creating.set(false); this.editing.set(true);
     this.form = { ...this.empty(),name:n.name,parentId:n.parentId,gradeNumber:n.gradeNumber ?? null,examCode:n.examCode ?? null,displayOrder:n.displayOrder ?? null,estimatedMinutes:n.estimatedMinutes ?? null,yieldWeight:n.yieldWeight ?? 3,
       sessions:(n.sessions ?? []).map(s => ({id:s.id,date:s.date,label:s.label,applicationStart:s.applicationStart ?? '',applicationEnd:s.applicationEnd ?? ''})),code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourceKind === 'ExamSkill' ? null : n.sourcePage ?? 1,notes:n.notes ?? '',
@@ -308,6 +319,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     this.confidence = estimate?.confidence ?? 'Low'; this.durationEvidence = ''; this.publishDuration = false;
     this.initialDuration = JSON.stringify(this.durationFields()); if (unsaved) Object.assign(this,unsaved);
     if (n.kind === 'outcomes') this.loadShareTopics(n,sameOutcome); else { this.shares=[]; this.shareTopics.set([]); }
+    if (!(n.kind === 'topics' && sameTopic)) this.topicOutcomes.set([]);
     if (n.kind === 'lessons') { this.loadExams(); this.loadCurricula(); }
     if (n.kind === 'programs') this.loadExams();
   }
@@ -422,6 +434,20 @@ export class CoachingCurriculumManagerComponent implements OnInit {
       switchMap(total => { this.bulkSkipped.set(total.skipped); return this.http.get<{data:Node}>(`${this.base}/topics/${n.id}`).pipe(map(r => ({...r,total}))); })),
       res => res.total.changed || res.total.skipped.length ? `${res.total.changed} bağlantı onaylandı.` : 'Bu konuya bağlı kazanım yok.',false,true);
   }
+  /** KM7: the outcomes linked to the open topic, loaded on demand. */
+  loadTopicOutcomes() {
+    const n=this.selected(); if (!n || n.kind !== 'topics') return;
+    this.topicOutcomesLoading.set(true);
+    const params=new HttpParams().set('kind','outcomes').set('parentId',n.id).set('page',1).set('pageSize',200);
+    this.http.get<{data:Page}>(`${this.base}/children`,{params}).pipe(takeUntilDestroyed(this.destroy),finalize(() => this.topicOutcomesLoading.set(false)))
+      .subscribe({next:r => { if (this.selected()?.id === n.id) this.topicOutcomes.set(r.data.items); },error:e => this.fail(e)});
+  }
+  async removeTopicLink(o: Node) {
+    const n=this.selected(); if (!n || n.kind !== 'topics' || !this.reasonReady()) return;
+    if (!await this.toaster.confirm(`“${o.code ? o.code + ' ' : ''}${o.name}” kazanımının bu konuyla bağlantısı kaldırılsın mı? Planlarda veya yayınlanmış süre paylarında kullanılan bağlantı kaldırılamaz.`,{title:'Bağlantıyı kaldır',confirmText:'Kaldır',cancelText:'Vazgeç'}) || this.destroy.destroyed) return;
+    this.write(this.api.deleteMapping({topicId:n.id,outcomeId:o.id},this.form.reason.trim()).pipe(switchMap(() => this.http.get<{data:Node}>(`${this.base}/topics/${n.id}`))),
+      () => { this.topicOutcomes.update(rows => rows.filter(x => x.id !== o.id)); return 'Bağlantı kaldırıldı.'; },false,true);
+  }
   // ---- duration estimate with topic shares (KM7) ----
   approvedTopicIds() { return (this.selected()?.mappings ?? []).filter(m => this.mappingStatus(m) === 'approved').map(m => m.topicId); }
   needsShares() { return this.kind === 'outcomes' && this.approvedTopicIds().length >= 2; }
@@ -436,7 +462,10 @@ export class CoachingCurriculumManagerComponent implements OnInit {
       if (!keep) this.splitShares();
     };
     build(n.mappings.filter(m => approved.includes(m.topicId)).map(m => ({topicId:m.topicId,topicPath:m.path})));
-    this.api.outcomeTopics(n.id).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:topics => { if (this.selected()?.id === n.id) build(topics.length ? topics : this.shareTopics()); },error:() => undefined});
+    this.api.outcomeTopics(n.id).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:topics => {
+      const usable=topics.filter(t => !t.status || t.status === 'approved');
+      if (this.selected()?.id === n.id) build(usable.length ? usable : this.shareTopics());
+    },error:() => undefined});
   }
   /** Splits each duration component evenly; earlier topics get the remainder minute. */
   splitShares() {

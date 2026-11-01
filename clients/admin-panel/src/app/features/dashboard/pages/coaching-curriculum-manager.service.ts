@@ -8,7 +8,8 @@ export type BulkKind = 'lessons' | 'units' | 'topics' | 'outcomes' | 'exams';
 export type MappingStatus = 'pending' | 'approved' | 'rejected' | 'all';
 export type MappingDecision = 'approve' | 'unapprove' | 'reject';
 export type QualityIssue = 'noMinutes' | 'noOutcomes' | 'noYksScope' | 'inactiveParent' | 'pendingLinks';
-export interface Skipped { id: string; kind?: string; reason: string }
+/** Bulk status skips carry {id, kind}; link review skips carry {topicId, outcomeId}. */
+export interface Skipped { id?: string; kind?: string; topicId?: string; outcomeId?: string; reason: string }
 export interface BulkResult { changed: number; skipped: Skipped[] }
 export interface BulkStatusRequest { kind: BulkKind; ids: string[]; active: boolean; includeDescendants: boolean; reason: string }
 export interface MappingRow { topicId: string; topicPath: string; lessonName: string; examCode: string; outcomeId: string; outcomeCode: string; outcomeText: string;
@@ -21,7 +22,7 @@ export interface QualityReport { counts: QualityCounts; byLesson: { lessonId: st
 export interface QualityQuery { examCode?: string; lessonId?: string; issue?: QualityIssue | ''; page?: number; pageSize?: number }
 export interface TopicPatch { id: string; version: string | number; estimatedMinutes?: number | null; yieldWeight?: number | null }
 export interface TopicPatchResult { changed: number; conflicts: { id: string }[] }
-export interface OutcomeTopic { topicId: string; topicPath: string }
+export interface OutcomeTopic { topicId: string; topicPath: string; status?: string; isActive?: boolean }
 
 /** Largest batch the bulk endpoints accept; bigger selections are sent in several requests. */
 export const BULK_LIMIT = 500;

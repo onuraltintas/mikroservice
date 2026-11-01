@@ -25,6 +25,7 @@
   </section>
   @if (hasFilterBar() || tab === 'quality') {
     <section class="filter-bar" aria-label="Filtreler">
+      @if (tab !== 'exams') {
       <label for="curriculum-exam-filter">Sınav<select id="curriculum-exam-filter" [(ngModel)]="filters.examCode" (ngModelChange)="examFilterChanged()" [disabled]="busy()">
         <option value="">Tüm sınavlar</option>
         @for (group of examGroups(); track group.label) {
@@ -36,12 +37,15 @@
         <option value="">{{ filters.examCode ? 'Tüm dersler' : 'Önce sınav seçin' }}</option>
         @for (l of lessonOptions(); track l.id) { <option [value]="l.id">{{ l.name }}{{ l.gradeNumber ? ' · ' + l.gradeNumber + '. sınıf' : '' }}</option> }
       </select></label>
+      }
       @if (tab !== 'quality') {
         <label for="curriculum-active-filter">Durum<select id="curriculum-active-filter" [(ngModel)]="filters.active" (ngModelChange)="applyFilters()" [disabled]="busy()"><option value="">Aktif ve pasif</option><option value="true">Yalnız aktif</option><option value="false">Yalnız pasif</option></select></label>
       }
+      @if (tab !== 'exams') {
       <label for="curriculum-issue-filter">Eksikleri göster<select id="curriculum-issue-filter" [(ngModel)]="filters.issue" (ngModelChange)="issueFilterChanged()" [disabled]="busy()">
         <option value="">{{ tab === 'quality' ? 'Tüm eksikler' : 'Seçin' }}</option>@for (i of qualityIssues; track i) { <option [value]="i">{{ issueLabels[i] }}</option> }
       </select></label>
+      }
     </section>
   }
   @if (tab === 'imports') {
@@ -93,7 +97,7 @@
           </div>
         </section>
       }
-      @if (bulkMessage()) { <div class="notice success" role="status"><p>{{ bulkMessage() }}</p>@if (bulkSkipped().length) { <ul class="skipped">@for (s of bulkSkipped(); track s.id) { <li><strong>{{ skippedName(s) }}:</strong> {{ s.reason }}</li> }</ul> }</div> }
+      @if (bulkMessage()) { <div class="notice success" role="status"><p>{{ bulkMessage() }}</p>@if (bulkSkipped().length) { <ul class="skipped">@for (s of bulkSkipped(); track $index) { <li><strong>{{ skippedName(s) }}:</strong> {{ s.reason }}</li> }</ul> }</div> }
       @if (inlineCount()) {
         <section class="bulk-bar inline-bar" aria-label="Satır içi değişiklikler">
           <p><strong>{{ inlineCount() }} konuda kaydedilmemiş süre/sıklık değişikliği</strong></p>
@@ -177,7 +181,12 @@
           @if (kind !== 'programs' && kind !== 'programTopics') { <section class="section-block status-actions"><h3>Kullanım durumu</h3><label class="checkbox"><input type="checkbox" [(ngModel)]="statusConfirmed">{{ n.isActive ? 'Pasife almayı' : 'Etkinleştirmeyi' }} onaylıyorum.</label><button type="button" (click)="setActive()" [disabled]="busy() || !statusConfirmed || form.reason.trim().length < 5 || dirtyFields() || durationDirty()">{{ n.isActive ? 'Pasife al' : 'Etkinleştir' }}</button><small>Yukarıdaki işlem gerekçesini doldurun. Alt kayıtlarla birlikte değiştirmek için listede seçip toplu işlemi kullanın.</small></section> }
           @if (kind === 'topics') {
             <section class="section-block"><h3>Kazanım bağlantıları</h3><p>{{ n.topicOutcomeCount || 0 }} kazanım bu konuya bağlı. Bekleyen bağlantıların tümünü yukarıdaki gerekçeyle onaylayabilirsiniz; tek tek incelemek için <a routerLink="/dashboard/coaching/outcome-approvals">onay kuyruğunu</a> kullanın.</p>
-              <button type="button" (click)="approveTopicLinks()" [disabled]="busy() || form.reason.trim().length < 5">Bağlantıları onayla</button></section>
+              <button type="button" (click)="approveTopicLinks()" [disabled]="busy() || form.reason.trim().length < 5">Bağlantıları onayla</button>
+              <details class="topic-outcomes" (toggle)="$any($event.target).open && !topicOutcomes().length && loadTopicOutcomes()"><summary>Bağlı kazanımları göster</summary>
+                @if (topicOutcomesLoading()) { <p role="status">Kazanımlar yükleniyor…</p> }
+                <ul>@for (o of topicOutcomes(); track o.id) { <li><button type="button" class="link-button" (click)="select(o)" [disabled]="busy()">{{ o.code }} · {{ o.name }}</button><button type="button" class="danger-button" (click)="removeTopicLink(o)" [disabled]="busy() || form.reason.trim().length < 5" [attr.aria-label]="o.name + ' bağlantısını kaldır'">Bağlantıyı kaldır</button></li> }
+                  @empty { @if (!topicOutcomesLoading()) { <li class="empty">Bağlı kazanım yok.</li> } }</ul>
+              </details></section>
             <section class="section-block"><h3>YKS kapsamı</h3><app-yks-scope-editor [topicId]="n.id" (saved)="embeddedSaved('YKS kapsamı kaydedildi.')" /></section>
           }
           @if (kind === 'outcomes') {

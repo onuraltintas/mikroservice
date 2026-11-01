@@ -42,6 +42,9 @@ app-coaching-curriculum-manager .curriculum-workspace {
   .quality-table th small { display: block; }
   .quality-items { display: grid; gap: .35rem; margin: .5rem 0; padding: 0; list-style: none; }
   .quality-items button { width: 100%; display: grid; gap: .15rem; text-align: left; font-weight: 500; }
+  .topic-outcomes ul { display: grid; gap: .35rem; padding: 0; margin: .5rem 0; list-style: none; }
+  .topic-outcomes li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem; border-bottom: 1px solid var(--line); padding: .3rem 0; }
+  .topic-outcomes li .link-button { text-align: left; overflow-wrap: anywhere; min-width: 0; flex: 1 1 14rem; }
   .mapping-actions { display: flex; flex-wrap: wrap; gap: .35rem; }
   .shares { display: grid; gap: .6rem; border: 1px solid var(--line); border-radius: .5rem; padding: .7rem; }
   .shares legend { font-weight: 700; font-size: .88rem; padding: 0 .3rem; }
