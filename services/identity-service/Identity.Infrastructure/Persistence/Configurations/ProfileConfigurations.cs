@@ -50,14 +50,7 @@ public class StudentProfileConfiguration : IEntityTypeConfiguration<StudentProfi
             .HasDefaultValueSql("NOW()");
 
         builder.HasIndex(s => s.InstitutionId);
-        builder.HasIndex(s => s.ParentId);
         builder.HasIndex(s => s.GradeLevel);
-
-        // Parent relationship
-        builder.HasOne(s => s.Parent)
-            .WithMany()
-            .HasForeignKey(s => s.ParentId)
-            .OnDelete(DeleteBehavior.SetNull);
 
         // Teacher assignments
         builder.HasMany(s => s.TeacherAssignments)
@@ -141,9 +134,6 @@ public class ParentProfileConfiguration : IEntityTypeConfiguration<ParentProfile
         builder.Property(p => p.Relationship)
             .HasConversion<string>()
             .HasMaxLength(20);
-
-        builder.Property(p => p.NotificationPreferences)
-            .HasColumnType("jsonb");
 
         builder.Property(p => p.CreatedAt)
             .HasDefaultValueSql("NOW()");

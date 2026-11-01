@@ -90,7 +90,7 @@ public sealed class CoachingExistingAccountRegistrationTests
     public async Task ExistingProfileIsPreserved()
     {
         var fixture = new Fixture();
-        fixture.ExistingProfile = StudentProfile.Create(fixture.User.Id, "Existing", "Student", null, null);
+        fixture.ExistingProfile = StudentProfile.Create(fixture.User.Id, "Existing", "Student", null);
         Assert.True((await fixture.Register()).IsSuccess);
         Assert.Equal(0, fixture.ProfilesAdded);
         Assert.Equal(1, fixture.Saves);

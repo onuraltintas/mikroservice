@@ -144,20 +144,20 @@ public sealed class ParentLinkProductsPostgresTests : IAsyncLifetime
         var hidden = await AddUserAsync("hidden@example.test", "Gizli", _studentRole, PlatformProduct.Coaching);
         var noProduct = await AddUserAsync("none@example.test", "Hiç", _studentRole);
         var parent = await AddUserAsync("veli@example.test", "Ayşe", _parentRole);
-        var muted = await AddUserAsync("sessiz@example.test", "Can", _parentRole);
+        // V6a (01.11.2026): Identity keeps no weekly-summary switch of its own; the ParentSummary category in
+        // notification-service decides whether the e-mail goes out, so every eligible parent is a recipient here.
+        var father = await AddUserAsync("baba@example.test", "Can", _parentRole);
         await using (var context = _database.CreateContext())
         {
             context.ParentProfiles.Add(ParentProfile.Create(parent.Id, "Ayşe", "Veli", ParentRelationship.Mother));
-            var mutedProfile = ParentProfile.Create(muted.Id, "Can", "Veli", ParentRelationship.Father);
-            mutedProfile.UpdateNotificationPreferences("{\"dailyReport\": true, \"weeklyProgress\": false}");
-            context.ParentProfiles.Add(mutedProfile);
+            context.ParentProfiles.Add(ParentProfile.Create(father.Id, "Can", "Veli", ParentRelationship.Father));
             await context.SaveChangesAsync();
         }
         var bothLink = await LinkAsync(parent, both, ParentRelationship.Mother, verify: true);
         await LinkAsync(parent, coachingOnly, ParentRelationship.Mother, verify: true);
         var hiddenLink = await LinkAsync(parent, hidden, ParentRelationship.Mother, verify: true);
         await LinkAsync(parent, noProduct, ParentRelationship.Mother, verify: true);
-        await LinkAsync(muted, both, ParentRelationship.Father, verify: true);
+        await LinkAsync(father, both, ParentRelationship.Father, verify: true);
         await using (var context = _database.CreateContext())
         {
             (await Service(context).SetProductVisibilityAsync(hidden.Id, hiddenLink, false, true, default)).IsSuccess.Should().BeTrue();
@@ -167,17 +167,19 @@ public sealed class ParentLinkProductsPostgresTests : IAsyncLifetime
         await using var read = _database.CreateContext();
         var service = Service(read);
         var all = await service.GetWeeklySummaryRecipientsAsync(1, 50, default);
-        all.TotalCount.Should().Be(2, "no product left, a hidden-only child and a muted parent are skipped");
-        all.Items.Select(x => (x.StudentUserId, x.CoachingVisible, x.SpeedReadingVisible, x.StudentHasCoaching, x.StudentHasSpeedReading))
-            .Should().BeEquivalentTo([(both.Id, true, false, true, true), (coachingOnly.Id, true, true, true, false)]);
-        all.Items.Should().OnlyContain(x => x.ParentUserId == parent.Id && x.ParentEmail == "veli@example.test" && x.ParentName == "Ayşe Veli");
+        all.TotalCount.Should().Be(3, "no product left and a hidden-only child are skipped");
+        all.Items.Select(x => (x.ParentUserId, x.StudentUserId, x.CoachingVisible, x.SpeedReadingVisible, x.StudentHasCoaching, x.StudentHasSpeedReading))
+            .Should().BeEquivalentTo([(parent.Id, both.Id, true, false, true, true), (parent.Id, coachingOnly.Id, true, true, true, false),
+                (father.Id, both.Id, true, true, true, true)]);
+        all.Items.Where(x => x.ParentUserId == parent.Id).Should()
+            .OnlyContain(x => x.ParentEmail == "veli@example.test" && x.ParentName == "Ayşe Veli");
 
-        var first = await service.GetWeeklySummaryRecipientsAsync(1, 1, default);
-        var second = await service.GetWeeklySummaryRecipientsAsync(2, 1, default);
-        var third = await service.GetWeeklySummaryRecipientsAsync(3, 1, default);
-        (first.TotalCount, second.TotalCount, third.TotalCount).Should().Be((2, 2, 2));
-        first.Items.Concat(second.Items).Select(x => x.StudentUserId).Should().BeEquivalentTo([both.Id, coachingOnly.Id]);
-        third.Items.Should().BeEmpty();
+        var pages = new List<ParentSummaryRecipientPage>();
+        for (var number = 1; number <= 4; number++) pages.Add(await service.GetWeeklySummaryRecipientsAsync(number, 1, default));
+        pages.Select(x => x.TotalCount).Should().Equal(3, 3, 3, 3);
+        pages.Take(3).SelectMany(x => x.Items).Select(x => (x.ParentUserId, x.StudentUserId))
+            .Should().BeEquivalentTo([(parent.Id, both.Id), (parent.Id, coachingOnly.Id), (father.Id, both.Id)]);
+        pages[3].Items.Should().BeEmpty();
     }
 
     [Fact]

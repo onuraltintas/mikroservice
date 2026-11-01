@@ -100,15 +100,14 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
             inactiveChild.Id,
             "Inactive",
             "Child",
-            institution.Id,
-            parent.Id);
+            institution.Id);
         inactiveChildProfile.Deactivate();
 
         _dbContext!.Institutions.Add(institution);
         _dbContext.Users.AddRange(parent, child, unrelated, inactiveChild);
         _dbContext.ParentProfiles.Add(ParentProfile.Create(parent.Id, "Parent", "User"));
         _dbContext.StudentProfiles.AddRange(
-            StudentProfile.Create(child.Id, "Child", "One", institution.Id, parent.Id),
+            StudentProfile.Create(child.Id, "Child", "One", institution.Id),
             StudentProfile.Create(unrelated.Id, "Other", "Student", institution.Id),
             inactiveChildProfile);
         var requestedAt = DateTime.UtcNow.AddMinutes(-1);

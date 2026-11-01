@@ -14,8 +14,7 @@ public class StudentProfile : AggregateRoot
     public Guid? InstitutionId { get; private set; }
     public Institution? Institution { get; private set; }
 
-    public Guid? ParentId { get; private set; }
-    public User? Parent { get; private set; }
+    // V6a (01.11.2026): a student's parents are only the ParentStudentRelationship links; the legacy ParentId is gone.
 
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
@@ -46,16 +45,14 @@ public class StudentProfile : AggregateRoot
         Guid userId,
         string firstName,
         string lastName,
-        Guid? institutionId = null,
-        Guid? parentId = null)
+        Guid? institutionId = null)
     {
         return new StudentProfile
         {
             UserId = userId,
             FirstName = firstName ?? throw new ArgumentNullException(nameof(firstName)),
             LastName = lastName ?? throw new ArgumentNullException(nameof(lastName)),
-            InstitutionId = institutionId,
-            ParentId = parentId
+            InstitutionId = institutionId
         };
     }
 
@@ -127,12 +124,6 @@ public class StudentProfile : AggregateRoot
     public void RemoveFromInstitution()
     {
         InstitutionId = null;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void AssignParent(Guid parentId)
-    {
-        ParentId = parentId;
         UpdatedAt = DateTime.UtcNow;
     }
 

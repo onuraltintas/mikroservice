@@ -18,7 +18,7 @@ namespace Identity.Infrastructure.Repositories;
 
 /// <summary>
 /// V1 (audit finding): the parents among an institution's people are those with a verified Mother/Father/Guardian link
-/// to one of its active students. The legacy StudentProfile.ParentId is never used for this.
+/// to one of its active students (the legacy StudentProfile.ParentId was removed in V6a).
 /// </summary>
 internal static class InstitutionParentScope
 {
@@ -668,7 +668,6 @@ public class InstitutionRepository : IInstitutionRepository
     private sealed record StudentReadProfile(
         Guid Id,
         Guid UserId,
-        Guid? ParentId,
         Guid? InstitutionId,
         bool ShareProgressWithTeachers);
     private sealed record TeacherStudentReadAssignment(Guid TeacherId, Guid StudentId, Guid? InstitutionId);
@@ -1439,7 +1438,6 @@ public class InstitutionRepository : IInstitutionRepository
             .Select(profile => new StudentReadProfile(
                 profile.Id,
                 profile.UserId,
-                profile.ParentId,
                 profile.InstitutionId,
                 profile.ShareProgressWithTeachers))
             .ToListAsync(cancellationToken);

@@ -5,7 +5,7 @@ namespace Identity.Domain.Entities;
 
 /// <summary>
 /// Auditable link between one parent or legal representative and one student.
-/// The legacy StudentProfile.ParentId is not treated as verification evidence.
+/// The only parent–student link (V6a removed the legacy StudentProfile.ParentId).
 /// </summary>
 public sealed class ParentStudentRelationship : AggregateRoot
 {

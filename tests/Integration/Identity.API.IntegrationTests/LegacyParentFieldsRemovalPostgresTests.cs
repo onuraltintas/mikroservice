@@ -43,6 +43,7 @@ public sealed class LegacyParentFieldsRemovalPostgresTests : IAsyncLifetime
         var migrator = context.GetService<IMigrator>();
         (await context.Database.GetAppliedMigrationsAsync()).Should().Contain(Removal);
         (await ColumnsAsync(context)).Should().BeEmpty("both legacy columns are dropped");
+        context.Database.HasPendingModelChanges().Should().BeFalse("the snapshot and the Designer follow the model");
 
         await migrator.MigrateAsync(Previous);
         var parent = User.Create(Guid.NewGuid(), "veli@example.test", "Ayşe", "Veli");
@@ -69,9 +70,9 @@ public sealed class LegacyParentFieldsRemovalPostgresTests : IAsyncLifetime
         (await RowsAsync(context, "SELECT student_user_id::text || '|' || parent_id::text FROM identity.legacy_student_parent_ids_20261101"))
             .Should().Equal($"{child.Id}|{parent.Id}");
         (await RowsAsync(context, """
-            SELECT parent_user_id::text FROM identity.legacy_parent_notification_preferences_20261101
-            WHERE notification_preferences @> '{"weeklyProgress": false}'
-            """)).Should().Equal(mutedParent.Id.ToString(), "only a non-default preference is kept, and the muted one is");
+            SELECT parent_user_id::text || '|' || (notification_preferences @> '{"weeklyProgress": false}')::text
+            FROM identity.legacy_parent_notification_preferences_20261101
+            """)).Should().Equal([$"{mutedParent.Id}|true"], "only a non-default preference is kept, and the muted one is");
 
         await migrator.MigrateAsync(Previous);
         (await RowsAsync(context, """SELECT "UserId"::text || '|' || coalesce("ParentId"::text, '-') FROM identity.student_profiles ORDER BY "FirstName" """))
@@ -94,5 +95,6 @@ public sealed class LegacyParentFieldsRemovalPostgresTests : IAsyncLifetime
         """);
 
     private static async Task<List<string>> RowsAsync(IdentityDbContext context, string sql) =>
-        await context.Database.SqlQueryRaw<string>($"SELECT x AS \"Value\" FROM ({sql}) AS q(x)").ToListAsync();
+        await context.Database.SqlQueryRaw<string>(
+            $"SELECT x AS \"Value\" FROM ({sql.Replace("{", "{{").Replace("}", "}}")}) AS q(x)").ToListAsync();
 }
