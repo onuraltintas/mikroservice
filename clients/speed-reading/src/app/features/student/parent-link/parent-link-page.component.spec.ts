@@ -5,6 +5,8 @@ import { provideRouter } from '@angular/router';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { ParentLinkPageComponent } from './parent-link-page.component';
 import { ParentLink } from './parent-link.service';
+import { SHARE_NAVIGATOR, ShareNavigator } from './share-navigator';
+import { parentPanelLinks } from '../../../core/utils/parent-panel-links';
 import { routes } from '../../../app.routes';
 
 const LINKS = '/api/users/me/parent-links';
@@ -25,13 +27,17 @@ describe('ParentLinkPageComponent (Veli bağlantısı)', () => {
   let fixture: ComponentFixture<ParentLinkPageComponent>;
   let http: HttpTestingController;
   let toaster: jasmine.SpyObj<ToasterService>;
+  let nav: ShareNavigator;
 
   beforeEach(() => {
+    nav = { clipboard: { writeText: jasmine.createSpy('writeText').and.resolveTo() } };
     toaster = jasmine.createSpyObj<ToasterService>('ToasterService', ['confirm', 'success', 'error']);
     toaster.confirm.and.resolveTo(true);
     TestBed.configureTestingModule({
       imports: [ParentLinkPageComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: ToasterService, useValue: toaster }]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: ToasterService, useValue: toaster },
+        // A live view of `nav` so a test can swap the browser before the first render.
+        { provide: SHARE_NAVIGATOR, useValue: { get clipboard() { return nav.clipboard; }, get share() { return nav.share; } } }]
     });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ParentLinkPageComponent);
@@ -71,6 +77,87 @@ describe('ParentLinkPageComponent (Veli bağlantısı)', () => {
     expect(el('[data-testid="parent-code-expiry"]').textContent).toContain('2026');
     expect(el('[role="status"]').textContent).toContain('Kod oluşturuldu');
     expect(el<HTMLButtonElement>('[data-testid="create-code"] button').textContent).toContain('Yeni kod oluştur');
+  });
+
+  async function createCode(expiresInDays = 7): Promise<void> {
+    await load([]);
+    el<HTMLButtonElement>('[data-testid="create-code"] button').click();
+    const expiresAt = new Date(Date.now() + expiresInDays * 86_400_000 - 60_000).toISOString();
+    http.expectOne('/api/users/me/parent-link-codes').flush({ code: 'ABCD-EFGH', expiresAt });
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  const MESSAGE = () => `Veli panelinden beni ekle: ${parentPanelLinks().register} · Kod: ABCD-EFGH (7 gün geçerli)`;
+
+  it('keeps button icon ligatures out of the accessible names', async () => {
+    await createCode();
+    const icons = page().querySelectorAll('sp-button .material-icons');
+    expect(icons.length).toBeGreaterThan(0);
+    icons.forEach(icon => expect(icon.getAttribute('aria-hidden')).toBe('true'));
+  });
+
+  it('offers no share message before a code exists', async () => {
+    await load([]);
+    expect(page().querySelector('[data-testid="parent-share"]')).toBeNull();
+  });
+
+  it('shows a ready-to-share message with the parent-panel link, the code and its validity', async () => {
+    await createCode();
+    expect(el('[data-testid="parent-share-message"]').textContent?.trim()).toBe(MESSAGE());
+  });
+
+  it('copies the message with the Clipboard API and confirms it in the live region', async () => {
+    await createCode();
+    el<HTMLButtonElement>('[data-testid="copy-share"] button').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(nav.clipboard!.writeText).toHaveBeenCalledOnceWith(MESSAGE());
+    const live = el('[role="status"][aria-live="polite"]');
+    expect(live.textContent).toContain('Mesaj kopyalandı');
+  });
+
+  it('falls back to a hidden text area copy when the Clipboard API is missing', async () => {
+    nav = {};
+    const exec = spyOn(document, 'execCommand').and.returnValue(true);
+    await createCode();
+    el<HTMLButtonElement>('[data-testid="copy-share"] button').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(exec).toHaveBeenCalledWith('copy');
+    expect(document.querySelector('textarea[data-share-fallback]')).toBeNull();
+    expect(el('[role="status"]').textContent).toContain('Mesaj kopyalandı');
+  });
+
+  it('says how to copy by hand when copying is not possible', async () => {
+    nav = { clipboard: { writeText: jasmine.createSpy('writeText').and.rejectWith(new Error('denied')) } };
+    spyOn(document, 'execCommand').and.returnValue(false);
+    await createCode();
+    el<HTMLButtonElement>('[data-testid="copy-share"] button').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el('[role="alert"]').textContent).toContain('kendin kopyalayabilirsin');
+  });
+
+  it('hides the share button when the browser cannot share', async () => {
+    await createCode();
+    expect(page().querySelector('[data-testid="native-share"]')).toBeNull();
+  });
+
+  it('shares the message natively where supported and stays quiet when the student cancels', async () => {
+    const share = jasmine.createSpy('share').and.resolveTo();
+    nav = { share };
+    await createCode();
+    el<HTMLButtonElement>('[data-testid="native-share"] button').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(share).toHaveBeenCalledOnceWith({ title: 'Veli bağlantı kodu', text: MESSAGE() });
+
+    share.and.rejectWith(new DOMException('cancelled', 'AbortError'));
+    el<HTMLButtonElement>('[data-testid="native-share"] button').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(page().querySelector('[role="alert"]')).toBeNull();
   });
 
   it('approves a pending request after the student confirms and reloads the list', async () => {

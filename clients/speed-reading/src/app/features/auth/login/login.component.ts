@@ -23,6 +23,7 @@ import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role
 import { GoogleRegistrationConsentComponent } from '../google-registration-consent.component';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationShellComponent } from '../registration-shell.component';
+import { ParentPanelEntryComponent } from '../parent-panel-entry.component';
 
 @Component({
   selector: 'app-login',
@@ -40,7 +41,8 @@ import { RegistrationShellComponent } from '../registration-shell.component';
     MatProgressSpinnerModule,
     MatIconModule,
     MatCheckboxModule,
-    GoogleRegistrationConsentComponent
+    GoogleRegistrationConsentComponent,
+    ParentPanelEntryComponent
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
