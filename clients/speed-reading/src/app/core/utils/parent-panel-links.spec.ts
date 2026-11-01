@@ -1,17 +1,16 @@
-import { environment } from '../../../environments/environment';
 import { parentPanelLinks } from './parent-panel-links';
 
-describe('parentPanelLinks (V6b: veli paneline giden yol)', () => {
-  it('derives the parent login and register pages from the configured coaching-site login URL', () => {
+describe('parentPanelLinks', () => {
+  it('points parents at the coaching site, not the management panel', () => {
     const links = parentPanelLinks();
-    expect(links.login).toBe(environment.centralAdminLoginUrl);
-    expect(links.register).toBe(new URL('/auth/register/parent', environment.centralAdminLoginUrl).href);
+    expect(links.login).toBe('https://onuraltintas.net/auth/login');
+    expect(links.register).toBe('https://onuraltintas.net/auth/register/parent');
+    expect(links.login).not.toContain('eduivme.com');
   });
 
-  it('follows another configured site instead of a hard-coded domain', () => {
-    expect(parentPanelLinks('https://staging.example.test/auth/login')).toEqual({
-      login: 'https://staging.example.test/auth/login',
-      register: 'https://staging.example.test/auth/register/parent'
+  it('builds both links from the given origin', () => {
+    expect(parentPanelLinks('https://staging.example.test/')).toEqual({
+      login: 'https://staging.example.test/auth/login', register: 'https://staging.example.test/auth/register/parent'
     });
   });
 });
