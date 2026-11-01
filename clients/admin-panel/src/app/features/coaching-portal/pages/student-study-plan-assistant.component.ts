@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
-import { CoachingLearningSetupService, LearningCatalog, LearningContext, TopicDeclaration } from '../../../core/services/coaching-learning-setup.service';
+import { CoachingLearningSetupService, LearningCatalog, LearningContext, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
 import { clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
@@ -38,6 +38,9 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly lessons = signal<{ id: string; name: string; examCode: string | null }[]>([]);
   readonly slots = signal<WeeklySlot[]>([]);
   readonly learningContext = signal<LearningContext | null>(null);
+  /** KM8: the saved study purpose (School, General, Undecided) is retired; the student has to choose an exam first. */
+  readonly purposeRetired = signal(false);
+  readonly retiredPurposeNotice = RETIRED_PURPOSE_NOTICE;
   readonly catalog = signal<LearningCatalog | null>(null);
   readonly topicLessonId = signal('');
   readonly topicLoading = signal(false);
@@ -66,8 +69,9 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     (this.staffStudentId ? this.learningSetup.getForStudent(this.staffStudentId) : this.learningSetup.get()).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: view => {
         const context = view.context; this.learningContext.set(context);
+        this.purposeRetired.set(!!view.purposeRetired || isRetiredPurpose(context?.purpose));
         this.topicStatuses.set(new Map((context?.topicStates ?? []).map(x => [x.topicId, x.declaredStatus])));
-        if (context) this.loadLearningCatalog();
+        if (context && !this.purposeRetired()) this.loadLearningCatalog();
       },
       error: () => this.topicError.set('Konu durumları yüklenemedi. Çalışma düzeni kurulumunu kontrol et.')
     });

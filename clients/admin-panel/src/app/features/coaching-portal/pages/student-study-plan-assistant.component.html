@@ -44,7 +44,10 @@
     <aside class="panel review-panel" aria-label="Haftalık taslak ve sihirbaz önerisi">
       <section class="topic-statuses" aria-labelledby="topic-status-title">
         <h2 id="topic-status-title">Daha önce çalıştığın konular</h2>
-        @if (!learningContext()) {
+        @if (purposeRetired()) {
+          @if (staffStudentId) { <p class="notice" role="status" data-testid="retired-purpose">Öğrencinin çalışma amacı artık desteklenmiyor; öğrencinin hazırlandığı sınavı seçmesi gerekiyor.</p> }
+          @else { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }} <a routerLink="/coaching-portal/account/settings">Çalışma amacını seç →</a></p> }
+        } @else if (!learningContext()) {
           @if(staffStudentId){<p class="muted">Öğrencinin eğitim bağlamını tamamlaması gerekiyor.</p>}@else{<p class="muted">Derslerini seçmek için önce <a routerLink="/coaching-portal/account/settings">çalışma düzenini tamamla</a>.</p>}
         } @else {
           <p class="muted">“Çalıştım” seçtiklerin yeni yıllık plan önizlemesinden çıkar. “Tekrar etmek istiyorum” ve boş bıraktıkların plana dahil kalır. Bu işlem mevcut planları değiştirmez.</p>

@@ -5,6 +5,12 @@ import { environment } from '../../../environments/environment';
 import { StudyTopic, TargetPage } from './coaching-study-planning.service';
 
 export type LearningPurpose = 'School' | 'Lgs' | 'Yks' | 'General' | 'Undecided' | 'Ags' | 'Yds' | 'Yokdil';
+/** KM8 (01.11.2026): only exam purposes can be chosen; School, General and Undecided remain only on older saved setups. */
+export type ExamLearningPurpose = Exclude<LearningPurpose, 'School' | 'General' | 'Undecided'>;
+export const RETIRED_PURPOSE_NOTICE = 'Çalışma amacın artık desteklenmiyor; hazırlandığın sınavı seç.';
+export function isRetiredPurpose(purpose: LearningPurpose | null | undefined): boolean {
+  return purpose === 'School' || purpose === 'General' || purpose === 'Undecided';
+}
 export type TopicDeclaration = 'NotStudied' | 'Studied' | 'NeedsReview';
 export interface LearningCourse { lessonId: string; priority: number; selfReportedDifficulty: number | null }
 export interface LearningTopic { topicId: string; declaredStatus: TopicDeclaration }
@@ -17,7 +23,9 @@ export interface LearningContext {
 }
 /** KM1: an upcoming session of an active exam a purpose can aim for. */
 export interface LearningExamSession { id: string; examCode: string; examName: string; date: string; label: string; applicationStart: string | null; applicationEnd: string | null }
-export interface LearningSetupView { context: LearningContext | null; nextStep: string; isReady: boolean; missingFields: string[]; warnings: string[]; examSessions?: LearningExamSession[] }
+export interface LearningSetupView { context: LearningContext | null; nextStep: string; isReady: boolean; missingFields: string[]; warnings: string[]; examSessions?: LearningExamSession[];
+  /** KM8: the saved purpose can no longer be chosen; the student has to pick an exam first. */
+  purposeRetired?: boolean }
 export interface LearningSetupUpdate {
   expectedVersion: number | null; academicYearStart: number; purpose: LearningPurpose; targetExamYear: number | null;
   primaryScoreType: string | null; foreignLanguage: string | null; courses: LearningCourse[]; topics: LearningTopic[]; startingStatusReviewed: boolean;

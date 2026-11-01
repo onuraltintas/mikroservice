@@ -7,7 +7,7 @@
   <button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving()">Bilgileri yeniden yükle</button>
   @if (ready()) {
     <nav class="actions" aria-label="Kurulum adımları">@for (item of steps; track item.id) {
-      <button type="button" class="secondary" [attr.aria-current]="step() === item.id ? 'step' : null" [disabled]="saving() || loading() || catalogLoading() || (item.id !== 'Profile' && item.id !== 'Purpose' && !state()?.context)" (click)="goTo(item.id)">{{ item.label }}</button>
+      <button type="button" class="secondary" [attr.aria-current]="step() === item.id ? 'step' : null" [disabled]="saving() || loading() || catalogLoading() || (item.id !== 'Profile' && item.id !== 'Purpose' && (!state()?.context || purposeRetired()))" (click)="goTo(item.id)">{{ item.label }}</button>
     }</nav>
   }
   @if (step() === 'Profile') {
@@ -17,10 +17,12 @@
   }
   @if (ready() && step() === 'Purpose') {
     <form class="panel" #purposeForm="ngForm" (ngSubmit)="savePurpose()">
-      <h2>Çalışma amacım</h2><p>Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
+      <h2>Çalışma amacım</h2>
+      @if (purposeRetired()) { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }}</p> }
+      <p>Hazırlandığın sınavı seç. Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
       <fieldset [disabled]="saving()"><div class="fields">
         <label>Eğitim yılı başlangıcı<input type="number" name="academicYear" min="2000" max="2200" required [(ngModel)]="academicYearStart" (ngModelChange)="changed()"></label>
-        <label>Çalışma amacım<select name="purpose" [(ngModel)]="purpose" (ngModelChange)="changed()">@for (item of purposes; track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select></label>
+        <label>Çalışma amacım<select name="purpose" required [(ngModel)]="purpose" (ngModelChange)="changed()"><option value="" disabled>Hazırlandığın sınavı seç</option>@for (item of purposes; track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select></label>
         @if (examPurpose()) { <label>Hedef sınav yılı<input type="number" name="examYear" [min]="academicYearStart" [max]="academicYearStart + 5" required [(ngModel)]="targetExamYear" (ngModelChange)="changed()"></label> }
         @if (sessionChoices().length > 1) {
           <label class="wide">Hedef oturum<select name="examSession" aria-describedby="exam-session-help" [ngModel]="targetExamSessionId" (ngModelChange)="selectSession($event)">
@@ -74,7 +76,7 @@
         <p>Konu durumları senin beyanındır; sınav başarısı veya kazanım yeterliliği olarak değerlendirilmez. İstersen konu seçmeden devam edebilirsin.</p>
         <fieldset [disabled]="saving() || catalogLoading()">
           <p class="muted">Sınav → ders → ünite → konu. Bu adım yalnızca başlangıç durumunu kaydeder; plan görevlerini veya kazanım yeterliliğini değiştirmez.</p>
-          <label>Ders<select [(ngModel)]="selectedLesson" (ngModelChange)="expandedTopicId.set(null); loadCatalog()"><option value="">Ders seç</option>@for (lesson of catalog()?.lessons ?? []; track lesson.id) { @if (included(lesson.id)) { <option [value]="lesson.id">{{ lesson.name }} · {{ lesson.examCode || 'Genel' }} · {{ lesson.gradeNumber ? lesson.gradeNumber + '. sınıf' : 'sınıf belirtilmedi' }}</option> } }</select></label>
+          <label>Ders<select [(ngModel)]="selectedLesson" (ngModelChange)="expandedTopicId.set(null); loadCatalog()"><option value="">Ders seç</option>@for (lesson of catalog()?.lessons ?? []; track lesson.id) { @if (included(lesson.id)) { <option [value]="lesson.id">{{ lesson.name }}@if (lesson.examCode) { · {{ lesson.examCode }} }</option> } }</select></label>
           @for (group of topicGroups(); track group.name) {
             <section class="topic-unit" [attr.aria-label]="group.name + ' ünitesi'">
               <h3>{{ group.name }}</h3>

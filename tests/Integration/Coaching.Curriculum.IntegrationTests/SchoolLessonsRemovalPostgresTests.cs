@@ -102,7 +102,7 @@ public sealed class SchoolLessonsRemovalPostgresTests
         draft.Replace("Europe/Istanbul", [new(Guid.NewGuid(), list[3].Id, list[3].Name, null, DayOfWeek.Monday, 900, 60)]);
         pg.Db.AddRange(CoachingStudentProfile.Create(student), context, revision, topicTask, lessonTask, draft);
         await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
-        await Run(pg, $"""UPDATE coaching.study_plan_tasks SET "WeeklyLessonId" = '{list[4].Id}' WHERE "Id" = '{lessonTask.Id}'""");
+        await Run(pg, $"""UPDATE coaching.study_plan_tasks SET "WeeklyLessonId" = '{list[4].Id}', "LessonNameSnapshot" = 'Okul dersi', "PlannedStartMinute" = 900 WHERE "Id" = '{lessonTask.Id}'""");
         var before = await Catalog(pg);
 
         var check = await Rows(pg, await File.ReadAllTextAsync(Path.Combine(Pack, "check.sql")));
