@@ -32,6 +32,7 @@ async function fixtures(context) {
       return respond({ availabilityVersion: hours.version, timeZoneId: 'Europe/Istanbul', activeRevisionId: 'existing', activeRevisionVersion: 1, protectedTasks: [],
         schedule: { tasks: [{ topicId: 'topic-1', plannedDate: r.startDate, plannedMinutes: 30 }], unscheduledTopics: [], availableMinutes: 60, scheduledMinutes: 30, unscheduledMinutes: 0, unusedMinutes: 30 } });
     }
+    if (path.endsWith('/weekly-draft')) return respond({ draft: null, lessons: [lesson] });
     if (path.endsWith('/plans/existing')) return respond({ id: 'existing', version: 1, title: 'Mevcut koç planı', status: 'Active', tasks: [{ id: 'old-task', title: 'Önceki çalışma', plannedDate: '2026-10-19', plannedMinutes: 30, isPinned: false, isCompleted: true, actualMinutes: 25 }] });
     if (path.endsWith('/plans')) return respond({ items: [{ id: 'existing', version: 1, title: 'Mevcut koç planı', status: 'Active' }], totalCount: 1, pageNumber: 1, pageSize: 20 });
     if (path.includes('assignments')) return respond({ items: [], totalCount: 0, pageNumber: 1, pageSize: 5 });
@@ -63,6 +64,11 @@ test('student resumes setup after reload and previews a plan from selected cours
   await page.getByRole('region', { name: 'Sayılar ünitesi' }).getByRole('combobox', { name: 'Başlangıç durumu', exact: true }).selectOption({ label: 'Tekrar etmek istiyorum' });
   await page.getByRole('checkbox', { name: 'Başlangıç bilgilerimi gözden geçirdim.' }).check();
   await page.getByRole('button', { name: 'Kaydet ve önizlemeye geç', exact: true }).click();
+  // T3: the ready setup hands over to the plan wizard (Planım › Plan sihirbazı), where the topic preview now lives.
+  await expect(page.getByText('Eğitim bilgilerin hazır.', { exact: false })).toBeVisible();
+  await page.getByRole('link', { name: 'Plan sihirbazını aç', exact: true }).click();
+  await expect(page).toHaveURL(/\/coaching-portal\/plan\/wizard$/);
+  await page.getByRole('button', { name: 'Konulardan plan hazırla', exact: true }).click();
   await page.getByRole('combobox', { name: 'Seçtiğim ders', exact: true }).selectOption('lesson-1');
   await page.getByRole('button', { name: 'Konuları ara', exact: true }).click();
   await page.getByRole('button', { name: 'Konu ekle', exact: true }).click();
@@ -77,8 +83,12 @@ test('student resumes setup after reload and previews a plan from selected cours
 test('incomplete setup leaves the existing active plan accessible', async ({ page, context }) => {
   await fixtures(context);
   await page.goto('/coaching-portal/account/settings');
-  await page.getByRole('link', { name: 'Mevcut planlarım', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Çalışma planlarım', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /Mevcut koç planı/ }).click();
-  await expect(page.getByText(/Tamamlandı · 25 dk/)).toBeVisible();
+  // T5 hides the setup's own shortcut links inside Profil ve ayarlar; the main menu (desktop) or quick bar (mobile) leads to Planım.
+  await page.getByRole('link', { name: 'Planım', exact: true }).filter({ visible: true }).first().click();
+  // T4: Planım opens the active plan by itself; its tasks are rows that open a detail sheet.
+  await expect(page).toHaveURL(/\/coaching-portal\/plan(\?|$)/);
+  await expect(page.locator('.plan-head .plan-status')).toContainText('Mevcut koç planı');
+  await page.getByRole('tab', { name: 'Liste', exact: true }).click();
+  await page.getByRole('button', { name: 'Önceki çalışma, ayrıntıları aç', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Önceki çalışma' }).getByText(/Tamamlandı · 25 dk/)).toBeVisible();
 });

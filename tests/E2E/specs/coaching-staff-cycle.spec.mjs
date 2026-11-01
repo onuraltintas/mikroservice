@@ -96,7 +96,7 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   const studentContext = await browser.newContext();
   const studentPage = await studentContext.newPage();
   await studentPage.route('**/api/auth/refresh-token', route => route.fulfill({ json: { accessToken: planningToken(planningStudent), tokenType: 'Bearer', expiresInMinutes: 15 } }));
-  await studentPage.goto('http://127.0.0.1:4300/coaching-portal/study-plans');
+  await studentPage.goto('http://127.0.0.1:4300/coaching-portal/plan');
   await studentPage.getByRole('button', { name: new RegExp(title) }).click();
   await studentPage.getByLabel('Gerçek süre (dk)', { exact: true }).fill('40');
   await studentPage.getByLabel('Gerçek soru (isteğe bağlı)', { exact: true }).fill('24');

@@ -131,8 +131,8 @@ test('each tab can create a unit topic subtopic and sourced outcome',async({cont
   const unit=f.nodes.find(x=>x.name==='Yeni ünite');await tab(page,'Konular');await create(page,'Konu','Yeni konu',unit.id);await page.getByLabel('Konu çalışma süresi (dk)',{exact:true}).fill('45');await save(page);
   const topic=f.nodes.find(x=>x.name==='Yeni konu');await tab(page,'Alt konular');await create(page,'Alt konu','Yeni alt konu',topic.id);await save(page);
   const child=f.nodes.find(x=>x.name==='Yeni alt konu');await tab(page,'Kazanımlar');await page.getByRole('button',{name:'Kazanım ekle',exact:true}).click();await page.getByLabel('Bağlanacağı üst kayıt',{exact:true}).selectOption(child.id);
-  await page.getByLabel('Kazanım metni',{exact:true}).fill('Yeni kazanım açıklaması');await page.getByLabel('Kazanım kodu',{exact:true}).fill('M.8.1.1.9');await page.getByLabel('Kaynak program',{exact:true}).selectOption('edition');await page.getByLabel('Programdaki konu grubu',{exact:true}).selectOption('official');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Program dayanaklı kazanım ekle');await save(page);
-  expect(f.nodes.find(x=>x.name==='Yeni kazanım açıklaması').parentId).toBe(child.id);
+  await page.getByLabel('Kazanım metni',{exact:true}).fill('Yeni kazanım açıklaması');await page.getByLabel('Kazanım kodu',{exact:true}).fill('M.8.1.1.9');await page.getByLabel('Kaynak sayfa',{exact:true}).fill('74');await page.getByLabel('Kaynak program',{exact:true}).selectOption('edition');await page.getByLabel('Programdaki konu grubu',{exact:true}).selectOption('official');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Program dayanaklı kazanım ekle');await save(page);
+  expect(f.nodes.find(x=>x.name==='Yeni kazanım açıklaması').parentId).toBe(child.id);expect(f.nodes.find(x=>x.name==='Yeni kazanım açıklaması').sourcePage).toBe(74);
 });
 
 test('tab navigation and concurrency preserve unsaved fields until explicitly discarded',async({context,page})=>{
