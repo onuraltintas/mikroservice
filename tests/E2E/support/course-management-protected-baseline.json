@@ -834,7 +834,7 @@
     "services/coaching-service/Coaching.API/Controllers/CoachingAgreementsController.cs": "c181b497af353ac1389d3a2d1d96aac1dd6a62b44f62dd81c15ce70f274c80dd",
     "services/coaching-service/Coaching.API/Controllers/CoachingCatalogAdminController.cs": "393257fd7f8b5db49a0ff68e12baa743bfe51bd969287dfc533846e6d04b218c",
     "services/coaching-service/Coaching.API/Controllers/CoachingCatalogDeletionAdminController.cs": "ac67d4ebad7679b934f45bd7f81c9edd7314e01e455226e9977db25c6caaa1ce",
-    "services/coaching-service/Coaching.API/Controllers/CoachingCatalogImportAdminController.cs": "f5672d10bff461119c8bb1a1ebb41566193b8aec8c2d241585f7dc0638ee6111",
+    "services/coaching-service/Coaching.API/Controllers/CoachingCatalogImportAdminController.cs": "98215a2c2f867e3af21f7acbb5fb969ea5ff7b60989685d52909c5e2e180574d",
     "services/coaching-service/Coaching.API/Controllers/CoachingCatalogLookupsController.cs": "44011ddacfae8e4679162088ee0f47623b64be5a76fd162568919d58a719ce74",
     "services/coaching-service/Coaching.API/Controllers/CoachingCatalogManagementAdminController.cs": "055ad63870024fffe89553d62887b76e6d3adc06fc73af01fb59657a235c63b7",
     "services/coaching-service/Coaching.API/Controllers/CoachingCmsAdminController.cs": "ba859208291a411554b28f33cbe3411055ad13e3a8d98e077d708065e4253ab6",
@@ -1117,7 +1117,7 @@
     "services/coaching-service/Coaching.Infrastructure/Attachments/DevelopmentAttachmentScanner.cs": "0080c5d8d5ae60e36dbb2aa9f12c724298563c501c7216e0bbf039ceaf971d57",
     "services/coaching-service/Coaching.Infrastructure/Attachments/LocalAssignmentAttachmentStorage.cs": "109f0fee03b6f8ec43e6b37d973db92d24fa2ba5258348a249ffe3d27078fd82",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/CatalogOperatorOptions.cs": "3a2acc01df9154f8f5f712698c2a399ce05ab55b432386818ee816a81e6b6e88",
-    "services/coaching-service/Coaching.Infrastructure/Catalogs/CatalogPreflight.cs": "3ccb5234fc5e917cd4ab6c6ff122ef9d953e436831475a999ccac13494f97683",
+    "services/coaching-service/Coaching.Infrastructure/Catalogs/CatalogPreflight.cs": "8d1f95388c8cf81412207f58a1216e0680aee99bea8bd4790202ee3263d86bbb",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/CoachingAdminCatalogReader.cs": "457d680359ad242f9ee45cbc53d92dbfa53ac4a782edc19899e173dc78b4e530",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/CoachingCatalogDeletionService.cs": "ca2a3375326605798854335960b7b2d89c86efc8649275f229754ee904bb3acc",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/CoachingCatalogImporter.cs": "f6655a2749b22b7fa8c5a58a0d92d81febb97d8ae007d725c695358c664fc3e1",
@@ -2667,7 +2667,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "speed-reading parent links to the coaching site",
+    "purpose": "catalog import accepts the five preflight files",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
