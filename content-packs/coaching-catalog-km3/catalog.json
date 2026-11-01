@@ -1,0 +1,396 @@
+{
+  "source": "coaching-catalog-km3",
+  "curriculum": {
+    "code": "coaching-exam-prep-km3-2026",
+    "name": "AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu (taslak)",
+    "versionLabel": "2026.11-taslak",
+    "validFrom": 2026,
+    "validTo": 2027,
+    "source": "KM3 taslak paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; ekip onayı bekliyor.",
+    "sourceUrl": "https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf"
+  },
+  "documents": {
+    "AGS2026": {
+      "url": "https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf",
+      "title": "ÖSYM, Akademi Giriş Sınavı (AGS) Konu Dağılımı ve ÖABT Özel Eğitim Alanı Konu Dağılımı (08.01.2026)"
+    },
+    "AGS2025": {
+      "url": "https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf",
+      "title": "ÖSYM, MEB-AGS: AGS ve ÖABT Sınavına İlişkin Açıklama ve Konu Dağılımları (16.01.2025) — Özel Eğitim dışındaki 16 alanın en güncel resmî dağılımı"
+    },
+    "GUIDE2026": {
+      "url": "https://dokuman.osym.gov.tr/web/2026/7/basvuru-kilavuzu-p9djhk-30105733.pdf",
+      "title": "2026 MEB-AGS Kılavuzu (17 ÖABT alanı; test süreleri 90/70 dakika)"
+    },
+    "YDS2026_1": {
+      "url": "https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf",
+      "title": "2026-YDS/1 İngilizce temel soru kitapçığı (05.04.2026), yönerge aralıkları sayıldı"
+    },
+    "YDS2025_2": {
+      "url": "https://dokuman.osym.gov.tr/pdfdokuman/2025/YDS-2/TSK/ingilizce_yd2d16112025.pdf",
+      "title": "2025-YDS/2 İngilizce temel soru kitapçığı (16.11.2025), çapraz kontrol: aynı dağılım"
+    },
+    "YOKDIL2026_2_FEN": {
+      "url": "https://dokuman.osym.gov.tr/web/2026/8/ngilizce-fen-bilimleri-testi-ve-cevap-anahtari-10-4ehn8t-09134606.pdf",
+      "title": "2026-YÖKDİL/2 İngilizce Fen Bilimleri temel soru kitapçığı (09.08.2026), yönerge aralıkları sayıldı"
+    },
+    "YOKDIL2026_2_SAG": {
+      "url": "https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf",
+      "title": "2026-YÖKDİL/2 İngilizce Sağlık Bilimleri temel soru kitapçığı (09.08.2026), yönerge aralıkları sayıldı"
+    },
+    "YOKDIL2026_2_SOS": {
+      "url": "https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf",
+      "title": "2026-YÖKDİL/2 İngilizce Sosyal Bilimler temel soru kitapçığı (09.08.2026), yönerge aralıkları sayıldı"
+    }
+  },
+  "method": {
+    "budgetHours": {
+      "AGS": 150,
+      "OABT_90": 180,
+      "OABT_70": 150,
+      "YDS": 160,
+      "YOKDIL": 140
+    },
+    "budgetNote": "Koçluk tahmini: sıfırdan sınav düzeyine bir tam hazırlık turu. ÖABT'de 90 dakikalık (hesaplama ağırlıklı) testlere daha büyük bütçe verildi; süre grupları 2026 MEB-AGS Kılavuzu'ndan.",
+    "minMinutes": 30,
+    "maxMinutes": 1440,
+    "roundTo": 5,
+    "yieldBands": [[8, 5], [6, 4], [4, 3], [2, 2], [0, 1]],
+    "grammarYieldBonus": 1
+  },
+  "grammarAreas": [
+    { "name": "Zamanlar (Tenses)", "size": 1.25 },
+    { "name": "Kipler (Modals)", "size": 1 },
+    { "name": "Edilgen ve ettirgen yapı (Passive & Causatives)", "size": 0.75 },
+    { "name": "Koşul ve dilek cümleleri (Conditionals & Wish Clauses)", "size": 0.75 },
+    { "name": "Sıfat cümlecikleri (Relative Clauses)", "size": 1 },
+    { "name": "İsim cümlecikleri ve dolaylı anlatım (Noun Clauses & Reported Speech)", "size": 1 },
+    { "name": "Bağlaçlar ve geçiş ifadeleri (Conjunctions & Transitions)", "size": 1.25 },
+    { "name": "Fiilimsiler: gerund ve infinitive (Gerunds & Infinitives)", "size": 1 },
+    { "name": "Sıfatlar, zarflar ve karşılaştırma (Adjectives, Adverbs & Comparison)", "size": 0.75 },
+    { "name": "Belirleyiciler ve miktar ifadeleri (Determiners & Quantifiers)", "size": 0.75 },
+    { "name": "Zamirler (Pronouns)", "size": 0.5 },
+    { "name": "Edatlar (Prepositions)", "size": 0.75 }
+  ],
+  "lessons": [
+    {
+      "code": "AGS_SOZ", "exam": "AGS", "name": "Sözel Yetenek (AGS)", "budget": "AGS", "doc": "AGS2026",
+      "units": [{ "name": "Sözel Yetenek", "sectionPct": 18.75, "topics": [
+        { "name": "Sözcükte Anlam", "size": 1 },
+        { "name": "Cümlede Anlam", "size": 1 },
+        { "name": "Anlatımın Oluşması", "size": 0.75, "sizeNote": "dar kapsam" },
+        { "name": "Paragrafta Anlam", "size": 1.5, "sizeNote": "uzun metin okuma ve en geniş beceri" },
+        { "name": "Sözel Mantık", "size": 1 }
+      ] }]
+    },
+    {
+      "code": "AGS_SAY", "exam": "AGS", "name": "Sayısal Yetenek (AGS)", "budget": "AGS", "doc": "AGS2026",
+      "units": [{ "name": "Sayısal Yetenek", "sectionPct": 18.75, "topics": [
+        { "name": "Temel Matematik", "size": 1.5, "sizeNote": "sayılar, işlemler ve problemler: en geniş alan" },
+        { "name": "Grafik ve Tablo Yorumlama", "size": 0.75, "sizeNote": "dar kapsam" },
+        { "name": "Mantıksal Muhakeme Problemleri", "size": 1 }
+      ] }]
+    },
+    {
+      "code": "AGS_TAR", "exam": "AGS", "name": "Tarih (AGS)", "budget": "AGS", "doc": "AGS2026",
+      "units": [{ "name": "Tarih", "sectionPct": 7.5, "topics": [
+        { "name": "Osmanlı Öncesi Türk Devletleri Tarihi", "scope": "Siyasal, sosyal, ekonomik ve kültürel gelişmeler", "size": 1 },
+        { "name": "Osmanlı Tarihi", "scope": "XIII. yüzyıldan XX. yüzyıl başlarına kadar yaşanan siyasal, sosyal, ekonomik ve kültürel gelişmeler", "size": 1.25, "sizeNote": "yedi yüzyıllık dönem" },
+        { "name": "Atatürk İlkeleri ve İnkılap Tarihi", "scope": "XX. yüzyıl başından XX. yüzyılın ortalarına kadar, Osmanlı Devleti’nin yıkılışından İkinci Dünya Savaşı’nın sonuna kadar Türkiye tarihinde yaşanan siyasal, sosyal, ekonomik ve kültürel gelişmeler", "size": 1 },
+        { "name": "Çağdaş Türk ve Dünya Tarihi", "scope": "XX. yüzyılın başlangıcından günümüze kadar dünyada; İkinci Dünya Savaşı’ndan günümüze kadar Türkiye’de yaşanan siyasal, sosyal, ekonomik ve kültürel gelişmeler", "size": 1 }
+      ] }]
+    },
+    {
+      "code": "AGS_COG", "exam": "AGS", "name": "Türkiye Coğrafyası (AGS)", "budget": "AGS", "doc": "AGS2026",
+      "units": [{ "name": "Türkiye Coğrafyası", "sectionPct": 7.5, "topics": [
+        { "name": "Türkiye Fiziki Coğrafyası", "size": 1 },
+        { "name": "Türkiye Beşerî ve Ekonomik Coğrafyası", "size": 1 }
+      ] }]
+    },
+    {
+      "code": "AGS_EGT", "exam": "AGS", "name": "Eğitim Bilimleri ve Türk Millî Eğitim Sistemi (AGS)", "budget": "AGS", "doc": "AGS2026",
+      "units": [{ "name": "Eğitim Bilimleri ve Türk Millî Eğitim Sistemi", "sectionPct": 37.5, "topics": [
+        { "name": "Eğitim Tarihi, Felsefi, Toplumsal, Ekonomik ve Politik Temelleri", "size": 1 },
+        { "name": "Öğretim Yöntem ve Teknikleri", "size": 1.25, "sizeNote": "çok sayıda yöntem ve teknik" },
+        { "name": "Sınıf Yönetimi", "size": 0.75, "sizeNote": "dar kapsam" },
+        { "name": "Program Okuryazarlığı", "size": 1 },
+        { "name": "Eğitimde Ölçme ve Değerlendirme", "size": 1.25, "sizeNote": "hesaplama içeren konular" },
+        { "name": "Öğrenme Psikolojisi", "size": 1.25, "sizeNote": "çok sayıda kuram" },
+        { "name": "Gelişim Psikolojisi", "size": 1.25, "sizeNote": "çok sayıda kuram" },
+        { "name": "Rehberlik", "size": 1 },
+        { "name": "Eğitim ve Öğretim Teknolojileri", "size": 0.75, "sizeNote": "dar kapsam" },
+        { "name": "Türk Millî Eğitim Sisteminin Genel Yapısı", "size": 1 },
+        { "name": "Türkiye Yüzyılı Maarif Modeli", "size": 1 }
+      ] }]
+    },
+    {
+      "code": "AGS_MEV", "exam": "AGS", "name": "Mevzuat (AGS)", "budget": "AGS", "doc": "AGS2026",
+      "units": [{ "name": "Mevzuat", "sectionPct": 10, "topics": [
+        { "name": "Türkiye Cumhuriyeti Anayasası (Kanun Numarası: 2709, Kabul Tarihi: 18/10/1982), İnsan Hakları Hukuku", "size": 1.5, "sizeNote": "en uzun metin ve insan hakları hukuku" },
+        { "name": "1739 sayılı Millî Eğitim Temel Kanunu", "size": 1 },
+        { "name": "222 sayılı İlköğretim ve Eğitim Kanunu", "size": 0.75, "sizeNote": "kısa kanun" },
+        { "name": "7528 sayılı Öğretmenlik Mesleği Kanunu", "size": 0.75, "sizeNote": "kısa kanun" }
+      ] }]
+    },
+
+    { "code": "OABT_TUR", "exam": "OABT", "field": "Türkçe", "name": "Türkçe (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Anlama ve Anlatma Teknikleri", "pct": 32 },
+        { "name": "Dil Bilgisi ve Dil Bilimi", "pct": 24 },
+        { "name": "Çocuk Edebiyatı", "pct": 6 },
+        { "name": "Türk Halk Edebiyatı", "pct": 10 },
+        { "name": "Eski Türk Edebiyatı", "pct": 10 },
+        { "name": "Yeni Türk Edebiyatı", "pct": 10 },
+        { "name": "Edebiyat Bilgi ve Kuramları", "pct": 8 }
+      ] }] },
+    { "code": "OABT_IMAT", "exam": "OABT", "field": "İlköğretim Matematik", "name": "İlköğretim Matematik (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Analiz", "pct": 36 },
+        { "name": "Cebir", "pct": 24 },
+        { "name": "Geometri", "pct": 24 },
+        { "name": "Uygulamalı Matematik", "pct": 16 }
+      ] }] },
+    { "code": "OABT_FEN", "exam": "OABT", "field": "Fen Bilimleri", "name": "Fen Bilimleri (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Fizik", "pct": 32 },
+        { "name": "Kimya", "pct": 30 },
+        { "name": "Biyoloji", "pct": 26 },
+        { "name": "Jeoloji (Yer Bilimi)", "pct": 4 },
+        { "name": "Astronomi", "pct": 4 },
+        { "name": "Çevre Bilimi", "pct": 4 }
+      ] }] },
+    { "code": "OABT_SOS", "exam": "OABT", "field": "Sosyal Bilgiler", "name": "Sosyal Bilgiler (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Tarih", "pct": 44 },
+        { "name": "Coğrafya", "pct": 24 },
+        { "name": "Siyaset Bilimi", "pct": 16 },
+        { "name": "Diğer Sosyal Bilim Alanları", "scope": "Sosyal Bilgilerin Temelleri, Bilim Teknoloji ve Toplum, Sosyal Antropoloji ve Medeniyet Tarihi, Ekonomi, İnsan İlişkileri ve İletişim, Sosyoloji, Sosyal Proje Geliştirme", "pct": 16 }
+      ] }] },
+    { "code": "OABT_TDE", "exam": "OABT", "field": "Türk Dili ve Edebiyatı", "name": "Türk Dili ve Edebiyatı (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Eski Türk Dili ve Yeni Türk Dili", "pct": 30 },
+        { "name": "Türk Halk Edebiyatı", "pct": 20 },
+        { "name": "Eski Türk Edebiyatı", "pct": 20 },
+        { "name": "Yeni Türk Edebiyatı", "pct": 30 }
+      ] }] },
+    { "code": "OABT_TAR", "exam": "OABT", "field": "Tarih", "name": "Tarih (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Tarih Metodolojisi", "pct": 8 },
+        { "name": "Osmanlı Türkçesi", "pct": 6 },
+        { "name": "Eski Çağ Tarihi", "pct": 4 },
+        { "name": "İlk Türk Devletleri Tarihi", "pct": 10 },
+        { "name": "Orta Çağ İslam Tarihi", "pct": 14 },
+        { "name": "Osmanlı Tarihi", "pct": 18 },
+        { "name": "Türkiye Cumhuriyeti Tarihi", "pct": 16 },
+        { "name": "Orta Çağ’dan XX. Yüzyıl'a Dünya Tarihi", "pct": 14 },
+        { "name": "XX. Yüzyıl Türk ve Dünya Tarihi", "pct": 10 }
+      ] }] },
+    { "code": "OABT_COG", "exam": "OABT", "field": "Coğrafya", "name": "Coğrafya (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Fiziki Coğrafya", "pct": 40 },
+        { "name": "Beşerî ve Ekonomik Coğrafya", "pct": 40 },
+        { "name": "Kıtalar ve Ülkeler Coğrafyası", "pct": 20 }
+      ] }] },
+    { "code": "OABT_MAT", "exam": "OABT", "field": "Matematik", "name": "Matematik (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Analiz", "pct": 36 },
+        { "name": "Cebir", "pct": 24 },
+        { "name": "Geometri", "pct": 20 },
+        { "name": "Uygulamalı Matematik", "pct": 20 }
+      ] }] },
+    { "code": "OABT_FIZ", "exam": "OABT", "field": "Fizik", "name": "Fizik (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Mekanik", "pct": 30 },
+        { "name": "Elektrik ve Manyetizma", "pct": 24 },
+        { "name": "Maddenin Mekanik ve Isıl Özellikleri", "pct": 10 },
+        { "name": "Dalgalar ve Optik", "pct": 16 },
+        { "name": "Modern Fizik", "pct": 20 }
+      ] }] },
+    { "code": "OABT_KIM", "exam": "OABT", "field": "Kimya/Kimya Teknolojisi", "name": "Kimya / Kimya Teknolojisi (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Temel Kimya", "pct": 32 },
+        { "name": "Analitik Kimya", "pct": 20 },
+        { "name": "Anorganik Kimya", "pct": 16 },
+        { "name": "Organik Kimya", "pct": 20 },
+        { "name": "Fizikokimya", "pct": 12 }
+      ] }] },
+    { "code": "OABT_BIO", "exam": "OABT", "field": "Biyoloji", "name": "Biyoloji (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Hücre ve Metabolizma", "pct": 20 },
+        { "name": "Bitki Biyolojisi", "pct": 12 },
+        { "name": "İnsan ve Hayvan Biyolojisi", "pct": 28 },
+        { "name": "Ekoloji", "pct": 12 },
+        { "name": "Canlıların Sınıflandırılması", "pct": 8 },
+        { "name": "Genetik", "pct": 20 }
+      ] }] },
+    { "code": "OABT_DIN", "exam": "OABT", "field": "Din Kültürü ve Ahlâk Bilgisi / İmam-Hatip Lisesi Meslek Dersleri",
+      "name": "Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "note": "Belgedeki tablo üç sütunlu (Ortak Alan Bilgisi; Temel İslam Bilimleri; İslam Tarihi, Felsefe ve Din Bilimleri) ve toplam satırı %20 / %80; sütun yerleşimi metinden kesin okunamadığı için konular tek ünitede, satırdaki değerlerin toplamıyla verildi (Fıkıh: %4 + %10).",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Kur’an-ı Kerim ve Tecvid", "pct": 8 },
+        { "name": "Tefsir", "pct": 10 },
+        { "name": "Hadis", "pct": 10 },
+        { "name": "Fıkıh", "pct": 14, "pctNote": "satırda iki değer: %4 ve %10" },
+        { "name": "Akaid", "pct": 2 },
+        { "name": "Kelam", "pct": 10 },
+        { "name": "İslam Mezhepleri ve Akımları", "pct": 6 },
+        { "name": "Siyer", "pct": 6 },
+        { "name": "İslam Tarihi, Kültür ve Medeniyeti", "pct": 10 },
+        { "name": "İslam Felsefesi", "pct": 4 },
+        { "name": "Din Felsefesi", "pct": 4 },
+        { "name": "Din Sosyolojisi", "pct": 4 },
+        { "name": "Din Psikolojisi", "pct": 4 },
+        { "name": "Din Eğitimi", "pct": 4 },
+        { "name": "Dinler Tarihi", "pct": 4 }
+      ] }] },
+    { "code": "OABT_REH", "exam": "OABT", "field": "Rehberlik", "name": "Rehberlik (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Temel Psikolojik Kavramlar", "pct": 16 },
+        { "name": "Psikolojik Danışma Kuram İlke ve Teknikleri", "pct": 20 },
+        { "name": "Davranış ve Uyum Problemleri", "pct": 12 },
+        { "name": "Bireyi Tanıma Teknikleri", "pct": 14 },
+        { "name": "Bireyle ve Grupla Psikolojik Danışma", "pct": 14 },
+        { "name": "Mesleki Rehberlik ve Kariyer Danışmanlığı", "pct": 12 },
+        { "name": "Psikolojik Danışma ve Rehberlikte Araştırma ve Program Geliştirme", "pct": 8 },
+        { "name": "Meslek Etiği ve Yasal Konular", "pct": 4 }
+      ] }] },
+    { "code": "OABT_SINIF", "exam": "OABT", "field": "Sınıf Öğretmenliği", "name": "Sınıf Öğretmenliği (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "note": "Alan Eğitimi Testi (%66) için belge yüzde vermeden bir liste veriyor ve listeyi \"vb.\" ile bitiriyor: konular listedeki satırlardır, ağırlık eşit bölündü (yaklaşık).",
+      "units": [
+        { "name": "Alan Bilgisi Testi", "topics": [
+          { "name": "İlkokulda Temel Matematik", "pct": 6 },
+          { "name": "İlkokulda Temel Fen Bilimleri", "pct": 10 },
+          { "name": "Türk Dili", "pct": 6 },
+          { "name": "Türk Tarihi ve Kültürü", "pct": 4 },
+          { "name": "Türkiye Coğrafyası ve Jeopolitiği", "pct": 4 },
+          { "name": "Çocuk Edebiyatı", "pct": 4 }
+        ] },
+        { "name": "Alan Eğitimi Testi", "sectionPct": 66, "openList": true, "topics": [
+          { "name": "Hayat Bilgisi Öğretimi" },
+          { "name": "Sosyal Bilgiler Öğretimi" },
+          { "name": "Din Kültürü ve Ahlak Bilgisi Öğretimi" },
+          { "name": "Fen Bilgisi Öğretimi" },
+          { "name": "Drama" },
+          { "name": "Görsel Sanatlar" },
+          { "name": "Müzik Öğretimi" },
+          { "name": "Matematik Öğretimi" },
+          { "name": "İlk Okuma ve Yazma Öğretimi" }
+        ] }
+      ] },
+    { "code": "OABT_OKUL", "exam": "OABT", "field": "Okul Öncesi", "name": "Okul Öncesi (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "note": "Alan Eğitimi Testi (%40) için belge yüzde vermeden bir liste veriyor ve listeyi \"vb.\" ile bitiriyor: konular listedeki satırlardır, ağırlık eşit bölündü (yaklaşık).",
+      "units": [
+        { "name": "Alan Bilgisi Testi", "topics": [
+          { "name": "Erken Çocukluk Eğitimine Giriş", "pct": 8 },
+          { "name": "Çocuk Sağlığı ve İlk Yardım", "pct": 4 },
+          { "name": "Erken Çocukluk Döneminde Gelişim", "pct": 12 },
+          { "name": "Çocuk Ruh Sağlığı", "pct": 8 },
+          { "name": "Erken Çocukluk Dönemi Edebiyatı", "pct": 6 },
+          { "name": "Erken Çocuklukta Program, Yöntem ve Yaklaşımlar", "pct": 12 },
+          { "name": "Anne-Baba Eğitimi", "pct": 6 },
+          { "name": "Çocuk Hakları", "pct": 4 }
+        ] },
+        { "name": "Alan Eğitimi Testi", "sectionPct": 40, "openList": true, "topics": [
+          { "name": "Erken Çocukluk Fen Eğitimi" },
+          { "name": "Erken Çocukluk Matematik Eğitimi" },
+          { "name": "Erken Çocukluk Güzel Sanatlar Eğitimi" },
+          { "name": "Erken Çocukluk Müzik Eğitimi" },
+          { "name": "Erken Çocukluk Eğitiminde Oyun" },
+          { "name": "Erken Çocukluk Eğitiminde Drama" },
+          { "name": "Erken Çocukluk Eğitiminde Öğrenme Yaklaşımları" },
+          { "name": "Okula Uyum ve Erken Okuryazarlık Eğitimi" }
+        ] }
+      ] },
+    { "code": "OABT_BED", "exam": "OABT", "field": "Beden Eğitimi", "name": "Beden Eğitimi (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
+      "units": [{ "name": "Alan Bilgisi Testi", "topics": [
+        { "name": "Beden Eğitimi ve Sporun Temelleri", "pct": 16 },
+        { "name": "İnsan Anatomisi ve Kinesiyoloji", "pct": 8 },
+        { "name": "Sağlık Bilgisi ve İlk Yardım", "pct": 6 },
+        { "name": "Egzersiz Fizyolojisi", "pct": 8 },
+        { "name": "Antrenman Bilgisi", "pct": 6 },
+        { "name": "Fiziksel Uygunluk", "pct": 6 },
+        { "name": "Egzersiz ve Beslenme", "pct": 4 },
+        { "name": "Engelliler İçin Beden Eğitimi ve Spor", "pct": 4 },
+        { "name": "Psikomotor Gelişim", "pct": 6 },
+        { "name": "Beden Eğitimi ve Spor Yönetimi", "pct": 4 },
+        { "name": "Beceri Öğrenimi", "pct": 6 },
+        { "name": "Atletizm", "pct": 4 },
+        { "name": "Takım Sporları", "pct": 10 },
+        { "name": "Ritim Eğitimi ve Dans, Halk Oyunları", "pct": 4 },
+        { "name": "Jimnastik", "pct": 4 },
+        { "name": "Eğitsel Oyunlar", "pct": 4 }
+      ] }] },
+    { "code": "OABT_OZEL", "exam": "OABT", "field": "Özel Eğitim", "name": "Özel Eğitim (ÖABT)", "budget": "OABT_70", "doc": "AGS2026",
+      "units": [
+        { "name": "Alan Bilgisi Testi", "topics": [
+          { "name": "Zihin Yetersizliği ve Otizm Spektrum Bozukluğu", "pct": 10 },
+          { "name": "Öğrenme Güçlüğü ve Özel Yetenek", "pct": 6 },
+          { "name": "İşitme ve Görme Yetersizliği", "pct": 10 },
+          { "name": "Erken Çocuklukta Özel Eğitim", "pct": 4 },
+          { "name": "Uygulamalı Davranış Analizi", "pct": 8 },
+          { "name": "Bireyselleştirilmiş Eğitim Programları", "pct": 6 },
+          { "name": "Özel Eğitimde Değerlendirme", "pct": 6 },
+          { "name": "Dil ve İletişim Becerilerinin Desteklenmesi", "pct": 4 },
+          { "name": "Özel Eğitim Politikaları ve Yasal Düzenlemeler", "pct": 6 }
+        ] },
+        { "name": "Alan Eğitimi Testi", "topics": [
+          { "name": "2024 TYMM Özel Eğitim Programları", "pct": 4 },
+          { "name": "Özel Eğitimde Okuma-Yazma Öğretimi", "pct": 4 },
+          { "name": "Özel Eğitimde Fen ve Sosyal Bilgiler Öğretimi", "pct": 4 },
+          { "name": "Özel Eğitimde Matematik Öğretimi", "pct": 4 },
+          { "name": "Özel Eğitimde Sanatsal Becerilerin Öğretimi", "pct": 4 },
+          { "name": "Özel Eğitimde Fiziksel Eğitim ve Spor", "pct": 4 },
+          { "name": "Özel Eğitimde Sosyal Uyum Becerilerinin Öğretimi", "pct": 4 },
+          { "name": "Özel Eğitimde Türkçe Öğretimi", "pct": 4 },
+          { "name": "Özel Eğitimde Oyun ve Müzik", "pct": 4 },
+          { "name": "Özel Eğitimde Aile Eğitimi", "pct": 4 }
+        ] }
+      ] },
+
+    { "code": "YDS_EN", "exam": "YDS", "name": "YDS İngilizce", "budget": "YDS", "doc": "YDS2026_1", "evidenceDoc": "YDS2025_2", "questions": 80,
+      "units": [
+        { "name": "Sözcük ve ifade bilgisi", "range": "1–6", "topics": [
+          { "name": "Sözcük ve ifade bilgisi", "q": 6, "size": 1.5, "sizeNote": "sürekli kelime çalışması gerektirir" } ] },
+        { "name": "Dil bilgisi", "range": "7–16", "grammar": 10 },
+        { "name": "Cloze test (paragrafta boşluk doldurma)", "range": "17–26 (iki paragraf × 5)", "topics": [
+          { "name": "Cloze test (paragrafta boşluk doldurma)", "q": 10 } ] },
+        { "name": "Cümle tamamlama", "range": "27–36", "topics": [
+          { "name": "Cümle tamamlama", "q": 10 } ] },
+        { "name": "Çeviri", "range": "37–42", "topics": [
+          { "name": "İngilizceden Türkçeye çeviri", "q": 3, "qNote": "yönerge 37–42 için iki yönü birlikte veriyor; 3 + 3 ayrımı koçluk tahmini (37. soru İngilizceden Türkçeye, 42. soru Türkçeden İngilizceye)" },
+          { "name": "Türkçeden İngilizceye çeviri", "q": 3, "qNote": "yönerge 37–42 için iki yönü birlikte veriyor; 3 + 3 ayrımı koçluk tahmini (37. soru İngilizceden Türkçeye, 42. soru Türkçeden İngilizceye)" } ] },
+        { "name": "Okuduğunu anlama", "range": "43–62 (beş paragraf × 4)", "topics": [
+          { "name": "Okuduğunu anlama (paragraf soruları)", "q": 20, "size": 1.25, "sizeNote": "uzun metinler, okuma hızı" } ] },
+        { "name": "Diyalog tamamlama", "range": "63–67", "topics": [
+          { "name": "Diyalog tamamlama", "q": 5 } ] },
+        { "name": "Anlamca en yakın cümle", "range": "68–71", "topics": [
+          { "name": "Anlamca en yakın cümle (restatement)", "q": 4 } ] },
+        { "name": "Paragraf tamamlama", "range": "72–75", "topics": [
+          { "name": "Paragraf tamamlama", "q": 4 } ] },
+        { "name": "Anlam bütünlüğünü bozan cümle", "range": "76–80", "topics": [
+          { "name": "Anlam bütünlüğünü bozan cümle", "q": 5 } ] }
+      ] },
+    { "code": "YOKDIL_FEN", "exam": "YOKDIL", "name": "YÖKDİL Fen Bilimleri İngilizce", "budget": "YOKDIL", "doc": "YOKDIL2026_2_FEN", "questions": 80, "domain": "fen bilimleri", "template": "YOKDIL" },
+    { "code": "YOKDIL_SAG", "exam": "YOKDIL", "name": "YÖKDİL Sağlık Bilimleri İngilizce", "budget": "YOKDIL", "doc": "YOKDIL2026_2_SAG", "questions": 80, "domain": "sağlık bilimleri", "template": "YOKDIL" },
+    { "code": "YOKDIL_SOS", "exam": "YOKDIL", "name": "YÖKDİL Sosyal Bilimler İngilizce", "budget": "YOKDIL", "doc": "YOKDIL2026_2_SOS", "questions": 80, "domain": "sosyal bilimler", "template": "YOKDIL" }
+  ],
+  "templates": {
+    "YOKDIL": [
+      { "name": "Cümlede boşluk: sözcük ve dil bilgisi", "range": "1–20", "split": "ÖSYM 1–20. soruları tek yönergeyle veriyor; 10 sözcük + 10 dil bilgisi ayrımı koçluk tahmini", "topics": [
+        { "name": "Sözcük ve ifade bilgisi", "q": 10, "size": 1.5, "sizeNote": "sürekli kelime çalışması gerektirir", "qNote": "1–20 arasındaki sözcük payı koçluk tahmini (10)" } ], "grammar": 10 },
+      { "name": "Cloze test (paragrafta boşluk doldurma)", "range": "21–30 (iki paragraf × 5)", "topics": [
+        { "name": "Cloze test (paragrafta boşluk doldurma)", "q": 10 } ] },
+      { "name": "Cümle tamamlama", "range": "31–41", "topics": [
+        { "name": "Cümle tamamlama", "q": 11 } ] },
+      { "name": "Çeviri", "range": "42–53", "topics": [
+        { "name": "İngilizceden Türkçeye çeviri", "q": 6, "qNote": "42–47. sorular" },
+        { "name": "Türkçeden İngilizceye çeviri", "q": 6, "qNote": "48–53. sorular" } ] },
+      { "name": "Paragraf tamamlama", "range": "54–59", "topics": [
+        { "name": "Paragraf tamamlama", "q": 6 } ] },
+      { "name": "Anlam bütünlüğünü bozan cümle", "range": "60–65", "topics": [
+        { "name": "Anlam bütünlüğünü bozan cümle", "q": 6 } ] },
+      { "name": "Okuduğunu anlama", "range": "66–80 (beş paragraf × 3)", "topics": [
+        { "name": "Okuduğunu anlama (paragraf soruları)", "q": 15, "size": 1.25, "sizeNote": "uzun alan metinleri, okuma hızı" } ] }
+    ]
+  }
+}

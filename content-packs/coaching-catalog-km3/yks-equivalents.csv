@@ -1,0 +1,92 @@
+km3_lesson,km3_topic_code,existing_topic_id,existing_lesson,existing_topic,relation
+AGS_SOZ,AGS_SOZ.1.01,532b8273-eb74-4faa-94c9-15b434ae7d4c,Türkçe (TYT),Sözcükte Anlam,aynı beceri
+AGS_SOZ,AGS_SOZ.1.02,d1889b15-59f2-4b22-8793-3c715d318444,Türkçe (TYT),Cümlede Anlam,aynı beceri
+AGS_SOZ,AGS_SOZ.1.04,b99a81da-b8d5-4e27-95d9-f31bbc24a3e3,Türkçe (TYT),Paragrafta Anlam,aynı beceri
+AGS_SAY,AGS_SAY.1.02,23bb1571-05f5-4ba2-890b-ab3271e1b613,Matematik (TYT),Verilerin Grafikle Gösterilmesi,kısmi örtüşme
+AGS_TAR,AGS_TAR.1.01,eabb00ba-efb5-4295-a733-5352f5189506,Tarih (TYT),İlk ve Orta Çağlarda Türk Dünyası,kısmi örtüşme
+AGS_TAR,AGS_TAR.1.01,621a291e-0e6a-431e-a62f-9343ef34afe1,Tarih (TYT),"Türk İslam Tarihindeki Siyasi Gelişmeler, Türklerin İslamiyet'i Kabulü",kısmi örtüşme
+AGS_TAR,AGS_TAR.1.02,4a5cc4d0-bcc0-43b0-8d3c-8fe2a95ad027,Tarih (TYT),Dünya Gücü Osmanlı (1453-1595),kısmi örtüşme
+AGS_TAR,AGS_TAR.1.02,1657a054-159c-4862-adfb-01797d7036b5,Tarih (TYT),Değişen Dünya Dengeleri Karşısında Osmanlı Siyaseti (1595-1774),kısmi örtüşme
+AGS_TAR,AGS_TAR.1.03,bc3169b9-b886-4370-a326-1071faffb746,Tarih (TYT),Millî Mücadele,kısmi örtüşme
+AGS_TAR,AGS_TAR.1.03,2daf396b-b8a4-468f-9367-810643e9aded,Tarih (TYT),Atatürkçülük ve Türk İnkılabı,kısmi örtüşme
+AGS_TAR,AGS_TAR.1.04,e56a2b15-43ee-4e69-9e63-77b0a07c6e88,Tarih (AYT),II. Dünya Savaşı Sonrasında Türkiye ve Dünya,kısmi örtüşme
+AGS_TAR,AGS_TAR.1.04,0ef4f2e8-5413-4108-b3f5-b177117bd1e4,Tarih (AYT),XXI. Yüzyılın Eşiğinde Türkiye ve Dünya,kısmi örtüşme
+AGS_COG,AGS_COG.1.02,82ea5cae-cdd0-45aa-885e-492fe4ec8285,Coğrafya (AYT),Türkiye'de Ekonomi,kısmi örtüşme
+YDS_EN,YDS_EN.2.01,7c91086d-02e9-4b12-8d98-c820a62323d0,İngilizce (YDT),Tenses,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.02,8220dbd2-2a85-42b1-a77d-3dfe3cf2b18a,İngilizce (YDT),Modals,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.03,595c62b7-94fc-45b6-b816-ba1d16649bd9,İngilizce (YDT),Active - Passive & Causatives,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.04,7b1d59f1-dfe2-4ebe-8640-0eb2be754ecc,İngilizce (YDT),Conditionals & Wish Clauses,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.05,11505d90-a84c-4d38-848e-f9991cafe0c2,İngilizce (YDT),Relative Clause,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.06,0ed42e48-0453-4a9c-8bd0-024d2eccad3f,İngilizce (YDT),Noun Clause & Reported Speech,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.07,6845951a-c465-4dde-9b10-8e165dc5955a,İngilizce (YDT),Conjunctions & Transitions,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.08,f1674483-ad10-449f-afe3-acb0ba7e5a42,İngilizce (YDT),Gerund & infinitives,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.09,22c01669-9527-4c72-8768-d9de9af9e892,İngilizce (YDT),Adjectives & Adverbs,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.10,6d6a6e6c-bc82-44f9-b81c-8d0cf55a5931,İngilizce (YDT),Determiners & Quantifiers,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.11,6eb0b164-4117-4735-ae17-413a09c5a0c6,İngilizce (YDT),Pronouns,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.2.12,7d3c3087-26a2-493d-b4a3-85585ec0133a,İngilizce (YDT),Prepositions,aynı dil bilgisi alanı
+YDS_EN,YDS_EN.3.01,dc77e15e-f097-444d-baec-eff1e2dcb587,İngilizce (YDT),Cloze Test,aynı soru tipi
+YDS_EN,YDS_EN.4.01,51c83fd1-f698-43dd-8248-fc867d3ae4de,İngilizce (YDT),Sentence Completion,aynı soru tipi
+YDS_EN,YDS_EN.5.01,5192b79a-6085-4bd3-80b9-8c85d0a10263,İngilizce (YDT),English- Turkish Translation,aynı soru tipi
+YDS_EN,YDS_EN.5.02,67744a33-aeb5-42ff-ae4f-8efe8594dbc0,İngilizce (YDT),Turkish-English Translation,aynı soru tipi
+YDS_EN,YDS_EN.6.01,8bdc633b-5390-4dc8-b7f8-a49b45f40eeb,İngilizce (YDT),Paragraph  Comprehension,aynı soru tipi
+YDS_EN,YDS_EN.7.01,09748f44-0c32-4666-a2d7-8d8a074a1c16,İngilizce (YDT),Dialogue,aynı soru tipi
+YDS_EN,YDS_EN.8.01,5ef1f12c-06ad-4e7a-af4f-dae8e3015310,İngilizce (YDT),Restatement,aynı soru tipi
+YDS_EN,YDS_EN.9.01,d7b7ff85-d0fc-461c-8c04-2111a96313ef,İngilizce (YDT),Paragraph Completion,aynı soru tipi
+YDS_EN,YDS_EN.10.01,a825e6c8-30cb-44e4-b64d-2e1929435047,İngilizce (YDT),Irrelevant Sentence,aynı soru tipi
+YOKDIL_FEN,YOKDIL_FEN.1.02,7c91086d-02e9-4b12-8d98-c820a62323d0,İngilizce (YDT),Tenses,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.03,8220dbd2-2a85-42b1-a77d-3dfe3cf2b18a,İngilizce (YDT),Modals,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.04,595c62b7-94fc-45b6-b816-ba1d16649bd9,İngilizce (YDT),Active - Passive & Causatives,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.05,7b1d59f1-dfe2-4ebe-8640-0eb2be754ecc,İngilizce (YDT),Conditionals & Wish Clauses,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.06,11505d90-a84c-4d38-848e-f9991cafe0c2,İngilizce (YDT),Relative Clause,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.07,0ed42e48-0453-4a9c-8bd0-024d2eccad3f,İngilizce (YDT),Noun Clause & Reported Speech,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.08,6845951a-c465-4dde-9b10-8e165dc5955a,İngilizce (YDT),Conjunctions & Transitions,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.09,f1674483-ad10-449f-afe3-acb0ba7e5a42,İngilizce (YDT),Gerund & infinitives,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.10,22c01669-9527-4c72-8768-d9de9af9e892,İngilizce (YDT),Adjectives & Adverbs,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.11,6d6a6e6c-bc82-44f9-b81c-8d0cf55a5931,İngilizce (YDT),Determiners & Quantifiers,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.12,6eb0b164-4117-4735-ae17-413a09c5a0c6,İngilizce (YDT),Pronouns,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.1.13,7d3c3087-26a2-493d-b4a3-85585ec0133a,İngilizce (YDT),Prepositions,aynı dil bilgisi alanı
+YOKDIL_FEN,YOKDIL_FEN.2.01,dc77e15e-f097-444d-baec-eff1e2dcb587,İngilizce (YDT),Cloze Test,aynı soru tipi
+YOKDIL_FEN,YOKDIL_FEN.3.01,51c83fd1-f698-43dd-8248-fc867d3ae4de,İngilizce (YDT),Sentence Completion,aynı soru tipi
+YOKDIL_FEN,YOKDIL_FEN.4.01,5192b79a-6085-4bd3-80b9-8c85d0a10263,İngilizce (YDT),English- Turkish Translation,aynı soru tipi
+YOKDIL_FEN,YOKDIL_FEN.4.02,67744a33-aeb5-42ff-ae4f-8efe8594dbc0,İngilizce (YDT),Turkish-English Translation,aynı soru tipi
+YOKDIL_FEN,YOKDIL_FEN.7.01,8bdc633b-5390-4dc8-b7f8-a49b45f40eeb,İngilizce (YDT),Paragraph  Comprehension,aynı soru tipi
+YOKDIL_FEN,YOKDIL_FEN.5.01,d7b7ff85-d0fc-461c-8c04-2111a96313ef,İngilizce (YDT),Paragraph Completion,aynı soru tipi
+YOKDIL_FEN,YOKDIL_FEN.6.01,a825e6c8-30cb-44e4-b64d-2e1929435047,İngilizce (YDT),Irrelevant Sentence,aynı soru tipi
+YOKDIL_SAG,YOKDIL_SAG.1.02,7c91086d-02e9-4b12-8d98-c820a62323d0,İngilizce (YDT),Tenses,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.03,8220dbd2-2a85-42b1-a77d-3dfe3cf2b18a,İngilizce (YDT),Modals,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.04,595c62b7-94fc-45b6-b816-ba1d16649bd9,İngilizce (YDT),Active - Passive & Causatives,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.05,7b1d59f1-dfe2-4ebe-8640-0eb2be754ecc,İngilizce (YDT),Conditionals & Wish Clauses,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.06,11505d90-a84c-4d38-848e-f9991cafe0c2,İngilizce (YDT),Relative Clause,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.07,0ed42e48-0453-4a9c-8bd0-024d2eccad3f,İngilizce (YDT),Noun Clause & Reported Speech,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.08,6845951a-c465-4dde-9b10-8e165dc5955a,İngilizce (YDT),Conjunctions & Transitions,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.09,f1674483-ad10-449f-afe3-acb0ba7e5a42,İngilizce (YDT),Gerund & infinitives,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.10,22c01669-9527-4c72-8768-d9de9af9e892,İngilizce (YDT),Adjectives & Adverbs,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.11,6d6a6e6c-bc82-44f9-b81c-8d0cf55a5931,İngilizce (YDT),Determiners & Quantifiers,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.12,6eb0b164-4117-4735-ae17-413a09c5a0c6,İngilizce (YDT),Pronouns,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.1.13,7d3c3087-26a2-493d-b4a3-85585ec0133a,İngilizce (YDT),Prepositions,aynı dil bilgisi alanı
+YOKDIL_SAG,YOKDIL_SAG.2.01,dc77e15e-f097-444d-baec-eff1e2dcb587,İngilizce (YDT),Cloze Test,aynı soru tipi
+YOKDIL_SAG,YOKDIL_SAG.3.01,51c83fd1-f698-43dd-8248-fc867d3ae4de,İngilizce (YDT),Sentence Completion,aynı soru tipi
+YOKDIL_SAG,YOKDIL_SAG.4.01,5192b79a-6085-4bd3-80b9-8c85d0a10263,İngilizce (YDT),English- Turkish Translation,aynı soru tipi
+YOKDIL_SAG,YOKDIL_SAG.4.02,67744a33-aeb5-42ff-ae4f-8efe8594dbc0,İngilizce (YDT),Turkish-English Translation,aynı soru tipi
+YOKDIL_SAG,YOKDIL_SAG.7.01,8bdc633b-5390-4dc8-b7f8-a49b45f40eeb,İngilizce (YDT),Paragraph  Comprehension,aynı soru tipi
+YOKDIL_SAG,YOKDIL_SAG.5.01,d7b7ff85-d0fc-461c-8c04-2111a96313ef,İngilizce (YDT),Paragraph Completion,aynı soru tipi
+YOKDIL_SAG,YOKDIL_SAG.6.01,a825e6c8-30cb-44e4-b64d-2e1929435047,İngilizce (YDT),Irrelevant Sentence,aynı soru tipi
+YOKDIL_SOS,YOKDIL_SOS.1.02,7c91086d-02e9-4b12-8d98-c820a62323d0,İngilizce (YDT),Tenses,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.03,8220dbd2-2a85-42b1-a77d-3dfe3cf2b18a,İngilizce (YDT),Modals,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.04,595c62b7-94fc-45b6-b816-ba1d16649bd9,İngilizce (YDT),Active - Passive & Causatives,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.05,7b1d59f1-dfe2-4ebe-8640-0eb2be754ecc,İngilizce (YDT),Conditionals & Wish Clauses,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.06,11505d90-a84c-4d38-848e-f9991cafe0c2,İngilizce (YDT),Relative Clause,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.07,0ed42e48-0453-4a9c-8bd0-024d2eccad3f,İngilizce (YDT),Noun Clause & Reported Speech,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.08,6845951a-c465-4dde-9b10-8e165dc5955a,İngilizce (YDT),Conjunctions & Transitions,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.09,f1674483-ad10-449f-afe3-acb0ba7e5a42,İngilizce (YDT),Gerund & infinitives,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.10,22c01669-9527-4c72-8768-d9de9af9e892,İngilizce (YDT),Adjectives & Adverbs,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.11,6d6a6e6c-bc82-44f9-b81c-8d0cf55a5931,İngilizce (YDT),Determiners & Quantifiers,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.12,6eb0b164-4117-4735-ae17-413a09c5a0c6,İngilizce (YDT),Pronouns,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.1.13,7d3c3087-26a2-493d-b4a3-85585ec0133a,İngilizce (YDT),Prepositions,aynı dil bilgisi alanı
+YOKDIL_SOS,YOKDIL_SOS.2.01,dc77e15e-f097-444d-baec-eff1e2dcb587,İngilizce (YDT),Cloze Test,aynı soru tipi
+YOKDIL_SOS,YOKDIL_SOS.3.01,51c83fd1-f698-43dd-8248-fc867d3ae4de,İngilizce (YDT),Sentence Completion,aynı soru tipi
+YOKDIL_SOS,YOKDIL_SOS.4.01,5192b79a-6085-4bd3-80b9-8c85d0a10263,İngilizce (YDT),English- Turkish Translation,aynı soru tipi
+YOKDIL_SOS,YOKDIL_SOS.4.02,67744a33-aeb5-42ff-ae4f-8efe8594dbc0,İngilizce (YDT),Turkish-English Translation,aynı soru tipi
+YOKDIL_SOS,YOKDIL_SOS.7.01,8bdc633b-5390-4dc8-b7f8-a49b45f40eeb,İngilizce (YDT),Paragraph  Comprehension,aynı soru tipi
+YOKDIL_SOS,YOKDIL_SOS.5.01,d7b7ff85-d0fc-461c-8c04-2111a96313ef,İngilizce (YDT),Paragraph Completion,aynı soru tipi
+YOKDIL_SOS,YOKDIL_SOS.6.01,a825e6c8-30cb-44e4-b64d-2e1929435047,İngilizce (YDT),Irrelevant Sentence,aynı soru tipi
