@@ -176,6 +176,8 @@ test('activation waits for the team review, then publishes durations and YKS sco
       WHERE p."TopicId"=s."TopicId" AND p."OutcomeId"=s."OutcomeId" AND pe."Number"=e."Number"-1
       AND (p."LearningMinutes",p."PracticeMinutes",p."CheckMinutes")=(s."LearningMinutes",s."PracticeMinutes",s."CheckMinutes"));`), '0');
 
+  assert.match(run(url, pack('verify.sql')), new RegExp(`km2 pending ${pendingLinks} \\| km2 approved ${approved} \\| with yks scope 72`));
+
   const after = fingerprint(url);
   const again = run(url, pack('02-activate-ayt-tarih.sql'), { reviewer_id: REVIEWER, reason: 'KM2 AYT Tarih onayı' });
   assert.match(again, /km2 activate: reviewed topics 0 \| estimates 0 \| shares 0 \| scopes 0/);
