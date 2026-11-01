@@ -135,6 +135,66 @@ test('loads the AGS, ÖABT, YDS and YÖKDİL drafts once, passive and pending ap
   assert.deepEqual(counts(), { AGS: '6/6/29/29', OABT: '17/20/146/146', YDS: '1/10/22/22', YOKDIL: '3/21/60/60' });
 });
 
+test('a rerun over the state production reached (c1ce79c pack, admin-panel renames, server-side hashes) changes nothing', { skip }, () => {
+  // Fresh install: the real ÖSYM hashes, the corrected names and no pending hash.
+  assert.equal(run(`SELECT "DocumentSha256" FROM coaching.official_curriculum_editions WHERE "Code" = 'km3-yds-en-2026'`),
+    'fd815d7a4941a94110038d895a40cb74728acc3b769b5f8c34d3f2bb6a3ae057');
+  assert.match(run(pack('verify.sql')), /pending PDF hashes: 0 editions/);
+  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_exams WHERE "Code" = 'OABT_KIM'`), 'ÖABT · Kimya / Kimya Teknolojisi');
+  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_topics WHERE "SourceId" = 'OABT_OKUL.2.01' AND "Source" = 'coaching-catalog-km3'`),
+    'Erken Çocuklukta Fen Eğitimi');
+  // What production holds: the 27 editions were written by the c1ce79c pack (its package hash); records the admin panel
+  // did not rename (here: the program topics and one outcome) may still carry the c1ce79c names.
+  run(`UPDATE coaching.official_curriculum_editions SET "PackageSha256" = 'f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab' WHERE "Code" LIKE 'km3-%';
+    UPDATE coaching.official_curriculum_topics SET "Name" = replace("Name", 'Erken Çocuklukta ', 'Erken Çocukluk ')
+      WHERE "Code" IN ('OABT_OKUL.2.01', 'OABT_OKUL.2.02', 'OABT_OKUL.2.03', 'OABT_OKUL.2.04');
+    UPDATE coaching.study_catalog_outcomes SET "Name" = 'Cloze test (paragrafta boşluk doldurma) — 2026-YDS/1 İngilizce, 17–26 (iki paragraf × 5). sorular'
+      WHERE "Code" = 'YDS_EN.3.01';`);
+  const rerun = psql(pack('apply.sql'));
+  assert.equal(rerun.status, 0, rerun.stderr);
+  assert.ok(notices(rerun).some(x => /^inserted: lessons 0, units 0, topics 0, outcomes 0, editions 0, mappings 0, ÖABT field exams 0/.test(x)), notices(rerun).join('\n'));
+  // Only the exact c1ce79c values are tolerated: any other stored name still stops the pack.
+  run(`UPDATE coaching.official_curriculum_topics SET "Name" = 'Başka bir ad' WHERE "Code" = 'OABT_OKUL.2.01'`);
+  const conflict = psql(pack('apply.sql'));
+  assert.notEqual(conflict.status, 0);
+  assert.match(conflict.stderr, /differs/);
+  run(`UPDATE coaching.official_curriculum_topics SET "Name" = 'Erken Çocuklukta Fen Eğitimi' WHERE "Code" = 'OABT_OKUL.2.01'`);
+});
+
+test('a rerun passes before and after the server renames the curriculum version (and changes nothing)', { skip }, () => {
+  const version = `SELECT "Name" || '|' || "VersionLabel" || '|' || "Source" || '|' || "ValidFromYear" || '-' || "ValidToYear" || '|' || "SourceUrl"
+    FROM coaching.curriculum_versions WHERE "Id" = '80d32c5a-cd82-4496-5f37-1c96041942b4' AND "Code" = 'coaching-exam-prep-km3-2026'`;
+  const renamed = `AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu|2026.11|KM3 paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; 01.11.2026'da incelenip yayımlandı.|2026-2027|https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf`;
+  // A fresh install already writes the renamed values.
+  assert.equal(run(version), renamed);
+  const rerun = expected => {
+    const before = foreignRows() + run(`SELECT md5(string_agg(x, '|' ORDER BY x)) FROM (SELECT v::text x FROM coaching.curriculum_versions v
+      UNION ALL SELECT l::text FROM coaching.study_catalog_lessons l UNION ALL SELECT t::text FROM coaching.study_catalog_topics t) rows`);
+    const result = psql(pack('apply.sql'));
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(notices(result).some(x => /^inserted: lessons 0, units 0, topics 0, outcomes 0, editions 0, mappings 0, ÖABT field exams 0/.test(x)), notices(result).join('\n'));
+    assert.equal(foreignRows() + run(`SELECT md5(string_agg(x, '|' ORDER BY x)) FROM (SELECT v::text x FROM coaching.curriculum_versions v
+      UNION ALL SELECT l::text FROM coaching.study_catalog_lessons l UNION ALL SELECT t::text FROM coaching.study_catalog_topics t) rows`), before);
+    assert.equal(run(version), expected);
+  };
+  // Production before the rename: the exact values release c1ce79c wrote.
+  run(`UPDATE coaching.curriculum_versions SET "Name" = 'AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu (taslak)', "VersionLabel" = '2026.11-taslak',
+    "Source" = 'KM3 taslak paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; ekip onayı bekliyor.'
+    WHERE "Id" = '80d32c5a-cd82-4496-5f37-1c96041942b4'`);
+  rerun(`AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu (taslak)|2026.11-taslak|KM3 taslak paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; ekip onayı bekliyor.|2026-2027|https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf`);
+  // The server SQL step renames it (published version: name, label and source only).
+  run(`UPDATE coaching.curriculum_versions SET "IsPublished" = true, "Name" = 'AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu', "VersionLabel" = '2026.11',
+    "Source" = 'KM3 paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; 01.11.2026''da incelenip yayımlandı.'
+    WHERE "Id" = '80d32c5a-cd82-4496-5f37-1c96041942b4'`);
+  rerun(renamed);
+  // A mix of old and new values is neither release: it still stops the pack.
+  run(`UPDATE coaching.curriculum_versions SET "VersionLabel" = '2026.11-taslak' WHERE "Id" = '80d32c5a-cd82-4496-5f37-1c96041942b4'`);
+  const conflict = psql(pack('apply.sql'));
+  assert.notEqual(conflict.status, 0);
+  assert.match(conflict.stderr, /differs.*curriculum version/);
+  run(`UPDATE coaching.curriculum_versions SET "IsPublished" = false, "VersionLabel" = '2026.11' WHERE "Id" = '80d32c5a-cd82-4496-5f37-1c96041942b4'`);
+});
+
 test('after the team activates and approves records, a rerun keeps their decisions; changed content stops it', { skip }, () => {
   run(`UPDATE coaching.study_catalog_lessons SET "IsActive" = true WHERE "Source" = 'coaching-catalog-km3' AND "SourceId" = 'AGS_SOZ';
     UPDATE coaching.study_catalog_topic_outcomes m SET "IsApproved" = true, "ReviewedAt" = now()
