@@ -113,6 +113,22 @@ describe('T6 Gelişimim', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent!;
     expect(text).toContain("Elif'in hedefi"); expect(text).toContain('Puan tahmini');
     expect(text).not.toContain('Hedefin'); expect(text).not.toContain('Puan tahminin'); expect(text).not.toContain('puanın');
+    expect(text).toContain('Yaklaşık tahmin'); expect(text).toContain("Yöntem: netler ÖSYM'nin 2025 sınav istatistikleriyle puana");
+  });
+
+  // KM4 (01.11.2026): every estimate card is labelled approximate, with a one-line method note and the diploma caveat.
+  it('Hedefim labels the estimate as approximate and explains the method in one line', () => {
+    const el = goal(estimate);
+    const card = el.querySelector('[data-testid="estimate-card"]')!;
+    expect(card.querySelector('[data-testid="estimate-approximate"]')?.textContent?.trim()).toBe('Yaklaşık tahmin');
+    expect(el.querySelector('[data-testid="estimate-method"]')?.textContent).toContain("Yöntem: netler ÖSYM'nin 2025 sınav istatistikleriyle puana, puan da 2025 yerleştirme sonuçlarıyla sıralamaya çevrilir. Resmî hesap değildir.");
+    expect(el.textContent).toContain('Diploma notu eklenmediği için YKS sıralaması olduğundan geride görünebilir.');
+  });
+
+  it('Hedefim drops the diploma caveat once the diploma grade is included', () => {
+    const el = goal({ ...estimate, estimates: [{ ...estimate.estimates[0], includesDiplomaGrade: true }] });
+    expect(el.textContent).toContain('Yaklaşık tahmin');
+    expect(el.textContent).not.toContain('Diploma notu eklenmediği');
   });
 
   it('the parent goal view explains a missing target', () => {

@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { ScoreEstimate } from '../../../core/services/coaching-score-estimate.service';
+import { ScoreEstimate, diplomaRankNote, estimateMethodNote } from '../../../core/services/coaching-score-estimate.service';
 import { CoachingScoreModelsComponent } from '../../dashboard/pages/coaching-score-models';
 import { DASHBOARD_ROUTES } from '../../dashboard/dashboard.routes';
 import { StudentScoreEstimateComponent } from './student-score-estimate.component';
@@ -38,6 +38,28 @@ describe('O5 score estimate', () => {
     expect(text()).toContain('Yüzdelik dilim: %6,5');
     expect(text()).toContain('Hedef: Fen Lisesi'); expect(text()).toContain('yaklaşık 9 net (30 puan)');
     expect(text()).toContain('Bu bir tahmindir');
+  });
+
+  // KM4 (01.11.2026): the models are derived from official statistics, not ÖSYM/MEB's own calculation; every view says so.
+  it('labels the estimate as approximate and says in one line how it is made', () => {
+    const { fixture, http, text } = setup('student-1');
+    http.expectOne(r => r.url.endsWith('/score-estimate')).flush(estimate);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="estimate-approximate"]')).toHaveLength(2);
+    expect(text()).toContain('Yaklaşık tahmin');
+    expect(text()).toContain('Yöntem: netler ÖSYM ve MEB\'in 2025 sınav istatistikleriyle puana, puan da 2025 yerleştirme sonuçlarıyla sıralamaya çevrilir. Resmî hesap değildir.');
+    expect(text()).toContain('Diploma notu eklenmediği için YKS sıralaması olduğundan geride görünebilir.');
+  });
+
+  it('names the source and year that the estimates use', () => {
+    const yks = estimate.estimates[0];
+    expect(estimateMethodNote([yks])).toBe('Yöntem: netler ÖSYM\'nin 2025 sınav istatistikleriyle puana, puan da 2025 yerleştirme sonuçlarıyla sıralamaya çevrilir. Resmî hesap değildir.');
+    expect(estimateMethodNote([estimate.estimates[1]])).toContain('MEB\'in 2025');
+    expect(estimateMethodNote([{ ...yks, modelYear: 2026 }, estimate.estimates[1]])).toContain('2025–2026');
+    expect(estimateMethodNote([])).toBeNull();
+    expect(diplomaRankNote([yks])).toContain('Diploma notu eklenmediği için');
+    expect(diplomaRankNote([{ ...yks, includesDiplomaGrade: true }])).toBeNull();
+    expect(diplomaRankNote([estimate.estimates[1]])).toBeNull();
   });
 
   // K4 (31.10.2026): a target without a taban or rank is not a missing estimate; the student is told why there is no gap.
