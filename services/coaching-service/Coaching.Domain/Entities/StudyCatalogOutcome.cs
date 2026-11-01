@@ -77,6 +77,15 @@ public sealed class StudyCatalogOutcome
         Code = valid.Code; Name = valid.Name; Notes = valid.Notes; SourcePage = valid.SourcePage; DisplayOrder = valid.DisplayOrder;
     }
     public void Archive(bool archived) => IsArchived = archived;
+    /// <summary>KM7: sets or clears the source URL; exam-skill outcomes always keep one.</summary>
+    public void SetSourceUrl(string? url)
+    {
+        url = string.IsNullOrWhiteSpace(url) ? null : url.Trim();
+        if (url is not null && (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != "https" || url.Length > 1000))
+            throw new ArgumentException("Kaynak adresi https:// ile başlayan en fazla 1000 karakterlik bir adres olmalıdır.");
+        if (url is null && SourceKind == "ExamSkill") throw new ArgumentException("Sınav becerisi kazanımlarının kaynak adresi boş bırakılamaz.");
+        SourceUrl = url;
+    }
     public static StudyCatalogOutcome Create(Guid edition, Guid group, string code, string name, string notes, int? page, int order,
         string sourceKind="Official",string? sourceUrl=null)
     {
@@ -109,6 +118,8 @@ public sealed class StudyCatalogTopicOutcome
     public Guid TopicId { get; private set; }
     public Guid OutcomeId { get; private set; }
     public bool IsApproved { get; private set; }
+    /// <summary>KM7: a rejected link is kept for audit but no longer counts as a link for planning or deletion checks.</summary>
+    public bool IsRejected { get; private set; }
     public string Evidence { get; private set; } = "";
     public Guid? ReviewedBy { get; private set; }
     public DateTime? ReviewedAt { get; private set; }
@@ -121,8 +132,16 @@ public sealed class StudyCatalogTopicOutcome
     public void Review(bool approved, string evidence, Guid actor)
     {
         if (actor == Guid.Empty) throw new ArgumentException("İnceleyen kullanıcı gereklidir.");
-        Evidence = StudyCatalogText.Require(evidence, 2000); IsApproved = approved; ReviewedBy = actor; ReviewedAt = DateTime.UtcNow;
+        Evidence = StudyCatalogText.Require(evidence, 2000); IsApproved = approved; IsRejected = false; ReviewedBy = actor; ReviewedAt = DateTime.UtcNow;
     }
+    /// <summary>KM7: rejects the link; the record and its evidence stay for audit.</summary>
+    public void Reject(Guid actor)
+    {
+        if (actor == Guid.Empty) throw new ArgumentException("İnceleyen kullanıcı gereklidir.");
+        IsApproved = false; IsRejected = true; ReviewedBy = actor; ReviewedAt = DateTime.UtcNow;
+    }
+    /// <summary>KM7: "pending", "approved" or "rejected".</summary>
+    public string Status => IsRejected ? "rejected" : IsApproved ? "approved" : "pending";
 }
 
 public sealed class OutcomeDurationEstimate
