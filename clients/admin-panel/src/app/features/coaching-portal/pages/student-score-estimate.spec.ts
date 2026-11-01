@@ -102,12 +102,16 @@ describe('O5 score estimate', () => {
     expect(component.canApply()).toBe(false);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('3. satır');
     component.preview.set({ fingerprint: 'fp', year: 2025, models: [{ scoreType: 'TYT', name: 'TYT', baseScore: 100, coefficients: 9, rankRows: 3, replaces: false }], errors: [] });
+    // KM7: every write takes a 5–500 character reason.
+    await component.apply(); http.expectNone(r => r.url.endsWith('/coaching-admin/score-models/apply'));
+    component.applyReason = '2025 sonuçları yüklendi';
     const applying = component.apply();
     await vi.waitFor(() => {
       const apply = http.expectOne(r => r.url.endsWith('/coaching-admin/score-models/apply'));
-      expect(apply.request.body.fingerprint).toBe('fp'); apply.flush({ applied: 1 });
+      expect(apply.request.body.fingerprint).toBe('fp'); expect(apply.request.body.reason).toBe('2025 sonuçları yüklendi'); apply.flush({ applied: 1 });
     });
     await vi.waitFor(() => http.expectOne(r => r.url.endsWith('/coaching-admin/score-models')).flush([]));
+    await vi.waitFor(() => { const history = http.match(r => r.url.endsWith('/coaching-admin/score-models/history')); history.forEach(x => x.flush([])); expect(history.length).toBeGreaterThan(0); });
     await applying;
     expect(component.success()).toContain('1 puan türünün');
     expect(DASHBOARD_ROUTES.find(route => route.path === 'coaching/score-models')?.data?.['role']).toBe('SystemAdmin');
