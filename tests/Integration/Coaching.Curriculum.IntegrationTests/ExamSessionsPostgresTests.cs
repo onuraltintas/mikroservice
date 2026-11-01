@@ -71,7 +71,8 @@ public sealed class ExamSessionsPostgresTests
         await migrator.MigrateAsync(Migration);
         Assert.Equal("LGS:2027:2027-06-20:-:-,TYT:2026:2026-06-21:-:-", await Sessions(pg));
         Assert.Equal("0", await Scalar(pg, "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'coaching' AND table_name = 'study_catalog_exams' AND column_name = 'ExamDate'"));
-        Assert.Empty(await pg.Db.Database.GetPendingMigrationsAsync());
+        // Only migrations newer than this one may still be pending.
+        Assert.All(await pg.Db.Database.GetPendingMigrationsAsync(), x => Assert.True(string.CompareOrdinal(x, Migration) > 0, x));
         Assert.False(pg.Db.Database.HasPendingModelChanges());
 
         // The new purposes are allowed by the database; a student on one of them blocks the rollback.
