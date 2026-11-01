@@ -28,8 +28,8 @@ describe('StudentLearningSetupComponent exam purposes', () => {
   it('offers AGS / ÖABT, YDS and YÖKDİL preparation next to LGS and YKS', async () => {
     const { fixture } = await setup();
     const options = [...fixture.nativeElement.querySelectorAll('select[name="purpose"] option')].map((x: HTMLOptionElement) => x.textContent?.trim());
-    expect(options).toEqual(['Okul derslerimi desteklemek', 'LGS hazırlığı', 'YKS hazırlığı', 'AGS / ÖABT hazırlığı', 'YDS hazırlığı',
-      'YÖKDİL hazırlığı', 'Genel çalışma', 'Henüz karar vermedim']);
+    // KM8 (01.11.2026): only exam purposes remain selectable.
+    expect(options).toEqual(['Hazırlandığın sınavı seç', 'LGS hazırlığı', 'YKS hazırlığı', 'AGS / ÖABT hazırlığı', 'YDS hazırlığı', 'YÖKDİL hazırlığı']);
   });
 
   it('lets a YDS student pick one of the sessions and saves English as the language', async () => {

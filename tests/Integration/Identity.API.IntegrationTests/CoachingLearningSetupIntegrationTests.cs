@@ -18,7 +18,7 @@ public sealed class CoachingLearningSetupIntegrationTests
         var request = new AutomaticStudyPreviewRequest(new(2026, 10, 19), 7, 0, [new(Guid.NewGuid(), 30)], 0);
         var error = await Assert.ThrowsAsync<BusinessRuleException>(() => service.PreviewAsync(request));
         Assert.Equal("StudyPlanning.Conflict", error.Code);
-        await f.Service.SaveAsync(new(null, 2026, LearningPurpose.General, null, null, null, [], [], false), default);
+        await f.Service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default);
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.PreviewAsync(request));
         Assert.Empty(f.Db.StudyPlanRevisions);
     }
