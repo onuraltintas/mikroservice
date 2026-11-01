@@ -15,6 +15,7 @@ test('student selects reviewed outcomes, overrides time and saves and completes 
     const respond = data => route.fulfill({ json: { success: true, data } });
     if (path.endsWith('/auth/refresh-token')) return route.fulfill({ json: { accessToken: token('Student'), tokenType: 'Bearer', expiresInMinutes: 15 } });
     if (path.endsWith('/profiles/me')) return respond({ student: { educationStatus: 'Student', gradeLevel: 8, isActive: true }, memberships: [] });
+    if (path.endsWith('/weekly-draft')) return respond({ draft: null, lessons: [] });
     if (path.endsWith('/availability')) return respond({ version: 1, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] });
     if (path.endsWith('/topics')) return respond({ items: [{ id: 'topic', name: 'Çarpanlar ve Katlar', lessonName: 'Matematik', unitName: 'LGS', examCode: 'LGS', gradeNumber: null, estimatedMinutes: null }], totalCount: 1, pageNumber: 1, pageSize: 20 });
     if (path.endsWith('/topics/topic/outcomes')) return respond([outcome]);
@@ -34,7 +35,10 @@ test('student selects reviewed outcomes, overrides time and saves and completes 
     if (path.endsWith('/plans')) return respond({ items: plan ? [plan] : [], totalCount: plan ? 1 : 0, pageNumber: 1, pageSize: 20 });
     return respond([]);
   });
+  // T3: the old automatic-plan address leads to Planım › Plan sihirbazı; topic planning sits behind "Konulardan plan hazırla".
   await page.goto('/coaching-portal/automatic-plan');
+  await expect(page).toHaveURL(/\/coaching-portal\/plan\/wizard$/);
+  await page.getByRole('button', { name: 'Konulardan plan hazırla', exact: true }).click();
   await page.getByRole('button', { name: 'Konuları ara', exact: true }).click();
   await page.getByRole('button', { name: 'Konu ekle', exact: true }).click();
   await page.getByRole('button', { name: 'Kazanım önerilerini yükle', exact: true }).click();
@@ -49,14 +53,19 @@ test('student selects reviewed outcomes, overrides time and saves and completes 
   await page.getByRole('button', { name: 'Taslağı kaydet', exact: true }).click();
   await expect(page.getByText(/taslak olarak kaydedildi/)).toBeVisible();
   await page.getByRole('link', { name: 'Çalışma planlarımı aç', exact: true }).click();
+  // T4: with no active plan Planım offers the saved plans under "Kayıtlı planlarım"; a draft opens in its editor and is published there.
+  await page.getByText('Kayıtlı planlarım', { exact: true }).click();
   await page.getByRole('button', { name: /LGS kazanım pilotu/ }).click();
+  await expect(page.getByRole('heading', { name: 'Taslağını düzenle', exact: true })).toBeVisible();
   await page.getByRole('checkbox', { name: /Planımı kontrol ettim/ }).check();
   await page.getByRole('button', { name: 'Planı yayımla', exact: true }).click();
-  await expect(page.getByText(/M.8.1.1.1.*süre sürümü 2/)).toBeVisible();
-  await page.getByLabel('Gerçek süre (dk)', { exact: true }).fill('32');
-  await page.getByLabel('Gerçek soru (isteğe bağlı)', { exact: true }).fill('12');
-  await page.getByRole('button', { name: 'Tamamla', exact: true }).click();
-  await expect(page.getByText(/Tamamlandı · 32 dk/)).toBeVisible(); expect(completed).toHaveLength(1);
+  await page.getByRole('button', { name: 'Çarpanlar ve Katlar, ayrıntıları aç', exact: true }).click();
+  const sheet = page.getByRole('dialog', { name: 'Çarpanlar ve Katlar' });
+  await expect(sheet.getByText(/M.8.1.1.1.*süre sürümü 2/)).toBeVisible();
+  await sheet.getByLabel('Gerçek süre (dk)', { exact: true }).fill('32');
+  await sheet.getByLabel('Gerçek soru (isteğe bağlı)', { exact: true }).fill('12');
+  await sheet.getByRole('button', { name: 'Tamamla', exact: true }).click();
+  await expect(sheet.getByText(/Tamamlandı · 32 dk/)).toBeVisible(); expect(completed).toHaveLength(1);
   await page.screenshot({ path: `../../artifacts/coaching-outcomes/student-${test.info().project.name}.png`, fullPage: true });
 });
 
@@ -72,7 +81,7 @@ test('administrator previews a draft package and must supply an import reason', 
     return respond([]);
   });
   await page.goto('/dashboard/coaching/catalog');
-  await page.getByText('LGS kazanımları ve süre incelemesi', { exact: true }).click();
+  await page.getByText('Kazanımlar ve süre incelemesi', { exact: true }).click();
   await page.getByText('Kazanım paketi aktar', { exact: true }).click();
   await page.getByLabel('Paket JSON', { exact: true }).fill('{"code":"pilot"}');
   await page.getByRole('button', { name: 'Aktarımı önizle', exact: true }).click();
