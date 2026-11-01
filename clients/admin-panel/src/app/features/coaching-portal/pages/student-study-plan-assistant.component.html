@@ -18,7 +18,11 @@
           </article>
         }
       </div>
-      @if (error()) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Çalışma düzenini tamamla →</a> }</p> }
+      @if (purposeRetired()) {
+        @if (staffStudentId) { <p class="notice" role="status" data-testid="retired-purpose">Öğrencinin çalışma amacı artık desteklenmiyor; öğrencinin hazırlandığı sınavı seçmesi gerekiyor.</p> }
+        @else { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }} <a routerLink="/coaching-portal/account/settings">Çalışma amacını seç →</a></p> }
+      }
+      @if (error() && !(purposeRetired() && !lessons().length)) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Çalışma düzenini tamamla →</a> }</p> }
       @if (saved()) { <p class="notice success" role="status">Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }
       <div class="composer wizard-form">
         <fieldset [disabled]="busy() || !lessons().length">
@@ -45,8 +49,7 @@
       <section class="topic-statuses" aria-labelledby="topic-status-title">
         <h2 id="topic-status-title">Daha önce çalıştığın konular</h2>
         @if (purposeRetired()) {
-          @if (staffStudentId) { <p class="notice" role="status" data-testid="retired-purpose">Öğrencinin çalışma amacı artık desteklenmiyor; öğrencinin hazırlandığı sınavı seçmesi gerekiyor.</p> }
-          @else { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }} <a routerLink="/coaching-portal/account/settings">Çalışma amacını seç →</a></p> }
+          <p class="muted">@if (staffStudentId) { Öğrenci sınavını seçtikten sonra konular burada görünür. } @else { Sınavını seçtikten sonra konuların burada görünür. }</p>
         } @else if (!learningContext()) {
           @if(staffStudentId){<p class="muted">Öğrencinin eğitim bağlamını tamamlaması gerekiyor.</p>}@else{<p class="muted">Derslerini seçmek için önce <a routerLink="/coaching-portal/account/settings">çalışma düzenini tamamla</a>.</p>}
         } @else {

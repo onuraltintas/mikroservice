@@ -19,7 +19,7 @@
     <form class="panel" #purposeForm="ngForm" (ngSubmit)="savePurpose()">
       <h2>Çalışma amacım</h2>
       @if (purposeRetired()) { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }}</p> }
-      <p>Hazırlandığın sınavı seç. Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
+      <p>@if (!purposeRetired()) { Hazırlandığın sınavı seç. }Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
       <fieldset [disabled]="saving()"><div class="fields">
         <label>Eğitim yılı başlangıcı<input type="number" name="academicYear" min="2000" max="2200" required [(ngModel)]="academicYearStart" (ngModelChange)="changed()"></label>
         <label>Çalışma amacım<select name="purpose" required [(ngModel)]="purpose" (ngModelChange)="changed()"><option value="" disabled>Hazırlandığın sınavı seç</option>@for (item of purposes; track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select></label>
