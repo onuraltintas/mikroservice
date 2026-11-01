@@ -16,7 +16,8 @@ public sealed class PracticeAdaptationPostgresTests
     public async Task AllSixProfilesUseTheirDynamicCatalogAndCanPreviewAndApplyReviews()
     {
         await using var f = await Fixture.Create();
-        foreach (var profile in PracticeExamRules.Profiles)
+        // The six LGS/YKS scopes have official lesson aliases in the catalog; KM1's AGS/ÖABT/YDS/YÖKDİL catalogs come later.
+        foreach (var profile in PracticeExamRules.Profiles.Where(x => x.Code is "LGS" or "TYT" or "AYT_SAY" or "AYT_EA" or "AYT_SOZ" or "YDT_EN"))
         {
             var student = Guid.NewGuid(); f.Pg.Data.User.UserId = student;
             var section = profile.Sections[0]; var scope = profile.Code.StartsWith("AYT_") ? "AYT" : profile.Code == "YDT_EN" ? "YDT" : profile.Code;

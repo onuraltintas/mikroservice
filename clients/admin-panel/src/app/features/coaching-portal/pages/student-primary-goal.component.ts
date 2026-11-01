@@ -19,17 +19,18 @@ import { coachingFeedback } from '../coaching-feedback';
   @if(message()){<p role="status" class="notice success">{{message()}}</p>}
   @if(loading()){<p role="status">Hedefin yükleniyor…</p>}
   @if(!loading() && ready()){
-   @if(context()?.purpose !== 'Lgs' && context()?.purpose !== 'Yks'){
-    <div class="panel"><h2>Önce sınavını belirle</h2><p>Profil ve tercihlerinden LGS veya YKS hazırlığını seçerek sana uygun hedefleri açabilirsin.</p><a routerLink="/coaching-portal/account/settings">Profil ve tercihlerime git →</a></div>
+   @if(!goalTitle()){
+    <div class="panel"><h2>Önce sınavını belirle</h2><p>Profil ve tercihlerinden LGS, YKS, AGS / ÖABT, YDS veya YÖKDİL hazırlığını seçerek sana uygun hedefleri açabilirsin.</p><a routerLink="/coaching-portal/account/settings">Profil ve tercihlerime git →</a></div>
    }@else{
-    <div class="panel"><h2>{{context()?.purpose === 'Lgs' ? 'LGS okul hedefim' : 'YKS program hedefim'}}</h2>
+    <div class="panel"><h2>{{goalTitle()}}</h2>
      @if(current();as goal){<p><strong>{{goal.target.catalogTarget?.name || goal.title}}</strong></p>
-      <app-student-goal-target [goalId]="goal.id" [context]="context()" [autoOpen]="true" (targetChanged)="targetUpdated($event)" />
+      @if(hasCatalogTarget()){<app-student-goal-target [goalId]="goal.id" [context]="context()" [autoOpen]="true" (targetChanged)="targetUpdated($event)" />}
+      @else{<p>Bu sınavda okul veya program seçilmez; hedefini net olarak Hedeflerim bölümünde belirleyebilirsin.</p>}
      }@else{<p>Henüz bu sınav için ana hedef seçmedin. Var olan hedeflerinden birini seçebilir veya yeni hedef oluşturabilirsin.</p>}
     </div>
     <details class="panel" [open]="!current()"><summary>{{current() ? 'Ana hedefimi değiştir' : 'Ana hedef seç veya oluştur'}}</summary><p>Seçimin hesabına kaydedilir. Önceki hedefler ve çalışma kayıtların korunur.</p>
      @for(goal of choices();track goal.id){<div class="draft-task"><strong>{{goal.target.catalogTarget?.name || goal.title}}</strong><button type="button" [disabled]="saving() || creating() || current()?.id===goal.id" (click)="select(goal.id)">{{current()?.id===goal.id ? 'Ana hedefim' : 'Ana hedef olarak seç'}}</button></div>}
-     <button type="button" class="primary" (click)="create()" [disabled]="saving() || creating()">{{creating()?'Hazırlanıyor…':'Yeni okul / program hedefi oluştur'}}</button>
+     <button type="button" class="primary" (click)="create()" [disabled]="saving() || creating()">{{creating()?'Hazırlanıyor…':hasCatalogTarget()?'Yeni okul / program hedefi oluştur':'Yeni sınav hedefi oluştur'}}</button>
     </details>
    }
   }
@@ -67,11 +68,15 @@ export class StudentPrimaryGoalComponent implements OnInit {
  private selectCore(id:string){this.saving.set(true);this.error.set('');this.api.selectPrimaryGoal(id,this.version).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving.set(false))).subscribe({next:value=>{this.version=value.version;this.current.set(this.choices().find(x=>x.id===id)??null);this.message.set('Ana hedefin kaydedildi.');this.changed.emit();},error:e=>this.error.set(e?.error?.message??'Ana hedef kaydedilemedi. Yeniden yükleyip tekrar deneyebilirsin.')});}
  create(){
   const id=this.auth.userProfile()?.id;if(!id||this.creating()||this.saving()||!this.canLeavePage())return;
-  this.creating.set(true);this.error.set('');const title=this.context()?.purpose==='Lgs'?'LGS okul hedefim':'YKS program hedefim';
+  const title=this.goalTitle();if(!title)return;
+  this.creating.set(true);this.error.set('');
   this.goals.createStudentGoal(id,{title,category:1},crypto.randomUUID()).pipe(switchMap(r=>this.api.getGoalTarget(r.goalId)),takeUntilDestroyed(this.destroy),finalize(()=>this.creating.set(false))).subscribe({next:target=>{
    this.choices.update(rows=>[...rows,{id:target.goalId,title,category:'ExamPreparation',progress:0,isCompleted:false,target}]);this.selectCore(target.goalId);
   },error:()=>this.error.set('Hedef oluşturulamadı. Yeniden yükleyerek mevcut hedeflerini kontrol et.')});
  }
+ /** KM1: LGS and YKS goals point at a school or programme; AGS/ÖABT, YDS and YÖKDİL goals are net targets only. */
+ goalTitle(){return ({Lgs:'LGS okul hedefim',Yks:'YKS program hedefim',Ags:'AGS / ÖABT hedefim',Yds:'YDS hedefim',Yokdil:'YÖKDİL hedefim'} as Record<string,string>)[this.context()?.purpose??'']??null;}
+ hasCatalogTarget(){return this.context()?.purpose==='Lgs'||this.context()?.purpose==='Yks';}
  targetUpdated(target:GoalTarget){this.choices.update(rows=>rows.map(g=>g.id===target.goalId?{...g,target}:g));this.current.set(this.choices().find(g=>g.id===target.goalId)??null);this.changed.emit();}
  canLeavePage(){return !this.saving()&&!this.creating()&&(this.picker?.canLeavePage()??true);}
  private readonly feedback=coachingFeedback(this.message,this.error);

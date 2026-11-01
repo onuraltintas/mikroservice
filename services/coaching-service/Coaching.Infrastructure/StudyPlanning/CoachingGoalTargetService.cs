@@ -143,8 +143,9 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
         if (request.ExamCode is { } code && await db.Set<StudentPrimaryGoal>().AnyAsync(x => x.StudentId == student && x.GoalId == goalId, ct))
         {
             var context = await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x => x.StudentUserId == student, ct);
-            var advanced = YksScoreTypes.AdvancedNetExam(context?.PrimaryScoreType);
-            if (context?.Purpose == LearningPurpose.Lgs && code != "LGS" || context?.Purpose == LearningPurpose.Yks && code != "TYT" && code != advanced)
+            // KM1: every exam-preparation purpose limits the primary goal's nets to its own scopes.
+            if (context is not null && LearningPurposes.IsExamPreparation(context.Purpose)
+                && !LearningPurposes.NetExamCodes(context.Purpose, context.PrimaryScoreType).Contains(code))
                 throw new ArgumentException("Ana hedefin net kapsamı profilindeki sınavla eşleşmeli.");
         }
         await ValidateNetCatalogAsync(goal.TargetSchoolId, goal.TargetUniversityProgramId, request.ExamCode, ct);

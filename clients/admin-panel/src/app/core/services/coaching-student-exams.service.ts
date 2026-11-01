@@ -6,7 +6,7 @@ import { TargetPage } from './coaching-study-planning.service';
 import { PracticeExamInput, PracticeExamProfile, PracticeExamSummary } from '../models/practice-exam';
 
 export interface LessonAnswers { lessonId: string; topicId: string | null; questionCount: number; correct: number; wrong: number; empty: number; lessonName?: string | null; topicName?: string | null }
-export type StudentExamType = 'Mock' | 'Weekly' | 'Monthly' | 'LGS' | 'YKS' | 'MidTerm' | 'Final' | 'Quiz';
+export type StudentExamType = 'Mock' | 'Weekly' | 'Monthly' | 'LGS' | 'YKS' | 'MidTerm' | 'Final' | 'Quiz' | 'AGS' | 'YDS' | 'YOKDIL';
 export interface StudentExamInput { title: string; examType: StudentExamType; examDate: string; score: number; maxScore: number; correctAnswers: number; wrongAnswers: number; emptyAnswers: number; lessons: LessonAnswers[]; practiceExam?: PracticeExamInput | null }
 export interface StudentExam extends StudentExamInput { id: string; version: number; source: 'StudentReported'; netSummary?: PracticeExamSummary | null }
 interface ApiResult<T> { success: boolean; data: T }

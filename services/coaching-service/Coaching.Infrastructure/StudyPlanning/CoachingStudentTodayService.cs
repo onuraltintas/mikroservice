@@ -64,15 +64,17 @@ public sealed class CoachingStudentTodayService(CoachingDbContext db, CoachingMo
     private async Task<StudentTodayExam?> ExamAsync(Guid student, DateOnly today, CancellationToken ct)
     {
         var own = await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == student)
-            .Select(x => x.TargetExamDate).SingleOrDefaultAsync(ct);
-        if (own is { } date && date > today) return new("Sınavın", date, date.DayNumber - today.DayNumber, "Student");
-        var draft = await db.Set<WeeklyStudyDraft>().AsNoTracking().Where(x => x.StudentId == student).SingleOrDefaultAsync(ct);
-        var codes = draft?.Slots.Select(x => x.ExamCode).Where(x => x is not null).Distinct().ToArray() ?? [];
-        if (codes.Length == 0) return null;
-        var exam = await db.Set<StudyCatalogExam>().AsNoTracking()
-            .Where(x => Enumerable.Contains(codes, x.Code) && x.IsActive && x.ExamDate > today)
-            .OrderBy(x => x.ExamDate).ThenBy(x => x.Code).FirstOrDefaultAsync(ct);
-        return exam?.ExamDate is { } catalog ? new(exam.Name, catalog, catalog.DayNumber - today.DayNumber, "Catalog") : null;
+            .Select(x => new { x.TargetExamDate, x.TargetExamSessionId }).SingleOrDefaultAsync(ct);
+        if (own?.TargetExamDate is { } date && date > today) return new("Sınavın", date, date.DayNumber - today.DayNumber, "Student");
+        // KM1: the session the student chose, else the nearest upcoming session of the plan's exams.
+        var target = await CoachingExamSessions.ChosenAsync(db, own?.TargetExamSessionId, today, ct);
+        if (target is null)
+        {
+            var draft = await db.Set<WeeklyStudyDraft>().AsNoTracking().Where(x => x.StudentId == student).SingleOrDefaultAsync(ct);
+            var codes = draft?.Slots.Select(x => x.ExamCode).OfType<string>().Distinct().ToArray() ?? [];
+            target = await CoachingExamSessions.NextCatalogAsync(db, codes, today, ct);
+        }
+        return target is null ? null : new(target.Name, target.Date, target.Date.DayNumber - today.DayNumber, target.Source);
     }
 
     private async Task<StudentTodayGoal?> GoalAsync(Guid student, DateTime now, CancellationToken ct)

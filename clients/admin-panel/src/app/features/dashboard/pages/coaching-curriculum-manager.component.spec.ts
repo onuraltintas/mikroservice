@@ -33,14 +33,35 @@ describe('Coaching curriculum manager', () => {
     const button = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(x => x.textContent?.trim() === 'Kalıcı sil');
     expect(button?.disabled).toBe(true); c.remove(); http.expectNone(r => r.method === 'DELETE'); http.verify();
   });
-  it('offers an optional exam date and sends it as a calendar date without a time zone', async () => {
+  // KM1 (01.11.2026): an exam has dated sessions (YDS twice a year, e-YDS many times) instead of one optional date.
+  it('adds exam sessions with application windows and sends them as calendar dates', async () => {
     const {fixture,http,c}=setup();c.create('exams');fixture.detectChanges();await fixture.whenStable();
-    const date=fixture.nativeElement.querySelector('input[name="examDate"]') as HTMLInputElement | null;
-    expect(date).not.toBeNull();expect(date?.type).toBe('date');
-    if (date) {date.value='2027-06-20';date.dispatchEvent(new Event('input'));}
-    c.form.name='Tarihli sınav';c.form.code='DATE';c.form.reason='Sınav tarihi belirle';c.save();
-    const req=http.expectOne(r=>r.method==='POST');expect(req.request.body.examDate).toBe('2027-06-20');
+    expect(fixture.nativeElement.querySelector('input[name="examDate"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Henüz oturum yok');
+    const add=Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(x=>x.textContent?.trim()==='Oturum ekle')!;
+    add.click();add.click();fixture.detectChanges();await fixture.whenStable();
+    const dates=fixture.nativeElement.querySelectorAll('input[name^="sessionDate"]') as NodeListOf<HTMLInputElement>;
+    expect(dates.length).toBe(2);expect(dates[0].type).toBe('date');
+    c.form.sessions[0]={id:null,date:'2027-03-28',label:'2027/1',applicationStart:'2027-02-03',applicationEnd:'2027-02-11'};
+    c.form.sessions[1]={id:null,date:'2027-11-21',label:'2027/2',applicationStart:'',applicationEnd:''};
+    c.form.name='Yabancı Dil Bilgisi Seviye Tespit Sınavı';c.form.code='YDS';c.form.reason='YDS oturumları';c.save();
+    const req=http.expectOne(r=>r.method==='POST');
+    expect(req.request.body.examDate).toBeUndefined();
+    expect(req.request.body.sessions).toEqual([{id:null,date:'2027-03-28',label:'2027/1',applicationStart:'2027-02-03',applicationEnd:'2027-02-11'},
+      {id:null,date:'2027-11-21',label:'2027/2',applicationStart:null,applicationEnd:null}]);
     req.flush({message:'Örnek çakışma'},{status:409,statusText:'Conflict'});http.verify();
+  });
+  it('loads the sessions of an exam, removes one and keeps the others with their ids', () => {
+    const {fixture,http,c}=setup();
+    const exam={kind:'exams',id:'yds',name:'YDS',code:'YDS',path:'YDS',isActive:false,fingerprint:'v1',canDelete:true,blockers:[],estimates:[],mappings:[],examDate:'2027-03-28',
+      sessions:[{id:'s1',date:'2027-03-28',label:'2027/1',applicationStart:'2027-02-03',applicationEnd:'2027-02-11'},{id:'s2',date:'2027-11-21',label:'2027/2',applicationStart:null,applicationEnd:null}]};
+    c.select({...exam} as never);http.expectOne(r=>r.url.endsWith('/exams/yds')).flush({data:exam});fixture.detectChanges();
+    expect(c.form.sessions.map(x=>x.label)).toEqual(['2027/1','2027/2']);
+    expect(fixture.nativeElement.textContent).toContain('Sınav oturumları');
+    c.removeSession(0);c.form.reason='Bahar oturumu iptal';c.save();
+    const req=http.expectOne(r=>r.method==='PUT');
+    expect(req.request.body.sessions).toEqual([{id:'s2',date:'2027-11-21',label:'2027/2',applicationStart:null,applicationEnd:null}]);
+    req.flush({message:'Çakışma'},{status:409,statusText:'Conflict'});http.verify();
   });
   it('edits the topic exam weight used when a plan does not fit (roadmap O7)', () => {
     const { fixture, http, c } = setup(); c.select({ ...topic } as never);

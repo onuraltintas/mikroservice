@@ -231,7 +231,9 @@ public sealed class CoachingPracticeAdaptationService(CoachingDbContext db, ICoa
     // Exact official subject aliases only. Unknown/custom names are deliberately not guessed.
     internal static bool Fits(string exam, string section, string? catalogExam, string lesson)
     {
-        var scope = exam.StartsWith("AYT_") ? "AYT" : exam == "YDT_EN" ? "YDT" : exam;
+        // KM1: ÖABT fields share the OABT catalog exam; YDS and YÖKDİL scopes map to their catalog exams.
+        var scope = exam.StartsWith("AYT_") ? "AYT" : exam == "YDT_EN" ? "YDT" : exam == "YDS_EN" ? "YDS"
+            : exam.StartsWith("OABT_", StringComparison.Ordinal) ? "OABT" : exam.StartsWith("YOKDIL_", StringComparison.Ordinal) ? "YOKDIL" : exam;
         if (catalogExam != scope) return false;
         var name = string.Concat(lesson.Normalize(NormalizationForm.FormD).Where(x => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(x)
             != System.Globalization.UnicodeCategory.NonSpacingMark)).ToUpperInvariant().Replace('İ', 'I').Replace('ı', 'I');

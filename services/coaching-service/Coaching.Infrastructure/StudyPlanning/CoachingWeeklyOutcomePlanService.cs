@@ -26,12 +26,15 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     {
         var draft=await Draft(student,ct);var today=Today(draft.TimeZoneId);
         var codes=draft.Slots.Select(x=>x.ExamCode).Where(x=>x is not null).Distinct().ToArray();
-        var rows=await db.Set<StudyCatalogExam>().AsNoTracking().Where(x=>Enumerable.Contains(codes,x.Code)&&x.IsActive).OrderBy(x=>x.Code).ToArrayAsync(ct);
-        var exams=rows.Select(x=>new WeeklyExamReference(x.Name,x.ExamDate)).ToArray();
-        // Roadmap O7: the plan ends the day before the exam: the student's own date, else the admin's nearest upcoming date.
-        var catalogDate=rows.Where(x=>x.ExamDate>today).Select(x=>x.ExamDate).Min();
-        var own=await db.StudentLearningContexts.AsNoTracking().Where(x=>x.StudentUserId==student).Select(x=>x.TargetExamDate).SingleOrDefaultAsync(ct);
-        var (examDate,source)=own>today?(own,"Student"):catalogDate.HasValue?(catalogDate,"Catalog"):((DateOnly?)null,"Default");
+        var rows=await db.Set<StudyCatalogExam>().AsNoTracking().Include(x=>x.Sessions).Where(x=>Enumerable.Contains(codes,x.Code)&&x.IsActive).OrderBy(x=>x.Code).ToArrayAsync(ct);
+        // KM1: each exam shows its next session (else its latest one), as the single date used to.
+        var exams=rows.Select(x=>new WeeklyExamReference(x.Name,x.NextSessionDate(today))).ToArray();
+        // Roadmap O7: the plan ends the day before the exam: the student's own date, then (KM1) the session the student chose,
+        // else the admin's nearest upcoming session.
+        var catalogDate=(await CoachingExamSessions.NextCatalogAsync(db,codes.OfType<string>().ToArray(),today,ct))?.Date;
+        var own=await db.StudentLearningContexts.AsNoTracking().Where(x=>x.StudentUserId==student).Select(x=>new{x.TargetExamDate,x.TargetExamSessionId}).SingleOrDefaultAsync(ct);
+        var chosen=await CoachingExamSessions.ChosenAsync(db,own?.TargetExamSessionId,today,ct);
+        var (examDate,source)=own?.TargetExamDate>today?(own.TargetExamDate,"Student"):chosen is not null?(chosen.Date,"Session"):catalogDate.HasValue?(catalogDate,"Catalog"):((DateOnly?)null,"Default");
         var end=examDate is {} date?(date.AddDays(-1)<today?today:date.AddDays(-1)):WeeklyOutcomeScheduler.DefaultEnd(today);
         return new(today,end,draft.Version,draft.TimeZoneId,exams,examDate,source,catalogDate);
     }

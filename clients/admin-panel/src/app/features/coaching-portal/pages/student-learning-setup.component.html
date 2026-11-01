@@ -21,12 +21,32 @@
       <fieldset [disabled]="saving()"><div class="fields">
         <label>Eğitim yılı başlangıcı<input type="number" name="academicYear" min="2000" max="2200" required [(ngModel)]="academicYearStart" (ngModelChange)="changed()"></label>
         <label>Çalışma amacım<select name="purpose" [(ngModel)]="purpose" (ngModelChange)="changed()">@for (item of purposes; track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select></label>
-        @if (purpose === 'Lgs' || purpose === 'Yks') { <label>Hedef sınav yılı<input type="number" name="examYear" [min]="academicYearStart" [max]="academicYearStart + 5" required [(ngModel)]="targetExamYear" (ngModelChange)="changed()"></label> }
+        @if (examPurpose()) { <label>Hedef sınav yılı<input type="number" name="examYear" [min]="academicYearStart" [max]="academicYearStart + 5" required [(ngModel)]="targetExamYear" (ngModelChange)="changed()"></label> }
+        @if (sessionChoices().length > 1) {
+          <label class="wide">Hedef oturum<select name="examSession" aria-describedby="exam-session-help" [ngModel]="targetExamSessionId" (ngModelChange)="selectSession($event)">
+            <option [ngValue]="null">Henüz seçmedim</option>
+            @for (session of sessionChoices(); track session.id) { <option [ngValue]="session.id">{{ sessionLabel(session) }}</option> }
+          </select><small id="exam-session-help">Planın ve geri sayımın bu oturuma göre hazırlanır.</small></label>
+        }
+        @if (purpose === 'Ags') {
+          <label class="wide">ÖABT alanı<select name="oabtField" aria-describedby="oabt-field-help" [(ngModel)]="oabtField" (ngModelChange)="changed()">
+            <option value="">ÖABT’ye girmeyeceğim</option>
+            @for (field of oabtFields; track field[0]) { <option [value]="field[0]">{{ field[1] }}</option> }
+          </select><small id="oabt-field-help">Yabancı dil öğretmenliği alanları ÖABT’ye girmez; bu alanlarda YDS puanı kullanılır.</small></label>
+        }
+        @if (purpose === 'Yokdil') {
+          <label>YÖKDİL alanı<select name="yokdilField" required [(ngModel)]="yokdilField" (ngModelChange)="changed()">
+            <option value="">Seç</option>
+            @for (field of yokdilFields; track field[0]) { <option [value]="field[0]">{{ field[1] }}</option> }
+          </select></label>
+        }
         @if (purpose === 'Yks') {
           <label>Birincil puan türü<select name="scoreType" [(ngModel)]="primaryScoreType" (ngModelChange)="changed()"><option value="TYT">TYT</option><option value="SAY">Sayısal</option><option value="EA">Eşit ağırlık</option><option value="SOZ">Sözel</option><option value="DIL">Dil</option></select></label>
           @if (primaryScoreType === 'DIL') { <label>Yabancı dil<select name="language" required [(ngModel)]="foreignLanguage" (ngModelChange)="changed()"><option value="">Seç</option><option value="English">İngilizce</option></select></label> }
         }
-      </div><p class="muted">Eğitim kapsamını değiştirirsen ders seçimlerini ve başlangıç durumunu yeniden belirlemen gerekir. Aktif planın korunur.</p>
+      </div>
+      @if (purpose === 'Yds' || purpose === 'Yokdil') { <p class="muted">Sınav dili: İngilizce. Şimdilik yalnız İngilizce hazırlık destekleniyor.</p> }
+      <p class="muted">Eğitim kapsamını değiştirirsen ders seçimlerini ve başlangıç durumunu yeniden belirlemen gerekir. Aktif planın korunur.</p>
       <button type="submit" [disabled]="purposeForm.invalid">Kaydet ve devam et</button></fieldset>
     </form>
   }

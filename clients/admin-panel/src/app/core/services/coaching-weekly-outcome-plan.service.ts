@@ -8,7 +8,7 @@ export interface WeeklyOutcomeRequest {startDate:string;endDate:string;expectedW
 export type WeeklyPlanKind='Learn'|'Review'|'Refresh'|'Spaced';
 export const weeklyPlanKindLabels:Record<string,string>={Learn:'Yeni konu',Review:'Tekrar',Refresh:'Kısa tekrar',Spaced:'Aralıklı tekrar'};
 export function weeklyPlanKindLabel(kind?:string|null){return (kind&&weeklyPlanKindLabels[kind])||'Çalışma';}
-export interface WeeklyOutcomeOptions {startDate:string;endDate:string;weeklyDraftVersion:number;timeZoneId:string;exams:{name:string;date:string|null}[];examDate?:string|null;endDateSource?:'Student'|'Catalog'|'Default';catalogExamDate?:string|null}
+export interface WeeklyOutcomeOptions {startDate:string;endDate:string;weeklyDraftVersion:number;timeZoneId:string;exams:{name:string;date:string|null}[];examDate?:string|null;endDateSource?:'Student'|'Session'|'Catalog'|'Default';catalogExamDate?:string|null}
 export interface WeeklyOutcomeTask {date:string;startMinute:number;lessonId:string;lessonName:string;minutes:number;reusedSlot:boolean;kind?:string;reason?:string|null;plannedQuestions?:number|null;outcome:{topicId:string;topicName:string;outcomeId:string;code:string;name:string;estimateId:string;estimateNumber:number;minutes:number}}
 export interface WeeklyOutcomePreview {
   request:WeeklyOutcomeRequest;timeZoneId:string;fingerprint:string;canCreate:boolean;protectedTaskCount:number;

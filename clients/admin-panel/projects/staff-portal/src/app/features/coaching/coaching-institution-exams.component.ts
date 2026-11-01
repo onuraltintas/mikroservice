@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CoachingInstitutionExamsService, InstitutionExam, InstitutionExamPage, InstitutionExamPreview, InstitutionExamReport } from './coaching-institution-exams.service';
+import { PRACTICE_SCOPE_CODES, practiceExamName } from '../../../../../../src/app/core/models/practice-exam';
 
-const scopes = [
-  { code: 'LGS', name: 'LGS' }, { code: 'TYT', name: 'TYT' }, { code: 'AYT_SAY', name: 'AYT · Sayısal' },
-  { code: 'AYT_EA', name: 'AYT · Eşit Ağırlık' }, { code: 'AYT_SOZ', name: 'AYT · Sözel' }, { code: 'YDT_EN', name: 'YDT · İngilizce' }
-];
+/** KM1 (01.11.2026): every official scope, including AGS, the 17 ÖABT fields, YDS and YÖKDİL. */
+export const institutionExamScopes: readonly { code: string; name: string }[] = PRACTICE_SCOPE_CODES.map(code => ({ code, name: practiceExamName(code) }));
+const scopes = institutionExamScopes;
 
 /** Roadmap O4: the institution's own practice exams — create, import a CSV, read ranking and branches. */
 @Component({
