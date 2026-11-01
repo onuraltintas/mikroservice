@@ -188,8 +188,45 @@ public sealed class CoachingOwnedProfilePersistenceTests
         Assert.Contains(student, await fixture.Scope.AuthorizeStudentReadAsync(student, [student], default));
         var parent = fixture.AddAccount("Parent");
         Assert.Empty(await fixture.Scope.AuthorizeStudentReadAsync(parent, [student], default));
-        fixture.Accounts.Representatives[(parent, student)] = new(Guid.NewGuid(), "Parent");
+        fixture.Accounts.ParentReads.Add((parent, student));
         Assert.Contains(student, await fixture.Scope.AuthorizeStudentReadAsync(parent, [student], default));
+    }
+
+    // V3 (parent panel): a parent reads the child's Coaching data only while Identity's authorize-read (product Coaching)
+    // allows it — a verified link, the child's Coaching access and the child's "visible to my parent" switch. The
+    // representative link alone (agreements, payments) is no longer enough to read.
+    [Fact]
+    public async Task ParentReads_FollowIdentityAuthorizeRead_NotTheRepresentativeLink()
+    {
+        await using var fixture = new Fixture(); var student = fixture.AddAccount("Student"); var parent = fixture.AddAccount("Parent");
+        await fixture.Store.ProvisionAsync(student, "Student", default);
+        var profile = await fixture.Db.CoachingStudentProfiles.SingleAsync(); profile.UpdatePersonal(null, null, null, false);
+        await fixture.Db.SaveChangesAsync();
+
+        // Visible: allowed, for progress and for teaching work, whatever the teacher-sharing setting says.
+        fixture.Accounts.ParentReads.Add((parent, student));
+        Assert.Contains(student, await fixture.Scope.AuthorizeStudentReadAsync(parent, [student], default));
+        Assert.Contains(student, await fixture.Scope.AuthorizeStudentWorkReadAsync(parent, [student], default));
+        Assert.Equal([(parent, student)], fixture.Accounts.ParentReadCalls.Distinct());
+
+        // Coaching hidden from the parent (Identity answers 403) while the representative link still exists: forbidden.
+        fixture.Accounts.ParentReads.Clear();
+        fixture.Accounts.Representatives[(parent, student)] = new(Guid.NewGuid(), "Mother");
+        Assert.Empty(await fixture.Scope.AuthorizeStudentReadAsync(parent, [student], default));
+        Assert.Empty(await fixture.Scope.AuthorizeStudentWorkReadAsync(parent, [student], default));
+
+        // Link revoked: forbidden.
+        fixture.Accounts.Representatives.Clear();
+        Assert.Empty(await fixture.Scope.AuthorizeStudentReadAsync(parent, [student], default));
+        await Assert.ThrowsAsync<BusinessRuleException>(() => fixture.Scope.RequireParentReadAsync(parent, student, default));
+        fixture.Accounts.ParentReads.Add((parent, student));
+        await fixture.Scope.RequireParentReadAsync(parent, student, default);
+
+        // Another parent, or a parent without Coaching access, never reads.
+        var stranger = fixture.AddAccount("Parent");
+        await Assert.ThrowsAsync<BusinessRuleException>(() => fixture.Scope.RequireParentReadAsync(stranger, student, default));
+        var noAccess = fixture.AddAccount("Parent", hasAccess: false); fixture.Accounts.ParentReads.Add((noAccess, student));
+        await Assert.ThrowsAsync<BusinessRuleException>(() => fixture.Scope.RequireParentReadAsync(noAccess, student, default));
     }
 
     [Fact]
@@ -238,6 +275,13 @@ public sealed class CoachingOwnedProfilePersistenceTests
         public Task<bool> IsActiveInstitutionAsync(Guid institutionId, CancellationToken ct) => Task.FromResult(Institutions.Contains(institutionId));
         public Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeRepresentativeAsync(Guid viewer, Guid student, CancellationToken ct) =>
             Task.FromResult(Representatives.GetValueOrDefault((viewer, student)));
+        public HashSet<(Guid Parent, Guid Student)> ParentReads { get; } = [];
+        public List<(Guid Parent, Guid Student)> ParentReadCalls { get; } = [];
+        public Task<CoachingParentReadAuthorization?> AuthorizeParentReadAsync(Guid parent, Guid student, CancellationToken ct)
+        {
+            ParentReadCalls.Add((parent, student));
+            return Task.FromResult(ParentReads.Contains((parent, student)) ? new CoachingParentReadAuthorization(Guid.NewGuid(), "Mother") : null);
+        }
     }
 
     internal sealed class Actor : ICurrentUserService

@@ -39,6 +39,17 @@ public sealed class ParentLinksController(IParentLinkService links, ICurrentUser
     [Authorize(Roles = "Student,Parent")]
     public async Task<IActionResult> Revoke(Guid id, CancellationToken ct) => Respond(await links.RevokeAsync(UserId, id, ct));
 
+    /// <summary>V1: the student chooses which products the parent sees (both start visible).</summary>
+    [HttpPut("parent-links/{id:guid}/products")]
+    [Authorize(Roles = "Student")]
+    [RequestSizeLimit(1024)]
+    public async Task<IActionResult> SetProducts(Guid id, [FromBody] ParentLinkProductsRequest request, CancellationToken ct)
+    {
+        if (request?.Coaching is not { } coaching || request.SpeedReading is not { } speedReading)
+            return BadRequest(new { error = new Error("ParentLink.InvalidProducts", "Her ürün için görünürlük seçilmelidir.") });
+        return Respond(await links.SetProductVisibilityAsync(UserId, id, coaching, speedReading, ct));
+    }
+
     private Guid UserId => actor.UserId ?? Guid.Empty;
 
     private IActionResult Respond<T>(Result<T> result) => result.IsSuccess ? Ok(result.Value) : Failure(result.Error);
@@ -53,3 +64,4 @@ public sealed class ParentLinksController(IParentLinkService links, ICurrentUser
 }
 
 public sealed record ParentLinkRequest(string Code, ParentRelationship Relationship);
+public sealed record ParentLinkProductsRequest(bool? Coaching, bool? SpeedReading);

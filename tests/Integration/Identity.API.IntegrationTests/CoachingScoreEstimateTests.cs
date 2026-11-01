@@ -154,11 +154,14 @@ public sealed class CoachingScoreEstimateTests
     public async Task OnlyTheStudentTheirParentsAndTheirTeachersSeeTheEstimate()
     {
         await using var s = await Setup.CreateAsync(models: true);
-        var parent = s.F.AddAccount("Parent"); s.F.Accounts.Representatives[(parent, s.Student)] = new(Guid.NewGuid(), "Mother");
+        var parent = s.F.AddAccount("Parent"); s.F.Accounts.ParentReads.Add((parent, s.Student));
         var stranger = s.F.AddAccount("Teacher");
 
         (await s.Service.EstimateAsync(parent, s.Student, null, default)).Should().NotBeNull();
         await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.EstimateAsync(stranger, s.Student, null, default));
+        // V3: a parent the child hid Coaching from (only the representative link is left) no longer reads it.
+        var hidden = s.F.AddAccount("Parent"); s.F.Accounts.Representatives[(hidden, s.Student)] = new(Guid.NewGuid(), "Father");
+        await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.EstimateAsync(hidden, s.Student, null, default));
     }
 
     // K4 (31.10.2026): the university catalog stores Dil programmes as "YDT"; the estimate's score type for them is DIL.

@@ -50,14 +50,7 @@ public class StudentProfileConfiguration : IEntityTypeConfiguration<StudentProfi
             .HasDefaultValueSql("NOW()");
 
         builder.HasIndex(s => s.InstitutionId);
-        builder.HasIndex(s => s.ParentId);
         builder.HasIndex(s => s.GradeLevel);
-
-        // Parent relationship
-        builder.HasOne(s => s.Parent)
-            .WithMany()
-            .HasForeignKey(s => s.ParentId)
-            .OnDelete(DeleteBehavior.SetNull);
 
         // Teacher assignments
         builder.HasMany(s => s.TeacherAssignments)
@@ -142,9 +135,6 @@ public class ParentProfileConfiguration : IEntityTypeConfiguration<ParentProfile
             .HasConversion<string>()
             .HasMaxLength(20);
 
-        builder.Property(p => p.NotificationPreferences)
-            .HasColumnType("jsonb");
-
         builder.Property(p => p.CreatedAt)
             .HasDefaultValueSql("NOW()");
     }
@@ -182,6 +172,9 @@ public sealed class ParentStudentRelationshipConfiguration
         builder.Property(relationship => relationship.RevocationReason)
             .HasColumnName("revocation_reason")
             .HasMaxLength(500);
+        // V1: the domain always writes both; the migration's database default (true) only fills rows that existed before.
+        builder.Property(relationship => relationship.CoachingVisible).HasColumnName("coaching_visible");
+        builder.Property(relationship => relationship.SpeedReadingVisible).HasColumnName("speed_reading_visible");
         builder.Property(relationship => relationship.CreatedAt).HasColumnName("created_at");
         builder.Property(relationship => relationship.UpdatedAt).HasColumnName("updated_at");
         builder.Property(relationship => relationship.CreatedBy).HasColumnName("created_by").HasMaxLength(100);

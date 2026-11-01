@@ -241,6 +241,8 @@ services:
       - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
       - Services__IdentityService=http://identity-service:8080
+      # V3 (parent panel): the weekly parent e-mail reads the child's speed-reading week from here.
+      - Services__SpeedReadingService=http://speed-reading-service:8080
       - COACHING_NEWSLETTER_RECAPTCHA_ENABLED=${COACHING_NEWSLETTER_RECAPTCHA_ENABLED:-false}
       - COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY=${COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY:-}
       - COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY=${COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY:-}

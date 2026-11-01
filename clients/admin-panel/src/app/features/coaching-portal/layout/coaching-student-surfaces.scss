@@ -40,26 +40,26 @@
 // One set of surfaces, typography and state colours across the learning workspace.
 .coaching-shell .coaching-body .coaching-content {
   font-size: 15px;
-  :is(.text-xs, small, .muted, .calendar-note, .home-muted) { font-size: 13px; line-height: 1.65; }
+  :is(.text-xs, small, .muted, .calendar-note) { font-size: 13px; line-height: 1.65; }
   :is(small, .muted) { color: var(--ui-text-muted); opacity: 1; }
-  :is(.text-sm, label, .home-welcome > div > p, .home-next-steps strong, .assignment-copy strong) { font-size: 15px; }
+  :is(.text-sm, label) { font-size: 15px; }
   :is(h2, h3) { font-family: inherit; font-weight: 700; line-height: 1.4; }
   :is(.weekly-review, .profile-card, .panel, .assistant-page, .weekly-page, .plan-calendar) { color: var(--ui-text); }
   :is(.weekly-review, .profile-card, .panel, .slot-dialog, .context-menu, .time-scroller, .month-grid, .month-day) { background: var(--ui-surface); border-color: var(--ui-border); }
   :is(.weekly-review, .profile-card, .panel) { border-radius: 18px; }
   .weekly-review h2 { font-size: 23px; }
-  :is(.eyebrow, .home-eyebrow, .today-eyebrow) { color: var(--ui-success); font-size: 12px; }
+  .eyebrow { color: var(--ui-success); font-size: 12px; }
   app-practice-progress :is(section, article, .points > div, .development-tabs) { border-color: var(--ui-border); }
   app-practice-progress .summary { background: var(--ui-brand-soft); color: var(--ui-text); }
   :is(.weekly-review dt, .weekly-review small, .weekly-review .muted, .calendar-help, .calendar-note, .context-menu small, .move-tools span) { color: var(--ui-text-muted); }
-  :is(.weekly-review .summary, .draft-strip, .view-switch, .time-heading, .day-heading, .day-headers, .time-labels, .time-axis, .month-heading, .untimed-grid, .other-month, .privacy-note, .slot-line, .topic-row, .assistant-message, .student-message) { background: var(--ui-surface-muted); color: var(--ui-text); border-color: var(--ui-border); }
+  :is(.weekly-review .summary, .draft-strip, .view-switch, .time-heading, .day-heading, .day-headers, .time-labels, .time-axis, .month-heading, .untimed-grid, .other-month, .privacy-note, .slot-line, .topic-row, .assistant-message) { background: var(--ui-surface-muted); color: var(--ui-text); border-color: var(--ui-border); }
   :is(.weekly-review button, .profile-card button, .weekly-page button, .plan-calendar button) { background: var(--ui-surface); color: var(--ui-text); border-color: var(--ui-border); min-height: 44px; }
   :is(.weekly-review button, .profile-card button, .weekly-page button, .plan-calendar button):hover:not(:disabled) { background: var(--ui-brand-soft); }
   :is(.weekly-review fieldset, .weekly-review article, .weekly-review .linked-work, .profile-card article, .month-day, .month-grid, .day-track, .day-headers, .day-heading, .time-heading) { border-color: var(--ui-border); }
   :is(.weekly-review a, .assistant-page a, .weekly-page a, .profile-card a) { color: var(--ui-success); }
   :is(.weekly-review .badge, .draft-badge, .success, .gesture-status) { background: var(--ui-brand-soft); color: var(--ui-success); }
-  :is(.error, .text-red-600, .text-red-700, .move-error, .home-error) { color: var(--ui-danger); }
-  :is(.notice.error, .move-error, .home-error) { background: var(--coaching-danger-soft); border-color: var(--ui-danger); }
+  :is(.error, .text-red-600, .text-red-700, .move-error) { color: var(--ui-danger); }
+  :is(.notice.error, .move-error) { background: var(--coaching-danger-soft); border-color: var(--ui-danger); }
   :is(.assignment-status:not(.is-done):not(.is-overdue)) { color: var(--coaching-warning); }
   :is(.assignment-status.is-overdue) { background: var(--coaching-danger-soft); color: var(--ui-danger); }
   :is(.weekly-page .primary, .plan-calendar .view-switch button[aria-pressed=true], .development-tabs button[aria-selected=true]) { background: var(--ui-brand); color: var(--ui-brand-contrast); border-color: var(--ui-brand); }
@@ -75,23 +75,16 @@
   :is(.weekly-page .time-cell, .weekly-page .slot-content, .weekly-page .resize, .weekly-page .month-slot, .plan-calendar .timed-block, .plan-calendar .month-block, .plan-calendar .month-date) { min-height: 0; }
   :is(.time-scroller, .table, .overflow-x-auto) { scrollbar-color: var(--ui-border) var(--ui-surface); }
   :is(.assistant-page, .weekly-page) { padding: 0; }
-  .home-next-steps :is(strong, small), .assignment-copy :is(strong, small) { line-height: 1.65; }
-  .home-next-steps small, .assignment-copy small, .home-gentle-note p { font-size: 13px; }
   .development-tabs { gap: 8px; border-color: var(--ui-border); }
   .development-tabs button { font-size: 14px; border-radius: 10px; }
   .profile-card fieldset { align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
-  .assignment-heading { background: var(--ui-surface); color: var(--ui-text); border: 1px solid var(--ui-border); border-left: 4px solid var(--ui-brand); }
-  .assignment-heading :is(p, span) { color: var(--ui-text-muted); }
-  .assignment-heading h1 { color: var(--ui-text); }
-  .setup-entry { background: var(--ui-brand-soft); color: var(--ui-text); border-color: var(--ui-border); }
-  .setup-entry :is(a, button) { color: var(--ui-success); }
   .assistant-page button:not(.secondary), .outcome-page button:not(.secondary) { background: var(--ui-brand); color: var(--ui-brand-contrast); }
   :is(.assistant-page, .outcome-page) .secondary { background: var(--ui-surface); color: var(--ui-text); border-color: var(--ui-border); }
   .assistant-page .day-options .selected { background: var(--ui-brand); color: var(--ui-brand-contrast); }
   .outcome-page { color: var(--ui-text); padding: 0; }
   .outcome-page :is(.totals > div, thead, .notice, .decisions, .late) { background: var(--ui-surface-muted); color: var(--ui-text); }
   .outcome-page :is(.totals span, .exam, small, .confirm p) { color: var(--ui-text-muted); }
-  .outcome-page :is(.issues, .error), .today-error { background: var(--coaching-danger-soft); color: var(--ui-danger); border-color: var(--ui-danger); }
+  .outcome-page :is(.issues, .error) { background: var(--coaching-danger-soft); color: var(--ui-danger); border-color: var(--ui-danger); }
   .outcome-page :is(a, .transfer) { color: var(--ui-success); }
   .outcome-page :is(table, thead) { font-size: 13px; }
   .outcome-page .totals span { font-size: 12px; }

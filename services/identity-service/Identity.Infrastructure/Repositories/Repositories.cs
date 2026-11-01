@@ -16,6 +16,26 @@ using EduPlatform.Shared.Contracts.Reporting;
 
 namespace Identity.Infrastructure.Repositories;
 
+/// <summary>
+/// V1 (audit finding): the parents among an institution's people are those with a verified Mother/Father/Guardian link
+/// to one of its active students (the legacy StudentProfile.ParentId was removed in V6a).
+/// </summary>
+internal static class InstitutionParentScope
+{
+    public static IQueryable<Guid> VerifiedParentUserIds(IdentityDbContext context, Guid institutionId) =>
+        from link in context.ParentStudentRelationships
+        where link.Status == ParentStudentRelationshipStatus.Verified
+            && (link.Relationship == ParentRelationship.Mother || link.Relationship == ParentRelationship.Father
+                || link.Relationship == ParentRelationship.Guardian)
+            && context.StudentProfiles.Any(student => student.UserId == link.StudentUserId
+                && student.InstitutionId == institutionId
+                && student.IsActive
+                && student.User.IsActive
+                && student.Institution != null
+                && student.Institution.IsActive)
+        select link.ParentUserId;
+}
+
 public sealed class LocationRepository : ILocationRepository
 {
     private readonly IdentityDbContext _context;
@@ -468,10 +488,9 @@ public class UserRepository : IUserRepository
                         admin.InstitutionId == institutionId && admin.UserId == token.UserId)
                     || _context.TeacherProfiles.Any(teacher =>
                         teacher.InstitutionId == institutionId && teacher.UserId == token.UserId)
+                    // V1 (audit): parents are not institution members; their sessions outlive a child's institution.
                     || _context.StudentProfiles.Any(student =>
-                        student.InstitutionId == institutionId && student.UserId == token.UserId)
-                    || _context.StudentProfiles.Any(student =>
-                        student.InstitutionId == institutionId && student.ParentId == token.UserId)))
+                        student.InstitutionId == institutionId && student.UserId == token.UserId)))
             .ToListAsync(cancellationToken);
 
         foreach (var token in activeTokens)
@@ -505,6 +524,7 @@ public class UserRepository : IUserRepository
         if (institutionId.HasValue)
         {
             var scopedInstitutionId = institutionId.Value;
+            var parents = InstitutionParentScope.VerifiedParentUserIds(_context, scopedInstitutionId);
             query = query.Where(u =>
                 _context.InstitutionAdmins.Any(a =>
                     a.UserId == u.Id &&
@@ -523,12 +543,7 @@ public class UserRepository : IUserRepository
                     s.IsActive &&
                     s.Institution != null &&
                     s.Institution.IsActive) ||
-                _context.StudentProfiles.Any(s =>
-                    s.ParentId == u.Id &&
-                    s.InstitutionId == scopedInstitutionId &&
-                    s.IsActive &&
-                    s.Institution != null &&
-                    s.Institution.IsActive));
+                parents.Contains(u.Id));
         }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -611,6 +626,7 @@ public class UserRepository : IUserRepository
         if (institutionId.HasValue)
         {
             var scopedInstitutionId = institutionId.Value;
+            var parents = InstitutionParentScope.VerifiedParentUserIds(_context, scopedInstitutionId);
             query = query.Where(u =>
                 _context.InstitutionAdmins.Any(a =>
                     a.UserId == u.Id && a.InstitutionId == scopedInstitutionId && a.IsActive && a.Institution.IsActive) ||
@@ -618,8 +634,7 @@ public class UserRepository : IUserRepository
                     t.UserId == u.Id && t.InstitutionId == scopedInstitutionId && t.IsActive && t.Institution != null && t.Institution.IsActive) ||
                 _context.StudentProfiles.Any(s =>
                     s.UserId == u.Id && s.InstitutionId == scopedInstitutionId && s.IsActive && s.Institution != null && s.Institution.IsActive) ||
-                _context.StudentProfiles.Any(s =>
-                    s.ParentId == u.Id && s.InstitutionId == scopedInstitutionId && s.IsActive && s.Institution != null && s.Institution.IsActive));
+                parents.Contains(u.Id));
         }
 
         var totalUsers = await query.CountAsync(cancellationToken);
@@ -653,7 +668,6 @@ public class InstitutionRepository : IInstitutionRepository
     private sealed record StudentReadProfile(
         Guid Id,
         Guid UserId,
-        Guid? ParentId,
         Guid? InstitutionId,
         bool ShareProgressWithTeachers);
     private sealed record TeacherStudentReadAssignment(Guid TeacherId, Guid StudentId, Guid? InstitutionId);
@@ -940,23 +954,9 @@ public class InstitutionRepository : IInstitutionRepository
             .Select(s => s.InstitutionId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (studentInstitutionId.HasValue)
-        {
-            return studentInstitutionId;
-        }
-
-        return await _context.StudentProfiles
-            .AsNoTracking()
-            .Where(s => s.ParentId == userId
-                && s.IsActive
-                && s.User.IsActive
-                && s.InstitutionId.HasValue
-                && s.Institution != null
-                && s.Institution.IsActive)
-            .OrderBy(s => s.CreatedAt)
-            .ThenBy(s => s.Id)
-            .Select(s => s.InstitutionId)
-            .FirstOrDefaultAsync(cancellationToken);
+        // V1 (audit): a parent is not an institution member, so a child's institution is never the parent's own scope
+        // (the legacy StudentProfile.ParentId used to grant it).
+        return studentInstitutionId;
     }
 
     public async Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, PlatformProduct product, CancellationToken cancellationToken)
@@ -985,14 +985,8 @@ public class InstitutionRepository : IInstitutionRepository
                    && s.Institution != null
                    && s.Institution.IsActive,
                    cancellationToken)
-            || product == PlatformProduct.Coaching && await _context.StudentProfiles.AnyAsync(s =>
-                   s.ParentId == userId
-                   && s.InstitutionId == institutionId
-                   && s.IsActive
-                   && s.User.IsActive
-                   && s.Institution != null
-                   && s.Institution.IsActive,
-                   cancellationToken);
+            || product == PlatformProduct.Coaching && await InstitutionParentScope.VerifiedParentUserIds(_context, institutionId)
+                   .AnyAsync(parentUserId => parentUserId == userId, cancellationToken);
     }
 
     public async Task<PagedList<InstitutionStudentRosterItem>> GetStudentRosterAsync(
@@ -1444,7 +1438,6 @@ public class InstitutionRepository : IInstitutionRepository
             .Select(profile => new StudentReadProfile(
                 profile.Id,
                 profile.UserId,
-                profile.ParentId,
                 profile.InstitutionId,
                 profile.ShareProgressWithTeachers))
             .ToListAsync(cancellationToken);
@@ -2273,37 +2266,6 @@ public class ParentRepository : IParentRepository
     {
         return await _context.ParentProfiles
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<StudentProfile>> GetActiveChildrenByUserIdAsync(
-        Guid userId,
-        CancellationToken cancellationToken)
-    {
-        var hasActiveParentProfile = await _context.ParentProfiles
-            .AsNoTracking()
-            .AnyAsync(parent => parent.UserId == userId
-                && parent.IsActive
-                && parent.User.IsActive,
-                cancellationToken);
-
-        if (!hasActiveParentProfile)
-        {
-            return Array.Empty<StudentProfile>();
-        }
-
-        return await _context.StudentProfiles
-            .AsNoTracking()
-            .Include(student => student.User)
-            .Include(student => student.Institution)
-            .Where(student => student.ParentId == userId
-                && student.IsActive
-                && student.User.IsActive
-                && (!student.InstitutionId.HasValue
-                    || (student.Institution != null && student.Institution.IsActive)))
-            .OrderBy(student => student.FirstName)
-            .ThenBy(student => student.LastName)
-            .ThenBy(student => student.UserId)
-            .ToListAsync(cancellationToken);
     }
 }
 

@@ -101,6 +101,28 @@ public sealed class ParentStudentRelationshipDomainTests
         localTimeAct.Should().Throw<ArgumentException>();
     }
 
+    // V1 (parent panel): the student chooses per product what the parent sees; both start visible.
+    [Fact]
+    public void ProductVisibility_StartsVisibleAndOnlyTheStudentChangesItOnAnOpenLink()
+    {
+        var relationship = CreatePending();
+        (relationship.CoachingVisible, relationship.SpeedReadingVisible).Should().Be((true, true));
+        var at = RequestedAt.AddHours(1);
+
+        var byParent = () => relationship.SetProductVisibility(false, false, relationship.ParentUserId, at);
+        var localTime = () => relationship.SetProductVisibility(false, false, relationship.StudentUserId, DateTime.Now);
+        byParent.Should().Throw<InvalidOperationException>();
+        localTime.Should().Throw<ArgumentException>();
+
+        relationship.SetProductVisibility(false, true, relationship.StudentUserId, at);
+        (relationship.CoachingVisible, relationship.SpeedReadingVisible, relationship.UpdatedAt).Should().Be((false, true, (DateTime?)at));
+
+        relationship.Revoke(relationship.StudentUserId, at, "Öğrenci kaldırdı.");
+        var afterRevoke = () => relationship.SetProductVisibility(true, true, relationship.StudentUserId, at);
+        afterRevoke.Should().Throw<InvalidOperationException>();
+        (relationship.CoachingVisible, relationship.SpeedReadingVisible).Should().Be((false, true));
+    }
+
     private static ParentStudentRelationship CreatePending() =>
         ParentStudentRelationship.Request(
             Guid.NewGuid(),

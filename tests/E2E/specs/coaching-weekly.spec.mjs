@@ -19,13 +19,15 @@ async function fixture(context){
   });
   return{writes,getDraft:()=>draft,setDraft:value=>draft=value,setConflict:value=>conflict=value,active};
 }
-async function open(page){await page.goto('/coaching-portal/weekly-plan');await expect(page.getByRole('heading',{name:'Haftalık programım',exact:true})).toBeVisible();await page.getByRole('button',{name:'Hafta',exact:true}).click();}
+async function open(page){await page.goto('/coaching-portal/plan/weekly');await expect(page.getByRole('heading',{name:'Haftalık programım',exact:true})).toBeVisible();await page.getByRole('button',{name:'Hafta',exact:true}).click();}
 async function add(page,lesson=math,start='18:00',duration='60'){
   await page.getByRole('button',{name:'+ Ders ekle',exact:true}).click();const dialog=page.getByRole('dialog');await dialog.getByLabel('Ders',{exact:true}).selectOption(lesson);await dialog.getByLabel('Gün',{exact:true}).selectOption('Monday');await dialog.getByLabel('Başlangıç',{exact:true}).fill(start);await dialog.getByLabel('Süre',{exact:true}).selectOption({label:duration==='30'?'30 dakika':'1 saat (60 dakika)'});await dialog.getByRole('button',{name:'Dersi ekle',exact:true}).click();await expect(dialog).toHaveCount(0);
 }
 const card=(page,name)=>page.locator('.slot-card').filter({hasText:name}).first();
 async function resize(page,name,edge,delta){
-  const handle=card(page,name).getByRole('button',{name:name+(edge==='bottom'?' bitişini ayarla':' başlangıcını ayarla'),exact:true});await handle.scrollIntoViewIfNeeded();const b=await handle.boundingBox();
+  const handle=card(page,name).getByRole('button',{name:name+(edge==='bottom'?' bitişini ayarla':' başlangıcını ayarla'),exact:true});
+  // Centre the handle: on phones the T1 quick-access bar covers the bottom of the viewport, where scrollIntoViewIfNeeded may leave it.
+  await handle.evaluate(el=>el.scrollIntoView({block:'center'}));const b=await handle.boundingBox();
   if(test.info().project.name==='mobile'){
     const session=await page.context().newCDPSession(page),point={x:b.x+b.width/2,y:b.y+b.height/2};
     await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point]});
@@ -42,12 +44,13 @@ test('right click adds a lesson, resizing frees the other half hour and both sav
   await page.getByRole('button',{name:'Taslağı kaydet',exact:true}).click();await expect(page.getByRole('status')).toContainText('Haftalık taslak kaydedildi');expect(f.getDraft().slots.map(s=>s.durationMinutes)).toEqual([30,30]);
   await page.reload();await page.getByRole('button',{name:'Hafta',exact:true}).click();await expect(card(page,'Matematik')).toContainText('18:00–18:30');await expect(card(page,'Türkçe')).toContainText('18:30–19:00');
   await page.locator('main').first().evaluate(el=>el.scrollTo({top:0,behavior:'instant'}));await page.locator('.time-scroller').evaluate(el=>el.scrollTop=17*72);await page.screenshot({path:`../../artifacts/coaching-weekly/calendar-${test.info().project.name}.png`,fullPage:false});
-  await page.getByRole('link',{name:'Mevcut planlarım ↗',exact:true}).click();await expect(page.getByRole('heading',{name:'Mevcut çalışma planım',exact:true})).toBeVisible();await expect(page.getByText(/Tamamlandı · 25 dk/)).toBeVisible();expect(f.active.version).toBe(7);expect(f.writes.every(w=>w.path.endsWith('/weekly-draft'))).toBe(true);
+  // T4: Planım shows the active plan as a status line and its tasks as rows that open a detail sheet.
+  await page.getByRole('link',{name:'Mevcut planlarım ↗',exact:true}).click();await expect(page.locator('.plan-head .plan-status')).toContainText('Mevcut çalışma planım');await page.getByRole('tab',{name:'Liste',exact:true}).click();await page.getByRole('button',{name:'Önceki çalışma kaydım, ayrıntıları aç',exact:true}).click();await expect(page.getByRole('dialog',{name:'Önceki çalışma kaydım'}).getByText(/Tamamlandı · 25 dk/)).toBeVisible();expect(f.active.version).toBe(7);expect(f.writes.every(w=>w.path.endsWith('/weekly-draft'))).toBe(true);
 });
 
 test('saved evening cards open in the visible time range without manual scrolling',async({context,page})=>{
   const f=await fixture(context);f.setDraft({version:0,timeZoneId:'Europe/Istanbul',slots:[{id:'saved',lessonId:math,lessonName:'Matematik',examCode:'LGS',day:'Monday',startMinute:1080,durationMinutes:60}]});
-  await page.goto('/coaching-portal/weekly-plan');await expect(card(page,'Matematik')).toHaveCount(1);
+  await page.goto('/coaching-portal/plan/weekly');await expect(card(page,'Matematik')).toHaveCount(1);
   await expect.poll(()=>page.locator('.time-scroller').evaluate(el=>Math.abs(el.scrollTop-17.5*72))).toBeLessThanOrEqual(10);
   const bounds=await card(page,'Matematik').boundingBox(),viewport=await page.locator('.time-scroller').boundingBox();
   expect(bounds.y).toBeGreaterThanOrEqual(viewport.y);expect(bounds.y+bounds.height).toBeLessThanOrEqual(viewport.y+viewport.height);

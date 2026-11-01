@@ -85,27 +85,71 @@ public sealed class ParentLinkTests
         (await links.ListAsync(student.Id, default)).Value.Should().BeEmpty("ended links leave the list");
     }
 
+    // The weekly-summary recipients (muted parents, product flags, SQL paging) are covered on PostgreSQL in
+    // ParentLinkProductsPostgresTests: the preference filter is a jsonb query.
+
+    // V1 (parent panel): each step of a link is told to the other side, with a link to where they act on it.
     [Fact]
-    public async Task WeeklySummaryRecipientsAreVerifiedParentsWhoKeptTheWeeklyPreference()
+    public async Task EachStepOfALinkIsToldToTheOtherSide()
     {
-        await using var context = CreateContext(); var clock = new Clock();
+        await using var context = CreateContext(); var clock = new Clock(); var events = new RecordingEvents();
         var (parent, student, otherParent) = AddUsers(context);
-        var muted = ParentProfile.Create(otherParent.Id, "Can", "Veli", ParentRelationship.Father);
-        muted.UpdateNotificationPreferences("{\"weeklyProgress\":false}");
-        context.ParentProfiles.Add(muted); await context.SaveChangesAsync();
-        var links = new ParentLinkService(context, clock);
-        foreach (var who in new[] { parent, otherParent })
-        {
-            var code = (await links.CreateCodeAsync(student.Id, default)).Value.Code;
-            var link = (await links.RequestAsync(who.Id, code, ParentRelationship.Guardian, default)).Value;
-            await links.ApproveAsync(student.Id, link.Id, default);
-        }
+        student.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.Admin, null, clock.GetUtcNow().AddDays(-1));
+        await context.SaveChangesAsync();
+        var links = new ParentLinkService(context, clock, events);
 
-        var page = await links.GetWeeklySummaryRecipientsAsync(1, 50, default);
+        var link = (await links.RequestAsync(parent.Id, (await links.CreateCodeAsync(student.Id, default)).Value.Code, ParentRelationship.Mother, default)).Value;
+        var requested = events.Messages.Should().ContainSingle().Subject;
+        (requested.Change, requested.LinkId, requested.RecipientUserId, requested.RecipientRole, requested.RecipientEmail, requested.RecipientFirstName,
+            requested.OtherPartyName, requested.LinkProduct, requested.LinkPath)
+            .Should().Be(("Requested", link.Id, student.Id, "Student", "student@example.test", "Ada", "Ayşe Veli", "coaching",
+                "/coaching-portal/account/settings/profile"));
+        requested.OccurredAt.Should().Be(clock.GetUtcNow().UtcDateTime);
 
-        var recipient = page.Items.Should().ContainSingle().Subject;
-        (recipient.ParentUserId, recipient.ParentEmail, recipient.StudentUserId, recipient.StudentName)
-            .Should().Be((parent.Id, "parent@example.test", student.Id, "Ada Öğrenci"));
+        await links.ApproveAsync(student.Id, link.Id, default);
+        var approved = events.Messages.Last();
+        (approved.Change, approved.RecipientUserId, approved.RecipientRole, approved.RecipientEmail, approved.RecipientFirstName,
+            approved.OtherPartyName, approved.LinkProduct, approved.LinkPath)
+            .Should().Be(("Approved", parent.Id, "Parent", "parent@example.test", "Ayşe", "Ada Öğrenci", "coaching", "/coaching-portal/parent"));
+
+        await links.RevokeAsync(student.Id, link.Id, default);
+        var byStudent = events.Messages.Last();
+        (byStudent.Change, byStudent.RecipientUserId, byStudent.LinkPath).Should().Be(("Revoked", parent.Id, "/coaching-portal/parent"));
+
+        var second = (await links.RequestAsync(otherParent.Id, (await links.CreateCodeAsync(student.Id, default)).Value.Code, ParentRelationship.Father, default)).Value;
+        await links.RevokeAsync(otherParent.Id, second.Id, default);
+        var byParent = events.Messages.Last();
+        (byParent.Change, byParent.RecipientUserId, byParent.OtherPartyName, byParent.LinkProduct)
+            .Should().Be(("Revoked", student.Id, "Can Veli", "coaching"));
+
+        events.Messages.Select(x => x.EventId).Should().OnlyHaveUniqueItems().And.NotContain(Guid.Empty);
+        (await links.ApproveAsync(student.Id, second.Id, default)).IsFailure.Should().BeTrue();
+        events.Messages.Should().HaveCount(5, "a refused step tells no one");
+    }
+
+    [Fact]
+    public async Task ASpeedReadingOnlyStudentIsSentToTheSpeedReadingSite()
+    {
+        await using var context = CreateContext(); var clock = new Clock(); var events = new RecordingEvents();
+        var (parent, student, _) = AddUsers(context);
+        student.GrantProductAccess(PlatformProduct.SpeedReading, UserProductAccessSource.Admin, null, clock.GetUtcNow().AddDays(-1));
+        await context.SaveChangesAsync();
+        var links = new ParentLinkService(context, clock, events);
+
+        await links.RequestAsync(parent.Id, (await links.CreateCodeAsync(student.Id, default)).Value.Code, ParentRelationship.Guardian, default);
+
+        var message = events.Messages.Should().ContainSingle().Subject;
+        (message.LinkProduct, message.LinkPath).Should().Be(("speed-reading", "/veli-baglantisi"));
+    }
+
+    [Fact]
+    public async Task EventIdsAreStablePerLinkStepAndRecipient()
+    {
+        var linkId = Guid.NewGuid(); var recipient = Guid.NewGuid();
+        ParentLinkService.EventId(linkId, "Approved", recipient).Should().Be(ParentLinkService.EventId(linkId, "Approved", recipient))
+            .And.NotBe(ParentLinkService.EventId(linkId, "Revoked", recipient))
+            .And.NotBe(ParentLinkService.EventId(linkId, "Approved", Guid.NewGuid()));
+        await Task.CompletedTask;
     }
 
     // Roadmap O3: Coaching asks for verified links by child (a teacher's message contacts) or by parent (a parent's children).
@@ -137,9 +181,77 @@ public sealed class ParentLinkTests
     [InlineData(nameof(ParentLinksController.Approve), "Student")]
     [InlineData(nameof(ParentLinksController.Revoke), "Student,Parent")]
     [InlineData(nameof(ParentLinksController.List), "Student,Parent")]
+    [InlineData(nameof(ParentLinksController.SetProducts), "Student")]
     public void SelfServiceEndpointsAreLimitedToTheTwoSides(string action, string roles) =>
         typeof(ParentLinksController).GetMethod(action)!.GetCustomAttributes(typeof(AuthorizeAttribute), true)
             .Cast<AuthorizeAttribute>().Should().Contain(x => x.Roles == roles);
+
+    [Fact]
+    public void ParentReadAuthorizationIsServiceToServiceOnlyAndNotRoutedByTheGateway()
+    {
+        var method = typeof(InternalParentsController).GetMethod(nameof(InternalParentsController.AuthorizeRead))!;
+        method.GetCustomAttributes(typeof(Identity.API.InternalServiceKeyAttribute), true).Should().ContainSingle();
+        method.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).Should().ContainSingle();
+        typeof(InternalParentsController).GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.RouteAttribute), true)
+            .Cast<Microsoft.AspNetCore.Mvc.RouteAttribute>().Single().Template.Should().Be("api/internal/parents");
+
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (!File.Exists(Path.Combine(root.FullName, "EduPlatform.sln"))) root = root.Parent!;
+        using var gateway = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(root.FullName, "services", "api-gateway", "appsettings.json")),
+            new System.Text.Json.JsonDocumentOptions { CommentHandling = System.Text.Json.JsonCommentHandling.Skip, AllowTrailingCommas = true });
+        var paths = gateway.RootElement.GetProperty("ReverseProxy").GetProperty("Routes").EnumerateObject()
+            .Select(route => route.Value.GetProperty("Match").TryGetProperty("Path", out var path) ? path.GetString()! : "")
+            .Where(path => path.Length > 0).ToArray();
+        paths.Should().NotBeEmpty();
+        paths.Should().NotContain(path => path.StartsWith("/api/internal", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/api/{", StringComparison.Ordinal)
+            || path.StartsWith("/{", StringComparison.Ordinal), "internal endpoints must not be reachable from the public gateway");
+    }
+
+    [Fact]
+    public async Task ParentReadAuthorizationAnswersForbiddenOrTheLink()
+    {
+        var links = new StubLinks();
+        var controller = new InternalParentsController(links);
+        var parent = Guid.NewGuid(); var student = Guid.NewGuid();
+
+        (await controller.AuthorizeRead(new(parent, student, "Chess"), default)).Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
+        (await controller.AuthorizeRead(new(Guid.Empty, student, "Coaching"), default)).Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
+        var refused = await controller.AuthorizeRead(new(parent, student, "SpeedReading"), default);
+        refused.Should().BeOfType<Microsoft.AspNetCore.Mvc.StatusCodeResult>().Which.StatusCode.Should().Be(403);
+        links.Answer = new ParentReadAuthorization(Guid.NewGuid(), "Mother");
+        var ok = (await controller.AuthorizeRead(new(parent, student, "Coaching"), default)).Should().BeOfType<Microsoft.AspNetCore.Mvc.OkObjectResult>().Subject;
+        ok.Value.Should().Be(new ParentReadAuthorizationResponse(links.Answer.RelationshipId, "Mother"));
+        links.Asked.Should().Equal((parent, student, PlatformProduct.SpeedReading), (parent, student, PlatformProduct.Coaching));
+    }
+
+    private sealed class StubLinks : IParentLinkService
+    {
+        public ParentReadAuthorization? Answer { get; set; }
+        public List<(Guid, Guid, PlatformProduct)> Asked { get; } = [];
+        public Task<ParentReadAuthorization?> AuthorizeReadAsync(Guid parentUserId, Guid studentUserId, PlatformProduct product, CancellationToken ct)
+        {
+            Asked.Add((parentUserId, studentUserId, product));
+            return Task.FromResult(Answer);
+        }
+        public Task<EduPlatform.Shared.Kernel.Results.Result<ParentLinkCodeIssued>> CreateCodeAsync(Guid studentUserId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<EduPlatform.Shared.Kernel.Results.Result<ParentLinkView>> RequestAsync(Guid parentUserId, string code, ParentRelationship relationship, CancellationToken ct) => throw new NotSupportedException();
+        public Task<EduPlatform.Shared.Kernel.Results.Result<IReadOnlyList<ParentLinkView>>> ListAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<EduPlatform.Shared.Kernel.Results.Result> ApproveAsync(Guid studentUserId, Guid linkId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<EduPlatform.Shared.Kernel.Results.Result> RevokeAsync(Guid userId, Guid linkId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<ParentSummaryRecipientPage> GetWeeklySummaryRecipientsAsync(int pageNumber, int pageSize, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<VerifiedParentLink>> GetVerifiedLinksAsync(IReadOnlyCollection<Guid> studentUserIds, Guid? parentUserId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<EduPlatform.Shared.Kernel.Results.Result> SetProductVisibilityAsync(Guid studentUserId, Guid linkId, bool coaching, bool speedReading, CancellationToken ct) => throw new NotSupportedException();
+    }
+
+    private sealed class RecordingEvents : IParentLinkEventPublisher
+    {
+        public List<EduPlatform.Shared.Contracts.Events.Identity.ParentLinkNotificationV1> Messages { get; } = [];
+        public Task PublishAsync(EduPlatform.Shared.Contracts.Events.Identity.ParentLinkNotificationV1 message, CancellationToken ct)
+        {
+            Messages.Add(message);
+            return Task.CompletedTask;
+        }
+    }
 
     private static (User Parent, User Student, User OtherParent) AddUsers(IdentityDbContext context)
     {

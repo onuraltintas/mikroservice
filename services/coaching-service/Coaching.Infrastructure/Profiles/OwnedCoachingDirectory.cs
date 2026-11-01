@@ -92,6 +92,23 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
     public Task<IReadOnlyCollection<Guid>> AuthorizeStudentWorkReadAsync(Guid viewerUserId,
         IReadOnlyCollection<Guid> studentIds, CancellationToken ct) => AuthorizeStudentReadCoreAsync(viewerUserId, studentIds, false, ct);
 
+    /// <summary>
+    /// V3 (parent panel): the parent-only read check of the parent child page. The parent must be an active Parent with
+    /// Coaching access, the child an active Coaching student, and Identity's authorize-read (product Coaching) must allow it.
+    /// Returns the child's account (for the child's first name).
+    /// </summary>
+    public async Task<CoachingAccount> RequireParentReadAsync(Guid parentUserId, Guid studentUserId, CancellationToken ct)
+    {
+        if (parentUserId == Guid.Empty || studentUserId == Guid.Empty || parentUserId == studentUserId) throw CoachingProfileStore.Forbidden();
+        var directory = (await accounts.GetAccountsAsync([parentUserId, studentUserId], ct)).ToDictionary(x => x.UserId);
+        if (!directory.TryGetValue(parentUserId, out var parent) || !parent.IsActive || !parent.HasCoachingAccess || !parent.IsEligible("Parent")
+            || !directory.TryGetValue(studentUserId, out var student) || !student.IsEligible("Student")
+            || !await db.CoachingStudentProfiles.AsNoTracking().AnyAsync(x => x.UserId == studentUserId && x.IsActive, ct)
+            || await accounts.AuthorizeParentReadAsync(parentUserId, studentUserId, ct) is null)
+            throw CoachingProfileStore.Forbidden();
+        return student;
+    }
+
     private async Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadCoreAsync(Guid viewerUserId,
         IReadOnlyCollection<Guid> studentIds, bool requireProgressShare, CancellationToken ct)
     {
@@ -120,7 +137,9 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
             // records (including the data export) when the student's institution is deactivated.
             if (viewer.IsSystemAdministrator || viewer.IsEligible("Student") && viewerUserId == student.UserId)
             { allowed.Add(student.UserId); continue; }
-            if (viewer.IsEligible("Parent") && await accounts.AuthorizeRepresentativeAsync(viewerUserId, student.UserId, ct) is not null)
+            // V3 (parent panel): reads follow Identity's authorize-read for Coaching (verified link, the child's Coaching
+            // access and the child's "visible to my parent" switch). Agreements and payments keep the representative check.
+            if (viewer.IsEligible("Parent") && await accounts.AuthorizeParentReadAsync(viewerUserId, student.UserId, ct) is not null)
             { allowed.Add(student.UserId); continue; }
             if (institution.HasValue && !await IsActiveInstitutionAsync(institution.Value, ct)) continue;
             if (requireProgressShare && !student.ShareProgressWithTeachers) continue;

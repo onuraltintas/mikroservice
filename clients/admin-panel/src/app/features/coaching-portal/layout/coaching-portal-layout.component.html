@@ -1,14 +1,14 @@
 <div class="coaching-shell" [class.menu-open]="menuOpen()">
   <a class="coaching-skip" href="#coaching-main">İçeriğe geç</a>
   <button *ngIf="menuOpen()" class="coaching-scrim" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"></button>
-  <aside id="coaching-navigation" class="coaching-sidebar" [cdkTrapFocus]="menuOpen()" [cdkTrapFocusAutoCapture]="menuOpen()" [attr.role]="menuOpen() ? 'dialog' : null" [attr.aria-modal]="menuOpen() ? true : null" aria-label="Öğrenci çalışma alanı">
-    <a routerLink="/coaching-portal" class="coaching-brand" aria-label="eduivme Öğrenci Koçluğu ana sayfa" (click)="closeMenu()">
-      <span class="brand-symbol">E<span></span></span><span><strong>eduivme<span>.</span></strong><small>Öğrenci Koçluğu</small></span>
+  <aside id="coaching-navigation" class="coaching-sidebar" [cdkTrapFocus]="menuOpen()" [cdkTrapFocusAutoCapture]="menuOpen()" [attr.role]="menuOpen() ? 'dialog' : null" [attr.aria-modal]="menuOpen() ? true : null" [attr.aria-label]="isParent() ? 'Veli paneli' : 'Öğrenci çalışma alanı'">
+    <a [routerLink]="isParent() ? '/coaching-portal/parent' : '/coaching-portal'" class="coaching-brand" [attr.aria-label]="isParent() ? 'eduivme Veli paneli ana sayfa' : 'eduivme Öğrenci Koçluğu ana sayfa'" (click)="closeMenu()">
+      <span class="brand-symbol">E<span></span></span><span><strong>eduivme<span>.</span></strong><small>{{ isParent() ? 'Veli paneli' : 'Öğrenci Koçluğu' }}</small></span>
     </a>
     <button class="coaching-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"><app-coaching-icon name="close" /></button>
     <nav aria-label="Veli menüsü" class="coaching-navigation" *ngIf="isParent()">
-      <a *ngFor="let link of parentLinks" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" (click)="closeMenu()">
-        <app-coaching-icon [name]="link.icon" /><span>{{ link.label }}</span>
+      <a *ngFor="let link of parentLinks()" [routerLink]="link.path" [class.is-active]="isActive(link)" [attr.aria-current]="isActive(link) ? 'page' : null" (click)="closeMenu()" [attr.aria-label]="linkLabel(link)">
+        <app-coaching-icon [name]="link.icon" /><span>{{ link.label }}</span>@if (link.badge) { <span class="coaching-badge" aria-hidden="true">{{ badgeText(link.badge) }}</span> }
       </a>
     </nav>
     <nav aria-label="Koçluk menüsü" class="coaching-navigation" *ngIf="isStudent() && !isParent()">
@@ -22,7 +22,7 @@
       <button #menuToggle class="coaching-menu-toggle" type="button" [attr.aria-expanded]="menuOpen()" aria-controls="coaching-navigation" aria-label="Menüyü aç" (click)="menuOpen() ? closeMenu() : menuOpen.set(true)"><app-coaching-icon name="menu" /></button>
       <p class="coaching-page-title">{{ pageLabel() }}</p>
       <div class="coaching-topbar-actions">
-        <button #bellToggle *ngIf="!isParent()" type="button" class="coaching-icon-button coaching-bell" [attr.aria-expanded]="notificationsOpen()" aria-haspopup="dialog" [attr.aria-label]="notificationLabel()" (click)="toggleNotifications()"><app-coaching-icon name="bell" />@if (unreadCount()) { <span class="coaching-badge" aria-hidden="true">{{ badgeText(unreadCount()) }}</span> }</button>
+        <button #bellToggle type="button" class="coaching-icon-button coaching-bell" [attr.aria-expanded]="notificationsOpen()" aria-haspopup="dialog" [attr.aria-label]="notificationLabel()" (click)="toggleNotifications()"><app-coaching-icon name="bell" />@if (unreadCount()) { <span class="coaching-badge" aria-hidden="true">{{ badgeText(unreadCount()) }}</span> }</button>
         <div class="coaching-account">
           <button #accountToggle type="button" class="coaching-account-toggle" [attr.aria-expanded]="accountOpen()" aria-haspopup="menu" aria-controls="coaching-account-menu" [attr.aria-label]="'Hesabım: ' + fullName()" (click)="toggleAccount()"><span class="coaching-avatar" aria-hidden="true">{{ initials() }}</span></button>
           <div *ngIf="accountOpen()" id="coaching-account-menu" class="coaching-account-menu" role="menu" aria-label="Hesabım">
@@ -32,18 +32,25 @@
               <a role="menuitem" routerLink="/coaching-portal/account/payments"><app-coaching-icon name="wallet" /><span>Ödemeler</span></a>
               <a role="menuitem" routerLink="/coaching-portal/account/data"><app-coaching-icon name="card" /><span>Kişisel verilerim</span></a>
             </ng-container>
+            <ng-container *ngIf="isParent()">
+              <a role="menuitem" routerLink="/coaching-portal/parent/account/notifications"><app-coaching-icon name="bell" /><span>Bildirim tercihleri</span></a>
+              <a role="menuitem" routerLink="/coaching-portal/parent/account/data"><app-coaching-icon name="card" /><span>Kişisel verilerim</span></a>
+            </ng-container>
             <button role="menuitem" type="button" (click)="logout()"><app-coaching-icon name="logout" /><span>Çıkış</span></button>
           </div>
         </div>
       </div>
     </header>
-    <app-coaching-notification-panel *ngIf="notificationsOpen()" (closed)="closeNotifications()" />
+    <app-coaching-notification-panel *ngIf="notificationsOpen()" [allLink]="notificationsPage()" (closed)="closeNotifications()" />
     <main id="coaching-main" class="coaching-content" tabindex="-1">
       <router-outlet />
     </main>
-    <footer class="coaching-footer"><span>Eduİvme · Öğrenci Koçluğu</span><span>Bugünkü emeğin, yarının temeli.</span></footer>
+    <footer class="coaching-footer"><span>Eduİvme · {{ isParent() ? 'Veli paneli' : 'Öğrenci Koçluğu' }}</span><span>Bugünkü emeğin, yarının temeli.</span></footer>
   </div>
   <nav *ngIf="isStudent() && !isParent()" class="coaching-mobile-nav" aria-label="Hızlı erişim" [style.--mobile-items]="mobileLinks().length">
     <a *ngFor="let link of mobileLinks()" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" [attr.aria-label]="link.badge ? (link.short || link.label) + ' (' + link.badge + ' okunmamış)' : null"><app-coaching-icon [name]="link.icon" /><span>{{ link.short || link.label }}</span>@if (link.badge) { <span class="coaching-badge" aria-hidden="true">{{ badgeText(link.badge) }}</span> }</a>
+  </nav>
+  <nav *ngIf="isParent()" class="coaching-mobile-nav" aria-label="Hızlı erişim" [style.--mobile-items]="parentLinks().length">
+    <a *ngFor="let link of parentLinks()" [routerLink]="link.path" [class.is-active]="isActive(link)" [attr.aria-current]="isActive(link) ? 'page' : null" [attr.aria-label]="linkLabel(link)"><app-coaching-icon [name]="link.icon" /><span>{{ link.label }}</span>@if (link.badge) { <span class="coaching-badge" aria-hidden="true">{{ badgeText(link.badge) }}</span> }</a>
   </nav>
 </div>

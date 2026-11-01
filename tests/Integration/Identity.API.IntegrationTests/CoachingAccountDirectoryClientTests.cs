@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Coaching.Application.Interfaces;
+using Coaching.Application.Profiles;
 using Coaching.Infrastructure.ExternalServices;
 using EduPlatform.Shared.Contracts.Coaching;
 using EduPlatform.Shared.Security.Services;
@@ -59,6 +60,33 @@ public sealed class CoachingAccountDirectoryClientTests
         var parent = Guid.NewGuid(); var student = Guid.NewGuid();
         await client.AuthorizeRepresentativeAsync(parent, student, default);
         Assert.Equal((parent, student), representative.Last);
+    }
+
+    // V3 (parent panel): parent reads ask Identity's authorize-read for product Coaching; 403 means no access.
+    [Fact]
+    public async Task ParentReadAuthorizationAsksIdentityForTheCoachingProduct()
+    {
+        var parent = Guid.NewGuid(); var student = Guid.NewGuid(); var relationship = Guid.NewGuid();
+        System.Text.Json.JsonElement? body = null;
+        using var http = new HttpClient(new Handler(async request =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal("https://identity.example/api/internal/parents/authorize-read", request.RequestUri!.ToString());
+            Assert.Equal("test-service-key", Assert.Single(request.Headers.GetValues(InternalServiceAuthentication.HeaderName)));
+            body = await request.Content!.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            return new(HttpStatusCode.OK) { Content = JsonContent.Create(new { relationshipId = relationship, relationship = "Father" }) };
+        }));
+        var allowed = await new CoachingAccountDirectoryClient(http, Configuration(), new Representative()).AuthorizeParentReadAsync(parent, student, default);
+        Assert.Equal(new CoachingParentReadAuthorization(relationship, "Father"), allowed);
+        Assert.Equal(parent, body!.Value.GetProperty("parentUserId").GetGuid());
+        Assert.Equal(student, body.Value.GetProperty("studentUserId").GetGuid());
+        Assert.Equal("Coaching", body.Value.GetProperty("product").GetString());
+
+        using var denied = new HttpClient(new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden))));
+        Assert.Null(await new CoachingAccountDirectoryClient(denied, Configuration(), new Representative()).AuthorizeParentReadAsync(parent, student, default));
+        using var down = new HttpClient(new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable))));
+        await Assert.ThrowsAsync<HttpRequestException>(() =>
+            new CoachingAccountDirectoryClient(down, Configuration(), new Representative()).AuthorizeParentReadAsync(parent, student, default));
     }
 
     private static IConfiguration Configuration() => new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>

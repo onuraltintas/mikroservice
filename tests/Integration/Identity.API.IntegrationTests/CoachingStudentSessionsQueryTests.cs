@@ -41,6 +41,35 @@ public sealed class CoachingStudentSessionsQueryTests
         identityClient.RequestedStudentIds.Should().ContainSingle().Which.Should().Be(studentId);
     }
 
+    // V3 (parent panel): the child's session list says whether the child attended, for the child and a linked parent,
+    // and only the child's own attendance in a group session.
+    [Theory]
+    [InlineData("Student")]
+    [InlineData("Parent")]
+    public async Task StudentSessionQuery_ShowsTheChildsOwnAttendance(string viewerRole)
+    {
+        var studentId = Guid.NewGuid(); var classmate = Guid.NewGuid();
+        var held = CoachingSession.Create(Guid.NewGuid(), "Grup çalışması", DateTime.UtcNow.AddDays(-2), SessionType.Group);
+        held.AddStudents([studentId, classmate]);
+        held.RecordAttendance(classmate, AttendanceStatus.Present, null, DateTime.UtcNow);
+        held.RecordAttendance(studentId, AttendanceStatus.Absent, null, DateTime.UtcNow);
+        var coming = CoachingSession.Create(Guid.NewGuid(), "Haftalık görüşme", DateTime.UtcNow.AddDays(2), SessionType.OneOnOne);
+        coming.AddStudent(studentId);
+        coming.Attendances.Single().AddStudentNote("Hazırlandım");
+        var handler = new GetSessionsQueryHandler(new StubSessionRepository(held, coming),
+            CreatePolicy(viewerRole == "Student" ? studentId : Guid.NewGuid(), viewerRole), new StubIdentityAuthorizationClient([studentId]));
+
+        var result = await handler.Handle(new GetStudentSessionsQuery(studentId), CancellationToken.None);
+
+        result.Items.Single(x => x.Id == held.Id).AttendanceStatus.Should().Be("Absent");
+        result.Items.Single(x => x.Id == coming.Id).AttendanceStatus.Should().Be("NotRecorded");
+        // The same in studentReflections (one row, the child's own); the child's note to the teacher only for the child.
+        var row = result.Items.Single(x => x.Id == coming.Id).StudentReflections!.Should().ContainSingle().Subject;
+        (row.StudentId, row.AttendanceStatus).Should().Be((studentId, "NotRecorded"));
+        row.Note.Should().Be(viewerRole == "Student" ? "Hazırlandım" : null);
+        result.Items.Single(x => x.Id == held.Id).StudentReflections!.Should().ContainSingle().Which.AttendanceStatus.Should().Be("Absent");
+    }
+
     [Fact]
     public async Task StudentSessionQuery_ShouldRejectUnauthorizedParent()
     {

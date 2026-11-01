@@ -169,6 +169,19 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     path: 'parent/children/:studentId', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },
     loadComponent: () => import('./parent/parent-child.component').then(m => m.ParentChildComponent)
   },
+  // V4 (01.11.2026): the parent's Bildirimler page and account menu pages.
+  {
+    path: 'parent/notifications', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },
+    loadComponent: () => import('./parent/parent-notifications.component').then(m => m.ParentNotificationsComponent)
+  },
+  {
+    path: 'parent/account/notifications', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },
+    loadComponent: () => import('./parent/parent-account.component').then(m => m.ParentNotificationSettingsComponent)
+  },
+  {
+    path: 'parent/account/data', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },
+    loadComponent: () => import('./parent/parent-account.component').then(m => m.ParentPersonalDataComponent)
+  },
   {
     path: 'teacher',
     children: [

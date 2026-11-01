@@ -119,6 +119,20 @@ export const routes: Routes = [
       }
     ]
   },
+  // V2 (veli paneli): öğrencinin veli bağlantısı sayfası. Identity bildirimleri bu adrese bağlanır.
+  {
+    path: 'veli-baglantisi',
+    canActivate: [authGuard],
+    data: { role: ['Student'] },
+    loadComponent: () => import('./features/student/student-layout.component').then(m => m.StudentLayoutComponent),
+    children: [
+      {
+        path: '',
+        title: 'Veli bağlantısı',
+        loadComponent: () => import('./features/student/parent-link/parent-link-page.component').then(m => m.ParentLinkPageComponent)
+      }
+    ]
+  },
   // Public routes — catch-all :slug içeriyor, en sona alındı
   {
     path: '',

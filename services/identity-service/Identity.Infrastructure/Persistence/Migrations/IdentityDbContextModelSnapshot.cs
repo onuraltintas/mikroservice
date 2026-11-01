@@ -673,10 +673,6 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("NotificationPreferences")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
@@ -711,6 +707,10 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<bool>("CoachingVisible")
+                        .HasColumnType("boolean")
+                        .HasColumnName("coaching_visible");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -751,6 +751,10 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("RevokedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("revoked_by_user_id");
+
+                    b.Property<bool>("SpeedReadingVisible")
+                        .HasColumnType("boolean")
+                        .HasColumnName("speed_reading_visible");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1260,9 +1264,6 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("ParentProfileId")
                         .HasColumnType("uuid");
 
@@ -1300,8 +1301,6 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.HasIndex("GradeLevel");
 
                     b.HasIndex("InstitutionId");
-
-                    b.HasIndex("ParentId");
 
                     b.HasIndex("ParentProfileId");
 
@@ -2057,11 +2056,6 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasForeignKey("InstitutionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Identity.Domain.Entities.User", "Parent")
-                        .WithMany()
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Identity.Domain.Entities.ParentProfile", null)
                         .WithMany("Children")
                         .HasForeignKey("ParentProfileId");
@@ -2073,8 +2067,6 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Institution");
-
-                    b.Navigation("Parent");
 
                     b.Navigation("User");
                 });

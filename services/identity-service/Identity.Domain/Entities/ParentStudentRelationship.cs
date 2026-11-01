@@ -5,7 +5,7 @@ namespace Identity.Domain.Entities;
 
 /// <summary>
 /// Auditable link between one parent or legal representative and one student.
-/// The legacy StudentProfile.ParentId is not treated as verification evidence.
+/// The only parent–student link (V6a removed the legacy StudentProfile.ParentId).
 /// </summary>
 public sealed class ParentStudentRelationship : AggregateRoot
 {
@@ -23,6 +23,9 @@ public sealed class ParentStudentRelationship : AggregateRoot
     public Guid? RevokedByUserId { get; private set; }
     public DateTime? RevokedAt { get; private set; }
     public string? RevocationReason { get; private set; }
+    /// <summary>V1 (parent panel): the student decides per product what the parent may see; both start visible.</summary>
+    public bool CoachingVisible { get; private set; } = true;
+    public bool SpeedReadingVisible { get; private set; } = true;
 
     private ParentStudentRelationship() { }
 
@@ -50,6 +53,8 @@ public sealed class ParentStudentRelationship : AggregateRoot
             Status = ParentStudentRelationshipStatus.Pending,
             RequestedByUserId = requestedByUserId,
             RequestedAt = requestedAt,
+            CoachingVisible = true,
+            SpeedReadingVisible = true,
             CreatedAt = requestedAt
         };
     }
@@ -91,6 +96,21 @@ public sealed class ParentStudentRelationship : AggregateRoot
         RevokedAt = revokedAt;
         RevocationReason = reason.Trim();
         UpdatedAt = revokedAt;
+    }
+
+    /// <summary>Only the link's own student chooses which products the parent sees; an ended link cannot change.</summary>
+    public void SetProductVisibility(bool coaching, bool speedReading, Guid byStudent, DateTime at)
+    {
+        if (Status == ParentStudentRelationshipStatus.Revoked)
+            throw new InvalidOperationException("An ended parent-student relationship cannot change.");
+        EnsureUserId(byStudent, nameof(byStudent));
+        if (byStudent != StudentUserId)
+            throw new InvalidOperationException("Only the link's student chooses what the parent sees.");
+        EnsureUtc(at, nameof(at));
+
+        CoachingVisible = coaching;
+        SpeedReadingVisible = speedReading;
+        UpdatedAt = at;
     }
 
     private static void EnsureUserId(Guid value, string parameterName)

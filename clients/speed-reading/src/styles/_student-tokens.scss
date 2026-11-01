@@ -173,6 +173,12 @@
   --sp-primary-dark:    #6366f1;
   --sp-primary-ghost:   rgba(129, 140, 248, 0.15);
   --sp-primary-ghost-hover: rgba(129, 140, 248, 0.22);
+  // Parlak indigo üzerinde beyaz yazı 4.5:1'i tutmuyor; dolu butonlar koyu yazı ve daha açık hover kullanır.
+  --sp-on-primary:      #0f172a;
+  --sp-primary-hover:   #a5b4fc;
+
+  // Başarı mesajı yazısı koyu zeminde okunur kalsın
+  --sp-success-text:    #6ee7b7;
 
   // Shadows — daha güçlü (koyu zemin üzerinde)
   --sp-shadow-card:     0 1px 3px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.4);

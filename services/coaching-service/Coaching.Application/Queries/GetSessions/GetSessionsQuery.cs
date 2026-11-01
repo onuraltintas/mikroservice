@@ -69,7 +69,9 @@ public record SessionDto(
     string? SharedNotes = null,
     string? SharedNotesVisibility = null,
     /// <summary>Roadmap O6: the recurring series of the session, if any.</summary>
-    Guid? SeriesId = null
+    Guid? SeriesId = null,
+    /// <summary>V3 (parent panel): on a student's own list (the student or a linked parent), that student's attendance.</summary>
+    string? AttendanceStatus = null
 );
 
 /// <summary>Roadmap O6: a teacher's sessions in the week starting on <paramref name="WeekStart"/> (Türkiye time).</summary>

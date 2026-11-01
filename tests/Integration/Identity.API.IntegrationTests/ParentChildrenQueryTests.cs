@@ -32,10 +32,10 @@ public sealed class ParentChildrenQueryTests
         context.AddRange(parentRole, studentRole, parentUser, otherParent, activeChild, inactiveChild, otherChild);
         context.ParentProfiles.Add(ParentProfile.Create(parentUser.Id, "Parent", "User"));
         context.ParentProfiles.Add(ParentProfile.Create(otherParent.Id, "Other", "Parent"));
-        var activeProfile = StudentProfile.Create(activeChild.Id, "Active", "Child", parentId: parentUser.Id);
-        var inactiveProfile = StudentProfile.Create(inactiveChild.Id, "Inactive", "Child", parentId: parentUser.Id);
+        var activeProfile = StudentProfile.Create(activeChild.Id, "Active", "Child");
+        var inactiveProfile = StudentProfile.Create(inactiveChild.Id, "Inactive", "Child");
         inactiveProfile.Deactivate();
-        var otherProfile = StudentProfile.Create(otherChild.Id, "Other", "Child", parentId: otherParent.Id);
+        var otherProfile = StudentProfile.Create(otherChild.Id, "Other", "Child");
         context.StudentProfiles.AddRange(activeProfile, inactiveProfile, otherProfile);
         var verified = ParentStudentRelationship.Request(
             parentUser.Id, activeChild.Id, ParentRelationship.Mother, parentUser.Id, DateTime.UtcNow.AddMinutes(-1));
@@ -82,7 +82,7 @@ public sealed class ParentChildrenQueryTests
     }
 
     [Fact]
-    public async Task CoachingReadAuthorization_RequiresVerifiedSupportedRelationshipInsteadOfLegacyParentId()
+    public async Task CoachingReadAuthorization_RequiresVerifiedSupportedRelationship()
     {
         await using var context = CreateContext();
         var parentRole = Role.Create(Identity.Domain.Enums.UserRole.Parent.ToString(), "Parent", true);
@@ -97,7 +97,7 @@ public sealed class ParentChildrenQueryTests
         context.ParentProfiles.Add(ParentProfile.Create(parent.Id, "Parent", "User"));
         context.StudentProfiles.AddRange(
             StudentProfile.Create(verifiedChild.Id, "Verified", "Child"),
-            StudentProfile.Create(legacyOnlyChild.Id, "Legacy", "Child", parentId: parent.Id));
+            StudentProfile.Create(legacyOnlyChild.Id, "Legacy", "Child"));
         var relationship = ParentStudentRelationship.Request(
             parent.Id, verifiedChild.Id, ParentRelationship.Father, parent.Id, DateTime.UtcNow.AddMinutes(-1));
         relationship.Verify(ParentStudentVerificationMethod.ManualReview, Guid.NewGuid(), DateTime.UtcNow);

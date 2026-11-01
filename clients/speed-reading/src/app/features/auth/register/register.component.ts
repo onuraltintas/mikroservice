@@ -24,6 +24,7 @@ import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../existing-product-join.component';
 import { RegistrationShellComponent } from '../registration-shell.component';
+import { ParentPanelEntryComponent } from '../parent-panel-entry.component';
 
 @Component({
   selector: 'app-register',
@@ -41,7 +42,8 @@ import { RegistrationShellComponent } from '../registration-shell.component';
     MatProgressSpinnerModule,
     MatDividerModule,
     MatIconModule,
-    RegistrationLegalConsentComponent
+    RegistrationLegalConsentComponent,
+    ParentPanelEntryComponent
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'

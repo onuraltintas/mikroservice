@@ -82,7 +82,7 @@ public sealed class InstitutionManagementTests
             unrelatedUser,
             InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching),
             TeacherProfile.Create(teacher.Id, "Tenant", "Teacher", institution.Id),
-            StudentProfile.Create(student.Id, "Tenant", "Student", institution.Id, parent.Id));
+            StudentProfile.Create(student.Id, "Tenant", "Student", institution.Id));
         await context.SaveChangesAsync();
 
         var repository = new InstitutionRepository(context);
@@ -96,9 +96,12 @@ public sealed class InstitutionManagementTests
             .Handle(new SetInstitutionActiveCommand(institution.Id, false), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        (await context.RefreshTokens.Where(token => token.UserId != unrelatedUser.Id).ToListAsync())
+        (await context.RefreshTokens.Where(token => token.UserId != unrelatedUser.Id && token.UserId != parent.Id).ToListAsync())
             .Should().OnlyContain(token => token.IsRevoked);
         (await context.RefreshTokens.SingleAsync(token => token.Id == unrelatedToken.Id)).IsRevoked.Should().BeFalse();
+        // V1 (01.11.2026): a parent is not an institution member, so the child's institution being deactivated does not
+        // end the parent's sessions.
+        (await context.RefreshTokens.SingleAsync(token => token.UserId == parent.Id)).IsRevoked.Should().BeFalse();
     }
 
     [Fact]

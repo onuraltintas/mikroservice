@@ -41,6 +41,9 @@ export class StudentShellComponent implements OnInit, OnDestroy {
 
   user = computed(() => this.authService.currentUserValue);
 
+  /** V2: only students link a parent (the page lives at /veli-baglantisi). */
+  isStudent = computed(() => this.authService.hasRole('Student'));
+
   avatarLetters = computed(() => {
     const u = this.user();
     if (!u) return '?';
