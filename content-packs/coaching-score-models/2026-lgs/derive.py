@@ -81,7 +81,6 @@ def report(tests, base, coef, k):
         sc = max(100, base + sum(coef[s] * nets[s] for s in tests))
         total = sum(nets.values())
         print(f'her dersin %{share * 100:.0f}\'i ({total:.0f} net): {sc:.1f} ± {min(UNCERTAINTY_CAP, k * (500 - sc)):.1f}')
-    one = {s: t['n'] for s, t in tests.items()}
     for s in tests:
         print(f'tam net, {s} 1 yanlış: {500 - coef[s] * 4 / 3:.2f}')
 
