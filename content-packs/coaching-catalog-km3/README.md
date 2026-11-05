@@ -88,17 +88,18 @@ YÖKDİL has no dialogue and no restatement questions, twice as many translation
 the 90-minute tests (İlköğretim Matematik, Fen Bilimleri, Matematik, Fizik, Kimya) and 150 h for the 70-minute tests; YDS
 160 h; each YÖKDİL field 140 h. A topic gets `budget × (share × size) / Σ(share × size)` of its test, rounded to 5 minutes,
 at least 30. `size` is 1 unless a reason is recorded (e.g. Paragrafta Anlam 1,5, Sınıf Yönetimi 0,75); ÖABT topics use 1
-because ÖSYM's own weights already reflect their size. The planner refuses a topic over 1440 minutes ("Bir konu için
-toplam süre 1440 dakikayı geçemez"), so larger estimates are stored as 1440 and the outcome note says the topic must be
-planned in several rounds. Each outcome note spells out its own calculation.
+because ÖSYM's own weights already reflect their size. A topic may need up to 4320 minutes (user decision 01.11.2026,
+"sınırı yükselt"; `StudyLimits.MaxTopicMinutes`); the planner places a topic longer than a day as several tasks on several
+days, each within one day (1440). The largest KM3 estimate is 3960 minutes, so no topic is capped. Releases c1ce79c and
+5056431e capped topics at 1440; see "Topic minutes: 1440 → 4320" below. Each outcome note spells out its own calculation.
 
 <!-- totals:start -->
-| Sınav | Ders | Ünite | Konu (= kazanım) | Planlanan süre (konu sınırı 1440 dk) | Tahmin (sınırsız) | 1440 dk ile sınırlanan konu |
+| Sınav | Ders | Ünite | Konu (= kazanım) | Planlanan süre (konu sınırı 4320 dk) | Tahmin (sınırsız) | 4320 dk ile sınırlanan konu |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | AGS | 6 | 6 | 29 | 149,7 saat | 149,7 saat | 0 |
-| ÖABT | 17 | 20 | 146 | 2.056,1 saat | 2.699,9 saat | 35 |
-| YDS | 1 | 10 | 22 | 137,8 saat | 159,8 saat | 1 |
-| YÖKDİL | 3 | 21 | 60 | 402,5 saat | 420,3 saat | 3 |
+| ÖABT | 17 | 20 | 146 | 2.699,9 saat | 2.699,9 saat | 0 |
+| YDS | 1 | 10 | 22 | 159,8 saat | 159,8 saat | 0 |
+| YÖKDİL | 3 | 21 | 60 | 420,3 saat | 420,3 saat | 0 |
 
 | Ders | Konu | Planlanan | Tahmin |
 | --- | ---: | ---: | ---: |
@@ -108,27 +109,27 @@ planned in several rounds. Each outcome note spells out its own calculation.
 | AGS_COG — Türkiye Coğrafyası (AGS) | 2 | 10,7 saat | 10,7 saat |
 | AGS_EGT — Eğitim Bilimleri ve Türk Millî Eğitim Sistemi (AGS) | 11 | 56,3 saat | 56,3 saat |
 | AGS_MEV — Mevzuat (AGS) | 4 | 14,3 saat | 14,3 saat |
-| OABT_TUR — Türkçe (ÖABT) | 7 | 114 saat | 150 saat |
-| OABT_IMAT — İlköğretim Matematik (ÖABT) | 4 | 96 saat | 180 saat |
-| OABT_FEN — Fen Bilimleri (ÖABT) | 6 | 93,5 saat | 179,9 saat |
-| OABT_SOS — Sosyal Bilgiler (ÖABT) | 4 | 96 saat | 150 saat |
-| OABT_TDE — Türk Dili ve Edebiyatı (ÖABT) | 4 | 96 saat | 150 saat |
-| OABT_TAR — Tarih (ÖABT) | 9 | 147 saat | 150 saat |
-| OABT_COG — Coğrafya (ÖABT) | 3 | 72 saat | 150 saat |
-| OABT_MAT — Matematik (ÖABT) | 4 | 96 saat | 180 saat |
-| OABT_FIZ — Fizik (ÖABT) | 5 | 114 saat | 180 saat |
-| OABT_KIM — Kimya / Kimya Teknolojisi (ÖABT) | 5 | 117,6 saat | 180 saat |
-| OABT_BIO — Biyoloji (ÖABT) | 6 | 120 saat | 150 saat |
+| OABT_TUR — Türkçe (ÖABT) | 7 | 150 saat | 150 saat |
+| OABT_IMAT — İlköğretim Matematik (ÖABT) | 4 | 180 saat | 180 saat |
+| OABT_FEN — Fen Bilimleri (ÖABT) | 6 | 179,9 saat | 179,9 saat |
+| OABT_SOS — Sosyal Bilgiler (ÖABT) | 4 | 150 saat | 150 saat |
+| OABT_TDE — Türk Dili ve Edebiyatı (ÖABT) | 4 | 150 saat | 150 saat |
+| OABT_TAR — Tarih (ÖABT) | 9 | 150 saat | 150 saat |
+| OABT_COG — Coğrafya (ÖABT) | 3 | 150 saat | 150 saat |
+| OABT_MAT — Matematik (ÖABT) | 4 | 180 saat | 180 saat |
+| OABT_FIZ — Fizik (ÖABT) | 5 | 180 saat | 180 saat |
+| OABT_KIM — Kimya / Kimya Teknolojisi (ÖABT) | 5 | 180 saat | 180 saat |
+| OABT_BIO — Biyoloji (ÖABT) | 6 | 150 saat | 150 saat |
 | OABT_DIN — Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT) | 15 | 150 saat | 150 saat |
-| OABT_REH — Rehberlik (ÖABT) | 8 | 144 saat | 150 saat |
+| OABT_REH — Rehberlik (ÖABT) | 8 | 150 saat | 150 saat |
 | OABT_SINIF — Sınıf Öğretmenliği (ÖABT) | 15 | 150 saat | 150 saat |
 | OABT_OKUL — Okul Öncesi (ÖABT) | 16 | 150 saat | 150 saat |
 | OABT_BED — Beden Eğitimi (ÖABT) | 16 | 150 saat | 150 saat |
 | OABT_OZEL — Özel Eğitim (ÖABT) | 19 | 150 saat | 150 saat |
-| YDS_EN — YDS İngilizce | 22 | 137,8 saat | 159,8 saat |
-| YOKDIL_FEN — YÖKDİL Fen Bilimleri İngilizce | 20 | 134,2 saat | 140,1 saat |
-| YOKDIL_SAG — YÖKDİL Sağlık Bilimleri İngilizce | 20 | 134,2 saat | 140,1 saat |
-| YOKDIL_SOS — YÖKDİL Sosyal Bilimler İngilizce | 20 | 134,2 saat | 140,1 saat |
+| YDS_EN — YDS İngilizce | 22 | 159,8 saat | 159,8 saat |
+| YOKDIL_FEN — YÖKDİL Fen Bilimleri İngilizce | 20 | 140,1 saat | 140,1 saat |
+| YOKDIL_SAG — YÖKDİL Sağlık Bilimleri İngilizce | 20 | 140,1 saat | 140,1 saat |
+| YOKDIL_SOS — YÖKDİL Sosyal Bilimler İngilizce | 20 | 140,1 saat | 140,1 saat |
 <!-- totals:end -->
 
 ## Gaps and things to check before approval
@@ -138,8 +139,8 @@ planned in several rounds. Each outcome note spells out its own calculation.
   without a recorded hash would get the placeholder `000…0` (64 zeros); `verify.sql` prints `pending PDF hashes: N editions`
   (0 for this pack).
 - **ÖABT topics are the official areas, not finer units.** ÖSYM publishes 3–19 rows per field (e.g. İlköğretim Matematik:
-  Analiz, Cebir, Geometri, Uygulamalı Matematik). No finer official list exists, so none was invented; 35 broad ÖABT topics
-  hit the 1440-minute planner limit.
+  Analiz, Cebir, Geometri, Uygulamalı Matematik). No finer official list exists, so none was invented; the broad ÖABT
+  topics keep their whole estimate under the 4320-minute topic limit.
 - **Open lists.** Sınıf Öğretmenliği and Okul Öncesi "Alan Eğitimi" lists end with "vb." in the official document.
 - **Din Kültürü.** The table has three column groups (Ortak Alan Bilgisi; Temel İslam Bilimleri; İslam Tarihi, Felsefe ve
   Din Bilimleri) with totals %20 / %80; the column of each value could not be read reliably, so the 15 rows are one unit and
@@ -188,15 +189,19 @@ edit of `catalog.json` changes the package hash) and, for a record the panel did
 (`previousRelease.topicNames` and the old outcome-name template). The guard does not compare `DocumentSha256`. Any other
 difference still stops the pack with nothing changed.
 
-### Open follow-up: the 1440-minute topic cap (review O1)
+### Topic minutes: 1440 → 4320 (review O1, resolved 01.11.2026)
 
-The planner refuses more than 1440 minutes per topic, so 35 ÖABT topics, 1 YDS and 3 YÖKDİL topics are stored at 1440 while
-their estimate is higher (see the totals table: ÖABT 2.056 h planned vs 2.700 h estimated). In İlköğretim Matematik,
-Matematik, TDE and Coğrafya every topic hits the cap, so a %36 topic gets the same time as a %16 one, and the 90-minute
-İlköğretim Matematik and Matematik tests get 96 h planned against 150 h for 70-minute tests such as Beden Eğitimi. The outcome notes say "konu birden çok turda planlanmalı", but the
-planner does not do that. Not fixed here; the team has to choose: (a) split capped topics into rounds ("… (1. tur)",
-"… (2. tur)") keeping the official name, or (b) apply the cap per weekly slice instead of per topic in the planner. Until
-then the distortion is an accepted, known gap.
+The planner used to refuse more than 1440 minutes per topic, so releases c1ce79c and 5056431e stored 39 topics (35 ÖABT,
+1 YDS, 3 YÖKDİL) at 1440 although their estimate was higher; in İlköğretim Matematik a %36 topic (Analiz) got the same time
+as a %16 one. The user chose to raise the limit instead of splitting topics: the coaching service now accepts up to 4320
+minutes per topic and per outcome duration version (migration `TopicMinutesCap4320`) and schedules a long topic over several
+days. `catalog.json` → `method.maxMinutes` is 4320, so a fresh install writes the uncapped estimates directly.
+
+Production keeps the 1440 values until `content-packs/coaching-catalog-km3-minutes/v1` runs (guarded, by id, with a new
+published duration version for any outcome the team already timed). Until then and afterwards a rerun of this pack passes:
+the guard counts the exact 1440 values and their outcome notes (`previousRelease.maxMinutes`, columns `previous_minutes`,
+`previous_notes`) as equal to the new ones and never updates a row. Topics whose estimate is exactly 1440 (5 ÖABT topics)
+were never capped and do not change.
 
 ## Running it
 

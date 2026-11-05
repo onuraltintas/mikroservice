@@ -13,6 +13,11 @@
     "note": "Üretimde 01.11.2026'da uygulanan sürüm (c1ce79c). Sonraki düzeltmeler üretimde yönetim panelinden yapıldı; koruma, panelde değiştirilmemiş bir kayıtta yalnız bu sürümün tam değerlerini kabul eder.",
     "commit": "c1ce79c1",
     "packageSha256": "f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab",
+    "alsoAcceptedPackageSha256": {
+      "5056431e": "e7c92b1910de085bac0aee0d1979721de104a18582e05422d4ac78335ac3838c"
+    },
+    "maxMinutes": 1440,
+    "maxMinutesNote": "c1ce79c ve 5056431e konu süresini 1440 dakikada sınırladı; 01.11.2026 kararıyla sınır 4320 oldu. Üretimdeki 1440 değerleri ve onların kazanım notları eşit sayılır; yeni süreleri content-packs/coaching-catalog-km3-minutes/v1 yazar.",
     "curriculum": {
       "name": "AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu (taslak)",
       "versionLabel": "2026.11-taslak",
@@ -75,7 +80,7 @@
     },
     "budgetNote": "Koçluk tahmini: sıfırdan sınav düzeyine bir tam hazırlık turu. ÖABT'de 90 dakikalık (hesaplama ağırlıklı) testlere daha büyük bütçe verildi; süre grupları 2026 MEB-AGS Kılavuzu'ndan.",
     "minMinutes": 30,
-    "maxMinutes": 1440,
+    "maxMinutes": 4320,
     "roundTo": 5,
     "yieldBands": [[8, 5], [6, 4], [4, 3], [2, 2], [0, 1]],
     "grammarYieldBonus": 1

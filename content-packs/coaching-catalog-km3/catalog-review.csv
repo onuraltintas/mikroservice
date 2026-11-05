@@ -28,63 +28,63 @@ AGS,AGS_MEV,Mevzuat (AGS),Mevzuat,AGS_MEV.1.01,"Türkiye Cumhuriyeti Anayasası 
 AGS,AGS_MEV,Mevzuat (AGS),Mevzuat,AGS_MEV.1.02,1739 sayılı Millî Eğitim Temel Kanunu,2.5,2,2,215,215,https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf
 AGS,AGS_MEV,Mevzuat (AGS),Mevzuat,AGS_MEV.1.03,222 sayılı İlköğretim ve Eğitim Kanunu,2.5,2,2,160,160,https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf
 AGS,AGS_MEV,Mevzuat (AGS),Mevzuat,AGS_MEV.1.04,7528 sayılı Öğretmenlik Mesleği Kanunu,2.5,2,2,160,160,https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf
-ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.01,Anlama ve Anlatma Teknikleri,32,16,5,1440,2880,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.02,Dil Bilgisi ve Dil Bilimi,24,12,5,1440,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.01,Anlama ve Anlatma Teknikleri,32,16,5,2880,2880,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.02,Dil Bilgisi ve Dil Bilimi,24,12,5,2160,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.03,Çocuk Edebiyatı,6,3,4,540,540,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.04,Türk Halk Edebiyatı,10,5,5,900,900,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.05,Eski Türk Edebiyatı,10,5,5,900,900,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.06,Yeni Türk Edebiyatı,10,5,5,900,900,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TUR,Türkçe (ÖABT),Alan Bilgisi Testi,OABT_TUR.1.07,Edebiyat Bilgi ve Kuramları,8,4,5,720,720,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_IMAT,İlköğretim Matematik (ÖABT),Alan Bilgisi Testi,OABT_IMAT.1.01,Analiz,36,18,5,1440,3890,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_IMAT,İlköğretim Matematik (ÖABT),Alan Bilgisi Testi,OABT_IMAT.1.02,Cebir,24,12,5,1440,2590,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_IMAT,İlköğretim Matematik (ÖABT),Alan Bilgisi Testi,OABT_IMAT.1.03,Geometri,24,12,5,1440,2590,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_IMAT,İlköğretim Matematik (ÖABT),Alan Bilgisi Testi,OABT_IMAT.1.04,Uygulamalı Matematik,16,8,5,1440,1730,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.01,Fizik,32,16,5,1440,3455,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.02,Kimya,30,15,5,1440,3240,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.03,Biyoloji,26,13,5,1440,2810,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_IMAT,İlköğretim Matematik (ÖABT),Alan Bilgisi Testi,OABT_IMAT.1.01,Analiz,36,18,5,3890,3890,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_IMAT,İlköğretim Matematik (ÖABT),Alan Bilgisi Testi,OABT_IMAT.1.02,Cebir,24,12,5,2590,2590,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_IMAT,İlköğretim Matematik (ÖABT),Alan Bilgisi Testi,OABT_IMAT.1.03,Geometri,24,12,5,2590,2590,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_IMAT,İlköğretim Matematik (ÖABT),Alan Bilgisi Testi,OABT_IMAT.1.04,Uygulamalı Matematik,16,8,5,1730,1730,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.01,Fizik,32,16,5,3455,3455,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.02,Kimya,30,15,5,3240,3240,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.03,Biyoloji,26,13,5,2810,2810,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.04,Jeoloji (Yer Bilimi),4,2,3,430,430,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.05,Astronomi,4,2,3,430,430,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_FEN,Fen Bilimleri (ÖABT),Alan Bilgisi Testi,OABT_FEN.1.06,Çevre Bilimi,4,2,3,430,430,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_SOS,Sosyal Bilgiler (ÖABT),Alan Bilgisi Testi,OABT_SOS.1.01,Tarih,44,22,5,1440,3960,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_SOS,Sosyal Bilgiler (ÖABT),Alan Bilgisi Testi,OABT_SOS.1.02,Coğrafya,24,12,5,1440,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_SOS,Sosyal Bilgiler (ÖABT),Alan Bilgisi Testi,OABT_SOS.1.01,Tarih,44,22,5,3960,3960,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_SOS,Sosyal Bilgiler (ÖABT),Alan Bilgisi Testi,OABT_SOS.1.02,Coğrafya,24,12,5,2160,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_SOS,Sosyal Bilgiler (ÖABT),Alan Bilgisi Testi,OABT_SOS.1.03,Siyaset Bilimi,16,8,5,1440,1440,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_SOS,Sosyal Bilgiler (ÖABT),Alan Bilgisi Testi,OABT_SOS.1.04,Diğer Sosyal Bilim Alanları,16,8,5,1440,1440,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_TDE,Türk Dili ve Edebiyatı (ÖABT),Alan Bilgisi Testi,OABT_TDE.1.01,Eski Türk Dili ve Yeni Türk Dili,30,15,5,1440,2700,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_TDE,Türk Dili ve Edebiyatı (ÖABT),Alan Bilgisi Testi,OABT_TDE.1.02,Türk Halk Edebiyatı,20,10,5,1440,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_TDE,Türk Dili ve Edebiyatı (ÖABT),Alan Bilgisi Testi,OABT_TDE.1.03,Eski Türk Edebiyatı,20,10,5,1440,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_TDE,Türk Dili ve Edebiyatı (ÖABT),Alan Bilgisi Testi,OABT_TDE.1.04,Yeni Türk Edebiyatı,30,15,5,1440,2700,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_TDE,Türk Dili ve Edebiyatı (ÖABT),Alan Bilgisi Testi,OABT_TDE.1.01,Eski Türk Dili ve Yeni Türk Dili,30,15,5,2700,2700,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_TDE,Türk Dili ve Edebiyatı (ÖABT),Alan Bilgisi Testi,OABT_TDE.1.02,Türk Halk Edebiyatı,20,10,5,1800,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_TDE,Türk Dili ve Edebiyatı (ÖABT),Alan Bilgisi Testi,OABT_TDE.1.03,Eski Türk Edebiyatı,20,10,5,1800,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_TDE,Türk Dili ve Edebiyatı (ÖABT),Alan Bilgisi Testi,OABT_TDE.1.04,Yeni Türk Edebiyatı,30,15,5,2700,2700,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.01,Tarih Metodolojisi,8,4,5,720,720,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.02,Osmanlı Türkçesi,6,3,4,540,540,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.03,Eski Çağ Tarihi,4,2,3,360,360,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.04,İlk Türk Devletleri Tarihi,10,5,5,900,900,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.05,Orta Çağ İslam Tarihi,14,7,5,1260,1260,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.06,Osmanlı Tarihi,18,9,5,1440,1620,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.06,Osmanlı Tarihi,18,9,5,1620,1620,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.07,Türkiye Cumhuriyeti Tarihi,16,8,5,1440,1440,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.08,Orta Çağ’dan XX. Yüzyıl'a Dünya Tarihi,14,7,5,1260,1260,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_TAR,Tarih (ÖABT),Alan Bilgisi Testi,OABT_TAR.1.09,XX. Yüzyıl Türk ve Dünya Tarihi,10,5,5,900,900,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_COG,Coğrafya (ÖABT),Alan Bilgisi Testi,OABT_COG.1.01,Fiziki Coğrafya,40,20,5,1440,3600,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_COG,Coğrafya (ÖABT),Alan Bilgisi Testi,OABT_COG.1.02,Beşerî ve Ekonomik Coğrafya,40,20,5,1440,3600,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_COG,Coğrafya (ÖABT),Alan Bilgisi Testi,OABT_COG.1.03,Kıtalar ve Ülkeler Coğrafyası,20,10,5,1440,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_MAT,Matematik (ÖABT),Alan Bilgisi Testi,OABT_MAT.1.01,Analiz,36,18,5,1440,3890,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_MAT,Matematik (ÖABT),Alan Bilgisi Testi,OABT_MAT.1.02,Cebir,24,12,5,1440,2590,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_MAT,Matematik (ÖABT),Alan Bilgisi Testi,OABT_MAT.1.03,Geometri,20,10,5,1440,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_MAT,Matematik (ÖABT),Alan Bilgisi Testi,OABT_MAT.1.04,Uygulamalı Matematik,20,10,5,1440,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.01,Mekanik,30,15,5,1440,3240,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.02,Elektrik ve Manyetizma,24,12,5,1440,2590,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_COG,Coğrafya (ÖABT),Alan Bilgisi Testi,OABT_COG.1.01,Fiziki Coğrafya,40,20,5,3600,3600,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_COG,Coğrafya (ÖABT),Alan Bilgisi Testi,OABT_COG.1.02,Beşerî ve Ekonomik Coğrafya,40,20,5,3600,3600,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_COG,Coğrafya (ÖABT),Alan Bilgisi Testi,OABT_COG.1.03,Kıtalar ve Ülkeler Coğrafyası,20,10,5,1800,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_MAT,Matematik (ÖABT),Alan Bilgisi Testi,OABT_MAT.1.01,Analiz,36,18,5,3890,3890,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_MAT,Matematik (ÖABT),Alan Bilgisi Testi,OABT_MAT.1.02,Cebir,24,12,5,2590,2590,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_MAT,Matematik (ÖABT),Alan Bilgisi Testi,OABT_MAT.1.03,Geometri,20,10,5,2160,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_MAT,Matematik (ÖABT),Alan Bilgisi Testi,OABT_MAT.1.04,Uygulamalı Matematik,20,10,5,2160,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.01,Mekanik,30,15,5,3240,3240,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.02,Elektrik ve Manyetizma,24,12,5,2590,2590,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.03,Maddenin Mekanik ve Isıl Özellikleri,10,5,5,1080,1080,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.04,Dalgalar ve Optik,16,8,5,1440,1730,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.05,Modern Fizik,20,10,5,1440,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.01,Temel Kimya,32,16,5,1440,3455,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.02,Analitik Kimya,20,10,5,1440,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.03,Anorganik Kimya,16,8,5,1440,1730,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.04,Organik Kimya,20,10,5,1440,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.04,Dalgalar ve Optik,16,8,5,1730,1730,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_FIZ,Fizik (ÖABT),Alan Bilgisi Testi,OABT_FIZ.1.05,Modern Fizik,20,10,5,2160,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.01,Temel Kimya,32,16,5,3455,3455,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.02,Analitik Kimya,20,10,5,2160,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.03,Anorganik Kimya,16,8,5,1730,1730,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.04,Organik Kimya,20,10,5,2160,2160,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_KIM,Kimya / Kimya Teknolojisi (ÖABT),Alan Bilgisi Testi,OABT_KIM.1.05,Fizikokimya,12,6,5,1295,1295,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.01,Hücre ve Metabolizma,20,10,5,1440,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.01,Hücre ve Metabolizma,20,10,5,1800,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.02,Bitki Biyolojisi,12,6,5,1080,1080,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.03,İnsan ve Hayvan Biyolojisi,28,14,5,1440,2520,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.03,İnsan ve Hayvan Biyolojisi,28,14,5,2520,2520,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.04,Ekoloji,12,6,5,1080,1080,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.05,Canlıların Sınıflandırılması,8,4,5,720,720,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.06,Genetik,20,10,5,1440,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_BIO,Biyoloji (ÖABT),Alan Bilgisi Testi,OABT_BIO.1.06,Genetik,20,10,5,1800,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_DIN,Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT),Alan Bilgisi Testi,OABT_DIN.1.01,Kur’an-ı Kerim ve Tecvid,8,4,5,720,720,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_DIN,Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT),Alan Bilgisi Testi,OABT_DIN.1.02,Tefsir,10,5,5,900,900,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_DIN,Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT),Alan Bilgisi Testi,OABT_DIN.1.03,Hadis,10,5,5,900,900,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
@@ -101,7 +101,7 @@ AGS,AGS_MEV,Mevzuat (AGS),Mevzuat,AGS_MEV.1.04,7528 sayılı Öğretmenlik Mesle
 ÖABT,OABT_DIN,Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT),Alan Bilgisi Testi,OABT_DIN.1.14,Din Eğitimi,4,2,3,360,360,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_DIN,Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT),Alan Bilgisi Testi,OABT_DIN.1.15,Dinler Tarihi,4,2,3,360,360,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_REH,Rehberlik (ÖABT),Alan Bilgisi Testi,OABT_REH.1.01,Temel Psikolojik Kavramlar,16,8,5,1440,1440,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
-ÖABT,OABT_REH,Rehberlik (ÖABT),Alan Bilgisi Testi,OABT_REH.1.02,Psikolojik Danışma Kuram İlke ve Teknikleri,20,10,5,1440,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
+ÖABT,OABT_REH,Rehberlik (ÖABT),Alan Bilgisi Testi,OABT_REH.1.02,Psikolojik Danışma Kuram İlke ve Teknikleri,20,10,5,1800,1800,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_REH,Rehberlik (ÖABT),Alan Bilgisi Testi,OABT_REH.1.03,Davranış ve Uyum Problemleri,12,6,5,1080,1080,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_REH,Rehberlik (ÖABT),Alan Bilgisi Testi,OABT_REH.1.04,Bireyi Tanıma Teknikleri,14,7,5,1260,1260,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
 ÖABT,OABT_REH,Rehberlik (ÖABT),Alan Bilgisi Testi,OABT_REH.1.05,Bireyle ve Grupla Psikolojik Danışma,14,7,5,1260,1260,https://dokuman.osym.gov.tr/pdfdokuman/2025/MEB-AGS/konudagilimi16012025.pdf
@@ -191,7 +191,7 @@ YDS,YDS_EN,YDS İngilizce,Cloze test (paragrafta boşluk doldurma),YDS_EN.3.01,C
 YDS,YDS_EN,YDS İngilizce,Cümle tamamlama,YDS_EN.4.01,Cümle tamamlama,12.5,10,5,1105,1105,https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf
 YDS,YDS_EN,YDS İngilizce,Çeviri,YDS_EN.5.01,İngilizceden Türkçeye çeviri,3.75,3,2,330,330,https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf
 YDS,YDS_EN,YDS İngilizce,Çeviri,YDS_EN.5.02,Türkçeden İngilizceye çeviri,3.75,3,2,330,330,https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf
-YDS,YDS_EN,YDS İngilizce,Okuduğunu anlama,YDS_EN.6.01,Okuduğunu anlama (paragraf soruları),25,20,5,1440,2760,https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf
+YDS,YDS_EN,YDS İngilizce,Okuduğunu anlama,YDS_EN.6.01,Okuduğunu anlama (paragraf soruları),25,20,5,2760,2760,https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf
 YDS,YDS_EN,YDS İngilizce,Diyalog tamamlama,YDS_EN.7.01,Diyalog tamamlama,6.25,5,4,550,550,https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf
 YDS,YDS_EN,YDS İngilizce,Anlamca en yakın cümle,YDS_EN.8.01,Anlamca en yakın cümle (restatement),5,4,3,440,440,https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf
 YDS,YDS_EN,YDS İngilizce,Paragraf tamamlama,YDS_EN.9.01,Paragraf tamamlama,5,4,3,440,440,https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/TSK/ing_yd1d05042026.pdf
@@ -215,7 +215,7 @@ YÖKDİL,YOKDIL_FEN,YÖKDİL Fen Bilimleri İngilizce,Çeviri,YOKDIL_FEN.4.01,İ
 YÖKDİL,YOKDIL_FEN,YÖKDİL Fen Bilimleri İngilizce,Çeviri,YOKDIL_FEN.4.02,Türkçeden İngilizceye çeviri,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-fen-bilimleri-testi-ve-cevap-anahtari-10-4ehn8t-09134606.pdf
 YÖKDİL,YOKDIL_FEN,YÖKDİL Fen Bilimleri İngilizce,Paragraf tamamlama,YOKDIL_FEN.5.01,Paragraf tamamlama,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-fen-bilimleri-testi-ve-cevap-anahtari-10-4ehn8t-09134606.pdf
 YÖKDİL,YOKDIL_FEN,YÖKDİL Fen Bilimleri İngilizce,Anlam bütünlüğünü bozan cümle,YOKDIL_FEN.6.01,Anlam bütünlüğünü bozan cümle,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-fen-bilimleri-testi-ve-cevap-anahtari-10-4ehn8t-09134606.pdf
-YÖKDİL,YOKDIL_FEN,YÖKDİL Fen Bilimleri İngilizce,Okuduğunu anlama,YOKDIL_FEN.7.01,Okuduğunu anlama (paragraf soruları),18.75,15,5,1440,1795,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-fen-bilimleri-testi-ve-cevap-anahtari-10-4ehn8t-09134606.pdf
+YÖKDİL,YOKDIL_FEN,YÖKDİL Fen Bilimleri İngilizce,Okuduğunu anlama,YOKDIL_FEN.7.01,Okuduğunu anlama (paragraf soruları),18.75,15,5,1795,1795,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-fen-bilimleri-testi-ve-cevap-anahtari-10-4ehn8t-09134606.pdf
 YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Cümlede boşluk: sözcük ve dil bilgisi,YOKDIL_SAG.1.01,Sözcük ve ifade bilgisi,12.5,10,5,1435,1435,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf
 YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Cümlede boşluk: sözcük ve dil bilgisi,YOKDIL_SAG.1.02,Zamanlar (Tenses),1.04,0.83,2,100,100,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf
 YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Cümlede boşluk: sözcük ve dil bilgisi,YOKDIL_SAG.1.03,Kipler (Modals),1.04,0.83,2,80,80,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf
@@ -235,7 +235,7 @@ YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Çeviri,YOKDIL_SAG.4.
 YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Çeviri,YOKDIL_SAG.4.02,Türkçeden İngilizceye çeviri,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf
 YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Paragraf tamamlama,YOKDIL_SAG.5.01,Paragraf tamamlama,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf
 YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Anlam bütünlüğünü bozan cümle,YOKDIL_SAG.6.01,Anlam bütünlüğünü bozan cümle,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf
-YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Okuduğunu anlama,YOKDIL_SAG.7.01,Okuduğunu anlama (paragraf soruları),18.75,15,5,1440,1795,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf
+YÖKDİL,YOKDIL_SAG,YÖKDİL Sağlık Bilimleri İngilizce,Okuduğunu anlama,YOKDIL_SAG.7.01,Okuduğunu anlama (paragraf soruları),18.75,15,5,1795,1795,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-saglik-bilimleri-testi-ve-cevap-anahtari-10-66hydo-09134606.pdf
 YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Cümlede boşluk: sözcük ve dil bilgisi,YOKDIL_SOS.1.01,Sözcük ve ifade bilgisi,12.5,10,5,1435,1435,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf
 YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Cümlede boşluk: sözcük ve dil bilgisi,YOKDIL_SOS.1.02,Zamanlar (Tenses),1.04,0.83,2,100,100,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf
 YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Cümlede boşluk: sözcük ve dil bilgisi,YOKDIL_SOS.1.03,Kipler (Modals),1.04,0.83,2,80,80,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf
@@ -255,4 +255,4 @@ YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Çeviri,YOKDIL_SOS.4.01,
 YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Çeviri,YOKDIL_SOS.4.02,Türkçeden İngilizceye çeviri,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf
 YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Paragraf tamamlama,YOKDIL_SOS.5.01,Paragraf tamamlama,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf
 YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Anlam bütünlüğünü bozan cümle,YOKDIL_SOS.6.01,Anlam bütünlüğünü bozan cümle,7.5,6,4,575,575,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf
-YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Okuduğunu anlama,YOKDIL_SOS.7.01,Okuduğunu anlama (paragraf soruları),18.75,15,5,1440,1795,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf
+YÖKDİL,YOKDIL_SOS,YÖKDİL Sosyal Bilimler İngilizce,Okuduğunu anlama,YOKDIL_SOS.7.01,Okuduğunu anlama (paragraf soruları),18.75,15,5,1795,1795,https://dokuman.osym.gov.tr/web/2026/8/ngilizce-sosyal-bilimler-testi-ve-cevap-anahtari-10-8eh7a1-09134606.pdf
