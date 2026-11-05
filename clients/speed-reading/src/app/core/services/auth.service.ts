@@ -274,7 +274,8 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.AUTH_URL}/forgot-password`, { email }, { withCredentials: true });
+    // PR #111 final review: the speed-reading reset e-mail with its link.
+    return this.http.post(`${this.AUTH_URL}/forgot-password`, { email, product: 'speed-reading' }, { withCredentials: true });
   }
 
   /**

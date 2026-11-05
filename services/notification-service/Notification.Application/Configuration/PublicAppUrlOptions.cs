@@ -44,16 +44,23 @@ public sealed class PublicAppUrlOptions
         "InstitutionOwner"
     };
 
-    /// <summary>Management accounts: their links open the admin panel (<see cref="AdminPanelUrl"/>), never the Coaching site.</summary>
-    private static readonly HashSet<string> ManagementRoles = new(StringComparer.OrdinalIgnoreCase)
+    /// <summary>The roles of the Coaching and speed-reading products ("User" = an account without a role).</summary>
+    private static readonly HashSet<string> ProductRoles = new(StringComparer.OrdinalIgnoreCase)
     {
-        "SystemAdmin",
-        "Admin",
-        "Editor"
+        "Student",
+        "Teacher",
+        "Parent",
+        "InstitutionAdmin",
+        "InstitutionOwner",
+        "User"
     };
 
+    /// <summary>
+    /// Management accounts (SystemAdmin, Editor, course-management and any role made in role management): their
+    /// links open the admin panel (<see cref="AdminPanelUrl"/>), never the Coaching site, whose /dashboard is closed.
+    /// </summary>
     public static bool IsManagementRole(string? role) =>
-        !string.IsNullOrWhiteSpace(role) && ManagementRoles.Contains(role.Trim());
+        !string.IsNullOrWhiteSpace(role) && !ProductRoles.Contains(role.Trim());
 
     public static bool IsValidBaseUrl(string? value)
     {
@@ -108,6 +115,9 @@ public sealed class PublicAppUrlOptions
     /// <summary>The speed-reading app page that reads <c>token</c> and <c>userId</c>.</summary>
     public const string SpeedReadingEmailVerificationPath = "/auth/verify-email";
 
+    /// <summary>The reset page of every site (admin-panel and speed-reading); it reads <c>token</c> and <c>email</c>.</summary>
+    public const string PasswordResetPath = "/auth/reset-password";
+
     public string ResolveBaseUrl(string? role = null) => ResolveBaseUrl(role, null);
 
     /// <summary>
@@ -151,7 +161,7 @@ public sealed class PublicAppUrlOptions
     public string BuildPasswordResetLink(string token, string email, string? role, string? product)
     {
         var baseUrl = ResolveBaseUrl(role, product);
-        return $"{baseUrl}/auth/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+        return $"{baseUrl}{PasswordResetPath}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
     }
 
     public string BuildLoginLink(string? role = null) => BuildLoginLink(role, null);

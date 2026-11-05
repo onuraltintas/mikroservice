@@ -45,7 +45,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             user.FirstName,
             user.LastName,
             resetToken,
-            primaryRole), cancellationToken);
+            primaryRole) { Product = Identity.Application.Registration.EmailProduct.Resolve(user, request.Product) }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
