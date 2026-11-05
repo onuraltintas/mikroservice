@@ -395,6 +395,9 @@ public class UserController : ControllerBase
         if (result.IsSuccess)
             return Ok();
 
+        if (result.Error.Code == "Identity.UserNotFound")
+            return NotFound(new { Error = result.Error });
+
         return BadRequest(new { Error = result.Error });
     }
 

@@ -140,11 +140,12 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Yeni
                                 Şifre</label>
-                            <input type="password" formControlName="newPassword"
+                            <input type="password" formControlName="newPassword" autocomplete="new-password" maxlength="128" aria-describedby="profile-password-rules"
                                 class="block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2.5 transition-all duration-200">
+                            <app-password-requirements [password]="passwordForm.get('newPassword')?.value" describedById="profile-password-rules" />
                             @if (passwordForm.get('newPassword')?.touched &&
-                            passwordForm.get('newPassword')?.hasError('minlength')) {
-                            <p class="mt-1 text-xs text-red-500">Şifre en az 6 karakter olmalıdır.</p>
+                            passwordForm.get('newPassword')?.hasError('passwordStrength')) {
+                            <p class="mt-1 text-xs text-red-500">Şifre yukarıdaki kuralların hepsine uymalıdır.</p>
                             }
                         </div>
 
@@ -159,6 +160,10 @@
                             }
                         </div>
                     </div>
+
+                    @if (passwordError()) {
+                    <p class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300" role="alert">{{ passwordError() }}</p>
+                    }
 
                     <div class="mt-8 flex justify-end">
                         <button type="submit" [disabled]="passwordForm.invalid || savingPassword()"

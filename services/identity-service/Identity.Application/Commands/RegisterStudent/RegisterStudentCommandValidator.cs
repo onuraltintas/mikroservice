@@ -9,11 +9,11 @@ public class RegisterStudentCommandValidator : AbstractValidator<RegisterStudent
     {
         RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("Ad alanı zorunludur.")
-            .MaximumLength(50);
+            .MaximumLength(50).WithMessage("Ad en fazla 50 karakter olabilir.");
 
         RuleFor(x => x.LastName)
             .NotEmpty().WithMessage("Soyad alanı zorunludur.")
-            .MaximumLength(50);
+            .MaximumLength(50).WithMessage("Soyad en fazla 50 karakter olabilir.");
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("E-posta alanı zorunludur.")

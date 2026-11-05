@@ -7,6 +7,8 @@ import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, Validati
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
+import { getApiErrorMessage } from '../../../../core/http/api-error-message';
+import { PasswordRequirementsComponent } from '../../../../shared/components/password-requirements/password-requirements.component';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
@@ -42,7 +44,7 @@ export function birthDateValidator(control: AbstractControl): ValidationErrors |
         ExistingProductJoinComponent,
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-        GoogleSigninButtonModule, RegistrationLegalConsentComponent
+        GoogleSigninButtonModule, RegistrationLegalConsentComponent, PasswordRequirementsComponent
     ],
     templateUrl: './student-register.component.html'
 })
@@ -131,10 +133,10 @@ export class StudentRegisterComponent implements OnInit {
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const apiError = err.error;
-                const msg = apiError?.description || apiError?.message
-                    || (typeof apiError?.Error === 'string' ? apiError.Error : apiError?.Error?.description)
-                    || 'Kayıt başarısız oldu. Lütfen yeniden deneyin.';
+                const msg = getApiErrorMessage(err, 'Kayıt tamamlanamadı. Biraz sonra yeniden dene.', {
+                    voice: 'sen',
+                    conflict: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.'
+                });
                 this.toaster.error(msg);
                 this.errorMessage.set(msg);
             }
@@ -168,9 +170,7 @@ export class StudentRegisterComponent implements OnInit {
             this.toaster.success('Google hesabınızla devam edildi.');
         } catch (error: any) {
             const errorCode = error.error?.code;
-            const errorMessage = error.error?.message
-                || error.error?.description
-                || 'Google ile kayıt başarısız oldu.';
+            const errorMessage = getApiErrorMessage(error, 'Google ile kayıt tamamlanamadı. Biraz sonra yeniden dene.', { voice: 'sen' });
 
             if (errorCode === 'Identity.RegistrationDisabled') {
                 this.toaster.info('Yeni kullanıcı kayıtları şu an kapalıdır.');

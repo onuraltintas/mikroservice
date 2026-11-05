@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { getApiErrorMessage } from '../../../core/http/api-error-message';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { GoogleRegistrationConsentComponent } from '../google-registration-consent.component';
 import { RegistrationLegalAcceptance } from '../../../core/services/identity.service';
@@ -130,7 +131,7 @@ export class LoginComponent {
             this.googleRegistrationToken.set('');
             if (result.requiresMfa) await this.beginMfa(result.mfaChallengeToken, result.mfaEnrollmentRequired);
         } catch (error: any) {
-            this.errorMessage.set(error.error?.description || error.error?.message || 'Kayıt tamamlanamadı. Lütfen Google ile tekrar devam edin.');
+            this.errorMessage.set(getApiErrorMessage(error, 'Kayıt tamamlanamadı. Lütfen Google ile tekrar devam edin.'));
             if (error.error?.code === 'Auth.GoogleRegistrationExpired') this.googleRegistrationToken.set('');
         } finally { this.isLoading.set(false); }
     }

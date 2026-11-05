@@ -229,7 +229,7 @@ public class LocalIdentityService : IIdentityService
             if (user == null) 
             {
                 _logger.LogWarning("User {UserId} not found for role assignment", userId);
-                return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+                return Result.Failure(new Error("Identity.UserNotFound", "Kullanıcı bulunamadı."));
             }
 
             var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
@@ -288,7 +288,7 @@ public class LocalIdentityService : IIdentityService
     public async Task<Result> DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "Kullanıcı bulunamadı."));
 
         if (await IsLastActiveSystemAdministratorAsync(user, cancellationToken))
         {
@@ -306,7 +306,7 @@ public class LocalIdentityService : IIdentityService
     public async Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "Kullanıcı bulunamadı."));
 
         if (await IsLastActiveSystemAdministratorAsync(user, cancellationToken))
         {
@@ -327,7 +327,7 @@ public class LocalIdentityService : IIdentityService
     public async Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken)
     {
          var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "Kullanıcı bulunamadı."));
 
         user.Activate();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -337,7 +337,7 @@ public class LocalIdentityService : IIdentityService
     public async Task<Result> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "Kullanıcı bulunamadı."));
 
         _passwordHasher.CreatePasswordHash(newPassword, out byte[] hash, out byte[] salt);
         user.SetPassword(hash, salt);
@@ -352,7 +352,7 @@ public class LocalIdentityService : IIdentityService
     public async Task<Result> UpdateUserAsync(Guid userId, string firstName, string lastName, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+        if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "Kullanıcı bulunamadı."));
 
         user.UpdateName(firstName, lastName);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -428,7 +428,7 @@ public class LocalIdentityService : IIdentityService
                 return Result.Failure(new Error("Auth.InvalidProduct", "Platform ürünü geçersiz."));
 
             var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-            if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+            if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "Kullanıcı bulunamadı."));
 
             var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
             if (role == null || role.IsDeleted) return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));

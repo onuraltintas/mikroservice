@@ -43,9 +43,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
         if (!RegistrationPasswordRules.IsValid(request.NewPassword))
         {
-            return Result.Failure(new Error(
-                "ResetPassword.WeakPassword",
-                "Şifre 8-128 karakter arasında olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir."));
+            return Result.Failure(new Error("ResetPassword.WeakPassword", RegistrationPasswordRules.Message));
         }
 
         // Reset password

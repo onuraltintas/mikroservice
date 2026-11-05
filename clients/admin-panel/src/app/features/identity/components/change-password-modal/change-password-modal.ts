@@ -4,11 +4,13 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentityService, UserDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
+import { strongPasswordValidator } from '../../../../core/validators/password.validator';
+import { PasswordRequirementsComponent } from '../../../../shared/components/password-requirements/password-requirements.component';
 
 @Component({
     selector: 'app-change-password-modal',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [CommonModule, ReactiveFormsModule, PasswordRequirementsComponent],
     template: `
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <!-- Backdrop (Modern Glass Effect) -->
@@ -36,8 +38,9 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
             <form [formGroup]="form" class="space-y-4">
               <div class="relative">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Yeni Şifre</label>
+                <app-password-requirements [password]="p?.value" describedById="admin-password-rules" />
                 <div class="mt-1 relative rounded-md shadow-sm">
-                    <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" 
+                    <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" aria-describedby="admin-password-rules" maxlength="128" 
                         class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-50 dark:placeholder-gray-400 pr-10">
                     <button type="button" (click)="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         @if (showPassword()) {
@@ -72,14 +75,13 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
               @if (p?.invalid && (p?.dirty || p?.touched)) {
                 <div class="mt-2 space-y-1">
                     @if (p?.errors?.['required']) { <p class="text-xs text-red-500">• Şifre alanı zorunludur.</p> }
-                    @if (p?.errors?.['minlength']) { <p class="text-xs text-red-500">• Şifre en az 6 karakter olmalıdır.</p> }
-                    @if (p?.errors?.['pattern']) { <p class="text-xs text-red-500">• En az bir büyük harf, bir küçük harf ve bir rakam içermelidir.</p> }
+                    @if (p?.errors?.['passwordStrength']) { <p class="text-xs text-red-500">• Şifre yukarıdaki kuralların hepsine uymalıdır.</p> }
                 </div>
               }
             </form>
 
             @if (error()) {
-                <div class="mt-4 p-3 bg-red-100 text-red-700 rounded-md text-sm border border-red-200 fade-in">
+                <div class="mt-4 p-3 bg-red-100 text-red-700 rounded-md text-sm border border-red-200 fade-in" role="alert">
                     <div class="font-bold mb-1">Hata</div>
                     {{ error() }}
                 </div>
@@ -113,8 +115,7 @@ export class ChangePasswordModalComponent {
     form = this.fb.group({
         password: ['', [
             Validators.required,
-            Validators.minLength(6),
-            Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/) // En az 1 büyük, 1 küçük harf ve 1 rakam
+            strongPasswordValidator() // Identity RegistrationPasswordRules ile aynı kural
         ]],
         confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
@@ -151,15 +152,9 @@ export class ChangePasswordModalComponent {
                 this.closeModal(true);
             },
             error: (err) => {
-                console.error('Password Change API Error:', err);
+                // Never log the error object: keep request data (the new password) out of the console.
                 this.loading.set(false);
-
-                let msg = getAdminErrorMessage(err, 'Şifre güncellenirken bir hata oluştu.', true);
-                if (err?.status !== 403) {
-                    const errObj = err.error?.error || err.error?.Error;
-                    if (errObj) msg = errObj.message || errObj.description || msg;
-                }
-
+                const msg = getAdminErrorMessage(err, 'Şifre güncellenirken bir hata oluştu.', true);
                 this.error.set(msg);
                 this.toaster.error(msg);
             }

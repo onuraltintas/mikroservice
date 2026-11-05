@@ -20,6 +20,7 @@ import {
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
 import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role-routing';
 import { getErrorMessage } from '../../../core/utils/error-message';
+import { PasswordRequirementsComponent } from '../../../shared/components/password-requirements/password-requirements.component';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../existing-product-join.component';
@@ -29,7 +30,7 @@ import { ParentPanelEntryComponent } from '../parent-panel-entry.component';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [
+  imports: [PasswordRequirementsComponent, 
     ExistingProductJoinComponent,
     RegistrationShellComponent,
     CommonModule,
@@ -144,7 +145,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.error = getErrorMessage(err, 'Google kaydı başarısız oldu.');
+        this.error = getErrorMessage(err, 'Google ile kayıt tamamlanamadı. Biraz sonra yeniden dene.', { voice: 'sen' });
         this.loading = false;
       }
     });
@@ -179,7 +180,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
         });
       },
       error: (err) => {
-        this.error = getErrorMessage(err, 'Kayıt başarısız. Lütfen bilgilerinizi kontrol edin.');
+        this.error = getErrorMessage(err, 'Kayıt tamamlanamadı. Biraz sonra yeniden dene.', { voice: 'sen', conflictIsDuplicateAccount: true });
         this.loading = false;
       }
     });

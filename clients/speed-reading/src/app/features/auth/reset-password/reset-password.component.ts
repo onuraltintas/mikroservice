@@ -10,11 +10,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
+import { getErrorMessage } from '../../../core/utils/error-message';
+import { PasswordRequirementsComponent } from '../../../shared/components/password-requirements/password-requirements.component';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [
+  imports: [PasswordRequirementsComponent, 
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
@@ -95,7 +97,7 @@ export class ResetPasswordComponent implements OnInit {
         }, 3000);
       },
       error: (err) => {
-        this.error = 'Şifre sıfırlama başarısız. Lütfen tekrar deneyin veya yeni bir bağlantı isteyin.';
+        this.error = getErrorMessage(err, 'Şifre sıfırlama başarısız. Lütfen tekrar deneyin veya yeni bir bağlantı isteyin.');
         this.loading = false;
       }
     });

@@ -8,11 +8,14 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { StaffAuthService } from '../auth/staff-auth.service';
 import { NotificationPreferencesApi, NotificationPreferencesComponent } from '../../../../../shared/notification-preferences.component';
+import { getApiErrorMessage } from '../../../../../src/app/core/http/api-error-message';
+import { isPasswordPolicySatisfied } from '../../../../../src/app/core/validators/password.validator';
+import { PasswordRequirementsComponent } from '../../../../../src/app/shared/components/password-requirements/password-requirements.component';
 
 @Component({
   selector: 'staff-account-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, NotificationPreferencesComponent],
+  imports: [CommonModule, FormsModule, NotificationPreferencesComponent, PasswordRequirementsComponent],
   templateUrl: './staff-account-settings.component.html',
   styleUrl: './staff-account-settings.component.scss',
 })
@@ -79,9 +82,8 @@ export class StaffAccountSettingsComponent implements OnInit {
   }
 
   changePassword(): void {
-    const passwordPolicy = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
-    if (!passwordPolicy.test(this.newPassword)) {
-      this.passwordErrorMessage.set('Yeni şifre en az 8 karakter olmalı; büyük/küçük harf, rakam ve özel karakter içermelidir.');
+    if (!isPasswordPolicySatisfied(this.newPassword)) {
+      this.passwordErrorMessage.set('Yeni şifre en az 8 karakter (en fazla 128) olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.');
       return;
     }
     if (!this.currentPassword || this.newPassword !== this.confirmPassword) {
@@ -99,7 +101,8 @@ export class StaffAccountSettingsComponent implements OnInit {
           this.confirmPassword = '';
           this.successMessage.set('Şifreniz güncellendi.');
         },
-        error: () => this.passwordErrorMessage.set('Şifre değiştirilemedi. Mevcut şifrenizi kontrol edip yeniden deneyin.'),
+        error: (error: unknown) => this.passwordErrorMessage.set(
+          getApiErrorMessage(error, 'Şifre değiştirilemedi. Mevcut şifrenizi kontrol edip yeniden deneyin.')),
       });
   }
 

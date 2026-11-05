@@ -47,13 +47,13 @@
                 <div class="row">
                     <mat-form-field appearance="outline">
                         <mat-label>Şifre</mat-label>
-                        <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" autocomplete="new-password">
+                        <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" autocomplete="new-password" maxlength="128" aria-describedby="password-rules">
                         <button mat-icon-button matSuffix type="button" aria-label="Parolayı göster veya gizle" (click)="hidePassword = !hidePassword">
                             <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
                         <mat-error *ngIf="registerForm.get('password')?.hasError('passwordStrength')">
                             <span *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.minLength">En az 8
-                                karakter</span>
+                                karakter</span><span *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.maxLength">En fazla 128 karakter</span>
                             <span *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.uppercase">, Büyük
                                 harf</span>
                             <span *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.lowercase">, Küçük
@@ -65,6 +65,7 @@
                             gerekli.
                         </mat-error>
                     </mat-form-field>
+                    <app-password-requirements [password]="registerForm.get('password')?.value" describedById="password-rules" />
                     <mat-form-field appearance="outline">
                         <mat-label>Şifre Tekrar</mat-label>
                         <input matInput formControlName="confirmPassword"

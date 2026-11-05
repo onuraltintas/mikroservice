@@ -8,11 +8,14 @@ import { AuthService, MfaSetupResponse } from '../../../../core/auth/auth.servic
 import { GoogleLoginProvider, SocialAuthService } from '@abacritt/angularx-social-login';
 
 import { RouterModule } from '@angular/router';
+import { getApiErrorMessage } from '../../../../core/http/api-error-message';
+import { strongPasswordValidator } from '../../../../core/validators/password.validator';
+import { PasswordRequirementsComponent } from '../../../../shared/components/password-requirements/password-requirements.component';
 
 @Component({
     selector: 'app-profile-settings',
     standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, PasswordRequirementsComponent],
     templateUrl: './profile-settings.html',
     styleUrl: './profile-settings.scss'
 })
@@ -31,6 +34,7 @@ export class ProfileSettingsComponent implements OnInit {
     loading = signal(true);
     savingProfile = signal(false);
     savingPassword = signal(false);
+    passwordError = signal<string | null>(null);
     linkingGoogle = signal(false);
     mfaSetup = signal<MfaSetupResponse | null>(null);
     mfaCurrentPassword = '';
@@ -60,7 +64,7 @@ export class ProfileSettingsComponent implements OnInit {
 
         this.passwordForm = this.fb.group({
             currentPassword: ['', [Validators.required]],
-            newPassword: ['', [Validators.required, Validators.minLength(6)]],
+            newPassword: ['', [Validators.required, strongPasswordValidator()]],
             confirmPassword: ['', [Validators.required]]
         }, {
             validators: this.passwordMatchValidator
@@ -116,6 +120,7 @@ export class ProfileSettingsComponent implements OnInit {
         if (this.passwordForm.invalid) return;
 
         this.savingPassword.set(true);
+        this.passwordError.set(null);
         const { currentPassword, newPassword } = this.passwordForm.value;
 
         this.identityService.changeMyPassword({ currentPassword, newPassword }).subscribe({
@@ -125,7 +130,8 @@ export class ProfileSettingsComponent implements OnInit {
                 this.savingPassword.set(false);
             },
             error: (err) => {
-                const errorMsg = err.error?.Error?.Message || 'Şifre güncellenirken bir hata oluştu.';
+                const errorMsg = getApiErrorMessage(err, 'Şifre güncellenirken bir hata oluştu. Lütfen yeniden deneyin.');
+                this.passwordError.set(errorMsg);
                 this.toaster.error(errorMsg);
                 this.savingPassword.set(false);
             }

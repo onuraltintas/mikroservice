@@ -88,6 +88,8 @@ public static class SecurityExtensions
         services.AddHttpClient<IMfaPolicyStore, MfaPolicyStore>(client =>
             client.Timeout = TimeSpan.FromSeconds(3));
         services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, MfaAuthorizationHandler>();
+        // 403 bodies say whether MFA or a permission/role is missing (Auth.MfaRequired / Auth.Forbidden).
+        services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationMiddlewareResultHandler, AuthorizationProblemResultHandler>();
         return services;
     }
 }

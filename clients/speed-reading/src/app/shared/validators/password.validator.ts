@@ -5,6 +5,7 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
  */
 export interface PasswordValidationErrors {
     minLength?: boolean;
+    maxLength?: boolean;
     uppercase?: boolean;
     lowercase?: boolean;
     digit?: boolean;
@@ -16,11 +17,40 @@ export interface PasswordValidationErrors {
  */
 export const PASSWORD_ERROR_MESSAGES: Record<string, string> = {
     minLength: 'Şifre en az 8 karakter olmalıdır',
+    maxLength: 'Şifre en fazla 128 karakter olabilir',
     uppercase: 'Şifre en az bir büyük harf içermelidir',
     lowercase: 'Şifre en az bir küçük harf içermelidir',
     digit: 'Şifre en az bir rakam içermelidir',
-    specialChar: 'Şifre en az bir özel karakter içermelidir (!@#$%^&*)'
+    specialChar: 'Şifre en az bir özel karakter içermelidir (ör. - _ . ! @ #)'
 };
+
+/**
+ * Platformun tek şifre kuralı; Identity RegistrationPasswordRules ile aynıdır (kayıt, şifre
+ * sıfırlama, şifre değiştirme): 8-128 karakter, büyük harf (A-Z), küçük harf (a-z), rakam ve
+ * harf ya da rakam olmayan herhangi bir karakter (ör. - _ . ! @ # veya boşluk).
+ */
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 128;
+export const PASSWORD_POLICY_SUMMARY = 'En az 8 karakter; büyük harf, küçük harf, rakam ve özel karakter';
+const SPECIAL_CHARACTER = /[^A-Za-z0-9]/;
+
+export type PasswordRequirementKey = 'length' | 'upper' | 'lower' | 'digit' | 'special';
+export interface PasswordRequirement { key: PasswordRequirementKey; label: string; met: boolean; }
+
+export function passwordRequirements(value: string | null | undefined): PasswordRequirement[] {
+    const password = value ?? '';
+    return [
+        { key: 'length', label: '8-128 karakter', met: password.length >= PASSWORD_MIN_LENGTH && password.length <= PASSWORD_MAX_LENGTH },
+        { key: 'upper', label: 'Büyük harf (A-Z)', met: /[A-Z]/.test(password) },
+        { key: 'lower', label: 'Küçük harf (a-z)', met: /[a-z]/.test(password) },
+        { key: 'digit', label: 'Rakam (0-9)', met: /[0-9]/.test(password) },
+        { key: 'special', label: 'Özel karakter (ör. - _ . ! @ #)', met: SPECIAL_CHARACTER.test(password) },
+    ];
+}
+
+export function isPasswordPolicySatisfied(value: string | null | undefined): boolean {
+    return passwordRequirements(value).every(requirement => requirement.met);
+}
 
 /**
  * Güçlü şifre validatörü
@@ -41,9 +71,12 @@ export function strongPasswordValidator(): ValidatorFn {
 
         const errors: PasswordValidationErrors = {};
 
-        // Minimum 8 karakter
-        if (value.length < 8) {
+        // 8-128 karakter
+        if (value.length < PASSWORD_MIN_LENGTH) {
             errors.minLength = true;
+        }
+        if (value.length > PASSWORD_MAX_LENGTH) {
+            errors.maxLength = true;
         }
 
         // En az bir büyük harf
@@ -62,7 +95,7 @@ export function strongPasswordValidator(): ValidatorFn {
         }
 
         // En az bir özel karakter
-        if (!/[!@#$%^&*()_+\-=\[\]{}|;:'",.<>?\/\\]/.test(value)) {
+        if (!SPECIAL_CHARACTER.test(value)) {
             errors.specialChar = true;
         }
 
@@ -112,7 +145,7 @@ export function calculatePasswordStrength(password: string): number {
     if (/[a-z]/.test(password)) score += 15;
     if (/[A-Z]/.test(password)) score += 15;
     if (/[0-9]/.test(password)) score += 15;
-    if (/[!@#$%^&*()_+\-=\[\]{}|;:'",.<>?\/\\]/.test(password)) score += 15;
+    if (SPECIAL_CHARACTER.test(password)) score += 15;
 
     return Math.min(score, 100);
 }

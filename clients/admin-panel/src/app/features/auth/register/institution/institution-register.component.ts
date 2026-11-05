@@ -5,6 +5,8 @@ import { ToasterService } from '../../../../core/services/toaster.service';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
+import { getApiErrorMessage } from '../../../../core/http/api-error-message';
+import { PasswordRequirementsComponent } from '../../../../shared/components/password-requirements/password-requirements.component';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
@@ -28,7 +30,7 @@ import { RegistrationLegalAcceptance } from '../../../../core/services/identity.
         ExistingProductJoinComponent,
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatSelectModule,
-        RegistrationLegalConsentComponent
+        RegistrationLegalConsentComponent, PasswordRequirementsComponent
     ],
     templateUrl: './institution-register.component.html'
 })
@@ -124,8 +126,10 @@ export class InstitutionRegisterComponent implements OnInit {
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const detail = err.error?.description ?? err.error?.message ?? err.error?.Error?.description;
-                const msg = typeof detail === 'string' ? detail : 'Kayıt başarısız oldu.';
+                const msg = getApiErrorMessage(err, 'Kayıt tamamlanamadı. Lütfen biraz sonra yeniden deneyin.', {
+                    voice: 'siz',
+                    conflict: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifrenizi sıfırlayabilirsiniz.'
+                });
                 this.toaster.error(msg);
                 this.errorMessage.set(msg);
             }

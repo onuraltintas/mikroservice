@@ -1,4 +1,5 @@
 using FluentValidation;
+using Identity.Application.Validators;
 
 namespace Identity.Application.Commands.AdminChangePassword;
 
@@ -9,13 +10,10 @@ public class AdminChangePasswordCommandValidator : AbstractValidator<AdminChange
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("Kullanıcı ID boş olamaz.");
 
+        // Same policy as registration, self change and reset (RegistrationPasswordRules).
         RuleFor(x => x.NewPassword)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage("Şifre boş olamaz.")
-            .MaximumLength(128).WithMessage("Şifre en fazla 128 karakter olabilir.")
-            .MinimumLength(8).WithMessage("Şifre en az 8 karakter olmalıdır.")
-            .Matches(@"[A-Z]").WithMessage("Şifre en az bir büyük harf içermelidir.")
-            .Matches(@"[a-z]").WithMessage("Şifre en az bir küçük harf içermelidir.")
-            .Matches(@"[0-9]").WithMessage("Şifre en az bir rakam içermelidir.")
-            .Matches(@"[!@#$%^&*(),.?""{}|<>]").WithMessage("Şifre en az bir özel karakter içermelidir.");
+            .ApplyRegistrationPasswordPolicy();
     }
 }
