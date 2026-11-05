@@ -107,13 +107,18 @@ public sealed class CoachingExistingAccountRegistrationTests
         Assert.False(fixture.User.HasProductAccess(PlatformProduct.Coaching));
     }
 
+    // Review #8 (PR #111): registering again for a service the verified account already has is
+    // idempotent ("zaten doğrulanmış, giriş yap") instead of a conflict; nothing new is granted.
     [Fact]
     public async Task OtherProductRegistrationDoesNotUseTheCoachingJoinPath()
     {
         var fixture = new Fixture();
-        Assert.Equal("Identity.UserExists", (await fixture.Register(product: PlatformProduct.SpeedReading)).Error.Code);
+        var result = await fixture.Register(product: PlatformProduct.SpeedReading);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(Identity.Application.Registration.RegistrationOutcome.NotRequired, result.Value.VerificationEmail);
         Assert.False(fixture.User.HasProductAccess(PlatformProduct.Coaching));
-        Assert.Equal(0, fixture.Saves);
+        Assert.Equal(0, fixture.ProvisioningEvents);
+        Assert.Equal(0, fixture.Legal.Tracked);
     }
 
     [Fact]

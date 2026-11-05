@@ -64,6 +64,31 @@ public sealed class NotificationEmailInjectionTests
         mail.Body.Should().Contain("href='https://app.example.test/coaching-portal/profile'");
     }
 
+    // Review #2 (PR #111): a verification e-mail follows the product it was sent for; without a
+    // product (older publishers) the role decides as before.
+    [Theory]
+    [InlineData("Student", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/verify-email", "Eduİvme")]
+    [InlineData("Teacher", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/verify-email", "Eduİvme")]
+    [InlineData("InstitutionAdmin", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/verify-email", "Eduİvme")]
+    [InlineData("Parent", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/verify-email", "Eduİvme")]
+    [InlineData("Student", "speed-reading", "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email", "Master Hızlı Okuma")]
+    [InlineData("Student", null, "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email", "Master Hızlı Okuma")]
+    public async Task VerificationEmail_UsesTheProductTemplateLinkAndName(string role, string? product, string template, string link, string appName)
+    {
+        foreach (var withTemplate in new[] { true, false })
+        {
+            var mail = (await RunAsync<UserRegisteredConsumer>(
+                new UserRegisteredEvent(Guid.NewGuid(), "a@example.test", "Ada", "Kaya", "token", role) { Product = product },
+                withTemplate ? (template, "Doğrula - Eduİvme", "<p>Eduİvme <a href='{{VerificationLink}}'>x</a></p>") : null)).Single();
+
+            mail.Body.Should().Contain($"href='{link}?token=token&userId=");
+            if (withTemplate) mail.Subject.Should().Be($"Doğrula - {appName}");
+            else mail.Subject.Should().Contain(appName);
+            mail.Body.Should().Contain(appName);
+            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma");
+        }
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

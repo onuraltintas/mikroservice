@@ -110,6 +110,7 @@ describe('registration verification e-mail outcome copy', () => {
   it('renders the already-verified screen with a sign-in button and no "gönderildi"', async () => {
     TestBed.configureTestingModule({ imports: [RegistrationSuccessComponent], providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(RegistrationSuccessComponent);
+    document.body.appendChild(fixture.nativeElement);
     const copy = registrationSuccessCopy('notRequired', 'sen');
     fixture.componentRef.setInput('title', copy.title);
     fixture.componentRef.setInput('message', copy.message);
@@ -119,6 +120,10 @@ describe('registration verification e-mail outcome copy', () => {
     const element: HTMLElement = fixture.nativeElement;
     expect(element.querySelector('[role="status"]')?.textContent).toContain('zaten doğrulanmış');
     expect(element.textContent).not.toMatch(/gönder/i);
+    // Review #4: focus moves to the panel heading so it is not lost when the form is hidden.
+    const heading = element.querySelector('h3') as HTMLElement;
+    expect(heading.getAttribute('tabindex')).toBe('-1');
+    expect(document.activeElement).toBe(heading);
     const link = element.querySelector('a') as HTMLAnchorElement;
     expect(link.textContent?.trim()).toBe('Giriş yap');
     expect(link.getAttribute('href')).toBe('/auth/login?registered=true&role=student');
@@ -138,8 +143,8 @@ describe.each(forms)('$name registration success screen', entry => {
     const { component, toaster, router } = await submit(entry, { userId: 'u', verificationEmail: 'notRequired' });
     const copy = registrationSuccessCopy('notRequired', entry.voice);
     expect(component.verifiedNotice()).toEqual(copy);
-    expect(toaster.success).toHaveBeenCalledWith(copy.message, copy.title);
-    expect(JSON.stringify(toaster.success.mock.calls)).not.toMatch(/gönder/i);
+    // Review #4: the panel is the message; no second copy in a toast.
+    expect(toaster.success).not.toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
     expect(component.isLoading()).toBe(false);
   });

@@ -9,13 +9,15 @@ import { RegisterSchoolComponent } from './register-school/register-school.compo
 import { RegisterTeacherComponent } from './register-teacher/register-teacher.component';
 import { RegisterComponent } from './register/register.component';
 import { readVerificationEmailOutcome, registrationSuccessCopy } from './registration-outcome';
+import { RegistrationVerifiedComponent } from './registration-verified.component';
+import { provideRouter } from '@angular/router';
 
 // Paket A #2 (05.11.2026): the success screen follows the server's verificationEmail outcome.
 type Voice = 'sen' | 'siz';
 const acceptances = ['privacy', 'kvkk', 'speed-reading-terms'].map(slug => ({ slug, version: 1 }));
 const password = 'Sifre-2026';
 
-interface Harness { submit(): void; successMessage(): string; alreadyVerified(): boolean; }
+interface Harness { submit(): void; successMessage(): string; verifiedMessage(): string; alreadyVerified(): boolean; setError(v: string): void; error(): string; }
 
 const forms: Array<{ name: string; voice: Voice; method: string; create(): Harness }> = [
   {
@@ -24,7 +26,8 @@ const forms: Array<{ name: string; voice: Voice; method: string; create(): Harne
       const c = TestBed.runInInjectionContext(() => new RegisterComponent());
       c.registerForm.setValue({ firstName: 'Elif', lastName: 'Kaya', email: 'elif@example.test', password, confirmPassword: password });
       c.legalReady = true; c.legalAcceptances = acceptances;
-      return { submit: () => c.onSubmit(), successMessage: () => c.successMessage, alreadyVerified: () => c.alreadyVerified };
+      return { submit: () => c.onSubmit(), successMessage: () => c.successMessage, verifiedMessage: () => c.verifiedMessage, alreadyVerified: () => c.alreadyVerified,
+        setError: v => c.error = v, error: () => c.error };
     },
   },
   {
@@ -33,7 +36,8 @@ const forms: Array<{ name: string; voice: Voice; method: string; create(): Harne
       const c = TestBed.runInInjectionContext(() => new RegisterTeacherComponent());
       c.registerForm.setValue({ firstName: 'Ali', lastName: 'Demir', email: 'ali@example.test', password, confirmPassword: password });
       c.legalReady = true; c.legalAcceptances = acceptances;
-      return { submit: () => c.onSubmit(), successMessage: () => c.successMessage, alreadyVerified: () => c.alreadyVerified };
+      return { submit: () => c.onSubmit(), successMessage: () => c.successMessage, verifiedMessage: () => c.verifiedMessage, alreadyVerified: () => c.alreadyVerified,
+        setError: v => c.error = v, error: () => c.error };
     },
   },
   {
@@ -43,7 +47,8 @@ const forms: Array<{ name: string; voice: Voice; method: string; create(): Harne
       c.registerForm.setValue({ schoolName: 'Okul', contactEmail: 'okul@example.test', phoneNumber: '5551234567', address: '',
         provinceId: '34', districtId: '3401', firstName: 'Ali', lastName: 'Demir', adminEmail: 'ali@example.test', password, confirmPassword: password });
       c.legalReady = true; c.legalAcceptances = acceptances;
-      return { submit: () => c.onSubmit(), successMessage: () => c.successMessage, alreadyVerified: () => c.alreadyVerified };
+      return { submit: () => c.onSubmit(), successMessage: () => c.successMessage, verifiedMessage: () => c.verifiedMessage, alreadyVerified: () => c.alreadyVerified,
+        setError: v => c.error = v, error: () => c.error };
     },
   },
 ];
@@ -92,6 +97,7 @@ forms.forEach(entry => {
       form.submit();
       tick(5000);
       expect(form.alreadyVerified()).toBeFalse();
+      expect(form.verifiedMessage()).toBe('');
       expect(form.successMessage()).toBe(registrationSuccessCopy('sent', entry.voice).message);
       expect(router.navigate).toHaveBeenCalled();
       expect(router.navigate.calls.mostRecent().args[0]).toEqual(['/auth/login']);
@@ -100,11 +106,15 @@ forms.forEach(entry => {
     it('says the address is already verified, offers sign in and does not claim an e-mail was sent', fakeAsync(() => {
       const router = configure(entry.method, { userId: 'u', verificationEmail: 'notRequired' });
       const form = entry.create();
+      form.setError('Önceki hata');
       form.submit();
       tick(5000);
       expect(form.alreadyVerified()).toBeTrue();
-      expect(form.successMessage()).toBe(registrationSuccessCopy('notRequired', entry.voice).message);
-      expect(form.successMessage()).not.toMatch(/gönder/i);
+      expect(form.verifiedMessage()).toBe(registrationSuccessCopy('notRequired', entry.voice).message);
+      expect(form.verifiedMessage()).not.toMatch(/gönder/i);
+      // Review #4/#5: shown once (in the panel), no stale success or error text next to it.
+      expect(form.successMessage()).toBe('');
+      expect(form.error()).toBe('');
       expect(router.navigate).not.toHaveBeenCalled();
     }));
 
@@ -116,5 +126,28 @@ forms.forEach(entry => {
       expect(form.alreadyVerified()).toBeFalse();
       expect(form.successMessage()).toBe(registrationSuccessCopy('sent', entry.voice).message);
     }));
+  });
+});
+
+// Review #4: the already-verified panel takes focus (the form it replaces is hidden) and offers sign in.
+describe('RegistrationVerifiedComponent', () => {
+  it('focuses its heading and links to login', async () => {
+    TestBed.configureTestingModule({ imports: [RegistrationVerifiedComponent], providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(RegistrationVerifiedComponent);
+    document.body.appendChild(fixture.nativeElement);
+    fixture.componentRef.setInput('message', registrationSuccessCopy('notRequired', 'siz').message);
+    fixture.componentRef.setInput('loginQueryParams', { returnUrl: '/student/dashboard' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const element: HTMLElement = fixture.nativeElement;
+    const heading = element.querySelector('h3') as HTMLElement;
+    expect(heading.getAttribute('tabindex')).toBe('-1');
+    expect(document.activeElement).toBe(heading);
+    expect(element.querySelector('[role="status"]')?.textContent).toContain('zaten doğrulanmış');
+    expect(element.textContent).not.toMatch(/gönder/i);
+    const link = element.querySelector('a') as HTMLAnchorElement;
+    expect(link.textContent?.trim()).toBe('Giriş yap');
+    expect(link.getAttribute('href')).toBe('/auth/login?returnUrl=%2Fstudent%2Fdashboard');
+    fixture.nativeElement.remove();
   });
 });

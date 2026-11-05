@@ -187,7 +187,7 @@ public sealed class ProductRegistrationEndpointTests
     [Fact]
     public async Task ParentRegistration_ShouldRejectNonCoachingProduct()
     {
-        var handler = new RegisterParentCommandHandler(null!, null!, null!, null!, null!, null!, null!);
+        var handler = new RegisterParentCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!);
 
         var result = await handler.Handle(
             new RegisterParentCommand(

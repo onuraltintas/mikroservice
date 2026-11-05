@@ -119,4 +119,21 @@ describe('ExistingProductJoinComponent', () => {
       expect(c.verificationEmailSent).toBe(true);
     });
   }
+  // Review #6: staff accounts are addressed with "siz".
+  it('addresses students with sen and teachers/institutions with siz', () => {
+    const student = create('student');
+    expect(student.copy.intro).toContain('mevcut şifreni kullan.');
+    expect(student.copy.heading).toBe('Mevcut hesabınla katıl');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: ChangeDetectorRef, useValue: { markForCheck: () => {} } }] });
+    for (const account of ['teacher', 'institution'] as const) {
+      const staff = create(account);
+      expect(staff.copy.heading).toBe('Mevcut hesabınızla katılın');
+      expect(staff.copy.intro).toContain('mevcut şifrenizi kullanın.');
+      expect(staff.copy.intro).toContain('Hesabınız ve kurum bağlantınız korunur.');
+      expect(staff.copy.mfaHint).toContain('girin.');
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ providers: [{ provide: ChangeDetectorRef, useValue: { markForCheck: () => {} } }] });
+    }
+  });
 });
