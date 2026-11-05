@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, scoreGroup } from '../../../core/services/coaching-score-estimate.service';
+import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, scoreGroup, scoreTypeNote } from '../../../core/services/coaching-score-estimate.service';
 import { CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent } from '../ui';
 import { goalGauge, goalScore } from './growth-model';
 import { possessive } from '../parent/parent-model';
@@ -27,8 +27,8 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
     @if (loading() && !data()) { <div class="cs-growth-skeleton" role="status" [attr.aria-label]="parent() ? 'Hedef yükleniyor' : 'Hedefin yükleniyor'"></div> }
     @if (data(); as result) {
       @if (gauge(); as goal) {
-        <cs-card tone="raised" class="cs-goal-hero" [attr.data-reached]="goal.reached">
-          <p class="cs-goal-kicker">{{ parent() ? possessive(name()) + ' hedefi' : 'Hedefin' }} · {{ goal.scoreType }}</p>
+        <cs-card tone="raised" class="cs-goal-hero" [attr.data-reached]="goal.reached" [attr.data-status]="goal.status">
+          <p class="cs-goal-kicker">{{ parent() ? possessive(name()) + ' hedefi' : 'Hedefin' }} · {{ goal.scoreType }}@if (goal.label) { · <span data-testid="gauge-approximate">{{ goal.label }}</span> }</p>
           <h2>{{ goal.targetName }}</h2>
           <p class="cs-goal-headline" [class.is-muted]="goal.missingData">{{ goal.headline }}</p>
           @for (row of goal.rows; track row.label) {
@@ -46,7 +46,13 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
           <h2>{{ card.title }}</h2>
           <p class="cs-goal-headline">{{ card.headline }}</p>
           <p class="cs-growth-muted"><small>{{ card.label }}</small></p>
+          @if (card.note) { <p class="cs-growth-muted"><small>{{ card.note }}</small></p> }
         </cs-card>
+        <!-- Review 06.11.2026: LGS and YKS students can still choose a target school or programme. -->
+        @if (card.group === 'LGS' || card.group === 'YKS') {
+          @if (parent()) { <p class="cs-growth-muted" data-testid="goal-target-hint">{{ name() }} henüz bir hedef seçmedi.</p> }
+          @else if (!readonly()) { <p class="cs-growth-muted" data-testid="goal-target-hint">Okulunu ya da bölümünü seçtiğinde ona ne kadar kaldığını da gösteririz.</p> }
+        }
       } @else if (parent()) {
         <cs-empty-state [title]="name() + ' henüz bir hedef seçmedi'" text="Hedef okul ya da bölüm seçildiğinde ona ne kadar kaldığı burada görünür." />
       } @else if (!readonly()) {
@@ -60,7 +66,8 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
             <cs-card data-testid="estimate-card" class="cs-estimate">
               <div class="cs-growth-card-head"><strong>{{ item.name }}</strong><cs-status-chip [label]="'son ' + item.examsUsed + ' deneme'" /></div>
               <p class="cs-estimate-score">{{ num(item.score) }}<small> puan</small></p>
-              <p class="cs-growth-muted">{{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }} arası@if (item.margin) { · ±{{ num(item.margin) }} }</p>
+              <p class="cs-growth-muted">{{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }} arası@if (item.margin) { · model payı ±{{ num(item.margin) }} }</p>
+              @if (typeNote(item.scoreType); as note) { <p class="cs-growth-muted"><small>{{ note }}</small></p> }
               @if (item.rankBest !== null && item.rankWorst !== null) {
                 <p>Sıralama <b>{{ int(item.rankBest) }}–{{ int(item.rankWorst) }}</b>@if (item.percentile !== null) { · ilk %{{ num(item.percentile) }} }</p>
               }
@@ -122,6 +129,7 @@ export class StudentGoalSummaryComponent implements OnInit {
   });
   readonly label = ESTIMATE_LABEL;
   readonly exactLabel = EXACT_LABEL;
+  readonly typeNote = scoreTypeNote;
   readonly methodNote = computed(() => estimateMethodNote(this.data()?.estimates ?? []));
   readonly diplomaNote = computed(() => diplomaRankNote(this.data()?.estimates ?? []));
   readonly hasYks = computed(() => [...this.data()?.estimates ?? [], ...this.data()?.notComputed ?? []].some(x => scoreGroup(x) === 'YKS'));

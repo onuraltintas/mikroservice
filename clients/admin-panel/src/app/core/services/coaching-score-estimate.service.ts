@@ -19,6 +19,11 @@ export interface ScoreTargetGap {
   scoreGap: number | null; netGap: number | null; rankGap: number | null; reached: boolean;
   /** 01.11.2026: 'minRawScore' when the target's score type is not computed (see ScoreEstimate.notComputed). */
   notComputedReason?: string | null;
+  /**
+   * Review 06.11.2026: 'reached' | 'borderline' | 'below' (null without an estimate). For LGS / MEB-AGS the estimate's whole range
+   * decides: borderline when the taban lies inside it. `margin` is the estimate's model ± (null for YKS).
+   */
+  status?: 'reached' | 'borderline' | 'below' | null; margin?: number | null;
 }
 /** 01.11.2026: a test's ham puan (doğru − yanlış/4), cut to hundredths, e.g. Türkçe or AYT Fen Bilimleri. */
 export interface RawScoreValue { code: string; name: string; rawScore: number }
@@ -42,6 +47,17 @@ export interface LanguageScoreEstimate {
 export interface ScoreGoalEstimate {
   scoreType: string; name: string; group: string; score: number | null; scoreLow: number | null; scoreHigh: number | null; margin: number | null;
   scaleMax: number; label: string; exact: boolean; level: string | null; notComputedReason: string | null;
+  /** Review 06.11.2026: why `score` is null: no model, no practice exam, some exams missing (`missingExams`), or not computed. */
+  reason?: 'noModel' | 'noExam' | 'missingExam' | 'notComputed' | null; missingExams?: string[];
+}
+
+/** Review 06.11.2026: P1 is the score of AGS-only candidates; foreign-language teacher candidates are placed with P3. */
+export const P3_NOTE = "Yabancı dil öğretmenliği adaylarının puanı P3'tür (AGS + YDS); P3 tahmin edilmez.";
+/** Review 06.11.2026: the ÖABT practice exam of Din Kültürü is one section, so the 1-net rule is checked on all of it. */
+export const DIN_SUBTEST_NOTE = "1 net koşulu burada ÖABT'nin tamamına uygulanır; alt testler ayrı girilmiyor.";
+/** One extra line for a score type, if it needs one. */
+export function scoreTypeNote(scoreType: string): string | null {
+  return scoreType === 'P2_16' || scoreType === 'P2_17' ? DIN_SUBTEST_NOTE : null;
 }
 /** KM1: the exam date an AGS, YDS or YÖKDİL student works towards. */
 export interface ScoreTargetExam { name: string; date: string; daysLeft: number; source: 'Student' | 'Session' | 'Catalog' }

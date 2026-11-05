@@ -8,7 +8,9 @@ namespace Coaching.Infrastructure.Data.Migrations
     /// Paket B (user decision 05.11.2026): score estimates for every exam. score_models and score_model_versions accept the
     /// MEB-AGS score types (P1, P2_&lt;field&gt;, P2_16, P2_17) and keep the model's own ± range (UncertaintyShare: share of the
     /// distance to the top score; UncertaintyCap: optional cap in points). Existing rows get 0 / null, so YKS estimates are
-    /// unchanged. Down refuses, changing nothing, while a MEB-AGS model or version exists: the previous release cannot read it.
+    /// unchanged. Down refuses, changing nothing, while a MEB-AGS model or version, or a model or version without a rank table
+    /// (the 2026 LGS pack), exists: the previous release cannot read them. Release note: once the 2026-lgs / 2026-meb-ags packs
+    /// are uploaded the application must not be rolled back to an earlier version.
     /// </summary>
     public partial class ScoreModelsAllExams : Migration
     {
@@ -36,12 +38,18 @@ namespace Coaching.Infrastructure.Data.Migrations
         {
             migrationBuilder.Sql("""
                 DO $$
-                DECLARE models bigint; versions bigint;
+                DECLARE models bigint; versions bigint; rankless bigint;
                 BEGIN
                   SELECT count(*) INTO models FROM coaching.score_models WHERE "ScoreType" NOT IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL');
                   SELECT count(*) INTO versions FROM coaching.score_model_versions WHERE "ScoreType" NOT IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL');
                   IF models + versions > 0 THEN
                     RAISE EXCEPTION 'ScoreModelsAllExams down refused: % MEB-AGS score model(s) and % version(s) exist. Nothing changed.', models, versions;
+                  END IF;
+                  -- The previous release reads every model's rank table (at least two rows); a rank-less LGS model would break it.
+                  SELECT (SELECT count(*) FROM coaching.score_models WHERE jsonb_array_length("RanksJson") < 2)
+                       + (SELECT count(*) FROM coaching.score_model_versions WHERE jsonb_array_length("RanksJson") < 2) INTO rankless;
+                  IF rankless > 0 THEN
+                    RAISE EXCEPTION 'ScoreModelsAllExams down refused: % score model row(s) or version(s) without a rank table exist. Nothing changed.', rankless;
                   END IF;
                 END $$;
                 """);

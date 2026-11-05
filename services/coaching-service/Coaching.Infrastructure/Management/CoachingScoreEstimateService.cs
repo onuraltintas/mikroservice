@@ -15,7 +15,12 @@ public sealed record ScoreModelImportRequest(int Year, string Csv, string? Finge
 public sealed record ScoreModelHistoryItem(Guid Id, Guid UploadId, int Year, string ScoreType, string Name, string Action, decimal BaseScore, int RankRows,
     int Coefficients, string? FileSha256, string? Reason, Guid ActorUserId, DateTime CreatedAt, bool IsCurrent);
 public sealed record ScoreModelReasonRequest(string Reason);
-public sealed record ScoreModelPreviewItem(string ScoreType, string Name, decimal BaseScore, int Coefficients, int RankRows, bool Replaces);
+public sealed record ScoreModelPreviewItem(string ScoreType, string Name, decimal BaseScore, int Coefficients, int RankRows, bool Replaces)
+{
+    /// <summary>Paket B: the model's own ± range (share of the distance to the top score, optional cap in points).</summary>
+    public decimal UncertaintyShare { get; init; }
+    public decimal? UncertaintyCap { get; init; }
+}
 public sealed record ScoreModelImportError(int Line, string Message);
 public sealed record ScoreModelPreview(string Fingerprint, int Year, IReadOnlyList<ScoreModelPreviewItem> Models, IReadOnlyList<ScoreModelImportError> Errors);
 public sealed record ScoreModelItem(Guid Id, int Year, string ScoreType, string Name, decimal BaseScore, int RankRows, DateTime ImportedAt);
@@ -46,6 +51,14 @@ public sealed record ScoreTargetGap(string TargetName, string ScoreType, decimal
 {
     /// <summary>01.11.2026: "minRawScore" when the target's score type is not computed (see ScoreEstimate.NotComputed).</summary>
     public string? NotComputedReason { get; init; }
+    /// <summary>
+    /// Review 06.11.2026: "reached", "borderline" or "below" (null without an estimate). For a model with its own ± (LGS,
+    /// MEB-AGS) the estimate's range decides: reached only when its low end reaches the taban, borderline when the taban lies
+    /// inside the range. Without a margin (YKS) reached / below as before.
+    /// </summary>
+    public string? Status { get; init; }
+    /// <summary>The estimate's model ± (null for YKS).</summary>
+    public decimal? Margin { get; init; }
 }
 public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, ScoreTargetGap? Target, string? Notice)
 {
@@ -65,7 +78,17 @@ public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, S
 
 /// <summary>Paket B: what the home goal card needs about the student's own score (see ScoreEstimate.Goal).</summary>
 public sealed record ScoreGoalEstimate(string ScoreType, string Name, string Group, decimal? Score, decimal? ScoreLow, decimal? ScoreHigh,
-    decimal? Margin, decimal ScaleMax, string Label, bool Exact, string? Level, string? NotComputedReason);
+    decimal? Margin, decimal ScaleMax, string Label, bool Exact, string? Level, string? NotComputedReason)
+{
+    /// <summary>
+    /// Review 06.11.2026: why Score is null — "noModel" (no score model uploaded for this type), "noExam" (no practice exam of
+    /// it), "missingExam" (some of its practice exams are missing, see MissingExams, e.g. the ÖABT for P2) or "notComputed"
+    /// (the minimum raw score rule, see NotComputedReason). Null when there is a score.
+    /// </summary>
+    public string? Reason { get; init; }
+    /// <summary>Names of the practice exams still missing for the score ("ÖABT · İlköğretim Matematik", "AYT · Sayısal").</summary>
+    public IReadOnlyList<string> MissingExams { get; init; } = [];
+}
 /// <summary>01.11.2026: a score type with a model and practice exams that ÖSYM does not compute, and the conditions that fail.</summary>
 public sealed record ScoreTypeNotComputed(string ScoreType, string Name, int ModelYear, string NotComputedReason,
     IReadOnlyList<RawScoreCondition> FailedConditions, int ExamsUsed, DateTime LastExamDate)
@@ -118,7 +141,8 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
         var parsed = Parse(request);
         var existing = await db.Set<CoachingScoreModel>().AsNoTracking().Where(x => x.Year == request.Year).Select(x => x.ScoreType).ToListAsync(ct);
         return new(parsed.Fingerprint, request.Year, parsed.Models.Select(x => new ScoreModelPreviewItem(x.ScoreType, ScoreModelRules.Get(x.ScoreType).Name,
-            x.BaseScore, x.Coefficients.Count, x.Ranks.Count, existing.Contains(x.ScoreType))).ToArray(), parsed.Errors);
+            x.BaseScore, x.Coefficients.Count, x.Ranks.Count, existing.Contains(x.ScoreType)) { UncertaintyShare = x.UncertaintyShare, UncertaintyCap = x.UncertaintyCap })
+            .ToArray(), parsed.Errors);
     }
 
     /// <summary>Applies a previewed file: the fingerprint must match and the file must be free of errors.</summary>
@@ -256,7 +280,7 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             targetExam = target is null ? null : new(target.Name, target.Date, target.Date.DayNumber - today.DayNumber, target.Source);
         }
         if (models.Count == 0 && purpose is not (LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil))
-            return new([], null, "Puan tahmini verisi henüz yüklenmedi.") { Goal = Goal(GoalScoreType(purpose, context?.PrimaryScoreType, null), [], [], []) };
+            return new([], null, "Puan tahmini verisi henüz yüklenmedi.") { Goal = Goal(GoalScoreType(purpose, context?.PrimaryScoreType, null), [], [], [], [], []) };
 
         // K4 (31.10.2026): exams dated in the future do not count, and a student's own copy of a deneme that their institution
         // or teacher recorded on the same Türkiye day for the same scope is a duplicate.
@@ -325,7 +349,7 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             : purpose is LearningPurpose.Yds or LearningPurpose.Yokdil ? "Puanını görmek için bir YDS ya da YÖKDİL denemesini gir."
             : models.Count == 0 ? "Puan tahmini verisi henüz yüklenmedi."
             : "Tahmin için en az bir LGS ya da YKS denemesini ders ders gir.";
-        var goal = Goal(GoalScoreType(purpose, context?.PrimaryScoreType, goalTarget), estimates, notComputed, language);
+        var goal = Goal(GoalScoreType(purpose, context?.PrimaryScoreType, goalTarget), estimates, notComputed, language, models.Keys.ToArray(), exams.Keys.ToArray());
         return new(estimates, goalTarget, notice) { LanguageScores = language, TargetExam = targetExam, NotComputed = notComputed, Goal = goal };
     }
 
@@ -342,7 +366,7 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
         };
 
     private static ScoreGoalEstimate? Goal(string? code, IReadOnlyList<ScoreTypeEstimate> estimates, IReadOnlyList<ScoreTypeNotComputed> notComputed,
-        IReadOnlyList<LanguageScoreEstimate> language)
+        IReadOnlyList<LanguageScoreEstimate> language, IReadOnlyCollection<string> modelTypes, IReadOnlyCollection<string> examCodes)
     {
         if (code is null) return null;
         if (LanguageScoreRules.IsLanguageExam(code))
@@ -351,13 +375,21 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             if (scope is null) return null;
             var item = language.SingleOrDefault(x => x.ExamCode == code);
             return new(code, scope.Name, code == "YDS_EN" ? "YDS" : "YÖKDİL", item?.Score, item?.ScoreLow, item?.ScoreHigh, null, 100,
-                ScoreLabels.PracticeExact, true, item?.Level, null);
+                ScoreLabels.PracticeExact, true, item?.Level, null) { Reason = item is null ? "noExam" : null };
         }
         var type = ScoreModelRules.Types.SingleOrDefault(x => x.Code == code);
         if (type is null) return null;
         var estimate = estimates.SingleOrDefault(x => x.ScoreType == code);
+        var notComputedHere = notComputed.Any(x => x.ScoreType == code);
+        var missing = type.Exams.Where(exam => !examCodes.Contains(exam)).ToArray();
+        var reason = estimate is not null ? null : notComputedHere ? "notComputed" : !modelTypes.Contains(code) ? "noModel"
+            : missing.Length == type.Exams.Count ? "noExam" : "missingExam";
         return new(code, type.Name, type.Group, estimate?.Score, estimate?.ScoreLow, estimate?.ScoreHigh, estimate?.Margin, type.MaxScore,
-            ScoreLabels.Approximate, false, null, notComputed.Any(x => x.ScoreType == code) ? MinRawScoreRules.Reason : null);
+            ScoreLabels.Approximate, false, null, notComputedHere ? MinRawScoreRules.Reason : null)
+        {
+            Reason = reason,
+            MissingExams = reason == "missingExam" ? missing.Select(exam => PracticeExamRules.Profiles.Single(x => x.Code == exam).Name).ToArray() : []
+        };
     }
 
     private async Task<ScoreTargetGap?> TargetAsync(Guid studentId, IReadOnlyList<ScoreTypeEstimate> estimates,
@@ -381,7 +413,16 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
         decimal? netGap = scoreGap is null ? null : scoreGap > 0 && perNet > 0 ? Math.Round(scoreGap.Value / perNet, 1, MidpointRounding.AwayFromZero) : 0m;
         var rankGap = entry.Rank is { } targetRank && estimate.Rank is { } rank ? rank - targetRank : (int?)null;
         var reached = scoreGap is { } gap ? gap <= 0 : rankGap is <= 0;
-        return new(name, scoreType, entry.MinimumScore, entry.Rank, entry.Percentile, scoreGap, netGap, rankGap, reached);
+        var status = reached ? "reached" : "below";
+        // Review 06.11.2026: an approximate model (LGS, MEB-AGS) reaches the taban only with its whole range; a taban inside the
+        // range is "borderline". The range is the estimate card's (practice spread and the model's ±).
+        if (estimate.Margin is > 0 && entry.MinimumScore is { } taban)
+        {
+            reached = estimate.ScoreLow >= taban;
+            status = reached ? "reached" : taban <= estimate.ScoreHigh ? "borderline" : "below";
+        }
+        return new(name, scoreType, entry.MinimumScore, entry.Rank, entry.Percentile, scoreGap, netGap, rankGap, reached)
+            { Status = status, Margin = estimate.Margin };
     }
 
     private static decimal Clamp(decimal value, ScoreTypeDefinition type) => Math.Round(Math.Clamp(value, type.MinScore, type.MaxScore), 2, MidpointRounding.AwayFromZero);
@@ -432,6 +473,9 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
                     var list = coefficients.TryGetValue(type, out var found) ? found : coefficients[type] = [];
                     if (list.Any(x => x.Exam == exam && x.Section == section)) errors.Add(new(line, $"{exam} {section} katsayısı bir kez yazılmalı."));
                     else list.Add(new(exam, section, value));
+                    break;
+                case "belirsizlik" or "belirsizlik_siniri" when definition.RanksRequired:
+                    errors.Add(new(line, "Belirsizlik payı yalnız LGS ve MEB-AGS puan türlerinde kullanılır."));
                     break;
                 case "belirsizlik":
                     if (value is < 0 or > 1) errors.Add(new(line, "Belirsizlik payı 0 ile 1 arasında olmalı."));
