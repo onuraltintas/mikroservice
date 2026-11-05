@@ -164,6 +164,91 @@ public sealed class NotificationEmailInjectionTests
         }
     }
 
+    // Reviewer L1: a custom role next to a product role must not move the product's links to the admin panel.
+    // The role named on the e-mail is the account's role in the e-mail's product; only an account without one
+    // (custom role only, SystemAdmin) gets admin-panel links.
+    private static Identity.Domain.Entities.User AccountWithRoles(Identity.Domain.Enums.PlatformProduct? access,
+        params (string Name, Identity.Domain.Enums.PlatformProduct? Product)[] roles)
+    {
+        var user = Identity.Domain.Entities.User.Create(Guid.NewGuid(), "hesap@example.test", "Ada", "Kaya");
+        if (access is { } product)
+            user.GrantProductAccess(product, Identity.Domain.Enums.UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        foreach (var (name, product2) in roles)
+        {
+            var role = Identity.Domain.Entities.Role.Create(name, name, true);
+            var membership = new Identity.Domain.Entities.UserRole(user.Id, role.Id, product2);
+            typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(membership, role);
+            user.AddRole(membership);
+        }
+        return user;
+    }
+
+    public static TheoryData<string, string> MixedRoleCases() => new()
+    {
+        { "coaching-student-and-moderator", "https://onuraltintas.net" },
+        { "speed-reading-student-and-moderator", "https://masterhizliokuma.com" },
+        { "coaching-moderator-only", "https://eduivme.com" },
+        { "system-admin-only", "https://eduivme.com" },
+    };
+
+    private static (Identity.Domain.Entities.User User, string? Product) MixedRoleAccount(string scenario) => scenario switch
+    {
+        "coaching-student-and-moderator" => (AccountWithRoles(Identity.Domain.Enums.PlatformProduct.Coaching,
+            ("Moderator", null), ("Student", Identity.Domain.Enums.PlatformProduct.Coaching)), "coaching"),
+        "speed-reading-student-and-moderator" => (AccountWithRoles(Identity.Domain.Enums.PlatformProduct.SpeedReading,
+            ("Moderator", null), ("Student", Identity.Domain.Enums.PlatformProduct.SpeedReading)), "speed-reading"),
+        "coaching-moderator-only" => (AccountWithRoles(Identity.Domain.Enums.PlatformProduct.Coaching,
+            ("Moderator", Identity.Domain.Enums.PlatformProduct.Coaching)), "coaching"),
+        _ => (AccountWithRoles(null, ("SystemAdmin", null)), null),
+    };
+
+    private static async Task<List<object>> PublishFrom(Func<Identity.Application.Interfaces.IUserRepository, Identity.Application.Interfaces.IUnitOfWork, IPublishEndpoint, Task> run,
+        Identity.Domain.Entities.User user)
+    {
+        var events = new List<object>();
+        await run(Stub<Identity.Application.Interfaces.IUserRepository>((_, _) => Task.FromResult<Identity.Domain.Entities.User?>(user)),
+            Stub<Identity.Application.Interfaces.IUnitOfWork>((_, _) => Task.FromResult(1)),
+            Stub<IPublishEndpoint>((_, args) => { events.Add(args![0]!); return Task.CompletedTask; }));
+        return events;
+    }
+
+    [Theory]
+    [MemberData(nameof(MixedRoleCases))]
+    public async Task PasswordReset_LinkFollowsTheProductRoleNotACustomRole(string scenario, string origin)
+    {
+        var (user, product) = MixedRoleAccount(scenario);
+        user.ConfirmEmail();
+        var events = await PublishFrom((users, uow, bus) => new Identity.Application.Commands.ForgotPassword.ForgotPasswordCommandHandler(users, uow, bus)
+            .Handle(new(user.Email, product), default), user);
+        var mail = (await RunAsync<UserForgotPasswordConsumer>(events.OfType<UserForgotPasswordEvent>().Single(), null, ProductionOrigins)).Single();
+        mail.Body.Should().Contain($"href='{origin}/auth/reset-password?token=");
+    }
+
+    [Theory]
+    [MemberData(nameof(MixedRoleCases))]
+    public async Task ResentVerification_LinkFollowsTheProductRoleNotACustomRole(string scenario, string origin)
+    {
+        var (user, product) = MixedRoleAccount(scenario);
+        var events = await PublishFrom((users, uow, bus) => new Identity.Application.Commands.ResendVerificationEmail.ResendVerificationEmailCommandHandler(users, uow, bus)
+            .Handle(new(user.Email, product), default), user);
+        var mail = (await RunAsync<UserRegisteredConsumer>(events.OfType<UserRegisteredEvent>().Single(), null, ProductionOrigins)).Single();
+        mail.Body.Should().Contain($"href='{origin}/auth/");
+        mail.Body.Should().NotContain(origin == "https://eduivme.com" ? "onuraltintas.net" : "eduivme.com");
+    }
+
+    [Theory]
+    [MemberData(nameof(MixedRoleCases))]
+    public async Task WelcomeAfterConfirmation_LoginLinkFollowsTheProductRoleNotACustomRole(string scenario, string origin)
+    {
+        var (user, product) = MixedRoleAccount(scenario);
+        user.GenerateEmailVerificationToken();
+        var token = user.EmailVerificationToken;
+        var events = await PublishFrom((users, uow, bus) => new Identity.Application.Commands.ConfirmEmail.ConfirmEmailCommandHandler(users, uow, bus)
+            .Handle(new(user.Id, token, product), default), user);
+        var mail = (await RunAsync<UserEmailConfirmedConsumer>(events.OfType<UserEmailConfirmedEvent>().Single(), null, ProductionOrigins)).Single();
+        mail.Body.Should().Contain($"href='{origin}/auth/login'");
+    }
+
     public class StubProxy : System.Reflection.DispatchProxy
     {
         public Func<System.Reflection.MethodInfo, object?[]?, object?> Call = null!;
