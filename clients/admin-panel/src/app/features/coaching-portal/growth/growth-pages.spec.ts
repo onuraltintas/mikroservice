@@ -161,6 +161,36 @@ describe('T6 Gelişimim', () => {
     expect(el.textContent).toContain('taban puanı ya da sıralaması yok');
   });
 
+  // 01.11.2026: a score type ÖSYM would not compute (0,5 ham puan, 2026 YKS Kılavuzu Tablo 1D) gets a card without a score.
+  const sayNotComputed = { scoreType: 'SAY', name: 'YKS Sayısal', modelYear: 2026, notComputedReason: 'minRawScore', examsUsed: 1, lastExamDate: '2026-10-20',
+    failedConditions: [{ anyOf: [{ code: 'AMAT', name: 'AYT Matematik', rawScore: 0 }, { code: 'FEN', name: 'AYT Fen Bilimleri', rawScore: 0.25 }] }] };
+
+  it('Hedefim shows a not-computed score type and why the target has no gap', () => {
+    const el = goal({ estimates: [], notComputed: [sayNotComputed], notice: null,
+      target: { ...estimate.target!, scoreGap: null, netGap: null, rankGap: null, notComputedReason: 'minRawScore' } });
+    const card = el.querySelector('[data-testid="estimate-not-computed"]')!;
+    expect(card.textContent).toContain('YKS Sayısal'); expect(card.textContent).toContain('Puan hesaplanmaz');
+    expect(card.textContent).toContain('AYT Matematik ya da AYT Fen Bilimleri testinden en az 0,5 ham puan gerekir.');
+    expect(el.querySelectorAll('[data-testid="estimate-card"]')).toHaveLength(0);
+    expect(el.querySelector('[data-testid="estimate-approximate"]')).toBeNull();
+    expect(el.querySelectorAll('[role="meter"]')).toHaveLength(0);
+    expect(el.textContent).toContain('Bu puan türünde puan hesaplanmaz: AYT Matematik ya da AYT Fen Bilimleri testinden en az 0,5 ham puan gerekir.');
+    expect(el.textContent).toContain('Puan tahminin');
+    expect(el.querySelector('#diploma-grade')).not.toBeNull();
+  });
+
+  it('the parent goal view shows a not-computed score type in the same words', () => {
+    TestBed.configureTestingModule({ imports: [StudentGoalSummaryComponent], providers: [provideRouter([]),
+      { provide: CoachingScoreEstimateService, useValue: { estimate: vi.fn(() => of({ ...estimate, notComputed: [{ ...sayNotComputed, scoreType: 'EA', name: 'YKS Eşit Ağırlık' }] })) } }] });
+    const fixture = TestBed.createComponent(StudentGoalSummaryComponent);
+    fixture.componentRef.setInput('studentId', 'child'); fixture.componentRef.setInput('readonly', true);
+    fixture.componentRef.setInput('audience', 'parent'); fixture.componentRef.setInput('childName', 'Elif'); fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelectorAll('[data-testid="estimate-card"]')).toHaveLength(1);
+    expect(el.querySelector('[data-testid="estimate-not-computed"]')!.textContent).toContain('YKS Eşit Ağırlık');
+    expect(el.textContent).not.toContain('Puan tahminin');
+  });
+
   it('Haftam shows weekly minutes and tasks, open decisions and badge progress', () => {
     const weeks = { weeks: vi.fn(() => of([{ label: '13 Eki', minutes: 240, tasks: 4, scheduled: 6 }, { label: 'Bu hafta', minutes: 90, tasks: 1, scheduled: 5 }])),
       motivation: vi.fn(() => of({ studentId: 'me', currentStreak: 2, longestStreak: 4, activeToday: true, lastActiveDay: null, timeZoneId: 'Europe/Istanbul', celebration: null,

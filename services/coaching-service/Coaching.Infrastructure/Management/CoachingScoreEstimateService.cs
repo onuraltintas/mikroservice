@@ -22,14 +22,23 @@ public sealed record ScoreModelItem(Guid Id, int Year, string ScoreType, string 
 public sealed record ScoreTypeEstimate(string ScoreType, string Name, int ModelYear, decimal Score, decimal ScoreLow, decimal ScoreHigh,
     int Rank, int RankBest, int RankWorst, decimal? Percentile, int ExamsUsed, DateTime LastExamDate, bool IncludesDiplomaGrade);
 public sealed record ScoreTargetGap(string TargetName, string ScoreType, decimal? TargetScore, int? TargetRank, decimal? TargetPercentile,
-    decimal? ScoreGap, decimal? NetGap, int? RankGap, bool Reached);
+    decimal? ScoreGap, decimal? NetGap, int? RankGap, bool Reached)
+{
+    /// <summary>01.11.2026: "minRawScore" when the target's score type is not computed (see ScoreEstimate.NotComputed).</summary>
+    public string? NotComputedReason { get; init; }
+}
 public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, ScoreTargetGap? Target, string? Notice)
 {
     /// <summary>KM1: YDS and YÖKDİL scores (correct answers out of 100), one per practice scope.</summary>
     public IReadOnlyList<LanguageScoreEstimate> LanguageScores { get; init; } = [];
     /// <summary>KM1: for AGS, YDS and YÖKDİL students, the exam date they work towards (own date, chosen session or next session).</summary>
     public ScoreTargetExam? TargetExam { get; init; }
+    /// <summary>01.11.2026: score types ÖSYM would not compute (NotComputedReason "minRawScore"); they have no score or rank.</summary>
+    public IReadOnlyList<ScoreTypeNotComputed> NotComputed { get; init; } = [];
 }
+/// <summary>01.11.2026: a score type with a model and practice exams that ÖSYM does not compute, and the conditions that fail.</summary>
+public sealed record ScoreTypeNotComputed(string ScoreType, string Name, int ModelYear, string NotComputedReason,
+    IReadOnlyList<RawScoreCondition> FailedConditions, int ExamsUsed, DateTime LastExamDate);
 public sealed record LanguageScoreEstimate(string ExamCode, string Name, decimal Score, decimal ScoreLow, decimal ScoreHigh, int ExamsUsed, DateTime LastExamDate);
 public sealed record ScoreTargetExam(string Name, DateOnly Date, int DaysLeft, string Source);
 
@@ -223,9 +232,19 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
                 scores.Min(), scores.Max(), scores.Length, group.Value[0].ExamDate);
         }).ToArray();
         var estimates = new List<ScoreTypeEstimate>();
+        var notComputed = new List<ScoreTypeNotComputed>();
         foreach (var type in ScoreModelRules.Types)
         {
             if (!models.TryGetValue(type.Code, out var model) || type.Exams.Any(exam => !exams.ContainsKey(exam))) continue;
+            // 01.11.2026: ÖSYM computes the score type only with 0,5 ham puan in one of its tests (2026 YKS Kılavuzu, Tablo 1D).
+            // The estimate averages the last exams, so the condition is read on each test's average ham puan over the same exams.
+            var failed = MinRawScoreRules.Failed(type.Code, test => exams[test.Exam].Average(x => MinRawScoreRules.Raw(test, x.Summary)));
+            if (failed.Count > 0)
+            {
+                notComputed.Add(new(type.Code, type.Name, model.Year, MinRawScoreRules.Reason, failed,
+                    type.Exams.Min(exam => exams[exam].Length), type.Exams.Max(exam => exams[exam][0].ExamDate)));
+                continue;
+            }
             var coefficients = model.Coefficients();
             decimal Contribution(PracticeExamSummary summary) => summary.Sections.Sum(section =>
                 section.Net * coefficients.Single(x => x.Exam == summary.ExamCode && x.Section == section.SectionCode).Coefficient);
@@ -240,12 +259,14 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
                 type.UsesDiplomaGrade && diplomaGrade is not null));
         }
         var goalTarget = await TargetAsync(studentId, estimates, models, ct);
-        var notice = estimates.Count > 0 || language.Length > 0 ? null
+        if (goalTarget is not null && notComputed.Any(x => x.ScoreType == goalTarget.ScoreType))
+            goalTarget = goalTarget with { NotComputedReason = MinRawScoreRules.Reason };
+        var notice = estimates.Count > 0 || notComputed.Count > 0 || language.Length > 0 ? null
             : purpose == LearningPurpose.Ags ? "AGS ve ÖABT için puan tahmini henüz yok. Netlerini Denemeler bölümünden izleyebilirsin."
             : purpose is LearningPurpose.Yds or LearningPurpose.Yokdil ? "Puanını görmek için bir YDS ya da YÖKDİL denemesini gir."
             : models.Count == 0 ? "Puan tahmini verisi henüz yüklenmedi."
             : "Tahmin için en az bir LGS ya da YKS denemesini ders ders gir.";
-        return new(estimates, goalTarget, notice) { LanguageScores = language, TargetExam = targetExam };
+        return new(estimates, goalTarget, notice) { LanguageScores = language, TargetExam = targetExam, NotComputed = notComputed };
     }
 
     private async Task<ScoreTargetGap?> TargetAsync(Guid studentId, IReadOnlyList<ScoreTypeEstimate> estimates,

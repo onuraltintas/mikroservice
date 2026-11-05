@@ -32,6 +32,25 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     expect(card.textContent).toContain('Puan ve sıralama tahmini');
     expect(card.textContent).toContain('412,5');
   });
+  // 01.11.2026: a score type ÖSYM does not compute (0,5 ham puan, 2026 YKS Kılavuzu Tablo 1D) is named with the tests it needs,
+  // in words that address neither the student nor the teacher.
+  it('shows a YKS score type that is not computed and the tests it needs', () => {
+    const fixture = createDetail(); flushInitialReport();
+    (fixture.nativeElement.querySelector('[data-testid="toggle-score-estimate"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    http.expectOne(request => request.url === '/api/coaching/students/student-1/score-estimate').flush({
+      estimates: [], target: null, notice: null,
+      notComputed: [{ scoreType: 'EA', name: 'YKS Eşit Ağırlık', modelYear: 2026, notComputedReason: 'minRawScore', examsUsed: 3, lastExamDate: '2026-10-20T00:00:00Z',
+        failedConditions: [{ anyOf: [{ code: 'AMAT', name: 'AYT Matematik', rawScore: 0.25 },
+          { code: 'TDESB1', name: 'AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1', rawScore: 0 }] }] }]
+    });
+    fixture.detectChanges();
+    const row = fixture.nativeElement.querySelector('[data-testid="estimate-not-computed"]') as HTMLElement;
+    expect(row.textContent).toContain('YKS Eşit Ağırlık: puan hesaplanmaz');
+    expect(row.textContent).toContain('Bu puan türünde puan hesaplanmaz: AYT Matematik ya da AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1 testinden en az 0,5 ham puan gerekir.');
+    expect(row.textContent).toContain('Son 3 denemenin ortalama ham puanı: AYT Matematik 0,25 · AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1 0.');
+    expect(row.textContent).not.toMatch(/\b(sen|senin|siz|sizin)\b/);
+  });
   let http: HttpTestingController;
   const student: CoachingTeacherStudent = {
     userId: 'student-1',
