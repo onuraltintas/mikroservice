@@ -101,9 +101,12 @@ public sealed class PublicAppUrlOptions
         return candidate.TrimEnd('/');
     }
 
-    public string BuildEmailVerificationLink(Guid userId, string token, string? role = null)
+    public string BuildEmailVerificationLink(Guid userId, string token, string? role = null) =>
+        BuildEmailVerificationLink(userId, token, role, null);
+
+    public string BuildEmailVerificationLink(Guid userId, string token, string? role, string? product)
     {
-        var baseUrl = ResolveBaseUrl(role);
+        var baseUrl = ResolveBaseUrl(role, product);
         return $"{baseUrl}/auth/verify-email?token={Uri.EscapeDataString(token)}&userId={Uri.EscapeDataString(userId.ToString())}";
     }
 

@@ -143,7 +143,10 @@ public sealed class NotificationEmailInjectionTests
     {
         var queue = new RecordingEmailQueue();
         var services = new ServiceCollection();
-        services.AddDbContext<NotificationDbContext>(options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+        // One database for the whole run: the options lambda runs per scope, so a name created inside it
+        // would give the consumer an empty database and the seeded template would never be used.
+        var databaseName = Guid.NewGuid().ToString();
+        services.AddDbContext<NotificationDbContext>(options => options.UseInMemoryDatabase(databaseName));
         services.AddScoped<INotificationDbContext>(provider => provider.GetRequiredService<NotificationDbContext>());
         services.AddSingleton<IEmailDeliveryQueue>(queue);
         services.AddSingleton<INotificationService>(new NoopNotificationService());

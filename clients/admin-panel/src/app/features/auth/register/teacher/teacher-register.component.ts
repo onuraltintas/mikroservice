@@ -101,13 +101,15 @@ export class TeacherRegisterComponent implements OnInit {
             next: (response) => {
                 const outcome = readVerificationEmailOutcome(response);
                 const copy = registrationSuccessCopy(outcome, 'siz');
-                this.toaster.success(copy.message, copy.title);
                 this.analytics.track('sign_up', { method: 'password', role: 'teacher' });
                 if (outcome === 'notRequired') {
+                    // The panel (with focus and a sign-in button) is the message; no duplicate toast.
                     this.isLoading.set(false);
+                    this.errorMessage.set(null);
                     this.verifiedNotice.set(copy);
                     return;
                 }
+                this.toaster.success(copy.message, copy.title);
                 this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },
             error: (err) => {

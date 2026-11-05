@@ -16,7 +16,7 @@ public sealed class ExistingAccountEnrollment(
     IInstitutionRepository institutions, IRoleRepository roles, IPasswordHasher passwords,
     IMultiFactorService multiFactor, IUnitOfWork unitOfWork,
     IRegistrationLegalConsentService legalConsent, TimeProvider timeProvider, IAuthenticationLock authenticationLock, IPublishEndpoint publisher,
-    ILoginAttemptLimiter? loginAttempts = null)
+    ILoginAttemptLimiter? loginAttempts = null, IParentRepository? parents = null)
 {
     private readonly ILoginAttemptLimiter _loginAttempts = loginAttempts ?? NoLoginAttemptLimiter.Instance;
 
@@ -25,7 +25,8 @@ public sealed class ExistingAccountEnrollment(
         CancellationToken cancellationToken, Guid? institutionId = null)
     {
         if (target is not (PlatformProduct.Coaching or PlatformProduct.SpeedReading)
-            || account is not ("student" or "teacher" or "institution")
+            || account is not ("student" or "teacher" or "institution" or "parent")
+            || account == "parent" && target != PlatformProduct.Coaching
             || institutionId.HasValue && (account != "institution" || institutionId == Guid.Empty))
             return Failure("Auth.InvalidProduct", "Geçersiz servis veya hesap türü.");
 
@@ -50,15 +51,27 @@ public sealed class ExistingAccountEnrollment(
         // and the join sends the verification e-mail below, so access is usable only after verification.
         if (!user.IsActive)
             return Failure("Auth.ExistingAccountNotEligible", "Mevcut hesabınız aktif olmalıdır.");
+
+        var sourceRole = account switch
+        {
+            "student" => "Student",
+            "teacher" => "Teacher",
+            "institution" => "InstitutionAdmin",
+            _ => "Parent"
+        };
+        // Review #8: a retry (e.g. after a lost response) of a join that already happened is idempotent.
+        // Nothing is granted; an unverified address gets a fresh verification link, a verified one "sign in".
+        if (user.HasProductAccess(target) && await HasTargetMembershipAsync(user, target, account, sourceRole, cancellationToken))
+            return await CompleteAsync(user, target, sourceRole, cancellationToken);
         if (user.ProductAccesses.Any(a => a.Product == target) || user.Roles.Any(r => r.Product == target))
             return Failure("Identity.UserExists", "Bu serviste kaydınız zaten var. Giriş yapın; erişim kapatılmışsa servis yöneticisiyle görüşün.");
 
         var source = target == PlatformProduct.Coaching ? PlatformProduct.SpeedReading : PlatformProduct.Coaching;
         bool HasSourceRole(string name) => user.Roles.Any(r => r.Product == source
             && r.Role is not null && !r.Role.IsDeleted && r.Role.Name == name);
-        var sourceRole = account == "student" ? "Student" : account == "teacher" ? "Teacher" : "InstitutionAdmin";
-        if (!user.HasProductAccess(source)
-            || !(HasSourceRole(sourceRole) || account == "institution" && HasSourceRole("InstitutionOwner")))
+        // Review #1: a Coaching parent needs no parent role elsewhere; the verified password (and MFA) is the proof.
+        if (account != "parent" && (!user.HasProductAccess(source)
+            || !(HasSourceRole(sourceRole) || account == "institution" && HasSourceRole("InstitutionOwner"))))
             return Failure("Auth.SourceRoleRequired", "Diğer serviste bu hesap türüne ait aktif yetkiniz bulunmuyor. Yetki değişikliği için yöneticinizle görüşün.");
 
         InstitutionAdmin? sourceAdmin = null;
@@ -135,13 +148,42 @@ public sealed class ExistingAccountEnrollment(
         legalConsent.TrackAcceptedDocuments(user.Id, target, documents, "password");
         if (target == PlatformProduct.Coaching && account is "student" or "teacher")
             await publisher.Publish(new CoachingProfileProvisioningRequested(user.Id, sourceRole, DateTime.UtcNow), cancellationToken);
+        if (account == "parent" && parents is not null && await parents.GetByUserIdAsync(user.Id, cancellationToken) is null)
+            await parents.AddAsync(ParentProfile.Create(user.Id, user.FirstName, user.LastName), cancellationToken);
+        return await CompleteAsync(user, target, sourceRole, cancellationToken);
+    }
+
+    /// <summary>
+    /// The account already has <paramref name="target"/> with the membership this registration asks for.
+    /// Roles are compared by id because a freshly added membership has no loaded <see cref="Role"/>.
+    /// </summary>
+    private async Task<bool> HasTargetMembershipAsync(User user, PlatformProduct target, string account, string roleName,
+        CancellationToken cancellationToken)
+    {
+        var role = await roles.GetByNameAsync(roleName, cancellationToken);
+        if (role is null || role.IsDeleted
+            || !user.Roles.Any(r => r.Product == target && (r.RoleId == role.Id || r.Role?.Name == roleName)))
+            return false;
+        if (account != "institution")
+            return true;
+        var links = await institutions.GetAdminsForRegistrationAsync(user.Id, cancellationToken);
+        return links.Any(link => link.UserId == user.Id && link.Product == target && link.IsActive);
+    }
+
+    /// <summary>
+    /// Paket A: an unverified address gets a fresh 24-hour link (the previous one stops working), named for
+    /// the joined product; a verified address needs no e-mail. Repeats are limited by the registration
+    /// rate limit at the gateway and the shared sign-in lockout above.
+    /// </summary>
+    private async Task<Result<RegistrationOutcome>> CompleteAsync(User user, PlatformProduct target, string roleName,
+        CancellationToken cancellationToken)
+    {
         var verificationEmailSent = false;
         if (!user.EmailConfirmed)
         {
-            // Same message as a new registration / ResendVerificationEmail: a fresh 24-hour link.
             user.GenerateEmailVerificationToken();
             await publisher.Publish(new UserRegisteredEvent(user.Id, user.Email, user.FirstName, user.LastName,
-                user.EmailVerificationToken ?? "", sourceRole), cancellationToken);
+                user.EmailVerificationToken ?? "", roleName) { Product = target.ToRouteValue() }, cancellationToken);
             verificationEmailSent = true;
         }
         await unitOfWork.SaveChangesAsync(cancellationToken);

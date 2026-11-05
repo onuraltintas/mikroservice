@@ -26,8 +26,5 @@ app-registration-legal-consent { display: block; padding: .9rem; border: 1px sol
 .error-message, .error-msg, .success-msg { display: flex; align-items: flex-start; gap: .5rem; padding: .85rem; border-radius: .75rem; font-size: .82rem; line-height: 1.6; }
 .error-message, .error-msg { color: var(--ui-danger); background: var(--ui-danger-soft); }
 .success-msg { color: var(--ui-success); background: var(--ui-success-soft); }
-.verified-success { flex-wrap: wrap; }
-.verified-success span { flex: 1; }
-.verified-success a { flex-basis: 100%; }
 mat-divider { margin: .5rem 0; border-top-color: var(--ui-border); }
 @media (max-width: 34rem) { .form-row, .row { flex-direction: column; gap: 0; } .existing-account { align-items: flex-start; flex-direction: column; gap: .4rem; } .existing-account button { width: 100%; } }

@@ -30,7 +30,7 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         
         var template = await _dbContext.EmailTemplates
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_VerifyEmail", message.Role) && t.IsActive);
+            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_VerifyEmail", message.Role, message.Product) && t.IsActive);
 
         string subject;
         string body;
@@ -38,7 +38,8 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         var verificationLink = _publicAppUrlOptions.BuildEmailVerificationLink(
             message.UserId,
             message.VerificationToken,
-            message.Role);
+            message.Role,
+            message.Product);
 
         if (template != null)
         {
@@ -50,12 +51,12 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
                 .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.Html(message.LastName))
                 .Replace("{{VerificationLink}}", verificationLink);
-            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
-            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role);
+            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
+            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
         }
         else
         {
-            var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
+            var appName = PublicAppUrlOptions.GetApplicationName(message.Role, message.Product);
             subject = $"E-posta Adresinizi Doğrulayın - {appName}";
             body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}!</p><p>Lütfen e-posta adresinizi doğrulamak için tıklayın: <a href='{verificationLink}'>Doğrula</a></p>";
         }

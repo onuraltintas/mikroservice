@@ -27,12 +27,14 @@ import { ExistingProductJoinComponent } from '../existing-product-join.component
 import { RegistrationShellComponent } from '../registration-shell.component';
 import { ParentPanelEntryComponent } from '../parent-panel-entry.component';
 import { readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
+import { RegistrationVerifiedComponent } from '../registration-verified.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [PasswordRequirementsComponent, 
     ExistingProductJoinComponent,
+    RegistrationVerifiedComponent,
     RegistrationShellComponent,
     CommonModule,
     ReactiveFormsModule,
@@ -70,8 +72,9 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
   legalReady = false;
   legalAcceptances: RegistrationLegalAcceptance[] = [];
   successMessage = '';
-  /** The address was already verified: show "sign in now" instead of redirecting. */
+  /** The address was already verified: the form is replaced by "sign in now" instead of redirecting. */
   alreadyVerified = false;
+  verifiedMessage = '';
 
   constructor() {
     this.registerForm = this.fb.group({
@@ -175,11 +178,15 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
     ).subscribe({
       next: (response) => {
         const outcome = readVerificationEmailOutcome(response);
-        this.successMessage = registrationSuccessCopy(outcome, 'sen').message;
+        const message = registrationSuccessCopy(outcome, 'sen').message;
         if (outcome === 'notRequired') {
+          this.successMessage = '';
+          this.error = '';
+          this.verifiedMessage = message;
           this.alreadyVerified = true;
           return;
         }
+        this.successMessage = message;
         this.router.navigate(['/auth/login'], {
           queryParams: { registered: 'true', message: this.successMessage, ...this.loginQueryParams }
         });
@@ -191,7 +198,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  get loginQueryParams(): { returnUrl?: string } {
+  get loginQueryParams(): Record<string, string> {
     const returnUrl = this.getInvitationReturnUrl();
     return returnUrl ? { returnUrl } : {};
   }

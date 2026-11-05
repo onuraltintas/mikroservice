@@ -134,12 +134,29 @@ public class User : AggregateRoot
     /// password, so every credential set before the proof is discarded: the password,
     /// pending reset/verification links and any session. The owner signs in with the
     /// external provider and can set a password through the reset flow.
+    /// Paket A review #3: services joined with that password while the address was unconfirmed
+    /// (self-granted access: <see cref="UserProductAccessSource.SelfRegistration"/> granted by the
+    /// account itself) are taken back with their roles; the products are returned so the caller can
+    /// also close the institution links made by those joins. The original registration is kept.
     /// </summary>
-    public void ClaimUnconfirmedAccountByVerifiedExternalLogin()
+    public IReadOnlyList<PlatformProduct> ClaimUnconfirmedAccountByVerifiedExternalLogin()
     {
         if (EmailConfirmed)
         {
-            return;
+            return [];
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var joinedWhileUnconfirmed = _productAccesses
+            .Where(access => access.IsActive
+                && access.Source == UserProductAccessSource.SelfRegistration
+                && access.GrantedByUserId == Id)
+            .Select(access => access.Product)
+            .ToList();
+        foreach (var product in joinedWhileUnconfirmed)
+        {
+            RevokeProductAccess(product, now);
+            _roles.RemoveAll(role => role.Product == product);
         }
 
         PasswordHash = [];
@@ -152,6 +169,7 @@ public class User : AggregateRoot
         }
 
         ConfirmEmail();
+        return joinedWhileUnconfirmed;
     }
 
     public void RevokeEmailConfirmation()

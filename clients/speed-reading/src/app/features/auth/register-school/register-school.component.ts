@@ -22,12 +22,14 @@ import { RegistrationLegalConsentComponent } from '../registration-legal-consent
 import { ExistingProductJoinComponent } from '../existing-product-join.component';
 import { RegistrationShellComponent } from '../registration-shell.component';
 import { readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
+import { RegistrationVerifiedComponent } from '../registration-verified.component';
 
 @Component({
   selector: 'app-register-school',
   standalone: true,
-  imports: [PasswordRequirementsComponent, 
+  imports: [PasswordRequirementsComponent,
     ExistingProductJoinComponent,
+    RegistrationVerifiedComponent,
     RegistrationShellComponent,
     CommonModule,
     ReactiveFormsModule,
@@ -55,8 +57,9 @@ export class RegisterSchoolComponent implements OnInit {
   isLoading = false;
   error = '';
   successMessage = '';
-  /** The address was already verified: show "sign in now" instead of redirecting. */
+  /** The address was already verified: the form is replaced by "sign in now" instead of redirecting. */
   alreadyVerified = false;
+  verifiedMessage = '';
   hidePassword = true;
   hideConfirmPassword = true;
   provinces: ProvinceOption[] = [];
@@ -164,12 +167,16 @@ export class RegisterSchoolComponent implements OnInit {
     this.authService.registerInstitution(request).subscribe({
       next: (response) => {
         const outcome = readVerificationEmailOutcome(response);
-        this.successMessage = registrationSuccessCopy(outcome, 'siz').message;
+        const message = registrationSuccessCopy(outcome, 'siz').message;
         this.isLoading = false;
         if (outcome === 'notRequired') {
+          this.successMessage = '';
+          this.error = '';
+          this.verifiedMessage = message;
           this.alreadyVerified = true;
           return;
         }
+        this.successMessage = message;
         setTimeout(() => {
           this.router.navigate(['/auth/login']);
         }, 3000);

@@ -146,11 +146,7 @@ builder.Services.AddApplication();
 // Add Controllers
 builder.Services.AddControllers(options => options.Filters.Add<Identity.API.CoachingOwnershipFilter>())
     .AddEduPlatformApiConventions()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    });
+    .AddJsonOptions(options => Identity.API.IdentityApiJson.Configure(options.JsonSerializerOptions));
 builder.Services.AddEduPlatformApiVersioning();
 
 // Add Swagger

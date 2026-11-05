@@ -8,11 +8,7 @@
       </button></div>
       @if (joinExisting) { <app-existing-product-join product="speed-reading" account="student" /> }
       @if (alreadyVerified) {
-      <div class="success-msg verified-success" role="status">
-        <mat-icon>check_circle</mat-icon>
-        <span>{{ successMessage }}</span>
-        <a mat-raised-button color="primary" routerLink="/auth/login" [queryParams]="loginQueryParams">Giriş yap</a>
-      </div>
+      <app-registration-verified [message]="verifiedMessage" [loginQueryParams]="loginQueryParams" />
       }
       <form [style.display]="joinExisting || alreadyVerified ? 'none' : null" [formGroup]="registerForm" [attr.aria-busy]="loading" (ngSubmit)="onSubmit()">
 

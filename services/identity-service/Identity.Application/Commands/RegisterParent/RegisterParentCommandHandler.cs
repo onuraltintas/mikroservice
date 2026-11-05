@@ -19,6 +19,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
+    private readonly Identity.Application.Services.ExistingAccountEnrollment _enrollment;
 
     public RegisterParentCommandHandler(
         IIdentityService identityService,
@@ -27,8 +28,10 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
         IConfigurationService configurationService,
-        IRegistrationLegalConsentService registrationLegalConsentService)
+        IRegistrationLegalConsentService registrationLegalConsentService,
+        Identity.Application.Services.ExistingAccountEnrollment enrollment)
     {
+        _enrollment = enrollment;
         _identityService = identityService;
         _userRepository = userRepository;
         _parentRepository = parentRepository;
@@ -68,6 +71,11 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
 
         if (identityResult.IsFailure)
         {
+            // Paket A review #1: an existing Eduİvme account (any service, any role) becomes a Coaching
+            // parent with its existing password, under the same rules as the other registrations.
+            if (identityResult.Error.Code == "Identity.UserExists")
+                return await _enrollment.JoinAsync(request.Email, request.Password, PlatformProduct.Coaching, "parent",
+                    legalValidation.Value, null, cancellationToken);
             return Result.Failure<RegistrationOutcome>(identityResult.Error);
         }
 
@@ -125,7 +133,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
                 request.LastName,
                 user?.EmailVerificationToken ?? "",
                 Identity.Domain.Enums.UserRole.Parent.ToString()
-            ), cancellationToken);
+            ) { Product = PlatformProduct.Coaching.ToRouteValue() }, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success(RegistrationOutcome.EmailSent(userId));
@@ -133,7 +141,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         catch (Exception)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
+            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Kayıt tamamlanamadı. Lütfen biraz sonra yeniden deneyin."));
         }
     }
 }

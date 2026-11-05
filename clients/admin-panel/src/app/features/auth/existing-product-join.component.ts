@@ -16,9 +16,8 @@ import { readVerificationEmailOutcome } from './register/registration-outcome';
   imports: [ReactiveFormsModule, MatInputModule, MatButtonModule, RegistrationLegalConsentComponent],
   template: `
     <section aria-label="Mevcut hesapla servise katılım">
-      <h3>Mevcut hesabınla katıl</h3>
-      <p>Aynı e-posta ve mevcut şifreni kullan. Hesabın ve kurum bağlantın korunur.
-        Bu işlem abonelik satın almaz; servis yetkileri ve abonelikleri ayrı kalır.</p>
+      <h3>{{ copy.heading }}</h3>
+      <p>{{ copy.intro }}</p>
       @if (joined) {
         <p role="status">{{ joinedMessage }}</p>
         @if (!verificationEmailSent) { <a [href]="loginUrl">Panele giriş yap</a> }
@@ -48,7 +47,7 @@ import { readVerificationEmailOutcome } from './register/registration-outcome';
           <mat-form-field appearance="outline">
             <mat-label>İki adımlı doğrulama kodu (varsa)</mat-label>
             <input matInput inputmode="numeric" autocomplete="one-time-code" maxlength="6" formControlName="mfaCode">
-            <mat-hint>Hesabında MFA açıksa doğrulama uygulamandaki yeni kodu gir.</mat-hint>
+            <mat-hint>{{ copy.mfaHint }}</mat-hint>
           </mat-form-field>
           <app-registration-legal-consent [product]="product"
             (acceptancesChange)="legalAcceptances = $event"
@@ -102,6 +101,11 @@ export class ExistingProductJoinComponent {
     this.selectedInstitutionId = '';
   }
 
+  /** Review #6: students are addressed with "sen", teachers and institutions with "siz". */
+  get copy(): JoinCopy {
+    return this.account === 'student' ? JOIN_COPY.sen : JOIN_COPY.siz;
+  }
+
   get loginUrl(): string {
     if (this.account !== 'student') return `${environment.staffPortalUrl}?product=${this.product}`;
     return this.product === 'coaching' ? 'https://eduivme.com/auth/login' : 'https://masterhizliokuma.com/auth/login';
@@ -137,7 +141,7 @@ export class ExistingProductJoinComponent {
         }
         if (err.error?.code === 'Auth.InvalidInstitutionSelection') this.clearInstitutions();
         const detail = err.error?.description ?? err.error?.message ?? err.error?.Error?.description;
-        this.error = typeof detail === 'string' ? detail : 'Katılım tamamlanamadı. Bilgilerini kontrol edip tekrar dene.';
+        this.error = typeof detail === 'string' ? detail : this.copy.fallbackError;
       }
     });
   }
@@ -153,3 +157,20 @@ function joinedMessage(verificationEmailSent: boolean, voice: 'sen' | 'siz'): st
     ? 'Katılım tamamlandı. E-posta adresin zaten doğrulanmış; mevcut şifrenle hemen giriş yapabilirsin.'
     : 'Katılım tamamlandı. E-posta adresiniz zaten doğrulanmış; mevcut şifrenizle hemen giriş yapabilirsiniz.';
 }
+
+interface JoinCopy { heading: string; intro: string; mfaHint: string; fallbackError: string; }
+
+const JOIN_COPY: Record<'sen' | 'siz', JoinCopy> = {
+  sen: {
+    heading: 'Mevcut hesabınla katıl',
+    intro: 'Aynı e-posta ve mevcut şifreni kullan. Hesabın ve kurum bağlantın korunur. Bu işlem abonelik satın almaz; servis yetkileri ve abonelikleri ayrı kalır.',
+    mfaHint: 'Hesabında MFA açıksa doğrulama uygulamandaki yeni kodu gir.',
+    fallbackError: 'Katılım tamamlanamadı. Bilgilerini kontrol edip tekrar dene.'
+  },
+  siz: {
+    heading: 'Mevcut hesabınızla katılın',
+    intro: 'Aynı e-posta ve mevcut şifrenizi kullanın. Hesabınız ve kurum bağlantınız korunur. Bu işlem abonelik satın almaz; servis yetkileri ve abonelikleri ayrı kalır.',
+    mfaHint: 'Hesabınızda MFA açıksa doğrulama uygulamanızdaki yeni kodu girin.',
+    fallbackError: 'Katılım tamamlanamadı. Bilgilerinizi kontrol edip tekrar deneyin.'
+  }
+};

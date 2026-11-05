@@ -133,7 +133,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
                 request.LastName,
                 user?.EmailVerificationToken ?? "",
                 Identity.Domain.Enums.UserRole.Teacher.ToString()
-            ), cancellationToken);
+            ) { Product = product.ToRouteValue() }, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success(RegistrationOutcome.EmailSent(userId));
@@ -141,7 +141,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         catch (Exception)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
+            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Kayıt tamamlanamadı. Lütfen biraz sonra yeniden deneyin."));
         }
     }
 }
