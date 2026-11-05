@@ -46,7 +46,8 @@ public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, R
         user.ConfirmEmail();
 
         // 2. Publish Event for Notification Service (Welcome Email)
-        var primaryRole = user.Roles.OrderBy(r => r.Role.Name).FirstOrDefault()?.Role?.Name ?? "User";
+        var product = Identity.Application.Registration.EmailProduct.Resolve(user, request.Product);
+        var primaryRole = Identity.Application.Registration.EmailProduct.Role(user, product, "User");
         
         await _publishEndpoint.Publish(new UserEmailConfirmedEvent(
             user.Id,
@@ -54,7 +55,7 @@ public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, R
             user.FirstName,
             user.LastName,
             primaryRole
-        ) { Product = Identity.Application.Registration.EmailProduct.Resolve(user, request.Product) }, cancellationToken);
+        ) { Product = product }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

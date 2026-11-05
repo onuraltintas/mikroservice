@@ -36,10 +36,8 @@ public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerif
 
         // Generate new token
         user.GenerateEmailVerificationToken();
-        var primaryRole = user.Roles
-            .OrderBy(role => role.Role.Name)
-            .Select(role => role.Role.Name)
-            .FirstOrDefault() ?? Identity.Domain.Enums.UserRole.Student.ToString();
+        var product = Identity.Application.Registration.EmailProduct.Resolve(user, request.Product);
+        var primaryRole = Identity.Application.Registration.EmailProduct.Role(user, product, Identity.Domain.Enums.UserRole.Student.ToString());
 
         // Publish Event
         await _publishEndpoint.Publish(new UserRegisteredEvent(
@@ -49,7 +47,7 @@ public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerif
             user.LastName,
             user.EmailVerificationToken ?? "",
             primaryRole
-        ) { Product = Identity.Application.Registration.EmailProduct.Resolve(user, request.Product) }, cancellationToken);
+        ) { Product = product }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
