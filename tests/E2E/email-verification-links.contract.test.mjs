@@ -40,3 +40,31 @@ test('speed-reading verification links open the verify-email page with the names
   assert.deepEqual(read_, ['token', 'userId']);
   assert.deepEqual(queryNames(linkTemplate('SpeedReadingEmailVerificationPath')), read_);
 });
+
+// User decision 05.11.2026: Coaching e-mail links (verification, parent summary and link, subscription
+// notices, invitations) go to the Coaching site onuraltintas.net; management links stay on eduivme.com.
+test('production sends Coaching links to onuraltintas.net and management links to eduivme.com', () => {
+  const compose = read('docker-compose.production.yml');
+  const defaults = name => [...compose.matchAll(new RegExp(`\\$\\{${name}:-([^}]+)\\}`, 'g'))].map(m => m[1]);
+  assert.ok(defaults('PUBLIC_APP_BASE_URL').length >= 2, 'coaching and notification services read PUBLIC_APP_BASE_URL');
+  assert.deepEqual([...new Set(defaults('PUBLIC_APP_BASE_URL'))], ['https://onuraltintas.net']);
+  assert.deepEqual([...new Set(defaults('PUBLIC_ADMIN_PANEL_URL'))], ['https://eduivme.com']);
+  assert.deepEqual([...new Set(defaults('PUBLIC_STAFF_PORTAL_URL'))], ['https://onuraltintas.net/staff']);
+  assert.match(compose, /Coaching__PublicBaseUrl: \$\{PUBLIC_APP_BASE_URL:-/);
+  assert.match(compose, /PublicApp__BaseUrl: \$\{PUBLIC_APP_BASE_URL:-/);
+  assert.match(compose, /PublicApp__AdminPanelUrl: \$\{PUBLIC_ADMIN_PANEL_URL:-/);
+  // Staging keeps its own address.
+  assert.match(read('docs/VPS_STAGING_DEPLOYMENT.md'), /PUBLIC_APP_BASE_URL=https:\/\/staging\.onuraltintas\.net/);
+});
+
+test('onuraltintas.net serves the pages the Coaching links open', () => {
+  const caddy = read('infrastructure/caddy/Caddyfile.production.litespeed');
+  const site = /onuraltintas\.net:80, www\.onuraltintas\.net:80 \{([\s\S]*?)\n\}/.exec(caddy);
+  assert.ok(site, 'the Coaching site block exists');
+  assert.match(site[1], /reverse_proxy admin-panel:4000/);
+  const blocked = [...site[1].matchAll(/@management path ([^\n]+)/g)].map(m => m[1]).join(' ');
+  for (const path of ['/auth/confirm-email', '/auth/login', '/auth/reset-password', '/coaching-portal'])
+    assert.ok(!blocked.split(/\s+/).some(prefix => path === prefix || path.startsWith(prefix.replace('/*', '/'))), `${path} is not blocked`);
+  const hosts = read('clients/admin-panel/src/server-config.ts');
+  assert.match(hosts, /'onuraltintas\.net'/);
+});

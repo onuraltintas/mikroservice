@@ -80,6 +80,41 @@ public sealed class NotificationContractTests
             .Should().StartWith("https://masterhizliokuma.example.test/auth/reset-password");
     }
 
+    // User decision 05.11.2026: Coaching links use the Coaching site (PublicApp:BaseUrl = onuraltintas.net in
+    // production); management accounts (SystemAdmin, Editor) keep the admin panel (PublicApp:AdminPanelUrl).
+    [Theory]
+    [InlineData("Student", "coaching", "https://onuraltintas.example.test")]
+    [InlineData("Parent", "coaching", "https://onuraltintas.example.test")]
+    [InlineData("Teacher", "coaching", "https://onuraltintas.example.test")]
+    [InlineData("Parent", null, "https://onuraltintas.example.test")]
+    [InlineData("SystemAdmin", null, "https://eduivme.example.test")]
+    [InlineData("Editor", null, "https://eduivme.example.test")]
+    [InlineData("SystemAdmin", "coaching", "https://eduivme.example.test")]
+    [InlineData("Student", "speed-reading", "https://masterhizliokuma.example.test")]
+    public void PublicAppUrlOptions_SendsCoachingToTheCoachingSiteAndManagementToTheAdminPanel(string role, string? product, string origin)
+    {
+        var options = new PublicAppUrlOptions
+        {
+            BaseUrl = "https://onuraltintas.example.test",
+            SpeedReadingBaseUrl = "https://masterhizliokuma.example.test",
+            AdminPanelUrl = "https://eduivme.example.test"
+        };
+        var userId = Guid.NewGuid();
+
+        options.ResolveBaseUrl(role, product).Should().Be(origin);
+        options.BuildLoginLink(role, product).Should().Be($"{origin}/auth/login");
+        options.BuildPasswordResetLink("t", "a@example.test", role, product).Should().StartWith($"{origin}/auth/reset-password?");
+        options.BuildEmailVerificationLink(userId, "t", role, product).Should().StartWith(origin + "/auth/");
+        options.AdminPanelLink("/dashboard/coaching/subscriptions").Should().Be("https://eduivme.example.test/dashboard/coaching/subscriptions");
+    }
+
+    [Fact]
+    public void PublicAppUrlOptions_ManagementFallsBackToTheBaseUrlWithoutAnAdminPanelUrl()
+    {
+        var options = new PublicAppUrlOptions { BaseUrl = "https://eduivme.example.test" };
+        options.ResolveBaseUrl("SystemAdmin", null).Should().Be("https://eduivme.example.test");
+    }
+
     // Second review L5: an unknown product never throws; the role decides as for older messages.
     [Theory]
     [InlineData("Student", "something-new", true)]
