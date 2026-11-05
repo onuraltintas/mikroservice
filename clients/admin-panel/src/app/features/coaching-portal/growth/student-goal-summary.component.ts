@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { CoachingScoreEstimateService, ESTIMATE_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText } from '../../../core/services/coaching-score-estimate.service';
+import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, scoreGroup } from '../../../core/services/coaching-score-estimate.service';
 import { CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent } from '../ui';
-import { goalGauge } from './growth-model';
+import { goalGauge, goalScore } from './growth-model';
 import { possessive } from '../parent/parent-model';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
@@ -12,7 +12,9 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 
 /**
  * T6 (31.10.2026): the target school or programme with a now → target gauge, and the score estimate as cards. Read-only
- * for a parent (`studentId` set); the student can add a diploma grade to the YKS estimate.
+ * for a parent (`studentId` set); the student can add a diploma grade to the YKS estimate. Paket B (05.11.2026): without a
+ * target school or programme the card shows the score of the exam the student works towards (MEB-AGS, YDS, YÖKDİL too), and
+ * the YDS / YÖKDİL scores appear as cards.
  */
 @Component({
   selector: 'app-student-goal-summary',
@@ -38,22 +40,39 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
             </div>
           }
         </cs-card>
+      } @else if (goalCard(); as card) {
+        <cs-card tone="raised" class="cs-goal-hero" data-testid="goal-score">
+          <p class="cs-goal-kicker">{{ parent() ? possessive(name()) + ' hedefi' : 'Hedefin' }} · {{ card.group }}</p>
+          <h2>{{ card.title }}</h2>
+          <p class="cs-goal-headline">{{ card.headline }}</p>
+          <p class="cs-growth-muted"><small>{{ card.label }}</small></p>
+        </cs-card>
       } @else if (parent()) {
         <cs-empty-state [title]="name() + ' henüz bir hedef seçmedi'" text="Hedef okul ya da bölüm seçildiğinde ona ne kadar kaldığı burada görünür." />
       } @else if (!readonly()) {
         <cs-empty-state title="Bir hedef seç" text="Okulunu ya da bölümünü seçtiğinde ona ne kadar kaldığını burada gösteririz." />
       }
       @if (result.notice) { <p class="cs-growth-muted">{{ result.notice }}</p> }
-      @if (result.estimates.length || result.notComputed?.length) {
-        <h2 class="cs-growth-section-title">{{ parent() ? 'Puan tahmini' : 'Puan tahminin' }}</h2>
+      @if (result.estimates.length || result.notComputed?.length || result.languageScores?.length) {
+        <h2 class="cs-growth-section-title">{{ sectionTitle() }}</h2>
         <div class="cs-estimate-grid">
           @for (item of result.estimates; track item.scoreType) {
             <cs-card data-testid="estimate-card" class="cs-estimate">
               <div class="cs-growth-card-head"><strong>{{ item.name }}</strong><cs-status-chip [label]="'son ' + item.examsUsed + ' deneme'" /></div>
               <p class="cs-estimate-score">{{ num(item.score) }}<small> puan</small></p>
-              <p class="cs-growth-muted">{{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }} arası</p>
-              <p>Sıralama <b>{{ int(item.rankBest) }}–{{ int(item.rankWorst) }}</b>@if (item.percentile !== null) { · ilk %{{ num(item.percentile) }} }</p>
-              <p class="cs-growth-muted"><small><span data-testid="estimate-approximate">{{ label }}</span> · {{ item.modelYear }} verisiyle{{ item.includesDiplomaGrade ? ', diploma notu dahil' : '' }}</small></p>
+              <p class="cs-growth-muted">{{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }} arası@if (item.margin) { · ±{{ num(item.margin) }} }</p>
+              @if (item.rankBest !== null && item.rankWorst !== null) {
+                <p>Sıralama <b>{{ int(item.rankBest) }}–{{ int(item.rankWorst) }}</b>@if (item.percentile !== null) { · ilk %{{ num(item.percentile) }} }</p>
+              }
+              <p class="cs-growth-muted"><small><span data-testid="estimate-approximate">{{ item.label ?? label }}</span> · {{ item.modelYear }} verisiyle{{ item.includesDiplomaGrade ? ', diploma notu dahil' : '' }}</small></p>
+            </cs-card>
+          }
+          @for (item of result.languageScores ?? []; track item.examCode) {
+            <cs-card data-testid="language-card" class="cs-estimate">
+              <div class="cs-growth-card-head"><strong>{{ item.name }}</strong><cs-status-chip [label]="'son ' + item.examsUsed + ' deneme'" /></div>
+              <p class="cs-estimate-score">{{ num(item.score) }}<small> puan</small></p>
+              <p class="cs-growth-muted">{{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }} arası@if (item.level) { · Seviye <b>{{ item.level }}</b> }</p>
+              <p class="cs-growth-muted"><small>{{ item.label ?? exactLabel }} · her doğru 1,25 puan</small></p>
             </cs-card>
           }
           @for (item of result.notComputed ?? []; track item.scoreType) {
@@ -95,10 +114,17 @@ export class StudentGoalSummaryComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly gauge = computed(() => { const data = this.data(); return data ? goalGauge(data, this.parent() ? this.name() : null) : null; });
+  readonly goalCard = computed(() => { const data = this.data(); return data ? goalScore(data, this.parent() ? this.name() : null) : null; });
+  readonly sectionTitle = computed(() => {
+    const data = this.data();
+    const onlyLanguage = !!data && !data.estimates.length && !data.notComputed?.length;
+    return onlyLanguage ? (this.parent() ? 'Deneme puanları' : 'Deneme puanların') : (this.parent() ? 'Puan tahmini' : 'Puan tahminin');
+  });
   readonly label = ESTIMATE_LABEL;
+  readonly exactLabel = EXACT_LABEL;
   readonly methodNote = computed(() => estimateMethodNote(this.data()?.estimates ?? []));
   readonly diplomaNote = computed(() => diplomaRankNote(this.data()?.estimates ?? []));
-  readonly hasYks = computed(() => [...this.data()?.estimates ?? [], ...this.data()?.notComputed ?? []].some(x => x.scoreType !== 'LGS'));
+  readonly hasYks = computed(() => [...this.data()?.estimates ?? [], ...this.data()?.notComputed ?? []].some(x => scoreGroup(x) === 'YKS'));
   readonly notComputed = (item: ScoreTypeNotComputed) => notComputedText(item);
   diploma: number | null = null;
 

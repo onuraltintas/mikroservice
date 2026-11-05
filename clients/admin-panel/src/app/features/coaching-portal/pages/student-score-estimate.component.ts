@@ -1,12 +1,14 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CoachingScoreEstimateService, ESTIMATE_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, rawScoresText } from '../../../core/services/coaching-score-estimate.service';
+import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, rawScoresText, scoreGroup } from '../../../core/services/coaching-score-estimate.service';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
 
 /**
  * Roadmap O5: estimated LGS / YKS score and rank range from the last three practice exams, and the distance to the target
- * school or programme. Shown to the student and (read-only, same data) to a linked parent.
+ * school or programme. Shown to the student and (read-only, same data) to a linked parent and to staff. Paket B (05.11.2026):
+ * MEB-AGS and LGS with the model's ± range (no rank: none is published), YDS / YÖKDİL as ÖSYM's own rule with the YDS level,
+ * and the score type the student works towards marked. The copy addresses nobody, so staff pages can reuse it.
  */
 @Component({
   selector: 'app-student-score-estimate', standalone: true, imports: [FormsModule],
@@ -19,10 +21,13 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         @if (result.notice) { <p>{{ result.notice }}</p> }
         @for (item of result.estimates; track item.scoreType) {
           <div class="plan-row">
-            <strong>{{ item.name }}: yaklaşık {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})
-            <span class="badge" data-testid="estimate-approximate">{{ label }}</span><br>
-            Tahmini sıralama: {{ int(item.rankBest) }}–{{ int(item.rankWorst) }}
-            @if (item.percentile !== null) { · Yüzdelik dilim: %{{ num(item.percentile) }} }
+            <strong>{{ item.name }}: yaklaşık {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})@if (item.margin) { · ±{{ num(item.margin) }} }
+            <span class="badge" data-testid="estimate-approximate">{{ item.label ?? label }}</span>
+            @if (result.goal?.scoreType === item.scoreType) { <span class="badge" data-testid="estimate-goal">Hedef puan türü</span> }
+            @if (item.rankBest !== null && item.rankWorst !== null) {
+              <br>Tahmini sıralama: {{ int(item.rankBest) }}–{{ int(item.rankWorst) }}
+              @if (item.percentile !== null) { · Yüzdelik dilim: %{{ num(item.percentile) }} }
+            }
             <br><small>{{ item.modelYear }} verisiyle, son {{ item.examsUsed }} denemeye göre{{ item.includesDiplomaGrade ? ' · diploma notu dahil' : '' }}.</small>
           </div>
         }
@@ -35,8 +40,10 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         }
         @for (item of result.languageScores ?? []; track item.examCode) {
           <div class="plan-row" data-testid="language-score">
-            <strong>{{ item.name }}: yaklaşık {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})<br>
-            <small>Son {{ item.examsUsed }} denemene göre. Her doğru 1,25 puan; yanlışlar puanı düşürmez.</small>
+            <strong>{{ item.name }}: {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})@if (item.level) { · Seviye {{ item.level }} }
+            <span class="badge">{{ item.label ?? exactLabel }}</span>
+            @if (result.goal?.scoreType === item.examCode) { <span class="badge" data-testid="estimate-goal">Hedef sınav</span> }<br>
+            <small>Son {{ item.examsUsed }} denemeye göre. Her doğru 1,25 puan; yanlışlar puanı düşürmez (ÖSYM'nin hesabı).</small>
           </div>
         }
         @if (result.targetExam; as exam) {
@@ -87,10 +94,11 @@ export class StudentScoreEstimateComponent implements OnInit {
   }
 
   readonly label = ESTIMATE_LABEL;
+  readonly exactLabel = EXACT_LABEL;
   method(result: ScoreEstimate): string | null { return estimateMethodNote(result.estimates); }
   diplomaNote(result: ScoreEstimate): string | null { return diplomaRankNote(result.estimates); }
 
-  hasYks(result: ScoreEstimate): boolean { return [...result.estimates, ...result.notComputed ?? []].some(x => x.scoreType !== 'LGS'); }
+  hasYks(result: ScoreEstimate): boolean { return [...result.estimates, ...result.notComputed ?? []].some(x => scoreGroup(x) === 'YKS'); }
   notComputed(item: ScoreTypeNotComputed): string { return notComputedText(item); }
   rawScores(item: ScoreTypeNotComputed): string { return rawScoresText(item); }
 

@@ -1,5 +1,6 @@
 import { StudentExamOverviewItem, StudentExamSource, StudentExamSubject, StudentExamTrend } from '../../../core/services/coaching-student-exam-overview.service';
-import { ScoreEstimate, notComputedText } from '../../../core/services/coaching-score-estimate.service';
+import { ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, notComputedText } from '../../../core/services/coaching-score-estimate.service';
+import { possessive } from '../parent/parent-model';
 import { CsTone } from '../ui';
 
 /**
@@ -85,7 +86,7 @@ export function goalGauge(estimate: ScoreEstimate, childName: string | null = nu
   if (!missingData && now) {
     if (target.targetScore !== null) rows.push({ label: 'Puan', current: decimal.format(now.score), target: decimal.format(target.targetScore),
       percent: share(now.score, target.targetScore), text: `Şu an ${decimal.format(now.score)}, hedef ${decimal.format(target.targetScore)}` });
-    if (target.targetRank !== null) rows.push({ label: 'Sıralama', current: whole.format(now.rank), target: whole.format(target.targetRank),
+    if (target.targetRank !== null && now.rank !== null) rows.push({ label: 'Sıralama', current: whole.format(now.rank), target: whole.format(target.targetRank),
       percent: share(target.targetRank, now.rank), text: `Şu an ${whole.format(now.rank)}., hedef ${whole.format(target.targetRank)}.` });
   }
   const headline = missingData ? 'Bu hedefin taban puanı ya da sıralaması yok; farkı hesaplayamıyoruz.'
@@ -95,6 +96,30 @@ export function goalGauge(estimate: ScoreEstimate, childName: string | null = nu
     : target.rankGap !== null ? `Hedef sıralamaya ${whole.format(target.rankGap)} kişi kaldı` : 'Hedefe olan farkı henüz hesaplayamıyoruz.';
   return { targetName: target.targetName, scoreType: target.scoreType, headline, rows, reached: target.reached, missingData };
 }
+export interface GoalScoreCard { scoreType: string; title: string; group: string; headline: string; label: string; exact: boolean }
+
+/**
+ * Paket B (05.11.2026): without a target school or programme (MEB-AGS, YDS, YÖKDİL, or before one is chosen) Hedefim shows the
+ * score of the exam the student works towards: the estimate with its ± range, or the exact YDS / YÖKDİL practice score.
+ */
+export function goalScore(estimate: ScoreEstimate, childName: string | null = null): GoalScoreCard | null {
+  const goal = estimate.goal;
+  if (!goal || estimate.target) return null;
+  const label = goal.label || (goal.exact ? EXACT_LABEL : ESTIMATE_LABEL);
+  const card = (headline: string) => ({ scoreType: goal.scoreType, title: goal.name, group: goal.group, headline, label, exact: goal.exact });
+  if (goal.notComputedReason)
+    return card(notComputedText(estimate.notComputed?.find(x => x.scoreType === goal.scoreType) ?? { notComputedReason: goal.notComputedReason, failedConditions: [] }));
+  if (goal.score === null)
+    return card(childName ? 'Deneme sonucu girildiğinde puanı burada görünür.' : 'Bu sınavda bir deneme gir; puanını burada gösterelim.');
+  const score = decimal.format(goal.score);
+  if (goal.exact) {
+    const level = goal.level ? ` · Seviye ${goal.level}` : '';
+    return card(childName ? `${possessive(childName)} deneme puanı ${score}${level}` : `Deneme puanın ${score}${level}`);
+  }
+  const margin = goal.margin ? ` (±${decimal.format(goal.margin)})` : '';
+  return card(childName ? `Tahmini puan: ${score}${margin}` : `Tahmini puanın ${score}${margin}`);
+}
+
 function share(value: number, goal: number) { return goal > 0 && value > 0 ? Math.round(Math.min(1, value / goal) * 100) : 0; }
 
 export interface WeekRange { from: string; to: string; label: string }

@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ScoreEstimate, ScoreTypeEstimate, diplomaRankNote, estimateMethodNote, notComputedText } from '../../../core/services/coaching-score-estimate.service';
+import { ScoreEstimate, ScoreTypeEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText } from '../../../core/services/coaching-score-estimate.service';
 import { StudentScoreEstimateComponent } from './student-score-estimate.component';
 
 // Paket B (05.11.2026): LGS and MEB-AGS are approximate with a ± range and no rank; YDS and YÖKDİL are ÖSYM's own rule (not
@@ -12,7 +12,7 @@ const p1: ScoreTypeEstimate = { scoreType: 'P1', name: 'MEB-AGS P1', modelYear: 
 const lgs: ScoreTypeEstimate = { scoreType: 'LGS', name: 'LGS', modelYear: 2026, score: 433.3, scoreLow: 420, scoreHigh: 446.6, rank: null, rankBest: null,
   rankWorst: null, percentile: null, examsUsed: 1, lastExamDate: '2026-10-25T00:00:00Z', includesDiplomaGrade: false, group: 'LGS', label: 'Yaklaşık tahmin',
   margin: 13.3, scaleMin: 100, scaleMax: 500 };
-const agsNotComputed = { scoreType: 'P2_IMAT', name: 'MEB-AGS P2 · İlköğretim Matematik', modelYear: 2026, notComputedReason: 'minRawScore', examsUsed: 1,
+const agsNotComputed: ScoreTypeNotComputed = { scoreType: 'P2_IMAT', name: 'MEB-AGS P2 · İlköğretim Matematik', modelYear: 2026, notComputedReason: 'minRawScore', examsUsed: 1,
   lastExamDate: '2026-10-25T00:00:00Z', minimumRawScore: 1, group: 'MEB-AGS',
   failedConditions: [{ anyOf: [{ code: 'MEV', name: 'Mevzuat', rawScore: 0.75 }] }, { anyOf: [{ code: 'OABT', name: 'ÖABT', rawScore: 0 }] }] };
 
