@@ -19,6 +19,12 @@ export function readVerificationEmailOutcome(response: unknown): VerificationEma
     return value === 'notRequired' ? 'notRequired' : 'sent';
 }
 
+/** Third review N3: false only when the API says this request granted nothing new (a retry); older APIs count. */
+export function grantedNewProductAccess(response: unknown): boolean {
+    return !(response && typeof response === 'object'
+        && (response as { newProductAccess?: unknown }).newProductAccess === false);
+}
+
 export function registrationSuccessCopy(outcome: VerificationEmailOutcome, voice: RegistrationVoice): RegistrationSuccessCopy {
     if (outcome === 'notRequired') {
         return voice === 'sen'

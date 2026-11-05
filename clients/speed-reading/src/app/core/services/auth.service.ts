@@ -292,7 +292,8 @@ export class AuthService {
    * Service receives: void (auto-unwrapped)
    */
   verifyEmail(data: { userId: string; token: string }): Observable<any> {
-    return this.http.post(`${this.AUTH_URL}/confirm-email`, data, { withCredentials: true });
+    // PR #111 third review N2: the speed-reading welcome e-mail.
+    return this.http.post(`${this.AUTH_URL}/confirm-email`, { ...data, product: 'speed-reading' }, { withCredentials: true });
   }
 
   /**

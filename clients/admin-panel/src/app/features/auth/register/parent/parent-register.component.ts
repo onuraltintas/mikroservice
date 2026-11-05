@@ -20,7 +20,7 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
 import { RegistrationSuccessComponent } from '../registration-success.component';
-import { RegistrationSuccessCopy, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
+import { RegistrationSuccessCopy, grantedNewProductAccess, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
     selector: 'app-parent-register',
@@ -81,7 +81,11 @@ export class ParentRegisterComponent implements OnInit {
 
     async onSubmit() {
         if (this.form.invalid || !this.hasRequiredLegalAcceptances) return;
-        if (this.mfaRequired() && (this.mfaCode.invalid || !this.mfaCode.value)) return;
+        if (this.mfaRequired() && (this.mfaCode.invalid || !this.mfaCode.value)) {
+            this.mfaCode.markAsTouched();
+            this.errorMessage.set('Doğrulama uygulamandaki altı haneli kodu gir.');
+            return;
+        }
 
         this.isLoading.set(true);
         this.errorMessage.set(null);
@@ -102,6 +106,8 @@ export class ParentRegisterComponent implements OnInit {
             next: (response) => {
                 const outcome = readVerificationEmailOutcome(response);
                 const copy = registrationSuccessCopy(outcome, 'sen');
+                // Third review N3: a sign-up only when this request granted the product (not on a retry).
+                if (grantedNewProductAccess(response)) this.analytics.track('sign_up', { method: 'password', role: 'parent' });
                 if (outcome === 'notRequired') {
                     // The panel (with focus and a sign-in button) is the message; no duplicate toast.
                     this.isLoading.set(false);
@@ -109,8 +115,6 @@ export class ParentRegisterComponent implements OnInit {
                     this.verifiedNotice.set(copy);
                     return;
                 }
-                // Second review L3: only a new (or still unverified) registration counts as a sign-up.
-                this.analytics.track('sign_up', { method: 'password', role: 'parent' });
                 this.toaster.success(copy.message, copy.title);
                 this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },

@@ -108,7 +108,8 @@ export class ExistingProductJoinComponent {
 
   get loginUrl(): string {
     if (this.account !== 'student') return `${environment.staffPortalUrl}?product=${this.product}`;
-    return this.product === 'coaching' ? 'https://eduivme.com/auth/login' : 'https://masterhizliokuma.com/auth/login';
+    // Third review: a Coaching student signs in on the Coaching site they are on (onuraltintas.net).
+    return this.product === 'coaching' ? '/auth/login' : 'https://masterhizliokuma.com/auth/login';
   }
 
   submit(): void {

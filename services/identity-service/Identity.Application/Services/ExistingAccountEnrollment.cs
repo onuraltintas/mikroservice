@@ -34,10 +34,6 @@ public sealed class ExistingAccountEnrollment(
         if (await _loginAttempts.GetLockoutAsync(email, cancellationToken) is { } remaining)
             return Result.Failure<RegistrationOutcome>(Commands.Login.LoginCommandHandler.TooManyAttempts(remaining));
         var user = await users.GetByEmailAsync(email.Trim(), cancellationToken);
-        // Second review M2a: only an account that is active in the other product (speed reading) may make
-        // itself a Coaching parent; anyone else (revoked, product-less, staff-only) gets the old answer.
-        if (account == "parent" && user is not null && !IsEligibleParentSource(user))
-            return Failure("Identity.UserExists", "Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın.");
         if (user is null || !passwords.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
         {
             await _loginAttempts.RecordFailureAsync(email, cancellationToken);
@@ -140,11 +136,16 @@ public sealed class ExistingAccountEnrollment(
             acceptedMfaStep = step;
         }
 
+        // Second review M2a: only an account that is active in the other product (speed reading) may make
+        // itself a Coaching parent; anyone else (revoked, product-less, staff-only) gets the old answer.
+        // Third review N1: only after the password and MFA, so it reveals nothing to someone without them.
+        if (account == "parent" && !IsEligibleParentSource(user))
+            return Failure("Identity.UserExists", "Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın.");
         if (alreadyJoined)
         {
             if (acceptedMfaStep.HasValue && !user.TryAcceptMfaTimeStep(acceptedMfaStep.Value))
                 return Failure("Auth.InvalidMfaCode", "Doğrulama kodu kullanılmış. Yeni kodla tekrar deneyin.");
-            return await CompleteAsync(user, target, sourceRole, cancellationToken);
+            return await CompleteAsync(user, target, sourceRole, newProductAccess: false, cancellationToken);
         }
         if (account == "institution" && sourceAdmin is null)
             return Result.Failure<RegistrationOutcome>(new InstitutionSelectionRequiredError(institutionChoices
@@ -165,7 +166,7 @@ public sealed class ExistingAccountEnrollment(
             await publisher.Publish(new CoachingProfileProvisioningRequested(user.Id, sourceRole, DateTime.UtcNow), cancellationToken);
         if (account == "parent" && await parents.GetByUserIdAsync(user.Id, cancellationToken) is null)
             await parents.AddAsync(ParentProfile.Create(user.Id, user.FirstName, user.LastName), cancellationToken);
-        return await CompleteAsync(user, target, sourceRole, cancellationToken);
+        return await CompleteAsync(user, target, sourceRole, newProductAccess: true, cancellationToken);
     }
 
     private static bool IsEligibleParentSource(User user) =>
@@ -194,7 +195,7 @@ public sealed class ExistingAccountEnrollment(
     /// rate limit at the gateway and the shared sign-in lockout above.
     /// </summary>
     private async Task<Result<RegistrationOutcome>> CompleteAsync(User user, PlatformProduct target, string roleName,
-        CancellationToken cancellationToken)
+        bool newProductAccess, CancellationToken cancellationToken)
     {
         var verificationEmailSent = false;
         if (!user.EmailConfirmed)
@@ -206,8 +207,8 @@ public sealed class ExistingAccountEnrollment(
         }
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success(verificationEmailSent
-            ? RegistrationOutcome.EmailSent(user.Id)
-            : RegistrationOutcome.AlreadyVerified(user.Id));
+            ? RegistrationOutcome.EmailSent(user.Id, newProductAccess)
+            : RegistrationOutcome.AlreadyVerified(user.Id, newProductAccess));
     }
 
     private static Result<RegistrationOutcome> Failure(string code, string description) =>

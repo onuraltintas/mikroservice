@@ -23,7 +23,7 @@ import { RegistrationLegalConsentComponent } from '../../registration-legal-cons
 import { ExistingProductJoinComponent } from '../../existing-product-join.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
 import { RegistrationSuccessComponent } from '../registration-success.component';
-import { RegistrationSuccessCopy, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
+import { RegistrationSuccessCopy, grantedNewProductAccess, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
     selector: 'app-institution-register',
@@ -127,6 +127,8 @@ export class InstitutionRegisterComponent implements OnInit {
             next: (response) => {
                 const outcome = readVerificationEmailOutcome(response);
                 const copy = registrationSuccessCopy(outcome, 'siz');
+                // Third review N3: a sign-up only when this request granted the product (not on a retry).
+                if (grantedNewProductAccess(response)) this.analytics.track('sign_up', { method: 'password', role: 'institution' });
                 if (outcome === 'notRequired') {
                     // The panel (with focus and a sign-in button) is the message; no duplicate toast.
                     this.isLoading.set(false);
@@ -134,8 +136,6 @@ export class InstitutionRegisterComponent implements OnInit {
                     this.verifiedNotice.set(copy);
                     return;
                 }
-                // Second review L3: only a new (or still unverified) registration counts as a sign-up.
-                this.analytics.track('sign_up', { method: 'password', role: 'institution' });
                 this.toaster.success(copy.message, copy.title);
                 this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },

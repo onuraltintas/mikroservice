@@ -6,6 +6,7 @@ public sealed class PublicAppUrlOptions
 {
     public const string SectionName = "PublicApp";
 
+    /// <summary>The Coaching site (production https://onuraltintas.net): Coaching and parent links.</summary>
     public string BaseUrl { get; set; } = string.Empty;
 
     /// <summary>
@@ -20,7 +21,8 @@ public sealed class PublicAppUrlOptions
     /// </summary>
     public string StaffPortalUrl { get; set; } = string.Empty;
 
-    /// <summary>Coaching audit K3: the admin panel origin, e.g. https://eduivme.com. Empty means BaseUrl.</summary>
+    /// <summary>Coaching audit K3: the admin panel origin, e.g. https://eduivme.com. Empty means BaseUrl.
+    /// Also the origin of links sent to management accounts (SystemAdmin, Editor).</summary>
     public string AdminPanelUrl { get; set; } = string.Empty;
 
     public string StaffPortalLink() =>
@@ -33,14 +35,25 @@ public sealed class PublicAppUrlOptions
     public static bool IsValidOptionalForEnvironment(string? value, bool isProduction) =>
         string.IsNullOrWhiteSpace(value) || IsValidForEnvironment(value, isProduction);
 
+    // Parents exist only in Coaching, so a Parent message without a product goes to the Coaching site.
     private static readonly HashSet<string> SpeedReadingRoles = new(StringComparer.OrdinalIgnoreCase)
     {
         "Student",
         "Teacher",
-        "Parent",
         "InstitutionAdmin",
         "InstitutionOwner"
     };
+
+    /// <summary>Management accounts: their links open the admin panel (<see cref="AdminPanelUrl"/>), never the Coaching site.</summary>
+    private static readonly HashSet<string> ManagementRoles = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "SystemAdmin",
+        "Admin",
+        "Editor"
+    };
+
+    public static bool IsManagementRole(string? role) =>
+        !string.IsNullOrWhiteSpace(role) && ManagementRoles.Contains(role.Trim());
 
     public static bool IsValidBaseUrl(string? value)
     {
@@ -97,9 +110,16 @@ public sealed class PublicAppUrlOptions
 
     public string ResolveBaseUrl(string? role = null) => ResolveBaseUrl(role, null);
 
+    /// <summary>
+    /// User decision 05.11.2026: <see cref="BaseUrl"/> is the Coaching site (production https://onuraltintas.net)
+    /// for students, parents and Coaching staff; management accounts use <see cref="AdminPanelUrl"/> when it is set;
+    /// speed-reading links use <see cref="SpeedReadingBaseUrl"/>.
+    /// </summary>
     public string ResolveBaseUrl(string? role, string? product)
     {
-        var candidate = IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
+        var candidate = IsManagementRole(role) && IsValidBaseUrl(AdminPanelUrl)
+            ? AdminPanelUrl
+            : IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
             ? SpeedReadingBaseUrl
             : BaseUrl;
 
@@ -120,7 +140,7 @@ public sealed class PublicAppUrlOptions
         var id = Uri.EscapeDataString(userId.ToString());
         var value = Uri.EscapeDataString(token);
         // PR #111 second review H1: each site's own verification page; the Coaching site has no /auth/verify-email.
-        return IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
+        return !IsManagementRole(role) && IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
             ? $"{baseUrl}{SpeedReadingEmailVerificationPath}?token={value}&userId={id}"
             : $"{baseUrl}{CoachingEmailVerificationPath}?userId={id}&token={value}";
     }
@@ -134,7 +154,9 @@ public sealed class PublicAppUrlOptions
         return $"{baseUrl}/auth/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
     }
 
-    public string BuildLoginLink(string? role = null) => $"{ResolveBaseUrl(role)}/auth/login";
+    public string BuildLoginLink(string? role = null) => BuildLoginLink(role, null);
+
+    public string BuildLoginLink(string? role, string? product) => $"{ResolveBaseUrl(role, product)}/auth/login";
 
     public static string GetApplicationName(string? role) =>
         GetApplicationName(role, null);

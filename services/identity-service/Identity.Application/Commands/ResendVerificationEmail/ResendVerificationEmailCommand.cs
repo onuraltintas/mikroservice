@@ -3,7 +3,6 @@ using MediatR;
 using Identity.Application.Interfaces;
 using EduPlatform.Shared.Kernel.Primitives;
 using MassTransit;
-using Identity.Domain.Enums;
 using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.ResendVerificationEmail;
@@ -50,19 +49,9 @@ public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerif
             user.LastName,
             user.EmailVerificationToken ?? "",
             primaryRole
-        ) { Product = ResolveProduct(user, request.Product) }, cancellationToken);
+        ) { Product = Identity.Application.Registration.EmailProduct.Resolve(user, request.Product) }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
-    }
-
-    private static string? ResolveProduct(Identity.Domain.Entities.User user, string? requested)
-    {
-        if (PlatformProductExtensions.TryParseRouteValue(requested, out var product)
-            && product is PlatformProduct.Coaching or PlatformProduct.SpeedReading
-            && user.HasProductAccess(product))
-            return product.ToRouteValue();
-        var products = new[] { PlatformProduct.Coaching, PlatformProduct.SpeedReading }.Where(user.HasProductAccess).ToArray();
-        return products.Length == 1 ? products[0].ToRouteValue() : null;
     }
 }

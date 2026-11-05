@@ -5,13 +5,17 @@ namespace Identity.Application.Registration;
 /// <see cref="VerificationEmail"/> tells the client which success screen to show:
 /// <see cref="Sent"/> when a verification e-mail went out (new account, or an existing account whose
 /// address is not verified yet), <see cref="NotRequired"/> when the address is already verified and
-/// the person can sign in now. Serialized as <c>{ userId, verificationEmail }</c>; older clients read only userId.
+/// the person can sign in now. Serialized as <c>{ userId, verificationEmail, newProductAccess }</c>; older clients read only userId.
 /// </summary>
-public sealed record RegistrationOutcome(Guid UserId, string VerificationEmail)
+/// <param name="NewProductAccess">
+/// Third review N3: true when this request granted the product (a new account or a first join), false for a
+/// retry of a registration that had already happened. Clients count a sign-up only when it is true.
+/// </param>
+public sealed record RegistrationOutcome(Guid UserId, string VerificationEmail, bool NewProductAccess = true)
 {
     public const string Sent = "sent";
     public const string NotRequired = "notRequired";
 
-    public static RegistrationOutcome EmailSent(Guid userId) => new(userId, Sent);
-    public static RegistrationOutcome AlreadyVerified(Guid userId) => new(userId, NotRequired);
+    public static RegistrationOutcome EmailSent(Guid userId, bool newProductAccess = true) => new(userId, Sent, newProductAccess);
+    public static RegistrationOutcome AlreadyVerified(Guid userId, bool newProductAccess = true) => new(userId, NotRequired, newProductAccess);
 }

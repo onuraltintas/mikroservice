@@ -7,7 +7,9 @@ using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.ConfirmEmail;
 
-public record ConfirmEmailCommand(Guid UserId, string? Token = null) : IRequest<Result>;
+/// <param name="Product">Third review N2: the site confirming ("coaching" / "speed-reading"), so the welcome
+/// e-mail is that product's; see <see cref="Identity.Application.Registration.EmailProduct"/>.</param>
+public record ConfirmEmailCommand(Guid UserId, string? Token = null, string? Product = null) : IRequest<Result>;
 
 public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, Result>
 {
@@ -52,7 +54,7 @@ public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, R
             user.FirstName,
             user.LastName,
             primaryRole
-        ), cancellationToken);
+        ) { Product = Identity.Application.Registration.EmailProduct.Resolve(user, request.Product) }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

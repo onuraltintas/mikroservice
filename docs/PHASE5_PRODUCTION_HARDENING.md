@@ -201,10 +201,11 @@ politikaları uygular.
   `SMTP_FROM_EMAIL=<mailbox>@eduivme.com`, `SMTP_USERNAME=<mailbox>@eduivme.com`,
   `SMTP_PASSWORD=<mailbox-parolası>`, `SMTP_FROM_NAME=Eduİvme`. Kullanılan
   mailbox adının `eduivme` yazımını taşıdığı doğrulanmalıdır.
-- Doğrulama, parola ve davet akışlarının tarayıcı bağlantıları alıcının rolüne
-  göre seçilir. Merkezi roller `PublicApp__BaseUrl`/`PUBLIC_APP_BASE_URL`,
-  hızlı okuma rolleri `PublicApp__SpeedReadingBaseUrl`/
-  `SPEED_READING_PUBLIC_BASE_URL` kullanır. Her değer ilgili public HTTPS
+- Doğrulama, parola ve davet akışlarının tarayıcı bağlantıları ürüne (yoksa alıcının
+  rolüne) göre seçilir. Koçluk bağlantıları Koçluk sitesini `PublicApp__BaseUrl`/
+  `PUBLIC_APP_BASE_URL` (üretimde `https://onuraltintas.net`), hızlı okuma
+  `PublicApp__SpeedReadingBaseUrl`/`SPEED_READING_PUBLIC_BASE_URL`, yönetim hesapları
+  `PublicApp__AdminPanelUrl`/`PUBLIC_ADMIN_PANEL_URL` (`https://eduivme.com`) kullanır. Her değer ilgili public HTTPS
   frontend origin'i olmalı; credentials, query veya fragment içermemeli ve
   production'da `localhost` olmamalıdır.
 - RabbitMQ tek node için sabit `rabbit@rabbitmq` node adı kullanır. Mevcut

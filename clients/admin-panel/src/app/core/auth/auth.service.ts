@@ -245,7 +245,8 @@ export class AuthService implements OnDestroy {
     async confirmEmail(userId: string, token: string): Promise<unknown> {
         return firstValueFrom(this.httpClient.post(
             `${environment.apiUrl}/auth/confirm-email`,
-            { userId, token }));
+            // PR #111 third review N2: the Coaching welcome e-mail.
+            { userId, token, product: 'coaching' }));
     }
 
     async resendVerificationEmail(email: string): Promise<unknown> {
