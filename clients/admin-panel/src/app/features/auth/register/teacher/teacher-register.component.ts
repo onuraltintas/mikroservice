@@ -21,6 +21,8 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../../existing-product-join.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
+import { RegistrationSuccessComponent } from '../registration-success.component';
+import { RegistrationSuccessCopy, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
     selector: 'app-teacher-register',
@@ -29,7 +31,7 @@ import { RegistrationLegalAcceptance } from '../../../../core/services/identity.
         ExistingProductJoinComponent,
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatSelectModule, MatProgressSpinnerModule,
-        RegistrationLegalConsentComponent, PasswordRequirementsComponent
+        RegistrationLegalConsentComponent, PasswordRequirementsComponent, RegistrationSuccessComponent
     ],
     templateUrl: './teacher-register.component.html'
 })
@@ -45,6 +47,9 @@ export class TeacherRegisterComponent implements OnInit {
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    /** Set when the address was already verified: the page shows "sign in now" instead of redirecting. */
+    verifiedNotice = signal<RegistrationSuccessCopy | null>(null);
+    readonly loginQueryParams: Record<string, string> = { registered: 'true', role: 'teacher' };
     joinExisting = false;
     legalReady = false;
     legalAcceptances: RegistrationLegalAcceptance[] = [];
@@ -93,10 +98,17 @@ export class TeacherRegisterComponent implements OnInit {
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/teacher`, payload).subscribe({
-            next: () => {
-                this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
+            next: (response) => {
+                const outcome = readVerificationEmailOutcome(response);
+                const copy = registrationSuccessCopy(outcome, 'siz');
+                this.toaster.success(copy.message, copy.title);
                 this.analytics.track('sign_up', { method: 'password', role: 'teacher' });
-                this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'teacher' } });
+                if (outcome === 'notRequired') {
+                    this.isLoading.set(false);
+                    this.verifiedNotice.set(copy);
+                    return;
+                }
+                this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },
             error: (err) => {
                 this.isLoading.set(false);

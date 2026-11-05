@@ -11,9 +11,10 @@
 
                 <!-- Messages -->
                 <div class="messages-container" *ngIf="successMessage || error">
-                    <div *ngIf="successMessage" class="success-msg" role="status">
+                    <div *ngIf="successMessage" class="success-msg" [class.verified-success]="alreadyVerified" role="status">
                         <mat-icon>check_circle</mat-icon>
-                        {{ successMessage }}
+                        <span>{{ successMessage }}</span>
+                        <a *ngIf="alreadyVerified" mat-raised-button color="primary" routerLink="/auth/login">Giriş yap</a>
                     </div>
                     <div *ngIf="error" class="error-msg" role="alert">
                         <mat-icon>error</mat-icon>

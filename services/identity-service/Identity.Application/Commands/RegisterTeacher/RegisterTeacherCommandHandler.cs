@@ -5,6 +5,7 @@ using Identity.Application.LegalPages;
 using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
+using Identity.Application.Registration;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
@@ -12,7 +13,7 @@ using EduPlatform.Shared.Contracts.Coaching;
 
 namespace Identity.Application.Commands.RegisterTeacher;
 
-public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherCommand, Result<Guid>>
+public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherCommand, Result<RegistrationOutcome>>
 {
     private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
@@ -41,18 +42,18 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         _enrollment = enrollment;
     }
 
-    public async Task<Result<Guid>> Handle(RegisterTeacherCommand request, CancellationToken cancellationToken)
+    public async Task<Result<RegistrationOutcome>> Handle(RegisterTeacherCommand request, CancellationToken cancellationToken)
     {
         if (request.Product is not { } product || !Enum.IsDefined(product))
         {
-            return Result.Failure<Guid>(new Error("Auth.ProductRequired", "Kayıt yapılacak platform belirtilmelidir."));
+            return Result.Failure<RegistrationOutcome>(new Error("Auth.ProductRequired", "Kayıt yapılacak platform belirtilmelidir."));
         }
 
         // Global Registration Switch Check
         var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
         if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
         {
-            return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
+            return Result.Failure<RegistrationOutcome>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
         }
 
         var legalValidation = await _registrationLegalConsentService.ValidateAsync(
@@ -60,7 +61,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
             request.LegalAcceptances,
             cancellationToken);
         if (legalValidation.IsFailure)
-            return Result.Failure<Guid>(legalValidation.Error);
+            return Result.Failure<RegistrationOutcome>(legalValidation.Error);
 
         var identityResult = await _identityService.RegisterUserAsync(
             request.Email,
@@ -74,7 +75,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
             if (product is PlatformProduct.Coaching or PlatformProduct.SpeedReading && identityResult.Error.Code == "Identity.UserExists")
                 return await _enrollment.JoinAsync(request.Email, request.Password, product, "teacher",
                     legalValidation.Value, null, cancellationToken);
-            return Result.Failure<Guid>(identityResult.Error);
+            return Result.Failure<RegistrationOutcome>(identityResult.Error);
         }
 
         var userId = identityResult.Value;
@@ -89,7 +90,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         if (roleResult.IsFailure)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<Guid>(roleResult.Error);
+            return Result.Failure<RegistrationOutcome>(roleResult.Error);
         }
 
         // Update Phone if needed
@@ -97,7 +98,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         if (user is null)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<Guid>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
+            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
         }
 
         if (user.GrantProductAccess(
@@ -135,12 +136,12 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
             ), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success(userId);
+            return Result.Success(RegistrationOutcome.EmailSent(userId));
         }
         catch (Exception)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<Guid>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
+            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
         }
     }
 }

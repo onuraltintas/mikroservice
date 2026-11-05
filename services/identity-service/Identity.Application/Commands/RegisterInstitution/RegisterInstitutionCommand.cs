@@ -19,4 +19,4 @@ public record RegisterInstitutionCommand(
     IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null,
     /// <summary>Roadmap O11: campaign tags of the landing page, stored with a new account.</summary>
     Identity.Application.Registration.RegistrationUtm? Utm = null
-) : IRequest<Result<Guid>>;
+) : IRequest<Result<Identity.Application.Registration.RegistrationOutcome>>;

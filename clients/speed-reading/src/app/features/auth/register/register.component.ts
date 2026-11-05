@@ -26,6 +26,7 @@ import { RegistrationLegalConsentComponent } from '../registration-legal-consent
 import { ExistingProductJoinComponent } from '../existing-product-join.component';
 import { RegistrationShellComponent } from '../registration-shell.component';
 import { ParentPanelEntryComponent } from '../parent-panel-entry.component';
+import { readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
   selector: 'app-register',
@@ -68,6 +69,9 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
   joinExisting = false;
   legalReady = false;
   legalAcceptances: RegistrationLegalAcceptance[] = [];
+  successMessage = '';
+  /** The address was already verified: show "sign in now" instead of redirecting. */
+  alreadyVerified = false;
 
   constructor() {
     this.registerForm = this.fb.group({
@@ -170,13 +174,14 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
       finalize(() => this.loading = false)
     ).subscribe({
       next: (response) => {
-        // Kayıt başarılı, login sayfasına yönlendir
+        const outcome = readVerificationEmailOutcome(response);
+        this.successMessage = registrationSuccessCopy(outcome, 'sen').message;
+        if (outcome === 'notRequired') {
+          this.alreadyVerified = true;
+          return;
+        }
         this.router.navigate(['/auth/login'], {
-          queryParams: {
-            registered: 'true',
-            message: 'Kayıt başarılı! Lütfen e-posta adresinizi onaylayın ve giriş yapın.',
-            ...(this.getInvitationReturnUrl() ? { returnUrl: this.getInvitationReturnUrl() } : {})
-          }
+          queryParams: { registered: 'true', message: this.successMessage, ...this.loginQueryParams }
         });
       },
       error: (err) => {
@@ -184,6 +189,11 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
         this.loading = false;
       }
     });
+  }
+
+  get loginQueryParams(): { returnUrl?: string } {
+    const returnUrl = this.getInvitationReturnUrl();
+    return returnUrl ? { returnUrl } : {};
   }
 
   private getInvitationReturnUrl(): string | null {

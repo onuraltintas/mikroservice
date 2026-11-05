@@ -73,7 +73,7 @@ function create(entry: (typeof forms)[number]) {
   return { component, toaster, router };
 }
 
-async function submit(entry: (typeof forms)[number], body: unknown) {
+async function submit(entry: (typeof forms)[number], body: Record<string, string>) {
   const created = create(entry);
   await created.component.onSubmit();
   const http = TestBed.inject(HttpTestingController);

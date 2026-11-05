@@ -1,5 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Contracts.Coaching;
+using EduPlatform.Shared.Contracts.Events.Identity;
+using Identity.Application.Registration;
 using MassTransit;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
@@ -18,7 +20,7 @@ public sealed class ExistingAccountEnrollment(
 {
     private readonly ILoginAttemptLimiter _loginAttempts = loginAttempts ?? NoLoginAttemptLimiter.Instance;
 
-    public async Task<Result<Guid>> JoinAsync(string email, string password, PlatformProduct target,
+    public async Task<Result<RegistrationOutcome>> JoinAsync(string email, string password, PlatformProduct target,
         string account, IReadOnlyList<PlatformLegalPageDto> documents, string? mfaCode,
         CancellationToken cancellationToken, Guid? institutionId = null)
     {
@@ -29,7 +31,7 @@ public sealed class ExistingAccountEnrollment(
 
         // Joining verifies the account password, so it shares the sign-in lockout.
         if (await _loginAttempts.GetLockoutAsync(email, cancellationToken) is { } remaining)
-            return Result.Failure<Guid>(Commands.Login.LoginCommandHandler.TooManyAttempts(remaining));
+            return Result.Failure<RegistrationOutcome>(Commands.Login.LoginCommandHandler.TooManyAttempts(remaining));
         var user = await users.GetByEmailAsync(email.Trim(), cancellationToken);
         if (user is null || !passwords.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
         {
@@ -43,8 +45,11 @@ public sealed class ExistingAccountEnrollment(
         user = await users.GetByEmailAsync(email.Trim(), cancellationToken);
         if (user is null || user.Id != lockedUserId || !passwords.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
             return Failure("Auth.ExistingAccountPasswordRequired", "Mevcut hesabınızın e-posta adresini ve şifresini kullanın. Bu işlem şifrenizi değiştirmez.");
-        if (!user.IsActive || !user.EmailConfirmed)
-            return Failure("Auth.ExistingAccountNotEligible", "Mevcut hesabınız aktif ve e-posta adresiniz doğrulanmış olmalıdır.");
+        // Paket A (05.11.2026): an unverified address no longer blocks joining. The existing password
+        // is still required (above), sign-in still requires a verified address (LoginCommandHandler),
+        // and the join sends the verification e-mail below, so access is usable only after verification.
+        if (!user.IsActive)
+            return Failure("Auth.ExistingAccountNotEligible", "Mevcut hesabınız aktif olmalıdır.");
         if (user.ProductAccesses.Any(a => a.Product == target) || user.Roles.Any(r => r.Product == target))
             return Failure("Identity.UserExists", "Bu serviste kaydınız zaten var. Giriş yapın; erişim kapatılmışsa servis yöneticisiyle görüşün.");
 
@@ -115,7 +120,7 @@ public sealed class ExistingAccountEnrollment(
         }
 
         if (account == "institution" && sourceAdmin is null)
-            return Result.Failure<Guid>(new InstitutionSelectionRequiredError(institutionChoices
+            return Result.Failure<RegistrationOutcome>(new InstitutionSelectionRequiredError(institutionChoices
                 .OrderBy(choice => choice.Name, StringComparer.OrdinalIgnoreCase).ThenBy(choice => choice.Id).ToArray()));
         if (acceptedMfaStep.HasValue && !user.TryAcceptMfaTimeStep(acceptedMfaStep.Value))
             return Failure("Auth.InvalidMfaCode", "Doğrulama kodu kullanılmış. Yeni kodla tekrar deneyin.");
@@ -130,9 +135,21 @@ public sealed class ExistingAccountEnrollment(
         legalConsent.TrackAcceptedDocuments(user.Id, target, documents, "password");
         if (target == PlatformProduct.Coaching && account is "student" or "teacher")
             await publisher.Publish(new CoachingProfileProvisioningRequested(user.Id, sourceRole, DateTime.UtcNow), cancellationToken);
+        var verificationEmailSent = false;
+        if (!user.EmailConfirmed)
+        {
+            // Same message as a new registration / ResendVerificationEmail: a fresh 24-hour link.
+            user.GenerateEmailVerificationToken();
+            await publisher.Publish(new UserRegisteredEvent(user.Id, user.Email, user.FirstName, user.LastName,
+                user.EmailVerificationToken ?? "", sourceRole), cancellationToken);
+            verificationEmailSent = true;
+        }
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Success(user.Id);
+        return Result.Success(verificationEmailSent
+            ? RegistrationOutcome.EmailSent(user.Id)
+            : RegistrationOutcome.AlreadyVerified(user.Id));
     }
 
-    private static Result<Guid> Failure(string code, string description) => Result.Failure<Guid>(new Error(code, description));
+    private static Result<RegistrationOutcome> Failure(string code, string description) =>
+        Result.Failure<RegistrationOutcome>(new Error(code, description));
 }

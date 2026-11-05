@@ -19,6 +19,8 @@ import { SiteAnalyticsService } from '../../../../core/services/site-analytics.s
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
+import { RegistrationSuccessComponent } from '../registration-success.component';
+import { RegistrationSuccessCopy, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
     selector: 'app-parent-register',
@@ -26,7 +28,7 @@ import { RegistrationLegalAcceptance } from '../../../../core/services/identity.
     imports: [
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-        RegistrationLegalConsentComponent, PasswordRequirementsComponent
+        RegistrationLegalConsentComponent, PasswordRequirementsComponent, RegistrationSuccessComponent
     ],
     templateUrl: './parent-register.component.html'
 })
@@ -42,6 +44,9 @@ export class ParentRegisterComponent implements OnInit {
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    /** Set when the address was already verified: the page shows "sign in now" instead of redirecting. */
+    verifiedNotice = signal<RegistrationSuccessCopy | null>(null);
+    readonly loginQueryParams: Record<string, string> = { registered: 'true', role: 'parent' };
     legalReady = false;
     legalAcceptances: RegistrationLegalAcceptance[] = [];
 
@@ -89,10 +94,17 @@ export class ParentRegisterComponent implements OnInit {
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/parent`, payload).subscribe({
-            next: () => {
-                this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
+            next: (response) => {
+                const outcome = readVerificationEmailOutcome(response);
+                const copy = registrationSuccessCopy(outcome, 'sen');
+                this.toaster.success(copy.message, copy.title);
                 this.analytics.track('sign_up', { method: 'password', role: 'parent' });
-                this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'parent' } });
+                if (outcome === 'notRequired') {
+                    this.isLoading.set(false);
+                    this.verifiedNotice.set(copy);
+                    return;
+                }
+                this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },
             error: (err) => {
                 this.isLoading.set(false);

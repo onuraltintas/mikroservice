@@ -13,8 +13,9 @@ public record RegisterStudentCommand(
     string? Phone,
     PlatformProduct? Product = null,
     IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null,
-    /// <summary>Roadmap Y8: asked at Coaching registration; kept on the Coaching student profile.</summary>
+    /// <summary>Optional (Paket A, 05.11.2026): no longer asked at registration; an older client may still
+    /// send it, and it is then kept on the Coaching student profile.</summary>
     DateOnly? BirthDate = null,
     /// <summary>Roadmap O11: campaign tags of the landing page, stored with a new account.</summary>
     Identity.Application.Registration.RegistrationUtm? Utm = null
-) : IRequest<Result<Guid>>;
+) : IRequest<Result<Identity.Application.Registration.RegistrationOutcome>>;

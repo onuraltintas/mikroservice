@@ -25,6 +25,7 @@ import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../existing-product-join.component';
 import { RegistrationShellComponent } from '../registration-shell.component';
+import { readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
   selector: 'app-register-teacher',
@@ -61,6 +62,8 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
   isLoading = false;
   error = '';
   successMessage = '';
+  /** The address was already verified: show "sign in now" instead of redirecting. */
+  alreadyVerified = false;
   hidePassword = true;
   hideConfirmPassword = true;
   joinExisting = false;
@@ -161,13 +164,19 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
     };
 
     this.authService.registerTeacher(request).subscribe({
-      next: () => {
-        this.successMessage = 'Öğretmen kaydınız oluşturuldu. E-posta adresinizi doğruladıktan sonra giriş yapabilirsiniz.';
+      next: (response) => {
+        const outcome = readVerificationEmailOutcome(response);
+        this.successMessage = registrationSuccessCopy(outcome, 'siz').message;
+        if (outcome === 'notRequired') {
+          this.alreadyVerified = true;
+          this.isLoading = false;
+          return;
+        }
         setTimeout(() => {
           this.router.navigate(['/auth/login'], {
             queryParams: {
               registered: 'true',
-              message: 'Kayıt oluşturuldu. Lütfen e-posta adresinizi onaylayıp giriş yapın.',
+              message: this.successMessage,
               ...(resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'))
                 ? { returnUrl: resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')) }
                 : {})

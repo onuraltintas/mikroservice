@@ -4,13 +4,14 @@ using Identity.Application.LegalPages;
 using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
+using Identity.Application.Registration;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.RegisterInstitution;
 
-public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitutionCommand, Result<Guid>>
+public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitutionCommand, Result<RegistrationOutcome>>
 {
     private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
@@ -44,18 +45,18 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         _enrollment = enrollment;
     }
 
-    public async Task<Result<Guid>> Handle(RegisterInstitutionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<RegistrationOutcome>> Handle(RegisterInstitutionCommand request, CancellationToken cancellationToken)
     {
         if (request.Product is not { } product || !Enum.IsDefined(product))
         {
-            return Result.Failure<Guid>(new Error("Auth.ProductRequired", "Kayıt yapılacak platform belirtilmelidir."));
+            return Result.Failure<RegistrationOutcome>(new Error("Auth.ProductRequired", "Kayıt yapılacak platform belirtilmelidir."));
         }
 
         // Global Registration Switch Check
         var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
         if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
         {
-            return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
+            return Result.Failure<RegistrationOutcome>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
         }
 
         var legalValidation = await _registrationLegalConsentService.ValidateAsync(
@@ -63,7 +64,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             request.LegalAcceptances,
             cancellationToken);
         if (legalValidation.IsFailure)
-            return Result.Failure<Guid>(legalValidation.Error);
+            return Result.Failure<RegistrationOutcome>(legalValidation.Error);
 
         if (product is PlatformProduct.Coaching or PlatformProduct.SpeedReading
             && await _userRepository.GetByEmailAsync(request.Email, cancellationToken) is not null)
@@ -76,7 +77,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             cancellationToken);
         if (location is null)
         {
-            return Result.Failure<Guid>(new Error(
+            return Result.Failure<RegistrationOutcome>(new Error(
                 "Institution.InvalidLocation",
                 "Seçilen il ve ilçe eşleşmiyor."));
         }
@@ -91,7 +92,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
 
         if (identityResult.IsFailure)
         {
-            return Result.Failure<Guid>(identityResult.Error);
+            return Result.Failure<RegistrationOutcome>(identityResult.Error);
         }
 
         var userId = identityResult.Value;
@@ -113,7 +114,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         if (adminRoleResult.IsFailure || ownerRoleResult.IsFailure)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<Guid>(adminRoleResult.IsFailure ? adminRoleResult.Error : ownerRoleResult.Error);
+            return Result.Failure<RegistrationOutcome>(adminRoleResult.IsFailure ? adminRoleResult.Error : ownerRoleResult.Error);
         }
 
         // 3. Create Domain Entities
@@ -122,7 +123,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         if (user is null)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<Guid>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
+            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
         }
 
         if (user.GrantProductAccess(
@@ -172,14 +173,14 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             ), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success(userId);
+            return Result.Success(RegistrationOutcome.EmailSent(userId));
         }
         catch (Exception)
         {
             // 5. Compensating Transaction: Delete User from Keycloak
             await _identityService.DeleteUserAsync(userId, cancellationToken);
             
-            return Result.Failure<Guid>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
+            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
         }
     }
 }

@@ -211,7 +211,7 @@ public sealed class RegistrationVerificationEmailTests
         }
     }
 
-    private sealed class OutcomeMediator : DispatchProxy
+    public class OutcomeMediator : DispatchProxy
     {
         public RegistrationOutcome Outcome = null!;
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>

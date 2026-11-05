@@ -21,6 +21,7 @@ import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../existing-product-join.component';
 import { RegistrationShellComponent } from '../registration-shell.component';
+import { readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
   selector: 'app-register-school',
@@ -54,6 +55,8 @@ export class RegisterSchoolComponent implements OnInit {
   isLoading = false;
   error = '';
   successMessage = '';
+  /** The address was already verified: show "sign in now" instead of redirecting. */
+  alreadyVerified = false;
   hidePassword = true;
   hideConfirmPassword = true;
   provinces: ProvinceOption[] = [];
@@ -159,9 +162,14 @@ export class RegisterSchoolComponent implements OnInit {
     };
 
     this.authService.registerInstitution(request).subscribe({
-      next: () => {
-        this.successMessage = 'Okul kaydınız başarıyla oluşturuldu! E-posta adresinize doğrulama linki gönderildi. Giriş yapabilmek için lütfen e-postanızı doğrulayın.';
+      next: (response) => {
+        const outcome = readVerificationEmailOutcome(response);
+        this.successMessage = registrationSuccessCopy(outcome, 'siz').message;
         this.isLoading = false;
+        if (outcome === 'notRequired') {
+          this.alreadyVerified = true;
+          return;
+        }
         setTimeout(() => {
           this.router.navigate(['/auth/login']);
         }, 3000);

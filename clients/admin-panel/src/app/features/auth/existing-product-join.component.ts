@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { RegistrationLegalConsentComponent } from './registration-legal-consent.component';
 import { RegistrationLegalAcceptance } from '../../core/services/identity.service';
 import { environment } from '../../../environments/environment';
+import { readVerificationEmailOutcome } from './register/registration-outcome';
 
 @Component({
   selector: 'app-existing-product-join',
@@ -19,8 +20,8 @@ import { environment } from '../../../environments/environment';
       <p>Aynı e-posta ve mevcut şifreni kullan. Hesabın ve kurum bağlantın korunur.
         Bu işlem abonelik satın almaz; servis yetkileri ve abonelikleri ayrı kalır.</p>
       @if (joined) {
-        <p role="status">Katılım tamamlandı. Mevcut şifrenle giriş yapabilirsin.</p>
-        <a [href]="loginUrl">Panele giriş yap</a>
+        <p role="status">{{ joinedMessage }}</p>
+        @if (!verificationEmailSent) { <a [href]="loginUrl">Panele giriş yap</a> }
       } @else {
         <form [formGroup]="form" (ngSubmit)="submit()">
           <mat-form-field appearance="outline">
@@ -82,6 +83,8 @@ export class ExistingProductJoinComponent {
   });
   loading = false;
   joined = false;
+  joinedMessage = '';
+  verificationEmailSent = false;
   error = '';
   legalReady = false;
   legalAcceptances: RegistrationLegalAcceptance[] = [];
@@ -116,7 +119,12 @@ export class ExistingProductJoinComponent {
       ...this.form.getRawValue(), account: this.account, legalAcceptances: this.legalAcceptances,
       ...(this.account === 'institution' && this.selectedInstitutionId ? { institutionId: this.selectedInstitutionId } : {})
     }).pipe(finalize(() => this.changeDetector.markForCheck())).subscribe({
-      next: () => { this.joined = true; this.loading = false; },
+      next: (response) => {
+        // Paket A: an unverified address now joins too and gets a verification e-mail first.
+        this.verificationEmailSent = readVerificationEmailOutcome(response) === 'sent';
+        this.joinedMessage = joinedMessage(this.verificationEmailSent, this.account === 'student' ? 'sen' : 'siz');
+        this.joined = true; this.loading = false;
+      },
       error: (err) => {
         this.loading = false;
         if (this.account === 'institution' && err.error?.code === 'Auth.InstitutionSelectionRequired'
@@ -133,4 +141,15 @@ export class ExistingProductJoinComponent {
       }
     });
   }
+}
+
+function joinedMessage(verificationEmailSent: boolean, voice: 'sen' | 'siz'): string {
+  if (verificationEmailSent) {
+    return voice === 'sen'
+      ? 'Katılım tamamlandı. E-posta adresine doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra mevcut şifrenle giriş yapabilirsin.'
+      : 'Katılım tamamlandı. E-posta adresinize doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra mevcut şifrenizle giriş yapabilirsiniz.';
+  }
+  return voice === 'sen'
+    ? 'Katılım tamamlandı. E-posta adresin zaten doğrulanmış; mevcut şifrenle hemen giriş yapabilirsin.'
+    : 'Katılım tamamlandı. E-posta adresiniz zaten doğrulanmış; mevcut şifrenizle hemen giriş yapabilirsiniz.';
 }
