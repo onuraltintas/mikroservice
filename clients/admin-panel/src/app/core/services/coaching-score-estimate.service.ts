@@ -46,7 +46,18 @@ export function estimateMethodNote(estimates: readonly ScoreTypeEstimate[]): str
   return `Yöntem: netler ${source} ${year} sınav istatistikleriyle puana, puan da ${year} yerleştirme sonuçlarıyla sıralamaya çevrilir. Resmî hesap değildir.`;
 }
 
-export function notComputedText(_item: ScoreTypeNotComputed): string { return ''; }
+/** 01.11.2026: why a score type has no score, in words for both students and staff (the sentence addresses neither). */
+export function notComputedText(item: (Pick<ScoreTypeNotComputed, 'notComputedReason' | 'failedConditions'> & Partial<ScoreTypeNotComputed>) | null | undefined): string {
+  const lead = 'Bu puan türünde puan hesaplanmaz';
+  if (item?.notComputedReason !== 'minRawScore' || !item.failedConditions?.length) return `${lead}.`;
+  const tests = item.failedConditions.map(condition => `${condition.anyOf.map(x => x.name).join(' ya da ')} testinden`).join(' ve ');
+  return `${lead}: ${tests} en az 0,5 ham puan gerekir.`;
+}
+
+/** The ham puan of the tests named in the failing conditions, e.g. "Türkçe 0,25 · Temel Matematik 0". */
+export function rawScoresText(item: ScoreTypeNotComputed): string {
+  return item.failedConditions.flatMap(x => x.anyOf).map(x => `${x.name} ${x.rawScore.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`).join(' · ');
+}
 
 /** YKS ranks are read from placement scores (with OBP); without the diploma grade they look worse than they are. */
 export function diplomaRankNote(estimates: readonly ScoreTypeEstimate[]): string | null {

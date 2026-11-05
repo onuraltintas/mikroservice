@@ -51,13 +51,39 @@ public static class MinRawScoreRules
     public const decimal Minimum = 0.5m;
     public const string Reason = "minRawScore";
 
-    public static IReadOnlyList<IReadOnlyList<RawScoreTest>> ConditionsFor(string scoreType) => throw new NotImplementedException();
+    // ÖSYM tests made up of the platform's practice exam sections, as in content-packs/coaching-score-models/2026/derive.py
+    // (SECTIONS). AYT Fen Bilimleri = Fizik + Kimya + Biyoloji; Türk Dili ve Edebiyatı-Sosyal Bilimler-1 = Edebiyat + Tarih-1 +
+    // Coğrafya-1; Sosyal Bilimler-2 = Tarih-2 + Coğrafya-2 + Felsefe Grubu + Din Kültürü.
+    private static readonly RawScoreTest[] Tyt = [new("TUR", "Türkçe", "TYT", ["TUR"]), new("TMAT", "Temel Matematik", "TYT", ["MAT"])];
+    private static RawScoreTest Amat(string exam) => new("AMAT", "AYT Matematik", exam, ["MAT"]);
+    private static RawScoreTest TdeSb1(string exam) => new("TDESB1", "AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1", exam, ["EDB", "TAR1", "COG1"]);
+    private static readonly IReadOnlyDictionary<string, RawScoreTest[][]> Conditions = new Dictionary<string, RawScoreTest[][]>
+    {
+        ["LGS"] = [],
+        ["TYT"] = [Tyt],
+        ["SAY"] = [Tyt, [Amat("AYT_SAY"), new("FEN", "AYT Fen Bilimleri", "AYT_SAY", ["FIZ", "KIM", "BIO"])]],
+        ["EA"] = [Tyt, [Amat("AYT_EA"), TdeSb1("AYT_EA")]],
+        ["SOZ"] = [Tyt, [TdeSb1("AYT_SOZ"), new("SB2", "AYT Sosyal Bilimler-2", "AYT_SOZ", ["TAR2", "COG2", "FEL", "DIN"])]],
+        ["DIL"] = [Tyt, [new("YD", "YDT Yabancı Dil", "YDT_EN", ["ENG"])]]
+    };
+
+    /// <summary>The score type's conditions in order (TYT's first); each needs one of its tests to reach the minimum.</summary>
+    public static IReadOnlyList<IReadOnlyList<RawScoreTest>> ConditionsFor(string scoreType) =>
+        Conditions.TryGetValue(scoreType, out var conditions) ? conditions : throw new ArgumentException("Bilinmeyen puan türü.");
 
     /// <summary>The test's ham puan in one practice exam: the sum of its sections' nets (each already doğru − yanlış/4).</summary>
-    public static decimal Raw(RawScoreTest test, PracticeExamSummary summary) => throw new NotImplementedException();
+    public static decimal Raw(RawScoreTest test, PracticeExamSummary summary)
+    {
+        if (summary.ExamCode != test.Exam) throw new ArgumentException($"{test.Name} {test.Exam} denemesinden hesaplanır.");
+        return summary.Sections.Where(x => test.Sections.Contains(x.SectionCode)).Sum(x => x.Net);
+    }
 
     /// <summary>The conditions of the score type that fail for these ham puanlar; empty means the score is computed.</summary>
-    public static IReadOnlyList<RawScoreCondition> Failed(string scoreType, Func<RawScoreTest, decimal> raw) => throw new NotImplementedException();
+    public static IReadOnlyList<RawScoreCondition> Failed(string scoreType, Func<RawScoreTest, decimal> raw) =>
+        ConditionsFor(scoreType).Select(condition => condition.Select(test => (Test: test, Raw: raw(test))).ToArray())
+            .Where(values => values.All(x => x.Raw < Minimum))
+            .Select(values => new RawScoreCondition(values.Select(x => new RawScoreValue(x.Test.Code, x.Test.Name, Math.Floor(x.Raw * 100) / 100)).ToArray()))
+            .ToArray();
 }
 
 /// <summary>
