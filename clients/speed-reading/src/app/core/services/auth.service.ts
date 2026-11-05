@@ -301,7 +301,7 @@ export class AuthService {
    * Service receives: void (auto-unwrapped)
    */
   resendVerification(email: string): Observable<any> {
-    return this.http.post(`${this.AUTH_URL}/resend-verification-email`, { email }, { withCredentials: true });
+    return this.http.post(`${this.AUTH_URL}/resend-verification-email`, { email, product: 'speed-reading' }, { withCredentials: true });
   }
 
   /** Called by GoogleCallbackComponent after server-side OAuth redirect. */

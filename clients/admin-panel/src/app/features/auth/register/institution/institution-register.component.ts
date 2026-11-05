@@ -127,7 +127,6 @@ export class InstitutionRegisterComponent implements OnInit {
             next: (response) => {
                 const outcome = readVerificationEmailOutcome(response);
                 const copy = registrationSuccessCopy(outcome, 'siz');
-                this.analytics.track('sign_up', { method: 'password', role: 'institution' });
                 if (outcome === 'notRequired') {
                     // The panel (with focus and a sign-in button) is the message; no duplicate toast.
                     this.isLoading.set(false);
@@ -135,6 +134,8 @@ export class InstitutionRegisterComponent implements OnInit {
                     this.verifiedNotice.set(copy);
                     return;
                 }
+                // Second review L3: only a new (or still unverified) registration counts as a sign-up.
+                this.analytics.track('sign_up', { method: 'password', role: 'institution' });
                 this.toaster.success(copy.message, copy.title);
                 this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },

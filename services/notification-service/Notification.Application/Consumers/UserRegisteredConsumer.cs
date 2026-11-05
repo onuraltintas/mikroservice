@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Notification.Application.Consumers;
 
@@ -13,12 +15,15 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
     private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationDbContext _dbContext;
     private readonly PublicAppUrlOptions _publicAppUrlOptions;
+    private readonly ILogger<UserRegisteredConsumer> _logger;
 
     public UserRegisteredConsumer(
         IEmailDeliveryQueue emailDeliveryQueue,
         INotificationDbContext dbContext,
-        IOptions<PublicAppUrlOptions> publicAppUrlOptions)
+        IOptions<PublicAppUrlOptions> publicAppUrlOptions,
+        ILogger<UserRegisteredConsumer>? logger = null)
     {
+        _logger = logger ?? NullLogger<UserRegisteredConsumer>.Instance;
         _emailDeliveryQueue = emailDeliveryQueue;
         _dbContext = dbContext;
         _publicAppUrlOptions = publicAppUrlOptions.Value;
@@ -27,6 +32,8 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
     public async Task Consume(ConsumeContext<UserRegisteredEvent> context)
     {
         var message = context.Message;
+        if (!PublicAppUrlOptions.IsKnownProduct(message.Product))
+            _logger.LogWarning("Verification e-mail for an unknown product {Product}; using the role-based site.", message.Product);
         
         var template = await _dbContext.EmailTemplates
             .AsNoTracking()

@@ -14,5 +14,7 @@ public record RegisterParentCommand(
     PlatformProduct? Product = null,
     IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null,
     /// <summary>Roadmap O11: campaign tags of the landing page, stored with a new account.</summary>
-    Identity.Application.Registration.RegistrationUtm? Utm = null
+    Identity.Application.Registration.RegistrationUtm? Utm = null,
+    /// <summary>Second review M2b: the authenticator code of an existing MFA-protected account joining as parent.</summary>
+    string? MfaCode = null
 ) : IRequest<Result<Identity.Application.Registration.RegistrationOutcome>>;

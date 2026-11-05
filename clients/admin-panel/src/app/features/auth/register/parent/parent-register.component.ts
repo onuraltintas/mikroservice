@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit, PLATFORM_ID } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { HttpClient } from '@angular/common/http';
@@ -49,6 +49,9 @@ export class ParentRegisterComponent implements OnInit {
     readonly loginQueryParams: Record<string, string> = { registered: 'true', role: 'parent' };
     legalReady = false;
     legalAcceptances: RegistrationLegalAcceptance[] = [];
+    /** Second review M2b: an existing MFA-protected account becoming a parent is asked for its code. */
+    mfaRequired = signal(false);
+    readonly mfaCode = new FormControl('', { nonNullable: true, validators: [Validators.pattern(/^\d{6}$/)] });
 
     form = this.fb.group({
         firstName: ['', Validators.required],
@@ -78,6 +81,7 @@ export class ParentRegisterComponent implements OnInit {
 
     async onSubmit() {
         if (this.form.invalid || !this.hasRequiredLegalAcceptances) return;
+        if (this.mfaRequired() && (this.mfaCode.invalid || !this.mfaCode.value)) return;
 
         this.isLoading.set(true);
         this.errorMessage.set(null);
@@ -90,14 +94,14 @@ export class ParentRegisterComponent implements OnInit {
             password: formData.password,
             phoneNumber: formData.phoneNumber,
             legalAcceptances: this.legalAcceptances,
-            utm: this.analytics.registrationUtm()
+            utm: this.analytics.registrationUtm(),
+            ...(this.mfaRequired() ? { mfaCode: this.mfaCode.value } : {})
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/parent`, payload).subscribe({
             next: (response) => {
                 const outcome = readVerificationEmailOutcome(response);
                 const copy = registrationSuccessCopy(outcome, 'sen');
-                this.analytics.track('sign_up', { method: 'password', role: 'parent' });
                 if (outcome === 'notRequired') {
                     // The panel (with focus and a sign-in button) is the message; no duplicate toast.
                     this.isLoading.set(false);
@@ -105,11 +109,17 @@ export class ParentRegisterComponent implements OnInit {
                     this.verifiedNotice.set(copy);
                     return;
                 }
+                // Second review L3: only a new (or still unverified) registration counts as a sign-up.
+                this.analytics.track('sign_up', { method: 'password', role: 'parent' });
                 this.toaster.success(copy.message, copy.title);
                 this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },
             error: (err) => {
                 this.isLoading.set(false);
+                if (['Auth.ExistingAccountMfaRequired', 'Auth.InvalidMfaCode'].includes(err?.error?.code)) {
+                    this.mfaRequired.set(true);
+                    this.mfaCode.reset('');
+                }
                 const msg = getApiErrorMessage(err, 'Kayıt tamamlanamadı. Biraz sonra yeniden dene.', {
                     voice: 'sen',
                     conflict: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.'

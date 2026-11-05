@@ -136,8 +136,8 @@ public class User : AggregateRoot
     /// external provider and can set a password through the reset flow.
     /// Paket A review #3: services joined with that password while the address was unconfirmed
     /// (self-granted access: <see cref="UserProductAccessSource.SelfRegistration"/> granted by the
-    /// account itself) are taken back with their roles; the products are returned so the caller can
-    /// also close the institution links made by those joins. The original registration is kept.
+    /// account itself) are removed with their roles; the products are returned so the caller can
+    /// also remove the institution links made by those joins. The original registration is kept.
     /// </summary>
     public IReadOnlyList<PlatformProduct> ClaimUnconfirmedAccountByVerifiedExternalLogin()
     {
@@ -146,18 +146,16 @@ public class User : AggregateRoot
             return [];
         }
 
-        var now = DateTimeOffset.UtcNow;
         var joinedWhileUnconfirmed = _productAccesses
             .Where(access => access.IsActive
                 && access.Source == UserProductAccessSource.SelfRegistration
                 && access.GrantedByUserId == Id)
             .Select(access => access.Product)
             .ToList();
+        // Second review M1: removed (not revoked) so the owner can join that service again.
+        _productAccesses.RemoveAll(access => joinedWhileUnconfirmed.Contains(access.Product));
         foreach (var product in joinedWhileUnconfirmed)
-        {
-            RevokeProductAccess(product, now);
             _roles.RemoveAll(role => role.Product == product);
-        }
 
         PasswordHash = [];
         PasswordSalt = [];

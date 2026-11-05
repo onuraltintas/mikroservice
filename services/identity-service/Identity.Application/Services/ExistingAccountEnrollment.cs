@@ -16,7 +16,7 @@ public sealed class ExistingAccountEnrollment(
     IInstitutionRepository institutions, IRoleRepository roles, IPasswordHasher passwords,
     IMultiFactorService multiFactor, IUnitOfWork unitOfWork,
     IRegistrationLegalConsentService legalConsent, TimeProvider timeProvider, IAuthenticationLock authenticationLock, IPublishEndpoint publisher,
-    ILoginAttemptLimiter? loginAttempts = null, IParentRepository? parents = null)
+    IParentRepository parents, ILoginAttemptLimiter? loginAttempts = null)
 {
     private readonly ILoginAttemptLimiter _loginAttempts = loginAttempts ?? NoLoginAttemptLimiter.Instance;
 
@@ -34,6 +34,10 @@ public sealed class ExistingAccountEnrollment(
         if (await _loginAttempts.GetLockoutAsync(email, cancellationToken) is { } remaining)
             return Result.Failure<RegistrationOutcome>(Commands.Login.LoginCommandHandler.TooManyAttempts(remaining));
         var user = await users.GetByEmailAsync(email.Trim(), cancellationToken);
+        // Second review M2a: only an account that is active in the other product (speed reading) may make
+        // itself a Coaching parent; anyone else (revoked, product-less, staff-only) gets the old answer.
+        if (account == "parent" && user is not null && !IsEligibleParentSource(user))
+            return Failure("Identity.UserExists", "Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın.");
         if (user is null || !passwords.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
         {
             await _loginAttempts.RecordFailureAsync(email, cancellationToken);
@@ -60,59 +64,63 @@ public sealed class ExistingAccountEnrollment(
             _ => "Parent"
         };
         // Review #8: a retry (e.g. after a lost response) of a join that already happened is idempotent.
-        // Nothing is granted; an unverified address gets a fresh verification link, a verified one "sign in".
-        if (user.HasProductAccess(target) && await HasTargetMembershipAsync(user, target, account, sourceRole, cancellationToken))
-            return await CompleteAsync(user, target, sourceRole, cancellationToken);
-        if (user.ProductAccesses.Any(a => a.Product == target) || user.Roles.Any(r => r.Product == target))
+        // Nothing is granted; after MFA (below) an unverified address gets a fresh link, a verified one "sign in".
+        var alreadyJoined = user.HasProductAccess(target)
+            && await HasTargetMembershipAsync(user, target, account, sourceRole, cancellationToken);
+        if (!alreadyJoined && (user.ProductAccesses.Any(a => a.Product == target) || user.Roles.Any(r => r.Product == target)))
             return Failure("Identity.UserExists", "Bu serviste kaydınız zaten var. Giriş yapın; erişim kapatılmışsa servis yöneticisiyle görüşün.");
-
-        var source = target == PlatformProduct.Coaching ? PlatformProduct.SpeedReading : PlatformProduct.Coaching;
-        bool HasSourceRole(string name) => user.Roles.Any(r => r.Product == source
-            && r.Role is not null && !r.Role.IsDeleted && r.Role.Name == name);
-        // Review #1: a Coaching parent needs no parent role elsewhere; the verified password (and MFA) is the proof.
-        if (account != "parent" && (!user.HasProductAccess(source)
-            || !(HasSourceRole(sourceRole) || account == "institution" && HasSourceRole("InstitutionOwner"))))
-            return Failure("Auth.SourceRoleRequired", "Diğer serviste bu hesap türüne ait aktif yetkiniz bulunmuyor. Yetki değişikliği için yöneticinizle görüşün.");
-
         InstitutionAdmin? sourceAdmin = null;
         var institutionChoices = new List<InstitutionEnrollmentChoice>();
-        var targetRoleNames = new List<string> { sourceRole };
-        if (account == "institution")
+        var targetRoles = new List<Role>();
+        if (!alreadyJoined)
         {
-            var links = await institutions.GetAdminsForRegistrationAsync(user.Id, cancellationToken);
-            if (links.Any(a => a.Product == target))
-                return Failure("Identity.UserExists", "Bu servis için mevcut kurum bağlantınız var. Yöneticinizle görüşün.");
-            var sourceLinks = new List<InstitutionAdmin>();
-            foreach (var link in links.Where(a => a.UserId == user.Id && a.Product == source && a.IsActive))
+            var source = target == PlatformProduct.Coaching ? PlatformProduct.SpeedReading : PlatformProduct.Coaching;
+            bool HasSourceRole(string name) => user.Roles.Any(r => r.Product == source
+                && r.Role is not null && !r.Role.IsDeleted && r.Role.Name == name);
+            // Review #1: a Coaching parent needs no parent role elsewhere; the verified password (and MFA) is the proof.
+            if (account != "parent" && (!user.HasProductAccess(source)
+                || !(HasSourceRole(sourceRole) || account == "institution" && HasSourceRole("InstitutionOwner"))))
+                return Failure("Auth.SourceRoleRequired", "Diğer serviste bu hesap türüne ait aktif yetkiniz bulunmuyor. Yetki değişikliği için yöneticinizle görüşün.");
+
+            var targetRoleNames = new List<string> { sourceRole };
+            if (account == "institution")
             {
-                var institution = await institutions.GetByIdAsync(link.InstitutionId, cancellationToken);
-                if (institution is not { IsActive: true }) continue;
-                sourceLinks.Add(link);
-                institutionChoices.Add(new(link.InstitutionId, institution.Name, link.Role.ToString()));
+                var links = await institutions.GetAdminsForRegistrationAsync(user.Id, cancellationToken);
+                if (links.Any(a => a.Product == target))
+                    return Failure("Identity.UserExists", "Bu servis için mevcut kurum bağlantınız var. Yöneticinizle görüşün.");
+                var sourceLinks = new List<InstitutionAdmin>();
+                foreach (var link in links.Where(a => a.UserId == user.Id && a.Product == source && a.IsActive))
+                {
+                    var institution = await institutions.GetByIdAsync(link.InstitutionId, cancellationToken);
+                    if (institution is not { IsActive: true }) continue;
+                    sourceLinks.Add(link);
+                    institutionChoices.Add(new(link.InstitutionId, institution.Name, link.Role.ToString()));
+                }
+                if (sourceLinks.Count == 0)
+                    return Failure("Auth.ExistingAccountNotEligible", "Katılım için aktif bir kurum bağlantısı gerekir.");
+                sourceAdmin = institutionId.HasValue
+                    ? sourceLinks.SingleOrDefault(link => link.InstitutionId == institutionId)
+                    : sourceLinks.Count == 1 ? sourceLinks[0] : null;
+                if (institutionId.HasValue && sourceAdmin is null)
+                    return Failure("Auth.InvalidInstitutionSelection", "Seçilen kuruma ait aktif yetkiniz bulunmuyor. Kurum listesini yeniden yükleyin.");
+                if (sourceAdmin?.Role == InstitutionAdminRole.Owner)
+                {
+                    if (!HasSourceRole("InstitutionOwner"))
+                        return Failure("Auth.SourceRoleRequired", "Kurum sahibi yetkisi doğrulanamadı.");
+                    targetRoleNames.Add("InstitutionOwner");
+                }
             }
-            if (sourceLinks.Count == 0)
-                return Failure("Auth.ExistingAccountNotEligible", "Katılım için aktif bir kurum bağlantısı gerekir.");
-            sourceAdmin = institutionId.HasValue
-                ? sourceLinks.SingleOrDefault(link => link.InstitutionId == institutionId)
-                : sourceLinks.Count == 1 ? sourceLinks[0] : null;
-            if (institutionId.HasValue && sourceAdmin is null)
-                return Failure("Auth.InvalidInstitutionSelection", "Seçilen kuruma ait aktif yetkiniz bulunmuyor. Kurum listesini yeniden yükleyin.");
-            if (sourceAdmin?.Role == InstitutionAdminRole.Owner)
+
+            foreach (var name in targetRoleNames)
             {
-                if (!HasSourceRole("InstitutionOwner"))
-                    return Failure("Auth.SourceRoleRequired", "Kurum sahibi yetkisi doğrulanamadı.");
-                targetRoleNames.Add("InstitutionOwner");
+                var role = await roles.GetByNameAsync(name, cancellationToken);
+                if (role is null || role.IsDeleted)
+                    return Failure("Identity.RoleNotFound", "Katılım rolü şu anda kullanılamıyor.");
+                targetRoles.Add(role);
             }
         }
 
-        var targetRoles = new List<Role>();
-        foreach (var name in targetRoleNames)
-        {
-            var role = await roles.GetByNameAsync(name, cancellationToken);
-            if (role is null || role.IsDeleted)
-                return Failure("Identity.RoleNotFound", "Katılım rolü şu anda kullanılamıyor.");
-            targetRoles.Add(role);
-        }
+        // Second review L2: MFA comes before anything is sent or rotated, also for a retry.
         long? acceptedMfaStep = null;
         if (user.MfaEnabled)
         {
@@ -132,6 +140,12 @@ public sealed class ExistingAccountEnrollment(
             acceptedMfaStep = step;
         }
 
+        if (alreadyJoined)
+        {
+            if (acceptedMfaStep.HasValue && !user.TryAcceptMfaTimeStep(acceptedMfaStep.Value))
+                return Failure("Auth.InvalidMfaCode", "Doğrulama kodu kullanılmış. Yeni kodla tekrar deneyin.");
+            return await CompleteAsync(user, target, sourceRole, cancellationToken);
+        }
         if (account == "institution" && sourceAdmin is null)
             return Result.Failure<RegistrationOutcome>(new InstitutionSelectionRequiredError(institutionChoices
                 .OrderBy(choice => choice.Name, StringComparer.OrdinalIgnoreCase).ThenBy(choice => choice.Id).ToArray()));
@@ -140,7 +154,8 @@ public sealed class ExistingAccountEnrollment(
 
         // Product profiles and memberships are provisioned by their owning service.
         if (sourceAdmin is not null)
-            await institutions.AddAdminAsync(InstitutionAdmin.Create(user.Id, sourceAdmin.InstitutionId, sourceAdmin.Role, target), cancellationToken);
+            await institutions.AddAdminAsync(
+                InstitutionAdmin.CreateByExistingAccountJoin(user.Id, sourceAdmin.InstitutionId, sourceAdmin.Role, target), cancellationToken);
         foreach (var role in targetRoles)
             user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id, target));
         if (user.GrantProductAccess(target, UserProductAccessSource.SelfRegistration, user.Id, timeProvider.GetUtcNow()))
@@ -148,10 +163,13 @@ public sealed class ExistingAccountEnrollment(
         legalConsent.TrackAcceptedDocuments(user.Id, target, documents, "password");
         if (target == PlatformProduct.Coaching && account is "student" or "teacher")
             await publisher.Publish(new CoachingProfileProvisioningRequested(user.Id, sourceRole, DateTime.UtcNow), cancellationToken);
-        if (account == "parent" && parents is not null && await parents.GetByUserIdAsync(user.Id, cancellationToken) is null)
+        if (account == "parent" && await parents.GetByUserIdAsync(user.Id, cancellationToken) is null)
             await parents.AddAsync(ParentProfile.Create(user.Id, user.FirstName, user.LastName), cancellationToken);
         return await CompleteAsync(user, target, sourceRole, cancellationToken);
     }
+
+    private static bool IsEligibleParentSource(User user) =>
+        user.ProductAccesses.Any(access => access.IsActive && access.Product == PlatformProduct.SpeedReading);
 
     /// <summary>
     /// The account already has <paramref name="target"/> with the membership this registration asks for.

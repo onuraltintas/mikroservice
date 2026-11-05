@@ -19,7 +19,7 @@ public sealed class JoinProductCommandHandler(ExistingAccountEnrollment enrollme
     public async Task<Result<RegistrationOutcome>> Handle(JoinProductCommand request, CancellationToken cancellationToken)
     {
         if (request.Product is not (PlatformProduct.Coaching or PlatformProduct.SpeedReading)
-            || request.Account is not ("student" or "teacher" or "institution")
+            || request.Account is not ("student" or "teacher" or "institution" or "parent")
             || string.IsNullOrWhiteSpace(request.Email) || request.Email.Length > 254
             || string.IsNullOrWhiteSpace(request.Password) || request.Password.Length > 1024
             || request.MfaCode is { Length: > 6 }

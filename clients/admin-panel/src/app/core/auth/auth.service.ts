@@ -251,7 +251,8 @@ export class AuthService implements OnDestroy {
     async resendVerificationEmail(email: string): Promise<unknown> {
         return firstValueFrom(this.httpClient.post(
             `${environment.apiUrl}/auth/resend-verification-email`,
-            { email }));
+            // PR #111 second review H1: the Coaching e-mail and link (the API may otherwise pick by role).
+            { email, product: 'coaching' }));
     }
 
     async logout() {

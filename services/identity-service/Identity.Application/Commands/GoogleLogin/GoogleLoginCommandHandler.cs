@@ -25,7 +25,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
     private readonly ILogger<GoogleLoginCommandHandler> _logger;
 
-    private readonly IInstitutionRepository? _institutions;
+    private readonly IInstitutionRepository _institutions;
 
     public GoogleLoginCommandHandler(
         IGoogleAuthService googleAuthService,
@@ -39,7 +39,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         ILogger<GoogleLoginCommandHandler> logger,
         IRegistrationLegalConsentService registrationLegalConsentService,
         IPublishEndpoint profileEvents,
-        IInstitutionRepository? institutions = null)
+        IInstitutionRepository institutions)
     {
         _institutions = institutions;
         _googleAuthService = googleAuthService;

@@ -3,11 +3,15 @@ using MediatR;
 using Identity.Application.Interfaces;
 using EduPlatform.Shared.Kernel.Primitives;
 using MassTransit;
+using Identity.Domain.Enums;
 using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.ResendVerificationEmail;
 
-public record ResendVerificationEmailCommand(string Email) : IRequest<Result>;
+/// <param name="Product">PR #111 second review H1: the site asking ("coaching" / "speed-reading"), so the e-mail and
+/// its link are that product's. Used only when the account has that product; otherwise the account's single
+/// Coaching/Speed-reading product decides, and with both or neither the role decides as before.</param>
+public record ResendVerificationEmailCommand(string Email, string? Product = null) : IRequest<Result>;
 
 public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerificationEmailCommand, Result>
 {
@@ -46,9 +50,19 @@ public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerif
             user.LastName,
             user.EmailVerificationToken ?? "",
             primaryRole
-        ), cancellationToken);
+        ) { Product = ResolveProduct(user, request.Product) }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
+    }
+
+    private static string? ResolveProduct(Identity.Domain.Entities.User user, string? requested)
+    {
+        if (PlatformProductExtensions.TryParseRouteValue(requested, out var product)
+            && product is PlatformProduct.Coaching or PlatformProduct.SpeedReading
+            && user.HasProductAccess(product))
+            return product.ToRouteValue();
+        var products = new[] { PlatformProduct.Coaching, PlatformProduct.SpeedReading }.Where(user.HasProductAccess).ToArray();
+        return products.Length == 1 ? products[0].ToRouteValue() : null;
     }
 }

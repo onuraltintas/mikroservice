@@ -75,7 +75,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
             // parent with its existing password, under the same rules as the other registrations.
             if (identityResult.Error.Code == "Identity.UserExists")
                 return await _enrollment.JoinAsync(request.Email, request.Password, PlatformProduct.Coaching, "parent",
-                    legalValidation.Value, null, cancellationToken);
+                    legalValidation.Value, string.IsNullOrEmpty(request.MfaCode) ? null : request.MfaCode, cancellationToken);
             return Result.Failure<RegistrationOutcome>(identityResult.Error);
         }
 

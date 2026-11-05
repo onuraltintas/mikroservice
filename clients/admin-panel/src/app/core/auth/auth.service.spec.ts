@@ -173,6 +173,7 @@ describe('AuthService browser session security', () => {
   // PR #111 second review H1: a resend names the Coaching product so the e-mail and link are the Coaching ones.
   it('asks for a Coaching verification e-mail when resending', async () => {
     const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(null, { status: 401, statusText: 'Unauthorized' });
     const pending = service.resendVerificationEmail('veli@example.test');
     const request = http.expectOne('/api/auth/resend-verification-email');
     expect(request.request.body).toEqual({ email: 'veli@example.test', product: 'coaching' });

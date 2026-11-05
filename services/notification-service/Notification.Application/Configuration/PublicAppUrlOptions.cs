@@ -77,13 +77,23 @@ public sealed class PublicAppUrlOptions
     public static bool IsSpeedReadingRole(string? role) =>
         !string.IsNullOrWhiteSpace(role) && SpeedReadingRoles.Contains(role.Trim());
 
+    /// <summary>Second review L5: an unknown product falls back to the role (as messages without one); consumers log it.</summary>
     private static bool IsSpeedReadingProduct(string? role, string? product) => product?.ToLowerInvariant() switch
     {
-        null => IsSpeedReadingRole(role),
         "coaching" => false,
         "speed-reading" => true,
-        _ => throw new InvalidOperationException("Unknown notification product.")
+        _ => IsSpeedReadingRole(role)
     };
+
+    /// <summary>Null (older message shape), "coaching" or "speed-reading".</summary>
+    public static bool IsKnownProduct(string? product) =>
+        product is null || product.ToLowerInvariant() is "coaching" or "speed-reading";
+
+    /// <summary>The admin-panel (Coaching site) page that reads <c>userId</c> and <c>token</c>.</summary>
+    public const string CoachingEmailVerificationPath = "/auth/confirm-email";
+
+    /// <summary>The speed-reading app page that reads <c>token</c> and <c>userId</c>.</summary>
+    public const string SpeedReadingEmailVerificationPath = "/auth/verify-email";
 
     public string ResolveBaseUrl(string? role = null) => ResolveBaseUrl(role, null);
 
@@ -107,7 +117,12 @@ public sealed class PublicAppUrlOptions
     public string BuildEmailVerificationLink(Guid userId, string token, string? role, string? product)
     {
         var baseUrl = ResolveBaseUrl(role, product);
-        return $"{baseUrl}/auth/verify-email?token={Uri.EscapeDataString(token)}&userId={Uri.EscapeDataString(userId.ToString())}";
+        var id = Uri.EscapeDataString(userId.ToString());
+        var value = Uri.EscapeDataString(token);
+        // PR #111 second review H1: each site's own verification page; the Coaching site has no /auth/verify-email.
+        return IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
+            ? $"{baseUrl}{SpeedReadingEmailVerificationPath}?token={value}&userId={id}"
+            : $"{baseUrl}{CoachingEmailVerificationPath}?userId={id}&token={value}";
     }
 
     public string BuildPasswordResetLink(string token, string email, string? role = null) =>

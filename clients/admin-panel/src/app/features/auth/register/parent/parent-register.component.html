@@ -135,6 +135,14 @@
                             eşleşmiyor</mat-error>
                     </mat-form-field>
 
+                    @if (mfaRequired()) {
+                        <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>İki adımlı doğrulama kodu</mat-label>
+                            <input matInput [formControl]="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+                            <mat-hint>Mevcut hesabında iki adımlı doğrulama açık. Doğrulama uygulamandaki yeni kodu gir.</mat-hint>
+                        </mat-form-field>
+                    }
+
                     <app-registration-legal-consent product="coaching"
                         (acceptancesChange)="legalAcceptances = $event"
                         (readinessChange)="legalReady = $event"></app-registration-legal-consent>

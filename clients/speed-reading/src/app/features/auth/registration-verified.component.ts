@@ -23,7 +23,8 @@ import { MatIconModule } from '@angular/material/icon';
   styles: [`
     .verified-success { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .85rem; border-radius: .75rem;
       color: var(--ui-success); background: var(--ui-success-soft); line-height: 1.6; }
-    h3 { margin: 0; font-size: 1rem; outline: none; }
+    h3 { margin: 0; font-size: 1rem; border-radius: .25rem; }
+    h3:focus { outline: 2px solid currentColor; outline-offset: 4px; }
     p, a { flex-basis: 100%; margin: 0; }
   `]
 })

@@ -183,6 +183,25 @@ public class InstitutionAdmin : Entity
         };
     }
 
+    /// <summary>
+    /// A link an existing account made for itself by joining another service (mirrors its link there).
+    /// Marked so that a later verified external claim of an unconfirmed account removes only these.
+    /// </summary>
+    public static InstitutionAdmin CreateByExistingAccountJoin(
+        Guid userId,
+        Guid institutionId,
+        InstitutionAdminRole role,
+        PlatformProduct product)
+    {
+        var admin = Create(userId, institutionId, role, product);
+        admin.CreatedBy = ExistingAccountJoinMarker(userId);
+        return admin;
+    }
+
+    public static string ExistingAccountJoinMarker(Guid userId) => $"existing-account-join:{userId:N}";
+
+    public bool IsExistingAccountJoinLink() => CreatedBy == ExistingAccountJoinMarker(UserId);
+
     public void ChangeRole(InstitutionAdminRole newRole)
     {
         Role = newRole;
