@@ -100,7 +100,7 @@ public sealed class CoachingAutomaticPreviewTests(PostgresFixture postgres)
         Assert.Throws<ArgumentException>(() => CoachingAutomaticStudyPlanPreviewService.Validate(new(date, 7, -1, [new(id, 30)])));
         Assert.Throws<ArgumentException>(() => CoachingAutomaticStudyPlanPreviewService.Validate(new(date, 7, 0, [])));
         Assert.Throws<ArgumentException>(() => CoachingAutomaticStudyPlanPreviewService.Validate(new(date, 7, 0, [new(id, 0)])));
-        Assert.Throws<ArgumentException>(() => CoachingAutomaticStudyPlanPreviewService.Validate(new(date, 7, 0, [new(id, 1441)])));
+        Assert.Throws<ArgumentException>(() => CoachingAutomaticStudyPlanPreviewService.Validate(new(date, 7, 0, [new(id, 4321)])));
         Assert.Throws<ArgumentException>(() => CoachingAutomaticStudyPlanPreviewService.Validate(new(date, 7, 0, [new(id, 30), new(id, 30)])));
         Assert.Throws<ArgumentException>(() => CoachingAutomaticStudyPlanPreviewService.Validate(new(date, 7, 0, [new(Guid.Empty, 30)])));
     }
