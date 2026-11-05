@@ -106,12 +106,41 @@ ihmal edilebilir**; asıl belirsizlik net → puan adımındadır.
 ÖSYM'nin 2026'da çapa/ölçek kuralını değiştirmiş olmasıdır (aşağıya bakın). Bundan büyük belirsizlik zaten denemelerin
 kendisindedir (deneme zorluğu gerçek sınavdan farklıdır); ekran bu yüzden aralık ve "Yaklaşık tahmin" gösterir.
 
+### 0,5 ham puan koşulu (puan hesaplanmayan puan türleri)
+
+ÖSYM bir puan türünü yalnız adayın o puan türü için sayılan testlerden birinde **en az 0,5 ham puanı** (doğru − yanlış/4)
+varsa hesaplar. Kaynak: 2026-YKS Başvuru Kılavuzu, Tablo 1D
+(<https://dokuman.osym.gov.tr/pdfdokuman/2026/YKS/basvuru_kilavuz06022026.pdf>, SHA-256
+`67c0aba07a942365e8ee059ef1c63a91151a3b02267d463c58681dd9ce6603c1`, PDF s. 51–52 / basılı s. 47–48; resmî PDF'ten
+sunucu operatörü tarafından doğrulandı, 01.11.2026):
+
+| Puan türü | Koşul |
+|---|---|
+| TYT | Türkçe **ya da** Temel Matematik testinden ≥ 0,5 |
+| SAY | TYT koşulu **ve** (AYT Matematik **ya da** AYT Fen Bilimleri testinden ≥ 0,5) |
+| EA | TYT koşulu **ve** (AYT Matematik **ya da** AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1 testinden ≥ 0,5) |
+| SÖZ | TYT koşulu **ve** (AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1 **ya da** Sosyal Bilimler-2 testinden ≥ 0,5) |
+| DİL | TYT koşulu **ve** YDT Yabancı Dil testinden ≥ 0,5 |
+
+TYT puanı hesaplanmazsa SAY, EA, SÖZ ve DİL de hesaplanmaz. Testler deneme bölümlerinden `derive.py`'deki `SECTIONS`
+eşlemesiyle oluşur: AYT Fen Bilimleri = Fizik + Kimya + Biyoloji; Türk Dili ve Edebiyatı-Sosyal Bilimler-1 = Edebiyat +
+Tarih-1 + Coğrafya-1; Sosyal Bilimler-2 = Tarih-2 + Coğrafya-2 + Felsefe Grubu + Din Kültürü. Platformda her bölümün neti
+zaten doğru − yanlış/4'tür; testin ham puanı bölüm netlerinin toplamıdır.
+
+Uygulama (`MinRawScoreRules`, Coaching.Domain): tahmin son üç denemenin ortalamasını kullandığı için koşul, aynı
+denemelerde her testin **ortalama** ham puanına uygulanır. Koşulu sağlamayan puan türü için puan ve sıralama verilmez;
+yanıt `notComputed` listesinde `notComputedReason: "minRawScore"` ve sağlanmayan koşullardaki testlerin ham puanlarıyla
+(yüzde birlere kesilerek, ör. 0,499 → 0,49) döner; hedef bu puan türündeyse `target.notComputedReason` da dolar.
+Ekranlar "Bu puan türünde puan hesaplanmaz: Türkçe ya da Temel Matematik testinden en az 0,5 ham puan gerekir." gibi
+puan türüne özgü testleri yazar. Puan modeli dosyası (`puan-modelleri-2026.csv`) bu koşuldan etkilenmez.
+
 ## Sınırlamalar ve açık konular
 
 - **Yöntemin 2026 geçerliliği**: ağırlıklar ve 150/170 çapaları ÖSYM'nin 2020 raporundan; 2026 kılavuzunun puan hesabı
   bölümü (Kılavuz 3.10.1, Tablo 1C–1E, <https://dokuman.osym.gov.tr/pdfdokuman/2026/YKS/basvuru_kilavuz06022026.pdf>)
-  araçla okunamadı. 2026 SSS'si TYT'nin %40 ağırlığını ve OBP kurallarını doğruluyor. Yüklemeden önce bir kişinin
-  kılavuz s. 29 ve s. 47–48'deki tabloyla karşılaştırması önerilir.
+  araçla okunamadı. 2026 SSS'si TYT'nin %40 ağırlığını ve OBP kurallarını doğruluyor. Tablo 1D'deki 0,5 ham puan koşulu
+  01.11.2026'da resmî PDF'ten doğrulandı ve uygulandı (yukarıya bakın); ağırlıklar için bir kişinin kılavuz s. 29 ve
+  s. 47–48'deki tabloyla karşılaştırması hâlâ önerilir.
 - **En yüksek puan = tam net varsayımı**: TYT'de 5 aday 500 aldığı için güvenli; SAY/EA/SÖZ'de 500 alan tek aday tam
   net yapmadıysa katsayılar biraz (SAY/EA <%1, SÖZ birkaç %) düşük kalır.
 - **Çapa altı puanlar** (TYT < 150, diğerleri < 170) ÖSYM'de farklı eğimle hesaplanır; model aynı doğruyu sürdürür.

@@ -202,6 +202,95 @@ public sealed class CoachingScoreEstimateTests
         lgs.ExamsUsed.Should().Be(2, "the student's own copy of the institution's deneme on the same day is a duplicate");
     }
 
+    // 01.11.2026: ÖSYM computes TYT only with at least 0,5 ham puan in Türkçe or Temel Matematik (2026 YKS Kılavuzu, Tablo 1D).
+    [Fact]
+    public async Task TytIsNotComputedWithoutHalfARawPointInTurkceOrTemelMatematik()
+    {
+        await using var s = await Setup.CreateAsync(models: true);
+        s.Exam("TYT", new(2026, 10, 1), answers: [("TUR", 0, 2), ("MAT", 1, 3), ("FIZ", 7, 0), ("TAR", 5, 0)]);
+        await s.F.Db.SaveChangesAsync();
+
+        var estimate = await s.Service.EstimateAsync(s.Student, s.Student, null, default);
+
+        estimate.Estimates.Should().BeEmpty("there is no TYT score or rank");
+        estimate.Notice.Should().BeNull("the reason is given for the score type, not as a missing-exam notice");
+        var tyt = estimate.NotComputed.Should().ContainSingle().Subject;
+        (tyt.ScoreType, tyt.Name, tyt.ModelYear, tyt.NotComputedReason, tyt.ExamsUsed, tyt.LastExamDate)
+            .Should().Be(("TYT", "TYT", 2025, "minRawScore", 1, new DateTime(2026, 10, 1)));
+        tyt.FailedConditions.Single().AnyOf.Select(x => (x.Code, x.Name, x.RawScore)).Should().Equal(("TUR", "Türkçe", -0.5m), ("TMAT", "Temel Matematik", 0.25m));
+    }
+
+    // The estimate averages the last three exams, so the condition is read on the average ham puan of each test.
+    [Fact]
+    public async Task TheConditionUsesTheAverageRawScoreOfTheExamsUsed()
+    {
+        await using var s = await Setup.CreateAsync(models: true);
+        s.Exam("TYT", new(2026, 9, 1), answers: [("TUR", 0, 0)]);
+        s.Exam("TYT", new(2026, 10, 1), answers: [("TUR", 1, 0)]);
+        await s.F.Db.SaveChangesAsync();
+
+        var estimate = await s.Service.EstimateAsync(s.Student, s.Student, null, default);
+
+        estimate.NotComputed.Should().BeEmpty("Türkçe averages 0,5");
+        estimate.Estimates.Single().ScoreType.Should().Be("TYT");
+
+        s.Exam("TYT", new(2026, 10, 10), answers: [("TUR", 0, 1)]);
+        await s.F.Db.SaveChangesAsync();
+        estimate = await s.Service.EstimateAsync(s.Student, s.Student, null, default);
+        estimate.Estimates.Should().BeEmpty();
+        estimate.NotComputed.Single().FailedConditions.Single().AnyOf[0].RawScore.Should().Be(0.25m, "(0 + 1 − 0,25) / 3");
+    }
+
+    // SAY needs TYT's condition and AYT Matematik or AYT Fen Bilimleri (Fizik + Kimya + Biyoloji); the target says why it has no gap.
+    [Fact]
+    public async Task SayIsNotComputedWithoutHalfARawPointInAytMatematikOrFenBilimleri()
+    {
+        await using var s = await Setup.CreateAsync(models: true, extra: SayModel);
+        s.Exam("TYT", new(2026, 10, 1), turkish: 20, math: 10);
+        s.Exam("AYT_SAY", new(2026, 10, 2), answers: [("MAT", 0, 1), ("FIZ", 1, 2), ("KIM", 0, 1), ("BIO", 0, 0)]);
+        var program = TargetUniversityProgram.Create("p", "Üniversite", "Bilgisayar Mühendisliği", null, "Bachelor", "SAY"); program.SetActive(true);
+        var goal = AcademicGoal.Create(s.Student, "Bilgisayar", GoalCategory.ExamPreparation); goal.SetCatalogTarget(program.Id, null);
+        s.F.Db.AddRange(program, goal); await s.F.Db.SaveChangesAsync();
+        s.F.Db.Add(StudentPrimaryGoal.Create(s.Student, goal.Id)); await s.F.Db.SaveChangesAsync();
+
+        var estimate = await s.Service.EstimateAsync(s.Student, s.Student, null, default);
+
+        estimate.Estimates.Select(x => x.ScoreType).Should().Equal("TYT");
+        var say = estimate.NotComputed.Should().ContainSingle().Subject;
+        (say.ScoreType, say.Name, say.NotComputedReason, say.ExamsUsed, say.LastExamDate).Should().Be(("SAY", "YKS Sayısal", "minRawScore", 1, new DateTime(2026, 10, 2)));
+        say.FailedConditions.Single().AnyOf.Select(x => (x.Code, x.Name, x.RawScore))
+            .Should().Equal(("AMAT", "AYT Matematik", -0.25m), ("FEN", "AYT Fen Bilimleri", 0.25m));
+        (estimate.Target!.ScoreType, estimate.Target.ScoreGap, estimate.Target.NotComputedReason).Should().Be(("SAY", (decimal?)null, "minRawScore"));
+
+        s.Exam("AYT_SAY", new(2026, 10, 3), answers: [("FIZ", 2, 0)]);
+        await s.F.Db.SaveChangesAsync();
+        estimate = await s.Service.EstimateAsync(s.Student, s.Student, null, default);
+        estimate.NotComputed.Should().BeEmpty("Fen Bilimleri averages (0,25 + 2) / 2 = 1,125");
+        estimate.Estimates.Select(x => x.ScoreType).Should().Equal("TYT", "SAY");
+        estimate.Target!.NotComputedReason.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task WithoutTytsConditionSayIsNotComputedEither()
+    {
+        await using var s = await Setup.CreateAsync(models: true, extra: SayModel);
+        s.Exam("TYT", new(2026, 10, 1), answers: [("FIZ", 7, 0)]);
+        s.Exam("AYT_SAY", new(2026, 10, 2), math: 30);
+        await s.F.Db.SaveChangesAsync();
+
+        var estimate = await s.Service.EstimateAsync(s.Student, s.Student, null, default);
+
+        estimate.Estimates.Should().BeEmpty();
+        estimate.NotComputed.Select(x => (x.ScoreType, x.FailedConditions.Single().AnyOf[0].Code)).Should().Equal(("TYT", "TUR"), ("SAY", "TUR"));
+    }
+
+    /// <summary>SAY = 100 + 3 × each TYT and AYT net.</summary>
+    private static string SayModel =>
+        "taban;SAY;;;100;;\nobp;SAY;;;0,12;;\n" +
+        string.Join("\n", new[] { "TUR", "MAT", "TAR", "COG", "FEL", "DIN", "FIZ", "KIM", "BIO" }.Select(x => $"katsayi;SAY;TYT;{x};3;;")) + "\n" +
+        string.Join("\n", new[] { "MAT", "FIZ", "KIM", "BIO" }.Select(x => $"katsayi;SAY;AYT_SAY;{x};3;;")) + "\n" +
+        "siralama;SAY;;;400;10000;\nsiralama;SAY;;;200;500000;";
+
     [Fact]
     public void UploadingModelsIsForThePlatformAdministrator()
     {
@@ -217,7 +306,7 @@ public sealed class CoachingScoreEstimateTests
         public Guid Admin, Student;
         public CoachingScoreEstimateService Service => new(F.Db, F.Scope, TimeProvider.System);
 
-        public static async Task<Setup> CreateAsync(bool models = false)
+        public static async Task<Setup> CreateAsync(bool models = false, string? extra = null)
         {
             var s = new Setup();
             s.Admin = s.F.AddAccount("SystemAdmin");
@@ -225,27 +314,32 @@ public sealed class CoachingScoreEstimateTests
             await s.F.Store.ProvisionAsync(s.Student, "Student", default, new DateOnly(2010, 1, 1));
             if (models)
             {
-                var csv = Models();
+                var csv = Models() + (extra is null ? "" : "\n" + extra);
                 await s.Service.ApplyAsync(s.Admin, new(2025, csv, (await s.Service.PreviewAsync(s.Admin, new(2025, csv, null), default)).Fingerprint), default);
             }
             return s;
         }
 
-        /// <summary>A practice exam with the given correct answers and no wrong answers (the rest are blank).</summary>
-        public void Exam(string code, DateTime date, int turkish = 0, int math = 0, int science = 0, int others = 0, bool institution = false)
+        /// <summary>A practice exam with the given correct answers and no wrong answers (the rest are blank); `answers` sets
+        /// correct and wrong answers for the sections it names, and the sections it does not name are left blank.</summary>
+        public void Exam(string code, DateTime date, int turkish = 0, int math = 0, int science = 0, int others = 0, bool institution = false,
+            (string Section, int Correct, int Wrong)[]? answers = null)
         {
             var profile = PracticeExamRules.Profiles.Single(x => x.Code == code);
             var sections = profile.Sections.Select(section =>
             {
-                var correct = Math.Min(section.QuestionCount, section.Code switch { "TUR" => turkish, "MAT" => math, "FEN" => science, _ => code == "LGS" ? others : 0 });
-                return new PracticeSectionAnswers(section.Code, correct, 0, section.QuestionCount - correct);
+                var given = answers?.FirstOrDefault(x => x.Section == section.Code) ?? default;
+                var correct = answers is not null ? given.Correct
+                    : Math.Min(section.QuestionCount, section.Code switch { "TUR" => turkish, "MAT" => math, "FEN" => science, _ => code == "LGS" ? others : 0 });
+                var wrong = given.Wrong;
+                return new PracticeSectionAnswers(section.Code, correct, wrong, section.QuestionCount - correct - wrong);
             }).ToArray();
             var type = code == "LGS" ? ExamType.LGS : ExamType.YKS;
             var exam = institution
                 ? Coaching.Domain.Entities.Exam.CreateInstitutionWide(Admin, Guid.NewGuid(), $"{code} kurum denemesi", code, DateTime.SpecifyKind(date, DateTimeKind.Utc), 500, null)
                 : Coaching.Domain.Entities.Exam.CreateStudentReported(Student, $"{code} denemesi", type, DateTime.SpecifyKind(date, DateTimeKind.Utc), 500);
             var result = ExamResult.Create(exam.Id, Student, 0);
-            result.SetAnswerStatistics(sections.Sum(x => x.Correct), 0, sections.Sum(x => x.Empty));
+            result.SetAnswerStatistics(sections.Sum(x => x.Correct), sections.Sum(x => x.Wrong), sections.Sum(x => x.Empty));
             result.SetPracticeExam(new(code, sections), type);
             exam.AddResult(result);
             F.Db.Add(exam);

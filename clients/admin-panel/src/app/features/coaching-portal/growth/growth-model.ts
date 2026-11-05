@@ -1,5 +1,5 @@
 import { StudentExamOverviewItem, StudentExamSource, StudentExamSubject, StudentExamTrend } from '../../../core/services/coaching-student-exam-overview.service';
-import { ScoreEstimate } from '../../../core/services/coaching-score-estimate.service';
+import { ScoreEstimate, notComputedText } from '../../../core/services/coaching-score-estimate.service';
 import { CsTone } from '../ui';
 
 /**
@@ -78,6 +78,10 @@ export function goalGauge(estimate: ScoreEstimate, childName: string | null = nu
   const now = estimate.estimates.find(x => x.scoreType === target.scoreType) ?? null;
   const missingData = target.targetScore === null && target.targetRank === null;
   const rows: GaugeRow[] = [];
+  // 01.11.2026: ÖSYM does not compute the target's score type (0,5 ham puan, 2026 YKS Kılavuzu Tablo 1D): say which tests.
+  if (target.notComputedReason)
+    return { targetName: target.targetName, scoreType: target.scoreType, rows, reached: false, missingData: false,
+      headline: notComputedText(estimate.notComputed?.find(x => x.scoreType === target.scoreType) ?? { notComputedReason: target.notComputedReason, failedConditions: [] }) };
   if (!missingData && now) {
     if (target.targetScore !== null) rows.push({ label: 'Puan', current: decimal.format(now.score), target: decimal.format(target.targetScore),
       percent: share(now.score, target.targetScore), text: `Şu an ${decimal.format(now.score)}, hedef ${decimal.format(target.targetScore)}` });

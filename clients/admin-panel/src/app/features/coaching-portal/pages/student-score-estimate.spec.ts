@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { ScoreEstimate, diplomaRankNote, estimateMethodNote } from '../../../core/services/coaching-score-estimate.service';
+import { ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText } from '../../../core/services/coaching-score-estimate.service';
 import { CoachingScoreModelsComponent } from '../../dashboard/pages/coaching-score-models';
 import { DASHBOARD_ROUTES } from '../../dashboard/dashboard.routes';
 import { StudentScoreEstimateComponent } from './student-score-estimate.component';
@@ -69,6 +69,46 @@ describe('O5 score estimate', () => {
     const noData = { targetName: 'Yeni Bölüm', scoreType: 'DIL', targetScore: null, targetRank: null, targetPercentile: null, scoreGap: null, netGap: null, rankGap: null, reached: false };
     expect(component.targetText(noData)).toContain('taban puanı ya da sıralama verisi yok');
     expect(component.targetText({ ...noData, targetScore: 400 })).toContain('henüz tahmin yok');
+  });
+
+  // 01.11.2026: ÖSYM computes a YKS score type only with at least 0,5 ham puan in one of its tests (2026 YKS Kılavuzu, Tablo 1D).
+  const tytNotComputed: ScoreTypeNotComputed = { scoreType: 'TYT', name: 'TYT', modelYear: 2026, notComputedReason: 'minRawScore', examsUsed: 2,
+    lastExamDate: '2026-10-15T00:00:00Z', failedConditions: [{ anyOf: [{ code: 'TUR', name: 'Türkçe', rawScore: 0.25 }, { code: 'TMAT', name: 'Temel Matematik', rawScore: 0 }] }] };
+  const sayNotComputed: ScoreTypeNotComputed = { ...tytNotComputed, scoreType: 'SAY', name: 'YKS Sayısal', failedConditions: [
+    { anyOf: [{ code: 'AMAT', name: 'AYT Matematik', rawScore: -0.25 }, { code: 'FEN', name: 'AYT Fen Bilimleri', rawScore: 0.49 }] }] };
+
+  it('says which tests need 0,5 ham puan when a score type is not computed', () => {
+    expect(notComputedText(tytNotComputed)).toBe('Bu puan türünde puan hesaplanmaz: Türkçe ya da Temel Matematik testinden en az 0,5 ham puan gerekir.');
+    expect(notComputedText(sayNotComputed)).toBe('Bu puan türünde puan hesaplanmaz: AYT Matematik ya da AYT Fen Bilimleri testinden en az 0,5 ham puan gerekir.');
+    expect(notComputedText({ ...sayNotComputed, scoreType: 'DIL', failedConditions: [{ anyOf: [{ code: 'YD', name: 'YDT Yabancı Dil', rawScore: 0 }] }] }))
+      .toBe('Bu puan türünde puan hesaplanmaz: YDT Yabancı Dil testinden en az 0,5 ham puan gerekir.');
+    expect(notComputedText({ ...sayNotComputed, failedConditions: [...tytNotComputed.failedConditions, ...sayNotComputed.failedConditions] }))
+      .toBe('Bu puan türünde puan hesaplanmaz: Türkçe ya da Temel Matematik testinden ve AYT Matematik ya da AYT Fen Bilimleri testinden en az 0,5 ham puan gerekir.');
+    expect(notComputedText({ ...tytNotComputed, notComputedReason: 'other' })).toBe('Bu puan türünde puan hesaplanmaz.');
+  });
+
+  it('shows a not-computed score type without a score or rank, next to the computed ones', () => {
+    const { fixture, http } = setup('student-1');
+    http.expectOne(r => r.url.endsWith('/score-estimate')).flush({ ...estimate, estimates: [estimate.estimates[1]], notComputed: [tytNotComputed],
+      target: { targetName: 'Bir Bölüm', scoreType: 'TYT', targetScore: 300, targetRank: null, targetPercentile: null, scoreGap: null, netGap: null, rankGap: null,
+        reached: false, notComputedReason: 'minRawScore' } });
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const row = el.querySelector('[data-testid="estimate-not-computed"]')!;
+    expect(row.textContent).toContain('TYT: puan hesaplanmaz');
+    expect(row.textContent).toContain('Bu puan türünde puan hesaplanmaz: Türkçe ya da Temel Matematik testinden en az 0,5 ham puan gerekir.');
+    expect(row.textContent).toContain('Son 2 denemenin ortalama ham puanı: Türkçe 0,25 · Temel Matematik 0');
+    expect(row.textContent).not.toContain('Yaklaşık tahmin'); expect(row.textContent).not.toContain('sıralama');
+    expect(el.querySelectorAll('[data-testid="estimate-approximate"]')).toHaveLength(1);
+    expect(el.querySelector('[data-testid="score-target"]')!.textContent).toContain('Bu hedefin puan türünde (TYT) puan hesaplanmadığı için hedefe olan fark gösterilemiyor.');
+    expect(el.querySelector('#diploma-grade')).not.toBeNull();
+  });
+
+  it('keeps working with an older response without notComputed', () => {
+    const { fixture, http, text } = setup();
+    http.expectOne(r => r.url.endsWith('/score-estimate')).flush(estimate); fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="estimate-not-computed"]')).toBeNull();
+    expect(text()).toContain('TYT: yaklaşık 250 puan');
   });
 
   it('adds the diploma grade for YKS and remembers it on this device', () => {

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { CoachingScoreEstimateService, ESTIMATE_LABEL, ScoreEstimate, diplomaRankNote, estimateMethodNote } from '../../../core/services/coaching-score-estimate.service';
+import { CoachingScoreEstimateService, ESTIMATE_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText } from '../../../core/services/coaching-score-estimate.service';
 import { CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent } from '../ui';
 import { goalGauge } from './growth-model';
 import { possessive } from '../parent/parent-model';
@@ -44,7 +44,7 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
         <cs-empty-state title="Bir hedef seç" text="Okulunu ya da bölümünü seçtiğinde ona ne kadar kaldığını burada gösteririz." />
       }
       @if (result.notice) { <p class="cs-growth-muted">{{ result.notice }}</p> }
-      @if (result.estimates.length) {
+      @if (result.estimates.length || result.notComputed?.length) {
         <h2 class="cs-growth-section-title">{{ parent() ? 'Puan tahmini' : 'Puan tahminin' }}</h2>
         <div class="cs-estimate-grid">
           @for (item of result.estimates; track item.scoreType) {
@@ -56,10 +56,19 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
               <p class="cs-growth-muted"><small><span data-testid="estimate-approximate">{{ label }}</span> · {{ item.modelYear }} verisiyle{{ item.includesDiplomaGrade ? ', diploma notu dahil' : '' }}</small></p>
             </cs-card>
           }
+          @for (item of result.notComputed ?? []; track item.scoreType) {
+            <cs-card data-testid="estimate-not-computed" class="cs-estimate">
+              <div class="cs-growth-card-head"><strong>{{ item.name }}</strong><cs-status-chip [label]="'son ' + item.examsUsed + ' deneme'" /></div>
+              <p><b>Puan hesaplanmaz</b></p>
+              <p class="cs-growth-muted"><small>{{ notComputed(item) }}</small></p>
+            </cs-card>
+          }
         </div>
-        <p class="cs-growth-muted" data-testid="estimate-method"><small>{{ methodNote() }}</small></p>
-        @if (diplomaNote(); as note) { <p class="cs-growth-muted"><small>{{ note }}</small></p> }
-        <p class="cs-growth-muted"><small>Bu bir tahmin. Gerçek puan ve sıralama her yıl adayların sonuçlarına göre değişir.</small></p>
+        @if (result.estimates.length) {
+          <p class="cs-growth-muted" data-testid="estimate-method"><small>{{ methodNote() }}</small></p>
+          @if (diplomaNote(); as note) { <p class="cs-growth-muted"><small>{{ note }}</small></p> }
+          <p class="cs-growth-muted"><small>Bu bir tahmin. Gerçek puan ve sıralama her yıl adayların sonuçlarına göre değişir.</small></p>
+        }
       }
       @if (!readonly() && hasYks()) {
         <form class="cs-diploma" (ngSubmit)="saveDiploma()">
@@ -89,7 +98,8 @@ export class StudentGoalSummaryComponent implements OnInit {
   readonly label = ESTIMATE_LABEL;
   readonly methodNote = computed(() => estimateMethodNote(this.data()?.estimates ?? []));
   readonly diplomaNote = computed(() => diplomaRankNote(this.data()?.estimates ?? []));
-  readonly hasYks = computed(() => this.data()?.estimates.some(x => x.scoreType !== 'LGS') ?? false);
+  readonly hasYks = computed(() => [...this.data()?.estimates ?? [], ...this.data()?.notComputed ?? []].some(x => x.scoreType !== 'LGS'));
+  readonly notComputed = (item: ScoreTypeNotComputed) => notComputedText(item);
   diploma: number | null = null;
 
   ngOnInit() {
