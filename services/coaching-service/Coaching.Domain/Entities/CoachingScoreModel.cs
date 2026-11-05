@@ -33,6 +33,59 @@ public static class ScoreModelRules
     public static ScoreTypeDefinition Get(string code) => Types.Single(x => x.Code == code);
 }
 
+/// <summary>One ÖSYM test as the platform's practice exam sections make it up (Fen Bilimleri = Fizik + Kimya + Biyoloji).</summary>
+public sealed record RawScoreTest(string Code, string Name, string Exam, IReadOnlyList<string> Sections);
+/// <summary>A test's ham puan (doğru − yanlış/4) as shown to the user: cut, not rounded, to hundredths, so 0,499 reads 0,49.</summary>
+public sealed record RawScoreValue(string Code, string Name, decimal RawScore);
+/// <summary>A condition that fails: none of these tests reached the minimum ham puan; one of them would have been enough.</summary>
+public sealed record RawScoreCondition(IReadOnlyList<RawScoreValue> AnyOf);
+
+/// <summary>
+/// 01.11.2026: ÖSYM computes a YKS score type only if the candidate has at least 0,5 ham puan in one of the tests named for it
+/// (2026 YKS Kılavuzu, Tablo 1D). TYT: Türkçe or Temel Matematik. SAY: TYT's condition and AYT Matematik or AYT Fen Bilimleri.
+/// EA: TYT's and AYT Matematik or AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1. SÖZ: TYT's and Türk Dili ve Edebiyatı-Sosyal
+/// Bilimler-1 or Sosyal Bilimler-2. DİL: TYT's and YDT Yabancı Dil. LGS has no such condition.
+/// </summary>
+public static class MinRawScoreRules
+{
+    public const decimal Minimum = 0.5m;
+    public const string Reason = "minRawScore";
+
+    // ÖSYM tests made up of the platform's practice exam sections, as in content-packs/coaching-score-models/2026/derive.py
+    // (SECTIONS). AYT Fen Bilimleri = Fizik + Kimya + Biyoloji; Türk Dili ve Edebiyatı-Sosyal Bilimler-1 = Edebiyat + Tarih-1 +
+    // Coğrafya-1; Sosyal Bilimler-2 = Tarih-2 + Coğrafya-2 + Felsefe Grubu + Din Kültürü.
+    private static readonly RawScoreTest[] Tyt = [new("TUR", "Türkçe", "TYT", ["TUR"]), new("TMAT", "Temel Matematik", "TYT", ["MAT"])];
+    private static RawScoreTest Amat(string exam) => new("AMAT", "AYT Matematik", exam, ["MAT"]);
+    private static RawScoreTest TdeSb1(string exam) => new("TDESB1", "AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1", exam, ["EDB", "TAR1", "COG1"]);
+    private static readonly IReadOnlyDictionary<string, RawScoreTest[][]> Conditions = new Dictionary<string, RawScoreTest[][]>
+    {
+        ["LGS"] = [],
+        ["TYT"] = [Tyt],
+        ["SAY"] = [Tyt, [Amat("AYT_SAY"), new("FEN", "AYT Fen Bilimleri", "AYT_SAY", ["FIZ", "KIM", "BIO"])]],
+        ["EA"] = [Tyt, [Amat("AYT_EA"), TdeSb1("AYT_EA")]],
+        ["SOZ"] = [Tyt, [TdeSb1("AYT_SOZ"), new("SB2", "AYT Sosyal Bilimler-2", "AYT_SOZ", ["TAR2", "COG2", "FEL", "DIN"])]],
+        ["DIL"] = [Tyt, [new("YD", "YDT Yabancı Dil", "YDT_EN", ["ENG"])]]
+    };
+
+    /// <summary>The score type's conditions in order (TYT's first); each needs one of its tests to reach the minimum.</summary>
+    public static IReadOnlyList<IReadOnlyList<RawScoreTest>> ConditionsFor(string scoreType) =>
+        Conditions.TryGetValue(scoreType, out var conditions) ? conditions : throw new ArgumentException("Bilinmeyen puan türü.");
+
+    /// <summary>The test's ham puan in one practice exam: the sum of its sections' nets (each already doğru − yanlış/4).</summary>
+    public static decimal Raw(RawScoreTest test, PracticeExamSummary summary)
+    {
+        if (summary.ExamCode != test.Exam) throw new ArgumentException($"{test.Name} {test.Exam} denemesinden hesaplanır.");
+        return summary.Sections.Where(x => test.Sections.Contains(x.SectionCode)).Sum(x => x.Net);
+    }
+
+    /// <summary>The conditions of the score type that fail for these ham puanlar; empty means the score is computed.</summary>
+    public static IReadOnlyList<RawScoreCondition> Failed(string scoreType, Func<RawScoreTest, decimal> raw) =>
+        ConditionsFor(scoreType).Select(condition => condition.Select(test => (Test: test, Raw: raw(test))).ToArray())
+            .Where(values => values.All(x => x.Raw < Minimum))
+            .Select(values => new RawScoreCondition(values.Select(x => new RawScoreValue(x.Test.Code, x.Test.Name, Math.Floor(x.Raw * 100) / 100)).ToArray()))
+            .ToArray();
+}
+
 /// <summary>
 /// Roadmap O5: one year's model for a score type — score = base + Σ coefficient × section net (+ diploma weight × OBP for YKS),
 /// and a score-to-rank table read between its rows. Uploaded by the platform administrator every year.

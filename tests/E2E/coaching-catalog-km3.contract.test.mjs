@@ -93,14 +93,15 @@ test('YDS and YÖKDİL question types follow the counted 2026 booklets (80 quest
   }
 });
 
-test('every record is passive, sourced, weighted 1–5 and plannable (1–1440 minutes)', () => {
+test('every record is passive, sourced, weighted 1–5 and plannable (1–4320 minutes: the per-topic limit since 01.11.2026)', () => {
   const data = built();
   for (const lesson of data.lessons)
     for (const topic of lesson.topics) {
       assert.match(topic.sourceUrl, /^https:\/\/dokuman\.osym\.gov\.tr\//, `${lesson.code}/${topic.name}`);
       assert.ok(topic.yieldWeight >= 1 && topic.yieldWeight <= 5, `${lesson.code}/${topic.name}`);
-      assert.ok(topic.minutes >= 30 && topic.minutes <= 1440 && topic.minutes % 5 === 0, `${lesson.code}/${topic.name}: ${topic.minutes}`);
+      assert.ok(topic.minutes >= 30 && topic.minutes <= 4320 && topic.minutes % 5 === 0, `${lesson.code}/${topic.name}: ${topic.minutes}`);
       assert.ok(topic.rawMinutes >= topic.minutes);
+      assert.equal(topic.minutes, topic.rawMinutes, `${lesson.code}/${topic.name}: no KM3 estimate reaches 4320`);
       assert.match(topic.minutesNote, /koçluk tahmini/);
     }
   const sql = read('apply.sql');
@@ -172,7 +173,8 @@ test('editions get the real ÖSYM PDF hashes and a rerun accepts what production
   assert.ok(sql.includes(PRODUCTION_PACKAGE_SHA_C1CE79C));
   const readme = read('README.md');
   for (const sha of Object.values(documentHashes)) assert.ok(readme.includes(sha), sha);
-  assert.match(readme, /1440/);
+  assert.match(readme, /4320/);
+  assert.match(readme, /coaching-catalog-km3-minutes/);
 });
 
 test('YKS-equivalent references point at existing approved-catalog topics', { skip: !process.env.COACHING_CATALOG_SNAPSHOT_DIR && 'set COACHING_CATALOG_SNAPSHOT_DIR' }, () => {

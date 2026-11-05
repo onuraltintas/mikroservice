@@ -9,7 +9,7 @@ public sealed class StudyCatalogTopicOutcomeShareConfiguration : IEntityTypeConf
     public void Configure(EntityTypeBuilder<StudyCatalogTopicOutcomeShare> b)
     {
         b.ToTable("study_catalog_topic_outcome_shares", t => t.HasCheckConstraint("ck_topic_outcome_share_minutes",
-            "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND 1440"));
+            "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND " + StudyLimits.MaxTopicMinutes));
         b.HasKey(x => new { x.TopicId, x.OutcomeId, x.EstimateId });
         b.Property(x => x.ScopeDescription).HasMaxLength(2000).IsRequired();
         b.Ignore(x => x.TotalMinutes);

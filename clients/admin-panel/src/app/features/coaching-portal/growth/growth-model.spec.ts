@@ -76,6 +76,19 @@ describe('T6 growth model', () => {
     expect(gauge.rows[1].percent).toBeLessThan(50);
   });
 
+  // 01.11.2026: the target's score type is not computed (0,5 ham puan, 2026 YKS Kılavuzu Tablo 1D): say which tests, no gauge.
+  it('says why a target whose score type is not computed has no gap', () => {
+    const target = { targetName: 'Bir Bölüm', scoreType: 'SAY', targetScore: 440, targetRank: 30000, targetPercentile: null,
+      scoreGap: null, netGap: null, rankGap: null, reached: false, notComputedReason: 'minRawScore' };
+    const notComputed = [{ scoreType: 'SAY', name: 'YKS Sayısal', modelYear: 2026, notComputedReason: 'minRawScore', examsUsed: 1, lastExamDate: '2026-10-20',
+      failedConditions: [{ anyOf: [{ code: 'TUR', name: 'Türkçe', rawScore: 0 }, { code: 'TMAT', name: 'Temel Matematik', rawScore: 0.25 }] }] }];
+    const gauge = goalGauge({ estimates: [], notComputed, notice: null, target })!;
+    expect(gauge.rows).toEqual([]);
+    expect(gauge.missingData).toBe(false);
+    expect(gauge.headline).toBe('Bu puan türünde puan hesaplanmaz: Türkçe ya da Temel Matematik testinden en az 0,5 ham puan gerekir.');
+    expect(goalGauge({ estimates: [], notice: null, target }, 'Elif')!.headline).toBe('Bu puan türünde puan hesaplanmaz.');
+  });
+
   it('explains a target without taban or rank instead of a gap (K4)', () => {
     const gauge = goalGauge({ estimates: [], notice: null, target: { targetName: 'Bir lise', scoreType: 'LGS', targetScore: null, targetRank: null,
       targetPercentile: null, scoreGap: null, netGap: null, rankGap: null, reached: false } })!;

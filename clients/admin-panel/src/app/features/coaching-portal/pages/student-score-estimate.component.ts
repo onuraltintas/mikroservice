@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CoachingScoreEstimateService, ESTIMATE_LABEL, ScoreEstimate, ScoreTypeEstimate, diplomaRankNote, estimateMethodNote } from '../../../core/services/coaching-score-estimate.service';
+import { CoachingScoreEstimateService, ESTIMATE_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, rawScoresText } from '../../../core/services/coaching-score-estimate.service';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
 
@@ -24,6 +24,13 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
             Tahmini sıralama: {{ int(item.rankBest) }}–{{ int(item.rankWorst) }}
             @if (item.percentile !== null) { · Yüzdelik dilim: %{{ num(item.percentile) }} }
             <br><small>{{ item.modelYear }} verisiyle, son {{ item.examsUsed }} denemeye göre{{ item.includesDiplomaGrade ? ' · diploma notu dahil' : '' }}.</small>
+          </div>
+        }
+        @for (item of result.notComputed ?? []; track item.scoreType) {
+          <div class="plan-row" data-testid="estimate-not-computed">
+            <strong>{{ item.name }}: puan hesaplanmaz</strong><br>
+            {{ notComputed(item) }}<br>
+            <small>Son {{ item.examsUsed }} denemenin ortalama ham puanı: {{ rawScores(item) }}.</small>
           </div>
         }
         @for (item of result.languageScores ?? []; track item.examCode) {
@@ -83,12 +90,16 @@ export class StudentScoreEstimateComponent implements OnInit {
   method(result: ScoreEstimate): string | null { return estimateMethodNote(result.estimates); }
   diplomaNote(result: ScoreEstimate): string | null { return diplomaRankNote(result.estimates); }
 
-  hasYks(result: ScoreEstimate): boolean { return result.estimates.some((x: ScoreTypeEstimate) => x.scoreType !== 'LGS'); }
+  hasYks(result: ScoreEstimate): boolean { return [...result.estimates, ...result.notComputed ?? []].some(x => x.scoreType !== 'LGS'); }
+  notComputed(item: ScoreTypeNotComputed): string { return notComputedText(item); }
+  rawScores(item: ScoreTypeNotComputed): string { return rawScoresText(item); }
 
   targetText(target: NonNullable<ScoreEstimate['target']>): string {
     // K4 (31.10.2026): without a taban or a rank on the target no gap can be shown, whatever the estimate.
     if (target.targetScore === null && target.targetRank === null)
       return 'Bu hedefin taban puanı ya da sıralama verisi yok; bu yüzden hedefe olan fark hesaplanamıyor.';
+    // 01.11.2026: ÖSYM does not compute the target's score type for these ham puanlar (2026 YKS Kılavuzu, Tablo 1D).
+    if (target.notComputedReason) return `Bu hedefin puan türünde (${target.scoreType}) puan hesaplanmadığı için hedefe olan fark gösterilemiyor.`;
     if (target.scoreGap === null && target.rankGap === null) return 'Bu hedefin puan türü için henüz tahmin yok; o puan türünde bir deneme gir.';
     if (target.reached) return 'Tahmini puanın hedefin tabanına ulaşıyor. Bu çizgiyi korumaya çalış.';
     if (target.scoreGap !== null) return `Hedefe yaklaşık ${this.num(target.netGap ?? 0)} net (${this.num(target.scoreGap)} puan) kaldı.`;

@@ -23,9 +23,9 @@ public static class StudyPlanDraftScheduler
         if (startDate == default || days is < 1 or > 90 || startDate.DayNumber > DateOnly.MaxValue.DayNumber - (days - 1))
             throw new ArgumentException("Planning dates must cover 1–90 valid local calendar days.");
         if (windows.Count > 42 || windows.Any(x => x is null)
-            || topics.Count > 500 || topics.Any(x => x is null || x.TopicId == Guid.Empty || x.RequiredMinutes is < 1 or > 1440)
+            || topics.Count > 500 || topics.Any(x => x is null || x.TopicId == Guid.Empty || x.RequiredMinutes is < 1 or > StudyLimits.MaxTopicMinutes)
             || topics.Select(x => x.TopicId).Distinct().Count() != topics.Count
-            || reservations.Count > 500 || reservations.Any(x => x is null || x.Minutes is < 1 or > 1440))
+            || reservations.Count > 500 || reservations.Any(x => x is null || x.Minutes is < 1 or > StudyLimits.MaxDayMinutes))
             throw new ArgumentException("Invalid planning inputs or limits exceeded.");
         var ordered = windows.OrderBy(x => x.Day).ThenBy(x => x.StartMinute).ToArray();
         for (var i = 1; i < ordered.Length; i++)
@@ -47,7 +47,9 @@ public static class StudyPlanDraftScheduler
         var tasks = new List<ScheduledStudyTopic>();
         var unscheduled = new List<UnscheduledStudyTopic>();
         var dayIndex = 0;
-        // Input order is explicit priority; a topic may span dates, never exceed a day's remaining capacity.
+        // Input order is explicit priority; a topic may span dates, never exceed a day's remaining capacity. A day's capacity
+        // comes from availability windows (at most 1440 minutes a day), so a topic of up to 4320 minutes becomes several
+        // tasks on several days and every task stays within one day.
         foreach (var topic in topics)
         {
             var remaining = topic.RequiredMinutes;

@@ -72,7 +72,7 @@ public sealed class CoachingOutcomePilotTests
     }
 
     [Theory]
-    [InlineData(-1, 20, 5)] [InlineData(0, 0, 0)] [InlineData(1440, 1, 0)]
+    [InlineData(-1, 20, 5)] [InlineData(0, 0, 0)] [InlineData(4320, 1, 0)] [InlineData(0, 4321, 0)]
     public void DurationRejectsInvalidTotals(int learning, int practice, int check)
         => Assert.Throws<ArgumentException>(() => OutcomeDurationEstimate.Create(Guid.NewGuid(), 1, learning, practice, check,
             "OfficialBudgetDraft", "Low", "Taslak dayanak", null));

@@ -76,6 +76,39 @@ public sealed class CoachingScoreEstimatePostgresTests
         Assert.Equal("AGS ve ÖABT için puan tahmini henüz yok. Netlerini Denemeler bölümünden izleyebilirsin.", estimate.Notice);
     }
 
+    [CurriculumPostgresTests.LocalPostgresFact]
+    // 01.11.2026: ÖSYM's 0,5 ham puan condition (2026 YKS Kılavuzu, Tablo 1D) on the stored practice exams: TYT is not computed
+    // with 0,25 in Türkçe and 0 in Temel Matematik, whatever the other tests.
+    public async Task TytWithoutHalfARawPointInTurkceOrTemelMatematikIsNotComputedOnPostgres()
+    {
+        await using var f = await CurriculumPostgresTests.Pg.Create();
+        var student = Guid.NewGuid(); var admin = Guid.NewGuid();
+        var service = new CoachingScoreEstimateService(f.Db, new Reader(student), TimeProvider.System);
+        var tyt = PracticeExamRules.Profiles.Single(x => x.Code == "TYT");
+        var csv = CoachingScoreEstimateService.Header + "\ntaban;TYT;;;100;;\n" +
+            string.Join("\n", tyt.Sections.Select(x => $"katsayi;TYT;TYT;{x.Code};3;;")) + "\nsiralama;TYT;;;400;10000;\nsiralama;TYT;;;200;800000;";
+        await service.ApplyAsync(admin, new(2026, csv, (await service.PreviewAsync(admin, new(2026, csv, null), default)).Fingerprint), default);
+
+        var sections = tyt.Sections.Select(x => x.Code switch
+        {
+            "TUR" => new PracticeSectionAnswers("TUR", 1, 3, 36),
+            "MAT" => new PracticeSectionAnswers("MAT", 0, 0, 40),
+            _ => new PracticeSectionAnswers(x.Code, x.QuestionCount, 0, 0)
+        }).ToArray();
+        var exam = Exam.CreateStudentReported(student, "TYT denemesi", ExamType.YKS, DateTime.UtcNow.Date, 500);
+        var result = ExamResult.Create(exam.Id, student, 0);
+        result.SetAnswerStatistics(sections.Sum(x => x.Correct), sections.Sum(x => x.Wrong), sections.Sum(x => x.Empty));
+        result.SetPracticeExam(new("TYT", sections), ExamType.YKS);
+        exam.AddResult(result); f.Db.Add(exam); await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
+
+        var estimate = await service.EstimateAsync(student, student, null, default);
+
+        Assert.Empty(estimate.Estimates);
+        var item = Assert.Single(estimate.NotComputed);
+        Assert.Equal(("TYT", "minRawScore"), (item.ScoreType, item.NotComputedReason));
+        Assert.Equal(new[] { ("TUR", 0.25m), ("TMAT", 0m) }, item.FailedConditions.Single().AnyOf.Select(x => (x.Code, x.RawScore)).ToArray());
+    }
+
     private sealed class Reader(Guid student) : ICoachingIdentityAuthorizationClient
     {
         public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken ct) => Task.FromResult<CoachingAdminAccessScope?>(null);
