@@ -239,8 +239,8 @@
     "clients/speed-reading/src/app/core/services/assignment.service.ts": "604ca06c051e616e7a2e4e152cf3c5e0f7b79e97790b20de23335f37d5312f3f",
     "clients/speed-reading/src/app/core/services/auth-recaptcha.service.spec.ts": "eff7a3c4c1d1fa4c3bf3c591f2300ec05a40ee8a0a993d39b33823100bc8e045",
     "clients/speed-reading/src/app/core/services/auth-recaptcha.service.ts": "2e17fa00c31067bada585730e2b3c1586e007cf90605f1c53198d105788b1675",
-    "clients/speed-reading/src/app/core/services/auth.service.spec.ts": "d63dcddf6fdbe344c1de905cf0d3edfce816f62f9ae909489980ee9b5ce2be85",
-    "clients/speed-reading/src/app/core/services/auth.service.ts": "c9b4e78b8a94e99a0ca6af7c439d080c9408179a819c3385316d31f0f94e374e",
+    "clients/speed-reading/src/app/core/services/auth.service.spec.ts": "d39e69a54cbfbec43b28a761ca50b8892bb2773ed86f7fc45fc60aec74a59d3f",
+    "clients/speed-reading/src/app/core/services/auth.service.ts": "391f2481b64e7d1ef35805d25368889a2d9c9feb32bde01a82e6be12237c383c",
     "clients/speed-reading/src/app/core/services/chart-config.service.ts": "d11c5e5e076ea0180bcce58ec553fe20f79baf4dcd904f32b6369ea37c33ed48",
     "clients/speed-reading/src/app/core/services/content-feedback.service.ts": "7d2d62cb05112a6d5914e38b90d0900a844e29938f21a808c609b831f83424ee",
     "clients/speed-reading/src/app/core/services/email-campaigns.service.ts": "6501a56f82a5d400222d5a3398b8d7eb85bc6d6164febbea50f9a3fc0515312b",
@@ -345,12 +345,12 @@
     "clients/speed-reading/src/app/features/auth/register/register.component.ts": "4502e63f72c59a2e293318460d78a7d2b280138b27c8ab43690fe2393dd39a3b",
     "clients/speed-reading/src/app/features/auth/registration-feedback.spec.ts": "21551e002da5aab014c6324e8c4686a0d7eacc6cd29b88a93b094feaa6513a8b",
     "clients/speed-reading/src/app/features/auth/registration-legal-consent.component.ts": "14f22a6f840a3c66cb3c362c2db2b8bca09e94f6dc6a61ff754da756da05156c",
-    "clients/speed-reading/src/app/features/auth/registration-outcome.spec.ts": "5b21df32fe1679698f54b47d20713f064acca1fd724ab010861d8eed184ac088",
+    "clients/speed-reading/src/app/features/auth/registration-outcome.spec.ts": "d4937fa53635f71cb2b5055dc9664d427aaceda641eb267976497a8fc5a5f8e6",
     "clients/speed-reading/src/app/features/auth/registration-outcome.ts": "58e2a102aaeb6b467130a339b07083e1fdf54b438509b6fde3374cb63cf0b45d",
     "clients/speed-reading/src/app/features/auth/registration-shell.component.html": "4866c860ed3eba757a7e56391526fe4057d286472001534f281af711311c023d",
     "clients/speed-reading/src/app/features/auth/registration-shell.component.scss": "94ab49aa14a0c8e03c48156f9179d956467b4d7fba314e879874eb5d3c63a963",
     "clients/speed-reading/src/app/features/auth/registration-shell.component.ts": "68e8e150a4679ae941e9263aa7346dd3403b18bee60e8f9d12a37bc88dbf225b",
-    "clients/speed-reading/src/app/features/auth/registration-verified.component.ts": "f76af7d88568540775c0ef2774f524ec91b5a9506adce4c010e763e453037e3c",
+    "clients/speed-reading/src/app/features/auth/registration-verified.component.ts": "0f229562288f52b88212f240d259cd4af63a6ed8f5ab5ba8cb7eac6b0c0afa0c",
     "clients/speed-reading/src/app/features/auth/reset-password/reset-password.component.html": "05b07c911373da2bedf2436d792d3f91d32ef441d294b5cb3d44d665a2de3cd2",
     "clients/speed-reading/src/app/features/auth/reset-password/reset-password.component.scss": "c325d263377e732e2220fbc634d0e29e703b9cb249909b84f4c8ea8797fa1eb4",
     "clients/speed-reading/src/app/features/auth/reset-password/reset-password.component.ts": "f393d3a97927bf6427ea3b658a1165e4d06e0a4b28fa01d7e29f2a753566440b",
@@ -2686,7 +2686,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "PR #111 review follow-up",
+    "purpose": "PR #111 second review",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2734,7 +2734,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "e7a724a6",
+    "previousBaselineCommit": "73c1c420",
     "removedSincePreviousBaseline": []
   }
 }
