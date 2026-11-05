@@ -128,7 +128,8 @@ public sealed class CoachingScoreEstimatePostgresTests
             Assert.Equal(count, await service.ApplyAsync(admin, new(2026, csv, preview.Fingerprint, "2026 modelleri yüklendi."), default));
         }
         Assert.Equal(20, await f.Db.Set<CoachingScoreModelVersion>().CountAsync());
-        f.Db.Add(StudentLearningContext.Create(student, 2026, LearningPurpose.Ags, DateTime.UtcNow.Year + 1, "OABT_SINIF", null));
+        f.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student),
+            StudentLearningContext.Create(student, 2026, LearningPurpose.Ags, DateTime.UtcNow.Year + 1, "OABT_SINIF", null));
         void Add(string code, Func<PracticeSection, PracticeSectionAnswers> answers)
         {
             var sections = PracticeExamRules.Profiles.Single(x => x.Code == code).Sections.Select(answers).ToArray();

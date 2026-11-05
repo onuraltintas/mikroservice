@@ -223,7 +223,8 @@ public sealed class CoachingScoreEstimatesAllExamsTests
         var model = await s.F.Db.Set<CoachingScoreModel>().AsNoTracking().SingleAsync(x => x.ScoreType == "LGS");
         var coefficients = model.Coefficients().ToDictionary(x => x.Section, x => x.Coefficient);
         coefficients.Values.Should().OnlyContain(x => x > 0);
-        new[] { "TUR", "MAT", "FEN" }.Should().OnlyContain(x => coefficients[x] > 2 * new[] { "INK", "DIN", "ENG" }.Max(y => coefficients[y]));
+        new[] { "TUR", "MAT", "FEN" }.Should().OnlyContain(x => coefficients[x] > 1.5m * new[] { "INK", "DIN", "ENG" }.Max(y => coefficients[y]),
+            "weight 4 against 1, divided by each test's standard deviation");
     }
 
     [Theory]

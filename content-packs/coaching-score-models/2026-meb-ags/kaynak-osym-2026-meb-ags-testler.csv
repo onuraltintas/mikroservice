@@ -1,0 +1,27 @@
+test;oturum;soru;ortalama;standart_sapma;aday;ad;kaynak
+SOZ;AGS;15;8.3;3.2;369008;Sözel Yetenek;osym-2026-meb-ags-sayisal-bilgiler
+SAY;AGS;15;3.4;3.9;369008;Sayısal Yetenek;osym-2026-meb-ags-sayisal-bilgiler
+TAR;AGS;6;2.7;2.1;369008;Tarih;osym-2026-meb-ags-sayisal-bilgiler
+COG;AGS;6;2.2;1.7;369008;Türkiye Coğrafyası;osym-2026-meb-ags-sayisal-bilgiler
+EGT;AGS;30;11.2;6.3;369008;Eğitimin Temelleri ve Türk Millî Eğitim Sistemi;osym-2026-meb-ags-sayisal-bilgiler
+MEV;AGS;8;2.5;2.4;369008;Mevzuat;osym-2026-meb-ags-sayisal-bilgiler
+OABT_TUR;OABT;50;25.5;9.8;17070;Türkçe;osym-2026-meb-ags-sayisal-bilgiler
+OABT_IMAT;OABT;50;19.2;9.2;16880;İlköğretim Matematik;osym-2026-meb-ags-sayisal-bilgiler
+OABT_FEN;OABT;50;16.5;8.7;13468;Fen Bilimleri;osym-2026-meb-ags-sayisal-bilgiler
+OABT_SOS;OABT;50;23.7;8.9;12597;Sosyal Bilgiler;osym-2026-meb-ags-sayisal-bilgiler
+OABT_TDE;OABT;50;16.6;10.8;20947;Türk Dili ve Edebiyatı;osym-2026-meb-ags-sayisal-bilgiler
+OABT_TAR;OABT;50;20.8;10.1;12720;Tarih;osym-2026-meb-ags-sayisal-bilgiler
+OABT_COG;OABT;50;16.7;10.2;6244;Coğrafya;osym-2026-meb-ags-sayisal-bilgiler
+OABT_MAT;OABT;50;13.6;7.7;10822;Matematik;osym-2026-meb-ags-sayisal-bilgiler
+OABT_FIZ;OABT;50;19.5;10.6;2509;Fizik;osym-2026-meb-ags-sayisal-bilgiler
+OABT_KIM;OABT;50;17.6;9.7;2812;Kimya/Kimya Teknolojisi;osym-2026-meb-ags-sayisal-bilgiler
+OABT_BIO;OABT;50;22.0;12.2;3818;Biyoloji;osym-2026-meb-ags-sayisal-bilgiler
+OABT_REH;OABT;50;33.5;9.2;23236;Rehberlik;osym-2026-meb-ags-sayisal-bilgiler
+OABT_SINIF;OABT;50;26.5;7.1;14936;Sınıf Öğretmenliği;osym-2026-meb-ags-sayisal-bilgiler
+OABT_OKUL;OABT;50;32.1;7.9;61068;Okul Öncesi;osym-2026-meb-ags-sayisal-bilgiler
+OABT_BED;OABT;50;15.8;9.1;13490;Beden Eğitimi;osym-2026-meb-ags-sayisal-bilgiler
+OABT_OZEL;OABT;50;31.7;7.4;6524;Özel Eğitim;osym-2026-meb-ags-sayisal-bilgiler
+OABT_DIN;OABT;50;22.1;9.6;50666;Din Kültürü ve Ahlak Bilgisi / İHL Meslek Dersleri;osym-2026-meb-ags-sayisal-bilgiler
+DIN_OAB;OABT_DIN;10;4.7;2.3;;İHL – Ortak Alan Bilgisi;osym-2026-meb-ags-sayisal-bilgiler
+DIN_TIB;OABT_DIN;23;9.9;5.4;;İHL – Temel İslam Bilimleri;osym-2026-meb-ags-sayisal-bilgiler
+DIN_ITF;OABT_DIN;17;7.5;3.4;;İHL – İslam Tarihi, Felsefe ve Din Bilimleri;osym-2026-meb-ags-sayisal-bilgiler
