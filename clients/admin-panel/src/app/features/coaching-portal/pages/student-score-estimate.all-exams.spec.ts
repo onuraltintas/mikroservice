@@ -32,7 +32,7 @@ describe('Paket B score estimates for every exam', () => {
       goal: { scoreType: 'P1', name: 'MEB-AGS P1', group: 'MEB-AGS', score: 64.4, scoreLow: 61.7, scoreHigh: 67.1, margin: 2.7, scaleMax: 100,
         label: 'Yaklaşık tahmin', exact: false, level: null, notComputedReason: null } });
     expect(text()).toContain('MEB-AGS P1: yaklaşık 64,4 puan (61,7–67,1)');
-    expect(text()).toContain('±2,7');
+    expect(text()).toContain('model payı ±2,7');
     expect(text()).toContain('LGS: yaklaşık 433,3 puan (420–446,6)');
     expect(text()).not.toContain('Tahmini sıralama');
     expect(el.querySelectorAll('[data-testid="estimate-approximate"]')).toHaveLength(2);

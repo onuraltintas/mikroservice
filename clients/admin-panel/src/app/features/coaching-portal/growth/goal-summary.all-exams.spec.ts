@@ -37,11 +37,11 @@ describe('Paket B Hedefim for every exam', () => {
     const el = render(ags);
     const hero = el.querySelector('[data-testid="goal-score"]')!;
     expect(hero.textContent).toContain('MEB-AGS P2 · İlköğretim Matematik');
-    expect(hero.textContent).toContain('Tahmini puanın 72,5 (±1,4)');
+    expect(hero.textContent).toContain('Tahmini puanın 72,5 (70,6–74,4)');
     expect(hero.textContent).toContain('Yaklaşık tahmin');
     expect(el.textContent).not.toContain('Bir hedef seç');
     const card = el.querySelector('[data-testid="estimate-card"]')!;
-    expect(card.textContent).toContain('70,6–74,4 arası · ±1,4');
+    expect(card.textContent).toContain('70,6–74,4 arası · model payı ±1,4');
     expect(card.textContent).not.toContain('Sıralama');
     expect(el.querySelector('#diploma-grade')).toBeNull();
   });

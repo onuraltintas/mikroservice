@@ -66,7 +66,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     });
     fixture.detectChanges();
     const card = fixture.nativeElement.querySelector('[data-testid="score-estimate"]') as HTMLElement;
-    expect(card.textContent).toContain('MEB-AGS P2 · Sınıf Öğretmenliği: yaklaşık 71,2 puan (69,5–72,9) · ±1,7');
+    expect(card.textContent).toContain('MEB-AGS P2 · Sınıf Öğretmenliği: yaklaşık 71,2 puan (69,5–72,9) · model payı ±1,7');
     expect(card.textContent).not.toContain('Tahmini sıralama');
     expect(card.textContent).toContain('YDS · İngilizce: 72,5 puan (72,5–72,5) · Seviye C');
     expect(card.textContent).not.toMatch(/\b(sen|senin|denemene|siz|sizin)\b/);

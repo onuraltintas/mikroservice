@@ -161,6 +161,25 @@ public sealed class CoachingScoreEstimatePostgresTests
         Assert.Empty(await f.Db.Database.GetPendingMigrationsAsync());
     }
 
+    [CurriculumPostgresTests.LocalPostgresFact]
+    // Review 06.11.2026: the previous release cannot read an LGS model without a rank table either, so Down refuses then too;
+    // without such rows it goes down and up again.
+    public async Task DownRefusesWhileAnLgsModelHasNoRankTable()
+    {
+        await using var f = await CurriculumPostgresTests.Pg.Create();
+        var admin = Guid.NewGuid();
+        var service = new CoachingScoreEstimateService(f.Db, new Reader(Guid.NewGuid()), TimeProvider.System);
+        await f.Db.GetService<IMigrator>().MigrateAsync("20261111090000_TopicMinutesCap4320");
+        await f.Db.Database.MigrateAsync(); f.Db.ChangeTracker.Clear();
+        var csv = await File.ReadAllTextAsync(Pack("2026-lgs", "puan-modelleri-2026-lgs.csv"));
+        await service.ApplyAsync(admin, new(2026, csv, (await service.PreviewAsync(admin, new(2026, csv, null), default)).Fingerprint, "LGS 2026 yüklendi."), default);
+
+        var error = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync("20261111090000_TopicMinutesCap4320"));
+        Assert.Contains("without a rank table", error.ToString());
+        Assert.Empty(await f.Db.Database.GetPendingMigrationsAsync());
+        Assert.Equal(0.2m, (await f.Db.Set<CoachingScoreModel>().AsNoTracking().SingleAsync()).UncertaintyShare);
+    }
+
     private static string Pack(string folder, string file)
     {
         var root = new DirectoryInfo(AppContext.BaseDirectory);

@@ -291,6 +291,141 @@ public sealed class CoachingScoreEstimatesAllExamsTests
         (restored.UncertaintyShare, restored.UncertaintyCap).Should().Be((0.2m, (decimal?)30m));
     }
 
+    // ---------- Review fixes (06.11.2026) ----------
+
+    [Theory]
+    [InlineData(440, "borderline", false)]   // inside the card's range 420–446,6
+    [InlineData(415, "reached", true)]       // under the range's low end
+    [InlineData(460, "below", false)]
+    public async Task AnLgsTargetIsReachedOnlyWhenTheWholeRangeIsAboveIt(int minimum, string status, bool reached)
+    {
+        await using var s = await Setup.CreateAsync(lgsPack: true);
+        s.Context(LearningPurpose.Lgs, null);
+        s.Exam("LGS", new() { ["TUR"] = (16, 0), ["MAT"] = (16, 0), ["FEN"] = (16, 0), ["INK"] = (8, 0), ["DIN"] = (8, 0), ["ENG"] = (8, 0) });
+        await s.Target(minimum);
+
+        var estimate = await s.Service.EstimateAsync(s.Student, s.Student, null, default);
+
+        var lgs = estimate.Estimates.Single();
+        (lgs.Score, lgs.ScoreLow, lgs.ScoreHigh).Should().Be((433.33m, 420m, 446.66m));
+        var target = estimate.Target!;
+        (target.Status, target.Reached, target.Margin, target.RankGap).Should().Be((status, reached, lgs.Margin, (int?)null));
+        target.ScoreGap.Should().Be(minimum - 433.33m);
+    }
+
+    [Fact]
+    public async Task TheGoalSaysWhyThereIsNoScore()
+    {
+        await using (var s = await Setup.CreateAsync())
+        {
+            s.Context(LearningPurpose.Lgs, null); await s.F.Db.SaveChangesAsync();
+            var goal = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Goal!;
+            (goal.ScoreType, goal.Score, goal.Reason).Should().Be(("LGS", (decimal?)null, "noModel"));
+        }
+        await using (var s = await Setup.CreateAsync(agsPack: true))
+        {
+            s.Context(LearningPurpose.Ags, "OABT_IMAT"); await s.F.Db.SaveChangesAsync();
+            (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Goal!.Reason.Should().Be("noExam");
+            s.Exam("AGS", new() { ["SOZ"] = (10, 0), ["SAY"] = (5, 0), ["TAR"] = (3, 0), ["COG"] = (3, 0), ["EGT"] = (15, 0), ["MEV"] = (4, 0) });
+            await s.F.Db.SaveChangesAsync();
+            var goal = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Goal!;
+            (goal.ScoreType, goal.Reason).Should().Be(("P2_IMAT", "missingExam"));
+            goal.MissingExams.Should().Equal("ÖABT · İlköğretim Matematik");
+        }
+        await using (var s = await Setup.CreateAsync(agsPack: true))
+        {
+            s.Context(LearningPurpose.Ags, null);
+            s.Exam("AGS", new() { ["SOZ"] = (10, 0), ["SAY"] = (5, 0), ["TAR"] = (3, 0), ["COG"] = (3, 0), ["EGT"] = (15, 0), ["MEV"] = (0, 0) });
+            await s.F.Db.SaveChangesAsync();
+            var goal = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Goal!;
+            (goal.Reason, goal.NotComputedReason).Should().Be(("notComputed", "minRawScore"));
+        }
+        await using (var s = await Setup.CreateAsync())
+        {
+            s.Context(LearningPurpose.Yds, null); await s.F.Db.SaveChangesAsync();
+            (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Goal!.Reason.Should().Be("noExam", "YDS needs no model");
+        }
+    }
+
+    [Fact]
+    public async Task TheRangeRowsAreOnlyForScoreTypesWithoutARequiredRankTableAndThePreviewShowsThem()
+    {
+        await using var s = await Setup.CreateAsync();
+        var tyt = CoachingScoreEstimateService.Header + "\ntaban;TYT;;;100;;\n" + string.Join("\n",
+            PracticeExamRules.Profiles.Single(x => x.Code == "TYT").Sections.Select(x => $"katsayi;TYT;TYT;{x.Code};3;;")) +
+            "\nsiralama;TYT;;;400;10000;\nsiralama;TYT;;;200;800000;\nbelirsizlik;TYT;;;0,1;;";
+        (await s.Service.PreviewAsync(s.Admin, new(2026, tyt, null), default)).Errors.Should().ContainSingle()
+            .Which.Message.Should().Be("Belirsizlik payı yalnız LGS ve MEB-AGS puan türlerinde kullanılır.");
+        var lgs = await File.ReadAllTextAsync(Pack("2026-lgs", "puan-modelleri-2026-lgs.csv"));
+        var item = (await s.Service.PreviewAsync(s.Admin, new(2026, lgs, null), default)).Models.Single();
+        (item.UncertaintyShare, item.UncertaintyCap).Should().Be((0.2m, (decimal?)30m));
+    }
+
+    [Theory]
+    // Mixed profiles: (correct, wrong) per section TUR, MAT, FEN, INK, DIN, ENG.
+    [InlineData(15, 3, 10, 6, 12, 4, 8, 1, 9, 0, 6, 3)]
+    [InlineData(18, 1, 17, 2, 16, 3, 10, 0, 7, 2, 9, 1)]
+    public async Task LgsMatchesMebsFormulaComputedFromTheReportInTheTest(int tc, int tw, int mc, int mw, int fc, int fw, int ic, int iw, int dc, int dw, int ec, int ew)
+    {
+        await using var s = await Setup.CreateAsync(lgsPack: true);
+        var answers = new Dictionary<string, (int, int)> { ["TUR"] = (tc, tw), ["MAT"] = (mc, mw), ["FEN"] = (fc, fw), ["INK"] = (ic, iw), ["DIN"] = (dc, dw), ["ENG"] = (ec, ew) };
+        s.Exam("LGS", answers);
+        await s.F.Db.SaveChangesAsync();
+        var score = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Estimates.Single().Score;
+
+        // MEB 2026 Merkezî Sınav Raporu: (questions, weight, p̄, reliability); sd from KR-20; TASP_min at net −n/5 in every test.
+        var report = new Dictionary<string, (double N, double W, double P, double R)>
+        { ["TUR"] = (20, 4, .47, .82), ["MAT"] = (20, 4, .28, .86), ["FEN"] = (20, 4, .45, .87), ["INK"] = (10, 1, .53, .81), ["DIN"] = (10, 1, .63, .72), ["ENG"] = (10, 1, .44, .88) };
+        double Sd((double N, double W, double P, double R) t) => Math.Sqrt(t.N * t.P * (1 - t.P) / (1 - t.R * (t.N - 1) / t.N));
+        double Tasp(Func<string, double> net) => report.Sum(t => t.Value.W * 10 * net(t.Key) / Sd(t.Value));   // the means cancel
+        double Net(string k) => answers[k].Item1 - answers[k].Item2 / 3.0;
+        var max = Tasp(k => report[k].N); var min = Tasp(k => -report[k].N / 5);
+        var expected = 100 + 400 * (Tasp(Net) - min) / (max - min);
+        score.Should().BeApproximately((decimal)expected, 0.05m);
+    }
+
+    [Fact]
+    public async Task P2FollowsOsymsFormulaComputedInTheTest()
+    {
+        await using var s = await Setup.CreateAsync(agsPack: true);
+        var nets = new Dictionary<string, int> { ["SOZ"] = 9, ["SAY"] = 6, ["TAR"] = 2, ["COG"] = 4, ["EGT"] = 18, ["MEV"] = 3 };
+        s.Exam("AGS", nets.ToDictionary(x => x.Key, x => (x.Value, 0)));
+        s.Exam("OABT_SINIF", new() { ["ALAN"] = (33, 0) });
+        await s.F.Db.SaveChangesAsync();
+        var p2 = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Estimates.Single(x => x.ScoreType == "P2_SINIF");
+
+        // P2: the AGS weights halved plus ÖABT Sınıf Öğretmenliği 50 % (mean 26,5, sd 7,1, 50 questions).
+        var tests = Ags.ToDictionary(x => x.Key, x => (N: (double)x.Value.N, Mean: (double)x.Value.Mean, Sd: (double)x.Value.Sd, W: (double)P1Weights[x.Key] / 2));
+        tests["OABT"] = (50, 26.5, 7.1, 50);
+        var given = nets.ToDictionary(x => x.Key, x => (double)x.Value); given["OABT"] = 33;
+        double Ap(Func<string, double> net) => tests.Sum(t => t.Value.W / 100 * (50 + 10 * (net(t.Key) - t.Value.Mean) / t.Value.Sd));
+        var sumSq = tests.Sum(t => Math.Pow(t.Value.W / 100, 2));
+        var sd = 10 * Math.Sqrt(sumSq + 0.5 * (1 - sumSq));
+        var b = Ap(k => tests[k].N);
+        var expected = 70 + 30 * (2 * (Ap(k => given[k]) - 50) - sd) / (2 * (b - 50) - sd);
+        p2.Score.Should().BeApproximately((decimal)expected, 0.02m);
+    }
+
+    [Fact]
+    public async Task NegativeAgsNetsGiveNoScoreAndTheRangeNeverGoesBelowZero()
+    {
+        await using (var s = await Setup.CreateAsync(agsPack: true))
+        {
+            s.Exam("AGS", Ags.ToDictionary(x => x.Key, x => (0, x.Value.N)));
+            await s.F.Db.SaveChangesAsync();
+            var estimate = await s.Service.EstimateAsync(s.Student, s.Student, null, default);
+            estimate.Estimates.Should().BeEmpty();
+            estimate.NotComputed.Single().FailedConditions.Select(x => x.AnyOf.Single().Code).Should().Equal("SOZ", "SAY", "TAR", "COG", "EGT", "MEV");
+        }
+        await using (var s = await Setup.CreateAsync(agsPack: true))
+        {
+            s.Exam("AGS", Ags.ToDictionary(x => x.Key, x => (1, 0)));   // the lowest profile that is computed
+            await s.F.Db.SaveChangesAsync();
+            var p1 = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Estimates.Single();
+            p1.ScoreLow.Should().BeGreaterThanOrEqualTo(0); p1.Score.Should().BeInRange(40, 50);
+        }
+    }
+
     /// <summary>ÖSYM's 2026 MEB-AGS method computed directly from the published statistics (independent of the pack).</summary>
     private static decimal OsymScore(Dictionary<string, decimal> weights, Dictionary<string, decimal> nets, double rho)
     {
@@ -330,6 +465,15 @@ public sealed class CoachingScoreEstimatesAllExamsTests
                 await s.Service.ApplyAsync(s.Admin, new(2026, csv, (await s.Service.PreviewAsync(s.Admin, new(2026, csv, null), default)).Fingerprint), default);
             }
             return s;
+        }
+
+        public async Task Target(int minimumScore)
+        {
+            var school = TargetSchool.Create("meb", "lise-1", "Fen Lisesi", "İstanbul", "Kadıköy", minimumScore, 2026);
+            var goal = AcademicGoal.Create(Student, "Fen Lisesi", GoalCategory.ExamPreparation);
+            goal.SetCatalogTarget(null, school.Id);
+            F.Db.AddRange(school, goal); await F.Db.SaveChangesAsync();
+            F.Db.Add(StudentPrimaryGoal.Create(Student, goal.Id)); await F.Db.SaveChangesAsync();
         }
 
         public void Context(LearningPurpose purpose, string? scoreType) =>
