@@ -77,8 +77,10 @@ starts with `KM2:` — and set the 28 TDP leaves back to `NULL`. Once plans have
 * Test structure (ÖSYM, 2026 AYT question booklet, verified):
   "Bu testte sırasıyla Türk Dili ve Edebiyatı (1-24), Tarih-1 (25-34), Coğrafya-1 (35-40) alanlarına ait toplam 40 soru
   vardır." and "Bu testte sırasıyla Tarih-2 (1-11), Coğrafya-2 (12-22), Felsefe Grubu (23-34), Din Kültürü ve Ahlak
-  Bilgisi (35-40) …". Both Tarih-1 and Tarih-2 questions range from early Turkish states to the Second World War; ÖSYM does
-  not split the Tarih program between the two tests, which is why every AYT Tarih topic gets both tests (as the 26 have).
+  Bilgisi (35-40) …". In this booklet Tarih-1 runs from early Turkish states to the Republic and its reforms, and Tarih-2
+  from the science of history to the Second World War (only Tarih-2 has a WWII question). Both tests cover a wide range of
+  periods and ÖSYM does not publish a split of the Tarih program between them, which is why every AYT Tarih topic gets both
+  tests (as the 26 have). This is one booklet, not an official scope rule.
   Source: https://dokuman.osym.gov.tr/pdfdokuman/2026/YKS/TSK/yks_ayt_2026_kitapcik_kt12.pdf
 * Like the existing YKS scopes, this is the 2026 exam structure, not a published 2027 scope.
 
@@ -87,7 +89,16 @@ starts with `KM2:` — and set the 28 TDP leaves back to `NULL`. Once plans have
 Method (reproducible with `build.py`): for each TDP leaf, the **lower median of the `EstimatedMinutes` of the comparable
 TYT Matematik leaves** listed in `data/tdp-matematik-estimates.csv` (our own content mapping, same mathematics at TYT
 level); leaves with no comparable TYT leaf (Uzunluk ve Zaman Ölçme, Silindir, Koni, Çember ve Daire, Sıvı Ölçme,
-Dönüşüm Geometrisi) use the lower median of all 128 TYT Matematik leaves (90). Result: 27 × 90 min, Yüzdeler 115 min.
+Dönüşüm Geometrisi) use the lower median of all 128 TYT Matematik leaves (90). Result: 28 × 90 min.
+
+* **Yüzdeler: 90, review decision** (content review 01.11.2026, B1; `build.py` → `TDP_OVERRIDES`, CSV `method`
+  `review-decision`, `method_note` "tutarlılık: karşılaştırma kümesinde problem yaprağı olan diğer konular gibi 90"). Its
+  two comparable TYT leaves are both "problem" leaves (115), so the median gave 115; Oran-Orantı and Kesirler also have a
+  problem leaf in their comparison set and got 90, and a 7th-grade support topic is not harder than those. Production
+  already holds 90: step 3 wrote 115 on 01.11.2026 and the team set 90 in the admin panel. Step 3 only fills empty
+  values, so a rerun keeps 90.
+* Watch list (B2): the broad leaves Kareköklü İfadeler, Doğrusal Denklemler, Özel Dörtgenler, Kümeler and Kesirler get
+  90 as a starting value; revisit them with the first 4–6 weeks of real study times.
 
 * MEB ders saati were considered and not used: they are class periods for a whole unit, not individual study minutes
   (the outcome import says the same), and the 5th–7th grade periods could not be fetched from mufredat.meb.gov.tr here.

@@ -2,6 +2,7 @@
 """KM4: derives the 2026 YKS score models (puan-modelleri-2026.csv) for the admin "Puan tahmini verileri" import.
 
 Usage: python3 -I derive.py <target_catalog.csv from the production catalog export> [--check]
+       python3 -I derive.py --help
 
 Inputs
   kaynak-osym-2026-yks-testler.csv  ÖSYM 2026-YKS Sayısal Bilgiler: per-test valid questions, mean and standard deviation.
@@ -221,10 +222,23 @@ def report(tests, dist, log):
         print(f'{t}: en fazla ±{worst:.1f} puan')
 
 
+def parse_args(argv):
+    """Returns (catalog path, check). -h/--help prints the usage and exits 0; anything else unexpected exits 2."""
+    if '-h' in argv or '--help' in argv:
+        print(__doc__)
+        sys.exit(0)
+    check = '--check' in argv
+    rest = [a for a in argv if a != '--check']
+    if len(rest) != 1 or rest[0].startswith('-'):
+        print(__doc__, file=sys.stderr)
+        sys.exit(2)
+    return rest[0], check
+
+
 if __name__ == '__main__':
-    if len(sys.argv) < 2: sys.exit(__doc__)
-    text = build(sys.argv[1])
-    if '--check' in sys.argv:
+    catalog, check = parse_args(sys.argv[1:])
+    text = build(catalog)
+    if check:
         with open(OUT, encoding='utf-8') as f:
             if f.read() != text: sys.exit('puan-modelleri-2026.csv is out of date')
         print('\nOK: puan-modelleri-2026.csv is up to date')

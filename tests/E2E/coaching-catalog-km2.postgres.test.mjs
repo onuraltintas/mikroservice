@@ -184,6 +184,19 @@ test('activation waits for the team review, then publishes durations and YKS sco
   assert.equal(fingerprint(url), after, 'running it twice changes nothing');
 });
 
+test('TDP Matematik proposals: Yüzdeler is 90 like the other leaves with a problem leaf in their comparison set (review B1)', () => {
+  const [header, ...lines] = pack('data/tdp-matematik-estimates.csv').trim().split('\n');
+  const columns = header.split(',');
+  const rows = lines.map(line => Object.fromEntries(line.split(',').map((cell, i) => [columns[i], cell])));
+  assert.equal(rows.length, 28);
+  const yuzdeler = rows.find(r => r.topic_source_id === 'topic:8ac577e3-be34-40be-274a-08dce39258cc');
+  assert.equal(yuzdeler.topic_name, 'Yüzdeler');
+  assert.equal(yuzdeler.proposed_minutes, '90');
+  assert.equal(yuzdeler.method_note, 'tutarlılık: karşılaştırma kümesinde problem yaprağı olan diğer konular gibi 90');
+  assert.deepEqual([...new Set(rows.map(r => r.proposed_minutes))], ['90']);
+  assert.match(pack('03-apply-tdp-estimates.sql'), /\('topic:8ac577e3-be34-40be-274a-08dce39258cc', 90\)/);
+});
+
 test('TDP Matematik estimates need an explicit approval, fill only empty leaves and are idempotent', { skip }, () => {
   const url = clone('tdp');
   assert.notEqual(psql(url, pack('03-apply-tdp-estimates.sql')).status, 0, 'approval_reason is required');

@@ -1,29 +1,29 @@
-topic_source_id,proposed_minutes,yield_weight,method,comparable_tyt_source_ids,comparable_minutes,lgs_reference_minutes,topic_name
-topic:02f16954-3c61-42de-2763-08dce39258cc,90,3,comparable-tyt-median,topic:37f2cb9e-1454-4941-228a-08dc0b6af052 topic:0fcde9db-2137-44cc-569c-08dc0b6b5532,90 90,145,Veri Toplama ve Değerlendirme
-topic:04c8bbeb-b1de-44d2-275b-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,Silindir
-topic:0613181d-8523-4ea6-2759-08dce39258cc,90,3,comparable-tyt-median,topic:3df3692c-ef06-4e4d-56a0-08dc0b6b5532 topic:7618f3a2-3d6b-4a35-b6c8-08dc0b6b444a topic:6c6e88ef-2bac-440c-afa0-08dc0b6afc03 topic:89b099e0-b6bf-4409-99ed-08dc48bc468e,90 90 90 90,,Alan Ölçme
-topic:082d442c-39f3-4ac7-274f-08dce39258cc,90,3,comparable-tyt-median,topic:562f645f-7262-4de5-5692-08dc0b6b5532 topic:48d41471-990b-476e-af82-08dc0b6afc03,90 115,,Oran - Orantı
-topic:139f6398-d06a-4a28-2751-08dce39258cc,90,3,comparable-tyt-median,topic:4a9b0c1b-d4ed-4799-af81-08dc0b6afc03,90,290,Kareköklü İfadeler ve İşlemler
-topic:17c42310-940a-4f7c-274c-08dce39258cc,90,3,comparable-tyt-median,topic:bfdbf326-d5c3-4560-b6c2-08dc0b6b444a topic:5dd5568e-8073-4014-31d9-08dc0b6b4f46 topic:f64b9d70-06c6-41b8-af8c-08dc0b6afc03 topic:4f6ec219-204d-40e4-8b8a-08dc0b6b07fd topic:500c543c-c211-40ef-5694-08dc0b6b5532,90 90 90 90 115,,Kümeler ve Kümelerle İşlemler
-topic:22c139e4-0a05-41d4-275e-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,Sıvı Ölçme
-topic:303289bf-7827-4138-2750-08dce39258cc,90,3,comparable-tyt-median,topic:15d9e824-647a-4b03-5691-08dc0b6b5532,90,195,Üslü İfadeler ve Bilimsel Gösterim
-topic:416b7fd3-6525-4a24-2757-08dce39258cc,90,3,comparable-tyt-median,topic:c21a1316-4b7c-4737-8b91-08dc0b6b07fd topic:b3fde499-107e-414c-af9f-08dc0b6afc03 topic:0681068f-b6c4-48fb-5fb7-08dc0b6b6139 topic:bc154e6a-18f4-4ac1-31f3-08dc0b6b4f46,90 90 90 90,,Üçgen ve Dörtgenler
-topic:4e4a871e-58f5-40ec-275d-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,Çember ve Daire
-topic:523f6f42-5d12-4316-2756-08dce39258cc,90,3,comparable-tyt-median,topic:bf118af2-a14d-4462-b6c5-08dc0b6b444a topic:e0f295ba-69b8-477d-b6c6-08dc0b6b444a,90 90,,Temel Geometrik Kavramlar
-topic:6a5ee913-82ed-47fc-2753-08dce39258cc,90,3,comparable-tyt-median,topic:8cfafab3-b44b-44de-b6bc-08dc0b6b444a topic:3777fc8e-bec0-49bb-e9df-08dc0b6ad494 topic:c7ead496-24b3-45db-5fb3-08dc0b6b6139,90 90 90,390,Doğrusal Denklemler
-topic:6cc652c9-9aed-4115-274d-08dce39258cc,90,3,comparable-tyt-median,topic:a7bace37-2e4d-4831-e9d6-08dc0b6ad494 topic:42a96ee6-de6e-49bc-e9d7-08dc0b6ad494 topic:cc6d4eaa-fb41-430a-e9d9-08dc0b6ad494,90 90 90,,Tam Sayılar ve Tam Sayılarla İşlemler
-topic:7ba52936-6505-43e9-2752-08dce39258cc,90,3,comparable-tyt-median,topic:8cfafab3-b44b-44de-b6bc-08dc0b6b444a,90,,Eşitlik ve Denklemler
-topic:802cb490-0b67-4e65-2760-08dce39258cc,90,3,comparable-tyt-median,topic:8d38aba1-1884-42fb-b6c7-08dc0b6b444a,90,,Çokgenler
-topic:86678d89-c314-42ec-2761-08dce39258cc,90,3,comparable-tyt-median,topic:da357cd8-c265-4516-8b93-08dc0b6b07fd topic:62ab8080-0654-4c68-afa1-08dc0b6afc03 topic:0e2b0ba9-1e56-41e1-228c-08dc0b6af052 topic:47aec3c4-1e9a-42d0-228d-08dc0b6af052 topic:800cbf06-32a0-4836-e9ea-08dc0b6ad494 topic:ba55ec77-d08b-46f1-31f8-08dc0b6b4f46,90 90 90 90 90 90,,Özel Dörtgenler
-topic:8ac577e3-be34-40be-274a-08dce39258cc,115,3,comparable-tyt-median,topic:21657ed2-c3f6-4315-b6bf-08dc0b6b444a topic:45cebedf-d996-4238-8b89-08dc0b6b07fd,115 115,,Yüzdeler
-topic:8e62586f-0f5e-41bf-2755-08dce39258cc,90,3,comparable-tyt-median,topic:0658e545-4322-40e8-b6bd-08dc0b6b444a topic:3fc5e036-f251-4420-e9de-08dc0b6ad494,90 90,145,Eşitsizlikler
-topic:942328dc-2e5a-4f03-275c-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,Koni
-topic:9c2c87e9-ef7b-4939-2758-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,Uzunluk ve Zaman Ölçme
-topic:a2bdbbd0-25ca-46ae-0546-08dce38e4979,90,3,comparable-tyt-median,topic:ed2aa349-dcd9-4a56-c844-08dc224a8549 topic:8f8127ee-0908-4079-5faf-08dc0b6b6139,90 115,,Kesirler ve Kesirlerle İşlemler
-topic:a5657513-6b65-434f-2762-08dce39258cc,90,3,comparable-tyt-median,topic:1e8d6134-2e07-45bc-228b-08dc0b6af052 topic:99b09934-a44e-4e57-569d-08dc0b6b5532,90 90,145,Eşlik ve Benzerlik
-topic:b4029917-0e6a-4ec8-274b-08dce39258cc,90,3,comparable-tyt-median,topic:4c1b662b-5fbb-405b-568f-08dc0b6b5532 topic:f461e084-d8cf-4c35-2282-08dc0b6af052 topic:264b62f2-e64c-4e8e-e9dd-08dc0b6ad494 topic:c80a52cd-4665-45e3-af7d-08dc0b6afc03 topic:03c6794c-67d6-453c-568e-08dc0b6b5532,90 90 115 90 90,195,Çarpanlar ve Katları
-topic:bd0a9d11-93ef-40fc-2754-08dce39258cc,90,3,comparable-tyt-median,topic:4c93cb58-36f9-458c-af93-08dc0b6afc03 topic:d4daa420-c8e9-43d1-2289-08dc0b6af052 topic:9d366c1b-60f7-430a-8b8f-08dc0b6b07fd,90 90 90,195,Cebirsel İfadeler ve Özdeşlikler
-topic:e24af3c3-891b-4df1-2764-08dce39258cc,90,3,comparable-tyt-median,topic:882d753d-9925-4933-5695-08dc0b6b5532 topic:82820b04-9d79-437b-2287-08dc0b6af052,90 90,145,Basit Olayların Olma Olasılığı
-topic:e69c15a2-9c20-438c-275a-08dce39258cc,90,3,comparable-tyt-median,topic:8722458a-4b63-4b70-1594-08dc0c34b5fa topic:5c631438-b2ce-4d01-1595-08dc0c34b5fa,90 90,,Prizmalar
-topic:fdc4948b-9262-47dd-275f-08dce39258cc,90,3,tyt-matematik-median-fallback,,,145,Dönüşüm Geometrisi
-topic:ffe5ee44-87e2-4aca-274e-08dce39258cc,90,3,comparable-tyt-median,topic:51969f2b-06b4-40cb-568b-08dc0b6b5532 topic:ed2aa349-dcd9-4a56-c844-08dc224a8549,90 90,,Rasyonel Sayılar ve Devirli Olan ve Olmayan Ondalık Gösterimler
+topic_source_id,proposed_minutes,yield_weight,method,method_note,comparable_tyt_source_ids,comparable_minutes,lgs_reference_minutes,topic_name
+topic:02f16954-3c61-42de-2763-08dce39258cc,90,3,comparable-tyt-median,,topic:37f2cb9e-1454-4941-228a-08dc0b6af052 topic:0fcde9db-2137-44cc-569c-08dc0b6b5532,90 90,145,Veri Toplama ve Değerlendirme
+topic:04c8bbeb-b1de-44d2-275b-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,,Silindir
+topic:0613181d-8523-4ea6-2759-08dce39258cc,90,3,comparable-tyt-median,,topic:3df3692c-ef06-4e4d-56a0-08dc0b6b5532 topic:7618f3a2-3d6b-4a35-b6c8-08dc0b6b444a topic:6c6e88ef-2bac-440c-afa0-08dc0b6afc03 topic:89b099e0-b6bf-4409-99ed-08dc48bc468e,90 90 90 90,,Alan Ölçme
+topic:082d442c-39f3-4ac7-274f-08dce39258cc,90,3,comparable-tyt-median,,topic:562f645f-7262-4de5-5692-08dc0b6b5532 topic:48d41471-990b-476e-af82-08dc0b6afc03,90 115,,Oran - Orantı
+topic:139f6398-d06a-4a28-2751-08dce39258cc,90,3,comparable-tyt-median,,topic:4a9b0c1b-d4ed-4799-af81-08dc0b6afc03,90,290,Kareköklü İfadeler ve İşlemler
+topic:17c42310-940a-4f7c-274c-08dce39258cc,90,3,comparable-tyt-median,,topic:bfdbf326-d5c3-4560-b6c2-08dc0b6b444a topic:5dd5568e-8073-4014-31d9-08dc0b6b4f46 topic:f64b9d70-06c6-41b8-af8c-08dc0b6afc03 topic:4f6ec219-204d-40e4-8b8a-08dc0b6b07fd topic:500c543c-c211-40ef-5694-08dc0b6b5532,90 90 90 90 115,,Kümeler ve Kümelerle İşlemler
+topic:22c139e4-0a05-41d4-275e-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,,Sıvı Ölçme
+topic:303289bf-7827-4138-2750-08dce39258cc,90,3,comparable-tyt-median,,topic:15d9e824-647a-4b03-5691-08dc0b6b5532,90,195,Üslü İfadeler ve Bilimsel Gösterim
+topic:416b7fd3-6525-4a24-2757-08dce39258cc,90,3,comparable-tyt-median,,topic:c21a1316-4b7c-4737-8b91-08dc0b6b07fd topic:b3fde499-107e-414c-af9f-08dc0b6afc03 topic:0681068f-b6c4-48fb-5fb7-08dc0b6b6139 topic:bc154e6a-18f4-4ac1-31f3-08dc0b6b4f46,90 90 90 90,,Üçgen ve Dörtgenler
+topic:4e4a871e-58f5-40ec-275d-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,,Çember ve Daire
+topic:523f6f42-5d12-4316-2756-08dce39258cc,90,3,comparable-tyt-median,,topic:bf118af2-a14d-4462-b6c5-08dc0b6b444a topic:e0f295ba-69b8-477d-b6c6-08dc0b6b444a,90 90,,Temel Geometrik Kavramlar
+topic:6a5ee913-82ed-47fc-2753-08dce39258cc,90,3,comparable-tyt-median,,topic:8cfafab3-b44b-44de-b6bc-08dc0b6b444a topic:3777fc8e-bec0-49bb-e9df-08dc0b6ad494 topic:c7ead496-24b3-45db-5fb3-08dc0b6b6139,90 90 90,390,Doğrusal Denklemler
+topic:6cc652c9-9aed-4115-274d-08dce39258cc,90,3,comparable-tyt-median,,topic:a7bace37-2e4d-4831-e9d6-08dc0b6ad494 topic:42a96ee6-de6e-49bc-e9d7-08dc0b6ad494 topic:cc6d4eaa-fb41-430a-e9d9-08dc0b6ad494,90 90 90,,Tam Sayılar ve Tam Sayılarla İşlemler
+topic:7ba52936-6505-43e9-2752-08dce39258cc,90,3,comparable-tyt-median,,topic:8cfafab3-b44b-44de-b6bc-08dc0b6b444a,90,,Eşitlik ve Denklemler
+topic:802cb490-0b67-4e65-2760-08dce39258cc,90,3,comparable-tyt-median,,topic:8d38aba1-1884-42fb-b6c7-08dc0b6b444a,90,,Çokgenler
+topic:86678d89-c314-42ec-2761-08dce39258cc,90,3,comparable-tyt-median,,topic:da357cd8-c265-4516-8b93-08dc0b6b07fd topic:62ab8080-0654-4c68-afa1-08dc0b6afc03 topic:0e2b0ba9-1e56-41e1-228c-08dc0b6af052 topic:47aec3c4-1e9a-42d0-228d-08dc0b6af052 topic:800cbf06-32a0-4836-e9ea-08dc0b6ad494 topic:ba55ec77-d08b-46f1-31f8-08dc0b6b4f46,90 90 90 90 90 90,,Özel Dörtgenler
+topic:8ac577e3-be34-40be-274a-08dce39258cc,90,3,review-decision,tutarlılık: karşılaştırma kümesinde problem yaprağı olan diğer konular gibi 90,topic:21657ed2-c3f6-4315-b6bf-08dc0b6b444a topic:45cebedf-d996-4238-8b89-08dc0b6b07fd,115 115,,Yüzdeler
+topic:8e62586f-0f5e-41bf-2755-08dce39258cc,90,3,comparable-tyt-median,,topic:0658e545-4322-40e8-b6bd-08dc0b6b444a topic:3fc5e036-f251-4420-e9de-08dc0b6ad494,90 90,145,Eşitsizlikler
+topic:942328dc-2e5a-4f03-275c-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,,Koni
+topic:9c2c87e9-ef7b-4939-2758-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,,Uzunluk ve Zaman Ölçme
+topic:a2bdbbd0-25ca-46ae-0546-08dce38e4979,90,3,comparable-tyt-median,,topic:ed2aa349-dcd9-4a56-c844-08dc224a8549 topic:8f8127ee-0908-4079-5faf-08dc0b6b6139,90 115,,Kesirler ve Kesirlerle İşlemler
+topic:a5657513-6b65-434f-2762-08dce39258cc,90,3,comparable-tyt-median,,topic:1e8d6134-2e07-45bc-228b-08dc0b6af052 topic:99b09934-a44e-4e57-569d-08dc0b6b5532,90 90,145,Eşlik ve Benzerlik
+topic:b4029917-0e6a-4ec8-274b-08dce39258cc,90,3,comparable-tyt-median,,topic:4c1b662b-5fbb-405b-568f-08dc0b6b5532 topic:f461e084-d8cf-4c35-2282-08dc0b6af052 topic:264b62f2-e64c-4e8e-e9dd-08dc0b6ad494 topic:c80a52cd-4665-45e3-af7d-08dc0b6afc03 topic:03c6794c-67d6-453c-568e-08dc0b6b5532,90 90 115 90 90,195,Çarpanlar ve Katları
+topic:bd0a9d11-93ef-40fc-2754-08dce39258cc,90,3,comparable-tyt-median,,topic:4c93cb58-36f9-458c-af93-08dc0b6afc03 topic:d4daa420-c8e9-43d1-2289-08dc0b6af052 topic:9d366c1b-60f7-430a-8b8f-08dc0b6b07fd,90 90 90,195,Cebirsel İfadeler ve Özdeşlikler
+topic:e24af3c3-891b-4df1-2764-08dce39258cc,90,3,comparable-tyt-median,,topic:882d753d-9925-4933-5695-08dc0b6b5532 topic:82820b04-9d79-437b-2287-08dc0b6af052,90 90,145,Basit Olayların Olma Olasılığı
+topic:e69c15a2-9c20-438c-275a-08dce39258cc,90,3,comparable-tyt-median,,topic:8722458a-4b63-4b70-1594-08dc0c34b5fa topic:5c631438-b2ce-4d01-1595-08dc0c34b5fa,90 90,,Prizmalar
+topic:fdc4948b-9262-47dd-275f-08dce39258cc,90,3,tyt-matematik-median-fallback,,,,145,Dönüşüm Geometrisi
+topic:ffe5ee44-87e2-4aca-274e-08dce39258cc,90,3,comparable-tyt-median,,topic:51969f2b-06b4-40cb-568b-08dc0b6b5532 topic:ed2aa349-dcd9-4a56-c844-08dc224a8549,90 90,,Rasyonel Sayılar ve Devirli Olan ve Olmayan Ondalık Gösterimler
