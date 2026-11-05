@@ -68,3 +68,28 @@ test('onuraltintas.net serves the pages the Coaching links open', () => {
   const hosts = read('clients/admin-panel/src/server-config.ts');
   assert.match(hosts, /'onuraltintas\.net'/);
 });
+
+// Final review: password reset links open the reset page of the product's own site with the names it reads.
+test('password reset links open reset-password pages that read token and email', () => {
+  const path = constant('PasswordResetPath');
+  assert.equal(path, '/auth/reset-password');
+  assert.deepEqual(queryNames(linkTemplate('PasswordResetPath')), ['email', 'token']);
+  const pages = [
+    ['clients/admin-panel/src/app/features/auth/auth.routes.ts', 'clients/admin-panel/src/app/features/auth/reset-password/reset-password.component.ts'],
+    ['clients/speed-reading/src/app/features/auth/auth.routes.ts', 'clients/speed-reading/src/app/features/auth/reset-password/reset-password.component.ts'],
+  ];
+  for (const [routesFile, componentFile] of pages) {
+    assert.match(read(routesFile), /path: 'reset-password'[\s\S]{0,200}reset-password\.component/);
+    const names = [...read(componentFile).matchAll(/params\['([^']+)'\]/g)].map(m => m[1]).sort();
+    assert.deepEqual([...new Set(names)], ['email', 'token']);
+  }
+});
+
+test('production sends speed-reading links to masterhizliokuma.com', () => {
+  const compose = read('docker-compose.production.yml');
+  const defaults = [...compose.matchAll(/\$\{SPEED_READING_PUBLIC_BASE_URL:-([^}]+)\}/g)].map(m => m[1]);
+  assert.ok(defaults.length >= 2, 'speed-reading service and notification read SPEED_READING_PUBLIC_BASE_URL');
+  assert.deepEqual([...new Set(defaults)], ['https://masterhizliokuma.com']);
+  assert.match(compose, /PublicApp__SpeedReadingBaseUrl: \$\{SPEED_READING_PUBLIC_BASE_URL:-/);
+  assert.match(options, /SpeedReadingBaseUrl[\s\S]*IsSpeedReadingProduct\(role, product\) && IsValidBaseUrl\(SpeedReadingBaseUrl\)/);
+});

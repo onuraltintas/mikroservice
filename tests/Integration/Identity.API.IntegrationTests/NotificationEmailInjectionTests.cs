@@ -94,6 +94,88 @@ public sealed class NotificationEmailInjectionTests
         }
     }
 
+    // Final review R3 and 1: end to end from the identity handler to the queued e-mail, with the production origins.
+    private static void ProductionOrigins(PublicAppUrlOptions options)
+    {
+        options.BaseUrl = "https://onuraltintas.net";
+        options.SpeedReadingBaseUrl = "https://masterhizliokuma.com";
+        options.AdminPanelUrl = "https://eduivme.com";
+    }
+
+    private static Identity.Domain.Entities.User AccountIn(Identity.Domain.Enums.PlatformProduct product, bool confirmed)
+    {
+        var user = Identity.Domain.Entities.User.Create(Guid.NewGuid(), "hesap@example.test", "Ada", "Kaya");
+        if (confirmed) user.ConfirmEmail();
+        user.GrantProductAccess(product, Identity.Domain.Enums.UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        var role = Identity.Domain.Entities.Role.Create("Student", "Student", true);
+        var membership = new Identity.Domain.Entities.UserRole(user.Id, role.Id, product);
+        typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(membership, role);
+        user.AddRole(membership);
+        return user;
+    }
+
+    [Theory]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching, "coaching", "SpeedReading_Auth_VerifyEmail", "https://onuraltintas.net/auth/confirm-email?userId={0}&token={1}", "Eduİvme")]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading, "speed-reading", "Auth_VerifyEmail", "https://masterhizliokuma.com/auth/verify-email?token={1}&userId={0}", "Master Hızlı Okuma")]
+    public async Task ResentVerificationEmail_IsTheProductsEmailWithItsWorkingLink(
+        Identity.Domain.Enums.PlatformProduct product, string requested, string otherTemplate, string link, string appName)
+    {
+        var user = AccountIn(product, confirmed: false);
+        var events = new List<object>();
+        var handler = new Identity.Application.Commands.ResendVerificationEmail.ResendVerificationEmailCommandHandler(
+            Stub<Identity.Application.Interfaces.IUserRepository>((_, _) => Task.FromResult<Identity.Domain.Entities.User?>(user)),
+            Stub<Identity.Application.Interfaces.IUnitOfWork>((_, _) => Task.FromResult(1)),
+            Stub<IPublishEndpoint>((_, args) => { events.Add(args![0]!); return Task.CompletedTask; }));
+        (await handler.Handle(new(user.Email, requested), default)).IsSuccess.Should().BeTrue();
+        var registered = events.OfType<UserRegisteredEvent>().Single();
+
+        // Seed the other product's template: it must not be chosen.
+        var mail = (await RunAsync<UserRegisteredConsumer>(registered, (otherTemplate, "Yanlış", "<p>yanlış</p>"), ProductionOrigins)).Single();
+
+        mail.Body.Should().Contain($"href='{string.Format(link, user.Id, user.EmailVerificationToken)}'");
+        mail.Subject.Should().Contain(appName);
+        mail.Body.Should().NotContain("yanlış");
+        if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma").And.NotContain("masterhizliokuma");
+    }
+
+    [Theory]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching, "coaching", "Auth_ForgotPassword", "https://onuraltintas.net/auth/reset-password?token=", "Eduİvme")]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading, "speed-reading", "SpeedReading_Auth_ForgotPassword", "https://masterhizliokuma.com/auth/reset-password?token=", "Master Hızlı Okuma")]
+    public async Task ForgotPasswordEmail_IsTheProductsEmailWithItsWorkingLink(
+        Identity.Domain.Enums.PlatformProduct product, string requested, string template, string link, string appName)
+    {
+        var user = AccountIn(product, confirmed: true);
+        var events = new List<object>();
+        var handler = new Identity.Application.Commands.ForgotPassword.ForgotPasswordCommandHandler(
+            Stub<Identity.Application.Interfaces.IUserRepository>((_, _) => Task.FromResult<Identity.Domain.Entities.User?>(user)),
+            Stub<Identity.Application.Interfaces.IUnitOfWork>((_, _) => Task.FromResult(1)),
+            Stub<IPublishEndpoint>((_, args) => { events.Add(args![0]!); return Task.CompletedTask; }));
+        (await handler.Handle(new(user.Email, requested), default)).IsSuccess.Should().BeTrue();
+        var forgot = events.OfType<UserForgotPasswordEvent>().Single();
+
+        foreach (var withTemplate in new[] { true, false })
+        {
+            var mail = (await RunAsync<UserForgotPasswordConsumer>(forgot,
+                withTemplate ? (template, "Sıfırla - Eduİvme", "<p>Eduİvme <a href='{{ResetLink}}'>x</a></p>") : null, ProductionOrigins)).Single();
+            mail.Body.Should().Contain($"href='{link}");
+            mail.Body.Should().Contain("&email=hesap%40example.test'");
+            mail.Body.Should().Contain(appName);
+            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma").And.NotContain("masterhizliokuma");
+        }
+    }
+
+    public class StubProxy : System.Reflection.DispatchProxy
+    {
+        public Func<System.Reflection.MethodInfo, object?[]?, object?> Call = null!;
+        protected override object? Invoke(System.Reflection.MethodInfo? method, object?[]? args) => Call(method!, args);
+    }
+    private static T Stub<T>(Func<System.Reflection.MethodInfo, object?[]?, object?> call) where T : class
+    {
+        var proxy = System.Reflection.DispatchProxy.Create<T, StubProxy>();
+        ((StubProxy)(object)proxy).Call = call;
+        return proxy;
+    }
+
     // Third review N2: the welcome e-mail after verification follows the product; null keeps the role.
     [Theory]
     [InlineData("Student", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "Eduİvme")]
@@ -164,7 +246,8 @@ public sealed class NotificationEmailInjectionTests
 
     private static async Task<IReadOnlyList<QueuedMessage>> RunAsync<TConsumer>(
         object message,
-        (string Name, string Subject, string Body)? template = null)
+        (string Name, string Subject, string Body)? template = null,
+        Action<PublicAppUrlOptions>? origins = null)
         where TConsumer : class, IConsumer
     {
         var queue = new RecordingEmailQueue();
@@ -180,6 +263,7 @@ public sealed class NotificationEmailInjectionTests
         {
             options.BaseUrl = "https://app.example.test";
             options.SpeedReadingBaseUrl = "https://speed.example.test";
+            origins?.Invoke(options);
         });
         services.AddMassTransitTestHarness(configurator =>
         {

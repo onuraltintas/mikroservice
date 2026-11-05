@@ -723,6 +723,94 @@ public sealed class RegistrationVerificationEmailTests
         Assert.Equal(expected, Assert.Single(f.Published.OfType<UserEmailConfirmedEvent>()).Product);
     }
 
+    // ---- Final review (PR #111) ----
+
+    // R4: an account that is already locked out by failed attempts cannot join, and nothing is sent.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ALockedOutAccountCannotJoin(bool confirmed)
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "student", confirmed) { LockedOutFor = TimeSpan.FromMinutes(5) };
+
+        var result = await f.Join();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Auth.TooManyAttempts", result.Error.Code);
+        Assert.False(f.User.HasProductAccess(PlatformProduct.Coaching));
+        Assert.Empty(f.Published);
+        Assert.Equal(0, f.Saves);
+        Assert.Equal(0, f.FailedAttempts);
+    }
+
+    // R2a: a brand-new institution account gets the verification e-mail for its product.
+    [Theory]
+    [InlineData(PlatformProduct.Coaching)]
+    [InlineData(PlatformProduct.SpeedReading)]
+    public async Task ANewInstitutionAccountGetsTheVerificationEmail(PlatformProduct product)
+    {
+        var userId = Guid.NewGuid();
+        var user = User.Create(userId, "kurum@example.test", "Yeni", "Kurum");
+        var published = new List<object>();
+        var admins = new List<InstitutionAdmin>();
+        var handler = new Identity.Application.Commands.RegisterInstitution.RegisterInstitutionCommandHandler(
+            NewIdentity(userId),
+            Stub<IUserRepository>((m, _) => m.Name switch
+            {
+                nameof(IUserRepository.GetByEmailAsync) => Task.FromResult<User?>(null),
+                nameof(IUserRepository.GetByIdAsync) => Task.FromResult<User?>(user),
+                nameof(IUserRepository.TrackProductAccessIfNew) => null,
+                _ => throw new NotSupportedException(m.Name)
+            }),
+            Stub<IInstitutionRepository>((m, args) => m.Name switch
+            {
+                "AddAsync" => Task.CompletedTask,
+                "AddAdminAsync" => AddTo(admins, (InstitutionAdmin)args![0]!),
+                _ => throw new NotSupportedException(m.Name)
+            }),
+            Stub<IUnitOfWork>((_, _) => Task.FromResult(1)),
+            Stub<IPublishEndpoint>((_, args) => { published.Add(args![0]!); return Task.CompletedTask; }),
+            Stub<IConfigurationService>((_, _) => Task.FromResult<string?>("true")),
+            Stub<ILocationRepository>((_, _) => Task.FromResult<(Province, District)?>(
+                (Province.Create("34", "İstanbul"), District.Create("3401", "34", "Adalar")))),
+            new AcceptingLegal(), null!);
+
+        var result = await handler.Handle(new Identity.Application.Commands.RegisterInstitution.RegisterInstitutionCommand(
+            "kurum@example.test", "StrongPassword1!", "Yeni", "Kurum", "Yeni Okul", InstitutionType.School, null, "34", "3401", product),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Description : "");
+        Assert.Equal(new RegistrationOutcome(userId, RegistrationOutcome.Sent), result.Value);
+        var mail = Assert.Single(published.OfType<UserRegisteredEvent>());
+        Assert.Equal(product.ToRouteValue(), mail.Product);
+        Assert.Equal(user.EmailVerificationToken, mail.VerificationToken);
+        Assert.Equal("InstitutionOwner", mail.Role);
+        Assert.Single(admins, a => a.Product == product && a.Role == InstitutionAdminRole.Owner);
+        Assert.True(user.HasProductAccess(product));
+    }
+
+    // Final review 1: forgot-password names the product like the other account e-mails.
+    [Theory]
+    [InlineData("coaching", true, "coaching")]
+    [InlineData(null, false, "speed-reading")]
+    [InlineData(null, true, null)]
+    [InlineData("coaching", false, "speed-reading")]
+    public async Task ForgotPasswordNamesTheProduct(string? requested, bool bothProducts, string? expected)
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "student", confirmed: true);  // speed reading only
+        if (bothProducts)
+        {
+            f.User.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+            f.AddRole("Student", PlatformProduct.Coaching);
+        }
+        var handler = new Identity.Application.Commands.ForgotPassword.ForgotPasswordCommandHandler(f.Users(), f.UnitOfWork(), f.Publisher());
+
+        Assert.True((await handler.Handle(new(f.User.Email, requested), CancellationToken.None)).IsSuccess);
+        Assert.Equal(expected, Assert.Single(f.Published.OfType<UserForgotPasswordEvent>()).Product);
+    }
+
+    private static Task AddTo(List<InstitutionAdmin> admins, InstitutionAdmin admin) { admins.Add(admin); return Task.CompletedTask; }
+
     private static Identity.Application.Commands.RegisterParent.RegisterParentCommandHandler ParentHandler(EnrollmentFixture f) => new(
         f.ExistingIdentity(), f.Users(), Stub<IParentRepository>((m, _) => throw new NotSupportedException(m.Name)), f.UnitOfWork(), f.Publisher(),
         Stub<IConfigurationService>((_, _) => Task.FromResult<string?>("true")), new AcceptingLegal(), f.Enrollment);
@@ -774,6 +862,7 @@ public sealed class RegistrationVerificationEmailTests
         public readonly ExistingAccountEnrollment Enrollment;
         public readonly IInstitutionRepository Institutions;
         public int Saves, FailedAttempts;
+        public TimeSpan? LockedOutFor;
 
         /// <param name="account">student, teacher, institution or parent (a parent's source account is a student one).</param>
         public EnrollmentFixture(PlatformProduct target, string account, bool confirmed)
@@ -811,7 +900,7 @@ public sealed class RegistrationVerificationEmailTests
                 }),
                 loginAttempts: Stub<ILoginAttemptLimiter>((m, _) => m.Name switch
                 {
-                    nameof(ILoginAttemptLimiter.GetLockoutAsync) => Task.FromResult<TimeSpan?>(null),
+                    nameof(ILoginAttemptLimiter.GetLockoutAsync) => Task.FromResult(LockedOutFor),
                     nameof(ILoginAttemptLimiter.RecordFailureAsync) => RecordFailure(),
                     _ => Task.CompletedTask
                 }));

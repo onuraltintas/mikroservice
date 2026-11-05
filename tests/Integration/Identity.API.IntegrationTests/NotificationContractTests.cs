@@ -108,6 +108,40 @@ public sealed class NotificationContractTests
         options.AdminPanelLink("/dashboard/coaching/subscriptions").Should().Be("https://eduivme.example.test/dashboard/coaching/subscriptions");
     }
 
+    // Final review 2: roles made in role management are not product roles, so their links open the admin panel.
+    [Theory]
+    [InlineData("İçerik Sorumlusu", true)]
+    [InlineData("SupportAgent", true)]
+    [InlineData("CourseTeacher", true)]
+    [InlineData("Student", false)]
+    [InlineData("Teacher", false)]
+    [InlineData("Parent", false)]
+    [InlineData("InstitutionAdmin", false)]
+    [InlineData("InstitutionOwner", false)]
+    [InlineData("User", false)]
+    [InlineData(null, false)]
+    public void PublicAppUrlOptions_AnyNonProductRoleIsManagement(string? role, bool management)
+    {
+        PublicAppUrlOptions.IsManagementRole(role).Should().Be(management);
+        var options = new PublicAppUrlOptions
+        {
+            BaseUrl = "https://onuraltintas.example.test",
+            SpeedReadingBaseUrl = "https://masterhizliokuma.example.test",
+            AdminPanelUrl = "https://eduivme.example.test"
+        };
+        if (management)
+            options.BuildPasswordResetLink("t", "a@example.test", role, "coaching").Should().StartWith("https://eduivme.example.test/auth/reset-password?");
+    }
+
+    [Fact]
+    public void PublicAppUrlOptions_ResetLinkUsesTheQueryNamesTheResetPagesRead()
+    {
+        PublicAppUrlOptions.PasswordResetPath.Should().Be("/auth/reset-password");
+        var options = new PublicAppUrlOptions { BaseUrl = "https://onuraltintas.example.test" };
+        options.BuildPasswordResetLink("a b", "x+y@example.test", "Student", "coaching")
+            .Should().Be("https://onuraltintas.example.test/auth/reset-password?token=a%20b&email=x%2By%40example.test");
+    }
+
     [Fact]
     public void PublicAppUrlOptions_ManagementFallsBackToTheBaseUrlWithoutAnAdminPanelUrl()
     {
