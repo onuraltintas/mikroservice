@@ -64,7 +64,7 @@ public sealed class OutcomeDurationEstimateConfiguration : IEntityTypeConfigurat
     {
         b.ToTable("outcome_duration_estimates", t =>
         {
-            t.HasCheckConstraint("ck_outcome_minutes", "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND 1440 AND \"Number\" > 0");
+            t.HasCheckConstraint("ck_outcome_minutes", "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND " + StudyLimits.MaxTopicMinutes + " AND \"Number\" > 0");
             t.HasCheckConstraint("ck_outcome_review", "\"Method\" IN ('OfficialBudgetDraft','ReviewedStudy') AND \"Confidence\" IN ('Low','Medium','High') AND (\"Method\" <> 'ReviewedStudy' OR (\"ReviewedBy\" IS NOT NULL AND \"ReviewedAt\" IS NOT NULL)) AND (NOT \"IsPublished\" OR \"Method\" = 'ReviewedStudy')");
         });
         b.HasKey(x => x.Id); b.HasAlternateKey(x => new { x.Id, x.OutcomeId }); b.HasIndex(x => new { x.OutcomeId, x.Number }).IsUnique();

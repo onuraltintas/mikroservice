@@ -87,7 +87,7 @@ public sealed class CoachingAutomaticStudySchedulerTests
         Assert.Throws<ArgumentException>(() => StudyPlanDraftScheduler.Generate(DateOnly.MaxValue, 2, Windows, [topic], []));
         Assert.Throws<ArgumentException>(() => StudyPlanDraftScheduler.Generate(Monday, 1, Windows, [topic, topic], []));
         Assert.Throws<ArgumentException>(() => StudyPlanDraftScheduler.Generate(Monday, 1, Windows, [topic with { TopicId = Guid.Empty }], []));
-        Assert.Throws<ArgumentException>(() => StudyPlanDraftScheduler.Generate(Monday, 1, Windows, [topic with { RequiredMinutes = 1441 }], []));
+        Assert.Throws<ArgumentException>(() => StudyPlanDraftScheduler.Generate(Monday, 1, Windows, [topic with { RequiredMinutes = 4321 }], []));
         Assert.Throws<ArgumentException>(() => StudyPlanDraftScheduler.Generate(Monday, 1, Windows, Enumerable.Repeat(topic, 501).ToArray(), []));
         Assert.Throws<ArgumentException>(() => StudyPlanDraftScheduler.Generate(Monday, 1, Windows, [topic], [new(Monday, 0)]));
     }

@@ -17,6 +17,8 @@ const PENDING_PDF_SHA = '0'.repeat(64); // placeholder for a document without a 
 // The release that production runs (README "Production state"): its package hash and the names it wrote. The guard treats
 // exactly these stored values as equal to this pack's, so a rerun neither stops on them nor changes them.
 const PREVIOUS = data.previousRelease;
+// Package hashes of earlier releases a stored edition may carry (c1ce79c in production, 5056431e on fresh installs of it).
+const PREVIOUS_SHAS = [PREVIOUS.packageSha256, ...Object.values(PREVIOUS.alsoAcceptedPackageSha256 ?? {})];
 const uuid = key => { const h = createHash('md5').update(`${SOURCE}:${key}`).digest('hex');
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`; };
 const examLabel = { AGS: 'AGS', OABT: 'ÖABT', YDS: 'YDS', YOKDIL: 'YÖKDİL' };
@@ -63,13 +65,17 @@ for (const lesson of lessons) for (const unit of lesson.units) for (const topic 
   const pool = pools[lesson.pool];
   topic.rawMinutes = Math.max(data.method.minMinutes, round5(pool.budget * 60 * topic.pct * topic.size / pool.weight));
   topic.minutes = Math.min(topic.rawMinutes, data.method.maxMinutes);
+  // What the previous releases stored under their 1440-minute limit (production until the KM3 minutes pack runs).
+  topic.previousMinutes = Math.min(topic.rawMinutes, PREVIOUS.maxMinutes);
   topic.yieldWeight = Math.min(5, band(topic.pct) + (topic.grammar ? data.method.grammarYieldBonus : 0));
   const testQuestions = lesson.exam === 'OABT' ? 50 : 80;
   topic.questions = topic.q ?? topic.pct * testQuestions / 100;
-  topic.minutesNote = `Süre koçluk tahmini: ${examLabel[lesson.exam]} hazırlık bütçesi ${pool.budget} saat; konu payı soru ağırlığı`
+  const note = minutes => `Süre koçluk tahmini: ${examLabel[lesson.exam]} hazırlık bütçesi ${pool.budget} saat; konu payı soru ağırlığı`
     + ` (yaklaşık %${fmtPct(topic.pct)}, ~${fmtPct(topic.questions)} soru) × konu büyüklüğü (${String(topic.size).replace('.', ',')}`
     + `${topic.sizeNote ? ': ' + topic.sizeNote : ''}) ile orantılı; ${topic.rawMinutes} dk`
-    + (topic.rawMinutes > topic.minutes ? `, planlayıcı sınırı nedeniyle ${topic.minutes} dk kaydedildi; konu birden çok turda planlanmalı.` : '.');
+    + (topic.rawMinutes > minutes ? `, planlayıcı sınırı nedeniyle ${minutes} dk kaydedildi; konu birden çok turda planlanmalı.` : '.');
+  topic.minutesNote = note(topic.minutes);
+  topic.previousMinutesNote = note(topic.previousMinutes);
   topic.sourceUrl = lesson.doc.url;
 }
 
@@ -89,7 +95,7 @@ const previousOutcomeName = (lesson, unit, topic) => {
   return outcomeName(lesson, unit, topic, name);
 };
 const previousName = (current, previous) => previous === undefined || previous === current ? null : previous;
-const outcomeNotes = (lesson, unit, topic) => [
+const outcomeNotes = (lesson, unit, topic, minutesNote = topic.minutesNote) => [
   `Kaynak: ${lesson.doc.title}.`,
   lesson.exam === 'OABT' && lesson.doc === data.documents.AGS2025
     ? '2026 belgesi yalnız AGS ile yeni Özel Eğitim alanını yayımladı; bu alanın en güncel resmî konu dağılımı 2025 belgesidir.' : null,
@@ -103,7 +109,7 @@ const outcomeNotes = (lesson, unit, topic) => [
   lesson.exam === 'YDS' || lesson.exam === 'YOKDIL'
     ? 'ÖSYM bu sınav için konu listesi yayımlamıyor; ağaç soru tipi ve dil bilgisi alanlarına göre kurulmuş koçluk analizidir.' : null,
   'Resmî kazanım kodu değildir; sınav hazırlık kapsamıdır.',
-  topic.minutesNote,
+  minutesNote,
   `YieldWeight ${topic.yieldWeight}: testteki yaklaşık paya göre bant (≥8→5, ≥6→4, ≥4→3, ≥2→2, diğer→1)`
     + (topic.grammar ? ' + 1 (dil bilgisi cloze ve cümle tamamlamada da kullanılır; koçluk tahmini).' : '.'),
 ].filter(Boolean).join(' ');
@@ -115,7 +121,8 @@ const model = {
     unitQuestions: l.units.map(u => Math.round(u.topics.reduce((s, t) => s + t.questions, 0) * 100) / 100),
     topics: l.units.flatMap(u => u.topics.map(t => ({ code: t.code, unit: u.name, name: t.name, pct: Math.round(t.pct * 10000) / 10000,
       questions: Math.round(t.questions * 100) / 100, size: t.size, yieldWeight: t.yieldWeight, minutes: t.minutes, rawMinutes: t.rawMinutes,
-      minutesNote: t.minutesNote, sourceUrl: t.sourceUrl }))),
+      minutesNote: t.minutesNote, sourceUrl: t.sourceUrl, topicId: uuid(`topic:${t.code}`), outcomeId: uuid(`outcome:${t.code}`),
+      previousMinutes: t.previousMinutes, outcomeNotes: outcomeNotes(l, u, t), previousOutcomeNotes: outcomeNotes(l, u, t, t.previousMinutesNote) }))),
   })),
 };
 const totals = {};
@@ -147,10 +154,12 @@ for (const l of lessons) {
     for (const t of u.topics) {
       const topicId = uuid(`topic:${t.code}`), officialId = uuid(`official:${t.code}`), outcomeId = uuid(`outcome:${t.code}`);
       const previousTopicName = previousName(t.name, PREVIOUS.topicNames[t.code]), current = outcomeName(l, u, t);
-      rows.topics.push([topicId, t.code, lessonId, unitId, t.name, t.order, t.minutes, t.yieldWeight, previousTopicName]);
+      rows.topics.push([topicId, t.code, lessonId, unitId, t.name, t.order, t.minutes, t.yieldWeight, previousTopicName,
+        t.previousMinutes === t.minutes ? null : t.previousMinutes]);
       rows.official.push([officialId, editionId, t.code, t.name, previousTopicName]);
-      rows.outcomes.push([outcomeId, editionId, officialId, t.code, current, outcomeNotes(l, u, t), t.order, t.sourceUrl,
-        previousName(current, previousOutcomeName(l, u, t))]);
+      const notes = outcomeNotes(l, u, t), previousNotes = outcomeNotes(l, u, t, t.previousMinutesNote);
+      rows.outcomes.push([outcomeId, editionId, officialId, t.code, current, notes, t.order, t.sourceUrl,
+        previousName(current, previousOutcomeName(l, u, t)), previousNotes === notes ? null : previousNotes]);
       rows.sources.push([uuid(`outcome-source:${t.code}`), outcomeId, t.code]);
       rows.maps.push([topicId, outcomeId]);
     }
@@ -168,7 +177,9 @@ const apply = `-- KM3 coaching catalog pack (01.11.2026): AGS, ÖABT (17 fields)
 -- Needs the KM1 exams AGS, OABT, YDS and YOKDIL (content-packs/exam-calendar/2027) and stops otherwise.
 -- Idempotent: rows are keyed by fixed ids; a rerun inserts only what is missing, keeps the team's activation and approval
 -- decisions and stops (changing nothing) when a stored row's content differs from this pack. Stored values that are
--- exactly what release ${PREVIOUS.commit} wrote (its package hash, the names in "previous_name") count as equal and are kept.
+-- exactly what release ${PREVIOUS.commit} wrote (its package hash, the names in "previous_name") count as equal and are kept, and
+-- so do the topic minutes and outcome notes of the ${PREVIOUS.maxMinutes}-minute limit ("previous_minutes", "previous_notes"): the
+-- pack never updates a row; content-packs/coaching-catalog-km3-minutes/v1 writes the ${data.method.maxMinutes}-minute values.
 --   psql -X -qAt -v ON_ERROR_STOP=1 -f apply.sql      (Coaching database; prints before/inserted/after NOTICEs)
 BEGIN;
 SET LOCAL lock_timeout = '5s';
@@ -211,7 +222,7 @@ CREATE TEMP TABLE km3_units (id uuid PRIMARY KEY, source_id text, lesson_id uuid
 INSERT INTO km3_units VALUES
 ${values(rows.units)};
 CREATE TEMP TABLE km3_topics (id uuid PRIMARY KEY, source_id text, lesson_id uuid, unit_id uuid, name text, display_order int,
-    minutes int, yield_weight int, previous_name text) ON COMMIT DROP;
+    minutes int, yield_weight int, previous_name text, previous_minutes int) ON COMMIT DROP;
 INSERT INTO km3_topics VALUES
 ${values(rows.topics)};
 CREATE TEMP TABLE km3_editions (id uuid PRIMARY KEY, code text, exam text, subject text, source_url text, scope_url text,
@@ -222,7 +233,7 @@ CREATE TEMP TABLE km3_official (id uuid PRIMARY KEY, edition_id uuid, code text,
 INSERT INTO km3_official VALUES
 ${values(rows.official)};
 CREATE TEMP TABLE km3_outcomes (id uuid PRIMARY KEY, edition_id uuid, official_id uuid, code text, name text, notes text,
-    display_order int, source_url text, previous_name text) ON COMMIT DROP;
+    display_order int, source_url text, previous_name text, previous_notes text) ON COMMIT DROP;
 INSERT INTO km3_outcomes VALUES
 ${values(rows.outcomes)};
 CREATE TEMP TABLE km3_outcome_sources (id uuid PRIMARY KEY, outcome_id uuid, source_id text) ON COMMIT DROP;
@@ -267,13 +278,14 @@ BEGIN
         LEFT JOIN km3_topics k ON k.id = t."Id"
         WHERE (t."Source" = '${SOURCE}' OR k.id IS NOT NULL)
           AND (k.id IS NULL OR (t."Source", t."SourceId", t."LessonId", t."UnitId", t."ParentId",
-                  CASE WHEN t."Name" = k.previous_name THEN k.name ELSE t."Name" END, t."DisplayOrder", t."EstimatedMinutes", t."YieldWeight")
+                  CASE WHEN t."Name" = k.previous_name THEN k.name ELSE t."Name" END, t."DisplayOrder",
+                  CASE WHEN t."EstimatedMinutes" = k.previous_minutes THEN k.minutes ELSE t."EstimatedMinutes" END, t."YieldWeight")
               IS DISTINCT FROM ('${SOURCE}'::varchar, k.source_id::varchar, k.lesson_id, k.unit_id, NULL::uuid, k.name::varchar, k.display_order, k.minutes, k.yield_weight))
         UNION ALL SELECT 'edition ' || e."Code" FROM coaching.official_curriculum_editions e
         LEFT JOIN km3_editions k ON k.id = e."Id"
         WHERE (e."Code" IN (SELECT code FROM km3_editions) OR k.id IS NOT NULL)
           AND (k.id IS NULL OR (e."Code", e."ExamCode", e."GradeNumber", e."SubjectName", e."AcademicYearStart", e."AcademicYearEnd", e."SourceUrl",
-                  e."ScopeEvidenceUrl", CASE WHEN e."PackageSha256" = '${PREVIOUS.packageSha256}' THEN '${PACKAGE_SHA}' ELSE e."PackageSha256" END)
+                  e."ScopeEvidenceUrl", CASE WHEN e."PackageSha256" IN (${PREVIOUS_SHAS.map(q).join(', ')}) THEN '${PACKAGE_SHA}' ELSE e."PackageSha256" END)
               IS DISTINCT FROM (k.code::varchar, k.exam::varchar, NULL::int, k.subject::varchar, 2026, 2027, k.source_url::varchar, k.scope_url::varchar, '${PACKAGE_SHA}'::varchar))
         UNION ALL SELECT 'official topic ' || o."Code" FROM coaching.official_curriculum_topics o
         JOIN km3_official k ON k.id = o."Id"
@@ -281,7 +293,8 @@ BEGIN
               IS DISTINCT FROM (k.edition_id, k.code::varchar, k.name::varchar, 1, NULL::int)
         UNION ALL SELECT 'outcome ' || o."Code" FROM coaching.study_catalog_outcomes o
         JOIN km3_outcomes k ON k.id = o."Id"
-        WHERE (o."EditionId", o."OfficialTopicId", o."Code", CASE WHEN o."Name" = k.previous_name THEN k.name ELSE o."Name" END, o."Notes",
+        WHERE (o."EditionId", o."OfficialTopicId", o."Code", CASE WHEN o."Name" = k.previous_name THEN k.name ELSE o."Name" END,
+                  CASE WHEN o."Notes" = k.previous_notes THEN k.notes ELSE o."Notes" END,
                   o."SourcePage", o."DisplayOrder", o."SourceKind", o."SourceUrl")
               IS DISTINCT FROM (k.edition_id, k.official_id, k.code::varchar, k.name::varchar, k.notes::varchar, NULL::int, k.display_order, 'ExamSkill'::varchar, k.source_url::varchar)
         UNION ALL SELECT 'outcome source ' || s."SourceId" FROM coaching.study_catalog_outcome_sources s
@@ -406,7 +419,7 @@ BEGIN
         UNION ALL SELECT 'topic without outcome ' || t."SourceId" FROM coaching.study_catalog_topics t
         WHERE t."Source" = '${SOURCE}' AND NOT EXISTS (SELECT 1 FROM coaching.study_catalog_topic_outcomes m WHERE m."TopicId" = t."Id")
         UNION ALL SELECT 'topic minutes/weight ' || t."SourceId" FROM coaching.study_catalog_topics t
-        WHERE t."Source" = '${SOURCE}' AND ("EstimatedMinutes" IS NULL OR "EstimatedMinutes" NOT BETWEEN 1 AND 1440 OR "YieldWeight" NOT BETWEEN 1 AND 5)
+        WHERE t."Source" = '${SOURCE}' AND ("EstimatedMinutes" IS NULL OR "EstimatedMinutes" NOT BETWEEN 1 AND ${data.method.maxMinutes} OR "YieldWeight" NOT BETWEEN 1 AND 5)
         UNION ALL SELECT 'outcome source ' || o."Code" FROM coaching.study_catalog_outcomes o
         JOIN coaching.official_curriculum_editions e ON e."Id" = o."EditionId"
         WHERE e."Code" LIKE 'km3-%' AND (o."SourceKind" <> 'ExamSkill' OR o."SourceUrl" IS NULL)
@@ -426,7 +439,7 @@ const review = ['exam,lesson_code,lesson,unit,topic_code,topic,approx_pct,approx
   .join('\n') + '\n';
 
 const h = m => (Math.round(m / 6) / 10).toLocaleString('tr-TR');
-const totalsTable = ['| Sınav | Ders | Ünite | Konu (= kazanım) | Planlanan süre (konu sınırı 1440 dk) | Tahmin (sınırsız) | 1440 dk ile sınırlanan konu |',
+const totalsTable = [`| Sınav | Ders | Ünite | Konu (= kazanım) | Planlanan süre (konu sınırı ${data.method.maxMinutes} dk) | Tahmin (sınırsız) | ${data.method.maxMinutes} dk ile sınırlanan konu |`,
   '| --- | ---: | ---: | ---: | ---: | ---: | ---: |']
   .concat(Object.entries(totals).map(([exam, r]) => `| ${exam} | ${r.lessons} | ${r.units} | ${r.topics} | ${h(r.minutes)} saat | ${h(r.rawMinutes)} saat | ${r.capped} |`))
   .concat(['', '| Ders | Konu | Planlanan | Tahmin |', '| --- | ---: | ---: | ---: |'])

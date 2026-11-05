@@ -109,7 +109,8 @@ public sealed class StudyCatalogTopic
         if (lessonId == Guid.Empty || unitId == Guid.Empty || parentId == Guid.Empty)
             throw new ArgumentException("Valid catalog ownership is required.");
         if (displayOrder < 0) throw new ArgumentOutOfRangeException(nameof(displayOrder));
-        if (estimatedMinutes <= 0) throw new ArgumentOutOfRangeException(nameof(estimatedMinutes));
+        if (estimatedMinutes is <= 0 or > StudyLimits.MaxTopicMinutes)
+            throw new ArgumentOutOfRangeException(nameof(estimatedMinutes), $"Konu çalışma süresi 1–{StudyLimits.MaxTopicMinutes} dakika olmalıdır.");
         return new StudyCatalogTopic { Source = StudyCatalogText.Require(source, 100),
             SourceId = StudyCatalogText.Require(sourceId, 100), LessonId = lessonId, UnitId = unitId,
             Name = StudyCatalogText.Require(name, 300), ParentId = parentId,

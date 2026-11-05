@@ -95,7 +95,7 @@ public static class WeeklyOutcomeScheduler
             var last=merged.Count==0?null:merged[^1];
             if(last is not null&&last.Date==slice.Date&&last.LessonId==slice.LessonId&&last.ReusedSlot==slice.ReusedSlot&&last.Kind==slice.Kind
                 &&last.Reason==slice.Reason&&last.Outcome.OutcomeId==slice.Outcome.OutcomeId&&last.Outcome.TopicId==slice.Outcome.TopicId
-                &&last.StartMinute+last.Minutes==slice.StartMinute&&last.Minutes+slice.Minutes<=1440)
+                &&last.StartMinute+last.Minutes==slice.StartMinute&&last.Minutes+slice.Minutes<=StudyLimits.MaxDayMinutes)
             {
                 var minutes=last.Minutes+slice.Minutes;
                 merged[^1]=last with {Minutes=minutes,PlannedQuestions=WeeklyPlanEngine.Questions(last.Kind,minutes,last.Outcome.PracticeShare)};

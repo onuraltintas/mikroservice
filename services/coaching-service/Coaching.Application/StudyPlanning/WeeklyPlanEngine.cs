@@ -63,7 +63,8 @@ public static class WeeklyPlanEngine
                 if (kind != "Refresh" && factor > 1) reasons.Add("Bu dersi zor bulduğun için süre artırıldı");
                 if (kind != "Refresh" && factor < 1) reasons.Add("Bu dersi kolay bulduğun için süre kısaltıldı");
                 if (reasons.Count == 0) reasons.Add("Müfredat sırasındaki yeni konu");
-                return outcome with { Kind = kind, Minutes = Math.Clamp(minutes, 1, 1440), Reason = string.Join(" · ", reasons) };
+                // The work of one outcome, not of one day: the weekly scheduler places it in hour slots over as many days as needed.
+                return outcome with { Kind = kind, Minutes = Math.Clamp(minutes, 1, StudyLimits.MaxTopicMinutes), Reason = string.Join(" · ", reasons) };
             }).ToArray();
             return lesson with
             {

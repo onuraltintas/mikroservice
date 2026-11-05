@@ -19,7 +19,7 @@ public sealed class StudyCatalogTopicOutcomeShare
     {
         ArgumentNullException.ThrowIfNull(estimate);
         if (topic == Guid.Empty || learning < 0 || practice < 0 || check < 0
-            || (long)learning + practice + check is < 1 or > 1440)
+            || (long)learning + practice + check is < 1 or > StudyLimits.MaxTopicMinutes)
             throw new ArgumentException("Konu kapsamının süre paylarını kontrol edin.");
         return new() { TopicId = topic, OutcomeId = estimate.OutcomeId, EstimateId = estimate.Id,
             LearningMinutes = learning, PracticeMinutes = practice, CheckMinutes = check,

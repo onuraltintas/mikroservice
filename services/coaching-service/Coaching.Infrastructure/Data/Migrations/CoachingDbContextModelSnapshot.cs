@@ -3243,7 +3243,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("outcome_duration_estimates", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_outcome_minutes", "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND 1440 AND \"Number\" > 0");
+                            t.HasCheckConstraint("ck_outcome_minutes", "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND 4320 AND \"Number\" > 0");
 
                             t.HasCheckConstraint("ck_outcome_review", "\"Method\" IN ('OfficialBudgetDraft','ReviewedStudy') AND \"Confidence\" IN ('Low','Medium','High') AND (\"Method\" <> 'ReviewedStudy' OR (\"ReviewedBy\" IS NOT NULL AND \"ReviewedAt\" IS NOT NULL)) AND (NOT \"IsPublished\" OR \"Method\" = 'ReviewedStudy')");
                         });
@@ -3917,7 +3917,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("study_catalog_topic_outcome_shares", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_topic_outcome_share_minutes", "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND 1440");
+                            t.HasCheckConstraint("ck_topic_outcome_share_minutes", "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND 4320");
                         });
                 });
 

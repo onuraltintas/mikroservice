@@ -33,7 +33,7 @@ BEGIN
         UNION ALL SELECT 'topic without outcome ' || t."SourceId" FROM coaching.study_catalog_topics t
         WHERE t."Source" = 'coaching-catalog-km3' AND NOT EXISTS (SELECT 1 FROM coaching.study_catalog_topic_outcomes m WHERE m."TopicId" = t."Id")
         UNION ALL SELECT 'topic minutes/weight ' || t."SourceId" FROM coaching.study_catalog_topics t
-        WHERE t."Source" = 'coaching-catalog-km3' AND ("EstimatedMinutes" IS NULL OR "EstimatedMinutes" NOT BETWEEN 1 AND 1440 OR "YieldWeight" NOT BETWEEN 1 AND 5)
+        WHERE t."Source" = 'coaching-catalog-km3' AND ("EstimatedMinutes" IS NULL OR "EstimatedMinutes" NOT BETWEEN 1 AND 4320 OR "YieldWeight" NOT BETWEEN 1 AND 5)
         UNION ALL SELECT 'outcome source ' || o."Code" FROM coaching.study_catalog_outcomes o
         JOIN coaching.official_curriculum_editions e ON e."Id" = o."EditionId"
         WHERE e."Code" LIKE 'km3-%' AND (o."SourceKind" <> 'ExamSkill' OR o."SourceUrl" IS NULL)

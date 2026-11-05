@@ -72,7 +72,7 @@ before(() => {
       "Confidence" varchar(20) NOT NULL,"Evidence" varchar(2000) NOT NULL,"ReviewedBy" uuid,"ReviewedAt" timestamptz,"IsPublished" boolean NOT NULL,
       CONSTRAINT "AK_outcome_duration_estimates_Id_OutcomeId" UNIQUE("Id","OutcomeId"),
       CONSTRAINT ck_outcome_minutes CHECK ("LearningMinutes">=0 AND "PracticeMinutes">=0 AND "CheckMinutes">=0
-        AND ("LearningMinutes"::bigint+"PracticeMinutes"+"CheckMinutes") BETWEEN 1 AND 1440 AND "Number">0),
+        AND ("LearningMinutes"::bigint+"PracticeMinutes"+"CheckMinutes") BETWEEN 1 AND 4320 AND "Number">0),
       CONSTRAINT ck_outcome_review CHECK ("Method" IN ('OfficialBudgetDraft','ReviewedStudy') AND "Confidence" IN ('Low','Medium','High')
         AND ("Method"<>'ReviewedStudy' OR ("ReviewedBy" IS NOT NULL AND "ReviewedAt" IS NOT NULL)) AND (NOT "IsPublished" OR "Method"='ReviewedStudy')));
     CREATE UNIQUE INDEX "IX_outcome_duration_estimates_OutcomeId_Number" ON coaching.outcome_duration_estimates("OutcomeId","Number");`);

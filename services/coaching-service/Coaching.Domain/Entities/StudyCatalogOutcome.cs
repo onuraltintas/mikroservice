@@ -163,11 +163,11 @@ public sealed class OutcomeDurationEstimate
     public static OutcomeDurationEstimate Create(Guid outcome, int number, int learning, int practice, int check,
         string method, string confidence, string evidence, Guid? reviewer)
     {
-        if (outcome == Guid.Empty || number < 1 || learning is < 0 or > 1440 || practice is < 0 or > 1440 || check is < 0 or > 1440
-            || (long)learning + practice + check is < 1 or > 1440
+        if (outcome == Guid.Empty || number < 1 || learning is < 0 or > StudyLimits.MaxTopicMinutes || practice is < 0 or > StudyLimits.MaxTopicMinutes
+            || check is < 0 or > StudyLimits.MaxTopicMinutes || (long)learning + practice + check is < 1 or > StudyLimits.MaxTopicMinutes
             || method is not ("OfficialBudgetDraft" or "ReviewedStudy") || confidence is not ("Low" or "Medium" or "High")
             || (method == "ReviewedStudy" && (!reviewer.HasValue || reviewer == Guid.Empty)))
-            throw new ArgumentException("Kazanım süresi 1–1440 dakika olmalı; yöntem ve inceleme bilgilerini kontrol edin.");
+            throw new ArgumentException($"Kazanım süresi 1–{StudyLimits.MaxTopicMinutes} dakika olmalı; yöntem ve inceleme bilgilerini kontrol edin.");
         return new() { OutcomeId = outcome, Number = number, LearningMinutes = learning, PracticeMinutes = practice, CheckMinutes = check,
             Method = method, Confidence = confidence, Evidence = StudyCatalogText.Require(evidence, 2000),
             ReviewedBy = reviewer, ReviewedAt = reviewer.HasValue ? DateTime.UtcNow : null };
@@ -198,7 +198,7 @@ public sealed class StudyPlanTaskOutcome
     private StudyPlanTaskOutcome() { }
     public static StudyPlanTaskOutcome Create(Guid task, Guid outcome, Guid estimate, int minutes, string origin)
     {
-        if (task == Guid.Empty || outcome == Guid.Empty || estimate == Guid.Empty || minutes is < 1 or > 1440
+        if (task == Guid.Empty || outcome == Guid.Empty || estimate == Guid.Empty || minutes is < 1 or > StudyLimits.MaxDayMinutes
             || origin is not ("Catalog" or "StudentOverride")) throw new ArgumentException("Plan kazanım süresi geçersiz.");
         return new() { TaskId = task, OutcomeId = outcome, EstimateId = estimate, AllocatedMinutes = minutes, Origin = origin };
     }

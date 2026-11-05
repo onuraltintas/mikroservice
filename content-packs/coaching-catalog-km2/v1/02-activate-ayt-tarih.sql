@@ -298,8 +298,8 @@ DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM km2_estimates GROUP BY outcome_id HAVING count(DISTINCT previous_id) > 1)
      OR EXISTS (SELECT 1 FROM km2_estimates k JOIN outcome_duration_estimates e ON e."Id"=k.previous_id
-       WHERE e."LearningMinutes"::bigint + e."PracticeMinutes" + e."CheckMinutes" + k.add_learning + k.add_practice + k.add_check > 1440) THEN
-    RAISE EXCEPTION 'km2 activate refused: a new duration version would exceed 1440 minutes';
+       WHERE e."LearningMinutes"::bigint + e."PracticeMinutes" + e."CheckMinutes" + k.add_learning + k.add_practice + k.add_check > 4320) THEN
+    RAISE EXCEPTION 'km2 activate refused: a new duration version would exceed 4320 minutes (the per-topic limit)';
   END IF;
 END $$;
 

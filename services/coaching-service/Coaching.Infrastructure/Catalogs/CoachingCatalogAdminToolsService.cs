@@ -524,8 +524,8 @@ public sealed class CoachingCatalogAdminToolsService(CoachingDbContext db, ICoac
         if (r!.Items is null || r.Items.Count is < 1 or > 200 || r.Items.Any(x => x is null || x.Id == Guid.Empty)
             || r.Items.Select(x => x.Id).Distinct().Count() != r.Items.Count)
             throw new ArgumentException("1–200 farklı konu seçin.");
-        if (r.Items.Any(x => x.EstimatedMinutes is < 1 or > 100000 || x.YieldWeight is < 1 or > 5 || (x.EstimatedMinutes is null && x.YieldWeight is null)))
-            throw new ArgumentException("Süre 1 dakikadan, sınav ağırlığı 1–5 aralığından olmalıdır.");
+        if (r.Items.Any(x => x.EstimatedMinutes is < 1 or > StudyLimits.MaxTopicMinutes || x.YieldWeight is < 1 or > 5 || (x.EstimatedMinutes is null && x.YieldWeight is null)))
+            throw new ArgumentException($"Konu süresi 1–{StudyLimits.MaxTopicMinutes} dakika, sınav ağırlığı 1–5 aralığında olmalıdır.");
         return await Write(async audits =>
         {
             var conflicts = new List<TopicConflict>(); var changed = 0;

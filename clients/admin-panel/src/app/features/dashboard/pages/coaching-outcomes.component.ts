@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CONFIDENCE_LABELS, label } from './coaching-curriculum-labels';
+import { MAX_TOPIC_MINUTES } from '../../../shared/coaching-study-limits';
 
 interface Edition { id: string; code: string; subjectName: string; academicYearStart: number; academicYearEnd: number; sourceUrl: string; documentSha256: string }
 interface Outcome { id: string; code: string; name: string; officialTopicId: string; sourcePage: number | null; sourceKind?: string }
@@ -42,9 +43,9 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
           @for (m of mappings(); track m.topicId) { <article><p>{{ topicName(m.topicId) }} · {{ m.isApproved ? 'Onaylı' : 'İnceleme bekliyor' }}</p><p>{{ m.evidence }}</p>
             <button type="button" [disabled]="mappingEvidence.trim().length < 5" (click)="reviewMapping(m.topicId, !m.isApproved)">{{ m.isApproved ? 'Onayı kaldır' : 'Kapsamı onayla' }}</button></article> }
           <h4>Yeni süre sürümü</h4><p>İlk öğrenme için net dakika girin. Değişiklik eski sürümleri ve planları değiştirmez.</p>
-          <div class="fields"><label>Öğrenme (dk)<input type="number" min="0" max="1440" [(ngModel)]="learningMinutes"></label>
-            <label>Alıştırma (dk)<input type="number" min="0" max="1440" [(ngModel)]="practiceMinutes"></label>
-            <label>Kısa kontrol (dk)<input type="number" min="0" max="1440" [(ngModel)]="checkMinutes"></label></div>
+          <div class="fields"><label>Öğrenme (dk)<input type="number" min="0" [max]="maxTopicMinutes" [(ngModel)]="learningMinutes"></label>
+            <label>Alıştırma (dk)<input type="number" min="0" [max]="maxTopicMinutes" [(ngModel)]="practiceMinutes"></label>
+            <label>Kısa kontrol (dk)<input type="number" min="0" [max]="maxTopicMinutes" [(ngModel)]="checkMinutes"></label></div>
           <label>Güven düzeyi<select [(ngModel)]="confidence"><option value="Low">Düşük</option><option value="Medium">Orta</option><option value="High">Yüksek</option></select></label>
           <label>Süre inceleme dayanağı<textarea [(ngModel)]="durationEvidence" maxlength="500"></textarea></label>
           <button type="button" [disabled]="durationEvidence.trim().length < 5 || reason.trim().length < 5" (click)="saveEstimate()">İncelenmiş süre sürümü oluştur</button>
@@ -62,6 +63,7 @@ export class CoachingOutcomesComponent implements OnInit {
   private readonly url = `${environment.apiUrl}/coaching-admin/outcomes`;
   readonly busy = signal(false); readonly error = signal<string | null>(null); readonly editions = signal<Edition[]>([]);
   readonly catalog = signal<Catalog | null>(null); readonly review = signal<ImportReview | null>(null);
+  readonly maxTopicMinutes = MAX_TOPIC_MINUTES;
   packageText = ''; reason = ''; editionId = ''; outcomeId = ''; mappingEvidence = ''; durationEvidence = ''; confidence = 'Medium';
   learningMinutes = 0; practiceMinutes = 0; checkMinutes = 0; private reviewedText = '';
   private requestNumber = 0;
@@ -88,7 +90,7 @@ export class CoachingOutcomesComponent implements OnInit {
     this.write(this.http.put(`${this.url}/mappings/${topic}/${this.outcomeId}`, { approved, evidence: this.mappingEvidence.trim() })); }
   saveEstimate() { const parts = [this.learningMinutes, this.practiceMinutes, this.checkMinutes]; const total = parts.reduce((a, b) => a + b, 0);
     if (!this.outcomeId || this.reason.trim().length < 5 || this.durationEvidence.trim().length < 5) return;
-    if (parts.some(x => !Number.isInteger(x) || x < 0) || total < 1 || total > 1440) { this.error.set('Toplam süre 1–1440 dakika olmalıdır.'); return; }
+    if (parts.some(x => !Number.isInteger(x) || x < 0) || total < 1 || total > MAX_TOPIC_MINUTES) { this.error.set(`Toplam süre 1–${MAX_TOPIC_MINUTES} dakika olmalıdır.`); return; }
     this.write(this.http.post(`${this.url}/${this.outcomeId}/estimates`, { learningMinutes: this.learningMinutes, practiceMinutes: this.practiceMinutes,
       checkMinutes: this.checkMinutes, confidence: this.confidence, evidence: this.durationEvidence.trim(), reason: this.reason.trim() })); }
   publish(id: string) { if (this.reason.trim().length >= 5) this.write(this.http.put(`${this.url}/estimates/${id}/publication`, { reason: this.reason.trim() })); }

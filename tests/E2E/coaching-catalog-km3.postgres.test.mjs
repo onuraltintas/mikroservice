@@ -120,7 +120,7 @@ test('loads the AGS, ÖABT, YDS and YÖKDİL drafts once, passive and pending ap
     WHERE e."Code" LIKE 'km3-%' AND (o."SourceKind" <> 'ExamSkill' OR o."SourceUrl" NOT LIKE 'https://dokuman.osym.gov.tr/%')`), '0');
   assert.equal(run(`SELECT count(*) FROM coaching.study_catalog_topics t WHERE "Source" = 'coaching-catalog-km3'
     AND NOT EXISTS (SELECT 1 FROM coaching.study_catalog_topics c WHERE c."ParentId" = t."Id")
-    AND ("EstimatedMinutes" IS NULL OR "EstimatedMinutes" NOT BETWEEN 30 AND 1440)`), '0');
+    AND ("EstimatedMinutes" IS NULL OR "EstimatedMinutes" NOT BETWEEN 30 AND 4320)`), '0');
   assert.equal(run(`SELECT "YieldWeight" || ':' || "EstimatedMinutes" FROM coaching.study_catalog_topics WHERE "Source" = 'coaching-catalog-km3' AND "SourceId" = 'OABT_OZEL.1.01'`), '5:900');
 
   // verify.sql (read-only) agrees.
