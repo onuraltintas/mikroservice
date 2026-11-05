@@ -210,7 +210,7 @@ public sealed class RegistrationVerificationEmailTests
         {
             var body = Assert.IsType<OkObjectResult>(response).Value!;
             var json = System.Text.Json.JsonSerializer.Serialize(body, body.GetType(), AppJsonOptions());
-            Assert.Equal($"{{\"userId\":\"{userId}\",\"verificationEmail\":\"{outcome}\"}}", json);
+            Assert.Equal($"{{\"userId\":\"{userId}\",\"verificationEmail\":\"{outcome}\",\"newProductAccess\":true}}", json);
         }
     }
 
@@ -342,7 +342,8 @@ public sealed class RegistrationVerificationEmailTests
         var second = await f.Join();
 
         Assert.True(second.IsSuccess, second.IsFailure ? second.Error.Description : "");
-        Assert.Equal(new RegistrationOutcome(f.User.Id, RegistrationOutcome.Sent), second.Value);
+        Assert.Equal(new RegistrationOutcome(f.User.Id, RegistrationOutcome.Sent, NewProductAccess: false), second.Value);
+        Assert.True(first.Value.NewProductAccess);
         Assert.Equal(2, f.Published.OfType<UserRegisteredEvent>().Count());
         Assert.NotEqual(firstToken, f.User.EmailVerificationToken);
         Assert.Equal(f.User.EmailVerificationToken, f.Published.OfType<UserRegisteredEvent>().Last().VerificationToken);
@@ -362,6 +363,7 @@ public sealed class RegistrationVerificationEmailTests
 
         Assert.True(second.IsSuccess, second.IsFailure ? second.Error.Description : "");
         Assert.Equal(RegistrationOutcome.NotRequired, second.Value.VerificationEmail);
+        Assert.False(second.Value.NewProductAccess, "a retry grants nothing new");
         Assert.Empty(f.Published.OfType<UserRegisteredEvent>());
     }
 
@@ -657,6 +659,70 @@ public sealed class RegistrationVerificationEmailTests
         Assert.Equal("speed-reading", Assert.Single(f.Published.OfType<UserRegisteredEvent>()).Product);
     }
 
+    // ---- Third review (PR #111) ----
+
+    // N1: the parent eligibility answer needs the password first, and a wrong password counts as a failed attempt.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AWrongPasswordGetsTheSameAnswerWhetherOrNotTheAccountCouldBecomeAParent(bool eligible)
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "parent", confirmed: true);
+        if (!eligible) f.User.RevokeProductAccess(PlatformProduct.SpeedReading, DateTimeOffset.UtcNow);
+
+        var result = await f.Enrollment.JoinAsync(f.User.Email, "WrongPassword1!", PlatformProduct.Coaching, "parent", [], null, CancellationToken.None);
+
+        Assert.Equal("Auth.ExistingAccountPasswordRequired", result.Error.Code);
+        Assert.Equal(1, f.FailedAttempts);
+    }
+
+    [Fact]
+    public async Task AnIneligibleParentSourceWithMfaIsAskedForTheCodeFirst()
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "parent", confirmed: true);
+        f.User.RevokeProductAccess(PlatformProduct.SpeedReading, DateTimeOffset.UtcNow);
+        f.User.EnableMfa("protected", ["recovery"], DateTimeOffset.UtcNow);
+
+        Assert.Equal("Auth.ExistingAccountMfaRequired", (await f.Enrollment.JoinAsync(f.User.Email, EnrollmentFixture.Password,
+            PlatformProduct.Coaching, "parent", [], null, CancellationToken.None)).Error.Code);
+        var withCode = await f.Enrollment.JoinAsync(f.User.Email, EnrollmentFixture.Password, PlatformProduct.Coaching, "parent", [], "123456", CancellationToken.None);
+        Assert.Equal("Identity.UserExists", withCode.Error.Code);
+        Assert.False(f.User.HasProductAccess(PlatformProduct.Coaching));
+    }
+
+    // N3: the response says whether this request granted a product (first registration or first join).
+    [Fact]
+    public async Task ANewAccountAndAFirstJoinGrantANewProductButARetryDoesNot()
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "student", confirmed: true);
+        Assert.True((await f.Join()).Value.NewProductAccess);
+        Assert.False((await f.Join()).Value.NewProductAccess);
+        Assert.True(RegistrationOutcome.EmailSent(Guid.NewGuid()).NewProductAccess);
+    }
+
+    // N2: the welcome e-mail after verification names the product like the verification e-mail.
+    [Theory]
+    [InlineData(null, false, "speed-reading")]
+    [InlineData(null, true, null)]
+    [InlineData("coaching", true, "coaching")]
+    [InlineData("coaching", false, "speed-reading")]
+    public async Task ConfirmingTheAddressNamesTheProductOnTheWelcomeEmail(string? requested, bool bothProducts, string? expected)
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "student", confirmed: false);  // speed reading only
+        if (bothProducts)
+        {
+            f.User.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+            f.AddRole("Student", PlatformProduct.Coaching);
+        }
+        f.User.GenerateEmailVerificationToken();
+        var confirm = new Identity.Application.Commands.ConfirmEmail.ConfirmEmailCommandHandler(f.Users(), f.UnitOfWork(), f.Publisher());
+
+        var result = await confirm.Handle(new(f.User.Id, f.User.EmailVerificationToken, requested), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expected, Assert.Single(f.Published.OfType<UserEmailConfirmedEvent>()).Product);
+    }
+
     private static Identity.Application.Commands.RegisterParent.RegisterParentCommandHandler ParentHandler(EnrollmentFixture f) => new(
         f.ExistingIdentity(), f.Users(), Stub<IParentRepository>((m, _) => throw new NotSupportedException(m.Name)), f.UnitOfWork(), f.Publisher(),
         Stub<IConfigurationService>((_, _) => Task.FromResult<string?>("true")), new AcceptingLegal(), f.Enrollment);
@@ -707,7 +773,7 @@ public sealed class RegistrationVerificationEmailTests
         public readonly List<ParentProfile> ParentProfiles = [];
         public readonly ExistingAccountEnrollment Enrollment;
         public readonly IInstitutionRepository Institutions;
-        public int Saves;
+        public int Saves, FailedAttempts;
 
         /// <param name="account">student, teacher, institution or parent (a parent's source account is a student one).</param>
         public EnrollmentFixture(PlatformProduct target, string account, bool confirmed)
@@ -742,6 +808,12 @@ public sealed class RegistrationVerificationEmailTests
                     nameof(IParentRepository.GetByUserIdAsync) => Task.FromResult(ParentProfiles.FirstOrDefault(p => p.UserId == (Guid)args![0]!)),
                     nameof(IParentRepository.AddAsync) => AddParent((ParentProfile)args![0]!),
                     _ => throw new NotSupportedException(m.Name)
+                }),
+                loginAttempts: Stub<ILoginAttemptLimiter>((m, _) => m.Name switch
+                {
+                    nameof(ILoginAttemptLimiter.GetLockoutAsync) => Task.FromResult<TimeSpan?>(null),
+                    nameof(ILoginAttemptLimiter.RecordFailureAsync) => RecordFailure(),
+                    _ => Task.CompletedTask
                 }));
         }
 
@@ -771,6 +843,7 @@ public sealed class RegistrationVerificationEmailTests
         private Task AddAdmin(InstitutionAdmin admin) { Admins.Add(admin); return Task.CompletedTask; }
         private Task AddParent(ParentProfile profile) { ParentProfiles.Add(profile); return Task.CompletedTask; }
         private object? RemoveAdmin(InstitutionAdmin admin) { Admins.Remove(admin); return null; }
+        private Task RecordFailure() { FailedAttempts++; return Task.CompletedTask; }
         public void SetPassword(string password)
         {
             new PasswordHasher().CreatePasswordHash(password, out var hash, out var salt);

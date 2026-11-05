@@ -94,6 +94,27 @@ public sealed class NotificationEmailInjectionTests
         }
     }
 
+    // Third review N2: the welcome e-mail after verification follows the product; null keeps the role.
+    [Theory]
+    [InlineData("Student", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "Eduİvme")]
+    [InlineData("Parent", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "Eduİvme")]
+    [InlineData("Student", "speed-reading", "SpeedReading_Auth_Welcome", "https://speed.example.test/auth/login", "Master Hızlı Okuma")]
+    [InlineData("Student", null, "SpeedReading_Auth_Welcome", "https://speed.example.test/auth/login", "Master Hızlı Okuma")]
+    public async Task WelcomeEmail_UsesTheProductTemplateLoginLinkAndName(string role, string? product, string template, string login, string appName)
+    {
+        foreach (var withTemplate in new[] { true, false })
+        {
+            var mail = (await RunAsync<UserEmailConfirmedConsumer>(
+                new UserEmailConfirmedEvent(Guid.NewGuid(), "a@example.test", "Ada", "Kaya", role) { Product = product },
+                withTemplate ? (template, "Hoş geldin - Eduİvme", "<p>Eduİvme <a href='{{LoginLink}}'>x</a></p>") : null)).Single();
+
+            mail.Body.Should().Contain($"href='{login}'");
+            mail.Body.Should().Contain(appName);
+            if (withTemplate) mail.Subject.Should().Be($"Hoş geldin - {appName}");
+            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma");
+        }
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

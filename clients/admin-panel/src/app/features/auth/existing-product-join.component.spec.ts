@@ -136,4 +136,9 @@ describe('ExistingProductJoinComponent', () => {
       TestBed.configureTestingModule({ providers: [{ provide: ChangeDetectorRef, useValue: { markForCheck: () => {} } }] });
     }
   });
+  // Third review item 6: a Coaching student signs in on the site they are on.
+  it('links a Coaching student to the login page of the same site', () => {
+    const c = create('student');
+    expect(c.loginUrl).toBe('/auth/login');
+  });
 });

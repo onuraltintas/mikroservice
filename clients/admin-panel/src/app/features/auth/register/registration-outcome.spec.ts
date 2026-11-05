@@ -143,13 +143,20 @@ describe.each(forms)('$name registration success screen', entry => {
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], { queryParams: { registered: 'true', role: entry.role } });
   });
 
-  // Second review L3: an existing account joining is not a new sign-up.
-  it('counts a sign-up only when a new or unverified account was registered', async () => {
+  // Third review N3: a sign-up is counted only when the request granted the product (new account or first join).
+  it.each([
+    ['a retry of a verified account', { verificationEmail: 'notRequired', newProductAccess: false }, false],
+    ['a retry of an unverified account', { verificationEmail: 'sent', newProductAccess: false }, false],
+    ['a first join of a verified account', { verificationEmail: 'notRequired', newProductAccess: true }, true],
+    ['a new account', { verificationEmail: 'sent', newProductAccess: true }, true],
+    ['an older API response', { verificationEmail: 'sent' }, true],
+  ] as const)('counts a sign-up only when something new was granted: %s', async (_, response, counted) => {
     const created = create(entry);
     const track = vi.spyOn(TestBed.inject(SiteAnalyticsService), 'track');
     await created.component.onSubmit();
-    TestBed.inject(HttpTestingController).expectOne(candidate => candidate.url.endsWith(entry.path)).flush({ userId: 'u', verificationEmail: 'notRequired' });
-    expect(track).not.toHaveBeenCalledWith('sign_up', expect.anything());
+    TestBed.inject(HttpTestingController).expectOne(candidate => candidate.url.endsWith(entry.path)).flush({ userId: 'u', ...response });
+    if (counted) expect(track).toHaveBeenCalledWith('sign_up', { method: 'password', role: entry.role });
+    else expect(track).not.toHaveBeenCalledWith('sign_up', expect.anything());
   });
 
   it('says the e-mail is already verified, shows sign in, and does not claim an e-mail was sent', async () => {
@@ -199,5 +206,20 @@ describe('parent registration with an MFA-protected existing account', () => {
     const request = TestBed.inject(HttpTestingController).expectOne(candidate => candidate.url.endsWith(entry.path));
     expect('mfaCode' in request.request.body).toBe(false);
     request.flush({ userId: 'u', verificationEmail: 'sent' });
+  });
+});
+
+// Third review item 5: an empty or invalid code is explained, not ignored.
+describe('parent registration MFA code validation', () => {
+  it.each(['', '12ab'])('shows a Turkish error for the code %j and sends nothing', async code => {
+    const entry = forms.find(candidate => candidate.name === 'parent')!;
+    const { component } = create(entry);
+    const parent = component as unknown as ParentRegisterComponent;
+    parent.mfaRequired.set(true);
+    parent.mfaCode.setValue(code);
+    await parent.onSubmit();
+    TestBed.inject(HttpTestingController).expectNone(candidate => candidate.url.endsWith(entry.path));
+    expect(parent.errorMessage()).toBe('Doğrulama uygulamandaki altı haneli kodu gir.');
+    expect(parent.mfaCode.touched).toBe(true);
   });
 });

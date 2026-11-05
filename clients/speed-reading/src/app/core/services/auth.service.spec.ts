@@ -267,7 +267,7 @@ describe('AuthService', () => {
     service.verifyEmail({ userId: 'student-id', token: 'verification-token' }).subscribe();
 
     const request = http.expectOne('/api/auth/confirm-email');
-    expect(request.request.body).toEqual({ userId: 'student-id', token: 'verification-token' });
+    expect(request.request.body).toEqual({ userId: 'student-id', token: 'verification-token', product: 'speed-reading' });
     request.flush({});
   });
 

@@ -180,6 +180,17 @@ describe('AuthService browser session security', () => {
     request.flush({});
     await pending;
   });
+
+  // Third review N2: the confirmation names Coaching so the welcome e-mail is the Coaching one.
+  it('confirms the e-mail address for Coaching', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(null, { status: 401, statusText: 'Unauthorized' });
+    const pending = service.confirmEmail('user-id', 'token');
+    const request = http.expectOne('/api/auth/confirm-email');
+    expect(request.request.body).toEqual({ userId: 'user-id', token: 'token', product: 'coaching' });
+    request.flush({});
+    await pending;
+  });
 });
 
 function createToken(userId: string): string {
