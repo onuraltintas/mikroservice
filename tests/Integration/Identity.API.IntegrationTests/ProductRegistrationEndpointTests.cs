@@ -216,7 +216,8 @@ public sealed class ProductRegistrationEndpointTests
                     return Task.FromResult(EduPlatform.Shared.Kernel.Results.Result.Success(
                         new LoginResponse("access-token", "refresh-token", DateTime.UtcNow.AddDays(1), true)));
                 }
-                return Task.FromResult(EduPlatform.Shared.Kernel.Results.Result.Success(Guid.NewGuid()));
+                return Task.FromResult(EduPlatform.Shared.Kernel.Results.Result.Success(
+                    new Identity.Application.Registration.RegistrationOutcome(Guid.NewGuid(), Identity.Application.Registration.RegistrationOutcome.Sent)));
             }
 
             throw new NotSupportedException($"Unexpected mediator call: {targetMethod?.Name}");

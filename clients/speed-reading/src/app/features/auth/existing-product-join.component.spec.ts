@@ -93,4 +93,24 @@ describe('ExistingProductJoinComponent', () => {
     expect(req.request.body.mfaCode).toBe('123456'); expect(c.error).toBe('');
     req.flush({ userId: 'existing' }); expect(c.joined).toBe(true); http.verify();
   });
+  // Paket A #2: an unverified existing account now joins and gets a verification e-mail.
+  for (const [account, voice] of [['student', 'sen'], ['teacher', 'siz'], ['institution', 'siz']] as const) {
+    it(`tells a ${account} with a verified address to sign in, without claiming an e-mail was sent`, () => {
+      const c = create(account); c.submit();
+      TestBed.inject(HttpTestingController).expectOne('/api/auth/speed-reading/register/join').flush({ userId: 'u', verificationEmail: 'notRequired' });
+      expect(c.joined).toBe(true);
+      expect(c.joinedMessage).toContain('zaten doğrulanmış');
+      expect(c.joinedMessage).not.toMatch(/gönder/i);
+      expect(c.joinedMessage).toContain(voice === 'sen' ? 'giriş yapabilirsin.' : 'giriş yapabilirsiniz.');
+      expect(c.verificationEmailSent).toBe(false);
+    });
+    it(`tells a ${account} with an unverified address that the verification e-mail was sent`, () => {
+      const c = create(account); c.submit();
+      TestBed.inject(HttpTestingController).expectOne('/api/auth/speed-reading/register/join').flush({ userId: 'u', verificationEmail: 'sent' });
+      expect(c.joined).toBe(true);
+      expect(c.joinedMessage).toMatch(/gönderdik/);
+      expect(c.joinedMessage).not.toContain('zaten doğrulanmış');
+      expect(c.verificationEmailSent).toBe(true);
+    });
+  }
 });

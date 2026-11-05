@@ -22,7 +22,8 @@ public sealed class CoachingExistingAccountRegistrationTests
         var result = await fixture.Register();
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(fixture.User.Id, result.Value);
+        Assert.Equal(fixture.User.Id, result.Value.UserId);
+        Assert.Equal(Identity.Application.Registration.RegistrationOutcome.NotRequired, result.Value.VerificationEmail);
         Assert.True(fixture.User.HasProductAccess(PlatformProduct.SpeedReading));
         Assert.True(fixture.User.HasProductAccess(PlatformProduct.Coaching));
         Assert.Contains(fixture.User.Roles, role => role.Product == PlatformProduct.Coaching && role.RoleId == fixture.StudentRole!.Id);
@@ -40,7 +41,6 @@ public sealed class CoachingExistingAccountRegistrationTests
     [Theory]
     [InlineData("wrong-password", "Auth.ExistingAccountPasswordRequired")]
     [InlineData("inactive", "Auth.ExistingAccountNotEligible")]
-    [InlineData("unconfirmed", "Auth.ExistingAccountNotEligible")]
     [InlineData("mfa", "Auth.ExistingAccountMfaRequired")]
     [InlineData("revoked", "Identity.UserExists")]
     [InlineData("coaching-role", "Identity.UserExists")]
@@ -180,7 +180,7 @@ public sealed class CoachingExistingAccountRegistrationTests
             Stub<IMultiFactorService>((method, _) => throw new NotSupportedException(method.Name)),
             Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null), Legal, TimeProvider.System, new TestAuthenticationLock(), Stub<IPublishEndpoint>((_, args) => { if (args?[0] is EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested) ProvisioningEvents++; return Task.CompletedTask; }));
 
-        public Task<Result<Guid>> Register(string password = Password, PlatformProduct product = PlatformProduct.Coaching) =>
+        public Task<Result<Identity.Application.Registration.RegistrationOutcome>> Register(string password = Password, PlatformProduct product = PlatformProduct.Coaching) =>
             handler.Handle(new RegisterStudentCommand(User.Email, password, "Replacement", "Name", null, product), CancellationToken.None);
         private Task<Result<Guid>> RegisterExisting() { RegisterCalls++; return Task.FromResult(Result.Failure<Guid>(new Error("Identity.UserExists", "Existing account"))); }
         private Task<Result> Delete() { Deletes++; return Task.FromResult(Result.Success()); }

@@ -90,7 +90,7 @@ public sealed class CrossProductEnrollmentTests
         var teacherId = fixture.Teacher.Id;
         var result = await fixture.Join();
         Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Description : "");
-        Assert.Equal(fixture.User.Id, result.Value);
+        Assert.Equal(fixture.User.Id, result.Value.UserId);
         Assert.Equal(passwordHash, fixture.User.PasswordHash);
         Assert.Equal("Original", fixture.User.FirstName);
         Assert.True(fixture.User.HasProductAccess(fixture.Source));
@@ -115,7 +115,6 @@ public sealed class CrossProductEnrollmentTests
     [Theory]
     [InlineData("password", "Auth.ExistingAccountPasswordRequired")]
     [InlineData("inactive", "Auth.ExistingAccountNotEligible")]
-    [InlineData("unconfirmed", "Auth.ExistingAccountNotEligible")]
     [InlineData("wrong-role", "Auth.SourceRoleRequired")]
     [InlineData("revoked", "Identity.UserExists")]
     
@@ -202,7 +201,7 @@ public sealed class CrossProductEnrollmentTests
                 Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null),
                 Stub<IRegistrationLegalConsentService>((_, _) => { Consents++; return null; }), TimeProvider.System, new TestAuthenticationLock(), Stub<MassTransit.IPublishEndpoint>((_, _) => Task.CompletedTask));
         }
-        public Task<EduPlatform.Shared.Kernel.Results.Result<Guid>> Join(string password = Password, string? role = null, string? mfaCode = null, Guid? institutionId = null) => enrollment.JoinAsync(User.Email, password, Target, role ?? account, [], mfaCode, CancellationToken.None, institutionId);
+        public Task<EduPlatform.Shared.Kernel.Results.Result<Identity.Application.Registration.RegistrationOutcome>> Join(string password = Password, string? role = null, string? mfaCode = null, Guid? institutionId = null) => enrollment.JoinAsync(User.Email, password, Target, role ?? account, [], mfaCode, CancellationToken.None, institutionId);
         private Task AddProfile() { ProfilesAdded++; return Task.CompletedTask; }
         private Task AddAdmin(InstitutionAdmin admin) { AddedAdmins.Add(admin); return Task.CompletedTask; }
         private Task<int> Save() { Saves++; if (FailSave) throw new InvalidOperationException("Write failed"); return Task.FromResult(1); }
