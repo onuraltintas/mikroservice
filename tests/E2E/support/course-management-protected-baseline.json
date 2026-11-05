@@ -239,8 +239,8 @@
     "clients/speed-reading/src/app/core/services/assignment.service.ts": "604ca06c051e616e7a2e4e152cf3c5e0f7b79e97790b20de23335f37d5312f3f",
     "clients/speed-reading/src/app/core/services/auth-recaptcha.service.spec.ts": "eff7a3c4c1d1fa4c3bf3c591f2300ec05a40ee8a0a993d39b33823100bc8e045",
     "clients/speed-reading/src/app/core/services/auth-recaptcha.service.ts": "2e17fa00c31067bada585730e2b3c1586e007cf90605f1c53198d105788b1675",
-    "clients/speed-reading/src/app/core/services/auth.service.spec.ts": "d682d668d58429fffed10ca0d0513f8075fd67fdd12525317f39f63e011adcd7",
-    "clients/speed-reading/src/app/core/services/auth.service.ts": "6dcf1d1fc3b229723fd4acfbc4121dfe978bd3450e7bbb4f887ebec5b720c9be",
+    "clients/speed-reading/src/app/core/services/auth.service.spec.ts": "d5d53cc4d2a06b3a9da0aa5489391be7e3128aa2eb9d546eeab91082b06fd0b3",
+    "clients/speed-reading/src/app/core/services/auth.service.ts": "41385ad1212e341c7e26728934f22b6382662bcfeb150951efe5a0ba7c0c59af",
     "clients/speed-reading/src/app/core/services/chart-config.service.ts": "d11c5e5e076ea0180bcce58ec553fe20f79baf4dcd904f32b6369ea37c33ed48",
     "clients/speed-reading/src/app/core/services/content-feedback.service.ts": "7d2d62cb05112a6d5914e38b90d0900a844e29938f21a808c609b831f83424ee",
     "clients/speed-reading/src/app/core/services/email-campaigns.service.ts": "6501a56f82a5d400222d5a3398b8d7eb85bc6d6164febbea50f9a3fc0515312b",
@@ -2686,7 +2686,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "PR #111 third review",
+    "purpose": "PR #111 final review",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2734,7 +2734,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "b2f2675a",
+    "previousBaselineCommit": "28c60786",
     "removedSincePreviousBaseline": []
   }
 }
