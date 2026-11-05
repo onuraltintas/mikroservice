@@ -8,27 +8,27 @@ public class RegisterInstitutionCommandValidator : AbstractValidator<RegisterIns
     public RegisterInstitutionCommandValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email address is required")
-            .EmailAddress().WithMessage("A valid email address is required");
+            .NotEmpty().WithMessage("E-posta alanı zorunludur.")
+            .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
 
         RuleFor(x => x.Password).ApplyRegistrationPasswordPolicy();
 
         RuleFor(x => x.InstitutionName)
-            .NotEmpty().WithMessage("Institution name is required")
-            .MaximumLength(200).WithMessage("Institution name cannot exceed 200 characters");
+            .NotEmpty().WithMessage("Kurum adı zorunludur.")
+            .MaximumLength(200).WithMessage("Kurum adı en fazla 200 karakter olabilir.");
 
         RuleFor(x => x.FirstName)
-            .NotEmpty().WithMessage("First name is required");
+            .NotEmpty().WithMessage("Ad alanı zorunludur.");
 
         RuleFor(x => x.LastName)
-            .NotEmpty().WithMessage("Last name is required");
+            .NotEmpty().WithMessage("Soyad alanı zorunludur.");
             
         RuleFor(x => x.ProvinceId)
-            .NotEmpty()
-            .MaximumLength(12);
+            .NotEmpty().WithMessage("İl seçimi zorunludur.")
+            .MaximumLength(12).WithMessage("Geçerli bir il seçiniz.");
 
         RuleFor(x => x.DistrictId)
-            .NotEmpty()
-            .MaximumLength(16);
+            .NotEmpty().WithMessage("İlçe seçimi zorunludur.")
+            .MaximumLength(16).WithMessage("Geçerli bir ilçe seçiniz.");
     }
 }

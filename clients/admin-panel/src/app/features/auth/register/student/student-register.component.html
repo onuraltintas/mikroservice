@@ -122,18 +122,16 @@
 
                     <mat-form-field appearance="outline" class="w-full">
                         <mat-label>Şifre Oluştur</mat-label>
-                        <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password">
+                        <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password" autocomplete="new-password" maxlength="128" [attr.aria-describedby]="'password-rules'">
                         <mat-icon matPrefix class="text-gray-400 mr-2">lock</mat-icon>
                         <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button" aria-label="Parolayı göster veya gizle">
                             <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
 
                         <mat-error *ngIf="form.get('password')?.hasError('required')">Şifre zorunludur</mat-error>
-                        <mat-error *ngIf="form.get('password')?.hasError('passwordStrength')"
-                            class="!text-[11px] !leading-3 block mt-1">
-                            En az 8 karakter; büyük harf, küçük harf, rakam ve sembol içermelidir.
-                        </mat-error>
+                        <mat-error *ngIf="form.get('password')?.hasError('passwordStrength')">Şifre aşağıdaki kuralların hepsine uymalı.</mat-error>
                     </mat-form-field>
+                    <app-password-requirements class="block -mt-3 mb-2" [password]="form.get('password')?.value" describedById="password-rules" />
 
                     <mat-form-field appearance="outline" class="w-full">
                         <mat-label>Şifreyi Onayla</mat-label>

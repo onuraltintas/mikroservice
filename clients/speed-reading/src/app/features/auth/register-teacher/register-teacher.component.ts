@@ -19,6 +19,7 @@ import {
 } from '../../../core/services/google-identity.service';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
 import { getErrorMessage } from '../../../core/utils/error-message';
+import { PasswordRequirementsComponent } from '../../../shared/components/password-requirements/password-requirements.component';
 import { resolveInvitationReturnUrl } from '../auth-role-routing';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
@@ -28,7 +29,7 @@ import { RegistrationShellComponent } from '../registration-shell.component';
 @Component({
   selector: 'app-register-teacher',
   standalone: true,
-  imports: [
+  imports: [PasswordRequirementsComponent, 
     ExistingProductJoinComponent,
     RegistrationShellComponent,
     CommonModule,
@@ -175,7 +176,7 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
         }, 2000);
       },
       error: (err) => {
-        this.error = getErrorMessage(err, 'Kayıt sırasında bir hata oluştu. Lütfen bilgilerinizi kontrol edin.');
+        this.error = getErrorMessage(err, 'Kayıt tamamlanamadı. Lütfen biraz sonra yeniden deneyin.', { conflictIsDuplicateAccount: true });
         this.isLoading = false;
       }
     });

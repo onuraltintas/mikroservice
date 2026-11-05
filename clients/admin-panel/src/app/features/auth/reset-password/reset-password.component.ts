@@ -7,6 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IdentityService } from '../../../core/services/identity.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { getApiErrorMessage } from '../../../core/http/api-error-message';
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../../core/validators/password.validator';
 
 @Component({
     selector: 'app-reset-password',
@@ -56,8 +58,9 @@ export class ResetPasswordComponent implements OnInit {
     }
 
     // Individual validation checks
+    /** 8–128 characters, like Identity's RegistrationPasswordRules. */
     get hasMinLength(): boolean {
-        return this.newPassword.length >= 8;
+        return this.newPassword.length >= PASSWORD_MIN_LENGTH && this.newPassword.length <= PASSWORD_MAX_LENGTH;
     }
 
     get hasUppercase(): boolean {
@@ -73,7 +76,7 @@ export class ResetPasswordComponent implements OnInit {
     }
 
     get hasSpecialChar(): boolean {
-        return /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\;'/`~]/.test(this.newPassword);
+        return /[^A-Za-z0-9]/.test(this.newPassword);
     }
 
     get passwordStrong(): boolean {
@@ -131,8 +134,7 @@ export class ResetPasswordComponent implements OnInit {
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const message = err.error?.message || err.error?.Message || 'Şifre sıfırlama başarısız oldu.';
-                this.errorMessage.set(message);
+                this.errorMessage.set(getApiErrorMessage(err, 'Şifre sıfırlanamadı. Lütfen yeniden deneyin ya da yeni bir bağlantı isteyin.'));
             }
         });
     }

@@ -69,14 +69,14 @@ describe('StaffAccountSettingsComponent', () => {
     fixture.componentInstance.confirmPassword = fixture.componentInstance.newPassword;
     fixture.componentInstance.changePassword();
     http.expectNone('/api/users/me/change-password');
-    expect(fixture.componentInstance.passwordErrorMessage()).toContain('En az 8 karakter');
+    expect(fixture.componentInstance.passwordErrorMessage()).toContain('en az 8 karakter (en fazla 128)');
   });
 
   it('shows the Identity reason when the password change is rejected', () => {
     const fixture = TestBed.createComponent(StaffAccountSettingsComponent);
     fixture.detectChanges();
     http.expectOne('/api/users/me').flush({ userId: 'user-1', firstName: '', lastName: '', email: '', role: 'Teacher' });
-    const attempt = (body: unknown, status: number) => {
+    const attempt = (body: object | null, status: number) => {
       fixture.componentInstance.currentPassword = 'eski';
       fixture.componentInstance.newPassword = 'Sifre-2026';
       fixture.componentInstance.confirmPassword = 'Sifre-2026';

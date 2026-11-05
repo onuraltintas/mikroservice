@@ -47,10 +47,11 @@ describe('getErrorMessage', () => {
       .toBe('Çok fazla deneme yapıldı. Birkaç dakika bekleyip yeniden dene.');
   });
 
-  it('uses the duplicate account text for an empty 409', () => {
-    expect(getErrorMessage(new HttpErrorResponse({ status: 409 }), 'fallback'))
+  it('uses the duplicate account text for an empty 409 on registration forms', () => {
+    expect(getErrorMessage(new HttpErrorResponse({ status: 409 }), 'fallback')).toBe('fallback');
+    expect(getErrorMessage(new HttpErrorResponse({ status: 409 }), 'fallback', { conflictIsDuplicateAccount: true }))
       .toBe('Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın.');
-    expect(getErrorMessage(new HttpErrorResponse({ status: 409 }), 'fallback', { voice: 'sen' }))
+    expect(getErrorMessage(new HttpErrorResponse({ status: 409 }), 'fallback', { voice: 'sen', conflictIsDuplicateAccount: true }))
       .toBe('Bu e-posta adresiyle zaten kayıtlı bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.');
   });
 });

@@ -16,6 +16,7 @@ import { RegisterInstitutionRequest } from '../../../core/models/user.model';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
 import { DistrictOption, LocationsService, ProvinceOption } from '../../../core/services/locations.service';
 import { getErrorMessage } from '../../../core/utils/error-message';
+import { PasswordRequirementsComponent } from '../../../shared/components/password-requirements/password-requirements.component';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../existing-product-join.component';
@@ -24,7 +25,7 @@ import { RegistrationShellComponent } from '../registration-shell.component';
 @Component({
   selector: 'app-register-school',
   standalone: true,
-  imports: [
+  imports: [PasswordRequirementsComponent, 
     ExistingProductJoinComponent,
     RegistrationShellComponent,
     CommonModule,
@@ -166,7 +167,7 @@ export class RegisterSchoolComponent implements OnInit {
         }, 3000);
       },
       error: (err) => {
-        this.error = getErrorMessage(err, 'Kayıt sırasında bir hata oluştu. Lütfen bilgilerinizi kontrol edin.');
+        this.error = getErrorMessage(err, 'Kayıt tamamlanamadı. Lütfen biraz sonra yeniden deneyin.', { conflictIsDuplicateAccount: true });
         this.isLoading = false;
       }
     });

@@ -7,12 +7,20 @@ public sealed class RegisterParentCommandValidator : AbstractValidator<RegisterP
 {
     public RegisterParentCommandValidator()
     {
-        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(255);
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("E-posta alanı zorunludur.")
+            .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.")
+            .MaximumLength(255).WithMessage("E-posta adresi en fazla 255 karakter olabilir.");
         RuleFor(x => x.Password).ApplyRegistrationPasswordPolicy();
-        RuleFor(x => x.FirstName).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.FirstName)
+            .NotEmpty().WithMessage("Ad alanı zorunludur.")
+            .MaximumLength(100).WithMessage("Ad en fazla 100 karakter olabilir.");
+        RuleFor(x => x.LastName)
+            .NotEmpty().WithMessage("Soyad alanı zorunludur.")
+            .MaximumLength(100).WithMessage("Soyad en fazla 100 karakter olabilir.");
         RuleFor(x => x.PhoneNumber)
             .Matches(@"^\+?[0-9]{8,15}$")
-            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber))
+            .WithMessage("Geçerli bir telefon numarası giriniz.");
     }
 }

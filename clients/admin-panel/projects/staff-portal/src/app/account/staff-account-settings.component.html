@@ -23,7 +23,7 @@
         <div><p class="eyebrow">GÜVENLİK</p><h3 id="password-heading">Şifre değiştir</h3></div>
         <form (ngSubmit)="changePassword()">
           <label><span>Mevcut şifre</span><input name="currentPassword" [(ngModel)]="currentPassword" type="password" autocomplete="current-password" required></label>
-          <label><span>Yeni şifre</span><input name="newPassword" [(ngModel)]="newPassword" type="password" autocomplete="new-password" minlength="8" required><small>En az 8 karakter; büyük/küçük harf, rakam ve özel karakter.</small></label>
+          <label><span>Yeni şifre</span><input name="newPassword" [(ngModel)]="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="staff-password-rules" required><app-password-requirements [password]="newPassword" describedById="staff-password-rules" /></label>
           <label><span>Yeni şifre (tekrar)</span><input name="confirmPassword" [(ngModel)]="confirmPassword" type="password" autocomplete="new-password" required></label>
           @if (passwordErrorMessage()) { <p class="field-error" role="alert">{{ passwordErrorMessage() }}</p> }
           <button class="primary-button" type="submit" [disabled]="isChangingPassword()">{{ isChangingPassword() ? 'Güncelleniyor…' : 'Şifreyi güncelle' }}</button>
