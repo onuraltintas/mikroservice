@@ -58,6 +58,40 @@ describe('StaffAccountSettingsComponent', () => {
     http.expectNone('/api/users/me/change-password');
     expect(fixture.componentInstance.passwordErrorMessage()).toContain('en az 8 karakter');
   });
+  it('shows the password rules up front and accepts every non-alphanumeric special character', () => {
+    const fixture = TestBed.createComponent(StaffAccountSettingsComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/users/me').flush({ userId: 'user-1', firstName: '', lastName: '', email: '', role: 'Teacher' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('En az 8 karakter; büyük harf, küçük harf, rakam ve özel karakter');
+    fixture.componentInstance.currentPassword = 'eski';
+    fixture.componentInstance.newPassword = 'Sifre-2026' + 'x'.repeat(119);
+    fixture.componentInstance.confirmPassword = fixture.componentInstance.newPassword;
+    fixture.componentInstance.changePassword();
+    http.expectNone('/api/users/me/change-password');
+    expect(fixture.componentInstance.passwordErrorMessage()).toContain('En az 8 karakter');
+  });
+
+  it('shows the Identity reason when the password change is rejected', () => {
+    const fixture = TestBed.createComponent(StaffAccountSettingsComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/users/me').flush({ userId: 'user-1', firstName: '', lastName: '', email: '', role: 'Teacher' });
+    const attempt = (body: unknown, status: number) => {
+      fixture.componentInstance.currentPassword = 'eski';
+      fixture.componentInstance.newPassword = 'Sifre-2026';
+      fixture.componentInstance.confirmPassword = 'Sifre-2026';
+      fixture.componentInstance.changePassword();
+      http.expectOne('/api/users/me/change-password').flush(body, { status, statusText: 'x' });
+      expect(fixture.componentInstance.isChangingPassword()).toBe(false);
+      return fixture.componentInstance.passwordErrorMessage();
+    };
+
+    expect(attempt({ error: { code: 'Auth.InvalidCredentials', description: 'Mevcut şifre hatalı.' } }, 400)).toBe('Mevcut şifre hatalı.');
+    expect(attempt({ detail: 'One or more validation errors occurred.', errors: { NewPassword: ['Şifre 8-128 karakter arasında olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.'] } }, 400))
+      .toContain('Şifre 8-128 karakter');
+    expect(attempt(null, 429)).toBe('Çok fazla deneme yapıldı. Lütfen birkaç dakika bekleyip yeniden deneyin.');
+  });
+
   it('shows notification preferences only in the coaching workspace (roadmap O8)', () => {
     vi.spyOn(TestBed.inject(StaffAuthService), 'activeProduct').mockReturnValue('coaching');
     const fixture = TestBed.createComponent(StaffAccountSettingsComponent);
