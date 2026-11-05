@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { LocationService } from '../../../core/services/location.service';
 import { ConfigurationService } from '../../../core/services/settings/configuration.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { SiteAnalyticsService } from '../../../core/services/site-analytics.service';
 import { InstitutionRegisterComponent } from './institution/institution-register.component';
 import { ParentRegisterComponent } from './parent/parent-register.component';
 import { StudentRegisterComponent } from './student/student-register.component';
@@ -124,6 +125,9 @@ describe('registration verification e-mail outcome copy', () => {
     const heading = element.querySelector('h3') as HTMLElement;
     expect(heading.getAttribute('tabindex')).toBe('-1');
     expect(document.activeElement).toBe(heading);
+    // Second review nit: the focused heading keeps a visible focus style.
+    expect(heading.className).not.toContain('outline-none');
+    expect(heading.className).toContain('focus-visible:outline-2');
     const link = element.querySelector('a') as HTMLAnchorElement;
     expect(link.textContent?.trim()).toBe('Giriş yap');
     expect(link.getAttribute('href')).toBe('/auth/login?registered=true&role=student');
@@ -137,6 +141,15 @@ describe.each(forms)('$name registration success screen', entry => {
     expect(toaster.success).toHaveBeenCalledWith(copy.message, copy.title);
     expect(component.verifiedNotice()).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], { queryParams: { registered: 'true', role: entry.role } });
+  });
+
+  // Second review L3: an existing account joining is not a new sign-up.
+  it('counts a sign-up only when a new or unverified account was registered', async () => {
+    const created = create(entry);
+    const track = vi.spyOn(TestBed.inject(SiteAnalyticsService), 'track');
+    await created.component.onSubmit();
+    TestBed.inject(HttpTestingController).expectOne(candidate => candidate.url.endsWith(entry.path)).flush({ userId: 'u', verificationEmail: 'notRequired' });
+    expect(track).not.toHaveBeenCalledWith('sign_up', expect.anything());
   });
 
   it('says the e-mail is already verified, shows sign in, and does not claim an e-mail was sent', async () => {
@@ -153,5 +166,38 @@ describe.each(forms)('$name registration success screen', entry => {
     const { toaster } = await submit(entry, { userId: 'u' });
     const copy = registrationSuccessCopy('sent', entry.voice);
     expect(toaster.success).toHaveBeenCalledWith(copy.message, copy.title);
+  });
+});
+
+// Second review M2b: an existing account with MFA can become a parent from the parent form.
+describe('parent registration with an MFA-protected existing account', () => {
+  it('asks for the authenticator code and sends it on the next attempt', async () => {
+    const entry = forms.find(candidate => candidate.name === 'parent')!;
+    const { component } = create(entry);
+    const parent = component as unknown as ParentRegisterComponent;
+    expect(parent.mfaRequired()).toBe(false);
+    await parent.onSubmit();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne(candidate => candidate.url.endsWith(entry.path)).flush(
+      { code: 'Auth.ExistingAccountMfaRequired', description: 'Mevcut hesabınızın doğrulama uygulamasındaki altı haneli kodu girin.' },
+      { status: 400, statusText: 'Bad Request' });
+    expect(parent.mfaRequired()).toBe(true);
+
+    parent.mfaCode.setValue('123456');
+    await parent.onSubmit();
+    const retry = http.expectOne(candidate => candidate.url.endsWith(entry.path));
+    expect(retry.request.body.mfaCode).toBe('123456');
+    retry.flush({ userId: 'u', verificationEmail: 'notRequired' });
+    expect(parent.verifiedNotice()).not.toBeNull();
+    http.verify();
+  });
+
+  it('does not send a code field for a normal registration', async () => {
+    const entry = forms.find(candidate => candidate.name === 'parent')!;
+    const { component } = create(entry);
+    await component.onSubmit();
+    const request = TestBed.inject(HttpTestingController).expectOne(candidate => candidate.url.endsWith(entry.path));
+    expect('mfaCode' in request.request.body).toBe(false);
+    request.flush({ userId: 'u', verificationEmail: 'sent' });
   });
 });

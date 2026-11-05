@@ -199,7 +199,8 @@ public sealed class CrossProductEnrollmentTests
                 Stub<IRoleRepository>((_, args) => Task.FromResult<Role?>(Roles[(string)args![0]!])), hasher,
                 Stub<IMultiFactorService>((_, args) => (string)args![1]! == "123456" ? (long?)100 : null),
                 Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null),
-                Stub<IRegistrationLegalConsentService>((_, _) => { Consents++; return null; }), TimeProvider.System, new TestAuthenticationLock(), Stub<MassTransit.IPublishEndpoint>((_, _) => Task.CompletedTask));
+                Stub<IRegistrationLegalConsentService>((_, _) => { Consents++; return null; }), TimeProvider.System, new TestAuthenticationLock(), Stub<MassTransit.IPublishEndpoint>((_, _) => Task.CompletedTask),
+                Stub<IParentRepository>((m, _) => throw new NotSupportedException(m.Name)));
         }
         public Task<EduPlatform.Shared.Kernel.Results.Result<Identity.Application.Registration.RegistrationOutcome>> Join(string password = Password, string? role = null, string? mfaCode = null, Guid? institutionId = null) => enrollment.JoinAsync(User.Email, password, Target, role ?? account, [], mfaCode, CancellationToken.None, institutionId);
         private Task AddProfile() { ProfilesAdded++; return Task.CompletedTask; }

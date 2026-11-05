@@ -143,6 +143,8 @@ describe('RegistrationVerifiedComponent', () => {
     const heading = element.querySelector('h3') as HTMLElement;
     expect(heading.getAttribute('tabindex')).toBe('-1');
     expect(document.activeElement).toBe(heading);
+    // Second review nit: the focused heading keeps a visible focus outline.
+    expect(getComputedStyle(heading).outlineStyle).not.toBe('none');
     expect(element.querySelector('[role="status"]')?.textContent).toContain('zaten doğrulanmış');
     expect(element.textContent).not.toMatch(/gönder/i);
     const link = element.querySelector('a') as HTMLAnchorElement;

@@ -255,6 +255,14 @@ describe('AuthService', () => {
     requests.forEach(request => expect(request.cancelled).toBeTrue());
   }));
 
+  // PR #111 second review H1: a resend names the speed-reading product.
+  it('asks for a speed-reading verification e-mail when resending', () => {
+    service.resendVerification('ogrenci@example.test').subscribe();
+    const request = http.expectOne('/api/auth/resend-verification-email');
+    expect(request.request.body).toEqual({ email: 'ogrenci@example.test', product: 'speed-reading' });
+    request.flush({});
+  });
+
   it('confirms email with the user identifier and verification token from the email link', () => {
     service.verifyEmail({ userId: 'student-id', token: 'verification-token' }).subscribe();
 

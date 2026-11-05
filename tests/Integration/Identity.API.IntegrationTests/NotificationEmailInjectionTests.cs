@@ -65,23 +65,28 @@ public sealed class NotificationEmailInjectionTests
     }
 
     // Review #2 (PR #111): a verification e-mail follows the product it was sent for; without a
-    // product (older publishers) the role decides as before.
+    // product (older publishers) or with an unknown one, the role decides as before.
+    // Second review H1: the link must open a page that exists. The Coaching site (admin-panel, PublicApp:BaseUrl)
+    // verifies at /auth/confirm-email?userId=…&token=…; the speed-reading app at /auth/verify-email?token=…&userId=….
     [Theory]
-    [InlineData("Student", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/verify-email", "Eduİvme")]
-    [InlineData("Teacher", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/verify-email", "Eduİvme")]
-    [InlineData("InstitutionAdmin", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/verify-email", "Eduİvme")]
-    [InlineData("Parent", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/verify-email", "Eduİvme")]
-    [InlineData("Student", "speed-reading", "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email", "Master Hızlı Okuma")]
-    [InlineData("Student", null, "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email", "Master Hızlı Okuma")]
+    [InlineData("Student", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Teacher", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("InstitutionAdmin", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Parent", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Coach", null, "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Student", "speed-reading", "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
+    [InlineData("Student", null, "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
+    [InlineData("Student", "unknown-product", "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
     public async Task VerificationEmail_UsesTheProductTemplateLinkAndName(string role, string? product, string template, string link, string appName)
     {
         foreach (var withTemplate in new[] { true, false })
         {
+            var userId = Guid.NewGuid();
             var mail = (await RunAsync<UserRegisteredConsumer>(
-                new UserRegisteredEvent(Guid.NewGuid(), "a@example.test", "Ada", "Kaya", "token", role) { Product = product },
+                new UserRegisteredEvent(userId, "a@example.test", "Ada", "Kaya", "token", role) { Product = product },
                 withTemplate ? (template, "Doğrula - Eduİvme", "<p>Eduİvme <a href='{{VerificationLink}}'>x</a></p>") : null)).Single();
 
-            mail.Body.Should().Contain($"href='{link}?token=token&userId=");
+            mail.Body.Should().Contain($"href='{string.Format(link, userId)}'");
             if (withTemplate) mail.Subject.Should().Be($"Doğrula - {appName}");
             else mail.Subject.Should().Contain(appName);
             mail.Body.Should().Contain(appName);

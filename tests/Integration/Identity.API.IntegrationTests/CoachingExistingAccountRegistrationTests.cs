@@ -183,7 +183,8 @@ public sealed class CoachingExistingAccountRegistrationTests
             Stub<IInstitutionRepository>((method, _) => throw new NotSupportedException(method.Name)),
             Stub<IRoleRepository>((_, _) => Task.FromResult(StudentRole)), hasher,
             Stub<IMultiFactorService>((method, _) => throw new NotSupportedException(method.Name)),
-            Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null), Legal, TimeProvider.System, new TestAuthenticationLock(), Stub<IPublishEndpoint>((_, args) => { if (args?[0] is EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested) ProvisioningEvents++; return Task.CompletedTask; }));
+            Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null), Legal, TimeProvider.System, new TestAuthenticationLock(), Stub<IPublishEndpoint>((_, args) => { if (args?[0] is EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested) ProvisioningEvents++; return Task.CompletedTask; }),
+            Stub<IParentRepository>((m, _) => throw new NotSupportedException(m.Name)));
 
         public Task<Result<Identity.Application.Registration.RegistrationOutcome>> Register(string password = Password, PlatformProduct product = PlatformProduct.Coaching) =>
             handler.Handle(new RegisterStudentCommand(User.Email, password, "Replacement", "Name", null, product), CancellationToken.None);

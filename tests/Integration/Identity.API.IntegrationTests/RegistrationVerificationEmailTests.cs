@@ -454,15 +454,22 @@ public sealed class RegistrationVerificationEmailTests
         Assert.True(f.User.HasProductAccess(PlatformProduct.Coaching));
         var coachingLink = Assert.Single(f.Admins, a => a.Product == PlatformProduct.Coaching);
 
-        var institutions = Stub<IInstitutionRepository>((m, args) => m.Name == "GetAdminsForRegistrationAsync"
-            ? Task.FromResult<IReadOnlyList<InstitutionAdmin>>(f.Admins.ToList()) : throw new NotSupportedException(m.Name));
-        var revoked = await UnconfirmedAccountClaim.ClaimAsync(f.User, institutions, CancellationToken.None);
+        // Second review L4: a link in the same product that someone else created is not touched.
+        var other = Institution.Create("Başka kurum", InstitutionType.School);
+        var otherLink = InstitutionAdmin.Create(f.User.Id, other.Id, InstitutionAdminRole.Manager, PlatformProduct.Coaching);
+        f.Admins.Add(otherLink);
+
+        var revoked = await UnconfirmedAccountClaim.ClaimAsync(f.User, f.Institutions, CancellationToken.None);
 
         Assert.Equal(new[] { PlatformProduct.Coaching }, revoked);
         Assert.True(f.User.EmailConfirmed);
         Assert.False(f.User.HasProductAccess(PlatformProduct.Coaching));
+        // Second review M1: removed, not revoked, so the owner can join again.
+        Assert.DoesNotContain(f.User.ProductAccesses, a => a.Product == PlatformProduct.Coaching);
         Assert.DoesNotContain(f.User.Roles, r => r.Product == PlatformProduct.Coaching);
-        Assert.False(coachingLink.IsActive);
+        Assert.DoesNotContain(coachingLink, f.Admins);
+        Assert.Contains(otherLink, f.Admins);
+        Assert.True(otherLink.IsActive);
         Assert.True(f.User.HasProductAccess(PlatformProduct.SpeedReading), "the original registration stays (existing behaviour)");
         Assert.Contains(f.User.Roles, r => r.Product == PlatformProduct.SpeedReading);
         Assert.All(f.Admins.Where(a => a.Product == PlatformProduct.SpeedReading), a => Assert.True(a.IsActive));
@@ -474,7 +481,7 @@ public sealed class RegistrationVerificationEmailTests
     {
         var f = new EnrollmentFixture(PlatformProduct.Coaching, "student", confirmed: true);
         Assert.True((await f.Join()).IsSuccess);
-        var revoked = await UnconfirmedAccountClaim.ClaimAsync(f.User, null, CancellationToken.None);
+        var revoked = await UnconfirmedAccountClaim.ClaimAsync(f.User, f.Institutions, CancellationToken.None);
         Assert.Empty(revoked);
         Assert.True(f.User.HasProductAccess(PlatformProduct.Coaching));
         Assert.NotEmpty(f.User.PasswordHash);
@@ -510,6 +517,144 @@ public sealed class RegistrationVerificationEmailTests
             Assert.Equal("Registration.Failed", result.Error.Code);
             Assert.Equal("Kayıt tamamlanamadı. Lütfen biraz sonra yeniden deneyin.", result.Error.Description);
         }
+    }
+
+    // ---- Second review (PR #111) ----
+
+    // M1: unverified join -> verified Google claim -> the owner (after setting a password) joins again -> verified flow.
+    [Theory]
+    [InlineData("student")]
+    [InlineData("institution")]
+    [InlineData("parent")]
+    public async Task TheRealOwnerCanJoinAgainAfterClaimingTheAccount(string account)
+    {
+        var target = PlatformProduct.Coaching;
+        var f = new EnrollmentFixture(target, account, confirmed: false);
+        Assert.Equal(RegistrationOutcome.Sent, (await f.Join()).Value.VerificationEmail);
+
+        await UnconfirmedAccountClaim.ClaimAsync(f.User, f.Institutions, CancellationToken.None);
+        Assert.DoesNotContain(f.User.ProductAccesses, a => a.Product == target);
+        Assert.Empty(f.User.PasswordHash);
+
+        f.SetPassword("OwnersNewPassword1!");
+        var again = await f.Join("OwnersNewPassword1!");
+
+        Assert.True(again.IsSuccess, again.IsFailure ? again.Error.Description : "");
+        Assert.Equal(RegistrationOutcome.NotRequired, again.Value.VerificationEmail);
+        Assert.True(f.User.HasProductAccess(target));
+        Assert.Single(f.User.ProductAccesses, a => a.Product == target);
+        Assert.Single(f.Published.OfType<UserRegisteredEvent>());
+        if (account == "institution") Assert.Single(f.Admins, a => a.Product == target && a.IsActive);
+    }
+
+    // M2a: a parent join needs an active account in another product (speed reading).
+    [Theory]
+    [InlineData("revoked")]
+    [InlineData("course-management-only")]
+    [InlineData("no-product")]
+    public async Task ParentJoinNeedsAnActiveAccountInTheOtherProduct(string scenario)
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "parent", confirmed: true);
+        f.User.RevokeProductAccess(PlatformProduct.SpeedReading, DateTimeOffset.UtcNow);
+        if (scenario == "course-management-only")
+            f.User.GrantProductAccess(PlatformProduct.CourseManagement, UserProductAccessSource.Admin, Guid.NewGuid(), DateTimeOffset.UtcNow);
+        if (scenario == "no-product")
+            ((System.Collections.IList)typeof(User).GetField("_productAccesses", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(f.User)!).Clear();
+
+        var result = await ParentHandler(f).Handle(new Identity.Application.Commands.RegisterParent.RegisterParentCommand(
+            f.User.Email, EnrollmentFixture.Password, "Yeni", "Veli", null, PlatformProduct.Coaching), CancellationToken.None);
+
+        Assert.Equal("Identity.UserExists", result.Error.Code);
+        Assert.Equal("Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın.", result.Error.Description);
+        Assert.False(f.User.HasProductAccess(PlatformProduct.Coaching));
+        Assert.DoesNotContain(f.User.Roles, r => r.RoleId == f.Roles["Parent"].Id);
+        Assert.Empty(f.ParentProfiles);
+        Assert.Equal(0, f.Saves);
+    }
+
+    // M2b: an MFA account can become a parent from the parent form (code field) and from the join endpoint.
+    [Fact]
+    public async Task ParentRegistrationAcceptsTheMfaCodeOfTheExistingAccount()
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "parent", confirmed: true);
+        f.User.EnableMfa("protected", ["recovery"], DateTimeOffset.UtcNow);
+        Identity.Application.Commands.RegisterParent.RegisterParentCommand Command(string? code) =>
+            new(f.User.Email, EnrollmentFixture.Password, "Yeni", "Veli", null, PlatformProduct.Coaching, MfaCode: code);
+
+        Assert.Equal("Auth.ExistingAccountMfaRequired", (await ParentHandler(f).Handle(Command(null), CancellationToken.None)).Error.Code);
+        var result = await ParentHandler(f).Handle(Command("123456"), CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Description : "");
+        Assert.Equal(RegistrationOutcome.NotRequired, result.Value.VerificationEmail);
+        Assert.Contains(f.User.Roles, r => r.Product == PlatformProduct.Coaching && r.RoleId == f.Roles["Parent"].Id);
+    }
+
+    [Fact]
+    public async Task TheJoinEndpointAcceptsAParentAccount()
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "parent", confirmed: true);
+        var handler = new Identity.Application.Commands.JoinProduct.JoinProductCommandHandler(f.Enrollment,
+            Stub<IConfigurationService>((_, _) => Task.FromResult<string?>("true")), new AcceptingLegal());
+
+        var result = await handler.Handle(new Identity.Application.Commands.JoinProduct.JoinProductCommand(
+            f.User.Email, EnrollmentFixture.Password, "parent", Product: PlatformProduct.Coaching), CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Description : "");
+        Assert.Contains(f.User.Roles, r => r.Product == PlatformProduct.Coaching && r.RoleId == f.Roles["Parent"].Id);
+    }
+
+    // L2: the idempotent retry happens only after MFA; no token rotation or e-mail without the code.
+    [Fact]
+    public async Task ARetryOfAnMfaAccountNeedsAFreshCodeBeforeAnythingIsSent()
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "student", confirmed: false);
+        f.User.EnableMfa("protected", ["recovery"], DateTimeOffset.UtcNow);
+        Assert.True((await f.Join(mfaCode: "123456")).IsSuccess);
+        var token = f.User.EmailVerificationToken;
+
+        Assert.Equal("Auth.ExistingAccountMfaRequired", (await f.Join()).Error.Code);
+        Assert.Equal("Auth.InvalidMfaCode", (await f.Join(mfaCode: "123456")).Error.Code);
+        Assert.Equal(token, f.User.EmailVerificationToken);
+        Assert.Single(f.Published.OfType<UserRegisteredEvent>());
+
+        var retry = await f.Join(mfaCode: "654321");
+        Assert.True(retry.IsSuccess, retry.IsFailure ? retry.Error.Description : "");
+        Assert.Equal(RegistrationOutcome.Sent, retry.Value.VerificationEmail);
+        Assert.NotEqual(token, f.User.EmailVerificationToken);
+        Assert.Equal(2, f.Published.OfType<UserRegisteredEvent>().Count());
+        Assert.Equal(101, f.User.LastAcceptedMfaTimeStep);
+    }
+
+    // H1: a resend names the product, so a Coaching account gets the Coaching e-mail and link.
+    [Theory]
+    [InlineData("speed-reading", false, "speed-reading")]
+    [InlineData(null, false, "speed-reading")]
+    [InlineData(null, true, null)]
+    [InlineData("coaching", true, "coaching")]
+    [InlineData("not-a-product", false, "speed-reading")]
+    public async Task ResendingTheVerificationEmailNamesTheProduct(string? requested, bool bothProducts, string? expected)
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "student", confirmed: false);  // has speed reading only
+        if (bothProducts)
+        {
+            f.User.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+            f.AddRole("Student", PlatformProduct.Coaching);
+        }
+        var handler = new Identity.Application.Commands.ResendVerificationEmail.ResendVerificationEmailCommandHandler(f.Users(), f.UnitOfWork(), f.Publisher());
+
+        var result = await handler.Handle(new(f.User.Email, requested), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expected, Assert.Single(f.Published.OfType<UserRegisteredEvent>()).Product);
+    }
+
+    [Fact]
+    public async Task ResendingForAProductTheAccountDoesNotHaveFallsBackToItsOwnProduct()
+    {
+        var f = new EnrollmentFixture(PlatformProduct.Coaching, "student", confirmed: false);  // speed reading only
+        var handler = new Identity.Application.Commands.ResendVerificationEmail.ResendVerificationEmailCommandHandler(f.Users(), f.UnitOfWork(), f.Publisher());
+        Assert.True((await handler.Handle(new(f.User.Email, "coaching"), CancellationToken.None)).IsSuccess);
+        Assert.Equal("speed-reading", Assert.Single(f.Published.OfType<UserRegisteredEvent>()).Product);
     }
 
     private static Identity.Application.Commands.RegisterParent.RegisterParentCommandHandler ParentHandler(EnrollmentFixture f) => new(
@@ -561,6 +706,7 @@ public sealed class RegistrationVerificationEmailTests
         public readonly List<InstitutionAdmin> Admins = [];
         public readonly List<ParentProfile> ParentProfiles = [];
         public readonly ExistingAccountEnrollment Enrollment;
+        public readonly IInstitutionRepository Institutions;
         public int Saves;
 
         /// <param name="account">student, teacher, institution or parent (a parent's source account is a student one).</param>
@@ -576,17 +722,19 @@ public sealed class RegistrationVerificationEmailTests
             User.GrantProductAccess(Source, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
             AddRole(account switch { "teacher" => "Teacher", "institution" => "InstitutionAdmin", _ => "Student" }, Source);
             Admins.Add(InstitutionAdmin.Create(User.Id, Institution.Id, InstitutionAdminRole.Manager, Source));
+            Institutions = Stub<IInstitutionRepository>((m, args) => m.Name switch
+            {
+                "GetByIdAsync" => Task.FromResult<Institution?>((Guid)args![0]! == Institution.Id ? Institution : null),
+                "GetAdminsForRegistrationAsync" => Task.FromResult<IReadOnlyList<InstitutionAdmin>>(Admins.ToList()),
+                "AddAdminAsync" => AddAdmin((InstitutionAdmin)args![0]!),
+                "RemoveAdmin" => RemoveAdmin((InstitutionAdmin)args![0]!),
+                _ => throw new NotSupportedException(m.Name)
+            });
             Enrollment = new ExistingAccountEnrollment(
                 Users(),
-                Stub<IInstitutionRepository>((m, args) => m.Name switch
-                {
-                    "GetByIdAsync" => Task.FromResult<Institution?>((Guid)args![0]! == Institution.Id ? Institution : null),
-                    "GetAdminsForRegistrationAsync" => Task.FromResult<IReadOnlyList<InstitutionAdmin>>(Admins.ToList()),
-                    "AddAdminAsync" => AddAdmin((InstitutionAdmin)args![0]!),
-                    _ => throw new NotSupportedException(m.Name)
-                }),
+                Institutions,
                 Stub<IRoleRepository>((_, args) => Task.FromResult<Role?>(Roles[(string)args![0]!])), hasher,
-                Stub<IMultiFactorService>((_, args) => (string)args![1]! == "123456" ? (long?)100 : null),
+                Stub<IMultiFactorService>((_, args) => (string)args![1]! switch { "123456" => (long?)100, "654321" => 101, _ => null }),
                 UnitOfWork(), Stub<IRegistrationLegalConsentService>((_, _) => null), TimeProvider.System,
                 new TestAuthenticationLock(), Publisher(),
                 parents: Stub<IParentRepository>((m, args) => m.Name switch
@@ -622,6 +770,12 @@ public sealed class RegistrationVerificationEmailTests
         private Task<int> Save() { Saves++; return Task.FromResult(1); }
         private Task AddAdmin(InstitutionAdmin admin) { Admins.Add(admin); return Task.CompletedTask; }
         private Task AddParent(ParentProfile profile) { ParentProfiles.Add(profile); return Task.CompletedTask; }
+        private object? RemoveAdmin(InstitutionAdmin admin) { Admins.Remove(admin); return null; }
+        public void SetPassword(string password)
+        {
+            new PasswordHasher().CreatePasswordHash(password, out var hash, out var salt);
+            User.SetPassword(hash, salt);
+        }
     }
 
     private sealed class AcceptingLegal : IRegistrationLegalConsentService

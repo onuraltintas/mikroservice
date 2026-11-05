@@ -47,7 +47,7 @@ public sealed class NotificationContractTests
         var link = options.BuildEmailVerificationLink(userId, "token with & unsafe");
 
         link.Should().Be(
-            "https://staging.example.test/auth/verify-email?token=token%20with%20%26%20unsafe&userId=11111111-1111-1111-1111-111111111111");
+            "https://staging.example.test/auth/confirm-email?userId=11111111-1111-1111-1111-111111111111&token=token%20with%20%26%20unsafe");
     }
 
     [Fact]
@@ -78,6 +78,34 @@ public sealed class NotificationContractTests
 
         options.BuildPasswordResetLink("reset-token", "student@example.test", "Teacher")
             .Should().StartWith("https://masterhizliokuma.example.test/auth/reset-password");
+    }
+
+    // Second review L5: an unknown product never throws; the role decides as for older messages.
+    [Theory]
+    [InlineData("Student", "something-new", true)]
+    [InlineData("Teacher", "", true)]
+    [InlineData("SystemAdmin", "something-new", false)]
+    public void PublicAppUrlOptions_UnknownProductFallsBackToTheRole(string role, string product, bool speedReading)
+    {
+        var options = new PublicAppUrlOptions { BaseUrl = "https://eduivme.example.test", SpeedReadingBaseUrl = "https://masterhizliokuma.example.test" };
+        options.ResolveBaseUrl(role, product).Should().Be(speedReading ? "https://masterhizliokuma.example.test" : "https://eduivme.example.test");
+        PublicAppUrlOptions.GetTemplateName("Auth_VerifyEmail", role, product).Should().Be(speedReading ? "SpeedReading_Auth_VerifyEmail" : "Auth_VerifyEmail");
+        PublicAppUrlOptions.IsKnownProduct(product).Should().BeFalse();
+        PublicAppUrlOptions.IsKnownProduct("coaching").Should().BeTrue();
+        PublicAppUrlOptions.IsKnownProduct(null).Should().BeTrue("no product is the old message shape");
+    }
+
+    [Fact]
+    public void PublicAppUrlOptions_VerificationPathsMatchTheClientRoutes()
+    {
+        PublicAppUrlOptions.CoachingEmailVerificationPath.Should().Be("/auth/confirm-email");
+        PublicAppUrlOptions.SpeedReadingEmailVerificationPath.Should().Be("/auth/verify-email");
+        var options = new PublicAppUrlOptions { BaseUrl = "https://eduivme.example.test", SpeedReadingBaseUrl = "https://masterhizliokuma.example.test" };
+        var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        options.BuildEmailVerificationLink(userId, "t", "Student", "coaching")
+            .Should().Be("https://eduivme.example.test/auth/confirm-email?userId=11111111-1111-1111-1111-111111111111&token=t");
+        options.BuildEmailVerificationLink(userId, "t", "Student", "speed-reading")
+            .Should().Be("https://masterhizliokuma.example.test/auth/verify-email?token=t&userId=11111111-1111-1111-1111-111111111111");
     }
 
     [Fact]
