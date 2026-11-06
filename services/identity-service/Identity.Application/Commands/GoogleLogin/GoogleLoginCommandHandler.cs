@@ -25,6 +25,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
     private readonly ILogger<GoogleLoginCommandHandler> _logger;
 
+    private readonly IInstitutionRepository _institutions;
+
     public GoogleLoginCommandHandler(
         IGoogleAuthService googleAuthService,
         IUserRepository userRepository,
@@ -36,8 +38,10 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         IMultiFactorService multiFactorService,
         ILogger<GoogleLoginCommandHandler> logger,
         IRegistrationLegalConsentService registrationLegalConsentService,
-        IPublishEndpoint profileEvents)
+        IPublishEndpoint profileEvents,
+        IInstitutionRepository institutions)
     {
+        _institutions = institutions;
         _googleAuthService = googleAuthService;
         _userRepository = userRepository;
         _tokenService = tokenService;
@@ -214,7 +218,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     if (!createdNewUser && !user.EmailConfirmed)
                     {
                         // Registration race onto an account someone else created and never confirmed.
-                        user.ClaimUnconfirmedAccountByVerifiedExternalLogin();
+                        await Identity.Application.Services.UnconfirmedAccountClaim.ClaimAsync(user, _institutions, cancellationToken);
                     }
 
                     userChanged = true;
@@ -327,7 +331,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             {
                 // The local password of an unconfirmed account may have been chosen by
                 // someone else; Google's verified address now proves the real owner.
-                user.ClaimUnconfirmedAccountByVerifiedExternalLogin();
+                await Identity.Application.Services.UnconfirmedAccountClaim.ClaimAsync(user, _institutions, cancellationToken);
 
                 try
                 {

@@ -47,7 +47,7 @@ public sealed class NotificationContractTests
         var link = options.BuildEmailVerificationLink(userId, "token with & unsafe");
 
         link.Should().Be(
-            "https://staging.example.test/auth/verify-email?token=token%20with%20%26%20unsafe&userId=11111111-1111-1111-1111-111111111111");
+            "https://staging.example.test/auth/confirm-email?userId=11111111-1111-1111-1111-111111111111&token=token%20with%20%26%20unsafe");
     }
 
     [Fact]
@@ -78,6 +78,103 @@ public sealed class NotificationContractTests
 
         options.BuildPasswordResetLink("reset-token", "student@example.test", "Teacher")
             .Should().StartWith("https://masterhizliokuma.example.test/auth/reset-password");
+    }
+
+    // User decision 05.11.2026: Coaching links use the Coaching site (PublicApp:BaseUrl = onuraltintas.net in
+    // production); management accounts (SystemAdmin, Editor) keep the admin panel (PublicApp:AdminPanelUrl).
+    [Theory]
+    [InlineData("Student", "coaching", "https://onuraltintas.example.test")]
+    [InlineData("Parent", "coaching", "https://onuraltintas.example.test")]
+    [InlineData("Teacher", "coaching", "https://onuraltintas.example.test")]
+    [InlineData("Parent", null, "https://onuraltintas.example.test")]
+    [InlineData("SystemAdmin", null, "https://eduivme.example.test")]
+    [InlineData("Editor", null, "https://eduivme.example.test")]
+    [InlineData("SystemAdmin", "coaching", "https://eduivme.example.test")]
+    [InlineData("Student", "speed-reading", "https://masterhizliokuma.example.test")]
+    public void PublicAppUrlOptions_SendsCoachingToTheCoachingSiteAndManagementToTheAdminPanel(string role, string? product, string origin)
+    {
+        var options = new PublicAppUrlOptions
+        {
+            BaseUrl = "https://onuraltintas.example.test",
+            SpeedReadingBaseUrl = "https://masterhizliokuma.example.test",
+            AdminPanelUrl = "https://eduivme.example.test"
+        };
+        var userId = Guid.NewGuid();
+
+        options.ResolveBaseUrl(role, product).Should().Be(origin);
+        options.BuildLoginLink(role, product).Should().Be($"{origin}/auth/login");
+        options.BuildPasswordResetLink("t", "a@example.test", role, product).Should().StartWith($"{origin}/auth/reset-password?");
+        options.BuildEmailVerificationLink(userId, "t", role, product).Should().StartWith(origin + "/auth/");
+        options.AdminPanelLink("/dashboard/coaching/subscriptions").Should().Be("https://eduivme.example.test/dashboard/coaching/subscriptions");
+    }
+
+    // Final review 2: roles made in role management are not product roles, so their links open the admin panel.
+    [Theory]
+    [InlineData("İçerik Sorumlusu", true)]
+    [InlineData("SupportAgent", true)]
+    [InlineData("CourseTeacher", true)]
+    [InlineData("Student", false)]
+    [InlineData("Teacher", false)]
+    [InlineData("Parent", false)]
+    [InlineData("InstitutionAdmin", false)]
+    [InlineData("InstitutionOwner", false)]
+    [InlineData("User", false)]
+    [InlineData(null, false)]
+    public void PublicAppUrlOptions_AnyNonProductRoleIsManagement(string? role, bool management)
+    {
+        PublicAppUrlOptions.IsManagementRole(role).Should().Be(management);
+        var options = new PublicAppUrlOptions
+        {
+            BaseUrl = "https://onuraltintas.example.test",
+            SpeedReadingBaseUrl = "https://masterhizliokuma.example.test",
+            AdminPanelUrl = "https://eduivme.example.test"
+        };
+        if (management)
+            options.BuildPasswordResetLink("t", "a@example.test", role, "coaching").Should().StartWith("https://eduivme.example.test/auth/reset-password?");
+    }
+
+    [Fact]
+    public void PublicAppUrlOptions_ResetLinkUsesTheQueryNamesTheResetPagesRead()
+    {
+        PublicAppUrlOptions.PasswordResetPath.Should().Be("/auth/reset-password");
+        var options = new PublicAppUrlOptions { BaseUrl = "https://onuraltintas.example.test" };
+        options.BuildPasswordResetLink("a b", "x+y@example.test", "Student", "coaching")
+            .Should().Be("https://onuraltintas.example.test/auth/reset-password?token=a%20b&email=x%2By%40example.test");
+    }
+
+    [Fact]
+    public void PublicAppUrlOptions_ManagementFallsBackToTheBaseUrlWithoutAnAdminPanelUrl()
+    {
+        var options = new PublicAppUrlOptions { BaseUrl = "https://eduivme.example.test" };
+        options.ResolveBaseUrl("SystemAdmin", null).Should().Be("https://eduivme.example.test");
+    }
+
+    // Second review L5: an unknown product never throws; the role decides as for older messages.
+    [Theory]
+    [InlineData("Student", "something-new", true)]
+    [InlineData("Teacher", "", true)]
+    [InlineData("SystemAdmin", "something-new", false)]
+    public void PublicAppUrlOptions_UnknownProductFallsBackToTheRole(string role, string product, bool speedReading)
+    {
+        var options = new PublicAppUrlOptions { BaseUrl = "https://eduivme.example.test", SpeedReadingBaseUrl = "https://masterhizliokuma.example.test" };
+        options.ResolveBaseUrl(role, product).Should().Be(speedReading ? "https://masterhizliokuma.example.test" : "https://eduivme.example.test");
+        PublicAppUrlOptions.GetTemplateName("Auth_VerifyEmail", role, product).Should().Be(speedReading ? "SpeedReading_Auth_VerifyEmail" : "Auth_VerifyEmail");
+        PublicAppUrlOptions.IsKnownProduct(product).Should().BeFalse();
+        PublicAppUrlOptions.IsKnownProduct("coaching").Should().BeTrue();
+        PublicAppUrlOptions.IsKnownProduct(null).Should().BeTrue("no product is the old message shape");
+    }
+
+    [Fact]
+    public void PublicAppUrlOptions_VerificationPathsMatchTheClientRoutes()
+    {
+        PublicAppUrlOptions.CoachingEmailVerificationPath.Should().Be("/auth/confirm-email");
+        PublicAppUrlOptions.SpeedReadingEmailVerificationPath.Should().Be("/auth/verify-email");
+        var options = new PublicAppUrlOptions { BaseUrl = "https://eduivme.example.test", SpeedReadingBaseUrl = "https://masterhizliokuma.example.test" };
+        var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        options.BuildEmailVerificationLink(userId, "t", "Student", "coaching")
+            .Should().Be("https://eduivme.example.test/auth/confirm-email?userId=11111111-1111-1111-1111-111111111111&token=t");
+        options.BuildEmailVerificationLink(userId, "t", "Student", "speed-reading")
+            .Should().Be("https://masterhizliokuma.example.test/auth/verify-email?token=t&userId=11111111-1111-1111-1111-111111111111");
     }
 
     [Fact]

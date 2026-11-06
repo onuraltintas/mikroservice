@@ -492,7 +492,8 @@ export class IdentityService {
 
     // Password Reset Methods
     forgotPassword(email: string) {
-        return this.http.post(`${environment.apiUrl}/auth/forgot-password`, { email });
+        // PR #111 final review: the Coaching reset e-mail with the Coaching site's link.
+        return this.http.post(`${environment.apiUrl}/auth/forgot-password`, { email, product: 'coaching' });
     }
 
     resetPassword(email: string, token: string, newPassword: string) {

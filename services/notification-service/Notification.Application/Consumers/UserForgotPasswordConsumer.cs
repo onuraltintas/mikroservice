@@ -30,7 +30,7 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
         
         var template = await _dbContext.EmailTemplates
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_ForgotPassword", message.Role) && t.IsActive);
+            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_ForgotPassword", message.Role, message.Product) && t.IsActive);
 
         string subject;
         string body;
@@ -38,7 +38,8 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
         var resetLink = _publicAppUrlOptions.BuildPasswordResetLink(
             message.ResetToken,
             message.Email,
-            message.Role);
+            message.Role,
+            message.Product);
 
         if (template != null)
         {
@@ -50,12 +51,12 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
                 .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.Html(message.LastName))
                 .Replace("{{ResetLink}}", resetLink);
-            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
-            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role);
+            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
+            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
         }
         else
         {
-            var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
+            var appName = PublicAppUrlOptions.GetApplicationName(message.Role, message.Product);
             subject = $"Şifre Sıfırlama Talebi - {appName}";
             body = $@"
                 <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>

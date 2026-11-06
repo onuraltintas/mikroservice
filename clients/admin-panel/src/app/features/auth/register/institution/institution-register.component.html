@@ -78,7 +78,10 @@
                     {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
                 </button>
                 @if (joinExisting) { <app-existing-product-join product="coaching" account="institution" /> }
-                <form [style.display]="joinExisting ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+                @if (verifiedNotice(); as notice) {
+                    <app-registration-success [title]="notice.title" [message]="notice.message" [loginQueryParams]="loginQueryParams" />
+                }
+                <form [style.display]="joinExisting || verifiedNotice() ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
 
 
                     <!-- Institution Info -->

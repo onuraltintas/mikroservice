@@ -77,3 +77,16 @@ describe('IdentityService shared platform legal pages', () => {
     http.verify();
   });
 });
+
+// PR #111 final review: the reset e-mail is the Coaching one with the Coaching site's link.
+describe('IdentityService password reset request', () => {
+  it('asks for a Coaching password reset e-mail', () => {
+    TestBed.configureTestingModule({ providers: [IdentityService, provideHttpClient(), provideHttpClientTesting()] });
+    const http = TestBed.inject(HttpTestingController);
+    TestBed.inject(IdentityService).forgotPassword('ogrenci@example.test').subscribe();
+    const request = http.expectOne(candidate => candidate.url.endsWith('/auth/forgot-password'));
+    expect(request.request.body).toEqual({ email: 'ogrenci@example.test', product: 'coaching' });
+    request.flush({});
+    http.verify();
+  });
+});

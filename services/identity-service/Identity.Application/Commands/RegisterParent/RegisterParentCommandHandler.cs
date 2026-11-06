@@ -3,13 +3,14 @@ using Identity.Application.Interfaces;
 using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
+using Identity.Application.Registration;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.RegisterParent;
 
-public class RegisterParentCommandHandler : IRequestHandler<RegisterParentCommand, Result<Guid>>
+public class RegisterParentCommandHandler : IRequestHandler<RegisterParentCommand, Result<RegistrationOutcome>>
 {
     private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
@@ -18,6 +19,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
+    private readonly Identity.Application.Services.ExistingAccountEnrollment _enrollment;
 
     public RegisterParentCommandHandler(
         IIdentityService identityService,
@@ -26,8 +28,10 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
         IConfigurationService configurationService,
-        IRegistrationLegalConsentService registrationLegalConsentService)
+        IRegistrationLegalConsentService registrationLegalConsentService,
+        Identity.Application.Services.ExistingAccountEnrollment enrollment)
     {
+        _enrollment = enrollment;
         _identityService = identityService;
         _userRepository = userRepository;
         _parentRepository = parentRepository;
@@ -37,18 +41,18 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         _registrationLegalConsentService = registrationLegalConsentService;
     }
 
-    public async Task<Result<Guid>> Handle(RegisterParentCommand request, CancellationToken cancellationToken)
+    public async Task<Result<RegistrationOutcome>> Handle(RegisterParentCommand request, CancellationToken cancellationToken)
     {
         if (request.Product != PlatformProduct.Coaching)
         {
-            return Result.Failure<Guid>(new Error("Auth.ProductRoleNotSupported", "Veli kaydı Koçluk platformunda yapılabilir."));
+            return Result.Failure<RegistrationOutcome>(new Error("Auth.ProductRoleNotSupported", "Veli kaydı Koçluk platformunda yapılabilir."));
         }
 
         // Global Registration Switch Check
         var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
         if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
         {
-            return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
+            return Result.Failure<RegistrationOutcome>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
         }
 
         var legalValidation = await _registrationLegalConsentService.ValidateAsync(
@@ -56,7 +60,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
             request.LegalAcceptances,
             cancellationToken);
         if (legalValidation.IsFailure)
-            return Result.Failure<Guid>(legalValidation.Error);
+            return Result.Failure<RegistrationOutcome>(legalValidation.Error);
 
         var identityResult = await _identityService.RegisterUserAsync(
             request.Email,
@@ -67,7 +71,12 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
 
         if (identityResult.IsFailure)
         {
-            return Result.Failure<Guid>(identityResult.Error);
+            // Paket A review #1: an existing Eduİvme account (any service, any role) becomes a Coaching
+            // parent with its existing password, under the same rules as the other registrations.
+            if (identityResult.Error.Code == "Identity.UserExists")
+                return await _enrollment.JoinAsync(request.Email, request.Password, PlatformProduct.Coaching, "parent",
+                    legalValidation.Value, string.IsNullOrEmpty(request.MfaCode) ? null : request.MfaCode, cancellationToken);
+            return Result.Failure<RegistrationOutcome>(identityResult.Error);
         }
 
         var userId = identityResult.Value;
@@ -82,7 +91,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         if (roleResult.IsFailure)
         {
              await _identityService.DeleteUserAsync(userId, cancellationToken);
-             return Result.Failure<Guid>(roleResult.Error);
+             return Result.Failure<RegistrationOutcome>(roleResult.Error);
         }
 
         // Create Parent Profile
@@ -94,7 +103,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
             if (user is null)
             {
                 await _identityService.DeleteUserAsync(userId, cancellationToken);
-                return Result.Failure<Guid>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
+                return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
             }
 
             if (user.GrantProductAccess(
@@ -124,15 +133,15 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
                 request.LastName,
                 user?.EmailVerificationToken ?? "",
                 Identity.Domain.Enums.UserRole.Parent.ToString()
-            ), cancellationToken);
+            ) { Product = PlatformProduct.Coaching.ToRouteValue() }, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success(userId);
+            return Result.Success(RegistrationOutcome.EmailSent(userId));
         }
         catch (Exception)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<Guid>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
+            return Result.Failure<RegistrationOutcome>(new Error("Registration.Failed", "Kayıt tamamlanamadı. Lütfen biraz sonra yeniden deneyin."));
         }
     }
 }

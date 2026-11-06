@@ -29,7 +29,7 @@ const forms: Array<{ name: string; voice: Voice; path: string; create: () => For
   {
     name: 'student', voice: 'sen', path: '/auth/coaching/register/student',
     create: () => new StudentRegisterComponent() as unknown as Form,
-    value: { firstName: 'Elif', lastName: 'Kaya', email: 'elif@example.test', password, confirmPassword: password, birthDate: '2011-05-03' },
+    value: { firstName: 'Elif', lastName: 'Kaya', email: 'elif@example.test', password, confirmPassword: password },
   },
   {
     name: 'parent', voice: 'sen', path: '/auth/coaching/register/parent',

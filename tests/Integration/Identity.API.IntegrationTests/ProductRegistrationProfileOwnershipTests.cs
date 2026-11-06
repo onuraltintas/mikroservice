@@ -102,20 +102,44 @@ public sealed class ProductRegistrationProfileOwnershipTests
         Assert.Equal(new DateOnly(2011, 5, 3), message.BirthDate);
     }
 
+    // Paket A #1 (05.11.2026): Coaching student registration no longer asks for the birth date;
+    // it is asked later (first-login wizard). An older client may still send one, which must be plausible.
     [Fact]
-    public void CoachingStudentRegistration_RequiresAPlausibleBirthDate()
+    public void CoachingStudentRegistration_DoesNotRequireABirthDate()
     {
         var validator = new Identity.Application.Commands.RegisterStudent.RegisterStudentCommandValidator();
         RegisterStudentCommand Command(DateOnly? birthDate, PlatformProduct product = PlatformProduct.Coaching) =>
             new("student@example.test", "StrongPassword1!", "Test", "Student", null, product, null, birthDate);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        Assert.True(validator.Validate(Command(new DateOnly(2011, 5, 3))).IsValid);
-        Assert.False(validator.Validate(Command(null)).IsValid);
+        Assert.True(validator.Validate(Command(null)).IsValid, "the birth date is no longer asked at registration");
+        Assert.True(validator.Validate(Command(new DateOnly(2011, 5, 3))).IsValid, "older clients may still send it");
         Assert.False(validator.Validate(Command(today.AddDays(1))).IsValid);
         Assert.False(validator.Validate(Command(today.AddYears(-2))).IsValid);
         Assert.False(validator.Validate(Command(today.AddYears(-101))).IsValid);
-        Assert.True(validator.Validate(Command(null, PlatformProduct.SpeedReading)).IsValid, "speed reading does not ask for it yet");
+        Assert.True(validator.Validate(Command(null, PlatformProduct.SpeedReading)).IsValid);
+    }
+
+    [Fact]
+    public async Task CoachingStudentRegistrationWithoutABirthDateProvisionsTheProfileWithoutOne()
+    {
+        var userId = Guid.NewGuid();
+        var publisher = DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>();
+        var handler = new RegisterStudentCommandHandler(
+            CreateIdentityService(userId),
+            CreateUserRepository(User.Create(userId, "student@example.test")),
+            DispatchProxy.Create<IStudentRepository, StudentRepositoryProxy>(),
+            DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
+            publisher,
+            DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
+            new AcceptingLegalConsentService(), null!);
+
+        var result = await handler.Handle(new RegisterStudentCommand("student@example.test", "StrongPassword1!", "Test", "Student", null,
+            PlatformProduct.Coaching), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var message = Assert.Single(((PublishEndpointProxy)(object)publisher).Messages.OfType<CoachingProfileProvisioningRequested>());
+        Assert.Null(message.BirthDate);
     }
 
     [Theory]

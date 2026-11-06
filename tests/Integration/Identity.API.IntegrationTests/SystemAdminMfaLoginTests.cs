@@ -29,7 +29,7 @@ public sealed class SystemAdminMfaLoginTests
         var handler = new GoogleLoginCommandHandler(new StubGoogleAuthService(user.Email), repository, new IssuingTokenService(),
             new StubUnitOfWork(), new RejectingIdentityService(Result.Success(user.Id), allowRefreshToken: true),
             new RejectingStudentRepository(), new StubConfigurationService(allowRegistration: "true"), new StubMfaService(user.Id),
-            NullLogger<GoogleLoginCommandHandler>.Instance, new AcceptingLegalConsentService(), publisher);
+            NullLogger<GoogleLoginCommandHandler>.Instance, new AcceptingLegalConsentService(), publisher, NoInstitutions());
         var result = await handler.Handle(new GoogleLoginCommand("google-token", "127.0.0.1", product), default);
         result.IsSuccess.Should().BeTrue();
         var messages = ((ProductRegistrationProfileOwnershipTests.PublishEndpointProxy)(object)publisher).Messages
@@ -277,7 +277,8 @@ public sealed class SystemAdminMfaLoginTests
             mfaService,
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -308,7 +309,8 @@ public sealed class SystemAdminMfaLoginTests
             mfaService,
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -340,7 +342,8 @@ public sealed class SystemAdminMfaLoginTests
             mfaService,
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -373,7 +376,8 @@ public sealed class SystemAdminMfaLoginTests
             new StubMfaService(user.Id),
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
@@ -410,7 +414,8 @@ public sealed class SystemAdminMfaLoginTests
             new StubMfaService(user.Id),
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1", requestedProduct),
@@ -445,7 +450,8 @@ public sealed class SystemAdminMfaLoginTests
             new StubMfaService(user.Id),
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.SpeedReading),
@@ -475,7 +481,8 @@ public sealed class SystemAdminMfaLoginTests
             mfaService,
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -502,7 +509,8 @@ public sealed class SystemAdminMfaLoginTests
             new StubMfaService(user.Id),
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -535,7 +543,8 @@ public sealed class SystemAdminMfaLoginTests
             new StubMfaService(inactiveUser.Id),
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
@@ -561,7 +570,8 @@ public sealed class SystemAdminMfaLoginTests
             new StubMfaService(user.Id),
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -1194,7 +1204,8 @@ public sealed class SystemAdminMfaLoginTests
             new StubMfaService(user.Id),
             NullLogger<GoogleLoginCommandHandler>.Instance,
             new AcceptingLegalConsentService(),
-            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>());
+            System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>(),
+            NoInstitutions());
 
     private static User CreateSystemAdministrator(bool mfaEnabled = false, Guid? id = null)
     {
@@ -1508,5 +1519,20 @@ public sealed class SystemAdminMfaLoginTests
         public Task<Result<IEnumerable<string>>> GetAvailableRolesAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> RevokeRefreshTokenAsync(string token, string ipAddress, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> UpdateUserAsync(Guid userId, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    /// <summary>No institution links: these accounts never joined a service while unconfirmed.</summary>
+    private static Identity.Application.Interfaces.IInstitutionRepository NoInstitutions()
+    {
+        var proxy = System.Reflection.DispatchProxy.Create<Identity.Application.Interfaces.IInstitutionRepository, NoInstitutionsProxy>();
+        return proxy;
+    }
+
+    public class NoInstitutionsProxy : System.Reflection.DispatchProxy
+    {
+        protected override object? Invoke(System.Reflection.MethodInfo? targetMethod, object?[]? args) =>
+            targetMethod?.Name == "GetAdminsForRegistrationAsync"
+                ? Task.FromResult<IReadOnlyList<Identity.Domain.Entities.InstitutionAdmin>>([])
+                : throw new NotSupportedException(targetMethod?.Name);
     }
 }

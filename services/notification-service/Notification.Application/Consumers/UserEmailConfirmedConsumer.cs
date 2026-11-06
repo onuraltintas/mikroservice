@@ -34,7 +34,7 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
         
         var template = await _dbContext.EmailTemplates
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_Welcome", message.Role) && t.IsActive);
+            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_Welcome", message.Role, message.Product) && t.IsActive);
 
         string subject;
         string body;
@@ -49,16 +49,16 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
                 .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.Html(message.LastName))
                 .Replace("{{Email}}", EmailContent.Html(message.Email))
-                .Replace("{{LoginLink}}", _publicAppUrlOptions.BuildLoginLink(message.Role))
-                .Replace("http://localhost:4200/auth/login", _publicAppUrlOptions.BuildLoginLink(message.Role));
-            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
-            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role);
+                .Replace("{{LoginLink}}", _publicAppUrlOptions.BuildLoginLink(message.Role, message.Product))
+                .Replace("http://localhost:4200/auth/login", _publicAppUrlOptions.BuildLoginLink(message.Role, message.Product));
+            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
+            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
         }
         else
         {
-            var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
+            var appName = PublicAppUrlOptions.GetApplicationName(message.Role, message.Product);
             subject = $"Hoş Geldiniz, {EmailContent.SubjectText(message.FirstName)}!";
-            body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}, e-posta adresiniz başarıyla doğrulandı.</p><p><a href='{_publicAppUrlOptions.BuildLoginLink(message.Role)}'>Giriş yapın</a></p>";
+            body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}, e-posta adresiniz başarıyla doğrulandı.</p><p><a href='{_publicAppUrlOptions.BuildLoginLink(message.Role, message.Product)}'>Giriş yapın</a></p>";
         }
 
         var messageId = MessageIds.Require(context);

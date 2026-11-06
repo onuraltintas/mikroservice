@@ -21,11 +21,11 @@ public class RegisterStudentCommandValidator : AbstractValidator<RegisterStudent
 
         RuleFor(x => x.Password).ApplyRegistrationPasswordPolicy();
 
-        // Roadmap Y8: Coaching asks for the birth date (no parental consent flow yet, only the date).
+        // Paket A (05.11.2026): registration no longer asks for the birth date (the first-login
+        // wizard will). Older clients may still send one; it must then be a plausible date.
         RuleFor(x => x.BirthDate)
-            .NotNull().WithMessage("Doğum tarihi zorunludur.")
             .Must(BePlausibleBirthDate).WithMessage("Geçerli bir doğum tarihi giriniz.")
-            .When(x => x.Product == Identity.Domain.Enums.PlatformProduct.Coaching);
+            .When(x => x.BirthDate.HasValue);
 
         // Telefon validasyonu (opsiyonel)
         RuleFor(x => x.Phone)
