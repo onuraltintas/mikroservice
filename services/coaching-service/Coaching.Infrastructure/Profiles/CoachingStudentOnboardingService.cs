@@ -137,6 +137,10 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         RequireOpen(profile);
         if (!profile.HasOnboardingStep(1) || !profile.IsEducationComplete) throw new ArgumentException("Önce kişisel bilgilerini kaydet.");
         if (!LearningPurposes.IsSelectable(request.Purpose)) throw new ArgumentException("Hazırlandığın sınavı seç.");
+        // Paket D re-check (N1): the wizard is never finished with an exam the grade does not fit, even one already saved
+        // (the study settings let an unchanged exam through so unrelated saves keep working).
+        if (!LearningPurposes.FitsEducation(request.Purpose, profile.EducationStatus, profile.GradeLevel))
+            throw new ArgumentException(LearningPurposes.PurposeNotForEducationNotice);
         var diplomaApplies = LearningPurposes.DiplomaApplies(request.Purpose, profile.EducationStatus, profile.GradeLevel);
         var diploma = diplomaApplies ? request.DiplomaGrade : null;
         // Every check before any write.

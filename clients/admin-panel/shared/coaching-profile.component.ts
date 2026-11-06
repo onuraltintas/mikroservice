@@ -1,7 +1,7 @@
 import { coachingFeedback, coachingToaster } from '../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, DestroyRef, Input, OnInit, inject, signal, output } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Input, OnInit, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -142,6 +142,7 @@ export class CoachingProfileComponent implements OnInit {
   readonly saved = output<void>();
   private readonly http = inject(HttpClient);
   private readonly destroy = inject(DestroyRef);
+  private readonly host = inject(ElementRef<HTMLElement>);
   readonly loading = signal(false); readonly working = signal(false); readonly ready = signal(false);
   readonly error = signal<string | null>(null); readonly success = signal<string | null>(null);
   readonly invitations = signal<Invitation[]>([]); readonly invitationError = signal<string | null>(null); readonly invitationLoading = signal(false);
@@ -194,16 +195,20 @@ export class CoachingProfileComponent implements OnInit {
   openSchoolPicker() {
     this.schoolPicker.set(true);
     const home = this.student?.homeCity;
-    if (home) { this.schoolCity.set(home); this.schoolCityLabel.set(home); this.cityPicker.set(false); } else this.changeSchoolCity();
+    if (home) { this.schoolCity.set(home); this.schoolCityLabel.set(home); this.cityPicker.set(false); this.focusPicker(); } else this.changeSchoolCity();
+  }
+  /** Review L8: the focus moves into the picker's list as it opens or changes (after it is rendered). */
+  private focusPicker() {
+    setTimeout(() => (this.host.nativeElement.querySelector('[data-testid="own-school"] input[role="combobox"]') as HTMLInputElement | null)?.focus());
   }
   changeSchoolCity() {
-    this.cityPicker.set(true);
+    this.cityPicker.set(true); this.focusPicker();
     if (this.schoolCities().length) return;
     this.http.get<{ data: { value: string; label?: string }[] }>(`${this.base}/students/me/onboarding/options/schools/cities`).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: r => this.schoolCities.set(r.data.map(x => ({ value: x.value, label: x.label ?? x.value }))),
       error: e => this.error.set(this.message(e, 'Şehir listesi yüklenemedi. Yeniden dene.')) });
   }
-  pickSchoolCity(option: ComboOption) { this.schoolCity.set(option.value); this.schoolCityLabel.set(option.label); this.cityPicker.set(false); }
+  pickSchoolCity(option: ComboOption) { this.schoolCity.set(option.value); this.schoolCityLabel.set(option.label); this.cityPicker.set(false); this.focusPicker(); }
   closeSchoolPicker() { this.schoolPicker.set(false); this.cityPicker.set(false); }
   pickSchool(option: ComboOption) {
     const data = option.data ?? {};
