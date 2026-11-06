@@ -5,6 +5,8 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { StudentLearningSetupComponent } from './student-learning-setup.component';
+import { StudentPlanPreviewComponent } from './student-plan-preview.component';
+import { By } from '@angular/platform-browser';
 import { CoachingLearningSetupService, LearningCatalog, LearningSetupImpact, LearningSetupUpdate, LearningSetupView } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 
@@ -275,6 +277,24 @@ describe('StudentLearningSetupComponent', () => {
     expect(year.getAttribute('aria-invalid')).toBe('true');
     expect(t.el.querySelector('#' + year.getAttribute('aria-describedby'))!.textContent).toContain('2026 ile 2031');
     expect((t.el.querySelector('form button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
+  });
+  // E6 #29: "Plan önizlemesi" shows the draft from the saved availability, not only a link to the plan wizard.
+  it('#29: the ready preview step hosts the plan draft preview for the chosen courses', async () => {
+    const context = { id: 'ctx', version: 4, academicYearStart: 2026, purpose: 'Lgs' as const, targetExamYear: 2027, primaryScoreType: null, foreignLanguage: null,
+      curriculumVersionId: null, coursePreferences: [{ lessonId: 'math', priority: 1, selfReportedDifficulty: null }], topicStates: [], startingStatusReviewed: true };
+    const { fixture, component } = await setup({ context, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] });
+    const el = fixture.nativeElement as HTMLElement;
+    const preview = fixture.debugElement.query(By.css('app-student-plan-preview'));
+    expect(preview).toBeTruthy();
+    expect((preview.componentInstance as StudentPlanPreviewComponent).lessonIds).toEqual(['math']);
+    expect(el.querySelector('a[href="/coaching-portal/plan/wizard"]')).toBeTruthy();
+    (preview.componentInstance as StudentPlanPreviewComponent).editAvailability.emit();
+    await fixture.whenStable();
+    expect(component.step()).toBe('Availability');
+    await component.goTo('Preview'); fixture.detectChanges();
+    (fixture.debugElement.query(By.css('app-student-plan-preview')).componentInstance as StudentPlanPreviewComponent).editCourses.emit();
+    await fixture.whenStable();
+    expect(component.step()).toBe('Courses');
   });
 });
 

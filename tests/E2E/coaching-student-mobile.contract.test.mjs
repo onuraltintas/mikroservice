@@ -63,6 +63,19 @@ test('The plan wizard has one name and one entry point', async () => {
   assert.match(wizard, /<app-student-automatic-plan/, 'the topic-based plan lives inside the wizard');
 });
 
+// E6 #29 (live test 06.11): the study times are asked in Çalışma tercihlerim only; the wizard and the setup preview reuse them.
+test('Availability is asked in one place and the setup page previews the plan', async () => {
+  const wizard = await read(`${portal}/pages/student-study-plan-assistant.component.html`);
+  assert.match(wizard, /<app-student-study-availability/, 'Değiştir opens the same availability editor');
+  assert.doesNotMatch(wizard, /Yapay zekâ servisine|kurallı olarak değerlendirilir|privacy-note/, 'no technical note in the wizard');
+  const wizardCode = await read(`${portal}/pages/student-study-plan-assistant.component.ts`);
+  assert.match(wizardCode, /saveAvailability\(/, 'the wizard answers are saved as the availability');
+  const setup = await read(`${portal}/pages/student-learning-setup.component.html`);
+  assert.match(setup, /<app-student-plan-preview/, 'Plan önizlemesi shows the draft itself');
+  const preview = await read(`${portal}/pages/student-plan-preview.component.ts`);
+  assert.match(preview, /createProposalFromWindows/, 'the preview uses the wizard rules');
+});
+
 test('Student links stay inside the app instead of reloading the page', async () => {
   const hits = await findAll(/\shref="\/coaching-portal[^"]*"/g);
   assert.deepEqual(hits, [], `use routerLink:\n${hits.join('\n')}`);
