@@ -14,6 +14,16 @@ public interface IUserRepository
     Task AddAsync(User user, CancellationToken cancellationToken);
     void TrackProductAccessIfNew(User user, PlatformProduct product);
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Paket F L5 / PR #124 review L3: the current address of an active account, read without tracking or the
+    /// role/permission graph; null when the account does not exist or is inactive (deactivated or erased).
+    /// </summary>
+    async Task<string?> GetActiveEmailAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var user = await GetByIdAsync(id, cancellationToken);
+        return user is { IsActive: true } ? user.Email : null;
+    }
     Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
         IReadOnlyCollection<Guid> userIds,
         CancellationToken cancellationToken);

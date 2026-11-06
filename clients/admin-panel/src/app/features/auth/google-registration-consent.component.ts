@@ -1,26 +1,27 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RegistrationLegalConsentComponent, RegistrationProduct } from './registration-legal-consent.component';
 import { RegistrationLegalAcceptance } from '../../core/services/identity.service';
+import { injectAuthCopy } from './auth-voice';
 
 @Component({
   selector: 'app-google-registration-consent',
   standalone: true,
   imports: [RegistrationLegalConsentComponent],
   template: `
-    <section role="region" aria-label="Google kaydını tamamla" class="rounded-xl border border-indigo-200 bg-white p-6 dark:bg-slate-900">
-      <h2 class="text-xl font-semibold">Kaydını tamamla</h2>
-      <p class="my-3">Google hesabın doğrulandı. Hesabını oluşturmak için aşağıdaki metinleri inceleyip onayla.</p>
+    <section role="region" [attr.aria-label]="copy.googleConsentLabel" class="rounded-xl border border-indigo-200 bg-white p-6 dark:bg-slate-900">
+      <h2 class="text-xl font-semibold">{{ copy.googleConsentTitle }}</h2>
+      <p class="my-3">{{ copy.googleConsentIntro }}</p>
       <app-registration-legal-consent [product]="product"
         (readinessChange)="ready = $event" (acceptancesChange)="acceptances = $event" />
       @if (error) { <p role="alert" class="my-3 text-red-600">{{ error }}</p> }
       <div class="mt-4 flex gap-3">
         <button type="button" [disabled]="busy || !ready || acceptances.length !== 3"
           (click)="confirm.emit(acceptances)" class="rounded-lg bg-indigo-600 px-4 py-3 text-white disabled:opacity-50">
-          {{ busy ? 'Hesabın oluşturuluyor…' : 'Onayla ve hesabımı oluştur' }}
+          {{ busy ? copy.googleConsentBusy : 'Onayla ve hesabımı oluştur' }}
         </button>
         <button type="button" [disabled]="busy" (click)="cancel.emit()" class="rounded-lg border px-4 py-3">Vazgeç</button>
       </div>
-      <p class="mt-3 text-sm">Bu işlemi 5 dakika içinde tamamlaman gerekiyor. Vazgeçersen hesap oluşturulmaz.</p>
+      <p class="mt-3 text-sm">{{ copy.googleConsentTimeLimit }}</p>
     </section>
   `
 })
@@ -30,6 +31,8 @@ export class GoogleRegistrationConsentComponent {
   @Input() error = '';
   @Output() confirm = new EventEmitter<RegistrationLegalAcceptance[]>();
   @Output() cancel = new EventEmitter<void>();
+  /** PR #124 review L7: the login page renders this on eduivme.com too, so it follows the host's voice. */
+  readonly copy = injectAuthCopy().copy;
   ready = false;
   acceptances: RegistrationLegalAcceptance[] = [];
 }

@@ -67,6 +67,13 @@ export interface AuthCopy {
   resendEmailLabel: string;
   resendSent: string;
   resendFailed: string;
+  // Google sign-up consent and the legal texts note (also shown on the management host's login page)
+  googleConsentLabel: string;
+  googleConsentTitle: string;
+  googleConsentIntro: string;
+  googleConsentBusy: string;
+  googleConsentTimeLimit: string;
+  legalNote: string;
 }
 
 export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
@@ -112,7 +119,13 @@ export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
     unavailableHint: 'Bağlantın sorunsuz olabilir; biraz sonra yeniden dene.',
     resendEmailLabel: 'E-posta adresin',
     resendSent: 'Bu adres doğrulama bekliyorsa yeni bir doğrulama e-postası gönderdik. Gelen kutunu kontrol et.',
-    resendFailed: 'Doğrulama e-postası şu an gönderilemedi. Biraz sonra yeniden dene.'
+    resendFailed: 'Doğrulama e-postası şu an gönderilemedi. Biraz sonra yeniden dene.',
+    googleConsentLabel: 'Google kaydını tamamla',
+    googleConsentTitle: 'Kaydını tamamla',
+    googleConsentIntro: 'Google hesabın doğrulandı. Hesabını oluşturmak için aşağıdaki metinleri inceleyip onayla.',
+    googleConsentBusy: 'Hesabın oluşturuluyor…',
+    googleConsentTimeLimit: 'Bu işlemi 5 dakika içinde tamamlaman gerekiyor. Vazgeçersen hesap oluşturulmaz.',
+    legalNote: 'Onayladığın metinlerin hangi sürüm olduğu kaydınla birlikte saklanır.'
   },
   siz: {
     welcome: 'Hoş Geldiniz 👋',
@@ -156,7 +169,13 @@ export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
     unavailableHint: 'Bağlantınız sorunsuz olabilir; lütfen biraz sonra yeniden deneyin.',
     resendEmailLabel: 'E-posta adresiniz',
     resendSent: 'Eğer bu adres doğrulama bekliyorsa yeni bir doğrulama e-postası gönderdik. Gelen kutunuzu kontrol edin.',
-    resendFailed: 'Doğrulama e-postası şu an gönderilemedi. Lütfen biraz sonra yeniden deneyin.'
+    resendFailed: 'Doğrulama e-postası şu an gönderilemedi. Lütfen biraz sonra yeniden deneyin.',
+    googleConsentLabel: 'Google kaydını tamamlayın',
+    googleConsentTitle: 'Kaydınızı tamamlayın',
+    googleConsentIntro: 'Google hesabınız doğrulandı. Hesabınızı oluşturmak için aşağıdaki metinleri inceleyip onaylayın.',
+    googleConsentBusy: 'Hesabınız oluşturuluyor…',
+    googleConsentTimeLimit: 'Bu işlem 5 dakika içinde tamamlanmalıdır. Vazgeçerseniz hesap oluşturulmaz.',
+    legalNote: 'Onayladığınız metinlerin hangi sürüm olduğu kaydınızla birlikte saklanır.'
   }
 };
 

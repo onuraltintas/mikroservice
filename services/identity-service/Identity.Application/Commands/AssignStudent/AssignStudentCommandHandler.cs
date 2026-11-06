@@ -83,7 +83,8 @@ public class AssignStudentCommandHandler : IRequestHandler<AssignStudentCommand,
         // Publish Event
         var eventMessage = new EduPlatform.Shared.Contracts.Events.Identity.InvitationCreatedEvent(
             InvitationId: invitation.Id,
-            InviterEmail: _currentUserService.Email ?? "system",
+            // PR #124 review L3: the inviter's current address, not the possibly stale e-mail claim.
+            InviterEmail: await CurrentUserEmail.ReadAsync(_currentUserService, _userRepository, cancellationToken) ?? "system",
             InviteeEmail: request.StudentEmail,
             InviteeId: inviteeUser?.Id,
             InvitationType: invitation.Type.ToString(),

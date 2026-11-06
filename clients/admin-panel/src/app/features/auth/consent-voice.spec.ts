@@ -1,3 +1,4 @@
+import { Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -7,7 +8,7 @@ import { GoogleRegistrationConsentComponent } from './google-registration-consen
 import { RegistrationLegalConsentComponent } from './registration-legal-consent.component';
 
 // Review L7: both consent parts are rendered on eduivme.com too (login page), so they follow the host's voice.
-function render<T>(component: new (...args: never[]) => T, voice: 'sen' | 'siz') {
+function render<T>(component: Type<T>, voice: 'sen' | 'siz') {
   TestBed.configureTestingModule({
     imports: [component],
     providers: [provideRouter([]), { provide: AUTH_VOICE, useValue: voice }, { provide: IdentityService, useValue: {

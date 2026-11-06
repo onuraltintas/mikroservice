@@ -20,7 +20,7 @@ import { readVerificationEmailOutcome } from './register/registration-outcome';
       <p>{{ copy.intro }}</p>
       @if (joined) {
         <p role="status">{{ joinedMessage }}</p>
-        <a [href]="loginUrl" data-testid="join-login-link">{{ copy.login }}</a>
+        <a [href]="loginUrl" data-testid="join-login-link">{{ verificationEmailSent ? copy.loginAfterVerification : copy.login }}</a>
       } @else {
         <form [formGroup]="form" (ngSubmit)="submit()">
           <mat-form-field appearance="outline">
@@ -167,7 +167,7 @@ function joinedMessage(verificationEmailSent: boolean, voice: 'sen' | 'siz'): st
 }
 
 interface JoinCopy {
-  heading: string; intro: string; mfaHint: string; fallbackError: string; login: string;
+  heading: string; intro: string; mfaHint: string; fallbackError: string; login: string; loginAfterVerification: string;
   chooseInstitution: string; institutionHint: string; chooseInstitutionError: string; institutionsFailed: string;
 }
 
@@ -178,6 +178,7 @@ const JOIN_COPY: Record<'sen' | 'siz', JoinCopy> = {
     mfaHint: 'Hesabında MFA açıksa doğrulama uygulamandaki yeni kodu gir.',
     fallbackError: 'Katılım tamamlanamadı. Bilgilerini kontrol edip tekrar dene.',
     login: 'Giriş yap',
+    loginAfterVerification: 'E-postanı doğruladıktan sonra giriş yap',
     chooseInstitution: 'Kurum seç',
     institutionHint: 'Yalnız seçilen kurum bu servise bağlanır. Diğer bağlantıların korunur.',
     chooseInstitutionError: 'Katılacağın kurumu listeden seç.',
@@ -189,6 +190,7 @@ const JOIN_COPY: Record<'sen' | 'siz', JoinCopy> = {
     mfaHint: 'Hesabınızda MFA açıksa doğrulama uygulamanızdaki yeni kodu girin.',
     fallbackError: 'Katılım tamamlanamadı. Bilgilerinizi kontrol edip tekrar deneyin.',
     login: 'Panele giriş yap',
+    loginAfterVerification: 'E-postanızı doğruladıktan sonra panele giriş yapın',
     chooseInstitution: 'Kurum seçin',
     institutionHint: 'Yalnız seçilen kurum bu servise bağlanır. Diğer bağlantılarınız korunur.',
     chooseInstitutionError: 'Katılacağınız kurumu listeden seçin.',

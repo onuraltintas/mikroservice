@@ -85,11 +85,17 @@ public sealed class RequestEmailChangeCommandHandler(
     IUnitOfWork unitOfWork,
     IPublishEndpoint publishEndpoint,
     ICurrentUserService currentUser,
-    IMultiFactorService multiFactor) : IRequestHandler<RequestEmailChangeCommand, Result<EmailChangeRequested>>
+    IMultiFactorService multiFactor,
+    IAuthenticationLock authenticationLock) : IRequestHandler<RequestEmailChangeCommand, Result<EmailChangeRequested>>
 {
     public async Task<Result<EmailChangeRequested>> Handle(RequestEmailChangeCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is not { } userId) return Result.Failure<EmailChangeRequested>(EmailChangeErrors.Unauthorized);
+        // PR #124 review M2: like sign-in MFA (MfaAuthenticationCoordinator), the whole request runs under the account's
+        // authentication lock and reads the account fresh inside it, so two requests cannot use one code or race the
+        // failed-attempt count.
+        await using var lease = await authenticationLock.AcquireAsync(userId, cancellationToken);
+        unitOfWork.ClearTracking();
         var user = await users.GetByIdAsync(userId, cancellationToken);
         if (user is null || !user.IsActive) return Result.Failure<EmailChangeRequested>(EmailChangeErrors.NotFound);
         var password = CurrentPassword.Check(user, request.CurrentPassword, passwordHasher);
@@ -128,7 +134,13 @@ public sealed class RequestEmailChangeCommandHandler(
         if (string.IsNullOrEmpty(trimmed)) return EmailChangeErrors.MfaCodeRequired;
         var step = string.IsNullOrWhiteSpace(user.MfaSecretProtected) ? null
             : multiFactor.FindMatchingTimeStep(user.MfaSecretProtected, trimmed);
-        if (step.HasValue && user.TryAcceptMfaTimeStep(step.Value)) return null;
+        if (step.HasValue && user.TryAcceptMfaTimeStep(step.Value))
+        {
+            // PR #124 review M1: the accepted step is stored at once, so the code is used up even when the request is
+            // refused afterwards (minute limit, same or taken address) and cannot be replayed here or at sign-in.
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return null;
+        }
 
         user.RecordFailedMfaAttempt(now);
         await unitOfWork.SaveChangesAsync(cancellationToken);

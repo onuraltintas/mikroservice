@@ -119,6 +119,15 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
+    public async Task<string?> GetActiveEmailAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id && u.IsActive)
+            .Select(u => u.Email)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
         IReadOnlyCollection<Guid> userIds,
         CancellationToken cancellationToken)

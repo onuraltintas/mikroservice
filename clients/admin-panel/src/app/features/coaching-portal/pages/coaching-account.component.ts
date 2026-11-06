@@ -226,9 +226,13 @@ export class CoachingAccountComponent implements OnInit {
         this.newEmail = ''; this.emailPassword = ''; this.emailMfaCode = '';
         this.succeed('email', `Doğrulama bağlantısını ${result?.pendingEmail ?? newEmail} adresine gönderdik. Bağlantıyı açıp onaylayana kadar e-posta adresin değişmez.`);
       },
-      error: error => this.apiFail('email', error, 'Doğrulama bağlantısı gönderilemedi. Yeniden dene.', {
+      error: error => {
+        // Review L9: two-step verification was turned on after this page loaded; show the code field.
+        if (this.errorCode(error) === 'Account.MfaCodeRequired') this.profile.update(p => p ? { ...p, mfaEnabled: true } : p);
+        this.apiFail('email', error, 'Doğrulama bağlantısı gönderilemedi. Yeniden dene.', {
         'Auth.InvalidCredentials': 'emailPassword', 'Account.SameEmail': 'newEmail', 'Account.EmailInUse': 'newEmail',
-        'Account.MfaCodeRequired': 'emailMfaCode', 'Auth.InvalidMfaCode': 'emailMfaCode', 'Auth.MfaLocked': 'emailMfaCode' })
+        'Account.MfaCodeRequired': 'emailMfaCode', 'Auth.InvalidMfaCode': 'emailMfaCode', 'Auth.MfaLocked': 'emailMfaCode' });
+      }
     });
   }
 
@@ -294,11 +298,15 @@ export class CoachingAccountComponent implements OnInit {
 
   private apiFail(form: FormName, error: unknown, fallback: string, fieldsByCode: Record<string, FieldName>) {
     const message = getApiErrorMessage(error, fallback, voice);
-    const body = (error as { error?: { error?: { code?: string }; Error?: { code?: string }; code?: string } })?.error;
-    const code = body?.error?.code ?? body?.Error?.code ?? body?.code;
+    const code = this.errorCode(error);
     const field = code ? fieldsByCode[code] : undefined;
     if (field) this.fieldErrors.update(current => ({ ...current, [field]: message }));
     this.fail(form, message);
+  }
+
+  private errorCode(error: unknown): string | undefined {
+    const body = (error as { error?: { error?: { code?: string }; Error?: { code?: string }; code?: string } })?.error;
+    return body?.error?.code ?? body?.Error?.code ?? body?.code;
   }
 
   private fail(form: FormName, message: string) {

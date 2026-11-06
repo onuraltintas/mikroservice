@@ -6,7 +6,8 @@ namespace Identity.Application.Services;
 /// <summary>
 /// Paket F L5 (E5 leftover): the signed-in account's current e-mail address, read from the database by the token's
 /// subject. The token's <c>email</c> claim is not used: after a confirmed e-mail change it keeps the old address until
-/// the session is refreshed. Null when the request is anonymous or the account no longer exists.
+/// the session is refreshed. Null when the request is anonymous or the account no longer exists or is inactive
+/// (deactivated or erased). A light, untracked read (PR #124 review L3).
 /// </summary>
 public static class CurrentUserEmail
 {
@@ -16,7 +17,7 @@ public static class CurrentUserEmail
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is not { } userId) return null;
-        var user = await users.GetByIdAsync(userId, cancellationToken);
-        return user is null || string.IsNullOrWhiteSpace(user.Email) ? null : user.Email;
+        var email = await users.GetActiveEmailAsync(userId, cancellationToken);
+        return string.IsNullOrWhiteSpace(email) ? null : email;
     }
 }
