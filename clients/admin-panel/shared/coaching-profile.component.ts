@@ -22,7 +22,9 @@ interface Place { id: string; name: string }
 interface PickedSchool { id: string; name: string; district: string | null; type: string | null }
 interface SchoolPage { items: { id: string; name: string; district: string | null; type?: string | null; inHomeDistrict?: boolean }[]; totalCount: number }
 interface TeacherProfile { version: number; isActive: boolean; title?: string | null; subjects: string[]; experienceYears?: number | null; bio?: string | null; avatarUrl?: string | null; }
-interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null; }
+interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null;
+  /** Paket D review (L2): the student's exam asks the YKS diploma grade (missing on an older API: asked). */
+  examAsksDiploma?: boolean }
 interface Invitation { id: string; inviterEmail: string; type: string; message?: string; expiresAt: string; }
 
 @Component({
@@ -35,7 +37,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
       @if (success()) { <p role="status">{{ success() }}</p> }
       @if (gradeNotice()) {
         <!-- Paket D (#8): the new grade no longer fits the exam in the study settings. -->
-        <p role="status" class="notice" data-testid="grade-purpose-notice">Sınıfın değişti; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
+        <p role="status" class="notice" data-testid="grade-purpose-notice">Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
       }
       @if (loading()) { <p role="status">Profil yükleniyor…</p> }
       @if (ready() && !student && role === 'Student' || ready() && !teacher && role === 'Teacher') {
@@ -61,11 +63,12 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
               <div class="place" data-testid="own-school">
                 <span>Okulun (isteğe bağlı): <strong>{{ schoolName(s) ?? 'seçilmedi' }}</strong>
                   @if (schoolDetail(s); as detail) { <small> · {{ detail }}</small> }</span>
-                @if (schoolApplies(s)) {
-                  @if (!schoolPicker()) {
-                    <span><button type="button" (click)="openSchoolPicker()">{{ schoolName(s) ? 'Okulunu değiştir' : 'Okulunu seç' }}</button>
-                    @if (schoolName(s)) { <button type="button" (click)="removeSchool()">Okulu kaldır</button> }</span>
-                  } @else if (cityPicker()) {
+                @if (!schoolPicker()) {
+                  <!-- Review L5: a saved school can always be removed; the catalog list is the high-school one (9th grade on). -->
+                  <span>@if (schoolApplies(s)) { <button type="button" (click)="openSchoolPicker()">{{ schoolName(s) ? 'Okulunu değiştir' : 'Okulunu seç' }}</button> }
+                  @if (schoolName(s)) { <button type="button" (click)="removeSchool()">Okulu kaldır</button> }</span>
+                } @else if (schoolApplies(s)) {
+                  @if (cityPicker()) {
                     <app-onboarding-combobox label="Okulun hangi şehirde?" placeholder="Şehir adını yaz" [options]="schoolCities()" (picked)="pickSchoolCity($event)" />
                     <button type="button" (click)="closeSchoolPicker()">Vazgeç</button>
                   } @else {
@@ -144,7 +147,7 @@ export class CoachingProfileComponent implements OnInit {
   readonly invitations = signal<Invitation[]>([]); readonly invitationError = signal<string | null>(null); readonly invitationLoading = signal(false);
   student: StudentProfile | null = null; teacher: TeacherProfile | null = null; subjects = ''; dirty = false;
   readonly provinces = signal<Place[] | null>(null); readonly districts = signal<Place[]>([]);
-  homeProvince = ''; homeDistrictId = ''; private savedDiploma: number | null = null; private savedEducation = '';
+  homeProvince = ''; homeDistrictId = ''; private savedDiploma: number | null = null; private savedEducation = ''; private examAsksDiploma = true;
   /** Paket D (#7): the school picker (the wizard's catalog list) and the school picked or removed but not saved yet. */
   readonly schoolPicker = signal(false); readonly cityPicker = signal(false);
   readonly schoolCity = signal(''); readonly schoolCityLabel = signal('');
@@ -162,6 +165,7 @@ export class CoachingProfileComponent implements OnInit {
   }
   private apply(profile: OwnProfile) {
     this.student = profile.student ? { ...profile.student, educationStatus: profile.student.educationStatus.toLowerCase() } : null;
+    if (profile.examAsksDiploma !== undefined) this.examAsksDiploma = profile.examAsksDiploma;
     this.savedDiploma = this.student?.diplomaGrade ?? null; this.provinces.set(null); this.homeProvince = ''; this.homeDistrictId = '';
     this.savedEducation = this.education(this.student); this.closeSchoolPicker(); this.pickedSchool.set(null); this.schoolRemoved.set(false);
     this.teacher = profile.teacher ? { ...profile.teacher } : null; this.subjects = this.teacher?.subjects?.join(', ') ?? ''; this.dirty = false;
@@ -217,7 +221,9 @@ export class CoachingProfileComponent implements OnInit {
         hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.type].filter(Boolean).join(' · ') || undefined })) })));
   };
   /** The wizard's rule: the diploma grade is asked for 11th, 12th grade and graduates (YKS; the server drops it for other exams). */
-  diplomaApplies(s: StudentProfile) { return s.educationStatus === 'graduate' || s.educationStatus === 'student' && [11, 12].includes(Number(s.gradeLevel)); }
+  diplomaApplies(s: StudentProfile) {
+    return this.examAsksDiploma && (s.educationStatus === 'graduate' || s.educationStatus === 'student' && [11, 12].includes(Number(s.gradeLevel)));
+  }
   private education(s: StudentProfile | null) { return s ? `${s.educationStatus.toLowerCase()}:${s.educationStatus.toLowerCase() === 'student' ? s.gradeLevel ?? '' : ''}` : ''; }
   async reload() { if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş profil değişikliklerinden vazgeçilsin mi?')) return; this.loadProfile(); }
   provision() {
@@ -255,7 +261,7 @@ export class CoachingProfileComponent implements OnInit {
       payload = { expectedVersion: t.version, title: t.title || null, subjects: this.subjects.split(',').map(x => x.trim()).filter(Boolean),
         experienceYears: t.experienceYears ?? null, bio: t.bio || null, avatarUrl: t.avatarUrl || null };
     } else return;
-    this.working.set(true); this.error.set(null); this.success.set(null);
+    this.working.set(true); this.error.set(null); this.success.set(null); this.gradeNotice.set(false);
     const gradeChanged = this.role === 'Student' && !!this.student && this.education(this.student) !== this.savedEducation;
     this.http.put<{ data: StudentProfile | TeacherProfile }>(`${this.base}/profiles/me/${this.role.toLowerCase()}`, payload)
       .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false))).subscribe({ next: response => {

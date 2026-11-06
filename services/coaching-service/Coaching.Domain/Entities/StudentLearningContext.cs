@@ -50,11 +50,24 @@ public static class LearningPurposes
             _ => true
         };
 
-    /// <summary>The wizard's rule: the diploma grade (OBP) is asked for YKS in 11th, 12th grade and after graduation.</summary>
+    /// <summary>
+    /// Paket D: the exams a student with this education can choose, in display order. This and <see cref="FitsEducation"/> are the
+    /// one place of the rule: the wizard and Çalışma tercihlerim only show this list (sent by the server).
+    /// </summary>
+    public static IReadOnlyList<LearningPurpose> AllowedFor(CoachingEducationStatus status, int? grade) =>
+        [.. new[] { LearningPurpose.Lgs, LearningPurpose.Yks, LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil }.Where(x => FitsEducation(x, status, grade))];
+
+    /// <summary>
+    /// The wizard's rule: the diploma grade (OBP) is asked for YKS in 11th, 12th grade and after graduation. No exam yet, or an
+    /// older retired purpose (KM8), counts as "not decided" and keeps it.
+    /// </summary>
+    public static bool ExamAsksDiploma(LearningPurpose? purpose) => purpose is null || IsRetired(purpose.Value) || purpose == LearningPurpose.Yks;
     public static bool DiplomaApplies(LearningPurpose? purpose, CoachingEducationStatus status, int? grade) =>
-        (purpose is null || purpose == LearningPurpose.Yks) && (status == CoachingEducationStatus.Graduate || grade is 11 or 12);
+        ExamAsksDiploma(purpose) && (status == CoachingEducationStatus.Graduate || grade is 11 or 12);
 
     public const string PurposeNotForEducationNotice = "Seçtiğin sınav sınıfına uymuyor. Profilindeki sınıfa uygun bir sınav seç.";
+    /// <summary>Paket D review: said wherever the saved exam no longer fits the grade (a grade change, or an older setup).</summary>
+    public const string SavedPurposeNotForEducationNotice = "Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle.";
 
     /// <summary>Practice scopes a net target of this purpose may use.</summary>
     public static IReadOnlyList<string> NetExamCodes(LearningPurpose purpose, string? scoreType) => purpose switch

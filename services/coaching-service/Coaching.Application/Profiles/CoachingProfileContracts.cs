@@ -52,7 +52,11 @@ public sealed record TeacherStudentProfileUpdate([property:System.Text.Json.Seri
     string? SchoolName,string? SchoolCity,string? SchoolDistrict,string? SchoolType,string? ClassBranch,DateOnly? BirthDate,string? Bio);
 
 public sealed record CoachingOwnProfile(CoachingStudentProfile? Student, CoachingTeacherProfile? Teacher,
-    IReadOnlyList<CoachingInstitutionMembership> Memberships);
+    IReadOnlyList<CoachingInstitutionMembership> Memberships)
+{
+    /// <summary>Paket D review (L2): the student's exam asks the YKS diploma grade (YKS, or no exam chosen yet).</summary>
+    public bool ExamAsksDiploma { get; init; } = true;
+}
 
 public sealed record CoachingRosterItem(Guid UserId, string FirstName, string LastName, string FullName,
     string Email, int? GradeLevel, Guid? InstitutionId, string? InstitutionName, string? AvatarUrl,

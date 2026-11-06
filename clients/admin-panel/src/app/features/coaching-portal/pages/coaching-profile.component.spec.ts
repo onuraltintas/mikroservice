@@ -83,7 +83,9 @@ describe('Coaching owned profile', () => {
     component.removeSchool(); fixture.detectChanges(); await fixture.whenStable();
     expect(el.querySelector('[data-testid="own-school"]')!.textContent).toContain('seçilmedi');
     // A graduate preparing for YDS is not asked the diploma grade (the server would drop it).
-    component.student!.educationStatus = 'graduate'; fixture.detectChanges(); await fixture.whenStable();
+    const status = el.querySelector('[name="educationStatus"]') as HTMLSelectElement;
+    status.value = 'graduate'; status.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
+    expect(component.student!.educationStatus).toBe('graduate');
     expect(el.querySelector('[name="diplomaGrade"]')).toBeNull();
     TestBed.resetTestingModule();
     const yks = await setup();

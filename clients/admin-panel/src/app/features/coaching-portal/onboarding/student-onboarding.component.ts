@@ -12,7 +12,7 @@ import { NotificationPreference, NotificationPreferencesApi } from '../../../../
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
-  formatScore, nextQuestion, personalRequest, prefill, questions, signature, stepComplete, summary, targetRequest, withAnswer
+  formatScore, nextQuestion, personalRequest, prefill, questions, signature, stepComplete, summary, targetRequest, withoutUnfitPurpose
 } from './onboarding-model';
 
 /** The reminder e-mails the wizard offers (roadmap O8 categories); the defaults are the student's current settings. */
@@ -59,7 +59,8 @@ export class StudentOnboardingComponent implements OnInit {
   /** Step → the signature the server has (only for steps the server reports as saved). */
   private readonly saved = signal<Partial<Record<StepNumber, string>>>({});
 
-  readonly context = computed<FlowContext>(() => ({ sessions: this.view()?.examSessions ?? [], academicYearStart: this.view()?.academicYearStart ?? new Date().getFullYear() }));
+  readonly context = computed<FlowContext>(() => ({ sessions: this.view()?.examSessions ?? [], academicYearStart: this.view()?.academicYearStart ?? new Date().getFullYear(),
+    allowedPurposes: this.view()?.allowedPurposes }));
   readonly flow = computed(() => questions(this.answers(), this.context()));
   readonly current = computed(() => this.mode() === 'target'
     ? this.flow().find(x => x.step === 3 && !(x.id in this.answers())) ?? null
@@ -99,7 +100,8 @@ export class StudentOnboardingComponent implements OnInit {
       if (view.status === 'Completed' && !targetOnly) { await this.router.navigate(['/coaching-portal']); return; }
       if (view.status === 'Completed') this.mode.set('target');
       this.view.set(view);
-      const answers = prefill(view);
+      // "Hedefini belirle" keeps the saved exam (the target belongs to it); the wizard asks an exam the grade no longer fits again.
+      const answers = prefill(view.status === 'Completed' ? { ...view, allowedPurposes: undefined } : view);
       this.answers.set(this.mode() === 'target' && !view.answers.targetLocked ? change(answers, 'targetSaved') : answers);
       this.markSaved(view);
       if (this.mode() === 'target') { await this.settle(); return; }
@@ -114,7 +116,7 @@ export class StudentOnboardingComponent implements OnInit {
 
   answer(question: Question, answer: Answer) {
     if (this.busy()) return;
-    this.answers.update(current => withAnswer(current, question.id, answer));
+    this.answers.update(current => ({ ...change(current, question.id), [question.id]: answer }));
     void this.settle();
   }
   choose(question: Question, choice: Choice) { this.answer(question, { value: choice.value, label: choice.label }); }
@@ -201,6 +203,8 @@ export class StudentOnboardingComponent implements OnInit {
       const view = await this.saveStep(pending);
       if (!view) return;
       this.view.set(view);
+      // Review M1: a saved grade the chosen exam no longer fits asks the exam again instead of resending it.
+      if (this.mode() === 'wizard') this.answers.update(current => withoutUnfitPurpose(current, view.allowedPurposes));
       this.markSaved(view);
       if (this.mode() === 'target' && pending === 3) { await this.router.navigate(['/coaching-portal']); return; }
     }

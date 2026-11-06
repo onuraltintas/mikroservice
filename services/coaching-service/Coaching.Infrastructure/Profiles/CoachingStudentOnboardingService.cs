@@ -20,7 +20,11 @@ namespace Coaching.Infrastructure.Profiles;
 
 /// <summary>Paket C (#3): where a student is in the first-login wizard, with the answers saved so far.</summary>
 public sealed record OnboardingView(string Status, int NextStep, IReadOnlyList<int> SavedSteps, DateTime? CompletedAt, int AcademicYearStart,
-    OnboardingAnswers Answers, IReadOnlyList<LearningExamSessionView> ExamSessions);
+    OnboardingAnswers Answers, IReadOnlyList<LearningExamSessionView> ExamSessions)
+{
+    /// <summary>Paket D review (M1, L3): the exams that fit the saved grade (the server's rule); the wizard offers only these.</summary>
+    public IReadOnlyList<LearningPurpose> AllowedPurposes { get; init; } = [];
+}
 public sealed record OnboardingAnswers(DateOnly? BirthDate, string? HomeProvinceId, string? HomeCity, string? HomeDistrictId, string? HomeDistrict,
     CoachingEducationStatus EducationStatus, int? GradeLevel, int? GraduationYear, string? SchoolName,
     LearningPurpose? Purpose, string? PrimaryScoreType, string? ForeignLanguage, Guid? TargetExamSessionId, int? TargetExamYear,
@@ -515,7 +519,8 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
             p.DiplomaGrade, p.DiplomaGradeEstimated, goal is null ? null : await TargetAsync(goal, ct)) { TargetLocked = goal?.SetByTeacherId is not null };
         var saved = Enumerable.Range(1, CoachingStudentProfile.OnboardingStepCount).Where(p.HasOnboardingStep).ToArray();
         var status = p.OnboardingCompletedAt is not null ? "Completed" : p.OnboardingSteps == 0 ? "NotStarted" : "InProgress";
-        return new(status, p.NextOnboardingStep, saved, p.OnboardingCompletedAt, AcademicYearStart(), answers, sessions);
+        return new(status, p.NextOnboardingStep, saved, p.OnboardingCompletedAt, AcademicYearStart(), answers, sessions)
+            { AllowedPurposes = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel) };
     }
 
     private async Task<OnboardingTarget?> TargetAsync(AcademicGoal goal, CancellationToken ct)

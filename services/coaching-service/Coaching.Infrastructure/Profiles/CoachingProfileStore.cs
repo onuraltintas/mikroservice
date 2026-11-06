@@ -110,6 +110,10 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         if (profile.OnboardingCompletedAt is null && profile.HasOnboardingStep(2)) profile.ReopenOnboardingStep(2);
     }
 
+    /// <summary>Paket D review (L2): Profilim asks the diploma grade only when the exam does (YKS, or no exam chosen yet).</summary>
+    public async Task<bool> ExamAsksDiplomaAsync(Guid userId, CancellationToken ct) => LearningPurposes.ExamAsksDiploma(
+        await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == userId).Select(x => (LearningPurpose?)x.Purpose).SingleOrDefaultAsync(ct));
+
     private static void Apply(CoachingStudentProfile profile, UpdateCoachingStudentProfile request)
     {
         profile.UpdateEducation(request.EducationStatus, request.GradeLevel, request.SchoolName, request.SchoolCity,

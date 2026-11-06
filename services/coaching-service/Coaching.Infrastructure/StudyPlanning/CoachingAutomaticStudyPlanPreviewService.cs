@@ -38,6 +38,9 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
         if (request.ExpectedLearningContextVersion.HasValue)
         {
             var learning = await (setup ?? throw new InvalidOperationException("Learning setup service is required.")).GetAsync(cancellationToken);
+            // Paket D review (L7): an exam that no longer fits the grade is named as the reason.
+            if (learning.PurposeNotForEducation)
+                throw new BusinessRuleException("StudyPlanning.Conflict", LearningPurposes.SavedPurposeNotForEducationNotice);
             if (!learning.IsReady || learning.Context?.Version != request.ExpectedLearningContextVersion)
                 throw new BusinessRuleException("StudyPlanning.Conflict", "Eğitim kurulumu eksik veya değişmiş. Kurulum bilgilerini yeniden yükleyin.");
             var lessons = learning.Context.CoursePreferences.Select(x => x.LessonId).ToArray();

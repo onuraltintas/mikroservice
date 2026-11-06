@@ -40,6 +40,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly learningContext = signal<LearningContext | null>(null);
   /** KM8: the saved study purpose (School, General, Undecided) is retired; the student has to choose an exam first. */
   readonly purposeRetired = signal(false);
+  /** Paket D review (L6): the saved exam does not fit the grade; topic saves still work, the student is asked to choose again. */
+  readonly purposeNotForEducation = signal(false);
   readonly retiredPurposeNotice = RETIRED_PURPOSE_NOTICE;
   readonly catalog = signal<LearningCatalog | null>(null);
   readonly topicLessonId = signal('');
@@ -70,6 +72,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
       next: view => {
         const context = view.context; this.learningContext.set(context);
         this.purposeRetired.set(!!view.purposeRetired || isRetiredPurpose(context?.purpose));
+        this.purposeNotForEducation.set(!!view.purposeNotForEducation);
         this.topicStatuses.set(new Map((context?.topicStates ?? []).map(x => [x.topicId, x.declaredStatus])));
         if (context && !this.purposeRetired()) this.loadLearningCatalog();
       },

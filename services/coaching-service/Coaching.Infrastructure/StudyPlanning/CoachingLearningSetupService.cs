@@ -44,8 +44,9 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var scopeChanged = context is null || context.Purpose != candidate.Purpose || context.PrimaryScoreType != candidate.PrimaryScoreType
             || context.ForeignLanguage != candidate.ForeignLanguage;
         if (context is null ? r.ExpectedVersion.HasValue : r.ExpectedVersion != context.Version) throw Conflict();
-        // Paket D (#8): the exam must fit the grade on the profile (the wizard and these settings offer only those).
-        if (!LearningPurposes.FitsEducation(r.Purpose, profile.EducationStatus, profile.GradeLevel))
+        // Paket D (#8): a newly chosen exam must fit the grade on the profile (the wizard and these settings offer only those).
+        // Review L6: a save that keeps the saved exam (topics, session, courses) is not refused; the settings say to choose again.
+        if ((context is null || context.Purpose != r.Purpose) && !LearningPurposes.FitsEducation(r.Purpose, profile.EducationStatus, profile.GradeLevel))
             throw new ArgumentException(LearningPurposes.PurposeNotForEducationNotice);
         await ValidateSessionAsync(r, ct);
         var curriculum = await ResolveCurriculum(candidate, ct);
@@ -193,7 +194,7 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var missing = new List<string>(); var warnings = new List<string>();
         if (!p.IsEducationComplete) missing.Add("Profile");
         var sessions = await SessionsAsync(ct);
-        var allowed = Enum.GetValues<LearningPurpose>().Where(x => LearningPurposes.IsSelectable(x) && LearningPurposes.FitsEducation(x, p.EducationStatus, p.GradeLevel)).ToArray();
+        var allowed = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel);
         if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions, AllowedPurposes = allowed }; }
         var fits = LearningPurposes.FitsEducation(c.Purpose, p.EducationStatus, p.GradeLevel);
         if (LearningPurposes.IsRetired(c.Purpose) || !fits || p.EducationStatus != c.EducationStatus || p.GradeLevel != c.GradeLevel) missing.Add("Purpose");

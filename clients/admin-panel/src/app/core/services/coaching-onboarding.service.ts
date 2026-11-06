@@ -25,6 +25,8 @@ export interface OnboardingAnswers {
 export interface OnboardingView {
   status: OnboardingStatus; nextStep: number; savedSteps: number[]; completedAt: string | null; academicYearStart: number;
   answers: OnboardingAnswers; examSessions: LearningExamSession[];
+  /** Paket D review: the exams that fit the saved grade (the server's rule); missing on an older API (then every exam is offered). */
+  allowedPurposes?: string[];
 }
 export interface OnboardingPersonalStep {
   birthDate: string; provinceId: string; districtId: string; educationStatus: EducationStatus; gradeLevel: number | null;
