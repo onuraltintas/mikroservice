@@ -92,7 +92,7 @@ export const COACHING_PORTAL_ROUTES: Routes = [
       },
       {
         path: 'goals',
-        canDeactivate: [(component: import('./growth/student-growth-goal.component').StudentGrowthGoalComponent) => component.canLeavePage()],
+        canDeactivate: [async (component: import('./growth/student-growth-goal.component').StudentGrowthGoalComponent) => await component.canLeavePage()],
         loadComponent: () => import('./growth/student-growth-goal.component').then(m => m.StudentGrowthGoalComponent)
       },
       {

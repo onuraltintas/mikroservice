@@ -31,6 +31,8 @@ export class StudentGoalTargetComponent implements OnChanges {
   @Input() staffStudentId: string | null = null;
   /** E7 (#30): Hedefim sets the target with the wizard's steps; here only the net targets ("Deneme net hedeflerin"). */
   @Input() netOnly = false;
+  /** Review of #120: Hedefim bumps it after a saved target so the goal's new version is loaded (a change re-opens the editor). */
+  @Input() revision = 0;
   @Output() readonly targetChanged = new EventEmitter<GoalTarget>();
   private readonly scopeChanged = new Subject<void>();
   private readonly service = inject(CoachingStudyPlanningService);

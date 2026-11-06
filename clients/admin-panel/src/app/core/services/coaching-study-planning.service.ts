@@ -95,7 +95,6 @@ export class CoachingStudyPlanningService {
   }
 
   getPrimaryGoal() { return this.http.get<ApiResult<{goalId:string|null;version:number|null}>>(`${environment.apiUrl}/coaching/study-planning/primary-goal`).pipe(map(x=>x.data)); }
-  selectPrimaryGoal(goalId:string, expectedVersion:number|null) { return this.http.put<ApiResult<{goalId:string|null;version:number|null}>>(`${environment.apiUrl}/coaching/study-planning/primary-goal`,{goalId,expectedVersion}).pipe(map(x=>x.data)); }
   private goalTargetUrl(goalId: string, studentId?: string) {
     const root = studentId ? `${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study` : `${environment.apiUrl}/coaching/study-planning`;
     return `${root}/goals/${encodeURIComponent(goalId)}/target`;

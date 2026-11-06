@@ -62,27 +62,14 @@
   .cs-diploma { display: flex; flex-wrap: wrap; align-items: end; gap: var(--coaching-space-3); margin-top: var(--coaching-space-4);
     label { display: grid; flex: 1 1 100%; font-weight: 700; color: var(--ui-text); small { font-weight: 500; color: var(--ui-text-muted); } }
     input { width: 140px; min-height: 44px; padding: 0 var(--coaching-space-3); border: 1px solid var(--ui-border-strong); border-radius: var(--coaching-radius-control); background: var(--ui-surface); color: var(--ui-text); font: inherit; } }
-  .cs-goal-edit { margin-top: var(--coaching-space-6); border: 1px solid var(--ui-border); border-radius: var(--coaching-radius-card); background: var(--ui-surface);
-    > summary { display: grid; gap: 2px; padding: var(--coaching-space-4) var(--coaching-space-5); cursor: pointer; list-style: none; min-height: 56px;
-      span { font-weight: 800; color: var(--ui-text); } small { color: var(--ui-text-muted); }
-      &::-webkit-details-marker { display: none; }
-      &::after { content: '+'; position: absolute; right: var(--coaching-space-5); top: var(--coaching-space-4); font-size: 22px; font-weight: 600; color: var(--ui-text-muted); } }
-    position: relative;
-    &[open] > summary { border-bottom: 1px solid var(--ui-border); &::after { content: '−'; } }
-    > app-student-primary-goal { display: block; padding: var(--coaching-space-4) var(--coaching-space-5); }
-    // E7 (#30): Hedefim's target step (the wizard, embedded) and the net targets below it.
-    padding: var(--coaching-space-4) var(--coaching-space-5);
+  // E7 (#30): Hedefim's target step (the wizard, embedded) and the net targets below it.
+  .cs-goal-edit { margin-top: var(--coaching-space-6); padding: var(--coaching-space-4) var(--coaching-space-5); border: 1px solid var(--ui-border);
+    border-radius: var(--coaching-radius-card); background: var(--ui-surface);
     > h2 { margin: 0 0 var(--coaching-space-3); font-size: var(--coaching-text-lg, 1.1rem); font-weight: 800; color: var(--ui-text); }
     > app-student-onboarding, > app-student-goal-target { display: block; }
     > app-student-goal-target > div { margin-top: 0; border: 0; padding: 0; }
-    // The legacy goal editor sets its own panels; let its rows wrap so no button is cut off on a phone.
-    .draft-task, .actions, .fields { display: flex; flex-wrap: wrap; gap: var(--coaching-space-2); align-items: center; }
-    .draft-task > strong { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
     button { max-width: 100%; white-space: normal; text-align: center; }
-    // Panels inside panels read as boxes in boxes here; keep only the outer frame.
-    .study-plans.embedded .panel .panel, .study-plans.embedded .panel .draft-task { border: 0; padding-inline: 0; background: transparent; box-shadow: none; }
   }
-
   // Haftam
   .cs-week-chart { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--coaching-space-2); margin: var(--coaching-space-3) 0 0; padding: 0; list-style: none;
     li { display: grid; grid-template-rows: auto 120px auto auto; justify-items: center; gap: 4px; text-align: center; }

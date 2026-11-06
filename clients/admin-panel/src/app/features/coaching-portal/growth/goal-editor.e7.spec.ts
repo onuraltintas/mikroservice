@@ -24,7 +24,7 @@ class FakeWizard { readonly embedded = input(false); readonly targetSaved = outp
 class FakeSummary { load = vi.fn(); }
 @Component({ selector: 'app-student-goal-target', standalone: true, host: { '[attr.data-goal]': 'goalId', '[attr.data-net-only]': 'netOnly' }, template: '<p>Netler</p>' })
 class FakeNets {
-  @Input() goalId = ''; @Input() netOnly = false; @Input() context: unknown = null; @Input() autoOpen = false;
+  @Input() goalId = ''; @Input() netOnly = false; @Input() context: unknown = null; @Input() autoOpen = false; @Input() revision = 0;
   @Output() readonly targetChanged = new EventEmitter<GoalTarget>();
   open = vi.fn(); canLeavePage() { return true; }
 }
@@ -89,7 +89,7 @@ describe('E7 Hedefim goal editor', () => {
     expect(toaster.confirm).not.toHaveBeenCalled();
     wizard.dirty.mockReturnValue(true);
     expect(await fixture.componentInstance.canLeavePage()).toBe(false);
-    expect(toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Hedef değişikliğin kaydedilmedi'));
+    expect(toaster.confirm.mock.calls[0][0]).toContain('Hedef değişikliğin kaydedilmedi');
   });
 
   it('the net-only editor offers "Yeniden yükle" when the goal cannot be loaded', async () => {
