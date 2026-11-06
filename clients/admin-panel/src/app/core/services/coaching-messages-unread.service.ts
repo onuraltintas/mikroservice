@@ -11,7 +11,8 @@ export class CoachingMessagesUnreadService {
   readonly count = signal(0);
 
   refresh() {
-    this.request?.unsubscribe();
+    // Paket F #36: a request in flight is shared, not aborted and sent again.
+    if (this.request && !this.request.closed) return;
     this.request = this.http.get<{ count: number }>(`${environment.apiUrl}/coaching/messages/unread-count`).subscribe({
       next: response => this.count.set(Math.max(0, Number(response?.count) || 0)),
       error: () => this.count.set(0)

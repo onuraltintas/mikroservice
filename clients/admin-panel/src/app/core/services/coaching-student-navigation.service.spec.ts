@@ -25,9 +25,9 @@ describe('student navigation visibility', () => {
   it('is not loaded until the server answers (or fails)', () => {
     const service = TestBed.inject(CoachingStudentNavigationService);
     service.refresh(true);
-    expect((service as unknown as { loaded?: () => boolean }).loaded?.()).toBe(false);
+    expect(service.loaded()).toBe(false);
     TestBed.inject(HttpTestingController).expectOne('/api/coaching/profiles/me/navigation').flush({}, {status:503,statusText:'Unavailable'});
-    expect((service as unknown as { loaded?: () => boolean }).loaded?.()).toBe(true);
+    expect(service.loaded()).toBe(true);
   });
   it('a refresh while a request is in flight shares it instead of aborting it', () => {
     const service = TestBed.inject(CoachingStudentNavigationService);

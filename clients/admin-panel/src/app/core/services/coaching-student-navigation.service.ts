@@ -9,15 +9,23 @@ interface StudentNavigation { showAssignments: boolean; showSessions: boolean; s
 export class CoachingStudentNavigationService {
   private readonly http = inject(HttpClient);
   private readonly state = signal<StudentNavigation | null>(null);
+  private readonly settled = signal(false);
   private request?: Subscription;
   // An unavailable status must never hide access to existing student records.
   readonly showAssignments = computed(() => this.state()?.showAssignments ?? true);
   readonly showFees = computed(() => this.state()?.showFees ?? true);
   readonly showSessions = computed(() => this.state()?.showSessions ?? true);
+  /** Paket F #36: the server has answered (or failed); until then the menu shows only its fixed items. */
+  readonly loaded = this.settled.asReadonly();
+
   refresh(resetForAccount = false) {
-    this.request?.unsubscribe();
-    if (resetForAccount) this.state.set(null);
+    if (resetForAccount) { this.request?.unsubscribe(); this.request = undefined; this.state.set(null); this.settled.set(false); }
+    // Paket F #36: a request in flight is shared, not aborted and sent again.
+    if (this.request && !this.request.closed) return;
     this.request = this.http.get<{data: StudentNavigation}>(`${environment.apiUrl}/coaching/profiles/me/navigation`)
-      .subscribe({next: response => this.state.set(response.data), error: () => this.state.set(null)});
+      .subscribe({
+        next: response => { this.state.set(response.data); this.settled.set(true); },
+        error: () => { this.state.set(null); this.settled.set(true); }
+      });
   }
 }

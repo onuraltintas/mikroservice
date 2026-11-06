@@ -74,14 +74,18 @@ export class CoachingPortalLayoutComponent {
   readonly initials = computed(() => (this.user()?.firstName?.charAt(0) || 'Ö') + (this.user()?.lastName?.charAt(0) || ''));
   readonly fullName = computed(() => `${this.user()?.firstName || (this.isParent() ? 'Veli' : 'Öğrenci')} ${this.user()?.lastName ?? ''}`.trim());
 
-  /** The six student destinations; Ödevlerim and Seanslar only when the student has them. */
+  /**
+   * The six student destinations; Ödevlerim and Seanslar only when the student has them. Paket F #36: they wait for the
+   * server's answer (no flash of items that then disappear); a failed answer keeps them reachable.
+   */
+  private readonly navigationLoaded = computed(() => this.studentNavigation.loaded());
   readonly links = computed<PortalLink[]>(() => [
     { label: 'Bugün', path: ROOT, icon: 'home', exact: true },
     { label: 'Planım', path: `${ROOT}/plan`, icon: 'plan' },
-    ...(this.studentNavigation.showAssignments() ? [{ label: 'Ödevlerim', short: 'Ödevler', path: `${ROOT}/assignments`, icon: 'book' as const }] : []),
+    ...(this.navigationLoaded() && this.studentNavigation.showAssignments() ? [{ label: 'Ödevlerim', short: 'Ödevler', path: `${ROOT}/assignments`, icon: 'book' as const }] : []),
     { label: 'Gelişimim', path: `${ROOT}/growth`, icon: 'chart' },
     { label: 'Mesajlar', path: `${ROOT}/messages`, icon: 'chat', badge: this.unreadMessages() },
-    ...(this.studentNavigation.showSessions() ? [{ label: 'Seanslar', path: `${ROOT}/sessions`, icon: 'calendar' as const }] : [])
+    ...(this.navigationLoaded() && this.studentNavigation.showSessions() ? [{ label: 'Seanslar', path: `${ROOT}/sessions`, icon: 'calendar' as const }] : [])
   ]);
   /** The phone bar: everything but Seanslar (the next session also shows on Bugün). */
   readonly mobileLinks = computed(() => this.links().filter(link => link.path !== `${ROOT}/sessions`));
@@ -91,9 +95,17 @@ export class CoachingPortalLayoutComponent {
     if (!this.isParent()) this.studentNavigation.refresh(true);
     this.messagesUnread.refresh();
     this.updatePageLabel();
-    this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed(inject(DestroyRef)))
-      .subscribe(() => {
+    // Paket F #36: the shell is created inside a navigation; that navigation's NavigationEnd must not ask again (the second
+    // request used to abort the first). Later page changes ask once; a change of only the query string asks nothing.
+    const opening = this.router.currentNavigation()?.id ?? null;
+    let refreshedFor: string | null = null;
+    this.router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed(inject(DestroyRef)))
+      .subscribe(event => {
         this.closeMenu(); this.accountOpen.set(false); this.notificationsOpen.set(false); this.updatePageLabel();
+        const path = this.currentPath();
+        if (event.id === opening) { refreshedFor = path; return; }
+        if (path === refreshedFor) return;
+        refreshedFor = path;
         if (!this.isParent()) this.studentNavigation.refresh();
         this.messagesUnread.refresh();
       });

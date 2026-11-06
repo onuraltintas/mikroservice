@@ -14,7 +14,7 @@ import { CoachingPortalLayoutComponent } from './coaching-portal-layout.componen
 import { CoachingWhatsNewService } from './coaching-whats-new.service';
 
 // T2 (31.10.2026): six menu items, a five-item phone bar, notifications behind the bell and an account menu.
-const flags = { showAssignments: () => true, showSessions: () => true, showFees: () => true, refresh: () => {} };
+const flags = { loaded: () => true, showAssignments: () => true, showSessions: () => true, showFees: () => true, refresh: () => {} };
 const unread = signal(0);
 const messagesUnread = { count: signal(3), refresh: vi.fn() };
 const notifications = signal<any[]>([]);
