@@ -191,7 +191,9 @@ public sealed class TopicMinutesCapTests
         Assert.Contains("1440", error.MessageText);
         Assert.Contains("4320", await Constraint(f.Db, "ck_outcome_minutes"));
         Assert.Contains("4320", await Constraint(f.Db, "ck_topic_outcome_share_minutes"));
-        Assert.Equal(Current, (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
+        // Nothing was rolled back: the newest migration (later ones too, e.g. 20261112090000_ScoreModelsAllExams) stays applied.
+        Assert.Equal(f.Db.Database.GetMigrations().Last(), (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
+        Assert.Contains(Current, await f.Db.Database.GetAppliedMigrationsAsync());
         Assert.Equal(1, await Count(f.Db, $"SELECT count(*)::int AS \"Value\" FROM coaching.study_catalog_topic_outcome_shares WHERE \"EstimateId\" = '{big}'"));
 
         // Only the share is large: still refused.
