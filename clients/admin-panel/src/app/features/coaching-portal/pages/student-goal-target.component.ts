@@ -11,6 +11,7 @@ import { TargetAdmissionSearchComponent } from './target-admission-search.compon
 import { PracticeExamProfile } from '../../../core/models/practice-exam';
 
 import { CoachingLabelPipe } from '../coaching-labels';
+const NET = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
 @Component({
   selector: 'app-student-goal-target', standalone: true, imports: [CoachingLabelPipe, CommonModule, FormsModule, TargetAdmissionSearchComponent],
   templateUrl: './student-goal-target.component.html',
@@ -28,6 +29,8 @@ export class StudentGoalTargetComponent implements OnChanges {
   @Input() context: LearningContext | null = null;
   @Input() autoOpen = false;
   @Input() staffStudentId: string | null = null;
+  /** E7 (#30): Hedefim sets the target with the wizard's steps; here only the net targets ("Deneme net hedeflerin"). */
+  @Input() netOnly = false;
   @Output() readonly targetChanged = new EventEmitter<GoalTarget>();
   private readonly scopeChanged = new Subject<void>();
   private readonly service = inject(CoachingStudyPlanningService);
@@ -47,6 +50,8 @@ export class StudentGoalTargetComponent implements OnChanges {
   maxScore: number | null = null;
   examType = '';
   readonly examTypes = ['Mock', 'Weekly', 'Monthly', 'LGS', 'YKS', 'AGS', 'YDS', 'YOKDIL', 'MidTerm', 'Final', 'Quiz'];
+
+  net(value: number | null | undefined) { return value === null || value === undefined ? '' : NET.format(value); }
 
   private get studentArgument(): [] | [string] { return this.staffStudentId ? [this.staffStudentId] : []; }
 

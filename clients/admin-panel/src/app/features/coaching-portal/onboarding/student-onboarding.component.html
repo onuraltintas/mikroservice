@@ -1,4 +1,5 @@
-<div class="ob-page coaching-onboarding">
+<div class="ob-page coaching-onboarding" [class.is-embedded]="embedded()">
+  @if (!embedded()) {
   <header class="ob-head">
     <div class="ob-top">
       <p class="ob-brand"><strong>eduivme<span>.</span></strong> Öğrenci Koçluğu</p>
@@ -17,8 +18,9 @@
       </div>
     }
   </header>
+  }
 
-  <main class="ob-chat" aria-labelledby="ob-title">
+  <main class="ob-chat" [attr.aria-labelledby]="embedded() ? null : 'ob-title'" [attr.aria-label]="embedded() ? 'Hedefini düzenle' : null">
     @if (loading()) { <p class="ob-bot" role="status">Hazırlanıyor…</p> }
     <div class="ob-log" role="log" aria-live="polite" aria-relevant="additions">
       @for (question of asked(); track question.id) {
@@ -122,14 +124,28 @@
             @if (question.skipLabel && question.kind !== 'diploma') {
               <button type="button" class="ob-link" [disabled]="busy()" (click)="skip(question)">{{ question.skipLabel }}</button>
             }
+            @if (mode() === 'target' && original() && question.step === 3) {
+              <button type="button" class="ob-link" [disabled]="busy()" (click)="cancelChange()">Vazgeç</button>
+            }
           </div>
         </div>
       } @else if (mode() === 'target' && !loading()) {
-        <section class="ob-summary" data-current aria-labelledby="ob-target-title">
-          <h2 id="ob-target-title">{{ locked() ? 'Hedefini öğretmenin belirledi' : 'Önce sınavını seç' }}</h2>
-          <p>{{ locked() ? 'Değiştirmek istersen öğretmenine yaz.' : 'Hedef, hazırlandığın sınava göre seçilir. Sınavını Çalışma tercihlerim sayfasından seç.' }}</p>
-          <a class="ob-primary" routerLink="/coaching-portal">Bugün'e dön</a>
-        </section>
+        @if (locked() || !answers().targetSaved) {
+          <section class="ob-summary" data-current aria-labelledby="ob-target-title">
+            <h2 id="ob-target-title">{{ locked() ? 'Hedefini öğretmenin belirledi' : 'Önce sınavını seç' }}</h2>
+            <p>{{ locked() ? 'Değiştirmek istersen öğretmenine yaz.' : 'Hedef, hazırlandığın sınava göre seçilir. Sınavını Çalışma tercihlerim sayfasından seç.' }}</p>
+            @if (!embedded()) { <a class="ob-primary" routerLink="/coaching-portal">Bugün'e dön</a> }
+          </section>
+        } @else if (saved$(); as message) {
+          <p class="ob-note" role="status">{{ message }}</p>
+        } @else if (!embedded()) {
+          <!-- E7 (#30): the saved target comes first; "Değiştir" next to it opens the steps. -->
+          <section class="ob-summary" data-current aria-labelledby="ob-target-title">
+            <h2 id="ob-target-title">Güncel hedefin bu</h2>
+            <p>Değiştirmek istersen hedefinin yanındaki "Değiştir"e bas.</p>
+            <a class="ob-primary" routerLink="/coaching-portal">Bugün'e dön</a>
+          </section>
+        }
       } @else if (!loading() && !done() && !error()) {
         <section class="ob-summary" data-current aria-labelledby="ob-summary-title">
           <h2 id="ob-summary-title">Her şey hazır mı?</h2>

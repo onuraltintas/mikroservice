@@ -70,6 +70,11 @@
     position: relative;
     &[open] > summary { border-bottom: 1px solid var(--ui-border); &::after { content: '−'; } }
     > app-student-primary-goal { display: block; padding: var(--coaching-space-4) var(--coaching-space-5); }
+    // E7 (#30): Hedefim's target step (the wizard, embedded) and the net targets below it.
+    padding: var(--coaching-space-4) var(--coaching-space-5);
+    > h2 { margin: 0 0 var(--coaching-space-3); font-size: var(--coaching-text-lg, 1.1rem); font-weight: 800; color: var(--ui-text); }
+    > app-student-onboarding, > app-student-goal-target { display: block; }
+    > app-student-goal-target > div { margin-top: 0; border: 0; padding: 0; }
     // The legacy goal editor sets its own panels; let its rows wrap so no button is cut off on a phone.
     .draft-task, .actions, .fields { display: flex; flex-wrap: wrap; gap: var(--coaching-space-2); align-items: center; }
     .draft-task > strong { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }

@@ -34,6 +34,9 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
         <cs-card tone="raised" class="cs-goal-hero" [attr.data-reached]="goal.reached" [attr.data-status]="goal.status">
           <p class="cs-goal-kicker">{{ parent() ? possessive(name()) + ' hedefi' : 'Hedefin' }} · {{ goal.scoreType }}@if (goal.label) { · <span data-testid="gauge-approximate">{{ goal.label }}</span> }</p>
           <h2>{{ goal.targetName }}</h2>
+          <!-- E7 (#30): the target score (or taban) and the other YKS score target, also before the first practice exam. -->
+          @if (goal.detail) { <p class="cs-growth-muted" data-testid="goal-target-score">{{ goal.detail }}</p> }
+          @for (line of goal.secondary; track line) { <p class="cs-growth-muted" data-testid="goal-target-secondary">{{ line }}</p> }
           <p class="cs-goal-headline" [class.is-muted]="goal.missingData">{{ goal.headline }}</p>
           @for (row of goal.rows; track row.label) {
             <div class="cs-gauge">

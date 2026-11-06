@@ -17,7 +17,7 @@ public sealed class TargetAdmissionTurkishSearchTests
     [InlineData("Ankara Üniversitesi", "Hukuk Fakültesi", "Hukuk")]
     [InlineData("ankara üniversitesi", "hukuk fakültesi", "hukuk")]
     [InlineData("ANKARA ÜNİVERSİTESİ", "HUKUK FAKÜLTESİ", "HUKUK")]
-    [InlineData("ANKARA ÜNIVERSITESI", "HUKUK FAKULTESI", "Hukuk")]
+    [InlineData("ANKARA ÜNIVERSITESI", "HUKUK FAKÜLTESI", "Hukuk")]
     public async Task UniversityFacultyAndProgramMatchWhateverTheTurkishCase(string university, string faculty, string program)
     {
         using var culture = new InvariantCultureScope();

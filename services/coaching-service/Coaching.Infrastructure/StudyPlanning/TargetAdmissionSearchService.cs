@@ -1,3 +1,4 @@
+using System.Globalization;
 using Coaching.Application.StudyPlanning;
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
@@ -107,18 +108,18 @@ public sealed class TargetAdmissionSearchService(CoachingDbContext db)
             if (exceptFacet != "programType" && f.ProgramType is not null) query = query.Where(x => x.Degree == f.ProgramType);
             if (exceptFacet != "university" && !string.IsNullOrWhiteSpace(f.University))
             {
-                var university = f.University.Trim().ToUpper();
-                query = query.Where(x => x.Institution.ToUpper().Contains(university));
+                var university = Key(f.University);
+                query = query.Where(x => x.Institution.ToUpper().Replace("İ", "I").Replace("ı", "I").Contains(university));
             }
             if (exceptFacet != "faculty" && !string.IsNullOrWhiteSpace(f.Faculty))
             {
-                var faculty = f.Faculty.Trim().ToUpper();
-                query = query.Where(x => x.Field != null && x.Field.ToUpper().Contains(faculty));
+                var faculty = Key(f.Faculty);
+                query = query.Where(x => x.Field != null && x.Field.ToUpper().Replace("İ", "I").Replace("ı", "I").Contains(faculty));
             }
             if (exceptFacet != "programName" && !string.IsNullOrWhiteSpace(f.ProgramName))
             {
-                var program = f.ProgramName.Trim().ToUpper();
-                query = query.Where(x => x.Name.ToUpper().Contains(program));
+                var program = Key(f.ProgramName);
+                query = query.Where(x => x.Name.ToUpper().Replace("İ", "I").Replace("ı", "I").Contains(program));
             }
             if (exceptFacet != "scoreType" && f.ScoreType is not null)
             {
@@ -130,8 +131,9 @@ public sealed class TargetAdmissionSearchService(CoachingDbContext db)
 
         if (!string.IsNullOrWhiteSpace(f.Search))
         {
-            var search = f.Search.Trim().ToUpper();
-            query = query.Where(x => x.Name.ToUpper().Contains(search) || x.ExternalCode.Contains(search));
+            var search = Key(f.Search);
+            var code = f.Search.Trim();
+            query = query.Where(x => x.Name.ToUpper().Replace("İ", "I").Replace("ı", "I").Contains(search) || x.ExternalCode.Contains(code));
         }
         if (exceptFacet != "city" && f.City is not null) query = query.Where(x => x.City == f.City);
         if (exceptFacet != "district" && f.District is not null) query = query.Where(x => x.District == f.District);
@@ -185,6 +187,16 @@ public sealed class TargetAdmissionSearchService(CoachingDbContext db)
             ["field"] = await Apply(f, baseQuery, "field").Select(x => x.Field).Where(x => x != null).Select(x => x!).Distinct().Order().ToArrayAsync(ct)
         };
     }
+
+    private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
+
+    /// <summary>
+    /// E7 (#30): the catalog writes names in Turkish capitals ("ANKARA ÜNİVERSİTESİ"). The typed text is upper-cased the Turkish way
+    /// and both sides fold dotted and dotless I to I, as the first-login wizard's lists do (CoachingStudentOnboardingService), so
+    /// "Ankara Üniversitesi", "ankara üniversitesi" and "ANKARA ÜNIVERSITESI" all match, whatever the process culture or the
+    /// database collation upper-cases "i" to.
+    /// </summary>
+    internal static string Key(string value) => value.Trim().ToUpper(Turkish).Replace('İ', 'I');
 
     private static string NormalizeScoreType(string value) => value.Trim().ToUpperInvariant() switch
     {
