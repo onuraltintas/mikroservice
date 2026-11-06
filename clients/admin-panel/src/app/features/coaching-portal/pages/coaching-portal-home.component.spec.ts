@@ -13,6 +13,7 @@ import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
 import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudentTodayService, StudentTodayView } from '../../../core/services/coaching-student-today.service';
 import { CoachingWhatsNewService } from '../layout/coaching-whats-new.service';
+import { CoachingScoreEstimateService, ScoreEstimate } from '../../../core/services/coaching-score-estimate.service';
 
 describe('CoachingPortalHomeComponent', () => {
   const view = (over: Partial<StudentTodayView> = {}): StudentTodayView => ({
@@ -32,7 +33,8 @@ describe('CoachingPortalHomeComponent', () => {
     nextSession: null, hasActivePlan: true, ...over
   });
 
-  async function render(today: StudentTodayView, setupReady = true) {
+  const noTarget: ScoreEstimate = { estimates: [], target: null, notice: null };
+  async function render(today: StudentTodayView, setupReady = true, estimate: ScoreEstimate = noTarget) {
     const profile = signal<UserProfile | null>({ id: 'user-1', email: 'a@test', firstName: 'Elif', lastName: 'Test', username: 'a@test', roles: ['Student'], role: 'Student', permissions: [], product: 'coaching' });
     const api = { get: vi.fn(() => of(today)) };
     TestBed.configureTestingModule({ imports: [CoachingPortalHomeComponent], providers: [
@@ -41,6 +43,7 @@ describe('CoachingPortalHomeComponent', () => {
       { provide: CoachingStudentTodayService, useValue: api },
       { provide: CoachingLearningSetupService, useValue: { get: () => of({ context: null, isReady: setupReady }) } },
       { provide: CoachingWhatsNewService, useValue: { visible: () => true, dismiss: vi.fn() } },
+      { provide: CoachingScoreEstimateService, useValue: { estimate: vi.fn(() => of(estimate)) } },
       { provide: StaffPortalRedirectService, useValue: { redirect: vi.fn(), url: () => '' } }
     ] });
     await TestBed.compileComponents();
@@ -106,11 +109,88 @@ describe('CoachingPortalHomeComponent', () => {
     expect(el.querySelector('app-coaching-whats-new-card')).not.toBeNull();
   });
 
-  it('asks to finish setup only when it is not ready, and offers a first plan when there is none', async () => {
-    const { el } = await render(view({ hasActivePlan: false, nextStep: null, items: [], overdue: [], todayCount: 0, overdueCount: 0 }), false);
-    expect(el.textContent).toContain('Çalışma düzenini kur');
-    expect(el.querySelector('a[href="/coaching-portal/plan/wizard"]')).not.toBeNull();
-    expect(el.querySelector('[data-testid="next-step"]')).toBeNull();
+  it('points to "Planını kur" until the setup is ready, then offers a first plan when there is none', async () => {
+    const empty = { hasActivePlan: false, nextStep: null, items: [], overdue: [], todayCount: 0, overdueCount: 0 };
+    let r = await render(view(empty), false);
+    // Paket C (#3): after the first-login wizard free hours and lessons are still missing; the card says so clearly.
+    const setup = r.el.querySelector('[data-home-block="setup"]')!;
+    expect(setup.textContent).toContain('Planını kur');
+    expect(setup.querySelector('a[href="/coaching-portal/account/settings"]')!.textContent).toContain('Planını kur');
+    expect(setup.querySelector('a[href="/coaching-portal/plan/wizard"]')).toBeNull();
+    expect(r.el.querySelector('[data-testid="next-step"]')).toBeNull();
+    TestBed.resetTestingModule();
+    r = await render(view(empty), true);
+    expect(r.el.querySelector('[data-home-block="setup"]')!.textContent).toContain('İlk planını oluştur');
+    expect(r.el.querySelector('a[href="/coaching-portal/plan/wizard"]')).not.toBeNull();
+  });
+
+  describe('goal card (Paket C #4)', () => {
+    const lgs = { scoreType: 'LGS', name: 'LGS', modelYear: 2026, score: 420, scoreLow: 400, scoreHigh: 440, rank: null, rankBest: null, rankWorst: null,
+      percentile: null, examsUsed: 2, lastExamDate: '2026-10-20', includesDiplomaGrade: false, group: 'LGS' as const, label: 'Yaklaşık tahmin', margin: 16 };
+    const school = { targetName: 'Ankara Fen Lisesi', scoreType: 'LGS', targetScore: 480, targetRank: null, targetPercentile: null, scoreGap: 60, netGap: 16.2,
+      rankGap: null, reached: false, status: 'below' as const, margin: 16, kind: 'school' as const, scoreYear: 2025 };
+    const card = (el: HTMLElement) => el.querySelector('[data-testid="home-goal"]')!;
+
+    it('without a target says "Hedefini belirle" and links to the target page', async () => {
+      const { el } = await render(view({ goal: null }));
+      expect(card(el).textContent).toContain('Hedefini belirle');
+      expect(card(el).getAttribute('href')).toBe('/coaching-portal/growth/goals');
+    });
+
+    it('with a target and no practice exam names the target and says when the gap appears', async () => {
+      const { el } = await render(view({ goal: null }), true, { estimates: [], notice: null, target: { ...school, scoreGap: null, netGap: null, status: null },
+        goal: { scoreType: 'LGS', name: 'LGS', group: 'LGS', score: null, scoreLow: null, scoreHigh: null, margin: null, scaleMax: 500, label: 'Yaklaşık tahmin', exact: false, level: null, notComputedReason: null, reason: 'noExam' } });
+      expect(card(el).textContent).toContain('Ankara Fen Lisesi');
+      expect(card(el).textContent).toContain('İlk denemeni girince hedefe ne kadar kaldığını burada göreceksin.');
+      expect(card(el).querySelector('[data-testid="home-goal-label"]')).toBeNull();
+    });
+
+    it('with an estimate shows the score gap, the taban, the approximate label and the LGS note; the net line stays second', async () => {
+      const { el } = await render(view(), true, { estimates: [lgs], target: school, notice: null });
+      const text = card(el).textContent!;
+      expect(text).toContain('Hedefine yaklaşık 60 puan kaldı');
+      expect(text).toContain('Ankara Fen Lisesi');
+      expect(text).toContain('Taban puanı 480 (yaklaşık)');
+      expect(card(el).querySelector('[data-testid="home-goal-label"]')!.textContent).toContain('Yaklaşık tahmin');
+      expect(text).toContain("LGS'de hem puan tahmini hem okulun taban puanı yaklaşıktır.");
+      expect(card(el).querySelector('[data-testid="home-goal-net"]')!.textContent).toContain('Hedefine 10 net kaldı');
+    });
+
+    it('says the target is passed, and borderline as in Paket B', async () => {
+      let r = await render(view({ goal: null }), true, { estimates: [lgs], target: { ...school, targetScore: 380, scoreGap: -40, status: 'reached', reached: true }, notice: null });
+      expect(card(r.el).textContent).toContain('Hedef puanını geçtin');
+      TestBed.resetTestingModule();
+      r = await render(view({ goal: null }), true, { estimates: [lgs], target: { ...school, targetScore: 430, scoreGap: 10, status: 'borderline' }, notice: null });
+      expect(card(r.el).textContent).toContain('Hedef, tahmini puan aralığının içinde (400–440): sınırdasın.');
+    });
+
+    it('a YDS score target is exact: no "yaklaşık"', async () => {
+      const { el } = await render(view({ goal: null }), true, { estimates: [], notice: null,
+        languageScores: [{ examCode: 'YDS_EN', name: 'YDS İngilizce', score: 75, scoreLow: 70, scoreHigh: 80, examsUsed: 2, lastExamDate: '2026-10-20', level: 'C', label: 'Deneme sonucuna göre', exact: true }],
+        target: { targetName: 'YDS İngilizce', scoreType: 'YDS_EN', targetScore: 85, targetRank: null, targetPercentile: null, scoreGap: 10, netGap: 8, rankGap: null,
+          reached: false, status: 'below', kind: 'score', ownTargetScore: true } });
+      const text = card(el).textContent!;
+      expect(text).toContain('Hedefine 10 puan kaldı'); expect(text).not.toContain('yaklaşık');
+      expect(text).toContain('YDS İngilizce hedef puanın'); expect(text).toContain('Hedef puanın 85');
+      expect(card(el).querySelector('[data-testid="home-goal-label"]')!.textContent).toContain('Deneme sonucuna göre');
+    });
+
+    it('shows why no score can be computed (YKS 0,5 rule, MEB-AGS 1 net, no model)', async () => {
+      const failed = [{ anyOf: [{ code: 'TUR', name: 'Türkçe', rawScore: 0.25 }] }];
+      let r = await render(view({ goal: null }), true, { estimates: [], notice: null,
+        notComputed: [{ scoreType: 'SAY', name: 'SAY', modelYear: 2026, notComputedReason: 'minRawScore', failedConditions: failed, examsUsed: 1, lastExamDate: '2026-10-20' }],
+        target: { ...school, scoreType: 'SAY', kind: 'program', targetName: 'ODTÜ · Fizik', notComputedReason: 'minRawScore', status: null } });
+      expect(card(r.el).textContent).toContain('Türkçe testinden en az 0,5 ham puan gerekir');
+      TestBed.resetTestingModule();
+      r = await render(view({ goal: null }), true, { estimates: [], notice: null,
+        notComputed: [{ scoreType: 'P1', name: 'P1', modelYear: 2026, notComputedReason: 'minRawScore', failedConditions: [{ anyOf: [{ code: 'SAY', name: 'Sayısal', rawScore: 0.5 }] }], examsUsed: 1, lastExamDate: '2026-10-20', minimumRawScore: 1 }],
+        target: { ...school, scoreType: 'P1', kind: 'score', targetName: 'MEB-AGS P1', targetScore: 70, notComputedReason: 'minRawScore', status: null } });
+      expect(card(r.el).textContent).toContain('Sayısal testinden en az 1 net gerekir');
+      TestBed.resetTestingModule();
+      r = await render(view({ goal: null }), true, { estimates: [], notice: null, target: { ...school, scoreGap: null, status: null },
+        goal: { scoreType: 'LGS', name: 'LGS', group: 'LGS', score: null, scoreLow: null, scoreHigh: null, margin: null, scaleMax: 500, label: 'Yaklaşık tahmin', exact: false, level: null, notComputedReason: null, reason: 'noModel' } });
+      expect(card(r.el).textContent).toContain('Bu sınav için puan tahmini henüz hazır değil.');
+    });
   });
 
   it('sends teacher-only users to the new staff portal instead of rendering the legacy dashboard', async () => {

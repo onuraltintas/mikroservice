@@ -205,6 +205,7 @@ public sealed class CoachingStudentOnboardingTests
         (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "LİSE 25", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 25");
         (await s.Service.SchoolCitiesAsync(default)).Should().NotContain(x => x.Value == "Kapanan Lise");
         await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SchoolsAsync(null, "Anadolu Lisesi", null, 1, default));
+        (await s.Service.SchoolsAsync("Ankara", null, null, 1, default)).TotalCount.Should().Be(26, "without a type every school of the city");
     }
 
     [Fact]
