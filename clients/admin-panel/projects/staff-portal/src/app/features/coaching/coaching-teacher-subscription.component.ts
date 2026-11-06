@@ -1,4 +1,5 @@
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
+import { educationLabel } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
@@ -46,7 +47,7 @@ import {
             <ul class="student-list">
               @for (student of students(); track student.userId) {
                 <li>
-                  <span><strong>{{ student.fullName }}</strong><small>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Koçluk öğrencisi' }}</small></span>
+                  <span><strong>{{ student.fullName }}</strong><small>{{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Koçluk öğrencisi') }}</small></span>
                   @if (isSeatActive(student.userId)) {
                     <button type="button" class="secondary" [attr.data-testid]="'teacher-seat-' + student.userId" [disabled]="isStudentBusy(student.userId)" (click)="removeStudent(student)">Kontenjanı kaldır</button>
                   } @else {
@@ -164,6 +165,8 @@ import {
   `]
 })
 export class CoachingTeacherSubscriptionComponent implements OnInit {
+  /** E3 #14: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi" … */
+  readonly educationLabel = educationLabel;
   private readonly subscriptions = inject(CoachingTeacherSubscriptionService);
   private readonly teacherStudents = inject(CoachingTeacherStudentsService);
 

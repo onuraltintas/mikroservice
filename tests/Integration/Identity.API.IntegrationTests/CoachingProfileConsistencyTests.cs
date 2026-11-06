@@ -25,7 +25,7 @@ public sealed class CoachingProfileConsistencyTests
     public async Task ChangingTheExamInStudySettingsClearsTheStudentsOwnTargetThatNoLongerFits()
     {
         await using var s = await Setup.CreateAsync();
-        await s.Wizard(null, LearningPurpose.Yks, "SAY");
+        await s.Wizard(null, LearningPurpose.Yks, "SAY", status: CoachingEducationStatus.UniversityGraduate);
         await s.Onboarding.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null), default);
         await s.SetNets(("TYT", 90), ("AYT_SAY", 60));
         s.Published.Clear();
@@ -96,7 +96,7 @@ public sealed class CoachingProfileConsistencyTests
     public async Task ATeachersGoalIsKeptAndMarkedAsNotMatchingTheNewExam()
     {
         await using var s = await Setup.CreateAsync();
-        await s.Wizard(null, LearningPurpose.Yks, "SAY");
+        await s.Wizard(null, LearningPurpose.Yks, "SAY", status: CoachingEducationStatus.UniversityGraduate);
         var goal = AcademicGoal.Create(s.Student, "Öğretmenin hedefi", GoalCategory.ExamPreparation, setByTeacherId: Guid.NewGuid());
         goal.SetCatalogTarget(s.Programs["Bilgisayar Mühendisliği"], null); goal.SetNetTarget("AYT_SAY", 60);
         s.F.Db.Add(goal); s.F.Db.Add(StudentPrimaryGoal.Create(s.Student, goal.Id)); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
@@ -154,7 +154,7 @@ public sealed class CoachingProfileConsistencyTests
     [InlineData(LearningPurpose.Ags, null, 12)]   // user decision 06.11.2026: AGS/ÖABT only for university graduates
     public async Task TheStudySettingsAcceptOnlyAnExamThatFitsTheGrade(LearningPurpose purpose, string? field, int? grade)
     {
-        LearningPurposes.FitsEducation(purpose, grade is null ? CoachingEducationStatus.Graduate : CoachingEducationStatus.Student, grade).Should().BeFalse();
+        LearningPurposes.FitsEducation(purpose, grade is null ? CoachingEducationStatus.HighSchoolGraduate : CoachingEducationStatus.Student, grade).Should().BeFalse();
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade);
         var error = await Assert.ThrowsAsync<ArgumentException>(() => s.SaveSetup(purpose, field));
@@ -216,7 +216,7 @@ public sealed class CoachingProfileConsistencyTests
         var preview = new CoachingAutomaticStudyPlanPreviewService(s.F.Db, new CoachingAccessPolicy(s.F.Actor), s.Settings);
         var error = await Assert.ThrowsAsync<BusinessRuleException>(() => preview.PreviewAsync(
             new AutomaticStudyPreviewRequest(new(2026, 10, 19), 7, 0, [new(Guid.NewGuid(), 30)], context.Version)));
-        error.Message.Should().Contain("Seçili sınavın sınıfına uymuyor");
+        error.Message.Should().Contain("Seçili sınavın eğitim durumuna ya da sınıfına uymuyor");
     }
 
     [Fact]
@@ -300,7 +300,8 @@ public sealed class CoachingProfileConsistencyTests
     {
         await using var s = await Setup.CreateAsync();
         (await s.Personal(8)).AllowedPurposes.Should().Equal(LearningPurpose.Lgs);
-        (await s.Personal(null)).AllowedPurposes.Should().Equal(LearningPurpose.Yks, LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        (await s.Personal(null)).AllowedPurposes.Should().Equal(LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        (await s.Personal(null, CoachingEducationStatus.UniversityGraduate)).AllowedPurposes.Should().Equal(LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil, LearningPurpose.Yks);
         LearningPurposes.AllowedFor(CoachingEducationStatus.Student, 10).Should().Equal(LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil);
     }
 
@@ -329,6 +330,182 @@ public sealed class CoachingProfileConsistencyTests
         (typed.SchoolName, typed.SchoolType).Should().Be(("Eski Lise", "Lise"));
         var picked = await s.UpdateProfile(x => x with { SchoolId = s.School });
         picked.SchoolName.Should().Be("Ankara Fen Lisesi");
+    }
+
+    // ---------- E3 #14: "Şu an durumun ne?" ----------
+
+    [Fact]
+    public async Task AUniversityGraduateChoosesAgsInTheWizard()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(null, LearningPurpose.Ags, null, status: CoachingEducationStatus.UniversityGraduate);
+        var context = await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync();
+        (context.Purpose, context.EducationStatus, context.GradeLevel).Should().Be((LearningPurpose.Ags, CoachingEducationStatus.UniversityGraduate, (int?)null));
+        (await s.Onboarding.GetAsync(default)).Answers.EducationStatus.Should().Be(CoachingEducationStatus.UniversityGraduate);
+    }
+
+    [Theory]
+    [InlineData(CoachingEducationStatus.HighSchoolGraduate)]
+    [InlineData(CoachingEducationStatus.UniversityStudent)]
+    public async Task OnlyAUniversityGraduateMayChooseAgs(CoachingEducationStatus status)
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(null, status);
+        var error = await Assert.ThrowsAsync<ArgumentException>(() => s.SaveSetup(LearningPurpose.Ags, null));
+        error.Message.Should().Contain("uymuyor");
+    }
+
+    [Theory]
+    [InlineData(CoachingEducationStatus.HighSchoolGraduate)]
+    [InlineData(CoachingEducationStatus.UniversityStudent)]
+    [InlineData(CoachingEducationStatus.UniversityGraduate)]
+    public async Task EveryoneOutOfHighSchoolKeepsTheYksDiplomaGrade(CoachingEducationStatus status)
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(null, LearningPurpose.Yks, "SAY", diploma: 82.5m, status: status);
+        (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).DiplomaGrade.Should().Be(82.5m);
+        (await s.UpdateProfile(x => x with { EducationStatus = CoachingEducationStatus.HighSchoolGraduate })).DiplomaGrade.Should().Be(82.5m);
+    }
+
+    [Fact]
+    public async Task SwitchingProfilimToANonStudentStatusClearsTheGradeSchoolAndBranch()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(11, LearningPurpose.Yks, "SAY");
+        await s.UpdateProfile(x => x with { SchoolId = s.School, ClassBranch = "11-A" });
+
+        var updated = await s.UpdateProfile(x => x with { EducationStatus = CoachingEducationStatus.UniversityStudent, GradeLevel = null });
+
+        (updated.EducationStatus, updated.GradeLevel, updated.SchoolName, updated.SchoolType, updated.ClassBranch)
+            .Should().Be((CoachingEducationStatus.UniversityStudent, (int?)null, (string?)null, (string?)null, (string?)null));
+        var context = await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync();
+        (context.EducationStatus, context.GradeLevel).Should().Be((CoachingEducationStatus.UniversityStudent, (int?)null));
+        (await s.Settings.GetAsync(default)).PurposeNotForEducation.Should().BeFalse("YKS fits a university student");
+    }
+
+    [Fact]
+    public async Task AMiddleSchoolStudentWhoBecomesAUniversityGraduateIsAskedForANewExam()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(8, LearningPurpose.Lgs, null);
+        await s.UpdateProfile(x => x with { EducationStatus = CoachingEducationStatus.UniversityGraduate, GradeLevel = null });
+        var setup = await s.Settings.GetAsync(default);
+        setup.PurposeNotForEducation.Should().BeTrue();
+        setup.AllowedPurposes.Should().Equal(LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil, LearningPurpose.Yks);
+    }
+
+    [Fact]
+    public async Task TheInstitutionCanSetEveryEducationStatus()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(12, LearningPurpose.Yks, "SAY", diploma: 90);
+        await s.UpdateProfile(x => x with { SchoolId = s.School });
+        var admin = s.F.AddAccount("InstitutionAdmin"); var institution = Guid.NewGuid();
+        s.F.Accounts.Institutions.Add(institution);
+        s.F.Accounts.Admins[admin] = new(false, institution);
+        s.F.Db.Add(CoachingInstitutionMembership.Create(institution, s.Student, CoachingMemberRole.Student, admin)); await s.F.Db.SaveChangesAsync();
+
+        await s.F.Store.UpdateInstitutionStudentAsync(admin, institution, s.Student, CoachingEducationStatus.HighSchoolGraduate, null, null, default);
+        s.F.Db.ChangeTracker.Clear();
+        var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync();
+        (profile.EducationStatus, profile.GradeLevel, profile.SchoolName, profile.DiplomaGrade)
+            .Should().Be((CoachingEducationStatus.HighSchoolGraduate, (int?)null, (string?)null, (decimal?)90m));
+        (await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync()).EducationStatus.Should().Be(CoachingEducationStatus.HighSchoolGraduate);
+        // A student status still needs its grade; a non-student status takes none.
+        await Assert.ThrowsAsync<ArgumentException>(() => s.F.Store.UpdateInstitutionStudentAsync(admin, institution, s.Student, CoachingEducationStatus.Student, null, null, default));
+        await Assert.ThrowsAsync<ArgumentException>(() => s.F.Store.UpdateInstitutionStudentAsync(admin, institution, s.Student, CoachingEducationStatus.UniversityStudent, 10, null, default));
+        await Assert.ThrowsAsync<ArgumentException>(() => s.F.Store.UpdateInstitutionStudentAsync(admin, institution, s.Student, CoachingEducationStatus.Student, 4, null, default));
+        await s.F.Store.UpdateInstitutionStudentAsync(admin, institution, s.Student, CoachingEducationStatus.Student, 9, null, default);
+        s.F.Db.ChangeTracker.Clear();
+        (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).GradeLevel.Should().Be(9);
+    }
+
+    [Fact]
+    public async Task StaffListsSeeTheEducationStatus()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(null, CoachingEducationStatus.UniversityStudent);
+        var admin = s.F.AddAccount("InstitutionAdmin"); var institution = Guid.NewGuid();
+        s.F.Accounts.Institutions.Add(institution);
+        s.F.Accounts.Admins[admin] = new(false, institution);
+        s.F.Db.Add(CoachingInstitutionMembership.Create(institution, s.Student, CoachingMemberRole.Student, admin)); await s.F.Db.SaveChangesAsync();
+        s.F.Actor.UserId = admin; s.F.Actor.Roles = ["InstitutionAdmin"];
+        var directory = new OwnedCoachingDirectory(s.F.Db, s.F.Accounts, s.F.Actor);
+        var page = await directory.GetMemberStudentPageAsync(admin, institution, null, 1, 25, default);
+        var item = page.Students!.Should().ContainSingle().Subject;
+        (item.EducationStatus, item.GradeLevel).Should().Be((CoachingEducationStatus.UniversityStudent, (int?)null));
+    }
+
+    // ---------- E3 review (M1, L4) ----------
+
+    private static void SetStored(CoachingStudentProfile profile, string property, object? value) =>
+        typeof(CoachingStudentProfile).GetProperty(property)!.SetValue(profile, value);
+
+    [Fact]
+    public async Task ATeacherEditsTheDetailsOfAStudentWithAnOlderGradeBelowFive()
+    {
+        await using var s = await Setup.CreateAsync();
+        var tracked = await s.F.Db.CoachingStudentProfiles.SingleAsync();
+        SetStored(tracked, nameof(CoachingStudentProfile.EducationStatus), CoachingEducationStatus.Student);
+        SetStored(tracked, nameof(CoachingStudentProfile.GradeLevel), 3);
+        await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+        var teacher = s.F.AddAccount("Teacher");
+        var version = (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).Version;
+
+        var saved = await s.F.Store.UpdateTeacherStudentDetailsAsync(s.Student, teacher,
+            new(version, "Atatürk İlkokulu", "ANKARA", "ÇANKAYA", null, "3-A", new DateOnly(2018, 3, 1), "Okumayı seviyor."), default);
+
+        (saved.EducationStatus, saved.GradeLevel, saved.SchoolName, saved.ClassBranch, saved.Bio)
+            .Should().Be((CoachingEducationStatus.Student, (int?)3, "Atatürk İlkokulu", "3-A", "Okumayı seviyor."));
+    }
+
+    [Fact]
+    public async Task ATeachersDetailsSaveLeavesTheSchoolOfANonStudentAlone()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(null);
+        var tracked = await s.F.Db.CoachingStudentProfiles.SingleAsync();
+        SetStored(tracked, nameof(CoachingStudentProfile.SchoolName), "Eski Lise");   // stored before E3
+        await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+        var teacher = s.F.AddAccount("Teacher");
+        var version = (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).Version;
+
+        var saved = await s.F.Store.UpdateTeacherStudentDetailsAsync(s.Student, teacher,
+            new(version, "Eski Lise", null, null, null, null, new DateOnly(2006, 1, 1), "Mezun, YKS'ye tekrar giriyor."), default);
+
+        (saved.SchoolName, saved.Bio).Should().Be(("Eski Lise", "Mezun, YKS'ye tekrar giriyor."), "the teacher did not change the school");
+    }
+
+    [Fact]
+    public async Task MovingFromLiseToOrtaokulDropsTheHighSchool()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(11, school: s.School);
+        (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).SchoolName.Should().Be("Ankara Fen Lisesi");
+        await s.Personal(8);
+        (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).SchoolName.Should().BeNull("the catalog school is a lise");
+        // On Profilim too, the stored lise is not kept for an ortaokul grade; a newly typed school is.
+        await s.Personal(11, school: s.School);
+        (await s.UpdateProfile(x => x with { GradeLevel = 7 })).SchoolName.Should().BeNull();
+        (await s.UpdateProfile(x => x with { SchoolName = "Kızılay Ortaokulu" })).SchoolName.Should().Be("Kızılay Ortaokulu");
+    }
+
+    [Fact]
+    public async Task TheInstitutionKeepsTheGraduationYearBetweenTheGraduateStatuses()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Onboarding.SavePersonalAsync(new(new DateOnly(2000, 5, 1), "06", "0601", CoachingEducationStatus.HighSchoolGraduate, null, 2018, null), default);
+        var admin = s.F.AddAccount("InstitutionAdmin"); var institution = Guid.NewGuid();
+        s.F.Accounts.Institutions.Add(institution);
+        s.F.Accounts.Admins[admin] = new(false, institution);
+        s.F.Db.Add(CoachingInstitutionMembership.Create(institution, s.Student, CoachingMemberRole.Student, admin)); await s.F.Db.SaveChangesAsync();
+
+        await s.F.Store.UpdateInstitutionStudentAsync(admin, institution, s.Student, CoachingEducationStatus.UniversityGraduate, null, null, default);
+        s.F.Db.ChangeTracker.Clear();
+        (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).GraduationYear.Should().Be(2018);
+        await s.F.Store.UpdateInstitutionStudentAsync(admin, institution, s.Student, CoachingEducationStatus.UniversityStudent, null, null, default);
+        s.F.Db.ChangeTracker.Clear();
+        (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).GraduationYear.Should().BeNull();
     }
 
     // ---------- Setup ----------
@@ -379,13 +556,14 @@ public sealed class CoachingProfileConsistencyTests
             program.SetActive(true); F.Db.Add(program); Programs[name] = program.Id;
         }
 
-        public Task<OnboardingView> Personal(int? grade) => Onboarding.SavePersonalAsync(new(new DateOnly(2008, 5, 1), "06", "0601",
-            grade is null ? CoachingEducationStatus.Graduate : CoachingEducationStatus.Student, grade, null, null), default);
+        /// <summary>E3 #14: no grade is a lise graduate unless another status is given.</summary>
+        public Task<OnboardingView> Personal(int? grade, CoachingEducationStatus? status = null, Guid? school = null) => Onboarding.SavePersonalAsync(new(new DateOnly(2008, 5, 1), "06", "0601",
+            status ?? (grade is null ? CoachingEducationStatus.HighSchoolGraduate : CoachingEducationStatus.Student), grade, null, school), default);
 
         /// <summary>The wizard's first two steps, then the wizard is finished.</summary>
-        public async Task Wizard(int? grade, LearningPurpose purpose, string? field, decimal? diploma = null)
+        public async Task Wizard(int? grade, LearningPurpose purpose, string? field, decimal? diploma = null, CoachingEducationStatus? status = null)
         {
-            await Personal(grade);
+            await Personal(grade, status);
             await Onboarding.SaveExamAsync(new(purpose, field, null, purpose == LearningPurpose.Lgs ? LgsSession : null,
                 purpose == LearningPurpose.Lgs ? null : Year, diploma, false), default);
             await Onboarding.SaveTargetAsync(new("none", null, null), default);

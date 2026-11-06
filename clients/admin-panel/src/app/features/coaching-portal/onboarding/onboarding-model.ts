@@ -1,6 +1,7 @@
 import { ExamLearningPurpose, LearningExamSession } from '../../../core/services/coaching-learning-setup.service';
 import { OnboardingExamStep, OnboardingPersonalStep, OnboardingTargetStep, OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
+import { EDUCATION_STAGES, EducationStage, educationRequest, gradesFor, isStudentStage, stageOf } from '../coaching-education';
 
 /**
  * Paket C (#3, user decisions 05.11.2026): the first-login wizard as a chat. Every question is answered with a component
@@ -8,7 +9,7 @@ import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
  * which questions apply to the answers so far, what a changed answer clears, and the request of each step.
  */
 export type QuestionId =
-  | 'birthDate' | 'city' | 'district' | 'education' | 'ownSchool'
+  | 'birthDate' | 'city' | 'district' | 'stage' | 'education' | 'ownSchool'
   | 'purpose' | 'yksField' | 'language' | 'oabtField' | 'yokdilField' | 'session' | 'diploma'
   | 'targetSaved' | 'targetMode' | 'schoolCity' | 'schoolType' | 'targetSchool'
   | 'level' | 'programScoreType' | 'programCity' | 'university' | 'program' | 'ownScore'
@@ -38,8 +39,9 @@ export const PURPOSES: Choice[] = [
 export const YKS_FIELDS: Choice[] = [
   { value: 'SAY', label: 'Sayısal' }, { value: 'EA', label: 'Eşit Ağırlık' }, { value: 'SOZ', label: 'Sözel' },
   { value: 'DIL', label: 'Dil' }, { value: 'TYT', label: 'Yalnız TYT (önlisans)' }];
-export const GRADES: Choice[] = [5, 6, 7, 8, 9, 10, 11, 12].map(grade => ({ value: String(grade), label: `${grade}. sınıf` }))
-  .concat({ value: 'graduate', label: 'Mezunum' });
+/** E3 #14: "Şu an durumun ne?" (the grade is asked next, for ortaokul and lise students only). */
+export const STAGES: Choice[] = EDUCATION_STAGES.map(x => ({ value: x.value, label: x.label }));
+const gradeChoices = (stage: EducationStage | '') => gradesFor(stage).map(grade => ({ value: String(grade), label: `${grade}. sınıf` }));
 /** ÖSYM YDS levels (2026 YDS Kılavuzu 3.8): the shortcut fills the level's lowest score. */
 export const YDS_LEVELS: Choice[] = [
   { value: '90', label: 'A (90–100)' }, { value: '80', label: 'B (80–89)' }, { value: '70', label: 'C (70–79)' },
@@ -52,6 +54,7 @@ const TARGET: QuestionId[] = ['targetSaved', 'targetMode', 'schoolCity', 'school
 /** A changed answer clears only the answers that depend on it; the flow then asks them again. */
 export const DEPENDENTS: Partial<Record<QuestionId, QuestionId[]>> = {
   city: ['district', 'ownSchool'],
+  stage: ['education', 'ownSchool', 'diploma'],
   education: ['ownSchool', 'diploma'],
   purpose: ['yksField', 'language', 'oabtField', 'yokdilField', 'session', 'diploma', ...TARGET],
   yksField: ['language', 'diploma', ...TARGET],
@@ -86,14 +89,16 @@ export function change(answers: Answers, id: QuestionId): Answers {
 
 const value = (answers: Answers, id: QuestionId) => answers[id]?.value ?? null;
 export function purposeOf(answers: Answers): ExamLearningPurpose | null { return value(answers, 'purpose') as ExamLearningPurpose | null; }
-export function gradeOf(answers: Answers): number | 'graduate' | null {
+export function stageOfAnswers(answers: Answers): EducationStage | '' { return (value(answers, 'stage') as EducationStage | null) ?? ''; }
+/** The grade of an ortaokul or lise student (null for everyone else and before it is answered). */
+export function gradeOf(answers: Answers): number | null {
   const education = value(answers, 'education');
-  return education === null ? null : education === 'graduate' ? 'graduate' : Number(education);
+  return isStudentStage(stageOfAnswers(answers)) && education !== null ? Number(education) : null;
 }
-/** OBP counts from 11th grade; graduates too. */
+/** OBP counts from 11th grade, and for everyone out of high school (E3 #14). */
 export function asksDiploma(answers: Answers): boolean {
-  const grade = gradeOf(answers);
-  return purposeOf(answers) === 'Yks' && (grade === 'graduate' || grade === 11 || grade === 12);
+  const stage = stageOfAnswers(answers); const grade = gradeOf(answers);
+  return purposeOf(answers) === 'Yks' && (stage !== '' && !isStudentStage(stage) || grade === 11 || grade === 12);
 }
 
 /** The score types a score-only target may use (the server's ScoreTargetTypes). */
@@ -132,13 +137,16 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
   const list: Question[] = [];
   const add = (question: Question) => list.push(question);
   const purpose = purposeOf(answers);
-  const grade = gradeOf(answers);
+  const stage = stageOfAnswers(answers);
 
   add({ id: 'birthDate', step: 1, kind: 'date', prompt: 'Merhaba! Önce seni tanıyalım. Doğum tarihin ne?', reason: 'Profilinde tutulur; öğretmenin de görebilir.' });
   add({ id: 'city', step: 1, kind: 'combobox', prompt: 'Hangi şehirde yaşıyorsun?', reason: 'Okulunu listeden bulabilmen için. Profilinde tutulur.' });
   if (answers.city) add({ id: 'district', step: 1, kind: 'combobox', prompt: `${answers.city.label} içinde hangi ilçedesin?`, reason: 'Okul listelerinde ilçendeki okulları önce gösteririz. Profilinde tutulur.' });
-  add({ id: 'education', step: 1, kind: 'buttons', choices: GRADES, prompt: 'Kaçıncı sınıftasın?', reason: 'Çalışma ayarların ve diploma notu sorusu buna göre belirlenir; öğretmenin de görür.' });
-  if (typeof grade === 'number' && grade >= 9)
+  add({ id: 'stage', step: 1, kind: 'buttons', choices: STAGES, prompt: 'Şu an durumun ne?', reason: 'Hazırlanabileceğin sınavlar ve diploma notu sorusu buna göre belirlenir; öğretmenin de görür.' });
+  if (isStudentStage(stage))
+    add({ id: 'education', step: 1, kind: 'buttons', choices: gradeChoices(stage), prompt: 'Kaçıncı sınıftasın?', reason: 'Çalışma ayarların buna göre belirlenir; öğretmenin de görür.' });
+  // The own-school list is the high-school catalog: asked of lise students only.
+  if (stage === 'high' && answers.education)
     add({ id: 'ownSchool', step: 1, kind: 'combobox', skipLabel: 'Şimdilik geçeyim', prompt: 'Okulunu listeden seçmek ister misin?', reason: 'İsteğe bağlı. Profilinde tutulur; öğretmenin de görür.' });
 
   add({ id: 'purpose', step: 2, kind: 'buttons', choices: purposeChoices(context), prompt: 'Hangi sınava hazırlanıyorsun?', reason: 'Planın, derslerin ve puan hesabın bu sınava göre hazırlanır.' });
@@ -246,12 +254,13 @@ export function signature(answers: Answers, context: FlowContext, step: StepNumb
 // ---------- Requests ----------
 
 export function personalRequest(answers: Answers): OnboardingPersonalStep {
-  const grade = gradeOf(answers);
+  const education = educationRequest(stageOfAnswers(answers) as EducationStage, gradeOf(answers));
   return {
     birthDate: String(value(answers, 'birthDate')), provinceId: String(value(answers, 'city')), districtId: String(value(answers, 'district')),
-    educationStatus: grade === 'graduate' ? 'Graduate' : 'Student', gradeLevel: typeof grade === 'number' ? grade : null,
+    ...education,
     // Not asked here: the server keeps the saved graduation year, and the saved school unless a new one is picked.
-    graduationYear: null, schoolId: typeof value(answers, 'ownSchool') === 'string' ? value(answers, 'ownSchool') as string : null
+    graduationYear: null,
+    schoolId: education.educationStatus === 'Student' && typeof value(answers, 'ownSchool') === 'string' ? value(answers, 'ownSchool') as string : null
   };
 }
 
@@ -302,10 +311,11 @@ export function prefill(view: OnboardingView): Answers {
   if (a.birthDate) answers.birthDate = { value: a.birthDate, label: a.birthDate.split('-').reverse().join('.') };
   if (a.homeProvinceId && a.homeCity) answers.city = { value: a.homeProvinceId, label: a.homeCity };
   if (a.homeDistrictId && a.homeDistrict) answers.district = { value: a.homeDistrictId, label: a.homeDistrict };
-  if (a.educationStatus === 'Graduate') answers.education = { value: 'graduate', label: 'Mezunum' };
-  else if (a.educationStatus === 'Student' && a.gradeLevel) answers.education = { value: String(a.gradeLevel), label: `${a.gradeLevel}. sınıf` };
+  const stage = stageOf(a.educationStatus, a.gradeLevel);
+  if (stage) answers.stage = { value: stage, label: STAGES.find(x => x.value === stage)!.label };
+  if (isStudentStage(stage) && a.gradeLevel) answers.education = { value: String(a.gradeLevel), label: `${a.gradeLevel}. sınıf` };
   // The saved school stays (value null keeps it on the server); a newly picked one sends its catalog id.
-  if (saved.has(1) && (gradeOf(answers) as number) >= 9) answers.ownSchool = { value: null, label: a.schoolName ?? 'Şimdilik geçeyim' };
+  if (saved.has(1) && stage === 'high') answers.ownSchool = { value: null, label: a.schoolName ?? 'Şimdilik geçeyim' };
   if (a.purpose) {
     answers.purpose = { value: a.purpose, label: PURPOSES.find(x => x.value === a.purpose)?.label ?? a.purpose };
     if (a.purpose === 'Yks' && a.primaryScoreType) answers.yksField = { value: a.primaryScoreType, label: YKS_FIELDS.find(x => x.value === a.primaryScoreType)?.label ?? a.primaryScoreType };
@@ -353,7 +363,7 @@ export function summary(answers: Answers, context: FlowContext): { step: StepNum
   }));
 }
 const SUMMARY_LABELS: Record<QuestionId, string> = {
-  birthDate: 'Doğum tarihi', city: 'Şehir', district: 'İlçe', education: 'Sınıf', ownSchool: 'Okul',
+  birthDate: 'Doğum tarihi', city: 'Şehir', district: 'İlçe', stage: 'Eğitim durumu', education: 'Sınıf', ownSchool: 'Okul',
   purpose: 'Sınav', yksField: 'Puan türü', language: 'Yabancı dil', oabtField: 'ÖABT alanı', yokdilField: 'YÖKDİL alanı', session: 'Oturum', diploma: 'Diploma notu',
   targetSaved: 'Hedef', targetMode: 'Hedef', schoolCity: 'Okulun şehri', schoolType: 'Okul türü', targetSchool: 'Okul', level: 'Düzey', programScoreType: 'Puan türü',
   programCity: 'Şehir', university: 'Üniversite', program: 'Bölüm', ownScore: 'Hedef puan', targetScoreType: 'Puan', ydsLevel: 'Seviye', targetScore: 'Hedef puan',

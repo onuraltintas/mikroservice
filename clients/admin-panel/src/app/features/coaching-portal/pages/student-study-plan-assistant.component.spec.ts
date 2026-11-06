@@ -81,7 +81,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
   it('asks to update the exam when it no longer fits the grade, without blocking topic saves (review L6)', async () => {
     const { fixture } = await setup({ isReady: false, missingFields: ['Purpose'], purposeNotForEducation: true });
     const note = fixture.nativeElement.querySelector('[data-testid="grade-purpose"]') as HTMLElement;
-    expect(note.textContent).toContain('Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle.');
+    expect(note.textContent).toContain('Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle.');
     expect(note.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
   });
 

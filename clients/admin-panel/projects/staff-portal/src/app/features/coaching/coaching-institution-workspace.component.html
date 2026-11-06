@@ -135,15 +135,24 @@
               <thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Öğretmen</th><th>E-posta</th><th>İşlemler</th></tr></thead>
               <tbody>
                 @for (student of students(); track student.userId) {
-                  <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}@if (student.progressShared === false) { <span class="privacy-tag" title="Öğrenci gelişimini öğretmenleriyle paylaşmayı kapattı; raporlarda görünmez.">Gelişimini paylaşmıyor</span> }</td><td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}</td><td>@if (teacherLinks(student).length) { <ul class="teacher-links">@for (link of teacherLinks(student); track link.userId) { <li><span>{{ link.name }}</span><button type="button" class="link-remove" [disabled]="isMembershipSaving() || !!editingStudentId()" [attr.aria-label]="link.name + ' atamasını sonlandır'" [attr.data-testid]="'remove-link-' + student.userId + '-' + link.userId" (click)="removeStudentTeacher(student, link)">×</button></li> }</ul> } @else { Atanmamış }</td><td>{{ student.email }}</td><td><div class="member-actions">
+                  <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}@if (student.progressShared === false) { <span class="privacy-tag" title="Öğrenci gelişimini öğretmenleriyle paylaşmayı kapattı; raporlarda görünmez.">Gelişimini paylaşmıyor</span> }</td><td>{{ educationLabel(student.educationStatus, student.gradeLevel, '—') }}</td><td>@if (teacherLinks(student).length) { <ul class="teacher-links">@for (link of teacherLinks(student); track link.userId) { <li><span>{{ link.name }}</span><button type="button" class="link-remove" [disabled]="isMembershipSaving() || !!editingStudentId()" [attr.aria-label]="link.name + ' atamasını sonlandır'" [attr.data-testid]="'remove-link-' + student.userId + '-' + link.userId" (click)="removeStudentTeacher(student, link)">×</button></li> }</ul> } @else { Atanmamış }</td><td>{{ student.email }}</td><td><div class="member-actions">
                     <button type="button" class="report-button" [disabled]="isMembershipSaving()" [attr.data-testid]="'student-report-' + student.userId" (click)="openStudentReport(student)">Raporu incele</button>
-                    <button type="button" class="report-button" [disabled]="isMembershipSaving()" [attr.data-testid]="'edit-student-' + student.userId" (click)="startStudentEdit(student)">Sınıf / öğretmen</button>
+                    <button type="button" class="report-button" [disabled]="isMembershipSaving()" [attr.data-testid]="'edit-student-' + student.userId" (click)="startStudentEdit(student)">Eğitim / öğretmen</button>
                     <button type="button" class="report-button danger" [disabled]="isMembershipSaving() || !!editingStudentId()" [attr.data-testid]="'remove-student-' + student.userId" (click)="removeStudent(student)">Kurumdan çıkar</button>
                   </div></td></tr>
                   @if (editingStudentId() === student.userId) {
                     <tr><td colspan="5"><form #memberForm="ngForm" (ngSubmit)="saveStudentEdit()" class="member-editor">
                       <fieldset [disabled]="isMembershipSaving()">
-                        <label class="filter-field">Öğrencinin sınıfı<input type="number" [(ngModel)]="editStudentGrade" (ngModelChange)="membershipDirty = true" name="memberGrade" min="1" max="12" step="1" required></label>
+                        <label class="filter-field">Eğitim durumu<select [ngModel]="editStudentStage" (ngModelChange)="changeStudentStage($event)" name="memberStage" required>
+                          @for (item of educationStages; track item.value) { <option [value]="item.value">{{ item.staffLabel }}</option> }
+                        </select></label>
+                        @if (isStudentStage(editStudentStage)) {
+                          <label class="filter-field">Öğrencinin sınıfı<select [(ngModel)]="editStudentGrade" (ngModelChange)="membershipDirty = true" name="memberGrade" required>
+                            <option [ngValue]="null" disabled>Sınıf seçin</option>
+                            @for (grade of gradesFor(editStudentStage); track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
+                          </select></label>
+                        }
+                        @if (memberClearsSchoolNotice(); as notice) { <p class="filter-note" role="status" data-testid="member-clears-school">{{ notice }}</p> }
                         <label class="filter-field">Öğretmen ekle<select [(ngModel)]="editStudentTeacherId" (ngModelChange)="membershipDirty = true" name="memberTeacher">
                           <option value="">Öğretmen ekleme</option>
                           @for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}</option> }

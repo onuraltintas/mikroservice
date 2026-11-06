@@ -27,9 +27,9 @@ public sealed class CoachingStudentProfileConfiguration : IEntityTypeConfigurati
     {
         builder.ToTable("student_profiles", table =>
         {
-            table.HasCheckConstraint("ck_coaching_student_education", "\"EducationStatus\" BETWEEN 0 AND 2 AND ((\"EducationStatus\" = 1 AND \"GradeLevel\" BETWEEN 1 AND 12 AND \"GradeLevel\" IS NOT NULL) OR (\"EducationStatus\" <> 1 AND \"GradeLevel\" IS NULL))");
+            table.HasCheckConstraint("ck_coaching_student_education", "\"EducationStatus\" BETWEEN 0 AND 4 AND ((\"EducationStatus\" = 1 AND \"GradeLevel\" BETWEEN 1 AND 12 AND \"GradeLevel\" IS NOT NULL) OR (\"EducationStatus\" <> 1 AND \"GradeLevel\" IS NULL))");
             table.HasCheckConstraint("ck_coaching_student_diploma", "\"DiplomaGrade\" IS NULL OR \"DiplomaGrade\" BETWEEN 50 AND 100");
-            table.HasCheckConstraint("ck_coaching_student_graduation", "\"GraduationYear\" IS NULL OR (\"EducationStatus\" = 2 AND \"GraduationYear\" BETWEEN 1900 AND 9999)");
+            table.HasCheckConstraint("ck_coaching_student_graduation", "\"GraduationYear\" IS NULL OR (\"EducationStatus\" IN (2, 4) AND \"GraduationYear\" BETWEEN 1900 AND 9999)");
         });
         builder.HasKey(x => x.Id);
         builder.HasAlternateKey(x => x.UserId).HasName("ak_coaching_student_profile_user");

@@ -89,5 +89,6 @@ public sealed class LessonSeries
         DurationMinutes = durationMinutes;
         DaysOfWeekMask = daysOfWeekMask;
         RoomId = roomId;
+        TimeZoneId = CourseManagementTime.ZoneId; // E3 #34: a changed schedule is in Türkiye time
     }
 }

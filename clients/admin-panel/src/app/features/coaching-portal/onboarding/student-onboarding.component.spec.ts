@@ -66,6 +66,8 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     const district = t.el.querySelector('[data-current] input[role="combobox"]') as HTMLInputElement;
     district.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' })); district.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await t.settle();
+    expect(t.el.querySelector('[data-current]')!.textContent).toContain('Şu an durumun ne?');
+    await t.click('Ortaokul öğrencisiyim');
     await t.click('8. sınıf');
     const save = t.http.expectOne(`${base}/steps/personal`);
     expect(save.request.body).toEqual({ birthDate: '2012-05-01', provinceId: '06', districtId: '0601', educationStatus: 'Student', gradeLevel: 8, graduationYear: null, schoolId: null });
@@ -167,7 +169,8 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
 
   it('a new grade in the wizard drops an exam that no longer fits once the server answers (review M1)', async () => {
     const t = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2], allowedPurposes: ['Lgs'] }, stepTwo));
-    (t.el.querySelector('[data-question="education"] .ob-me button') as HTMLElement).click(); await t.settle();
+    (t.el.querySelector('[data-question="stage"] .ob-me button') as HTMLElement).click(); await t.settle();
+    await t.click('Lise öğrencisiyim');
     await t.click('9. sınıf');
     await t.click('Şimdilik geçeyim');
     t.http.expectOne(`${base}/steps/personal`).flush({ data: view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] },
@@ -239,6 +242,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     (t.el.querySelector('[role="option"]') as HTMLElement).click(); await t.settle();
     t.http.expectOne('/api/locations/provinces/06/districts').flush([{ id: '0601', provinceId: '06', name: 'Çankaya' }]); await t.settle();
     (t.el.querySelector('[role="option"]') as HTMLElement).click(); await t.settle();
+    await t.click('Lise öğrencisiyim');
     await t.click('10. sınıf');
     await new Promise(r => setTimeout(r, 300)); await t.settle();
     const own = t.http.expectOne(r => r.url === `${base}/options/schools`);

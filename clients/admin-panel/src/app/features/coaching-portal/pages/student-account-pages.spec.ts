@@ -29,13 +29,22 @@ describe('Profil ve ayarlar sections', () => {
     expect(child('account/settings', 'profile').canDeactivate?.length).toBe(1);
   });
 
-  it('asks before leaving when either the setup or the time zone has unsaved changes', async () => {
+  it('asks before leaving when the setup has unsaved changes', async () => {
     const component = TestBed.runInInjectionContext(() => new StudentStudyPreferencesComponent());
-    component.setup = { canLeavePage: vi.fn(async () => true) } as never;
-    component.timeZone = { canLeavePage: vi.fn(async () => false) } as never;
+    component.setup = { canLeavePage: vi.fn(async () => false) } as never;
     expect(await component.canLeavePage()).toBe(false);
-    component.timeZone = { canLeavePage: vi.fn(async () => true) } as never;
+    component.setup = { canLeavePage: vi.fn(async () => true) } as never;
     expect(await component.canLeavePage()).toBe(true);
+  });
+
+  // E3 #34 (06.11.2026): no time zone choice anywhere; everyone is on Türkiye time.
+  it('has no time zone setting', async () => {
+    TestBed.configureTestingModule({ imports: [StudentStudyPreferencesComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    const fixture = TestBed.createComponent(StudentStudyPreferencesComponent); fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('app-student-settings')).toBeNull();
+    expect(el.textContent).not.toContain('Saat dilimi');
+    expect(el.textContent).toContain('Bütün saatler Türkiye saatine göredir.');
   });
 
   it('puts the e-mail notifications and the calendar link under Bildirimler', async () => {

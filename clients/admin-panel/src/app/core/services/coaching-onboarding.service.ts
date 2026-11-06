@@ -4,10 +4,11 @@ import { Observable, map, of, tap } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { environment } from '../../../environments/environment';
 import { ExamLearningPurpose, LearningExamSession } from './coaching-learning-setup.service';
+import type { EducationStatus } from '../../features/coaching-portal/coaching-education';
 
 /** Paket C (#3): the student's first-login wizard (api/coaching/students/me/onboarding). */
 export type OnboardingStatus = 'NotStarted' | 'InProgress' | 'Completed';
-export type EducationStatus = 'Unknown' | 'Student' | 'Graduate';
+export type { EducationStatus } from '../../features/coaching-portal/coaching-education';
 /** A target score in one score type; YKS may have two (TYT and the field's). */
 export interface OnboardingScore { scoreType: string; score: number }
 export interface OnboardingTarget {

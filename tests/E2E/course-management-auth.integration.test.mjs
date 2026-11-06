@@ -1103,12 +1103,20 @@ test('live API enforces product and subject boundaries before database access', 
       assert.equal(seriesCancellationCredits.length, replacementSeriesLessons.length * 2,
         'cancelling a group series grants each active participant one credit per cancelled session');
 
-      const invalidDstSeries = await createSeries('16ecdcf4-79ba-4bd8-8f5d-a564a51db7cf', '2027-03-14', '2027-03-14', '02:30', 'America/New_York', 64);
-      assert.equal(invalidDstSeries.status, 400);
-      assert.equal((await invalidDstSeries.json()).code, 'LessonSeries.InvalidLocalTime', 'nonexistent DST wall-clock times are rejected');
-      const ambiguousDstSeries = await createSeries('82582e53-6418-41be-bf88-8595f9c28795', '2027-11-07', '2027-11-07', '01:30', 'America/New_York', 64);
-      assert.equal(ambiguousDstSeries.status, 400);
-      assert.equal((await ambiguousDstSeries.json()).code, 'LessonSeries.InvalidLocalTime', 'ambiguous DST wall-clock times are rejected');
+      // E3 #34 (06.11.2026): no time zone choice. A zone sent by an older client is ignored: the series is stored in Europe/Istanbul
+      // and its wall-clock time is Türkiye time (2027-03-14 02:30, a New York DST gap, is a normal Türkiye time).
+      const ignoredZoneSeriesId = '16ecdcf4-79ba-4bd8-8f5d-a564a51db7cf';
+      const ignoredZoneSeries = await createSeries(ignoredZoneSeriesId, '2027-03-14', '2027-03-14', '02:30', 'America/New_York', 64);
+      assert.equal(ignoredZoneSeries.status, 200, await ignoredZoneSeries.clone().text());
+      assert.equal((await ignoredZoneSeries.json()).sessionsCreated, 1);
+      const storedSeries = (await (await request(seriesPath, teacherToken)).json()).find(item => item.id === ignoredZoneSeriesId);
+      assert.equal(storedSeries?.timeZoneId, 'Europe/Istanbul', 'the client zone is ignored; series are stored in Türkiye time');
+      const ignoredZoneRange = new URLSearchParams({ from: '2027-03-13T00:00:00Z', to: '2027-03-15T00:00:00Z' });
+      const ignoredZoneLessons = (await (await request(`${lessonPath}?${ignoredZoneRange}`, teacherToken)).json())
+        .filter(lesson => lesson.seriesId === ignoredZoneSeriesId);
+      assert.equal(ignoredZoneLessons.length, 1);
+      assert.equal(new Date(ignoredZoneLessons[0].startsAt).getTime(), Date.parse('2027-03-14T02:30:00+03:00'),
+        'the series time is read as Türkiye time');
 
       const attendanceLessonId = 'f0e46f1e-8af6-44bd-bab2-d15abfed22a8';
       assert.equal((await createLesson(attendanceLessonId, scheduledAt(40))).status, 201);

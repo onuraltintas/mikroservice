@@ -6,9 +6,12 @@ import {HttpClient,HttpErrorResponse} from '@angular/common/http';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {finalize} from 'rxjs';
 import {environment} from '../../../environments/environment';
+import { educationDetail } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 interface StudentProfile {version:number;educationStatus:string|number;gradeLevel:number|null;graduationYear?:number|null;schoolName:string|null;schoolCity:string|null;schoolDistrict:string|null;schoolType:string|null;classBranch:string|null;birthDate:string|null;bio:string|null}
 @Component({selector:'staff-coaching-student-profile',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./coaching-teacher-student-profile.component.html',styleUrl:'./coaching-teacher-student-profile.component.scss'})
 export class CoachingTeacherStudentProfileComponent implements OnInit {
+  /** E3 #14: "Lise öğrencisi, 10. sınıf", "Üniversite mezunu" … */
+  readonly educationDetail = educationDetail;
  private readonly toaster=coachingToaster();
  @Input({required:true}) studentId!:string;
  private readonly http=inject(HttpClient);private readonly destroyRef=inject(DestroyRef);

@@ -8,8 +8,12 @@ public sealed class StudyAvailabilityConfiguration : IEntityTypeConfiguration<St
 {
     public void Configure(EntityTypeBuilder<StudyAvailability> builder)
     {
-        builder.ToTable("study_availability", table => table.HasCheckConstraint(
-            "ck_study_availability_array", "jsonb_typeof(\"WindowsJson\") = 'array'"));
+        builder.ToTable("study_availability", table =>
+        {
+            table.HasCheckConstraint("ck_study_availability_array", "jsonb_typeof(\"WindowsJson\") = 'array'");
+            // E3 #34: everyone is on Türkiye time.
+            table.HasCheckConstraint("ck_study_availability_zone", "\"TimeZoneId\" = 'Europe/Istanbul'");
+        });
         builder.HasKey(x => x.Id);
         builder.HasIndex(x => x.StudentId).IsUnique();
         builder.Property(x => x.TimeZoneId).HasMaxLength(100).IsRequired();

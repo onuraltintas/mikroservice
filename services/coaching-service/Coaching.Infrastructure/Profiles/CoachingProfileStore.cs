@@ -82,7 +82,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
                 SchoolType = await CoachingStudentOnboardingService.OwnSchoolTypeAsync(db, school, ct) };
         }
         // Validate the full replacement before changing a tracked entity.
-        var validated = CoachingStudentProfile.Create(userId);
+        var validated = profile.CopyForValidation();
         Apply(validated, request);
         if (request.DiplomaGrade is not null) validated.SetDiplomaGrade(request.DiplomaGrade, request.DiplomaGradeEstimated);
         var educationChanged = profile.EducationStatus != request.EducationStatus || profile.GradeLevel != request.GradeLevel;
@@ -128,12 +128,14 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         var profile=await db.CoachingStudentProfiles.SingleOrDefaultAsync(x=>x.UserId==student&&x.IsActive,ct)
             ?? throw new KeyNotFoundException();
         if(profile.Version!=request.ExpectedVersion)throw Conflict("Profil değişti. Yeniden yükleyin.");
+        // E3 review M1: the teacher changes the school details and personal notes, never the education; validated on a copy
+        // with the stored education first (an older grade below 5 stays valid).
         void ApplyDetails(CoachingStudentProfile target)
         {
-            target.UpdateEducation(profile.EducationStatus,profile.GradeLevel,request.SchoolName,request.SchoolCity,request.SchoolDistrict,request.SchoolType,request.ClassBranch,profile.GraduationYear);
+            target.UpdateSchoolDetails(request.SchoolName,request.SchoolCity,request.SchoolDistrict,request.SchoolType,request.ClassBranch);
             target.UpdatePersonal(request.BirthDate,request.Bio,profile.AvatarUrl,profile.ShareProgressWithTeachers);
         }
-        ApplyDetails(CoachingStudentProfile.Create(student));ApplyDetails(profile);
+        ApplyDetails(profile.CopyForValidation());ApplyDetails(profile);
         db.Entry(profile).Property(x=>x.UpdatedBy).CurrentValue=actor.ToString();
         await db.SaveChangesAsync(ct);return profile;
     }
@@ -226,23 +228,38 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             throw Forbidden();
     }
 
+    public Task UpdateInstitutionStudentAsync(Guid actorUserId, Guid institutionId, Guid studentUserId,
+        int gradeLevel, Guid? teacherUserId, CancellationToken ct) =>
+        UpdateInstitutionStudentAsync(actorUserId, institutionId, studentUserId, CoachingEducationStatus.Student, gradeLevel, teacherUserId, ct);
+
+    /// <summary>
+    /// The institution sets the student's education (E3 #14: any status; a grade from 5 to 12 for a student only) and may add a
+    /// teacher link. A non-student status clears the grade, the school and the branch, as on Profilim.
+    /// </summary>
     public async Task UpdateInstitutionStudentAsync(Guid actorUserId, Guid institutionId, Guid studentUserId,
-        int gradeLevel, Guid? teacherUserId, CancellationToken ct)
+        CoachingEducationStatus status, int? gradeLevel, Guid? teacherUserId, CancellationToken ct)
     {
         await MutateStudentAsync(studentUserId, async () =>
         {
             await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
             await RequireAccountAsync(studentUserId, "Student", ct);
-            if (gradeLevel is < 1 or > 12) throw new ArgumentException("Sınıf 1–12 arasında olmalıdır.");
+            if (status is CoachingEducationStatus.Unknown || !Enum.IsDefined(status))
+                throw new ArgumentException("Öğrencinin eğitim durumunu seçin.");
+            if (status == CoachingEducationStatus.Student
+                    ? gradeLevel is not (>= CoachingStudentProfile.FirstGrade and <= CoachingStudentProfile.LastGrade)
+                    : gradeLevel.HasValue)
+                throw new ArgumentException("Sınıf yalnız öğrenciler için ve 5–12 arasında seçilir.");
             if (!await HasMembershipAsync(studentUserId, institutionId, CoachingMemberRole.Student, ct)) throw Forbidden();
             var profile = await db.CoachingStudentProfiles.SingleOrDefaultAsync(x => x.UserId == studentUserId && x.IsActive, ct)
                 ?? throw Forbidden();
             if (teacherUserId.HasValue) await RequireAssignmentAccountsAsync(teacherUserId.Value, studentUserId, institutionId, ct);
             var assignments = await db.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == studentUserId
                 && x.InstitutionId == institutionId && x.IsActive).ToListAsync(ct);
-            var educationChanged = profile.EducationStatus != CoachingEducationStatus.Student || profile.GradeLevel != gradeLevel;
-            profile.UpdateEducation(CoachingEducationStatus.Student, gradeLevel, profile.SchoolName, profile.SchoolCity,
-                profile.SchoolDistrict, profile.SchoolType, profile.ClassBranch, null);
+            var educationChanged = profile.EducationStatus != status || profile.GradeLevel != gradeLevel;
+            profile.UpdateEducation(status, gradeLevel, profile.SchoolName, profile.SchoolCity,
+                profile.SchoolDistrict, profile.SchoolType, profile.ClassBranch,
+                // E3 review L4: as in the wizard, a graduate keeps the graduation year (also between the two graduate statuses).
+                CoachingStudentProfile.IsGraduate(status) ? profile.GraduationYear : null);
             await FollowEducationAsync(profile, educationChanged, ct);
             // A student can have several teachers in the institution; choosing a teacher adds that link and a grade
             // change alone leaves the links as they are. A link is ended on its own (EndInstitutionTeacherLinkAsync).

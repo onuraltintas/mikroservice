@@ -1,4 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
+import type { EducationStatus } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -78,6 +79,8 @@ export interface CoachingInstitutionStudent {
   lastName: string;
   email: string;
   gradeLevel?: number | null;
+  /** E3 #14: shown where there is no grade ("Lise mezunu", "Üniversite öğrencisi" …). */
+  educationStatus?: EducationStatus | null;
   teacherName?: string | null;
   teacherUserId?: string | null;
   /** Every teacher the student works with in the institution. */
@@ -197,8 +200,9 @@ export class CoachingInstitutionService {
   setSubscriptionSeat(subscriptionId: string, studentId: string, isSuspended: boolean): Observable<void> {
     return this.http.put<void>(`${environment.apiUrl}/coaching/institution-subscription/${encodeURIComponent(subscriptionId)}/students/${encodeURIComponent(studentId)}`, { isSuspended });
   }
-  updateStudent(studentId: string, gradeLevel: number, teacherUserId: string | null): Observable<void> {
-    return this.http.put<void>(`${environment.apiUrl}/coaching/institution/students/${encodeURIComponent(studentId)}`, { gradeLevel, teacherUserId });
+  /** E3 #14: the education status and, for a student, the grade (5–12). */
+  updateStudent(studentId: string, education: { educationStatus: EducationStatus; gradeLevel: number | null }, teacherUserId: string | null): Observable<void> {
+    return this.http.put<void>(`${environment.apiUrl}/coaching/institution/students/${encodeURIComponent(studentId)}`, { ...education, teacherUserId });
   }
 
   removeStudent(studentId: string): Observable<void> {

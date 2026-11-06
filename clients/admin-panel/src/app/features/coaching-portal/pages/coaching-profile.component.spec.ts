@@ -12,11 +12,15 @@ describe('Coaching owned profile', () => {
     const student = { version: 1, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true };
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
     fixture.detectChanges(); await fixture.whenStable();
-    const fields = { classBranch: 'A', birthDate: '2008-01-02', studentBio: 'Sınava hazırlanıyorum.', gradeLevel: '11' };
+    const fields = { classBranch: 'A', birthDate: '2008-01-02', studentBio: 'Sınava hazırlanıyorum.' };
     for (const [name, value] of Object.entries(fields)) {
       const input = fixture.nativeElement.querySelector(`[name="${name}"]`) as HTMLInputElement;
       input.value = value; input.dispatchEvent(new Event('input'));
     }
+    // E3 #14: the grade is a choice as in the wizard (lise: 9–12), not a typed number.
+    const grade = fixture.nativeElement.querySelector('select[name="gradeLevel"]') as HTMLSelectElement;
+    expect(Array.from(grade.options).map(x => x.textContent!.trim())).toEqual(['Seç', '9. sınıf', '10. sınıf', '11. sınıf', '12. sınıf']);
+    grade.selectedIndex = 3; grade.dispatchEvent(new Event('change'));
     (fixture.nativeElement.querySelector('[name="shareProgress"]') as HTMLInputElement).click();
     fixture.detectChanges(); await fixture.whenStable();
     expect(component.dirty).toBe(true);
@@ -83,20 +87,20 @@ describe('Coaching owned profile', () => {
     component.removeSchool(); fixture.detectChanges(); await fixture.whenStable();
     expect(el.querySelector('[data-testid="own-school"]')!.textContent).toContain('seçilmedi');
     // A graduate preparing for YDS is not asked the diploma grade (the server would drop it).
-    const status = el.querySelector('[name="educationStatus"]') as HTMLSelectElement;
-    status.value = 'graduate'; status.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
-    expect(component.student!.educationStatus).toBe('graduate');
+    const status = el.querySelector('[name="educationStage"]') as HTMLSelectElement;
+    status.value = 'HighSchoolGraduate'; status.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
+    expect(component.stage).toBe('HighSchoolGraduate');
     expect(el.querySelector('[name="diplomaGrade"]')).toBeNull();
     TestBed.resetTestingModule();
     const yks = await setup();
-    yks.http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { ...student, educationStatus: 'Graduate', gradeLevel: null }, examAsksDiploma: true } });
+    yks.http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { ...student, educationStatus: 'HighSchoolGraduate', gradeLevel: null }, examAsksDiploma: true } });
     yks.fixture.detectChanges(); await yks.fixture.whenStable();
     expect(yks.fixture.nativeElement.querySelector('[name="diplomaGrade"]')).not.toBeNull();
   });
 
   it('lets the student pick another city and remove the school', async () => {
     const { fixture, component, http } = await setup();
-    const student = { version: 5, educationStatus: 'Graduate', gradeLevel: null, shareProgressWithTeachers: true, isActive: true,
+    const student = { version: 5, educationStatus: 'Student', gradeLevel: 11, shareProgressWithTeachers: true, isActive: true,
       homeProvinceId: '34', homeCity: 'İstanbul', homeDistrictId: '3401', homeDistrict: 'Kadıköy', schoolName: 'Eski Lise', schoolType: 'Lise' };
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
     fixture.detectChanges(); await fixture.whenStable();
@@ -126,12 +130,12 @@ describe('Coaching owned profile', () => {
     const student = { version: 2, educationStatus: 'Student', gradeLevel: 8, shareProgressWithTeachers: true, isActive: true };
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
     fixture.detectChanges(); await fixture.whenStable();
-    component.student!.gradeLevel = 9; component.dirty = true; component.save();
+    component.stage = 'high'; component.student!.gradeLevel = 9; component.dirty = true; component.save();
     http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...student, version: 3, gradeLevel: 9 } });
     http.expectOne('/api/coaching/study-planning/setup').flush({ data: { context: null, isReady: false, missingFields: ['Purpose'], warnings: [], purposeNotForEducation: true } });
     fixture.detectChanges(); await fixture.whenStable();
     const notice = fixture.nativeElement.querySelector('[data-testid="grade-purpose-notice"]') as HTMLElement;
-    expect(notice.textContent).toContain('Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle.');
+    expect(notice.textContent).toContain('Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle.');
     expect(notice.querySelector('a[href="/coaching-portal/account/settings"]')!.textContent).toContain('Çalışma tercihlerim');
     // The diploma grade is asked only for 11th, 12th grade and graduates (as in the wizard).
     expect(fixture.nativeElement.querySelector('[name="diplomaGrade"]')).toBeNull();
@@ -214,12 +218,12 @@ describe('Coaching owned profile', () => {
     const { fixture, component, http } = await setup();
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 3, educationStatus: 'student', gradeLevel: 12, shareProgressWithTeachers: true, isActive: true } } });
     fixture.detectChanges(); await fixture.whenStable();
-    component.student!.educationStatus = 'graduate'; component.dirty = true;
-    component.save();
+    component.stage = 'HighSchoolGraduate'; component.dirty = true;
+    await component.save();
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body.expectedVersion).toBe(3);
-    expect(request.request.body.gradeLevel).toBeNull();
+    expect(request.request.body.gradeLevel).toBeNull(); expect(request.request.body.educationStatus).toBe('HighSchoolGraduate');
     expect(request.request.body.userId).toBeUndefined();
     expect(request.request.body.firstName).toBeUndefined();
     request.flush({ data: { ...component.student, version: 4, gradeLevel: null } });
@@ -278,6 +282,71 @@ describe('Coaching owned profile', () => {
     http.expectNone('/api/coaching/profiles/me'); confirm.mockRestore();
     const unload = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
     window.dispatchEvent(unload); expect(unload.defaultPrevented).toBe(false); http.verify();
+  });
+
+  // E3 #14 (user decision 06.11.2026): "Şu an durumun ne?" as in the wizard; a non-student status has no grade, school or branch.
+  it('offers the five education statuses and the grades that fit, and warns before a non-student status clears the school', async () => {
+    const { fixture, component, http } = await setup();
+    const student = { version: 4, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true,
+      schoolName: 'Ankara Fen Lisesi', schoolCity: 'ANKARA', schoolType: 'Fen Lisesi', classBranch: '10-B' };
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const stage = el.querySelector('select[name="educationStage"]') as HTMLSelectElement;
+    expect(el.textContent).toContain('Şu an durumun ne?');
+    expect(Array.from(stage.options).map(x => x.textContent!.trim())).toEqual(['Seç', 'Ortaokul öğrencisiyim', 'Lise öğrencisiyim', 'Liseden mezunum', 'Üniversite öğrencisiyim', 'Üniversiteden mezunum']);
+    expect(component.stage).toBe('high');
+    expect(el.querySelector('[data-testid="education-clears-school"]')).toBeNull();
+    // Ortaokul: 5–8, and a lise grade no longer fits.
+    stage.value = 'middle'; stage.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
+    expect(Array.from((el.querySelector('select[name="gradeLevel"]') as HTMLSelectElement).options).map(x => x.textContent!.trim())).toEqual(['Seç', '5. sınıf', '6. sınıf', '7. sınıf', '8. sınıf']);
+    expect(component.student!.gradeLevel).toBeNull();
+    // A university student: no grade, no school, no branch, and the student is told before saving.
+    stage.value = 'UniversityStudent'; stage.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('select[name="gradeLevel"]')).toBeNull();
+    expect(el.querySelector('[data-testid="own-school"]')).toBeNull(); expect(el.querySelector('[name="classBranch"]')).toBeNull();
+    expect(el.querySelector('[data-testid="education-clears-school"]')!.textContent).toContain('sınıf, okul ve şube bilgin silinecek');
+    const confirm = TestBed.inject(ToasterService).confirm as ReturnType<typeof vi.fn>;
+    confirm.mockResolvedValueOnce(false);
+    await component.save();
+    http.expectNone('/api/coaching/profiles/me/student');
+    expect(confirm.mock.calls[0][0]).toContain('sınıf, okul ve şube bilgin silinecek');
+    await component.save();
+    const request = http.expectOne('/api/coaching/profiles/me/student');
+    expect(request.request.body).toMatchObject({ educationStatus: 'UniversityStudent', gradeLevel: null, graduationYear: null,
+      schoolName: null, schoolCity: null, schoolDistrict: null, schoolType: null, classBranch: null });
+    request.flush({ data: { ...student, version: 5, educationStatus: 'UniversityStudent', gradeLevel: null, schoolName: null, classBranch: null } });
+    http.expectOne('/api/coaching/study-planning/setup').flush({ data: { purposeNotForEducation: false } });
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(component.stage).toBe('UniversityStudent'); http.verify();
+  });
+
+  // E3 review L4: the stored school is a lise; an ortaokul grade drops it after the same warning.
+  it('warns and drops the lise when the student switches to ortaokul', async () => {
+    const { fixture, component, http } = await setup();
+    const student = { version: 2, educationStatus: 'Student', gradeLevel: 9, shareProgressWithTeachers: true, isActive: true,
+      schoolName: 'Ankara Fen Lisesi', schoolCity: 'ANKARA', schoolType: 'Fen Lisesi', classBranch: '9-A' };
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    component.changeStage('middle'); component.student!.gradeLevel = 8; fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[data-testid="education-clears-school"]')!.textContent).toContain('kayıtlı okulun ve şuben silinecek');
+    const confirm = TestBed.inject(ToasterService).confirm as ReturnType<typeof vi.fn>;
+    await component.save();
+    expect(confirm.mock.calls.at(-1)![0]).toContain('kayıtlı okulun ve şuben silinecek');
+    const request = http.expectOne('/api/coaching/profiles/me/student');
+    expect(request.request.body).toMatchObject({ educationStatus: 'Student', gradeLevel: 8, schoolName: null, schoolCity: null, schoolType: null, classBranch: null });
+    expect(request.request.body.schoolId).toBeUndefined();
+  });
+
+  it('shows a university graduate as such and asks the graduation year', async () => {
+    const { fixture, http } = await setup();
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'UniversityGraduate', gradeLevel: null, graduationYear: 2020, shareProgressWithTeachers: true, isActive: true } } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    expect((el.querySelector('select[name="educationStage"]') as HTMLSelectElement).selectedOptions[0].textContent!.trim()).toBe('Üniversiteden mezunum');
+    expect((el.querySelector('[name="graduationYear"]') as HTMLInputElement).value).toBe('2020');
+    expect(el.querySelector('[data-testid="education-clears-school"]')).toBeNull();
   });
 
   it('keeps missing profile creation retryable after access failure and reports invitation loading errors', async () => {

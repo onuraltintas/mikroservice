@@ -1,4 +1,5 @@
 import { coachingFeedback, coachingToaster } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
+import { educationLabel } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
@@ -16,6 +17,8 @@ import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.c
   styleUrl: './coaching-teacher-students.component.scss'
 })
 export class CoachingTeacherStudentsComponent implements OnInit {
+  /** E3 #14: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi" … */
+  readonly educationLabel = educationLabel;
   @ViewChild(CoachingTeacherStudentDetailComponent) private detail?: CoachingTeacherStudentDetailComponent;
   async canLeavePage(): Promise<boolean> { return await this.detail?.canLeavePage() ?? true; }
   private readonly studentsService = inject(CoachingTeacherStudentsService);

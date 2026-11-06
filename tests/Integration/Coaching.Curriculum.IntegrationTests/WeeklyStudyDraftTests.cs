@@ -27,8 +27,9 @@ public sealed class WeeklyStudyDraftTests
         Assert.IsType<OkObjectResult>(await controller.Get(default));
         var lesson=(await f.Db.StudyCatalogLessons.SingleAsync()).Id;
         Assert.IsType<BadRequestObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[Slot(lesson,1080,45)]),default));
-        Assert.IsType<BadRequestObjectResult>(await controller.Save(new(null,"Invalid/Zone",[]),default));
-        Assert.IsType<OkObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[Slot(lesson,1080,30)]),default));
+        // E3 #34: a time zone sent by an older client is ignored; the draft is always in Türkiye time.
+        Assert.IsType<OkObjectResult>(await controller.Save(new(null,"Invalid/Zone",[Slot(lesson,1080,30)]),default));
+        Assert.Equal("Europe/Istanbul",(await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync()).TimeZoneId);
         Assert.IsType<ConflictObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[]),default));
         f.User.Roles=["Teacher"];Assert.Equal(403,Assert.IsType<ObjectResult>(await controller.Get(default)).StatusCode);
     }

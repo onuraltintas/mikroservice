@@ -72,7 +72,7 @@
         <table>
           <thead><tr><th>Öğrenci</th><th>Sınıf</th><th>E-posta</th><th>Rapor</th></tr></thead>
           <tbody>@for (student of students(); track student.userId) {
-            <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}</td><td>{{ student.email }}</td><td><button class="report-link" type="button" [attr.data-testid]="'open-student-report-' + student.userId" (click)="openStudentReport(student)">Öğrenci raporu</button></td></tr>
+            <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}</td><td>{{ educationLabel($any(student).educationStatus, student.gradeLevel, '—') }}</td><td>{{ student.email }}</td><td><button class="report-link" type="button" [attr.data-testid]="'open-student-report-' + student.userId" (click)="openStudentReport(student)">Öğrenci raporu</button></td></tr>
           }</tbody>
         </table>
       </div>

@@ -11,19 +11,14 @@ import { CoachingPortalService } from '../../core/services/coaching-portal.servi
 import { CoachingStudentNavigationService } from '../../core/services/coaching-student-navigation.service';
 import { CoachingStudyPlanningService, StudyPlan } from '../../core/services/coaching-study-planning.service';
 import { CoachingLearningSetupService } from '../../core/services/coaching-learning-setup.service';
-import { CoachingTimeZoneService } from '../../core/services/coaching-time-zone.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ToasterService } from '../../core/services/toaster.service';
 import { PracticeExamProfile } from '../../core/models/practice-exam';
-import { CoachingParentService } from './parent/coaching-parent.service';
-import { CoachingStudentTeachersService } from '../../core/services/coaching-student-teachers.service';
-import { CoachingDataExportService } from '../../core/services/coaching-data-export.service';
 import { coachingFeedback } from './coaching-feedback';
 import { CoachingPortalLayoutComponent } from './layout/coaching-portal-layout.component';
 import { CoachingWhatsNewService } from './layout/coaching-whats-new.service';
 import { CoachingMessagesUnreadService } from '../../core/services/coaching-messages-unread.service';
 import { StudentAssignmentsComponent } from './pages/student-assignments.component';
-import { StudentSettingsComponent } from './pages/student-settings.component';
 import { PracticeExamEditorComponent } from './pages/practice-exam-editor.component';
 import { StudentStudyPlansComponent } from './pages/student-study-plans.component';
 import { StudentExamResultsComponent } from './pages/student-exam-results.component';
@@ -118,24 +113,6 @@ describe('O1 one message channel', () => {
     await vi.waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
     expect(scroll.mock.contexts[0]).toBe(fixture.nativeElement.querySelector('[role=alert]'));
     expect(toaster.error).not.toHaveBeenCalled(); expect(toaster.success).not.toHaveBeenCalled();
-  });
-});
-
-describe('O1 time zone', () => {
-  it('chooses the time zone from a list with the saved zone and Istanbul suggested first', async () => {
-    const api = { get: vi.fn(() => of({ timeZoneId: 'Europe/Berlin', availabilityVersion: 1, draftVersion: 1 })), save: vi.fn() };
-    TestBed.configureTestingModule({ imports: [StudentSettingsComponent], providers: [
-      { provide: CoachingTimeZoneService, useValue: api }, { provide: CoachingParentService, useValue: { getLinks: () => of([]) } }, { provide: CoachingStudentTeachersService, useValue: { list: () => of([]) } }, { provide: CoachingDataExportService, useValue: {} }] });
-    const fixture = TestBed.createComponent(StudentSettingsComponent); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
-    const page = fixture.nativeElement as HTMLElement;
-    expect(page.querySelector('input[name=timeZone]')).toBeNull();
-    const select = page.querySelector('select[name=timeZone]') as HTMLSelectElement;
-    const suggested = [...select.querySelectorAll('optgroup[label="Önerilen"] option')] as HTMLOptionElement[];
-    expect(suggested[0].value).toBe('Europe/Istanbul');
-    expect(suggested[0].textContent).toContain('İstanbul');
-    expect(suggested[0].textContent).toContain('GMT+3');
-    expect(suggested.map(x => x.value)).toContain('Europe/Berlin');
-    expect(select.value).toBe('Europe/Berlin');
   });
 });
 

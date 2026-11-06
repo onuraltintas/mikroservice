@@ -218,7 +218,7 @@ describe('CoachingPeopleComponent', () => {
     component.scope.set({ isGlobal: false, institutionId: 'own-institution' });
     component.institutionId = 'own-institution';
     component.selectedStudent.set({ userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test', gradeLevel: 7 });
-    component.editingGradeLevel = 8;
+    component.editingStage = 'middle'; component.editingGradeLevel = 8;
     component.editingTeacherUserId = 'teacher-1';
     const pending = new Subject<undefined>();
     memberships.updateStudent.mockReturnValueOnce(pending);
@@ -229,11 +229,29 @@ describe('CoachingPeopleComponent', () => {
     pending.next(undefined);
 
     expect(memberships.updateStudent).toHaveBeenCalledWith('student-1', {
-      gradeLevel: 8, teacherUserId: 'teacher-1'
+      educationStatus: 'Student', gradeLevel: 8, teacherUserId: 'teacher-1'
     }, undefined);
     expect(component.selectedStudent()?.gradeLevel).toBe(8);
     expect(component.selectedStudent()?.teacherUserId).toBe('teacher-1');
     expect(toaster.success).toHaveBeenCalled();
+  });
+
+  // E3 review: lise -> ortaokul drops the stored lise and branch; the admin is told before saving, as on Profilim.
+  it('warns before a lise student moved to ortaokul loses the stored school and branch', async () => {
+    const { component, memberships, toaster } = create('students', 'student-1');
+    component.scope.set({ isGlobal: false, institutionId: 'own-institution' });
+    component.institutionId = 'own-institution';
+    const student = { userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test', gradeLevel: 10, educationStatus: 'Student' };
+    component.selectedStudent.set(student); component.resetEducationEditor(student);
+    expect(component.editingStage).toBe('high');
+    component.changeEditingStage('middle'); component.editingGradeLevel = 7;
+    expect(component.editingClearsSchoolNotice()).toContain('okul ve şube bilgisi silinir');
+    toaster.confirm.mockResolvedValueOnce(false);
+    await component.saveStudentMembership();
+    expect(memberships.updateStudent).not.toHaveBeenCalled();
+    await component.saveStudentMembership();
+    expect(toaster.confirm.mock.calls.at(-1)![0]).toContain('okul ve şube bilgisi silinir');
+    expect(memberships.updateStudent).toHaveBeenCalledWith('student-1', { educationStatus: 'Student', gradeLevel: 7, teacherUserId: null }, undefined);
   });
 
   it('ignores a teacher lookup response started for the previous institution', () => {

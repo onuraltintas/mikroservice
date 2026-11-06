@@ -180,7 +180,7 @@
                   <input type="checkbox" [checked]="isSelected(student.userId)"
                     [disabled]="!isSelected(student.userId) && selectedStudentIds.size >= 100"
                     (change)="toggleStudent(student.userId)">
-                  <span><strong>{{ student.fullName }}</strong><small>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}</small></span>
+                  <span><strong>{{ student.fullName }}</strong><small>{{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Sınıf bilgisi yok') }}</small></span>
                 </label>
               }
             </div>

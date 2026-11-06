@@ -72,14 +72,14 @@ public sealed class CoachingParentChildPostgresTests
         await using var pg = await CurriculumPostgresTests.Pg.Create();
         var f = await Family.Create(pg, firstName: "Ada");
         var plan = StudyPlanRevision.Create(f.Student, Guid.NewGuid(), 1, "Plan"); plan.Activate();
-        // Monday 01:00 UTC is still Sunday evening in New York: the New York week started on 26 October.
-        pg.Db.AddRange(plan, StudyAvailability.Create(f.Student, "America/New_York"),
+        // E3 #34: the week is Türkiye's. Sunday 22:00 UTC is already Monday 01:00 in Istanbul: the new week started on 2 November.
+        pg.Db.AddRange(plan, StudyAvailability.Create(f.Student, "Europe/Istanbul"),
             StudyPlanTask.Create(plan, new DateOnly(2026, 10, 27), "Geçen hafta", 30), StudyPlanTask.Create(plan, Monday, "Bu hafta", 30));
         await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
 
-        var week = Data<ParentChildWeek>(await f.Api(new DateTimeOffset(2026, 11, 2, 1, 0, 0, TimeSpan.Zero)).Week(f.Student));
+        var week = Data<ParentChildWeek>(await f.Api(new DateTimeOffset(2026, 11, 1, 22, 0, 0, TimeSpan.Zero)).Week(f.Student));
 
-        Assert.Equal((new DateOnly(2026, 10, 26), 1, 0), (week.WeekStart, week.Planned, week.Completed));
+        Assert.Equal((Monday, 1, 0), (week.WeekStart, week.Planned, week.Completed));
         Assert.Equal("Ada henüz hiç çalışma kaydetmedi.", Assert.Single(week.Attention, x => x.Kind == "noStudy").Text);
         Assert.Null(week.NextSession); Assert.Null(week.ExamCountdown);
     }

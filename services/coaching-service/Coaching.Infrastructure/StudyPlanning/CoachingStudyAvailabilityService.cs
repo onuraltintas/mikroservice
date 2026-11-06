@@ -25,7 +25,7 @@ public sealed class CoachingStudyAvailabilityService(CoachingDbContext db, ICoac
             throw new ArgumentException("Haftalık çalışma saatleri geçersiz; en fazla 42 aralık girilebilir.");
         // Fully validate new values before modifying the tracked preferences.
         var preferences = await db.StudyAvailability.SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
-        var zone = preferences?.TimeZoneId ?? request.TimeZoneId;
+        var zone = Coaching.Domain.CoachingTime.ZoneId; // E3 #34: a zone sent by the client is ignored
         var validated = StudyAvailability.Create(studentId, zone);
         var windows = request.Windows.Select(x => new StudyAvailabilityWindow(x.Day, x.StartMinute, x.EndMinute)).ToArray();
         validated.ReplaceWindows(windows);

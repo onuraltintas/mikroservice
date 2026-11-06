@@ -226,10 +226,7 @@ builder.Services.AddApplication();
 // Add Controllers
 builder.Services.AddControllers()
     .AddEduPlatformApiConventions()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter(
-                allowIntegerValues: false)));
+    .AddJsonOptions(options => Coaching.API.CoachingApiJson.Configure(options.JsonSerializerOptions));
 builder.Services.AddEduPlatformApiVersioning();
 
 // Add Swagger

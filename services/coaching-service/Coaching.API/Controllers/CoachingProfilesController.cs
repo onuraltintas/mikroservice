@@ -18,61 +18,7 @@ namespace Coaching.API.Controllers;
 public sealed class CoachingProfilesController(CoachingDbContext db, CoachingProfileStore profiles,
     ICoachingAccountDirectory accounts, ICurrentUserService currentUser) : ControllerBase
 {
-    [HttpGet("time-zone")]
-    [Authorize(Roles = "Student")]
-    public Task<IActionResult> GetTimeZone(CancellationToken ct) => Execute(async () =>
-    {
-        var id = await RequireAccount(ct);
-        var hours = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == id, ct);
-        var draft = await db.Set<WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == id, ct);
-        return new CoachingTimeZoneView(hours?.TimeZoneId ?? draft?.TimeZoneId, hours?.Version, draft?.Version);
-    });
-
-    [HttpPut("time-zone")]
-    [Authorize(Roles = "Student")]
-    public async Task<IActionResult> UpdateTimeZone(CoachingTimeZoneUpdate request, CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(request.TimeZoneId) || request.TimeZoneId.Length > 100)
-            return BadRequest(new { message = "Geçerli bir saat dilimi seçin." });
-        var zone = request.TimeZoneId.Trim();
-        try
-        {
-            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(zone);
-            if (!timeZone.HasIanaId && zone != "UTC")
-                return BadRequest(new { message = "Europe/Istanbul gibi bölge/şehir biçiminde bir saat dilimi seçin." });
-        }
-        catch (Exception e) when (e is TimeZoneNotFoundException or InvalidTimeZoneException)
-        { return BadRequest(new { message = "Saat dilimi tanınmadı." }); }
-        return await Execute(async () =>
-        {
-            var id = await RequireAccount(ct);
-            async Task<CoachingTimeZoneView> Save()
-            {
-                var hours = await db.StudyAvailability.SingleOrDefaultAsync(x => x.StudentId == id, ct);
-                var draft = await db.Set<WeeklyStudyDraft>().SingleOrDefaultAsync(x => x.StudentId == id, ct);
-                if (request.AvailabilityVersion != hours?.Version || request.DraftVersion != draft?.Version)
-                    throw new BusinessRuleException("Profiles.Conflict", "Çalışma düzenin değişti. Ayarları yeniden yükleyip tekrar dene.");
-                if (hours is null) db.StudyAvailability.Add(hours = StudyAvailability.Create(id, zone));
-                else hours.ReplacePreferences(zone, hours.Windows);
-                if (draft is not null) draft.Replace(zone, draft.Slots);
-                try { await db.SaveChangesAsync(ct); }
-                catch (Exception e) when (e is DbUpdateConcurrencyException or ConcurrencyException
-                    || e is DbUpdateException { InnerException: Npgsql.PostgresException { SqlState: "23505" } })
-                { throw new BusinessRuleException("Profiles.Conflict", "Çalışma düzenin değişti. Ayarları yeniden yükleyip tekrar dene."); }
-                return new CoachingTimeZoneView(zone, hours.Version, draft?.Version);
-            }
-            if (!db.Database.IsRelational()) return await Save();
-            return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
-            {
-                await using var transaction = await db.Database.BeginTransactionAsync(ct);
-                var key = "coaching-study-plan:" + id;
-                await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key},0))", ct);
-                var result = await Save();
-                await transaction.CommitAsync(ct);
-                return result;
-            });
-        });
-    }
+    // E3 #34 (user decision 06.11.2026): the time-zone setting (GET/PUT time-zone) is gone; everyone is on Europe/Istanbul.
 
     [HttpGet("navigation")]
     [Authorize(Roles = "Student")]
@@ -143,5 +89,3 @@ public sealed class CoachingProfilesController(CoachingDbContext db, CoachingPro
     }
 }
 public sealed record CoachingProfileProvisionRequest(string Role);
-public sealed record CoachingTimeZoneView(string? TimeZoneId, int? AvailabilityVersion, int? DraftVersion);
-public sealed record CoachingTimeZoneUpdate(string TimeZoneId, int? AvailabilityVersion, int? DraftVersion);

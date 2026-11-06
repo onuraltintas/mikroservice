@@ -56,10 +56,11 @@ public sealed partial class CoachingReminderTests(PostgresFixture postgres)
         var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>(); await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
         try
         {
-            for (var i = 1; i <= 100; i++)
+            // E3 #34: everyone is on Türkiye time; 99 students have a reminder due (the first one, once on London time, is left out).
+            for (var i = 2; i <= 100; i++)
             {
                 var student = Guid.Parse($"10000000-0000-0000-0000-{i:D12}"); var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan"); plan.Activate();
-                db.AddRange(plan, StudyPlanTask.Create(plan, date, "Task", 30), StudyAvailability.Create(student, i == 1 ? "Europe/London" : "Europe/Istanbul"));
+                db.AddRange(plan, StudyPlanTask.Create(plan, date, "Task", 30), StudyAvailability.Create(student, "Europe/Istanbul"));
             }
             await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             var publisher = new PageInsertPublisher(new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), async () => {

@@ -101,8 +101,9 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
             school = await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == schoolId && x.IsActive, ct)
                 ?? throw new ArgumentException("Okulunu listeden seç.");
         var educationChanged = profile.EducationStatus != request.EducationStatus || profile.GradeLevel != request.GradeLevel;
-        // A resuming student keeps what the wizard does not ask: the graduation year and, unless a new one is picked, the school.
-        var graduationYear = request.GraduationYear ?? (request.EducationStatus == CoachingEducationStatus.Graduate ? profile.GraduationYear : null);
+        // A resuming student keeps what the wizard does not ask: the graduation year (a graduate's) and, unless a new one is picked,
+        // the school (a student's; E3 #14: a non-student status has no school, so it is cleared).
+        var graduationYear = request.GraduationYear ?? (CoachingStudentProfile.IsGraduate(request.EducationStatus) ? profile.GraduationYear : null);
         var schoolType = school is null ? profile.SchoolType : await OwnSchoolTypeAsync(db, school, ct);
         profile.UpdateEducation(request.EducationStatus, request.GradeLevel, school?.Name ?? profile.SchoolName, school is null ? profile.SchoolCity : school.City,
             school is null ? profile.SchoolDistrict : school.District, schoolType, profile.ClassBranch, graduationYear);

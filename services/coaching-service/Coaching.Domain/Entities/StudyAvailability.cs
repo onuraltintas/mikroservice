@@ -29,11 +29,10 @@ public sealed class StudyAvailability : AggregateRoot
         JsonSerializer.Deserialize<StudyAvailabilityWindow[]>(WindowsJson)!);
     private StudyAvailability() { }
 
-    public static StudyAvailability Create(Guid studentId, string timeZoneId)
+    public static StudyAvailability Create(Guid studentId, string timeZoneId = CoachingTime.ZoneId)
     {
         if (studentId == Guid.Empty) throw new ArgumentException("Student ownership is required.", nameof(studentId));
-        var zone = StudyCatalogText.Require(timeZoneId, 100);
-        TimeZoneInfo.FindSystemTimeZoneById(zone);
+        var zone = CoachingTime.RequireTurkey(timeZoneId);
         return new StudyAvailability { StudentId = studentId, TimeZoneId = zone };
     }
 
@@ -50,8 +49,7 @@ public sealed class StudyAvailability : AggregateRoot
 
     public void ReplacePreferences(string timeZoneId, IEnumerable<StudyAvailabilityWindow> windows)
     {
-        var zone = StudyCatalogText.Require(timeZoneId, 100);
-        TimeZoneInfo.FindSystemTimeZoneById(zone);
+        var zone = CoachingTime.RequireTurkey(timeZoneId);
         ReplaceWindows(windows);
         TimeZoneId = zone;
     }

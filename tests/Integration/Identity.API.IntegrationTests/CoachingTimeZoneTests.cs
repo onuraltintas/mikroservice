@@ -1,78 +1,60 @@
 using Coaching.API.Controllers;
+using Coaching.Application.Authorization;
+using Coaching.Application.StudyPlanning;
+using Coaching.Domain;
 using Coaching.Domain.Entities;
+using Coaching.Infrastructure.StudyPlanning;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.IntegrationTests;
 
+// E3 #34 (user decision 06.11.2026): nobody chooses a time zone any more. Every plan, reminder, session, calendar feed and
+// notification uses Türkiye time (Europe/Istanbul). The time-zone setting is gone; a zone a client still sends is ignored, and
+// the stored study hours, weekly draft and plan snapshot accept only Europe/Istanbul.
 public sealed class CoachingTimeZoneTests
 {
     [Fact]
-    public async Task SettingsChangePreservesWindowsAndSlotsAndOtherStudent()
+    public void TheProductZoneIsIstanbul() => Assert.Equal("Europe/Istanbul", CoachingTime.ZoneId);
+
+    [Fact]
+    public void StoredStudyTimesAcceptOnlyIstanbul()
     {
-        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
-        var id = f.AddAccount("Student"); f.Actor.UserId = id;
-        var hours = StudyAvailability.Create(id, "Europe/Istanbul");
-        hours.ReplaceWindows([new(DayOfWeek.Monday, 480, 540)]);
-        var draft = WeeklyStudyDraft.Create(id);
-        var slot = new WeeklyDraftSlot(Guid.NewGuid(), Guid.NewGuid(), "Matematik", "LGS", DayOfWeek.Monday, 480, 60);
-        draft.Replace("Europe/Istanbul", [slot]);
-        var other = StudyAvailability.Create(Guid.NewGuid(), "Europe/Istanbul");
-        f.Db.StudyAvailability.AddRange(hours, other); f.Db.Set<WeeklyStudyDraft>().Add(draft);
-        var revision = StudyPlanRevision.Create(id, Guid.NewGuid(), 1, "Korunan plan"); revision.Activate();
-        var task = StudyPlanTask.Create(revision, new(2026, 10, 23), "Tamamlanan çalışma", 30, plannedQuestions: 10);
-        task.Complete(25, 8); f.Db.AddRange(revision, task);
-        await f.Db.SaveChangesAsync();
-        var taskVersion = task.Version;
-        var controller = new CoachingProfilesController(f.Db, f.Store, f.Accounts, f.Actor);
-        Assert.IsType<OkObjectResult>(await controller.UpdateTimeZone(new("Europe/Berlin", hours.Version, draft.Version), default));
-        Assert.Equal("Europe/Berlin", hours.TimeZoneId);
-        Assert.Equal("Europe/Berlin", draft.TimeZoneId);
-        Assert.Equal(slot, Assert.Single(draft.Slots));
-        Assert.Equal(480, Assert.Single(hours.Windows).StartMinute);
-        Assert.Equal("Europe/Istanbul", other.TimeZoneId);
-        Assert.True(task.IsCompleted); Assert.Equal(25, task.ActualMinutes); Assert.Equal(8, task.ActualQuestions);
-        Assert.Equal(new DateOnly(2026, 10, 23), task.PlannedDate); Assert.Equal(taskVersion, task.Version);
+        Assert.Equal(CoachingTime.ZoneId, StudyAvailability.Create(Guid.NewGuid(), CoachingTime.ZoneId).TimeZoneId);
+        foreach (var zone in new[] { "Europe/Berlin", "UTC", "America/New_York", "Not/AZone" })
+        {
+            Assert.Throws<ArgumentException>(() => StudyAvailability.Create(Guid.NewGuid(), zone));
+            var hours = StudyAvailability.Create(Guid.NewGuid(), CoachingTime.ZoneId);
+            Assert.Throws<ArgumentException>(() => hours.ReplacePreferences(zone, []));
+            var draft = WeeklyStudyDraft.Create(Guid.NewGuid());
+            Assert.Throws<ArgumentException>(() => draft.Replace(zone, []));
+            var plan = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Plan");
+            Assert.Throws<ArgumentException>(() => plan.SetWeeklySource(new(0, null, new(2026, 11, 9), new(2026, 11, 15), false, "f", null, null, zone)));
+        }
     }
 
     [Fact]
-    public async Task InvalidAndStaleSettingsDoNotMutateData()
+    public void TheTimeZoneSettingIsGone()
     {
-        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
-        var id = f.AddAccount("Student"); f.Actor.UserId = id;
-        var hours = StudyAvailability.Create(id, "Europe/Istanbul"); f.Db.StudyAvailability.Add(hours);
-        await f.Db.SaveChangesAsync();
-        var controller = new CoachingProfilesController(f.Db, f.Store, f.Accounts, f.Actor);
-        Assert.IsType<BadRequestObjectResult>(await controller.UpdateTimeZone(new("Invalid/Zone", hours.Version, null), default));
-        Assert.IsType<BadRequestObjectResult>(await controller.UpdateTimeZone(new("Turkey Standard Time", hours.Version, null), default));
-        Assert.IsType<ConflictObjectResult>(await controller.UpdateTimeZone(new("Europe/Berlin", null, null), default));
-        Assert.Equal("Europe/Istanbul", hours.TimeZoneId);
+        var routes = typeof(CoachingProfilesController).Assembly.GetTypes()
+            .SelectMany(x => x.GetMethods()).SelectMany(x => x.GetCustomAttributes(typeof(HttpMethodAttribute), true).Cast<HttpMethodAttribute>())
+            .Select(x => x.Template ?? "").ToArray();
+        Assert.DoesNotContain(routes, x => x.Contains("time-zone", StringComparison.OrdinalIgnoreCase));
+        Assert.Null(typeof(CoachingProfilesController).GetMethod("UpdateTimeZone"));
+        Assert.Null(typeof(CoachingProfilesController).GetMethod("GetTimeZone"));
     }
-}
 
-[Collection("Database")]
-public sealed class CoachingTimeZonePostgresTests(Shared.IntegrationTests.Fixtures.PostgresFixture postgres)
-{
     [Fact]
-    public async Task ConcurrentInitialSettingsSaveHasOneWinner()
+    public async Task NewStudyHoursUseIstanbulWhateverTheClientSends()
     {
-        var connection = new Npgsql.NpgsqlConnectionStringBuilder(postgres.ConnectionString);
-        Assert.Equal(postgres.DatabaseName, connection.Database);
-        Assert.Equal(postgres.Port, connection.Port);
-        var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Coaching.Infrastructure.Data.CoachingDbContext>()
-            .UseNpgsql(postgres.ConnectionString, x => x.EnableRetryOnFailure()).Options;
-        await using var db = new Coaching.Infrastructure.Data.CoachingDbContext(options);
-        await db.Database.EnsureCreatedAsync();
         await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
-        var id = f.AddAccount("Student"); f.Actor.UserId = id;
-        await using var first = new Coaching.Infrastructure.Data.CoachingDbContext(options);
-        await using var second = new Coaching.Infrastructure.Data.CoachingDbContext(options);
-        var a = new CoachingProfilesController(first, f.Store, f.Accounts, f.Actor);
-        var b = new CoachingProfilesController(second, f.Store, f.Accounts, f.Actor);
-        var responses = await Task.WhenAll(a.UpdateTimeZone(new("Europe/London", null, null), default),
-            b.UpdateTimeZone(new("Europe/Berlin", null, null), default));
-        Assert.Single(responses.OfType<OkObjectResult>());
-        Assert.Single(responses.OfType<ConflictObjectResult>());
-        Assert.Single(await db.StudyAvailability.Where(x => x.StudentId == id).ToArrayAsync());
+        var id = f.AddAccount("Student"); f.Actor.UserId = id; f.Actor.Roles = ["Student"];
+        var service = new CoachingStudyAvailabilityService(f.Db, new CoachingAccessPolicy(f.Actor));
+        var created = await service.ReplaceAsync(new StudyAvailabilityUpdate(null, "America/New_York", [new(DayOfWeek.Monday, 480, 540)]));
+        Assert.Equal(CoachingTime.ZoneId, created.TimeZoneId);
+        // A missing zone (the new client sends none) is fine too.
+        var changed = await service.ReplaceAsync(new StudyAvailabilityUpdate(created.Version, null, [new(DayOfWeek.Tuesday, 600, 660)]));
+        Assert.Equal((CoachingTime.ZoneId, 600), (changed.TimeZoneId, Assert.Single(changed.Windows).StartMinute));
+        Assert.Equal(CoachingTime.ZoneId, (await f.Db.StudyAvailability.AsNoTracking().SingleAsync()).TimeZoneId);
     }
 }

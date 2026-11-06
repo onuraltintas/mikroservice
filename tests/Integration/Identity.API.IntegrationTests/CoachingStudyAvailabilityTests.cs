@@ -38,7 +38,7 @@ public sealed class CoachingStudyAvailabilityTests
     public void Availability_RequiresValidOwnerAndTimeZone()
     {
         Assert.Throws<ArgumentException>(() => StudyAvailability.Create(Guid.Empty, "Europe/Istanbul"));
-        Assert.Throws<TimeZoneNotFoundException>(() => StudyAvailability.Create(Guid.NewGuid(), "Not/AZone"));
+        Assert.Throws<ArgumentException>(() => StudyAvailability.Create(Guid.NewGuid(), "Not/AZone")); // E3 #34: only Europe/Istanbul
         Assert.Throws<ArgumentOutOfRangeException>(() => new StudyAvailabilityWindow((DayOfWeek)7, 0, 60));
     }
 }

@@ -7,14 +7,13 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningExamSession, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
-import { CoachingProfileComponent } from '../../../../../shared/coaching-profile.component';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingStudyPlanningService, PublishedStudyOutcome, StudyTopic } from '../../../core/services/coaching-study-planning.service';
 
 @Component({
   selector: 'app-student-learning-setup', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CoachingProfileComponent, StudentStudyAvailabilityComponent],
+  imports: [CommonModule, FormsModule, RouterLink, StudentStudyAvailabilityComponent],
   templateUrl: './student-learning-setup.component.html', styleUrl: './student-study-plans.component.scss'
 })
 export class StudentLearningSetupComponent implements OnInit {
@@ -27,7 +26,8 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly loading = signal(false); readonly saving = signal(false); readonly ready = signal(false);
   readonly error = signal<string | null>(null); readonly catalogError = signal<string | null>(null); readonly catalogLoading = signal(false);
   readonly catalog = signal<LearningCatalog | null>(null);
-  readonly steps = [{ id: 'Profile', label: 'Eğitim bilgilerim' }, { id: 'Purpose', label: 'Çalışma amacım' },
+  // E3 #14: no "Eğitim bilgilerim" step: the education is edited on Profilim (a missing one sends the student there).
+  readonly steps = [{ id: 'Purpose', label: 'Çalışma amacım' },
     { id: 'Availability', label: 'Müsaitliğim' }, { id: 'Courses', label: 'Derslerim' }, { id: 'Starting', label: 'Başlangıç durumum' }, { id: 'Preview', label: 'Plan önizlemesi' }];
   // KM8 (01.11.2026): only exam purposes; the catalog keeps only exam lessons. KM1 added AGS (+ÖABT), YDS and YÖKDİL
   // (the language exams are prepared in English only).
@@ -40,7 +40,6 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly oabtFields = Object.entries(OABT_FIELDS);
   readonly yokdilFields = Object.entries(YOKDIL_FIELDS);
   private static readonly examCodes: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
-  @ViewChild(CoachingProfileComponent) profile?: CoachingProfileComponent;
   @ViewChild(StudentStudyAvailabilityComponent) hours?: StudentStudyAvailabilityComponent;
   academicYearStart = new Date().getMonth() >= 8 ? new Date().getFullYear() : new Date().getFullYear() - 1;
   purpose: ExamLearningPurpose | '' = ''; targetExamYear: number | null = null; primaryScoreType = 'TYT'; foreignLanguage = '';
@@ -58,7 +57,7 @@ export class StudentLearningSetupComponent implements OnInit {
     this.loading.set(true); this.ready.set(false); this.error.set(null);
     this.service.get().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
       next: state => { this.apply(state); this.ready.set(true); this.step.set(state.nextStep === 'Catalog' ? 'Courses' : state.nextStep); if (this.step() === 'Courses' || this.step() === 'Starting') this.loadCatalog(); },
-      error: e => { if (e?.status === 404) this.step.set('Profile'); this.error.set(e?.status === 404 ? 'Koçluk profilin henüz hazırlanmadı. Eğitim bilgileri adımından profilini oluşturabilirsin.' : 'Kurulum bilgileri yüklenemedi. Yeniden dene.'); }
+      error: e => { if (e?.status === 404) this.step.set('Profile'); this.error.set(e?.status === 404 ? 'Koçluk profilin henüz hazırlanmadı. Profilim sayfasından profilini oluşturabilirsin.' : 'Kurulum bilgileri yüklenemedi. Yeniden dene.'); }
     });
   }
   private apply(state: LearningSetupView) {
@@ -131,7 +130,6 @@ export class StudentLearningSetupComponent implements OnInit {
       error: e => this.error.set(e?.status === 409 ? 'Kurulum başka bir oturumda değişti. Seçimlerin korundu; güncel bilgileri yeniden yükle.' : e?.error?.message ?? 'Kurulum kaydedilemedi. Seçimlerin ekranda korundu.')
     });
   }
-  async afterProfileSaved() { await this.load(); }
   async afterHoursSaved() { await this.load(); }
   loadCatalog(page = 1) {
     if (this.catalogLoading()) return;
@@ -178,7 +176,7 @@ export class StudentLearningSetupComponent implements OnInit {
     this.topics = this.topics.filter(x => x.topicId !== id); if (status) this.topics.push({ topicId: id, declaredStatus: status }); this.changed();
   }
   finishStarting() { if (!this.startingStatusReviewed) { this.error.set('Başlangıç bilgilerini gözden geçirdiğini onayla.'); return; } this.persist(this.request(), 'Preview'); }
-  private async canLeaveChildren() { return (await this.profile?.canLeavePage() ?? true) && (await this.hours?.canLeavePage() ?? true); }
+  private async canLeaveChildren() { return await this.hours?.canLeavePage() ?? true; }
   async canLeavePage() { return !this.saving() && await this.canLeaveChildren() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş kurulum seçimlerinden vazgeçilsin mi?')); }
   private readonly feedback = coachingFeedback(undefined, this.error);
 }

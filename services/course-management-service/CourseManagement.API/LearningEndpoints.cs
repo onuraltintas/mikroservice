@@ -675,25 +675,13 @@ public static class LearningEndpoints
             var userId = UserId(user);
             if (!await CanManageWorkspace(db, workspaceId, userId, ct)) return Results.NotFound();
             if (request.Id == Guid.Empty || request.TeacherUserId == Guid.Empty || request.Weekday is < 0 or > 6
-                || string.IsNullOrWhiteSpace(request.TimeZoneId)
                 || !TimeOnly.TryParseExact(request.StartTime, ["HH:mm", "HH:mm:ss"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var startTime)
                 || !TimeOnly.TryParseExact(request.EndTime, ["HH:mm", "HH:mm:ss"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var endTime)
                 || endTime <= startTime)
                 return Results.BadRequest(new { code = "Availability.InvalidWindow" });
 
-            TimeZoneInfo timeZone;
-            try
-            {
-                timeZone = TimeZoneInfo.FindSystemTimeZoneById(request.TimeZoneId.Trim());
-            }
-            catch (TimeZoneNotFoundException)
-            {
-                return Results.BadRequest(new { code = "Availability.InvalidTimeZone" });
-            }
-            catch (InvalidTimeZoneException)
-            {
-                return Results.BadRequest(new { code = "Availability.InvalidTimeZone" });
-            }
+            // E3 #34: teacher hours are in Türkiye time; a zone sent by an older client is ignored.
+            var timeZone = CourseManagementTime.Turkey;
 
             try
             {
@@ -846,24 +834,17 @@ public static class LearningEndpoints
                 TimeZoneInfo timeZone;
                 try
                 {
-                    timeZone = TimeZoneInfo.FindSystemTimeZoneById(series.TimeZoneId);
+                    // E3 #34: a changed schedule continues in Türkiye time (an older series in another zone moves to it).
+                    timeZone = CourseManagementTime.Turkey;
                     var localToday = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, timeZone).DateTime);
                     var scheduleStartsOn = series.StartsOn < localToday ? localToday : series.StartsOn;
                     if (scheduleStartsOn > endsOn)
                         return Results.BadRequest(new { code = "LessonSeries.NoFutureOccurrences" });
                     updatedSchedule = LessonSeries.Create(series.Id, series.WorkspaceId, series.CourseId,
-                        series.GroupId, series.StudentId, series.TeacherUserId, series.TimeZoneId,
+                        series.GroupId, series.StudentId, series.TeacherUserId, CourseManagementTime.ZoneId,
                         scheduleStartsOn, endsOn, startTime, request.DurationMinutes, request.DaysOfWeekMask,
                         now, request.RoomId);
                     occurrences = updatedSchedule.Expand(timeZone).Where(item => item.StartsAt > now).ToArray();
-                }
-                catch (TimeZoneNotFoundException)
-                {
-                    return Results.BadRequest(new { code = "LessonSeries.InvalidTimeZone" });
-                }
-                catch (InvalidTimeZoneException)
-                {
-                    return Results.BadRequest(new { code = "LessonSeries.InvalidTimeZone" });
                 }
                 catch (InvalidOperationException)
                 {
@@ -1059,7 +1040,6 @@ public static class LearningEndpoints
             if (request.Id == Guid.Empty || request.CourseId == Guid.Empty || request.TeacherUserId == Guid.Empty
                 || (request.GroupId is null) == (request.StudentId is null)
                 || request.GroupId == Guid.Empty || request.StudentId == Guid.Empty || request.RoomId == Guid.Empty
-                || string.IsNullOrWhiteSpace(request.TimeZoneId)
                 || !DateOnly.TryParseExact(request.StartsOn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startsOn)
                 || !DateOnly.TryParseExact(request.EndsOn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endsOn)
                 || !TimeOnly.TryParseExact(request.StartTime, ["HH:mm", "HH:mm:ss"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var startTime)
@@ -1067,19 +1047,8 @@ public static class LearningEndpoints
                 || endsOn < startsOn || endsOn.DayNumber - startsOn.DayNumber > 180)
                 return Results.BadRequest(new { code = "LessonSeries.InvalidInput" });
 
-            TimeZoneInfo timeZone;
-            try
-            {
-                timeZone = TimeZoneInfo.FindSystemTimeZoneById(request.TimeZoneId.Trim());
-            }
-            catch (TimeZoneNotFoundException)
-            {
-                return Results.BadRequest(new { code = "LessonSeries.InvalidTimeZone" });
-            }
-            catch (InvalidTimeZoneException)
-            {
-                return Results.BadRequest(new { code = "LessonSeries.InvalidTimeZone" });
-            }
+            // E3 #34: a weekly series is in Türkiye time; a zone sent by an older client is ignored.
+            var timeZone = CourseManagementTime.Turkey;
 
             var now = DateTimeOffset.UtcNow;
             var localToday = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, timeZone).DateTime);
@@ -1090,7 +1059,7 @@ public static class LearningEndpoints
             try
             {
                 series = LessonSeries.Create(request.Id, workspaceId, request.CourseId, request.GroupId, request.StudentId,
-                    request.TeacherUserId, request.TimeZoneId, startsOn, endsOn, startTime,
+                    request.TeacherUserId, CourseManagementTime.ZoneId, startsOn, endsOn, startTime,
                     request.DurationMinutes, request.DaysOfWeekMask, now, request.RoomId);
                 occurrences = series.Expand(timeZone).Where(occurrence => occurrence.StartsAt > now).ToArray();
             }
@@ -1800,19 +1769,8 @@ public static class LearningEndpoints
     private static bool FitsTeacherAvailability((DateTimeOffset StartsAt, DateTimeOffset EndsAt) occurrence,
         IReadOnlyList<TeacherAvailabilityWindow> windows)
     {
-        if (windows.Count == 0) return true;
-        foreach (var window in windows)
-        {
-            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(window.TimeZoneId);
-            var localStart = TimeZoneInfo.ConvertTime(occurrence.StartsAt, timeZone);
-            var localEnd = TimeZoneInfo.ConvertTime(occurrence.EndsAt, timeZone);
-            if (DateOnly.FromDateTime(localStart.DateTime) == DateOnly.FromDateTime(localEnd.DateTime)
-                && ((int)localStart.DayOfWeek + 6) % 7 == window.Weekday
-                && TimeOnly.FromDateTime(localStart.DateTime) >= window.StartTime
-                && TimeOnly.FromDateTime(localEnd.DateTime) <= window.EndTime)
-                return true;
-        }
-        return false;
+        // E3 #34: the hours are Türkiye time (older rows stored with another zone too).
+        return CourseManagementTime.FitsTeacherHours(windows, occurrence.StartsAt, occurrence.EndsAt);
     }
     private static async Task GrantStaffCancellationCredits(CourseManagementDbContext db, Guid workspaceId,
         Guid lessonId, Guid actorId, DateTimeOffset now, CancellationToken ct)
@@ -2045,12 +2003,12 @@ public sealed record CreateLessonSessionRequest(Guid Id, Guid CourseId, Guid? Gr
     DateTimeOffset StartsAt, DateTimeOffset EndsAt, Guid? RoomId = null, Guid? MakeupCreditId = null);
 public sealed record RescheduleLessonRequest(DateTimeOffset StartsAt, DateTimeOffset EndsAt, Guid? RoomId);
 public sealed record CreateLessonSeriesRequest(Guid Id, Guid CourseId, Guid? GroupId, Guid? StudentId, Guid TeacherUserId,
-    string TimeZoneId, string StartsOn, string EndsOn, string StartTime, int DurationMinutes, int DaysOfWeekMask, Guid? RoomId = null);
+    string? TimeZoneId, string StartsOn, string EndsOn, string StartTime, int DurationMinutes, int DaysOfWeekMask, Guid? RoomId = null);
 public sealed record UpdateLessonSeriesScheduleRequest(string EndsOn, string StartTime, int DurationMinutes,
     int DaysOfWeekMask, Guid? RoomId);
 public sealed record CreateTeacherTimeOffRequest(Guid Id, Guid TeacherUserId, DateTimeOffset StartsAt, DateTimeOffset EndsAt, string? Reason);
 public sealed record CreateTeacherAvailabilityWindowRequest(Guid Id, Guid TeacherUserId, int Weekday,
-    string StartTime, string EndTime, string TimeZoneId);
+    string StartTime, string EndTime, string? TimeZoneId = null);
 public sealed record UpdateLessonAttendanceRequest(int Status);
 public sealed record LessonStudentView(Guid StudentId, string DisplayName, string? AttendanceStatus, bool IsActive);
 public sealed record StudentLessonCancellationResponse(Guid LessonId, bool EligibleForCredit, Guid? CreditId, string? CreditStatus);

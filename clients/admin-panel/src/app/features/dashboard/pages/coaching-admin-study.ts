@@ -23,7 +23,7 @@ interface RevisionPage { items: RevisionSummary[]; totalCount: number; pageNumbe
       @if(availabilityLoading()) { <p role="status">Müsaitlik yükleniyor…</p> }
       @if(availabilityError()) { <p role="alert" class="text-red-700">{{ availabilityError() }}</p> }
       @else if(availability(); as value) {
-        <p class="text-sm">Saat dilimi: {{ value.timeZoneId }} · Sürüm: {{ value.version }}</p>
+        <p class="text-sm">Sürüm: {{ value.version }}</p>
         <ul class="text-sm">@for(window of value.windows; track $index) { <li>{{ dayLabel(window.day) }} · {{ time(window.startMinute) }}–{{ time(window.endMinute) }}</li> }</ul>
         @if(!value.windows.length) { <p class="text-sm">Haftalık zaman aralığı belirlenmemiş.</p> }
       } @else if(!availabilityLoading()) { <p class="text-sm">Müsaitlik kaydı yok.</p> }

@@ -44,7 +44,9 @@ public sealed class CoachingMembershipsController(CoachingProfileStore profiles,
         Guid? institutionId, CancellationToken ct)
     {
         var id = await Resolve(institutionId, ct);
-        await profiles.UpdateInstitutionStudentAsync(UserId, id, studentUserId, request.GradeLevel, request.TeacherUserId, ct);
+        // E3 #14: an older client sends only the grade (a student); the status is sent by the current pages.
+        await profiles.UpdateInstitutionStudentAsync(UserId, id, studentUserId, request.EducationStatus ?? CoachingEducationStatus.Student,
+            request.GradeLevel, request.TeacherUserId, ct);
         return NoContent();
     }
 
@@ -87,4 +89,4 @@ public sealed class CoachingMembershipsController(CoachingProfileStore profiles,
     }
 }
 public sealed record CoachingTeacherInviteRequest(string TeacherEmail, string? Message);
-public sealed record CoachingInstitutionStudentUpdate(int GradeLevel, Guid? TeacherUserId);
+public sealed record CoachingInstitutionStudentUpdate(int? GradeLevel, Guid? TeacherUserId, CoachingEducationStatus? EducationStatus = null);

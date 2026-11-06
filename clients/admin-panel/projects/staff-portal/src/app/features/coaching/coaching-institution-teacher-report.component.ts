@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { educationLabel } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { FormsModule } from '@angular/forms';
 import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -19,6 +20,8 @@ import {
   styleUrl: './coaching-institution-teacher-report.component.scss'
 })
 export class CoachingInstitutionTeacherReportComponent implements OnInit {
+  /** E3 #14: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi" … */
+  readonly educationLabel = educationLabel;
   private readonly institutionService = inject(CoachingInstitutionService);
   private readonly destroyRef = inject(DestroyRef);
   private overviewRequestId = 0;

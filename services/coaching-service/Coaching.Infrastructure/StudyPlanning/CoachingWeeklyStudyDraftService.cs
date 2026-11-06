@@ -54,7 +54,7 @@ public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachi
         var choices=(staff?await setup.GetCatalogForStudentAsync(student,null,1,ct):await setup.GetCatalogAsync(null,1,ct)).Lessons.ToDictionary(x=>x.Id);
         if(r.Slots.Any(x=>!choices.ContainsKey(x.LessonId))) throw new ArgumentException("Çalışma düzeninize uygun aktif bir ders seçin; dersler değişmiş olabilir.");
         var candidate=WeeklyStudyDraft.Create(student);
-        var zone=await db.StudyAvailability.AsNoTracking().Where(x=>x.StudentId==student).Select(x=>x.TimeZoneId).SingleOrDefaultAsync(ct)??r.TimeZoneId;
+        var zone=Coaching.Domain.CoachingTime.ZoneId; // E3 #34: a zone sent by the client is ignored
         candidate.Replace(zone,r.Slots.Select(x=>new WeeklyDraftSlot(x.Id,x.LessonId,choices[x.LessonId].Name,choices[x.LessonId].ExamCode,x.Day,x.StartMinute,x.DurationMinutes)).ToArray());
         var draft=await db.Set<WeeklyStudyDraft>().SingleOrDefaultAsync(x=>x.StudentId==student,ct);
         if(draft is not null) await db.Entry(draft).ReloadAsync(ct);

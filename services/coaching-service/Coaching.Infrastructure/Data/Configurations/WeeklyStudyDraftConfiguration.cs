@@ -8,7 +8,11 @@ public sealed class WeeklyStudyDraftConfiguration:IEntityTypeConfiguration<Weekl
 {
     public void Configure(EntityTypeBuilder<WeeklyStudyDraft> b)
     {
-        b.ToTable("study_weekly_drafts",t=>t.HasCheckConstraint("ck_weekly_draft_slots","jsonb_typeof(\"SlotsJson\") = 'array'"));
+        b.ToTable("study_weekly_drafts",t=>
+        {
+            t.HasCheckConstraint("ck_weekly_draft_slots","jsonb_typeof(\"SlotsJson\") = 'array'");
+            t.HasCheckConstraint("ck_weekly_draft_zone","\"TimeZoneId\" = 'Europe/Istanbul'"); // E3 #34
+        });
         b.HasKey(x=>x.Id);b.HasIndex(x=>x.StudentId).IsUnique();b.Property(x=>x.Version).IsConcurrencyToken();
         b.Property(x=>x.TimeZoneId).HasMaxLength(100).IsRequired();b.Property<string>("SlotsJson").HasColumnType("jsonb").IsRequired();b.Ignore(x=>x.Slots);
     }

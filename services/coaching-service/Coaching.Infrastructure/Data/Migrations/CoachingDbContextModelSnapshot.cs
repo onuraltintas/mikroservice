@@ -3439,6 +3439,8 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("student_learning_contexts", "coaching", t =>
                         {
+                            t.HasCheckConstraint("ck_learning_education", "\"EducationStatus\" BETWEEN 0 AND 4");
+
                             t.HasCheckConstraint("ck_learning_purpose", "\"Purpose\" BETWEEN 0 AND 7");
 
                             t.HasCheckConstraint("ck_learning_year", "\"AcademicYearStart\" BETWEEN 2000 AND 2200");
@@ -3557,6 +3559,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("study_availability", "coaching", t =>
                         {
                             t.HasCheckConstraint("ck_study_availability_array", "jsonb_typeof(\"WindowsJson\") = 'array'");
+
+                            t.HasCheckConstraint("ck_study_availability_zone", "\"TimeZoneId\" = 'Europe/Istanbul'");
                         });
                 });
 
@@ -4116,6 +4120,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_study_plan_revision_number", "\"RevisionNumber\" > 0");
 
                             t.HasCheckConstraint("ck_study_plan_status", "\"Status\" BETWEEN 0 AND 2 AND \"IsActive\" = (\"Status\" = 1)");
+
+                            t.HasCheckConstraint("ck_study_plan_weekly_zone", "\"WeeklySource\" IS NULL OR coalesce(\"WeeklySource\"->>'TimeZoneId', 'Europe/Istanbul') = 'Europe/Istanbul'");
                         });
                 });
 
@@ -4711,6 +4717,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("study_weekly_drafts", "coaching", t =>
                         {
                             t.HasCheckConstraint("ck_weekly_draft_slots", "jsonb_typeof(\"SlotsJson\") = 'array'");
+
+                            t.HasCheckConstraint("ck_weekly_draft_zone", "\"TimeZoneId\" = 'Europe/Istanbul'");
                         });
                 });
 
@@ -4948,9 +4956,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_coaching_student_diploma", "\"DiplomaGrade\" IS NULL OR \"DiplomaGrade\" BETWEEN 50 AND 100");
 
-                            t.HasCheckConstraint("ck_coaching_student_education", "\"EducationStatus\" BETWEEN 0 AND 2 AND ((\"EducationStatus\" = 1 AND \"GradeLevel\" BETWEEN 1 AND 12 AND \"GradeLevel\" IS NOT NULL) OR (\"EducationStatus\" <> 1 AND \"GradeLevel\" IS NULL))");
+                            t.HasCheckConstraint("ck_coaching_student_education", "\"EducationStatus\" BETWEEN 0 AND 4 AND ((\"EducationStatus\" = 1 AND \"GradeLevel\" BETWEEN 1 AND 12 AND \"GradeLevel\" IS NOT NULL) OR (\"EducationStatus\" <> 1 AND \"GradeLevel\" IS NULL))");
 
-                            t.HasCheckConstraint("ck_coaching_student_graduation", "\"GraduationYear\" IS NULL OR (\"EducationStatus\" = 2 AND \"GraduationYear\" BETWEEN 1900 AND 9999)");
+                            t.HasCheckConstraint("ck_coaching_student_graduation", "\"GraduationYear\" IS NULL OR (\"EducationStatus\" IN (2, 4) AND \"GraduationYear\" BETWEEN 1900 AND 9999)");
                         });
                 });
 

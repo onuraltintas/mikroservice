@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import type { EducationStatus } from '../../features/coaching-portal/coaching-education';
 import { environment } from '../../../environments/environment';
 
 export interface CoachingTeacherInvitation {
@@ -14,7 +15,9 @@ export interface CoachingStudentInvitation {
 }
 
 export interface CoachingInstitutionStudentUpdate {
-  gradeLevel: number;
+  /** E3 #14: the education status; a grade (5–12) only for a student. Without it the server reads a student's grade. */
+  educationStatus?: EducationStatus;
+  gradeLevel: number | null;
   teacherUserId: string | null;
 }
 

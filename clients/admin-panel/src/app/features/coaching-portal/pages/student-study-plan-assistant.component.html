@@ -23,8 +23,8 @@
         @else { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }} <a routerLink="/coaching-portal/account/settings">Çalışma amacını seç →</a></p> }
       }
       @if (purposeNotForEducation() && !purposeRetired()) {
-        @if (staffStudentId) { <p class="notice" role="status" data-testid="grade-purpose">Öğrencinin seçili sınavı sınıfına uymuyor; öğrencinin çalışma tercihlerini güncellemesi gerekiyor.</p> }
-        @else { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p> }
+        @if (staffStudentId) { <p class="notice" role="status" data-testid="grade-purpose">Öğrencinin seçili sınavı eğitim durumuna ya da sınıfına uymuyor; öğrencinin çalışma tercihlerini güncellemesi gerekiyor.</p> }
+        @else { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p> }
       }
       @if (error() && !(purposeRetired() && !lessons().length)) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Çalışma düzenini tamamla →</a> }</p> }
       @if (saved()) { <p class="notice success" role="status">Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }

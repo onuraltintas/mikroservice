@@ -1,4 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { EDUCATION_STAGES, EducationStage, educationLabel, educationRequest, gradesFor, isStudentStage, stageOf } from '../../coaching-portal/coaching-education';
 import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CoachingAdminStudyComponent } from './coaching-admin-study';
@@ -49,16 +50,25 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
           @if (error()) { <p role="alert" class="text-red-700">{{ error() }} <button type="button" class="ml-2 underline" [disabled]="loading()" (click)="retryCurrent()">Yeniden dene</button></p> }
           @if (kind === 'students' && selectedStudent(); as student) {
             <article class="space-y-4 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-              <div><h2 class="text-lg font-semibold">{{ student.firstName }} {{ student.lastName }}</h2><p class="text-sm text-gray-500">{{ student.email }} · {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf yok' }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div>
+              <div><h2 class="text-lg font-semibold">{{ student.firstName }} {{ student.lastName }}</h2><p class="text-sm text-gray-500">{{ student.email }} · {{ educationLabel(student.educationStatus, student.gradeLevel, 'Sınıf yok') }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div>
               @if (canManageMemberships()) {
                 <section class="space-y-3 rounded-lg bg-gray-50 p-4 text-sm dark:bg-gray-900" aria-labelledby="student-membership-heading">
                   <h3 id="student-membership-heading" class="font-semibold">Kurum üyeliğini yönet</h3>
-                  <label class="block">Sınıf seviyesi
-                    <select [(ngModel)]="editingGradeLevel" name="editingGradeLevel" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-800">
-                      <option [ngValue]="null">Sınıf seçin</option>
-                      @for (grade of gradeLevels; track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
+                  <label class="block">Eğitim durumu
+                    <select [ngModel]="editingStage" (ngModelChange)="changeEditingStage($event)" name="editingStage" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-800">
+                      <option value="">Eğitim durumunu seçin</option>
+                      @for (item of educationStages; track item.value) { <option [value]="item.value">{{ item.staffLabel }}</option> }
                     </select>
                   </label>
+                  @if (isStudentStage(editingStage)) {
+                    <label class="block">Sınıf seviyesi
+                      <select [(ngModel)]="editingGradeLevel" name="editingGradeLevel" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-800">
+                        <option [ngValue]="null">Sınıf seçin</option>
+                        @for (grade of gradesFor(editingStage); track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
+                      </select>
+                    </label>
+                  }
+                  @if (editingClearsSchoolNotice(); as notice) { <p class="text-amber-800" role="status" data-testid="membership-clears-school">{{ notice }}</p> }
                   <label class="block">Öğretmen ara
                     <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" maxlength="100" [disabled]="savingMembership()" class="w-full rounded border px-3 py-2 dark:bg-gray-800" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading() || savingMembership()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Ara' }}</button></span>
                   </label>
@@ -71,7 +81,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                       @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
                     </select>
                   </label>
-                  <button type="button" class="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50" [disabled]="savingMembership() || editingGradeLevel === null" (click)="saveStudentMembership()">{{ savingMembership() ? 'Kaydediliyor…' : 'Sınıf ve atamayı kaydet' }}</button>
+                  <button type="button" class="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50" [disabled]="savingMembership() || !editingStage || isStudentStage(editingStage) && editingGradeLevel === null" (click)="saveStudentMembership()">{{ savingMembership() ? 'Kaydediliyor…' : 'Eğitim durumunu ve atamayı kaydet' }}</button>
                   <p class="text-xs text-gray-500">Bu işlem üyeliği ve öğretmen atamasını günceller; hesabı veya koçluk geçmişini silmez.</p>
                 </section>
               }
@@ -271,6 +281,26 @@ export class CoachingPeopleComponent implements OnInit {
   editingGradeLevel: number | null = null;
   editingTeacherUserId = '';
   gradeLevelFilter: number | null = null;
+  /** E3 #14: the education status the institution sets; a non-student status has no grade. */
+  editingStage: EducationStage | '' = ''; private savedStage: EducationStage | '' = '';
+  readonly educationStages = EDUCATION_STAGES; readonly gradesFor = gradesFor; readonly isStudentStage = isStudentStage; readonly educationLabel = educationLabel;
+  readonly clearsSchoolText = 'Öğrenci olmayan bir eğitim durumu seçilirse öğrencinin sınıf, okul ve şube bilgisi silinir.';
+  editingClearsSchool() { return isStudentStage(this.savedStage) && this.editingStage !== '' && !isStudentStage(this.editingStage); }
+  /** E3 re-check: lise -> ortaokul drops the stored lise and branch on the server; said first, as on Profilim. */
+  readonly dropsLiseText = 'Lise öğrencisi ortaokula geçirilirse kayıtlı okul ve şube bilgisi silinir.';
+  editingClearsSchoolNotice() {
+    return this.editingClearsSchool() ? this.clearsSchoolText
+      : this.savedStage === 'high' && this.editingStage === 'middle' ? this.dropsLiseText : null;
+  }
+  /** Sets the education editor from the selected student (status choice and grade). */
+  resetEducationEditor(student: CoachingStudentRosterItem | null) {
+    this.editingGradeLevel = student?.gradeLevel ?? null;
+    this.editingStage = this.savedStage = stageOf(student?.educationStatus ?? (this.editingGradeLevel ? 'Student' : null), this.editingGradeLevel);
+  }
+  changeEditingStage(stage: EducationStage | '') {
+    this.editingStage = stage;
+    if (!gradesFor(stage).includes(Number(this.editingGradeLevel))) this.editingGradeLevel = null;
+  }
   readonly gradeLevels = Array.from({ length: 12 }, (_, index) => index + 1);
   teacherStudentSearch = '';
   pageNumber = 1;
@@ -335,7 +365,7 @@ export class CoachingPeopleComponent implements OnInit {
     this.teacherLookupLoading.set(false);
     this.teacherLookupSearch = '';
     this.teacherFilterUserId = '';
-    this.editingGradeLevel = null;
+    this.editingGradeLevel = null; this.editingStage = this.savedStage = '';
     this.editingTeacherUserId = '';
     this.studentInviteTeacherUserId = '';
     this.search = '';
@@ -396,7 +426,7 @@ export class CoachingPeopleComponent implements OnInit {
           if (requestId !== this.requestId) return;
           this.selectedStudent.set(result.roster.students.find(item => item.userId === id) ?? null);
           this.studentDetail.set(this.selectedStudent() ? result.detail : null);
-          this.editingGradeLevel = this.selectedStudent()?.gradeLevel ?? null;
+          this.resetEducationEditor(this.selectedStudent());
           this.editingTeacherUserId = this.selectedStudent()?.teacherUserId ?? '';
           if (!this.selectedStudent()) this.error.set('Öğrenci bu kurumda bulunamadı.');
           else this.loadStudentHistory(1);
@@ -520,15 +550,20 @@ export class CoachingPeopleComponent implements OnInit {
     });
   }
 
-  saveStudentMembership(): void {
-    const student = this.selectedStudent();
-    if (!this.canManageMemberships() || !student || this.editingGradeLevel === null
-      || this.editingGradeLevel < 1 || this.editingGradeLevel > 12 || this.savingMembership()) return;
-    const gradeLevel = this.editingGradeLevel;
+  async saveStudentMembership(): Promise<void> {
+    const student = this.selectedStudent(); const stage = this.editingStage;
+    if (!this.canManageMemberships() || !student || !stage || this.savingMembership()
+      || isStudentStage(stage) && !gradesFor(stage).includes(Number(this.editingGradeLevel))) return;
+    const education = educationRequest(stage, this.editingGradeLevel);
+    const gradeLevel = education.gradeLevel;
     const teacherUserId = this.editingTeacherUserId || null;
+    // E3 #14: a non-student status clears the grade, school and branch; the admin is told first.
+    const notice = this.editingClearsSchoolNotice();
+    if (notice && !await this.toaster.confirm(`${notice} Kaydedilsin mi?`)) return;
+    if (this.savingMembership() || this.selectedStudent()?.userId !== student.userId) return;
     this.savingMembership.set(true);
     this.membershipService.updateStudent(student.userId, {
-      gradeLevel,
+      ...education,
       teacherUserId
     }, this.membershipInstitutionId()).subscribe({
       next: () => {
@@ -536,11 +571,11 @@ export class CoachingPeopleComponent implements OnInit {
         const teacher = this.teacherLookupResults().find(item => item.userId === teacherUserId);
         this.selectedStudent.set({
           ...student,
-          gradeLevel,
+          gradeLevel, educationStatus: education.educationStatus,
           teacherUserId,
           teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : teacherUserId ? student.teacherName : null
         });
-        this.toaster.success('Öğrencinin sınıfı ve öğretmen ataması güncellendi.');
+        this.toaster.success('Öğrencinin eğitim durumu ve öğretmen ataması güncellendi.');
         this.loadPage(this.pageNumber);
       },
       error: () => {

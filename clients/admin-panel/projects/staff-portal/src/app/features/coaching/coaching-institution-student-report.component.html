@@ -11,7 +11,7 @@
       <p class="report-eyebrow">KOÇLUK · KURUM ÖĞRENCİ RAPORU</p>
       <h2 id="student-report-title">{{ student.firstName }} {{ student.lastName }}</h2>
       <p class="student-context">
-        {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}
+        {{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Sınıf bilgisi yok') }}
         · {{ student.teacherName || 'Öğretmen atanmamış' }} · {{ student.email }}
       </p>
     </div>
