@@ -21,7 +21,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     educationStatus: 'Student' as const, gradeLevel: 8, purpose: 'Lgs' as const, targetExamSessionId: 'lgs-27', targetExamYear: 2027 };
 
   interface Resume { invitations?: object[]; code?: { expiresAt: string; createdAt: string; expired?: boolean } | null; links?: { parentName: string; status: string }[]; prefs?: { category: string; label: string; inApp: boolean; email: boolean }[] }
-  async function render(first: OnboardingView, query: Record<string, string> = {}, resume: Resume = {}) {
+  async function render(first: OnboardingView, query: Record<string, string> = {}, resume: Resume = {}, options: { embedded?: boolean } = {}) {
     const auth = { userProfile: signal({ id: 'student-1' }), logout: vi.fn().mockResolvedValue(undefined) };
     TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
       { provide: AuthService, useValue: auth },
@@ -29,6 +29,8 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     const router = TestBed.inject(Router); const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(StudentOnboardingComponent);
     const http = TestBed.inject(HttpTestingController);
+    if (options.embedded) fixture.componentRef.setInput('embedded', true);
+    const saved = vi.fn(); fixture.componentInstance.targetSaved.subscribe(saved);
     fixture.detectChanges();
     http.expectOne(base).flush({ data: first });
     await settle();
@@ -46,7 +48,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     async function settle() { for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); } }
     const button = (text: string) => Array.from(el.querySelectorAll('[data-current] button, .ob-summary button, .ob-summary a')).find(x => x.textContent?.trim() === text) as HTMLElement;
     const click = async (text: string) => { const target = button(text); expect(target, text).toBeTruthy(); target.click(); await settle(); };
-    return { fixture, http, el, settle, click, button, navigate, auth };
+    return { fixture, http, el, settle, click, button, navigate, auth, saved };
   }
 
   it('is a chat: one question with its reason, a progress bar, a live log, and answers that stay as bubbles with "Değiştir"', async () => {
@@ -364,5 +366,77 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     expect(current.textContent).toContain('Veli kodunun süresi doldu (01.11.2026)');
     expect(current.textContent).not.toContain('Aktif bir veli kodun var');
     expect(t.button('Veli kodu oluştur')).toBeTruthy();
+  });
+  // E7 (#30, live test 06.11.2026): "Hedefini belirle" and Hedefim show the current target first; "Değiştir" opens the same steps.
+  describe('E7: the current target first', () => {
+    const completed = { status: 'Completed' as const, nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6, 7], completedAt: '2026-11-06T00:00:00Z' };
+    const yks = { ...stepTwo, educationStatus: 'Student' as const, gradeLevel: 12, purpose: 'Yks' as const, primaryScoreType: 'EA', targetExamSessionId: null, targetExamYear: 2027 };
+    const program = { kind: 'program' as const, targetId: 'p-1', name: 'Ankara Üniversitesi · Hukuk', detail: 'Hukuk Fakültesi', minimumScore: 475.14192,
+      scoreYear: 2025, scoreType: 'EA', scores: [], canEdit: true };
+    const scores = { kind: 'score' as const, targetId: null, name: 'TYT ve Eşit Ağırlık', detail: null, minimumScore: null, scoreYear: null, scoreType: 'EA',
+      scores: [{ scoreType: 'EA', score: 450 }, { scoreType: 'TYT', score: 400 }], canEdit: true };
+
+    it('"Hedefini belirle" shows the saved programme with its taban in tr-TR before asking anything', async () => {
+      const t = await render(view(completed, { ...yks, target: program }), { step: 'target' });
+      const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
+      expect(bubble.textContent).toContain('Ankara Üniversitesi · Hukuk · taban 475,14');
+      expect(bubble.textContent).not.toContain('475.14');
+      expect(t.el.querySelector('[data-question="targetMode"]')).toBeNull();
+      expect(bubble.querySelector('button')!.textContent).toContain('Değiştir');
+      t.http.expectNone(`${base}/steps/target`);
+    });
+
+    it('"Değiştir" opens the steps and "Vazgeç" keeps the saved target without saving', async () => {
+      const t = await render(view(completed, { ...yks, target: program }), { step: 'target' });
+      (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
+      expect(t.button('Bölüm seçeceğim')).toBeTruthy();
+      await t.click('Vazgeç');
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Üniversitesi · Hukuk');
+      t.http.expectNone(`${base}/steps/target`);
+      expect(t.navigate).not.toHaveBeenCalled();
+    });
+
+    it('shows both YKS score targets and saves both again from the score steps', async () => {
+      const t = await render(view(completed, { ...yks, target: scores }), { step: 'target' });
+      const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
+      expect(bubble.textContent).toContain('Eşit Ağırlık 450');
+      expect(bubble.textContent).toContain('TYT 400');
+      (bubble.querySelector('button') as HTMLElement).click(); await t.settle();
+      await t.click('Yalnız puan gireceğim');
+      const number = () => t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
+      number().value = '410'; number().dispatchEvent(new Event('input')); await t.click('Devam');
+      number().value = '455,5'.replace(',', '.'); number().dispatchEvent(new Event('input')); await t.click('Devam');
+      const save = t.http.expectOne(`${base}/steps/target`);
+      expect(save.request.body).toEqual({ kind: 'score', targetId: null, scores: [{ scoreType: 'TYT', score: 410 }, { scoreType: 'EA', score: 455.5 }] });
+    });
+
+    it('embedded in Hedefim: no page header, the new target is shown after saving and Bugün is not opened', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: { ...program, kind: 'school', name: 'Ankara Fen Lisesi', scoreType: 'LGS', minimumScore: 480.5 } }), {}, {}, { embedded: true });
+      expect(t.el.querySelector('h1')).toBeNull();
+      expect(t.el.textContent).not.toContain('Çıkış yap');
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi · taban 480,5');
+      (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      await t.click('Hedef puan gireceğim');
+      const input = t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
+      input.value = '460'; input.dispatchEvent(new Event('input')); await t.click('Devam');
+      const save = t.http.expectOne(`${base}/steps/target`);
+      expect(save.request.body).toEqual({ kind: 'score', targetId: null, scores: [{ scoreType: 'LGS', score: 460 }] });
+      save.flush({ data: view(completed, { ...stepTwo, target: { kind: 'score', targetId: null, name: 'LGS', detail: null, minimumScore: null, scoreYear: null,
+        scoreType: 'LGS', scores: [{ scoreType: 'LGS', score: 460 }], canEdit: true } }) }); await t.settle();
+      expect(t.navigate).not.toHaveBeenCalled();
+      expect(t.saved).toHaveBeenCalledTimes(1);
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('LGS 460');
+      expect(t.el.querySelector('[role="status"]')!.textContent).toContain('Hedefin kaydedildi');
+    });
+
+    it('embedded: a teacher\'s goal is shown locked with the note and no "Değiştir"', async () => {
+      const t = await render(view(completed, { ...stepTwo, targetLocked: true, target: { ...program, kind: 'school', name: 'Ankara Fen Lisesi', canEdit: false } }), {}, {}, { embedded: true });
+      const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
+      expect(bubble.textContent).toContain('Hedefini öğretmenin belirledi: Ankara Fen Lisesi');
+      expect(bubble.querySelector('button')).toBeNull();
+      expect(t.el.textContent).toContain('Değiştirmek istersen öğretmenine yaz.');
+      expect(t.el.textContent).not.toContain("Bugün'e dön");
+    });
   });
 });
