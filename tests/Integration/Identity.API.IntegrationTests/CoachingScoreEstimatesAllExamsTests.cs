@@ -314,6 +314,17 @@ public sealed class CoachingScoreEstimatesAllExamsTests
     }
 
     [Fact]
+    public async Task ATargetWithoutAComputableGapHasNoStatus()
+    {
+        // Re-check 06.11.2026: no taban (and no rank against a rank-less model): neither gap can be computed, so no status.
+        await using var s = await Setup.CreateAsync(lgsPack: true);
+        s.Exam("LGS", new() { ["TUR"] = (16, 0), ["MAT"] = (16, 0), ["FEN"] = (16, 0), ["INK"] = (8, 0), ["DIN"] = (8, 0), ["ENG"] = (8, 0) });
+        await s.Target(null);
+        var target = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Target!;
+        (target.ScoreGap, target.RankGap, target.Status, target.Reached).Should().Be(((decimal?)null, (int?)null, (string?)null, false));
+    }
+
+    [Fact]
     public async Task TheGoalSaysWhyThereIsNoScore()
     {
         await using (var s = await Setup.CreateAsync())
@@ -467,7 +478,7 @@ public sealed class CoachingScoreEstimatesAllExamsTests
             return s;
         }
 
-        public async Task Target(int minimumScore)
+        public async Task Target(int? minimumScore)
         {
             var school = TargetSchool.Create("meb", "lise-1", "Fen Lisesi", "İstanbul", "Kadıköy", minimumScore, 2026);
             var goal = AcademicGoal.Create(Student, "Fen Lisesi", GoalCategory.ExamPreparation);

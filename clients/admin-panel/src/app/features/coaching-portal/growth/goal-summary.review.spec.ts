@@ -46,6 +46,20 @@ describe('Paket B review: approximate targets and goal reasons', () => {
     expect(el.querySelector('.cs-goal-hero')?.getAttribute('data-status')).toBe('borderline');
   });
 
+  // Re-check 06.11.2026: the label follows the exam group, not a non-zero margin; without a computable gap there is no status.
+  it('keeps "Yaklaşık tahmin" at full net and shows no status when no gap can be computed', () => {
+    const full: ScoreEstimate = { ...borderline, estimates: [{ ...lgs, score: 500, scoreLow: 490, scoreHigh: 500, margin: 0 }],
+      target: { ...borderline.target!, scoreGap: -60, netGap: 0, reached: true, status: 'reached', margin: 0 } };
+    expect(goalGauge(full)!.label).toBe('Yaklaşık tahmin');
+    const noGap: ScoreEstimate = { ...borderline, target: { ...borderline.target!, targetScore: null, targetRank: 5000, scoreGap: null, netGap: null,
+      rankGap: null, reached: false, status: null } };
+    const gauge = goalGauge(noGap)!;
+    expect(gauge.status).toBeNull(); expect(gauge.rows).toHaveLength(0);
+    expect(gauge.headline).toBe('Hedefe olan farkı henüz hesaplayamıyoruz.');
+    const el = render(noGap);
+    expect(el.querySelector('.cs-goal-hero')?.hasAttribute('data-status')).toBe(false);
+  });
+
   it('a YKS target without a margin keeps its old wording', () => {
     const yks: ScoreEstimate = { ...borderline, estimates: [{ ...lgs, scoreType: 'SAY', group: 'YKS', margin: null, rank: 90000, rankBest: 80000, rankWorst: 100000 }],
       target: { ...borderline.target!, scoreType: 'SAY', status: 'below', margin: null } };
