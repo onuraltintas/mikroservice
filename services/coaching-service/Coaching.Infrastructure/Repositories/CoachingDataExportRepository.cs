@@ -65,7 +65,7 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var goals = goalRows.Select(goal => new CoachingDataGoalDto(
             goal.Id, goal.Title, goal.Description, goal.Category.ToString(), goal.CurrentProgress,
             goal.IsCompleted, goal.TargetDate, goal.TargetScore, goal.TargetSchoolId, goal.TargetUniversityProgramId,
-            goal.TargetMaxScore, goal.TargetExamType?.ToString(), goal.TargetSubject, goal.NetTargets)).ToArray();
+            goal.TargetMaxScore, goal.TargetExamType?.ToString(), goal.TargetSubject, goal.NetTargets) { ScoreTargets = goal.ScoreTargets }).ToArray();
 
         var sessionRows = await context.SessionAttendances.AsNoTracking()
             .Where(attendance => attendance.StudentId == studentId)

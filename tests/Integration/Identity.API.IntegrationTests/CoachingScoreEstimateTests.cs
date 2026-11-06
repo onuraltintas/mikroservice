@@ -134,7 +134,7 @@ public sealed class CoachingScoreEstimateTests
 
         var target = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Target!;
 
-        target.Should().BeEquivalentTo(new ScoreTargetGap("Fen Lisesi", "LGS", 450m, null, 2m, 30m, 9m, null, false) { Status = "below" },
+        target.Should().BeEquivalentTo(new ScoreTargetGap("Fen Lisesi", "LGS", 450m, null, 2m, 30m, 9m, null, false) { Status = "below", Kind = "school", ScoreYear = 2025 },
             "the estimate is 420; 30 points are about 9 nets at an average weight of 3,33 points per net");
     }
 

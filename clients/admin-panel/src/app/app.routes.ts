@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { authGuard, coachingPortalGuard } from './core/auth/auth.guard';
+import { authGuard, coachingPortalGuard, coachingRoleGuard } from './core/auth/auth.guard';
+import { studentOnboardingGuard } from './features/coaching-portal/onboarding/onboarding.guard';
 
 export const routes: Routes = [
     // Auth Routes
@@ -50,9 +51,17 @@ export const routes: Routes = [
     },
 
     // Student Coaching workspace. Teacher/institution management lives in the staff portal.
+    // Paket C (#3): the student's first-login wizard, full screen outside the portal shell.
+    {
+        path: 'coaching-portal/welcome',
+        canActivate: [authGuard, coachingPortalGuard, coachingRoleGuard],
+        data: { coachingRoles: ['Student'] },
+        loadComponent: () => import('./features/coaching-portal/onboarding/student-onboarding.component').then(m => m.StudentOnboardingComponent)
+    },
     {
         path: 'coaching-portal',
         canActivate: [authGuard, coachingPortalGuard],
+        canActivateChild: [studentOnboardingGuard],
         loadComponent: () => import('./features/coaching-portal/layout/coaching-portal-layout.component').then(m => m.CoachingPortalLayoutComponent),
         children: [
             {

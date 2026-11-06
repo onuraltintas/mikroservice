@@ -68,6 +68,13 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasDefaultValue("[]");
 
+                    b.Property<string>("ScoreTargetsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]")
+                        .HasColumnName("score_targets");
+
                     b.Property<Guid?>("SetByTeacherId")
                         .HasColumnType("uuid")
                         .HasColumnName("set_by_teacher_id");
@@ -158,6 +165,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_goal_net_target", "(target_net IS NULL AND target_practice_exam_code IS NULL) OR (target_net IS NOT NULL AND target_practice_exam_code IS NOT NULL AND target_net >= 0 AND target_net <= CASE target_practice_exam_code WHEN 'LGS' THEN 90 WHEN 'TYT' THEN 120 WHEN 'AYT_SAY' THEN 80 WHEN 'AYT_EA' THEN 80 WHEN 'AYT_SOZ' THEN 80 WHEN 'YDT_EN' THEN 80 WHEN 'AGS' THEN 80 WHEN 'OABT_TUR' THEN 50 WHEN 'OABT_IMAT' THEN 50 WHEN 'OABT_FEN' THEN 50 WHEN 'OABT_SOS' THEN 50 WHEN 'OABT_TDE' THEN 50 WHEN 'OABT_TAR' THEN 50 WHEN 'OABT_COG' THEN 50 WHEN 'OABT_MAT' THEN 50 WHEN 'OABT_FIZ' THEN 50 WHEN 'OABT_KIM' THEN 50 WHEN 'OABT_BIO' THEN 50 WHEN 'OABT_DIN' THEN 50 WHEN 'OABT_REH' THEN 50 WHEN 'OABT_SINIF' THEN 50 WHEN 'OABT_OKUL' THEN 50 WHEN 'OABT_BED' THEN 50 WHEN 'OABT_OZEL' THEN 50 WHEN 'YDS_EN' THEN 80 WHEN 'YOKDIL_FEN' THEN 80 WHEN 'YOKDIL_SAG' THEN 80 WHEN 'YOKDIL_SOS' THEN 80 ELSE -1 END)");
 
                             t.HasCheckConstraint("ck_goal_score_scale", "target_max_score IS NULL OR (target_max_score > 0 AND target_max_score <= 999.99 AND target_score IS NOT NULL AND target_score > 0 AND target_score <= target_max_score AND target_exam_type IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_goal_score_targets", "jsonb_typeof(score_targets) = 'array' AND jsonb_array_length(score_targets) <= 2");
 
                             t.HasCheckConstraint("ck_goal_single_catalog_target", "target_university_program_id IS NULL OR target_school_id IS NULL");
                         });
@@ -4855,6 +4864,13 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("DiplomaGrade")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<bool>("DiplomaGradeEstimated")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("EducationStatus")
                         .HasColumnType("integer");
 
@@ -4864,8 +4880,30 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int?>("GraduationYear")
                         .HasColumnType("integer");
 
+                    b.Property<string>("HomeCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("HomeDistrict")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("HomeDistrictId")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("HomeProvinceId")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("OnboardingCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OnboardingSteps")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SchoolCity")
                         .HasMaxLength(100)
@@ -4908,6 +4946,8 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("student_profiles", "coaching", t =>
                         {
+                            t.HasCheckConstraint("ck_coaching_student_diploma", "\"DiplomaGrade\" IS NULL OR \"DiplomaGrade\" BETWEEN 50 AND 100");
+
                             t.HasCheckConstraint("ck_coaching_student_education", "\"EducationStatus\" BETWEEN 0 AND 2 AND ((\"EducationStatus\" = 1 AND \"GradeLevel\" BETWEEN 1 AND 12 AND \"GradeLevel\" IS NOT NULL) OR (\"EducationStatus\" <> 1 AND \"GradeLevel\" IS NULL))");
 
                             t.HasCheckConstraint("ck_coaching_student_graduation", "\"GraduationYear\" IS NULL OR (\"EducationStatus\" = 2 AND \"GraduationYear\" BETWEEN 1900 AND 9999)");

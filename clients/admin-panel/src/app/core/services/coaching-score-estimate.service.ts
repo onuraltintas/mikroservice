@@ -24,6 +24,11 @@ export interface ScoreTargetGap {
    * decides: borderline when the taban lies inside it. `margin` is the estimate's model ± (null for YKS).
    */
   status?: 'reached' | 'borderline' | 'below' | null; margin?: number | null;
+  /**
+   * Paket C (#4): 'school', 'program' or 'score' (a target score without a school or programme; `targetScore` is the student's
+   * own). `scoreYear` is the taban's year; `ownTargetScore` marks a programme without a taban that uses the student's score.
+   */
+  kind?: 'school' | 'program' | 'score'; scoreYear?: number | null; ownTargetScore?: boolean;
 }
 /** 01.11.2026: a test's ham puan (doğru − yanlış/4), cut to hundredths, e.g. Türkçe or AYT Fen Bilimleri. */
 export interface RawScoreValue { code: string; name: string; rawScore: number }
@@ -68,6 +73,8 @@ export interface ScoreEstimate {
   notComputed?: ScoreTypeNotComputed[];
   /** Paket B: absent in older responses. */
   goal?: ScoreGoalEstimate | null;
+  /** Paket C (#4): every target score set without a school or programme (YKS: TYT and the field's); `target` is the main one. */
+  scoreTargets?: ScoreTargetGap[];
 }
 
 /** KM4 (01.11.2026): the yearly models are derived from official statistics, so every view labels the estimate approximate. */

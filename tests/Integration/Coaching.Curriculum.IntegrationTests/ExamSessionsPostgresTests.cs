@@ -77,7 +77,8 @@ public sealed class ExamSessionsPostgresTests
 
         // The new purposes are allowed by the database; a student on one of them blocks the rollback.
         var student = Guid.NewGuid();
-        pg.Db.AddRange(CoachingStudentProfile.Create(student), StudentLearningContext.Create(student, 2026, LearningPurpose.Yokdil, 2027, "YOKDIL_SOS", null));
+        await LegacyRows.StudentProfileAsync(pg.Db, student);
+        pg.Db.Add(StudentLearningContext.Create(student, 2026, LearningPurpose.Yokdil, 2027, "YOKDIL_SOS", null));
         await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
         await Assert.ThrowsAsync<PostgresException>(() => migrator.MigrateAsync(Previous));
         await Run(pg, $"DELETE FROM coaching.student_learning_contexts WHERE \"StudentUserId\" = '{student}'");

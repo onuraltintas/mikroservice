@@ -134,6 +134,8 @@ public sealed class CoachingProfilesController(CoachingDbContext db, CoachingPro
         try { return Ok(new { success = true, data = await action() }); }
         catch (BusinessRuleException e) when (e.Code.StartsWith("Authorization."))
         { return StatusCode(403, new { success = false, code = e.Code, message = e.Message }); }
+        catch (BusinessRuleException e) when (e.Code == "Profiles.LocationsUnavailable")
+        { return StatusCode(503, new { success = false, code = e.Code, message = e.Message }); }
         catch (BusinessRuleException e) when (e.Code == "Profiles.Conflict")
         { return Conflict(new { success = false, code = e.Code, message = e.Message }); }
         catch (KeyNotFoundException) { return NotFound(new { success = false, message = "Koçluk profili bulunamadı." }); }

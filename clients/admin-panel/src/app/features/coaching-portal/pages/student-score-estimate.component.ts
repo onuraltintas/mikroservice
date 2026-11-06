@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { GoalCardComponent } from '../growth/goal-card.component';
 import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, rawScoresText, scoreGroup, scoreTypeNote, P3_NOTE } from '../../../core/services/coaching-score-estimate.service';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
@@ -11,13 +12,15 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
  * and the score type the student works towards marked. The copy addresses nobody, so staff pages can reuse it.
  */
 @Component({
-  selector: 'app-student-score-estimate', standalone: true, imports: [FormsModule],
+  selector: 'app-student-score-estimate', standalone: true, imports: [FormsModule, GoalCardComponent],
   template: `
     <section class="panel" aria-labelledby="score-estimate-heading" data-testid="score-estimate">
       <h2 id="score-estimate-heading">Puan ve sıralama tahmini</h2>
       @if (loading()) { <p role="status">Tahmin hazırlanıyor…</p> }
       @if (error()) { <p role="alert">{{ error() }}</p> }
       @if (data(); as result) {
+        <!-- Paket C (#4): the same goal states and wording as the student's Bugün card (third person for staff). -->
+        <app-goal-card [estimate]="result" [childName]="studentId ? 'Öğrenci' : null" [title]="studentId ? 'Öğrencinin hedefi' : 'Hedefin'" [link]="!studentId" />
         @if (result.notice) { <p>{{ result.notice }}</p> }
         @for (item of result.estimates; track item.scoreType) {
           <div class="plan-row">
@@ -54,7 +57,7 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         @if (result.target; as target) {
           <p class="plan-row" data-testid="score-target">
             <strong>Hedef: {{ target.targetName }}</strong>
-            @if (target.targetScore !== null) { · taban puan {{ num(target.targetScore) }} }
+            @if (target.targetScore !== null) { · {{ target.kind === 'score' || target.ownTargetScore ? 'hedef puanı' : 'taban puan' }} {{ num(target.targetScore) }} }
             @if (target.targetRank !== null) { · başarı sırası {{ int(target.targetRank) }} }
             @if (target.targetPercentile !== null) { · yüzdelik %{{ num(target.targetPercentile) }} }
             <br>{{ targetText(target) }}
@@ -122,7 +125,7 @@ export class StudentScoreEstimateComponent implements OnInit {
       const now = this.data()?.estimates.find(x => x.scoreType === target.scoreType);
       return now ? `Hedef taban puanı tahmini aralığın içinde (${this.num(now.scoreLow)}–${this.num(now.scoreHigh)}): sınırda.` : 'Hedef taban puanı tahmini aralığın içinde: sınırda.';
     }
-    if (target.reached) return 'Tahmini puanın hedefin tabanına ulaşıyor. Bu çizgiyi korumaya çalış.';
+    if (target.reached) return target.kind === 'score' ? 'Tahmini puan hedef puana ulaşıyor.' : 'Tahmini puanın hedefin tabanına ulaşıyor. Bu çizgiyi korumaya çalış.';
     if (target.scoreGap !== null) return `Hedefe yaklaşık ${this.num(target.netGap ?? 0)} net (${this.num(target.scoreGap)} puan) kaldı.`;
     return `Hedef sıralamaya yaklaşık ${this.int(target.rankGap ?? 0)} kişi kaldı.`;
   }

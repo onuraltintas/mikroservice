@@ -24,6 +24,13 @@ public class AcademicGoal : AggregateRoot
 
     public decimal? TargetScore { get; private set; }
     public decimal? TargetMaxScore { get; private set; }
+    /// <summary>
+    /// Paket C (#3): the student's own target scores, each in its score type (LGS, TYT, SAY, EA, SOZ, DIL, P1, P2_…, YDS_EN,
+    /// YOKDIL_…). YKS may have two: TYT and the field's score type. Empty for older targets, which keep only TargetScore.
+    /// TargetScore / TargetMaxScore / TargetExamType mirror the main one (the field's, else the only one) for older readers.
+    /// </summary>
+    private string ScoreTargetsJson { get; set; } = "[]";
+    public IReadOnlyList<AcademicScoreTarget> ScoreTargets => Array.AsReadOnly(JsonSerializer.Deserialize<AcademicScoreTarget[]>(ScoreTargetsJson) ?? []);
     public string? TargetPracticeExamCode { get; private set; }
     public decimal? TargetNet { get; private set; }
     private string NetTargetsJson { get; set; } = "[]";
@@ -101,7 +108,7 @@ public class AcademicGoal : AggregateRoot
         Description = NormalizeOptional(description);
         Category = category;
         TargetDate = targetDate;
-        if (TargetScore != targetScore || TargetExamType != targetExamType) TargetMaxScore = null;
+        if (TargetScore != targetScore || TargetExamType != targetExamType) { TargetMaxScore = null; ScoreTargetsJson = "[]"; }
         TargetScore = targetScore;
         TargetExamType = targetExamType;
         TargetSubject = NormalizeOptional(targetSubject);
@@ -120,12 +127,12 @@ public class AcademicGoal : AggregateRoot
             if (targetScore.Value is < 0 or > 999.99m)
                 throw new ArgumentOutOfRangeException(nameof(targetScore), "Target score must be between 0 and 999.99");
 
-            if (TargetScore != targetScore) TargetMaxScore = null;
+            if (TargetScore != targetScore) { TargetMaxScore = null; ScoreTargetsJson = "[]"; }
             TargetScore = targetScore;
         }
         if (targetExamType.HasValue)
         {
-            if (TargetExamType != targetExamType) TargetMaxScore = null;
+            if (TargetExamType != targetExamType) { TargetMaxScore = null; ScoreTargetsJson = "[]"; }
             TargetExamType = targetExamType;
         }
         if (targetSubject != null) TargetSubject = targetSubject;
@@ -162,10 +169,25 @@ public class AcademicGoal : AggregateRoot
                 || examType is null || !Enum.IsDefined(examType.Value))
                 throw new ArgumentException("Specify a positive target, its score scale and an exam type.");
         }
+        ScoreTargetsJson = "[]";
         TargetScore = score;
         TargetMaxScore = maxScore;
         TargetExamType = examType;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Paket C (#3): the student's own target scores (see ScoreTargets); an empty list clears every score target.</summary>
+    public void SetScoreTargets(IReadOnlyList<AcademicScoreTarget> targets, ExamType? examType)
+    {
+        ArgumentNullException.ThrowIfNull(targets);
+        if (targets.Count > 2 || targets.Select(x => x.ScoreType).Distinct().Count() != targets.Count
+            || targets.Any(x => string.IsNullOrWhiteSpace(x.ScoreType) || x.ScoreType.Length > 20 || x.MaxScore is <= 0 or > 999.99m
+                || x.Score <= 0 || x.Score > x.MaxScore || decimal.Round(x.Score, 2) != x.Score)
+            || targets.Count > 0 && (examType is null || !Enum.IsDefined(examType.Value)))
+            throw new ArgumentException("Hedef puanlarını ve sınav türünü kontrol edin.");
+        var main = targets.FirstOrDefault(x => x.ScoreType != "TYT") ?? targets.FirstOrDefault();
+        SetScoreTarget(main?.Score, main?.MaxScore, main is null ? null : examType);
+        ScoreTargetsJson = JsonSerializer.Serialize(targets.Select(x => x with { ScoreType = x.ScoreType.Trim().ToUpperInvariant() }));
     }
 
     public void SetNetTarget(string? examCode, decimal? net)
@@ -188,6 +210,8 @@ public class AcademicGoal : AggregateRoot
         if (universityProgramId == Guid.Empty || schoolId == Guid.Empty
             || (universityProgramId.HasValue && schoolId.HasValue))
             throw new ArgumentException("Select either a valid university program or a valid school.");
+        // Paket C: a school or programme replaces the student's own target scores (as in the wizard); an older single score stays.
+        if ((universityProgramId.HasValue || schoolId.HasValue) && ScoreTargetsJson != "[]") SetScoreTargets([], null);
         TargetUniversityProgramId = universityProgramId;
         TargetSchoolId = schoolId;
         UpdatedAt = DateTime.UtcNow;
@@ -213,3 +237,5 @@ public class AcademicGoal : AggregateRoot
 }
 
 public sealed record AcademicNetTarget(string ExamCode, decimal TargetNet);
+/// <summary>Paket C (#3): a target score in one score type, with that type's scale.</summary>
+public sealed record AcademicScoreTarget(string ScoreType, decimal Score, decimal MaxScore);

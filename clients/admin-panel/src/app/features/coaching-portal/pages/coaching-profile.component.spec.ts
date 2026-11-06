@@ -27,6 +27,35 @@ describe('Coaching owned profile', () => {
     request.flush({ data: { ...student, ...request.request.body, version: 2 } }); fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Profilin kaydedildi.'); http.verify();
   });
+  it('lets a student correct the home city, district and diploma grade from the wizard (KVKK m.11)', async () => {
+    const { fixture, component, http } = await setup();
+    const student = { version: 3, educationStatus: 'Student', gradeLevel: 12, shareProgressWithTeachers: true, isActive: true,
+      homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', diplomaGrade: 85, diplomaGradeEstimated: true };
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="home-place"]')!.textContent).toContain('Ankara / Çankaya');
+    (Array.from(el.querySelectorAll('[data-testid="home-place"] button')).find(x => x.textContent?.includes('Değiştir')) as HTMLElement).click();
+    http.expectOne('/api/locations/provinces').flush([{ id: '06', name: 'Ankara' }, { id: '34', name: 'İstanbul' }]);
+    fixture.detectChanges(); await fixture.whenStable();
+    component.pickProvince('34');
+    http.expectOne('/api/locations/provinces/34/districts').flush([{ id: '3401', provinceId: '34', name: 'Kadıköy' }]);
+    component.homeDistrictId = '3401';
+    component.student!.diplomaGrade = null;
+    component.save();
+    const request = http.expectOne('/api/coaching/profiles/me/student');
+    expect(request.request.body).toMatchObject({ homeProvinceId: '34', homeDistrictId: '3401', clearDiplomaGrade: true });
+    request.flush({ data: { ...student, version: 4, homeCity: 'İstanbul', homeDistrict: 'Kadıköy', diplomaGrade: null } });
+    TestBed.resetTestingModule();
+    const second = await setup();
+    second.http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
+    second.fixture.detectChanges(); await second.fixture.whenStable();
+    second.component.student!.diplomaGrade = 120; second.component.save();
+    expect(second.component.error()).toContain('Diploma notu 50 ile 100');
+    second.component.student!.diplomaGrade = 90.5; second.component.save();
+    expect(second.http.expectOne('/api/coaching/profiles/me/student').request.body).toMatchObject({ diplomaGrade: 90.5, diplomaGradeEstimated: true });
+  });
+
   it('speaks to students with "sen" and to teachers with "siz" (T7)', async () => {
     const student = await setup('Student');
     student.http.expectOne('/api/coaching/profiles/me').flush({ data: { student: null, teacher: null } });

@@ -11,7 +11,11 @@ interface StudentProfile {
   schoolName?: string | null; schoolCity?: string | null; schoolDistrict?: string | null; schoolType?: string | null;
   classBranch?: string | null; graduationYear?: number | null; birthDate?: string | null;
   bio?: string | null; avatarUrl?: string | null; shareProgressWithTeachers: boolean;
+  /** Paket C: asked in the first-login wizard; the student corrects them here (KVKK m.11). */
+  homeProvinceId?: string | null; homeCity?: string | null; homeDistrictId?: string | null; homeDistrict?: string | null;
+  diplomaGrade?: number | null; diplomaGradeEstimated?: boolean;
 }
+interface Place { id: string; name: string }
 interface TeacherProfile { version: number; isActive: boolean; title?: string | null; subjects: string[]; experienceYears?: number | null; bio?: string | null; avatarUrl?: string | null; }
 interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null; }
 interface Invitation { id: string; inviterEmail: string; type: string; message?: string; expiresAt: string; }
@@ -50,6 +54,20 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
               <label>Okul türü (isteğe bağlı) <input name="schoolType" maxlength="100" [(ngModel)]="s.schoolType" (ngModelChange)="dirty = true"></label>
               <label>Şube (isteğe bağlı) <input name="classBranch" maxlength="30" [(ngModel)]="s.classBranch" (ngModelChange)="dirty = true"></label>
               <label>Doğum tarihi (isteğe bağlı) <input name="birthDate" type="date" [max]="today" [(ngModel)]="s.birthDate" (ngModelChange)="dirty = true"></label>
+              <div class="place" data-testid="home-place">
+                <span>Yaşadığın yer: <strong>{{ s.homeCity ? s.homeCity + (s.homeDistrict ? ' / ' + s.homeDistrict : '') : 'seçilmedi' }}</strong></span>
+                @if (!provinces()) { <button type="button" (click)="loadProvinces()">{{ s.homeCity ? 'Değiştir' : 'Seç' }}</button> }
+                @else {
+                  <label>Şehir <select name="homeProvince" [ngModel]="homeProvince" (ngModelChange)="pickProvince($event)">
+                    <option value="">Seç</option>@for (p of provinces(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+                  </select></label>
+                  <label>İlçe <select name="homeDistrict" [ngModel]="homeDistrictId" (ngModelChange)="homeDistrictId = $event; dirty = true" [disabled]="!districts().length">
+                    <option value="">Seç</option>@for (d of districts(); track d.id) { <option [value]="d.id">{{ d.name }}</option> }
+                  </select></label>
+                }
+              </div>
+              <label>Diploma notu (YKS, isteğe bağlı) <input name="diplomaGrade" type="number" min="50" max="100" step="0.01" [(ngModel)]="s.diplomaGrade" (ngModelChange)="dirty = true"></label>
+              <label class="check"><input name="diplomaEstimated" type="checkbox" [(ngModel)]="s.diplomaGradeEstimated" (ngModelChange)="dirty = true"> Diploma notum tahmini</label>
               <label>Hakkımda (isteğe bağlı) <textarea name="studentBio" maxlength="2000" [(ngModel)]="s.bio" (ngModelChange)="dirty = true"></textarea></label>
               <label class="check"><input name="shareProgress" type="checkbox" [(ngModel)]="s.shareProgressWithTeachers" (ngModelChange)="dirty = true"> Çalışma ilerlememi yetkili öğretmenlerle paylaş</label>
               }
@@ -84,7 +102,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
       }
       <button type="button" [disabled]="working() || invitationLoading()" (click)="loadInvitations()">Davetleri yenile</button>
     </section> }`,
-  styles: [`:host{display:block;color:inherit}.profile-card{padding:1.5rem;margin-bottom:1rem;border:1px solid #d6deea;border-radius:1rem;background:var(--surface,#fff);color:#16243c}h2{margin-top:0}fieldset{border:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}label{display:grid;gap:.4rem}input,textarea,select,button{font:inherit;padding:.6rem;border:1px solid #bcc8da;border-radius:.5rem;max-width:100%;box-sizing:border-box}button{cursor:pointer;background:#edf3fb;margin:.4rem .4rem .4rem 0}button:disabled{opacity:.55;cursor:default}.check{display:flex;align-items:center}.error{color:#a21825}article{border-top:1px solid #d6deea;padding-top:1rem}input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #3972c6;outline-offset:2px}`]
+  styles: [`:host{display:block;color:inherit}.profile-card{padding:1.5rem;margin-bottom:1rem;border:1px solid #d6deea;border-radius:1rem;background:var(--surface,#fff);color:#16243c}h2{margin-top:0}fieldset{border:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}label{display:grid;gap:.4rem}input,textarea,select,button{font:inherit;padding:.6rem;border:1px solid #bcc8da;border-radius:.5rem;max-width:100%;box-sizing:border-box}button{cursor:pointer;background:#edf3fb;margin:.4rem .4rem .4rem 0}button:disabled{opacity:.55;cursor:default}.check{display:flex;align-items:center}.place{display:grid;gap:.4rem}.error{color:#a21825}article{border-top:1px solid #d6deea;padding-top:1rem}input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #3972c6;outline-offset:2px}`]
 })
 export class CoachingProfileComponent implements OnInit {
   private readonly toaster = coachingToaster();
@@ -98,6 +116,8 @@ export class CoachingProfileComponent implements OnInit {
   readonly error = signal<string | null>(null); readonly success = signal<string | null>(null);
   readonly invitations = signal<Invitation[]>([]); readonly invitationError = signal<string | null>(null); readonly invitationLoading = signal(false);
   student: StudentProfile | null = null; teacher: TeacherProfile | null = null; subjects = ''; dirty = false;
+  readonly provinces = signal<Place[] | null>(null); readonly districts = signal<Place[]>([]);
+  homeProvince = ''; homeDistrictId = ''; private savedDiploma: number | null = null;
   readonly year = new Date().getFullYear(); readonly today = new Date().toISOString().slice(0, 10);
   private get base() { return `${this.apiUrl}/coaching`; }
   ngOnInit() { this.loadProfile(); if (!this.setupMode) this.loadInvitations(); }
@@ -109,7 +129,18 @@ export class CoachingProfileComponent implements OnInit {
   }
   private apply(profile: OwnProfile) {
     this.student = profile.student ? { ...profile.student, educationStatus: profile.student.educationStatus.toLowerCase() } : null;
+    this.savedDiploma = this.student?.diplomaGrade ?? null; this.provinces.set(null); this.homeProvince = ''; this.homeDistrictId = '';
     this.teacher = profile.teacher ? { ...profile.teacher } : null; this.subjects = this.teacher?.subjects?.join(', ') ?? ''; this.dirty = false;
+  }
+  loadProvinces() {
+    this.http.get<Place[]>(`${this.apiUrl}/locations/provinces`).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+      next: list => this.provinces.set(list), error: () => this.error.set(this.t('Şehir listesi yüklenemedi.', 'Şehir listesi yüklenemedi. Yeniden dene.')) });
+  }
+  pickProvince(id: string) {
+    this.homeProvince = id; this.homeDistrictId = ''; this.districts.set([]); this.dirty = true;
+    if (!id) return;
+    this.http.get<Place[]>(`${this.apiUrl}/locations/provinces/${encodeURIComponent(id)}/districts`).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+      next: list => this.districts.set(list), error: () => this.error.set(this.t('İlçe listesi yüklenemedi.', 'İlçe listesi yüklenemedi. Yeniden dene.')) });
   }
   async reload() { if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş profil değişikliklerinden vazgeçilsin mi?')) return; this.loadProfile(); }
   provision() {
@@ -127,7 +158,15 @@ export class CoachingProfileComponent implements OnInit {
       payload = { expectedVersion: s.version, educationStatus: s.educationStatus, gradeLevel: s.educationStatus === 'student' ? s.gradeLevel : null,
         graduationYear: s.educationStatus === 'graduate' ? s.graduationYear || null : null, schoolName: s.schoolName || null, schoolCity: s.schoolCity || null,
         schoolDistrict: s.schoolDistrict || null, schoolType: s.schoolType || null, classBranch: s.classBranch || null, birthDate: s.birthDate || null,
-        bio: s.bio || null, avatarUrl: s.avatarUrl || null, shareProgressWithTeachers: s.shareProgressWithTeachers };
+        bio: s.bio || null, avatarUrl: s.avatarUrl || null, shareProgressWithTeachers: s.shareProgressWithTeachers,
+        // Paket C: only a changed place is sent (checked against the shared list); an emptied diploma grade is removed.
+        ...(this.homeProvince && this.homeDistrictId ? { homeProvinceId: this.homeProvince, homeDistrictId: this.homeDistrictId } : {}),
+        ...(s.diplomaGrade !== null && s.diplomaGrade !== undefined && String(s.diplomaGrade) !== ''
+          ? { diplomaGrade: Number(s.diplomaGrade), diplomaGradeEstimated: !!s.diplomaGradeEstimated }
+          : { clearDiplomaGrade: this.savedDiploma !== null }) };
+      if (this.homeProvince && !this.homeDistrictId) { this.error.set('Şehrinle birlikte ilçeni de seç.'); return; }
+      const grade = Number(s.diplomaGrade);
+      if (s.diplomaGrade !== null && s.diplomaGrade !== undefined && String(s.diplomaGrade) !== '' && (grade < 50 || grade > 100)) { this.error.set('Diploma notu 50 ile 100 arasında olmalı.'); return; }
     } else if (this.role === 'Teacher' && this.teacher) {
       const t = this.teacher;
       payload = { expectedVersion: t.version, title: t.title || null, subjects: this.subjects.split(',').map(x => x.trim()).filter(Boolean),

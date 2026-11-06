@@ -6,6 +6,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingDailyAgendaService, DailyAgendaItem } from '../../../core/services/coaching-daily-agenda.service';
 import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudentTodayService, StudentTodayView } from '../../../core/services/coaching-student-today.service';
+import { CoachingScoreEstimateService, ScoreEstimate } from '../../../core/services/coaching-score-estimate.service';
+import { homeGoalCard } from '../growth/growth-model';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
 import { CoachingWhatsNewCardComponent } from '../layout/coaching-whats-new-card.component';
@@ -41,6 +43,9 @@ export class CoachingPortalHomeComponent implements OnInit {
   readonly setupReady = signal(true);
   readonly upcoming = signal<DailyAgendaItem[] | null>(null);
   readonly upcomingError = signal(false);
+  /** Paket C (#4): the score estimate behind the goal card; undefined while loading, null when it could not be read. */
+  readonly estimate = signal<ScoreEstimate | null | undefined>(undefined);
+  readonly goalCard = computed(() => { const estimate = this.estimate(); return estimate === undefined || estimate === null ? null : homeGoalCard(estimate); });
 
   /** Overdue work first (oldest first), then today in time order; each row says whether it is late. */
   readonly rows = computed<TodayRow[]>(() => {
@@ -68,6 +73,8 @@ export class CoachingPortalHomeComponent implements OnInit {
     this.load();
     this.injector.get(CoachingLearningSetupService).get().pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: setup => this.setupReady.set(setup.isReady), error: () => this.setupReady.set(true) });
+    this.injector.get(CoachingScoreEstimateService).estimate(null, null).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: estimate => this.estimate.set(estimate), error: () => this.estimate.set(null) });
   }
 
   load() {

@@ -68,7 +68,11 @@ public sealed record CoachingDataGoalDto(
     Guid GoalId, string Title, string? Description, string Category, int CurrentProgress,
     bool IsCompleted, DateTime? TargetDate, decimal? TargetScore, Guid? TargetSchoolId = null, Guid? TargetUniversityProgramId = null,
     decimal? TargetMaxScore = null, string? TargetExamType = null, string? TargetSubject = null,
-    IReadOnlyList<Coaching.Domain.Entities.AcademicNetTarget>? NetTargets = null);
+    IReadOnlyList<Coaching.Domain.Entities.AcademicNetTarget>? NetTargets = null)
+{
+    /// <summary>Paket C (#3): the student's own target scores, each in its score type.</summary>
+    public IReadOnlyList<Coaching.Domain.Entities.AcademicScoreTarget> ScoreTargets { get; init; } = [];
+}
 
 public sealed record CoachingDataSessionDto(
     Guid SessionId, string Title, DateTime ScheduledDate, int DurationMinutes, string Status,
