@@ -58,6 +58,26 @@ public sealed class CoachingStudentOnboardingTests
     }
 
     [Fact]
+    public async Task AResumedWizardIsToldWhichInvitationsTheStudentAccepted()
+    {
+        // E4 #18 (live test 06.11.2026): after a reload the invite step shows the accepted invitation, not "Tamam".
+        await using var s = await Setup.CreateAsync();
+        var teacher = s.F.AddAccount("Teacher"); var now = DateTime.UtcNow;
+        var email = s.F.Accounts.Users[s.Student].Email;
+        var accepted = CoachingInvitation.Create(teacher, email, "Student", null, teacher, false, null, now.AddMinutes(-5));
+        accepted.Finish(CoachingInvitationStatus.Accepted, s.Student, now);
+        var rejected = CoachingInvitation.Create(teacher, email, "Student", null, teacher, false, null, now.AddMinutes(-4));
+        rejected.Finish(CoachingInvitationStatus.Rejected, s.Student, now);
+        var pending = CoachingInvitation.Create(teacher, email, "Student", null, teacher, false, null, now);
+        var someoneElse = CoachingInvitation.Create(teacher, "other@example.test", "Student", null, teacher, false, null, now.AddMinutes(-3));
+        someoneElse.Finish(CoachingInvitationStatus.Accepted, Guid.NewGuid(), now);
+        s.F.Db.AddRange(accepted, rejected, pending, someoneElse); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+
+        var view = await s.Service.GetAsync(default);
+        view.AcceptedInvitations.Should().ContainSingle().Which.Should().Be(new OnboardingInvitation($"{teacher:N}@example.test", "StudentToTeacher", now));
+    }
+
+    [Fact]
     public async Task CompletingNeedsEveryStepAndReportsWhetherASubscriptionIsNeeded()
     {
         await using var s = await Setup.CreateAsync();

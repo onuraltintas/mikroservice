@@ -94,6 +94,23 @@ describe('StudentStudyAvailabilityComponent', () => {
     pending.complete();
     confirm.mockRestore();
   });
+  // E4 #24 (live test 06.11.2026): an invalid save is never silent and never leaves the previous "kaydedildi" on screen.
+  it('clears the previous message on every save and marks the row that is wrong', async () => {
+    const { fixture, component, service } = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    const submit = async () => { el.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges(); };
+    expect(el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
+    await submit();
+    expect(el.textContent).toContain('Çalışma saatlerin kaydedildi.');
+    component.rows = [{ day: 'Monday', start: '10:00', end: '09:00', endOfDay: false }]; component.dirty = true; fixture.detectChanges(); await fixture.whenStable();
+    await submit();
+    expect(service.saveAvailability).toHaveBeenCalledTimes(1);
+    expect(el.textContent).not.toContain('Çalışma saatlerin kaydedildi.');
+    expect(el.querySelector('[role="alert"]')!.textContent).toContain('Bitiş saati başlangıçtan sonra olmalıdır.');
+    expect(el.querySelector('[name="end-0"]')!.getAttribute('aria-invalid')).toBe('true');
+    expect((el.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
+  });
+
 });
 
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

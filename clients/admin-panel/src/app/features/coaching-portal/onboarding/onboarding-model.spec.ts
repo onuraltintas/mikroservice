@@ -1,7 +1,7 @@
 import { OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import {
   Answers, FlowContext, change, currentStep, withoutUnfitPurpose, examRequest, nextQuestion, personalRequest, prefill, questions, scoreTargetTypes, signature,
-  stepComplete, summary, targetRequest
+  stepComplete, summary, targetRequest, inviteAnswer, parentAnswer, emailAnswer, parentCodeNote
 } from './onboarding-model';
 
 describe('first-login wizard flow (Paket C #3)', () => {
@@ -217,5 +217,30 @@ describe('first-login wizard flow (Paket C #3)', () => {
     }
     expect(prefill(view('Unknown', null)).stage).toBeUndefined();
     expect(summary(prefill(view('UniversityStudent', null)), context).find(x => x.step === 1)!.lines).toContain('Eğitim durumu: Üniversite öğrencisiyim');
+  });
+
+  // E4 #18 (live test 06.11.2026): after a reload the answers of steps 4–6 are rebuilt from the server, not "Tamam".
+  it('rebuilds the invite, parent and e-mail answers of a resumed wizard from what the server has', () => {
+    const view: OnboardingView = { status: 'InProgress', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6], completedAt: null, academicYearStart: 2026, examSessions: context.sessions,
+      answers: { birthDate: '2012-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student',
+        gradeLevel: 8, graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: 'lgs-27',
+        targetExamYear: 2027, diplomaGrade: null, diplomaGradeEstimated: false, target: null },
+      acceptedInvitations: [{ inviterEmail: 'ogretmen@example.test', type: 'StudentToTeacher', acceptedAt: '2026-11-06T09:00:00Z' }] };
+    const answers = prefill(view);
+    expect(answers.invite).toEqual({ value: 'passed', label: 'Daveti kabul ettim: ogretmen@example.test' });
+    expect(prefill({ ...view, acceptedInvitations: [] }).invite!.label).toBe('Davetim yok');
+    // Steps 5 and 6 come from Identity and Notification; until they answer the bubble does not pretend to know.
+    expect(answers.parent!.label).not.toBe('Tamam'); expect(answers.notifications!.label).not.toBe('Tercihlerim kaydedildi');
+
+    expect(inviteAnswer([{ inviterEmail: 'kurum@example.test', type: 'StudentToInstitution', acceptedAt: '2026-11-06T09:00:00Z' },
+      { inviterEmail: null, type: 'StudentToTeacher', acceptedAt: '2026-11-06T09:00:00Z' }])).toBe('Daveti kabul ettim: kurum@example.test (kurum), bir öğretmen');
+    expect(parentAnswer({ expiresAt: '2026-11-13T09:00:00Z' }, [])).toBe('Veli kodu oluşturdum (13.11.2026 tarihine kadar geçerli)');
+    expect(parentAnswer(null, [{ parentName: 'Ayşe Veli', status: 'Verified' }, { parentName: 'Can Veli', status: 'Pending' }]))
+      .toBe('Velimle bağlantım var: Ayşe Veli, Can Veli (onayımı bekliyor)');
+    expect(parentAnswer(null, [])).toBe('Şimdilik geç');
+    expect(emailAnswer([{ label: 'Çalışma planı hatırlatmaları', email: true }, { label: 'Seanslar', email: false }])).toBe('Çalışma planı hatırlatmaları');
+    expect(emailAnswer([{ label: 'Seanslar', email: false }])).toBe('E-posta istemiyorum');
+    // As on Profilim: the code's expiry and that it works once.
+    expect(parentCodeNote('2026-11-13T09:00:00Z')).toBe('13.11.2026 tarihine kadar, bir kez kullanılabilir.');
   });
 });

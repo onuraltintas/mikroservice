@@ -63,6 +63,35 @@ public sealed class ParentLinkTests
     }
 
     [Fact]
+    public async Task TheStudentSeesWhetherAnUnusedCodeIsActiveButNeverTheCodeAgain()
+    {
+        // E4 #18/#21 (live test 06.11.2026): Profilim and a resumed wizard show the code made in the wizard (only a hash is stored,
+        // so the expiry is shown, not the code); a new code replaces the old one.
+        await using var context = CreateContext(); var clock = new Clock();
+        var (parent, student, _) = AddUsers(context); await context.SaveChangesAsync();
+        var links = new ParentLinkService(context, clock);
+
+        (await links.GetActiveCodeAsync(student.Id, default)).Value.Should().BeNull();
+        var first = (await links.CreateCodeAsync(student.Id, default)).Value;
+        var active = (await links.GetActiveCodeAsync(student.Id, default)).Value!;
+        (active.ExpiresAt, active.CreatedAt).Should().Be((first.ExpiresAt, clock.GetUtcNow().UtcDateTime));
+        typeof(ParentLinkCodeStatus).GetProperties().Select(x => x.Name).Should().BeEquivalentTo(["CreatedAt", "ExpiresAt"], "the code itself is never shown again");
+
+        clock.Now = clock.Now.AddHours(1);
+        var second = (await links.CreateCodeAsync(student.Id, default)).Value;
+        (await links.GetActiveCodeAsync(student.Id, default)).Value!.ExpiresAt.Should().Be(second.ExpiresAt, "the new code replaces the old one");
+        (await context.ParentLinkCodes.CountAsync(x => x.RevokedAt != null)).Should().Be(1);
+        (await links.RequestAsync(parent.Id, first.Code, ParentRelationship.Mother, default)).Error.Code.Should().Be("ParentLink.InvalidCode");
+
+        (await links.RequestAsync(parent.Id, second.Code, ParentRelationship.Mother, default)).IsSuccess.Should().BeTrue();
+        (await links.GetActiveCodeAsync(student.Id, default)).Value.Should().BeNull("a used code is no longer active");
+        await links.CreateCodeAsync(student.Id, default);
+        clock.Now = clock.Now.AddDays(8);
+        (await links.GetActiveCodeAsync(student.Id, default)).Value.Should().BeNull("an expired code is no longer active");
+        (await links.GetActiveCodeAsync(parent.Id, default)).Error.Code.Should().Be("ParentLink.Forbidden");
+    }
+
+    [Fact]
     public async Task OnlyAParentCanUseACodeOnlyTheChildCanApproveAndEitherSideCanEndTheLink()
     {
         await using var context = CreateContext(); var clock = new Clock();
@@ -177,6 +206,7 @@ public sealed class ParentLinkTests
 
     [Theory]
     [InlineData(nameof(ParentLinksController.CreateCode), "Student")]
+    [InlineData(nameof(ParentLinksController.GetActiveCode), "Student")]
     [InlineData(nameof(ParentLinksController.RequestLink), "Parent")]
     [InlineData(nameof(ParentLinksController.Approve), "Student")]
     [InlineData(nameof(ParentLinksController.Revoke), "Student,Parent")]
@@ -234,6 +264,7 @@ public sealed class ParentLinkTests
             return Task.FromResult(Answer);
         }
         public Task<EduPlatform.Shared.Kernel.Results.Result<ParentLinkCodeIssued>> CreateCodeAsync(Guid studentUserId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<EduPlatform.Shared.Kernel.Results.Result<ParentLinkCodeStatus?>> GetActiveCodeAsync(Guid studentUserId, CancellationToken ct) => throw new NotSupportedException();
         public Task<EduPlatform.Shared.Kernel.Results.Result<ParentLinkView>> RequestAsync(Guid parentUserId, string code, ParentRelationship relationship, CancellationToken ct) => throw new NotSupportedException();
         public Task<EduPlatform.Shared.Kernel.Results.Result<IReadOnlyList<ParentLinkView>>> ListAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
         public Task<EduPlatform.Shared.Kernel.Results.Result> ApproveAsync(Guid studentUserId, Guid linkId, CancellationToken ct) => throw new NotSupportedException();

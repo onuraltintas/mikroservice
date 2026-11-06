@@ -5,15 +5,17 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { StudentLearningSetupComponent } from './student-learning-setup.component';
-import { CoachingLearningSetupService, LearningCatalog, LearningSetupUpdate, LearningSetupView } from '../../../core/services/coaching-learning-setup.service';
+import { CoachingLearningSetupService, LearningCatalog, LearningSetupImpact, LearningSetupUpdate, LearningSetupView } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 
 describe('StudentLearningSetupComponent', () => {
   const empty: LearningSetupView = { context: null, nextStep: 'Purpose', isReady: false, missingFields: ['Purpose'], warnings: [] };
   async function setup(view = empty) {
     const service = { get: vi.fn(() => of(view)), save: vi.fn((_request: LearningSetupUpdate) => of(view)),
+      impact: vi.fn((_request: { purpose: string; primaryScoreType: string | null; foreignLanguage: string | null }) =>
+        of<LearningSetupImpact>({ removedTargets: [], teacherGoalMismatch: false, diplomaGradeRemoved: null })),
       catalog: vi.fn((_lessonId?: string | null, _page?: number) => of({ curriculum: null, lessons: [], topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: ['Katalog hazırlanıyor.'] } as LearningCatalog)) };
-    const planning = { getTopicOutcomes: vi.fn(() => of([{ outcomeId: 'outcome-1', code: 'MAT.8.1.1', name: 'Çarpanları belirler', estimateId: 'estimate-1', estimateNumber: 1, learningMinutes: 20, practiceMinutes: 10, checkMinutes: 5, totalMinutes: 35, editionCode: 'MEB-2026', officialLessonPeriods: null, sourceKind: 'Official' as const }])) };
+    const planning = { getAvailability: vi.fn(() => of(null)), getTopicOutcomes: vi.fn(() => of([{ outcomeId: 'outcome-1', code: 'MAT.8.1.1', name: 'Çarpanları belirler', estimateId: 'estimate-1', estimateNumber: 1, learningMinutes: 20, practiceMinutes: 10, checkMinutes: 5, totalMinutes: 35, editionCode: 'MEB-2026', officialLessonPeriods: null, sourceKind: 'Official' as const }])) };
     TestBed.configureTestingModule({ imports: [StudentLearningSetupComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: CoachingLearningSetupService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: planning }] });
     const fixture = TestBed.createComponent(StudentLearningSetupComponent); fixture.detectChanges(); await fixture.whenStable();
     return { fixture, component: fixture.componentInstance, service, planning };
@@ -153,6 +155,82 @@ describe('StudentLearningSetupComponent', () => {
     const { component, service } = await setup({ ...empty, context, missingFields: ['Purpose'] });
     component.savePurpose();
     expect(service.save).toHaveBeenCalledWith(expect.objectContaining({ courses: [], topics: [] }));
+  });
+
+  // ---------- E4 (live test 06.11.2026) ----------
+  const yks = { id: 'ctx', version: 4, academicYearStart: 2026, purpose: 'Yks' as const, targetExamYear: 2027, primaryScoreType: 'SAY', foreignLanguage: null,
+    curriculumVersionId: 'program', coursePreferences: [], topicStates: [], startingStatusReviewed: false };
+  const yksView: LearningSetupView = { ...empty, context: yks, nextStep: 'Purpose', missingFields: [], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] };
+  async function purposeForm(view = yksView) {
+    const t = await setup(view); const el = t.fixture.nativeElement as HTMLElement;
+    const settle = async () => { t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges(); };
+    const submit = async () => { el.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await settle(); };
+    const click = async (text: string) => {
+      const button = Array.from(el.querySelectorAll('button, a')).find(x => x.textContent?.trim() === text) as HTMLElement | undefined;
+      expect(button, text).toBeTruthy(); button!.click(); await settle();
+    };
+    return { ...t, el, settle, submit, click };
+  }
+
+  it('#26: a new score type that removes the own target asks in the page first, then confirms with "Yeni hedef seç"', async () => {
+    const t = await purposeForm();
+    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
+    t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
+    expect(t.service.impact).toHaveBeenCalledWith({ purpose: 'Yks', primaryScoreType: 'EA', foreignLanguage: null });
+    expect(t.service.save).not.toHaveBeenCalled();
+    const ask = t.el.querySelector('[data-testid="target-impact"]')!;
+    expect(ask.textContent).toContain('Hedefin (Hacettepe Üniversitesi · Bilgisayar Mühendisliği) bu puan türüne uymuyor; kaydedersen kaldırılacak.');
+    await t.click('Vazgeç');
+    expect(t.el.querySelector('[data-testid="target-impact"]')).toBeNull(); expect(t.service.save).not.toHaveBeenCalled();
+    expect(t.component.primaryScoreType).toBe('EA');
+
+    await t.submit(); await t.click('Evet, kaydet');
+    expect(t.service.save).toHaveBeenCalledTimes(1);
+    const done = t.el.querySelector('[data-testid="setup-saved"]')!;
+    expect(done.getAttribute('role')).toBe('status');
+    expect(done.textContent).toContain('Çalışma amacın kaydedildi.');
+    expect(done.textContent).toContain('Hedefinden kaldırıldı: Hacettepe Üniversitesi · Bilgisayar Mühendisliği');
+    expect(done.querySelector('a[href="/coaching-portal/welcome?step=target"]')!.textContent).toContain('Yeni hedef seç');
+  });
+
+  it('#26: a new exam says it deletes the diploma grade; a teacher\'s goal is kept and its mismatch is shown', async () => {
+    const t = await purposeForm();
+    t.service.impact.mockReturnValue(of({ removedTargets: [], teacherGoalMismatch: false, diplomaGradeRemoved: 85 }));
+    t.component.purpose = 'Yds'; t.component.changed(); await t.submit();
+    expect(t.el.querySelector('[data-testid="target-impact"]')!.textContent).toContain('Diploma notun (85) silinecek');
+    await t.click('Evet, kaydet');
+    expect(t.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Diploma notun (85) silindi.');
+
+    TestBed.resetTestingModule();
+    const teacher = await purposeForm();
+    teacher.service.impact.mockReturnValue(of({ removedTargets: [], teacherGoalMismatch: true, diplomaGradeRemoved: null }));
+    teacher.component.primaryScoreType = 'EA'; teacher.component.changed(); await teacher.submit();
+    expect(teacher.service.save).toHaveBeenCalledTimes(1);
+    expect(teacher.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Hedefini öğretmenin belirledi');
+  });
+
+  it('#26: saving without a scope change does not ask and still confirms the save', async () => {
+    const t = await purposeForm();
+    t.component.targetExamYear = 2028; t.component.changed(); await t.submit();
+    expect(t.service.impact).not.toHaveBeenCalled(); expect(t.service.save).toHaveBeenCalledTimes(1);
+    expect(t.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Çalışma amacın kaydedildi.');
+  });
+
+  it('#24: an invalid year is never swallowed: the old message goes, the field and a summary say why', async () => {
+    const t = await purposeForm();
+    expect(t.el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
+    t.component.targetExamYear = 2028; t.component.changed(); await t.submit();
+    expect(t.el.querySelector('[data-testid="setup-saved"]')).not.toBeNull();
+    await t.click('Çalışma amacım');
+    const year = t.el.querySelector('[name="examYear"]') as HTMLInputElement;
+    year.value = '2040'; year.dispatchEvent(new Event('input')); await t.settle();
+    await t.submit();
+    expect(t.service.save).toHaveBeenCalledTimes(1);
+    expect(t.el.querySelector('[data-testid="setup-saved"]')).toBeNull();
+    expect(t.el.querySelector('[data-testid="setup-error-summary"]')!.textContent).toContain('Hedef sınav yılı 2026 ile 2031 arasında olmalı.');
+    expect(year.getAttribute('aria-invalid')).toBe('true');
+    expect(t.el.querySelector('#' + year.getAttribute('aria-describedby'))!.textContent).toContain('2026 ile 2031');
+    expect((t.el.querySelector('form button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
   });
 });
 
