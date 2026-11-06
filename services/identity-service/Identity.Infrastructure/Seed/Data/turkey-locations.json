@@ -6,15 +6,15 @@
     },
     {
       "id": "TUR002",
-      "name": "Adiyaman"
+      "name": "Adıyaman"
     },
     {
       "id": "TUR003",
-      "name": "Afyonkarahi̇sar"
+      "name": "Afyonkarahisar"
     },
     {
       "id": "TUR004",
-      "name": "Ağri"
+      "name": "Ağrı"
     },
     {
       "id": "TUR068",
@@ -38,19 +38,19 @@
     },
     {
       "id": "TUR008",
-      "name": "Artvi̇n"
+      "name": "Artvin"
     },
     {
       "id": "TUR009",
-      "name": "Aydin"
+      "name": "Aydın"
     },
     {
       "id": "TUR010",
-      "name": "Balikesi̇r"
+      "name": "Balıkesir"
     },
     {
       "id": "TUR074",
-      "name": "Bartin"
+      "name": "Bartın"
     },
     {
       "id": "TUR072",
@@ -62,15 +62,15 @@
     },
     {
       "id": "TUR011",
-      "name": "Bi̇leci̇k"
+      "name": "Bilecik"
     },
     {
       "id": "TUR012",
-      "name": "Bi̇ngöl"
+      "name": "Bingöl"
     },
     {
       "id": "TUR013",
-      "name": "Bi̇tli̇s"
+      "name": "Bitlis"
     },
     {
       "id": "TUR014",
@@ -90,7 +90,7 @@
     },
     {
       "id": "TUR018",
-      "name": "Çankiri"
+      "name": "Çankırı"
     },
     {
       "id": "TUR019",
@@ -98,11 +98,11 @@
     },
     {
       "id": "TUR020",
-      "name": "Deni̇zli̇"
+      "name": "Denizli"
     },
     {
       "id": "TUR021",
-      "name": "Di̇yarbakir"
+      "name": "Diyarbakır"
     },
     {
       "id": "TUR081",
@@ -110,15 +110,15 @@
     },
     {
       "id": "TUR022",
-      "name": "Edi̇rne"
+      "name": "Edirne"
     },
     {
       "id": "TUR023",
-      "name": "Elaziğ"
+      "name": "Elazığ"
     },
     {
       "id": "TUR024",
-      "name": "Erzi̇ncan"
+      "name": "Erzincan"
     },
     {
       "id": "TUR025",
@@ -126,15 +126,15 @@
     },
     {
       "id": "TUR026",
-      "name": "Eski̇şehir"
+      "name": "Eskişehir"
     },
     {
       "id": "TUR027",
-      "name": "Gazi̇antep"
+      "name": "Gaziantep"
     },
     {
       "id": "TUR028",
-      "name": "Gi̇resun"
+      "name": "Giresun"
     },
     {
       "id": "TUR029",
@@ -142,7 +142,7 @@
     },
     {
       "id": "TUR030",
-      "name": "Hakkari̇"
+      "name": "Hakkari"
     },
     {
       "id": "TUR031",
@@ -150,7 +150,7 @@
     },
     {
       "id": "TUR076",
-      "name": "Iğdir"
+      "name": "Iğdır"
     },
     {
       "id": "TUR032",
@@ -162,7 +162,7 @@
     },
     {
       "id": "TUR035",
-      "name": "İzmi̇r"
+      "name": "İzmir"
     },
     {
       "id": "TUR046",
@@ -186,27 +186,27 @@
     },
     {
       "id": "TUR038",
-      "name": "Kayseri̇"
+      "name": "Kayseri"
     },
     {
       "id": "TUR079",
-      "name": "Ki̇li̇s"
+      "name": "Kilis"
     },
     {
       "id": "TUR071",
-      "name": "Kirikkale"
+      "name": "Kırıkkale"
     },
     {
       "id": "TUR039",
-      "name": "Kirklareli̇"
+      "name": "Kırklareli"
     },
     {
       "id": "TUR040",
-      "name": "Kirşehi̇r"
+      "name": "Kırşehir"
     },
     {
       "id": "TUR041",
-      "name": "Kocaeli̇"
+      "name": "Kocaeli"
     },
     {
       "id": "TUR042",
@@ -222,15 +222,15 @@
     },
     {
       "id": "TUR045",
-      "name": "Mani̇sa"
+      "name": "Manisa"
     },
     {
       "id": "TUR047",
-      "name": "Mardi̇n"
+      "name": "Mardin"
     },
     {
       "id": "TUR033",
-      "name": "Mersi̇n"
+      "name": "Mersin"
     },
     {
       "id": "TUR048",
@@ -242,11 +242,11 @@
     },
     {
       "id": "TUR050",
-      "name": "Nevşehi̇r"
+      "name": "Nevşehir"
     },
     {
       "id": "TUR051",
-      "name": "Ni̇ğde"
+      "name": "Niğde"
     },
     {
       "id": "TUR052",
@@ -254,11 +254,11 @@
     },
     {
       "id": "TUR080",
-      "name": "Osmani̇ye"
+      "name": "Osmaniye"
     },
     {
       "id": "TUR053",
-      "name": "Ri̇ze"
+      "name": "Rize"
     },
     {
       "id": "TUR054",
@@ -270,27 +270,27 @@
     },
     {
       "id": "TUR063",
-      "name": "Şanliurfa"
+      "name": "Şanlıurfa"
     },
     {
       "id": "TUR056",
-      "name": "Si̇i̇rt"
+      "name": "Siirt"
     },
     {
       "id": "TUR057",
-      "name": "Si̇nop"
+      "name": "Sinop"
     },
     {
       "id": "TUR073",
-      "name": "Şirnak"
+      "name": "Şırnak"
     },
     {
       "id": "TUR058",
-      "name": "Si̇vas"
+      "name": "Sivas"
     },
     {
       "id": "TUR059",
-      "name": "Teki̇rdağ"
+      "name": "Tekirdağ"
     },
     {
       "id": "TUR060",
@@ -302,7 +302,7 @@
     },
     {
       "id": "TUR062",
-      "name": "Tunceli̇"
+      "name": "Tunceli"
     },
     {
       "id": "TUR064",
@@ -354,7 +354,7 @@
     {
       "id": "TUR001006",
       "provinceId": "TUR001",
-      "name": "Karai̇sali"
+      "name": "Karaisalı"
     },
     {
       "id": "TUR001007",
@@ -369,17 +369,17 @@
     {
       "id": "TUR001009",
       "provinceId": "TUR001",
-      "name": "Pozanti"
+      "name": "Pozantı"
     },
     {
       "id": "TUR001010",
       "provinceId": "TUR001",
-      "name": "Sai̇mbeyli̇"
+      "name": "Saimbeyli"
     },
     {
       "id": "TUR001011",
       "provinceId": "TUR001",
-      "name": "Sariçam"
+      "name": "Sarıçam"
     },
     {
       "id": "TUR001012",
@@ -389,32 +389,32 @@
     {
       "id": "TUR001013",
       "provinceId": "TUR001",
-      "name": "Tufanbeyli̇"
+      "name": "Tufanbeyli"
     },
     {
       "id": "TUR001014",
       "provinceId": "TUR001",
-      "name": "Yumurtalik"
+      "name": "Yumurtalık"
     },
     {
       "id": "TUR001015",
       "provinceId": "TUR001",
-      "name": "Yüreği̇r"
+      "name": "Yüreğir"
     },
     {
       "id": "TUR002001",
       "provinceId": "TUR002",
-      "name": "Adiyaman"
+      "name": "Adıyaman"
     },
     {
       "id": "TUR002002",
       "provinceId": "TUR002",
-      "name": "Besni̇"
+      "name": "Besni"
     },
     {
       "id": "TUR002003",
       "provinceId": "TUR002",
-      "name": "Çeli̇khan"
+      "name": "Çelikhan"
     },
     {
       "id": "TUR002004",
@@ -424,7 +424,7 @@
     {
       "id": "TUR002005",
       "provinceId": "TUR002",
-      "name": "Gölbaşi"
+      "name": "Gölbaşı"
     },
     {
       "id": "TUR002006",
@@ -439,7 +439,7 @@
     {
       "id": "TUR002008",
       "provinceId": "TUR002",
-      "name": "Si̇nci̇k"
+      "name": "Sincik"
     },
     {
       "id": "TUR002009",
@@ -454,7 +454,7 @@
     {
       "id": "TUR003002",
       "provinceId": "TUR003",
-      "name": "Başmakçi"
+      "name": "Başmakçı"
     },
     {
       "id": "TUR003003",
@@ -464,7 +464,7 @@
     {
       "id": "TUR003004",
       "provinceId": "TUR003",
-      "name": "Bolvadi̇n"
+      "name": "Bolvadin"
     },
     {
       "id": "TUR003005",
@@ -479,22 +479,22 @@
     {
       "id": "TUR003007",
       "provinceId": "TUR003",
-      "name": "Dazkiri"
+      "name": "Dazkırı"
     },
     {
       "id": "TUR003008",
       "provinceId": "TUR003",
-      "name": "Di̇nar"
+      "name": "Dinar"
     },
     {
       "id": "TUR003009",
       "provinceId": "TUR003",
-      "name": "Emi̇rdağ"
+      "name": "Emirdağ"
     },
     {
       "id": "TUR003010",
       "provinceId": "TUR003",
-      "name": "Evci̇ler"
+      "name": "Evciler"
     },
     {
       "id": "TUR003011",
@@ -504,32 +504,32 @@
     {
       "id": "TUR003012",
       "provinceId": "TUR003",
-      "name": "İhsani̇ye"
+      "name": "İhsaniye"
     },
     {
       "id": "TUR003013",
       "provinceId": "TUR003",
-      "name": "İscehi̇sar"
+      "name": "İscehisar"
     },
     {
       "id": "TUR003014",
       "provinceId": "TUR003",
-      "name": "Kizilören"
+      "name": "Kızılören"
     },
     {
       "id": "TUR003015",
       "provinceId": "TUR003",
-      "name": "Sandikli"
+      "name": "Sandıklı"
     },
     {
       "id": "TUR003016",
       "provinceId": "TUR003",
-      "name": "Si̇nanpaşa"
+      "name": "Sinanpaşa"
     },
     {
       "id": "TUR003017",
       "provinceId": "TUR003",
-      "name": "Sultandaği"
+      "name": "Sultandağı"
     },
     {
       "id": "TUR003018",
@@ -539,22 +539,22 @@
     {
       "id": "TUR004001",
       "provinceId": "TUR004",
-      "name": "Ağri"
+      "name": "Ağrı"
     },
     {
       "id": "TUR004002",
       "provinceId": "TUR004",
-      "name": "Di̇yadi̇n"
+      "name": "Diyadin"
     },
     {
       "id": "TUR004003",
       "provinceId": "TUR004",
-      "name": "Doğubayazit"
+      "name": "Doğubayazıt"
     },
     {
       "id": "TUR004004",
       "provinceId": "TUR004",
-      "name": "Eleşki̇rt"
+      "name": "Eleşkirt"
     },
     {
       "id": "TUR004005",
@@ -569,7 +569,7 @@
     {
       "id": "TUR004007",
       "provinceId": "TUR004",
-      "name": "Taşliçay"
+      "name": "Taşlıçay"
     },
     {
       "id": "TUR004008",
@@ -589,7 +589,7 @@
     {
       "id": "TUR005003",
       "provinceId": "TUR005",
-      "name": "Gümüşhaciköy"
+      "name": "Gümüşhacıköy"
     },
     {
       "id": "TUR005004",
@@ -599,7 +599,7 @@
     {
       "id": "TUR005005",
       "provinceId": "TUR005",
-      "name": "Merzi̇fon"
+      "name": "Merzifon"
     },
     {
       "id": "TUR005006",
@@ -619,7 +619,7 @@
     {
       "id": "TUR006002",
       "provinceId": "TUR006",
-      "name": "Altindağ"
+      "name": "Altındağ"
     },
     {
       "id": "TUR006003",
@@ -634,12 +634,12 @@
     {
       "id": "TUR006005",
       "provinceId": "TUR006",
-      "name": "Beypazari"
+      "name": "Beypazarı"
     },
     {
       "id": "TUR006006",
       "provinceId": "TUR006",
-      "name": "Çamlidere"
+      "name": "Çamlıdere"
     },
     {
       "id": "TUR006007",
@@ -659,7 +659,7 @@
     {
       "id": "TUR006010",
       "provinceId": "TUR006",
-      "name": "Eti̇mesgut"
+      "name": "Etimesgut"
     },
     {
       "id": "TUR006011",
@@ -669,7 +669,7 @@
     {
       "id": "TUR006012",
       "provinceId": "TUR006",
-      "name": "Gölbaşi"
+      "name": "Gölbaşı"
     },
     {
       "id": "TUR006013",
@@ -689,17 +689,17 @@
     {
       "id": "TUR006016",
       "provinceId": "TUR006",
-      "name": "Kaleci̇k"
+      "name": "Kalecik"
     },
     {
       "id": "TUR006017",
       "provinceId": "TUR006",
-      "name": "Keçi̇ören"
+      "name": "Keçiören"
     },
     {
       "id": "TUR006018",
       "provinceId": "TUR006",
-      "name": "Kizilcahamam"
+      "name": "Kızılcahamam"
     },
     {
       "id": "TUR006019",
@@ -709,12 +709,12 @@
     {
       "id": "TUR006020",
       "provinceId": "TUR006",
-      "name": "Nallihan"
+      "name": "Nallıhan"
     },
     {
       "id": "TUR006021",
       "provinceId": "TUR006",
-      "name": "Polatli"
+      "name": "Polatlı"
     },
     {
       "id": "TUR006022",
@@ -724,22 +724,22 @@
     {
       "id": "TUR006023",
       "provinceId": "TUR006",
-      "name": "Si̇ncan"
+      "name": "Sincan"
     },
     {
       "id": "TUR006024",
       "provinceId": "TUR006",
-      "name": "Şerefli̇koçhi̇sar"
+      "name": "Şereflikoçhisar"
     },
     {
       "id": "TUR006025",
       "provinceId": "TUR006",
-      "name": "Yeni̇mahalle"
+      "name": "Yenimahalle"
     },
     {
       "id": "TUR007001",
       "provinceId": "TUR007",
-      "name": "Akseki̇"
+      "name": "Akseki"
     },
     {
       "id": "TUR007002",
@@ -759,22 +759,22 @@
     {
       "id": "TUR007005",
       "provinceId": "TUR007",
-      "name": "Döşemealti"
+      "name": "Döşemealtı"
     },
     {
       "id": "TUR007006",
       "provinceId": "TUR007",
-      "name": "Elmali"
+      "name": "Elmalı"
     },
     {
       "id": "TUR007007",
       "provinceId": "TUR007",
-      "name": "Fi̇ni̇ke"
+      "name": "Finike"
     },
     {
       "id": "TUR007008",
       "provinceId": "TUR007",
-      "name": "Gazi̇paşa"
+      "name": "Gazipaşa"
     },
     {
       "id": "TUR007009",
@@ -784,7 +784,7 @@
     {
       "id": "TUR007010",
       "provinceId": "TUR007",
-      "name": "İbradi"
+      "name": "İbradı"
     },
     {
       "id": "TUR007011",
@@ -804,12 +804,12 @@
     {
       "id": "TUR007014",
       "provinceId": "TUR007",
-      "name": "Konyaalti"
+      "name": "Konyaaltı"
     },
     {
       "id": "TUR007015",
       "provinceId": "TUR007",
-      "name": "Korkuteli̇"
+      "name": "Korkuteli"
     },
     {
       "id": "TUR007016",
@@ -829,7 +829,7 @@
     {
       "id": "TUR007019",
       "provinceId": "TUR007",
-      "name": "Seri̇k"
+      "name": "Serik"
     },
     {
       "id": "TUR008001",
@@ -839,7 +839,7 @@
     {
       "id": "TUR008002",
       "provinceId": "TUR008",
-      "name": "Arhavi̇"
+      "name": "Arhavi"
     },
     {
       "id": "TUR008003",
@@ -874,7 +874,7 @@
     {
       "id": "TUR008009",
       "provinceId": "TUR008",
-      "name": "Yusufeli̇"
+      "name": "Yusufeli"
     },
     {
       "id": "TUR009001",
@@ -889,12 +889,12 @@
     {
       "id": "TUR009003",
       "provinceId": "TUR009",
-      "name": "Çi̇ne"
+      "name": "Çine"
     },
     {
       "id": "TUR009004",
       "provinceId": "TUR009",
-      "name": "Di̇di̇m"
+      "name": "Didim"
     },
     {
       "id": "TUR009005",
@@ -904,12 +904,12 @@
     {
       "id": "TUR009006",
       "provinceId": "TUR009",
-      "name": "Germenci̇k"
+      "name": "Germencik"
     },
     {
       "id": "TUR009007",
       "provinceId": "TUR009",
-      "name": "İnci̇rli̇ova"
+      "name": "İncirliova"
     },
     {
       "id": "TUR009008",
@@ -924,7 +924,7 @@
     {
       "id": "TUR009010",
       "provinceId": "TUR009",
-      "name": "Koçarli"
+      "name": "Koçarlı"
     },
     {
       "id": "TUR009011",
@@ -934,7 +934,7 @@
     {
       "id": "TUR009012",
       "provinceId": "TUR009",
-      "name": "Kuşadasi"
+      "name": "Kuşadası"
     },
     {
       "id": "TUR009013",
@@ -944,7 +944,7 @@
     {
       "id": "TUR009014",
       "provinceId": "TUR009",
-      "name": "Nazi̇lli̇"
+      "name": "Nazilli"
     },
     {
       "id": "TUR009015",
@@ -954,22 +954,22 @@
     {
       "id": "TUR009016",
       "provinceId": "TUR009",
-      "name": "Sultanhi̇sar"
+      "name": "Sultanhisar"
     },
     {
       "id": "TUR009017",
       "provinceId": "TUR009",
-      "name": "Yeni̇pazar"
+      "name": "Yenipazar"
     },
     {
       "id": "TUR010001",
       "provinceId": "TUR010",
-      "name": "Altieylül"
+      "name": "Altıeylül"
     },
     {
       "id": "TUR010002",
       "provinceId": "TUR010",
-      "name": "Ayvalik"
+      "name": "Ayvalık"
     },
     {
       "id": "TUR010003",
@@ -979,17 +979,17 @@
     {
       "id": "TUR010004",
       "provinceId": "TUR010",
-      "name": "Bandirma"
+      "name": "Bandırma"
     },
     {
       "id": "TUR010005",
       "provinceId": "TUR010",
-      "name": "Bi̇gadi̇ç"
+      "name": "Bigadiç"
     },
     {
       "id": "TUR010006",
       "provinceId": "TUR010",
-      "name": "Burhani̇ye"
+      "name": "Burhaniye"
     },
     {
       "id": "TUR010007",
@@ -999,7 +999,7 @@
     {
       "id": "TUR010008",
       "provinceId": "TUR010",
-      "name": "Edremi̇t"
+      "name": "Edremit"
     },
     {
       "id": "TUR010009",
@@ -1024,12 +1024,12 @@
     {
       "id": "TUR010013",
       "provinceId": "TUR010",
-      "name": "İvri̇ndi̇"
+      "name": "İvrindi"
     },
     {
       "id": "TUR010014",
       "provinceId": "TUR010",
-      "name": "Karesi̇"
+      "name": "Karesi"
     },
     {
       "id": "TUR010015",
@@ -1054,7 +1054,7 @@
     {
       "id": "TUR010019",
       "provinceId": "TUR010",
-      "name": "Sindirgi"
+      "name": "Sındırgı"
     },
     {
       "id": "TUR010020",
@@ -1074,22 +1074,22 @@
     {
       "id": "TUR011003",
       "provinceId": "TUR011",
-      "name": "Gölpazari"
+      "name": "Gölpazarı"
     },
     {
       "id": "TUR011004",
       "provinceId": "TUR011",
-      "name": "İnhi̇sar"
+      "name": "İnhisar"
     },
     {
       "id": "TUR011005",
       "provinceId": "TUR011",
-      "name": "Osmaneli̇"
+      "name": "Osmaneli"
     },
     {
       "id": "TUR011006",
       "provinceId": "TUR011",
-      "name": "Pazaryeri̇"
+      "name": "Pazaryeri"
     },
     {
       "id": "TUR011007",
@@ -1099,12 +1099,12 @@
     {
       "id": "TUR011008",
       "provinceId": "TUR011",
-      "name": "Yeni̇pazar"
+      "name": "Yenipazar"
     },
     {
       "id": "TUR012001",
       "provinceId": "TUR012",
-      "name": "Adakli"
+      "name": "Adaklı"
     },
     {
       "id": "TUR012002",
@@ -1119,12 +1119,12 @@
     {
       "id": "TUR012004",
       "provinceId": "TUR012",
-      "name": "Karliova"
+      "name": "Karlıova"
     },
     {
       "id": "TUR012005",
       "provinceId": "TUR012",
-      "name": "Ki̇ği"
+      "name": "Kiğı"
     },
     {
       "id": "TUR012006",
@@ -1139,12 +1139,12 @@
     {
       "id": "TUR012008",
       "provinceId": "TUR012",
-      "name": "Yedi̇su"
+      "name": "Yedisu"
     },
     {
       "id": "TUR013001",
       "provinceId": "TUR013",
-      "name": "Adi̇lcevaz"
+      "name": "Adilcevaz"
     },
     {
       "id": "TUR013002",
@@ -1164,12 +1164,12 @@
     {
       "id": "TUR013005",
       "provinceId": "TUR013",
-      "name": "Hi̇zan"
+      "name": "Hizan"
     },
     {
       "id": "TUR013006",
       "provinceId": "TUR013",
-      "name": "Mutki̇"
+      "name": "Mutki"
     },
     {
       "id": "TUR013007",
@@ -1184,7 +1184,7 @@
     {
       "id": "TUR014002",
       "provinceId": "TUR014",
-      "name": "Dörtdi̇van"
+      "name": "Dörtdivan"
     },
     {
       "id": "TUR014003",
@@ -1199,7 +1199,7 @@
     {
       "id": "TUR014005",
       "provinceId": "TUR014",
-      "name": "Kibriscik"
+      "name": "Kıbrıscık"
     },
     {
       "id": "TUR014006",
@@ -1219,7 +1219,7 @@
     {
       "id": "TUR014009",
       "provinceId": "TUR014",
-      "name": "Yeni̇çağa"
+      "name": "Yeniçağa"
     },
     {
       "id": "TUR015001",
@@ -1229,7 +1229,7 @@
     {
       "id": "TUR015002",
       "provinceId": "TUR015",
-      "name": "Altinyayla"
+      "name": "Altınyayla"
     },
     {
       "id": "TUR015003",
@@ -1244,22 +1244,22 @@
     {
       "id": "TUR015005",
       "provinceId": "TUR015",
-      "name": "Çavdir"
+      "name": "Çavdır"
     },
     {
       "id": "TUR015006",
       "provinceId": "TUR015",
-      "name": "Çelti̇kçi̇"
+      "name": "Çeltikçi"
     },
     {
       "id": "TUR015007",
       "provinceId": "TUR015",
-      "name": "Gölhi̇sar"
+      "name": "Gölhisar"
     },
     {
       "id": "TUR015008",
       "provinceId": "TUR015",
-      "name": "Karamanli"
+      "name": "Karamanlı"
     },
     {
       "id": "TUR015009",
@@ -1269,12 +1269,12 @@
     {
       "id": "TUR015010",
       "provinceId": "TUR015",
-      "name": "Tefenni̇"
+      "name": "Tefenni"
     },
     {
       "id": "TUR015011",
       "provinceId": "TUR015",
-      "name": "Yeşi̇lova"
+      "name": "Yeşilova"
     },
     {
       "id": "TUR016001",
@@ -1284,7 +1284,7 @@
     {
       "id": "TUR016002",
       "provinceId": "TUR016",
-      "name": "Gemli̇k"
+      "name": "Gemlik"
     },
     {
       "id": "TUR016003",
@@ -1294,7 +1294,7 @@
     {
       "id": "TUR016004",
       "provinceId": "TUR016",
-      "name": "Harmancik"
+      "name": "Harmancık"
     },
     {
       "id": "TUR016005",
@@ -1304,7 +1304,7 @@
     {
       "id": "TUR016006",
       "provinceId": "TUR016",
-      "name": "İzni̇k"
+      "name": "İznik"
     },
     {
       "id": "TUR016007",
@@ -1334,47 +1334,47 @@
     {
       "id": "TUR016012",
       "provinceId": "TUR016",
-      "name": "Ni̇lüfer"
+      "name": "Nilüfer"
     },
     {
       "id": "TUR016013",
       "provinceId": "TUR016",
-      "name": "Orhaneli̇"
+      "name": "Orhaneli"
     },
     {
       "id": "TUR016014",
       "provinceId": "TUR016",
-      "name": "Orhangazi̇"
+      "name": "Orhangazi"
     },
     {
       "id": "TUR016015",
       "provinceId": "TUR016",
-      "name": "Osmangazi̇"
+      "name": "Osmangazi"
     },
     {
       "id": "TUR016016",
       "provinceId": "TUR016",
-      "name": "Yeni̇şehi̇r"
+      "name": "Yenişehir"
     },
     {
       "id": "TUR016017",
       "provinceId": "TUR016",
-      "name": "Yildirim"
+      "name": "Yıldırım"
     },
     {
       "id": "TUR017001",
       "provinceId": "TUR017",
-      "name": "Ayvacik"
+      "name": "Ayvacık"
     },
     {
       "id": "TUR017002",
       "provinceId": "TUR017",
-      "name": "Bayrami̇ç"
+      "name": "Bayramiç"
     },
     {
       "id": "TUR017003",
       "provinceId": "TUR017",
-      "name": "Bi̇ga"
+      "name": "Biga"
     },
     {
       "id": "TUR017004",
@@ -1399,12 +1399,12 @@
     {
       "id": "TUR017008",
       "provinceId": "TUR017",
-      "name": "Ezi̇ne"
+      "name": "Ezine"
     },
     {
       "id": "TUR017009",
       "provinceId": "TUR017",
-      "name": "Geli̇bolu"
+      "name": "Gelibolu"
     },
     {
       "id": "TUR017010",
@@ -1414,12 +1414,12 @@
     {
       "id": "TUR017011",
       "provinceId": "TUR017",
-      "name": "Lâpseki̇"
+      "name": "Lâpseki"
     },
     {
       "id": "TUR017012",
       "provinceId": "TUR017",
-      "name": "Yeni̇ce"
+      "name": "Yenice"
     },
     {
       "id": "TUR018001",
@@ -1434,7 +1434,7 @@
     {
       "id": "TUR018003",
       "provinceId": "TUR018",
-      "name": "Çankiri"
+      "name": "Çankırı"
     },
     {
       "id": "TUR018004",
@@ -1444,7 +1444,7 @@
     {
       "id": "TUR018005",
       "provinceId": "TUR018",
-      "name": "Eldi̇van"
+      "name": "Eldivan"
     },
     {
       "id": "TUR018006",
@@ -1454,7 +1454,7 @@
     {
       "id": "TUR018007",
       "provinceId": "TUR018",
-      "name": "Kizilirmak"
+      "name": "Kızılırmak"
     },
     {
       "id": "TUR018008",
@@ -1479,7 +1479,7 @@
     {
       "id": "TUR018012",
       "provinceId": "TUR018",
-      "name": "Yaprakli"
+      "name": "Yapraklı"
     },
     {
       "id": "TUR019001",
@@ -1509,22 +1509,22 @@
     {
       "id": "TUR019006",
       "provinceId": "TUR019",
-      "name": "İski̇li̇p"
+      "name": "İskilip"
     },
     {
       "id": "TUR019007",
       "provinceId": "TUR019",
-      "name": "Kargi"
+      "name": "Kargı"
     },
     {
       "id": "TUR019008",
       "provinceId": "TUR019",
-      "name": "Lâçi̇n"
+      "name": "Lâçin"
     },
     {
       "id": "TUR019009",
       "provinceId": "TUR019",
-      "name": "Meci̇tözü"
+      "name": "Mecitözü"
     },
     {
       "id": "TUR019010",
@@ -1539,7 +1539,7 @@
     {
       "id": "TUR019012",
       "provinceId": "TUR019",
-      "name": "Osmancik"
+      "name": "Osmancık"
     },
     {
       "id": "TUR019013",
@@ -1554,7 +1554,7 @@
     {
       "id": "TUR020001",
       "provinceId": "TUR020",
-      "name": "Acipayam"
+      "name": "Acıpayam"
     },
     {
       "id": "TUR020002",
@@ -1569,7 +1569,7 @@
     {
       "id": "TUR020004",
       "provinceId": "TUR020",
-      "name": "Beki̇lli̇"
+      "name": "Bekilli"
     },
     {
       "id": "TUR020005",
@@ -1594,7 +1594,7 @@
     {
       "id": "TUR020009",
       "provinceId": "TUR020",
-      "name": "Çameli̇"
+      "name": "Çameli"
     },
     {
       "id": "TUR020010",
@@ -1604,7 +1604,7 @@
     {
       "id": "TUR020011",
       "provinceId": "TUR020",
-      "name": "Çi̇vri̇l"
+      "name": "Çivril"
     },
     {
       "id": "TUR020012",
@@ -1624,7 +1624,7 @@
     {
       "id": "TUR020015",
       "provinceId": "TUR020",
-      "name": "Merkezefendi̇"
+      "name": "Merkezefendi"
     },
     {
       "id": "TUR020016",
@@ -1639,7 +1639,7 @@
     {
       "id": "TUR020018",
       "provinceId": "TUR020",
-      "name": "Seri̇nhi̇sar"
+      "name": "Serinhisar"
     },
     {
       "id": "TUR020019",
@@ -1654,17 +1654,17 @@
     {
       "id": "TUR021002",
       "provinceId": "TUR021",
-      "name": "Bi̇smi̇l"
+      "name": "Bismil"
     },
     {
       "id": "TUR021003",
       "provinceId": "TUR021",
-      "name": "Çermi̇k"
+      "name": "Çermik"
     },
     {
       "id": "TUR021004",
       "provinceId": "TUR021",
-      "name": "Çinar"
+      "name": "Çınar"
     },
     {
       "id": "TUR021005",
@@ -1674,22 +1674,22 @@
     {
       "id": "TUR021006",
       "provinceId": "TUR021",
-      "name": "Di̇cle"
+      "name": "Dicle"
     },
     {
       "id": "TUR021007",
       "provinceId": "TUR021",
-      "name": "Eği̇l"
+      "name": "Eğil"
     },
     {
       "id": "TUR021008",
       "provinceId": "TUR021",
-      "name": "Ergani̇"
+      "name": "Ergani"
     },
     {
       "id": "TUR021009",
       "provinceId": "TUR021",
-      "name": "Hani̇"
+      "name": "Hani"
     },
     {
       "id": "TUR021010",
@@ -1699,7 +1699,7 @@
     {
       "id": "TUR021011",
       "provinceId": "TUR021",
-      "name": "Kayapinar"
+      "name": "Kayapınar"
     },
     {
       "id": "TUR021012",
@@ -1714,12 +1714,12 @@
     {
       "id": "TUR021014",
       "provinceId": "TUR021",
-      "name": "Li̇ce"
+      "name": "Lice"
     },
     {
       "id": "TUR021015",
       "provinceId": "TUR021",
-      "name": "Si̇lvan"
+      "name": "Silvan"
     },
     {
       "id": "TUR021016",
@@ -1729,7 +1729,7 @@
     {
       "id": "TUR021017",
       "provinceId": "TUR021",
-      "name": "Yeni̇şehi̇r"
+      "name": "Yenişehir"
     },
     {
       "id": "TUR022001",
@@ -1764,7 +1764,7 @@
     {
       "id": "TUR022007",
       "provinceId": "TUR022",
-      "name": "Meri̇ç"
+      "name": "Meriç"
     },
     {
       "id": "TUR022008",
@@ -1779,7 +1779,7 @@
     {
       "id": "TUR023001",
       "provinceId": "TUR023",
-      "name": "Ağin"
+      "name": "Ağın"
     },
     {
       "id": "TUR023002",
@@ -1789,17 +1789,17 @@
     {
       "id": "TUR023003",
       "provinceId": "TUR023",
-      "name": "Aricak"
+      "name": "Arıcak"
     },
     {
       "id": "TUR023004",
       "provinceId": "TUR023",
-      "name": "Baski̇l"
+      "name": "Baskil"
     },
     {
       "id": "TUR023005",
       "provinceId": "TUR023",
-      "name": "Elaziğ"
+      "name": "Elazığ"
     },
     {
       "id": "TUR023006",
@@ -1814,7 +1814,7 @@
     {
       "id": "TUR023008",
       "provinceId": "TUR023",
-      "name": "Kovancilar"
+      "name": "Kovancılar"
     },
     {
       "id": "TUR023009",
@@ -1829,12 +1829,12 @@
     {
       "id": "TUR023011",
       "provinceId": "TUR023",
-      "name": "Si̇vri̇ce"
+      "name": "Sivrice"
     },
     {
       "id": "TUR024001",
       "provinceId": "TUR024",
-      "name": "Çayirli"
+      "name": "Çayırlı"
     },
     {
       "id": "TUR024002",
@@ -1844,7 +1844,7 @@
     {
       "id": "TUR024003",
       "provinceId": "TUR024",
-      "name": "İli̇ç"
+      "name": "İliç"
     },
     {
       "id": "TUR024004",
@@ -1854,17 +1854,17 @@
     {
       "id": "TUR024005",
       "provinceId": "TUR024",
-      "name": "Kemali̇ye"
+      "name": "Kemaliye"
     },
     {
       "id": "TUR024006",
       "provinceId": "TUR024",
-      "name": "Otlukbeli̇"
+      "name": "Otlukbeli"
     },
     {
       "id": "TUR024007",
       "provinceId": "TUR024",
-      "name": "Refahi̇ye"
+      "name": "Refahiye"
     },
     {
       "id": "TUR024008",
@@ -1884,7 +1884,7 @@
     {
       "id": "TUR025002",
       "provinceId": "TUR025",
-      "name": "Azi̇zi̇ye"
+      "name": "Aziziye"
     },
     {
       "id": "TUR025003",
@@ -1894,7 +1894,7 @@
     {
       "id": "TUR025004",
       "provinceId": "TUR025",
-      "name": "Hinis"
+      "name": "Hınıs"
     },
     {
       "id": "TUR025005",
@@ -1904,7 +1904,7 @@
     {
       "id": "TUR025006",
       "provinceId": "TUR025",
-      "name": "İspi̇r"
+      "name": "İspir"
     },
     {
       "id": "TUR025007",
@@ -1914,7 +1914,7 @@
     {
       "id": "TUR025008",
       "provinceId": "TUR025",
-      "name": "Karayazi"
+      "name": "Karayazı"
     },
     {
       "id": "TUR025009",
@@ -1944,7 +1944,7 @@
     {
       "id": "TUR025014",
       "provinceId": "TUR025",
-      "name": "Pasi̇nler"
+      "name": "Pasinler"
     },
     {
       "id": "TUR025015",
@@ -1974,7 +1974,7 @@
     {
       "id": "TUR025020",
       "provinceId": "TUR025",
-      "name": "Yakuti̇ye"
+      "name": "Yakutiye"
     },
     {
       "id": "TUR026001",
@@ -1984,12 +1984,12 @@
     {
       "id": "TUR026002",
       "provinceId": "TUR026",
-      "name": "Beyli̇kova"
+      "name": "Beylikova"
     },
     {
       "id": "TUR026003",
       "provinceId": "TUR026",
-      "name": "Çi̇fteler"
+      "name": "Çifteler"
     },
     {
       "id": "TUR026004",
@@ -2009,42 +2009,42 @@
     {
       "id": "TUR026007",
       "provinceId": "TUR026",
-      "name": "Mahmudi̇ye"
+      "name": "Mahmudiye"
     },
     {
       "id": "TUR026008",
       "provinceId": "TUR026",
-      "name": "Mi̇halgazi̇"
+      "name": "Mihalgazi"
     },
     {
       "id": "TUR026009",
       "provinceId": "TUR026",
-      "name": "Mi̇haliççik"
+      "name": "Mihalıççık"
     },
     {
       "id": "TUR026010",
       "provinceId": "TUR026",
-      "name": "Odunpazari"
+      "name": "Odunpazarı"
     },
     {
       "id": "TUR026011",
       "provinceId": "TUR026",
-      "name": "Saricakaya"
+      "name": "Sarıcakaya"
     },
     {
       "id": "TUR026012",
       "provinceId": "TUR026",
-      "name": "Seyi̇tgazi̇"
+      "name": "Seyitgazi"
     },
     {
       "id": "TUR026013",
       "provinceId": "TUR026",
-      "name": "Si̇vri̇hi̇sar"
+      "name": "Sivrihisar"
     },
     {
       "id": "TUR026014",
       "provinceId": "TUR026",
-      "name": "Tepebaşi"
+      "name": "Tepebaşı"
     },
     {
       "id": "TUR027001",
@@ -2054,42 +2054,42 @@
     {
       "id": "TUR027002",
       "provinceId": "TUR027",
-      "name": "İslahi̇ye"
+      "name": "İslahiye"
     },
     {
       "id": "TUR027003",
       "provinceId": "TUR027",
-      "name": "Karkamiş"
+      "name": "Karkamış"
     },
     {
       "id": "TUR027004",
       "provinceId": "TUR027",
-      "name": "Ni̇zi̇p"
+      "name": "Nizip"
     },
     {
       "id": "TUR027005",
       "provinceId": "TUR027",
-      "name": "Nurdaği"
+      "name": "Nurdağı"
     },
     {
       "id": "TUR027006",
       "provinceId": "TUR027",
-      "name": "Oğuzeli̇"
+      "name": "Oğuzeli"
     },
     {
       "id": "TUR027007",
       "provinceId": "TUR027",
-      "name": "Şahi̇nbey"
+      "name": "Şahinbey"
     },
     {
       "id": "TUR027008",
       "provinceId": "TUR027",
-      "name": "Şehi̇tkami̇l"
+      "name": "Şehitkamil"
     },
     {
       "id": "TUR027009",
       "provinceId": "TUR027",
-      "name": "Yavuzeli̇"
+      "name": "Yavuzeli"
     },
     {
       "id": "TUR028001",
@@ -2109,12 +2109,12 @@
     {
       "id": "TUR028004",
       "provinceId": "TUR028",
-      "name": "Çanakçi"
+      "name": "Çanakçı"
     },
     {
       "id": "TUR028005",
       "provinceId": "TUR028",
-      "name": "Dereli̇"
+      "name": "Dereli"
     },
     {
       "id": "TUR028006",
@@ -2124,12 +2124,12 @@
     {
       "id": "TUR028007",
       "provinceId": "TUR028",
-      "name": "Espi̇ye"
+      "name": "Espiye"
     },
     {
       "id": "TUR028008",
       "provinceId": "TUR028",
-      "name": "Eynesi̇l"
+      "name": "Eynesil"
     },
     {
       "id": "TUR028009",
@@ -2154,22 +2154,22 @@
     {
       "id": "TUR028013",
       "provinceId": "TUR028",
-      "name": "Pi̇razi̇z"
+      "name": "Piraziz"
     },
     {
       "id": "TUR028014",
       "provinceId": "TUR028",
-      "name": "Şebi̇nkarahi̇sar"
+      "name": "Şebinkarahisar"
     },
     {
       "id": "TUR028015",
       "provinceId": "TUR028",
-      "name": "Ti̇rebolu"
+      "name": "Tirebolu"
     },
     {
       "id": "TUR028016",
       "provinceId": "TUR028",
-      "name": "Yağlidere"
+      "name": "Yağlıdere"
     },
     {
       "id": "TUR029001",
@@ -2179,7 +2179,7 @@
     {
       "id": "TUR029002",
       "provinceId": "TUR029",
-      "name": "Kelki̇t"
+      "name": "Kelkit"
     },
     {
       "id": "TUR029003",
@@ -2194,7 +2194,7 @@
     {
       "id": "TUR029005",
       "provinceId": "TUR029",
-      "name": "Şi̇ran"
+      "name": "Şiran"
     },
     {
       "id": "TUR029006",
@@ -2214,7 +2214,7 @@
     {
       "id": "TUR030003",
       "provinceId": "TUR030",
-      "name": "Şemdi̇nli̇"
+      "name": "Şemdinli"
     },
     {
       "id": "TUR030004",
@@ -2224,12 +2224,12 @@
     {
       "id": "TUR030005",
       "provinceId": "TUR030",
-      "name": "Dereci̇k"
+      "name": "Derecik"
     },
     {
       "id": "TUR031001",
       "provinceId": "TUR031",
-      "name": "Altinözü"
+      "name": "Altınözü"
     },
     {
       "id": "TUR031002",
@@ -2259,7 +2259,7 @@
     {
       "id": "TUR031007",
       "provinceId": "TUR031",
-      "name": "Erzi̇n"
+      "name": "Erzin"
     },
     {
       "id": "TUR031008",
@@ -2274,7 +2274,7 @@
     {
       "id": "TUR031010",
       "provinceId": "TUR031",
-      "name": "Kirikhan"
+      "name": "Kırıkhan"
     },
     {
       "id": "TUR031011",
@@ -2289,7 +2289,7 @@
     {
       "id": "TUR031013",
       "provinceId": "TUR031",
-      "name": "Reyhanli"
+      "name": "Reyhanlı"
     },
     {
       "id": "TUR031014",
@@ -2299,7 +2299,7 @@
     {
       "id": "TUR031015",
       "provinceId": "TUR031",
-      "name": "Yayladaği"
+      "name": "Yayladağı"
     },
     {
       "id": "TUR032001",
@@ -2314,7 +2314,7 @@
     {
       "id": "TUR032003",
       "provinceId": "TUR032",
-      "name": "Eği̇rdi̇r"
+      "name": "Eğirdir"
     },
     {
       "id": "TUR032004",
@@ -2334,12 +2334,12 @@
     {
       "id": "TUR032007",
       "provinceId": "TUR032",
-      "name": "Keçi̇borlu"
+      "name": "Keçiborlu"
     },
     {
       "id": "TUR032008",
       "provinceId": "TUR032",
-      "name": "Seni̇rkent"
+      "name": "Senirkent"
     },
     {
       "id": "TUR032009",
@@ -2349,7 +2349,7 @@
     {
       "id": "TUR032010",
       "provinceId": "TUR032",
-      "name": "Şarki̇karaağaç"
+      "name": "Şarkikaraağaç"
     },
     {
       "id": "TUR032011",
@@ -2364,12 +2364,12 @@
     {
       "id": "TUR032013",
       "provinceId": "TUR032",
-      "name": "Yeni̇şarbademli̇"
+      "name": "Yenişarbademli"
     },
     {
       "id": "TUR033001",
       "provinceId": "TUR033",
-      "name": "Akdeni̇z"
+      "name": "Akdeniz"
     },
     {
       "id": "TUR033002",
@@ -2379,22 +2379,22 @@
     {
       "id": "TUR033003",
       "provinceId": "TUR033",
-      "name": "Aydincik"
+      "name": "Aydıncık"
     },
     {
       "id": "TUR033004",
       "provinceId": "TUR033",
-      "name": "Bozyazi"
+      "name": "Bozyazı"
     },
     {
       "id": "TUR033005",
       "provinceId": "TUR033",
-      "name": "Çamliyayla"
+      "name": "Çamlıyayla"
     },
     {
       "id": "TUR033006",
       "provinceId": "TUR033",
-      "name": "Erdemli̇"
+      "name": "Erdemli"
     },
     {
       "id": "TUR033007",
@@ -2404,7 +2404,7 @@
     {
       "id": "TUR033008",
       "provinceId": "TUR033",
-      "name": "Mezi̇tli̇"
+      "name": "Mezitli"
     },
     {
       "id": "TUR033009",
@@ -2414,7 +2414,7 @@
     {
       "id": "TUR033010",
       "provinceId": "TUR033",
-      "name": "Si̇li̇fke"
+      "name": "Silifke"
     },
     {
       "id": "TUR033011",
@@ -2429,7 +2429,7 @@
     {
       "id": "TUR033013",
       "provinceId": "TUR033",
-      "name": "Yeni̇şehi̇r"
+      "name": "Yenişehir"
     },
     {
       "id": "TUR034001",
@@ -2444,32 +2444,32 @@
     {
       "id": "TUR034003",
       "provinceId": "TUR034",
-      "name": "Ataşehi̇r"
+      "name": "Ataşehir"
     },
     {
       "id": "TUR034004",
       "provinceId": "TUR034",
-      "name": "Avcilar"
+      "name": "Avcılar"
     },
     {
       "id": "TUR034005",
       "provinceId": "TUR034",
-      "name": "Bağcilar"
+      "name": "Bağcılar"
     },
     {
       "id": "TUR034006",
       "provinceId": "TUR034",
-      "name": "Bahçeli̇evler"
+      "name": "Bahçelievler"
     },
     {
       "id": "TUR034007",
       "provinceId": "TUR034",
-      "name": "Bakirköy"
+      "name": "Bakırköy"
     },
     {
       "id": "TUR034008",
       "provinceId": "TUR034",
-      "name": "Başakşehi̇r"
+      "name": "Başakşehir"
     },
     {
       "id": "TUR034009",
@@ -2479,7 +2479,7 @@
     {
       "id": "TUR034010",
       "provinceId": "TUR034",
-      "name": "Beşi̇ktaş"
+      "name": "Beşiktaş"
     },
     {
       "id": "TUR034011",
@@ -2489,7 +2489,7 @@
     {
       "id": "TUR034012",
       "provinceId": "TUR034",
-      "name": "Beyli̇kdüzü"
+      "name": "Beylikdüzü"
     },
     {
       "id": "TUR034013",
@@ -2529,12 +2529,12 @@
     {
       "id": "TUR034020",
       "provinceId": "TUR034",
-      "name": "Fati̇h"
+      "name": "Fatih"
     },
     {
       "id": "TUR034021",
       "provinceId": "TUR034",
-      "name": "Gazi̇ Osmanpaşa"
+      "name": "Gaziosmanpaşa"
     },
     {
       "id": "TUR034022",
@@ -2544,12 +2544,12 @@
     {
       "id": "TUR034023",
       "provinceId": "TUR034",
-      "name": "Kadiköy"
+      "name": "Kadıköy"
     },
     {
       "id": "TUR034024",
       "provinceId": "TUR034",
-      "name": "Kağithane"
+      "name": "Kağıthane"
     },
     {
       "id": "TUR034025",
@@ -2569,7 +2569,7 @@
     {
       "id": "TUR034028",
       "provinceId": "TUR034",
-      "name": "Pendi̇k"
+      "name": "Pendik"
     },
     {
       "id": "TUR034029",
@@ -2579,32 +2579,32 @@
     {
       "id": "TUR034030",
       "provinceId": "TUR034",
-      "name": "Sariyer"
+      "name": "Sarıyer"
     },
     {
       "id": "TUR034031",
       "provinceId": "TUR034",
-      "name": "Si̇li̇vri̇"
+      "name": "Silivri"
     },
     {
       "id": "TUR034032",
       "provinceId": "TUR034",
-      "name": "Sultanbeyli̇"
+      "name": "Sultanbeyli"
     },
     {
       "id": "TUR034033",
       "provinceId": "TUR034",
-      "name": "Sultangazi̇"
+      "name": "Sultangazi"
     },
     {
       "id": "TUR034034",
       "provinceId": "TUR034",
-      "name": "Şi̇le"
+      "name": "Şile"
     },
     {
       "id": "TUR034035",
       "provinceId": "TUR034",
-      "name": "Şi̇şli̇"
+      "name": "Şişli"
     },
     {
       "id": "TUR034036",
@@ -2614,7 +2614,7 @@
     {
       "id": "TUR034037",
       "provinceId": "TUR034",
-      "name": "Ümrani̇ye"
+      "name": "Ümraniye"
     },
     {
       "id": "TUR034038",
@@ -2624,12 +2624,12 @@
     {
       "id": "TUR034039",
       "provinceId": "TUR034",
-      "name": "Zeyti̇nburnu"
+      "name": "Zeytinburnu"
     },
     {
       "id": "TUR035001",
       "provinceId": "TUR035",
-      "name": "Ali̇ağa"
+      "name": "Aliağa"
     },
     {
       "id": "TUR035002",
@@ -2639,12 +2639,12 @@
     {
       "id": "TUR035003",
       "provinceId": "TUR035",
-      "name": "Bayindir"
+      "name": "Bayındır"
     },
     {
       "id": "TUR035004",
       "provinceId": "TUR035",
-      "name": "Bayrakli"
+      "name": "Bayraklı"
     },
     {
       "id": "TUR035005",
@@ -2674,12 +2674,12 @@
     {
       "id": "TUR035010",
       "provinceId": "TUR035",
-      "name": "Çi̇ğli̇"
+      "name": "Çiğli"
     },
     {
       "id": "TUR035011",
       "provinceId": "TUR035",
-      "name": "Di̇ki̇li̇"
+      "name": "Dikili"
     },
     {
       "id": "TUR035012",
@@ -2689,7 +2689,7 @@
     {
       "id": "TUR035013",
       "provinceId": "TUR035",
-      "name": "Gazi̇emi̇r"
+      "name": "Gaziemir"
     },
     {
       "id": "TUR035014",
@@ -2709,7 +2709,7 @@
     {
       "id": "TUR035017",
       "provinceId": "TUR035",
-      "name": "Karşiyaka"
+      "name": "Karşıyaka"
     },
     {
       "id": "TUR035018",
@@ -2719,12 +2719,12 @@
     {
       "id": "TUR035019",
       "provinceId": "TUR035",
-      "name": "Kinik"
+      "name": "Kınık"
     },
     {
       "id": "TUR035020",
       "provinceId": "TUR035",
-      "name": "Ki̇raz"
+      "name": "Kiraz"
     },
     {
       "id": "TUR035021",
@@ -2744,17 +2744,17 @@
     {
       "id": "TUR035024",
       "provinceId": "TUR035",
-      "name": "Narlidere"
+      "name": "Narlıdere"
     },
     {
       "id": "TUR035025",
       "provinceId": "TUR035",
-      "name": "Ödemi̇ş"
+      "name": "Ödemiş"
     },
     {
       "id": "TUR035026",
       "provinceId": "TUR035",
-      "name": "Seferi̇hi̇sar"
+      "name": "Seferihisar"
     },
     {
       "id": "TUR035027",
@@ -2764,12 +2764,12 @@
     {
       "id": "TUR035028",
       "provinceId": "TUR035",
-      "name": "Ti̇re"
+      "name": "Tire"
     },
     {
       "id": "TUR035029",
       "provinceId": "TUR035",
-      "name": "Torbali"
+      "name": "Torbalı"
     },
     {
       "id": "TUR035030",
@@ -2789,12 +2789,12 @@
     {
       "id": "TUR036003",
       "provinceId": "TUR036",
-      "name": "Di̇gor"
+      "name": "Digor"
     },
     {
       "id": "TUR036004",
       "provinceId": "TUR036",
-      "name": "Kağizman"
+      "name": "Kağızman"
     },
     {
       "id": "TUR036005",
@@ -2804,12 +2804,12 @@
     {
       "id": "TUR036006",
       "provinceId": "TUR036",
-      "name": "Sarikamiş"
+      "name": "Sarıkamış"
     },
     {
       "id": "TUR036007",
       "provinceId": "TUR036",
-      "name": "Seli̇m"
+      "name": "Selim"
     },
     {
       "id": "TUR036008",
@@ -2824,7 +2824,7 @@
     {
       "id": "TUR037002",
       "provinceId": "TUR037",
-      "name": "Ağli"
+      "name": "Ağlı"
     },
     {
       "id": "TUR037003",
@@ -2844,12 +2844,12 @@
     {
       "id": "TUR037006",
       "provinceId": "TUR037",
-      "name": "Ci̇de"
+      "name": "Cide"
     },
     {
       "id": "TUR037007",
       "provinceId": "TUR037",
-      "name": "Çatalzeyti̇n"
+      "name": "Çatalzeytin"
     },
     {
       "id": "TUR037008",
@@ -2859,7 +2859,7 @@
     {
       "id": "TUR037009",
       "provinceId": "TUR037",
-      "name": "Devrekâni̇"
+      "name": "Devrekâni"
     },
     {
       "id": "TUR037010",
@@ -2874,7 +2874,7 @@
     {
       "id": "TUR037012",
       "provinceId": "TUR037",
-      "name": "İhsangazi̇"
+      "name": "İhsangazi"
     },
     {
       "id": "TUR037013",
@@ -2894,12 +2894,12 @@
     {
       "id": "TUR037016",
       "provinceId": "TUR037",
-      "name": "Pinarbaşi"
+      "name": "Pınarbaşı"
     },
     {
       "id": "TUR037017",
       "provinceId": "TUR037",
-      "name": "Seydi̇ler"
+      "name": "Seydiler"
     },
     {
       "id": "TUR037018",
@@ -2919,7 +2919,7 @@
     {
       "id": "TUR038001",
       "provinceId": "TUR038",
-      "name": "Akkişla"
+      "name": "Akkışla"
     },
     {
       "id": "TUR038002",
@@ -2929,17 +2929,17 @@
     {
       "id": "TUR038003",
       "provinceId": "TUR038",
-      "name": "Develi̇"
+      "name": "Develi"
     },
     {
       "id": "TUR038004",
       "provinceId": "TUR038",
-      "name": "Felahi̇ye"
+      "name": "Felahiye"
     },
     {
       "id": "TUR038005",
       "provinceId": "TUR038",
-      "name": "Hacilar"
+      "name": "Hacılar"
     },
     {
       "id": "TUR038006",
@@ -2949,12 +2949,12 @@
     {
       "id": "TUR038007",
       "provinceId": "TUR038",
-      "name": "Kocasi̇nan"
+      "name": "Kocasinan"
     },
     {
       "id": "TUR038008",
       "provinceId": "TUR038",
-      "name": "Meli̇kgazi̇"
+      "name": "Melikgazi"
     },
     {
       "id": "TUR038009",
@@ -2964,17 +2964,17 @@
     {
       "id": "TUR038010",
       "provinceId": "TUR038",
-      "name": "Pinarbaşi"
+      "name": "Pınarbaşı"
     },
     {
       "id": "TUR038011",
       "provinceId": "TUR038",
-      "name": "Sarioğlan"
+      "name": "Sarıoğlan"
     },
     {
       "id": "TUR038012",
       "provinceId": "TUR038",
-      "name": "Sariz"
+      "name": "Sarız"
     },
     {
       "id": "TUR038013",
@@ -2989,27 +2989,27 @@
     {
       "id": "TUR038015",
       "provinceId": "TUR038",
-      "name": "Yahyali"
+      "name": "Yahyalı"
     },
     {
       "id": "TUR038016",
       "provinceId": "TUR038",
-      "name": "Yeşi̇lhi̇sar"
+      "name": "Yeşilhisar"
     },
     {
       "id": "TUR039001",
       "provinceId": "TUR039",
-      "name": "Babaeski̇"
+      "name": "Babaeski"
     },
     {
       "id": "TUR039002",
       "provinceId": "TUR039",
-      "name": "Demi̇rköy"
+      "name": "Demirköy"
     },
     {
       "id": "TUR039003",
       "provinceId": "TUR039",
-      "name": "Kirklareli"
+      "name": "Kırklareli"
     },
     {
       "id": "TUR039004",
@@ -3024,17 +3024,17 @@
     {
       "id": "TUR039006",
       "provinceId": "TUR039",
-      "name": "Pehli̇vanköy"
+      "name": "Pehlivanköy"
     },
     {
       "id": "TUR039007",
       "provinceId": "TUR039",
-      "name": "Pinarhi̇sar"
+      "name": "Pınarhisar"
     },
     {
       "id": "TUR039008",
       "provinceId": "TUR039",
-      "name": "Vi̇ze"
+      "name": "Vize"
     },
     {
       "id": "TUR040001",
@@ -3044,7 +3044,7 @@
     {
       "id": "TUR040002",
       "provinceId": "TUR040",
-      "name": "Akpinar"
+      "name": "Akpınar"
     },
     {
       "id": "TUR040003",
@@ -3054,7 +3054,7 @@
     {
       "id": "TUR040004",
       "provinceId": "TUR040",
-      "name": "Çi̇çekdaği"
+      "name": "Çiçekdağı"
     },
     {
       "id": "TUR040005",
@@ -3064,7 +3064,7 @@
     {
       "id": "TUR040006",
       "provinceId": "TUR040",
-      "name": "Kirşehir"
+      "name": "Kırşehir"
     },
     {
       "id": "TUR040007",
@@ -3074,27 +3074,27 @@
     {
       "id": "TUR041001",
       "provinceId": "TUR041",
-      "name": "Başi̇skele"
+      "name": "Başiskele"
     },
     {
       "id": "TUR041002",
       "provinceId": "TUR041",
-      "name": "Çayirova"
+      "name": "Çayırova"
     },
     {
       "id": "TUR041003",
       "provinceId": "TUR041",
-      "name": "Darica"
+      "name": "Darıca"
     },
     {
       "id": "TUR041004",
       "provinceId": "TUR041",
-      "name": "Deri̇nce"
+      "name": "Derince"
     },
     {
       "id": "TUR041005",
       "provinceId": "TUR041",
-      "name": "Di̇lovasi"
+      "name": "Dilovası"
     },
     {
       "id": "TUR041006",
@@ -3109,12 +3109,12 @@
     {
       "id": "TUR041008",
       "provinceId": "TUR041",
-      "name": "İzmi̇t"
+      "name": "İzmit"
     },
     {
       "id": "TUR041009",
       "provinceId": "TUR041",
-      "name": "Kandira"
+      "name": "Kandıra"
     },
     {
       "id": "TUR041010",
@@ -3134,7 +3134,7 @@
     {
       "id": "TUR042001",
       "provinceId": "TUR042",
-      "name": "Ahirli"
+      "name": "Ahırlı"
     },
     {
       "id": "TUR042002",
@@ -3144,32 +3144,32 @@
     {
       "id": "TUR042003",
       "provinceId": "TUR042",
-      "name": "Akşehi̇r"
+      "name": "Akşehir"
     },
     {
       "id": "TUR042004",
       "provinceId": "TUR042",
-      "name": "Altineki̇n"
+      "name": "Altınekin"
     },
     {
       "id": "TUR042005",
       "provinceId": "TUR042",
-      "name": "Beyşehi̇r"
+      "name": "Beyşehir"
     },
     {
       "id": "TUR042006",
       "provinceId": "TUR042",
-      "name": "Bozkir"
+      "name": "Bozkır"
     },
     {
       "id": "TUR042007",
       "provinceId": "TUR042",
-      "name": "Ci̇hanbeyli̇"
+      "name": "Cihanbeyli"
     },
     {
       "id": "TUR042008",
       "provinceId": "TUR042",
-      "name": "Çelti̇k"
+      "name": "Çeltik"
     },
     {
       "id": "TUR042009",
@@ -3189,32 +3189,32 @@
     {
       "id": "TUR042012",
       "provinceId": "TUR042",
-      "name": "Doğanhi̇sar"
+      "name": "Doğanhisar"
     },
     {
       "id": "TUR042013",
       "provinceId": "TUR042",
-      "name": "Emi̇rgazi̇"
+      "name": "Emirgazi"
     },
     {
       "id": "TUR042014",
       "provinceId": "TUR042",
-      "name": "Ereğli̇"
+      "name": "Ereğli"
     },
     {
       "id": "TUR042015",
       "provinceId": "TUR042",
-      "name": "Güneysinir"
+      "name": "Güneysınır"
     },
     {
       "id": "TUR042016",
       "provinceId": "TUR042",
-      "name": "Hadi̇m"
+      "name": "Hadim"
     },
     {
       "id": "TUR042017",
       "provinceId": "TUR042",
-      "name": "Halkapinar"
+      "name": "Halkapınar"
     },
     {
       "id": "TUR042018",
@@ -3224,17 +3224,17 @@
     {
       "id": "TUR042019",
       "provinceId": "TUR042",
-      "name": "Ilgin"
+      "name": "Ilgın"
     },
     {
       "id": "TUR042020",
       "provinceId": "TUR042",
-      "name": "Kadinhani"
+      "name": "Kadınhanı"
     },
     {
       "id": "TUR042021",
       "provinceId": "TUR042",
-      "name": "Karapinar"
+      "name": "Karapınar"
     },
     {
       "id": "TUR042022",
@@ -3264,7 +3264,7 @@
     {
       "id": "TUR042027",
       "provinceId": "TUR042",
-      "name": "Seydi̇şehi̇r"
+      "name": "Seydişehir"
     },
     {
       "id": "TUR042028",
@@ -3279,7 +3279,7 @@
     {
       "id": "TUR042030",
       "provinceId": "TUR042",
-      "name": "Yalihüyük"
+      "name": "Yalıhüyük"
     },
     {
       "id": "TUR042031",
@@ -3289,7 +3289,7 @@
     {
       "id": "TUR043001",
       "provinceId": "TUR043",
-      "name": "Altintaş"
+      "name": "Altıntaş"
     },
     {
       "id": "TUR043002",
@@ -3299,17 +3299,17 @@
     {
       "id": "TUR043003",
       "provinceId": "TUR043",
-      "name": "Çavdarhi̇sar"
+      "name": "Çavdarhisar"
     },
     {
       "id": "TUR043004",
       "provinceId": "TUR043",
-      "name": "Domani̇ç"
+      "name": "Domaniç"
     },
     {
       "id": "TUR043005",
       "provinceId": "TUR043",
-      "name": "Dumlupinar"
+      "name": "Dumlupınar"
     },
     {
       "id": "TUR043006",
@@ -3319,12 +3319,12 @@
     {
       "id": "TUR043007",
       "provinceId": "TUR043",
-      "name": "Gedi̇z"
+      "name": "Gediz"
     },
     {
       "id": "TUR043008",
       "provinceId": "TUR043",
-      "name": "Hi̇sarcik"
+      "name": "Hisarcık"
     },
     {
       "id": "TUR043009",
@@ -3339,7 +3339,7 @@
     {
       "id": "TUR043011",
       "provinceId": "TUR043",
-      "name": "Si̇mav"
+      "name": "Simav"
     },
     {
       "id": "TUR043012",
@@ -3349,7 +3349,7 @@
     {
       "id": "TUR043013",
       "provinceId": "TUR043",
-      "name": "Tavşanli"
+      "name": "Tavşanlı"
     },
     {
       "id": "TUR044001",
@@ -3359,7 +3359,7 @@
     {
       "id": "TUR044002",
       "provinceId": "TUR044",
-      "name": "Arapgi̇r"
+      "name": "Arapgir"
     },
     {
       "id": "TUR044003",
@@ -3369,7 +3369,7 @@
     {
       "id": "TUR044004",
       "provinceId": "TUR044",
-      "name": "Battalgazi̇"
+      "name": "Battalgazi"
     },
     {
       "id": "TUR044005",
@@ -3379,7 +3379,7 @@
     {
       "id": "TUR044006",
       "provinceId": "TUR044",
-      "name": "Doğanşehi̇r"
+      "name": "Doğanşehir"
     },
     {
       "id": "TUR044007",
@@ -3389,7 +3389,7 @@
     {
       "id": "TUR044008",
       "provinceId": "TUR044",
-      "name": "Heki̇mhan"
+      "name": "Hekimhan"
     },
     {
       "id": "TUR044009",
@@ -3409,32 +3409,32 @@
     {
       "id": "TUR044012",
       "provinceId": "TUR044",
-      "name": "Yazihan"
+      "name": "Yazıhan"
     },
     {
       "id": "TUR044013",
       "provinceId": "TUR044",
-      "name": "Yeşi̇lyurt"
+      "name": "Yeşilyurt"
     },
     {
       "id": "TUR045001",
       "provinceId": "TUR045",
-      "name": "Ahmetli̇"
+      "name": "Ahmetli"
     },
     {
       "id": "TUR045002",
       "provinceId": "TUR045",
-      "name": "Akhi̇sar"
+      "name": "Akhisar"
     },
     {
       "id": "TUR045003",
       "provinceId": "TUR045",
-      "name": "Alaşehi̇r"
+      "name": "Alaşehir"
     },
     {
       "id": "TUR045004",
       "provinceId": "TUR045",
-      "name": "Demi̇rci̇"
+      "name": "Demirci"
     },
     {
       "id": "TUR045005",
@@ -3449,12 +3449,12 @@
     {
       "id": "TUR045007",
       "provinceId": "TUR045",
-      "name": "Kirkağaç"
+      "name": "Kırkağaç"
     },
     {
       "id": "TUR045008",
       "provinceId": "TUR045",
-      "name": "Köprübaşi"
+      "name": "Köprübaşı"
     },
     {
       "id": "TUR045009",
@@ -3464,22 +3464,22 @@
     {
       "id": "TUR045010",
       "provinceId": "TUR045",
-      "name": "Sali̇hli̇"
+      "name": "Salihli"
     },
     {
       "id": "TUR045011",
       "provinceId": "TUR045",
-      "name": "Sarigöl"
+      "name": "Sarıgöl"
     },
     {
       "id": "TUR045012",
       "provinceId": "TUR045",
-      "name": "Saruhanli"
+      "name": "Saruhanlı"
     },
     {
       "id": "TUR045013",
       "provinceId": "TUR045",
-      "name": "Selendi̇"
+      "name": "Selendi"
     },
     {
       "id": "TUR045014",
@@ -3504,32 +3504,32 @@
     {
       "id": "TUR046001",
       "provinceId": "TUR046",
-      "name": "Afşi̇n"
+      "name": "Afşin"
     },
     {
       "id": "TUR046002",
       "provinceId": "TUR046",
-      "name": "Andirin"
+      "name": "Andırın"
     },
     {
       "id": "TUR046003",
       "provinceId": "TUR046",
-      "name": "Çağlayanceri̇t"
+      "name": "Çağlayancerit"
     },
     {
       "id": "TUR046004",
       "provinceId": "TUR046",
-      "name": "Dulkadi̇roğlu"
+      "name": "Dulkadiroğlu"
     },
     {
       "id": "TUR046005",
       "provinceId": "TUR046",
-      "name": "Eki̇nözü"
+      "name": "Ekinözü"
     },
     {
       "id": "TUR046006",
       "provinceId": "TUR046",
-      "name": "Elbi̇stan"
+      "name": "Elbistan"
     },
     {
       "id": "TUR046007",
@@ -3544,12 +3544,12 @@
     {
       "id": "TUR046009",
       "provinceId": "TUR046",
-      "name": "Oni̇ki̇ Şubat"
+      "name": "Onikişubat"
     },
     {
       "id": "TUR046010",
       "provinceId": "TUR046",
-      "name": "Pazarcik"
+      "name": "Pazarcık"
     },
     {
       "id": "TUR046011",
@@ -3564,37 +3564,37 @@
     {
       "id": "TUR047002",
       "provinceId": "TUR047",
-      "name": "Dargeçi̇t"
+      "name": "Dargeçit"
     },
     {
       "id": "TUR047003",
       "provinceId": "TUR047",
-      "name": "Deri̇k"
+      "name": "Derik"
     },
     {
       "id": "TUR047004",
       "provinceId": "TUR047",
-      "name": "Kiziltepe"
+      "name": "Kızıltepe"
     },
     {
       "id": "TUR047005",
       "provinceId": "TUR047",
-      "name": "Mazidaği"
+      "name": "Mazıdağı"
     },
     {
       "id": "TUR047006",
       "provinceId": "TUR047",
-      "name": "Mi̇dyat"
+      "name": "Midyat"
     },
     {
       "id": "TUR047007",
       "provinceId": "TUR047",
-      "name": "Nusaybi̇n"
+      "name": "Nusaybin"
     },
     {
       "id": "TUR047008",
       "provinceId": "TUR047",
-      "name": "Ömerli̇"
+      "name": "Ömerli"
     },
     {
       "id": "TUR047009",
@@ -3604,7 +3604,7 @@
     {
       "id": "TUR047010",
       "provinceId": "TUR047",
-      "name": "Yeşi̇lli̇"
+      "name": "Yeşilli"
     },
     {
       "id": "TUR048001",
@@ -3624,22 +3624,22 @@
     {
       "id": "TUR048004",
       "provinceId": "TUR048",
-      "name": "Fethi̇ye"
+      "name": "Fethiye"
     },
     {
       "id": "TUR048005",
       "provinceId": "TUR048",
-      "name": "Kavaklidere"
+      "name": "Kavaklıdere"
     },
     {
       "id": "TUR048006",
       "provinceId": "TUR048",
-      "name": "Köyceği̇z"
+      "name": "Köyceğiz"
     },
     {
       "id": "TUR048007",
       "provinceId": "TUR048",
-      "name": "Marmari̇s"
+      "name": "Marmaris"
     },
     {
       "id": "TUR048008",
@@ -3649,7 +3649,7 @@
     {
       "id": "TUR048009",
       "provinceId": "TUR048",
-      "name": "Mi̇las"
+      "name": "Milas"
     },
     {
       "id": "TUR048010",
@@ -3659,7 +3659,7 @@
     {
       "id": "TUR048011",
       "provinceId": "TUR048",
-      "name": "Seydi̇kemer"
+      "name": "Seydikemer"
     },
     {
       "id": "TUR048012",
@@ -3674,7 +3674,7 @@
     {
       "id": "TUR049001",
       "provinceId": "TUR049",
-      "name": "Bulanik"
+      "name": "Bulanık"
     },
     {
       "id": "TUR049002",
@@ -3689,7 +3689,7 @@
     {
       "id": "TUR049004",
       "provinceId": "TUR049",
-      "name": "Malazgi̇rt"
+      "name": "Malazgirt"
     },
     {
       "id": "TUR049005",
@@ -3704,7 +3704,7 @@
     {
       "id": "TUR050001",
       "provinceId": "TUR050",
-      "name": "Acigöl"
+      "name": "Acıgöl"
     },
     {
       "id": "TUR050002",
@@ -3714,22 +3714,22 @@
     {
       "id": "TUR050003",
       "provinceId": "TUR050",
-      "name": "Deri̇nkuyu"
+      "name": "Derinkuyu"
     },
     {
       "id": "TUR050004",
       "provinceId": "TUR050",
-      "name": "Gülşehi̇r"
+      "name": "Gülşehir"
     },
     {
       "id": "TUR050005",
       "provinceId": "TUR050",
-      "name": "Hacibektaş"
+      "name": "Hacıbektaş"
     },
     {
       "id": "TUR050006",
       "provinceId": "TUR050",
-      "name": "Kozakli"
+      "name": "Kozaklı"
     },
     {
       "id": "TUR050007",
@@ -3744,7 +3744,7 @@
     {
       "id": "TUR051001",
       "provinceId": "TUR051",
-      "name": "Altunhi̇sar"
+      "name": "Altunhisar"
     },
     {
       "id": "TUR051002",
@@ -3754,12 +3754,12 @@
     {
       "id": "TUR051003",
       "provinceId": "TUR051",
-      "name": "Çamardi"
+      "name": "Çamardı"
     },
     {
       "id": "TUR051004",
       "provinceId": "TUR051",
-      "name": "Çi̇ftli̇k"
+      "name": "Çiftlik"
     },
     {
       "id": "TUR051005",
@@ -3769,7 +3769,7 @@
     {
       "id": "TUR051006",
       "provinceId": "TUR051",
-      "name": "Ulukişla"
+      "name": "Ulukışla"
     },
     {
       "id": "TUR052001",
@@ -3779,12 +3779,12 @@
     {
       "id": "TUR052002",
       "provinceId": "TUR052",
-      "name": "Altinordu"
+      "name": "Altınordu"
     },
     {
       "id": "TUR052003",
       "provinceId": "TUR052",
-      "name": "Aybasti"
+      "name": "Aybastı"
     },
     {
       "id": "TUR052004",
@@ -3794,12 +3794,12 @@
     {
       "id": "TUR052005",
       "provinceId": "TUR052",
-      "name": "Çatalpinar"
+      "name": "Çatalpınar"
     },
     {
       "id": "TUR052006",
       "provinceId": "TUR052",
-      "name": "Çaybaşi"
+      "name": "Çaybaşı"
     },
     {
       "id": "TUR052007",
@@ -3814,7 +3814,7 @@
     {
       "id": "TUR052009",
       "provinceId": "TUR052",
-      "name": "Gülyali"
+      "name": "Gülyalı"
     },
     {
       "id": "TUR052010",
@@ -3824,7 +3824,7 @@
     {
       "id": "TUR052011",
       "provinceId": "TUR052",
-      "name": "İki̇zce"
+      "name": "İkizce"
     },
     {
       "id": "TUR052012",
@@ -3849,7 +3849,7 @@
     {
       "id": "TUR052016",
       "provinceId": "TUR052",
-      "name": "Mesudi̇ye"
+      "name": "Mesudiye"
     },
     {
       "id": "TUR052017",
@@ -3874,22 +3874,22 @@
     {
       "id": "TUR053002",
       "provinceId": "TUR053",
-      "name": "Çamlihemşi̇n"
+      "name": "Çamlıhemşin"
     },
     {
       "id": "TUR053003",
       "provinceId": "TUR053",
-      "name": "Çayeli̇"
+      "name": "Çayeli"
     },
     {
       "id": "TUR053004",
       "provinceId": "TUR053",
-      "name": "Derepazari"
+      "name": "Derepazarı"
     },
     {
       "id": "TUR053005",
       "provinceId": "TUR053",
-      "name": "Findikli"
+      "name": "Fındıklı"
     },
     {
       "id": "TUR053006",
@@ -3899,17 +3899,17 @@
     {
       "id": "TUR053007",
       "provinceId": "TUR053",
-      "name": "Hemşi̇n"
+      "name": "Hemşin"
     },
     {
       "id": "TUR053008",
       "provinceId": "TUR053",
-      "name": "İki̇zdere"
+      "name": "İkizdere"
     },
     {
       "id": "TUR053009",
       "provinceId": "TUR053",
-      "name": "İyi̇dere"
+      "name": "İyidere"
     },
     {
       "id": "TUR053010",
@@ -3929,17 +3929,17 @@
     {
       "id": "TUR054001",
       "provinceId": "TUR054",
-      "name": "Adapazari"
+      "name": "Adapazarı"
     },
     {
       "id": "TUR054002",
       "provinceId": "TUR054",
-      "name": "Akyazi"
+      "name": "Akyazı"
     },
     {
       "id": "TUR054003",
       "provinceId": "TUR054",
-      "name": "Ari̇fi̇ye"
+      "name": "Arifiye"
     },
     {
       "id": "TUR054004",
@@ -3949,7 +3949,7 @@
     {
       "id": "TUR054005",
       "provinceId": "TUR054",
-      "name": "Feri̇zli̇"
+      "name": "Ferizli"
     },
     {
       "id": "TUR054006",
@@ -3979,7 +3979,7 @@
     {
       "id": "TUR054011",
       "provinceId": "TUR054",
-      "name": "Kocaali̇"
+      "name": "Kocaali"
     },
     {
       "id": "TUR054012",
@@ -3994,7 +3994,7 @@
     {
       "id": "TUR054014",
       "provinceId": "TUR054",
-      "name": "Serdi̇van"
+      "name": "Serdivan"
     },
     {
       "id": "TUR054015",
@@ -4004,12 +4004,12 @@
     {
       "id": "TUR054016",
       "provinceId": "TUR054",
-      "name": "Tarakli"
+      "name": "Taraklı"
     },
     {
       "id": "TUR055001",
       "provinceId": "TUR055",
-      "name": "19 Mayis"
+      "name": "19 Mayıs"
     },
     {
       "id": "TUR055002",
@@ -4019,7 +4019,7 @@
     {
       "id": "TUR055003",
       "provinceId": "TUR055",
-      "name": "Asarcik"
+      "name": "Asarcık"
     },
     {
       "id": "TUR055004",
@@ -4029,7 +4029,7 @@
     {
       "id": "TUR055005",
       "provinceId": "TUR055",
-      "name": "Ayvacik"
+      "name": "Ayvacık"
     },
     {
       "id": "TUR055006",
@@ -4039,7 +4039,7 @@
     {
       "id": "TUR055007",
       "provinceId": "TUR055",
-      "name": "Cani̇k"
+      "name": "Canik"
     },
     {
       "id": "TUR055008",
@@ -4054,7 +4054,7 @@
     {
       "id": "TUR055010",
       "provinceId": "TUR055",
-      "name": "İlkadim"
+      "name": "İlkadım"
     },
     {
       "id": "TUR055011",
@@ -4064,12 +4064,12 @@
     {
       "id": "TUR055012",
       "provinceId": "TUR055",
-      "name": "Ladi̇k"
+      "name": "Ladik"
     },
     {
       "id": "TUR055013",
       "provinceId": "TUR055",
-      "name": "Salipazari"
+      "name": "Salıpazarı"
     },
     {
       "id": "TUR055014",
@@ -4084,7 +4084,7 @@
     {
       "id": "TUR055016",
       "provinceId": "TUR055",
-      "name": "Vezi̇rköprü"
+      "name": "Vezirköprü"
     },
     {
       "id": "TUR055017",
@@ -4109,7 +4109,7 @@
     {
       "id": "TUR056004",
       "provinceId": "TUR056",
-      "name": "Pervari̇"
+      "name": "Pervari"
     },
     {
       "id": "TUR056005",
@@ -4119,17 +4119,17 @@
     {
       "id": "TUR056006",
       "provinceId": "TUR056",
-      "name": "Şi̇rvan"
+      "name": "Şirvan"
     },
     {
       "id": "TUR056007",
       "provinceId": "TUR056",
-      "name": "Ti̇llo"
+      "name": "Tillo"
     },
     {
       "id": "TUR057001",
       "provinceId": "TUR057",
-      "name": "Ayancik"
+      "name": "Ayancık"
     },
     {
       "id": "TUR057002",
@@ -4139,7 +4139,7 @@
     {
       "id": "TUR057003",
       "provinceId": "TUR057",
-      "name": "Di̇kmen"
+      "name": "Dikmen"
     },
     {
       "id": "TUR057004",
@@ -4169,22 +4169,22 @@
     {
       "id": "TUR057009",
       "provinceId": "TUR057",
-      "name": "Türkeli̇"
+      "name": "Türkeli"
     },
     {
       "id": "TUR058001",
       "provinceId": "TUR058",
-      "name": "Akincilar"
+      "name": "Akıncılar"
     },
     {
       "id": "TUR058002",
       "provinceId": "TUR058",
-      "name": "Altinyayla"
+      "name": "Altınyayla"
     },
     {
       "id": "TUR058003",
       "provinceId": "TUR058",
-      "name": "Di̇vri̇ği̇"
+      "name": "Divriği"
     },
     {
       "id": "TUR058004",
@@ -4209,12 +4209,12 @@
     {
       "id": "TUR058008",
       "provinceId": "TUR058",
-      "name": "Hafi̇k"
+      "name": "Hafik"
     },
     {
       "id": "TUR058009",
       "provinceId": "TUR058",
-      "name": "İmranli"
+      "name": "İmranlı"
     },
     {
       "id": "TUR058010",
@@ -4224,7 +4224,7 @@
     {
       "id": "TUR058011",
       "provinceId": "TUR058",
-      "name": "Koyulhi̇sar"
+      "name": "Koyulhisar"
     },
     {
       "id": "TUR058012",
@@ -4234,12 +4234,12 @@
     {
       "id": "TUR058013",
       "provinceId": "TUR058",
-      "name": "Suşehri̇"
+      "name": "Suşehri"
     },
     {
       "id": "TUR058014",
       "provinceId": "TUR058",
-      "name": "Sarkişla"
+      "name": "Şarkışla"
     },
     {
       "id": "TUR058015",
@@ -4249,7 +4249,7 @@
     {
       "id": "TUR058016",
       "provinceId": "TUR058",
-      "name": "Yildizeli̇"
+      "name": "Yıldızeli"
     },
     {
       "id": "TUR058017",
@@ -4279,7 +4279,7 @@
     {
       "id": "TUR059005",
       "provinceId": "TUR059",
-      "name": "Kapakli"
+      "name": "Kapaklı"
     },
     {
       "id": "TUR059006",
@@ -4289,12 +4289,12 @@
     {
       "id": "TUR059007",
       "provinceId": "TUR059",
-      "name": "Marmara Ereğli̇si̇"
+      "name": "Marmara Ereğlisi"
     },
     {
       "id": "TUR059008",
       "provinceId": "TUR059",
-      "name": "Muratli"
+      "name": "Muratlı"
     },
     {
       "id": "TUR059009",
@@ -4324,7 +4324,7 @@
     {
       "id": "TUR060003",
       "provinceId": "TUR060",
-      "name": "Başçi̇ftli̇k"
+      "name": "Başçiftlik"
     },
     {
       "id": "TUR060004",
@@ -4334,7 +4334,7 @@
     {
       "id": "TUR060005",
       "provinceId": "TUR060",
-      "name": "Ni̇ksar"
+      "name": "Niksar"
     },
     {
       "id": "TUR060006",
@@ -4344,7 +4344,7 @@
     {
       "id": "TUR060007",
       "provinceId": "TUR060",
-      "name": "Reşadi̇ye"
+      "name": "Reşadiye"
     },
     {
       "id": "TUR060008",
@@ -4364,12 +4364,12 @@
     {
       "id": "TUR060011",
       "provinceId": "TUR060",
-      "name": "Yeşi̇lyurt"
+      "name": "Yeşilyurt"
     },
     {
       "id": "TUR060012",
       "provinceId": "TUR060",
-      "name": "Zi̇le"
+      "name": "Zile"
     },
     {
       "id": "TUR061001",
@@ -4379,22 +4379,22 @@
     {
       "id": "TUR061002",
       "provinceId": "TUR061",
-      "name": "Arakli"
+      "name": "Araklı"
     },
     {
       "id": "TUR061003",
       "provinceId": "TUR061",
-      "name": "Arsi̇n"
+      "name": "Arsin"
     },
     {
       "id": "TUR061004",
       "provinceId": "TUR061",
-      "name": "Beşi̇kdüzü"
+      "name": "Beşikdüzü"
     },
     {
       "id": "TUR061005",
       "provinceId": "TUR061",
-      "name": "Çarşibaşi"
+      "name": "Çarşıbaşı"
     },
     {
       "id": "TUR061006",
@@ -4404,7 +4404,7 @@
     {
       "id": "TUR061007",
       "provinceId": "TUR061",
-      "name": "Dernekpazari"
+      "name": "Dernekpazarı"
     },
     {
       "id": "TUR061008",
@@ -4419,7 +4419,7 @@
     {
       "id": "TUR061010",
       "provinceId": "TUR061",
-      "name": "Köprübaşi"
+      "name": "Köprübaşı"
     },
     {
       "id": "TUR061011",
@@ -4434,7 +4434,7 @@
     {
       "id": "TUR061013",
       "provinceId": "TUR061",
-      "name": "Ortahi̇sar"
+      "name": "Ortahisar"
     },
     {
       "id": "TUR061014",
@@ -4444,7 +4444,7 @@
     {
       "id": "TUR061015",
       "provinceId": "TUR061",
-      "name": "Şalpazari"
+      "name": "Şalpazarı"
     },
     {
       "id": "TUR061016",
@@ -4454,7 +4454,7 @@
     {
       "id": "TUR061017",
       "provinceId": "TUR061",
-      "name": "Vakfikebi̇r"
+      "name": "Vakfıkebir"
     },
     {
       "id": "TUR061018",
@@ -4464,7 +4464,7 @@
     {
       "id": "TUR062001",
       "provinceId": "TUR062",
-      "name": "Çemi̇şgezek"
+      "name": "Çemişgezek"
     },
     {
       "id": "TUR062002",
@@ -4474,17 +4474,17 @@
     {
       "id": "TUR062003",
       "provinceId": "TUR062",
-      "name": "Mazgi̇rt"
+      "name": "Mazgirt"
     },
     {
       "id": "TUR062004",
       "provinceId": "TUR062",
-      "name": "Nazimi̇ye"
+      "name": "Nazımiye"
     },
     {
       "id": "TUR062005",
       "provinceId": "TUR062",
-      "name": "Ovacik"
+      "name": "Ovacık"
     },
     {
       "id": "TUR062006",
@@ -4509,7 +4509,7 @@
     {
       "id": "TUR063002",
       "provinceId": "TUR063",
-      "name": "Bi̇reci̇k"
+      "name": "Birecik"
     },
     {
       "id": "TUR063003",
@@ -4519,22 +4519,22 @@
     {
       "id": "TUR063004",
       "provinceId": "TUR063",
-      "name": "Ceylanpinar"
+      "name": "Ceylanpınar"
     },
     {
       "id": "TUR063005",
       "provinceId": "TUR063",
-      "name": "Eyyübi̇ye"
+      "name": "Eyyübiye"
     },
     {
       "id": "TUR063006",
       "provinceId": "TUR063",
-      "name": "Halfeti̇"
+      "name": "Halfeti"
     },
     {
       "id": "TUR063007",
       "provinceId": "TUR063",
-      "name": "Hali̇li̇ye"
+      "name": "Haliliye"
     },
     {
       "id": "TUR063008",
@@ -4544,7 +4544,7 @@
     {
       "id": "TUR063009",
       "provinceId": "TUR063",
-      "name": "Hi̇lvan"
+      "name": "Hilvan"
     },
     {
       "id": "TUR063010",
@@ -4554,7 +4554,7 @@
     {
       "id": "TUR063011",
       "provinceId": "TUR063",
-      "name": "Si̇verek"
+      "name": "Siverek"
     },
     {
       "id": "TUR063012",
@@ -4564,7 +4564,7 @@
     {
       "id": "TUR063013",
       "provinceId": "TUR063",
-      "name": "Vi̇ranşehi̇r"
+      "name": "Viranşehir"
     },
     {
       "id": "TUR064001",
@@ -4579,12 +4579,12 @@
     {
       "id": "TUR064003",
       "provinceId": "TUR064",
-      "name": "Karahalli"
+      "name": "Karahallı"
     },
     {
       "id": "TUR064004",
       "provinceId": "TUR064",
-      "name": "Si̇vasli"
+      "name": "Sivaslı"
     },
     {
       "id": "TUR064005",
@@ -4609,7 +4609,7 @@
     {
       "id": "TUR065003",
       "provinceId": "TUR065",
-      "name": "Çaldiran"
+      "name": "Çaldıran"
     },
     {
       "id": "TUR065004",
@@ -4619,12 +4619,12 @@
     {
       "id": "TUR065005",
       "provinceId": "TUR065",
-      "name": "Edremi̇t"
+      "name": "Edremit"
     },
     {
       "id": "TUR065006",
       "provinceId": "TUR065",
-      "name": "Erci̇ş"
+      "name": "Erciş"
     },
     {
       "id": "TUR065007",
@@ -4634,7 +4634,7 @@
     {
       "id": "TUR065008",
       "provinceId": "TUR065",
-      "name": "Gürpinar"
+      "name": "Gürpınar"
     },
     {
       "id": "TUR065009",
@@ -4644,7 +4644,7 @@
     {
       "id": "TUR065010",
       "provinceId": "TUR065",
-      "name": "Muradi̇ye"
+      "name": "Muradiye"
     },
     {
       "id": "TUR065011",
@@ -4664,27 +4664,27 @@
     {
       "id": "TUR066001",
       "provinceId": "TUR066",
-      "name": "Akdağmadeni̇"
+      "name": "Akdağmadeni"
     },
     {
       "id": "TUR066002",
       "provinceId": "TUR066",
-      "name": "Aydincik"
+      "name": "Aydıncık"
     },
     {
       "id": "TUR066003",
       "provinceId": "TUR066",
-      "name": "Boğazliyan"
+      "name": "Boğazlıyan"
     },
     {
       "id": "TUR066004",
       "provinceId": "TUR066",
-      "name": "Çandir"
+      "name": "Çandır"
     },
     {
       "id": "TUR066005",
       "provinceId": "TUR066",
-      "name": "Çayiralan"
+      "name": "Çayıralan"
     },
     {
       "id": "TUR066006",
@@ -4694,7 +4694,7 @@
     {
       "id": "TUR066007",
       "provinceId": "TUR066",
-      "name": "Kadişehri̇"
+      "name": "Kadışehri"
     },
     {
       "id": "TUR066008",
@@ -4704,7 +4704,7 @@
     {
       "id": "TUR066009",
       "provinceId": "TUR066",
-      "name": "Sarikaya"
+      "name": "Sarıkaya"
     },
     {
       "id": "TUR066010",
@@ -4714,12 +4714,12 @@
     {
       "id": "TUR066011",
       "provinceId": "TUR066",
-      "name": "Şefaatli̇"
+      "name": "Şefaatli"
     },
     {
       "id": "TUR066012",
       "provinceId": "TUR066",
-      "name": "Yeni̇fakili"
+      "name": "Yenifakılı"
     },
     {
       "id": "TUR066013",
@@ -4734,7 +4734,7 @@
     {
       "id": "TUR067001",
       "provinceId": "TUR067",
-      "name": "Alapli"
+      "name": "Alaplı"
     },
     {
       "id": "TUR067002",
@@ -4749,7 +4749,7 @@
     {
       "id": "TUR067004",
       "provinceId": "TUR067",
-      "name": "Ereğli̇"
+      "name": "Ereğli"
     },
     {
       "id": "TUR067005",
@@ -4759,7 +4759,7 @@
     {
       "id": "TUR067006",
       "provinceId": "TUR067",
-      "name": "Ki̇li̇mli̇"
+      "name": "Kilimli"
     },
     {
       "id": "TUR067007",
@@ -4784,7 +4784,7 @@
     {
       "id": "TUR068003",
       "provinceId": "TUR068",
-      "name": "Eski̇l"
+      "name": "Eskil"
     },
     {
       "id": "TUR068004",
@@ -4804,17 +4804,17 @@
     {
       "id": "TUR068007",
       "provinceId": "TUR068",
-      "name": "Sariyahşi̇"
+      "name": "Sarıyahşi"
     },
     {
       "id": "TUR068008",
       "provinceId": "TUR068",
-      "name": "Sultanhani"
+      "name": "Sultanhanı"
     },
     {
       "id": "TUR069001",
       "provinceId": "TUR069",
-      "name": "Aydintepe"
+      "name": "Aydıntepe"
     },
     {
       "id": "TUR069002",
@@ -4824,12 +4824,12 @@
     {
       "id": "TUR069003",
       "provinceId": "TUR069",
-      "name": "Demi̇rözü"
+      "name": "Demirözü"
     },
     {
       "id": "TUR070001",
       "provinceId": "TUR070",
-      "name": "Ayranci"
+      "name": "Ayrancı"
     },
     {
       "id": "TUR070002",
@@ -4849,47 +4849,47 @@
     {
       "id": "TUR070005",
       "provinceId": "TUR070",
-      "name": "Kazimkarabeki̇r"
+      "name": "Kazımkarabekir"
     },
     {
       "id": "TUR070006",
       "provinceId": "TUR070",
-      "name": "Sariveli̇ler"
+      "name": "Sarıveliler"
     },
     {
       "id": "TUR071001",
       "provinceId": "TUR071",
-      "name": "Bahşi̇li̇"
+      "name": "Bahşili"
     },
     {
       "id": "TUR071002",
       "provinceId": "TUR071",
-      "name": "Balişeyh"
+      "name": "Balışeyh"
     },
     {
       "id": "TUR071003",
       "provinceId": "TUR071",
-      "name": "Çelebi̇"
+      "name": "Çelebi"
     },
     {
       "id": "TUR071004",
       "provinceId": "TUR071",
-      "name": "Deli̇ce"
+      "name": "Delice"
     },
     {
       "id": "TUR071005",
       "provinceId": "TUR071",
-      "name": "Karakeçi̇li̇"
+      "name": "Karakeçili"
     },
     {
       "id": "TUR071006",
       "provinceId": "TUR071",
-      "name": "Keski̇n"
+      "name": "Keskin"
     },
     {
       "id": "TUR071007",
       "provinceId": "TUR071",
-      "name": "Kirikkale"
+      "name": "Kırıkkale"
     },
     {
       "id": "TUR071008",
@@ -4899,7 +4899,7 @@
     {
       "id": "TUR071009",
       "provinceId": "TUR071",
-      "name": "Yahşi̇han"
+      "name": "Yahşihan"
     },
     {
       "id": "TUR072001",
@@ -4909,7 +4909,7 @@
     {
       "id": "TUR072002",
       "provinceId": "TUR072",
-      "name": "Beşi̇ri̇"
+      "name": "Beşiri"
     },
     {
       "id": "TUR072003",
@@ -4939,7 +4939,7 @@
     {
       "id": "TUR073002",
       "provinceId": "TUR073",
-      "name": "Ci̇zre"
+      "name": "Cizre"
     },
     {
       "id": "TUR073003",
@@ -4949,17 +4949,17 @@
     {
       "id": "TUR073004",
       "provinceId": "TUR073",
-      "name": "İdi̇l"
+      "name": "İdil"
     },
     {
       "id": "TUR073005",
       "provinceId": "TUR073",
-      "name": "Si̇lopi̇"
+      "name": "Silopi"
     },
     {
       "id": "TUR073006",
       "provinceId": "TUR073",
-      "name": "Şirnak"
+      "name": "Şırnak"
     },
     {
       "id": "TUR073007",
@@ -4974,12 +4974,12 @@
     {
       "id": "TUR074002",
       "provinceId": "TUR074",
-      "name": "Bartin"
+      "name": "Bartın"
     },
     {
       "id": "TUR074003",
       "provinceId": "TUR074",
-      "name": "Kurucaşi̇le"
+      "name": "Kurucaşile"
     },
     {
       "id": "TUR074004",
@@ -4994,7 +4994,7 @@
     {
       "id": "TUR075002",
       "provinceId": "TUR075",
-      "name": "Çildir"
+      "name": "Çıldır"
     },
     {
       "id": "TUR075003",
@@ -5019,12 +5019,12 @@
     {
       "id": "TUR076001",
       "provinceId": "TUR076",
-      "name": "Aralik"
+      "name": "Aralık"
     },
     {
       "id": "TUR076002",
       "provinceId": "TUR076",
-      "name": "Iğdir"
+      "name": "Iğdır"
     },
     {
       "id": "TUR076003",
@@ -5039,7 +5039,7 @@
     {
       "id": "TUR077001",
       "provinceId": "TUR077",
-      "name": "Altinova"
+      "name": "Altınova"
     },
     {
       "id": "TUR077002",
@@ -5049,12 +5049,12 @@
     {
       "id": "TUR077003",
       "provinceId": "TUR077",
-      "name": "Çi̇ftli̇kköy"
+      "name": "Çiftlikköy"
     },
     {
       "id": "TUR077004",
       "provinceId": "TUR077",
-      "name": "Çinarcik"
+      "name": "Çınarcık"
     },
     {
       "id": "TUR077005",
@@ -5069,12 +5069,12 @@
     {
       "id": "TUR078001",
       "provinceId": "TUR078",
-      "name": "Eflani̇"
+      "name": "Eflani"
     },
     {
       "id": "TUR078002",
       "provinceId": "TUR078",
-      "name": "Eski̇pazar"
+      "name": "Eskipazar"
     },
     {
       "id": "TUR078003",
@@ -5084,7 +5084,7 @@
     {
       "id": "TUR078004",
       "provinceId": "TUR078",
-      "name": "Ovacik"
+      "name": "Ovacık"
     },
     {
       "id": "TUR078005",
@@ -5094,12 +5094,12 @@
     {
       "id": "TUR078006",
       "provinceId": "TUR078",
-      "name": "Yeni̇ce"
+      "name": "Yenice"
     },
     {
       "id": "TUR079001",
       "provinceId": "TUR079",
-      "name": "Elbeyli̇"
+      "name": "Elbeyli"
     },
     {
       "id": "TUR079002",
@@ -5109,12 +5109,12 @@
     {
       "id": "TUR079003",
       "provinceId": "TUR079",
-      "name": "Musabeyli̇"
+      "name": "Musabeyli"
     },
     {
       "id": "TUR079004",
       "provinceId": "TUR079",
-      "name": "Polateli̇"
+      "name": "Polateli"
     },
     {
       "id": "TUR080001",
@@ -5124,17 +5124,17 @@
     {
       "id": "TUR080002",
       "provinceId": "TUR080",
-      "name": "Düzi̇çi̇"
+      "name": "Düziçi"
     },
     {
       "id": "TUR080003",
       "provinceId": "TUR080",
-      "name": "Hasanbeyli̇"
+      "name": "Hasanbeyli"
     },
     {
       "id": "TUR080004",
       "provinceId": "TUR080",
-      "name": "Kadi̇rli̇"
+      "name": "Kadirli"
     },
     {
       "id": "TUR080005",
@@ -5159,12 +5159,12 @@
     {
       "id": "TUR081002",
       "provinceId": "TUR081",
-      "name": "Cumayeri̇"
+      "name": "Cumayeri"
     },
     {
       "id": "TUR081003",
       "provinceId": "TUR081",
-      "name": "Çi̇li̇mli̇"
+      "name": "Çilimli"
     },
     {
       "id": "TUR081004",
@@ -5184,12 +5184,12 @@
     {
       "id": "TUR081007",
       "provinceId": "TUR081",
-      "name": "Kaynaşli"
+      "name": "Kaynaşlı"
     },
     {
       "id": "TUR081008",
       "provinceId": "TUR081",
-      "name": "Yiğilca"
+      "name": "Yığılca"
     }
   ]
 }

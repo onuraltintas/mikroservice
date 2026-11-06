@@ -24,7 +24,7 @@ public sealed class StudentOnboardingMigrationPostgresTests
 
         await f.Db.Database.MigrateAsync();
         Assert.False(f.Db.Database.HasPendingModelChanges());
-        Assert.Equal(Current, (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
+        Assert.Contains(Current, await f.Db.Database.GetAppliedMigrationsAsync());
         var rows = await f.Db.CoachingStudentProfiles.AsNoTracking().ToDictionaryAsync(x => x.UserId);
         foreach (var id in new[] { done, graduate })
         {

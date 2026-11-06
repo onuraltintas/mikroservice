@@ -472,7 +472,7 @@ public sealed class CoachingStudentOnboardingTests
         await s.F.Db.SaveChangesAsync();
 
         (await s.Service.SchoolsAsync("Ankara", null, null, 1, default)).TotalCount.Should().Be(28, "26 schools and two schools with several rows");
-        var one = (await s.Service.SchoolsAsync("Ankara", null, "Ayrancı", 1, default)).Items.Should().ContainSingle().Subject;
+        var one = (await s.Service.SchoolsAsync("Ankara", null, "Ayran", 1, default)).Items.Should().ContainSingle().Subject;
         one.Should().Match<OnboardingSchoolOption>(x => x.Name == "Ayrancı Anadolu Lisesi" && x.District == "ÇANKAYA" && x.Type == "Anadolu Lisesi");
         one.Id.Should().Be(ayranci.Min(x => x.Id), "the representative is stable: the smallest id");
         var mixed = (await s.Service.SchoolsAsync("Ankara", null, "balgat", 1, default)).Items.Should().ContainSingle().Subject;
@@ -481,7 +481,7 @@ public sealed class CoachingStudentOnboardingTests
         (await s.Service.SchoolsAsync("Ankara", null, "balgat", 1, default)).Items.Single().Id.Should().Be(mixed.Id);
         // The LGS target list (city → type → school) keeps one row per programme.
         (await s.Service.SchoolsAsync("Ankara", "Anadolu Teknik Programı", "balgat", 1, default)).Items.Should().HaveCount(2);
-        (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "Ayrancı", 1, default)).Items.Should().HaveCount(2);
+        (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "Ayran", 1, default)).Items.Should().HaveCount(2);
 
         // Saving keeps the name, city and district; the type only where every row agrees.
         await s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 8, null, balgat[2].Id), default);

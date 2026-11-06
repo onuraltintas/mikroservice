@@ -71,7 +71,8 @@ public sealed class TargetAdmissionSearchService(CoachingDbContext db)
     private IQueryable<TargetAdmissionView> Base(TargetAdmissionFilter f)
     {
         if (f.ExamCode == "YKS")
-            return from p in db.TargetUniversityPrograms.AsNoTracking()
+            // E2 (#17): nationality-restricted quotas ("(KKTC Uyruklu)") are not offered.
+            return from p in db.TargetUniversityPrograms.AsNoTracking().Where(Catalogs.NationalityQuota.OpenToEveryone)
                    where p.IsActive && (p.CatalogYear == null || p.CatalogYear == f.Year)
                    select new TargetAdmissionView
                    {

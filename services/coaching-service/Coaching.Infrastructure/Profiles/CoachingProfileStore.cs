@@ -78,7 +78,8 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         {
             var school = await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == schoolId && x.IsActive, ct)
                 ?? throw new ArgumentException("Okulunu listeden seç.");
-            request = request with { SchoolName = school.Name, SchoolCity = school.City, SchoolDistrict = school.District, SchoolType = school.InstitutionType };
+            request = request with { SchoolName = school.Name, SchoolCity = school.City, SchoolDistrict = school.District,
+                SchoolType = await CoachingStudentOnboardingService.OwnSchoolTypeAsync(db, school, ct) };
         }
         // Validate the full replacement before changing a tracked entity.
         var validated = CoachingStudentProfile.Create(userId);
