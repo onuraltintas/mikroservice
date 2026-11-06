@@ -150,8 +150,8 @@ export const HOME_LGS_NOTE = "LGS'de hem puan tahmini hem okulun taban puanı ya
 /**
  * Paket C (#4, approved 05.11.2026): what the home goal card says. No target: "Hedefini belirle". A target without a practice
  * exam: its name and when the gap appears. With an estimate: the score gap ("Hedefine yaklaşık X puan kaldı", "Hedef puanını
- * geçtin", or borderline as in #112), the target's name, its taban and "Yaklaşık tahmin" (not for exact YDS / YÖKDİL). When no
- * score can be computed the card says why, with #112's reason texts. The net line is shown under it by the page.
+ * geçtin", or borderline as in Paket B), the target's name, its taban and "Yaklaşık tahmin" (not for exact YDS / YÖKDİL). When no
+ * score can be computed the card says why, with Paket B's reason texts. The net line is shown under it by the page.
  */
 export function homeGoalCard(estimate: ScoreEstimate | null, childName: string | null = null): HomeGoalCard {
   const target = estimate?.target ?? null;

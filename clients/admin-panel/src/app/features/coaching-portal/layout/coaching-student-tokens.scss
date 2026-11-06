@@ -81,3 +81,6 @@ body:has(.coaching-shell) .ui-confirm-dialog :is(button, a):focus-visible { outl
 body:has(.coaching-shell) .ui-confirm-dialog button { font-family: var(--ui-font-body); font-size: 15px; border-radius: 10px; }
 body:has(.coaching-shell) .ui-confirm-dialog .confirm-btn { background: var(--ui-brand); color: var(--ui-brand-contrast); }
 body:has(.coaching-shell) .ui-confirm-dialog .cancel-btn { background: var(--ui-surface-muted); color: var(--ui-text); border-color: var(--ui-border); }
+
+// Paket C (#3): the first-login wizard (.coaching-onboarding) is outside the shell and takes the same tokens.
+.coaching-onboarding { @extend .coaching-shell; }

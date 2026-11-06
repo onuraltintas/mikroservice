@@ -1,19 +1,14 @@
-:host {
-  --ob-bg: var(--ui-surface-muted, #f5f6fb);
-  --ob-card: var(--ui-surface, #ffffff);
-  --ob-text: var(--ui-text, #1f2433);
-  --ob-muted: var(--ui-text-muted, #5b6478);
-  --ob-brand: var(--ui-brand, #4f46e5);
-  --ob-brand-soft: var(--ui-brand-soft, #eef0ff);
-  --ob-border: var(--ui-border, #dfe3ee);
-  --ob-danger: var(--ui-danger, #b42318);
-  display: block; min-height: 100vh; min-height: 100dvh; background: var(--ob-bg); color: var(--ob-text);
+:host { display: block; }
+.ob-page {
+  --ob-bg: var(--ui-page); --ob-card: var(--ui-surface); --ob-text: var(--ui-text); --ob-muted: var(--ui-text-muted);
+  --ob-brand: var(--ui-brand); --ob-brand-text: var(--ui-brand-contrast); --ob-brand-soft: var(--ui-brand-soft);
+  --ob-border: var(--ui-border); --ob-danger: var(--ui-danger);
+  min-height: 100vh; min-height: 100dvh; background: var(--ob-bg); color: var(--ob-text);
 }
-@media (prefers-color-scheme: dark) {
-  :host { --ob-bg: #11131a; --ob-card: #1b1e29; --ob-text: #eef0f6; --ob-muted: #a5acc0; --ob-brand-soft: #262a46; --ob-border: #2e3344; }
-}
-.ob-page { max-width: 44rem; margin: 0 auto; padding: 1rem 1rem 4rem; }
-.ob-head { position: sticky; top: 0; z-index: 2; background: var(--ob-bg); padding: .75rem 0 .5rem; }
+.ob-page { box-sizing: border-box; }
+.ob-head, .ob-chat { max-width: 44rem; margin-inline: auto; padding-inline: 1rem; }
+.ob-chat { padding-bottom: 4rem; }
+.ob-head { position: sticky; top: 0; z-index: 2; background: var(--ob-bg); padding-block: .75rem .5rem; }
 .ob-brand { margin: 0; font-size: .85rem; color: var(--ob-muted); strong { color: var(--ob-text); } span { color: var(--ob-brand); } }
 h1 { margin: .25rem 0 .5rem; font-size: 1.35rem; }
 .ob-progress { display: grid; gap: .35rem; font-size: .85rem; color: var(--ob-muted); }
@@ -25,8 +20,8 @@ h1 { margin: .25rem 0 .5rem; font-size: 1.35rem; }
 .ob-bot, .ob-me { max-width: 88%; border-radius: 1rem; padding: .65rem .9rem; line-height: 1.45;
   p { margin: 0; } }
 .ob-bot { justify-self: start; background: var(--ob-card); border: 1px solid var(--ob-border); border-bottom-left-radius: .3rem; }
-.ob-me { justify-self: end; display: flex; flex-wrap: wrap; gap: .25rem .75rem; align-items: baseline; background: var(--ob-brand); color: #fff;
-  border-bottom-right-radius: .3rem; .ob-link { color: #fff; } }
+.ob-me { justify-self: end; display: flex; flex-wrap: wrap; gap: .25rem .75rem; align-items: baseline; background: var(--ob-brand); color: var(--ob-brand-text);
+  border-bottom-right-radius: .3rem; .ob-link { color: var(--ob-brand-text); } }
 .ob-why { display: block; margin-top: .3rem; color: var(--ob-muted); font-size: .8rem; }
 .ob-input { display: grid; gap: .6rem; background: var(--ob-card); border: 1px solid var(--ob-border); border-radius: 1rem; padding: .85rem;
   input[type=date], input[type=number], input[type=text] { font: inherit; min-height: 2.75rem; padding: .5rem .7rem; border: 1px solid var(--ob-border);
@@ -36,10 +31,10 @@ h1 { margin: .25rem 0 .5rem; font-size: 1.35rem; }
   display: inline-flex; align-items: center; justify-content: center; }
 .ob-chip { border: 1px solid var(--ob-border); background: var(--ob-bg); color: inherit;
   &:hover:not(:disabled) { border-color: var(--ob-brand); } }
-.ob-primary { border: 0; background: var(--ob-brand); color: #fff; font-weight: 600; justify-self: start; }
+.ob-primary { border: 0; background: var(--ob-brand); color: var(--ob-brand-text); font-weight: 600; justify-self: start; }
 .ob-chip:disabled, .ob-primary:disabled { opacity: .55; cursor: not-allowed; }
 .ob-link { font: inherit; font-size: .85rem; border: 0; background: none; color: var(--ob-brand); text-decoration: underline; cursor: pointer; padding: .25rem 0; justify-self: start; }
-button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--ob-brand); outline-offset: 2px; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--coaching-focus, var(--ob-brand)); outline-offset: 2px; }
 .ob-check { display: flex; gap: .5rem; align-items: center; min-height: 2.5rem; }
 .ob-card { margin: 0; padding: .7rem .85rem; border: 1px solid var(--ob-border); border-radius: .75rem; display: grid; gap: .5rem; }
 .ob-code { font-family: ui-monospace, monospace; font-size: 1.2rem; letter-spacing: .15em; }
