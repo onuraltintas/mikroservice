@@ -89,7 +89,7 @@ describe('KM8 exam-only study purposes: plan wizard', () => {
     const engine = { options: vi.fn(() => of({ startDate: '2027-05-24', endDate: '2027-06-01', weeklyDraftVersion: 0, timeZoneId: 'Europe/Istanbul', exams: [] })) };
     TestBed.configureTestingModule({ imports: [StudentStudyPlanAssistantComponent], providers: [provideRouter([]),
       { provide: CoachingWeeklyDraftService, useValue: weekly }, { provide: CoachingLearningSetupService, useValue: learning },
-      { provide: CoachingWeeklyOutcomePlanService, useValue: engine }] });
+      { provide: CoachingWeeklyOutcomePlanService, useValue: engine }, { provide: CoachingStudyPlanningService, useValue: { getAvailability: vi.fn(() => of(null)) } }] });
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(StudentStudyPlanAssistantComponent);
     if (staff) fixture.componentInstance.staffStudentId = 'student-1';

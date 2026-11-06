@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingStudyPlanningService, StudyAvailabilityUpdate } from '../../../core/services/coaching-study-planning.service';
+import { of } from 'rxjs';
 import { StudentStudyPlanAssistantComponent } from './student-study-plan-assistant.component';
 import { createStudyPlanProposal } from './study-plan-wizard';
 import { Weekday } from './weekly-calendar';
@@ -34,7 +36,9 @@ describe('Wizard lesson coverage regression', () => {
       TestBed.configureTestingModule({ imports: [StudentStudyPlanAssistantComponent], providers: [
         provideRouter([]),
         { provide: CoachingWeeklyDraftService, useValue: {} },
-        { provide: CoachingLearningSetupService, useValue: {} }
+        { provide: CoachingLearningSetupService, useValue: {} },
+        // E6 #29: the student's answers are saved as her availability (a teacher's are not).
+        { provide: CoachingStudyPlanningService, useValue: { saveAvailability: (update: StudyAvailabilityUpdate) => of({ version: 1, timeZoneId: 'Europe/Istanbul', windows: update.windows }) } }
       ] });
       const fixture = TestBed.createComponent(StudentStudyPlanAssistantComponent);
       const component = fixture.componentInstance;
@@ -53,7 +57,9 @@ describe('Wizard lesson coverage regression', () => {
       expect(message).toContain('Ders 16');
       expect(message).toContain('henüz ders saati yok');
       component.slots.set(component.proposal());
-      component.startTime.set('10:00');
+      // The student changes her availability (Değiştir); the teacher changes the form answers.
+      if (teacher) component.startTime.set('10:00');
+      else component.availability.set({ version: 2, timeZoneId: 'Europe/Istanbul', windows: days.map(day => ({ day, startMinute: 600, endMinute: 720 })) });
       component.createProposal();
       expect(component.messages().at(-1)!.content).not.toContain('henüz ders saati yok');
       expect(new Set([...component.slots(), ...component.proposal()].map(slot => slot.lessonId)).size).toBe(16);
