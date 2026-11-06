@@ -90,7 +90,7 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-students.service.ts": "438a352f5578a7e08985d307acf74553007893e0b08b535557b214f50ae7f8ea",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.html": "406a1076f16e25daa7ab6cedf40c09edf631712a763a7e8134f7dce88ee5aa8d",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.scss": "db14a82039d27f46befdc440e7c17ed44fcdedca938a5fdcbca98d26d9565b28",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.spec.ts": "0634227edc7f25e68b8d2a10652aecfdc5ea12d6b977db8517e50cd8dd676f32",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.spec.ts": "705c86fa50d14edcd2fa3c7cf3d2c0f3b497b11bf0b4fe57c561728f81bd432c",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.ts": "b43d5ac8f519eef7bfed6db183d7d4f149380d50a9ee58f1d52926fb14f14807",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-subscription.component.spec.ts": "2f2db6bab9d8cff670fdaf7e0aa066784041040d19413cc0f68f72d89fece36c",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-subscription.component.ts": "841ca44e9b54c1691c94dd16cf46adfec42b489212319d02b83aa8cb92ab25e9",
@@ -2699,7 +2699,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "E7 review",
+    "purpose": "E7 after merging E4 and E6",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2747,7 +2747,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "82f5698d",
+    "previousBaselineCommit": "45732abb",
     "removedSincePreviousBaseline": []
   }
 }
