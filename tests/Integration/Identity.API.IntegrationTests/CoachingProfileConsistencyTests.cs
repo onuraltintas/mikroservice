@@ -6,8 +6,10 @@ using Coaching.Domain.Enums;
 using Coaching.Domain.Profiles;
 using Coaching.Infrastructure.Management;
 using Coaching.Infrastructure.Profiles;
+using Coaching.Infrastructure.Repositories;
 using Coaching.Infrastructure.StudyPlanning;
 using EduPlatform.Shared.Contracts.Events.Coaching;
+using EduPlatform.Shared.Kernel.Exceptions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
@@ -189,6 +191,79 @@ public sealed class CoachingProfileConsistencyTests
         s.F.Db.Add(CoachingInstitutionMembership.Create(institution, s.Student, CoachingMemberRole.Student, admin)); await s.F.Db.SaveChangesAsync();
         await s.F.Store.UpdateInstitutionStudentAsync(admin, institution, s.Student, 12, null, default);
         (await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync()).GradeLevel.Should().Be(12);
+    }
+
+    // ---------- Review fixes (PR #114) ----------
+
+    [Fact]
+    public async Task AnUpgradedStudentWithLgsInTwelfthGradeKeepsThePanelAndIsToldToChooseAgain()
+    {
+        await using var s = await Setup.CreateAsync();
+        // An existing student from before the wizard: grade 12, an old LGS setup, the wizard marked done by the upgrade.
+        var profile = await s.F.Db.CoachingStudentProfiles.SingleAsync(x => x.UserId == s.Student);
+        profile.UpdateEducation(CoachingEducationStatus.Student, 12, null, null, null, null, null, null);
+        foreach (var step in Enumerable.Range(1, CoachingStudentProfile.OnboardingStepCount - 1)) profile.RecordOnboardingStep(step);
+        profile.CompleteOnboarding(DateTime.UtcNow);
+        var context = StudentLearningContext.Create(s.Student, s.Year - 1, LearningPurpose.Lgs, s.Year, null, null);
+        context.SetEducation(CoachingEducationStatus.Student, 12, null);
+        s.F.Db.Add(context); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+
+        (await s.Onboarding.GetAsync(default)).Status.Should().Be("Completed", "no wizard redirect");
+        var setup = await s.Settings.GetAsync(default);
+        (setup.PurposeNotForEducation, setup.IsReady).Should().Be((true, false));
+        setup.AllowedPurposes.Should().NotContain(LearningPurpose.Lgs);
+        var preview = new CoachingAutomaticStudyPlanPreviewService(s.F.Db, new CoachingAccessPolicy(s.F.Actor), s.Settings);
+        var error = await Assert.ThrowsAsync<BusinessRuleException>(() => preview.PreviewAsync(
+            new AutomaticStudyPreviewRequest(new(2026, 10, 19), 7, 0, [new(Guid.NewGuid(), 30)], context.Version)));
+        error.Message.Should().Contain("Seçili sınavın sınıfına uymuyor");
+    }
+
+    [Fact]
+    public async Task OtherSettingsCanStillBeSavedWhileTheSavedExamDoesNotFit()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(8, LearningPurpose.Lgs, null);
+        await s.UpdateProfile(x => x with { GradeLevel = 12 });
+        // A topic or session change resends the saved exam: it is not refused for an unrelated change.
+        await s.SaveSetup(LearningPurpose.Lgs, null);
+        (await s.Settings.GetAsync(default)).PurposeNotForEducation.Should().BeTrue();
+        // Choosing an exam that does not fit is still refused.
+        await s.SaveSetup(LearningPurpose.Yks, "SAY");
+        await Assert.ThrowsAsync<ArgumentException>(() => s.SaveSetup(LearningPurpose.Lgs, null));
+    }
+
+    [Fact]
+    public async Task ARetiredPurposeKeepsTheDiplomaGradeLikeNoExam()
+    {
+        await using var s = await Setup.CreateAsync();
+        var profile = await s.F.Db.CoachingStudentProfiles.SingleAsync(x => x.UserId == s.Student);
+        profile.UpdateEducation(CoachingEducationStatus.Student, 12, null, null, null, null, null, null);
+        profile.SetDiplomaGrade(85, false);
+        var context = StudentLearningContext.Create(s.Student, s.Year - 1, LearningPurpose.School, null, null, null);
+        context.SetEducation(CoachingEducationStatus.Student, 12, null);
+        s.F.Db.Add(context); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+        (await s.UpdateProfile(x => x with { Bio = "Merhaba" })).DiplomaGrade.Should().Be(85m);
+        (await s.Store.ExamAsksDiplomaAsync(s.Student, default)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ProfilimKnowsWhetherTheExamAsksTheDiplomaGrade()
+    {
+        await using var s = await Setup.CreateAsync();
+        (await s.Store.ExamAsksDiplomaAsync(s.Student, default)).Should().BeTrue("no exam yet");
+        await s.Wizard(null, LearningPurpose.Yds, null);
+        (await s.Store.ExamAsksDiplomaAsync(s.Student, default)).Should().BeFalse();
+        await s.SaveSetup(LearningPurpose.Yks, "EA");
+        (await s.Store.ExamAsksDiplomaAsync(s.Student, default)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TheWizardIsGivenTheExamsThatFitTheGradeByTheServer()
+    {
+        await using var s = await Setup.CreateAsync();
+        (await s.Personal(8)).AllowedPurposes.Should().Equal(LearningPurpose.Lgs);
+        (await s.Personal(null)).AllowedPurposes.Should().Equal(LearningPurpose.Yks, LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        LearningPurposes.AllowedFor(CoachingEducationStatus.Student, 10).Should().Equal(LearningPurpose.Yks, LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
     }
 
     // ---------- #7: the school on Profilim comes from the catalog ----------

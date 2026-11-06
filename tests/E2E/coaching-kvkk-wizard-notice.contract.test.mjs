@@ -32,6 +32,9 @@ test('the new text covers every item the wizard collects, with its purpose', () 
   // Paket D: a grade changed on Profilim updates the study settings and the diploma grade; an exam change clears the student's own unfit target.
   assert.match(text, /çalışma ayarları da güncellenir/);
   assert.match(text, /kayıtlı diploma notu silinir/);
+  // Review L4: the institution can change the grade too, and an exam change away from YKS also removes the diploma grade.
+  assert.match(text, /kurumu tarafından/);
+  assert.match(text, /sınıfı ya da sınavı değiştiğinde/);
   assert.match(text, /yeni sınava uymayan okul, bölüm, puan ve net hedefleri kaldırılır/);
   assert.match(text, /öğretmenin belirlediği hedef değiştirilmez/);
   for (const page of ['Profil ve ayarlar › Profilim', 'Profil ve ayarlar › Çalışma tercihlerim', 'Gelişimim › Hedefim', 'Profil ve ayarlar › Bildirimler'])

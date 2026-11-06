@@ -47,6 +47,9 @@ describe('Coaching owned profile', () => {
     expect(el.textContent).not.toContain('Okulumu listede bulamıyorum');
     (Array.from(el.querySelectorAll('[data-testid="own-school"] button')).find(x => x.textContent?.includes('Okulunu değiştir')) as HTMLElement).click();
     fixture.detectChanges(); await fixture.whenStable();
+    // Review L8: the focus moves into the picker.
+    await new Promise(resolve => setTimeout(resolve));
+    expect(document.activeElement).toBe(el.querySelector('[data-testid="own-school"] input[role="combobox"]'));
     // The home city is the starting city; its district's schools come first, marked "ilçende", with the catalog's type.
     expect(component.schoolCity()).toBe('İstanbul');
     await new Promise(resolve => setTimeout(resolve, 250));
@@ -67,6 +70,26 @@ describe('Coaching owned profile', () => {
     fixture.detectChanges(); await fixture.whenStable();
     expect(el.querySelector('[data-testid="own-school"]')!.textContent).toContain('Anadolu Lisesi');
     http.verify();
+  });
+
+  it('lets a younger student remove an older typed school and shows the diploma grade only when the exam asks it (review L2, L5)', async () => {
+    const { fixture, component, http } = await setup();
+    const student = { version: 5, educationStatus: 'Student', gradeLevel: 7, shareProgressWithTeachers: true, isActive: true, schoolName: 'Eski Ortaokul' };
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student, examAsksDiploma: false } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const buttons = Array.from(el.querySelectorAll('[data-testid="own-school"] button')).map(x => x.textContent?.trim());
+    expect(buttons).toContain('Okulu kaldır'); expect(buttons).not.toContain('Okulunu değiştir');
+    component.removeSchool(); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[data-testid="own-school"]')!.textContent).toContain('seçilmedi');
+    // A graduate preparing for YDS is not asked the diploma grade (the server would drop it).
+    component.student!.educationStatus = 'graduate'; fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[name="diplomaGrade"]')).toBeNull();
+    TestBed.resetTestingModule();
+    const yks = await setup();
+    yks.http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { ...student, educationStatus: 'Graduate', gradeLevel: null }, examAsksDiploma: true } });
+    yks.fixture.detectChanges(); await yks.fixture.whenStable();
+    expect(yks.fixture.nativeElement.querySelector('[name="diplomaGrade"]')).not.toBeNull();
   });
 
   it('lets the student pick another city and remove the school', async () => {
@@ -98,14 +121,17 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/study-planning/setup').flush({ data: { context: null, isReady: false, missingFields: ['Purpose'], warnings: [], purposeNotForEducation: true } });
     fixture.detectChanges(); await fixture.whenStable();
     const notice = fixture.nativeElement.querySelector('[data-testid="grade-purpose-notice"]') as HTMLElement;
-    expect(notice.textContent).toContain('Sınıfın değişti; çalışma tercihlerini güncelle.');
+    expect(notice.textContent).toContain('Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle.');
     expect(notice.querySelector('a[href="/coaching-portal/account/settings"]')!.textContent).toContain('Çalışma tercihlerim');
     // The diploma grade is asked only for 11th, 12th grade and graduates (as in the wizard).
     expect(fixture.nativeElement.querySelector('[name="diplomaGrade"]')).toBeNull();
     // Saving without a grade change does not ask again.
     component.student!.bio = 'x'; component.dirty = true; component.save();
     http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...student, version: 4, gradeLevel: 9 } });
-    http.expectNone('/api/coaching/study-planning/setup'); http.verify();
+    http.expectNone('/api/coaching/study-planning/setup');
+    // Review L8: a later save clears the old notice.
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[data-testid="grade-purpose-notice"]')).toBeNull(); http.verify();
   });
 
   it('lets a student correct the home city, district and diploma grade from the wizard (KVKK m.11)', async () => {

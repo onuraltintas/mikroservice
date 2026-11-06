@@ -128,7 +128,7 @@ describe('CoachingPortalHomeComponent', () => {
     const { el } = await render(view({ hasActivePlan: true }), false, noTarget, true);
     const setup = el.querySelector('[data-home-block="setup"]')!;
     expect(setup.querySelector('h2')!.textContent).toContain('Çalışma tercihlerini güncelle');
-    expect(setup.textContent).toContain('Sınıfın değişti; seçili sınav yeni sınıfına uymuyor.');
+    expect(setup.textContent).toContain('Seçili sınavın sınıfına uymuyor.');
     expect(setup.querySelector('a[href="/coaching-portal/account/settings"]')!.textContent).toContain('Çalışma tercihlerim');
   });
 
