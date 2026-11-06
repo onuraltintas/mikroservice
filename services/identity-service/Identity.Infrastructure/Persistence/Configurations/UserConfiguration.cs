@@ -34,8 +34,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.PendingEmail)
             .HasMaxLength(255);
 
+        // Review L2: a change of the link value is checked on save, so two confirmations of one link succeed once.
         builder.Property(u => u.PendingEmailToken)
-            .HasMaxLength(128);
+            .HasMaxLength(128)
+            .IsConcurrencyToken();
 
         builder.Property(u => u.MfaSecretProtected)
             .HasMaxLength(2048);

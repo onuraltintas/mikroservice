@@ -178,7 +178,7 @@ export const COACHING_PORTAL_ROUTES: Routes = [
   },
   // E5 (#22): the parent's Hesabım (name, e-mail address and password).
   {
-    path: 'parent/account/settings', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },
+    path: 'parent/account/settings', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'], audience: 'parent' },
     loadComponent: () => import('./pages/coaching-account.component').then(m => m.CoachingAccountComponent)
   },
   {

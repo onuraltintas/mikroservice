@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 
-export type CoachingIcon = 'home' | 'plan' | 'book' | 'clock' | 'spark' | 'chart' | 'target' | 'calendar' | 'bell' | 'wallet' | 'card' | 'arrow' | 'check' | 'menu' | 'close' | 'logout' | 'sun' | 'moon' | 'chat';
+export type CoachingIcon = 'home' | 'plan' | 'book' | 'clock' | 'spark' | 'chart' | 'target' | 'calendar' | 'bell' | 'wallet' | 'card' | 'arrow' | 'check' | 'menu' | 'close' | 'logout' | 'sun' | 'moon' | 'chat' | 'user';
 
 @Component({
   selector: 'app-coaching-icon', standalone: true,
@@ -13,6 +13,7 @@ export class CoachingIconComponent {
     sun: 'M16 12a4 4 0 1 0-8 0 4 4 0 0 0 8 0M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5',
     moon: 'M21 13a9 9 0 0 1-10-10 9 9 0 1 0 10 10',
     chat: 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12',
+    user: 'M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M4 21c0-4 3.6-6 8-6s8 2 8 6',
     home: 'M3 10 12 3l9 7M5 9v11h5v-6h4v6h5V9',
     plan: 'M8 4H5v17h14V4h-3M9 2h6v4H9zM8 11h8M8 15h5',
     book: 'M12 5v16M12 5C8 2 4 3 2 4v16c4-2 7-1 10 1 3-2 6-3 10-1V4c-3-2-7-2-10 1',

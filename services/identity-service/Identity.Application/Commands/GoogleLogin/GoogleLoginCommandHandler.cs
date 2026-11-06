@@ -114,11 +114,9 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             // 2b. Auto-Register User
             _logger.LogInformation("Google login is registering a new user.");
 
-            var randomPassword = Guid.NewGuid().ToString("N") + "A1!"; // Unused but required
-            
-            var regResult = await _identityService.RegisterUserAsync(
+            // E5 review M2: no generated password; the owner can set one later through a reset link.
+            var regResult = await _identityService.RegisterExternalUserAsync(
                 googleUser.Email, 
-                randomPassword, 
                 googleUser.FirstName, 
                 googleUser.LastName, 
                 cancellationToken);

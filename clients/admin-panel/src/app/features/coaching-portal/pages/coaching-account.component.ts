@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
@@ -29,21 +29,21 @@ const voice = { voice: 'sen' as const };
   template: `<div class="cs-account" aria-labelledby="account-title">
     <header>
       <h1 id="account-title">Hesabım</h1>
-      <p>Adın, e-posta adresin ve şifren. Okul ve sınıf bilgilerin Profilim'de.</p>
+      <p>Adın, e-posta adresin ve şifren.@if (!isParent) { Okul ve sınıf bilgilerin Profilim'de. }</p>
     </header>
     @if (loadError()) { <p class="ca-alert" role="alert">{{ loadError() }} <button type="button" (click)="load()">Yeniden dene</button></p> }
     @else if (!profile()) { <p role="status">Hesap bilgilerin yükleniyor…</p> }
     @if (profile(); as me) {
       <section aria-labelledby="account-name-title">
         <h2 id="account-name-title">Ad ve soyad</h2>
-        <p>Öğretmenlerin ve bağlı hesaplar seni bu adla görür.</p>
+        <p>{{ isParent ? 'Bağlı olduğun hesaplar ve öğretmenler seni bu adla görür.' : 'Öğretmenlerin ve bağlı hesaplar seni bu adla görür.' }}</p>
         @if (summary('name'); as text) { <div class="ca-alert" role="alert" data-testid="name-form-summary">{{ text }}</div> }
         @if (status('name'); as text) { <p class="ca-success" role="status" data-testid="name-form-status">{{ text }}</p> }
         <form novalidate data-testid="name-form" (ngSubmit)="saveName()">
           <fieldset [disabled]="busy() === 'name'">
-            <label>Ad <input name="firstName" autocomplete="given-name" maxlength="50" [(ngModel)]="firstName" [attr.aria-invalid]="invalid('firstName')" [attr.aria-describedby]="describedBy('firstName')">
+            <label>Ad <input name="firstName" autocomplete="given-name" maxlength="100" [(ngModel)]="firstName" [attr.aria-invalid]="invalid('firstName')" [attr.aria-describedby]="describedBy('firstName')">
               @if (fieldError('firstName'); as message) { <small class="ca-field-error" id="account-firstName-error">{{ message }}</small> }</label>
-            <label>Soyad <input name="lastName" autocomplete="family-name" maxlength="50" [(ngModel)]="lastName" [attr.aria-invalid]="invalid('lastName')" [attr.aria-describedby]="describedBy('lastName')">
+            <label>Soyad <input name="lastName" autocomplete="family-name" maxlength="100" [(ngModel)]="lastName" [attr.aria-invalid]="invalid('lastName')" [attr.aria-describedby]="describedBy('lastName')">
               @if (fieldError('lastName'); as message) { <small class="ca-field-error" id="account-lastName-error">{{ message }}</small> }</label>
             <button type="submit">{{ busy() === 'name' ? 'Kaydediliyor…' : 'Adımı kaydet' }}</button>
           </fieldset>
@@ -72,7 +72,7 @@ const voice = { voice: 'sen' as const };
             </fieldset>
           </form>
         } @else {
-          <p class="ca-notice">Google ile giriş yapıyorsun. E-posta adresini değiştirmek için önce aşağıdan bir şifre belirle.</p>
+          <p class="ca-notice">Hesabın için henüz bir şifre belirlenmemiş. E-posta adresini değiştirmek için önce aşağıdan bir şifre belirle.</p>
         }
       </section>
 
@@ -98,7 +98,7 @@ const voice = { voice: 'sen' as const };
             </fieldset>
           </form>
         } @else {
-          <p>Google ile giriş yapıyorsun; hesabında şifre yok. İstersen bir şifre de belirleyebilirsin: <strong>{{ me.email }}</strong> adresine şifre belirleme bağlantısı gönderelim.</p>
+          <p>Hesabın için henüz bir şifre belirlenmemiş (örneğin Google ile kaydolduysan). İstersen <strong>{{ me.email }}</strong> adresine şifre belirleme bağlantısı gönderelim.</p>
           @if (summary('password'); as text) { <div class="ca-alert" role="alert">{{ text }}</div> }
           @if (status('password'); as text) { <p class="ca-success" role="status" data-testid="password-setup-status">{{ text }}</p> }
           <button type="button" data-testid="request-password-setup" [disabled]="busy() === 'password'" (click)="requestPasswordSetup()">Şifre belirleme bağlantısı gönder</button>
@@ -132,6 +132,8 @@ const voice = { voice: 'sen' as const };
 export class CoachingAccountComponent implements OnInit {
   private readonly identity = inject(IdentityService);
   private readonly auth = inject(AuthService);
+  /** Review L8: the parent's page has no student copy (route data audience: 'parent'). */
+  readonly isParent = inject(ActivatedRoute, { optional: true })?.snapshot?.data?.['audience'] === 'parent';
 
   readonly profile = signal<UserProfileDto | null>(null);
   readonly loadError = signal<string | null>(null);
@@ -176,8 +178,11 @@ export class CoachingAccountComponent implements OnInit {
     this.begin('name', ['firstName', 'lastName']);
     const firstName = this.firstName.trim(), lastName = this.lastName.trim();
     const errors: Partial<Record<FieldName, string>> = {};
-    if (firstName.length < 2) errors.firstName = firstName ? 'Adın en az 2 harf olmalı.' : 'Adını yaz.';
-    if (lastName.length < 2) errors.lastName = lastName ? 'Soyadın en az 2 harf olmalı.' : 'Soyadını yaz.';
+    // Review L7: the server's rules — not blank, at most 100 characters.
+    if (!firstName) errors.firstName = 'Adını yaz.';
+    else if (firstName.length > 100) errors.firstName = 'Adın en fazla 100 karakter olabilir.';
+    if (!lastName) errors.lastName = 'Soyadını yaz.';
+    else if (lastName.length > 100) errors.lastName = 'Soyadın en fazla 100 karakter olabilir.';
     if (this.reject('name', errors, 'Adın kaydedilmedi.')) return;
     this.busy.set('name');
     this.identity.updateMyProfile({ firstName, lastName }).pipe(finalize(() => this.busy.set(null))).subscribe({

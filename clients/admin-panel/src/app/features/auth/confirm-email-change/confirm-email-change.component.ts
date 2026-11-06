@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
@@ -8,6 +9,8 @@ import { IdentityService } from '../../../core/services/identity.service';
  * E5 (#22): the page the e-mail change link opens (PublicAppUrlOptions.EmailChangeConfirmationPath on the Coaching
  * site, or the admin panel for management accounts). The change is applied only when the button is pressed, so a mail
  * scanner that opens the link changes nothing. Reads `userId` and `token` (tests/E2E/email-verification-links).
+ * Review M1 (b): before the button it names the account (masked current address, from an anonymous preview);
+ * review L4: the link value is removed from the address bar once read.
  */
 @Component({
   selector: 'app-confirm-email-change',
@@ -20,13 +23,19 @@ import { IdentityService } from '../../../core/services/identity.service';
         <h1 id="confirm-change-title">Yeni e-posta adresini onayla</h1>
         @if (state() === 'done') {
           <p role="status">E-posta adresin değiştirildi. Bundan sonra giriş yaparken ve bildirimlerde yeni adresin kullanılacak.</p>
-          @if (signedIn()) { <a routerLink="/coaching-portal/account/settings/account">Hesabım'a dön</a> }
+          @if (signedIn()) { <a [routerLink]="accountPage()">Hesabım'a dön</a> }
           @else { <a routerLink="/auth/login">Giriş yap</a> }
         } @else if (!userId || !token) {
           <p role="alert">Bağlantı eksik görünüyor. E-postadaki bağlantının tamamını aç ya da Hesabım sayfasından yeni bir bağlantı iste.</p>
           <a routerLink="/auth/login">Giriş sayfasına dön</a>
+        } @else if (previewError()) {
+          <p role="alert">{{ previewError() }}</p>
+          <a routerLink="/auth/login">Giriş sayfasına dön</a>
+        } @else if (!currentMasked()) {
+          <p role="status">Bağlantı kontrol ediliyor…</p>
         } @else {
-          <p>Hesabının e-posta adresini bu bağlantının gönderildiği adresle değiştirmek için onayla. Onaylamazsan adresin değişmez.</p>
+          <p data-testid="change-account">Bu onay, şu an <strong>{{ currentMasked() }}</strong> adresini kullanan hesabın e-posta adresini bu bağlantının gönderildiği adresle değiştirir. Bu hesap senin değilse onaylama ve bu e-postayı dikkate alma.</p>
+          <p>Onayladığında bu hesabın bütün oturumları kapanır ve bağlı Google girişi kaldırılır; yeni adresin ve şifrenle giriş yaparsın.</p>
           @if (error()) { <p role="alert">{{ error() }}</p> }
           <button type="button" data-testid="confirm-email-change" [disabled]="state() === 'working'" (click)="confirm()">
             {{ state() === 'working' ? 'Onaylanıyor…' : 'Yeni adresimi onayla' }}</button>
@@ -45,7 +54,7 @@ import { IdentityService } from '../../../core/services/identity.service';
     a { color: #4338ca; font-weight: 650; }
   `]
 })
-export class ConfirmEmailChangeComponent {
+export class ConfirmEmailChangeComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly identity = inject(IdentityService);
   private readonly auth = inject(AuthService);
@@ -54,7 +63,26 @@ export class ConfirmEmailChangeComponent {
   readonly token = this.route.snapshot.queryParamMap.get('token');
   readonly state = signal<'ready' | 'working' | 'done'>('ready');
   readonly error = signal<string | null>(null);
+  readonly previewError = signal<string | null>(null);
+  readonly currentMasked = signal<string | null>(null);
   readonly signedIn = () => !!this.auth.userProfile();
+  /** Review L7: a parent goes back to the parent's Hesabım. */
+  readonly accountPage = () => {
+    const roles = this.auth.userProfile()?.roles ?? [];
+    return roles.includes('Parent') && !roles.includes('Student') ? '/coaching-portal/parent/account/settings' : '/coaching-portal/account/settings/account';
+  };
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  ngOnInit(): void {
+    if (!this.userId || !this.token) return;
+    // The value stays in memory only: not in the address bar, the history or a later Referer.
+    if (this.browser) window.history.replaceState(null, '', '/auth/confirm-email-change');
+    this.identity.previewEmailChange(this.userId, this.token).subscribe({
+      next: preview => this.currentMasked.set(preview?.currentEmailMasked ?? '***'),
+      error: error => this.previewError.set(getApiErrorMessage(error,
+        'Bağlantı geçersiz ya da süresi dolmuş. Hesabım sayfasından yeni bir bağlantı iste.', { voice: 'sen' }))
+    });
+  }
 
   confirm(): void {
     if (!this.userId || !this.token || this.state() === 'working') return;

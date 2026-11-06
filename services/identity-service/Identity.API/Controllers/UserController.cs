@@ -372,7 +372,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> RequestEmailChange([FromBody] EmailChangeRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new Identity.Application.Commands.ChangeEmail.RequestEmailChangeCommand(
-            request.CurrentPassword ?? string.Empty, request.NewEmail ?? string.Empty, GetClaimedProductScope()), cancellationToken);
+            request.CurrentPassword ?? string.Empty, request.NewEmail ?? string.Empty), cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(new { Error = result.Error });
     }
 

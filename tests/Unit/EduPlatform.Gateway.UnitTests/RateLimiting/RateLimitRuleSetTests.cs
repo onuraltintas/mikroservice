@@ -19,6 +19,7 @@ public sealed class RateLimitRuleSetTests
     [InlineData("/api/auth/confirm-email", "POST", "auth-email-confirmation", 10, 900)]
     // E5 (#22): the e-mail change link, and the signed-in account changes that check the current password.
     [InlineData("/api/auth/confirm-email-change", "POST", "auth-email-confirmation", 10, 900)]
+    [InlineData("/api/auth/email-change-preview", "POST", "auth-email-confirmation", 10, 900)]
     [InlineData("/api/users/me/email-change", "POST", "account-security", 10, 900)]
     [InlineData("/api/users/me/change-password", "POST", "account-security", 10, 900)]
     [InlineData("/api/auth/coaching/register/student", "POST", "auth-registration", 15, 60)]

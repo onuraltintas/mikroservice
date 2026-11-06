@@ -1582,6 +1582,9 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("bytea");
 
+                    b.Property<bool>("PasswordKnownToOwner")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("PasswordResetToken")
                         .HasColumnType("text");
 
@@ -1603,6 +1606,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PendingEmailToken")
+                        .IsConcurrencyToken()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 

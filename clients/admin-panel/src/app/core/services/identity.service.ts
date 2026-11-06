@@ -439,6 +439,11 @@ export class IdentityService {
         return this.http.delete<void>(`${this.baseUrl}/me/email-change`);
     }
 
+    /** Review M1 (b): the masked current address of the account the link belongs to (nothing changes). */
+    previewEmailChange(userId: string, token: string) {
+        return this.http.post<{ currentEmailMasked: string }>(`${environment.apiUrl}/auth/email-change-preview`, { userId, token });
+    }
+
     /** The link in the e-mail (anonymous: it may be opened on another device). */
     confirmEmailChange(userId: string, token: string) {
         return this.http.post<void>(`${environment.apiUrl}/auth/confirm-email-change`, { userId, token });

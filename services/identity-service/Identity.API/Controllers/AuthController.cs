@@ -220,6 +220,25 @@ public class AuthController : ControllerBase
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
+    /// <summary>
+    /// E5 review M1 (b): what the confirmation page shows before its button — the masked current address of the
+    /// account the link belongs to (e.g. "o***@example.test"); nothing is changed. Same rate limit as the confirmation.
+    /// </summary>
+    [HttpPost("email-change-preview")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PreviewEmailChange([FromBody] ConfirmEmailChangeRequest request, CancellationToken cancellationToken)
+    {
+        if (request.UserId == Guid.Empty || string.IsNullOrWhiteSpace(request.Token))
+        {
+            return BadRequest(new Error("EmailChange.InvalidLink",
+                "Bağlantı geçersiz ya da süresi dolmuş. Hesabım sayfasından yeni bir bağlantı iste."));
+        }
+
+        var result = await _mediator.Send(
+            new Identity.Application.Commands.ChangeEmail.GetEmailChangePreviewQuery(request.UserId, request.Token), cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
     [HttpPost("resend-verification-email")]
     [AllowAnonymous]
     public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailCommand command)

@@ -19,6 +19,11 @@ public class User : AggregateRoot
     // Auth credentials
     public byte[] PasswordHash { get; private set; } = Array.Empty<byte>();
     public byte[] PasswordSalt { get; private set; } = Array.Empty<byte>();
+    /// <summary>
+    /// E5 review M2: false when the stored password was generated for the account (Google registration before this
+    /// change, administrator provisioning) and the owner never chose it. A password sign-in, reset or change sets it.
+    /// </summary>
+    public bool PasswordKnownToOwner { get; private set; } = true;
 
     public bool EmailConfirmed { get; private set; }
     public string? EmailVerificationToken { get; private set; }
@@ -42,7 +47,7 @@ public class User : AggregateRoot
 
     /// <summary>Accounts made with Google sign-in have no password until the owner sets one through a reset link.</summary>
     [NotMapped]
-    public bool HasPassword => PasswordHash.Length > 0 && PasswordSalt.Length > 0;
+    public bool HasPassword => PasswordKnownToOwner && PasswordHash.Length > 0 && PasswordSalt.Length > 0;
 
     public string? PhoneNumber { get; private set; }
     public bool PhoneConfirmed { get; private set; }
@@ -101,10 +106,19 @@ public class User : AggregateRoot
     /// </summary>
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
-    public void SetPassword(byte[] passwordHash, byte[] passwordSalt)
+    /// <summary>"ogrenci@example.test" → "o***@example.test" (E5: what an e-mail change link may show).</summary>
+    public static string MaskEmail(string email)
+    {
+        var at = email.IndexOf('@');
+        return at <= 0 ? "***" : $"{email[0]}***{email[at..]}";
+    }
+
+    /// <param name="knownToOwner">False for a generated password the owner never sees (see <see cref="PasswordKnownToOwner"/>).</param>
+    public void SetPassword(byte[] passwordHash, byte[] passwordSalt, bool knownToOwner = true)
     {
         PasswordHash = passwordHash;
         PasswordSalt = passwordSalt;
+        PasswordKnownToOwner = knownToOwner;
         UpdatedAt = DateTime.UtcNow;
     }
     
@@ -128,6 +142,14 @@ public class User : AggregateRoot
         {
             refreshToken.Revoke(ipAddress, reason);
         }
+    }
+
+    /// <summary>The owner entered the stored password (sign-in, re-authentication), so it is theirs.</summary>
+    public void MarkPasswordKnownToOwner()
+    {
+        if (PasswordKnownToOwner || PasswordHash.Length == 0) return;
+        PasswordKnownToOwner = true;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void UpdateName(string firstName, string lastName)
@@ -176,6 +198,7 @@ public class User : AggregateRoot
 
         PasswordHash = [];
         PasswordSalt = [];
+        PasswordKnownToOwner = false;
         PasswordResetToken = null;
         PasswordResetTokenExpiresAt = null;
         foreach (var refreshToken in _refreshTokens.Where(token => token.IsActive))
@@ -427,6 +450,7 @@ public class User : AggregateRoot
         PhoneConfirmed = false;
         PasswordHash = [];
         PasswordSalt = [];
+        PasswordKnownToOwner = false;
         EmailConfirmed = false;
         EmailVerificationToken = null;
         EmailVerificationTokenExpiresAt = null;
