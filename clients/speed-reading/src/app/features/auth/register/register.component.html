@@ -7,7 +7,10 @@
         {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
       </button></div>
       @if (joinExisting) { <app-existing-product-join product="speed-reading" account="student" /> }
-      <form [style.display]="joinExisting ? 'none' : null" [formGroup]="registerForm" [attr.aria-busy]="loading" (ngSubmit)="onSubmit()">
+      @if (alreadyVerified) {
+      <app-registration-verified [message]="verifiedMessage" [loginQueryParams]="loginQueryParams" />
+      }
+      <form [style.display]="joinExisting || alreadyVerified ? 'none' : null" [formGroup]="registerForm" [attr.aria-busy]="loading" (ngSubmit)="onSubmit()">
 
         <!-- Row 1: Names -->
         <div class="form-row">

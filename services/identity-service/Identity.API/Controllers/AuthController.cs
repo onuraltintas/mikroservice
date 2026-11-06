@@ -83,7 +83,7 @@ public class AuthController : ControllerBase
         if (!TryResolveProduct(product, out var platformProduct))
             return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
         var result = await _mediator.Send(command with { Product = platformProduct });
-        return result.IsFailure ? RegistrationFailure(result) : Ok(new { UserId = result.Value });
+        return result.IsFailure ? RegistrationFailure(result) : Ok(result.Value);
     }
 
     [HttpPost("{product:regex(coaching|speed-reading)}/register/student")]
@@ -102,7 +102,7 @@ public class AuthController : ControllerBase
         {
             return RegistrationFailure(result);
         }
-        return Ok(new { UserId = result.Value });
+        return Ok(result.Value);
     }
 
     [HttpPost("{product:regex(coaching|speed-reading)}/register/teacher")]
@@ -121,7 +121,7 @@ public class AuthController : ControllerBase
         {
             return RegistrationFailure(result);
         }
-        return Ok(new { UserId = result.Value });
+        return Ok(result.Value);
     }
 
     [HttpPost("{product:regex(coaching|speed-reading)}/register/institution")]
@@ -140,7 +140,7 @@ public class AuthController : ControllerBase
         {
             return RegistrationFailure(result);
         }
-        return Ok(new { UserId = result.Value });
+        return Ok(result.Value);
     }
 
     [HttpPost("{product:regex(coaching|speed-reading)}/register/parent")]
@@ -159,7 +159,7 @@ public class AuthController : ControllerBase
         {
             return RegistrationFailure(result);
         }
-        return Ok(new { UserId = result.Value });
+        return Ok(result.Value);
     }
 
     [HttpPost("refresh-token")]

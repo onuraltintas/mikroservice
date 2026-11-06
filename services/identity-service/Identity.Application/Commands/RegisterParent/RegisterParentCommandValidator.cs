@@ -7,6 +7,10 @@ public sealed class RegisterParentCommandValidator : AbstractValidator<RegisterP
 {
     public RegisterParentCommandValidator()
     {
+        RuleFor(x => x.MfaCode)
+            .Matches(@"^\d{6}$").WithMessage("Doğrulama kodu altı haneli olmalıdır.")
+            .When(x => !string.IsNullOrEmpty(x.MfaCode));
+
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("E-posta alanı zorunludur.")
             .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.")

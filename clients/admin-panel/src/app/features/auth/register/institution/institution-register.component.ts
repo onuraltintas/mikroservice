@@ -22,6 +22,8 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../../existing-product-join.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
+import { RegistrationSuccessComponent } from '../registration-success.component';
+import { RegistrationSuccessCopy, grantedNewProductAccess, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
     selector: 'app-institution-register',
@@ -30,7 +32,7 @@ import { RegistrationLegalAcceptance } from '../../../../core/services/identity.
         ExistingProductJoinComponent,
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatSelectModule,
-        RegistrationLegalConsentComponent, PasswordRequirementsComponent
+        RegistrationLegalConsentComponent, PasswordRequirementsComponent, RegistrationSuccessComponent
     ],
     templateUrl: './institution-register.component.html'
 })
@@ -49,6 +51,9 @@ export class InstitutionRegisterComponent implements OnInit {
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    /** Set when the address was already verified: the page shows "sign in now" instead of redirecting. */
+    verifiedNotice = signal<RegistrationSuccessCopy | null>(null);
+    readonly loginQueryParams: Record<string, string> = { registered: 'true', role: 'institution' };
     joinExisting = false;
     legalReady = false;
     legalAcceptances: RegistrationLegalAcceptance[] = [];
@@ -119,10 +124,20 @@ export class InstitutionRegisterComponent implements OnInit {
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/institution`, payload).subscribe({
-            next: () => {
-                this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
-                this.analytics.track('sign_up', { method: 'password', role: 'institution' });
-                this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'institution' } });
+            next: (response) => {
+                const outcome = readVerificationEmailOutcome(response);
+                const copy = registrationSuccessCopy(outcome, 'siz');
+                // Third review N3: a sign-up only when this request granted the product (not on a retry).
+                if (grantedNewProductAccess(response)) this.analytics.track('sign_up', { method: 'password', role: 'institution' });
+                if (outcome === 'notRequired') {
+                    // The panel (with focus and a sign-in button) is the message; no duplicate toast.
+                    this.isLoading.set(false);
+                    this.errorMessage.set(null);
+                    this.verifiedNotice.set(copy);
+                    return;
+                }
+                this.toaster.success(copy.message, copy.title);
+                this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },
             error: (err) => {
                 this.isLoading.set(false);

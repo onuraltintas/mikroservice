@@ -13,21 +13,18 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { StudentRegisterComponent } from './student-register.component';
 
 describe('StudentRegisterComponent registration', () => {
-  // Roadmap Y8: registration asks for the student's birth date and sends it as a calendar date.
-  it('requires a real past birth date and sends it with the registration', async () => {
+  // Paket A #1 (05.11.2026): the birth date is no longer asked at registration (a first-login wizard asks it later).
+  it('does not ask for a birth date and does not send one', async () => {
     const component = createComponent(new Subject(), {}, { success: vi.fn(), error: vi.fn() }, { navigate: vi.fn().mockResolvedValue(true) });
-    const values = { firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!', confirmPassword: 'NewPassword1!' };
-    component.form.setValue({ ...values, birthDate: '' });
-    expect(component.form.invalid).toBe(true);
-    component.form.setValue({ ...values, birthDate: '2999-01-01' });
-    expect(component.form.controls.birthDate.hasError('birthDate')).toBe(true);
-    component.form.setValue({ ...values, birthDate: '2011-05-03' });
+    expect(Object.keys(component.form.controls)).not.toContain('birthDate');
+    component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!', confirmPassword: 'NewPassword1!' });
+    expect(component.form.valid).toBe(true);
     await component.onSubmit();
     const http = TestBed.inject(HttpTestingController);
     const request = http.expectOne(candidate => candidate.url.endsWith('/auth/coaching/register/student'));
-    expect(request.request.body.birthDate).toBe('2011-05-03');
+    expect('birthDate' in request.request.body).toBe(false);
     expect(request.request.body.dateOfBirth).toBeUndefined();
-    request.flush({ userId: 'new-user' });
+    request.flush({ userId: 'new-user', verificationEmail: 'sent' });
     http.verify();
   });
 
@@ -38,7 +35,7 @@ describe('StudentRegisterComponent registration', () => {
       { returnUrl: '/coaching-portal/account/payments?plan=ogrenci-yillik' });
     TestBed.inject(SiteAnalyticsService).utm.set({ utmSource: 'instagram', utmMedium: 'social', utmCampaign: 'lgs-ekim' });
     component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!',
-      confirmPassword: 'NewPassword1!', birthDate: '2011-05-03' });
+      confirmPassword: 'NewPassword1!' });
     await component.onSubmit();
     const http = TestBed.inject(HttpTestingController);
     const request = http.expectOne(candidate => candidate.url.endsWith('/auth/coaching/register/student'));
@@ -53,7 +50,7 @@ describe('StudentRegisterComponent registration', () => {
     const router = { navigate: vi.fn().mockResolvedValue(true) };
     const component = createComponent(new Subject(), {}, { success: vi.fn(), error: vi.fn() }, router, { returnUrl: 'https://evil.example' });
     component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'new@example.test', password: 'NewPassword1!',
-      confirmPassword: 'NewPassword1!', birthDate: '2011-05-03' });
+      confirmPassword: 'NewPassword1!' });
     await component.onSubmit();
     TestBed.inject(HttpTestingController).expectOne(candidate => candidate.url.endsWith('/auth/coaching/register/student')).flush({});
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], { queryParams: { registered: 'true', role: 'student' } });
@@ -63,7 +60,7 @@ describe('StudentRegisterComponent registration', () => {
     const toaster = { error: vi.fn() };
     const component = createComponent(new Subject(), {}, toaster);
     component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'existing@example.test',
-      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!', birthDate: '2011-05-03' });
+      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!' });
     await component.onSubmit();
     const http = TestBed.inject(HttpTestingController);
     http.expectOne(request => request.url.endsWith('/auth/coaching/register/student')).flush({
@@ -81,7 +78,7 @@ describe('StudentRegisterComponent registration', () => {
     const component = createComponent(new Subject(), {}, toaster, router);
     component.errorMessage.set('Previous error');
     component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'existing@example.test',
-      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!', birthDate: '2011-05-03' });
+      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!' });
     await component.onSubmit();
     expect(component.errorMessage()).toBeNull();
     const http = TestBed.inject(HttpTestingController);

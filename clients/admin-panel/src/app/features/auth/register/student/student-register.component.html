@@ -95,7 +95,10 @@
                     {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
                 </button>
                 @if (joinExisting) { <app-existing-product-join product="coaching" account="student" /> }
-                <form [style.display]="joinExisting ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+                @if (verifiedNotice(); as notice) {
+                    <app-registration-success [title]="notice.title" [message]="notice.message" [loginQueryParams]="loginQueryParams" />
+                }
+                <form [style.display]="joinExisting || verifiedNotice() ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
 
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -145,15 +148,6 @@
                             zorunludur</mat-error>
                         <mat-error *ngIf="form.get('confirmPassword')?.hasError('passwordMismatch')">Şifreler
                             eşleşmiyor</mat-error>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>Doğum tarihi</mat-label>
-                        <input matInput type="date" formControlName="birthDate" autocomplete="bday">
-                        <mat-icon matPrefix class="text-gray-400 mr-2">cake</mat-icon>
-                        <mat-hint>Koçluk planın yaşına ve sınıfına göre hazırlanır.</mat-hint>
-                        <mat-error *ngIf="form.get('birthDate')?.hasError('required')">Doğum tarihi zorunludur</mat-error>
-                        <mat-error *ngIf="form.get('birthDate')?.hasError('birthDate')">Geçerli bir doğum tarihi girin</mat-error>
                     </mat-form-field>
 
                     <app-registration-legal-consent product="coaching"

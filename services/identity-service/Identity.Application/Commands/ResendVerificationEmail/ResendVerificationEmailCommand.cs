@@ -7,7 +7,10 @@ using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.ResendVerificationEmail;
 
-public record ResendVerificationEmailCommand(string Email) : IRequest<Result>;
+/// <param name="Product">PR #111 second review H1: the site asking ("coaching" / "speed-reading"), so the e-mail and
+/// its link are that product's. Used only when the account has that product; otherwise the account's single
+/// Coaching/Speed-reading product decides, and with both or neither the role decides as before.</param>
+public record ResendVerificationEmailCommand(string Email, string? Product = null) : IRequest<Result>;
 
 public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerificationEmailCommand, Result>
 {
@@ -33,10 +36,8 @@ public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerif
 
         // Generate new token
         user.GenerateEmailVerificationToken();
-        var primaryRole = user.Roles
-            .OrderBy(role => role.Role.Name)
-            .Select(role => role.Role.Name)
-            .FirstOrDefault() ?? Identity.Domain.Enums.UserRole.Student.ToString();
+        var product = Identity.Application.Registration.EmailProduct.Resolve(user, request.Product);
+        var primaryRole = Identity.Application.Registration.EmailProduct.Role(user, product, Identity.Domain.Enums.UserRole.Student.ToString());
 
         // Publish Event
         await _publishEndpoint.Publish(new UserRegisteredEvent(
@@ -46,7 +47,7 @@ public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerif
             user.LastName,
             user.EmailVerificationToken ?? "",
             primaryRole
-        ), cancellationToken);
+        ) { Product = product }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

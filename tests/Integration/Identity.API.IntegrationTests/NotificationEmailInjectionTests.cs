@@ -64,6 +64,224 @@ public sealed class NotificationEmailInjectionTests
         mail.Body.Should().Contain("href='https://app.example.test/coaching-portal/profile'");
     }
 
+    // Review #2 (PR #111): a verification e-mail follows the product it was sent for; without a
+    // product (older publishers) or with an unknown one, the role decides as before.
+    // Second review H1: the link must open a page that exists. The Coaching site (admin-panel, PublicApp:BaseUrl)
+    // verifies at /auth/confirm-email?userId=…&token=…; the speed-reading app at /auth/verify-email?token=…&userId=….
+    [Theory]
+    [InlineData("Student", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Teacher", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("InstitutionAdmin", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Parent", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Coach", null, "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Student", "speed-reading", "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
+    [InlineData("Student", null, "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
+    [InlineData("Student", "unknown-product", "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
+    public async Task VerificationEmail_UsesTheProductTemplateLinkAndName(string role, string? product, string template, string link, string appName)
+    {
+        foreach (var withTemplate in new[] { true, false })
+        {
+            var userId = Guid.NewGuid();
+            var mail = (await RunAsync<UserRegisteredConsumer>(
+                new UserRegisteredEvent(userId, "a@example.test", "Ada", "Kaya", "token", role) { Product = product },
+                withTemplate ? (template, "Doğrula - Eduİvme", "<p>Eduİvme <a href='{{VerificationLink}}'>x</a></p>") : null)).Single();
+
+            mail.Body.Should().Contain($"href='{string.Format(link, userId)}'");
+            if (withTemplate) mail.Subject.Should().Be($"Doğrula - {appName}");
+            else mail.Subject.Should().Contain(appName);
+            mail.Body.Should().Contain(appName);
+            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma");
+        }
+    }
+
+    // Final review R3 and 1: end to end from the identity handler to the queued e-mail, with the production origins.
+    private static void ProductionOrigins(PublicAppUrlOptions options)
+    {
+        options.BaseUrl = "https://onuraltintas.net";
+        options.SpeedReadingBaseUrl = "https://masterhizliokuma.com";
+        options.AdminPanelUrl = "https://eduivme.com";
+    }
+
+    private static Identity.Domain.Entities.User AccountIn(Identity.Domain.Enums.PlatformProduct product, bool confirmed)
+    {
+        var user = Identity.Domain.Entities.User.Create(Guid.NewGuid(), "hesap@example.test", "Ada", "Kaya");
+        if (confirmed) user.ConfirmEmail();
+        user.GrantProductAccess(product, Identity.Domain.Enums.UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        var role = Identity.Domain.Entities.Role.Create("Student", "Student", true);
+        var membership = new Identity.Domain.Entities.UserRole(user.Id, role.Id, product);
+        typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(membership, role);
+        user.AddRole(membership);
+        return user;
+    }
+
+    [Theory]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching, "coaching", "SpeedReading_Auth_VerifyEmail", "https://onuraltintas.net/auth/confirm-email?userId={0}&token={1}", "Eduİvme")]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading, "speed-reading", "Auth_VerifyEmail", "https://masterhizliokuma.com/auth/verify-email?token={1}&userId={0}", "Master Hızlı Okuma")]
+    public async Task ResentVerificationEmail_IsTheProductsEmailWithItsWorkingLink(
+        Identity.Domain.Enums.PlatformProduct product, string requested, string otherTemplate, string link, string appName)
+    {
+        var user = AccountIn(product, confirmed: false);
+        var events = new List<object>();
+        var handler = new Identity.Application.Commands.ResendVerificationEmail.ResendVerificationEmailCommandHandler(
+            Stub<Identity.Application.Interfaces.IUserRepository>((_, _) => Task.FromResult<Identity.Domain.Entities.User?>(user)),
+            Stub<Identity.Application.Interfaces.IUnitOfWork>((_, _) => Task.FromResult(1)),
+            Stub<IPublishEndpoint>((_, args) => { events.Add(args![0]!); return Task.CompletedTask; }));
+        (await handler.Handle(new(user.Email, requested), default)).IsSuccess.Should().BeTrue();
+        var registered = events.OfType<UserRegisteredEvent>().Single();
+
+        // Seed the other product's template: it must not be chosen.
+        var mail = (await RunAsync<UserRegisteredConsumer>(registered, (otherTemplate, "Yanlış", "<p>yanlış</p>"), ProductionOrigins)).Single();
+
+        mail.Body.Should().Contain($"href='{string.Format(link, user.Id, user.EmailVerificationToken)}'");
+        mail.Subject.Should().Contain(appName);
+        mail.Body.Should().NotContain("yanlış");
+        if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma").And.NotContain("masterhizliokuma");
+    }
+
+    [Theory]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching, "coaching", "Auth_ForgotPassword", "https://onuraltintas.net/auth/reset-password?token=", "Eduİvme")]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading, "speed-reading", "SpeedReading_Auth_ForgotPassword", "https://masterhizliokuma.com/auth/reset-password?token=", "Master Hızlı Okuma")]
+    public async Task ForgotPasswordEmail_IsTheProductsEmailWithItsWorkingLink(
+        Identity.Domain.Enums.PlatformProduct product, string requested, string template, string link, string appName)
+    {
+        var user = AccountIn(product, confirmed: true);
+        var events = new List<object>();
+        var handler = new Identity.Application.Commands.ForgotPassword.ForgotPasswordCommandHandler(
+            Stub<Identity.Application.Interfaces.IUserRepository>((_, _) => Task.FromResult<Identity.Domain.Entities.User?>(user)),
+            Stub<Identity.Application.Interfaces.IUnitOfWork>((_, _) => Task.FromResult(1)),
+            Stub<IPublishEndpoint>((_, args) => { events.Add(args![0]!); return Task.CompletedTask; }));
+        (await handler.Handle(new(user.Email, requested), default)).IsSuccess.Should().BeTrue();
+        var forgot = events.OfType<UserForgotPasswordEvent>().Single();
+
+        foreach (var withTemplate in new[] { true, false })
+        {
+            var mail = (await RunAsync<UserForgotPasswordConsumer>(forgot,
+                withTemplate ? (template, "Sıfırla - Eduİvme", "<p>Eduİvme <a href='{{ResetLink}}'>x</a></p>") : null, ProductionOrigins)).Single();
+            mail.Body.Should().Contain($"href='{link}");
+            mail.Body.Should().Contain("&email=hesap%40example.test'");
+            mail.Body.Should().Contain(appName);
+            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma").And.NotContain("masterhizliokuma");
+        }
+    }
+
+    // Reviewer L1: a custom role next to a product role must not move the product's links to the admin panel.
+    // The role named on the e-mail is the account's role in the e-mail's product; only an account without one
+    // (custom role only, SystemAdmin) gets admin-panel links.
+    private static Identity.Domain.Entities.User AccountWithRoles(Identity.Domain.Enums.PlatformProduct? access,
+        params (string Name, Identity.Domain.Enums.PlatformProduct? Product)[] roles)
+    {
+        var user = Identity.Domain.Entities.User.Create(Guid.NewGuid(), "hesap@example.test", "Ada", "Kaya");
+        if (access is { } product)
+            user.GrantProductAccess(product, Identity.Domain.Enums.UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        foreach (var (name, product2) in roles)
+        {
+            var role = Identity.Domain.Entities.Role.Create(name, name, true);
+            var membership = new Identity.Domain.Entities.UserRole(user.Id, role.Id, product2);
+            typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(membership, role);
+            user.AddRole(membership);
+        }
+        return user;
+    }
+
+    public static TheoryData<string, string> MixedRoleCases() => new()
+    {
+        { "coaching-student-and-moderator", "https://onuraltintas.net" },
+        { "speed-reading-student-and-moderator", "https://masterhizliokuma.com" },
+        { "coaching-moderator-only", "https://eduivme.com" },
+        { "system-admin-only", "https://eduivme.com" },
+    };
+
+    private static (Identity.Domain.Entities.User User, string? Product) MixedRoleAccount(string scenario) => scenario switch
+    {
+        "coaching-student-and-moderator" => (AccountWithRoles(Identity.Domain.Enums.PlatformProduct.Coaching,
+            ("Moderator", null), ("Student", Identity.Domain.Enums.PlatformProduct.Coaching)), "coaching"),
+        "speed-reading-student-and-moderator" => (AccountWithRoles(Identity.Domain.Enums.PlatformProduct.SpeedReading,
+            ("Moderator", null), ("Student", Identity.Domain.Enums.PlatformProduct.SpeedReading)), "speed-reading"),
+        "coaching-moderator-only" => (AccountWithRoles(Identity.Domain.Enums.PlatformProduct.Coaching,
+            ("Moderator", Identity.Domain.Enums.PlatformProduct.Coaching)), "coaching"),
+        _ => (AccountWithRoles(null, ("SystemAdmin", null)), null),
+    };
+
+    private static async Task<List<object>> PublishFrom(Func<Identity.Application.Interfaces.IUserRepository, Identity.Application.Interfaces.IUnitOfWork, IPublishEndpoint, Task> run,
+        Identity.Domain.Entities.User user)
+    {
+        var events = new List<object>();
+        await run(Stub<Identity.Application.Interfaces.IUserRepository>((_, _) => Task.FromResult<Identity.Domain.Entities.User?>(user)),
+            Stub<Identity.Application.Interfaces.IUnitOfWork>((_, _) => Task.FromResult(1)),
+            Stub<IPublishEndpoint>((_, args) => { events.Add(args![0]!); return Task.CompletedTask; }));
+        return events;
+    }
+
+    [Theory]
+    [MemberData(nameof(MixedRoleCases))]
+    public async Task PasswordReset_LinkFollowsTheProductRoleNotACustomRole(string scenario, string origin)
+    {
+        var (user, product) = MixedRoleAccount(scenario);
+        user.ConfirmEmail();
+        var events = await PublishFrom((users, uow, bus) => new Identity.Application.Commands.ForgotPassword.ForgotPasswordCommandHandler(users, uow, bus)
+            .Handle(new(user.Email, product), default), user);
+        var mail = (await RunAsync<UserForgotPasswordConsumer>(events.OfType<UserForgotPasswordEvent>().Single(), null, ProductionOrigins)).Single();
+        mail.Body.Should().Contain($"href='{origin}/auth/reset-password?token=");
+    }
+
+    [Theory]
+    [MemberData(nameof(MixedRoleCases))]
+    public async Task ResentVerification_LinkFollowsTheProductRoleNotACustomRole(string scenario, string origin)
+    {
+        var (user, product) = MixedRoleAccount(scenario);
+        var events = await PublishFrom((users, uow, bus) => new Identity.Application.Commands.ResendVerificationEmail.ResendVerificationEmailCommandHandler(users, uow, bus)
+            .Handle(new(user.Email, product), default), user);
+        var mail = (await RunAsync<UserRegisteredConsumer>(events.OfType<UserRegisteredEvent>().Single(), null, ProductionOrigins)).Single();
+        mail.Body.Should().Contain($"href='{origin}/auth/");
+        mail.Body.Should().NotContain(origin == "https://eduivme.com" ? "onuraltintas.net" : "eduivme.com");
+    }
+
+    [Theory]
+    [MemberData(nameof(MixedRoleCases))]
+    public async Task WelcomeAfterConfirmation_LoginLinkFollowsTheProductRoleNotACustomRole(string scenario, string origin)
+    {
+        var (user, product) = MixedRoleAccount(scenario);
+        user.GenerateEmailVerificationToken();
+        var token = user.EmailVerificationToken;
+        var events = await PublishFrom((users, uow, bus) => new Identity.Application.Commands.ConfirmEmail.ConfirmEmailCommandHandler(users, uow, bus)
+            .Handle(new(user.Id, token, product), default), user);
+        var mail = (await RunAsync<UserEmailConfirmedConsumer>(events.OfType<UserEmailConfirmedEvent>().Single(), null, ProductionOrigins)).Single();
+        mail.Body.Should().Contain($"href='{origin}/auth/login'");
+    }
+
+    public class StubProxy : System.Reflection.DispatchProxy
+    {
+        public Func<System.Reflection.MethodInfo, object?[]?, object?> Call = null!;
+        protected override object? Invoke(System.Reflection.MethodInfo? method, object?[]? args) => Call(method!, args);
+    }
+    private static T Stub<T>(Func<System.Reflection.MethodInfo, object?[]?, object?> call) where T : class
+    {
+        var proxy = System.Reflection.DispatchProxy.Create<T, StubProxy>();
+        ((StubProxy)(object)proxy).Call = call;
+        return proxy;
+    }
+
+    // Third review N2: the welcome e-mail after verification follows the product; null keeps the role.
+    [Theory]
+    [InlineData("Student", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "Eduİvme")]
+    [InlineData("Parent", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "Eduİvme")]
+    [InlineData("Student", "speed-reading", "SpeedReading_Auth_Welcome", "https://speed.example.test/auth/login", "Master Hızlı Okuma")]
+    [InlineData("Student", null, "SpeedReading_Auth_Welcome", "https://speed.example.test/auth/login", "Master Hızlı Okuma")]
+    public async Task WelcomeEmail_UsesTheProductTemplateLoginLinkAndName(string role, string? product, string template, string login, string appName)
+    {
+        foreach (var withTemplate in new[] { true, false })
+        {
+            var mail = (await RunAsync<UserEmailConfirmedConsumer>(
+                new UserEmailConfirmedEvent(Guid.NewGuid(), "a@example.test", "Ada", "Kaya", role) { Product = product },
+                withTemplate ? (template, "Hoş geldin - Eduİvme", "<p>Eduİvme <a href='{{LoginLink}}'>x</a></p>") : null)).Single();
+
+            mail.Body.Should().Contain($"href='{login}'");
+            mail.Body.Should().Contain(appName);
+            if (withTemplate) mail.Subject.Should().Be($"Hoş geldin - {appName}");
+            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma");
+        }
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -113,12 +331,16 @@ public sealed class NotificationEmailInjectionTests
 
     private static async Task<IReadOnlyList<QueuedMessage>> RunAsync<TConsumer>(
         object message,
-        (string Name, string Subject, string Body)? template = null)
+        (string Name, string Subject, string Body)? template = null,
+        Action<PublicAppUrlOptions>? origins = null)
         where TConsumer : class, IConsumer
     {
         var queue = new RecordingEmailQueue();
         var services = new ServiceCollection();
-        services.AddDbContext<NotificationDbContext>(options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+        // One database for the whole run: the options lambda runs per scope, so a name created inside it
+        // would give the consumer an empty database and the seeded template would never be used.
+        var databaseName = Guid.NewGuid().ToString();
+        services.AddDbContext<NotificationDbContext>(options => options.UseInMemoryDatabase(databaseName));
         services.AddScoped<INotificationDbContext>(provider => provider.GetRequiredService<NotificationDbContext>());
         services.AddSingleton<IEmailDeliveryQueue>(queue);
         services.AddSingleton<INotificationService>(new NoopNotificationService());
@@ -126,6 +348,7 @@ public sealed class NotificationEmailInjectionTests
         {
             options.BaseUrl = "https://app.example.test";
             options.SpeedReadingBaseUrl = "https://speed.example.test";
+            origins?.Invoke(options);
         });
         services.AddMassTransitTestHarness(configurator =>
         {

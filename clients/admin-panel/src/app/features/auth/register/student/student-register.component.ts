@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { HttpClient } from '@angular/common/http';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
@@ -23,19 +23,8 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../../existing-product-join.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
-
-/** A past calendar date between 3 and 100 years ago (same rule as the API). */
-export function birthDateValidator(control: AbstractControl): ValidationErrors | null {
-    const value = control.value as string | null;
-    if (!value) return null;
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    if (!match) return { birthDate: true };
-    const date = new Date(Date.UTC(+match[1], +match[2] - 1, +match[3]));
-    const today = new Date();
-    const latest = Date.UTC(today.getUTCFullYear() - 3, today.getUTCMonth(), today.getUTCDate());
-    const earliest = Date.UTC(today.getUTCFullYear() - 100, today.getUTCMonth(), today.getUTCDate());
-    return date.getTime() > latest || date.getTime() < earliest ? { birthDate: true } : null;
-}
+import { RegistrationSuccessComponent } from '../registration-success.component';
+import { RegistrationSuccessCopy, grantedNewProductAccess, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
 @Component({
     selector: 'app-student-register',
@@ -44,7 +33,7 @@ export function birthDateValidator(control: AbstractControl): ValidationErrors |
         ExistingProductJoinComponent,
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-        GoogleSigninButtonModule, RegistrationLegalConsentComponent, PasswordRequirementsComponent
+        GoogleSigninButtonModule, RegistrationLegalConsentComponent, PasswordRequirementsComponent, RegistrationSuccessComponent
     ],
     templateUrl: './student-register.component.html'
 })
@@ -64,6 +53,8 @@ export class StudentRegisterComponent implements OnInit {
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    /** Set when the address was already verified: the page shows "sign in now" instead of redirecting. */
+    verifiedNotice = signal<RegistrationSuccessCopy | null>(null);
     joinExisting = false;
     legalReady = false;
     legalAcceptances: RegistrationLegalAcceptance[] = [];
@@ -73,9 +64,8 @@ export class StudentRegisterComponent implements OnInit {
         lastName: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, strongPasswordValidator()]],
-        confirmPassword: ['', Validators.required],
-        // Roadmap Y8: the student's birth date (yyyy-MM-dd from the date input).
-        birthDate: ['', [Validators.required, birthDateValidator]]
+        confirmPassword: ['', Validators.required]
+        // Paket A (05.11.2026): no birth date at registration; the first-login wizard asks for it.
     }, { validators: passwordMatchValidator });
 
     constructor() {
@@ -121,15 +111,24 @@ export class StudentRegisterComponent implements OnInit {
             email: formData.email,
             password: formData.password,
             legalAcceptances: this.legalAcceptances,
-            birthDate: formData.birthDate,
             utm: this.analytics.registrationUtm()
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/student`, payload).subscribe({
-            next: () => {
-                this.toaster.success('Koçluk kaydınız tamamlandı. Yeni hesaplarda e-posta adresinizi gönderilen bağlantıyla doğrulayın; mevcut doğrulanmış hesabınız varsa giriş yapabilirsiniz.');
-                this.analytics.track('sign_up', { method: 'password', role: 'student' });
-                this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'student', ...this.safeReturnUrl() } });
+            next: (response) => {
+                const outcome = readVerificationEmailOutcome(response);
+                const copy = registrationSuccessCopy(outcome, 'sen');
+                // Third review N3: a sign-up only when this request granted the product (not on a retry).
+                if (grantedNewProductAccess(response)) this.analytics.track('sign_up', { method: 'password', role: 'student' });
+                if (outcome === 'notRequired') {
+                    // The panel (with focus and a sign-in button) is the message; no duplicate toast.
+                    this.isLoading.set(false);
+                    this.errorMessage.set(null);
+                    this.verifiedNotice.set(copy);
+                    return;
+                }
+                this.toaster.success(copy.message, copy.title);
+                this.router.navigate(['/auth/login'], { queryParams: this.loginQueryParams });
             },
             error: (err) => {
                 this.isLoading.set(false);
@@ -141,6 +140,10 @@ export class StudentRegisterComponent implements OnInit {
                 this.errorMessage.set(msg);
             }
         });
+    }
+
+    get loginQueryParams(): Record<string, string> {
+        return { registered: 'true', role: 'student', ...this.safeReturnUrl() };
     }
 
     /** A plan chosen on the public site brings the student back to the subscription page after login. */

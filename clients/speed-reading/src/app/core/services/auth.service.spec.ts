@@ -255,11 +255,27 @@ describe('AuthService', () => {
     requests.forEach(request => expect(request.cancelled).toBeTrue());
   }));
 
+  // PR #111 final review: the reset e-mail is the speed-reading one with its link.
+  it('asks for a speed-reading password reset e-mail', () => {
+    service.forgotPassword('ogrenci@example.test').subscribe();
+    const request = http.expectOne('/api/auth/forgot-password');
+    expect(request.request.body).toEqual({ email: 'ogrenci@example.test', product: 'speed-reading' });
+    request.flush({});
+  });
+
+  // PR #111 second review H1: a resend names the speed-reading product.
+  it('asks for a speed-reading verification e-mail when resending', () => {
+    service.resendVerification('ogrenci@example.test').subscribe();
+    const request = http.expectOne('/api/auth/resend-verification-email');
+    expect(request.request.body).toEqual({ email: 'ogrenci@example.test', product: 'speed-reading' });
+    request.flush({});
+  });
+
   it('confirms email with the user identifier and verification token from the email link', () => {
     service.verifyEmail({ userId: 'student-id', token: 'verification-token' }).subscribe();
 
     const request = http.expectOne('/api/auth/confirm-email');
-    expect(request.request.body).toEqual({ userId: 'student-id', token: 'verification-token' });
+    expect(request.request.body).toEqual({ userId: 'student-id', token: 'verification-token', product: 'speed-reading' });
     request.flush({});
   });
 
