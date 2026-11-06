@@ -38,7 +38,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
         }
 
         /// <summary>(id, name as first imported, Turkish name) for the 42 provinces whose name changes.</summary>
-        internal const string Provinces = """
+        public const string Provinces = """
             VALUES
                 ('TUR002', 'Adiyaman', 'Adıyaman'),
                 ('TUR003', 'Afyonkarahi̇sar', 'Afyonkarahisar'),
@@ -85,7 +85,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
             """;
 
         /// <summary>(id, name as first imported, Turkish name) for the 486 districts whose name changes.</summary>
-        internal const string Districts = """
+        public const string Districts = """
             VALUES
                 ('TUR001006', 'Karai̇sali', 'Karaisalı'),
                 ('TUR001009', 'Pozanti', 'Pozantı'),

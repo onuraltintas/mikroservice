@@ -421,7 +421,8 @@ public static class IdentitySeeder
     private static string? GetSetting(IConfiguration configuration, string key) =>
         Environment.GetEnvironmentVariable(key) ?? configuration[key];
 
-    private static async Task EnsureTurkeyLocationsAsync(
+    /// <summary>Seeds the Turkish provinces and districts and links older institutions to them by their city and district text.</summary>
+    public static async Task EnsureTurkeyLocationsAsync(
         IdentityDbContext context,
         ILogger logger)
     {

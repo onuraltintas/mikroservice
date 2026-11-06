@@ -497,6 +497,22 @@ public sealed class CoachingStudentOnboardingTests
     }
 
     [Fact]
+    public async Task TheSameSchoolNameInTwoDistrictsStaysTwoSchools()
+    {
+        await using var s = await Setup.CreateAsync();
+        foreach (var (district, language) in new[] { ("ÇANKAYA", "İngilizce"), ("ÇANKAYA", "Almanca"), ("KEÇİÖREN", "İngilizce") })
+        {
+            var school = TargetSchool.Create("meb", Guid.NewGuid().ToString(), "Atatürk Anadolu Lisesi", "ANKARA", district, 400, 2025);
+            school.SetProgramDetails("Anadolu Lisesi", language, null); school.SetActive(true); s.F.Db.Add(school);
+        }
+        await s.F.Db.SaveChangesAsync();
+        var page = await s.Service.SchoolsAsync("Ankara", null, "atatürk", 1, default, district: "Keçiören");
+        page.Items.Select(x => (x.Name, x.District, x.InHomeDistrict)).Should().Equal(
+            ("Atatürk Anadolu Lisesi", "KEÇİÖREN", true), ("Atatürk Anadolu Lisesi", "ÇANKAYA", false));
+        page.TotalCount.Should().Be(2);
+    }
+
+    [Fact]
     public async Task NationalityQuotaProgrammesAreNotOffered()
     {
         // #17: "(KKTC Uyruklu)" places are only for TRNC citizens; the catalog keeps them, the student lists do not offer them.

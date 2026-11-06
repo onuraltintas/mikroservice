@@ -6,6 +6,8 @@ using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Repositories;
 using Identity.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Identity.API.IntegrationTests;
 
@@ -42,6 +44,41 @@ public sealed class TurkishLocationNamesTests
         foreach (var name in provinces.Concat(districts.Select(x => x.Name)))
             name.Should().Be(TitleCase(name.ToUpper(CultureInfo.GetCultureInfo("tr-TR"))), name);
     }
+
+    [Fact]
+    public void TheNamesAgreeLetterForLetterWithTheMebCapitals()
+    {
+        // The MEB LGS export writes provinces and districts in Turkish capitals (I and İ kept apart). A name that matches one of
+        // them loosely (ı/i, İ/I and marks ignored) must be exactly its Turkish lower case: a wrong ı or i fails here.
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (root is not null && !Directory.Exists(Path.Combine(root.FullName, "data", "target-catalog"))) root = root.Parent;
+        var file = Directory.GetFiles(Path.Combine(root!.FullName, "data", "target-catalog", "2026", "raw"), "mebi-lgs-full-*.json").Single();
+        using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file));
+        var items = json.RootElement.GetProperty("items").EnumerateArray()
+            .Select(x => (City: x.GetProperty("city").GetString()!, Town: x.GetProperty("town").GetString()!)).ToArray();
+        var towns = items.Where(x => x.Town != "MERKEZ").GroupBy(x => x.City).ToDictionary(x => x.Key, x => x.Select(y => y.Town).Distinct().ToArray());
+        var tr = CultureInfo.GetCultureInfo("tr-TR");
+        string Capitals(string name) => NoCircumflex(name.ToUpper(tr));
+        var provinces = TurkeyLocationSeedData.Provinces.ToDictionary(x => x.Id, x => x.Name);
+        var cities = items.Select(x => x.City).Distinct().ToArray();
+        foreach (var province in provinces.Values)
+            cities.Should().Contain(Capitals(province), province);
+        var checkedDistricts = 0;
+        foreach (var district in TurkeyLocationSeedData.Districts)
+        {
+            var city = Capitals(provinces[district.ProvinceId]);
+            var town = towns.GetValueOrDefault(city, []).SingleOrDefault(x => Loose(x) == Loose(district.Name));
+            if (town is null) continue;
+            Capitals(district.Name).Should().Be(town, $"{provinces[district.ProvinceId]} / {district.Name}");
+            checkedDistricts++;
+        }
+        checkedDistricts.Should().BeGreaterThanOrEqualTo(490, "most districts have a school in the export");
+    }
+
+    private static string NoCircumflex(string value) => value.Replace('Â', 'A').Replace('Î', 'I').Replace('Û', 'U');
+
+    private static string Loose(string value) => new(NoCircumflex(value.ToUpperInvariant()).Replace('\u0307'.ToString(), "")
+        .Select(c => c switch { 'İ' or 'ı' or 'i' => 'I', 'Ş' => 'S', 'Ç' => 'C', 'Ğ' => 'G', 'Ö' => 'O', 'Ü' => 'U', _ => c }).Where(c => c != ' ').ToArray());
 
     [Fact]
     public async Task ProvincesAndDistrictsAreListedInTurkishOrderAndFoundWithEitherI()
@@ -115,6 +152,49 @@ public sealed class TurkishLocationNamesTests
         var institution = await read.Institutions.AsNoTracking().SingleAsync(x => x.Id == linked);
         (institution.City, institution.District).Should().Be(("Adıyaman", "Adıyaman"));
         (await read.Institutions.AsNoTracking().SingleAsync(x => x.Id == typed)).City.Should().Be("Adiyaman", "free text without a reference is left alone");
+
+        // Rerunning is harmless: Down keeps the names, Up again (and the update itself) changes nothing.
+        await using (var again = database.CreateContext())
+        {
+            await again.GetService<IMigrator>().MigrateAsync("20261104090000_RemoveLegacyParentFields");
+            (await again.Provinces.AsNoTracking().SingleAsync(x => x.Id == "TUR002")).Name.Should().Be("Adıyaman", "Down keeps the correction");
+            await again.Database.MigrateAsync();
+            (await again.Database.ExecuteSqlRawAsync(
+                "UPDATE identity.provinces AS p SET \"Name\" = v.new_name FROM (" + Identity.Infrastructure.Persistence.Migrations.CorrectTurkishLocationNames.Provinces
+                + ") AS v(id, old_name, new_name) WHERE p.\"Id\" = v.id AND p.\"Name\" = v.old_name")).Should().Be(0);
+        }
+        await using var after = database.CreateContext();
+        (await after.Provinces.AsNoTracking().OrderBy(x => x.Id).Select(x => x.Name).ToListAsync())
+            .Should().Equal("Adıyaman", "Afyonkarahisar", "İstanbul", "Urfa (yönetici)");
+        (await after.Districts.AsNoTracking().OrderBy(x => x.Id).Select(x => x.Name).ToListAsync())
+            .Should().Equal("Adıyaman", "Afyonkarahisar", "Gaziosmanpaşa", "Kadıköy");
+    }
+
+    [Fact]
+    public async Task TheSeederLinksOlderInstitutionsWrittenWithoutTurkishLetters()
+    {
+        await using var database = await IdentityPostgresDatabase.CreateAsync();
+        Guid plain, capitals, combined, unknown;
+        await using (var context = database.CreateContext())
+        {
+            var a = Institution.Create("Kurs A", InstitutionType.PrivateCourse, "Adiyaman"); a.UpdateInfo(district: "Adiyaman");
+            var b = Institution.Create("Kurs B", InstitutionType.PrivateCourse, "ISTANBUL"); b.UpdateInfo(district: "KADIKOY");
+            var c = Institution.Create("Kurs C", InstitutionType.PrivateCourse, "Istanbul, Kadıköy");
+            var d = Institution.Create("Kurs D", InstitutionType.PrivateCourse, "Atlantis"); d.UpdateInfo(district: "Merkez");
+            context.Institutions.AddRange(a, b, c, d);
+            await context.SaveChangesAsync();
+            (plain, capitals, combined, unknown) = (a.Id, b.Id, c.Id, d.Id);
+        }
+
+        await using (var context = database.CreateContext())
+            await IdentitySeeder.EnsureTurkeyLocationsAsync(context, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+
+        await using var read = database.CreateContext();
+        var rows = await read.Institutions.AsNoTracking().ToDictionaryAsync(x => x.Id);
+        (rows[plain].ProvinceId, rows[plain].DistrictId, rows[plain].City, rows[plain].District).Should().Be(("TUR002", "TUR002001", "Adıyaman", "Adıyaman"));
+        (rows[capitals].ProvinceId, rows[capitals].DistrictId, rows[capitals].City, rows[capitals].District).Should().Be(("TUR034", "TUR034023", "İstanbul", "Kadıköy"));
+        (rows[combined].ProvinceId, rows[combined].DistrictId).Should().Be(("TUR034", "TUR034023"));
+        (rows[unknown].ProvinceId, rows[unknown].City).Should().Be((null, "Atlantis"));
     }
 
     private static string TitleCase(string capitals)
