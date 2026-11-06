@@ -38,15 +38,21 @@ public static class LearningPurposes
     public const string RetiredPurposeNotice = "Çalışma amacın artık desteklenmiyor; hazırlandığın sınavı seç.";
 
     /// <summary>
-    /// Paket D (#8): does the exam fit the student's education? LGS is for middle school (up to 8th grade); YKS, AGS, YDS and
-    /// YÖKDİL are for high school (9th grade on) and graduates. An unknown education (Profile still missing) fits everything,
-    /// and an older retired purpose is reported on its own (KM8).
+    /// Paket D (#8): does the exam fit the student's education? The single place of the rule (user decisions 06.11.2026):
+    /// LGS is for middle school (up to 8th grade); YKS, YDS and YÖKDİL are for high school (9th grade on) and graduates;
+    /// MEB-AGS/ÖABT is for university graduates only (never for grades 1–12). An unknown education (Profile still missing)
+    /// fits everything, and an older retired purpose is reported on its own (KM8).
     /// </summary>
     public static bool FitsEducation(LearningPurpose purpose, CoachingEducationStatus status, int? grade) =>
         !IsExamPreparation(purpose) || status switch
         {
             CoachingEducationStatus.Graduate => purpose != LearningPurpose.Lgs,
-            CoachingEducationStatus.Student when grade is { } g => purpose == LearningPurpose.Lgs ? g <= 8 : g >= 9,
+            CoachingEducationStatus.Student when grade is { } g => purpose switch
+            {
+                LearningPurpose.Lgs => g <= 8,
+                LearningPurpose.Ags => false,
+                _ => g >= 9
+            },
             _ => true
         };
 

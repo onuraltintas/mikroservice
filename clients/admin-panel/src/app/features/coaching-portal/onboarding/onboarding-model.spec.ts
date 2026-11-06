@@ -12,11 +12,11 @@ describe('first-login wizard flow (Paket C #3)', () => {
   const ids = (answers: Answers) => questions(answers, context).map(x => x.id);
 
   it('offers only the exams the server allows for the grade and does not prefill one that no longer fits (Paket D #8, review M1)', () => {
-    const allowed: FlowContext = { ...context, allowedPurposes: ['Yks', 'Ags', 'Yds', 'Yokdil'] };
-    expect(questions({ ...personal, education: a('10') }, allowed).find(x => x.id === 'purpose')!.choices!.map(x => x.value)).toEqual(['Yks', 'Ags', 'Yds', 'Yokdil']);
+    const allowed: FlowContext = { ...context, allowedPurposes: ['Yks', 'Yds', 'Yokdil'] };
+    expect(questions({ ...personal, education: a('10') }, allowed).find(x => x.id === 'purpose')!.choices!.map(x => x.value)).toEqual(['Yks', 'Yds', 'Yokdil']);
     // An older API sends no list: every exam is offered.
     expect(questions(personal, context).find(x => x.id === 'purpose')!.choices!.length).toBe(5);
-    const saved = { status: 'InProgress', nextStep: 2, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026, examSessions: [], allowedPurposes: ['Yks', 'Ags', 'Yds', 'Yokdil'],
+    const saved = { status: 'InProgress', nextStep: 2, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026, examSessions: [], allowedPurposes: ['Yks', 'Yds', 'Yokdil'],
       answers: { birthDate: '2009-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student', gradeLevel: 11,
         graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: 'lgs-27', targetExamYear: 2027,
         diplomaGrade: null, diplomaGradeEstimated: false, target: null, targetLocked: false } } as unknown as OnboardingView;

@@ -35,11 +35,11 @@ describe('StudentLearningSetupComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('başka bir oturumda');
   });
   it('offers only the exams that fit the grade and says why the exam has to be chosen again (Paket D #8)', async () => {
-    const { component, fixture } = await setup({ ...empty, allowedPurposes: ['Yks', 'Ags', 'Yds', 'Yokdil'], purposeNotForEducation: true,
+    const { component, fixture } = await setup({ ...empty, allowedPurposes: ['Yks', 'Yds', 'Yokdil'], purposeNotForEducation: true,
       context: { id: 'ctx', version: 3, academicYearStart: 2026, purpose: 'Lgs', targetExamYear: 2027, primaryScoreType: null, foreignLanguage: null,
         curriculumVersionId: null, coursePreferences: [], topicStates: [], startingStatusReviewed: false } });
     expect(component.step()).toBe('Purpose');
-    expect(component.purposeChoices().map(x => x.value)).toEqual(['Yks', 'Ags', 'Yds', 'Yokdil']);
+    expect(component.purposeChoices().map(x => x.value)).toEqual(['Yks', 'Yds', 'Yokdil']);
     const note = fixture.nativeElement.querySelector('[data-testid="grade-purpose"]') as HTMLElement;
     expect(note.textContent).toContain('Seçili sınavın sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.');
     // Without the server's list every exam stays (older API).

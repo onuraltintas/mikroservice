@@ -157,7 +157,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
 
   it('asks the exam again instead of resending one the grade no longer fits (review M1)', async () => {
     // Step 2 re-opened by a grade change (e.g. by the institution) while the wizard was open: the saved LGS no longer fits 11th grade.
-    const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Ags', 'Yds', 'Yokdil'] }, { ...stepTwo, gradeLevel: 11 }));
+    const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] }, { ...stepTwo, gradeLevel: 11 }));
     t.http.expectNone(`${base}/steps/exam`);
     const current = t.el.querySelector('[data-current]')!;
     expect(current.getAttribute('data-question')).toBe('purpose');
@@ -170,7 +170,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     (t.el.querySelector('[data-question="education"] .ob-me button') as HTMLElement).click(); await t.settle();
     await t.click('9. sınıf');
     await t.click('Şimdilik geçeyim');
-    t.http.expectOne(`${base}/steps/personal`).flush({ data: view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Ags', 'Yds', 'Yokdil'] },
+    t.http.expectOne(`${base}/steps/personal`).flush({ data: view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] },
       { ...stepTwo, gradeLevel: 9 }) });
     await t.settle();
     t.http.expectNone(`${base}/steps/exam`);
