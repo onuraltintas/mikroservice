@@ -59,7 +59,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
                   <option [ngValue]="null">Seç</option>@for (grade of gradesFor(stage); track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
                 </select></label>
               }
-              @if (clearsSchool()) { <p role="status" class="notice" data-testid="education-clears-school">{{ clearsSchoolText }}</p> }
+              @if (clearsSchoolNotice(); as notice) { <p role="status" class="notice" data-testid="education-clears-school">{{ notice }}</p> }
               @if (!setupMode) {
               @if (stage === 'HighSchoolGraduate' || stage === 'UniversityGraduate') {
                 <label>Mezuniyet yılı (isteğe bağlı) <input name="graduationYear" type="number" min="1900" [max]="year" [(ngModel)]="s.graduationYear" (ngModelChange)="dirty = true"></label>
@@ -158,6 +158,7 @@ export class CoachingProfileComponent implements OnInit {
   homeProvince = ''; homeDistrictId = ''; private savedDiploma: number | null = null; private savedEducation = ''; private examAsksDiploma = true;
   /** E3 #14: the status choice ("Şu an durumun ne?") and the one saved on the server. */
   readonly stages = EDUCATION_STAGES; stage: EducationStage | '' = ''; private savedStage: EducationStage | '' = '';
+  private savedSchool: string | null = null; private savedBranch: string | null = null;
   readonly isStudentStage = isStudentStage; readonly gradesFor = gradesFor;
   readonly clearsSchoolText = 'Öğrenci olmadığını seçersen kaydettiğinde sınıf, okul ve şube bilgin silinecek.';
   /** Paket D (#7): the school picker (the wizard's catalog list) and the school picked or removed but not saved yet. */
@@ -179,6 +180,7 @@ export class CoachingProfileComponent implements OnInit {
     this.student = profile.student ? { ...profile.student } : null;
     this.stage = this.savedStage = this.student ? stageOf(this.student.educationStatus, this.student.gradeLevel) : '';
     if (this.student && !this.stage) this.student.gradeLevel = null;
+    this.savedSchool = this.student?.schoolName || null; this.savedBranch = this.student?.classBranch || null;
     if (profile.examAsksDiploma !== undefined) this.examAsksDiploma = profile.examAsksDiploma;
     this.savedDiploma = this.student?.diplomaGrade ?? null; this.provinces.set(null); this.homeProvince = ''; this.homeDistrictId = '';
     this.savedEducation = this.education(this.student); this.closeSchoolPicker(); this.pickedSchool.set(null); this.schoolRemoved.set(false);
@@ -204,6 +206,13 @@ export class CoachingProfileComponent implements OnInit {
     if (stage !== 'high') this.closeSchoolPicker();
   }
   clearsSchool() { return isStudentStage(this.savedStage) && this.stage !== '' && !isStudentStage(this.stage); }
+  /** E3 review L4: from lise to ortaokul the stored lise and its branch are dropped (the catalog lists high schools only). */
+  dropsLise() {
+    const s = this.student;
+    return !!s && this.savedStage === 'high' && this.stage === 'middle' && !this.schoolRemoved() && !!(this.savedSchool || this.savedBranch);
+  }
+  readonly dropsLiseText = 'Ortaokul öğrencisi olduğunu seçersen kaydettiğinde kayıtlı okulun ve şuben silinecek.';
+  clearsSchoolNotice() { return this.clearsSchool() ? this.clearsSchoolText : this.dropsLise() ? this.dropsLiseText : null; }
   schoolName(s: StudentProfile) { return this.schoolRemoved() ? null : this.pickedSchool()?.name ?? (s.schoolName || null); }
   schoolDetail(s: StudentProfile) {
     if (this.schoolRemoved()) return null;
@@ -265,14 +274,15 @@ export class CoachingProfileComponent implements OnInit {
       if (!stage || isStudentStage(stage) && !gradesFor(stage).includes(Number(s.gradeLevel))) { this.error.set('Eğitim durumunu ve öğrenciysen sınıfını seç.'); return; }
       const education = educationRequest(stage, s.gradeLevel); const student = isStudentStage(stage);
       // Paket D (#7): the saved school is sent back as it is, a picked one by its catalog id (the server fills it from the catalog).
-      const removed = this.schoolRemoved() || !student; const picked = student ? this.pickedSchool() : null;
+      const dropLise = this.dropsLise();
+      const removed = this.schoolRemoved() || !student || dropLise; const picked = student && !dropLise ? this.pickedSchool() : null;
       // Paket D (#8): the diploma grade only where the wizard asks it; the server drops it elsewhere.
       const diploma = this.diplomaApplies(s);
       payload = { expectedVersion: s.version, ...education,
         graduationYear: stage === 'HighSchoolGraduate' || stage === 'UniversityGraduate' ? s.graduationYear || null : null, schoolName: removed ? null : s.schoolName || null,
         schoolCity: removed ? null : s.schoolCity || null, schoolDistrict: removed ? null : s.schoolDistrict || null, schoolType: removed ? null : s.schoolType || null,
         ...(picked && !removed ? { schoolId: picked.id } : {}),
-        classBranch: student ? s.classBranch || null : null, birthDate: s.birthDate || null,
+        classBranch: student && !(dropLise && (s.classBranch || null) === this.savedBranch) ? s.classBranch || null : null, birthDate: s.birthDate || null,
         bio: s.bio || null, avatarUrl: s.avatarUrl || null, shareProgressWithTeachers: s.shareProgressWithTeachers,
         // Paket C: only a changed place is sent (checked against the shared list); an emptied diploma grade is removed.
         ...(this.homeProvince && this.homeDistrictId ? { homeProvinceId: this.homeProvince, homeDistrictId: this.homeDistrictId } : {}),
@@ -288,7 +298,8 @@ export class CoachingProfileComponent implements OnInit {
         experienceYears: t.experienceYears ?? null, bio: t.bio || null, avatarUrl: t.avatarUrl || null };
     } else return;
     // E3 #14: the student is told before a non-student status clears the grade, school and branch.
-    if (this.role === 'Student' && this.clearsSchool() && !await this.toaster.confirm(`${this.clearsSchoolText} Kaydedilsin mi?`)) return;
+    const notice = this.role === 'Student' ? this.clearsSchoolNotice() : null;
+    if (notice && !await this.toaster.confirm(`${notice} Kaydedilsin mi?`)) return;
     this.working.set(true); this.error.set(null); this.success.set(null); this.gradeNotice.set(false);
     const gradeChanged = this.role === 'Student' && !!this.student && this.education(this.student) !== this.savedEducation;
     this.http.put<{ data: StudentProfile | TeacherProfile }>(`${this.base}/profiles/me/${this.role.toLowerCase()}`, payload)

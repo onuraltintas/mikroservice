@@ -65,7 +65,7 @@ export class StudentWeeklyCalendarComponent implements OnInit {
     else next=new Date(a.getFullYear(),a.getMonth(),a.getDate()+step*(this.view()==='week'?7:1));
     this.escape();this.anchor.set(next);
   }
-  today(){this.escape();try{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:this.timeZoneId,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const get=(type:string)=>Number(parts.find(p=>p.type===type)?.value);this.anchor.set(new Date(get('year'),get('month')-1,get('day')));}catch{this.error.set('Geçerli bir saat dilimi gir; örneğin Europe/Istanbul.');}}
+  today(){this.escape();try{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:this.timeZoneId,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const get=(type:string)=>Number(parts.find(p=>p.type===type)?.value);this.anchor.set(new Date(get('year'),get('month')-1,get('day')));}catch{this.error.set('Bugünün tarihi alınamadı. Sayfayı yenile.');}}
   title(){const a=this.anchor();return this.view()==='month'?a.toLocaleDateString('tr-TR',{month:'long',year:'numeric'}):this.view()==='day'?a.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'}):`${this.days()[0].toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${this.days()[6].toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'})}`;}
   dayTitle(d:Date){return d.toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'short'});}
   rows(d:Date){return this.displayed().filter(s=>s.day===weekday(d)).sort((a,b)=>a.startMinute-b.startMinute);}

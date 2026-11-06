@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.Infrastructure.Profiles;
 
-public sealed record CoachingImportReport(int Students, int Teachers, int Memberships, int Assignments, bool Applied);
+/// <summary>OlderGradesKept (E3 review L2): students imported with a grade below 5 (kept as it was; asked again on the next education change).</summary>
+public sealed record CoachingImportReport(int Students, int Teachers, int Memberships, int Assignments, bool Applied, int OlderGradesKept = 0);
 
 /// <summary>Explicit, idempotent cutover. Existing owned records and account/work tables are never overwritten.</summary>
 public sealed class CoachingProfileImporter(CoachingDbContext db, ICoachingAccountDirectory accounts)
@@ -28,6 +29,7 @@ public sealed class CoachingProfileImporter(CoachingDbContext db, ICoachingAccou
         var teachers = await db.CoachingTeacherProfiles.ToDictionaryAsync(x => x.UserId, ct);
         var members = await db.CoachingInstitutionMemberships.ToListAsync(ct);
         var assignments = await db.CoachingTeacherStudentAssignments.ToListAsync(ct);
+        var olderGrades = 0;
         var newStudents = new List<CoachingStudentProfile>(); var newTeachers = new List<CoachingTeacherProfile>();
         var newMembers = new List<CoachingInstitutionMembership>(); var newAssignments = new List<CoachingTeacherStudentAssignment>();
         foreach (var source in snapshot.Students)
@@ -35,8 +37,8 @@ public sealed class CoachingProfileImporter(CoachingDbContext db, ICoachingAccou
             if (!students.ContainsKey(source.UserId))
             {
                 var profile = CoachingStudentProfile.Create(source.UserId);
-                profile.UpdateEducation(source.GradeLevel.HasValue ? CoachingEducationStatus.Student : CoachingEducationStatus.Unknown,
-                    source.GradeLevel, source.SchoolName, source.SchoolCity, null, null, null, null);
+                profile.ImportLegacyEducation(source.GradeLevel, source.SchoolName, source.SchoolCity);
+                if (source.GradeLevel < CoachingStudentProfile.FirstGrade) olderGrades++;
                 profile.UpdatePersonal(source.BirthDate, source.Bio, source.AvatarUrl, source.ShareProgressWithTeachers);
                 if (!source.IsActive) profile.SetActive(false, source.UserId);
                 newStudents.Add(profile); students.Add(source.UserId, profile);
@@ -86,7 +88,7 @@ public sealed class CoachingProfileImporter(CoachingDbContext db, ICoachingAccou
             }
             await db.SaveChangesAsync(ct);
         }
-        return new(newStudents.Count, newTeachers.Count, newMembers.Count, newAssignments.Count, apply);
+        return new(newStudents.Count, newTeachers.Count, newMembers.Count, newAssignments.Count, apply, olderGrades);
 
         Guid? Institution(Guid userId, CoachingMemberRole role) => members.SingleOrDefault(x => x.UserId == userId && x.Role == role && x.IsActive)?.InstitutionId;
         void AddMember(Guid userId, Guid? institutionId, CoachingMemberRole role, bool active)

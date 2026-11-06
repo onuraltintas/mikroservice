@@ -76,8 +76,52 @@ public sealed class CoachingStudentProfile : AggregateRoot
         var district = student ? ProfileValue.Text(schoolDistrict, 100) : null;
         var type = student ? ProfileValue.Text(schoolType, 100) : null;
         var branch = student ? ProfileValue.Text(classBranch, 30) : null;
+        // E3 review L4: from lise (9th grade on) to ortaokul, the stored school is a lise (the catalog lists high schools) and the
+        // branch a lise branch: they are dropped unless a different school or branch is given (the pages warn before saving).
+        if (student && EducationStatus == CoachingEducationStatus.Student && GradeLevel >= 9 && gradeLevel <= 8)
+        {
+            if (school is not null && school == SchoolName) school = city = district = type = null;
+            if (branch is not null && branch == ClassBranch) branch = null;
+        }
         EducationStatus = status; GradeLevel = gradeLevel; GraduationYear = graduationYear;
         SchoolName = school; SchoolCity = city; SchoolDistrict = district; SchoolType = type; ClassBranch = branch;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// A copy holding the stored education, to validate a full replacement before the tracked profile changes (an older grade
+    /// below 5 stays valid while it is unchanged).
+    /// </summary>
+    public CoachingStudentProfile CopyForValidation() => new()
+    {
+        UserId = UserId, CreatedBy = CreatedBy, EducationStatus = EducationStatus, GradeLevel = GradeLevel,
+        SchoolName = SchoolName, ClassBranch = ClassBranch, GraduationYear = GraduationYear
+    };
+
+    /// <summary>
+    /// E3 review M1: a teacher edits only the school details (not the education). A student's are replaced; a non-student has no
+    /// school on the pages, so whatever is stored is left as it is.
+    /// </summary>
+    public void UpdateSchoolDetails(string? schoolName, string? schoolCity, string? schoolDistrict, string? schoolType, string? classBranch)
+    {
+        var school = ProfileValue.Text(schoolName, 255); var city = ProfileValue.Text(schoolCity, 100);
+        var district = ProfileValue.Text(schoolDistrict, 100); var type = ProfileValue.Text(schoolType, 100); var branch = ProfileValue.Text(classBranch, 30);
+        if (EducationStatus != CoachingEducationStatus.Student) return;
+        SchoolName = school; SchoolCity = city; SchoolDistrict = district; SchoolType = type; ClassBranch = branch;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// E3 review L2: the one-off cutover keeps an older snapshot's grade as it was (1–12, like the database); a grade below 5 is
+    /// asked again when the education next changes. Without a grade the education is unknown.
+    /// </summary>
+    public void ImportLegacyEducation(int? gradeLevel, string? schoolName, string? schoolCity)
+    {
+        if (gradeLevel is < 1 or > LastGrade) throw new ArgumentException("Geçerli eğitim durumu ve sınıf bilgisi belirtin.");
+        var student = gradeLevel.HasValue;
+        var school = student ? ProfileValue.Text(schoolName, 255) : null; var city = student ? ProfileValue.Text(schoolCity, 100) : null;
+        EducationStatus = student ? CoachingEducationStatus.Student : CoachingEducationStatus.Unknown; GradeLevel = gradeLevel;
+        SchoolName = school; SchoolCity = city; SchoolDistrict = null; SchoolType = null; ClassBranch = null; GraduationYear = null;
         UpdatedAt = DateTime.UtcNow;
     }
 

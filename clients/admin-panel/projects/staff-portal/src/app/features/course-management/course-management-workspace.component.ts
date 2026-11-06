@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, Input, OnInit, inject } from '@angular/core';
+import { TURKEY_ZONE, turkeyDateTimeLocal, turkeyDefaults, turkeyInstant } from './course-management-time';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { StaffAuthService } from '../../auth/staff-auth.service';
@@ -64,17 +65,6 @@ const courseAuditActionLabels: Record<string, string> = {
   'Assignment.FileResubmitted': 'Ödev dosyası yeniden teslim edildi',
   'Assignment.Submitted': 'Ödev teslim edildi'
 };
-
-/**
- * E3 #34 (user decision 06.11.2026): no time zone choice; every lesson, series, time off and teacher hour is Türkiye time.
- * Türkiye has been on UTC+3 all year since 2016 (no daylight saving).
- */
-const TURKEY_ZONE = 'Europe/Istanbul';
-const TURKEY_OFFSET_MINUTES = 180;
-/** A datetime-local value ("2026-11-10T18:30") read as Türkiye time. */
-export function turkeyInstant(local: string): string {
-  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(local) ? `${local}:00+03:00` : new Date(local).toISOString();
-}
 
 @Component({
   selector: 'staff-course-management-workspace',
@@ -214,6 +204,9 @@ export class CourseManagementWorkspaceComponent implements OnInit {
   lessonSeriesDurationMinutes = 60;
   lessonDaysOfWeek = [false, false, false, false, false, false, false];
   editingSeriesId = '';
+  /** E3 review L5: a series saved earlier in another zone is told its times are now read as Türkiye time. */
+  editingSeriesZone: string | null = null;
+  readonly turkeyZone = TURKEY_ZONE;
   editingSeriesEndsOn = '';
   editingSeriesStartTime = '';
   editingSeriesDurationMinutes = 60;
@@ -1029,6 +1022,7 @@ export class CourseManagementWorkspaceComponent implements OnInit {
   }
   editLessonSeries(series: CourseLessonSeries): void {
     this.editingSeriesId = series.id;
+    this.editingSeriesZone = series.timeZoneId;
     this.editingSeriesEndsOn = series.endsOn;
     this.editingSeriesStartTime = series.startTime.slice(0, 5);
     this.editingSeriesDurationMinutes = series.durationMinutes;
@@ -1341,21 +1335,18 @@ export class CourseManagementWorkspaceComponent implements OnInit {
   private async loadTeacherTimeOff(): Promise<void> { this.teacherTimeOff = this.selectedId ? await this.service.getTeacherTimeOff(this.selectedId) : []; }
   private async loadTeacherAvailability(): Promise<void> { this.teacherAvailability = this.selectedId ? await this.service.getTeacherAvailability(this.selectedId) : []; }
   private resetLessonTimes(): void {
-    const start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() + 1);
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
-    this.lessonStartsAt = this.dateTimeLocal(start); this.lessonEndsAt = this.dateTimeLocal(end);
-    this.lessonSeriesStartsOn = this.dateLocal(start);
-    const seriesEnd = new Date(start); seriesEnd.setDate(seriesEnd.getDate() + 30);
-    this.lessonSeriesEndsOn = this.dateLocal(seriesEnd);
-    this.lessonSeriesStartTime = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`;
+    // E3 review L6: the defaults come from the Türkiye clock, not the device's.
+    const d = turkeyDefaults(new Date());
+    this.lessonStartsAt = d.lessonStartsAt; this.lessonEndsAt = d.lessonEndsAt;
+    this.lessonSeriesStartsOn = d.seriesStartsOn; this.lessonSeriesEndsOn = d.seriesEndsOn;
+    this.lessonSeriesStartTime = d.seriesStartTime;
     this.lessonSeriesDurationMinutes = 60;
     this.lessonDaysOfWeek = [false, false, false, false, false, false, false];
-    this.lessonDaysOfWeek[(start.getDay() + 6) % 7] = true;
+    this.lessonDaysOfWeek[d.weekdayIndex] = true;
   }
   private resetTimeOffTimes(): void {
-    const start = new Date(); start.setHours(9, 0, 0, 0); start.setDate(start.getDate() + 1);
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
-    this.timeOffStartsAt = this.dateTimeLocal(start); this.timeOffEndsAt = this.dateTimeLocal(end);
+    const d = turkeyDefaults(new Date());
+    this.timeOffStartsAt = d.timeOffStartsAt; this.timeOffEndsAt = d.timeOffEndsAt;
   }
   private resetFinanceDates(): void {
     const due = new Date(); due.setDate(due.getDate() + 30);
@@ -1368,11 +1359,7 @@ export class CourseManagementWorkspaceComponent implements OnInit {
     return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
   }
   /** The datetime-local value of an instant in Türkiye time (E3 #34). */
-  private dateTimeLocal(value: Date): string {
-    const local = new Date(value.getTime() + TURKEY_OFFSET_MINUTES * 60000);
-    const pad = (part: number) => String(part).padStart(2, '0');
-    return `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}`;
-  }
+  private dateTimeLocal(value: Date): string { return turkeyDateTimeLocal(value); }
   private async run(action: () => Promise<void>): Promise<void> {
     if (this.busy) return;
     this.busy = true; this.error = ''; this.notice = '';

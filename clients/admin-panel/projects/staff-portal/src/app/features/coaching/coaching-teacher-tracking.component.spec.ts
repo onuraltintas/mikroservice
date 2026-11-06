@@ -55,10 +55,10 @@ describe('CoachingTeacherTrackingComponent', () => {
     const fixture = TestBed.createComponent(CoachingTeacherTrackingComponent); fixture.detectChanges();
     return { fixture, c: fixture.componentInstance, api };
   }
-  it('shows global filtered counts, student, timezone and record action', async () => {
+  it('shows global filtered counts, student, Türkiye time (no zone label) and record action', async () => {
     const { fixture } = await setup(); const text = fixture.nativeElement.textContent;
     expect(text).toContain('Takip merkezi'); expect(text).toContain('40'); expect(text).toContain('15'); expect(text).toContain('5');
-    expect(text).toContain('Ayşe Öğrenci'); expect(text).toContain('Europe/Istanbul'); expect(text).toContain('18:00');
+    expect(text).toContain('Ayşe Öğrenci'); expect(text).not.toContain('Europe/Istanbul'); expect(text).toContain('18:00');
     fixture.nativeElement.querySelector('[aria-label="Ayşe Öğrenci · Matematik tekrarı kaydını aç"]').click();
     await vi.waitFor(()=>expect(fixture.componentInstance.selected()).toEqual(item));
   });

@@ -88,7 +88,7 @@ describe('weekly draft calendar',()=>{
   it('navigates month boundaries and protects unsaved work when leaving',async ()=>{
     const{c}=await setup();c.changeView('month');c.anchor.set(new Date(2026,0,31));c.navigate(1);expect(c.anchor().getDate()).toBe(28);expect(c.title()).toContain('2026');
     c.changeView('week');c.navigate(1);expect(c.anchor().getMonth()).toBe(2);c.changeView('day');c.navigate(-1);expect(c.title()).toContain('2026');
-    c.timeZoneId='Invalid/Zone';c.today();expect(c.error()).toContain('saat dilimi');c.timeZoneId='Europe/Istanbul';c.today();
+    c.timeZoneId='Invalid/Zone';c.today();expect(c.error()).toContain('Bugünün tarihi alınamadı');c.timeZoneId='Europe/Istanbul';c.today();
     c.add();c.apply();const confirm=vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);expect(await c.canLeavePage()).toBe(false);const event=new Event('beforeunload',{cancelable:true});window.dispatchEvent(event);expect(event.defaultPrevented).toBe(false);confirm.mockResolvedValue(true);expect(await c.canLeavePage()).toBe(true);confirm.mockRestore();
   });
 });

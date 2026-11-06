@@ -534,7 +534,7 @@
     } @else {
       <label for="lesson-series-start">İlk ders tarihi</label><input id="lesson-series-start" name="lessonSeriesStartsOn" type="date" [(ngModel)]="lessonSeriesStartsOn" [disabled]="busy" required>
       <label for="lesson-series-end">Tekrar bitiş tarihi</label><input id="lesson-series-end" name="lessonSeriesEndsOn" type="date" [(ngModel)]="lessonSeriesEndsOn" [min]="lessonSeriesStartsOn" [disabled]="busy" required>
-      <label for="lesson-series-time">Yerel başlangıç saati</label><input id="lesson-series-time" name="lessonSeriesStartTime" type="time" [(ngModel)]="lessonSeriesStartTime" [disabled]="busy" required>
+      <label for="lesson-series-time">Başlangıç saati (Türkiye saati)</label><input id="lesson-series-time" name="lessonSeriesStartTime" type="time" [(ngModel)]="lessonSeriesStartTime" [disabled]="busy" required>
       <label for="lesson-series-duration">Ders süresi (dakika)</label><input id="lesson-series-duration" name="lessonSeriesDurationMinutes" type="number" min="1" max="480" step="1" [(ngModel)]="lessonSeriesDurationMinutes" [disabled]="busy" required>
       <fieldset><legend>Tekrarlanacağı günler</legend>
         @for (weekday of weekdays; track weekday.index) {
@@ -548,8 +548,9 @@
   </form>
   @if (editingSeriesId) {
     <form (ngSubmit)="saveLessonSeriesSchedule()"><h3>Haftalık serinin gelecek planını düzenle</h3>
+      @if (editingSeriesZone && editingSeriesZone !== turkeyZone) { <p class="notice" role="status" data-testid="series-zone-notice">Bu seri eskiden {{ editingSeriesZone }} saatiyle kaydedildi. Kaydettiğinde gelecek dersler Türkiye saatine göre okunur.</p> }
       <label for="edit-series-end">Tekrar bitiş tarihi</label><input id="edit-series-end" name="editingSeriesEndsOn" type="date" [(ngModel)]="editingSeriesEndsOn" [disabled]="busy" required>
-      <label for="edit-series-time">Yerel başlangıç saati</label><input id="edit-series-time" name="editingSeriesStartTime" type="time" [(ngModel)]="editingSeriesStartTime" [disabled]="busy" required>
+      <label for="edit-series-time">Başlangıç saati (Türkiye saati)</label><input id="edit-series-time" name="editingSeriesStartTime" type="time" [(ngModel)]="editingSeriesStartTime" [disabled]="busy" required>
       <label for="edit-series-duration">Ders süresi (dakika)</label><input id="edit-series-duration" name="editingSeriesDurationMinutes" type="number" min="1" max="480" step="1" [(ngModel)]="editingSeriesDurationMinutes" [disabled]="busy" required>
       <fieldset><legend>Tekrarlanacağı günler</legend>
         @for (weekday of weekdays; track weekday.index) {

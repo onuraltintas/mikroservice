@@ -357,6 +357,11 @@ public sealed class IdentityAuthorizationClient :
         }
     }
 
+    /// <remarks>
+    /// Not used for the student lists: <see cref="ICoachingIdentityReportClient"/> is registered to the owned Coaching directory
+    /// (DependencyInjection), which also sends the education status (E3 review L3). Identity's report has no education status, so
+    /// rows read here would show only the grade.
+    /// </remarks>
     public async Task<CoachingStudentReportPage> GetActiveStudentPageAsync(
         Guid viewerUserId,
         Guid institutionId,

@@ -747,11 +747,18 @@ test('course teacher creates a profile, independent workspace and targeted invit
     const movedStart = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000);
     movedStart.setMinutes(0, 0, 0);
     const movedEnd = new Date(movedStart.getTime() + 60 * 60 * 1000);
-    await page.getByLabel('Yeni başlangıç').fill(dateTimeLocal(movedStart));
+    const enteredStart = dateTimeLocal(movedStart);
+    await page.getByLabel('Yeni başlangıç').fill(enteredStart);
     await page.getByLabel('Yeni bitiş').fill(dateTimeLocal(movedEnd));
     await page.getByRole('button', { name: 'Yeni saati kaydet' }).click();
     await page.getByText('Tek dersin zamanı güncellendi.', { exact: true }).waitFor();
-    assert.equal(lesson.startsAt, movedStart.toISOString());
+    // E3 #34 (06.11.2026): the time entered is Türkiye time, whatever the device's zone (compared as instants).
+    assert.equal(new Date(lesson.startsAt).getTime(), Date.parse(`${enteredStart}:00+03:00`));
+    // The panel shows the lesson at the hour entered, in Türkiye time.
+    const shownStart = await page.evaluate(value => new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short',
+      timeZone: 'Europe/Istanbul' }).format(new Date(value)), lesson.startsAt);
+    assert.ok(shownStart.endsWith(enteredStart.slice(11)), shownStart);
+    await page.getByText(shownStart).first().waitFor();
     await page.getByLabel('Ada Öğrenci · Yoklama bekliyor').selectOption('Present');
     await page.getByText('Yoklama kaydedildi.', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Dersi tamamla', exact: true }).last().click();
