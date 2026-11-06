@@ -43,6 +43,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .completion { color: var(--ui-brand-text); }
 .notice { padding: 1rem; border-radius: .5rem; margin-bottom: 1rem; border: 1px solid; }
 .error { color: var(--ui-danger); border-color: var(--ui-danger); }
+.field-error { display: block; color: var(--ui-danger); font-size: .85rem; } [aria-invalid=true] { border-color: var(--ui-danger); }
 .success { color: var(--ui-brand-text); border-color: var(--ui-border); }
 .empty { padding: 3rem 1rem; text-align: center; }
 fieldset { border: 0; padding: 0; min-width: 0; }

@@ -79,14 +79,24 @@
                       <button type="button" class="ob-primary" [disabled]="busy()" (click)="acceptInvitation(invitation)">Kabul et</button>
                     </div>
                   } @empty { <p class="ob-note">Şu an bekleyen davetin yok. Öğretmenin seni e-posta adresinle davet edince burada görünür; sonra Profil ve ayarlar'dan da kabul edebilirsin.</p> }
-                  <button type="button" class="ob-chip" [disabled]="busy()" (click)="pass(question, list.length ? 'Sonra bakarım' : 'Davetim yok')">{{ list.length ? 'Sonra bakarım' : 'Davetim yok, devam' }}</button>
+                  <button type="button" class="ob-chip" [disabled]="busy()" (click)="passInvite(question, list.length)">{{ acceptedNow().length ? 'Devam' : list.length ? 'Sonra bakarım' : 'Davetim yok, devam' }}</button>
                 } @else { <p role="status">Davetlerin yükleniyor…</p> }
               }
               @case ('parent') {
                 @if (parentCode(); as issued) {
-                  <p class="ob-card">Velinle paylaş: <strong class="ob-code">{{ issued.code }}</strong><br><small>Velin kodu girince isteği Profil ve ayarlar'da onaylarsın.</small></p>
-                  <button type="button" class="ob-primary" [disabled]="busy()" (click)="pass(question, 'Veli kodu oluşturdum')">Devam</button>
+                  <p class="ob-card">Velinle paylaş: <strong class="ob-code">{{ issued.code }}</strong><br><small>{{ codeNote(issued.expiresAt) }} Velin kodu girince isteği Profil ve ayarlar'da onaylarsın.</small></p>
+                  <button type="button" class="ob-primary" [disabled]="busy()" (click)="passParent(question, issued)">Devam</button>
+                } @else if (activeCode() === undefined) {
+                  <p role="status">Veli kodun kontrol ediliyor…</p>
+                } @else if (openCode(); as active) {
+                  <!-- E4 #18/#21: a code made earlier (here or on Profilim); only its expiry can be shown again. -->
+                  <p class="ob-card">Aktif bir veli kodun var: {{ codeNote(active.expiresAt) }}<br><small>Kodu güvenliğin için yalnız oluşturduğunda gösteriyoruz. Yeni kod oluşturursan eski kod hemen geçersiz olur.</small></p>
+                  <div class="ob-chips">
+                    <button type="button" class="ob-primary" [disabled]="busy()" (click)="passParent(question, active)">Devam</button>
+                    <button type="button" class="ob-chip" [disabled]="busy()" (click)="createParentCode()">Yeni kod oluştur</button>
+                  </div>
                 } @else {
+                  @if (activeCode(); as old) { <p class="ob-note">{{ expiredNote(old.expiresAt) }}</p> }
                   <div class="ob-chips">
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="createParentCode()">Veli kodu oluştur</button>
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="pass(question, 'Şimdilik geç')">Şimdilik geç</button>
@@ -108,6 +118,7 @@
                 } @else { <p role="status">Tercihlerin yükleniyor…</p> }
               }
             }
+            @if (invalid(); as message) { <p class="ob-error" role="alert">{{ message }}</p> }
             @if (question.skipLabel && question.kind !== 'diploma') {
               <button type="button" class="ob-link" [disabled]="busy()" (click)="skip(question)">{{ question.skipLabel }}</button>
             }

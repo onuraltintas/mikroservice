@@ -60,6 +60,13 @@ public sealed class CoachingProfilesController(CoachingDbContext db, CoachingPro
     public Task<IActionResult> UpdateStudent([FromBody] UpdateCoachingStudentProfile request, CancellationToken ct) =>
         Execute(async () => await profiles.UpdateStudentAsync(await RequireAccount(ct), request, ct));
 
+    /// <summary>E4 #23: what saving this education would remove or leave not fitting (diploma grade, exam, target); nothing is saved.</summary>
+    [HttpPost("student/impact")]
+    [Authorize(Roles = "Student")]
+    [RequestSizeLimit(1024)]
+    public Task<IActionResult> StudentImpact([FromBody] StudentEducationImpactRequest request, CancellationToken ct) =>
+        Execute(async () => await profiles.PreviewEducationAsync(await RequireAccount(ct), request.EducationStatus, request.GradeLevel, ct));
+
     [HttpPut("teacher")]
     [Authorize(Roles = "Teacher")]
     [RequestSizeLimit(16384)]

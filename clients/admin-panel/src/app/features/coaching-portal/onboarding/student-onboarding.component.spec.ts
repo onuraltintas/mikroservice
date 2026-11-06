@@ -20,7 +20,8 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
   const stepTwo = { birthDate: '2012-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya',
     educationStatus: 'Student' as const, gradeLevel: 8, purpose: 'Lgs' as const, targetExamSessionId: 'lgs-27', targetExamYear: 2027 };
 
-  async function render(first: OnboardingView, query: Record<string, string> = {}) {
+  interface Resume { invitations?: object[]; code?: { expiresAt: string; createdAt: string; expired?: boolean } | null; links?: { parentName: string; status: string }[]; prefs?: { category: string; label: string; inApp: boolean; email: boolean }[] }
+  async function render(first: OnboardingView, query: Record<string, string> = {}, resume: Resume = {}) {
     const auth = { userProfile: signal({ id: 'student-1' }), logout: vi.fn().mockResolvedValue(undefined) };
     TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
       { provide: AuthService, useValue: auth },
@@ -32,6 +33,14 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     http.expectOne(base).flush({ data: first });
     await settle();
     if (first.status !== 'Completed') http.expectOne('/api/locations/provinces').flush([{ id: '06', name: 'Ankara' }, { id: '34', name: 'İstanbul' }]);
+    // E4 #18: a resumed wizard rebuilds the answers of saved steps 4–6 from Coaching, Identity and Notification.
+    if (first.status !== 'Completed' && first.savedSteps.includes(4) && !first.acceptedInvitations?.length)
+      http.expectOne('/api/coaching/invitations/my-invitations').flush(resume.invitations ?? []);
+    if (first.status !== 'Completed' && first.savedSteps.includes(5)) {
+      http.expectOne('/api/users/me/parent-link-codes/active').flush(resume.code ?? null);
+      http.expectOne('/api/users/me/parent-links').flush(resume.links ?? []);
+    }
+    if (first.status !== 'Completed' && first.savedSteps.includes(6)) http.expectOne('/api/notifications/preferences').flush({ data: resume.prefs ?? [] });
     await settle();
     const el = fixture.nativeElement as HTMLElement;
     async function settle() { for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); } }
@@ -91,9 +100,11 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     await t.click('Davetim yok, devam');
     t.http.expectOne(`${base}/steps/4`).flush({ data: view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo) }); await t.settle();
 
+    t.http.expectOne('/api/users/me/parent-link-codes/active').flush(null); await t.settle();
     await t.click('Veli kodu oluştur');
-    t.http.expectOne('/api/users/me/parent-link-codes').flush({ code: 'AB12CD', expiresAt: '2026-11-13T00:00:00Z' }); await t.settle();
+    t.http.expectOne('/api/users/me/parent-link-codes').flush({ code: 'AB12CD', expiresAt: '2026-11-13T09:00:00Z' }); await t.settle();
     expect(t.el.textContent).toContain('AB12CD');
+    expect(t.el.querySelector('[data-current]')!.textContent).toContain('13.11.2026 tarihine kadar, bir kez kullanılabilir.');
     await t.click('Devam');
     t.http.expectOne(`${base}/steps/5`).flush({ data: view({ status: 'InProgress', nextStep: 6, savedSteps: [1, 2, 3, 4, 5] }, stepTwo) }); await t.settle();
 
@@ -117,6 +128,9 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     const summary = t.el.querySelector('.ob-summary')!;
     expect(summary.textContent).toContain('Sınav: LGS'); expect(summary.textContent).toContain('Hedef: Henüz karar vermedim');
     expect(summary.querySelectorAll('button[aria-label^="Düzenle"]').length).toBe(6);
+    expect(summary.textContent).toContain('Davet: Davetim yok');
+    expect(summary.textContent).toContain('Veli bağlantısı: Veli kodu oluşturdum (13.11.2026 tarihine kadar geçerli)');
+    expect(summary.textContent).toContain('E-postalar: Çalışma planı hatırlatmaları, Ödev teslim hatırlatması');
     await t.click('Kurulumu bitir');
     t.http.expectOne(`${base}/complete`).flush({ data: { needsSubscription: false, state: view({ status: 'Completed', savedSteps: [1, 2, 3, 4, 5, 6, 7] }, stepTwo) } });
     await t.settle();
@@ -183,7 +197,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
   it('shows the server message when a step cannot be saved and keeps the answers', async () => {
     const t = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2] }, stepTwo));
     await t.click('Henüz karar vermedim');
-    t.http.expectOne(`${base}/steps/target`).flush({ message: 'Önce hazırlandığın sınavı seç.' }, { status: 400, statusText: 'Bad Request' });
+    t.http.expectOne(`${base}/steps/target`).flush({ message: 'Önce hazırlandığın sınavı seç.' }, { status: 500, statusText: 'Server Error' });
     await t.settle();
     expect(t.el.querySelector('[role="alert"]')!.textContent).toContain('Önce hazırlandığın sınavı seç.');
     expect(t.el.querySelector('[data-question="targetMode"] .ob-me')!.textContent).toContain('Henüz karar vermedim');
@@ -255,5 +269,100 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
   it('a student who already finished goes to the panel', async () => {
     const t = await render(view({ status: 'Completed' }));
     expect(t.navigate).toHaveBeenCalledWith(['/coaching-portal']);
+  });
+
+  // ---------- E4 (live test 06.11.2026) ----------
+
+  it('a reloaded wizard shows the real answers of the invite, parent and e-mail steps (#18)', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6],
+      acceptedInvitations: [{ inviterEmail: 'ogretmen@example.test', type: 'StudentToTeacher', acceptedAt: '2026-11-06T09:00:00Z' }] }, stepTwo), {}, {
+      code: { expiresAt: '2026-11-13T09:00:00Z', createdAt: '2026-11-06T09:00:00Z' },
+      prefs: [{ category: 'StudyPlan', label: 'Çalışma planı hatırlatmaları', inApp: true, email: true },
+        { category: 'Sessions', label: 'Seans hatırlatmaları', inApp: true, email: false },
+        { category: 'Messages', label: 'Yeni mesajlar', inApp: true, email: true }] });
+    const summary = t.el.querySelector('.ob-summary')!.textContent!;
+    expect(summary).toContain('Davet: Daveti kabul ettim: ogretmen@example.test');
+    expect(summary).toContain('Veli bağlantısı: Veli kodu oluşturdum (13.11.2026 tarihine kadar geçerli)');
+    expect(summary).toContain('E-postalar: Çalışma planı hatırlatmaları');
+    expect(summary).not.toContain('Yeni mesajlar');
+    expect(summary).not.toContain('Tamam'); expect(summary).not.toContain('Tercihlerim kaydedildi');
+    t.http.verify();
+  });
+
+  it('a validation message has no "Yeniden dene"; a server error does (#18)', async () => {
+    const twelfth = { ...stepTwo, educationStatus: 'Student' as const, gradeLevel: 12, purpose: null, targetExamSessionId: null, targetExamYear: null };
+    const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] }, twelfth));
+    await t.click('YKS'); await t.click('Sayısal'); await t.click('2028');
+    const grade = t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
+    grade.value = '45'; grade.dispatchEvent(new Event('input')); await t.click('Kaydet');
+    const alert = t.el.querySelector('[role="alert"]')!;
+    expect(alert.textContent).toContain('50 ile 100 arasında bir sayı yaz.');
+    expect(t.el.querySelector('[data-current]')!.contains(alert)).toBe(true);
+    expect(Array.from(t.el.querySelectorAll('button')).map(x => x.textContent?.trim())).not.toContain('Yeniden dene');
+    t.http.expectNone(`${base}/steps/exam`);
+
+    grade.value = '85'; grade.dispatchEvent(new Event('input')); await t.click('Kaydet');
+    expect(t.el.textContent).not.toContain('50 ile 100 arasında');
+    t.http.expectOne(`${base}/steps/exam`).flush({ message: 'Sunucuya ulaşılamadı.' }, { status: 503, statusText: 'Unavailable' }); await t.settle();
+    expect(t.el.querySelector('[role="alert"]')!.textContent).toContain('Sunucuya ulaşılamadı.');
+    expect(Array.from(t.el.querySelectorAll('button')).map(x => x.textContent?.trim())).toContain('Yeniden dene');
+  });
+
+  it('the parent step shows an active code with its expiry, and a new code replaces it (#18, #21)', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo));
+    t.http.expectOne('/api/users/me/parent-link-codes/active').flush({ expiresAt: '2026-11-13T09:00:00Z', createdAt: '2026-11-06T09:00:00Z' }); await t.settle();
+    const current = t.el.querySelector('[data-current]')!;
+    expect(current.textContent).toContain('Aktif bir veli kodun var: 13.11.2026 tarihine kadar, bir kez kullanılabilir.');
+    expect(current.textContent).toContain('Yeni kod oluşturursan eski kod hemen geçersiz olur.');
+    expect(t.button('Veli kodu oluştur')).toBeUndefined();
+    await t.click('Yeni kod oluştur');
+    t.http.expectOne('/api/users/me/parent-link-codes').flush({ code: 'XY34-ZW56', expiresAt: '2026-11-13T10:00:00Z' }); await t.settle();
+    expect(t.el.querySelector('[data-current]')!.textContent).toContain('XY34-ZW56');
+    await t.click('Devam');
+    t.http.expectOne(`${base}/steps/5`).flush({ data: view({ status: 'InProgress', nextStep: 6, savedSteps: [1, 2, 3, 4, 5] }, stepTwo) }); await t.settle();
+    expect(t.el.querySelector('[data-question="parent"] .ob-me')!.textContent).toContain('Veli kodu oluşturdum (13.11.2026 tarihine kadar geçerli)');
+  });
+
+  it('an accepted invitation is the answer of the invite step (#18)', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 4, savedSteps: [1, 2, 3] }, stepTwo));
+    t.http.expectOne('/api/coaching/invitations/my-invitations').flush([{ id: 'i1', inviterEmail: 'ogretmen@example.test', message: null }]); await t.settle();
+    await t.click('Kabul et');
+    t.http.expectOne('/api/coaching/invitations/i1/accept').flush(null); await t.settle();
+    await t.click('Devam');
+    t.http.expectOne(`${base}/steps/4`).flush({ data: view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo) }); await t.settle();
+    expect(t.el.querySelector('[data-question="invite"] .ob-me')!.textContent).toContain('Daveti kabul ettim: ogretmen@example.test');
+  });
+
+  // ---------- E4 review ----------
+  it('a step the server refuses (400) asks its last question again with the message and no "Yeniden dene"', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2] }, stepTwo));
+    await t.click('Henüz karar vermedim');
+    t.http.expectOne(`${base}/steps/target`).flush({ message: 'Bu hedef sınavına uymuyor.' }, { status: 400, statusText: 'Bad Request' }); await t.settle();
+    const current = t.el.querySelector('[data-current]')!;
+    expect(current.getAttribute('data-question')).toBe('targetMode');
+    expect(current.querySelector('[role="alert"]')!.textContent).toContain('Bu hedef sınavına uymuyor.');
+    expect(Array.from(t.el.querySelectorAll('button')).map(x => x.textContent?.trim())).not.toContain('Yeniden dene');
+    await t.click('Henüz karar vermedim');
+    t.http.expectOne(`${base}/steps/target`);
+    expect(t.el.textContent).not.toContain('Bu hedef sınavına uymuyor.');
+  });
+
+  it('a resumed wizard keeps "Sonra bakarım" when invitations are still waiting and says when the parent code expired', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6], acceptedInvitations: [] }, stepTwo), {}, {
+      invitations: [{ id: 'i1', inviterEmail: 'ogretmen@example.test', message: null }],
+      code: { expiresAt: '2026-11-01T09:00:00Z', createdAt: '2026-10-25T09:00:00Z', expired: true } });
+    const summary = t.el.querySelector('.ob-summary')!.textContent!;
+    expect(summary).toContain('Davet: Sonra bakarım');
+    expect(summary).toContain('Veli bağlantısı: Veli kodumun süresi doldu (01.11.2026)');
+    t.http.verify();
+  });
+
+  it('the parent step offers a new code when the earlier one expired', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo));
+    t.http.expectOne('/api/users/me/parent-link-codes/active').flush({ expiresAt: '2026-11-01T09:00:00Z', createdAt: '2026-10-25T09:00:00Z', expired: true }); await t.settle();
+    const current = t.el.querySelector('[data-current]')!;
+    expect(current.textContent).toContain('Veli kodunun süresi doldu (01.11.2026)');
+    expect(current.textContent).not.toContain('Aktif bir veli kodun var');
+    expect(t.button('Veli kodu oluştur')).toBeTruthy();
   });
 });

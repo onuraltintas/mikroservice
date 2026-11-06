@@ -27,6 +27,10 @@ export interface ParentLink {
 export interface ParentWeeklyEmail { inApp: boolean; email: boolean; sms: boolean; whatsApp: boolean }
 
 export interface ParentLinkCode { code: string; expiresAt: string }
+/** E4 #21: an unused, unexpired code; only its dates (the code itself is shown only when it is created). */
+export interface ParentLinkCodeStatus { createdAt: string; expiresAt: string;
+  /** E4 review: the newest unused code's week is over (missing on an older API: open). */
+  expired?: boolean }
 
 export interface ParentChildPage<T> { items: T[]; totalCount?: number }
 
@@ -49,6 +53,10 @@ export class CoachingParentService {
   approveLink(id: string): Observable<void> { return this.http.post<void>(`${this.links}/${encodeURIComponent(id)}/approve`, {}); }
   revokeLink(id: string): Observable<void> { return this.http.post<void>(`${this.links}/${encodeURIComponent(id)}/revoke`, {}); }
   createCode(): Observable<ParentLinkCode> { return this.http.post<ParentLinkCode>(`${this.api}/users/me/parent-link-codes`, {}); }
+  /** E4 #21: the active code (204 → null); a new code replaces it. */
+  getActiveCode(): Observable<ParentLinkCodeStatus | null> {
+    return this.http.get<ParentLinkCodeStatus | null>(`${this.api}/users/me/parent-link-codes/active`).pipe(map(r => r ?? null));
+  }
 
   getProgress(studentId: string): Observable<StudentProgressSummary> {
     return this.http.get<StudentProgressSummary>(`${this.api}/reports/student/${encodeURIComponent(studentId)}/progress`);

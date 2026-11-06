@@ -30,7 +30,7 @@ public sealed class CoachingExamPurposePostgresTests
             await using var db = new CoachingDbContext(options);
             await db.Database.MigrateAsync();
             var student = Guid.NewGuid(); var profile = CoachingStudentProfile.Create(student);
-            profile.UpdateEducation(CoachingEducationStatus.HighSchoolGraduate, null, null, null, null, null, null, null);
+            profile.UpdateEducation(CoachingEducationStatus.UniversityGraduate, null, null, null, null, null, null, null);
             var curriculum = CurriculumVersion.Create("dil-2026", "Dil sınavları", "v1", 2026, 2027, "Test", null); curriculum.SetPublished(true);
             var yds = StudyCatalogExam.Create("YDS", "Yabancı Dil Bilgisi Seviye Tespit Sınavı");
             yds.ReplaceSessions([new(null, new(2027, 3, 28), "2027/1", new(2027, 2, 3), new(2027, 2, 11)), new(null, new(2027, 11, 21), "2027/2", null, null),

@@ -17,6 +17,7 @@ describe('StudentLearningSetupComponent exam purposes', () => {
   const empty: LearningSetupView = { context: null, nextStep: 'Purpose', isReady: false, missingFields: ['Purpose'], warnings: [], examSessions: sessions };
   async function setup(view = empty) {
     const service = { get: vi.fn(() => of(view)), save: vi.fn((_request: LearningSetupUpdate) => of(view)),
+      impact: vi.fn(() => of({ removedTargets: [] as string[], teacherGoalMismatch: false, diplomaGradeRemoved: null })),
       catalog: vi.fn(() => of({ curriculum: null, lessons: [], topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] } as LearningCatalog)) };
     TestBed.configureTestingModule({ imports: [StudentLearningSetupComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
       { provide: CoachingLearningSetupService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: { getTopicOutcomes: vi.fn() } }] });

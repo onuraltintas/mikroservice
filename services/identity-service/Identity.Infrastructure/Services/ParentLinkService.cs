@@ -33,6 +33,17 @@ public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock, 
         return Result.Success(new ParentLinkCodeIssued($"{code[..4]}-{code[4..]}", issued.ExpiresAt));
     }
 
+    public async Task<Result<ParentLinkCodeStatus?>> GetActiveCodeAsync(Guid studentUserId, CancellationToken ct)
+    {
+        if (!await HasActiveRoleAsync(studentUserId, "Student", ct)) return Result.Failure<ParentLinkCodeStatus?>(ParentLinkErrors.Forbidden);
+        var now = Now;
+        // A new code revokes the older ones, so at most one is open; the newest wins should older data hold more.
+        var active = await db.ParentLinkCodes.AsNoTracking()
+            .Where(x => x.StudentUserId == studentUserId && x.UsedAt == null && x.RevokedAt == null)
+            .OrderByDescending(x => x.CreatedAt).Select(x => new ParentLinkCodeStatus(x.CreatedAt, x.ExpiresAt, x.ExpiresAt <= now)).FirstOrDefaultAsync(ct);
+        return Result.Success<ParentLinkCodeStatus?>(active);
+    }
+
     public async Task<Result<ParentLinkView>> RequestAsync(Guid parentUserId, string code, ParentRelationship relationship, CancellationToken ct)
     {
         if (!await HasActiveRoleAsync(parentUserId, "Parent", ct)) return Result.Failure<ParentLinkView>(ParentLinkErrors.Forbidden);

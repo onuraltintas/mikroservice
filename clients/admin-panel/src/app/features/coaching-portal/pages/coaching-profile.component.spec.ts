@@ -25,6 +25,10 @@ describe('Coaching owned profile', () => {
     fixture.detectChanges(); await fixture.whenStable();
     expect(component.dirty).toBe(true);
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    // E4 #23: a new grade first asks the server what it removes or leaves not fitting (here nothing, so it saves at once).
+    const impact = http.expectOne('/api/coaching/profiles/me/student/impact');
+    expect(impact.request.body).toEqual({ educationStatus: 'Student', gradeLevel: 11 });
+    impact.flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: null, target: null } });
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.body.classBranch).toBe('A');
     expect(request.request.body.gradeLevel).toBe(11); expect(request.request.body.birthDate).toBe('2008-01-02');
@@ -34,6 +38,7 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/study-planning/setup').flush({ data: { context: null, isReady: false, missingFields: [], warnings: [], purposeNotForEducation: false } });
     fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Profilin kaydedildi.');
+    expect(fixture.nativeElement.querySelector('[role="status"]')!.textContent).toContain('Sınıfın: 11. sınıf');
     expect(fixture.nativeElement.querySelector('[data-testid="grade-purpose-notice"]')).toBeNull(); http.verify();
   });
 
@@ -131,6 +136,10 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
     fixture.detectChanges(); await fixture.whenStable();
     component.stage = 'high'; component.student!.gradeLevel = 9; component.dirty = true; component.save();
+    http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: true, exam: 'LGS', diplomaGradeRemoved: null, target: null } });
+    fixture.detectChanges(); await fixture.whenStable();
+    http.expectNone('/api/coaching/profiles/me/student');
+    component.confirmSave();
     http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...student, version: 3, gradeLevel: 9 } });
     http.expectOne('/api/coaching/study-planning/setup').flush({ data: { context: null, isReady: false, missingFields: ['Purpose'], warnings: [], purposeNotForEducation: true } });
     fixture.detectChanges(); await fixture.whenStable();
@@ -167,6 +176,10 @@ describe('Coaching owned profile', () => {
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.body).toMatchObject({ homeProvinceId: '34', homeDistrictId: '3401', clearDiplomaGrade: true });
     request.flush({ data: { ...student, version: 4, homeCity: 'İstanbul', homeDistrict: 'Kadıköy', diplomaGrade: null } });
+    fixture.detectChanges(); await fixture.whenStable();
+    // E4 #23: the confirmation says what changed and what was removed.
+    const done = el.querySelector('[role="status"]')!.textContent!;
+    expect(done).toContain('Profilin kaydedildi'); expect(done).toContain('Yaşadığın yer: İstanbul / Kadıköy'); expect(done).toContain('Diploma notun (85) silindi');
     TestBed.resetTestingModule();
     const second = await setup();
     second.http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
@@ -220,6 +233,8 @@ describe('Coaching owned profile', () => {
     fixture.detectChanges(); await fixture.whenStable();
     component.stage = 'HighSchoolGraduate'; component.dirty = true;
     await component.save();
+    http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: null, target: null } });
+    component.confirmSave();
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body.expectedVersion).toBe(3);
@@ -236,6 +251,7 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true } } });
     fixture.detectChanges(); await fixture.whenStable();
     component.student!.gradeLevel = 11; component.dirty = true; component.save();
+    http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: null, target: null } });
     http.expectOne('/api/coaching/profiles/me/student').flush({ message: 'Profil değişti. Yeniden yükleyin.' }, { status: 409, statusText: 'Conflict' });
     expect(component.student!.gradeLevel).toBe(11); expect(component.dirty).toBe(true);
     expect(component.error()).toContain('Profil değişti'); http.verify();
@@ -306,12 +322,21 @@ describe('Coaching owned profile', () => {
     expect(el.querySelector('select[name="gradeLevel"]')).toBeNull();
     expect(el.querySelector('[data-testid="own-school"]')).toBeNull(); expect(el.querySelector('[name="classBranch"]')).toBeNull();
     expect(el.querySelector('[data-testid="education-clears-school"]')!.textContent).toContain('sınıf, okul ve şube bilgin silinecek');
+    // E4: the warning is asked in the page (no dialog) after the server says what else changes.
     const confirm = TestBed.inject(ToasterService).confirm as ReturnType<typeof vi.fn>;
-    confirm.mockResolvedValueOnce(false);
-    await component.save();
+    component.save();
+    http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: null, target: null } });
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[data-testid="save-consequences"]')!.textContent).toContain('sınıf, okul ve şube bilgin silinecek');
+    (Array.from(el.querySelectorAll('[data-testid="save-consequences"] button')).find(x => x.textContent?.trim() === 'Vazgeç') as HTMLElement).click();
+    fixture.detectChanges(); await fixture.whenStable();
     http.expectNone('/api/coaching/profiles/me/student');
-    expect(confirm.mock.calls[0][0]).toContain('sınıf, okul ve şube bilgin silinecek');
-    await component.save();
+    expect(el.querySelector('[data-testid="save-consequences"]')).toBeNull();
+    component.save();
+    http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: null, target: null } });
+    fixture.detectChanges(); await fixture.whenStable();
+    (Array.from(el.querySelectorAll('[data-testid="save-consequences"] button')).find(x => x.textContent?.trim() === 'Evet, kaydet') as HTMLElement).click();
+    expect(confirm).not.toHaveBeenCalled();
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.body).toMatchObject({ educationStatus: 'UniversityStudent', gradeLevel: null, graduationYear: null,
       schoolName: null, schoolCity: null, schoolDistrict: null, schoolType: null, classBranch: null });
@@ -331,9 +356,11 @@ describe('Coaching owned profile', () => {
     const el = fixture.nativeElement as HTMLElement;
     component.changeStage('middle'); component.student!.gradeLevel = 8; fixture.detectChanges(); await fixture.whenStable();
     expect(el.querySelector('[data-testid="education-clears-school"]')!.textContent).toContain('kayıtlı okulun ve şuben silinecek');
-    const confirm = TestBed.inject(ToasterService).confirm as ReturnType<typeof vi.fn>;
-    await component.save();
-    expect(confirm.mock.calls.at(-1)![0]).toContain('kayıtlı okulun ve şuben silinecek');
+    component.save();
+    http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: null, target: null } });
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[data-testid="save-consequences"]')!.textContent).toContain('kayıtlı okulun ve şuben silinecek');
+    component.confirmSave();
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.body).toMatchObject({ educationStatus: 'Student', gradeLevel: 8, schoolName: null, schoolCity: null, schoolType: null, classBranch: null });
     expect(request.request.body.schoolId).toBeUndefined();
@@ -359,6 +386,142 @@ describe('Coaching owned profile', () => {
     component.loadInvitations();
     http.expectOne('/api/coaching/invitations/my-invitations').flush({}, { status: 503, statusText: 'Unavailable' });
     expect(component.invitationError()).toContain('Davetler yüklenemedi'); http.verify();
+  });
+});
+
+// ---------- E4 (live test on onuraltintas.net, 06.11.2026) ----------
+describe('Profilim feedback and warnings (E4 #23, #24)', () => {
+  async function student(profile: object, extra: object = {}) {
+    TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+    const fixture = TestBed.createComponent(CoachingProfileComponent);
+    fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', 'Student');
+    fixture.detectChanges(); await fixture.whenStable();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student: profile, ...extra } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const settle = async () => { fixture.detectChanges(); await fixture.whenStable(); };
+    const submit = async () => { el.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await settle(); };
+    const set = async (name: string, value: string) => {
+      const input = el.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement;
+      input.value = value; input.dispatchEvent(new Event(input.tagName === 'SELECT' ? 'change' : 'input')); await settle();
+    };
+    const choose = async (name: string, label: string) => {
+      const select = el.querySelector(`select[name="${name}"]`) as HTMLSelectElement;
+      select.selectedIndex = Array.from(select.options).findIndex(x => x.textContent!.trim() === label);
+      expect(select.selectedIndex, label).toBeGreaterThan(-1); select.dispatchEvent(new Event('change')); await settle();
+    };
+    const click = async (scope: string, text: string) => {
+      const button = Array.from(el.querySelectorAll(`${scope} button`)).find(x => x.textContent?.trim() === text) as HTMLElement | undefined;
+      expect(button, text).toBeTruthy(); button!.click(); await settle();
+    };
+    return { fixture, component: fixture.componentInstance, http, el, settle, submit, set, choose, click };
+  }
+  const twelfth = { version: 7, educationStatus: 'Student', gradeLevel: 12, shareProgressWithTeachers: true, isActive: true, diplomaGrade: 85, diplomaGradeEstimated: false,
+    schoolName: 'Ankara Fen Lisesi', schoolCity: 'ANKARA', schoolType: 'Fen Lisesi', classBranch: '12-A', birthDate: '2008-05-01' };
+
+  it('#24: a future birth date is not saved silently: the old message goes, the field and a summary say why', async () => {
+    const t = await student(twelfth);
+    expect(t.el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
+    await t.set('studentBio', 'Merhaba'); await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...twelfth, version: 8, bio: 'Merhaba' } }); await t.settle();
+    expect(t.el.textContent).toContain('Profilin kaydedildi');
+
+    await t.set('birthDate', '2099-01-01'); await t.submit();
+    t.http.expectNone('/api/coaching/profiles/me/student');
+    expect(t.el.textContent).not.toContain('Profilin kaydedildi');
+    const summary = t.el.querySelector('[data-testid="error-summary"]')!;
+    expect(summary.getAttribute('role')).toBe('alert');
+    expect(summary.textContent).toContain('Profilin kaydedilmedi');
+    expect(summary.textContent).toContain('Doğum tarihin gelecekte olamaz.');
+    const field = t.el.querySelector('[name="birthDate"]')!;
+    expect(field.getAttribute('aria-invalid')).toBe('true');
+    expect(t.el.querySelector('#' + field.getAttribute('aria-describedby'))!.textContent).toContain('Doğum tarihin gelecekte olamaz.');
+    // The submit button stays usable so the student always gets an answer.
+    expect((t.el.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
+
+    await t.set('birthDate', '2008-05-01'); await t.set('diplomaGrade', '45'); await t.submit();
+    expect(t.el.querySelector('[name="birthDate"]')!.getAttribute('aria-invalid')).toBeNull();
+    expect(t.el.querySelector('[data-testid="error-summary"]')!.textContent).toContain('Diploma notu 50 ile 100 arasında olmalı.');
+    t.http.expectNone('/api/coaching/profiles/me/student');
+  });
+
+  it('#23: a lower grade says before saving that the diploma grade will be deleted, and the confirmation says it was', async () => {
+    const t = await student(twelfth, { examAsksDiploma: true });
+    await t.choose('gradeLevel', '10. sınıf'); await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: 85, target: null } }); await t.settle();
+    t.http.expectNone('/api/coaching/profiles/me/student');
+    const warning = t.el.querySelector('[data-testid="save-consequences"]')!;
+    expect(warning.textContent).toContain('Diploma notun (85) silinecek');
+    expect(warning.textContent).not.toContain('okulun');
+    await t.click('[data-testid="save-consequences"]', 'Evet, kaydet');
+    t.http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...twelfth, version: 8, gradeLevel: 10, diplomaGrade: null } }); await t.settle();
+    t.http.expectOne('/api/coaching/study-planning/setup').flush({ data: { purposeNotForEducation: false } }); await t.settle();
+    const done = t.el.querySelector('[role="status"]')!.textContent!;
+    expect(done).toContain('Profilin kaydedildi'); expect(done).toContain('Sınıfın: 10. sınıf'); expect(done).toContain('Diploma notun (85) silindi');
+    t.http.verify();
+  });
+
+  it('#23/#26: ortaokul says the school, the diploma grade and the exam that no longer fits, with the target it affects', async () => {
+    const t = await student(twelfth, { examAsksDiploma: true });
+    await t.choose('educationStage', 'Ortaokul öğrencisiyim'); await t.choose('gradeLevel', '8. sınıf'); await t.submit();
+    const impact = t.http.expectOne('/api/coaching/profiles/me/student/impact');
+    expect(impact.request.body).toEqual({ educationStatus: 'Student', gradeLevel: 8 });
+    impact.flush({ data: { examNoLongerFits: true, exam: 'YKS', diplomaGradeRemoved: 85, target: 'Hacettepe Üniversitesi · Bilgisayar Mühendisliği' } }); await t.settle();
+    const warning = t.el.querySelector('[data-testid="save-consequences"]')!.textContent!;
+    expect(warning).toContain('kayıtlı okulun ve şuben silinecek');
+    expect(warning).toContain('Diploma notun (85) silinecek');
+    expect(warning).toContain('Seçili sınavın (YKS) bu sınıfa uymuyor');
+    expect(warning).toContain('Hedefin (Hacettepe Üniversitesi · Bilgisayar Mühendisliği)');
+    await t.click('[data-testid="save-consequences"]', 'Evet, kaydet');
+    t.http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...twelfth, version: 8, gradeLevel: 8, diplomaGrade: null, schoolName: null, schoolCity: null, schoolType: null, classBranch: null } });
+    await t.settle();
+    t.http.expectOne('/api/coaching/study-planning/setup').flush({ data: { purposeNotForEducation: true } }); await t.settle();
+    const done = t.el.querySelector('[role="status"]')!.textContent!;
+    expect(done).toContain('Eğitim durumun: Ortaokul öğrencisiyim, 8. sınıf'); expect(done).toContain('Okulun ve şuben silindi');
+    const notice = t.el.querySelector('[data-testid="grade-purpose-notice"]')!;
+    expect(notice.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
+    expect(notice.textContent).toContain('Hedefin (Hacettepe Üniversitesi · Bilgisayar Mühendisliği) yeni sınavına uymazsa, sınavını değiştirdiğinde kaldırılır.');
+  });
+
+  it('review: while the confirmation is open the form cannot change, so the confirmed save is what was shown', async () => {
+    const t = await student(twelfth, { examAsksDiploma: true });
+    await t.choose('gradeLevel', '10. sınıf'); await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: 85, target: null } }); await t.settle();
+    expect((t.el.querySelector('form fieldset') as HTMLFieldSetElement).disabled).toBe(true);
+    await t.click('[data-testid="save-consequences"]', 'Vazgeç');
+    expect((t.el.querySelector('form fieldset') as HTMLFieldSetElement).disabled).toBe(false);
+    // Reloading the profile also drops a pending confirmation.
+    await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: 85, target: null } }); await t.settle();
+    t.component.cancelSave(); await t.settle();
+    expect(t.el.querySelector('[data-testid="save-consequences"]')).toBeNull();
+  });
+
+  it('review: an API without the impact check (404) still saves, after the school warning', async () => {
+    const t = await student(twelfth);
+    await t.choose('gradeLevel', '11. sınıf'); await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student/impact').flush({}, { status: 404, statusText: 'Not Found' }); await t.settle();
+    t.http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...twelfth, version: 8, gradeLevel: 11 } }); await t.settle();
+    t.http.expectOne('/api/coaching/study-planning/setup').flush({ data: { purposeNotForEducation: false } }); await t.settle();
+    expect(t.el.textContent).toContain('Profilin kaydedildi');
+
+    TestBed.resetTestingModule();
+    const u = await student({ ...twelfth, version: 8 });
+    await u.choose('educationStage', 'Üniversite öğrencisiyim'); await u.submit();
+    u.http.expectOne('/api/coaching/profiles/me/student/impact').flush({}, { status: 404, statusText: 'Not Found' }); await u.settle();
+    expect(u.el.querySelector('[data-testid="save-consequences"]')!.textContent).toContain('sınıf, okul ve şube bilgin silinecek');
+    await u.click('[data-testid="save-consequences"]', 'Evet, kaydet');
+    u.http.expectOne('/api/coaching/profiles/me/student');
+  });
+
+  it('#24: an impact check that fails says so and saves nothing', async () => {
+    const t = await student(twelfth);
+    await t.choose('gradeLevel', '11. sınıf'); await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student/impact').flush({}, { status: 503, statusText: 'Unavailable' }); await t.settle();
+    t.http.expectNone('/api/coaching/profiles/me/student');
+    expect(t.el.querySelector('[role="alert"]')!.textContent).toContain('kontrol edilemedi');
   });
 });
 

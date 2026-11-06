@@ -28,7 +28,10 @@ export interface OnboardingView {
   answers: OnboardingAnswers; examSessions: LearningExamSession[];
   /** Paket D review: the exams that fit the saved grade (the server's rule); missing on an older API (then every exam is offered). */
   allowedPurposes?: string[];
+  /** E4 #18: the invitations the student accepted (the invite step's answer when the wizard is resumed); missing on an older API. */
+  acceptedInvitations?: OnboardingInvitation[];
 }
+export interface OnboardingInvitation { inviterEmail: string | null; type: 'StudentToTeacher' | 'StudentToInstitution' | string; acceptedAt: string }
 export interface OnboardingPersonalStep {
   birthDate: string; provinceId: string; districtId: string; educationStatus: EducationStatus; gradeLevel: number | null;
   graduationYear: number | null;

@@ -1,5 +1,6 @@
 import { ExamLearningPurpose, LearningExamSession } from '../../../core/services/coaching-learning-setup.service';
-import { OnboardingExamStep, OnboardingPersonalStep, OnboardingTargetStep, OnboardingView } from '../../../core/services/coaching-onboarding.service';
+import { OnboardingExamStep, OnboardingInvitation, OnboardingPersonalStep, OnboardingTargetStep, OnboardingView } from '../../../core/services/coaching-onboarding.service';
+import { coachingDate } from '../coaching-labels';
 import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
 import { EDUCATION_STAGES, EducationStage, educationRequest, gradesFor, isStudentStage, stageOf } from '../coaching-education';
 
@@ -339,11 +340,36 @@ export function prefill(view: OnboardingView): Answers {
       scores: t.kind === 'school' || !t.scores.length || t.scores.some(x => !x.scoreType) && t.kind === 'score' ? null : t.scores } }
       : { value: 'none', label: 'Henüz karar vermedim', data: { kind: 'none' } };
   }
-  if (saved.has(4)) answers.invite = { value: 'passed', label: 'Tamam' };
-  if (saved.has(5)) answers.parent = { value: 'passed', label: 'Tamam' };
-  if (saved.has(6)) answers.notifications = { value: 'passed', label: 'Tercihlerim kaydedildi' };
+  // E4 #18: the real answers, not "Tamam". The invitations come with the view; the parent code and the e-mail choices live in
+  // Identity and Notification, so the component replaces these two labels once it has read them (see RESUMING).
+  if (saved.has(4)) answers.invite = { value: 'passed', label: inviteAnswer(view.acceptedInvitations ?? []) };
+  if (saved.has(5)) answers.parent = { value: 'passed', label: RESUMING };
+  if (saved.has(6)) answers.notifications = { value: 'passed', label: RESUMING };
   return withoutUnfitPurpose(answers, view.allowedPurposes);
 }
+
+/** The label of a saved step 5 or 6 until its answer is read from Identity or Notification. */
+export const RESUMING = 'Kaydedildi';
+
+/** E4 #18: the invite step's answer from the accepted invitations; with invitations still waiting the student chose "Sonra bakarım". */
+export function inviteAnswer(accepted: OnboardingInvitation[], pending = 0): string {
+  if (!accepted.length) return pending ? 'Sonra bakarım' : 'Davetim yok';
+  return `Daveti kabul ettim: ${accepted.map(x => x.inviterEmail
+    ? `${x.inviterEmail}${x.type === 'StudentToInstitution' ? ' (kurum)' : ''}` : x.type === 'StudentToInstitution' ? 'bir kurum' : 'bir öğretmen').join(', ')}`;
+}
+/** E4 #18: the parent step's answer: an open code with its expiry, else the parents linked or waiting, else an expired code, else skipped. */
+export function parentAnswer(code: { expiresAt: string; expired?: boolean } | null, links: { parentName: string; status: string }[]): string {
+  if (code && !code.expired) return `Veli kodu oluşturdum (${coachingDate(code.expiresAt)} tarihine kadar geçerli)`;
+  if (links.length) return `Velimle bağlantım var: ${links.map(x => x.status === 'Pending' ? `${x.parentName} (onayımı bekliyor)` : x.parentName).join(', ')}`;
+  if (code) return `Veli kodumun süresi doldu (${coachingDate(code.expiresAt)})`;
+  return 'Şimdilik geç';
+}
+/** E4 #18: the e-mail step's answer: the e-mails the student gets (the wizard's own categories). */
+export function emailAnswer(prefs: { label: string; email: boolean }[]): string {
+  return prefs.filter(x => x.email).map(x => x.label).join(', ') || 'E-posta istemiyorum';
+}
+/** As on Profilim: until when a parent code works and that it works once. */
+export function parentCodeNote(expiresAt: string): string { return `${coachingDate(expiresAt)} tarihine kadar, bir kez kullanılabilir.`; }
 
 export function targetLabel(t: { kind: string; name: string; minimumScore: number | null; scores: { scoreType: string; score: number }[] }): string {
   if (t.kind === 'score') return t.scores.map(x => `${SCORE_NAMES[x.scoreType] ?? t.name} ${formatScore(x.score)}`).join(', ');

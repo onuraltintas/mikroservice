@@ -130,6 +130,7 @@ public sealed class WeeklyStudyDraftTests
         public Task<LearningSetupView> GetAsync(CancellationToken ct)=>throw new NotSupportedException();
         public Task<LearningSetupView> GetForStudentAsync(Guid studentId,CancellationToken ct)=>throw new NotSupportedException();
         public Task<LearningSetupView> SaveAsync(LearningSetupUpdate r,CancellationToken ct)=>throw new NotSupportedException();
+        public Task<LearningSetupImpact> PreviewAsync(LearningSetupImpactRequest r,CancellationToken ct)=>throw new NotSupportedException();
         public Task<LearningCatalogView> GetCatalogForStudentAsync(Guid studentId,Guid? lessonId,int pageNumber,CancellationToken ct)=>GetCatalogAsync(lessonId,pageNumber,ct);
         public async Task<LearningCatalogView> GetCatalogAsync(Guid? lessonId,int pageNumber,CancellationToken ct)=>new(null,
             Empty ? [] : await db.StudyCatalogLessons.Where(x=>x.IsActive).Select(x=>new LearningLessonView(x.Id,x.Name,x.GradeNumber,x.ExamCode,0,0)).ToArrayAsync(ct),new([],0,1,50),0,[]);

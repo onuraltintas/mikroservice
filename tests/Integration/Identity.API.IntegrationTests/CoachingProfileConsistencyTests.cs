@@ -111,6 +111,74 @@ public sealed class CoachingProfileConsistencyTests
         (await s.Targets.GetAsync(goal.Id))!.ExamMismatch.Should().BeTrue();
     }
 
+    // ---------- E4 #26 (live test 06.11.2026): the student is told before saving what a change removes ----------
+
+    [Fact]
+    public async Task TheStudySettingsTellBeforeSavingWhichPartsOfTheOwnTargetAndTheDiplomaGradeAChangeRemoves()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(12, LearningPurpose.Yks, "SAY", diploma: 85);
+        await s.Onboarding.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null), default);
+        await s.SetNets(("TYT", 90), ("AYT_SAY", 60.5m));
+
+        var same = await s.Settings.PreviewAsync(new(LearningPurpose.Yks, "SAY", null), default);
+        (same.RemovedTargets.Count, same.TeacherGoalMismatch, same.DiplomaGradeRemoved).Should().Be((0, false, (decimal?)null));
+
+        var field = await s.Settings.PreviewAsync(new(LearningPurpose.Yks, "EA", null), default);
+        field.RemovedTargets.Should().Equal("Ankara Üniversitesi · Bilgisayar Mühendisliği", "AYT · Sayısal net hedefin (60,5)");
+        field.DiplomaGradeRemoved.Should().BeNull("the diploma grade stays with YKS");
+
+        var exam = await s.Settings.PreviewAsync(new(LearningPurpose.Yds, null, "English"), default);
+        exam.RemovedTargets.Should().BeEquivalentTo(["Ankara Üniversitesi · Bilgisayar Mühendisliği", "TYT net hedefin (90)", "AYT · Sayısal net hedefin (60,5)"]);
+        exam.DiplomaGradeRemoved.Should().Be(85m);
+
+        // Asking saves nothing; saving then removes exactly what was announced.
+        (await s.PrimaryGoal()).TargetUniversityProgramId.Should().Be(s.Programs["Bilgisayar Mühendisliği"]);
+        (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).DiplomaGrade.Should().Be(85m);
+        await s.SaveSetup(LearningPurpose.Yks, "EA");
+        var goal = await s.PrimaryGoal();
+        (goal.TargetUniversityProgramId, goal.NetTargets.Single().ExamCode).Should().Be(((Guid?)null, "TYT"));
+    }
+
+    [Fact]
+    public async Task TheStudySettingsNameScoreTargetsThatNoLongerFitAndKeepATeachersGoal()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(12, LearningPurpose.Yks, "SAY");
+        await s.Onboarding.SaveTargetAsync(new("score", null, [new("TYT", 400), new("SAY", 420.25m)]), default);
+        (await s.Settings.PreviewAsync(new(LearningPurpose.Yks, "EA", null), default)).RemovedTargets.Should().Equal("YKS Sayısal hedef puanın (420,25)");
+
+        await using var t = await Setup.CreateAsync();
+        await t.Wizard(null, LearningPurpose.Yks, "SAY", status: CoachingEducationStatus.UniversityGraduate);
+        var goal = AcademicGoal.Create(t.Student, "Öğretmenin hedefi", GoalCategory.ExamPreparation, setByTeacherId: Guid.NewGuid());
+        goal.SetCatalogTarget(t.Programs["Bilgisayar Mühendisliği"], null);
+        t.F.Db.Add(goal); t.F.Db.Add(StudentPrimaryGoal.Create(t.Student, goal.Id)); await t.F.Db.SaveChangesAsync(); t.F.Db.ChangeTracker.Clear();
+        var teacher = await t.Settings.PreviewAsync(new(LearningPurpose.Ags, null, null), default);
+        (teacher.RemovedTargets.Count, teacher.TeacherGoalMismatch).Should().Be((0, true), "a teacher's goal is kept; the student is told it no longer matches");
+        (await t.Settings.PreviewAsync(new(LearningPurpose.Yks, "SAY", null), default)).TeacherGoalMismatch.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ProfilimTellsBeforeSavingWhatAGradeChangeRemovesOrLeavesNotFitting()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(12, LearningPurpose.Yks, "SAY", diploma: 85);
+        await s.Onboarding.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null), default);
+
+        (await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.Student, 11, default))
+            .Should().Be(new StudentEducationImpact(false, null, null, null));
+        (await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.Student, 10, default))
+            .Should().Be(new StudentEducationImpact(false, null, 85m, null), "the diploma grade is asked from 11th grade on");
+        var eighth = await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.Student, 8, default);
+        (eighth.ExamNoLongerFits, eighth.Exam, eighth.DiplomaGradeRemoved, eighth.Target)
+            .Should().Be((true, "YKS", (decimal?)85m, "Ankara Üniversitesi · Bilgisayar Mühendisliği"));
+        (await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.UniversityGraduate, null, default))
+            .Should().Be(new StudentEducationImpact(false, null, null, null));
+
+        var stored = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync();
+        (stored.GradeLevel, stored.DiplomaGrade).Should().Be(((int?)12, (decimal?)85m), "asking saves nothing");
+    }
+
     // ---------- #8: the grade on Profilim and the study settings ----------
 
     [Fact]

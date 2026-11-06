@@ -1,3 +1,4 @@
+using FluentAssertions;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Profiles;
 using Coaching.Infrastructure.Data;
@@ -8,12 +9,44 @@ using Npgsql;
 
 namespace Identity.API.IntegrationTests;
 
-public sealed class CoachingProfilePostgresFactAttribute : FactAttribute
+/// <summary>
+/// A coaching test against a disposable local PostgreSQL. E4 review: the attribute is also the trait Category=CoachingProfilePostgres,
+/// which is what CI filters on, so a new test class is run without being added to a list.
+/// </summary>
+[Xunit.Sdk.TraitDiscoverer("Identity.API.IntegrationTests.CoachingProfilePostgresTraitDiscoverer", "Identity.API.IntegrationTests")]
+public sealed class CoachingProfilePostgresFactAttribute : FactAttribute, Xunit.Sdk.ITraitAttribute
 {
+    public const string Category = "CoachingProfilePostgres";
     public CoachingProfilePostgresFactAttribute()
     {
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("COACHING_PROFILE_TEST_POSTGRES")))
             Skip = "Set COACHING_PROFILE_TEST_POSTGRES to a disposable local PostgreSQL instance.";
+    }
+}
+
+// E4 review: CI ran only three hand-picked classes of these tests, so others rotted unseen. Every test with this attribute carries
+// the category CI filters on.
+public sealed class CoachingProfilePostgresTraitDiscoverer : Xunit.Sdk.ITraitDiscoverer
+{
+    public IEnumerable<KeyValuePair<string, string>> GetTraits(Xunit.Abstractions.IAttributeInfo traitAttribute) =>
+        [new("Category", CoachingProfilePostgresFactAttribute.Category)];
+}
+
+public sealed class CoachingProfilePostgresCiTests
+{
+    [Fact]
+    public void EveryCoachingProfilePostgresTestCarriesTheCategoryTheCiStepRuns()
+    {
+        typeof(Xunit.Sdk.ITraitAttribute).IsAssignableFrom(typeof(CoachingProfilePostgresFactAttribute)).Should().BeTrue();
+        var discoverer = typeof(CoachingProfilePostgresFactAttribute).GetCustomAttributes(typeof(Xunit.Sdk.TraitDiscovererAttribute), false);
+        discoverer.Should().ContainSingle();
+        new CoachingProfilePostgresTraitDiscoverer().GetTraits(null!).Should().ContainSingle().Which.Should().Be(new KeyValuePair<string, string>("Category", CoachingProfilePostgresFactAttribute.Category));
+
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (!File.Exists(Path.Combine(root.FullName, "EduPlatform.sln"))) root = root.Parent!;
+        var ci = File.ReadAllText(Path.Combine(root.FullName, ".github", "workflows", "ci.yml"));
+        ci.Should().Contain($"--filter 'Category={CoachingProfilePostgresFactAttribute.Category}'");
+        ci.Should().NotContain("FullyQualifiedName~CoachingLearningSetupPostgresTests", "a hand-written list of classes drifts");
     }
 }
 

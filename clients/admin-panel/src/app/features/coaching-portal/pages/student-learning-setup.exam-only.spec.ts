@@ -20,7 +20,8 @@ const legacy = (purpose: 'School' | 'General' | 'Undecided'): LearningContext =>
 
 describe('KM8 exam-only study purposes: setup wizard', () => {
   async function setup(view: LearningSetupView) {
-    const service = { get: vi.fn(() => of(view)), save: vi.fn((_request: LearningSetupUpdate) => of(view)), catalog: vi.fn(() => of(emptyCatalog)) };
+    const service = { get: vi.fn(() => of(view)), save: vi.fn((_request: LearningSetupUpdate) => of(view)),
+      impact: vi.fn(() => of({ removedTargets: [] as string[], teacherGoalMismatch: false, diplomaGradeRemoved: null })), catalog: vi.fn(() => of(emptyCatalog)) };
     TestBed.configureTestingModule({ imports: [StudentLearningSetupComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
       { provide: CoachingLearningSetupService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: { getTopicOutcomes: vi.fn() } }] });
     const fixture = TestBed.createComponent(StudentLearningSetupComponent); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();

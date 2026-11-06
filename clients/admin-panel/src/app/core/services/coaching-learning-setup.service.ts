@@ -30,6 +30,9 @@ export interface LearningSetupView { context: LearningContext | null; nextStep: 
   purposeNotForEducation?: boolean;
   /** Paket D (#8): the exams that fit the grade on the profile; missing on an older API (then every exam is offered). */
   allowedPurposes?: ExamLearningPurpose[] }
+/** E4 #26: what saving new exam settings would remove (the student's own target parts, the diploma grade); nothing is saved. */
+export interface LearningSetupImpactRequest { purpose: LearningPurpose; primaryScoreType: string | null; foreignLanguage: string | null }
+export interface LearningSetupImpact { removedTargets: string[]; teacherGoalMismatch: boolean; diplomaGradeRemoved: number | null }
 export interface LearningSetupUpdate {
   expectedVersion: number | null; academicYearStart: number; purpose: LearningPurpose; targetExamYear: number | null;
   primaryScoreType: string | null; foreignLanguage: string | null; courses: LearningCourse[]; topics: LearningTopic[]; startingStatusReviewed: boolean;
@@ -46,6 +49,7 @@ export class CoachingLearningSetupService {
   get() { return this.http.get<{ data: LearningSetupView }>(this.url).pipe(map(r => r.data)); }
   getForStudent(studentId:string) { return this.http.get<{data:LearningSetupView}>(`${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study/learning-setup`).pipe(map(r=>r.data)); }
   save(request: LearningSetupUpdate) { return this.http.put<{ data: LearningSetupView }>(this.url, request).pipe(map(r => r.data)); }
+  impact(request: LearningSetupImpactRequest) { return this.http.post<{ data: LearningSetupImpact }>(`${this.url}/impact`, request).pipe(map(r => r.data)); }
   catalog(lessonId: string | null = null, pageNumber = 1) {
     let params = new HttpParams().set('pageNumber', pageNumber);
     if (lessonId) params = params.set('lessonId', lessonId);

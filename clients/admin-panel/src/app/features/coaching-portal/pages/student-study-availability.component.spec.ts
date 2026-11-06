@@ -94,6 +94,37 @@ describe('StudentStudyAvailabilityComponent', () => {
     pending.complete();
     confirm.mockRestore();
   });
+  // E4 #24 (live test 06.11.2026): an invalid save is never silent and never leaves the previous "kaydedildi" on screen.
+  it('clears the previous message on every save and marks the row that is wrong', async () => {
+    const { fixture, component, service } = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    const submit = async () => { el.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges(); };
+    expect(el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
+    await submit();
+    expect(el.textContent).toContain('Çalışma saatlerin kaydedildi.');
+    const end = el.querySelectorAll('input[type="time"]')[1] as HTMLInputElement;
+    end.value = '07:00'; end.dispatchEvent(new Event('input')); fixture.detectChanges(); await fixture.whenStable();
+    expect(component.dirty).toBe(true);
+    await submit();
+    expect(service.saveAvailability).toHaveBeenCalledTimes(1);
+    expect(el.textContent).not.toContain('Çalışma saatlerin kaydedildi.');
+    expect(el.querySelector('[role="alert"]')!.textContent).toContain('Bitiş saati başlangıçtan sonra olmalıdır.');
+    expect(end.getAttribute('aria-invalid')).toBe('true');
+    expect((el.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('keeps the mark on the wrong row when a row above it is removed', async () => {
+    const { fixture, component } = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    component.rows = [...component.rows, { day: 'Tuesday', start: '10:00', end: '09:00', endOfDay: false }]; component.dirty = true;
+    component.save(); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelectorAll('input[type="time"]')[3].getAttribute('aria-invalid')).toBe('true');
+    component.removeRow(0); fixture.detectChanges(); await fixture.whenStable();
+    const times = el.querySelectorAll('input[type="time"]');
+    expect(times.length).toBe(2);
+    expect(times[1].getAttribute('aria-invalid')).toBe('true');
+  });
+
 });
 
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

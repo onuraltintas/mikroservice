@@ -75,4 +75,17 @@ describe('Notification preferences (roadmap O8)', () => {
     expect(api.saveConsents).toHaveBeenCalledWith([{ channel: 'Sms', granted: true }]);
     expect(fixture.nativeElement.textContent).toContain("İYS'ye aktarılmayı bekliyor");
   });
+
+  // E4 #24: every save attempt clears the previous message; a failure says so instead of leaving "kaydedildi" on screen.
+  it('clears the previous confirmation when a later save fails', () => {
+    const { fixture, api, el } = setup();
+    el('pref-email-Exams').click(); fixture.detectChanges();
+    (el('pref-save') as unknown as HTMLButtonElement).click(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="status"]')!.textContent).toContain('Bildirim tercihlerin kaydedildi.');
+    api.save.mockReturnValueOnce(throwError(() => ({ status: 503 })));
+    el('pref-email-Sessions').click(); fixture.detectChanges();
+    (el('pref-save') as unknown as HTMLButtonElement).click(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Bildirim tercihlerin kaydedildi.');
+    expect(fixture.nativeElement.querySelector('[role="alert"]')!.textContent).toContain('Tercihler kaydedilemedi');
+  });
 });

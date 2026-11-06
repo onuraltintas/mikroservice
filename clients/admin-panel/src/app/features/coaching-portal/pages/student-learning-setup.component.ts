@@ -1,11 +1,16 @@
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningExamSession, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
+import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningExamSession, LearningSetupImpact, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
+
+type SetupField = 'purpose' | 'academicYear' | 'examYear' | 'language' | 'yokdilField' | 'courses' | 'reviewed';
+/** E4 #26: the confirmation after a save (it stays when the page moves on to the next section). */
+interface SetupSaved { text: string; removed: string[]; diploma: number | null; teacher: boolean }
+const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
 import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
 import { environment } from '../../../../environments/environment';
@@ -21,11 +26,19 @@ export class StudentLearningSetupComponent implements OnInit {
   private readonly service = inject(CoachingLearningSetupService);
   private readonly planning = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject(ElementRef<HTMLElement>);
   readonly apiUrl = environment.apiUrl;
   readonly state = signal<LearningSetupView | null>(null); readonly step = signal('Purpose');
   readonly loading = signal(false); readonly saving = signal(false); readonly ready = signal(false);
   readonly error = signal<string | null>(null); readonly catalogError = signal<string | null>(null); readonly catalogLoading = signal(false);
   readonly catalog = signal<LearningCatalog | null>(null);
+  /** E4 #24: the fields the last save attempt refused (shown next to each field and in the summary at the top). */
+  readonly fieldErrors = signal<Partial<Record<SetupField, string>>>({});
+  /** E4 #26: what a new exam or field removes, confirmed in the page before saving. */
+  readonly impactAsk = signal<string[] | null>(null);
+  private pendingPurpose: { request: LearningSetupUpdate; impact: LearningSetupImpact } | null = null;
+  readonly saved = signal<SetupSaved | null>(null);
+  readonly savedText = computed(() => this.saved()?.text ?? null);
   // E3 #14: no "Eğitim bilgilerim" step: the education is edited on Profilim (a missing one sends the student there).
   readonly steps = [{ id: 'Purpose', label: 'Çalışma amacım' },
     { id: 'Availability', label: 'Müsaitliğim' }, { id: 'Courses', label: 'Derslerim' }, { id: 'Starting', label: 'Başlangıç durumum' }, { id: 'Preview', label: 'Plan önizlemesi' }];
@@ -76,10 +89,11 @@ export class StudentLearningSetupComponent implements OnInit {
     if (this.saving() || this.loading() || this.catalogLoading()) return;
     if (!await this.canLeaveChildren()) return;
     if (this.dirty) { this.error.set('Adım değiştirmeden önce seçimlerini kaydet veya yeniden yükle.'); return; }
-    this.step.set(step); this.error.set(null);
+    this.step.set(step); this.error.set(null); this.fieldErrors.set({}); this.cancelImpact();
     if (step === 'Courses' || step === 'Starting') this.loadCatalog();
   }
-  changed() { this.dirty = true; }
+  /** E4 review: any change drops a pending confirmation, so "Evet, kaydet" never saves a choice that was not shown. */
+  changed() { this.dirty = true; this.cancelImpact(); }
   examPurpose() { return !!this.purpose; }
   /** KM8: the saved purpose can no longer be chosen; only Profile and Purpose stay open until an exam is saved. */
   purposeRetired() { const state = this.state(); return !!state?.purposeRetired || isRetiredPurpose(state?.context?.purpose); }
@@ -99,21 +113,79 @@ export class StudentLearningSetupComponent implements OnInit {
       ? ` · başvuru ${day(session.applicationStart).slice(0, 5)}–${day(session.applicationEnd)}` : '';
     return `${session.label} · ${day(session.date)}${window}`;
   }
+  fieldError(name: SetupField) { return this.fieldErrors()[name] ?? null; }
+  invalid(name: SetupField) { return this.fieldErrors()[name] ? 'true' : null; }
+  describedBy(name: SetupField) { return this.fieldErrors()[name] ? `setup-${name}-error` : null; }
+  hasFieldErrors() { return Object.keys(this.fieldErrors()).length > 0; }
+  /** E4 #24: every attempt clears the previous message; refused fields are named next to the field and in the summary. */
+  private refuse(section: string, errors: Partial<Record<SetupField, string>>): boolean {
+    this.error.set(null); this.saved.set(null); this.fieldErrors.set(errors); this.cancelImpact();
+    const messages = Object.values(errors);
+    if (!messages.length) { this.wrongCourse.set(null); return false; }
+    this.error.set(`${section} ${messages.join(' ')}`);
+    // E4 review: the focus goes to the first refused field.
+    setTimeout(() => (this.host.nativeElement.querySelector('[aria-invalid="true"]') as HTMLElement | null)?.focus());
+    return true;
+  }
+  /** The course whose priority or difficulty was refused. */
+  readonly wrongCourse = signal<string | null>(null);
+  courseInvalid(lessonId: string) { return this.wrongCourse() === lessonId ? 'true' : null; }
+  courseDescribedBy(lessonId: string) { return this.wrongCourse() === lessonId ? 'setup-courses-error' : null; }
+
+  /**
+   * E4 #26: a new exam, field or language may remove parts of the student's own target (PR 114) and the diploma grade; the server
+   * says which before saving and the student confirms in the page. A teacher's goal is kept (the confirmation shows the mismatch).
+   */
   savePurpose() {
     if (this.loading() || this.saving() || !this.ready()) return;
-    if (!this.purpose) { this.error.set('Hazırlandığın sınavı seç.'); return; }
-    if (!Number.isInteger(this.academicYearStart) || this.academicYearStart < 2000 || this.academicYearStart > 2200
-      || this.examPurpose() && (!Number.isInteger(this.targetExamYear) || this.targetExamYear! < this.academicYearStart || this.targetExamYear! > this.academicYearStart + 5)
-      || this.purpose === 'Yks' && this.primaryScoreType === 'DIL' && !this.foreignLanguage
-      || this.purpose === 'Yokdil' && !this.yokdilField) {
-      this.error.set('Eğitim yılını ve seçtiğin amaca ait sınav bilgilerini tamamla.'); return;
-    }
+    const errors: Partial<Record<SetupField, string>> = {};
+    if (!this.purpose) errors.purpose = 'Hazırlandığın sınavı seç.';
+    if (!Number.isInteger(this.academicYearStart) || this.academicYearStart < 2000 || this.academicYearStart > 2200)
+      errors.academicYear = 'Eğitim yılı başlangıcı 2000 ile 2200 arasında olmalı.';
+    else if (this.examPurpose() && (!Number.isInteger(this.targetExamYear) || this.targetExamYear! < this.academicYearStart || this.targetExamYear! > this.academicYearStart + 5))
+      errors.examYear = `Hedef sınav yılı ${this.academicYearStart} ile ${this.academicYearStart + 5} arasında olmalı.`;
+    if (this.purpose === 'Yks' && this.primaryScoreType === 'DIL' && !this.foreignLanguage) errors.language = 'Yabancı dili seç.';
+    if (this.purpose === 'Yokdil' && !this.yokdilField) errors.yokdilField = 'YÖKDİL alanını seç.';
+    if (this.refuse('Çalışma amacın kaydedilmedi.', errors)) return;
     const previous = this.state()?.context; const scope = this.request([], [], false);
     const sameScope = previous && !this.state()?.missingFields.some(x => x === 'Purpose' || x === 'Catalog')
       && previous.academicYearStart === this.academicYearStart && previous.purpose === this.purpose
       && previous.primaryScoreType === scope.primaryScoreType && previous.foreignLanguage === scope.foreignLanguage;
-    this.persist(this.request(sameScope ? this.courses : [], sameScope ? this.topics : [], !!sameScope && this.startingStatusReviewed), 'Availability');
+    const request = this.request(sameScope ? this.courses : [], sameScope ? this.topics : [], !!sameScope && this.startingStatusReviewed);
+    const scopeChanged = !!previous && (previous.purpose !== scope.purpose || (previous.primaryScoreType ?? null) !== scope.primaryScoreType
+      || (previous.foreignLanguage ?? null) !== scope.foreignLanguage);
+    if (!scopeChanged) { this.persist(request, 'Availability', 'Çalışma amacın kaydedildi.'); return; }
+    this.saving.set(true);
+    this.service.impact({ purpose: scope.purpose, primaryScoreType: scope.primaryScoreType, foreignLanguage: scope.foreignLanguage })
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: impact => {
+          this.saving.set(false);
+          const lines = this.impactLines(impact, previous!.purpose === scope.purpose);
+          if (lines.length) { this.pendingPurpose = { request, impact }; this.impactAsk.set(lines); }
+          else this.persist(request, 'Availability', 'Çalışma amacın kaydedildi.', impact);
+        },
+        error: e => {
+          this.saving.set(false);
+          // E4 review: an API without the check (deployed later) still saves, as before the check existed.
+          if (e?.status === 404) { this.persist(request, 'Availability', 'Çalışma amacın kaydedildi.'); return; }
+          this.error.set(e?.error?.message ?? 'Değişikliğin hedefine etkisi kontrol edilemedi. Bağlantını kontrol edip yeniden dene.');
+        }
+      });
   }
+  confirmImpact() {
+    const pending = this.pendingPurpose; if (!pending) return;
+    this.cancelImpact(); this.persist(pending.request, 'Availability', 'Çalışma amacın kaydedildi.', pending.impact);
+  }
+  cancelImpact() { this.pendingPurpose = null; this.impactAsk.set(null); }
+  private impactLines(impact: LearningSetupImpact, samePurpose: boolean): string[] {
+    const lines: string[] = [];
+    if (impact.removedTargets.length)
+      lines.push(`Hedefin (${impact.removedTargets.join(', ')}) ${samePurpose ? 'bu puan türüne' : 'bu sınava'} uymuyor; kaydedersen kaldırılacak.`);
+    if (impact.diplomaGradeRemoved !== null)
+      lines.push(`Diploma notun (${decimal.format(impact.diplomaGradeRemoved)}) silinecek; diploma notu yalnız YKS'de kullanılıyor.`);
+    return lines;
+  }
+  formatNumber(value: number) { return decimal.format(value); }
   private request(courses = this.courses, topics = this.topics, reviewed = this.startingStatusReviewed): LearningSetupUpdate {
     return { expectedVersion: this.state()?.context?.version ?? null, academicYearStart: this.academicYearStart, purpose: this.purpose as ExamLearningPurpose,
       targetExamYear: this.examPurpose() ? this.targetExamYear : null,
@@ -122,11 +194,15 @@ export class StudentLearningSetupComponent implements OnInit {
       targetExamSessionId: this.sessionChoices().some(x => x.id === this.targetExamSessionId) ? this.targetExamSessionId : null,
       courses, topics, startingStatusReviewed: reviewed };
   }
-  private persist(request: LearningSetupUpdate, next: string) {
+  private persist(request: LearningSetupUpdate, next: string, message: string, impact: LearningSetupImpact | null = null) {
     if (this.saving() || !this.ready()) return;
-    this.saving.set(true); this.error.set(null);
+    this.saving.set(true); this.error.set(null); this.saved.set(null);
     this.service.save(request).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false))).subscribe({
-      next: state => { this.apply(state); this.step.set(next); if (next === 'Starting' || next === 'Courses') this.loadCatalog(); },
+      next: state => {
+        this.apply(state); this.step.set(next); if (next === 'Starting' || next === 'Courses') this.loadCatalog();
+        // E4 #26: a short confirmation that stays as the page moves on, with what was removed.
+        this.saved.set({ text: message, removed: impact?.removedTargets ?? [], diploma: impact?.diplomaGradeRemoved ?? null, teacher: !!impact?.teacherGoalMismatch });
+      },
       error: e => this.error.set(e?.status === 409 ? 'Kurulum başka bir oturumda değişti. Seçimlerin korundu; güncel bilgileri yeniden yükle.' : e?.error?.message ?? 'Kurulum kaydedilemedi. Seçimlerin ekranda korundu.')
     });
   }
@@ -170,13 +246,25 @@ export class StudentLearningSetupComponent implements OnInit {
     } else this.courses = [...this.courses, { lessonId: id, priority: 3, selfReportedDifficulty: null }];
     this.startingStatusReviewed = false; this.changed();
   }
-  saveCourses() { if (!this.courses.length) { this.error.set('En az bir ders seç.'); return; } this.persist(this.request(), 'Starting'); }
+  saveCourses() {
+    const wrong = this.courses.find(x => !Number.isInteger(Number(x.priority)) || x.priority < 1 || x.priority > 5
+      || x.selfReportedDifficulty !== null && x.selfReportedDifficulty !== undefined && String(x.selfReportedDifficulty) !== ''
+        && (!Number.isInteger(Number(x.selfReportedDifficulty)) || x.selfReportedDifficulty < 1 || x.selfReportedDifficulty > 5));
+    if (this.refuse('Derslerin kaydedilmedi.', !this.courses.length ? { courses: 'En az bir ders seç.' }
+      : wrong ? { courses: `${this.lessonName(wrong.lessonId)}: öncelik ve zorluk 1 ile 5 arasında bir tam sayı olmalı.` } : {})) {
+      this.wrongCourse.set(wrong?.lessonId ?? null); return;
+    }
+    this.persist(this.request(), 'Starting', 'Derslerin kaydedildi.');
+  }
   declaration(id: string) { return this.topics.find(x => x.topicId === id)?.declaredStatus ?? ''; }
   setDeclaration(id: string, status: TopicDeclaration | '') {
     this.topics = this.topics.filter(x => x.topicId !== id); if (status) this.topics.push({ topicId: id, declaredStatus: status }); this.changed();
   }
-  finishStarting() { if (!this.startingStatusReviewed) { this.error.set('Başlangıç bilgilerini gözden geçirdiğini onayla.'); return; } this.persist(this.request(), 'Preview'); }
+  finishStarting() {
+    if (this.refuse('Başlangıç durumun kaydedilmedi.', this.startingStatusReviewed ? {} : { reviewed: 'Başlangıç bilgilerini gözden geçirdiğini onayla.' })) return;
+    this.persist(this.request(), 'Preview', 'Başlangıç durumun kaydedildi.');
+  }
   private async canLeaveChildren() { return await this.hours?.canLeavePage() ?? true; }
   async canLeavePage() { return !this.saving() && await this.canLeaveChildren() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş kurulum seçimlerinden vazgeçilsin mi?')); }
-  private readonly feedback = coachingFeedback(undefined, this.error);
+  private readonly feedback = coachingFeedback(this.savedText, this.error);
 }

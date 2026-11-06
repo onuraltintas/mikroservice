@@ -79,6 +79,28 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         return await View(target, profile, ct);
     }
 
+    public async Task<LearningSetupImpact> PreviewAsync(LearningSetupImpactRequest r, CancellationToken ct)
+    {
+        var profile = await RequireStudent(ct);
+        ArgumentNullException.ThrowIfNull(r);
+        if (!LearningPurposes.IsSelectable(r.Purpose)) throw new ArgumentException(LearningPurposes.RetiredPurposeNotice);
+        var context = await Context(profile.UserId).AsNoTracking().SingleOrDefaultAsync(ct);
+        // The same normalisation as a save (field and language codes); the academic and exam years do not matter here.
+        var year = context?.AcademicYearStart ?? 2026;
+        var candidate = StudentLearningContext.Create(profile.UserId, year, r.Purpose, year + 1, r.PrimaryScoreType, r.ForeignLanguage);
+        var scopeChanged = context is null || context.Purpose != candidate.Purpose || context.PrimaryScoreType != candidate.PrimaryScoreType
+            || context.ForeignLanguage != candidate.ForeignLanguage;
+        if (!scopeChanged) return new([], false, null);
+        // As SaveAsync: the student's own primary goal loses what no longer fits; a teacher's goal is kept (Hedefim shows the mismatch).
+        IReadOnlyList<string> removed = []; var teacherMismatch = false;
+        var goalId = await db.Set<StudentPrimaryGoal>().AsNoTracking().Where(x => x.StudentId == profile.UserId).Select(x => (Guid?)x.GoalId).SingleOrDefaultAsync(ct);
+        var goal = goalId is null ? null : await db.AcademicGoals.AsNoTracking().SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == profile.UserId, ct);
+        if (goal is not null && goal.SetByTeacherId is null) removed = await GoalExamFit.DescribeRemovalsAsync(db, goal, candidate, ct);
+        else if (goal is not null) teacherMismatch = !await GoalExamFit.FitsAsync(db, goal, candidate, ct);
+        var diploma = profile.DiplomaGrade is { } grade && !LearningPurposes.DiplomaApplies(candidate.Purpose, profile.EducationStatus, profile.GradeLevel) ? grade : (decimal?)null;
+        return new(removed, teacherMismatch, diploma);
+    }
+
     public async Task<LearningCatalogView> GetCatalogAsync(Guid? lessonId, int pageNumber, CancellationToken ct)
     {
         if (pageNumber is < 1 or > 10000 || lessonId == Guid.Empty) throw new ArgumentException("Geçerli ders ve sayfa seçin.");

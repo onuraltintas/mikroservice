@@ -10,6 +10,12 @@ namespace Identity.Application.ParentLinks;
 public interface IParentLinkService
 {
     Task<Result<ParentLinkCodeIssued>> CreateCodeAsync(Guid studentUserId, CancellationToken ct);
+    /// <summary>
+    /// E4 #18/#21: the student's newest unused code that a newer one has not replaced, if any; Expired when its week is over. Only a
+    /// hash is stored, so the code itself is shown only when it is created; this says that one exists and until when (Profilim and
+    /// a resumed first-login wizard).
+    /// </summary>
+    Task<Result<ParentLinkCodeStatus?>> GetActiveCodeAsync(Guid studentUserId, CancellationToken ct);
     Task<Result<ParentLinkView>> RequestAsync(Guid parentUserId, string code, ParentRelationship relationship, CancellationToken ct);
     Task<Result<IReadOnlyList<ParentLinkView>>> ListAsync(Guid userId, CancellationToken ct);
     Task<Result> ApproveAsync(Guid studentUserId, Guid linkId, CancellationToken ct);
@@ -27,6 +33,8 @@ public interface IParentLinkService
 }
 
 public sealed record ParentLinkCodeIssued(string Code, DateTime ExpiresAt);
+/// <summary>E4: the newest unused code without the code itself (it is never shown again); Expired once it can no longer be used.</summary>
+public sealed record ParentLinkCodeStatus(DateTime CreatedAt, DateTime ExpiresAt, bool Expired);
 
 public sealed record ParentLinkView(Guid Id, Guid ParentUserId, string ParentName, Guid StudentUserId, string StudentName,
     string Relationship, string Status, DateTime RequestedAt, DateTime? VerifiedAt, IReadOnlyList<ParentLinkProductView> Products);
