@@ -78,6 +78,8 @@ public sealed class CoachingStudentOnboardingTests
         await s.Service.SaveTargetAsync(new("school", s.School, null), default);
         foreach (var step in new[] { 4, 5, 6 }) await s.Service.PassStepAsync(step, default);
 
+        // Paket D: YKS fits from 9th grade on, so the grade changes first (that re-opens the exam step).
+        (await s.Personal(grade: 9)).NextStep.Should().Be(2);
         var changed = await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
         changed.NextStep.Should().Be(3);
         changed.SavedSteps.Should().Equal(1, 2, 4, 5, 6);

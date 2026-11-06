@@ -12,7 +12,7 @@ import { NotificationPreference, NotificationPreferencesApi } from '../../../../
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
-  formatScore, nextQuestion, personalRequest, prefill, questions, signature, stepComplete, summary, targetRequest
+  formatScore, nextQuestion, personalRequest, prefill, questions, signature, stepComplete, summary, targetRequest, withAnswer
 } from './onboarding-model';
 
 /** The reminder e-mails the wizard offers (roadmap O8 categories); the defaults are the student's current settings. */
@@ -114,7 +114,7 @@ export class StudentOnboardingComponent implements OnInit {
 
   answer(question: Question, answer: Answer) {
     if (this.busy()) return;
-    this.answers.update(current => ({ ...change(current, question.id), [question.id]: answer }));
+    this.answers.update(current => withAnswer(current, question.id, answer));
     void this.settle();
   }
   choose(question: Question, choice: Choice) { this.answer(question, { value: choice.value, label: choice.label }); }
@@ -288,7 +288,7 @@ export class StudentOnboardingComponent implements OnInit {
 
   readonly loadOwnSchools = (search: string, page: number): Observable<ComboPage> =>
     this.api.schools(this.answers().city?.label ?? '', null, search, page, this.answers().district?.label ?? null).pipe(map(r => ({ total: r.totalCount,
-      items: r.items.map(x => ({ value: x.id, label: x.name, hint: [x.inHomeDistrict ? 'ilçende' : null, x.district].filter(Boolean).join(' · ') || undefined })) })));
+      items: r.items.map(x => ({ value: x.id, label: x.name, hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.type].filter(Boolean).join(' · ') || undefined })) })));
   /** The LGS school step: when the chosen city is the student's own, the schools of their district come first. */
   readonly loadSchools = (search: string, page: number): Observable<ComboPage> => {
     const a = this.answers();

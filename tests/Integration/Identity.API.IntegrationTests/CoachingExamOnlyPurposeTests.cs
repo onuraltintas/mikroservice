@@ -48,6 +48,7 @@ public sealed class CoachingExamOnlyPurposeTests
     public async Task ALegacyPurposeStudentMustChooseAnExam_TheirPlansStayUntouched(LearningPurpose purpose)
     {
         await using var f = await CoachingLearningSetupTests.Fixture.Create();
+        await f.Grade(8);
         // An old school-lesson setup: a published program with a grade-12 lesson the student had chosen.
         var catalog = CurriculumVersion.Create("school-2026", "Okul programı", "v1", 2026, 2026, "Test kaynağı", null); catalog.SetPublished(true);
         var school = StudyCatalogLesson.Create("test", "school-math", "Matematik", 12, null); school.AssignCurriculum(catalog.Id); school.SetActive(true);
@@ -57,7 +58,7 @@ public sealed class CoachingExamOnlyPurposeTests
         var lgsUnit = StudyCatalogUnit.Create("test", "lgs-unit", lgs.Id, "Çarpanlar", 1); lgsUnit.SetActive(true);
         var lgsTopic = StudyCatalogTopic.Create("test", "lgs-topic", lgs.Id, lgsUnit.Id, "Çarpanlar ve katlar", null, 1, 40); lgsTopic.SetActive(true);
         var context = StudentLearningContext.Create(f.Student, 2026, purpose, null, null, null);
-        context.SetEducation(Coaching.Domain.Profiles.CoachingEducationStatus.Student, 12, catalog.Id);
+        context.SetEducation(Coaching.Domain.Profiles.CoachingEducationStatus.Student, 8, catalog.Id);
         context.ReplaceSelections([StudentCoursePreference.Create(context.Id, school.Id, 1, null)],
             [StudentTopicState.Create(context.Id, topic.Id, DeclaredTopicStatus.Studied, f.Student)], true);
         var hours = StudyAvailability.Create(f.Student, "Europe/Istanbul"); hours.ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]);

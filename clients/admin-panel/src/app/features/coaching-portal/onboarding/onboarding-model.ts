@@ -62,6 +62,24 @@ export const DEPENDENTS: Partial<Record<QuestionId, QuestionId[]>> = {
   targetScoreType: ['ydsLevel', 'targetScore'], ydsLevel: ['targetScore'], tytScore: ['fieldScore']
 };
 
+/**
+ * Paket D (#8): the exams that fit a grade (the server's LearningPurposes.FitsEducation): LGS up to 8th grade; YKS, AGS, YDS and
+ * YÖKDİL from 9th grade on and after graduation. Without a grade every exam is offered.
+ */
+export function purposeChoices(grade: number | 'graduate' | null): Choice[] {
+  if (grade === null) return PURPOSES;
+  const middle = grade !== 'graduate' && grade <= 8;
+  return PURPOSES.filter(x => (x.value === 'Lgs') === middle);
+}
+
+/** An answer replaces the old one and clears its dependents; a new grade the chosen exam no longer fits asks the exam again. */
+export function withAnswer(answers: Answers, id: QuestionId, answer: Answer): Answers {
+  let next: Answers = { ...change(answers, id), [id]: answer };
+  const purpose = purposeOf(next);
+  if (id === 'education' && purpose && !purposeChoices(gradeOf(next)).some(x => x.value === purpose)) next = change(next, 'purpose');
+  return next;
+}
+
 /** Removes an answer and everything that depends on it ("Değiştir"). */
 export function change(answers: Answers, id: QuestionId): Answers {
   const next = { ...answers };
@@ -127,7 +145,7 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
   if (typeof grade === 'number' && grade >= 9)
     add({ id: 'ownSchool', step: 1, kind: 'combobox', skipLabel: 'Şimdilik geçeyim', prompt: 'Okulunu listeden seçmek ister misin?', reason: 'İsteğe bağlı. Profilinde tutulur; öğretmenin de görür.' });
 
-  add({ id: 'purpose', step: 2, kind: 'buttons', choices: PURPOSES, prompt: 'Hangi sınava hazırlanıyorsun?', reason: 'Planın, derslerin ve puan hesabın bu sınava göre hazırlanır.' });
+  add({ id: 'purpose', step: 2, kind: 'buttons', choices: purposeChoices(grade), prompt: 'Hangi sınava hazırlanıyorsun?', reason: 'Planın, derslerin ve puan hesabın bu sınava göre hazırlanır.' });
   if (purpose === 'Yks') {
     add({ id: 'yksField', step: 2, kind: 'buttons', choices: YKS_FIELDS, prompt: 'Hangi puan türüyle yerleşmek istiyorsun?', reason: 'Çalışacağın AYT dersleri ve puan hesabın buna göre seçilir.' });
     if (value(answers, 'yksField') === 'DIL')

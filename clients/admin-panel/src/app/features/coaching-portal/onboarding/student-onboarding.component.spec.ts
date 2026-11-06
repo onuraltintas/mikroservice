@@ -133,7 +133,9 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
   });
 
   it('"Değiştir" on the exam asks again only the questions that depend on it, then the target', async () => {
-    const t = await render(view({ status: 'InProgress', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6] }, stepTwo));
+    // Paket D: YKS is offered from 9th grade on, so this student is in 10th grade (with an older LGS answer).
+    const tenth = { ...stepTwo, gradeLevel: 10 };
+    const t = await render(view({ status: 'InProgress', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6] }, tenth));
     (t.el.querySelector('[data-question="purpose"] .ob-me button') as HTMLElement).click(); await t.settle();
     expect(t.el.querySelector('[data-current]')!.textContent).toContain('Hangi sınava hazırlanıyorsun?');
     // Personal answers stay.
@@ -144,7 +146,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     const exam = t.http.expectOne(`${base}/steps/exam`);
     expect(exam.request.body).toEqual({ purpose: 'Yks', primaryScoreType: 'SAY', foreignLanguage: null, targetExamSessionId: null, targetExamYear: 2028,
       diplomaGrade: null, diplomaGradeEstimated: false });
-    exam.flush({ data: view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2, 4, 5, 6] }, { ...stepTwo, purpose: 'Yks', primaryScoreType: 'SAY', targetExamSessionId: null, targetExamYear: 2028 }) });
+    exam.flush({ data: view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2, 4, 5, 6] }, { ...tenth, purpose: 'Yks', primaryScoreType: 'SAY', targetExamSessionId: null, targetExamYear: 2028 }) });
     await t.settle();
     const current = t.el.querySelector('[data-current]')!;
     expect(current.textContent).toContain('Hedefin ne?'); expect(current.textContent).toContain('Bölüm seçeceğim');

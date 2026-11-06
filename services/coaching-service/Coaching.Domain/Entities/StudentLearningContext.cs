@@ -37,6 +37,25 @@ public static class LearningPurposes
     public static bool IsRetired(LearningPurpose purpose) => Enum.IsDefined(purpose) && !IsSelectable(purpose);
     public const string RetiredPurposeNotice = "Çalışma amacın artık desteklenmiyor; hazırlandığın sınavı seç.";
 
+    /// <summary>
+    /// Paket D (#8): does the exam fit the student's education? LGS is for middle school (up to 8th grade); YKS, AGS, YDS and
+    /// YÖKDİL are for high school (9th grade on) and graduates. An unknown education (Profile still missing) fits everything,
+    /// and an older retired purpose is reported on its own (KM8).
+    /// </summary>
+    public static bool FitsEducation(LearningPurpose purpose, CoachingEducationStatus status, int? grade) =>
+        !IsExamPreparation(purpose) || status switch
+        {
+            CoachingEducationStatus.Graduate => purpose != LearningPurpose.Lgs,
+            CoachingEducationStatus.Student when grade is { } g => purpose == LearningPurpose.Lgs ? g <= 8 : g >= 9,
+            _ => true
+        };
+
+    /// <summary>The wizard's rule: the diploma grade (OBP) is asked for YKS in 11th, 12th grade and after graduation.</summary>
+    public static bool DiplomaApplies(LearningPurpose? purpose, CoachingEducationStatus status, int? grade) =>
+        (purpose is null || purpose == LearningPurpose.Yks) && (status == CoachingEducationStatus.Graduate || grade is 11 or 12);
+
+    public const string PurposeNotForEducationNotice = "Seçtiğin sınav sınıfına uymuyor. Profilindeki sınıfa uygun bir sınav seç.";
+
     /// <summary>Practice scopes a net target of this purpose may use.</summary>
     public static IReadOnlyList<string> NetExamCodes(LearningPurpose purpose, string? scoreType) => purpose switch
     {

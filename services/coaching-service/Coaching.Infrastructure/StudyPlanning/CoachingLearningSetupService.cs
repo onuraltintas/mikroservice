@@ -1,4 +1,5 @@
 using Coaching.Application.Authorization;
+using Coaching.Application.Interfaces;
 using Coaching.Application.Profiles;
 using Coaching.Application.StudyPlanning;
 using Coaching.Domain.Entities;
@@ -11,7 +12,7 @@ using Npgsql;
 namespace Coaching.Infrastructure.StudyPlanning;
 
 public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoachingAccessPolicy access,
-    ICoachingAccountDirectory accounts, CoachingStudyPlanAccess? staffAccess = null) : ILearningSetupService
+    ICoachingAccountDirectory accounts, CoachingStudyPlanAccess? staffAccess = null, ICoachingEventPublisher? events = null) : ILearningSetupService
 {
     public async Task<LearningSetupView> GetAsync(CancellationToken ct)
     {
@@ -40,7 +41,12 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         if (!LearningPurposes.IsSelectable(r.Purpose)) throw new ArgumentException(LearningPurposes.RetiredPurposeNotice);
         var candidate = StudentLearningContext.Create(profile.UserId, r.AcademicYearStart, r.Purpose, r.TargetExamYear, r.PrimaryScoreType, r.ForeignLanguage);
         var context = await Context(profile.UserId).SingleOrDefaultAsync(ct);
+        var scopeChanged = context is null || context.Purpose != candidate.Purpose || context.PrimaryScoreType != candidate.PrimaryScoreType
+            || context.ForeignLanguage != candidate.ForeignLanguage;
         if (context is null ? r.ExpectedVersion.HasValue : r.ExpectedVersion != context.Version) throw Conflict();
+        // Paket D (#8): the exam must fit the grade on the profile (the wizard and these settings offer only those).
+        if (!LearningPurposes.FitsEducation(r.Purpose, profile.EducationStatus, profile.GradeLevel))
+            throw new ArgumentException(LearningPurposes.PurposeNotForEducationNotice);
         await ValidateSessionAsync(r, ct);
         var curriculum = await ResolveCurriculum(candidate, ct);
         var lessonQuery = Lessons(candidate).Where(x => x.CurriculumVersionId == (curriculum == null ? (Guid?)null : curriculum.Id) && x.CurriculumVersionId != null);
@@ -59,6 +65,14 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         target.SetEducation(profile.EducationStatus, profile.GradeLevel, curriculum?.Id);
         target.ReplaceSelections(courses, topics, r.StartingStatusReviewed);
         if (context is null) db.StudentLearningContexts.Add(target);
+        if (scopeChanged)
+        {
+            // Paket D (#9), the wizard's rule: a new exam or field removes what no longer fits from the student's own target.
+            if (!r.SkipGoalAlignment) await GoalExamFit.AlignPrimaryAsync(db, profile.UserId, target, events, ct);
+            // The diploma grade belongs to YKS only (the wizard drops it for every other exam).
+            if (profile.DiplomaGrade is not null && !LearningPurposes.DiplomaApplies(target.Purpose, profile.EducationStatus, profile.GradeLevel))
+                (await db.CoachingStudentProfiles.SingleAsync(x => x.UserId == profile.UserId, ct)).SetDiplomaGrade(null, false);
+        }
         try { await db.SaveChangesAsync(ct); }
         catch (DbUpdateException e) when (e.InnerException is PostgresException { SqlState: "23505" }) { throw Conflict(); }
         return await View(target, profile, ct);
@@ -110,7 +124,8 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         .Include(x => x.CoursePreferences).Include(x => x.TopicStates).Where(x => x.StudentUserId == student);
 
     // KM8: only exam purposes have lessons; the grade-based School/General branches are gone with the school lessons.
-    private IQueryable<StudyCatalogLesson> Lessons(StudentLearningContext c)
+    private IQueryable<StudyCatalogLesson> Lessons(StudentLearningContext c) => Lessons(db, c);
+    private static IQueryable<StudyCatalogLesson> Lessons(CoachingDbContext db, StudentLearningContext c)
     {
         var query = db.StudyCatalogLessons.AsNoTracking().Where(x => x.IsActive);
         var yksTopics=YksCatalogEligibility.Topics(db,c);
@@ -164,9 +179,10 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             && (t.ParentId == null || db.StudyCatalogTopics.Any(parent => parent.Id == t.ParentId && parent.IsActive))
         select t;
 
-    private Task<CurriculumVersion?> ResolveCurriculum(StudentLearningContext c, CancellationToken ct)
+    private Task<CurriculumVersion?> ResolveCurriculum(StudentLearningContext c, CancellationToken ct) => ResolveCurriculum(db, c, ct);
+    private static Task<CurriculumVersion?> ResolveCurriculum(CoachingDbContext db, StudentLearningContext c, CancellationToken ct)
     {
-        var lessons = Lessons(c);
+        var lessons = Lessons(db, c);
         return db.CurriculumVersions.AsNoTracking().Where(x => x.IsPublished && x.ValidFromYear <= c.AcademicYearStart
             && x.ValidToYear >= c.AcademicYearStart && lessons.Any(l => l.CurriculumVersionId == x.Id))
             .OrderByDescending(x => x.ValidFromYear).ThenBy(x => x.Code).FirstOrDefaultAsync(ct);
@@ -177,8 +193,10 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var missing = new List<string>(); var warnings = new List<string>();
         if (!p.IsEducationComplete) missing.Add("Profile");
         var sessions = await SessionsAsync(ct);
-        if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions }; }
-        if (LearningPurposes.IsRetired(c.Purpose) || p.EducationStatus != c.EducationStatus || p.GradeLevel != c.GradeLevel) missing.Add("Purpose");
+        var allowed = Enum.GetValues<LearningPurpose>().Where(x => LearningPurposes.IsSelectable(x) && LearningPurposes.FitsEducation(x, p.EducationStatus, p.GradeLevel)).ToArray();
+        if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions, AllowedPurposes = allowed }; }
+        var fits = LearningPurposes.FitsEducation(c.Purpose, p.EducationStatus, p.GradeLevel);
+        if (LearningPurposes.IsRetired(c.Purpose) || !fits || p.EducationStatus != c.EducationStatus || p.GradeLevel != c.GradeLevel) missing.Add("Purpose");
         var hours = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == p.UserId, ct);
         if (hours is null || hours.Windows.Count == 0) missing.Add("Availability");
         var curriculum = await ResolveCurriculum(c, ct);
@@ -192,7 +210,21 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         if (await Topics(lessonQuery,c).AnyAsync(x => Enumerable.Contains(ids, x.LessonId) && x.EstimatedMinutes == null, ct))
             warnings.Add("Seçilen derslerde çalışma süresi eksik konular var; önizlemede süre girin.");
         if (missing.Contains("Catalog")) warnings.Add("Uygun yayımlanmış katalog eksik veya değişmiş. Mevcut planlarınıza erişebilirsiniz.");
-        return new(c, missing.FirstOrDefault() ?? "Preview", missing.Count == 0, missing, warnings) { ExamSessions = sessions };
+        return new(c, missing.FirstOrDefault() ?? "Preview", missing.Count == 0, missing, warnings)
+            { ExamSessions = sessions, AllowedPurposes = allowed, PurposeNotForEducation = !fits && LearningPurposes.IsSelectable(c.Purpose) };
+    }
+
+    /// <summary>
+    /// Paket D (#8): the grade changed on the profile (Profilim, or the institution): the study settings follow it and the
+    /// curriculum is resolved again as a save of the settings would. Whether the exam still fits is shown by the settings
+    /// (<see cref="LearningSetupView.PurposeNotForEducation"/>); nothing is saved here.
+    /// </summary>
+    public static async Task SyncEducationAsync(CoachingDbContext db, CoachingStudentProfile profile, CancellationToken ct)
+    {
+        var context = await db.StudentLearningContexts.SingleOrDefaultAsync(x => x.StudentUserId == profile.UserId, ct);
+        if (context is null || context.EducationStatus == profile.EducationStatus && context.GradeLevel == profile.GradeLevel) return;
+        context.SetEducation(profile.EducationStatus, profile.GradeLevel, LearningPurposes.IsRetired(context.Purpose)
+            ? context.CurriculumVersionId : (await ResolveCurriculum(db, context, ct))?.Id);
     }
 
     private async Task<CoachingStudentProfile> RequireStudent(CancellationToken ct)

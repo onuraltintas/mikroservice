@@ -121,7 +121,7 @@ public sealed class CoachingProfileConsistencyTests
         updated.DiplomaGrade.Should().Be(80m, "YKS keeps the diploma grade in 12th grade");
         var context = await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync();
         (context.EducationStatus, context.GradeLevel).Should().Be((CoachingEducationStatus.Student, (int?)12));
-        var setup = await s.Setup.GetAsync(default);
+        var setup = await s.Settings.GetAsync(default);
         setup.MissingFields.Should().NotContain("Purpose");
         setup.PurposeNotForEducation.Should().BeFalse();
     }
@@ -135,13 +135,13 @@ public sealed class CoachingProfileConsistencyTests
 
         updated.GradeLevel.Should().Be(9);
         (await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync()).GradeLevel.Should().Be(9);
-        var setup = await s.Setup.GetAsync(default);
+        var setup = await s.Settings.GetAsync(default);
         setup.MissingFields.Should().Contain("Purpose");
         setup.PurposeNotForEducation.Should().BeTrue();
         setup.IsReady.Should().BeFalse();
         // Choosing an exam that fits the new grade clears the reason.
         await s.SaveSetup(LearningPurpose.Yks, "SAY");
-        (await s.Setup.GetAsync(default)).PurposeNotForEducation.Should().BeFalse();
+        (await s.Settings.GetAsync(default)).PurposeNotForEducation.Should().BeFalse();
     }
 
     [Theory]
@@ -231,8 +231,8 @@ public sealed class CoachingProfileConsistencyTests
         private Recorder Events => new(Published);
         private CoachingAccessPolicy Access => new(F.Actor);
 
-        public CoachingLearningSetupService Setup => new(F.Db, Access, F.Accounts, null, Events);
-        public CoachingStudentOnboardingService Onboarding => new(F.Db, Access, F.Accounts, Setup, Places, null, null, Events);
+        public CoachingLearningSetupService Settings => new(F.Db, Access, F.Accounts, null, Events);
+        public CoachingStudentOnboardingService Onboarding => new(F.Db, Access, F.Accounts, Settings, Places, null, null, Events);
         public CoachingProfileStore Store => new(F.Db, F.Accounts, Events, null, Places);
         public CoachingGoalTargetService Targets => new(F.Db, Access, Events);
 
@@ -287,7 +287,7 @@ public sealed class CoachingProfileConsistencyTests
             var context = await F.Db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x => x.StudentUserId == Student);
             var year = context?.AcademicYearStart ?? (DateTime.UtcNow.Month >= 9 ? DateTime.UtcNow.Year : DateTime.UtcNow.Year - 1);
             var language = purpose is LearningPurpose.Yds or LearningPurpose.Yokdil || field == "DIL" ? "English" : null;
-            await Setup.SaveAsync(new(context?.Version, year, purpose, Year, field, language, [], [], false), default);
+            await Settings.SaveAsync(new(context?.Version, year, purpose, Year, field, language, [], [], false), default);
             F.Db.ChangeTracker.Clear();
         }
 

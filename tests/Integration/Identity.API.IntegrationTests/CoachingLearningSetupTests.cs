@@ -43,6 +43,7 @@ public sealed class CoachingLearningSetupTests
     public async Task PublishedCatalogIsScoped_UnknownDurationsAreVisible_AndStatementsAreNotMastery()
     {
         await using var f = await Fixture.Create();
+        await f.Grade(8);
         var catalog = CurriculumVersion.Create("test-2026", "Test programı", "v1", 2026, 2026, "Test kaynağı", null);
         catalog.SetPublished(true);
         // KM8: only exam lessons; a lesson of another exam is out of scope.
@@ -108,6 +109,13 @@ public sealed class CoachingLearningSetupTests
             var profile = await f.Db.CoachingStudentProfiles.SingleAsync();
             profile.UpdateEducation(CoachingEducationStatus.Student, 12, null, null, null, null, null, null);
             await f.Db.SaveChangesAsync(); return f;
+        }
+        /// <summary>Paket D: the exam must fit the grade (LGS up to 8th grade), so an LGS test sets a middle-school grade first.</summary>
+        public async Task Grade(int grade)
+        {
+            var profile = await Db.CoachingStudentProfiles.SingleAsync();
+            profile.UpdateEducation(CoachingEducationStatus.Student, grade, null, null, null, null, null, null);
+            await Db.SaveChangesAsync(); Db.ChangeTracker.Clear();
         }
         public ValueTask DisposeAsync() => Inner.DisposeAsync();
     }

@@ -38,6 +38,11 @@ public sealed record UpdateCoachingStudentProfile(int ExpectedVersion, CoachingE
     public decimal? DiplomaGrade { get; init; }
     public bool DiplomaGradeEstimated { get; init; }
     public bool ClearDiplomaGrade { get; init; }
+    /// <summary>
+    /// Paket D (#7): the student's own school from the school catalog, as in the wizard; it sets the school's name, city,
+    /// district and type from the catalog. Null keeps the school fields as sent (an older typed school stays until then).
+    /// </summary>
+    public Guid? SchoolId { get; init; }
 }
 
 public sealed record UpdateCoachingTeacherProfile(int ExpectedVersion, string? Title,

@@ -1,4 +1,5 @@
 using Coaching.Application.Profiles;
+using Coaching.Domain.Entities;
 using Coaching.Domain.Profiles;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Contracts.Coaching;
@@ -72,16 +73,41 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             { throw new BusinessRuleException("Profiles.LocationsUnavailable", "Şehir listesi şu an yüklenemedi. Biraz sonra yeniden deneyin."); }
             if (province is null || district is null) throw new ArgumentException("Şehri ve ilçeyi listeden seçin.");
         }
+        // Paket D (#7): a school picked from the catalog sets its name, city, district and type as in the wizard.
+        if (request.SchoolId is { } schoolId)
+        {
+            var school = await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == schoolId && x.IsActive, ct)
+                ?? throw new ArgumentException("Okulunu listeden seç.");
+            request = request with { SchoolName = school.Name, SchoolCity = school.City, SchoolDistrict = school.District, SchoolType = school.InstitutionType };
+        }
         // Validate the full replacement before changing a tracked entity.
         var validated = CoachingStudentProfile.Create(userId);
         Apply(validated, request);
         if (request.DiplomaGrade is not null) validated.SetDiplomaGrade(request.DiplomaGrade, request.DiplomaGradeEstimated);
+        var educationChanged = profile.EducationStatus != request.EducationStatus || profile.GradeLevel != request.GradeLevel;
         Apply(profile, request);
         if (province is not null) profile.SetHome(province.Id, province.Name, district!.Id, district.Name);
         if (request.DiplomaGrade is not null) profile.SetDiplomaGrade(request.DiplomaGrade, request.DiplomaGradeEstimated);
         else if (request.ClearDiplomaGrade) profile.SetDiplomaGrade(null, false);
+        await FollowEducationAsync(profile, educationChanged, ct);
         await db.SaveChangesAsync(ct);
         return profile;
+    }
+
+    /// <summary>
+    /// Paket D (#8): the profile and the study settings never silently diverge. A changed grade goes into the study settings (the
+    /// curriculum is resolved again); the settings then say when the exam no longer fits the grade. As in the wizard, the diploma
+    /// grade is kept only where it is asked (YKS in 11th, 12th grade and after graduation), and an open wizard asks its exam
+    /// step again.
+    /// </summary>
+    private async Task FollowEducationAsync(CoachingStudentProfile profile, bool educationChanged, CancellationToken ct)
+    {
+        var purpose = await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == profile.UserId).Select(x => (LearningPurpose?)x.Purpose).SingleOrDefaultAsync(ct);
+        if (profile.DiplomaGrade is not null && !LearningPurposes.DiplomaApplies(purpose, profile.EducationStatus, profile.GradeLevel))
+            profile.SetDiplomaGrade(null, false);
+        if (!educationChanged) return;
+        await Coaching.Infrastructure.StudyPlanning.CoachingLearningSetupService.SyncEducationAsync(db, profile, ct);
+        if (profile.OnboardingCompletedAt is null && profile.HasOnboardingStep(2)) profile.ReopenOnboardingStep(2);
     }
 
     private static void Apply(CoachingStudentProfile profile, UpdateCoachingStudentProfile request)
@@ -209,8 +235,10 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             if (teacherUserId.HasValue) await RequireAssignmentAccountsAsync(teacherUserId.Value, studentUserId, institutionId, ct);
             var assignments = await db.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == studentUserId
                 && x.InstitutionId == institutionId && x.IsActive).ToListAsync(ct);
+            var educationChanged = profile.EducationStatus != CoachingEducationStatus.Student || profile.GradeLevel != gradeLevel;
             profile.UpdateEducation(CoachingEducationStatus.Student, gradeLevel, profile.SchoolName, profile.SchoolCity,
                 profile.SchoolDistrict, profile.SchoolType, profile.ClassBranch, null);
+            await FollowEducationAsync(profile, educationChanged, ct);
             // A student can have several teachers in the institution; choosing a teacher adds that link and a grade
             // change alone leaves the links as they are. A link is ended on its own (EndInstitutionTeacherLinkAsync).
             if (teacherUserId.HasValue && !assignments.Any(x => x.TeacherUserId == teacherUserId))

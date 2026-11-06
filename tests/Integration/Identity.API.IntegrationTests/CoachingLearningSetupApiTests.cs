@@ -16,6 +16,7 @@ public sealed class CoachingLearningSetupApiTests
     public async Task OwnSetupEndpoints_DoNotAcceptStudentId_AndMapValidationAndConflict()
     {
         await using var f = await CoachingLearningSetupTests.Fixture.Create();
+        await f.Grade(8);
         var controller = new LearningSetupController(f.Service);
         Assert.Equal("Student", typeof(LearningSetupController).GetCustomAttributes(typeof(AuthorizeAttribute), true).Cast<AuthorizeAttribute>().Single().Roles);
         Assert.IsType<OkObjectResult>(await controller.Get(default));

@@ -41,7 +41,9 @@ export interface OnboardingTargetStep { kind: 'none' | 'school' | 'program' | 's
 export interface OnboardingOption { value: string; label?: string; count: number }
 export interface OnboardingSchoolOption { id: string; name: string; district: string | null; minimumScore: number | null; scoreYear: number | null;
   /** In the student's own district (those come first). */
-  inHomeDistrict?: boolean }
+  inHomeDistrict?: boolean;
+  /** Paket D (#7): the catalog's school type (Anadolu Lisesi, Fen Lisesi, …). */
+  type?: string | null }
 export interface OnboardingProgramOption {
   id: string; name: string; university: string; faculty: string | null; scoreType: string | null; programType: string | null;
   minimumScore: number | null; rank: number | null; scoreYear: number | null; educationType: string | null; scholarship: string | null; language: string | null;

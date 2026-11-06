@@ -9,6 +9,8 @@
     <p *ngIf="error()" role="alert" class="mt-2 text-sm text-red-600 dark:text-red-300">{{ error() }}</p>
     <p *ngIf="success()" role="status" class="mt-2 text-sm text-emerald-700 dark:text-emerald-300">{{ success() }}</p>
     <ng-container *ngIf="target() as current">
+      <!-- Paket D (#9): a teacher's goal stays as it is when the exam changes; both sides see that it no longer matches. -->
+      <p *ngIf="current.examMismatch" role="status" data-testid="goal-exam-mismatch" class="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">{{ staffStudentId ? 'Bu hedef, öğrencinin çalışma tercihlerindeki sınavla artık eşleşmiyor. Hedefi güncelleyin.' : current.canEdit ? 'Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor. Hedefini yeniden belirle.' : 'Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor. Hedefini öğretmenin belirledi; değiştirmek için öğretmenine yaz.' }}</p>
       <section aria-label="Net hedefi" class="my-3 rounded-lg border p-3">
         <h4>Deneme net hedeflerin</h4>
         <div class="grid gap-3 sm:grid-cols-2">@for(metric of current.netTargets || [];track metric.examCode){<article class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-950"><strong>{{(metric.examCode || '').replace('AYT_','AYT ').replace('YDT_EN','YDT İngilizce')}}</strong><p class="text-2xl font-bold">{{metric.targetNet}} net</p></article>}</div><p>Gelişim raporunda yalnız aynı sınav kapsamındaki denemelerle karşılaştırılır. Yerleştirme puanı veya kabul garantisi değildir.</p>

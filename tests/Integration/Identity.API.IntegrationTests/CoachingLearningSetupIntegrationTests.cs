@@ -14,6 +14,7 @@ public sealed class CoachingLearningSetupIntegrationTests
     public async Task PersonalizedPreviewRequiresCompleteAndCurrentContext_WhileLegacyReadIsUnaffected()
     {
         await using var f = await CoachingLearningSetupTests.Fixture.Create();
+        await f.Grade(8);
         var service = new CoachingAutomaticStudyPlanPreviewService(f.Db, new CoachingAccessPolicy(f.Actor), f.Service);
         var request = new AutomaticStudyPreviewRequest(new(2026, 10, 19), 7, 0, [new(Guid.NewGuid(), 30)], 0);
         var error = await Assert.ThrowsAsync<BusinessRuleException>(() => service.PreviewAsync(request));
