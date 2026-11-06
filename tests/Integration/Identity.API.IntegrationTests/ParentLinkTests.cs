@@ -75,7 +75,8 @@ public sealed class ParentLinkTests
         var first = (await links.CreateCodeAsync(student.Id, default)).Value;
         var active = (await links.GetActiveCodeAsync(student.Id, default)).Value!;
         (active.ExpiresAt, active.CreatedAt).Should().Be((first.ExpiresAt, clock.GetUtcNow().UtcDateTime));
-        typeof(ParentLinkCodeStatus).GetProperties().Select(x => x.Name).Should().BeEquivalentTo(["CreatedAt", "ExpiresAt"], "the code itself is never shown again");
+        typeof(ParentLinkCodeStatus).GetProperties().Select(x => x.Name).Should().BeEquivalentTo(["CreatedAt", "ExpiresAt", "Expired"], "the code itself is never shown again");
+        active.Expired.Should().BeFalse();
 
         clock.Now = clock.Now.AddHours(1);
         var second = (await links.CreateCodeAsync(student.Id, default)).Value;
@@ -87,7 +88,11 @@ public sealed class ParentLinkTests
         (await links.GetActiveCodeAsync(student.Id, default)).Value.Should().BeNull("a used code is no longer active");
         await links.CreateCodeAsync(student.Id, default);
         clock.Now = clock.Now.AddDays(8);
-        (await links.GetActiveCodeAsync(student.Id, default)).Value.Should().BeNull("an expired code is no longer active");
+        // E4 review: an expired unused code is reported as expired ("Veli kodun süresi doldu"), not as never made.
+        var expired = (await links.GetActiveCodeAsync(student.Id, default)).Value!;
+        expired.Expired.Should().BeTrue();
+        await links.CreateCodeAsync(student.Id, default);
+        (await links.GetActiveCodeAsync(student.Id, default)).Value!.Expired.Should().BeFalse("a new code replaces the expired one");
         (await links.GetActiveCodeAsync(parent.Id, default)).Error.Code.Should().Be("ParentLink.Forbidden");
     }
 

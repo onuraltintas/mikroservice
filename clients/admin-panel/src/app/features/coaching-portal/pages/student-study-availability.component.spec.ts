@@ -113,6 +113,18 @@ describe('StudentStudyAvailabilityComponent', () => {
     expect((el.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
   });
 
+  it('keeps the mark on the wrong row when a row above it is removed', async () => {
+    const { fixture, component } = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    component.rows = [...component.rows, { day: 'Tuesday', start: '10:00', end: '09:00', endOfDay: false }]; component.dirty = true;
+    component.save(); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelectorAll('input[type="time"]')[3].getAttribute('aria-invalid')).toBe('true');
+    component.removeRow(0); fixture.detectChanges(); await fixture.whenStable();
+    const times = el.querySelectorAll('input[type="time"]');
+    expect(times.length).toBe(2);
+    expect(times[1].getAttribute('aria-invalid')).toBe('true');
+  });
+
 });
 
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

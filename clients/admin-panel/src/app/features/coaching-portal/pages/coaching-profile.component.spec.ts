@@ -482,7 +482,38 @@ describe('Profilim feedback and warnings (E4 #23, #24)', () => {
     expect(done).toContain('Eğitim durumun: Ortaokul öğrencisiyim, 8. sınıf'); expect(done).toContain('Okulun ve şuben silindi');
     const notice = t.el.querySelector('[data-testid="grade-purpose-notice"]')!;
     expect(notice.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
-    expect(notice.textContent).toContain('Hacettepe Üniversitesi · Bilgisayar Mühendisliği');
+    expect(notice.textContent).toContain('Hedefin (Hacettepe Üniversitesi · Bilgisayar Mühendisliği) yeni sınavına uymazsa, sınavını değiştirdiğinde kaldırılır.');
+  });
+
+  it('review: while the confirmation is open the form cannot change, so the confirmed save is what was shown', async () => {
+    const t = await student(twelfth, { examAsksDiploma: true });
+    await t.choose('gradeLevel', '10. sınıf'); await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: 85, target: null } }); await t.settle();
+    expect((t.el.querySelector('form fieldset') as HTMLFieldSetElement).disabled).toBe(true);
+    await t.click('[data-testid="save-consequences"]', 'Vazgeç');
+    expect((t.el.querySelector('form fieldset') as HTMLFieldSetElement).disabled).toBe(false);
+    // Reloading the profile also drops a pending confirmation.
+    await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: 85, target: null } }); await t.settle();
+    t.component.cancelSave(); await t.settle();
+    expect(t.el.querySelector('[data-testid="save-consequences"]')).toBeNull();
+  });
+
+  it('review: an API without the impact check (404) still saves, after the school warning', async () => {
+    const t = await student(twelfth);
+    await t.choose('gradeLevel', '11. sınıf'); await t.submit();
+    t.http.expectOne('/api/coaching/profiles/me/student/impact').flush({}, { status: 404, statusText: 'Not Found' }); await t.settle();
+    t.http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...twelfth, version: 8, gradeLevel: 11 } }); await t.settle();
+    t.http.expectOne('/api/coaching/study-planning/setup').flush({ data: { purposeNotForEducation: false } }); await t.settle();
+    expect(t.el.textContent).toContain('Profilin kaydedildi');
+
+    TestBed.resetTestingModule();
+    const u = await student({ ...twelfth, version: 8 });
+    await u.choose('educationStage', 'Üniversite öğrencisiyim'); await u.submit();
+    u.http.expectOne('/api/coaching/profiles/me/student/impact').flush({}, { status: 404, statusText: 'Not Found' }); await u.settle();
+    expect(u.el.querySelector('[data-testid="save-consequences"]')!.textContent).toContain('sınıf, okul ve şube bilgin silinecek');
+    await u.click('[data-testid="save-consequences"]', 'Evet, kaydet');
+    u.http.expectOne('/api/coaching/profiles/me/student');
   });
 
   it('#24: an impact check that fails says so and saves nothing', async () => {

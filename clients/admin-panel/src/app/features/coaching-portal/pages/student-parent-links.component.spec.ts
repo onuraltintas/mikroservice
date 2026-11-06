@@ -56,4 +56,15 @@ describe('StudentParentLinksComponent', () => {
     expect(Array.from(el.querySelectorAll('button')).map(x => x.textContent?.trim())).toContain('Veli kodu oluştur');
     expect(el.textContent).not.toContain('Aktif bir veli kodun var');
   });
+
+  it('says when the earlier code expired and creates a new one without asking', async () => {
+    const service = { getLinks: vi.fn(() => of([])), getActiveCode: vi.fn(() => of({ expiresAt: '2026-11-01T09:00:00Z', createdAt: '2026-10-25T09:00:00Z', expired: true })),
+      createCode: vi.fn(() => of({ code: 'WXYZ-6789', expiresAt: '2026-11-14T09:00:00Z' })) };
+    const fixture = setup(service); const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Veli kodunun süresi doldu (01.11.2026)');
+    expect(el.textContent).not.toContain('Aktif bir veli kodun var');
+    (Array.from(el.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Veli kodu oluştur') as HTMLElement).click();
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(service.createCode).toHaveBeenCalledTimes(1);
+  });
 });

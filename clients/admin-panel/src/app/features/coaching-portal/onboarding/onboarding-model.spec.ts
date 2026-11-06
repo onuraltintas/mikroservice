@@ -238,6 +238,8 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(parentAnswer(null, [{ parentName: 'Ayşe Veli', status: 'Verified' }, { parentName: 'Can Veli', status: 'Pending' }]))
       .toBe('Velimle bağlantım var: Ayşe Veli, Can Veli (onayımı bekliyor)');
     expect(parentAnswer(null, [])).toBe('Şimdilik geç');
+    expect(parentAnswer({ expiresAt: '2026-11-01T09:00:00Z', expired: true }, [])).toBe('Veli kodumun süresi doldu (01.11.2026)');
+    expect(inviteAnswer([], 1)).toBe('Sonra bakarım');
     expect(emailAnswer([{ label: 'Çalışma planı hatırlatmaları', email: true }, { label: 'Seanslar', email: false }])).toBe('Çalışma planı hatırlatmaları');
     expect(emailAnswer([{ label: 'Seanslar', email: false }])).toBe('E-posta istemiyorum');
     // As on Profilim: the code's expiry and that it works once.

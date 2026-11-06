@@ -216,6 +216,47 @@ describe('StudentLearningSetupComponent', () => {
     expect(t.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Çalışma amacın kaydedildi.');
   });
 
+  it('review: changing the form while the confirmation is open drops it, so a stale choice is never saved', async () => {
+    const t = await purposeForm();
+    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
+    t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
+    expect(t.el.querySelector('[data-testid="target-impact"]')).not.toBeNull();
+    const field = t.el.querySelector('select[name="scoreType"]') as HTMLSelectElement;
+    field.value = 'SOZ'; field.dispatchEvent(new Event('change')); await t.settle();
+    expect(t.el.querySelector('[data-testid="target-impact"]')).toBeNull();
+    expect(t.service.save).not.toHaveBeenCalled();
+  });
+
+  it('review: an API without the impact check (404) still saves', async () => {
+    const t = await purposeForm();
+    t.service.impact.mockReturnValue(throwError(() => ({ status: 404 })));
+    t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
+    expect(t.service.save).toHaveBeenCalledTimes(1);
+    expect(t.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Çalışma amacın kaydedildi.');
+  });
+
+  it('review: a refused course or starting step names the field next to it', async () => {
+    const lessons = { curriculum: null, lessons: [{ id: 'lesson', name: 'Matematik', gradeNumber: null, examCode: 'TYT', topicCount: 3, missingDurationCount: 0 }],
+      topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] } as LearningCatalog;
+    const t = await setup({ ...yksView, nextStep: 'Courses', context: { ...yks, coursePreferences: [{ lessonId: 'lesson', priority: 1, selfReportedDifficulty: null }] } });
+    t.service.catalog.mockReturnValue(of(lessons)); t.component.loadCatalog(); t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
+    const el = t.fixture.nativeElement as HTMLElement;
+    t.component.courses[0].priority = 9; t.component.saveCourses(); t.fixture.detectChanges();
+    expect(t.component.error()).toContain('Derslerin kaydedilmedi.');
+    const priority = el.querySelector('input[name="priority-lesson"]')!;
+    expect(priority.getAttribute('aria-invalid')).toBe('true');
+    expect(priority.getAttribute('aria-describedby')).toBe('setup-courses-error');
+    expect(t.service.save).not.toHaveBeenCalled();
+
+    TestBed.resetTestingModule();
+    const s2 = await setup({ ...yksView, nextStep: 'Starting', context: yks });
+    s2.component.finishStarting(); s2.fixture.detectChanges();
+    const box = (s2.fixture.nativeElement as HTMLElement).querySelector('input[name="startingReviewed"]')!;
+    expect(box.getAttribute('aria-invalid')).toBe('true');
+    expect((s2.fixture.nativeElement as HTMLElement).querySelector('#' + box.getAttribute('aria-describedby'))!.textContent).toContain('gözden geçirdiğini onayla');
+    expect(s2.component.error()).toContain('Başlangıç durumun kaydedilmedi.');
+  });
+
   it('#24: an invalid year is never swallowed: the old message goes, the field and a summary say why', async () => {
     const t = await purposeForm();
     expect(t.el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
@@ -228,7 +269,9 @@ describe('StudentLearningSetupComponent', () => {
     await t.submit();
     expect(t.service.save).toHaveBeenCalledTimes(1);
     expect(t.el.querySelector('[data-testid="setup-saved"]')).toBeNull();
-    expect(t.el.querySelector('[data-testid="setup-error-summary"]')!.textContent).toContain('Hedef sınav yılı 2026 ile 2031 arasında olmalı.');
+    expect(t.el.querySelector('[data-testid="setup-error-summary"]')!.textContent).toContain('Çalışma amacın kaydedilmedi. Hedef sınav yılı 2026 ile 2031 arasında olmalı.');
+    await new Promise(resolve => setTimeout(resolve));
+    expect(document.activeElement).toBe(year);
     expect(year.getAttribute('aria-invalid')).toBe('true');
     expect(t.el.querySelector('#' + year.getAttribute('aria-describedby'))!.textContent).toContain('2026 ile 2031');
     expect((t.el.querySelector('form button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
