@@ -587,6 +587,42 @@ describe('Profilim (F2 #25)', () => {
     expect(t.http.expectOne('/api/coaching/profiles/me/student').request.body).toMatchObject({ homeProvinceId: '34', homeDistrictId: '3402' });
   });
 
+  // F2 review (M4): a failed profile load can be retried (students, teachers and staff).
+  for (const role of ['Student', 'Teacher'] as const) {
+    it(`retries a failed profile load (${role})`, async () => {
+      TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+      const fixture = TestBed.createComponent(CoachingProfileComponent);
+      fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', role);
+      fixture.detectChanges(); await fixture.whenStable();
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+      http.expectOne('/api/coaching/profiles/me').flush({}, { status: 503, statusText: 'Unavailable' });
+      fixture.detectChanges(); await fixture.whenStable();
+      const card = (fixture.nativeElement as HTMLElement).querySelector('.profile-card')!;
+      expect(card.querySelector('[role="alert"]')).not.toBeNull();
+      const retry = Array.from(card.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Yeniden dene') as HTMLButtonElement;
+      expect(retry).toBeTruthy();
+      retry.click(); await fixture.whenStable(); await new Promise(r => setTimeout(r));
+      http.expectOne('/api/coaching/profiles/me').flush({ data: role === 'Student' ? { student: tenth } : { teacher: { version: 1, isActive: true, subjects: [] } } });
+      fixture.detectChanges(); await fixture.whenStable();
+      expect(Array.from(card.querySelectorAll('button')).map(x => x.textContent?.trim())).not.toContain('Yeniden dene');
+    });
+  }
+
+  it('marks the district list when the district is missing, so the focus reaches it', async () => {
+    const t = await student(tenth);
+    (Array.from(t.el.querySelectorAll('[data-testid="home-place"] button')).find(x => x.textContent?.trim() === 'Değiştir') as HTMLElement).click();
+    t.http.expectOne('/api/locations/provinces').flush([{ id: '34', name: 'İstanbul' }]); await t.settle();
+    t.component.pickProvince('34');
+    t.http.expectOne('/api/locations/provinces/34/districts').flush([{ id: '3401', provinceId: '34', name: 'Kadıköy' }]); await t.settle();
+    t.component.save(); await t.settle(); await new Promise(r => setTimeout(r));
+    const district = t.el.querySelector('[data-testid="home-place"] input[role="combobox"]') as HTMLInputElement;
+    expect(district.getAttribute('aria-invalid')).toBe('true');
+    expect(district.getAttribute('aria-describedby')).toBe('homeDistrict-error');
+    expect(t.el.querySelector('#homeDistrict-error')!.textContent).toContain('ilçeni');
+    expect(document.activeElement).toBe(district);
+  });
+
   it('retries a failed invitation list only when it failed', async () => {
     TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
     const fixture = TestBed.createComponent(CoachingProfileComponent);

@@ -8,7 +8,8 @@ const token = () => {
   return `${encode({ alg: 'HS256' })}.${encode({ sub: student, role: 'Student', platform_product: 'coaching', given_name: 'Test', family_name: 'Öğrenci', exp: Math.floor(Date.now() / 1000) + 900 })}.fixture`;
 };
 async function fixtures(context) {
-  let profile = { version: 0, educationStatus: 'Unknown', gradeLevel: null, isActive: true, shareProgressWithTeachers: true };
+  // F2: the education is chosen on Profilim (or in the first-login wizard); this student is an 8th grader.
+  let profile = { version: 1, educationStatus: 'Student', gradeLevel: 8, isActive: true, shareProgressWithTeachers: true };
   let learning = null; let hours = null; const previews = [];
   const next = () => profile.educationStatus.toLowerCase() === 'unknown' ? 'Profile' : !learning ? 'Purpose'
     : !hours?.windows.length ? 'Availability' : !learning.coursePreferences.length ? 'Courses' : !learning.startingStatusReviewed ? 'Starting' : 'Preview';
@@ -46,11 +47,11 @@ test('student resumes setup after reload and previews a plan from selected cours
   await page.goto('/coaching-portal/account/settings');
   await expect(page.getByRole('heading', { name: 'Çalışma tercihlerim', exact: true })).toBeVisible();
   await expect(page.getByLabel('Okul adı (isteğe bağlı)')).toHaveCount(0);
-  await page.getByRole('combobox', { name: 'Eğitim durumu', exact: true }).selectOption('student');
-  await page.getByLabel('Sınıf', { exact: true }).fill('12');
-  await page.getByRole('button', { name: 'Profili kaydet', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Çalışma amacım', exact: true })).toBeVisible();
-  await page.getByRole('combobox', { name: 'Çalışma amacım', exact: true }).selectOption('School');
+  // F2 (#27): the education is not edited here; a short line links to Profilim.
+  await expect(page.getByRole('link', { name: 'Profilim', exact: true }).last()).toHaveAttribute('href', '/coaching-portal/account/settings/profile');
+  await expect(page.getByRole('heading', { name: 'Sınavım', exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Hangi sınava hazırlanıyorsun?', exact: true }).selectOption('Lgs');
+  await page.getByRole('combobox', { name: /^Hangi yıl sınava gireceksin\?/ }).selectOption({ index: 1 });
   await page.getByRole('button', { name: 'Kaydet ve devam et', exact: true }).click();
   await expect(page.locator('nav[aria-label="Kurulum adımları"] [aria-current=step]')).toHaveText('Müsaitliğim');
   await page.reload();
@@ -58,14 +59,16 @@ test('student resumes setup after reload and previews a plan from selected cours
   await page.getByRole('button', { name: 'Saat aralığı ekle', exact: true }).click();
   await page.getByRole('button', { name: 'Çalışma saatlerini kaydet', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Çalışacağım dersler', exact: true })).toBeVisible();
-  await page.getByRole('checkbox', { name: /Matematik/ }).check();
+  // F2 (#28): the exam's courses are suggested (ticked) until the student saves them.
+  await expect(page.getByRole('checkbox', { name: /Matematik/ })).toBeChecked();
   await page.getByRole('button', { name: 'Dersleri kaydet ve devam et', exact: true }).click();
   await page.getByRole('combobox', { name: 'Ders', exact: true }).selectOption('lesson-1');
-  await page.getByRole('region', { name: 'Sayılar ünitesi' }).getByRole('combobox', { name: 'Başlangıç durumu', exact: true }).selectOption({ label: 'Tekrar etmek istiyorum' });
-  await page.getByRole('checkbox', { name: 'Başlangıç bilgilerimi gözden geçirdim.' }).check();
+  await page.getByRole('region', { name: 'Sayılar ünitesi' }).getByRole('combobox', { name: 'Doğal sayılar – başlangıç durumu', exact: true }).selectOption({ label: 'Tekrar etmek istiyorum' });
+  // F2 (#28): no "gözden geçirdim" box; saving the step is the confirmation.
+  await expect(page.getByRole('checkbox', { name: 'Başlangıç bilgilerimi gözden geçirdim.' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Kaydet ve önizlemeye geç', exact: true }).click();
   // T3: the ready setup hands over to the plan wizard (Planım › Plan sihirbazı), where the topic preview now lives.
-  await expect(page.getByText('Eğitim bilgilerin hazır.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Bilgilerin hazır.', { exact: false })).toBeVisible();
   await page.getByRole('link', { name: 'Plan sihirbazını aç', exact: true }).click();
   await expect(page).toHaveURL(/\/coaching-portal\/plan\/wizard$/);
   await page.getByRole('button', { name: 'Konulardan plan hazırla', exact: true }).click();

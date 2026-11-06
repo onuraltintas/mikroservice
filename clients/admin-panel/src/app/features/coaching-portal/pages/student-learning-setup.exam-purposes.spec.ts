@@ -9,6 +9,9 @@ import { CoachingStudyPlanningService } from '../../../core/services/coaching-st
 
 // KM1 (01.11.2026): AGS (+ÖABT), YDS and YÖKDİL preparation in "Çalışma amacım", with the target session where an exam has several.
 describe('StudentLearningSetupComponent exam purposes', () => {
+  // F2 review: the school year follows today's date (Türkiye), so the specs pin the date.
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-11-07T10:00:00Z')); });
+  afterEach(() => vi.useRealTimers());
   const sessions = [
     { id: 'ags-2027', examCode: 'AGS', examName: 'Akademi Giriş Sınavı', date: '2027-05-08', label: '2027', applicationStart: '2027-03-19', applicationEnd: '2027-03-29' },
     { id: 'yds-1', examCode: 'YDS', examName: 'YDS', date: '2027-03-28', label: '2027/1', applicationStart: '2027-02-03', applicationEnd: '2027-02-11' },
@@ -76,6 +79,18 @@ describe('StudentLearningSetupComponent exam purposes', () => {
     expect(service.save).toHaveBeenLastCalledWith(expect.objectContaining({ purpose: 'Ags', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: 'ags-2027', targetExamYear: 2027 }));
     component.oabtField = 'OABT_SINIF'; component.savePurpose();
     expect(service.save).toHaveBeenLastCalledWith(expect.objectContaining({ purpose: 'Ags', primaryScoreType: 'OABT_SINIF' }));
+  });
+
+  // F2 review: a saved year without a listed session stays a choice, so saving does not change it silently.
+  it('keeps a saved year that has no listed session selectable', async () => {
+    const context = { id: 'ctx', version: 2, academicYearStart: 2026, purpose: 'Yds' as const, targetExamYear: 2028, targetExamSessionId: null,
+      primaryScoreType: null, foreignLanguage: 'English', curriculumVersionId: null, coursePreferences: [], topicStates: [], startingStatusReviewed: false };
+    const { component, fixture, service } = await setup({ ...empty, context }); await render(fixture);
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector('select[name="examYear"]');
+    expect([...select.options].map(x => x.textContent?.trim())).toEqual(['Seç', '2027/1 · 28.03.2027 · başvuru 03.02–11.02.2027', '2027/2 · 21.11.2027', '2028 · oturum seçmedim']);
+    expect(select.value).toBe('year:2028');
+    component.savePurpose();
+    expect(service.save).toHaveBeenCalledWith(expect.objectContaining({ purpose: 'Yds', targetExamYear: 2028, targetExamSessionId: null }));
   });
 
   it('prefills a saved YDS session and keeps LGS/YKS requests unchanged', async () => {

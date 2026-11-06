@@ -9,8 +9,12 @@ import { StudentPlanPreviewComponent } from './student-plan-preview.component';
 import { By } from '@angular/platform-browser';
 import { CoachingLearningSetupService, LearningCatalog, LearningSetupImpact, LearningSetupUpdate, LearningSetupView } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
+import { currentAcademicYear } from '../coaching-education';
 
 describe('StudentLearningSetupComponent', () => {
+  // F2 review: the school year follows today's date (Türkiye), so the specs pin the date.
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-11-07T10:00:00Z')); });
+  afterEach(() => vi.useRealTimers());
   const empty: LearningSetupView = { context: null, nextStep: 'Purpose', isReady: false, missingFields: ['Purpose'], warnings: [] };
   async function setup(view = empty) {
     const service = { get: vi.fn(() => of(view)), save: vi.fn((_request: LearningSetupUpdate) => of(view)),
@@ -307,6 +311,13 @@ describe('StudentLearningSetupComponent', () => {
     t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
     t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
     expect(t.el.querySelector('[data-testid="target-impact"]')).not.toBeNull();
+    // F2 review: declining "vazgeç?" keeps the confirmation open.
+    const confirm = TestBed.inject(ToasterService).confirm as ReturnType<typeof vi.fn>;
+    confirm.mockResolvedValueOnce(false);
+    await t.click('Bilgileri yeniden yükle');
+    await vi.waitFor(() => expect(confirm).toHaveBeenCalledTimes(1)); await t.settle();
+    expect(t.el.querySelector('[data-testid="target-impact"]')).not.toBeNull();
+    expect(t.service.get).toHaveBeenCalledTimes(1);
     await t.click('Bilgileri yeniden yükle');
     await vi.waitFor(() => expect(t.service.get).toHaveBeenCalledTimes(2)); await t.settle();
     expect(t.el.querySelector('[data-testid="target-impact"]')).toBeNull();
@@ -331,7 +342,7 @@ describe('StudentLearningSetupComponent', () => {
     expect(Array.from(el.querySelectorAll('[data-testid="course-group-TYT"] label')).map(x => x.textContent!.trim())).toEqual(['Türkçe · 10 konu', 'Matematik · 15 konu']);
     // The courses with topics are ticked, but only as a suggestion: nothing is saved and leaving does not ask.
     expect(t.component.courses.map(x => x.lessonId).sort()).toEqual(['ayt-mat', 'tyt-mat', 'tyt-tr']);
-    expect(el.querySelector('[data-testid="suggested-courses"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="suggested-courses"]')!.textContent).toContain('Sınavına uygun dersleri');
     expect(t.component.dirty).toBe(false); expect(t.service.save).not.toHaveBeenCalled();
     expect(el.textContent).not.toContain('Kataloğu yeniden yükle');
     expect(el.textContent).not.toContain('2026.10');
@@ -377,6 +388,37 @@ describe('StudentLearningSetupComponent', () => {
     (Array.from(unit.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Henüz çalışmadım') as HTMLButtonElement).click();
     expect(t.component.declaration('t1')).toBe('NotStudied'); expect(t.component.topics.length).toBe(2);
     expect(t.component.dirty).toBe(true);
+  });
+
+  // F2 review (M2): Sınavım is saved with the current school year (the wizard's rule: from September on), not a frozen one.
+  it('saves the exam with the current school year and offers years from it', async () => {
+    const old = { ...yks, academicYearStart: 2025, targetExamYear: 2026, coursePreferences: [{ lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }] };
+    const t = await purposeForm({ ...yksView, context: old });
+    const year = t.el.querySelector('select[name="examYear"]') as HTMLSelectElement;
+    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2026', '2027', '2028', '2029', '2030', '2031']);
+    year.value = 'year:2027'; year.dispatchEvent(new Event('change')); await t.settle();
+    await t.submit();
+    // A new school year is a new scope: the courses are chosen again for the new curriculum.
+    expect(t.service.save).toHaveBeenCalledWith(expect.objectContaining({ academicYearStart: 2026, targetExamYear: 2027, courses: [], topics: [] }));
+    // In August the school year is still the previous one.
+    vi.setSystemTime(new Date('2027-08-31T20:00:00Z'));
+    expect(currentAcademicYear()).toBe(2026);
+    vi.setSystemTime(new Date('2027-08-31T21:30:00Z')); // 1 September in Türkiye
+    expect(currentAcademicYear()).toBe(2027);
+  });
+
+  // F2 review: "Bu ünitenin hepsi" marks the whole unit, also its topics on other pages.
+  it('#28: marks every topic of a unit across pages', async () => {
+    const topic = (id: string, unitName: string) => ({ id, lessonId: 'tyt-mat', name: id, unitName, lessonName: 'Matematik', gradeNumber: null, examCode: 'TYT', estimatedMinutes: 30 });
+    const page1 = { ...yksCatalog([topic('t1', 'Sayılar'), topic('t2', 'Sayılar')]), topics: { items: [topic('t1', 'Sayılar'), topic('t2', 'Sayılar')], totalCount: 53, pageNumber: 1, pageSize: 50 } } as unknown as LearningCatalog;
+    const page2 = { ...page1, topics: { items: [topic('t51', 'Sayılar'), topic('t52', 'Problemler')], totalCount: 53, pageNumber: 2, pageSize: 50 } } as unknown as LearningCatalog;
+    const t = await setup({ ...yksView, nextStep: 'Starting', context: { ...yks, coursePreferences: [{ lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }] } });
+    t.service.catalog.mockImplementation((_lesson?: string | null, page?: number) => of(page === 2 ? page2 : page1));
+    t.component.selectedLesson = 'tyt-mat'; t.component.loadCatalog(); t.fixture.detectChanges();
+    await t.component.markUnit('Sayılar', 'Studied');
+    expect(t.service.catalog).toHaveBeenCalledWith('tyt-mat', 2);
+    expect(['t1', 't2', 't51', 't52'].map(id => t.component.declaration(id))).toEqual(['Studied', 'Studied', 'Studied', '']);
+    expect(t.component.topicPage).toBe(1);
   });
 
   // E6 #29: "Plan önizlemesi" shows the draft from the saved availability, not only a link to the plan wizard.

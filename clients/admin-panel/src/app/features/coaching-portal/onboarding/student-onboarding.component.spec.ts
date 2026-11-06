@@ -531,7 +531,20 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       t.http.expectNone(`${base}/steps/target`);
     });
 
-    it('"Henüz karar vermedim" asks before the saved target is removed', async () => {
+    // F2 review (M1): in target mode a field of another step (here "purpose") cannot be asked; the target question comes back.
+    it('a 400 naming a question of another step re-asks the target question in target mode', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
+      await changeToLgsScore(t);
+      t.http.expectOne(`${base}/steps/target`).flush({ message: 'Önce hazırlandığın sınavı seç.', field: 'purpose' }, { status: 400, statusText: 'Bad Request' }); await t.settle();
+      const current = t.el.querySelector('[data-current]')!;
+      expect(current).not.toBeNull();
+      expect(current.getAttribute('data-question')).toBe('targetScore');
+      expect(current.querySelector('[role="alert"]')!.textContent).toContain('Önce hazırlandığın sınavı seç.');
+      expect(t.el.querySelector('[data-question="purpose"]')).toBeNull();
+    });
+
+    // F2 review: the settle loop of this test can pass the default 5s under load (no product race).
+    it('"Henüz karar vermedim" asks before the saved target is removed', { timeout: 15000 }, async () => {
       const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true, confirm: false });
       (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
       await t.click('Henüz karar vermedim');

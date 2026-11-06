@@ -19,6 +19,9 @@ const legacy = (purpose: 'School' | 'General' | 'Undecided'): LearningContext =>
   topicStates: [{ topicId: 'school-topic', declaredStatus: 'Studied' }], startingStatusReviewed: true });
 
 describe('KM8 exam-only study purposes: setup wizard', () => {
+  // F2 review: the school year follows today's date (Türkiye), so the specs pin the date.
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-11-07T10:00:00Z')); });
+  afterEach(() => vi.useRealTimers());
   async function setup(view: LearningSetupView) {
     const service = { get: vi.fn(() => of(view)), save: vi.fn((_request: LearningSetupUpdate) => of(view)),
       impact: vi.fn(() => of({ removedTargets: [] as string[], teacherGoalMismatch: false, diplomaGradeRemoved: null })), catalog: vi.fn(() => of(emptyCatalog)) };

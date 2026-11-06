@@ -117,7 +117,8 @@ test('student links a school target and publishes an automatic topic plan within
   await page.getByLabel('Başlangıç', { exact: true }).fill('09:00');
   await page.getByLabel('Bitiş', { exact: true }).fill('10:00');
   await page.getByRole('button', { name: 'Çalışma saatlerini kaydet', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Yeniden yükle', exact: true })).toBeEnabled();
+  // F2 (#27): no "Yeniden yükle" after a successful load; the save confirms itself.
+  await expect(page.getByText('Çalışma saatlerin kaydedildi.', { exact: false }).first()).toBeVisible();
   await page.goto('/coaching-portal/plan/wizard');
   await page.getByLabel('Konu, ders veya ünite', { exact: true }).fill('E2E Kesirler');
   await page.getByRole('combobox', { name: 'Sınıf', exact: true }).selectOption({ label: '8' });
