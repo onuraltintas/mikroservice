@@ -20,3 +20,22 @@ public sealed class CourseManagementTimeTests
         Assert.Equal(new DateTimeOffset(2026, 11, 9, 18, 0, 0, TimeSpan.FromHours(3)), first.StartsAt);
     }
 }
+
+// E3 review: teacher hours stored earlier in another zone are read as Türkiye time, as the panel says.
+public sealed class CourseManagementTeacherHoursTests
+{
+    private static TeacherAvailabilityWindow Monday(string zone) => TeacherAvailabilityWindow.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 0,
+        new TimeOnly(9, 0), new TimeOnly(17, 0), zone, Guid.NewGuid(), DateTimeOffset.UtcNow);
+
+    [Theory]
+    [InlineData("Europe/Istanbul")]
+    [InlineData("Europe/London")]
+    public void TeacherHoursAreTurkeyTimeWhateverZoneWasStored(string zone)
+    {
+        // Monday 9 November 2026, 09:30–10:30 in Türkiye (06:30–07:30 UTC, before 09:00 in London).
+        var start = new DateTimeOffset(2026, 11, 9, 9, 30, 0, TimeSpan.FromHours(3));
+        Assert.True(CourseManagementTime.FitsTeacherHours([Monday(zone)], start, start.AddHours(1)));
+        Assert.False(CourseManagementTime.FitsTeacherHours([Monday(zone)], start.AddHours(-1), start));
+        Assert.True(CourseManagementTime.FitsTeacherHours([], start, start.AddHours(1)));
+    }
+}

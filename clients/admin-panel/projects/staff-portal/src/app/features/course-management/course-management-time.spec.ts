@@ -1,4 +1,4 @@
-import { turkeyDateTimeLocal, turkeyDefaults, turkeyInstant } from './course-management-time';
+import { olderZoneNotice, turkeyDateTimeLocal, turkeyDefaults, turkeyInstant } from './course-management-time';
 
 // E3 #34 (06.11.2026) and review L6: course management reads and fills times in Türkiye time, whatever the device's zone.
 describe('course management Türkiye time', () => {
@@ -14,5 +14,11 @@ describe('course management Türkiye time', () => {
     expect([d.lessonStartsAt, d.lessonEndsAt]).toEqual(['2026-11-07T01:00', '2026-11-07T02:00']);
     expect([d.seriesStartsOn, d.seriesEndsOn, d.seriesStartTime, d.weekdayIndex]).toEqual(['2026-11-07', '2026-12-07', '01:00', 5]);
     expect([d.timeOffStartsAt, d.timeOffEndsAt]).toEqual(['2026-11-08T09:00', '2026-11-08T10:00']);
+  });
+
+  it('tells staff that a row stored in another zone is read as Türkiye time', () => {
+    expect(olderZoneNotice('Europe/London')).toBe('Eskiden Europe/London saatiyle kaydedildi; artık Türkiye saatine göre okunur.');
+    expect(olderZoneNotice('Europe/Istanbul')).toBeNull();
+    expect(olderZoneNotice(null)).toBeNull();
   });
 });

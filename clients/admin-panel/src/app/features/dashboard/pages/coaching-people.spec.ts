@@ -236,6 +236,24 @@ describe('CoachingPeopleComponent', () => {
     expect(toaster.success).toHaveBeenCalled();
   });
 
+  // E3 review: lise -> ortaokul drops the stored lise and branch; the admin is told before saving, as on Profilim.
+  it('warns before a lise student moved to ortaokul loses the stored school and branch', async () => {
+    const { component, memberships, toaster } = create('students', 'student-1');
+    component.scope.set({ isGlobal: false, institutionId: 'own-institution' });
+    component.institutionId = 'own-institution';
+    const student = { userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test', gradeLevel: 10, educationStatus: 'Student' };
+    component.selectedStudent.set(student); component.resetEducationEditor(student);
+    expect(component.editingStage).toBe('high');
+    component.changeEditingStage('middle'); component.editingGradeLevel = 7;
+    expect(component.editingClearsSchoolNotice()).toContain('okul ve şube bilgisi silinir');
+    toaster.confirm.mockResolvedValueOnce(false);
+    await component.saveStudentMembership();
+    expect(memberships.updateStudent).not.toHaveBeenCalled();
+    await component.saveStudentMembership();
+    expect(toaster.confirm.mock.calls.at(-1)![0]).toContain('okul ve şube bilgisi silinir');
+    expect(memberships.updateStudent).toHaveBeenCalledWith('student-1', { educationStatus: 'Student', gradeLevel: 7, teacherUserId: null }, undefined);
+  });
+
   it('ignores a teacher lookup response started for the previous institution', () => {
     const { component, service } = create('students');
     const pending = new Subject<{ teachers: { userId: string; firstName: string; lastName: string; email: string }[]; totalCount: number }>();

@@ -82,6 +82,24 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(service.updateStudent).toHaveBeenCalledWith('student-1', { educationStatus: 'UniversityGraduate', gradeLevel: null }, null);
   });
 
+  it('warns before a lise student moved to ortaokul loses the stored school and branch', async () => {
+    const service = institutionService({ students: [{ ...student('student-1'), gradeLevel: 10, educationStatus: 'Student' }] });
+    const fixture = await createFixture(service); fixture.detectChanges();
+    const component = fixture.componentInstance; (await component.selectSection('students'));
+    (await component.startStudentEdit({ ...student('student-1'), gradeLevel: 10, educationStatus: 'Student' }));
+    fixture.detectChanges(); await fixture.whenStable();
+    const stage = fixture.nativeElement.querySelector('select[name="memberStage"]') as HTMLSelectElement;
+    stage.value = 'middle'; stage.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[data-testid="member-clears-school"]')!.textContent).toContain('okul ve şube bilgisi silinir');
+    component.editStudentGrade = 7;
+    const toaster = TestBed.inject(ToasterService) as unknown as { confirm: ReturnType<typeof vi.fn> };
+    toaster.confirm.mockResolvedValueOnce(false);
+    await component.saveStudentEdit(); expect(service.updateStudent).not.toHaveBeenCalled();
+    toaster.confirm.mockResolvedValueOnce(true);
+    await component.saveStudentEdit();
+    expect(service.updateStudent).toHaveBeenCalledWith('student-1', { educationStatus: 'Student', gradeLevel: 7 }, null);
+  });
+
   it('labels each student with the education status in the roster', async () => {
     const service = institutionService({ students: [{ ...student('student-1'), gradeLevel: null, educationStatus: 'HighSchoolGraduate' }, student('student-2')] });
     const fixture = await createFixture(service); fixture.detectChanges();

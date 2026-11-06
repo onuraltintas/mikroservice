@@ -53,7 +53,9 @@ test('everything else in the version 2 text stays', () => {
 });
 
 test('the date line must be set to the publish day before it runs', () => {
-  assert.match(sql, /^\\set publish_day 'GG Ay YYYY'$/m);
+  // Re-check 1: `psql -v publish_day='7 Kasım 2026'` wins; the placeholder is set only when nothing was passed.
+  assert.match(sql, /^\\if :\{\?publish_day\}\n\\else\n\\set publish_day 'GG Ay YYYY'\n\\endif$/m);
+  assert.equal(sql.match(/^\\set publish_day/gm).length, 1);
   assert.match(sql, /replace\(\$legal\$__YAYIN_GÜNÜ__ — /);
   assert.match(sql, /'__YAYIN_GÜNÜ__', :'publish_day'\)/);
   // It refuses, changing nothing, until the day is a real Turkish date.

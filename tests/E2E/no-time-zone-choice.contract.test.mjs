@@ -58,3 +58,12 @@ test('no leftover time zone text on the pages', async () => {
   assert.match(component, /turkeyDefaults\(/);
   assert.doesNotMatch(component, /setHours\(/);
 });
+
+// Re-check 4: teacher hours stored earlier in another zone are read as Türkiye time and say so.
+test('older teacher hours are Türkiye time and are marked', async () => {
+  const endpoints = await read('services/course-management-service/CourseManagement.API/LearningEndpoints.cs');
+  assert.doesNotMatch(endpoints, /FindSystemTimeZoneById\(window\.TimeZoneId\)/);
+  assert.match(endpoints, /CourseManagementTime\.FitsTeacherHours\(/);
+  const workspace = await read('clients/admin-panel/projects/staff-portal/src/app/features/course-management/course-management-workspace.component.html');
+  assert.match(workspace, /olderZoneNotice\(window\.timeZoneId\)/);
+});
