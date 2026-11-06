@@ -1,5 +1,6 @@
 using Coaching.Application.StudyPlanning;
 using Coaching.Domain.Entities;
+using Coaching.Infrastructure.Catalogs;
 using Coaching.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -105,21 +106,10 @@ public sealed class TargetAdmissionSearchService(CoachingDbContext db)
         if (f.ExamCode == "YKS")
         {
             if (exceptFacet != "programType" && f.ProgramType is not null) query = query.Where(x => x.Degree == f.ProgramType);
-            if (exceptFacet != "university" && !string.IsNullOrWhiteSpace(f.University))
-            {
-                var university = f.University.Trim().ToUpper();
-                query = query.Where(x => x.Institution.ToUpper().Contains(university));
-            }
-            if (exceptFacet != "faculty" && !string.IsNullOrWhiteSpace(f.Faculty))
-            {
-                var faculty = f.Faculty.Trim().ToUpper();
-                query = query.Where(x => x.Field != null && x.Field.ToUpper().Contains(faculty));
-            }
-            if (exceptFacet != "programName" && !string.IsNullOrWhiteSpace(f.ProgramName))
-            {
-                var program = f.ProgramName.Trim().ToUpper();
-                query = query.Where(x => x.Name.ToUpper().Contains(program));
-            }
+            // E7 (#30): Turkish case-insensitive, whatever the collation ("Ankara Üniversitesi" finds "ANKARA ÜNİVERSİTESİ").
+            if (exceptFacet != "university") query = query.WhereContains(f.University, x => x.Institution);
+            if (exceptFacet != "faculty") query = query.WhereContains(f.Faculty, x => x.Field);
+            if (exceptFacet != "programName") query = query.WhereContains(f.ProgramName, x => x.Name);
             if (exceptFacet != "scoreType" && f.ScoreType is not null)
             {
                 var scoreType = NormalizeScoreType(f.ScoreType);
@@ -128,11 +118,7 @@ public sealed class TargetAdmissionSearchService(CoachingDbContext db)
             return query;
         }
 
-        if (!string.IsNullOrWhiteSpace(f.Search))
-        {
-            var search = f.Search.Trim().ToUpper();
-            query = query.Where(x => x.Name.ToUpper().Contains(search) || x.ExternalCode.Contains(search));
-        }
+        query = query.WhereContains(f.Search, x => x.Name, x => x.ExternalCode);
         if (exceptFacet != "city" && f.City is not null) query = query.Where(x => x.City == f.City);
         if (exceptFacet != "district" && f.District is not null) query = query.Where(x => x.District == f.District);
         if (exceptFacet != "institutionType" && f.InstitutionType is not null) query = query.Where(x => x.InstitutionType == f.InstitutionType);

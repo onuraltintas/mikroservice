@@ -10,11 +10,13 @@ import { CoachingLearningSetupService, LearningCatalog, LearningContext, RETIRED
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
 import { clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
-import { createStudyPlanProposal } from './study-plan-wizard';
+import { createProposalFromWindows } from './study-plan-wizard';
+import { CoachingStudyPlanningService, StudyAvailability, StudyWindow } from '../../../core/services/coaching-study-planning.service';
+import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
 
 @Component({
   selector: 'app-student-study-plan-assistant', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, StudentWeeklyOutcomePlanComponent, StudentAutomaticPlanComponent], templateUrl: './student-study-plan-assistant.component.html',
+  imports: [CommonModule, FormsModule, RouterLink, StudentWeeklyOutcomePlanComponent, StudentAutomaticPlanComponent, StudentStudyAvailabilityComponent], templateUrl: './student-study-plan-assistant.component.html',
   styleUrl: './student-study-plan-assistant.component.scss'
 })
 export class StudentStudyPlanAssistantComponent implements OnInit {
@@ -23,13 +25,23 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   @ViewChild(StudentWeeklyOutcomePlanComponent) private annualPlan?: StudentWeeklyOutcomePlanComponent;
   private readonly weekly = inject(CoachingWeeklyDraftService);
   private readonly learningSetup = inject(CoachingLearningSetupService);
+  private readonly planning = inject(CoachingStudyPlanningService);
+  @ViewChild(StudentStudyAvailabilityComponent) private hoursEditor?: StudentStudyAvailabilityComponent;
   private readonly destroy = inject(DestroyRef);
-  readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Birkaç kısa adımda uygun günlerini ve çalışma süreni seçelim. Sana haftalık taslak önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
+  readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Çalışma saatlerinden sana haftalık ders düzeni önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
   readonly proposal = signal<WeeklySlot[]>([]);
   readonly selectedDays = signal<Weekday[]>([]);
   readonly startTime = signal('18:00');
   readonly minutesPerDay = signal<30 | 60 | 90 | 120>(60);
   readonly annualReview = signal(false);
+  /** E6 #29: the availability saved in Çalışma tercihlerim (one record); the wizard asks only when there is none. */
+  readonly availability = signal<StudyAvailability | null>(null);
+  readonly availabilityLoading = signal(false);
+  /** E6 review: a failed load (not 404) is retried, never answered with the questions (a save would only get a 409). */
+  readonly availabilityLoadError = signal('');
+  /** Değiştir: the same availability editor as Çalışma tercihlerim, inside the wizard. */
+  readonly editingAvailability = signal(false);
+  readonly savingAvailability = signal(false);
   /** Roadmap O1: the topic-based plan is part of the one plan wizard. */
   readonly topicPlanOpen = signal(false);
   readonly busy = signal(true);
@@ -57,6 +69,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly clock = clock;
 
   ngOnInit() {
+    this.loadAvailability();
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
         this.lessons.set(page.lessons);
@@ -79,6 +92,32 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
       error: () => this.topicError.set('Konu durumları yüklenemedi. Çalışma düzeni kurulumunu kontrol et.')
     });
   }
+
+  loadAvailability() {
+    this.availabilityLoading.set(true); this.availabilityLoadError.set('');
+    this.planning.getAvailability(this.staffStudentId).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.availabilityLoading.set(false))).subscribe({
+      next: value => this.availability.set(value ?? null),
+      error: e => {
+        if (e?.status === 404) { this.availability.set(null); return; }
+        this.availabilityLoadError.set(this.staffStudentId ? 'Öğrencinin çalışma saatleri yüklenemedi.' : 'Çalışma saatlerin yüklenemedi.');
+      }
+    });
+  }
+
+  /** E6 #29: the saved study times; empty when the student has not given any yet. */
+  savedWindows(): StudyWindow[] { return this.availability()?.windows ?? []; }
+  availabilityLines() {
+    return [...this.savedWindows()].sort((a, b) => this.dayOrder(a.day) - this.dayOrder(b.day) || a.startMinute - b.startMinute)
+      .map(window => `${this.dayName(window.day)} ${clock(window.startMinute)}–${window.endMinute === 1440 ? '24:00' : clock(window.endMinute)}`);
+  }
+  private dayOrder(day: string) { return this.weekDays.findIndex(x => x.value === day); }
+  async changeAvailability() {
+    if (this.staffStudentId) return;
+    if (this.editingAvailability()) { if (await (this.hoursEditor?.canLeavePage() ?? true)) this.editingAvailability.set(false); return; }
+    this.proposal.set([]); this.editingAvailability.set(true);
+  }
+  availabilitySaved() { this.editingAvailability.set(false); this.proposal.set([]); this.loadAvailability(); }
+  canPropose() { return !this.busy() && !this.savingAvailability() && !this.availabilityLoading() && !this.availabilityLoadError() && !!this.lessons().length && (this.savedWindows().length > 0 || this.selectedDays().length > 0); }
 
   availableTopicLessons() {
     const context = this.learningContext(); const catalog = this.catalog();
@@ -152,24 +191,49 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     if ([30, 60, 90, 120].includes(value)) this.minutesPerDay.set(value as 30 | 60 | 90 | 120);
   }
 
+  /**
+   * E6 #29: with saved study times the proposal uses them; otherwise the student's answers (days, start, duration)
+   * are saved as her availability first — the same record as Çalışma tercihlerim, never a second copy.
+   * A teacher's answers only make the proposal; the student's availability is hers.
+   */
   createProposal() {
-    if (this.busy() || !this.selectedDays().length || !this.lessons().length) return;
+    if (!this.canPropose() || this.editingAvailability()) return;
     if (this.topicDirty()) { this.topicError.set('Öneri oluşturmadan önce konu durumlarını kaydet.'); return; }
+    if (this.savedWindows().length) { this.propose(this.savedWindows()); return; }
     const [hours, minutes] = this.startTime().split(':').map(Number);
     const startMinute = hours * 60 + minutes;
+    if (!Number.isInteger(startMinute) || startMinute % 30 !== 0 || startMinute + this.minutesPerDay() > 1440) {
+      this.error.set('Başlangıç saati :00 veya :30 olmalı ve çalışma süresi gece yarısını geçmemeli.'); return;
+    }
+    const windows: StudyWindow[] = this.selectedDays().map(day => ({ day, startMinute, endMinute: startMinute + this.minutesPerDay() }));
+    if (this.staffStudentId) { this.propose(windows); return; }
+    this.savingAvailability.set(true); this.error.set('');
+    this.planning.saveAvailability({ expectedVersion: this.availability()?.version ?? null, timeZoneId: 'Europe/Istanbul', windows })
+      .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.savingAvailability.set(false))).subscribe({
+        next: saved => { this.availability.set(saved); this.propose(saved.windows); },
+        error: e => {
+          this.error.set(`Çalışma saatlerin kaydedilmedi. ${typeof e?.error?.message === 'string' ? e.error.message : 'Yeniden deneyebilirsin.'}`);
+          // E6 review: another session saved study times; load them so the next attempt uses the current record.
+          if (e?.status === 409) this.loadAvailability();
+        }
+      });
+  }
+
+  private propose(windows: StudyWindow[]) {
     const selected = new Set((this.learningContext()?.coursePreferences ?? []).map(x => x.lessonId.toLowerCase()));
     const lessons = this.lessons().filter(x => selected.has(x.id.toLowerCase()));
-    const proposal = createStudyPlanProposal({ days: this.selectedDays(), startMinute, minutesPerDay: this.minutesPerDay() }, lessons, this.slots());
+    const proposal = createProposalFromWindows(windows, lessons, this.slots());
     const coveredLessons = new Set([...this.slots(), ...proposal].map(slot => slot.lessonId.toLowerCase()));
     const missingLessons = lessons.filter(lesson => !coveredLessons.has(lesson.id.toLowerCase()));
     const coverageWarning = missingLessons.length
-      ? ` ${missingLessons.map(lesson => lesson.name).join(', ')} için henüz ders saati yok. Bu dersleri de plana almak için ek gün veya saat seçip yeni öneri oluştur.`
+      ? ` ${missingLessons.map(lesson => lesson.name).join(', ')} için henüz ders saati yok. Bu dersleri de plana almak için çalışma saatlerine gün veya saat ekleyip yeni öneri oluştur.`
       : '';
+    const dayCount = new Set(windows.map(window => window.day)).size;
     this.proposal.set(proposal);
     this.error.set(''); this.saved.set(false);
     this.messages.update(items => [...items, { role: 'assistant', content: proposal.length
-      ? `${this.selectedDays().length} gün için ${proposal.length} ders saati önerdim. Mevcut taslağındaki dolu saatleri korudum; öneriyi kaydetmeden önce inceleyebilirsin.${coverageWarning}`
-      : `Seçtiğin saatlerde boş yer bulamadım. Başlangıç saatini veya günlerini değiştirip yeniden deneyebilirsin.${coverageWarning}` }]);
+      ? `${dayCount} gün için ${proposal.length} ders saati önerdim. Mevcut taslağındaki dolu saatleri korudum; öneriyi kaydetmeden önce inceleyebilirsin.${coverageWarning}`
+      : `Çalışma saatlerinde boş yer bulamadım. Çalışma saatlerini değiştirip yeniden deneyebilirsin.${coverageWarning}` }]);
   }
 
   applyProposal() {
@@ -195,7 +259,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   dayName(day: string) { return this.weekDays.find(x => x.value === day)?.label ?? day; }
   ceil(value: number) { return Math.ceil(value); }
   @ViewChild(StudentAutomaticPlanComponent) private topicPlan?: StudentAutomaticPlanComponent;
-  async canLeavePage() { return this.annualReview() ? (await this.annualPlan?.canLeavePage() ?? true) : !this.busy() && (await this.topicPlan?.canLeavePage() ?? true); }
+  async canLeavePage() { return this.annualReview() ? (await this.annualPlan?.canLeavePage() ?? true) : !this.busy() && !this.savingAvailability() && (await this.hoursEditor?.canLeavePage() ?? true) && (await this.topicPlan?.canLeavePage() ?? true); }
   onPlanCreated(id: string) { this.planCreated.emit(id); }
 
   private readonly feedback = coachingFeedback(undefined, this.error);

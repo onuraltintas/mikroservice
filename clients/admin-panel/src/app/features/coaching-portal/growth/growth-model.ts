@@ -72,7 +72,11 @@ export function subjectBars(subjects: StudentExamSubject[], examCode: string): S
 export interface GaugeRow { label: string; current: string; target: string; percent: number; text: string }
 /** Review 06.11.2026: `label` is set for approximate models with a range (LGS, MEB-AGS); `status` adds "borderline". */
 export interface GoalGauge { targetName: string; scoreType: string; headline: string; rows: GaugeRow[]; reached: boolean; missingData: boolean;
-  status: 'reached' | 'borderline' | 'below' | null; label: string | null }
+  status: 'reached' | 'borderline' | 'below' | null; label: string | null;
+  /** E7 (#30): the target score or the taban, also before the first practice exam ("Hedef puanın 450", "Taban puanı 475,14 · 2025"). */
+  detail: string | null;
+  /** E7 (#30): YKS: the other target score (TYT or the field's), one line each. */
+  secondary: string[] }
 
 /** Now → target from the score estimate. A rank is better when lower, so its share is target / current. */
 export function goalGauge(estimate: ScoreEstimate, childName: string | null = null): GoalGauge | null {
@@ -88,8 +92,10 @@ export function goalGauge(estimate: ScoreEstimate, childName: string | null = nu
   // A null status from the server means no gap can be computed; only older responses (no status) fall back to `reached`.
   const status = target.status !== undefined ? target.status : now ? (target.reached ? 'reached' : 'below') : null;
   const label = approximate ? now?.label ?? ESTIMATE_LABEL : null;
+  const detail = targetDetail(target, childName);
+  const secondary = (estimate.scoreTargets ?? []).filter(x => x.scoreType !== target.scoreType).map(x => scoreLine(estimate, x, childName));
   if (target.notComputedReason)
-    return { targetName: target.targetName, scoreType: target.scoreType, rows, reached: false, missingData: false, status: null, label: null,
+    return { targetName: target.targetName, scoreType: target.scoreType, rows, reached: false, missingData: false, status: null, label: null, detail, secondary,
       headline: notComputedText(estimate.notComputed?.find(x => x.scoreType === target.scoreType) ?? { notComputedReason: target.notComputedReason, failedConditions: [] }) };
   if (!missingData && now) {
     // Review 06.11.2026: an approximate score is shown with the same range as its estimate card.
@@ -105,7 +111,7 @@ export function goalGauge(estimate: ScoreEstimate, childName: string | null = nu
     : target.reached ? (childName ? `${childName} için tahmini puan hedefe ulaşıyor.` : 'Tahmini puanın hedefe ulaşıyor. Bu çizgiyi koru.')
     : target.netGap !== null ? `Hedefe ${decimal.format(target.netGap)} net kaldı`
     : target.rankGap !== null ? `Hedef sıralamaya ${whole.format(target.rankGap)} kişi kaldı` : 'Hedefe olan farkı henüz hesaplayamıyoruz.';
-  return { targetName: target.targetName, scoreType: target.scoreType, headline, rows, reached: target.reached, missingData, status, label };
+  return { targetName: target.targetName, scoreType: target.scoreType, headline, rows, reached: target.reached, missingData, status, label, detail, secondary };
 }
 export interface GoalScoreCard { scoreType: string; title: string; group: string; headline: string; label: string; exact: boolean; note: string | null }
 
@@ -169,9 +175,7 @@ export function homeGoalCard(estimate: ScoreEstimate | null, childName: string |
   const kind = target.kind ?? 'program';
   const own = childName ? 'hedef puanı' : 'hedef puanın';
   const targetName = kind === 'score' ? `${target.targetName} ${own}` : target.targetName;
-  const taban = target.targetScore === null ? null
-    : kind === 'score' || target.ownTargetScore ? `${childName ? 'Hedef puanı' : 'Hedef puanın'} ${decimal.format(target.targetScore)}`
-    : `Taban puanı ${decimal.format(target.targetScore)}${lgs ? ' (yaklaşık)' : ''}${target.scoreYear ? ` · ${target.scoreYear}` : ''}`;
+  const taban = targetDetail(target, childName);
   const note = lgs && kind === 'school' ? HOME_LGS_NOTE : null;
   const secondary = (estimate.scoreTargets ?? []).filter(x => x.scoreType !== target.scoreType).map(x => scoreLine(estimate, x, childName));
   const card = (state: HomeGoalCard['state'], headline: string, label: string | null = null, status: HomeGoalCard['status'] = null): HomeGoalCard =>
@@ -201,6 +205,14 @@ export function homeGoalCard(estimate: ScoreEstimate | null, childName: string |
   if (target.rankGap !== null && target.rankGap > 0)
     return card('estimate', `Hedef sıralamaya yaklaşık ${whole.format(target.rankGap)} kişi kaldı`, label, 'below');
   return card('estimate', 'Hedefe olan farkı henüz hesaplayamıyoruz.', label, null);
+}
+
+/** The target's score: the student's own target score, or the school's / programme's taban with its year. */
+export function targetDetail(target: NonNullable<ScoreEstimate['target']>, childName: string | null = null): string | null {
+  if (target.targetScore === null) return null;
+  const kind = target.kind ?? 'program';
+  return kind === 'score' || target.ownTargetScore ? `${childName ? 'Hedef puanı' : 'Hedef puanın'} ${decimal.format(target.targetScore)}`
+    : `Taban puanı ${decimal.format(target.targetScore)}${target.scoreType === 'LGS' ? ' (yaklaşık)' : ''}${target.scoreYear ? ` · ${target.scoreYear}` : ''}`;
 }
 
 function isExact(scoreType: string) { return scoreType === 'YDS_EN' || scoreType.startsWith('YOKDIL_'); }

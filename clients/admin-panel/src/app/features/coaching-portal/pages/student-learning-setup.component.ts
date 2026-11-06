@@ -13,12 +13,13 @@ interface SetupSaved { text: string; removed: string[]; diploma: number | null; 
 const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
 import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
+import { StudentPlanPreviewComponent } from './student-plan-preview.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingStudyPlanningService, PublishedStudyOutcome, StudyTopic } from '../../../core/services/coaching-study-planning.service';
 
 @Component({
   selector: 'app-student-learning-setup', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, StudentStudyAvailabilityComponent],
+  imports: [CommonModule, FormsModule, RouterLink, StudentStudyAvailabilityComponent, StudentPlanPreviewComponent],
   templateUrl: './student-learning-setup.component.html', styleUrl: './student-study-plans.component.scss'
 })
 export class StudentLearningSetupComponent implements OnInit {
@@ -64,6 +65,8 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly topicOutcomeErrors = signal<Record<string, boolean>>({});
   selectedLesson = ''; topicPage = 1; dirty = false;
   async ngOnInit() { await this.load(); }
+  /** E6 #29: the saved courses (Derslerim) the plan preview uses. */
+  readonly courseIds = computed(() => (this.state()?.context?.coursePreferences ?? []).map(x => x.lessonId));
   async load() {
     if (this.loading() || this.saving()) return;
     if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş seçimlerden vazgeçip sunucudaki bilgileri yükleyelim mi?')) return;

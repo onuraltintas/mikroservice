@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { vi } from 'vitest';
 import { OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import { StudentOnboardingComponent } from './student-onboarding.component';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 describe('StudentOnboardingComponent (Paket C #3)', () => {
   const base = '/api/coaching/students/me/onboarding';
@@ -21,32 +22,36 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     educationStatus: 'Student' as const, gradeLevel: 8, purpose: 'Lgs' as const, targetExamSessionId: 'lgs-27', targetExamYear: 2027 };
 
   interface Resume { invitations?: object[]; code?: { expiresAt: string; createdAt: string; expired?: boolean } | null; links?: { parentName: string; status: string }[]; prefs?: { category: string; label: string; inApp: boolean; email: boolean }[] }
-  async function render(first: OnboardingView, query: Record<string, string> = {}, resume: Resume = {}) {
+  async function render(first: OnboardingView, query: Record<string, string> = {}, resume: Resume = {}, options: { embedded?: boolean; confirm?: boolean } = {}) {
     const auth = { userProfile: signal({ id: 'student-1' }), logout: vi.fn().mockResolvedValue(undefined) };
+    const toaster = { confirm: vi.fn().mockResolvedValue(options.confirm ?? true), success: vi.fn(), error: vi.fn() };
     TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
-      { provide: AuthService, useValue: auth },
+      { provide: AuthService, useValue: auth }, { provide: ToasterService, useValue: toaster },
       ...(Object.keys(query).length ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) }, queryParamMap: of(convertToParamMap(query)) } }] : [])] });
     const router = TestBed.inject(Router); const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(StudentOnboardingComponent);
     const http = TestBed.inject(HttpTestingController);
+    if (options.embedded) fixture.componentRef.setInput('embedded', true);
+    const saved = vi.fn(); fixture.componentInstance.targetSaved.subscribe(saved);
     fixture.detectChanges();
     http.expectOne(base).flush({ data: first });
     await settle();
-    if (first.status !== 'Completed') http.expectOne('/api/locations/provinces').flush([{ id: '06', name: 'Ankara' }, { id: '34', name: 'İstanbul' }]);
+    const wizard = first.status !== 'Completed' && !options.embedded;
+    if (wizard) http.expectOne('/api/locations/provinces').flush([{ id: '06', name: 'Ankara' }, { id: '34', name: 'İstanbul' }]);
     // E4 #18: a resumed wizard rebuilds the answers of saved steps 4–6 from Coaching, Identity and Notification.
-    if (first.status !== 'Completed' && first.savedSteps.includes(4) && !first.acceptedInvitations?.length)
+    if (wizard && first.savedSteps.includes(4) && !first.acceptedInvitations?.length)
       http.expectOne('/api/coaching/invitations/my-invitations').flush(resume.invitations ?? []);
-    if (first.status !== 'Completed' && first.savedSteps.includes(5)) {
+    if (wizard && first.savedSteps.includes(5)) {
       http.expectOne('/api/users/me/parent-link-codes/active').flush(resume.code ?? null);
       http.expectOne('/api/users/me/parent-links').flush(resume.links ?? []);
     }
-    if (first.status !== 'Completed' && first.savedSteps.includes(6)) http.expectOne('/api/notifications/preferences').flush({ data: resume.prefs ?? [] });
+    if (wizard && first.savedSteps.includes(6)) http.expectOne('/api/notifications/preferences').flush({ data: resume.prefs ?? [] });
     await settle();
     const el = fixture.nativeElement as HTMLElement;
     async function settle() { for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); } }
     const button = (text: string) => Array.from(el.querySelectorAll('[data-current] button, .ob-summary button, .ob-summary a')).find(x => x.textContent?.trim() === text) as HTMLElement;
     const click = async (text: string) => { const target = button(text); expect(target, text).toBeTruthy(); target.click(); await settle(); };
-    return { fixture, http, el, settle, click, button, navigate, auth };
+    return { fixture, http, el, settle, click, button, navigate, auth, saved, toaster };
   }
 
   it('is a chat: one question with its reason, a progress bar, a live log, and answers that stay as bubbles with "Değiştir"', async () => {
@@ -364,5 +369,178 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     expect(current.textContent).toContain('Veli kodunun süresi doldu (01.11.2026)');
     expect(current.textContent).not.toContain('Aktif bir veli kodun var');
     expect(t.button('Veli kodu oluştur')).toBeTruthy();
+  });
+  // E7 (#30, live test 06.11.2026): "Hedefini belirle" and Hedefim show the current target first; "Değiştir" opens the same steps.
+  describe('E7: the current target first', () => {
+    const completed = { status: 'Completed' as const, nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6, 7], completedAt: '2026-11-06T00:00:00Z' };
+    const yks = { ...stepTwo, educationStatus: 'Student' as const, gradeLevel: 12, purpose: 'Yks' as const, primaryScoreType: 'EA', targetExamSessionId: null, targetExamYear: 2027 };
+    const program = { kind: 'program' as const, targetId: 'p-1', name: 'Ankara Üniversitesi · Hukuk', detail: 'Hukuk Fakültesi', minimumScore: 475.14192,
+      scoreYear: 2025, scoreType: 'EA', scores: [], canEdit: true };
+    const scores = { kind: 'score' as const, targetId: null, name: 'TYT ve Eşit Ağırlık', detail: null, minimumScore: null, scoreYear: null, scoreType: 'EA',
+      scores: [{ scoreType: 'EA', score: 450 }, { scoreType: 'TYT', score: 400 }], canEdit: true };
+
+    it('"Hedefini belirle" shows the saved programme with its taban in tr-TR before asking anything', async () => {
+      const t = await render(view(completed, { ...yks, target: program }), { step: 'target' });
+      const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
+      expect(bubble.textContent).toContain('Ankara Üniversitesi · Hukuk · taban 475,14');
+      expect(bubble.textContent).not.toContain('475.14');
+      expect(t.el.querySelector('[data-question="targetMode"]')).toBeNull();
+      expect(bubble.querySelector('button')!.textContent).toContain('Değiştir');
+      t.http.expectNone(`${base}/steps/target`);
+    });
+
+    it('"Değiştir" opens the steps and "Vazgeç" keeps the saved target without saving', async () => {
+      const t = await render(view(completed, { ...yks, target: program }), { step: 'target' });
+      (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
+      expect(t.button('Bölüm seçeceğim')).toBeTruthy();
+      await t.click('Vazgeç');
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Üniversitesi · Hukuk');
+      t.http.expectNone(`${base}/steps/target`);
+      expect(t.navigate).not.toHaveBeenCalled();
+    });
+
+    it('shows both YKS score targets and saves both again from the score steps', async () => {
+      const t = await render(view(completed, { ...yks, target: scores }), { step: 'target' });
+      const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
+      expect(bubble.textContent).toContain('Eşit Ağırlık 450');
+      expect(bubble.textContent).toContain('TYT 400');
+      (bubble.querySelector('button') as HTMLElement).click(); await t.settle();
+      await t.click('Yalnız puan gireceğim');
+      const number = () => t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
+      number().value = '410'; number().dispatchEvent(new Event('input')); await t.click('Devam');
+      number().value = '455,5'.replace(',', '.'); number().dispatchEvent(new Event('input')); await t.click('Devam');
+      const save = t.http.expectOne(`${base}/steps/target`);
+      expect(save.request.body).toEqual({ kind: 'score', targetId: null, scores: [{ scoreType: 'TYT', score: 410 }, { scoreType: 'EA', score: 455.5 }] });
+    });
+
+    it('embedded in Hedefim: no page header, the new target is shown after saving and Bugün is not opened', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: { ...program, kind: 'school', name: 'Ankara Fen Lisesi', scoreType: 'LGS', minimumScore: 480.5 } }), {}, {}, { embedded: true });
+      expect(t.el.querySelector('h1')).toBeNull();
+      expect(t.el.textContent).not.toContain('Çıkış yap');
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi · taban 480,5');
+      (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      await t.click('Hedef puan gireceğim');
+      const input = t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
+      input.value = '460'; input.dispatchEvent(new Event('input')); await t.click('Devam');
+      const save = t.http.expectOne(`${base}/steps/target`);
+      expect(save.request.body).toEqual({ kind: 'score', targetId: null, scores: [{ scoreType: 'LGS', score: 460 }] });
+      save.flush({ data: view(completed, { ...stepTwo, target: { kind: 'score', targetId: null, name: 'LGS', detail: null, minimumScore: null, scoreYear: null,
+        scoreType: 'LGS', scores: [{ scoreType: 'LGS', score: 460 }], canEdit: true } }) }); await t.settle();
+      expect(t.navigate).not.toHaveBeenCalled();
+      expect(t.saved).toHaveBeenCalledTimes(1);
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('LGS 460');
+      expect(t.el.querySelector('[role="status"]')!.textContent).toContain('Hedefin kaydedildi');
+    });
+
+    it('embedded: a teacher\'s goal is shown locked with the note and no "Değiştir"', async () => {
+      const t = await render(view(completed, { ...stepTwo, targetLocked: true, target: { ...program, kind: 'school', name: 'Ankara Fen Lisesi', canEdit: false } }), {}, {}, { embedded: true });
+      const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
+      expect(bubble.textContent).toContain('Hedefini öğretmenin belirledi: Ankara Fen Lisesi');
+      expect(bubble.querySelector('button')).toBeNull();
+      expect(t.el.textContent).toContain('Değiştirmek istersen öğretmenine yaz.');
+      expect(t.el.textContent).not.toContain("Bugün'e dön");
+    });
+    // Review of PR 120 (item 1): the target branch never says "Önce sınavını seç" to a student who has an exam.
+    async function changeToLgsScore(t: Awaited<ReturnType<typeof render>>, score = '460') {
+      (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      await t.click('Hedef puan gireceğim');
+      const input = t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
+      input.value = score; input.dispatchEvent(new Event('input')); await t.click('Devam');
+    }
+    const school = { ...program, kind: 'school' as const, name: 'Ankara Fen Lisesi', scoreType: 'LGS', minimumScore: 480.5 };
+
+    it('while the new target is being saved it says "Kaydediliyor…", not "Önce sınavını seç"', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
+      await changeToLgsScore(t);
+      const save = t.http.expectOne(`${base}/steps/target`);
+      expect(t.el.textContent).toContain('Kaydediliyor…');
+      expect(t.el.textContent).not.toContain('Önce sınavını seç');
+      save.flush({ data: view(completed, { ...stepTwo, target: school }) }); await t.settle();
+    });
+
+    it('a failed save shows the error with "Yeniden dene" and "Vazgeç" next to it; "Vazgeç" brings the saved target back', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
+      await changeToLgsScore(t);
+      t.http.expectOne(`${base}/steps/target`).flush({ message: 'Sunucu hatası.' }, { status: 500, statusText: 'Server Error' }); await t.settle();
+      expect(t.el.textContent).not.toContain('Önce sınavını seç');
+      const alert = t.el.querySelector('.ob-error[role="alert"]') as HTMLElement;
+      expect(alert.textContent).toContain('Sunucu hatası.');
+      const buttons = Array.from(alert.querySelectorAll('button')).map(x => x.textContent?.trim());
+      expect(buttons).toEqual(['Yeniden dene', 'Vazgeç']);
+      (Array.from(alert.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Vazgeç') as HTMLElement).click(); await t.settle();
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi');
+      expect(t.el.querySelector('.ob-error')).toBeNull();
+      t.http.expectNone(`${base}/steps/target`);
+    });
+
+    it('a teacher who sets the goal meanwhile (Onboarding.TeacherGoal) shows the locked goal clearly', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
+      await changeToLgsScore(t);
+      t.http.expectOne(`${base}/steps/target`).flush({ success: false, code: 'Onboarding.TeacherGoal', message: 'Hedefini öğretmenin belirledi. Değiştirmek istersen öğretmenine yaz.' },
+        { status: 409, statusText: 'Conflict' }); await t.settle();
+      t.http.expectOne(base).flush({ data: view(completed, { ...stepTwo, targetLocked: true, target: { ...school, name: 'Kabataş Erkek Lisesi', canEdit: false } }) }); await t.settle();
+      const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
+      expect(bubble.textContent).toContain('Hedefini öğretmenin belirledi: Kabataş Erkek Lisesi');
+      expect(bubble.querySelector('button')).toBeNull();
+      expect(t.el.querySelector('.ob-summary')!.textContent).toContain('Değiştirmek istersen öğretmenine yaz.');
+      expect(t.el.textContent).not.toContain('Önce sınavını seç');
+      expect(t.el.textContent).not.toContain('Vazgeç');
+    });
+
+    it('after a refused answer (400) the question comes back with the message and "Vazgeç" still works', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
+      await changeToLgsScore(t);
+      t.http.expectOne(`${base}/steps/target`).flush({ message: 'Bu puan bu sınava uymuyor.' }, { status: 400, statusText: 'Bad Request' }); await t.settle();
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetScore');
+      expect(t.el.querySelector('[data-current] [role="alert"]')!.textContent).toContain('Bu puan bu sınava uymuyor.');
+      await t.click('Vazgeç');
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi');
+      expect(t.el.textContent).not.toContain('Bu puan bu sınava uymuyor.');
+      t.http.expectNone(`${base}/steps/target`);
+    });
+
+    it('"Henüz karar vermedim" asks before the saved target is removed', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true, confirm: false });
+      (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      await t.click('Henüz karar vermedim');
+      expect(t.toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Mevcut hedefin silinecek'), expect.anything());
+      t.http.expectNone(`${base}/steps/target`);
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
+      t.toaster.confirm.mockResolvedValue(true);
+      await t.click('Henüz karar vermedim');
+      const save = t.http.expectOne(`${base}/steps/target`);
+      expect(save.request.body).toEqual({ kind: 'none', targetId: null, scores: null });
+      save.flush({ data: view(completed, stepTwo) }); await t.settle();
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Henüz karar vermedim');
+    });
+
+    it('embedded: no target after a reload looks as right after saving ("Henüz karar vermedim" with "Değiştir")', async () => {
+      const t = await render(view(completed, stepTwo), {}, {}, { embedded: true });
+      const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
+      expect(bubble.textContent).toContain('Henüz karar vermedim');
+      expect(bubble.querySelector('button')!.textContent).toContain('Değiştir');
+      expect(t.el.querySelector('[data-question="targetMode"]')).toBeNull();
+    });
+
+    it('embedded before the first-login setup is finished: only a link to it', async () => {
+      const t = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2] }, stepTwo), {}, {}, { embedded: true });
+      expect(t.el.querySelector('[data-question]')).toBeNull();
+      const link = t.el.querySelector('a[href="/coaching-portal/welcome"]')!;
+      expect(link).toBeTruthy();
+      expect(t.el.textContent).toContain('Önce hesap kurulumunu bitir');
+      t.http.expectNone('/api/locations/provinces');
+    });
+
+    it('a started change counts as unsaved (Hedefim asks before leaving)', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
+      expect(t.fixture.componentInstance.dirty()).toBe(false);
+      (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      expect(t.fixture.componentInstance.dirty()).toBe(false);
+      await t.click('Hedef puan gireceğim');
+      expect(t.fixture.componentInstance.dirty()).toBe(true);
+      await t.click('Vazgeç');
+      expect(t.fixture.componentInstance.dirty()).toBe(false);
+    });
   });
 });

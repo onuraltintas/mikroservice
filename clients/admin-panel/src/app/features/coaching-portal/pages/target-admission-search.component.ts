@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { Subscription, finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+const SCORE = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
+
 interface AdmissionItem {
   id: string; targetId: string; name: string; institution: string; externalCode: string; scoreType: string;
   degree: string | null; field: string | null; minimumScore: number | null; rank: number | null;
@@ -64,12 +66,12 @@ interface AdmissionItem {
         <div *ngIf="kind === 'program'; else schoolResult">
           <strong>{{item.name}}</strong><p class="text-sm">{{item.field}}</p>
           <p class="text-sm">{{item.institution}} · {{display(item.degree || '')}} · {{display(item.scoreType)}}</p>
-          <p class="text-sm">Taban puan: {{item.minimumScore ?? 'Yayımlanmamış'}}</p>
+          <p class="text-sm">Taban puan: {{number(item.minimumScore)}}</p>
         </div>
         <ng-template #schoolResult>
           <div><strong>{{item.institution}}</strong><p class="text-sm">{{item.city}} / {{item.district}} · {{display(item.institutionType || '')}}</p>
             <p class="text-sm">Dil: {{item.language ?? '—'}} · Alan: {{item.field ?? '—'}}</p>
-            <p class="text-sm">Taban puan: {{item.minimumScore ?? 'Yayımlanmamış'}} · Yüzdelik: {{item.percentile ?? 'Yayımlanmamış'}} · Kontenjan: {{item.quota ?? 'Bilinmiyor'}}</p></div>
+            <p class="text-sm">Taban puan: {{number(item.minimumScore)}} · Yüzdelik: {{number(item.percentile)}} · Kontenjan: {{item.quota ?? 'Bilinmiyor'}}</p></div>
         </ng-template>
         <div class="flex items-center gap-3"><a [href]="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="underline">Resmî kaynak</a>
           <button type="button" (click)="choose(item.id)" [disabled]="disabled || busy()" class="rounded border px-3 py-2">Bu hedefi bağla</button></div>
@@ -96,6 +98,9 @@ export class TargetAdmissionSearchComponent implements OnChanges {
   readonly year = 2026;
   page = 1;
   filters: Record<string, string> = {};
+
+  /** E7 (#30): scores in tr-TR with two decimals at most ("475,14", not "475.14192"). */
+  number(value: number | null) { return value === null || value === undefined ? 'Yayımlanmamış' : SCORE.format(value); }
 
   display(value: string) {
     return ({ Associate: 'ÖNLİSANS', Bachelor: 'LİSANS', SOZ: 'SÖZ', DIL: 'YDT', 'DİL': 'YDT' } as Record<string, string>)[value] ?? value;
