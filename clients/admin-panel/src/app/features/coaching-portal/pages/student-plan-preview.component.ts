@@ -21,10 +21,17 @@ import { WeeklySlot, clock, weekDays } from './weekly-calendar';
   templateUrl: './student-plan-preview.component.html', styleUrl: './student-study-plan-assistant.component.scss'
 })
 export class StudentPlanPreviewComponent implements OnInit {
-  /** The chosen courses (Derslerim); the weekly lessons are made for these only. */
-  @Input() lessonIds: string[] = [];
+  /** The chosen courses (Derslerim); the weekly lessons are made for these only. A change remakes the proposal. */
+  @Input() set lessonIds(value: string[]) { this.chosenIds = value ?? []; this.propose(); }
+  get lessonIds() { return this.chosenIds; }
+  private chosenIds: string[] = [];
   /** No availability yet: the setup page opens Müsaitliğim. */
   @Output() editAvailability = new EventEmitter<void>();
+  /** E6 review: none of the chosen courses has weekly lessons; the setup page opens Derslerim. */
+  @Output() editCourses = new EventEmitter<void>();
+  /** The chosen courses that can get weekly lessons; empty means the student has to choose courses first. */
+  readonly chosenLessons = signal<WeeklyLesson[]>([]);
+  private loaded = false;
   private readonly weekly = inject(CoachingWeeklyDraftService);
   private readonly planning = inject(CoachingStudyPlanningService);
   private readonly destroy = inject(DestroyRef);
@@ -50,12 +57,18 @@ export class StudentPlanPreviewComponent implements OnInit {
       next: ({ page, availability }) => {
         this.lessons = page.lessons; this.version = page.draft?.version ?? null;
         this.slots.set(page.draft?.slots ?? []); this.availability.set(availability ?? null);
-        const chosen = new Set(this.lessonIds.map(id => id.toLowerCase()));
-        const lessons = this.lessons.filter(lesson => chosen.has(lesson.id.toLowerCase()));
-        this.proposal.set(this.slots().length ? [] : createProposalFromWindows(availability?.windows ?? [], lessons, []));
+        this.loaded = true; this.propose();
       },
       error: () => { this.loadFailed.set(true); this.error.set('Plan önizlemesi hazırlanamadı. Yeniden deneyebilirsin.'); }
     });
+  }
+
+  private propose() {
+    if (!this.loaded) return;
+    const chosen = new Set(this.chosenIds.map(id => id.toLowerCase()));
+    const lessons = this.lessons.filter(lesson => chosen.has(lesson.id.toLowerCase()));
+    this.chosenLessons.set(lessons);
+    this.proposal.set(this.slots().length ? [] : createProposalFromWindows(this.availability()?.windows ?? [], lessons, []));
   }
 
   hasAvailability() { return !!this.availability()?.windows.length; }

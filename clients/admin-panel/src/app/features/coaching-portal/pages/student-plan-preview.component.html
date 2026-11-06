@@ -20,6 +20,9 @@
         <p class="muted">Kaydedersen yıllık plan önizlemesi hemen açılır. Taslağı oluşturup Planım sayfasında “Planı yayımla” dediğinde aktif planın olur.</p>
         <div class="actions"><button type="button" (click)="saveWeek()" [disabled]="saving()">{{ saving() ? 'Kaydediliyor…' : 'Bu düzeni kaydet ve planı önizle' }}</button>
           <a routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a></div>
+      } @else if (!chosenLessons().length) {
+        <p class="notice" role="status">Önizleme için Derslerim adımında çalışacağın dersleri seç.</p>
+        <button type="button" (click)="editCourses.emit()">Derslerimi seç</button>
       } @else {
         <p class="notice">Seçtiğin dersler için müsaitliğinde ders saati oluşturulamadı. Müsaitliğine en az 30 dakikalık bir aralık ekle ya da takvimde kendin düzenle.</p>
         <a routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a>

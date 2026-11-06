@@ -37,6 +37,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   /** E6 #29: the availability saved in Çalışma tercihlerim (one record); the wizard asks only when there is none. */
   readonly availability = signal<StudyAvailability | null>(null);
   readonly availabilityLoading = signal(false);
+  /** E6 review: a failed load (not 404) is retried, never answered with the questions (a save would only get a 409). */
+  readonly availabilityLoadError = signal('');
   /** Değiştir: the same availability editor as Çalışma tercihlerim, inside the wizard. */
   readonly editingAvailability = signal(false);
   readonly savingAvailability = signal(false);
@@ -92,10 +94,13 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   }
 
   loadAvailability() {
-    this.availabilityLoading.set(true);
+    this.availabilityLoading.set(true); this.availabilityLoadError.set('');
     this.planning.getAvailability(this.staffStudentId).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.availabilityLoading.set(false))).subscribe({
       next: value => this.availability.set(value ?? null),
-      error: e => { if (e?.status !== 404) this.error.set('Çalışma saatlerin yüklenemedi. Yeniden deneyebilirsin.'); }
+      error: e => {
+        if (e?.status === 404) { this.availability.set(null); return; }
+        this.availabilityLoadError.set(this.staffStudentId ? 'Öğrencinin çalışma saatleri yüklenemedi.' : 'Çalışma saatlerin yüklenemedi.');
+      }
     });
   }
 
@@ -112,7 +117,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     this.proposal.set([]); this.editingAvailability.set(true);
   }
   availabilitySaved() { this.editingAvailability.set(false); this.proposal.set([]); this.loadAvailability(); }
-  canPropose() { return !this.busy() && !this.savingAvailability() && !!this.lessons().length && (this.savedWindows().length > 0 || this.selectedDays().length > 0); }
+  canPropose() { return !this.busy() && !this.savingAvailability() && !this.availabilityLoading() && !this.availabilityLoadError() && !!this.lessons().length && (this.savedWindows().length > 0 || this.selectedDays().length > 0); }
 
   availableTopicLessons() {
     const context = this.learningContext(); const catalog = this.catalog();
@@ -206,7 +211,11 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     this.planning.saveAvailability({ expectedVersion: this.availability()?.version ?? null, timeZoneId: 'Europe/Istanbul', windows })
       .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.savingAvailability.set(false))).subscribe({
         next: saved => { this.availability.set(saved); this.propose(saved.windows); },
-        error: e => this.error.set(`Çalışma saatlerin kaydedilmedi. ${typeof e?.error?.message === 'string' ? e.error.message : 'Yeniden deneyebilirsin.'}`)
+        error: e => {
+          this.error.set(`Çalışma saatlerin kaydedilmedi. ${typeof e?.error?.message === 'string' ? e.error.message : 'Yeniden deneyebilirsin.'}`);
+          // E6 review: another session saved study times; load them so the next attempt uses the current record.
+          if (e?.status === 409) this.loadAvailability();
+        }
       });
   }
 

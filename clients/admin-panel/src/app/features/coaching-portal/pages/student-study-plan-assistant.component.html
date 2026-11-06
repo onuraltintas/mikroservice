@@ -29,7 +29,8 @@
       @if (saved()) { <p class="notice success" role="status">Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }
       <!-- E6 #29: the study times are given once (Çalışma tercihlerim › Müsaitliğim); the wizard uses the saved ones. -->
       <div class="composer wizard-form">
-        @if (availabilityLoading() && !availability()) { <p role="status" class="muted">Çalışma saatlerin yükleniyor…</p> }
+        @if (availabilityLoadError()) { <p class="notice error" role="alert" data-testid="availability-load-error">{{ availabilityLoadError() }} <button type="button" class="secondary" (click)="loadAvailability()" [disabled]="availabilityLoading()">Yeniden dene</button></p> }
+        @else if (availabilityLoading() && !availability()) { <p role="status" class="muted">{{ staffStudentId ? 'Öğrencinin çalışma saatleri yükleniyor…' : 'Çalışma saatlerin yükleniyor…' }}</p> }
         @else if (savedWindows().length) {
           <section class="availability-summary" data-testid="wizard-availability" aria-labelledby="wizard-availability-title">
             <h2 id="wizard-availability-title">{{ staffStudentId ? 'Öğrencinin çalışma saatleri' : 'Çalışma saatlerin' }}</h2>
