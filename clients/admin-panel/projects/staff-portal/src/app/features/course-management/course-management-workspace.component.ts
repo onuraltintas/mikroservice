@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, Input, OnInit, inject } from '@angular/core';
-import { TURKEY_ZONE, turkeyDateTimeLocal, turkeyDefaults, turkeyInstant } from './course-management-time';
+import { TURKEY_ZONE, olderZoneNotice, turkeyDateTimeLocal, turkeyDefaults, turkeyInstant } from './course-management-time';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { StaffAuthService } from '../../auth/staff-auth.service';
@@ -207,6 +207,7 @@ export class CourseManagementWorkspaceComponent implements OnInit {
   /** E3 review L5: a series saved earlier in another zone is told its times are now read as Türkiye time. */
   editingSeriesZone: string | null = null;
   readonly turkeyZone = TURKEY_ZONE;
+  readonly olderZoneNotice = olderZoneNotice;
   editingSeriesEndsOn = '';
   editingSeriesStartTime = '';
   editingSeriesDurationMinutes = 60;

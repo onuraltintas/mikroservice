@@ -68,7 +68,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                       </select>
                     </label>
                   }
-                  @if (editingClearsSchool()) { <p class="text-amber-800" role="status" data-testid="membership-clears-school">{{ clearsSchoolText }}</p> }
+                  @if (editingClearsSchoolNotice(); as notice) { <p class="text-amber-800" role="status" data-testid="membership-clears-school">{{ notice }}</p> }
                   <label class="block">Öğretmen ara
                     <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" maxlength="100" [disabled]="savingMembership()" class="w-full rounded border px-3 py-2 dark:bg-gray-800" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading() || savingMembership()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Ara' }}</button></span>
                   </label>
@@ -286,6 +286,17 @@ export class CoachingPeopleComponent implements OnInit {
   readonly educationStages = EDUCATION_STAGES; readonly gradesFor = gradesFor; readonly isStudentStage = isStudentStage; readonly educationLabel = educationLabel;
   readonly clearsSchoolText = 'Öğrenci olmayan bir eğitim durumu seçilirse öğrencinin sınıf, okul ve şube bilgisi silinir.';
   editingClearsSchool() { return isStudentStage(this.savedStage) && this.editingStage !== '' && !isStudentStage(this.editingStage); }
+  /** E3 re-check: lise -> ortaokul drops the stored lise and branch on the server; said first, as on Profilim. */
+  readonly dropsLiseText = 'Lise öğrencisi ortaokula geçirilirse kayıtlı okul ve şube bilgisi silinir.';
+  editingClearsSchoolNotice() {
+    return this.editingClearsSchool() ? this.clearsSchoolText
+      : this.savedStage === 'high' && this.editingStage === 'middle' ? this.dropsLiseText : null;
+  }
+  /** Sets the education editor from the selected student (status choice and grade). */
+  resetEducationEditor(student: CoachingStudentRosterItem | null) {
+    this.editingGradeLevel = student?.gradeLevel ?? null;
+    this.editingStage = this.savedStage = stageOf(student?.educationStatus ?? (this.editingGradeLevel ? 'Student' : null), this.editingGradeLevel);
+  }
   changeEditingStage(stage: EducationStage | '') {
     this.editingStage = stage;
     if (!gradesFor(stage).includes(Number(this.editingGradeLevel))) this.editingGradeLevel = null;
@@ -415,8 +426,7 @@ export class CoachingPeopleComponent implements OnInit {
           if (requestId !== this.requestId) return;
           this.selectedStudent.set(result.roster.students.find(item => item.userId === id) ?? null);
           this.studentDetail.set(this.selectedStudent() ? result.detail : null);
-          this.editingGradeLevel = this.selectedStudent()?.gradeLevel ?? null;
-          this.editingStage = this.savedStage = stageOf(this.selectedStudent()?.educationStatus ?? (this.editingGradeLevel ? 'Student' : null), this.editingGradeLevel);
+          this.resetEducationEditor(this.selectedStudent());
           this.editingTeacherUserId = this.selectedStudent()?.teacherUserId ?? '';
           if (!this.selectedStudent()) this.error.set('Öğrenci bu kurumda bulunamadı.');
           else this.loadStudentHistory(1);
@@ -548,7 +558,8 @@ export class CoachingPeopleComponent implements OnInit {
     const gradeLevel = education.gradeLevel;
     const teacherUserId = this.editingTeacherUserId || null;
     // E3 #14: a non-student status clears the grade, school and branch; the admin is told first.
-    if (this.editingClearsSchool() && !await this.toaster.confirm(`${this.clearsSchoolText} Kaydedilsin mi?`)) return;
+    const notice = this.editingClearsSchoolNotice();
+    if (notice && !await this.toaster.confirm(`${notice} Kaydedilsin mi?`)) return;
     if (this.savingMembership() || this.selectedStudent()?.userId !== student.userId) return;
     this.savingMembership.set(true);
     this.membershipService.updateStudent(student.userId, {

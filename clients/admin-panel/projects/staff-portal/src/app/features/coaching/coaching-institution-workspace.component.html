@@ -152,7 +152,7 @@
                             @for (grade of gradesFor(editStudentStage); track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
                           </select></label>
                         }
-                        @if (memberClearsSchool()) { <p class="filter-note" role="status" data-testid="member-clears-school">{{ memberClearsSchoolText }}</p> }
+                        @if (memberClearsSchoolNotice(); as notice) { <p class="filter-note" role="status" data-testid="member-clears-school">{{ notice }}</p> }
                         <label class="filter-field">Öğretmen ekle<select [(ngModel)]="editStudentTeacherId" (ngModelChange)="membershipDirty = true" name="memberTeacher">
                           <option value="">Öğretmen ekleme</option>
                           @for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}</option> }

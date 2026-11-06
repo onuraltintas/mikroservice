@@ -698,6 +698,7 @@
       <div class="row"><span>
         @if (isOwner) { <small>Öğretmen · <code>{{ window.teacherUserId }}</code><br></small> }
         {{ weekdayLabel(window.weekday) }} · {{ window.startTime }}–{{ window.endTime }}
+        @if (olderZoneNotice(window.timeZoneId); as notice) { <small class="notice" data-testid="availability-zone-notice"> · {{ notice }}</small> }
       </span>
         <button type="button" (click)="removeTeacherAvailability(window.id)" [disabled]="busy">Saati kaldır</button>
       </div>

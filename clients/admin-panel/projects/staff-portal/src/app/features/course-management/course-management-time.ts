@@ -40,3 +40,8 @@ export function turkeyDefaults(now: Date) {
     today: day(0)
   };
 }
+
+/** A row saved before E3 in another zone (re-check 4): it is now read as Türkiye time, and the panel says so. */
+export function olderZoneNotice(zone: string | null | undefined): string | null {
+  return zone && zone !== TURKEY_ZONE ? `Eskiden ${zone} saatiyle kaydedildi; artık Türkiye saatine göre okunur.` : null;
+}

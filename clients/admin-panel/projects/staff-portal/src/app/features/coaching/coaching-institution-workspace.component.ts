@@ -53,6 +53,12 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   readonly educationLabel = educationLabel;
   readonly memberClearsSchoolText = 'Öğrenci olmayan bir eğitim durumu seçilirse öğrencinin sınıf, okul ve şube bilgisi silinir.';
   memberClearsSchool() { return isStudentStage(this.editStudentSavedStage) && this.editStudentStage !== '' && !isStudentStage(this.editStudentStage); }
+  /** E3 re-check: lise -> ortaokul drops the stored lise and branch on the server; said first, as on Profilim. */
+  readonly memberDropsLiseText = 'Lise öğrencisi ortaokula geçirilirse kayıtlı okul ve şube bilgisi silinir.';
+  memberClearsSchoolNotice() {
+    return this.memberClearsSchool() ? this.memberClearsSchoolText
+      : this.editStudentSavedStage === 'high' && this.editStudentStage === 'middle' ? this.memberDropsLiseText : null;
+  }
   changeStudentStage(stage: EducationStage | '') {
     this.editStudentStage = stage; this.membershipDirty = true;
     if (!gradesFor(stage).includes(Number(this.editStudentGrade))) this.editStudentGrade = null;
@@ -89,7 +95,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
       && !this.teacherFilterOptions().some(teacher => teacher.userId === this.editStudentTeacherId)) {
       this.membershipError.set('Kurum öğretmenlerinden birini seçin.'); return;
     }
-    if (this.memberClearsSchool() && !await this.toaster.confirm(`${this.memberClearsSchoolText} Kaydedilsin mi?`)) return;
+    const notice = this.memberClearsSchoolNotice();
+    if (notice && !await this.toaster.confirm(`${notice} Kaydedilsin mi?`)) return;
     if (this.isMembershipSaving() || this.editingStudentId() !== id) return;
     this.changeMembership(this.institutionService.updateStudent(id, educationRequest(stage, grade), this.editStudentTeacherId || null),
       this.editStudentTeacherId ? 'Öğrenci sınıfı güncellendi ve öğretmen eklendi.' : 'Öğrenci sınıfı güncellendi.', async () => {

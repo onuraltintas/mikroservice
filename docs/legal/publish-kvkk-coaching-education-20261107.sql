@@ -1,7 +1,11 @@
 \set ON_ERROR_STOP on
--- The date line of the new text is the publish day. The release instruction sets it here (for example '14 Kasım 2026');
--- the script refuses to run while it is not a real date.
+-- The date line of the new text is the publish day. The release instruction passes it on the command line:
+--   psql -v ON_ERROR_STOP=1 -v publish_day='7 Kasım 2026' -f publish-kvkk-coaching-education-20261107.sql
+-- Without it the placeholder below is used and the script refuses, changing nothing.
+\if :{?publish_day}
+\else
 \set publish_day 'GG Ay YYYY'
+\endif
 -- E3 #14 (user decision 06.11.2026): the first-login wizard asks "Şu an durumun ne?" (ortaokul or lise student with the grade, lise
 -- graduate, university student or graduate) instead of the grade alone. The KVKK aydınlatma metni published on 06.11.2026 as version 2
 -- (publish-kvkk-coaching-wizard-20261106.sql, not edited again) says "Sınıf ya da mezun olma durumu"; this changes only those education
@@ -52,7 +56,7 @@ KVKK m.11 kapsamında işleme olup olmadığını öğrenme, bilgi isteme, amac�
 
 DO $$ BEGIN
  IF (SELECT content FROM kvkk_texts WHERE slug='kvkk') !~ '^[0-9]{1,2} (Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık) 20[0-9]{2} — ' THEN
-   RAISE EXCEPTION 'Set publish_day at the top of this script to the publish day (for example 14 Kasım 2026). Nothing changed.';
+   RAISE EXCEPTION 'Set publish_day to the publish day (psql -v publish_day=''7 Kasım 2026''). Nothing changed.';
  END IF;
  IF (SELECT count(*) FROM identity."users" WHERE "Email"='admin@eduivme.com') <> 1 THEN
    RAISE EXCEPTION 'Expected existing admin actor not found';

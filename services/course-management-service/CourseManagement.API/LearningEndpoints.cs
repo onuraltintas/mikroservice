@@ -1769,19 +1769,8 @@ public static class LearningEndpoints
     private static bool FitsTeacherAvailability((DateTimeOffset StartsAt, DateTimeOffset EndsAt) occurrence,
         IReadOnlyList<TeacherAvailabilityWindow> windows)
     {
-        if (windows.Count == 0) return true;
-        foreach (var window in windows)
-        {
-            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(window.TimeZoneId);
-            var localStart = TimeZoneInfo.ConvertTime(occurrence.StartsAt, timeZone);
-            var localEnd = TimeZoneInfo.ConvertTime(occurrence.EndsAt, timeZone);
-            if (DateOnly.FromDateTime(localStart.DateTime) == DateOnly.FromDateTime(localEnd.DateTime)
-                && ((int)localStart.DayOfWeek + 6) % 7 == window.Weekday
-                && TimeOnly.FromDateTime(localStart.DateTime) >= window.StartTime
-                && TimeOnly.FromDateTime(localEnd.DateTime) <= window.EndTime)
-                return true;
-        }
-        return false;
+        // E3 #34: the hours are Türkiye time (older rows stored with another zone too).
+        return CourseManagementTime.FitsTeacherHours(windows, occurrence.StartsAt, occurrence.EndsAt);
     }
     private static async Task GrantStaffCancellationCredits(CourseManagementDbContext db, Guid workspaceId,
         Guid lessonId, Guid actorId, DateTimeOffset now, CancellationToken ct)
