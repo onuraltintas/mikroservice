@@ -424,6 +424,115 @@ public sealed class CoachingStudentOnboardingTests
         await Assert.ThrowsAsync<ArgumentException>(() => store.UpdateStudentAsync(s.Student, Request(updated.Version) with { DiplomaGrade = 30 }, default));
     }
 
+    // ---------- E2 (live test 06.11.2026) ----------
+
+    [Fact]
+    public async Task RealTurkishPlaceNamesMatchTheCatalogsCapitals()
+    {
+        // #15: the Identity directory now writes the names in Turkish; the folding match of PR #113 keeps working for them.
+        foreach (var (name, capitals) in new[] { ("Adıyaman", "ADIYAMAN"), ("Afyonkarahisar", "AFYONKARAHİSAR"), ("Iğdır", "IĞDIR"), ("İstanbul", "İSTANBUL"),
+                     ("Şanlıurfa", "ŞANLIURFA"), ("Kadıköy", "KADIKÖY"), ("Keçiören", "KEÇİÖREN"), ("Çamlıdere", "ÇAMLIDERE") })
+            CoachingStudentOnboardingService.Fold(name).Should().Be(CoachingStudentOnboardingService.Fold(capitals), name);
+        await using var s = await Setup.CreateAsync();
+        foreach (var (city, district, name) in new[] { ("ADIYAMAN", "MERKEZ", "Adıyaman Fen Lisesi"), ("IĞDIR", "MERKEZ", "Iğdır Fen Lisesi"),
+                     ("ŞANLIURFA", "EYYÜBİYE", "Şanlıurfa Fen Lisesi"), ("ANKARA", "ÇAMLIDERE", "Çamlıdere Anadolu Lisesi") })
+        {
+            var school = TargetSchool.Create("meb", name, name, city, district, 400, 2025); school.SetProgramDetails("Fen Lisesi", null, null); school.SetActive(true);
+            s.F.Db.Add(school);
+        }
+        await s.F.Db.SaveChangesAsync();
+        foreach (var (city, expected) in new[] { ("Adıyaman", "Adıyaman Fen Lisesi"), ("Iğdır", "Iğdır Fen Lisesi"), ("Şanlıurfa", "Şanlıurfa Fen Lisesi") })
+            (await s.Service.SchoolsAsync(city, null, null, 1, default)).Items.Select(x => x.Name).Should().Equal([expected], city);
+        var ankara = await s.Service.SchoolsAsync("Ankara", null, null, 1, default, district: "Çamlıdere");
+        ankara.Items[0].Should().Match<OnboardingSchoolOption>(x => x.Name == "Çamlıdere Anadolu Lisesi" && x.InHomeDistrict);
+        (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", null, 1, default, district: "Keçiören")).Items[0].InHomeDistrict.Should().BeTrue();
+        // The wizard stores the directory's (corrected) names.
+        var view = await s.Personal(grade: 8);
+        (view.Answers.HomeCity, view.Answers.HomeDistrict).Should().Be(("Ankara", "Çankaya"));
+        await s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "02", "0201", CoachingEducationStatus.Student, 8, null, null), default);
+        (await s.Service.GetAsync(default)).Answers.HomeCity.Should().Be("Adıyaman");
+    }
+
+    [Fact]
+    public async Task TheOwnSchoolListShowsEachSchoolOnceAndTheTargetListKeepsEachProgramme()
+    {
+        // #16: the catalog has one row per type, programme and language; the student's own school is one school.
+        await using var s = await Setup.CreateAsync();
+        TargetSchool Add(string name, string type, string? language)
+        {
+            var school = TargetSchool.Create("meb", Guid.NewGuid().ToString(), name, "ANKARA", "ÇANKAYA", 400, 2025);
+            school.SetProgramDetails(type, language, null); school.SetActive(true); s.F.Db.Add(school);
+            return school;
+        }
+        var ayranci = new[] { Add("Ayrancı Anadolu Lisesi", "Anadolu Lisesi", "İngilizce"), Add("Ayrancı Anadolu Lisesi", "Anadolu Lisesi", "Almanca") };
+        var balgat = new[] { Add("Balgat Mesleki ve Teknik Anadolu Lisesi", "Anadolu Teknik Programı", "İngilizce"),
+            Add("Balgat Mesleki ve Teknik Anadolu Lisesi", "Anadolu Teknik Programı", "Almanca"),
+            Add("Balgat Mesleki ve Teknik Anadolu Lisesi", "Anadolu Meslek Programı", "İngilizce"),
+            Add("Balgat Mesleki ve Teknik Anadolu Lisesi", "Anadolu Meslek Programı", "Almanca") };
+        await s.F.Db.SaveChangesAsync();
+
+        (await s.Service.SchoolsAsync("Ankara", null, null, 1, default)).TotalCount.Should().Be(28, "26 schools and two schools with several rows");
+        var one = (await s.Service.SchoolsAsync("Ankara", null, "Ayran", 1, default)).Items.Should().ContainSingle().Subject;
+        one.Should().Match<OnboardingSchoolOption>(x => x.Name == "Ayrancı Anadolu Lisesi" && x.District == "ÇANKAYA" && x.Type == "Anadolu Lisesi");
+        one.Id.Should().Be(ayranci.Min(x => x.Id), "the representative is stable: the smallest id");
+        var mixed = (await s.Service.SchoolsAsync("Ankara", null, "balgat", 1, default)).Items.Should().ContainSingle().Subject;
+        mixed.Type.Should().BeNull("the rows have different types, so none is shown");
+        mixed.Id.Should().Be(balgat.Min(x => x.Id));
+        (await s.Service.SchoolsAsync("Ankara", null, "balgat", 1, default)).Items.Single().Id.Should().Be(mixed.Id);
+        // The LGS target list (city → type → school) keeps one row per programme.
+        (await s.Service.SchoolsAsync("Ankara", "Anadolu Teknik Programı", "balgat", 1, default)).Items.Should().HaveCount(2);
+        (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "Ayran", 1, default)).Items.Should().HaveCount(2);
+
+        // Saving keeps the name, city and district; the type only where every row agrees.
+        await s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 8, null, balgat[2].Id), default);
+        var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
+        (profile.SchoolName, profile.SchoolCity, profile.SchoolDistrict, profile.SchoolType).Should().Be(("Balgat Mesleki ve Teknik Anadolu Lisesi", "ANKARA", "ÇANKAYA", (string?)null));
+        var store = new CoachingProfileStore(s.F.Db, s.F.Accounts, null, null, s.Places);
+        var updated = await store.UpdateStudentAsync(s.Student, new(profile.Version, CoachingEducationStatus.Student, 8, null, null, null, null, null, null,
+            new DateOnly(2012, 5, 1), null, null, true) { SchoolId = ayranci[1].Id }, default);
+        (updated.SchoolName, updated.SchoolType).Should().Be(("Ayrancı Anadolu Lisesi", "Anadolu Lisesi"));
+        updated = await store.UpdateStudentAsync(s.Student, new(updated.Version, CoachingEducationStatus.Student, 8, null, null, null, null, null, null,
+            new DateOnly(2012, 5, 1), null, null, true) { SchoolId = balgat[0].Id }, default);
+        (updated.SchoolName, updated.SchoolType).Should().Be(("Balgat Mesleki ve Teknik Anadolu Lisesi", (string?)null));
+    }
+
+    [Fact]
+    public async Task TheSameSchoolNameInTwoDistrictsStaysTwoSchools()
+    {
+        await using var s = await Setup.CreateAsync();
+        foreach (var (district, language) in new[] { ("ÇANKAYA", "İngilizce"), ("ÇANKAYA", "Almanca"), ("KEÇİÖREN", "İngilizce") })
+        {
+            var school = TargetSchool.Create("meb", Guid.NewGuid().ToString(), "Atatürk Anadolu Lisesi", "ANKARA", district, 400, 2025);
+            school.SetProgramDetails("Anadolu Lisesi", language, null); school.SetActive(true); s.F.Db.Add(school);
+        }
+        await s.F.Db.SaveChangesAsync();
+        var page = await s.Service.SchoolsAsync("Ankara", null, "atatürk", 1, default, district: "Keçiören");
+        page.Items.Select(x => (x.Name, x.District, x.InHomeDistrict)).Should().Equal(
+            ("Atatürk Anadolu Lisesi", "KEÇİÖREN", true), ("Atatürk Anadolu Lisesi", "ÇANKAYA", false));
+        page.TotalCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task NationalityQuotaProgrammesAreNotOffered()
+    {
+        // #17: "(KKTC Uyruklu)" places are only for TRNC citizens; the catalog keeps them, the student lists do not offer them.
+        await using var s = await Setup.CreateAsync();
+        s.Program("2001", "Ankara Üniversitesi", "Ergoterapi (KKTC Uyruklu)", "Bachelor", "SAY", "ANKARA", 211, 900000);
+        s.Program("2002", "Ankara Üniversitesi", "Makine Mühendisliği (M.T.O.K.)", "Bachelor", "SAY", "ANKARA", 300, 300000);
+        s.Program("2003", "Girne Üniversitesi", "Tıp (KKTC Uyruklu)", "Bachelor", "SAY", "KIBRIS", 400, 60000);
+        await s.F.Db.SaveChangesAsync();
+
+        (await s.Service.ProgramCitiesAsync("Bachelor", "SAY", default)).Select(x => x.Value).Should().Equal("ANKARA", "İSTANBUL");
+        (await s.Service.UniversitiesAsync("Bachelor", "SAY", "Kıbrıs", null, default)).Should().BeEmpty();
+        (await s.Service.ProgramsAsync("Bachelor", "SAY", "Ankara", "Ankara Üniversitesi", null, 1, default)).Items.Select(x => x.Name)
+            .Should().Equal("Bilgisayar Mühendisliği", "Fizik", "Makine Mühendisliği (M.T.O.K.)");
+        (await s.Service.ProgramsAsync("Bachelor", "SAY", "Ankara", "Ankara Üniversitesi", "ergo", 1, default)).TotalCount.Should().Be(0);
+        // Hedefim's catalog search (students and teachers) does not offer them either.
+        var search = await new TargetAdmissionSearchService(s.F.Db).SearchAsync(new("YKS", 2026, ProgramType: "Bachelor", PageSize: 50));
+        search.Items.Select(x => x.Name).Should().NotContain(x => x.Contains("Uyruklu")).And.Contain("Makine Mühendisliği (M.T.O.K.)");
+        search.TotalCount.Should().Be(5);
+    }
+
     // ---------- Re-check LOWs (Paket C) ----------
 
     [Fact]
@@ -486,13 +595,16 @@ public sealed class CoachingStudentOnboardingTests
         public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default) where T : class { published.Add(message); return Task.CompletedTask; }
     }
 
-    /// <summary>Province names as turkey-locations.json writes them ("Adiyaman", "Afyonkarahi̇sar" with a combining dot).</summary>
+    /// <summary>
+    /// Province names as the corrected directory writes them ("Adıyaman"); "Afyonkarahi̇sar" (with a combining dot) stands for a
+    /// name written before the E2 correction, which still matches the catalog.
+    /// </summary>
     internal sealed class Locations : ICoachingLocationDirectory
     {
         public bool TimesOut { get; set; }
         public Task<IReadOnlyList<LocationProvince>> GetProvincesAsync(CancellationToken ct) => TimesOut
             ? throw new TaskCanceledException("timeout")
-            : Task.FromResult<IReadOnlyList<LocationProvince>>([new("06", "Ankara"), new("34", "İstanbul"), new("02", "Adiyaman"), new("03", "Afyonkarahi\u0307sar")]);
+            : Task.FromResult<IReadOnlyList<LocationProvince>>([new("06", "Ankara"), new("34", "İstanbul"), new("02", "Adıyaman"), new("03", "Afyonkarahi\u0307sar")]);
         public Task<IReadOnlyList<LocationDistrict>> GetDistrictsAsync(string provinceId, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<LocationDistrict>>(provinceId switch
             {
@@ -555,7 +667,7 @@ public sealed class CoachingStudentOnboardingTests
             return s;
         }
 
-        private void Program(string code, string university, string name, string level, string scoreType, string city, int? minimum, int? rank)
+        public void Program(string code, string university, string name, string level, string scoreType, string city, int? minimum, int? rank)
         {
             var program = TargetUniversityProgram.Create(code, university, name, "Fakülte", level, scoreType);
             program.UpdateDetails(new(code, university, name, scoreType, city, null, "Devlet", level, null, null, null, null, 50, 50, minimum, minimum, rank, null),

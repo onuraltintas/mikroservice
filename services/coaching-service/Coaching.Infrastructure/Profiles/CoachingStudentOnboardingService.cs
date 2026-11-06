@@ -103,8 +103,9 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         var educationChanged = profile.EducationStatus != request.EducationStatus || profile.GradeLevel != request.GradeLevel;
         // A resuming student keeps what the wizard does not ask: the graduation year and, unless a new one is picked, the school.
         var graduationYear = request.GraduationYear ?? (request.EducationStatus == CoachingEducationStatus.Graduate ? profile.GraduationYear : null);
+        var schoolType = school is null ? profile.SchoolType : await OwnSchoolTypeAsync(db, school, ct);
         profile.UpdateEducation(request.EducationStatus, request.GradeLevel, school?.Name ?? profile.SchoolName, school is null ? profile.SchoolCity : school.City,
-            school is null ? profile.SchoolDistrict : school.District, school is null ? profile.SchoolType : school.InstitutionType, profile.ClassBranch, graduationYear);
+            school is null ? profile.SchoolDistrict : school.District, schoolType, profile.ClassBranch, graduationYear);
         profile.UpdatePersonal(birthDate, profile.Bio, profile.AvatarUrl, profile.ShareProgressWithTeachers);
         profile.SetHome(province.Id, province.Name, district.Id, district.Name);
         // The exam step depends on the grade (the diploma question is for 11th, 12th grade and graduates).
@@ -318,7 +319,10 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         return await Options(db.TargetSchools.AsNoTracking().Where(x => x.IsActive && Enumerable.Contains(cities, x.City)).Select(x => x.InstitutionType), ct);
     }
 
-    /// <summary>City: a catalog value or a place name from the Identity directory ("Adiyaman", "Afyonkarahi̇sar"); both match the catalog's spelling.</summary>
+    /// <summary>
+    /// City: a catalog value or a place name from the Identity directory ("Adıyaman"); both match the catalog's spelling. Without a
+    /// type it is the student's own school: one entry per school (E2 #16); with a type, the LGS target list: one row per programme.
+    /// </summary>
     public async Task<TargetSearchPage<OnboardingSchoolOption>> SchoolsAsync(string? city, string? type, string? search, int page, CancellationToken ct,
         string? district = null)
     {
@@ -330,8 +334,41 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         if (Search(search) is { } text) query = query.Where(x => x.Name.ToUpper().Replace("İ", "I").Contains(text) || (x.District ?? "").ToUpper().Replace("İ", "I").Contains(text));
         // Paket C: the student's own district comes first (a sort, not a filter); the catalog spells districts in capitals.
         string[] home = string.IsNullOrWhiteSpace(district) ? [] : await CitiesAsync(query.Select(x => x.District), RequireText(district, "İlçeyi seç."), ct);
+        if (kind is null) return await OwnSchoolsAsync(query, home, page, ct);
         return await PageAsync(query.OrderBy(x => Enumerable.Contains(home, x.District) ? 0 : 1).ThenBy(x => x.Name).ThenBy(x => x.Id)
             .Select(x => new OnboardingSchoolOption(x.Id, x.Name, x.District, x.MinimumScore, x.ScoreYear) { InHomeDistrict = Enumerable.Contains(home, x.District), Type = x.InstitutionType }), page, ct);
+    }
+
+    /// <summary>
+    /// E2 (#16): the catalog has one row per school type, programme and language ("Balgat Mesleki ve Teknik Anadolu Lisesi" four
+    /// times); the student's own school is one school. One entry per school (name, district, city; folded), represented by its
+    /// smallest id (stable); the type is shown only when every row of the school has the same one. Scores are left out (the own
+    /// school is not a target). A city has at most a few hundred rows, so they are grouped and paged here.
+    /// </summary>
+    private static async Task<TargetSearchPage<OnboardingSchoolOption>> OwnSchoolsAsync(IQueryable<TargetSchool> query, string[] home, int page, CancellationToken ct)
+    {
+        if (page is < 1 or > 10000) throw new ArgumentException("Geçerli bir sayfa seç.");
+        var rows = await query.Select(x => new { x.Id, x.Name, x.City, x.District, x.InstitutionType }).ToListAsync(ct);
+        var schools = rows.GroupBy(x => (Fold(x.Name), Fold(x.City ?? ""), Fold(x.District ?? "")))
+            .Select(group =>
+            {
+                var first = group.MinBy(x => x.Id)!;
+                var types = group.Select(x => x.InstitutionType).Distinct().ToArray();
+                return new OnboardingSchoolOption(first.Id, first.Name, first.District, null, null)
+                    { InHomeDistrict = home.Contains(first.District), Type = types.Length == 1 ? types[0] : null };
+            })
+            .OrderBy(x => x.InHomeDistrict ? 0 : 1).ThenBy(x => x.Name, StringComparer.Create(Turkish, false)).ThenBy(x => x.Id).ToList();
+        return new(schools.Skip((page - 1) * PageSize).Take(PageSize).ToList(), schools.Count, page, PageSize);
+    }
+
+    /// <summary>E2 (#16): the type saved with the student's own school: the school's only type, or none when its rows differ.</summary>
+    public static async Task<string?> OwnSchoolTypeAsync(CoachingDbContext db, TargetSchool school, CancellationToken ct)
+    {
+        var name = Fold(school.Name); var district = Fold(school.District ?? "");
+        var types = (await db.TargetSchools.AsNoTracking().Where(x => x.IsActive && x.City == school.City)
+                .Select(x => new { x.Name, x.District, x.InstitutionType }).ToListAsync(ct))
+            .Where(x => Fold(x.Name) == name && Fold(x.District ?? "") == district).Select(x => x.InstitutionType).Distinct().ToArray();
+        return types.Length == 1 ? types[0] : null;
     }
 
     public async Task<IReadOnlyList<OnboardingOption>> ProgramCitiesAsync(string? programType, string? scoreType, CancellationToken ct)
@@ -374,13 +411,16 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         };
         // The catalog of the newest year in use (older imports stay readable for existing targets).
         var year = await db.TargetUniversityPrograms.AsNoTracking().Where(x => x.IsActive).MaxAsync(x => x.CatalogYear, ct);
-        var query = db.TargetUniversityPrograms.AsNoTracking().Where(x => x.IsActive && x.ProgramType == programType && (x.CatalogYear == null || x.CatalogYear == year));
+        // E2 (#17): nationality-restricted quotas ("(KKTC Uyruklu)") are not offered.
+        var query = db.TargetUniversityPrograms.AsNoTracking().Where(Catalogs.NationalityQuota.OpenToEveryone)
+            .Where(x => x.IsActive && x.ProgramType == programType && (x.CatalogYear == null || x.CatalogYear == year));
         return type is null ? query : query.Where(x => x.ScoreType == type);
     }
 
     /// <summary>
     /// Paket C review: the catalog writes cities in capitals ("ADIYAMAN", "İSTANBUL"); the Identity directory writes them as names
-    /// ("Adiyaman", "Afyonkarahi̇sar" with a combining dot). Both are folded (Turkish lower case, marks removed, ı → i) to match.
+    /// ("Adıyaman" since E2; before it "Adiyaman", "Afyonkarahi̇sar" with a combining dot). All are folded (Turkish lower case,
+    /// marks removed, ı → i) to match.
     /// </summary>
     private static async Task<string[]> CitiesAsync(IQueryable<string?> cities, string requested, CancellationToken ct)
     {

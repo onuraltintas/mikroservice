@@ -1,3 +1,4 @@
+using Identity.Infrastructure.Repositories;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
@@ -421,7 +422,8 @@ public static class IdentitySeeder
     private static string? GetSetting(IConfiguration configuration, string key) =>
         Environment.GetEnvironmentVariable(key) ?? configuration[key];
 
-    private static async Task EnsureTurkeyLocationsAsync(
+    /// <summary>Seeds the Turkish provinces and districts and links older institutions to them by their city and district text.</summary>
+    public static async Task EnsureTurkeyLocationsAsync(
         IdentityDbContext context,
         ILogger logger)
     {
@@ -456,11 +458,13 @@ public static class IdentitySeeder
         var unlinkedInstitutions = await context.Institutions
             .Where(institution => institution.ProvinceId == null && institution.City != null)
             .ToListAsync();
+        // E2: older institutions wrote the names in any case and often without Turkish letters ("Adiyaman", "ISTANBUL",
+        // "Kadikoy"); the reference names are Turkish ("Adıyaman", "İstanbul", "Kadıköy"). Both sides are folded to match.
         var provincesByName = TurkeyLocationSeedData.Provinces.ToDictionary(
-            province => province.Name,
-            StringComparer.OrdinalIgnoreCase);
+            province => TurkishPlaceNames.Fold(province.Name),
+            StringComparer.Ordinal);
         var districtsByProvinceAndName = TurkeyLocationSeedData.Districts.ToDictionary(
-            district => (district.ProvinceId, district.Name),
+            district => (district.ProvinceId, TurkishPlaceNames.Fold(district.Name)),
             EqualityComparer<(string ProvinceId, string Name)>.Default);
         var linkedInstitutionCount = 0;
 
@@ -476,8 +480,8 @@ public static class IdentitySeeder
             }
 
             if (string.IsNullOrWhiteSpace(district)
-                || !provincesByName.TryGetValue(city, out var provinceSeed)
-                || !districtsByProvinceAndName.TryGetValue((provinceSeed.Id, district), out var districtSeed))
+                || !provincesByName.TryGetValue(TurkishPlaceNames.Fold(city), out var provinceSeed)
+                || !districtsByProvinceAndName.TryGetValue((provinceSeed.Id, TurkishPlaceNames.Fold(district)), out var districtSeed))
             {
                 continue;
             }

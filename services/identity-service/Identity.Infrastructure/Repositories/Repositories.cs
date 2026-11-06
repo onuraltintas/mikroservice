@@ -45,20 +45,18 @@ public sealed class LocationRepository : ILocationRepository
         _context = context;
     }
 
+    /// <summary>
+    /// E2 (#15): the 81 provinces (and at most a few dozen districts of one province) are listed in Turkish alphabetical order
+    /// (Ç after C, I before İ, Ş after S), which the database collation does not give, and found with either ı/i or I/İ.
+    /// </summary>
     public async Task<IReadOnlyList<ProvinceDto>> GetProvincesAsync(
         string? search,
         CancellationToken cancellationToken)
     {
-        IQueryable<Province> query = _context.Provinces.AsNoTracking();
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var pattern = $"%{search.Trim()}%";
-            query = query.Where(province => EF.Functions.ILike(province.Name, pattern));
-        }
-
-        return await query.OrderBy(province => province.Name)
+        var provinces = await _context.Provinces.AsNoTracking()
             .Select(province => new ProvinceDto(province.Id, province.Name))
             .ToListAsync(cancellationToken);
+        return TurkishPlaceNames.Filter(provinces, province => province.Name, search);
     }
 
     public async Task<IReadOnlyList<DistrictDto>> GetDistrictsAsync(
@@ -66,17 +64,11 @@ public sealed class LocationRepository : ILocationRepository
         string? search,
         CancellationToken cancellationToken)
     {
-        IQueryable<District> query = _context.Districts.AsNoTracking()
-            .Where(district => district.ProvinceId == provinceId);
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var pattern = $"%{search.Trim()}%";
-            query = query.Where(district => EF.Functions.ILike(district.Name, pattern));
-        }
-
-        return await query.OrderBy(district => district.Name)
+        var districts = await _context.Districts.AsNoTracking()
+            .Where(district => district.ProvinceId == provinceId)
             .Select(district => new DistrictDto(district.Id, district.ProvinceId, district.Name))
             .ToListAsync(cancellationToken);
+        return TurkishPlaceNames.Filter(districts, district => district.Name, search);
     }
 
     public async Task<(Province Province, District District)?> GetLocationAsync(
@@ -2409,3 +2401,28 @@ public class RoleRepository : IRoleRepository
     }
 }
 
+
+/// <summary>E2 (#15): Turkish order and an ı/i-, İ/I- and mark-insensitive search for place names.</summary>
+public static class TurkishPlaceNames
+{
+    private static readonly System.Globalization.CultureInfo Turkish = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+    public static readonly StringComparer Order = StringComparer.Create(Turkish, false);
+
+    public static IReadOnlyList<T> Filter<T>(IEnumerable<T> places, Func<T, string> name, string? search)
+    {
+        var key = string.IsNullOrWhiteSpace(search) ? null : Fold(search);
+        return places.Where(place => key is null || Fold(name(place)).Contains(key, StringComparison.Ordinal))
+            .OrderBy(name, Order).ToList();
+    }
+
+    /// <summary>Turkish lower case, marks removed (ç → c, ş → s, the combining dot), ı → i: "IĞDIR", "ığdır" and "Igdir" fold alike.</summary>
+    public static string Fold(string value)
+    {
+        var lower = value.Trim().ToLower(Turkish).Normalize(System.Text.NormalizationForm.FormD);
+        var text = new System.Text.StringBuilder(lower.Length);
+        foreach (var c in lower)
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+                text.Append(c == 'ı' ? 'i' : c);
+        return text.ToString();
+    }
+}

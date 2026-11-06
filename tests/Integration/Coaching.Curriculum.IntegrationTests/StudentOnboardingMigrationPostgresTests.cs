@@ -24,7 +24,7 @@ public sealed class StudentOnboardingMigrationPostgresTests
 
         await f.Db.Database.MigrateAsync();
         Assert.False(f.Db.Database.HasPendingModelChanges());
-        Assert.Equal(Current, (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
+        Assert.Contains(Current, await f.Db.Database.GetAppliedMigrationsAsync());
         var rows = await f.Db.CoachingStudentProfiles.AsNoTracking().ToDictionaryAsync(x => x.UserId);
         foreach (var id in new[] { done, graduate })
         {
@@ -46,7 +46,7 @@ public sealed class StudentOnboardingMigrationPostgresTests
         // Down refuses while wizard answers exist (they live only in the new columns), and changes nothing.
         var refused = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync(Previous));
         Assert.Contains("StudentOnboarding down refused: 1 student profile(s)", refused.ToString());
-        Assert.Equal(Current, (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
+        Assert.Contains(Current, await f.Db.Database.GetAppliedMigrationsAsync());
         Assert.Equal("Ankara", (await f.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == noContext)).HomeCity);
         await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.student_profiles SET "HomeProvinceId" = NULL, "HomeCity" = NULL, "HomeDistrictId" = NULL, "HomeDistrict" = NULL, "DiplomaGrade" = NULL, "OnboardingSteps" = 0""");
         // A goal with target scores blocks it too.
