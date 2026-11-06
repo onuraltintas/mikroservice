@@ -7,6 +7,11 @@ const token = () => {
   const encode = x => Buffer.from(JSON.stringify(x)).toString('base64url');
   return `${encode({ alg: 'HS256' })}.${encode({ sub: student, role: 'Student', platform_product: 'coaching', given_name: 'Test', family_name: 'Öğrenci', exp: Math.floor(Date.now() / 1000) + 900 })}.fixture`;
 };
+const onboarding = { status: 'Completed', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6, 7], completedAt: '2026-11-01T00:00:00Z', academicYearStart: 2026,
+  examSessions: [], allowedPurposes: ['Lgs'], acceptedInvitations: [],
+  answers: { birthDate: '2012-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student',
+    gradeLevel: 8, graduationYear: null, schoolName: null, purpose: null, primaryScoreType: null, foreignLanguage: null, targetExamSessionId: null,
+    targetExamYear: null, diplomaGrade: null, diplomaGradeEstimated: false, target: null, targetLocked: false } };
 async function fixtures(context) {
   // F2: the education is chosen on Profilim (or in the first-login wizard); this student is an 8th grader.
   let profile = { version: 1, educationStatus: 'Student', gradeLevel: 8, isActive: true, shareProgressWithTeachers: true };
@@ -19,6 +24,11 @@ async function fixtures(context) {
     const request = route.request(); const url = new URL(request.url()); const path = url.pathname;
     const respond = data => route.fulfill({ json: { success: true, data } });
     if (path === '/api/auth/refresh-token') return route.fulfill({ json: { accessToken: token(), tokenType: 'Bearer', expiresInMinutes: 15 } });
+    // Paket C: the first-login wizard is finished, so the guard lets the student into the panel (shape as in coaching-goal-editor.spec.mjs).
+    if (path.endsWith('/students/me/onboarding')) return respond(onboarding);
+    // The shell's own calls on load.
+    if (path.endsWith('/profiles/me/navigation')) return respond({ showAssignments: true, showSessions: true, showFees: true });
+    if (path.endsWith('/messages/unread-count')) return route.fulfill({ json: { count: 0 } });
     if (path.endsWith('/profiles/me/student')) { profile = { ...profile, ...request.postDataJSON(), version: profile.version + 1 }; return respond(profile); }
     if (path.endsWith('/profiles/me')) return respond({ student: profile, teacher: null, memberships: [] });
     if (path.endsWith('/setup/catalog')) return respond({ curriculum: { id: 'curriculum', name: 'Test ders programı', versionLabel: 'v1' }, lessons: [lesson],
