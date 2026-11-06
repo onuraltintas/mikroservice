@@ -72,32 +72,10 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
         Assert.Equal((3, 1, 1), (summary.AssignmentsDue, summary.AssignmentsSubmitted, summary.AssignmentsOverdue));
     }
 
-    // Coaching audit K3: the summary follows the student's own time zone (as the study reminders do).
+    // Coaching audit K3, E3 #34 (06.11.2026): the summary waits for Sunday 18:00 in Türkiye, the only time zone; a study zone
+    // stored before the migration no longer moves it.
     [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task TheSummaryWaitsForSundayEveningInTheStudentsOwnTimeZone()
-    {
-        await using var pg = await CurriculumPostgresTests.Pg.Create();
-        var student = Guid.NewGuid(); var parent = Guid.NewGuid();
-        var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Haftalık plan"); plan.Activate();
-        var task = StudyPlanTask.Create(plan, Monday.AddDays(1), "Matematik", 30);
-        pg.Db.AddRange(plan, task, StudyAvailability.Create(student, "America/New_York"));
-        await pg.Db.SaveChangesAsync();
-        var parents = new Parents(new CoachingParentSummaryRecipient(parent, "veli@example.test", "Veli", student, "Öğrenci"));
-        var events = new Publisher();
-
-        // Sunday 19:00 in Istanbul is Sunday 11:00 in New York: too early.
-        await Run(pg, parents, events, At(Monday.AddDays(6), 19));
-        Assert.Empty(events.Summaries);
-        // Sunday 18:30 in New York (EST, UTC-5).
-        await Run(pg, parents, events, Monday.AddDays(6).ToDateTime(new TimeOnly(23, 30), DateTimeKind.Utc));
-        var summary = Assert.Single(events.Summaries);
-        Assert.Equal((Monday, Monday.AddDays(6), 1), (summary.WeekStart, summary.WeekEnd, summary.Coaching!.StudyTasksPlanned));
-    }
-
-    // Coaching audit (CoachingParentWeeklySummary.cs:111): "today" and "now" of the counted tasks are the student's, not
-    // Istanbul's. At 18:30 on Sunday in New York it is already Monday in Istanbul; the Sunday 20:00 task is still ahead.
-    [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task TasksStillAheadAreJudgedInTheStudentsOwnTimeZone()
+    public async Task TheSummaryWaitsForSundayEveningInTurkey()
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create();
         var student = Guid.NewGuid(); var parent = Guid.NewGuid();
@@ -105,14 +83,17 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
         var sunday = Monday.AddDays(6);
         var ahead = StudyPlanTask.Create(plan, sunday, "Akşam", 30); ahead.SetWeeklyPlacement(Guid.NewGuid(), "Türkçe", 20 * 60);
         var tuesday = StudyPlanTask.Create(plan, Monday.AddDays(1), "Salı", 30);
-        pg.Db.AddRange(plan, ahead, tuesday, StudyAvailability.Create(student, "America/New_York"));
+        pg.Db.AddRange(plan, ahead, tuesday, StudyAvailability.Create(student, "Europe/Istanbul"));
         await pg.Db.SaveChangesAsync();
+        var parents = new Parents(new CoachingParentSummaryRecipient(parent, "veli@example.test", "Veli", student, "Öğrenci"));
         var events = new Publisher();
 
-        await Run(pg, new Parents(new CoachingParentSummaryRecipient(parent, "veli@example.test", "Veli", student, "Öğrenci")), events,
-            sunday.ToDateTime(new TimeOnly(23, 30), DateTimeKind.Utc));
-
-        Assert.Equal((1, 0), (Assert.Single(events.Summaries).Coaching!.StudyTasksPlanned, events.Summaries[0].Coaching!.StudyTasksCompleted));
+        await Run(pg, parents, events, At(sunday, 17));
+        Assert.Empty(events.Summaries);
+        // Sunday 18:30 in Istanbul: the 20:00 task is still ahead, Tuesday's is counted.
+        await Run(pg, parents, events, At(sunday, 18).AddMinutes(30));
+        var summary = Assert.Single(events.Summaries);
+        Assert.Equal((Monday, sunday, 1, 0), (summary.WeekStart, summary.WeekEnd, summary.Coaching!.StudyTasksPlanned, summary.Coaching.StudyTasksCompleted));
     }
 
     // Coaching audit K3: two service instances running at the same moment send one summary and neither run fails.

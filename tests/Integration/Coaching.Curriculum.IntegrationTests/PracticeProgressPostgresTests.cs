@@ -105,11 +105,11 @@ public sealed class PracticeProgressPostgresTests
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var db=pg.Db;var student=pg.Data.User.UserId!.Value;pg.Data.User.Roles=["Student"];
         var plan=StudyPlanRevision.Create(student,Guid.NewGuid(),1,"Saat dilimi");
-        plan.SetWeeklySource(new(0,null,new(2026,10,1),new(2026,10,21),false,"snapshot",null,null,"Europe/London"));plan.Activate();
+        plan.SetWeeklySource(new(0,null,new(2026,10,1),new(2026,10,21),false,"snapshot",null,null,"Europe/Istanbul"));plan.Activate();
         var task=StudyPlanTask.Create(plan,new(2026,10,19),"Telafi",30);task.Schedule(task.PlannedDate,600);
         var second=StudyPlanTask.Create(plan,new(2026,10,19),"Telafi",30);second.Schedule(second.PlannedDate,630);
         var untimed=StudyPlanTask.Create(plan,new(2026,10,21),"Saati bilinmiyor",30);
-        var draft=WeeklyStudyDraft.Create(student);var lesson=Guid.NewGuid();draft.Replace("Europe/London",[
+        var draft=WeeklyStudyDraft.Create(student);var lesson=Guid.NewGuid();draft.Replace("Europe/Istanbul",[
             new(Guid.NewGuid(),lesson,"Ders","LGS",DayOfWeek.Wednesday,540,30),new(Guid.NewGuid(),lesson,"Ders","LGS",DayOfWeek.Wednesday,570,30),
             new(Guid.NewGuid(),lesson,"Ders","LGS",DayOfWeek.Thursday,540,60)]);
         db.AddRange(plan,task,second,untimed,draft);await db.SaveChangesAsync();
@@ -126,7 +126,7 @@ public sealed class PracticeProgressPostgresTests
         await targets.ReplaceNetAsync(goal.Id,new(goal.Version,"AYT_SAY",60));
         Assert.Equal("AYT_SAY",(await targets.GetAsync(goal.Id))!.NetTarget!.ExamCode);
     }
-    private sealed class ClockAtMidnightBoundary : TimeProvider { public override DateTimeOffset GetUtcNow()=>new(2026,10,20,22,30,0,TimeSpan.Zero); }
+    private sealed class ClockAtMidnightBoundary : TimeProvider { public override DateTimeOffset GetUtcNow()=>new(2026,10,20,20,30,0,TimeSpan.Zero); } // 23:30 in Türkiye (E3 #34: the only zone)
     private sealed class Clock : TimeProvider { public override DateTimeOffset GetUtcNow()=>new(2026,10,20,18,0,0,TimeSpan.Zero); }
     private sealed class Identity(Guid student) : ICoachingIdentityAuthorizationClient
     {

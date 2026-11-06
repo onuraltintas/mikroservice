@@ -138,7 +138,7 @@ public sealed class TeacherTrackingPostgresTests
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task UsesPlanTimeZoneAndTurkeySubmissionDayInsteadOfUtcCalendarDay()
+    public async Task UsesTurkeyDaysForStudyAndSubmissionsInsteadOfUtcCalendarDay()
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create(); var f = pg.Data;
         var teacher = Guid.NewGuid(); var student = Guid.NewGuid();
@@ -146,9 +146,9 @@ public sealed class TeacherTrackingPostgresTests
         f.User.UserId = teacher; f.User.Roles = ["Teacher"];
         f.Db.AddRange(CoachingTeacherProfile.Create(teacher), CoachingStudentProfile.Create(student), CoachingTeacherStudentAssignment.Create(teacher, student, null, null, teacher));
         var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Yerel gün");
-        plan.SetWeeklySource(new(0, 0, new(2027, 1, 1), new(2027, 6, 1), false, "test", null, null, "America/New_York"));
-        var atEnd = StudyPlanTask.Create(plan, new(2027, 1, 5), "Tam bitiş", 30); atEnd.Schedule(atEnd.PlannedDate, 16 * 60);
-        var later = StudyPlanTask.Create(plan, new(2027, 1, 5), "Henüz bitmedi", 30); later.Schedule(later.PlannedDate, 17 * 60);
+        plan.SetWeeklySource(new(0, 0, new(2027, 1, 1), new(2027, 6, 1), false, "test", null, null, "Europe/Istanbul")); // E3 #34: the only zone
+        var atEnd = StudyPlanTask.Create(plan, new(2027, 1, 6), "Tam bitiş", 30); atEnd.Schedule(atEnd.PlannedDate, 0);
+        var later = StudyPlanTask.Create(plan, new(2027, 1, 6), "Henüz bitmedi", 30); later.Schedule(later.PlannedDate, 60);
         plan.Activate(); f.Db.AddRange(plan, atEnd, later);
         foreach(var profile in f.Db.CoachingStudentProfiles.Local) f.Db.Entry(profile).Property(x=>x.CreatedAt).CurrentValue=now.UtcDateTime;
         foreach(var link in f.Db.CoachingTeacherStudentAssignments.Local) f.Db.Entry(link).Property(x=>x.StartDate).CurrentValue=now.UtcDateTime;
@@ -157,10 +157,11 @@ public sealed class TeacherTrackingPostgresTests
         var accounts = new Accounts(teacher);
         var api = new CoachingTeacherTrackingController(f.Db, new CoachingAccessPolicy(f.User), new OwnedCoachingDirectory(f.Db, accounts, f.User), accounts, new Clock(now));
         async Task<TeacherTrackingPage> Page(DateOnly date) => Assert.IsType<TeacherTrackingPage>(Assert.IsType<OkObjectResult>(await api.Get(date, date)).Value);
-        var jan5 = await Page(new(2027, 1, 5)); Assert.Equal(atEnd.Id, Assert.Single(jan5.Items).RecordId);
-        Assert.Equal("America/New_York", jan5.Items[0].TimeZoneId);
-        var jan6 = await Page(new(2027, 1, 6)); Assert.Equal(a.Id, Assert.Single(jan6.Items).RecordId);
-        Assert.Equal(15, jan6.Items[0].StartMinute);
+        Assert.Empty((await Page(new(2027, 1, 5))).Items);   // 5 January in UTC, already 6 January in Türkiye
+        var jan6 = await Page(new(2027, 1, 6));
+        Assert.Equal(new[] { a.Id, atEnd.Id }.Order(), jan6.Items.Select(x => x.RecordId).Order());
+        Assert.All(jan6.Items, x => Assert.Equal("Europe/Istanbul", x.TimeZoneId));
+        Assert.Equal(15, jan6.Items.Single(x => x.RecordId == a.Id).StartMinute);
     }
 
     private static async Task<string> Snapshot(Coaching.Infrastructure.Data.CoachingDbContext db) => JsonSerializer.Serialize(new

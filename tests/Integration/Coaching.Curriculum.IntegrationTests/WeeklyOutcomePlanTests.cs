@@ -214,11 +214,14 @@ public sealed class WeeklyOutcomePlanTests
         Assert.Equal(30,await f.Db.Set<StudyPlanTaskOutcome>().Where(x=>Enumerable.Contains(ids,x.TaskId)).SumAsync(x=>x.AllocatedMinutes));
     }
     [Fact]
-    public async Task SavedPlanKeepsItsTimezoneEvenIfTheWeeklyDraftLaterChanges()
+    public async Task SavedPlansAreInTurkeyTime()
     {
-        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var weekly=await f.Db.Set<WeeklyStudyDraft>().SingleAsync();weekly.Replace("UTC",weekly.Slots);await f.Db.SaveChangesAsync();
+        // E3 #34 (06.11.2026): the weekly draft and so every plan made from it is in Europe/Istanbul; no other zone is stored.
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var weekly=await f.Db.Set<WeeklyStudyDraft>().SingleAsync();
+        Assert.Throws<ArgumentException>(()=>weekly.Replace("UTC",weekly.Slots));
         var input=Input with {ExpectedWeeklyDraftVersion=weekly.Version};var preview=await service.PreviewAsync(input,default);var created=await service.CreateAsync(new("Saat dilimi",input,preview.Fingerprint),default);
-        Assert.Equal("UTC",(await f.Db.StudyPlanRevisions.SingleAsync(x=>x.Id==created.Id)).WeeklySource!.TimeZoneId);
+        Assert.Equal("Europe/Istanbul",preview.TimeZoneId);
+        Assert.Equal("Europe/Istanbul",(await f.Db.StudyPlanRevisions.SingleAsync(x=>x.Id==created.Id)).WeeklySource!.TimeZoneId);
     }
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task DatabaseRejectsPartialWeeklyPlacement()

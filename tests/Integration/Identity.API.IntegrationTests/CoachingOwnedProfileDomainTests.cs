@@ -17,7 +17,7 @@ public sealed class CoachingOwnedProfileDomainTests
         profile.UpdateEducation(CoachingEducationStatus.Student, 12, "Okul", "Ankara", null, "Lise", "A", null);
         Assert.True(profile.IsEducationComplete);
         Assert.Equal(12, profile.GradeLevel);
-        profile.UpdateEducation(CoachingEducationStatus.Graduate, null, null, null, null, null, null, 2025);
+        profile.UpdateEducation(CoachingEducationStatus.HighSchoolGraduate, null, null, null, null, null, null, 2025);
         Assert.True(profile.IsEducationComplete);
         Assert.Null(profile.GradeLevel);
         Assert.Equal(2025, profile.GraduationYear);
@@ -30,7 +30,7 @@ public sealed class CoachingOwnedProfileDomainTests
         var profile = CoachingStudentProfile.Create(Guid.NewGuid());
         Assert.Throws<ArgumentException>(() => profile.UpdateEducation(CoachingEducationStatus.Student, null, null, null, null, null, null, null));
         Assert.Throws<ArgumentException>(() => profile.UpdateEducation(CoachingEducationStatus.Student, 13, null, null, null, null, null, null));
-        Assert.Throws<ArgumentException>(() => profile.UpdateEducation(CoachingEducationStatus.Graduate, 12, null, null, null, null, null, 2025));
+        Assert.Throws<ArgumentException>(() => profile.UpdateEducation(CoachingEducationStatus.HighSchoolGraduate, 12, null, null, null, null, null, 2025));
         Assert.Throws<ArgumentException>(() => profile.UpdateEducation((CoachingEducationStatus)99, null, null, null, null, null, null, null));
         profile.UpdatePersonal(new DateOnly(2008, 1, 2), "Bio", null, false);
         Assert.Equal(new DateOnly(2008, 1, 2), profile.BirthDate);

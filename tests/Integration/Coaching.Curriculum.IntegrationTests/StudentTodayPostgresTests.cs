@@ -99,23 +99,23 @@ public sealed class StudentTodayPostgresTests
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task UsesTheStudentsOwnTimeZoneForToday()
+    public async Task UsesTurkeyTimeForToday()
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create();
         var student = Guid.NewGuid(); pg.Data.User.UserId = student; pg.Data.User.Roles = ["Student"];
         pg.Db.Add(CoachingStudentProfile.Create(student));
-        pg.Db.Add(StudyAvailability.Create(student, "America/New_York"));
+        pg.Db.Add(StudyAvailability.Create(student, "Europe/Istanbul"));
         var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan"); plan.Activate(); pg.Db.Add(plan);
-        // 21 October 02:00 UTC is still 20 October (22:00) in New York.
-        var evening = StudyPlanTask.Create(plan, new DateOnly(2026, 10, 20), "Akşam tekrarı", 30);
-        var istanbulToday = StudyPlanTask.Create(plan, new DateOnly(2026, 10, 21), "Yarınki iş", 30);
-        pg.Db.AddRange(evening, istanbulToday); await pg.Db.SaveChangesAsync();
+        // E3 #34: 20 October 22:00 UTC is already 21 October (01:00) in Istanbul, the only time zone.
+        var tomorrow = StudyPlanTask.Create(plan, new DateOnly(2026, 10, 22), "Yarınki iş", 30);
+        var istanbulToday = StudyPlanTask.Create(plan, new DateOnly(2026, 10, 21), "Bugünkü iş", 30);
+        pg.Db.AddRange(tomorrow, istanbulToday); await pg.Db.SaveChangesAsync();
 
-        var view = await Read(Api(pg, new DateTimeOffset(2026, 10, 21, 2, 0, 0, TimeSpan.Zero)));
+        var view = await Read(Api(pg, new DateTimeOffset(2026, 10, 20, 22, 0, 0, TimeSpan.Zero)));
 
-        Assert.Equal((new DateOnly(2026, 10, 20), "America/New_York"), (view.Today, view.TimeZoneId));
-        Assert.Equal([evening.Id], view.Items.Select(x => x.RecordId));
-        Assert.Equal((evening.Id, false), (view.NextStep!.Item.RecordId, view.NextStep.Overdue));
+        Assert.Equal((new DateOnly(2026, 10, 21), "Europe/Istanbul"), (view.Today, view.TimeZoneId));
+        Assert.Equal([istanbulToday.Id], view.Items.Select(x => x.RecordId));
+        Assert.Equal((istanbulToday.Id, false), (view.NextStep!.Item.RecordId, view.NextStep.Overdue));
         Assert.Equal(1, view.UpcomingCount);
     }
 

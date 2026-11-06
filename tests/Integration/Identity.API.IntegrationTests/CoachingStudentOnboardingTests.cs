@@ -125,13 +125,18 @@ public sealed class CoachingStudentOnboardingTests
         await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 8, null, Guid.NewGuid()), default));
         await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, null, s.LgsYear, null, false), default));
         (await s.Service.GetAsync(default)).SavedSteps.Should().BeEmpty();
-        var graduate = await s.Service.SavePersonalAsync(new(new DateOnly(2000, 1, 1), "06", "0601", CoachingEducationStatus.Graduate, null, 2018, s.School), default);
-        (graduate.Answers.EducationStatus, graduate.Answers.GraduationYear, graduate.Answers.SchoolName).Should().Be((CoachingEducationStatus.Graduate, (int?)2018, "Ankara Fen Lisesi"));
-        // The picked school also sets the school's city, district and type; a resuming student keeps the graduation year and the school.
+        var student = await s.Service.SavePersonalAsync(new(new DateOnly(2009, 1, 1), "06", "0601", CoachingEducationStatus.Student, 11, null, s.School), default);
+        student.Answers.SchoolName.Should().Be("Ankara Fen Lisesi");
+        // The picked school also sets the school's city, district and type; a resuming student keeps the school.
         var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
         (profile.SchoolCity, profile.SchoolDistrict, profile.SchoolType).Should().Be(("ANKARA", "ÇANKAYA", "Fen Lisesi"));
-        var again = await s.Service.SavePersonalAsync(new(new DateOnly(2000, 1, 1), "06", "0602", CoachingEducationStatus.Graduate, null, null, null), default);
-        (again.Answers.GraduationYear, again.Answers.SchoolName, again.Answers.HomeDistrict).Should().Be(((int?)2018, "Ankara Fen Lisesi", "Keçiören"));
+        var resumed = await s.Service.SavePersonalAsync(new(new DateOnly(2009, 1, 1), "06", "0602", CoachingEducationStatus.Student, 11, null, null), default);
+        (resumed.Answers.SchoolName, resumed.Answers.HomeDistrict).Should().Be(("Ankara Fen Lisesi", "Keçiören"));
+        // E3 #14: a graduate has no school (it is cleared) and keeps the graduation year when resuming.
+        var graduate = await s.Service.SavePersonalAsync(new(new DateOnly(2000, 1, 1), "06", "0601", CoachingEducationStatus.HighSchoolGraduate, null, 2018, s.School), default);
+        (graduate.Answers.EducationStatus, graduate.Answers.GraduationYear, graduate.Answers.SchoolName).Should().Be((CoachingEducationStatus.HighSchoolGraduate, (int?)2018, (string?)null));
+        var again = await s.Service.SavePersonalAsync(new(new DateOnly(2000, 1, 1), "06", "0602", CoachingEducationStatus.HighSchoolGraduate, null, null, null), default);
+        (again.Answers.GraduationYear, again.Answers.SchoolName, again.Answers.HomeDistrict).Should().Be(((int?)2018, (string?)null, "Keçiören"));
     }
 
     // ---------- Targets ----------
@@ -676,7 +681,7 @@ public sealed class CoachingStudentOnboardingTests
         }
 
         public Task<OnboardingView> Personal(int? grade) => Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601",
-            grade is null ? CoachingEducationStatus.Graduate : CoachingEducationStatus.Student, grade, null, null), default);
+            grade is null ? CoachingEducationStatus.HighSchoolGraduate : CoachingEducationStatus.Student, grade, null, null), default);
 
         public async Task ApplyLgsPack()
         {

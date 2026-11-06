@@ -55,10 +55,38 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const component = fixture.componentInstance; (await component.selectSection('students')); fixture.detectChanges();
     const edit = fixture.nativeElement.querySelector('[data-testid="edit-student-student-1"]') as HTMLButtonElement;
     expect(edit).toBeTruthy(); await component.startStudentEdit(student('student-1'));
-    component.editStudentGrade = 9; component.editStudentTeacherId = 'teacher-2'; component.saveStudentEdit();
-    expect(service.updateStudent).toHaveBeenCalledWith('student-1', 9, 'teacher-2');
+    expect(component.editStudentStage).toBe('middle');
+    component.editStudentStage = 'high'; component.editStudentGrade = 9; component.editStudentTeacherId = 'teacher-2'; component.saveStudentEdit();
+    expect(service.updateStudent).toHaveBeenCalledWith('student-1', { educationStatus: 'Student', gradeLevel: 9 }, 'teacher-2');
     await vi.waitFor(()=>expect(service.getStudentRoster).toHaveBeenCalledTimes(2));
     expect(component.editingStudentId()).toBeNull();
+  });
+
+  // E3 #14 (06.11.2026): the institution sets the education status too; a non-student status clears the grade and the school.
+  it('sets a non-student education status after telling the admin what is cleared', async () => {
+    const service = institutionService({ students: [student('student-1')], teachers: [teacher('teacher-1')] });
+    const fixture = await createFixture(service); fixture.detectChanges();
+    const component = fixture.componentInstance; (await component.selectSection('students')); (await component.startStudentEdit(student('student-1')));
+    fixture.detectChanges();
+    const stage = fixture.nativeElement.querySelector('select[name="memberStage"]') as HTMLSelectElement;
+    expect(Array.from(stage.options).map(x => x.textContent!.trim())).toEqual(['Ortaokul öğrencisi', 'Lise öğrencisi', 'Lise mezunu', 'Üniversite öğrencisi', 'Üniversite mezunu']);
+    component.editStudentStage = 'UniversityGraduate'; fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[name="memberGrade"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="member-clears-school"]')!.textContent).toContain('sınıf, okul ve şube bilgisi silinir');
+    const toaster = TestBed.inject(ToasterService) as unknown as { confirm: ReturnType<typeof vi.fn> };
+    toaster.confirm.mockResolvedValueOnce(false);
+    await component.saveStudentEdit(); expect(service.updateStudent).not.toHaveBeenCalled();
+    toaster.confirm.mockResolvedValueOnce(true);
+    await component.saveStudentEdit();
+    expect(service.updateStudent).toHaveBeenCalledWith('student-1', { educationStatus: 'UniversityGraduate', gradeLevel: null }, null);
+  });
+
+  it('labels each student with the education status in the roster', async () => {
+    const service = institutionService({ students: [{ ...student('student-1'), gradeLevel: null, educationStatus: 'HighSchoolGraduate' }, student('student-2')] });
+    const fixture = await createFixture(service); fixture.detectChanges();
+    (await fixture.componentInstance.selectSection('students')); fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Lise mezunu'); expect(text).toContain('8. sınıf');
   });
 
   it('rejects invalid grade and blocks navigation and duplicate membership saves while pending', async () => {
@@ -66,6 +94,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const fixture = await createFixture(service); fixture.detectChanges();
     const component = fixture.componentInstance; (await component.selectSection('students')); (await component.startStudentEdit(student('student-1')));
     component.editStudentGrade = 13; component.saveStudentEdit(); expect(service.updateStudent).not.toHaveBeenCalled();
+    component.editStudentGrade = 4; component.saveStudentEdit(); expect(service.updateStudent).not.toHaveBeenCalled();
     component.editStudentGrade = 8;
     const pending = new Subject<undefined>(); service.updateStudent.mockReturnValueOnce(pending);
     component.saveStudentEdit(); component.saveStudentEdit(); (await component.selectSection('teachers'));

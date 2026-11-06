@@ -13,13 +13,14 @@ describe('CoachingInstitutionService', () => {
     expect(assign.request.method).toBe('PUT'); expect(assign.request.body).toEqual({ isSuspended: false }); assign.flush(null);
   });
   it('updates teacher assignment and grade through the current institution scope', () => {
-    service.updateStudent('student/1', 8, 'teacher-1').subscribe();
+    service.updateStudent('student/1', { educationStatus: 'Student', gradeLevel: 8 }, 'teacher-1').subscribe();
     const update = http.expectOne('/api/coaching/institution/students/student%2F1');
-    expect(update.request.method).toBe('PUT'); expect(update.request.body).toEqual({ gradeLevel: 8, teacherUserId: 'teacher-1' });
+    expect(update.request.method).toBe('PUT'); expect(update.request.body).toEqual({ educationStatus: 'Student', gradeLevel: 8, teacherUserId: 'teacher-1' });
     update.flush(null);
-    service.updateStudent('student/1', 8, null).subscribe();
+    // E3 #14: a non-student status has no grade.
+    service.updateStudent('student/1', { educationStatus: 'UniversityStudent', gradeLevel: null }, null).subscribe();
     const unassign = http.expectOne('/api/coaching/institution/students/student%2F1');
-    expect(unassign.request.body).toEqual({ gradeLevel: 8, teacherUserId: null }); unassign.flush(null);
+    expect(unassign.request.body).toEqual({ educationStatus: 'UniversityStudent', gradeLevel: null, teacherUserId: null }); unassign.flush(null);
   });
 
   it('removes current institution members through role-scoped endpoints', () => {

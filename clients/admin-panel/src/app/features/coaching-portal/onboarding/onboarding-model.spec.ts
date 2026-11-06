@@ -8,12 +8,13 @@ describe('first-login wizard flow (Paket C #3)', () => {
   const context: FlowContext = { academicYearStart: 2026, sessions: [
     { id: 'lgs-27', examCode: 'LGS', examName: 'LGS', date: '2027-06-13', label: '2027', applicationStart: null, applicationEnd: null }] };
   const a = (value: string | number | null, label = String(value), data?: Record<string, unknown>) => ({ value, label, data });
-  const personal: Answers = { birthDate: a('2012-05-01', '01.05.2012'), city: a('06', 'Ankara'), district: a('0601', 'Çankaya'), education: a('8', '8. sınıf') };
+  const personal: Answers = { birthDate: a('2012-05-01', '01.05.2012'), city: a('06', 'Ankara'), district: a('0601', 'Çankaya'), stage: a('middle', 'Ortaokul öğrencisiyim'), education: a('8', '8. sınıf') };
+  const lise = { stage: a('high', 'Lise öğrencisiyim') };
   const ids = (answers: Answers) => questions(answers, context).map(x => x.id);
 
   it('offers only the exams the server allows for the grade and does not prefill one that no longer fits (Paket D #8, review M1)', () => {
     const allowed: FlowContext = { ...context, allowedPurposes: ['Yks', 'Yds', 'Yokdil'] };
-    expect(questions({ ...personal, education: a('10') }, allowed).find(x => x.id === 'purpose')!.choices!.map(x => x.value)).toEqual(['Yks', 'Yds', 'Yokdil']);
+    expect(questions({ ...personal, ...lise, education: a('10') }, allowed).find(x => x.id === 'purpose')!.choices!.map(x => x.value)).toEqual(['Yks', 'Yds', 'Yokdil']);
     // An older API sends no list: every exam is offered.
     expect(questions(personal, context).find(x => x.id === 'purpose')!.choices!.length).toBe(5);
     const saved = { status: 'InProgress', nextStep: 2, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026, examSessions: [], allowedPurposes: ['Yks', 'Yds', 'Yokdil'],
@@ -22,7 +23,7 @@ describe('first-login wizard flow (Paket C #3)', () => {
         diplomaGrade: null, diplomaGradeEstimated: false, target: null, targetLocked: false } } as unknown as OnboardingView;
     const answers = prefill(saved);
     expect(answers.purpose).toBeUndefined(); expect(answers.session).toBeUndefined();
-    expect(answers.education!.value).toBe('11');
+    expect(answers.education!.value).toBe('11'); expect(answers.stage!.value).toBe('high');
     expect(withoutUnfitPurpose({ ...personal, purpose: a('Lgs'), session: a('session:lgs-27:2027') }, ['Yks']).purpose).toBeUndefined();
     expect(withoutUnfitPurpose({ ...personal, purpose: a('Lgs') }, ['Lgs']).purpose!.value).toBe('Lgs');
     expect(withoutUnfitPurpose({ ...personal, purpose: a('Lgs') }, undefined).purpose!.value).toBe('Lgs');
@@ -42,7 +43,7 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(ids(lgs).filter(x => ['schoolCity', 'schoolType', 'targetSchool'].includes(x))).toEqual(['schoolCity']);
     expect(ids({ ...lgs, schoolCity: a('Ankara') })).toContain('schoolType');
     expect(ids({ ...lgs, schoolCity: a('Ankara'), schoolType: a('Fen Lisesi') })).toContain('targetSchool');
-    const yks = { ...personal, education: a('12'), ownSchool: a(null), purpose: a('Yks'), yksField: a('SAY'), session: a('year:2027'), diploma: a(null), targetMode: a('program') };
+    const yks = { ...personal, ...lise, education: a('12'), ownSchool: a(null), purpose: a('Yks'), yksField: a('SAY'), session: a('year:2027'), diploma: a(null), targetMode: a('program') };
     expect(nextQuestion(yks, context)!.id).toBe('level');
     expect(nextQuestion({ ...yks, level: a('Bachelor') }, context)!.choices).toEqual([{ value: 'SAY', label: 'Sayısal' }]);
     expect(nextQuestion({ ...yks, level: a('Associate') }, context)!.id).toBe('programCity');
@@ -61,8 +62,8 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(ids({ ...personal, purpose: a('Ags') })).toContain('oabtField');
     expect(ids({ ...personal, purpose: a('Yokdil') })).toContain('yokdilField');
     expect(ids({ ...personal, purpose: a('Yks'), yksField: a('SAY') })).not.toContain('diploma');
-    expect(ids({ ...personal, education: a('11'), purpose: a('Yks'), yksField: a('SAY') })).toContain('diploma');
-    expect(ids({ ...personal, education: a('graduate'), purpose: a('Yks'), yksField: a('SAY') })).toContain('diploma');
+    expect(ids({ ...personal, ...lise, education: a('11'), purpose: a('Yks'), yksField: a('SAY') })).toContain('diploma');
+    expect(ids({ ...personal, stage: a('HighSchoolGraduate'), education: undefined, purpose: a('Yks'), yksField: a('SAY') })).toContain('diploma');
     const lgsSession = questions({ ...personal, purpose: a('Lgs') }, context).find(x => x.id === 'session')!;
     expect(lgsSession.choices).toEqual([{ value: 'session:lgs-27:2027', label: '2027 · 13.06.2027' }]);
     const ydsYear = questions({ ...personal, purpose: a('Yds') }, context).find(x => x.id === 'session')!;
@@ -84,7 +85,7 @@ describe('first-login wizard flow (Paket C #3)', () => {
   });
 
   it('a YKS score target asks TYT and the field score; one of them may be skipped, not both', () => {
-    const yks = { ...personal, education: a('11'), ownSchool: a(null), purpose: a('Yks'), yksField: a('EA'), session: a('year:2027'), diploma: a(null), targetMode: a('score') };
+    const yks = { ...personal, ...lise, education: a('11'), ownSchool: a(null), purpose: a('Yks'), yksField: a('EA'), session: a('year:2027'), diploma: a(null), targetMode: a('score') };
     const tyt = nextQuestion(yks, context)!;
     expect(tyt).toMatchObject({ id: 'tytScore', skipLabel: 'TYT hedefim yok', max: 560 });
     expect(tyt.reason).toContain("0'dan büyük");
@@ -122,7 +123,7 @@ describe('first-login wizard flow (Paket C #3)', () => {
     const full: Answers = { ...personal, purpose: a('Lgs'), session: a('session:lgs-27:2027'), targetMode: a('school'), schoolCity: a('Ankara'),
       schoolType: a('Fen Lisesi'), targetSchool: a('s1', 'Ankara Fen Lisesi'), invite: a('passed'), parent: a('passed') };
     const exam = change(full, 'purpose');
-    expect(Object.keys(exam).sort()).toEqual(['birthDate', 'city', 'district', 'education', 'invite', 'parent']);
+    expect(Object.keys(exam).sort()).toEqual(['birthDate', 'city', 'district', 'education', 'invite', 'parent', 'stage']);
     const city = change(full, 'schoolCity');
     expect(city.targetMode).toBeDefined(); expect(city.schoolType).toBeUndefined(); expect(city.targetSchool).toBeUndefined();
     const home = change(full, 'city');
@@ -131,12 +132,12 @@ describe('first-login wizard flow (Paket C #3)', () => {
   });
 
   it('builds each step request', () => {
-    expect(personalRequest({ ...personal, education: a('graduate') })).toEqual({ birthDate: '2012-05-01', provinceId: '06', districtId: '0601',
-      educationStatus: 'Graduate', gradeLevel: null, graduationYear: null, schoolId: null });
+    expect(personalRequest({ ...personal, stage: a('HighSchoolGraduate'), education: undefined })).toEqual({ birthDate: '2012-05-01', provinceId: '06', districtId: '0601',
+      educationStatus: 'HighSchoolGraduate', gradeLevel: null, graduationYear: null, schoolId: null });
     // A picked school sends its catalog id; a resumed (saved) school sends nothing and stays.
-    expect(personalRequest({ ...personal, education: a('10'), ownSchool: a('school-1', 'Ankara Lisesi') })).toMatchObject({ educationStatus: 'Student', gradeLevel: 10, schoolId: 'school-1' });
-    expect(personalRequest({ ...personal, education: a('10'), ownSchool: a(null, 'Ankara Lisesi') }).schoolId).toBeNull();
-    expect(examRequest({ ...personal, education: a('12'), purpose: a('Yks'), yksField: a('DIL'), language: a('English'), session: a('session:s1:2027'),
+    expect(personalRequest({ ...personal, ...lise, education: a('10'), ownSchool: a('school-1', 'Ankara Lisesi') })).toMatchObject({ educationStatus: 'Student', gradeLevel: 10, schoolId: 'school-1' });
+    expect(personalRequest({ ...personal, ...lise, education: a('10'), ownSchool: a(null, 'Ankara Lisesi') }).schoolId).toBeNull();
+    expect(examRequest({ ...personal, ...lise, education: a('12'), purpose: a('Yks'), yksField: a('DIL'), language: a('English'), session: a('session:s1:2027'),
       diploma: a(82.5, '82,5 (tahmini)', { estimated: true }) })).toEqual({ purpose: 'Yks', primaryScoreType: 'DIL', foreignLanguage: 'English',
       targetExamSessionId: 's1', targetExamYear: 2027, diplomaGrade: 82.5, diplomaGradeEstimated: true });
     expect(examRequest({ ...personal, purpose: a('Ags'), oabtField: a('none'), session: a('year:2028') })).toMatchObject({ primaryScoreType: null,
@@ -168,5 +169,53 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(summary(done, context).find(x => x.step === 3)!.lines).toEqual(['Hedef: Ankara Fen Lisesi · taban 480']);
     // A step whose answers changed has a new signature, so it is sent again.
     expect(signature(change(done, 'targetSaved'), context, 3)).not.toBe(signature(done, context, 3));
+  });
+  // E3 #14 (user decision 06.11.2026): "Şu an durumun ne?" first; the grade only for ortaokul (5–8) and lise (9–12) students.
+  it('asks the education status, then the grade that fits it', () => {
+    const start: Answers = { birthDate: personal.birthDate, city: personal.city, district: personal.district };
+    const stage = questions(start, context).find(x => x.id === 'stage')!;
+    expect(stage.prompt).toBe('Şu an durumun ne?');
+    expect(stage.choices!.map(x => x.label)).toEqual(['Ortaokul öğrencisiyim', 'Lise öğrencisiyim', 'Liseden mezunum', 'Üniversite öğrencisiyim', 'Üniversiteden mezunum']);
+    expect(questions(start, context).some(x => x.prompt === 'Kaçıncı sınıftasın?')).toBe(false);
+    const grade = (value: string) => questions({ ...start, stage: a(value) }, context).find(x => x.id === 'education');
+    expect(grade('middle')!.choices!.map(x => x.value)).toEqual(['5', '6', '7', '8']);
+    expect(grade('high')!.choices!.map(x => x.value)).toEqual(['9', '10', '11', '12']);
+    for (const other of ['HighSchoolGraduate', 'UniversityStudent', 'UniversityGraduate']) {
+      expect(grade(other)).toBeUndefined();
+      expect(ids({ ...start, stage: a(other) })).not.toContain('ownSchool');
+      expect(personalRequest({ ...start, stage: a(other) })).toMatchObject({ educationStatus: other, gradeLevel: null, schoolId: null });
+    }
+    // The own school list is the high-school catalog: asked of lise students only.
+    expect(ids({ ...start, ...lise, education: a('9') })).toContain('ownSchool');
+    expect(ids({ ...start, stage: a('middle'), education: a('7') })).not.toContain('ownSchool');
+    expect(personalRequest({ ...start, stage: a('middle'), education: a('7') })).toMatchObject({ educationStatus: 'Student', gradeLevel: 7 });
+    // A changed status asks the grade, the school and the diploma grade again.
+    const changed = change({ ...start, ...lise, education: a('11'), ownSchool: a(null), diploma: a(80) }, 'stage');
+    expect([changed.education, changed.ownSchool, changed.diploma]).toEqual([undefined, undefined, undefined]);
+  });
+
+  it('asks the YKS diploma grade in 11th and 12th grade and of everyone out of high school', () => {
+    const yks = { ...personal, purpose: a('Yks'), yksField: a('SAY'), education: undefined };
+    for (const stage of ['HighSchoolGraduate', 'UniversityStudent', 'UniversityGraduate'])
+      expect(ids({ ...yks, stage: a(stage) })).toContain('diploma');
+    expect(ids({ ...yks, ...lise, education: a('12') })).toContain('diploma');
+    expect(ids({ ...yks, ...lise, education: a('10') })).not.toContain('diploma');
+    expect(ids({ ...yks, stage: a('UniversityGraduate'), purpose: a('Yds') })).not.toContain('diploma');
+  });
+
+  it('resumes every status from the server', () => {
+    const view = (educationStatus: string, gradeLevel: number | null) => ({ status: 'InProgress', nextStep: 2, savedSteps: [1], completedAt: null, academicYearStart: 2026,
+      examSessions: [], answers: { birthDate: '2000-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus,
+        gradeLevel, graduationYear: null, schoolName: null, purpose: null, primaryScoreType: null, foreignLanguage: null, targetExamSessionId: null, targetExamYear: null,
+        diplomaGrade: null, diplomaGradeEstimated: false, target: null } }) as unknown as OnboardingView;
+    expect([prefill(view('Student', 7)).stage!.value, prefill(view('Student', 7)).education!.value]).toEqual(['middle', '7']);
+    expect([prefill(view('Student', 10)).stage!.value, prefill(view('Student', 10)).education!.value]).toEqual(['high', '10']);
+    for (const status of ['HighSchoolGraduate', 'UniversityStudent', 'UniversityGraduate']) {
+      const answers = prefill(view(status, null));
+      expect([answers.stage!.value, answers.education]).toEqual([status, undefined]);
+      expect(stepComplete(answers, context, 1)).toBe(true);
+    }
+    expect(prefill(view('Unknown', null)).stage).toBeUndefined();
+    expect(summary(prefill(view('UniversityStudent', null)), context).find(x => x.step === 1)!.lines).toContain('Eğitim durumu: Üniversite öğrencisiyim');
   });
 });

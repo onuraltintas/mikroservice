@@ -39,20 +39,20 @@ public sealed class TeacherCalendarTests
         Assert.Equal(403,Assert.IsType<ObjectResult>(await api.Get(student,default)).StatusCode);
     }
     [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task PublishingBetweenReportQueriesUsesTheNewPlansTimezoneWithoutLosingWork()
+    public async Task PublishingBetweenReportQueriesUsesTheNewPlanWithoutLosingWork()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;await f.Seed();var old=await f.Db.StudyPlanRevisions.SingleAsync();
         var teacher=Guid.NewGuid();f.User.UserId=teacher;f.User.Roles=["Teacher"];
         f.Db.AddRange(CoachingTeacherProfile.Create(teacher),CoachingStudentProfile.Create(old.StudentId),CoachingTeacherStudentAssignment.Create(teacher,old.StudentId,null,null,teacher));await f.Db.SaveChangesAsync();
         var hook=new PublicationHook(async()=>{
             await using var writer=new CoachingDbContext(pg.Options);var previous=await writer.StudyPlanRevisions.SingleAsync(x=>x.Id==old.Id);previous.Archive();await writer.SaveChangesAsync();
-            var next=StudyPlanRevision.Create(old.StudentId,Guid.NewGuid(),1,"Yeni plan");next.SetWeeklySource(new(0,null,new(2027,1,1),new(2027,1,10),false,"test",null,null,"Europe/London"));next.Activate();
-            var task=StudyPlanTask.Create(next,new(2027,1,5),"Londra saatinde gelecek çalışma",30);task.Schedule(task.PlannedDate,840);writer.AddRange(next,task);await writer.SaveChangesAsync();
+            var next=StudyPlanRevision.Create(old.StudentId,Guid.NewGuid(),1,"Yeni plan");next.SetWeeklySource(new(0,null,new(2027,1,1),new(2027,1,10),false,"test",null,null,"Europe/Istanbul"));next.Activate();
+            var task=StudyPlanTask.Create(next,new(2027,1,5),"Akşam gelecek çalışma",30);task.Schedule(task.PlannedDate,1020);writer.AddRange(next,task);await writer.SaveChangesAsync();
         });
         await using var db=new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>(pg.Options).AddInterceptors(hook).Options);
         var api=new CoachingTeacherStudyController(db,new OwnedCoachingDirectory(db,new Accounts(teacher,old.StudentId),f.User),f.User,new FixedClock());
         var response=Assert.IsType<OkObjectResult>(await api.Overview(new(2027,1,4),new(2027,1,6),1,25,null,default));
-        var row=Assert.Single(Assert.IsType<TeacherStudyOverview>(response.Value).Items);Assert.Equal(1,row.PendingTasks);Assert.Equal(0,row.OverdueTasks);Assert.Equal("Londra saatinde gelecek çalışma",Assert.Single(row.Tasks!).Title);
+        var row=Assert.Single(Assert.IsType<TeacherStudyOverview>(response.Value).Items);Assert.Equal(1,row.PendingTasks);Assert.Equal(0,row.OverdueTasks);Assert.Equal("Akşam gelecek çalışma",Assert.Single(row.Tasks!).Title);
     }
     private sealed class PublicationHook(Func<Task> publish):DbCommandInterceptor
     {

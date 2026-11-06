@@ -85,7 +85,7 @@ public sealed class StudentDailyAgendaPostgresTests
         await using var pg = await CurriculumPostgresTests.Pg.Create(); var f = pg.Data;
         var student = Guid.NewGuid(); f.User.UserId = student; f.User.Roles = ["Student"]; f.Db.Add(CoachingStudentProfile.Create(student));
         var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Saat dilimi");
-        plan.SetWeeklySource(new(0, 0, Today, new(2027, 6, 1), false, "test", null, null, "America/New_York")); plan.Activate(); f.Db.Add(plan);
+        plan.SetWeeklySource(new(0, 0, Today, new(2027, 6, 1), false, "test", null, null, "Europe/Istanbul")); plan.Activate(); f.Db.Add(plan);
         var ended = StudyPlanTask.Create(plan, Today, "Bittiği saat", 30); ended.Schedule(Today, 3 * 60 + 30); f.Db.Add(ended);
         f.Db.Add(StudyPlanTask.Create(plan, Today, "Saati yok", 30));
         var late = Assignment.Create(Guid.NewGuid(), "Bir saniye gecikmiş", Now.UtcDateTime.AddSeconds(-1)); late.AssignToStudent(student); f.Db.Add(late);
@@ -93,7 +93,7 @@ public sealed class StudentDailyAgendaPostgresTests
         await f.Db.SaveChangesAsync();
         var api = new StudentDailyAgendaController(f.Db, new CoachingAccessPolicy(f.User), new Clock());
         var overdue = await Page(api, "overdue"); Assert.Equal(2, overdue.TotalCount);
-        Assert.Equal("America/New_York", overdue.Items.Single(x => x.RecordId == ended.Id).TimeZoneId);
+        Assert.Equal("Europe/Istanbul", overdue.Items.Single(x => x.RecordId == ended.Id).TimeZoneId);
         var today = await Page(api); Assert.Equal(2, today.TotalCount); Assert.Contains(today.Items, x => x.RecordId == exact.Id);
         Assert.Equal(1, (await Page(api, "overdue", 100)).PageNumber);
     }
@@ -113,20 +113,19 @@ public sealed class StudentDailyAgendaPostgresTests
         Assert.Equal(1, overdue.OverdueCount); Assert.Equal(0, overdue.UpcomingCount); Assert.Equal(missed.Id, Assert.Single(overdue.Items).RecordId);
     }
 
-    // Roadmap D2: assignments and decisions use the student's own time zone for "today", like study tasks.
+    // Roadmap D2, E3 #34 (06.11.2026): assignment days follow Türkiye time for everyone (no own time zone any more).
     [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task AssignmentDaysFollowTheStudentsOwnTimeZone()
+    public async Task AssignmentDaysFollowTurkeyTime()
     {
         await using var pg = await CurriculumPostgresTests.Pg.Create(); var f = pg.Data;
         var student = Guid.NewGuid(); f.User.UserId = student; f.User.Roles = ["Student"];
-        f.Db.AddRange(CoachingStudentProfile.Create(student), StudyAvailability.Create(student, "Asia/Tokyo"));
-        // 16:00 UTC is 19:00 in Istanbul (today) but 01:00 the next day in Tokyo.
-        var assignment = Assignment.Create(Guid.NewGuid(), "Gece teslim", new DateTime(2026, 10, 21, 16, 0, 0, DateTimeKind.Utc)); assignment.AssignToStudent(student);
+        f.Db.AddRange(CoachingStudentProfile.Create(student), StudyAvailability.Create(student, "Europe/Istanbul"));
+        // 16:00 UTC is 19:00 in Istanbul, still today.
+        var assignment = Assignment.Create(Guid.NewGuid(), "Akşam teslim", new DateTime(2026, 10, 21, 16, 0, 0, DateTimeKind.Utc)); assignment.AssignToStudent(student);
         f.Db.Add(assignment); await f.Db.SaveChangesAsync();
         var api = new StudentDailyAgendaController(f.Db, new CoachingAccessPolicy(f.User), new Clock());
-        Assert.Empty((await Page(api)).Items);
-        var item = Assert.Single((await Page(api, "upcoming")).Items);
-        Assert.Equal(("Asia/Tokyo", new DateOnly(2026, 10, 22), 60), (item.TimeZoneId, item.Date, item.StartMinute));
+        var item = Assert.Single((await Page(api)).Items);
+        Assert.Equal(("Europe/Istanbul", new DateOnly(2026, 10, 21), 1140), (item.TimeZoneId, item.Date, item.StartMinute));
     }
 
     private static async Task<StudentDailyAgendaPage> Page(StudentDailyAgendaController api, string mode = "today", int page = 1) =>

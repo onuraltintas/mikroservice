@@ -24,6 +24,21 @@ describe('StudentLearningSetupComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/account/settings/profile"]')).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Çalışma amacım');
   });
+  // E3 #14 (06.11.2026): the education is edited on Profilim only; here a short line links there instead of a second form.
+  it('has no education form of its own and links to Profilim', async () => {
+    const { fixture, component, service } = await setup({ ...empty, nextStep: 'Profile', missingFields: ['Profile'] });
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('edu-coaching-profile')).toBeNull();
+    expect(Array.from(el.querySelectorAll('button')).map(x => x.textContent?.trim())).not.toContain('Eğitim bilgilerim');
+    const line = el.querySelector('[data-testid="education-on-profile"]')!;
+    expect(line.textContent).toContain('Eğitim durumun ve sınıfın Profilim sayfasında');
+    expect(line.querySelector('a[href="/coaching-portal/account/settings/profile"]')).toBeTruthy();
+    expect(component.step()).toBe('Profile');
+    expect(el.querySelector('[data-testid="education-missing"]')!.textContent).toContain('Önce Profilim sayfasında eğitim durumunu seç');
+    service.get.mockReturnValueOnce(throwError(() => ({ status: 404 })));
+    await component.load(); fixture.detectChanges(); await fixture.whenStable();
+    expect(component.error()).toContain('Profilim');
+  });
   it('requires conditional exam fields and preserves input on save failure', async () => {
     const { component, service, fixture } = await setup();
     component.purpose = 'Yks'; component.targetExamYear = null; component.savePurpose();
