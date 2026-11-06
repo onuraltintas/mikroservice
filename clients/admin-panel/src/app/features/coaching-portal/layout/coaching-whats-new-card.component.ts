@@ -1,5 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 import { CoachingWhatsNewService } from './coaching-whats-new.service';
+
+const COUNT_WORDS: Record<number, string> = { 3: 'üç', 4: 'dört', 5: 'beş', 6: 'altı' };
 
 /** T2 (31.10.2026): a short, one-time note about the new student menu. On a phone it shrinks to one line (T7). */
 @Component({
@@ -11,8 +14,8 @@ import { CoachingWhatsNewService } from './coaching-whats-new.service';
       <div>
         <p class="tag">Yeni</p>
         <h2 id="whats-new-title">Panelin yenilendi</h2>
-        <p class="long">Her şey artık daha az menüde: <strong>Bugün</strong>, <strong>Planım</strong>, <strong>Ödevlerim</strong>, <strong>Gelişimim</strong> ve <strong>Mesajlar</strong>. Profil, ödemeler ve tema sağ üstteki profil simgende.</p>
-        <p class="short">Menü beş bölüme indi. Profil, ödemeler ve tema sağ üstte.</p>
+        <p class="long">Her şey artık daha az menüde: @for (part of menuParts(); track part.item) {<strong>{{ part.item }}</strong><span>{{ part.after }}</span>} Profil, ödemeler ve tema sağ üstteki profil simgende.</p>
+        <p class="short">Menü {{ phoneCount() }} bölüme indi. Profil, ödemeler ve tema sağ üstte.</p>
       </div>
       <button type="button" (click)="whatsNew.dismiss()">Anladım</button>
     </section>
@@ -35,4 +38,12 @@ import { CoachingWhatsNewService } from './coaching-whats-new.service';
 })
 export class CoachingWhatsNewCardComponent {
   readonly whatsNew = inject(CoachingWhatsNewService);
+  private readonly navigation = inject(CoachingStudentNavigationService);
+  /** Paket F #33: the side menu the student actually has (Ödevlerim and Seanslar only when the shell shows them). */
+  readonly menu = computed(() => ['Bugün', 'Planım', ...(this.navigation.showAssignments() ? ['Ödevlerim'] : []), 'Gelişimim', 'Mesajlar',
+    ...(this.navigation.showSessions() ? ['Seanslar'] : [])]);
+  /** "Bugün, Planım, Gelişimim ve Mesajlar." */
+  readonly menuParts = computed(() => this.menu().map((item, i, all) => ({ item, after: i === all.length - 1 ? '.' : i === all.length - 2 ? ' ve ' : ', ' })));
+  /** The phone bar is the same menu without Seanslar. */
+  readonly phoneCount = computed(() => { const n = this.menu().filter(x => x !== 'Seanslar').length; return COUNT_WORDS[n] ?? String(n); });
 }

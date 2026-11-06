@@ -3,7 +3,8 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-interface StudentNavigation { showAssignments: boolean; showSessions: boolean; showFees?: boolean }
+/** registeredAt (Paket F #20): when the student's coaching profile was made (UTC ISO), null without one. */
+interface StudentNavigation { showAssignments: boolean; showSessions: boolean; showFees?: boolean; registeredAt?: string | null }
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudentNavigationService {
@@ -15,6 +16,7 @@ export class CoachingStudentNavigationService {
   readonly showAssignments = computed(() => this.state()?.showAssignments ?? true);
   readonly showFees = computed(() => this.state()?.showFees ?? true);
   readonly showSessions = computed(() => this.state()?.showSessions ?? true);
+  readonly registeredAt = computed(() => this.state()?.registeredAt ?? null);
   /** Paket F #36: the server has answered (or failed); until then the menu shows only its fixed items. */
   readonly loaded = this.settled.asReadonly();
 
