@@ -1501,7 +1501,10 @@ public sealed class SystemAdminMfaLoginTests
             allowRefreshToken
                 ? Task.FromResult(Result.Success())
                 : throw new InvalidOperationException("Refresh token must not be persisted before MFA.");
+        // E5 review M2: a Google registration creates the account without a password (no generated one).
         public Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken) =>
+            throw new NotSupportedException("Google sign-in must not register the account with a generated password.");
+        public Task<Result<Guid>> RegisterExternalUserAsync(string email, string firstName, string lastName, CancellationToken cancellationToken) =>
             registerResult is not null
                 ? Task.FromResult(registerResult)
                 : throw new NotSupportedException();

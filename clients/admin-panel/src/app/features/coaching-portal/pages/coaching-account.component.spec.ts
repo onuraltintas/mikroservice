@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
 import { COACHING_PORTAL_ROUTES } from '../coaching-portal.routes';
@@ -18,10 +18,11 @@ const me = (over: Record<string, unknown> = {}) => ({
 describe('Hesabım', () => {
   let auth: { refreshSession: ReturnType<typeof vi.fn>; logout: ReturnType<typeof vi.fn> };
 
-  async function render(profile = me()) {
+  async function render(profile = me(), audience?: 'parent') {
     auth = { refreshSession: vi.fn(async () => true), logout: vi.fn(async () => undefined) };
     TestBed.configureTestingModule({ imports: [CoachingAccountComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: AuthService, useValue: auth }] });
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: AuthService, useValue: auth },
+        ...(audience ? [{ provide: ActivatedRoute, useValue: { snapshot: { data: { audience } } } }] : [])] });
     const fixture = TestBed.createComponent(CoachingAccountComponent);
     fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
@@ -43,6 +44,7 @@ describe('Hesabım', () => {
     expect(await settings.children!.find(c => c.path === 'account')!.loadComponent!()).toBe(CoachingAccountComponent);
     const parent = COACHING_PORTAL_ROUTES.find(r => r.path === 'parent/account/settings')!;
     expect(parent.data?.['coachingRoles']).toEqual(['Parent']);
+    expect(parent.data?.['audience']).toBe('parent');
     expect(await parent.loadComponent!()).toBe(CoachingAccountComponent);
   });
 
@@ -145,9 +147,10 @@ describe('Hesabım', () => {
     expect(auth.logout).toHaveBeenCalled();
   });
 
-  it('tells a Google account that it signs in with Google and sends a password link on request', async () => {
+  // Review L9: administrator-provisioned accounts have no password either, so the wording is neutral.
+  it('tells an account without a password so and sends a password link on request', async () => {
     const { el, http, settle } = await render(me({ hasPassword: false }));
-    expect(el.textContent).toContain('Google ile giriş yapıyorsun');
+    expect(el.textContent).toContain('Hesabın için henüz bir şifre belirlenmemiş');
     expect(el.querySelector('form[data-testid="password-form"]')).toBeNull();
     expect(el.querySelector('form[data-testid="email-form"]')).toBeNull();
     el.querySelector<HTMLButtonElement>('[data-testid="request-password-setup"]')!.click();
@@ -160,5 +163,25 @@ describe('Hesabım', () => {
   it('shows two-step verification only when it is on', async () => {
     const { el } = await render(me({ mfaEnabled: true }));
     expect(el.querySelector('[data-testid="mfa-status"]')?.textContent).toContain('İki adımlı doğrulama açık');
+  });
+
+  // Review L7: the name rules are the server's (up to 100 characters, no minimum beyond not blank).
+  it('accepts a one-letter name and refuses one over 100 characters', async () => {
+    const { el, http, type, submit } = await render();
+    type('input[name="firstName"]', 'a'.repeat(101));
+    await submit('name-form');
+    expect(el.querySelector('#account-firstName-error')?.textContent).toContain('en fazla 100');
+    http.expectNone(r => r.method === 'PUT');
+    type('input[name="firstName"]', 'Ü');
+    await submit('name-form');
+    expect(http.expectOne(r => r.method === 'PUT').request.body).toEqual({ firstName: 'Ü', lastName: 'Kaya' });
+  });
+
+  // Review L8: the parent page has no student copy.
+  it('shows no student copy to a parent', async () => {
+    const { el } = await render(me({ role: 'Parent', roles: ['Parent'] }), 'parent');
+    expect(el.textContent).not.toContain('Profilim');
+    expect(el.textContent).not.toContain('Öğretmenlerin');
+    expect(el.textContent).not.toContain('Okul ve sınıf');
   });
 });

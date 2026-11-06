@@ -86,7 +86,9 @@ public sealed class AccountEmailChangeTests
 
         request.Error.Code.Should().Be("Account.PasswordNotSet");
         change.Error.Code.Should().Be("Account.PasswordNotSet");
-        change.Error.Description.Should().Contain("Google");
+        // Review L9: accounts provisioned by an administrator have no password either, so the wording is neutral.
+        change.Error.Description.Should().Contain("henüz bir şifre belirlenmemiş");
+        request.Error.Description.Should().Contain("henüz bir şifre belirlenmemiş");
         f.Published.Should().BeEmpty();
     }
 
@@ -101,6 +103,99 @@ public sealed class AccountEmailChangeTests
         again.Error.Code.Should().Be("Account.EmailChangeTooSoon");
         f.Published.Should().ContainSingle();
         (await f.Reload()).PendingEmail.Should().Be("ilk@example.test");
+    }
+
+    // Review L3: the one-minute limit is checked before the address, so the form cannot be used to probe addresses.
+    [Fact]
+    public async Task TheMinuteLimitComesBeforeTheAddressCheck()
+    {
+        await using var f = await Fixture.CreateAsync();
+        (await f.Request(Password, "ilk@example.test")).IsSuccess.Should().BeTrue();
+
+        (await f.Request(Password, "baskasi@example.test")).Error.Code.Should().Be("Account.EmailChangeTooSoon");
+    }
+
+    // Review M1 (a, c): confirming ends every session of the account and removes its Google sign-in, which belonged to
+    // the old address. (Only an account with a password can ask for a change, so nobody is locked out.)
+    [Fact]
+    public async Task ConfirmingEndsTheSessionsAndRemovesTheGoogleSignIn()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var user = await f.Reload();
+        f.Context.RefreshTokens.Add(RefreshToken.Create(user.Id, $"refresh-{Guid.NewGuid():N}", DateTime.UtcNow.AddDays(7), "127.0.0.1"));
+        f.Context.Set<UserLogin>().Add(UserLogin.Create(user.Id, "Google", "google-subject", "Google"));
+        await f.Context.SaveChangesAsync();
+        (await f.Request(Password, "yeni@example.test")).IsSuccess.Should().BeTrue();
+        var token = f.Published.OfType<UserEmailChangeRequestedEvent>().Single().ConfirmationToken;
+
+        (await f.Confirm(f.UserId, token)).IsSuccess.Should().BeTrue();
+
+        f.Context.ChangeTracker.Clear();
+        (await f.Context.RefreshTokens.Where(t => t.UserId == f.UserId).ToListAsync()).Should().OnlyContain(t => t.RevokedAt != null);
+        (await f.Context.Set<UserLogin>().CountAsync(l => l.UserId == f.UserId)).Should().Be(0);
+    }
+
+    // Review M1 (b): the confirmation page shows which account changes, with only the masked current address.
+    [Fact]
+    public async Task ThePreviewShowsOnlyTheMaskedCurrentAddress()
+    {
+        await using var f = await Fixture.CreateAsync();
+        (await f.Request(Password, "yeni@example.test")).IsSuccess.Should().BeTrue();
+        var token = f.Published.OfType<UserEmailChangeRequestedEvent>().Single().ConfirmationToken;
+        var handler = new GetEmailChangePreviewQueryHandler(f.Users);
+
+        var preview = await handler.Handle(new GetEmailChangePreviewQuery(f.UserId, token), default);
+
+        preview.Value.CurrentEmailMasked.Should().Be("o***@example.test");
+        (await handler.Handle(new GetEmailChangePreviewQuery(f.UserId, token + "x"), default)).Error.Code.Should().Be("EmailChange.InvalidLink");
+        (await f.Reload()).PendingEmail.Should().Be("yeni@example.test", "looking does not confirm");
+    }
+
+    // Review M2: a password the owner never chose (Google registration, administrator provisioning) does not count.
+    [Fact]
+    public void APasswordTheOwnerNeverChoseDoesNotCount()
+    {
+        var user = User.Create(Guid.NewGuid(), "a@example.test", "A", "B");
+        new PasswordHasher().CreatePasswordHash("Generated-Password-1!", out var hash, out var salt);
+
+        user.SetPassword(hash, salt, knownToOwner: false);
+        user.HasPassword.Should().BeFalse();
+
+        user.SetPassword(hash, salt);
+        user.HasPassword.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AGoogleRegistrationHasNoPassword()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var service = new Identity.Infrastructure.Services.LocalIdentityService(f.Users, new PasswordHasher(), f.UnitOfWork,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Identity.Infrastructure.Services.LocalIdentityService>.Instance,
+            null!, new RoleRepository(f.Context), f.Context, f.CurrentUser);
+
+        var created = await service.RegisterExternalUserAsync("google@example.test", "Ada", "Google", default);
+
+        f.Context.ChangeTracker.Clear();
+        var user = await f.Context.Users.SingleAsync(u => u.Id == created.Value);
+        user.HasPassword.Should().BeFalse();
+        user.PasswordHash.Should().BeEmpty();
+        var own = await new GetUserProfileQueryHandler(f.Users, new TeacherRepository(f.Context), new StudentRepository(f.Context),
+            new InstitutionRepository(f.Context), new Current(user.Id)).Handle(new GetUserProfileQuery(user.Id), default);
+        own.Value.HasPassword.Should().BeFalse();
+    }
+
+    // Review M2: an account linked to Google whose password was only marked unknown can still use it if the owner knows it.
+    [Fact]
+    public async Task AKnownPasswordStillWorksWhenItWasMarkedUnknown()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var user = await f.Reload();
+        new PasswordHasher().CreatePasswordHash(Password, out var hash, out var salt);
+        user.SetPassword(hash, salt, knownToOwner: false);
+        await f.Context.SaveChangesAsync();
+
+        (await f.Request(Password, "yeni@example.test")).IsSuccess.Should().BeTrue();
+        (await f.Reload()).HasPassword.Should().BeTrue("entering it proves the owner knows it");
     }
 
     [Fact]
@@ -238,6 +333,11 @@ public sealed class AccountEmailChangeTests
         var confirm = typeof(AuthController).GetMethod(nameof(AuthController.ConfirmEmailChange))!;
         confirm.GetCustomAttribute<HttpPostAttribute>()!.Template.Should().Be("confirm-email-change");
         confirm.GetCustomAttribute<AllowAnonymousAttribute>().Should().NotBeNull();
+        var preview = typeof(AuthController).GetMethod(nameof(AuthController.PreviewEmailChange))!;
+        preview.GetCustomAttribute<HttpPostAttribute>()!.Template.Should().Be("email-change-preview");
+        preview.GetCustomAttribute<AllowAnonymousAttribute>().Should().NotBeNull();
+        // Review L10: the request carries no product; the e-mail is always the Coaching site's.
+        typeof(RequestEmailChangeCommand).GetProperty("Product").Should().BeNull();
     }
 
     // The e-mails: the link opens the Coaching site's confirmation page (management accounts: the admin panel);
@@ -351,7 +451,7 @@ public sealed class AccountEmailChangeTests
 
         public Task<EduPlatform.Shared.Kernel.Results.Result<EmailChangeRequested>> Request(string password, string newEmail) =>
             new RequestEmailChangeCommandHandler(Users, new PasswordHasher(), UnitOfWork, Publisher(), CurrentUser)
-                .Handle(new RequestEmailChangeCommand(password, newEmail, PlatformProduct.Coaching), default);
+                .Handle(new RequestEmailChangeCommand(password, newEmail), default);
 
         public Task<EduPlatform.Shared.Kernel.Results.Result> Confirm(Guid userId, string token) =>
             new ConfirmEmailChangeCommandHandler(Users, UnitOfWork, Publisher())
