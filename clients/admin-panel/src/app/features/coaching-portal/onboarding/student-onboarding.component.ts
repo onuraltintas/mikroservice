@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Observable, catchError, firstValueFrom, forkJoin, map, of } from 'rxjs';
@@ -12,10 +12,11 @@ import { CoachingParentService, ParentLinkCode, ParentLinkCodeStatus } from '../
 import { NotificationPreference, NotificationPreferencesApi } from '../../../../../shared/notification-preferences.component';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
 import {
-  Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
+  Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, TARGET_QUESTIONS, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
   emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, personalRequest, prefill, questions, signature, stepComplete, stepQuestions,
-  summary, targetRequest, withoutUnfitPurpose
+  purposeOf, summary, targetRequest, withoutUnfitPurpose
 } from './onboarding-model';
+import { coachingToaster } from '../coaching-feedback';
 
 /** The reminder e-mails the wizard offers (roadmap O8 categories); the defaults are the student's current settings. */
 export const ONBOARDING_EMAIL_CATEGORIES = ['StudyPlan', 'AssignmentReminders', 'Sessions'];
@@ -47,6 +48,22 @@ export class StudentOnboardingComponent implements OnInit {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
   readonly notifications = new NotificationPreferencesApi(this.http, environment.apiUrl);
+  /** E7 (#30): Hedefim embeds the target step: no page header, and a saved target stays on the page (no Bugün). */
+  readonly embedded = input(false);
+  /** E7: a new target was saved (Hedefim reloads its summary and net targets). */
+  readonly targetSaved = output<void>();
+  /** E7: the saved target shown first in target mode; "Vazgeç" goes back to it after "Değiştir". */
+  readonly original = signal<Answer | null>(null);
+  /** Review of PR 120: embedded before the first-login setup is completed (Hedefim then only links to it). */
+  readonly notReady = signal(false);
+  private readonly toaster = coachingToaster();
+  /** The student has an exam, so the target step applies (otherwise "Önce sınavını seç"). */
+  readonly hasExam = computed(() => !!purposeOf(this.answers()));
+  /** Review of PR 120: a target change has been started and not saved (Hedefim asks before leaving). */
+  readonly dirty = computed(() => this.mode() === 'target' && !this.answers().targetSaved
+    && TARGET_QUESTIONS.some(id => id !== 'targetSaved' && id in this.answers()));
+  /** E7: "Hedefin kaydedildi." after a save in Hedefim. */
+  readonly saved$ = signal<string | null>(null);
 
   readonly view = signal<OnboardingView | null>(null);
   readonly answers = signal<Answers>({});
@@ -100,6 +117,7 @@ export class StudentOnboardingComponent implements OnInit {
   /** The server accepts a birth date between 100 and 6 years ago (Türkiye date). */
   readonly oldest = shiftYears(-100);
   readonly youngest = shiftYears(-6);
+  private interacted = false;
   draftNumber: number | null = null;
   draftDate = '';
   draftEstimated = false;
@@ -107,13 +125,18 @@ export class StudentOnboardingComponent implements OnInit {
   async ngOnInit() {
     try {
       const view = await firstValueFrom(this.api.get());
-      const targetOnly = this.route.snapshot.queryParamMap.get('step') === 'target';
+      // Review of PR 120: Hedefim offers the target step only after the first-login setup; before that it links to it.
+      if (this.embedded() && view.status !== 'Completed') { this.notReady.set(true); return; }
+      const targetOnly = this.embedded() || this.route.snapshot.queryParamMap.get('step') === 'target';
       if (view.status === 'Completed' && !targetOnly) { await this.router.navigate(['/coaching-portal']); return; }
       if (view.status === 'Completed') this.mode.set('target');
       this.view.set(view);
       // "Hedefini belirle" keeps the saved exam (the target belongs to it); the wizard asks an exam the grade no longer fits again.
       const answers = prefill(view.status === 'Completed' ? { ...view, allowedPurposes: undefined } : view);
-      this.answers.set(this.mode() === 'target' && !view.answers.targetLocked ? change(answers, 'targetSaved') : answers);
+      // E7 (#30): a saved target is shown first with "Değiştir". "Hedefini belirle" without a target asks right away; Hedefim shows
+      // "Henüz karar vermedim" as it does right after saving it.
+      this.answers.set(this.mode() === 'target' && !view.answers.targetLocked && !view.answers.target && !this.embedded() ? change(answers, 'targetSaved') : answers);
+      this.original.set(this.mode() === 'target' && !view.answers.targetLocked ? this.answers().targetSaved ?? null : null);
       this.markSaved(view);
       if (this.mode() === 'target') { await this.settle(); return; }
       this.resumeAnswers(view);
@@ -128,11 +151,18 @@ export class StudentOnboardingComponent implements OnInit {
 
   answer(question: Question, answer: Answer) {
     if (this.busy()) return;
+    this.interacted = true;
     this.invalid.set(null);
     this.answers.update(current => ({ ...change(current, question.id), [question.id]: answer }));
     void this.settle();
   }
-  choose(question: Question, choice: Choice) { this.answer(question, { value: choice.value, label: choice.label }); }
+  async choose(question: Question, choice: Choice) {
+    // Review of PR 120: "Henüz karar vermedim" removes a saved target, so it is confirmed first.
+    const saved = this.original();
+    if (question.id === 'targetMode' && choice.value === 'none' && this.mode() === 'target' && saved && saved.value !== 'none'
+      && !await this.toaster.confirm(`Mevcut hedefin silinecek: ${saved.label}. Devam edilsin mi?`, { confirmText: 'Hedefimi sil', cancelText: 'Vazgeç' })) return;
+    this.answer(question, { value: choice.value, label: choice.label });
+  }
   skip(question: Question) { this.answer(question, { value: null, label: question.skipLabel ?? 'Geç' }); }
   pickCombo(question: Question, option: ComboOption) { this.answer(question, { value: option.value, label: option.label, data: option.data }); }
 
@@ -152,13 +182,26 @@ export class StudentOnboardingComponent implements OnInit {
   /** "Değiştir": the answer and only the answers that depend on it are asked again. */
   edit(id: QuestionId) {
     if (this.busy()) return;
-    this.error.set(null); this.invalid.set(null); this.done.set(null);
+    this.error.set(null); this.invalid.set(null); this.done.set(null); this.saved$.set(null); this.interacted = true;
     this.answers.update(current => change(current, id));
     void this.settle();
   }
   editStep(step: StepNumber) {
     const first = this.flow().find(x => x.step === step);
     if (first) this.edit(first.id);
+  }
+
+  /** E7: "Vazgeç" while changing the target: the saved target stays, nothing is sent. */
+  cancelChange() {
+    const original = this.original();
+    if (this.busy() || !original) return;
+    this.error.set(null); this.invalid.set(null);
+    this.answers.update(current => {
+      const next = { ...current };
+      for (const id of TARGET_QUESTIONS) delete next[id];
+      return { ...next, targetSaved: original };
+    });
+    void this.settle();
   }
 
   /** Steps 4–6 are passed after their own action (accepting an invitation, a parent code, e-mail choices). */
@@ -229,7 +272,15 @@ export class StudentOnboardingComponent implements OnInit {
       // Review M1: a saved grade the chosen exam no longer fits asks the exam again instead of resending it.
       if (this.mode() === 'wizard') this.answers.update(current => withoutUnfitPurpose(current, view.allowedPurposes));
       this.markSaved(view);
-      if (this.mode() === 'target' && pending === 3) { await this.router.navigate(['/coaching-portal']); return; }
+      if (this.mode() === 'target' && pending === 3) {
+        if (!this.embedded()) { await this.router.navigate(['/coaching-portal']); return; }
+        // E7: Hedefim shows the new target as the current one and stays on the page.
+        this.answers.set(prefill({ ...view, allowedPurposes: undefined }));
+        this.original.set(view.answers.targetLocked ? null : this.answers().targetSaved ?? null);
+        this.markSaved(view);
+        this.saved$.set('Hedefin kaydedildi.');
+        this.targetSaved.emit();
+      }
     }
     this.prepare();
   }
@@ -243,7 +294,8 @@ export class StudentOnboardingComponent implements OnInit {
         : this.api.passStep(step as 4 | 5 | 6);
       return await firstValueFrom(request);
     } catch (e) {
-      const failure = e as { status?: number; error?: { message?: string } };
+      const failure = e as { status?: number; error?: { message?: string; code?: string } };
+      if (step === 3 && failure?.error?.code === 'Onboarding.TeacherGoal') { await this.showTeacherGoal(); return null; }
       if (failure?.status === 400) {
         // E4 review: a rule only the server knows refused the step: its last question is asked again with the message (no retry).
         const last = stepQuestions(this.answers(), this.context(), step).filter(x => x.id in this.answers()).at(-1);
@@ -259,6 +311,23 @@ export class StudentOnboardingComponent implements OnInit {
   }
 
   retry() { this.error.set(null); void this.settle(); }
+
+  /** Review of PR 120: a teacher set the goal while the student was changing it: the teacher's goal is shown, locked. */
+  private async showTeacherGoal() {
+    this.invalid.set(null); this.error.set(null); this.original.set(null);
+    try {
+      const view = await firstValueFrom(this.api.get());
+      this.view.set(view);
+      this.answers.set(prefill({ ...view, allowedPurposes: undefined }));
+      this.markSaved(view);
+    } catch {
+      this.answers.update(current => {
+        const next = { ...current };
+        for (const id of TARGET_QUESTIONS) delete next[id];
+        return { ...next, targetSaved: { value: 'locked', label: 'Hedefini öğretmenin belirledi', data: { kind: 'none', locked: true } } };
+      });
+    }
+  }
 
   /** A step counts as saved only while the server reports it; a re-opened step is sent again. */
   private markSaved(view: OnboardingView) {
@@ -315,6 +384,8 @@ export class StudentOnboardingComponent implements OnInit {
         break;
       }
     }
+    // E7: embedded in Hedefim the focus moves only once the student works on the target (not when the page opens).
+    if (this.embedded() && !this.interacted) return;
     setTimeout(() => (this.host.nativeElement.querySelector('[data-current] input, [data-current] button') as HTMLElement | null)?.focus());
   }
 

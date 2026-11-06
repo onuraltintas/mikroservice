@@ -1446,7 +1446,7 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyWorkReader.cs": "58c6ea94b3fcd13e98aea7823d28d93aaa344632edf9f4cd43ce2aab2da16865",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/GoalExamFit.cs": "090388c154486ecec40e6d21c100437321261bbe8bea38424067b6525f3f29ab",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/StudyPlanOutcomeReader.cs": "1b4469acc44ce759ddd83bb9a65d92fb060583aacdfd5d0a603980030ff9aec4",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/TargetAdmissionSearchService.cs": "37a851a2c1e90e4b4769e7b72a6123ff9a2131f7096f938923d6465bcd71c24e",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/TargetAdmissionSearchService.cs": "b0476b6d156c5df3085a3f852ed3e8034e234a8613fdc73a07931ae28ad7878a",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/YksCatalogEligibility.cs": "fbedc2c2e6a9865d5ecbf8fd1a65ee01bd12e5035cb8861b1eb2ae2e29ae5a02",
     "services/coaching-service/Coaching.sln": "c0ddddad6384e9205556a700ed32049585f5fbc06c55cfde566ad07a65ace5f6",
     "services/coaching-service/Dockerfile": "bca110da90e391711e73fa645a53e33afe55920d30feca188f499fd79651b1c4",
@@ -2699,7 +2699,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "E6 staff-portal wizard spec answers the availability request",
+    "purpose": "E7 after merging E4 and E6",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2747,7 +2747,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "f74fc297",
+    "previousBaselineCommit": "45732abb",
     "removedSincePreviousBaseline": []
   }
 }

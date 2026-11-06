@@ -58,5 +58,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 :host ::ng-deep .ob-combo-empty { margin: .35rem 0 0; color: var(--ob-muted); }
 :host ::ng-deep .ob-combo-more { margin: .35rem 0 0; button { font: inherit; border: 0; background: none; color: var(--ob-brand); text-decoration: underline; cursor: pointer; } }
 :host ::ng-deep .ob-error { color: var(--ob-danger); }
+.ob-page.is-embedded { min-height: 0; background: transparent;
+  .ob-chat { max-width: none; padding: 0; } }
 @media (max-width: 30rem) { .ob-bot, .ob-me { max-width: 100%; } h1 { font-size: 1.15rem; } }
 @media (prefers-reduced-motion: reduce) { .ob-bar span { transition: none; } }

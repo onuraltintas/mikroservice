@@ -32,14 +32,13 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   expect((await page.request.put(`http://127.0.0.1:5006/api/goals/${goalId}/progress`, {
     headers, data: { goalId, progress: 30 }
   })).ok()).toBeTruthy();
-  await page.goto('/coaching-portal/growth/goals');
-  const goalPicker = page.locator('app-student-goal-target');
-  await goalPicker.getByRole('button', { name: 'Okul / üniversite hedefini görüntüle' }).click();
-  await goalPicker.getByRole('combobox', { name: 'Sınav türü', exact: true }).selectOption('Mock');
-  await goalPicker.getByLabel('Hedef puan', { exact: true }).fill('90');
-  await goalPicker.getByLabel('En yüksek puan (ölçek)', { exact: true }).fill('100');
-  await goalPicker.getByRole('button', { name: 'Puan hedefini kaydet', exact: true }).click();
-  await expect(goalPicker.getByText(/Puan hedefi kaydedildi/)).toBeVisible();
+  // E7 (#30): Hedefim no longer offers a free exam type and scale to the student (the wizard's target step sets the scale from the
+  // score type); this report check keeps the goal-target score API with a practice-exam scale.
+  const auth = { Authorization: `Bearer ${planningToken(student)}` };
+  const goalTarget = `http://127.0.0.1:5006/api/coaching/study-planning/goals/${goalId}/target`;
+  const version = (await (await page.request.get(goalTarget, { headers: auth })).json()).data.version;
+  const scored = await page.request.put(`${goalTarget}/score`, { headers: auth, data: { expectedVersion: version, targetScore: 90, maxScore: 100, examType: 'Mock' } });
+  expect(scored.ok(), await scored.text()).toBeTruthy();
   await page.goto('/coaching-portal/plan');
   await expect(page.getByRole('heading', { name: 'Çalışma planlarım', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Yeni taslak', exact: true }).click();
@@ -99,14 +98,17 @@ test('student links a school target and publishes an automatic topic plan within
   } });
   expect(created.ok(), await created.text()).toBeTruthy();
   const goalId = (await created.json()).goalId;
-  await page.goto('/coaching-portal/growth/goals');
-  const picker = page.locator('app-student-goal-target');
-  await picker.getByRole('button', { name: 'Okul / üniversite hedefini görüntüle' }).click();
-  await picker.getByLabel('Okul adı', { exact: true }).fill('E2E Okul');
-  await picker.getByRole('button', { name: 'Ara', exact: true }).click();
-  await expect(picker.getByText('E2E Okul', { exact: true })).toBeVisible();
-  await picker.getByRole('button', { name: 'Bu hedefi bağla', exact: true }).click();
-  await expect(picker.getByText('Hedef bağlantısı kaydedildi.', { exact: true })).toBeVisible();
+  // E7 (#30): the student picks a school in Hedefim through the wizard's target step; here the catalog search (case-folded) and the
+  // goal-target API link it.
+  const auth = { Authorization: `Bearer ${planningToken(student)}` };
+  const found = await page.request.get('http://127.0.0.1:5006/api/coaching/study-planning/targets/admissions?examCode=LGS&year=2026&search=e2e%20okul', { headers: auth });
+  expect(found.ok(), await found.text()).toBeTruthy();
+  const school = (await found.json()).data.items.find(x => x.name === 'E2E Okul');
+  expect(school).toBeTruthy();
+  const goalTarget = `http://127.0.0.1:5006/api/coaching/study-planning/goals/${goalId}/target`;
+  const version = (await (await page.request.get(goalTarget, { headers: auth })).json()).data.version;
+  const linked = await page.request.put(goalTarget, { headers: auth, data: { expectedVersion: version, targetUniversityProgramId: null, targetSchoolId: school.targetId } });
+  expect(linked.ok(), await linked.text()).toBeTruthy();
   const target = await page.request.get(`http://127.0.0.1:5006/api/coaching/study-planning/goals/${goalId}/target`, { headers });
   expect((await target.json()).data.catalogTarget.name).toBe('E2E Okul');
   await page.goto('/coaching-portal/plan/hours');

@@ -50,8 +50,10 @@ export const YDS_LEVELS: Choice[] = [
 const EXAM_CODES: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
 const EXAM_TYPES: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'YKS', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YÖKDİL' };
 
-const TARGET: QuestionId[] = ['targetSaved', 'targetMode', 'schoolCity', 'schoolType', 'targetSchool', 'level', 'programScoreType', 'programCity',
+/** Every question of the target step (E7: "Vazgeç" clears them all to bring the saved target back). */
+export const TARGET_QUESTIONS: readonly QuestionId[] = ['targetSaved', 'targetMode', 'schoolCity', 'schoolType', 'targetSchool', 'level', 'programScoreType', 'programCity',
   'university', 'program', 'ownScore', 'targetScoreType', 'ydsLevel', 'targetScore', 'tytScore', 'fieldScore'];
+const TARGET: QuestionId[] = [...TARGET_QUESTIONS];
 /** A changed answer clears only the answers that depend on it; the flow then asks them again. */
 export const DEPENDENTS: Partial<Record<QuestionId, QuestionId[]>> = {
   city: ['district', 'ownSchool'],

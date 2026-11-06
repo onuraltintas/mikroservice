@@ -1,20 +1,22 @@
 <div class="mt-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-  <button *ngIf="!expanded()" type="button" (click)="open()" class="text-sm font-semibold text-(--ui-brand-text) ">Okul / üniversite hedefini görüntüle</button>
+  <button *ngIf="!expanded() && !netOnly" type="button" (click)="open()" class="text-sm font-semibold text-(--ui-brand-text) ">Okul / üniversite hedefini görüntüle</button>
   <ng-container *ngIf="expanded()">
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <!-- E7 (#30): on Hedefim the student edits the target with the wizard's steps; this editor then shows only the net targets. -->
+    <div *ngIf="!netOnly" class="flex flex-wrap items-center justify-between gap-3">
       <h3 class="text-sm font-semibold">Okul / üniversite hedefi</h3>
       <button type="button" (click)="open()" [disabled]="busy() || saving()" class="text-sm underline disabled:opacity-50">Yeniden yükle</button>
     </div>
     <p *ngIf="busy()" role="status" class="mt-2 text-sm">Yükleniyor…</p>
     <p *ngIf="error()" role="alert" class="mt-2 text-sm text-red-600 dark:text-red-300">{{ error() }}</p>
+    <button *ngIf="netOnly && error() && !target() && !busy()" type="button" (click)="open()" class="text-sm underline">Yeniden yükle</button>
     <p *ngIf="success()" role="status" class="mt-2 text-sm text-emerald-700 dark:text-emerald-300">{{ success() }}</p>
     <ng-container *ngIf="target() as current">
       <!-- Paket D (#9): a teacher's goal stays as it is when the exam changes; both sides see that it no longer matches. -->
       <p *ngIf="current.examMismatch" role="status" data-testid="goal-exam-mismatch" class="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">{{ staffStudentId ? 'Bu hedef, öğrencinin çalışma tercihlerindeki sınavla artık eşleşmiyor; hedefin güncellenmesi gerekiyor.' : current.canEdit ? 'Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor. Hedefini yeniden belirle.' : 'Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor. Hedefini öğretmenin belirledi; değiştirmek için öğretmenine yaz.' }}</p>
       <section aria-label="Net hedefi" class="my-3 rounded-lg border p-3">
         <h4>Deneme net hedeflerin</h4>
-        <div class="grid gap-3 sm:grid-cols-2">@for(metric of current.netTargets || [];track metric.examCode){<article class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-950"><strong>{{(metric.examCode || '').replace('AYT_','AYT ').replace('YDT_EN','YDT İngilizce')}}</strong><p class="text-2xl font-bold">{{metric.targetNet}} net</p></article>}</div><p>Gelişim raporunda yalnız aynı sınav kapsamındaki denemelerle karşılaştırılır. Yerleştirme puanı veya kabul garantisi değildir.</p>
-        <p *ngIf="current.netTarget?.examCode">{{current.netTarget?.examCode}} · {{current.netTarget?.targetNet}} net</p>
+        <div class="grid gap-3 sm:grid-cols-2">@for(metric of current.netTargets || [];track metric.examCode){<article class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-950"><strong>{{(metric.examCode || '').replace('AYT_','AYT ').replace('YDT_EN','YDT İngilizce')}}</strong><p class="text-2xl font-bold">{{net(metric.targetNet)}} net</p></article>}</div><p>{{ netOnly ? 'Yalnız aynı sınavın denemeleriyle karşılaştırılır.' : 'Gelişim raporunda yalnız aynı sınav kapsamındaki denemelerle karşılaştırılır. Yerleştirme puanı veya kabul garantisi değildir.' }}</p>
+        <p *ngIf="current.netTarget?.examCode && !current.netTargets?.length">{{current.netTarget?.examCode}} · {{net(current.netTarget?.targetNet)}} net</p>
         <ng-container *ngIf="current.canEdit">
           <button type="button" (click)="openNet()" [disabled]="saving() || busy()">Net hedefini düzenle</button>
           <fieldset *ngIf="netExpanded()" [disabled]="saving() || busy() || stale()">
@@ -24,6 +26,7 @@
           </fieldset>
         </ng-container>
       </section>
+      <ng-container *ngIf="!netOnly">
       <section class="my-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800" aria-label="Puan hedefi">
         <h4 class="text-sm font-semibold">Puan hedefi ve otomatik karşılaştırma</h4>
         <p class="mt-2 text-xs text-slate-500">Aynı sınav türü ve puan ölçeğindeki dönem içi son sonuç kullanılır. Öğrenci beyanı ve öğretmen kaydı ayrı değerlendirilir. Kaydedilen ilerlemeniz değişmez; bu bir yerleşme tahmini değildir.</p>
@@ -50,6 +53,7 @@
         <button *ngIf="current.targetSchoolId || current.targetUniversityProgramId" type="button" (click)="clear()" [disabled]="busy() || saving() || stale()" class="ml-2 rounded border p-2 text-sm">Hedef bağlantısını kaldır</button>
         <app-target-admission-search [kind]="kind" [scoreType]="context?.primaryScoreType || null" [disabled]="busy() || saving() || stale()" (selected)="chooseVerified($event)" />
       </div>
+      </ng-container>
     </ng-container>
     <p *ngIf="saving()" role="status" class="mt-2 text-sm">Bağlantı kaydediliyor…</p>
   </ng-container>
