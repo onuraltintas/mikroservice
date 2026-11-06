@@ -8,6 +8,7 @@ using Identity.Application.Interfaces;
 using Identity.Application.Queries.GetMyInvitations;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Identity.API.IntegrationTests;
@@ -50,6 +51,27 @@ public sealed class InvitationCurrentEmailTests
             .Handle(new GetMyInvitationsQuery(), CancellationToken.None);
 
         result.Error.Code.Should().Be("Auth.Unauthorized");
+    }
+
+    // Review L3: an inactive (or erased) account has no current address; the read loads no roles or permissions.
+    [Fact]
+    public async Task TheCurrentAddressIsReadOnlyForAnActiveAccount()
+    {
+        await using var context = new Identity.Infrastructure.Persistence.IdentityDbContext(
+            new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Identity.Infrastructure.Persistence.IdentityDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var active = User.Create(Guid.NewGuid(), NewEmail, "Ada", "Kaya");
+        var inactive = User.Create(Guid.NewGuid(), OldEmail, "Eski", "Hesap");
+        inactive.Deactivate();
+        context.Users.AddRange(active, inactive);
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+        var users = new Identity.Infrastructure.Repositories.UserRepository(context);
+
+        (await users.GetActiveEmailAsync(active.Id, CancellationToken.None)).Should().Be(NewEmail);
+        (await users.GetActiveEmailAsync(inactive.Id, CancellationToken.None)).Should().BeNull();
+        (await users.GetActiveEmailAsync(Guid.NewGuid(), CancellationToken.None)).Should().BeNull();
+        context.ChangeTracker.Entries().Should().BeEmpty("the read does not track the account");
     }
 
     [Theory]
@@ -133,6 +155,7 @@ public sealed class InvitationCurrentEmailTests
             Users = Stub<IUserRepository>((m, args) => m.Name switch
             {
                 nameof(IUserRepository.GetByIdAsync) => Task.FromResult<User?>(userExists && (Guid)args![0]! == User.Id ? User : null),
+                nameof(IUserRepository.GetActiveEmailAsync) => Task.FromResult<string?>(userExists && (Guid)args![0]! == User.Id ? User.Email : null),
                 nameof(IUserRepository.TrackProductAccessIfNew) => null,
                 _ => throw new NotSupportedException(m.Name)
             });

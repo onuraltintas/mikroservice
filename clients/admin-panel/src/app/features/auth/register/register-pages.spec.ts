@@ -52,14 +52,15 @@ describe('sign-up pages', () => {
     ['student', StudentRegisterComponent], ['parent', ParentRegisterComponent],
     ['teacher', TeacherRegisterComponent], ['institution', InstitutionRegisterComponent],
   ] as const) {
-    it(`the ${name} form says sen and ends with "Zaten hesabın var mı? Giriş yap" under the submit button`, () => {
+    // Review L9: one "Zaten hesabın var mı? Giriş yap" per page — the existing one under the heading.
+    it(`the ${name} form says sen and has exactly one "Zaten hesabın var mı? Giriş yap"`, () => {
       const el = render(component as Type<unknown>);
       expect(el.textContent).not.toMatch(formal);
-      const link = el.querySelector('[data-testid="register-login-link"]') as HTMLElement;
-      expect(link.textContent?.replace(/\s+/g, ' ').trim()).toBe('Zaten hesabın var mı? Giriş yap');
-      expect(link.querySelector('a')?.getAttribute('href')).toBe('/auth/login');
-      const submit = el.querySelector('form button[type="submit"]') as HTMLElement;
-      expect(submit.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(el.textContent!.match(/Zaten hesabın var mı\?/g)).toHaveLength(1);
+      expect(el.querySelector('[data-testid="register-login-link"]')).toBeNull();
+      const login = [...el.querySelectorAll('a[href="/auth/login"]')];
+      expect(login).toHaveLength(1);
+      expect(login[0].textContent?.trim()).toBe('Giriş yap');
       // "Geri Dön" and ✕ still lead back to role selection.
       expect(el.querySelector('a[href="/auth/register"]')).not.toBeNull();
     });

@@ -68,9 +68,12 @@ public sealed class InvitationQueryTests
         private string email = string.Empty;
 
         protected override object? Invoke(System.Reflection.MethodInfo? targetMethod, object?[]? args) =>
-            targetMethod?.Name == nameof(IUserRepository.GetByIdAsync)
-                ? Task.FromResult<User?>(User.Create((Guid)args![0]!, email, "Student", "Example"))
-                : throw new NotSupportedException(targetMethod?.Name);
+            targetMethod?.Name switch
+            {
+                nameof(IUserRepository.GetByIdAsync) => Task.FromResult<User?>(User.Create((Guid)args![0]!, email, "Student", "Example")),
+                nameof(IUserRepository.GetActiveEmailAsync) => Task.FromResult<string?>(email),
+                _ => throw new NotSupportedException(targetMethod?.Name)
+            };
     }
 
     private sealed class StubCurrentUserService(string email) : ICurrentUserService

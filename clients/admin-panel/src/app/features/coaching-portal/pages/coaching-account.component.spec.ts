@@ -185,6 +185,21 @@ describe('Hesabım', () => {
     expect(el.querySelector('#account-emailMfaCode-error')?.textContent).toContain('Doğrulama kodu geçersiz');
   });
 
+  // Review L9: two-step verification turned on elsewhere — the server asks for the code, so the field appears.
+  it('shows the code field when the server asks for it', async () => {
+    const { el, http, type, submit, settle } = await render();
+    type('input[name="newEmail"]', 'yeni@example.test');
+    type('input[name="emailPassword"]', 'Current-Password-1!');
+    await submit('email-form');
+    http.expectOne(r => r.url === '/api/users/me/email-change')
+      .flush({ error: { code: 'Account.MfaCodeRequired', description: 'İki adımlı doğrulama açık. Doğrulama uygulamandaki 6 haneli kodu yaz.' } }, { status: 400, statusText: 'Bad Request' });
+    await settle();
+    const code = el.querySelector<HTMLInputElement>('input[name="emailMfaCode"]');
+    expect(code).not.toBeNull();
+    expect(code!.getAttribute('aria-invalid')).toBe('true');
+    expect(el.querySelector('#account-emailMfaCode-error')?.textContent).toContain('6 haneli kodu');
+  });
+
   it('shows two-step verification only when it is on', async () => {
     const { el } = await render(me({ mfaEnabled: true }));
     expect(el.querySelector('[data-testid="mfa-status"]')?.textContent).toContain('İki adımlı doğrulama açık');

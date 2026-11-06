@@ -135,8 +135,9 @@ describe('ExistingProductJoinComponent', () => {
     staff.product = 'speed-reading';
     expect(staff.copy.heading).toBe('Mevcut hesabınızla katılın');
   });
-  // Paket F #13: the screen after joining always has a sign-in link, also when a verification e-mail was sent.
-  it('shows a sign-in link after joining, whether or not a verification e-mail was sent', () => {
+  // Paket F #13 / review L9: after joining there is a sign-in link; while the address still needs verification it
+  // says to verify first.
+  it('shows a sign-in link after joining, with a verify-first hint while the address is unverified', () => {
     TestBed.resetTestingModule();
     for (const outcome of ['sent', 'notRequired']) {
       TestBed.configureTestingModule({ imports: [ExistingProductJoinComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
@@ -145,7 +146,7 @@ describe('ExistingProductJoinComponent', () => {
       fixture.componentInstance.verificationEmailSent = outcome === 'sent';
       fixture.detectChanges();
       const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="join-login-link"]');
-      expect(link?.textContent?.trim()).toBe('Giriş yap');
+      expect(link?.textContent?.trim()).toBe(outcome === 'sent' ? 'E-postanı doğruladıktan sonra giriş yap' : 'Giriş yap');
       expect(link?.getAttribute('href')).toBe('/auth/login');
       TestBed.resetTestingModule();
     }

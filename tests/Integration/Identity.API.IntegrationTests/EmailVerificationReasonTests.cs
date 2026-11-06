@@ -32,6 +32,20 @@ public sealed class EmailVerificationReasonTests
         f.Published.OfType<UserEmailConfirmedEvent>().Should().ContainSingle("the welcome e-mail goes out once");
     }
 
+    // Review L1 (kept as is): an already verified account answers "already verified" whatever token is presented;
+    // the token is cleared on verification, so there is nothing left to compare it with.
+    [Fact]
+    public async Task AVerifiedAccountSaysAlreadyVerifiedEvenForAWrongToken()
+    {
+        await using var f = await Fixture.CreateAsync();
+        (await f.Confirm(f.User.EmailVerificationToken!)).IsSuccess.Should().BeTrue();
+
+        var result = await f.Confirm("not-the-token");
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(ConfirmEmailOutcome.AlreadyConfirmed);
+    }
+
     [Fact]
     public async Task AnExpiredLinkIsReportedAsExpired()
     {

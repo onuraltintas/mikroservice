@@ -138,6 +138,43 @@ public sealed class AccountEmailChangeTests
         (await f.Request(Password, "baska@example.test", "123456")).Error.Code.Should().Be("Auth.InvalidMfaCode");
     }
 
+    // Review M1: an accepted code is stored even when the request then fails, so it cannot be used a second time.
+    [Theory]
+    [InlineData("baskasi@example.test", "Account.EmailInUse")]
+    [InlineData("ogrenci@example.test", "Account.SameEmail")]
+    public async Task AnAcceptedCodeIsUsedUpEvenWhenTheAddressIsRefused(string newEmail, string refusal)
+    {
+        await using var f = await Fixture.CreateAsync(withMfa: true);
+
+        (await f.Request(Password, newEmail, "123456")).Error.Code.Should().Be(refusal);
+
+        (await f.Reload()).LastAcceptedMfaTimeStep.Should().Be(42);
+        (await f.Request(Password, "yeni@example.test", "123456")).Error.Code.Should().Be("Auth.InvalidMfaCode");
+        f.Published.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AnAcceptedCodeIsUsedUpEvenWhenTheMinuteLimitRefusesTheRequest()
+    {
+        await using var f = await Fixture.CreateAsync(withMfa: true);
+        (await f.Request(Password, "ilk@example.test", "123456")).IsSuccess.Should().BeTrue();
+
+        (await f.Request(Password, "ikinci@example.test", "654321")).Error.Code.Should().Be("Account.EmailChangeTooSoon");
+        (await f.Request(Password, "ikinci@example.test", "654321")).Error.Code.Should().Be("Auth.InvalidMfaCode");
+    }
+
+    // Review M2: like sign-in MFA, the request runs under the account's authentication lock.
+    [Fact]
+    public async Task TheRequestRunsUnderTheAccountsAuthenticationLock()
+    {
+        await using var f = await Fixture.CreateAsync(withMfa: true);
+
+        (await f.Request(Password, "yeni@example.test", "123456")).IsSuccess.Should().BeTrue();
+
+        f.Lock.Acquired.Should().Equal(f.UserId);
+        f.Lock.Held.Should().BeFalse("the lease is released when the request ends");
+    }
+
     [Fact]
     public async Task WrongCodesCountTowardsTheLockout()
     {
@@ -490,6 +527,7 @@ public sealed class AccountEmailChangeTests
         public Guid UserId { get; private init; }
         public ICurrentUserService CurrentUser => new Current(UserId);
         public List<object> Published { get; } = [];
+        public RecordingLock Lock { get; } = new();
 
         public static async Task<Fixture> CreateAsync(bool withPassword = true, bool withMfa = false)
         {
@@ -514,7 +552,7 @@ public sealed class AccountEmailChangeTests
         }
 
         public Task<EduPlatform.Shared.Kernel.Results.Result<EmailChangeRequested>> Request(string password, string newEmail, string? mfaCode = null) =>
-            new RequestEmailChangeCommandHandler(Users, new PasswordHasher(), UnitOfWork, Publisher(), CurrentUser, new TotpStub())
+            new RequestEmailChangeCommandHandler(Users, new PasswordHasher(), UnitOfWork, Publisher(), CurrentUser, new TotpStub(), Lock)
                 .Handle(new RequestEmailChangeCommand(password, newEmail, mfaCode), default);
 
         public Task<EduPlatform.Shared.Kernel.Results.Result> Confirm(Guid userId, string token) =>
@@ -544,6 +582,24 @@ public sealed class AccountEmailChangeTests
         {
             Published.Add(args![0]!);
             return Task.CompletedTask;
+        }
+    }
+
+    public sealed class RecordingLock : Identity.Application.Interfaces.IAuthenticationLock
+    {
+        public List<Guid> Acquired { get; } = [];
+        public bool Held { get; private set; }
+
+        public Task<IAsyncDisposable> AcquireAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            Acquired.Add(userId);
+            Held = true;
+            return Task.FromResult<IAsyncDisposable>(new Lease(this));
+        }
+
+        private sealed class Lease(RecordingLock owner) : IAsyncDisposable
+        {
+            public ValueTask DisposeAsync() { owner.Held = false; return ValueTask.CompletedTask; }
         }
     }
 
