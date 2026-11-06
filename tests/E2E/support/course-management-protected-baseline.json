@@ -870,7 +870,7 @@
     "services/coaching-service/Coaching.API/Controllers/CoachingStaffStudyController.cs": "3e20d3644134367eee7b39e8b025d96f7f10f4d66ea1c78b2d0c5521cd3895db",
     "services/coaching-service/Coaching.API/Controllers/CoachingStudentExamOverviewController.cs": "bce4cf783001b6060ee97872c2815f3fdbc0b85d2bcc865d08168d64cd987917",
     "services/coaching-service/Coaching.API/Controllers/CoachingStudentLinksController.cs": "4c3849ee70d2d89f1da55635b95da59442e06bcecc1176dd7c0e6340d04abce5",
-    "services/coaching-service/Coaching.API/Controllers/CoachingStudentOnboardingController.cs": "420cf15ac1f53961bdd10ab379fdaccb82dd6b73ac6378f407f6f7bde00ac57e",
+    "services/coaching-service/Coaching.API/Controllers/CoachingStudentOnboardingController.cs": "6ff82ff77e5c03d467583c93005405d295024211249147fcf700c737a6199595",
     "services/coaching-service/Coaching.API/Controllers/CoachingSubscriptionPlansController.cs": "e6bdebe2d68b50c84569b31f30108c1301820291263d8cdbd40e63bd7484ef00",
     "services/coaching-service/Coaching.API/Controllers/CoachingSubscriptionsAdminController.cs": "4fca41ac5ea94e44b7c2b7a109ea51f12fda32cc13136e795c54135229bd2bc0",
     "services/coaching-service/Coaching.API/Controllers/CoachingSubscriptionsController.cs": "f7a43649e2361311e358ad6416eddfb852de7babe007d43354a79f6a1abe2c50",
@@ -1406,7 +1406,7 @@
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingInvitationStore.cs": "e26e52e60d237fb9561fa4fb9885493b9fd78c1b3d1bfbd0684638ce5eef6eb0",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileImporter.cs": "6c83e9e9dbda3000d09a728824973ae614d7e28f0b38f4e5c5e543116d9b59f0",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs": "682406910d5ce2b763959bf81f63b93078d6b67217a1950b94589ea43183081f",
-    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingStudentOnboardingService.cs": "dff4f5af0e863f1544c64b4b01e25180f63b304fd494c28c5df80ca0287ed202",
+    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingStudentOnboardingService.cs": "9ad575d240f0b3f8518fcf1081d4b775e5a9a2f3f92a3c3ae81b4c6cc30e4f42",
     "services/coaching-service/Coaching.Infrastructure/Profiles/OwnedCoachingDirectory.cs": "3dae636bf8d538c40258998ed54228e477cc9b392f8ceca6d2d5abba73dd0174",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderProcessor.cs": "225ac6f86590f93937b19d5b19851dd9735c69a8faaa70ce4f67ca04bf976241",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderScanState.cs": "f20a8f3ea616d616d4392a9fdc33119193d46b50a429e0bfa181b500cff26828",
@@ -1421,7 +1421,7 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingCompletedOutcomeCredits.cs": "f3cb7936acb03bfdf3f628637f87ba5c6b46c28439add36596622186d5cd33f6",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingExamSessions.cs": "bd0439fd893b96caac4663df1a383dd0ac94a82faa57135e148988fd7f150ad0",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingGoalTargetService.cs": "80f5df6bfac4e3e20d2fa14155e97c75db7f4b45739494e5993de509c7ab9595",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingLearningSetupService.cs": "de4f540a02956ee9fb2ae3cc324d87c0f7bc8af83d048615b44e8421e6e16421",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingLearningSetupService.cs": "8e6038a82c4dbd5b9aee9181d03bb9a9572bfda0bb07156d5402d0ccde95dd2a",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingManualStudyPlanService.cs": "cd38fa9a33cd7e7ed92d93d4ee06397c58025da6ae3c7b98f1d7179e64d566ef",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingMotivationService.cs": "19e44ec768f4cc773388edde4080931ef6ea2392c484b53c6befc28d28888c92",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingPracticeAdaptationService.cs": "e53a624fe5e711b4d4a257bb59fc063b5ab77af5ef38e2d338d575a73acbc79a",
@@ -2699,7 +2699,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "E5 after merging E4, E6 and E7",
+    "purpose": "F2 preferences and profile",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2747,7 +2747,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "20cff157",
+    "previousBaselineCommit": "60a34cf7",
     "removedSincePreviousBaseline": []
   }
 }
