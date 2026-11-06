@@ -19,6 +19,11 @@ public class User : AggregateRoot
     // Auth credentials
     public byte[] PasswordHash { get; private set; } = Array.Empty<byte>();
     public byte[] PasswordSalt { get; private set; } = Array.Empty<byte>();
+    /// <summary>
+    /// E5 review M2: false when the stored password was generated for the account (Google registration before this
+    /// change, administrator provisioning) and the owner never chose it. A password sign-in, reset or change sets it.
+    /// </summary>
+    public bool PasswordKnownToOwner { get; private set; } = true;
 
     public bool EmailConfirmed { get; private set; }
     public string? EmailVerificationToken { get; private set; }
@@ -26,6 +31,23 @@ public class User : AggregateRoot
 
     public string? PasswordResetToken { get; private set; }
     public DateTime? PasswordResetTokenExpiresAt { get; private set; }
+
+    /// <summary>
+    /// E5 (#22): an e-mail change waiting for the link sent to the new address. <see cref="Email"/> changes only when
+    /// that link is confirmed. Only a SHA-256 digest of the link value is kept (<see cref="PendingEmailToken"/>).
+    /// </summary>
+    public string? PendingEmail { get; private set; }
+    public string? PendingEmailToken { get; private set; }
+    public DateTime? PendingEmailExpiresAt { get; private set; }
+    /// <summary>When the last change link was sent (one request a minute).</summary>
+    public DateTime? PendingEmailRequestedAt { get; private set; }
+
+    public static readonly TimeSpan EmailChangeLinkLifetime = TimeSpan.FromHours(24);
+    public static readonly TimeSpan EmailChangeRequestInterval = TimeSpan.FromMinutes(1);
+
+    /// <summary>Accounts made with Google sign-in have no password until the owner sets one through a reset link.</summary>
+    [NotMapped]
+    public bool HasPassword => PasswordKnownToOwner && PasswordHash.Length > 0 && PasswordSalt.Length > 0;
 
     public string? PhoneNumber { get; private set; }
     public bool PhoneConfirmed { get; private set; }
@@ -84,10 +106,19 @@ public class User : AggregateRoot
     /// </summary>
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
-    public void SetPassword(byte[] passwordHash, byte[] passwordSalt)
+    /// <summary>"ogrenci@example.test" → "o***@example.test" (E5: what an e-mail change link may show).</summary>
+    public static string MaskEmail(string email)
+    {
+        var at = email.IndexOf('@');
+        return at <= 0 ? "***" : $"{email[0]}***{email[at..]}";
+    }
+
+    /// <param name="knownToOwner">False for a generated password the owner never sees (see <see cref="PasswordKnownToOwner"/>).</param>
+    public void SetPassword(byte[] passwordHash, byte[] passwordSalt, bool knownToOwner = true)
     {
         PasswordHash = passwordHash;
         PasswordSalt = passwordSalt;
+        PasswordKnownToOwner = knownToOwner;
         UpdatedAt = DateTime.UtcNow;
     }
     
@@ -111,6 +142,14 @@ public class User : AggregateRoot
         {
             refreshToken.Revoke(ipAddress, reason);
         }
+    }
+
+    /// <summary>The owner entered the stored password (sign-in, re-authentication), so it is theirs.</summary>
+    public void MarkPasswordKnownToOwner()
+    {
+        if (PasswordKnownToOwner || PasswordHash.Length == 0) return;
+        PasswordKnownToOwner = true;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void UpdateName(string firstName, string lastName)
@@ -159,6 +198,7 @@ public class User : AggregateRoot
 
         PasswordHash = [];
         PasswordSalt = [];
+        PasswordKnownToOwner = false;
         PasswordResetToken = null;
         PasswordResetTokenExpiresAt = null;
         foreach (var refreshToken in _refreshTokens.Where(token => token.IsActive))
@@ -217,6 +257,66 @@ public class User : AggregateRoot
         PasswordResetToken = null;
         PasswordResetTokenExpiresAt = null;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>True when a link was sent less than <see cref="EmailChangeRequestInterval"/> before <paramref name="now"/>.</summary>
+    public bool EmailChangeRequestedRecently(DateTime now) =>
+        PendingEmailRequestedAt is { } requested && now - requested < EmailChangeRequestInterval;
+
+    /// <summary>
+    /// E5 (#22): starts a change to <paramref name="newEmail"/> (normalized) and returns the one-time link value. A
+    /// previous pending change is replaced, so only the newest link works.
+    /// </summary>
+    public string RequestEmailChange(string newEmail, DateTime now)
+    {
+        Span<byte> tokenBytes = stackalloc byte[32];
+        RandomNumberGenerator.Fill(tokenBytes);
+        var token = Convert.ToBase64String(tokenBytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        PendingEmail = NormalizeEmail(newEmail);
+        PendingEmailToken = RefreshToken.Digest(token);
+        PendingEmailExpiresAt = now.Add(EmailChangeLinkLifetime);
+        PendingEmailRequestedAt = now;
+        UpdatedAt = now;
+        return token;
+    }
+
+    /// <summary>Constant-time check of a presented change link against the stored digest; false when none is pending or it expired.</summary>
+    public bool EmailChangeTokenMatches(string? presented, DateTime? now = null) =>
+        PendingEmail is not null
+        && PendingEmailToken is { } stored
+        && PendingEmailExpiresAt > (now ?? DateTime.UtcNow)
+        && !string.IsNullOrEmpty(presented)
+        && CryptographicOperations.FixedTimeEquals(
+            Encoding.ASCII.GetBytes(RefreshToken.Digest(presented)),
+            Encoding.ASCII.GetBytes(stored));
+
+    /// <summary>
+    /// Applies the pending change and returns the previous address. The new address is verified by the link, and
+    /// links sent to the old address (password reset, verification) stop working.
+    /// </summary>
+    public string ConfirmEmailChange()
+    {
+        var pending = PendingEmail ?? throw new InvalidOperationException("No e-mail change is pending.");
+        var previous = Email;
+        Email = pending;
+        ClearPendingEmail();
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
+        ConfirmEmail();
+        return previous;
+    }
+
+    public void CancelEmailChange()
+    {
+        ClearPendingEmail();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    private void ClearPendingEmail()
+    {
+        PendingEmail = null;
+        PendingEmailToken = null;
+        PendingEmailExpiresAt = null;
     }
 
     public void SetPhoneNumber(string phoneNumber, bool confirmed = false)
@@ -350,11 +450,14 @@ public class User : AggregateRoot
         PhoneConfirmed = false;
         PasswordHash = [];
         PasswordSalt = [];
+        PasswordKnownToOwner = false;
         EmailConfirmed = false;
         EmailVerificationToken = null;
         EmailVerificationTokenExpiresAt = null;
         PasswordResetToken = null;
         PasswordResetTokenExpiresAt = null;
+        ClearPendingEmail();
+        PendingEmailRequestedAt = null;
         LastLoginAt = null;
         ResetMfa();
         Deactivate();

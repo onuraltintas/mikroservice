@@ -201,6 +201,44 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// E5 (#22): the link sent to the new address of an e-mail change (Coaching site /auth/confirm-email-change).
+    /// Anonymous, like confirm-email: the link may be opened on another device. The value is single-use.
+    /// </summary>
+    [HttpPost("confirm-email-change")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmEmailChange([FromBody] ConfirmEmailChangeRequest request, CancellationToken cancellationToken)
+    {
+        if (request.UserId == Guid.Empty || string.IsNullOrWhiteSpace(request.Token))
+        {
+            return BadRequest(new Error("EmailChange.InvalidLink",
+                "Bağlantı geçersiz ya da süresi dolmuş. Hesabım sayfasından yeni bir bağlantı iste."));
+        }
+
+        var result = await _mediator.Send(
+            new Identity.Application.Commands.ChangeEmail.ConfirmEmailChangeCommand(request.UserId, request.Token), cancellationToken);
+        return result.IsSuccess ? Ok() : BadRequest(result.Error);
+    }
+
+    /// <summary>
+    /// E5 review M1 (b): what the confirmation page shows before its button — the masked current address of the
+    /// account the link belongs to (e.g. "o***@example.test"); nothing is changed. Same rate limit as the confirmation.
+    /// </summary>
+    [HttpPost("email-change-preview")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PreviewEmailChange([FromBody] ConfirmEmailChangeRequest request, CancellationToken cancellationToken)
+    {
+        if (request.UserId == Guid.Empty || string.IsNullOrWhiteSpace(request.Token))
+        {
+            return BadRequest(new Error("EmailChange.InvalidLink",
+                "Bağlantı geçersiz ya da süresi dolmuş. Hesabım sayfasından yeni bir bağlantı iste."));
+        }
+
+        var result = await _mediator.Send(
+            new Identity.Application.Commands.ChangeEmail.GetEmailChangePreviewQuery(request.UserId, request.Token), cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
     [HttpPost("resend-verification-email")]
     [AllowAnonymous]
     public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailCommand command)
@@ -501,6 +539,7 @@ public sealed record CompleteGoogleRegistrationRequest(
     Identity.Application.Registration.RegistrationUtm? Utm = null);
 public record RefreshTokenRequest(string? RefreshToken = null);
 public record RevokeTokenRequest(string? Token = null);
+public sealed record ConfirmEmailChangeRequest(Guid UserId, string? Token);
 public sealed record MfaSetupRequest(string ChallengeToken);
 public sealed record MfaAuthenticatedSetupRequest(string CurrentPassword);
 public sealed record MfaEnableRequest(string ChallengeToken, string SetupToken, string Code);

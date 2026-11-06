@@ -44,6 +44,12 @@ public interface IUserRepository
         CancellationToken cancellationToken);
     Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken);
 
+    /// <summary>E5 review M1: removes the account's external sign-ins (Google); saved with the unit of work.</summary>
+    Task RemoveExternalLoginsAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+    /// <summary>E5 review L1: true when a save failed on the unique address index.</summary>
+    bool IsDuplicateEmailViolation(Exception exception) => false;
+
     /// <summary>
     /// When <paramref name="presentedToken"/> was already rotated, revokes every token of
     /// its family and returns <c>true</c>.

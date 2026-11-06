@@ -264,6 +264,15 @@ public class UserRepository : IUserRepository
             StringComparison.Ordinal);
 
     /// <summary>A concurrent registration won the race for the same (normalised) address.</summary>
+    public async Task RemoveExternalLoginsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var logins = await _context.Set<UserLogin>().Where(login => login.UserId == userId).ToListAsync(cancellationToken);
+        _context.Set<UserLogin>().RemoveRange(logins);
+    }
+
+    bool IUserRepository.IsDuplicateEmailViolation(Exception exception) =>
+        exception is DbUpdateException update && IsDuplicateEmailViolation(update);
+
     public static bool IsDuplicateEmailViolation(DbUpdateException exception) =>
         exception.InnerException is PostgresException postgresException
         && postgresException.SqlState == PostgresErrorCodes.UniqueViolation

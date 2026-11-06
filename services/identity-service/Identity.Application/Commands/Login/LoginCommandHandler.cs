@@ -75,6 +75,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         }
 
         await _loginAttempts.ResetAsync(request.Email, cancellationToken);
+        // E5 review M2: signing in with the stored password shows the owner knows it.
+        user.MarkPasswordKnownToOwner();
 
         var passwordRehashed = _passwordHasher.NeedsRehash(user.PasswordHash, user.PasswordSalt);
         if (passwordRehashed)

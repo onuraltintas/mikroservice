@@ -37,10 +37,12 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
             return Result.Failure(new Error("User.NotFound", "Kullanıcı bulunamadı."));
         }
 
-        // Verify current password
-        if (!_passwordHasher.VerifyPasswordHash(request.CurrentPassword, user.PasswordHash, user.PasswordSalt))
+        // E5 (#22) and review M2: an account without a password of its own (Google, administrator provisioning) is
+        // told to set one instead of "Mevcut şifre hatalı".
+        var check = Identity.Application.Commands.ChangeEmail.CurrentPassword.Check(user, request.CurrentPassword, _passwordHasher);
+        if (check is not null)
         {
-            return Result.Failure(new Error("Auth.InvalidCredentials", "Mevcut şifre hatalı."));
+            return Result.Failure(check);
         }
 
         // Create new hash

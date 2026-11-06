@@ -18,6 +18,13 @@ public interface IIdentityService
     Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken);
 
     /// <summary>
+    /// E5 review M2: an account created by an external sign-in (Google) has no password until the owner sets one
+    /// through a reset link, so Hesabım never asks it for a "current password" it does not know.
+    /// </summary>
+    Task<Result<Guid>> RegisterExternalUserAsync(string email, string firstName, string lastName, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
+
+    /// <summary>
     /// Deletes a user from the system.
     /// </summary>
     Task<Result> DeleteUserAsync(Guid userId, CancellationToken cancellationToken);

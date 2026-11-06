@@ -30,6 +30,15 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.PhoneNumber)
             .HasMaxLength(20);
 
+        // E5 (#22): a pending e-mail change. Not unique: only the confirmed address is (checked again on confirm).
+        builder.Property(u => u.PendingEmail)
+            .HasMaxLength(255);
+
+        // Review L2: a change of the link value is checked on save, so two confirmations of one link succeed once.
+        builder.Property(u => u.PendingEmailToken)
+            .HasMaxLength(128)
+            .IsConcurrencyToken();
+
         builder.Property(u => u.MfaSecretProtected)
             .HasMaxLength(2048);
 

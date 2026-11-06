@@ -126,7 +126,7 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     path: 'notifications', canActivate: [coachingRoleGuard], data: student,
     loadComponent: () => import('./pages/coaching-notifications.component').then(m => m.CoachingNotificationsComponent)
   },
-  // Account menu: Profil ve ayarlar (T5: Profilim, Çalışma tercihlerim, Bildirimler, Görünüm), Ödemeler (one page), Kişisel verilerim.
+  // Account menu: Profil ve ayarlar (T5: Profilim, E5: Hesabım, Çalışma tercihlerim, Bildirimler, Görünüm), Ödemeler (one page), Kişisel verilerim.
   {
     path: 'account/settings', canActivate: [coachingRoleGuard], data: { ...student, hub: 'settings' }, loadComponent: hub('settings'),
     children: [
@@ -140,6 +140,8 @@ export const COACHING_PORTAL_ROUTES: Routes = [
         canDeactivate: [async (component: import('./pages/student-coaching-profile.component').StudentCoachingProfileComponent) => await component.canLeavePage()],
         loadComponent: () => import('./pages/student-coaching-profile.component').then(m => m.StudentCoachingProfileComponent)
       },
+      // E5 (#22): name, e-mail address and password.
+      { path: 'account', loadComponent: () => import('./pages/coaching-account.component').then(m => m.CoachingAccountComponent) },
       { path: 'notifications', loadComponent: () => import('./pages/student-notification-settings.component').then(m => m.StudentNotificationSettingsComponent) },
       { path: 'theme', loadComponent: () => import('./layout/student-theme-setting.component').then(m => m.StudentThemeSettingComponent) },
       // The old Ayarlar tab: its time zone now sits under Çalışma tercihlerim.
@@ -173,6 +175,11 @@ export const COACHING_PORTAL_ROUTES: Routes = [
   {
     path: 'parent/notifications', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },
     loadComponent: () => import('./parent/parent-notifications.component').then(m => m.ParentNotificationsComponent)
+  },
+  // E5 (#22): the parent's Hesabım (name, e-mail address and password).
+  {
+    path: 'parent/account/settings', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'], audience: 'parent' },
+    loadComponent: () => import('./pages/coaching-account.component').then(m => m.CoachingAccountComponent)
   },
   {
     path: 'parent/account/notifications', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Parent'] },

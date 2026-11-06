@@ -49,8 +49,8 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
         if (!string.IsNullOrWhiteSpace(request.FirstName) || !string.IsNullOrWhiteSpace(request.LastName))
         {
             user.UpdateName(
-                request.FirstName ?? user.FirstName, 
-                request.LastName ?? user.LastName
+                string.IsNullOrWhiteSpace(request.FirstName) ? user.FirstName : request.FirstName.Trim(),
+                string.IsNullOrWhiteSpace(request.LastName) ? user.LastName : request.LastName.Trim()
             );
         }
 

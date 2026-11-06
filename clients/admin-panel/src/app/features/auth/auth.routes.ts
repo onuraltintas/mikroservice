@@ -38,6 +38,11 @@ export const AUTH_ROUTES: Routes = [
         path: 'confirm-email',
         loadComponent: () => import('./confirm-email/confirm-email.component').then(m => m.ConfirmEmailComponent)
     },
+    // E5 (#22): the link sent to the new address of an e-mail change.
+    {
+        path: 'confirm-email-change',
+        loadComponent: () => import('./confirm-email-change/confirm-email-change.component').then(m => m.ConfirmEmailChangeComponent)
+    },
     {
         path: 'forgot-password',
         loadComponent: () => import('./forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)

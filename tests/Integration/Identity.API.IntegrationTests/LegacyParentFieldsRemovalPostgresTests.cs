@@ -45,13 +45,14 @@ public sealed class LegacyParentFieldsRemovalPostgresTests : IAsyncLifetime
         (await ColumnsAsync(context)).Should().BeEmpty("both legacy columns are dropped");
         context.Database.HasPendingModelChanges().Should().BeFalse("the snapshot and the Designer follow the model");
 
-        await migrator.MigrateAsync(Previous);
+        // The users are saved with the current model first (later migrations add user columns), then the schema goes back.
         var parent = User.Create(Guid.NewGuid(), "veli@example.test", "Ayşe", "Veli");
         var mutedParent = User.Create(Guid.NewGuid(), "sessiz@example.test", "Can", "Veli");
         var child = User.Create(Guid.NewGuid(), "ogrenci@example.test", "Ada", "Öğrenci");
         var unlinkedChild = User.Create(Guid.NewGuid(), "diger@example.test", "Efe", "Öğrenci");
         context.Users.AddRange(parent, mutedParent, child, unlinkedChild);
         await context.SaveChangesAsync();
+        await migrator.MigrateAsync(Previous);
         const string muted = """{"dailyReport": true, "weeklyProgress": false}""";
         await context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO identity.parent_profiles ("Id", "UserId", "FirstName", "LastName", "IsActive", "NotificationPreferences", "Version")

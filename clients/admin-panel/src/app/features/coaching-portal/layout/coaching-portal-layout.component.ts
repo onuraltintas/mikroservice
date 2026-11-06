@@ -24,7 +24,7 @@ const PAGE_LABELS: [string, string][] = [
 ];
 /** V4 (01.11.2026): header titles in the parent shell. Longest prefix wins. */
 const PARENT_PAGE_LABELS: [string, string][] = [
-  [`${ROOT}/parent/account/notifications`, 'Bildirim tercihleri'], [`${ROOT}/parent/account/data`, 'Kişisel verilerim'],
+  [`${ROOT}/parent/account/settings`, 'Hesabım'], [`${ROOT}/parent/account/notifications`, 'Bildirim tercihleri'], [`${ROOT}/parent/account/data`, 'Kişisel verilerim'],
   [`${ROOT}/parent/notifications`, 'Bildirimler'], [`${ROOT}/parent/children`, 'Çocuğum'], [`${ROOT}/messages`, 'Mesajlar'], [`${ROOT}/parent`, 'Çocuklarım']
 ];
 

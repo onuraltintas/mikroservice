@@ -1,3 +1,4 @@
+import { CoachingIconComponent } from '../coaching-icon.component';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -155,7 +156,10 @@ describe('CoachingPortalLayoutComponent (T2 menu)', () => {
     const fixture = create(['Parent']); await fixture.whenStable();
     (fixture.nativeElement.querySelector('button.coaching-account-toggle') as HTMLButtonElement).click(); fixture.detectChanges();
     const menu = fixture.nativeElement.querySelector('[role=menu]') as HTMLElement;
-    expect(hrefs(menu, 'a')).toEqual(['/coaching-portal/parent/account/notifications', '/coaching-portal/parent/account/data']);
+    expect(hrefs(menu, 'a')).toEqual(['/coaching-portal/parent/account/settings', '/coaching-portal/parent/account/notifications', '/coaching-portal/parent/account/data']);
+    // Review L7: Hesabım has a person icon.
+    const accountIcon = menu.querySelector('a[href="/coaching-portal/parent/account/settings"] path')?.getAttribute('d');
+    expect(accountIcon).toBe(new CoachingIconComponent().paths.user);
     expect(menu.textContent).toContain('Bildirim tercihleri');
     expect(menu.textContent).toContain('Kişisel verilerim');
     expect(menu.textContent).toContain('Veli hesabı');
@@ -169,6 +173,7 @@ describe('CoachingPortalLayoutComponent (T2 menu)', () => {
     expect(label('/coaching-portal/parent')).toBe('Çocuklarım');
     expect(label('/coaching-portal/parent/children/x?urun=kocluk')).toBe('Çocuğum');
     expect(label('/coaching-portal/parent/notifications')).toBe('Bildirimler');
+    expect(label('/coaching-portal/parent/account/settings')).toBe('Hesabım');
     expect(label('/coaching-portal/parent/account/notifications')).toBe('Bildirim tercihleri');
     expect(label('/coaching-portal/parent/account/data')).toBe('Kişisel verilerim');
     expect(label('/coaching-portal/messages/abc')).toBe('Mesajlar');

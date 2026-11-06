@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText } from '../../../core/services/coaching-score-estimate.service';
 import { CoachingScoreModelsComponent } from '../../dashboard/pages/coaching-score-models';
@@ -159,7 +160,7 @@ describe('O5 score estimate', () => {
 
   // Roadmap O12 decision: a new institution or teacher sees the student's earlier history, and the student is told before accepting.
   it('tells the student that a new institution or teacher will see their earlier history', () => {
-    TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
     const fixture = TestBed.createComponent(CoachingProfileComponent); const http = TestBed.inject(HttpTestingController);
     fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', 'Student');
     fixture.detectChanges();

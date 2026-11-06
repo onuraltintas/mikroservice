@@ -44,7 +44,13 @@ public class LocalIdentityService : IIdentityService
         _currentUserService = currentUserService;
     }
 
-    public async Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken)
+    public Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken) =>
+        RegisterAsync(email, password ?? throw new ArgumentNullException(nameof(password)), firstName, lastName, cancellationToken);
+
+    public Task<Result<Guid>> RegisterExternalUserAsync(string email, string firstName, string lastName, CancellationToken cancellationToken) =>
+        RegisterAsync(email, null, firstName, lastName, cancellationToken);
+
+    private async Task<Result<Guid>> RegisterAsync(string email, string? password, string firstName, string lastName, CancellationToken cancellationToken)
     {
         // 1. Check if exists
         var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
@@ -59,9 +65,16 @@ public class LocalIdentityService : IIdentityService
         var userId = Guid.NewGuid();
         var user = User.Create(userId, email, firstName, lastName);
 
-        // 3. Hash Password
-        _passwordHasher.CreatePasswordHash(password, out byte[] hash, out byte[] salt);
-        user.SetPassword(hash, salt);
+        // 3. Hash Password (an external sign-in account has none: empty hash, not known to the owner)
+        if (password is not null)
+        {
+            _passwordHasher.CreatePasswordHash(password, out byte[] hash, out byte[] salt);
+            user.SetPassword(hash, salt);
+        }
+        else
+        {
+            user.SetPassword([], [], knownToOwner: false);
+        }
 
         // 4. Save. The unique index decides a race between two registrations of the
         // same address; the loser gets the same answer as the pre-check above.
@@ -135,7 +148,7 @@ public class LocalIdentityService : IIdentityService
         // after consuming the one-time setup token.
         var internalPassword = GenerateInternalProvisioningPassword();
         _passwordHasher.CreatePasswordHash(internalPassword, out byte[] hash, out byte[] salt);
-        user.SetPassword(hash, salt);
+        user.SetPassword(hash, salt, knownToOwner: false);
 
         var passwordSetupToken = user.GeneratePasswordResetToken();
         var passwordSetupTokenExpiresAt = user.PasswordResetTokenExpiresAt
