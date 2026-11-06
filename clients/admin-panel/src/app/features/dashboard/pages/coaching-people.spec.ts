@@ -218,7 +218,7 @@ describe('CoachingPeopleComponent', () => {
     component.scope.set({ isGlobal: false, institutionId: 'own-institution' });
     component.institutionId = 'own-institution';
     component.selectedStudent.set({ userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test', gradeLevel: 7 });
-    component.editingGradeLevel = 8;
+    component.editingStage = 'middle'; component.editingGradeLevel = 8;
     component.editingTeacherUserId = 'teacher-1';
     const pending = new Subject<undefined>();
     memberships.updateStudent.mockReturnValueOnce(pending);
@@ -229,7 +229,7 @@ describe('CoachingPeopleComponent', () => {
     pending.next(undefined);
 
     expect(memberships.updateStudent).toHaveBeenCalledWith('student-1', {
-      gradeLevel: 8, teacherUserId: 'teacher-1'
+      educationStatus: 'Student', gradeLevel: 8, teacherUserId: 'teacher-1'
     }, undefined);
     expect(component.selectedStudent()?.gradeLevel).toBe(8);
     expect(component.selectedStudent()?.teacherUserId).toBe('teacher-1');

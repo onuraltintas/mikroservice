@@ -1,4 +1,5 @@
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
+import { educationLabel } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +23,8 @@ import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-p
   styleUrl: './coaching-teacher-assignment-form.component.scss'
 })
 export class CoachingTeacherAssignmentFormComponent implements OnInit {
+  /** E3 #14: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi" … */
+  readonly educationLabel = educationLabel;
   private readonly auth = inject(StaffAuthService);
   private readonly assignmentsService = inject(CoachingTeacherAssignmentsService);
   private readonly studentsService = inject(CoachingTeacherStudentsService);

@@ -23,6 +23,7 @@ public sealed class StudentLearningContextConfiguration : IEntityTypeConfigurati
         {
             t.HasCheckConstraint("ck_learning_year", "\"AcademicYearStart\" BETWEEN 2000 AND 2200");
             t.HasCheckConstraint("ck_learning_purpose", "\"Purpose\" BETWEEN 0 AND 7");
+            t.HasCheckConstraint("ck_learning_education", "\"EducationStatus\" BETWEEN 0 AND 4");
         });
         b.HasKey(x => x.Id); b.HasIndex(x => x.StudentUserId).IsUnique(); b.Property(x => x.Version).IsConcurrencyToken();
         b.Property(x => x.PrimaryScoreType).HasMaxLength(10); b.Property(x => x.ForeignLanguage).HasMaxLength(30);

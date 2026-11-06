@@ -38,42 +38,38 @@ public static class LearningPurposes
     public const string RetiredPurposeNotice = "Çalışma amacın artık desteklenmiyor; hazırlandığın sınavı seç.";
 
     /// <summary>
-    /// Paket D (#8): does the exam fit the student's education? The single place of the rule (user decisions 06.11.2026):
-    /// LGS is for middle school (up to 8th grade); YKS, YDS and YÖKDİL are for high school (9th grade on) and graduates;
-    /// MEB-AGS/ÖABT is for university graduates only (never for grades 1–12). An unknown education (Profile still missing)
-    /// fits everything, and an older retired purpose is reported on its own (KM8).
+    /// Paket D (#8), E3 #14 (user decisions 06.11.2026): the exams each education allows, in display order. The single place of
+    /// the rule: an ortaokul student (5th–8th grade) LGS; a lise student (9th–12th grade) and a lise graduate YKS, YDS and YÖKDİL;
+    /// a university student YDS, YÖKDİL and YKS; a university graduate MEB-AGS/ÖABT, YDS, YÖKDİL and YKS (AGS for nobody else).
+    /// An unknown education (Profile still missing) allows everything; an older retired purpose is reported on its own (KM8).
+    /// The wizard and Çalışma tercihlerim only show this list (sent by the server).
     /// </summary>
+    public static IReadOnlyList<LearningPurpose> AllowedFor(CoachingEducationStatus status, int? grade) => status switch
+    {
+        CoachingEducationStatus.Student when grade is { } g => g <= 8 ? [LearningPurpose.Lgs] : [LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil],
+        CoachingEducationStatus.HighSchoolGraduate => [LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil],
+        CoachingEducationStatus.UniversityStudent => [LearningPurpose.Yds, LearningPurpose.Yokdil, LearningPurpose.Yks],
+        CoachingEducationStatus.UniversityGraduate => [LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil, LearningPurpose.Yks],
+        _ => [LearningPurpose.Lgs, LearningPurpose.Yks, LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil]
+    };
+
+    /// <summary>Does the exam fit the student's education (<see cref="AllowedFor"/>)? A purpose that is no exam is reported elsewhere.</summary>
     public static bool FitsEducation(LearningPurpose purpose, CoachingEducationStatus status, int? grade) =>
-        !IsExamPreparation(purpose) || status switch
-        {
-            CoachingEducationStatus.Graduate => purpose != LearningPurpose.Lgs,
-            CoachingEducationStatus.Student when grade is { } g => purpose switch
-            {
-                LearningPurpose.Lgs => g <= 8,
-                LearningPurpose.Ags => false,
-                _ => g >= 9
-            },
-            _ => true
-        };
+        !IsExamPreparation(purpose) || AllowedFor(status, grade).Contains(purpose);
 
     /// <summary>
-    /// Paket D: the exams a student with this education can choose, in display order. This and <see cref="FitsEducation"/> are the
-    /// one place of the rule: the wizard and Çalışma tercihlerim only show this list (sent by the server).
-    /// </summary>
-    public static IReadOnlyList<LearningPurpose> AllowedFor(CoachingEducationStatus status, int? grade) =>
-        [.. new[] { LearningPurpose.Lgs, LearningPurpose.Yks, LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil }.Where(x => FitsEducation(x, status, grade))];
-
-    /// <summary>
-    /// The wizard's rule: the diploma grade (OBP) is asked for YKS in 11th, 12th grade and after graduation. No exam yet, or an
-    /// older retired purpose (KM8), counts as "not decided" and keeps it.
+    /// The wizard's rule: the diploma grade (OBP) is asked for YKS in 11th and 12th grade and of everyone out of high school (a lise
+    /// graduate, a university student or graduate retaking YKS has a diploma). No exam yet, or an older retired purpose (KM8),
+    /// counts as "not decided" and keeps it.
     /// </summary>
     public static bool ExamAsksDiploma(LearningPurpose? purpose) => purpose is null || IsRetired(purpose.Value) || purpose == LearningPurpose.Yks;
     public static bool DiplomaApplies(LearningPurpose? purpose, CoachingEducationStatus status, int? grade) =>
-        ExamAsksDiploma(purpose) && (status == CoachingEducationStatus.Graduate || grade is 11 or 12);
+        ExamAsksDiploma(purpose) && (status is CoachingEducationStatus.HighSchoolGraduate or CoachingEducationStatus.UniversityStudent
+            or CoachingEducationStatus.UniversityGraduate || status == CoachingEducationStatus.Student && grade is 11 or 12);
 
-    public const string PurposeNotForEducationNotice = "Seçtiğin sınav sınıfına uymuyor. Profilindeki sınıfa uygun bir sınav seç.";
+    public const string PurposeNotForEducationNotice = "Seçtiğin sınav eğitim durumuna ya da sınıfına uymuyor. Profilindeki eğitim durumuna uygun bir sınav seç.";
     /// <summary>Paket D review: said wherever the saved exam no longer fits the grade (a grade change, or an older setup).</summary>
-    public const string SavedPurposeNotForEducationNotice = "Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle.";
+    public const string SavedPurposeNotForEducationNotice = "Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle.";
 
     /// <summary>Practice scopes a net target of this purpose may use.</summary>
     public static IReadOnlyList<string> NetExamCodes(LearningPurpose purpose, string? scoreType) => purpose switch

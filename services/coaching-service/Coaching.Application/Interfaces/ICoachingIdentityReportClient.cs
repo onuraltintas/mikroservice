@@ -67,6 +67,10 @@ public sealed record CoachingStudentReportItem(
     string? TeacherName,
     Guid? TeacherUserId = null,
     bool ProgressShared = true,
-    IReadOnlyList<CoachingStudentTeacher>? Teachers = null);
+    IReadOnlyList<CoachingStudentTeacher>? Teachers = null)
+{
+    /// <summary>E3 #14: staff lists show "Lise mezunu", "Üniversite öğrencisi" … where a student has no grade.</summary>
+    public Coaching.Domain.Profiles.CoachingEducationStatus? EducationStatus { get; init; }
+}
 
 public sealed record CoachingStudentTeacher(Guid UserId, string Name);

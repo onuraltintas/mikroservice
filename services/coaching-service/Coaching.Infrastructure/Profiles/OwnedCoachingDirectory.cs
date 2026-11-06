@@ -213,7 +213,8 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
             return new CoachingStudentReportItem(user.UserId, user.FirstName, user.LastName, user.Email,
                 profile.GradeLevel, teacher is null ? null : $"{teacher.FirstName} {teacher.LastName}", teacher?.UserId,
                 profile.ShareProgressWithTeachers,
-                linked.Select(x => new CoachingStudentTeacher(x.UserId, $"{x.FirstName} {x.LastName}")).ToArray());
+                linked.Select(x => new CoachingStudentTeacher(x.UserId, $"{x.FirstName} {x.LastName}")).ToArray())
+                { EducationStatus = profile.EducationStatus };
         }).ToArray();
         return new(selectedIds, matching.Length, items);
     }
@@ -260,7 +261,8 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
                 var user = directory[x.profile.UserId];
                 return new CoachingRosterItem(user.UserId, user.FirstName, user.LastName, $"{user.FirstName} {user.LastName}",
                     user.Email, x.profile.GradeLevel, institution, null, x.profile.AvatarUrl, x.assignment.Subject,
-                    x.assignment.StartDate, user.IsActive && x.profile.IsActive, user.LastLoginAt);
+                    x.assignment.StartDate, user.IsActive && x.profile.IsActive, user.LastLoginAt)
+                    { EducationStatus = x.profile.EducationStatus };
             }).OrderBy(x => x.LastName, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.UserId).ToArray();
         return new(items.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToArray(), items.Length, pageNumber, pageSize);
     }

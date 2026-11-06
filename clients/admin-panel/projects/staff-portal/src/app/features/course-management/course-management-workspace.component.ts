@@ -65,6 +65,17 @@ const courseAuditActionLabels: Record<string, string> = {
   'Assignment.Submitted': 'Ödev teslim edildi'
 };
 
+/**
+ * E3 #34 (user decision 06.11.2026): no time zone choice; every lesson, series, time off and teacher hour is Türkiye time.
+ * Türkiye has been on UTC+3 all year since 2016 (no daylight saving).
+ */
+const TURKEY_ZONE = 'Europe/Istanbul';
+const TURKEY_OFFSET_MINUTES = 180;
+/** A datetime-local value ("2026-11-10T18:30") read as Türkiye time. */
+export function turkeyInstant(local: string): string {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(local) ? `${local}:00+03:00` : new Date(local).toISOString();
+}
+
 @Component({
   selector: 'staff-course-management-workspace',
   standalone: true,
@@ -201,7 +212,6 @@ export class CourseManagementWorkspaceComponent implements OnInit {
   lessonSeriesEndsOn = '';
   lessonSeriesStartTime = '';
   lessonSeriesDurationMinutes = 60;
-  lessonSeriesTimeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Istanbul';
   lessonDaysOfWeek = [false, false, false, false, false, false, false];
   editingSeriesId = '';
   editingSeriesEndsOn = '';
@@ -221,7 +231,6 @@ export class CourseManagementWorkspaceComponent implements OnInit {
   availabilityWeekday = 0;
   availabilityStartTime = '09:00';
   availabilityEndTime = '17:00';
-  availabilityTimeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Istanbul';
   readonly weekdays = [
     { label: 'Pzt', index: 0 }, { label: 'Sal', index: 1 }, { label: 'Çar', index: 2 },
     { label: 'Per', index: 3 }, { label: 'Cum', index: 4 }, { label: 'Cmt', index: 5 }, { label: 'Paz', index: 6 }
@@ -953,16 +962,16 @@ export class CourseManagementWorkspaceComponent implements OnInit {
     if (!courseId || !teacherUserId || (this.lessonMode === 'group' && !group) || (this.lessonMode === 'private' && !student)
       || (this.lessonSchedule === 'once' && (!this.lessonStartsAt || !this.lessonEndsAt))
       || (this.lessonSchedule === 'weekly' && (!this.lessonSeriesStartsOn || !this.lessonSeriesEndsOn
-        || !this.lessonSeriesStartTime || !this.lessonSeriesTimeZoneId.trim() || !this.lessonDaysOfWeekMask))) return;
+        || !this.lessonSeriesStartTime || !this.lessonDaysOfWeekMask))) return;
     await this.run(async () => {
       if (this.lessonSchedule === 'weekly') {
         const result = await this.service.createLessonSeries(this.selectedId, courseId, group?.id ?? null, student?.id ?? null,
-          teacherUserId, this.lessonSeriesTimeZoneId.trim(), this.lessonSeriesStartsOn, this.lessonSeriesEndsOn,
+          teacherUserId, TURKEY_ZONE, this.lessonSeriesStartsOn, this.lessonSeriesEndsOn,
           this.lessonSeriesStartTime, this.lessonSeriesDurationMinutes, this.lessonDaysOfWeekMask, this.lessonRoomId || null);
         this.notice = `${result.sessionsCreated} derslik haftalık seri takvime eklendi.`;
       } else {
         await this.service.createLesson(this.selectedId, courseId, group?.id ?? null, student?.id ?? null,
-          teacherUserId, new Date(this.lessonStartsAt).toISOString(), new Date(this.lessonEndsAt).toISOString(), this.lessonRoomId || null);
+          teacherUserId, turkeyInstant(this.lessonStartsAt), turkeyInstant(this.lessonEndsAt), this.lessonRoomId || null);
         this.notice = 'Ders takvime eklendi.';
       }
       this.resetLessonTimes();
@@ -997,7 +1006,7 @@ export class CourseManagementWorkspaceComponent implements OnInit {
     if (!this.selected || !this.canSaveLessonReschedule()) return;
     await this.run(async () => {
       await this.service.rescheduleLesson(this.selectedId, this.editingLessonId,
-        new Date(this.editingLessonStartsAt).toISOString(), new Date(this.editingLessonEndsAt).toISOString(),
+        turkeyInstant(this.editingLessonStartsAt), turkeyInstant(this.editingLessonEndsAt),
         this.editingLessonRoomId || null);
       this.editingLessonId = '';
       await this.loadLessons();
@@ -1063,14 +1072,14 @@ export class CourseManagementWorkspaceComponent implements OnInit {
     this.notice = 'Telafi kredisi onaylandı. 30 gün içinde ders planlayın.';
   }); }
   canScheduleMakeupCredit(credit: CourseMakeupCredit): boolean {
-    const startsAt = Date.parse(this.makeupStartsAt[credit.id] ?? '');
+    const startsAt = Date.parse(turkeyInstant(this.makeupStartsAt[credit.id] ?? ''));
     const endsAt = startsAt + credit.durationMinutes * 60000;
     return credit.status === 'Available' && startsAt > Date.now() && endsAt > startsAt && endsAt <= Date.parse(credit.expiresAt);
   }
   async scheduleMakeupCredit(credit: CourseMakeupCredit): Promise<void> {
     if (!this.selected || !this.canScheduleMakeupCredit(credit)) return;
     await this.run(async () => {
-      const startsAt = new Date(this.makeupStartsAt[credit.id]);
+      const startsAt = new Date(turkeyInstant(this.makeupStartsAt[credit.id]));
       const endsAt = new Date(startsAt.getTime() + credit.durationMinutes * 60000);
       await this.service.createLesson(this.selectedId, credit.sourceCourseId, null, credit.studentId,
         credit.sourceTeacherUserId, startsAt.toISOString(), endsAt.toISOString(), null, credit.id);
@@ -1084,7 +1093,7 @@ export class CourseManagementWorkspaceComponent implements OnInit {
     if (!teacherUserId) return;
     await this.run(async () => {
       await this.service.createTeacherTimeOff(this.selectedId, teacherUserId,
-        new Date(this.timeOffStartsAt).toISOString(), new Date(this.timeOffEndsAt).toISOString(), this.timeOffReason);
+        turkeyInstant(this.timeOffStartsAt), turkeyInstant(this.timeOffEndsAt), this.timeOffReason);
       this.timeOffReason = '';
       this.resetTimeOffTimes();
       await this.loadTeacherTimeOff();
@@ -1103,7 +1112,7 @@ export class CourseManagementWorkspaceComponent implements OnInit {
     if (!teacherUserId) return;
     await this.run(async () => {
       await this.service.createTeacherAvailability(this.selectedId, teacherUserId, this.availabilityWeekday,
-        this.availabilityStartTime, this.availabilityEndTime, this.availabilityTimeZoneId);
+        this.availabilityStartTime, this.availabilityEndTime, TURKEY_ZONE);
       await this.loadTeacherAvailability();
       this.notice = 'Haftalık çalışma saati eklendi. Bu kural yalnızca yeni ders planlarını denetler.';
     });
@@ -1114,8 +1123,9 @@ export class CourseManagementWorkspaceComponent implements OnInit {
     this.notice = 'Haftalık çalışma saati kaldırıldı.';
   }); }
   weekdayLabel(weekday: number): string { return this.weekdays[weekday]?.label ?? ''; }
-  lessonTime(value: string, timeZoneId: string | null): string {
-    return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short', timeZone: timeZoneId ?? undefined }).format(new Date(value));
+  /** E3 #34: every lesson is shown in Türkiye time (an older series' stored zone no longer changes the display). */
+  lessonTime(value: string, _timeZoneId?: string | null): string {
+    return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short', timeZone: TURKEY_ZONE }).format(new Date(value));
   }
   lessonStatus(status: string): string { return status === 'Scheduled' ? 'Planlandı' : status === 'Cancelled' ? 'İptal edildi' : 'Tamamlandı'; }
   attendanceLabel(status: string | null, isActive = true): string {
@@ -1357,9 +1367,11 @@ export class CourseManagementWorkspaceComponent implements OnInit {
     const pad = (part: number) => String(part).padStart(2, '0');
     return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
   }
+  /** The datetime-local value of an instant in Türkiye time (E3 #34). */
   private dateTimeLocal(value: Date): string {
+    const local = new Date(value.getTime() + TURKEY_OFFSET_MINUTES * 60000);
     const pad = (part: number) => String(part).padStart(2, '0');
-    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+    return `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}`;
   }
   private async run(action: () => Promise<void>): Promise<void> {
     if (this.busy) return;
@@ -1395,7 +1407,6 @@ export class CourseManagementWorkspaceComponent implements OnInit {
         : code === 'Availability.InvalidTime' ? 'İzin gelecekte başlamalı, bitişi başlangıçtan sonra olmalı ve süre 90 günü aşmamalı.'
         : code === 'Availability.OutsideWorkingHours' ? 'Ders, öğretmenin seçili haftalık çalışma saatlerinin içinde kalmıyor.'
         : code === 'Availability.InvalidWindow' ? 'Haftanın gününü ve başlangıç/bitiş saatlerini kontrol edin.'
-        : code === 'Availability.InvalidTimeZone' ? 'IANA saat dilimini kontrol edin; örnek: Europe/Istanbul.'
         : code === 'Availability.DuplicateWindow' ? 'Bu çalışma saati zaten kayıtlı.'
         : code === 'Lesson.GroupHasNoActiveStudents' ? 'Bu grupta etkin öğrenci bulunmuyor.'
         : code === 'Room.Conflict' ? 'Seçilen derslik bu saatlerde başka bir ders için kullanılıyor.'
@@ -1403,7 +1414,6 @@ export class CourseManagementWorkspaceComponent implements OnInit {
         : code === 'Room.DuplicateName' || code === 'Branch.DuplicateName' ? 'Bu ad aynı şube veya çalışma alanında zaten kullanılıyor.'
         : code === 'Room.InvalidInput' ? 'Derslik adını ve kapasitesini kontrol edin.'
         : code === 'Branch.InvalidInput' ? 'Şube adını kontrol edin.'
-        : code === 'LessonSeries.InvalidTimeZone' ? 'IANA saat dilimini kontrol edin; örnek: Europe/Istanbul.'
         : code === 'LessonSeries.InvalidLocalTime' ? 'Seride yaz saati nedeniyle oluşmayan veya iki kez oluşan bir saat var. Başka saat seçin.'
         : code === 'LessonSeries.NoFutureOccurrences' ? 'Seçilen tarih aralığında gelecekte ders oluşmuyor.'
         : code === 'LessonSeries.NoFutureSessions' ? 'Düzenlenecek gelecek planlı oturum kalmamış; yeni bir seri oluşturun.'

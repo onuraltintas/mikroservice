@@ -541,11 +541,10 @@
           <label><input type="checkbox" [name]="'lesson-day-' + weekday.index" [(ngModel)]="lessonDaysOfWeek[weekday.index]" [disabled]="busy">{{ weekday.label }}</label>
         }
       </fieldset>
-      <label for="lesson-series-timezone">Saat dilimi (IANA)</label><input id="lesson-series-timezone" name="lessonSeriesTimeZoneId" type="text" [(ngModel)]="lessonSeriesTimeZoneId" maxlength="80" placeholder="Europe/Istanbul" [disabled]="busy" required>
-      <p>Haftalık seri 180 güne kadar oluşturulur. Yaz saati geçişinde olmayan veya iki kez oluşan yerel saatler reddedilir.</p>
+      <p>Haftalık seri 180 güne kadar oluşturulur.</p>
     }
-    <button type="submit" [disabled]="busy || (lessonSchedule === 'once' && (!lessonStartsAt || !lessonEndsAt)) || (lessonSchedule === 'weekly' && (!lessonSeriesStartsOn || !lessonSeriesEndsOn || !lessonSeriesStartTime || !lessonSeriesTimeZoneId.trim() || !lessonDaysOfWeekMask)) || (lessonMode === 'group' && !lessonGroupId) || (lessonMode === 'private' && (!lessonStudentId || !lessonCourseId))">{{ lessonSchedule === 'weekly' ? 'Ders serisi oluştur' : 'Dersi planla' }}</button>
-    <p>Tek ders cihazınızın yerel saat dilimiyle girilir; haftalık seri seçili IANA saat diliminde tutulur. Öğretmen ve öğrenci çakışmaları engellenir.</p>
+    <button type="submit" [disabled]="busy || (lessonSchedule === 'once' && (!lessonStartsAt || !lessonEndsAt)) || (lessonSchedule === 'weekly' && (!lessonSeriesStartsOn || !lessonSeriesEndsOn || !lessonSeriesStartTime  || !lessonDaysOfWeekMask)) || (lessonMode === 'group' && !lessonGroupId) || (lessonMode === 'private' && (!lessonStudentId || !lessonCourseId))">{{ lessonSchedule === 'weekly' ? 'Ders serisi oluştur' : 'Dersi planla' }}</button>
+    <p>Bütün saatler Türkiye saatine göredir. Öğretmen ve öğrenci çakışmaları engellenir.</p>
   </form>
   @if (editingSeriesId) {
     <form (ngSubmit)="saveLessonSeriesSchedule()"><h3>Haftalık serinin gelecek planını düzenle</h3>
@@ -612,7 +611,7 @@
     @if (!lessons.length) { <p>Bu tarih aralığında planlı ders bulunmuyor.</p> }
     @for (lesson of lessons; track lesson.id) {
       <div class="row"><div><strong>{{ lesson.courseName }}</strong> · {{ lesson.groupName || 'Bire bir ders' }}{{ lesson.seriesId ? ' · Haftalık seri' : '' }}<br>
-        <small>{{ lessonTime(lesson.startsAt, lesson.timeZoneId) }} – {{ lessonTime(lesson.endsAt, lesson.timeZoneId) }} · {{ lessonStatus(lesson.status) }}{{ lesson.timeZoneId ? ' · ' + lesson.timeZoneId : '' }}{{ lesson.branchName && lesson.roomName ? ' · ' + lesson.branchName + ' / ' + lesson.roomName : '' }}</small>
+        <small>{{ lessonTime(lesson.startsAt, lesson.timeZoneId) }} – {{ lessonTime(lesson.endsAt, lesson.timeZoneId) }} · {{ lessonStatus(lesson.status) }}{{ lesson.branchName && lesson.roomName ? ' · ' + lesson.branchName + ' / ' + lesson.roomName : '' }}</small>
         @if (canTakeAttendance(lesson)) {
           @for (student of lesson.students; track student.studentId) {
             @if (student.isActive !== false) {
@@ -691,14 +690,13 @@
       </select>
       <label for="availability-start">Başlangıç</label><input id="availability-start" name="availabilityStart" type="time" [(ngModel)]="availabilityStartTime" [disabled]="busy" required>
       <label for="availability-end">Bitiş</label><input id="availability-end" name="availabilityEnd" type="time" [(ngModel)]="availabilityEndTime" [disabled]="busy" required>
-      <label for="availability-timezone">Saat dilimi (IANA)</label><input id="availability-timezone" name="availabilityTimeZoneId" [(ngModel)]="availabilityTimeZoneId" maxlength="80" placeholder="Europe/Istanbul" [disabled]="busy" required>
       <button type="submit" [disabled]="busy || !availabilityStartTime || !availabilityEndTime || availabilityEndTime <= availabilityStartTime || (isOwner && !availabilityTeacherUserId)">Çalışma saati ekle</button>
     </form>
     @if (!teacherAvailability.length) { <p>Henüz haftalık saat tanımlanmamış; yeni dersler için saat kısıtı uygulanmıyor.</p> }
     @for (window of teacherAvailability; track window.id) {
       <div class="row"><span>
         @if (isOwner) { <small>Öğretmen · <code>{{ window.teacherUserId }}</code><br></small> }
-        {{ weekdayLabel(window.weekday) }} · {{ window.startTime }}–{{ window.endTime }} · {{ window.timeZoneId }}
+        {{ weekdayLabel(window.weekday) }} · {{ window.startTime }}–{{ window.endTime }}
       </span>
         <button type="button" (click)="removeTeacherAvailability(window.id)" [disabled]="busy">Saati kaldır</button>
       </div>

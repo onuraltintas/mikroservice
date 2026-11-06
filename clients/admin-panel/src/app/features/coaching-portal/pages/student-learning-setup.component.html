@@ -10,16 +10,17 @@
       <button type="button" class="secondary" [attr.aria-current]="step() === item.id ? 'step' : null" [disabled]="saving() || loading() || catalogLoading() || (item.id !== 'Profile' && item.id !== 'Purpose' && (!state()?.context || purposeRetired()))" (click)="goTo(item.id)">{{ item.label }}</button>
     }</nav>
   }
+  <!-- E3 #14: the education is edited on Profilim only (no second form here). -->
+  <p class="notice" data-testid="education-on-profile">Eğitim durumun ve sınıfın Profilim sayfasında. <a routerLink="/coaching-portal/account/settings/profile">Profilime git</a></p>
   @if (step() === 'Profile') {
-    <p class="notice">Öğrenciysen sınıfın, mezunsan eğitim durumun yeterli. Okul adı ve doğum tarihi isteğe bağlıdır.</p>
-    <edu-coaching-profile [apiUrl]="apiUrl" [role]="'Student'" [setupMode]="true" (saved)="afterProfileSaved()" />
-    <button type="button" (click)="load()">Kaydedilen bilgilerle devam et</button>
+    <p class="notice" role="status" data-testid="education-missing">Önce Profilim sayfasında eğitim durumunu seç; hazırlanabileceğin sınavlar buna göre belirlenir.</p>
+    <button type="button" (click)="load()">Kaydettim, devam et</button>
   }
   @if (ready() && step() === 'Purpose') {
     <form class="panel" #purposeForm="ngForm" (ngSubmit)="savePurpose()">
       <h2>Çalışma amacım</h2>
       @if (purposeRetired()) { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }}</p> }
-      @if (state()?.purposeNotForEducation) { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.</p> }
+      @if (state()?.purposeNotForEducation) { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.</p> }
       <p>@if (!purposeRetired()) { Hazırlandığın sınavı seç. }Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
       <fieldset [disabled]="saving()"><div class="fields">
         <label>Eğitim yılı başlangıcı<input type="number" name="academicYear" min="2000" max="2200" required [(ngModel)]="academicYearStart" (ngModelChange)="changed()"></label>

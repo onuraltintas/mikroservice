@@ -54,7 +54,7 @@ describe('KM8 exam-only study purposes: setup wizard', () => {
       // The saved, retired purpose is not preselected; later steps wait until an exam is chosen.
       expect(component.purpose).toBe('');
       const steps = [...fixture.nativeElement.querySelectorAll('nav[aria-label="Kurulum adımları"] button')] as HTMLButtonElement[];
-      expect(steps.filter(x => !x.disabled).map(x => x.textContent?.trim())).toEqual(['Eğitim bilgilerim', 'Çalışma amacım']);
+      expect(steps.filter(x => !x.disabled).map(x => x.textContent?.trim())).toEqual(['Çalışma amacım']); // E3 #14: the education is on Profilim
       component.savePurpose(); expect(service.save).not.toHaveBeenCalled();
       // Choosing an exam saves a new scope without the old school lessons and topics.
       component.purpose = 'Lgs'; component.targetExamYear = 2027; component.changed(); component.savePurpose();

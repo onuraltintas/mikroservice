@@ -216,7 +216,7 @@ public sealed class CoachingProfileConsistencyTests
         var preview = new CoachingAutomaticStudyPlanPreviewService(s.F.Db, new CoachingAccessPolicy(s.F.Actor), s.Settings);
         var error = await Assert.ThrowsAsync<BusinessRuleException>(() => preview.PreviewAsync(
             new AutomaticStudyPreviewRequest(new(2026, 10, 19), 7, 0, [new(Guid.NewGuid(), 30)], context.Version)));
-        error.Message.Should().Contain("Seçili sınavın sınıfına uymuyor");
+        error.Message.Should().Contain("Seçili sınavın eğitim durumuna ya da sınıfına uymuyor");
     }
 
     [Fact]

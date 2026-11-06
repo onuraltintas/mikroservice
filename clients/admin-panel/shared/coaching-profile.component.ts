@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Observable, finalize, map } from 'rxjs';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from '../src/app/features/coaching-portal/onboarding/onboarding-combobox.component';
+import { EDUCATION_STAGES, EducationStage, educationRequest, gradesFor, isStudentStage, stageOf } from '../src/app/features/coaching-portal/coaching-education';
 
 interface StudentProfile {
   version: number; isActive: boolean; educationStatus: string; gradeLevel: number | null;
@@ -37,7 +38,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
       @if (success()) { <p role="status">{{ success() }}</p> }
       @if (gradeNotice()) {
         <!-- Paket D (#8): the new grade no longer fits the exam in the study settings. -->
-        <p role="status" class="notice" data-testid="grade-purpose-notice">Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
+        <p role="status" class="notice" data-testid="grade-purpose-notice">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
       }
       @if (loading()) { <p role="status">Profil yükleniyor…</p> }
       @if (ready() && !student && role === 'Student' || ready() && !teacher && role === 'Teacher') {
@@ -49,16 +50,21 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
         <form #profileForm="ngForm" (ngSubmit)="profileForm.valid && save()" (ngModelChange)="dirty = true">
           <fieldset [disabled]="working() || !profile.isActive">
             @if (role === 'Student' && student; as s) {
-              <label>Eğitim durumu <select name="educationStatus" [(ngModel)]="s.educationStatus" (ngModelChange)="dirty = true" required>
-                <option value="unknown">{{ t('Seçin', 'Seç') }}</option><option value="student">Öğrenci</option><option value="graduate">Mezun</option>
+              <!-- E3 #14: "Şu an durumun ne?" as in the wizard; the grade is a choice (ortaokul 5–8, lise 9–12). -->
+              <label>Şu an durumun ne? <select name="educationStage" [ngModel]="stage" (ngModelChange)="changeStage($event)" required>
+                <option value="">Seç</option>@for (item of stages; track item.value) { <option [value]="item.value">{{ item.label }}</option> }
               </select></label>
-              @if (s.educationStatus === 'student') {
-                <label>Sınıf <input name="gradeLevel" type="number" min="1" max="12" required [(ngModel)]="s.gradeLevel" (ngModelChange)="dirty = true"></label>
+              @if (isStudentStage(stage)) {
+                <label>Sınıf <select name="gradeLevel" [(ngModel)]="s.gradeLevel" (ngModelChange)="dirty = true" required>
+                  <option [ngValue]="null">Seç</option>@for (grade of gradesFor(stage); track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
+                </select></label>
               }
+              @if (clearsSchool()) { <p role="status" class="notice" data-testid="education-clears-school">{{ clearsSchoolText }}</p> }
               @if (!setupMode) {
-              @if (s.educationStatus === 'graduate') {
+              @if (stage === 'HighSchoolGraduate' || stage === 'UniversityGraduate') {
                 <label>Mezuniyet yılı (isteğe bağlı) <input name="graduationYear" type="number" min="1900" [max]="year" [(ngModel)]="s.graduationYear" (ngModelChange)="dirty = true"></label>
               }
+              @if (isStudentStage(stage)) {
               <!-- Paket D (#7): the school comes from the catalog as in the wizard (no typed school); an older typed one stays until replaced. -->
               <div class="place" data-testid="own-school">
                 <span>Okulun (isteğe bağlı): <strong>{{ schoolName(s) ?? 'seçilmedi' }}</strong>
@@ -81,6 +87,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
                 }
               </div>
               <label>Şube (isteğe bağlı) <input name="classBranch" maxlength="30" [(ngModel)]="s.classBranch" (ngModelChange)="dirty = true"></label>
+              }
               <label>Doğum tarihi (isteğe bağlı) <input name="birthDate" type="date" [max]="today" [(ngModel)]="s.birthDate" (ngModelChange)="dirty = true"></label>
               <div class="place" data-testid="home-place">
                 <span>Yaşadığın yer: <strong>{{ s.homeCity ? s.homeCity + (s.homeDistrict ? ' / ' + s.homeDistrict : '') : 'seçilmedi' }}</strong></span>
@@ -149,6 +156,10 @@ export class CoachingProfileComponent implements OnInit {
   student: StudentProfile | null = null; teacher: TeacherProfile | null = null; subjects = ''; dirty = false;
   readonly provinces = signal<Place[] | null>(null); readonly districts = signal<Place[]>([]);
   homeProvince = ''; homeDistrictId = ''; private savedDiploma: number | null = null; private savedEducation = ''; private examAsksDiploma = true;
+  /** E3 #14: the status choice ("Şu an durumun ne?") and the one saved on the server. */
+  readonly stages = EDUCATION_STAGES; stage: EducationStage | '' = ''; private savedStage: EducationStage | '' = '';
+  readonly isStudentStage = isStudentStage; readonly gradesFor = gradesFor;
+  readonly clearsSchoolText = 'Öğrenci olmadığını seçersen kaydettiğinde sınıf, okul ve şube bilgin silinecek.';
   /** Paket D (#7): the school picker (the wizard's catalog list) and the school picked or removed but not saved yet. */
   readonly schoolPicker = signal(false); readonly cityPicker = signal(false);
   readonly schoolCity = signal(''); readonly schoolCityLabel = signal('');
@@ -165,7 +176,9 @@ export class CoachingProfileComponent implements OnInit {
       .subscribe({ next: response => { this.apply(response.data); this.ready.set(true); }, error: e => this.error.set(this.message(e, this.t('Koçluk profili yüklenemedi. Yeniden deneyin.', 'Profilin yüklenemedi. Yeniden dene.'))) });
   }
   private apply(profile: OwnProfile) {
-    this.student = profile.student ? { ...profile.student, educationStatus: profile.student.educationStatus.toLowerCase() } : null;
+    this.student = profile.student ? { ...profile.student } : null;
+    this.stage = this.savedStage = this.student ? stageOf(this.student.educationStatus, this.student.gradeLevel) : '';
+    if (this.student && !this.stage) this.student.gradeLevel = null;
     if (profile.examAsksDiploma !== undefined) this.examAsksDiploma = profile.examAsksDiploma;
     this.savedDiploma = this.student?.diplomaGrade ?? null; this.provinces.set(null); this.homeProvince = ''; this.homeDistrictId = '';
     this.savedEducation = this.education(this.student); this.closeSchoolPicker(); this.pickedSchool.set(null); this.schoolRemoved.set(false);
@@ -182,8 +195,15 @@ export class CoachingProfileComponent implements OnInit {
       next: list => this.districts.set(list), error: () => this.error.set(this.t('İlçe listesi yüklenemedi.', 'İlçe listesi yüklenemedi. Yeniden dene.')) });
   }
   // ---------- Paket D (#7): the school from the catalog ----------
-  /** As in the wizard: the own-school list is the high-school catalog (9th grade on, and graduates). */
-  schoolApplies(s: StudentProfile) { return s.educationStatus === 'graduate' || s.educationStatus === 'student' && Number(s.gradeLevel) >= 9; }
+  /** As in the wizard: the own-school list is the high-school catalog (lise students; E3 #14: graduates have no school). */
+  schoolApplies(_s: StudentProfile) { return this.stage === 'high'; }
+  /** E3 #14: a new status keeps only a grade that fits it; leaving the student statuses clears the grade, school and branch on save. */
+  changeStage(stage: EducationStage | '') {
+    this.stage = stage; this.dirty = true;
+    if (this.student && !gradesFor(stage).includes(Number(this.student.gradeLevel))) this.student.gradeLevel = null;
+    if (stage !== 'high') this.closeSchoolPicker();
+  }
+  clearsSchool() { return isStudentStage(this.savedStage) && this.stage !== '' && !isStudentStage(this.stage); }
   schoolName(s: StudentProfile) { return this.schoolRemoved() ? null : this.pickedSchool()?.name ?? (s.schoolName || null); }
   schoolDetail(s: StudentProfile) {
     if (this.schoolRemoved()) return null;
@@ -227,9 +247,9 @@ export class CoachingProfileComponent implements OnInit {
   };
   /** The wizard's rule: the diploma grade is asked for 11th, 12th grade and graduates (YKS; the server drops it for other exams). */
   diplomaApplies(s: StudentProfile) {
-    return this.examAsksDiploma && (s.educationStatus === 'graduate' || s.educationStatus === 'student' && [11, 12].includes(Number(s.gradeLevel)));
+    return this.examAsksDiploma && (this.stage !== '' && !isStudentStage(this.stage) || isStudentStage(this.stage) && [11, 12].includes(Number(s.gradeLevel)));
   }
-  private education(s: StudentProfile | null) { return s ? `${s.educationStatus.toLowerCase()}:${s.educationStatus.toLowerCase() === 'student' ? s.gradeLevel ?? '' : ''}` : ''; }
+  private education(s: StudentProfile | null) { return s ? `${this.stage}:${isStudentStage(this.stage) ? s.gradeLevel ?? '' : ''}` : ''; }
   async reload() { if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş profil değişikliklerinden vazgeçilsin mi?')) return; this.loadProfile(); }
   provision() {
     if (this.working() || !this.ready()) return;
@@ -237,21 +257,22 @@ export class CoachingProfileComponent implements OnInit {
     this.http.post(`${this.base}/profiles/me/provision`, { role: this.role }).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false)))
       .subscribe({ next: () => this.loadProfile(), error: e => this.error.set(this.message(e, 'Koçluk profili oluşturulamadı.')) });
   }
-  save() {
+  async save() {
     if (this.working() || !this.ready()) return;
     let payload: object;
     if (this.role === 'Student' && this.student) {
-      const s = this.student;
-      if (s.educationStatus === 'unknown' || s.educationStatus === 'student' && (!s.gradeLevel || s.gradeLevel < 1 || s.gradeLevel > 12)) { this.error.set('Eğitim durumunu ve öğrenciysen sınıfını seç.'); return; }
+      const s = this.student; const stage = this.stage;
+      if (!stage || isStudentStage(stage) && !gradesFor(stage).includes(Number(s.gradeLevel))) { this.error.set('Eğitim durumunu ve öğrenciysen sınıfını seç.'); return; }
+      const education = educationRequest(stage, s.gradeLevel); const student = isStudentStage(stage);
       // Paket D (#7): the saved school is sent back as it is, a picked one by its catalog id (the server fills it from the catalog).
-      const removed = this.schoolRemoved(); const picked = this.pickedSchool();
+      const removed = this.schoolRemoved() || !student; const picked = student ? this.pickedSchool() : null;
       // Paket D (#8): the diploma grade only where the wizard asks it; the server drops it elsewhere.
       const diploma = this.diplomaApplies(s);
-      payload = { expectedVersion: s.version, educationStatus: s.educationStatus, gradeLevel: s.educationStatus === 'student' ? s.gradeLevel : null,
-        graduationYear: s.educationStatus === 'graduate' ? s.graduationYear || null : null, schoolName: removed ? null : s.schoolName || null,
+      payload = { expectedVersion: s.version, ...education,
+        graduationYear: stage === 'HighSchoolGraduate' || stage === 'UniversityGraduate' ? s.graduationYear || null : null, schoolName: removed ? null : s.schoolName || null,
         schoolCity: removed ? null : s.schoolCity || null, schoolDistrict: removed ? null : s.schoolDistrict || null, schoolType: removed ? null : s.schoolType || null,
         ...(picked && !removed ? { schoolId: picked.id } : {}),
-        classBranch: s.classBranch || null, birthDate: s.birthDate || null,
+        classBranch: student ? s.classBranch || null : null, birthDate: s.birthDate || null,
         bio: s.bio || null, avatarUrl: s.avatarUrl || null, shareProgressWithTeachers: s.shareProgressWithTeachers,
         // Paket C: only a changed place is sent (checked against the shared list); an emptied diploma grade is removed.
         ...(this.homeProvince && this.homeDistrictId ? { homeProvinceId: this.homeProvince, homeDistrictId: this.homeDistrictId } : {}),
@@ -266,6 +287,8 @@ export class CoachingProfileComponent implements OnInit {
       payload = { expectedVersion: t.version, title: t.title || null, subjects: this.subjects.split(',').map(x => x.trim()).filter(Boolean),
         experienceYears: t.experienceYears ?? null, bio: t.bio || null, avatarUrl: t.avatarUrl || null };
     } else return;
+    // E3 #14: the student is told before a non-student status clears the grade, school and branch.
+    if (this.role === 'Student' && this.clearsSchool() && !await this.toaster.confirm(`${this.clearsSchoolText} Kaydedilsin mi?`)) return;
     this.working.set(true); this.error.set(null); this.success.set(null); this.gradeNotice.set(false);
     const gradeChanged = this.role === 'Student' && !!this.student && this.education(this.student) !== this.savedEducation;
     this.http.put<{ data: StudentProfile | TeacherProfile }>(`${this.base}/profiles/me/${this.role.toLowerCase()}`, payload)

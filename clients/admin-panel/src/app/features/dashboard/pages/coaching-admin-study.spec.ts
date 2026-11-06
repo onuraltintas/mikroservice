@@ -19,7 +19,7 @@ describe('CoachingAdminStudyComponent', () => {
     component.inspect('revision');
     http.expectOne(r => r.url.endsWith('/plans/revision')).flush({ data: { id: 'revision', title: 'Study plan', status: 'Archived', version: 1, tasks: [{ id: 'task', plannedDate: '2026-10-02', title: 'History task', plannedMinutes: 30, isCompleted: true, actualMinutes: 25, sourceName: 'Matematik kitabı', plannedQuestions: 20, actualQuestions: 0 }] } });
     fixture.detectChanges(); const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Europe/Istanbul'); expect(text).toContain('History task'); expect(text).toContain('25');
+    expect(text).not.toContain('Saat dilimi'); expect(text).toContain('History task'); expect(text).toContain('25');
     expect(text).toContain('Matematik kitabı'); expect(text).toContain('20 / 0');
     expect(text).toContain('02.10.2026');
     expect(fixture.nativeElement.querySelector('button[type="submit"]')).toBeNull();

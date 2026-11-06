@@ -61,7 +61,11 @@ public sealed record CoachingOwnProfile(CoachingStudentProfile? Student, Coachin
 public sealed record CoachingRosterItem(Guid UserId, string FirstName, string LastName, string FullName,
     string Email, int? GradeLevel, Guid? InstitutionId, string? InstitutionName, string? AvatarUrl,
     string? Subject, DateTime AssignmentStartDate, bool IsActive, DateTime? LastLoginAt,
-    Guid? TeacherUserId = null, string? TeacherName = null);
+    Guid? TeacherUserId = null, string? TeacherName = null)
+{
+    /// <summary>E3 #14: staff lists show "Lise mezunu", "Üniversite öğrencisi" … where a student has no grade.</summary>
+    public CoachingEducationStatus? EducationStatus { get; init; }
+}
 
 public sealed record CoachingRosterPage(IReadOnlyList<CoachingRosterItem> Items, int TotalCount,
     int PageNumber, int PageSize)

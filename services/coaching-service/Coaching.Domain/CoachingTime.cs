@@ -7,7 +7,13 @@ namespace Coaching.Domain;
 /// </summary>
 public static class CoachingTime
 {
-    public static readonly TimeZoneInfo Turkey = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+    /// <summary>E3 #34 (user decision 06.11.2026): the only time zone. Nobody chooses one; every stored zone is this one.</summary>
+    public const string ZoneId = "Europe/Istanbul";
+    public static readonly TimeZoneInfo Turkey = TimeZoneInfo.FindSystemTimeZoneById(ZoneId);
+
+    /// <summary>E3 #34: a stored zone (study hours, weekly draft, plan snapshot) can only be Europe/Istanbul.</summary>
+    public static string RequireTurkey(string? zone) => zone == ZoneId
+        ? ZoneId : throw new ArgumentException("Koçlukta bütün saatler Türkiye saatine (Europe/Istanbul) göredir.");
 
     public static DateTime ToUtc(DateTime value) => value.Kind switch
     {

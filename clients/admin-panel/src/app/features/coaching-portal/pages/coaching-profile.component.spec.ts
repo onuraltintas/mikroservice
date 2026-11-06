@@ -130,12 +130,12 @@ describe('Coaching owned profile', () => {
     const student = { version: 2, educationStatus: 'Student', gradeLevel: 8, shareProgressWithTeachers: true, isActive: true };
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
     fixture.detectChanges(); await fixture.whenStable();
-    component.student!.gradeLevel = 9; component.dirty = true; component.save();
+    component.stage = 'high'; component.student!.gradeLevel = 9; component.dirty = true; component.save();
     http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...student, version: 3, gradeLevel: 9 } });
     http.expectOne('/api/coaching/study-planning/setup').flush({ data: { context: null, isReady: false, missingFields: ['Purpose'], warnings: [], purposeNotForEducation: true } });
     fixture.detectChanges(); await fixture.whenStable();
     const notice = fixture.nativeElement.querySelector('[data-testid="grade-purpose-notice"]') as HTMLElement;
-    expect(notice.textContent).toContain('Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle.');
+    expect(notice.textContent).toContain('Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle.');
     expect(notice.querySelector('a[href="/coaching-portal/account/settings"]')!.textContent).toContain('Çalışma tercihlerim');
     // The diploma grade is asked only for 11th, 12th grade and graduates (as in the wizard).
     expect(fixture.nativeElement.querySelector('[name="diplomaGrade"]')).toBeNull();
@@ -310,7 +310,7 @@ describe('Coaching owned profile', () => {
     confirm.mockResolvedValueOnce(false);
     await component.save();
     http.expectNone('/api/coaching/profiles/me/student');
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('sınıf, okul ve şube bilgin silinecek'));
+    expect(confirm.mock.calls[0][0]).toContain('sınıf, okul ve şube bilgin silinecek');
     await component.save();
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.body).toMatchObject({ educationStatus: 'UniversityStudent', gradeLevel: null, graduationYear: null,

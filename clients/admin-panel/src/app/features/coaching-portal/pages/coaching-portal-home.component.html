@@ -52,7 +52,7 @@
             @if (!setupReady() && gradeChanged()) {
               <!-- Paket D (#8): the saved exam does not fit the grade (a grade change or an older setup); the card says why. -->
               <h2>Çalışma tercihlerini güncelle</h2>
-              <p>Seçili sınavın sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.</p>
+              <p>Seçili sınavın eğitim durumuna ya da sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.</p>
             } @else {
               <h2>{{ setupReady() ? 'İlk planını oluştur' : 'Planını kur' }}</h2>
               <p>{{ setupReady() ? 'Derslerine ve boş saatlerine göre haftalık planını birkaç adımda hazırla.' : 'Boş saatlerini ve derslerini seç, konularda nerede olduğunu işaretle. Planın bunlar olmadan hazırlanamıyor.' }}</p>

@@ -12,6 +12,8 @@ public sealed class StudyPlanRevisionConfiguration : IEntityTypeConfiguration<St
         {
             table.HasCheckConstraint("ck_study_plan_revision_number", "\"RevisionNumber\" > 0");
             table.HasCheckConstraint("ck_study_plan_status", "\"Status\" BETWEEN 0 AND 2 AND \"IsActive\" = (\"Status\" = 1)");
+            // E3 #34: a weekly plan snapshot is in Türkiye time (an older one without the zone means the same).
+            table.HasCheckConstraint("ck_study_plan_weekly_zone", "\"WeeklySource\" IS NULL OR coalesce(\"WeeklySource\"->>'TimeZoneId', 'Europe/Istanbul') = 'Europe/Istanbul'");
         });
         builder.HasKey(x => x.Id);
         builder.HasAlternateKey(x => new { x.Id, x.StudentId });

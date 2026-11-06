@@ -3,7 +3,12 @@ using EduPlatform.Shared.Kernel.Primitives;
 
 namespace Coaching.Domain.Profiles;
 
-public enum CoachingEducationStatus { Unknown = 0, Student = 1, Graduate = 2 }
+/// <summary>
+/// E3 #14 (user decision 06.11.2026), "Şu an durumun ne?": an ortaokul or lise student is a Student with the grade (5–8, 9–12);
+/// a lise graduate (the earlier "Graduate", same stored number), a university student and a university graduate have no grade
+/// and no school. The numbers are stored: never renumber.
+/// </summary>
+public enum CoachingEducationStatus { Unknown = 0, Student = 1, HighSchoolGraduate = 2, UniversityStudent = 3, UniversityGraduate = 4 }
 public enum CoachingMemberRole { Student = 1, Teacher = 2 }
 
 public sealed class CoachingStudentProfile : AggregateRoot
@@ -34,8 +39,8 @@ public sealed class CoachingStudentProfile : AggregateRoot
     /// <summary>Paket C (#3): the first-login wizard steps saved so far (bit n = step n, 1–7) and when it was finished.</summary>
     public int OnboardingSteps { get; private set; }
     public DateTime? OnboardingCompletedAt { get; private set; }
-    public bool IsEducationComplete => EducationStatus == CoachingEducationStatus.Graduate
-        || EducationStatus == CoachingEducationStatus.Student && GradeLevel.HasValue;
+    public bool IsEducationComplete => EducationStatus is CoachingEducationStatus.HighSchoolGraduate or CoachingEducationStatus.UniversityStudent
+        or CoachingEducationStatus.UniversityGraduate || EducationStatus == CoachingEducationStatus.Student && GradeLevel.HasValue;
 
     public static CoachingStudentProfile Create(Guid userId)
     {
@@ -43,21 +48,34 @@ public sealed class CoachingStudentProfile : AggregateRoot
         return new() { UserId = userId, CreatedBy = userId.ToString() };
     }
 
+    /// <summary>E3 #14: the grades a student chooses (the wizard's and Profilim's 5–12).</summary>
+    public const int FirstGrade = 5, LastGrade = 12;
+    public static bool IsGraduate(CoachingEducationStatus status) =>
+        status is CoachingEducationStatus.HighSchoolGraduate or CoachingEducationStatus.UniversityGraduate;
+
+    /// <summary>
+    /// E3 #14: a student needs a grade from 5 to 12 (an older grade below 5 is kept while the education does not change); every other
+    /// status has no grade, and a non-student has no school, school details or branch (they are cleared; the pages warn before saving).
+    /// A graduation year belongs to a graduate status.
+    /// </summary>
     public void UpdateEducation(CoachingEducationStatus status, int? gradeLevel, string? schoolName,
         string? schoolCity, string? schoolDistrict, string? schoolType, string? classBranch, int? graduationYear)
     {
-        if (!Enum.IsDefined(status) || gradeLevel is < 1 or > 12
+        var unchangedOlderGrade = status == EducationStatus && gradeLevel == GradeLevel && gradeLevel is >= 1 and < FirstGrade;
+        if (!Enum.IsDefined(status) || gradeLevel is < 1 or > LastGrade
+            || gradeLevel < FirstGrade && !unchangedOlderGrade
             || status == CoachingEducationStatus.Student && !gradeLevel.HasValue
             || status != CoachingEducationStatus.Student && gradeLevel.HasValue
             || graduationYear is < 1900 or > 9999
-            || status != CoachingEducationStatus.Graduate && graduationYear.HasValue
+            || !IsGraduate(status) && graduationYear.HasValue
             || graduationYear > DateTime.UtcNow.Year)
             throw new ArgumentException("Geçerli eğitim durumu ve sınıf bilgisi belirtin.");
-        var school = ProfileValue.Text(schoolName, 255);
-        var city = ProfileValue.Text(schoolCity, 100);
-        var district = ProfileValue.Text(schoolDistrict, 100);
-        var type = ProfileValue.Text(schoolType, 100);
-        var branch = ProfileValue.Text(classBranch, 30);
+        var student = status == CoachingEducationStatus.Student;
+        var school = student ? ProfileValue.Text(schoolName, 255) : null;
+        var city = student ? ProfileValue.Text(schoolCity, 100) : null;
+        var district = student ? ProfileValue.Text(schoolDistrict, 100) : null;
+        var type = student ? ProfileValue.Text(schoolType, 100) : null;
+        var branch = student ? ProfileValue.Text(classBranch, 30) : null;
         EducationStatus = status; GradeLevel = gradeLevel; GraduationYear = graduationYear;
         SchoolName = school; SchoolCity = city; SchoolDistrict = district; SchoolType = type; ClassBranch = branch;
         UpdatedAt = DateTime.UtcNow;

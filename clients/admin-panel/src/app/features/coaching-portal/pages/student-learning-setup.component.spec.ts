@@ -56,7 +56,7 @@ describe('StudentLearningSetupComponent', () => {
     expect(component.step()).toBe('Purpose');
     expect(component.purposeChoices().map(x => x.value)).toEqual(['Yks', 'Yds', 'Yokdil']);
     const note = fixture.nativeElement.querySelector('[data-testid="grade-purpose"]') as HTMLElement;
-    expect(note.textContent).toContain('Seçili sınavın sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.');
+    expect(note.textContent).toContain('Seçili sınavın eğitim durumuna ya da sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.');
     // Without the server's list every exam stays (older API).
     TestBed.resetTestingModule();
     const older = await setup();

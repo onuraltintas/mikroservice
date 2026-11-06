@@ -1,4 +1,4 @@
-import { EDUCATION_STAGES, educationLabel, educationRequest, gradesFor, isStudentStage, stageOf } from './coaching-education';
+import { EDUCATION_STAGES, educationDetail, educationLabel, educationRequest, gradesFor, isStudentStage, stageOf } from './coaching-education';
 
 // E3 #14 (user decision 06.11.2026): one place for the education statuses shown by the wizard, Profilim and the staff pages.
 describe('coaching education statuses', () => {
@@ -34,5 +34,9 @@ describe('coaching education statuses', () => {
     expect(educationLabel(4, null)).toBe('Üniversite mezunu');
     expect(educationLabel(undefined, null)).toBe('Sınıf bilgisi yok');
     expect(educationLabel('Unknown', null, 'Koçluk öğrencisi')).toBe('Koçluk öğrencisi');
+    expect(educationDetail('Student', 10)).toBe('Lise öğrencisi, 10. sınıf');
+    expect(educationDetail(1, 6)).toBe('Ortaokul öğrencisi, 6. sınıf');
+    expect(educationDetail('UniversityGraduate', null)).toBe('Üniversite mezunu');
+    expect(educationDetail('Unknown', null)).toBe('Belirtilmedi');
   });
 });

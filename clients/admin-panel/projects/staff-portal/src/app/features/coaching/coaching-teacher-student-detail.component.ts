@@ -1,4 +1,5 @@
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
+import { educationLabel } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { CommonModule } from '@angular/common';
 import { moveTabFocus } from '../../navigation/staff-tablist';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -38,6 +39,8 @@ import {
   styleUrl: './coaching-teacher-student-detail.component.scss'
 })
 export class CoachingTeacherStudentDetailComponent implements OnInit {
+  /** E3 #14: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi" … */
+  readonly educationLabel = educationLabel;
   // Roadmap D5: the student's study streak and badges.
   readonly motivationApi = new CoachingMotivationApi(inject(HttpClient), environment.apiUrl);
   readonly moveTabFocus = moveTabFocus;

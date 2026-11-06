@@ -32,7 +32,8 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     { value: 'Friday', label: 'Cuma' }, { value: 'Saturday', label: 'Cumartesi' }, { value: 'Sunday', label: 'Pazar' }
   ];
   version: number | null = null;
-  timeZoneId = 'Europe/Istanbul';
+  /** E3 #34: every study time is Türkiye time (the server ignores the zone; an older API still expects the field). */
+  readonly timeZoneId = 'Europe/Istanbul';
   rows: AvailabilityRow[] = [];
   dirty = false;
 
@@ -97,7 +98,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     this.saving.set(true);
     this.error.set(null);
     this.success.set(null);
-    this.service.saveAvailability({ expectedVersion: this.version, timeZoneId: this.timeZoneId.trim(), windows })
+    this.service.saveAvailability({ expectedVersion: this.version, timeZoneId: this.timeZoneId, windows })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
       .subscribe({ next: preferences => { this.apply(preferences); this.success.set('Çalışma saatlerin kaydedildi. Aktif planın değişmedi.'); this.saved.emit(); },
         error: error => this.showError(error, 'Çalışma saatleri kaydedilemedi. Değişikliklerin ekranda korundu.') });
@@ -109,7 +110,6 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   }
 
   private validatedWindows(): StudyWindow[] {
-    if (!this.timeZoneId.trim() || this.timeZoneId.length > 100) throw new Error('Geçerli bir saat dilimi gir.');
     if (this.rows.length > 42) throw new Error('En fazla 42 saat aralığı eklenebilir.');
     const windows = this.rows.map(row => ({ day: row.day, startMinute: this.minute(row.start), endMinute: row.endOfDay ? 1440 : this.minute(row.end) }));
     if (windows.some(row => !this.days.some(day => day.value === row.day) || !Number.isFinite(row.startMinute)
@@ -134,7 +134,6 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   private apply(preferences: StudyAvailability | null) {
     this.lastSaved = preferences;
     this.version = preferences?.version ?? null;
-    this.timeZoneId = preferences?.timeZoneId ?? 'Europe/Istanbul';
     this.rows = (preferences?.windows ?? []).map(row => ({ day: row.day, start: this.clock(row.startMinute),
       end: row.endMinute === 1440 ? '00:00' : this.clock(row.endMinute), endOfDay: row.endMinute === 1440 }));
     this.dirty = false;

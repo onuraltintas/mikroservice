@@ -55,6 +55,7 @@ public sealed class StudyPlanRevision : AggregateRoot
     {
         if(Status!=StudyPlanStatus.Draft||source.DraftVersion<0||source.EndDate<source.StartDate||string.IsNullOrEmpty(source.Fingerprint))
             throw new ArgumentException("Geçerli haftalık plan kaynağı gereklidir.");
+        CoachingTime.RequireTurkey(source.TimeZoneId); // E3 #34
         WeeklySource=source;
     }
 
@@ -353,7 +354,7 @@ public sealed class StudyPlanTask : AggregateRoot
 }
 
 public sealed record WeeklyPlanSource(int DraftVersion,int? LearningContextVersion,DateOnly StartDate,DateOnly EndDate,bool ReuseFreedSlots,
-    string Fingerprint,Guid? ActiveRevisionId,int? ActiveRevisionVersion,string TimeZoneId="Europe/Istanbul");
+    string Fingerprint,Guid? ActiveRevisionId,int? ActiveRevisionVersion,string TimeZoneId=CoachingTime.ZoneId);
 public sealed record AutomaticOutcomeEvidence(Guid[] OutcomeIds,string Fingerprint);
 
 public sealed record StudyRealizationChange(DateTime At, Guid ActorUserId, string Action,

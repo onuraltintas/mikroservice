@@ -67,10 +67,11 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     const service = institutionService({ students: [student('student-1')], teachers: [teacher('teacher-1')] });
     const fixture = await createFixture(service); fixture.detectChanges();
     const component = fixture.componentInstance; (await component.selectSection('students')); (await component.startStudentEdit(student('student-1')));
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     const stage = fixture.nativeElement.querySelector('select[name="memberStage"]') as HTMLSelectElement;
     expect(Array.from(stage.options).map(x => x.textContent!.trim())).toEqual(['Ortaokul öğrencisi', 'Lise öğrencisi', 'Lise mezunu', 'Üniversite öğrencisi', 'Üniversite mezunu']);
-    component.editStudentStage = 'UniversityGraduate'; fixture.detectChanges();
+    stage.value = 'UniversityGraduate'; stage.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
+    expect(component.editStudentStage).toBe('UniversityGraduate');
     expect(fixture.nativeElement.querySelector('[name="memberGrade"]')).toBeNull();
     expect(fixture.nativeElement.querySelector('[data-testid="member-clears-school"]')!.textContent).toContain('sınıf, okul ve şube bilgisi silinir');
     const toaster = TestBed.inject(ToasterService) as unknown as { confirm: ReturnType<typeof vi.fn> };

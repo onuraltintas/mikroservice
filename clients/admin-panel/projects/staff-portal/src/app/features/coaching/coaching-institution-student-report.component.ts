@@ -1,4 +1,5 @@
 import { StudentScoreEstimateComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-score-estimate.component';
+import { educationLabel } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { CommonModule } from '@angular/common';
 import { moveTabFocus } from '../../navigation/staff-tablist';
 import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
@@ -24,6 +25,8 @@ import {
   styleUrl: './coaching-institution-student-report.component.scss'
 })
 export class CoachingInstitutionStudentReportComponent implements OnInit {
+  /** E3 #14: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi" … */
+  readonly educationLabel = educationLabel;
   readonly moveTabFocus = moveTabFocus;
   private readonly institutionService = inject(CoachingInstitutionService);
   private readonly destroyRef = inject(DestroyRef);

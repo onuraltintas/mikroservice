@@ -50,6 +50,8 @@ export interface CoachingStudentRosterItem {
   lastName: string;
   email: string;
   gradeLevel?: number | null;
+  /** E3 #14: shown where there is no grade ("Lise mezunu", "Üniversite öğrencisi" …). */
+  educationStatus?: string | null;
   teacherName?: string | null;
   teacherUserId?: string | null;
 }

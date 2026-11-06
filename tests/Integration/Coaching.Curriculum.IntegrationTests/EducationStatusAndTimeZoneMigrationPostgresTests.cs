@@ -75,15 +75,15 @@ public sealed class EducationStatusAndTimeZoneMigrationPostgresTests
         // Zones chosen on the old settings page (written as they were stored).
         await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_availability SET "TimeZoneId" = 'Europe/London' WHERE "StudentId" = {0}""", london);
         await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_weekly_drafts SET "TimeZoneId" = 'America/New_York' WHERE "StudentId" = {0}""", london);
-        foreach (var (id, number) in new[] { (plan, 1), (oldPlan, 2) })
+        foreach (var (id, owner) in new[] { (plan, london), (oldPlan, istanbul) })   // one draft plan per student
         {
-            var revision = Coaching.Domain.Entities.StudyPlanRevision.Create(london, Guid.NewGuid(), number, "Plan");
+            var revision = Coaching.Domain.Entities.StudyPlanRevision.Create(owner, Guid.NewGuid(), 1, "Plan");
             revision.SetWeeklySource(new(1, null, new(2026, 11, 9), new(2026, 11, 15), false, "f", null, null));
             f.Db.Add(revision); await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
             await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_plan_revisions SET "Id" = {0} WHERE "Id" = {1}""", id, revision.Id);
         }
         // A plan made in another zone, and an older snapshot from before the zone was recorded.
-        await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_plan_revisions SET "WeeklySource" = jsonb_set("WeeklySource", '{TimeZoneId}', '"Asia/Tokyo"') WHERE "Id" = {0}""", plan);
+        await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_plan_revisions SET "WeeklySource" = jsonb_set("WeeklySource", '{{TimeZoneId}}', '"Asia/Tokyo"') WHERE "Id" = {0}""", plan);
         await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_plan_revisions SET "WeeklySource" = "WeeklySource" - 'TimeZoneId' WHERE "Id" = {0}""", oldPlan);
 
         await f.Db.Database.MigrateAsync();

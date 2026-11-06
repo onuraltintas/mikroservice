@@ -8,7 +8,7 @@
       <p class="report-eyebrow">KOÇLUK · ÖĞRENCİ RAPORU</p>
       <h2 id="student-report-title">{{ student.fullName }}</h2>
       <p class="student-context">
-        {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}
+        {{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Sınıf bilgisi yok') }}
         @if (student.subject) { <span> · {{ student.subject }}</span> }
         @if (student.institutionName) { <span> · {{ student.institutionName }}</span> }
       </p>

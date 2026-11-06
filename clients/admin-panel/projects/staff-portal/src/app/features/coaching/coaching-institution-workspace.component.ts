@@ -1,4 +1,5 @@
 import { coachingToaster } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
+import { EDUCATION_STAGES, EducationStage, educationLabel, educationRequest, gradesFor, isStudentStage, stageOf } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -46,6 +47,16 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   readonly membershipError = signal<string | null>(null);
   readonly membershipSuccess = signal<string | null>(null);
   editStudentGrade: number | null = null;
+  /** E3 #14: the education status the institution sets ("" until chosen); a non-student status has no grade. */
+  editStudentStage: EducationStage | '' = ''; private editStudentSavedStage: EducationStage | '' = '';
+  readonly educationStages = EDUCATION_STAGES; readonly gradesFor = gradesFor; readonly isStudentStage = isStudentStage;
+  readonly educationLabel = educationLabel;
+  readonly memberClearsSchoolText = 'Öğrenci olmayan bir eğitim durumu seçilirse öğrencinin sınıf, okul ve şube bilgisi silinir.';
+  memberClearsSchool() { return isStudentStage(this.editStudentSavedStage) && this.editStudentStage !== '' && !isStudentStage(this.editStudentStage); }
+  changeStudentStage(stage: EducationStage | '') {
+    this.editStudentStage = stage; this.membershipDirty = true;
+    if (!gradesFor(stage).includes(Number(this.editStudentGrade))) this.editStudentGrade = null;
+  }
   editStudentTeacherId = '';
   membershipDirty = false;
 
@@ -58,17 +69,19 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   async startStudentEdit(student: CoachingInstitutionStudent): Promise<void> {
     if (!this.students().some(item => item.userId === student.userId) || !await this.canLeavePage()) return;
     this.editingStudentId.set(student.userId); this.editStudentGrade = student.gradeLevel ?? null;
+    this.editStudentStage = this.editStudentSavedStage = stageOf(student.educationStatus ?? (student.gradeLevel ? 'Student' : null), student.gradeLevel);
     // The teacher choice adds a teacher; existing links are listed in the row and ended one by one.
     this.editStudentTeacherId = ''; this.membershipDirty = false; this.membershipError.set(null);
   }
   cancelStudentEdit(): void {
     this.editingStudentId.set(null); this.membershipDirty = false;
   }
-  saveStudentEdit(): void {
-    const id = this.editingStudentId(); const grade = this.editStudentGrade;
+  async saveStudentEdit(): Promise<void> {
+    const id = this.editingStudentId(); const grade = this.editStudentGrade; const stage = this.editStudentStage;
     if (!id || this.isMembershipSaving()) return;
-    if (grade === null || !Number.isInteger(grade) || grade < 1 || grade > 12) {
-      this.membershipError.set('1–12 arasında geçerli bir sınıf seçin.'); return;
+    if (!stage) { this.membershipError.set('Öğrencinin eğitim durumunu seçin.'); return; }
+    if (isStudentStage(stage) && (grade === null || !Number.isInteger(grade) || !gradesFor(stage).includes(grade))) {
+      this.membershipError.set(stage === 'middle' ? '5–8 arasında geçerli bir sınıf seçin.' : '9–12 arasında geçerli bir sınıf seçin.'); return;
     }
     const original = this.students().find(student => student.userId === id);
     if (!original) return;
@@ -76,7 +89,9 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
       && !this.teacherFilterOptions().some(teacher => teacher.userId === this.editStudentTeacherId)) {
       this.membershipError.set('Kurum öğretmenlerinden birini seçin.'); return;
     }
-    this.changeMembership(this.institutionService.updateStudent(id, grade, this.editStudentTeacherId || null),
+    if (this.memberClearsSchool() && !await this.toaster.confirm(`${this.memberClearsSchoolText} Kaydedilsin mi?`)) return;
+    if (this.isMembershipSaving() || this.editingStudentId() !== id) return;
+    this.changeMembership(this.institutionService.updateStudent(id, educationRequest(stage, grade), this.editStudentTeacherId || null),
       this.editStudentTeacherId ? 'Öğrenci sınıfı güncellendi ve öğretmen eklendi.' : 'Öğrenci sınıfı güncellendi.', async () => {
       this.cancelStudentEdit(); await this.loadStudents();
     });

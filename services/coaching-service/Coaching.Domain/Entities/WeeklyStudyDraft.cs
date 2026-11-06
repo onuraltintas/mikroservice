@@ -9,7 +9,7 @@ public sealed record WeeklyDraftSlot(Guid Id, Guid LessonId, string LessonName, 
 public sealed class WeeklyStudyDraft : AggregateRoot
 {
     public Guid StudentId { get; private set; }
-    public string TimeZoneId { get; private set; } = "Europe/Istanbul";
+    public string TimeZoneId { get; private set; } = CoachingTime.ZoneId;
     private string SlotsJson { get; set; } = "[]";
     public IReadOnlyList<WeeklyDraftSlot> Slots => Array.AsReadOnly(JsonSerializer.Deserialize<WeeklyDraftSlot[]>(SlotsJson)!);
     private WeeklyStudyDraft() { }
@@ -20,7 +20,7 @@ public sealed class WeeklyStudyDraft : AggregateRoot
     }
     public void Replace(string timeZoneId,IReadOnlyList<WeeklyDraftSlot> slots)
     {
-        var zone=StudyCatalogText.Require(timeZoneId,100);TimeZoneInfo.FindSystemTimeZoneById(zone);
+        var zone=CoachingTime.RequireTurkey(timeZoneId);
         if (slots.Count > 336 || slots.Any(x=>x is null || x.Id==Guid.Empty || x.LessonId==Guid.Empty || !Enum.IsDefined(x.Day)
             || x.StartMinute is < 0 or > 1410 || x.StartMinute%30 != 0 || x.DurationMinutes is not (30 or 60) || x.StartMinute+x.DurationMinutes>1440)
             || slots.Select(x=>x.Id).Distinct().Count()!=slots.Count) throw new ArgumentException("Ders kartları 30/60 dakika olmalı ve yarım saatlerde başlamalıdır.");

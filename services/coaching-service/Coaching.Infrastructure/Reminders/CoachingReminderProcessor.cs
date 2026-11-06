@@ -40,8 +40,8 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
         finishedScans.Clear();
         var count = 0;
         var kind = overdue ? "StudyOverdue" : "StudyDay";
-        var zones = (await db.StudyAvailability.AsNoTracking().Select(x => x.TimeZoneId).Distinct().ToListAsync(ct))
-            .Append("Europe/Istanbul").Distinct().OrderBy(x => x, StringComparer.Ordinal);
+        // E3 #34 (06.11.2026): everyone is on Türkiye time; reminders are due at 09:00 in Istanbul.
+        var zones = new[] { Coaching.Domain.CoachingTime.ZoneId };
         foreach (var zoneId in zones)
         {
             var zone = TimeZoneInfo.FindSystemTimeZoneById(zoneId); var local = TimeZoneInfo.ConvertTime(now, zone);
@@ -52,9 +52,7 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
             var occurrence = date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
             var due = TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(new TimeOnly(9, 0)), zone);
             var plans = await (from plan in db.StudyPlanRevisions.AsNoTracking()
-                join hours in db.StudyAvailability.AsNoTracking() on plan.StudentId equals hours.StudentId into preferences
-                from hours in preferences.DefaultIfEmpty()
-                where plan.IsActive && (hours == null ? zoneId == "Europe/Istanbul" : hours.TimeZoneId == zoneId)
+                where plan.IsActive
                     && db.StudyPlanTasks.Any(task => task.RevisionId == plan.Id && task.StudentId == plan.StudentId
                         && !task.IsCompleted && task.SkippedAt == null && (overdue ? task.PlannedDate < date && task.PlannedDate >= since : task.PlannedDate == date))
                     && !db.CoachingReminderReceipts.Any(receipt => receipt.Kind == kind && receipt.SourceId == plan.Id
@@ -136,26 +134,22 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
         var financialDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul")).DateTime);
         var overdue = db.CoachingFeeAgreements.AsNoTracking().Where(fee => !fee.IsCancelled
             && (fee.Installments.Where(x => x.DueOn < financialDate).Sum(x => (decimal?)x.Amount) ?? 0m) > fee.PaidAmount);
-        var zones = (await db.StudyAvailability.AsNoTracking().Select(x => x.TimeZoneId).Distinct().ToListAsync(ct))
-            .Append("Europe/Istanbul").Distinct().OrderBy(x => x, StringComparer.Ordinal);
+        // E3 #34 (06.11.2026): everyone is on Türkiye time; reminders are due at 09:00 in Istanbul.
+        var zones = new[] { Coaching.Domain.CoachingTime.ZoneId };
         foreach (var zoneId in zones) {
             var zone = TimeZoneInfo.FindSystemTimeZoneById(zoneId); var local = TimeZoneInfo.ConvertTime(now, zone);
             if (local.Hour < 9) continue;
             var date = DateOnly.FromDateTime(local.DateTime); var occurrence = date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
             var due = TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(new TimeOnly(9, 0)), zone);
             var students = await (from fee in overdue
-                join hours in db.StudyAvailability.AsNoTracking() on fee.StudentId equals hours.StudentId into preferences
-                from hours in preferences.DefaultIfEmpty()
-                where (hours == null ? zoneId == "Europe/Istanbul" : hours.TimeZoneId == zoneId)
-                    && !db.CoachingReminderReceipts.Any(receipt => receipt.Kind == "FeeOverdue" && receipt.SourceId == fee.StudentId
+                where !db.CoachingReminderReceipts.Any(receipt => receipt.Kind == "FeeOverdue" && receipt.SourceId == fee.StudentId
                         && receipt.RecipientUserId == fee.StudentId && receipt.OccurrenceKey == occurrence)
                 select fee.StudentId).Distinct().OrderBy(x => x).Take(BatchSize - count).ToListAsync(ct);
             foreach (var student in students) {
                 var studyKey = "coaching-study-plan:" + student; var financeKey = "coaching-finance:" + student;
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({studyKey}, 0))", ct);
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({financeKey}, 0))", ct);
-                var currentZone = await db.StudyAvailability.AsNoTracking().Where(x => x.StudentId == student).Select(x => x.TimeZoneId).SingleOrDefaultAsync(ct) ?? "Europe/Istanbul";
-                if (currentZone != zoneId || !await overdue.AnyAsync(x => x.StudentId == student, ct)) continue;
+                if (!await overdue.AnyAsync(x => x.StudentId == student, ct)) continue;
                 if (await QueueAsync(CoachingReminderReceipt.Create(student, student, "FeeOverdue", occurrence, due, now.UtcDateTime), ct)) count++;
                 if (count == BatchSize) break;
             }
