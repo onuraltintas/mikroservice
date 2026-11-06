@@ -101,9 +101,17 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
     fixture.detectChanges(); await fixture.whenStable();
     component.openSchoolPicker(); fixture.detectChanges(); await fixture.whenStable();
-    component.changeSchoolCity(); fixture.detectChanges(); await fixture.whenStable();
+    const box = () => fixture.nativeElement.querySelector('[data-testid="own-school"] input[role="combobox"]') as HTMLInputElement;
+    // Review L8: the focus follows the picker, from the school list to the city list and back.
+    await new Promise(resolve => setTimeout(resolve)); expect(document.activeElement).toBe(box());
+    (Array.from(fixture.nativeElement.querySelectorAll('[data-testid="own-school"] button')).find(x => (x as HTMLElement).textContent?.includes('Şehri değiştir')) as HTMLElement).click();
+    fixture.detectChanges(); await fixture.whenStable();
     http.expectOne('/api/coaching/students/me/onboarding/options/schools/cities').flush({ data: [{ value: 'ANKARA', label: 'Ankara', count: 3 }] });
+    await new Promise(resolve => setTimeout(resolve)); expect(document.activeElement).toBe(box());
+    expect(box().getAttribute('aria-label')).toBe('Okulun hangi şehirde?');
     component.pickSchoolCity({ value: 'ANKARA', label: 'Ankara' }); fixture.detectChanges(); await fixture.whenStable();
+    await new Promise(resolve => setTimeout(resolve)); expect(document.activeElement).toBe(box());
+    expect(box().getAttribute('aria-label')).toBe('Okulunu listeden seç');
     await new Promise(resolve => setTimeout(resolve, 250));
     const list = http.expectOne(r => r.url === '/api/coaching/students/me/onboarding/options/schools');
     expect(list.request.params.get('city')).toBe('ANKARA'); expect(list.request.params.has('district')).toBe(false);

@@ -220,6 +220,43 @@ public sealed class CoachingProfileConsistencyTests
     }
 
     [Fact]
+    public async Task ANonGraduateWithAnAgsSetupIsToldToChooseAgain()
+    {
+        await using var s = await Setup.CreateAsync();
+        // An existing 11th grader with AGS saved before the rule (user decision 06.11.2026: AGS only for graduates).
+        var profile = await s.F.Db.CoachingStudentProfiles.SingleAsync(x => x.UserId == s.Student);
+        profile.UpdateEducation(CoachingEducationStatus.Student, 11, null, null, null, null, null, null);
+        foreach (var step in Enumerable.Range(1, CoachingStudentProfile.OnboardingStepCount - 1)) profile.RecordOnboardingStep(step);
+        profile.CompleteOnboarding(DateTime.UtcNow);
+        var context = StudentLearningContext.Create(s.Student, s.Year - 1, LearningPurpose.Ags, s.Year, null, null);
+        context.SetEducation(CoachingEducationStatus.Student, 11, null);
+        s.F.Db.Add(context); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+
+        (await s.Onboarding.GetAsync(default)).Status.Should().Be("Completed", "no wizard redirect");
+        var setup = await s.Settings.GetAsync(default);
+        (setup.PurposeNotForEducation, setup.IsReady).Should().Be((true, false));
+        setup.MissingFields.Should().Contain("Purpose");
+        setup.AllowedPurposes.Should().Equal(LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil);
+    }
+
+    [Fact]
+    public async Task TheWizardRefusesAnExamTheGradeDoesNotFitEvenWhenItIsAlreadySaved()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(8);
+        await s.Onboarding.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default);
+        // The grade changes to 11th: the exam step re-opens; resending the saved LGS (an old bundle, a direct call) is refused.
+        (await s.Personal(11)).NextStep.Should().Be(2);
+        var error = await Assert.ThrowsAsync<ArgumentException>(() =>
+            s.Onboarding.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default));
+        error.Message.Should().Be(LearningPurposes.PurposeNotForEducationNotice);
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            s.Onboarding.SaveExamAsync(new(LearningPurpose.Ags, null, null, null, s.Year, null, false), default));
+        var view = await s.Onboarding.GetAsync(default);
+        (view.NextStep, view.Answers.Purpose).Should().Be((2, (LearningPurpose?)LearningPurpose.Lgs), "nothing was written");
+    }
+
+    [Fact]
     public async Task OtherSettingsCanStillBeSavedWhileTheSavedExamDoesNotFit()
     {
         await using var s = await Setup.CreateAsync();
