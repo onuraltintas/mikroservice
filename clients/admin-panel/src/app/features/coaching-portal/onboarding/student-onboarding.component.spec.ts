@@ -532,6 +532,47 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       t.http.expectNone('/api/locations/provinces');
     });
 
+    // Paket F #35: Hedefim › "Hedefini düzenle" and /welcome?step=target flashed the first wizard question while the status loaded.
+    for (const [name, embedded, query] of [['embedded in Hedefim', true, {}], ['/welcome?step=target', false, { step: 'target' }]] as const) {
+      it(`${name}: only "Hazırlanıyor…" until the status and target load, never a wizard question`, async () => {
+        TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+          { provide: AuthService, useValue: { userProfile: signal({ id: 'student-1' }), logout: vi.fn() } },
+          ...(Object.keys(query).length ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } }] : [])] });
+        vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        const fixture = TestBed.createComponent(StudentOnboardingComponent);
+        if (embedded) fixture.componentRef.setInput('embedded', true);
+        fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+        expect(el.querySelector('[role="status"]')!.textContent).toContain('Hazırlanıyor…');
+        expect(el.querySelector('[data-question]')).toBeNull();
+        expect(el.querySelector('input')).toBeNull();
+        expect(el.textContent).not.toContain('Doğum tarihin ne?');
+        TestBed.inject(HttpTestingController).expectOne(base).flush({ data: view(completed, { ...stepTwo, target: school }) });
+        for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); }
+        expect(el.textContent).not.toContain('Hazırlanıyor…');
+        expect(el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi');
+        expect(el.textContent).not.toContain('Doğum tarihin ne?');
+      });
+    }
+
+    it('a status that cannot be loaded shows only the error with "Yeniden dene", which loads it again (#35)', async () => {
+      TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        { provide: AuthService, useValue: { userProfile: signal({ id: 'student-1' }), logout: vi.fn() } }] });
+      const fixture = TestBed.createComponent(StudentOnboardingComponent);
+      fixture.componentRef.setInput('embedded', true);
+      fixture.detectChanges();
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne(base).flush({ message: 'x' }, { status: 500, statusText: 'Server Error' });
+      for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); }
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-question]')).toBeNull();
+      expect(el.textContent).not.toContain('Doğum tarihin ne?');
+      (el.querySelector('.ob-error button') as HTMLElement).click();
+      http.expectOne(base).flush({ data: view(completed, { ...stepTwo, target: school }) });
+      for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); }
+      expect(el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi');
+    });
+
     it('a started change counts as unsaved (Hedefim asks before leaving)', async () => {
       const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
       expect(t.fixture.componentInstance.dirty()).toBe(false);
