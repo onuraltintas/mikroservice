@@ -17,6 +17,10 @@ public sealed class RateLimitRuleSetTests
     [InlineData("/api/auth/resend-verification-email", "POST", "auth-email", 5, 900)]
     [InlineData("/api/auth/reset-password", "POST", "auth-password-reset", 10, 900)]
     [InlineData("/api/auth/confirm-email", "POST", "auth-email-confirmation", 10, 900)]
+    // E5 (#22): the e-mail change link, and the signed-in account changes that check the current password.
+    [InlineData("/api/auth/confirm-email-change", "POST", "auth-email-confirmation", 10, 900)]
+    [InlineData("/api/users/me/email-change", "POST", "account-security", 10, 900)]
+    [InlineData("/api/users/me/change-password", "POST", "account-security", 10, 900)]
     [InlineData("/api/auth/coaching/register/student", "POST", "auth-registration", 15, 60)]
     [InlineData("/api/auth/coaching/register/join", "POST", "auth-registration", 15, 60)]
     [InlineData("/api/auth/speed-reading/register/join", "POST", "auth-registration", 15, 60)]
@@ -59,6 +63,8 @@ public sealed class RateLimitRuleSetTests
     [InlineData("/api/speed-reading/cms/newsletter/unsubscribe-info", "GET")]
     [InlineData("/api/coaching/cms/newsletter/subscriptions", "GET")]
     [InlineData("/api/users/me", "GET")]
+    [InlineData("/api/users/me", "PUT")]
+    [InlineData("/api/users/me/email-change", "DELETE")]
     [InlineData("/health", "GET")]
     [InlineData("/api/authorities", "GET")]
     public void Unlisted_requests_have_no_route_rule(string path, string method)
@@ -75,6 +81,14 @@ public sealed class RateLimitRuleSetTests
         var newsletter = ruleSet.Match("POST", "/api/speed-reading/cms/newsletter/subscribe");
 
         contact!.Name.Should().Be(newsletter!.Name);
+    }
+
+    // E5 (#22): the account changes are limited per signed-in user, so a shared school network is not one budget.
+    [Fact]
+    public void Account_security_rule_is_counted_per_user()
+    {
+        new RateLimitRuleSet(Shipped.Rules).Match("POST", "/api/users/me/email-change")!
+            .Partition.Should().Be(RateLimitPartitionKind.User);
     }
 
     [Fact]

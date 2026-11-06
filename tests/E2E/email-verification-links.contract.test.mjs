@@ -93,3 +93,22 @@ test('production sends speed-reading links to masterhizliokuma.com', () => {
   assert.match(compose, /PublicApp__SpeedReadingBaseUrl: \$\{SPEED_READING_PUBLIC_BASE_URL:-/);
   assert.match(options, /SpeedReadingBaseUrl[\s\S]*IsSpeedReadingProduct\(role, product\) && IsValidBaseUrl\(SpeedReadingBaseUrl\)/);
 });
+
+// E5 (#22): the e-mail change link opens the admin-panel page (Coaching site; management: the admin panel) that reads
+// exactly the names the link carries, and that page is not one of the blocked management paths on onuraltintas.net.
+test('e-mail change links open the confirm-email-change page with the names it reads', () => {
+  const path = constant('EmailChangeConfirmationPath');
+  assert.equal(path, '/auth/confirm-email-change');
+  const routes = read('clients/admin-panel/src/app/features/auth/auth.routes.ts');
+  assert.match(routes, /path: 'confirm-email-change'[\s\S]{0,200}confirm-email-change\.component/);
+  const component = read('clients/admin-panel/src/app/features/auth/confirm-email-change/confirm-email-change.component.ts');
+  const names = [...component.matchAll(/queryParamMap\.get\('([^']+)'\)/g)].map(m => m[1]).sort();
+  assert.deepEqual(names, ['token', 'userId']);
+  assert.deepEqual(queryNames(linkTemplate('EmailChangeConfirmationPath')), names);
+  // The link always goes to an admin-panel origin: the speed-reading app has no such page.
+  assert.match(options, /BuildEmailChangeLink[\s\S]{0,300}ResolveBaseUrl\(role, "coaching"\)/);
+  const caddy = read('infrastructure/caddy/Caddyfile.production.litespeed');
+  const site = /onuraltintas\.net:80, www\.onuraltintas\.net:80 \{([\s\S]*?)\n\}/.exec(caddy)[1];
+  const blocked = [...site.matchAll(/@management path ([^\n]+)/g)].map(m => m[1]).join(' ').split(/\s+/);
+  assert.ok(!blocked.some(prefix => path.startsWith(prefix.replace('/*', '/')) || path === prefix));
+});

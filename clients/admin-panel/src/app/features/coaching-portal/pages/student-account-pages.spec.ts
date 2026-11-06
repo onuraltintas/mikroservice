@@ -70,6 +70,9 @@ describe('Profil ve ayarlar sections', () => {
     expect(el.querySelector('app-student-teachers')).not.toBeNull();
     expect(el.querySelector('app-student-parent-links')).not.toBeNull();
     expect(el.textContent).not.toContain('←');
+    // E5 (#22): the sentence about name, e-mail and password points to the Hesabım tab.
+    const link = el.querySelector<HTMLAnchorElement>('edu-coaching-profile a[href="/coaching-portal/account/settings/account"]');
+    expect(link?.textContent?.trim()).toBe('Hesabım');
   });
 });
 
