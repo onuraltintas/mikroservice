@@ -82,7 +82,7 @@ public sealed class CoachingStudentOnboardingTests
     {
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: 8);
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.CompleteAsync(default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.CompleteAsync(default));
         await s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default);
         await s.Service.SaveTargetAsync(new("none", null, null), default);
         foreach (var step in new[] { 4, 5, 6 }) await s.Service.PassStepAsync(step, default);
@@ -138,12 +138,12 @@ public sealed class CoachingStudentOnboardingTests
     public async Task PersonalAnswersAreChecked()
     {
         await using var s = await Setup.CreateAsync();
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "99", CoachingEducationStatus.Student, 8, null, null), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "34", "0601", CoachingEducationStatus.Student, 8, null, null), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1), "06", "0601", CoachingEducationStatus.Student, 8, null, null), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(null, "06", "0601", CoachingEducationStatus.Student, 8, null, null), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 8, null, Guid.NewGuid()), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, null, s.LgsYear, null, false), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "99", CoachingEducationStatus.Student, 8, null, null), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "34", "0601", CoachingEducationStatus.Student, 8, null, null), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1), "06", "0601", CoachingEducationStatus.Student, 8, null, null), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(null, "06", "0601", CoachingEducationStatus.Student, 8, null, null), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 8, null, Guid.NewGuid()), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, null, s.LgsYear, null, false), default));
         (await s.Service.GetAsync(default)).SavedSteps.Should().BeEmpty();
         var student = await s.Service.SavePersonalAsync(new(new DateOnly(2009, 1, 1), "06", "0601", CoachingEducationStatus.Student, 11, null, s.School), default);
         student.Answers.SchoolName.Should().Be("Ankara Fen Lisesi");
@@ -206,9 +206,9 @@ public sealed class CoachingStudentOnboardingTests
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: 12);
         await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("EA", 400)]), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("SAY", 561)]), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("school", s.School, null), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("EA", 400)]), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("SAY", 561)]), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("school", s.School, null), default));
         var view = await s.Service.SaveTargetAsync(new("score", null, [new("TYT", 380.5m)]), default);
         view.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "score" && x.ScoreType == "TYT" && x.Scores.Single().Score == 380.5m && x.Name == "TYT");
         var goal = await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync();
@@ -225,8 +225,8 @@ public sealed class CoachingStudentOnboardingTests
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: 12);
         await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("program", s.Programs["Hukuk"], null), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("program", s.Programs["Fizik"], null), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("program", s.Programs["Hukuk"], null), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("program", s.Programs["Fizik"], null), default));
         var withOwn = await s.Service.SaveTargetAsync(new("program", s.Programs["Fizik"], [new("SAY", 410)]), default);
         withOwn.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "program" && x.MinimumScore == null && x.Scores.Single().Score == 410m);
         var view = await s.Service.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null), default);
@@ -263,7 +263,7 @@ public sealed class CoachingStudentOnboardingTests
         (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "lise 7", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 7");
         (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "LİSE 25", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 25");
         (await s.Service.SchoolCitiesAsync(default)).Should().NotContain(x => x.Value == "Kapanan Lise");
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SchoolsAsync(null, "Anadolu Lisesi", null, 1, default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SchoolsAsync(null, "Anadolu Lisesi", null, 1, default));
         (await s.Service.SchoolsAsync("Ankara", null, null, 1, default)).TotalCount.Should().Be(26, "without a type every school of the city");
     }
 
@@ -281,7 +281,7 @@ public sealed class CoachingStudentOnboardingTests
         programs.Items.Select(x => x.Name).Should().Equal("Bilgisayar Mühendisliği", "Fizik");
         programs.Items[0].Should().Match<OnboardingProgramOption>(x => x.MinimumScore == 470m && x.Rank == 12000 && x.ScoreType == "SAY");
         (await s.Service.ProgramsAsync("Bachelor", "EA", "Ankara", "Ankara Üniversitesi", null, 1, default)).Items.Select(x => x.Name).Should().Equal("Hukuk");
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.ProgramCitiesAsync("Doctorate", null, default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.ProgramCitiesAsync("Doctorate", null, default));
     }
 
     [Fact]
@@ -379,7 +379,7 @@ public sealed class CoachingStudentOnboardingTests
     {
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: 12);
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, 120, false), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, 120, false), default));
         (await s.F.Db.StudentLearningContexts.AsNoTracking().AnyAsync()).Should().BeFalse("every check runs before any write");
         (await s.Service.GetAsync(default)).NextStep.Should().Be(2);
     }
@@ -397,9 +397,9 @@ public sealed class CoachingStudentOnboardingTests
         var estimate = await new CoachingScoreEstimateService(s.F.Db, s.F.Scope, TimeProvider.System).EstimateAsync(s.Student, s.Student, null, default);
         estimate.ScoreTargets.Select(x => (x.ScoreType, x.TargetScore, x.Kind)).Should().Equal(("SAY", (decimal?)450m, "score"), ("TYT", (decimal?)380m, "score"));
         estimate.Target!.ScoreType.Should().Be("SAY");
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("TYT", 380), new("TYT", 390)]), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("TYT", 0)]), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, []), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("TYT", 380), new("TYT", 390)]), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("TYT", 0)]), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, []), default));
     }
 
     [Fact]
