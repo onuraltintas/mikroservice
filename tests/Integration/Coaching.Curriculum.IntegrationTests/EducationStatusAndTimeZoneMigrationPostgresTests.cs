@@ -98,7 +98,7 @@ public sealed class EducationStatusAndTimeZoneMigrationPostgresTests
         await Assert.ThrowsAnyAsync<Exception>(() => f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_availability SET "TimeZoneId" = 'UTC'"""));
         await Assert.ThrowsAnyAsync<Exception>(() => f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_weekly_drafts SET "TimeZoneId" = 'UTC'"""));
         await Assert.ThrowsAnyAsync<Exception>(() => f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_plan_revisions SET "WeeklySource" = jsonb_set("WeeklySource", '{TimeZoneId}', '"UTC"')"""));
-        // Down only lifts the constraints (the zones stay Istanbul); Up again changes nothing.
+        // Down only lifts the constraints and keeps the zones in Istanbul; a zone written while rolled back is moved to Istanbul again by Up.
         await f.Db.GetService<IMigrator>().MigrateAsync(Previous);
         await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.study_availability SET "TimeZoneId" = 'UTC' WHERE "StudentId" = {0}""", istanbul);
         await f.Db.Database.MigrateAsync();

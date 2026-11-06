@@ -11,7 +11,7 @@ const read = path => readFile(new URL(`../../${path}`, import.meta.url), 'utf8')
 const published = await read('docs/legal/publish-kvkk-coaching-wizard-20261106.sql');
 const sql = await read('docs/legal/publish-kvkk-coaching-education-20261107.sql');
 const content = (source, slug) => {
-  const match = source.match(new RegExp(`\\('${slug}','[^']*',\\$legal\\$([\\s\\S]*?)\\$legal\\$\\)`));
+  const match = source.match(new RegExp(`\\('${slug}','[^']*',(?:replace\\()?\\$legal\\$([\\s\\S]*?)\\$legal\\$`));
   assert.ok(match, `${slug} text missing`);
   return match[1];
 };
@@ -26,7 +26,8 @@ test('the refusal compares with the published version 2 text, word for word', ()
 });
 
 test('the education sentences name the new statuses accurately', () => {
-  assert.match(v3, /^7 Kasım 2026 — /);
+  // Review L8: the date line is the publish day, filled in when the user approves publication.
+  assert.match(v3, /^__YAYIN_GÜNÜ__ — /);
   assert.doesNotMatch(v3, /Sınıf ya da mezun olma durumu/);
   assert.match(v3, /Eğitim durumu \(ortaokul ya da lise öğrencisi, lise mezunu, üniversite öğrencisi ya da üniversite mezunu\) ve öğrenciyse sınıfı/);
   assert.match(v3, /öğrenci olmayan bir eğitim durumu seçildiğinde kayıtlı sınıf, okul ve şube silinir/);
@@ -49,6 +50,14 @@ test('everything else in the version 2 text stays', () => {
   // Inside the changed paragraph only the education sentences differ.
   for (const sentence of paragraphs[changed].split('. ').filter(x => !/[Ss]ınıf|mezun|diploma notu sorusu|sınavını yeniden/.test(x)))
     assert.ok(v3.includes(sentence), `dropped sentence: ${sentence.slice(0, 60)}…`);
+});
+
+test('the date line must be set to the publish day before it runs', () => {
+  assert.match(sql, /^\\set publish_day 'GG Ay YYYY'$/m);
+  assert.match(sql, /replace\(\$legal\$__YAYIN_GÜNÜ__ — /);
+  assert.match(sql, /'__YAYIN_GÜNÜ__', :'publish_day'\)/);
+  // It refuses, changing nothing, until the day is a real Turkish date.
+  assert.match(sql, /RAISE EXCEPTION 'Set publish_day/);
 });
 
 test('it is published like the earlier legal texts and changes only the text', () => {

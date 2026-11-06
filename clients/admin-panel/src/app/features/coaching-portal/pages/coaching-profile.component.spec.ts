@@ -321,6 +321,24 @@ describe('Coaching owned profile', () => {
     expect(component.stage).toBe('UniversityStudent'); http.verify();
   });
 
+  // E3 review L4: the stored school is a lise; an ortaokul grade drops it after the same warning.
+  it('warns and drops the lise when the student switches to ortaokul', async () => {
+    const { fixture, component, http } = await setup();
+    const student = { version: 2, educationStatus: 'Student', gradeLevel: 9, shareProgressWithTeachers: true, isActive: true,
+      schoolName: 'Ankara Fen Lisesi', schoolCity: 'ANKARA', schoolType: 'Fen Lisesi', classBranch: '9-A' };
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    component.changeStage('middle'); component.student!.gradeLevel = 8; fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[data-testid="education-clears-school"]')!.textContent).toContain('kayıtlı okulun ve şuben silinecek');
+    const confirm = TestBed.inject(ToasterService).confirm as ReturnType<typeof vi.fn>;
+    await component.save();
+    expect(confirm.mock.calls.at(-1)![0]).toContain('kayıtlı okulun ve şuben silinecek');
+    const request = http.expectOne('/api/coaching/profiles/me/student');
+    expect(request.request.body).toMatchObject({ educationStatus: 'Student', gradeLevel: 8, schoolName: null, schoolCity: null, schoolType: null, classBranch: null });
+    expect(request.request.body.schoolId).toBeUndefined();
+  });
+
   it('shows a university graduate as such and asks the graduation year', async () => {
     const { fixture, http } = await setup();
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'UniversityGraduate', gradeLevel: null, graduationYear: 2020, shareProgressWithTeachers: true, isActive: true } } });

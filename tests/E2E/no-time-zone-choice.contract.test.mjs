@@ -45,3 +45,16 @@ test('course management uses Türkiye time for lesson series and teacher hours',
   assert.doesNotMatch(endpoints, /InvalidTimeZone/);
   assert.match(endpoints, /CourseManagementTime\.ZoneId/);
 });
+
+// E3 review L5, L6: no leftover zone text; an older series in another zone is told it is read as Türkiye time.
+test('no leftover time zone text on the pages', async () => {
+  const tracking = await read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-tracking.component.html');
+  assert.doesNotMatch(tracking, /item\.timeZoneId/);
+  for (const file of clientFiles) assert.doesNotMatch(await read(file), /Geçerli bir saat dilimi/, file);
+  const workspace = await read('clients/admin-panel/projects/staff-portal/src/app/features/course-management/course-management-workspace.component.html');
+  assert.match(workspace, /data-testid="series-zone-notice"/);
+  assert.match(workspace, /Türkiye saatine göre/);
+  const component = await read('clients/admin-panel/projects/staff-portal/src/app/features/course-management/course-management-workspace.component.ts');
+  assert.match(component, /turkeyDefaults\(/);
+  assert.doesNotMatch(component, /setHours\(/);
+});
