@@ -29,7 +29,16 @@ public sealed record CoachingParentReadAuthorization(Guid RelationshipId, string
 public sealed record UpdateCoachingStudentProfile(int ExpectedVersion, CoachingEducationStatus EducationStatus,
     int? GradeLevel, string? SchoolName, string? SchoolCity, string? SchoolDistrict, string? SchoolType,
     string? ClassBranch, int? GraduationYear, DateOnly? BirthDate, string? Bio, string? AvatarUrl,
-    bool ShareProgressWithTeachers);
+    bool ShareProgressWithTeachers)
+{
+    /// <summary>Paket C (#5, KVKK m.11): the home city and district from the shared location directory; null keeps them.</summary>
+    public string? HomeProvinceId { get; init; }
+    public string? HomeDistrictId { get; init; }
+    /// <summary>Paket C: a new YKS diploma grade (50–100); ClearDiplomaGrade removes it; neither keeps it.</summary>
+    public decimal? DiplomaGrade { get; init; }
+    public bool DiplomaGradeEstimated { get; init; }
+    public bool ClearDiplomaGrade { get; init; }
+}
 
 public sealed record UpdateCoachingTeacherProfile(int ExpectedVersion, string? Title,
     IReadOnlyList<string> Subjects, int? ExperienceYears, string? Bio, string? AvatarUrl);

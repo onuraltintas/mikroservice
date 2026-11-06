@@ -73,6 +73,8 @@ export interface ScoreEstimate {
   notComputed?: ScoreTypeNotComputed[];
   /** Paket B: absent in older responses. */
   goal?: ScoreGoalEstimate | null;
+  /** Paket C (#4): every target score set without a school or programme (YKS: TYT and the field's); `target` is the main one. */
+  scoreTargets?: ScoreTargetGap[];
 }
 
 /** KM4 (01.11.2026): the yearly models are derived from official statistics, so every view labels the estimate approximate. */

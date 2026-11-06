@@ -83,6 +83,11 @@ public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, S
     /// the student has no exam purpose. Score is null until there is a practice exam (or when it is not computed).
     /// </summary>
     public ScoreGoalEstimate? Goal { get; init; }
+    /// <summary>
+    /// Paket C (#4): every target score the student set without a school or programme (YKS: TYT and the field's score type).
+    /// Target is the main one of them (the field's, else the only one). Empty for a school or programme target.
+    /// </summary>
+    public IReadOnlyList<ScoreTargetGap> ScoreTargets { get; init; } = [];
 }
 
 /// <summary>Paket B: what the home goal card needs about the student's own score (see ScoreEstimate.Goal).</summary>
@@ -290,11 +295,11 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
                   ?? await StudyPlanning.CoachingExamSessions.NextCatalogAsync(db, [LearningPurposes.CatalogExamCode(purpose.Value)!], today, ct);
             targetExam = target is null ? null : new(target.Name, target.Date, target.Date.DayNumber - today.DayNumber, target.Source);
         }
-        var purposeScoreType = GoalScoreType(purpose, context?.PrimaryScoreType, null);
         if (models.Count == 0 && purpose is not (LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil))
         {
-            var bare = await TargetAsync(studentId, [], [], models, purposeScoreType, ct);
-            return new([], bare, "Puan tahmini verisi henüz yüklenmedi.") { Goal = Goal(GoalScoreType(purpose, context?.PrimaryScoreType, bare), [], [], [], [], []) };
+            var (bare, bareScores) = await TargetAsync(studentId, [], [], models, purpose, context?.PrimaryScoreType, ct);
+            return new([], bare, "Puan tahmini verisi henüz yüklenmedi.")
+                { Goal = Goal(GoalScoreType(purpose, context?.PrimaryScoreType, bare), [], [], [], [], []), ScoreTargets = bareScores };
         }
 
         // K4 (31.10.2026): exams dated in the future do not count, and a student's own copy of a deneme that their institution
@@ -354,9 +359,10 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
                 type.UsesDiplomaGrade && diplomaGrade is not null)
                 { Group = type.Group, Margin = model.UncertaintyShare > 0 ? margin : null, ScaleMin = type.MinScore, ScaleMax = type.MaxScore });
         }
-        var goalTarget = await TargetAsync(studentId, estimates, language, models, purposeScoreType, ct);
-        if (goalTarget is not null && notComputed.Any(x => x.ScoreType == goalTarget.ScoreType))
-            goalTarget = goalTarget with { NotComputedReason = MinRawScoreRules.Reason };
+        var (goalTarget, scoreTargets) = await TargetAsync(studentId, estimates, language, models, purpose, context?.PrimaryScoreType, ct);
+        ScoreTargetGap? Mark(ScoreTargetGap? gap) => gap is not null && notComputed.Any(x => x.ScoreType == gap.ScoreType) ? gap with { NotComputedReason = MinRawScoreRules.Reason } : gap;
+        goalTarget = Mark(goalTarget);
+        scoreTargets = scoreTargets.Select(x => Mark(x)!).ToArray();
         var hasAgsModel = models.Values.Any(x => ScoreModelRules.Get(x.ScoreType).Group == ScoreModelRules.MebAgs);
         var notice = estimates.Count > 0 || notComputed.Count > 0 || language.Length > 0 ? null
             : purpose == LearningPurpose.Ags && !hasAgsModel ? "AGS ve ÖABT için puan tahmini henüz yok. Netlerini Denemeler bölümünden izleyebilirsin."
@@ -365,7 +371,7 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             : models.Count == 0 ? "Puan tahmini verisi henüz yüklenmedi."
             : "Tahmin için en az bir LGS ya da YKS denemesini ders ders gir.";
         var goal = Goal(GoalScoreType(purpose, context?.PrimaryScoreType, goalTarget), estimates, notComputed, language, models.Keys.ToArray(), exams.Keys.ToArray());
-        return new(estimates, goalTarget, notice) { LanguageScores = language, TargetExam = targetExam, NotComputed = notComputed, Goal = goal };
+        return new(estimates, goalTarget, notice) { LanguageScores = language, TargetExam = targetExam, NotComputed = notComputed, Goal = goal, ScoreTargets = scoreTargets };
     }
 
     /// <summary>Paket B: the score type (or YDS / YÖKDİL practice scope) the student works towards; null without an exam purpose.</summary>
@@ -407,38 +413,42 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
         };
     }
 
-    private async Task<ScoreTargetGap?> TargetAsync(Guid studentId, IReadOnlyList<ScoreTypeEstimate> estimates, IReadOnlyList<LanguageScoreEstimate> language,
-        IReadOnlyDictionary<string, CoachingScoreModel> models, string? purposeScoreType, CancellationToken ct)
+    private async Task<(ScoreTargetGap? Main, IReadOnlyList<ScoreTargetGap> Scores)> TargetAsync(Guid studentId, IReadOnlyList<ScoreTypeEstimate> estimates,
+        IReadOnlyList<LanguageScoreEstimate> language, IReadOnlyDictionary<string, CoachingScoreModel> models, LearningPurpose? purpose, string? primaryScoreType,
+        CancellationToken ct)
     {
         var goalId = await db.Set<StudentPrimaryGoal>().AsNoTracking().Where(x => x.StudentId == studentId).Select(x => (Guid?)x.GoalId).FirstOrDefaultAsync(ct);
         var goal = goalId is null ? null : await db.AcademicGoals.AsNoTracking().SingleOrDefaultAsync(x => x.Id == goalId, ct);
         TargetCatalogEntry? entry = goal?.TargetSchoolId is { } schoolId ? await db.Set<TargetSchool>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == schoolId, ct)
             : goal?.TargetUniversityProgramId is { } programId ? await db.Set<TargetUniversityProgram>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == programId, ct)
             : null;
-        // Paket C (#3): the student's own target score, in its own score type (older targets: the purpose's score type).
-        var ownType = goal?.TargetScore is null ? null : TargetScoreType(goal.TargetScoreType) ?? purposeScoreType;
+        var own = goal?.ScoreTargets ?? [];
         if (entry is null)
         {
-            if (goal?.TargetScore is not { } wanted || ownType is null) return null;
-            var title = LanguageScoreRules.IsLanguageExam(ownType) ? PracticeExamRules.Profiles.Single(x => x.Code == ownType).Name : ScoreModelRules.Get(ownType).Name;
-            if (LanguageScoreRules.IsLanguageExam(ownType))
-            {
-                // YDS / YÖKDİL: ÖSYM's own rule, 1,25 points per correct answer; no ± and no rank.
-                var own = language.SingleOrDefault(x => x.ExamCode == ownType);
-                if (own is null) return new(title, ownType, wanted, null, null, null, null, null, false) { Kind = "score", OwnTargetScore = true };
-                var languageGap = Math.Round(wanted - own.Score, 2, MidpointRounding.AwayFromZero);
-                var languageReached = languageGap <= 0;
-                return new(title, ownType, wanted, null, null, languageGap, languageReached ? 0m : Math.Round(languageGap / 1.25m, 1, MidpointRounding.AwayFromZero),
-                    null, languageReached) { Kind = "score", OwnTargetScore = true, Status = languageReached ? "reached" : "below" };
-            }
-            return Gap(title, ownType, wanted, null, null, "score", null, true);
+            // Paket C (#3): the student's own target scores, each in its score type.
+            var scores = own.Select(x => TargetScoreType(x.ScoreType) is { } type ? ScoreGap(type, x.Score) : null).OfType<ScoreTargetGap>().ToArray();
+            if (scores.Length == 0 && goal?.TargetScore is { } legacy && LegacyScoreType(goal, purpose, primaryScoreType) is { } legacyType)
+                scores = [ScoreGap(legacyType, legacy)];
+            return (scores.FirstOrDefault(x => x.ScoreType != "TYT") ?? scores.FirstOrDefault(), scores);
         }
-        if (ScoreModelRules.Normalize(entry.ScoreType) is not { } scoreType) return null;
+        if (ScoreModelRules.Normalize(entry.ScoreType) is not { } scoreType) return (null, []);
         var name = entry is TargetUniversityProgram program ? $"{program.UniversityName} · {program.Name}" : entry.Name;
         var kind = entry is TargetSchool ? "school" : "program";
         // Paket C (#3): a programme without a published taban uses the target score the student entered for it.
-        var ownTaban = entry.MinimumScore is null && ownType == scoreType ? goal!.TargetScore : null;
-        return Gap(name, scoreType, entry.MinimumScore ?? ownTaban, entry.Rank, entry.Percentile, kind, entry.ScoreYear, ownTaban is not null);
+        var ownTaban = entry.MinimumScore is null ? own.FirstOrDefault(x => TargetScoreType(x.ScoreType) == scoreType)?.Score : null;
+        return (Gap(name, scoreType, entry.MinimumScore ?? ownTaban, entry.Rank, entry.Percentile, kind, entry.ScoreYear, ownTaban is not null), []);
+
+        ScoreTargetGap ScoreGap(string type, decimal wanted)
+        {
+            if (!LanguageScoreRules.IsLanguageExam(type)) return Gap(ScoreModelRules.Get(type).Name, type, wanted, null, null, "score", null, true);
+            // YDS / YÖKDİL: ÖSYM's own rule, 1,25 points per correct answer; no ± and no rank.
+            var title = PracticeExamRules.Profiles.Single(x => x.Code == type).Name;
+            var score = language.SingleOrDefault(x => x.ExamCode == type);
+            if (score is null) return new(title, type, wanted, null, null, null, null, null, false) { Kind = "score", OwnTargetScore = true };
+            var gap = Math.Round(wanted - score.Score, 2, MidpointRounding.AwayFromZero);
+            return new(title, type, wanted, null, null, gap, gap <= 0 ? 0m : Math.Round(gap / 1.25m, 1, MidpointRounding.AwayFromZero), null, gap <= 0)
+                { Kind = "score", OwnTargetScore = true, Status = gap <= 0 ? "reached" : "below" };
+        }
 
         ScoreTargetGap Gap(string name, string scoreType, decimal? taban, int? targetRank, decimal? targetPercentile, string kind, int? year, bool own)
         {
@@ -470,6 +480,28 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
     /// <summary>Paket C (#3): a stored target score type (a model score type or a YDS / YÖKDİL practice scope); unknown values give null.</summary>
     private static string? TargetScoreType(string? stored) =>
         stored is null ? null : LanguageScoreRules.IsLanguageExam(stored) && PracticeExamRules.Profiles.Any(x => x.Code == stored) ? stored : ScoreModelRules.Normalize(stored);
+
+    /// <summary>
+    /// Paket C review: an older target score (no score type stored) counts only when its score type is certain from the exam
+    /// purpose and it fits that type's scale: the goal's exam type is the purpose's, the purpose has one score type (YKS only
+    /// when the student prepares for TYT alone; AGS not for Din Kültürü, which has P2-16 and P2-17), the score is within the
+    /// scale and a stated scale equals it. Anything else (a Mock / Monthly goal, "TYT 400" on a SAY student) is ignored.
+    /// </summary>
+    private static string? LegacyScoreType(AcademicGoal goal, LearningPurpose? purpose, string? primaryScoreType)
+    {
+        var (examType, type) = purpose switch
+        {
+            LearningPurpose.Lgs => (Coaching.Domain.Enums.ExamType.LGS, "LGS"),
+            LearningPurpose.Yks => (Coaching.Domain.Enums.ExamType.YKS, primaryScoreType == "TYT" ? "TYT" : null),
+            LearningPurpose.Ags => (Coaching.Domain.Enums.ExamType.AGS, primaryScoreType == "OABT_DIN" ? null : ScoreModelRules.AgsTarget(primaryScoreType)),
+            LearningPurpose.Yds => (Coaching.Domain.Enums.ExamType.YDS, "YDS_EN"),
+            LearningPurpose.Yokdil => (Coaching.Domain.Enums.ExamType.YOKDIL, primaryScoreType),
+            _ => ((Coaching.Domain.Enums.ExamType)0, (string?)null)
+        };
+        if (type is null || goal.TargetExamType != examType || goal.TargetScore is not { } score) return null;
+        var max = LanguageScoreRules.IsLanguageExam(type) ? 100m : ScoreModelRules.Get(type).MaxScore;
+        return score <= max && (goal.TargetMaxScore is null || goal.TargetMaxScore == max) ? type : null;
+    }
 
     private static decimal Clamp(decimal value, ScoreTypeDefinition type) => Math.Round(Math.Clamp(value, type.MinScore, type.MaxScore), 2, MidpointRounding.AwayFromZero);
 

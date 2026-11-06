@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, scoreGroup, scoreTypeNote } from '../../../core/services/coaching-score-estimate.service';
 import { CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent } from '../ui';
 import { goalGauge, goalScore } from './growth-model';
+import { GoalCardComponent } from './goal-card.component';
 import { possessive } from '../parent/parent-model';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
@@ -19,13 +20,15 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 @Component({
   selector: 'app-student-goal-summary',
   standalone: true,
-  imports: [FormsModule, CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent],
+  imports: [FormsModule, CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent, GoalCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'cs-growth-goal' },
   template: `
     @if (error()) { <p class="cs-growth-alert" role="alert">{{ error() }} <button type="button" (click)="load()">Yeniden dene</button></p> }
     @if (loading() && !data()) { <div class="cs-growth-skeleton" role="status" [attr.aria-label]="parent() ? 'Hedef yükleniyor' : 'Hedefin yükleniyor'"></div> }
     @if (data(); as result) {
+      <!-- Paket C (#4): the parent's "…'in hedefi" card says the same as the student's Bugün card, in the third person. -->
+      @if (parent()) { <app-goal-card [estimate]="result" [childName]="name()" [title]="possessive(name()) + ' hedefi'" /> }
       @if (gauge(); as goal) {
         <cs-card tone="raised" class="cs-goal-hero" [attr.data-reached]="goal.reached" [attr.data-status]="goal.status">
           <p class="cs-goal-kicker">{{ parent() ? possessive(name()) + ' hedefi' : 'Hedefin' }} · {{ goal.scoreType }}@if (goal.label) { · <span data-testid="gauge-approximate">{{ goal.label }}</span> }</p>
@@ -50,12 +53,10 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
         </cs-card>
         <!-- Review 06.11.2026: LGS and YKS students can still choose a target school or programme. -->
         @if (card.group === 'LGS' || card.group === 'YKS') {
-          @if (parent()) { <p class="cs-growth-muted" data-testid="goal-target-hint">{{ name() }} henüz bir hedef seçmedi.</p> }
-          @else if (!readonly()) { <p class="cs-growth-muted" data-testid="goal-target-hint">Okulunu ya da bölümünü seçtiğinde ona ne kadar kaldığını da gösteririz.</p> }
+          <!-- The parent's goal card above already says that no target is chosen. -->
+          @if (!parent() && !readonly()) { <p class="cs-growth-muted" data-testid="goal-target-hint">Okulunu ya da bölümünü seçtiğinde ona ne kadar kaldığını da gösteririz.</p> }
         }
-      } @else if (parent()) {
-        <cs-empty-state [title]="name() + ' henüz bir hedef seçmedi'" text="Hedef okul ya da bölüm seçildiğinde ona ne kadar kaldığı burada görünür." />
-      } @else if (!readonly()) {
+      } @else if (!parent() && !readonly()) {
         <cs-empty-state title="Bir hedef seç" text="Okulunu ya da bölümünü seçtiğinde ona ne kadar kaldığını burada gösteririz." />
       }
       @if (result.notice) { <p class="cs-growth-muted">{{ result.notice }}</p> }

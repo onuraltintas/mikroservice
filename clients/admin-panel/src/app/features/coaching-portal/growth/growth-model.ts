@@ -139,37 +139,43 @@ export function goalScore(estimate: ScoreEstimate, childName: string | null = nu
   return card(childName ? `Tahmini puan: ${score}${range}` : `Tahmini puanın ${score}${range}`);
 }
 
-/** Paket C (#4): the "Bugün" goal card. */
+/** Paket C (#4): the "Bugün" goal card; the parent's "…'in hedefi" and the teacher view use the same states (third person). */
 export interface HomeGoalCard {
   state: 'none' | 'pending' | 'estimate' | 'reason';
   headline: string; targetName: string | null; detail: string | null; label: string | null; note: string | null;
   status: 'reached' | 'borderline' | 'below' | null;
+  /** YKS: the other target score (TYT or the field's), one line. */
+  secondary: string[];
 }
 export const HOME_LGS_NOTE = "LGS'de hem puan tahmini hem okulun taban puanı yaklaşıktır.";
 
 /**
- * Paket C (#4, approved 05.11.2026): what the home goal card says. No target: "Hedefini belirle". A target without a practice
- * exam: its name and when the gap appears. With an estimate: the score gap ("Hedefine yaklaşık X puan kaldı", "Hedef puanını
- * geçtin", or borderline as in Paket B), the target's name, its taban and "Yaklaşık tahmin" (not for exact YDS / YÖKDİL). When no
- * score can be computed the card says why, with Paket B's reason texts. The net line is shown under it by the page.
+ * Paket C (#4, approved 05.11.2026): what the goal card says. No target: "Hedefini belirle" (the parent: "… henüz bir hedef
+ * seçmedi"). A target without a practice exam: its name and when the gap appears. With an estimate: the score gap ("Hedefine
+ * yaklaşık X puan kaldı", "Hedef puanını geçtin", or borderline as in Paket B), the target's name, its taban and "Yaklaşık
+ * tahmin" (not for exact YDS / YÖKDİL). When no score can be computed the card says why, with Paket B's reason texts. With
+ * `childName` (parent, teacher) the card speaks in the third person.
  */
 export function homeGoalCard(estimate: ScoreEstimate | null, childName: string | null = null): HomeGoalCard {
   const target = estimate?.target ?? null;
   if (!estimate || !target)
-    return { state: 'none', headline: 'Hedefini belirle', targetName: null, detail: 'Okulunu, bölümünü ya da hedef puanını seç; ne kadar kaldığını burada gösterelim.',
-      label: null, note: null, status: null };
-  const exact = target.scoreType === 'YDS_EN' || target.scoreType.startsWith('YOKDIL_');
+    return { state: 'none', headline: childName ? `${childName} henüz bir hedef seçmedi` : 'Hedefini belirle', targetName: null,
+      detail: childName ? 'Hedef okul, bölüm ya da puan seçildiğinde ne kadar kaldığı burada görünür.' : 'Okulunu, bölümünü ya da hedef puanını seç; ne kadar kaldığını burada gösterelim.',
+      label: null, note: null, status: null, secondary: [] };
+  const exact = isExact(target.scoreType);
   const lgs = target.scoreType === 'LGS';
   const now = estimate.estimates.find(x => x.scoreType === target.scoreType) ?? null;
   const language = estimate.languageScores?.find(x => x.examCode === target.scoreType) ?? null;
   const kind = target.kind ?? 'program';
-  const targetName = kind === 'score' ? `${target.targetName} hedef puanın` : target.targetName;
+  const own = childName ? 'hedef puanı' : 'hedef puanın';
+  const targetName = kind === 'score' ? `${target.targetName} ${own}` : target.targetName;
   const taban = target.targetScore === null ? null
-    : kind === 'score' || target.ownTargetScore ? `Hedef puanın ${decimal.format(target.targetScore)}`
+    : kind === 'score' || target.ownTargetScore ? `${childName ? 'Hedef puanı' : 'Hedef puanın'} ${decimal.format(target.targetScore)}`
     : `Taban puanı ${decimal.format(target.targetScore)}${lgs ? ' (yaklaşık)' : ''}${target.scoreYear ? ` · ${target.scoreYear}` : ''}`;
   const note = lgs && kind === 'school' ? HOME_LGS_NOTE : null;
+  const secondary = (estimate.scoreTargets ?? []).filter(x => x.scoreType !== target.scoreType).map(x => scoreLine(estimate, x, childName));
   const card = (state: HomeGoalCard['state'], headline: string, label: string | null = null, status: HomeGoalCard['status'] = null): HomeGoalCard =>
-    ({ state, headline, targetName, detail: taban, label, note, status });
+    ({ state, headline, targetName, detail: taban, label, note, status, secondary });
 
   if (target.notComputedReason)
     return card('reason', notComputedText(estimate.notComputed?.find(x => x.scoreType === target.scoreType) ?? { notComputedReason: target.notComputedReason, failedConditions: [] }));
@@ -187,7 +193,7 @@ export function homeGoalCard(estimate: ScoreEstimate | null, childName: string |
   const label = exact ? (language?.label ?? EXACT_LABEL) : (now?.label ?? ESTIMATE_LABEL);
   const status = target.status ?? (target.reached ? 'reached' : target.scoreGap !== null || target.rankGap !== null ? 'below' : null);
   const you = childName ? 'Hedefe' : 'Hedefine';
-  if (status === 'reached') return card('estimate', childName ? 'Hedef puanı geçildi' : 'Hedef puanını geçtin', label, status);
+  if (status === 'reached') return card('estimate', childName ? 'Hedef puan geçildi' : 'Hedef puanını geçtin', label, status);
   if (status === 'borderline' && now)
     return card('estimate', `Hedef, tahmini puan aralığının içinde (${decimal.format(now.scoreLow)}–${decimal.format(now.scoreHigh)}): ${childName ? 'sınırda' : 'sınırdasın'}.`, label, status);
   if (target.scoreGap !== null && target.scoreGap > 0)
@@ -195,6 +201,20 @@ export function homeGoalCard(estimate: ScoreEstimate | null, childName: string |
   if (target.rankGap !== null && target.rankGap > 0)
     return card('estimate', `Hedef sıralamaya yaklaşık ${whole.format(target.rankGap)} kişi kaldı`, label, 'below');
   return card('estimate', 'Hedefe olan farkı henüz hesaplayamıyoruz.', label, null);
+}
+
+function isExact(scoreType: string) { return scoreType === 'YDS_EN' || scoreType.startsWith('YOKDIL_'); }
+
+/** One line for another target score (YKS: TYT next to the field's score). */
+function scoreLine(estimate: ScoreEstimate, gap: NonNullable<ScoreEstimate['target']>, childName: string | null): string {
+  const name = gap.targetName;
+  if (gap.notComputedReason) return `${name}: puan hesaplanmaz.`;
+  const has = estimate.estimates.some(x => x.scoreType === gap.scoreType) || estimate.languageScores?.some(x => x.examCode === gap.scoreType);
+  if (!has || gap.targetScore === null) return `${name} ${childName ? 'hedef puanı' : 'hedef puanın'} ${decimal.format(gap.targetScore ?? 0)}`;
+  const status = gap.status ?? (gap.reached ? 'reached' : 'below');
+  if (status === 'reached') return `${name}: ${childName ? 'hedef puan geçildi' : 'hedef puanını geçtin'}`;
+  if (status === 'borderline') return `${name}: ${childName ? 'sınırda' : 'sınırdasın'}`;
+  return `${name} hedefine ${isExact(gap.scoreType) ? '' : 'yaklaşık '}${decimal.format(gap.scoreGap ?? 0)} puan kaldı`;
 }
 
 function share(value: number, goal: number) { return goal > 0 && value > 0 ? Math.round(Math.min(1, value / goal) * 100) : 0; }

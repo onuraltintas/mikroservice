@@ -9,9 +9,10 @@ namespace Coaching.Infrastructure.Data.Migrations
     /// Paket C (#3, user decisions 05.11.2026): the coaching student's first-login wizard.
     /// student_profiles gains the student's home city and district (ids and names from the shared Identity location directory),
     /// the YKS diploma grade (50–100, with whether it is an expected grade) and the wizard state (saved steps as bits 1–7 and
-    /// the completion time). academic_goals gains target_score_type, the score type of a score-only target.
+    /// the completion time). academic_goals gains score_targets, the student's own target scores (YKS: TYT and the field's score type).
     /// Students who already finished the old setup (an exam purpose and complete education) are marked as having completed the
-    /// wizard, so they never see it; everyone else starts or resumes it. Down drops the new columns (the wizard state with them).
+    /// wizard, so they never see it; everyone else starts or resumes it. Down refuses, changing nothing, while any profile has wizard answers (home city or district, diploma grade, a partial wizard
+    /// state) or any goal has target scores; otherwise it drops the new columns. Release note: back up before rolling back.
     /// </summary>
     public partial class StudentOnboarding : Migration
     {
@@ -28,7 +29,7 @@ namespace Coaching.Infrastructure.Data.Migrations
             migrationBuilder.AddColumn<DateTime>(name: "OnboardingCompletedAt", schema: "coaching", table: "student_profiles", type: "timestamp with time zone", nullable: true);
             migrationBuilder.AddCheckConstraint(name: "ck_coaching_student_diploma", schema: "coaching", table: "student_profiles",
                 sql: "\"DiplomaGrade\" IS NULL OR \"DiplomaGrade\" BETWEEN 50 AND 100");
-            migrationBuilder.AddColumn<string>(name: "target_score_type", schema: "coaching", table: "academic_goals", type: "character varying(20)", maxLength: 20, nullable: true);
+            migrationBuilder.AddColumn<string>(name: "score_targets", schema: "coaching", table: "academic_goals", type: "jsonb", nullable: false, defaultValue: "[]");
 
             // Existing students with an exam purpose (LGS 1, YKS 2, AGS 5, YDS 6, YÖKDİL 7) and complete education finished the
             // old setup: all seven wizard steps (bits 1–7 = 254) are marked done.
@@ -45,7 +46,21 @@ namespace Coaching.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(name: "target_score_type", schema: "coaching", table: "academic_goals");
+            // The wizard's answers live only in these columns: going back would lose them. Back up and clear them by hand first.
+            migrationBuilder.Sql("""
+                DO $$
+                DECLARE profiles bigint; goals bigint;
+                BEGIN
+                  SELECT count(*) INTO profiles FROM coaching.student_profiles
+                  WHERE "HomeProvinceId" IS NOT NULL OR "HomeCity" IS NOT NULL OR "HomeDistrictId" IS NOT NULL OR "HomeDistrict" IS NOT NULL
+                     OR "DiplomaGrade" IS NOT NULL OR "OnboardingSteps" NOT IN (0, 254);
+                  SELECT count(*) INTO goals FROM coaching.academic_goals WHERE score_targets <> '[]'::jsonb;
+                  IF profiles + goals > 0 THEN
+                    RAISE EXCEPTION 'StudentOnboarding down refused: % student profile(s) with first-login wizard answers and % goal(s) with target scores exist. Back them up and clear them first. Nothing changed.', profiles, goals;
+                  END IF;
+                END $$;
+                """);
+            migrationBuilder.DropColumn(name: "score_targets", schema: "coaching", table: "academic_goals");
             migrationBuilder.DropCheckConstraint(name: "ck_coaching_student_diploma", schema: "coaching", table: "student_profiles");
             foreach (var column in new[] { "HomeProvinceId", "HomeCity", "HomeDistrictId", "HomeDistrict", "DiplomaGrade", "DiplomaGradeEstimated",
                          "OnboardingSteps", "OnboardingCompletedAt" })

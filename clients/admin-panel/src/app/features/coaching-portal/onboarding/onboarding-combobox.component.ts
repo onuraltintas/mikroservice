@@ -20,17 +20,17 @@ let nextId = 0;
         [attr.aria-expanded]="open()" [attr.aria-controls]="id + '-list'" [attr.aria-activedescendant]="active() >= 0 ? id + '-opt-' + active() : null"
         [placeholder]="placeholder()" [value]="query()" (input)="type($event)" (focus)="open.set(true)" (keydown)="key($event)">
       @if (open()) {
+        <!-- Only options inside the listbox; the empty state and "more" sit next to it (ARIA combobox pattern). -->
         <ul class="ob-combo-list" role="listbox" [id]="id + '-list'" [attr.aria-label]="label()">
           @for (option of shown(); track option.value; let i = $index) {
             <li role="option" [id]="id + '-opt-' + i" [attr.aria-selected]="i === active()" [class.is-active]="i === active()"
               (mousedown)="$event.preventDefault()" (click)="pick(option)">
               <span>{{ option.label }}</span>@if (option.hint) { <small>{{ option.hint }}</small> }
             </li>
-          } @empty {
-            <li class="ob-combo-empty" role="status">{{ loading() ? 'Yükleniyor…' : 'Sonuç yok. Başka bir şey yaz.' }}</li>
           }
-          @if (more()) { <li class="ob-combo-more"><button type="button" (mousedown)="$event.preventDefault()" (click)="loadMore()">Daha fazla göster</button></li> }
         </ul>
+        @if (!shown().length) { <p class="ob-combo-empty" role="status">{{ loading() ? 'Yükleniyor…' : 'Sonuç yok. Başka bir şey yaz.' }}</p> }
+        @if (more()) { <p class="ob-combo-more"><button type="button" (mousedown)="$event.preventDefault()" (click)="loadMore()">Daha fazla göster</button></p> }
       }
       @if (error()) { <p class="ob-error" role="alert">{{ error() }}</p> }
     </div>`

@@ -100,12 +100,15 @@
               <small>{{ v.goal.title }}, {{ v.goal.examCode }} son deneme {{ v.goal.latestNet | number: '1.0-2' }} / hedef {{ v.goal.targetNet | number: '1.0-2' }} net</small>
             </a>
           } @else {
-            <a class="goal" [class.is-quiet]="card.state === 'none'" [attr.data-status]="card.status" data-home-block="goal" data-testid="home-goal" routerLink="/coaching-portal/growth/goals">
+            <!-- No target: "Hedefini belirle" opens the wizard's target question. -->
+            <a class="goal" [class.is-quiet]="card.state === 'none'" [attr.data-status]="card.status" data-home-block="goal" data-testid="home-goal"
+              [routerLink]="card.state === 'none' ? '/coaching-portal/welcome' : '/coaching-portal/growth/goals'" [queryParams]="card.state === 'none' ? { step: 'target' } : null">
               <strong>{{ card.headline }}</strong>
               @if (card.targetName) { <span class="goal-name">{{ card.targetName }}</span> }
               @if (card.detail) { <small>{{ card.detail }}</small> }
               @if (card.label) { <small class="goal-label" data-testid="home-goal-label">{{ card.label }}</small> }
               @if (card.note) { <small>{{ card.note }}</small> }
+              @for (line of card.secondary; track line) { <small data-testid="home-goal-secondary">{{ line }}</small> }
               @if (v.goal; as goal) {
                 <small class="goal-net" data-testid="home-goal-net">{{ goal.remainingNet > 0 ? 'Hedefine ' + (goal.remainingNet | number: '1.0-2') + ' net kaldı' : 'Hedef netine ulaştın' }} · {{ goal.examCode }} son deneme {{ goal.latestNet | number: '1.0-2' }} / hedef {{ goal.targetNet | number: '1.0-2' }} net</small>
               }

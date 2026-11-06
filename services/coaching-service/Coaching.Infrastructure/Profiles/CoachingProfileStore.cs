@@ -10,7 +10,8 @@ using Npgsql;
 namespace Coaching.Infrastructure.Profiles;
 
 public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoachingAccountDirectory accounts,
-    Coaching.Application.Interfaces.ICoachingEventPublisher? events = null, TimeProvider? clock = null) : ICoachingProfileProvisioner
+    Coaching.Application.Interfaces.ICoachingEventPublisher? events = null, TimeProvider? clock = null,
+    Coaching.Application.CatalogAdministration.ICoachingLocationDirectory? locations = null) : ICoachingProfileProvisioner
 {
     public Task<CoachingStudentProfile?> GetStudentAsync(Guid userId, CancellationToken ct) =>
         db.CoachingStudentProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == userId, ct);
@@ -55,10 +56,30 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         var profile = await db.CoachingStudentProfiles.SingleOrDefaultAsync(x => x.UserId == userId && x.IsActive, ct)
             ?? throw new KeyNotFoundException("Koçluk öğrenci profili bulunamadı.");
         if (request.ExpectedVersion != profile.Version) throw Conflict("Profil değişti. Yeniden yükleyin.");
+        // Paket C (#5): the student corrects the home city and district (checked against the shared directory) and the diploma grade.
+        Coaching.Application.CatalogAdministration.LocationProvince? province = null; Coaching.Application.CatalogAdministration.LocationDistrict? district = null;
+        if (request.HomeProvinceId is not null || request.HomeDistrictId is not null)
+        {
+            if (locations is null || string.IsNullOrWhiteSpace(request.HomeProvinceId) || string.IsNullOrWhiteSpace(request.HomeDistrictId)
+                || request.HomeProvinceId.Length > 20 || request.HomeDistrictId.Length > 20)
+                throw new ArgumentException("Şehri ve ilçeyi listeden seçin.");
+            try
+            {
+                province = (await locations.GetProvincesAsync(ct)).SingleOrDefault(x => x.Id == request.HomeProvinceId);
+                district = province is null ? null : (await locations.GetDistrictsAsync(province.Id, ct)).SingleOrDefault(x => x.Id == request.HomeDistrictId && x.ProvinceId == province.Id);
+            }
+            catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException && !ct.IsCancellationRequested)
+            { throw new BusinessRuleException("Profiles.LocationsUnavailable", "Şehir listesi şu an yüklenemedi. Biraz sonra yeniden deneyin."); }
+            if (province is null || district is null) throw new ArgumentException("Şehri ve ilçeyi listeden seçin.");
+        }
         // Validate the full replacement before changing a tracked entity.
         var validated = CoachingStudentProfile.Create(userId);
         Apply(validated, request);
+        if (request.DiplomaGrade is not null) validated.SetDiplomaGrade(request.DiplomaGrade, request.DiplomaGradeEstimated);
         Apply(profile, request);
+        if (province is not null) profile.SetHome(province.Id, province.Name, district!.Id, district.Name);
+        if (request.DiplomaGrade is not null) profile.SetDiplomaGrade(request.DiplomaGrade, request.DiplomaGradeEstimated);
+        else if (request.ClearDiplomaGrade) profile.SetDiplomaGrade(null, false);
         await db.SaveChangesAsync(ct);
         return profile;
     }

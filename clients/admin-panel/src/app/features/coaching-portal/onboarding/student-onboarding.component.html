@@ -1,8 +1,14 @@
 <div class="ob-page coaching-onboarding">
   <header class="ob-head">
-    <p class="ob-brand"><strong>eduivme<span>.</span></strong> Öğrenci Koçluğu</p>
-    <h1 id="ob-title">Hesabını birlikte kuralım</h1>
-    @if (!loading() && !done()) {
+    <div class="ob-top">
+      <p class="ob-brand"><strong>eduivme<span>.</span></strong> Öğrenci Koçluğu</p>
+      <nav class="ob-exit" aria-label="Hesap">
+        <a class="ob-link" routerLink="/coaching-portal/account/data">Kişisel verilerim</a>
+        <button type="button" class="ob-link" (click)="logout()">Çıkış yap</button>
+      </nav>
+    </div>
+    <h1 id="ob-title">{{ mode() === 'target' ? 'Hedefini belirle' : 'Hesabını birlikte kuralım' }}</h1>
+    @if (!loading() && !done() && mode() === 'wizard') {
       <div class="ob-progress">
         <span id="ob-progress-label">Adım {{ step() }}/{{ stepCount }} · {{ stepTitle() }}</span>
         <div class="ob-bar" role="progressbar" aria-labelledby="ob-progress-label" aria-valuemin="1" [attr.aria-valuemax]="stepCount" [attr.aria-valuenow]="step()">
@@ -20,7 +26,7 @@
           <div class="ob-bot"><p>{{ question.prompt }}</p></div>
           <div class="ob-me">
             <p>{{ answers()[question.id]?.label }}</p>
-            @if (!done()) { <button type="button" class="ob-link" [disabled]="busy()" (click)="edit(question.id)" [attr.aria-label]="'Değiştir: ' + question.prompt">Değiştir</button> }
+            @if (!done() && !(question.id === 'targetSaved' && locked())) { <button type="button" class="ob-link" [disabled]="busy()" (click)="edit(question.id)" [attr.aria-label]="'Değiştir: ' + question.prompt">Değiştir</button> }
           </div>
         </div>
       }
@@ -88,7 +94,10 @@
                 }
               }
               @case ('notifications') {
-                @if (emailPrefs(); as prefs) {
+                @if (prefsError()) {
+                  <p class="ob-error" role="alert">E-posta tercihlerin yüklenemedi.</p>
+                  <button type="button" class="ob-chip" (click)="loadEmails()">Yeniden dene</button>
+                } @else if (emailPrefs(); as prefs) {
                   <fieldset class="ob-prefs">
                     <legend class="ob-sr">E-posta tercihleri</legend>
                     @for (pref of prefs; track pref.category) {
@@ -104,6 +113,12 @@
             }
           </div>
         </div>
+      } @else if (mode() === 'target' && !loading()) {
+        <section class="ob-summary" data-current aria-labelledby="ob-target-title">
+          <h2 id="ob-target-title">{{ locked() ? 'Hedefini öğretmenin belirledi' : 'Önce sınavını seç' }}</h2>
+          <p>{{ locked() ? 'Değiştirmek istersen öğretmenine yaz.' : 'Hedef, hazırlandığın sınava göre seçilir. Sınavını Çalışma tercihlerim sayfasından seç.' }}</p>
+          <a class="ob-primary" routerLink="/coaching-portal">Bugün'e dön</a>
+        </section>
       } @else if (!loading() && !done() && !error()) {
         <section class="ob-summary" data-current aria-labelledby="ob-summary-title">
           <h2 id="ob-summary-title">Her şey hazır mı?</h2>

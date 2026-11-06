@@ -9,6 +9,8 @@
 .ob-head, .ob-chat { max-width: 44rem; margin-inline: auto; padding-inline: 1rem; }
 .ob-chat { padding-bottom: 4rem; }
 .ob-head { position: sticky; top: 0; z-index: 2; background: var(--ob-bg); padding-block: .75rem .5rem; }
+.ob-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; }
+.ob-exit { display: flex; gap: 1rem; }
 .ob-brand { margin: 0; font-size: .85rem; color: var(--ob-muted); strong { color: var(--ob-text); } span { color: var(--ob-brand); } }
 h1 { margin: .25rem 0 .5rem; font-size: 1.35rem; }
 .ob-progress { display: grid; gap: .35rem; font-size: .85rem; color: var(--ob-muted); }
@@ -52,8 +54,9 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   li { padding: .55rem .65rem; border-radius: .45rem; cursor: pointer; display: grid; gap: .1rem; }
   li small { color: var(--ob-muted); }
   li.is-active, li[role=option]:hover { background: var(--ob-brand-soft); }
-  .ob-combo-empty { cursor: default; color: var(--ob-muted); }
-  .ob-combo-more button { font: inherit; border: 0; background: none; color: var(--ob-brand); text-decoration: underline; cursor: pointer; } }
+}
+:host ::ng-deep .ob-combo-empty { margin: .35rem 0 0; color: var(--ob-muted); }
+:host ::ng-deep .ob-combo-more { margin: .35rem 0 0; button { font: inherit; border: 0; background: none; color: var(--ob-brand); text-decoration: underline; cursor: pointer; } }
 :host ::ng-deep .ob-error { color: var(--ob-danger); }
 @media (max-width: 30rem) { .ob-bot, .ob-me { max-width: 100%; } h1 { font-size: 1.15rem; } }
 @media (prefers-reduced-motion: reduce) { .ob-bar span { transition: none; } }

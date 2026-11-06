@@ -12,7 +12,7 @@ export type QuestionId =
   | 'purpose' | 'yksField' | 'language' | 'oabtField' | 'yokdilField' | 'session' | 'diploma'
   | 'targetSaved' | 'targetMode' | 'schoolCity' | 'schoolType' | 'targetSchool'
   | 'level' | 'programScoreType' | 'programCity' | 'university' | 'program' | 'ownScore'
-  | 'targetScoreType' | 'ydsLevel' | 'targetScore'
+  | 'targetScoreType' | 'ydsLevel' | 'targetScore' | 'tytScore' | 'fieldScore'
   | 'invite' | 'parent' | 'notifications';
 export type InputKind = 'date' | 'buttons' | 'combobox' | 'number' | 'diploma' | 'invite' | 'parent' | 'notifications';
 export type StepNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -46,7 +46,7 @@ const EXAM_CODES: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT'
 const EXAM_TYPES: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'YKS', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YÖKDİL' };
 
 const TARGET: QuestionId[] = ['targetSaved', 'targetMode', 'schoolCity', 'schoolType', 'targetSchool', 'level', 'programScoreType', 'programCity',
-  'university', 'program', 'ownScore', 'targetScoreType', 'ydsLevel', 'targetScore'];
+  'university', 'program', 'ownScore', 'targetScoreType', 'ydsLevel', 'targetScore', 'tytScore', 'fieldScore'];
 /** A changed answer clears only the answers that depend on it; the flow then asks them again. */
 export const DEPENDENTS: Partial<Record<QuestionId, QuestionId[]>> = {
   city: ['district', 'ownSchool'],
@@ -59,7 +59,7 @@ export const DEPENDENTS: Partial<Record<QuestionId, QuestionId[]>> = {
   level: ['programScoreType', 'programCity', 'university', 'program', 'ownScore'],
   programScoreType: ['programCity', 'university', 'program', 'ownScore'],
   programCity: ['university', 'program', 'ownScore'], university: ['program', 'ownScore'], program: ['ownScore'],
-  targetScoreType: ['ydsLevel', 'targetScore'], ydsLevel: ['targetScore']
+  targetScoreType: ['ydsLevel', 'targetScore'], ydsLevel: ['targetScore'], tytScore: ['fieldScore']
 };
 
 /** Removes an answer and everything that depends on it ("Değiştir"). */
@@ -120,12 +120,12 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
   const purpose = purposeOf(answers);
   const grade = gradeOf(answers);
 
-  add({ id: 'birthDate', step: 1, kind: 'date', prompt: 'Merhaba! Önce seni tanıyalım. Doğum tarihin ne?', reason: 'Sana uygun sınavları ve önerileri seçmek için soruyoruz.' });
-  add({ id: 'city', step: 1, kind: 'combobox', prompt: 'Hangi şehirde yaşıyorsun?', reason: 'Yakınındaki okulları ve sınav bilgilerini gösterebilmek için.' });
-  if (answers.city) add({ id: 'district', step: 1, kind: 'combobox', prompt: `${answers.city.label} içinde hangi ilçedesin?`, reason: 'Şehrini daraltmak için; başka yerde kullanılmaz.' });
-  add({ id: 'education', step: 1, kind: 'buttons', choices: GRADES, prompt: 'Kaçıncı sınıftasın?', reason: 'Sınav ve ders önerileri sınıfına göre değişir.' });
+  add({ id: 'birthDate', step: 1, kind: 'date', prompt: 'Merhaba! Önce seni tanıyalım. Doğum tarihin ne?', reason: 'Profilinde tutulur; öğretmenin de görebilir.' });
+  add({ id: 'city', step: 1, kind: 'combobox', prompt: 'Hangi şehirde yaşıyorsun?', reason: 'Okulunu listeden bulabilmen için. Profilinde tutulur.' });
+  if (answers.city) add({ id: 'district', step: 1, kind: 'combobox', prompt: `${answers.city.label} içinde hangi ilçedesin?`, reason: 'Profilinde tutulur; başka yerde kullanılmaz.' });
+  add({ id: 'education', step: 1, kind: 'buttons', choices: GRADES, prompt: 'Kaçıncı sınıftasın?', reason: 'Diploma notunu sorup sormayacağımızı belirler; öğretmenin de görür.' });
   if (typeof grade === 'number' && grade >= 9)
-    add({ id: 'ownSchool', step: 1, kind: 'combobox', skipLabel: 'Şimdilik geçeyim', prompt: 'Okulunu listeden seçmek ister misin?', reason: 'İsteğe bağlı. Öğretmenin seni daha kolay tanır.' });
+    add({ id: 'ownSchool', step: 1, kind: 'combobox', skipLabel: 'Şimdilik geçeyim', prompt: 'Okulunu listeden seçmek ister misin?', reason: 'İsteğe bağlı. Profilinde tutulur; öğretmenin de görür.' });
 
   add({ id: 'purpose', step: 2, kind: 'buttons', choices: PURPOSES, prompt: 'Hangi sınava hazırlanıyorsun?', reason: 'Planın, derslerin ve puan hesabın bu sınava göre hazırlanır.' });
   if (purpose === 'Yks') {
@@ -142,7 +142,7 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
     const choices = sessionChoices(answers, context);
     add({ id: 'session', step: 2, kind: 'buttons', choices,
       prompt: choices[0]?.value.startsWith('session:') ? 'Hangi oturuma hazırlanıyorsun?' : 'Hangi yıl sınava gireceksin?',
-      reason: 'Kalan günleri ve haftalık planını bu tarihe göre hesaplarız.' });
+      reason: 'Sınava kalan günleri bu tarihe göre gösteririz.' });
   }
   if (asksDiploma(answers))
     add({ id: 'diploma', step: 2, kind: 'diploma', min: 50, max: 100, skipLabel: 'Sonra gireceğim', prompt: 'Diploma notun kaç?',
@@ -150,7 +150,7 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
 
   if (purpose) addTarget(answers, add, purpose);
 
-  add({ id: 'invite', step: 4, kind: 'invite', prompt: 'Davet kodun var mı?', reason: 'Öğretmenin ya da kurumun seni davet ettiyse onlara buradan bağlanırsın.' });
+  add({ id: 'invite', step: 4, kind: 'invite', prompt: 'Seni davet eden bir öğretmenin ya da kurumun var mı?', reason: 'Seni e-postanla davet ettilerse onlara buradan bağlanırsın.' });
   add({ id: 'parent', step: 5, kind: 'parent', prompt: 'Velinle bağlantı kurmak ister misin?', reason: 'İstersen velin çalışmanı görebilir. Zorunlu değil, sonra da yapabilirsin.' });
   add({ id: 'notifications', step: 6, kind: 'notifications', prompt: 'Hangi e-postaları almak istersin?', reason: 'Hatırlatmaları sen seçersin; sonra da değiştirebilirsin.' });
   return list;
@@ -184,16 +184,24 @@ function addTarget(answers: Answers, add: (question: Question) => void, purpose:
     if (answers.programCity) add({ id: 'university', step: 3, kind: 'combobox', prompt: 'Hangi üniversite?', reason: 'Bölüm listesini daraltmak için.' });
     if (answers.university) add({ id: 'program', step: 3, kind: 'combobox', prompt: 'Hangi bölüm?', reason: 'Taban puanını ve başarı sırasını hedefinle karşılaştırırız.' });
     if (answers.program && answers.program.data?.['minimumScore'] == null)
-      add({ id: 'ownScore', step: 3, kind: 'number', min: 1, max: 560, prompt: 'Bu bölümün taban puanı yok. Hedef puanın kaç?', reason: 'Farkı bu puana göre hesaplarız.' });
+      add({ id: 'ownScore', step: 3, kind: 'number', min: 0, max: 560, prompt: 'Bu bölümün taban puanı yok. Hedef puanın kaç?', reason: "Farkı bu puana göre hesaplarız. 0'dan büyük, en çok 560." });
   }
-  if (mode === 'score') {
+  if (mode === 'score' && purpose === 'Yks') {
+    // Karar 4 (user): a YKS student may aim at both the TYT and the field's score; either may be left out, not both.
+    const field = scoreTargetTypes(answers).find(x => x.value !== 'TYT');
+    add({ id: 'tytScore', step: 3, kind: 'number', min: 0, max: 560, skipLabel: field ? 'TYT hedefim yok' : undefined,
+      prompt: 'TYT hedef puanın kaç?', reason: "0'dan büyük, en çok 560 olan bir puan yaz." });
+    if (field && answers.tytScore)
+      add({ id: 'fieldScore', step: 3, kind: 'number', min: 0, max: 560, skipLabel: typeof value(answers, 'tytScore') === 'number' ? 'Bu puanı şimdi girmeyeceğim' : undefined,
+        prompt: `${field.label.replace(' puanı', '')} hedef puanın kaç?`, reason: "0'dan büyük, en çok 560 olan bir puan yaz." });
+  } else if (mode === 'score') {
     const types = scoreTargetTypes(answers);
     add({ id: 'targetScoreType', step: 3, kind: 'buttons', choices: types, prompt: 'Hangi puanı hedefliyorsun?', reason: 'Puanın bu türde hesaplanır.' });
     const type = value(answers, 'targetScoreType') as string | null;
     if (type === 'YDS_EN')
       add({ id: 'ydsLevel', step: 3, kind: 'buttons', choices: YDS_LEVELS, skipLabel: 'Puanı kendim yazacağım', prompt: 'Hangi seviyeyi hedefliyorsun?', reason: 'İstersen seviyeni seç, puanı biz dolduralım.' });
     if (type && (type !== 'YDS_EN' || answers.ydsLevel))
-      add({ id: 'targetScore', step: 3, kind: 'number', min: 1, max: scoreMax(type), prompt: 'Hedef puanın kaç?', reason: `0 ile ${scoreMax(type)} arasında bir puan yaz.` });
+      add({ id: 'targetScore', step: 3, kind: 'number', min: 0, max: scoreMax(type), prompt: 'Hedef puanın kaç?', reason: `0'dan büyük, en çok ${scoreMax(type)} olan bir puan yaz.` });
   }
 }
 
@@ -227,8 +235,9 @@ export function personalRequest(answers: Answers): OnboardingPersonalStep {
   const grade = gradeOf(answers);
   return {
     birthDate: String(value(answers, 'birthDate')), provinceId: String(value(answers, 'city')), districtId: String(value(answers, 'district')),
-    educationStatus: grade === 'graduate' ? 'Graduate' : 'Student', gradeLevel: typeof grade === 'number' ? grade : null, graduationYear: null,
-    schoolName: value(answers, 'ownSchool') === null ? null : answers.ownSchool?.label ?? null
+    educationStatus: grade === 'graduate' ? 'Graduate' : 'Student', gradeLevel: typeof grade === 'number' ? grade : null,
+    // Not asked here: the server keeps the saved graduation year, and the saved school unless a new one is picked.
+    graduationYear: null, schoolId: typeof value(answers, 'ownSchool') === 'string' ? value(answers, 'ownSchool') as string : null
   };
 }
 
@@ -249,13 +258,22 @@ export function examRequest(answers: Answers): OnboardingExamStep {
 export function targetRequest(answers: Answers): OnboardingTargetStep {
   const saved = answers.targetSaved?.data;
   if (saved) return { kind: saved['kind'] as OnboardingTargetStep['kind'], targetId: (saved['targetId'] as string) ?? null,
-    scoreType: (saved['scoreType'] as string) ?? null, targetScore: (saved['targetScore'] as number) ?? null };
+    scores: (saved['scores'] as OnboardingTargetStep['scores']) ?? null };
+  const num = (id: QuestionId) => typeof value(answers, id) === 'number' ? value(answers, id) as number : null;
   switch (value(answers, 'targetMode')) {
-    case 'school': return { kind: 'school', targetId: String(value(answers, 'targetSchool')), scoreType: null, targetScore: null };
-    case 'program': return { kind: 'program', targetId: String(value(answers, 'program')), scoreType: null,
-      targetScore: typeof value(answers, 'ownScore') === 'number' ? value(answers, 'ownScore') as number : null };
-    case 'score': return { kind: 'score', targetId: null, scoreType: String(value(answers, 'targetScoreType')), targetScore: value(answers, 'targetScore') as number };
-    default: return { kind: 'none', targetId: null, scoreType: null, targetScore: null };
+    case 'school': return { kind: 'school', targetId: String(value(answers, 'targetSchool')), scores: null };
+    case 'program': return { kind: 'program', targetId: String(value(answers, 'program')),
+      scores: num('ownScore') !== null ? [{ scoreType: '', score: num('ownScore')! }] : null };
+    case 'score': {
+      if (purposeOf(answers) === 'Yks') {
+        const field = scoreTargetTypes(answers).find(x => x.value !== 'TYT')?.value;
+        const scores = [{ scoreType: 'TYT', score: num('tytScore') }, { scoreType: field ?? '', score: num('fieldScore') }]
+          .filter((x): x is { scoreType: string; score: number } => x.score !== null && x.scoreType !== '');
+        return { kind: 'score', targetId: null, scores };
+      }
+      return { kind: 'score', targetId: null, scores: [{ scoreType: String(value(answers, 'targetScoreType')), score: num('targetScore')! }] };
+    }
+    default: return { kind: 'none', targetId: null, scores: null };
   }
 }
 
@@ -272,7 +290,8 @@ export function prefill(view: OnboardingView): Answers {
   if (a.homeDistrictId && a.homeDistrict) answers.district = { value: a.homeDistrictId, label: a.homeDistrict };
   if (a.educationStatus === 'Graduate') answers.education = { value: 'graduate', label: 'Mezunum' };
   else if (a.educationStatus === 'Student' && a.gradeLevel) answers.education = { value: String(a.gradeLevel), label: `${a.gradeLevel}. sınıf` };
-  if (saved.has(1) && (gradeOf(answers) as number) >= 9) answers.ownSchool = a.schoolName ? { value: a.schoolName, label: a.schoolName } : { value: null, label: 'Şimdilik geçeyim' };
+  // The saved school stays (value null keeps it on the server); a newly picked one sends its catalog id.
+  if (saved.has(1) && (gradeOf(answers) as number) >= 9) answers.ownSchool = { value: null, label: a.schoolName ?? 'Şimdilik geçeyim' };
   if (a.purpose) {
     answers.purpose = { value: a.purpose, label: PURPOSES.find(x => x.value === a.purpose)?.label ?? a.purpose };
     if (a.purpose === 'Yks' && a.primaryScoreType) answers.yksField = { value: a.primaryScoreType, label: YKS_FIELDS.find(x => x.value === a.primaryScoreType)?.label ?? a.primaryScoreType };
@@ -286,10 +305,14 @@ export function prefill(view: OnboardingView): Answers {
       answers.diploma = a.diplomaGrade !== null ? { value: a.diplomaGrade, label: `${formatScore(a.diplomaGrade)}${a.diplomaGradeEstimated ? ' (tahmini)' : ''}`, data: { estimated: a.diplomaGradeEstimated } }
         : { value: null, label: 'Sonra gireceğim' };
   }
-  if (saved.has(3)) {
+  if (a.targetLocked) {
+    // A teacher's goal: the wizard does not change it ("none" keeps it as it is).
+    answers.targetSaved = { value: 'locked', label: `Hedefini öğretmenin belirledi${a.target ? ': ' + targetLabel(a.target) : ''}`, data: { kind: 'none', locked: true } };
+  } else if (saved.has(3)) {
     const t = a.target;
-    answers.targetSaved = t ? { value: t.kind, label: targetLabel(t), data: { kind: t.kind, targetId: t.targetId, scoreType: t.kind === 'score' ? t.scoreType : null,
-      targetScore: t.kind === 'school' ? null : t.targetScore } } : { value: 'none', label: 'Henüz karar vermedim', data: { kind: 'none' } };
+    answers.targetSaved = t ? { value: t.kind, label: targetLabel(t), data: { kind: t.kind, targetId: t.targetId,
+      scores: t.kind === 'school' || !t.scores.length || t.scores.some(x => !x.scoreType) && t.kind === 'score' ? null : t.scores } }
+      : { value: 'none', label: 'Henüz karar vermedim', data: { kind: 'none' } };
   }
   if (saved.has(4)) answers.invite = { value: 'passed', label: 'Tamam' };
   if (saved.has(5)) answers.parent = { value: 'passed', label: 'Tamam' };
@@ -297,11 +320,14 @@ export function prefill(view: OnboardingView): Answers {
   return answers;
 }
 
-export function targetLabel(t: { kind: string; name: string; minimumScore: number | null; targetScore: number | null }): string {
-  if (t.kind === 'score') return `${t.name}: ${formatScore(t.targetScore ?? 0)} puan`;
-  const taban = t.minimumScore !== null ? ` · taban ${formatScore(t.minimumScore)}` : t.targetScore !== null ? ` · hedef puanın ${formatScore(t.targetScore)}` : '';
+export function targetLabel(t: { kind: string; name: string; minimumScore: number | null; scores: { scoreType: string; score: number }[] }): string {
+  if (t.kind === 'score') return t.scores.map(x => `${SCORE_NAMES[x.scoreType] ?? t.name} ${formatScore(x.score)}`).join(', ');
+  const own = t.scores[0]?.score;
+  const taban = t.minimumScore !== null ? ` · taban ${formatScore(t.minimumScore)}` : own !== undefined ? ` · hedef puanın ${formatScore(own)}` : '';
   return `${t.name}${taban}`;
 }
+const SCORE_NAMES: Record<string, string> = { LGS: 'LGS', TYT: 'TYT', SAY: 'Sayısal', EA: 'Eşit Ağırlık', SOZ: 'Sözel', DIL: 'Dil', P1: 'P1', P2_16: 'P2-16', P2_17: 'P2-17',
+  YDS_EN: 'YDS', YOKDIL_FEN: 'YÖKDİL', YOKDIL_SAG: 'YÖKDİL', YOKDIL_SOS: 'YÖKDİL' };
 
 /** The summary: one line per answered question, grouped by step. */
 export function summary(answers: Answers, context: FlowContext): { step: StepNumber; title: string; lines: string[] }[] {
@@ -316,6 +342,7 @@ const SUMMARY_LABELS: Record<QuestionId, string> = {
   purpose: 'Sınav', yksField: 'Puan türü', language: 'Yabancı dil', oabtField: 'ÖABT alanı', yokdilField: 'YÖKDİL alanı', session: 'Oturum', diploma: 'Diploma notu',
   targetSaved: 'Hedef', targetMode: 'Hedef', schoolCity: 'Okulun şehri', schoolType: 'Okul türü', targetSchool: 'Okul', level: 'Düzey', programScoreType: 'Puan türü',
   programCity: 'Şehir', university: 'Üniversite', program: 'Bölüm', ownScore: 'Hedef puan', targetScoreType: 'Puan', ydsLevel: 'Seviye', targetScore: 'Hedef puan',
+  tytScore: 'TYT hedef puanı', fieldScore: 'Alan hedef puanı',
   invite: 'Davet', parent: 'Veli bağlantısı', notifications: 'E-postalar'
 };
 export function examTypeLabel(purpose: ExamLearningPurpose): string { return EXAM_TYPES[purpose]; }

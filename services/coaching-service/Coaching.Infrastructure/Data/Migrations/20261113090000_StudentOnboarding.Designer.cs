@@ -71,6 +71,13 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasDefaultValue("[]");
 
+                    b.Property<string>("ScoreTargetsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]")
+                        .HasColumnName("score_targets");
+
                     b.Property<Guid?>("SetByTeacherId")
                         .HasColumnType("uuid")
                         .HasColumnName("set_by_teacher_id");
@@ -111,11 +118,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("target_score");
-
-                    b.Property<string>("TargetScoreType")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("target_score_type");
 
                     b.Property<string>("TargetSubject")
                         .HasMaxLength(100)
