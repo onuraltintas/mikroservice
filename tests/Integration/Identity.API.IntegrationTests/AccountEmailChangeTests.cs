@@ -105,6 +105,69 @@ public sealed class AccountEmailChangeTests
         (await f.Reload()).PendingEmail.Should().Be("ilk@example.test");
     }
 
+    // Paket F L6: with two-step verification on, the password alone does not start a change.
+    [Theory]
+    [InlineData(null, "Account.MfaCodeRequired")]
+    [InlineData("", "Account.MfaCodeRequired")]
+    [InlineData("000000", "Auth.InvalidMfaCode")]
+    public async Task WithTwoStepVerificationTheCodeIsRequired(string? code, string expected)
+    {
+        await using var f = await Fixture.CreateAsync(withMfa: true);
+
+        var result = await f.Request(Password, "yeni@example.test", code);
+
+        result.Error.Code.Should().Be(expected);
+        result.Error.Description.Should().NotBeNullOrWhiteSpace();
+        f.Published.Should().BeEmpty();
+        (await f.Reload()).PendingEmail.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task WithTwoStepVerificationAValidCodeStartsTheChangeAndIsUsedOnce()
+    {
+        await using var f = await Fixture.CreateAsync(withMfa: true);
+
+        var result = await f.Request(Password, "yeni@example.test", " 123456 ");
+
+        result.IsSuccess.Should().BeTrue(result.IsFailure ? result.Error.Description : "");
+        var user = await f.Reload();
+        user.PendingEmail.Should().Be("yeni@example.test");
+        user.LastAcceptedMfaTimeStep.Should().Be(42);
+        f.Published.OfType<UserEmailChangeRequestedEvent>().Should().ContainSingle();
+        // The same code cannot be replayed (checked before the one-minute limit).
+        (await f.Request(Password, "baska@example.test", "123456")).Error.Code.Should().Be("Auth.InvalidMfaCode");
+    }
+
+    [Fact]
+    public async Task WrongCodesCountTowardsTheLockout()
+    {
+        await using var f = await Fixture.CreateAsync(withMfa: true);
+        for (var i = 0; i < 5; i++)
+            (await f.Request(Password, "yeni@example.test", "000000")).Error.Code.Should().Be("Auth.InvalidMfaCode");
+
+        // Locked: even the right code is refused for now.
+        (await f.Request(Password, "yeni@example.test", "123456")).Error.Code.Should().Be("Auth.MfaLocked");
+        f.Published.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AWrongPasswordIsReportedBeforeTheCodeAndDoesNotCountAsACodeFailure()
+    {
+        await using var f = await Fixture.CreateAsync(withMfa: true);
+
+        (await f.Request("Wrong-Password-1!", "yeni@example.test", "000000")).Error.Code.Should().Be("Auth.InvalidCredentials");
+
+        (await f.Reload()).MfaFailedAttempts.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task WithoutTwoStepVerificationNoCodeIsAsked()
+    {
+        await using var f = await Fixture.CreateAsync();
+
+        (await f.Request(Password, "yeni@example.test", "garbage")).IsSuccess.Should().BeTrue();
+    }
+
     // Review L3: the one-minute limit is checked before the address, so the form cannot be used to probe addresses.
     [Fact]
     public async Task TheMinuteLimitComesBeforeTheAddressCheck()
@@ -428,7 +491,7 @@ public sealed class AccountEmailChangeTests
         public ICurrentUserService CurrentUser => new Current(UserId);
         public List<object> Published { get; } = [];
 
-        public static async Task<Fixture> CreateAsync(bool withPassword = true)
+        public static async Task<Fixture> CreateAsync(bool withPassword = true, bool withMfa = false)
         {
             var context = new IdentityDbContext(new DbContextOptionsBuilder<IdentityDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
@@ -440,6 +503,7 @@ public sealed class AccountEmailChangeTests
                 user.SetPassword(hash, salt);
             }
             user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+            if (withMfa) user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
             var role = Role.Create("Student", "Student", true);
             user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id, PlatformProduct.Coaching));
             context.Roles.Add(role);
@@ -449,9 +513,9 @@ public sealed class AccountEmailChangeTests
             return new Fixture { Context = context, UserId = user.Id };
         }
 
-        public Task<EduPlatform.Shared.Kernel.Results.Result<EmailChangeRequested>> Request(string password, string newEmail) =>
-            new RequestEmailChangeCommandHandler(Users, new PasswordHasher(), UnitOfWork, Publisher(), CurrentUser)
-                .Handle(new RequestEmailChangeCommand(password, newEmail), default);
+        public Task<EduPlatform.Shared.Kernel.Results.Result<EmailChangeRequested>> Request(string password, string newEmail, string? mfaCode = null) =>
+            new RequestEmailChangeCommandHandler(Users, new PasswordHasher(), UnitOfWork, Publisher(), CurrentUser, new TotpStub())
+                .Handle(new RequestEmailChangeCommand(password, newEmail, mfaCode), default);
 
         public Task<EduPlatform.Shared.Kernel.Results.Result> Confirm(Guid userId, string token) =>
             new ConfirmEmailChangeCommandHandler(Users, UnitOfWork, Publisher())
@@ -481,6 +545,21 @@ public sealed class AccountEmailChangeTests
             Published.Add(args![0]!);
             return Task.CompletedTask;
         }
+    }
+
+    /// <summary>"123456" is the code of time step 42 and "654321" of step 43; anything else is wrong.</summary>
+    private sealed class TotpStub : Identity.Application.Interfaces.IMultiFactorService
+    {
+        public long? FindMatchingTimeStep(string protectedSecret, string code) =>
+            protectedSecret != "protected-secret" ? null : code switch { "123456" => 42, "654321" => 43, _ => null };
+        public string CreateChallenge(Guid userId, bool rememberMe, PlatformProduct? product = null) => throw new NotSupportedException();
+        public EduPlatform.Shared.Kernel.Results.Result<Identity.Application.Interfaces.MfaChallengePayload> ReadChallenge(string token) => throw new NotSupportedException();
+        public Identity.Application.Interfaces.MfaSetupResponse CreateSetup(Guid userId, string email) => throw new NotSupportedException();
+        public EduPlatform.Shared.Kernel.Results.Result<Identity.Application.Interfaces.MfaSetupPayload> ReadSetupToken(string token) => throw new NotSupportedException();
+        public string ProtectSecret(string secret) => throw new NotSupportedException();
+        public string UnprotectSecret(string protectedSecret) => throw new NotSupportedException();
+        public IReadOnlyList<string> GenerateRecoveryCodes() => throw new NotSupportedException();
+        public string HashRecoveryCode(string recoveryCode) => throw new NotSupportedException();
     }
 
     private sealed class Current(Guid userId) : ICurrentUserService

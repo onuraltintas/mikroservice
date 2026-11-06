@@ -29,7 +29,8 @@ public sealed class InvitationQueryTests
         };
         var handler = new GetMyInvitationsQueryHandler(
             repository,
-            new StubCurrentUserService("student@example.com"));
+            new StubCurrentUserService("student@example.com"),
+            StubUserRepository.Create("student@example.com"));
 
         var result = await handler.Handle(new GetMyInvitationsQuery(), CancellationToken.None);
 
@@ -52,6 +53,24 @@ public sealed class InvitationQueryTests
             Task.FromResult(new List<Invitation>());
         public Task<List<Invitation>> GetPendingByInviterIdAsync(Guid inviterId, DateTime now, CancellationToken cancellationToken) =>
             Task.FromResult(new List<Invitation>());
+    }
+
+    // Paket F L5: the handler reads the account's current address by the token's subject.
+    private class StubUserRepository : System.Reflection.DispatchProxy
+    {
+        public static IUserRepository Create(string email)
+        {
+            var proxy = System.Reflection.DispatchProxy.Create<IUserRepository, StubUserRepository>();
+            ((StubUserRepository)(object)proxy).email = email;
+            return proxy;
+        }
+
+        private string email = string.Empty;
+
+        protected override object? Invoke(System.Reflection.MethodInfo? targetMethod, object?[]? args) =>
+            targetMethod?.Name == nameof(IUserRepository.GetByIdAsync)
+                ? Task.FromResult<User?>(User.Create((Guid)args![0]!, email, "Student", "Example"))
+                : throw new NotSupportedException(targetMethod?.Name);
     }
 
     private sealed class StubCurrentUserService(string email) : ICurrentUserService

@@ -24,7 +24,7 @@ describe('ExistingProductJoinComponent', () => {
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('button').disabled).toBe(false);
     expect(fixture.nativeElement.querySelector('option').textContent).toBe('İkinci kurum');
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('kurumu listeden seçin');
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Katılacağın kurumu listeden seç.');
     TestBed.inject(HttpTestingController).verify();
   });
   it('uses the dedicated Speed Reading origin for student login', () => {
@@ -52,7 +52,7 @@ describe('ExistingProductJoinComponent', () => {
       { id: '22222222-2222-2222-2222-222222222222', name: 'Second', role: 'Admin' }
     ] }, { status: 400, statusText: 'Bad Request' });
     expect(c.institutions.length).toBe(2); expect(c.joined).toBe(false);
-    expect(c.error).toBe('Katılacağınız kurumu listeden seçin.');
+    expect(c.error).toBe('Katılacağın kurumu listeden seç.');
     c.submit(); http.expectNone('/api/auth/coaching/register/join');
     c.selectedInstitutionId = '22222222-2222-2222-2222-222222222222'; c.submit();
     const selected = http.expectOne('/api/auth/coaching/register/join');
@@ -100,7 +100,8 @@ describe('ExistingProductJoinComponent', () => {
     req.flush({ userId: 'existing' }); expect(c.joined).toBe(true); http.verify();
   });
   // Paket A #2: an unverified existing account now joins and gets a verification e-mail.
-  for (const [account, voice] of [['student', 'sen'], ['teacher', 'siz'], ['institution', 'siz']] as const) {
+  // Paket F #12: every Coaching sign-up says "sen".
+  for (const [account, voice] of [['student', 'sen'], ['teacher', 'sen'], ['institution', 'sen']] as const) {
     it(`tells a ${account} with a verified address to sign in, without claiming an e-mail was sent`, () => {
       const c = create(account); c.submit();
       TestBed.inject(HttpTestingController).expectOne('/api/auth/coaching/register/join').flush({ userId: 'u', verificationEmail: 'notRequired' });
@@ -119,21 +120,34 @@ describe('ExistingProductJoinComponent', () => {
       expect(c.verificationEmailSent).toBe(true);
     });
   }
-  // Review #6: staff accounts are addressed with "siz".
-  it('addresses students with sen and teachers/institutions with siz', () => {
-    const student = create('student');
-    expect(student.copy.intro).toContain('mevcut şifreni kullan.');
-    expect(student.copy.heading).toBe('Mevcut hesabınla katıl');
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ providers: [{ provide: ChangeDetectorRef, useValue: { markForCheck: () => {} } }] });
-    for (const account of ['teacher', 'institution'] as const) {
-      const staff = create(account);
-      expect(staff.copy.heading).toBe('Mevcut hesabınızla katılın');
-      expect(staff.copy.intro).toContain('mevcut şifrenizi kullanın.');
-      expect(staff.copy.intro).toContain('Hesabınız ve kurum bağlantınız korunur.');
-      expect(staff.copy.mfaHint).toContain('girin.');
+  // Review #6 kept "siz" for staff; Paket F #12 (user decision 07.11.2026): every sign-up on the Coaching site says "sen".
+  it('addresses every Coaching account with sen and keeps siz for staff of the other service', () => {
+    for (const account of ['student', 'teacher', 'institution'] as const) {
+      const coaching = create(account);
+      expect(coaching.copy.heading).toBe('Mevcut hesabınla katıl');
+      expect(coaching.copy.intro).toContain('mevcut şifreni kullan.');
+      expect(coaching.copy.mfaHint).toContain('gir.');
+      expect(coaching.copy.login).toBe('Giriş yap');
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({ providers: [{ provide: ChangeDetectorRef, useValue: { markForCheck: () => {} } }] });
+    }
+    const staff = create('teacher');
+    staff.product = 'speed-reading';
+    expect(staff.copy.heading).toBe('Mevcut hesabınızla katılın');
+  });
+  // Paket F #13: the screen after joining always has a sign-in link, also when a verification e-mail was sent.
+  it('shows a sign-in link after joining, whether or not a verification e-mail was sent', () => {
+    TestBed.resetTestingModule();
+    for (const outcome of ['sent', 'notRequired']) {
+      TestBed.configureTestingModule({ imports: [ExistingProductJoinComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
+      const fixture = TestBed.createComponent(ExistingProductJoinComponent);
+      fixture.componentInstance.joined = true;
+      fixture.componentInstance.verificationEmailSent = outcome === 'sent';
+      fixture.detectChanges();
+      const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="join-login-link"]');
+      expect(link?.textContent?.trim()).toBe('Giriş yap');
+      expect(link?.getAttribute('href')).toBe('/auth/login');
+      TestBed.resetTestingModule();
     }
   });
   // Third review item 6: a Coaching student signs in on the site they are on.

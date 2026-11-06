@@ -41,12 +41,12 @@ const forms: Array<{ name: string; voice: Voice; role: string; path: string; cre
     value: { firstName: 'Ayşe', lastName: 'Kaya', email: 'ayse@example.test', password, confirmPassword: password, phoneNumber: '5551234567' },
   },
   {
-    name: 'teacher', voice: 'siz', role: 'teacher', path: '/auth/coaching/register/teacher',
+    name: 'teacher', voice: 'sen', role: 'teacher', path: '/auth/coaching/register/teacher',
     create: () => new TeacherRegisterComponent() as unknown as Form,
     value: { firstName: 'Ali', lastName: 'Demir', email: 'ali@example.test', password, confirmPassword: password, branch: 'Matematik' },
   },
   {
-    name: 'institution', voice: 'siz', role: 'institution', path: '/auth/coaching/register/institution',
+    name: 'institution', voice: 'sen', role: 'institution', path: '/auth/coaching/register/institution',
     create: () => new InstitutionRegisterComponent() as unknown as Form,
     value: { institutionName: 'Okul', institutionType: 1, provinceId: '34', districtId: '3401', firstName: 'Ali', lastName: 'Demir', email: 'ali@example.test', password, confirmPassword: password },
   },
@@ -101,7 +101,8 @@ describe('registration verification e-mail outcome copy', () => {
     expect(sent.message).not.toContain('zaten doğrulanmış');
   });
 
-  it('uses sen for students/parents and siz for staff', () => {
+  // Paket F #12: every Coaching sign-up form uses sen; the siz copy stays for other callers.
+  it('has a sen and a siz version', () => {
     expect(registrationSuccessCopy('notRequired', 'sen').message).toContain('yapabilirsin.');
     expect(registrationSuccessCopy('notRequired', 'siz').message).toContain('yapabilirsiniz.');
     expect(registrationSuccessCopy('sent', 'sen').message).toContain('yapabilirsin.');

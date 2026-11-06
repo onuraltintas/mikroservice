@@ -110,3 +110,15 @@ test('the theme is applied before the app starts, from a same-origin script', ()
   const boot = fs.readFileSync(path.join(root, 'public/theme-boot.js'), 'utf8');
   assert.match(boot, /localStorage/); assert.match(boot, /prefers-color-scheme: dark/); assert.match(boot, /classList/); assert.match(boot, /colorScheme/);
 });
+
+// Paket F #38: an invalid field (aria-invalid="true") must show the danger border. The shared field rule in the
+// surfaces file outranks per-page styles, so the invalid rule has to live next to it with the same selector plus the
+// attribute, or it never wins.
+test('invalid fields get the danger border in the shared field styles', () => {
+  const surfaces = fs.readFileSync(path.join(root, 'src/app/features/coaching-portal/layout/coaching-student-surfaces.scss'), 'utf8');
+  const field = /^\s*(:is\(input:not\(\[type=checkbox\]\)[^{]*\))\s*\{\s*min-height: 44px/m.exec(surfaces);
+  assert.ok(field, 'missing the shared field rule');
+  const invalid = surfaces.indexOf(`${field[1]}[aria-invalid=true]`);
+  assert.notEqual(invalid, -1, 'the shared field rule needs an [aria-invalid=true] variant');
+  assert.match(surfaces.slice(invalid, surfaces.indexOf('}', invalid)), /border-color:\s*var\(--ui-danger\)/);
+});

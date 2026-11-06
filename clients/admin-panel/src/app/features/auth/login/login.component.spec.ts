@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { AUTH_VOICE } from '../auth-voice';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent MFA flow', () => {
@@ -89,9 +90,33 @@ describe('LoginComponent MFA flow', () => {
     expect(component.recoveryCodes()).toEqual(['CODE01-CODE001', 'CODE02-CODE002']);
   });
 
-  function createComponent(authService: Record<string, unknown>): LoginComponent {
+  // Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com).
+  it('addresses the Coaching site with sen and the management panel with siz', async () => {
+    const rejectUnconfirmed = { loginWithPassword: vi.fn().mockRejectedValue({ error: { code: 'Auth.EmailNotConfirmed' } }) };
+    const coaching = createComponent(rejectUnconfirmed, 'sen');
+    expect(coaching.copy.welcome).toBe('Hoş geldin 👋');
+    expect(coaching.copy.loginIntro).toBe('Hesabına giriş yap.');
+    expect(coaching.copy.noAccount).toBe('Hesabın yok mu?');
+    expect(coaching.copy.signUp).toBe('Kayıt ol');
+    expect(coaching.googleButtonText).toBe('continue_with');
+    coaching.email = 'ada@example.test'; coaching.password = 'x';
+    await coaching.onSubmit(new Event('submit'));
+    expect(coaching.errorMessage()).toBe('Giriş yapmadan önce e-posta adresini doğrula.');
+
+    TestBed.resetTestingModule();
+    const management = createComponent(rejectUnconfirmed, 'siz');
+    expect(management.copy.welcome).toBe('Hoş Geldiniz 👋');
+    expect(management.copy.signUp).toBe('Kayıt Olun');
+    expect(management.googleButtonText).toBe('signin_with');
+    management.email = 'admin@example.test'; management.password = 'x';
+    await management.onSubmit(new Event('submit'));
+    expect(management.errorMessage()).toBe('Lütfen e-posta adresinizi doğrulayın.');
+  });
+
+  function createComponent(authService: Record<string, unknown>, voice: 'sen' | 'siz' = 'sen'): LoginComponent {
     TestBed.configureTestingModule({
       providers: [
+        { provide: AUTH_VOICE, useValue: voice },
         { provide: AuthService, useValue: authService },
         { provide: Router, useValue: { navigate: vi.fn().mockResolvedValue(true) } },
         { provide: ToasterService, useValue: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() } },
