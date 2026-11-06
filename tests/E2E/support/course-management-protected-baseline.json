@@ -25,10 +25,10 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-teacher-report.component.scss": "20dcf1a7d39fc5117dbe5374ca6b3f98da5d969e731a977985be9869fb7f4ad5",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-teacher-report.component.spec.ts": "b75a6612301e3a123607f854d6c651daffd002e8c2958685a63285b15b80b463",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-teacher-report.component.ts": "40eacab6b70ec79ae62397f70e0286c74e7c6217b774a1b7c5ed28a8768e8fff",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.html": "fce50e9163ebd32476edfb923173023e81ecba9382535ced8f2cf0b59550cace",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.html": "a183d94a4ee6b3ab6c68778456b4b652dcd8cee32bfe19a506777c7195825ad1",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.scss": "5d1bd0eb9b35bac86f41238a1cfdd2cb4f1e2f4fbb51d1be1f4b9201f05cff16",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.spec.ts": "225b6f92551ae78ee80dfb1c468ca4c7d6c916fce2523e89028da475a362bd4d",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.ts": "cbbaa6539c4285722af0b52915b5f52600517ebaca8912d7ee4c06a93d406218",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.spec.ts": "85c74a1fca65e305fc04f46dfe58de7b805e6b3ac2d21f45975568caf0491d33",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-workspace.component.ts": "7b770aee47a453cab485be389b5ef0cfad66b37ebee4a2bbde5704f305dc931c",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution.service.spec.ts": "a701290be92568d39a730eed10756a8e657913a6ae1af6befceaef8dcf4b169d",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution.service.ts": "3774e6c7ae4685a36fe2c8787973ec8fd86ec9696edff33d08321de001431ad8",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-messages.spec.ts": "2e450e9dfb32a6f70ffd95da995c4ca9327140df0d2c9e8893533fb6b8bd38cf",
@@ -2699,7 +2699,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "E3 review fixes",
+    "purpose": "E3 re-check",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2747,7 +2747,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "88ddbf13",
+    "previousBaselineCommit": "c2547dad",
     "removedSincePreviousBaseline": []
   }
 }
