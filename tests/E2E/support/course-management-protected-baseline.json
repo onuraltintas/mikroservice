@@ -1403,7 +1403,7 @@
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingInvitationStore.cs": "e26e52e60d237fb9561fa4fb9885493b9fd78c1b3d1bfbd0684638ce5eef6eb0",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileImporter.cs": "1213ccca7bf48a88e56226c0f51f84489d880a6ac5894b1edbacfc339e0a44e1",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs": "f201652ed88d9fbb1442bf99008b863546b9dd267282e8776d152fff98f7842c",
-    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingStudentOnboardingService.cs": "9e45cd0ed2984a655270d866a896697ea533814078c621c4b77d6f037d0dab4a",
+    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingStudentOnboardingService.cs": "ffaa43cd6645bf1fa9ec8d74664f4ea9293c3ce282feec1bb8b99ee9986307a1",
     "services/coaching-service/Coaching.Infrastructure/Profiles/OwnedCoachingDirectory.cs": "ad910fabaaa618cdc157f1e851570f3127a56af1fabfbca4685a788f44df3b03",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderProcessor.cs": "ecf8cc3936ce497a32b2ba1de86538b47d3ff93a7943d8e9e92aba5da873d96e",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderScanState.cs": "f20a8f3ea616d616d4392a9fdc33119193d46b50a429e0bfa181b500cff26828",
@@ -2696,7 +2696,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "E2 Turkish place names, own-school list and nationality quotas",
+    "purpose": "E2 null fix",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2744,7 +2744,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "a5f0e4ca",
+    "previousBaselineCommit": "399aecb6",
     "removedSincePreviousBaseline": []
   }
 }
