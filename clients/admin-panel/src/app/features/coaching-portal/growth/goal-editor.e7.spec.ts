@@ -3,7 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { ToasterService } from '../../../core/services/toaster.service';
 import { describe, expect, it, vi } from 'vitest';
 import { CoachingScoreEstimateService, ScoreEstimate } from '../../../core/services/coaching-score-estimate.service';
 import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
@@ -18,7 +19,7 @@ import { StudentGrowthGoalComponent } from './student-growth-goal.component';
 /** E7 (#30, live test 06.11.2026): Hedefim's target editor is the first-login wizard's target step. */
 
 @Component({ selector: 'app-student-onboarding', standalone: true, template: '<p>Sihirbaz hedef adımı</p>' })
-class FakeWizard { readonly embedded = input(false); readonly targetSaved = output<void>(); busy() { return false; } }
+class FakeWizard { readonly embedded = input(false); readonly targetSaved = output<void>(); busy() { return false; } dirty = vi.fn(() => false); }
 @Component({ selector: 'app-student-goal-summary', standalone: true, template: '<p>Özet</p>' })
 class FakeSummary { load = vi.fn(); }
 @Component({ selector: 'app-student-goal-target', standalone: true, host: { '[attr.data-goal]': 'goalId', '[attr.data-net-only]': 'netOnly' }, template: '<p>Netler</p>' })
@@ -56,17 +57,53 @@ describe('E7 Hedefim goal editor', () => {
     expect(hero.textContent).toContain('TYT hedef puanın 400');
   });
 
-  function hedefim(primary: { goalId: string | null; version: number | null } = { goalId: 'goal-1', version: 2 }) {
-    const planning = { getPrimaryGoal: vi.fn(() => of(primary)) };
+  function hedefim(primary: { goalId: string | null; version: number | null } | Error = { goalId: 'goal-1', version: 2 }, confirm = false) {
+    const planning = { getPrimaryGoal: vi.fn(() => primary instanceof Error ? throwError(() => primary) : of(primary)) };
+    const toaster = { confirm: vi.fn().mockResolvedValue(confirm), success: vi.fn(), error: vi.fn() };
     const setup = { get: vi.fn(() => of({ context: { purpose: 'Yks', primaryScoreType: 'EA' } })) };
     TestBed.configureTestingModule({ imports: [StudentGrowthGoalComponent], providers: [provideRouter([]),
-      { provide: CoachingStudyPlanningService, useValue: planning }, { provide: CoachingLearningSetupService, useValue: setup }] });
+      { provide: CoachingStudyPlanningService, useValue: planning }, { provide: CoachingLearningSetupService, useValue: setup },
+      { provide: ToasterService, useValue: toaster }] });
     TestBed.overrideComponent(StudentGrowthGoalComponent, {
       remove: { imports: [StudentOnboardingComponent, StudentGoalTargetComponent, StudentGoalSummaryComponent] },
       add: { imports: [FakeWizard, FakeSummary, FakeNets] } });
     const fixture = TestBed.createComponent(StudentGrowthGoalComponent); fixture.detectChanges();
-    return { fixture, planning, el: fixture.nativeElement as HTMLElement };
+    return { fixture, planning, toaster, el: fixture.nativeElement as HTMLElement };
   }
+
+  // Review of #120 (items 4 and 6).
+  it('a failed main-goal load says so with "Yeniden yükle" instead of asking for a target', () => {
+    const { fixture, planning, el } = hedefim(new Error('offline'));
+    expect(el.textContent).not.toContain('önce hedefini seç');
+    expect(el.querySelector('[role="alert"]')!.textContent).toContain('Net hedeflerin yüklenemedi.');
+    planning.getPrimaryGoal.mockReturnValue(of({ goalId: 'goal-1', version: 2 }));
+    (Array.from(el.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Yeniden yükle') as HTMLElement).click(); fixture.detectChanges();
+    expect(el.querySelector('app-student-goal-target')!.getAttribute('data-goal')).toBe('goal-1');
+    expect(el.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('leaving with a started target change asks first', async () => {
+    const { fixture, toaster } = hedefim();
+    const wizard = fixture.debugElement.query(x => x.name === 'app-student-onboarding').componentInstance as FakeWizard;
+    expect(await fixture.componentInstance.canLeavePage()).toBe(true);
+    expect(toaster.confirm).not.toHaveBeenCalled();
+    wizard.dirty.mockReturnValue(true);
+    expect(await fixture.componentInstance.canLeavePage()).toBe(false);
+    expect(toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Hedef değişikliğin kaydedilmedi'));
+  });
+
+  it('the net-only editor offers "Yeniden yükle" when the goal cannot be loaded', async () => {
+    const getGoalTarget = vi.fn(() => throwError(() => new Error('offline')));
+    TestBed.configureTestingModule({ imports: [StudentGoalTargetComponent], providers: [provideHttpClient(), provideHttpClientTesting(),
+      { provide: CoachingStudyPlanningService, useValue: { getGoalTarget, practiceProfiles: vi.fn(() => of([])) } }] });
+    const fixture = TestBed.createComponent(StudentGoalTargetComponent);
+    fixture.componentRef.setInput('goalId', 'goal'); fixture.componentRef.setInput('autoOpen', true); fixture.componentRef.setInput('netOnly', true);
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const reload = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(x => x.textContent?.trim() === 'Yeniden yükle') as HTMLElement;
+    expect(reload).toBeTruthy();
+    reload.click();
+    expect(getGoalTarget).toHaveBeenCalledTimes(2);
+  });
 
   it('Hedefim embeds the wizard\'s target step and the net targets of the main goal, without the old editor', () => {
     const { el } = hedefim();

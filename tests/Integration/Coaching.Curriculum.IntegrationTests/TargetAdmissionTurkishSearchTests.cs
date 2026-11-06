@@ -41,6 +41,20 @@ public sealed class TargetAdmissionTurkishSearchTests
         Assert.Equal("IŞIKLAR FEN LİSESİ", Assert.Single(result.Items).Name);
     }
 
+    [Theory]
+    [InlineData("afyonkarahisar")]
+    [InlineData("AFYONKARAHİSAR")]
+    [InlineData("Afyonkarahisar Sosyal")]
+    // The shared Catalogs.TurkishSearch folding: a name written with a combining dot ("i̇") still matches.
+    public async Task NamesWithACombiningDotMatch(string search)
+    {
+        using var culture = new InvariantCultureScope();
+        using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var school = TargetSchool.Create("mebi-lgs", Guid.NewGuid().ToString(), "Afyonkarahi\u0307sar Sosyal Bilimler Lisesi", "AFYONKARAHİSAR", "MERKEZ", 430m);
+        school.SetActive(true); db.Add(school); await db.SaveChangesAsync();
+        Assert.Single((await new TargetAdmissionSearchService(db).SearchAsync(new("LGS", Search: search))).Items);
+    }
+
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task TheSameSearchesWorkOnPostgres()
     {
@@ -55,6 +69,9 @@ public sealed class TargetAdmissionTurkishSearchTests
             Assert.Equal(law.Id, Assert.Single(result.Items).TargetId);
         }
         Assert.Single((await service.SearchAsync(new("LGS", Search: "ışıklar fen lisesi"))).Items);
+        var dotted = TargetSchool.Create("mebi-lgs", Guid.NewGuid().ToString(), "Afyonkarahi\u0307sar Sosyal Bilimler Lisesi", "AFYONKARAHİSAR", "MERKEZ", 430m);
+        dotted.SetActive(true); f.Db.Add(dotted); await f.Db.SaveChangesAsync();
+        Assert.Single((await service.SearchAsync(new("LGS", Search: "AFYONKARAHİSAR SOSYAL"))).Items);
     }
 
     private static async Task<TargetUniversityProgram> Seed(CoachingDbContext db)
