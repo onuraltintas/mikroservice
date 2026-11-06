@@ -71,7 +71,7 @@ describe('E7 Hedefim goal editor', () => {
     return { fixture, planning, toaster, el: fixture.nativeElement as HTMLElement };
   }
 
-  // Review of #120 (items 4 and 6).
+  // Review of PR 120 (items 4 and 6).
   it('a failed main-goal load says so with "Yeniden yükle" instead of asking for a target', () => {
     const { fixture, planning, el } = hedefim(new Error('offline'));
     expect(el.textContent).not.toContain('önce hedefini seç');

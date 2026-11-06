@@ -441,7 +441,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       expect(t.el.textContent).toContain('Değiştirmek istersen öğretmenine yaz.');
       expect(t.el.textContent).not.toContain("Bugün'e dön");
     });
-    // Review of #120 (item 1): the target branch never says "Önce sınavını seç" to a student who has an exam.
+    // Review of PR 120 (item 1): the target branch never says "Önce sınavını seç" to a student who has an exam.
     async function changeToLgsScore(t: Awaited<ReturnType<typeof render>>, score = '460') {
       (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
       await t.click('Hedef puan gireceğim');

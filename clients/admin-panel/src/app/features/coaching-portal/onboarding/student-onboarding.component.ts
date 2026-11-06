@@ -54,12 +54,12 @@ export class StudentOnboardingComponent implements OnInit {
   readonly targetSaved = output<void>();
   /** E7: the saved target shown first in target mode; "Vazgeç" goes back to it after "Değiştir". */
   readonly original = signal<Answer | null>(null);
-  /** Review of #120: embedded before the first-login setup is completed (Hedefim then only links to it). */
+  /** Review of PR 120: embedded before the first-login setup is completed (Hedefim then only links to it). */
   readonly notReady = signal(false);
   private readonly toaster = coachingToaster();
   /** The student has an exam, so the target step applies (otherwise "Önce sınavını seç"). */
   readonly hasExam = computed(() => !!purposeOf(this.answers()));
-  /** Review of #120: a target change has been started and not saved (Hedefim asks before leaving). */
+  /** Review of PR 120: a target change has been started and not saved (Hedefim asks before leaving). */
   readonly dirty = computed(() => this.mode() === 'target' && !this.answers().targetSaved
     && TARGET_QUESTIONS.some(id => id !== 'targetSaved' && id in this.answers()));
   /** E7: "Hedefin kaydedildi." after a save in Hedefim. */
@@ -125,7 +125,7 @@ export class StudentOnboardingComponent implements OnInit {
   async ngOnInit() {
     try {
       const view = await firstValueFrom(this.api.get());
-      // Review of #120: Hedefim offers the target step only after the first-login setup; before that it links to it.
+      // Review of PR 120: Hedefim offers the target step only after the first-login setup; before that it links to it.
       if (this.embedded() && view.status !== 'Completed') { this.notReady.set(true); return; }
       const targetOnly = this.embedded() || this.route.snapshot.queryParamMap.get('step') === 'target';
       if (view.status === 'Completed' && !targetOnly) { await this.router.navigate(['/coaching-portal']); return; }
@@ -157,7 +157,7 @@ export class StudentOnboardingComponent implements OnInit {
     void this.settle();
   }
   async choose(question: Question, choice: Choice) {
-    // Review of #120: "Henüz karar vermedim" removes a saved target, so it is confirmed first.
+    // Review of PR 120: "Henüz karar vermedim" removes a saved target, so it is confirmed first.
     const saved = this.original();
     if (question.id === 'targetMode' && choice.value === 'none' && this.mode() === 'target' && saved && saved.value !== 'none'
       && !await this.toaster.confirm(`Mevcut hedefin silinecek: ${saved.label}. Devam edilsin mi?`, { confirmText: 'Hedefimi sil', cancelText: 'Vazgeç' })) return;
@@ -312,7 +312,7 @@ export class StudentOnboardingComponent implements OnInit {
 
   retry() { this.error.set(null); void this.settle(); }
 
-  /** Review of #120: a teacher set the goal while the student was changing it: the teacher's goal is shown, locked. */
+  /** Review of PR 120: a teacher set the goal while the student was changing it: the teacher's goal is shown, locked. */
   private async showTeacherGoal() {
     this.invalid.set(null); this.error.set(null); this.original.set(null);
     try {

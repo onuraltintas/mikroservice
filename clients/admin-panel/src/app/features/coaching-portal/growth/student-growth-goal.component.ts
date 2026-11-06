@@ -75,7 +75,7 @@ export class StudentGrowthGoalComponent implements OnInit {
       });
   }
 
-  /** Review of #120: a started target change (or a save in flight) is not lost without asking. */
+  /** Review of PR 120: a started target change (or a save in flight) is not lost without asking. */
   async canLeavePage() {
     const wizard = this.wizard();
     if (wizard?.busy()) return false;
