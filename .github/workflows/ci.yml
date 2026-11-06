@@ -73,6 +73,7 @@ jobs:
           node --test tests/E2E/support/ci-failure-report.contract.test.mjs
           node --test tests/E2E/course-management-foundation.contract.test.mjs
           node --test tests/E2E/email-verification-links.contract.test.mjs
+          node --test tests/E2E/support/litespeed-signalr-routing.test.mjs
 
   frontend:
     name: Frontend checks
