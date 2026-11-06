@@ -111,7 +111,6 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         if (profile.OnboardingCompletedAt is null && profile.HasOnboardingStep(2)) profile.ReopenOnboardingStep(2);
     }
 
-    /// <summary>Paket D review (L2): Profilim asks the diploma grade only when the exam does (YKS, or no exam chosen yet).</summary>
     /// <summary>
     /// E4 #23: what <see cref="UpdateStudentAsync"/> with this education would remove or leave not fitting (the same rules as
     /// <see cref="FollowEducationAsync"/>); nothing is saved.
@@ -139,6 +138,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         LearningPurpose.Yds => "YDS", LearningPurpose.Yokdil => "YÖKDİL", _ => purpose.ToString()
     };
 
+    /// <summary>Paket D review (L2): Profilim asks the diploma grade only when the exam does (YKS, or no exam chosen yet).</summary>
     public async Task<bool> ExamAsksDiplomaAsync(Guid userId, CancellationToken ct) => LearningPurposes.ExamAsksDiploma(
         await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == userId).Select(x => (LearningPurpose?)x.Purpose).SingleOrDefaultAsync(ct));
 

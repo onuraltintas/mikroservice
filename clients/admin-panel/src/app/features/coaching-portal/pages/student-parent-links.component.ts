@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingDatePipe } from '../coaching-labels';
@@ -28,6 +28,8 @@ import { apiMessage, parentRelationshipLabel } from '../parent/parent-home.compo
       }
       @if (code(); as issued) {
         <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm ">Velinle paylaş: <strong class="font-mono text-lg tracking-widest">{{ issued.code }}</strong><br>{{ note(issued.expiresAt) }} Velin kodu girdiğinde isteği burada onaylarsın.</p>
+      } @else if (expired(); as old) {
+        <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm" data-testid="expired-code">Veli kodunun süresi doldu ({{ old.expiresAt | coachingDate }}). Velin bağlanacaksa yeni bir kod oluştur.</p>
       } @else if (active(); as current) {
         <!-- E4 #21: a code made in the wizard (or earlier here); only a hash is stored, so its expiry is shown, not the code. -->
         <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm" data-testid="active-code">Aktif bir veli kodun var: {{ note(current.expiresAt) }}<br>Kodu güvenliğin için yalnız oluşturduğunda gösteriyoruz; kaybettiysen yeni kod oluştur.</p>
@@ -52,7 +54,9 @@ export class StudentParentLinksComponent implements OnInit {
   readonly links = signal<ParentLink[]>([]);
   readonly code = signal<ParentLinkCode | null>(null);
   /** E4 #21: an unused code made earlier (in the wizard or here). */
-  readonly active = signal<ParentLinkCodeStatus | null>(null);
+  private readonly rawCode = signal<ParentLinkCodeStatus | null>(null);
+  /** The earlier code while it can still be used. */
+  readonly active = computed(() => { const code = this.rawCode(); return code && !code.expired ? code : null; });
   readonly confirmReplace = signal(false);
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
@@ -61,7 +65,9 @@ export class StudentParentLinksComponent implements OnInit {
 
   relationshipLabel(value: string): string { return parentRelationshipLabel(value); }
 
+  /** E4 review: an expired code is not replaced by asking (it no longer works anyway). */
   hasCode() { return !!this.code() || !!this.active(); }
+  expired() { const code = this.code() ? null : this.rawCode(); return code?.expired ? code : null; }
   note(expiresAt: string) { return parentCodeNote(expiresAt); }
   /** E4 #21: a new code replaces the old one (the server revokes it), so the student is asked in the page first. */
   askCode(): void { if (this.hasCode()) this.confirmReplace.set(true); else void this.createCode(); }
@@ -69,7 +75,7 @@ export class StudentParentLinksComponent implements OnInit {
   async createCode(): Promise<void> {
     await this.run(async () => {
       const issued = await firstValueFrom(this.service.createCode());
-      this.code.set(issued); this.active.set({ createdAt: new Date().toISOString(), expiresAt: issued.expiresAt }); this.confirmReplace.set(false);
+      this.code.set(issued); this.rawCode.set({ createdAt: new Date().toISOString(), expiresAt: issued.expiresAt }); this.confirmReplace.set(false);
     }, 'Veli kodu oluşturulamadı.', false);
   }
 
@@ -92,7 +98,7 @@ export class StudentParentLinksComponent implements OnInit {
   }
 
   private load(): void {
-    this.service.getActiveCode?.().subscribe({ next: code => this.active.set(code), error: () => this.active.set(null) });
+    this.service.getActiveCode().subscribe({ next: code => this.rawCode.set(code), error: () => this.rawCode.set(null) });
     this.service.getLinks().subscribe({ next: links => this.links.set(links), error: () => this.error.set('Veli bağlantıların yüklenemedi.') });
   }
 }

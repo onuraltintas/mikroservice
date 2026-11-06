@@ -37,10 +37,10 @@ public sealed class ParentLinkService(IdentityDbContext db, TimeProvider clock, 
     {
         if (!await HasActiveRoleAsync(studentUserId, "Student", ct)) return Result.Failure<ParentLinkCodeStatus?>(ParentLinkErrors.Forbidden);
         var now = Now;
-        // A new code revokes the older ones, so at most one is active; the newest wins should older data hold more.
+        // A new code revokes the older ones, so at most one is open; the newest wins should older data hold more.
         var active = await db.ParentLinkCodes.AsNoTracking()
-            .Where(x => x.StudentUserId == studentUserId && x.UsedAt == null && x.RevokedAt == null && x.ExpiresAt > now)
-            .OrderByDescending(x => x.CreatedAt).Select(x => new ParentLinkCodeStatus(x.CreatedAt, x.ExpiresAt)).FirstOrDefaultAsync(ct);
+            .Where(x => x.StudentUserId == studentUserId && x.UsedAt == null && x.RevokedAt == null)
+            .OrderByDescending(x => x.CreatedAt).Select(x => new ParentLinkCodeStatus(x.CreatedAt, x.ExpiresAt, x.ExpiresAt <= now)).FirstOrDefaultAsync(ct);
         return Result.Success<ParentLinkCodeStatus?>(active);
     }
 

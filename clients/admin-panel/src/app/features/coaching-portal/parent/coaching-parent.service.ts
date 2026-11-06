@@ -28,7 +28,9 @@ export interface ParentWeeklyEmail { inApp: boolean; email: boolean; sms: boolea
 
 export interface ParentLinkCode { code: string; expiresAt: string }
 /** E4 #21: an unused, unexpired code; only its dates (the code itself is shown only when it is created). */
-export interface ParentLinkCodeStatus { createdAt: string; expiresAt: string }
+export interface ParentLinkCodeStatus { createdAt: string; expiresAt: string;
+  /** E4 review: the newest unused code's week is over (missing on an older API: open). */
+  expired?: boolean }
 
 export interface ParentChildPage<T> { items: T[]; totalCount?: number }
 

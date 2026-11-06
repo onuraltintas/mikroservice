@@ -7,12 +7,13 @@ import { environment } from '../../../../environments/environment';
 import { CoachingOnboardingService, OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import { LocationService } from '../../../core/services/location.service';
 import { OABT_FIELDS } from '../../../core/models/practice-exam';
+import { coachingDate } from '../coaching-labels';
 import { CoachingParentService, ParentLinkCode, ParentLinkCodeStatus } from '../parent/coaching-parent.service';
 import { NotificationPreference, NotificationPreferencesApi } from '../../../../../shared/notification-preferences.component';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
-  emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, personalRequest, prefill, questions, signature, stepComplete,
+  emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, personalRequest, prefill, questions, signature, stepComplete, stepQuestions,
   summary, targetRequest, withoutUnfitPurpose
 } from './onboarding-model';
 
@@ -89,6 +90,8 @@ export class StudentOnboardingComponent implements OnInit {
   readonly parentCode = signal<ParentLinkCode | null>(null);
   /** E4 #18/#21: an unused code made earlier (undefined while it is checked). */
   readonly activeCode = signal<ParentLinkCodeStatus | null | undefined>(undefined);
+  /** The earlier code when it can still be used (an expired one only gets a note). */
+  readonly openCode = computed(() => { const code = this.activeCode(); return code && !code.expired ? code : null; });
   /** E4 #18: the invitations accepted in this step (its answer). */
   readonly acceptedNow = signal<Invitation[]>([]);
   readonly emailPrefs = signal<NotificationPreference[] | null>(null);
@@ -178,6 +181,7 @@ export class StudentOnboardingComponent implements OnInit {
   /** E4 #18: the parent step's answer names the code's expiry. */
   passParent(question: Question, code: { expiresAt: string } | null) { this.pass(question, parentAnswer(code, [])); }
   codeNote(expiresAt: string) { return parentCodeNote(expiresAt); }
+  expiredNote(expiresAt: string) { return `Veli kodunun süresi doldu (${coachingDate(expiresAt)}). İstersen yeni bir kod oluştur.`; }
   async createParentCode() {
     await this.run(async () => this.parentCode.set(await firstValueFrom(this.parents.createCode())), 'Veli kodu oluşturulamadı. Yeniden dene.');
   }
@@ -220,7 +224,7 @@ export class StudentOnboardingComponent implements OnInit {
       const pending = steps.find(step => this.saved()[step] !== signature(this.answers(), this.context(), step));
       if (!pending || !stepComplete(this.answers(), this.context(), pending)) break;
       const view = await this.saveStep(pending);
-      if (!view) return;
+      if (!view) { if (this.invalid()) this.prepare(); return; }
       this.view.set(view);
       // Review M1: a saved grade the chosen exam no longer fits asks the exam again instead of resending it.
       if (this.mode() === 'wizard') this.answers.update(current => withoutUnfitPurpose(current, view.allowedPurposes));
@@ -239,7 +243,17 @@ export class StudentOnboardingComponent implements OnInit {
         : this.api.passStep(step as 4 | 5 | 6);
       return await firstValueFrom(request);
     } catch (e) {
-      this.error.set((e as { error?: { message?: string } })?.error?.message ?? 'Kaydedilemedi. Bağlantını kontrol edip yeniden dene.');
+      const failure = e as { status?: number; error?: { message?: string } };
+      if (failure?.status === 400) {
+        // E4 review: a rule only the server knows refused the step: its last question is asked again with the message (no retry).
+        const last = stepQuestions(this.answers(), this.context(), step).filter(x => x.id in this.answers()).at(-1);
+        if (last) {
+          this.answers.update(current => change(current, last.id));
+          this.invalid.set(failure.error?.message ?? 'Bu cevap kaydedilemedi. Başka bir seçenek dene.');
+          return null;
+        }
+      }
+      this.error.set(failure?.error?.message ?? 'Kaydedilemedi. Bağlantını kontrol edip yeniden dene.');
       return null;
     } finally { this.busy.set(false); }
   }
@@ -309,8 +323,12 @@ export class StudentOnboardingComponent implements OnInit {
    * read from Identity and Notification; step 4 comes with the view. A failed read keeps the neutral label.
    */
   private resumeAnswers(view: OnboardingView) {
-    const relabel = (id: 'parent' | 'notifications', label: string) =>
+    const relabel = (id: 'invite' | 'parent' | 'notifications', label: string) =>
       this.answers.update(current => current[id] ? { ...current, [id]: { ...current[id]!, label } } : current);
+    // "Sonra bakarım" is not stored: invitations still waiting mean the student chose it.
+    if (view.savedSteps.includes(4) && !view.acceptedInvitations?.length)
+      this.http.get<Invitation[]>(`${environment.apiUrl}/coaching/invitations/my-invitations`)
+        .subscribe({ next: list => relabel('invite', inviteAnswer([], list.length)), error: () => undefined });
     if (view.savedSteps.includes(5))
       forkJoin([this.parents.getActiveCode().pipe(catchError(() => of(null))), this.parents.getLinks()])
         .subscribe({ next: ([code, links]) => relabel('parent', parentAnswer(code, links)), error: () => undefined });

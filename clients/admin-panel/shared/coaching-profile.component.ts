@@ -47,7 +47,7 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
       @if (success()) { <p role="status">{{ success() }}</p> }
       @if (gradeNotice()) {
         <!-- Paket D (#8): the new grade no longer fits the exam in the study settings. -->
-        <p role="status" class="notice" data-testid="grade-purpose-notice">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle.@if (savedImpactTarget(); as target) { Hedefin ({{ target }}) yeni sınavına uymazsa sınavını değiştirdiğinde kaldırılır; Çalışma tercihlerim bunu kaydetmeden önce söyler. } <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
+        <p role="status" class="notice" data-testid="grade-purpose-notice">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle.@if (savedImpactTarget(); as target) { Hedefin ({{ target }}) yeni sınavına uymazsa, sınavını değiştirdiğinde kaldırılır. } <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
       }
       @if (loading()) { <p role="status">Profil yükleniyor…</p> }
       @if (ready() && !student && role === 'Student' || ready() && !teacher && role === 'Teacher') {
@@ -57,7 +57,8 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
       @if (ready() && (role === 'Student' ? student : teacher); as profile) {
         @if (!profile.isActive) { <p role="alert">{{ t('Koçluk profiliniz pasif. Yöneticinizle görüşün.', 'Koçluk profilin pasif. Öğretmeninle ya da kurumunla görüş.') }}</p> }
         <form #profileForm="ngForm" novalidate (ngSubmit)="save()" (ngModelChange)="dirty = true">
-          <fieldset [disabled]="working() || !profile.isActive">
+          <!-- E4 review: while the consequences are asked the form is locked, so "Evet, kaydet" saves exactly what was shown. -->
+          <fieldset [disabled]="working() || !profile.isActive || !!consequences()">
             @if (role === 'Student' && student; as s) {
               <!-- E3 #14: "Şu an durumun ne?" as in the wizard; the grade is a choice (ortaokul 5–8, lise 9–12). -->
               <label>Şu an durumun ne? <select name="educationStage" [ngModel]="stage" (ngModelChange)="changeStage($event)" required [attr.aria-invalid]="invalid('educationStage')" [attr.aria-describedby]="describedBy('educationStage')">
@@ -207,7 +208,7 @@ export class CoachingProfileComponent implements OnInit {
   }
   private apply(profile: OwnProfile) {
     this.student = profile.student ? { ...profile.student } : null;
-    this.savedProfile = profile.student ? { ...profile.student } : null;
+    this.savedProfile = profile.student ? { ...profile.student } : null; this.cancelSave();
     this.stage = this.savedStage = this.student ? stageOf(this.student.educationStatus, this.student.gradeLevel) : '';
     if (this.student && !this.stage) this.student.gradeLevel = null;
     this.savedSchool = this.student?.schoolName || null; this.savedBranch = this.student?.classBranch || null;
@@ -319,11 +320,14 @@ export class CoachingProfileComponent implements OnInit {
       .subscribe({
         next: response => {
           this.working.set(false);
-          const impact = response.data; const lines = this.consequenceLines(impact);
-          if (lines.length) { this.pending = { payload, impact }; this.consequences.set(lines); }
-          else this.put(payload, impact);
+          this.ask(payload, response.data, this.consequenceLines(response.data));
         },
-        error: e => { this.working.set(false); this.error.set(this.message(e, 'Değişikliğin sınavına ve hedefine etkisi kontrol edilemedi. Bağlantını kontrol edip yeniden dene.')); }
+        error: e => {
+          this.working.set(false);
+          // E4 review: an API without the check (deployed later) still saves, after the warning the page knows itself.
+          if (e?.status === 404) { this.ask(payload, null, this.clearsSchoolNotice() ? [this.clearsSchoolNotice()!] : []); return; }
+          this.error.set(this.message(e, 'Değişikliğin sınavına ve hedefine etkisi kontrol edilemedi. Bağlantını kontrol edip yeniden dene.'));
+        }
       });
   }
   confirmSave() {
@@ -331,6 +335,10 @@ export class CoachingProfileComponent implements OnInit {
     this.pending = null; this.consequences.set(null); this.put(pending.payload, pending.impact);
   }
   cancelSave() { this.pending = null; this.consequences.set(null); }
+  private ask(payload: object, impact: EducationImpact | null, lines: string[]) {
+    if (lines.length) { this.pending = { payload, impact }; this.consequences.set(lines); }
+    else this.put(payload, impact);
+  }
 
   private consequenceLines(impact: EducationImpact): string[] {
     const lines: string[] = [];

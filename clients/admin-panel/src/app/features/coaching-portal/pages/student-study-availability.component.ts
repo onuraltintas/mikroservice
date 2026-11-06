@@ -27,7 +27,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
   /** E4 #24: the row and field the last save attempt refused (marked next to the field). */
-  readonly invalidField = signal<{ row: number; field: 'start' | 'end' } | null>(null);
+  readonly invalidField = signal<{ row: AvailabilityRow; field: 'start' | 'end' } | null>(null);
   readonly days: { value: StudyDay; label: string }[] = [
     { value: 'Monday', label: 'Pazartesi' }, { value: 'Tuesday', label: 'Salı' },
     { value: 'Wednesday', label: 'Çarşamba' }, { value: 'Thursday', label: 'Perşembe' },
@@ -117,13 +117,13 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     const wrong = windows.findIndex(row => !this.days.some(day => day.value === row.day) || !Number.isFinite(row.startMinute)
       || !Number.isFinite(row.endMinute) || row.endMinute <= row.startMinute);
     if (wrong >= 0) {
-      this.invalidField.set({ row: wrong, field: Number.isFinite(windows[wrong].startMinute) ? 'end' : 'start' });
+      this.invalidField.set({ row: this.rows[wrong], field: Number.isFinite(windows[wrong].startMinute) ? 'end' : 'start' });
       throw new Error('Gün ve saatleri kontrol et. Bitiş saati başlangıçtan sonra olmalıdır.');
     }
     for (const day of this.days) {
       const sorted = windows.map((row, index) => ({ ...row, index })).filter(row => row.day === day.value).sort((a, b) => a.startMinute - b.startMinute);
       const overlap = sorted.find((row, index) => index > 0 && row.startMinute < sorted[index - 1].endMinute);
-      if (overlap) { this.invalidField.set({ row: overlap.index, field: 'start' }); throw new Error(`${day.label} günündeki saat aralıkları çakışıyor.`); }
+      if (overlap) { this.invalidField.set({ row: this.rows[overlap.index], field: 'start' }); throw new Error(`${day.label} günündeki saat aralıkları çakışıyor.`); }
     }
     return windows;
   }
@@ -134,7 +134,8 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     return hour * 60 + minute;
   }
 
-  isInvalid(row: number, field: 'start' | 'end') { const wrong = this.invalidField(); return wrong?.row === row && wrong.field === field ? 'true' : null; }
+  /** E4 review: keyed by the row itself, so removing a row above it keeps the mark on the right one. */
+  isInvalid(row: AvailabilityRow, field: 'start' | 'end') { const wrong = this.invalidField(); return wrong?.row === row && wrong.field === field ? 'true' : null; }
 
   private clock(minute: number) { return `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`; }
 

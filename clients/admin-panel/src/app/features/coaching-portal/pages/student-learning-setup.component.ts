@@ -1,13 +1,13 @@
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningExamSession, LearningSetupImpact, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 
-type SetupField = 'purpose' | 'academicYear' | 'examYear' | 'language' | 'yokdilField' | 'courses';
+type SetupField = 'purpose' | 'academicYear' | 'examYear' | 'language' | 'yokdilField' | 'courses' | 'reviewed';
 /** E4 #26: the confirmation after a save (it stays when the page moves on to the next section). */
 interface SetupSaved { text: string; removed: string[]; diploma: number | null; teacher: boolean }
 const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
@@ -26,6 +26,7 @@ export class StudentLearningSetupComponent implements OnInit {
   private readonly service = inject(CoachingLearningSetupService);
   private readonly planning = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject(ElementRef<HTMLElement>);
   readonly apiUrl = environment.apiUrl;
   readonly state = signal<LearningSetupView | null>(null); readonly step = signal('Purpose');
   readonly loading = signal(false); readonly saving = signal(false); readonly ready = signal(false);
@@ -91,7 +92,8 @@ export class StudentLearningSetupComponent implements OnInit {
     this.step.set(step); this.error.set(null); this.fieldErrors.set({}); this.cancelImpact();
     if (step === 'Courses' || step === 'Starting') this.loadCatalog();
   }
-  changed() { this.dirty = true; }
+  /** E4 review: any change drops a pending confirmation, so "Evet, kaydet" never saves a choice that was not shown. */
+  changed() { this.dirty = true; this.cancelImpact(); }
   examPurpose() { return !!this.purpose; }
   /** KM8: the saved purpose can no longer be chosen; only Profile and Purpose stay open until an exam is saved. */
   purposeRetired() { const state = this.state(); return !!state?.purposeRetired || isRetiredPurpose(state?.context?.purpose); }
@@ -116,13 +118,19 @@ export class StudentLearningSetupComponent implements OnInit {
   describedBy(name: SetupField) { return this.fieldErrors()[name] ? `setup-${name}-error` : null; }
   hasFieldErrors() { return Object.keys(this.fieldErrors()).length > 0; }
   /** E4 #24: every attempt clears the previous message; refused fields are named next to the field and in the summary. */
-  private refuse(errors: Partial<Record<SetupField, string>>): boolean {
+  private refuse(section: string, errors: Partial<Record<SetupField, string>>): boolean {
     this.error.set(null); this.saved.set(null); this.fieldErrors.set(errors); this.cancelImpact();
     const messages = Object.values(errors);
-    if (!messages.length) return false;
-    this.error.set(`Kaydedilmedi. ${messages.join(' ')}`);
+    if (!messages.length) { this.wrongCourse.set(null); return false; }
+    this.error.set(`${section} ${messages.join(' ')}`);
+    // E4 review: the focus goes to the first refused field.
+    setTimeout(() => (this.host.nativeElement.querySelector('[aria-invalid="true"]') as HTMLElement | null)?.focus());
     return true;
   }
+  /** The course whose priority or difficulty was refused. */
+  readonly wrongCourse = signal<string | null>(null);
+  courseInvalid(lessonId: string) { return this.wrongCourse() === lessonId ? 'true' : null; }
+  courseDescribedBy(lessonId: string) { return this.wrongCourse() === lessonId ? 'setup-courses-error' : null; }
 
   /**
    * E4 #26: a new exam, field or language may remove parts of the student's own target (PR 114) and the diploma grade; the server
@@ -138,7 +146,7 @@ export class StudentLearningSetupComponent implements OnInit {
       errors.examYear = `Hedef sınav yılı ${this.academicYearStart} ile ${this.academicYearStart + 5} arasında olmalı.`;
     if (this.purpose === 'Yks' && this.primaryScoreType === 'DIL' && !this.foreignLanguage) errors.language = 'Yabancı dili seç.';
     if (this.purpose === 'Yokdil' && !this.yokdilField) errors.yokdilField = 'YÖKDİL alanını seç.';
-    if (this.refuse(errors)) return;
+    if (this.refuse('Çalışma amacın kaydedilmedi.', errors)) return;
     const previous = this.state()?.context; const scope = this.request([], [], false);
     const sameScope = previous && !this.state()?.missingFields.some(x => x === 'Purpose' || x === 'Catalog')
       && previous.academicYearStart === this.academicYearStart && previous.purpose === this.purpose
@@ -156,7 +164,12 @@ export class StudentLearningSetupComponent implements OnInit {
           if (lines.length) { this.pendingPurpose = { request, impact }; this.impactAsk.set(lines); }
           else this.persist(request, 'Availability', 'Çalışma amacın kaydedildi.', impact);
         },
-        error: e => { this.saving.set(false); this.error.set(e?.error?.message ?? 'Değişikliğin hedefine etkisi kontrol edilemedi. Bağlantını kontrol edip yeniden dene.'); }
+        error: e => {
+          this.saving.set(false);
+          // E4 review: an API without the check (deployed later) still saves, as before the check existed.
+          if (e?.status === 404) { this.persist(request, 'Availability', 'Çalışma amacın kaydedildi.'); return; }
+          this.error.set(e?.error?.message ?? 'Değişikliğin hedefine etkisi kontrol edilemedi. Bağlantını kontrol edip yeniden dene.');
+        }
       });
   }
   confirmImpact() {
@@ -237,8 +250,10 @@ export class StudentLearningSetupComponent implements OnInit {
     const wrong = this.courses.find(x => !Number.isInteger(Number(x.priority)) || x.priority < 1 || x.priority > 5
       || x.selfReportedDifficulty !== null && x.selfReportedDifficulty !== undefined && String(x.selfReportedDifficulty) !== ''
         && (!Number.isInteger(Number(x.selfReportedDifficulty)) || x.selfReportedDifficulty < 1 || x.selfReportedDifficulty > 5));
-    if (this.refuse(!this.courses.length ? { courses: 'En az bir ders seç.' }
-      : wrong ? { courses: `${this.lessonName(wrong.lessonId)}: öncelik ve zorluk 1 ile 5 arasında bir tam sayı olmalı.` } : {})) return;
+    if (this.refuse('Derslerin kaydedilmedi.', !this.courses.length ? { courses: 'En az bir ders seç.' }
+      : wrong ? { courses: `${this.lessonName(wrong.lessonId)}: öncelik ve zorluk 1 ile 5 arasında bir tam sayı olmalı.` } : {})) {
+      this.wrongCourse.set(wrong?.lessonId ?? null); return;
+    }
     this.persist(this.request(), 'Starting', 'Derslerin kaydedildi.');
   }
   declaration(id: string) { return this.topics.find(x => x.topicId === id)?.declaredStatus ?? ''; }
@@ -246,7 +261,7 @@ export class StudentLearningSetupComponent implements OnInit {
     this.topics = this.topics.filter(x => x.topicId !== id); if (status) this.topics.push({ topicId: id, declaredStatus: status }); this.changed();
   }
   finishStarting() {
-    if (this.refuse(this.startingStatusReviewed ? {} : { courses: 'Başlangıç bilgilerini gözden geçirdiğini onayla.' })) return;
+    if (this.refuse('Başlangıç durumun kaydedilmedi.', this.startingStatusReviewed ? {} : { reviewed: 'Başlangıç bilgilerini gözden geçirdiğini onayla.' })) return;
     this.persist(this.request(), 'Preview', 'Başlangıç durumun kaydedildi.');
   }
   private async canLeaveChildren() { return await this.hours?.canLeavePage() ?? true; }

@@ -184,11 +184,13 @@ jobs:
           --configuration Release
           --logger 'trx;LogFileName=coaching-development.trx'
           -- xUnit.MaxParallelThreads=2
+      # E4 review: every [CoachingProfilePostgresFact] test carries this category, so no class list can drift out of CI again.
       - name: Coaching profile PostgreSQL tests
         run: >-
           dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
-          --configuration Release --filter 'FullyQualifiedName~CoachingLearningSetupPostgresTests|FullyQualifiedName~CoachingOutcomePostgresTests|FullyQualifiedName~CoachingOwnedProfilePostgresTests'
+          --configuration Release --filter 'Category=CoachingProfilePostgres'
           --logger 'trx;LogFileName=coaching-profile-postgres.trx'
+          -- xUnit.MaxParallelThreads=2
       # Failed test names and messages as annotations, readable without downloading the job log.
       - name: Report failed coaching tests
         if: failure()

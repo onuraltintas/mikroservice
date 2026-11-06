@@ -20,7 +20,7 @@ public sealed class ParentLinksController(IParentLinkService links, ICurrentUser
     [Authorize(Roles = "Student")]
     public async Task<IActionResult> CreateCode(CancellationToken ct) => Respond(await links.CreateCodeAsync(UserId, ct));
 
-    /// <summary>E4: whether an unused code is active and until when (the code itself is shown only when it is created).</summary>
+    /// <summary>E4: whether an unused code is open and until when, or expired (the code itself is shown only when it is created).</summary>
     [HttpGet("parent-link-codes/active")]
     [Authorize(Roles = "Student")]
     public async Task<IActionResult> GetActiveCode(CancellationToken ct)

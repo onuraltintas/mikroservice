@@ -88,7 +88,7 @@
                   <button type="button" class="ob-primary" [disabled]="busy()" (click)="passParent(question, issued)">Devam</button>
                 } @else if (activeCode() === undefined) {
                   <p role="status">Veli kodun kontrol ediliyor…</p>
-                } @else if (activeCode(); as active) {
+                } @else if (openCode(); as active) {
                   <!-- E4 #18/#21: a code made earlier (here or on Profilim); only its expiry can be shown again. -->
                   <p class="ob-card">Aktif bir veli kodun var: {{ codeNote(active.expiresAt) }}<br><small>Kodu güvenliğin için yalnız oluşturduğunda gösteriyoruz. Yeni kod oluşturursan eski kod hemen geçersiz olur.</small></p>
                   <div class="ob-chips">
@@ -96,6 +96,7 @@
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="createParentCode()">Yeni kod oluştur</button>
                   </div>
                 } @else {
+                  @if (activeCode(); as old) { <p class="ob-note">{{ expiredNote(old.expiresAt) }}</p> }
                   <div class="ob-chips">
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="createParentCode()">Veli kodu oluştur</button>
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="pass(question, 'Şimdilik geç')">Şimdilik geç</button>

@@ -351,16 +351,17 @@ export function prefill(view: OnboardingView): Answers {
 /** The label of a saved step 5 or 6 until its answer is read from Identity or Notification. */
 export const RESUMING = 'Kaydedildi';
 
-/** E4 #18: the invite step's answer from the accepted invitations. */
-export function inviteAnswer(accepted: OnboardingInvitation[]): string {
-  if (!accepted.length) return 'Davetim yok';
+/** E4 #18: the invite step's answer from the accepted invitations; with invitations still waiting the student chose "Sonra bakarım". */
+export function inviteAnswer(accepted: OnboardingInvitation[], pending = 0): string {
+  if (!accepted.length) return pending ? 'Sonra bakarım' : 'Davetim yok';
   return `Daveti kabul ettim: ${accepted.map(x => x.inviterEmail
     ? `${x.inviterEmail}${x.type === 'StudentToInstitution' ? ' (kurum)' : ''}` : x.type === 'StudentToInstitution' ? 'bir kurum' : 'bir öğretmen').join(', ')}`;
 }
-/** E4 #18: the parent step's answer: an active code with its expiry, else the parents linked or waiting, else skipped. */
-export function parentAnswer(code: { expiresAt: string } | null, links: { parentName: string; status: string }[]): string {
-  if (code) return `Veli kodu oluşturdum (${coachingDate(code.expiresAt)} tarihine kadar geçerli)`;
+/** E4 #18: the parent step's answer: an open code with its expiry, else the parents linked or waiting, else an expired code, else skipped. */
+export function parentAnswer(code: { expiresAt: string; expired?: boolean } | null, links: { parentName: string; status: string }[]): string {
+  if (code && !code.expired) return `Veli kodu oluşturdum (${coachingDate(code.expiresAt)} tarihine kadar geçerli)`;
   if (links.length) return `Velimle bağlantım var: ${links.map(x => x.status === 'Pending' ? `${x.parentName} (onayımı bekliyor)` : x.parentName).join(', ')}`;
+  if (code) return `Veli kodumun süresi doldu (${coachingDate(code.expiresAt)})`;
   return 'Şimdilik geç';
 }
 /** E4 #18: the e-mail step's answer: the e-mails the student gets (the wizard's own categories). */

@@ -9,8 +9,14 @@ using Npgsql;
 
 namespace Identity.API.IntegrationTests;
 
-public sealed class CoachingProfilePostgresFactAttribute : FactAttribute
+/// <summary>
+/// A coaching test against a disposable local PostgreSQL. E4 review: the attribute is also the trait Category=CoachingProfilePostgres,
+/// which is what CI filters on, so a new test class is run without being added to a list.
+/// </summary>
+[Xunit.Sdk.TraitDiscoverer("Identity.API.IntegrationTests.CoachingProfilePostgresTraitDiscoverer", "Identity.API.IntegrationTests")]
+public sealed class CoachingProfilePostgresFactAttribute : FactAttribute, Xunit.Sdk.ITraitAttribute
 {
+    public const string Category = "CoachingProfilePostgres";
     public CoachingProfilePostgresFactAttribute()
     {
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("COACHING_PROFILE_TEST_POSTGRES")))
@@ -20,6 +26,12 @@ public sealed class CoachingProfilePostgresFactAttribute : FactAttribute
 
 // E4 review: CI ran only three hand-picked classes of these tests, so others rotted unseen. Every test with this attribute carries
 // the category CI filters on.
+public sealed class CoachingProfilePostgresTraitDiscoverer : Xunit.Sdk.ITraitDiscoverer
+{
+    public IEnumerable<KeyValuePair<string, string>> GetTraits(Xunit.Abstractions.IAttributeInfo traitAttribute) =>
+        [new("Category", CoachingProfilePostgresFactAttribute.Category)];
+}
+
 public sealed class CoachingProfilePostgresCiTests
 {
     [Fact]
@@ -28,7 +40,7 @@ public sealed class CoachingProfilePostgresCiTests
         typeof(Xunit.Sdk.ITraitAttribute).IsAssignableFrom(typeof(CoachingProfilePostgresFactAttribute)).Should().BeTrue();
         var discoverer = typeof(CoachingProfilePostgresFactAttribute).GetCustomAttributes(typeof(Xunit.Sdk.TraitDiscovererAttribute), false);
         discoverer.Should().ContainSingle();
-        new CoachingProfilePostgresTraitDiscoverer().GetTraits(null!).Should().Equal(new KeyValuePair<string, string>("Category", CoachingProfilePostgresFactAttribute.Category));
+        new CoachingProfilePostgresTraitDiscoverer().GetTraits(null!).Should().ContainSingle().Which.Should().Be(new KeyValuePair<string, string>("Category", CoachingProfilePostgresFactAttribute.Category));
 
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (!File.Exists(Path.Combine(root.FullName, "EduPlatform.sln"))) root = root.Parent!;

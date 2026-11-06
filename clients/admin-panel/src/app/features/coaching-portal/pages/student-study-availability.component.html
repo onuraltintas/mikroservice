@@ -15,8 +15,8 @@
               <label>Gün<select [name]="'day-' + i" [(ngModel)]="row.day" (ngModelChange)="dirty = true">
                 @for (day of days; track day.value) { <option [value]="day.value">{{ day.label }}</option> }
               </select></label>
-              <label>Başlangıç<input type="time" [name]="'start-' + i" [(ngModel)]="row.start" (ngModelChange)="dirty = true" required [attr.aria-invalid]="isInvalid(i, 'start')" [attr.aria-describedby]="isInvalid(i, 'start') ? 'availability-error' : null"></label>
-              <label>Bitiş<input type="time" [name]="'end-' + i" [(ngModel)]="row.end" (ngModelChange)="dirty = true" [disabled]="row.endOfDay" [required]="!row.endOfDay" [attr.aria-invalid]="isInvalid(i, 'end')" [attr.aria-describedby]="isInvalid(i, 'end') ? 'availability-error' : null"></label>
+              <label>Başlangıç<input type="time" [name]="'start-' + i" [(ngModel)]="row.start" (ngModelChange)="dirty = true" required [attr.aria-invalid]="isInvalid(row, 'start')" [attr.aria-describedby]="isInvalid(row, 'start') ? 'availability-error' : null"></label>
+              <label>Bitiş<input type="time" [name]="'end-' + i" [(ngModel)]="row.end" (ngModelChange)="dirty = true" [disabled]="row.endOfDay" [required]="!row.endOfDay" [attr.aria-invalid]="isInvalid(row, 'end')" [attr.aria-describedby]="isInvalid(row, 'end') ? 'availability-error' : null"></label>
             </div>
             <label class="check"><input type="checkbox" [name]="'midnight-' + i" [(ngModel)]="row.endOfDay" (ngModelChange)="dirty = true">Günün sonunda bitir (24:00)</label>
             <button type="button" class="secondary" (click)="removeRow(i)">Aralığı kaldır</button>
