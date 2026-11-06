@@ -14,6 +14,7 @@ import { CoachingNotificationPanelComponent, groupNotificationsByDay } from './c
 import { CoachingWhatsNewCardComponent } from './coaching-whats-new-card.component';
 import { CoachingWhatsNewService } from './coaching-whats-new.service';
 import { StudentHubComponent } from './student-hub.component';
+import { STUDENT_HUBS } from './student-hubs';
 import { StudentThemeSettingComponent } from './student-theme-setting.component';
 
 const profile = signal<any>({ id: 'student-1', roles: ['Student'] });
@@ -144,7 +145,7 @@ describe('CoachingNotificationPanelComponent', () => {
 });
 
 describe('StudentHubComponent', () => {
-  function hub(name: string, navigation = { showFees: () => true }) {
+  function hub(name: string, navigation: object = { loaded: () => true, showFees: () => true }) {
     TestBed.configureTestingModule({ imports: [StudentHubComponent], providers: [provideRouter([]),
       { provide: ActivatedRoute, useValue: { snapshot: { data: { hub: name } } } },
       { provide: CoachingStudentNavigationService, useValue: navigation }] });
@@ -158,6 +159,18 @@ describe('StudentHubComponent', () => {
     expect(links.map(a => a.getAttribute('href'))).toEqual(['/coaching-portal/growth/exams', '/coaching-portal/growth/goals', '/coaching-portal/growth/week']);
     expect(fixture.nativeElement.querySelector('nav').getAttribute('aria-label')).toBe('Gelişimim bölümleri');
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  // Review of PR 122: a tab that needs fees waits for the navigation answer instead of flashing.
+  it('keeps a fees tab back until the navigation has loaded', () => {
+    const tabs = STUDENT_HUBS.growth.tabs;
+    STUDENT_HUBS.growth.tabs = [...tabs, { label: 'Ücretlerim', path: '/coaching-portal/fees', needsFees: true }];
+    try {
+      const labels = (fixture: { nativeElement: HTMLElement }) => [...fixture.nativeElement.querySelectorAll('nav a')].map(a => a.textContent?.trim());
+      expect(labels(hub('growth', { loaded: () => false, showFees: () => true }))).not.toContain('Ücretlerim');
+      TestBed.resetTestingModule();
+      expect(labels(hub('growth', { loaded: () => true, showFees: () => true }))).toContain('Ücretlerim');
+    } finally { STUDENT_HUBS.growth.tabs = tabs; }
   });
 
   it('shows no tab strip for a hub that is one page (Ödemeler)', () => {

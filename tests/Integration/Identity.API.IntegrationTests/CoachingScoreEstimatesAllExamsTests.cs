@@ -336,6 +336,18 @@ public sealed class CoachingScoreEstimatesAllExamsTests
         notice.Should().Contain($"{own} denemesini").And.NotContain(other).And.NotContain(" ya da ");
     }
 
+    // Review of PR 122: a student without an exam (School, General, Undecided) is asked for a deneme without naming one.
+    [Theory]
+    [InlineData(LearningPurpose.School)]
+    [InlineData(LearningPurpose.General)]
+    [InlineData(LearningPurpose.Undecided)]
+    public async Task WithoutAnExamTheNoticeAsksForAnyDeneme(LearningPurpose purpose)
+    {
+        await using var s = await Setup.CreateAsync(lgsPack: true);
+        s.Context(purpose, null); await s.F.Db.SaveChangesAsync();
+        (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Notice.Should().Be("Tahmin için en az bir denemeyi ders ders gir.");
+    }
+
     [Fact]
     public async Task TheGoalSaysWhyThereIsNoScore()
     {

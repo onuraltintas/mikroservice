@@ -333,6 +333,8 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     t.http.expectOne('/api/coaching/invitations/my-invitations').flush([{ id: 'i1', inviterEmail: 'ogretmen@example.test', message: null }]); await t.settle();
     await t.click('Kabul et');
     t.http.expectOne('/api/coaching/invitations/i1/accept').flush(null); await t.settle();
+    // Review of PR 122: a teacher now has the student, so the menu (Ödevlerim, Seanslar) is asked again.
+    t.http.expectOne('/api/coaching/profiles/me/navigation').flush({ data: { showAssignments: true, showSessions: true, showFees: true } });
     await t.click('Devam');
     t.http.expectOne(`${base}/steps/4`).flush({ data: view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo) }); await t.settle();
     expect(t.el.querySelector('[data-question="invite"] .ob-me')!.textContent).toContain('Daveti kabul ettim: ogretmen@example.test');
@@ -567,6 +569,8 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       const el = fixture.nativeElement as HTMLElement;
       expect(el.querySelector('[data-question]')).toBeNull();
       expect(el.textContent).not.toContain('Doğum tarihin ne?');
+      // Review of PR 122: "Yeniden dene" is right there, so no "Sayfayı yenile".
+      expect(el.querySelector('.ob-error p')!.textContent!.trim()).toBe('Kurulum bilgilerin yüklenemedi.');
       (el.querySelector('.ob-error button') as HTMLElement).click();
       http.expectOne(base).flush({ data: view(completed, { ...stepTwo, target: school }) });
       for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); }

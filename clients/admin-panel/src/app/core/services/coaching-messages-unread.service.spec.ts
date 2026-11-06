@@ -21,4 +21,28 @@ describe('CoachingMessagesUnreadService', () => {
     http.expectOne('/api/coaching/messages/unread-count').flush({ count: 0 });
     expect(service.count()).toBe(0);
   });
+
+  // Review of PR 122: a refresh after a change (a conversation read) must not be dropped by a request in flight.
+  it('a forced refresh aborts the request in flight and asks again', () => {
+    const service = TestBed.inject(CoachingMessagesUnreadService);
+    const http = TestBed.inject(HttpTestingController);
+    service.refresh();
+    const first = http.expectOne('/api/coaching/messages/unread-count');
+    (service.refresh as (o?: object) => void)({ force: true });
+    expect(first.cancelled).toBe(true);
+    http.expectOne('/api/coaching/messages/unread-count').flush({ count: 1 });
+    expect(service.count()).toBe(1);
+  });
+
+  it('a new account starts from 0 and never gets the previous account\'s answer', () => {
+    const service = TestBed.inject(CoachingMessagesUnreadService);
+    const http = TestBed.inject(HttpTestingController);
+    service.refresh(); http.expectOne('/api/coaching/messages/unread-count').flush({ count: 7 });
+    service.refresh(); const late = http.expectOne('/api/coaching/messages/unread-count');
+    (service.refresh as (o?: object) => void)({ reset: true });
+    expect(service.count()).toBe(0);
+    expect(late.cancelled).toBe(true);
+    http.expectOne('/api/coaching/messages/unread-count').flush({ count: 2 });
+    expect(service.count()).toBe(2);
+  });
 });

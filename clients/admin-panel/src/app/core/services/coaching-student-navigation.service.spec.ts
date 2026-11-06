@@ -24,7 +24,7 @@ describe('student navigation visibility', () => {
   // Paket F #36: the menu waits for the answer, and a second refresh does not abort the request in flight.
   it('is not loaded until the server answers (or fails)', () => {
     const service = TestBed.inject(CoachingStudentNavigationService);
-    service.refresh(true);
+    (service.refresh as (o?: object) => void)({ reset: true });
     expect(service.loaded()).toBe(false);
     TestBed.inject(HttpTestingController).expectOne('/api/coaching/profiles/me/navigation').flush({}, {status:503,statusText:'Unavailable'});
     expect(service.loaded()).toBe(true);
@@ -32,7 +32,7 @@ describe('student navigation visibility', () => {
   it('a refresh while a request is in flight shares it instead of aborting it', () => {
     const service = TestBed.inject(CoachingStudentNavigationService);
     const http = TestBed.inject(HttpTestingController);
-    service.refresh(true); service.refresh();
+    (service.refresh as (o?: object) => void)({ reset: true }); service.refresh();
     const requests = http.match('/api/coaching/profiles/me/navigation');
     expect(requests.length).toBe(1);
     expect(requests[0].cancelled).toBe(false);
@@ -40,6 +40,20 @@ describe('student navigation visibility', () => {
     expect(service.showAssignments()).toBe(false);
     service.refresh();
     http.expectOne('/api/coaching/profiles/me/navigation').flush({data:{showAssignments:true,showSessions:false}});
+    expect(service.showAssignments()).toBe(true);
+  });
+  // Review of PR 122: after a change that can change the menu (an accepted invitation) the answer in flight may be old.
+  it('a forced refresh aborts the request in flight and asks again, keeping the menu loaded', () => {
+    const service = TestBed.inject(CoachingStudentNavigationService);
+    const http = TestBed.inject(HttpTestingController);
+    (service.refresh as (o?: object) => void)({ reset: true });
+    http.expectOne('/api/coaching/profiles/me/navigation').flush({data:{showAssignments:false,showSessions:false}});
+    service.refresh();
+    const old = http.expectOne('/api/coaching/profiles/me/navigation');
+    (service.refresh as (o?: object) => void)({ force: true });
+    expect(old.cancelled).toBe(true);
+    expect(service.loaded()).toBe(true);
+    http.expectOne('/api/coaching/profiles/me/navigation').flush({data:{showAssignments:true,showSessions:true}});
     expect(service.showAssignments()).toBe(true);
   });
 });

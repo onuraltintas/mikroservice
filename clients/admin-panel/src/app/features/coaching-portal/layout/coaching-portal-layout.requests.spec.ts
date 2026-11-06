@@ -7,6 +7,8 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { CoachingMessagesUnreadService } from '../../../core/services/coaching-messages-unread.service';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 import { CoachingPortalLayoutComponent } from './coaching-portal-layout.component';
 
 @Component({ standalone: true, template: 'sayfa' })
@@ -17,7 +19,7 @@ const UNREAD = '/api/coaching/messages/unread-count';
 
 /** Paket F #36 (live test): every page change asked navigation and unread-count twice and aborted one of each. */
 describe('CoachingPortalLayoutComponent requests', () => {
-  async function open(url: string) {
+  async function open(url: string, before?: () => void) {
     TestBed.configureTestingModule({ providers: [
       provideHttpClient(), provideHttpClientTesting(),
       provideRouter([{ path: 'coaching-portal', component: CoachingPortalLayoutComponent, children: [
@@ -25,6 +27,7 @@ describe('CoachingPortalLayoutComponent requests', () => {
       { provide: AuthService, useValue: { userProfile: signal<any>({ roles: ['Student'], product: 'coaching', firstName: 'Ada', lastName: 'Kaya', id: 'u1' }), logout: vi.fn() } },
       { provide: NotificationService, useValue: { unreadCount: signal(0), notifications: signal([]), fetchNotifications: vi.fn(), markAsRead: vi.fn() } }
     ] });
+    before?.();
     const harness = await RouterTestingHarness.create(url);
     return { harness, http: TestBed.inject(HttpTestingController), router: TestBed.inject(Router) };
   }
@@ -37,6 +40,15 @@ describe('CoachingPortalLayoutComponent requests', () => {
       expect(requests.length, url).toBe(1);
       expect(requests[0].cancelled).toBe(false);
     }
+  });
+
+  it('opening the panel starts both from scratch for this account (review of PR 122)', async () => {
+    let spies: { unread: ReturnType<typeof vi.spyOn>; navigation: ReturnType<typeof vi.spyOn> } | undefined;
+    await open('/coaching-portal', () => spies = {
+      unread: vi.spyOn(TestBed.inject(CoachingMessagesUnreadService), 'refresh'),
+      navigation: vi.spyOn(TestBed.inject(CoachingStudentNavigationService), 'refresh') });
+    expect(spies!.unread).toHaveBeenCalledWith({ reset: true });
+    expect(spies!.navigation).toHaveBeenCalledWith({ reset: true });
   });
 
   it('each page change asks each once; a change of only the query string asks nothing', async () => {
