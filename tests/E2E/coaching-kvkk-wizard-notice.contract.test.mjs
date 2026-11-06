@@ -25,6 +25,9 @@ test('the new text covers every item the wizard collects, with its purpose', () 
   assert.doesNotMatch(text, /uygun sınav(ları)? ve öneri/);
   assert.match(text, /başka bir hesaplamada kullanılmaz/);
   assert.match(text, /kendi okulunu listeden seçebilmesi amacıyla/);
+  // Re-check: the district orders the school lists (its schools first); the grade also goes into the study settings.
+  assert.match(text, /ilçesindeki okulların önce gösterilmesi/);
+  assert.match(text, /sınıf, çalışma ayarlarına da aktarılır/);
   assert.match(text, /OBP'nin YKS puan tahminine ve hedef karşılaştırmasına/);
   for (const page of ['Profil ve ayarlar › Profilim', 'Profil ve ayarlar › Çalışma tercihlerim', 'Gelişimim › Hedefim', 'Profil ve ayarlar › Bildirimler'])
     assert.ok(text.includes(page), `missing correction page: ${page}`);

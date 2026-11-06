@@ -422,6 +422,51 @@ public sealed class CoachingStudentOnboardingTests
         await Assert.ThrowsAsync<ArgumentException>(() => store.UpdateStudentAsync(s.Student, Request(updated.Version) with { DiplomaGrade = 30 }, default));
     }
 
+    // ---------- Re-check LOWs (Paket C) ----------
+
+    [Fact]
+    public async Task TheStudentsDistrictComesFirstInTheSchoolListWithoutFilteringOthers()
+    {
+        await using var s = await Setup.CreateAsync();
+        var page = await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", null, 1, default, district: "Keçiören");
+        page.TotalCount.Should().Be(25, "a sort, not a filter");
+        page.Items.Take(13).Should().OnlyContain(x => x.District == "KEÇİÖREN" && x.InHomeDistrict);
+        page.Items.Skip(13).Should().OnlyContain(x => x.District == "ÇANKAYA" && !x.InHomeDistrict);
+        (await s.Service.SchoolsAsync("Ankara", null, null, 1, default, district: "Çankaya")).Items[0].Name.Should().Be("Anadolu Lise 10");
+        (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", null, 1, default)).Items.Should().OnlyContain(x => !x.InHomeDistrict);
+    }
+
+    [Fact]
+    public async Task ATargetFromTheWizardRetitlesTheStudentsOwnGoal()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(grade: 8);
+        await s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default);
+        var goal = AcademicGoal.Create(s.Student, "Benim eski hedefim", GoalCategory.ExamPreparation);
+        s.F.Db.Add(goal); await s.F.Db.SaveChangesAsync(); s.F.Db.Add(StudentPrimaryGoal.Create(s.Student, goal.Id)); await s.F.Db.SaveChangesAsync();
+        s.F.Db.ChangeTracker.Clear();
+        await s.Service.SaveTargetAsync(new("school", s.School, null), default);
+        (await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync()).Title.Should().Be("Ankara Fen Lisesi");
+    }
+
+    [Fact]
+    public void ChoosingASchoolOrProgrammeClearsTheWizardsTargetScores()
+    {
+        var goal = AcademicGoal.Create(Guid.NewGuid(), "Hedef", GoalCategory.ExamPreparation);
+        goal.SetScoreTargets([new("TYT", 380, 560), new("SAY", 450, 560)], ExamType.YKS);
+        goal.SetCatalogTarget(Guid.NewGuid(), null);
+        (goal.ScoreTargets.Count, goal.TargetScore, goal.TargetMaxScore).Should().Be((0, (decimal?)null, (decimal?)null));
+        // An older score (no score targets) set on the goal page is not touched by a catalog target.
+        var older = AcademicGoal.Create(Guid.NewGuid(), "Hedef", GoalCategory.ExamPreparation);
+        older.SetScoreTarget(400, 500, ExamType.LGS);
+        older.SetCatalogTarget(null, Guid.NewGuid());
+        older.TargetScore.Should().Be(400);
+        // The wizard's programme without a taban: the catalog target first, then its own score.
+        var own = AcademicGoal.Create(Guid.NewGuid(), "Hedef", GoalCategory.ExamPreparation);
+        own.SetCatalogTarget(Guid.NewGuid(), null); own.SetScoreTargets([new("SAY", 410, 560)], ExamType.YKS);
+        own.ScoreTargets.Should().ContainSingle();
+    }
+
     // ---------- Setup ----------
 
     /// <summary>A subscription service whose only answer is "no active subscription".</summary>

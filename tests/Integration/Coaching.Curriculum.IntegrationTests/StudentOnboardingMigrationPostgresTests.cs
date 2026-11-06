@@ -56,7 +56,14 @@ public sealed class StudentOnboardingMigrationPostgresTests
         Assert.Equal(2, (await f.Db.AcademicGoals.AsNoTracking().SingleAsync()).ScoreTargets.Count);
         refused = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync(Previous));
         Assert.Contains("0 student profile(s) with first-login wizard answers and 1 goal(s)", refused.ToString());
-        await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.academic_goals SET score_targets = '[]'::jsonb""");
+        // The goal page's catalog target clears the wizard's target scores, so they no longer block the rollback.
+        var school = Coaching.Domain.Entities.TargetSchool.Create("meb", "pc-1", "Ankara Fen Lisesi", "ANKARA", "ÇANKAYA", 480, 2025);
+        f.Db.Add(school); await f.Db.SaveChangesAsync();
+        var tracked = await f.Db.AcademicGoals.SingleAsync(); tracked.SetCatalogTarget(null, school.Id); await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
+        // score_targets is a JSON array of at most two targets.
+        await Assert.ThrowsAnyAsync<Exception>(() => f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.academic_goals SET score_targets = '[{},{},{}]'::jsonb"""));
+        await Assert.ThrowsAnyAsync<Exception>(() => f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.academic_goals SET score_targets = '{}'::jsonb"""));
+        Assert.Contains("jsonb_array_length", await f.Db.Database.SqlQueryRaw<string>("SELECT pg_get_constraintdef(oid) AS \"Value\" FROM pg_constraint WHERE conname = 'ck_goal_score_targets'").SingleAsync());
         await f.Db.GetService<IMigrator>().MigrateAsync(Previous);
         Assert.Equal(Previous, (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
         await f.Db.Database.MigrateAsync();

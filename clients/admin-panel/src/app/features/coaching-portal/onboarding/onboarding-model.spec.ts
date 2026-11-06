@@ -79,6 +79,17 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(change({ ...yks, tytScore: a(380), fieldScore: a(400) }, 'tytScore').fieldScore).toBeUndefined();
   });
 
+  it('an older score target without a score type is asked again instead of sending an invalid request', () => {
+    const view: OnboardingView = { status: 'InProgress', nextStep: 4, savedSteps: [1, 2, 3], completedAt: null, academicYearStart: 2026, examSessions: [],
+      answers: { birthDate: '2012-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student',
+        gradeLevel: 8, graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: null,
+        targetExamYear: 2027, diplomaGrade: null, diplomaGradeEstimated: false,
+        target: { kind: 'score', targetId: null, name: 'Eski hedef', detail: null, minimumScore: null, scoreYear: null, scoreType: null, scores: [{ scoreType: '', score: 400 }], canEdit: true } } };
+    const answers = prefill(view);
+    expect(answers.targetSaved).toBeUndefined();
+    expect(nextQuestion(answers, context)!.id).toBe('targetMode');
+  });
+
   it('a teacher\'s goal is shown as set and is not sent', () => {
     const view: OnboardingView = { status: 'InProgress', nextStep: 3, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026, examSessions: [],
       answers: { birthDate: '2012-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student',

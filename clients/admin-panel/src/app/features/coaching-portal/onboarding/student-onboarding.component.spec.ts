@@ -206,6 +206,24 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     expect(t.el.textContent).not.toMatch(/kod(un)? var/i);
   });
 
+  it('lists the schools of the student\'s district first (own school and the LGS school step in the home city)', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 1, savedSteps: [] }, { ...stepTwo, gradeLevel: 10, purpose: null }));
+    const date = t.el.querySelector('[data-current] input[type="date"]') as HTMLInputElement;
+    date.value = '2010-05-01'; date.dispatchEvent(new Event('input')); await t.click('Devam');
+    const city = t.el.querySelector('[data-current] input[role="combobox"]') as HTMLInputElement;
+    city.value = 'ank'; city.dispatchEvent(new Event('input')); await t.settle();
+    (t.el.querySelector('[role="option"]') as HTMLElement).click(); await t.settle();
+    t.http.expectOne('/api/locations/provinces/06/districts').flush([{ id: '0601', provinceId: '06', name: 'Çankaya' }]); await t.settle();
+    (t.el.querySelector('[role="option"]') as HTMLElement).click(); await t.settle();
+    await t.click('10. sınıf');
+    await new Promise(r => setTimeout(r, 300)); await t.settle();
+    const own = t.http.expectOne(r => r.url === `${base}/options/schools`);
+    expect(own.request.params.get('city')).toBe('Ankara'); expect(own.request.params.get('district')).toBe('Çankaya');
+    own.flush({ data: { items: [{ id: 's1', name: 'Çankaya Lisesi', district: 'ÇANKAYA', minimumScore: null, scoreYear: null, inHomeDistrict: true }], totalCount: 1, pageNumber: 1, pageSize: 20 } });
+    await t.settle();
+    expect(t.el.querySelector('[role="option"]')!.textContent).toContain('ilçende');
+  });
+
   it('a student who already finished goes to the panel', async () => {
     const t = await render(view({ status: 'Completed' }));
     expect(t.navigate).toHaveBeenCalledWith(['/coaching-portal']);

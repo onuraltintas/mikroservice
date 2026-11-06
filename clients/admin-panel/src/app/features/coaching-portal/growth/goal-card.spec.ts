@@ -4,6 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { ScoreEstimate, ScoreTargetGap, ScoreTypeEstimate } from '../../../core/services/coaching-score-estimate.service';
 import { StudentScoreEstimateComponent } from '../pages/student-score-estimate.component';
 import { GoalCardComponent } from './goal-card.component';
+import { StudentGoalSummaryComponent } from './student-goal-summary.component';
+import { provideRouter } from '@angular/router';
 import { homeGoalCard } from './growth-model';
 
 // Paket C (#4): the parent's "…'in hedefi" card and the teacher's view use the student card's states, in the third person.
@@ -40,8 +42,40 @@ describe('goal card for parents and teachers', () => {
     expect(text).not.toContain('Hedefine');
   });
 
+  it('on the student\'s own Denemeler page "Hedefini belirle" opens the target question; staff get no link', async () => {
+    TestBed.configureTestingModule({ imports: [StudentScoreEstimateComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    let fixture = TestBed.createComponent(StudentScoreEstimateComponent);
+    fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne(r => r.url.includes('/students/me/score-estimate')).flush({ estimates: [], target: null, notice: null });
+    fixture.detectChanges();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="goal-card"] a')!;
+    expect(link.textContent).toContain('Hedefini belirle');
+    expect(link.getAttribute('href')).toBe('/coaching-portal/welcome?step=target');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [StudentScoreEstimateComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    fixture = TestBed.createComponent(StudentScoreEstimateComponent);
+    fixture.componentInstance.studentId = 'student-1'; fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne(r => r.url.includes('/students/student-1/score-estimate')).flush({ estimates: [], target: null, notice: null });
+    fixture.detectChanges();
+    const card = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="goal-card"]')!;
+    expect(card.querySelector('a')).toBeNull();
+    expect(card.textContent).toContain('Öğrenci henüz bir hedef seçmedi');
+  });
+
+  it('the parent page shows the gap once (the goal card, no second gauge)', async () => {
+    TestBed.configureTestingModule({ imports: [StudentGoalSummaryComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    const fixture = TestBed.createComponent(StudentGoalSummaryComponent);
+    fixture.componentRef.setInput('studentId', 'student-1'); fixture.componentRef.setInput('audience', 'parent'); fixture.componentRef.setInput('childName', 'Elif');
+    fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne(r => r.url.includes('/students/student-1/score-estimate')).flush({ estimates: [lgs], target: school, notice: null });
+    fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent!;
+    expect(text.match(/Hedefe yaklaşık 60 puan kaldı/g)).toHaveLength(1);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.cs-goal-hero')).toBeNull();
+  });
+
   it('the teacher view shows the same card in the third person, with a score-only target', async () => {
-    TestBed.configureTestingModule({ imports: [StudentScoreEstimateComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ imports: [StudentScoreEstimateComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
     const fixture = TestBed.createComponent(StudentScoreEstimateComponent);
     fixture.componentInstance.studentId = 'student-1';
     fixture.detectChanges();
