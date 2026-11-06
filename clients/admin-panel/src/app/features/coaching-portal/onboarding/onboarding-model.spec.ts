@@ -1,7 +1,7 @@
 import { OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import {
   Answers, FlowContext, change, currentStep, withoutUnfitPurpose, examRequest, nextQuestion, personalRequest, prefill, questions, scoreTargetTypes, signature,
-  stepComplete, summary, targetRequest, inviteAnswer, parentAnswer, emailAnswer, parentCodeNote
+  stepComplete, summary, targetRequest, inviteAnswer, parentAnswer, emailAnswer, parentCodeNote, staleParentCode
 } from './onboarding-model';
 
 describe('first-login wizard flow (Paket C #3)', () => {
@@ -238,7 +238,15 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(parentAnswer(null, [{ parentName: 'Ayşe Veli', status: 'Verified' }, { parentName: 'Can Veli', status: 'Pending' }]))
       .toBe('Velimle bağlantım var: Ayşe Veli, Can Veli (onayımı bekliyor)');
     expect(parentAnswer(null, [])).toBe('Şimdilik geç');
+    // F2 (E4 c): an expired code is named for a week; a code whose expiry is long past is not.
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-11-03T12:00:00Z'));
     expect(parentAnswer({ expiresAt: '2026-11-01T09:00:00Z', expired: true }, [])).toBe('Veli kodumun süresi doldu (01.11.2026)');
+    vi.setSystemTime(new Date('2026-11-20T12:00:00Z'));
+    expect(parentAnswer({ expiresAt: '2026-11-01T09:00:00Z', expired: true }, [])).toBe('Şimdilik geç');
+    vi.useRealTimers();
+    expect(staleParentCode({ expiresAt: '2026-11-01T09:00:00Z' }, Date.parse('2026-11-03T12:00:00Z'))).toBe(false);
+    expect(staleParentCode({ expiresAt: '2026-11-01T09:00:00Z' }, Date.parse('2026-11-20T12:00:00Z'))).toBe(true);
+    expect(staleParentCode(null)).toBe(false);
     expect(inviteAnswer([], 1)).toBe('Sonra bakarım');
     expect(emailAnswer([{ label: 'Çalışma planı hatırlatmaları', email: true }, { label: 'Seanslar', email: false }])).toBe('Çalışma planı hatırlatmaları');
     expect(emailAnswer([{ label: 'Seanslar', email: false }])).toBe('E-posta istemiyorum');

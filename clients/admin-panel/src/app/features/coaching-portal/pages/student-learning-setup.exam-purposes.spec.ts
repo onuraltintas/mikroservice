@@ -30,15 +30,20 @@ describe('StudentLearningSetupComponent exam purposes', () => {
     const { fixture } = await setup();
     const options = [...fixture.nativeElement.querySelectorAll('select[name="purpose"] option')].map((x: HTMLOptionElement) => x.textContent?.trim());
     // KM8 (01.11.2026): only exam purposes remain selectable.
-    expect(options).toEqual(['Hazırlandığın sınavı seç', 'LGS hazırlığı', 'YKS hazırlığı', 'AGS / ÖABT hazırlığı', 'YDS hazırlığı', 'YÖKDİL hazırlığı']);
+    // F2 #27: the wizard's names.
+    expect(options).toEqual(['Seç', 'LGS', 'YKS', 'AGS / ÖABT', 'YDS', 'YÖKDİL']);
   });
 
   it('lets a YDS student pick one of the sessions and saves English as the language', async () => {
     const { component, fixture, service } = await setup();
     component.purpose = 'Yds'; component.changed(); await render(fixture);
     expect(component.sessionChoices().map(x => x.id)).toEqual(['yds-1', 'yds-2']);
-    const select: HTMLSelectElement = fixture.nativeElement.querySelector('select[name="examSession"]');
-    expect([...select.options].map(x => x.textContent?.trim())).toEqual(['Henüz seçmedim', '2027/1 · 28.03.2027 · başvuru 03.02–11.02.2027', '2027/2 · 21.11.2027']);
+    // F2 #27: "Hangi oturuma hazırlanıyorsun?" as in the wizard.
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector('select[name="examYear"]');
+    expect(select.closest('label')!.firstChild!.textContent!.trim()).toBe('Hangi oturuma hazırlanıyorsun?');
+    expect([...select.options].map(x => x.textContent?.trim())).toEqual(['Seç', '2027/1 · 28.03.2027 · başvuru 03.02–11.02.2027', '2027/2 · 21.11.2027']);
+    component.savePurpose(); expect(service.save).not.toHaveBeenCalled();
+    expect(component.error()).toContain('Hangi oturuma hazırlandığını seç.');
     expect(fixture.nativeElement.textContent).toContain('Sınav dili: İngilizce');
     component.selectSession('yds-2');
     expect(component.targetExamYear).toBe(2027);
@@ -57,16 +62,18 @@ describe('StudentLearningSetupComponent exam purposes', () => {
     expect(service.save).toHaveBeenCalledWith(expect.objectContaining({ purpose: 'Yokdil', primaryScoreType: 'YOKDIL_SAG', foreignLanguage: 'English', targetExamSessionId: null }));
   });
 
-  it('saves AGS with or without an ÖABT field and shows no session choice for a single session', async () => {
+  it('saves AGS with or without an ÖABT field and offers its one session', async () => {
     const { component, fixture, service } = await setup();
-    component.purpose = 'Ags'; component.targetExamYear = 2027; component.changed(); await render(fixture);
-    expect(fixture.nativeElement.querySelector('select[name="examSession"]')).toBeNull();
+    component.purpose = 'Ags'; component.changed(); await render(fixture);
+    expect([...(fixture.nativeElement.querySelector('select[name="examYear"]') as HTMLSelectElement).options].map(x => x.textContent?.trim()))
+      .toEqual(['Seç', '2027 · 08.05.2027 · başvuru 19.03–29.03.2027']);
+    component.pickExam('session:ags-2027');
     const fields = [...fixture.nativeElement.querySelectorAll('select[name="oabtField"] option')].map((x: HTMLOptionElement) => x.textContent?.trim());
     expect(fields.length).toBe(18);
     expect(fields[0]).toBe('ÖABT’ye girmeyeceğim');
     expect(fields).toContain('Özel Eğitim');
     component.savePurpose();
-    expect(service.save).toHaveBeenLastCalledWith(expect.objectContaining({ purpose: 'Ags', primaryScoreType: null, foreignLanguage: null }));
+    expect(service.save).toHaveBeenLastCalledWith(expect.objectContaining({ purpose: 'Ags', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: 'ags-2027', targetExamYear: 2027 }));
     component.oabtField = 'OABT_SINIF'; component.savePurpose();
     expect(service.save).toHaveBeenLastCalledWith(expect.objectContaining({ purpose: 'Ags', primaryScoreType: 'OABT_SINIF' }));
   });

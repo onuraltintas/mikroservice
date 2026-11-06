@@ -22,11 +22,15 @@ describe('StudentLearningSetupComponent', () => {
     const fixture = TestBed.createComponent(StudentLearningSetupComponent); fixture.detectChanges(); await fixture.whenStable();
     return { fixture, component: fixture.componentInstance, service, planning };
   }
-  it('keeps profile, routine and existing plan entry points available without completing setup', async () => {
+  // F2 #27: the page has its own heading; no second title, no shortcut links, one short link to Profilim.
+  it('has no second title or shortcut links, only a short link to Profilim', async () => {
     const { fixture } = await setup();
-    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/plan"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/account/settings/profile"]')).toBeTruthy();
-    expect(fixture.nativeElement.textContent).toContain('Çalışma amacım');
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('h1')).toBeNull();
+    expect(el.textContent).not.toContain('Profil ve tercihlerim');
+    expect(el.querySelector('a[href="/coaching-portal/plan"]')).toBeNull();
+    expect(el.querySelectorAll('a[href="/coaching-portal/account/settings/profile"]').length).toBe(1);
+    expect(el.textContent).toContain('Sınavım');
   });
   // E3 #14 (06.11.2026): the education is edited on Profilim only; here a short line links there instead of a second form.
   it('has no education form of its own and links to Profilim', async () => {
@@ -35,8 +39,8 @@ describe('StudentLearningSetupComponent', () => {
     expect(el.querySelector('edu-coaching-profile')).toBeNull();
     expect(Array.from(el.querySelectorAll('button')).map(x => x.textContent?.trim())).not.toContain('Eğitim bilgilerim');
     const line = el.querySelector('[data-testid="education-on-profile"]')!;
-    expect(line.textContent).toContain('Eğitim durumun ve sınıfın Profilim sayfasında');
-    expect(line.querySelector('a[href="/coaching-portal/account/settings/profile"]')).toBeTruthy();
+    expect(line.textContent!.trim()).toBe('Eğitim durumun ve sınıfın: Profilim');
+    expect(line.querySelector('a[href="/coaching-portal/account/settings/profile"]')!.textContent).toBe('Profilim');
     expect(component.step()).toBe('Profile');
     expect(el.querySelector('[data-testid="education-missing"]')!.textContent).toContain('Önce Profilim sayfasında eğitim durumunu seç');
     service.get.mockReturnValueOnce(throwError(() => ({ status: 404 })));
@@ -70,7 +74,6 @@ describe('StudentLearningSetupComponent', () => {
     const { component, fixture } = await setup({ ...empty, nextStep: 'Catalog' });
     expect(component.step()).toBe('Courses');
     expect(fixture.nativeElement.textContent).toContain('Katalog hazırlanıyor.');
-    expect(fixture.nativeElement.textContent).toContain('Mevcut planım');
   });
   it('prevents repeated saves and leaving during a pending request', async () => {
     const { component, service } = await setup();
@@ -100,8 +103,8 @@ describe('StudentLearningSetupComponent', () => {
     expect(service.catalog).toHaveBeenLastCalledWith('lesson', 2);
     component.setDeclaration('topic', 'NeedsReview'); expect(component.declaration('topic')).toBe('NeedsReview');
     component.setDeclaration('topic', ''); expect(component.declaration('topic')).toBe('');
-    component.finishStarting(); expect(service.save).not.toHaveBeenCalled();
-    component.startingStatusReviewed = true; component.finishStarting();
+    // F2 #28: no "gözden geçirdim" box; saving the step is the confirmation.
+    component.finishStarting();
     expect(service.save.mock.calls[0][0].startingStatusReviewed).toBe(true);
   });
   it('groups starting topics by unit and reveals their published learning outcomes on demand', async () => {
@@ -190,7 +193,7 @@ describe('StudentLearningSetupComponent', () => {
     expect(t.service.save).toHaveBeenCalledTimes(1);
     const done = t.el.querySelector('[data-testid="setup-saved"]')!;
     expect(done.getAttribute('role')).toBe('status');
-    expect(done.textContent).toContain('Çalışma amacın kaydedildi.');
+    expect(done.textContent).toContain('Sınavın kaydedildi.');
     expect(done.textContent).toContain('Hedefinden kaldırıldı: Hacettepe Üniversitesi · Bilgisayar Mühendisliği');
     expect(done.querySelector('a[href="/coaching-portal/welcome?step=target"]')!.textContent).toContain('Yeni hedef seç');
   });
@@ -215,7 +218,7 @@ describe('StudentLearningSetupComponent', () => {
     const t = await purposeForm();
     t.component.targetExamYear = 2028; t.component.changed(); await t.submit();
     expect(t.service.impact).not.toHaveBeenCalled(); expect(t.service.save).toHaveBeenCalledTimes(1);
-    expect(t.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Çalışma amacın kaydedildi.');
+    expect(t.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Sınavın kaydedildi.');
   });
 
   it('review: changing the form while the confirmation is open drops it, so a stale choice is never saved', async () => {
@@ -234,7 +237,7 @@ describe('StudentLearningSetupComponent', () => {
     t.service.impact.mockReturnValue(throwError(() => ({ status: 404 })));
     t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
     expect(t.service.save).toHaveBeenCalledTimes(1);
-    expect(t.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Çalışma amacın kaydedildi.');
+    expect(t.el.querySelector('[data-testid="setup-saved"]')!.textContent).toContain('Sınavın kaydedildi.');
   });
 
   it('review: a refused course or starting step names the field next to it', async () => {
@@ -250,13 +253,14 @@ describe('StudentLearningSetupComponent', () => {
     expect(priority.getAttribute('aria-describedby')).toBe('setup-courses-error');
     expect(t.service.save).not.toHaveBeenCalled();
 
+    // F2 #28: the starting step has no box to tick; it saves at once.
     TestBed.resetTestingModule();
     const s2 = await setup({ ...yksView, nextStep: 'Starting', context: yks });
-    s2.component.finishStarting(); s2.fixture.detectChanges();
-    const box = (s2.fixture.nativeElement as HTMLElement).querySelector('input[name="startingReviewed"]')!;
-    expect(box.getAttribute('aria-invalid')).toBe('true');
-    expect((s2.fixture.nativeElement as HTMLElement).querySelector('#' + box.getAttribute('aria-describedby'))!.textContent).toContain('gözden geçirdiğini onayla');
-    expect(s2.component.error()).toContain('Başlangıç durumun kaydedilmedi.');
+    s2.fixture.detectChanges();
+    expect((s2.fixture.nativeElement as HTMLElement).querySelector('input[name="startingReviewed"]')).toBeNull();
+    expect(s2.fixture.nativeElement.textContent).not.toContain('gözden geçirdim');
+    s2.component.finishStarting();
+    expect(s2.service.save).toHaveBeenCalledWith(expect.objectContaining({ startingStatusReviewed: true }));
   });
 
   it('#24: an invalid year is never swallowed: the old message goes, the field and a summary say why', async () => {
@@ -264,20 +268,117 @@ describe('StudentLearningSetupComponent', () => {
     expect(t.el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
     t.component.targetExamYear = 2028; t.component.changed(); await t.submit();
     expect(t.el.querySelector('[data-testid="setup-saved"]')).not.toBeNull();
-    await t.click('Çalışma amacım'); await new Promise(resolve => setTimeout(resolve)); await t.settle();
+    await t.click('Sınavım'); await new Promise(resolve => setTimeout(resolve)); await t.settle();
     expect(t.el.querySelector('[data-testid="setup-saved"]')).not.toBeNull();
-    const year = t.el.querySelector('[name="examYear"]') as HTMLInputElement;
-    year.value = '2040'; year.dispatchEvent(new Event('input')); await t.settle();
+    const year = t.el.querySelector('select[name="examYear"]') as HTMLSelectElement;
+    t.component.targetExamYear = 2040; t.component.changed();
     await t.submit();
     expect(t.service.save).toHaveBeenCalledTimes(1);
     expect(t.el.querySelector('[data-testid="setup-saved"]')).toBeNull();
-    expect(t.el.querySelector('[data-testid="setup-error-summary"]')!.textContent).toContain('Çalışma amacın kaydedilmedi. Hedef sınav yılı 2026 ile 2031 arasında olmalı.');
+    expect(t.el.querySelector('[data-testid="setup-error-summary"]')!.textContent).toContain('Sınavın kaydedilmedi. Sınav yılı 2026 ile 2031 arasında olmalı.');
     await new Promise(resolve => setTimeout(resolve));
     expect(document.activeElement).toBe(year);
     expect(year.getAttribute('aria-invalid')).toBe('true');
     expect(t.el.querySelector('#' + year.getAttribute('aria-describedby'))!.textContent).toContain('2026 ile 2031');
     expect((t.el.querySelector('form button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
   });
+  // ---------- F2 (live test 06.11.2026) ----------
+  it('#27: asks the exam with the wizard\'s words and no school year or exam-year number field', async () => {
+    const t = await purposeForm();
+    const labels = Array.from(t.el.querySelectorAll('form label')).map(x => x.firstChild?.textContent?.trim());
+    expect(labels).toEqual(expect.arrayContaining(['Hangi sınava hazırlanıyorsun?', 'Hangi puan türüyle yerleşmek istiyorsun?', 'Hangi yıl sınava gireceksin?']));
+    expect(t.el.textContent).not.toContain('Eğitim yılı başlangıcı');
+    expect(t.el.textContent).not.toContain('Hedef sınav yılı');
+    expect(t.el.querySelector('[name="academicYear"]')).toBeNull();
+    expect(Array.from((t.el.querySelector('select[name="purpose"]') as HTMLSelectElement).options).map(x => x.textContent!.trim())).toEqual(['Seç', 'YKS', 'YDS', 'YÖKDİL']);
+    expect(Array.from((t.el.querySelector('select[name="scoreType"]') as HTMLSelectElement).options).map(x => x.textContent!.trim()))
+      .toEqual(['Sayısal', 'Eşit Ağırlık', 'Sözel', 'Dil', 'Yalnız TYT (önlisans)']);
+    const year = t.el.querySelector('select[name="examYear"]') as HTMLSelectElement;
+    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2027', '2028', '2029', '2030', '2031']);
+    expect(year.value).toBe('year:2027');
+    year.value = 'year:2029'; year.dispatchEvent(new Event('change')); await t.settle();
+    expect(t.component.targetExamYear).toBe(2029);
+    await t.submit();
+    expect(t.service.save).toHaveBeenCalledWith(expect.objectContaining({ academicYearStart: 2026, targetExamYear: 2029, targetExamSessionId: null }));
+  });
+
+  it('#27 (E4 b): "Bilgileri yeniden yükle" drops a confirmation that is still open', async () => {
+    const t = await purposeForm();
+    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
+    t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
+    expect(t.el.querySelector('[data-testid="target-impact"]')).not.toBeNull();
+    await t.click('Bilgileri yeniden yükle');
+    await vi.waitFor(() => expect(t.service.get).toHaveBeenCalledTimes(2)); await t.settle();
+    expect(t.el.querySelector('[data-testid="target-impact"]')).toBeNull();
+    expect(t.component.impactAsk()).toBeNull();
+    t.component.confirmImpact();
+    expect(t.service.save).not.toHaveBeenCalled();
+    expect(t.service.get).toHaveBeenCalledTimes(2);
+  });
+
+  const yksCatalog = (topics: object[] = []) => ({ curriculum: { id: 'program', name: 'YKS programı', versionLabel: '2026.10' }, lessons: [
+      { id: 'ayt-mat', name: 'Matematik', gradeNumber: null, examCode: 'AYT', topicCount: 20, missingDurationCount: 0 },
+      { id: 'tyt-tr', name: 'Türkçe', gradeNumber: null, examCode: 'TYT', topicCount: 10, missingDurationCount: 0 },
+      { id: 'tyt-mat', name: 'Matematik', gradeNumber: null, examCode: 'TYT', topicCount: 15, missingDurationCount: 0 },
+      { id: 'empty', name: 'Felsefe', gradeNumber: null, examCode: 'AYT', topicCount: 0, missingDurationCount: 0 }],
+    topics: { items: topics, totalCount: topics.length, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] }) as unknown as LearningCatalog;
+
+  it('#28: suggests the score type\'s courses as unsaved defaults, groups them under TYT and AYT and has "Tümünü seç"', async () => {
+    const t = await setup({ ...yksView, nextStep: 'Courses' });
+    t.service.catalog.mockReturnValue(of(yksCatalog())); t.component.loadCatalog(); t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
+    const el = t.fixture.nativeElement as HTMLElement;
+    expect(Array.from(el.querySelectorAll('[data-testid^="course-group-"] h3')).map(x => x.textContent)).toEqual(['TYT', 'AYT']);
+    expect(Array.from(el.querySelectorAll('[data-testid="course-group-TYT"] label')).map(x => x.textContent!.trim())).toEqual(['Türkçe · 10 konu', 'Matematik · 15 konu']);
+    // The courses with topics are ticked, but only as a suggestion: nothing is saved and leaving does not ask.
+    expect(t.component.courses.map(x => x.lessonId).sort()).toEqual(['ayt-mat', 'tyt-mat', 'tyt-tr']);
+    expect(el.querySelector('[data-testid="suggested-courses"]')).not.toBeNull();
+    expect(t.component.dirty).toBe(false); expect(t.service.save).not.toHaveBeenCalled();
+    expect(el.textContent).not.toContain('Kataloğu yeniden yükle');
+    expect(el.textContent).not.toContain('2026.10');
+    t.component.saveCourses();
+    expect(t.service.save.mock.calls[0][0].courses.map((x: { lessonId: string }) => x.lessonId).sort()).toEqual(['ayt-mat', 'tyt-mat', 'tyt-tr']);
+
+    // "Tümünü seç" adds every course that has topics.
+    TestBed.resetTestingModule();
+    const u = await setup({ ...yksView, nextStep: 'Courses', context: { ...yks, coursePreferences: [{ lessonId: 'tyt-tr', priority: 1, selfReportedDifficulty: null }] } });
+    u.service.catalog.mockReturnValue(of(yksCatalog())); u.component.loadCatalog(); u.fixture.detectChanges();
+    expect(u.component.courses.map(x => x.lessonId)).toEqual(['tyt-tr']);
+    const all = (u.fixture.nativeElement as HTMLElement).querySelector('[data-testid="select-all-courses"]') as HTMLButtonElement;
+    all.click(); u.fixture.detectChanges();
+    expect(u.component.courses.map(x => x.lessonId)).toEqual(['tyt-tr', 'ayt-mat', 'tyt-mat']);
+    expect(all.disabled).toBe(true); expect(u.component.dirty).toBe(true);
+  });
+
+  it('#28: unsaved suggestions are dropped when the student moves to another step', async () => {
+    const t = await setup({ ...yksView, nextStep: 'Courses' });
+    t.service.catalog.mockReturnValue(of(yksCatalog())); t.component.loadCatalog();
+    expect(t.component.suggested()).toBe(true);
+    await t.component.goTo('Availability');
+    expect(t.component.courses).toEqual([]);
+  });
+
+  it('#28: marks a whole unit at once, names each status with its topic and has no technical text', async () => {
+    const topic = (id: string, name: string, unitName: string) => ({ id, lessonId: 'tyt-mat', name, unitName, lessonName: 'Matematik', gradeNumber: null, examCode: 'TYT', estimatedMinutes: 30 });
+    const t = await setup({ ...yksView, nextStep: 'Starting', context: { ...yks, coursePreferences: [{ lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }] } });
+    t.service.catalog.mockReturnValue(of(yksCatalog([topic('t1', 'Sayılar', 'Temel kavramlar'), topic('t2', 'Bölünebilme', 'Temel kavramlar'), topic('t3', 'Problemler', 'Problemler')])));
+    t.component.selectedLesson = 'tyt-mat'; t.component.loadCatalog(); t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
+    const el = t.fixture.nativeElement as HTMLElement;
+    for (const text of ['Konu durumları senin beyanındır', 'kazanım yeterliliği', 'Sınav → ders', 'MEBİ', 'Kataloğu yeniden yükle', 'gözden geçirdim'])
+      expect(el.textContent).not.toContain(text);
+    // The lesson list shows the chosen course under its exam.
+    expect(Array.from(el.querySelectorAll('optgroup')).map(x => x.getAttribute('label'))).toEqual(['TYT']);
+    const statuses = Array.from(el.querySelectorAll('.topic-status select')).map(x => x.getAttribute('aria-label'));
+    expect(statuses).toEqual(['Sayılar – başlangıç durumu', 'Bölünebilme – başlangıç durumu', 'Problemler – başlangıç durumu']);
+    const unit = el.querySelector('[aria-label="Temel kavramlar ünitesi"]')!;
+    const studied = Array.from(unit.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Çalıştım') as HTMLButtonElement;
+    expect(studied.getAttribute('aria-label')).toBe('Temel kavramlar ünitesinin hepsi: Çalıştım');
+    studied.click(); t.fixture.detectChanges();
+    expect([t.component.declaration('t1'), t.component.declaration('t2'), t.component.declaration('t3')]).toEqual(['Studied', 'Studied', '']);
+    (Array.from(unit.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Henüz çalışmadım') as HTMLButtonElement).click();
+    expect(t.component.declaration('t1')).toBe('NotStudied'); expect(t.component.topics.length).toBe(2);
+    expect(t.component.dirty).toBe(true);
+  });
+
   // E6 #29: "Plan önizlemesi" shows the draft from the saved availability, not only a link to the plan wizard.
   it('#29: the ready preview step hosts the plan draft preview for the chosen courses', async () => {
     const context = { id: 'ctx', version: 4, academicYearStart: 2026, purpose: 'Lgs' as const, targetExamYear: 2027, primaryScoreType: null, foreignLanguage: null,

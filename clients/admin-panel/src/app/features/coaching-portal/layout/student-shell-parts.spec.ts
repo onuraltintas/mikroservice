@@ -137,7 +137,9 @@ describe('StudentThemeSettingComponent', () => {
     const radios = [...fixture.nativeElement.querySelectorAll('input[type=radio]')] as HTMLInputElement[];
     expect(radios.map(r => r.value)).toEqual(['light', 'dark', 'system']);
     expect(radios[2].checked).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Sistemi izle');
+    // F2 #32: the radios have Turkish accessible names.
+    expect(radios.map(r => r.getAttribute('aria-label'))).toEqual(['Açık', 'Koyu', 'Sistem']);
+    expect(fixture.nativeElement.querySelector('#' + radios[2].getAttribute('aria-describedby'))!.textContent).toContain('Cihazının ayarına göre');
     radios[1].click();
     expect(theme.setMode).toHaveBeenCalledWith('dark');
   });

@@ -44,7 +44,8 @@ describe('Profil ve ayarlar sections', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('app-student-settings')).toBeNull();
     expect(el.textContent).not.toContain('Saat dilimi');
-    expect(el.textContent).toContain('Bütün saatler Türkiye saatine göredir.');
+    // F2 #27: no time zone text either (every time is Türkiye time without saying so).
+    expect(el.textContent).not.toMatch(/saat dilimi|Türkiye saati/i);
   });
 
   it('puts the e-mail notifications and the calendar link under Bildirimler', async () => {
@@ -55,8 +56,11 @@ describe('Profil ve ayarlar sections', () => {
     expect(el.querySelector('edu-notification-preferences')).not.toBeNull();
     expect(el.querySelector('edu-coaching-calendar-subscription')).not.toBeNull();
     const http = TestBed.inject(HttpTestingController);
-    http.expectOne(r => r.url === '/api/notifications/preferences');
+    // F2 #31: the weekly parent summary says what it is.
+    http.expectOne(r => r.url === '/api/notifications/preferences').flush({ data: [{ category: 'ParentSummary', label: 'Haftalık veli özeti', inApp: true, email: true }] });
     expect(http.expectOne(r => r.url === '/api/calendar/subscription').request.params.get('role')).toBe('student');
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="pref-hint-ParentSummary"]')?.textContent?.trim()).toBe('Velin bağlıysa ona giden haftalık özet');
   });
 
   it('shows the profile with the teachers and parent links under Profilim', () => {
@@ -66,6 +70,8 @@ describe('Profil ve ayarlar sections', () => {
     const fixture = TestBed.createComponent(StudentCoachingProfileComponent); fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('h1')?.textContent?.trim()).toBe('Profilim');
+    // F2 #25: the page heading is the only "Profilim" heading.
+    expect([...el.querySelectorAll('h1, h2, h3')].filter(h => /profilim/i.test(h.textContent ?? '')).length).toBe(1);
     expect(el.querySelector('edu-coaching-profile')).not.toBeNull();
     expect(el.querySelector('app-student-teachers')).not.toBeNull();
     expect(el.querySelector('app-student-parent-links')).not.toBeNull();

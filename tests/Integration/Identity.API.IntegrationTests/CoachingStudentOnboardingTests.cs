@@ -159,6 +159,27 @@ public sealed class CoachingStudentOnboardingTests
         (again.Answers.GraduationYear, again.Answers.SchoolName, again.Answers.HomeDistrict).Should().Be(((int?)2018, (string?)null, "Keçiören"));
     }
 
+    // F2 (E4 leftover a, live test 06.11.2026): a refused answer names the wizard question to ask again (the API sends it as "field").
+    [Fact]
+    public async Task ARefusedAnswerNamesTheQuestionToAskAgain()
+    {
+        await using var s = await Setup.CreateAsync();
+        async Task<string> Refused(Func<Task> save) => (await Assert.ThrowsAsync<OnboardingFieldException>(save)).Field;
+        (await Refused(() => s.Service.SavePersonalAsync(new(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1), "06", "0601", CoachingEducationStatus.Student, 8, null, null), default))).Should().Be("birthDate");
+        (await Refused(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "99", "0601", CoachingEducationStatus.Student, 8, null, null), default))).Should().Be("city");
+        (await Refused(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "99", CoachingEducationStatus.Student, 8, null, null), default))).Should().Be("district");
+        (await Refused(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 13, null, null), default))).Should().Be("education");
+        (await Refused(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 11, null, Guid.NewGuid()), default))).Should().Be("ownSchool");
+        await s.Personal(grade: 12);
+        (await Refused(() => s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default))).Should().Be("purpose");
+        (await Refused(() => s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, 120m, false), default))).Should().Be("diploma");
+        await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
+        (await Refused(() => s.Service.SaveTargetAsync(new("score", null, [new("TYT", 600)]), default))).Should().Be("tytScore");
+        (await Refused(() => s.Service.SaveTargetAsync(new("score", null, [new("SAY", 561)]), default))).Should().Be("fieldScore");
+        (await Refused(() => s.Service.SaveTargetAsync(new("school", s.School, null), default))).Should().Be("targetMode");
+        (await Refused(() => s.Service.SaveTargetAsync(new("program", Guid.NewGuid(), null), default))).Should().Be("program");
+    }
+
     // ---------- Targets ----------
 
     [Fact]
