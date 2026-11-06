@@ -29,7 +29,8 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
     @if (data(); as result) {
       <!-- Paket C (#4): the parent's "…'in hedefi" card says the same as the student's Bugün card, in the third person. -->
       @if (parent()) { <app-goal-card [estimate]="result" [childName]="name()" [title]="possessive(name()) + ' hedefi'" /> }
-      @if (gauge(); as goal) {
+      <!-- The parent sees the gap once, on the goal card above; the gauge is the student's own view. -->
+      @if (!parent() && gauge(); as goal) {
         <cs-card tone="raised" class="cs-goal-hero" [attr.data-reached]="goal.reached" [attr.data-status]="goal.status">
           <p class="cs-goal-kicker">{{ parent() ? possessive(name()) + ' hedefi' : 'Hedefin' }} · {{ goal.scoreType }}@if (goal.label) { · <span data-testid="gauge-approximate">{{ goal.label }}</span> }</p>
           <h2>{{ goal.targetName }}</h2>

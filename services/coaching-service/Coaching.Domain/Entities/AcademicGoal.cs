@@ -210,6 +210,8 @@ public class AcademicGoal : AggregateRoot
         if (universityProgramId == Guid.Empty || schoolId == Guid.Empty
             || (universityProgramId.HasValue && schoolId.HasValue))
             throw new ArgumentException("Select either a valid university program or a valid school.");
+        // Paket C: a school or programme replaces the student's own target scores (as in the wizard); an older single score stays.
+        if ((universityProgramId.HasValue || schoolId.HasValue) && ScoreTargetsJson != "[]") SetScoreTargets([], null);
         TargetUniversityProgramId = universityProgramId;
         TargetSchoolId = schoolId;
         UpdatedAt = DateTime.UtcNow;

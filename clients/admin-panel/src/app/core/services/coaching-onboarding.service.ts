@@ -39,7 +39,9 @@ export interface OnboardingExamStep {
 export interface OnboardingTargetStep { kind: 'none' | 'school' | 'program' | 'score'; targetId: string | null; scores: OnboardingScore[] | null }
 /** `value` is the catalog's spelling (sent back as the filter); `label` is for display. */
 export interface OnboardingOption { value: string; label?: string; count: number }
-export interface OnboardingSchoolOption { id: string; name: string; district: string | null; minimumScore: number | null; scoreYear: number | null }
+export interface OnboardingSchoolOption { id: string; name: string; district: string | null; minimumScore: number | null; scoreYear: number | null;
+  /** In the student's own district (those come first). */
+  inHomeDistrict?: boolean }
 export interface OnboardingProgramOption {
   id: string; name: string; university: string; faculty: string | null; scoreType: string | null; programType: string | null;
   minimumScore: number | null; rank: number | null; scoreYear: number | null; educationType: string | null; scholarship: string | null; language: string | null;
@@ -82,8 +84,9 @@ export class CoachingOnboardingService {
 
   schoolCities() { return this.list<OnboardingOption[]>('options/schools/cities'); }
   schoolTypes(city: string) { return this.list<OnboardingOption[]>('options/schools/types', { city }); }
-  schools(city: string, type: string | null, search: string, page = 1) {
-    return this.list<OnboardingPage<OnboardingSchoolOption>>('options/schools', { city, type, search, page });
+  /** `district`: the student's own district, whose schools come first. */
+  schools(city: string, type: string | null, search: string, page = 1, district: string | null = null) {
+    return this.list<OnboardingPage<OnboardingSchoolOption>>('options/schools', { city, type, search, page, district });
   }
   programCities(programType: string, scoreType: string | null) { return this.list<OnboardingOption[]>('options/programs/cities', { programType, scoreType }); }
   universities(programType: string, scoreType: string | null, city: string, search = '') {

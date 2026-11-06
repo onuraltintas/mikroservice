@@ -122,8 +122,8 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
 
   add({ id: 'birthDate', step: 1, kind: 'date', prompt: 'Merhaba! Önce seni tanıyalım. Doğum tarihin ne?', reason: 'Profilinde tutulur; öğretmenin de görebilir.' });
   add({ id: 'city', step: 1, kind: 'combobox', prompt: 'Hangi şehirde yaşıyorsun?', reason: 'Okulunu listeden bulabilmen için. Profilinde tutulur.' });
-  if (answers.city) add({ id: 'district', step: 1, kind: 'combobox', prompt: `${answers.city.label} içinde hangi ilçedesin?`, reason: 'Profilinde tutulur; başka yerde kullanılmaz.' });
-  add({ id: 'education', step: 1, kind: 'buttons', choices: GRADES, prompt: 'Kaçıncı sınıftasın?', reason: 'Diploma notunu sorup sormayacağımızı belirler; öğretmenin de görür.' });
+  if (answers.city) add({ id: 'district', step: 1, kind: 'combobox', prompt: `${answers.city.label} içinde hangi ilçedesin?`, reason: 'Okul listelerinde ilçendeki okulları önce gösteririz. Profilinde tutulur.' });
+  add({ id: 'education', step: 1, kind: 'buttons', choices: GRADES, prompt: 'Kaçıncı sınıftasın?', reason: 'Çalışma ayarların ve diploma notu sorusu buna göre belirlenir; öğretmenin de görür.' });
   if (typeof grade === 'number' && grade >= 9)
     add({ id: 'ownSchool', step: 1, kind: 'combobox', skipLabel: 'Şimdilik geçeyim', prompt: 'Okulunu listeden seçmek ister misin?', reason: 'İsteğe bağlı. Profilinde tutulur; öğretmenin de görür.' });
 
@@ -308,7 +308,8 @@ export function prefill(view: OnboardingView): Answers {
   if (a.targetLocked) {
     // A teacher's goal: the wizard does not change it ("none" keeps it as it is).
     answers.targetSaved = { value: 'locked', label: `Hedefini öğretmenin belirledi${a.target ? ': ' + targetLabel(a.target) : ''}`, data: { kind: 'none', locked: true } };
-  } else if (saved.has(3)) {
+  } else if (saved.has(3) && !(a.target?.kind === 'score' && a.target.scores.some(x => !x.scoreType))) {
+    // An older score target without a score type cannot be sent again as it is: the target question is asked again.
     const t = a.target;
     answers.targetSaved = t ? { value: t.kind, label: targetLabel(t), data: { kind: t.kind, targetId: t.targetId,
       scores: t.kind === 'school' || !t.scores.length || t.scores.some(x => !x.scoreType) && t.kind === 'score' ? null : t.scores } }

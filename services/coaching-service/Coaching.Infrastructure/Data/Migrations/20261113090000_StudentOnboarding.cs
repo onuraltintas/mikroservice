@@ -30,6 +30,8 @@ namespace Coaching.Infrastructure.Data.Migrations
             migrationBuilder.AddCheckConstraint(name: "ck_coaching_student_diploma", schema: "coaching", table: "student_profiles",
                 sql: "\"DiplomaGrade\" IS NULL OR \"DiplomaGrade\" BETWEEN 50 AND 100");
             migrationBuilder.AddColumn<string>(name: "score_targets", schema: "coaching", table: "academic_goals", type: "jsonb", nullable: false, defaultValue: "[]");
+            migrationBuilder.AddCheckConstraint(name: "ck_goal_score_targets", schema: "coaching", table: "academic_goals",
+                sql: "jsonb_typeof(score_targets) = 'array' AND jsonb_array_length(score_targets) <= 2");
 
             // Existing students with an exam purpose (LGS 1, YKS 2, AGS 5, YDS 6, YÖKDİL 7) and complete education finished the
             // old setup: all seven wizard steps (bits 1–7 = 254) are marked done.
@@ -60,6 +62,7 @@ namespace Coaching.Infrastructure.Data.Migrations
                   END IF;
                 END $$;
                 """);
+            migrationBuilder.DropCheckConstraint(name: "ck_goal_score_targets", schema: "coaching", table: "academic_goals");
             migrationBuilder.DropColumn(name: "score_targets", schema: "coaching", table: "academic_goals");
             migrationBuilder.DropCheckConstraint(name: "ck_coaching_student_diploma", schema: "coaching", table: "student_profiles");
             foreach (var column in new[] { "HomeProvinceId", "HomeCity", "HomeDistrictId", "HomeDistrict", "DiplomaGrade", "DiplomaGradeEstimated",

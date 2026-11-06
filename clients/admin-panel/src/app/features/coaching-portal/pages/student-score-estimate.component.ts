@@ -20,7 +20,7 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
       @if (error()) { <p role="alert">{{ error() }}</p> }
       @if (data(); as result) {
         <!-- Paket C (#4): the same goal states and wording as the student's Bugün card (third person for staff). -->
-        <app-goal-card [estimate]="result" [childName]="studentId ? 'Öğrenci' : null" [title]="studentId ? 'Öğrencinin hedefi' : 'Hedefin'" />
+        <app-goal-card [estimate]="result" [childName]="studentId ? 'Öğrenci' : null" [title]="studentId ? 'Öğrencinin hedefi' : 'Hedefin'" [link]="!studentId" />
         @if (result.notice) { <p>{{ result.notice }}</p> }
         @for (item of result.estimates; track item.scoreType) {
           <div class="plan-row">

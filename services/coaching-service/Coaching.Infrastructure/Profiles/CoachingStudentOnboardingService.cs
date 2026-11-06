@@ -47,7 +47,11 @@ public sealed record OnboardingOption(string Value, int Count)
 {
     public string Label { get; init; } = Value;
 }
-public sealed record OnboardingSchoolOption(Guid Id, string Name, string? District, decimal? MinimumScore, int? ScoreYear);
+public sealed record OnboardingSchoolOption(Guid Id, string Name, string? District, decimal? MinimumScore, int? ScoreYear)
+{
+    /// <summary>Paket C: the school is in the student's own district (those come first).</summary>
+    public bool InHomeDistrict { get; init; }
+}
 public sealed record OnboardingProgramOption(Guid Id, string Name, string University, string? Faculty, string? ScoreType, string? ProgramType,
     decimal? MinimumScore, int? Rank, int? ScoreYear, string? EducationType, string? Scholarship, string? Language);
 
@@ -240,7 +244,8 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
                 db.AcademicGoals.Add(goal); created = true;
                 if (primary is null) db.Add(StudentPrimaryGoal.Create(profile.UserId, goal.Id)); else primary.Select(goal.Id);
             }
-            else if (goal.Description == WizardMarker) goal.UpdateDetails(title: Clip(title));
+            // The goal is named after its target, so the home page and Hedefim show the new one (a teacher's goal never reaches here).
+            else goal.UpdateDetails(title: Clip(title));
             apply(goal);
             KeepNetTargets(goal, nets);
         }
@@ -304,7 +309,8 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     }
 
     /// <summary>City: a catalog value or a place name from the Identity directory ("Adiyaman", "Afyonkarahi̇sar"); both match the catalog's spelling.</summary>
-    public async Task<TargetSearchPage<OnboardingSchoolOption>> SchoolsAsync(string? city, string? type, string? search, int page, CancellationToken ct)
+    public async Task<TargetSearchPage<OnboardingSchoolOption>> SchoolsAsync(string? city, string? type, string? search, int page, CancellationToken ct,
+        string? district = null)
     {
         await RequireListAccessAsync(ct);
         var cities = await CitiesAsync(db.TargetSchools.AsNoTracking().Where(x => x.IsActive).Select(x => x.City), RequireText(city, "Şehri seç."), ct);
@@ -312,8 +318,10 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         var kind = string.IsNullOrWhiteSpace(type) ? null : RequireText(type, "Okul türünü seç.");
         var query = db.TargetSchools.AsNoTracking().Where(x => x.IsActive && Enumerable.Contains(cities, x.City) && (kind == null || x.InstitutionType == kind));
         if (Search(search) is { } text) query = query.Where(x => x.Name.ToUpper().Replace("İ", "I").Contains(text) || (x.District ?? "").ToUpper().Replace("İ", "I").Contains(text));
-        return await PageAsync(query.OrderBy(x => x.Name).ThenBy(x => x.Id)
-            .Select(x => new OnboardingSchoolOption(x.Id, x.Name, x.District, x.MinimumScore, x.ScoreYear)), page, ct);
+        // Paket C: the student's own district comes first (a sort, not a filter); the catalog spells districts in capitals.
+        string[] home = string.IsNullOrWhiteSpace(district) ? [] : await CitiesAsync(query.Select(x => x.District), RequireText(district, "İlçeyi seç."), ct);
+        return await PageAsync(query.OrderBy(x => Enumerable.Contains(home, x.District) ? 0 : 1).ThenBy(x => x.Name).ThenBy(x => x.Id)
+            .Select(x => new OnboardingSchoolOption(x.Id, x.Name, x.District, x.MinimumScore, x.ScoreYear) { InHomeDistrict = Enumerable.Contains(home, x.District) }), page, ct);
     }
 
     public async Task<IReadOnlyList<OnboardingOption>> ProgramCitiesAsync(string? programType, string? scoreType, CancellationToken ct)

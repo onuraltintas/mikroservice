@@ -17,6 +17,8 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
             // KM1: the net limit of every practice scope is its question count, generated from PracticeExamRules.Profiles.
             table.HasCheckConstraint("ck_goal_net_target", "(target_net IS NULL AND target_practice_exam_code IS NULL) OR (target_net IS NOT NULL AND target_practice_exam_code IS NOT NULL AND target_net >= 0 AND target_net <= CASE target_practice_exam_code "
                 + string.Join(" ", PracticeExamRules.Profiles.Select(p => $"WHEN '{p.Code}' THEN {p.Sections.Sum(s => s.QuestionCount)}")) + " ELSE -1 END)");
+            // Paket C (#3): the student's own target scores, at most two (YKS: TYT and the field's).
+            table.HasCheckConstraint("ck_goal_score_targets", "jsonb_typeof(score_targets) = 'array' AND jsonb_array_length(score_targets) <= 2");
             table.HasCheckConstraint("ck_goal_score_scale", "target_max_score IS NULL OR (target_max_score > 0 AND target_max_score <= 999.99 AND target_score IS NOT NULL AND target_score > 0 AND target_score <= target_max_score AND target_exam_type IS NOT NULL)");
         });
 

@@ -169,6 +169,8 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                             t.HasCheckConstraint("ck_goal_score_scale", "target_max_score IS NULL OR (target_max_score > 0 AND target_max_score <= 999.99 AND target_score IS NOT NULL AND target_score > 0 AND target_score <= target_max_score AND target_exam_type IS NOT NULL)");
 
+                            t.HasCheckConstraint("ck_goal_score_targets", "jsonb_typeof(score_targets) = 'array' AND jsonb_array_length(score_targets) <= 2");
+
                             t.HasCheckConstraint("ck_goal_single_catalog_target", "target_university_program_id IS NULL OR target_school_id IS NULL");
                         });
                 });

@@ -41,8 +41,9 @@ public sealed class CoachingStudentOnboardingController(CoachingStudentOnboardin
     public Task<IActionResult> SchoolTypes([FromQuery] string? city, CancellationToken ct) => Run(() => onboarding.SchoolTypesAsync(city, ct));
 
     [HttpGet("options/schools"), EnableRateLimiting("target-catalog-search")]
-    public Task<IActionResult> Schools([FromQuery] string? city, [FromQuery] string? type, [FromQuery] string? search, [FromQuery] int page = 1, CancellationToken ct = default) =>
-        Run(() => onboarding.SchoolsAsync(city, type, search, page, ct));
+    public Task<IActionResult> Schools([FromQuery] string? city, [FromQuery] string? type, [FromQuery] string? search, [FromQuery] int page = 1,
+        [FromQuery] string? district = null, CancellationToken ct = default) =>
+        Run(() => onboarding.SchoolsAsync(city, type, search, page, ct, district));
 
     [HttpGet("options/programs/cities"), EnableRateLimiting("target-catalog-search")]
     public Task<IActionResult> ProgramCities([FromQuery] string? programType, [FromQuery] string? scoreType, CancellationToken ct) =>
