@@ -122,7 +122,10 @@ export class StudentOnboardingComponent implements OnInit {
   draftDate = '';
   draftEstimated = false;
 
-  async ngOnInit() {
+  async ngOnInit() { await this.load(); }
+
+  private async load() {
+    this.loading.set(true); this.error.set(null);
     try {
       const view = await firstValueFrom(this.api.get());
       // Review of PR 120: Hedefim offers the target step only after the first-login setup; before that it links to it.
@@ -310,7 +313,8 @@ export class StudentOnboardingComponent implements OnInit {
     } finally { this.busy.set(false); }
   }
 
-  retry() { this.error.set(null); void this.settle(); }
+  /** #35: when the status itself could not be loaded, "Yeniden dene" loads it again (nothing to save yet). */
+  retry() { this.error.set(null); void (this.view() ? this.settle() : this.load()); }
 
   /** Review of PR 120: a teacher set the goal while the student was changing it: the teacher's goal is shown, locked. */
   private async showTeacherGoal() {
