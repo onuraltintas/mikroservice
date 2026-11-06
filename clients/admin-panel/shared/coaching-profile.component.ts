@@ -9,6 +9,7 @@ import { Observable, finalize, map } from 'rxjs';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from '../src/app/features/coaching-portal/onboarding/onboarding-combobox.component';
 import { EDUCATION_STAGES, EducationStage, educationRequest, gradesFor, isStudentStage, stageOf } from '../src/app/features/coaching-portal/coaching-education';
 import { coachingDate } from '../src/app/features/coaching-portal/coaching-labels';
+import { CoachingStudentNavigationService } from '../src/app/core/services/coaching-student-navigation.service';
 
 interface StudentProfile {
   version: number; isActive: boolean; educationStatus: string; gradeLevel: number | null;
@@ -189,6 +190,8 @@ export class CoachingProfileComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly destroy = inject(DestroyRef);
   private readonly host = inject(ElementRef<HTMLElement>);
+  /** The student menu (absent in the staff portal). */
+  private readonly navigation = inject(CoachingStudentNavigationService, { optional: true });
   readonly loading = signal(false); readonly working = signal(false); readonly ready = signal(false);
   readonly error = signal<string | null>(null); readonly success = signal<string | null>(null);
   readonly invitations = signal<Invitation[]>([]); readonly invitationError = signal<string | null>(null); readonly invitationLoading = signal(false);
@@ -489,7 +492,15 @@ export class CoachingProfileComponent implements OnInit {
     if (this.dirty) { this.invitationError.set(this.t('Davet işlemi öncesinde profil değişikliklerini kaydedin.', 'Daveti yanıtlamadan önce profil değişikliklerini kaydet.')); return; }
     this.working.set(true); this.invitationError.set(null);
     this.http.post(`${this.base}/invitations/${encodeURIComponent(id)}/${action}`, {}).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false)))
-      .subscribe({ next: () => { this.loadInvitations(); if (action === 'accept') this.loadProfile(); }, error: e => this.invitationError.set(this.message(e, this.t('Davet işlenemedi. Koçluk rolünüzü ve davetin geçerliliğini kontrol edin.', 'Davet yanıtlanamadı. Davetin süresi dolmuş olabilir.'))) });
+      .subscribe({ next: () => {
+        this.loadInvitations();
+        if (action !== 'accept') return;
+        this.loadProfile();
+        // F2/F3: a new teacher or institution can open menu items; the refresh is forced past a request in flight. Called this way it
+        // works with refresh(reset) and refresh({ force, reset }) (PR #122).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (this.role === 'Student') (this.navigation as any)?.refresh?.({ force: true });
+      }, error: e => this.invitationError.set(this.message(e, this.t('Davet işlenemedi. Koçluk rolünüzü ve davetin geçerliliğini kontrol edin.', 'Davet yanıtlanamadı. Davetin süresi dolmuş olabilir.'))) });
   }
   async canLeavePage() { return !this.working() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş Koçluk profil değişikliklerinden vazgeçilsin mi?')); }
   /** Teachers are addressed formally (siz), students informally (sen). */

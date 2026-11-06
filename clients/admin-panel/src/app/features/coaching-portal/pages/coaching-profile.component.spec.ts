@@ -281,6 +281,8 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/invitations/invite-1/accept').flush(null);
     http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student, memberships: [] } });
+    // F2/F3: the student menu is read again (a new teacher can open menu items).
+    http.expectOne('/api/coaching/profiles/me/navigation').flush({ data: { showAssignments: true, showSessions: true } });
     fixture.detectChanges(); await fixture.whenStable();
     expect(component.invitations()).toEqual([]); expect(component.working()).toBe(false); http.verify();
   });
