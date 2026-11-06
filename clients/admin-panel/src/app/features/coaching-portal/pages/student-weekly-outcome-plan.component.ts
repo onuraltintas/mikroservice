@@ -11,6 +11,8 @@ import {clock} from './weekly-calendar';
 @Component({selector:'app-student-weekly-outcome-plan',standalone:true,imports:[CommonModule,FormsModule,RouterLink],templateUrl:'./student-weekly-outcome-plan.component.html',styleUrl:'./student-weekly-outcome-plan.component.scss'})
 export class StudentWeeklyOutcomePlanComponent implements OnInit {
   @Input() studentId?:string;
+  /** E6 #29: Plan önizlemesi (Çalışma tercihlerim) shows the preview as soon as the saved week is loaded. */
+  @Input() autoPreview=false;
   @Output() planCreated=new EventEmitter<string>();
   private readonly service=inject(CoachingWeeklyOutcomePlanService);private readonly destroy=inject(DestroyRef);private readonly router=inject(Router);
   readonly options=signal<WeeklyOutcomeOptions|null>(null);readonly preview=signal<WeeklyOutcomePreview|null>(null);readonly loading=signal(false);readonly generating=signal(false);readonly saving=signal(false);readonly stale=signal(false);readonly error=signal('');
@@ -26,7 +28,7 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   ngOnInit(){this.load();}
   busy(){return this.loading()||this.generating()||this.saving()||this.savingExamDate();}
   canLeavePage(){return !this.busy();}
-  load(){if(this.busy())return;this.loading.set(true);this.error.set('');this.service.options(this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.loading.set(false))).subscribe({next:r=>{
+  load(){if(this.busy())return;this.loading.set(true);this.error.set('');let loaded=false;this.service.options(this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>{this.loading.set(false);if(loaded&&this.autoPreview&&!this.preview())this.generatePreview();})).subscribe({next:r=>{loaded=true;
     if(!this.options()){this.startDate=r.startDate;this.endDate=r.endDate;}this.options.set(r);this.examDateInput=r.examDate??'';this.changed();this.stale.set(false);
   },error:e=>this.fail(e,'Haftalık taslak yüklenemedi. Önce takvimini kaydet.')} );}
   changed(){this.preview.set(null);this.confirmed=false;this.page.set(1);this.lessonFilter.set('');this.error.set('');}

@@ -23,7 +23,7 @@ describe('KM8 exam-only study purposes: setup wizard', () => {
     const service = { get: vi.fn(() => of(view)), save: vi.fn((_request: LearningSetupUpdate) => of(view)),
       impact: vi.fn(() => of({ removedTargets: [] as string[], teacherGoalMismatch: false, diplomaGradeRemoved: null })), catalog: vi.fn(() => of(emptyCatalog)) };
     TestBed.configureTestingModule({ imports: [StudentLearningSetupComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
-      { provide: CoachingLearningSetupService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: { getTopicOutcomes: vi.fn() } }] });
+      { provide: CoachingLearningSetupService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: { getTopicOutcomes: vi.fn(), getAvailability: vi.fn(() => of(null)) } }] });
     const fixture = TestBed.createComponent(StudentLearningSetupComponent); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     return { fixture, component: fixture.componentInstance, service, text: () => (fixture.nativeElement as HTMLElement).textContent ?? '' };
   }

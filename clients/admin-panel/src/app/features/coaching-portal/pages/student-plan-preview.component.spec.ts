@@ -16,15 +16,15 @@ describe('StudentPlanPreviewComponent', () => {
   const lessons = [{ id: 'math', name: 'Matematik', examCode: 'LGS', gradeNumber: 8 }, { id: 'science', name: 'Fen Bilimleri', examCode: 'LGS', gradeNumber: 8 }];
   const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
   const saved: WeeklySlot[] = [{ id: 'old', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Friday', startMinute: 1080, durationMinutes: 60 }];
-  const request = { startDate: '2026-11-09', endDate: '2027-06-01', expectedWeeklyDraftVersion: 1, reuseFreedSlots: false };
+  const request = { startDate: '2030-11-04', endDate: '2031-06-01', expectedWeeklyDraftVersion: 1, reuseFreedSlots: false };
   async function setup(availability: StudyAvailability | null, slots: WeeklySlot[] = []) {
     const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 1, timeZoneId: 'Europe/Istanbul', slots } : null, lessons })),
       save: vi.fn((_version: number | null, zone: string, next: WeeklySlot[]) => of({ version: 1, timeZoneId: zone, slots: next })) };
     const planning = { getAvailability: vi.fn(() => of(availability)) };
-    const engine = { options: vi.fn(() => of({ startDate: '2026-11-09', endDate: '2027-06-01', weeklyDraftVersion: 1, timeZoneId: 'Europe/Istanbul', exams: [] })),
+    const engine = { options: vi.fn(() => of({ startDate: '2030-11-04', endDate: '2031-06-01', weeklyDraftVersion: 1, timeZoneId: 'Europe/Istanbul', exams: [] })),
       preview: vi.fn(() => of({ request, timeZoneId: 'Europe/Istanbul', fingerprint: 'f', canCreate: true, protectedTaskCount: 0, issues: [],
-        schedule: { tasks: [], freeMinutes: 0, recommendedEndDate: '2027-05-31', lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3,
-          weeklyMinutes: 60, requiredMinutes: 60, scheduledMinutes: 60, remainingMinutes: 0, finishDate: '2027-05-31', extraWeeklyMinutes: 0 }] } })),
+        schedule: { tasks: [], freeMinutes: 0, recommendedEndDate: '2031-05-30', lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3,
+          weeklyMinutes: 60, requiredMinutes: 60, scheduledMinutes: 60, remainingMinutes: 0, finishDate: '2031-05-30', extraWeeklyMinutes: 0 }] } })),
       create: vi.fn(() => of({ id: 'draft-1', version: 1 })) };
     TestBed.configureTestingModule({ imports: [StudentPlanPreviewComponent], providers: [provideRouter([]),
       { provide: CoachingWeeklyDraftService, useValue: weekly }, { provide: CoachingStudyPlanningService, useValue: planning },
