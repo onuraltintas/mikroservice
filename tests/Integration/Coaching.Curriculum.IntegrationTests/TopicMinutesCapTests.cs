@@ -191,7 +191,11 @@ public sealed class TopicMinutesCapTests
         Assert.Contains("1440", error.MessageText);
         Assert.Contains("4320", await Constraint(f.Db, "ck_outcome_minutes"));
         Assert.Contains("4320", await Constraint(f.Db, "ck_topic_outcome_share_minutes"));
-        Assert.Equal(Current, (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
+        // The cap migration was not rolled back. EF runs each Down in its own transaction, so later
+        // migrations (e.g. 20261112090000_ScoreModelsAllExams) may already have been reverted; Up re-applies them.
+        Assert.Contains(Current, await f.Db.Database.GetAppliedMigrationsAsync());
+        await f.Db.Database.MigrateAsync();
+        Assert.Equal(f.Db.Database.GetMigrations().Last(), (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
         Assert.Equal(1, await Count(f.Db, $"SELECT count(*)::int AS \"Value\" FROM coaching.study_catalog_topic_outcome_shares WHERE \"EstimateId\" = '{big}'"));
 
         // Only the share is large: still refused.

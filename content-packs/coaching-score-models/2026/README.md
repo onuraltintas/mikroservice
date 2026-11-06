@@ -2,7 +2,7 @@
 
 `puan-modelleri-2026.csv`, yönetim panelindeki **Puan tahmini verileri** sayfasından (`/coaching/score-models`)
 **Yıl = 2026** ile yüklenir: önce önizleme, hata yoksa uygula. Dosya beş puan türünü içerir: TYT, SAY, EA, SÖZ, DİL.
-LGS modeli **yoktur** (aşağıdaki "Eksikler"e bakın). Üretime hiçbir şey otomatik uygulanmaz.
+LGS ve MEB-AGS modelleri ayrı klasörlerdedir (aşağıdaki "LGS ve MEB-AGS"e bakın). Üretime hiçbir şey otomatik uygulanmaz.
 
 Bu veriler ÖSYM'nin kendi hesabı değildir; resmî istatistiklerden türetilmiş **yaklaşık** bir modeldir. Öğrenci, veli ve
 öğretmen ekranları tahmini "Yaklaşık tahmin" etiketiyle ve tek satırlık yöntem notuyla gösterir.
@@ -151,18 +151,8 @@ puan türüne özgü testleri yazar. Puan modeli dosyası (`puan-modelleri-2026.
 - **Bir yıllık veri**: tablolar 2026 adaylarına göredir; 2027 sınavında dağılım değişir. Her yıl ÖSYM sayısal bilgileri ve
   yeni yerleştirme sonuçları çıkınca bu paket yeniden üretilmelidir (yeni klasör, ör. `2027/`).
 
-## Eksikler: LGS
+## LGS ve MEB-AGS
 
-LGS modeli **üretilmedi**. MEB'in puan yöntemi biliniyor (2026 LGS Başvuru ve Uygulama Kılavuzu, Bölüm 11:
-SP = 50 + 10 × (HP − ort)/ss, ağırlıklar Türkçe/Matematik/Fen 4, diğerleri 1, MSP = 100 + 400 × (TASP − min)/(max − min);
-<https://www.meb.gov.tr/meb_iys_dosyalar/2026_04/06110219_LGS_Basvuru_ve_Uygulama_Kilavuzu_2026.pdf>), ancak:
-
-- 2026 testlerinin ortalama ve **standart sapmaları** ile en küçük/en büyük TASP bulunamadı. "2026 LGS Kapsamında Merkezî
-  Sınav Raporu" sayfası (<https://odsgm.meb.gov.tr/www/2026-lgs-kapsaminda-merkezi-sinav-raporu/icerik/1695/tr>) bu oturumda
-  erişilemedi; MEB duyurusunda (<https://www.meb.gov.tr/2026-lgs-kapsaminda-merkezi-sinav-raporu-yayimlandi/haber/41333/tr>)
-  ve 2026 yerleştirme raporunda (<https://odsgm.meb.gov.tr/meb_iys_dosyalar/2026_08/6a72dd74c263a920303943_lgs_2026_yerlestirme_raporu_kamuoyu_0508.pdf>)
-  bu istatistikler yok.
-- Puan → yüzdelik/sıra için MEB'in puan dağılımı ya da okul taban **yüzdelikleri** gerekir; katalogdaki 3.150 okulun yalnız
-  taban puanı var, yüzdeliği yok.
-
-Bu iki veri MEB'den alınabilirse aynı yöntemle LGS satırları eklenebilir.
+LGS ve MEB-AGS modelleri ayrı paketlerdedir (Paket B, 05.11.2026): `../2026-lgs/` (tam net = 500 çapası ve kalibre edilmiş eğim,
+sıralama tablosu yok) ve `../2026-meb-ags/` (ÖSYM 2026 MEB-AGS sayısal bilgileri ve Kılavuz 3.10; P1, P2, P2-16, P2-17).
+YDS ve YÖKDİL model gerektirmez (doğru × 100 / 80, YDS seviyesi A–E; `LanguageScoreRules`).

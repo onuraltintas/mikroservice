@@ -3,6 +3,8 @@ using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using Coaching.Infrastructure.Management;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
@@ -107,6 +109,82 @@ public sealed class CoachingScoreEstimatePostgresTests
         var item = Assert.Single(estimate.NotComputed);
         Assert.Equal(("TYT", "minRawScore"), (item.ScoreType, item.NotComputedReason));
         Assert.Equal(new[] { ("TUR", 0.25m), ("TMAT", 0m) }, item.FailedConditions.Single().AnyOf.Select(x => (x.Code, x.RawScore)).ToArray());
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    // Paket B (05.11.2026): the 2026 MEB-AGS and LGS packs go through the admin import on PostgreSQL (new score types, no rank
+    // table, the model's ± range) and an AGS + ÖABT student gets P1 and P2 with ranges; LGS has no rank.
+    public async Task MebAgsAndLgsPacksApplyAndEstimateOnPostgres()
+    {
+        await using var f = await CurriculumPostgresTests.Pg.Create();
+        Assert.False(f.Db.Database.HasPendingModelChanges());
+        var student = Guid.NewGuid(); var admin = Guid.NewGuid();
+        var service = new CoachingScoreEstimateService(f.Db, new Reader(student), TimeProvider.System);
+        foreach (var (folder, file, count) in new[] { ("2026-meb-ags", "puan-modelleri-2026-meb-ags.csv", 19), ("2026-lgs", "puan-modelleri-2026-lgs.csv", 1) })
+        {
+            var csv = await File.ReadAllTextAsync(Pack(folder, file));
+            var preview = await service.PreviewAsync(admin, new(2026, csv, null), default);
+            Assert.Empty(preview.Errors);
+            Assert.Equal(count, await service.ApplyAsync(admin, new(2026, csv, preview.Fingerprint, "2026 modelleri yüklendi."), default));
+        }
+        Assert.Equal(20, await f.Db.Set<CoachingScoreModelVersion>().CountAsync());
+        f.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student),
+            StudentLearningContext.Create(student, 2026, LearningPurpose.Ags, DateTime.UtcNow.Year + 1, "OABT_SINIF", null));
+        void Add(string code, Func<PracticeSection, PracticeSectionAnswers> answers)
+        {
+            var sections = PracticeExamRules.Profiles.Single(x => x.Code == code).Sections.Select(answers).ToArray();
+            var type = PracticeExamRules.ExamTypeFor(code);
+            var exam = Exam.CreateStudentReported(student, code + " denemesi", type, DateTime.UtcNow.Date.AddDays(-1), 100);
+            var result = ExamResult.Create(exam.Id, student, 0);
+            result.SetAnswerStatistics(sections.Sum(x => x.Correct), sections.Sum(x => x.Wrong), sections.Sum(x => x.Empty));
+            result.SetPracticeExam(new(code, sections), type);
+            exam.AddResult(result); f.Db.Add(exam);
+        }
+        Add("AGS", x => new(x.Code, x.QuestionCount / 2, 2, x.QuestionCount - x.QuestionCount / 2 - 2));
+        Add("OABT_SINIF", x => new(x.Code, 30, 8, 12));
+        Add("LGS", x => new(x.Code, x.QuestionCount, 0, 0));
+        await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
+
+        var estimate = await service.EstimateAsync(student, student, null, default);
+
+        Assert.Equal(new[] { "LGS", "P1", "P2_SINIF" }, estimate.Estimates.Select(x => x.ScoreType).Order().ToArray());
+        var p2 = estimate.Estimates.Single(x => x.ScoreType == "P2_SINIF");
+        Assert.InRange(p2.Score, 50, 100);
+        Assert.True(p2.Margin > 0 && p2.ScoreLow <= p2.Score - p2.Margin && p2.ScoreHigh >= p2.Score + p2.Margin);
+        Assert.Null(p2.Rank);
+        Assert.Equal(("P2_SINIF", p2.Score), (estimate.Goal!.ScoreType, estimate.Goal.Score));
+        var lgs = estimate.Estimates.Single(x => x.ScoreType == "LGS");
+        Assert.Equal((500m, (int?)null), (Math.Round(lgs.Score), lgs.Rank));
+
+        // Down refuses while MEB-AGS models exist.
+        await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync("20261111090000_TopicMinutesCap4320"));
+        Assert.Empty(await f.Db.Database.GetPendingMigrationsAsync());
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    // Review 06.11.2026: the previous release cannot read an LGS model without a rank table either, so Down refuses then too;
+    // without such rows it goes down and up again.
+    public async Task DownRefusesWhileAnLgsModelHasNoRankTable()
+    {
+        await using var f = await CurriculumPostgresTests.Pg.Create();
+        var admin = Guid.NewGuid();
+        var service = new CoachingScoreEstimateService(f.Db, new Reader(Guid.NewGuid()), TimeProvider.System);
+        await f.Db.GetService<IMigrator>().MigrateAsync("20261111090000_TopicMinutesCap4320");
+        await f.Db.Database.MigrateAsync(); f.Db.ChangeTracker.Clear();
+        var csv = await File.ReadAllTextAsync(Pack("2026-lgs", "puan-modelleri-2026-lgs.csv"));
+        await service.ApplyAsync(admin, new(2026, csv, (await service.PreviewAsync(admin, new(2026, csv, null), default)).Fingerprint, "LGS 2026 yüklendi."), default);
+
+        var error = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync("20261111090000_TopicMinutesCap4320"));
+        Assert.Contains("without a rank table", error.ToString());
+        Assert.Empty(await f.Db.Database.GetPendingMigrationsAsync());
+        Assert.Equal(0.2m, (await f.Db.Set<CoachingScoreModel>().AsNoTracking().SingleAsync()).UncertaintyShare);
+    }
+
+    private static string Pack(string folder, string file)
+    {
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (root is not null && !Directory.Exists(Path.Combine(root.FullName, "content-packs"))) root = root.Parent;
+        return Path.Combine(root!.FullName, "content-packs", "coaching-score-models", folder, file);
     }
 
     private sealed class Reader(Guid student) : ICoachingIdentityAuthorizationClient

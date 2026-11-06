@@ -1,5 +1,6 @@
 import { StudentExamOverviewItem, StudentExamSource, StudentExamSubject, StudentExamTrend } from '../../../core/services/coaching-student-exam-overview.service';
-import { ScoreEstimate, notComputedText } from '../../../core/services/coaching-score-estimate.service';
+import { ESTIMATE_LABEL, EXACT_LABEL, P3_NOTE, ScoreEstimate, notComputedText, scoreGroup } from '../../../core/services/coaching-score-estimate.service';
+import { possessive } from '../parent/parent-model';
 import { CsTone } from '../ui';
 
 /**
@@ -69,7 +70,9 @@ export function subjectBars(subjects: StudentExamSubject[], examCode: string): S
 }
 
 export interface GaugeRow { label: string; current: string; target: string; percent: number; text: string }
-export interface GoalGauge { targetName: string; scoreType: string; headline: string; rows: GaugeRow[]; reached: boolean; missingData: boolean }
+/** Review 06.11.2026: `label` is set for approximate models with a range (LGS, MEB-AGS); `status` adds "borderline". */
+export interface GoalGauge { targetName: string; scoreType: string; headline: string; rows: GaugeRow[]; reached: boolean; missingData: boolean;
+  status: 'reached' | 'borderline' | 'below' | null; label: string | null }
 
 /** Now → target from the score estimate. A rank is better when lower, so its share is target / current. */
 export function goalGauge(estimate: ScoreEstimate, childName: string | null = null): GoalGauge | null {
@@ -79,22 +82,63 @@ export function goalGauge(estimate: ScoreEstimate, childName: string | null = nu
   const missingData = target.targetScore === null && target.targetRank === null;
   const rows: GaugeRow[] = [];
   // 01.11.2026: ÖSYM does not compute the target's score type (0,5 ham puan, 2026 YKS Kılavuzu Tablo 1D): say which tests.
+  // Re-check 06.11.2026: approximate by exam group (LGS, MEB-AGS), so the label stays at full net where the margin is 0.
+  const approximate = !!now && scoreGroup(now) !== 'YKS';
+  const range = now ? `${decimal.format(now.scoreLow)}–${decimal.format(now.scoreHigh)}` : '';
+  // A null status from the server means no gap can be computed; only older responses (no status) fall back to `reached`.
+  const status = target.status !== undefined ? target.status : now ? (target.reached ? 'reached' : 'below') : null;
+  const label = approximate ? now?.label ?? ESTIMATE_LABEL : null;
   if (target.notComputedReason)
-    return { targetName: target.targetName, scoreType: target.scoreType, rows, reached: false, missingData: false,
+    return { targetName: target.targetName, scoreType: target.scoreType, rows, reached: false, missingData: false, status: null, label: null,
       headline: notComputedText(estimate.notComputed?.find(x => x.scoreType === target.scoreType) ?? { notComputedReason: target.notComputedReason, failedConditions: [] }) };
   if (!missingData && now) {
-    if (target.targetScore !== null) rows.push({ label: 'Puan', current: decimal.format(now.score), target: decimal.format(target.targetScore),
-      percent: share(now.score, target.targetScore), text: `Şu an ${decimal.format(now.score)}, hedef ${decimal.format(target.targetScore)}` });
-    if (target.targetRank !== null) rows.push({ label: 'Sıralama', current: whole.format(now.rank), target: whole.format(target.targetRank),
+    // Review 06.11.2026: an approximate score is shown with the same range as its estimate card.
+    const current = approximate ? `${decimal.format(now.score)} (${range})` : decimal.format(now.score);
+    if (target.targetScore !== null) rows.push({ label: 'Puan', current, target: decimal.format(target.targetScore),
+      percent: share(now.score, target.targetScore), text: `Şu an ${current}, hedef ${decimal.format(target.targetScore)}` });
+    if (target.targetRank !== null && now.rank !== null) rows.push({ label: 'Sıralama', current: whole.format(now.rank), target: whole.format(target.targetRank),
       percent: share(target.targetRank, now.rank), text: `Şu an ${whole.format(now.rank)}., hedef ${whole.format(target.targetRank)}.` });
   }
   const headline = missingData ? 'Bu hedefin taban puanı ya da sıralaması yok; farkı hesaplayamıyoruz.'
     : !now ? (childName ? 'Bu puan türünde deneme sonucu girildiğinde hedefe ne kadar kaldığı burada görünür.' : 'Bu puan türünde deneme gir; hedefe ne kadar kaldığını hesaplayalım.')
+    : status === 'borderline' ? `Hedef, tahmini puan aralığının içinde (${range}): ${childName ? 'sınırda' : 'sınırdasın'}.`
     : target.reached ? (childName ? `${childName} için tahmini puan hedefe ulaşıyor.` : 'Tahmini puanın hedefe ulaşıyor. Bu çizgiyi koru.')
     : target.netGap !== null ? `Hedefe ${decimal.format(target.netGap)} net kaldı`
     : target.rankGap !== null ? `Hedef sıralamaya ${whole.format(target.rankGap)} kişi kaldı` : 'Hedefe olan farkı henüz hesaplayamıyoruz.';
-  return { targetName: target.targetName, scoreType: target.scoreType, headline, rows, reached: target.reached, missingData };
+  return { targetName: target.targetName, scoreType: target.scoreType, headline, rows, reached: target.reached, missingData, status, label };
 }
+export interface GoalScoreCard { scoreType: string; title: string; group: string; headline: string; label: string; exact: boolean; note: string | null }
+
+/**
+ * Paket B (05.11.2026): without a target school or programme (MEB-AGS, YDS, YÖKDİL, or before one is chosen) Hedefim shows the
+ * score of the exam the student works towards: the estimate with its ± range, or the exact YDS / YÖKDİL practice score.
+ */
+export function goalScore(estimate: ScoreEstimate, childName: string | null = null): GoalScoreCard | null {
+  const goal = estimate.goal;
+  if (!goal || estimate.target) return null;
+  const label = goal.label || (goal.exact ? EXACT_LABEL : ESTIMATE_LABEL);
+  const note = goal.scoreType === 'P1' ? P3_NOTE : null;
+  const card = (headline: string) => ({ scoreType: goal.scoreType, title: goal.name, group: goal.group, headline, label, exact: goal.exact, note });
+  if (goal.notComputedReason)
+    return card(notComputedText(estimate.notComputed?.find(x => x.scoreType === goal.scoreType) ?? { notComputedReason: goal.notComputedReason, failedConditions: [] }));
+  // Review 06.11.2026: say why there is no score.
+  if (goal.score === null && goal.reason === 'noModel') return card('Bu sınav için puan tahmini henüz hazır değil.');
+  if (goal.score === null && goal.reason === 'missingExam' && goal.missingExams?.length) {
+    const exams = goal.missingExams.join(' ve ');
+    return card(childName ? `Bu puan için ${exams} denemesi de gerekiyor.` : `Bu puan için ${exams} denemesi de gir.`);
+  }
+  if (goal.score === null)
+    return card(childName ? 'Deneme sonucu girildiğinde puanı burada görünür.' : 'Bu sınavda bir deneme gir; puanını burada gösterelim.');
+  const score = decimal.format(goal.score);
+  if (goal.exact) {
+    const level = goal.level ? ` · Seviye ${goal.level}` : '';
+    return card(childName ? `${possessive(childName)} deneme puanı ${score}${level}` : `Deneme puanın ${score}${level}`);
+  }
+  // The same range as the estimate card (practice spread and model ±).
+  const range = goal.scoreLow !== null && goal.scoreHigh !== null ? ` (${decimal.format(goal.scoreLow)}–${decimal.format(goal.scoreHigh)})` : '';
+  return card(childName ? `Tahmini puan: ${score}${range}` : `Tahmini puanın ${score}${range}`);
+}
+
 function share(value: number, goal: number) { return goal > 0 && value > 0 ? Math.round(Math.min(1, value / goal) * 100) : 0; }
 
 export interface WeekRange { from: string; to: string; label: string }

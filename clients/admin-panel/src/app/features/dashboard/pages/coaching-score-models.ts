@@ -9,7 +9,7 @@ import { scoreModelActionLabel } from './coaching-exam-groups';
 export interface ScoreModelItem { id: string; year: number; scoreType: string; name: string; baseScore: number; rankRows: number; importedAt: string }
 export interface ScoreModelPreview {
   fingerprint: string; year: number;
-  models: { scoreType: string; name: string; baseScore: number; coefficients: number; rankRows: number; replaces: boolean }[];
+  models: { scoreType: string; name: string; baseScore: number; coefficients: number; rankRows: number; replaces: boolean; uncertaintyShare?: number; uncertaintyCap?: number | null }[];
   errors: { line: number; message: string }[];
 }
 /** KM7: one upload, restore or delete of one score type. */
@@ -48,10 +48,10 @@ export interface ScoreModelHistoryItem {
           </ul>
         }
         <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Önizleme tablosu"><table class="mt-2 w-full text-sm">
-          <thead><tr><th class="text-left">Puan türü</th><th class="text-left">Taban</th><th class="text-left">Katsayı</th><th class="text-left">Sıralama satırı</th><th class="text-left">Durum</th></tr></thead>
+          <thead><tr><th class="text-left">Puan türü</th><th class="text-left">Taban</th><th class="text-left">Katsayı</th><th class="text-left">Sıralama satırı</th><th class="text-left">Model payı</th><th class="text-left">Durum</th></tr></thead>
           <tbody>
             @for (model of p.models; track model.scoreType) {
-              <tr><td>{{ model.name }}</td><td>{{ model.baseScore }}</td><td>{{ model.coefficients }}</td><td>{{ model.rankRows }}</td><td>{{ model.replaces ? 'Mevcut veriyi değiştirir' : 'Yeni' }}</td></tr>
+              <tr><td>{{ model.name }}</td><td>{{ model.baseScore }}</td><td>{{ model.coefficients }}</td><td>{{ model.rankRows }}</td><td>{{ marginText(model) }}</td><td>{{ model.replaces ? 'Mevcut veriyi değiştirir' : 'Yeni' }}</td></tr>
             }
           </tbody>
         </table></div>
@@ -110,6 +110,12 @@ export class CoachingScoreModelsComponent implements OnInit {
 
   canApply(): boolean { const p = this.preview(); return !!p && p.errors.length === 0 && p.models.length > 0 && p.year === this.year; }
   date(value: string): string { return new Date(value).toLocaleDateString('tr-TR'); }
+  /** Paket B review: the model's own ± range (LGS, MEB-AGS); YKS has none. */
+  marginText(model: { uncertaintyShare?: number; uncertaintyCap?: number | null }): string {
+    if (!model.uncertaintyShare) return '—';
+    const n = (x: number) => x.toLocaleString('tr-TR', { maximumFractionDigits: 4 });
+    return `±${n(model.uncertaintyShare)} × (en yüksek puan − puan)${model.uncertaintyCap != null ? `, en çok ${n(model.uncertaintyCap)}` : ''}`;
+  }
   dateTime(value: string): string { return new Date(value).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }); }
   action(value: string): string { return scoreModelActionLabel(value); }
 

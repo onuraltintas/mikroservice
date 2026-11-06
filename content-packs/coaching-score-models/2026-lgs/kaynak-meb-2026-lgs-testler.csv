@@ -1,0 +1,7 @@
+test;ders;soru;agirlik;ortalama_guclugu;guvenirlik;kaynak
+TUR;Türkçe;20;4;0.47;0.82;meb-2026-lgs-merkezi-sinav-raporu
+MAT;Matematik;20;4;0.28;0.86;meb-2026-lgs-merkezi-sinav-raporu
+FEN;Fen Bilimleri;20;4;0.45;0.87;meb-2026-lgs-merkezi-sinav-raporu
+INK;T.C. İnkılap Tarihi ve Atatürkçülük;10;1;0.53;0.81;meb-2026-lgs-merkezi-sinav-raporu
+DIN;Din Kültürü ve Ahlak Bilgisi;10;1;0.63;0.72;meb-2026-lgs-merkezi-sinav-raporu
+ENG;Yabancı Dil;10;1;0.44;0.88;meb-2026-lgs-merkezi-sinav-raporu

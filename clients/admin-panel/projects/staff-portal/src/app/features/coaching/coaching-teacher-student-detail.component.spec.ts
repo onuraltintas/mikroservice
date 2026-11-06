@@ -51,6 +51,26 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     expect(row.textContent).toContain('Son 3 denemenin ortalama ham puanı: AYT Matematik 0,25 · AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1 0.');
     expect(row.textContent).not.toMatch(/\b(sen|senin|siz|sizin)\b/);
   });
+  // Paket B (05.11.2026): the teacher sees MEB-AGS with its ± range and the YDS level in words that address nobody.
+  it('shows MEB-AGS with its range and YDS with its level', () => {
+    const fixture = createDetail(); flushInitialReport();
+    (fixture.nativeElement.querySelector('[data-testid="toggle-score-estimate"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    http.expectOne(request => request.url === '/api/coaching/students/student-1/score-estimate').flush({
+      estimates: [{ scoreType: 'P2_SINIF', name: 'MEB-AGS P2 · Sınıf Öğretmenliği', modelYear: 2026, score: 71.2, scoreLow: 69.5, scoreHigh: 72.9, rank: null,
+        rankBest: null, rankWorst: null, percentile: null, examsUsed: 2, lastExamDate: '2026-10-20T00:00:00Z', includesDiplomaGrade: false,
+        group: 'MEB-AGS', label: 'Yaklaşık tahmin', margin: 1.7, scaleMin: 0, scaleMax: 100 }],
+      languageScores: [{ examCode: 'YDS_EN', name: 'YDS · İngilizce', score: 72.5, scoreLow: 72.5, scoreHigh: 72.5, examsUsed: 1, lastExamDate: '2026-10-20T00:00:00Z',
+        level: 'C', label: 'Deneme sonucuna göre', exact: true, scaleMax: 100 }],
+      target: null, notice: null
+    });
+    fixture.detectChanges();
+    const card = fixture.nativeElement.querySelector('[data-testid="score-estimate"]') as HTMLElement;
+    expect(card.textContent).toContain('MEB-AGS P2 · Sınıf Öğretmenliği: yaklaşık 71,2 puan (69,5–72,9) · model payı ±1,7');
+    expect(card.textContent).not.toContain('Tahmini sıralama');
+    expect(card.textContent).toContain('YDS · İngilizce: 72,5 puan (72,5–72,5) · Seviye C');
+    expect(card.textContent).not.toMatch(/\b(sen|senin|denemene|siz|sizin)\b/);
+  });
   let http: HttpTestingController;
   const student: CoachingTeacherStudent = {
     userId: 'student-1',

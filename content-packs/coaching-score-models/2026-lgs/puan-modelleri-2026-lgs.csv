@@ -1,0 +1,12 @@
+tur;puan_turu;sinav;ders;deger;siralama;yuzdelik
+# Paket B · 2026 LGS puan modeli (YAKLAŞIK). MEB 2026 LGS Kılavuzu Bölüm 11 + 2026 Merkezî Sınav Raporu (madde güçlüğü, güvenirlik).
+# Tam net = 500 (452 öğrenci); ders oranları KR-20 ile türetilen standart sapmalardan; en küçük TASP varsayımı README.md'de.
+taban;LGS;;;166.6667;;
+katsayi;LGS;LGS;TUR;4.7629;;
+katsayi;LGS;LGS;MAT;4.8178;;
+katsayi;LGS;LGS;FEN;4.2338;;
+katsayi;LGS;LGS;INK;1.8647;;
+katsayi;LGS;LGS;DIN;2.197;;
+katsayi;LGS;LGS;ENG;1.6426;;
+belirsizlik;LGS;;;0.2;;
+belirsizlik_siniri;LGS;;;30;;

@@ -2112,6 +2112,14 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<decimal?>("UncertaintyCap")
+                        .HasPrecision(8, 3)
+                        .HasColumnType("numeric(8,3)");
+
+                    b.Property<decimal>("UncertaintyShare")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2128,7 +2136,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("score_models", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_score_model_type", "\"ScoreType\" IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL')");
+                            t.HasCheckConstraint("ck_score_model_type", "\"ScoreType\" IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL', 'P1', 'P2_TUR', 'P2_IMAT', 'P2_FEN', 'P2_SOS', 'P2_TDE', 'P2_TAR', 'P2_COG', 'P2_MAT', 'P2_FIZ', 'P2_KIM', 'P2_BIO', 'P2_REH', 'P2_SINIF', 'P2_OKUL', 'P2_BED', 'P2_OZEL', 'P2_16', 'P2_17')");
 
                             t.HasCheckConstraint("ck_score_model_year", "\"Year\" BETWEEN 2018 AND 2100");
                         });
@@ -2185,6 +2193,14 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<decimal?>("UncertaintyCap")
+                        .HasPrecision(8, 3)
+                        .HasColumnType("numeric(8,3)");
+
+                    b.Property<decimal>("UncertaintyShare")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)");
+
                     b.Property<Guid>("UploadId")
                         .HasColumnType("uuid");
 
@@ -2201,7 +2217,7 @@ namespace Coaching.Infrastructure.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_score_model_version_action", "\"Action\" IN ('Upload', 'Restore', 'Delete')");
 
-                            t.HasCheckConstraint("ck_score_model_version_type", "\"ScoreType\" IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL')");
+                            t.HasCheckConstraint("ck_score_model_version_type", "\"ScoreType\" IN ('LGS', 'TYT', 'SAY', 'EA', 'SOZ', 'DIL', 'P1', 'P2_TUR', 'P2_IMAT', 'P2_FEN', 'P2_SOS', 'P2_TDE', 'P2_TAR', 'P2_COG', 'P2_MAT', 'P2_FIZ', 'P2_KIM', 'P2_BIO', 'P2_REH', 'P2_SINIF', 'P2_OKUL', 'P2_BED', 'P2_OZEL', 'P2_16', 'P2_17')");
 
                             t.HasCheckConstraint("ck_score_model_version_year", "\"Year\" BETWEEN 2018 AND 2100");
                         });

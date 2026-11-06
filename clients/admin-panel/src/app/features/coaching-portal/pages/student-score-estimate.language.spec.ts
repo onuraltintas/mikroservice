@@ -18,7 +18,7 @@ describe('KM1 language scores', () => {
       languageScores: [{ examCode: 'YDS_EN', name: 'YDS · İngilizce', score: 77.5, scoreLow: 75, scoreHigh: 80, examsUsed: 2, lastExamDate: '2026-10-25T00:00:00Z' }],
       targetExam: { name: 'YDS · 2027/1', date: '2027-03-28', daysLeft: 147, source: 'Session' } };
     http.expectOne(r => r.url.endsWith('/coaching/students/me/score-estimate')).flush(value); fixture.detectChanges();
-    expect(text()).toContain('YDS · İngilizce: yaklaşık 77,5 puan (75–80)');
+    expect(text()).toContain('YDS · İngilizce: 77,5 puan (75–80)');
     expect(text()).toContain('Her doğru 1,25 puan');
     expect(text()).toContain('YDS · 2027/1 sınavına 147 gün');
     expect(fixture.nativeElement.querySelector('#diploma-grade')).toBeNull();

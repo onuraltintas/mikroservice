@@ -151,4 +151,13 @@ public static class LanguageScoreRules
         var questions = summary.Sections.Sum(x => x.QuestionCount);
         return decimal.Round(summary.Correct * 100m / questions, 2, MidpointRounding.AwayFromZero);
     }
+
+    /// <summary>
+    /// Paket B (05.11.2026): the YDS level of a score — "90–100 A, 80–89 B, 70–79 C, 60–69 D, 50–59 E" (2026 e-YDS Kılavuzu
+    /// md. 1.2; the same scale in the 2026-YDS/2 Kılavuzu). Below 50 there is no level. YÖKDİL has no level scale.
+    /// </summary>
+    public static string? YdsLevel(decimal score) => score switch
+    {
+        >= 90 => "A", >= 80 => "B", >= 70 => "C", >= 60 => "D", >= 50 => "E", _ => null
+    };
 }
