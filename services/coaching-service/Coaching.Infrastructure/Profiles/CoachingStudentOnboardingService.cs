@@ -349,7 +349,7 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     {
         if (page is < 1 or > 10000) throw new ArgumentException("Geçerli bir sayfa seç.");
         var rows = await query.Select(x => new { x.Id, x.Name, x.City, x.District, x.InstitutionType }).ToListAsync(ct);
-        var schools = rows.GroupBy(x => (Fold(x.Name), Fold(x.City), Fold(x.District ?? "")))
+        var schools = rows.GroupBy(x => (Fold(x.Name), Fold(x.City ?? ""), Fold(x.District ?? "")))
             .Select(group =>
             {
                 var first = group.MinBy(x => x.Id)!;
