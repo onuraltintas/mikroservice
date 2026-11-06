@@ -3,7 +3,7 @@ import { StudentLearningSetupComponent } from './student-learning-setup.componen
 
 /**
  * T5 (31.10.2026): Profil ve ayarlar › Çalışma tercihlerim — what you study and when. E3 #34 (06.11.2026): no time zone setting;
- * every time is Türkiye time.
+ * every time is Türkiye time. F2 #27: and no time zone text either.
  */
 @Component({
   selector: 'app-student-study-preferences',
@@ -13,7 +13,7 @@ import { StudentLearningSetupComponent } from './student-learning-setup.componen
   template: `<div class="cs-account" aria-labelledby="preferences-title">
     <header>
       <h1 id="preferences-title">Çalışma tercihlerim</h1>
-      <p>Neye çalıştığını ve ne zaman müsait olduğunu söyle; planın buna göre kurulur. Bütün saatler Türkiye saatine göredir.</p>
+      <p>Neye çalıştığını ve ne zaman müsait olduğunu söyle; planın buna göre kurulur.</p>
     </header>
     <app-student-learning-setup />
   </div>`

@@ -4,6 +4,7 @@
     <span class="badge" aria-live="polite">Haftalık {{ weeklyMinutes() }} dakika</span></header>
   @if (error()) { <p role="alert" class="notice error" id="availability-error">{{ error() }}</p> }
   @if (success()) { <p role="status" class="notice success">{{ success() }}</p> }
+  @if (copyNote(); as note) { <p role="status" class="notice" data-testid="copy-note">{{ note }}</p> }
   @if (loading()) { <p role="status">Çalışma saatleri yükleniyor…</p> }
   <div class="panel">
     <form #availabilityForm="ngForm" novalidate (ngSubmit)="save()">
@@ -19,17 +20,23 @@
               <label>Bitiş<input type="time" [name]="'end-' + i" [(ngModel)]="row.end" (ngModelChange)="dirty = true" [disabled]="row.endOfDay" [required]="!row.endOfDay" [attr.aria-invalid]="isInvalid(row, 'end')" [attr.aria-describedby]="isInvalid(row, 'end') ? 'availability-error' : null"></label>
             </div>
             <label class="check"><input type="checkbox" [name]="'midnight-' + i" [(ngModel)]="row.endOfDay" (ngModelChange)="dirty = true">Günün sonunda bitir (24:00)</label>
-            <button type="button" class="secondary" (click)="removeRow(i)">Aralığı kaldır</button>
+            <!-- F2 #28: copy this range to every weekday or to the weekend. -->
+            <div class="actions" role="group" [attr.aria-label]="'Bu aralığı kopyala: ' + dayLabel(row.day) + ' ' + row.start">
+              <button type="button" class="secondary" (click)="copyRow(i, 'weekdays')" [attr.data-testid]="'copy-weekdays-' + i">Hafta içi her gün</button>
+              <button type="button" class="secondary" (click)="copyRow(i, 'weekend')" [attr.data-testid]="'copy-weekend-' + i">Hafta sonu</button>
+              <button type="button" class="secondary" (click)="removeRow(i)">Aralığı kaldır</button>
+            </div>
           </div>
         }
+        <!-- F2 #27: one row of actions: add a range, save, cancel. -->
         <div class="actions">
-          <button type="button" class="secondary" (click)="addRow()" [disabled]="rows.length >= 42">Saat aralığı ekle</button>
-          <button type="submit">Çalışma saatlerini kaydet</button>
-          <button type="button" class="secondary" (click)="discardChanges()" [disabled]="!dirty">Değişikliklerden vazgeç</button>
+          <button type="button" class="secondary" (click)="addRow()" [disabled]="rows.length >= 42" aria-label="Saat aralığı ekle">Ekle</button>
+          <button type="submit" aria-label="Çalışma saatlerini kaydet">Kaydet</button>
+          <button type="button" class="secondary" (click)="discardChanges()" [disabled]="!dirty" aria-label="Değişikliklerden vazgeç">Vazgeç</button>
         </div>
       </fieldset>
     </form>
-    <button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving() || dirty">Yeniden yükle</button>
+    @if (!ready() && !loading()) { <button type="button" class="secondary" (click)="load()">Yeniden dene</button> }
     @if (saving()) { <p role="status">Çalışma saatleri kaydediliyor…</p> }
   </div>
 </section>

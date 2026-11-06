@@ -5,9 +5,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningExamSession, LearningSetupImpact, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
+import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningLesson, LearningExamSession, LearningSetupImpact, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 
-type SetupField = 'purpose' | 'academicYear' | 'examYear' | 'language' | 'yokdilField' | 'courses' | 'reviewed';
+type SetupField = 'purpose' | 'examYear' | 'language' | 'yokdilField' | 'courses';
 /** E4 #26: the confirmation after a save (it stays when the page moves on to the next section). */
 interface SetupSaved { text: string; removed: string[]; diploma: number | null; teacher: boolean }
 const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
@@ -16,6 +16,12 @@ import { StudentStudyAvailabilityComponent } from './student-study-availability.
 import { StudentPlanPreviewComponent } from './student-plan-preview.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingStudyPlanningService, PublishedStudyOutcome, StudyTopic } from '../../../core/services/coaching-study-planning.service';
+import { PURPOSES, YKS_FIELDS } from '../onboarding/onboarding-model';
+
+/** F2 #28: the course groups in exam order (TYT before AYT); any other exam code follows. */
+const LESSON_GROUPS: Record<string, { order: number; label: string }> = {
+  LGS: { order: 0, label: 'LGS' }, TYT: { order: 1, label: 'TYT' }, AYT: { order: 2, label: 'AYT' }, YDT: { order: 3, label: 'YDT' },
+  AGS: { order: 4, label: 'AGS' }, OABT: { order: 5, label: 'ÖABT' }, YDS: { order: 6, label: 'YDS' }, YOKDIL: { order: 7, label: 'YÖKDİL' } };
 
 @Component({
   selector: 'app-student-learning-setup', standalone: true,
@@ -41,13 +47,14 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly saved = signal<SetupSaved | null>(null);
   readonly savedText = computed(() => this.saved()?.text ?? null);
   // E3 #14: no "Eğitim bilgilerim" step: the education is edited on Profilim (a missing one sends the student there).
-  readonly steps = [{ id: 'Purpose', label: 'Çalışma amacım' },
+  // F2 #27: the wizard's name for the exam step ("Sınavın").
+  readonly steps = [{ id: 'Purpose', label: 'Sınavım' },
     { id: 'Availability', label: 'Müsaitliğim' }, { id: 'Courses', label: 'Derslerim' }, { id: 'Starting', label: 'Başlangıç durumum' }, { id: 'Preview', label: 'Plan önizlemesi' }];
   // KM8 (01.11.2026): only exam purposes; the catalog keeps only exam lessons. KM1 added AGS (+ÖABT), YDS and YÖKDİL
   // (the language exams are prepared in English only).
-  readonly purposes: { value: ExamLearningPurpose; label: string }[] = [
-    { value: 'Lgs', label: 'LGS hazırlığı' }, { value: 'Yks', label: 'YKS hazırlığı' },
-    { value: 'Ags', label: 'AGS / ÖABT hazırlığı' }, { value: 'Yds', label: 'YDS hazırlığı' }, { value: 'Yokdil', label: 'YÖKDİL hazırlığı' }];
+  // F2 #27: the wizard's names for the exams and the YKS score types.
+  readonly purposes = PURPOSES as { value: ExamLearningPurpose; label: string }[];
+  readonly yksFields = YKS_FIELDS;
   readonly retiredPurposeNotice = RETIRED_PURPOSE_NOTICE;
   /** Paket D (#8): only the exams that fit the grade on the profile (every exam when the server does not say). */
   purposeChoices() { const allowed = this.state()?.allowedPurposes; return allowed ? this.purposes.filter(x => allowed.includes(x.value)) : this.purposes; }
@@ -69,6 +76,8 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly courseIds = computed(() => (this.state()?.context?.coursePreferences ?? []).map(x => x.lessonId));
   async load() {
     if (this.loading() || this.saving()) return;
+    // F2 (E4 b): reloading drops a confirmation that is still open, so it can never save what was loaded over it.
+    this.cancelImpact();
     if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş seçimlerden vazgeçip sunucudaki bilgileri yükleyelim mi?')) return;
     this.loading.set(true); this.ready.set(false); this.error.set(null);
     this.service.get().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
@@ -86,12 +95,14 @@ export class StudentLearningSetupComponent implements OnInit {
       this.targetExamSessionId = c.targetExamSessionId ?? null;
       this.courses = c.coursePreferences.map(x => ({ ...x })); this.topics = c.topicStates.map(x => ({ ...x })); this.startingStatusReviewed = c.startingStatusReviewed;
     }
-    this.dirty = false;
+    this.dirty = false; this.suggested.set(false);
   }
   async goTo(step: string) {
     if (this.saving() || this.loading() || this.catalogLoading()) return;
     if (!await this.canLeaveChildren()) return;
     if (this.dirty) { this.error.set('Adım değiştirmeden önce seçimlerini kaydet veya yeniden yükle.'); return; }
+    // F2 #28: suggested courses that were not saved are dropped when the student moves on.
+    if (this.suggested()) { this.courses = (this.state()?.context?.coursePreferences ?? []).map(x => ({ ...x })); this.suggested.set(false); }
     this.step.set(step); this.error.set(null); this.fieldErrors.set({}); this.cancelImpact();
     if (step === 'Courses' || step === 'Starting') this.loadCatalog();
   }
@@ -109,6 +120,24 @@ export class StudentLearningSetupComponent implements OnInit {
     this.targetExamSessionId = id; const session = this.sessionChoices().find(x => x.id === id);
     if (session) this.targetExamYear = Number(session.date.slice(0, 4));
     this.changed();
+  }
+  /** F2 #27: the wizard's question: the session when the exam has dated sessions, the year otherwise. */
+  examQuestion() { return this.sessionChoices().length ? 'Hangi oturuma hazırlanıyorsun?' : 'Hangi yıl sınava gireceksin?'; }
+  examChoices(): { value: string; label: string }[] {
+    const sessions = this.sessionChoices();
+    if (sessions.length) return sessions.map(x => ({ value: `session:${x.id}`, label: this.sessionLabel(x) }));
+    const years = new Set([1, 2, 3, 4, 5].map(offset => this.academicYearStart + offset));
+    if (this.targetExamYear) years.add(this.targetExamYear);
+    return [...years].sort((a, b) => a - b).map(year => ({ value: `year:${year}`, label: String(year) }));
+  }
+  examChoice() {
+    const sessions = this.sessionChoices();
+    if (sessions.length) return sessions.some(x => x.id === this.targetExamSessionId) ? `session:${this.targetExamSessionId}` : '';
+    return this.targetExamYear ? `year:${this.targetExamYear}` : '';
+  }
+  pickExam(value: string) {
+    if (value.startsWith('session:')) { this.selectSession(value.slice(8)); return; }
+    this.targetExamSessionId = null; this.targetExamYear = Number(value.slice(5)) || null; this.changed();
   }
   sessionLabel(session: LearningExamSession) {
     const day = (iso: string) => iso.split('-').reverse().join('.');
@@ -143,13 +172,13 @@ export class StudentLearningSetupComponent implements OnInit {
     if (this.loading() || this.saving() || !this.ready()) return;
     const errors: Partial<Record<SetupField, string>> = {};
     if (!this.purpose) errors.purpose = 'Hazırlandığın sınavı seç.';
-    if (!Number.isInteger(this.academicYearStart) || this.academicYearStart < 2000 || this.academicYearStart > 2200)
-      errors.academicYear = 'Eğitim yılı başlangıcı 2000 ile 2200 arasında olmalı.';
-    else if (this.examPurpose() && (!Number.isInteger(this.targetExamYear) || this.targetExamYear! < this.academicYearStart || this.targetExamYear! > this.academicYearStart + 5))
-      errors.examYear = `Hedef sınav yılı ${this.academicYearStart} ile ${this.academicYearStart + 5} arasında olmalı.`;
+    else if (this.sessionChoices().length) { if (!this.examChoice()) errors.examYear = 'Hangi oturuma hazırlandığını seç.'; }
+    else if (!this.targetExamYear) errors.examYear = 'Hangi yıl sınava gireceğini seç.';
+    else if (!Number.isInteger(this.targetExamYear) || this.targetExamYear < this.academicYearStart || this.targetExamYear > this.academicYearStart + 5)
+      errors.examYear = `Sınav yılı ${this.academicYearStart} ile ${this.academicYearStart + 5} arasında olmalı.`;
     if (this.purpose === 'Yks' && this.primaryScoreType === 'DIL' && !this.foreignLanguage) errors.language = 'Yabancı dili seç.';
     if (this.purpose === 'Yokdil' && !this.yokdilField) errors.yokdilField = 'YÖKDİL alanını seç.';
-    if (this.refuse('Çalışma amacın kaydedilmedi.', errors)) return;
+    if (this.refuse('Sınavın kaydedilmedi.', errors)) return;
     const previous = this.state()?.context; const scope = this.request([], [], false);
     const sameScope = previous && !this.state()?.missingFields.some(x => x === 'Purpose' || x === 'Catalog')
       && previous.academicYearStart === this.academicYearStart && previous.purpose === this.purpose
@@ -157,7 +186,7 @@ export class StudentLearningSetupComponent implements OnInit {
     const request = this.request(sameScope ? this.courses : [], sameScope ? this.topics : [], !!sameScope && this.startingStatusReviewed);
     const scopeChanged = !!previous && (previous.purpose !== scope.purpose || (previous.primaryScoreType ?? null) !== scope.primaryScoreType
       || (previous.foreignLanguage ?? null) !== scope.foreignLanguage);
-    if (!scopeChanged) { this.persist(request, 'Availability', 'Çalışma amacın kaydedildi.'); return; }
+    if (!scopeChanged) { this.persist(request, 'Availability', 'Sınavın kaydedildi.'); return; }
     this.saving.set(true);
     this.service.impact({ purpose: scope.purpose, primaryScoreType: scope.primaryScoreType, foreignLanguage: scope.foreignLanguage })
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -165,19 +194,19 @@ export class StudentLearningSetupComponent implements OnInit {
           this.saving.set(false);
           const lines = this.impactLines(impact, previous!.purpose === scope.purpose);
           if (lines.length) { this.pendingPurpose = { request, impact }; this.impactAsk.set(lines); }
-          else this.persist(request, 'Availability', 'Çalışma amacın kaydedildi.', impact);
+          else this.persist(request, 'Availability', 'Sınavın kaydedildi.', impact);
         },
         error: e => {
           this.saving.set(false);
           // E4 review: an API without the check (deployed later) still saves, as before the check existed.
-          if (e?.status === 404) { this.persist(request, 'Availability', 'Çalışma amacın kaydedildi.'); return; }
+          if (e?.status === 404) { this.persist(request, 'Availability', 'Sınavın kaydedildi.'); return; }
           this.error.set(e?.error?.message ?? 'Değişikliğin hedefine etkisi kontrol edilemedi. Bağlantını kontrol edip yeniden dene.');
         }
       });
   }
   confirmImpact() {
     const pending = this.pendingPurpose; if (!pending) return;
-    this.cancelImpact(); this.persist(pending.request, 'Availability', 'Çalışma amacın kaydedildi.', pending.impact);
+    this.cancelImpact(); this.persist(pending.request, 'Availability', 'Sınavın kaydedildi.', pending.impact);
   }
   cancelImpact() { this.pendingPurpose = null; this.impactAsk.set(null); }
   private impactLines(impact: LearningSetupImpact, samePurpose: boolean): string[] {
@@ -214,7 +243,7 @@ export class StudentLearningSetupComponent implements OnInit {
     if (this.catalogLoading()) return;
     this.catalogLoading.set(true); this.catalogError.set(null);
     this.service.catalog(this.selectedLesson || null, page).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.catalogLoading.set(false))).subscribe({
-      next: catalog => { this.catalog.set(catalog); this.topicPage = page; }, error: () => this.catalogError.set('Ders kataloğu yüklenemedi. Tekrar dene.')
+      next: catalog => { this.catalog.set(catalog); this.topicPage = page; this.suggestCourses(); }, error: () => this.catalogError.set('Dersler yüklenemedi.')
     });
   }
   topicGroups() {
@@ -239,6 +268,39 @@ export class StudentLearningSetupComponent implements OnInit {
     });
   }
   retryTopicOutcomes(topicId: string) { this.topicOutcomes.update(current => { const next = { ...current }; delete next[topicId]; return next; }); this.topicOutcomeErrors.update(current => ({ ...current, [topicId]: false })); this.loadTopicOutcomes(topicId); }
+  /** F2 #28: the lessons of the exam in groups (TYT, AYT, …); `withCourses` keeps only the chosen ones (Başlangıç durumum). */
+  lessonGroups(withCourses = false): { code: string; label: string; lessons: LearningLesson[] }[] {
+    const groups = new Map<string, LearningLesson[]>();
+    for (const lesson of this.catalog()?.lessons ?? []) {
+      if (withCourses && !this.included(lesson.id)) continue;
+      const code = (lesson.examCode ?? '').toUpperCase() || 'OTHER';
+      groups.set(code, [...(groups.get(code) ?? []), lesson]);
+    }
+    const order = (code: string) => LESSON_GROUPS[code]?.order ?? 50;
+    return [...groups].sort(([a], [b]) => order(a) - order(b) || a.localeCompare(b))
+      .map(([code, lessons]) => ({ code, label: LESSON_GROUPS[code]?.label ?? (code === 'OTHER' ? 'Diğer dersler' : code), lessons }));
+  }
+  /** The lessons that can be chosen (the score type's lessons with topics). */
+  private choosable() { return (this.catalog()?.lessons ?? []).filter(x => x.topicCount > 0); }
+  allCoursesSelected() { const all = this.choosable(); return all.length > 0 && all.every(x => this.included(x.id)); }
+  selectAllCourses() {
+    const missing = this.choosable().filter(x => !this.included(x.id));
+    if (!missing.length) return;
+    this.courses = [...this.courses, ...missing.map(x => ({ lessonId: x.id, priority: 3, selfReportedDifficulty: null }))];
+    this.startingStatusReviewed = false; this.suggested.set(false); this.changed();
+  }
+  /**
+   * F2 #28: a student with no courses yet finds the score type's courses ticked. They are only suggestions: nothing is saved
+   * until "Dersleri kaydet", and leaving the page does not ask about them.
+   */
+  readonly suggested = signal(false);
+  private suggestCourses() {
+    if (this.step() !== 'Courses' || this.courses.length || this.dirty || this.state()?.context?.coursePreferences.length) return;
+    const all = this.choosable();
+    if (!all.length) return;
+    this.courses = all.map(x => ({ lessonId: x.id, priority: 3, selfReportedDifficulty: null }));
+    this.suggested.set(true);
+  }
   included(id: string) { return this.courses.some(x => x.lessonId === id); }
   lessonName(id: string) { return this.catalog()?.lessons.find(x => x.id === id)?.name ?? 'Ders'; }
   toggleCourse(id: string) {
@@ -247,7 +309,7 @@ export class StudentLearningSetupComponent implements OnInit {
       // Topic ownership is checked again on the server; clear declarations on scope removal.
       this.topics = [];
     } else this.courses = [...this.courses, { lessonId: id, priority: 3, selfReportedDifficulty: null }];
-    this.startingStatusReviewed = false; this.changed();
+    this.startingStatusReviewed = false; this.suggested.set(false); this.changed();
   }
   saveCourses() {
     const wrong = this.courses.find(x => !Number.isInteger(Number(x.priority)) || x.priority < 1 || x.priority > 5
@@ -263,8 +325,16 @@ export class StudentLearningSetupComponent implements OnInit {
   setDeclaration(id: string, status: TopicDeclaration | '') {
     this.topics = this.topics.filter(x => x.topicId !== id); if (status) this.topics.push({ topicId: id, declaredStatus: status }); this.changed();
   }
+  /** F2 #28: one status for every topic of a unit shown on the page. */
+  setUnit(topics: StudyTopic[], status: TopicDeclaration) {
+    const ids = new Set(topics.map(x => x.id));
+    this.topics = [...this.topics.filter(x => !ids.has(x.topicId)), ...topics.map(x => ({ topicId: x.id, declaredStatus: status }))];
+    this.changed();
+  }
+  /** F2 #28: saving this step is the confirmation (no "gözden geçirdim" box); the server records the step as reviewed. */
   finishStarting() {
-    if (this.refuse('Başlangıç durumun kaydedilmedi.', this.startingStatusReviewed ? {} : { reviewed: 'Başlangıç bilgilerini gözden geçirdiğini onayla.' })) return;
+    this.refuse('', {});
+    this.startingStatusReviewed = true;
     this.persist(this.request(), 'Preview', 'Başlangıç durumun kaydedildi.');
   }
   private async canLeaveChildren() { return await this.hours?.canLeavePage() ?? true; }

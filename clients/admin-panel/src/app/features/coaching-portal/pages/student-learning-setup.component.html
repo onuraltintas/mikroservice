@@ -1,7 +1,5 @@
-<section class="study-plans" aria-labelledby="setup-title">
-  <header class="page-heading"><div><p class="eyebrow">Kendi ritmine göre</p><h1 id="setup-title">Profil ve tercihlerim</h1>
-    <p>Bilgilerini adım adım kaydet. İstediğin zaman ayrılıp başka cihazda kaldığın yerden devam edebilirsin.</p></div></header>
-  <nav class="actions" aria-label="Profil ve çalışma düzeni"><a routerLink="/coaching-portal/account/settings/profile">Profil ayrıntılarını düzenle</a><a routerLink="/coaching-portal/plan/weekly">Haftalık düzenime geç</a><a routerLink="/coaching-portal/plan">Mevcut planım</a></nav>
+<!-- F2 #27: the page (Çalışma tercihlerim) has the heading; no second title or shortcut links here. -->
+<section class="study-plans" aria-label="Çalışma tercihlerin">
   @if (loading()) { <p role="status">Kurulum yükleniyor…</p> }
   <!-- E4 #24: every save attempt replaces the previous message; refused fields are also named next to the field. -->
   @if (error()) { <p class="notice error" role="alert" [attr.data-testid]="hasFieldErrors() ? 'setup-error-summary' : null">{{ error() }}</p> }
@@ -20,47 +18,46 @@
       <button type="button" class="secondary" [attr.aria-current]="step() === item.id ? 'step' : null" [disabled]="saving() || loading() || catalogLoading() || (item.id !== 'Profile' && item.id !== 'Purpose' && (!state()?.context || purposeRetired()))" (click)="goTo(item.id)">{{ item.label }}</button>
     }</nav>
   }
-  <!-- E3 #14: the education is edited on Profilim only (no second form here). -->
-  <p class="notice" data-testid="education-on-profile">Eğitim durumun ve sınıfın Profilim sayfasında. <a routerLink="/coaching-portal/account/settings/profile">Profilime git</a></p>
+  <!-- E3 #14 / F2 #27: the education is edited on Profilim only; a short link instead of a second form. -->
+  <p class="muted" data-testid="education-on-profile">Eğitim durumun ve sınıfın: <a routerLink="/coaching-portal/account/settings/profile">Profilim</a></p>
   @if (step() === 'Profile') {
     <p class="notice" role="status" data-testid="education-missing">Önce Profilim sayfasında eğitim durumunu seç; hazırlanabileceğin sınavlar buna göre belirlenir.</p>
     <button type="button" (click)="load()">Kaydettim, devam et</button>
   }
   @if (ready() && step() === 'Purpose') {
     <form class="panel" #purposeForm="ngForm" novalidate (ngSubmit)="savePurpose()">
-      <h2>Çalışma amacım</h2>
+      <h2>Sınavım</h2>
       @if (purposeRetired()) { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }}</p> }
       @if (state()?.purposeNotForEducation) { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.</p> }
-      <p>@if (!purposeRetired()) { Hazırlandığın sınavı seç. }Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
+      <p>Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
+      <!-- F2 #27: the wizard's questions; the school year is not shown (it follows today's date). -->
       <fieldset [disabled]="saving()"><div class="fields">
-        <label>Eğitim yılı başlangıcı<input type="number" name="academicYear" min="2000" max="2200" required [(ngModel)]="academicYearStart" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('academicYear')" [attr.aria-describedby]="describedBy('academicYear')">@if (fieldError('academicYear'); as message) { <small class="field-error" id="setup-academicYear-error">{{ message }}</small> }</label>
-        <label>Çalışma amacım<select name="purpose" required [(ngModel)]="purpose" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('purpose')" [attr.aria-describedby]="describedBy('purpose')"><option value="" disabled>Hazırlandığın sınavı seç</option>@for (item of purposeChoices(); track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select>@if (fieldError('purpose'); as message) { <small class="field-error" id="setup-purpose-error">{{ message }}</small> }</label>
-        @if (examPurpose()) { <label>Hedef sınav yılı<input type="number" name="examYear" [min]="academicYearStart" [max]="academicYearStart + 5" required [(ngModel)]="targetExamYear" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('examYear')" [attr.aria-describedby]="describedBy('examYear')">@if (fieldError('examYear'); as message) { <small class="field-error" id="setup-examYear-error">{{ message }}</small> }</label> }
-        @if (sessionChoices().length > 1) {
-          <label class="wide">Hedef oturum<select name="examSession" aria-describedby="exam-session-help" [ngModel]="targetExamSessionId" (ngModelChange)="selectSession($event)">
-            <option [ngValue]="null">Henüz seçmedim</option>
-            @for (session of sessionChoices(); track session.id) { <option [ngValue]="session.id">{{ sessionLabel(session) }}</option> }
-          </select><small id="exam-session-help">Planın ve geri sayımın bu oturuma göre hazırlanır.</small></label>
+        <label>Hangi sınava hazırlanıyorsun?<select name="purpose" required [(ngModel)]="purpose" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('purpose')" [attr.aria-describedby]="describedBy('purpose')"><option value="" disabled>Seç</option>@for (item of purposeChoices(); track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select>@if (fieldError('purpose'); as message) { <small class="field-error" id="setup-purpose-error">{{ message }}</small> }</label>
+        @if (purpose === 'Yks') {
+          <label>Hangi puan türüyle yerleşmek istiyorsun?<select name="scoreType" [(ngModel)]="primaryScoreType" (ngModelChange)="changed()">@for (field of yksFields; track field.value) { <option [value]="field.value">{{ field.label }}</option> }</select></label>
+          @if (primaryScoreType === 'DIL') { <label>YDT'de hangi dile gireceksin?<select name="language" required [(ngModel)]="foreignLanguage" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('language')" [attr.aria-describedby]="describedBy('language')"><option value="">Seç</option><option value="English">İngilizce</option></select>@if (fieldError('language'); as message) { <small class="field-error" id="setup-language-error">{{ message }}</small> }</label> }
         }
         @if (purpose === 'Ags') {
-          <label class="wide">ÖABT alanı<select name="oabtField" aria-describedby="oabt-field-help" [(ngModel)]="oabtField" (ngModelChange)="changed()">
+          <label class="wide">ÖABT'de hangi alandasın?<select name="oabtField" aria-describedby="oabt-field-help" [(ngModel)]="oabtField" (ngModelChange)="changed()">
             <option value="">ÖABT’ye girmeyeceğim</option>
             @for (field of oabtFields; track field[0]) { <option [value]="field[0]">{{ field[1] }}</option> }
           </select><small id="oabt-field-help">Yabancı dil öğretmenliği alanları ÖABT’ye girmez; bu alanlarda YDS puanı kullanılır.</small></label>
         }
         @if (purpose === 'Yokdil') {
-          <label>YÖKDİL alanı<select name="yokdilField" required [(ngModel)]="yokdilField" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('yokdilField')" [attr.aria-describedby]="describedBy('yokdilField')">
+          <label>YÖKDİL'de hangi alana gireceksin?<select name="yokdilField" required [(ngModel)]="yokdilField" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('yokdilField')" [attr.aria-describedby]="describedBy('yokdilField')">
             <option value="">Seç</option>
             @for (field of yokdilFields; track field[0]) { <option [value]="field[0]">{{ field[1] }}</option> }
           </select>@if (fieldError('yokdilField'); as message) { <small class="field-error" id="setup-yokdilField-error">{{ message }}</small> }</label>
         }
-        @if (purpose === 'Yks') {
-          <label>Birincil puan türü<select name="scoreType" [(ngModel)]="primaryScoreType" (ngModelChange)="changed()"><option value="TYT">TYT</option><option value="SAY">Sayısal</option><option value="EA">Eşit ağırlık</option><option value="SOZ">Sözel</option><option value="DIL">Dil</option></select></label>
-          @if (primaryScoreType === 'DIL') { <label>Yabancı dil<select name="language" required [(ngModel)]="foreignLanguage" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('language')" [attr.aria-describedby]="describedBy('language')"><option value="">Seç</option><option value="English">İngilizce</option></select>@if (fieldError('language'); as message) { <small class="field-error" id="setup-language-error">{{ message }}</small> }</label> }
+        @if (examPurpose()) {
+          <label class="wide">{{ examQuestion() }}<select name="examYear" required [ngModel]="examChoice()" (ngModelChange)="pickExam($event)" [attr.aria-invalid]="invalid('examYear')" [attr.aria-describedby]="describedBy('examYear') ?? 'exam-session-help'">
+            <option value="" disabled>Seç</option>
+            @for (choice of examChoices(); track choice.value) { <option [value]="choice.value">{{ choice.label }}</option> }
+          </select><small id="exam-session-help">Sınava kalan günleri bu tarihe göre gösteririz.</small>@if (fieldError('examYear'); as message) { <small class="field-error" id="setup-examYear-error">{{ message }}</small> }</label>
         }
       </div>
       @if (purpose === 'Yds' || purpose === 'Yokdil') { <p class="muted">Sınav dili: İngilizce. Şimdilik yalnız İngilizce hazırlık destekleniyor.</p> }
-      <p class="muted">Eğitim kapsamını değiştirirsen ders seçimlerini ve başlangıç durumunu yeniden belirlemen gerekir. Aktif planın korunur.</p>
+      <p class="muted">Sınavını ya da puan türünü değiştirirsen derslerini ve başlangıç durumunu yeniden seçmen gerekir. Mevcut planın korunur.</p>
       @if (impactAsk(); as lines) {
         <!-- E4 #26: what the new exam or field removes, confirmed in the page before anything is saved. -->
         <div class="notice" role="group" aria-labelledby="target-impact-title" data-testid="target-impact">
@@ -75,19 +72,25 @@
   }
   @if (ready() && step() === 'Availability') {
     <app-student-study-availability (saved)="afterHoursSaved()" />
-    <button type="button" class="secondary" (click)="load()">Kaydedilen müsaitlikle devam et</button>
   }
   @if (ready() && (step() === 'Courses' || step() === 'Starting')) {
     <section class="panel"><h2>{{ step() === 'Courses' ? 'Çalışacağım dersler' : 'Başlangıç durumum' }}</h2>
       @if (catalogLoading()) { <p role="status">Dersler yükleniyor…</p> }
-      @if (catalogError()) { <p role="alert" class="notice error">{{ catalogError() }}</p> }
+      @if (catalogError()) { <p role="alert" class="notice error">{{ catalogError() }} <button type="button" class="secondary" [disabled]="catalogLoading() || saving()" (click)="loadCatalog()">Yeniden dene</button></p> }
       @for (warning of catalog()?.warnings ?? []; track warning) { <p class="notice">{{ warning }}</p> }
-      @if (catalog()?.curriculum; as program) { <p class="muted">{{ program.name }} · {{ academicYearStart }}–{{ academicYearStart + 1 }} · {{ program.versionLabel }}</p> }
-      <button type="button" class="secondary" [disabled]="catalogLoading() || saving()" (click)="loadCatalog()">Kataloğu yeniden yükle</button>
       @if (step() === 'Courses') {
-        <fieldset [disabled]="saving() || catalogLoading()">@for (lesson of catalog()?.lessons ?? []; track lesson.id) {
-          <label class="check"><input type="checkbox" [checked]="included(lesson.id)" [disabled]="lesson.topicCount === 0 && !included(lesson.id)" (change)="toggleCourse(lesson.id)">{{ lesson.name }} {{ lesson.examCode || '' }} · {{ lesson.topicCount }} konu @if (lesson.missingDurationCount) { <span>· {{ lesson.missingDurationCount }} konuda süre eksik</span> }</label>
-        }
+        <!-- F2 #28: the courses of the exam, grouped (TYT, AYT); suggested ones are ticked until the student saves. -->
+        @if (suggested()) { <p class="notice" role="status" data-testid="suggested-courses">Puan türüne uygun dersleri senin için seçtik. Kontrol et, istemediklerini kaldır ve kaydet.</p> }
+        <fieldset [disabled]="saving() || catalogLoading()">
+          <div class="actions"><button type="button" class="secondary" data-testid="select-all-courses" [disabled]="allCoursesSelected()" (click)="selectAllCourses()">Tümünü seç</button></div>
+          @for (group of lessonGroups(); track group.code) {
+            <div role="group" [attr.aria-label]="group.label" [attr.data-testid]="'course-group-' + group.code">
+              @if (lessonGroups().length > 1) { <h3>{{ group.label }}</h3> }
+              @for (lesson of group.lessons; track lesson.id) {
+                <label class="check"><input type="checkbox" [checked]="included(lesson.id)" [disabled]="lesson.topicCount === 0 && !included(lesson.id)" (change)="toggleCourse(lesson.id)">{{ lesson.name }} · {{ lesson.topicCount }} konu</label>
+              }
+            </div>
+          }
         @for (course of courses; track course.lessonId) { <div class="fields"><strong>{{ lessonName(course.lessonId) }}</strong>
           <label>Öncelik (1 en yüksek)<input type="number" min="1" max="5" [attr.name]="'priority-' + course.lessonId" [(ngModel)]="course.priority" (ngModelChange)="changed()" [attr.aria-invalid]="courseInvalid(course.lessonId)" [attr.aria-describedby]="courseDescribedBy(course.lessonId)"></label>
           <label>Bana göre zorluk (isteğe bağlı, 1–5)<input type="number" min="1" max="5" [attr.name]="'difficulty-' + course.lessonId" [(ngModel)]="course.selfReportedDifficulty" (ngModelChange)="changed()" [attr.aria-invalid]="courseInvalid(course.lessonId)" [attr.aria-describedby]="courseDescribedBy(course.lessonId)"></label>
@@ -95,23 +98,29 @@
         @if (fieldError('courses'); as message) { <p class="field-error" id="setup-courses-error">{{ message }}</p> }
         <button type="button" [disabled]="!!catalogError()" (click)="saveCourses()">Dersleri kaydet ve devam et</button></fieldset>
       } @else {
-        <p>Konu durumları senin beyanındır; sınav başarısı veya kazanım yeterliliği olarak değerlendirilmez. İstersen konu seçmeden devam edebilirsin.</p>
+        <p>Hangi konuları daha önce çalıştığını işaretle; planın buna göre başlar. İstersen hiçbirini işaretlemeden devam edebilirsin.</p>
         <fieldset [disabled]="saving() || catalogLoading()">
-          <p class="muted">Sınav → ders → ünite → konu. Bu adım yalnızca başlangıç durumunu kaydeder; plan görevlerini veya kazanım yeterliliğini değiştirmez.</p>
-          <label>Ders<select [(ngModel)]="selectedLesson" (ngModelChange)="expandedTopicId.set(null); loadCatalog()"><option value="">Ders seç</option>@for (lesson of catalog()?.lessons ?? []; track lesson.id) { @if (included(lesson.id)) { <option [value]="lesson.id">{{ lesson.name }}@if (lesson.examCode) { · {{ lesson.examCode }} }</option> } }</select></label>
+          <label>Ders<select [(ngModel)]="selectedLesson" (ngModelChange)="expandedTopicId.set(null); loadCatalog()"><option value="">Ders seç</option>
+            @for (group of lessonGroups(true); track group.code) { <optgroup [label]="group.label">@for (lesson of group.lessons; track lesson.id) { <option [value]="lesson.id">{{ lesson.name }}</option> }</optgroup> }
+          </select></label>
           @for (group of topicGroups(); track group.name) {
             <section class="topic-unit" [attr.aria-label]="group.name + ' ünitesi'">
               <h3>{{ group.name }}</h3>
+              <!-- F2 #28: mark a whole unit at once. -->
+              <div class="actions" role="group" [attr.aria-label]="group.name + ' ünitesinin hepsi'"><span class="muted">Bu ünitenin hepsi:</span>
+                <button type="button" class="secondary" (click)="setUnit(group.topics, 'Studied')" [attr.aria-label]="group.name + ' ünitesinin hepsi: Çalıştım'">Çalıştım</button>
+                <button type="button" class="secondary" (click)="setUnit(group.topics, 'NotStudied')" [attr.aria-label]="group.name + ' ünitesinin hepsi: Henüz çalışmadım'">Henüz çalışmadım</button>
+              </div>
               @for (topic of group.topics; track topic.id) {
                 <article class="topic-entry">
-                  <div class="topic-entry-heading"><strong>{{ topic.name }}</strong><button type="button" class="secondary" (click)="toggleTopicOutcomes(topic.id)" [attr.aria-expanded]="expandedTopicId() === topic.id">{{ expandedTopicId() === topic.id ? 'Kazanımları gizle' : 'Kazanımları gör' }}</button></div>
-                  <div class="topic-entry-fields"><label class="topic-status">Başlangıç durumu<select [ngModel]="declaration(topic.id)" (ngModelChange)="setDeclaration(topic.id, $event)"><option value="">Belirtmedim</option><option value="NotStudied">Henüz çalışmadım</option><option value="Studied">Çalıştım</option><option value="NeedsReview">Tekrar etmek istiyorum</option></select></label><span class="muted">{{ topic.estimatedMinutes ? topic.estimatedMinutes + ' dk öneri' : 'Süre belirtilmemiş' }}</span></div>
+                  <div class="topic-entry-heading"><strong>{{ topic.name }}</strong><button type="button" class="secondary" (click)="toggleTopicOutcomes(topic.id)" [attr.aria-expanded]="expandedTopicId() === topic.id" [attr.aria-label]="topic.name + ': ' + (expandedTopicId() === topic.id ? 'kazanımları gizle' : 'kazanımları gör')">{{ expandedTopicId() === topic.id ? 'Kazanımları gizle' : 'Kazanımları gör' }}</button></div>
+                  <div class="topic-entry-fields"><label class="topic-status">Başlangıç durumu<select [attr.aria-label]="topic.name + ' – başlangıç durumu'" [ngModel]="declaration(topic.id)" (ngModelChange)="setDeclaration(topic.id, $event)"><option value="">Belirtmedim</option><option value="NotStudied">Henüz çalışmadım</option><option value="Studied">Çalıştım</option><option value="NeedsReview">Tekrar etmek istiyorum</option></select></label><span class="muted">{{ topic.estimatedMinutes ? 'yaklaşık ' + topic.estimatedMinutes + ' dk' : '' }}</span></div>
                   @if (expandedTopicId() === topic.id) {
                     <div class="topic-outcomes" aria-live="polite">
                       @if (topicOutcomeLoading() === topic.id) { <p role="status">Kazanımlar yükleniyor…</p> }
                       @else if (topicOutcomeErrors()[topic.id]) { <p class="notice error" role="alert">Kazanımlar yüklenemedi. <button type="button" class="secondary" (click)="retryTopicOutcomes(topic.id)">Yeniden dene</button></p> }
-                      @else if (topicOutcomes()[topic.id]?.length) { <ul>@for (outcome of topicOutcomes()[topic.id]; track outcome.outcomeId) { <li><strong>{{ outcome.code }}</strong> · {{ outcome.name }}<small>{{ outcome.totalMinutes }} dk · {{ outcome.sourceKind === 'ExamSkill' ? 'MEBİ çalışma becerisi' : 'Program kazanımı' }} · süre sürümü {{ outcome.estimateNumber }}</small></li> }</ul> }
-                      @else { <p class="muted">Bu konuya bağlı yayımlanmış kazanım veya süre bulunmuyor.</p> }
+                      @else if (topicOutcomes()[topic.id]?.length) { <ul>@for (outcome of topicOutcomes()[topic.id]; track outcome.outcomeId) { <li><strong>{{ outcome.code }}</strong> · {{ outcome.name }}<small>yaklaşık {{ outcome.totalMinutes }} dk</small></li> }</ul> }
+                      @else { <p class="muted">Bu konunun kazanımları henüz eklenmedi.</p> }
                     </div>
                   }
                 </article>
@@ -120,8 +129,7 @@
           }
           <div class="actions"><button type="button" class="secondary" [disabled]="topicPage <= 1" (click)="loadCatalog(topicPage - 1)">Önceki konular</button><button type="button" class="secondary" [disabled]="topicPage * 50 >= (catalog()?.topics?.totalCount ?? 0)" (click)="loadCatalog(topicPage + 1)">Sonraki konular</button></div>
           <a routerLink="/coaching-portal/growth/exams">Deneme sonucumu ekle (isteğe bağlı)</a>
-          <label class="check"><input type="checkbox" name="startingReviewed" [(ngModel)]="startingStatusReviewed" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('reviewed')" [attr.aria-describedby]="describedBy('reviewed')">Başlangıç bilgilerimi gözden geçirdim.</label>
-          @if (fieldError('reviewed'); as message) { <p class="field-error" id="setup-reviewed-error">{{ message }}</p> }
+          <!-- F2 #28: no "gözden geçirdim" box; saving this step is the confirmation. -->
           <button type="button" (click)="finishStarting()">Kaydet ve önizlemeye geç</button>
         </fieldset>
       }
@@ -130,7 +138,7 @@
   @if (ready() && step() === 'Preview') {
     @for (warning of state()?.warnings ?? []; track warning) { <p class="notice">{{ warning }}</p> }
     @if (state()?.isReady) {
-      <p class="notice success">Eğitim bilgilerin hazır. Mevcut planın, yeni taslağı açıkça yayımlayana kadar korunur.</p>
+      <p class="notice success">Bilgilerin hazır. Mevcut planın, yeni taslağı yayımlayana kadar korunur.</p>
       <!-- E6 #29: the draft preview itself (from the saved availability), not only a link to the wizard. -->
       <app-student-plan-preview [lessonIds]="courseIds()" (editAvailability)="goTo('Availability')" (editCourses)="goTo('Courses')" />
       <p class="muted">Konuları tek tek seçerek plan hazırlamak istersen: <a routerLink="/coaching-portal/plan/wizard">Plan sihirbazını aç</a></p>
