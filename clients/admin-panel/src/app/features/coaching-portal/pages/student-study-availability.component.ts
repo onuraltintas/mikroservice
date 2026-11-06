@@ -84,7 +84,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     if (added.length) { this.rows = [...this.rows, ...added]; this.dirty = true; }
     const range = `${source.start}–${source.endOfDay ? '24:00' : source.end}`;
     const notes = [added.length ? `${range} ${target === 'weekdays' ? 'hafta içi günlere' : 'hafta sonuna'} eklendi; kaydetmeyi unutma.` : skipped.length || full ? `${range} bu günlere eklenmedi.` : `${range} bu günlerde zaten var.`];
-    if (skipped.length) notes.push(`${skipped.join(', ')}: o gün bu saatlerle çakışan bir aralık var.`);
+    if (skipped.length) notes.push(`${skipped.join(', ')}: ${skipped.length > 1 ? 'o günlerde' : 'o gün'} bu saatlerle çakışan bir aralık var.`);
     if (full) notes.push('En fazla 42 saat aralığı eklenebilir.');
     this.copyNote.set(notes.join(' '));
   }

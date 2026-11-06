@@ -4,7 +4,7 @@ import { Component, DestroyRef, ElementRef, OnInit, ViewChild, computed, inject,
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
 import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningLesson, LearningExamSession, LearningSetupImpact, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 
 type SetupField = 'purpose' | 'examYear' | 'language' | 'yokdilField' | 'courses';
@@ -17,6 +17,7 @@ import { StudentPlanPreviewComponent } from './student-plan-preview.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingStudyPlanningService, PublishedStudyOutcome, StudyTopic } from '../../../core/services/coaching-study-planning.service';
 import { PURPOSES, YKS_FIELDS } from '../onboarding/onboarding-model';
+import { currentAcademicYear } from '../coaching-education';
 
 /** F2 #28: the course groups in exam order (TYT before AYT); any other exam code follows. */
 const LESSON_GROUPS: Record<string, { order: number; label: string }> = {
@@ -62,7 +63,12 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly yokdilFields = Object.entries(YOKDIL_FIELDS);
   private static readonly examCodes: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
   @ViewChild(StudentStudyAvailabilityComponent) hours?: StudentStudyAvailabilityComponent;
-  academicYearStart = new Date().getMonth() >= 8 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+  /** The saved school year (courses and topics are saved in it). F2 review: Sınavım is saved in the current one (`examYearBase`). */
+  academicYearStart = currentAcademicYear();
+  /** F2 review: a saved year without a session (an older choice) stays selectable while the exam is the same. */
+  private legacyYear: { purpose: string; year: number } | null = null;
+  /** The school year the exam is chosen in now (not shown; the wizard's rule, from 1 September on). */
+  examYearBase() { return currentAcademicYear(); }
   purpose: ExamLearningPurpose | '' = ''; targetExamYear: number | null = null; primaryScoreType = 'TYT'; foreignLanguage = '';
   targetExamSessionId: string | null = null; oabtField = ''; yokdilField = '';
   courses: LearningCourse[] = []; topics: LearningTopic[] = []; startingStatusReviewed = false;
@@ -76,9 +82,9 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly courseIds = computed(() => (this.state()?.context?.coursePreferences ?? []).map(x => x.lessonId));
   async load() {
     if (this.loading() || this.saving()) return;
-    // F2 (E4 b): reloading drops a confirmation that is still open, so it can never save what was loaded over it.
-    this.cancelImpact();
     if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş seçimlerden vazgeçip sunucudaki bilgileri yükleyelim mi?')) return;
+    // F2 (E4 b): reloading drops a confirmation that is still open (once the student agreed to drop the changes).
+    this.cancelImpact();
     this.loading.set(true); this.ready.set(false); this.error.set(null);
     this.service.get().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
       next: state => { this.apply(state); this.ready.set(true); this.step.set(state.nextStep === 'Catalog' ? 'Courses' : state.nextStep); if (this.step() === 'Courses' || this.step() === 'Starting') this.loadCatalog(); },
@@ -93,6 +99,7 @@ export class StudentLearningSetupComponent implements OnInit {
       this.primaryScoreType = c.purpose === 'Yks' ? c.primaryScoreType ?? 'TYT' : 'TYT'; this.foreignLanguage = c.purpose === 'Yks' ? c.foreignLanguage ?? '' : '';
       this.oabtField = c.purpose === 'Ags' ? c.primaryScoreType ?? '' : ''; this.yokdilField = c.purpose === 'Yokdil' ? c.primaryScoreType ?? '' : '';
       this.targetExamSessionId = c.targetExamSessionId ?? null;
+      this.legacyYear = !c.targetExamSessionId && c.targetExamYear ? { purpose: c.purpose, year: c.targetExamYear } : null;
       this.courses = c.coursePreferences.map(x => ({ ...x })); this.topics = c.topicStates.map(x => ({ ...x })); this.startingStatusReviewed = c.startingStatusReviewed;
     }
     this.dirty = false; this.suggested.set(false);
@@ -125,16 +132,23 @@ export class StudentLearningSetupComponent implements OnInit {
   examQuestion() { return this.sessionChoices().length ? 'Hangi oturuma hazırlanıyorsun?' : 'Hangi yıl sınava gireceksin?'; }
   examChoices(): { value: string; label: string }[] {
     const sessions = this.sessionChoices();
-    if (sessions.length) return sessions.map(x => ({ value: `session:${x.id}`, label: this.sessionLabel(x) }));
-    const years = new Set([1, 2, 3, 4, 5].map(offset => this.academicYearStart + offset));
+    if (sessions.length) {
+      const legacy = this.legacy();
+      return [...sessions.map(x => ({ value: `session:${x.id}`, label: this.sessionLabel(x) })),
+        ...(legacy ? [{ value: `year:${legacy}`, label: `${legacy} · oturum seçmedim` }] : [])];
+    }
+    const base = this.examYearBase();
+    const years = new Set([1, 2, 3, 4, 5].map(offset => base + offset));
     if (this.targetExamYear) years.add(this.targetExamYear);
     return [...years].sort((a, b) => a - b).map(year => ({ value: `year:${year}`, label: String(year) }));
   }
   examChoice() {
     const sessions = this.sessionChoices();
-    if (sessions.length) return sessions.some(x => x.id === this.targetExamSessionId) ? `session:${this.targetExamSessionId}` : '';
+    if (sessions.length) return sessions.some(x => x.id === this.targetExamSessionId) ? `session:${this.targetExamSessionId}`
+      : this.legacy() !== null && this.targetExamYear === this.legacy() ? `year:${this.targetExamYear}` : '';
     return this.targetExamYear ? `year:${this.targetExamYear}` : '';
   }
+  private legacy() { const legacy = this.legacyYear; return legacy && legacy.purpose === this.purpose ? legacy.year : null; }
   pickExam(value: string) {
     if (value.startsWith('session:')) { this.selectSession(value.slice(8)); return; }
     this.targetExamSessionId = null; this.targetExamYear = Number(value.slice(5)) || null; this.changed();
@@ -174,16 +188,18 @@ export class StudentLearningSetupComponent implements OnInit {
     if (!this.purpose) errors.purpose = 'Hazırlandığın sınavı seç.';
     else if (this.sessionChoices().length) { if (!this.examChoice()) errors.examYear = 'Hangi oturuma hazırlandığını seç.'; }
     else if (!this.targetExamYear) errors.examYear = 'Hangi yıl sınava gireceğini seç.';
-    else if (!Number.isInteger(this.targetExamYear) || this.targetExamYear < this.academicYearStart || this.targetExamYear > this.academicYearStart + 5)
-      errors.examYear = `Sınav yılı ${this.academicYearStart} ile ${this.academicYearStart + 5} arasında olmalı.`;
+    else if (!Number.isInteger(this.targetExamYear) || this.targetExamYear < this.examYearBase() || this.targetExamYear > this.examYearBase() + 5)
+      errors.examYear = `Sınav yılı ${this.examYearBase()} ile ${this.examYearBase() + 5} arasında olmalı.`;
     if (this.purpose === 'Yks' && this.primaryScoreType === 'DIL' && !this.foreignLanguage) errors.language = 'Yabancı dili seç.';
     if (this.purpose === 'Yokdil' && !this.yokdilField) errors.yokdilField = 'YÖKDİL alanını seç.';
     if (this.refuse('Sınavın kaydedilmedi.', errors)) return;
+    // F2 review: saved in the current school year (as the wizard does); a new school year is a new scope.
+    const year = this.examYearBase();
     const previous = this.state()?.context; const scope = this.request([], [], false);
     const sameScope = previous && !this.state()?.missingFields.some(x => x === 'Purpose' || x === 'Catalog')
-      && previous.academicYearStart === this.academicYearStart && previous.purpose === this.purpose
+      && previous.academicYearStart === year && previous.purpose === this.purpose
       && previous.primaryScoreType === scope.primaryScoreType && previous.foreignLanguage === scope.foreignLanguage;
-    const request = this.request(sameScope ? this.courses : [], sameScope ? this.topics : [], !!sameScope && this.startingStatusReviewed);
+    const request = { ...this.request(sameScope ? this.courses : [], sameScope ? this.topics : [], !!sameScope && this.startingStatusReviewed), academicYearStart: year };
     const scopeChanged = !!previous && (previous.purpose !== scope.purpose || (previous.primaryScoreType ?? null) !== scope.primaryScoreType
       || (previous.foreignLanguage ?? null) !== scope.foreignLanguage);
     if (!scopeChanged) { this.persist(request, 'Availability', 'Sınavın kaydedildi.'); return; }
@@ -325,7 +341,24 @@ export class StudentLearningSetupComponent implements OnInit {
   setDeclaration(id: string, status: TopicDeclaration | '') {
     this.topics = this.topics.filter(x => x.topicId !== id); if (status) this.topics.push({ topicId: id, declaredStatus: status }); this.changed();
   }
-  /** F2 #28: one status for every topic of a unit shown on the page. */
+  /**
+   * F2 review: "Bu ünitenin hepsi" marks the whole unit, also its topics on the other pages of the lesson (read for this only;
+   * the page shown stays).
+   */
+  async markUnit(unit: string, status: TopicDeclaration) {
+    const catalog = this.catalog(); if (!catalog) return;
+    let topics = catalog.topics.items;
+    const size = catalog.topics.pageSize || 50; const pages = Math.ceil(catalog.topics.totalCount / size);
+    if (pages > 1 && this.selectedLesson) {
+      try {
+        const others = await Promise.all(Array.from({ length: pages }, (_, i) => i + 1).filter(page => page !== this.topicPage)
+          .map(page => firstValueFrom(this.service.catalog(this.selectedLesson, page))));
+        topics = [...topics, ...others.flatMap(x => x.topics.items)];
+      } catch { this.error.set('Ünitenin bütün konuları yüklenemedi. Yeniden dene.'); return; }
+    }
+    this.setUnit(topics.filter(x => (x.unitName || 'Diğer konular') === unit), status);
+  }
+  /** F2 #28: one status for each of these topics. */
   setUnit(topics: StudyTopic[], status: TopicDeclaration) {
     const ids = new Set(topics.map(x => x.id));
     this.topics = [...this.topics.filter(x => !ids.has(x.topicId)), ...topics.map(x => ({ topicId: x.id, declaredStatus: status }))];

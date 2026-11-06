@@ -299,9 +299,11 @@ export class StudentOnboardingComponent implements OnInit {
       if (step === 3 && failure?.error?.code === 'Onboarding.TeacherGoal') { await this.showTeacherGoal(); return null; }
       if (failure?.status === 400) {
         // E4 review: a rule only the server knows refused the step: that question is asked again with the message (no retry).
-        // F2 (E4 a): the server names the refused question; an older API (or an unknown name) re-asks the step's last question.
+        // F2 (E4 a): the server names the refused question. Only a question of this step or an earlier one is asked again (the
+        // wizard can go back); Hedefim asks only the target step. Otherwise (an older API, an unknown name) the step's last question.
         const field = failure.error?.field;
-        const named = field ? questions(this.answers(), this.context()).find(x => x.id === field && x.id in this.answers()) : undefined;
+        const steps = this.mode() === 'target' ? [3] : Array.from({ length: step }, (_, i) => i + 1);
+        const named = field ? questions(this.answers(), this.context()).find(x => x.id === field && steps.includes(x.step) && x.id in this.answers()) : undefined;
         const last = named ?? stepQuestions(this.answers(), this.context(), step).filter(x => x.id in this.answers()).at(-1);
         if (last) {
           this.answers.update(current => change(current, last.id));

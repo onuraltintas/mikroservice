@@ -46,6 +46,8 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
       @if (error()) {
         @if (hasFieldErrors()) { <div role="alert" class="error" data-testid="error-summary">{{ error() }}</div> }
         @else { <p role="alert" class="error">{{ error() }}</p> }
+        <!-- F2 review: a profile that did not load can be loaded again (students, teachers and staff). -->
+        @if (!ready() && !loading()) { <button type="button" (click)="reload()">Yeniden dene</button> }
       }
       @if (success()) { <p role="status">{{ success() }}</p> }
       @if (gradeNotice()) {
@@ -121,7 +123,8 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
                     <span>Şehir: <strong>{{ provinceName() }}</strong> <button type="button" (click)="pickProvince('')">Şehri değiştir</button></span>
                     @if (districtOptions().length) {
                       @for (key of [homeProvince]; track key) {
-                        <app-onboarding-combobox [label]="provinceName() + ' içinde hangi ilçedesin?'" placeholder="İlçe adını yaz" [options]="districtOptions()" (picked)="pickDistrict($event)" />
+                        <app-onboarding-combobox [label]="provinceName() + ' içinde hangi ilçedesin?'" placeholder="İlçe adını yaz" [options]="districtOptions()" (picked)="pickDistrict($event)"
+                          [invalid]="!!fieldError('homeDistrict')" [describedBy]="describedBy('homeDistrict')" />
                       }
                     } @else { <p role="status">İlçeler yükleniyor…</p> }
                   }

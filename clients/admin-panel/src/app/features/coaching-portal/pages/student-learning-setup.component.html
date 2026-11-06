@@ -30,7 +30,7 @@
       @if (purposeRetired()) { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }}</p> }
       @if (state()?.purposeNotForEducation) { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.</p> }
       <p>Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
-      <!-- F2 #27: the wizard's questions; the school year is not shown (it follows today's date). -->
+      <!-- F2 #27: the wizard's questions. The school year is not asked: the exam is saved in the current one (from 1 September). -->
       <fieldset [disabled]="saving()"><div class="fields">
         <label>Hangi sınava hazırlanıyorsun?<select name="purpose" required [(ngModel)]="purpose" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('purpose')" [attr.aria-describedby]="describedBy('purpose')"><option value="" disabled>Seç</option>@for (item of purposeChoices(); track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select>@if (fieldError('purpose'); as message) { <small class="field-error" id="setup-purpose-error">{{ message }}</small> }</label>
         @if (purpose === 'Yks') {
@@ -80,7 +80,7 @@
       @for (warning of catalog()?.warnings ?? []; track warning) { <p class="notice">{{ warning }}</p> }
       @if (step() === 'Courses') {
         <!-- F2 #28: the courses of the exam, grouped (TYT, AYT); suggested ones are ticked until the student saves. -->
-        @if (suggested()) { <p class="notice" role="status" data-testid="suggested-courses">Puan türüne uygun dersleri senin için seçtik. Kontrol et, istemediklerini kaldır ve kaydet.</p> }
+        @if (suggested()) { <p class="notice" role="status" data-testid="suggested-courses">Sınavına uygun dersleri senin için seçtik. Kontrol et, istemediklerini kaldır ve kaydet.</p> }
         <fieldset [disabled]="saving() || catalogLoading()">
           <div class="actions"><button type="button" class="secondary" data-testid="select-all-courses" [disabled]="allCoursesSelected()" (click)="selectAllCourses()">Tümünü seç</button></div>
           @for (group of lessonGroups(); track group.code) {
@@ -108,8 +108,8 @@
               <h3>{{ group.name }}</h3>
               <!-- F2 #28: mark a whole unit at once. -->
               <div class="actions" role="group" [attr.aria-label]="group.name + ' ünitesinin hepsi'"><span class="muted">Bu ünitenin hepsi:</span>
-                <button type="button" class="secondary" (click)="setUnit(group.topics, 'Studied')" [attr.aria-label]="group.name + ' ünitesinin hepsi: Çalıştım'">Çalıştım</button>
-                <button type="button" class="secondary" (click)="setUnit(group.topics, 'NotStudied')" [attr.aria-label]="group.name + ' ünitesinin hepsi: Henüz çalışmadım'">Henüz çalışmadım</button>
+                <button type="button" class="secondary" (click)="markUnit(group.name, 'Studied')" [attr.aria-label]="group.name + ' ünitesinin hepsi: Çalıştım'">Çalıştım</button>
+                <button type="button" class="secondary" (click)="markUnit(group.name, 'NotStudied')" [attr.aria-label]="group.name + ' ünitesinin hepsi: Henüz çalışmadım'">Henüz çalışmadım</button>
               </div>
               @for (topic of group.topics; track topic.id) {
                 <article class="topic-entry">
