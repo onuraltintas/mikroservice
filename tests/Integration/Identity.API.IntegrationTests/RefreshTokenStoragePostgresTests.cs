@@ -4,6 +4,7 @@ using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
@@ -19,7 +20,8 @@ public sealed class IdentityPostgresDatabase : IAsyncDisposable
 
     public string ConnectionString { get; private set; } = string.Empty;
 
-    public static async Task<IdentityPostgresDatabase> CreateAsync()
+    /// <param name="targetMigration">Migrate only up to this migration (a migration test adds rows, then migrates the rest).</param>
+    public static async Task<IdentityPostgresDatabase> CreateAsync(string? targetMigration = null)
     {
         var database = new IdentityPostgresDatabase();
         var external = Environment.GetEnvironmentVariable("IDENTITY_TEST_POSTGRES");
@@ -40,7 +42,8 @@ public sealed class IdentityPostgresDatabase : IAsyncDisposable
             Database = $"identity_test_{Guid.NewGuid():N}"
         }.ConnectionString;
         await using var context = database.CreateContext();
-        await context.Database.MigrateAsync();
+        if (targetMigration is null) await context.Database.MigrateAsync();
+        else await context.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>().MigrateAsync(targetMigration);
         return database;
     }
 
