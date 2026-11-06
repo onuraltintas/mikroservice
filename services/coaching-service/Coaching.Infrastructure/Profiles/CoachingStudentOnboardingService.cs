@@ -242,8 +242,9 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     public async Task<TargetSearchPage<OnboardingSchoolOption>> SchoolsAsync(string? city, string? type, string? search, int page, CancellationToken ct)
     {
         await RequireProfileAsync(false, ct);
-        var name = RequireText(city, "Şehri seç."); var kind = RequireText(type, "Okul türünü seç.");
-        var query = db.TargetSchools.AsNoTracking().Where(x => x.IsActive && x.City == name && x.InstitutionType == kind);
+        // Without a type: every school of the city (the student's own high school in step 1).
+        var name = RequireText(city, "Şehri seç."); var kind = string.IsNullOrWhiteSpace(type) ? null : RequireText(type, "Okul türünü seç.");
+        var query = db.TargetSchools.AsNoTracking().Where(x => x.IsActive && x.City == name && (kind == null || x.InstitutionType == kind));
         if (Search(search) is { } text) query = query.Where(x => x.Name.ToUpper().Replace("İ", "I").Contains(text) || (x.District ?? "").ToUpper().Replace("İ", "I").Contains(text));
         return await PageAsync(query.OrderBy(x => x.Name).ThenBy(x => x.Id)
             .Select(x => new OnboardingSchoolOption(x.Id, x.Name, x.District, x.MinimumScore, x.ScoreYear)), page, ct);

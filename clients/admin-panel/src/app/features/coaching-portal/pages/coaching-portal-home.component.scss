@@ -90,6 +90,10 @@
   strong { font-size: var(--coaching-text-md); font-weight: 800; }
   small { font-size: var(--coaching-text-sm); color: var(--ui-text-muted); }
   &.is-quiet { border-left-color: var(--ui-border-strong); }
+  .goal-name { font-weight: 700; }
+  .goal-label { justify-self: start; padding: 0 8px; border-radius: var(--coaching-radius-pill); background: var(--ui-surface-muted); }
+  .goal-net { padding-top: var(--coaching-space-1); border-top: 1px solid var(--ui-border); }
+  &[data-status='reached'] { border-left-color: var(--ui-success, var(--ui-accent)); }
   &:hover strong { color: var(--ui-brand-text); }
   &:focus-visible { outline: 3px solid var(--coaching-focus); outline-offset: 2px; }
 }

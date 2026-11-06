@@ -54,7 +54,7 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         @if (result.target; as target) {
           <p class="plan-row" data-testid="score-target">
             <strong>Hedef: {{ target.targetName }}</strong>
-            @if (target.targetScore !== null) { · taban puan {{ num(target.targetScore) }} }
+            @if (target.targetScore !== null) { · {{ target.kind === 'score' || target.ownTargetScore ? 'hedef puanı' : 'taban puan' }} {{ num(target.targetScore) }} }
             @if (target.targetRank !== null) { · başarı sırası {{ int(target.targetRank) }} }
             @if (target.targetPercentile !== null) { · yüzdelik %{{ num(target.targetPercentile) }} }
             <br>{{ targetText(target) }}
@@ -122,7 +122,7 @@ export class StudentScoreEstimateComponent implements OnInit {
       const now = this.data()?.estimates.find(x => x.scoreType === target.scoreType);
       return now ? `Hedef taban puanı tahmini aralığın içinde (${this.num(now.scoreLow)}–${this.num(now.scoreHigh)}): sınırda.` : 'Hedef taban puanı tahmini aralığın içinde: sınırda.';
     }
-    if (target.reached) return 'Tahmini puanın hedefin tabanına ulaşıyor. Bu çizgiyi korumaya çalış.';
+    if (target.reached) return target.kind === 'score' ? 'Tahmini puan hedef puana ulaşıyor.' : 'Tahmini puanın hedefin tabanına ulaşıyor. Bu çizgiyi korumaya çalış.';
     if (target.scoreGap !== null) return `Hedefe yaklaşık ${this.num(target.netGap ?? 0)} net (${this.num(target.scoreGap)} puan) kaldı.`;
     return `Hedef sıralamaya yaklaşık ${this.int(target.rankGap ?? 0)} kişi kaldı.`;
   }

@@ -1,0 +1,137 @@
+<div class="ob-page">
+  <header class="ob-head">
+    <p class="ob-brand"><strong>eduivme<span>.</span></strong> Öğrenci Koçluğu</p>
+    <h1 id="ob-title">Hesabını birlikte kuralım</h1>
+    @if (!loading() && !done()) {
+      <div class="ob-progress">
+        <span id="ob-progress-label">Adım {{ step() }}/{{ stepCount }} · {{ stepTitle() }}</span>
+        <div class="ob-bar" role="progressbar" aria-labelledby="ob-progress-label" aria-valuemin="1" [attr.aria-valuemax]="stepCount" [attr.aria-valuenow]="step()">
+          <span [style.width.%]="(step() / stepCount) * 100"></span>
+        </div>
+      </div>
+    }
+  </header>
+
+  <main class="ob-chat" aria-labelledby="ob-title">
+    @if (loading()) { <p class="ob-bot" role="status">Hazırlanıyor…</p> }
+    <div class="ob-log" role="log" aria-live="polite" aria-relevant="additions">
+      @for (question of asked(); track question.id) {
+        <div class="ob-turn" [attr.data-question]="question.id">
+          <div class="ob-bot"><p>{{ question.prompt }}</p></div>
+          <div class="ob-me">
+            <p>{{ answers()[question.id]?.label }}</p>
+            @if (!done()) { <button type="button" class="ob-link" [disabled]="busy()" (click)="edit(question.id)" [attr.aria-label]="'Değiştir: ' + question.prompt">Değiştir</button> }
+          </div>
+        </div>
+      }
+
+      @if (current(); as question) {
+        <div class="ob-turn is-current" data-current [attr.data-question]="question.id">
+          <div class="ob-bot">
+            <p>{{ question.prompt }}</p>
+            <small class="ob-why">{{ question.reason }}</small>
+          </div>
+          <div class="ob-input" [attr.aria-label]="question.prompt" role="group">
+            @switch (question.kind) {
+              @case ('date') {
+                <label class="ob-sr" for="ob-date">Doğum tarihi</label>
+                <input id="ob-date" type="date" [min]="oldest" [max]="youngest" (input)="dateInput($event)">
+                <button type="button" class="ob-primary" [disabled]="busy()" (click)="submitDate(question)">Devam</button>
+              }
+              @case ('buttons') {
+                <div class="ob-chips">
+                  @for (choice of choicesOf(question); track choice.value) {
+                    <button type="button" class="ob-chip" [disabled]="busy()" (click)="choose(question, choice)">{{ choice.label }}</button>
+                  } @empty { <p role="status">Seçenekler yükleniyor…</p> }
+                </div>
+              }
+              @case ('combobox') {
+                <!-- A new list for every question: nothing typed for the previous one is carried over. -->
+                @for (key of [question.id]; track key) {
+                  <app-onboarding-combobox [label]="question.prompt" [options]="comboOptions(question)" [load]="comboLoader(question)" (picked)="pickCombo(question, $event)" />
+                }
+              }
+              @case ('number') {
+                <label class="ob-sr" for="ob-number">{{ question.prompt }}</label>
+                <input id="ob-number" type="number" inputmode="decimal" step="0.01" [min]="question.min ?? 0" [max]="question.max ?? 1000" [value]="draftNumber ?? ''" (input)="numberInput($event)">
+                <button type="button" class="ob-primary" [disabled]="busy()" (click)="submitNumber(question)">Devam</button>
+              }
+              @case ('diploma') {
+                <label class="ob-sr" for="ob-diploma">Diploma notu</label>
+                <input id="ob-diploma" type="number" inputmode="decimal" step="0.01" min="50" max="100" placeholder="50–100" (input)="numberInput($event)">
+                <label class="ob-check"><input type="checkbox" (change)="estimatedInput($event)"> Bu tahmini notum</label>
+                <div class="ob-chips">
+                  <button type="button" class="ob-primary" [disabled]="busy()" (click)="submitNumber(question)">Kaydet</button>
+                  <button type="button" class="ob-chip" [disabled]="busy()" (click)="skip(question)">{{ question.skipLabel }}</button>
+                </div>
+              }
+              @case ('invite') {
+                @if (invitations(); as list) {
+                  @for (invitation of list; track invitation.id) {
+                    <div class="ob-card">
+                      <p><strong>{{ invitation.inviterEmail ?? 'Bir öğretmen' }}</strong> seni davet etti.@if (invitation.message) { <br><small>{{ invitation.message }}</small> }</p>
+                      <button type="button" class="ob-primary" [disabled]="busy()" (click)="acceptInvitation(invitation)">Kabul et</button>
+                    </div>
+                  } @empty { <p class="ob-note">Şu an bekleyen davetin yok. Öğretmenin seni e-posta adresinle davet edince burada görünür; sonra Profil ve ayarlar'dan da kabul edebilirsin.</p> }
+                  <button type="button" class="ob-chip" [disabled]="busy()" (click)="pass(question, list.length ? 'Sonra bakarım' : 'Davetim yok')">{{ list.length ? 'Sonra bakarım' : 'Davetim yok, devam' }}</button>
+                } @else { <p role="status">Davetlerin yükleniyor…</p> }
+              }
+              @case ('parent') {
+                @if (parentCode(); as issued) {
+                  <p class="ob-card">Velinle paylaş: <strong class="ob-code">{{ issued.code }}</strong><br><small>Velin kodu girince isteği Profil ve ayarlar'da onaylarsın.</small></p>
+                  <button type="button" class="ob-primary" [disabled]="busy()" (click)="pass(question, 'Veli kodu oluşturdum')">Devam</button>
+                } @else {
+                  <div class="ob-chips">
+                    <button type="button" class="ob-chip" [disabled]="busy()" (click)="createParentCode()">Veli kodu oluştur</button>
+                    <button type="button" class="ob-chip" [disabled]="busy()" (click)="pass(question, 'Şimdilik geç')">Şimdilik geç</button>
+                  </div>
+                }
+              }
+              @case ('notifications') {
+                @if (emailPrefs(); as prefs) {
+                  <fieldset class="ob-prefs">
+                    <legend class="ob-sr">E-posta tercihleri</legend>
+                    @for (pref of prefs; track pref.category) {
+                      <label class="ob-check"><input type="checkbox" [checked]="pref.email" (change)="toggleEmail(pref.category, $event)" [attr.data-testid]="'ob-email-' + pref.category"> {{ pref.label }}</label>
+                    } @empty { <p class="ob-note">Seçilecek e-posta yok.</p> }
+                  </fieldset>
+                  <button type="button" class="ob-primary" [disabled]="busy()" (click)="saveEmails(question)">Kaydet ve devam et</button>
+                } @else { <p role="status">Tercihlerin yükleniyor…</p> }
+              }
+            }
+            @if (question.skipLabel && question.kind !== 'diploma') {
+              <button type="button" class="ob-link" [disabled]="busy()" (click)="skip(question)">{{ question.skipLabel }}</button>
+            }
+          </div>
+        </div>
+      } @else if (!loading() && !done() && !error()) {
+        <section class="ob-summary" data-current aria-labelledby="ob-summary-title">
+          <h2 id="ob-summary-title">Her şey hazır mı?</h2>
+          <p class="ob-why">Seçimlerine bir göz at; istediğin bölümü düzenleyebilirsin.</p>
+          @for (section of summary(); track section.step) {
+            <div class="ob-section">
+              <div class="ob-section-head"><h3>{{ section.title }}</h3><button type="button" class="ob-link" [disabled]="busy()" (click)="editStep(section.step)" [attr.aria-label]="'Düzenle: ' + section.title">Düzenle</button></div>
+              <ul>@for (line of section.lines; track line) { <li>{{ line }}</li> }</ul>
+            </div>
+          }
+          <button type="button" class="ob-primary" [disabled]="busy()" (click)="finish()">Kurulumu bitir</button>
+        </section>
+      }
+
+      @if (done(); as result) {
+        @if (!result.needsSubscription) {
+          <section class="ob-summary" data-current aria-labelledby="ob-done-title">
+            <h2 id="ob-done-title">Hazırsın!</h2>
+            <p>Son bir adım kaldı: planın için boş saatlerini ve derslerini seç. Plan bu bilgiler olmadan hazırlanamıyor.</p>
+            <a class="ob-primary" routerLink="/coaching-portal/account/settings">Planını kur</a>
+            <a class="ob-link" routerLink="/coaching-portal">Şimdilik Bugün'e git</a>
+          </section>
+        }
+      }
+    </div>
+    @if (busy()) { <p class="ob-note" role="status">Kaydediliyor…</p> }
+    @if (error(); as message) {
+      <div class="ob-error" role="alert"><p>{{ message }}</p><button type="button" class="ob-chip" (click)="retry()">Yeniden dene</button></div>
+    }
+  </main>
+</div>

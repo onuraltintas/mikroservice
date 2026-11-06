@@ -47,12 +47,13 @@
         }
 
         @if (!setupReady() || !v.hasActivePlan) {
+          <!-- Paket C (#3): after the first-login wizard the plan still needs free hours and lessons: "Planını kur" says so. -->
           <cs-card class="setup" data-home-block="setup">
-            <h2>{{ setupReady() ? 'İlk planını oluştur' : 'Çalışma düzenini kur' }}</h2>
-            <p>{{ setupReady() ? 'Derslerine ve boş saatlerine göre haftalık planını birkaç adımda hazırla.' : 'Sınıfını, derslerini ve boş saatlerini yaz; planın bunlara göre hazırlansın.' }}</p>
+            <h2>{{ setupReady() ? 'İlk planını oluştur' : 'Planını kur' }}</h2>
+            <p>{{ setupReady() ? 'Derslerine ve boş saatlerine göre haftalık planını birkaç adımda hazırla.' : 'Boş saatlerini ve derslerini seç, konularda nerede olduğunu işaretle. Planın bunlar olmadan hazırlanamıyor.' }}</p>
             <div class="setup-actions">
-              @if (!setupReady()) { <a class="primary" routerLink="/coaching-portal/account/settings">Bilgilerini tamamla</a> }
-              @if (!v.hasActivePlan) { <a [class.primary]="setupReady()" routerLink="/coaching-portal/plan/wizard">Planını oluştur</a> }
+              @if (!setupReady()) { <a class="primary" routerLink="/coaching-portal/account/settings">Planını kur</a> }
+              @if (!v.hasActivePlan && setupReady()) { <a class="primary" routerLink="/coaching-portal/plan/wizard">Planını oluştur</a> }
             </div>
           </cs-card>
         }
@@ -91,14 +92,33 @@
       </div>
 
       <aside class="today-side" aria-label="Haftan ve hedefin">
-        @if (v.goal; as goal) {
+        <!-- Paket C (#4): the target (school, programme or score) with the score gap; the net line stays as the second line. -->
+        @if (goalCard(); as card) {
+          @if (card.state === 'none' && v.goal) {
+            <a class="goal" data-home-block="goal" data-testid="home-goal" routerLink="/coaching-portal/growth/goals">
+              <strong>{{ v.goal.remainingNet > 0 ? 'Hedefine ' + (v.goal.remainingNet | number: '1.0-2') + ' net kaldı' : 'Hedef netine ulaştın' }}</strong>
+              <small>{{ v.goal.title }}, {{ v.goal.examCode }} son deneme {{ v.goal.latestNet | number: '1.0-2' }} / hedef {{ v.goal.targetNet | number: '1.0-2' }} net</small>
+            </a>
+          } @else {
+            <a class="goal" [class.is-quiet]="card.state === 'none'" [attr.data-status]="card.status" data-home-block="goal" data-testid="home-goal" routerLink="/coaching-portal/growth/goals">
+              <strong>{{ card.headline }}</strong>
+              @if (card.targetName) { <span class="goal-name">{{ card.targetName }}</span> }
+              @if (card.detail) { <small>{{ card.detail }}</small> }
+              @if (card.label) { <small class="goal-label" data-testid="home-goal-label">{{ card.label }}</small> }
+              @if (card.note) { <small>{{ card.note }}</small> }
+              @if (v.goal; as goal) {
+                <small class="goal-net" data-testid="home-goal-net">{{ goal.remainingNet > 0 ? 'Hedefine ' + (goal.remainingNet | number: '1.0-2') + ' net kaldı' : 'Hedef netine ulaştın' }} · {{ goal.examCode }} son deneme {{ goal.latestNet | number: '1.0-2' }} / hedef {{ goal.targetNet | number: '1.0-2' }} net</small>
+              }
+            </a>
+          }
+        } @else if (v.goal; as goal) {
           <a class="goal" data-home-block="goal" routerLink="/coaching-portal/growth/goals">
             <strong>{{ goal.remainingNet > 0 ? 'Hedefine ' + (goal.remainingNet | number: '1.0-2') + ' net kaldı' : 'Hedef netine ulaştın' }}</strong>
             <small>{{ goal.title }}, {{ goal.examCode }} son deneme {{ goal.latestNet | number: '1.0-2' }} / hedef {{ goal.targetNet | number: '1.0-2' }} net</small>
           </a>
-        } @else {
+        } @else if (estimate() === null) {
           <a class="goal is-quiet" data-home-block="goal" routerLink="/coaching-portal/growth/goals">
-            <strong>Hedefini belirle</strong><small>Hedef net ve deneme sonuçların olunca kalan farkı burada görürsün.</small>
+            <strong>Hedefin</strong><small>Hedefin şu an yüklenemedi. Gelişimim sayfasından bakabilirsin.</small>
           </a>
         }
 
