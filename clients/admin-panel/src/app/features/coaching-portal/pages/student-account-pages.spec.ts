@@ -61,7 +61,7 @@ describe('Profil ve ayarlar sections', () => {
 
   it('shows the profile with the teachers and parent links under Profilim', () => {
     TestBed.configureTestingModule({ imports: [StudentCoachingProfileComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
-      { provide: CoachingParentService, useValue: { getLinks: () => of([]) } },
+      { provide: CoachingParentService, useValue: { getLinks: () => of([]), getActiveCode: () => of(null) } },
       { provide: CoachingStudentTeachersService, useValue: { list: () => of([]) } }] });
     const fixture = TestBed.createComponent(StudentCoachingProfileComponent); fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
