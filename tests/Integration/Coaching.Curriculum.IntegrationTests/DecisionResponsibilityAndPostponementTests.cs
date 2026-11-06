@@ -148,7 +148,8 @@ public sealed class DecisionResponsibilityAndPostponementTests
     internal static async Task<Scenario> Seed(CoachingDbContext db,bool institution=true)
     {
         var student=Guid.NewGuid();var old=Guid.NewGuid();var next=Guid.NewGuid();var admin=Guid.NewGuid();var inst=Guid.NewGuid();
-        db.AddRange(CoachingStudentProfile.Create(student),CoachingTeacherProfile.Create(old),CoachingTeacherProfile.Create(next),CoachingTeacherStudentAssignment.Create(old,student,institution?inst:null,null,admin));
+        await LegacyRows.StudentProfileAsync(db,student);
+        db.AddRange(CoachingTeacherProfile.Create(old),CoachingTeacherProfile.Create(next),CoachingTeacherStudentAssignment.Create(old,student,institution?inst:null,null,admin));
         if(institution)db.AddRange(CoachingInstitutionMembership.Create(inst,student,CoachingMemberRole.Student,admin),CoachingInstitutionMembership.Create(inst,old,CoachingMemberRole.Teacher,admin),CoachingInstitutionMembership.Create(inst,next,CoachingMemberRole.Teacher,admin));
         await db.SaveChangesAsync();db.ChangeTracker.Clear();return new(student,old,next,admin,inst,new(){UserId=old,Roles=["Teacher"]},new());
     }

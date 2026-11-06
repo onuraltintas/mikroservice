@@ -181,7 +181,8 @@ public sealed class WeeklyReviewPostgresTests
 
     internal static async Task<CoachingWeeklyReviewService> Setup(CurriculumPostgresTests.Pg pg, Guid student, Guid teacher, ICoachingEventPublisher? publisher = null)
     {
-        pg.Db.AddRange(CoachingTeacherProfile.Create(teacher), CoachingStudentProfile.Create(student), CoachingTeacherStudentAssignment.Create(teacher, student, null, null, teacher));
+        await LegacyRows.StudentProfileAsync(pg.Db, student);
+        pg.Db.AddRange(CoachingTeacherProfile.Create(teacher), CoachingTeacherStudentAssignment.Create(teacher, student, null, null, teacher));
         await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
         var access = new CoachingAccessPolicy(pg.Data.User); var directory = new OwnedCoachingDirectory(pg.Db, new Accounts(teacher), pg.Data.User);
         return new(pg.Db, access, new(access, directory, new CurriculumManagementTests.Scope()), directory, new Clock(), publisher ?? new CurriculumManagementTests.NoopPublisher());
