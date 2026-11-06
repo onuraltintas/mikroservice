@@ -503,15 +503,24 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     });
 
     it('"Henüz karar vermedim" asks before the saved target is removed', async () => {
-      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true, confirm: false });
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
       (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      // CI flake (35 ms): the confirm dialog's service is loaded on demand (a dynamic import), so the dialog opens after an
+      // unknown number of ticks. The spec answers the dialog itself and waits for it instead of a fixed number of ticks.
+      let answer!: (ok: boolean) => void;
+      t.toaster.confirm.mockImplementationOnce(() => new Promise<boolean>(resolve => answer = resolve));
       await t.click('Henüz karar vermedim');
-      expect(t.toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Mevcut hedefin silinecek'), expect.anything());
+      await vi.waitFor(() => expect(t.toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Mevcut hedefin silinecek'), expect.anything()));
+      // While the dialog is open nothing is sent and the question stays.
+      t.http.expectNone(`${base}/steps/target`);
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
+      answer(false); await t.settle();
       t.http.expectNone(`${base}/steps/target`);
       expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
       t.toaster.confirm.mockResolvedValue(true);
       await t.click('Henüz karar vermedim');
-      const save = t.http.expectOne(`${base}/steps/target`);
+      await vi.waitFor(() => expect(t.toaster.confirm).toHaveBeenCalledTimes(2));
+      const save = await vi.waitFor(() => t.http.expectOne(`${base}/steps/target`));
       expect(save.request.body).toEqual({ kind: 'none', targetId: null, scores: null });
       save.flush({ data: view(completed, stepTwo) }); await t.settle();
       expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Henüz karar vermedim');
