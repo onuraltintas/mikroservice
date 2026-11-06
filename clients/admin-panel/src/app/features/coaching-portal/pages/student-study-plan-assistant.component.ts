@@ -30,6 +30,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   private readonly destroy = inject(DestroyRef);
   private readonly injector = inject(Injector);
   @ViewChild('proposalTitle') private proposalTitle?: ElementRef<HTMLElement>;
+  @ViewChild('proposeButton') private proposeButton?: ElementRef<HTMLElement>;
+  @ViewChild('savedNotice') private savedNotice?: ElementRef<HTMLElement>;
   readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Çalışma saatlerinden sana haftalık ders düzeni önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
   readonly proposal = signal<WeeklySlot[]>([]);
   readonly selectedDays = signal<Weekday[]>([]);
@@ -252,9 +254,17 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     }
     this.busy.set(true); this.error.set('');
     this.weekly.save(this.version, this.timeZoneId, merged, this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.busy.set(false))).subscribe({
-      next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.proposal.set([]); this.saved.set(true); },
+      next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.proposal.set([]); this.saved.set(true); this.focusAfter('saved'); },
       error: e => this.error.set(e?.error?.message ?? 'Haftalık taslak kaydedilemedi. Yeniden deneyebilirsin.')
     });
+  }
+
+  /** "Öneriyi kaldır": the proposal goes away and the focus returns to "Haftalık öneri oluştur". */
+  removeProposal() { this.proposal.set([]); this.focusAfter('propose'); }
+
+  /** Review of PR 122: when the proposal block disappears the focus moves on, not to the page. */
+  private focusAfter(target: 'saved' | 'propose') {
+    afterNextRender(() => (target === 'saved' ? this.savedNotice : this.proposeButton)?.nativeElement.focus(), { injector: this.injector });
   }
 
   continueToAnnualReview() {

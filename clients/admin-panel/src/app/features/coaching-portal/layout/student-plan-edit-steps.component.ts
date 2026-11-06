@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Subscription, catchError, filter, forkJoin, map, of, startWith } from 'rxjs';
@@ -77,7 +77,7 @@ export class StudentPlanEditStepsComponent {
 
   constructor() {
     // Read again on each step change, so what was just saved on the previous step counts.
-    effect(() => { if (this.current() >= 0) this.load(); });
+    effect(() => { if (this.current() >= 0) untracked(() => this.load()); });
     this.destroyRef.onDestroy(() => this.request?.unsubscribe());
   }
 

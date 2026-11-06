@@ -92,8 +92,9 @@ export class CoachingPortalLayoutComponent {
   readonly notificationLabel = computed(() => this.unreadCount() ? `Bildirimler (${this.unreadCount()} okunmamış)` : 'Bildirimler');
 
   constructor() {
-    if (!this.isParent()) this.studentNavigation.refresh(true);
-    this.messagesUnread.refresh();
+    // Review of PR 122: the shell opens for one account; nothing of an earlier account's answers is kept.
+    if (!this.isParent()) this.studentNavigation.refresh({ reset: true });
+    this.messagesUnread.refresh({ reset: true });
     this.updatePageLabel();
     // Paket F #36: the shell is created inside a navigation; that navigation's NavigationEnd must not ask again (the second
     // request used to abort the first). Later page changes ask once; a change of only the query string asks nothing.

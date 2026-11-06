@@ -17,6 +17,7 @@ import {
   purposeOf, summary, targetRequest, withoutUnfitPurpose
 } from './onboarding-model';
 import { coachingToaster } from '../coaching-feedback';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 /** The reminder e-mails the wizard offers (roadmap O8 categories); the defaults are the student's current settings. */
 export const ONBOARDING_EMAIL_CATEGORIES = ['StudyPlan', 'AssignmentReminders', 'Sessions'];
@@ -47,6 +48,7 @@ export class StudentOnboardingComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly navigation = inject(CoachingStudentNavigationService);
   readonly notifications = new NotificationPreferencesApi(this.http, environment.apiUrl);
   /** E7 (#30): Hedefim embeds the target step: no page header, and a saved target stays on the page (no Bugün). */
   readonly embedded = input(false);
@@ -146,7 +148,7 @@ export class StudentOnboardingComponent implements OnInit {
       this.locations.getProvinces().subscribe({ next: list => this.provinces.set(list.map(x => ({ value: x.id, label: x.name }))),
         error: () => this.error.set('Şehir listesi yüklenemedi. Sayfayı yenile.') });
       await this.settle();
-    } catch { this.error.set('Kurulum bilgilerin yüklenemedi. Sayfayı yenileyip tekrar dene.'); }
+    } catch { this.error.set('Kurulum bilgilerin yüklenemedi.'); }
     finally { this.loading.set(false); }
   }
 
@@ -215,6 +217,8 @@ export class StudentOnboardingComponent implements OnInit {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/coaching/invitations/${encodeURIComponent(invitation.id)}/accept`, {}));
       this.invitations.update(list => (list ?? []).filter(x => x.id !== invitation.id));
       this.acceptedNow.update(list => [...list, invitation]);
+      // Review of PR 122: a teacher now has the student, so Ödevlerim and Seanslar may appear.
+      this.navigation.refresh({ force: true });
     }, 'Davet kabul edilemedi. Yeniden dene.');
   }
   /** E4 #18: the invite step's answer names the invitations accepted here. */

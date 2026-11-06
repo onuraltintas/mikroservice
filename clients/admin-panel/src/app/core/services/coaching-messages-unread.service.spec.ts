@@ -28,7 +28,7 @@ describe('CoachingMessagesUnreadService', () => {
     const http = TestBed.inject(HttpTestingController);
     service.refresh();
     const first = http.expectOne('/api/coaching/messages/unread-count');
-    (service.refresh as (o?: object) => void)({ force: true });
+    service.refresh({ force: true });
     expect(first.cancelled).toBe(true);
     http.expectOne('/api/coaching/messages/unread-count').flush({ count: 1 });
     expect(service.count()).toBe(1);
@@ -39,7 +39,7 @@ describe('CoachingMessagesUnreadService', () => {
     const http = TestBed.inject(HttpTestingController);
     service.refresh(); http.expectOne('/api/coaching/messages/unread-count').flush({ count: 7 });
     service.refresh(); const late = http.expectOne('/api/coaching/messages/unread-count');
-    (service.refresh as (o?: object) => void)({ reset: true });
+    service.refresh({ reset: true });
     expect(service.count()).toBe(0);
     expect(late.cancelled).toBe(true);
     http.expectOne('/api/coaching/messages/unread-count').flush({ count: 2 });

@@ -341,10 +341,12 @@ public sealed class CoachingScoreEstimatesAllExamsTests
     [InlineData(LearningPurpose.School)]
     [InlineData(LearningPurpose.General)]
     [InlineData(LearningPurpose.Undecided)]
-    public async Task WithoutAnExamTheNoticeAsksForAnyDeneme(LearningPurpose purpose)
+    [InlineData(null)]
+    public async Task WithoutAnExamTheNoticeAsksForAnyDeneme(LearningPurpose? purpose)
     {
         await using var s = await Setup.CreateAsync(lgsPack: true);
-        s.Context(purpose, null); await s.F.Db.SaveChangesAsync();
+        if (purpose is { } chosen) s.F.Db.Add(StudentLearningContext.Create(s.Student, 2026, chosen, null, null, null));
+        await s.F.Db.SaveChangesAsync();
         (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Notice.Should().Be("Tahmin için en az bir denemeyi ders ders gir.");
     }
 

@@ -34,7 +34,8 @@ export class StudentHubComponent {
   private readonly navigation = inject(CoachingStudentNavigationService);
   readonly hub = STUDENT_HUBS[inject(ActivatedRoute).snapshot.data['hub'] as keyof typeof STUDENT_HUBS];
   protected readonly plan = STUDENT_HUBS.plan;
-  readonly tabs = computed(() => this.hub.tabs.filter(tab => !tab.needsFees || (this.navigation.showFees?.() ?? true)));
+  // Review of PR 122: a fees tab waits for the navigation answer (no flash).
+  readonly tabs = computed(() => this.hub.tabs.filter(tab => !tab.needsFees || this.navigation.loaded() && this.navigation.showFees()));
   private readonly url = toSignal(this.router.events.pipe(filter(event => event instanceof NavigationEnd), map(() => this.router.url), startWith(this.router.url)), { initialValue: '' });
 
   constructor() {

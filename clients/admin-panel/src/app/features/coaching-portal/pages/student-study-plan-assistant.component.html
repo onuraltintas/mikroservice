@@ -26,7 +26,7 @@
         @else { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p> }
       }
       @if (error() && !(purposeRetired() && !lessons().length)) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Çalışma düzenini tamamla →</a> }</p> }
-      @if (saved()) { <p class="notice success" role="status">Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }
+      @if (saved()) { <p class="notice success" role="status" tabindex="-1" #savedNotice>Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }
       <!-- E6 #29: the study times are given once (Çalışma tercihlerim › Müsaitliğim); the wizard uses the saved ones. -->
       <div class="composer wizard-form">
         @if (availabilityLoadError()) { <p class="notice error" role="alert" data-testid="availability-load-error">{{ availabilityLoadError() }} <button type="button" class="secondary" (click)="loadAvailability()" [disabled]="availabilityLoading()">Yeniden dene</button></p> }
@@ -43,7 +43,7 @@
           @if (editingAvailability()) { <app-student-study-availability (saved)="availabilitySaved()" /> }
           @else {
             @if (topicDirty()) { <p class="muted">Öneri oluşturmadan önce konu durumlarını kaydet.</p> }
-            <button type="button" (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">Haftalık öneri oluştur</button>
+            <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">Haftalık öneri oluştur</button>
           }
         } @else {
           <fieldset [disabled]="busy() || savingAvailability() || !lessons().length">
@@ -62,7 +62,7 @@
             </select>
             @if (!staffStudentId) { <p class="muted">Bu saatler çalışma saatlerin olarak kaydedilir; Çalışma tercihlerimde de görürsün.</p> }
             @if (topicDirty()) { <p class="muted">Öneri oluşturmadan önce konu durumlarını kaydet.</p> }
-            <button type="button" (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">{{ savingAvailability() ? 'Kaydediliyor…' : 'Haftalık öneri oluştur' }}</button>
+            <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">{{ savingAvailability() ? 'Kaydediliyor…' : 'Haftalık öneri oluştur' }}</button>
           </fieldset>
         }
       </div>
@@ -75,7 +75,7 @@
           <h2 id="wizard-proposal-title" tabindex="-1" #proposalTitle>Öneriyi incele</h2>
           @for (slot of proposal(); track slot.id) { <p class="slot-line proposed">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
           <button type="button" (click)="applyProposal()" [disabled]="busy()">Bu saatleri taslağa ekle</button>
-          <button type="button" class="secondary" (click)="proposal.set([])" [disabled]="busy()">Öneriyi kaldır</button>
+          <button type="button" class="secondary" (click)="removeProposal()" [disabled]="busy()">Öneriyi kaldır</button>
         </section>
       }
       <section class="topic-statuses" aria-labelledby="topic-status-title">
