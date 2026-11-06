@@ -15,7 +15,14 @@ public sealed record GoalNetTargetUpdate([property: JsonRequired] [Range(0, int.
     [property: JsonRequired] string? ExamCode, [property: JsonRequired] decimal? TargetNet);
 public sealed record GoalNetTargetView(string? ExamCode, decimal? TargetNet);
 public sealed record GoalTargetView(Guid GoalId, int Version, Guid? TargetUniversityProgramId, Guid? TargetSchoolId, bool CanEdit,
-    GoalCatalogTargetView? CatalogTarget = null, GoalScoreTargetView? ScoreTarget = null, GoalNetTargetView? NetTarget = null, IReadOnlyList<GoalNetTargetView>? NetTargets = null);
+    GoalCatalogTargetView? CatalogTarget = null, GoalScoreTargetView? ScoreTarget = null, GoalNetTargetView? NetTarget = null, IReadOnlyList<GoalNetTargetView>? NetTargets = null)
+{
+    /// <summary>
+    /// Paket D (#9): the primary goal no longer matches the exam in the study settings. The student's own goal is cleaned up when
+    /// the exam changes, so this is a teacher's goal (never changed for the student); the student and the teacher both see it.
+    /// </summary>
+    public bool ExamMismatch { get; init; }
+}
 
 public interface IGoalTargetService
 {

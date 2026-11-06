@@ -20,7 +20,11 @@ namespace Coaching.Infrastructure.Profiles;
 
 /// <summary>Paket C (#3): where a student is in the first-login wizard, with the answers saved so far.</summary>
 public sealed record OnboardingView(string Status, int NextStep, IReadOnlyList<int> SavedSteps, DateTime? CompletedAt, int AcademicYearStart,
-    OnboardingAnswers Answers, IReadOnlyList<LearningExamSessionView> ExamSessions);
+    OnboardingAnswers Answers, IReadOnlyList<LearningExamSessionView> ExamSessions)
+{
+    /// <summary>Paket D review (M1, L3): the exams that fit the saved grade (the server's rule); the wizard offers only these.</summary>
+    public IReadOnlyList<LearningPurpose> AllowedPurposes { get; init; } = [];
+}
 public sealed record OnboardingAnswers(DateOnly? BirthDate, string? HomeProvinceId, string? HomeCity, string? HomeDistrictId, string? HomeDistrict,
     CoachingEducationStatus EducationStatus, int? GradeLevel, int? GraduationYear, string? SchoolName,
     LearningPurpose? Purpose, string? PrimaryScoreType, string? ForeignLanguage, Guid? TargetExamSessionId, int? TargetExamYear,
@@ -51,6 +55,8 @@ public sealed record OnboardingSchoolOption(Guid Id, string Name, string? Distri
 {
     /// <summary>Paket C: the school is in the student's own district (those come first).</summary>
     public bool InHomeDistrict { get; init; }
+    /// <summary>Paket D (#7): the catalog's school type (Anadolu Lisesi, Fen Lisesi, …), shown next to the school.</summary>
+    public string? Type { get; init; }
 }
 public sealed record OnboardingProgramOption(Guid Id, string Name, string University, string? Faculty, string? ScoreType, string? ProgramType,
     decimal? MinimumScore, int? Rank, int? ScoreYear, string? EducationType, string? Scholarship, string? Language);
@@ -131,7 +137,11 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         RequireOpen(profile);
         if (!profile.HasOnboardingStep(1) || !profile.IsEducationComplete) throw new ArgumentException("Önce kişisel bilgilerini kaydet.");
         if (!LearningPurposes.IsSelectable(request.Purpose)) throw new ArgumentException("Hazırlandığın sınavı seç.");
-        var diplomaApplies = request.Purpose == LearningPurpose.Yks && (profile.EducationStatus == CoachingEducationStatus.Graduate || profile.GradeLevel is 11 or 12);
+        // Paket D re-check (N1): the wizard is never finished with an exam the grade does not fit, even one already saved
+        // (the study settings let an unchanged exam through so unrelated saves keep working).
+        if (!LearningPurposes.FitsEducation(request.Purpose, profile.EducationStatus, profile.GradeLevel))
+            throw new ArgumentException(LearningPurposes.PurposeNotForEducationNotice);
+        var diplomaApplies = LearningPurposes.DiplomaApplies(request.Purpose, profile.EducationStatus, profile.GradeLevel);
         var diploma = diplomaApplies ? request.DiplomaGrade : null;
         // Every check before any write.
         if (diploma is < 50 or > 100 || diploma.HasValue && decimal.Round(diploma.Value, 2) != diploma.Value)
@@ -153,7 +163,7 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
             await setup.SaveAsync(new LearningSetupUpdate(context?.Version, year, request.Purpose, examYear, scoreType, language,
                 keepSelections ? context!.CoursePreferences.Select(x => new LearningCourseInput(x.LessonId, x.Priority, x.SelfReportedDifficulty)).ToArray() : [],
                 keepSelections ? context!.TopicStates.Select(x => new LearningTopicInput(x.TopicId, x.DeclaredStatus)).ToArray() : [],
-                keepSelections && context!.StartingStatusReviewed, request.TargetExamSessionId), ct);
+                keepSelections && context!.StartingStatusReviewed, request.TargetExamSessionId) { SkipGoalAlignment = true }, ct);
             profile.SetDiplomaGrade(diploma, request.DiplomaGradeEstimated);
             // The target depends on the exam and the field: a change asks it again.
             if (context is not null && !sameScope)
@@ -321,7 +331,7 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         // Paket C: the student's own district comes first (a sort, not a filter); the catalog spells districts in capitals.
         string[] home = string.IsNullOrWhiteSpace(district) ? [] : await CitiesAsync(query.Select(x => x.District), RequireText(district, "İlçeyi seç."), ct);
         return await PageAsync(query.OrderBy(x => Enumerable.Contains(home, x.District) ? 0 : 1).ThenBy(x => x.Name).ThenBy(x => x.Id)
-            .Select(x => new OnboardingSchoolOption(x.Id, x.Name, x.District, x.MinimumScore, x.ScoreYear) { InHomeDistrict = Enumerable.Contains(home, x.District) }), page, ct);
+            .Select(x => new OnboardingSchoolOption(x.Id, x.Name, x.District, x.MinimumScore, x.ScoreYear) { InHomeDistrict = Enumerable.Contains(home, x.District), Type = x.InstitutionType }), page, ct);
     }
 
     public async Task<IReadOnlyList<OnboardingOption>> ProgramCitiesAsync(string? programType, string? scoreType, CancellationToken ct)
@@ -431,7 +441,7 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     private static decimal ScaleMax(string type) => LanguageScoreRules.IsLanguageExam(type) ? 100 : ScoreModelRules.Get(type).MaxScore;
     private static string TypeName(string type) => LanguageScoreRules.IsLanguageExam(type)
         ? PracticeExamRules.Profiles.Single(x => x.Code == type).Name : ScoreModelRules.Get(type).Name;
-    private static ExamType ExamTypeOf(LearningPurpose purpose) => purpose switch
+    internal static ExamType ExamTypeOf(LearningPurpose purpose) => purpose switch
     {
         LearningPurpose.Lgs => ExamType.LGS, LearningPurpose.Yks => ExamType.YKS, LearningPurpose.Ags => ExamType.AGS,
         LearningPurpose.Yds => ExamType.YDS, LearningPurpose.Yokdil => ExamType.YOKDIL,
@@ -513,7 +523,8 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
             p.DiplomaGrade, p.DiplomaGradeEstimated, goal is null ? null : await TargetAsync(goal, ct)) { TargetLocked = goal?.SetByTeacherId is not null };
         var saved = Enumerable.Range(1, CoachingStudentProfile.OnboardingStepCount).Where(p.HasOnboardingStep).ToArray();
         var status = p.OnboardingCompletedAt is not null ? "Completed" : p.OnboardingSteps == 0 ? "NotStarted" : "InProgress";
-        return new(status, p.NextOnboardingStep, saved, p.OnboardingCompletedAt, AcademicYearStart(), answers, sessions);
+        return new(status, p.NextOnboardingStep, saved, p.OnboardingCompletedAt, AcademicYearStart(), answers, sessions)
+            { AllowedPurposes = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel) };
     }
 
     private async Task<OnboardingTarget?> TargetAsync(AcademicGoal goal, CancellationToken ct)

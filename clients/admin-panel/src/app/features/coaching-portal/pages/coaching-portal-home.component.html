@@ -49,10 +49,16 @@
         @if (!setupReady() || !v.hasActivePlan) {
           <!-- Paket C (#3): after the first-login wizard the plan still needs free hours and lessons: "Planını kur" says so. -->
           <cs-card class="setup" data-home-block="setup">
-            <h2>{{ setupReady() ? 'İlk planını oluştur' : 'Planını kur' }}</h2>
-            <p>{{ setupReady() ? 'Derslerine ve boş saatlerine göre haftalık planını birkaç adımda hazırla.' : 'Boş saatlerini ve derslerini seç, konularda nerede olduğunu işaretle. Planın bunlar olmadan hazırlanamıyor.' }}</p>
+            @if (!setupReady() && gradeChanged()) {
+              <!-- Paket D (#8): the saved exam does not fit the grade (a grade change or an older setup); the card says why. -->
+              <h2>Çalışma tercihlerini güncelle</h2>
+              <p>Seçili sınavın sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.</p>
+            } @else {
+              <h2>{{ setupReady() ? 'İlk planını oluştur' : 'Planını kur' }}</h2>
+              <p>{{ setupReady() ? 'Derslerine ve boş saatlerine göre haftalık planını birkaç adımda hazırla.' : 'Boş saatlerini ve derslerini seç, konularda nerede olduğunu işaretle. Planın bunlar olmadan hazırlanamıyor.' }}</p>
+            }
             <div class="setup-actions">
-              @if (!setupReady()) { <a class="primary" routerLink="/coaching-portal/account/settings">Planını kur</a> }
+              @if (!setupReady()) { <a class="primary" routerLink="/coaching-portal/account/settings">{{ gradeChanged() ? 'Çalışma tercihlerim' : 'Planını kur' }}</a> }
               @if (!v.hasActivePlan && setupReady()) { <a class="primary" routerLink="/coaching-portal/plan/wizard">Planını oluştur</a> }
             </div>
           </cs-card>

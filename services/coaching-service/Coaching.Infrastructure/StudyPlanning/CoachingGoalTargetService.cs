@@ -122,9 +122,15 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
                 .Select(x => new GoalCatalogTargetView(x.UniversityName + " — " + x.Name,
                     (x.FacultyName ?? "") + " · " + (x.ProgramType ?? "") + " · " + (x.ScoreType ?? ""), x.IsActive, x.ScoreType))
                 .SingleOrDefaultAsync(cancellationToken);
+        // Paket D (#9): a primary goal that no longer matches the exam in the study settings is marked (a teacher's goal is kept).
+        var mismatch = false;
+        if (await db.Set<StudentPrimaryGoal>().AsNoTracking().AnyAsync(x => x.StudentId == goal.StudentId && x.GoalId == goal.Id, cancellationToken)
+            && await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x => x.StudentUserId == goal.StudentId, cancellationToken) is { } context)
+            mismatch = !await GoalExamFit.FitsAsync(db, goal, context, cancellationToken);
         return new(goal.Id, goal.Version, goal.TargetUniversityProgramId, goal.TargetSchoolId,
             canEdit ?? !goal.SetByTeacherId.HasValue, target,
-            new(goal.TargetScore, goal.TargetMaxScore, goal.TargetExamType, goal.TargetSubject), new(goal.TargetPracticeExamCode, goal.TargetNet), goal.NetTargets.Select(x => new GoalNetTargetView(x.ExamCode, x.TargetNet)).ToArray());
+            new(goal.TargetScore, goal.TargetMaxScore, goal.TargetExamType, goal.TargetSubject), new(goal.TargetPracticeExamCode, goal.TargetNet), goal.NetTargets.Select(x => new GoalNetTargetView(x.ExamCode, x.TargetNet)).ToArray())
+            { ExamMismatch = mismatch };
     }
 
     public Task<GoalTargetView> ReplaceNetAsync(Guid goalId, GoalNetTargetUpdate request, CancellationToken ct = default)

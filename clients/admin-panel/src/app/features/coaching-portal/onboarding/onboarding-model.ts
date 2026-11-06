@@ -24,7 +24,9 @@ export interface Question {
   /** A skip button with this label answers the question with no value. */
   skipLabel?: string; min?: number; max?: number;
 }
-export interface FlowContext { sessions: LearningExamSession[]; academicYearStart: number }
+export interface FlowContext { sessions: LearningExamSession[]; academicYearStart: number;
+  /** Paket D: the exams the server allows for the saved grade (all when missing). */
+  allowedPurposes?: string[] }
 
 export const STEP_COUNT = 7;
 export const STEP_TITLES: Record<StepNumber, string> = {
@@ -61,6 +63,18 @@ export const DEPENDENTS: Partial<Record<QuestionId, QuestionId[]>> = {
   programCity: ['university', 'program', 'ownScore'], university: ['program', 'ownScore'], program: ['ownScore'],
   targetScoreType: ['ydsLevel', 'targetScore'], ydsLevel: ['targetScore'], tytScore: ['fieldScore']
 };
+
+/** Paket D (#8, review M1/L3): the exams the server allows for the saved grade; the rule itself lives only on the server. */
+export function purposeChoices(context: FlowContext): Choice[] {
+  const allowed = context.allowedPurposes;
+  return allowed ? PURPOSES.filter(x => allowed.includes(x.value)) : PURPOSES;
+}
+
+/** An exam the saved grade no longer allows is asked again (with its dependents), never resent to the server. */
+export function withoutUnfitPurpose(answers: Answers, allowed: string[] | undefined): Answers {
+  const purpose = purposeOf(answers);
+  return allowed && purpose && !allowed.includes(purpose) ? change(answers, 'purpose') : answers;
+}
 
 /** Removes an answer and everything that depends on it ("Değiştir"). */
 export function change(answers: Answers, id: QuestionId): Answers {
@@ -127,7 +141,7 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
   if (typeof grade === 'number' && grade >= 9)
     add({ id: 'ownSchool', step: 1, kind: 'combobox', skipLabel: 'Şimdilik geçeyim', prompt: 'Okulunu listeden seçmek ister misin?', reason: 'İsteğe bağlı. Profilinde tutulur; öğretmenin de görür.' });
 
-  add({ id: 'purpose', step: 2, kind: 'buttons', choices: PURPOSES, prompt: 'Hangi sınava hazırlanıyorsun?', reason: 'Planın, derslerin ve puan hesabın bu sınava göre hazırlanır.' });
+  add({ id: 'purpose', step: 2, kind: 'buttons', choices: purposeChoices(context), prompt: 'Hangi sınava hazırlanıyorsun?', reason: 'Planın, derslerin ve puan hesabın bu sınava göre hazırlanır.' });
   if (purpose === 'Yks') {
     add({ id: 'yksField', step: 2, kind: 'buttons', choices: YKS_FIELDS, prompt: 'Hangi puan türüyle yerleşmek istiyorsun?', reason: 'Çalışacağın AYT dersleri ve puan hesabın buna göre seçilir.' });
     if (value(answers, 'yksField') === 'DIL')
@@ -318,7 +332,7 @@ export function prefill(view: OnboardingView): Answers {
   if (saved.has(4)) answers.invite = { value: 'passed', label: 'Tamam' };
   if (saved.has(5)) answers.parent = { value: 'passed', label: 'Tamam' };
   if (saved.has(6)) answers.notifications = { value: 'passed', label: 'Tercihlerim kaydedildi' };
-  return answers;
+  return withoutUnfitPurpose(answers, view.allowedPurposes);
 }
 
 export function targetLabel(t: { kind: string; name: string; minimumScore: number | null; scores: { scoreType: string; score: number }[] }): string {

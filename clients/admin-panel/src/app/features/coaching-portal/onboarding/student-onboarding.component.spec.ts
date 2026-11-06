@@ -133,7 +133,9 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
   });
 
   it('"Değiştir" on the exam asks again only the questions that depend on it, then the target', async () => {
-    const t = await render(view({ status: 'InProgress', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6] }, stepTwo));
+    // Paket D: YKS is offered from 9th grade on, so this student is in 10th grade (with an older LGS answer).
+    const tenth = { ...stepTwo, gradeLevel: 10 };
+    const t = await render(view({ status: 'InProgress', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6] }, tenth));
     (t.el.querySelector('[data-question="purpose"] .ob-me button') as HTMLElement).click(); await t.settle();
     expect(t.el.querySelector('[data-current]')!.textContent).toContain('Hangi sınava hazırlanıyorsun?');
     // Personal answers stay.
@@ -144,13 +146,35 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     const exam = t.http.expectOne(`${base}/steps/exam`);
     expect(exam.request.body).toEqual({ purpose: 'Yks', primaryScoreType: 'SAY', foreignLanguage: null, targetExamSessionId: null, targetExamYear: 2028,
       diplomaGrade: null, diplomaGradeEstimated: false });
-    exam.flush({ data: view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2, 4, 5, 6] }, { ...stepTwo, purpose: 'Yks', primaryScoreType: 'SAY', targetExamSessionId: null, targetExamYear: 2028 }) });
+    exam.flush({ data: view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2, 4, 5, 6] }, { ...tenth, purpose: 'Yks', primaryScoreType: 'SAY', targetExamSessionId: null, targetExamYear: 2028 }) });
     await t.settle();
     const current = t.el.querySelector('[data-current]')!;
     expect(current.textContent).toContain('Hedefin ne?'); expect(current.textContent).toContain('Bölüm seçeceğim');
     // The invite, parent and notification steps are not asked again.
     expect(t.el.querySelector('[data-question="invite"]')).toBeNull();
     t.http.verify();
+  });
+
+  it('asks the exam again instead of resending one the grade no longer fits (review M1)', async () => {
+    // Step 2 re-opened by a grade change (e.g. by the institution) while the wizard was open: the saved LGS no longer fits 11th grade.
+    const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] }, { ...stepTwo, gradeLevel: 11 }));
+    t.http.expectNone(`${base}/steps/exam`);
+    const current = t.el.querySelector('[data-current]')!;
+    expect(current.getAttribute('data-question')).toBe('purpose');
+    expect(Array.from(current.querySelectorAll('button')).map(x => x.textContent?.trim())).not.toContain('LGS');
+    expect(t.button('YKS')).toBeTruthy();
+  });
+
+  it('a new grade in the wizard drops an exam that no longer fits once the server answers (review M1)', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2], allowedPurposes: ['Lgs'] }, stepTwo));
+    (t.el.querySelector('[data-question="education"] .ob-me button') as HTMLElement).click(); await t.settle();
+    await t.click('9. sınıf');
+    await t.click('Şimdilik geçeyim');
+    t.http.expectOne(`${base}/steps/personal`).flush({ data: view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] },
+      { ...stepTwo, gradeLevel: 9 }) });
+    await t.settle();
+    t.http.expectNone(`${base}/steps/exam`);
+    expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('purpose');
   });
 
   it('shows the server message when a step cannot be saved and keeps the answers', async () => {

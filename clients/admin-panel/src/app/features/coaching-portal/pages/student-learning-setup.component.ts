@@ -35,6 +35,8 @@ export class StudentLearningSetupComponent implements OnInit {
     { value: 'Lgs', label: 'LGS hazırlığı' }, { value: 'Yks', label: 'YKS hazırlığı' },
     { value: 'Ags', label: 'AGS / ÖABT hazırlığı' }, { value: 'Yds', label: 'YDS hazırlığı' }, { value: 'Yokdil', label: 'YÖKDİL hazırlığı' }];
   readonly retiredPurposeNotice = RETIRED_PURPOSE_NOTICE;
+  /** Paket D (#8): only the exams that fit the grade on the profile (every exam when the server does not say). */
+  purposeChoices() { const allowed = this.state()?.allowedPurposes; return allowed ? this.purposes.filter(x => allowed.includes(x.value)) : this.purposes; }
   readonly oabtFields = Object.entries(OABT_FIELDS);
   readonly yokdilFields = Object.entries(YOKDIL_FIELDS);
   private static readonly examCodes: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
@@ -63,7 +65,7 @@ export class StudentLearningSetupComponent implements OnInit {
     this.state.set(state); const c = state.context;
     if (c) {
       // KM8: a retired purpose (School, General, Undecided) is not preselected; the student chooses an exam.
-      this.academicYearStart = c.academicYearStart; this.purpose = isRetiredPurpose(c.purpose) ? '' : c.purpose as ExamLearningPurpose; this.targetExamYear = c.targetExamYear;
+      this.academicYearStart = c.academicYearStart; this.purpose = isRetiredPurpose(c.purpose) || state.purposeNotForEducation ? '' : c.purpose as ExamLearningPurpose; this.targetExamYear = c.targetExamYear;
       this.primaryScoreType = c.purpose === 'Yks' ? c.primaryScoreType ?? 'TYT' : 'TYT'; this.foreignLanguage = c.purpose === 'Yks' ? c.foreignLanguage ?? '' : '';
       this.oabtField = c.purpose === 'Ags' ? c.primaryScoreType ?? '' : ''; this.yokdilField = c.purpose === 'Yokdil' ? c.primaryScoreType ?? '' : '';
       this.targetExamSessionId = c.targetExamSessionId ?? null;

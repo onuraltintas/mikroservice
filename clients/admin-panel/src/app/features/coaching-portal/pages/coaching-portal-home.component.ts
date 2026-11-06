@@ -41,6 +41,8 @@ export class CoachingPortalHomeComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly view = signal<StudentTodayView | null>(null);
   readonly setupReady = signal(true);
+  /** Paket D (#8): the exam in the study settings no longer fits the grade on the profile. */
+  readonly gradeChanged = signal(false);
   readonly upcoming = signal<DailyAgendaItem[] | null>(null);
   readonly upcomingError = signal(false);
   /** Paket C (#4): the score estimate behind the goal card; undefined while loading, null when it could not be read. */
@@ -72,7 +74,7 @@ export class CoachingPortalHomeComponent implements OnInit {
     if (!this.isStudent()) { this.loading.set(false); return; }
     this.load();
     this.injector.get(CoachingLearningSetupService).get().pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: setup => this.setupReady.set(setup.isReady), error: () => this.setupReady.set(true) });
+      .subscribe({ next: setup => { this.setupReady.set(setup.isReady); this.gradeChanged.set(!!setup.purposeNotForEducation); }, error: () => this.setupReady.set(true) });
     this.injector.get(CoachingScoreEstimateService).estimate(null, null).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: estimate => this.estimate.set(estimate), error: () => this.estimate.set(null) });
   }

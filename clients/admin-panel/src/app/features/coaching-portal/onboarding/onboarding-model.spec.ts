@@ -1,6 +1,6 @@
 import { OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import {
-  Answers, FlowContext, change, currentStep, examRequest, nextQuestion, personalRequest, prefill, questions, scoreTargetTypes, signature,
+  Answers, FlowContext, change, currentStep, withoutUnfitPurpose, examRequest, nextQuestion, personalRequest, prefill, questions, scoreTargetTypes, signature,
   stepComplete, summary, targetRequest
 } from './onboarding-model';
 
@@ -10,6 +10,23 @@ describe('first-login wizard flow (Paket C #3)', () => {
   const a = (value: string | number | null, label = String(value), data?: Record<string, unknown>) => ({ value, label, data });
   const personal: Answers = { birthDate: a('2012-05-01', '01.05.2012'), city: a('06', 'Ankara'), district: a('0601', 'Çankaya'), education: a('8', '8. sınıf') };
   const ids = (answers: Answers) => questions(answers, context).map(x => x.id);
+
+  it('offers only the exams the server allows for the grade and does not prefill one that no longer fits (Paket D #8, review M1)', () => {
+    const allowed: FlowContext = { ...context, allowedPurposes: ['Yks', 'Yds', 'Yokdil'] };
+    expect(questions({ ...personal, education: a('10') }, allowed).find(x => x.id === 'purpose')!.choices!.map(x => x.value)).toEqual(['Yks', 'Yds', 'Yokdil']);
+    // An older API sends no list: every exam is offered.
+    expect(questions(personal, context).find(x => x.id === 'purpose')!.choices!.length).toBe(5);
+    const saved = { status: 'InProgress', nextStep: 2, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026, examSessions: [], allowedPurposes: ['Yks', 'Yds', 'Yokdil'],
+      answers: { birthDate: '2009-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student', gradeLevel: 11,
+        graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: 'lgs-27', targetExamYear: 2027,
+        diplomaGrade: null, diplomaGradeEstimated: false, target: null, targetLocked: false } } as unknown as OnboardingView;
+    const answers = prefill(saved);
+    expect(answers.purpose).toBeUndefined(); expect(answers.session).toBeUndefined();
+    expect(answers.education!.value).toBe('11');
+    expect(withoutUnfitPurpose({ ...personal, purpose: a('Lgs'), session: a('session:lgs-27:2027') }, ['Yks']).purpose).toBeUndefined();
+    expect(withoutUnfitPurpose({ ...personal, purpose: a('Lgs') }, ['Lgs']).purpose!.value).toBe('Lgs');
+    expect(withoutUnfitPurpose({ ...personal, purpose: a('Lgs') }, undefined).purpose!.value).toBe('Lgs');
+  });
 
   it('asks one question at a time, each with a reason, and every answer comes from a component', () => {
     expect(nextQuestion({}, context)!.id).toBe('birthDate');

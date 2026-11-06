@@ -25,7 +25,11 @@ export interface LearningContext {
 export interface LearningExamSession { id: string; examCode: string; examName: string; date: string; label: string; applicationStart: string | null; applicationEnd: string | null }
 export interface LearningSetupView { context: LearningContext | null; nextStep: string; isReady: boolean; missingFields: string[]; warnings: string[]; examSessions?: LearningExamSession[];
   /** KM8: the saved purpose can no longer be chosen; the student has to pick an exam first. */
-  purposeRetired?: boolean }
+  purposeRetired?: boolean;
+  /** Paket D (#8): the saved exam does not fit the grade on the profile (e.g. LGS after 9th grade). */
+  purposeNotForEducation?: boolean;
+  /** Paket D (#8): the exams that fit the grade on the profile; missing on an older API (then every exam is offered). */
+  allowedPurposes?: ExamLearningPurpose[] }
 export interface LearningSetupUpdate {
   expectedVersion: number | null; academicYearStart: number; purpose: LearningPurpose; targetExamYear: number | null;
   primaryScoreType: string | null; foreignLanguage: string | null; courses: LearningCourse[]; topics: LearningTopic[]; startingStatusReviewed: boolean;

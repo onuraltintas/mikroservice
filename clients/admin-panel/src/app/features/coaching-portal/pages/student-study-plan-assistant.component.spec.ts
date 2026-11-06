@@ -16,9 +16,9 @@ describe('StudentStudyPlanAssistantComponent', () => {
     primaryScoreType: null, foreignLanguage: null, curriculumVersionId: 'curriculum',
     coursePreferences: [{ lessonId: 'math', priority: 2, selfReportedDifficulty: 3 }],
     topicStates: [{ topicId: 'previous-topic', declaredStatus: 'Studied' as const }], startingStatusReviewed: true };
-  async function setup() {
+  async function setup(over: Record<string, unknown> = {}) {
     const weekly = { get: vi.fn(() => of({ draft: saved, lessons })), save: vi.fn(() => of({ ...saved, version: 4 })) };
-    const learning = { get: vi.fn(() => of({ context, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })),
+    const learning = { get: vi.fn(() => of({ context, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [], ...over })),
       catalog: vi.fn((lessonId: string | null) => of({ curriculum: null, lessons: [{ id: 'math', name: 'Matematik', gradeNumber: 8, examCode: 'LGS', topicCount: 1, missingDurationCount: 0 }],
         topics: { items: lessonId ? [{ id: 'topic-2', name: 'Oran', lessonName: 'Matematik', unitName: 'Sayılar', gradeNumber: 8, examCode: 'LGS', estimatedMinutes: 30 }] : [], totalCount: 1, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] })),
       save: vi.fn(() => of({ context: { ...context, version: 9, topicStates: [...context.topicStates, { topicId: 'topic-2', declaredStatus: 'Studied' as const }] }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })) };
@@ -76,6 +76,13 @@ describe('StudentStudyPlanAssistantComponent', () => {
     }));
     expect(component.topicSaved()).toBe(true);
     expect(component.topicDirty()).toBe(false);
+  });
+
+  it('asks to update the exam when it no longer fits the grade, without blocking topic saves (review L6)', async () => {
+    const { fixture } = await setup({ isReady: false, missingFields: ['Purpose'], purposeNotForEducation: true });
+    const note = fixture.nativeElement.querySelector('[data-testid="grade-purpose"]') as HTMLElement;
+    expect(note.textContent).toContain('Seçili sınavın sınıfına uymuyor; çalışma tercihlerini güncelle.');
+    expect(note.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
   });
 
   it('requires changed topic states to be saved before creating a proposal', async () => {

@@ -19,10 +19,11 @@
     <form class="panel" #purposeForm="ngForm" (ngSubmit)="savePurpose()">
       <h2>Çalışma amacım</h2>
       @if (purposeRetired()) { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }}</p> }
+      @if (state()?.purposeNotForEducation) { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.</p> }
       <p>@if (!purposeRetired()) { Hazırlandığın sınavı seç. }Kesin bir okul veya üniversite hedefi seçmek zorunda değilsin.</p>
       <fieldset [disabled]="saving()"><div class="fields">
         <label>Eğitim yılı başlangıcı<input type="number" name="academicYear" min="2000" max="2200" required [(ngModel)]="academicYearStart" (ngModelChange)="changed()"></label>
-        <label>Çalışma amacım<select name="purpose" required [(ngModel)]="purpose" (ngModelChange)="changed()"><option value="" disabled>Hazırlandığın sınavı seç</option>@for (item of purposes; track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select></label>
+        <label>Çalışma amacım<select name="purpose" required [(ngModel)]="purpose" (ngModelChange)="changed()"><option value="" disabled>Hazırlandığın sınavı seç</option>@for (item of purposeChoices(); track item.value) { <option [value]="item.value">{{ item.label }}</option> }</select></label>
         @if (examPurpose()) { <label>Hedef sınav yılı<input type="number" name="examYear" [min]="academicYearStart" [max]="academicYearStart + 5" required [(ngModel)]="targetExamYear" (ngModelChange)="changed()"></label> }
         @if (sessionChoices().length > 1) {
           <label class="wide">Hedef oturum<select name="examSession" aria-describedby="exam-session-help" [ngModel]="targetExamSessionId" (ngModelChange)="selectSession($event)">

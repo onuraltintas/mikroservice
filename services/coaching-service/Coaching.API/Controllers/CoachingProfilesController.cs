@@ -95,7 +95,8 @@ public sealed class CoachingProfilesController(CoachingDbContext db, CoachingPro
     {
         var userId = await RequireAccount(ct);
         return new CoachingOwnProfile(await profiles.GetStudentAsync(userId, ct), await profiles.GetTeacherAsync(userId, ct),
-            await db.CoachingInstitutionMemberships.AsNoTracking().Where(x => x.UserId == userId && x.IsActive).ToArrayAsync(ct));
+            await db.CoachingInstitutionMemberships.AsNoTracking().Where(x => x.UserId == userId && x.IsActive).ToArrayAsync(ct))
+            { ExamAsksDiploma = await profiles.ExamAsksDiplomaAsync(userId, ct) };
     });
 
     [HttpPost("provision")]
