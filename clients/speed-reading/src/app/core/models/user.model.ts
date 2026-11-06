@@ -45,6 +45,8 @@ export interface RegistrationLegalAcceptance {
 
 export interface RegistrationResponse {
   userId: string;
+  /** Paket A: `notRequired` when an already verified account from the other service joined; absent on older APIs. */
+  verificationEmail?: 'sent' | 'notRequired';
 }
 
 export interface RegisterTeacherRequest {

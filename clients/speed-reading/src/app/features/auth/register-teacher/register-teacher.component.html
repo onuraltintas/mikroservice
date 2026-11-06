@@ -6,7 +6,8 @@
               {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
             </button></div>
             @if (joinExisting) { <app-existing-product-join product="speed-reading" account="teacher" /> }
-            <form [style.display]="joinExisting ? 'none' : null" [formGroup]="registerForm" [attr.aria-busy]="isLoading" (ngSubmit)="onSubmit()">
+            @if (alreadyVerified) { <app-registration-verified [message]="verifiedMessage" /> }
+            <form [style.display]="joinExisting || alreadyVerified ? 'none' : null" [formGroup]="registerForm" [attr.aria-busy]="isLoading" (ngSubmit)="onSubmit()">
 
                 <!-- Messages -->
                 <div class="messages-container" *ngIf="successMessage || error">

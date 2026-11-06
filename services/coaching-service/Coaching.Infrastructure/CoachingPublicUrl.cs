@@ -18,7 +18,7 @@ public static class CoachingPublicUrl
         var value = Configured(configuration);
         if (value is null)
         {
-            if (requireConfigured) throw new InvalidOperationException("Coaching:PublicBaseUrl must be set (for example https://eduivme.com).");
+            if (requireConfigured) throw new InvalidOperationException("Coaching:PublicBaseUrl must be set (for example https://onuraltintas.net).");
             return Default;
         }
         if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")

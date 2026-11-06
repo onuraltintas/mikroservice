@@ -660,6 +660,8 @@ public class UserRepository : IUserRepository
 
 public class InstitutionRepository : IInstitutionRepository
 {
+    public void RemoveAdmin(InstitutionAdmin admin) => _context.InstitutionAdmins.Remove(admin);
+
     public async Task<IReadOnlyList<InstitutionAdmin>> GetAdminsForRegistrationAsync(Guid userId, CancellationToken cancellationToken) =>
         await _context.InstitutionAdmins.IgnoreQueryFilters().Where(admin => admin.UserId == userId).ToListAsync(cancellationToken);
     private readonly IdentityDbContext _context;

@@ -112,7 +112,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       COACHING_NEWSLETTER_RECAPTCHA_ENABLED: ${COACHING_NEWSLETTER_RECAPTCHA_ENABLED:-false}
-      Coaching__PublicBaseUrl: ${PUBLIC_APP_BASE_URL:-https://eduivme.com}
+      Coaching__PublicBaseUrl: ${PUBLIC_APP_BASE_URL:-https://onuraltintas.net}
       Coaching__StaffPortalUrl: ${PUBLIC_STAFF_PORTAL_URL:-https://onuraltintas.net/staff}
       COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY: ${COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY:-}
       COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY: ${COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY:-}
@@ -260,9 +260,10 @@ services:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/notification-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      # Notification links are selected by recipient role: speed-reading
-      # roles use SPEED_READING_PUBLIC_BASE_URL; central roles use PUBLIC_APP_BASE_URL.
-      PublicApp__BaseUrl: ${PUBLIC_APP_BASE_URL:-https://eduivme.com}
+      # Notification links: Coaching (students, parents, Coaching e-mails) use PUBLIC_APP_BASE_URL, the
+      # Coaching site onuraltintas.net; speed reading uses SPEED_READING_PUBLIC_BASE_URL; management
+      # accounts (SystemAdmin, Editor) and admin notices use PUBLIC_ADMIN_PANEL_URL (eduivme.com).
+      PublicApp__BaseUrl: ${PUBLIC_APP_BASE_URL:-https://onuraltintas.net}
       PublicApp__SpeedReadingBaseUrl: ${SPEED_READING_PUBLIC_BASE_URL:-https://masterhizliokuma.com}
       PublicApp__StaffPortalUrl: ${PUBLIC_STAFF_PORTAL_URL:-https://onuraltintas.net/staff}
       PublicApp__AdminPanelUrl: ${PUBLIC_ADMIN_PANEL_URL:-https://eduivme.com}

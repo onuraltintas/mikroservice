@@ -274,7 +274,8 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.AUTH_URL}/forgot-password`, { email }, { withCredentials: true });
+    // PR #111 final review: the speed-reading reset e-mail with its link.
+    return this.http.post(`${this.AUTH_URL}/forgot-password`, { email, product: 'speed-reading' }, { withCredentials: true });
   }
 
   /**
@@ -292,7 +293,8 @@ export class AuthService {
    * Service receives: void (auto-unwrapped)
    */
   verifyEmail(data: { userId: string; token: string }): Observable<any> {
-    return this.http.post(`${this.AUTH_URL}/confirm-email`, data, { withCredentials: true });
+    // PR #111 third review N2: the speed-reading welcome e-mail.
+    return this.http.post(`${this.AUTH_URL}/confirm-email`, { ...data, product: 'speed-reading' }, { withCredentials: true });
   }
 
   /**
@@ -301,7 +303,7 @@ export class AuthService {
    * Service receives: void (auto-unwrapped)
    */
   resendVerification(email: string): Observable<any> {
-    return this.http.post(`${this.AUTH_URL}/resend-verification-email`, { email }, { withCredentials: true });
+    return this.http.post(`${this.AUTH_URL}/resend-verification-email`, { email, product: 'speed-reading' }, { withCredentials: true });
   }
 
   /** Called by GoogleCallbackComponent after server-side OAuth redirect. */

@@ -91,6 +91,7 @@ public interface IInstitutionRepository
     Task<IReadOnlyList<InstitutionAdmin>> GetAdminsForRegistrationAsync(Guid userId, CancellationToken cancellationToken);
     Task AddAsync(Institution institution, CancellationToken cancellationToken);
     Task AddAdminAsync(InstitutionAdmin admin, CancellationToken cancellationToken);
+    void RemoveAdmin(InstitutionAdmin admin);
     Task<PagedList<InstitutionDto>> GetAllAsync(int page, int pageSize, string? searchTerm, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
     Task<InstitutionDto?> GetDtoByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<Institution?> GetByIdAsync(Guid id, CancellationToken cancellationToken);

@@ -22,7 +22,8 @@ public sealed class CoachingExistingAccountRegistrationTests
         var result = await fixture.Register();
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(fixture.User.Id, result.Value);
+        Assert.Equal(fixture.User.Id, result.Value.UserId);
+        Assert.Equal(Identity.Application.Registration.RegistrationOutcome.NotRequired, result.Value.VerificationEmail);
         Assert.True(fixture.User.HasProductAccess(PlatformProduct.SpeedReading));
         Assert.True(fixture.User.HasProductAccess(PlatformProduct.Coaching));
         Assert.Contains(fixture.User.Roles, role => role.Product == PlatformProduct.Coaching && role.RoleId == fixture.StudentRole!.Id);
@@ -40,7 +41,6 @@ public sealed class CoachingExistingAccountRegistrationTests
     [Theory]
     [InlineData("wrong-password", "Auth.ExistingAccountPasswordRequired")]
     [InlineData("inactive", "Auth.ExistingAccountNotEligible")]
-    [InlineData("unconfirmed", "Auth.ExistingAccountNotEligible")]
     [InlineData("mfa", "Auth.ExistingAccountMfaRequired")]
     [InlineData("revoked", "Identity.UserExists")]
     [InlineData("coaching-role", "Identity.UserExists")]
@@ -107,13 +107,18 @@ public sealed class CoachingExistingAccountRegistrationTests
         Assert.False(fixture.User.HasProductAccess(PlatformProduct.Coaching));
     }
 
+    // Review #8 (PR #111): registering again for a service the verified account already has is
+    // idempotent ("zaten doğrulanmış, giriş yap") instead of a conflict; nothing new is granted.
     [Fact]
     public async Task OtherProductRegistrationDoesNotUseTheCoachingJoinPath()
     {
         var fixture = new Fixture();
-        Assert.Equal("Identity.UserExists", (await fixture.Register(product: PlatformProduct.SpeedReading)).Error.Code);
+        var result = await fixture.Register(product: PlatformProduct.SpeedReading);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(Identity.Application.Registration.RegistrationOutcome.NotRequired, result.Value.VerificationEmail);
         Assert.False(fixture.User.HasProductAccess(PlatformProduct.Coaching));
-        Assert.Equal(0, fixture.Saves);
+        Assert.Equal(0, fixture.ProvisioningEvents);
+        Assert.Equal(0, fixture.Legal.Tracked);
     }
 
     [Fact]
@@ -178,9 +183,10 @@ public sealed class CoachingExistingAccountRegistrationTests
             Stub<IInstitutionRepository>((method, _) => throw new NotSupportedException(method.Name)),
             Stub<IRoleRepository>((_, _) => Task.FromResult(StudentRole)), hasher,
             Stub<IMultiFactorService>((method, _) => throw new NotSupportedException(method.Name)),
-            Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null), Legal, TimeProvider.System, new TestAuthenticationLock(), Stub<IPublishEndpoint>((_, args) => { if (args?[0] is EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested) ProvisioningEvents++; return Task.CompletedTask; }));
+            Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null), Legal, TimeProvider.System, new TestAuthenticationLock(), Stub<IPublishEndpoint>((_, args) => { if (args?[0] is EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested) ProvisioningEvents++; return Task.CompletedTask; }),
+            Stub<IParentRepository>((m, _) => throw new NotSupportedException(m.Name)));
 
-        public Task<Result<Guid>> Register(string password = Password, PlatformProduct product = PlatformProduct.Coaching) =>
+        public Task<Result<Identity.Application.Registration.RegistrationOutcome>> Register(string password = Password, PlatformProduct product = PlatformProduct.Coaching) =>
             handler.Handle(new RegisterStudentCommand(User.Email, password, "Replacement", "Name", null, product), CancellationToken.None);
         private Task<Result<Guid>> RegisterExisting() { RegisterCalls++; return Task.FromResult(Result.Failure<Guid>(new Error("Identity.UserExists", "Existing account"))); }
         private Task<Result> Delete() { Deletes++; return Task.FromResult(Result.Success()); }
