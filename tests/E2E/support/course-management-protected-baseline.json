@@ -1092,7 +1092,7 @@
     "services/coaching-service/Coaching.Domain/Entities/Exam.cs": "9d4cc98b86fa379698dca38f3293ef7988c530f9c4b62cd78849216ada7f2eb2",
     "services/coaching-service/Coaching.Domain/Entities/IdempotencyRecord.cs": "f1e2178df798fc85d21d773c21f324cb6b0d63a260c91b7ce4737696c561a116",
     "services/coaching-service/Coaching.Domain/Entities/PracticeExamRules.cs": "1280d14cb3e6aa6b0c4d0f04440cdeb3a472d9d0230976a2ab19403ebd7473e2",
-    "services/coaching-service/Coaching.Domain/Entities/StudentLearningContext.cs": "8267505c7e45c01f6af054677f1e7d14ff24bbed842a125f6b4f59ddcbe3e1e7",
+    "services/coaching-service/Coaching.Domain/Entities/StudentLearningContext.cs": "bcb1c6b46cb063151d5772c4adad15788799af05d79b7da0aa3c1e7efc8fc75e",
     "services/coaching-service/Coaching.Domain/Entities/StudentPrimaryGoal.cs": "918a8a41670e74a481bc58d177e8d2378b2beb13e26e22f6df9fabc8e41e6ecb",
     "services/coaching-service/Coaching.Domain/Entities/StudyAvailability.cs": "f62ba62ce4b0ebea898ac5e46465477ee2494dd52553f7116be40958a434405d",
     "services/coaching-service/Coaching.Domain/Entities/StudyCatalog.cs": "f4a62c9f691a243e608135f6c1bb80bf6d659f1e500688b31a8e19cdae6e60aa",
@@ -2693,7 +2693,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "Paket D review fixes (M1, L1-L8)",
+    "purpose": "Paket D: AGS only for graduates",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2741,7 +2741,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "fb11ac76",
+    "previousBaselineCommit": "468707f4",
     "removedSincePreviousBaseline": []
   }
 }
