@@ -413,7 +413,8 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
         decimal? netGap = scoreGap is null ? null : scoreGap > 0 && perNet > 0 ? Math.Round(scoreGap.Value / perNet, 1, MidpointRounding.AwayFromZero) : 0m;
         var rankGap = entry.Rank is { } targetRank && estimate.Rank is { } rank ? rank - targetRank : (int?)null;
         var reached = scoreGap is { } gap ? gap <= 0 : rankGap is <= 0;
-        var status = reached ? "reached" : "below";
+        // Re-check 06.11.2026: without a score gap or a rank gap nothing can be said about the target.
+        string? status = scoreGap is null && rankGap is null ? null : reached ? "reached" : "below";
         // Review 06.11.2026: an approximate model (LGS, MEB-AGS) reaches the taban only with its whole range; a taban inside the
         // range is "borderline". The range is the estimate card's (practice spread and the model's ±).
         if (estimate.Margin is > 0 && entry.MinimumScore is { } taban)

@@ -112,7 +112,11 @@ export class StudentScoreEstimateComponent implements OnInit {
       return 'Bu hedefin taban puanı ya da sıralama verisi yok; bu yüzden hedefe olan fark hesaplanamıyor.';
     // 01.11.2026: ÖSYM does not compute the target's score type for these ham puanlar (2026 YKS Kılavuzu, Tablo 1D).
     if (target.notComputedReason) return `Bu hedefin puan türünde (${target.scoreType}) puan hesaplanmadığı için hedefe olan fark gösterilemiyor.`;
-    if (target.scoreGap === null && target.rankGap === null) return 'Bu hedefin puan türü için henüz tahmin yok; o puan türünde bir deneme gir.';
+    if (target.scoreGap === null && target.rankGap === null)
+      // Re-check 06.11.2026: an estimate without a rank (LGS, MEB-AGS) cannot be compared with a rank-only target.
+      return this.data()?.estimates.some(x => x.scoreType === target.scoreType)
+        ? 'Hedefe olan fark hesaplanamıyor: bu hedefin taban puanı yok, tahminde de sıralama yok.'
+        : 'Bu hedefin puan türü için henüz tahmin yok; o puan türünde bir deneme gir.';
     // Review 06.11.2026: an approximate (LGS / MEB-AGS) taban inside the estimate's range is borderline.
     if (target.status === 'borderline') {
       const now = this.data()?.estimates.find(x => x.scoreType === target.scoreType);

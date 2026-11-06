@@ -1,5 +1,5 @@
 import { StudentExamOverviewItem, StudentExamSource, StudentExamSubject, StudentExamTrend } from '../../../core/services/coaching-student-exam-overview.service';
-import { ESTIMATE_LABEL, EXACT_LABEL, P3_NOTE, ScoreEstimate, notComputedText } from '../../../core/services/coaching-score-estimate.service';
+import { ESTIMATE_LABEL, EXACT_LABEL, P3_NOTE, ScoreEstimate, notComputedText, scoreGroup } from '../../../core/services/coaching-score-estimate.service';
 import { possessive } from '../parent/parent-model';
 import { CsTone } from '../ui';
 
@@ -82,9 +82,11 @@ export function goalGauge(estimate: ScoreEstimate, childName: string | null = nu
   const missingData = target.targetScore === null && target.targetRank === null;
   const rows: GaugeRow[] = [];
   // 01.11.2026: ÖSYM does not compute the target's score type (0,5 ham puan, 2026 YKS Kılavuzu Tablo 1D): say which tests.
-  const approximate = !!now?.margin;
+  // Re-check 06.11.2026: approximate by exam group (LGS, MEB-AGS), so the label stays at full net where the margin is 0.
+  const approximate = !!now && scoreGroup(now) !== 'YKS';
   const range = now ? `${decimal.format(now.scoreLow)}–${decimal.format(now.scoreHigh)}` : '';
-  const status = target.status ?? (now ? (target.reached ? 'reached' : 'below') : null);
+  // A null status from the server means no gap can be computed; only older responses (no status) fall back to `reached`.
+  const status = target.status !== undefined ? target.status : now ? (target.reached ? 'reached' : 'below') : null;
   const label = approximate ? now?.label ?? ESTIMATE_LABEL : null;
   if (target.notComputedReason)
     return { targetName: target.targetName, scoreType: target.scoreType, rows, reached: false, missingData: false, status: null, label: null,
