@@ -156,8 +156,11 @@ public sealed class CoachingScoreEstimatePostgresTests
         var lgs = estimate.Estimates.Single(x => x.ScoreType == "LGS");
         Assert.Equal((500m, (int?)null), (Math.Round(lgs.Score), lgs.Rank));
 
-        // Down refuses while MEB-AGS models exist.
+        // Down refuses while MEB-AGS models exist. EF runs each Down in its own transaction, so later migrations (e.g.
+        // 20261113090000_StudentOnboarding) may be reverted first; ScoreModelsAllExams itself stays applied and Up re-applies the rest.
         await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync("20261111090000_TopicMinutesCap4320"));
+        Assert.Contains("20261112090000_ScoreModelsAllExams", await f.Db.Database.GetAppliedMigrationsAsync());
+        await f.Db.Database.MigrateAsync();
         Assert.Empty(await f.Db.Database.GetPendingMigrationsAsync());
     }
 
@@ -176,6 +179,8 @@ public sealed class CoachingScoreEstimatePostgresTests
 
         var error = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync("20261111090000_TopicMinutesCap4320"));
         Assert.Contains("without a rank table", error.ToString());
+        Assert.Contains("20261112090000_ScoreModelsAllExams", await f.Db.Database.GetAppliedMigrationsAsync());
+        await f.Db.Database.MigrateAsync();
         Assert.Empty(await f.Db.Database.GetPendingMigrationsAsync());
         Assert.Equal(0.2m, (await f.Db.Set<CoachingScoreModel>().AsNoTracking().SingleAsync()).UncertaintyShare);
     }
