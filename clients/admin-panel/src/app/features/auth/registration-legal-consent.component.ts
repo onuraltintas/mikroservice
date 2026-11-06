@@ -31,7 +31,7 @@ const REQUIRED_SLUGS: Record<RegistrationProduct, string[]> = {
               {{ isTerms(page.slug) ? 'koşullarını kabul ediyorum.' : 'metnini okudum ve bilgilendirildim.' }}</span>
           </label>
         }
-        <p class="text-xs leading-5 text-slate-500">Her kayıt işleminde onaylanan metin sürümü Identity’de saklanır. Metin taslaksa kayıt kapalı kalır.</p>
+        <p class="text-xs leading-5 text-slate-500" data-testid="legal-consent-note">Onayladığın metinlerin hangi sürüm olduğu kaydınla birlikte saklanır.</p>
       }
     </section>
   `

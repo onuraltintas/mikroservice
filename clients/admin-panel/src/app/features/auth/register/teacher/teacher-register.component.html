@@ -17,7 +17,7 @@
                 İlham Ver,<br>Geleceği<br>İnşa Et.
             </h1>
             <p class="text-purple-100 text-lg max-w-md">
-                Modern sınıf yönetimi araçları, performans analizleri ve dijital kaynaklarla eğitimde fark yaratın.
+                Modern sınıf yönetimi araçları, performans analizleri ve dijital kaynaklarla eğitimde fark yarat.
             </p>
         </div>
 
@@ -64,9 +64,9 @@
                 <div class="mb-8">
                     <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Öğretmen Hesabı 🎓</h2>
                     <p class="text-gray-500 dark:text-gray-400">
-                        Zaten hesabınız var mı?
+                        Zaten hesabın var mı?
                         <a routerLink="/auth/login"
-                            class="text-purple-600 dark:text-purple-500 font-bold hover:underline">Giriş Yap</a>
+                            class="text-purple-600 dark:text-purple-500 font-bold hover:underline">Giriş yap</a>
                     </p>
                 </div>
 
@@ -83,19 +83,19 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Ad</mat-label>
-                            <input matInput formControlName="firstName" placeholder="Adınız">
+                            <input matInput formControlName="firstName" placeholder="Adın">
                             <mat-error>Gerekli</mat-error>
                         </mat-form-field>
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Soyad</mat-label>
-                            <input matInput formControlName="lastName" placeholder="Soyadınız">
+                            <input matInput formControlName="lastName" placeholder="Soyadın">
                             <mat-error>Gerekli</mat-error>
                         </mat-form-field>
                     </div>
 
                     <mat-form-field appearance="outline" class="w-full">
                         <mat-label>Branş</mat-label>
-                        <mat-select formControlName="branch" placeholder="Branş Seçiniz">
+                        <mat-select formControlName="branch" placeholder="Branşını seç">
                             <mat-option value="Mathematics">
                                 <mat-icon class="text-blue-500 mr-2">calculate</mat-icon> Matematik
                             </mat-option>
@@ -124,8 +124,7 @@
                         <input matInput type="email" formControlName="email">
                         <mat-icon matPrefix class="text-gray-400 mr-2">email</mat-icon>
                         <mat-error *ngIf="form.get('email')?.hasError('required')">E-posta adresi zorunludur</mat-error>
-                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi
-                            giriniz</mat-error>
+                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi gir</mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="w-full">
@@ -175,6 +174,14 @@
                     </button>
 
                 </form>
+
+                @if (!verifiedNotice()) {
+                    <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400" data-testid="register-login-link">
+                        Zaten hesabın var mı?
+                        <a routerLink="/auth/login" class="font-bold text-purple-600 dark:text-purple-500 hover:underline">Giriş yap</a>
+                    </p>
+                }
+
 
             </div>
         </div>

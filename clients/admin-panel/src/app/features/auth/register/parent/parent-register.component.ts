@@ -72,7 +72,7 @@ export class ParentRegisterComponent implements OnInit {
                 next: (val) => {
                     const allowed = val?.replace(/"/g, '').trim().toLowerCase() === 'true';
                     if (!allowed) {
-                        this.toaster.warning('Yeni kullanıcı kayıtları şu an kapalıdır.');
+                        this.toaster.warning('Yeni kayıtlar şu an kapalı.');
                         this.router.navigate(['/auth/register']);
                     }
                 }

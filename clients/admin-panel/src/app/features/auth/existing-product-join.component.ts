@@ -20,7 +20,7 @@ import { readVerificationEmailOutcome } from './register/registration-outcome';
       <p>{{ copy.intro }}</p>
       @if (joined) {
         <p role="status">{{ joinedMessage }}</p>
-        @if (!verificationEmailSent) { <a [href]="loginUrl">Panele giriş yap</a> }
+        <a [href]="loginUrl" data-testid="join-login-link">{{ copy.login }}</a>
       } @else {
         <form [formGroup]="form" (ngSubmit)="submit()">
           <mat-form-field appearance="outline">
@@ -36,12 +36,12 @@ import { readVerificationEmailOutcome } from './register/registration-outcome';
               <mat-label>Katılınacak kurum</mat-label>
               <select matNativeControl aria-label="Katılınacak kurum" [value]="selectedInstitutionId"
                 (change)="selectedInstitutionId = $any($event.target).value" [disabled]="loading">
-                <option value="" disabled>Kurum seçin</option>
+                <option value="" disabled>{{ copy.chooseInstitution }}</option>
                 @for (institution of institutions; track institution.id) {
                   <option [value]="institution.id">{{ institution.name }} · {{ institution.role === 'Owner' ? 'Kurum sahibi' : institution.role === 'Admin' ? 'Yönetici' : 'Yetkili' }}</option>
                 }
               </select>
-              <mat-hint>Yalnız seçilen kurum bu servise bağlanır. Diğer bağlantılarınız korunur.</mat-hint>
+              <mat-hint>{{ copy.institutionHint }}</mat-hint>
             </mat-form-field>
           }
           <mat-form-field appearance="outline">
@@ -101,9 +101,16 @@ export class ExistingProductJoinComponent {
     this.selectedInstitutionId = '';
   }
 
-  /** Review #6: students are addressed with "sen", teachers and institutions with "siz". */
+  /**
+   * Review #6: students are addressed with "sen", teachers and institutions with "siz". Paket F #12 (07.11.2026):
+   * every sign-up on the Coaching site (onuraltintas.net) uses "sen".
+   */
+  get voice(): 'sen' | 'siz' {
+    return this.account === 'student' || this.product === 'coaching' ? 'sen' : 'siz';
+  }
+
   get copy(): JoinCopy {
-    return this.account === 'student' ? JOIN_COPY.sen : JOIN_COPY.siz;
+    return JOIN_COPY[this.voice];
   }
 
   get loginUrl(): string {
@@ -115,7 +122,7 @@ export class ExistingProductJoinComponent {
   submit(): void {
     if (this.loading || this.joined || this.form.invalid || !this.legalReady || this.legalAcceptances.length !== 3) return;
     if (this.account === 'institution' && this.institutions.length && !this.selectedInstitutionId) {
-      this.error = 'Listeden katılacağınız kurumu seçin.';
+      this.error = this.copy.chooseInstitutionError;
       return;
     }
     this.loading = true;
@@ -127,7 +134,7 @@ export class ExistingProductJoinComponent {
       next: (response) => {
         // Paket A: an unverified address now joins too and gets a verification e-mail first.
         this.verificationEmailSent = readVerificationEmailOutcome(response) === 'sent';
-        this.joinedMessage = joinedMessage(this.verificationEmailSent, this.account === 'student' ? 'sen' : 'siz');
+        this.joinedMessage = joinedMessage(this.verificationEmailSent, this.voice);
         this.joined = true; this.loading = false;
       },
       error: (err) => {
@@ -137,7 +144,7 @@ export class ExistingProductJoinComponent {
           this.institutions = err.error.institutions.filter((item: any) =>
             typeof item?.id === 'string' && typeof item?.name === 'string' && typeof item?.role === 'string');
           this.selectedInstitutionId = '';
-          this.error = this.institutions.length ? 'Katılacağınız kurumu listeden seçin.' : 'Kurum listesi yüklenemedi. Tekrar deneyin.';
+          this.error = this.institutions.length ? this.copy.chooseInstitutionError : this.copy.institutionsFailed;
           return;
         }
         if (err.error?.code === 'Auth.InvalidInstitutionSelection') this.clearInstitutions();
@@ -159,19 +166,32 @@ function joinedMessage(verificationEmailSent: boolean, voice: 'sen' | 'siz'): st
     : 'Katılım tamamlandı. E-posta adresiniz zaten doğrulanmış; mevcut şifrenizle hemen giriş yapabilirsiniz.';
 }
 
-interface JoinCopy { heading: string; intro: string; mfaHint: string; fallbackError: string; }
+interface JoinCopy {
+  heading: string; intro: string; mfaHint: string; fallbackError: string; login: string;
+  chooseInstitution: string; institutionHint: string; chooseInstitutionError: string; institutionsFailed: string;
+}
 
 const JOIN_COPY: Record<'sen' | 'siz', JoinCopy> = {
   sen: {
     heading: 'Mevcut hesabınla katıl',
     intro: 'Aynı e-posta ve mevcut şifreni kullan. Hesabın ve kurum bağlantın korunur. Bu işlem abonelik satın almaz; servis yetkileri ve abonelikleri ayrı kalır.',
     mfaHint: 'Hesabında MFA açıksa doğrulama uygulamandaki yeni kodu gir.',
-    fallbackError: 'Katılım tamamlanamadı. Bilgilerini kontrol edip tekrar dene.'
+    fallbackError: 'Katılım tamamlanamadı. Bilgilerini kontrol edip tekrar dene.',
+    login: 'Giriş yap',
+    chooseInstitution: 'Kurum seç',
+    institutionHint: 'Yalnız seçilen kurum bu servise bağlanır. Diğer bağlantıların korunur.',
+    chooseInstitutionError: 'Katılacağın kurumu listeden seç.',
+    institutionsFailed: 'Kurum listesi yüklenemedi. Yeniden dene.'
   },
   siz: {
     heading: 'Mevcut hesabınızla katılın',
     intro: 'Aynı e-posta ve mevcut şifrenizi kullanın. Hesabınız ve kurum bağlantınız korunur. Bu işlem abonelik satın almaz; servis yetkileri ve abonelikleri ayrı kalır.',
     mfaHint: 'Hesabınızda MFA açıksa doğrulama uygulamanızdaki yeni kodu girin.',
-    fallbackError: 'Katılım tamamlanamadı. Bilgilerinizi kontrol edip tekrar deneyin.'
+    fallbackError: 'Katılım tamamlanamadı. Bilgilerinizi kontrol edip tekrar deneyin.',
+    login: 'Panele giriş yap',
+    chooseInstitution: 'Kurum seçin',
+    institutionHint: 'Yalnız seçilen kurum bu servise bağlanır. Diğer bağlantılarınız korunur.',
+    chooseInstitutionError: 'Katılacağınız kurumu listeden seçin.',
+    institutionsFailed: 'Kurum listesi yüklenemedi. Tekrar deneyin.'
   }
 };

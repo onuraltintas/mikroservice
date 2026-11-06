@@ -431,8 +431,10 @@ export class IdentityService {
     }
 
     /** E5 (#22): sends a one-time link to the new address; the address changes only when it is confirmed. */
-    requestEmailChange(currentPassword: string, newEmail: string) {
-        return this.http.post<EmailChangeRequested>(`${this.baseUrl}/me/email-change`, { currentPassword, newEmail });
+    /** Paket F L6: an account with two-step verification also sends the authenticator code. */
+    requestEmailChange(currentPassword: string, newEmail: string, mfaCode?: string) {
+        return this.http.post<EmailChangeRequested>(`${this.baseUrl}/me/email-change`,
+            mfaCode ? { currentPassword, newEmail, mfaCode } : { currentPassword, newEmail });
     }
 
     cancelEmailChange() {

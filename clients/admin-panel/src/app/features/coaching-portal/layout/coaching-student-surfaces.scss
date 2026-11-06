@@ -14,6 +14,10 @@
   .is-selected-plan { border-color: var(--ui-brand); background: var(--ui-brand-soft); box-shadow: inset 0 0 0 1px var(--ui-brand); }
   :is(.rounded-2xl, .panel, .finance) { border-radius: 20px; box-shadow: var(--coaching-card-shadow); }
   :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select, textarea) { min-height: 44px; min-width: 0; border: 1px solid var(--ui-border); border-radius: 10px; padding: 10px 12px; background: var(--ui-surface); color: var(--ui-text); font: inherit; font-size: 16px; }
+  // Paket F #38: a field marked invalid (aria-invalid="true") shows a danger border. This selector outranks the field
+  // rule above and the .cp-form fields, which otherwise hid the per-page invalid styles.
+  :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select, textarea)[aria-invalid=true] {
+    border-color: var(--ui-danger); box-shadow: inset 0 0 0 1px var(--ui-danger); }
   input[type=checkbox] { accent-color: var(--ui-brand); width: 18px; height: 18px; flex-shrink: 0; }
   :is(button, a.rounded-lg, a.rounded-full) { min-height: 44px; transition: background .18s, border-color .18s; }
   button:disabled { opacity: 1; cursor: not-allowed; background: var(--ui-surface-muted); color: var(--ui-text-muted); border-color: var(--ui-border); box-shadow: none; } .overflow-x-auto { max-width: 100%; overscroll-behavior-x: contain; }

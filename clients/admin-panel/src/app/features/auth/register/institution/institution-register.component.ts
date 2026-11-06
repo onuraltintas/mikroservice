@@ -80,14 +80,14 @@ export class InstitutionRegisterComponent implements OnInit {
                 next: (val) => {
                     const allowed = val?.replace(/"/g, '').trim().toLowerCase() === 'true';
                     if (!allowed) {
-                        this.toaster.warning('Yeni kullanıcı kayıtları şu an kapalıdır.');
+                        this.toaster.warning('Yeni kayıtlar şu an kapalı.');
                         this.router.navigate(['/auth/register']);
                     }
                 }
             });
         this.locations.getProvinces().subscribe({
             next: provinces => this.provinces = provinces,
-            error: () => this.errorMessage.set('İl seçenekleri yüklenemedi. Sayfayı yenileyin.')
+            error: () => this.errorMessage.set('İl seçenekleri yüklenemedi. Sayfayı yenile.')
         });
     }
 
@@ -126,7 +126,7 @@ export class InstitutionRegisterComponent implements OnInit {
         this.http.post(`${environment.apiUrl}/auth/coaching/register/institution`, payload).subscribe({
             next: (response) => {
                 const outcome = readVerificationEmailOutcome(response);
-                const copy = registrationSuccessCopy(outcome, 'siz');
+                const copy = registrationSuccessCopy(outcome, 'sen');
                 // Third review N3: a sign-up only when this request granted the product (not on a retry).
                 if (grantedNewProductAccess(response)) this.analytics.track('sign_up', { method: 'password', role: 'institution' });
                 if (outcome === 'notRequired') {
@@ -141,9 +141,9 @@ export class InstitutionRegisterComponent implements OnInit {
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const msg = getApiErrorMessage(err, 'Kayıt tamamlanamadı. Lütfen biraz sonra yeniden deneyin.', {
-                    voice: 'siz',
-                    conflict: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifrenizi sıfırlayabilirsiniz.'
+                const msg = getApiErrorMessage(err, 'Kayıt tamamlanamadı. Biraz sonra yeniden dene.', {
+                    voice: 'sen',
+                    conflict: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.'
                 });
                 this.toaster.error(msg);
                 this.errorMessage.set(msg);

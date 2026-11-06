@@ -15,8 +15,10 @@ namespace Identity.Application.Commands.ChangeEmail;
 /// <summary>
 /// E5 (#22, live test 06.11.2026): the signed-in account asks to change its e-mail address. The current password is
 /// required; a one-time link (24 hours) goes to the new address and nothing changes until it is confirmed.
+/// Paket F L6: an account with two-step verification also gives a current authenticator code (TOTP).
 /// </summary>
-public record RequestEmailChangeCommand(string CurrentPassword, string NewEmail) : IRequest<Result<EmailChangeRequested>>;
+public record RequestEmailChangeCommand(string CurrentPassword, string NewEmail, string? MfaCode = null)
+    : IRequest<Result<EmailChangeRequested>>;
 
 public record EmailChangeRequested(string PendingEmail, DateTime ExpiresAt);
 
@@ -48,6 +50,12 @@ internal static class EmailChangeErrors
         "Bağlantı geçersiz ya da süresi dolmuş. Hesabım sayfasından yeni bir bağlantı iste.");
     public static readonly Error Unauthorized = new("Auth.Unauthorized", "Oturum açılmamış.");
     public static readonly Error NotFound = new("User.NotFound", "Kullanıcı bulunamadı.");
+    public static readonly Error MfaCodeRequired = new("Account.MfaCodeRequired",
+        "İki adımlı doğrulama açık. Doğrulama uygulamandaki 6 haneli kodu yaz.");
+    public static readonly Error InvalidMfaCode = new("Auth.InvalidMfaCode",
+        "Doğrulama kodu geçersiz ya da kullanılmış. Uygulamadaki yeni kodu yaz.");
+    public static readonly Error MfaLocked = new("Auth.MfaLocked",
+        "Çok fazla hatalı doğrulama kodu girildi. Bir süre sonra yeniden dene.");
 
     // The e-mail and its link are the Coaching site's (a management account gets the admin panel through its role):
     // the confirmation page exists only in the admin-panel application.
@@ -76,7 +84,8 @@ public sealed class RequestEmailChangeCommandHandler(
     IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork,
     IPublishEndpoint publishEndpoint,
-    ICurrentUserService currentUser) : IRequestHandler<RequestEmailChangeCommand, Result<EmailChangeRequested>>
+    ICurrentUserService currentUser,
+    IMultiFactorService multiFactor) : IRequestHandler<RequestEmailChangeCommand, Result<EmailChangeRequested>>
 {
     public async Task<Result<EmailChangeRequested>> Handle(RequestEmailChangeCommand request, CancellationToken cancellationToken)
     {
@@ -85,6 +94,14 @@ public sealed class RequestEmailChangeCommandHandler(
         if (user is null || !user.IsActive) return Result.Failure<EmailChangeRequested>(EmailChangeErrors.NotFound);
         var password = CurrentPassword.Check(user, request.CurrentPassword, passwordHasher);
         if (password is not null) return Result.Failure<EmailChangeRequested>(password);
+
+        // Paket F L6: with two-step verification on, the password alone is not enough. Same rules as sign-in: the
+        // lockout applies, a failed code counts towards it, and a time step is accepted only once.
+        if (user.MfaEnabled)
+        {
+            var mfa = await VerifyMfaCodeAsync(user, request.MfaCode, cancellationToken);
+            if (mfa is not null) return Result.Failure<EmailChangeRequested>(mfa);
+        }
 
         // Review L3: the minute limit comes before the address checks, so the form is a slow address probe at best.
         var now = DateTime.UtcNow;
@@ -101,6 +118,21 @@ public sealed class RequestEmailChangeCommandHandler(
             EmailProduct.Role(user, EmailChangeErrors.Product, "User")) { Product = EmailChangeErrors.Product }, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success(new EmailChangeRequested(newEmail, user.PendingEmailExpiresAt!.Value));
+    }
+
+    private async Task<Error?> VerifyMfaCodeAsync(User user, string? code, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        if (user.IsMfaVerificationLocked(now)) return EmailChangeErrors.MfaLocked;
+        var trimmed = code?.Trim();
+        if (string.IsNullOrEmpty(trimmed)) return EmailChangeErrors.MfaCodeRequired;
+        var step = string.IsNullOrWhiteSpace(user.MfaSecretProtected) ? null
+            : multiFactor.FindMatchingTimeStep(user.MfaSecretProtected, trimmed);
+        if (step.HasValue && user.TryAcceptMfaTimeStep(step.Value)) return null;
+
+        user.RecordFailedMfaAttempt(now);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return EmailChangeErrors.InvalidMfaCode;
     }
 }
 

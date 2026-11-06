@@ -9,9 +9,28 @@ namespace Identity.Application.Commands.ConfirmEmail;
 
 /// <param name="Product">Third review N2: the site confirming ("coaching" / "speed-reading"), so the welcome
 /// e-mail is that product's; see <see cref="Identity.Application.Registration.EmailProduct"/>.</param>
-public record ConfirmEmailCommand(Guid UserId, string? Token = null, string? Product = null) : IRequest<Result>;
+public record ConfirmEmailCommand(Guid UserId, string? Token = null, string? Product = null) : IRequest<Result<ConfirmEmailOutcome>>;
 
-public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, Result>
+/// <summary>
+/// Paket F #10: whether this request verified the address or it already was verified (an old link opened again), so
+/// the page can say "zaten doğrulanmış" and offer sign-in. Failures keep their codes: <c>User.InvalidToken</c>,
+/// <c>User.TokenExpired</c>, <c>User.NotFound</c>.
+/// </summary>
+public enum ConfirmEmailOutcome
+{
+    Confirmed,
+    AlreadyConfirmed
+}
+
+public static class ConfirmEmailErrors
+{
+    public const string InvalidTokenCode = "User.InvalidToken";
+    public const string TokenExpiredCode = "User.TokenExpired";
+    public static readonly Error InvalidToken = new(InvalidTokenCode, "Geçersiz veya süresi dolmuş doğrulama kodu.");
+    public static readonly Error TokenExpired = new(TokenExpiredCode, "Doğrulama kodunun süresi dolmuş. Lütfen yeni bir kod isteyin.");
+}
+
+public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, Result<ConfirmEmailOutcome>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -24,22 +43,22 @@ public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, R
         _publishEndpoint = publishEndpoint;
     }
 
-    public async Task<Result> Handle(ConfirmEmailCommand request, CancellationToken cancellationToken)
+    public async Task<Result<ConfirmEmailOutcome>> Handle(ConfirmEmailCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null)
-            return Result.Failure(new Error("User.NotFound", "Kullanıcı bulunamadı."));
+            return Result.Failure<ConfirmEmailOutcome>(new Error("User.NotFound", "Kullanıcı bulunamadı."));
 
         if (user.EmailConfirmed)
-            return Result.Success();
+            return Result.Success(ConfirmEmailOutcome.AlreadyConfirmed);
 
         if (request.Token != null)
         {
             if (user.EmailVerificationToken != request.Token)
-                return Result.Failure(new Error("User.InvalidToken", "Geçersiz veya süresi dolmuş doğrulama kodu."));
+                return Result.Failure<ConfirmEmailOutcome>(ConfirmEmailErrors.InvalidToken);
 
             if (user.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
-                return Result.Failure(new Error("User.TokenExpired", "Doğrulama kodunun süresi dolmuş. Lütfen yeni bir kod isteyin."));
+                return Result.Failure<ConfirmEmailOutcome>(ConfirmEmailErrors.TokenExpired);
         }
 
         // 1. Confirm Email
@@ -58,6 +77,6 @@ public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, R
         ) { Product = product }, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return Result.Success(ConfirmEmailOutcome.Confirmed);
     }
 }

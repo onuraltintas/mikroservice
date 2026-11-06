@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Exceptions;
 using Identity.Application.Interfaces;
+using Identity.Application.Services;
 using MediatR;
 
 namespace Identity.Application.Commands.RejectInvitation;
@@ -11,26 +12,29 @@ public class RejectInvitationCommandHandler : IRequestHandler<RejectInvitationCo
     private readonly IInvitationRepository _invitationRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IUserRepository _userRepository;
 
     public RejectInvitationCommandHandler(
         IInvitationRepository invitationRepository,
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IUserRepository userRepository)
     {
         _invitationRepository = invitationRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _userRepository = userRepository;
     }
 
     public async Task<Result> Handle(RejectInvitationCommand request, CancellationToken cancellationToken)
     {
-        // 1. Validate current user is authenticated
-        if (_currentUserService.Email == null)
+        // 1. Validate current user is authenticated. Paket F L5: the address is read from the account (by the token's
+        // subject), not from the token's e-mail claim, which stays stale after a confirmed e-mail change until refresh.
+        var userEmail = await CurrentUserEmail.ReadAsync(_currentUserService, _userRepository, cancellationToken);
+        if (userEmail == null)
         {
             return Result.Failure(new Error("Auth.Unauthorized", "User is not authenticated"));
         }
-
-        var userEmail = _currentUserService.Email;
 
         // 2. Get invitation
         var invitation = await _invitationRepository.GetByIdAsync(request.InvitationId, cancellationToken);
