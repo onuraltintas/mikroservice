@@ -53,6 +53,13 @@ describe('createStudyPlanProposal', () => {
       expect(proposal[0].lessonId).toBe('science');
     });
 
+    it('never double-books when windows on the same day overlap', () => {
+      const proposal = createProposalFromWindows([{ day: 'Monday', startMinute: 1020, endMinute: 1110 }, { day: 'Monday', startMinute: 1050, endMinute: 1140 }], lessons, []);
+      const minutes = proposal.flatMap(x => Array.from({ length: x.durationMinutes / 30 }, (_, i) => x.startMinute + i * 30));
+      expect(new Set(minutes).size).toBe(minutes.length);
+      expect(minutes.sort((a, b) => a - b)).toEqual([1020, 1050, 1080, 1110]);
+    });
+
     it('returns nothing without windows or lessons', () => {
       expect(createProposalFromWindows([], lessons, [])).toEqual([]);
       expect(createProposalFromWindows([{ day: 'Monday', startMinute: 1020, endMinute: 1140 }], [], [])).toEqual([]);

@@ -2,7 +2,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingWeeklyOutcomePlanService } from '../../../core/services/coaching-weekly-outcome-plan.service';
@@ -193,6 +193,56 @@ describe('StudentStudyPlanAssistantComponent', () => {
       component.createProposal();
       expect(component.proposal()).toHaveLength(2);
       expect(planning.saveAvailability).not.toHaveBeenCalled();
+    });
+
+    // E6 review: a failed load never shows the questions (a save would send expectedVersion null and always get a 409).
+    it('a failed availability load asks to retry instead of asking the questions', async () => {
+      const { fixture, component, planning } = await setup({}, mondayEvening);
+      planning.getAvailability.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      component.availability.set(null); component.loadAvailability(); fixture.detectChanges(); await fixture.whenStable();
+      expect(text(fixture)).toContain('Çalışma saatlerin yüklenemedi');
+      expect(text(fixture)).not.toContain('Hangi günler çalışabilirsin');
+      expect(component.canPropose()).toBe(false);
+      (Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(x => x.textContent?.trim() === 'Yeniden dene'))!.click();
+      fixture.detectChanges(); await fixture.whenStable();
+      expect((fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement).textContent).toContain('Pazartesi 17:00–19:00');
+    });
+
+    it('reloads the availability after a 409 on save', async () => {
+      const { component, planning } = await setup();
+      planning.saveAvailability.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Başka bir oturumda değişti.' } })));
+      planning.getAvailability.mockReturnValue(of(mondayEvening));
+      const calls = planning.getAvailability.mock.calls.length;
+      component.toggleDay('Tuesday'); component.createProposal();
+      expect(planning.getAvailability.mock.calls.length).toBe(calls + 1);
+      expect(component.availability()?.version).toBe(5);
+    });
+
+    it('does not propose from the old windows while the saved availability reloads', async () => {
+      const { component, planning } = await setup({}, mondayEvening);
+      const pending = new Subject<StudyAvailability>();
+      planning.getAvailability.mockReturnValueOnce(pending);
+      component.availabilitySaved();
+      expect(component.canPropose()).toBe(false);
+      component.createProposal();
+      expect(component.proposal()).toEqual([]);
+      pending.next({ ...mondayEvening, version: 6, windows: [{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }] }); pending.complete();
+      component.createProposal();
+      expect(component.proposal().map(x => [x.day, x.startMinute])).toEqual([['Tuesday', 1080]]);
+    });
+
+    it('a teacher answers the questions for a student without availability: a proposal, never a save', async () => {
+      const { component, planning } = await setup({}, null, 'student-1');
+      component.toggleDay('Wednesday'); component.createProposal();
+      expect(component.proposal().map(x => [x.day, x.startMinute, x.durationMinutes])).toEqual([['Wednesday', 1080, 60]]);
+      expect(planning.saveAvailability).not.toHaveBeenCalled();
+    });
+
+    it('a teacher sees that the student availability could not be loaded', async () => {
+      const { fixture, component, planning } = await setup({}, null, 'student-1');
+      planning.getAvailability.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      component.loadAvailability(); fixture.detectChanges();
+      expect(text(fixture)).toContain('Öğrencinin çalışma saatleri yüklenemedi');
     });
 
     it('shows no technical note about rules or AI services', async () => {

@@ -79,6 +79,25 @@ describe('StudentPlanPreviewComponent', () => {
     expect(engine.options).not.toHaveBeenCalled();
   });
 
+  // E6 review: without matching courses the student is sent to Derslerim, not to add availability.
+  it('asks to choose courses in Derslerim when none of the chosen courses has weekly lessons', async () => {
+    const { fixture, component, el } = await setup(mondayEvening);
+    const courses = vi.fn(); component.editCourses.subscribe(courses);
+    fixture.componentRef.setInput('lessonIds', []); fixture.detectChanges();
+    expect(el.querySelectorAll('[data-testid="preview-slot"]')).toHaveLength(0);
+    expect(el.textContent).toContain('Derslerim');
+    expect(el.textContent).not.toContain('Müsaitliğine en az 30 dakikalık');
+    button(el, 'Derslerimi seç')!.click();
+    expect(courses).toHaveBeenCalledOnce();
+  });
+
+  it('follows a change of the chosen courses', async () => {
+    const { fixture, el } = await setup(mondayEvening);
+    fixture.componentRef.setInput('lessonIds', ['science']); fixture.detectChanges();
+    const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
+    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Fen Bilimleri (60 dk)']);
+  });
+
   it('keeps the proposal and shows the error when the weekly lessons cannot be saved', async () => {
     const { fixture, el, weekly } = await setup(mondayEvening);
     weekly.save.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Haftalık düzenin başka bir oturumda değişti.' } })));

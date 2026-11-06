@@ -291,6 +291,10 @@ describe('StudentLearningSetupComponent', () => {
     (preview.componentInstance as StudentPlanPreviewComponent).editAvailability.emit();
     await fixture.whenStable();
     expect(component.step()).toBe('Availability');
+    await component.goTo('Preview'); fixture.detectChanges();
+    (fixture.debugElement.query(By.css('app-student-plan-preview')).componentInstance as StudentPlanPreviewComponent).editCourses.emit();
+    await fixture.whenStable();
+    expect(component.step()).toBe('Courses');
   });
 });
 
