@@ -151,6 +151,7 @@ public sealed class CoachingProfileConsistencyTests
     [InlineData(LearningPurpose.Lgs, null, null)]
     [InlineData(LearningPurpose.Yks, "SAY", 8)]
     [InlineData(LearningPurpose.Ags, null, 7)]
+    [InlineData(LearningPurpose.Ags, null, 12)]   // user decision 06.11.2026: AGS/ÖABT only for university graduates
     public async Task TheStudySettingsAcceptOnlyAnExamThatFitsTheGrade(LearningPurpose purpose, string? field, int? grade)
     {
         LearningPurposes.FitsEducation(purpose, grade is null ? CoachingEducationStatus.Graduate : CoachingEducationStatus.Student, grade).Should().BeFalse();
@@ -263,7 +264,7 @@ public sealed class CoachingProfileConsistencyTests
         await using var s = await Setup.CreateAsync();
         (await s.Personal(8)).AllowedPurposes.Should().Equal(LearningPurpose.Lgs);
         (await s.Personal(null)).AllowedPurposes.Should().Equal(LearningPurpose.Yks, LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
-        LearningPurposes.AllowedFor(CoachingEducationStatus.Student, 10).Should().Equal(LearningPurpose.Yks, LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        LearningPurposes.AllowedFor(CoachingEducationStatus.Student, 10).Should().Equal(LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil);
     }
 
     // ---------- #7: the school on Profilim comes from the catalog ----------
