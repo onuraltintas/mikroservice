@@ -23,6 +23,17 @@ public sealed class CoachingStudentProfile : AggregateRoot
     public string? AvatarUrl { get; private set; }
     public bool ShareProgressWithTeachers { get; private set; } = true;
     public bool IsActive { get; private set; } = true;
+    /// <summary>Paket C (#3): where the student lives, from the shared Identity location directory (ids and names).</summary>
+    public string? HomeProvinceId { get; private set; }
+    public string? HomeCity { get; private set; }
+    public string? HomeDistrictId { get; private set; }
+    public string? HomeDistrict { get; private set; }
+    /// <summary>Paket C (#3): the YKS diploma grade (50–100) for OBP; Estimated when the student gave an expected grade.</summary>
+    public decimal? DiplomaGrade { get; private set; }
+    public bool DiplomaGradeEstimated { get; private set; }
+    /// <summary>Paket C (#3): the first-login wizard steps saved so far (bit n = step n, 1–7) and when it was finished.</summary>
+    public int OnboardingSteps { get; private set; }
+    public DateTime? OnboardingCompletedAt { get; private set; }
     public bool IsEducationComplete => EducationStatus == CoachingEducationStatus.Graduate
         || EducationStatus == CoachingEducationStatus.Student && GradeLevel.HasValue;
 
@@ -69,6 +80,54 @@ public sealed class CoachingStudentProfile : AggregateRoot
         ProfileValue.RequireId(actorUserId);
         IsActive = active; UpdatedBy = actorUserId.ToString(); UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>Paket C (#3): call only after the shared Identity directory has verified this province and district pair.</summary>
+    public void SetHome(string provinceId, string city, string districtId, string district)
+    {
+        var province = ProfileValue.Text(provinceId, 20) ?? throw new ArgumentException("Şehir seçin.");
+        var cityName = ProfileValue.Text(city, 100) ?? throw new ArgumentException("Şehir seçin.");
+        var districtCode = ProfileValue.Text(districtId, 20) ?? throw new ArgumentException("İlçe seçin.");
+        var districtName = ProfileValue.Text(district, 100) ?? throw new ArgumentException("İlçe seçin.");
+        HomeProvinceId = province; HomeCity = cityName; HomeDistrictId = districtCode; HomeDistrict = districtName;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Paket C (#3): 50–100 with at most two decimals; null clears it ("sonra gir").</summary>
+    public void SetDiplomaGrade(decimal? grade, bool estimated)
+    {
+        if (grade is < 50 or > 100 || grade.HasValue && decimal.Round(grade.Value, 2) != grade.Value)
+            throw new ArgumentException("Diploma notu 50 ile 100 arasında olmalı.");
+        DiplomaGrade = grade; DiplomaGradeEstimated = grade.HasValue && estimated;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool HasOnboardingStep(int step) => step is >= 1 and <= OnboardingStepCount && (OnboardingSteps & (1 << step)) != 0;
+
+    /// <summary>The first wizard step not saved yet (1–7); 7 is the summary.</summary>
+    public int NextOnboardingStep => Enumerable.Range(1, OnboardingStepCount).FirstOrDefault(step => !HasOnboardingStep(step), OnboardingStepCount);
+
+    public void RecordOnboardingStep(int step)
+    {
+        if (step is < 1 or >= OnboardingStepCount) throw new ArgumentOutOfRangeException(nameof(step));
+        OnboardingSteps |= 1 << step; UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>A changed answer re-asks only the steps that depend on it.</summary>
+    public void ReopenOnboardingStep(int step)
+    {
+        if (step is < 1 or >= OnboardingStepCount) throw new ArgumentOutOfRangeException(nameof(step));
+        OnboardingSteps &= ~(1 << step); UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void CompleteOnboarding(DateTime at)
+    {
+        if (Enumerable.Range(1, OnboardingStepCount - 1).Any(step => !HasOnboardingStep(step)))
+            throw new InvalidOperationException("Kurulumun bütün adımlarını tamamla.");
+        OnboardingSteps |= 1 << OnboardingStepCount; OnboardingCompletedAt ??= DateTime.SpecifyKind(at, DateTimeKind.Utc);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public const int OnboardingStepCount = 7;
 }
 
 public sealed class CoachingTeacherProfile : AggregateRoot

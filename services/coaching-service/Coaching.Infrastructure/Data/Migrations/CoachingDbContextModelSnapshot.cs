@@ -109,6 +109,11 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("target_score");
 
+                    b.Property<string>("TargetScoreType")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("target_score_type");
+
                     b.Property<string>("TargetSubject")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -4855,6 +4860,13 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("DiplomaGrade")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<bool>("DiplomaGradeEstimated")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("EducationStatus")
                         .HasColumnType("integer");
 
@@ -4864,8 +4876,30 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int?>("GraduationYear")
                         .HasColumnType("integer");
 
+                    b.Property<string>("HomeCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("HomeDistrict")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("HomeDistrictId")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("HomeProvinceId")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("OnboardingCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OnboardingSteps")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SchoolCity")
                         .HasMaxLength(100)
@@ -4908,6 +4942,8 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("student_profiles", "coaching", t =>
                         {
+                            t.HasCheckConstraint("ck_coaching_student_diploma", "\"DiplomaGrade\" IS NULL OR \"DiplomaGrade\" BETWEEN 50 AND 100");
+
                             t.HasCheckConstraint("ck_coaching_student_education", "\"EducationStatus\" BETWEEN 0 AND 2 AND ((\"EducationStatus\" = 1 AND \"GradeLevel\" BETWEEN 1 AND 12 AND \"GradeLevel\" IS NOT NULL) OR (\"EducationStatus\" <> 1 AND \"GradeLevel\" IS NULL))");
 
                             t.HasCheckConstraint("ck_coaching_student_graduation", "\"GraduationYear\" IS NULL OR (\"EducationStatus\" = 2 AND \"GraduationYear\" BETWEEN 1900 AND 9999)");

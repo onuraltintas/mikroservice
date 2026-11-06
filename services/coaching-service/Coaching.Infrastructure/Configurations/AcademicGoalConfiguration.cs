@@ -73,6 +73,7 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
             .HasColumnName("target_score")
             .HasPrecision(5, 2);
         builder.Property(x => x.TargetMaxScore).HasColumnName("target_max_score").HasPrecision(5, 2);
+        builder.Property(x => x.TargetScoreType).HasColumnName("target_score_type").HasMaxLength(20);
         builder.Property(x => x.TargetPracticeExamCode).HasColumnName("target_practice_exam_code").HasMaxLength(20);
         builder.Property(x => x.TargetNet).HasColumnName("target_net").HasPrecision(5, 2);
 

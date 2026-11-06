@@ -24,6 +24,11 @@ public class AcademicGoal : AggregateRoot
 
     public decimal? TargetScore { get; private set; }
     public decimal? TargetMaxScore { get; private set; }
+    /// <summary>
+    /// Paket C (#3): the score type a score-only target is in (LGS, TYT, SAY, EA, SOZ, DIL, P1, P2_…, YDS_EN, YOKDIL_…).
+    /// Null for older targets: their score type is the one the student's exam purpose works towards.
+    /// </summary>
+    public string? TargetScoreType { get; private set; }
     public string? TargetPracticeExamCode { get; private set; }
     public decimal? TargetNet { get; private set; }
     private string NetTargetsJson { get; set; } = "[]";
@@ -101,7 +106,7 @@ public class AcademicGoal : AggregateRoot
         Description = NormalizeOptional(description);
         Category = category;
         TargetDate = targetDate;
-        if (TargetScore != targetScore || TargetExamType != targetExamType) TargetMaxScore = null;
+        if (TargetScore != targetScore || TargetExamType != targetExamType) { TargetMaxScore = null; TargetScoreType = null; }
         TargetScore = targetScore;
         TargetExamType = targetExamType;
         TargetSubject = NormalizeOptional(targetSubject);
@@ -120,12 +125,12 @@ public class AcademicGoal : AggregateRoot
             if (targetScore.Value is < 0 or > 999.99m)
                 throw new ArgumentOutOfRangeException(nameof(targetScore), "Target score must be between 0 and 999.99");
 
-            if (TargetScore != targetScore) TargetMaxScore = null;
+            if (TargetScore != targetScore) { TargetMaxScore = null; TargetScoreType = null; }
             TargetScore = targetScore;
         }
         if (targetExamType.HasValue)
         {
-            if (TargetExamType != targetExamType) TargetMaxScore = null;
+            if (TargetExamType != targetExamType) { TargetMaxScore = null; TargetScoreType = null; }
             TargetExamType = targetExamType;
         }
         if (targetSubject != null) TargetSubject = targetSubject;
@@ -162,10 +167,19 @@ public class AcademicGoal : AggregateRoot
                 || examType is null || !Enum.IsDefined(examType.Value))
                 throw new ArgumentException("Specify a positive target, its score scale and an exam type.");
         }
+        if (TargetScore != score || TargetExamType != examType || !score.HasValue) TargetScoreType = null;
         TargetScore = score;
         TargetMaxScore = maxScore;
         TargetExamType = examType;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Paket C (#3): a score target in a named score type (see TargetScoreType).</summary>
+    public void SetScoreTarget(decimal score, decimal maxScore, ExamType examType, string scoreType)
+    {
+        if (string.IsNullOrWhiteSpace(scoreType) || scoreType.Length > 20) throw new ArgumentException("Puan türünü seçin.");
+        SetScoreTarget((decimal?)score, maxScore, examType);
+        TargetScoreType = scoreType.Trim().ToUpperInvariant();
     }
 
     public void SetNetTarget(string? examCode, decimal? net)

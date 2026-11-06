@@ -28,6 +28,7 @@ public sealed class CoachingStudentProfileConfiguration : IEntityTypeConfigurati
         builder.ToTable("student_profiles", table =>
         {
             table.HasCheckConstraint("ck_coaching_student_education", "\"EducationStatus\" BETWEEN 0 AND 2 AND ((\"EducationStatus\" = 1 AND \"GradeLevel\" BETWEEN 1 AND 12 AND \"GradeLevel\" IS NOT NULL) OR (\"EducationStatus\" <> 1 AND \"GradeLevel\" IS NULL))");
+            table.HasCheckConstraint("ck_coaching_student_diploma", "\"DiplomaGrade\" IS NULL OR \"DiplomaGrade\" BETWEEN 50 AND 100");
             table.HasCheckConstraint("ck_coaching_student_graduation", "\"GraduationYear\" IS NULL OR (\"EducationStatus\" = 2 AND \"GraduationYear\" BETWEEN 1900 AND 9999)");
         });
         builder.HasKey(x => x.Id);
@@ -42,6 +43,12 @@ public sealed class CoachingStudentProfileConfiguration : IEntityTypeConfigurati
         builder.Property(x => x.BirthDate).HasColumnType("date");
         builder.Property(x => x.Bio).HasMaxLength(2000);
         builder.Property(x => x.AvatarUrl).HasMaxLength(500);
+        builder.Property(x => x.HomeProvinceId).HasMaxLength(20);
+        builder.Property(x => x.HomeCity).HasMaxLength(100);
+        builder.Property(x => x.HomeDistrictId).HasMaxLength(20);
+        builder.Property(x => x.HomeDistrict).HasMaxLength(100);
+        builder.Property(x => x.DiplomaGrade).HasPrecision(5, 2);
+        builder.Ignore(x => x.NextOnboardingStep);
         builder.HasIndex(x => new { x.IsActive, x.GradeLevel });
     }
 }
