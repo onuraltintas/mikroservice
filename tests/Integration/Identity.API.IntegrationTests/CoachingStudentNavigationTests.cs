@@ -3,6 +3,7 @@ using Coaching.API.Controllers;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Profiles;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Identity.API.IntegrationTests;
 
@@ -60,6 +61,20 @@ public sealed class CoachingStudentNavigationTests
             [new(new DateOnly(2026, 10, 23), 10m)], DateTime.UtcNow));
         await f.Db.SaveChangesAsync();
         Assert.True((await Read(f)).GetProperty("showFees").GetBoolean());
+    }
+
+    // Paket F #20: "Panelin yenilendi" is only for students who were here before the new menu; the profile's creation date tells.
+    [Fact]
+    public async Task TheNavigationTellsWhenTheStudentsProfileWasCreated()
+    {
+        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
+        var student = f.AddAccount("Student"); f.Actor.UserId = student;
+        Assert.Equal(JsonValueKind.Null, (await Read(f)).GetProperty("registeredAt").ValueKind);
+        await f.Store.ProvisionAsync(student, "Student", default);
+        var created = (await f.Db.CoachingStudentProfiles.SingleAsync(x => x.UserId == student)).CreatedAt;
+        var registeredAt = (await Read(f)).GetProperty("registeredAt");
+        Assert.EndsWith("Z", registeredAt.GetString());
+        Assert.Equal(created, registeredAt.GetDateTime().ToUniversalTime());
     }
 
     private static async Task<JsonElement> Read(CoachingOwnedProfilePersistenceTests.Fixture f)

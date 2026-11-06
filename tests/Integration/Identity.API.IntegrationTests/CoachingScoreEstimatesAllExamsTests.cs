@@ -324,6 +324,18 @@ public sealed class CoachingScoreEstimatesAllExamsTests
         (target.ScoreGap, target.RankGap, target.Status, target.Reached).Should().Be(((decimal?)null, (int?)null, (string?)null, false));
     }
 
+    // Paket F #33: a YKS student was asked for "en az bir LGS ya da YKS denemesi"; the notice names only the student's own exam.
+    [Theory]
+    [InlineData(LearningPurpose.Lgs, "LGS", "YKS")]
+    [InlineData(LearningPurpose.Yks, "YKS", "LGS")]
+    public async Task TheMissingExamNoticeNamesOnlyTheStudentsOwnExam(LearningPurpose purpose, string own, string other)
+    {
+        await using var s = await Setup.CreateAsync(lgsPack: true);
+        s.Context(purpose, purpose == LearningPurpose.Yks ? "SAY" : null); await s.F.Db.SaveChangesAsync();
+        var notice = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Notice;
+        notice.Should().Contain($"{own} denemesini").And.NotContain(other).And.NotContain(" ya da ");
+    }
+
     [Fact]
     public async Task TheGoalSaysWhyThereIsNoScore()
     {
