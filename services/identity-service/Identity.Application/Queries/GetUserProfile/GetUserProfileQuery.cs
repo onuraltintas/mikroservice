@@ -15,6 +15,11 @@ public class UserProfileDto
     public bool IsActive { get; set; } = true;
     public bool EmailConfirmed { get; set; }
     public bool MfaEnabled { get; set; }
+    /// <summary>E5 (#22): own profile only — false for an account made with Google sign-in (no password yet).</summary>
+    public bool? HasPassword { get; set; }
+    /// <summary>E5 (#22): own profile only — the address waiting for its confirmation link.</summary>
+    public string? PendingEmail { get; set; }
+    public DateTime? PendingEmailExpiresAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public DateTime? CreatedAt { get; set; }
     public int? StudentCount { get; set; }

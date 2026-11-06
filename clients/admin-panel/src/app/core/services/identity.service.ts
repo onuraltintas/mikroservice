@@ -39,9 +39,16 @@ export interface PlatformLegalPageRevisionDto {
     createdBy: string;
 }
 
+export interface EmailChangeRequested { pendingEmail: string; expiresAt: string }
+
 export interface UserDto {
     userId: string;
     email: string;
+    /** E5 (#22): own profile only — false for an account made with Google sign-in. */
+    hasPassword?: boolean | null;
+    /** E5 (#22): own profile only — the new address waiting for its confirmation link. */
+    pendingEmail?: string | null;
+    pendingEmailExpiresAt?: string | null;
     fullName: string;
     role: string;
     isActive: boolean;
@@ -421,6 +428,20 @@ export class IdentityService {
 
     changeMyPassword(data: any) {
         return this.http.post(`${this.baseUrl}/me/change-password`, data);
+    }
+
+    /** E5 (#22): sends a one-time link to the new address; the address changes only when it is confirmed. */
+    requestEmailChange(currentPassword: string, newEmail: string) {
+        return this.http.post<EmailChangeRequested>(`${this.baseUrl}/me/email-change`, { currentPassword, newEmail });
+    }
+
+    cancelEmailChange() {
+        return this.http.delete<void>(`${this.baseUrl}/me/email-change`);
+    }
+
+    /** The link in the e-mail (anonymous: it may be opened on another device). */
+    confirmEmailChange(userId: string, token: string) {
+        return this.http.post<void>(`${environment.apiUrl}/auth/confirm-email-change`, { userId, token });
     }
 
     getRoles() {

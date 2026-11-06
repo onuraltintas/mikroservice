@@ -362,6 +362,33 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
+    /// E5 (#22): asks to change the signed-in account's e-mail address. The current password is required; a one-time
+    /// link goes to the new address and the address changes only when it is confirmed (POST api/auth/confirm-email-change).
+    /// </summary>
+    [HttpPost("me/email-change")]
+    [Authorize]
+    [ProducesResponseType(typeof(Identity.Application.Commands.ChangeEmail.EmailChangeRequested), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RequestEmailChange([FromBody] EmailChangeRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new Identity.Application.Commands.ChangeEmail.RequestEmailChangeCommand(
+            request.CurrentPassword ?? string.Empty, request.NewEmail ?? string.Empty, GetClaimedProductScope()), cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { Error = result.Error });
+    }
+
+    /// <summary>E5 (#22): withdraws a pending e-mail change; its link stops working.</summary>
+    [HttpDelete("me/email-change")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> CancelEmailChange(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new Identity.Application.Commands.ChangeEmail.CancelEmailChangeCommand(), cancellationToken);
+        return result.IsSuccess ? NoContent() : BadRequest(new { Error = result.Error });
+    }
+
+    public record EmailChangeRequest(string? CurrentPassword, string? NewEmail);
+
+    /// <summary>
     /// Kullanıcının bağlı olduğu kurumdan ayrılmasını sağlar.
     /// </summary>
     [HttpDelete("me/institution")]

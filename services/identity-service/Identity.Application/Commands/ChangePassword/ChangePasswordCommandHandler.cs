@@ -37,6 +37,13 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
             return Result.Failure(new Error("User.NotFound", "Kullanıcı bulunamadı."));
         }
 
+        // E5 (#22): an account made with Google sign-in has no password to check; say so instead of "hatalı".
+        if (!user.HasPassword)
+        {
+            return Result.Failure(new Error("Account.PasswordNotSet",
+                "Hesabında şifre yok: Google ile giriş yapıyorsun. Şifre belirlemek için e-posta adresine bağlantı iste."));
+        }
+
         // Verify current password
         if (!_passwordHasher.VerifyPasswordHash(request.CurrentPassword, user.PasswordHash, user.PasswordSalt))
         {

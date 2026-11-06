@@ -118,6 +118,10 @@ public sealed class PublicAppUrlOptions
     /// <summary>The reset page of every site (admin-panel and speed-reading); it reads <c>token</c> and <c>email</c>.</summary>
     public const string PasswordResetPath = "/auth/reset-password";
 
+    /// <summary>E5 (#22): the admin-panel page (Coaching site, or the admin panel for management) that reads
+    /// <c>userId</c> and <c>token</c> of an e-mail change.</summary>
+    public const string EmailChangeConfirmationPath = "/auth/confirm-email-change";
+
     public string ResolveBaseUrl(string? role = null) => ResolveBaseUrl(role, null);
 
     /// <summary>
@@ -163,6 +167,16 @@ public sealed class PublicAppUrlOptions
         var baseUrl = ResolveBaseUrl(role, product);
         return $"{baseUrl}{PasswordResetPath}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
     }
+
+    /// <summary>
+    /// E5 (#22): the e-mail change link always opens an admin-panel origin — the Coaching site, or the admin panel for
+    /// a management role — because the speed-reading app has no such page.
+    /// </summary>
+    public string BuildEmailChangeLink(Guid userId, string token, string? role) =>
+        $"{ResolveBaseUrl(role, "coaching")}{EmailChangeConfirmationPath}?userId={Uri.EscapeDataString(userId.ToString())}&token={Uri.EscapeDataString(token)}";
+
+    /// <summary>E5 (#22): the support page of the same origin (told in the notice to the previous address).</summary>
+    public string BuildSupportLink(string? role) => $"{ResolveBaseUrl(role, "coaching")}/auth/support";
 
     public string BuildLoginLink(string? role = null) => BuildLoginLink(role, null);
 

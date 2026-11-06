@@ -129,6 +129,14 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 .ToList()
         };
 
+        if (currentUserId == user.Id)
+        {
+            profile.HasPassword = user.HasPassword;
+            var pendingIsLive = user.PendingEmail is not null && user.PendingEmailExpiresAt > DateTime.UtcNow;
+            profile.PendingEmail = pendingIsLive ? user.PendingEmail : null;
+            profile.PendingEmailExpiresAt = pendingIsLive ? user.PendingEmailExpiresAt : null;
+        }
+
         return Result.Success(profile);
     }
 }

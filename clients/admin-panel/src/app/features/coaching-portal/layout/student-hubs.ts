@@ -21,6 +21,8 @@ export const STUDENT_HUBS: Record<'plan' | 'growth' | 'settings' | 'payments', S
   // T5 (31.10.2026): four sections; Çalışma tercihlerim keeps the hub's own address (the setup reminders link there).
   settings: { label: 'Profil ve ayarlar', tabs: [
     { label: 'Profilim', path: `${root}/account/settings/profile` },
+    // E5 (#22, live test 06.11.2026): name, e-mail address and password.
+    { label: 'Hesabım', path: `${root}/account/settings/account` },
     { label: 'Çalışma tercihlerim', path: `${root}/account/settings`, exact: true },
     { label: 'Bildirimler', path: `${root}/account/settings/notifications` },
     { label: 'Görünüm', path: `${root}/account/settings/theme` }

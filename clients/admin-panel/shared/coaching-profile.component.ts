@@ -38,7 +38,9 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
   template: `
     <section aria-labelledby="coaching-profile-title" class="profile-card">
       <h2 id="coaching-profile-title">Koçluk profilim</h2>
-      <p>{{ t('Eğitim ve uzmanlık bilgilerinizi burada düzenleyebilirsiniz. Ad, e-posta ve şifre ortak hesap ayarlarınızdadır.', 'Okul ve sınıf bilgilerini burada düzenle. Ad, e-posta ve şifre hesap ayarlarında.') }}</p>
+      <!-- E5 (#22): the student's name, e-mail and password are on the Hesabım tab; staff use the portal's Hesap ayarları. -->
+      @if (role === 'Student') { <p>Okul ve sınıf bilgilerini burada düzenle. Adın, e-posta adresin ve şifren <a routerLink="/coaching-portal/account/settings/account">Hesabım</a> sekmesinde.</p> }
+      @else { <p>Eğitim ve uzmanlık bilgilerinizi burada düzenleyebilirsiniz. Ad, e-posta ve şifre ortak hesap ayarlarınızdadır.</p> }
       <!-- E4 #24: every save attempt replaces the previous message; field errors are listed here and next to each field. -->
       @if (error()) {
         @if (hasFieldErrors()) { <div role="alert" class="error" data-testid="error-summary">{{ error() }}</div> }

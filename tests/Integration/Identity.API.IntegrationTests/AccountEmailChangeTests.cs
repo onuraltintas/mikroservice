@@ -198,7 +198,7 @@ public sealed class AccountEmailChangeTests
         var errors = new RequestEmailChangeCommandValidator().Validate(new RequestEmailChangeCommand(password, newEmail)).Errors;
 
         errors.Should().ContainSingle(error => error.PropertyName == property)
-            .Which.ErrorMessage.Should().MatchRegex("[çğıöşüÇĞİÖŞÜ]|E-posta|Mevcut şifre");
+            .Which.ErrorMessage.Should().MatchRegex("(?i)[çğıöşü]|e-posta|mevcut şifre");
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public sealed class AccountEmailChangeTests
     public async Task TheOwnProfileTellsWhetherThereIsAPasswordAndAPendingAddress()
     {
         await using var f = await Fixture.CreateAsync(withPassword: false);
-        f.Context.Users.Single().RequestEmailChange("yeni@example.test", DateTime.UtcNow);
+        f.Context.Users.Single(u => u.Id == f.UserId).RequestEmailChange("yeni@example.test", DateTime.UtcNow);
         await f.Context.SaveChangesAsync();
 
         var own = await new GetUserProfileQueryHandler(f.Users, new TeacherRepository(f.Context), new StudentRepository(f.Context),
@@ -341,7 +341,7 @@ public sealed class AccountEmailChangeTests
             }
             user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
             var role = Role.Create("Student", "Student", true);
-            user.AddRole(new UserRole(user.Id, role.Id, PlatformProduct.Coaching));
+            user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id, PlatformProduct.Coaching));
             context.Roles.Add(role);
             context.Users.Add(user);
             context.Users.Add(User.Create(Guid.NewGuid(), "baskasi@example.test", "Başka", "Hesap"));

@@ -1589,6 +1589,20 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("bytea");
 
+                    b.Property<string>("PendingEmail")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("PendingEmailExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("PendingEmailRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PendingEmailToken")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<bool>("PhoneConfirmed")
                         .HasColumnType("boolean");
 
