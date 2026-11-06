@@ -43,6 +43,20 @@ public sealed class StudentOnboardingMigrationPostgresTests
         Assert.Equal(("Ankara", "Çankaya", (decimal?)87.25m, true, 2), (stored.HomeCity, stored.HomeDistrict, stored.DiplomaGrade, stored.DiplomaGradeEstimated, stored.NextOnboardingStep));
         await Assert.ThrowsAnyAsync<Exception>(() => f.Db.Database.ExecuteSqlRawAsync($"UPDATE coaching.student_profiles SET \"DiplomaGrade\" = 40 WHERE \"UserId\" = '{noContext}'"));
 
+        // Down refuses while wizard answers exist (they live only in the new columns), and changes nothing.
+        var refused = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync(Previous));
+        Assert.Contains("StudentOnboarding down refused: 1 student profile(s)", refused.ToString());
+        Assert.Equal(Current, (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
+        Assert.Equal("Ankara", (await f.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == noContext)).HomeCity);
+        await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.student_profiles SET "HomeProvinceId" = NULL, "HomeCity" = NULL, "HomeDistrictId" = NULL, "HomeDistrict" = NULL, "DiplomaGrade" = NULL, "OnboardingSteps" = 0""");
+        // A goal with target scores blocks it too.
+        var goal = Coaching.Domain.Entities.AcademicGoal.Create(noContext, "Hedef", Coaching.Domain.Enums.GoalCategory.ExamPreparation);
+        goal.SetScoreTargets([new("TYT", 380, 560), new("SAY", 450, 560)], Coaching.Domain.Enums.ExamType.YKS);
+        f.Db.Add(goal); await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
+        Assert.Equal(2, (await f.Db.AcademicGoals.AsNoTracking().SingleAsync()).ScoreTargets.Count);
+        refused = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync(Previous));
+        Assert.Contains("0 student profile(s) with first-login wizard answers and 1 goal(s)", refused.ToString());
+        await f.Db.Database.ExecuteSqlRawAsync("""UPDATE coaching.academic_goals SET score_targets = '[]'::jsonb""");
         await f.Db.GetService<IMigrator>().MigrateAsync(Previous);
         Assert.Equal(Previous, (await f.Db.Database.GetAppliedMigrationsAsync()).Last());
         await f.Db.Database.MigrateAsync();

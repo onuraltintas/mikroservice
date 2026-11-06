@@ -134,7 +134,8 @@ describe('CoachingPortalHomeComponent', () => {
     it('without a target says "Hedefini belirle" and links to the target page', async () => {
       const { el } = await render(view({ goal: null }));
       expect(card(el).textContent).toContain('Hedefini belirle');
-      expect(card(el).getAttribute('href')).toBe('/coaching-portal/growth/goals');
+      // It opens the wizard's target question.
+      expect(card(el).getAttribute('href')).toBe('/coaching-portal/welcome?step=target');
     });
 
     it('with a target and no practice exam names the target and says when the gap appears', async () => {
@@ -154,6 +155,19 @@ describe('CoachingPortalHomeComponent', () => {
       expect(card(el).querySelector('[data-testid="home-goal-label"]')!.textContent).toContain('Yaklaşık tahmin');
       expect(text).toContain("LGS'de hem puan tahmini hem okulun taban puanı yaklaşıktır.");
       expect(card(el).querySelector('[data-testid="home-goal-net"]')!.textContent).toContain('Hedefine 10 net kaldı');
+    });
+
+    it('a YKS student with TYT and field target scores sees both', async () => {
+      const say = { ...lgs, scoreType: 'SAY', name: 'YKS Sayısal', group: 'YKS' as const, margin: null, score: 400, scoreLow: 390, scoreHigh: 410 };
+      const tyt = { ...say, scoreType: 'TYT', name: 'TYT', score: 360 };
+      const gap = (scoreType: string, name: string, targetScore: number, scoreGap: number) => ({ targetName: name, scoreType, targetScore, targetRank: null,
+        targetPercentile: null, scoreGap, netGap: 5, rankGap: null, reached: scoreGap <= 0, status: (scoreGap <= 0 ? 'reached' : 'below') as 'reached' | 'below',
+        kind: 'score' as const, ownTargetScore: true });
+      const { el } = await render(view({ goal: null }), true, { estimates: [say, tyt], notice: null, target: gap('SAY', 'YKS Sayısal', 450, 50),
+        scoreTargets: [gap('SAY', 'YKS Sayısal', 450, 50), gap('TYT', 'TYT', 350, -10)] });
+      expect(card(el).textContent).toContain('Hedefine yaklaşık 50 puan kaldı');
+      expect(card(el).textContent).toContain('YKS Sayısal hedef puanın');
+      expect(el.querySelector('[data-testid="home-goal-secondary"]')!.textContent).toContain('TYT: hedef puanını geçtin');
     });
 
     it('says the target is passed, and borderline as in Paket B', async () => {

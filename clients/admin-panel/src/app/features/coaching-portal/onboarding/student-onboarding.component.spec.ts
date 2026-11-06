@@ -1,7 +1,10 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { signal } from '@angular/core';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
 import { vi } from 'vitest';
 import { OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import { StudentOnboardingComponent } from './student-onboarding.component';
@@ -17,8 +20,11 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
   const stepTwo = { birthDate: '2012-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya',
     educationStatus: 'Student' as const, gradeLevel: 8, purpose: 'Lgs' as const, targetExamSessionId: 'lgs-27', targetExamYear: 2027 };
 
-  async function render(first: OnboardingView) {
-    TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+  async function render(first: OnboardingView, query: Record<string, string> = {}) {
+    const auth = { userProfile: signal({ id: 'student-1' }), logout: vi.fn().mockResolvedValue(undefined) };
+    TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+      { provide: AuthService, useValue: auth },
+      ...(Object.keys(query).length ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) }, queryParamMap: of(convertToParamMap(query)) } }] : [])] });
     const router = TestBed.inject(Router); const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(StudentOnboardingComponent);
     const http = TestBed.inject(HttpTestingController);
@@ -31,7 +37,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     async function settle() { for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); } }
     const button = (text: string) => Array.from(el.querySelectorAll('[data-current] button, .ob-summary button, .ob-summary a')).find(x => x.textContent?.trim() === text) as HTMLElement;
     const click = async (text: string) => { const target = button(text); expect(target, text).toBeTruthy(); target.click(); await settle(); };
-    return { fixture, http, el, settle, click, button, navigate };
+    return { fixture, http, el, settle, click, button, navigate, auth };
   }
 
   it('is a chat: one question with its reason, a progress bar, a live log, and answers that stay as bubbles with "Değiştir"', async () => {
@@ -62,7 +68,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     await t.settle();
     await t.click('8. sınıf');
     const save = t.http.expectOne(`${base}/steps/personal`);
-    expect(save.request.body).toEqual({ birthDate: '2012-05-01', provinceId: '06', districtId: '0601', educationStatus: 'Student', gradeLevel: 8, graduationYear: null, schoolName: null });
+    expect(save.request.body).toEqual({ birthDate: '2012-05-01', provinceId: '06', districtId: '0601', educationStatus: 'Student', gradeLevel: 8, graduationYear: null, schoolId: null });
     save.flush({ data: view({ status: 'InProgress', nextStep: 2, savedSteps: [1] }, { ...stepTwo, purpose: null, targetExamSessionId: null, targetExamYear: null }) });
     await t.settle();
     expect(t.el.querySelector('[data-current]')!.textContent).toContain('Hangi sınava hazırlanıyorsun?');
@@ -75,7 +81,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     expect(t.el.querySelector('[data-current]')!.textContent).toContain('Hedefin ne?');
     await t.click('Henüz karar vermedim');
     const target = t.http.expectOne(`${base}/steps/target`);
-    expect(target.request.body).toEqual({ kind: 'none', targetId: null, scoreType: null, targetScore: null });
+    expect(target.request.body).toEqual({ kind: 'none', targetId: null, scores: null });
     target.flush({ data: view({ status: 'InProgress', nextStep: 4, savedSteps: [1, 2, 3] }, stepTwo) }); await t.settle();
 
     t.http.expectOne('/api/coaching/invitations/my-invitations').flush([]); await t.settle();
@@ -154,6 +160,50 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     await t.settle();
     expect(t.el.querySelector('[role="alert"]')!.textContent).toContain('Önce hazırlandığın sınavı seç.');
     expect(t.el.querySelector('[data-question="targetMode"] .ob-me')!.textContent).toContain('Henüz karar vermedim');
+  });
+
+  it('"Hedefini belirle" after the wizard asks only the target, saves it and returns to Bugün', async () => {
+    const t = await render(view({ status: 'Completed', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6, 7], completedAt: '2026-11-06T00:00:00Z' }, stepTwo), { step: 'target' });
+    expect(t.el.querySelector('h1')!.textContent).toContain('Hedefini belirle');
+    expect(t.el.querySelector('[role="progressbar"]')).toBeNull();
+    expect(t.el.querySelector('[data-current]')!.textContent).toContain('Hedefin ne?');
+    expect(t.el.querySelector('[data-question="birthDate"]')).toBeNull();
+    await t.click('Hedef puan gireceğim');
+    const input = t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
+    input.value = '0'; input.dispatchEvent(new Event('input')); await t.click('Devam');
+    expect(t.el.querySelector('[role="alert"]')!.textContent).toContain("0'dan büyük, en çok 500");
+    input.value = '450'; input.dispatchEvent(new Event('input')); await t.click('Devam');
+    const save = t.http.expectOne(`${base}/steps/target`);
+    expect(save.request.body).toEqual({ kind: 'score', targetId: null, scores: [{ scoreType: 'LGS', score: 450 }] });
+    save.flush({ data: view({ status: 'Completed', savedSteps: [1, 2, 3, 4, 5, 6, 7] }, stepTwo) }); await t.settle();
+    expect(t.navigate).toHaveBeenCalledWith(['/coaching-portal']);
+  });
+
+  it('a teacher\'s goal cannot be changed from "Hedefini belirle"', async () => {
+    const t = await render(view({ status: 'Completed', savedSteps: [1, 2, 3, 4, 5, 6, 7] }, { ...stepTwo, targetLocked: true }), { step: 'target' });
+    expect(t.el.querySelector('.ob-summary')!.textContent).toContain('Hedefini öğretmenin belirledi');
+    t.http.expectNone(`${base}/steps/target`);
+  });
+
+  it('offers sign-out and Kişisel verilerim, and a retry when the e-mail choices cannot be loaded', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 6, savedSteps: [1, 2, 3, 4, 5] }, stepTwo));
+    expect(t.el.querySelector('a[href="/coaching-portal/account/data"]')).not.toBeNull();
+    (Array.from(t.el.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Çıkış yap') as HTMLElement).click();
+    expect(t.auth.logout).toHaveBeenCalled();
+    t.http.expectOne('/api/notifications/preferences').flush({}, { status: 500, statusText: 'Error' }); await t.settle();
+    expect(t.el.querySelector('[data-current]')!.textContent).toContain('E-posta tercihlerin yüklenemedi.');
+    expect(t.button('Kaydet ve devam et')).toBeUndefined();
+    await t.click('Yeniden dene');
+    t.http.expectOne('/api/notifications/preferences').flush({ data: [{ category: 'StudyPlan', label: 'Çalışma planı hatırlatmaları', inApp: true, email: false }] });
+    await t.settle();
+    expect(t.button('Kaydet ve devam et')).toBeTruthy();
+  });
+
+  it('asks "Seni davet eden bir öğretmenin ya da kurumun var mı?" (no code)', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 4, savedSteps: [1, 2, 3] }, stepTwo));
+    t.http.expectOne('/api/coaching/invitations/my-invitations').flush([]); await t.settle();
+    expect(t.el.querySelector('[data-current]')!.textContent).toContain('Seni davet eden bir öğretmenin ya da kurumun var mı?');
+    expect(t.el.textContent).not.toMatch(/kod(un)? var/i);
   });
 
   it('a student who already finished goes to the panel', async () => {

@@ -16,6 +16,6 @@ public sealed class LegacyExamSchemaDbContext(string connectionString)
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Exam>().Ignore(x => x.CreatedByAdminId).Ignore(x => x.PracticeExamCode);
         // Paket C: the goal's score type comes with 20261113090000_StudentOnboarding.
-        modelBuilder.Entity<AcademicGoal>().Ignore(x => x.TargetScoreType);
+        modelBuilder.Entity<AcademicGoal>().Ignore("ScoreTargetsJson");
     }
 }

@@ -88,7 +88,9 @@ describe('Paket B review: approximate targets and goal reasons', () => {
     expect(el.querySelector('[data-testid="goal-target-hint"]')?.textContent).toContain('Okulunu ya da bölümünü seçtiğinde ona ne kadar kaldığını da gösteririz.');
     TestBed.resetTestingModule();
     el = render({ ...noTarget, goal: { ...lgsGoal, scoreType: 'SAY', name: 'YKS Sayısal', group: 'YKS' } }, true);
-    expect(el.querySelector('[data-testid="goal-target-hint"]')?.textContent).toContain('Elif henüz bir hedef seçmedi.');
+    // Paket C (#4): the parent's goal card says it once, in the third person.
+    expect(el.querySelector('[data-testid="goal-card"]')?.textContent).toContain('Elif henüz bir hedef seçmedi');
+    expect(el.querySelector('[data-testid="goal-target-hint"]')).toBeNull();
     TestBed.resetTestingModule();
     el = render({ estimates: [], target: null, notice: null, goal: ags });
     expect(el.querySelector('[data-testid="goal-target-hint"]')).toBeNull();

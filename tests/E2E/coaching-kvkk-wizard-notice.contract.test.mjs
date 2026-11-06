@@ -21,6 +21,13 @@ test('the new text covers every item the wizard collects, with its purpose', () 
     assert.ok(text.toLocaleLowerCase('tr').includes(item), `missing: ${item}`);
   for (const purpose of ['amacıyla', 'puan tahmini', 'çalışma planı', 'hedef kartı'])
     assert.ok(text.includes(purpose), `missing purpose: ${purpose}`);
+  // Review: only true uses. Nothing computes with the birth date or the city; the student can correct each item.
+  assert.doesNotMatch(text, /uygun sınav(ları)? ve öneri/);
+  assert.match(text, /başka bir hesaplamada kullanılmaz/);
+  assert.match(text, /kendi okulunu listeden seçebilmesi amacıyla/);
+  assert.match(text, /OBP'nin YKS puan tahminine ve hedef karşılaştırmasına/);
+  for (const page of ['Profil ve ayarlar › Profilim', 'Profil ve ayarlar › Çalışma tercihlerim', 'Gelişimim › Hedefim', 'Profil ve ayarlar › Bildirimler'])
+    assert.ok(text.includes(page), `missing correction page: ${page}`);
   // The rest of the published 1 Ekim text stays (controller, legal bases, transfers, retention, rights).
   const previous = content('kvkk-previous');
   for (const paragraph of previous.split('\n\n').slice(1)) assert.ok(text.includes(paragraph), `dropped: ${paragraph.slice(0, 60)}…`);

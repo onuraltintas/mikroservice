@@ -28,12 +28,13 @@ public sealed class CoachingLearningSetupPostgresTests
                 x => x.MigrationsHistoryTable("__ef_migrations_history", "coaching")).Options;
             await using var db = new CoachingDbContext(options);
             await db.GetService<IMigrator>().MigrateAsync("20261016134530_OwnedCoachingInvitations");
-            var student = Guid.NewGuid(); var profile = CoachingStudentProfile.Create(student);
-            profile.UpdateEducation(CoachingEducationStatus.Student, 12, null, null, null, null, null, null);
+            var student = Guid.NewGuid();
             var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Mevcut plan"); plan.Activate();
             var task = StudyPlanTask.Create(plan, new(2026, 10, 19), "Tamamlandı", 30); task.Complete(25);
             // The pre-upgrade catalog has no curriculum column yet.
-            db.Add(profile); await db.SaveChangesAsync(); await CoachingLegacyPlanSeed.InsertAsync(db,plan,task); db.ChangeTracker.Clear();
+            // Paket C: the profile is written with the old columns; the current model has columns this schema lacks.
+            await Coaching.Curriculum.IntegrationTests.LegacyRows.StudentProfileAsync(db, student, (int)CoachingEducationStatus.Student, 12);
+            await CoachingLegacyPlanSeed.InsertAsync(db,plan,task); db.ChangeTracker.Clear();
             await db.Database.MigrateAsync();
             var curriculum = CurriculumVersion.Create("test-2026", "Test", "v1", 2026, 2026, "Test", null); curriculum.SetPublished(true);
             var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 8, "LGS"); lesson.AssignCurriculum(curriculum.Id); lesson.SetActive(true);

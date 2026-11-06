@@ -6,6 +6,7 @@ using Coaching.Domain.Profiles;
 using Coaching.Infrastructure.Management;
 using Coaching.Infrastructure.Profiles;
 using Coaching.Infrastructure.StudyPlanning;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using EduPlatform.Shared.Kernel.Exceptions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +38,7 @@ public sealed class CoachingStudentOnboardingTests
 
         // A fresh service (another request) resumes at the target question.
         (await s.Service.GetAsync(default)).NextStep.Should().Be(3);
-        var target = await s.Service.SaveTargetAsync(new("school", s.School, null, null), default);
+        var target = await s.Service.SaveTargetAsync(new("school", s.School, null), default);
         target.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "school" && x.Name == "Ankara Fen Lisesi" && x.MinimumScore == 480m);
         var goal = await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync();
         (goal.TargetSchoolId, goal.Category).Should().Be(((Guid?)s.School, GoalCategory.ExamPreparation));
@@ -49,8 +50,11 @@ public sealed class CoachingStudentOnboardingTests
         (done.State.Status, done.State.CompletedAt.HasValue, done.NeedsSubscription).Should().Be(("Completed", true, false));
 
         // After completion the wizard is closed; changes go through the regular pages.
-        var closed = await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.SaveTargetAsync(new("none", null, null, null), default));
+        var closed = await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.PassStepAsync(4, default));
         closed.Code.Should().Be("Onboarding.Completed");
+        // #4 "Hedefini belirle": the target question stays open after the wizard and keeps it completed.
+        var later = await s.Service.SaveTargetAsync(new("none", null, null), default);
+        (later.Status, later.Answers.Target).Should().Be(("Completed", (OnboardingTarget?)null));
     }
 
     [Fact]
@@ -60,7 +64,7 @@ public sealed class CoachingStudentOnboardingTests
         await s.Personal(grade: 8);
         await Assert.ThrowsAsync<ArgumentException>(() => s.Service.CompleteAsync(default));
         await s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default);
-        await s.Service.SaveTargetAsync(new("none", null, null, null), default);
+        await s.Service.SaveTargetAsync(new("none", null, null), default);
         foreach (var step in new[] { 4, 5, 6 }) await s.Service.PassStepAsync(step, default);
         (await s.ServiceWith(NoAccess()).CompleteAsync(default)).NeedsSubscription.Should().BeTrue();
     }
@@ -71,7 +75,7 @@ public sealed class CoachingStudentOnboardingTests
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: 8);
         await s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default);
-        await s.Service.SaveTargetAsync(new("school", s.School, null, null), default);
+        await s.Service.SaveTargetAsync(new("school", s.School, null), default);
         foreach (var step in new[] { 4, 5, 6 }) await s.Service.PassStepAsync(step, default);
 
         var changed = await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
@@ -81,7 +85,7 @@ public sealed class CoachingStudentOnboardingTests
         (await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync()).TargetSchoolId.Should().BeNull();
 
         // The same exam again keeps the target step.
-        await s.Service.SaveTargetAsync(new("score", null, "SAY", 420), default);
+        await s.Service.SaveTargetAsync(new("score", null, [new("SAY", 420)]), default);
         (await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default)).NextStep.Should().Be(7);
     }
 
@@ -116,10 +120,16 @@ public sealed class CoachingStudentOnboardingTests
         await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "34", "0601", CoachingEducationStatus.Student, 8, null, null), default));
         await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1), "06", "0601", CoachingEducationStatus.Student, 8, null, null), default));
         await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(null, "06", "0601", CoachingEducationStatus.Student, 8, null, null), default));
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 8, null, Guid.NewGuid()), default));
         await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, null, s.LgsYear, null, false), default));
         (await s.Service.GetAsync(default)).SavedSteps.Should().BeEmpty();
-        var graduate = await s.Service.SavePersonalAsync(new(new DateOnly(2000, 1, 1), "06", "0601", CoachingEducationStatus.Graduate, null, 2018, "Ankara Lisesi"), default);
-        (graduate.Answers.EducationStatus, graduate.Answers.GraduationYear, graduate.Answers.SchoolName).Should().Be((CoachingEducationStatus.Graduate, (int?)2018, "Ankara Lisesi"));
+        var graduate = await s.Service.SavePersonalAsync(new(new DateOnly(2000, 1, 1), "06", "0601", CoachingEducationStatus.Graduate, null, 2018, s.School), default);
+        (graduate.Answers.EducationStatus, graduate.Answers.GraduationYear, graduate.Answers.SchoolName).Should().Be((CoachingEducationStatus.Graduate, (int?)2018, "Ankara Fen Lisesi"));
+        // The picked school also sets the school's city, district and type; a resuming student keeps the graduation year and the school.
+        var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
+        (profile.SchoolCity, profile.SchoolDistrict, profile.SchoolType).Should().Be(("ANKARA", "ÇANKAYA", "Fen Lisesi"));
+        var again = await s.Service.SavePersonalAsync(new(new DateOnly(2000, 1, 1), "06", "0602", CoachingEducationStatus.Graduate, null, null, null), default);
+        (again.Answers.GraduationYear, again.Answers.SchoolName, again.Answers.HomeDistrict).Should().Be(((int?)2018, "Ankara Fen Lisesi", "Keçiören"));
     }
 
     // ---------- Targets ----------
@@ -148,16 +158,16 @@ public sealed class CoachingStudentOnboardingTests
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: 12);
         await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, "EA", 400), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, "SAY", 561), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("school", s.School, null, null), default));
-        var view = await s.Service.SaveTargetAsync(new("score", null, "TYT", 380.5m), default);
-        view.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "score" && x.ScoreType == "TYT" && x.TargetScore == 380.5m && x.Name == "TYT");
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("EA", 400)]), default));
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("SAY", 561)]), default));
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("school", s.School, null), default));
+        var view = await s.Service.SaveTargetAsync(new("score", null, [new("TYT", 380.5m)]), default);
+        view.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "score" && x.ScoreType == "TYT" && x.Scores.Single().Score == 380.5m && x.Name == "TYT");
         var goal = await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync();
-        (goal.TargetScore, goal.TargetMaxScore, goal.TargetExamType, goal.TargetScoreType, goal.Title).Should().Be(((decimal?)380.5m, (decimal?)560m, (ExamType?)ExamType.YKS, "TYT", "TYT hedefi"));
+        (goal.TargetScore, goal.TargetMaxScore, goal.TargetExamType, goal.ScoreTargets.Single().ScoreType, goal.Title).Should().Be(((decimal?)380.5m, (decimal?)560m, (ExamType?)ExamType.YKS, "TYT", "TYT hedefi"));
 
         // "Henüz karar vermedim" clears it again.
-        (await s.Service.SaveTargetAsync(new("none", null, null, null), default)).Answers.Target.Should().BeNull();
+        (await s.Service.SaveTargetAsync(new("none", null, null), default)).Answers.Target.Should().BeNull();
         (await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync()).TargetScore.Should().BeNull();
     }
 
@@ -167,13 +177,13 @@ public sealed class CoachingStudentOnboardingTests
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: 12);
         await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("program", s.Programs["Hukuk"], null, null), default));
-        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("program", s.Programs["Fizik"], null, null), default));
-        var withOwn = await s.Service.SaveTargetAsync(new("program", s.Programs["Fizik"], null, 410), default);
-        withOwn.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "program" && x.MinimumScore == null && x.TargetScore == 410m);
-        var view = await s.Service.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null, null), default);
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("program", s.Programs["Hukuk"], null), default));
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("program", s.Programs["Fizik"], null), default));
+        var withOwn = await s.Service.SaveTargetAsync(new("program", s.Programs["Fizik"], [new("SAY", 410)]), default);
+        withOwn.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "program" && x.MinimumScore == null && x.Scores.Single().Score == 410m);
+        var view = await s.Service.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null), default);
         view.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "program" && x.Name == "Ankara Üniversitesi · Bilgisayar Mühendisliği"
-            && x.MinimumScore == 470m && x.TargetScore == null);
+            && x.MinimumScore == 470m && x.Scores.Count == 0);
         (await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync()).TargetScore.Should().BeNull();
     }
 
@@ -185,9 +195,10 @@ public sealed class CoachingStudentOnboardingTests
         await s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default);
         var goal = AcademicGoal.Create(s.Student, "Öğretmenin hedefi", GoalCategory.ExamPreparation, setByTeacherId: Guid.NewGuid());
         s.F.Db.Add(goal); await s.F.Db.SaveChangesAsync(); s.F.Db.Add(StudentPrimaryGoal.Create(s.Student, goal.Id)); await s.F.Db.SaveChangesAsync();
-        var error = await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.SaveTargetAsync(new("school", s.School, null, null), default));
+        var error = await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.SaveTargetAsync(new("school", s.School, null), default));
         error.Code.Should().Be("Onboarding.TeacherGoal");
-        (await s.Service.SaveTargetAsync(new("none", null, null, null), default)).NextStep.Should().Be(4);
+        (await s.Service.GetAsync(default)).Answers.TargetLocked.Should().BeTrue();
+        (await s.Service.SaveTargetAsync(new("none", null, null), default)).NextStep.Should().Be(4);
     }
 
     // ---------- Filtered option lists ----------
@@ -196,7 +207,7 @@ public sealed class CoachingStudentOnboardingTests
     public async Task SchoolListsAreNarrowedByCityAndTypeAndPaged()
     {
         await using var s = await Setup.CreateAsync();
-        (await s.Service.SchoolCitiesAsync(default)).Select(x => (x.Value, x.Count)).Should().Equal(("Ankara", 26), ("İzmir", 1));
+        (await s.Service.SchoolCitiesAsync(default)).Select(x => (x.Value, x.Label, x.Count)).Should().Equal(("ANKARA", "Ankara", 26), ("İZMİR", "İzmir", 1));
         (await s.Service.SchoolTypesAsync("Ankara", default)).Select(x => x.Value).Should().Equal("Anadolu Lisesi", "Fen Lisesi");
         var page = await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", null, 1, default);
         (page.TotalCount, page.Items.Count, page.PageSize).Should().Be((25, 20, 20));
@@ -212,8 +223,11 @@ public sealed class CoachingStudentOnboardingTests
     public async Task ProgrammeListsAreNarrowedByLevelScoreTypeCityAndUniversity()
     {
         await using var s = await Setup.CreateAsync();
-        (await s.Service.ProgramCitiesAsync("Bachelor", "SAY", default)).Select(x => x.Value).Should().Equal("Ankara", "İstanbul");
-        (await s.Service.ProgramCitiesAsync("Associate", null, default)).Select(x => x.Value).Should().Equal("Ankara");
+        (await s.Service.ProgramCitiesAsync("Bachelor", "SAY", default)).Select(x => x.Label).Should().Equal("Ankara", "İstanbul");
+        (await s.Service.ProgramCitiesAsync("Associate", null, default)).Select(x => x.Value).Should().Equal("ANKARA");
+        // The catalog value and the place name both match.
+        (await s.Service.UniversitiesAsync("Bachelor", "SAY", "İSTANBUL", null, default)).Select(x => x.Value).Should().Equal("İstanbul Üniversitesi");
+        (await s.Service.UniversitiesAsync("Bachelor", "SAY", "istanbul", null, default)).Select(x => x.Value).Should().Equal("İstanbul Üniversitesi");
         (await s.Service.UniversitiesAsync("Bachelor", "SAY", "Ankara", null, default)).Select(x => x.Value).Should().Equal("Ankara Üniversitesi");
         var programs = await s.Service.ProgramsAsync("Bachelor", "SAY", "Ankara", "Ankara Üniversitesi", null, 1, default);
         programs.Items.Select(x => x.Name).Should().Equal("Bilgisayar Mühendisliği", "Fizik");
@@ -239,7 +253,7 @@ public sealed class CoachingStudentOnboardingTests
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: 8);
         await s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default);
-        await s.Service.SaveTargetAsync(new("score", null, "LGS", 450), default);
+        await s.Service.SaveTargetAsync(new("score", null, [new("LGS", 450)]), default);
         var estimates = new CoachingScoreEstimateService(s.F.Db, s.F.Scope, TimeProvider.System);
 
         var before = await estimates.EstimateAsync(s.Student, s.Student, null, default);
@@ -258,7 +272,7 @@ public sealed class CoachingStudentOnboardingTests
         await using var s = await Setup.CreateAsync();
         await s.Personal(grade: null);
         await s.Service.SaveExamAsync(new(LearningPurpose.Yds, null, null, null, s.LgsYear, null, false), default);
-        await s.Service.SaveTargetAsync(new("score", null, "YDS_EN", 85), default);
+        await s.Service.SaveTargetAsync(new("score", null, [new("YDS_EN", 85)]), default);
         s.LanguageExam(60);
         var estimate = await new CoachingScoreEstimateService(s.F.Db, s.F.Scope, TimeProvider.System).EstimateAsync(s.Student, s.Student, null, default);
         estimate.Target.Should().Match<ScoreTargetGap>(x => x.Kind == "score" && x.ScoreType == "YDS_EN" && x.ScoreGap == 10m && x.NetGap == 8m && x.Status == "below");
@@ -278,6 +292,136 @@ public sealed class CoachingStudentOnboardingTests
         (await service.EstimateAsync(s.Student, s.Student, null, default)).Estimates.Should().BeEmpty();
     }
 
+    // ---------- Review fixes (Paket C) ----------
+
+    [Fact]
+    public async Task HomeCitiesFromTheLocationDirectoryMatchTheCatalogsCapitals()
+    {
+        await using var s = await Setup.CreateAsync();
+        foreach (var (city, name) in new[] { ("ADIYAMAN", "Adıyaman Fen Lisesi"), ("AFYONKARAHİSAR", "Afyon Fen Lisesi"), ("İSTANBUL", "İstanbul Fen Lisesi") })
+        {
+            var school = TargetSchool.Create("meb", name, name, city, "MERKEZ", 450, 2025); school.SetProgramDetails("Fen Lisesi", null, null); school.SetActive(true);
+            s.F.Db.Add(school);
+        }
+        await s.F.Db.SaveChangesAsync();
+        // Step 1: the student's own school is listed by the home city's name from the Identity directory.
+        foreach (var (identityName, expected) in new[] { ("Adiyaman", "Adıyaman Fen Lisesi"), ("Afyonkarahi\u0307sar", "Afyon Fen Lisesi"), ("İstanbul", "İstanbul Fen Lisesi"), ("Ankara", "Ankara Fen Lisesi") })
+            (await s.Service.SchoolsAsync(identityName, null, "Fen", 1, default)).Items.Select(x => x.Name).Should().Contain(expected, identityName);
+        CoachingStudentOnboardingService.Fold("AFYONKARAHİSAR").Should().Be(CoachingStudentOnboardingService.Fold("Afyonkarahi\u0307sar"));
+        CoachingStudentOnboardingService.Fold("ADIYAMAN").Should().Be(CoachingStudentOnboardingService.Fold("Adiyaman"));
+        // LGS target path: city (catalog value) → type → school.
+        var cities = await s.Service.SchoolCitiesAsync(default);
+        cities.Select(x => x.Label).Should().Contain(["Adıyaman", "Afyonkarahisar", "İstanbul"]);
+        var afyon = cities.Single(x => x.Label == "Afyonkarahisar").Value;
+        (await s.Service.SchoolTypesAsync(afyon, default)).Select(x => x.Value).Should().Equal("Fen Lisesi");
+        (await s.Service.SchoolsAsync(afyon, "Fen Lisesi", null, 1, default)).Items.Select(x => x.Name).Should().Equal("Afyon Fen Lisesi");
+    }
+
+    [Fact]
+    public async Task ASlowLocationDirectoryIsReportedAsUnavailable()
+    {
+        await using var s = await Setup.CreateAsync();
+        s.Places.TimesOut = true;
+        var error = await Assert.ThrowsAsync<BusinessRuleException>(() => s.Personal(grade: 8));
+        error.Code.Should().Be("Onboarding.LocationsUnavailable");
+    }
+
+    [Fact]
+    public async Task AnInvalidDiplomaGradeChangesNothing()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(grade: 12);
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, 120, false), default));
+        (await s.F.Db.StudentLearningContexts.AsNoTracking().AnyAsync()).Should().BeFalse("every check runs before any write");
+        (await s.Service.GetAsync(default)).NextStep.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task AYksStudentCanSetBothTheTytAndTheFieldTargetScore()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(grade: 12);
+        await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
+        var view = await s.Service.SaveTargetAsync(new("score", null, [new("TYT", 380), new("SAY", 450)]), default);
+        view.Answers.Target!.Scores.Select(x => (x.ScoreType, x.Score)).Should().Equal(("SAY", 450m), ("TYT", 380m));
+        var goal = await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync();
+        (goal.TargetScore, goal.TargetExamType).Should().Be(((decimal?)450m, (ExamType?)ExamType.YKS), "the field's score is the main one for older readers");
+        var estimate = await new CoachingScoreEstimateService(s.F.Db, s.F.Scope, TimeProvider.System).EstimateAsync(s.Student, s.Student, null, default);
+        estimate.ScoreTargets.Select(x => (x.ScoreType, x.TargetScore, x.Kind)).Should().Equal(("SAY", (decimal?)450m, "score"), ("TYT", (decimal?)380m, "score"));
+        estimate.Target!.ScoreType.Should().Be("SAY");
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("TYT", 380), new("TYT", 390)]), default));
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, [new("TYT", 0)]), default));
+        await Assert.ThrowsAsync<ArgumentException>(() => s.Service.SaveTargetAsync(new("score", null, []), default));
+    }
+
+    [Fact]
+    public async Task TargetChangesPublishTheGoalEventsAndDropNetTargetsThatNoLongerFit()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(grade: 12);
+        await s.Service.SaveExamAsync(new(LearningPurpose.Yks, "SAY", null, null, s.LgsYear + 1, null, false), default);
+        await s.Service.SaveTargetAsync(new("score", null, [new("SAY", 420)]), default);
+        s.Published.OfType<GoalCreatedEvent>().Should().ContainSingle();
+        var goal = await s.F.Db.AcademicGoals.SingleAsync();
+        goal.SetNetTarget("TYT", 90); goal.SetNetTarget("AYT_EA", 60); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+        await s.Service.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null), default);
+        s.Published.OfType<GoalUpdatedEvent>().Should().ContainSingle();
+        var updated = await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync();
+        updated.NetTargets.Select(x => x.ExamCode).Should().Equal("TYT");
+        updated.Title.Should().Be("Ankara Üniversitesi · Bilgisayar Mühendisliği");
+    }
+
+    // ---------- Older target scores (no score type stored) ----------
+
+    [Theory]
+    [InlineData(LearningPurpose.Lgs, null, ExamType.LGS, 450, null, true)]
+    [InlineData(LearningPurpose.Lgs, null, ExamType.LGS, 450, 500, true)]
+    [InlineData(LearningPurpose.Lgs, null, ExamType.LGS, 90, 100, false)]   // a score on another scale
+    [InlineData(LearningPurpose.Lgs, null, ExamType.Mock, 450, null, false)] // a practice-exam goal
+    [InlineData(LearningPurpose.Yks, "SAY", ExamType.YKS, 400, 560, false)] // "TYT 400" or SAY 400? not certain
+    [InlineData(LearningPurpose.Yks, "TYT", ExamType.YKS, 400, null, true)]
+    [InlineData(LearningPurpose.Ags, "OABT_DIN", ExamType.AGS, 70, 100, false)] // P2-16 or P2-17
+    [InlineData(LearningPurpose.Ags, "OABT_IMAT", ExamType.AGS, 70, 100, true)]
+    [InlineData(LearningPurpose.Yds, null, ExamType.YDS, 85, 100, true)]
+    [InlineData(LearningPurpose.Yds, null, ExamType.YDS, 600, 999, false)]
+    public async Task AnOlderTargetScoreCountsOnlyWhenItsScoreTypeIsCertain(LearningPurpose purpose, string? field, ExamType examType, int score, int? max, bool counts)
+    {
+        await using var s = await Setup.CreateAsync();
+        s.F.Db.Add(StudentLearningContext.Create(s.Student, 2026, purpose, 2027, field, purpose is LearningPurpose.Yds ? "English" : null));
+        var goal = AcademicGoal.Create(s.Student, "Eski hedef", GoalCategory.ExamPreparation);
+        if (max is null) goal.SetTarget(targetScore: (decimal)score, targetExamType: examType);
+        else goal.SetScoreTarget((decimal)score, (decimal)max, examType);
+        s.F.Db.Add(goal); await s.F.Db.SaveChangesAsync(); s.F.Db.Add(StudentPrimaryGoal.Create(s.Student, goal.Id)); await s.F.Db.SaveChangesAsync();
+        // The parent sees the same target as the student (and the teacher, through the same service).
+        var parent = s.F.AddAccount("Parent"); s.F.Accounts.ParentReads.Add((parent, s.Student));
+        var service = new CoachingScoreEstimateService(s.F.Db, s.F.Scope, TimeProvider.System);
+        foreach (var viewer in new[] { s.Student, parent })
+        {
+            var estimate = await service.EstimateAsync(viewer, s.Student, null, default);
+            (estimate.Target is not null).Should().Be(counts, viewer == parent ? "parent" : "student");
+            if (counts) (estimate.Target!.Kind, estimate.Target.TargetScore).Should().Be(("score", (decimal?)(decimal)score));
+        }
+    }
+
+    [Fact]
+    public async Task TheProfilePageCorrectsTheHomeCityAndTheDiplomaGrade()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(grade: 12);
+        var store = new CoachingProfileStore(s.F.Db, s.F.Accounts, null, null, s.Places);
+        var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
+        Coaching.Application.Profiles.UpdateCoachingStudentProfile Request(int version) => new(version, CoachingEducationStatus.Student, 12, null, null, null, null, null, null,
+            new DateOnly(2008, 1, 1), null, null, true);
+        var updated = await store.UpdateStudentAsync(s.Student, Request(profile.Version) with { HomeProvinceId = "34", HomeDistrictId = "3401", DiplomaGrade = 88.5m }, default);
+        (updated.HomeCity, updated.HomeDistrict, updated.DiplomaGrade, updated.DiplomaGradeEstimated).Should().Be(("İstanbul", "Kadıköy", (decimal?)88.5m, false));
+        updated = await store.UpdateStudentAsync(s.Student, Request(updated.Version), default);
+        (updated.HomeCity, updated.DiplomaGrade).Should().Be(("İstanbul", (decimal?)88.5m), "unset fields keep their values");
+        updated = await store.UpdateStudentAsync(s.Student, Request(updated.Version) with { ClearDiplomaGrade = true }, default);
+        updated.DiplomaGrade.Should().BeNull();
+        await Assert.ThrowsAsync<ArgumentException>(() => store.UpdateStudentAsync(s.Student, Request(updated.Version) with { HomeProvinceId = "34", HomeDistrictId = "0601" }, default));
+        await Assert.ThrowsAsync<ArgumentException>(() => store.UpdateStudentAsync(s.Student, Request(updated.Version) with { DiplomaGrade = 30 }, default));
+    }
+
     // ---------- Setup ----------
 
     /// <summary>A subscription service whose only answer is "no active subscription".</summary>
@@ -290,12 +434,26 @@ public sealed class CoachingStudentOnboardingTests
     private static Coaching.Application.Subscriptions.ICoachingSubscription NoAccess() =>
         System.Reflection.DispatchProxy.Create<Coaching.Application.Subscriptions.ICoachingSubscription, NoAccessProxy>();
 
-    private sealed class Locations : ICoachingLocationDirectory
+    private sealed class Recorder(List<object> published) : Coaching.Application.Interfaces.ICoachingEventPublisher
     {
-        public Task<IReadOnlyList<LocationProvince>> GetProvincesAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<LocationProvince>>([new("06", "Ankara"), new("34", "İstanbul")]);
+        public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default) where T : class { published.Add(message); return Task.CompletedTask; }
+    }
+
+    /// <summary>Province names as turkey-locations.json writes them ("Adiyaman", "Afyonkarahi̇sar" with a combining dot).</summary>
+    internal sealed class Locations : ICoachingLocationDirectory
+    {
+        public bool TimesOut { get; set; }
+        public Task<IReadOnlyList<LocationProvince>> GetProvincesAsync(CancellationToken ct) => TimesOut
+            ? throw new TaskCanceledException("timeout")
+            : Task.FromResult<IReadOnlyList<LocationProvince>>([new("06", "Ankara"), new("34", "İstanbul"), new("02", "Adiyaman"), new("03", "Afyonkarahi\u0307sar")]);
         public Task<IReadOnlyList<LocationDistrict>> GetDistrictsAsync(string provinceId, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<LocationDistrict>>(provinceId == "06" ? [new("0601", "06", "Çankaya"), new("0602", "06", "Keçiören")] : [new("3401", "34", "Kadıköy")]);
+            Task.FromResult<IReadOnlyList<LocationDistrict>>(provinceId switch
+            {
+                "06" => [new("0601", "06", "Çankaya"), new("0602", "06", "Keçiören")],
+                "02" => [new("0201", "02", "Merkez")],
+                "03" => [new("0301", "03", "Merkez")],
+                _ => [new("3401", "34", "Kadıköy")]
+            });
         public Task<bool> VerifyPairAsync(string provinceId, string districtId, CancellationToken ct) => Task.FromResult(true);
     }
 
@@ -305,13 +463,16 @@ public sealed class CoachingStudentOnboardingTests
         public Guid Student, School, LgsSession;
         public int LgsYear;
         public Dictionary<string, Guid> Programs { get; } = [];
+        public List<object> Published { get; } = [];
+        public Locations Places { get; } = new();
+        private Coaching.Application.Interfaces.ICoachingEventPublisher Events => new Recorder(Published);
         private int order;
 
         public CoachingStudentOnboardingService Service => ServiceWith(null);
         public CoachingStudentOnboardingService ServiceWith(Coaching.Application.Subscriptions.ICoachingSubscription? subscriptions)
         {
             var access = new CoachingAccessPolicy(F.Actor);
-            return new(F.Db, access, F.Accounts, new CoachingLearningSetupService(F.Db, access, F.Accounts), new Locations(), subscriptions);
+            return new(F.Db, access, F.Accounts, new CoachingLearningSetupService(F.Db, access, F.Accounts), Places, subscriptions, null, Events);
         }
 
         public static async Task<Setup> CreateAsync()
@@ -325,22 +486,22 @@ public sealed class CoachingStudentOnboardingTests
             lgs.ReplaceSessions([new(null, new(s.LgsYear, 6, 14), $"{s.LgsYear}", null, null)]);
             var yds = StudyCatalogExam.Create("YDS", "Yabancı Dil Bilgisi Seviye Tespit Sınavı");
             s.F.Db.AddRange(lgs, yds);
-            var fen = TargetSchool.Create("meb", "fen-1", "Ankara Fen Lisesi", "Ankara", "Çankaya", 480, 2025);
+            var fen = TargetSchool.Create("meb", "fen-1", "Ankara Fen Lisesi", "ANKARA", "ÇANKAYA", 480, 2025);
             fen.SetProgramDetails("Fen Lisesi", null, null); fen.SetActive(true); s.F.Db.Add(fen); s.School = fen.Id;
             for (var i = 1; i <= 25; i++)
             {
-                var school = TargetSchool.Create("meb", $"al-{i}", $"Anadolu Lise {i}", "Ankara", i % 2 == 0 ? "Çankaya" : "Keçiören", 300 + i, 2025);
+                var school = TargetSchool.Create("meb", $"al-{i}", $"Anadolu Lise {i}", "ANKARA", i % 2 == 0 ? "ÇANKAYA" : "KEÇİÖREN", 300 + i, 2025);
                 school.SetProgramDetails("Anadolu Lisesi", null, null); school.SetActive(true); s.F.Db.Add(school);
             }
-            var izmir = TargetSchool.Create("meb", "iz-1", "İzmir Fen Lisesi", "İzmir", "Bornova", 470, 2025);
+            var izmir = TargetSchool.Create("meb", "iz-1", "İzmir Fen Lisesi", "İZMİR", "BORNOVA", 470, 2025);
             izmir.SetProgramDetails("Fen Lisesi", null, null); izmir.SetActive(true); s.F.Db.Add(izmir);
-            var passive = TargetSchool.Create("meb", "old", "Kapanan Lise", "Ankara", "Çankaya", 300, 2025);
+            var passive = TargetSchool.Create("meb", "old", "Kapanan Lise", "ANKARA", "ÇANKAYA", 300, 2025);
             passive.SetProgramDetails("Anadolu Lisesi", null, null); s.F.Db.Add(passive);
-            s.Program("1001", "Ankara Üniversitesi", "Bilgisayar Mühendisliği", "Bachelor", "SAY", "Ankara", 470, 12000);
-            s.Program("1002", "Ankara Üniversitesi", "Fizik", "Bachelor", "SAY", "Ankara", null, null);
-            s.Program("1003", "Ankara Üniversitesi", "Hukuk", "Bachelor", "EA", "Ankara", 450, 20000);
-            s.Program("1004", "İstanbul Üniversitesi", "Matematik", "Bachelor", "SAY", "İstanbul", 420, 50000);
-            s.Program("1005", "Ankara Üniversitesi", "Bilgisayar Programcılığı", "Associate", "TYT", "Ankara", 300, 400000);
+            s.Program("1001", "Ankara Üniversitesi", "Bilgisayar Mühendisliği", "Bachelor", "SAY", "ANKARA", 470, 12000);
+            s.Program("1002", "Ankara Üniversitesi", "Fizik", "Bachelor", "SAY", "ANKARA", null, null);
+            s.Program("1003", "Ankara Üniversitesi", "Hukuk", "Bachelor", "EA", "ANKARA", 450, 20000);
+            s.Program("1004", "İstanbul Üniversitesi", "Matematik", "Bachelor", "SAY", "İSTANBUL", 420, 50000);
+            s.Program("1005", "Ankara Üniversitesi", "Bilgisayar Programcılığı", "Associate", "TYT", "ANKARA", 300, 400000);
             await s.F.Db.SaveChangesAsync();
             s.LgsSession = lgs.Sessions.Single().Id;
             s.F.Db.ChangeTracker.Clear();

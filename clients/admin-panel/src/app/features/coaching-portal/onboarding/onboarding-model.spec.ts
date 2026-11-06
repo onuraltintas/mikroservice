@@ -66,6 +66,30 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(nextQuestion({ ...yds, ydsLevel: a('80') }, context)!).toMatchObject({ id: 'targetScore', max: 100 });
   });
 
+  it('a YKS score target asks TYT and the field score; one of them may be skipped, not both', () => {
+    const yks = { ...personal, education: a('11'), ownSchool: a(null), purpose: a('Yks'), yksField: a('EA'), session: a('year:2027'), diploma: a(null), targetMode: a('score') };
+    const tyt = nextQuestion(yks, context)!;
+    expect(tyt).toMatchObject({ id: 'tytScore', skipLabel: 'TYT hedefim yok', max: 560 });
+    expect(tyt.reason).toContain("0'dan büyük");
+    const field = nextQuestion({ ...yks, tytScore: a(null) }, context)!;
+    expect(field).toMatchObject({ id: 'fieldScore', prompt: 'Eşit Ağırlık (EA) hedef puanın kaç?' });
+    expect(field.skipLabel).toBeUndefined();
+    expect(nextQuestion({ ...yks, tytScore: a(380) }, context)!.skipLabel).toBe('Bu puanı şimdi girmeyeceğim');
+    expect(nextQuestion({ ...yks, yksField: a('TYT'), tytScore: undefined }, context)!.skipLabel).toBeUndefined();
+    expect(change({ ...yks, tytScore: a(380), fieldScore: a(400) }, 'tytScore').fieldScore).toBeUndefined();
+  });
+
+  it('a teacher\'s goal is shown as set and is not sent', () => {
+    const view: OnboardingView = { status: 'InProgress', nextStep: 3, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026, examSessions: [],
+      answers: { birthDate: '2012-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student',
+        gradeLevel: 8, graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: null,
+        targetExamYear: 2027, diplomaGrade: null, diplomaGradeEstimated: false, targetLocked: true,
+        target: { kind: 'school', targetId: 's1', name: 'Ankara Fen Lisesi', detail: null, minimumScore: 480, scoreYear: 2025, scoreType: 'LGS', scores: [], canEdit: false } } };
+    const answers = prefill(view);
+    expect(answers.targetSaved!.label).toBe('Hedefini öğretmenin belirledi: Ankara Fen Lisesi · taban 480');
+    expect(targetRequest(answers)).toEqual({ kind: 'none', targetId: null, scores: null });
+  });
+
   it('"Değiştir" clears only the dependent answers', () => {
     const full: Answers = { ...personal, purpose: a('Lgs'), session: a('session:lgs-27:2027'), targetMode: a('school'), schoolCity: a('Ankara'),
       schoolType: a('Fen Lisesi'), targetSchool: a('s1', 'Ankara Fen Lisesi'), invite: a('passed'), parent: a('passed') };
@@ -80,17 +104,24 @@ describe('first-login wizard flow (Paket C #3)', () => {
 
   it('builds each step request', () => {
     expect(personalRequest({ ...personal, education: a('graduate') })).toEqual({ birthDate: '2012-05-01', provinceId: '06', districtId: '0601',
-      educationStatus: 'Graduate', gradeLevel: null, graduationYear: null, schoolName: null });
-    expect(personalRequest({ ...personal, education: a('10'), ownSchool: a('x', 'Ankara Lisesi') })).toMatchObject({ educationStatus: 'Student', gradeLevel: 10, schoolName: 'Ankara Lisesi' });
+      educationStatus: 'Graduate', gradeLevel: null, graduationYear: null, schoolId: null });
+    // A picked school sends its catalog id; a resumed (saved) school sends nothing and stays.
+    expect(personalRequest({ ...personal, education: a('10'), ownSchool: a('school-1', 'Ankara Lisesi') })).toMatchObject({ educationStatus: 'Student', gradeLevel: 10, schoolId: 'school-1' });
+    expect(personalRequest({ ...personal, education: a('10'), ownSchool: a(null, 'Ankara Lisesi') }).schoolId).toBeNull();
     expect(examRequest({ ...personal, education: a('12'), purpose: a('Yks'), yksField: a('DIL'), language: a('English'), session: a('session:s1:2027'),
       diploma: a(82.5, '82,5 (tahmini)', { estimated: true }) })).toEqual({ purpose: 'Yks', primaryScoreType: 'DIL', foreignLanguage: 'English',
       targetExamSessionId: 's1', targetExamYear: 2027, diplomaGrade: 82.5, diplomaGradeEstimated: true });
     expect(examRequest({ ...personal, purpose: a('Ags'), oabtField: a('none'), session: a('year:2028') })).toMatchObject({ primaryScoreType: null,
       targetExamSessionId: null, targetExamYear: 2028, diplomaGrade: null });
-    expect(targetRequest({ targetMode: a('none') })).toEqual({ kind: 'none', targetId: null, scoreType: null, targetScore: null });
-    expect(targetRequest({ targetMode: a('school'), targetSchool: a('s1') })).toEqual({ kind: 'school', targetId: 's1', scoreType: null, targetScore: null });
-    expect(targetRequest({ targetMode: a('program'), program: a('p1'), ownScore: a(410) })).toEqual({ kind: 'program', targetId: 'p1', scoreType: null, targetScore: 410 });
-    expect(targetRequest({ targetMode: a('score'), targetScoreType: a('P2_16'), targetScore: a(72.5) })).toEqual({ kind: 'score', targetId: null, scoreType: 'P2_16', targetScore: 72.5 });
+    expect(targetRequest({ targetMode: a('none') })).toEqual({ kind: 'none', targetId: null, scores: null });
+    expect(targetRequest({ targetMode: a('school'), targetSchool: a('s1') })).toEqual({ kind: 'school', targetId: 's1', scores: null });
+    expect(targetRequest({ targetMode: a('program'), program: a('p1'), ownScore: a(410) })).toEqual({ kind: 'program', targetId: 'p1', scores: [{ scoreType: '', score: 410 }] });
+    expect(targetRequest({ purpose: a('Ags'), targetMode: a('score'), targetScoreType: a('P2_16'), targetScore: a(72.5) })).toEqual({ kind: 'score', targetId: null, scores: [{ scoreType: 'P2_16', score: 72.5 }] });
+    // YKS: TYT and the field's score; either may be left out.
+    const yks = { purpose: a('Yks'), yksField: a('SAY'), targetMode: a('score') };
+    expect(targetRequest({ ...yks, tytScore: a(380), fieldScore: a(450) }).scores).toEqual([{ scoreType: 'TYT', score: 380 }, { scoreType: 'SAY', score: 450 }]);
+    expect(targetRequest({ ...yks, tytScore: a(null), fieldScore: a(450) }).scores).toEqual([{ scoreType: 'SAY', score: 450 }]);
+    expect(targetRequest({ ...yks, tytScore: a(380), fieldScore: a(null) }).scores).toEqual([{ scoreType: 'TYT', score: 380 }]);
   });
 
   it('resumes from the server: saved steps count as answered, the progress shows the step', () => {
@@ -103,9 +134,9 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(nextQuestion(answers, context)!.id).toBe('targetMode');
     expect(currentStep(answers, context)).toBe(3);
     const done = prefill({ ...view, savedSteps: [1, 2, 3, 4, 5, 6], answers: { ...view.answers,
-      target: { kind: 'school', targetId: 's1', name: 'Ankara Fen Lisesi', detail: 'Ankara / Çankaya', minimumScore: 480, scoreYear: 2025, scoreType: 'LGS', targetScore: null, canEdit: true } } });
+      target: { kind: 'school', targetId: 's1', name: 'Ankara Fen Lisesi', detail: 'Ankara / Çankaya', minimumScore: 480, scoreYear: 2025, scoreType: 'LGS', scores: [], canEdit: true } } });
     expect(currentStep(done, context)).toBe(7);
-    expect(targetRequest(done)).toEqual({ kind: 'school', targetId: 's1', scoreType: null, targetScore: null });
+    expect(targetRequest(done)).toEqual({ kind: 'school', targetId: 's1', scores: null });
     expect(summary(done, context).find(x => x.step === 3)!.lines).toEqual(['Hedef: Ankara Fen Lisesi · taban 480']);
     // A step whose answers changed has a new signature, so it is sent again.
     expect(signature(change(done, 'targetSaved'), context, 3)).not.toBe(signature(done, context, 3));

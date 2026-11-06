@@ -8,6 +8,6 @@ namespace Coaching.Curriculum.IntegrationTests;
 /// </summary>
 internal static class LegacyRows
 {
-    public static Task StudentProfileAsync(DbContext db, Guid user) => db.Database.ExecuteSqlInterpolatedAsync(
-        $"""INSERT INTO coaching.student_profiles ("Id","UserId","EducationStatus","ShareProgressWithTeachers","IsActive","CreatedAt","CreatedBy","Version") VALUES ({Guid.NewGuid()},{user},0,true,true,{DateTime.UtcNow},{user.ToString()},1)""");
+    public static Task StudentProfileAsync(DbContext db, Guid user, int educationStatus = 0, int? gradeLevel = null) => db.Database.ExecuteSqlInterpolatedAsync(
+        $"""INSERT INTO coaching.student_profiles ("Id","UserId","EducationStatus","GradeLevel","ShareProgressWithTeachers","IsActive","CreatedAt","CreatedBy","Version") VALUES ({Guid.NewGuid()},{user},{educationStatus},{gradeLevel},true,true,{DateTime.UtcNow},{user.ToString()},1)""");
 }

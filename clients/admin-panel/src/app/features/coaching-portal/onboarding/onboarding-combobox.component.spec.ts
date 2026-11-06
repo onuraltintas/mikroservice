@@ -19,6 +19,9 @@ describe('OnboardingComboboxComponent (Paket C #3)', () => {
     expect(input.getAttribute('role')).toBe('combobox'); expect(input.getAttribute('aria-label')).toBe('Hangi okul?');
     input.dispatchEvent(new Event('focus')); fixture.detectChanges();
     expect(el.querySelectorAll('[role="option"]').length).toBe(20);
+    // The listbox holds only options; "more" and the empty state sit outside it.
+    expect(Array.from(el.querySelector('[role="listbox"]')!.children).every(x => x.getAttribute('role') === 'option')).toBe(true);
+    expect(el.querySelector('[role="listbox"] button')).toBeNull();
     (el.querySelector('.ob-combo-more button') as HTMLElement).click(); await wait(); fixture.detectChanges();
     expect(el.querySelectorAll('[role="option"]').length).toBe(40);
     input.value = 'fen'; input.dispatchEvent(new Event('input')); await wait(); fixture.detectChanges();
