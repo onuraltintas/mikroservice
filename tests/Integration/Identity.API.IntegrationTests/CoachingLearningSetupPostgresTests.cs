@@ -33,7 +33,7 @@ public sealed class CoachingLearningSetupPostgresTests
             var task = StudyPlanTask.Create(plan, new(2026, 10, 19), "Tamamlandı", 30); task.Complete(25);
             // The pre-upgrade catalog has no curriculum column yet.
             // Paket C: the profile is written with the old columns; the current model has columns this schema lacks.
-            await Coaching.Curriculum.IntegrationTests.LegacyRows.StudentProfileAsync(db, student, (int)CoachingEducationStatus.Student, 12);
+            await Coaching.Curriculum.IntegrationTests.LegacyRows.StudentProfileAsync(db, student, (int)CoachingEducationStatus.Student, 8); // Paket D: LGS fits up to 8th grade
             await CoachingLegacyPlanSeed.InsertAsync(db,plan,task); db.ChangeTracker.Clear();
             await db.Database.MigrateAsync();
             var curriculum = CurriculumVersion.Create("test-2026", "Test", "v1", 2026, 2026, "Test", null); curriculum.SetPublished(true);
