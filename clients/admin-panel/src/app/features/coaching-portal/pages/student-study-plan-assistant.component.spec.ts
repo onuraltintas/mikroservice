@@ -2,10 +2,12 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingWeeklyOutcomePlanService } from '../../../core/services/coaching-weekly-outcome-plan.service';
+import { CoachingStudyPlanningService, StudyAvailability, StudyAvailabilityUpdate } from '../../../core/services/coaching-study-planning.service';
+import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
 import { StudentStudyPlanAssistantComponent } from './student-study-plan-assistant.component';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 
@@ -16,9 +18,12 @@ describe('StudentStudyPlanAssistantComponent', () => {
     primaryScoreType: null, foreignLanguage: null, curriculumVersionId: 'curriculum',
     coursePreferences: [{ lessonId: 'math', priority: 2, selfReportedDifficulty: 3 }],
     topicStates: [{ topicId: 'previous-topic', declaredStatus: 'Studied' as const }], startingStatusReviewed: true };
-  async function setup(over: Record<string, unknown> = {}) {
+  async function setup(over: Record<string, unknown> = {}, availability: StudyAvailability | null = null, staffStudentId: string | null = null) {
+    const planning = { getAvailability: vi.fn((_studentId?: string | null) => of(availability)),
+      saveAvailability: vi.fn((update: StudyAvailabilityUpdate) => of<StudyAvailability>({ version: (update.expectedVersion ?? 0) + 1, timeZoneId: 'Europe/Istanbul', windows: update.windows })) };
     const weekly = { get: vi.fn(() => of({ draft: saved, lessons })), save: vi.fn(() => of({ ...saved, version: 4 })) };
-    const learning = { get: vi.fn(() => of({ context, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [], ...over })),
+    const view = () => of({ context, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [], ...over });
+    const learning = { get: vi.fn(view), getForStudent: vi.fn(view), catalogForStudent: vi.fn(() => of({ curriculum: null, lessons: [], topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] })),
       catalog: vi.fn((lessonId: string | null) => of({ curriculum: null, lessons: [{ id: 'math', name: 'Matematik', gradeNumber: 8, examCode: 'LGS', topicCount: 1, missingDurationCount: 0 }],
         topics: { items: lessonId ? [{ id: 'topic-2', name: 'Oran', lessonName: 'Matematik', unitName: 'Sayılar', gradeNumber: 8, examCode: 'LGS', estimatedMinutes: 30 }] : [], totalCount: 1, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] })),
       save: vi.fn(() => of({ context: { ...context, version: 9, topicStates: [...context.topicStates, { topicId: 'topic-2', declaredStatus: 'Studied' as const }] }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })) };
@@ -31,11 +36,13 @@ describe('StudentStudyPlanAssistantComponent', () => {
     TestBed.configureTestingModule({ imports: [StudentStudyPlanAssistantComponent], providers: [
       provideRouter([]),
       { provide: CoachingWeeklyDraftService, useValue: weekly },
-      { provide: CoachingLearningSetupService, useValue: learning }, { provide: CoachingWeeklyOutcomePlanService, useValue: engine }
+      { provide: CoachingLearningSetupService, useValue: learning }, { provide: CoachingWeeklyOutcomePlanService, useValue: engine },
+      { provide: CoachingStudyPlanningService, useValue: planning }
     ] });
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    const fixture = TestBed.createComponent(StudentStudyPlanAssistantComponent); fixture.detectChanges(); await fixture.whenStable();
-    return { fixture, component: fixture.componentInstance, weekly, learning, engine };
+    const fixture = TestBed.createComponent(StudentStudyPlanAssistantComponent); fixture.componentInstance.staffStudentId = staffStudentId;
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    return { fixture, component: fixture.componentInstance, weekly, learning, engine, planning };
   }
 
   it('keeps generated slots as a review proposal until the student explicitly applies them', async () => {
@@ -116,6 +123,134 @@ describe('StudentStudyPlanAssistantComponent', () => {
     const enginePage = fixture.debugElement.query(By.directive(StudentWeeklyOutcomePlanComponent)).componentInstance as StudentWeeklyOutcomePlanComponent;
     enginePage.generatePreview(); enginePage.confirmed = true; enginePage.save();
     expect(engine.create).toHaveBeenCalledWith({ title: 'Haftalık derslerimden çalışma planım', preview: request, fingerprint: 'ready-fingerprint' }, undefined);
+  });
+
+  // E6 #29 (live test 06.11): availability is asked in one place; the wizard uses the saved one and saves to the same record.
+  describe('availability from Çalışma tercihlerim', () => {
+    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
+    const text = (fixture: { nativeElement: HTMLElement }) => fixture.nativeElement.textContent ?? '';
+
+    it('skips the day/start/duration questions when availability is saved and shows it with Değiştir', async () => {
+      const { fixture, planning } = await setup({}, mondayEvening);
+      expect(planning.getAvailability).toHaveBeenCalled();
+      const summary = fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement;
+      expect(summary.textContent).toContain('Pazartesi 17:00–19:00');
+      expect(text(fixture)).not.toContain('Hangi günler çalışabilirsin');
+      expect(fixture.nativeElement.querySelector('#wizard-start-time')).toBeNull();
+      const change = Array.from(summary.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Değiştir');
+      expect(change).toBeTruthy();
+    });
+
+    it('plans from the saved availability without asking again or saving a copy', async () => {
+      const { component, planning } = await setup({}, mondayEvening);
+      component.createProposal();
+      expect(component.proposal().map(x => [x.day, x.startMinute, x.durationMinutes])).toEqual([['Monday', 1020, 60], ['Monday', 1080, 60]]);
+      expect(planning.saveAvailability).not.toHaveBeenCalled();
+    });
+
+    it('Değiştir opens the same availability editor as Çalışma tercihlerim and reloads it after saving', async () => {
+      const { fixture, component, planning } = await setup({}, mondayEvening);
+      (Array.from(fixture.nativeElement.querySelectorAll('[data-testid="wizard-availability"] button') as NodeListOf<HTMLButtonElement>).find(x => x.textContent?.trim() === 'Değiştir'))!.click();
+      fixture.detectChanges(); await fixture.whenStable();
+      const editor = fixture.debugElement.query(By.directive(StudentStudyAvailabilityComponent));
+      expect(editor).toBeTruthy();
+      const calls = planning.getAvailability.mock.calls.length;
+      planning.getAvailability.mockReturnValue(of({ ...mondayEvening, version: 6, windows: [{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }] }));
+      (editor.componentInstance as StudentStudyAvailabilityComponent).saved.emit();
+      fixture.detectChanges(); await fixture.whenStable();
+      expect(planning.getAvailability.mock.calls.length).toBeGreaterThan(calls);
+      expect(fixture.debugElement.query(By.directive(StudentStudyAvailabilityComponent))).toBeNull();
+      expect(component.availability()?.windows).toEqual([{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }]);
+      expect((fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement).textContent).toContain('Salı 18:00–19:00');
+    });
+
+    it('without saved availability asks once and saves the answer as the availability before proposing', async () => {
+      const { fixture, component, planning } = await setup();
+      expect(text(fixture)).toContain('Hangi günler çalışabilirsin');
+      component.toggleDay('Tuesday'); component.startTime.set('18:00'); component.setMinutesPerDay(60); component.createProposal();
+      expect(planning.saveAvailability).toHaveBeenCalledWith({ expectedVersion: null, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }] });
+      expect(component.availability()?.version).toBe(1);
+      expect(component.proposal().map(x => [x.day, x.startMinute, x.durationMinutes])).toEqual([['Tuesday', 1080, 60]]);
+      fixture.detectChanges(); await fixture.whenStable();
+      expect((fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement).textContent).toContain('Salı 18:00–19:00');
+    });
+
+    it('keeps the answers and shows the error when the availability cannot be saved', async () => {
+      const { component, planning } = await setup();
+      planning.saveAvailability.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Çalışma saatlerin başka bir oturumda değişti.' } })));
+      component.toggleDay('Tuesday'); component.createProposal();
+      expect(component.error()).toContain('başka bir oturumda');
+      expect(component.proposal()).toEqual([]);
+      expect(component.selectedDays()).toEqual(['Tuesday']);
+    });
+
+    it('a teacher sees the student availability and never saves it', async () => {
+      const { fixture, component, planning } = await setup({}, mondayEvening, 'student-1');
+      expect(planning.getAvailability).toHaveBeenCalledWith('student-1');
+      const summary = fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement;
+      expect(summary.textContent).toContain('Pazartesi 17:00–19:00');
+      expect(Array.from(summary.querySelectorAll('button')).some(x => x.textContent?.trim() === 'Değiştir')).toBe(false);
+      component.createProposal();
+      expect(component.proposal()).toHaveLength(2);
+      expect(planning.saveAvailability).not.toHaveBeenCalled();
+    });
+
+    // E6 review: a failed load never shows the questions (a save would send expectedVersion null and always get a 409).
+    it('a failed availability load asks to retry instead of asking the questions', async () => {
+      const { fixture, component, planning } = await setup({}, mondayEvening);
+      planning.getAvailability.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      component.availability.set(null); component.loadAvailability(); fixture.detectChanges(); await fixture.whenStable();
+      expect(text(fixture)).toContain('Çalışma saatlerin yüklenemedi');
+      expect(text(fixture)).not.toContain('Hangi günler çalışabilirsin');
+      expect(component.canPropose()).toBe(false);
+      (Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(x => x.textContent?.trim() === 'Yeniden dene'))!.click();
+      fixture.detectChanges(); await fixture.whenStable();
+      expect((fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement).textContent).toContain('Pazartesi 17:00–19:00');
+    });
+
+    it('reloads the availability after a 409 on save', async () => {
+      const { component, planning } = await setup();
+      planning.saveAvailability.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Başka bir oturumda değişti.' } })));
+      planning.getAvailability.mockReturnValue(of(mondayEvening));
+      const calls = planning.getAvailability.mock.calls.length;
+      component.toggleDay('Tuesday'); component.createProposal();
+      expect(planning.getAvailability.mock.calls.length).toBe(calls + 1);
+      expect(component.availability()?.version).toBe(5);
+    });
+
+    it('does not propose from the old windows while the saved availability reloads', async () => {
+      const { component, planning } = await setup({}, mondayEvening);
+      const pending = new Subject<StudyAvailability>();
+      planning.getAvailability.mockReturnValueOnce(pending);
+      component.availabilitySaved();
+      expect(component.canPropose()).toBe(false);
+      component.createProposal();
+      expect(component.proposal()).toEqual([]);
+      pending.next({ ...mondayEvening, version: 6, windows: [{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }] }); pending.complete();
+      component.createProposal();
+      expect(component.proposal().map(x => [x.day, x.startMinute])).toEqual([['Tuesday', 1080]]);
+    });
+
+    it('a teacher answers the questions for a student without availability: a proposal, never a save', async () => {
+      const { component, planning } = await setup({}, null, 'student-1');
+      component.toggleDay('Wednesday'); component.createProposal();
+      expect(component.proposal().map(x => [x.day, x.startMinute, x.durationMinutes])).toEqual([['Wednesday', 1080, 60]]);
+      expect(planning.saveAvailability).not.toHaveBeenCalled();
+    });
+
+    it('a teacher sees that the student availability could not be loaded', async () => {
+      const { fixture, component, planning } = await setup({}, null, 'student-1');
+      planning.getAvailability.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      component.loadAvailability(); fixture.detectChanges();
+      expect(text(fixture)).toContain('Öğrencinin çalışma saatleri yüklenemedi');
+    });
+
+    it('shows no technical note about rules or AI services', async () => {
+      const { fixture } = await setup({}, mondayEvening);
+      expect(fixture.nativeElement.querySelector('.privacy-note')).toBeNull();
+      expect(text(fixture)).not.toContain('Yapay zekâ servisine');
+      expect(text(fixture)).not.toContain('kurallı olarak değerlendirilir');
+    });
   });
 });
 

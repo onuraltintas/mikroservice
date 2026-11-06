@@ -1,0 +1,32 @@
+<section class="panel plan-preview" aria-labelledby="plan-preview-title">
+  <h2 id="plan-preview-title">Plan önizlemesi</h2>
+  @if (error()) { <p class="notice error" role="alert">{{ error() }} @if (loadFailed()) { <button type="button" class="secondary" (click)="load()" [disabled]="loading()">Yeniden dene</button> }</p> }
+  @if (loading()) { <p role="status" class="muted">Plan önizlemesi hazırlanıyor…</p> }
+  @else if (slots().length) {
+    <h3>Haftalık ders düzenin · {{ slots().length }} ders saati</h3>
+    @for (slot of slots(); track slot.id) { <p class="slot-line">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
+    <p class="muted">Aşağıdaki önizleme bu haftalık düzenden hazırlanır. Taslağı oluşturunca Planım sayfasında kontrol edip “Planı yayımla” ile yayımlarsın; o zamana kadar mevcut planın değişmez.</p>
+    <a routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a>
+    <app-student-weekly-outcome-plan [autoPreview]="true" />
+  } @else if (!loadFailed()) {
+    @if (!hasAvailability()) {
+      <p class="notice" role="status">Önizleme için önce müsaitliğini kaydet. Plan, çalışabileceğin gün ve saatlere göre hazırlanır.</p>
+      <button type="button" (click)="editAvailability.emit()">Müsaitliğimi gir</button>
+    } @else {
+      <p>Müsaitliğin: {{ availabilityLines().join(', ') }}</p>
+      @if (proposal().length) {
+        <h3>Önerilen haftalık ders düzenin</h3>
+        @for (slot of proposal(); track slot.id) { <p class="slot-line proposed" data-testid="preview-slot">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
+        <p class="muted">Kaydedersen yıllık plan önizlemesi hemen açılır. Taslağı oluşturup Planım sayfasında “Planı yayımla” dediğinde aktif planın olur.</p>
+        <div class="actions"><button type="button" (click)="saveWeek()" [disabled]="saving()">{{ saving() ? 'Kaydediliyor…' : 'Bu düzeni kaydet ve planı önizle' }}</button>
+          <a routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a></div>
+      } @else if (!chosenLessons().length) {
+        <p class="notice" role="status">Önizleme için Derslerim adımında çalışacağın dersleri seç.</p>
+        <button type="button" (click)="editCourses.emit()">Derslerimi seç</button>
+      } @else {
+        <p class="notice">Seçtiğin dersler için müsaitliğinde ders saati oluşturulamadı. Müsaitliğine en az 30 dakikalık bir aralık ekle ya da takvimde kendin düzenle.</p>
+        <a routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a>
+      }
+    }
+  }
+</section>
