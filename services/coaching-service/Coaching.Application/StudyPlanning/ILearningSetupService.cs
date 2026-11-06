@@ -16,6 +16,14 @@ public sealed record LearningSetupUpdate(int? ExpectedVersion, int AcademicYearS
     [System.Text.Json.Serialization.JsonIgnore]
     public bool SkipGoalAlignment { get; init; }
 }
+/// <summary>E4 #26: the exam settings the student is about to save (Çalışma tercihlerim asks before saving what they remove).</summary>
+public sealed record LearningSetupImpactRequest(LearningPurpose Purpose, string? PrimaryScoreType, string? ForeignLanguage);
+/// <summary>
+/// E4 #26: what saving the new exam settings would change. RemovedTargets: the parts of the student's own primary goal that no
+/// longer fit, as the student reads them. TeacherGoalMismatch: a teacher's goal is kept but would no longer match the exam.
+/// DiplomaGradeRemoved: the saved diploma grade that the new exam drops (it belongs to YKS only).
+/// </summary>
+public sealed record LearningSetupImpact(IReadOnlyList<string> RemovedTargets, bool TeacherGoalMismatch, decimal? DiplomaGradeRemoved);
 public sealed record LearningSetupView(StudentLearningContext? Context, string NextStep, bool IsReady,
     IReadOnlyList<string> MissingFields, IReadOnlyList<string> Warnings)
 {
@@ -38,6 +46,8 @@ public interface ILearningSetupService
 {
     Task<LearningSetupView> GetAsync(CancellationToken ct);
     Task<LearningSetupView> SaveAsync(LearningSetupUpdate request, CancellationToken ct);
+    /// <summary>E4 #26: what <see cref="SaveAsync"/> with these exam settings would remove; nothing is saved.</summary>
+    Task<LearningSetupImpact> PreviewAsync(LearningSetupImpactRequest request, CancellationToken ct);
     Task<LearningCatalogView> GetCatalogAsync(Guid? lessonId, int pageNumber, CancellationToken ct);
     Task<LearningSetupView> GetForStudentAsync(Guid studentId, CancellationToken ct);
     Task<LearningCatalogView> GetCatalogForStudentAsync(Guid studentId, Guid? lessonId, int pageNumber, CancellationToken ct);

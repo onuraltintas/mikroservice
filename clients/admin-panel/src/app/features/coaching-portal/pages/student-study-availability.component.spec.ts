@@ -102,12 +102,14 @@ describe('StudentStudyAvailabilityComponent', () => {
     expect(el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
     await submit();
     expect(el.textContent).toContain('Çalışma saatlerin kaydedildi.');
-    component.rows = [{ day: 'Monday', start: '10:00', end: '09:00', endOfDay: false }]; component.dirty = true; fixture.detectChanges(); await fixture.whenStable();
+    const end = el.querySelectorAll('input[type="time"]')[1] as HTMLInputElement;
+    end.value = '07:00'; end.dispatchEvent(new Event('input')); fixture.detectChanges(); await fixture.whenStable();
+    expect(component.dirty).toBe(true);
     await submit();
     expect(service.saveAvailability).toHaveBeenCalledTimes(1);
     expect(el.textContent).not.toContain('Çalışma saatlerin kaydedildi.');
     expect(el.querySelector('[role="alert"]')!.textContent).toContain('Bitiş saati başlangıçtan sonra olmalıdır.');
-    expect(el.querySelector('[name="end-0"]')!.getAttribute('aria-invalid')).toBe('true');
+    expect(end.getAttribute('aria-invalid')).toBe('true');
     expect((el.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
   });
 

@@ -233,6 +233,8 @@ describe('Coaching owned profile', () => {
     fixture.detectChanges(); await fixture.whenStable();
     component.stage = 'HighSchoolGraduate'; component.dirty = true;
     await component.save();
+    http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: null, target: null } });
+    component.confirmSave();
     const request = http.expectOne('/api/coaching/profiles/me/student');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body.expectedVersion).toBe(3);
@@ -249,6 +251,7 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true } } });
     fixture.detectChanges(); await fixture.whenStable();
     component.student!.gradeLevel = 11; component.dirty = true; component.save();
+    http.expectOne('/api/coaching/profiles/me/student/impact').flush({ data: { examNoLongerFits: false, exam: null, diplomaGradeRemoved: null, target: null } });
     http.expectOne('/api/coaching/profiles/me/student').flush({ message: 'Profil değişti. Yeniden yükleyin.' }, { status: 409, statusText: 'Conflict' });
     expect(component.student!.gradeLevel).toBe(11); expect(component.dirty).toBe(true);
     expect(component.error()).toContain('Profil değişti'); http.verify();

@@ -2,22 +2,23 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Observable, firstValueFrom, map } from 'rxjs';
+import { Observable, catchError, firstValueFrom, forkJoin, map, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CoachingOnboardingService, OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import { LocationService } from '../../../core/services/location.service';
 import { OABT_FIELDS } from '../../../core/models/practice-exam';
-import { CoachingParentService, ParentLinkCode } from '../parent/coaching-parent.service';
+import { CoachingParentService, ParentLinkCode, ParentLinkCodeStatus } from '../parent/coaching-parent.service';
 import { NotificationPreference, NotificationPreferencesApi } from '../../../../../shared/notification-preferences.component';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
-  formatScore, nextQuestion, personalRequest, prefill, questions, signature, stepComplete, summary, targetRequest, withoutUnfitPurpose
+  emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, personalRequest, prefill, questions, signature, stepComplete,
+  summary, targetRequest, withoutUnfitPurpose
 } from './onboarding-model';
 
 /** The reminder e-mails the wizard offers (roadmap O8 categories); the defaults are the student's current settings. */
 export const ONBOARDING_EMAIL_CATEGORIES = ['StudyPlan', 'AssignmentReminders', 'Sessions'];
-interface Invitation { id: string; inviterEmail: string | null; message: string | null }
+interface Invitation { id: string; inviterEmail: string | null; message: string | null; type?: string }
 const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 
 /**
@@ -50,7 +51,10 @@ export class StudentOnboardingComponent implements OnInit {
   readonly answers = signal<Answers>({});
   readonly loading = signal(true);
   readonly busy = signal(false);
+  /** A server or network error: shown with "Yeniden dene". */
   readonly error = signal<string | null>(null);
+  /** E4 #18: an answer the wizard does not accept (e.g. diploma grade 45): shown at the question, without "Yeniden dene". */
+  readonly invalid = signal<string | null>(null);
   readonly done = signal<{ needsSubscription: boolean } | null>(null);
   /** 'target': after the wizard, "Hedefini belirle" asks only the target question, then goes back to Bugün. */
   readonly mode = signal<'wizard' | 'target'>('wizard');
@@ -83,6 +87,10 @@ export class StudentOnboardingComponent implements OnInit {
   readonly universities = signal<ComboOption[] | null>(null);
   readonly invitations = signal<Invitation[] | null>(null);
   readonly parentCode = signal<ParentLinkCode | null>(null);
+  /** E4 #18/#21: an unused code made earlier (undefined while it is checked). */
+  readonly activeCode = signal<ParentLinkCodeStatus | null | undefined>(undefined);
+  /** E4 #18: the invitations accepted in this step (its answer). */
+  readonly acceptedNow = signal<Invitation[]>([]);
   readonly emailPrefs = signal<NotificationPreference[] | null>(null);
   readonly oabtOptions: ComboOption[] = [...Object.entries(OABT_FIELDS).map(([value, label]) => ({ value, label })),
     { value: 'none', label: 'ÖABT\'ye girmeyeceğim (yalnız AGS)' }];
@@ -105,6 +113,7 @@ export class StudentOnboardingComponent implements OnInit {
       this.answers.set(this.mode() === 'target' && !view.answers.targetLocked ? change(answers, 'targetSaved') : answers);
       this.markSaved(view);
       if (this.mode() === 'target') { await this.settle(); return; }
+      this.resumeAnswers(view);
       this.locations.getProvinces().subscribe({ next: list => this.provinces.set(list.map(x => ({ value: x.id, label: x.name }))),
         error: () => this.error.set('Şehir listesi yüklenemedi. Sayfayı yenile.') });
       await this.settle();
@@ -116,6 +125,7 @@ export class StudentOnboardingComponent implements OnInit {
 
   answer(question: Question, answer: Answer) {
     if (this.busy()) return;
+    this.invalid.set(null);
     this.answers.update(current => ({ ...change(current, question.id), [question.id]: answer }));
     void this.settle();
   }
@@ -124,24 +134,22 @@ export class StudentOnboardingComponent implements OnInit {
   pickCombo(question: Question, option: ComboOption) { this.answer(question, { value: option.value, label: option.label, data: option.data }); }
 
   submitDate(question: Question) {
-    if (!this.draftDate || this.draftDate < this.oldest || this.draftDate > this.youngest) { this.error.set('Doğum tarihini kontrol et.'); return; }
-    this.error.set(null);
+    if (!this.draftDate || this.draftDate < this.oldest || this.draftDate > this.youngest) { this.invalid.set('Doğum tarihini kontrol et.'); return; }
     this.answer(question, { value: this.draftDate, label: this.draftDate.split('-').reverse().join('.') });
   }
   submitNumber(question: Question) {
     const value = this.draftNumber; const min = question.min ?? 0; const max = question.max ?? 1000;
     // A score is above 0 (the server's rule); the diploma grade is 50–100.
     if (value === null || !Number.isFinite(value) || value < min || min === 0 && value <= 0 || value > max || Math.round(value * 100) !== value * 100) {
-      this.error.set(min === 0 ? `0'dan büyük, en çok ${max} olan bir sayı yaz.` : `${min} ile ${max} arasında bir sayı yaz.`); return;
+      this.invalid.set(min === 0 ? `0'dan büyük, en çok ${max} olan bir sayı yaz.` : `${min} ile ${max} arasında bir sayı yaz.`); return;
     }
-    this.error.set(null);
     const estimated = question.kind === 'diploma' && this.draftEstimated;
     this.answer(question, { value, label: `${formatScore(value)}${estimated ? ' (tahmini)' : ''}`, data: question.kind === 'diploma' ? { estimated } : undefined });
   }
   /** "Değiştir": the answer and only the answers that depend on it are asked again. */
   edit(id: QuestionId) {
     if (this.busy()) return;
-    this.error.set(null); this.done.set(null);
+    this.error.set(null); this.invalid.set(null); this.done.set(null);
     this.answers.update(current => change(current, id));
     void this.settle();
   }
@@ -157,8 +165,19 @@ export class StudentOnboardingComponent implements OnInit {
     await this.run(async () => {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/coaching/invitations/${encodeURIComponent(invitation.id)}/accept`, {}));
       this.invitations.update(list => (list ?? []).filter(x => x.id !== invitation.id));
+      this.acceptedNow.update(list => [...list, invitation]);
     }, 'Davet kabul edilemedi. Yeniden dene.');
   }
+  /** E4 #18: the invite step's answer names the invitations accepted here. */
+  passInvite(question: Question, pending: number) {
+    const accepted = this.acceptedNow();
+    this.pass(question, accepted.length
+      ? inviteAnswer(accepted.map(x => ({ inviterEmail: x.inviterEmail, type: x.type ?? 'StudentToTeacher', acceptedAt: '' })))
+      : pending ? 'Sonra bakarım' : 'Davetim yok');
+  }
+  /** E4 #18: the parent step's answer names the code's expiry. */
+  passParent(question: Question, code: { expiresAt: string } | null) { this.pass(question, parentAnswer(code, [])); }
+  codeNote(expiresAt: string) { return parentCodeNote(expiresAt); }
   async createParentCode() {
     await this.run(async () => this.parentCode.set(await firstValueFrom(this.parents.createCode())), 'Veli kodu oluşturulamadı. Yeniden dene.');
   }
@@ -178,7 +197,7 @@ export class StudentOnboardingComponent implements OnInit {
     await this.run(async () => {
       if (prefs?.length) await firstValueFrom(this.notifications.save(prefs.map(({ category, inApp, email, sms, whatsApp }) => ({ category, inApp, email, sms: !!sms, whatsApp: !!whatsApp }))));
     }, 'E-posta tercihlerin kaydedilemedi. Yeniden dene.');
-    if (!this.error()) this.pass(question, prefs?.filter(x => x.email).map(x => x.label).join(', ') || 'E-posta istemiyorum');
+    if (!this.error()) this.pass(question, emailAnswer(prefs));
   }
 
   async finish() {
@@ -272,6 +291,10 @@ export class StudentOnboardingComponent implements OnInit {
           next: list => this.invitations.set(list), error: () => this.invitations.set([]) });
         break;
       case 'notifications': this.loadEmails(); break;
+      case 'parent':
+        this.activeCode.set(undefined);
+        this.parents.getActiveCode().subscribe({ next: code => this.activeCode.set(code), error: () => this.activeCode.set(null) });
+        break;
       case 'targetScore': {
         const level = a.ydsLevel?.value;
         if (typeof level === 'string') this.draftNumber = Number(level);
@@ -279,6 +302,21 @@ export class StudentOnboardingComponent implements OnInit {
       }
     }
     setTimeout(() => (this.host.nativeElement.querySelector('[data-current] input, [data-current] button') as HTMLElement | null)?.focus());
+  }
+
+  /**
+   * E4 #18: a resumed wizard shows the real answers of the saved steps 5 and 6 (a parent code and its expiry, the e-mails chosen),
+   * read from Identity and Notification; step 4 comes with the view. A failed read keeps the neutral label.
+   */
+  private resumeAnswers(view: OnboardingView) {
+    const relabel = (id: 'parent' | 'notifications', label: string) =>
+      this.answers.update(current => current[id] ? { ...current, [id]: { ...current[id]!, label } } : current);
+    if (view.savedSteps.includes(5))
+      forkJoin([this.parents.getActiveCode().pipe(catchError(() => of(null))), this.parents.getLinks()])
+        .subscribe({ next: ([code, links]) => relabel('parent', parentAnswer(code, links)), error: () => undefined });
+    if (view.savedSteps.includes(6))
+      this.notifications.list().subscribe({ next: list => relabel('notifications',
+        emailAnswer(list.filter(x => ONBOARDING_EMAIL_CATEGORIES.includes(x.category) && x.emailEditable !== false))), error: () => undefined });
   }
 
   private options(source: Observable<{ value: string; label?: string; count: number }[]>) {

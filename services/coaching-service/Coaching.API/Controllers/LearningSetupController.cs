@@ -17,6 +17,10 @@ public sealed class LearningSetupController(ILearningSetupService setup) : Contr
     [HttpPut]
     [RequestSizeLimit(131072)]
     public Task<IActionResult> Save([FromBody] LearningSetupUpdate request, CancellationToken ct) => Execute(async () => await setup.SaveAsync(request, ct));
+    /// <summary>E4 #26: what saving these exam settings would remove (the student's own target, the diploma grade); nothing is saved.</summary>
+    [HttpPost("impact")]
+    [RequestSizeLimit(1024)]
+    public Task<IActionResult> Impact([FromBody] LearningSetupImpactRequest request, CancellationToken ct) => Execute(async () => await setup.PreviewAsync(request, ct));
     [HttpGet("catalog")]
     public Task<IActionResult> Catalog([FromQuery] Guid? lessonId = null, [FromQuery] int pageNumber = 1, CancellationToken ct = default)
         => Execute(async () => await setup.GetCatalogAsync(lessonId, pageNumber, ct));

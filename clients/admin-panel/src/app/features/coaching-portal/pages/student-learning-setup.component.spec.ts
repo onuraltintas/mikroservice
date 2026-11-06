@@ -221,7 +221,8 @@ describe('StudentLearningSetupComponent', () => {
     expect(t.el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
     t.component.targetExamYear = 2028; t.component.changed(); await t.submit();
     expect(t.el.querySelector('[data-testid="setup-saved"]')).not.toBeNull();
-    await t.click('Çalışma amacım');
+    await t.click('Çalışma amacım'); await new Promise(resolve => setTimeout(resolve)); await t.settle();
+    expect(t.el.querySelector('[data-testid="setup-saved"]')).not.toBeNull();
     const year = t.el.querySelector('[name="examYear"]') as HTMLInputElement;
     year.value = '2040'; year.dispatchEvent(new Event('input')); await t.settle();
     await t.submit();

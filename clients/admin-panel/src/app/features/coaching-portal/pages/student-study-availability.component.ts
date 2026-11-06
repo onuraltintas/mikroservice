@@ -26,6 +26,8 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   readonly ready = signal(false);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
+  /** E4 #24: the row and field the last save attempt refused (marked next to the field). */
+  readonly invalidField = signal<{ row: number; field: 'start' | 'end' } | null>(null);
   readonly days: { value: StudyDay; label: string }[] = [
     { value: 'Monday', label: 'Pazartesi' }, { value: 'Tuesday', label: 'Salı' },
     { value: 'Wednesday', label: 'Çarşamba' }, { value: 'Thursday', label: 'Perşembe' },
@@ -90,14 +92,14 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     }, 0);
   }
 
+  /** E4 #24: every attempt clears the previous message; a refused row is marked next to its field (the form is novalidate). */
   save() {
     if (!this.ready() || this.saving() || this.loading()) return;
+    this.error.set(null); this.success.set(null); this.invalidField.set(null);
     let windows: StudyWindow[];
     try { windows = this.validatedWindows(); }
-    catch (error) { this.error.set(error instanceof Error ? error.message : 'Çalışma saatlerini kontrol et.'); return; }
+    catch (error) { this.error.set(`Çalışma saatlerin kaydedilmedi. ${error instanceof Error ? error.message : 'Çalışma saatlerini kontrol et.'}`); return; }
     this.saving.set(true);
-    this.error.set(null);
-    this.success.set(null);
     this.service.saveAvailability({ expectedVersion: this.version, timeZoneId: this.timeZoneId, windows })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
       .subscribe({ next: preferences => { this.apply(preferences); this.success.set('Çalışma saatlerin kaydedildi. Aktif planın değişmedi.'); this.saved.emit(); },
@@ -112,13 +114,16 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   private validatedWindows(): StudyWindow[] {
     if (this.rows.length > 42) throw new Error('En fazla 42 saat aralığı eklenebilir.');
     const windows = this.rows.map(row => ({ day: row.day, startMinute: this.minute(row.start), endMinute: row.endOfDay ? 1440 : this.minute(row.end) }));
-    if (windows.some(row => !this.days.some(day => day.value === row.day) || !Number.isFinite(row.startMinute)
-      || !Number.isFinite(row.endMinute) || row.endMinute <= row.startMinute))
+    const wrong = windows.findIndex(row => !this.days.some(day => day.value === row.day) || !Number.isFinite(row.startMinute)
+      || !Number.isFinite(row.endMinute) || row.endMinute <= row.startMinute);
+    if (wrong >= 0) {
+      this.invalidField.set({ row: wrong, field: Number.isFinite(windows[wrong].startMinute) ? 'end' : 'start' });
       throw new Error('Gün ve saatleri kontrol et. Bitiş saati başlangıçtan sonra olmalıdır.');
+    }
     for (const day of this.days) {
-      const sorted = windows.filter(row => row.day === day.value).sort((a, b) => a.startMinute - b.startMinute);
-      if (sorted.some((row, index) => index > 0 && row.startMinute < sorted[index - 1].endMinute))
-        throw new Error(`${day.label} günündeki saat aralıkları çakışıyor.`);
+      const sorted = windows.map((row, index) => ({ ...row, index })).filter(row => row.day === day.value).sort((a, b) => a.startMinute - b.startMinute);
+      const overlap = sorted.find((row, index) => index > 0 && row.startMinute < sorted[index - 1].endMinute);
+      if (overlap) { this.invalidField.set({ row: overlap.index, field: 'start' }); throw new Error(`${day.label} günündeki saat aralıkları çakışıyor.`); }
     }
     return windows;
   }
@@ -128,6 +133,8 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     const [hour, minute] = time.split(':').map(Number);
     return hour * 60 + minute;
   }
+
+  isInvalid(row: number, field: 'start' | 'end') { const wrong = this.invalidField(); return wrong?.row === row && wrong.field === field ? 'true' : null; }
 
   private clock(minute: number) { return `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`; }
 

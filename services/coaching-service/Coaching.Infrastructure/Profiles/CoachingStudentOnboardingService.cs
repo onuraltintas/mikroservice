@@ -24,7 +24,11 @@ public sealed record OnboardingView(string Status, int NextStep, IReadOnlyList<i
 {
     /// <summary>Paket D review (M1, L3): the exams that fit the saved grade (the server's rule); the wizard offers only these.</summary>
     public IReadOnlyList<LearningPurpose> AllowedPurposes { get; init; } = [];
+    /// <summary>E4 #18: the invitations the student accepted (the invite step's answer when the wizard is resumed), oldest first.</summary>
+    public IReadOnlyList<OnboardingInvitation> AcceptedInvitations { get; init; } = [];
 }
+/// <summary>Type: StudentToTeacher or StudentToInstitution. InviterEmail is null when the inviter's account is gone.</summary>
+public sealed record OnboardingInvitation(string? InviterEmail, string Type, DateTime AcceptedAt);
 public sealed record OnboardingAnswers(DateOnly? BirthDate, string? HomeProvinceId, string? HomeCity, string? HomeDistrictId, string? HomeDistrict,
     CoachingEducationStatus EducationStatus, int? GradeLevel, int? GraduationYear, string? SchoolName,
     LearningPurpose? Purpose, string? PrimaryScoreType, string? ForeignLanguage, Guid? TargetExamSessionId, int? TargetExamYear,
@@ -480,6 +484,11 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     private static string Normalize(string? type) =>
         type is null ? "" : LanguageScoreRules.IsLanguageExam(type.Trim().ToUpperInvariant()) ? type.Trim().ToUpperInvariant() : ScoreModelRules.Normalize(type) ?? "";
     private static decimal ScaleMax(string type) => LanguageScoreRules.IsLanguageExam(type) ? 100 : ScoreModelRules.Get(type).MaxScore;
+    /// <summary>E4: a score type as the student reads it ("YKS Sayısal"); an unknown one as it is.</summary>
+    internal static string ScoreTypeName(string type)
+    {
+        try { return TypeName(type); } catch (Exception e) when (e is ArgumentException or InvalidOperationException or KeyNotFoundException) { return type; }
+    }
     private static string TypeName(string type) => LanguageScoreRules.IsLanguageExam(type)
         ? PracticeExamRules.Profiles.Single(x => x.Code == type).Name : ScoreModelRules.Get(type).Name;
     internal static ExamType ExamTypeOf(LearningPurpose purpose) => purpose switch
@@ -565,7 +574,19 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         var saved = Enumerable.Range(1, CoachingStudentProfile.OnboardingStepCount).Where(p.HasOnboardingStep).ToArray();
         var status = p.OnboardingCompletedAt is not null ? "Completed" : p.OnboardingSteps == 0 ? "NotStarted" : "InProgress";
         return new(status, p.NextOnboardingStep, saved, p.OnboardingCompletedAt, AcademicYearStart(), answers, sessions)
-            { AllowedPurposes = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel) };
+            { AllowedPurposes = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel), AcceptedInvitations = await AcceptedInvitationsAsync(p.UserId, ct) };
+    }
+
+    private async Task<IReadOnlyList<OnboardingInvitation>> AcceptedInvitationsAsync(Guid student, CancellationToken ct)
+    {
+        var rows = await db.CoachingInvitations.AsNoTracking()
+            .Where(x => x.AcceptedByUserId == student && x.Status == CoachingInvitationStatus.Accepted && x.Role == "Student")
+            .OrderBy(x => x.UpdatedAt).ThenBy(x => x.Id).Take(20)
+            .Select(x => new { x.InviterUserId, x.IsInstitutionInvitation, x.UpdatedAt, x.CreatedAt }).ToArrayAsync(ct);
+        if (rows.Length == 0) return [];
+        var senders = (await accounts.GetAccountsAsync(rows.Select(x => x.InviterUserId).Distinct().ToArray(), ct)).ToDictionary(x => x.UserId);
+        return rows.Select(x => new OnboardingInvitation(senders.GetValueOrDefault(x.InviterUserId)?.Email,
+            x.IsInstitutionInvitation ? "StudentToInstitution" : "StudentToTeacher", x.UpdatedAt ?? x.CreatedAt)).ToArray();
     }
 
     private async Task<OnboardingTarget?> TargetAsync(AcademicGoal goal, CancellationToken ct)

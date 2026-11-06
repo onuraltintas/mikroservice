@@ -51,6 +51,15 @@ public sealed record UpdateCoachingTeacherProfile(int ExpectedVersion, string? T
 public sealed record TeacherStudentProfileUpdate([property:System.Text.Json.Serialization.JsonRequired] [System.ComponentModel.DataAnnotations.Range(0,int.MaxValue)] int ExpectedVersion,
     string? SchoolName,string? SchoolCity,string? SchoolDistrict,string? SchoolType,string? ClassBranch,DateOnly? BirthDate,string? Bio);
 
+/// <summary>E4 #23: the education Profilim is about to save (it asks before saving what the change removes or leaves not fitting).</summary>
+public sealed record StudentEducationImpactRequest(CoachingEducationStatus EducationStatus, int? GradeLevel);
+/// <summary>
+/// E4 #23/#26: what saving a new education on Profilim would do. ExamNoLongerFits/Exam: the exam in the study settings no longer fits
+/// (it stays saved; the student chooses again). DiplomaGradeRemoved: the saved diploma grade the server drops. Target: the student's
+/// own primary goal, named when the exam no longer fits (it is cleaned up once a new exam is chosen).
+/// </summary>
+public sealed record StudentEducationImpact(bool ExamNoLongerFits, string? Exam, decimal? DiplomaGradeRemoved, string? Target);
+
 public sealed record CoachingOwnProfile(CoachingStudentProfile? Student, CoachingTeacherProfile? Teacher,
     IReadOnlyList<CoachingInstitutionMembership> Memberships)
 {

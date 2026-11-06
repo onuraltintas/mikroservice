@@ -129,7 +129,7 @@ public sealed class CoachingProfileConsistencyTests
         field.DiplomaGradeRemoved.Should().BeNull("the diploma grade stays with YKS");
 
         var exam = await s.Settings.PreviewAsync(new(LearningPurpose.Yds, null, "English"), default);
-        exam.RemovedTargets.Should().Equal("Ankara Üniversitesi · Bilgisayar Mühendisliği", "TYT net hedefin (90)", "AYT · Sayısal net hedefin (60,5)");
+        exam.RemovedTargets.Should().BeEquivalentTo(["Ankara Üniversitesi · Bilgisayar Mühendisliği", "TYT net hedefin (90)", "AYT · Sayısal net hedefin (60,5)"]);
         exam.DiplomaGradeRemoved.Should().Be(85m);
 
         // Asking saves nothing; saving then removes exactly what was announced.

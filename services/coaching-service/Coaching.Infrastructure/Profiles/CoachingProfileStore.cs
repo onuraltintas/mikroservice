@@ -112,6 +112,33 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
     }
 
     /// <summary>Paket D review (L2): Profilim asks the diploma grade only when the exam does (YKS, or no exam chosen yet).</summary>
+    /// <summary>
+    /// E4 #23: what <see cref="UpdateStudentAsync"/> with this education would remove or leave not fitting (the same rules as
+    /// <see cref="FollowEducationAsync"/>); nothing is saved.
+    /// </summary>
+    public async Task<StudentEducationImpact> PreviewEducationAsync(Guid userId, CoachingEducationStatus status, int? grade, CancellationToken ct)
+    {
+        var profile = await db.CoachingStudentProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == userId, ct)
+            ?? throw new KeyNotFoundException("Koçluk profili bulunamadı.");
+        var context = await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == userId)
+            .Select(x => new { x.Purpose }).SingleOrDefaultAsync(ct);
+        LearningPurpose? purpose = context?.Purpose;
+        var diploma = profile.DiplomaGrade is { } saved && !LearningPurposes.DiplomaApplies(purpose, status, grade) ? saved : (decimal?)null;
+        var unfit = purpose is { } p && LearningPurposes.IsSelectable(p) && LearningPurposes.FitsEducation(p, profile.EducationStatus, profile.GradeLevel)
+            && !LearningPurposes.FitsEducation(p, status, grade);
+        if (!unfit) return new(false, null, diploma, null);
+        var goalId = await db.Set<StudentPrimaryGoal>().AsNoTracking().Where(x => x.StudentId == userId).Select(x => (Guid?)x.GoalId).SingleOrDefaultAsync(ct);
+        var goal = goalId is null ? null : await db.AcademicGoals.AsNoTracking().SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == userId && x.SetByTeacherId == null, ct);
+        var target = goal is null ? null : await Coaching.Infrastructure.StudyPlanning.GoalExamFit.DescribeAsync(db, goal, ct);
+        return new(true, ExamLabel(purpose!.Value), diploma, target);
+    }
+
+    private static string ExamLabel(LearningPurpose purpose) => purpose switch
+    {
+        LearningPurpose.Lgs => "LGS", LearningPurpose.Yks => "YKS", LearningPurpose.Ags => "AGS / ÖABT",
+        LearningPurpose.Yds => "YDS", LearningPurpose.Yokdil => "YÖKDİL", _ => purpose.ToString()
+    };
+
     public async Task<bool> ExamAsksDiplomaAsync(Guid userId, CancellationToken ct) => LearningPurposes.ExamAsksDiploma(
         await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == userId).Select(x => (LearningPurpose?)x.Purpose).SingleOrDefaultAsync(ct));
 
