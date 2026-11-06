@@ -5,6 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { CoachingProfileComponent } from '../../../../../shared/coaching-profile.component';
 import { vi } from 'vitest';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 describe('Coaching owned profile', () => {
   it('lets a student fill education fields and save them through the rendered form', async () => {
@@ -622,6 +623,30 @@ describe('Profilim (F2 #25)', () => {
     expect(t.el.querySelector('#homeDistrict-error')!.textContent).toContain('ilçeni');
     expect(document.activeElement).toBe(district);
   });
+
+  // F2/F3: after a student accepts an invitation the side menu is refreshed (forced past a request in flight); staff do not.
+  for (const role of ['Student', 'Teacher'] as const) {
+    it(`refreshes the student menu after an accepted invitation (${role})`, async () => {
+      const navigation = { refresh: vi.fn() };
+      TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
+        { provide: CoachingStudentNavigationService, useValue: navigation }] });
+      const fixture = TestBed.createComponent(CoachingProfileComponent);
+      fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', role);
+      fixture.detectChanges(); await fixture.whenStable();
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+      http.expectOne('/api/coaching/profiles/me').flush({ data: role === 'Student' ? { student: tenth } : { teacher: { version: 1, isActive: true, subjects: [] } } });
+      fixture.detectChanges(); await fixture.whenStable();
+      fixture.componentInstance.respond('invite-1', 'reject');
+      http.expectOne('/api/coaching/invitations/invite-1/reject').flush(null);
+      http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+      expect(navigation.refresh).not.toHaveBeenCalled();
+      fixture.componentInstance.respond('invite-2', 'accept');
+      http.expectOne('/api/coaching/invitations/invite-2/accept').flush(null);
+      if (role === 'Student') expect(navigation.refresh).toHaveBeenCalledWith({ force: true });
+      else expect(navigation.refresh).not.toHaveBeenCalled();
+    });
+  }
 
   it('retries a failed invitation list only when it failed', async () => {
     TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
