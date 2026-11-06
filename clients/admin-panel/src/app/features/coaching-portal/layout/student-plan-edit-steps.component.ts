@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map, startWith } from 'rxjs';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { Subscription, catchError, filter, forkJoin, map, of, startWith } from 'rxjs';
+import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 
 const root = '/coaching-portal/plan';
 const STEPS = [
@@ -13,6 +15,8 @@ const STEPS = [
 /**
  * T4 (31.10.2026): "Planı düzenle" is one flow in three steps over the existing pages — weekly lessons, free hours,
  * then the plan wizard (or the weekly preview). It only navigates; each page keeps its own saving and validation.
+ * Paket F #37: a step is shown as done only when its data exists (lessons in the weekly draft, saved free hours), read again on
+ * every step change; an unknown state (loading, failed) is not done. The last step has no "done" state of its own.
  */
 @Component({
   selector: 'app-student-plan-edit-steps',
@@ -23,8 +27,8 @@ const STEPS = [
     <nav class="edit-steps" aria-label="Planı düzenleme adımları">
       <ol class="steps">
         @for (step of steps; track step.path; let i = $index) {
-          <li [class.done]="i < current()" [class.now]="i === current()">
-            <a [routerLink]="step.path" [attr.aria-current]="i === current() ? 'step' : null"><span class="n" aria-hidden="true">{{ i + 1 }}</span> {{ step.label }}</a>
+          <li [class.done]="done()[i]" [class.now]="i === current()">
+            <a [routerLink]="step.path" [attr.aria-current]="i === current() ? 'step' : null" [attr.aria-label]="done()[i] ? (i + 1) + ' ' + step.label + ' (tamamlandı)' : null"><span class="n" aria-hidden="true">{{ i + 1 }}</span> {{ step.label }}</a>
           </li>
         }
       </ol>
@@ -64,4 +68,24 @@ export class StudentPlanEditStepsComponent {
     const path = this.url().split(/[?#]/)[0];
     return STEPS.findIndex(step => path === step.path || ('also' in step && step.also.some(other => path === other)));
   });
+  private readonly weekly = inject(CoachingWeeklyDraftService);
+  private readonly planning = inject(CoachingStudyPlanningService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly state = signal<{ lessons: boolean; hours: boolean }>({ lessons: false, hours: false });
+  readonly done = computed(() => [this.state().lessons, this.state().hours, false]);
+  private request?: Subscription;
+
+  constructor() {
+    // Read again on each step change, so what was just saved on the previous step counts.
+    effect(() => { if (this.current() >= 0) this.load(); });
+    this.destroyRef.onDestroy(() => this.request?.unsubscribe());
+  }
+
+  private load() {
+    this.request?.unsubscribe();
+    this.request = forkJoin({
+      lessons: this.weekly.get().pipe(map(page => !!page.draft?.slots.length), catchError(() => of(false))),
+      hours: this.planning.getAvailability().pipe(map(availability => !!availability?.windows.length), catchError(() => of(false)))
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(state => this.state.set(state));
+  }
 }
