@@ -34,14 +34,14 @@ describe('CoachingPortalHomeComponent', () => {
   });
 
   const noTarget: ScoreEstimate = { estimates: [], target: null, notice: null };
-  async function render(today: StudentTodayView, setupReady = true, estimate: ScoreEstimate = noTarget) {
+  async function render(today: StudentTodayView, setupReady = true, estimate: ScoreEstimate = noTarget, purposeNotForEducation = false) {
     const profile = signal<UserProfile | null>({ id: 'user-1', email: 'a@test', firstName: 'Elif', lastName: 'Test', username: 'a@test', roles: ['Student'], role: 'Student', permissions: [], product: 'coaching' });
     const api = { get: vi.fn(() => of(today)) };
     TestBed.configureTestingModule({ imports: [CoachingPortalHomeComponent], providers: [
       provideRouter([]),
       { provide: AuthService, useValue: { userProfile: profile } },
       { provide: CoachingStudentTodayService, useValue: api },
-      { provide: CoachingLearningSetupService, useValue: { get: () => of({ context: null, isReady: setupReady }) } },
+      { provide: CoachingLearningSetupService, useValue: { get: () => of({ context: null, isReady: setupReady, purposeNotForEducation }) } },
       { provide: CoachingWhatsNewService, useValue: { visible: () => true, dismiss: vi.fn() } },
       { provide: CoachingScoreEstimateService, useValue: { estimate: vi.fn(() => of(estimate)) } },
       { provide: StaffPortalRedirectService, useValue: { redirect: vi.fn(), url: () => '' } }
@@ -122,6 +122,14 @@ describe('CoachingPortalHomeComponent', () => {
     r = await render(view(empty), true);
     expect(r.el.querySelector('[data-home-block="setup"]')!.textContent).toContain('İlk planını oluştur');
     expect(r.el.querySelector('a[href="/coaching-portal/plan/wizard"]')).not.toBeNull();
+  });
+
+  it('says why the setup is open again when the exam no longer fits the grade (Paket D #8)', async () => {
+    const { el } = await render(view({ hasActivePlan: true }), false, noTarget, true);
+    const setup = el.querySelector('[data-home-block="setup"]')!;
+    expect(setup.querySelector('h2')!.textContent).toContain('Çalışma tercihlerini güncelle');
+    expect(setup.textContent).toContain('Sınıfın değişti; seçili sınav yeni sınıfına uymuyor.');
+    expect(setup.querySelector('a[href="/coaching-portal/account/settings"]')!.textContent).toContain('Çalışma tercihlerim');
   });
 
   describe('goal card (Paket C #4)', () => {

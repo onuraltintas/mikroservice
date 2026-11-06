@@ -29,6 +29,11 @@ test('the new text covers every item the wizard collects, with its purpose', () 
   assert.match(text, /ilçesindeki okulların önce gösterilmesi/);
   assert.match(text, /sınıf, çalışma ayarlarına da aktarılır/);
   assert.match(text, /OBP'nin YKS puan tahminine ve hedef karşılaştırmasına/);
+  // Paket D: a grade changed on Profilim updates the study settings and the diploma grade; an exam change clears the student's own unfit target.
+  assert.match(text, /çalışma ayarları da güncellenir/);
+  assert.match(text, /kayıtlı diploma notu silinir/);
+  assert.match(text, /yeni sınava uymayan okul, bölüm, puan ve net hedefleri kaldırılır/);
+  assert.match(text, /öğretmenin belirlediği hedef değiştirilmez/);
   for (const page of ['Profil ve ayarlar › Profilim', 'Profil ve ayarlar › Çalışma tercihlerim', 'Gelişimim › Hedefim', 'Profil ve ayarlar › Bildirimler'])
     assert.ok(text.includes(page), `missing correction page: ${page}`);
   // The rest of the published 1 Ekim text stays (controller, legal bases, transfers, retention, rights).

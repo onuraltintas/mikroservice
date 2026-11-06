@@ -1,6 +1,6 @@
 import { OnboardingView } from '../../../core/services/coaching-onboarding.service';
 import {
-  Answers, FlowContext, change, currentStep, examRequest, nextQuestion, personalRequest, prefill, questions, scoreTargetTypes, signature,
+  Answers, FlowContext, change, currentStep, purposeChoices, withAnswer, examRequest, nextQuestion, personalRequest, prefill, questions, scoreTargetTypes, signature,
   stepComplete, summary, targetRequest
 } from './onboarding-model';
 
@@ -10,6 +10,19 @@ describe('first-login wizard flow (Paket C #3)', () => {
   const a = (value: string | number | null, label = String(value), data?: Record<string, unknown>) => ({ value, label, data });
   const personal: Answers = { birthDate: a('2012-05-01', '01.05.2012'), city: a('06', 'Ankara'), district: a('0601', 'Çankaya'), education: a('8', '8. sınıf') };
   const ids = (answers: Answers) => questions(answers, context).map(x => x.id);
+
+  it('offers only the exams that fit the grade and asks the exam again when a new grade no longer fits it (Paket D #8)', () => {
+    expect(purposeChoices(8).map(x => x.value)).toEqual(['Lgs']);
+    expect(purposeChoices(9).map(x => x.value)).toEqual(['Yks', 'Ags', 'Yds', 'Yokdil']);
+    expect(purposeChoices('graduate').map(x => x.value)).toEqual(['Yks', 'Ags', 'Yds', 'Yokdil']);
+    expect(purposeChoices(null).length).toBe(5);
+    expect(questions({ ...personal, education: a('10') }, context).find(x => x.id === 'purpose')!.choices!.map(x => x.value)).not.toContain('Lgs');
+    const lgs: Answers = { ...personal, purpose: a('Lgs'), session: a('session:lgs-27:2027'), targetMode: a('school') };
+    const older = withAnswer(lgs, 'education', a('9', '9. sınıf'));
+    expect(older.education!.value).toBe('9');
+    expect(older.purpose).toBeUndefined(); expect(older.session).toBeUndefined(); expect(older.targetMode).toBeUndefined();
+    expect(withAnswer(lgs, 'education', a('7', '7. sınıf')).purpose!.value).toBe('Lgs');
+  });
 
   it('asks one question at a time, each with a reason, and every answer comes from a component', () => {
     expect(nextQuestion({}, context)!.id).toBe('birthDate');

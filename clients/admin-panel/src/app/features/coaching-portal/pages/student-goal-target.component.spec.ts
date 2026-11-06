@@ -32,6 +32,22 @@ describe('StudentGoalTargetComponent', () => {
     component.score = 450; component.maxScore = 500; component.examType = 'LGS'; component.saveScore();
     expect(service.saveGoalScoreTarget).toHaveBeenCalledWith('goal', 4, 450, 500, 'LGS', 'student');
   });
+  it('says when a teacher goal no longer matches the exam in the study settings (Paket D #9)', async () => {
+    const { component, fixture } = await setup(false);
+    await component.open();
+    component.target.set({ goalId: 'goal', version: 3, targetSchoolId: null, targetUniversityProgramId: 'p', canEdit: false, examMismatch: true });
+    fixture.detectChanges(); await fixture.whenStable();
+    const note = fixture.nativeElement.querySelector('[data-testid="goal-exam-mismatch"]') as HTMLElement;
+    expect(note.textContent).toContain('Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor.');
+    expect(note.textContent).toContain('öğretmenine yaz');
+    fixture.componentRef.setInput('staffStudentId', 'student'); fixture.detectChanges(); await fixture.whenStable(); await component.open();
+    component.target.set({ goalId: 'goal', version: 3, targetSchoolId: null, targetUniversityProgramId: 'p', canEdit: true, examMismatch: true });
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[data-testid="goal-exam-mismatch"]').textContent).toContain('öğrencinin çalışma tercihlerindeki sınavla artık eşleşmiyor');
+    component.target.set({ goalId: 'goal', version: 3, targetSchoolId: null, targetUniversityProgramId: 'p', canEdit: true, examMismatch: false });
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[data-testid="goal-exam-mismatch"]')).toBeNull();
+  });
   it('shows the linked catalog name and warns when its record is inactive', async () => {
     const { component, fixture } = await setup();
     await component.open();
