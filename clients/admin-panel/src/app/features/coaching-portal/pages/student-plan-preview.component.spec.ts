@@ -60,6 +60,33 @@ describe('StudentPlanPreviewComponent', () => {
     expect(edit).toHaveBeenCalledOnce();
   });
 
+  // Review of PR #126: the status container is always there, so a screen reader hears the notice when it appears.
+  it('keeps one live status container whose text changes', async () => {
+    const { el } = await setup(mondayEvening);
+    const status = el.querySelector('[data-testid="unplaced-status"]');
+    expect(status?.getAttribute('role')).toBe('status');
+    expect(status?.textContent?.trim()).toBe('');
+  });
+
+  // Review of PR #126: a saved week that leaves a chosen course without time says so, and a new proposal can be made.
+  it('names the courses without time in a saved week and makes a new proposal on request', async () => {
+    const { fixture, component, el, weekly } = await setup(mondayEvening, saved);
+    const notice = el.querySelector('[data-testid="unplaced-status"] [data-testid="unplaced-notice"]');
+    expect(notice?.textContent?.replace(/\s+/g, ' ')).toContain('Şu dersler için saat kalmadı: Fen Bilimleri.');
+    const edit = vi.fn(); component.editAvailability.subscribe(edit);
+    button(el, 'Müsaitliğime saat ekle')!.click(); expect(edit).toHaveBeenCalledOnce();
+    button(el, 'Yeni öneri oluştur')!.click(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
+    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Matematik (60 dk)']);
+    expect(el.textContent).toContain('kayıtlı haftalık düzeninin yerine geçer');
+    expect(weekly.save).not.toHaveBeenCalled();
+    button(el, 'Kayıtlı düzenime dön')!.click(); fixture.detectChanges();
+    expect(el.querySelectorAll('[data-testid="preview-slot"]').length).toBe(0);
+    button(el, 'Yeni öneri oluştur')!.click(); fixture.detectChanges();
+    button(el, 'Bu düzeni kaydet ve planı önizle')!.click(); fixture.detectChanges(); await fixture.whenStable();
+    expect(weekly.save).toHaveBeenCalledWith(1, 'Europe/Istanbul', [expect.objectContaining({ lessonId: 'science' }), expect.objectContaining({ lessonId: 'math' })]);
+  });
+
   it('without a priority from the page the exam weight and then the name decide', async () => {
     const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1080 }] };
     const { el } = await setup(oneHour);

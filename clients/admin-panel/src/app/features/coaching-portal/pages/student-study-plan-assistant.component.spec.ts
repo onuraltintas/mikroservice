@@ -217,8 +217,13 @@ describe('StudentStudyPlanAssistantComponent', () => {
       const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1080 }] };
       const { fixture, component } = await setup({ context: { ...context, coursePreferences: prefs } }, oneHour, null, { lessons: three,
         courses: [{ lessonId: 'math', priority: 3, examQuestions: 20 }, { lessonId: 'tur', priority: 3, examQuestions: 20 }, { lessonId: 'din', priority: 1, examQuestions: 10 }] });
+      const status = fixture.nativeElement.querySelector('[data-testid="unplaced-status"]') as HTMLElement;
+      expect(status.getAttribute('role')).toBe('status'); expect(status.textContent?.trim()).toBe('');
       component.createProposal(); fixture.detectChanges();
       expect(component.proposal().map(x => x.lessonId)).toEqual(['din']);
+      // Review of PR #126: the courses are named once, in the notice (inside the same live container), not in the chat.
+      expect(component.messages().at(-1)!.content).not.toContain('Türkçe');
+      expect(status.querySelector('[data-testid="unplaced-notice"]')).toBeTruthy();
       const notice = fixture.nativeElement.querySelector('[data-testid="unplaced-notice"]') as HTMLElement;
       // Matematik already has a saved hour (Friday); only Türkçe is without time.
       expect(notice.textContent?.replace(/\s+/g, ' ')).toContain('Şu dersler için saat kalmadı: Türkçe. Müsaitliğine saat ekle ya da ders sayısını azalt.');

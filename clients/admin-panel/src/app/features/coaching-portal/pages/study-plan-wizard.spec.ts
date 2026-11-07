@@ -95,10 +95,29 @@ describe('createStudyPlanProposal', () => {
           ['Monday', 'mat-ayt'], ['Tuesday', 'mat-tyt'], ['Wednesday', 'tur'], ['Thursday', 'fiz-ayt'], ['Friday', 'bio-ayt']]);
       });
 
-      it('uses the topic count when the exam weight is not known for every course', () => {
-        const lessons = [{ id: 'a', name: 'Ağırlıksız', examCode: 'TYT', topicCount: 4 }, { id: 'b', name: 'Büyük', examCode: 'TYT', examQuestions: 1, topicCount: 30 }];
-        expect(rankLessons(lessons, []).map(x => x.id)).toEqual(['b', 'a']);
-        expect(rankLessons(lessons.map(x => ({ ...x, topicCount: undefined })), []).map(x => x.id)).toEqual(['a', 'b']);
+      // Review of PR #126: one course without a count must not switch the whole ranking to topic counts.
+      it('ranks courses with a known count first, the others after them by topic count', () => {
+        const lessons = [
+          { id: 'mat', name: 'Matematik (TYT)', examCode: 'TYT', examQuestions: 40, topicCount: 60 },
+          { id: 'fel', name: 'Felsefe (TYT)', examCode: 'TYT', examQuestions: null, topicCount: 50 },
+          { id: 'din', name: 'Din Kültürü (TYT)', examCode: 'TYT', examQuestions: 5, topicCount: 40 },
+          { id: 'tur', name: 'Türkçe (TYT)', examCode: 'TYT', examQuestions: 40, topicCount: 36 },
+          { id: 'sec', name: 'Seçmeli', examCode: 'TYT', topicCount: 10 },
+          { id: 'abc', name: 'Adsız', examCode: 'TYT' }];
+        expect(rankLessons(lessons, []).map(x => x.id)).toEqual(['mat', 'tur', 'din', 'fel', 'sec', 'abc']);
+        const proposal = createProposalFromWindows(week.slice(0, 2), lessons, []);
+        expect(proposal.map(x => x.lessonId)).toEqual(['mat', 'tur']);
+      });
+
+      it('lists the courses without time in the order the proposal used', () => {
+        const lessons = [
+          { id: 'a', name: 'A', examCode: 'TYT', examQuestions: 40, topicCount: 1 },
+          { id: 'b', name: 'B', examCode: 'TYT', examQuestions: null, topicCount: 50 },
+          { id: 'c', name: 'C', examCode: 'TYT', examQuestions: 5, topicCount: 30 },
+          { id: 'd', name: 'D', examCode: 'TYT', examQuestions: 4, topicCount: 1 }];
+        const proposal = createProposalFromWindows(week.slice(0, 1), lessons, []);
+        expect(proposal.map(x => x.lessonId)).toEqual(['a']);
+        expect(lessonsWithoutTime(lessons, [], proposal).map(x => x.id)).toEqual(['c', 'd', 'b']);
       });
 
       it('keeps the least planned course first among equals and never moves saved cards', () => {
@@ -119,6 +138,15 @@ describe('createStudyPlanProposal', () => {
         expect(unplaced).toHaveLength(8);
         expect(unplaced.map(x => x.id)).toEqual(['kim-ayt', 'fiz-tyt', 'kim-tyt', 'bio-tyt', 'cog', 'din', 'fel', 'tar']);
         expect(lessonsWithoutTime(lessons.slice(0, 2), [{ ...proposal[0], lessonId: 'BIO-AYT' }], []).map(x => x.id)).toEqual(['bio-tyt']);
+      });
+
+      it('warns in development about a chosen course the server could not weight', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        rankedWizardLessons([{ id: 'x', name: 'Seçmeli Okuma', examCode: 'LGS', gradeNumber: 8 }, { id: 'y', name: 'Türkçe', examCode: 'LGS', gradeNumber: 8 }],
+          [{ lessonId: 'x', priority: 3, examQuestions: null }, { lessonId: 'y', priority: 3, examQuestions: 20 }]);
+        expect(warn).toHaveBeenCalledOnce();
+        expect(String(warn.mock.calls[0][0])).toContain('Seçmeli Okuma');
+        warn.mockRestore();
       });
 
       it('takes the priority and the exam weight from the weekly draft page', () => {

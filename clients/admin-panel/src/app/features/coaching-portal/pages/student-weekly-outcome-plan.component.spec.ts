@@ -61,10 +61,21 @@ describe('weekly outcome plan preview',()=>{
     c.generatePreview();fixture.detectChanges();const el=fixture.nativeElement as HTMLElement;
     const part=el.querySelector('[data-testid="unscheduled-lessons"]');
     expect(part?.textContent?.replace(/\s+/g,' ')).toContain('Türkçe (TYT), Felsefe (TYT) için haftalık düzeninde ders saati yok');
-    expect(el.textContent).toContain('HEDEF TARİHİNE SIĞMAYAN DERSLER VAR');
-    expect(el.querySelector('a[href="/coaching-portal/plan/weekly"]')).toBeTruthy();
+    // Review of PR #126: only courses without a weekly lesson: their own eyebrow, heading and action.
+    expect(el.textContent).toContain('HAFTALIK DÜZENDE SAATİ OLMAYAN DERSLER');expect(el.textContent).not.toContain('HEDEF TARİHİNE SIĞMAYAN');
+    expect(el.querySelector('.decisions h2')?.textContent).toBe('Bu dersler yıllık plana girmiyor');
+    expect(el.querySelector('.decisions a[href="/coaching-portal/plan/weekly"]')?.textContent).toContain('Haftalık takvimime saat ekle');
+    expect(el.querySelector('[data-testid="prioritize-short"]')).toBeNull();
     service.preview.mockReturnValue(of(fits) as any);c.generatePreview();fixture.detectChanges();
     expect(el.querySelector('[data-testid="unscheduled-lessons"]')).toBeNull();expect(el.textContent).not.toContain('SIĞMAYAN DERSLER');
+  });
+  it('uses the teacher wording for courses without a weekly lesson',async ()=>{
+    const{fixture,c,service}=await setup('student-42');
+    service.preview.mockReturnValue(of({...short,unscheduledLessons:[{lessonId:'tur',lessonName:'Türkçe'}]}) as any);c.generatePreview();fixture.detectChanges();
+    const el=fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="unscheduled-lessons"]')?.textContent).toContain('Türkçe için öğrencinin haftalık düzeninde ders saati yok');
+    // Both reasons: the courses that do not fit keep the first eyebrow.
+    expect(el.textContent).toContain('HEDEF TARİHİNE SIĞMAYAN DERSLER VAR');
   });
   it('includes preserved pinned work in preview totals',async ()=>{
     const{c,service}=await setup();service.preview.mockReturnValue(of({...short,protectedTaskCount:1,protectedTasks:[{date:'2027-05-24',startMinute:1080,title:'Sabit görev',minutes:15}]}) as any);c.generatePreview();expect(c.totalMinutes()).toBe(15);

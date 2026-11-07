@@ -30,6 +30,26 @@ public sealed class ExamQuestionWeightsTests
         Assert.Equal(21m,weights[lessons[0].Id]);Assert.Equal(24m,weights[lessons[1].Id]);Assert.Equal(6m,weights[lessons[2].Id]);Assert.Equal(6m,weights[lessons[3].Id]);
     }
 
+    // Review of PR #126: catalog names with a circumflex or the language in brackets still find their section.
+    [Fact]
+    public void RealLgsCatalogNamesFindTheirSections()
+    {
+        ExamQuestionWeights.Lesson Lgs(string name)=>new(Guid.NewGuid(),name,"LGS",[]);
+        var lessons=new[]{Lgs("Türkçe"),Lgs("Matematik"),Lgs("Fen Bilimleri"),Lgs("T.C. İnkılap Tarihi ve Atatürkçülük"),
+            Lgs("Din Kültürü ve Ahlâk Bilgisi"),Lgs("Yabancı Dil (İngilizce)"),Lgs("Seçmeli Okuma Becerileri")};
+        var weights=ExamQuestionWeights.For(LearningPurpose.Lgs,lessons);
+        Assert.Equal([20m,20m,20m,10m,10m,10m],lessons.Take(6).Select(x=>weights[x.Id]));
+        Assert.False(weights.ContainsKey(lessons[6].Id));
+    }
+
+    [Fact]
+    public void TheSameUnknownCourseTestIsSharedWhateverItsSpelling()
+    {
+        var lessons=new[]{Yks("Fen Denemesi","AYT.FEN"),Yks("Fen Tekrarı"," ayt.fen ")};
+        var weights=ExamQuestionWeights.For(LearningPurpose.Yks,lessons);
+        Assert.Equal(6.7m,weights[lessons[0].Id]);Assert.Equal(6.7m,weights[lessons[1].Id]);
+    }
+
     [Fact]
     public void OtherExamsMatchTheCourseNameToASection()
     {

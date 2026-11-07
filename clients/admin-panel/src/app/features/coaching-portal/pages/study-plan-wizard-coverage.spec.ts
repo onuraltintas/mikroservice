@@ -52,16 +52,15 @@ describe('Wizard lesson coverage regression', () => {
       component.startTime.set('08:00');
       component.minutesPerDay.set(120);
       component.createProposal();
-      const message = component.messages().at(-1)!.content;
-      expect(message).toContain('Ders 15');
-      expect(message).toContain('Ders 16');
-      expect(message).toContain('henüz ders saati yok');
+      // Paket G review: the courses are named once, in the notice under the proposal (not again in the chat message).
+      expect(component.unplaced().map(lesson => lesson.name)).toEqual(['Ders 15', 'Ders 16']);
+      expect(component.messages().at(-1)!.content).not.toContain('Ders 15');
       component.slots.set(component.proposal());
       // The student changes her availability (Değiştir); the teacher changes the form answers.
       if (teacher) component.startTime.set('10:00');
       else component.availability.set({ version: 2, timeZoneId: 'Europe/Istanbul', windows: days.map(day => ({ day, startMinute: 600, endMinute: 720 })) });
       component.createProposal();
-      expect(component.messages().at(-1)!.content).not.toContain('henüz ders saati yok');
+      expect(component.unplaced()).toEqual([]);
       expect(new Set([...component.slots(), ...component.proposal()].map(slot => slot.lessonId)).size).toBe(16);
       fixture.destroy();
     });
