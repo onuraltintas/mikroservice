@@ -5,6 +5,7 @@ import { map } from 'rxjs';
 import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import { environment } from '../../../../environments/environment';
 import { CoachingMessagesComponent } from '../../../../../shared/coaching-messages.component';
+import { CoachingMessagesUnreadService } from '../../../core/services/coaching-messages-unread.service';
 
 /** Roadmap O3: a student's or parent's messages with teachers; the open conversation is kept in the address. */
 @Component({
@@ -12,7 +13,7 @@ import { CoachingMessagesComponent } from '../../../../../shared/coaching-messag
   template: `
     <div class="cs-messages-page">
       <p class="intro">{{ intro }}</p>
-      <edu-coaching-messages [apiUrl]="apiUrl" [viewerRole]="role" [selectedId]="selectedId()" (selectedIdChange)="go($event)" />
+      <edu-coaching-messages [apiUrl]="apiUrl" [viewerRole]="role" [selectedId]="selectedId()" (selectedIdChange)="go($event)" (unreadChange)="unreadChanged()" />
     </div>`,
   styles: [`.cs-messages-page{max-width:1100px}.intro{margin:0 0 var(--coaching-space-4);color:var(--ui-text-muted);font-size:var(--coaching-text-sm)}`]
 })
@@ -25,6 +26,11 @@ export class CoachingMessagesPageComponent {
     ? 'Çocuğunun öğretmenlerine buradan yaz. Mesajlar 2 yıl saklanır, kurumun gerekirse okuyabilir.'
     : 'Öğretmenlerine buradan yaz. Mesajlar 2 yıl saklanır, kurumun gerekirse okuyabilir.';
   readonly selectedId = toSignal(inject(ActivatedRoute).paramMap.pipe(map(params => params.get('conversationId'))), { initialValue: null });
+
+  private readonly unread = inject(CoachingMessagesUnreadService);
+
+  /** Review of PR 122: a conversation was read (also one opened from the bell): the Mesajlar badge is asked again now. */
+  unreadChanged() { this.unread.refresh({ force: true }); }
 
   go(id: string | null) {
     void this.router.navigate(id ? ['/coaching-portal/messages', id] : ['/coaching-portal/messages']);

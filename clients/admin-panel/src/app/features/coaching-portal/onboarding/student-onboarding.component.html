@@ -26,7 +26,8 @@
       <p class="ob-note">Önce hesap kurulumunu bitir; hedefini orada seçebilirsin. <a class="ob-link" routerLink="/coaching-portal/welcome">Kuruluma git</a></p>
     }
     @if (loading()) { <p class="ob-bot" role="status">Hazırlanıyor…</p> }
-    @if (!notReady()) {
+    <!-- Paket F #35: no question (not even the first one) before the status and the saved target are loaded. -->
+    @if (!loading() && !notReady() && view()) {
     <div class="ob-log" role="log" aria-live="polite" aria-relevant="additions">
       @for (question of asked(); track question.id) {
         <div class="ob-turn" [attr.data-question]="question.id">

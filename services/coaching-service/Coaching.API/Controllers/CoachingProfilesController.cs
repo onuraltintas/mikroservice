@@ -32,7 +32,10 @@ public sealed class CoachingProfilesController(CoachingDbContext db, CoachingPro
         {
             showFees = managed || await db.CoachingFeeAgreements.AsNoTracking().AnyAsync(x => x.StudentId == userId, ct),
             showAssignments = managed || await db.AssignmentStudents.AsNoTracking().AnyAsync(x => x.StudentId == userId, ct),
-            showSessions = managed || await db.SessionAttendances.AsNoTracking().AnyAsync(x => x.StudentId == userId, ct)
+            showSessions = managed || await db.SessionAttendances.AsNoTracking().AnyAsync(x => x.StudentId == userId, ct),
+            // Paket F #20: when the student's profile was made (UTC); "Panelin yenilendi" is only for students from before the new menu.
+            registeredAt = await db.CoachingStudentProfiles.AsNoTracking().Where(x => x.UserId == userId)
+                .Select(x => (DateTime?)x.CreatedAt).FirstOrDefaultAsync(ct) is { } created ? DateTime.SpecifyKind(created, DateTimeKind.Utc) : (DateTime?)null
         };
     });
 

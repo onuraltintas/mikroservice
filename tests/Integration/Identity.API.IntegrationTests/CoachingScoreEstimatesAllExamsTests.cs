@@ -324,6 +324,32 @@ public sealed class CoachingScoreEstimatesAllExamsTests
         (target.ScoreGap, target.RankGap, target.Status, target.Reached).Should().Be(((decimal?)null, (int?)null, (string?)null, false));
     }
 
+    // Paket F #33: a YKS student was asked for "en az bir LGS ya da YKS denemesi"; the notice names only the student's own exam.
+    [Theory]
+    [InlineData(LearningPurpose.Lgs, "LGS", "YKS")]
+    [InlineData(LearningPurpose.Yks, "YKS", "LGS")]
+    public async Task TheMissingExamNoticeNamesOnlyTheStudentsOwnExam(LearningPurpose purpose, string own, string other)
+    {
+        await using var s = await Setup.CreateAsync(lgsPack: true);
+        s.Context(purpose, purpose == LearningPurpose.Yks ? "SAY" : null); await s.F.Db.SaveChangesAsync();
+        var notice = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Notice;
+        notice.Should().Contain($"{own} denemesini").And.NotContain(other).And.NotContain(" ya da ");
+    }
+
+    // Review of PR 122: a student without an exam (School, General, Undecided) is asked for a deneme without naming one.
+    [Theory]
+    [InlineData(LearningPurpose.School)]
+    [InlineData(LearningPurpose.General)]
+    [InlineData(LearningPurpose.Undecided)]
+    [InlineData(null)]
+    public async Task WithoutAnExamTheNoticeAsksForAnyDeneme(LearningPurpose? purpose)
+    {
+        await using var s = await Setup.CreateAsync(lgsPack: true);
+        if (purpose is { } chosen) s.F.Db.Add(StudentLearningContext.Create(s.Student, 2026, chosen, null, null, null));
+        await s.F.Db.SaveChangesAsync();
+        (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Notice.Should().Be("Tahmin için en az bir denemeyi ders ders gir.");
+    }
+
     [Fact]
     public async Task TheGoalSaysWhyThereIsNoScore()
     {

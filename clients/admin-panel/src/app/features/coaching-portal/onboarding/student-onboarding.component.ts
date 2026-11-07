@@ -17,6 +17,7 @@ import {
   purposeOf, summary, targetRequest, withoutUnfitPurpose
 } from './onboarding-model';
 import { coachingToaster } from '../coaching-feedback';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 /** The reminder e-mails the wizard offers (roadmap O8 categories); the defaults are the student's current settings. */
 export const ONBOARDING_EMAIL_CATEGORIES = ['StudyPlan', 'AssignmentReminders', 'Sessions'];
@@ -47,6 +48,7 @@ export class StudentOnboardingComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly navigation = inject(CoachingStudentNavigationService);
   readonly notifications = new NotificationPreferencesApi(this.http, environment.apiUrl);
   /** E7 (#30): Hedefim embeds the target step: no page header, and a saved target stays on the page (no Bugün). */
   readonly embedded = input(false);
@@ -122,7 +124,10 @@ export class StudentOnboardingComponent implements OnInit {
   draftDate = '';
   draftEstimated = false;
 
-  async ngOnInit() {
+  async ngOnInit() { await this.load(); }
+
+  private async load() {
+    this.loading.set(true); this.error.set(null);
     try {
       const view = await firstValueFrom(this.api.get());
       // Review of PR 120: Hedefim offers the target step only after the first-login setup; before that it links to it.
@@ -143,7 +148,7 @@ export class StudentOnboardingComponent implements OnInit {
       this.locations.getProvinces().subscribe({ next: list => this.provinces.set(list.map(x => ({ value: x.id, label: x.name }))),
         error: () => this.error.set('Şehir listesi yüklenemedi. Sayfayı yenile.') });
       await this.settle();
-    } catch { this.error.set('Kurulum bilgilerin yüklenemedi. Sayfayı yenileyip tekrar dene.'); }
+    } catch { this.error.set('Kurulum bilgilerin yüklenemedi.'); }
     finally { this.loading.set(false); }
   }
 
@@ -212,6 +217,8 @@ export class StudentOnboardingComponent implements OnInit {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/coaching/invitations/${encodeURIComponent(invitation.id)}/accept`, {}));
       this.invitations.update(list => (list ?? []).filter(x => x.id !== invitation.id));
       this.acceptedNow.update(list => [...list, invitation]);
+      // Review of PR 122: a teacher now has the student, so Ödevlerim and Seanslar may appear.
+      this.navigation.refresh({ force: true });
     }, 'Davet kabul edilemedi. Yeniden dene.');
   }
   /** E4 #18: the invite step's answer names the invitations accepted here. */
@@ -316,7 +323,8 @@ export class StudentOnboardingComponent implements OnInit {
     } finally { this.busy.set(false); }
   }
 
-  retry() { this.error.set(null); void this.settle(); }
+  /** #35: when the status itself could not be loaded, "Yeniden dene" loads it again (nothing to save yet). */
+  retry() { this.error.set(null); void (this.view() ? this.settle() : this.load()); }
 
   /** Review of PR 120: a teacher set the goal while the student was changing it: the teacher's goal is shown, locked. */
   private async showTeacherGoal() {
