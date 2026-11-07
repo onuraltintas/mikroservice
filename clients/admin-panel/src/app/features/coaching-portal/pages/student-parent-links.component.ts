@@ -6,6 +6,7 @@ import { CoachingDatePipe } from '../coaching-labels';
 import { CoachingParentService, ParentLink, ParentLinkCode, ParentLinkCodeStatus } from '../parent/coaching-parent.service';
 import { parentCodeNote, staleParentCode } from '../onboarding/onboarding-model';
 import { apiMessage, parentRelationshipLabel } from '../parent/parent-home.component';
+import { copyMessage, copyText } from '../copy-text';
 
 /** Roadmap Y7: the student gives a parent a code, approves the parent's request and can end the link. */
 @Component({
@@ -27,7 +28,10 @@ import { apiMessage, parentRelationshipLabel } from '../parent/parent-home.compo
         </div>
       }
       @if (code(); as issued) {
-        <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm ">Velinle paylaş: <strong class="font-mono text-lg tracking-widest">{{ issued.code }}</strong><br>{{ note(issued.expiresAt) }} Velin kodu girdiğinde isteği burada onaylarsın.</p>
+        <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm ">Velinle paylaş: <strong class="font-mono text-lg tracking-widest" #codeText>{{ issued.code }}</strong><br>{{ note(issued.expiresAt) }} Velin kodu girdiğinde isteği burada onaylarsın.</p>
+        <!-- G5 (#45): copies the code (or selects it when the browser does not allow copying). -->
+        <button type="button" class="mt-2 rounded-lg border border-(--ui-border) px-3 py-1 text-sm font-medium" [attr.aria-label]="'Veli kodunu kopyala: ' + issued.code" (click)="copyCode(issued.code, codeText)">Kopyala</button>
+        @if (copyStatus(); as copied) { <p class="mt-2 text-sm" role="status" data-testid="copy-status">{{ copied }}</p> }
       } @else if (expired(); as old) {
         <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm" data-testid="expired-code">Veli kodunun süresi doldu ({{ old.expiresAt | coachingDate }}). Velin bağlanacaksa yeni bir kod oluştur.</p>
       } @else if (active(); as current) {
@@ -58,6 +62,8 @@ export class StudentParentLinksComponent implements OnInit {
   /** The earlier code while it can still be used. */
   readonly active = computed(() => { const code = this.rawCode(); return code && !code.expired ? code : null; });
   readonly confirmReplace = signal(false);
+  /** G5 (#45): the result of "Kopyala". */
+  readonly copyStatus = signal<string | null>(null);
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
 
@@ -74,11 +80,15 @@ export class StudentParentLinksComponent implements OnInit {
   askCode(): void { if (this.hasCode()) this.confirmReplace.set(true); else void this.createCode(); }
 
   async createCode(): Promise<void> {
+    this.copyStatus.set(null);
     await this.run(async () => {
       const issued = await firstValueFrom(this.service.createCode());
       this.code.set(issued); this.rawCode.set({ createdAt: new Date().toISOString(), expiresAt: issued.expiresAt }); this.confirmReplace.set(false);
     }, 'Veli kodu oluşturulamadı.', false);
   }
+
+  /** G5 (#45): copies the new code; without clipboard access it is selected so the student can copy it. */
+  async copyCode(code: string, element: HTMLElement): Promise<void> { this.copyStatus.set(copyMessage(await copyText(code, element))); }
 
   async approve(link: ParentLink): Promise<void> {
     if (!await this.toaster.confirm(`${link.parentName} senin Koçluk bilgilerini görebilsin mi? Bu bağlantıyı istediğin zaman kaldırabilirsin.`)) return;

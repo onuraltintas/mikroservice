@@ -6,6 +6,15 @@
 export type VerificationEmailOutcome = 'sent' | 'notRequired';
 export type RegistrationVoice = 'sen' | 'siz';
 
+/**
+ * G5 (#39): the first verification e-mail can take a few minutes (the recipient's mail server may hold a first message from a
+ * new sender); the screens that say it was sent ask the user not to send it again needlessly.
+ */
+export const VERIFICATION_DELAY_NOTE: Record<RegistrationVoice, string> = {
+    sen: 'E-postanın gelmesi birkaç dakika sürebilir; gereksiz yere yeniden gönderme.',
+    siz: 'E-postanın gelmesi birkaç dakika sürebilir; lütfen gereksiz yere yeniden göndermeyin.'
+};
+
 export interface RegistrationSuccessCopy {
     title: string;
     message: string;
@@ -40,10 +49,10 @@ export function registrationSuccessCopy(outcome: VerificationEmailOutcome, voice
     return voice === 'sen'
         ? {
             title: 'Doğrulama e-postası gönderildi',
-            message: 'Kaydın tamamlandı. E-posta adresine doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra giriş yapabilirsin.'
+            message: `Kaydın tamamlandı. E-posta adresine doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra giriş yapabilirsin. ${VERIFICATION_DELAY_NOTE.sen}`
         }
         : {
             title: 'Doğrulama e-postası gönderildi',
-            message: 'Kaydınız tamamlandı. E-posta adresinize doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra giriş yapabilirsiniz.'
+            message: `Kaydınız tamamlandı. E-posta adresinize doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra giriş yapabilirsiniz. ${VERIFICATION_DELAY_NOTE.siz}`
         };
 }

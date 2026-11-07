@@ -87,14 +87,31 @@
             <div role="group" [attr.aria-label]="group.label" [attr.data-testid]="'course-group-' + group.code">
               @if (lessonGroups().length > 1) { <h3>{{ group.label }}</h3> }
               @for (lesson of group.lessons; track lesson.id) {
-                <label class="check"><input type="checkbox" [checked]="included(lesson.id)" [disabled]="lesson.topicCount === 0 && !included(lesson.id)" (change)="toggleCourse(lesson.id)">{{ lesson.name }} · {{ lesson.topicCount }} konu</label>
+                <div class="course-row" [attr.data-testid]="'course-row-' + lesson.id">
+                  <label class="check"><input type="checkbox" [checked]="included(lesson.id)" [disabled]="lesson.topicCount === 0 && !included(lesson.id)" (change)="toggleCourse(lesson.id)">{{ lesson.name }} · {{ lesson.topicCount }} konu</label>
+                  <!-- G5 (#46): a chosen course's priority and own difficulty sit in its row, folded under "Gelişmiş". -->
+                  @if (courseOf(lesson.id); as course) {
+                    <ng-container [ngTemplateOutlet]="courseSettings" [ngTemplateOutletContext]="{ $implicit: course }" />
+                  }
+                </div>
               }
             </div>
           }
-        @for (course of courses; track course.lessonId) { <div class="fields"><strong>{{ lessonName(course.lessonId) }}</strong>
-          <label>Öncelik (1 en yüksek)<input type="number" min="1" max="5" [attr.name]="'priority-' + course.lessonId" [(ngModel)]="course.priority" (ngModelChange)="changed()" [attr.aria-invalid]="courseInvalid(course.lessonId)" [attr.aria-describedby]="courseDescribedBy(course.lessonId)"></label>
-          <label>Bana göre zorluk (isteğe bağlı, 1–5)<input type="number" min="1" max="5" [attr.name]="'difficulty-' + course.lessonId" [(ngModel)]="course.selfReportedDifficulty" (ngModelChange)="changed()" [attr.aria-invalid]="courseInvalid(course.lessonId)" [attr.aria-describedby]="courseDescribedBy(course.lessonId)"></label>
-        </div> }
+          <!-- A saved course the catalog no longer lists keeps its settings here (nothing is lost on save). -->
+          @for (course of unlistedCourses(); track course.lessonId) {
+            <div class="course-row" [attr.data-testid]="'course-row-' + course.lessonId"><strong>{{ lessonName(course.lessonId) }}</strong>
+              <ng-container [ngTemplateOutlet]="courseSettings" [ngTemplateOutletContext]="{ $implicit: course }" />
+            </div>
+          }
+          <ng-template #courseSettings let-course>
+            <details class="course-advanced" [open]="wrongCourse() === course.lessonId">
+              <summary [attr.aria-label]="lessonName(course.lessonId) + ': gelişmiş ayarlar (öncelik ve zorluk)'">Gelişmiş · öncelik {{ course.priority }}@if (course.selfReportedDifficulty) {, zorluk {{ course.selfReportedDifficulty }}}</summary>
+              <div class="fields">
+                <label>Öncelik (1 en yüksek)<input type="number" min="1" max="5" [attr.name]="'priority-' + course.lessonId" [(ngModel)]="course.priority" (ngModelChange)="changed()" [attr.aria-invalid]="courseInvalid(course.lessonId)" [attr.aria-describedby]="courseDescribedBy(course.lessonId)"></label>
+                <label>Bana göre zorluk (isteğe bağlı, 1–5)<input type="number" min="1" max="5" [attr.name]="'difficulty-' + course.lessonId" [(ngModel)]="course.selfReportedDifficulty" (ngModelChange)="changed()" [attr.aria-invalid]="courseInvalid(course.lessonId)" [attr.aria-describedby]="courseDescribedBy(course.lessonId)"></label>
+              </div>
+            </details>
+          </ng-template>
         @if (fieldError('courses'); as message) { <p class="field-error" id="setup-courses-error">{{ message }}</p> }
         <button type="button" [disabled]="!!catalogError()" (click)="saveCourses()">Dersleri kaydet ve devam et</button></fieldset>
       } @else {

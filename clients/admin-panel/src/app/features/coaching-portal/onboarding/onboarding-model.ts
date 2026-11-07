@@ -150,7 +150,7 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
     add({ id: 'education', step: 1, kind: 'buttons', choices: gradeChoices(stage), prompt: 'Kaçıncı sınıftasın?', reason: 'Çalışma ayarların buna göre belirlenir; öğretmenin de görür.' });
   // The own-school list is the high-school catalog: asked of lise students only.
   if (stage === 'high' && answers.education)
-    add({ id: 'ownSchool', step: 1, kind: 'combobox', skipLabel: 'Şimdilik geçeyim', prompt: 'Okulunu listeden seçmek ister misin?', reason: 'İsteğe bağlı. Profilinde tutulur; öğretmenin de görür.' });
+    add({ id: 'ownSchool', step: 1, kind: 'combobox', skipLabel: 'Şimdilik geçeyim', prompt: 'Okulunu listeden seçmek ister misin?', reason: 'İsteğe bağlı. Profilinde tutulur; öğretmenin de görür. Okulun listede yoksa adını yazabilirsin.' });
 
   add({ id: 'purpose', step: 2, kind: 'buttons', choices: purposeChoices(context), prompt: 'Hangi sınava hazırlanıyorsun?', reason: 'Planın, derslerin ve puan hesabın bu sınava göre hazırlanır.' });
   if (purpose === 'Yks') {
@@ -258,13 +258,31 @@ export function signature(answers: Answers, context: FlowContext, step: StepNumb
 
 export function personalRequest(answers: Answers): OnboardingPersonalStep {
   const education = educationRequest(stageOfAnswers(answers) as EducationStage, gradeOf(answers));
+  const typed = education.educationStatus === 'Student' ? typedSchoolOf(answers) : null;
   return {
     birthDate: String(value(answers, 'birthDate')), provinceId: String(value(answers, 'city')), districtId: String(value(answers, 'district')),
     ...education,
     // Not asked here: the server keeps the saved graduation year, and the saved school unless a new one is picked.
     graduationYear: null,
-    schoolId: education.educationStatus === 'Student' && typeof value(answers, 'ownSchool') === 'string' ? value(answers, 'ownSchool') as string : null
+    schoolId: education.educationStatus === 'Student' && typeof value(answers, 'ownSchool') === 'string' ? value(answers, 'ownSchool') as string : null,
+    ...(typed ? { schoolName: typed } : {})
   };
+}
+
+/** G4 (#43): the longest school name the student may type ("Okulum listede yok"; the server's limit). */
+export const TYPED_SCHOOL_MAX = 150;
+/** G4 (#43): a typed school name, trimmed with inner runs of spaces made one. */
+export function cleanSchoolName(value: string): string { return value.trim().replace(/\s+/g, ' '); }
+/** G4 (#43): what is wrong with a typed school name, or null. */
+export function typedSchoolError(value: string): string | null {
+  const name = cleanSchoolName(value);
+  return !name ? 'Okulunun adını yaz.' : name.length > TYPED_SCHOOL_MAX ? `Okulunun adı en fazla ${TYPED_SCHOOL_MAX} karakter olabilir.` : null;
+}
+/** G4 (#43): the answer for a school typed in: no catalog id, the name in its data (sent as schoolName). */
+export function typedSchoolAnswer(value: string): Answer { const name = cleanSchoolName(value); return { value: null, label: name, data: { typed: name } }; }
+function typedSchoolOf(answers: Answers): string | null {
+  const typed = answers.ownSchool?.data?.['typed'];
+  return typeof typed === 'string' && typed ? typed : null;
 }
 
 export function examRequest(answers: Answers): OnboardingExamStep {

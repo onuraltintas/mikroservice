@@ -318,6 +318,10 @@ export class StudentLearningSetupComponent implements OnInit {
     this.suggested.set(true);
   }
   included(id: string) { return this.courses.some(x => x.lessonId === id); }
+  /** G5 (#46): the chosen course of a lesson (its priority and difficulty are edited in the lesson's row). */
+  courseOf(id: string) { return this.courses.find(x => x.lessonId === id) ?? null; }
+  /** G5 (#46): chosen courses the catalog does not list (shown on their own so their settings are not hidden). */
+  unlistedCourses() { const listed = new Set((this.catalog()?.lessons ?? []).map(x => x.id)); return this.courses.filter(x => !listed.has(x.lessonId)); }
   lessonName(id: string) { return this.catalog()?.lessons.find(x => x.id === id)?.name ?? 'Ders'; }
   toggleCourse(id: string) {
     if (this.included(id)) {

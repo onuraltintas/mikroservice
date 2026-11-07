@@ -132,12 +132,17 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var topicQuery = eligibleTopics.Where(x => lessonId != null && x.LessonId == lessonId);
         var count = await topicQuery.CountAsync(ct);
         // F2 #28: curriculum order. A sub-topic's rank counts within its parent, so it takes its parent's place in the unit first.
+        // G5 (#42): the imported units have no rank of their own (DisplayOrder is empty for every unit of the approved catalog),
+        // so the order fell back to the unit id. Their upper topics carry lesson-wide curriculum ranks (TYT Matematik: Denklem ve
+        // Eşitsizlikler 1–5, Mantık 6, Kümeler 7–8, …, Uzay Geometri 26): a unit without its own rank takes its first upper
+        // topic's place. Units without any rank come last, by name.
         var topicViews = await (from t in topicQuery
             join l in db.StudyCatalogLessons on t.LessonId equals l.Id
             join u in db.StudyCatalogUnits on t.UnitId equals u.Id
             join p in db.StudyCatalogTopics on t.ParentId equals (Guid?)p.Id into parents
             from p in parents.DefaultIfEmpty()
-            orderby u.DisplayOrder, u.Id, p == null ? t.DisplayOrder : p.DisplayOrder, p == null ? t.Id : p.Id, t.DisplayOrder, t.Id
+            let unitRank = u.DisplayOrder ?? db.StudyCatalogTopics.Where(x => x.UnitId == u.Id && x.ParentId == null).Min(x => x.DisplayOrder)
+            orderby unitRank == null ? 1 : 0, unitRank, u.Name, u.Id, p == null ? t.DisplayOrder : p.DisplayOrder, p == null ? t.Id : p.Id, t.DisplayOrder, t.Id
             select new StudyTopicView(t.Id, t.Name, l.Name, u.Name, l.GradeNumber, l.ExamCode, t.EstimatedMinutes, l.Id))
             .Skip((pageNumber - 1) * 50).Take(50).ToArrayAsync(ct);
         var missing = choices.Sum(x => x.MissingDurationCount);
