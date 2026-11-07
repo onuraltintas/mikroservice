@@ -8,7 +8,9 @@ import { BehaviorSubject, filter, firstValueFrom, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { RegistrationLegalAcceptance } from '../services/identity.service';
+import { getApiErrorCode } from '../http/api-error-message';
 import { SiteAnalyticsService } from '../services/site-analytics.service';
+import { ADMIN_PERMISSIONS } from './permissions';
 
 export interface UserProfile {
     id: string;
@@ -70,25 +72,38 @@ export function hasRole(user: UserProfile | null, role: string): boolean {
 }
 
 /**
- * Paket F F4 (live 07.11.2026): roles that only open the Koçluk portal. Any other role (SystemAdmin, Editor,
- * InstitutionAdmin, a custom staff role, ...) is a management role and may open the /dashboard shell.
+ * Paket F F4 (PR #125 review M2): the /dashboard management shell opens for an explicit staff allowlist, or for a
+ * session that carries at least one admin permission claim (a custom staff role). Nothing is allowed by exclusion:
+ * a portal role, a course-management role or a custom role without such a permission does not open it.
  */
-export const PORTAL_ONLY_ROLES: readonly string[] = ['Student', 'Teacher', 'Parent'];
+export const MANAGEMENT_ROLES: readonly string[] = ['SystemAdmin', 'Editor', 'InstitutionAdmin', 'InstitutionOwner'];
 
-export function hasManagementRole(user: Pick<UserProfile, 'roles'> | null): boolean {
-    return !!user && user.roles.some(role => !!role && !PORTAL_ONLY_ROLES.includes(role));
+/** Admin-panel permission claims, minus the ones the identity seeder also gives to students, teachers and parents. */
+const LEARNER_PERMISSIONS: readonly string[] = [
+    ADMIN_PERMISSIONS.speedReadingLeaderboardView,
+    ADMIN_PERMISSIONS.speedReadingReportView
+];
+export const MANAGEMENT_PERMISSIONS: readonly string[] = Object.values(ADMIN_PERMISSIONS)
+    .filter(permission => !LEARNER_PERMISSIONS.includes(permission));
+
+export function hasManagementRole(
+    user: { roles: readonly string[]; permissions?: readonly string[] } | null
+): boolean {
+    return !!user && (
+        user.roles.some(role => MANAGEMENT_ROLES.includes(role))
+        || (user.permissions ?? []).some(permission => MANAGEMENT_PERMISSIONS.includes(permission)));
 }
 
 /** The identity service's code for an account with product access but no role in that product. */
 export const NO_ROLE_FOR_PRODUCT_CODE = 'Auth.NoRoleForProduct';
 
-/** The same error shape as the identity service, for a session that reached the client without any role. */
+/** The same error shape and status as the identity service, for a session that reached the client without a role. */
 export function noRoleForProductError(): { status: number; error: { code: string; description: string } } {
     return {
-        status: 403,
+        status: 400,
         error: {
             code: NO_ROLE_FOR_PRODUCT_CODE,
-            description: 'Bu platformda hesabınıza tanımlı aktif bir rol yok. Mevcut hesabınızla yeniden katılmak için kayıt sayfasındaki "Mevcut hesabımla katıl" seçeneğini kullanabilirsiniz.'
+            description: 'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor. Yeniden erişim için kurumunuzla ya da destekle iletişime geçin.'
         }
     };
 }
@@ -118,8 +133,9 @@ export class AuthService implements OnDestroy {
     private refreshTimer?: ReturnType<typeof setTimeout>;
     private refreshPromise?: Promise<boolean>;
     private oauthEventsSubscription?: Subscription;
-    /** An error to show on the login page after a role-less session was ended outside it (F4). */
-    private signInNotice: ReturnType<typeof noRoleForProductError> | null = null;
+    /** An error to show on the login page after a role-less session was ended outside it (F4: guard, refresh). */
+    private readonly _signInNotice = signal<ReturnType<typeof noRoleForProductError> | null>(null);
+    readonly signInNotice = this._signInNotice.asReadonly();
 
     public isDoneLoading$ = new BehaviorSubject<boolean>(false);
 
@@ -262,8 +278,10 @@ export class AuthService implements OnDestroy {
 
             this.applySession(response);
             return true;
-        } catch {
+        } catch (error: unknown) {
             this.clearSession();
+            // F4 (PR #125 review L4): the server refused the session because the account has no role here.
+            if (getApiErrorCode(error) === NO_ROLE_FOR_PRODUCT_CODE) this._signInNotice.set(noRoleForProductError());
             return false;
         }
     }
@@ -325,12 +343,12 @@ export class AuthService implements OnDestroy {
     /** Ends a role-less session found by a route guard; the login page shows why (see consumeSignInNotice). */
     async endRoleLessSession(): Promise<void> {
         await this.endSession();
-        this.signInNotice = noRoleForProductError();
+        this._signInNotice.set(noRoleForProductError());
     }
 
     consumeSignInNotice(): ReturnType<typeof noRoleForProductError> | null {
-        const notice = this.signInNotice;
-        this.signInNotice = null;
+        const notice = this._signInNotice();
+        this._signInNotice.set(null);
         return notice;
     }
 

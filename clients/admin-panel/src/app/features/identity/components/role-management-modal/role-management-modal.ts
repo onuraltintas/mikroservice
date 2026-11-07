@@ -6,8 +6,9 @@ import { isRoleProduct, productRoleLabel, RoleProduct, userProductRoles } from '
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
-/** Paket F F4: shown after the user's last role in a service was removed. */
-export const LAST_PRODUCT_ROLE_WARNING = 'Bu serviste başka rolü kalmadı; kullanıcı bu servise giriş yapamaz.';
+/** Paket F F4 (user decision 07.11.2026): removing a service's last role also closes its access, so ask first. */
+export const LAST_PRODUCT_ROLE_CONFIRMATION =
+    'Bu, kullanıcının bu servisteki son rolü. Kaldırırsan bu servise erişimi de kapanır ve giriş yapamaz. Devam edilsin mi?';
 
 @Component({
     selector: 'app-role-management-modal',
@@ -76,7 +77,7 @@ export const LAST_PRODUCT_ROLE_WARNING = 'Bu serviste başka rolü kalmadı; kul
                 <option value="coaching">Koçluk</option>
                 <option value="speed-reading">Hızlı Okuma</option>
               </select>
-              <p class="text-xs text-gray-500 mb-3">Ekleme ve kaldırma yalnızca belirtilen servisin rolünü değiştirir. Kapatılmış servis erişimi rol eklenince açılmaz; Kullanıcı Düzenle ekranından açabilirsiniz. Abonelik ve kurum bağlantıları ayrı yönetilir. SystemAdmin tüm servislerde geçerli genel roldür; bu listeden atanmaz.</p>
+              <p class="text-xs text-gray-500 mb-3">Ekleme ve kaldırma yalnızca belirtilen servisin rolünü değiştirir. Bir servisteki son rol kaldırılınca o servise erişim de kapanır. Kapatılmış servis erişimi rol eklenince açılmaz; Kullanıcı Düzenle ekranından açabilirsiniz. Abonelik ve kurum bağlantıları ayrı yönetilir. SystemAdmin tüm servislerde geçerli genel roldür; bu listeden atanmaz.</p>
               @if (refreshFailed()) {
                 <p role="alert" class="text-sm text-red-600 mb-2">Rol değişti ancak güncel liste alınamadı. Devam etmek için listeyi yeniden yükleyin.</p>
                 <button (click)="refreshUser()" [disabled]="actionLoading() !== null" class="text-sm text-indigo-600 underline mb-3">Listeyi yeniden yükle</button>
@@ -189,21 +190,24 @@ export class RoleManagementModalComponent implements OnInit {
         });
     }
 
-    removeRole(assignment: UserProductRoleDto) {
+    async removeRole(assignment: UserProductRoleDto) {
         const userId = this.user()?.userId;
         if (!userId || this.busy() || !this.canRemove(assignment)) return;
 
         const product = isRoleProduct(assignment.product) ? assignment.product : null;
-        // F4: without a role in the service the user can no longer sign in there (access stays as it is).
         const lastRoleInProduct = product !== null && !this.assignments().some(other =>
             other.product === product && other.role !== assignment.role);
+        if (lastRoleInProduct) {
+            const confirmed = await this.toaster.confirm(LAST_PRODUCT_ROLE_CONFIRMATION, {
+                title: 'Son rolü kaldır',
+                confirmText: 'Evet, kaldır'
+            });
+            if (!confirmed || this.busy()) return;
+        }
         this.actionLoading.set(this.roleKey(assignment));
         this.identityService.removeRole(userId, assignment.role, product).subscribe({
             next: () => {
                 this.toaster.success(`${productRoleLabel(assignment)} rolü başarıyla kaldırıldı.`);
-                if (lastRoleInProduct) {
-                    this.toaster.warning(LAST_PRODUCT_ROLE_WARNING);
-                }
                 this.changed.set(true);
                 this.refreshUser();
             },

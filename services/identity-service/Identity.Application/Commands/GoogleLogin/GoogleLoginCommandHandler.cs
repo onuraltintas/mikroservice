@@ -376,10 +376,10 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         // MAINTENANCE MODE CHECK (Google users can be logged in now, check roles)
         var productRoles = user.GetRolesForProductScope(request.Product).ToArray();
         var isAdmin = productRoles.Any(r => 
-            r.Role.Name == "SystemAdmin" || 
-            r.Role.Name == "InstitutionAdmin" || 
-            r.Role.Name == "InstitutionOwner" ||
-            r.Role.Name == "Editor");
+            r.Role?.Name == "SystemAdmin" || 
+            r.Role?.Name == "InstitutionAdmin" || 
+            r.Role?.Name == "InstitutionOwner" ||
+            r.Role?.Name == "Editor");
 
         if (!isAdmin)
         {
@@ -393,7 +393,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             }
         }
 
-        // An account provisioned above already got its default role through the identity service.
+        // An account provisioned above got its default role through the identity service, which the in-memory
+        // copy may not show yet: an explicit bypass of the role check, the access check stays.
         var finalDenial = provisionedInThisRequest
             ? HasSystemAdminRole(user) || HasRequestedProductAccess(user, request.Product) ? null : ProductAccessDenied()
             : ProductSignInDenied(user, request.Product);
@@ -467,26 +468,22 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     }
 
     /// <summary>
-    /// The shared product sign-in rule (F4): SystemAdmin, or active access to the product and a live role in it.
-    /// Null when the account may sign in; otherwise the error to return.
+    /// The shared product sign-in rule (F4, <see cref="ProductSignInPolicy"/>). Null when the account may sign in.
     /// </summary>
-    private static Result<LoginResponse>? ProductSignInDenied(User user, PlatformProduct? product)
-    {
-        if (HasSystemAdminRole(user))
-            return null;
-        if (product is not { } requestedProduct || !user.HasProductAccess(requestedProduct))
-            return ProductAccessDenied();
-        return ProductSignInPolicy.HasLiveRoleInProduct(user, requestedProduct)
-            ? null
-            : Result.Failure<LoginResponse>(ProductSignInPolicy.NoRoleForProduct());
-    }
+    private static Result<LoginResponse>? ProductSignInDenied(User user, PlatformProduct? product) =>
+        ProductSignInPolicy.Evaluate(user, product) switch
+        {
+            ProductSignInDecision.AccessDenied => ProductAccessDenied(),
+            ProductSignInDecision.NoRoleForProduct => Result.Failure<LoginResponse>(ProductSignInPolicy.NoRoleForProduct()),
+            _ => null
+        };
 
     private static bool HasRequestedProductAccess(User user, PlatformProduct? product) =>
         product is { } requestedProduct && user.HasProductAccess(requestedProduct);
 
     private static bool HasSystemAdminRole(User user) =>
         user.Roles.Any(userRole => string.Equals(
-            userRole.Role.Name,
+            userRole.Role?.Name,
             Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
             StringComparison.OrdinalIgnoreCase));
 

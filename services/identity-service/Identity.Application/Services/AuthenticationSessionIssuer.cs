@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Application.Authorization;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
@@ -34,6 +35,16 @@ public sealed class AuthenticationSessionIssuer : IAuthenticationSessionIssuer
         CancellationToken cancellationToken,
         PlatformProduct? product = null)
     {
+        // F4 (PR #125 review M1): every session issued here (MFA verify/enable, course-management session) obeys
+        // the same product rule as password, Google and refresh sign-in.
+        switch (ProductSignInPolicy.Evaluate(user, product))
+        {
+            case ProductSignInDecision.AccessDenied:
+                return Result.Failure<LoginResponse>(ProductSignInPolicy.AccessDenied());
+            case ProductSignInDecision.NoRoleForProduct:
+                return Result.Failure<LoginResponse>(ProductSignInPolicy.NoRoleForProduct());
+        }
+
         var accessToken = await _tokens.GenerateAccessTokenAsync(user, mfaVerifiedAt, product);
         var refreshToken = _tokens.GenerateRefreshToken(user.Id, ipAddress, rememberMe, mfaVerifiedAt, product);
         var persisted = await _identity.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);

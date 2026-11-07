@@ -11,9 +11,8 @@
 /** Error codes whose every server text is replaced. */
 export const SEN_BY_CODE: Readonly<Record<string, string>> = {
   'Auth.ProductAccessDenied': 'Hesabının bu platforma erişim yetkisi yok.',
-  // F4: product access without any role in it (e.g. the Koçluk role was removed); the join path gives it back.
-  'Auth.NoRoleForProduct':
-    'Bu platformda hesabın aktif değil. Mevcut hesabınla koçluğa katılmak için kayıt sayfasındaki "Mevcut hesabımla katıl" yolunu kullanabilirsin.',
+  // F4 (user decision 07.11.2026): product access without any role in it; only an admin restores it (no join hint).
+  'Auth.NoRoleForProduct': 'Bu platformda hesabına tanımlı bir yetki kalmadı. Yeniden erişim için kurumunla ya da destekle iletişime geç.',
   'Auth.MfaLocked': 'Çok fazla hatalı doğrulama denemesi yapıldı. Biraz sonra yeniden dene.',
   'Auth.InvalidMfaCode': 'Doğrulama kodu geçersiz ya da kullanılmış. Uygulamadaki yeni kodu yaz.',
   'Auth.ExistingAccountMfaRequired': 'Mevcut hesabının doğrulama uygulamasındaki 6 haneli kodu gir.',

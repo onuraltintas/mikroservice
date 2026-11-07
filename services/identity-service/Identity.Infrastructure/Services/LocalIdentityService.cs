@@ -472,6 +472,13 @@ public class LocalIdentityService : IIdentityService
             }
 
             user.RemoveRole(role.Id, product);
+            // F4 (user decision 07.11.2026): the last live role in a product closes that product's access in the
+            // same save, so the user cannot sign in or rejoin on their own; an admin reopens it (Kullanıcı Düzenle).
+            if (product is { } removedFrom
+                && !Identity.Application.Authorization.ProductSignInPolicy.HasLiveProductScopedRole(user, removedFrom))
+            {
+                user.RevokeProductAccess(removedFrom, DateTimeOffset.UtcNow);
+            }
             if (product is { } scopedProduct)
             {
                 await _userRepository.RevokeActiveRefreshTokensForProductAsync(

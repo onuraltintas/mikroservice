@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -71,9 +71,15 @@ export class LoginComponent {
     hidePassword = signal(true);
 
     constructor() {
-        // F4: a route guard ended a session without any role in this product; say why here.
-        const notice = this.authService.consumeSignInNotice?.();
-        if (notice) this.errorMessage.set(this.serverMessage(notice, this.copy.loginFailed));
+        // F4: a route guard or a refused refresh ended a session without any role in this product; say why here,
+        // also when that happens after this page opened (the startup refresh).
+        effect(() => {
+            if (!this.authService.signInNotice?.()) return;
+            untracked(() => {
+                const notice = this.authService.consumeSignInNotice();
+                if (notice) this.errorMessage.set(this.serverMessage(notice, this.copy.loginFailed));
+            });
+        });
 
         // Listen for Google Login
         this.socialAuthService.authState

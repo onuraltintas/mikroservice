@@ -82,9 +82,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         }
 
         var productRoles = user.GetRolesForProductScope(targetProduct).ToArray();
-        var isSystemAdministrator = productRoles.Any(role =>
-            role.Role is not null
-            && string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        var isSystemAdministrator = ProductSignInPolicy.IsSystemAdministrator(user);
         if (!isSystemAdministrator
             && (existingRefreshToken.Product is not { } product || !user.HasProductAccess(product)))
         {

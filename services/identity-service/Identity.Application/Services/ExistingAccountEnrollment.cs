@@ -63,10 +63,10 @@ public sealed class ExistingAccountEnrollment(
         // Nothing is granted; after MFA (below) an unverified address gets a fresh link, a verified one "sign in".
         var alreadyJoined = user.HasProductAccess(target)
             && await HasTargetMembershipAsync(user, target, account, sourceRole, cancellationToken);
-        // F4: an account whose last role in the target was removed (its access row left active, as the admin
-        // panel keeps access and roles separate) may join again. A closed access or any role in the target still blocks.
-        if (!alreadyJoined && (user.ProductAccesses.Any(a => a.Product == target && !a.IsActive)
-                || user.Roles.Any(r => r.Product == target)))
+        // F4 (user decision 07.11.2026): any access row (open or closed) still blocks; a role an admin removed is
+        // restored only by an admin. A membership whose role was soft-deleted is not a live one (PR #125 review L2).
+        if (!alreadyJoined && (user.ProductAccesses.Any(a => a.Product == target)
+                || user.Roles.Any(r => r.Product == target && r.Role is not { IsDeleted: true })))
             return Failure("Identity.UserExists", "Bu serviste kaydınız zaten var. Giriş yapın; erişim kapatılmışsa servis yöneticisiyle görüşün.");
         InstitutionAdmin? sourceAdmin = null;
         var institutionChoices = new List<InstitutionEnrollmentChoice>();

@@ -27,8 +27,9 @@ import { ParentPanelEntryComponent } from '../parent-panel-entry.component';
 
 /** Paket F F4: the identity service's code for product access without any role in the product. */
 const NO_ROLE_FOR_PRODUCT_CODE = 'Auth.NoRoleForProduct';
+// User decision 07.11.2026: no join hint; only an admin restores the access.
 export const NO_ROLE_MESSAGE =
-  'Bu platformda hesabınıza tanımlı aktif bir rol yok. Mevcut hesabınızla yeniden katılmak için kayıt sayfasındaki "Mevcut hesabımla katıl" seçeneğini kullanabilirsiniz.';
+  'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor. Yeniden erişim için kurumunuzla ya da destekle iletişime geçin.';
 
 @Component({
   selector: 'app-login',
