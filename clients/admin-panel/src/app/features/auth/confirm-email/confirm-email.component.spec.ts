@@ -80,6 +80,8 @@ describe('ConfirmEmailComponent', () => {
     await fixture.whenStable(); fixture.detectChanges();
     expect(auth.resendVerificationEmail).toHaveBeenCalledWith('ada@example.test');
     expect(el.querySelector('[data-testid="confirm-email-resend-status"]')?.textContent).toContain('doğrulama bekliyorsa');
+    // G5 (#39): the e-mail may take a few minutes; it is not to be sent again needlessly.
+    expect(el.querySelector('[data-testid="confirm-email-resend-status"]')?.textContent).toContain('E-postanın gelmesi birkaç dakika sürebilir; gereksiz yere yeniden gönderme.');
     expect(el.querySelector('[data-testid="confirm-email-resend"]')).toBeNull();
   });
 

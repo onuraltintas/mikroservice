@@ -52,14 +52,24 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var curriculum = await ResolveCurriculum(candidate, ct);
         var lessonQuery = Lessons(candidate).Where(x => x.CurriculumVersionId == (curriculum == null ? (Guid?)null : curriculum.Id) && x.CurriculumVersionId != null);
         var ids = r.Courses.Select(x => x.LessonId).ToArray();
-        if (await lessonQuery.CountAsync(x => Enumerable.Contains(ids, x.Id), ct) != ids.Length)
-            throw new ArgumentException("Eğitim bağlamına uygun aktif dersleri seçin.");
+        var fitting = await lessonQuery.Where(x => Enumerable.Contains(ids, x.Id)).Select(x => x.Id).ToArrayAsync(ct);
+        if (fitting.Length != ids.Length)
+        {
+            // PR #128 review M2: one course that does not fit is named (Derslerim opens its row).
+            const string message = "Eğitim bağlamına uygun aktif dersleri seçin.";
+            var unfit = ids.Except(fitting).ToArray();
+            throw unfit.Length == 1 ? new LearningCourseException(unfit[0], message) : new ArgumentException(message);
+        }
         var topicIds = r.Topics.Select(x => x.TopicId).ToArray();
         if (await Topics(lessonQuery,candidate).CountAsync(x => Enumerable.Contains(topicIds, x.Id) && Enumerable.Contains(ids, x.LessonId), ct) != topicIds.Length)
             throw new ArgumentException("Seçilen derslere ait aktif konuları belirtin.");
         // Validate every selection before mutating tracked state.
         var target = context ?? candidate;
-        var courses = r.Courses.Select(x => StudentCoursePreference.Create(target.Id, x.LessonId, x.Priority, x.SelfReportedDifficulty)).ToArray();
+        var courses = r.Courses.Select(x =>
+        {
+            try { return StudentCoursePreference.Create(target.Id, x.LessonId, x.Priority, x.SelfReportedDifficulty); }
+            catch (ArgumentException e) { throw new LearningCourseException(x.LessonId, e.Message); }
+        }).ToArray();
         var topics = r.Topics.Select(x => StudentTopicState.Create(target.Id, x.TopicId, x.DeclaredStatus, profile.UserId)).ToArray();
         target.SetScope(r.AcademicYearStart, r.Purpose, r.TargetExamYear, r.PrimaryScoreType, r.ForeignLanguage);
         if (r.TargetExamSessionId != target.TargetExamSessionId) target.SetTargetExamSession(r.TargetExamSessionId);
@@ -132,12 +142,14 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var topicQuery = eligibleTopics.Where(x => lessonId != null && x.LessonId == lessonId);
         var count = await topicQuery.CountAsync(ct);
         // F2 #28: curriculum order. A sub-topic's rank counts within its parent, so it takes its parent's place in the unit first.
+        // G5 (#42): units in curriculum order (Catalogs.CatalogUnitOrder: own rank, else the first upper topic's rank).
         var topicViews = await (from t in topicQuery
             join l in db.StudyCatalogLessons on t.LessonId equals l.Id
             join u in db.StudyCatalogUnits on t.UnitId equals u.Id
+            join r in Catalogs.CatalogUnitOrder.Ranks(db) on u.Id equals r.UnitId
             join p in db.StudyCatalogTopics on t.ParentId equals (Guid?)p.Id into parents
             from p in parents.DefaultIfEmpty()
-            orderby u.DisplayOrder, u.Id, p == null ? t.DisplayOrder : p.DisplayOrder, p == null ? t.Id : p.Id, t.DisplayOrder, t.Id
+            orderby r.Unranked, r.Rank, r.Name, u.Id, p == null ? t.DisplayOrder : p.DisplayOrder, p == null ? t.Id : p.Id, t.DisplayOrder, t.Id
             select new StudyTopicView(t.Id, t.Name, l.Name, u.Name, l.GradeNumber, l.ExamCode, t.EstimatedMinutes, l.Id))
             .Skip((pageNumber - 1) * 50).Take(50).ToArrayAsync(ct);
         var missing = choices.Sum(x => x.MissingDurationCount);

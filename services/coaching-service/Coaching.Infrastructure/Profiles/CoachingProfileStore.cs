@@ -78,9 +78,15 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         {
             var school = await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == schoolId && x.IsActive, ct)
                 ?? throw new ArgumentException("Okulunu listeden seç.");
-            request = request with { SchoolName = school.Name, SchoolCity = school.City, SchoolDistrict = school.District,
+            // G4 (#43): the catalog's capitals are stored as names ("Karşıyaka"), as in the wizard.
+            request = request with { SchoolName = school.Name, SchoolCity = CoachingStudentOnboardingService.PlaceName(school.City),
+                SchoolDistrict = CoachingStudentOnboardingService.PlaceName(school.District),
                 SchoolType = await CoachingStudentOnboardingService.OwnSchoolTypeAsync(db, school, ct) };
         }
+        // G4 (#43): a newly typed school ("Okulum listede yok") follows the wizard's rule (trimmed, at most 150 characters); a
+        // school saved earlier is sent back unchanged and kept as it is.
+        else if (request.SchoolName is { } typed && typed != profile.SchoolName)
+            request = request with { SchoolName = CoachingStudentOnboardingService.TypedSchoolName(typed) };
         // Validate the full replacement before changing a tracked entity.
         var validated = profile.CopyForValidation();
         Apply(validated, request);

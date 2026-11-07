@@ -60,9 +60,20 @@
                 </div>
               }
               @case ('combobox') {
-                <!-- A new list for every question: nothing typed for the previous one is carried over. -->
-                @for (key of [question.id]; track key) {
-                  <app-onboarding-combobox [label]="question.prompt" [options]="comboOptions(question)" [load]="comboLoader(question)" (picked)="pickCombo(question, $event)" />
+                @if (question.id === 'ownSchool' && typingSchool()) {
+                  <!-- G4 (#43): "Okulum listede yok": the school's name is typed in. -->
+                  <label class="ob-sr" for="ob-own-school">Okulunun adı</label>
+                  <input id="ob-own-school" type="text" autocomplete="off" [attr.maxlength]="typedSchoolMax" [attr.aria-invalid]="invalid() ? 'true' : null" [attr.aria-describedby]="invalid() ? 'ob-invalid' : null" placeholder="Okulunun adını yaz" (input)="schoolNameInput($event)" (keydown.enter)="submitSchoolName(question)">
+                  <div class="ob-chips">
+                    <button type="button" class="ob-primary" [disabled]="busy()" (click)="submitSchoolName(question)">Devam</button>
+                    <button type="button" class="ob-link" [disabled]="busy()" (click)="typeSchool(false)">Listeden seç</button>
+                  </div>
+                } @else {
+                  <!-- A new list for every question: nothing typed for the previous one is carried over. -->
+                  @for (key of [question.id]; track key) {
+                    <app-onboarding-combobox [label]="question.prompt" [options]="comboOptions(question)" [load]="comboLoader(question)" (picked)="pickCombo(question, $event)" />
+                  }
+                  @if (question.id === 'ownSchool') { <button type="button" class="ob-link" [disabled]="busy()" (click)="typeSchool(true)">Okulum listede yok</button> }
                 }
               }
               @case ('number') {
@@ -92,8 +103,13 @@
               }
               @case ('parent') {
                 @if (parentCode(); as issued) {
-                  <p class="ob-card">Velinle paylaş: <strong class="ob-code">{{ issued.code }}</strong><br><small>{{ codeNote(issued.expiresAt) }} Velin kodu girince isteği Profil ve ayarlar'da onaylarsın.</small></p>
-                  <button type="button" class="ob-primary" [disabled]="busy()" (click)="passParent(question, issued)">Devam</button>
+                  <p class="ob-card">Velinle paylaş: <strong class="ob-code" #parentCodeText>{{ issued.code }}</strong><br><small>{{ codeNote(issued.expiresAt) }} Velin kodu girince isteği Profil ve ayarlar'da onaylarsın.</small></p>
+                  <!-- G5 (#45): copies the code (or selects it when the browser does not allow copying). -->
+                  <div class="ob-chips">
+                    <button type="button" class="ob-chip" [attr.aria-label]="'Veli kodunu kopyala: ' + issued.code" (click)="copyParentCode(issued.code, parentCodeText)">Kopyala</button>
+                    <button type="button" class="ob-primary" [disabled]="busy()" (click)="passParent(question, issued)">Devam</button>
+                  </div>
+                  <p class="ob-note" role="status" aria-live="polite" data-testid="ob-copy-status">{{ copyStatus() }}</p>
                 } @else if (activeCode() === undefined) {
                   <p role="status">Veli kodun kontrol ediliyor…</p>
                 } @else if (openCode(); as active) {
@@ -127,7 +143,7 @@
                 } @else { <p role="status">Tercihlerin yükleniyor…</p> }
               }
             }
-            @if (invalid(); as message) { <p class="ob-error" role="alert">{{ message }}</p> }
+            @if (invalid(); as message) { <p class="ob-error" id="ob-invalid" role="alert">{{ message }}</p> }
             @if (question.skipLabel && question.kind !== 'diploma') {
               <button type="button" class="ob-link" [disabled]="busy()" (click)="skip(question)">{{ question.skipLabel }}</button>
             }

@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Observable, finalize, map } from 'rxjs';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from '../src/app/features/coaching-portal/onboarding/onboarding-combobox.component';
+import { TYPED_SCHOOL_MAX, cleanSchoolName, typedSchoolError } from '../src/app/features/coaching-portal/onboarding/onboarding-model';
+import { birthDateError } from '../src/app/features/coaching-portal/birth-date';
 import { EDUCATION_STAGES, EducationStage, educationRequest, gradesFor, isStudentStage, stageOf } from '../src/app/features/coaching-portal/coaching-education';
 import { coachingDate } from '../src/app/features/coaching-portal/coaching-labels';
 import { CoachingStudentNavigationService } from '../src/app/core/services/coaching-student-navigation.service';
@@ -21,8 +23,8 @@ interface StudentProfile {
   diplomaGrade?: number | null; diplomaGradeEstimated?: boolean;
 }
 interface Place { id: string; name: string }
-/** Paket D (#7): a school picked from the catalog on Profilim (the wizard's list). */
-interface PickedSchool { id: string; name: string; district: string | null; type: string | null }
+/** Paket D (#7): a school picked from the catalog on Profilim (the wizard's list); G4 (#43): id null = typed in ("Okulum listede yok"). */
+interface PickedSchool { id: string | null; name: string; district: string | null; type: string | null }
 interface SchoolPage { items: { id: string; name: string; district: string | null; type?: string | null; inHomeDistrict?: boolean }[]; totalCount: number }
 interface TeacherProfile { version: number; isActive: boolean; title?: string | null; subjects: string[]; experienceYears?: number | null; bio?: string | null; avatarUrl?: string | null; }
 interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null;
@@ -89,7 +91,7 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
                 <label>Mezuniyet yılı (isteğe bağlı) <input name="graduationYear" type="number" min="1900" [max]="year" [(ngModel)]="s.graduationYear" (ngModelChange)="dirty = true" [attr.aria-invalid]="invalid('graduationYear')" [attr.aria-describedby]="describedBy('graduationYear')">@if (fieldError('graduationYear'); as message) { <small class="field-error" id="graduationYear-error">{{ message }}</small> }</label>
               }
               @if (isStudentStage(stage)) {
-              <!-- Paket D (#7): the school comes from the catalog as in the wizard (no typed school); an older typed one stays until replaced. -->
+              <!-- Paket D (#7): the school comes from the catalog as in the wizard; G4 (#43): one that is not in the list is typed in ("Okulum listede yok"). -->
               <div class="place" data-testid="own-school">
                 <span>Okulun (isteğe bağlı): <strong>{{ schoolName(s) ?? 'seçilmedi' }}</strong>
                   @if (schoolDetail(s); as detail) { <small> · {{ detail }}</small> }</span>
@@ -98,16 +100,22 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
                   <span>@if (schoolApplies(s)) { <button type="button" (click)="openSchoolPicker()">{{ schoolName(s) ? 'Okulunu değiştir' : 'Okulunu seç' }}</button> }
                   @if (schoolName(s)) { <button type="button" (click)="removeSchool()">Okulu kaldır</button> }</span>
                 } @else if (schoolApplies(s)) {
-                  @if (cityPicker()) {
+                  @if (typingSchool()) {
+                    <!-- G4 (#43), review L11: a school that is not in the list is typed in (no city needed first). -->
+                    <label>Okulunun adı <input id="profile-own-school" name="typedSchool" type="text" autocomplete="off" [attr.maxlength]="typedSchoolMax" [(ngModel)]="draftSchool" (keydown.enter)="$event.preventDefault(); useTypedSchool()" [attr.aria-invalid]="typedSchoolProblem() ? 'true' : null" [attr.aria-describedby]="typedSchoolProblem() ? 'typed-school-error' : null"></label>
+                    @if (typedSchoolProblem(); as message) { <small class="field-error" id="typed-school-error">{{ message }}</small> }
+                    <span><button type="button" (click)="useTypedSchool()">Tamam</button> <button type="button" (click)="typeSchool(false)">Listeden seç</button></span>
+                  } @else if (cityPicker()) {
                     <app-onboarding-combobox label="Okulun hangi şehirde?" placeholder="Şehir adını yaz" [options]="schoolCities()" (picked)="pickSchoolCity($event)" />
-                    <button type="button" (click)="closeSchoolPicker()">Vazgeç</button>
+                    <button type="button" (click)="typeSchool(true)">Okulum listede yok</button>
                   } @else {
                     <span>Şehir: <strong>{{ schoolCityLabel() }}</strong> <button type="button" (click)="changeSchoolCity()">Şehri değiştir</button></span>
                     @for (key of [schoolCity()]; track key) {
                       <app-onboarding-combobox label="Okulunu listeden seç" placeholder="Okulunun adını yaz" [load]="loadSchools" (picked)="pickSchool($event)" />
                     }
-                    <button type="button" (click)="closeSchoolPicker()">Vazgeç</button>
+                    <button type="button" (click)="typeSchool(true)">Okulum listede yok</button>
                   }
+                  <button type="button" (click)="closeSchoolPicker()">Vazgeç</button>
                 }
               </div>
               <label>Şube (isteğe bağlı) <input name="classBranch" maxlength="30" [(ngModel)]="s.classBranch" (ngModelChange)="dirty = true"></label>
@@ -200,13 +208,15 @@ export class CoachingProfileComponent implements OnInit {
   homeProvince = ''; homeDistrictId = ''; private savedDiploma: number | null = null; private savedEducation = ''; private examAsksDiploma = true;
   /** E3 #14: the status choice ("Şu an durumun ne?") and the one saved on the server. */
   readonly stages = EDUCATION_STAGES; stage: EducationStage | '' = ''; private savedStage: EducationStage | '' = '';
-  private savedSchool: string | null = null; private savedBranch: string | null = null;
+  private savedSchool: string | null = null; private savedBranch: string | null = null; private savedBirthDate: string | null = null;
   readonly isStudentStage = isStudentStage; readonly gradesFor = gradesFor;
   readonly clearsSchoolText = 'Öğrenci olmadığını seçersen kaydettiğinde sınıf, okul ve şube bilgin silinecek.';
   /** Paket D (#7): the school picker (the wizard's catalog list) and the school picked or removed but not saved yet. */
   readonly schoolPicker = signal(false); readonly cityPicker = signal(false);
   readonly schoolCity = signal(''); readonly schoolCityLabel = signal('');
   readonly schoolCities = signal<ComboOption[]>([]); readonly pickedSchool = signal<PickedSchool | null>(null); readonly schoolRemoved = signal(false);
+  /** G4 (#43): "Okulum listede yok": the school's name typed in, as in the wizard. */
+  readonly typingSchool = signal(false); readonly typedSchoolProblem = signal<string | null>(null); readonly typedSchoolMax = TYPED_SCHOOL_MAX; draftSchool = '';
   /** Paket D (#8): after a grade change the exam in the study settings no longer fits. */
   readonly gradeNotice = signal(false);
   /** E4 #24: the message of each field the last save attempt refused. */
@@ -234,7 +244,7 @@ export class CoachingProfileComponent implements OnInit {
     this.savedProfile = profile.student ? { ...profile.student } : null; this.cancelSave();
     this.stage = this.savedStage = this.student ? stageOf(this.student.educationStatus, this.student.gradeLevel) : '';
     if (this.student && !this.stage) this.student.gradeLevel = null;
-    this.savedSchool = this.student?.schoolName || null; this.savedBranch = this.student?.classBranch || null;
+    this.savedSchool = this.student?.schoolName || null; this.savedBranch = this.student?.classBranch || null; this.savedBirthDate = this.student?.birthDate || null;
     if (profile.examAsksDiploma !== undefined) this.examAsksDiploma = profile.examAsksDiploma;
     this.savedDiploma = this.student?.diplomaGrade ?? null; this.provinces.set(null); this.homeProvince = ''; this.homeDistrictId = '';
     this.savedEducation = this.education(this.student); this.closeSchoolPicker(); this.pickedSchool.set(null); this.schoolRemoved.set(false);
@@ -305,7 +315,22 @@ export class CoachingProfileComponent implements OnInit {
       error: e => this.error.set(this.message(e, 'Şehir listesi yüklenemedi. Yeniden dene.')) });
   }
   pickSchoolCity(option: ComboOption) { this.schoolCity.set(option.value); this.schoolCityLabel.set(option.label); this.cityPicker.set(false); this.focusPicker(); }
-  closeSchoolPicker() { this.schoolPicker.set(false); this.cityPicker.set(false); }
+  closeSchoolPicker() { this.schoolPicker.set(false); this.cityPicker.set(false); this.typingSchool.set(false); this.typedSchoolProblem.set(null); }
+  /** G4 (#43): "Okulum listede yok" opens a text box (starting with a typed school's name); "Listeden seç" goes back to the list. */
+  typeSchool(typing: boolean) {
+    this.typingSchool.set(typing); this.typedSchoolProblem.set(null);
+    const current = this.pickedSchool() ?? (this.student?.schoolName && !this.student.schoolCity ? { id: null, name: this.student.schoolName } : null);
+    this.draftSchool = typing && current && !current.id ? current.name : '';
+    if (typing) setTimeout(() => (this.host.nativeElement.querySelector('#profile-own-school') as HTMLInputElement | null)?.focus());
+    else this.focusPicker();
+  }
+  useTypedSchool() {
+    const problem = typedSchoolError(this.draftSchool);
+    this.typedSchoolProblem.set(problem);
+    if (problem) { setTimeout(() => (this.host.nativeElement.querySelector('#profile-own-school') as HTMLInputElement | null)?.focus()); return; }
+    this.pickedSchool.set({ id: null, name: cleanSchoolName(this.draftSchool), district: null, type: null });
+    this.schoolRemoved.set(false); this.closeSchoolPicker(); this.dirty = true;
+  }
   pickSchool(option: ComboOption) {
     const data = option.data ?? {};
     this.pickedSchool.set({ id: option.value, name: option.label, district: (data['district'] as string | null) ?? null, type: (data['type'] as string | null) ?? null });
@@ -399,8 +424,9 @@ export class CoachingProfileComponent implements OnInit {
     if ((stage === 'HighSchoolGraduate' || stage === 'UniversityGraduate') && graduation !== null && graduation !== undefined && String(graduation) !== ''
       && (!Number.isInteger(Number(graduation)) || Number(graduation) < 1900 || Number(graduation) > this.year))
       errors.graduationYear = `Mezuniyet yılı 1900 ile ${this.year} arasında olmalı.`;
-    if (s.birthDate && s.birthDate > this.today) errors.birthDate = 'Doğum tarihin gelecekte olamaz.';
-    else if (s.birthDate && s.birthDate < '1900-01-01') errors.birthDate = 'Doğum tarihini kontrol et.';
+    // PR 128 review L1: the wizard's rule (Türkiye date, 6 to 100 years old); a stored date sent back unchanged is kept.
+    const birthProblem = s.birthDate && s.birthDate !== this.savedBirthDate ? birthDateError(s.birthDate) : null;
+    if (birthProblem) errors.birthDate = birthProblem;
     if (this.homeProvince && !this.homeDistrictId) errors.homeDistrict = 'Şehrinle birlikte ilçeni de seç.';
     const diploma = this.diplomaApplies(s);
     const hasGrade = s.diplomaGrade !== null && s.diplomaGrade !== undefined && String(s.diplomaGrade) !== '';
@@ -411,11 +437,13 @@ export class CoachingProfileComponent implements OnInit {
     // Paket D (#7): the saved school is sent back as it is, a picked one by its catalog id (the server fills it from the catalog).
     const dropLise = this.dropsLise();
     const removed = this.schoolRemoved() || !student || dropLise; const picked = student && !dropLise ? this.pickedSchool() : null;
+    // G4 (#43): a typed school is sent as its name, without a catalog city, district or type.
+    const typed = picked && !picked.id ? picked.name : null;
     // Paket D (#8): the diploma grade only where the wizard asks it; the server drops it elsewhere.
     return { expectedVersion: s.version, ...education,
-      graduationYear: stage === 'HighSchoolGraduate' || stage === 'UniversityGraduate' ? s.graduationYear || null : null, schoolName: removed ? null : s.schoolName || null,
-      schoolCity: removed ? null : s.schoolCity || null, schoolDistrict: removed ? null : s.schoolDistrict || null, schoolType: removed ? null : s.schoolType || null,
-      ...(picked && !removed ? { schoolId: picked.id } : {}),
+      graduationYear: stage === 'HighSchoolGraduate' || stage === 'UniversityGraduate' ? s.graduationYear || null : null, schoolName: removed ? null : typed ?? (s.schoolName || null),
+      schoolCity: removed || typed ? null : s.schoolCity || null, schoolDistrict: removed || typed ? null : s.schoolDistrict || null, schoolType: removed || typed ? null : s.schoolType || null,
+      ...(picked?.id && !removed ? { schoolId: picked.id } : {}),
       classBranch: student && !(dropLise && (s.classBranch || null) === this.savedBranch) ? s.classBranch || null : null, birthDate: s.birthDate || null,
       bio: s.bio || null, avatarUrl: s.avatarUrl || null, shareProgressWithTeachers: s.shareProgressWithTeachers,
       // Paket C: only a changed place is sent (checked against the shared list); an emptied diploma grade is removed.

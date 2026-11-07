@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { RegistrationLegalConsentComponent } from './registration-legal-consent.component';
 import { RegistrationLegalAcceptance } from '../../core/services/identity.service';
 import { environment } from '../../../environments/environment';
-import { readVerificationEmailOutcome } from './register/registration-outcome';
+import { VERIFICATION_DELAY_NOTE, readVerificationEmailOutcome } from './register/registration-outcome';
 import { getApiErrorMessage } from '../../core/http/api-error-message';
 import { AUTH_VOICE } from './auth-voice';
 
@@ -162,8 +162,8 @@ export class ExistingProductJoinComponent {
 function joinedMessage(verificationEmailSent: boolean, voice: 'sen' | 'siz'): string {
   if (verificationEmailSent) {
     return voice === 'sen'
-      ? 'Katılım tamamlandı. E-posta adresine doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra mevcut şifrenle giriş yapabilirsin.'
-      : 'Katılım tamamlandı. E-posta adresinize doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra mevcut şifrenizle giriş yapabilirsiniz.';
+      ? `Katılım tamamlandı. E-posta adresine doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra mevcut şifrenle giriş yapabilirsin. ${VERIFICATION_DELAY_NOTE.sen}`
+      : `Katılım tamamlandı. E-posta adresinize doğrulama bağlantısı gönderdik; bağlantıya tıkladıktan sonra mevcut şifrenizle giriş yapabilirsiniz. ${VERIFICATION_DELAY_NOTE.siz}`;
   }
   return voice === 'sen'
     ? 'Katılım tamamlandı. E-posta adresin zaten doğrulanmış; mevcut şifrenle hemen giriş yapabilirsin.'

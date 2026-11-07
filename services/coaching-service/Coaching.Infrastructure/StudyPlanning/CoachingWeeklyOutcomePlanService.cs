@@ -81,11 +81,12 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var context=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
         var year=context?.AcademicYearStart??(clock.GetUtcNow().Month>=9?clock.GetUtcNow().Year:clock.GetUtcNow().Year-1);
         var catalogTopics=await (from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
+            join r in Catalogs.CatalogUnitOrder.Ranks(db) on u.Id equals r.UnitId // G5 (#42): units in curriculum order
             where Enumerable.Contains(lessonIds,t.LessonId)&&t.IsActive&&u.IsActive&&u.LessonId==t.LessonId
                 &&!db.StudyCatalogTopics.Any(c=>c.ParentId==t.Id)
                 &&(t.ParentId==null||db.StudyCatalogTopics.Any(p=>p.Id==t.ParentId&&p.IsActive))
-            orderby u.DisplayOrder,t.ParentId==null?t.DisplayOrder:db.StudyCatalogTopics.Where(p=>p.Id==t.ParentId).Select(p=>p.DisplayOrder).First(),t.DisplayOrder,t.Id
-            select new {Topic=t,UnitOrder=u.DisplayOrder}).ToArrayAsync(ct);
+            orderby r.Unranked,r.Rank,r.Name,u.Id,t.ParentId==null?t.DisplayOrder:db.StudyCatalogTopics.Where(p=>p.Id==t.ParentId).Select(p=>p.DisplayOrder).First(),t.DisplayOrder,t.Id
+            select new {Topic=t}).ToArrayAsync(ct);
         var topicStates=context is null?new Dictionary<Guid,DeclaredTopicStatus>():await db.Set<StudentTopicState>().AsNoTracking()
             .Where(x=>x.ContextId==context.Id).ToDictionaryAsync(x=>x.TopicId,x=>x.DeclaredStatus,ct);
         var completedTopicIds=topicStates.Where(x=>x.Value==DeclaredTopicStatus.Studied).Select(x=>x.Key).ToArray();

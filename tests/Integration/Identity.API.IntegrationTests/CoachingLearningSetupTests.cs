@@ -58,8 +58,9 @@ public sealed class CoachingLearningSetupTests
         var choices = await f.Service.GetCatalogAsync(lesson.Id, 1, default);
         Assert.Single(choices.Lessons); Assert.Equal(1, choices.MissingDurationCount);
         Assert.Null(Assert.Single(choices.Topics.Items).EstimatedMinutes);
-        await Assert.ThrowsAsync<ArgumentException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,
-            [new(wrongGrade.Id, 1, null)], [], false), default));
+        // PR #128 review M2: the refused course is named.
+        Assert.Equal(wrongGrade.Id, (await Assert.ThrowsAsync<LearningCourseException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,
+            [new(wrongGrade.Id, 1, null)], [], false), default))).LessonId);
         var hours = StudyAvailability.Create(f.Student, "Europe/Istanbul");
         hours.ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]); f.Db.Add(hours); await f.Db.SaveChangesAsync();
         var ready = await f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,
@@ -91,6 +92,63 @@ public sealed class CoachingLearningSetupTests
         Assert.Throws<ArgumentException>(() => CurriculumVersion.Create("x", "x", "v1", 2027, 2026, "test", null));
         Assert.Throws<ArgumentException>(() => StudentLearningContext.Create(Guid.Empty, 2026, LearningPurpose.School, null, null, null));
         Assert.Throws<ArgumentException>(() => StudentLearningContext.Create(Guid.NewGuid(), 2026, LearningPurpose.Yks, 2027, "UNKNOWN", null));
+    }
+
+    [Fact]
+    public async Task UnitsComeInCurriculumOrderEvenWithoutTheirOwnRank()
+    {
+        // G5 (#42): the approved catalog's units have no DisplayOrder; their upper topics carry lesson-wide ranks (snapshot of
+        // 01.11.2026, TYT Matematik). Before, the units came in id order ("Veri, Uzay Geometri, Kümeler, Üçgenler, …").
+        await using var f = await Fixture.Create();
+        await f.Grade(8);
+        var catalog = CurriculumVersion.Create("test-2026", "Test programı", "v1", 2026, 2026, "Test kaynağı", null); catalog.SetPublished(true);
+        var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 8, "LGS"); lesson.AssignCurriculum(catalog.Id); lesson.SetActive(true);
+        f.Db.AddRange(catalog, lesson);
+        // (unit, the unit's own rank, its upper topics' ranks): only an admin-made unit has its own rank.
+        foreach (var (name, own, ranks) in new (string, int?, int[])[] { ("Veri", null, [16, 17]), ("Uzay Geometri", null, [26]),
+                     ("Kümeler", null, [7, 8]), ("Üçgenler", null, [18, 22]), ("Mantık", 6, [99]), ("Denklem ve Eşitsizlikler", null, [1, 5]) })
+        {
+            var unit = StudyCatalogUnit.Create("test", name, lesson.Id, name, own); unit.SetActive(true); f.Db.Add(unit);
+            foreach (var rank in ranks.Reverse())
+            {
+                var parent = StudyCatalogTopic.Create("test", $"{name}-{rank}", lesson.Id, unit.Id, $"{name} {rank}", null, rank); parent.SetActive(true);
+                var child = StudyCatalogTopic.Create("test", $"{name}-{rank}-1", lesson.Id, unit.Id, $"{name} {rank}.1", parent.Id, 1, 20); child.SetActive(true);
+                f.Db.AddRange(parent, child);
+            }
+        }
+        // Review L4: a passive upper topic does not move its unit (Uzay Geometri stays last).
+        var uzay = f.Db.StudyCatalogUnits.Local.Single(x => x.Name == "Uzay Geometri");
+        f.Db.Add(StudyCatalogTopic.Create("test", "passive", lesson.Id, uzay.Id, "Pasif üst konu", null, 0));
+        await f.Db.SaveChangesAsync();
+        await f.Service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default);
+        var topics = (await f.Service.GetCatalogAsync(lesson.Id, 1, default)).Topics.Items;
+        Assert.Equal(new[] { "Denklem ve Eşitsizlikler", "Mantık", "Kümeler", "Veri", "Üçgenler", "Uzay Geometri" }, topics.Select(x => x.UnitName).Distinct().ToArray());
+        Assert.Equal(new[] { "Denklem ve Eşitsizlikler 1.1", "Denklem ve Eşitsizlikler 5.1", "Mantık 99.1", "Kümeler 7.1", "Kümeler 8.1" },
+            topics.Take(5).Select(x => x.Name).ToArray());
+    }
+
+    // PR #128 review M2: a refused course is named, so Derslerim can open its row.
+    [Fact]
+    public async Task ARefusedCourseIsNamed()
+    {
+        await using var f = await Fixture.Create();
+        await f.Grade(8);
+        var catalog = CurriculumVersion.Create("test-2026", "Test programı", "v1", 2026, 2026, "Test kaynağı", null); catalog.SetPublished(true);
+        var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 8, "LGS"); lesson.AssignCurriculum(catalog.Id); lesson.SetActive(true);
+        var other = StudyCatalogLesson.Create("test", "turkish", "Türkçe", 8, "LGS"); other.AssignCurriculum(catalog.Id); other.SetActive(true);
+        f.Db.AddRange(catalog, lesson, other); await f.Db.SaveChangesAsync();
+        var saved = await f.Service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default);
+        var priority = await Assert.ThrowsAsync<LearningCourseException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027,
+            null, null, [new(lesson.Id, 1, null), new(other.Id, 9, null)], [], false), default));
+        Assert.Equal(other.Id, priority.LessonId);
+        var unknown = Guid.NewGuid();
+        var missing = await Assert.ThrowsAsync<LearningCourseException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027,
+            null, null, [new(lesson.Id, 1, null), new(unknown, 1, null)], [], false), default));
+        Assert.Equal(unknown, missing.LessonId);
+        var result = await new Coaching.API.Controllers.LearningSetupController(f.Service).Save(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027,
+            null, null, [new(other.Id, 0, null)], [], false), default);
+        var body = System.Text.Json.JsonSerializer.Serialize(Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(result).Value);
+        Assert.Contains("\"field\":\"courses\"", body); Assert.Contains(other.Id.ToString(), body);
     }
 
     internal sealed class Fixture : IAsyncDisposable

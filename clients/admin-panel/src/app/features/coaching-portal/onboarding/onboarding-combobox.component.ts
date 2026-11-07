@@ -64,8 +64,9 @@ export class OnboardingComboboxComponent implements OnInit {
   readonly shown = computed(() => {
     const options = this.options();
     if (!options) return this.remote();
-    const text = fold(this.query());
-    return text ? options.filter(x => fold(x.label).includes(text)) : options;
+    // G4 (#43): every word typed must match, in any order ("kadıköy istanbul").
+    const words = fold(this.query()).split(/\s+/).filter(Boolean);
+    return words.length ? options.filter(x => { const label = fold(x.label); return words.every(word => label.includes(word)); }) : options;
   });
   readonly more = computed(() => !this.options() && this.remote().length < this.total());
 

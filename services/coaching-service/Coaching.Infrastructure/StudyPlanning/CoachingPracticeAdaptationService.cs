@@ -221,11 +221,15 @@ public sealed class CoachingPracticeAdaptationService(CoachingDbContext db, ICoa
     private sealed record CatalogTopic(Guid Id, Guid LessonId, string LessonName, string? ExamCode, string Name);
     private async Task<CatalogTopic[]> Catalog(CancellationToken ct) => await (from t in db.StudyCatalogTopics.AsNoTracking()
         join u in db.StudyCatalogUnits on t.UnitId equals u.Id join l in db.StudyCatalogLessons on t.LessonId equals l.Id
+        join r in Catalogs.CatalogUnitOrder.Ranks(db) on u.Id equals r.UnitId // G5 (#42): units in curriculum order
         where t.IsActive && u.IsActive && l.IsActive && u.LessonId == l.Id
             && db.Set<StudyCatalogExam>().Any(e => e.Code == l.ExamCode && e.IsActive)
             && !db.StudyCatalogTopics.Any(c => c.ParentId == t.Id)
             && (t.ParentId == null || db.StudyCatalogTopics.Any(p => p.Id == t.ParentId && p.IsActive && p.UnitId == t.UnitId && p.LessonId == l.Id))
-        orderby l.Name, u.DisplayOrder, t.DisplayOrder, t.Id
+        // Review L5: as in the catalog and the yearly plan, a sub-topic takes its parent's place before its own rank.
+        orderby l.Name, r.Unranked, r.Rank, r.Name, u.Id,
+            t.ParentId == null ? t.DisplayOrder : db.StudyCatalogTopics.Where(p => p.Id == t.ParentId).Select(p => p.DisplayOrder).First(),
+            t.ParentId ?? t.Id, t.DisplayOrder, t.Id
         select new CatalogTopic(t.Id, l.Id, l.Name, l.ExamCode, t.Name)).ToArrayAsync(ct);
 
     // Exact official subject aliases only. Unknown/custom names are deliberately not guessed.

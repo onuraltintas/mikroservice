@@ -39,6 +39,8 @@ export interface OnboardingPersonalStep {
   graduationYear: number | null;
   /** The student's own school from the school catalog; null keeps the saved one. */
   schoolId: string | null;
+  /** G4 (#43): a school typed in because it is not in the list ("Okulum listede yok"); sent only without a schoolId. */
+  schoolName?: string | null;
 }
 export interface OnboardingExamStep {
   purpose: ExamLearningPurpose; primaryScoreType: string | null; foreignLanguage: string | null; targetExamSessionId: string | null;

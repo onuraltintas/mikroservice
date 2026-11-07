@@ -60,6 +60,18 @@ public sealed class CoachingLearningSetupPostgresTests
             { var child = StudyCatalogTopic.Create("test", name, other.Id, otherUnit.Id, name, parent.Id, rank, 20); child.SetActive(true); db.Add(child); }
             await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             Assert.Equal(new[] { "A1", "A2", "B1", "B2" }, (await service.GetCatalogAsync(other.Id, 1, default)).Topics.Items.Select(x => x.Name).ToArray());
+            // G5 (#42): units without their own rank (the approved catalog's) follow their first upper topic's rank.
+            var third = StudyCatalogLesson.Create("test", "math-3", "Matematik 3", 8, "LGS"); third.AssignCurriculum(curriculum.Id); third.SetActive(true);
+            db.Add(third);
+            foreach (var (name, rank) in new[] { ("Veri", 16), ("Uzay Geometri", 26), ("Kümeler", 7) })
+            {
+                var rankless = StudyCatalogUnit.Create("test", "u-" + name, third.Id, name, null); rankless.SetActive(true);
+                var upper = StudyCatalogTopic.Create("test", "p-" + name, third.Id, rankless.Id, name, null, rank, null); upper.SetActive(true);
+                var leaf = StudyCatalogTopic.Create("test", "t-" + name, third.Id, rankless.Id, name + " 1", upper.Id, 1, 20); leaf.SetActive(true);
+                db.AddRange(rankless, upper, leaf);
+            }
+            await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            Assert.Equal(new[] { "Kümeler", "Veri", "Uzay Geometri" }, (await service.GetCatalogAsync(third.Id, 1, default)).Topics.Items.Select(x => x.UnitName).ToArray());
             await using var second = new CoachingDbContext(options);
             var resumedService = new CoachingLearningSetupService(second, new CoachingAccessPolicy(actor), accounts);
             var resumed = await resumedService.GetAsync(default); Assert.True(resumed.IsReady);

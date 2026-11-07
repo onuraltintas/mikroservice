@@ -28,6 +28,31 @@ describe('StudentParentLinksComponent', () => {
     expect(service.getLinks).toHaveBeenCalledTimes(3);
   });
 
+  // G5 (#45): "Kopyala" next to a new code; without clipboard access the code is selected.
+  it('copies a new code, or selects it when copying is not allowed', async () => {
+    const original = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    try {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+      const service = { getLinks: vi.fn(() => of([])), getActiveCode: vi.fn(() => of(null)), createCode: vi.fn(() => of({ code: 'ABCD-2345', expiresAt: '2026-11-09T09:00:00Z' })) };
+      const fixture = setup(service); const el = fixture.nativeElement as HTMLElement;
+      const copy = () => Array.from(el.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Kopyala') as HTMLButtonElement | undefined;
+      expect(copy()).toBeUndefined();
+      await fixture.componentInstance.createCode(); fixture.detectChanges();
+      expect(copy()!.getAttribute('aria-label')).toBe('Veli kodunu kopyala: ABCD-2345');
+      expect(el.querySelector('[data-testid="copy-status"]')!.getAttribute('role')).toBe('status');
+      copy()!.click(); await new Promise(r => setTimeout(r, 120)); fixture.detectChanges();
+      expect(writeText).toHaveBeenCalledWith('ABCD-2345');
+      expect(el.querySelector('[data-testid="copy-status"]')!.textContent).toContain('Kod kopyalandı.');
+      Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+      copy()!.click(); await new Promise(r => setTimeout(r, 120)); fixture.detectChanges();
+      expect(window.getSelection()!.toString()).toBe('ABCD-2345');
+      expect(el.querySelector('[data-testid="copy-status"]')!.textContent).toContain('Kodu seçip kopyalayabilirsin.');
+    } finally {
+      if (original) Object.defineProperty(navigator, 'clipboard', original); else delete (navigator as { clipboard?: unknown }).clipboard;
+    }
+  });
+
   // E4 #21 (live test 06.11.2026): a code made in the wizard is shown on Profilim; a new code says it replaces the old one.
   it('shows an active code made elsewhere and asks in the page before replacing it', async () => {
     const service = { getLinks: vi.fn(() => of([])), getActiveCode: vi.fn(() => of({ expiresAt: '2026-11-13T09:00:00Z', createdAt: '2026-11-06T09:00:00Z' })),

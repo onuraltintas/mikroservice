@@ -49,6 +49,30 @@ public sealed class PracticeAdaptationPostgresTests
         }
     }
 
+    // PR #128 review L5 (G5 #42): practice advice lists topics like the catalog and the yearly plan: units in curriculum order
+    // (own rank, else the first upper topic's rank), and a sub-topic in its parent's place before its own rank.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TopicsComeInCurriculumUnitOrderWithSubTopicsInTheirParentsPlace()
+    {
+        await using var f = await Fixture.Create();
+        var lesson = StudyCatalogLesson.Create("order-test", "tyt-mat", "Matematik (TYT)", null, "TYT"); lesson.SetActive(true); f.Db.Add(lesson);
+        foreach (var (name, own, ranks) in new (string, int?, int[])[] { ("Veri", null, [16]), ("Uzay Geometri", null, [26]), ("Kümeler", null, [7]),
+                     ("Üçgenler", null, [18]), ("Mantık", 6, [99]), ("Denklem ve Eşitsizlikler", null, [5, 1]) })
+        {
+            var unit = StudyCatalogUnit.Create("order-test", "u-" + name, lesson.Id, name, own); unit.SetActive(true); f.Db.Add(unit);
+            foreach (var rank in ranks)
+            {
+                var upper = StudyCatalogTopic.Create("order-test", $"p-{name}-{rank}", lesson.Id, unit.Id, $"{name} {rank}", null, rank); upper.SetActive(true);
+                // Two sub-topics whose own ranks cross the parents' ranks (2 under the first parent, 1 under the second).
+                var leaf = StudyCatalogTopic.Create("order-test", $"t-{name}-{rank}", lesson.Id, unit.Id, $"{name} {rank}.x", upper.Id, rank == 1 ? 2 : 1, 20); leaf.SetActive(true);
+                f.Db.AddRange(upper, leaf);
+            }
+        }
+        await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
+        var names = (await f.Service.TopicsAsync("TYT", "MAT", default)).Where(x => x.LessonId == lesson.Id).Select(x => x.Name).ToArray();
+        Assert.Equal(new[] { "Denklem ve Eşitsizlikler 1.x", "Denklem ve Eşitsizlikler 5.x", "Mantık 99.x", "Kümeler 7.x", "Veri 16.x", "Üçgenler 18.x", "Uzay Geometri 26.x" }, names);
+    }
+
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task ImportedScopeSuffixesMatchOnlyTheirOfficialSubjectsAndScopes()
     {

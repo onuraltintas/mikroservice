@@ -14,8 +14,10 @@ import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onb
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, TARGET_QUESTIONS, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
   emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, staleParentCode, personalRequest, prefill, questions, signature, stepComplete, stepQuestions,
-  purposeOf, sessionAnswerLabel, summary, targetRequest, withoutUnfitPurpose
+  purposeOf, sessionAnswerLabel, summary, targetRequest, withoutUnfitPurpose, TYPED_SCHOOL_MAX, typedSchoolAnswer, typedSchoolError
 } from './onboarding-model';
+import { CopyResult, copyMessage, copyText } from '../copy-text';
+import { birthDateError, shiftYears } from '../birth-date';
 import { coachingToaster } from '../coaching-feedback';
 import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
@@ -124,6 +126,12 @@ export class StudentOnboardingComponent implements OnInit {
   /** The server accepts a birth date between 100 and 6 years ago (Türkiye date). */
   readonly oldest = shiftYears(-100);
   readonly youngest = shiftYears(-6);
+  /** G4 (#43): "Okulum listede yok": the student types the school's name instead of picking it. */
+  readonly typingSchool = signal(false);
+  readonly typedSchoolMax = TYPED_SCHOOL_MAX;
+  draftSchool = '';
+  /** G5 (#45): the result of "Kopyala" for the parent code. */
+  readonly copyStatus = signal<string | null>(null);
   private interacted = false;
   draftNumber: number | null = null;
   draftDate = '';
@@ -177,7 +185,9 @@ export class StudentOnboardingComponent implements OnInit {
   pickCombo(question: Question, option: ComboOption) { this.answer(question, { value: option.value, label: option.label, data: option.data }); }
 
   submitDate(question: Question) {
-    if (!this.draftDate || this.draftDate < this.oldest || this.draftDate > this.youngest) { this.invalid.set('Doğum tarihini kontrol et.'); return; }
+    // G5 (#44): the message says what is wrong (the server's window: 6 to 100 years old, Türkiye date).
+    const problem = birthDateError(this.draftDate);
+    if (problem) { this.invalid.set(problem); return; }
     this.answer(question, { value: this.draftDate, label: this.draftDate.split('-').reverse().join('.') });
   }
   submitNumber(question: Question) {
@@ -189,6 +199,18 @@ export class StudentOnboardingComponent implements OnInit {
     const estimated = question.kind === 'diploma' && this.draftEstimated;
     this.answer(question, { value, label: `${formatScore(value)}${estimated ? ' (tahmini)' : ''}`, data: question.kind === 'diploma' ? { estimated } : undefined });
   }
+  /** G4 (#43): "Okulum listede yok" opens a text box; "Listeden seç" goes back to the list. */
+  typeSchool(typing: boolean) {
+    this.typingSchool.set(typing); this.invalid.set(null); this.draftSchool = '';
+    setTimeout(() => (this.host.nativeElement.querySelector(typing ? '#ob-own-school' : '[data-current] input[role="combobox"]') as HTMLElement | null)?.focus());
+  }
+  schoolNameInput(event: Event) { this.draftSchool = (event.target as HTMLInputElement).value; }
+  submitSchoolName(question: Question) {
+    const problem = typedSchoolError(this.draftSchool);
+    if (problem) { this.invalid.set(problem); return; }
+    this.answer(question, typedSchoolAnswer(this.draftSchool));
+  }
+
   /** "Değiştir": the answer and only the answers that depend on it are asked again. */
   edit(id: QuestionId) {
     if (this.busy()) return;
@@ -239,7 +261,14 @@ export class StudentOnboardingComponent implements OnInit {
   staleCode(code: { expiresAt: string }) { return staleParentCode(code); }
   expiredNote(expiresAt: string) { return `Veli kodunun süresi doldu (${coachingDate(expiresAt)}). İstersen yeni bir kod oluştur.`; }
   async createParentCode() {
+    this.copyStatus.set(null);
     await this.run(async () => this.parentCode.set(await firstValueFrom(this.parents.createCode())), 'Veli kodu oluşturulamadı. Yeniden dene.');
+  }
+  /** G5 (#45): copies the parent code; without clipboard access the code is selected so the student can copy it. */
+  async copyParentCode(code: string, element: HTMLElement) {
+    const result: CopyResult = await copyText(code, element);
+    // Review L10: the live region is emptied first, so a repeated click is announced again.
+    this.copyStatus.set(''); setTimeout(() => this.copyStatus.set(copyMessage(result)), 60);
   }
   toggleEmail(category: string, event: Event) {
     const email = (event.target as HTMLInputElement).checked;
@@ -366,7 +395,7 @@ export class StudentOnboardingComponent implements OnInit {
   /** Loads what the current question needs and moves the focus to it (the log also announces it). */
   private prepare() {
     const question = this.current();
-    this.draftNumber = null; this.draftEstimated = false; this.draftDate = '';
+    this.draftNumber = null; this.draftEstimated = false; this.draftDate = ''; this.draftSchool = ''; this.typingSchool.set(false);
     const a = this.answers();
     const val = (id: QuestionId) => String(a[id]?.value ?? '');
     switch (question?.id) {
@@ -475,11 +504,5 @@ export class StudentOnboardingComponent implements OnInit {
   stepOf(question: Question) { return question.step; }
 }
 
-/** Today ± years as YYYY-MM-DD in Türkiye (the server's birth-date window). */
-export function shiftYears(years: number, now = new Date()): string {
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(now);
-  const [y, m, d] = today.split('-').map(Number);
-  const shifted = new Date(Date.UTC(y + years, m - 1, d));
-  if (shifted.getUTCMonth() !== m - 1) shifted.setUTCDate(0); // 29 Feb → 28 Feb
-  return shifted.toISOString().slice(0, 10);
-}
+/** G5 (#44): the birth-date rule, shared with Profilim (PR 128 review L1). */
+export { birthDateError, shiftYears } from '../birth-date';

@@ -12,6 +12,7 @@ using Coaching.Domain;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using Coaching.Domain.Profiles;
+using Coaching.Infrastructure.Catalogs;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -44,9 +45,12 @@ public sealed record OnboardingScore(string ScoreType, decimal Score);
 /// <summary>Kind: school, program or score. Scores: the student's own target scores (YKS: TYT and the field's; a programme without a taban: one).</summary>
 public sealed record OnboardingTarget(string Kind, Guid? TargetId, string Name, string? Detail, decimal? MinimumScore, int? ScoreYear,
     string? ScoreType, IReadOnlyList<OnboardingScore> Scores, bool CanEdit);
-/// <summary>SchoolId: the student's own school from the school catalog (null keeps the saved school).</summary>
+/// <summary>
+/// SchoolId: the student's own school from the school catalog (null keeps the saved school). G4 (#43): SchoolName is the
+/// student's own school typed in when it is not in the list ("Okulum listede yok"); it is used only without a SchoolId.
+/// </summary>
 public sealed record OnboardingPersonalStep(DateOnly? BirthDate, string? ProvinceId, string? DistrictId, CoachingEducationStatus EducationStatus,
-    int? GradeLevel, int? GraduationYear, Guid? SchoolId);
+    int? GradeLevel, int? GraduationYear, Guid? SchoolId, string? SchoolName = null);
 public sealed record OnboardingExamStep(LearningPurpose Purpose, string? PrimaryScoreType, string? ForeignLanguage, Guid? TargetExamSessionId,
     int? TargetExamYear, decimal? DiplomaGrade, bool DiplomaGradeEstimated);
 /// <summary>Kind: none ("Henüz karar vermedim"), school, program or score. Scores: score targets, or a programme's own score.</summary>
@@ -84,6 +88,10 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     ICoachingEventPublisher? events = null, IMemoryCache? cache = null)
 {
     public const int PageSize = 20;
+    /// <summary>G4 (#43): the longest school name a student may type in ("Okulum listede yok").</summary>
+    public const int TypedSchoolNameMaxLength = 150;
+    /// <summary>The birth-date window (Türkiye date): at least 6 and at most 100 years old.</summary>
+    public const int YoungestAge = 6, OldestAge = 100;
     private const string WizardMarker = "İlk giriş sihirbazında belirlendi.";
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
     private TimeProvider Clock => clock ?? TimeProvider.System;
@@ -103,8 +111,11 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         var profile = await RequireProfileAsync(true, ct);
         RequireOpen(profile);
         var today = Today();
-        if (request.BirthDate is not { } birthDate || birthDate > today.AddYears(-6) || birthDate < today.AddYears(-100))
-            throw new OnboardingFieldException("birthDate", "Doğum tarihini kontrol et.");
+        // G5 (#44): the message says what is wrong with the date.
+        if (request.BirthDate is not { } birthDate) throw new OnboardingFieldException("birthDate", "Doğum tarihini seç.");
+        if (birthDate > today) throw new OnboardingFieldException("birthDate", "Doğum tarihi bugünden sonra olamaz.");
+        if (birthDate > today.AddYears(-YoungestAge)) throw new OnboardingFieldException("birthDate", $"Bu tarihe göre {YoungestAge} yaşından küçüksün. Doğum tarihini kontrol et.");
+        if (birthDate < today.AddYears(-OldestAge)) throw new OnboardingFieldException("birthDate", $"Bu tarihe göre {OldestAge} yaşından büyüksün. Doğum tarihini kontrol et.");
         if (string.IsNullOrWhiteSpace(request.ProvinceId) || request.ProvinceId.Length > 20)
             throw new OnboardingFieldException("city", "Şehrini ve ilçeni listeden seç.");
         if (string.IsNullOrWhiteSpace(request.DistrictId) || request.DistrictId.Length > 20)
@@ -114,15 +125,19 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         if (request.SchoolId is { } schoolId)
             school = await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == schoolId && x.IsActive, ct)
                 ?? throw new OnboardingFieldException("ownSchool", "Okulunu listeden seç.");
+        // G4 (#43): a school that is not in the list is typed in; it has no catalog city, district or type.
+        var typedSchool = school is null ? TypedSchoolName(request.SchoolName) : null;
         var educationChanged = profile.EducationStatus != request.EducationStatus || profile.GradeLevel != request.GradeLevel;
         // A resuming student keeps what the wizard does not ask: the graduation year (a graduate's) and, unless a new one is picked,
         // the school (a student's; E3 #14: a non-student status has no school, so it is cleared).
         var graduationYear = request.GraduationYear ?? (CoachingStudentProfile.IsGraduate(request.EducationStatus) ? profile.GraduationYear : null);
-        var schoolType = school is null ? profile.SchoolType : await OwnSchoolTypeAsync(db, school, ct);
+        var schoolType = school is not null ? await OwnSchoolTypeAsync(db, school, ct) : typedSchool is null ? profile.SchoolType : null;
+        var (schoolName, schoolCity, schoolDistrict) = school is not null ? (school.Name, PlaceName(school.City), PlaceName(school.District))
+            : typedSchool is not null ? (typedSchool, null, null) : (profile.SchoolName, profile.SchoolCity, profile.SchoolDistrict);
         // F2 (E4 a): a refused answer names the wizard question to ask again.
         var educationField = request.EducationStatus == CoachingEducationStatus.Student ? "education" : "stage";
-        Field(educationField, () => profile.UpdateEducation(request.EducationStatus, request.GradeLevel, school?.Name ?? profile.SchoolName,
-            school is null ? profile.SchoolCity : school.City, school is null ? profile.SchoolDistrict : school.District, schoolType, profile.ClassBranch, graduationYear));
+        Field(educationField, () => profile.UpdateEducation(request.EducationStatus, request.GradeLevel, schoolName, schoolCity, schoolDistrict,
+            schoolType, profile.ClassBranch, graduationYear));
         Field("birthDate", () => profile.UpdatePersonal(birthDate, profile.Bio, profile.AvatarUrl, profile.ShareProgressWithTeachers));
         Field("city", () => profile.SetHome(province.Id, province.Name, district.Id, district.Name));
         // The exam step depends on the grade (the diploma question is for 11th, 12th grade and graduates).
@@ -130,6 +145,25 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         profile.RecordOnboardingStep(1);
         await SaveAsync(ct);
         return await ViewAsync(profile, ct);
+    }
+
+    /// <summary>
+    /// G4 (#43): a typed school name, trimmed (inner runs of spaces made one); null when none was typed. Review L2: zero-width
+    /// and other format characters (Unicode Cf) are dropped first, and a name made only of them is refused.
+    /// </summary>
+    public static string? TypedSchoolName(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return null;
+        var visible = string.Concat(value.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.Format));
+        if (string.IsNullOrWhiteSpace(visible))
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            throw new OnboardingFieldException("ownSchool", "Okulunun adını yaz.");
+        }
+        var name = string.Join(' ', visible.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        if (name.Length > TypedSchoolNameMaxLength)
+            throw new OnboardingFieldException("ownSchool", $"Okulunun adı en fazla {TypedSchoolNameMaxLength} karakter olabilir.");
+        return name;
     }
 
     /// <summary>The province and district from the shared Identity directory; a slow or failing directory is a 503.</summary>
@@ -350,12 +384,26 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         // Without a type: every school of the city (the student's own high school in step 1).
         var kind = string.IsNullOrWhiteSpace(type) ? null : RequireText(type, "Okul türünü seç.");
         var query = db.TargetSchools.AsNoTracking().Where(x => x.IsActive && Enumerable.Contains(cities, x.City) && (kind == null || x.InstitutionType == kind));
-        if (Search(search) is { } text) query = query.Where(x => x.Name.ToUpper().Replace("İ", "I").Contains(text) || (x.District ?? "").ToUpper().Replace("İ", "I").Contains(text));
+        // G4 (#43): every word must be in the name or the district, in any order ("karşıyaka anadolu").
+        if (Search(search) is not null) query = query.WhereEveryWord(search, x => x.Name, x => x.District);
         // Paket C: the student's own district comes first (a sort, not a filter); the catalog spells districts in capitals.
         string[] home = string.IsNullOrWhiteSpace(district) ? [] : await CitiesAsync(query.Select(x => x.District), RequireText(district, "İlçeyi seç."), ct);
-        if (kind is null) return await OwnSchoolsAsync(query, home, page, ct);
-        return await PageAsync(query.OrderBy(x => Enumerable.Contains(home, x.District) ? 0 : 1).ThenBy(x => x.Name).ThenBy(x => x.Id)
-            .Select(x => new OnboardingSchoolOption(x.Id, x.Name, x.District, x.MinimumScore, x.ScoreYear) { InHomeDistrict = Enumerable.Contains(home, x.District), Type = x.InstitutionType }), page, ct);
+        var searched = Search(search) is null ? null : search;
+        if (kind is null) return await OwnSchoolsAsync(query, home, page, ct, searched);
+        var options = query.OrderBy(x => Enumerable.Contains(home, x.District) ? 0 : 1).ThenBy(x => x.Name).ThenBy(x => x.Id)
+            .Select(x => new OnboardingSchoolOption(x.Id, x.Name, x.District, x.MinimumScore, x.ScoreYear) { InHomeDistrict = Enumerable.Contains(home, x.District), Type = x.InstitutionType });
+        TargetSearchPage<OnboardingSchoolOption> result;
+        if (searched is null) result = await PageAsync(options, page, ct);
+        else
+        {
+            // G4 (#43): a search narrows the list to one city and type (a few hundred rows at most); the schools where every word
+            // starts a word come first ("lise 7": Lise 7 before Lise 17), then the order above.
+            if (page is < 1 or > 10000) throw new ArgumentException("Geçerli bir sayfa seç.");
+            var all = (await options.ToListAsync(ct)).OrderBy(x => TurkishSearch.EveryWordStarts(searched, x.Name, x.District) ? 0 : 1).ToList();
+            result = new(all.Skip((page - 1) * PageSize).Take(PageSize).ToList(), all.Count, page, PageSize);
+        }
+        // G4 (#43): the catalog writes districts in capitals; they are shown as names ("Karşıyaka").
+        return result with { Items = result.Items.Select(x => x with { District = PlaceName(x.District) }).ToList() };
     }
 
     /// <summary>
@@ -364,7 +412,8 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     /// smallest id (stable); the type is shown only when every row of the school has the same one. Scores are left out (the own
     /// school is not a target). A city has at most a few hundred rows, so they are grouped and paged here.
     /// </summary>
-    private static async Task<TargetSearchPage<OnboardingSchoolOption>> OwnSchoolsAsync(IQueryable<TargetSchool> query, string[] home, int page, CancellationToken ct)
+    private static async Task<TargetSearchPage<OnboardingSchoolOption>> OwnSchoolsAsync(IQueryable<TargetSchool> query, string[] home, int page, CancellationToken ct,
+        string? search = null)
     {
         if (page is < 1 or > 10000) throw new ArgumentException("Geçerli bir sayfa seç.");
         var rows = await query.Select(x => new { x.Id, x.Name, x.City, x.District, x.InstitutionType }).ToListAsync(ct);
@@ -373,10 +422,12 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
             {
                 var first = group.MinBy(x => x.Id)!;
                 var types = group.Select(x => x.InstitutionType).Distinct().ToArray();
-                return new OnboardingSchoolOption(first.Id, first.Name, first.District, null, null)
+                return new OnboardingSchoolOption(first.Id, first.Name, PlaceName(first.District), null, null)
                     { InHomeDistrict = home.Contains(first.District), Type = types.Length == 1 ? types[0] : null };
             })
-            .OrderBy(x => x.InHomeDistrict ? 0 : 1).ThenBy(x => x.Name, StringComparer.Create(Turkish, false)).ThenBy(x => x.Id).ToList();
+            // G4 (#43): with a search, the schools where every word starts a word come first ("lise 7": Lise 7 before Lise 17).
+            .OrderBy(x => search is null || TurkishSearch.EveryWordStarts(search, x.Name, x.District) ? 0 : 1)
+            .ThenBy(x => x.InHomeDistrict ? 0 : 1).ThenBy(x => x.Name, StringComparer.Create(Turkish, false)).ThenBy(x => x.Id).ToList();
         return new(schools.Skip((page - 1) * PageSize).Take(PageSize).ToList(), schools.Count, page, PageSize);
     }
 
@@ -456,6 +507,13 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     }
 
     private static string TitleCase(string value) => Turkish.TextInfo.ToTitleCase(value.ToLower(Turkish));
+
+    /// <summary>
+    /// G4 (#43): the school catalog writes cities and districts in capitals ("KARŞIYAKA"); they are shown and stored as names
+    /// ("Karşıyaka"), like the corrected location directory. A name that is not all capitals is kept as it is.
+    /// </summary>
+    public static string? PlaceName(string? value) =>
+        string.IsNullOrWhiteSpace(value) || value != value.ToUpper(Turkish) ? value : TitleCase(value.Trim());
 
     private static async Task<IReadOnlyList<OnboardingOption>> Options(IQueryable<string?> values, CancellationToken ct, bool titleCase = false) =>
         (await values.Where(x => x != null && x != "").GroupBy(x => x!).Select(g => new { g.Key, Count = g.Count() }).ToListAsync(ct))
