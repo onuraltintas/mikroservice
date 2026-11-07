@@ -7,7 +7,7 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService } from './auth.service';
+import { AuthService, hasManagementRole, NO_ROLE_FOR_PRODUCT_CODE } from './auth.service';
 
 describe('AuthService browser session security', () => {
   let http: HttpTestingController;
@@ -181,6 +181,44 @@ describe('AuthService browser session security', () => {
     await pending;
   });
 
+  // Paket F F4 (live 07.11.2026): a Koçluk token with roles: [] opened the /dashboard management shell.
+  it('ends a role-less session after sign-in instead of opening the management shell', async () => {
+    const service = TestBed.inject(AuthService);
+    const router = TestBed.inject(Router) as unknown as { navigate: ReturnType<typeof vi.fn> };
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    const pending = service.loginWithPassword('student@example.test', 'password', false);
+    const outcome = pending.then(() => null, (error: unknown) => error);
+    http.expectOne(req => req.url.endsWith('/auth/coaching/login')).flush({
+      accessToken: createToken('role-less', [], 'coaching'),
+      tokenType: 'Bearer',
+      expiresInMinutes: 15
+    });
+    await vi.waitFor(() => http.expectOne(req => req.url.endsWith('/auth/revoke-token')).flush({}));
+
+    expect(await outcome).toMatchObject({ error: { code: NO_ROLE_FOR_PRODUCT_CODE } });
+    expect(service.isAuthenticated()).toBe(false);
+    expect(router.navigate).not.toHaveBeenCalledWith(['/dashboard']);
+  });
+
+  it('lands a Koçluk student in the portal and staff in the management shell', async () => {
+    const service = TestBed.inject(AuthService);
+    const router = TestBed.inject(Router) as unknown as { navigate: ReturnType<typeof vi.fn> };
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    const student = service.loginWithPassword('student@example.test', 'password', false);
+    http.expectOne(req => req.url.endsWith('/auth/coaching/login')).flush({
+      accessToken: createToken('student', ['Student'], 'coaching'), tokenType: 'Bearer', expiresInMinutes: 15 });
+    await student;
+    expect(router.navigate).toHaveBeenLastCalledWith(['/coaching-portal']);
+
+    const staff = service.loginWithPassword('editor@example.test', 'password', false);
+    http.expectOne(req => req.url.endsWith('/auth/coaching/login')).flush({
+      accessToken: createToken('editor', ['Editor'], 'coaching'), tokenType: 'Bearer', expiresInMinutes: 15 });
+    await staff;
+    expect(router.navigate).toHaveBeenLastCalledWith(['/dashboard']);
+  });
+
   // Third review N2: the confirmation names Coaching so the welcome e-mail is the Coaching one.
   it('confirms the e-mail address for Coaching', async () => {
     const service = TestBed.inject(AuthService);
@@ -193,13 +231,30 @@ describe('AuthService browser session security', () => {
   });
 });
 
-function createToken(userId: string): string {
+function createToken(userId: string, roles: string[] = ['SystemAdmin'], product?: string): string {
   const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }));
   const payload = btoa(JSON.stringify({
     sub: userId,
     email: `${userId}@example.test`,
-    role: ['SystemAdmin'],
-    permission: []
+    role: roles,
+    permission: [],
+    ...(product ? { platform_product: product } : {})
   }));
   return `${header}.${payload}.signature`;
 }
+
+describe('hasManagementRole', () => {
+  it('accepts any role other than the Koçluk portal roles', () => {
+    for (const role of ['SystemAdmin', 'Editor', 'InstitutionAdmin', 'InstitutionOwner', 'ContentManager']) {
+      expect(hasManagementRole({ roles: [role] })).toBe(true);
+    }
+    expect(hasManagementRole({ roles: ['Student', 'InstitutionAdmin'] })).toBe(true);
+  });
+
+  it('rejects portal-only and role-less sessions', () => {
+    expect(hasManagementRole({ roles: [] })).toBe(false);
+    expect(hasManagementRole({ roles: ['Student'] })).toBe(false);
+    expect(hasManagementRole({ roles: ['Teacher', 'Parent'] })).toBe(false);
+    expect(hasManagementRole(null)).toBe(false);
+  });
+});

@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, noRoleForProductError } from '../../../core/auth/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { AUTH_VOICE } from '../auth-voice';
 import { LoginComponent } from './login.component';
@@ -131,6 +131,36 @@ describe('LoginComponent MFA flow', () => {
     management.mfaChallengeToken = 'c'; management.mfaStage.set('verify'); management.mfaCode = '123456';
     await management.submitMfa();
     expect(management.errorMessage()).toBe('Çok fazla hatalı deneme yapıldı. Lütfen daha sonra tekrar deneyin.');
+  });
+
+  // Paket F F4 (live 07.11.2026): a Koçluk account without a Koçluk role must get the reason, not the management shell.
+  it('shows the join hint when the account has no role in this platform', async () => {
+    const roleLess = { error: { code: 'Auth.NoRoleForProduct', description: 'Bu platformda hesabınıza tanımlı aktif bir rol yok.' } };
+    const coaching = createComponent({ loginWithPassword: vi.fn().mockRejectedValue(roleLess) });
+    coaching.email = 'a@example.test'; coaching.password = 'x';
+    await coaching.onSubmit(new Event('submit'));
+    expect(coaching.errorMessage()).toBe(
+      'Bu platformda hesabın aktif değil. Mevcut hesabınla koçluğa katılmak için kayıt sayfasındaki "Mevcut hesabımla katıl" yolunu kullanabilirsin.');
+
+    TestBed.resetTestingModule();
+    const management = createComponent({ loginWithPassword: vi.fn().mockRejectedValue(roleLess) }, 'siz');
+    management.email = 'a@example.test'; management.password = 'x';
+    await management.onSubmit(new Event('submit'));
+    expect(management.errorMessage()).toBe('Bu platformda hesabınıza tanımlı aktif bir rol yok.');
+  });
+
+  it('leaves MFA and shows the reason when the verified session has no role', async () => {
+    const component = createComponent({ verifyMfa: vi.fn().mockRejectedValue(noRoleForProductError()) });
+    component.mfaChallengeToken = 'challenge'; component.mfaStage.set('verify'); component.mfaCode = '123456';
+    await component.submitMfa();
+    expect(component.mfaStage()).toBe('none');
+    expect(component.mfaChallengeToken).toBe('');
+    expect(component.errorMessage()).toContain('Mevcut hesabımla katıl');
+  });
+
+  it('shows the notice left by a guard that ended a role-less session', () => {
+    const component = createComponent({ consumeSignInNotice: vi.fn(() => noRoleForProductError()) });
+    expect(component.errorMessage()).toContain('Mevcut hesabımla katıl');
   });
 
   function createComponent(authService: Record<string, unknown>, voice: 'sen' | 'siz' = 'sen'): LoginComponent {

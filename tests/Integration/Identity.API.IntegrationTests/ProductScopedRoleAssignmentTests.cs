@@ -76,6 +76,63 @@ public sealed class ProductScopedRoleAssignmentTests
             userRole.Role.Name == "Teacher" && userRole.Product == PlatformProduct.SpeedReading);
     }
 
+    /// <summary>
+    /// Paket F F4 (live 07.11.2026): Rol Yönetimi removed a user's last Koçluk role while the Hızlı Okuma role stayed.
+    /// Access and roles are managed separately (the modal says so), so the Koçluk access row stays active; the
+    /// product's sessions are revoked and the sign-in rule refuses a role-less Koçluk session from then on.
+    /// </summary>
+    [Fact]
+    public async Task RemovingTheLastRoleInAProductKeepsAccessButLeavesNoSignInRole()
+    {
+        var options = new DbContextOptionsBuilder<IdentityDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var userId = Guid.NewGuid();
+        var role = Role.Create("Student", "Student");
+        var user = User.Create(userId, "student@example.test");
+        user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id, PlatformProduct.Coaching));
+        user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id, PlatformProduct.SpeedReading));
+        user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        user.GrantProductAccess(PlatformProduct.SpeedReading, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+
+        await using var context = new IdentityDbContext(options);
+        context.Users.Add(user);
+        context.Roles.Add(role);
+        await context.SaveChangesAsync();
+
+        var userRepository = DispatchProxy.Create<IUserRepository, UserRepositoryProxy>();
+        var userRepositoryProxy = (UserRepositoryProxy)(object)userRepository;
+        userRepositoryProxy.User = await context.Users.SingleAsync();
+        userRepositoryProxy.Context = context;
+        var roleRepository = DispatchProxy.Create<IRoleRepository, RoleRepositoryProxy>();
+        ((RoleRepositoryProxy)(object)roleRepository).Role = role;
+        var logger = new CapturingLogger();
+        var service = new LocalIdentityService(
+            userRepository,
+            passwordHasher: null!,
+            new UnitOfWork(context),
+            logger,
+            tokenService: null!,
+            roleRepository,
+            context,
+            new SystemAdministratorCurrentUserService());
+
+        var result = await service.RemoveRoleForProductAsync(
+            userId,
+            "Student",
+            PlatformProduct.Coaching,
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue(logger.Exception?.ToString() ?? (result.IsFailure ? result.Error.Description : null));
+        userRepositoryProxy.RevokedSessionProducts.Should().Equal(PlatformProduct.Coaching);
+        var savedUser = await context.Users.Include(candidate => candidate.ProductAccesses)
+            .Include(candidate => candidate.Roles).ThenInclude(userRole => userRole.Role)
+            .SingleAsync(candidate => candidate.Id == userId);
+        savedUser.HasProductAccess(PlatformProduct.Coaching).Should().BeTrue();
+        savedUser.GetRolesForProductScope(PlatformProduct.Coaching).Should().BeEmpty();
+        savedUser.GetRolesForProductScope(PlatformProduct.SpeedReading).Should().ContainSingle();
+    }
+
     private sealed class SystemAdministratorCurrentUserService : ICurrentUserService
     {
         public Guid? UserId => Guid.NewGuid();
@@ -90,6 +147,7 @@ public sealed class ProductScopedRoleAssignmentTests
     {
         public User User { get; set; } = null!;
         public IdentityDbContext Context { get; set; } = null!;
+        public List<PlatformProduct> RevokedSessionProducts { get; } = [];
 
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
         {
@@ -100,6 +158,7 @@ public sealed class ProductScopedRoleAssignmentTests
                 case nameof(IUserRepository.RevokeActiveRefreshTokensAsync):
                     return Task.CompletedTask;
                 case nameof(IUserRepository.RevokeActiveRefreshTokensForProductAsync):
+                    RevokedSessionProducts.Add((PlatformProduct)args![1]!);
                     return Task.CompletedTask;
                 case nameof(IUserRepository.TrackProductAccessIfNew):
                     var product = (PlatformProduct)args![1]!;

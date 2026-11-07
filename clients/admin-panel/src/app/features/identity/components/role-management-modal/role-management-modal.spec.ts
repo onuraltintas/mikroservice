@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { RoleManagementModalComponent } from './role-management-modal';
+import { LAST_PRODUCT_ROLE_WARNING, RoleManagementModalComponent } from './role-management-modal';
 import { IdentityService, UserDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 
@@ -13,14 +13,14 @@ describe('Service-scoped role management', () => {
   };
   let identity: { getRoles: ReturnType<typeof vi.fn>; assignRole: ReturnType<typeof vi.fn>;
     removeRole: ReturnType<typeof vi.fn>; getUserById: ReturnType<typeof vi.fn> };
-  let toaster: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+  let toaster: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn>; warning: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     identity = { getRoles: vi.fn(() => of(['Teacher', 'Student', 'SystemAdmin'])),
       assignRole: vi.fn(() => of(null)), removeRole: vi.fn(() => of(null)),
       getUserById: vi.fn(() => of({ ...user, roles: ['Teacher'],
         productRoles: [{ role: 'Teacher', product: 'coaching' }] })) };
-    toaster = { success: vi.fn(), error: vi.fn() };
+    toaster = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
     TestBed.configureTestingModule({ imports: [RoleManagementModalComponent], providers: [
       { provide: IdentityService, useValue: identity }, { provide: ToasterService, useValue: toaster }
     ] });
@@ -64,6 +64,24 @@ describe('Service-scoped role management', () => {
     expect(identity.removeRole).toHaveBeenCalledWith('user-1', 'Teacher', 'speed-reading');
     expect(fixture.nativeElement.textContent).toContain('Teacher · Koçluk');
     expect(fixture.nativeElement.textContent).not.toContain('Teacher · Hızlı Okuma');
+  });
+
+  // Paket F F4 (live 07.11.2026): the Koçluk Student role was removed and the user could still sign in to Koçluk.
+  it('warns when the last role of a service is removed', () => {
+    const fixture = create({ ...user, roles: ['Student', 'Student'],
+      productRoles: [{ role: 'Student', product: 'coaching' }, { role: 'Student', product: 'speed-reading' }] });
+    fixture.componentInstance.removeRole({ role: 'Student', product: 'coaching' });
+    expect(identity.removeRole).toHaveBeenCalledWith('user-1', 'Student', 'coaching');
+    expect(toaster.warning).toHaveBeenCalledWith(LAST_PRODUCT_ROLE_WARNING);
+    expect(LAST_PRODUCT_ROLE_WARNING).toBe('Bu serviste başka rolü kalmadı; kullanıcı bu servise giriş yapamaz.');
+  });
+
+  it('does not warn while the service still has another role', () => {
+    const fixture = create({ ...user, roles: ['Teacher', 'Student'],
+      productRoles: [{ role: 'Teacher', product: 'coaching' }, { role: 'Student', product: 'coaching' }] });
+    fixture.componentInstance.removeRole({ role: 'Student', product: 'coaching' });
+    expect(identity.removeRole).toHaveBeenCalledWith('user-1', 'Student', 'coaching');
+    expect(toaster.warning).not.toHaveBeenCalled();
   });
 
   it('does not treat a missing service as coaching', () => {

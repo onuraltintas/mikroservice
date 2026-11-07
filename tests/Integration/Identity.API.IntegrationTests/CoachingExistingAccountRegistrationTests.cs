@@ -81,9 +81,27 @@ public sealed class CoachingExistingAccountRegistrationTests
     {
         var fixture = new Fixture();
         fixture.User.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        // F4: registered means a Koçluk role too; an access row without any Koçluk role may join again (below).
+        var teacherRole = Role.Create("Teacher", "Teacher", true);
+        var teacherMembership = new Identity.Domain.Entities.UserRole(fixture.User.Id, teacherRole.Id, PlatformProduct.Coaching);
+        typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(teacherMembership, teacherRole);
+        fixture.User.AddRole(teacherMembership);
         var result = await fixture.Register();
         Assert.Equal("Identity.UserExists", result.Error.Code);
         Assert.Equal(0, fixture.Saves);
+    }
+
+    // Paket F F4 (live 07.11.2026): the Koçluk Student role was removed in Rol Yönetimi and the access row stayed active.
+    [Fact]
+    public async Task RoleLessCoachingAccessCanJoinAgainWithTheExistingAccount()
+    {
+        var fixture = new Fixture();
+        fixture.User.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        var result = await fixture.Register();
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : "");
+        Assert.Contains(fixture.User.Roles, role => role.Product == PlatformProduct.Coaching);
+        Assert.True(fixture.User.HasProductAccess(PlatformProduct.Coaching));
+        Assert.Equal(1, fixture.Saves);
     }
 
     [Fact]

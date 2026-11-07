@@ -139,6 +139,25 @@ public sealed class CrossProductEnrollmentTests
         Assert.Equal(0, f.Consents);
     }
 
+    // Paket F F4: the account's last role in the target was removed in Rol Yönetimi and its access row stayed active.
+    // The login error points it to "Mevcut hesabımla katıl", so that join must give the role back.
+    [Theory]
+    [InlineData(PlatformProduct.Coaching)]
+    [InlineData(PlatformProduct.SpeedReading)]
+    public async Task RoleLessAccountWithActiveAccessCanRejoinWithItsExistingAccount(PlatformProduct target)
+    {
+        var f = new Fixture(target, "student");
+        f.User.GrantProductAccess(target, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        Assert.DoesNotContain(f.User.Roles, r => r.Product == target);
+
+        var result = await f.Join();
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : "");
+        Assert.True(f.User.HasProductAccess(target));
+        Assert.Contains(f.User.Roles, r => r.Product == target && r.RoleId == f.Roles["Student"].Id);
+        Assert.Equal(1, f.Consents);
+    }
+
     [Fact]
     public async Task MfaEnrollmentRequiresFreshCodeAndDoesNotDisableMfa()
     {

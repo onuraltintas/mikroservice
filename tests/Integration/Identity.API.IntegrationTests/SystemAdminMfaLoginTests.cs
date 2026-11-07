@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Identity.API.IntegrationTests;
 
-public sealed class SystemAdminMfaLoginTests
+public sealed partial class SystemAdminMfaLoginTests
 {
     [Theory]
     [InlineData(PlatformProduct.Coaching)]
@@ -75,7 +75,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task PasswordLogin_WithMatchingProductAccess_ShouldIssueProductScopedSession()
     {
-        var user = CreateUserWithRole("Student");
+        var user = CreateUserWithRole("Student", PlatformProduct.Coaching);
         user.ConfirmEmail();
         user.GrantProductAccess(
             PlatformProduct.Coaching,
@@ -109,7 +109,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task PasswordLogin_WhenInstitutionOwnerEmailIsNotConfirmed_ShouldRejectLogin()
     {
-        var user = CreateUserWithRole("InstitutionOwner");
+        var user = CreateUserWithRole("InstitutionOwner", PlatformProduct.Coaching);
         user.GrantProductAccess(
             PlatformProduct.Coaching,
             UserProductAccessSource.Admin,
@@ -360,6 +360,7 @@ public sealed class SystemAdminMfaLoginTests
     {
         var user = User.Create(Guid.NewGuid(), "student@example.com");
         user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
+        AddRole(user, "Student", PlatformProduct.Coaching); // F4: a product session needs a role in the product.
         user.GrantProductAccess(
             PlatformProduct.Coaching,
             UserProductAccessSource.SelfRegistration,
@@ -430,7 +431,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task GoogleLogin_WithMatchingProductAccess_ShouldIssueProductScopedSession()
     {
-        var user = CreateUserWithRole("Student");
+        var user = CreateUserWithRole("Student", PlatformProduct.SpeedReading);
         user.ConfirmEmail();
         user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
         user.GrantProductAccess(
@@ -725,7 +726,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task RefreshToken_ShouldKeepProductScopeOnRotatedSession()
     {
-        var user = CreateUserWithRole("Student");
+        var user = CreateUserWithRole("Student", PlatformProduct.Coaching);
         user.GrantProductAccess(
             PlatformProduct.Coaching,
             UserProductAccessSource.SelfRegistration,

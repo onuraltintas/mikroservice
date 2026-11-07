@@ -10,6 +10,7 @@ const formal = /(?:ınız|iniz|unuz|ünüz|yın|yin|girin|edin|seçin|Lütfen)(?
 describe('sen server messages', () => {
   const serverTexts: Record<string, string> = {
     'Auth.ProductAccessDenied': 'Bu platform için hesabınıza erişim yetkisi tanımlı değil.',
+    'Auth.NoRoleForProduct': 'Bu platformda hesabınıza tanımlı aktif bir rol yok. Mevcut hesabınızla yeniden katılmak için kayıt sayfasındaki "Mevcut hesabımla katıl" seçeneğini kullanabilirsiniz.',
     'Auth.MfaLocked': 'Çok fazla hatalı deneme yapıldı. Lütfen daha sonra tekrar deneyin.',
     'Auth.InvalidMfaCode': 'Doğrulama kodu geçersiz veya kullanılmış. Yeni kodla tekrar deneyin.',
     'Auth.ExistingAccountMfaRequired': 'Mevcut hesabınızın doğrulama uygulamasındaki altı haneli kodu girin.',
