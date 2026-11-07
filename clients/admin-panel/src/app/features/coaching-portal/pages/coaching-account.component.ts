@@ -9,12 +9,12 @@ import { isPasswordPolicySatisfied, PASSWORD_MAX_LENGTH } from '../../../core/va
 import { PasswordRequirementsComponent } from '../../../shared/components/password-requirements/password-requirements.component';
 import { coachingFeedback } from '../coaching-feedback';
 import { coachingDate } from '../coaching-labels';
+import { AUTH_VOICE } from '../../auth/auth-voice';
 
 type FormName = 'name' | 'email' | 'password';
 type FieldName = 'firstName' | 'lastName' | 'newEmail' | 'emailPassword' | 'emailMfaCode' | 'currentPassword' | 'newPassword' | 'confirmPassword';
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MFA_CODE = /^\d{6}$/;
-const voice = { voice: 'sen' as const };
 
 /**
  * E5 (#22, live test 06.11.2026): Profil ve ayarlar › Hesabım for students, and the parent's Hesabım page. The name,
@@ -139,6 +139,8 @@ const voice = { voice: 'sen' as const };
 export class CoachingAccountComponent implements OnInit {
   private readonly identity = inject(IdentityService);
   private readonly auth = inject(AuthService);
+  /** Paket F L8: identity texts are shown with "sen" on the Coaching site (rewritten by code or text). */
+  private readonly voice = { voice: inject(AUTH_VOICE) };
   /** Review L8: the parent's page has no student copy (route data audience: 'parent'). */
   readonly isParent = inject(ActivatedRoute, { optional: true })?.snapshot?.data?.['audience'] === 'parent';
 
@@ -170,7 +172,7 @@ export class CoachingAccountComponent implements OnInit {
     this.loadError.set(null);
     this.identity.getMyProfile().subscribe({
       next: profile => { this.profile.set(profile); this.firstName = profile.firstName ?? ''; this.lastName = profile.lastName ?? ''; },
-      error: error => this.loadError.set(getApiErrorMessage(error, 'Hesap bilgilerin yüklenemedi. Sayfayı yenileyip yeniden dene.', voice))
+      error: error => this.loadError.set(getApiErrorMessage(error, 'Hesap bilgilerin yüklenemedi. Sayfayı yenileyip yeniden dene.', this.voice))
     });
   }
 
@@ -202,7 +204,7 @@ export class CoachingAccountComponent implements OnInit {
         void this.auth.refreshSession();
         this.succeed('name', 'Adın ve soyadın kaydedildi.');
       },
-      error: error => this.fail('name', getApiErrorMessage(error, 'Adın kaydedilemedi. Bağlantını kontrol edip yeniden dene.', voice))
+      error: error => this.fail('name', getApiErrorMessage(error, 'Adın kaydedilemedi. Bağlantını kontrol edip yeniden dene.', this.voice))
     });
   }
 
@@ -244,7 +246,7 @@ export class CoachingAccountComponent implements OnInit {
         this.profile.update(p => p ? { ...p, pendingEmail: null, pendingEmailExpiresAt: null } : p);
         this.succeed('email', 'E-posta değişikliği iptal edildi; gönderdiğimiz bağlantı artık çalışmaz.');
       },
-      error: error => this.fail('email', getApiErrorMessage(error, 'Değişiklik iptal edilemedi. Yeniden dene.', voice))
+      error: error => this.fail('email', getApiErrorMessage(error, 'Değişiklik iptal edilemedi. Yeniden dene.', this.voice))
     });
   }
 
@@ -275,7 +277,7 @@ export class CoachingAccountComponent implements OnInit {
     this.busy.set('password');
     this.identity.forgotPassword(email).pipe(finalize(() => this.busy.set(null))).subscribe({
       next: () => this.succeed('password', `Şifre belirleme bağlantısını ${email} adresine gönderdik. Bağlantı 2 saat geçerli.`),
-      error: error => this.fail('password', getApiErrorMessage(error, 'Bağlantı gönderilemedi. Biraz sonra yeniden dene.', voice))
+      error: error => this.fail('password', getApiErrorMessage(error, 'Bağlantı gönderilemedi. Biraz sonra yeniden dene.', this.voice))
     });
   }
 
@@ -297,7 +299,7 @@ export class CoachingAccountComponent implements OnInit {
   }
 
   private apiFail(form: FormName, error: unknown, fallback: string, fieldsByCode: Record<string, FieldName>) {
-    const message = getApiErrorMessage(error, fallback, voice);
+    const message = getApiErrorMessage(error, fallback, this.voice);
     const code = this.errorCode(error);
     const field = code ? fieldsByCode[code] : undefined;
     if (field) this.fieldErrors.update(current => ({ ...current, [field]: message }));

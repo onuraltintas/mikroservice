@@ -8,6 +8,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
 import { getApiErrorMessage } from '../../../../core/http/api-error-message';
+import { AUTH_VOICE } from '../../auth-voice';
 import { PasswordRequirementsComponent } from '../../../../shared/components/password-requirements/password-requirements.component';
 
 import { MatCardModule } from '@angular/material/card';
@@ -44,6 +45,8 @@ export class StudentRegisterComponent implements OnInit {
     private route = inject(ActivatedRoute, { optional: true });
     private analytics = inject(SiteAnalyticsService);
     private toaster = inject(ToasterService);
+    /** Paket F L8: server texts are rewritten with "sen" on the Coaching site; eduivme.com keeps them as is. */
+    private readonly hostVoice = inject(AUTH_VOICE);
     private configService = inject(ConfigurationService);
     private platformId = inject(PLATFORM_ID);
     private authService = inject(AuthService);
@@ -133,7 +136,7 @@ export class StudentRegisterComponent implements OnInit {
             error: (err) => {
                 this.isLoading.set(false);
                 const msg = getApiErrorMessage(err, 'Kayıt tamamlanamadı. Biraz sonra yeniden dene.', {
-                    voice: 'sen',
+                    voice: this.hostVoice,
                     conflict: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.'
                 });
                 this.toaster.error(msg);
@@ -173,7 +176,7 @@ export class StudentRegisterComponent implements OnInit {
             this.toaster.success('Google hesabınla devam edildi.');
         } catch (error: any) {
             const errorCode = error.error?.code;
-            const errorMessage = getApiErrorMessage(error, 'Google ile kayıt tamamlanamadı. Biraz sonra yeniden dene.', { voice: 'sen' });
+            const errorMessage = getApiErrorMessage(error, 'Google ile kayıt tamamlanamadı. Biraz sonra yeniden dene.', { voice: this.hostVoice });
 
             if (errorCode === 'Identity.RegistrationDisabled') {
                 this.toaster.info('Yeni kayıtlar şu an kapalı.');

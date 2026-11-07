@@ -9,6 +9,8 @@ import { RegistrationLegalConsentComponent } from './registration-legal-consent.
 import { RegistrationLegalAcceptance } from '../../core/services/identity.service';
 import { environment } from '../../../environments/environment';
 import { readVerificationEmailOutcome } from './register/registration-outcome';
+import { getApiErrorMessage } from '../../core/http/api-error-message';
+import { AUTH_VOICE } from './auth-voice';
 
 @Component({
   selector: 'app-existing-product-join',
@@ -75,6 +77,7 @@ export class ExistingProductJoinComponent {
   private readonly http = inject(HttpClient);
   private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly fb = inject(FormBuilder);
+  private readonly hostVoice = inject(AUTH_VOICE);
   form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.maxLength(1024)]],
@@ -148,8 +151,9 @@ export class ExistingProductJoinComponent {
           return;
         }
         if (err.error?.code === 'Auth.InvalidInstitutionSelection') this.clearInstitutions();
-        const detail = err.error?.description ?? err.error?.message ?? err.error?.Error?.description;
-        this.error = typeof detail === 'string' ? detail : this.copy.fallbackError;
+        // Paket F L8: with "sen" on the Coaching site the server's "siz" texts are rewritten (eduivme.com keeps them).
+        this.error = getApiErrorMessage(err, this.copy.fallbackError,
+          { voice: this.voice === 'sen' && this.hostVoice === 'sen' ? 'sen' : 'siz' });
       }
     });
   }
