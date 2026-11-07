@@ -87,6 +87,16 @@ describe('CoachingPortalHomeComponent', () => {
     expect(el.querySelector('cs-progress-ring')!.getAttribute('ng-reflect-value') ?? '3').toBe('3');
     expect(el.textContent).toContain('Hedefine 10 net kaldı');
     expect(el.querySelector('a[href="/coaching-portal/growth/goals"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="exam-estimated"]')).toBeNull();
+  });
+
+  // G2 (#40): a year with no exam date yet counts down to an estimated day, said as such.
+  it('marks an estimated exam date in the countdown', async () => {
+    const { el } = await render(view({ exam: { name: 'YKS', date: '2028-06-17', daysLeft: 605, source: 'Estimated' } }));
+    const strip = el.querySelector('[data-testid="today-strip"]')!;
+    expect(strip.textContent).toContain('~605');
+    expect(el.querySelector('[data-testid="exam-estimated"]')!.textContent).toContain('tahmini tarih');
+    expect(strip.querySelector('.fact')!.getAttribute('aria-label')).toBe('Tahminen 605 gün sonra YKS');
   });
 
   it('shows the weekly review and the next session only when there is one', async () => {

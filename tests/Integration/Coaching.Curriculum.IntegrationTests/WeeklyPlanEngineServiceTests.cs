@@ -61,9 +61,38 @@ public sealed class WeeklyPlanEngineServiceTests
         await service.SetExamDateAsync(new(null), default);
         Assert.Equal("Catalog", (await service.OptionsAsync(default)).EndDateSource);
 
+        // G2 (#40): the chosen year (2027) with no session known at all: an estimated 15 June of that year, not 1 June.
         exam.ReplaceSessions([]); await f.Db.SaveChangesAsync();
         options = await service.OptionsAsync(default);
+        Assert.Equal((new DateOnly(2027, 6, 14), (DateOnly?)new DateOnly(2027, 6, 15), "Estimated"), (options.EndDate, options.ExamDate, options.EndDateSource));
+        // Without an exam year (no study settings) the plan still ends on the default 1 June.
+        f.Db.RemoveRange(f.Db.StudentLearningContexts); await f.Db.SaveChangesAsync();
+        options = await service.OptionsAsync(default);
         Assert.Equal((WeeklyOutcomeScheduler.DefaultEnd(options.StartDate), "Default"), (options.EndDate, options.EndDateSource));
+    }
+
+    [Fact]
+    // G2 (#40, user decision 07.11.2026): an 11th grader targets YKS/LGS 2028 while the catalog only has the 2027 session. The plan
+    // and its "Resmî tarihe dön" use the 2027 session's month and day carried to 2028, shown as an estimate; once the catalog has a
+    // 2028 session it is used.
+    public async Task AYearOnlyTargetIsNotCountedDownToAnEarlierYearsSession()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var service = await WeeklyOutcomePlanTests.Seed(f);
+        var exam = await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "LGS");
+        exam.ReplaceSessions([new(null, new DateOnly(2027, 6, 13), "2027", null, null)]);
+        var context = await f.Db.StudentLearningContexts.SingleAsync();
+        context.SetScope(2026, LearningPurpose.Lgs, 2028, null, null); await f.Db.SaveChangesAsync();
+
+        var options = await service.OptionsAsync(default);
+        Assert.Equal((new DateOnly(2028, 6, 12), (DateOnly?)new DateOnly(2028, 6, 13), "Estimated", (DateOnly?)new DateOnly(2028, 6, 13), true),
+            (options.EndDate, options.ExamDate, options.EndDateSource, options.CatalogExamDate, options.CatalogExamDateEstimated));
+        // The exam list still names the catalog's next session (for reference only).
+        Assert.Equal(new DateOnly(2027, 6, 13), Assert.Single(options.Exams).Date);
+
+        exam.ReplaceSessions([new(exam.Sessions.Single().Id, new DateOnly(2027, 6, 13), "2027", null, null), new(null, new DateOnly(2028, 6, 11), "2028", null, null)]);
+        await f.Db.SaveChangesAsync();
+        options = await service.OptionsAsync(default);
+        Assert.Equal(((DateOnly?)new DateOnly(2028, 6, 11), "Catalog", false), (options.ExamDate, options.EndDateSource, options.CatalogExamDateEstimated));
     }
 
     [Fact]

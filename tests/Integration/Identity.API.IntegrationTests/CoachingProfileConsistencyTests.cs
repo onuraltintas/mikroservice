@@ -25,7 +25,8 @@ public sealed class CoachingProfileConsistencyTests
     public async Task ChangingTheExamInStudySettingsClearsTheStudentsOwnTargetThatNoLongerFits()
     {
         await using var s = await Setup.CreateAsync();
-        await s.Wizard(null, LearningPurpose.Yks, "SAY", status: CoachingEducationStatus.UniversityGraduate);
+        // G1 (07.11.2026): a university graduate's YKS setup from before the rule; AGS is chosen now.
+        await s.OlderYksSetup(CoachingEducationStatus.UniversityGraduate);
         await s.Onboarding.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null), default);
         await s.SetNets(("TYT", 90), ("AYT_SAY", 60));
         s.Published.Clear();
@@ -96,7 +97,7 @@ public sealed class CoachingProfileConsistencyTests
     public async Task ATeachersGoalIsKeptAndMarkedAsNotMatchingTheNewExam()
     {
         await using var s = await Setup.CreateAsync();
-        await s.Wizard(null, LearningPurpose.Yks, "SAY", status: CoachingEducationStatus.UniversityGraduate);
+        await s.OlderYksSetup(CoachingEducationStatus.UniversityGraduate);
         var goal = AcademicGoal.Create(s.Student, "Öğretmenin hedefi", GoalCategory.ExamPreparation, setByTeacherId: Guid.NewGuid());
         goal.SetCatalogTarget(s.Programs["Bilgisayar Mühendisliği"], null); goal.SetNetTarget("AYT_SAY", 60);
         s.F.Db.Add(goal); s.F.Db.Add(StudentPrimaryGoal.Create(s.Student, goal.Id)); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
@@ -149,7 +150,7 @@ public sealed class CoachingProfileConsistencyTests
         (await s.Settings.PreviewAsync(new(LearningPurpose.Yks, "EA", null), default)).RemovedTargets.Should().Equal("YKS Sayısal hedef puanın (420,25)");
 
         await using var t = await Setup.CreateAsync();
-        await t.Wizard(null, LearningPurpose.Yks, "SAY", status: CoachingEducationStatus.UniversityGraduate);
+        await t.OlderYksSetup(CoachingEducationStatus.UniversityGraduate);
         var goal = AcademicGoal.Create(t.Student, "Öğretmenin hedefi", GoalCategory.ExamPreparation, setByTeacherId: Guid.NewGuid());
         goal.SetCatalogTarget(t.Programs["Bilgisayar Mühendisliği"], null);
         t.F.Db.Add(goal); t.F.Db.Add(StudentPrimaryGoal.Create(t.Student, goal.Id)); await t.F.Db.SaveChangesAsync(); t.F.Db.ChangeTracker.Clear();
@@ -172,7 +173,10 @@ public sealed class CoachingProfileConsistencyTests
         var eighth = await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.Student, 8, default);
         (eighth.ExamNoLongerFits, eighth.Exam, eighth.DiplomaGradeRemoved, eighth.Target)
             .Should().Be((true, "YKS", (decimal?)85m, "Ankara Üniversitesi · Bilgisayar Mühendisliği"));
-        (await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.UniversityGraduate, null, default))
+        // G1 (07.11.2026): a university graduate no longer takes YKS (and so has no diploma grade question).
+        var graduate = await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.UniversityGraduate, null, default);
+        (graduate.ExamNoLongerFits, graduate.Exam, graduate.DiplomaGradeRemoved).Should().Be((true, "YKS", (decimal?)85m));
+        (await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.HighSchoolGraduate, null, default))
             .Should().Be(new StudentEducationImpact(false, null, null, null));
 
         var stored = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync();
@@ -219,7 +223,7 @@ public sealed class CoachingProfileConsistencyTests
     [InlineData(LearningPurpose.Lgs, null, null)]
     [InlineData(LearningPurpose.Yks, "SAY", 8)]
     [InlineData(LearningPurpose.Ags, null, 7)]
-    [InlineData(LearningPurpose.Ags, null, 12)]   // user decision 06.11.2026: AGS/ÖABT only for university graduates
+    [InlineData(LearningPurpose.Ags, null, 12)]   // G1 (07.11.2026): AGS/ÖABT only for university students and graduates
     public async Task TheStudySettingsAcceptOnlyAnExamThatFitsTheGrade(LearningPurpose purpose, string? field, int? grade)
     {
         LearningPurposes.FitsEducation(purpose, grade is null ? CoachingEducationStatus.HighSchoolGraduate : CoachingEducationStatus.Student, grade).Should().BeFalse();
@@ -244,7 +248,10 @@ public sealed class CoachingProfileConsistencyTests
     public async Task ChangingTheExamAwayFromYksInStudySettingsClearsTheDiplomaGrade()
     {
         await using var s = await Setup.CreateAsync();
-        await s.Wizard(null, LearningPurpose.Yks, "SAY", diploma: 85);
+        // G1: a university student's YKS setup from before the rule keeps its diploma grade until another exam is chosen.
+        await s.OlderYksSetup(CoachingEducationStatus.UniversityStudent, diploma: 85);
+        // Profilim sends no diploma grade where the rule does not ask it; another save leaves the stored one as it is.
+        (await s.UpdateProfile(x => x with { Bio = "Merhaba", DiplomaGrade = null })).DiplomaGrade.Should().Be(85m, "existing data is not changed by the new rule");
         await s.SaveSetup(LearningPurpose.Yds, null);
         (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).DiplomaGrade.Should().BeNull();
     }
@@ -304,7 +311,7 @@ public sealed class CoachingProfileConsistencyTests
         var setup = await s.Settings.GetAsync(default);
         (setup.PurposeNotForEducation, setup.IsReady).Should().Be((true, false));
         setup.MissingFields.Should().Contain("Purpose");
-        setup.AllowedPurposes.Should().Equal(LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        setup.AllowedPurposes.Should().Equal(LearningPurpose.Yks);
     }
 
     [Fact]
@@ -357,8 +364,9 @@ public sealed class CoachingProfileConsistencyTests
     {
         await using var s = await Setup.CreateAsync();
         (await s.Store.ExamAsksDiplomaAsync(s.Student, default)).Should().BeTrue("no exam yet");
-        await s.Wizard(null, LearningPurpose.Yds, null);
+        await s.Wizard(null, LearningPurpose.Yds, null, status: CoachingEducationStatus.UniversityStudent);
         (await s.Store.ExamAsksDiplomaAsync(s.Student, default)).Should().BeFalse();
+        await s.UpdateProfile(x => x with { EducationStatus = CoachingEducationStatus.HighSchoolGraduate });
         await s.SaveSetup(LearningPurpose.Yks, "EA");
         (await s.Store.ExamAsksDiplomaAsync(s.Student, default)).Should().BeTrue();
     }
@@ -368,9 +376,11 @@ public sealed class CoachingProfileConsistencyTests
     {
         await using var s = await Setup.CreateAsync();
         (await s.Personal(8)).AllowedPurposes.Should().Equal(LearningPurpose.Lgs);
-        (await s.Personal(null)).AllowedPurposes.Should().Equal(LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil);
-        (await s.Personal(null, CoachingEducationStatus.UniversityGraduate)).AllowedPurposes.Should().Equal(LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil, LearningPurpose.Yks);
-        LearningPurposes.AllowedFor(CoachingEducationStatus.Student, 10).Should().Equal(LearningPurpose.Yks, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        // G1 (user decisions 07.11.2026).
+        (await s.Personal(null)).AllowedPurposes.Should().Equal(LearningPurpose.Yks);
+        (await s.Personal(null, CoachingEducationStatus.UniversityStudent)).AllowedPurposes.Should().Equal(LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        (await s.Personal(null, CoachingEducationStatus.UniversityGraduate)).AllowedPurposes.Should().Equal(LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        LearningPurposes.AllowedFor(CoachingEducationStatus.Student, 10).Should().Equal(LearningPurpose.Yks);
     }
 
     // ---------- #7: the school on Profilim comes from the catalog ----------
@@ -413,26 +423,63 @@ public sealed class CoachingProfileConsistencyTests
     }
 
     [Theory]
-    [InlineData(CoachingEducationStatus.HighSchoolGraduate)]
-    [InlineData(CoachingEducationStatus.UniversityStudent)]
-    public async Task OnlyAUniversityGraduateMayChooseAgs(CoachingEducationStatus status)
+    [InlineData(CoachingEducationStatus.HighSchoolGraduate, LearningPurpose.Ags)]
+    [InlineData(CoachingEducationStatus.HighSchoolGraduate, LearningPurpose.Yds)]
+    [InlineData(CoachingEducationStatus.HighSchoolGraduate, LearningPurpose.Yokdil)]
+    [InlineData(CoachingEducationStatus.UniversityStudent, LearningPurpose.Yks)]
+    [InlineData(CoachingEducationStatus.UniversityGraduate, LearningPurpose.Yks)]
+    // G1 (07.11.2026): AGS, YDS and YÖKDİL for university students and graduates; YKS for lise students and graduates.
+    public async Task TheStudySettingsRefuseAnExamOfAnotherEducation(CoachingEducationStatus status, LearningPurpose purpose)
     {
         await using var s = await Setup.CreateAsync();
         await s.Personal(null, status);
-        var error = await Assert.ThrowsAsync<ArgumentException>(() => s.SaveSetup(LearningPurpose.Ags, null));
+        var error = await Assert.ThrowsAsync<ArgumentException>(() => s.SaveSetup(purpose, purpose switch
+        { LearningPurpose.Yks => "SAY", LearningPurpose.Yokdil => "YOKDIL_FEN", _ => null }));
         error.Message.Should().Contain("uymuyor");
     }
 
-    [Theory]
-    [InlineData(CoachingEducationStatus.HighSchoolGraduate)]
-    [InlineData(CoachingEducationStatus.UniversityStudent)]
-    [InlineData(CoachingEducationStatus.UniversityGraduate)]
-    public async Task EveryoneOutOfHighSchoolKeepsTheYksDiplomaGrade(CoachingEducationStatus status)
+    [Fact]
+    public async Task AUniversityStudentChoosesAgsInTheWizard()
     {
         await using var s = await Setup.CreateAsync();
-        await s.Wizard(null, LearningPurpose.Yks, "SAY", diploma: 82.5m, status: status);
+        await s.Wizard(null, LearningPurpose.Ags, null, status: CoachingEducationStatus.UniversityStudent);
+        (await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync()).Purpose.Should().Be(LearningPurpose.Ags);
+    }
+
+    [Fact]
+    public async Task ALiseGraduateKeepsTheYksDiplomaGrade()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Wizard(null, LearningPurpose.Yks, "SAY", diploma: 82.5m, status: CoachingEducationStatus.HighSchoolGraduate);
         (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).DiplomaGrade.Should().Be(82.5m);
-        (await s.UpdateProfile(x => x with { EducationStatus = CoachingEducationStatus.HighSchoolGraduate })).DiplomaGrade.Should().Be(82.5m);
+        (await s.UpdateProfile(x => x with { Bio = "Merhaba" })).DiplomaGrade.Should().Be(82.5m);
+        // G1: the grade goes with a move to university (YKS no longer fits; the study settings ask for a new exam).
+        (await s.UpdateProfile(x => x with { EducationStatus = CoachingEducationStatus.UniversityStudent })).DiplomaGrade.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(CoachingEducationStatus.UniversityStudent)]
+    [InlineData(CoachingEducationStatus.UniversityGraduate)]
+    // G1 (07.11.2026): nothing is migrated. A university student's or graduate's saved YKS stays, with its diploma grade and session,
+    // and the student is told to choose again (the wizard is not reopened).
+    public async Task AnOlderYksSetupOfAUniversityStudentStaysAndIsToldToChooseAgain(CoachingEducationStatus status)
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.OlderYksSetup(status, diploma: 82.5m);
+        var setup = await s.Settings.GetAsync(default);
+        (setup.Context!.Purpose, setup.PurposeNotForEducation, setup.IsReady).Should().Be((LearningPurpose.Yks, true, false));
+        setup.MissingFields.Should().Contain("Purpose");
+        setup.AllowedPurposes.Should().Equal(LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
+        (await s.Onboarding.GetAsync(default)).Status.Should().Be("Completed");
+        (await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync()).DiplomaGrade.Should().Be(82.5m);
+        var preview = new CoachingAutomaticStudyPlanPreviewService(s.F.Db, new CoachingAccessPolicy(s.F.Actor), s.Settings);
+        var error = await Assert.ThrowsAsync<BusinessRuleException>(() => preview.PreviewAsync(
+            new AutomaticStudyPreviewRequest(new(2026, 10, 19), 7, 0, [new(Guid.NewGuid(), 30)], setup.Context.Version)));
+        error.Message.Should().Be(LearningPurposes.SavedPurposeNotForEducationNotice);
+        // Re-sending the saved YKS (a topic or session change) is not refused; choosing it anew is.
+        await s.SaveSetup(LearningPurpose.Yks, "SAY");
+        await s.SaveSetup(LearningPurpose.Ags, null);
+        await Assert.ThrowsAsync<ArgumentException>(() => s.SaveSetup(LearningPurpose.Yks, "SAY"));
     }
 
     [Fact]
@@ -448,7 +495,7 @@ public sealed class CoachingProfileConsistencyTests
             .Should().Be((CoachingEducationStatus.UniversityStudent, (int?)null, (string?)null, (string?)null, (string?)null));
         var context = await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync();
         (context.EducationStatus, context.GradeLevel).Should().Be((CoachingEducationStatus.UniversityStudent, (int?)null));
-        (await s.Settings.GetAsync(default)).PurposeNotForEducation.Should().BeFalse("YKS fits a university student");
+        (await s.Settings.GetAsync(default)).PurposeNotForEducation.Should().BeTrue("G1: YKS no longer fits a university student");
     }
 
     [Fact]
@@ -459,7 +506,7 @@ public sealed class CoachingProfileConsistencyTests
         await s.UpdateProfile(x => x with { EducationStatus = CoachingEducationStatus.UniversityGraduate, GradeLevel = null });
         var setup = await s.Settings.GetAsync(default);
         setup.PurposeNotForEducation.Should().BeTrue();
-        setup.AllowedPurposes.Should().Equal(LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil, LearningPurpose.Yks);
+        setup.AllowedPurposes.Should().Equal(LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil);
     }
 
     [Fact]
@@ -638,6 +685,20 @@ public sealed class CoachingProfileConsistencyTests
             foreach (var step in new[] { 4, 5, 6 }) await Onboarding.PassStepAsync(step, default);
             await Onboarding.CompleteAsync(default);
             F.Db.ChangeTracker.Clear();
+        }
+
+        /// <summary>
+        /// G1 (07.11.2026): a YKS setup saved before the rule by a student now at university: the wizard as a lise graduate, then the
+        /// stored education is changed directly (as the rows of such students are; nothing was migrated).
+        /// </summary>
+        public async Task OlderYksSetup(CoachingEducationStatus status, decimal? diploma = null)
+        {
+            await Wizard(null, LearningPurpose.Yks, "SAY", diploma);
+            var profile = await F.Db.CoachingStudentProfiles.SingleAsync(x => x.UserId == Student);
+            typeof(CoachingStudentProfile).GetProperty(nameof(CoachingStudentProfile.EducationStatus))!.SetValue(profile, status);
+            var context = await F.Db.StudentLearningContexts.SingleAsync(x => x.StudentUserId == Student);
+            context.SetEducation(status, null, context.CurriculumVersionId);
+            await F.Db.SaveChangesAsync(); F.Db.ChangeTracker.Clear();
         }
 
         /// <summary>Çalışma tercihlerim: the exam and the field change, the rest of the setup is sent as it is.</summary>
