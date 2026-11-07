@@ -5,9 +5,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, finalize, forkJoin, of, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
-import { CoachingWeeklyDraftService, WeeklyLesson } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingWeeklyDraftService, WeeklyCourseRank, WeeklyLesson } from '../../../core/services/coaching-weekly-draft.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
-import { createProposalFromWindows } from './study-plan-wizard';
+import { StudyPlanWizardLesson, createProposalFromWindows, lessonsWithoutTime, noTimeNotice, rankedWizardLessons } from './study-plan-wizard';
 import { WeeklySlot, clock, weekDays } from './weekly-calendar';
 
 /**
@@ -42,7 +42,13 @@ export class StudentPlanPreviewComponent implements OnInit {
   readonly availability = signal<StudyAvailability | null>(null);
   readonly slots = signal<WeeklySlot[]>([]);
   readonly proposal = signal<WeeklySlot[]>([]);
+  /** Paket G #41: the chosen courses that got no hour in the proposal, the most important first. */
+  readonly unplaced = signal<StudyPlanWizardLesson[]>([]);
+  readonly noTimeNotice = noTimeNotice;
+  /** Review of PR 126: a new proposal for a saved week; it replaces the saved week only when the student saves it. */
+  readonly rebuilding = signal(false);
   private lessons: WeeklyLesson[] = [];
+  private courses: WeeklyCourseRank[] = [];
   private version: number | null = null;
   readonly clock = clock;
 
@@ -55,7 +61,7 @@ export class StudentPlanPreviewComponent implements OnInit {
       availability: this.planning.getAvailability().pipe(catchError(e => e?.status === 404 ? of(null) : throwError(() => e)))
     }).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading.set(false))).subscribe({
       next: ({ page, availability }) => {
-        this.lessons = page.lessons; this.version = page.draft?.version ?? null;
+        this.lessons = page.lessons; this.courses = page.courses ?? []; this.version = page.draft?.version ?? null;
         this.slots.set(page.draft?.slots ?? []); this.availability.set(availability ?? null);
         this.loaded = true; this.propose();
       },
@@ -68,7 +74,17 @@ export class StudentPlanPreviewComponent implements OnInit {
     const chosen = new Set(this.chosenIds.map(id => id.toLowerCase()));
     const lessons = this.lessons.filter(lesson => chosen.has(lesson.id.toLowerCase()));
     this.chosenLessons.set(lessons);
-    this.proposal.set(this.slots().length ? [] : createProposalFromWindows(this.availability()?.windows ?? [], lessons, []));
+    const ranked = rankedWizardLessons(lessons, this.courses);
+    const fresh = !this.slots().length || this.rebuilding();
+    const proposal = fresh ? createProposalFromWindows(this.availability()?.windows ?? [], ranked, []) : [];
+    this.proposal.set(proposal);
+    // Review of PR 126: a saved week also names the chosen courses it leaves without time.
+    this.unplaced.set(fresh && !this.hasAvailability() ? [] : lessonsWithoutTime(ranked, fresh ? [] : this.slots(), proposal));
+  }
+
+  /** Review of PR 126: "Yeni öneri oluştur" for a saved week, from the saved availability; nothing is saved yet. */
+  newProposal() { this.rebuilding.set(true); this.error.set(''); this.propose(); }
+  keepSavedWeek() { this.rebuilding.set(false); this.propose();
   }
 
   hasAvailability() { return !!this.availability()?.windows.length; }
@@ -84,7 +100,7 @@ export class StudentPlanPreviewComponent implements OnInit {
     if (this.saving() || !this.proposal().length) return;
     this.saving.set(true); this.error.set('');
     this.weekly.save(this.version, 'Europe/Istanbul', this.proposal()).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.saving.set(false))).subscribe({
-      next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.proposal.set([]); },
+      next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.rebuilding.set(false); this.propose(); },
       error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık ders düzenin kaydedilemedi. Yeniden deneyebilirsin.')
     });
   }

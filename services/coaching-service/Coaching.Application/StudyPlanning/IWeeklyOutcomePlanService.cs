@@ -23,7 +23,9 @@ public sealed record WeeklyOutcomePlanOptions(DateOnly StartDate,DateOnly EndDat
 }
 public sealed record WeeklyProtectedTask(DateOnly Date,int? StartMinute,string Title,int Minutes);
 public sealed record WeeklyOutcomePlanPreview(WeeklyOutcomePlanRequest Request,string TimeZoneId,string Fingerprint,WeeklyOutcomeSchedule Schedule,IReadOnlyList<WeeklyLessonIssue> Issues,bool CanCreate,int ProtectedTaskCount,IReadOnlyList<WeeklyProtectedTask>? ProtectedTasks=null,
-    IReadOnlyList<WeeklyLeftOutTopic>? LeftOutTopics=null);
+    IReadOnlyList<WeeklyLeftOutTopic>? LeftOutTopics=null,IReadOnlyList<WeeklyUnscheduledLesson>? UnscheduledLessons=null);
+/// <summary>Paket G #41: a chosen course (Derslerim) with no lesson in the weekly draft; the yearly plan cannot include it.</summary>
+public sealed record WeeklyUnscheduledLesson(Guid LessonId,string LessonName);
 public sealed record WeeklyOutcomePlanCreated(Guid Id,int Version);
 public interface IWeeklyOutcomePlanService
 {

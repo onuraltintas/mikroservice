@@ -4,9 +4,11 @@ import {map} from 'rxjs';
 import {environment} from '../../../environments/environment';
 import type {WeeklySlot} from '../../features/coaching-portal/pages/weekly-calendar';
 
-export interface WeeklyLesson {id:string;name:string;examCode:string|null;gradeNumber:number|null}
+export interface WeeklyLesson {id:string;name:string;examCode:string|null;gradeNumber:number|null;topicCount?:number}
 export interface WeeklyDraft {version:number;timeZoneId:string;slots:WeeklySlot[]}
-export interface WeeklyDraftPage {draft:WeeklyDraft|null;lessons:WeeklyLesson[]}
+/** Paket G #41: a chosen course's priority (1 highest) and its question count in the exam (null when not known). */
+export interface WeeklyCourseRank {lessonId:string;priority:number;examQuestions:number|null}
+export interface WeeklyDraftPage {draft:WeeklyDraft|null;lessons:WeeklyLesson[];courses?:WeeklyCourseRank[]|null}
 @Injectable({providedIn:'root'})
 export class CoachingWeeklyDraftService {
   private readonly http=inject(HttpClient);private readonly url=`${environment.apiUrl}/coaching/study-planning/weekly-draft`;
