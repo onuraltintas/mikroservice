@@ -8,9 +8,12 @@ namespace Coaching.Application.StudyPlanning;
 /// weekly proposal orders courses by the student's priority first and by this weight second, so with too few study hours
 /// Matematik and Türkçe come before Din Kültürü and Felsefe. The counts are the platform's practice exam sections
 /// (<see cref="PracticeExamRules.Profiles"/>, from the 2026 ÖSYM/MEB guides). A YKS course's test is read from its topics'
-/// YKS scopes for the student's score type (TYT.MAT, AYT.FEN, …); other exams match the course name to a section. A section
-/// shared by several courses (TYT Temel Matematik for Matematik and Geometri) is split equally between them. A course
-/// that matches no section has no weight (null); the proposal then falls back to topic counts.
+/// YKS scopes for the student's score type (TYT.MAT, AYT.FEN, …); other exams match the course name to a section (circumflex
+/// folded, the text in brackets tried too: "Din Kültürü ve Ahlâk Bilgisi", "Yabancı Dil (İngilizce)"). A section shared by
+/// several courses (TYT Temel Matematik for Matematik and Geometri) is split equally between them; the split counts every
+/// course passed in, i.e. all eligible catalog courses of the student's exam, not only the chosen ones, so a course's
+/// weight does not change with the student's selection. A course that matches no section has no weight (null); the
+/// proposal ranks such courses after the weighted ones, by topic count.
 /// </summary>
 public static class ExamQuestionWeights
 {
@@ -48,12 +51,12 @@ public static class ExamQuestionWeights
     private static List<(string Key, decimal Questions)> YksParts(Lesson lesson)
     {
         var parts = new List<(string Key, decimal Questions)>();
-        foreach (var code in lesson.YksTestCodes.Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal))
+        foreach (var code in lesson.YksTestCodes.Select(x => x.Trim().ToUpperInvariant()).Distinct().Order(StringComparer.Ordinal))
         {
-            if (!YksTests.TryGetValue(code.Trim().ToUpperInvariant(), out var test)) continue;
+            if (!YksTests.TryGetValue(code, out var test)) continue;
             var sections = Profile(test.Exam).Sections.Where(x => test.Sections.Contains(x.Code)).ToArray();
             var own = sections.Length == 1 ? sections : sections.Where(x => SectionWords.TryGetValue(x.Code, out var words)
-                && words.Any(word => Normalize(lesson.Name).Contains(word, StringComparison.Ordinal))).ToArray();
+                && words.Any(word => Fold(lesson.Name).Contains(word, StringComparison.Ordinal))).ToArray();
             // A course of a mixed test whose name matches no section counts as the test's average section.
             if (own.Length == 0) parts.Add((code + "*", sections.Sum(x => x.QuestionCount) / (decimal)sections.Length));
             else parts.AddRange(own.Select(x => ($"{(test.Exam == "TYT" ? "TYT" : "AYT")}:{x.Code}", (decimal)x.QuestionCount)));
@@ -71,18 +74,34 @@ public static class ExamQuestionWeights
         };
         var profile = exam is null ? null : PracticeExamRules.Profiles.SingleOrDefault(x => x.Code == exam);
         if (profile is null) return [];
-        var name = Normalize(lesson.Name);
+        var names = Names(lesson.Name);
         var section = profile.Sections.Count == 1 ? profile.Sections[0] : profile.Sections.FirstOrDefault(x =>
-            name.Contains(Normalize(x.Name), StringComparison.Ordinal) || Normalize(x.Name).Contains(name, StringComparison.Ordinal));
+            names.Any(name => Matches(name, Fold(x.Name)) || Aliases.TryGetValue(x.Code, out var alias) && alias.Any(a => Matches(name, a))));
         return section is null ? [] : [($"{profile.Code}:{section.Code}", section.QuestionCount)];
     }
 
     private static PracticeExamProfile Profile(string code) => PracticeExamRules.Profiles.Single(x => x.Code == code);
 
-    // "Türk Dili ve Edebiyatı (AYT)" → "türk dili ve edebiyatı": the exam in brackets is not part of the section name.
-    private static string Normalize(string value)
+    // Names the catalog uses for a section in other words (LGS "Yabancı Dil" is the English test).
+    private static readonly IReadOnlyDictionary<string, string[]> Aliases = new Dictionary<string, string[]>
     {
-        var bracket = value.IndexOf('(');
-        return (bracket > 0 ? value[..bracket] : value).Trim().ToLower(Turkish);
+        ["ENG"] = ["yabancı dil", "ingilizce"], ["INK"] = ["inkılap tarihi"], ["DIN"] = ["din kültürü"]
+    };
+
+    private static bool Matches(string name, string section) =>
+        name.Length > 0 && (name.Contains(section, StringComparison.Ordinal) || section.Contains(name, StringComparison.Ordinal));
+
+    // "Yabancı Dil (İngilizce)" → "yabancı dil" and "ingilizce": the text outside and inside the brackets, each folded. A short
+    // bracket ("(AGS)", "(TYT)") is the exam, not a section name.
+    private static string[] Names(string value)
+    {
+        var open = value.IndexOf('('); var close = value.IndexOf(')', Math.Max(open, 0));
+        if (open < 0) return [Fold(value)];
+        var inner = close > open ? Fold(value[(open + 1)..close]) : "";
+        return new[] { Fold(value[..open]), inner.Length > 4 ? inner : "" }.Where(x => x.Length > 0).ToArray();
     }
+
+    // Lower case in Turkish, the circumflex folded (Ahlâk → ahlak) and the spaces collapsed.
+    private static string Fold(string value) => string.Join(' ', value.ToLower(Turkish).Replace('â', 'a').Replace('î', 'i').Replace('û', 'u')
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries));
 }

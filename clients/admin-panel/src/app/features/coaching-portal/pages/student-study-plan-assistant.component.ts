@@ -233,9 +233,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     const proposal = createProposalFromWindows(windows, lessons, this.slots());
     // Paket G #41: the courses without time are named in a notice under the proposal (with the way to Müsaitliğim).
     const missingLessons = lessonsWithoutTime(lessons, this.slots(), proposal);
-    const coverageWarning = missingLessons.length
-      ? ` ${missingLessons.map(lesson => lesson.name).join(', ')} için henüz ders saati yok. Bu dersleri de plana almak için çalışma saatlerine gün veya saat ekleyip yeni öneri oluştur.`
-      : '';
+    // Review of PR 126: the courses are named once, in the notice; the chat message only points to it.
+    const coverageWarning = missingLessons.length ? ' Saat kalmayan dersleri önerinin altında görebilirsin.' : '';
     const dayCount = new Set(windows.map(window => window.day)).size;
     this.proposal.set(proposal); this.unplaced.set(missingLessons);
     this.error.set(''); this.saved.set(false);

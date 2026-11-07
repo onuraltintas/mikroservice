@@ -4,11 +4,13 @@ using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace Coaching.Infrastructure.StudyPlanning;
 
-public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachingAccessPolicy access,ILearningSetupService setup,CoachingStudyPlanAccess? staffAccess=null):IWeeklyStudyDraftService
+public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachingAccessPolicy access,ILearningSetupService setup,CoachingStudyPlanAccess? staffAccess=null,
+    ILogger<CoachingWeeklyStudyDraftService>? logger=null):IWeeklyStudyDraftService
 {
     public async Task<WeeklyDraftPage> GetAsync(CancellationToken ct)
     {
@@ -82,8 +84,13 @@ public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachi
             select new{t.LessonId,s.TestCode}).Distinct().ToArrayAsync(ct);
         var weights=ExamQuestionWeights.For(context.Purpose,lessons.Select(x=>new ExamQuestionWeights.Lesson(x.Id,x.Name,x.ExamCode,
             tests.Where(t=>t.LessonId==x.Id).Select(t=>t.TestCode).ToArray())).ToArray());
-        return context.CoursePreferences.Where(x=>x.IsIncluded&&ids.Contains(x.LessonId)).OrderBy(x=>x.LessonId)
+        var ranks=context.CoursePreferences.Where(x=>x.IsIncluded&&ids.Contains(x.LessonId)).OrderBy(x=>x.LessonId)
             .Select(x=>new WeeklyCourseRank(x.LessonId,x.Priority,weights.TryGetValue(x.LessonId,out var questions)?questions:null)).ToArray();
+        // Review of PR #126: a chosen course without a weight ranks after the weighted ones; the catalog may need a mapping.
+        foreach(var rank in ranks.Where(x=>x.ExamQuestions is null))
+            logger?.LogWarning("Weekly proposal: no exam question count for chosen lesson {LessonId} ({LessonName}), purpose {Purpose}, score type {ScoreType}.",
+                rank.LessonId,lessons.First(x=>x.Id==rank.LessonId).Name,context.Purpose,context.PrimaryScoreType);
+        return ranks;
     }
     private Guid Require()=>access.CurrentUserId is {} id && access.IsCurrentStudent(id) ? id : throw new BusinessRuleException("Authorization.Forbidden","Yalnız kendi öğrenci hesabınızla kullanabilirsiniz.");
     private static BusinessRuleException Forbidden()=>new("Authorization.Forbidden","Öğretmen erişimi doğrulanamadı.");

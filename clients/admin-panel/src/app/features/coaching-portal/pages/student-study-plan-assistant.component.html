@@ -78,10 +78,13 @@
           <button type="button" class="secondary" (click)="removeProposal()" [disabled]="busy()">Öneriyi kaldır</button>
         </section>
       }
-      @if (unplaced().length && !editingAvailability()) {
-        <div class="notice" role="status" data-testid="unplaced-notice"><p>{{ noTimeNotice(unplaced(), !!staffStudentId) }}</p>
-          @if (!staffStudentId && savedWindows().length) { <button type="button" class="secondary" (click)="changeAvailability()">Müsaitliğime saat ekle</button> }</div>
-      }
+      <!-- Review of PR 126: one live container that is always there; its content changes with the proposal. -->
+      <div role="status" data-testid="unplaced-status">
+        @if (unplaced().length && !editingAvailability()) {
+          <div class="notice" data-testid="unplaced-notice"><p>{{ noTimeNotice(unplaced(), !!staffStudentId) }}</p>
+            @if (!staffStudentId && savedWindows().length) { <button type="button" class="secondary" (click)="changeAvailability()">Müsaitliğime saat ekle</button> }</div>
+        }
+      </div>
       <section class="topic-statuses" aria-labelledby="topic-status-title">
         <h2 id="topic-status-title">Daha önce çalıştığın konular</h2>
         @if (purposeRetired()) {

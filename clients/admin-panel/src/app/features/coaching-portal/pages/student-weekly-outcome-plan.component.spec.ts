@@ -61,7 +61,7 @@ describe('weekly outcome plan preview',()=>{
     c.generatePreview();fixture.detectChanges();const el=fixture.nativeElement as HTMLElement;
     const part=el.querySelector('[data-testid="unscheduled-lessons"]');
     expect(part?.textContent?.replace(/\s+/g,' ')).toContain('Türkçe (TYT), Felsefe (TYT) için haftalık düzeninde ders saati yok');
-    // Review of PR #126: only courses without a weekly lesson: their own eyebrow, heading and action.
+    // Review of PR 126: only courses without a weekly lesson: their own eyebrow, heading and action.
     expect(el.textContent).toContain('HAFTALIK DÜZENDE SAATİ OLMAYAN DERSLER');expect(el.textContent).not.toContain('HEDEF TARİHİNE SIĞMAYAN');
     expect(el.querySelector('.decisions h2')?.textContent).toBe('Bu dersler yıllık plana girmiyor');
     expect(el.querySelector('.decisions a[href="/coaching-portal/plan/weekly"]')?.textContent).toContain('Haftalık takvimime saat ekle');

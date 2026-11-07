@@ -22,6 +22,10 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   readonly remaining=computed(()=>this.preview()?.schedule.lessons.reduce((sum,x)=>sum+x.remainingMinutes,0)??0);
   /** Paket G #41: the chosen courses without a weekly lesson, named next to the courses that do not fit. */
   readonly unscheduledNames=computed(()=>(this.preview()?.unscheduledLessons??[]).map(x=>x.lessonName).join(', '));
+  /** Review of PR 126: a teacher reads about the student's week. */
+  unscheduledText(){const names=this.unscheduledNames();return this.studentId
+    ?`${names} için öğrencinin haftalık düzeninde ders saati yok; bu dersler plana hiç girmez. Öğrencinin haftalık takvimine bu dersler için saat eklenmeli.`
+    :`${names} için haftalık düzeninde ders saati yok; bu dersler plana hiç girmez. Haftalık takvimine bu dersler için saat ekleyip yeniden önizleyebilirsin.`;}
   readonly totalMinutes=computed(()=>(this.preview()?.schedule.tasks.reduce((sum,x)=>sum+x.minutes,0)??0)+(this.preview()?.protectedTasks?.reduce((sum,x)=>sum+x.minutes,0)??0));
   readonly kindLabel=weeklyPlanKindLabel;readonly savingExamDate=signal(false);
   // Roadmap O7: the rule-based engine (version 2) is always used by this screen.

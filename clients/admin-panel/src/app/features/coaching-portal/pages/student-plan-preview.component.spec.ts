@@ -60,7 +60,7 @@ describe('StudentPlanPreviewComponent', () => {
     expect(edit).toHaveBeenCalledOnce();
   });
 
-  // Review of PR #126: the status container is always there, so a screen reader hears the notice when it appears.
+  // Review of PR 126: the status container is always there, so a screen reader hears the notice when it appears.
   it('keeps one live status container whose text changes', async () => {
     const { el } = await setup(mondayEvening);
     const status = el.querySelector('[data-testid="unplaced-status"]');
@@ -68,7 +68,7 @@ describe('StudentPlanPreviewComponent', () => {
     expect(status?.textContent?.trim()).toBe('');
   });
 
-  // Review of PR #126: a saved week that leaves a chosen course without time says so, and a new proposal can be made.
+  // Review of PR 126: a saved week that leaves a chosen course without time says so, and a new proposal can be made.
   it('names the courses without time in a saved week and makes a new proposal on request', async () => {
     const { fixture, component, el, weekly } = await setup(mondayEvening, saved);
     const notice = el.querySelector('[data-testid="unplaced-status"] [data-testid="unplaced-notice"]');

@@ -95,7 +95,7 @@ describe('createStudyPlanProposal', () => {
           ['Monday', 'mat-ayt'], ['Tuesday', 'mat-tyt'], ['Wednesday', 'tur'], ['Thursday', 'fiz-ayt'], ['Friday', 'bio-ayt']]);
       });
 
-      // Review of PR #126: one course without a count must not switch the whole ranking to topic counts.
+      // Review of PR 126: one course without a count must not switch the whole ranking to topic counts.
       it('ranks courses with a known count first, the others after them by topic count', () => {
         const lessons = [
           { id: 'mat', name: 'Matematik (TYT)', examCode: 'TYT', examQuestions: 40, topicCount: 60 },

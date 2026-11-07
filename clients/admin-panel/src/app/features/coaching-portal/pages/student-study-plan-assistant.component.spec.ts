@@ -221,7 +221,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
       expect(status.getAttribute('role')).toBe('status'); expect(status.textContent?.trim()).toBe('');
       component.createProposal(); fixture.detectChanges();
       expect(component.proposal().map(x => x.lessonId)).toEqual(['din']);
-      // Review of PR #126: the courses are named once, in the notice (inside the same live container), not in the chat.
+      // Review of PR 126: the courses are named once, in the notice (inside the same live container), not in the chat.
       expect(component.messages().at(-1)!.content).not.toContain('Türkçe');
       expect(status.querySelector('[data-testid="unplaced-notice"]')).toBeTruthy();
       const notice = fixture.nativeElement.querySelector('[data-testid="unplaced-notice"]') as HTMLElement;

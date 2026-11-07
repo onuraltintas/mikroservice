@@ -1,3 +1,4 @@
+import { isDevMode } from '@angular/core';
 import type { WeeklyCourseRank, WeeklyLesson } from '../../../core/services/coaching-weekly-draft.service';
 import { WeeklySlot, Weekday, weekDays } from './weekly-calendar';
 
@@ -57,9 +58,10 @@ const nameOrder = new Intl.Collator('tr', { sensitivity: 'base', numeric: true }
 /**
  * Paket G #41 (live 07.11): the order in which the courses get the hours. First the student's priority (1 highest); among
  * the same priority the course with the least weekly time already saved (as before, so hours added later go to the courses
- * still without time); then the course's weight in the exam (its question count; when that is not known for every course,
- * its topic count); then the name. Before, the catalog's alphabetical order decided, so with five hours Biyoloji,
- * Coğrafya, Din Kültürü and Felsefe came before Matematik and Türkçe.
+ * still without time); then the course's weight in the exam: courses with a known question count come first, by that
+ * count; courses without one come after them, by their topic count (review of PR 126: decided per course, so one unknown
+ * course does not push Türkçe down); then the name. Before, the catalog's alphabetical order decided, so with five hours
+ * Biyoloji, Coğrafya, Din Kültürü and Felsefe came before Matematik and Türkçe.
  */
 export function rankLessons<T extends StudyPlanWizardLesson>(lessons: T[], existing: WeeklySlot[]): T[] {
   const allocatedMinutes = new Map<string, number>();
@@ -67,19 +69,21 @@ export function rankLessons<T extends StudyPlanWizardLesson>(lessons: T[], exist
     const id = slot.lessonId.toLowerCase();
     allocatedMinutes.set(id, (allocatedMinutes.get(id) ?? 0) + slot.durationMinutes);
   }
-  const byQuestions = lessons.every(lesson => typeof lesson.examQuestions === 'number');
-  const byTopics = !byQuestions && lessons.every(lesson => typeof lesson.topicCount === 'number');
-  const weight = (lesson: T) => byQuestions ? lesson.examQuestions as number : byTopics ? lesson.topicCount as number : 0;
+  const known = (lesson: T) => typeof lesson.examQuestions === 'number';
+  const weight = (lesson: T) => known(lesson) ? lesson.examQuestions as number : lesson.topicCount ?? 0;
   const priority = (lesson: T) => Number.isInteger(lesson.priority) ? lesson.priority as number : DEFAULT_PRIORITY;
   return [...lessons].sort((a, b) => priority(a) - priority(b)
     || (allocatedMinutes.get(a.id.toLowerCase()) ?? 0) - (allocatedMinutes.get(b.id.toLowerCase()) ?? 0)
-    || weight(b) - weight(a) || nameOrder.compare(a.name, b.name));
+    || Number(known(b)) - Number(known(a)) || weight(b) - weight(a) || nameOrder.compare(a.name, b.name));
 }
 
-/** Paket G #41: the chosen courses that have neither a saved card nor a proposed one, the most important first. */
+/**
+ * Paket G #41: the chosen courses that have neither a saved card nor a proposed one, in the order the proposal used
+ * (the whole ranking, then the leftovers).
+ */
 export function lessonsWithoutTime<T extends StudyPlanWizardLesson>(lessons: T[], existing: WeeklySlot[], proposal: WeeklySlot[]): T[] {
   const covered = new Set([...existing, ...proposal].map(slot => slot.lessonId.toLowerCase()));
-  return rankLessons(lessons.filter(lesson => !covered.has(lesson.id.toLowerCase())), existing);
+  return rankLessons(lessons, existing).filter(lesson => !covered.has(lesson.id.toLowerCase()));
 }
 
 /** Paket G #41: the weekly draft page's courses with the student's priority and exam weight (from the server). */
@@ -87,6 +91,9 @@ export function rankedWizardLessons<L extends Pick<WeeklyLesson, 'id' | 'name' |
   const ranks = new Map((courses ?? []).map(course => [course.lessonId.toLowerCase(), course]));
   return lessons.map(lesson => {
     const rank = ranks.get(lesson.id.toLowerCase());
+    // Review of PR 126: a chosen course without a question count ranks after the weighted ones; say so while developing.
+    if (rank && rank.examQuestions == null && isDevMode())
+      console.warn(`Haftalık öneri: "${lesson.name}" (${lesson.id}) için sınav soru sayısı bilinmiyor; konu sayısıyla sıralanıyor.`);
     return { id: lesson.id, name: lesson.name, examCode: lesson.examCode, priority: rank?.priority ?? DEFAULT_PRIORITY,
       examQuestions: rank?.examQuestions ?? null, topicCount: lesson.topicCount };
   });

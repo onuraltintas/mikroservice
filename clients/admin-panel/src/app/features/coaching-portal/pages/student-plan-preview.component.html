@@ -1,8 +1,16 @@
 <section class="panel plan-preview" aria-labelledby="plan-preview-title">
   <h2 id="plan-preview-title">Plan önizlemesi</h2>
   @if (error()) { <p class="notice error" role="alert">{{ error() }} @if (loadFailed()) { <button type="button" class="secondary" (click)="load()" [disabled]="loading()">Yeniden dene</button> }</p> }
+  <!-- Review of PR 126: one live container that is always there; its content changes with the proposal or the saved week. -->
+  <div role="status" data-testid="unplaced-status">
+    @if (!loading() && unplaced().length) {
+      <div class="notice" data-testid="unplaced-notice"><p>{{ noTimeNotice(unplaced()) }}</p>
+        <div class="actions"><button type="button" class="secondary" (click)="editAvailability.emit()">Müsaitliğime saat ekle</button>
+          @if (slots().length && !rebuilding() && hasAvailability()) { <button type="button" class="secondary" (click)="newProposal()">Yeni öneri oluştur</button> }</div></div>
+    }
+  </div>
   @if (loading()) { <p role="status" class="muted">Plan önizlemesi hazırlanıyor…</p> }
-  @else if (slots().length) {
+  @else if (slots().length && !rebuilding()) {
     <h3>Haftalık ders düzenin · {{ slots().length }} ders saati</h3>
     @for (slot of slots(); track slot.id) { <p class="slot-line">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
     <p class="muted">Aşağıdaki önizleme bu haftalık düzenden hazırlanır. Taslağı oluşturunca Planım sayfasında kontrol edip “Planı yayımla” ile yayımlarsın; o zamana kadar mevcut planın değişmez.</p>
@@ -17,9 +25,9 @@
       @if (proposal().length) {
         <h3>Önerilen haftalık ders düzenin</h3>
         @for (slot of proposal(); track slot.id) { <p class="slot-line proposed" data-testid="preview-slot">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
-        @if (unplaced().length) {
-          <div class="notice" role="status" data-testid="unplaced-notice"><p>{{ noTimeNotice(unplaced()) }}</p>
-            <button type="button" class="secondary" (click)="editAvailability.emit()">Müsaitliğime saat ekle</button></div>
+        @if (rebuilding()) {
+          <p class="notice">Kaydedersen bu öneri kayıtlı haftalık düzeninin yerine geçer. Kaydetmezsen hiçbir şey değişmez.</p>
+          <button type="button" class="secondary" (click)="keepSavedWeek()">Kayıtlı düzenime dön</button>
         }
         <p class="muted">Kaydedersen yıllık plan önizlemesi hemen açılır. Taslağı oluşturup Planım sayfasında “Planı yayımla” dediğinde aktif planın olur.</p>
         <div class="actions"><button type="button" (click)="saveWeek()" [disabled]="saving()">{{ saving() ? 'Kaydediliyor…' : 'Bu düzeni kaydet ve planı önizle' }}</button>
@@ -29,8 +37,7 @@
         <button type="button" (click)="editCourses.emit()">Derslerimi seç</button>
       } @else {
         <p class="notice">Seçtiğin dersler için müsaitliğinde ders saati oluşturulamadı. Müsaitliğine en az 30 dakikalık bir aralık ekle ya da takvimde kendin düzenle.</p>
-        <div class="actions"><button type="button" class="secondary" (click)="editAvailability.emit()">Müsaitliğime saat ekle</button>
-          <a routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a></div>
+        <a routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a>
       }
     }
   }

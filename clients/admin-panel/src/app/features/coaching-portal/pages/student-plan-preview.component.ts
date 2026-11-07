@@ -45,6 +45,8 @@ export class StudentPlanPreviewComponent implements OnInit {
   /** Paket G #41: the chosen courses that got no hour in the proposal, the most important first. */
   readonly unplaced = signal<StudyPlanWizardLesson[]>([]);
   readonly noTimeNotice = noTimeNotice;
+  /** Review of PR 126: a new proposal for a saved week; it replaces the saved week only when the student saves it. */
+  readonly rebuilding = signal(false);
   private lessons: WeeklyLesson[] = [];
   private courses: WeeklyCourseRank[] = [];
   private version: number | null = null;
@@ -73,9 +75,16 @@ export class StudentPlanPreviewComponent implements OnInit {
     const lessons = this.lessons.filter(lesson => chosen.has(lesson.id.toLowerCase()));
     this.chosenLessons.set(lessons);
     const ranked = rankedWizardLessons(lessons, this.courses);
-    const proposal = this.slots().length ? [] : createProposalFromWindows(this.availability()?.windows ?? [], ranked, []);
+    const fresh = !this.slots().length || this.rebuilding();
+    const proposal = fresh ? createProposalFromWindows(this.availability()?.windows ?? [], ranked, []) : [];
     this.proposal.set(proposal);
-    this.unplaced.set(this.slots().length || !this.hasAvailability() ? [] : lessonsWithoutTime(ranked, [], proposal));
+    // Review of PR 126: a saved week also names the chosen courses it leaves without time.
+    this.unplaced.set(fresh && !this.hasAvailability() ? [] : lessonsWithoutTime(ranked, fresh ? [] : this.slots(), proposal));
+  }
+
+  /** Review of PR 126: "Yeni öneri oluştur" for a saved week, from the saved availability; nothing is saved yet. */
+  newProposal() { this.rebuilding.set(true); this.error.set(''); this.propose(); }
+  keepSavedWeek() { this.rebuilding.set(false); this.propose();
   }
 
   hasAvailability() { return !!this.availability()?.windows.length; }
@@ -91,7 +100,7 @@ export class StudentPlanPreviewComponent implements OnInit {
     if (this.saving() || !this.proposal().length) return;
     this.saving.set(true); this.error.set('');
     this.weekly.save(this.version, 'Europe/Istanbul', this.proposal()).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.saving.set(false))).subscribe({
-      next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.proposal.set([]); this.unplaced.set([]); },
+      next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.rebuilding.set(false); this.propose(); },
       error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık ders düzenin kaydedilemedi. Yeniden deneyebilirsin.')
     });
   }
