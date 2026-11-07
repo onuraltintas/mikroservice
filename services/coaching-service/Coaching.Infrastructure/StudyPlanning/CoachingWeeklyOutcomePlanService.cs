@@ -37,6 +37,9 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         // The date her own date replaces ("Resmî tarihe dön"): a chosen session keeps the nearest catalog date as before.
         var catalog=fallback?.Source=="Session"?await CoachingExamSessions.NextCatalogAsync(db,codeList,today,ct):fallback;
         var catalogDate=catalog?.Date;
+        // G2 review (M2): an estimate with nothing in the catalog behind it is not used: the plan keeps the default 1 June end.
+        if(target is {Guessed:true})target=null;
+        if(catalog is {Guessed:true})catalog=null;catalogDate=catalog?.Date;
         var (examDate,source)=target is null?((DateOnly?)null,"Default"):((DateOnly?)target.Date,target.Source);
         var end=examDate is {} date?(date.AddDays(-1)<today?today:date.AddDays(-1)):WeeklyOutcomeScheduler.DefaultEnd(today);
         return new(today,end,draft.Version,draft.TimeZoneId,exams,examDate,source,catalogDate){CatalogExamDateEstimated=catalog?.Source=="Estimated"};
@@ -67,7 +70,8 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         // K4 (31.10.2026): the plan starts no earlier than the student's today and ends before the exam day.
         var window=await Options(student,ct);
         if(request.StartDate<window.StartDate)throw new ArgumentException("Plan bugünden önce başlayamaz. Başlangıç tarihini bugün ya da sonrası seçin.");
-        if(window.ExamDate is {} examDate&&request.EndDate>=examDate)
+        // G2 review (M2): an estimated exam date sets the default end only; it is no limit.
+        if(window.ExamDate is {} examDate&&window.EndDateSource!="Estimated"&&request.EndDate>=examDate)
             throw new ArgumentException($"Plan sınav gününden önce bitmeli. En geç {examDate.AddDays(-1):dd.MM.yyyy} tarihini seçin.");
         var choices=(staffAccess is not null && access.CurrentUserId != student
             ? await setup.GetCatalogForStudentAsync(student,null,1,ct)

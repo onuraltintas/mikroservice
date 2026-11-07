@@ -83,8 +83,13 @@ export class StudentOnboardingComponent implements OnInit {
   /** Step → the signature the server has (only for steps the server reports as saved). */
   private readonly saved = signal<Partial<Record<StepNumber, string>>>({});
 
-  readonly context = computed<FlowContext>(() => ({ sessions: this.view()?.examSessions ?? [], academicYearStart: this.view()?.academicYearStart ?? new Date().getFullYear(),
-    allowedPurposes: this.view()?.allowedPurposes }));
+  readonly context = computed<FlowContext>(() => {
+    const view = this.view(); const a = view?.answers;
+    return { sessions: view?.examSessions ?? [], academicYearStart: view?.academicYearStart ?? new Date().getFullYear(),
+      allowedPurposes: view?.allowedPurposes, openYears: view?.examOpenYears,
+      // G2 review (L6): the saved year-only choice stays selectable for its exam.
+      savedYear: a?.purpose && a.targetExamYear && !a.targetExamSessionId ? { purpose: a.purpose, year: a.targetExamYear } : null };
+  });
   readonly flow = computed(() => questions(this.answers(), this.context()));
   readonly current = computed(() => this.mode() === 'target'
     ? this.flow().find(x => x.step === 3 && !(x.id in this.answers())) ?? null

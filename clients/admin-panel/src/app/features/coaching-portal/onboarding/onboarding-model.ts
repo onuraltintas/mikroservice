@@ -3,7 +3,7 @@ import { OnboardingExamStep, OnboardingInvitation, OnboardingPersonalStep, Onboa
 import { coachingDate } from '../coaching-labels';
 import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
 import { EDUCATION_STAGES, EducationStage, educationRequest, gradesFor, isStudentStage, stageOf } from '../coaching-education';
-import { RECOMMENDED_SUFFIX, YEAR_ONLY_SUFFIX, examDay, examTimeChoices } from '../exam-time-choices';
+import { EXAM_CATALOG_CODES, ExamOpenYear, RECOMMENDED_SUFFIX, examDay, examTimeChoices, firstChoiceYear, keptYearLabel } from '../exam-time-choices';
 
 /**
  * Paket C (#3, user decisions 05.11.2026): the first-login wizard as a chat. Every question is answered with a component
@@ -29,7 +29,11 @@ export interface Question {
 }
 export interface FlowContext { sessions: LearningExamSession[]; academicYearStart: number;
   /** Paket D: the exams the server allows for the saved grade (all when missing). */
-  allowedPurposes?: string[] }
+  allowedPurposes?: string[];
+  /** G2 review: the first year whose exam has not happened yet, per catalog exam code (sent by the server). */
+  openYears?: ExamOpenYear[];
+  /** G2 review (L6): the saved year-only choice, kept selectable for its exam when the list no longer has it. */
+  savedYear?: { purpose: string; year: number } | null }
 
 export const STEP_COUNT = 7;
 export const STEP_TITLES: Record<StepNumber, string> = {
@@ -127,7 +131,9 @@ export function scoreMax(type: string | null): number { return type === 'LGS' ? 
 
 /** G2 (#40): the shared list (catalog sessions, then later years without a date yet; the grade's year is "önerilen"). */
 function sessionChoices(answers: Answers, context: FlowContext): Choice[] {
-  return examTimeChoices(purposeOf(answers), context.sessions, context.academicYearStart, { stage: stageOfAnswers(answers), grade: gradeOf(answers) })
+  const purpose = purposeOf(answers); const saved = context.savedYear;
+  return examTimeChoices(purpose, context.sessions, context.academicYearStart, { stage: stageOfAnswers(answers), grade: gradeOf(answers) },
+    { openYears: context.openYears, keepYear: saved && saved.purpose === purpose ? saved.year : null })
     .map(x => ({ value: x.value, label: x.label }));
 }
 /** The answer shown in the chat: the choice without its "önerilen" mark. */
@@ -326,7 +332,12 @@ export function prefill(view: OnboardingView): Answers {
     if (a.purpose === 'Yokdil' && a.primaryScoreType) answers.yokdilField = { value: a.primaryScoreType, label: YOKDIL_FIELDS[a.primaryScoreType] ?? a.primaryScoreType };
     const session = view.examSessions.find(x => x.id === a.targetExamSessionId);
     if (session) answers.session = { value: `session:${session.id}:${session.date.slice(0, 4)}`, label: `${session.label} · ${day(session.date)}` };
-    else if (a.targetExamYear && !a.targetExamSessionId && saved.has(2)) answers.session = { value: `year:${a.targetExamYear}`, label: `${a.targetExamYear}${YEAR_ONLY_SUFFIX}` };
+    else if (a.targetExamYear && !a.targetExamSessionId && saved.has(2)) {
+      // G2 review (L6): said as Sınavım says it ("2028 · oturum seçmedim" once the catalog has that year's sessions).
+      const own = view.examSessions.filter(x => x.examCode === EXAM_CATALOG_CODES[a.purpose as ExamLearningPurpose]);
+      answers.session = { value: `year:${a.targetExamYear}`,
+        label: keptYearLabel(a.targetExamYear, own, firstChoiceYear(a.purpose as ExamLearningPurpose, view.academicYearStart, view.examOpenYears)) };
+    }
     if (saved.has(2) && asksDiploma(answers))
       answers.diploma = a.diplomaGrade !== null ? { value: a.diplomaGrade, label: `${formatScore(a.diplomaGrade)}${a.diplomaGradeEstimated ? ' (tahmini)' : ''}`, data: { estimated: a.diplomaGradeEstimated } }
         : { value: null, label: 'Sonra gireceğim' };

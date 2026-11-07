@@ -131,20 +131,14 @@ export class StudentLearningSetupComponent implements OnInit {
   /** G2 (#40): the wizard's list (sessions, then later years without a date yet; the grade's year is "önerilen"). */
   private timeChoices(): ExamTimeChoice[] {
     const state = this.state();
+    // F2 review: a saved year without a session (an older choice, or a year outside the list) stays selectable while the exam is the same.
     return examTimeChoices(this.purpose, state?.examSessions ?? [], this.examYearBase(),
-      { stage: stageOf(state?.educationStatus, state?.gradeLevel), grade: state?.gradeLevel ?? null }, x => this.sessionLabel(x));
+      { stage: stageOf(state?.educationStatus, state?.gradeLevel), grade: state?.gradeLevel ?? null },
+      { openYears: state?.examOpenYears, sessionLabel: x => this.sessionLabel(x), keepYear: this.legacy() });
   }
   /** F2 #27: the wizard's question: the session when the exam has dated sessions, the year otherwise. */
   examQuestion() { return examTimeQuestion(this.timeChoices()); }
-  examChoices(): { value: string; label: string }[] {
-    const choices: { value: string; label: string }[] = this.timeChoices().map(x => ({ value: x.value, label: x.label }));
-    // F2 review: a saved year without a session (an older choice, or a year outside the list) stays selectable while the exam is the same.
-    const legacy = this.legacy();
-    if (legacy !== null && !choices.some(x => x.value === `year:${legacy}`))
-      choices.push({ value: `year:${legacy}`, label: this.sessionChoices().some(x => x.date.startsWith(`${legacy}-`)) ? `${legacy} · oturum seçmedim` : String(legacy) });
-    const year = (value: string) => Number(value.startsWith('year:') ? value.slice(5) : value.split(':')[2]);
-    return choices.sort((a, b) => year(a.value) - year(b.value));
-  }
+  examChoices(): { value: string; label: string }[] { return this.timeChoices().map(x => ({ value: x.value, label: x.label })); }
   examChoice() {
     const session = this.sessionChoices().find(x => x.id === this.targetExamSessionId);
     if (session) return `session:${session.id}:${session.date.slice(0, 4)}`;
