@@ -97,8 +97,14 @@ export function hasManagementRole(
 /** The identity service's code for an account with product access but no role in that product. */
 export const NO_ROLE_FOR_PRODUCT_CODE = 'Auth.NoRoleForProduct';
 
+/** A login-page notice in the identity service's error shape. */
+export interface SignInNotice {
+    status: number;
+    error: { code: string; description: string };
+}
+
 /** The same error shape and status as the identity service, for a session that reached the client without a role. */
-export function noRoleForProductError(): { status: number; error: { code: string; description: string } } {
+export function noRoleForProductError(): SignInNotice {
     return {
         status: 400,
         error: {
@@ -117,6 +123,27 @@ export function hasRequiredAccess(
         && (!requiredRole || hasRequiredRole(user, requiredRole));
 }
 
+/** Client-only code (F4, re-review L-d): the account has roles, but none this panel serves. */
+export const SESSION_NOT_FOR_THIS_PANEL_CODE = 'Auth.SessionNotForThisPanel';
+
+export function sessionNotForThisPanelError(): SignInNotice {
+    return {
+        status: 400,
+        error: {
+            code: SESSION_NOT_FOR_THIS_PANEL_CODE,
+            description: 'Bu oturumla bu panele erişemezsiniz. Doğru siteden giriş yapın.'
+        }
+    };
+}
+
+/** The notice for a session that cannot open any page here: no role at all, or roles this panel does not serve. */
+export function landingFailureError(user: Pick<UserProfile, 'roles'> | null): SignInNotice {
+    return user?.roles.some(role => !!role) ? sessionNotForThisPanelError() : noRoleForProductError();
+}
+
+/** Refresh refusals that end a session for a reason the login page should explain (F4, re-review L-b). */
+const NOTICE_REFRESH_CODES: readonly string[] = [NO_ROLE_FOR_PRODUCT_CODE, 'Auth.ProductAccessDenied'];
+
 @Injectable({ providedIn: 'root' })
 export class AuthService implements OnDestroy {
     private oauthService = inject(OAuthService);
@@ -134,7 +161,7 @@ export class AuthService implements OnDestroy {
     private refreshPromise?: Promise<boolean>;
     private oauthEventsSubscription?: Subscription;
     /** An error to show on the login page after a role-less session was ended outside it (F4: guard, refresh). */
-    private readonly _signInNotice = signal<ReturnType<typeof noRoleForProductError> | null>(null);
+    private readonly _signInNotice = signal<SignInNotice | null>(null);
     readonly signInNotice = this._signInNotice.asReadonly();
 
     public isDoneLoading$ = new BehaviorSubject<boolean>(false);
@@ -280,8 +307,10 @@ export class AuthService implements OnDestroy {
             return true;
         } catch (error: unknown) {
             this.clearSession();
-            // F4 (PR #125 review L4): the server refused the session because the account has no role here.
-            if (getApiErrorCode(error) === NO_ROLE_FOR_PRODUCT_CODE) this._signInNotice.set(noRoleForProductError());
+            // F4 (PR #125 review L4, re-review L-b): the server refused the session because the account has no role
+            // or no access here any more (removing the last role closes the access); the login page says why.
+            const code = getApiErrorCode(error);
+            if (code && NOTICE_REFRESH_CODES.includes(code)) this._signInNotice.set(refreshRefusalNotice(error, code));
             return false;
         }
     }
@@ -334,19 +363,21 @@ export class AuthService implements OnDestroy {
     async navigateToLanding(): Promise<void> {
         const route = this.getLandingRoute();
         if (!route) {
+            const failure = landingFailureError(this.userProfile());
             await this.endSession();
-            throw noRoleForProductError();
+            throw failure;
         }
         await this.router.navigate([route]);
     }
 
     /** Ends a role-less session found by a route guard; the login page shows why (see consumeSignInNotice). */
     async endRoleLessSession(): Promise<void> {
+        const notice = landingFailureError(this.userProfile());
         await this.endSession();
-        this._signInNotice.set(noRoleForProductError());
+        this._signInNotice.set(notice);
     }
 
-    consumeSignInNotice(): ReturnType<typeof noRoleForProductError> | null {
+    consumeSignInNotice(): SignInNotice | null {
         const notice = this._signInNotice();
         this._signInNotice.set(null);
         return notice;
@@ -475,4 +506,15 @@ export class AuthService implements OnDestroy {
         this.oauthEventsSubscription?.unsubscribe();
         this.clearSession();
     }
+}
+
+/** The server's own refusal text where it has one (the "sen" pages rewrite it by code). */
+function refreshRefusalNotice(error: unknown, code: string): SignInNotice {
+    const body = (error as { error?: { description?: unknown; Description?: unknown } } | null)?.error;
+    const description = body?.description ?? body?.Description;
+    return typeof description === 'string' && description.trim()
+        ? { status: 400, error: { code, description } }
+        : code === NO_ROLE_FOR_PRODUCT_CODE
+            ? noRoleForProductError()
+            : { status: 400, error: { code, description: 'Bu platform için hesabınıza erişim yetkisi tanımlı değil.' } };
 }

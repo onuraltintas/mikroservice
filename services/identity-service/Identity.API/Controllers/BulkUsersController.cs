@@ -232,6 +232,7 @@ public sealed class BulkUsersController : ControllerBase
 
                 var existingRoles = user.Roles
                     .Where(userRole => userRole.Role is not null
+                        && !userRole.Role.IsDeleted // F4 L-a: only live roles are replaced
                         && userRole.Product == platformProduct)
                     .Select(userRole => userRole.Role.Name)
                     .ToArray();

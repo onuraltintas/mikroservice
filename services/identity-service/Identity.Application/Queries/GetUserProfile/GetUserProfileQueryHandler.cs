@@ -107,7 +107,8 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
             ProductRoles = visibleRoles
                 .Select(userRole => new UserProductRoleDto(
                     userRole.Role?.Name ?? "Unknown",
-                    userRole.Product?.ToRouteValue()))
+                    userRole.Product?.ToRouteValue(),
+                    userRole.Role is null || userRole.Role.IsDeleted))
                 .ToList(),
             ProductAccesses = isSystemAdmin
                 ? user.ProductAccesses

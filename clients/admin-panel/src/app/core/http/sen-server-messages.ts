@@ -13,6 +13,8 @@ export const SEN_BY_CODE: Readonly<Record<string, string>> = {
   'Auth.ProductAccessDenied': 'Hesabının bu platforma erişim yetkisi yok.',
   // F4 (user decision 07.11.2026): product access without any role in it; only an admin restores it (no join hint).
   'Auth.NoRoleForProduct': 'Bu platformda hesabına tanımlı bir yetki kalmadı. Yeniden erişim için kurumunla ya da destekle iletişime geç.',
+  // F4 (re-review L-d): the account has roles, but not ones this panel serves (wrong site, custom role).
+  'Auth.SessionNotForThisPanel': 'Bu oturumla bu panele erişemezsin. Doğru siteden giriş yap.',
   'Auth.MfaLocked': 'Çok fazla hatalı doğrulama denemesi yapıldı. Biraz sonra yeniden dene.',
   'Auth.InvalidMfaCode': 'Doğrulama kodu geçersiz ya da kullanılmış. Uygulamadaki yeni kodu yaz.',
   'Auth.ExistingAccountMfaRequired': 'Mevcut hesabının doğrulama uygulamasındaki 6 haneli kodu gir.',

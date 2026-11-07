@@ -438,7 +438,7 @@ public sealed class ProductScopedRoleAssignmentTests
     public class RoleRepositoryProxy : DispatchProxy
     {
         public Role Role { get; set; } = null!;
-        public IDictionary<string, Role>? Roles { get; set; }
+        public Dictionary<string, Role>? Roles { get; set; }
 
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) => targetMethod?.Name switch
         {

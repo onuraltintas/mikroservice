@@ -195,8 +195,9 @@ export class RoleManagementModalComponent implements OnInit {
         if (!userId || this.busy() || !this.canRemove(assignment)) return;
 
         const product = isRoleProduct(assignment.product) ? assignment.product : null;
-        const lastRoleInProduct = product !== null && !this.assignments().some(other =>
-            other.product === product && other.role !== assignment.role);
+        // Only live roles count: a soft-deleted membership grants nothing (PR #125 re-review M-2).
+        const lastRoleInProduct = product !== null && !assignment.roleDeleted && !this.assignments().some(other =>
+            other.product === product && other.role !== assignment.role && !other.roleDeleted);
         if (lastRoleInProduct) {
             const confirmed = await this.toaster.confirm(LAST_PRODUCT_ROLE_CONFIRMATION, {
                 title: 'Son rolü kaldır',
