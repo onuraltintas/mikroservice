@@ -25,6 +25,12 @@ import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationShellComponent } from '../registration-shell.component';
 import { ParentPanelEntryComponent } from '../parent-panel-entry.component';
 
+/** Paket F F4: the identity service's code for product access without any role in the product. */
+const NO_ROLE_FOR_PRODUCT_CODE = 'Auth.NoRoleForProduct';
+// User decision 07.11.2026: no join hint; only an admin restores the access.
+export const NO_ROLE_MESSAGE =
+  'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor. Yeniden erişim için kurumunuzla ya da destekle iletişime geçin.';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -258,6 +264,8 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
               message = err.error.message;
             } else if (err.error?.title) {
               message = err.error.title;
+            } else if ((err.error?.code ?? err.error?.Code) === NO_ROLE_FOR_PRODUCT_CODE) {
+              message = NO_ROLE_MESSAGE;
             } else if (typeof err.error === 'string') {
               message = err.error;
             } else {
@@ -370,13 +378,17 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
       return;
     }
 
-    if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//')) {
-      this.router.navigateByUrl(returnUrl);
+    // Paket F F4 (07.11.2026): a session without any role in this platform never opens a page, not even the
+    // returnUrl; it is ended. The server refuses such sign-ins since F4; this covers an older or unexpected token.
+    if (!destination) {
+      this.authService.logout();
+      this.error = NO_ROLE_MESSAGE;
+      this.toaster.error(NO_ROLE_MESSAGE, 5000);
       return;
     }
 
-    if (!destination) {
-      this.toaster.error('Kullanıcı rolü bulunamadı.', 5000);
+    if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//')) {
+      this.router.navigateByUrl(returnUrl);
       return;
     }
 

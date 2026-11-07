@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, NO_ROLE_FOR_PRODUCT_CODE } from '../../../core/auth/auth.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { GoogleRegistrationConsentComponent } from '../google-registration-consent.component';
@@ -71,6 +71,16 @@ export class LoginComponent {
     hidePassword = signal(true);
 
     constructor() {
+        // F4: a route guard or a refused refresh ended a session without any role in this product; say why here,
+        // also when that happens after this page opened (the startup refresh).
+        effect(() => {
+            if (!this.authService.signInNotice?.()) return;
+            untracked(() => {
+                const notice = this.authService.consumeSignInNotice();
+                if (notice) this.errorMessage.set(this.serverMessage(notice, this.copy.loginFailed));
+            });
+        });
+
         // Listen for Google Login
         this.socialAuthService.authState
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -207,6 +217,7 @@ export class LoginComponent {
             await this.authService.verifyMfa(this.mfaChallengeToken, this.mfaCode);
             this.toaster.success('Giriş doğrulandı.');
         } catch (error: any) {
+            this.leaveMfaWhenRoleLess(error);
             this.errorMessage.set(this.serverMessage(error, 'Doğrulama kodu geçersiz.'));
         } finally {
             this.isLoading.set(false);
@@ -224,6 +235,7 @@ export class LoginComponent {
                 this.mfaRecoveryCode.trim());
             this.toaster.success('Kurtarma koduyla giriş doğrulandı.');
         } catch (error: any) {
+            this.leaveMfaWhenRoleLess(error);
             this.errorMessage.set(this.serverMessage(error, 'Kurtarma kodu geçersiz.'));
         } finally {
             this.isLoading.set(false);
@@ -231,7 +243,23 @@ export class LoginComponent {
     }
 
     async finishMfaEnrollment() {
-        await this.router.navigate([this.authService.getLandingRoute()]);
+        try {
+            await this.authService.navigateToLanding();
+        } catch (error: unknown) {
+            this.leaveMfaWhenRoleLess(error);
+            this.errorMessage.set(this.serverMessage(error, this.copy.loginFailed));
+        }
+    }
+
+    /** F4: a session without any role was ended; go back to the sign-in form that shows the reason. */
+    private leaveMfaWhenRoleLess(error: unknown) {
+        if ((error as { error?: { code?: unknown } } | null)?.error?.code !== NO_ROLE_FOR_PRODUCT_CODE) return;
+        this.mfaStage.set('none');
+        this.mfaChallengeToken = '';
+        this.mfaSetupToken = '';
+        this.mfaCode = '';
+        this.mfaRecoveryCode = '';
+        this.recoveryCodes.set([]);
     }
 
     private async beginMfa(challengeToken: string | null, enrollmentRequired: boolean) {

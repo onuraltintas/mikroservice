@@ -73,6 +73,8 @@ export interface UserProductAccessDto {
 export interface UserProductRoleDto {
     role: string;
     product: string | null;
+    /** F4: the role was soft-deleted; the membership is shown but grants nothing. */
+    roleDeleted?: boolean;
 }
 
 export interface SpeedReadingTeacherDirectoryItem {

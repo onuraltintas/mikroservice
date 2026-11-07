@@ -513,13 +513,11 @@ public class User : AggregateRoot
         _productAccesses.FirstOrDefault(access => access.Product == product)?.Revoke(revokedAt);
     }
 
-    public void RemoveRole(Guid roleId, PlatformProduct? product = null)
+    /// <summary>Removes the membership; true when one was actually removed.</summary>
+    public bool RemoveRole(Guid roleId, PlatformProduct? product = null)
     {
         var role = _roles.FirstOrDefault(r => r.RoleId == roleId && r.Product == product);
-        if (role != null)
-        {
-            _roles.Remove(role);
-        }
+        return role != null && _roles.Remove(role);
     }
 }
 

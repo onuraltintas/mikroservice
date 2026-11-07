@@ -328,8 +328,8 @@
     "clients/speed-reading/src/app/features/auth/google-registration-consent.component.ts": "3aad70b5e0be83489672ae0184a772cf3803d92b83f36375511c37d0aa71525a",
     "clients/speed-reading/src/app/features/auth/login/login.component.html": "20a20b4e5f1047135a16ffa0f18bc69ccb3afcda684ea85c5e26f6c7e2b3b8cc",
     "clients/speed-reading/src/app/features/auth/login/login.component.scss": "efcf2fc9ca71953cf72d73fd7b738c612bed4080cb293999867eec0e26f2de62",
-    "clients/speed-reading/src/app/features/auth/login/login.component.spec.ts": "1af532a3d35b2b5196a233557fd731509a684e540c2fe478cbd3dbca69a3eab2",
-    "clients/speed-reading/src/app/features/auth/login/login.component.ts": "0ae8e9baa38c05fc2d606922ccac4dd8c41061b2a1c34c32873fe61c43d7d3f4",
+    "clients/speed-reading/src/app/features/auth/login/login.component.spec.ts": "b11e13146bceb15deb395a5341932146aa5051408dad6bc2a5556a9e7397e149",
+    "clients/speed-reading/src/app/features/auth/login/login.component.ts": "e9407856f707e98cbcf3180fb703c4c075bf712b89c9649a4b048e44986f5cf8",
     "clients/speed-reading/src/app/features/auth/parent-panel-entry.component.spec.ts": "a6cf5409dc255978fa0574ebf0b6a02e2f2028bd182da7c5222472c1a9708225",
     "clients/speed-reading/src/app/features/auth/parent-panel-entry.component.ts": "5fb09d31b8bae2850af731bbbe348533df44e351d78fc424e23fd468c5655e0f",
     "clients/speed-reading/src/app/features/auth/register-school/register-school.component.html": "3f7bb1540bd6eb58d5eb674cbc052f3f7e2d09500b7c16b34545359c67bf9940",
@@ -2699,7 +2699,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "F2 after merging F3",
+    "purpose": "F4 review fixes and last-role access rule",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2747,7 +2747,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "f2461fd8",
+    "previousBaselineCommit": "4d8c83ef",
     "removedSincePreviousBaseline": []
   }
 }

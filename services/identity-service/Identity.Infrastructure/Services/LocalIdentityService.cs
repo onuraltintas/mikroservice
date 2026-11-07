@@ -23,6 +23,7 @@ public class LocalIdentityService : IIdentityService
     private readonly IRoleRepository _roleRepository;
     private readonly IdentityDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IAuthenticationLock _authenticationLock;
 
     public LocalIdentityService(
         IUserRepository userRepository,
@@ -32,8 +33,10 @@ public class LocalIdentityService : IIdentityService
         ITokenService tokenService,
         IRoleRepository roleRepository,
         IdentityDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IAuthenticationLock? authenticationLock = null)
     {
+        _authenticationLock = authenticationLock ?? Identity.Infrastructure.Security.NoAuthenticationLock.Instance;
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _unitOfWork = unitOfWork;
@@ -238,6 +241,9 @@ public class LocalIdentityService : IIdentityService
 
             _logger.LogInformation("Attempting to assign role {RoleName} to user {UserId}", roleName, userId);
 
+            // F4 (PR #125 re-review M-1): role and access changes of one user are serialised; the user is loaded
+            // inside the lock.
+            await using var lease = await _authenticationLock.AcquireAsync(userId, cancellationToken);
             var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             if (user == null) 
             {
@@ -440,6 +446,8 @@ public class LocalIdentityService : IIdentityService
             if (product.HasValue && !Enum.IsDefined(product.Value))
                 return Result.Failure(new Error("Auth.InvalidProduct", "Platform ürünü geçersiz."));
 
+            // F4 (PR #125 re-review M-1): serialised with role assignment and access changes of the same user.
+            await using var lease = await _authenticationLock.AcquireAsync(userId, cancellationToken);
             var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "Kullanıcı bulunamadı."));
 
@@ -471,7 +479,24 @@ public class LocalIdentityService : IIdentityService
                     "Son aktif SystemAdmin rolü kaldırılamaz."));
             }
 
-            user.RemoveRole(role.Id, product);
+            var removed = user.RemoveRole(role.Id, product);
+            // F4 (user decision 07.11.2026): removing the last live role in a product closes that product's access
+            // in the same save, so the user cannot sign in or rejoin on their own; an admin reopens it (Kullanıcı
+            // Düzenle). Decided from the database under the user lock (re-review M-1), and only when this call
+            // actually removed a membership (L-c).
+            if (removed && product is { } removedFrom
+                && !await _context.UserRoles.AnyAsync(userRole => userRole.UserId == userId
+                    && userRole.Product == removedFrom
+                    && userRole.RoleId != role.Id
+                    && !userRole.Role.IsDeleted, cancellationToken))
+            {
+                var access = user.ProductAccesses.FirstOrDefault(candidate => candidate.Product == removedFrom);
+                if (access is not null)
+                {
+                    await _context.Entry(access).ReloadAsync(cancellationToken);
+                }
+                user.RevokeProductAccess(removedFrom, DateTimeOffset.UtcNow);
+            }
             if (product is { } scopedProduct)
             {
                 await _userRepository.RevokeActiveRefreshTokensForProductAsync(

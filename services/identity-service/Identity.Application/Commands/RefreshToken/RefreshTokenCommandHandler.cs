@@ -82,9 +82,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         }
 
         var productRoles = user.GetRolesForProductScope(targetProduct).ToArray();
-        var isSystemAdministrator = productRoles.Any(role =>
-            role.Role is not null
-            && string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        var isSystemAdministrator = ProductSignInPolicy.IsSystemAdministrator(user);
         if (!isSystemAdministrator
             && (existingRefreshToken.Product is not { } product || !user.HasProductAccess(product)))
         {
@@ -96,6 +94,20 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             return Result.Failure<RefreshTokenResponse>(new Error(
                 "Auth.ProductAccessDenied",
                 "Bu platform için oturum erişiminiz yok. Lütfen yeniden giriş yapın."));
+        }
+
+        // F4: the same rule as sign-in. A session whose account lost its last role in the product
+        // cannot be extended into a role-less token.
+        if (!isSystemAdministrator
+            && (targetProduct is not { } sessionProduct
+                || !ProductSignInPolicy.HasLiveRoleInProduct(user, sessionProduct)))
+        {
+            await _userRepository.RevokeRefreshTokenAsync(
+                request.RefreshToken,
+                "system",
+                "no role in the session's product",
+                cancellationToken);
+            return Result.Failure<RefreshTokenResponse>(ProductSignInPolicy.NoRoleForProduct());
         }
 
         var isPrivilegedAdministrator = productRoles.Any(role =>

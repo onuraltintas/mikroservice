@@ -1,9 +1,10 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, noRoleForProductError, sessionNotForThisPanelError } from '../../../core/auth/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { AUTH_VOICE } from '../auth-voice';
 import { LoginComponent } from './login.component';
@@ -131,6 +132,58 @@ describe('LoginComponent MFA flow', () => {
     management.mfaChallengeToken = 'c'; management.mfaStage.set('verify'); management.mfaCode = '123456';
     await management.submitMfa();
     expect(management.errorMessage()).toBe('Çok fazla hatalı deneme yapıldı. Lütfen daha sonra tekrar deneyin.');
+  });
+
+  // Paket F F4 (live 07.11.2026): a Koçluk account without a Koçluk role must get the reason, not the management shell.
+  it('shows the join hint when the account has no role in this platform', async () => {
+    const roleLess = { error: { code: 'Auth.NoRoleForProduct', description: 'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor.' } };
+    const coaching = createComponent({ loginWithPassword: vi.fn().mockRejectedValue(roleLess) });
+    coaching.email = 'a@example.test'; coaching.password = 'x';
+    await coaching.onSubmit(new Event('submit'));
+    expect(coaching.errorMessage()).toBe(
+      'Bu platformda hesabına tanımlı bir yetki kalmadı. Yeniden erişim için kurumunla ya da destekle iletişime geç.');
+
+    TestBed.resetTestingModule();
+    const management = createComponent({ loginWithPassword: vi.fn().mockRejectedValue(roleLess) }, 'siz');
+    management.email = 'a@example.test'; management.password = 'x';
+    await management.onSubmit(new Event('submit'));
+    expect(management.errorMessage()).toBe('Bu platformda hesabınıza tanımlı bir yetki bulunmuyor.');
+  });
+
+  it('leaves MFA and shows the reason when the verified session has no role', async () => {
+    const component = createComponent({ verifyMfa: vi.fn().mockRejectedValue(noRoleForProductError()) });
+    component.mfaChallengeToken = 'challenge'; component.mfaStage.set('verify'); component.mfaCode = '123456';
+    await component.submitMfa();
+    expect(component.mfaStage()).toBe('none');
+    expect(component.mfaChallengeToken).toBe('');
+    expect(component.errorMessage()).toContain('tanımlı bir yetki kalmadı');
+  });
+
+  // PR #125 review L4: the notice left by a guard or a refused refresh, also when it arrives after the page opened.
+  it('shows the notice left by a guard or a refused refresh that ended a role-less session', () => {
+    const notice = signal<ReturnType<typeof noRoleForProductError> | null>(null);
+    const component = createComponent({
+      signInNotice: notice,
+      consumeSignInNotice: vi.fn(() => { const value = notice(); notice.set(null); return value; })
+    });
+    TestBed.tick();
+    expect(component.errorMessage()).toBeNull();
+    notice.set(noRoleForProductError());
+    TestBed.tick();
+    expect(component.errorMessage()).toBe(
+      'Bu platformda hesabına tanımlı bir yetki kalmadı. Yeniden erişim için kurumunla ya da destekle iletişime geç.');
+    expect(notice()).toBeNull();
+  });
+
+  it('shows the neutral notice for a session that does not fit this panel', () => {
+    const coaching = createComponent({ consumeSignInNotice: vi.fn(() => sessionNotForThisPanelError()), signInNotice: signal(sessionNotForThisPanelError()) });
+    TestBed.tick();
+    expect(coaching.errorMessage()).toBe('Bu oturumla bu panele erişemezsin. Doğru siteden giriş yap.');
+
+    TestBed.resetTestingModule();
+    const management = createComponent({ consumeSignInNotice: vi.fn(() => sessionNotForThisPanelError()), signInNotice: signal(sessionNotForThisPanelError()) }, 'siz');
+    TestBed.tick();
+    expect(management.errorMessage()).toBe('Bu oturumla bu panele erişemezsiniz. Doğru siteden giriş yapın.');
   });
 
   function createComponent(authService: Record<string, unknown>, voice: 'sen' | 'siz' = 'sen'): LoginComponent {

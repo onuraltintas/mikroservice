@@ -81,8 +81,25 @@ public sealed class CoachingExistingAccountRegistrationTests
     {
         var fixture = new Fixture();
         fixture.User.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        var teacherRole = Role.Create("Teacher", "Teacher", true);
+        var teacherMembership = new Identity.Domain.Entities.UserRole(fixture.User.Id, teacherRole.Id, PlatformProduct.Coaching);
+        typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(teacherMembership, teacherRole);
+        fixture.User.AddRole(teacherMembership);
         var result = await fixture.Register();
         Assert.Equal("Identity.UserExists", result.Error.Code);
+        Assert.Equal(0, fixture.Saves);
+    }
+
+    // Paket F F4 (user decision 07.11.2026): an open access row without a Koçluk role (legacy data from before the
+    // last-role rule, e.g. the live case) still blocks self-registration; an admin restores it.
+    [Fact]
+    public async Task RoleLessCoachingAccessCannotRegisterAgainWithTheExistingAccount()
+    {
+        var fixture = new Fixture();
+        fixture.User.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        var result = await fixture.Register();
+        Assert.Equal("Identity.UserExists", result.Error.Code);
+        Assert.DoesNotContain(fixture.User.Roles, role => role.Product == PlatformProduct.Coaching);
         Assert.Equal(0, fixture.Saves);
     }
 

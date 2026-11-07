@@ -9,13 +9,29 @@ namespace Identity.Infrastructure.Services;
 public sealed class UserAccessManagementService : IUserAccessManagementService
 {
     private readonly IdentityDbContext _context;
+    private readonly IAuthenticationLock _authenticationLock;
 
-    public UserAccessManagementService(IdentityDbContext context)
+    public UserAccessManagementService(IdentityDbContext context, IAuthenticationLock? authenticationLock = null)
     {
         _context = context;
+        _authenticationLock = authenticationLock ?? Identity.Infrastructure.Security.NoAuthenticationLock.Instance;
     }
 
     public async Task<Result> SetProductAccessAsync(
+        Guid userId,
+        PlatformProduct product,
+        bool isActive,
+        Guid grantedByUserId,
+        string? revokedByIp,
+        CancellationToken cancellationToken)
+    {
+        // F4 (PR #125 re-review M-1): serialised with role assignment and removal of the same user, so a reopen
+        // cannot interleave with the last-role access closure.
+        await using var lease = await _authenticationLock.AcquireAsync(userId, cancellationToken);
+        return await SetProductAccessCoreAsync(userId, product, isActive, grantedByUserId, revokedByIp, cancellationToken);
+    }
+
+    private async Task<Result> SetProductAccessCoreAsync(
         Guid userId,
         PlatformProduct product,
         bool isActive,

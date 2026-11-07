@@ -232,9 +232,23 @@ public sealed class BulkUsersController : ControllerBase
 
                 var existingRoles = user.Roles
                     .Where(userRole => userRole.Role is not null
+                        && !userRole.Role.IsDeleted // F4 L-a: only live roles are replaced
                         && userRole.Product == platformProduct)
                     .Select(userRole => userRole.Role.Name)
                     .ToArray();
+                // F4: assign first, then remove the others. Removing a product's last role closes its access and
+                // assigning does not reopen an access closed that way, so a replacement never passes through zero roles.
+                var assignResult = await _identityService.AssignRoleForProductAsync(
+                    userId,
+                    roleName,
+                    platformProduct,
+                    cancellationToken);
+                if (assignResult.IsFailure)
+                {
+                    errors.Add($"{userId}: {assignResult.Error.Description}");
+                    goto NextUser;
+                }
+
                 if (request.RemoveExistingRoles)
                 {
                     foreach (var existingRole in existingRoles.Where(existingRole =>
@@ -251,17 +265,6 @@ public sealed class BulkUsersController : ControllerBase
                             goto NextUser;
                         }
                     }
-                }
-
-                var assignResult = await _identityService.AssignRoleForProductAsync(
-                    userId,
-                    roleName,
-                    platformProduct,
-                    cancellationToken);
-                if (assignResult.IsFailure)
-                {
-                    errors.Add($"{userId}: {assignResult.Error.Description}");
-                    goto NextUser;
                 }
 
                 succeeded++;

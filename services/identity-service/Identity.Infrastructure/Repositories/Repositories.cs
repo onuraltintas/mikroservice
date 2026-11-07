@@ -612,7 +612,8 @@ public class UserRepository : IUserRepository
             ProductRoles = GetVisibleRoles(u, product)
                 .Select(userRole => new UserProductRoleDto(
                     userRole.Role.Name,
-                    userRole.Product?.ToRouteValue()))
+                    userRole.Product?.ToRouteValue(),
+                    userRole.Role.IsDeleted))
                 .ToList(),
             ProductAccesses = u.ProductAccesses
                 .Select(access => new UserProductAccessDto(access.Product.ToRouteValue(), access.IsActive))

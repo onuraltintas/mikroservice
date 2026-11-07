@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, coachingPortalGuard, coachingRoleGuard } from './core/auth/auth.guard';
+import { authGuard, coachingPortalGuard, coachingRoleGuard, managementShellGuard } from './core/auth/auth.guard';
 import { studentOnboardingGuard } from './features/coaching-portal/onboarding/onboarding.guard';
 
 export const routes: Routes = [
@@ -12,7 +12,8 @@ export const routes: Routes = [
     // Dashboard Routes (Protected by AuthGuard)
     {
         path: 'dashboard',
-        canActivate: [authGuard],
+        // F4: authGuard first (no session → login), then the management role check.
+        canActivate: [authGuard, managementShellGuard],
         loadComponent: () => import('./features/dashboard/layout/dashboard-layout/dashboard-layout').then(m => m.DashboardLayoutComponent),
         children: [
             {

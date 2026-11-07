@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Authorization;
 using EduPlatform.Shared.Security.Interfaces;
+using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
@@ -94,26 +95,26 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         // 4. Check Email Confirmation & IsAdmin Check
         var productRoles = user.GetRolesForProductScope(request.Product).ToArray();
         var isAdmin = productRoles.Any(r => 
-            r.Role.Name == "SystemAdmin" || 
-            r.Role.Name == "InstitutionAdmin" || 
-            r.Role.Name == "InstitutionOwner" ||
-            request.Product == PlatformProduct.CourseManagement && r.Role.Name == "CourseInstitutionOwner" ||
-            r.Role.Name == "Editor");
+            r.Role?.Name == "SystemAdmin" || 
+            r.Role?.Name == "InstitutionAdmin" || 
+            r.Role?.Name == "InstitutionOwner" ||
+            request.Product == PlatformProduct.CourseManagement && r.Role?.Name == "CourseInstitutionOwner" ||
+            r.Role?.Name == "Editor");
 
-        var isSystemAdministrator = productRoles.Any(role =>
-            string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        var isSystemAdministrator = ProductSignInPolicy.IsSystemAdministrator(user);
 
         if (request.Product.HasValue && !Enum.IsDefined(request.Product.Value))
         {
             return Result.Failure<LoginResponse>(new Error("Auth.InvalidProduct", "Geçersiz platform."));
         }
 
-        if (!isSystemAdministrator
-            && (request.Product is not { } product || !user.HasProductAccess(product)))
+        // F4: the shared product rule (access and a live role in the product, or SystemAdmin).
+        switch (ProductSignInPolicy.Evaluate(user, request.Product))
         {
-            return Result.Failure<LoginResponse>(new Error(
-                "Auth.ProductAccessDenied",
-                "Bu platform için hesabınıza erişim yetkisi tanımlı değil."));
+            case ProductSignInDecision.AccessDenied:
+                return Result.Failure<LoginResponse>(ProductSignInPolicy.AccessDenied());
+            case ProductSignInDecision.NoRoleForProduct:
+                return Result.Failure<LoginResponse>(ProductSignInPolicy.NoRoleForProduct());
         }
 
         if (!user.EmailConfirmed && !isSystemAdministrator)

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { LoginComponent } from './login.component';
+import { LoginComponent, NO_ROLE_MESSAGE } from './login.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { GoogleIdentityService } from '../../../core/services/google-identity.service';
 import { SubscriptionService } from '../../../core/services/subscription.service';
@@ -14,7 +14,7 @@ describe('LoginComponent', () => {
   let route: any;
 
   beforeEach(() => {
-    authService = jasmine.createSpyObj<AuthService>('AuthService', ['login', 'googleAuth', 'completeGoogleRegistration']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['login', 'googleAuth', 'completeGoogleRegistration', 'logout']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
     route = {
       queryParams: of({}),
@@ -205,5 +205,31 @@ describe('LoginComponent', () => {
 
     expect(router.navigate).toHaveBeenCalledWith(['/student/exercises']);
     expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  // Paket F F4 (live 07.11.2026): a role-less session must not open any page, not even the returnUrl.
+  it('ends a role-less session instead of following the return URL', () => {
+    (component as any).handleAuthenticatedResponse.and.callThrough();
+    route.snapshot.queryParamMap.get.and.returnValue('/student/dashboard');
+
+    (component as any).handleAuthenticatedResponse({ roles: [] });
+
+    expect(authService.logout).toHaveBeenCalled();
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(component.error).toBe(NO_ROLE_MESSAGE);
+    // Paket F F4 (user decision 07.11.2026): no join hint; an admin restores the access.
+    expect(NO_ROLE_MESSAGE).toBe(
+      'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor. Yeniden erişim için kurumunuzla ya da destekle iletişime geçin.');
+  });
+
+  it('shows the join hint when the server refuses a role-less sign-in', () => {
+    authService.login.and.returnValue(throwError(() => ({ status: 400, error: { code: 'Auth.NoRoleForProduct', description: 'x' } })));
+    component.loginForm.setValue({ email: 'student@example.com', password: 'Password1!', rememberMe: false });
+
+    component.onSubmit();
+
+    expect(TestBed.inject(ToasterService).error).toHaveBeenCalledWith(NO_ROLE_MESSAGE, jasmine.any(Number));
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });

@@ -8,7 +8,9 @@ import { BehaviorSubject, filter, firstValueFrom, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { RegistrationLegalAcceptance } from '../services/identity.service';
+import { getApiErrorCode } from '../http/api-error-message';
 import { SiteAnalyticsService } from '../services/site-analytics.service';
+import { ADMIN_PERMISSIONS } from './permissions';
 
 export interface UserProfile {
     id: string;
@@ -69,6 +71,49 @@ export function hasRole(user: UserProfile | null, role: string): boolean {
     return !!user && (user.role === role || user.roles.includes(role));
 }
 
+/**
+ * Paket F F4 (PR #125 review M2): the /dashboard management shell opens for an explicit staff allowlist, or for a
+ * session that carries at least one admin permission claim (a custom staff role). Nothing is allowed by exclusion:
+ * a portal role, a course-management role or a custom role without such a permission does not open it.
+ */
+export const MANAGEMENT_ROLES: readonly string[] = ['SystemAdmin', 'Editor', 'InstitutionAdmin', 'InstitutionOwner'];
+
+/** Admin-panel permission claims, minus the ones the identity seeder also gives to students, teachers and parents. */
+const LEARNER_PERMISSIONS: readonly string[] = [
+    ADMIN_PERMISSIONS.speedReadingLeaderboardView,
+    ADMIN_PERMISSIONS.speedReadingReportView
+];
+export const MANAGEMENT_PERMISSIONS: readonly string[] = Object.values(ADMIN_PERMISSIONS)
+    .filter(permission => !LEARNER_PERMISSIONS.includes(permission));
+
+export function hasManagementRole(
+    user: { roles: readonly string[]; permissions?: readonly string[] } | null
+): boolean {
+    return !!user && (
+        user.roles.some(role => MANAGEMENT_ROLES.includes(role))
+        || (user.permissions ?? []).some(permission => MANAGEMENT_PERMISSIONS.includes(permission)));
+}
+
+/** The identity service's code for an account with product access but no role in that product. */
+export const NO_ROLE_FOR_PRODUCT_CODE = 'Auth.NoRoleForProduct';
+
+/** A login-page notice in the identity service's error shape. */
+export interface SignInNotice {
+    status: number;
+    error: { code: string; description: string };
+}
+
+/** The same error shape and status as the identity service, for a session that reached the client without a role. */
+export function noRoleForProductError(): SignInNotice {
+    return {
+        status: 400,
+        error: {
+            code: NO_ROLE_FOR_PRODUCT_CODE,
+            description: 'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor. Yeniden erişim için kurumunuzla ya da destekle iletişime geçin.'
+        }
+    };
+}
+
 export function hasRequiredAccess(
     user: UserProfile | null,
     permission: string,
@@ -77,6 +122,27 @@ export function hasRequiredAccess(
     return hasRequiredPermission(user, permission)
         && (!requiredRole || hasRequiredRole(user, requiredRole));
 }
+
+/** Client-only code (F4, re-review L-d): the account has roles, but none this panel serves. */
+export const SESSION_NOT_FOR_THIS_PANEL_CODE = 'Auth.SessionNotForThisPanel';
+
+export function sessionNotForThisPanelError(): SignInNotice {
+    return {
+        status: 400,
+        error: {
+            code: SESSION_NOT_FOR_THIS_PANEL_CODE,
+            description: 'Bu oturumla bu panele erişemezsiniz. Doğru siteden giriş yapın.'
+        }
+    };
+}
+
+/** The notice for a session that cannot open any page here: no role at all, or roles this panel does not serve. */
+export function landingFailureError(user: Pick<UserProfile, 'roles'> | null): SignInNotice {
+    return user?.roles.some(role => !!role) ? sessionNotForThisPanelError() : noRoleForProductError();
+}
+
+/** Refresh refusals that end a session for a reason the login page should explain (F4, re-review L-b). */
+const NOTICE_REFRESH_CODES: readonly string[] = [NO_ROLE_FOR_PRODUCT_CODE, 'Auth.ProductAccessDenied'];
 
 @Injectable({ providedIn: 'root' })
 export class AuthService implements OnDestroy {
@@ -94,6 +160,9 @@ export class AuthService implements OnDestroy {
     private refreshTimer?: ReturnType<typeof setTimeout>;
     private refreshPromise?: Promise<boolean>;
     private oauthEventsSubscription?: Subscription;
+    /** An error to show on the login page after a role-less session was ended outside it (F4: guard, refresh). */
+    private readonly _signInNotice = signal<SignInNotice | null>(null);
+    readonly signInNotice = this._signInNotice.asReadonly();
 
     public isDoneLoading$ = new BehaviorSubject<boolean>(false);
 
@@ -207,7 +276,7 @@ export class AuthService implements OnDestroy {
             { challengeToken, code, recoveryCode },
             { withCredentials: true }));
         this.applySession(response);
-        await this.router.navigate([this.getLandingRoute()]);
+        await this.navigateToLanding();
     }
 
     async refreshSession(): Promise<boolean> {
@@ -236,8 +305,12 @@ export class AuthService implements OnDestroy {
 
             this.applySession(response);
             return true;
-        } catch {
+        } catch (error: unknown) {
             this.clearSession();
+            // F4 (PR #125 review L4, re-review L-b): the server refused the session because the account has no role
+            // or no access here any more (removing the last role closes the access); the login page says why.
+            const code = getApiErrorCode(error);
+            if (code && NOTICE_REFRESH_CODES.includes(code)) this._signInNotice.set(refreshRefusalNotice(error, code));
             return false;
         }
     }
@@ -257,6 +330,11 @@ export class AuthService implements OnDestroy {
     }
 
     async logout() {
+        await this.endSession();
+        await this.router.navigate(['/auth/login']);
+    }
+
+    private async endSession() {
         this.clearSession();
 
         try {
@@ -275,7 +353,34 @@ export class AuthService implements OnDestroy {
         }
 
         this.oauthService.logOut();
-        await this.router.navigate(['/auth/login']);
+    }
+
+    /**
+     * Paket F F4: opens the page for the signed-in roles. A session without any role in the product (the server
+     * refuses those since F4; this guards an older or unexpected token) is ended and the login error is thrown,
+     * so it never reaches the management shell.
+     */
+    async navigateToLanding(): Promise<void> {
+        const route = this.getLandingRoute();
+        if (!route) {
+            const failure = landingFailureError(this.userProfile());
+            await this.endSession();
+            throw failure;
+        }
+        await this.router.navigate([route]);
+    }
+
+    /** Ends a role-less session found by a route guard; the login page shows why (see consumeSignInNotice). */
+    async endRoleLessSession(): Promise<void> {
+        const notice = landingFailureError(this.userProfile());
+        await this.endSession();
+        this._signInNotice.set(notice);
+    }
+
+    consumeSignInNotice(): SignInNotice | null {
+        const notice = this._signInNotice();
+        this._signInNotice.set(null);
+        return notice;
     }
 
     private applySession(response: AuthSessionResponse) {
@@ -312,7 +417,7 @@ export class AuthService implements OnDestroy {
         }
 
         this.applySession(response as AuthSessionResponse);
-        await this.router.navigate([this.getLandingRoute()]);
+        await this.navigateToLanding();
         return {
             authenticated: true,
             requiresMfa: false,
@@ -373,12 +478,13 @@ export class AuthService implements OnDestroy {
         return hasRequiredPermission(this.userProfile(), permission);
     }
 
-    getLandingRoute(): string {
-        const role = this.userProfile()?.role;
+    /** The first page for the signed-in roles, or null when the session has no role at all (F4). */
+    getLandingRoute(): string | null {
+        const profile = this.userProfile();
+        const role = profile?.role;
         if (role === 'Parent') return '/coaching-portal/parent';
-        return ['Student', 'Teacher'].includes(role ?? '')
-            ? '/coaching-portal'
-            : '/dashboard';
+        if (['Student', 'Teacher'].includes(role ?? '')) return '/coaching-portal';
+        return hasManagementRole(profile) ? '/dashboard' : null;
     }
 
     private parseJwt(token: string): any {
@@ -400,4 +506,15 @@ export class AuthService implements OnDestroy {
         this.oauthEventsSubscription?.unsubscribe();
         this.clearSession();
     }
+}
+
+/** The server's own refusal text where it has one (the "sen" pages rewrite it by code). */
+function refreshRefusalNotice(error: unknown, code: string): SignInNotice {
+    const body = (error as { error?: { description?: unknown; Description?: unknown } } | null)?.error;
+    const description = body?.description ?? body?.Description;
+    return typeof description === 'string' && description.trim()
+        ? { status: 400, error: { code, description } }
+        : code === NO_ROLE_FOR_PRODUCT_CODE
+            ? noRoleForProductError()
+            : { status: 400, error: { code, description: 'Bu platform için hesabınıza erişim yetkisi tanımlı değil.' } };
 }

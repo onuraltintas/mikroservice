@@ -60,6 +60,7 @@ public class StudentDetailsDto
 }
 
 public record UserProductAccessDto(string Product, bool IsActive);
-public record UserProductRoleDto(string Role, string? Product);
+/// <param name="RoleDeleted">The role was soft-deleted: the membership is shown but grants nothing (F4).</param>
+public record UserProductRoleDto(string Role, string? Product, bool RoleDeleted = false);
 
 public record GetUserProfileQuery(Guid UserId, PlatformProduct? Product = null) : IRequest<Result<UserProfileDto>>;
