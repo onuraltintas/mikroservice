@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { IdentityService, PlatformLegalPageDto, RegistrationLegalAcceptance } from '../../core/services/identity.service';
+import { injectAuthCopy } from './auth-voice';
 
 export type RegistrationProduct = 'coaching' | 'speed-reading';
 
@@ -31,13 +32,15 @@ const REQUIRED_SLUGS: Record<RegistrationProduct, string[]> = {
               {{ isTerms(page.slug) ? 'koşullarını kabul ediyorum.' : 'metnini okudum ve bilgilendirildim.' }}</span>
           </label>
         }
-        <p class="text-xs leading-5 text-slate-500">Her kayıt işleminde onaylanan metin sürümü Identity’de saklanır. Metin taslaksa kayıt kapalı kalır.</p>
+        <p class="text-xs leading-5 text-slate-500" data-testid="legal-consent-note">{{ copy.legalNote }}</p>
       }
     </section>
   `
 })
 export class RegistrationLegalConsentComponent implements OnInit {
   private readonly identity = inject(IdentityService);
+  /** PR #124 review L7: also shown in the Google consent step on the management host's login page. */
+  readonly copy = injectAuthCopy().copy;
   @Input() product: RegistrationProduct = 'coaching';
   @Output() acceptancesChange = new EventEmitter<RegistrationLegalAcceptance[]>();
   @Output() readinessChange = new EventEmitter<boolean>();

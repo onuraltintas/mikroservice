@@ -5,6 +5,8 @@
  * conflicts, rate limits, network failures and server errors. Generic English framework texts
  * ("One or more validation errors occurred.", "Http failure response …") are never shown.
  */
+import { toSenServerMessage } from './sen-server-messages';
+
 export type MessageVoice = 'sen' | 'siz';
 
 export interface ApiErrorMessageOptions {
@@ -45,7 +47,10 @@ function usable(value: unknown): value is string {
   return text.length > 0 && !englishGenerics.some(pattern => pattern.test(text));
 }
 
-function validationMessages(errors: unknown): string[] {
+/** Rewrites one server text; `validation` marks a FluentValidation message. */
+type Translate = (text: string, validation: boolean) => string;
+
+function validationMessages(errors: unknown, translate?: Translate): string[] {
   const collected: unknown[] = [];
   if (Array.isArray(errors)) {
     collected.push(...errors);
@@ -61,24 +66,26 @@ function validationMessages(errors: unknown): string[] {
       ? item
       : (item as Record<string, unknown> | null)?.['errorMessage'] ?? (item as Record<string, unknown> | null)?.['message'])
     .filter(usable)
-    .map(text => text.trim());
+    .map(text => text.trim())
+    .map(text => translate ? translate(text, true) : text);
   return [...new Set(texts)];
 }
 
 /** Reads the most specific Turkish message in an API error body, or null. */
-export function extractApiErrorMessage(body: unknown): string | null {
+export function extractApiErrorMessage(body: unknown, translate?: Translate): string | null {
+  const plain = (text: string) => translate ? translate(text.trim(), false) : text.trim();
   const queue: unknown[] = [body];
   while (queue.length > 0) {
     const value = queue.shift();
-    if (usable(value)) return value.trim();
+    if (usable(value)) return plain(value);
     if (!value || typeof value !== 'object') continue;
 
     const record = value as Record<string, unknown>;
-    const validation = validationMessages(record['errors'] ?? record['Errors']);
+    const validation = validationMessages(record['errors'] ?? record['Errors'], translate);
     if (validation.length > 0) return validation.join(' ');
 
     for (const key of ['detail', 'Detail', 'description', 'Description', 'message', 'Message']) {
-      if (usable(record[key])) return (record[key] as string).trim();
+      if (usable(record[key])) return plain(record[key] as string);
     }
     for (const key of ['error', 'Error']) {
       if (record[key]) queue.push(record[key]);
@@ -107,13 +114,18 @@ export function getApiErrorMessage(error: unknown, fallback: string, options: Ap
   if (!error || typeof error !== 'object') return fallback;
   const voice = options.voice ?? 'siz';
   const response = error as { status?: unknown; error?: unknown };
-  if (typeof response.status !== 'number') return extractApiErrorMessage(response.error) ?? fallback;
+  // Paket F L8: with "sen" (onuraltintas.net) the identity service's "siz" texts are rewritten by code or text.
+  const code = voice === 'sen' ? getApiErrorCode(error) : null;
+  const translate: Translate | undefined = voice === 'sen'
+    ? (text, validation) => toSenServerMessage(text, validation ? null : code, validation)
+    : undefined;
+  if (typeof response.status !== 'number') return extractApiErrorMessage(response.error, translate) ?? fallback;
 
   const status = response.status;
   if (status === 0) return messages.network[voice];
   if (status === 429) return messages.rateLimit[voice];
 
-  const message = extractApiErrorMessage(response.error);
+  const message = extractApiErrorMessage(response.error, translate);
   if (status >= 500) return fallback;
   if (message) return message;
   if (status === 409) return options.conflict ?? fallback;

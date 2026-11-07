@@ -49,7 +49,7 @@
                         <span class="text-blue-200">Birlikte Şekillendirelim.</span>
                     </h2>
                     <p class="text-blue-100/90 text-lg">
-                        Tüm okul süreçlerinizi tek bir modern platformda birleştirin.
+                        {{ copy.brandIntro }}
                     </p>
                 </div>
 
@@ -91,8 +91,8 @@
             </div>
 
             <div class="mb-8">
-                <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Hoş Geldiniz 👋</h3>
-                <p class="text-gray-500 dark:text-gray-400">Lütfen hesabınıza giriş yapın.</p>
+                <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-2" data-testid="login-welcome">{{ copy.welcome }}</h3>
+                <p class="text-gray-500 dark:text-gray-400">{{ copy.loginIntro }}</p>
             </div>
 
             <form *ngIf="mfaStage() === 'none'" (submit)="onSubmit($event)" class="flex flex-col gap-6">
@@ -166,7 +166,7 @@
                 </div>
 
                 <div class="w-full flex justify-center overflow-x-hidden google-btn-wrapper">
-                    <asl-google-signin-button type="standard" size="large" [width]="320"></asl-google-signin-button>
+                    <asl-google-signin-button type="standard" size="large" [text]="googleButtonText" [width]="320"></asl-google-signin-button>
                 </div>
 
             </form>
@@ -175,12 +175,10 @@
                 class="flex flex-col gap-5" aria-labelledby="mfa-title">
                 <div>
                     <h4 id="mfa-title" class="text-xl font-bold text-gray-900 dark:text-white">
-                        {{ mfaStage() === 'setup' ? 'İki Adımlı Doğrulamayı Kurun' : 'Doğrulama Kodu' }}
+                        {{ mfaStage() === 'setup' ? copy.mfaSetupTitle : 'Doğrulama Kodu' }}
                     </h4>
                     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        {{ mfaStage() === 'setup'
-                            ? 'Authenticator uygulamanıza aşağıdaki anahtarı ekleyin ve üretilen kodu girin.'
-                            : 'Authenticator uygulamanızdaki altı haneli kodu girin.' }}
+                        {{ mfaStage() === 'setup' ? copy.mfaSetupHint : copy.mfaVerifyHint }}
                     </p>
                 </div>
 
@@ -220,9 +218,9 @@
 
             <section *ngIf="mfaStage() === 'recovery'" class="flex flex-col gap-5" aria-labelledby="recovery-title">
                 <div>
-                    <h4 id="recovery-title" class="text-xl font-bold text-gray-900 dark:text-white">Kurtarma Kodlarınızı Kaydedin</h4>
+                    <h4 id="recovery-title" class="text-xl font-bold text-gray-900 dark:text-white">{{ copy.recoveryTitle }}</h4>
                     <p class="mt-2 text-sm text-amber-700 dark:text-amber-300">
-                        Bu kodlar yalnızca bir kez gösterilir. Her kod tek kullanımlıktır; güvenli bir parola yöneticisine kaydedin.
+                        {{ copy.recoveryHint }}
                     </p>
                 </div>
                 <ul class="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-4 font-mono text-sm dark:bg-gray-700"
@@ -258,10 +256,9 @@
                 </div>
             </div>
 
-            <div class="mt-auto pt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                Hesabınız yok mu?
-                <a routerLink="/auth/register" class="font-bold text-blue-600 hover:text-blue-700 cursor-pointer">Kayıt
-                    Olun</a>
+            <div class="mt-auto pt-8 text-center text-sm text-gray-500 dark:text-gray-400" data-testid="login-signup">
+                {{ copy.noAccount }}
+                <a routerLink="/auth/register" class="font-bold text-blue-600 hover:text-blue-700 cursor-pointer">{{ copy.signUp }}</a>
             </div>
 
         </div>

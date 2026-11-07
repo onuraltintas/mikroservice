@@ -25,6 +25,7 @@ interface Form {
 }
 
 const password = 'Sifre-2026';
+// Paket F #12 (07.11.2026): every Coaching sign-up form says sen, teachers and institutions too.
 const forms: Array<{ name: string; voice: Voice; path: string; create: () => Form; value: Record<string, unknown> }> = [
   {
     name: 'student', voice: 'sen', path: '/auth/coaching/register/student',
@@ -37,12 +38,12 @@ const forms: Array<{ name: string; voice: Voice; path: string; create: () => For
     value: { firstName: 'Ayşe', lastName: 'Kaya', email: 'ayse@example.test', password, confirmPassword: password, phoneNumber: '5551234567' },
   },
   {
-    name: 'teacher', voice: 'siz', path: '/auth/coaching/register/teacher',
+    name: 'teacher', voice: 'sen', path: '/auth/coaching/register/teacher',
     create: () => new TeacherRegisterComponent() as unknown as Form,
     value: { firstName: 'Ali', lastName: 'Demir', email: 'ali@example.test', password, confirmPassword: password, branch: 'Matematik' },
   },
   {
-    name: 'institution', voice: 'siz', path: '/auth/coaching/register/institution',
+    name: 'institution', voice: 'sen', path: '/auth/coaching/register/institution',
     create: () => new InstitutionRegisterComponent() as unknown as Form,
     value: { institutionName: 'Okul', institutionType: 1, provinceId: '34', districtId: '3401', firstName: 'Ali', lastName: 'Demir', email: 'ali@example.test', password, confirmPassword: password },
   },
@@ -50,7 +51,8 @@ const forms: Array<{ name: string; voice: Voice; path: string; create: () => For
 
 const policy = 'Şifre 8-128 karakter arasında olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.';
 const expected = (voice: Voice) => ({
-  validation: `${policy} Geçerli bir e-posta adresi giriniz.`,
+  // Paket F L8: the server's FluentValidation text is shown with sen.
+  validation: `${policy} Geçerli bir e-posta adresi gir.`,
   conflict: voice === 'sen'
     ? 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.'
     : 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifrenizi sıfırlayabilirsiniz.',

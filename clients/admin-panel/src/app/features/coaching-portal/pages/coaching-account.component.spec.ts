@@ -160,6 +160,46 @@ describe('Hesabım', () => {
     expect(el.querySelector('[data-testid="password-setup-status"]')?.textContent).toContain('ada@example.test');
   });
 
+  // Paket F L6: with two-step verification on, the e-mail change also asks for the authenticator code.
+  it('asks for the authenticator code only when two-step verification is on, and sends it', async () => {
+    const off = await render();
+    expect(off.el.querySelector('input[name="emailMfaCode"]')).toBeNull();
+    TestBed.resetTestingModule();
+
+    const { el, http, type, submit, settle } = await render(me({ mfaEnabled: true }));
+    const code = el.querySelector<HTMLInputElement>('input[name="emailMfaCode"]')!;
+    expect(code.getAttribute('autocomplete')).toBe('one-time-code');
+    type('input[name="newEmail"]', 'yeni@example.test');
+    type('input[name="emailPassword"]', 'Current-Password-1!');
+    await submit('email-form');
+    expect(el.querySelector('#account-emailMfaCode-error')?.textContent).toContain('6 haneli kodu');
+    expect(code.getAttribute('aria-invalid')).toBe('true');
+    http.expectNone(r => r.url === '/api/users/me/email-change');
+
+    type('input[name="emailMfaCode"]', '123 456');
+    await submit('email-form');
+    const post = http.expectOne(r => r.method === 'POST' && r.url === '/api/users/me/email-change');
+    expect(post.request.body).toEqual({ currentPassword: 'Current-Password-1!', newEmail: 'yeni@example.test', mfaCode: '123456' });
+    post.flush({ error: { code: 'Auth.InvalidMfaCode', description: 'Doğrulama kodu geçersiz ya da kullanılmış.' } }, { status: 400, statusText: 'Bad Request' });
+    await settle();
+    expect(el.querySelector('#account-emailMfaCode-error')?.textContent).toContain('Doğrulama kodu geçersiz');
+  });
+
+  // Review L9: two-step verification turned on elsewhere — the server asks for the code, so the field appears.
+  it('shows the code field when the server asks for it', async () => {
+    const { el, http, type, submit, settle } = await render();
+    type('input[name="newEmail"]', 'yeni@example.test');
+    type('input[name="emailPassword"]', 'Current-Password-1!');
+    await submit('email-form');
+    http.expectOne(r => r.url === '/api/users/me/email-change')
+      .flush({ error: { code: 'Account.MfaCodeRequired', description: 'İki adımlı doğrulama açık. Doğrulama uygulamandaki 6 haneli kodu yaz.' } }, { status: 400, statusText: 'Bad Request' });
+    await settle();
+    const code = el.querySelector<HTMLInputElement>('input[name="emailMfaCode"]');
+    expect(code).not.toBeNull();
+    expect(code!.getAttribute('aria-invalid')).toBe('true');
+    expect(el.querySelector('#account-emailMfaCode-error')?.textContent).toContain('6 haneli kodu');
+  });
+
   it('shows two-step verification only when it is on', async () => {
     const { el } = await render(me({ mfaEnabled: true }));
     expect(el.querySelector('[data-testid="mfa-status"]')?.textContent).toContain('İki adımlı doğrulama açık');

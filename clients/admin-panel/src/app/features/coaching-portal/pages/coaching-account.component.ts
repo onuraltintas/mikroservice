@@ -9,11 +9,12 @@ import { isPasswordPolicySatisfied, PASSWORD_MAX_LENGTH } from '../../../core/va
 import { PasswordRequirementsComponent } from '../../../shared/components/password-requirements/password-requirements.component';
 import { coachingFeedback } from '../coaching-feedback';
 import { coachingDate } from '../coaching-labels';
+import { AUTH_VOICE } from '../../auth/auth-voice';
 
 type FormName = 'name' | 'email' | 'password';
-type FieldName = 'firstName' | 'lastName' | 'newEmail' | 'emailPassword' | 'currentPassword' | 'newPassword' | 'confirmPassword';
+type FieldName = 'firstName' | 'lastName' | 'newEmail' | 'emailPassword' | 'emailMfaCode' | 'currentPassword' | 'newPassword' | 'confirmPassword';
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const voice = { voice: 'sen' as const };
+const MFA_CODE = /^\d{6}$/;
 
 /**
  * E5 (#22, live test 06.11.2026): Profil ve ayarlar › Hesabım for students, and the parent's Hesabım page. The name,
@@ -68,6 +69,11 @@ const voice = { voice: 'sen' as const };
                 @if (fieldError('newEmail'); as message) { <small class="ca-field-error" id="account-newEmail-error">{{ message }}</small> }</label>
               <label>Mevcut şifren <input name="emailPassword" type="password" autocomplete="current-password" maxlength="128" [(ngModel)]="emailPassword" [attr.aria-invalid]="invalid('emailPassword')" [attr.aria-describedby]="describedBy('emailPassword')">
                 @if (fieldError('emailPassword'); as message) { <small class="ca-field-error" id="account-emailPassword-error">{{ message }}</small> }</label>
+              @if (me.mfaEnabled) {
+                <label>Doğrulama kodu <input name="emailMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" [(ngModel)]="emailMfaCode" [attr.aria-invalid]="invalid('emailMfaCode')" [attr.aria-describedby]="mfaCodeDescribedBy()">
+                  <small class="ca-hint" id="account-emailMfaCode-hint">İki adımlı doğrulama açık: doğrulama uygulamandaki 6 haneli kodu yaz.</small>
+                  @if (fieldError('emailMfaCode'); as message) { <small class="ca-field-error" id="account-emailMfaCode-error">{{ message }}</small> }</label>
+              }
               <button type="submit">{{ busy() === 'email' ? 'Gönderiliyor…' : 'Doğrulama bağlantısı gönder' }}</button>
             </fieldset>
           </form>
@@ -122,6 +128,7 @@ const voice = { voice: 'sen' as const };
     button:disabled { opacity: .55; cursor: not-allowed; }
     .ca-secondary { min-height: 40px; background: transparent; color: var(--ui-brand-text, var(--ui-brand)); }
     .ca-field-error { color: var(--ui-danger); font-weight: 600; }
+    .ca-hint { color: var(--ui-text-muted); font-weight: 400; }
     .ca-alert, .ca-success, .ca-notice { display: grid; gap: 8px; margin: 0 0 12px; padding: 12px 16px; border-radius: var(--coaching-radius-control, 10px); }
     .ca-alert { background: var(--ui-danger-soft); color: var(--ui-danger); font-weight: 650; }
     .ca-success { background: var(--ui-success-soft); color: var(--ui-success); font-weight: 650; }
@@ -132,6 +139,8 @@ const voice = { voice: 'sen' as const };
 export class CoachingAccountComponent implements OnInit {
   private readonly identity = inject(IdentityService);
   private readonly auth = inject(AuthService);
+  /** Paket F L8: identity texts are shown with "sen" on the Coaching site (rewritten by code or text). */
+  private readonly voice = { voice: inject(AUTH_VOICE) };
   /** Review L8: the parent's page has no student copy (route data audience: 'parent'). */
   readonly isParent = inject(ActivatedRoute, { optional: true })?.snapshot?.data?.['audience'] === 'parent';
 
@@ -147,6 +156,7 @@ export class CoachingAccountComponent implements OnInit {
   lastName = '';
   newEmail = '';
   emailPassword = '';
+  emailMfaCode = '';
   currentPassword = '';
   newPassword = '';
   confirmPassword = '';
@@ -162,7 +172,7 @@ export class CoachingAccountComponent implements OnInit {
     this.loadError.set(null);
     this.identity.getMyProfile().subscribe({
       next: profile => { this.profile.set(profile); this.firstName = profile.firstName ?? ''; this.lastName = profile.lastName ?? ''; },
-      error: error => this.loadError.set(getApiErrorMessage(error, 'Hesap bilgilerin yüklenemedi. Sayfayı yenileyip yeniden dene.', voice))
+      error: error => this.loadError.set(getApiErrorMessage(error, 'Hesap bilgilerin yüklenemedi. Sayfayı yenileyip yeniden dene.', this.voice))
     });
   }
 
@@ -170,6 +180,7 @@ export class CoachingAccountComponent implements OnInit {
   fieldError(name: FieldName) { return this.fieldErrors()[name] ?? null; }
   invalid(name: FieldName) { return this.fieldErrors()[name] ? 'true' : null; }
   describedBy(name: FieldName) { return this.fieldErrors()[name] ? `account-${name}-error` : null; }
+  mfaCodeDescribedBy() { return ['account-emailMfaCode-hint', this.describedBy('emailMfaCode')].filter(Boolean).join(' '); }
   passwordDescribedBy() { return ['account-password-rules', this.describedBy('newPassword')].filter(Boolean).join(' '); }
   summary(form: FormName) { return this.summaries()[form] ?? null; }
   status(form: FormName) { return this.statuses()[form] ?? null; }
@@ -193,28 +204,37 @@ export class CoachingAccountComponent implements OnInit {
         void this.auth.refreshSession();
         this.succeed('name', 'Adın ve soyadın kaydedildi.');
       },
-      error: error => this.fail('name', getApiErrorMessage(error, 'Adın kaydedilemedi. Bağlantını kontrol edip yeniden dene.', voice))
+      error: error => this.fail('name', getApiErrorMessage(error, 'Adın kaydedilemedi. Bağlantını kontrol edip yeniden dene.', this.voice))
     });
   }
 
   requestEmailChange(): void {
-    this.begin('email', ['newEmail', 'emailPassword']);
+    this.begin('email', ['newEmail', 'emailPassword', 'emailMfaCode']);
     const newEmail = this.newEmail.trim().toLowerCase();
     const errors: Partial<Record<FieldName, string>> = {};
     if (!newEmail) errors.newEmail = 'Yeni e-posta adresini yaz.';
     else if (!EMAIL.test(newEmail)) errors.newEmail = 'Yeni adres için geçerli bir e-posta adresi yaz (ör. ad@ornek.com).';
     else if (newEmail === this.profile()?.email.toLowerCase()) errors.newEmail = 'Bu zaten şu anki e-posta adresin.';
     if (!this.emailPassword) errors.emailPassword = 'Mevcut şifreni yaz.';
+    // Paket F L6: with two-step verification on, the authenticator code is asked too.
+    const mfaEnabled = this.profile()?.mfaEnabled === true;
+    const mfaCode = this.emailMfaCode.replace(/\s/g, '');
+    if (mfaEnabled && !MFA_CODE.test(mfaCode)) errors.emailMfaCode = 'Doğrulama uygulamandaki 6 haneli kodu yaz.';
     if (this.reject('email', errors, 'Doğrulama bağlantısı gönderilmedi.')) return;
     this.busy.set('email');
-    this.identity.requestEmailChange(this.emailPassword, newEmail).pipe(finalize(() => this.busy.set(null))).subscribe({
+    this.identity.requestEmailChange(this.emailPassword, newEmail, mfaEnabled ? mfaCode : undefined).pipe(finalize(() => this.busy.set(null))).subscribe({
       next: result => {
         this.profile.update(p => p ? { ...p, pendingEmail: result?.pendingEmail ?? newEmail, pendingEmailExpiresAt: result?.expiresAt ?? null } : p);
-        this.newEmail = ''; this.emailPassword = '';
+        this.newEmail = ''; this.emailPassword = ''; this.emailMfaCode = '';
         this.succeed('email', `Doğrulama bağlantısını ${result?.pendingEmail ?? newEmail} adresine gönderdik. Bağlantıyı açıp onaylayana kadar e-posta adresin değişmez.`);
       },
-      error: error => this.apiFail('email', error, 'Doğrulama bağlantısı gönderilemedi. Yeniden dene.', {
-        'Auth.InvalidCredentials': 'emailPassword', 'Account.SameEmail': 'newEmail', 'Account.EmailInUse': 'newEmail' })
+      error: error => {
+        // Review L9: two-step verification was turned on after this page loaded; show the code field.
+        if (this.errorCode(error) === 'Account.MfaCodeRequired') this.profile.update(p => p ? { ...p, mfaEnabled: true } : p);
+        this.apiFail('email', error, 'Doğrulama bağlantısı gönderilemedi. Yeniden dene.', {
+        'Auth.InvalidCredentials': 'emailPassword', 'Account.SameEmail': 'newEmail', 'Account.EmailInUse': 'newEmail',
+        'Account.MfaCodeRequired': 'emailMfaCode', 'Auth.InvalidMfaCode': 'emailMfaCode', 'Auth.MfaLocked': 'emailMfaCode' });
+      }
     });
   }
 
@@ -226,7 +246,7 @@ export class CoachingAccountComponent implements OnInit {
         this.profile.update(p => p ? { ...p, pendingEmail: null, pendingEmailExpiresAt: null } : p);
         this.succeed('email', 'E-posta değişikliği iptal edildi; gönderdiğimiz bağlantı artık çalışmaz.');
       },
-      error: error => this.fail('email', getApiErrorMessage(error, 'Değişiklik iptal edilemedi. Yeniden dene.', voice))
+      error: error => this.fail('email', getApiErrorMessage(error, 'Değişiklik iptal edilemedi. Yeniden dene.', this.voice))
     });
   }
 
@@ -257,7 +277,7 @@ export class CoachingAccountComponent implements OnInit {
     this.busy.set('password');
     this.identity.forgotPassword(email).pipe(finalize(() => this.busy.set(null))).subscribe({
       next: () => this.succeed('password', `Şifre belirleme bağlantısını ${email} adresine gönderdik. Bağlantı 2 saat geçerli.`),
-      error: error => this.fail('password', getApiErrorMessage(error, 'Bağlantı gönderilemedi. Biraz sonra yeniden dene.', voice))
+      error: error => this.fail('password', getApiErrorMessage(error, 'Bağlantı gönderilemedi. Biraz sonra yeniden dene.', this.voice))
     });
   }
 
@@ -279,12 +299,16 @@ export class CoachingAccountComponent implements OnInit {
   }
 
   private apiFail(form: FormName, error: unknown, fallback: string, fieldsByCode: Record<string, FieldName>) {
-    const message = getApiErrorMessage(error, fallback, voice);
-    const body = (error as { error?: { error?: { code?: string }; Error?: { code?: string }; code?: string } })?.error;
-    const code = body?.error?.code ?? body?.Error?.code ?? body?.code;
+    const message = getApiErrorMessage(error, fallback, this.voice);
+    const code = this.errorCode(error);
     const field = code ? fieldsByCode[code] : undefined;
     if (field) this.fieldErrors.update(current => ({ ...current, [field]: message }));
     this.fail(form, message);
+  }
+
+  private errorCode(error: unknown): string | undefined {
+    const body = (error as { error?: { error?: { code?: string }; Error?: { code?: string }; code?: string } })?.error;
+    return body?.error?.code ?? body?.Error?.code ?? body?.code;
   }
 
   private fail(form: FormName, message: string) {

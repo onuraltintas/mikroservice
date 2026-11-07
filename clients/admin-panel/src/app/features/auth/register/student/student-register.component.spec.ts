@@ -120,7 +120,7 @@ describe('StudentRegisterComponent registration', () => {
     await vi.waitFor(() => expect(authService.loginWithGoogle).toHaveBeenCalledWith('google-id-token', [
       { slug: 'privacy', version: 1 }, { slug: 'kvkk', version: 1 }, { slug: 'coaching-terms', version: 1 }
     ]));
-    expect(toaster.success).toHaveBeenCalledWith('Google hesabınızla devam edildi.');
+    expect(toaster.success).toHaveBeenCalledWith('Google hesabınla devam edildi.');
   });
 
   it('sends MFA-required Google accounts back to the login flow', async () => {
@@ -160,8 +160,8 @@ describe('StudentRegisterComponent registration', () => {
 
     authState.next({ idToken: 'google-disabled-token' });
 
-    await vi.waitFor(() => expect(toaster.info).toHaveBeenCalledWith('Yeni kullanıcı kayıtları şu an kapalıdır.'));
-    expect(component.errorMessage()).toBe('Kayıt kapalı.');
+    await vi.waitFor(() => expect(toaster.info).toHaveBeenCalledWith('Yeni kayıtlar şu an kapalı.'));
+    expect(component.errorMessage()).toBe('Yeni kayıtlar şu an kapalı.'); // Paket F L8
   });
 
   function createComponent(

@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { AUTH_VOICE } from '../auth-voice';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent MFA flow', () => {
@@ -44,7 +45,7 @@ describe('LoginComponent MFA flow', () => {
     component.googleRegistrationToken.set('ticket');
     await component.completeGoogleRegistration(['privacy', 'kvkk', 'coaching-terms'].map(slug => ({ slug, version: 1 })));
     expect(component.googleRegistrationToken()).toBe('');
-    expect(component.errorMessage()).toBe('Süre doldu');
+    expect(component.errorMessage()).toBe('Kayıt işleminin süresi doldu. Google ile yeniden devam et.'); // Paket F L8
     expect(component.isLoading()).toBe(false);
   });
 
@@ -89,9 +90,53 @@ describe('LoginComponent MFA flow', () => {
     expect(component.recoveryCodes()).toEqual(['CODE01-CODE001', 'CODE02-CODE002']);
   });
 
-  function createComponent(authService: Record<string, unknown>): LoginComponent {
+  // Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com).
+  it('addresses the Coaching site with sen and the management panel with siz', async () => {
+    const rejectUnconfirmed = { loginWithPassword: vi.fn().mockRejectedValue({ error: { code: 'Auth.EmailNotConfirmed' } }) };
+    const coaching = createComponent(rejectUnconfirmed, 'sen');
+    expect(coaching.copy.welcome).toBe('Hoş geldin 👋');
+    expect(coaching.copy.loginIntro).toBe('Hesabına giriş yap.');
+    expect(coaching.copy.noAccount).toBe('Hesabın yok mu?');
+    expect(coaching.copy.signUp).toBe('Kayıt ol');
+    expect(coaching.googleButtonText).toBe('continue_with');
+    coaching.email = 'ada@example.test'; coaching.password = 'x';
+    await coaching.onSubmit(new Event('submit'));
+    expect(coaching.errorMessage()).toBe('Giriş yapmadan önce e-posta adresini doğrula.');
+
+    TestBed.resetTestingModule();
+    const management = createComponent(rejectUnconfirmed, 'siz');
+    expect(management.copy.welcome).toBe('Hoş Geldiniz 👋');
+    expect(management.copy.signUp).toBe('Kayıt Olun');
+    expect(management.googleButtonText).toBe('signin_with');
+    management.email = 'admin@example.test'; management.password = 'x';
+    await management.onSubmit(new Event('submit'));
+    expect(management.errorMessage()).toBe('Lütfen e-posta adresinizi doğrulayın.');
+  });
+
+  // Paket F L8: server texts are shown with sen on the Coaching site; the management panel keeps them.
+  it('shows server texts with sen on the Coaching site and unchanged on the management panel', async () => {
+    const locked = { error: { code: 'Auth.MfaLocked', description: 'Çok fazla hatalı deneme yapıldı. Lütfen daha sonra tekrar deneyin.' } };
+    const auth = { verifyMfa: vi.fn().mockRejectedValue(locked), loginWithPassword: vi.fn().mockRejectedValue({
+      error: { code: 'System.MaintenanceMode', message: 'Sistem şu anda bakım modundadır. Lütfen daha sonra tekrar deneyiniz.' } }) };
+    const coaching = createComponent(auth, 'sen');
+    coaching.mfaChallengeToken = 'c'; coaching.mfaStage.set('verify'); coaching.mfaCode = '123456';
+    await coaching.submitMfa();
+    expect(coaching.errorMessage()).toBe('Çok fazla hatalı doğrulama denemesi yapıldı. Biraz sonra yeniden dene.');
+    coaching.email = 'a@example.test'; coaching.password = 'x';
+    await coaching.onSubmit(new Event('submit'));
+    expect(coaching.errorMessage()).toBe('Sistem şu anda bakımda. Biraz sonra yeniden dene.');
+
+    TestBed.resetTestingModule();
+    const management = createComponent(auth, 'siz');
+    management.mfaChallengeToken = 'c'; management.mfaStage.set('verify'); management.mfaCode = '123456';
+    await management.submitMfa();
+    expect(management.errorMessage()).toBe('Çok fazla hatalı deneme yapıldı. Lütfen daha sonra tekrar deneyin.');
+  });
+
+  function createComponent(authService: Record<string, unknown>, voice: 'sen' | 'siz' = 'sen'): LoginComponent {
     TestBed.configureTestingModule({
       providers: [
+        { provide: AUTH_VOICE, useValue: voice },
         { provide: AuthService, useValue: authService },
         { provide: Router, useValue: { navigate: vi.fn().mockResolvedValue(true) } },
         { provide: ToasterService, useValue: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() } },

@@ -8,6 +8,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
 import { getApiErrorMessage } from '../../../../core/http/api-error-message';
+import { AUTH_VOICE } from '../../auth-voice';
 import { PasswordRequirementsComponent } from '../../../../shared/components/password-requirements/password-requirements.component';
 
 import { MatCardModule } from '@angular/material/card';
@@ -44,6 +45,8 @@ export class StudentRegisterComponent implements OnInit {
     private route = inject(ActivatedRoute, { optional: true });
     private analytics = inject(SiteAnalyticsService);
     private toaster = inject(ToasterService);
+    /** Paket F L8: server texts are rewritten with "sen" on the Coaching site; eduivme.com keeps them as is. */
+    private readonly hostVoice = inject(AUTH_VOICE);
     private configService = inject(ConfigurationService);
     private platformId = inject(PLATFORM_ID);
     private authService = inject(AuthService);
@@ -88,7 +91,7 @@ export class StudentRegisterComponent implements OnInit {
                 next: (val) => {
                     const allowed = val?.replace(/"/g, '').trim().toLowerCase() === 'true';
                     if (!allowed) {
-                        this.toaster.warning('Yeni kullanıcı kayıtları şu an kapalıdır.');
+                        this.toaster.warning('Yeni kayıtlar şu an kapalı.');
                         this.router.navigate(['/auth/register']);
                     }
                 },
@@ -133,7 +136,7 @@ export class StudentRegisterComponent implements OnInit {
             error: (err) => {
                 this.isLoading.set(false);
                 const msg = getApiErrorMessage(err, 'Kayıt tamamlanamadı. Biraz sonra yeniden dene.', {
-                    voice: 'sen',
+                    voice: this.hostVoice,
                     conflict: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.'
                 });
                 this.toaster.error(msg);
@@ -155,7 +158,7 @@ export class StudentRegisterComponent implements OnInit {
     private async handleGoogleRegistration(idToken: string) {
         if (this.isLoading()) return;
         if (!this.hasRequiredLegalAcceptances) {
-            this.toaster.info('Önce güncel yasal metinleri inceleyip onaylayın, ardından Google ile kayıt düğmesine tekrar basın.');
+            this.toaster.info('Önce güncel yasal metinleri inceleyip onayla, ardından Google ile kayıt düğmesine yeniden bas.');
             return;
         }
 
@@ -165,18 +168,18 @@ export class StudentRegisterComponent implements OnInit {
         try {
             const result = await this.authService.loginWithGoogle(idToken, this.legalAcceptances);
             if (result.requiresMfa) {
-                this.toaster.info('Bu Google hesabı mevcut. Güvenli giriş için giriş sayfasını kullanın.');
+                this.toaster.info('Bu Google hesabıyla zaten bir hesap var. Güvenli giriş için giriş sayfasını kullan.');
                 await this.router.navigate(['/auth/login']);
                 return;
             }
 
-            this.toaster.success('Google hesabınızla devam edildi.');
+            this.toaster.success('Google hesabınla devam edildi.');
         } catch (error: any) {
             const errorCode = error.error?.code;
-            const errorMessage = getApiErrorMessage(error, 'Google ile kayıt tamamlanamadı. Biraz sonra yeniden dene.', { voice: 'sen' });
+            const errorMessage = getApiErrorMessage(error, 'Google ile kayıt tamamlanamadı. Biraz sonra yeniden dene.', { voice: this.hostVoice });
 
             if (errorCode === 'Identity.RegistrationDisabled') {
-                this.toaster.info('Yeni kullanıcı kayıtları şu an kapalıdır.');
+                this.toaster.info('Yeni kayıtlar şu an kapalı.');
             } else {
                 this.toaster.error(errorMessage);
             }

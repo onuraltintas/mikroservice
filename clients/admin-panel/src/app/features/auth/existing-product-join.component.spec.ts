@@ -24,7 +24,7 @@ describe('ExistingProductJoinComponent', () => {
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('button').disabled).toBe(false);
     expect(fixture.nativeElement.querySelector('option').textContent).toBe('İkinci kurum');
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('kurumu listeden seçin');
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Katılacağın kurumu listeden seç.');
     TestBed.inject(HttpTestingController).verify();
   });
   it('uses the dedicated Speed Reading origin for student login', () => {
@@ -52,7 +52,7 @@ describe('ExistingProductJoinComponent', () => {
       { id: '22222222-2222-2222-2222-222222222222', name: 'Second', role: 'Admin' }
     ] }, { status: 400, statusText: 'Bad Request' });
     expect(c.institutions.length).toBe(2); expect(c.joined).toBe(false);
-    expect(c.error).toBe('Katılacağınız kurumu listeden seçin.');
+    expect(c.error).toBe('Katılacağın kurumu listeden seç.');
     c.submit(); http.expectNone('/api/auth/coaching/register/join');
     c.selectedInstitutionId = '22222222-2222-2222-2222-222222222222'; c.submit();
     const selected = http.expectOne('/api/auth/coaching/register/join');
@@ -93,14 +93,16 @@ describe('ExistingProductJoinComponent', () => {
     http.expectOne('/api/auth/coaching/register/join').flush(
       { code: 'Auth.ExistingAccountMfaRequired', description: 'Yeni doğrulama kodunu girin.' },
       { status: 400, statusText: 'Bad Request' });
-    expect(c.error).toBe('Yeni doğrulama kodunu girin.'); expect(c.joined).toBe(false);
+    // Paket F L8: shown with sen on the Coaching site.
+    expect(c.error).toBe('Mevcut hesabının doğrulama uygulamasındaki 6 haneli kodu gir.'); expect(c.joined).toBe(false);
     c.form.controls.mfaCode.setValue('123456'); c.submit();
     const req = http.expectOne('/api/auth/coaching/register/join');
     expect(req.request.body.mfaCode).toBe('123456'); expect(c.error).toBe('');
     req.flush({ userId: 'existing' }); expect(c.joined).toBe(true); http.verify();
   });
   // Paket A #2: an unverified existing account now joins and gets a verification e-mail.
-  for (const [account, voice] of [['student', 'sen'], ['teacher', 'siz'], ['institution', 'siz']] as const) {
+  // Paket F #12: every Coaching sign-up says "sen".
+  for (const [account, voice] of [['student', 'sen'], ['teacher', 'sen'], ['institution', 'sen']] as const) {
     it(`tells a ${account} with a verified address to sign in, without claiming an e-mail was sent`, () => {
       const c = create(account); c.submit();
       TestBed.inject(HttpTestingController).expectOne('/api/auth/coaching/register/join').flush({ userId: 'u', verificationEmail: 'notRequired' });
@@ -119,21 +121,35 @@ describe('ExistingProductJoinComponent', () => {
       expect(c.verificationEmailSent).toBe(true);
     });
   }
-  // Review #6: staff accounts are addressed with "siz".
-  it('addresses students with sen and teachers/institutions with siz', () => {
-    const student = create('student');
-    expect(student.copy.intro).toContain('mevcut şifreni kullan.');
-    expect(student.copy.heading).toBe('Mevcut hesabınla katıl');
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ providers: [{ provide: ChangeDetectorRef, useValue: { markForCheck: () => {} } }] });
-    for (const account of ['teacher', 'institution'] as const) {
-      const staff = create(account);
-      expect(staff.copy.heading).toBe('Mevcut hesabınızla katılın');
-      expect(staff.copy.intro).toContain('mevcut şifrenizi kullanın.');
-      expect(staff.copy.intro).toContain('Hesabınız ve kurum bağlantınız korunur.');
-      expect(staff.copy.mfaHint).toContain('girin.');
+  // Review #6 kept "siz" for staff; Paket F #12 (user decision 07.11.2026): every sign-up on the Coaching site says "sen".
+  it('addresses every Coaching account with sen and keeps siz for staff of the other service', () => {
+    for (const account of ['student', 'teacher', 'institution'] as const) {
+      const coaching = create(account);
+      expect(coaching.copy.heading).toBe('Mevcut hesabınla katıl');
+      expect(coaching.copy.intro).toContain('mevcut şifreni kullan.');
+      expect(coaching.copy.mfaHint).toContain('gir.');
+      expect(coaching.copy.login).toBe('Giriş yap');
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({ providers: [{ provide: ChangeDetectorRef, useValue: { markForCheck: () => {} } }] });
+    }
+    const staff = create('teacher');
+    staff.product = 'speed-reading';
+    expect(staff.copy.heading).toBe('Mevcut hesabınızla katılın');
+  });
+  // Paket F #13 / review L9: after joining there is a sign-in link; while the address still needs verification it
+  // says to verify first.
+  it('shows a sign-in link after joining, with a verify-first hint while the address is unverified', () => {
+    TestBed.resetTestingModule();
+    for (const outcome of ['sent', 'notRequired']) {
+      TestBed.configureTestingModule({ imports: [ExistingProductJoinComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
+      const fixture = TestBed.createComponent(ExistingProductJoinComponent);
+      fixture.componentInstance.joined = true;
+      fixture.componentInstance.verificationEmailSent = outcome === 'sent';
+      fixture.detectChanges();
+      const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="join-login-link"]');
+      expect(link?.textContent?.trim()).toBe(outcome === 'sent' ? 'E-postanı doğruladıktan sonra giriş yap' : 'Giriş yap');
+      expect(link?.getAttribute('href')).toBe('/auth/login');
+      TestBed.resetTestingModule();
     }
   });
   // Third review item 6: a Coaching student signs in on the site they are on.

@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
+using Identity.Application.Services;
 using Identity.Application.Exceptions;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
@@ -49,7 +50,12 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         }
 
         var userId = _currentUserService.UserId.Value;
-        var userEmail = _currentUserService.Email;
+        // Paket F L5: the current address of the account, not the token's e-mail claim (stale after an e-mail change).
+        var userEmail = await CurrentUserEmail.ReadAsync(_currentUserService, _userRepository, cancellationToken);
+        if (userEmail == null)
+        {
+            return Result.Failure(new Error("Auth.Unauthorized", "User is not authenticated"));
+        }
 
         // 2. Get invitation
         var invitation = await _invitationRepository.GetByIdAsync(request.InvitationId, cancellationToken);

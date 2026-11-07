@@ -184,21 +184,28 @@ public class AuthController : ControllerBase
             UseSecureSessionCookie));
     }
 
+    /// <summary>
+    /// The verification link. Paket F #10: the answer names the reason, additively — 200 with
+    /// <c>{ status: "confirmed" | "alreadyConfirmed" }</c>; 400 with <c>User.TokenExpired</c> or <c>User.InvalidToken</c>.
+    /// An unknown account answers like a wrong link, so the anonymous endpoint does not reveal account ids.
+    /// </summary>
     [HttpPost("confirm-email")]
     [AllowAnonymous]
     public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailCommand command)
     {
         if (string.IsNullOrWhiteSpace(command.Token))
         {
-            return BadRequest(new { Error = "E-posta doğrulama token'ı zorunludur." });
+            return BadRequest(ConfirmEmailErrors.InvalidToken);
         }
 
         var result = await _mediator.Send(command);
         if (result.IsFailure)
         {
-            return BadRequest(result.Error);
+            return BadRequest(result.Error.Code == ConfirmEmailErrors.TokenExpiredCode
+                ? result.Error
+                : ConfirmEmailErrors.InvalidToken);
         }
-        return Ok();
+        return Ok(new ConfirmEmailResponse(result.Value == ConfirmEmailOutcome.AlreadyConfirmed ? "alreadyConfirmed" : "confirmed"));
     }
 
     /// <summary>
@@ -540,6 +547,9 @@ public sealed record CompleteGoogleRegistrationRequest(
 public record RefreshTokenRequest(string? RefreshToken = null);
 public record RevokeTokenRequest(string? Token = null);
 public sealed record ConfirmEmailChangeRequest(Guid UserId, string? Token);
+
+/// <summary>Paket F #10: "confirmed" or "alreadyConfirmed".</summary>
+public sealed record ConfirmEmailResponse(string Status);
 public sealed record MfaSetupRequest(string ChallengeToken);
 public sealed record MfaAuthenticatedSetupRequest(string CurrentPassword);
 public sealed record MfaEnableRequest(string ChallengeToken, string SetupToken, string Code);

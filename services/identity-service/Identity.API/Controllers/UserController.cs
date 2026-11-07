@@ -372,7 +372,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> RequestEmailChange([FromBody] EmailChangeRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new Identity.Application.Commands.ChangeEmail.RequestEmailChangeCommand(
-            request.CurrentPassword ?? string.Empty, request.NewEmail ?? string.Empty), cancellationToken);
+            request.CurrentPassword ?? string.Empty, request.NewEmail ?? string.Empty, request.MfaCode), cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(new { Error = result.Error });
     }
 
@@ -386,7 +386,8 @@ public class UserController : ControllerBase
         return result.IsSuccess ? NoContent() : BadRequest(new { Error = result.Error });
     }
 
-    public record EmailChangeRequest(string? CurrentPassword, string? NewEmail);
+    /// <param name="MfaCode">Paket F L6: required when the account has two-step verification on.</param>
+    public record EmailChangeRequest(string? CurrentPassword, string? NewEmail, string? MfaCode = null);
 
     /// <summary>
     /// Kullanıcının bağlı olduğu kurumdan ayrılmasını sağlar.

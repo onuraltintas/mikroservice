@@ -68,9 +68,9 @@
                     <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Veli Hesabı Başvurusu 👨‍👩-👧‍👦
                     </h2>
                     <p class="text-gray-500 dark:text-gray-400">
-                        Zaten bir hesabınız var mı?
+                        Zaten hesabın var mı?
                         <a routerLink="/auth/login"
-                            class="text-teal-600 dark:text-teal-500 font-bold hover:underline">Giriş Yap</a>
+                            class="text-teal-600 dark:text-teal-500 font-bold hover:underline">Giriş yap</a>
                     </p>
                 </div>
 
@@ -97,7 +97,7 @@
                         <mat-label>Telefon Numarası</mat-label>
                         <input matInput formControlName="phoneNumber" placeholder="5551234567">
                         <mat-icon matPrefix class="text-gray-400 mr-2">phone</mat-icon>
-                        <mat-error>Geçerli bir telefon numarası giriniz</mat-error>
+                        <mat-error>Geçerli bir telefon numarası gir</mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="w-full">
@@ -105,8 +105,7 @@
                         <input matInput type="email" formControlName="email">
                         <mat-icon matPrefix class="text-gray-400 mr-2">email</mat-icon>
                         <mat-error *ngIf="form.get('email')?.hasError('required')">E-posta adresi zorunludur</mat-error>
-                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi
-                            giriniz</mat-error>
+                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi gir</mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="w-full">
@@ -164,6 +163,7 @@
                     </button>
 
                 </form>
+
 
             </div>
         </div>

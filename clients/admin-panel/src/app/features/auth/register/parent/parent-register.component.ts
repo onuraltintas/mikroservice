@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
 import { getApiErrorMessage } from '../../../../core/http/api-error-message';
+import { AUTH_VOICE } from '../../auth-voice';
 import { PasswordRequirementsComponent } from '../../../../shared/components/password-requirements/password-requirements.component';
 
 import { MatCardModule } from '@angular/material/card';
@@ -38,6 +39,8 @@ export class ParentRegisterComponent implements OnInit {
     private router = inject(Router);
     private analytics = inject(SiteAnalyticsService);
     private toaster = inject(ToasterService);
+    /** Paket F L8: server texts are rewritten with "sen" on the Coaching site; eduivme.com keeps them as is. */
+    private readonly hostVoice = inject(AUTH_VOICE);
     private configService = inject(ConfigurationService);
     private platformId = inject(PLATFORM_ID);
 
@@ -72,7 +75,7 @@ export class ParentRegisterComponent implements OnInit {
                 next: (val) => {
                     const allowed = val?.replace(/"/g, '').trim().toLowerCase() === 'true';
                     if (!allowed) {
-                        this.toaster.warning('Yeni kullanıcı kayıtları şu an kapalıdır.');
+                        this.toaster.warning('Yeni kayıtlar şu an kapalı.');
                         this.router.navigate(['/auth/register']);
                     }
                 }
@@ -125,7 +128,7 @@ export class ParentRegisterComponent implements OnInit {
                     this.mfaCode.reset('');
                 }
                 const msg = getApiErrorMessage(err, 'Kayıt tamamlanamadı. Biraz sonra yeniden dene.', {
-                    voice: 'sen',
+                    voice: this.hostVoice,
                     conflict: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.'
                 });
                 this.toaster.error(msg);

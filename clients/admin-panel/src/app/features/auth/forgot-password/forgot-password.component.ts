@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IdentityService } from '../../../core/services/identity.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
+import { injectAuthCopy } from '../auth-voice';
 
 @Component({
     selector: 'app-forgot-password',
@@ -24,6 +25,9 @@ import { getApiErrorMessage } from '../../../core/http/api-error-message';
 })
 export class ForgotPasswordComponent {
     private identityService = inject(IdentityService);
+    /** Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com). */
+    private readonly authCopy = injectAuthCopy();
+    readonly copy = this.authCopy.copy;
 
     email = '';
     isLoading = signal(false);
@@ -46,7 +50,7 @@ export class ForgotPasswordComponent {
                 this.isLoading.set(false);
                 // Rate limits, network and server failures mean nothing was sent: say so.
                 if (err?.status === 0 || err?.status === 429 || err?.status >= 500) {
-                    this.errorMessage.set(getApiErrorMessage(err, 'Sıfırlama bağlantısı şu an gönderilemedi. Lütfen biraz sonra yeniden deneyin.'));
+                    this.errorMessage.set(getApiErrorMessage(err, this.copy.forgotFailed, { voice: this.authCopy.voice }));
                     return;
                 }
                 // Security best practice: don't reveal whether the e-mail exists.

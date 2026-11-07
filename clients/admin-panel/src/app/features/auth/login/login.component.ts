@@ -15,6 +15,7 @@ import { getApiErrorMessage } from '../../../core/http/api-error-message';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { GoogleRegistrationConsentComponent } from '../google-registration-consent.component';
 import { RegistrationLegalAcceptance } from '../../../core/services/identity.service';
+import { injectAuthCopy } from '../auth-voice';
 
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 
@@ -41,6 +42,12 @@ export class LoginComponent {
     private toaster = inject(ToasterService);
     private socialAuthService = inject(SocialAuthService);
     private destroyRef = inject(DestroyRef);
+    /** Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com). */
+    private readonly authCopy = injectAuthCopy();
+    readonly voice = this.authCopy.voice;
+    readonly copy = this.authCopy.copy;
+    /** Google renders its own button text; "continue_with" avoids the formal "oturum açın" on the Coaching site. */
+    readonly googleButtonText = this.voice === 'sen' ? 'continue_with' as const : 'signin_with' as const;
 
     isLoading = signal(false);
     googleRegistrationToken = signal('');
@@ -98,18 +105,18 @@ export class LoginComponent {
             // Backend returns: Result.Failure(new Error("Code", "Message")) -> serialized as { code: "...", message: "...", ... } or similar.
             // Let's assume error.error.code based on previous logic.
 
-            const errorMsg = error.error?.message || error.error?.description || 'Bir hata oluştu.';
+            const errorMsg = this.serverMessage(error, 'Bir hata oluştu.');
 
             /* MAINTENANCE MODE HANDLING & REGISTRATION CHECK */
             if (errorCode === 'Auth.LegalAcceptanceRequired') {
-                this.toaster.info('Yeni hesabınız için kayıt ekranındaki yasal metinleri inceleyip onaylayın, ardından Google ile kayıt düğmesini kullanın.');
+                this.toaster.info(this.copy.legalAcceptanceNeeded);
                 await this.router.navigate(['/auth/register/student']);
             } else if (errorCode === 'System.MaintenanceMode') {
-                this.errorMessage.set(errorMsg || 'Sistem bakım modundadır.');
+                this.errorMessage.set(errorMsg);
                 this.toaster.warning('⚠️ Sistem Bakım Modu Aktif');
             } else if (errorCode === 'Auth.UserInactive') {
-                this.errorMessage.set('Hesabınız pasif durumdadır.');
-                this.toaster.error('Hesabınız pasif.');
+                this.errorMessage.set(this.copy.userInactive);
+                this.toaster.error(this.copy.userInactiveToast);
             } else if (errorCode === 'Identity.RegistrationDisabled') {
                 this.errorMessage.set(errorMsg);
                 this.toaster.info('Yeni Kullanıcı Kaydı Kapalı');
@@ -131,7 +138,7 @@ export class LoginComponent {
             this.googleRegistrationToken.set('');
             if (result.requiresMfa) await this.beginMfa(result.mfaChallengeToken, result.mfaEnrollmentRequired);
         } catch (error: any) {
-            this.errorMessage.set(getApiErrorMessage(error, 'Kayıt tamamlanamadı. Lütfen Google ile tekrar devam edin.'));
+            this.errorMessage.set(getApiErrorMessage(error, this.copy.googleRegistrationFailed, { voice: this.voice }));
             if (error.error?.code === 'Auth.GoogleRegistrationExpired') this.googleRegistrationToken.set('');
         } finally { this.isLoading.set(false); }
     }
@@ -155,7 +162,7 @@ export class LoginComponent {
             if (result.requiresMfa) {
                 await this.beginMfa(result.mfaChallengeToken, result.mfaEnrollmentRequired);
             } else {
-                this.toaster.success('Giriş başarılı! Yönlendiriliyorsunuz.');
+                this.toaster.success(this.copy.loginSuccess);
             }
         } catch (error: any) {
             console.error('Login error:', error);
@@ -164,16 +171,16 @@ export class LoginComponent {
 
             /* MAINTENANCE MODE HANDLING */
             if (errorCode === 'System.MaintenanceMode') {
-                this.errorMessage.set(error.error?.message || 'Sistem bakım modundadır.');
+                this.errorMessage.set(this.serverMessage(error, 'Sistem bakım modundadır.'));
                 this.toaster.warning('⚠️ Bakım Modu Aktif');
             } else if (errorCode === 'Auth.EmailNotConfirmed') {
-                this.errorMessage.set('Lütfen e-posta adresinizi doğrulayın.');
+                this.errorMessage.set(this.copy.emailNotConfirmed);
                 this.showResendLink.set(true);
             } else if (errorCode === 'Auth.UserInactive') {
-                this.errorMessage.set('Hesabınız şu anda pasif durumdadır.');
+                this.errorMessage.set(this.copy.userInactive);
                 this.showSupportLink.set(true);
             } else {
-                this.errorMessage.set(error.error?.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+                this.errorMessage.set(this.serverMessage(error, this.copy.loginFailed));
             }
             this.isLoading.set(false);
         }
@@ -200,7 +207,7 @@ export class LoginComponent {
             await this.authService.verifyMfa(this.mfaChallengeToken, this.mfaCode);
             this.toaster.success('Giriş doğrulandı.');
         } catch (error: any) {
-            this.errorMessage.set(error.error?.description || 'Doğrulama kodu geçersiz.');
+            this.errorMessage.set(this.serverMessage(error, 'Doğrulama kodu geçersiz.'));
         } finally {
             this.isLoading.set(false);
         }
@@ -217,7 +224,7 @@ export class LoginComponent {
                 this.mfaRecoveryCode.trim());
             this.toaster.success('Kurtarma koduyla giriş doğrulandı.');
         } catch (error: any) {
-            this.errorMessage.set(error.error?.description || 'Kurtarma kodu geçersiz.');
+            this.errorMessage.set(this.serverMessage(error, 'Kurtarma kodu geçersiz.'));
         } finally {
             this.isLoading.set(false);
         }
@@ -252,10 +259,10 @@ export class LoginComponent {
         this.resendingEmail.set(true);
         try {
             await this.authService.resendVerificationEmail(this.email);
-            this.toaster.success('Eğer bu adres doğrulama bekliyorsa e-posta gönderme isteğiniz alındı. Gelen kutunuzu kontrol edin.');
+            this.toaster.success(this.copy.resendAccepted);
             this.showResendLink.set(false);
         } catch (error: any) {
-            this.toaster.error(error.error?.message || 'E-posta gönderilemedi.');
+            this.toaster.error(this.serverMessage(error, 'E-posta gönderilemedi.'));
         } finally {
             this.resendingEmail.set(false);
         }
@@ -264,6 +271,11 @@ export class LoginComponent {
     onLogin() {
         // Fallback or Social Login could use this
         this.authService.login();
+    }
+
+    /** Paket F L8: the server's text, rewritten with "sen" on the Coaching site (eduivme.com keeps it as is). */
+    private serverMessage(error: unknown, fallback: string): string {
+        return getApiErrorMessage(error, fallback, { voice: this.voice });
     }
 
     togglePasswordVisibility() {

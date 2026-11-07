@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IdentityService } from '../../../core/services/identity.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
+import { injectAuthCopy } from '../auth-voice';
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../../core/validators/password.validator';
 
 @Component({
@@ -27,6 +28,9 @@ import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../../core/validato
 export class ResetPasswordComponent implements OnInit {
     private identityService = inject(IdentityService);
     private toaster = inject(ToasterService);
+    /** Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com). */
+    private readonly authCopy = injectAuthCopy();
+    readonly copy = this.authCopy.copy;
     private route = inject(ActivatedRoute);
     private router = inject(Router);
 
@@ -130,11 +134,11 @@ export class ResetPasswordComponent implements OnInit {
             next: () => {
                 this.isSuccess.set(true);
                 this.isLoading.set(false);
-                this.toaster.success('Şifreniz başarıyla değiştirildi!');
+                this.toaster.success(this.copy.resetDoneToast);
             },
             error: (err) => {
                 this.isLoading.set(false);
-                this.errorMessage.set(getApiErrorMessage(err, 'Şifre sıfırlanamadı. Lütfen yeniden deneyin ya da yeni bir bağlantı isteyin.'));
+                this.errorMessage.set(getApiErrorMessage(err, this.copy.resetFailed, { voice: this.authCopy.voice }));
             }
         });
     }

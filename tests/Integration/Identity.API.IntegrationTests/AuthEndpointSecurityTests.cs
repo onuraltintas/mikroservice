@@ -70,6 +70,64 @@ public class AuthEndpointSecurityTests
         Assert.IsType<OkResult>(result);
     }
 
+    // Paket F #10: the page shows one message per reason, so the answer names it.
+    [Theory]
+    [InlineData(ConfirmEmailOutcome.Confirmed, "confirmed")]
+    [InlineData(ConfirmEmailOutcome.AlreadyConfirmed, "alreadyConfirmed")]
+    public async Task ConfirmEmail_Success_NamesWhetherTheAddressWasAlreadyVerified(ConfirmEmailOutcome outcome, string status)
+    {
+        var result = await CreateConfirmController(Result.Success(outcome))
+            .ConfirmEmail(new ConfirmEmailCommand(Guid.NewGuid(), "token"));
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(status, Assert.IsType<ConfirmEmailResponse>(ok.Value).Status);
+    }
+
+    [Fact]
+    public async Task ConfirmEmail_ExpiredLink_KeepsItsReasonCode()
+    {
+        var result = await CreateConfirmController(Result.Failure<ConfirmEmailOutcome>(ConfirmEmailErrors.TokenExpired))
+            .ConfirmEmail(new ConfirmEmailCommand(Guid.NewGuid(), "token"));
+
+        Assert.Equal("User.TokenExpired", Assert.IsType<Error>(Assert.IsType<BadRequestObjectResult>(result).Value).Code);
+    }
+
+    // An unknown account id answers exactly like a wrong link, and a missing token too.
+    [Fact]
+    public async Task ConfirmEmail_UnknownAccountMissingAndWrongToken_AnswerTheSameInvalidLink()
+    {
+        var unknown = await CreateConfirmController(Result.Failure<ConfirmEmailOutcome>(new Error("User.NotFound", "Kullanıcı bulunamadı.")))
+            .ConfirmEmail(new ConfirmEmailCommand(Guid.NewGuid(), "token"));
+        var wrong = await CreateConfirmController(Result.Failure<ConfirmEmailOutcome>(ConfirmEmailErrors.InvalidToken))
+            .ConfirmEmail(new ConfirmEmailCommand(Guid.NewGuid(), "token"));
+        var missing = await new AuthController(DispatchProxy.Create<IMediator, ThrowingMediatorProxy>(), new TestWebHostEnvironment())
+            .ConfirmEmail(new ConfirmEmailCommand(Guid.NewGuid()));
+
+        var errors = new[] { unknown, wrong, missing }
+            .Select(r => Assert.IsType<Error>(Assert.IsType<BadRequestObjectResult>(r).Value)).ToArray();
+        Assert.All(errors, e => Assert.Equal("User.InvalidToken", e.Code));
+        Assert.Single(errors.Select(e => e.Description).Distinct());
+    }
+
+    private static AuthController CreateConfirmController(Result<ConfirmEmailOutcome> answer)
+    {
+        var mediator = DispatchProxy.Create<IMediator, ConfirmMediatorProxy>();
+        ((ConfirmMediatorProxy)(object)mediator).Answer = answer;
+        return new AuthController(mediator, new TestWebHostEnvironment());
+    }
+
+    private class ConfirmMediatorProxy : DispatchProxy
+    {
+        public Result<ConfirmEmailOutcome> Answer { get; set; } = Result.Success(ConfirmEmailOutcome.Confirmed);
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            if (targetMethod?.Name == "Send" && args?.FirstOrDefault() is ConfirmEmailCommand)
+                return Task.FromResult(Answer);
+            throw new InvalidOperationException("Unexpected mediator call.");
+        }
+    }
+
     private static AuthController CreateController(Error failure)
     {
         var mediator = DispatchProxy.Create<IMediator, FailureMediatorProxy>();

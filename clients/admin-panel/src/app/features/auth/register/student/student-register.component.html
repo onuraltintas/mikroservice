@@ -72,7 +72,7 @@
                     <p class="text-gray-500 dark:text-gray-400">
                         Zaten hesabın var mı?
                         <a routerLink="/auth/login"
-                            class="text-blue-600 dark:text-blue-500 font-bold hover:underline">Giriş Yap</a>
+                            class="text-blue-600 dark:text-blue-500 font-bold hover:underline">Giriş yap</a>
                     </p>
                 </div>
 
@@ -119,8 +119,7 @@
                         <input matInput type="email" formControlName="email" placeholder="ornek@email.com">
                         <mat-icon matPrefix class="text-gray-400 mr-2">email</mat-icon>
                         <mat-error *ngIf="form.get('email')?.hasError('required')">E-posta adresi zorunludur</mat-error>
-                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi
-                            giriniz</mat-error>
+                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi gir</mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="w-full">
@@ -171,6 +170,7 @@
                     </button>
 
                 </form>
+
 
             </div>
         </div>
