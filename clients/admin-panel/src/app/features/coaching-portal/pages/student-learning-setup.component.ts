@@ -170,8 +170,15 @@ export class StudentLearningSetupComponent implements OnInit {
     if (!messages.length) { this.wrongCourse.set(null); return false; }
     this.error.set(`${section} ${messages.join(' ')}`);
     // E4 review: the focus goes to the first refused field.
-    setTimeout(() => (this.host.nativeElement.querySelector('[aria-invalid="true"]') as HTMLElement | null)?.focus());
+    setTimeout(() => this.focusInvalid());
     return true;
+  }
+  /** PR 128 review M2: a refused field inside a closed "Gelişmiş" is opened before it gets the focus (also on a repeated refusal). */
+  private focusInvalid() {
+    const field = this.host.nativeElement.querySelector('[aria-invalid="true"]') as HTMLElement | null;
+    const details = field?.closest('details') as HTMLDetailsElement | null;
+    if (details) details.open = true;
+    field?.focus();
   }
   /** The course whose priority or difficulty was refused. */
   readonly wrongCourse = signal<string | null>(null);
@@ -251,7 +258,12 @@ export class StudentLearningSetupComponent implements OnInit {
         // E4 #26: a short confirmation that stays as the page moves on, with what was removed.
         this.saved.set({ text: message, removed: impact?.removedTargets ?? [], diploma: impact?.diplomaGradeRemoved ?? null, teacher: !!impact?.teacherGoalMismatch });
       },
-      error: e => this.error.set(e?.status === 409 ? 'Kurulum başka bir oturumda değişti. Seçimlerin korundu; güncel bilgileri yeniden yükle.' : e?.error?.message ?? 'Kurulum kaydedilemedi. Seçimlerin ekranda korundu.')
+      error: e => {
+        // PR 128 review M2: a course the server names (field "courses" with its lesson) is marked in its row, which opens.
+        const course = e?.status === 400 && e?.error?.field === 'courses' ? this.courses.find(x => x.lessonId === e.error.lessonId) : undefined;
+        if (course && this.step() === 'Courses' && this.refuse('Derslerin kaydedilmedi.', { courses: e.error.message })) { this.wrongCourse.set(course.lessonId); return; }
+        this.error.set(e?.status === 409 ? 'Kurulum başka bir oturumda değişti. Seçimlerin korundu; güncel bilgileri yeniden yükle.' : e?.error?.message ?? 'Kurulum kaydedilemedi. Seçimlerin ekranda korundu.');
+      }
     });
   }
   async afterHoursSaved() { await this.load(); }

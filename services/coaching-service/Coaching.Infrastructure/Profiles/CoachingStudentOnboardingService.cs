@@ -145,11 +145,20 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         return await ViewAsync(profile, ct);
     }
 
-    /// <summary>G4 (#43): a typed school name, trimmed (inner runs of spaces made one); null when none was typed.</summary>
+    /// <summary>
+    /// G4 (#43): a typed school name, trimmed (inner runs of spaces made one); null when none was typed. Review L2: zero-width
+    /// and other format characters (Unicode Cf) are dropped first, and a name made only of them is refused.
+    /// </summary>
     public static string? TypedSchoolName(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value)) return null;
-        var name = string.Join(' ', value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        if (string.IsNullOrEmpty(value)) return null;
+        var visible = string.Concat(value.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.Format));
+        if (string.IsNullOrWhiteSpace(visible))
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            throw new OnboardingFieldException("ownSchool", "Okulunun adını yaz.");
+        }
+        var name = string.Join(' ', visible.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
         if (name.Length > TypedSchoolNameMaxLength)
             throw new OnboardingFieldException("ownSchool", $"Okulunun adı en fazla {TypedSchoolNameMaxLength} karakter olabilir.");
         return name;

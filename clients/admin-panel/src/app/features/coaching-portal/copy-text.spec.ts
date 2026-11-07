@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { copyMessage, copyText } from './copy-text';
 
-// G5 (#45) and PR #128 review L10: the Clipboard API first, then the older copy command, then only selecting the text.
+// G5 (#45) and PR 128 review L10: the Clipboard API first, then the older copy command, then only selecting the text.
 describe('copyText', () => {
   const original = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
   afterEach(() => {

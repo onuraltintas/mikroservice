@@ -95,7 +95,7 @@ public sealed class CoachingStudentProfile : AggregateRoot
     public CoachingStudentProfile CopyForValidation() => new()
     {
         UserId = UserId, CreatedBy = CreatedBy, EducationStatus = EducationStatus, GradeLevel = GradeLevel,
-        SchoolName = SchoolName, ClassBranch = ClassBranch, GraduationYear = GraduationYear
+        SchoolName = SchoolName, ClassBranch = ClassBranch, GraduationYear = GraduationYear, BirthDate = BirthDate
     };
 
     /// <summary>
@@ -127,8 +127,15 @@ public sealed class CoachingStudentProfile : AggregateRoot
 
     public void UpdatePersonal(DateOnly? birthDate, string? bio, string? avatarUrl, bool shareProgressWithTeachers)
     {
-        if (birthDate > DateOnly.FromDateTime(DateTime.UtcNow))
-            throw new ArgumentException("Doğum tarihi gelecekte olamaz.");
+        // PR #128 review L1: the wizard's rule (Türkiye date, 6 to 100 years old) for a new birth date; a stored one sent back
+        // unchanged is kept.
+        if (birthDate is { } date && date != BirthDate)
+        {
+            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CoachingTime.Turkey));
+            if (date > today) throw new ArgumentException("Doğum tarihi bugünden sonra olamaz.");
+            if (date > today.AddYears(-6)) throw new ArgumentException("Doğum tarihi en az 6 yıl önce olmalı. Doğum tarihini kontrol et.");
+            if (date < today.AddYears(-100)) throw new ArgumentException("Doğum tarihi en çok 100 yıl önce olabilir. Doğum tarihini kontrol et.");
+        }
         var biography = ProfileValue.Text(bio, 2000);
         var avatar = ProfileValue.Text(avatarUrl, 500);
         if (avatar is not null && (!Uri.TryCreate(avatar, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps))

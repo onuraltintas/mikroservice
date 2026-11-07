@@ -33,6 +33,8 @@ public sealed class LearningSetupController(ILearningSetupService setup) : Contr
         catch (BusinessRuleException e) when (e.Code == "StudyPlanning.Conflict")
         { return Conflict(new { success = false, code = e.Code, message = e.Message }); }
         catch (KeyNotFoundException e) { return NotFound(new { success = false, code = "Profiles.NotFound", message = e.Message }); }
+        // PR #128 review M2: a refused course is named, so Derslerim opens its row.
+        catch (LearningCourseException e) { return BadRequest(new { success = false, code = "StudyPlanning.Validation", message = e.Message, field = "courses", lessonId = e.LessonId }); }
         catch (ArgumentException e) { return BadRequest(new { success = false, code = "StudyPlanning.Validation", message = e.Message }); }
     }
 }

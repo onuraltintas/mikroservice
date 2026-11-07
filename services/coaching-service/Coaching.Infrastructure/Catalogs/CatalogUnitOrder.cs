@@ -16,13 +16,13 @@ public sealed class CatalogUnitRank
 /// G5 (#42): the curriculum order of catalog units, shared by the catalog (Başlangıç durumum), the yearly plan and the practice
 /// advice. The approved catalog's units have no DisplayOrder of their own (all 768 in the snapshot of 01.11.2026); their upper
 /// topics carry lesson-wide curriculum ranks (TYT Matematik: Denklem ve Eşitsizlikler 1–5, Mantık 6, Kümeler 7–8, …, Uzay
-/// Geometri 26). The rule: the unit's own rank, else its first upper topic's rank; units without any rank last, by name. Join
+/// Geometri 26). The rule: the unit's own rank, else its first active upper topic's rank; units without any rank last, by name. Join
 /// on <see cref="CatalogUnitRank.UnitId"/> and order by Unranked, Rank, Name (then the unit id).
 /// </summary>
 public static class CatalogUnitOrder
 {
     public static IQueryable<CatalogUnitRank> Ranks(CoachingDbContext db) =>
         db.StudyCatalogUnits
-            .Select(u => new { u.Id, u.Name, Rank = u.DisplayOrder ?? db.StudyCatalogTopics.Where(x => x.UnitId == u.Id && x.ParentId == null).Min(x => x.DisplayOrder) })
+            .Select(u => new { u.Id, u.Name, Rank = u.DisplayOrder ?? db.StudyCatalogTopics.Where(x => x.UnitId == u.Id && x.ParentId == null && x.IsActive).Min(x => x.DisplayOrder) })
             .Select(x => new CatalogUnitRank { UnitId = x.Id, Unranked = x.Rank == null ? 1 : 0, Rank = x.Rank, Name = x.Name });
 }

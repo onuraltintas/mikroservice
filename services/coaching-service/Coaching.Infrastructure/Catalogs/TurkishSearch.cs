@@ -1,33 +1,63 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Coaching.Infrastructure.Catalogs;
 
 /// <summary>
-/// KM7: Turkish case-insensitive search that does not depend on the database collation. Both sides are folded the same way:
-/// the Turkish capitals (Ç Ğ İ I Ö Ş Ü) and ı are mapped explicitly, the rest goes through lower(). "türev" finds "Türev"
-/// and "TÜREV"; "ışık" finds "IŞIK". EF Core translates the folding to nested replace()/lower() calls.
+/// KM7: Turkish case-insensitive search that does not depend on the database collation. PR #128 review M1: it also ignores the
+/// Turkish marks, like the client's fold(): "karsiyaka" finds "Karşıyaka" and "KARŞIYAKA", "isiklar" finds "IŞIKLAR", "kazim"
+/// finds "Kâzım"; "türev" finds "TÜREV" and "turev". The term is folded here (<see cref="Fold"/>) and turned into a regular
+/// expression in which every letter accepts its Turkish forms in both cases ("[sşSŞ]"); the database applies it to the column
+/// as it is stored (PostgreSQL "~", no lower() or replace() chain, so the folding stays one call deep).
 /// </summary>
 public static class TurkishSearch
 {
-    private static readonly (string From, string To)[] Map =
-        [("İ", "i"), ("I", "i"), ("ı", "i"), ("Ç", "ç"), ("Ğ", "ğ"), ("Ö", "ö"), ("Ş", "ş"), ("Ü", "ü"), ("i̇", "i")];
     /// <summary>G4 (#43): characters that separate words besides spaces ("Prof.Dr.", "(Kız)", "Mesleki-Teknik").</summary>
     private static readonly string[] Separators = ["(", ")", "-", "/", ".", ",", "'"];
     /// <summary>G4 (#43): a search uses at most this many words (each one is a condition in the query).</summary>
     public const int MaxWords = 8;
-    private static readonly MethodInfo Replace = typeof(string).GetMethod(nameof(string.Replace), [typeof(string), typeof(string)])!;
-    private static readonly MethodInfo Lower = typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes)!;
-    private static readonly MethodInfo Contains = typeof(string).GetMethod(nameof(string.Contains), [typeof(string)])!;
+    /// <summary>The forms a folded letter stands for (the dotted/dotless i, the Turkish marks and the circumflex).</summary>
+    private static readonly Dictionary<char, string> Forms = new()
+    {
+        ['a'] = "aâAÂ", ['c'] = "cçCÇ", ['g'] = "gğGĞ", ['i'] = "iıîIİÎ", ['o'] = "oöOÖ", ['s'] = "sşSŞ", ['u'] = "uüûUÜÛ"
+    };
+    private static readonly MethodInfo IsMatch = typeof(Regex).GetMethod(nameof(Regex.IsMatch), [typeof(string), typeof(string)])!;
 
-    /// <summary>The folded form of a search term (the same folding the database applies to the columns).</summary>
+    /// <summary>
+    /// The folded form of a text: Turkish lower case without marks ("KARŞIYAKA" → "karsiyaka", "Kâzım" → "kazim",
+    /// "Afyonkarahi̇sar" → "afyonkarahisar"), the same as the client's fold().
+    /// </summary>
     public static string Fold(string value)
     {
-        foreach (var (from, to) in Map) value = value.Replace(from, to, StringComparison.Ordinal);
-        return value.ToLowerInvariant();
+        var lower = value.Replace("İ", "i", StringComparison.Ordinal).Replace("I", "ı", StringComparison.Ordinal)
+            .ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var text = new StringBuilder(lower.Length);
+        foreach (var c in lower)
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark) text.Append(c == 'ı' ? 'i' : c);
+        return text.ToString().Normalize(NormalizationForm.FormC);
     }
 
-    /// <summary>G4 (#43): the folded words of a text ("Karşıyaka  Anadolu" → "karşiyaka", "anadolu"), at most <see cref="MaxWords"/>.</summary>
+    /// <summary>
+    /// The pattern that finds a folded term in a stored text: each letter accepts its Turkish forms in both cases (an i also
+    /// with a combining dot after it), anything else stands for itself. Valid for .NET and PostgreSQL regular expressions.
+    /// </summary>
+    public static string Pattern(string folded)
+    {
+        var pattern = new StringBuilder();
+        foreach (var c in folded)
+        {
+            if (Forms.TryGetValue(c, out var forms)) pattern.Append('[').Append(forms).Append(']').Append(c == 'i' ? "\u0307?" : "");
+            else if (char.IsLetter(c) && char.ToUpperInvariant(c) != c) pattern.Append('[').Append(c).Append(char.ToUpperInvariant(c)).Append(']');
+            else if (char.IsLetterOrDigit(c) || c == ' ' || c > 127) pattern.Append(c);
+            else pattern.Append('\\').Append(c);
+        }
+        return pattern.ToString();
+    }
+
+    /// <summary>G4 (#43): the folded words of a text ("Karşıyaka  Anadolu" → "karsiyaka", "anadolu"), at most <see cref="MaxWords"/>.</summary>
     public static IReadOnlyList<string> Words(string? term) => Split(term).Take(MaxWords).ToArray();
 
     private static IEnumerable<string> Split(string? text)
@@ -38,12 +68,12 @@ public static class TurkishSearch
         return folded.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct();
     }
 
-    /// <summary>Rows where any of the given text columns contains the term, Turkish case-insensitively.</summary>
+    /// <summary>Rows where any of the given text columns contains the term, Turkish case- and mark-insensitively.</summary>
     public static IQueryable<T> WhereContains<T>(this IQueryable<T> query, string? term, params Expression<Func<T, string?>>[] columns)
     {
         if (string.IsNullOrWhiteSpace(term)) return query;
-        var folded = Expression.Constant(Fold(term.Trim()));
-        return query.Where(AnyColumn(columns, text => Expression.Call(text, Contains, folded)));
+        var pattern = Expression.Constant(Pattern(Fold(term.Trim())));
+        return query.Where(AnyColumn(columns, text => Expression.Call(IsMatch, text, pattern)));
     }
 
     /// <summary>
@@ -67,7 +97,7 @@ public static class TurkishSearch
         return Words(term).All(word => words.Any(x => x.StartsWith(word, StringComparison.Ordinal)));
     }
 
-    /// <summary>One test per column on its folded (replace + lower) text, joined with OR; a null column never matches.</summary>
+    /// <summary>One test per column on its stored text, joined with OR; a null column never matches.</summary>
     private static Expression<Func<T, bool>> AnyColumn<T>(Expression<Func<T, string?>>[] columns, Func<Expression, Expression> test)
     {
         var row = Expression.Parameter(typeof(T), "row");
@@ -75,9 +105,7 @@ public static class TurkishSearch
         foreach (var column in columns)
         {
             var value = new Rebind(column.Parameters[0], row).Visit(column.Body)!;
-            Expression text = value;
-            foreach (var (from, to) in Map) text = Expression.Call(text, Replace, Expression.Constant(from), Expression.Constant(to));
-            var condition = Expression.AndAlso(Expression.NotEqual(value, Expression.Constant(null, typeof(string))), test(Expression.Call(text, Lower)));
+            var condition = Expression.AndAlso(Expression.NotEqual(value, Expression.Constant(null, typeof(string))), test(value));
             any = any is null ? condition : Expression.OrElse(any, condition);
         }
         return Expression.Lambda<Func<T, bool>>(any!, row);

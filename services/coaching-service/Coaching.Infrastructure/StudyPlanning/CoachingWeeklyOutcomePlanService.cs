@@ -79,7 +79,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
                 &&!db.StudyCatalogTopics.Any(c=>c.ParentId==t.Id)
                 &&(t.ParentId==null||db.StudyCatalogTopics.Any(p=>p.Id==t.ParentId&&p.IsActive))
             orderby r.Unranked,r.Rank,r.Name,u.Id,t.ParentId==null?t.DisplayOrder:db.StudyCatalogTopics.Where(p=>p.Id==t.ParentId).Select(p=>p.DisplayOrder).First(),t.DisplayOrder,t.Id
-            select new {Topic=t,UnitOrder=u.DisplayOrder}).ToArrayAsync(ct);
+            select new {Topic=t}).ToArrayAsync(ct);
         var topicStates=context is null?new Dictionary<Guid,DeclaredTopicStatus>():await db.Set<StudentTopicState>().AsNoTracking()
             .Where(x=>x.ContextId==context.Id).ToDictionaryAsync(x=>x.TopicId,x=>x.DeclaredStatus,ct);
         var completedTopicIds=topicStates.Where(x=>x.Value==DeclaredTopicStatus.Studied).Select(x=>x.Key).ToArray();

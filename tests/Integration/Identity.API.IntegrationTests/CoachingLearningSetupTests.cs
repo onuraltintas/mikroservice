@@ -58,8 +58,9 @@ public sealed class CoachingLearningSetupTests
         var choices = await f.Service.GetCatalogAsync(lesson.Id, 1, default);
         Assert.Single(choices.Lessons); Assert.Equal(1, choices.MissingDurationCount);
         Assert.Null(Assert.Single(choices.Topics.Items).EstimatedMinutes);
-        await Assert.ThrowsAsync<ArgumentException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,
-            [new(wrongGrade.Id, 1, null)], [], false), default));
+        // PR #128 review M2: the refused course is named.
+        Assert.Equal(wrongGrade.Id, (await Assert.ThrowsAsync<LearningCourseException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,
+            [new(wrongGrade.Id, 1, null)], [], false), default))).LessonId);
         var hours = StudyAvailability.Create(f.Student, "Europe/Istanbul");
         hours.ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]); f.Db.Add(hours); await f.Db.SaveChangesAsync();
         var ready = await f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027, null, null,

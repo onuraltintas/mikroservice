@@ -731,7 +731,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       expect(t.el.querySelector('[data-testid="ob-copy-status"]')).toBe(status);
       expect(status.textContent).toContain('Kod kopyalandı.');
       // A second click empties the region first, so the same message is announced again.
-      t.button('Kopyala').click(); await Promise.resolve(); t.fixture.detectChanges();
+      t.button('Kopyala').click(); await new Promise(r => setTimeout(r, 10)); t.fixture.detectChanges();
       expect(status.textContent!.trim()).toBe('');
       await new Promise(r => setTimeout(r, 120)); await t.settle();
       expect(status.textContent).toContain('Kod kopyalandı.');

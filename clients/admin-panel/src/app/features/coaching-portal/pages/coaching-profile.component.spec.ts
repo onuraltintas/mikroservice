@@ -124,7 +124,7 @@ describe('Coaching owned profile', () => {
     expect((el.querySelector('#profile-own-school') as HTMLInputElement).value).toBe('Köy Lisesi');
   });
 
-  // PR #128 review L11: "Okulum listede yok" is offered before a city is chosen (a student without a home city starts there).
+  // PR 128 review L11: "Okulum listede yok" is offered before a city is chosen (a student without a home city starts there).
   it('offers "Okulum listede yok" while the city is still to be chosen', async () => {
     const { fixture, component, http } = await setup();
     const student = { version: 5, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true };
@@ -496,7 +496,7 @@ describe('Profilim feedback and warnings (E4 #23, #24)', () => {
     const field = t.el.querySelector('[name="birthDate"]')!;
     expect(field.getAttribute('aria-invalid')).toBe('true');
     expect(t.el.querySelector('#' + field.getAttribute('aria-describedby'))!.textContent).toContain('Doğum tarihi bugünden sonra olamaz.');
-    // PR #128 review L1: the wizard's age range (6–100 years, Türkiye date) applies here too.
+    // PR 128 review L1: the wizard's age range (6–100 years, Türkiye date) applies here too.
     await t.set('birthDate', shiftYears(-3)); await t.submit();
     t.http.expectNone('/api/coaching/profiles/me/student');
     expect(t.el.querySelector('[data-testid="error-summary"]')!.textContent).toContain('6 yaşından küçüksün');

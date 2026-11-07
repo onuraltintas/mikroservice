@@ -17,6 +17,7 @@ import {
   purposeOf, summary, targetRequest, withoutUnfitPurpose, TYPED_SCHOOL_MAX, typedSchoolAnswer, typedSchoolError
 } from './onboarding-model';
 import { CopyResult, copyMessage, copyText } from '../copy-text';
+import { birthDateError, shiftYears } from '../birth-date';
 import { coachingToaster } from '../coaching-feedback';
 import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
@@ -261,7 +262,8 @@ export class StudentOnboardingComponent implements OnInit {
   /** G5 (#45): copies the parent code; without clipboard access the code is selected so the student can copy it. */
   async copyParentCode(code: string, element: HTMLElement) {
     const result: CopyResult = await copyText(code, element);
-    this.copyStatus.set(copyMessage(result));
+    // Review L10: the live region is emptied first, so a repeated click is announced again.
+    this.copyStatus.set(''); setTimeout(() => this.copyStatus.set(copyMessage(result)), 60);
   }
   toggleEmail(category: string, event: Event) {
     const email = (event.target as HTMLInputElement).checked;
@@ -497,21 +499,5 @@ export class StudentOnboardingComponent implements OnInit {
   stepOf(question: Question) { return question.step; }
 }
 
-/** G5 (#44): what is wrong with a birth date (YYYY-MM-DD) for the wizard, or null (the server's window, Türkiye date). */
-export function birthDateError(value: string, now = new Date()): string | null {
-  if (!value) return 'Doğum tarihini seç.';
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return 'Doğum tarihini gün, ay ve yıl olarak seç.';
-  if (value > shiftYears(0, now)) return 'Doğum tarihi bugünden sonra olamaz.';
-  if (value > shiftYears(-6, now)) return 'Bu tarihe göre 6 yaşından küçüksün. Doğum tarihini kontrol et.';
-  if (value < shiftYears(-100, now)) return 'Bu tarihe göre 100 yaşından büyüksün. Doğum tarihini kontrol et.';
-  return null;
-}
-
-/** Today ± years as YYYY-MM-DD in Türkiye (the server's birth-date window). */
-export function shiftYears(years: number, now = new Date()): string {
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(now);
-  const [y, m, d] = today.split('-').map(Number);
-  const shifted = new Date(Date.UTC(y + years, m - 1, d));
-  if (shifted.getUTCMonth() !== m - 1) shifted.setUTCDate(0); // 29 Feb → 28 Feb
-  return shifted.toISOString().slice(0, 10);
-}
+/** G5 (#44): the birth-date rule, shared with Profilim (PR 128 review L1). */
+export { birthDateError, shiftYears } from '../birth-date';

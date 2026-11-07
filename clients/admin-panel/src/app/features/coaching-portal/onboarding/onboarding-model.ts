@@ -271,8 +271,8 @@ export function personalRequest(answers: Answers): OnboardingPersonalStep {
 
 /** G4 (#43): the longest school name the student may type ("Okulum listede yok"; the server's limit). */
 export const TYPED_SCHOOL_MAX = 150;
-/** G4 (#43): a typed school name, trimmed with inner runs of spaces made one. */
-export function cleanSchoolName(value: string): string { return value.trim().replace(/\s+/g, ' '); }
+/** G4 (#43): a typed school name, trimmed with inner runs of spaces made one; review L2: zero-width/format characters dropped first. */
+export function cleanSchoolName(value: string): string { return value.replace(/\p{Cf}/gu, '').trim().replace(/\s+/g, ' '); }
 /** G4 (#43): what is wrong with a typed school name, or null. */
 export function typedSchoolError(value: string): string | null {
   const name = cleanSchoolName(value);

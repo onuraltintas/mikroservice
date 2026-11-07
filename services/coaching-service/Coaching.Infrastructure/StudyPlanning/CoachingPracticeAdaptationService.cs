@@ -226,7 +226,10 @@ public sealed class CoachingPracticeAdaptationService(CoachingDbContext db, ICoa
             && db.Set<StudyCatalogExam>().Any(e => e.Code == l.ExamCode && e.IsActive)
             && !db.StudyCatalogTopics.Any(c => c.ParentId == t.Id)
             && (t.ParentId == null || db.StudyCatalogTopics.Any(p => p.Id == t.ParentId && p.IsActive && p.UnitId == t.UnitId && p.LessonId == l.Id))
-        orderby l.Name, r.Unranked, r.Rank, r.Name, u.Id, t.DisplayOrder, t.Id
+        // Review L5: as in the catalog and the yearly plan, a sub-topic takes its parent's place before its own rank.
+        orderby l.Name, r.Unranked, r.Rank, r.Name, u.Id,
+            t.ParentId == null ? t.DisplayOrder : db.StudyCatalogTopics.Where(p => p.Id == t.ParentId).Select(p => p.DisplayOrder).First(),
+            t.ParentId ?? t.Id, t.DisplayOrder, t.Id
         select new CatalogTopic(t.Id, l.Id, l.Name, l.ExamCode, t.Name)).ToArrayAsync(ct);
 
     // Exact official subject aliases only. Unknown/custom names are deliberately not guessed.

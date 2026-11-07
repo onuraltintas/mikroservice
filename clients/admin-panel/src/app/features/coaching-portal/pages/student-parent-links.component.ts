@@ -31,13 +31,15 @@ import { copyMessage, copyText } from '../copy-text';
         <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm ">Velinle paylaş: <strong class="font-mono text-lg tracking-widest" #codeText>{{ issued.code }}</strong><br>{{ note(issued.expiresAt) }} Velin kodu girdiğinde isteği burada onaylarsın.</p>
         <!-- G5 (#45): copies the code (or selects it when the browser does not allow copying). -->
         <button type="button" class="mt-2 rounded-lg border border-(--ui-border) px-3 py-1 text-sm font-medium" [attr.aria-label]="'Veli kodunu kopyala: ' + issued.code" (click)="copyCode(issued.code, codeText)">Kopyala</button>
-        @if (copyStatus(); as copied) { <p class="mt-2 text-sm" role="status" data-testid="copy-status">{{ copied }}</p> }
+
       } @else if (expired(); as old) {
         <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm" data-testid="expired-code">Veli kodunun süresi doldu ({{ old.expiresAt | coachingDate }}). Velin bağlanacaksa yeni bir kod oluştur.</p>
       } @else if (active(); as current) {
         <!-- E4 #21: a code made in the wizard (or earlier here); only a hash is stored, so its expiry is shown, not the code. -->
         <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm" data-testid="active-code">Aktif bir veli kodun var: {{ note(current.expiresAt) }}<br>Kodu güvenliğin için yalnız oluşturduğunda gösteriyoruz; kaybettiysen yeni kod oluştur.</p>
       }
+      <!-- G5 (#45), review L10: always present, so every "Kopyala" result is announced. -->
+      <p class="mt-2 text-sm" role="status" aria-live="polite" data-testid="copy-status">{{ copyStatus() }}</p>
       @if (confirmReplace()) {
         <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-700 dark:bg-amber-950" role="group" aria-labelledby="replace-code-text" data-testid="replace-code">
           <p id="replace-code-text">Yeni kod oluşturursan eski kod hemen geçersiz olur. Velin eski kodu girerse bağlantı kurulamaz.</p>
@@ -88,7 +90,11 @@ export class StudentParentLinksComponent implements OnInit {
   }
 
   /** G5 (#45): copies the new code; without clipboard access it is selected so the student can copy it. */
-  async copyCode(code: string, element: HTMLElement): Promise<void> { this.copyStatus.set(copyMessage(await copyText(code, element))); }
+  async copyCode(code: string, element: HTMLElement): Promise<void> {
+    const message = copyMessage(await copyText(code, element));
+    // Review L10: emptied first, so a repeated click is announced again.
+    this.copyStatus.set(''); setTimeout(() => this.copyStatus.set(message), 60);
+  }
 
   async approve(link: ParentLink): Promise<void> {
     if (!await this.toaster.confirm(`${link.parentName} senin Koçluk bilgilerini görebilsin mi? Bu bağlantıyı istediğin zaman kaldırabilirsin.`)) return;

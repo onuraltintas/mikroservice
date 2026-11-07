@@ -296,7 +296,7 @@ describe('StudentLearningSetupComponent', () => {
     // A refused value opens its row's "Gelişmiş".
     t.component.courses.find(x => x.lessonId === 'tyt-mat')!.priority = 9; t.component.saveCourses(); t.fixture.detectChanges();
     expect(row('tyt-mat').querySelector('details')!.open).toBe(true);
-    // PR #128 review M2: closed again by the student, a second refusal of the same course opens it again.
+    // PR 128 review M2: closed again by the student, a second refusal of the same course opens it again.
     row('tyt-mat').querySelector('details')!.open = false;
     t.component.saveCourses(); t.fixture.detectChanges(); await new Promise(r => setTimeout(r));
     expect(row('tyt-mat').querySelector('details')!.open).toBe(true);
@@ -306,7 +306,7 @@ describe('StudentLearningSetupComponent', () => {
       { lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }, { lessonId: 'tyt-fiz', priority: 3, selfReportedDifficulty: null }]));
   });
 
-  // PR #128 review M2: a course the server refuses opens its row when the course can be told (the server names it, or only one is chosen).
+  // PR 128 review M2: a course the server refuses opens its row when the course can be told (the server names it, or only one is chosen).
   it('opens the row of a course the server refuses', async () => {
     const lessons = { curriculum: null, lessons: [
         { id: 'tyt-mat', name: 'Matematik (TYT)', gradeNumber: null, examCode: 'TYT', topicCount: 30, missingDurationCount: 0 },

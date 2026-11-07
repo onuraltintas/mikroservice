@@ -52,14 +52,24 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var curriculum = await ResolveCurriculum(candidate, ct);
         var lessonQuery = Lessons(candidate).Where(x => x.CurriculumVersionId == (curriculum == null ? (Guid?)null : curriculum.Id) && x.CurriculumVersionId != null);
         var ids = r.Courses.Select(x => x.LessonId).ToArray();
-        if (await lessonQuery.CountAsync(x => Enumerable.Contains(ids, x.Id), ct) != ids.Length)
-            throw new ArgumentException("Eğitim bağlamına uygun aktif dersleri seçin.");
+        var fitting = await lessonQuery.Where(x => Enumerable.Contains(ids, x.Id)).Select(x => x.Id).ToArrayAsync(ct);
+        if (fitting.Length != ids.Length)
+        {
+            // PR #128 review M2: one course that does not fit is named (Derslerim opens its row).
+            const string message = "Eğitim bağlamına uygun aktif dersleri seçin.";
+            var unfit = ids.Except(fitting).ToArray();
+            throw unfit.Length == 1 ? new LearningCourseException(unfit[0], message) : new ArgumentException(message);
+        }
         var topicIds = r.Topics.Select(x => x.TopicId).ToArray();
         if (await Topics(lessonQuery,candidate).CountAsync(x => Enumerable.Contains(topicIds, x.Id) && Enumerable.Contains(ids, x.LessonId), ct) != topicIds.Length)
             throw new ArgumentException("Seçilen derslere ait aktif konuları belirtin.");
         // Validate every selection before mutating tracked state.
         var target = context ?? candidate;
-        var courses = r.Courses.Select(x => StudentCoursePreference.Create(target.Id, x.LessonId, x.Priority, x.SelfReportedDifficulty)).ToArray();
+        var courses = r.Courses.Select(x =>
+        {
+            try { return StudentCoursePreference.Create(target.Id, x.LessonId, x.Priority, x.SelfReportedDifficulty); }
+            catch (ArgumentException e) { throw new LearningCourseException(x.LessonId, e.Message); }
+        }).ToArray();
         var topics = r.Topics.Select(x => StudentTopicState.Create(target.Id, x.TopicId, x.DeclaredStatus, profile.UserId)).ToArray();
         target.SetScope(r.AcademicYearStart, r.Purpose, r.TargetExamYear, r.PrimaryScoreType, r.ForeignLanguage);
         if (r.TargetExamSessionId != target.TargetExamSessionId) target.SetTargetExamSession(r.TargetExamSessionId);
