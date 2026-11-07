@@ -59,6 +59,30 @@ public sealed class WeeklyOutcomePlanTests
         Assert.Equal(old.Id,reordered.Schedule.Tasks[0].Outcome.TopicId);
     }
     [Fact]
+    public async Task UnitsComeInCurriculumOrderEvenWithoutTheirOwnRank()
+    {
+        // G5 (#42): the approved catalog's units have no DisplayOrder; their upper topics carry lesson-wide ranks (snapshot of
+        // 01.11.2026, Matematik (TYT)). The plan follows the same unit order as the catalog (Başlangıç durumum).
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);
+        var old=await f.Db.StudyCatalogTopics.SingleAsync();var existing=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        var units=new Dictionary<Guid,string>();var order=2;
+        foreach(var (name,own,rank) in new (string,int?,int)[]{("Veri",null,16),("Uzay Geometri",null,26),("Kümeler",null,7),("Üçgenler",null,18),("Mantık",6,99),("Denklem ve Eşitsizlikler",null,1)})
+        {
+            var unit=StudyCatalogUnit.Create("test","u-"+name,old.LessonId,name,own);unit.SetActive(true);
+            var upper=StudyCatalogTopic.Create("test","p-"+name,old.LessonId,unit.Id,name,null,rank);upper.SetActive(true);
+            var leaf=StudyCatalogTopic.Create("test","t-"+name,old.LessonId,unit.Id,name+" 1",upper.Id,1);leaf.SetActive(true);
+            var outcome=StudyCatalogOutcome.Create(existing.EditionId,existing.OfficialTopicId,$"M.UNIT.{order}",name,"",73,order++);
+            var estimate=OutcomeDurationEstimate.Create(outcome.Id,1,2,2,2,"ReviewedStudy","Medium","Sıra testi",f.User.UserId);estimate.Publish();
+            var mapping=StudyCatalogTopicOutcome.Create(leaf.Id,outcome.Id,"Sıra testi");mapping.Review(true,"Sıra testi",f.User.UserId!.Value);
+            f.Db.AddRange(unit,upper,leaf,outcome,estimate,mapping);units[leaf.Id]=name;
+        }
+        await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
+        var preview=await service.PreviewAsync(Input with {EndDate=new(2027,6,14)},default);
+        Assert.Equal(new[]{"Denklem ve Eşitsizlikler","Mantık","Kümeler","Veri","Üçgenler","Uzay Geometri"},
+            preview.Schedule.Tasks.Where(x=>units.ContainsKey(x.Outcome.TopicId)).Select(x=>units[x.Outcome.TopicId]).Distinct().ToArray());
+    }
+
+    [Fact]
     public async Task ApiRequiresStudentAndReturnsOptionsValidationConflictAndOwnedNotFound()
     {
         await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var api=new Coaching.API.Controllers.WeeklyOutcomePlansController(service);
