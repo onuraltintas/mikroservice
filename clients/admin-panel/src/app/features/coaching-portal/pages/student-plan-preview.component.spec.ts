@@ -17,8 +17,8 @@ describe('StudentPlanPreviewComponent', () => {
   const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
   const saved: WeeklySlot[] = [{ id: 'old', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Friday', startMinute: 1080, durationMinutes: 60 }];
   const request = { startDate: '2030-11-04', endDate: '2031-06-01', expectedWeeklyDraftVersion: 1, reuseFreedSlots: false };
-  async function setup(availability: StudyAvailability | null, slots: WeeklySlot[] = []) {
-    const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 1, timeZoneId: 'Europe/Istanbul', slots } : null, lessons })),
+  async function setup(availability: StudyAvailability | null, slots: WeeklySlot[] = [], courses?: { lessonId: string; priority: number; examQuestions: number | null }[]) {
+    const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 1, timeZoneId: 'Europe/Istanbul', slots } : null, lessons, courses })),
       save: vi.fn((_version: number | null, zone: string, next: WeeklySlot[]) => of({ version: 1, timeZoneId: zone, slots: next })) };
     const planning = { getAvailability: vi.fn(() => of(availability)) };
     const engine = { options: vi.fn(() => of({ startDate: '2030-11-04', endDate: '2031-06-01', weeklyDraftVersion: 1, timeZoneId: 'Europe/Istanbul', exams: [] })),
@@ -41,9 +41,57 @@ describe('StudentPlanPreviewComponent', () => {
     const { el, weekly } = await setup(mondayEvening);
     expect(el.textContent).toContain('Pazartesi 17:00–19:00');
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
-    expect(lines).toEqual(['Pazartesi · 17:00 · Matematik (60 dk)', 'Pazartesi · 18:00 · Fen Bilimleri (60 dk)']);
+    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Matematik (60 dk)']);
     expect(el.querySelector('a[href="/coaching-portal/plan/weekly"]')?.textContent).toContain('Takvimde düzenle');
     expect(weekly.save).not.toHaveBeenCalled();
+    expect(el.querySelector('[data-testid="unplaced-notice"]')).toBeNull();
+  });
+
+  // Paket G #41 (live 07.11): the proposal follows the student's priority and tells which courses got no time.
+  it('gives the hours by priority and names the courses without time, with the way to Müsaitliğim', async () => {
+    const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1080 }] };
+    const { component, el } = await setup(oneHour, [], [{ lessonId: 'math', priority: 3, examQuestions: 20 }, { lessonId: 'science', priority: 1, examQuestions: 20 }]);
+    const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
+    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)']);
+    const notice = el.querySelector('[data-testid="unplaced-notice"]');
+    expect(notice?.textContent?.replace(/\s+/g, ' ')).toContain('Şu dersler için saat kalmadı: Matematik. Müsaitliğine saat ekle ya da ders sayısını azalt.');
+    const edit = vi.fn(); component.editAvailability.subscribe(edit);
+    button(el, 'Müsaitliğime saat ekle')!.click();
+    expect(edit).toHaveBeenCalledOnce();
+  });
+
+  // Review of PR 126: the status container is always there, so a screen reader hears the notice when it appears.
+  it('keeps one live status container whose text changes', async () => {
+    const { el } = await setup(mondayEvening);
+    const status = el.querySelector('[data-testid="unplaced-status"]');
+    expect(status?.getAttribute('role')).toBe('status');
+    expect(status?.textContent?.trim()).toBe('');
+  });
+
+  // Review of PR 126: a saved week that leaves a chosen course without time says so, and a new proposal can be made.
+  it('names the courses without time in a saved week and makes a new proposal on request', async () => {
+    const { fixture, component, el, weekly } = await setup(mondayEvening, saved);
+    const notice = el.querySelector('[data-testid="unplaced-status"] [data-testid="unplaced-notice"]');
+    expect(notice?.textContent?.replace(/\s+/g, ' ')).toContain('Şu dersler için saat kalmadı: Fen Bilimleri.');
+    const edit = vi.fn(); component.editAvailability.subscribe(edit);
+    button(el, 'Müsaitliğime saat ekle')!.click(); expect(edit).toHaveBeenCalledOnce();
+    button(el, 'Yeni öneri oluştur')!.click(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
+    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Matematik (60 dk)']);
+    expect(el.textContent).toContain('kayıtlı haftalık düzeninin yerine geçer');
+    expect(weekly.save).not.toHaveBeenCalled();
+    button(el, 'Kayıtlı düzenime dön')!.click(); fixture.detectChanges();
+    expect(el.querySelectorAll('[data-testid="preview-slot"]').length).toBe(0);
+    button(el, 'Yeni öneri oluştur')!.click(); fixture.detectChanges();
+    button(el, 'Bu düzeni kaydet ve planı önizle')!.click(); fixture.detectChanges(); await fixture.whenStable();
+    expect(weekly.save).toHaveBeenCalledWith(1, 'Europe/Istanbul', [expect.objectContaining({ lessonId: 'science' }), expect.objectContaining({ lessonId: 'math' })]);
+  });
+
+  it('without a priority from the page the exam weight and then the name decide', async () => {
+    const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1080 }] };
+    const { el } = await setup(oneHour);
+    expect(el.querySelector('[data-testid="preview-slot"]')?.textContent).toContain('Fen Bilimleri');
+    expect(el.querySelector('[data-testid="unplaced-notice"]')?.textContent).toContain('Matematik');
   });
 
   it('saves the previewed weekly lessons only on request and then shows the plan draft preview', async () => {
@@ -51,8 +99,8 @@ describe('StudentPlanPreviewComponent', () => {
     button(el, 'Bu düzeni kaydet ve planı önizle')!.click();
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     expect(weekly.save).toHaveBeenCalledWith(null, 'Europe/Istanbul', [
-      expect.objectContaining({ lessonId: 'math', day: 'Monday', startMinute: 1020, durationMinutes: 60 }),
-      expect.objectContaining({ lessonId: 'science', day: 'Monday', startMinute: 1080, durationMinutes: 60 })]);
+      expect.objectContaining({ lessonId: 'science', day: 'Monday', startMinute: 1020, durationMinutes: 60 }),
+      expect.objectContaining({ lessonId: 'math', day: 'Monday', startMinute: 1080, durationMinutes: 60 })]);
     expect(fixture.debugElement.query(By.directive(StudentWeeklyOutcomePlanComponent))).toBeTruthy();
     expect(engine.preview).toHaveBeenCalledOnce();
     expect(el.textContent).toContain('Dersler ne zaman bitecek?');

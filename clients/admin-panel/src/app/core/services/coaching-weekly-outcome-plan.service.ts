@@ -15,6 +15,8 @@ export interface WeeklyOutcomePreview {
   issues:{lessonId:string;lessonName:string;message:string}[];
   protectedTasks?:{date:string;startMinute:number|null;title:string;minutes:number}[];
   leftOutTopics?:{lessonId:string;lessonName:string;topicId:string;topicName:string;minutes:number}[]|null;
+  /** Paket G #41: chosen courses with no lesson in the weekly draft; the yearly plan cannot include them. */
+  unscheduledLessons?:{lessonId:string;lessonName:string}[]|null;
   schedule:{tasks:WeeklyOutcomeTask[];freeMinutes:number;recommendedEndDate:string|null;lessons:{lessonId:string;lessonName:string;outcomeCount:number;weeklyMinutes:number;requiredMinutes:number;scheduledMinutes:number;remainingMinutes:number;finishDate:string|null;extraWeeklyMinutes:number}[]};
 }
 @Injectable({providedIn:'root'})

@@ -18,10 +18,11 @@ describe('StudentStudyPlanAssistantComponent', () => {
     primaryScoreType: null, foreignLanguage: null, curriculumVersionId: 'curriculum',
     coursePreferences: [{ lessonId: 'math', priority: 2, selfReportedDifficulty: 3 }],
     topicStates: [{ topicId: 'previous-topic', declaredStatus: 'Studied' as const }], startingStatusReviewed: true };
-  async function setup(over: Record<string, unknown> = {}, availability: StudyAvailability | null = null, staffStudentId: string | null = null) {
+  async function setup(over: Record<string, unknown> = {}, availability: StudyAvailability | null = null, staffStudentId: string | null = null,
+    page: { lessons: typeof lessons; courses?: { lessonId: string; priority: number; examQuestions: number | null }[] } = { lessons }) {
     const planning = { getAvailability: vi.fn((_studentId?: string | null) => of(availability)),
       saveAvailability: vi.fn((update: StudyAvailabilityUpdate) => of<StudyAvailability>({ version: (update.expectedVersion ?? 0) + 1, timeZoneId: 'Europe/Istanbul', windows: update.windows })) };
-    const weekly = { get: vi.fn(() => of({ draft: saved, lessons })), save: vi.fn(() => of({ ...saved, version: 4 })) };
+    const weekly = { get: vi.fn(() => of({ draft: saved, ...page })), save: vi.fn(() => of({ ...saved, version: 4 })) };
     const view = () => of({ context, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [], ...over });
     const learning = { get: vi.fn(view), getForStudent: vi.fn(view), catalogForStudent: vi.fn(() => of({ curriculum: null, lessons: [], topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] })),
       catalog: vi.fn((lessonId: string | null) => of({ curriculum: null, lessons: [{ id: 'math', name: 'Matematik', gradeNumber: 8, examCode: 'LGS', topicCount: 1, missingDurationCount: 0 }],
@@ -207,6 +208,40 @@ describe('StudentStudyPlanAssistantComponent', () => {
       expect(fixture.debugElement.query(By.directive(StudentStudyAvailabilityComponent))).toBeNull();
       expect(component.availability()?.windows).toEqual([{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }]);
       expect((fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement).textContent).toContain('Salı 18:00–19:00');
+    });
+
+    // Paket G #41 (live 07.11): the hours go to the student's priority first; the courses left without time are named.
+    it('follows the priority and names the courses without time, with the way to Müsaitliğim', async () => {
+      const three = [lessons[0], { id: 'tur', name: 'Türkçe', examCode: 'LGS', gradeNumber: 8 }, { id: 'din', name: 'Din Kültürü ve Ahlak Bilgisi', examCode: 'LGS', gradeNumber: 8 }];
+      const prefs = three.map(x => ({ lessonId: x.id, priority: 3, selfReportedDifficulty: null }));
+      const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1080 }] };
+      const { fixture, component } = await setup({ context: { ...context, coursePreferences: prefs } }, oneHour, null, { lessons: three,
+        courses: [{ lessonId: 'math', priority: 3, examQuestions: 20 }, { lessonId: 'tur', priority: 3, examQuestions: 20 }, { lessonId: 'din', priority: 1, examQuestions: 10 }] });
+      const status = fixture.nativeElement.querySelector('[data-testid="unplaced-status"]') as HTMLElement;
+      expect(status.getAttribute('role')).toBe('status'); expect(status.textContent?.trim()).toBe('');
+      component.createProposal(); fixture.detectChanges();
+      expect(component.proposal().map(x => x.lessonId)).toEqual(['din']);
+      // Review of PR 126: the courses are named once, in the notice (inside the same live container), not in the chat.
+      expect(component.messages().at(-1)!.content).not.toContain('Türkçe');
+      expect(status.querySelector('[data-testid="unplaced-notice"]')).toBeTruthy();
+      const notice = fixture.nativeElement.querySelector('[data-testid="unplaced-notice"]') as HTMLElement;
+      // Matematik already has a saved hour (Friday); only Türkçe is without time.
+      expect(notice.textContent?.replace(/\s+/g, ' ')).toContain('Şu dersler için saat kalmadı: Türkçe. Müsaitliğine saat ekle ya da ders sayısını azalt.');
+      (Array.from(notice.querySelectorAll('button')) as HTMLButtonElement[]).find(x => x.textContent?.trim() === 'Müsaitliğime saat ekle')!.click();
+      fixture.detectChanges(); await fixture.whenStable();
+      expect(fixture.debugElement.query(By.directive(StudentStudyAvailabilityComponent))).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('[data-testid="unplaced-notice"]')).toBeNull();
+    });
+
+    it('a teacher sees the notice without the availability action', async () => {
+      const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1050 }] };
+      const two = [lessons[0], { id: 'tur', name: 'Türkçe', examCode: 'LGS', gradeNumber: 8 }, { id: 'din', name: 'Din Kültürü ve Ahlak Bilgisi', examCode: 'LGS', gradeNumber: 8 }];
+      const { fixture, component } = await setup({ context: { ...context, coursePreferences: two.map(x => ({ lessonId: x.id, priority: 3, selfReportedDifficulty: null })) } },
+        oneHour, 'student-1', { lessons: two, courses: [] });
+      component.createProposal(); fixture.detectChanges();
+      const notice = fixture.nativeElement.querySelector('[data-testid="unplaced-notice"]') as HTMLElement;
+      expect(notice.textContent).toContain('Şu dersler için saat kalmadı: Türkçe.');
+      expect(notice.querySelector('button')).toBeNull();
     });
 
     it('without saved availability asks once and saves the answer as the availability before proposing', async () => {
