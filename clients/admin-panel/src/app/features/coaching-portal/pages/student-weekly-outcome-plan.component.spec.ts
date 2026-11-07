@@ -54,6 +54,18 @@ describe('weekly outcome plan preview',()=>{
   it('invalidates the preview when dates change and retains it read-only after conflict',async ()=>{
     const{c,service}=await setup();service.preview.mockReturnValue(of({...short,canCreate:true}) as any);c.generatePreview();c.confirmed=true;service.create.mockReturnValue(throwError(()=>({status:409,error:{message:'Kaynak değişti'}})));c.save();expect(c.stale()).toBe(true);expect(c.error()).toBe('Kaynak değişti');expect(c.preview()).not.toBeNull();c.changed();expect(c.preview()).toBeNull();expect(c.confirmed).toBe(false);
   });
+  // Paket G #41: a chosen course with no weekly lesson gets no time at all; the "sığmayan dersler" part names it too.
+  it('names the chosen courses that have no weekly lesson next to the courses that do not fit',async ()=>{
+    const{fixture,c,service}=await setup();const fits={...short,canCreate:true,schedule:{...short.schedule,lessons:[{...short.schedule.lessons[0],remainingMinutes:0,scheduledMinutes:80}]}};
+    service.preview.mockReturnValue(of({...fits,unscheduledLessons:[{lessonId:'tur',lessonName:'Türkçe (TYT)'},{lessonId:'fel',lessonName:'Felsefe (TYT)'}]}) as any);
+    c.generatePreview();fixture.detectChanges();const el=fixture.nativeElement as HTMLElement;
+    const part=el.querySelector('[data-testid="unscheduled-lessons"]');
+    expect(part?.textContent?.replace(/\s+/g,' ')).toContain('Türkçe (TYT), Felsefe (TYT) için haftalık düzeninde ders saati yok');
+    expect(el.textContent).toContain('HEDEF TARİHİNE SIĞMAYAN DERSLER VAR');
+    expect(el.querySelector('a[href="/coaching-portal/plan/weekly"]')).toBeTruthy();
+    service.preview.mockReturnValue(of(fits) as any);c.generatePreview();fixture.detectChanges();
+    expect(el.querySelector('[data-testid="unscheduled-lessons"]')).toBeNull();expect(el.textContent).not.toContain('SIĞMAYAN DERSLER');
+  });
   it('includes preserved pinned work in preview totals',async ()=>{
     const{c,service}=await setup();service.preview.mockReturnValue(of({...short,protectedTaskCount:1,protectedTasks:[{date:'2027-05-24',startMinute:1080,title:'Sabit görev',minutes:15}]}) as any);c.generatePreview();expect(c.totalMinutes()).toBe(15);
   });

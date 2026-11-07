@@ -1,4 +1,4 @@
-import { createStudyPlanProposal, createProposalFromWindows } from './study-plan-wizard';
+import { createStudyPlanProposal, createProposalFromWindows, lessonsWithoutTime, rankLessons, rankedWizardLessons } from './study-plan-wizard';
 import { WeeklySlot } from './weekly-calendar';
 
 describe('createStudyPlanProposal', () => {
@@ -58,6 +58,73 @@ describe('createStudyPlanProposal', () => {
       const minutes = proposal.flatMap(x => Array.from({ length: x.durationMinutes / 30 }, (_, i) => x.startMinute + i * 30));
       expect(new Set(minutes).size).toBe(minutes.length);
       expect(minutes.sort((a, b) => a - b)).toEqual([1020, 1050, 1080, 1110]);
+    });
+
+    // Paket G #41 (live 07.11): 13 YKS Sayısal courses and Pazartesi–Cuma 17:00–18:00 gave the five hours to the first five
+    // names (Biyoloji AYT, Biyoloji TYT, Coğrafya, Din Kültürü, Felsefe); Matematik and Türkçe got none.
+    describe('order of the courses (#41)', () => {
+      const week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => ({ day, startMinute: 1020, endMinute: 1080 }));
+      const yks = [
+        { id: 'bio-ayt', name: 'Biyoloji (AYT)', examCode: 'AYT', examQuestions: 13 },
+        { id: 'bio-tyt', name: 'Biyoloji (TYT)', examCode: 'TYT', examQuestions: 6 },
+        { id: 'cog', name: 'Coğrafya (TYT)', examCode: 'TYT', examQuestions: 5 },
+        { id: 'din', name: 'Din Kültürü ve Ahlak Bilgisi (TYT)', examCode: 'TYT', examQuestions: 5 },
+        { id: 'fel', name: 'Felsefe (TYT)', examCode: 'TYT', examQuestions: 5 },
+        { id: 'fiz-ayt', name: 'Fizik (AYT)', examCode: 'AYT', examQuestions: 14 },
+        { id: 'kim-ayt', name: 'Kimya (AYT)', examCode: 'AYT', examQuestions: 13 },
+        { id: 'mat-ayt', name: 'Matematik (AYT)', examCode: 'AYT', examQuestions: 40 },
+        { id: 'mat-tyt', name: 'Matematik (TYT)', examCode: 'TYT', examQuestions: 40 },
+        { id: 'tar', name: 'Tarih (TYT)', examCode: 'TYT', examQuestions: 5 },
+        { id: 'tur', name: 'Türkçe (TYT)', examCode: 'TYT', examQuestions: 40 },
+        { id: 'fiz-tyt', name: 'Fizik (TYT)', examCode: 'TYT', examQuestions: 7 },
+        { id: 'kim-tyt', name: 'Kimya (TYT)', examCode: 'TYT', examQuestions: 7 }
+      ];
+
+      it('gives the hours to the student\'s priority first, not to the first names', () => {
+        const lessons = yks.map(x => ({ ...x, priority: ['fel', 'din'].includes(x.id) ? 1 : 3 }));
+        const proposal = createProposalFromWindows(week, lessons, []);
+        expect(proposal.map(x => x.lessonId).slice(0, 2)).toEqual(['din', 'fel']);
+        expect(proposal).toHaveLength(5);
+        expect(proposal.every(x => x.durationMinutes === 60)).toBe(true);
+      });
+
+      it('breaks a tie of priority by the questions the course has in the exam, then by name', () => {
+        const proposal = createProposalFromWindows(week, yks.map(x => ({ ...x, priority: 3 })), []);
+        expect(proposal.map(x => [x.day, x.lessonId])).toEqual([
+          ['Monday', 'mat-ayt'], ['Tuesday', 'mat-tyt'], ['Wednesday', 'tur'], ['Thursday', 'fiz-ayt'], ['Friday', 'bio-ayt']]);
+      });
+
+      it('uses the topic count when the exam weight is not known for every course', () => {
+        const lessons = [{ id: 'a', name: 'Ağırlıksız', examCode: 'TYT', topicCount: 4 }, { id: 'b', name: 'Büyük', examCode: 'TYT', examQuestions: 1, topicCount: 30 }];
+        expect(rankLessons(lessons, []).map(x => x.id)).toEqual(['b', 'a']);
+        expect(rankLessons(lessons.map(x => ({ ...x, topicCount: undefined })), []).map(x => x.id)).toEqual(['a', 'b']);
+      });
+
+      it('keeps the least planned course first among equals and never moves saved cards', () => {
+        const existing: WeeklySlot[] = [{ id: 'saved', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Monday', startMinute: 1020, durationMinutes: 60 }];
+        const proposal = createProposalFromWindows([{ day: 'Monday', startMinute: 1020, endMinute: 1140 }], lessons, existing);
+        expect(proposal.map(x => [x.startMinute, x.lessonId])).toEqual([[1080, 'science']]);
+        // A higher priority still comes first, even with saved time.
+        const ranked = rankLessons([{ ...lessons[0], priority: 1 }, { ...lessons[1], priority: 2 }], existing);
+        expect(ranked.map(x => x.id)).toEqual(['math', 'science']);
+      });
+
+      it('names the courses that got no time, the most important first', () => {
+        const lessons = yks.map(x => ({ ...x, priority: 3 }));
+        const proposal = createProposalFromWindows(week, lessons, []);
+        const unplaced = lessonsWithoutTime(lessons, [], proposal);
+        expect(unplaced).toHaveLength(8);
+        expect(unplaced.map(x => x.id)).toEqual(['kim-ayt', 'fiz-tyt', 'kim-tyt', 'bio-tyt', 'cog', 'din', 'fel', 'tar']);
+        expect(lessonsWithoutTime(lessons.slice(0, 2), [{ ...proposal[0], lessonId: 'BIO-AYT' }], []).map(x => x.id)).toEqual(['bio-tyt']);
+      });
+
+      it('takes the priority and the exam weight from the weekly draft page', () => {
+        const merged = rankedWizardLessons([{ id: 'A', name: 'A', examCode: 'TYT', gradeNumber: null, topicCount: 3 }, { id: 'b', name: 'B', examCode: 'TYT', gradeNumber: null }],
+          [{ lessonId: 'a', priority: 2, examQuestions: 40 }]);
+        expect(merged).toEqual([
+          { id: 'A', name: 'A', examCode: 'TYT', priority: 2, examQuestions: 40, topicCount: 3 },
+          { id: 'b', name: 'B', examCode: 'TYT', priority: 3, examQuestions: null, topicCount: undefined }]);
+      });
     });
 
     it('returns nothing without windows or lessons', () => {

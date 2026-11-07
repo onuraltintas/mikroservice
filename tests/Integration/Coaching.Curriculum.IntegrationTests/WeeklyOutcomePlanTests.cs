@@ -97,6 +97,19 @@ public sealed class WeeklyOutcomePlanTests
         f.Db.Add(weekly);f.Db.Add(Coaching.Domain.Profiles.CoachingStudentProfile.Create(f.User.UserId.Value));f.Db.Add(StudentLearningContext.Create(f.User.UserId.Value,2026,LearningPurpose.Lgs,2027,null,null));await f.Db.SaveChangesAsync();
         return new(f.Db,new CoachingAccessPolicy(f.User),new WeeklyStudyDraftTests.Catalog(f.Db),TimeProvider.System);
     }
+    // Paket G #41 (07.11.2026): a chosen course without a weekly lesson is named, not silently left out of the yearly plan.
+    [Fact]
+    public async Task PreviewNamesChosenCoursesWithoutAWeeklyLesson()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);
+        var math=await f.Db.StudyCatalogLessons.SingleAsync();var turkish=StudyCatalogLesson.Create("test","g41-turkish","Türkçe",8,"LGS");turkish.SetActive(true);
+        var context=await f.Db.StudentLearningContexts.Include(x=>x.CoursePreferences).SingleAsync();f.Db.Add(turkish);
+        context.ReplaceSelections([StudentCoursePreference.Create(context.Id,math.Id,3,null),StudentCoursePreference.Create(context.Id,turkish.Id,1,null)],[],false);
+        await f.Db.SaveChangesAsync();
+        var preview=await service.PreviewAsync(Input,default);
+        var missing=Assert.Single(preview.UnscheduledLessons!);Assert.Equal(new WeeklyUnscheduledLesson(turkish.Id,"Türkçe"),missing);
+        Assert.True(preview.CanCreate);Assert.DoesNotContain(preview.Schedule.Lessons,x=>x.LessonId==turkish.Id);
+    }
     [Fact]
     public async Task PreviewIsReadOnly_AndConfirmationCreatesTimedDraftWithoutChangingOldWork()
     {
