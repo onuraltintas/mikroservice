@@ -6,6 +6,9 @@ import { isRoleProduct, productRoleLabel, RoleProduct, userProductRoles } from '
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
+/** Paket F F4: shown after the user's last role in a service was removed. */
+export const LAST_PRODUCT_ROLE_WARNING = 'Bu serviste başka rolü kalmadı; kullanıcı bu servise giriş yapamaz.';
+
 @Component({
     selector: 'app-role-management-modal',
     standalone: true,
@@ -191,10 +194,16 @@ export class RoleManagementModalComponent implements OnInit {
         if (!userId || this.busy() || !this.canRemove(assignment)) return;
 
         const product = isRoleProduct(assignment.product) ? assignment.product : null;
+        // F4: without a role in the service the user can no longer sign in there (access stays as it is).
+        const lastRoleInProduct = product !== null && !this.assignments().some(other =>
+            other.product === product && other.role !== assignment.role);
         this.actionLoading.set(this.roleKey(assignment));
         this.identityService.removeRole(userId, assignment.role, product).subscribe({
             next: () => {
                 this.toaster.success(`${productRoleLabel(assignment)} rolü başarıyla kaldırıldı.`);
+                if (lastRoleInProduct) {
+                    this.toaster.warning(LAST_PRODUCT_ROLE_WARNING);
+                }
                 this.changed.set(true);
                 this.refreshUser();
             },

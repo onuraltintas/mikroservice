@@ -98,6 +98,20 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
                 "Bu platform için oturum erişiminiz yok. Lütfen yeniden giriş yapın."));
         }
 
+        // F4: the same rule as sign-in. A session whose account lost its last role in the product
+        // cannot be extended into a role-less token.
+        if (!isSystemAdministrator
+            && (targetProduct is not { } sessionProduct
+                || !ProductSignInPolicy.HasLiveRoleInProduct(user, sessionProduct)))
+        {
+            await _userRepository.RevokeRefreshTokenAsync(
+                request.RefreshToken,
+                "system",
+                "no role in the session's product",
+                cancellationToken);
+            return Result.Failure<RefreshTokenResponse>(ProductSignInPolicy.NoRoleForProduct());
+        }
+
         var isPrivilegedAdministrator = productRoles.Any(role =>
             role.Role is not null
             && (string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase)

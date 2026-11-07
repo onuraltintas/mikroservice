@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Authorization;
 using EduPlatform.Shared.Security.Interfaces;
+using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
@@ -114,6 +115,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             return Result.Failure<LoginResponse>(new Error(
                 "Auth.ProductAccessDenied",
                 "Bu platform için hesabınıza erişim yetkisi tanımlı değil."));
+        }
+
+        // F4: an active access row without any role in the product would issue a role-less token.
+        if (!isSystemAdministrator
+            && !ProductSignInPolicy.HasLiveRoleInProduct(user, request.Product!.Value))
+        {
+            return Result.Failure<LoginResponse>(ProductSignInPolicy.NoRoleForProduct());
         }
 
         if (!user.EmailConfirmed && !isSystemAdministrator)

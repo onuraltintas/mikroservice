@@ -1,7 +1,7 @@
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService, hasRequiredRole, hasRole } from './auth.service';
+import { AuthService, hasManagementRole, hasRequiredRole, hasRole } from './auth.service';
 
 // Parents have a read-only panel of their linked children (roadmap Y7).
 export const COACHING_PORTAL_ROLES = ['Student', 'Teacher', 'Parent'] as const;
@@ -39,6 +39,38 @@ export const authGuard: CanActivateFn = async (_route, state) => {
     // Redirect to login
     router.navigate(['/auth/login'], { queryParams: { returnUrl: state.url } });
     return false;
+};
+
+/**
+ * Paket F F4 (live 07.11.2026): the /dashboard management shell needs a management role. A Koçluk student,
+ * teacher or parent goes to their own panel; any other session (no role at all) is ended and the login page says why.
+ * Runs after authGuard, which handles a missing session.
+ */
+export const managementShellGuard: CanActivateFn = async () => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+    const platformId = inject(PLATFORM_ID);
+
+    if (isPlatformServer(platformId)) {
+        return true;
+    }
+
+    if (!(await authService.waitForAuth())) {
+        return false;
+    }
+
+    if (hasManagementRole(authService.userProfile())) {
+        return true;
+    }
+
+    // Only a Koçluk-scoped portal role may be sent on; anything else would bounce back here.
+    const landing = authService.getLandingRoute();
+    if (landing && hasCoachingPortalRole(authService.userProfile())) {
+        return router.parseUrl(landing);
+    }
+
+    await authService.endRoleLessSession();
+    return router.parseUrl('/auth/login');
 };
 
 /**

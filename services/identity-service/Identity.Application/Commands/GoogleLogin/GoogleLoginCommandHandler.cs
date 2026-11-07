@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Authorization;
 using Identity.Application.Commands.Login;
+using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
 using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
@@ -71,6 +72,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             googleUser.GoogleId,
             cancellationToken);
         var userWasLinkedByGoogleSubject = user is not null;
+        // F4: an account created (with its default role) in this request; the others need a role in the product.
+        var provisionedInThisRequest = false;
 
         if (user is null)
         {
@@ -82,9 +85,9 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             if (request.Product is null)
                 return ProductAccessDenied();
         }
-        else if (!HasSystemAdminRole(user) && !HasRequestedProductAccess(user, request.Product))
+        else if (ProductSignInDenied(user, request.Product) is { } initialDenial)
         {
-            return ProductAccessDenied();
+            return initialDenial;
         }
         
         if (user == null)
@@ -153,6 +156,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             {
                userId = regResult.Value;
                createdNewUser = true;
+               provisionedInThisRequest = true;
                // Reload user to get fresh entity
                user = await _userRepository.GetByIdAsync(userId, cancellationToken);
                if (user is not null && acceptedLegalPages.Count > 0)
@@ -181,9 +185,9 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                         _userRepository.TrackProductAccessIfNew(user, request.Product.Value);
                     }
                 }
-                else if (!HasSystemAdminRole(user) && !HasRequestedProductAccess(user, request.Product))
+                else if (ProductSignInDenied(user, request.Product) is { } raceDenial)
                 {
-                    return ProductAccessDenied();
+                    return raceDenial;
                 }
 
                 if (!createdNewUser && GoogleAuthenticationRules.RequiresExplicitLink(user, request.Product))
@@ -302,9 +306,9 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         } 
         else
         {
-            if (!HasSystemAdminRole(user) && !HasRequestedProductAccess(user, request.Product))
+            if (ProductSignInDenied(user, request.Product) is { } existingAccountDenied)
             {
-                return ProductAccessDenied();
+                return existingAccountDenied;
             }
 
             if (!user.IsActive)
@@ -389,9 +393,13 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             }
         }
 
-        if (!HasSystemAdminRole(user) && !HasRequestedProductAccess(user, request.Product))
+        // An account provisioned above already got its default role through the identity service.
+        var finalDenial = provisionedInThisRequest
+            ? HasSystemAdminRole(user) || HasRequestedProductAccess(user, request.Product) ? null : ProductAccessDenied()
+            : ProductSignInDenied(user, request.Product);
+        if (finalDenial is not null)
         {
-            return ProductAccessDenied();
+            return finalDenial;
         }
 
         // Same rule as password login: any account with an enrolled authenticator.
@@ -456,6 +464,21 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                 "Privileged Google login MFA policy could not be read; keeping MFA required.");
             return true;
         }
+    }
+
+    /// <summary>
+    /// The shared product sign-in rule (F4): SystemAdmin, or active access to the product and a live role in it.
+    /// Null when the account may sign in; otherwise the error to return.
+    /// </summary>
+    private static Result<LoginResponse>? ProductSignInDenied(User user, PlatformProduct? product)
+    {
+        if (HasSystemAdminRole(user))
+            return null;
+        if (product is not { } requestedProduct || !user.HasProductAccess(requestedProduct))
+            return ProductAccessDenied();
+        return ProductSignInPolicy.HasLiveRoleInProduct(user, requestedProduct)
+            ? null
+            : Result.Failure<LoginResponse>(ProductSignInPolicy.NoRoleForProduct());
     }
 
     private static bool HasRequestedProductAccess(User user, PlatformProduct? product) =>

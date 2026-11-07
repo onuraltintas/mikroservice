@@ -69,6 +69,30 @@ export function hasRole(user: UserProfile | null, role: string): boolean {
     return !!user && (user.role === role || user.roles.includes(role));
 }
 
+/**
+ * Paket F F4 (live 07.11.2026): roles that only open the Koçluk portal. Any other role (SystemAdmin, Editor,
+ * InstitutionAdmin, a custom staff role, ...) is a management role and may open the /dashboard shell.
+ */
+export const PORTAL_ONLY_ROLES: readonly string[] = ['Student', 'Teacher', 'Parent'];
+
+export function hasManagementRole(user: Pick<UserProfile, 'roles'> | null): boolean {
+    return !!user && user.roles.some(role => !!role && !PORTAL_ONLY_ROLES.includes(role));
+}
+
+/** The identity service's code for an account with product access but no role in that product. */
+export const NO_ROLE_FOR_PRODUCT_CODE = 'Auth.NoRoleForProduct';
+
+/** The same error shape as the identity service, for a session that reached the client without any role. */
+export function noRoleForProductError(): { status: number; error: { code: string; description: string } } {
+    return {
+        status: 403,
+        error: {
+            code: NO_ROLE_FOR_PRODUCT_CODE,
+            description: 'Bu platformda hesabınıza tanımlı aktif bir rol yok. Mevcut hesabınızla yeniden katılmak için kayıt sayfasındaki "Mevcut hesabımla katıl" seçeneğini kullanabilirsiniz.'
+        }
+    };
+}
+
 export function hasRequiredAccess(
     user: UserProfile | null,
     permission: string,
@@ -94,6 +118,8 @@ export class AuthService implements OnDestroy {
     private refreshTimer?: ReturnType<typeof setTimeout>;
     private refreshPromise?: Promise<boolean>;
     private oauthEventsSubscription?: Subscription;
+    /** An error to show on the login page after a role-less session was ended outside it (F4). */
+    private signInNotice: ReturnType<typeof noRoleForProductError> | null = null;
 
     public isDoneLoading$ = new BehaviorSubject<boolean>(false);
 
@@ -207,7 +233,7 @@ export class AuthService implements OnDestroy {
             { challengeToken, code, recoveryCode },
             { withCredentials: true }));
         this.applySession(response);
-        await this.router.navigate([this.getLandingRoute()]);
+        await this.navigateToLanding();
     }
 
     async refreshSession(): Promise<boolean> {
@@ -257,6 +283,11 @@ export class AuthService implements OnDestroy {
     }
 
     async logout() {
+        await this.endSession();
+        await this.router.navigate(['/auth/login']);
+    }
+
+    private async endSession() {
         this.clearSession();
 
         try {
@@ -275,7 +306,32 @@ export class AuthService implements OnDestroy {
         }
 
         this.oauthService.logOut();
-        await this.router.navigate(['/auth/login']);
+    }
+
+    /**
+     * Paket F F4: opens the page for the signed-in roles. A session without any role in the product (the server
+     * refuses those since F4; this guards an older or unexpected token) is ended and the login error is thrown,
+     * so it never reaches the management shell.
+     */
+    async navigateToLanding(): Promise<void> {
+        const route = this.getLandingRoute();
+        if (!route) {
+            await this.endSession();
+            throw noRoleForProductError();
+        }
+        await this.router.navigate([route]);
+    }
+
+    /** Ends a role-less session found by a route guard; the login page shows why (see consumeSignInNotice). */
+    async endRoleLessSession(): Promise<void> {
+        await this.endSession();
+        this.signInNotice = noRoleForProductError();
+    }
+
+    consumeSignInNotice(): ReturnType<typeof noRoleForProductError> | null {
+        const notice = this.signInNotice;
+        this.signInNotice = null;
+        return notice;
     }
 
     private applySession(response: AuthSessionResponse) {
@@ -312,7 +368,7 @@ export class AuthService implements OnDestroy {
         }
 
         this.applySession(response as AuthSessionResponse);
-        await this.router.navigate([this.getLandingRoute()]);
+        await this.navigateToLanding();
         return {
             authenticated: true,
             requiresMfa: false,
@@ -373,12 +429,13 @@ export class AuthService implements OnDestroy {
         return hasRequiredPermission(this.userProfile(), permission);
     }
 
-    getLandingRoute(): string {
-        const role = this.userProfile()?.role;
+    /** The first page for the signed-in roles, or null when the session has no role at all (F4). */
+    getLandingRoute(): string | null {
+        const profile = this.userProfile();
+        const role = profile?.role;
         if (role === 'Parent') return '/coaching-portal/parent';
-        return ['Student', 'Teacher'].includes(role ?? '')
-            ? '/coaching-portal'
-            : '/dashboard';
+        if (['Student', 'Teacher'].includes(role ?? '')) return '/coaching-portal';
+        return hasManagementRole(profile) ? '/dashboard' : null;
     }
 
     private parseJwt(token: string): any {
