@@ -96,6 +96,19 @@ describe('weekly outcome plan preview',()=>{
     expect(c.endDate).toBe('2027-06-12');expect(fixture.nativeElement.textContent).toContain('resmî tarih');
     c.saveExamDate('bad');expect(service.setExamDate).toHaveBeenCalledTimes(2);expect(c.error()).toContain('tarih');
   });
+  // G2 (#40): a year-only target with no catalog date yet: the plan ends before an estimated date, said as such.
+  it('says when the exam date is an estimate',async ()=>{
+    const{fixture,c,service}=await setup();
+    service.setExamDate.mockImplementation((date:string|null)=>of({startDate:request.startDate,endDate:date?'2028-06-19':'2028-06-16',weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[],
+      examDate:date??'2028-06-17',endDateSource:date?'Student':'Estimated',catalogExamDate:'2028-06-17',catalogExamDateEstimated:true}) as never);
+    c.saveExamDate(null);fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="exam-date-note"]').textContent).toContain('(tahmini; resmî tarih henüz açıklanmadı)');
+    // G2 review (M2): the estimate sets the default end only; a later end is no date issue and the field has no maximum.
+    expect(c.lastDay()).toBeNull();c.endDate='2028-07-01';expect(c.dateIssue()).toBeNull();
+    expect(fixture.nativeElement.querySelector('#date-rules').textContent).toContain('tahmini olduğundan bitişi sınırlamaz');
+    c.saveExamDate('2028-06-20');fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Tahmini tarihe dön (17.06.2028)');
+  });
   it('keeps the exam date control off the teacher view',async ()=>{
     const{fixture,c,service}=await setup('student-42');
     expect(fixture.nativeElement.querySelector('[data-testid="exam-date-input"]')).toBeNull();

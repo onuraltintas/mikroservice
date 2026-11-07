@@ -8,6 +8,19 @@ import { vi } from 'vitest';
 import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 describe('Coaching owned profile', () => {
+  // G1 (07.11.2026): YKS (and so the OBP) ends with lise; a university student's or graduate's Profilim has no diploma field.
+  it('asks the diploma grade of a lise graduate but not at university', async () => {
+    const { fixture, component, http } = await setup();
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'HighSchoolGraduate', gradeLevel: null,
+      shareProgressWithTeachers: true, isActive: true, diplomaGrade: 80 }, examAsksDiploma: true } });
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[name="diplomaGrade"]')).not.toBeNull();
+    for (const stage of ['UniversityStudent', 'UniversityGraduate'] as const) {
+      component.stage = stage; fixture.detectChanges(); await fixture.whenStable();
+      expect(component.diplomaApplies(component.student!)).toBe(false);
+      expect(fixture.nativeElement.querySelector('[name="diplomaGrade"]')).toBeNull();
+    }
+  });
   it('lets a student fill education fields and save them through the rendered form', async () => {
     const { fixture, component, http } = await setup();
     const student = { version: 1, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true };

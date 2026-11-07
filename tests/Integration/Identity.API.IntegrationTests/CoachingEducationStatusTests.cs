@@ -14,11 +14,11 @@ public sealed class CoachingEducationStatusTests
     [Theory]
     [InlineData(CoachingEducationStatus.Student, 5, "Lgs")]
     [InlineData(CoachingEducationStatus.Student, 8, "Lgs")]
-    [InlineData(CoachingEducationStatus.Student, 9, "Yks,Yds,Yokdil")]
-    [InlineData(CoachingEducationStatus.Student, 12, "Yks,Yds,Yokdil")]
-    [InlineData(CoachingEducationStatus.HighSchoolGraduate, null, "Yks,Yds,Yokdil")]
-    [InlineData(CoachingEducationStatus.UniversityStudent, null, "Yds,Yokdil,Yks")]
-    [InlineData(CoachingEducationStatus.UniversityGraduate, null, "Ags,Yds,Yokdil,Yks")]
+    [InlineData(CoachingEducationStatus.Student, 9, "Yks")]
+    [InlineData(CoachingEducationStatus.Student, 12, "Yks")]
+    [InlineData(CoachingEducationStatus.HighSchoolGraduate, null, "Yks")]
+    [InlineData(CoachingEducationStatus.UniversityStudent, null, "Ags,Yds,Yokdil")]
+    [InlineData(CoachingEducationStatus.UniversityGraduate, null, "Ags,Yds,Yokdil")]
     [InlineData(CoachingEducationStatus.Unknown, null, "Lgs,Yks,Ags,Yds,Yokdil")]
     public void TheExamsFollowTheEducationTableInItsOrder(CoachingEducationStatus status, int? grade, string exams)
     {
@@ -28,10 +28,15 @@ public sealed class CoachingEducationStatusTests
     }
 
     [Fact]
-    public void AgsIsOnlyForUniversityGraduates()
+    // G1 (user decision 07.11.2026): AGS, YDS and YÖKDİL are for university students and graduates; YKS ends with lise.
+    public void UniversityExamsAreOnlyForUniversityStudentsAndGraduates()
     {
-        foreach (var status in Enum.GetValues<CoachingEducationStatus>().Where(x => x is not (CoachingEducationStatus.UniversityGraduate or CoachingEducationStatus.Unknown)))
-            LearningPurposes.FitsEducation(LearningPurpose.Ags, status, status == Student ? 12 : null).Should().BeFalse(status.ToString());
+        foreach (var status in Enum.GetValues<CoachingEducationStatus>().Where(x => x is not (CoachingEducationStatus.UniversityStudent
+            or CoachingEducationStatus.UniversityGraduate or CoachingEducationStatus.Unknown)))
+            foreach (var purpose in new[] { LearningPurpose.Ags, LearningPurpose.Yds, LearningPurpose.Yokdil })
+                LearningPurposes.FitsEducation(purpose, status, status == Student ? 12 : null).Should().BeFalse($"{purpose} for {status}");
+        foreach (var status in new[] { CoachingEducationStatus.UniversityStudent, CoachingEducationStatus.UniversityGraduate })
+            LearningPurposes.FitsEducation(LearningPurpose.Yks, status, null).Should().BeFalse(status.ToString());
     }
 
     [Theory]
@@ -39,10 +44,11 @@ public sealed class CoachingEducationStatusTests
     [InlineData(CoachingEducationStatus.Student, 11, true)]
     [InlineData(CoachingEducationStatus.Student, 12, true)]
     [InlineData(CoachingEducationStatus.HighSchoolGraduate, null, true)]
-    [InlineData(CoachingEducationStatus.UniversityStudent, null, true)]
-    [InlineData(CoachingEducationStatus.UniversityGraduate, null, true)]
+    [InlineData(CoachingEducationStatus.UniversityStudent, null, false)]
+    [InlineData(CoachingEducationStatus.UniversityGraduate, null, false)]
     [InlineData(CoachingEducationStatus.Unknown, null, false)]
-    public void TheDiplomaGradeIsAskedForYksFromEleventhGradeAndForEveryoneOutOfHighSchool(CoachingEducationStatus status, int? grade, bool asked)
+    // G1 (07.11.2026): university students and graduates no longer choose YKS, so the OBP is asked of lise students and graduates only.
+    public void TheDiplomaGradeIsAskedForYksFromEleventhGradeAndOfALiseGraduate(CoachingEducationStatus status, int? grade, bool asked)
     {
         LearningPurposes.DiplomaApplies(LearningPurpose.Yks, status, grade).Should().Be(asked);
         LearningPurposes.DiplomaApplies(LearningPurpose.Yds, status, grade).Should().BeFalse("only YKS uses the OBP");

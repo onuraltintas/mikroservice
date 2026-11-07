@@ -12,7 +12,8 @@ export interface ParentCoachingWeek {
   weekStart: string; planned: number; completed: number;
   overdue: { title: string; date: string; kind: string }[];
   nextSession: { startsAt: string; title: string; teacherName: string } | null;
-  examCountdown: { name: string; date: string; daysLeft: number } | null;
+  /** G2 review (M3): estimated is true when the year has no exam date yet (shown as "tahmini"). */
+  examCountdown: { name: string; date: string; daysLeft: number; source?: string; estimated?: boolean } | null;
   attention: { kind: string; text: string; link?: string | null }[];
 }
 /** `GET api/coaching/parents/me/children/{id}/adherence?weeks=8` (Coaching V3). */

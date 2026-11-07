@@ -52,12 +52,14 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   }
   /** T4: K4 date rules shown on the fields — start from today, finish at the latest on the day before the exam. */
   readonly todayIso=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  lastDay(){const exam=this.options()?.examDate;return exam?dayBefore(exam):null;}
+  /** G2 review (M2): an estimated exam date sets the default end only; it is no limit. */
+  lastDay(){const o=this.options();const exam=o?.examDate;return exam&&o?.endDateSource!=='Estimated'?dayBefore(exam):null;}
+  estimated(){return this.options()?.endDateSource==='Estimated';}
   dateIssue(){if(this.startDate&&this.startDate<this.todayIso)return'Başlangıç tarihi bugünden önce olamaz.';const last=this.lastDay();if(last&&this.endDate>last)return`Bitiş en geç sınavdan bir gün önce olabilir (${last.split('-').reverse().join('.')}).`;return null;}
   /** K4 (31.10.2026): the longest deadline is the day before the exam; the server rejects anything later. */
   extendedDeadline():string|null{
     const end=this.preview()?.schedule.recommendedEndDate;if(!end)return null;
-    const exam=this.options()?.examDate;const last=exam?dayBefore(exam):null;
+    const last=this.lastDay();
     const target=last&&end>last?last:end;return target>this.endDate?target:null;
   }
   canExtendDeadline(){return !!this.extendedDeadline();}

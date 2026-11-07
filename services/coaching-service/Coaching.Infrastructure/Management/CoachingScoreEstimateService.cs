@@ -290,9 +290,8 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
         ScoreTargetExam? targetExam = null;
         if (purpose is LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil)
         {
-            var target = context!.TargetExamDate is { } own && own > today ? new StudyPlanning.CoachingExamSessions.Target("Sınavın", own, "Student")
-                : await StudyPlanning.CoachingExamSessions.ChosenAsync(db, context.TargetExamSessionId, today, ct)
-                  ?? await StudyPlanning.CoachingExamSessions.NextCatalogAsync(db, [LearningPurposes.CatalogExamCode(purpose.Value)!], today, ct);
+            // G2 (#40): a year-only target counts down to its estimated date, never to an earlier year's session.
+            var target = await StudyPlanning.CoachingExamSessions.ForStudentAsync(db, studentId, [LearningPurposes.CatalogExamCode(purpose.Value)!], today, ct);
             targetExam = target is null ? null : new(target.Name, target.Date, target.Date.DayNumber - today.DayNumber, target.Source);
         }
         if (models.Count == 0 && purpose is not (LearningPurpose.Ags or LearningPurpose.Yds or LearningPurpose.Yokdil))

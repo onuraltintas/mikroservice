@@ -149,6 +149,16 @@ describe('ParentCoachingTabComponent', () => {
     expect(week.textContent).toContain('Haftalık görüşme'); expect(week.textContent).toContain('Mehmet Kaya');
     expect(week.textContent).toContain('YKS 2027'); expect(week.textContent).toContain('230 gün');
     expect(fixture.nativeElement.querySelector('[data-testid="parent-attention"]')?.textContent).toContain('2 görev gecikti');
+    expect(week.querySelector('[data-testid="exam-estimated"]')).toBeNull();
+  });
+
+  // G2 review (M3): a year without an exam date yet counts down to an estimated day, said as such.
+  it('marks an estimated exam countdown', () => {
+    const fixture = setup(parentServiceMock({ getCoachingWeek: vi.fn(() => of({ ...parentWeek,
+      examCountdown: { name: 'YKS', date: '2028-06-17', daysLeft: 590, source: 'Estimated', estimated: true } })) }));
+    const week = fixture.nativeElement.querySelector('[data-testid="parent-week"]') as HTMLElement;
+    expect(week.textContent).toContain('yaklaşık 590 gün');
+    expect(week.querySelector('[data-testid="exam-estimated"]')!.textContent).toContain('tahmini tarih');
   });
 
   it('draws the last weeks of plan adherence as labelled bars', () => {

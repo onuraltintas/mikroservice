@@ -35,7 +35,13 @@ public sealed record LearningSetupView(StudentLearningContext? Context, string N
     public bool PurposeNotForEducation { get; init; }
     /// <summary>Paket D (#8): the exams that fit the grade on the profile (see <see cref="LearningPurposes.FitsEducation"/>).</summary>
     public IReadOnlyList<LearningPurpose> AllowedPurposes { get; init; } = [];
+    /// <summary>G2 (#40): the education on the profile; Sınavım marks the exam year expected for the grade ("önerilen").</summary>
+    public Coaching.Domain.Profiles.CoachingEducationStatus EducationStatus { get; init; }
+    public int? GradeLevel { get; init; }
+    /// <summary>G2 review (M1): per catalog exam code, the first year whose exam has not happened yet (no earlier year is offered).</summary>
+    public IReadOnlyList<LearningExamOpenYear> ExamOpenYears { get; init; } = [];
 }
+public sealed record LearningExamOpenYear(string ExamCode, int Year);
 public sealed record LearningExamSessionView(Guid Id, string ExamCode, string ExamName, DateOnly Date, string Label,
     DateOnly? ApplicationStart, DateOnly? ApplicationEnd);
 public sealed record LearningLessonView(Guid Id, string Name, int? GradeNumber, string? ExamCode, int TopicCount, int MissingDurationCount);
