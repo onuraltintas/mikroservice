@@ -14,11 +14,15 @@ describe('first-login wizard flow (Paket C #3)', () => {
   const ids = (answers: Answers) => questions(answers, context).map(x => x.id);
 
   it('offers only the exams the server allows for the grade and does not prefill one that no longer fits (Paket D #8, review M1)', () => {
-    const allowed: FlowContext = { ...context, allowedPurposes: ['Yks', 'Yds', 'Yokdil'] };
-    expect(questions({ ...personal, ...lise, education: a('10') }, allowed).find(x => x.id === 'purpose')!.choices!.map(x => x.value)).toEqual(['Yks', 'Yds', 'Yokdil']);
+    // G1 (07.11.2026): a lise student YKS only; a university student or graduate AGS, YDS and YÖKDİL (the server's list).
+    const allowed: FlowContext = { ...context, allowedPurposes: ['Yks'] };
+    expect(questions({ ...personal, ...lise, education: a('10') }, allowed).find(x => x.id === 'purpose')!.choices!.map(x => x.value)).toEqual(['Yks']);
+    const university: FlowContext = { ...context, allowedPurposes: ['Ags', 'Yds', 'Yokdil'] };
+    expect(questions({ ...personal, stage: a('UniversityStudent'), education: undefined }, university).find(x => x.id === 'purpose')!.choices!.map(x => x.label))
+      .toEqual(['AGS / ÖABT', 'YDS', 'YÖKDİL']);
     // An older API sends no list: every exam is offered.
     expect(questions(personal, context).find(x => x.id === 'purpose')!.choices!.length).toBe(5);
-    const saved = { status: 'InProgress', nextStep: 2, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026, examSessions: [], allowedPurposes: ['Yks', 'Yds', 'Yokdil'],
+    const saved = { status: 'InProgress', nextStep: 2, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026, examSessions: [], allowedPurposes: ['Yks'],
       answers: { birthDate: '2009-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student', gradeLevel: 11,
         graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: 'lgs-27', targetExamYear: 2027,
         diplomaGrade: null, diplomaGradeEstimated: false, target: null, targetLocked: false } } as unknown as OnboardingView;
@@ -65,10 +69,21 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(ids({ ...personal, purpose: a('Yks'), yksField: a('SAY') })).not.toContain('diploma');
     expect(ids({ ...personal, ...lise, education: a('11'), purpose: a('Yks'), yksField: a('SAY') })).toContain('diploma');
     expect(ids({ ...personal, stage: a('HighSchoolGraduate'), education: undefined, purpose: a('Yks'), yksField: a('SAY') })).toContain('diploma');
+    // G1: an older YKS answer of a university student does not ask the OBP (the exam is asked again anyway).
+    expect(ids({ ...personal, stage: a('UniversityStudent'), education: undefined, purpose: a('Yks'), yksField: a('SAY') })).not.toContain('diploma');
+    // G2 (#40): the catalog session, then the later years without a date; an 8th grader's LGS is this school year's.
     const lgsSession = questions({ ...personal, purpose: a('Lgs') }, context).find(x => x.id === 'session')!;
-    expect(lgsSession.choices).toEqual([{ value: 'session:lgs-27:2027', label: '2027 · 13.06.2027' }]);
+    expect(lgsSession.prompt).toBe('Hangi oturuma hazırlanıyorsun?');
+    expect(lgsSession.choices).toEqual([{ value: 'session:lgs-27:2027', label: '2027 · 13.06.2027 · önerilen' },
+      { value: 'year:2028', label: '2028 · tarih henüz açıklanmadı' }, { value: 'year:2029', label: '2029 · tarih henüz açıklanmadı' },
+      { value: 'year:2030', label: '2030 · tarih henüz açıklanmadı' }]);
+    const seventh = questions({ ...personal, education: a('7'), purpose: a('Lgs') }, context).find(x => x.id === 'session')!;
+    expect(seventh.choices!.filter(x => x.label.endsWith('önerilen')).map(x => x.value)).toEqual(['year:2028']);
+    expect(examRequest({ ...personal, education: a('7'), purpose: a('Lgs'), session: a('year:2028') })).toMatchObject({ targetExamSessionId: null, targetExamYear: 2028 });
     const ydsYear = questions({ ...personal, purpose: a('Yds') }, context).find(x => x.id === 'session')!;
-    expect(ydsYear.prompt).toBe('Hangi yıl sınava gireceksin?'); expect(ydsYear.choices!.map(x => x.value)).toEqual(['year:2027', 'year:2028', 'year:2029']);
+    expect(ydsYear.prompt).toBe('Hangi yıl sınava gireceksin?');
+    expect(ydsYear.choices!.map(x => x.value)).toEqual(['year:2027', 'year:2028', 'year:2029', 'year:2030']);
+    expect(ydsYear.choices![0].label).toBe('2027 · tarih henüz açıklanmadı · önerilen');
   });
 
   it('offers the right score types for a score-only target', () => {
@@ -215,10 +230,26 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect([changed.education, changed.ownSchool, changed.diploma]).toEqual([undefined, undefined, undefined]);
   });
 
-  it('asks the YKS diploma grade in 11th and 12th grade and of everyone out of high school', () => {
+  // G2 review (L6): a saved year-only answer is said as Sınavım says it and stays a choice of its exam.
+  it('resumes a saved year-only choice as the catalog has it now', () => {
+    const view = (sessions: object[]) => ({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026,
+      examSessions: sessions, allowedPurposes: ['Lgs'], examOpenYears: [{ examCode: 'LGS', year: 2027 }],
+      answers: { birthDate: '2013-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student',
+        gradeLevel: 7, graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: null,
+        targetExamYear: 2028, diplomaGrade: null, diplomaGradeEstimated: false, target: null, targetLocked: false } }) as unknown as OnboardingView;
+    expect(prefill(view(context.sessions)).session).toMatchObject({ value: 'year:2028', label: '2028 · tarih henüz açıklanmadı' });
+    const lgs28 = { id: 'lgs-28', examCode: 'LGS', examName: 'LGS', date: '2028-06-11', label: '2028', applicationStart: null, applicationEnd: null };
+    expect(prefill(view([...context.sessions, lgs28])).session).toMatchObject({ value: 'year:2028', label: '2028 · oturum seçmedim' });
+    const kept = questions({ ...personal, education: a('7'), purpose: a('Lgs') }, { ...context, sessions: [...context.sessions, lgs28],
+      savedYear: { purpose: 'Lgs', year: 2028 } }).find(x => x.id === 'session')!;
+    expect(kept.choices!.map(x => x.value)).toEqual(['session:lgs-27:2027', 'session:lgs-28:2028', 'year:2028', 'year:2029', 'year:2030']);
+  });
+
+  it('asks the YKS diploma grade in 11th and 12th grade and of a lise graduate (G1: no YKS at university)', () => {
     const yks = { ...personal, purpose: a('Yks'), yksField: a('SAY'), education: undefined };
-    for (const stage of ['HighSchoolGraduate', 'UniversityStudent', 'UniversityGraduate'])
-      expect(ids({ ...yks, stage: a(stage) })).toContain('diploma');
+    expect(ids({ ...yks, stage: a('HighSchoolGraduate') })).toContain('diploma');
+    for (const stage of ['UniversityStudent', 'UniversityGraduate'])
+      expect(ids({ ...yks, stage: a(stage) })).not.toContain('diploma');
     expect(ids({ ...yks, ...lise, education: a('12') })).toContain('diploma');
     expect(ids({ ...yks, ...lise, education: a('10') })).not.toContain('diploma');
     expect(ids({ ...yks, stage: a('UniversityGraduate'), purpose: a('Yds') })).not.toContain('diploma');

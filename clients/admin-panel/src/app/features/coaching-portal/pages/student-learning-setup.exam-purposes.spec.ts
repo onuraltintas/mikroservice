@@ -44,7 +44,9 @@ describe('StudentLearningSetupComponent exam purposes', () => {
     // F2 #27: "Hangi oturuma hazırlanıyorsun?" as in the wizard.
     const select: HTMLSelectElement = fixture.nativeElement.querySelector('select[name="examYear"]');
     expect(select.closest('label')!.firstChild!.textContent!.trim()).toBe('Hangi oturuma hazırlanıyorsun?');
-    expect([...select.options].map(x => x.textContent?.trim())).toEqual(['Seç', '2027/1 · 28.03.2027 · başvuru 03.02–11.02.2027', '2027/2 · 21.11.2027']);
+    // G2 (#40): the sessions, then the later years without a date yet; the nearest is marked (no grade for a graduate).
+    expect([...select.options].map(x => x.textContent?.trim())).toEqual(['Seç', '2027/1 · 28.03.2027 · başvuru 03.02–11.02.2027 · önerilen', '2027/2 · 21.11.2027',
+      '2028 · tarih henüz açıklanmadı', '2029 · tarih henüz açıklanmadı', '2030 · tarih henüz açıklanmadı']);
     component.savePurpose(); expect(service.save).not.toHaveBeenCalled();
     expect(component.error()).toContain('Hangi oturuma hazırlandığını seç.');
     expect(fixture.nativeElement.textContent).toContain('Sınav dili: İngilizce');
@@ -69,8 +71,9 @@ describe('StudentLearningSetupComponent exam purposes', () => {
     const { component, fixture, service } = await setup();
     component.purpose = 'Ags'; component.changed(); await render(fixture);
     expect([...(fixture.nativeElement.querySelector('select[name="examYear"]') as HTMLSelectElement).options].map(x => x.textContent?.trim()))
-      .toEqual(['Seç', '2027 · 08.05.2027 · başvuru 19.03–29.03.2027']);
-    component.pickExam('session:ags-2027');
+      .toEqual(['Seç', '2027 · 08.05.2027 · başvuru 19.03–29.03.2027 · önerilen', '2028 · tarih henüz açıklanmadı', '2029 · tarih henüz açıklanmadı',
+        '2030 · tarih henüz açıklanmadı']);
+    component.pickExam('session:ags-2027:2027');
     const fields = [...fixture.nativeElement.querySelectorAll('select[name="oabtField"] option')].map((x: HTMLOptionElement) => x.textContent?.trim());
     expect(fields.length).toBe(18);
     expect(fields[0]).toBe('ÖABT’ye girmeyeceğim');
@@ -87,10 +90,34 @@ describe('StudentLearningSetupComponent exam purposes', () => {
       primaryScoreType: null, foreignLanguage: 'English', curriculumVersionId: null, coursePreferences: [], topicStates: [], startingStatusReviewed: false };
     const { component, fixture, service } = await setup({ ...empty, context }); await render(fixture);
     const select: HTMLSelectElement = fixture.nativeElement.querySelector('select[name="examYear"]');
-    expect([...select.options].map(x => x.textContent?.trim())).toEqual(['Seç', '2027/1 · 28.03.2027 · başvuru 03.02–11.02.2027', '2027/2 · 21.11.2027', '2028 · oturum seçmedim']);
+    expect([...select.options].map(x => x.textContent?.trim())).toEqual(['Seç', '2027/1 · 28.03.2027 · başvuru 03.02–11.02.2027 · önerilen', '2027/2 · 21.11.2027',
+      '2028 · tarih henüz açıklanmadı', '2029 · tarih henüz açıklanmadı', '2030 · tarih henüz açıklanmadı']);
     expect(select.value).toBe('year:2028');
     component.savePurpose();
     expect(service.save).toHaveBeenCalledWith(expect.objectContaining({ purpose: 'Yds', targetExamYear: 2028, targetExamSessionId: null }));
+  });
+
+  // G2 (#40): a year outside the list (an older choice in a year that has a session) stays as "oturum seçmedim".
+  it('keeps an older year-only choice in a year that has sessions', async () => {
+    const context = { id: 'ctx', version: 2, academicYearStart: 2026, purpose: 'Yds' as const, targetExamYear: 2027, targetExamSessionId: null,
+      primaryScoreType: null, foreignLanguage: 'English', curriculumVersionId: null, coursePreferences: [], topicStates: [], startingStatusReviewed: false };
+    const { fixture } = await setup({ ...empty, context }); await render(fixture);
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector('select[name="examYear"]');
+    expect([...select.options].map(x => x.textContent?.trim()).slice(0, 4)).toEqual(['Seç',
+      '2027/1 · 28.03.2027 · başvuru 03.02–11.02.2027 · önerilen', '2027/2 · 21.11.2027', '2027 · oturum seçmedim']);
+    expect(select.value).toBe('year:2027');
+  });
+
+  // G2 (#40): the mark follows the grade on the profile (an 11th grader's YKS is next year's; a 7th grader's LGS too).
+  it('marks the exam year the grade points to', async () => {
+    const tyt = { id: 'tyt-27', examCode: 'TYT', examName: 'YKS', date: '2027-06-19', label: '2027', applicationStart: null, applicationEnd: null };
+    const { component, fixture } = await setup({ ...empty, examSessions: [...sessions, tyt], educationStatus: 'Student', gradeLevel: 11, allowedPurposes: ['Yks'] });
+    component.purpose = 'Yks'; component.changed(); await render(fixture);
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector('select[name="examYear"]');
+    expect([...select.options].map(x => x.textContent?.trim())).toEqual(['Seç', '2027 · 19.06.2027', '2028 · tarih henüz açıklanmadı · önerilen',
+      '2029 · tarih henüz açıklanmadı', '2030 · tarih henüz açıklanmadı']);
+    component.pickExam('year:2028'); component.savePurpose();
+    expect(component.targetExamSessionId).toBeNull();
   });
 
   it('prefills a saved YDS session and keeps LGS/YKS requests unchanged', async () => {

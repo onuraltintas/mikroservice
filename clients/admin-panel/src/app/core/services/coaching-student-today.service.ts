@@ -9,7 +9,8 @@ export interface StudentTodayView {
   nextStep: { item: DailyAgendaItem; overdue: boolean } | null;
   items: DailyAgendaItem[]; overdue: DailyAgendaItem[];
   todayCount: number; overdueCount: number; upcomingCount: number;
-  exam: { name: string; date: string; daysLeft: number; source: 'Student' | 'Catalog' } | null;
+  /** G2 (#40): Estimated: the student chose a year the catalog has no date for yet; the date is a guess ("tahmini"). */
+  exam: { name: string; date: string; daysLeft: number; source: 'Student' | 'Session' | 'Catalog' | 'Estimated' } | null;
   streak: { currentStreak: number; longestStreak: number; activeToday: boolean };
   week: { weekStart: string; planned: number; completed: number };
   goal: { goalId: string; title: string; examCode: string; targetNet: number; latestNet: number; remainingNet: number } | null;

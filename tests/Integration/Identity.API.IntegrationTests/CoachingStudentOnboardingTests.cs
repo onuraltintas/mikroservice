@@ -321,13 +321,35 @@ public sealed class CoachingStudentOnboardingTests
     public async Task AYdsTargetScoreIsComparedExactly()
     {
         await using var s = await Setup.CreateAsync();
-        await s.Personal(grade: null);
+        // G1 (07.11.2026): YDS is for university students and graduates.
+        await s.Personal(grade: null, CoachingEducationStatus.UniversityGraduate);
         await s.Service.SaveExamAsync(new(LearningPurpose.Yds, null, null, null, s.LgsYear, null, false), default);
         await s.Service.SaveTargetAsync(new("score", null, [new("YDS_EN", 85)]), default);
         s.LanguageExam(60);
         var estimate = await new CoachingScoreEstimateService(s.F.Db, s.F.Scope, TimeProvider.System).EstimateAsync(s.Student, s.Student, null, default);
         estimate.Target.Should().Match<ScoreTargetGap>(x => x.Kind == "score" && x.ScoreType == "YDS_EN" && x.ScoreGap == 10m && x.NetGap == 8m && x.Status == "below");
         estimate.Goal!.ScoreType.Should().Be("YDS_EN");
+        // G2 (#40): no YDS session in the catalog: the chosen year counts down to an estimated date (15 June when none is known).
+        estimate.TargetExam.Should().Match<ScoreTargetExam>(x => x.Source == "Estimated" && x.Date == new DateOnly(s.LgsYear, 6, 15));
+    }
+
+    [Fact]
+    // G2 (#40, user decision 07.11.2026): a year the catalog has no session for is a target of its own next to the sessions (a 7th
+    // grader aims for LGS a year after the catalog's session). The year must stay within the school year's range.
+    public async Task AYearWithoutACatalogSessionIsSavedAsTheTarget()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(grade: 7);
+        var exam = await s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, null, s.LgsYear + 1, null, false), default);
+        (exam.NextStep, exam.Answers.TargetExamSessionId, exam.Answers.TargetExamYear).Should().Be((3, (Guid?)null, (int?)(s.LgsYear + 1)));
+        var context = await s.F.Db.StudentLearningContexts.AsNoTracking().SingleAsync();
+        (context.TargetExamSessionId, context.TargetExamYear).Should().Be(((Guid?)null, (int?)(s.LgsYear + 1)));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() =>
+            s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, null, context.AcademicYearStart + 6, null, false), default));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() =>
+            s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, null, null, null, false), default));
+        // Choosing the catalog session again replaces the year-only target.
+        (await s.Service.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default)).Answers.TargetExamSessionId.Should().Be(s.LgsSession);
     }
 
     [Fact]
@@ -851,8 +873,8 @@ public sealed class CoachingStudentOnboardingTests
             program.SetActive(true); F.Db.Add(program); Programs[name] = program.Id;
         }
 
-        public Task<OnboardingView> Personal(int? grade) => Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601",
-            grade is null ? CoachingEducationStatus.HighSchoolGraduate : CoachingEducationStatus.Student, grade, null, null), default);
+        public Task<OnboardingView> Personal(int? grade, CoachingEducationStatus? status = null) => Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601",
+            status ?? (grade is null ? CoachingEducationStatus.HighSchoolGraduate : CoachingEducationStatus.Student), grade, null, null), default);
 
         public async Task ApplyLgsPack()
         {

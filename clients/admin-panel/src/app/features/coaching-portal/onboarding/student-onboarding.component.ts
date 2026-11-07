@@ -14,7 +14,7 @@ import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onb
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, TARGET_QUESTIONS, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
   emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, staleParentCode, personalRequest, prefill, questions, signature, stepComplete, stepQuestions,
-  purposeOf, summary, targetRequest, withoutUnfitPurpose, TYPED_SCHOOL_MAX, typedSchoolAnswer, typedSchoolError
+  purposeOf, sessionAnswerLabel, summary, targetRequest, withoutUnfitPurpose, TYPED_SCHOOL_MAX, typedSchoolAnswer, typedSchoolError
 } from './onboarding-model';
 import { CopyResult, copyMessage, copyText } from '../copy-text';
 import { birthDateError, shiftYears } from '../birth-date';
@@ -85,8 +85,13 @@ export class StudentOnboardingComponent implements OnInit {
   /** Step → the signature the server has (only for steps the server reports as saved). */
   private readonly saved = signal<Partial<Record<StepNumber, string>>>({});
 
-  readonly context = computed<FlowContext>(() => ({ sessions: this.view()?.examSessions ?? [], academicYearStart: this.view()?.academicYearStart ?? new Date().getFullYear(),
-    allowedPurposes: this.view()?.allowedPurposes }));
+  readonly context = computed<FlowContext>(() => {
+    const view = this.view(); const a = view?.answers;
+    return { sessions: view?.examSessions ?? [], academicYearStart: view?.academicYearStart ?? new Date().getFullYear(),
+      allowedPurposes: view?.allowedPurposes, openYears: view?.examOpenYears,
+      // G2 review (L6): the saved year-only choice stays selectable for its exam.
+      savedYear: a?.purpose && a.targetExamYear && !a.targetExamSessionId ? { purpose: a.purpose, year: a.targetExamYear } : null };
+  });
   readonly flow = computed(() => questions(this.answers(), this.context()));
   readonly current = computed(() => this.mode() === 'target'
     ? this.flow().find(x => x.step === 3 && !(x.id in this.answers())) ?? null
@@ -174,7 +179,7 @@ export class StudentOnboardingComponent implements OnInit {
     const saved = this.original();
     if (question.id === 'targetMode' && choice.value === 'none' && this.mode() === 'target' && saved && saved.value !== 'none'
       && !await this.toaster.confirm(`Mevcut hedefin silinecek: ${saved.label}. Devam edilsin mi?`, { confirmText: 'Hedefimi sil', cancelText: 'Vazgeç' })) return;
-    this.answer(question, { value: choice.value, label: choice.label });
+    this.answer(question, { value: choice.value, label: question.id === 'session' ? sessionAnswerLabel(choice.label) : choice.label });
   }
   skip(question: Question) { this.answer(question, { value: null, label: question.skipLabel ?? 'Geç' }); }
   pickCombo(question: Question, option: ComboOption) { this.answer(question, { value: option.value, label: option.label, data: option.data }); }

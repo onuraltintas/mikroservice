@@ -346,9 +346,12 @@ export class CoachingProfileComponent implements OnInit {
       items: r.data.items.map(x => ({ value: x.id, label: x.name, data: { district: x.district, type: x.type ?? null },
         hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.type].filter(Boolean).join(' · ') || undefined })) })));
   };
-  /** The wizard's rule: the diploma grade is asked for 11th, 12th grade and graduates (YKS; the server drops it for other exams). */
+  /**
+   * The wizard's rule: the diploma grade is asked for 11th, 12th grade and of a lise graduate (YKS; the server drops it for other
+   * exams). G1 (07.11.2026): university students and graduates no longer choose YKS.
+   */
   diplomaApplies(s: StudentProfile) {
-    return this.examAsksDiploma && (this.stage !== '' && !isStudentStage(this.stage) || isStudentStage(this.stage) && [11, 12].includes(Number(s.gradeLevel)));
+    return this.examAsksDiploma && (this.stage === 'HighSchoolGraduate' || isStudentStage(this.stage) && [11, 12].includes(Number(s.gradeLevel)));
   }
   private education(s: StudentProfile | null) { return s ? `${this.stage}:${isStudentStage(this.stage) ? s.gradeLevel ?? '' : ''}` : ''; }
   async reload() { if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş profil değişikliklerinden vazgeçilsin mi?')) return; this.loadProfile(); }

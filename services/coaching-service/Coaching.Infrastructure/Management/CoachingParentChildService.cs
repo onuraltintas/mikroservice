@@ -13,7 +13,12 @@ namespace Coaching.Infrastructure.Management;
 
 public sealed record ParentChildOverdueItem(string Title, DateOnly Date, string Kind);
 public sealed record ParentChildNextSession(DateTime StartsAt, string Title, string? TeacherName);
-public sealed record ParentChildExamCountdown(string Name, DateOnly Date, int DaysLeft);
+/// <summary>Source: Student, Session, Catalog or Estimated (G2 review: a year without a date yet; the parent panel says "tahmini").</summary>
+public sealed record ParentChildExamCountdown(string Name, DateOnly Date, int DaysLeft)
+{
+    public string Source { get; init; } = "Catalog";
+    public bool Estimated => Source == "Estimated";
+}
 public sealed record ParentChildAttentionItem(string Kind, string Text, string? Link = null);
 public sealed record ParentChildWeek(DateOnly WeekStart, int Planned, int Completed, IReadOnlyList<ParentChildOverdueItem> Overdue,
     ParentChildNextSession? NextSession, ParentChildExamCountdown? ExamCountdown, IReadOnlyList<ParentChildAttentionItem> Attention);
@@ -68,7 +73,7 @@ public sealed class CoachingParentChildService(CoachingDbContext db, ICoachingAc
             next = new(session.ScheduledDate, session.Title, teacher is null ? null : $"{teacher.FirstName} {teacher.LastName}".Trim());
         }
         var exam = facts.Exam is { } e
-            ? new ParentChildExamCountdown(e.Source == "Student" ? $"{Possessive(name)} sınavı" : e.Name, e.Date, e.DaysLeft) : null;
+            ? new ParentChildExamCountdown(e.Source == "Student" ? $"{Possessive(name)} sınavı" : e.Name, e.Date, e.DaysLeft) { Source = e.Source } : null;
 
         var attention = new List<ParentChildAttentionItem>();
         // Every item opens the child's page in the parent panel (Koçluk tab).

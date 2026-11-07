@@ -12,9 +12,15 @@ public sealed record WeeklyLeftOutTopic(Guid LessonId,string LessonName,Guid Top
 public sealed record WeeklyOutcomePlanSave([Required,MaxLength(200)] string Title,[Required] WeeklyOutcomePlanRequest Preview,[Required] string Fingerprint);
 public sealed record WeeklyLessonIssue(Guid LessonId,string LessonName,string Message);
 public sealed record WeeklyExamReference(string Name,DateOnly? Date);
-// EndDateSource: Student (her own exam date), Catalog (the admin's exam date) or Default (1 June). The plan ends the day before the exam.
+// EndDateSource: Student (her own exam date), Session (the session she chose), Catalog (the admin's exam date), Estimated (G2: the year
+// she chose has no session yet; the date is a guess) or Default (1 June). The plan ends the day before the exam. CatalogExamDate: the
+// date her own date replaces.
 public sealed record WeeklyOutcomePlanOptions(DateOnly StartDate,DateOnly EndDate,int WeeklyDraftVersion,string TimeZoneId,IReadOnlyList<WeeklyExamReference> Exams,
-    DateOnly? ExamDate=null,string EndDateSource="Default",DateOnly? CatalogExamDate=null);
+    DateOnly? ExamDate=null,string EndDateSource="Default",DateOnly? CatalogExamDate=null)
+{
+    /// <summary>G2 (#40): <see cref="CatalogExamDate"/> is an estimate (a year-only target).</summary>
+    public bool CatalogExamDateEstimated { get; init; }
+}
 public sealed record WeeklyProtectedTask(DateOnly Date,int? StartMinute,string Title,int Minutes);
 public sealed record WeeklyOutcomePlanPreview(WeeklyOutcomePlanRequest Request,string TimeZoneId,string Fingerprint,WeeklyOutcomeSchedule Schedule,IReadOnlyList<WeeklyLessonIssue> Issues,bool CanCreate,int ProtectedTaskCount,IReadOnlyList<WeeklyProtectedTask>? ProtectedTasks=null,
     IReadOnlyList<WeeklyLeftOutTopic>? LeftOutTopics=null);

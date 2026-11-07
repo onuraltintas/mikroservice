@@ -61,9 +61,37 @@ public sealed class WeeklyPlanEngineServiceTests
         await service.SetExamDateAsync(new(null), default);
         Assert.Equal("Catalog", (await service.OptionsAsync(default)).EndDateSource);
 
+        // G2 review (M2): no session known at all: the 15 June guess is not used; the plan keeps the default 1 June end as before.
         exam.ReplaceSessions([]); await f.Db.SaveChangesAsync();
         options = await service.OptionsAsync(default);
-        Assert.Equal((WeeklyOutcomeScheduler.DefaultEnd(options.StartDate), "Default"), (options.EndDate, options.EndDateSource));
+        Assert.Equal((WeeklyOutcomeScheduler.DefaultEnd(options.StartDate), (DateOnly?)null, "Default"), (options.EndDate, options.ExamDate, options.EndDateSource));
+    }
+
+    [Fact]
+    // G2 (#40, user decision 07.11.2026): an 11th grader targets YKS/LGS 2028 while the catalog only has the 2027 session. The plan
+    // and its "Resmî tarihe dön" use the 2027 session's month and day carried to 2028, shown as an estimate; once the catalog has a
+    // 2028 session it is used.
+    public async Task AYearOnlyTargetIsNotCountedDownToAnEarlierYearsSession()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var service = await WeeklyOutcomePlanTests.Seed(f);
+        var exam = await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "LGS");
+        exam.ReplaceSessions([new(null, new DateOnly(2027, 6, 13), "2027", null, null)]);
+        var context = await f.Db.StudentLearningContexts.SingleAsync();
+        context.SetScope(2026, LearningPurpose.Lgs, 2028, null, null); await f.Db.SaveChangesAsync();
+
+        var options = await service.OptionsAsync(default);
+        Assert.Equal((new DateOnly(2028, 6, 12), (DateOnly?)new DateOnly(2028, 6, 13), "Estimated", (DateOnly?)new DateOnly(2028, 6, 13), true),
+            (options.EndDate, options.ExamDate, options.EndDateSource, options.CatalogExamDate, options.CatalogExamDateEstimated));
+        // The exam list still names the catalog's next session (for reference only).
+        Assert.Equal(new DateOnly(2027, 6, 13), Assert.Single(options.Exams).Date);
+        // G2 review (M2): the estimate is the default end only, no limit: a later end date is accepted.
+        var later = Input with { StartDate = options.StartDate, EndDate = new DateOnly(2028, 6, 20) };
+        Assert.Equal(new DateOnly(2028, 6, 20), (await service.PreviewAsync(later, default)).Request.EndDate);
+
+        exam.ReplaceSessions([new(exam.Sessions.Single().Id, new DateOnly(2027, 6, 13), "2027", null, null), new(null, new DateOnly(2028, 6, 11), "2028", null, null)]);
+        await f.Db.SaveChangesAsync();
+        options = await service.OptionsAsync(default);
+        Assert.Equal(((DateOnly?)new DateOnly(2028, 6, 11), "Catalog", false), (options.ExamDate, options.EndDateSource, options.CatalogExamDateEstimated));
     }
 
     [Fact]

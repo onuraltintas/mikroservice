@@ -43,7 +43,7 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
               <div><dt>Sıradaki seans</dt><dd><strong>{{ session.title }}</strong> · {{ when(session.startsAt) }}@if (session.teacherName) { · {{ session.teacherName }} }</dd></div>
             }
             @if (w.examCountdown; as exam) {
-              <div><dt>Sınava kalan</dt><dd><strong>{{ exam.name }}</strong> · {{ exam.daysLeft }} gün ({{ exam.date | coachingDate }})</dd></div>
+              <div><dt>Sınava kalan</dt><dd><strong>{{ exam.name }}</strong> · {{ exam.estimated ? 'yaklaşık ' : '' }}{{ exam.daysLeft }} gün ({{ exam.date | coachingDate }}@if (exam.estimated) {<span data-testid="exam-estimated">, tahmini tarih</span>})</dd></div>
             }
           </dl>
           @if (w.overdue.length) {

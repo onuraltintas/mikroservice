@@ -62,11 +62,12 @@ describe('StudentLearningSetupComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('başka bir oturumda');
   });
   it('offers only the exams that fit the grade and says why the exam has to be chosen again (Paket D #8)', async () => {
-    const { component, fixture } = await setup({ ...empty, allowedPurposes: ['Yks', 'Yds', 'Yokdil'], purposeNotForEducation: true,
+    // G1 (07.11.2026): a lise student is offered YKS only.
+    const { component, fixture } = await setup({ ...empty, allowedPurposes: ['Yks'], purposeNotForEducation: true,
       context: { id: 'ctx', version: 3, academicYearStart: 2026, purpose: 'Lgs', targetExamYear: 2027, primaryScoreType: null, foreignLanguage: null,
         curriculumVersionId: null, coursePreferences: [], topicStates: [], startingStatusReviewed: false } });
     expect(component.step()).toBe('Purpose');
-    expect(component.purposeChoices().map(x => x.value)).toEqual(['Yks', 'Yds', 'Yokdil']);
+    expect(component.purposeChoices().map(x => x.value)).toEqual(['Yks']);
     const note = fixture.nativeElement.querySelector('[data-testid="grade-purpose"]') as HTMLElement;
     expect(note.textContent).toContain('Seçili sınavın eğitim durumuna ya da sınıfına uymuyor. Hazırlandığın sınavı yeniden seç.');
     // Without the server's list every exam stays (older API).
@@ -169,7 +170,7 @@ describe('StudentLearningSetupComponent', () => {
   // ---------- E4 (live test 06.11.2026) ----------
   const yks = { id: 'ctx', version: 4, academicYearStart: 2026, purpose: 'Yks' as const, targetExamYear: 2027, primaryScoreType: 'SAY', foreignLanguage: null,
     curriculumVersionId: 'program', coursePreferences: [], topicStates: [], startingStatusReviewed: false };
-  const yksView: LearningSetupView = { ...empty, context: yks, nextStep: 'Purpose', missingFields: [], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] };
+  const yksView: LearningSetupView = { ...empty, context: yks, nextStep: 'Purpose', missingFields: [], allowedPurposes: ['Yks'] };
   async function purposeForm(view = yksView) {
     const t = await setup(view); const el = t.fixture.nativeElement as HTMLElement;
     const settle = async () => { t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges(); };
@@ -357,11 +358,13 @@ describe('StudentLearningSetupComponent', () => {
     expect(t.el.textContent).not.toContain('Eğitim yılı başlangıcı');
     expect(t.el.textContent).not.toContain('Hedef sınav yılı');
     expect(t.el.querySelector('[name="academicYear"]')).toBeNull();
-    expect(Array.from((t.el.querySelector('select[name="purpose"]') as HTMLSelectElement).options).map(x => x.textContent!.trim())).toEqual(['Seç', 'YKS', 'YDS', 'YÖKDİL']);
+    expect(Array.from((t.el.querySelector('select[name="purpose"]') as HTMLSelectElement).options).map(x => x.textContent!.trim())).toEqual(['Seç', 'YKS']);
     expect(Array.from((t.el.querySelector('select[name="scoreType"]') as HTMLSelectElement).options).map(x => x.textContent!.trim()))
       .toEqual(['Sayısal', 'Eşit Ağırlık', 'Sözel', 'Dil', 'Yalnız TYT (önlisans)']);
     const year = t.el.querySelector('select[name="examYear"]') as HTMLSelectElement;
-    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2027', '2028', '2029', '2030', '2031']);
+    // G2 (#40): the wizard's list (no catalog session here: years up to four ahead, the nearest marked without a grade).
+    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2027 · tarih henüz açıklanmadı · önerilen',
+      '2028 · tarih henüz açıklanmadı', '2029 · tarih henüz açıklanmadı', '2030 · tarih henüz açıklanmadı']);
     expect(year.value).toBe('year:2027');
     year.value = 'year:2029'; year.dispatchEvent(new Event('change')); await t.settle();
     expect(t.component.targetExamYear).toBe(2029);
@@ -458,7 +461,9 @@ describe('StudentLearningSetupComponent', () => {
     const old = { ...yks, academicYearStart: 2025, targetExamYear: 2026, coursePreferences: [{ lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }] };
     const t = await purposeForm({ ...yksView, context: old });
     const year = t.el.querySelector('select[name="examYear"]') as HTMLSelectElement;
-    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2026', '2027', '2028', '2029', '2030', '2031']);
+    // The older saved year stays selectable before the list.
+    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2026', '2027 · tarih henüz açıklanmadı · önerilen',
+      '2028 · tarih henüz açıklanmadı', '2029 · tarih henüz açıklanmadı', '2030 · tarih henüz açıklanmadı']);
     year.value = 'year:2027'; year.dispatchEvent(new Event('change')); await t.settle();
     await t.submit();
     // A new school year is a new scope: the courses are chosen again for the new curriculum.

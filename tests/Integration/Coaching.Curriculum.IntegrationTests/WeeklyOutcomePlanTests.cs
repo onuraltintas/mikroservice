@@ -86,7 +86,9 @@ public sealed class WeeklyOutcomePlanTests
     public async Task ApiRequiresStudentAndReturnsOptionsValidationConflictAndOwnedNotFound()
     {
         await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var api=new Coaching.API.Controllers.WeeklyOutcomePlansController(service);
-        var options=await service.OptionsAsync(default);Assert.Equal(WeeklyOutcomeScheduler.DefaultEnd(options.StartDate),options.EndDate);
+        var options=await service.OptionsAsync(default);
+        // G2 review (M2): the seeded LGS 2027 target has no catalog session at all: the default 1 June end, as before G2.
+        Assert.Equal((WeeklyOutcomeScheduler.DefaultEnd(options.StartDate),"Default"),(options.EndDate,options.EndDateSource));
         Assert.Equal("Student",Assert.Single(typeof(Coaching.API.Controllers.WeeklyOutcomePlansController).GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute),true).Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()).Roles);
         Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(await api.Options(default));Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(await api.Preview(Input,default));
         Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(await api.Preview(Input with {EndDate=Input.StartDate.AddDays(-1)},default));

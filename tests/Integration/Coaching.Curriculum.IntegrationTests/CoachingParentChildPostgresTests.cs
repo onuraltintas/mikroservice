@@ -84,6 +84,24 @@ public sealed class CoachingParentChildPostgresTests
         Assert.Null(week.NextSession); Assert.Null(week.ExamCountdown);
     }
 
+    // G2 review (M3): a year without a date yet counts down to an estimated day, and the parent panel says so.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task AnEstimatedExamDateReachesTheParentPanelAsAnEstimate()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var f = await Family.Create(pg, firstName: "Ada");
+        var tyt = await pg.Db.Set<StudyCatalogExam>().Include(x => x.Sessions).SingleOrDefaultAsync(x => x.Code == "TYT");
+        if (tyt is null) { tyt = StudyCatalogExam.Create("TYT", "YKS"); pg.Db.Add(tyt); }
+        tyt.ReplaceSessions([new(null, new DateOnly(2027, 6, 19), "2027")]);
+        pg.Db.Add(StudentLearningContext.Create(f.Student, 2026, LearningPurpose.Yks, 2028, "SAY", null));
+        await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
+
+        var week = Data<ParentChildWeek>(await f.Api().Week(f.Student));
+
+        Assert.Equal((tyt.Name, new DateOnly(2028, 6, 19), "Estimated", true),
+            (week.ExamCountdown!.Name, week.ExamCountdown.Date, week.ExamCountdown.Source, week.ExamCountdown.Estimated));
+    }
+
     // Adherence reuses the T7 week totals (planned, completed, minutes) for the last 8 weeks, oldest first.
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task AdherenceListsTheLastWeeksOldestFirst()

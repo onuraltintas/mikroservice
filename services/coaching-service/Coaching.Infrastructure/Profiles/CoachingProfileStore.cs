@@ -96,7 +96,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         if (province is not null) profile.SetHome(province.Id, province.Name, district!.Id, district.Name);
         if (request.DiplomaGrade is not null) profile.SetDiplomaGrade(request.DiplomaGrade, request.DiplomaGradeEstimated);
         else if (request.ClearDiplomaGrade) profile.SetDiplomaGrade(null, false);
-        await FollowEducationAsync(profile, educationChanged, ct);
+        await FollowEducationAsync(profile, educationChanged, ct, request.DiplomaGrade is not null);
         await db.SaveChangesAsync(ct);
         return profile;
     }
@@ -104,13 +104,15 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
     /// <summary>
     /// Paket D (#8): the profile and the study settings never silently diverge. A changed grade goes into the study settings (the
     /// curriculum is resolved again); the settings then say when the exam no longer fits the grade. As in the wizard, the diploma
-    /// grade is kept only where it is asked (YKS in 11th, 12th grade and after graduation), and an open wizard asks its exam
+    /// grade is kept only where it is asked (YKS in 11th, 12th grade and after lise), and an open wizard asks its exam
     /// step again.
     /// </summary>
-    private async Task FollowEducationAsync(CoachingStudentProfile profile, bool educationChanged, CancellationToken ct)
+    private async Task FollowEducationAsync(CoachingStudentProfile profile, bool educationChanged, CancellationToken ct, bool diplomaSent = false)
     {
         var purpose = await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == profile.UserId).Select(x => (LearningPurpose?)x.Purpose).SingleOrDefaultAsync(ct);
-        if (profile.DiplomaGrade is not null && !LearningPurposes.DiplomaApplies(purpose, profile.EducationStatus, profile.GradeLevel))
+        // G1 (07.11.2026): a changed education or a newly sent grade is checked; a saved grade the newer rule no longer asks for (a
+        // university student's older YKS setup) stays on other profile saves until the student chooses a new exam.
+        if ((educationChanged || diplomaSent) && profile.DiplomaGrade is not null && !LearningPurposes.DiplomaApplies(purpose, profile.EducationStatus, profile.GradeLevel))
             profile.SetDiplomaGrade(null, false);
         if (!educationChanged) return;
         await Coaching.Infrastructure.StudyPlanning.CoachingLearningSetupService.SyncEducationAsync(db, profile, ct);
@@ -128,7 +130,8 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         var context = await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == userId)
             .Select(x => new { x.Purpose }).SingleOrDefaultAsync(ct);
         LearningPurpose? purpose = context?.Purpose;
-        var diploma = profile.DiplomaGrade is { } saved && !LearningPurposes.DiplomaApplies(purpose, status, grade) ? saved : (decimal?)null;
+        var changed = profile.EducationStatus != status || profile.GradeLevel != grade;
+        var diploma = changed && profile.DiplomaGrade is { } saved && !LearningPurposes.DiplomaApplies(purpose, status, grade) ? saved : (decimal?)null;
         var unfit = purpose is { } p && LearningPurposes.IsSelectable(p) && LearningPurposes.FitsEducation(p, profile.EducationStatus, profile.GradeLevel)
             && !LearningPurposes.FitsEducation(p, status, grade);
         if (!unfit) return new(false, null, diploma, null);

@@ -163,7 +163,9 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     expect(t.el.querySelector('[data-question="district"] .ob-me')!.textContent).toContain('Çankaya');
     await t.click('YKS');
     await t.click('Sayısal');
-    await t.click('2028');
+    // G2 (#40): no catalog session: the years up to four ahead; a 10th grader's YKS (2029) is marked.
+    expect(t.button('2029 · tarih henüz açıklanmadı · önerilen')).toBeTruthy();
+    await t.click('2028 · tarih henüz açıklanmadı');
     const exam = t.http.expectOne(`${base}/steps/exam`);
     expect(exam.request.body).toEqual({ purpose: 'Yks', primaryScoreType: 'SAY', foreignLanguage: null, targetExamSessionId: null, targetExamYear: 2028,
       diplomaGrade: null, diplomaGradeEstimated: false });
@@ -178,7 +180,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
 
   it('asks the exam again instead of resending one the grade no longer fits (review M1)', async () => {
     // Step 2 re-opened by a grade change (e.g. by the institution) while the wizard was open: the saved LGS no longer fits 11th grade.
-    const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] }, { ...stepTwo, gradeLevel: 11 }));
+    const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks'] }, { ...stepTwo, gradeLevel: 11 }));
     t.http.expectNone(`${base}/steps/exam`);
     const current = t.el.querySelector('[data-current]')!;
     expect(current.getAttribute('data-question')).toBe('purpose');
@@ -192,7 +194,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     await t.click('Lise öğrencisiyim');
     await t.click('9. sınıf');
     await t.click('Şimdilik geçeyim');
-    t.http.expectOne(`${base}/steps/personal`).flush({ data: view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] },
+    t.http.expectOne(`${base}/steps/personal`).flush({ data: view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks'] },
       { ...stepTwo, gradeLevel: 9 }) });
     await t.settle();
     t.http.expectNone(`${base}/steps/exam`);
@@ -296,8 +298,11 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
 
   it('a validation message has no "Yeniden dene"; a server error does (#18)', async () => {
     const twelfth = { ...stepTwo, educationStatus: 'Student' as const, gradeLevel: 12, purpose: null, targetExamSessionId: null, targetExamYear: null };
-    const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks', 'Yds', 'Yokdil'] }, twelfth));
-    await t.click('YKS'); await t.click('Sayısal'); await t.click('2028');
+    const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks'] }, twelfth));
+    await t.click('YKS'); await t.click('Sayısal'); await t.click('2027 · tarih henüz açıklanmadı · önerilen');
+    // The answer in the chat is the year without the mark.
+    expect(t.el.querySelector('[data-question="session"] .ob-me')!.textContent).toContain('2027 · tarih henüz açıklanmadı');
+    expect(t.el.querySelector('[data-question="session"] .ob-me')!.textContent).not.toContain('önerilen');
     const grade = t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
     grade.value = '45'; grade.dispatchEvent(new Event('input')); await t.click('Kaydet');
     const alert = t.el.querySelector('[role="alert"]')!;

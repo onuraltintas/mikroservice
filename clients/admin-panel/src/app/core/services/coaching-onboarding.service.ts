@@ -28,6 +28,8 @@ export interface OnboardingView {
   answers: OnboardingAnswers; examSessions: LearningExamSession[];
   /** Paket D review: the exams that fit the saved grade (the server's rule); missing on an older API (then every exam is offered). */
   allowedPurposes?: string[];
+  /** G2 review (M1): per catalog exam code, the first year whose exam has not happened yet. */
+  examOpenYears?: { examCode: string; year: number }[];
   /** E4 #18: the invitations the student accepted (the invite step's answer when the wizard is resumed); missing on an older API. */
   acceptedInvitations?: OnboardingInvitation[];
 }

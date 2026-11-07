@@ -27,6 +27,8 @@ public sealed record OnboardingView(string Status, int NextStep, IReadOnlyList<i
     public IReadOnlyList<LearningPurpose> AllowedPurposes { get; init; } = [];
     /// <summary>E4 #18: the invitations the student accepted (the invite step's answer when the wizard is resumed), oldest first.</summary>
     public IReadOnlyList<OnboardingInvitation> AcceptedInvitations { get; init; } = [];
+    /// <summary>G2 review (M1): the first year whose exam has not happened yet, per catalog exam code (the session list starts there).</summary>
+    public IReadOnlyList<LearningExamOpenYear> ExamOpenYears { get; init; } = [];
 }
 /// <summary>Type: StudentToTeacher or StudentToInstitution. InviterEmail is null when the inviter's account is gone.</summary>
 public sealed record OnboardingInvitation(string? InviterEmail, string Type, DateTime AcceptedAt);
@@ -635,7 +637,7 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     {
         var context = await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x => x.StudentUserId == p.UserId, ct);
         var exam = context is not null && LearningPurposes.IsSelectable(context.Purpose) ? context : null;
-        var sessions = (await setup.GetAsync(ct)).ExamSessions;
+        var setupView = await setup.GetAsync(ct); var sessions = setupView.ExamSessions;
         var goalId = await db.Set<StudentPrimaryGoal>().AsNoTracking().Where(x => x.StudentId == p.UserId).Select(x => (Guid?)x.GoalId).SingleOrDefaultAsync(ct);
         var goal = goalId is null ? null : await db.AcademicGoals.AsNoTracking().SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == p.UserId, ct);
         var answers = new OnboardingAnswers(p.BirthDate, p.HomeProvinceId, p.HomeCity, p.HomeDistrictId, p.HomeDistrict, p.EducationStatus, p.GradeLevel,
@@ -644,7 +646,8 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         var saved = Enumerable.Range(1, CoachingStudentProfile.OnboardingStepCount).Where(p.HasOnboardingStep).ToArray();
         var status = p.OnboardingCompletedAt is not null ? "Completed" : p.OnboardingSteps == 0 ? "NotStarted" : "InProgress";
         return new(status, p.NextOnboardingStep, saved, p.OnboardingCompletedAt, AcademicYearStart(), answers, sessions)
-            { AllowedPurposes = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel), AcceptedInvitations = await AcceptedInvitationsAsync(p.UserId, ct) };
+            { AllowedPurposes = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel), AcceptedInvitations = await AcceptedInvitationsAsync(p.UserId, ct),
+              ExamOpenYears = setupView.ExamOpenYears };
     }
 
     private async Task<IReadOnlyList<OnboardingInvitation>> AcceptedInvitationsAsync(Guid student, CancellationToken ct)
