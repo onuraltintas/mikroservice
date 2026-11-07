@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
@@ -135,18 +136,18 @@ describe('LoginComponent MFA flow', () => {
 
   // Paket F F4 (live 07.11.2026): a Koçluk account without a Koçluk role must get the reason, not the management shell.
   it('shows the join hint when the account has no role in this platform', async () => {
-    const roleLess = { error: { code: 'Auth.NoRoleForProduct', description: 'Bu platformda hesabınıza tanımlı aktif bir rol yok.' } };
+    const roleLess = { error: { code: 'Auth.NoRoleForProduct', description: 'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor.' } };
     const coaching = createComponent({ loginWithPassword: vi.fn().mockRejectedValue(roleLess) });
     coaching.email = 'a@example.test'; coaching.password = 'x';
     await coaching.onSubmit(new Event('submit'));
     expect(coaching.errorMessage()).toBe(
-      'Bu platformda hesabın aktif değil. Mevcut hesabınla koçluğa katılmak için kayıt sayfasındaki "Mevcut hesabımla katıl" yolunu kullanabilirsin.');
+      'Bu platformda hesabına tanımlı bir yetki kalmadı. Yeniden erişim için kurumunla ya da destekle iletişime geç.');
 
     TestBed.resetTestingModule();
     const management = createComponent({ loginWithPassword: vi.fn().mockRejectedValue(roleLess) }, 'siz');
     management.email = 'a@example.test'; management.password = 'x';
     await management.onSubmit(new Event('submit'));
-    expect(management.errorMessage()).toBe('Bu platformda hesabınıza tanımlı aktif bir rol yok.');
+    expect(management.errorMessage()).toBe('Bu platformda hesabınıza tanımlı bir yetki bulunmuyor.');
   });
 
   it('leaves MFA and shows the reason when the verified session has no role', async () => {
@@ -155,12 +156,23 @@ describe('LoginComponent MFA flow', () => {
     await component.submitMfa();
     expect(component.mfaStage()).toBe('none');
     expect(component.mfaChallengeToken).toBe('');
-    expect(component.errorMessage()).toContain('Mevcut hesabımla katıl');
+    expect(component.errorMessage()).toContain('tanımlı bir yetki kalmadı');
   });
 
-  it('shows the notice left by a guard that ended a role-less session', () => {
-    const component = createComponent({ consumeSignInNotice: vi.fn(() => noRoleForProductError()) });
-    expect(component.errorMessage()).toContain('Mevcut hesabımla katıl');
+  // PR #125 review L4: the notice left by a guard or a refused refresh, also when it arrives after the page opened.
+  it('shows the notice left by a guard or a refused refresh that ended a role-less session', () => {
+    const notice = signal<ReturnType<typeof noRoleForProductError> | null>(null);
+    const component = createComponent({
+      signInNotice: notice,
+      consumeSignInNotice: vi.fn(() => { const value = notice(); notice.set(null); return value; })
+    });
+    TestBed.tick();
+    expect(component.errorMessage()).toBeNull();
+    notice.set(noRoleForProductError());
+    TestBed.tick();
+    expect(component.errorMessage()).toBe(
+      'Bu platformda hesabına tanımlı bir yetki kalmadı. Yeniden erişim için kurumunla ya da destekle iletişime geç.');
+    expect(notice()).toBeNull();
   });
 
   function createComponent(authService: Record<string, unknown>, voice: 'sen' | 'siz' = 'sen'): LoginComponent {

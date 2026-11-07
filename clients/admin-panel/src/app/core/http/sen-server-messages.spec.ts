@@ -10,7 +10,7 @@ const formal = /(?:ınız|iniz|unuz|ünüz|yın|yin|girin|edin|seçin|Lütfen)(?
 describe('sen server messages', () => {
   const serverTexts: Record<string, string> = {
     'Auth.ProductAccessDenied': 'Bu platform için hesabınıza erişim yetkisi tanımlı değil.',
-    'Auth.NoRoleForProduct': 'Bu platformda hesabınıza tanımlı aktif bir rol yok. Mevcut hesabınızla yeniden katılmak için kayıt sayfasındaki "Mevcut hesabımla katıl" seçeneğini kullanabilirsiniz.',
+    'Auth.NoRoleForProduct': 'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor. Yeniden erişim için kurumunuzla ya da destekle iletişime geçin.',
     'Auth.MfaLocked': 'Çok fazla hatalı deneme yapıldı. Lütfen daha sonra tekrar deneyin.',
     'Auth.InvalidMfaCode': 'Doğrulama kodu geçersiz veya kullanılmış. Yeni kodla tekrar deneyin.',
     'Auth.ExistingAccountMfaRequired': 'Mevcut hesabınızın doğrulama uygulamasındaki altı haneli kodu girin.',
@@ -23,6 +23,12 @@ describe('sen server messages', () => {
     'ResetPassword.InvalidRequest': 'Sıfırlama bağlantısı geçersiz veya süresi dolmuş olabilir. Lütfen yeni bir bağlantı isteyin.',
     'Profiles.OwnedByCoaching': 'Eğitim profilini Koçluk profil ekranından güncelleyin.',
   };
+
+  // Paket F F4 (user decision 07.11.2026): no join hint; an admin restores the access.
+  it('tells a role-less Koçluk user to contact their institution or support', () => {
+    expect(SEN_BY_CODE['Auth.NoRoleForProduct']).toBe(
+      'Bu platformda hesabına tanımlı bir yetki kalmadı. Yeniden erişim için kurumunla ya da destekle iletişime geç.');
+  });
 
   it('covers every mapped code in this spec', () => {
     expect(Object.keys(serverTexts).sort()).toEqual(Object.keys(SEN_BY_CODE).sort());

@@ -139,23 +139,44 @@ public sealed class CrossProductEnrollmentTests
         Assert.Equal(0, f.Consents);
     }
 
-    // Paket F F4: the account's last role in the target was removed in Rol Yönetimi and its access row stayed active.
-    // The login error points it to "Mevcut hesabımla katıl", so that join must give the role back.
+    // Paket F F4 (user decision 07.11.2026, PR #125 H1): a role an admin removed cannot be restored by the user.
+    // Removing the last role closes the access; an open row without a role (legacy data, e.g. the live case) blocks too.
     [Theory]
-    [InlineData(PlatformProduct.Coaching)]
-    [InlineData(PlatformProduct.SpeedReading)]
-    public async Task RoleLessAccountWithActiveAccessCanRejoinWithItsExistingAccount(PlatformProduct target)
+    [InlineData("student", false)]
+    [InlineData("student", true)]
+    [InlineData("teacher", false)]
+    [InlineData("teacher", true)]
+    public async Task RejoinAfterAnAdminRemovedTheRoleIsRefused(string account, bool accessStillOpen)
     {
-        var f = new Fixture(target, "student");
-        f.User.GrantProductAccess(target, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
-        Assert.DoesNotContain(f.User.Roles, r => r.Product == target);
+        var f = new Fixture(PlatformProduct.Coaching, account);
+        f.User.GrantProductAccess(f.Target, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        if (!accessStillOpen) f.User.RevokeProductAccess(f.Target, DateTimeOffset.UtcNow);
+
+        var result = await f.Join();
+
+        Assert.Equal("Identity.UserExists", result.Error.Code);
+        Assert.DoesNotContain(f.User.Roles, r => r.Product == f.Target);
+        Assert.Equal(accessStillOpen, f.User.HasProductAccess(f.Target));
+        Assert.Equal(0, f.Consents);
+        Assert.Equal(0, f.Saves);
+    }
+
+    // PR #125 review L2: a membership whose role was soft-deleted is not a live membership and must not dead-end.
+    [Fact]
+    public async Task ASoftDeletedRoleInTheTargetDoesNotBlockJoining()
+    {
+        var f = new Fixture(PlatformProduct.Coaching, "student");
+        var retired = Role.Create("RetiredRole", "Retired");
+        retired.MarkAsDeleted();
+        var membership = new Identity.Domain.Entities.UserRole(f.User.Id, retired.Id, f.Target);
+        typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(membership, retired);
+        f.User.AddRole(membership);
 
         var result = await f.Join();
 
         Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : "");
-        Assert.True(f.User.HasProductAccess(target));
-        Assert.Contains(f.User.Roles, r => r.Product == target && r.RoleId == f.Roles["Student"].Id);
-        Assert.Equal(1, f.Consents);
+        Assert.True(f.User.HasProductAccess(f.Target));
+        Assert.Contains(f.User.Roles, r => r.Product == f.Target && r.RoleId == f.Roles["Student"].Id);
     }
 
     [Fact]

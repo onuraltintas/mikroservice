@@ -218,6 +218,9 @@ describe('LoginComponent', () => {
     expect(router.navigateByUrl).not.toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
     expect(component.error).toBe(NO_ROLE_MESSAGE);
+    // Paket F F4 (user decision 07.11.2026): no join hint; an admin restores the access.
+    expect(NO_ROLE_MESSAGE).toBe(
+      'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor. Yeniden erişim için kurumunuzla ya da destekle iletişime geçin.');
   });
 
   it('shows the join hint when the server refuses a role-less sign-in', () => {

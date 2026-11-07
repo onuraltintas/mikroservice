@@ -11,7 +11,7 @@ import { routes } from '../../app.routes';
  * ("EduIvme yönetim paneli"). The shell now needs a management role.
  */
 describe('managementShellGuard', () => {
-  function run(profile: { roles: string[]; product?: string } | null, options: { authenticated?: boolean; landing?: string | null } = {}) {
+  function run(profile: { roles: string[]; permissions?: string[]; product?: string } | null, options: { authenticated?: boolean; landing?: string | null } = {}) {
     const auth = {
       userProfile: signal(profile),
       waitForAuth: vi.fn().mockResolvedValue(options.authenticated ?? true),
@@ -49,6 +49,21 @@ describe('managementShellGuard', () => {
     const { result, router, auth } = run({ roles: ['Student'], product: 'speed-reading' }, { landing: '/coaching-portal' });
     expect(router.serializeUrl(await result as UrlTree)).toBe('/auth/login');
     expect(auth.endRoleLessSession).toHaveBeenCalledTimes(1);
+  });
+
+  // PR #125 review M2: no management shell by exclusion.
+  it('ends course-management and permission-less custom sessions instead of opening the shell', async () => {
+    for (const roles of [['CourseStudent'], ['CourseTeacher'], ['ContentManager']]) {
+      TestBed.resetTestingModule();
+      const { result, router, auth } = run({ roles, permissions: [], product: 'coaching' });
+      expect(router.serializeUrl(await result as UrlTree)).toBe('/auth/login');
+      expect(auth.endRoleLessSession).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('lets a custom role with an admin permission claim into the shell', async () => {
+    const { result } = run({ roles: ['ContentManager'], permissions: ['Permissions.Coaching.ContentManage'], product: 'coaching' });
+    expect(await result).toBe(true);
   });
 
   it('leaves a missing session to authGuard', async () => {

@@ -196,9 +196,30 @@ describe('AuthService browser session security', () => {
     });
     await vi.waitFor(() => http.expectOne(req => req.url.endsWith('/auth/revoke-token')).flush({}));
 
-    expect(await outcome).toMatchObject({ error: { code: NO_ROLE_FOR_PRODUCT_CODE } });
+    expect(await outcome).toMatchObject({ status: 400, error: { code: NO_ROLE_FOR_PRODUCT_CODE } });
     expect(service.isAuthenticated()).toBe(false);
     expect(router.navigate).not.toHaveBeenCalledWith(['/dashboard']);
+  });
+
+  // PR #125 review L4/L5: a refresh refused for a role-less session leaves the same notice for the login page.
+  it('keeps the notice when a refresh is refused for a role-less session', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(
+      { code: NO_ROLE_FOR_PRODUCT_CODE, description: 'Bu platformda hesabınıza tanımlı bir yetki bulunmuyor.' },
+      { status: 400, statusText: 'Bad Request' });
+    await service.waitForAuth();
+
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.signInNotice()).toMatchObject({ status: 400, error: { code: NO_ROLE_FOR_PRODUCT_CODE } });
+    expect(service.consumeSignInNotice()).toMatchObject({ error: { code: NO_ROLE_FOR_PRODUCT_CODE } });
+    expect(service.signInNotice()).toBeNull();
+  });
+
+  it('leaves no notice when a refresh fails for another reason', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(null, { status: 401, statusText: 'Unauthorized' });
+    await service.waitForAuth();
+    expect(service.signInNotice()).toBeNull();
   });
 
   it('lands a Koçluk student in the portal and staff in the management shell', async () => {
@@ -243,18 +264,27 @@ function createToken(userId: string, roles: string[] = ['SystemAdmin'], product?
   return `${header}.${payload}.signature`;
 }
 
+// PR #125 review M2: an explicit staff allowlist, or at least one admin permission claim; nothing by exclusion.
 describe('hasManagementRole', () => {
-  it('accepts any role other than the Koçluk portal roles', () => {
-    for (const role of ['SystemAdmin', 'Editor', 'InstitutionAdmin', 'InstitutionOwner', 'ContentManager']) {
-      expect(hasManagementRole({ roles: [role] })).toBe(true);
+  it('accepts the staff roles', () => {
+    for (const role of ['SystemAdmin', 'Editor', 'InstitutionAdmin', 'InstitutionOwner']) {
+      expect(hasManagementRole({ roles: [role], permissions: [] })).toBe(true);
     }
-    expect(hasManagementRole({ roles: ['Student', 'InstitutionAdmin'] })).toBe(true);
+    expect(hasManagementRole({ roles: ['Student', 'InstitutionAdmin'], permissions: [] })).toBe(true);
   });
 
-  it('rejects portal-only and role-less sessions', () => {
-    expect(hasManagementRole({ roles: [] })).toBe(false);
-    expect(hasManagementRole({ roles: ['Student'] })).toBe(false);
-    expect(hasManagementRole({ roles: ['Teacher', 'Parent'] })).toBe(false);
+  it('accepts a custom role only with an admin permission claim', () => {
+    expect(hasManagementRole({ roles: ['ContentManager'], permissions: [] })).toBe(false);
+    expect(hasManagementRole({ roles: ['ContentManager'], permissions: ['Permissions.Coaching.ContentManage'] })).toBe(true);
+  });
+
+  it('rejects portal, course-management and role-less sessions', () => {
+    expect(hasManagementRole({ roles: [], permissions: [] })).toBe(false);
+    expect(hasManagementRole({ roles: ['Student'], permissions: ['Permissions.SpeedReading.LeaderboardView'] })).toBe(false);
+    expect(hasManagementRole({ roles: ['Teacher'], permissions: ['Permissions.SpeedReading.ReportView'] })).toBe(false);
+    expect(hasManagementRole({ roles: ['Parent'], permissions: [] })).toBe(false);
+    expect(hasManagementRole({ roles: ['CourseStudent'], permissions: [] })).toBe(false);
+    expect(hasManagementRole({ roles: ['CourseTeacher'], permissions: [] })).toBe(false);
     expect(hasManagementRole(null)).toBe(false);
   });
 });

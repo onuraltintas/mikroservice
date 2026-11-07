@@ -71,7 +71,70 @@ public sealed class MfaAuthenticationCoordinatorTests
         issuer.WasCalled.Should().BeFalse();
     }
 
-    private sealed class StubMfaService(Guid userId) : IMultiFactorService
+    // PR #125 review M1: an MFA-completed session goes through the real issuer, which enforces the product rule.
+    [Theory]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching)]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading)]
+    public async Task Verify_WhenAccountHasNoRoleInChallengeProduct_IssuesNothing(Identity.Domain.Enums.PlatformProduct product)
+    {
+        var user = User.Create(Guid.NewGuid(), "role-less@example.com");
+        user.GrantProductAccess(product, Identity.Domain.Enums.UserProductAccessSource.SelfRegistration, null, Now);
+        user.EnableMfa("protected", ["hash"], Now.AddMinutes(-1));
+        var tokens = new AuthenticationSessionIssuerTests.StubTokenService();
+        var coordinator = new MfaAuthenticationCoordinator(
+            new StubUserRepository(user), new StubMfaService(user.Id, product), RealIssuer(tokens),
+            new StubUnitOfWork(), new FixedTimeProvider(Now), new AcceptingPasswordHasher(), new TestAuthenticationLock());
+
+        var result = await coordinator.VerifyAsync("challenge", "123456", null, "127.0.0.1", CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.NoRoleForProduct");
+        tokens.Calls.Should().Be(0);
+    }
+
+    [Theory]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching)]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading)]
+    public async Task Enable_WhenAccountHasNoRoleInChallengeProduct_IssuesNothing(Identity.Domain.Enums.PlatformProduct product)
+    {
+        var user = User.Create(Guid.NewGuid(), "role-less@example.com");
+        user.GrantProductAccess(product, Identity.Domain.Enums.UserProductAccessSource.SelfRegistration, null, Now);
+        var tokens = new AuthenticationSessionIssuerTests.StubTokenService();
+        var coordinator = new MfaAuthenticationCoordinator(
+            new StubUserRepository(user), new StubMfaService(user.Id, product), RealIssuer(tokens),
+            new StubUnitOfWork(), new FixedTimeProvider(Now), new AcceptingPasswordHasher(), new TestAuthenticationLock());
+
+        var result = await coordinator.EnableAsync("challenge", "setup", "123456", "127.0.0.1", CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.NoRoleForProduct");
+        tokens.Calls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Verify_WithRoleInChallengeProduct_IssuesSession()
+    {
+        var user = AuthenticationSessionIssuerTests.CreateCoachingStudent();
+        user.EnableMfa("protected", ["hash"], Now.AddMinutes(-1));
+        var tokens = new AuthenticationSessionIssuerTests.StubTokenService();
+        var coordinator = new MfaAuthenticationCoordinator(
+            new StubUserRepository(user), new StubMfaService(user.Id, Identity.Domain.Enums.PlatformProduct.Coaching),
+            RealIssuer(tokens), new StubUnitOfWork(), new FixedTimeProvider(Now), new AcceptingPasswordHasher(),
+            new TestAuthenticationLock());
+
+        var result = await coordinator.VerifyAsync("challenge", "123456", null, "127.0.0.1", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue(result.IsFailure ? result.Error.Code : null);
+        tokens.Calls.Should().Be(1);
+    }
+
+    private static AuthenticationSessionIssuer RealIssuer(AuthenticationSessionIssuerTests.StubTokenService tokens) => new(
+        tokens,
+        new AuthenticationSessionIssuerTests.PersistingIdentityService(),
+        new AuthenticationSessionIssuerTests.RecordingUnitOfWork(),
+        Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthenticationSessionIssuer>.Instance);
+
+    private sealed class StubMfaService(Guid userId, Identity.Domain.Enums.PlatformProduct? product = null) : IMultiFactorService
     {
         public bool? LastRememberMe { get; private set; }
         public string CreateChallenge(Guid id, bool rememberMe, Identity.Domain.Enums.PlatformProduct? product = null)
@@ -80,7 +143,7 @@ public sealed class MfaAuthenticationCoordinatorTests
             return "challenge";
         }
         public Result<MfaChallengePayload> ReadChallenge(string token) =>
-            Result.Success(new MfaChallengePayload(userId, false, Now.AddMinutes(5)));
+            Result.Success(new MfaChallengePayload(userId, false, Now.AddMinutes(5), product));
         public MfaSetupResponse CreateSetup(Guid id, string email) => new("secret", "otpauth://test", "setup");
         public Result<MfaSetupPayload> ReadSetupToken(string token) =>
             Result.Success(new MfaSetupPayload(userId, "secret", Now.AddMinutes(5)));
