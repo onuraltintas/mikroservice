@@ -209,6 +209,21 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect([changed.education, changed.ownSchool, changed.diploma]).toEqual([undefined, undefined, undefined]);
   });
 
+  // G2 review (L6): a saved year-only answer is said as Sınavım says it and stays a choice of its exam.
+  it('resumes a saved year-only choice as the catalog has it now', () => {
+    const view = (sessions: object[]) => ({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2], completedAt: null, academicYearStart: 2026,
+      examSessions: sessions, allowedPurposes: ['Lgs'], examOpenYears: [{ examCode: 'LGS', year: 2027 }],
+      answers: { birthDate: '2013-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student',
+        gradeLevel: 7, graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: null,
+        targetExamYear: 2028, diplomaGrade: null, diplomaGradeEstimated: false, target: null, targetLocked: false } }) as unknown as OnboardingView;
+    expect(prefill(view(context.sessions)).session).toMatchObject({ value: 'year:2028', label: '2028 · tarih henüz açıklanmadı' });
+    const lgs28 = { id: 'lgs-28', examCode: 'LGS', examName: 'LGS', date: '2028-06-11', label: '2028', applicationStart: null, applicationEnd: null };
+    expect(prefill(view([...context.sessions, lgs28])).session).toMatchObject({ value: 'year:2028', label: '2028 · oturum seçmedim' });
+    const kept = questions({ ...personal, education: a('7'), purpose: a('Lgs') }, { ...context, sessions: [...context.sessions, lgs28],
+      savedYear: { purpose: 'Lgs', year: 2028 } }).find(x => x.id === 'session')!;
+    expect(kept.choices!.map(x => x.value)).toEqual(['session:lgs-27:2027', 'session:lgs-28:2028', 'year:2028', 'year:2029', 'year:2030']);
+  });
+
   it('asks the YKS diploma grade in 11th and 12th grade and of a lise graduate (G1: no YKS at university)', () => {
     const yks = { ...personal, purpose: a('Yks'), yksField: a('SAY'), education: undefined };
     expect(ids({ ...yks, stage: a('HighSchoolGraduate') })).toContain('diploma');

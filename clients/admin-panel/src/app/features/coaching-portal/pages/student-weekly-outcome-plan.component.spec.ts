@@ -102,7 +102,10 @@ describe('weekly outcome plan preview',()=>{
     service.setExamDate.mockImplementation((date:string|null)=>of({startDate:request.startDate,endDate:date?'2028-06-19':'2028-06-16',weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[],
       examDate:date??'2028-06-17',endDateSource:date?'Student':'Estimated',catalogExamDate:'2028-06-17',catalogExamDateEstimated:true}) as never);
     c.saveExamDate(null);fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="exam-date-note"]').textContent).toContain('tahmini tarih; sınav tarihi henüz açıklanmadı');
+    expect(fixture.nativeElement.querySelector('[data-testid="exam-date-note"]').textContent).toContain('(tahmini; resmî tarih henüz açıklanmadı)');
+    // G2 review (M2): the estimate sets the default end only; a later end is no date issue and the field has no maximum.
+    expect(c.lastDay()).toBeNull();c.endDate='2028-07-01';expect(c.dateIssue()).toBeNull();
+    expect(fixture.nativeElement.querySelector('#date-rules').textContent).toContain('tahmini olduğundan bitişi sınırlamaz');
     c.saveExamDate('2028-06-20');fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Tahmini tarihe dön (17.06.2028)');
   });

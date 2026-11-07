@@ -439,6 +439,24 @@ public sealed class CoachingProfileConsistencyTests
     }
 
     [Fact]
+    // G2 review (M1): a year whose exam has already happened cannot be chosen (a saved one is resent as it is).
+    public async Task AYearWhoseExamHasPassedIsRefused()
+    {
+        await using var s = await Setup.CreateAsync();
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Coaching.Domain.CoachingTime.Turkey));
+        var tyt = StudyCatalogExam.Create("TYT", "YKS");
+        tyt.ReplaceSessions([new(null, new DateOnly(today.Year, 1, 1), $"{today.Year}")]);
+        s.F.Db.Add(tyt); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+        await s.Personal(12);
+        var academic = today.Month >= 9 ? today.Year : today.Year - 1;
+        var error = await Assert.ThrowsAsync<ArgumentException>(() => s.Settings.SaveAsync(new(null, academic, LearningPurpose.Yks, today.Year, "SAY", null, [], [], false), default));
+        error.Message.Should().Be(CoachingLearningSetupService.PastExamYearNotice);
+        var saved = await s.Settings.SaveAsync(new(null, academic, LearningPurpose.Yks, today.Year + 1, "SAY", null, [], [], false), default);
+        saved.ExamOpenYears.Should().ContainEquivalentOf(new LearningExamOpenYear("TYT", today.Year + 1));
+        (await s.Onboarding.GetAsync(default)).ExamOpenYears.Should().ContainEquivalentOf(new LearningExamOpenYear("TYT", today.Year + 1));
+    }
+
+    [Fact]
     public async Task AUniversityStudentChoosesAgsInTheWizard()
     {
         await using var s = await Setup.CreateAsync();
