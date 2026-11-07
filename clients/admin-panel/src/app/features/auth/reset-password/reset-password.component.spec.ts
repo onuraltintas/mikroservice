@@ -45,7 +45,8 @@ describe('ResetPasswordComponent', () => {
 
     submit(component, 'Sifre-2026');
 
-    expect(component.errorMessage()).toBe('Sıfırlama bağlantısı geçersiz veya süresi dolmuş olabilir. Lütfen yeni bir bağlantı isteyin.');
+    // Paket F L8: with sen on the Coaching site (the test host is not eduivme.com).
+    expect(component.errorMessage()).toBe('Sıfırlama bağlantısı geçersiz ya da süresi dolmuş olabilir. Yeni bir bağlantı iste.');
     expect(component.isLoading()).toBe(false);
   });
 

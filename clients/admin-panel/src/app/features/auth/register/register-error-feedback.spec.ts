@@ -51,7 +51,8 @@ const forms: Array<{ name: string; voice: Voice; path: string; create: () => For
 
 const policy = 'Şifre 8-128 karakter arasında olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.';
 const expected = (voice: Voice) => ({
-  validation: `${policy} Geçerli bir e-posta adresi giriniz.`,
+  // Paket F L8: the server's FluentValidation text is shown with sen.
+  validation: `${policy} Geçerli bir e-posta adresi gir.`,
   conflict: voice === 'sen'
     ? 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifreni sıfırlayabilirsin.'
     : 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapabilir ya da şifrenizi sıfırlayabilirsiniz.',

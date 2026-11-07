@@ -93,7 +93,8 @@ describe('ExistingProductJoinComponent', () => {
     http.expectOne('/api/auth/coaching/register/join').flush(
       { code: 'Auth.ExistingAccountMfaRequired', description: 'Yeni doğrulama kodunu girin.' },
       { status: 400, statusText: 'Bad Request' });
-    expect(c.error).toBe('Yeni doğrulama kodunu girin.'); expect(c.joined).toBe(false);
+    // Paket F L8: shown with sen on the Coaching site.
+    expect(c.error).toBe('Mevcut hesabının doğrulama uygulamasındaki 6 haneli kodu gir.'); expect(c.joined).toBe(false);
     c.form.controls.mfaCode.setValue('123456'); c.submit();
     const req = http.expectOne('/api/auth/coaching/register/join');
     expect(req.request.body.mfaCode).toBe('123456'); expect(c.error).toBe('');

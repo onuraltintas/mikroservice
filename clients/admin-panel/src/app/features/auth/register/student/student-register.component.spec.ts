@@ -161,7 +161,7 @@ describe('StudentRegisterComponent registration', () => {
     authState.next({ idToken: 'google-disabled-token' });
 
     await vi.waitFor(() => expect(toaster.info).toHaveBeenCalledWith('Yeni kayıtlar şu an kapalı.'));
-    expect(component.errorMessage()).toBe('Kayıt kapalı.');
+    expect(component.errorMessage()).toBe('Yeni kayıtlar şu an kapalı.'); // Paket F L8
   });
 
   function createComponent(
