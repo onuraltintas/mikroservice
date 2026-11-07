@@ -104,7 +104,8 @@
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="createParentCode()">Yeni kod oluştur</button>
                   </div>
                 } @else {
-                  @if (activeCode(); as old) { <p class="ob-note">{{ expiredNote(old.expiresAt) }}</p> }
+                  <!-- F2 (E4 c): a code whose expiry is long past is not mentioned. -->
+                  @if (activeCode(); as old) { @if (!staleCode(old)) { <p class="ob-note" data-testid="ob-expired-code">{{ expiredNote(old.expiresAt) }}</p> } }
                   <div class="ob-chips">
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="createParentCode()">Veli kodu oluştur</button>
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="pass(question, 'Şimdilik geç')">Şimdilik geç</button>

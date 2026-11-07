@@ -51,9 +51,10 @@ describe('Notification preferences (roadmap O8)', () => {
     expect(fixture.componentInstance.items().find(x => x.category === 'Sessions')!.inApp).toBe(false);
     fixture.componentInstance.reset(); expect(fixture.componentInstance.dirty()).toBe(false);
   });
-  it('offers SMS and WhatsApp only where available, keeps locked e-mail on, and stores commercial consent (roadmap O9)', () => {
+  // F2 #31 (live test 06.11.2026): SMS and WhatsApp are not open yet, so they are not offered; their saved values are kept.
+  it('does not offer SMS or WhatsApp, keeps locked e-mail on, and stores commercial consent (roadmap O9)', () => {
     const textRows = [
-      { category: 'Sessions', label: 'Koçluk seansları', inApp: true, email: true, emailEditable: true, textAvailable: true, sms: false, whatsApp: false },
+      { category: 'Sessions', label: 'Koçluk seansları', inApp: true, email: true, emailEditable: true, textAvailable: true, sms: true, whatsApp: false },
       { category: 'Subscription', label: 'Abonelik bitişi', inApp: true, email: true, emailEditable: false, textAvailable: true, sms: false, whatsApp: false },
       { category: 'Exams', label: 'Sınavlar', inApp: true, email: false, emailEditable: true, textAvailable: false }
     ];
@@ -66,14 +67,46 @@ describe('Notification preferences (roadmap O8)', () => {
     const fixture = TestBed.createComponent(NotificationPreferencesComponent);
     fixture.componentRef.setInput('api', api); fixture.detectChanges();
     const el = (id: string) => fixture.nativeElement.querySelector(`[data-testid="${id}"]`) as HTMLInputElement | null;
-    expect(el('pref-sms-Sessions')).not.toBeNull(); expect(el('pref-sms-Exams')).toBeNull();
+    expect(el('pref-sms-Sessions')).toBeNull(); expect(el('pref-whatsapp-Sessions')).toBeNull(); expect(el('text-note')).toBeNull();
+    expect(fixture.nativeElement.querySelector('ul')!.textContent).not.toContain('SMS');
+    expect(fixture.nativeElement.textContent).not.toContain('WhatsApp');
     expect(el('pref-email-Subscription')!.disabled).toBe(true);
-    expect(el('text-note')!.textContent).toContain('henüz açılmadı');
-    el('pref-sms-Sessions')!.click(); fixture.detectChanges(); fixture.componentInstance.save();
-    expect(api.save).toHaveBeenCalledWith([{ category: 'Sessions', inApp: true, email: true, sms: true, whatsApp: false }]);
+    el('pref-app-Sessions')!.click(); fixture.detectChanges(); fixture.componentInstance.save();
+    expect(api.save).toHaveBeenCalledWith([{ category: 'Sessions', inApp: false, email: true, sms: true, whatsApp: false }]);
     el('consent-box-Sms')!.click(); fixture.detectChanges();
     expect(api.saveConsents).toHaveBeenCalledWith([{ channel: 'Sms', granted: true }]);
     expect(fixture.nativeElement.textContent).toContain("İYS'ye aktarılmayı bekliyor");
+  });
+
+  it('#31: names each box with its row, explains a row when asked, and turns a channel on or off for every row', () => {
+    const many = [
+      { category: 'Sessions', label: 'Koçluk seansları', inApp: true, email: false },
+      { category: 'ParentSummary', label: 'Haftalık veli özeti', inApp: false, email: true },
+      { category: 'Subscription', label: 'Abonelik bitişi', inApp: true, email: true, emailEditable: false }
+    ];
+    const api = { list: vi.fn(() => of(many)), save: vi.fn(() => of(many)) };
+    TestBed.configureTestingModule({ imports: [NotificationPreferencesComponent] });
+    const fixture = TestBed.createComponent(NotificationPreferencesComponent);
+    fixture.componentRef.setInput('api', api); fixture.componentRef.setInput('hints', { ParentSummary: 'Velin bağlıysa ona giden haftalık özet' });
+    fixture.detectChanges();
+    const el = (id: string) => fixture.nativeElement.querySelector(`[data-testid="${id}"]`) as HTMLInputElement;
+    expect(el('pref-app-Sessions').getAttribute('aria-label')).toBe('Koçluk seansları: Uygulamada');
+    expect(el('pref-email-ParentSummary').getAttribute('aria-label')).toBe('Haftalık veli özeti: E-posta');
+    expect(el('pref-hint-ParentSummary').textContent!.trim()).toBe('Velin bağlıysa ona giden haftalık özet');
+    expect(fixture.nativeElement.querySelector('[data-testid="pref-hint-Sessions"]')).toBeNull();
+
+    const onEmail = el('all-on-email') as unknown as HTMLButtonElement;
+    expect(onEmail.getAttribute('aria-label')).toBe('E-posta hepsini aç');
+    onEmail.click(); fixture.detectChanges();
+    expect(fixture.componentInstance.items().map(x => x.email)).toEqual([true, true, true]);
+    expect(onEmail.disabled).toBe(true);
+    (el('all-off-email') as unknown as HTMLButtonElement).click(); fixture.detectChanges();
+    // An e-mail that is always sent stays on.
+    expect(fixture.componentInstance.items().map(x => x.email)).toEqual([false, false, true]);
+    (el('all-on-inApp') as unknown as HTMLButtonElement).click(); fixture.detectChanges();
+    expect(fixture.componentInstance.items().every(x => x.inApp)).toBe(true);
+    (el('pref-save') as unknown as HTMLButtonElement).click();
+    expect(api.save).toHaveBeenCalledWith([{ category: 'ParentSummary', inApp: true, email: false, sms: false, whatsApp: false }]);
   });
 
   // E4 #24: every save attempt clears the previous message; a failure says so instead of leaving "kaydedildi" on screen.

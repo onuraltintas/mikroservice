@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingDatePipe } from '../coaching-labels';
 import { CoachingParentService, ParentLink, ParentLinkCode, ParentLinkCodeStatus } from '../parent/coaching-parent.service';
-import { parentCodeNote } from '../onboarding/onboarding-model';
+import { parentCodeNote, staleParentCode } from '../onboarding/onboarding-model';
 import { apiMessage, parentRelationshipLabel } from '../parent/parent-home.component';
 
 /** Roadmap Y7: the student gives a parent a code, approves the parent's request and can end the link. */
@@ -67,7 +67,8 @@ export class StudentParentLinksComponent implements OnInit {
 
   /** E4 review: an expired code is not replaced by asking (it no longer works anyway). */
   hasCode() { return !!this.code() || !!this.active(); }
-  expired() { const code = this.code() ? null : this.rawCode(); return code?.expired ? code : null; }
+  /** F2 (E4 c): a code whose expiry is long past is not mentioned any more. */
+  expired() { const code = this.code() ? null : this.rawCode(); return code?.expired && !staleParentCode(code) ? code : null; }
   note(expiresAt: string) { return parentCodeNote(expiresAt); }
   /** E4 #21: a new code replaces the old one (the server revokes it), so the student is asked in the page first. */
   askCode(): void { if (this.hasCode()) this.confirmReplace.set(true); else void this.createCode(); }

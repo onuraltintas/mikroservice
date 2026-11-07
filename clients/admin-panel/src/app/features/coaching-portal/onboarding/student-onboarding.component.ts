@@ -13,7 +13,7 @@ import { NotificationPreference, NotificationPreferencesApi } from '../../../../
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, TARGET_QUESTIONS, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
-  emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, personalRequest, prefill, questions, signature, stepComplete, stepQuestions,
+  emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, staleParentCode, personalRequest, prefill, questions, signature, stepComplete, stepQuestions,
   purposeOf, summary, targetRequest, withoutUnfitPurpose
 } from './onboarding-model';
 import { coachingToaster } from '../coaching-feedback';
@@ -231,6 +231,7 @@ export class StudentOnboardingComponent implements OnInit {
   /** E4 #18: the parent step's answer names the code's expiry. */
   passParent(question: Question, code: { expiresAt: string } | null) { this.pass(question, parentAnswer(code, [])); }
   codeNote(expiresAt: string) { return parentCodeNote(expiresAt); }
+  staleCode(code: { expiresAt: string }) { return staleParentCode(code); }
   expiredNote(expiresAt: string) { return `Veli kodunun süresi doldu (${coachingDate(expiresAt)}). İstersen yeni bir kod oluştur.`; }
   async createParentCode() {
     await this.run(async () => this.parentCode.set(await firstValueFrom(this.parents.createCode())), 'Veli kodu oluşturulamadı. Yeniden dene.');
@@ -301,11 +302,16 @@ export class StudentOnboardingComponent implements OnInit {
         : this.api.passStep(step as 4 | 5 | 6);
       return await firstValueFrom(request);
     } catch (e) {
-      const failure = e as { status?: number; error?: { message?: string; code?: string } };
+      const failure = e as { status?: number; error?: { message?: string; code?: string; field?: string } };
       if (step === 3 && failure?.error?.code === 'Onboarding.TeacherGoal') { await this.showTeacherGoal(); return null; }
       if (failure?.status === 400) {
-        // E4 review: a rule only the server knows refused the step: its last question is asked again with the message (no retry).
-        const last = stepQuestions(this.answers(), this.context(), step).filter(x => x.id in this.answers()).at(-1);
+        // E4 review: a rule only the server knows refused the step: that question is asked again with the message (no retry).
+        // F2 (E4 a): the server names the refused question. Only a question of this step or an earlier one is asked again (the
+        // wizard can go back); Hedefim asks only the target step. Otherwise (an older API, an unknown name) the step's last question.
+        const field = failure.error?.field;
+        const steps = this.mode() === 'target' ? [3] : Array.from({ length: step }, (_, i) => i + 1);
+        const named = field ? questions(this.answers(), this.context()).find(x => x.id === field && steps.includes(x.step) && x.id in this.answers()) : undefined;
+        const last = named ?? stepQuestions(this.answers(), this.context(), step).filter(x => x.id in this.answers()).at(-1);
         if (last) {
           this.answers.update(current => change(current, last.id));
           this.invalid.set(failure.error?.message ?? 'Bu cevap kaydedilemedi. Başka bir seçenek dene.');

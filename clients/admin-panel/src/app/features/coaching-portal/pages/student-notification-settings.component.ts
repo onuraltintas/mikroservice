@@ -15,11 +15,13 @@ import { NotificationPreferencesApi, NotificationPreferencesComponent } from '..
       <h1 id="notification-settings-title">Bildirimler</h1>
       <p>Hangi haberlerin e-postayla da geleceğini seç.</p>
     </header>
-    <section aria-label="E-posta bildirimleri"><edu-notification-preferences [api]="notifications" /></section>
+    <section aria-label="E-posta bildirimleri"><edu-notification-preferences [api]="notifications" [hints]="hints" /></section>
     <section aria-label="Takvim bağlantısı"><edu-coaching-calendar-subscription [api]="calendar" [role]="'student'" /></section>
   </div>`
 })
 export class StudentNotificationSettingsComponent {
   readonly notifications = new NotificationPreferencesApi(inject(HttpClient), environment.apiUrl);
+  /** F2 #31: what the weekly parent summary is. */
+  readonly hints: Record<string, string> = { ParentSummary: 'Velin bağlıysa ona giden haftalık özet' };
   readonly calendar = new CoachingCalendarSubscriptionApi(inject(HttpClient), environment.apiUrl);
 }

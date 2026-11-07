@@ -58,6 +58,37 @@ export class StudentStudyAvailabilityComponent implements OnInit {
       });
   }
 
+  dayLabel(day: StudyDay) { return this.days.find(x => x.value === day)?.label ?? day; }
+  /** F2 #28: what the last "Hafta içi her gün" / "Hafta sonu" did. */
+  readonly copyNote = signal<string | null>(null);
+  private static readonly weekdays: StudyDay[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  private static readonly weekend: StudyDay[] = ['Saturday', 'Sunday'];
+
+  /**
+   * F2 #28: copies a range to every weekday or to the weekend. A day that already has the same range is left as it is; a day
+   * whose ranges would overlap is skipped and named, so nothing that was entered is changed.
+   */
+  copyRow(index: number, target: 'weekdays' | 'weekend') {
+    const source = this.rows[index];
+    if (!source || !this.ready() || this.saving()) return;
+    const start = this.minute(source.start); const end = source.endOfDay ? 1440 : this.minute(source.end);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) { this.copyNote.set('Önce bu aralığın saatlerini düzelt.'); return; }
+    const added: AvailabilityRow[] = []; const skipped: string[] = []; let full = false;
+    for (const day of target === 'weekdays' ? StudentStudyAvailabilityComponent.weekdays : StudentStudyAvailabilityComponent.weekend) {
+      const same = this.rows.filter(row => row.day === day && row !== source);
+      if (day === source.day || same.some(row => this.minute(row.start) === start && (row.endOfDay ? 1440 : this.minute(row.end)) === end)) continue;
+      if (same.some(row => this.minute(row.start) < end && start < (row.endOfDay ? 1440 : this.minute(row.end)))) { skipped.push(this.dayLabel(day)); continue; }
+      if (this.rows.length + added.length >= 42) { full = true; break; }
+      added.push({ day, start: source.start, end: source.end, endOfDay: source.endOfDay });
+    }
+    if (added.length) { this.rows = [...this.rows, ...added]; this.dirty = true; }
+    const range = `${source.start}–${source.endOfDay ? '24:00' : source.end}`;
+    const notes = [added.length ? `${range} ${target === 'weekdays' ? 'hafta içi günlere' : 'hafta sonuna'} eklendi; kaydetmeyi unutma.` : skipped.length || full ? `${range} bu günlere eklenmedi.` : `${range} bu günlerde zaten var.`];
+    if (skipped.length) notes.push(`${skipped.join(', ')}: ${skipped.length > 1 ? 'o günlerde' : 'o gün'} bu saatlerle çakışan bir aralık var.`);
+    if (full) notes.push('En fazla 42 saat aralığı eklenebilir.');
+    this.copyNote.set(notes.join(' '));
+  }
+
   addRow() {
     if (!this.ready() || this.saving() || this.rows.length >= 42) return;
     this.rows = [...this.rows, { day: 'Monday', start: '17:00', end: '18:00', endOfDay: false }];
@@ -73,7 +104,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   discardChanges() {
     if (this.saving() || this.loading()) return;
     this.apply(this.lastSaved);
-    this.error.set(null);
+    this.error.set(null); this.copyNote.set(null);
     this.success.set(null);
   }
 
@@ -95,7 +126,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   /** E4 #24: every attempt clears the previous message; a refused row is marked next to its field (the form is novalidate). */
   save() {
     if (!this.ready() || this.saving() || this.loading()) return;
-    this.error.set(null); this.success.set(null); this.invalidField.set(null);
+    this.error.set(null); this.success.set(null); this.invalidField.set(null); this.copyNote.set(null);
     let windows: StudyWindow[];
     try { windows = this.validatedWindows(); }
     catch (error) { this.error.set(`Çalışma saatlerin kaydedilmedi. ${error instanceof Error ? error.message : 'Çalışma saatlerini kontrol et.'}`); return; }

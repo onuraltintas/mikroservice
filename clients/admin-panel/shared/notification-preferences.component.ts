@@ -56,6 +56,9 @@ export class NotificationPreferencesApi {
     ul{list-style:none;margin:.6rem 0 0;padding:0;display:grid}
     li{display:flex;flex-wrap:wrap;gap:.4rem .9rem;align-items:center;border-top:1px solid var(--ui-border,#e2e8f0);padding:.55rem 0;font-size:.86rem}
     li .name{flex:1 1 14rem;min-width:0}
+    .hint{display:block}
+    .bulk{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;margin-top:.6rem;font-size:.82rem}
+    .bulk-channel{display:inline-flex;flex-wrap:wrap;gap:.35rem;align-items:center}
     label{display:inline-flex;gap:.35rem;align-items:center;white-space:nowrap}
     .tag{border-radius:999px;padding:.05rem .5rem;font-size:.72rem;font-weight:700;background:var(--ui-surface-muted,#f1f5f9)}
     .actions{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.6rem}
@@ -67,21 +70,26 @@ export class NotificationPreferencesApi {
     <p class="muted">{{ formal
       ? 'Hangi bildirimleri uygulamada ve e-postayla almak istediğinizi seçin. Önemli koçluk bildirimleri varsayılan olarak e-postayla da gönderilir.'
       : 'Hangi bildirimleri uygulamada ve e-postayla almak istediğini seç. Önemli koçluk bildirimleri varsayılan olarak e-postayla da gelir.' }}</p>
-    @if (anyText()) { <p class="muted" data-testid="text-note">SMS ve WhatsApp gönderimi henüz açılmadı. {{ formal ? 'Seçiminiz kaydedilir; gönderim açıldığında onaylı telefon numaranıza yalnız seçtiğiniz hatırlatmalar gider.' : 'Seçimin kaydedilir; gönderim açıldığında onaylı telefon numarana yalnız seçtiğin hatırlatmalar gider.' }}</p> }
     @if (error()) { <p class="err" role="alert">{{ error() }}</p> }
     @if (message()) { <p class="ok" role="status">{{ message() }}</p> }
     @if (loading()) { <p class="muted" role="status">Tercihler yükleniyor…</p> }
     @else if (items().length) {
+      <!-- F2 #31: every channel can be turned on or off for all rows at once. -->
+      <div class="bulk" role="group" aria-label="Hepsini birden değiştir">
+        @for (channel of bulkChannels; track channel.key) {
+          <span class="bulk-channel"><span>{{ channel.label }}:</span>
+            <button type="button" [disabled]="saving() || allAre(channel.key, true)" (click)="setAll(channel.key, true)" [attr.aria-label]="channel.label + ' hepsini aç'" [attr.data-testid]="'all-on-' + channel.key">Hepsini aç</button>
+            <button type="button" [disabled]="saving() || allAre(channel.key, false)" (click)="setAll(channel.key, false)" [attr.aria-label]="channel.label + ' hepsini kapat'" [attr.data-testid]="'all-off-' + channel.key">Hepsini kapat</button>
+          </span>
+        }
+      </div>
       <ul>
         @for (item of items(); track item.category) {
           <li [attr.data-testid]="'pref-' + item.category">
-            <span class="name">{{ item.label }}</span>
-            <label><input type="checkbox" [checked]="item.inApp" [disabled]="saving()" (change)="toggle(item.category, 'inApp', $event)" [attr.data-testid]="'pref-app-' + item.category">Uygulamada</label>
-            <label><input type="checkbox" [checked]="item.email" [disabled]="saving() || item.emailEditable === false" (change)="toggle(item.category, 'email', $event)" [attr.data-testid]="'pref-email-' + item.category">E-posta</label>
-            @if (item.textAvailable) {
-              <label><input type="checkbox" [checked]="!!item.sms" [disabled]="saving()" (change)="toggle(item.category, 'sms', $event)" [attr.data-testid]="'pref-sms-' + item.category">SMS</label>
-              <label><input type="checkbox" [checked]="!!item.whatsApp" [disabled]="saving()" (change)="toggle(item.category, 'whatsApp', $event)" [attr.data-testid]="'pref-whatsapp-' + item.category">WhatsApp</label>
-            }
+            <span class="name">{{ item.label }}@if (hints[item.category]; as hint) { <small class="muted hint" [attr.data-testid]="'pref-hint-' + item.category">{{ hint }}</small> }</span>
+            <!-- F2 #31: each box is named with its row; SMS and WhatsApp are not offered until they are open. -->
+            <label><input type="checkbox" [checked]="item.inApp" [disabled]="saving()" (change)="toggle(item.category, 'inApp', $event)" [attr.aria-label]="item.label + ': Uygulamada'" [attr.data-testid]="'pref-app-' + item.category">Uygulamada</label>
+            <label><input type="checkbox" [checked]="item.email" [disabled]="saving() || item.emailEditable === false" (change)="toggle(item.category, 'email', $event)" [attr.aria-label]="item.label + ': E-posta'" [attr.data-testid]="'pref-email-' + item.category">E-posta</label>
           </li>
         }
       </ul>
@@ -110,6 +118,9 @@ export class NotificationPreferencesApi {
 export class NotificationPreferencesComponent implements OnInit {
   @Input({ required: true }) api!: NotificationPreferencesApi;
   @Input() formal = false;
+  /** F2 #31: a short line under a row's name (for example what the weekly parent summary is). */
+  @Input() hints: Record<string, string> = {};
+  readonly bulkChannels: { key: 'inApp' | 'email'; label: string }[] = [{ key: 'inApp', label: 'Uygulamada' }, { key: 'email', label: 'E-posta' }];
 
   readonly items = signal<NotificationPreference[]>([]);
   private readonly saved = signal<NotificationPreference[]>([]);
@@ -121,7 +132,6 @@ export class NotificationPreferencesComponent implements OnInit {
   readonly consentError = signal('');
   readonly message = signal('');
   readonly dirty = computed(() => JSON.stringify(this.items()) !== JSON.stringify(this.saved()));
-  readonly anyText = computed(() => this.items().some(item => item.textAvailable));
 
   ngOnInit(): void {
     this.api.list().pipe(finalize(() => this.loading.set(false))).subscribe({
@@ -135,6 +145,15 @@ export class NotificationPreferencesComponent implements OnInit {
     const checked = (event.target as HTMLInputElement).checked;
     this.message.set('');
     this.items.update(items => items.map(item => item.category === category ? { ...item, [channel]: checked } : item));
+  }
+
+  /** F2 #31: turns one channel on or off for every row (e-mails that are always sent stay as they are). */
+  setAll(channel: 'inApp' | 'email', on: boolean): void {
+    this.message.set('');
+    this.items.update(items => items.map(item => channel === 'email' && item.emailEditable === false ? item : { ...item, [channel]: on }));
+  }
+  allAre(channel: 'inApp' | 'email', on: boolean): boolean {
+    return this.items().filter(item => channel !== 'email' || item.emailEditable !== false).every(item => item[channel] === on);
   }
 
   reset(): void { this.items.set(this.saved()); this.message.set(''); }

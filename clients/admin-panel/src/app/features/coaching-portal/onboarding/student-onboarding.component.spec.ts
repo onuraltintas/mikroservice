@@ -354,23 +354,54 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     expect(t.el.textContent).not.toContain('Bu hedef sınavına uymuyor.');
   });
 
+  // F2 (E4 a): the server names the refused question ("field"); the wizard asks that one, not the step's last question.
+  it('a 400 that names its question asks that question again', async () => {
+    const t = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2] }, stepTwo));
+    await t.click('Henüz karar vermedim');
+    t.http.expectOne(`${base}/steps/target`).flush({ message: 'Önce hazırlandığın sınavı seç.', field: 'purpose' }, { status: 400, statusText: 'Bad Request' }); await t.settle();
+    const current = t.el.querySelector('[data-current]')!;
+    expect(current.getAttribute('data-question')).toBe('purpose');
+    expect(current.querySelector('[role="alert"]')!.textContent).toContain('Önce hazırlandığın sınavı seç.');
+    // An unknown name falls back to the step's last question.
+    TestBed.resetTestingModule();
+    const u = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2] }, stepTwo));
+    await u.click('Henüz karar vermedim');
+    u.http.expectOne(`${base}/steps/target`).flush({ message: 'Olmadı.', field: 'nope' }, { status: 400, statusText: 'Bad Request' }); await u.settle();
+    expect(u.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
+  });
+
   it('a resumed wizard keeps "Sonra bakarım" when invitations are still waiting and says when the parent code expired', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-11-03T12:00:00Z'));
     const t = await render(view({ status: 'InProgress', nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6], acceptedInvitations: [] }, stepTwo), {}, {
       invitations: [{ id: 'i1', inviterEmail: 'ogretmen@example.test', message: null }],
       code: { expiresAt: '2026-11-01T09:00:00Z', createdAt: '2026-10-25T09:00:00Z', expired: true } });
     const summary = t.el.querySelector('.ob-summary')!.textContent!;
     expect(summary).toContain('Davet: Sonra bakarım');
     expect(summary).toContain('Veli bağlantısı: Veli kodumun süresi doldu (01.11.2026)');
-    t.http.verify();
+    t.http.verify(); vi.useRealTimers();
   });
 
   it('the parent step offers a new code when the earlier one expired', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-11-03T12:00:00Z'));
     const t = await render(view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo));
     t.http.expectOne('/api/users/me/parent-link-codes/active').flush({ expiresAt: '2026-11-01T09:00:00Z', createdAt: '2026-10-25T09:00:00Z', expired: true }); await t.settle();
     const current = t.el.querySelector('[data-current]')!;
     expect(current.textContent).toContain('Veli kodunun süresi doldu (01.11.2026)');
     expect(current.textContent).not.toContain('Aktif bir veli kodun var');
     expect(t.button('Veli kodu oluştur')).toBeTruthy();
+    vi.useRealTimers();
+  });
+
+  // F2 (E4 c): a code whose expiry is long past is not mentioned.
+  it('the parent step does not mention a code whose expiry is long past', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-11-20T12:00:00Z'));
+    const t = await render(view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo));
+    t.http.expectOne('/api/users/me/parent-link-codes/active').flush({ expiresAt: '2026-11-01T09:00:00Z', createdAt: '2026-10-25T09:00:00Z', expired: true }); await t.settle();
+    const current = t.el.querySelector('[data-current]')!;
+    expect(current.querySelector('[data-testid="ob-expired-code"]')).toBeNull();
+    expect(current.textContent).not.toContain('01.11.2026');
+    expect(t.button('Veli kodu oluştur')).toBeTruthy();
+    vi.useRealTimers();
   });
   // E7 (#30, live test 06.11.2026): "Hedefini belirle" and Hedefim show the current target first; "Değiştir" opens the same steps.
   describe('E7: the current target first', () => {
@@ -500,6 +531,18 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi');
       expect(t.el.textContent).not.toContain('Bu puan bu sınava uymuyor.');
       t.http.expectNone(`${base}/steps/target`);
+    });
+
+    // F2 review (M1): in target mode a field of another step (here "purpose") cannot be asked; the target question comes back.
+    it('a 400 naming a question of another step re-asks the target question in target mode', async () => {
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
+      await changeToLgsScore(t);
+      t.http.expectOne(`${base}/steps/target`).flush({ message: 'Önce hazırlandığın sınavı seç.', field: 'purpose' }, { status: 400, statusText: 'Bad Request' }); await t.settle();
+      const current = t.el.querySelector('[data-current]')!;
+      expect(current).not.toBeNull();
+      expect(current.getAttribute('data-question')).toBe('targetScore');
+      expect(current.querySelector('[role="alert"]')!.textContent).toContain('Önce hazırlandığın sınavı seç.');
+      expect(t.el.querySelector('[data-question="purpose"]')).toBeNull();
     });
 
     it('"Henüz karar vermedim" asks before the saved target is removed', async () => {

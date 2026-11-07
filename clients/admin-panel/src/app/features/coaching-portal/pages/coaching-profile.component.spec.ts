@@ -5,6 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { CoachingProfileComponent } from '../../../../../shared/coaching-profile.component';
 import { vi } from 'vitest';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 describe('Coaching owned profile', () => {
   it('lets a student fill education fields and save them through the rendered form', async () => {
@@ -17,10 +18,9 @@ describe('Coaching owned profile', () => {
       const input = fixture.nativeElement.querySelector(`[name="${name}"]`) as HTMLInputElement;
       input.value = value; input.dispatchEvent(new Event('input'));
     }
-    // E3 #14: the grade is a choice as in the wizard (lise: 9–12), not a typed number.
-    const grade = fixture.nativeElement.querySelector('select[name="gradeLevel"]') as HTMLSelectElement;
-    expect(Array.from(grade.options).map(x => x.textContent!.trim())).toEqual(['Seç', '9. sınıf', '10. sınıf', '11. sınıf', '12. sınıf']);
-    grade.selectedIndex = 3; grade.dispatchEvent(new Event('change'));
+    // E3 #14 / F2 #25: the grade is the wizard's choice buttons (lise: 9–12), not a typed number.
+    expect(choices(fixture.nativeElement, 'gradeLevel')).toEqual(['9. sınıf', '10. sınıf', '11. sınıf', '12. sınıf']);
+    pick(fixture.nativeElement, 'gradeLevel', '11. sınıf');
     (fixture.nativeElement.querySelector('[name="shareProgress"]') as HTMLInputElement).click();
     fixture.detectChanges(); await fixture.whenStable();
     expect(component.dirty).toBe(true);
@@ -92,8 +92,7 @@ describe('Coaching owned profile', () => {
     component.removeSchool(); fixture.detectChanges(); await fixture.whenStable();
     expect(el.querySelector('[data-testid="own-school"]')!.textContent).toContain('seçilmedi');
     // A graduate preparing for YDS is not asked the diploma grade (the server would drop it).
-    const status = el.querySelector('[name="educationStage"]') as HTMLSelectElement;
-    status.value = 'HighSchoolGraduate'; status.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
+    pick(el, 'educationStage', 'Liseden mezunum'); fixture.detectChanges(); await fixture.whenStable();
     expect(component.stage).toBe('HighSchoolGraduate');
     expect(el.querySelector('[name="diplomaGrade"]')).toBeNull();
     TestBed.resetTestingModule();
@@ -282,6 +281,8 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/invitations/invite-1/accept').flush(null);
     http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student, memberships: [] } });
+    // F2/F3: the student menu is read again (a new teacher can open menu items).
+    http.expectOne('/api/coaching/profiles/me/navigation').flush({ data: { showAssignments: true, showSessions: true } });
     fixture.detectChanges(); await fixture.whenStable();
     expect(component.invitations()).toEqual([]); expect(component.working()).toBe(false); http.verify();
   });
@@ -308,18 +309,17 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
     fixture.detectChanges(); await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    const stage = el.querySelector('select[name="educationStage"]') as HTMLSelectElement;
-    expect(el.textContent).toContain('Şu an durumun ne?');
-    expect(Array.from(stage.options).map(x => x.textContent!.trim())).toEqual(['Seç', 'Ortaokul öğrencisiyim', 'Lise öğrencisiyim', 'Liseden mezunum', 'Üniversite öğrencisiyim', 'Üniversiteden mezunum']);
+    expect(el.querySelector('[data-testid="choice-educationStage"] legend')!.textContent).toBe('Şu an durumun ne?');
+    expect(choices(el, 'educationStage')).toEqual(['Ortaokul öğrencisiyim', 'Lise öğrencisiyim', 'Liseden mezunum', 'Üniversite öğrencisiyim', 'Üniversiteden mezunum']);
     expect(component.stage).toBe('high');
     expect(el.querySelector('[data-testid="education-clears-school"]')).toBeNull();
     // Ortaokul: 5–8, and a lise grade no longer fits.
-    stage.value = 'middle'; stage.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
-    expect(Array.from((el.querySelector('select[name="gradeLevel"]') as HTMLSelectElement).options).map(x => x.textContent!.trim())).toEqual(['Seç', '5. sınıf', '6. sınıf', '7. sınıf', '8. sınıf']);
+    pick(el, 'educationStage', 'Ortaokul öğrencisiyim'); fixture.detectChanges(); await fixture.whenStable();
+    expect(choices(el, 'gradeLevel')).toEqual(['5. sınıf', '6. sınıf', '7. sınıf', '8. sınıf']);
     expect(component.student!.gradeLevel).toBeNull();
     // A university student: no grade, no school, no branch, and the student is told before saving.
-    stage.value = 'UniversityStudent'; stage.dispatchEvent(new Event('change')); fixture.detectChanges(); await fixture.whenStable();
-    expect(el.querySelector('select[name="gradeLevel"]')).toBeNull();
+    pick(el, 'educationStage', 'Üniversite öğrencisiyim'); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[name="gradeLevel"]')).toBeNull();
     expect(el.querySelector('[data-testid="own-school"]')).toBeNull(); expect(el.querySelector('[name="classBranch"]')).toBeNull();
     expect(el.querySelector('[data-testid="education-clears-school"]')!.textContent).toContain('sınıf, okul ve şube bilgin silinecek');
     // E4: the warning is asked in the page (no dialog) after the server says what else changes.
@@ -371,7 +371,7 @@ describe('Coaching owned profile', () => {
     http.expectOne('/api/coaching/profiles/me').flush({ data: { student: { version: 1, educationStatus: 'UniversityGraduate', gradeLevel: null, graduationYear: 2020, shareProgressWithTeachers: true, isActive: true } } });
     fixture.detectChanges(); await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    expect((el.querySelector('select[name="educationStage"]') as HTMLSelectElement).selectedOptions[0].textContent!.trim()).toBe('Üniversiteden mezunum');
+    expect((el.querySelector('input[name="educationStage"]:checked') as HTMLInputElement).closest('label')!.textContent!.trim()).toBe('Üniversiteden mezunum');
     expect((el.querySelector('[name="graduationYear"]') as HTMLInputElement).value).toBe('2020');
     expect(el.querySelector('[data-testid="education-clears-school"]')).toBeNull();
   });
@@ -407,11 +407,7 @@ describe('Profilim feedback and warnings (E4 #23, #24)', () => {
       const input = el.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement;
       input.value = value; input.dispatchEvent(new Event(input.tagName === 'SELECT' ? 'change' : 'input')); await settle();
     };
-    const choose = async (name: string, label: string) => {
-      const select = el.querySelector(`select[name="${name}"]`) as HTMLSelectElement;
-      select.selectedIndex = Array.from(select.options).findIndex(x => x.textContent!.trim() === label);
-      expect(select.selectedIndex, label).toBeGreaterThan(-1); select.dispatchEvent(new Event('change')); await settle();
-    };
+    const choose = async (name: string, label: string) => { pick(el, name, label); await settle(); };
     const click = async (scope: string, text: string) => {
       const button = Array.from(el.querySelectorAll(`${scope} button`)).find(x => x.textContent?.trim() === text) as HTMLElement | undefined;
       expect(button, text).toBeTruthy(); button!.click(); await settle();
@@ -526,3 +522,145 @@ describe('Profilim feedback and warnings (E4 #23, #24)', () => {
 });
 
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });
+
+/** F2 #25: the education status and the grade are the wizard's choice buttons (radios), not lists. */
+function choices(el: HTMLElement, name: string) {
+  return Array.from(el.querySelectorAll(`[data-testid="choice-${name}"] label`)).map(x => x.textContent!.trim());
+}
+function pick(el: HTMLElement, name: string, label: string) {
+  const option = Array.from(el.querySelectorAll(`[data-testid="choice-${name}"] label`)).find(x => x.textContent!.trim() === label);
+  expect(option, label).toBeTruthy();
+  (option!.querySelector('input') as HTMLInputElement).click();
+}
+
+// ---------- F2 #25 (live test 06.11.2026): Profilim, simpler ----------
+describe('Profilim (F2 #25)', () => {
+  async function student(profile: object) {
+    TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+    const fixture = TestBed.createComponent(CoachingProfileComponent);
+    fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', 'Student');
+    fixture.detectChanges(); await fixture.whenStable();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student: profile } });
+    const settle = async () => { fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges(); };
+    await settle();
+    return { fixture, component: fixture.componentInstance, http, el: fixture.nativeElement as HTMLElement, settle };
+  }
+  const tenth = { version: 2, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true,
+    homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya' };
+
+  it('has no second heading and no reload buttons', async () => {
+    const t = await student(tenth);
+    expect(t.el.querySelector('h2#coaching-profile-title')).toBeNull();
+    expect(t.el.textContent).not.toContain('Koçluk profilim');
+    const buttons = Array.from(t.el.querySelectorAll('button')).map(x => x.textContent?.trim());
+    expect(buttons).not.toContain('Profili yeniden yükle'); expect(buttons).not.toContain('Davetleri yenile');
+  });
+
+  it('asks the status and the grade with the wizard\'s buttons and saves the picked grade', async () => {
+    const t = await student(tenth);
+    const grades = t.el.querySelectorAll('input[type="radio"][name="gradeLevel"]');
+    expect(grades.length).toBe(4);
+    expect((t.el.querySelector('input[name="gradeLevel"]:checked') as HTMLInputElement).closest('label')!.textContent!.trim()).toBe('10. sınıf');
+    expect(t.el.querySelector('[data-testid="choice-gradeLevel"] legend')!.textContent).toBe('Kaçıncı sınıftasın?');
+    expect(t.el.querySelector('input[type="number"][name="gradeLevel"], select[name="gradeLevel"]')).toBeNull();
+    pick(t.el, 'gradeLevel', '12. sınıf'); await t.settle();
+    expect(t.component.student!.gradeLevel).toBe(12); expect(t.component.dirty).toBe(true);
+    expect(t.el.querySelector('[data-testid="choice-gradeLevel"] .is-selected')!.textContent!.trim()).toBe('12. sınıf');
+  });
+
+  it('picks the home city and district from searchable lists', async () => {
+    const t = await student(tenth);
+    (Array.from(t.el.querySelectorAll('[data-testid="home-place"] button')).find(x => x.textContent?.trim() === 'Değiştir') as HTMLElement).click();
+    t.http.expectOne('/api/locations/provinces').flush([{ id: '06', name: 'Ankara' }, { id: '34', name: 'İstanbul' }]); await t.settle();
+    expect(t.el.querySelector('[data-testid="home-place"] select')).toBeNull();
+    const city = t.el.querySelector('[data-testid="home-place"] input[role="combobox"]') as HTMLInputElement;
+    expect(city.getAttribute('aria-label')).toBe('Hangi şehirde yaşıyorsun?');
+    city.value = 'ist'; city.dispatchEvent(new Event('input')); await t.settle();
+    const option = t.el.querySelector('[data-testid="home-place"] [role="option"]') as HTMLElement;
+    expect(option.textContent!.trim()).toBe('İstanbul'); option.click(); await t.settle();
+    t.http.expectOne('/api/locations/provinces/34/districts').flush([{ id: '3401', provinceId: '34', name: 'Kadıköy' }, { id: '3402', provinceId: '34', name: 'Beşiktaş' }]); await t.settle();
+    const district = t.el.querySelector('[data-testid="home-place"] input[role="combobox"]') as HTMLInputElement;
+    expect(district.getAttribute('aria-label')).toBe('İstanbul içinde hangi ilçedesin?');
+    district.value = 'beş'; district.dispatchEvent(new Event('input')); await t.settle();
+    (t.el.querySelector('[data-testid="home-place"] [role="option"]') as HTMLElement).click(); await t.settle();
+    expect(t.el.querySelector('[data-testid="home-place"] strong')!.textContent).toBe('İstanbul / Beşiktaş');
+    t.component.save();
+    expect(t.http.expectOne('/api/coaching/profiles/me/student').request.body).toMatchObject({ homeProvinceId: '34', homeDistrictId: '3402' });
+  });
+
+  // F2 review (M4): a failed profile load can be retried (students, teachers and staff).
+  for (const role of ['Student', 'Teacher'] as const) {
+    it(`retries a failed profile load (${role})`, async () => {
+      TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+      const fixture = TestBed.createComponent(CoachingProfileComponent);
+      fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', role);
+      fixture.detectChanges(); await fixture.whenStable();
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+      http.expectOne('/api/coaching/profiles/me').flush({}, { status: 503, statusText: 'Unavailable' });
+      fixture.detectChanges(); await fixture.whenStable();
+      const card = (fixture.nativeElement as HTMLElement).querySelector('.profile-card')!;
+      expect(card.querySelector('[role="alert"]')).not.toBeNull();
+      const retry = Array.from(card.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Yeniden dene') as HTMLButtonElement;
+      expect(retry).toBeTruthy();
+      retry.click(); await fixture.whenStable(); await new Promise(r => setTimeout(r));
+      http.expectOne('/api/coaching/profiles/me').flush({ data: role === 'Student' ? { student: tenth } : { teacher: { version: 1, isActive: true, subjects: [] } } });
+      fixture.detectChanges(); await fixture.whenStable();
+      expect(Array.from(card.querySelectorAll('button')).map(x => x.textContent?.trim())).not.toContain('Yeniden dene');
+    });
+  }
+
+  it('marks the district list when the district is missing, so the focus reaches it', async () => {
+    const t = await student(tenth);
+    (Array.from(t.el.querySelectorAll('[data-testid="home-place"] button')).find(x => x.textContent?.trim() === 'Değiştir') as HTMLElement).click();
+    t.http.expectOne('/api/locations/provinces').flush([{ id: '34', name: 'İstanbul' }]); await t.settle();
+    t.component.pickProvince('34');
+    t.http.expectOne('/api/locations/provinces/34/districts').flush([{ id: '3401', provinceId: '34', name: 'Kadıköy' }]); await t.settle();
+    t.component.save(); await t.settle(); await new Promise(r => setTimeout(r));
+    const district = t.el.querySelector('[data-testid="home-place"] input[role="combobox"]') as HTMLInputElement;
+    expect(district.getAttribute('aria-invalid')).toBe('true');
+    expect(district.getAttribute('aria-describedby')).toBe('homeDistrict-error');
+    expect(t.el.querySelector('#homeDistrict-error')!.textContent).toContain('ilçeni');
+    expect(document.activeElement).toBe(district);
+  });
+
+  // F2/F3: after a student accepts an invitation the side menu is refreshed (forced past a request in flight); staff do not.
+  for (const role of ['Student', 'Teacher'] as const) {
+    it(`refreshes the student menu after an accepted invitation (${role})`, async () => {
+      const navigation = { refresh: vi.fn() };
+      TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
+        { provide: CoachingStudentNavigationService, useValue: navigation }] });
+      const fixture = TestBed.createComponent(CoachingProfileComponent);
+      fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', role);
+      fixture.detectChanges(); await fixture.whenStable();
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+      http.expectOne('/api/coaching/profiles/me').flush({ data: role === 'Student' ? { student: tenth } : { teacher: { version: 1, isActive: true, subjects: [] } } });
+      fixture.detectChanges(); await fixture.whenStable();
+      fixture.componentInstance.respond('invite-1', 'reject');
+      http.expectOne('/api/coaching/invitations/invite-1/reject').flush(null);
+      http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+      expect(navigation.refresh).not.toHaveBeenCalled();
+      fixture.componentInstance.respond('invite-2', 'accept');
+      http.expectOne('/api/coaching/invitations/invite-2/accept').flush(null);
+      if (role === 'Student') expect(navigation.refresh).toHaveBeenCalledWith({ force: true });
+      else expect(navigation.refresh).not.toHaveBeenCalled();
+    });
+  }
+
+  it('retries a failed invitation list only when it failed', async () => {
+    TestBed.configureTestingModule({ imports: [CoachingProfileComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+    const fixture = TestBed.createComponent(CoachingProfileComponent);
+    fixture.componentRef.setInput('apiUrl', '/api'); fixture.componentRef.setInput('role', 'Student');
+    fixture.detectChanges(); await fixture.whenStable();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/coaching/invitations/my-invitations').flush({}, { status: 503, statusText: 'Unavailable' });
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student: tenth } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const retry = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(x => x.textContent?.trim() === 'Yeniden dene') as HTMLElement;
+    retry.click();
+    http.expectOne('/api/coaching/invitations/my-invitations').flush([]);
+  });
+});

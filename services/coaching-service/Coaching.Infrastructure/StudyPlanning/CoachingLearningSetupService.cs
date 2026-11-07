@@ -131,10 +131,13 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             eligibleTopics.Count(t => t.LessonId == x.Id), eligibleTopics.Count(t => t.LessonId == x.Id && t.EstimatedMinutes == null))).ToArrayAsync(ct);
         var topicQuery = eligibleTopics.Where(x => lessonId != null && x.LessonId == lessonId);
         var count = await topicQuery.CountAsync(ct);
+        // F2 #28: curriculum order. A sub-topic's rank counts within its parent, so it takes its parent's place in the unit first.
         var topicViews = await (from t in topicQuery
             join l in db.StudyCatalogLessons on t.LessonId equals l.Id
             join u in db.StudyCatalogUnits on t.UnitId equals u.Id
-            orderby u.DisplayOrder, u.Id, t.DisplayOrder, t.Id
+            join p in db.StudyCatalogTopics on t.ParentId equals (Guid?)p.Id into parents
+            from p in parents.DefaultIfEmpty()
+            orderby u.DisplayOrder, u.Id, p == null ? t.DisplayOrder : p.DisplayOrder, p == null ? t.Id : p.Id, t.DisplayOrder, t.Id
             select new StudyTopicView(t.Id, t.Name, l.Name, u.Name, l.GradeNumber, l.ExamCode, t.EstimatedMinutes, l.Id))
             .Skip((pageNumber - 1) * 50).Take(50).ToArrayAsync(ct);
         var missing = choices.Sum(x => x.MissingDurationCount);

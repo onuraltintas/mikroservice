@@ -50,6 +50,16 @@ public sealed class CoachingLearningSetupPostgresTests
                 [new(lesson.Id, 1, 3)], [new(topic.Id, DeclaredTopicStatus.NeedsReview)], true), default);
             Assert.True(saved.IsReady); db.ChangeTracker.Clear();
             var catalog = await service.GetCatalogAsync(lesson.Id, 1, default); Assert.Single(catalog.Topics.Items);
+            // F2 #28: topics come in curriculum order; a sub-topic's rank counts within its parent (A1, A2, B1, B2 — not A1, B1, A2, B2).
+            var other = StudyCatalogLesson.Create("test", "math-2", "Matematik 2", 8, "LGS"); other.AssignCurriculum(curriculum.Id); other.SetActive(true);
+            var otherUnit = StudyCatalogUnit.Create("test", "unit-2", other.Id, "Cebir", 1); otherUnit.SetActive(true);
+            var parentA = StudyCatalogTopic.Create("test", "a", other.Id, otherUnit.Id, "A", null, 1, null); parentA.SetActive(true);
+            var parentB = StudyCatalogTopic.Create("test", "b", other.Id, otherUnit.Id, "B", null, 2, null); parentB.SetActive(true);
+            db.AddRange(other, otherUnit, parentA, parentB); await db.SaveChangesAsync();
+            foreach (var (name, parent, rank) in new[] { ("B2", parentB, 2), ("A2", parentA, 2), ("B1", parentB, 1), ("A1", parentA, 1) })
+            { var child = StudyCatalogTopic.Create("test", name, other.Id, otherUnit.Id, name, parent.Id, rank, 20); child.SetActive(true); db.Add(child); }
+            await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            Assert.Equal(new[] { "A1", "A2", "B1", "B2" }, (await service.GetCatalogAsync(other.Id, 1, default)).Topics.Items.Select(x => x.Name).ToArray());
             await using var second = new CoachingDbContext(options);
             var resumedService = new CoachingLearningSetupService(second, new CoachingAccessPolicy(actor), accounts);
             var resumed = await resumedService.GetAsync(default); Assert.True(resumed.IsReady);

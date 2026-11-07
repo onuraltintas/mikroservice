@@ -1,7 +1,7 @@
 import { coachingFeedback, coachingToaster } from '../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, DestroyRef, ElementRef, Input, OnInit, inject, signal, output } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Input, OnInit, computed, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -9,6 +9,7 @@ import { Observable, finalize, map } from 'rxjs';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from '../src/app/features/coaching-portal/onboarding/onboarding-combobox.component';
 import { EDUCATION_STAGES, EducationStage, educationRequest, gradesFor, isStudentStage, stageOf } from '../src/app/features/coaching-portal/coaching-education';
 import { coachingDate } from '../src/app/features/coaching-portal/coaching-labels';
+import { CoachingStudentNavigationService } from '../src/app/core/services/coaching-student-navigation.service';
 
 interface StudentProfile {
   version: number; isActive: boolean; educationStatus: string; gradeLevel: number | null;
@@ -36,8 +37,9 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
 @Component({
   selector: 'edu-coaching-profile', standalone: true, imports: [CommonModule, FormsModule, RouterLink, OnboardingComboboxComponent],
   template: `
-    <section aria-labelledby="coaching-profile-title" class="profile-card">
-      <h2 id="coaching-profile-title">Koçluk profilim</h2>
+    <!-- F2 #25: the student page already has the "Profilim" heading; only staff see this card's own heading. -->
+    <section [attr.aria-labelledby]="role === 'Student' ? null : 'coaching-profile-title'" [attr.aria-label]="role === 'Student' ? 'Profil bilgilerin' : null" class="profile-card">
+      @if (role !== 'Student') { <h2 id="coaching-profile-title">Koçluk profilim</h2> }
       <!-- E5 (#22): the student's name, e-mail and password are on the Hesabım tab; staff use the portal's Hesap ayarları. -->
       @if (role === 'Student') { <p>Okul ve sınıf bilgilerini burada düzenle. Adın, e-posta adresin ve şifren <a routerLink="/coaching-portal/account/settings/account">Hesabım</a> sekmesinde.</p> }
       @else { <p>Eğitim ve uzmanlık bilgilerinizi burada düzenleyebilirsiniz. Ad, e-posta ve şifre ortak hesap ayarlarınızdadır.</p> }
@@ -45,6 +47,8 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
       @if (error()) {
         @if (hasFieldErrors()) { <div role="alert" class="error" data-testid="error-summary">{{ error() }}</div> }
         @else { <p role="alert" class="error">{{ error() }}</p> }
+        <!-- F2 review: a profile that did not load can be loaded again (students, teachers and staff). -->
+        @if (!ready() && !loading()) { <button type="button" (click)="reload()">Yeniden dene</button> }
       }
       @if (success()) { <p role="status">{{ success() }}</p> }
       @if (gradeNotice()) {
@@ -62,14 +66,22 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
           <!-- E4 review: while the consequences are asked the form is locked, so "Evet, kaydet" saves exactly what was shown. -->
           <fieldset [disabled]="working() || !profile.isActive || !!consequences()">
             @if (role === 'Student' && student; as s) {
-              <!-- E3 #14: "Şu an durumun ne?" as in the wizard; the grade is a choice (ortaokul 5–8, lise 9–12). -->
-              <label>Şu an durumun ne? <select name="educationStage" [ngModel]="stage" (ngModelChange)="changeStage($event)" required [attr.aria-invalid]="invalid('educationStage')" [attr.aria-describedby]="describedBy('educationStage')">
-                <option value="">Seç</option>@for (item of stages; track item.value) { <option [value]="item.value">{{ item.label }}</option> }
-              </select>@if (fieldError('educationStage'); as message) { <small class="field-error" id="educationStage-error">{{ message }}</small> }</label>
+              <!-- E3 #14 / F2 #25: "Şu an durumun ne?" and "Kaçıncı sınıftasın?" as the wizard's choice buttons (ortaokul 5–8, lise 9–12). -->
+              <fieldset class="choice" data-testid="choice-educationStage" [attr.aria-describedby]="describedBy('educationStage')">
+                <legend>Şu an durumun ne?</legend>
+                <div class="chips">@for (item of stages; track item.value) {
+                  <label class="chip" [class.is-selected]="stage === item.value"><input type="radio" name="educationStage" [value]="item.value" [ngModel]="stage" (ngModelChange)="changeStage($event)" [attr.aria-invalid]="invalid('educationStage')">{{ item.label }}</label>
+                }</div>
+                @if (fieldError('educationStage'); as message) { <small class="field-error" id="educationStage-error">{{ message }}</small> }
+              </fieldset>
               @if (isStudentStage(stage)) {
-                <label>Sınıf <select name="gradeLevel" [(ngModel)]="s.gradeLevel" (ngModelChange)="dirty = true" required [attr.aria-invalid]="invalid('gradeLevel')" [attr.aria-describedby]="describedBy('gradeLevel')">
-                  <option [ngValue]="null">Seç</option>@for (grade of gradesFor(stage); track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
-                </select>@if (fieldError('gradeLevel'); as message) { <small class="field-error" id="gradeLevel-error">{{ message }}</small> }</label>
+                <fieldset class="choice" data-testid="choice-gradeLevel" [attr.aria-describedby]="describedBy('gradeLevel')">
+                  <legend>Kaçıncı sınıftasın?</legend>
+                  <div class="chips">@for (grade of gradesFor(stage); track grade) {
+                    <label class="chip" [class.is-selected]="s.gradeLevel === grade"><input type="radio" name="gradeLevel" [value]="grade" [(ngModel)]="s.gradeLevel" (ngModelChange)="dirty = true" [attr.aria-invalid]="invalid('gradeLevel')">{{ grade }}. sınıf</label>
+                  }</div>
+                  @if (fieldError('gradeLevel'); as message) { <small class="field-error" id="gradeLevel-error">{{ message }}</small> }
+                </fieldset>
               }
               @if (clearsSchoolNotice(); as notice) { <p role="status" class="notice" data-testid="education-clears-school">{{ notice }}</p> }
               @if (!setupMode) {
@@ -101,16 +113,24 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
               <label>Şube (isteğe bağlı) <input name="classBranch" maxlength="30" [(ngModel)]="s.classBranch" (ngModelChange)="dirty = true"></label>
               }
               <label>Doğum tarihi (isteğe bağlı) <input name="birthDate" type="date" [max]="today" [(ngModel)]="s.birthDate" (ngModelChange)="dirty = true" [attr.aria-invalid]="invalid('birthDate')" [attr.aria-describedby]="describedBy('birthDate')">@if (fieldError('birthDate'); as message) { <small class="field-error" id="birthDate-error">{{ message }}</small> }</label>
+              <!-- F2 #25: the city and district are the wizard's searchable lists. -->
               <div class="place" data-testid="home-place">
-                <span>Yaşadığın yer: <strong>{{ s.homeCity ? s.homeCity + (s.homeDistrict ? ' / ' + s.homeDistrict : '') : 'seçilmedi' }}</strong></span>
-                @if (!provinces()) { <button type="button" (click)="loadProvinces()">{{ s.homeCity ? 'Değiştir' : 'Seç' }}</button> }
+                <span>Yaşadığın yer: <strong>{{ homePlace(s) }}</strong></span>
+                @if (!provinces()) { <span><button type="button" (click)="loadProvinces()">{{ s.homeCity ? 'Değiştir' : 'Seç' }}</button></span> }
                 @else {
-                  <label>Şehir <select name="homeProvince" [ngModel]="homeProvince" (ngModelChange)="pickProvince($event)">
-                    <option value="">Seç</option>@for (p of provinces(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
-                  </select></label>
-                  <label>İlçe <select name="homeDistrict" [ngModel]="homeDistrictId" (ngModelChange)="homeDistrictId = $event; dirty = true" [disabled]="!districts().length" [attr.aria-invalid]="invalid('homeDistrict')" [attr.aria-describedby]="describedBy('homeDistrict')">
-                    <option value="">Seç</option>@for (d of districts(); track d.id) { <option [value]="d.id">{{ d.name }}</option> }
-                  </select>@if (fieldError('homeDistrict'); as message) { <small class="field-error" id="homeDistrict-error">{{ message }}</small> }</label>
+                  @if (!homeProvince) {
+                    <app-onboarding-combobox label="Hangi şehirde yaşıyorsun?" placeholder="Şehir adını yaz" [options]="provinceOptions()" (picked)="pickProvince($event.value)" />
+                  } @else {
+                    <span>Şehir: <strong>{{ provinceName() }}</strong> <button type="button" (click)="pickProvince('')">Şehri değiştir</button></span>
+                    @if (districtOptions().length) {
+                      @for (key of [homeProvince]; track key) {
+                        <app-onboarding-combobox [label]="provinceName() + ' içinde hangi ilçedesin?'" placeholder="İlçe adını yaz" [options]="districtOptions()" (picked)="pickDistrict($event)"
+                          [invalid]="!!fieldError('homeDistrict')" [describedBy]="describedBy('homeDistrict')" />
+                      }
+                    } @else { <p role="status">İlçeler yükleniyor…</p> }
+                  }
+                  @if (fieldError('homeDistrict'); as message) { <small class="field-error" id="homeDistrict-error">{{ message }}</small> }
+                  <span><button type="button" (click)="closePlacePicker()">Vazgeç</button></span>
                 }
               </div>
               @if (diplomaApplies(s)) {
@@ -140,11 +160,11 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
           </div>
         }
       }
-      <button type="button" [disabled]="loading() || working()" (click)="reload()">Profili yeniden yükle</button>
     </section>
     @if (!setupMode) { <section class="profile-card" aria-labelledby="coaching-invitations-title">
       <h2 id="coaching-invitations-title">Koçluk davetlerim</h2>
-      @if (invitationError()) { <p role="alert" class="error">{{ invitationError() }}</p> }
+      @if (invitationError()) { <p role="alert" class="error">{{ invitationError() }}</p>
+        <button type="button" [disabled]="working() || invitationLoading()" (click)="loadInvitations()">Yeniden dene</button> }
       @if (invitationLoading()) { <p role="status">Davetler yükleniyor…</p> }
       @else if (!invitations().length && !invitationError()) { <p>{{ t('Bekleyen koçluk davetiniz yok.', 'Bekleyen koçluk davetin yok.') }}</p> }
       @for (invite of invitations(); track invite.id) {
@@ -158,9 +178,8 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
           <button type="button" [disabled]="working()" (click)="respond(invite.id, 'reject')">Reddet</button>
         </article>
       }
-      <button type="button" [disabled]="working() || invitationLoading()" (click)="loadInvitations()">Davetleri yenile</button>
     </section> }`,
-  styles: [`:host{display:block;color:inherit}.profile-card{padding:1.5rem;margin-bottom:1rem;border:1px solid #d6deea;border-radius:1rem;background:var(--surface,#fff);color:#16243c}h2{margin-top:0}fieldset{border:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}label{display:grid;gap:.4rem}input,textarea,select,button{font:inherit;padding:.6rem;border:1px solid #bcc8da;border-radius:.5rem;max-width:100%;box-sizing:border-box}button{cursor:pointer;background:#edf3fb;margin:.4rem .4rem .4rem 0}button:disabled{opacity:.55;cursor:default}.check{display:flex;align-items:center}.place{display:grid;gap:.4rem}.error{color:#a21825}article{border-top:1px solid #d6deea;padding-top:1rem}input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #3972c6;outline-offset:2px}.notice{padding:.6rem .8rem;border-radius:.5rem;background:#fff6e0}.field-error{color:#a21825}input[aria-invalid=true],select[aria-invalid=true]{border-color:#a21825}:host ::ng-deep .ob-combo{position:relative}:host ::ng-deep .ob-combo input{width:100%}:host ::ng-deep .ob-combo-list{list-style:none;margin:.35rem 0 0;padding:.25rem;max-height:16rem;overflow:auto;border:1px solid #bcc8da;border-radius:.5rem;background:var(--surface,#fff)}:host ::ng-deep .ob-combo-list li{display:grid;padding:.45rem .6rem;border-radius:.4rem;cursor:pointer}:host ::ng-deep .ob-combo-list li.is-active,:host ::ng-deep .ob-combo-list li:hover{background:#edf3fb}:host ::ng-deep .ob-combo-list small,:host ::ng-deep .ob-combo-empty{color:#5a6a82}:host ::ng-deep .ob-combo-more button{border:0;background:none;text-decoration:underline}`]
+  styles: [`:host{display:block;color:inherit}.profile-card{padding:1.5rem;margin-bottom:1rem;border:1px solid #d6deea;border-radius:1rem;background:var(--surface,#fff);color:#16243c}h2{margin-top:0}fieldset{border:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}label{display:grid;gap:.4rem}input,textarea,select,button{font:inherit;padding:.6rem;border:1px solid #bcc8da;border-radius:.5rem;max-width:100%;box-sizing:border-box}button{cursor:pointer;background:#edf3fb;margin:.4rem .4rem .4rem 0}button:disabled{opacity:.55;cursor:default}.check{display:flex;align-items:center}.place{display:grid;gap:.4rem}.error{color:#a21825}article{border-top:1px solid #d6deea;padding-top:1rem}input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #3972c6;outline-offset:2px}.notice{padding:.6rem .8rem;border-radius:.5rem;background:#fff6e0}.field-error{color:#a21825}.choice{grid-column:1/-1;display:block;border:0;margin:0;padding:0}.choice legend{padding:0;margin-bottom:.4rem}.chips{display:flex;flex-wrap:wrap;gap:.5rem}.chip{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .8rem;border:1px solid #bcc8da;border-radius:999px;cursor:pointer}.chip.is-selected{border-color:#3972c6;background:#edf3fb;font-weight:600}.chip input{margin:0;padding:0}input[aria-invalid=true],select[aria-invalid=true]{border-color:#a21825}:host ::ng-deep .ob-combo{position:relative}:host ::ng-deep .ob-combo input{width:100%}:host ::ng-deep .ob-combo-list{list-style:none;margin:.35rem 0 0;padding:.25rem;max-height:16rem;overflow:auto;border:1px solid #bcc8da;border-radius:.5rem;background:var(--surface,#fff)}:host ::ng-deep .ob-combo-list li{display:grid;padding:.45rem .6rem;border-radius:.4rem;cursor:pointer}:host ::ng-deep .ob-combo-list li.is-active,:host ::ng-deep .ob-combo-list li:hover{background:#edf3fb}:host ::ng-deep .ob-combo-list small,:host ::ng-deep .ob-combo-empty{color:#5a6a82}:host ::ng-deep .ob-combo-more button{border:0;background:none;text-decoration:underline}`]
 })
 export class CoachingProfileComponent implements OnInit {
   private readonly toaster = coachingToaster();
@@ -171,6 +190,8 @@ export class CoachingProfileComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly destroy = inject(DestroyRef);
   private readonly host = inject(ElementRef<HTMLElement>);
+  /** The student menu (absent in the staff portal). */
+  private readonly navigation = inject(CoachingStudentNavigationService, { optional: true });
   readonly loading = signal(false); readonly working = signal(false); readonly ready = signal(false);
   readonly error = signal<string | null>(null); readonly success = signal<string | null>(null);
   readonly invitations = signal<Invitation[]>([]); readonly invitationError = signal<string | null>(null); readonly invitationLoading = signal(false);
@@ -223,6 +244,19 @@ export class CoachingProfileComponent implements OnInit {
     this.http.get<Place[]>(`${this.apiUrl}/locations/provinces`).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: list => this.provinces.set(list), error: () => this.error.set(this.t('Şehir listesi yüklenemedi.', 'Şehir listesi yüklenemedi. Yeniden dene.')) });
   }
+  /** F2 #25: the wizard's searchable lists for the home city and district. */
+  readonly provinceOptions = computed<ComboOption[]>(() => (this.provinces() ?? []).map(p => ({ value: p.id, label: p.name })));
+  readonly districtOptions = computed<ComboOption[]>(() => this.districts().map(d => ({ value: d.id, label: d.name })));
+  provinceName() { return this.provinces()?.find(p => p.id === this.homeProvince)?.name ?? ''; }
+  /** The place on the card: the one picked (not saved yet) or the saved one. */
+  homePlace(s: StudentProfile) {
+    const district = this.districts().find(d => d.id === this.homeDistrictId);
+    if (this.homeProvince && district) return `${this.provinceName()} / ${district.name}`;
+    return s.homeCity ? s.homeCity + (s.homeDistrict ? ' / ' + s.homeDistrict : '') : 'seçilmedi';
+  }
+  pickDistrict(option: ComboOption) { this.homeDistrictId = option.value; this.dirty = true; }
+  /** Leaves the saved place as it is. */
+  closePlacePicker() { this.provinces.set(null); this.homeProvince = ''; this.homeDistrictId = ''; this.districts.set([]); }
   pickProvince(id: string) {
     this.homeProvince = id; this.homeDistrictId = ''; this.districts.set([]); this.dirty = true;
     if (!id) return;
@@ -458,7 +492,15 @@ export class CoachingProfileComponent implements OnInit {
     if (this.dirty) { this.invitationError.set(this.t('Davet işlemi öncesinde profil değişikliklerini kaydedin.', 'Daveti yanıtlamadan önce profil değişikliklerini kaydet.')); return; }
     this.working.set(true); this.invitationError.set(null);
     this.http.post(`${this.base}/invitations/${encodeURIComponent(id)}/${action}`, {}).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false)))
-      .subscribe({ next: () => { this.loadInvitations(); if (action === 'accept') this.loadProfile(); }, error: e => this.invitationError.set(this.message(e, this.t('Davet işlenemedi. Koçluk rolünüzü ve davetin geçerliliğini kontrol edin.', 'Davet yanıtlanamadı. Davetin süresi dolmuş olabilir.'))) });
+      .subscribe({ next: () => {
+        this.loadInvitations();
+        if (action !== 'accept') return;
+        this.loadProfile();
+        // F2/F3: a new teacher or institution can open menu items; the refresh is forced past a request in flight. Called this way it
+        // works with refresh(reset) and refresh({ force, reset }) (PR #122).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (this.role === 'Student') (this.navigation as any)?.refresh?.({ force: true });
+      }, error: e => this.invitationError.set(this.message(e, this.t('Davet işlenemedi. Koçluk rolünüzü ve davetin geçerliliğini kontrol edin.', 'Davet yanıtlanamadı. Davetin süresi dolmuş olabilir.'))) });
   }
   async canLeavePage() { return !this.working() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş Koçluk profil değişikliklerinden vazgeçilsin mi?')); }
   /** Teachers are addressed formally (siz), students informally (sen). */
