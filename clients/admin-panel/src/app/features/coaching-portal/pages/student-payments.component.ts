@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 import { CoachingFinanceComponent } from './coaching-finance.component';
 import { CoachingSubscriptionComponent } from './coaching-subscription.component';
@@ -23,5 +23,7 @@ import { CoachingSubscriptionComponent } from './coaching-subscription.component
   </app-coaching-subscription>`
 })
 export class StudentPaymentsComponent {
-  readonly showFees = inject(CoachingStudentNavigationService).showFees;
+  private readonly navigation = inject(CoachingStudentNavigationService);
+  /** Review of PR 122: Ücretler waits for the navigation answer instead of flashing and disappearing. */
+  readonly showFees = computed(() => this.navigation.loaded() && this.navigation.showFees());
 }

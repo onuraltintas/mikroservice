@@ -1,6 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Component } from '@angular/core';
+import { of, throwError } from 'rxjs';
+import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 import { StudentPlanEditStepsComponent } from './student-plan-edit-steps.component';
 import { STUDENT_HUBS } from './student-hubs';
 
@@ -8,8 +11,14 @@ import { STUDENT_HUBS } from './student-hubs';
 
 // T4 (31.10.2026): "Planı düzenle" is one stepwise flow over the weekly lessons, the free hours and the plan wizard.
 describe('Planı düzenle steps (T4)', () => {
-  async function at(url: string) {
-    TestBed.configureTestingModule({ imports: [StudentPlanEditStepsComponent], providers: [provideRouter([{ path: '**', component: Blank }])] });
+  const slot = { id: 's1', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Monday', startMinute: 1080, durationMinutes: 60 };
+  const window = { day: 'Monday', startMinute: 1020, endMinute: 1140 };
+  async function at(url: string, data: { slots?: object[] | 'error'; windows?: object[] | null } = {}) {
+    const weekly = { get: vi.fn(() => data.slots === 'error' ? throwError(() => new Error('x'))
+      : of({ draft: data.slots ? { version: 1, timeZoneId: 'Europe/Istanbul', slots: data.slots } : null, lessons: [] })) };
+    const planning = { getAvailability: vi.fn(() => of(data.windows ? { version: 1, timeZoneId: 'Europe/Istanbul', windows: data.windows } : null)) };
+    TestBed.configureTestingModule({ imports: [StudentPlanEditStepsComponent], providers: [provideRouter([{ path: '**', component: Blank }]),
+      { provide: CoachingWeeklyDraftService, useValue: weekly }, { provide: CoachingStudyPlanningService, useValue: planning }] });
     await TestBed.inject(Router).navigateByUrl(url);
     const fixture = TestBed.createComponent(StudentPlanEditStepsComponent);
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
@@ -29,6 +38,20 @@ describe('Planı düzenle steps (T4)', () => {
     const el = await at('/coaching-portal/plan/preview');
     expect(el.querySelector('ol.steps [aria-current=step]')?.textContent).toContain('Planını oluştur');
     expect(el.querySelector('a.next')?.getAttribute('href')).toBe('/coaching-portal/plan');
+  });
+
+  // Paket F #37: steps 1–2 showed as done on the wizard while the weekly draft was empty.
+  it('marks a step done only when its data exists, not because a later step is open', async () => {
+    const done = (el: HTMLElement) => [...el.querySelectorAll('ol.steps li')].map(li => li.classList.contains('done'));
+    expect(done(await at('/coaching-portal/plan/wizard'))).toEqual([false, false, false]);
+    TestBed.resetTestingModule();
+    expect(done(await at('/coaching-portal/plan/wizard', { slots: [slot] }))).toEqual([true, false, false]);
+    TestBed.resetTestingModule();
+    const both = await at('/coaching-portal/plan/weekly', { slots: [slot], windows: [window] });
+    expect(done(both)).toEqual([true, true, false]);
+    expect(both.querySelector('ol.steps li.done a')?.getAttribute('aria-label')).toContain('tamamlandı');
+    TestBed.resetTestingModule();
+    expect(done(await at('/coaching-portal/plan/wizard', { slots: 'error', windows: [] }))).toEqual([false, false, false]);
   });
 
   it('stays hidden on the plan itself', async () => {

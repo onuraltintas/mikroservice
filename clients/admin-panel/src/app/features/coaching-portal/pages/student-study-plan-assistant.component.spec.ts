@@ -126,6 +126,51 @@ describe('StudentStudyPlanAssistantComponent', () => {
   });
 
   // E6 #29 (live test 06.11): availability is asked in one place; the wizard uses the saved one and saves to the same record.
+  // Paket F #37: the proposal appeared ~650 px lower, under "Daha önce çalıştığın konular", and the page did not move.
+  it('shows the proposal above the topics and moves the focus to it', async () => {
+    // Review of PR 122: an own property on HTMLElement.prototype is removed again (it would shadow other specs' Element mocks).
+    const own = Object.prototype.hasOwnProperty.call(HTMLElement.prototype, 'scrollIntoView'); const original = HTMLElement.prototype.scrollIntoView;
+    const scroll = vi.fn(); HTMLElement.prototype.scrollIntoView = scroll;
+    try {
+      const { fixture, component } = await setup();
+      component.toggleDay('Tuesday'); component.createProposal(); fixture.detectChanges(); await fixture.whenStable();
+      await new Promise(r => setTimeout(r)); fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      const proposal = el.querySelector('[data-testid="wizard-proposal"]') as HTMLElement;
+      expect(proposal).toBeTruthy();
+      const topics = el.querySelector('.topic-statuses') as HTMLElement;
+      expect(proposal.compareDocumentPosition(topics) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      for (const label of ['Bu saatleri taslağa ekle', 'Öneriyi kaldır'])
+        expect(Array.from(proposal.querySelectorAll('button')).some(b => b.textContent?.trim() === label), label).toBe(true);
+      const heading = proposal.querySelector('h2') as HTMLElement;
+      expect(heading.textContent).toContain('Öneriyi incele');
+      expect(document.activeElement).toBe(heading);
+      expect(scroll).toHaveBeenCalled();
+      (Array.from(proposal.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Öneriyi kaldır') as HTMLElement).click();
+      fixture.detectChanges();
+      expect(el.querySelector('[data-testid="wizard-proposal"]')).toBeNull();
+    } finally { if (own) HTMLElement.prototype.scrollIntoView = original; else delete (HTMLElement.prototype as { scrollIntoView?: unknown }).scrollIntoView; }
+  });
+
+  // Review of PR 122: the focus does not fall to the page when the proposal block goes away.
+  it('after "Öneriyi kaldır" the focus returns to "Haftalık öneri oluştur"', async () => {
+    const { fixture, component } = await setup();
+    component.toggleDay('Tuesday'); component.createProposal(); fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    (Array.from(el.querySelectorAll('[data-testid="wizard-proposal"] button')).find(b => b.textContent?.trim() === 'Öneriyi kaldır') as HTMLElement).click();
+    fixture.detectChanges(); await fixture.whenStable(); await new Promise(r => setTimeout(r)); fixture.detectChanges();
+    expect((document.activeElement as HTMLElement | null)?.textContent?.trim()).toBe('Haftalık öneri oluştur');
+  });
+
+  it('after "Bu saatleri taslağa ekle" the focus moves to the success status', async () => {
+    const { fixture, component } = await setup();
+    component.toggleDay('Tuesday'); component.createProposal(); fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    (Array.from(el.querySelectorAll('[data-testid="wizard-proposal"] button')).find(b => b.textContent?.trim() === 'Bu saatleri taslağa ekle') as HTMLElement).click();
+    fixture.detectChanges(); await fixture.whenStable(); await new Promise(r => setTimeout(r)); fixture.detectChanges();
+    expect((document.activeElement as HTMLElement | null)?.textContent).toContain('Öneri haftalık taslağına eklendi');
+  });
+
   describe('availability from Çalışma tercihlerim', () => {
     const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
     const text = (fixture: { nativeElement: HTMLElement }) => fixture.nativeElement.textContent ?? '';

@@ -5,3 +5,5 @@
 
 .availability-summary{display:grid;gap:.4rem;margin-bottom:.8rem}.availability-summary h2{font-size:1rem;margin:0}.availability-summary ul{margin:0;padding-left:1.1rem}.availability-summary .secondary{margin:0;justify-self:start}
 .plan-preview{display:grid;gap:.6rem}.plan-preview h2,.plan-preview h3{margin:0}.plan-preview .actions{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+
+.proposal{padding-bottom:1rem;border-bottom:1px solid var(--ui-border);margin-bottom:1rem}.proposal h2{font-size:1rem;margin:0 0 .6rem}.proposal h2:focus{outline:none}.proposal h2:focus-visible{outline:3px solid var(--ui-border-strong);outline-offset:3px}
