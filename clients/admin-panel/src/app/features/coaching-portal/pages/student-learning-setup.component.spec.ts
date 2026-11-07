@@ -267,6 +267,40 @@ describe('StudentLearningSetupComponent', () => {
     expect(s2.service.save).toHaveBeenCalledWith(expect.objectContaining({ startingStatusReviewed: true }));
   });
 
+  // G5 (#46): each course's priority and own difficulty sit in its row (TYT/AYT groups), folded under "Gelişmiş"; same values and API.
+  it('keeps each course\'s priority and difficulty in its own row under "Gelişmiş"', async () => {
+    const lessons = { curriculum: null, lessons: [
+        { id: 'tyt-mat', name: 'Matematik (TYT)', gradeNumber: null, examCode: 'TYT', topicCount: 30, missingDurationCount: 0 },
+        { id: 'ayt-mat', name: 'Matematik (AYT)', gradeNumber: null, examCode: 'AYT', topicCount: 40, missingDurationCount: 0 },
+        { id: 'tyt-fiz', name: 'Fizik (TYT)', gradeNumber: null, examCode: 'TYT', topicCount: 10, missingDurationCount: 0 }],
+      topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] } as LearningCatalog;
+    const t = await setup({ ...yksView, nextStep: 'Courses', context: { ...yks, coursePreferences: [
+      { lessonId: 'ayt-mat', priority: 2, selfReportedDifficulty: 4 }, { lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }, { lessonId: 'gone', priority: 3, selfReportedDifficulty: null }] } });
+    t.service.catalog.mockReturnValue(of(lessons)); t.component.loadCatalog(); t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
+    const el = t.fixture.nativeElement as HTMLElement;
+    const row = (id: string) => el.querySelector(`[data-testid="course-row-${id}"]`) as HTMLElement;
+    // The settings are inside the course's row in its group, not in a separate list.
+    expect(el.querySelector('[data-testid="course-group-AYT"] [data-testid="course-row-ayt-mat"] input[name="priority-ayt-mat"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="course-group-TYT"] [data-testid="course-row-tyt-mat"] input[name="difficulty-tyt-mat"]')).not.toBeNull();
+    const advanced = row('ayt-mat').querySelector('details')!;
+    expect(advanced.open).toBe(false);
+    expect(advanced.querySelector('summary')!.textContent).toContain('Gelişmiş · öncelik 2, zorluk 4');
+    expect((row('ayt-mat').querySelector('input[name="difficulty-ayt-mat"]') as HTMLInputElement).value).toBe('4');
+    // A lesson that is not chosen has no settings; choosing it adds them with the default priority.
+    expect(row('tyt-fiz').querySelector('details')).toBeNull();
+    (row('tyt-fiz').querySelector('input[type="checkbox"]') as HTMLInputElement).click(); t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
+    expect(row('tyt-fiz').querySelector('summary')!.textContent).toContain('öncelik 3');
+    // A saved course the catalog no longer lists keeps its own row, so nothing is hidden.
+    expect(row('gone').querySelector('input[name="priority-gone"]')).not.toBeNull();
+    expect(el.querySelectorAll('input[name^="priority-"]').length).toBe(4);
+    // A refused value opens its row's "Gelişmiş".
+    t.component.courses.find(x => x.lessonId === 'tyt-mat')!.priority = 9; t.component.saveCourses(); t.fixture.detectChanges();
+    expect(row('tyt-mat').querySelector('details')!.open).toBe(true);
+    t.component.courses.find(x => x.lessonId === 'tyt-mat')!.priority = 1; t.component.saveCourses();
+    expect(t.service.save.mock.calls[0][0].courses).toEqual(expect.arrayContaining([{ lessonId: 'ayt-mat', priority: 2, selfReportedDifficulty: 4 },
+      { lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }, { lessonId: 'tyt-fiz', priority: 3, selfReportedDifficulty: null }]));
+  });
+
   it('#24: an invalid year is never swallowed: the old message goes, the field and a summary say why', async () => {
     const t = await purposeForm();
     expect(t.el.querySelector('form')!.hasAttribute('novalidate')).toBe(true);
@@ -339,7 +373,7 @@ describe('StudentLearningSetupComponent', () => {
     t.service.catalog.mockReturnValue(of(yksCatalog())); t.component.loadCatalog(); t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
     const el = t.fixture.nativeElement as HTMLElement;
     expect(Array.from(el.querySelectorAll('[data-testid^="course-group-"] h3')).map(x => x.textContent)).toEqual(['TYT', 'AYT']);
-    expect(Array.from(el.querySelectorAll('[data-testid="course-group-TYT"] label')).map(x => x.textContent!.trim())).toEqual(['Türkçe · 10 konu', 'Matematik · 15 konu']);
+    expect(Array.from(el.querySelectorAll('[data-testid="course-group-TYT"] label.check')).map(x => x.textContent!.trim())).toEqual(['Türkçe · 10 konu', 'Matematik · 15 konu']);
     // The courses with topics are ticked, but only as a suggestion: nothing is saved and leaving does not ask.
     expect(t.component.courses.map(x => x.lessonId).sort()).toEqual(['ayt-mat', 'tyt-mat', 'tyt-tr']);
     expect(el.querySelector('[data-testid="suggested-courses"]')!.textContent).toContain('Sınavına uygun dersleri');

@@ -14,7 +14,7 @@ import { InstitutionRegisterComponent } from './institution/institution-register
 import { ParentRegisterComponent } from './parent/parent-register.component';
 import { StudentRegisterComponent } from './student/student-register.component';
 import { TeacherRegisterComponent } from './teacher/teacher-register.component';
-import { readVerificationEmailOutcome, registrationSuccessCopy } from './registration-outcome';
+import { VERIFICATION_DELAY_NOTE, readVerificationEmailOutcome, registrationSuccessCopy } from './registration-outcome';
 import { RegistrationSuccessComponent } from './registration-success.component';
 
 // Paket A #2 (05.11.2026): the success screen follows the server's verificationEmail outcome.
@@ -99,6 +99,13 @@ describe('registration verification e-mail outcome copy', () => {
     const sent = registrationSuccessCopy('sent', voice);
     expect(`${sent.title} ${sent.message}`).toMatch(/gönder/i);
     expect(sent.message).not.toContain('zaten doğrulanmış');
+  });
+
+  // G5 (#39): the "gönderildi" screen says the e-mail may take a few minutes and not to send it again needlessly.
+  it('says the verification e-mail may take a few minutes, only when one was sent', () => {
+    expect(registrationSuccessCopy('sent', 'sen').message).toContain('E-postanın gelmesi birkaç dakika sürebilir; gereksiz yere yeniden gönderme.');
+    expect(registrationSuccessCopy('sent', 'siz').message).toContain(VERIFICATION_DELAY_NOTE.siz);
+    expect(registrationSuccessCopy('notRequired', 'sen').message).not.toContain('birkaç dakika');
   });
 
   // Paket F #12: every Coaching sign-up form uses sen; the siz copy stays for other callers.

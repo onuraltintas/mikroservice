@@ -3,6 +3,7 @@ using Coaching.Application.CatalogAdministration;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using Coaching.Domain.Profiles;
+using Coaching.Infrastructure.Catalogs;
 using Coaching.Infrastructure.Management;
 using Coaching.Infrastructure.Profiles;
 using Coaching.Infrastructure.StudyPlanning;
@@ -149,7 +150,8 @@ public sealed class CoachingStudentOnboardingTests
         student.Answers.SchoolName.Should().Be("Ankara Fen Lisesi");
         // The picked school also sets the school's city, district and type; a resuming student keeps the school.
         var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
-        (profile.SchoolCity, profile.SchoolDistrict, profile.SchoolType).Should().Be(("ANKARA", "ÇANKAYA", "Fen Lisesi"));
+        // G4 (#43): the catalog's capitals are stored as names.
+        (profile.SchoolCity, profile.SchoolDistrict, profile.SchoolType).Should().Be(("Ankara", "Çankaya", "Fen Lisesi"));
         var resumed = await s.Service.SavePersonalAsync(new(new DateOnly(2009, 1, 1), "06", "0602", CoachingEducationStatus.Student, 11, null, null), default);
         (resumed.Answers.SchoolName, resumed.Answers.HomeDistrict).Should().Be(("Ankara Fen Lisesi", "Keçiören"));
         // E3 #14: a graduate has no school (it is cleared) and keeps the graduation year when resuming.
@@ -260,7 +262,8 @@ public sealed class CoachingStudentOnboardingTests
         var page = await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", null, 1, default);
         (page.TotalCount, page.Items.Count, page.PageSize).Should().Be((25, 20, 20));
         (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", null, 2, default)).Items.Should().HaveCount(5);
-        (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "lise 7", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 7");
+        // G4 (#43): every word must be in the name; the schools where each word starts a word come first.
+        (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "lise 7", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 7", "Anadolu Lise 17");
         (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "LİSE 25", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 25");
         (await s.Service.SchoolCitiesAsync(default)).Should().NotContain(x => x.Value == "Kapanan Lise");
         await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SchoolsAsync(null, "Anadolu Lisesi", null, 1, default));
@@ -519,7 +522,7 @@ public sealed class CoachingStudentOnboardingTests
 
         (await s.Service.SchoolsAsync("Ankara", null, null, 1, default)).TotalCount.Should().Be(28, "26 schools and two schools with several rows");
         var one = (await s.Service.SchoolsAsync("Ankara", null, "Ayran", 1, default)).Items.Should().ContainSingle().Subject;
-        one.Should().Match<OnboardingSchoolOption>(x => x.Name == "Ayrancı Anadolu Lisesi" && x.District == "ÇANKAYA" && x.Type == "Anadolu Lisesi");
+        one.Should().Match<OnboardingSchoolOption>(x => x.Name == "Ayrancı Anadolu Lisesi" && x.District == "Çankaya" && x.Type == "Anadolu Lisesi");
         one.Id.Should().Be(ayranci.Min(x => x.Id), "the representative is stable: the smallest id");
         var mixed = (await s.Service.SchoolsAsync("Ankara", null, "balgat", 1, default)).Items.Should().ContainSingle().Subject;
         mixed.Type.Should().BeNull("the rows have different types, so none is shown");
@@ -532,7 +535,7 @@ public sealed class CoachingStudentOnboardingTests
         // Saving keeps the name, city and district; the type only where every row agrees.
         await s.Service.SavePersonalAsync(new(new DateOnly(2012, 5, 1), "06", "0601", CoachingEducationStatus.Student, 8, null, balgat[2].Id), default);
         var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
-        (profile.SchoolName, profile.SchoolCity, profile.SchoolDistrict, profile.SchoolType).Should().Be(("Balgat Mesleki ve Teknik Anadolu Lisesi", "ANKARA", "ÇANKAYA", (string?)null));
+        (profile.SchoolName, profile.SchoolCity, profile.SchoolDistrict, profile.SchoolType).Should().Be(("Balgat Mesleki ve Teknik Anadolu Lisesi", "Ankara", "Çankaya", (string?)null));
         var store = new CoachingProfileStore(s.F.Db, s.F.Accounts, null, null, s.Places);
         var updated = await store.UpdateStudentAsync(s.Student, new(profile.Version, CoachingEducationStatus.Student, 8, null, null, null, null, null, null,
             new DateOnly(2012, 5, 1), null, null, true) { SchoolId = ayranci[1].Id }, default);
@@ -554,8 +557,103 @@ public sealed class CoachingStudentOnboardingTests
         await s.F.Db.SaveChangesAsync();
         var page = await s.Service.SchoolsAsync("Ankara", null, "atatürk", 1, default, district: "Keçiören");
         page.Items.Select(x => (x.Name, x.District, x.InHomeDistrict)).Should().Equal(
-            ("Atatürk Anadolu Lisesi", "KEÇİÖREN", true), ("Atatürk Anadolu Lisesi", "ÇANKAYA", false));
+            ("Atatürk Anadolu Lisesi", "Keçiören", true), ("Atatürk Anadolu Lisesi", "Çankaya", false));
         page.TotalCount.Should().Be(2);
+    }
+
+    // ---------- Paket G (G4 #43, G5 #44) ----------
+
+    [Fact]
+    public async Task TheSchoolSearchMatchesEveryWordInAnyOrderAndShowsDistrictsAsNames()
+    {
+        await using var s = await Setup.CreateAsync();
+        foreach (var (name, district, type) in new[] { ("Karşıyaka Cihat Kora Anadolu Lisesi", "KARŞIYAKA", "Anadolu Lisesi"),
+                     ("Karşıyaka Fen Lisesi", "KARŞIYAKA", "Fen Lisesi"), ("Cihat Kora Anadolu Lisesi", "KARŞIYAKA", "Anadolu Lisesi"),
+                     ("Bornova Anadolu Lisesi", "BORNOVA", "Anadolu Lisesi"), ("Prof.Dr. Işıl Ünal Kız Anadolu Lisesi", "ÇİĞLİ", "Anadolu Lisesi") })
+        {
+            var school = TargetSchool.Create("meb", Guid.NewGuid().ToString(), name, "İZMİR", district, 400, 2025);
+            school.SetProgramDetails(type, null, null); school.SetActive(true); s.F.Db.Add(school);
+        }
+        await s.F.Db.SaveChangesAsync();
+        async Task<string[]> Names(string search, string? type = null) =>
+            (await s.Service.SchoolsAsync("İzmir", type, search, 1, default)).Items.Select(x => x.Name).ToArray();
+
+        // Every word must match, in any order, Turkish case-insensitively; a word may match the district instead of the name.
+        (await Names("karşıyaka anadolu")).Should().BeEquivalentTo("Karşıyaka Cihat Kora Anadolu Lisesi", "Cihat Kora Anadolu Lisesi");
+        (await Names("ANADOLU  KARŞIYAKA")).Should().BeEquivalentTo("Karşıyaka Cihat Kora Anadolu Lisesi", "Cihat Kora Anadolu Lisesi");
+        (await Names("kora karşıyaka cihat")).Should().HaveCount(2);
+        (await Names("karşıyaka fen")).Should().Equal("Karşıyaka Fen Lisesi");
+        (await Names("ışıl kız")).Should().Equal("Prof.Dr. Işıl Ünal Kız Anadolu Lisesi");
+        (await Names("dr. işil")).Should().Equal("Prof.Dr. Işıl Ünal Kız Anadolu Lisesi");
+        (await Names("karşıyaka bornova")).Should().BeEmpty("both words must match");
+        // In the own-school list the schools where every word starts a word come first ("lise 7": Lise 7, then Lise 17).
+        (await s.Service.SchoolsAsync("Ankara", null, "lise 7", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 7", "Anadolu Lise 17");
+        (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "7 lise", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 7", "Anadolu Lise 17");
+        TurkishSearch.EveryWordStarts("dr işil", "Prof.Dr. Işıl Ünal Kız Anadolu Lisesi").Should().BeTrue();
+        TurkishSearch.EveryWordStarts("lise 7", "Anadolu Lise 17").Should().BeFalse();
+        (await Names("anadolu karşıyaka", "Anadolu Lisesi")).Should().HaveCount(2, "the LGS target list searches the same way");
+        // Districts are shown as names, in both lists.
+        (await s.Service.SchoolsAsync("İzmir", null, "karşıyaka fen", 1, default)).Items.Single().District.Should().Be("Karşıyaka");
+        (await s.Service.SchoolsAsync("İzmir", "Fen Lisesi", "karşıyaka", 1, default)).Items.Single().District.Should().Be("Karşıyaka");
+        (await s.Service.SchoolsAsync("İzmir", null, "çiğli", 1, default)).Items.Single().District.Should().Be("Çiğli");
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.SchoolsAsync("İzmir", null, new string('a', 101), 1, default));
+    }
+
+    [Fact]
+    public async Task PlaceNamesInCapitalsAreShownAsNames()
+    {
+        foreach (var (capitals, name) in new[] { ("KARŞIYAKA", "Karşıyaka"), ("ÇANKAYA (MERKEZ)", "Çankaya (Merkez)"), ("İZMİR", "İzmir"),
+                     ("IĞDIR", "Iğdır"), ("19 MAYIS", "19 Mayıs"), ("Kadıköy", "Kadıköy") })
+            CoachingStudentOnboardingService.PlaceName(capitals).Should().Be(name, capitals);
+        CoachingStudentOnboardingService.PlaceName(null).Should().BeNull();
+        await Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task AStudentWhoseSchoolIsNotInTheListTypesItsName()
+    {
+        await using var s = await Setup.CreateAsync();
+        Task<OnboardingView> Save(Guid? school, string? name) => s.Service.SavePersonalAsync(new(new DateOnly(2009, 1, 1), "06", "0601",
+            CoachingEducationStatus.Student, 11, null, school, name), default);
+        // "Okulum listede yok": the name is trimmed and saved without a catalog city, district or type.
+        await Save(s.School, null);
+        var typed = await Save(null, "  Özel   Deneme Koleji ");
+        typed.Answers.SchoolName.Should().Be("Özel Deneme Koleji");
+        var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
+        (profile.SchoolName, profile.SchoolCity, profile.SchoolDistrict, profile.SchoolType).Should().Be(("Özel Deneme Koleji", (string?)null, (string?)null, (string?)null));
+        // Resuming without a new answer keeps it; a name over 150 characters is refused at the school question.
+        (await Save(null, null)).Answers.SchoolName.Should().Be("Özel Deneme Koleji");
+        (await Assert.ThrowsAsync<OnboardingFieldException>(() => Save(null, new string('a', 151)))).Field.Should().Be("ownSchool");
+        (await Save(null, new string('a', 150))).Answers.SchoolName.Should().HaveLength(150);
+        // A school picked from the list wins over a typed name.
+        (await Save(s.School, "Yazılan")).Answers.SchoolName.Should().Be("Ankara Fen Lisesi");
+
+        // Profilim keeps and edits a typed school the same way.
+        var store = new CoachingProfileStore(s.F.Db, s.F.Accounts, null, null, s.Places);
+        profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
+        var updated = await store.UpdateStudentAsync(s.Student, new(profile.Version, CoachingEducationStatus.Student, 11, " Köy   Lisesi ", null, null, null, null, null,
+            new DateOnly(2009, 1, 1), null, null, true), default);
+        (updated.SchoolName, updated.SchoolCity, updated.SchoolDistrict, updated.SchoolType).Should().Be(("Köy Lisesi", (string?)null, (string?)null, (string?)null));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => store.UpdateStudentAsync(s.Student, new(updated.Version, CoachingEducationStatus.Student, 11,
+            new string('b', 151), null, null, null, null, null, new DateOnly(2009, 1, 1), null, null, true), default));
+    }
+
+    [Fact]
+    public async Task TheBirthDateErrorSaysWhatIsWrong()
+    {
+        await using var s = await Setup.CreateAsync();
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul")));
+        async Task<string> Refused(DateOnly? date)
+        {
+            var error = await Assert.ThrowsAsync<OnboardingFieldException>(() => s.Service.SavePersonalAsync(new(date, "06", "0601",
+                CoachingEducationStatus.Student, 8, null, null), default));
+            error.Field.Should().Be("birthDate");
+            return error.Message;
+        }
+        (await Refused(today.AddDays(2))).Should().Be("Doğum tarihi bugünden sonra olamaz.");
+        (await Refused(today.AddYears(-3))).Should().Be("Bu tarihe göre 6 yaşından küçüksün. Doğum tarihini kontrol et.");
+        (await Refused(today.AddYears(-101))).Should().Be("Bu tarihe göre 100 yaşından büyüksün. Doğum tarihini kontrol et.");
+        (await Refused(null)).Should().Be("Doğum tarihini seç.");
     }
 
     [Fact]
@@ -587,8 +685,8 @@ public sealed class CoachingStudentOnboardingTests
         await using var s = await Setup.CreateAsync();
         var page = await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", null, 1, default, district: "Keçiören");
         page.TotalCount.Should().Be(25, "a sort, not a filter");
-        page.Items.Take(13).Should().OnlyContain(x => x.District == "KEÇİÖREN" && x.InHomeDistrict);
-        page.Items.Skip(13).Should().OnlyContain(x => x.District == "ÇANKAYA" && !x.InHomeDistrict);
+        page.Items.Take(13).Should().OnlyContain(x => x.District == "Keçiören" && x.InHomeDistrict);
+        page.Items.Skip(13).Should().OnlyContain(x => x.District == "Çankaya" && !x.InHomeDistrict);
         (await s.Service.SchoolsAsync("Ankara", null, null, 1, default, district: "Çankaya")).Items[0].Name.Should().Be("Anadolu Lise 10");
         (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", null, 1, default)).Items.Should().OnlyContain(x => !x.InHomeDistrict);
     }

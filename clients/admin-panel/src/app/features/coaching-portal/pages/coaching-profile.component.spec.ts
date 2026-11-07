@@ -81,6 +81,47 @@ describe('Coaching owned profile', () => {
     http.verify();
   });
 
+  // G4 (#43): "Okulum listede yok" as in the wizard: the school's name is typed and saved without a catalog city, district or type.
+  it('saves a school that is not in the list by its typed name, and edits it again', async () => {
+    const { fixture, component, http } = await setup();
+    const student = { version: 5, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true,
+      homeProvinceId: '34', homeCity: 'İstanbul', homeDistrictId: '3401', homeDistrict: 'Kadıköy',
+      schoolName: 'Kadıköy Anadolu Lisesi', schoolCity: 'İstanbul', schoolDistrict: 'Kadıköy', schoolType: 'Anadolu Lisesi' };
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const button = (text: string) => Array.from(el.querySelectorAll('[data-testid="own-school"] button')).find(x => x.textContent?.trim() === text) as HTMLElement;
+    button('Okulunu değiştir').click(); fixture.detectChanges(); await fixture.whenStable();
+    await new Promise(resolve => setTimeout(resolve, 250));
+    http.expectOne(r => r.url === '/api/coaching/students/me/onboarding/options/schools').flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 } });
+    fixture.detectChanges(); await fixture.whenStable();
+    button('Okulum listede yok').click(); fixture.detectChanges(); await fixture.whenStable();
+    const box = el.querySelector('#profile-own-school') as HTMLInputElement;
+    expect(box.getAttribute('maxlength')).toBe('150'); expect(box.value).toBe('');
+    box.value = 'x'.repeat(151); box.dispatchEvent(new Event('input')); fixture.detectChanges(); await fixture.whenStable();
+    button('Tamam').click(); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('#typed-school-error')!.textContent).toContain('en fazla 150 karakter');
+    expect(box.getAttribute('aria-invalid')).toBe('true');
+    box.value = '  Köy   Lisesi '; box.dispatchEvent(new Event('input')); fixture.detectChanges(); await fixture.whenStable();
+    button('Tamam').click(); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[data-testid="own-school"] strong')!.textContent).toBe('Köy Lisesi');
+    expect(el.querySelector('[data-testid="own-school"]')!.textContent).not.toContain('Anadolu Lisesi');
+    expect(component.dirty).toBe(true);
+    component.save();
+    const request = http.expectOne('/api/coaching/profiles/me/student');
+    expect(request.request.body).toMatchObject({ schoolName: 'Köy Lisesi', schoolCity: null, schoolDistrict: null, schoolType: null });
+    expect(request.request.body.schoolId).toBeUndefined();
+    request.flush({ data: { ...student, version: 6, schoolName: 'Köy Lisesi', schoolCity: null, schoolDistrict: null, schoolType: null } });
+    fixture.detectChanges(); await fixture.whenStable();
+    // Editing it again starts from the typed name.
+    button('Okulunu değiştir').click(); fixture.detectChanges(); await fixture.whenStable();
+    await new Promise(resolve => setTimeout(resolve, 250));
+    http.expectOne(r => r.url === '/api/coaching/students/me/onboarding/options/schools').flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 } });
+    fixture.detectChanges(); await fixture.whenStable();
+    button('Okulum listede yok').click(); fixture.detectChanges(); await fixture.whenStable();
+    expect((el.querySelector('#profile-own-school') as HTMLInputElement).value).toBe('Köy Lisesi');
+  });
+
   it('lets a younger student remove an older typed school and shows the diploma grade only when the exam asks it (review L2, L5)', async () => {
     const { fixture, component, http } = await setup();
     const student = { version: 5, educationStatus: 'Student', gradeLevel: 7, shareProgressWithTeachers: true, isActive: true, schoolName: 'Eski Ortaokul' };

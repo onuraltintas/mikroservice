@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { vi } from 'vitest';
 import { OnboardingView } from '../../../core/services/coaching-onboarding.service';
-import { StudentOnboardingComponent } from './student-onboarding.component';
+import { StudentOnboardingComponent, birthDateError } from './student-onboarding.component';
 import { ToasterService } from '../../../core/services/toaster.service';
 
 describe('StudentOnboardingComponent (Paket C #3)', () => {
@@ -638,6 +638,100 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       expect(t.fixture.componentInstance.dirty()).toBe(true);
       await t.click('Vazgeç');
       expect(t.fixture.componentInstance.dirty()).toBe(false);
+    });
+  });
+
+  // ---------- Paket G (G4 #43, G5 #44, #45) ----------
+
+  async function toOwnSchool(t: Awaited<ReturnType<typeof render>>) {
+    const date = t.el.querySelector('[data-current] input[type="date"]') as HTMLInputElement;
+    date.value = '2010-05-01'; date.dispatchEvent(new Event('input')); await t.click('Devam');
+    const city = t.el.querySelector('[data-current] input[role="combobox"]') as HTMLInputElement;
+    city.value = 'ank'; city.dispatchEvent(new Event('input')); await t.settle();
+    (t.el.querySelector('[role="option"]') as HTMLElement).click(); await t.settle();
+    t.http.expectOne('/api/locations/provinces/06/districts').flush([{ id: '0601', provinceId: '06', name: 'Çankaya' }]); await t.settle();
+    (t.el.querySelector('[role="option"]') as HTMLElement).click(); await t.settle();
+    await t.click('Lise öğrencisiyim');
+    await t.click('10. sınıf');
+    await new Promise(r => setTimeout(r, 300)); await t.settle();
+    t.http.expectOne(r => r.url === `${base}/options/schools`).flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 } }); await t.settle();
+  }
+
+  it('"Okulum listede yok": the student types the school\'s name and it is saved as the school (G4 #43)', async () => {
+    const t = await render(view());
+    await toOwnSchool(t);
+    expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('ownSchool');
+    await t.click('Okulum listede yok');
+    const box = t.el.querySelector('#ob-own-school') as HTMLInputElement;
+    expect(box).not.toBeNull(); expect(box.getAttribute('maxlength')).toBe('150');
+    expect(t.el.querySelector('[data-current] input[role="combobox"]')).toBeNull();
+    await t.click('Devam');
+    expect(t.el.querySelector('[data-current] [role="alert"]')!.textContent).toContain('Okulunun adını yaz.');
+    box.value = '  Özel  Deneme Koleji '; box.dispatchEvent(new Event('input')); await t.click('Devam');
+    const saved = t.http.expectOne(`${base}/steps/personal`);
+    expect(saved.request.body).toMatchObject({ educationStatus: 'Student', gradeLevel: 10, schoolId: null, schoolName: 'Özel Deneme Koleji' });
+    saved.flush({ data: view({ status: 'InProgress', nextStep: 2, savedSteps: [1] }, { ...stepTwo, gradeLevel: 10, purpose: null, targetExamSessionId: null, targetExamYear: null, schoolName: 'Özel Deneme Koleji' }) });
+    await t.settle();
+    expect(t.el.querySelector('[data-question="ownSchool"] .ob-me')!.textContent).toContain('Özel Deneme Koleji');
+  });
+
+  it('"Listeden seç" goes back to the school list (G4 #43)', async () => {
+    const t = await render(view());
+    await toOwnSchool(t);
+    await t.click('Okulum listede yok');
+    await t.click('Listeden seç');
+    expect(t.el.querySelector('#ob-own-school')).toBeNull();
+    await new Promise(r => setTimeout(r, 300)); await t.settle();
+    t.http.expectOne(r => r.url === `${base}/options/schools`).flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 } }); await t.settle();
+    expect(t.el.querySelector('[data-current] input[role="combobox"]')).not.toBeNull();
+  });
+
+  it('says what is wrong with a birth date (G5 #44)', async () => {
+    const now = new Date('2026-11-07T10:00:00Z');
+    expect(birthDateError('2026-11-08', now)).toBe('Doğum tarihi bugünden sonra olamaz.');
+    expect(birthDateError('2026-11-07', now)).toBe('Bu tarihe göre 6 yaşından küçüksün. Doğum tarihini kontrol et.');
+    expect(birthDateError('2020-11-08', now)).toBe('Bu tarihe göre 6 yaşından küçüksün. Doğum tarihini kontrol et.');
+    expect(birthDateError('2020-11-07', now)).toBeNull();
+    expect(birthDateError('1926-11-07', now)).toBeNull();
+    expect(birthDateError('1926-11-06', now)).toBe('Bu tarihe göre 100 yaşından büyüksün. Doğum tarihini kontrol et.');
+    expect(birthDateError('', now)).toBe('Doğum tarihini seç.');
+
+    const t = await render(view());
+    const date = t.el.querySelector('[data-current] input[type="date"]') as HTMLInputElement;
+    date.value = '2999-01-01'; date.dispatchEvent(new Event('input')); await t.click('Devam');
+    expect(t.el.querySelector('[data-current] [role="alert"]')!.textContent).toContain('Doğum tarihi bugünden sonra olamaz.');
+    expect(t.el.textContent).not.toContain('Doğum tarihini kontrol et.');
+  });
+
+  describe('"Kopyala" for the parent code (G5 #45)', () => {
+    const original = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    afterEach(() => { if (original) Object.defineProperty(navigator, 'clipboard', original); else delete (navigator as { clipboard?: unknown }).clipboard; });
+
+    async function issued() {
+      const t = await render(view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo));
+      t.http.expectOne('/api/users/me/parent-link-codes/active').flush(null); await t.settle();
+      await t.click('Veli kodu oluştur');
+      t.http.expectOne('/api/users/me/parent-link-codes').flush({ code: 'AB12CD', expiresAt: '2026-11-13T09:00:00Z' }); await t.settle();
+      return t;
+    }
+
+    it('copies the code to the clipboard and says so', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+      const t = await issued();
+      expect(t.button('Kopyala').getAttribute('aria-label')).toBe('Veli kodunu kopyala: AB12CD');
+      await t.click('Kopyala');
+      expect(writeText).toHaveBeenCalledWith('AB12CD');
+      const status = t.el.querySelector('[data-testid="ob-copy-status"]')!;
+      expect(status.getAttribute('role')).toBe('status'); expect(status.textContent).toContain('Kod kopyalandı.');
+    });
+
+    it('selects the code when the browser does not allow copying', async () => {
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) }, configurable: true });
+      const t = await issued();
+      await t.click('Kopyala');
+      expect(window.getSelection()!.toString()).toBe('AB12CD');
+      expect(t.el.querySelector('[data-testid="ob-copy-status"]')!.textContent).toContain('Kod seçildi.');
     });
   });
 });

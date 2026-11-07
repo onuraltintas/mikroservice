@@ -35,6 +35,20 @@ describe('OnboardingComboboxComponent (Paket C #3)', () => {
     expect(picked).toHaveBeenCalledWith(expect.objectContaining({ value: 'fen-1-1' }));
   });
 
+  // G4 (#43): a short list matches every typed word, in any order.
+  it('filters a short list by every word, in any order', () => {
+    TestBed.configureTestingModule({ imports: [OnboardingComboboxComponent] });
+    const fixture = TestBed.createComponent(OnboardingComboboxComponent);
+    fixture.componentRef.setInput('label', 'Şehir');
+    fixture.componentRef.setInput('options', [{ value: '1', label: 'Karşıyaka Anadolu' }, { value: '2', label: 'Karşıyaka Fen' }, { value: '3', label: 'Bornova Anadolu' }]);
+    fixture.detectChanges();
+    const shown = (query: string) => { fixture.componentInstance.query.set(query); return fixture.componentInstance.shown().map(x => x.value); };
+    expect(shown('anadolu  KARŞIYAKA')).toEqual(['1']);
+    expect(shown('anadolu')).toEqual(['1', '3']);
+    expect(shown('fen bornova')).toEqual([]);
+    expect(shown('')).toEqual(['1', '2', '3']);
+  });
+
   // F2 review: a refused field marks its list, so the focus-first-invalid rule reaches it.
   it('can be marked invalid and described by an error', () => {
     TestBed.configureTestingModule({ imports: [OnboardingComboboxComponent] });

@@ -384,7 +384,7 @@ public sealed class CoachingProfileConsistencyTests
         (await s.Onboarding.SchoolsAsync("Ankara", null, null, 1, default, "Çankaya")).Items.Single().Should()
             .Match<OnboardingSchoolOption>(x => x.Type == "Fen Lisesi" && x.InHomeDistrict);
         var updated = await s.UpdateProfile(x => x with { SchoolId = s.School, SchoolName = "yazılan ad", SchoolCity = "x", SchoolDistrict = "y", SchoolType = "z" });
-        (updated.SchoolName, updated.SchoolCity, updated.SchoolDistrict, updated.SchoolType).Should().Be(("Ankara Fen Lisesi", "ANKARA", "ÇANKAYA", "Fen Lisesi"));
+        (updated.SchoolName, updated.SchoolCity, updated.SchoolDistrict, updated.SchoolType).Should().Be(("Ankara Fen Lisesi", "Ankara", "Çankaya", "Fen Lisesi"));
         await Assert.ThrowsAsync<ArgumentException>(() => s.UpdateProfile(x => x with { SchoolId = Guid.NewGuid() }));
         await Assert.ThrowsAsync<ArgumentException>(() => s.UpdateProfile(x => x with { SchoolId = s.ClosedSchool }));
     }

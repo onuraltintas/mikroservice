@@ -93,6 +93,36 @@ public sealed class CoachingLearningSetupTests
         Assert.Throws<ArgumentException>(() => StudentLearningContext.Create(Guid.NewGuid(), 2026, LearningPurpose.Yks, 2027, "UNKNOWN", null));
     }
 
+    [Fact]
+    public async Task UnitsComeInCurriculumOrderEvenWithoutTheirOwnRank()
+    {
+        // G5 (#42): the approved catalog's units have no DisplayOrder; their upper topics carry lesson-wide ranks (snapshot of
+        // 01.11.2026, TYT Matematik). Before, the units came in id order ("Veri, Uzay Geometri, Kümeler, Üçgenler, …").
+        await using var f = await Fixture.Create();
+        await f.Grade(8);
+        var catalog = CurriculumVersion.Create("test-2026", "Test programı", "v1", 2026, 2026, "Test kaynağı", null); catalog.SetPublished(true);
+        var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 8, "LGS"); lesson.AssignCurriculum(catalog.Id); lesson.SetActive(true);
+        f.Db.AddRange(catalog, lesson);
+        // (unit, the unit's own rank, its upper topics' ranks): only an admin-made unit has its own rank.
+        foreach (var (name, own, ranks) in new (string, int?, int[])[] { ("Veri", null, [16, 17]), ("Uzay Geometri", null, [26]),
+                     ("Kümeler", null, [7, 8]), ("Üçgenler", null, [18, 22]), ("Mantık", 6, [99]), ("Denklem ve Eşitsizlikler", null, [1, 5]) })
+        {
+            var unit = StudyCatalogUnit.Create("test", name, lesson.Id, name, own); unit.SetActive(true); f.Db.Add(unit);
+            foreach (var rank in ranks.Reverse())
+            {
+                var parent = StudyCatalogTopic.Create("test", $"{name}-{rank}", lesson.Id, unit.Id, $"{name} {rank}", null, rank); parent.SetActive(true);
+                var child = StudyCatalogTopic.Create("test", $"{name}-{rank}-1", lesson.Id, unit.Id, $"{name} {rank}.1", parent.Id, 1, 20); child.SetActive(true);
+                f.Db.AddRange(parent, child);
+            }
+        }
+        await f.Db.SaveChangesAsync();
+        await f.Service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default);
+        var topics = (await f.Service.GetCatalogAsync(lesson.Id, 1, default)).Topics.Items;
+        Assert.Equal(new[] { "Denklem ve Eşitsizlikler", "Mantık", "Kümeler", "Veri", "Üçgenler", "Uzay Geometri" }, topics.Select(x => x.UnitName).Distinct().ToArray());
+        Assert.Equal(new[] { "Denklem ve Eşitsizlikler 1.1", "Denklem ve Eşitsizlikler 5.1", "Mantık 99.1", "Kümeler 7.1", "Kümeler 8.1" },
+            topics.Take(5).Select(x => x.Name).ToArray());
+    }
+
     internal sealed class Fixture : IAsyncDisposable
     {
         public CoachingOwnedProfilePersistenceTests.Fixture Inner { get; } = new();
