@@ -586,6 +586,11 @@ public sealed class CoachingStudentOnboardingTests
         (await Names("ışıl kız")).Should().Equal("Prof.Dr. Işıl Ünal Kız Anadolu Lisesi");
         (await Names("dr. işil")).Should().Equal("Prof.Dr. Işıl Ünal Kız Anadolu Lisesi");
         (await Names("karşıyaka bornova")).Should().BeEmpty("both words must match");
+        // PR #128 review M1: without Turkish letters too.
+        (await Names("karsiyaka anadolu")).Should().BeEquivalentTo("Karşıyaka Cihat Kora Anadolu Lisesi", "Cihat Kora Anadolu Lisesi");
+        (await Names("isil kiz")).Should().Equal("Prof.Dr. Işıl Ünal Kız Anadolu Lisesi");
+        (await s.Service.SchoolsAsync("İzmir", null, "cigli", 1, default)).Items.Single().District.Should().Be("Çiğli");
+        TurkishSearch.EveryWordStarts("karsiyaka", "KARŞIYAKA").Should().BeTrue();
         // In the own-school list the schools where every word starts a word come first ("lise 7": Lise 7, then Lise 17).
         (await s.Service.SchoolsAsync("Ankara", null, "lise 7", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 7", "Anadolu Lise 17");
         (await s.Service.SchoolsAsync("Ankara", "Anadolu Lisesi", "7 lise", 1, default)).Items.Select(x => x.Name).Should().Equal("Anadolu Lise 7", "Anadolu Lise 17");
@@ -625,6 +630,9 @@ public sealed class CoachingStudentOnboardingTests
         (await Save(null, null)).Answers.SchoolName.Should().Be("Özel Deneme Koleji");
         (await Assert.ThrowsAsync<OnboardingFieldException>(() => Save(null, new string('a', 151)))).Field.Should().Be("ownSchool");
         (await Save(null, new string('a', 150))).Answers.SchoolName.Should().HaveLength(150);
+        // Review L2: a name of only zero-width or format characters is refused; such characters are dropped from a name.
+        (await Assert.ThrowsAsync<OnboardingFieldException>(() => Save(null, "\u200B\u200C \uFEFF"))).Field.Should().Be("ownSchool");
+        (await Save(null, "Deneme\u200B Lisesi")).Answers.SchoolName.Should().Be("Deneme Lisesi");
         // A school picked from the list wins over a typed name.
         (await Save(s.School, "Yazılan")).Answers.SchoolName.Should().Be("Ankara Fen Lisesi");
 
@@ -636,6 +644,30 @@ public sealed class CoachingStudentOnboardingTests
         (updated.SchoolName, updated.SchoolCity, updated.SchoolDistrict, updated.SchoolType).Should().Be(("Köy Lisesi", (string?)null, (string?)null, (string?)null));
         await Assert.ThrowsAnyAsync<ArgumentException>(() => store.UpdateStudentAsync(s.Student, new(updated.Version, CoachingEducationStatus.Student, 11,
             new string('b', 151), null, null, null, null, null, new DateOnly(2009, 1, 1), null, null, true), default));
+    }
+
+    // PR #128 review L1: Profilim (and a teacher's edit) checks the birth date with the wizard's rule (Türkiye date, 6–100 years).
+    [Fact]
+    public async Task ProfilimChecksTheBirthDateLikeTheWizard()
+    {
+        await using var s = await Setup.CreateAsync();
+        await s.Personal(grade: 8);
+        var store = new CoachingProfileStore(s.F.Db, s.F.Accounts, null, null, s.Places);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul")));
+        async Task<CoachingStudentProfile> Update(DateOnly? date)
+        {
+            var profile = await s.F.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == s.Student);
+            return await store.UpdateStudentAsync(s.Student, new(profile.Version, CoachingEducationStatus.Student, 8, null, null, null, null, null, null,
+                date, null, null, true), default);
+        }
+        foreach (var wrong in new[] { today.AddDays(1), today.AddYears(-3), today.AddYears(-101) })
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => Update(wrong));
+        (await Update(today.AddYears(-14))).BirthDate.Should().Be(today.AddYears(-14));
+        (await Update(null)).BirthDate.Should().BeNull();
+        // A stored date is not refused again when it is sent back unchanged (only a new date is checked).
+        var profile = await s.F.Db.CoachingStudentProfiles.SingleAsync(x => x.UserId == s.Student);
+        s.F.Db.Entry(profile).Property(x => x.BirthDate).CurrentValue = today.AddYears(-4); await s.F.Db.SaveChangesAsync(); s.F.Db.ChangeTracker.Clear();
+        (await Update(today.AddYears(-4))).BirthDate.Should().Be(today.AddYears(-4));
     }
 
     [Fact]

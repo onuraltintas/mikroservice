@@ -144,6 +144,9 @@ describe('first-login wizard flow (Paket C #3)', () => {
     expect(typedSchoolError('   ')).toBe('Okulunun adını yaz.');
     expect(typedSchoolError('x'.repeat(151))).toBe('Okulunun adı en fazla 150 karakter olabilir.');
     expect(typedSchoolError(` ${'x'.repeat(150)} `)).toBeNull();
+    // Review L2: zero-width and other format characters are dropped; a name of only those is refused.
+    expect(typedSchoolError('\u200B\u200C \uFEFF')).toBe('Okulunun adını yaz.');
+    expect(cleanSchoolName('Deneme\u200B Lisesi')).toBe('Deneme Lisesi');
     // The typed name changes the step's signature, so the step is sent again.
     expect(signature({ ...personal, ...lise, education: a('10'), ownSchool: typed }, context, 1))
       .not.toBe(signature({ ...personal, ...lise, education: a('10'), ownSchool: a(null, 'Özel Deneme Koleji') }, context, 1));

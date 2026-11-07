@@ -115,12 +115,39 @@ public sealed class CoachingLearningSetupTests
                 f.Db.AddRange(parent, child);
             }
         }
+        // Review L4: a passive upper topic does not move its unit (Uzay Geometri stays last).
+        var uzay = f.Db.StudyCatalogUnits.Local.Single(x => x.Name == "Uzay Geometri");
+        f.Db.Add(StudyCatalogTopic.Create("test", "passive", lesson.Id, uzay.Id, "Pasif üst konu", null, 0));
         await f.Db.SaveChangesAsync();
         await f.Service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default);
         var topics = (await f.Service.GetCatalogAsync(lesson.Id, 1, default)).Topics.Items;
         Assert.Equal(new[] { "Denklem ve Eşitsizlikler", "Mantık", "Kümeler", "Veri", "Üçgenler", "Uzay Geometri" }, topics.Select(x => x.UnitName).Distinct().ToArray());
         Assert.Equal(new[] { "Denklem ve Eşitsizlikler 1.1", "Denklem ve Eşitsizlikler 5.1", "Mantık 99.1", "Kümeler 7.1", "Kümeler 8.1" },
             topics.Take(5).Select(x => x.Name).ToArray());
+    }
+
+    // PR #128 review M2: a refused course is named, so Derslerim can open its row.
+    [Fact]
+    public async Task ARefusedCourseIsNamed()
+    {
+        await using var f = await Fixture.Create();
+        await f.Grade(8);
+        var catalog = CurriculumVersion.Create("test-2026", "Test programı", "v1", 2026, 2026, "Test kaynağı", null); catalog.SetPublished(true);
+        var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 8, "LGS"); lesson.AssignCurriculum(catalog.Id); lesson.SetActive(true);
+        var other = StudyCatalogLesson.Create("test", "turkish", "Türkçe", 8, "LGS"); other.AssignCurriculum(catalog.Id); other.SetActive(true);
+        f.Db.AddRange(catalog, lesson, other); await f.Db.SaveChangesAsync();
+        var saved = await f.Service.SaveAsync(new(null, 2026, LearningPurpose.Lgs, 2027, null, null, [], [], false), default);
+        var priority = await Assert.ThrowsAsync<LearningCourseException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027,
+            null, null, [new(lesson.Id, 1, null), new(other.Id, 9, null)], [], false), default));
+        Assert.Equal(other.Id, priority.LessonId);
+        var unknown = Guid.NewGuid();
+        var missing = await Assert.ThrowsAsync<LearningCourseException>(() => f.Service.SaveAsync(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027,
+            null, null, [new(lesson.Id, 1, null), new(unknown, 1, null)], [], false), default));
+        Assert.Equal(unknown, missing.LessonId);
+        var result = await new Coaching.API.Controllers.LearningSetupController(f.Service).Save(new(saved.Context!.Version, 2026, LearningPurpose.Lgs, 2027,
+            null, null, [new(other.Id, 0, null)], [], false), default);
+        var body = System.Text.Json.JsonSerializer.Serialize(Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(result).Value);
+        Assert.Contains("\"field\":\"courses\"", body); Assert.Contains(other.Id.ToString(), body);
     }
 
     internal sealed class Fixture : IAsyncDisposable

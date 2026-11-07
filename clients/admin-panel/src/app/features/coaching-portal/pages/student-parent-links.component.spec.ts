@@ -40,13 +40,14 @@ describe('StudentParentLinksComponent', () => {
       expect(copy()).toBeUndefined();
       await fixture.componentInstance.createCode(); fixture.detectChanges();
       expect(copy()!.getAttribute('aria-label')).toBe('Veli kodunu kopyala: ABCD-2345');
-      copy()!.click(); await new Promise(r => setTimeout(r)); fixture.detectChanges();
+      expect(el.querySelector('[data-testid="copy-status"]')!.getAttribute('role')).toBe('status');
+      copy()!.click(); await new Promise(r => setTimeout(r, 120)); fixture.detectChanges();
       expect(writeText).toHaveBeenCalledWith('ABCD-2345');
       expect(el.querySelector('[data-testid="copy-status"]')!.textContent).toContain('Kod kopyalandı.');
       Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
-      copy()!.click(); await new Promise(r => setTimeout(r)); fixture.detectChanges();
+      copy()!.click(); await new Promise(r => setTimeout(r, 120)); fixture.detectChanges();
       expect(window.getSelection()!.toString()).toBe('ABCD-2345');
-      expect(el.querySelector('[data-testid="copy-status"]')!.textContent).toContain('Kod seçildi.');
+      expect(el.querySelector('[data-testid="copy-status"]')!.textContent).toContain('Kodu seçip kopyalayabilirsin.');
     } finally {
       if (original) Object.defineProperty(navigator, 'clipboard', original); else delete (navigator as { clipboard?: unknown }).clipboard;
     }

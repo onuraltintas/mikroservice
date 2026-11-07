@@ -296,9 +296,38 @@ describe('StudentLearningSetupComponent', () => {
     // A refused value opens its row's "Gelişmiş".
     t.component.courses.find(x => x.lessonId === 'tyt-mat')!.priority = 9; t.component.saveCourses(); t.fixture.detectChanges();
     expect(row('tyt-mat').querySelector('details')!.open).toBe(true);
+    // PR #128 review M2: closed again by the student, a second refusal of the same course opens it again.
+    row('tyt-mat').querySelector('details')!.open = false;
+    t.component.saveCourses(); t.fixture.detectChanges(); await new Promise(r => setTimeout(r));
+    expect(row('tyt-mat').querySelector('details')!.open).toBe(true);
+    expect(document.activeElement).toBe(row('tyt-mat').querySelector('input[name="priority-tyt-mat"]'));
     t.component.courses.find(x => x.lessonId === 'tyt-mat')!.priority = 1; t.component.saveCourses();
     expect(t.service.save.mock.calls[0][0].courses).toEqual(expect.arrayContaining([{ lessonId: 'ayt-mat', priority: 2, selfReportedDifficulty: 4 },
       { lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }, { lessonId: 'tyt-fiz', priority: 3, selfReportedDifficulty: null }]));
+  });
+
+  // PR #128 review M2: a course the server refuses opens its row when the course can be told (the server names it, or only one is chosen).
+  it('opens the row of a course the server refuses', async () => {
+    const lessons = { curriculum: null, lessons: [
+        { id: 'tyt-mat', name: 'Matematik (TYT)', gradeNumber: null, examCode: 'TYT', topicCount: 30, missingDurationCount: 0 },
+        { id: 'tyt-fiz', name: 'Fizik (TYT)', gradeNumber: null, examCode: 'TYT', topicCount: 10, missingDurationCount: 0 }],
+      topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] } as LearningCatalog;
+    const t = await setup({ ...yksView, nextStep: 'Courses', context: { ...yks, coursePreferences: [
+      { lessonId: 'tyt-mat', priority: 1, selfReportedDifficulty: null }, { lessonId: 'tyt-fiz', priority: 2, selfReportedDifficulty: null }] } });
+    t.service.catalog.mockReturnValue(of(lessons)); t.component.loadCatalog(); t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
+    const el = t.fixture.nativeElement as HTMLElement;
+    const details = (id: string) => el.querySelector(`[data-testid="course-row-${id}"] details`) as HTMLDetailsElement;
+    t.service.save.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'Ders, öncelik ve zorluk değerlerini kontrol edin.', field: 'courses', lessonId: 'tyt-fiz' } })));
+    t.component.saveCourses(); t.fixture.detectChanges(); await new Promise(r => setTimeout(r)); t.fixture.detectChanges();
+    expect(details('tyt-fiz').open).toBe(true); expect(details('tyt-mat').open).toBe(false);
+    expect(el.querySelector('input[name="priority-tyt-fiz"]')!.getAttribute('aria-invalid')).toBe('true');
+    expect(el.querySelector('#setup-courses-error')!.textContent).toContain('Ders, öncelik ve zorluk değerlerini kontrol edin.');
+    // A message that names no course leaves the rows as they are.
+    details('tyt-fiz').open = false;
+    t.service.save.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'Eğitim bağlamına uygun aktif dersleri seçin.' } })));
+    t.component.saveCourses(); t.fixture.detectChanges(); await new Promise(r => setTimeout(r)); t.fixture.detectChanges();
+    expect(details('tyt-fiz').open).toBe(false);
+    expect(t.component.error()).toContain('Eğitim bağlamına uygun aktif dersleri seçin.');
   });
 
   it('#24: an invalid year is never swallowed: the old message goes, the field and a summary say why', async () => {

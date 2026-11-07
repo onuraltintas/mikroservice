@@ -55,6 +55,52 @@ public sealed class TargetAdmissionTurkishSearchTests
         Assert.Single((await new TargetAdmissionSearchService(db).SearchAsync(new("LGS", Search: search))).Items);
     }
 
+    // PR #128 review M1: the server folds ş ç ğ ö ü like the client, so a search typed without Turkish letters still matches.
+    [Theory]
+    [InlineData("isiklar fen")]
+    [InlineData("ISIKLAR")]
+    [InlineData("Işıklar Fen Lİsesi")]
+    public async Task SearchesWithoutTurkishLettersMatch(string search)
+    {
+        using var culture = new InvariantCultureScope();
+        using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var law = await Seed(db);
+        Assert.Equal("IŞIKLAR FEN LİSESİ", Assert.Single((await new TargetAdmissionSearchService(db).SearchAsync(new("LGS", Search: search))).Items).Name);
+        var result = await new TargetAdmissionSearchService(db).SearchAsync(new("YKS", 2026, ProgramType: "Bachelor", University: "ankara universitesi",
+            Faculty: "hukuk fakultesi", ScoreType: "EA"));
+        Assert.Equal(law.Id, Assert.Single(result.Items).TargetId);
+    }
+
+    [Fact]
+    public void FoldingRemovesTurkishMarksLikeTheClient()
+    {
+        Assert.Equal("karsiyaka cagdas gogus ozel umit", Coaching.Infrastructure.Catalogs.TurkishSearch.Fold("KARŞIYAKA Çağdaş Göğüs Özel Ümİt"));
+        Assert.Equal("kazim", Coaching.Infrastructure.Catalogs.TurkishSearch.Fold("Kâzım"));
+        Assert.Equal("afyonkarahisar", Coaching.Infrastructure.Catalogs.TurkishSearch.Fold("Afyonkarahi\u0307sar"));
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task SearchesWithoutTurkishLettersWorkOnPostgres()
+    {
+        using var culture = new InvariantCultureScope();
+        await using var f = await CurriculumPostgresTests.Pg.Create();
+        await Seed(f.Db);
+        foreach (var (name, district) in new[] { ("Karşıyaka Cihat Kora Anadolu Lisesi", "KARŞIYAKA"), ("Cihat Kora Anadolu Lisesi", "KARŞIYAKA"),
+                     ("Bornova Anadolu Lisesi", "BORNOVA"), ("Kâzım Dirik (Kız) Lisesi", "BORNOVA") })
+        {
+            var school = TargetSchool.Create("mebi-lgs", Guid.NewGuid().ToString(), name, "İZMİR", district, 400m); school.SetActive(true); f.Db.Add(school);
+        }
+        await f.Db.SaveChangesAsync();
+        async Task<string[]> Names(string search) => await Coaching.Infrastructure.Catalogs.TurkishSearch
+            .WhereEveryWord(f.Db.TargetSchools.AsNoTracking(), search, x => x.Name, x => x.District).Select(x => x.Name).OrderBy(x => x).ToArrayAsync();
+        Assert.Equal(new[] { "Cihat Kora Anadolu Lisesi", "Karşıyaka Cihat Kora Anadolu Lisesi" }, await Names("karsiyaka anadolu"));
+        Assert.Equal(new[] { "Cihat Kora Anadolu Lisesi", "Karşıyaka Cihat Kora Anadolu Lisesi" }, await Names("ANADOLU KARŞIYAKA"));
+        Assert.Equal(new[] { "Kâzım Dirik (Kız) Lisesi" }, await Names("kazim (kiz)"));
+        Assert.Equal(new[] { "IŞIKLAR FEN LİSESİ" }, await Names("isiklar fen lisesi"));
+        Assert.Empty(await Names("karsiyaka bornova"));
+        Assert.Empty(await Names("50% [a]"));
+    }
+
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task TheSameSearchesWorkOnPostgres()
     {

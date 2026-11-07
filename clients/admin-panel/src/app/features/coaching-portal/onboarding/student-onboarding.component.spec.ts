@@ -667,6 +667,9 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     expect(t.el.querySelector('[data-current] input[role="combobox"]')).toBeNull();
     await t.click('Devam');
     expect(t.el.querySelector('[data-current] [role="alert"]')!.textContent).toContain('Okulunun adını yaz.');
+    // Review L11: the box is marked invalid and points at the message.
+    expect(box.getAttribute('aria-invalid')).toBe('true');
+    expect(t.el.querySelector('#' + box.getAttribute('aria-describedby'))!.textContent).toContain('Okulunun adını yaz.');
     box.value = '  Özel  Deneme Koleji '; box.dispatchEvent(new Event('input')); await t.click('Devam');
     const saved = t.http.expectOne(`${base}/steps/personal`);
     expect(saved.request.body).toMatchObject({ educationStatus: 'Student', gradeLevel: 10, schoolId: null, schoolName: 'Özel Deneme Koleji' });
@@ -720,18 +723,26 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
       const t = await issued();
       expect(t.button('Kopyala').getAttribute('aria-label')).toBe('Veli kodunu kopyala: AB12CD');
-      await t.click('Kopyala');
-      expect(writeText).toHaveBeenCalledWith('AB12CD');
+      // Review L10: the live region is there before the first click, so the first message is announced too.
       const status = t.el.querySelector('[data-testid="ob-copy-status"]')!;
-      expect(status.getAttribute('role')).toBe('status'); expect(status.textContent).toContain('Kod kopyalandı.');
+      expect(status.getAttribute('role')).toBe('status'); expect(status.textContent!.trim()).toBe('');
+      await t.click('Kopyala'); await new Promise(r => setTimeout(r, 120)); await t.settle();
+      expect(writeText).toHaveBeenCalledWith('AB12CD');
+      expect(t.el.querySelector('[data-testid="ob-copy-status"]')).toBe(status);
+      expect(status.textContent).toContain('Kod kopyalandı.');
+      // A second click empties the region first, so the same message is announced again.
+      t.button('Kopyala').click(); await Promise.resolve(); t.fixture.detectChanges();
+      expect(status.textContent!.trim()).toBe('');
+      await new Promise(r => setTimeout(r, 120)); await t.settle();
+      expect(status.textContent).toContain('Kod kopyalandı.');
     });
 
     it('selects the code when the browser does not allow copying', async () => {
       Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) }, configurable: true });
       const t = await issued();
-      await t.click('Kopyala');
+      await t.click('Kopyala'); await new Promise(r => setTimeout(r, 120)); await t.settle();
       expect(window.getSelection()!.toString()).toBe('AB12CD');
-      expect(t.el.querySelector('[data-testid="ob-copy-status"]')!.textContent).toContain('Kod seçildi.');
+      expect(t.el.querySelector('[data-testid="ob-copy-status"]')!.textContent).toContain('Kodu seçip kopyalayabilirsin.');
     });
   });
 });

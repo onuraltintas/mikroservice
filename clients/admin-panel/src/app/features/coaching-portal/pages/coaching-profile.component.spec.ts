@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { CoachingProfileComponent } from '../../../../../shared/coaching-profile.component';
+import { shiftYears } from '../birth-date';
 import { vi } from 'vitest';
 import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
@@ -97,6 +98,7 @@ describe('Coaching owned profile', () => {
     fixture.detectChanges(); await fixture.whenStable();
     button('Okulum listede yok').click(); fixture.detectChanges(); await fixture.whenStable();
     const box = el.querySelector('#profile-own-school') as HTMLInputElement;
+    expect(box.getAttribute('aria-invalid')).toBeNull();
     expect(box.getAttribute('maxlength')).toBe('150'); expect(box.value).toBe('');
     box.value = 'x'.repeat(151); box.dispatchEvent(new Event('input')); fixture.detectChanges(); await fixture.whenStable();
     button('Tamam').click(); fixture.detectChanges(); await fixture.whenStable();
@@ -120,6 +122,25 @@ describe('Coaching owned profile', () => {
     fixture.detectChanges(); await fixture.whenStable();
     button('Okulum listede yok').click(); fixture.detectChanges(); await fixture.whenStable();
     expect((el.querySelector('#profile-own-school') as HTMLInputElement).value).toBe('Köy Lisesi');
+  });
+
+  // PR #128 review L11: "Okulum listede yok" is offered before a city is chosen (a student without a home city starts there).
+  it('offers "Okulum listede yok" while the city is still to be chosen', async () => {
+    const { fixture, component, http } = await setup();
+    const student = { version: 5, educationStatus: 'Student', gradeLevel: 10, shareProgressWithTeachers: true, isActive: true };
+    http.expectOne('/api/coaching/profiles/me').flush({ data: { student } });
+    fixture.detectChanges(); await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const button = (text: string) => Array.from(el.querySelectorAll('[data-testid="own-school"] button')).find(x => x.textContent?.trim() === text) as HTMLElement;
+    button('Okulunu seç').click(); fixture.detectChanges(); await fixture.whenStable();
+    http.expectOne('/api/coaching/students/me/onboarding/options/schools/cities').flush({ data: [{ value: 'ANKARA', label: 'Ankara', count: 3 }] });
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(component.cityPicker()).toBe(true);
+    button('Okulum listede yok').click(); fixture.detectChanges(); await fixture.whenStable();
+    const box = el.querySelector('#profile-own-school') as HTMLInputElement;
+    box.value = 'Köy Lisesi'; box.dispatchEvent(new Event('input')); fixture.detectChanges(); await fixture.whenStable();
+    button('Tamam').click(); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[data-testid="own-school"] strong')!.textContent).toBe('Köy Lisesi');
   });
 
   it('lets a younger student remove an older typed school and shows the diploma grade only when the exam asks it (review L2, L5)', async () => {
@@ -465,16 +486,23 @@ describe('Profilim feedback and warnings (E4 #23, #24)', () => {
     t.http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...twelfth, version: 8, bio: 'Merhaba' } }); await t.settle();
     expect(t.el.textContent).toContain('Profilin kaydedildi');
 
-    await t.set('birthDate', '2099-01-01'); await t.submit();
+    await t.set('birthDate', '2999-01-01'); await t.submit();
     t.http.expectNone('/api/coaching/profiles/me/student');
     expect(t.el.textContent).not.toContain('Profilin kaydedildi');
     const summary = t.el.querySelector('[data-testid="error-summary"]')!;
     expect(summary.getAttribute('role')).toBe('alert');
     expect(summary.textContent).toContain('Profilin kaydedilmedi');
-    expect(summary.textContent).toContain('Doğum tarihin gelecekte olamaz.');
+    expect(summary.textContent).toContain('Doğum tarihi bugünden sonra olamaz.');
     const field = t.el.querySelector('[name="birthDate"]')!;
     expect(field.getAttribute('aria-invalid')).toBe('true');
-    expect(t.el.querySelector('#' + field.getAttribute('aria-describedby'))!.textContent).toContain('Doğum tarihin gelecekte olamaz.');
+    expect(t.el.querySelector('#' + field.getAttribute('aria-describedby'))!.textContent).toContain('Doğum tarihi bugünden sonra olamaz.');
+    // PR #128 review L1: the wizard's age range (6–100 years, Türkiye date) applies here too.
+    await t.set('birthDate', shiftYears(-3)); await t.submit();
+    t.http.expectNone('/api/coaching/profiles/me/student');
+    expect(t.el.querySelector('[data-testid="error-summary"]')!.textContent).toContain('6 yaşından küçüksün');
+    await t.set('birthDate', shiftYears(-101)); await t.submit();
+    t.http.expectNone('/api/coaching/profiles/me/student');
+    expect(t.el.querySelector('[data-testid="error-summary"]')!.textContent).toContain('100 yaşından büyüksün');
     // The submit button stays usable so the student always gets an answer.
     expect((t.el.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
 
