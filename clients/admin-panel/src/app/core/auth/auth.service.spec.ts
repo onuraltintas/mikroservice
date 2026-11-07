@@ -7,7 +7,7 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService, hasManagementRole, NO_ROLE_FOR_PRODUCT_CODE } from './auth.service';
+import { AuthService, hasManagementRole, NO_ROLE_FOR_PRODUCT_CODE, SESSION_NOT_FOR_THIS_PANEL_CODE } from './auth.service';
 
 describe('AuthService browser session security', () => {
   let http: HttpTestingController;
@@ -213,6 +213,30 @@ describe('AuthService browser session security', () => {
     expect(service.signInNotice()).toMatchObject({ status: 400, error: { code: NO_ROLE_FOR_PRODUCT_CODE } });
     expect(service.consumeSignInNotice()).toMatchObject({ error: { code: NO_ROLE_FOR_PRODUCT_CODE } });
     expect(service.signInNotice()).toBeNull();
+  });
+
+  // PR #125 re-review L-b: after the last role is removed the access is closed too, so refresh says ProductAccessDenied.
+  it('keeps the notice when a refresh is refused because the product access was closed', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(
+      { code: 'Auth.ProductAccessDenied', description: 'Bu platform için oturum erişiminiz yok. Lütfen yeniden giriş yapın.' },
+      { status: 400, statusText: 'Bad Request' });
+    await service.waitForAuth();
+    expect(service.consumeSignInNotice()).toMatchObject({ error: { code: 'Auth.ProductAccessDenied' } });
+  });
+
+  // L-d: roles that do not fit this panel get a neutral message, not "no role".
+  it('ends a session whose roles do not fit this panel with the neutral notice', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    const pending = service.loginWithPassword('course@example.test', 'password', false);
+    const outcome = pending.then(() => null, (error: unknown) => error);
+    http.expectOne(req => req.url.endsWith('/auth/coaching/login')).flush({
+      accessToken: createToken('course-student', ['CourseStudent'], 'coaching'), tokenType: 'Bearer', expiresInMinutes: 15 });
+    await vi.waitFor(() => http.expectOne(req => req.url.endsWith('/auth/revoke-token')).flush({}));
+
+    expect(await outcome).toMatchObject({ error: { code: SESSION_NOT_FOR_THIS_PANEL_CODE } });
   });
 
   it('leaves no notice when a refresh fails for another reason', async () => {

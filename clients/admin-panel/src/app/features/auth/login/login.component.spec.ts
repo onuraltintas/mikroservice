@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService, noRoleForProductError } from '../../../core/auth/auth.service';
+import { AuthService, noRoleForProductError, sessionNotForThisPanelError } from '../../../core/auth/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { AUTH_VOICE } from '../auth-voice';
 import { LoginComponent } from './login.component';
@@ -173,6 +173,17 @@ describe('LoginComponent MFA flow', () => {
     expect(component.errorMessage()).toBe(
       'Bu platformda hesabına tanımlı bir yetki kalmadı. Yeniden erişim için kurumunla ya da destekle iletişime geç.');
     expect(notice()).toBeNull();
+  });
+
+  it('shows the neutral notice for a session that does not fit this panel', () => {
+    const coaching = createComponent({ consumeSignInNotice: vi.fn(() => sessionNotForThisPanelError()), signInNotice: signal(sessionNotForThisPanelError()) });
+    TestBed.tick();
+    expect(coaching.errorMessage()).toBe('Bu oturumla bu panele erişemezsin. Doğru siteden giriş yap.');
+
+    TestBed.resetTestingModule();
+    const management = createComponent({ consumeSignInNotice: vi.fn(() => sessionNotForThisPanelError()), signInNotice: signal(sessionNotForThisPanelError()) }, 'siz');
+    TestBed.tick();
+    expect(management.errorMessage()).toBe('Bu oturumla bu panele erişemezsiniz. Doğru siteden giriş yapın.');
   });
 
   function createComponent(authService: Record<string, unknown>, voice: 'sen' | 'siz' = 'sen'): LoginComponent {

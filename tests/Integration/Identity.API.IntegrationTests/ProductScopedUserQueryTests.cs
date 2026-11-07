@@ -197,6 +197,32 @@ public sealed class ProductScopedUserQueryTests
         Assert.Null(result.Value.StudentDetails);
     }
 
+    // PR #125 re-review M-2: a membership whose role was soft-deleted is flagged, so Rol Yönetimi can count only live
+    // roles (the last-role confirmation) and still show the stale chip.
+    [Fact]
+    public async Task UserProfile_FlagsMembershipsWhoseRoleWasSoftDeleted()
+    {
+        var user = User.Create(Guid.NewGuid(), "stale-role@example.test");
+        user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.Admin, null, DateTimeOffset.UtcNow);
+        AddRole(user, "Student", PlatformProduct.Coaching);
+        AddRole(user, "RetiredRole", PlatformProduct.Coaching);
+        user.Roles.Single(role => role.Role.Name == "RetiredRole").Role.MarkAsDeleted();
+        var userRepository = DispatchProxy.Create<IUserRepository, UserRepositoryProxy>();
+        ((UserRepositoryProxy)(object)userRepository).User = user;
+        var handler = new GetUserProfileQueryHandler(
+            userRepository,
+            teacherRepository: null!,
+            studentRepository: null!,
+            institutionRepository: null!,
+            new TestCurrentUserService(user.Id, ["Student"], "coaching"));
+
+        var result = await handler.Handle(new GetUserProfileQuery(user.Id, PlatformProduct.Coaching), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value.ProductRoles.Single(role => role.Role == "Student").RoleDeleted);
+        Assert.True(result.Value.ProductRoles.Single(role => role.Role == "RetiredRole").RoleDeleted);
+    }
+
     private static void AddRole(User user, string name, PlatformProduct product)
     {
         var role = Role.Create(name, name);

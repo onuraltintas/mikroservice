@@ -86,6 +86,14 @@ describe('Service-scoped role management', () => {
     expect(identity.removeRole).toHaveBeenCalledWith('user-1', 'Student', 'coaching');
   });
 
+  // PR #125 re-review M-2: a soft-deleted role is shown but does not count as another live role.
+  it('asks before removing the last live role even when a soft-deleted role remains', async () => {
+    const fixture = create({ ...user, roles: ['Student', 'RetiredRole'],
+      productRoles: [{ role: 'Student', product: 'coaching' }, { role: 'RetiredRole', product: 'coaching', roleDeleted: true }] });
+    await fixture.componentInstance.removeRole({ role: 'Student', product: 'coaching' });
+    expect(toaster.confirm).toHaveBeenCalledWith(LAST_PRODUCT_ROLE_CONFIRMATION, expect.anything());
+  });
+
   it('does not ask while the service still has another role', async () => {
     const fixture = create({ ...user, roles: ['Teacher', 'Student'],
       productRoles: [{ role: 'Teacher', product: 'coaching' }, { role: 'Student', product: 'coaching' }] });
