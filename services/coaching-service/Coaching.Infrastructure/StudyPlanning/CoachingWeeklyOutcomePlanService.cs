@@ -30,13 +30,16 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         // KM1: each exam shows its next session (else its latest one), as the single date used to.
         var exams=rows.Select(x=>new WeeklyExamReference(x.Name,x.NextSessionDate(today))).ToArray();
         // Roadmap O7: the plan ends the day before the exam: the student's own date, then (KM1) the session the student chose,
-        // else the admin's nearest upcoming session.
-        var catalogDate=(await CoachingExamSessions.NextCatalogAsync(db,codes.OfType<string>().ToArray(),today,ct))?.Date;
-        var own=await db.StudentLearningContexts.AsNoTracking().Where(x=>x.StudentUserId==student).Select(x=>new{x.TargetExamDate,x.TargetExamSessionId}).SingleOrDefaultAsync(ct);
-        var chosen=await CoachingExamSessions.ChosenAsync(db,own?.TargetExamSessionId,today,ct);
-        var (examDate,source)=own?.TargetExamDate>today?(own.TargetExamDate,"Student"):chosen is not null?(chosen.Date,"Session"):catalogDate.HasValue?(catalogDate,"Catalog"):((DateOnly?)null,"Default");
+        // (G2 #40) the year they chose (an estimated date while the catalog has no session for it), else the admin's nearest session.
+        var codeList=codes.OfType<string>().ToArray();
+        var fallback=await CoachingExamSessions.ForStudentAsync(db,student,codeList,today,ct,includeOwnDate:false);
+        var target=await CoachingExamSessions.ForStudentAsync(db,student,codeList,today,ct);
+        // The date her own date replaces ("Resmî tarihe dön"): a chosen session keeps the nearest catalog date as before.
+        var catalog=fallback?.Source=="Session"?await CoachingExamSessions.NextCatalogAsync(db,codeList,today,ct):fallback;
+        var catalogDate=catalog?.Date;
+        var (examDate,source)=target is null?((DateOnly?)null,"Default"):((DateOnly?)target.Date,target.Source);
         var end=examDate is {} date?(date.AddDays(-1)<today?today:date.AddDays(-1)):WeeklyOutcomeScheduler.DefaultEnd(today);
-        return new(today,end,draft.Version,draft.TimeZoneId,exams,examDate,source,catalogDate);
+        return new(today,end,draft.Version,draft.TimeZoneId,exams,examDate,source,catalogDate){CatalogExamDateEstimated=catalog?.Source=="Estimated"};
     }
     private DateOnly Today(string zoneId)=>DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(),TimeZoneInfo.FindSystemTimeZoneById(zoneId)).DateTime);
 

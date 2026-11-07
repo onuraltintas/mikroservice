@@ -65,7 +65,7 @@ export function scoreTypeNote(scoreType: string): string | null {
   return scoreType === 'P2_16' || scoreType === 'P2_17' ? DIN_SUBTEST_NOTE : null;
 }
 /** KM1: the exam date an AGS, YDS or YÖKDİL student works towards. */
-export interface ScoreTargetExam { name: string; date: string; daysLeft: number; source: 'Student' | 'Session' | 'Catalog' }
+export interface ScoreTargetExam { name: string; date: string; daysLeft: number; source: 'Student' | 'Session' | 'Catalog' | 'Estimated' }
 export interface ScoreEstimate {
   estimates: ScoreTypeEstimate[]; target: ScoreTargetGap | null; notice: string | null;
   languageScores?: LanguageScoreEstimate[]; targetExam?: ScoreTargetExam | null;

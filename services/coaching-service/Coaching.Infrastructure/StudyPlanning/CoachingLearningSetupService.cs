@@ -170,7 +170,11 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
     private static IQueryable<StudyCatalogLesson> ByExam(IQueryable<StudyCatalogLesson> query, IReadOnlyList<string> codes)
     { var exams = codes.ToArray(); return query.Where(x => x.ExamCode != null && Enumerable.Contains(exams, x.ExamCode)); }
 
-    /// <summary>KM1: the chosen session must be an upcoming session of the purpose's own, active exam in the target year.</summary>
+    /// <summary>
+    /// KM1: the chosen session must be an upcoming session of the purpose's own, active exam in the target year. G2 (#40): without a
+    /// session the year alone is the target (a year the catalog has no session for yet); its range is checked by
+    /// <see cref="StudentLearningContext.SetScope"/> and its date is estimated where one is needed (<see cref="CoachingExamSessions"/>).
+    /// </summary>
     private async Task ValidateSessionAsync(LearningSetupUpdate r, CancellationToken ct)
     {
         if (r.TargetExamSessionId is not { } id) return;
@@ -220,7 +224,7 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         if (!p.IsEducationComplete) missing.Add("Profile");
         var sessions = await SessionsAsync(ct);
         var allowed = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel);
-        if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions, AllowedPurposes = allowed }; }
+        if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions, AllowedPurposes = allowed, EducationStatus = p.EducationStatus, GradeLevel = p.GradeLevel }; }
         var fits = LearningPurposes.FitsEducation(c.Purpose, p.EducationStatus, p.GradeLevel);
         if (LearningPurposes.IsRetired(c.Purpose) || !fits || p.EducationStatus != c.EducationStatus || p.GradeLevel != c.GradeLevel) missing.Add("Purpose");
         var hours = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == p.UserId, ct);
@@ -237,7 +241,8 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             warnings.Add("Seçilen derslerde çalışma süresi eksik konular var; önizlemede süre girin.");
         if (missing.Contains("Catalog")) warnings.Add("Uygun yayımlanmış katalog eksik veya değişmiş. Mevcut planlarınıza erişebilirsiniz.");
         return new(c, missing.FirstOrDefault() ?? "Preview", missing.Count == 0, missing, warnings)
-            { ExamSessions = sessions, AllowedPurposes = allowed, PurposeNotForEducation = !fits && LearningPurposes.IsSelectable(c.Purpose) };
+            { ExamSessions = sessions, AllowedPurposes = allowed, PurposeNotForEducation = !fits && LearningPurposes.IsSelectable(c.Purpose),
+              EducationStatus = p.EducationStatus, GradeLevel = p.GradeLevel };
     }
 
     /// <summary>

@@ -14,7 +14,7 @@ import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onb
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, TARGET_QUESTIONS, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
   emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, staleParentCode, personalRequest, prefill, questions, signature, stepComplete, stepQuestions,
-  purposeOf, summary, targetRequest, withoutUnfitPurpose
+  purposeOf, sessionAnswerLabel, summary, targetRequest, withoutUnfitPurpose
 } from './onboarding-model';
 import { coachingToaster } from '../coaching-feedback';
 import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
@@ -166,7 +166,7 @@ export class StudentOnboardingComponent implements OnInit {
     const saved = this.original();
     if (question.id === 'targetMode' && choice.value === 'none' && this.mode() === 'target' && saved && saved.value !== 'none'
       && !await this.toaster.confirm(`Mevcut hedefin silinecek: ${saved.label}. Devam edilsin mi?`, { confirmText: 'Hedefimi sil', cancelText: 'Vazgeç' })) return;
-    this.answer(question, { value: choice.value, label: choice.label });
+    this.answer(question, { value: choice.value, label: question.id === 'session' ? sessionAnswerLabel(choice.label) : choice.label });
   }
   skip(question: Question) { this.answer(question, { value: null, label: question.skipLabel ?? 'Geç' }); }
   pickCombo(question: Question, option: ComboOption) { this.answer(question, { value: option.value, label: option.label, data: option.data }); }

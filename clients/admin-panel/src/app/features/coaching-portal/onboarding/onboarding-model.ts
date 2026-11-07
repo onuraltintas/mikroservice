@@ -3,6 +3,7 @@ import { OnboardingExamStep, OnboardingInvitation, OnboardingPersonalStep, Onboa
 import { coachingDate } from '../coaching-labels';
 import { OABT_FIELDS, YOKDIL_FIELDS } from '../../../core/models/practice-exam';
 import { EDUCATION_STAGES, EducationStage, educationRequest, gradesFor, isStudentStage, stageOf } from '../coaching-education';
+import { RECOMMENDED_SUFFIX, YEAR_ONLY_SUFFIX, examDay, examTimeChoices } from '../exam-time-choices';
 
 /**
  * Paket C (#3, user decisions 05.11.2026): the first-login wizard as a chat. Every question is answered with a component
@@ -47,7 +48,6 @@ const gradeChoices = (stage: EducationStage | '') => gradesFor(stage).map(grade 
 export const YDS_LEVELS: Choice[] = [
   { value: '90', label: 'A (90–100)' }, { value: '80', label: 'B (80–89)' }, { value: '70', label: 'C (70–79)' },
   { value: '60', label: 'D (60–69)' }, { value: '50', label: 'E (50–59)' }];
-const EXAM_CODES: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
 const EXAM_TYPES: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'YKS', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YÖKDİL' };
 
 /** Every question of the target step (E7: "Vazgeç" clears them all to bring the saved target back). */
@@ -98,10 +98,10 @@ export function gradeOf(answers: Answers): number | null {
   const education = value(answers, 'education');
   return isStudentStage(stageOfAnswers(answers)) && education !== null ? Number(education) : null;
 }
-/** OBP counts from 11th grade, and for everyone out of high school (E3 #14). */
+/** OBP counts from 11th grade and for a lise graduate (E3 #14; G1: university students and graduates no longer take YKS). */
 export function asksDiploma(answers: Answers): boolean {
   const stage = stageOfAnswers(answers); const grade = gradeOf(answers);
-  return purposeOf(answers) === 'Yks' && (stage !== '' && !isStudentStage(stage) || grade === 11 || grade === 12);
+  return purposeOf(answers) === 'Yks' && (stage === 'HighSchoolGraduate' || grade === 11 || grade === 12);
 }
 
 /** The score types a score-only target may use (the server's ScoreTargetTypes). */
@@ -125,15 +125,14 @@ export function scoreTargetTypes(answers: Answers): Choice[] {
 }
 export function scoreMax(type: string | null): number { return type === 'LGS' ? 500 : ['TYT', 'SAY', 'EA', 'SOZ', 'DIL'].includes(type ?? '') ? 560 : 100; }
 
+/** G2 (#40): the shared list (catalog sessions, then later years without a date yet; the grade's year is "önerilen"). */
 function sessionChoices(answers: Answers, context: FlowContext): Choice[] {
-  const purpose = purposeOf(answers);
-  if (!purpose) return [];
-  const sessions = context.sessions.filter(x => x.examCode === EXAM_CODES[purpose]);
-  if (sessions.length) return sessions.map(x => ({ value: `session:${x.id}:${x.date.slice(0, 4)}`, label: `${x.label} · ${day(x.date)}` }));
-  // No session in the catalog yet: the year is enough.
-  return [1, 2, 3].map(offset => context.academicYearStart + offset).map(year => ({ value: `year:${year}`, label: String(year) }));
+  return examTimeChoices(purposeOf(answers), context.sessions, context.academicYearStart, { stage: stageOfAnswers(answers), grade: gradeOf(answers) })
+    .map(x => ({ value: x.value, label: x.label }));
 }
-function day(iso: string) { return iso.split('-').reverse().join('.'); }
+/** The answer shown in the chat: the choice without its "önerilen" mark. */
+export function sessionAnswerLabel(label: string): string { return label.endsWith(RECOMMENDED_SUFFIX) ? label.slice(0, -RECOMMENDED_SUFFIX.length) : label; }
+const day = examDay;
 
 /** Every question that applies to the answers so far, in order; the first unanswered one is asked next. */
 export function questions(answers: Answers, context: FlowContext): Question[] {
@@ -166,8 +165,8 @@ export function questions(answers: Answers, context: FlowContext): Question[] {
   if (purpose) {
     const choices = sessionChoices(answers, context);
     add({ id: 'session', step: 2, kind: 'buttons', choices,
-      prompt: choices[0]?.value.startsWith('session:') ? 'Hangi oturuma hazırlanıyorsun?' : 'Hangi yıl sınava gireceksin?',
-      reason: 'Sınava kalan günleri bu tarihe göre gösteririz.' });
+      prompt: choices.some(x => x.value.startsWith('session:')) ? 'Hangi oturuma hazırlanıyorsun?' : 'Hangi yıl sınava gireceksin?',
+      reason: 'Sınava kalan günleri bu tarihe göre gösteririz. Tarihi henüz açıklanmayan yıllarda tahmini bir tarih kullanırız.' });
   }
   if (asksDiploma(answers))
     add({ id: 'diploma', step: 2, kind: 'diploma', min: 50, max: 100, skipLabel: 'Sonra gireceğim', prompt: 'Diploma notun kaç?',
@@ -327,7 +326,7 @@ export function prefill(view: OnboardingView): Answers {
     if (a.purpose === 'Yokdil' && a.primaryScoreType) answers.yokdilField = { value: a.primaryScoreType, label: YOKDIL_FIELDS[a.primaryScoreType] ?? a.primaryScoreType };
     const session = view.examSessions.find(x => x.id === a.targetExamSessionId);
     if (session) answers.session = { value: `session:${session.id}:${session.date.slice(0, 4)}`, label: `${session.label} · ${day(session.date)}` };
-    else if (a.targetExamYear && !a.targetExamSessionId && saved.has(2)) answers.session = { value: `year:${a.targetExamYear}`, label: String(a.targetExamYear) };
+    else if (a.targetExamYear && !a.targetExamSessionId && saved.has(2)) answers.session = { value: `year:${a.targetExamYear}`, label: `${a.targetExamYear}${YEAR_ONLY_SUFFIX}` };
     if (saved.has(2) && asksDiploma(answers))
       answers.diploma = a.diplomaGrade !== null ? { value: a.diplomaGrade, label: `${formatScore(a.diplomaGrade)}${a.diplomaGradeEstimated ? ' (tahmini)' : ''}`, data: { estimated: a.diplomaGradeEstimated } }
         : { value: null, label: 'Sonra gireceğim' };

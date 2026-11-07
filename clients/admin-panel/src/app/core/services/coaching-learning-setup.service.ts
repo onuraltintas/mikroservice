@@ -29,7 +29,9 @@ export interface LearningSetupView { context: LearningContext | null; nextStep: 
   /** Paket D (#8): the saved exam does not fit the grade on the profile (e.g. LGS after 9th grade). */
   purposeNotForEducation?: boolean;
   /** Paket D (#8): the exams that fit the grade on the profile; missing on an older API (then every exam is offered). */
-  allowedPurposes?: ExamLearningPurpose[] }
+  allowedPurposes?: ExamLearningPurpose[];
+  /** G2 (#40): the education on the profile (Sınavım marks the grade's exam year "önerilen"). */
+  educationStatus?: string | null; gradeLevel?: number | null }
 /** E4 #26: what saving new exam settings would remove (the student's own target parts, the diploma grade); nothing is saved. */
 export interface LearningSetupImpactRequest { purpose: LearningPurpose; primaryScoreType: string | null; foreignLanguage: string | null }
 export interface LearningSetupImpact { removedTargets: string[]; teacherGoalMismatch: boolean; diplomaGradeRemoved: number | null }

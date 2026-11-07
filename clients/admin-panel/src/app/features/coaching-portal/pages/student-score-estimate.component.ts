@@ -52,7 +52,7 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         }
         @if (result.goal?.scoreType === 'P1') { <p class="plan-row"><small>{{ p3Note }}</small></p> }
         @if (result.targetExam; as exam) {
-          <p class="plan-row" data-testid="score-target-exam">{{ exam.source === 'Student' ? 'Sınavına' : exam.name + ' sınavına' }} {{ int(exam.daysLeft) }} gün kaldı.</p>
+          <p class="plan-row" data-testid="score-target-exam">{{ exam.source === 'Student' ? 'Sınavına' : exam.name + ' sınavına' }} {{ exam.source === 'Estimated' ? 'tahminen ' : '' }}{{ int(exam.daysLeft) }} gün kaldı.@if (exam.source === 'Estimated') { <small> Sınav tarihi henüz açıklanmadı; tahmini bir tarihe göre hesaplandı.</small> }</p>
         }
         @if (result.target; as target) {
           <p class="plan-row" data-testid="score-target">

@@ -17,7 +17,8 @@ import { StudentPlanPreviewComponent } from './student-plan-preview.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingStudyPlanningService, PublishedStudyOutcome, StudyTopic } from '../../../core/services/coaching-study-planning.service';
 import { PURPOSES, YKS_FIELDS } from '../onboarding/onboarding-model';
-import { currentAcademicYear } from '../coaching-education';
+import { currentAcademicYear, stageOf } from '../coaching-education';
+import { EXAM_CATALOG_CODES, ExamTimeChoice, examTimeChoices, examTimeQuestion } from '../exam-time-choices';
 
 /** F2 #28: the course groups in exam order (TYT before AYT); any other exam code follows. */
 const LESSON_GROUPS: Record<string, { order: number; label: string }> = {
@@ -61,7 +62,6 @@ export class StudentLearningSetupComponent implements OnInit {
   purposeChoices() { const allowed = this.state()?.allowedPurposes; return allowed ? this.purposes.filter(x => allowed.includes(x.value)) : this.purposes; }
   readonly oabtFields = Object.entries(OABT_FIELDS);
   readonly yokdilFields = Object.entries(YOKDIL_FIELDS);
-  private static readonly examCodes: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
   @ViewChild(StudentStudyAvailabilityComponent) hours?: StudentStudyAvailabilityComponent;
   /** The saved school year (courses and topics are saved in it). F2 review: Sınavım is saved in the current one (`examYearBase`). */
   academicYearStart = currentAcademicYear();
@@ -118,9 +118,9 @@ export class StudentLearningSetupComponent implements OnInit {
   examPurpose() { return !!this.purpose; }
   /** KM8: the saved purpose can no longer be chosen; only Profile and Purpose stay open until an exam is saved. */
   purposeRetired() { const state = this.state(); return !!state?.purposeRetired || isRetiredPurpose(state?.context?.purpose); }
-  /** KM1: upcoming sessions of the purpose's exam; the student picks one only when there are several. */
+  /** KM1: upcoming sessions of the purpose's exam. */
   sessionChoices(): LearningExamSession[] {
-    const code = this.purpose ? StudentLearningSetupComponent.examCodes[this.purpose] : null;
+    const code = this.purpose ? EXAM_CATALOG_CODES[this.purpose] : null;
     return code ? (this.state()?.examSessions ?? []).filter(x => x.examCode === code) : [];
   }
   selectSession(id: string | null) {
@@ -128,29 +128,33 @@ export class StudentLearningSetupComponent implements OnInit {
     if (session) this.targetExamYear = Number(session.date.slice(0, 4));
     this.changed();
   }
+  /** G2 (#40): the wizard's list (sessions, then later years without a date yet; the grade's year is "önerilen"). */
+  private timeChoices(): ExamTimeChoice[] {
+    const state = this.state();
+    return examTimeChoices(this.purpose, state?.examSessions ?? [], this.examYearBase(),
+      { stage: stageOf(state?.educationStatus, state?.gradeLevel), grade: state?.gradeLevel ?? null }, x => this.sessionLabel(x));
+  }
   /** F2 #27: the wizard's question: the session when the exam has dated sessions, the year otherwise. */
-  examQuestion() { return this.sessionChoices().length ? 'Hangi oturuma hazırlanıyorsun?' : 'Hangi yıl sınava gireceksin?'; }
+  examQuestion() { return examTimeQuestion(this.timeChoices()); }
   examChoices(): { value: string; label: string }[] {
-    const sessions = this.sessionChoices();
-    if (sessions.length) {
-      const legacy = this.legacy();
-      return [...sessions.map(x => ({ value: `session:${x.id}`, label: this.sessionLabel(x) })),
-        ...(legacy ? [{ value: `year:${legacy}`, label: `${legacy} · oturum seçmedim` }] : [])];
-    }
-    const base = this.examYearBase();
-    const years = new Set([1, 2, 3, 4, 5].map(offset => base + offset));
-    if (this.targetExamYear) years.add(this.targetExamYear);
-    return [...years].sort((a, b) => a - b).map(year => ({ value: `year:${year}`, label: String(year) }));
+    const choices: { value: string; label: string }[] = this.timeChoices().map(x => ({ value: x.value, label: x.label }));
+    // F2 review: a saved year without a session (an older choice, or a year outside the list) stays selectable while the exam is the same.
+    const legacy = this.legacy();
+    if (legacy !== null && !choices.some(x => x.value === `year:${legacy}`))
+      choices.push({ value: `year:${legacy}`, label: this.sessionChoices().some(x => x.date.startsWith(`${legacy}-`)) ? `${legacy} · oturum seçmedim` : String(legacy) });
+    const year = (value: string) => Number(value.startsWith('year:') ? value.slice(5) : value.split(':')[2]);
+    return choices.sort((a, b) => year(a.value) - year(b.value));
   }
   examChoice() {
-    const sessions = this.sessionChoices();
-    if (sessions.length) return sessions.some(x => x.id === this.targetExamSessionId) ? `session:${this.targetExamSessionId}`
-      : this.legacy() !== null && this.targetExamYear === this.legacy() ? `year:${this.targetExamYear}` : '';
-    return this.targetExamYear ? `year:${this.targetExamYear}` : '';
+    const session = this.sessionChoices().find(x => x.id === this.targetExamSessionId);
+    if (session) return `session:${session.id}:${session.date.slice(0, 4)}`;
+    // A session of another exam (the exam was just changed) does not count; its year stays when the new exam offers it.
+    const value = this.targetExamYear ? `year:${this.targetExamYear}` : '';
+    return this.examChoices().some(x => x.value === value) ? value : '';
   }
   private legacy() { const legacy = this.legacyYear; return legacy && legacy.purpose === this.purpose ? legacy.year : null; }
   pickExam(value: string) {
-    if (value.startsWith('session:')) { this.selectSession(value.slice(8)); return; }
+    if (value.startsWith('session:')) { this.selectSession(value.split(':')[1]); return; }
     this.targetExamSessionId = null; this.targetExamYear = Number(value.slice(5)) || null; this.changed();
   }
   sessionLabel(session: LearningExamSession) {
@@ -186,10 +190,10 @@ export class StudentLearningSetupComponent implements OnInit {
     if (this.loading() || this.saving() || !this.ready()) return;
     const errors: Partial<Record<SetupField, string>> = {};
     if (!this.purpose) errors.purpose = 'Hazırlandığın sınavı seç.';
-    else if (this.sessionChoices().length) { if (!this.examChoice()) errors.examYear = 'Hangi oturuma hazırlandığını seç.'; }
-    else if (!this.targetExamYear) errors.examYear = 'Hangi yıl sınava gireceğini seç.';
-    else if (!Number.isInteger(this.targetExamYear) || this.targetExamYear < this.examYearBase() || this.targetExamYear > this.examYearBase() + 5)
+    else if (!this.targetExamSessionId && this.targetExamYear !== null
+      && (!Number.isInteger(this.targetExamYear) || this.targetExamYear < this.examYearBase() || this.targetExamYear > this.examYearBase() + 5))
       errors.examYear = `Sınav yılı ${this.examYearBase()} ile ${this.examYearBase() + 5} arasında olmalı.`;
+    else if (!this.examChoice()) errors.examYear = this.sessionChoices().length ? 'Hangi oturuma hazırlandığını seç.' : 'Hangi yıl sınava gireceğini seç.';
     if (this.purpose === 'Yks' && this.primaryScoreType === 'DIL' && !this.foreignLanguage) errors.language = 'Yabancı dili seç.';
     if (this.purpose === 'Yokdil' && !this.yokdilField) errors.yokdilField = 'YÖKDİL alanını seç.';
     if (this.refuse('Sınavın kaydedilmedi.', errors)) return;
