@@ -9,6 +9,8 @@ import { coachingNotificationTarget } from '../../../../../shared/coaching-notif
 import { COACHING_PORTAL_ROUTES } from '../coaching-portal.routes';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingMessagesPageComponent } from './coaching-messages-page.component';
+import { CoachingMessagesUnreadService } from '../../../core/services/coaching-messages-unread.service';
+import { By } from '@angular/platform-browser';
 
 // Roadmap O3: students and parents write to teachers; files, read receipts and closed conversations.
 const conversation: CoachingConversation = {
@@ -164,6 +166,16 @@ describe('O3 messages', () => {
     expect(el.querySelector('.messages')?.classList.contains('has-thread')).toBe(true);
     expect([...el.querySelectorAll('.day')].map(day => day.textContent?.trim())).toEqual(['1 Kasım Pazar', '2 Kasım Pazartesi']);
     expect(el.querySelector('.msg.mine .who')).toBeNull();
+  });
+
+  // Review of PR 122: reading a conversation (also one opened from the bell) updates the Mesajlar badge right away.
+  it('asks the menu badge again, forced, when the open conversation changes the unread count', () => {
+    const unread = { count: () => 0, refresh: vi.fn() };
+    TestBed.configureTestingModule({ imports: [CoachingMessagesPageComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
+      { provide: AuthService, useValue: { userProfile: () => ({ roles: ['Student'] }) } }, { provide: CoachingMessagesUnreadService, useValue: unread }] });
+    const fixture = TestBed.createComponent(CoachingMessagesPageComponent); fixture.detectChanges();
+    (fixture.debugElement.query(By.directive(CoachingMessagesComponent)).componentInstance as CoachingMessagesComponent).unreadChange.emit(0);
+    expect(unread.refresh).toHaveBeenCalledWith({ force: true });
   });
 
   it('keeps the page intro to one short sentence about who reads the messages', () => {

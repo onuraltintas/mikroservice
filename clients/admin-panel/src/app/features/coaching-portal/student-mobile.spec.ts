@@ -40,7 +40,7 @@ describe('O1 bottom navigation', () => {
       { provide: NotificationService, useValue: { unreadCount: signal(unread) } },
       { provide: CoachingMessagesUnreadService, useValue: { count: signal(messages), refresh: () => {} } },
       { provide: CoachingWhatsNewService, useValue: { visible: () => false, dismiss: () => {} } },
-      { provide: CoachingStudentNavigationService, useValue: { showAssignments: () => showAssignments, showSessions: () => true, showFees: () => true, refresh: () => {} } }] });
+      { provide: CoachingStudentNavigationService, useValue: { loaded: () => true, showAssignments: () => showAssignments, showSessions: () => true, showFees: () => true, refresh: () => {} } }] });
     const fixture = TestBed.createComponent(CoachingPortalLayoutComponent); fixture.detectChanges(); await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
   }

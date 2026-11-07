@@ -82,9 +82,9 @@ class SubscriptionStub {}
 class FinanceStub { @Input() mode = ''; }
 
 describe('Ödemeler page', () => {
-  function render(showFees: boolean) {
+  function render(showFees: boolean, loaded = true) {
     TestBed.configureTestingModule({ imports: [StudentPaymentsComponent], providers: [
-      { provide: CoachingStudentNavigationService, useValue: { showFees: signal(showFees) } }] });
+      { provide: CoachingStudentNavigationService, useValue: { showFees: signal(showFees), loaded: signal(loaded) } }] });
     TestBed.overrideComponent(StudentPaymentsComponent, { set: { imports: [SubscriptionStub, FinanceStub] } });
     const fixture = TestBed.createComponent(StudentPaymentsComponent); fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
@@ -94,6 +94,11 @@ describe('Ödemeler page', () => {
     const el = render(true);
     expect([...el.querySelectorAll('h2')].map(h => h.textContent?.trim())).toEqual(['Abonelik durumu', 'Havale bildirimleri', 'Ücretler', 'Faturalar']);
     expect(el.querySelector('app-coaching-finance')).not.toBeNull();
+  });
+
+  // Review of PR 122: Ücretler waits for the navigation answer instead of flashing and disappearing.
+  it('shows Ücretler only once the navigation has loaded', () => {
+    expect(render(true, false).querySelector('app-coaching-finance')).toBeNull();
   });
 
   it('leaves out Ücretler when the student has no coaching fees', () => {

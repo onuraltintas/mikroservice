@@ -333,6 +333,8 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     t.http.expectOne('/api/coaching/invitations/my-invitations').flush([{ id: 'i1', inviterEmail: 'ogretmen@example.test', message: null }]); await t.settle();
     await t.click('Kabul et');
     t.http.expectOne('/api/coaching/invitations/i1/accept').flush(null); await t.settle();
+    // Review of PR 122: a teacher now has the student, so the menu (Ödevlerim, Seanslar) is asked again.
+    t.http.expectOne('/api/coaching/profiles/me/navigation').flush({ data: { showAssignments: true, showSessions: true, showFees: true } });
     await t.click('Devam');
     t.http.expectOne(`${base}/steps/4`).flush({ data: view({ status: 'InProgress', nextStep: 5, savedSteps: [1, 2, 3, 4] }, stepTwo) }); await t.settle();
     expect(t.el.querySelector('[data-question="invite"] .ob-me')!.textContent).toContain('Daveti kabul ettim: ogretmen@example.test');
@@ -501,15 +503,24 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     });
 
     it('"Henüz karar vermedim" asks before the saved target is removed', async () => {
-      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true, confirm: false });
+      const t = await render(view(completed, { ...stepTwo, target: school }), {}, {}, { embedded: true });
       (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
+      // CI flake (35 ms): the confirm dialog's service is loaded on demand (a dynamic import), so the dialog opens after an
+      // unknown number of ticks. The spec answers the dialog itself and waits for it instead of a fixed number of ticks.
+      let answer!: (ok: boolean) => void;
+      t.toaster.confirm.mockImplementationOnce(() => new Promise<boolean>(resolve => answer = resolve));
       await t.click('Henüz karar vermedim');
-      expect(t.toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Mevcut hedefin silinecek'), expect.anything());
+      await vi.waitFor(() => expect(t.toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Mevcut hedefin silinecek'), expect.anything()));
+      // While the dialog is open nothing is sent and the question stays.
+      t.http.expectNone(`${base}/steps/target`);
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
+      answer(false); await t.settle();
       t.http.expectNone(`${base}/steps/target`);
       expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
       t.toaster.confirm.mockResolvedValue(true);
       await t.click('Henüz karar vermedim');
-      const save = t.http.expectOne(`${base}/steps/target`);
+      await vi.waitFor(() => expect(t.toaster.confirm).toHaveBeenCalledTimes(2));
+      const save = await vi.waitFor(() => t.http.expectOne(`${base}/steps/target`));
       expect(save.request.body).toEqual({ kind: 'none', targetId: null, scores: null });
       save.flush({ data: view(completed, stepTwo) }); await t.settle();
       expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Henüz karar vermedim');
@@ -530,6 +541,49 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       expect(link).toBeTruthy();
       expect(t.el.textContent).toContain('Önce hesap kurulumunu bitir');
       t.http.expectNone('/api/locations/provinces');
+    });
+
+    // Paket F #35: Hedefim › "Hedefini düzenle" and /welcome?step=target flashed the first wizard question while the status loaded.
+    for (const [name, embedded, query] of [['embedded in Hedefim', true, {}], ['/welcome?step=target', false, { step: 'target' }]] as const) {
+      it(`${name}: only "Hazırlanıyor…" until the status and target load, never a wizard question`, async () => {
+        TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+          { provide: AuthService, useValue: { userProfile: signal({ id: 'student-1' }), logout: vi.fn() } },
+          ...(Object.keys(query).length ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } }] : [])] });
+        vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        const fixture = TestBed.createComponent(StudentOnboardingComponent);
+        if (embedded) fixture.componentRef.setInput('embedded', true);
+        fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+        expect(el.querySelector('[role="status"]')!.textContent).toContain('Hazırlanıyor…');
+        expect(el.querySelector('[data-question]')).toBeNull();
+        expect(el.querySelector('input')).toBeNull();
+        expect(el.textContent).not.toContain('Doğum tarihin ne?');
+        TestBed.inject(HttpTestingController).expectOne(base).flush({ data: view(completed, { ...stepTwo, target: school }) });
+        for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); }
+        expect(el.textContent).not.toContain('Hazırlanıyor…');
+        expect(el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi');
+        expect(el.textContent).not.toContain('Doğum tarihin ne?');
+      });
+    }
+
+    it('a status that cannot be loaded shows only the error with "Yeniden dene", which loads it again (#35)', async () => {
+      TestBed.configureTestingModule({ imports: [StudentOnboardingComponent], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        { provide: AuthService, useValue: { userProfile: signal({ id: 'student-1' }), logout: vi.fn() } }] });
+      const fixture = TestBed.createComponent(StudentOnboardingComponent);
+      fixture.componentRef.setInput('embedded', true);
+      fixture.detectChanges();
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne(base).flush({ message: 'x' }, { status: 500, statusText: 'Server Error' });
+      for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); }
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-question]')).toBeNull();
+      expect(el.textContent).not.toContain('Doğum tarihin ne?');
+      // Review of PR 122: "Yeniden dene" is right there, so no "Sayfayı yenile".
+      expect(el.querySelector('.ob-error p')!.textContent!.trim()).toBe('Kurulum bilgilerin yüklenemedi.');
+      (el.querySelector('.ob-error button') as HTMLElement).click();
+      http.expectOne(base).flush({ data: view(completed, { ...stepTwo, target: school }) });
+      for (let i = 0; i < 4; i++) { await new Promise(r => setTimeout(r)); fixture.detectChanges(); await fixture.whenStable(); }
+      expect(el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi');
     });
 
     it('a started change counts as unsaved (Hedefim asks before leaving)', async () => {

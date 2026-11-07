@@ -369,7 +369,10 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             : purpose == LearningPurpose.Ags ? "Puan tahmini için bir AGS denemesini ders ders gir; P2 puanı için ÖABT denemesi de gerekir."
             : purpose is LearningPurpose.Yds or LearningPurpose.Yokdil ? "Puanını görmek için bir YDS ya da YÖKDİL denemesini gir."
             : models.Count == 0 ? "Puan tahmini verisi henüz yüklenmedi."
-            : "Tahmin için en az bir LGS ya da YKS denemesini ders ders gir.";
+            // Paket F #33: the notice names only the student's own exam.
+            : purpose == LearningPurpose.Lgs ? "Tahmin için en az bir LGS denemesini ders ders gir."
+            : purpose == LearningPurpose.Yks ? "Tahmin için en az bir YKS denemesini ders ders gir."
+            : "Tahmin için en az bir denemeyi ders ders gir.";
         var goal = Goal(GoalScoreType(purpose, context?.PrimaryScoreType, goalTarget), estimates, notComputed, language, models.Keys.ToArray(), exams.Keys.ToArray());
         return new(estimates, goalTarget, notice) { LanguageScores = language, TargetExam = targetExam, NotComputed = notComputed, Goal = goal, ScoreTargets = scoreTargets };
     }
