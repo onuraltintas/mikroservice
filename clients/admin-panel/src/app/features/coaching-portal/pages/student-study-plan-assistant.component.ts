@@ -5,12 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingWeeklyDraftService, WeeklyCourseRank } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingLearningSetupService, LearningCatalog, LearningContext, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
 import { clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
-import { createProposalFromWindows } from './study-plan-wizard';
+import { StudyPlanWizardLesson, createProposalFromWindows, lessonsWithoutTime, noTimeNotice, rankedWizardLessons } from './study-plan-wizard';
 import { CoachingStudyPlanningService, StudyAvailability, StudyWindow } from '../../../core/services/coaching-study-planning.service';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
 
@@ -34,6 +34,10 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   @ViewChild('savedNotice') private savedNotice?: ElementRef<HTMLElement>;
   readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Çalışma saatlerinden sana haftalık ders düzeni önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
   readonly proposal = signal<WeeklySlot[]>([]);
+  /** Paket G #41: the chosen courses left without an hour by the last proposal (and the saved week), the most important first. */
+  readonly unplaced = signal<StudyPlanWizardLesson[]>([]);
+  readonly noTimeNotice = noTimeNotice;
+  private courseRanks: WeeklyCourseRank[] = [];
   readonly selectedDays = signal<Weekday[]>([]);
   readonly startTime = signal('18:00');
   readonly minutesPerDay = signal<30 | 60 | 90 | 120>(60);
@@ -51,7 +55,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly busy = signal(true);
   readonly error = signal('');
   readonly saved = signal(false);
-  readonly lessons = signal<{ id: string; name: string; examCode: string | null }[]>([]);
+  readonly lessons = signal<{ id: string; name: string; examCode: string | null; topicCount?: number }[]>([]);
   readonly slots = signal<WeeklySlot[]>([]);
   readonly learningContext = signal<LearningContext | null>(null);
   /** KM8: the saved study purpose (School, General, Undecided) is retired; the student has to choose an exam first. */
@@ -76,7 +80,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     this.loadAvailability();
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
-        this.lessons.set(page.lessons);
+        this.lessons.set(page.lessons); this.courseRanks = page.courses ?? [];
         this.slots.set(page.draft?.slots ?? []);
         this.version = page.draft?.version ?? null;
         this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul';
@@ -118,9 +122,9 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   async changeAvailability() {
     if (this.staffStudentId) return;
     if (this.editingAvailability()) { if (await (this.hoursEditor?.canLeavePage() ?? true)) this.editingAvailability.set(false); return; }
-    this.proposal.set([]); this.editingAvailability.set(true);
+    this.proposal.set([]); this.unplaced.set([]); this.editingAvailability.set(true);
   }
-  availabilitySaved() { this.editingAvailability.set(false); this.proposal.set([]); this.loadAvailability(); }
+  availabilitySaved() { this.editingAvailability.set(false); this.proposal.set([]); this.unplaced.set([]); this.loadAvailability(); }
   canPropose() { return !this.busy() && !this.savingAvailability() && !this.availabilityLoading() && !this.availabilityLoadError() && !!this.lessons().length && (this.savedWindows().length > 0 || this.selectedDays().length > 0); }
 
   availableTopicLessons() {
@@ -225,15 +229,15 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
 
   private propose(windows: StudyWindow[]) {
     const selected = new Set((this.learningContext()?.coursePreferences ?? []).map(x => x.lessonId.toLowerCase()));
-    const lessons = this.lessons().filter(x => selected.has(x.id.toLowerCase()));
+    const lessons = rankedWizardLessons(this.lessons().filter(x => selected.has(x.id.toLowerCase())), this.courseRanks);
     const proposal = createProposalFromWindows(windows, lessons, this.slots());
-    const coveredLessons = new Set([...this.slots(), ...proposal].map(slot => slot.lessonId.toLowerCase()));
-    const missingLessons = lessons.filter(lesson => !coveredLessons.has(lesson.id.toLowerCase()));
+    // Paket G #41: the courses without time are named in a notice under the proposal (with the way to Müsaitliğim).
+    const missingLessons = lessonsWithoutTime(lessons, this.slots(), proposal);
     const coverageWarning = missingLessons.length
       ? ` ${missingLessons.map(lesson => lesson.name).join(', ')} için henüz ders saati yok. Bu dersleri de plana almak için çalışma saatlerine gün veya saat ekleyip yeni öneri oluştur.`
       : '';
     const dayCount = new Set(windows.map(window => window.day)).size;
-    this.proposal.set(proposal);
+    this.proposal.set(proposal); this.unplaced.set(missingLessons);
     this.error.set(''); this.saved.set(false);
     // Paket F #37: bring the new proposal into view and move the focus to it.
     if (proposal.length) afterNextRender(() => {
@@ -260,7 +264,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   }
 
   /** "Öneriyi kaldır": the proposal goes away and the focus returns to "Haftalık öneri oluştur". */
-  removeProposal() { this.proposal.set([]); this.focusAfter('propose'); }
+  removeProposal() { this.proposal.set([]); this.unplaced.set([]); this.focusAfter('propose'); }
 
   /** Review of PR 122: when the proposal block disappears the focus moves on, not to the page. */
   private focusAfter(target: 'saved' | 'propose') {

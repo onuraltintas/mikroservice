@@ -210,10 +210,15 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var fingerprint=Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new{request,draft.Version,draft.TimeZoneId,Slots=draft.Slots,originalWork,work,issues,ContextVersion=context?.Version,Rules=new{topicStates=topicStates.OrderBy(x=>x.Key).ToArray(),preferences=preferences.OrderBy(x=>x.Key).ToArray(),examErrorTopics=examErrorTopics.Order().ToArray(),yieldWeights=yieldWeights.OrderBy(x=>x.Key).ToArray()},ActiveId=active?.Id,ActiveVersion=active?.Version,pinnedLinks,
             Completed=completedLinks.Select(x=>new{x.Task.Id,x.Task.Version,x.Task.OriginalTaskId,x.Task.TopicId,x.Link.OutcomeId,x.Link.EstimateId,x.Link.AllocatedMinutes}),
             Protected=protectedTasks.Select(x=>new{x.Id,x.Version,x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes,x.IsCompleted,x.IsPinned,x.RemainingMinutes,x.RemainingQuestions}),Placements=placements.Select(x=>new{x.Source.Id,x.Date,x.Start,x.Minutes})})));
+        // Paket G #41: chosen courses without a weekly lesson get no time at all; they are named next to the courses that do not fit.
+        var unscheduled=context is null?[]:(await db.StudentCoursePreferences.AsNoTracking().Where(x=>x.ContextId==context.Id&&x.IsIncluded)
+                .Select(x=>x.LessonId).ToArrayAsync(ct))
+            .Where(x=>choices.ContainsKey(x)&&!lessonIds.Contains(x)).Select(x=>new WeeklyUnscheduledLesson(x,choices[x].Name))
+            .OrderBy(x=>x.LessonName,StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"),false)).ThenBy(x=>x.LessonId).ToArray();
         // Roadmap O7: with PrioritizeWhenShort a plan that does not fit may be saved; the left-out topics are listed.
         var fits=schedule.Lessons.All(x=>x.RemainingMinutes==0)||v2&&request.PrioritizeWhenShort;
         var canCreate=issues.Count==0&&schedule.Tasks.Count+pending.Count>0&&fits&&schedule.Tasks.Count+pending.Count<=10000;
-        return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,placements.Select(x=>new WeeklyProtectedTask(x.Date,x.Start,x.Source.Title,x.Minutes)).ToArray(),leftOut),
+        return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,placements.Select(x=>new WeeklyProtectedTask(x.Date,x.Start,x.Source.Title,x.Minutes)).ToArray(),leftOut,unscheduled),
             new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId),protectedTasks,pinnedLinks,placements);
     }
 

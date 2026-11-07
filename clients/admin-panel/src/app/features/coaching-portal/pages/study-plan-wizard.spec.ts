@@ -14,7 +14,8 @@ describe('createStudyPlanProposal', () => {
     expect(proposal.map(x => [x.day, x.durationMinutes])).toEqual([
       ['Monday', 60], ['Monday', 30], ['Wednesday', 60], ['Wednesday', 30]
     ]);
-    expect(proposal.map(x => x.lessonId)).toEqual(['math', 'science', 'math', 'science']);
+    // Paket G #41: with the same priority and no exam weight the name decides (Fen Bilimleri before Matematik).
+    expect(proposal.map(x => x.lessonId)).toEqual(['science', 'math', 'science', 'math']);
   });
 
   it('skips time occupied by an existing plan without changing saved cards', () => {
@@ -37,7 +38,7 @@ describe('createStudyPlanProposal', () => {
     it('fills Pazartesi 17:00–19:00 with the same 60/30 minute cards as the form', () => {
       const proposal = createProposalFromWindows([{ day: 'Monday', startMinute: 1020, endMinute: 1140 }], lessons, []);
       expect(proposal.map(x => [x.day, x.startMinute, x.durationMinutes, x.lessonId])).toEqual([
-        ['Monday', 1020, 60, 'math'], ['Monday', 1080, 60, 'science']]);
+        ['Monday', 1020, 60, 'science'], ['Monday', 1080, 60, 'math']]);
       expect(createProposalFromWindows([{ day: 'Monday', startMinute: 1080, endMinute: 1170 }, { day: 'Wednesday', startMinute: 1080, endMinute: 1170 }], lessons, []))
         .toEqual(createStudyPlanProposal({ days: ['Monday', 'Wednesday'], startMinute: 1080, minutesPerDay: 90 }, lessons, [])
           .map(x => ({ ...x, id: expect.any(String) })));
@@ -104,6 +105,8 @@ describe('createStudyPlanProposal', () => {
         const existing: WeeklySlot[] = [{ id: 'saved', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Monday', startMinute: 1020, durationMinutes: 60 }];
         const proposal = createProposalFromWindows([{ day: 'Monday', startMinute: 1020, endMinute: 1140 }], lessons, existing);
         expect(proposal.map(x => [x.startMinute, x.lessonId])).toEqual([[1080, 'science']]);
+        // Hours added later go to the course still without time, even when the other one weighs more in the exam.
+        expect(rankLessons([{ ...lessons[0], examQuestions: 40 }, { ...lessons[1], examQuestions: 20 }], existing).map(x => x.id)).toEqual(['science', 'math']);
         // A higher priority still comes first, even with saved time.
         const ranked = rankLessons([{ ...lessons[0], priority: 1 }, { ...lessons[1], priority: 2 }], existing);
         expect(ranked.map(x => x.id)).toEqual(['math', 'science']);

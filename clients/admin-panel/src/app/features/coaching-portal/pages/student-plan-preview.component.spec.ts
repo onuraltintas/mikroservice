@@ -41,7 +41,7 @@ describe('StudentPlanPreviewComponent', () => {
     const { el, weekly } = await setup(mondayEvening);
     expect(el.textContent).toContain('Pazartesi 17:00–19:00');
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
-    expect(lines).toEqual(['Pazartesi · 17:00 · Matematik (60 dk)', 'Pazartesi · 18:00 · Fen Bilimleri (60 dk)']);
+    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Matematik (60 dk)']);
     expect(el.querySelector('a[href="/coaching-portal/plan/weekly"]')?.textContent).toContain('Takvimde düzenle');
     expect(weekly.save).not.toHaveBeenCalled();
     expect(el.querySelector('[data-testid="unplaced-notice"]')).toBeNull();
@@ -72,8 +72,8 @@ describe('StudentPlanPreviewComponent', () => {
     button(el, 'Bu düzeni kaydet ve planı önizle')!.click();
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     expect(weekly.save).toHaveBeenCalledWith(null, 'Europe/Istanbul', [
-      expect.objectContaining({ lessonId: 'math', day: 'Monday', startMinute: 1020, durationMinutes: 60 }),
-      expect.objectContaining({ lessonId: 'science', day: 'Monday', startMinute: 1080, durationMinutes: 60 })]);
+      expect.objectContaining({ lessonId: 'science', day: 'Monday', startMinute: 1020, durationMinutes: 60 }),
+      expect.objectContaining({ lessonId: 'math', day: 'Monday', startMinute: 1080, durationMinutes: 60 })]);
     expect(fixture.debugElement.query(By.directive(StudentWeeklyOutcomePlanComponent))).toBeTruthy();
     expect(engine.preview).toHaveBeenCalledOnce();
     expect(el.textContent).toContain('Dersler ne zaman bitecek?');

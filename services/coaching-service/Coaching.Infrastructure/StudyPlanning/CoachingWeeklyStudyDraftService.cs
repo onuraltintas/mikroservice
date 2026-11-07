@@ -13,13 +13,15 @@ public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachi
     public async Task<WeeklyDraftPage> GetAsync(CancellationToken ct)
     {
         var student=Require();var draft=await db.Set<WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student,ct);
-        return new(draft is null ? null : View(draft),(await setup.GetCatalogAsync(null,1,ct)).Lessons);
+        var lessons=(await setup.GetCatalogAsync(null,1,ct)).Lessons;
+        return new(draft is null ? null : View(draft),lessons,await Courses(student,lessons,ct));
     }
     public async Task<WeeklyDraftPage> GetForStudentAsync(Guid student,CancellationToken ct)
     {
         if(staffAccess is null)throw Forbidden();await staffAccess.RequireAsync(student,ct);
         var draft=await db.Set<WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student,ct);
-        return new(draft is null?null:View(draft),(await setup.GetCatalogForStudentAsync(student,null,1,ct)).Lessons);
+        var lessons=(await setup.GetCatalogForStudentAsync(student,null,1,ct)).Lessons;
+        return new(draft is null?null:View(draft),lessons,await Courses(student,lessons,ct));
     }
     public Task<WeeklyDraftView> SaveAsync(WeeklyDraftInput r,CancellationToken ct)
     {
@@ -64,6 +66,24 @@ public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachi
         catch(ConcurrencyException) { db.Entry(draft).State=EntityState.Detached;throw Conflict(); }
         catch(DbUpdateException e) when(e.InnerException is PostgresException {SqlState:"23505"}) { db.Entry(draft).State=EntityState.Detached;throw Conflict(); }
         return View(draft);
+    }
+    /// <summary>
+    /// Paket G #41: the chosen courses with their priority and exam weight, the order of the weekly proposal. A YKS course's
+    /// test comes from its active topics' scopes for the student's score type (and foreign language for YDT).
+    /// </summary>
+    private async Task<IReadOnlyList<WeeklyCourseRank>> Courses(Guid student,IReadOnlyList<LearningLessonView> lessons,CancellationToken ct)
+    {
+        var context=await db.StudentLearningContexts.AsNoTracking().Include(x=>x.CoursePreferences).SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
+        if(context is null||lessons.Count==0)return [];
+        var ids=lessons.Select(x=>x.Id).ToArray();
+        var tests=context.Purpose!=LearningPurpose.Yks?[]:await (from s in db.Set<StudyCatalogYksScope>().AsNoTracking()
+            join t in db.StudyCatalogTopics on s.TopicId equals t.Id
+            where Enumerable.Contains(ids,t.LessonId)&&t.IsActive&&s.ScoreType==context.PrimaryScoreType&&(s.ExamCode!="YDT"||s.ForeignLanguage==context.ForeignLanguage)
+            select new{t.LessonId,s.TestCode}).Distinct().ToArrayAsync(ct);
+        var weights=ExamQuestionWeights.For(context.Purpose,lessons.Select(x=>new ExamQuestionWeights.Lesson(x.Id,x.Name,x.ExamCode,
+            tests.Where(t=>t.LessonId==x.Id).Select(t=>t.TestCode).ToArray())).ToArray());
+        return context.CoursePreferences.Where(x=>x.IsIncluded&&ids.Contains(x.LessonId)).OrderBy(x=>x.LessonId)
+            .Select(x=>new WeeklyCourseRank(x.LessonId,x.Priority,weights.TryGetValue(x.LessonId,out var questions)?questions:null)).ToArray();
     }
     private Guid Require()=>access.CurrentUserId is {} id && access.IsCurrentStudent(id) ? id : throw new BusinessRuleException("Authorization.Forbidden","Yalnız kendi öğrenci hesabınızla kullanabilirsiniz.");
     private static BusinessRuleException Forbidden()=>new("Authorization.Forbidden","Öğretmen erişimi doğrulanamadı.");
