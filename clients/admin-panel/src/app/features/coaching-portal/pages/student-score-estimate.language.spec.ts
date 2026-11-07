@@ -24,6 +24,16 @@ describe('KM1 language scores', () => {
     expect(fixture.nativeElement.querySelector('#diploma-grade')).toBeNull();
   });
 
+  // G2 (#40): a year the catalog has no session for yet counts down to an estimated date, said as such.
+  it('says when the countdown is to an estimated date', () => {
+    const { fixture, http, text } = setup();
+    http.expectOne(r => r.url.endsWith('/coaching/students/me/score-estimate')).flush({ estimates: [], target: null, notice: null, languageScores: [],
+      targetExam: { name: 'YDS', date: '2028-11-21', daysLeft: 745, source: 'Estimated' } } as ScoreEstimate);
+    fixture.detectChanges();
+    expect(text()).toContain('YDS sınavına tahminen 745 gün kaldı.');
+    expect(text()).toContain('Sınav tarihi henüz açıklanmadı; tahmini bir tarihe göre hesaplandı.');
+  });
+
   it('says that AGS has no estimate yet', () => {
     const { fixture, http, text } = setup();
     http.expectOne(r => r.url.endsWith('/coaching/students/me/score-estimate')).flush({ estimates: [], target: null, languageScores: [], targetExam: null,

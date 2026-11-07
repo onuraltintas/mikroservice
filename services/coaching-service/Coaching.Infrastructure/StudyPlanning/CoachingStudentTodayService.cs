@@ -63,17 +63,10 @@ public sealed class CoachingStudentTodayService(CoachingDbContext db, CoachingMo
 
     private async Task<StudentTodayExam?> ExamAsync(Guid student, DateOnly today, CancellationToken ct)
     {
-        var own = await db.StudentLearningContexts.AsNoTracking().Where(x => x.StudentUserId == student)
-            .Select(x => new { x.TargetExamDate, x.TargetExamSessionId }).SingleOrDefaultAsync(ct);
-        if (own?.TargetExamDate is { } date && date > today) return new("Sınavın", date, date.DayNumber - today.DayNumber, "Student");
-        // KM1: the session the student chose, else the nearest upcoming session of the plan's exams.
-        var target = await CoachingExamSessions.ChosenAsync(db, own?.TargetExamSessionId, today, ct);
-        if (target is null)
-        {
-            var draft = await db.Set<WeeklyStudyDraft>().AsNoTracking().Where(x => x.StudentId == student).SingleOrDefaultAsync(ct);
-            var codes = draft?.Slots.Select(x => x.ExamCode).OfType<string>().Distinct().ToArray() ?? [];
-            target = await CoachingExamSessions.NextCatalogAsync(db, codes, today, ct);
-        }
+        // KM1: the own date, the session the student chose, (G2) the year they chose, else the nearest upcoming session of the plan's exams.
+        var draft = await db.Set<WeeklyStudyDraft>().AsNoTracking().Where(x => x.StudentId == student).SingleOrDefaultAsync(ct);
+        var codes = draft?.Slots.Select(x => x.ExamCode).OfType<string>().Distinct().ToArray() ?? [];
+        var target = await CoachingExamSessions.ForStudentAsync(db, student, codes, today, ct);
         return target is null ? null : new(target.Name, target.Date, target.Date.DayNumber - today.DayNumber, target.Source);
     }
 

@@ -48,7 +48,7 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         // Review L6: a save that keeps the saved exam (topics, session, courses) is not refused; the settings say to choose again.
         if ((context is null || context.Purpose != r.Purpose) && !LearningPurposes.FitsEducation(r.Purpose, profile.EducationStatus, profile.GradeLevel))
             throw new ArgumentException(LearningPurposes.PurposeNotForEducationNotice);
-        await ValidateSessionAsync(r, ct);
+        await ValidateSessionAsync(r, context, ct);
         var curriculum = await ResolveCurriculum(candidate, ct);
         var lessonQuery = Lessons(candidate).Where(x => x.CurriculumVersionId == (curriculum == null ? (Guid?)null : curriculum.Id) && x.CurriculumVersionId != null);
         var ids = r.Courses.Select(x => x.LessonId).ToArray();
@@ -170,10 +170,22 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
     private static IQueryable<StudyCatalogLesson> ByExam(IQueryable<StudyCatalogLesson> query, IReadOnlyList<string> codes)
     { var exams = codes.ToArray(); return query.Where(x => x.ExamCode != null && Enumerable.Contains(exams, x.ExamCode)); }
 
-    /// <summary>KM1: the chosen session must be an upcoming session of the purpose's own, active exam in the target year.</summary>
-    private async Task ValidateSessionAsync(LearningSetupUpdate r, CancellationToken ct)
+    /// <summary>
+    /// KM1: the chosen session must be an upcoming session of the purpose's own, active exam in the target year. G2 (#40): without a
+    /// session the year alone is the target (a year the catalog has no session for yet); its range is checked by
+    /// <see cref="StudentLearningContext.SetScope"/> and its date is estimated where one is needed (<see cref="CoachingExamSessions"/>).
+    /// </summary>
+    private async Task ValidateSessionAsync(LearningSetupUpdate r, StudentLearningContext? saved, CancellationToken ct)
     {
-        if (r.TargetExamSessionId is not { } id) return;
+        if (r.TargetExamSessionId is not { } id)
+        {
+            // G2 review (M1): a newly chosen year whose exam has already happened is refused; a saved one is resent as it is.
+            var unchanged = saved is not null && saved.Purpose == r.Purpose && saved.TargetExamSessionId is null && saved.TargetExamYear == r.TargetExamYear;
+            if (!unchanged && r.TargetExamYear is { } year && LearningPurposes.CatalogExamCode(r.Purpose) is { } exam
+                && year < (await CoachingExamSessions.FirstOpenYearsAsync(db, [exam], CoachingTodayInTurkey(), ct))[exam])
+                throw new ArgumentException(PastExamYearNotice);
+            return;
+        }
         var code = LearningPurposes.CatalogExamCode(r.Purpose) ?? throw new ArgumentException("Sınav oturumu yalnız sınav hazırlığında seçilir.");
         var session = await (from s in db.Set<StudyCatalogExamSession>().AsNoTracking()
                              join e in db.Set<StudyCatalogExam>().AsNoTracking() on s.ExamId equals e.Id
@@ -182,6 +194,15 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             ?? throw new ArgumentException("Seçilen oturum bu sınava ait değil veya artık sunulmuyor.");
         if (session.Date <= CoachingTodayInTurkey() || session.Date.Year != r.TargetExamYear)
             throw new ArgumentException("Hedef oturum gelecekte ve hedef sınav yılında olmalıdır.");
+    }
+
+    public const string PastExamYearNotice = "Bu yılın sınavı yapıldı; sonraki bir yılı seç.";
+
+    private async Task<IReadOnlyList<LearningExamOpenYear>> OpenYearsAsync(CancellationToken ct)
+    {
+        var codes = Enum.GetValues<LearningPurpose>().Select(LearningPurposes.CatalogExamCode).OfType<string>().ToArray();
+        return (await CoachingExamSessions.FirstOpenYearsAsync(db, codes, CoachingTodayInTurkey(), ct)).Select(x => new LearningExamOpenYear(x.Key, x.Value))
+            .OrderBy(x => x.ExamCode, StringComparer.Ordinal).ToArray();
     }
 
     private static DateOnly CoachingTodayInTurkey() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Coaching.Domain.CoachingTime.Turkey));
@@ -219,8 +240,9 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
         var missing = new List<string>(); var warnings = new List<string>();
         if (!p.IsEducationComplete) missing.Add("Profile");
         var sessions = await SessionsAsync(ct);
+        var openYears = await OpenYearsAsync(ct);
         var allowed = LearningPurposes.AllowedFor(p.EducationStatus, p.GradeLevel);
-        if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions, AllowedPurposes = allowed }; }
+        if (c is null) { missing.Add("Purpose"); return new(null, missing[0], false, missing, warnings) { ExamSessions = sessions, AllowedPurposes = allowed, EducationStatus = p.EducationStatus, GradeLevel = p.GradeLevel, ExamOpenYears = openYears }; }
         var fits = LearningPurposes.FitsEducation(c.Purpose, p.EducationStatus, p.GradeLevel);
         if (LearningPurposes.IsRetired(c.Purpose) || !fits || p.EducationStatus != c.EducationStatus || p.GradeLevel != c.GradeLevel) missing.Add("Purpose");
         var hours = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == p.UserId, ct);
@@ -237,7 +259,8 @@ public sealed class CoachingLearningSetupService(CoachingDbContext db, ICoaching
             warnings.Add("Seçilen derslerde çalışma süresi eksik konular var; önizlemede süre girin.");
         if (missing.Contains("Catalog")) warnings.Add("Uygun yayımlanmış katalog eksik veya değişmiş. Mevcut planlarınıza erişebilirsiniz.");
         return new(c, missing.FirstOrDefault() ?? "Preview", missing.Count == 0, missing, warnings)
-            { ExamSessions = sessions, AllowedPurposes = allowed, PurposeNotForEducation = !fits && LearningPurposes.IsSelectable(c.Purpose) };
+            { ExamSessions = sessions, AllowedPurposes = allowed, PurposeNotForEducation = !fits && LearningPurposes.IsSelectable(c.Purpose),
+              EducationStatus = p.EducationStatus, GradeLevel = p.GradeLevel, ExamOpenYears = openYears };
     }
 
     /// <summary>
