@@ -88,6 +88,13 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
 
     public async Task<OnboardingView> GetAsync(CancellationToken ct) => await ViewAsync(await RequireProfileAsync(false, ct), ct);
 
+    /// <summary>F2 (E4 a): a rule of the profile refused an answer; the error names the wizard question it belongs to.</summary>
+    private static void Field(string field, Action action)
+    {
+        try { action(); }
+        catch (ArgumentException e) when (e is not OnboardingFieldException) { throw new OnboardingFieldException(field, e.Message); }
+    }
+
     public async Task<OnboardingView> SavePersonalAsync(OnboardingPersonalStep request, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -95,24 +102,27 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         RequireOpen(profile);
         var today = Today();
         if (request.BirthDate is not { } birthDate || birthDate > today.AddYears(-6) || birthDate < today.AddYears(-100))
-            throw new ArgumentException("Doğum tarihini kontrol et.");
-        if (string.IsNullOrWhiteSpace(request.ProvinceId) || string.IsNullOrWhiteSpace(request.DistrictId)
-            || request.ProvinceId.Length > 20 || request.DistrictId.Length > 20)
-            throw new ArgumentException("Şehrini ve ilçeni listeden seç.");
+            throw new OnboardingFieldException("birthDate", "Doğum tarihini kontrol et.");
+        if (string.IsNullOrWhiteSpace(request.ProvinceId) || request.ProvinceId.Length > 20)
+            throw new OnboardingFieldException("city", "Şehrini ve ilçeni listeden seç.");
+        if (string.IsNullOrWhiteSpace(request.DistrictId) || request.DistrictId.Length > 20)
+            throw new OnboardingFieldException("district", "Şehrini ve ilçeni listeden seç.");
         var (province, district) = await LocationAsync(request.ProvinceId, request.DistrictId, ct);
         TargetSchool? school = null;
         if (request.SchoolId is { } schoolId)
             school = await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == schoolId && x.IsActive, ct)
-                ?? throw new ArgumentException("Okulunu listeden seç.");
+                ?? throw new OnboardingFieldException("ownSchool", "Okulunu listeden seç.");
         var educationChanged = profile.EducationStatus != request.EducationStatus || profile.GradeLevel != request.GradeLevel;
         // A resuming student keeps what the wizard does not ask: the graduation year (a graduate's) and, unless a new one is picked,
         // the school (a student's; E3 #14: a non-student status has no school, so it is cleared).
         var graduationYear = request.GraduationYear ?? (CoachingStudentProfile.IsGraduate(request.EducationStatus) ? profile.GraduationYear : null);
         var schoolType = school is null ? profile.SchoolType : await OwnSchoolTypeAsync(db, school, ct);
-        profile.UpdateEducation(request.EducationStatus, request.GradeLevel, school?.Name ?? profile.SchoolName, school is null ? profile.SchoolCity : school.City,
-            school is null ? profile.SchoolDistrict : school.District, schoolType, profile.ClassBranch, graduationYear);
-        profile.UpdatePersonal(birthDate, profile.Bio, profile.AvatarUrl, profile.ShareProgressWithTeachers);
-        profile.SetHome(province.Id, province.Name, district.Id, district.Name);
+        // F2 (E4 a): a refused answer names the wizard question to ask again.
+        var educationField = request.EducationStatus == CoachingEducationStatus.Student ? "education" : "stage";
+        Field(educationField, () => profile.UpdateEducation(request.EducationStatus, request.GradeLevel, school?.Name ?? profile.SchoolName,
+            school is null ? profile.SchoolCity : school.City, school is null ? profile.SchoolDistrict : school.District, schoolType, profile.ClassBranch, graduationYear));
+        Field("birthDate", () => profile.UpdatePersonal(birthDate, profile.Bio, profile.AvatarUrl, profile.ShareProgressWithTeachers));
+        Field("city", () => profile.SetHome(province.Id, province.Name, district.Id, district.Name));
         // The exam step depends on the grade (the diploma question is for 11th, 12th grade and graduates).
         if (educationChanged && profile.HasOnboardingStep(2)) profile.ReopenOnboardingStep(2);
         profile.RecordOnboardingStep(1);
@@ -132,7 +142,8 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         }
         catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException && !ct.IsCancellationRequested)
         { throw new BusinessRuleException("Onboarding.LocationsUnavailable", "Şehir listesi şu an yüklenemedi. Biraz sonra yeniden dene."); }
-        if (province is null || district is null) throw new ArgumentException("Şehrini ve ilçeni listeden seç.");
+        if (province is null || district is null)
+            throw new OnboardingFieldException(province is null ? "city" : "district", "Şehrini ve ilçeni listeden seç.");
         return (province, district);
     }
 
@@ -142,16 +153,16 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         var profile = await RequireProfileAsync(true, ct);
         RequireOpen(profile);
         if (!profile.HasOnboardingStep(1) || !profile.IsEducationComplete) throw new ArgumentException("Önce kişisel bilgilerini kaydet.");
-        if (!LearningPurposes.IsSelectable(request.Purpose)) throw new ArgumentException("Hazırlandığın sınavı seç.");
+        if (!LearningPurposes.IsSelectable(request.Purpose)) throw new OnboardingFieldException("purpose", "Hazırlandığın sınavı seç.");
         // Paket D re-check (N1): the wizard is never finished with an exam the grade does not fit, even one already saved
         // (the study settings let an unchanged exam through so unrelated saves keep working).
         if (!LearningPurposes.FitsEducation(request.Purpose, profile.EducationStatus, profile.GradeLevel))
-            throw new ArgumentException(LearningPurposes.PurposeNotForEducationNotice);
+            throw new OnboardingFieldException("purpose", LearningPurposes.PurposeNotForEducationNotice);
         var diplomaApplies = LearningPurposes.DiplomaApplies(request.Purpose, profile.EducationStatus, profile.GradeLevel);
         var diploma = diplomaApplies ? request.DiplomaGrade : null;
         // Every check before any write.
         if (diploma is < 50 or > 100 || diploma.HasValue && decimal.Round(diploma.Value, 2) != diploma.Value)
-            throw new ArgumentException("Diploma notu 50 ile 100 arasında olmalı.");
+            throw new OnboardingFieldException("diploma", "Diploma notu 50 ile 100 arasında olmalı.");
         var scoreType = string.IsNullOrWhiteSpace(request.PrimaryScoreType) ? null : request.PrimaryScoreType.Trim().ToUpperInvariant();
         var language = request.Purpose is LearningPurpose.Yds or LearningPurpose.Yokdil || request.Purpose == LearningPurpose.Yks && scoreType == "DIL"
             ? (string.IsNullOrWhiteSpace(request.ForeignLanguage) ? "English" : request.ForeignLanguage.Trim()) : null;
@@ -161,7 +172,7 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         var examYear = request.TargetExamYear;
         if (request.TargetExamSessionId is { } sessionId)
             examYear = await db.Set<StudyCatalogExamSession>().AsNoTracking().Where(x => x.Id == sessionId).Select(x => (int?)x.Date.Year).SingleOrDefaultAsync(ct)
-                ?? throw new ArgumentException("Seçilen oturum artık sunulmuyor.");
+                ?? throw new OnboardingFieldException("session", "Seçilen oturum artık sunulmuyor.");
         var sameScope = context is not null && context.Purpose == request.Purpose && context.PrimaryScoreType == scoreType && context.ForeignLanguage == language;
         var keepSelections = sameScope && context!.AcademicYearStart == year;
         await InTransactionAsync(async () =>
@@ -190,9 +201,9 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         var profile = await RequireProfileAsync(true, ct);
         var context = await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x => x.StudentUserId == profile.UserId, ct);
         if (!profile.HasOnboardingStep(2) || context is null || !LearningPurposes.IsSelectable(context.Purpose))
-            throw new ArgumentException("Önce hazırlandığın sınavı seç.");
+            throw new OnboardingFieldException("purpose", "Önce hazırlandığın sınavı seç.");
         var kind = request.Kind?.Trim().ToLowerInvariant();
-        if (kind is not ("none" or "school" or "program" or "score")) throw new ArgumentException("Bir hedef seç ya da \"Henüz karar vermedim\" de.");
+        if (kind is not ("none" or "school" or "program" or "score")) throw new OnboardingFieldException("targetMode", "Bir hedef seç ya da \"Henüz karar vermedim\" de.");
         var primary = await db.Set<StudentPrimaryGoal>().SingleOrDefaultAsync(x => x.StudentId == profile.UserId, ct);
         var goal = primary is null ? null : await db.AcademicGoals.SingleOrDefaultAsync(x => x.Id == primary.GoalId && x.StudentId == profile.UserId, ct);
         // Karar 10: a teacher's goal is not changed here.
@@ -209,25 +220,25 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
             string title; Action<AcademicGoal> apply; IReadOnlyList<string> nets;
             if (kind == "school")
             {
-                if (context.Purpose != LearningPurpose.Lgs) throw new ArgumentException("Okul hedefi yalnız LGS'de seçilir.");
+                if (context.Purpose != LearningPurpose.Lgs) throw new OnboardingFieldException("targetMode", "Okul hedefi yalnız LGS'de seçilir.");
                 var school = await db.TargetSchools.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.TargetId && x.IsActive, ct)
-                    ?? throw new ArgumentException("Okulu listeden seç.");
+                    ?? throw new OnboardingFieldException("targetSchool", "Okulu listeden seç.");
                 title = school.Name; nets = ["LGS"];
                 apply = target => { target.SetCatalogTarget(null, school.Id); target.SetScoreTargets([], null); };
             }
             else if (kind == "program")
             {
-                if (context.Purpose != LearningPurpose.Yks) throw new ArgumentException("Bölüm hedefi yalnız YKS'de seçilir.");
+                if (context.Purpose != LearningPurpose.Yks) throw new OnboardingFieldException("targetMode", "Bölüm hedefi yalnız YKS'de seçilir.");
                 var program = await db.TargetUniversityPrograms.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.TargetId && x.IsActive, ct)
-                    ?? throw new ArgumentException("Bölümü listeden seç.");
+                    ?? throw new OnboardingFieldException("program", "Bölümü listeden seç.");
                 if (!YksScoreTypes.ProgramFitsProfile(context.PrimaryScoreType, program.ScoreType))
-                    throw new ArgumentException("Bu bölümün puan türü seçtiğin alanla eşleşmiyor.");
-                var programType = ScoreModelRules.Normalize(program.ScoreType) ?? throw new ArgumentException("Bu bölümün puan türü tanınmadı.");
+                    throw new OnboardingFieldException("program", "Bu bölümün puan türü seçtiğin alanla eşleşmiyor.");
+                var programType = ScoreModelRules.Normalize(program.ScoreType) ?? throw new OnboardingFieldException("program", "Bu bölümün puan türü tanınmadı.");
                 var max = ScoreModelRules.Get(programType).MaxScore;
                 // A programme without a published taban needs the student's own target score.
                 var own = request.Scores?.FirstOrDefault()?.Score;
                 if (program.MinimumScore is null && (own is not { } given || given <= 0 || given > max || decimal.Round(given, 2) != given))
-                    throw new ArgumentException($"Bu bölümün taban puanı yok. Hedef puanını yaz: 0'dan büyük, en çok {max:0}.");
+                    throw new OnboardingFieldException("ownScore", $"Bu bölümün taban puanı yok. Hedef puanını yaz: 0'dan büyük, en çok {max:0}.");
                 title = $"{program.UniversityName} · {program.Name}";
                 nets = new[] { "TYT", YksScoreTypes.AdvancedNetExam(program.ScoreType) }.Distinct().ToArray();
                 apply = target =>
@@ -241,12 +252,13 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
                 var allowed = ScoreTargetTypes(context);
                 var scores = (request.Scores ?? []).Select(x => (Type: Normalize(x.ScoreType), x.Score)).ToArray();
                 if (scores.Length is 0 or > 2 || scores.Select(x => x.Type).Distinct().Count() != scores.Length || scores.Any(x => !allowed.Contains(x.Type)))
-                    throw new ArgumentException("Bu sınav için geçerli bir puan türü seç.");
+                    throw new OnboardingFieldException(context.Purpose == LearningPurpose.Yks ? "tytScore" : "targetScoreType", "Bu sınav için geçerli bir puan türü seç.");
                 var targets = scores.Select(x =>
                 {
                     var max = ScaleMax(x.Type);
                     if (x.Score <= 0 || x.Score > max || decimal.Round(x.Score, 2) != x.Score)
-                        throw new ArgumentException($"Hedef puanını yaz: 0'dan büyük, en çok {max:0}.");
+                        throw new OnboardingFieldException(context.Purpose != LearningPurpose.Yks ? "targetScore" : x.Type == "TYT" ? "tytScore" : "fieldScore",
+                            $"Hedef puanını yaz: 0'dan büyük, en çok {max:0}.");
                     return new AcademicScoreTarget(x.Type, x.Score, max);
                 }).OrderBy(x => x.ScoreType == "TYT").ToArray();
                 title = $"{TypeName(targets[0].ScoreType)} hedefi";
@@ -603,4 +615,13 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
         // An older target score without a stored score type.
         return goal.TargetScore is { } legacy ? new("score", null, goal.Title, null, null, null, null, [new OnboardingScore("", legacy)], canEdit) : null;
     }
+}
+
+/// <summary>
+/// F2 (E4 leftover a, live test 06.11.2026): a wizard answer the server refused, with the id of the wizard question that asks it
+/// (for example <c>birthDate</c>, <c>district</c>, <c>education</c>, <c>diploma</c>, <c>targetScore</c>), so the wizard asks that one again.
+/// </summary>
+public sealed class OnboardingFieldException(string field, string message) : ArgumentException(message)
+{
+    public string Field { get; } = field;
 }

@@ -315,10 +315,10 @@ public sealed class CoachingProfileConsistencyTests
         await s.Onboarding.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default);
         // The grade changes to 11th: the exam step re-opens; resending the saved LGS (an old bundle, a direct call) is refused.
         (await s.Personal(11)).NextStep.Should().Be(2);
-        var error = await Assert.ThrowsAsync<ArgumentException>(() =>
+        var error = await Assert.ThrowsAnyAsync<ArgumentException>(() =>
             s.Onboarding.SaveExamAsync(new(LearningPurpose.Lgs, null, null, s.LgsSession, null, null, false), default));
         error.Message.Should().Be(LearningPurposes.PurposeNotForEducationNotice);
-        await Assert.ThrowsAsync<ArgumentException>(() =>
+        await Assert.ThrowsAnyAsync<ArgumentException>(() =>
             s.Onboarding.SaveExamAsync(new(LearningPurpose.Ags, null, null, null, s.Year, null, false), default));
         var view = await s.Onboarding.GetAsync(default);
         (view.NextStep, view.Answers.Purpose).Should().Be((2, (LearningPurpose?)LearningPurpose.Lgs), "nothing was written");

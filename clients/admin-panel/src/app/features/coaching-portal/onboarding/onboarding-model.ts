@@ -363,7 +363,7 @@ export function inviteAnswer(accepted: OnboardingInvitation[], pending = 0): str
 export function parentAnswer(code: { expiresAt: string; expired?: boolean } | null, links: { parentName: string; status: string }[]): string {
   if (code && !code.expired) return `Veli kodu oluşturdum (${coachingDate(code.expiresAt)} tarihine kadar geçerli)`;
   if (links.length) return `Velimle bağlantım var: ${links.map(x => x.status === 'Pending' ? `${x.parentName} (onayımı bekliyor)` : x.parentName).join(', ')}`;
-  if (code) return `Veli kodumun süresi doldu (${coachingDate(code.expiresAt)})`;
+  if (code && !staleParentCode(code)) return `Veli kodumun süresi doldu (${coachingDate(code.expiresAt)})`;
   return 'Şimdilik geç';
 }
 /** E4 #18: the e-mail step's answer: the e-mails the student gets (the wizard's own categories). */
@@ -372,6 +372,12 @@ export function emailAnswer(prefs: { label: string; email: boolean }[]): string 
 }
 /** As on Profilim: until when a parent code works and that it works once. */
 export function parentCodeNote(expiresAt: string): string { return `${coachingDate(expiresAt)} tarihine kadar, bir kez kullanılabilir.`; }
+/** F2 (E4 leftover c): an expired parent code is mentioned for a week after it ran out; an older one is not shown at all. */
+export const STALE_PARENT_CODE_DAYS = 7;
+export function staleParentCode(code: { expiresAt: string } | null | undefined, now = Date.now()): boolean {
+  const end = code ? Date.parse(code.expiresAt) : NaN;
+  return Number.isFinite(end) && now - end > STALE_PARENT_CODE_DAYS * 24 * 60 * 60 * 1000;
+}
 
 export function targetLabel(t: { kind: string; name: string; minimumScore: number | null; scores: { scoreType: string; score: number }[] }): string {
   if (t.kind === 'score') return t.scores.map(x => `${SCORE_NAMES[x.scoreType] ?? t.name} ${formatScore(x.score)}`).join(', ');

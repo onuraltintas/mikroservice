@@ -13,8 +13,10 @@ import { DarkModeService, ThemeMode } from '../../../core/services/dark-mode.ser
       <legend>Tema</legend>
       @for (option of options; track option.value) {
         <label [class.is-selected]="theme.mode() === option.value">
-          <input type="radio" name="theme" [value]="option.value" [checked]="theme.mode() === option.value" (change)="theme.setMode(option.value)">
-          <span><strong>{{ option.label }}</strong><small>{{ option.hint }}</small></span>
+          <!-- F2 #32: the radio is named in Turkish ("Açık", "Koyu", "Sistem"); the hint describes it. -->
+          <input type="radio" name="theme" [value]="option.value" [checked]="theme.mode() === option.value" (change)="theme.setMode(option.value)"
+            [attr.aria-label]="option.label" [attr.aria-describedby]="'theme-hint-' + option.value">
+          <span><strong>{{ option.label }}</strong><small [id]="'theme-hint-' + option.value">{{ option.hint }}</small></span>
         </label>
       }
     </fieldset>
@@ -35,6 +37,6 @@ export class StudentThemeSettingComponent {
   readonly options: { value: ThemeMode; label: string; hint: string }[] = [
     { value: 'light', label: 'Açık', hint: 'Gündüz ve aydınlık ortamlar için' },
     { value: 'dark', label: 'Koyu', hint: 'Akşam çalışırken gözünü yormaz' },
-    { value: 'system', label: 'Sistemi izle', hint: 'Cihazının ayarına göre kendiliğinden değişir' }
+    { value: 'system', label: 'Sistem', hint: 'Cihazının ayarına göre kendiliğinden değişir' }
   ];
 }

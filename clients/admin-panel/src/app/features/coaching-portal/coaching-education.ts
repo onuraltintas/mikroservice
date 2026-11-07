@@ -43,6 +43,15 @@ export function educationRequest(stage: EducationStage, grade: number | null | u
   return { educationStatus: 'Student', gradeLevel: gradesFor(stage).includes(value) ? value : null };
 }
 
+/**
+ * F2 review: the school year a new exam choice is saved in. As the first-login wizard (the onboarding service's
+ * AcademicYearStart): it starts on 1 September, Türkiye time.
+ */
+export function currentAcademicYear(now = new Date()): number {
+  const [year, month] = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit' }).format(now).split('-').map(Number);
+  return month >= 9 ? year : year - 1;
+}
+
 const STATUS_NUMBERS: Record<number, string> = { 1: 'Student', 2: 'HighSchoolGraduate', 3: 'UniversityStudent', 4: 'UniversityGraduate' };
 
 /** A staff list's label: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi", "Üniversite mezunu", or the fallback. */

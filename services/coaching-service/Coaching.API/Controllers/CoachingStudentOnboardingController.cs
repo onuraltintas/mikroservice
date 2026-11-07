@@ -68,6 +68,8 @@ public sealed class CoachingStudentOnboardingController(CoachingStudentOnboardin
         catch (BusinessRuleException e) when (e.Code.StartsWith("Onboarding.", StringComparison.Ordinal) || e.Code == "StudyPlanning.Conflict")
         { return Conflict(new { success = false, code = e.Code, message = e.Message }); }
         catch (KeyNotFoundException e) { return NotFound(new { success = false, code = "Profiles.NotFound", message = e.Message }); }
+        // F2 (E4 a): the refused question's id, so the wizard asks that question again.
+        catch (OnboardingFieldException e) { return BadRequest(new { success = false, code = "Onboarding.Validation", message = e.Message, field = e.Field }); }
         catch (ArgumentException e) { return BadRequest(new { success = false, code = "Onboarding.Validation", message = e.Message }); }
     }
 }

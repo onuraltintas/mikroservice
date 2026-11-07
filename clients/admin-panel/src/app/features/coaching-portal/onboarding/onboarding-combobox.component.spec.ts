@@ -35,6 +35,18 @@ describe('OnboardingComboboxComponent (Paket C #3)', () => {
     expect(picked).toHaveBeenCalledWith(expect.objectContaining({ value: 'fen-1-1' }));
   });
 
+  // F2 review: a refused field marks its list, so the focus-first-invalid rule reaches it.
+  it('can be marked invalid and described by an error', () => {
+    TestBed.configureTestingModule({ imports: [OnboardingComboboxComponent] });
+    const fixture = TestBed.createComponent(OnboardingComboboxComponent);
+    fixture.componentRef.setInput('label', 'İlçe'); fixture.componentRef.setInput('options', []);
+    fixture.detectChanges();
+    const input = (fixture.nativeElement as HTMLElement).querySelector('input')!;
+    expect(input.hasAttribute('aria-invalid')).toBe(false);
+    fixture.componentRef.setInput('invalid', true); fixture.componentRef.setInput('describedBy', 'homeDistrict-error'); fixture.detectChanges();
+    expect(input.getAttribute('aria-invalid')).toBe('true'); expect(input.getAttribute('aria-describedby')).toBe('homeDistrict-error');
+  });
+
   it('filters a short list in the browser, ignoring case, Turkish i and accents', () => {
     expect(fold('İSTANBUL')).toBe(fold('istanbul'));
     expect(fold('Çankaya')).toBe('cankaya');

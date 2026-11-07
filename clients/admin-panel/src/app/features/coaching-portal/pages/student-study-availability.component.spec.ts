@@ -125,6 +125,44 @@ describe('StudentStudyAvailabilityComponent', () => {
     expect(times[1].getAttribute('aria-invalid')).toBe('true');
   });
 
+  // F2 #27 (live test 06.11.2026): one row of actions — Ekle, Kaydet, Vazgeç — instead of five buttons.
+  it('#27: has only "Ekle", "Kaydet" and "Vazgeç" below the ranges, with full names', async () => {
+    const { fixture } = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    const bar = Array.from(el.querySelectorAll('form fieldset > .actions button'));
+    expect(bar.map(x => x.textContent?.trim())).toEqual(['Ekle', 'Kaydet', 'Vazgeç']);
+    expect(bar.map(x => x.getAttribute('aria-label'))).toEqual(['Saat aralığı ekle', 'Çalışma saatlerini kaydet', 'Değişikliklerden vazgeç']);
+    expect(Array.from(el.querySelectorAll('button')).map(x => x.textContent?.trim())).not.toContain('Yeniden yükle');
+  });
+
+  // F2 #28: "Hafta içi her gün" / "Hafta sonu" copy a range to those days.
+  it('#28: copies a range to every weekday or to the weekend and skips a day where it would overlap', async () => {
+    const { fixture, component, service } = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    component.rows = [{ day: 'Monday', start: '17:00', end: '19:00', endOfDay: false }, { day: 'Wednesday', start: '18:00', end: '20:00', endOfDay: false }];
+    fixture.detectChanges(); await fixture.whenStable();
+    (el.querySelector('[data-testid="copy-weekdays-0"]') as HTMLButtonElement).click(); fixture.detectChanges();
+    expect(component.rows.map(x => `${x.day} ${x.start}-${x.end}`)).toEqual(['Monday 17:00-19:00', 'Wednesday 18:00-20:00', 'Tuesday 17:00-19:00', 'Thursday 17:00-19:00', 'Friday 17:00-19:00']);
+    expect(component.dirty).toBe(true);
+    expect(el.querySelector('[data-testid="copy-note"]')!.textContent).toContain('Çarşamba: o gün bu saatlerle çakışan');
+    // Again: nothing is added twice.
+    component.copyRow(0, 'weekdays');
+    expect(component.rows.length).toBe(5);
+    component.copyRow(0, 'weekend');
+    expect(component.rows.slice(5).map(x => x.day)).toEqual(['Saturday', 'Sunday']);
+    expect((el.querySelector('[data-testid="copy-weekend-0"]') as HTMLButtonElement).textContent!.trim()).toBe('Hafta sonu');
+    component.save();
+    expect(service.saveAvailability).toHaveBeenCalledWith(expect.objectContaining({ windows: expect.arrayContaining([{ day: 'Sunday', startMinute: 1020, endMinute: 1140 }]) }));
+  });
+
+  it('#28 review: says "o günlerde" when more than one day was skipped', async () => {
+    const { component } = await setup();
+    component.rows = [{ day: 'Monday', start: '17:00', end: '19:00', endOfDay: false }, { day: 'Saturday', start: '18:00', end: '20:00', endOfDay: false },
+      { day: 'Sunday', start: '16:00', end: '18:00', endOfDay: false }];
+    component.copyRow(0, 'weekend');
+    expect(component.copyNote()).toContain('Cumartesi, Pazar: o günlerde bu saatlerle çakışan');
+  });
+
 });
 
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

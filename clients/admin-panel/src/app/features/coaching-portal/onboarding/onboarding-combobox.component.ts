@@ -18,6 +18,7 @@ let nextId = 0;
     <div class="ob-combo">
       <input #box type="text" role="combobox" autocomplete="off" [id]="id + '-input'" [attr.aria-label]="label()" aria-autocomplete="list"
         [attr.aria-expanded]="open()" [attr.aria-controls]="id + '-list'" [attr.aria-activedescendant]="active() >= 0 ? id + '-opt-' + active() : null"
+        [attr.aria-invalid]="invalid() ? 'true' : null" [attr.aria-describedby]="describedBy()"
         [placeholder]="placeholder()" [value]="query()" (input)="type($event)" (focus)="open.set(true)" (keydown)="key($event)">
       @if (open()) {
         <!-- Only options inside the listbox; the empty state and "more" sit next to it (ARIA combobox pattern). -->
@@ -39,6 +40,9 @@ export class OnboardingComboboxComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   readonly label = input.required<string>();
   readonly placeholder = input('Yazarak ara');
+  /** F2 review: a refused field marks its list (focus-first-invalid reaches it) and points at its message. */
+  readonly invalid = input(false);
+  readonly describedBy = input<string | null>(null);
   /** A short list, filtered in the browser. */
   readonly options = input<ComboOption[] | null>(null);
   /** A long list, searched and paged on the server. */

@@ -57,7 +57,11 @@ describe('StudentParentLinksComponent', () => {
     expect(el.textContent).not.toContain('Aktif bir veli kodun var');
   });
 
+  afterEach(() => vi.useRealTimers());
+  const today = (iso: string) => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date(iso)); };
+
   it('says when the earlier code expired and creates a new one without asking', async () => {
+    today('2026-11-03T12:00:00Z');
     const service = { getLinks: vi.fn(() => of([])), getActiveCode: vi.fn(() => of({ expiresAt: '2026-11-01T09:00:00Z', createdAt: '2026-10-25T09:00:00Z', expired: true })),
       createCode: vi.fn(() => of({ code: 'WXYZ-6789', expiresAt: '2026-11-14T09:00:00Z' })) };
     const fixture = setup(service); const el = fixture.nativeElement as HTMLElement;
@@ -66,5 +70,16 @@ describe('StudentParentLinksComponent', () => {
     (Array.from(el.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Veli kodu oluştur') as HTMLElement).click();
     await fixture.whenStable(); fixture.detectChanges();
     expect(service.createCode).toHaveBeenCalledTimes(1);
+  });
+
+  // F2 (E4 leftover c): a code whose expiry is long past (more than a week) is not mentioned at all.
+  it('does not show a code whose expiry is long past', () => {
+    today('2026-11-20T12:00:00Z');
+    const service = { getLinks: vi.fn(() => of([])), getActiveCode: vi.fn(() => of({ expiresAt: '2026-11-01T09:00:00Z', createdAt: '2026-10-25T09:00:00Z', expired: true })),
+      createCode: vi.fn() };
+    const fixture = setup(service); const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="expired-code"]')).toBeNull();
+    expect(el.textContent).not.toContain('01.11.2026');
+    expect(Array.from(el.querySelectorAll('button')).map(x => x.textContent?.trim())).toContain('Veli kodu oluştur');
   });
 });
