@@ -1047,7 +1047,7 @@
     "services/coaching-service/Coaching.Application/StudyPlanning/IAutomaticStudyPlanDraftService.cs": "679cc541094531d71deb054db02e7313a3afec115265dfd74b77a1c75236c589",
     "services/coaching-service/Coaching.Application/StudyPlanning/IAutomaticStudyPlanPreviewService.cs": "d059cba41a704934ff3861c230ca65664f3c2165e0251fda93228317be94c67f",
     "services/coaching-service/Coaching.Application/StudyPlanning/IGoalTargetService.cs": "1353c7753694a40af193f3ae19cbbc5a865d0af035bf86a9b14a7d23274277c3",
-    "services/coaching-service/Coaching.Application/StudyPlanning/ILearningSetupService.cs": "b06f7d5f4403f249104360308b43d3cbb9d0f36632cd330114c3b321c844c2d0",
+    "services/coaching-service/Coaching.Application/StudyPlanning/ILearningSetupService.cs": "baea294525e66d8f7461c0d7bd5646ba7db8d05f3b033049f4ec67cd4981ceba",
     "services/coaching-service/Coaching.Application/StudyPlanning/IManualStudyPlanService.cs": "73b0b87cf7d09681b0d7c8b336aefad85f555d5bb6733c6b6f1831533830938f",
     "services/coaching-service/Coaching.Application/StudyPlanning/IStudentExamService.cs": "3920754e78b5773fd1527b391fb59c74266f799ec501ce147d3a780b88957fc3",
     "services/coaching-service/Coaching.Application/StudyPlanning/IStudentStudyReportService.cs": "1495655d3706a70c9e63c16261957aaa2fb1f95af77415babf8a61dfd62a6caf",
@@ -1387,7 +1387,7 @@
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingInstitutionWorkloadService.cs": "75c6e37a1ab4e237ad4430fc9dc101faffea7272cb7a135f5e6a173596b8314b",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingMessagingService.cs": "ce46631b1c1876a21ab2e3260f2d08cf19f9be4d6d1b1896084b987a2fd6ef2b",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingNewsletterService.cs": "50f0a545615ed7627973bc5ca69bdab60306cb3ac62264bf248e7b3ac2262d79",
-    "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentChildService.cs": "7b65443efa0d55c70a33a12a569ddc659d5bd085fb2aefa0fec92010f55695d1",
+    "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentChildService.cs": "c1afa6907c98d5203749c4f87a80c0799e5078be21c900e7d7e6a8d547380839",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentWeeklySummary.cs": "f7a5fc88f0aaad16904e7ea6c165a073e4b8cc9a15be2f79d4be76a35b7b45b3",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesDocuments.cs": "facfa2ace568d6d5200d52ef100199b21f1478010d65660308b9dfcbc51f8efc",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesService.cs": "4d2be80288a3b040dbc37913a335e95c73d746d753be7f5c447901b3f0bec207",
@@ -1406,7 +1406,7 @@
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingInvitationStore.cs": "e26e52e60d237fb9561fa4fb9885493b9fd78c1b3d1bfbd0684638ce5eef6eb0",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileImporter.cs": "6c83e9e9dbda3000d09a728824973ae614d7e28f0b38f4e5c5e543116d9b59f0",
     "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs": "4b7df874a41b3fa4375b6846da3b232255f0a93b43747bb011fbf7ab025af566",
-    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingStudentOnboardingService.cs": "9ad575d240f0b3f8518fcf1081d4b775e5a9a2f3f92a3c3ae81b4c6cc30e4f42",
+    "services/coaching-service/Coaching.Infrastructure/Profiles/CoachingStudentOnboardingService.cs": "7d4855baa9c39b6561ce3e4588e155adb66bae9a1d7cb4a5c6c5f04cf2521aec",
     "services/coaching-service/Coaching.Infrastructure/Profiles/OwnedCoachingDirectory.cs": "3dae636bf8d538c40258998ed54228e477cc9b392f8ceca6d2d5abba73dd0174",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderProcessor.cs": "225ac6f86590f93937b19d5b19851dd9735c69a8faaa70ce4f67ca04bf976241",
     "services/coaching-service/Coaching.Infrastructure/Reminders/CoachingReminderScanState.cs": "f20a8f3ea616d616d4392a9fdc33119193d46b50a429e0bfa181b500cff26828",
@@ -1419,9 +1419,9 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingAdminStudyReader.cs": "73324eee9ee6e2dd6b3fb83ff91557c7b6e12763dfbfe245bab255ca40e74296",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingAutomaticStudyPlanPreviewService.cs": "bbc448a23c992d923256867a80b31e016edefe716b172629fc64ecd6a7107b28",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingCompletedOutcomeCredits.cs": "f3cb7936acb03bfdf3f628637f87ba5c6b46c28439add36596622186d5cd33f6",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingExamSessions.cs": "934e5a13b4b9d435ac9b87bc7a29ae10e46bf838beb121f04f13523e98b0ff9a",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingExamSessions.cs": "c4b5ff811a82976c180d36c0e8fc555cd6687e9ee1d05adb999fd7ff1c15b183",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingGoalTargetService.cs": "80f5df6bfac4e3e20d2fa14155e97c75db7f4b45739494e5993de509c7ab9595",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingLearningSetupService.cs": "0a99a64d03c6a77ce90fd9c8a8efa55712d1b4c61714d5ca44f334e183deb7f7",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingLearningSetupService.cs": "787b962d604c1ab27b3c8c2b907c90702d7dc49429cbf3a390f2c7894d46ff31",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingManualStudyPlanService.cs": "cd38fa9a33cd7e7ed92d93d4ee06397c58025da6ae3c7b98f1d7179e64d566ef",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingMotivationService.cs": "19e44ec768f4cc773388edde4080931ef6ea2392c484b53c6befc28d28888c92",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingPracticeAdaptationService.cs": "e53a624fe5e711b4d4a257bb59fc063b5ab77af5ef38e2d338d575a73acbc79a",
@@ -1439,7 +1439,7 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyWorkReports.cs": "4476d0bf862bed3ab75395597d884db462753bd130bdf798daa16a13e9fb55c9",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingTopicSearchService.cs": "be7561a459a46cc7d1ca233b6ef0f87e2e277748ce0b71a794fcd0b260a66833",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyDecisionWork.cs": "4f81ad88ab164b61de95a697b824e4a5e9ff862877df72d5f47e39a3a857f0a8",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs": "b39f24a36c62a444c6b93b988be1b1ade90e01745e54464ebc62e889f0a76b21",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs": "265956092533732c5bdb8bbd6a7d7d0943eeff2176a93260e206f4d8f0b6a37a",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyResults.cs": "51264de209aed66dd1d3a7f1c40020bd26b97ab7f4efec63835dee64a5a65702",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyReviewService.cs": "f71e816976547070daa5ebaf4298d6e6b5ebdfdc2f0c3307a6a1e7f154a54544",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyStudyDraftService.cs": "f6f35114e362106fa93bb28f81cec75e2546e824e351c151722a86ec5c1a512d",
@@ -2699,7 +2699,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "G1 exam rules and G2 year-only exam targets",
+    "purpose": "PR 127 review of G2",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2747,7 +2747,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "645b9b70",
+    "previousBaselineCommit": "2d7ae83e",
     "removedSincePreviousBaseline": []
   }
 }
