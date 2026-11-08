@@ -1,3 +1,4 @@
+using EduPlatform.Shared.Kernel.Exceptions;
 using Coaching.Application.StudyPlanning;
 using Coaching.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -297,6 +298,29 @@ public sealed class WeeklyPlanEngineServiceTests
         foreach (var name in new[] { nameof(api.OutcomePreview), nameof(api.CreateOutcomeDraft) })
             Assert.Equal(8192, ((Microsoft.AspNetCore.Http.Metadata.IRequestSizeLimitMetadata)typeof(Coaching.API.Controllers.CoachingStaffStudyController).GetMethod(name)!
                 .GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute), false).Single()).MaxRequestBodySize);
+    }
+
+    // Paket H4a (H4b review): a second plan while a draft is open is refused with its own code, so the wizard need not read the message.
+    [Fact]
+    public async Task ASecondPlanWhileADraftIsOpenHasItsOwnCode()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var service = await WeeklyOutcomePlanTests.Seed(f);
+        var student = f.User.UserId!.Value;
+        await service.CreateAsync(new("İlk plan", Input, (await service.PreviewAsync(Input, default)).Fingerprint), default);
+        var again = await service.PreviewAsync(Input, default);
+        var error = await Assert.ThrowsAsync<BusinessRuleException>(() => service.CreateAsync(new("İkinci plan", Input, again.Fingerprint), default));
+        Assert.Equal(("StudyPlanning.DraftExists", "Önce mevcut plan taslağınızı yayımlayın veya arşivleyin."), (error.Code, error.Message));
+        Assert.Equal(WeeklyOutcomePlanCodes.DraftExists, error.Code);
+        var conflict = Assert.IsType<Microsoft.AspNetCore.Mvc.ConflictObjectResult>(await new Coaching.API.Controllers.WeeklyOutcomePlansController(service)
+            .Create(new("İkinci plan", Input, again.Fingerprint), default));
+        Assert.Equal("StudyPlanning.DraftExists", conflict.Value!.GetType().GetProperty("code")!.GetValue(conflict.Value));
+
+        f.User.UserId = Guid.NewGuid(); f.User.Roles = ["Teacher"]; var access = new Coaching.Application.Authorization.CoachingAccessPolicy(f.User);
+        var staff = new Coaching.Infrastructure.StudyPlanning.CoachingWeeklyOutcomePlanService(f.Db, access, new WeeklyStudyDraftTests.Catalog(f.Db), TimeProvider.System,
+            new Coaching.Application.Authorization.CoachingStudyPlanAccess(access, new WeeklyStudyDraftTests.Teaching(student), f.Scope));
+        var staffConflict = Assert.IsType<Microsoft.AspNetCore.Mvc.ConflictObjectResult>(await new Coaching.API.Controllers.CoachingStaffStudyController(null!, null!, null!, null!, null!, null!, null!, staff)
+            .CreateOutcomeDraft(student, new("Öğretmenin planı", Input, again.Fingerprint), default));
+        Assert.Equal("StudyPlanning.DraftExists", staffConflict.Value!.GetType().GetProperty("code")!.GetValue(staffConflict.Value));
     }
 
     [Fact]
