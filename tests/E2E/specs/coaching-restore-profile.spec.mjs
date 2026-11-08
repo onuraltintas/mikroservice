@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {studentShell} from '../support/coaching-student-shell.mjs';
 // The teacher sections are tabs on wide screens and a "Öğretmen bölümleri" select on phones.
 async function openSection(page,name){if(test.info().project.name==='mobile')await page.getByRole('combobox',{name:'Öğretmen bölümleri',exact:true}).selectOption({label:name});else await page.getByRole('tab',{name,exact:true}).click();}
 const token=()=>{const e=x=>Buffer.from(JSON.stringify(x)).toString('base64url');return `${e({alg:'HS256'})}.${e({sub:'student',role:'Student',platform_product:'coaching',exp:Math.floor(Date.now()/1000)+3600})}.fixture`;};
@@ -7,6 +8,7 @@ test('restore keeps completed work and outcome IDs and archives the exact active
  let plan={id:'annual',version:11,title:'Korunan yıllık plan',status:'Archived',tasks:[task]},active={id:'test',version:2,status:'Active',title:'Test planı',tasks:[]},writes=[];
  await context.route('**/api/**',async route=>{const path=new URL(route.request().url()).pathname,ok=data=>route.fulfill({json:{success:true,data}});
   if(path.endsWith('/auth/refresh-token'))return route.fulfill({json:{accessToken:token(),expiresInMinutes:60,tokenType:'Bearer'}});
+  const shell=studentShell(route,path);if(shell)return shell;
   if(path.endsWith('/profiles/me'))return ok({student:{educationStatus:'Student',gradeLevel:8,isActive:true},memberships:[]});
   if(path.endsWith('/plans/annual/restore')){const body=route.request().postDataJSON();writes.push(body);expect(body).toEqual({expectedVersion:11,expectedActiveRevisionId:'test',expectedActiveRevisionVersion:2});active={...active,status:'Archived'};plan={...plan,status:'Active',version:12};return ok(plan);}
   if(path.endsWith('/plans/annual'))return ok(plan);
