@@ -109,6 +109,14 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var availability = hours is null ? null : new Coaching.Application.StudyPlanning.StudyAvailabilityView(hours.Version, hours.TimeZoneId,
             hours.Windows.Select(x => new Coaching.Application.StudyPlanning.StudyWindowInput(x.Day, x.StartMinute, x.EndMinute)).ToArray());
         var routine = await context.Set<Coaching.Domain.Entities.StudyRoutineProfile>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
+        Coaching.Application.StudyPlanning.StudyRoutineView? routineView = null;
+        if (routine is not null)
+        {
+            var yks = await Coaching.Infrastructure.StudyPlanning.CoachingStudyRoutineService.PreparesForYksAsync(context, studentId, cancellationToken);
+            // An export must not fail on an unreadable row: the raw answers are exported instead.
+            try { routineView = Coaching.Infrastructure.StudyPlanning.CoachingStudyRoutineService.View(routine, hours, yks); }
+            catch (System.Text.Json.JsonException) { }
+        }
         var weeklyDraft = await context.Set<Coaching.Domain.Entities.WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var reminders = await context.CoachingReminderReceipts.AsNoTracking().Where(x => x.RecipientUserId == studentId)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
@@ -183,6 +191,6 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
             await context.Set<Coaching.Domain.Entities.WeeklyDecision>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId || x.ResponsibleTeacherId == studentId).OrderBy(x => x.DueOn).ThenBy(x => x.Id).ToArrayAsync(cancellationToken),
             await context.Set<Coaching.Domain.Entities.WeeklyReflectionReview>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId).OrderBy(x => x.CreatedAt).ToArrayAsync(cancellationToken),
             subscriptions, seats, transfers, payments, conversations, primaryGoal, trials, periods, invoices,
-            routine is null ? null : Coaching.Infrastructure.StudyPlanning.CoachingStudyRoutineService.View(routine, hours));
+            routineView, routine is not null && routineView is null ? routine.AnswersJson : null);
     }
 }

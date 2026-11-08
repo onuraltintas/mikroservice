@@ -9,12 +9,13 @@ namespace Coaching.Application.StudyPlanning;
 public sealed record StudyRoutineUpdate(int? ExpectedVersion, int? ExpectedAvailabilityVersion, [Required] StudyRoutineAnswers? Answers);
 
 /// <summary>
-/// H3: the saved answers, the windows and daily budgets they give, and whether the free hours are still the ones the routine wrote
-/// (false after the student edited her free hours by hand, or removed them).
+/// H3: the saved answers, the windows and daily budgets they give, the days with a budget but no window, and whether the free
+/// hours are still the ones the routine wrote (false after the student edited her free hours by hand, or removed them).
+/// Answers.ExamFocus is shown only while the student prepares for YKS.
 /// </summary>
 public sealed record StudyRoutineView(int Version, int SchemaVersion, StudyRoutineAnswers Answers, IReadOnlyList<StudyWindowInput> Windows,
-    IReadOnlyList<StudyDayBudget> DayBudgets, int AvailabilityVersion, int? CurrentAvailabilityVersion, bool AvailabilityMatches,
-    DateTime? UpdatedAt);
+    IReadOnlyList<StudyDayBudget> DayBudgets, IReadOnlyList<DayOfWeek> DaysWithoutWindows, int AvailabilityVersion,
+    int? CurrentAvailabilityVersion, bool AvailabilityMatches, DateTime? UpdatedAt);
 
 public interface IStudyRoutineService
 {

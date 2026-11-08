@@ -42,7 +42,7 @@ public sealed class StudyRoutineController(IStudyRoutineService routines) : Cont
         catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.Conflict")
         { return controller.Conflict(new { success = false, message = ex.Message, code = ex.Code }); }
         catch (ConcurrencyException)
-        { return controller.Conflict(new { success = false, message = "Günlük düzenin başka bir yerde değişti. Sayfayı yenileyip yeniden dene.", code = "StudyPlanning.Conflict" }); }
+        { return controller.Conflict(new { success = false, message = Coaching.Infrastructure.StudyPlanning.CoachingStudyRoutineService.RoutineConflictMessage, code = "StudyPlanning.Conflict" }); }
         catch (StudyPlanValidationException ex)
         { return controller.BadRequest(new { success = false, message = ex.Message, code = "StudyPlanning.Validation" }); }
         catch (ArgumentException)

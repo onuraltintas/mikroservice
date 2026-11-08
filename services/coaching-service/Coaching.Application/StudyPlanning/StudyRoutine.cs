@@ -1,4 +1,5 @@
 using Coaching.Domain.Entities;
+using Coaching.Domain.Profiles;
 
 namespace Coaching.Application.StudyPlanning;
 
@@ -14,6 +15,7 @@ public enum StudyExamFocus { Tyt, Balanced, Ayt }
 /// <summary>
 /// H3 (user decision K2): the answers to the "günlük düzen" questions, saved as the student's study routine profile.
 /// Every time is a minute of the day on the Europe/Istanbul wall clock (0–1440) on a full or half hour.
+/// BusyDaysOff: the student cannot study at all on her busy days (kurs, etüt, antrenman); otherwise BusyStart says from when she can.
 /// </summary>
 public sealed record StudyRoutineAnswers(
     StudySchoolShift? SchoolShift,
@@ -27,6 +29,7 @@ public sealed record StudyRoutineAnswers(
     int? DinnerStart,
     int? DinnerEnd,
     IReadOnlyList<DayOfWeek>? BusyDays,
+    bool BusyDaysOff,
     int? BusyStart,
     int? WeekdayMinutes,
     StudyWeekendDays? Weekend,
@@ -38,7 +41,9 @@ public sealed record StudyRoutineAnswers(
 /// <summary>The most a day should get from the weekly proposal (H4 caps a day at min(budget, daily limit)).</summary>
 public sealed record StudyDayBudget(DayOfWeek Day, int Minutes);
 
-public sealed record StudyRoutineWindows(IReadOnlyList<StudyAvailabilityWindow> Windows, IReadOnlyList<StudyDayBudget> DayBudgets);
+/// <summary>DaysWithoutWindows: days that have a budget but no window left (for example a busy day starting too late), for H4 to warn.</summary>
+public sealed record StudyRoutineWindows(IReadOnlyList<StudyAvailabilityWindow> Windows, IReadOnlyList<StudyDayBudget> DayBudgets,
+    IReadOnlyList<DayOfWeek> DaysWithoutWindows);
 
 /// <summary>
 /// H3: checks the routine answers and turns them into weekly availability windows, with the rules of the wizard the plan is
@@ -50,13 +55,23 @@ public static class StudyRoutine
     /// <summary>User decision K1: a study session is 60 minutes, so a shorter free piece is of no use.</summary>
     public const int MinimumWindowMinutes = 60;
     public const int Noon = 720, LunchStart = 780, LunchEnd = 840, NoSchoolMorningEnd = 750;
+    public const string NoWindowMessage = "Bu cevaplarla en az 1 saatlik bir çalışma aralığı kalmıyor; başlama ya da bitiş saatini, yemek saatini veya kurs günlerini değiştir.";
+    public const string NoWeekendWindowMessage = "Hafta sonu seçtiğin saatlerde öğle arası ve akşam yemeği dışında en az 1 saatlik bir aralık kalmıyor; hafta sonu saatlerini değiştir.";
     private static readonly DayOfWeek[] Weekdays = [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday];
 
     /// <summary>
-    /// Checks the answers and returns them with the fields that do not apply cleared. Throws <see cref="StudyPlanValidationException"/>
-    /// with a sentence for the student.
+    /// User decision K5: the most one day may hold, by education status. Mirrors WeeklyDayLimit from Paket H2 (PR #130, not on main
+    /// yet); keep the two in step.
     /// </summary>
-    public static StudyRoutineAnswers Validate(StudyRoutineAnswers? answers, bool preparesForYks)
+    public static int DailyLimitMinutes(CoachingEducationStatus? education) =>
+        education is CoachingEducationStatus.HighSchoolGraduate or CoachingEducationStatus.UniversityGraduate ? 600 : 480;
+
+    /// <summary>
+    /// Checks the answers and returns them with the fields that do not apply cleared. Throws <see cref="StudyPlanValidationException"/>
+    /// with a sentence for the student. An exam focus is cleared (not refused) when the student does not prepare for YKS: it may be
+    /// left from an earlier purpose. Answers that leave no study window at all, or no window on chosen weekend days, are refused.
+    /// </summary>
+    public static StudyRoutineAnswers Validate(StudyRoutineAnswers? answers, bool preparesForYks, CoachingEducationStatus? education = null)
     {
         if (answers is null) throw Invalid("Günlük düzen sorularını yanıtla.");
         if (answers.SchoolShift is not { } shift || !Enum.IsDefined(shift)) throw Invalid("Okul düzenini seç.");
@@ -72,16 +87,26 @@ public static class StudyRoutine
         else
         {
             schoolStart = Time(answers.SchoolStart, "Okulun kaçta başladığını seç.", "Okulun giriş saati");
+            var (from, to, text) = shift switch
+            {
+                StudySchoolShift.Morning => (390, 540, "Sabahçıysan okulun 06:30 ile 09:00 arasında başlamalı."),
+                StudySchoolShift.Afternoon => (660, 840, "Öğlenciysen okulun 11:00 ile 14:00 arasında başlamalı."),
+                _ => (420, 570, "Tam gün okuyorsan okulun 07:00 ile 09:30 arasında başlamalı.")
+            };
+            if (schoolStart < from || schoolStart > to) throw Invalid(text);
             schoolEnd = Time(answers.SchoolEnd, "Okulun kaçta bittiğini seç.", "Okulun çıkış saati");
             if (schoolEnd - schoolStart < 180) throw Invalid("Okulun çıkış saati, giriş saatinden en az 3 saat sonra olmalı.");
             afterSchool = Time(answers.AfterSchoolStart, "Okuldan sonra kaçta çalışmaya başlayacağını seç.", "Okuldan sonra başlama saatin");
+            if (shift == StudySchoolShift.Afternoon && afterSchool < schoolEnd + 60)
+                throw Invalid("Öğlenciysen okul çıkışından en az 1 saat sonrasını seç.");
             if (afterSchool < schoolEnd + 30)
                 throw Invalid("Okuldan sonra çalışmaya, okulun bitişinden en az yarım saat sonra başlayabilirsin.");
-            studyStart = shift == StudySchoolShift.Afternoon ? Math.Max(afterSchool.Value, schoolEnd.Value + 60) : afterSchool.Value;
+            studyStart = afterSchool.Value;
             if (shift == StudySchoolShift.Afternoon && answers.MorningStudy)
             {
                 morningStudy = true;
                 morningStart = Time(answers.MorningStart, "Sabah kaçta çalışmaya başlayacağını seç.", "Sabah başlama saatin");
+                if (morningStart < 360) throw Invalid("Sabah başlama saatin 06:00 ya da daha geç olmalı.");
                 if (schoolStart.Value - 90 - morningStart < MinimumWindowMinutes)
                     throw Invalid("Sabah çalışman okuldan 1,5 saat önce bitiyor; en az 1 saat çalışabilmen için daha erken başla.");
             }
@@ -98,29 +123,35 @@ public static class StudyRoutine
 
         var busyDays = (answers.BusyDays ?? []).Distinct().Order().ToArray();
         if (busyDays.Any(day => !Weekdays.Contains(day))) throw Invalid("Kurs, etüt ya da antrenman günlerini pazartesi ile cuma arasından seç.");
+        var busyDaysOff = busyDays.Length > 0 && answers.BusyDaysOff;
         int? busyStart = null;
-        if (busyDays.Length > 0 && answers.BusyStart is not null)
+        if (busyDays.Length > 0 && !busyDaysOff)
             busyStart = Time(answers.BusyStart, "Kurs olan günlerde kaçtan sonra çalışabileceğini seç.", "Kurs günlerindeki başlama saatin");
 
-        var weekdayMinutes = Minutes(answers.WeekdayMinutes, "Hafta içi günde toplam ne kadar çalışacağını seç.", "Hafta içi günlük süren");
+        var limit = DailyLimitMinutes(education);
+        var weekdayMinutes = Minutes(answers.WeekdayMinutes, limit, "Hafta içi günde toplam ne kadar çalışacağını seç.", "Hafta içi günlük süren");
         if (answers.Weekend is not { } weekend || !Enum.IsDefined(weekend)) throw Invalid("Hafta sonu hangi günler çalışacağını seç.");
         int? weekendStart = null, weekendEnd = null, weekendMinutes = null;
         if (weekend != StudyWeekendDays.None)
         {
             weekendStart = Time(answers.WeekendStart, "Hafta sonu kaçta çalışmaya başlayacağını seç.", "Hafta sonu başlama saatin");
+            if (weekendStart < 420) throw Invalid("Hafta sonu başlama saatin 07:00 ya da daha geç olmalı.");
             weekendEnd = Time(answers.WeekendEnd, "Hafta sonu en geç kaça kadar çalışabileceğini seç.", "Hafta sonu bitiş saatin");
             if (weekendEnd - weekendStart < 60) throw Invalid("Hafta sonu bitiş saatin, başlama saatinden en az 1 saat sonra olmalı.");
-            weekendMinutes = Minutes(answers.WeekendMinutes, "Hafta sonu günde toplam ne kadar çalışacağını seç.", "Hafta sonu günlük süren");
+            weekendMinutes = Minutes(answers.WeekendMinutes, limit, "Hafta sonu günde toplam ne kadar çalışacağını seç.", "Hafta sonu günlük süren");
         }
 
-        if (answers.ExamFocus is { } focus)
-        {
-            if (!Enum.IsDefined(focus)) throw Invalid("TYT ve AYT ağırlığını seç.");
-            if (!preparesForYks) throw Invalid("TYT ve AYT ağırlığını yalnız YKS'ye hazırlanıyorsan seçebilirsin.");
-        }
+        var focus = answers.ExamFocus;
+        if (focus is { } chosen && !Enum.IsDefined(chosen)) throw Invalid("TYT ve AYT ağırlığını seç.");
+        if (!preparesForYks) focus = null;
 
-        return new StudyRoutineAnswers(shift, schoolStart, schoolEnd, afterSchool, latestEnd, morningStudy, morningStart, dayStart,
-            dinnerStart, dinnerEnd, busyDays, busyStart, weekdayMinutes, weekend, weekendStart, weekendEnd, weekendMinutes, answers.ExamFocus);
+        var valid = new StudyRoutineAnswers(shift, schoolStart, schoolEnd, afterSchool, latestEnd, morningStudy, morningStart, dayStart,
+            dinnerStart, dinnerEnd, busyDays, busyDaysOff, busyStart, weekdayMinutes, weekend, weekendStart, weekendEnd, weekendMinutes, focus);
+        var windows = ToWindows(valid).Windows;
+        if (windows.Count == 0) throw Invalid(NoWindowMessage);
+        if (weekend != StudyWeekendDays.None && !windows.Any(x => x.Day is DayOfWeek.Saturday or DayOfWeek.Sunday))
+            throw Invalid(NoWeekendWindowMessage);
+        return valid;
     }
 
     /// <summary>
@@ -136,12 +167,12 @@ public static class StudyRoutine
         var dinner = answers.DinnerStart is { } ds && answers.DinnerEnd is { } de ? (ds, de) : ((int, int)?)null;
         foreach (var day in Weekdays)
         {
+            if (busy.Contains(day) && answers.BusyDaysOff) continue;   // "o günler çalışamam": no window, no budget
             if (answers.WeekdayMinutes is { } minutes) budgets.Add(new(day, minutes));
-            if (busy.Contains(day) && answers.BusyStart is null) continue;   // "o günler çalışamam"
             foreach (var (start, end, morning) in WeekdayPieces(answers))
             {
                 var from = start;
-                if (busy.Contains(day) && !morning && end > Noon) from = Math.Max(from, answers.BusyStart!.Value);
+                if (busy.Contains(day) && answers.BusyStart is { } busyStart && !morning && end > Noon) from = Math.Max(from, busyStart);
                 foreach (var piece in Subtract((from, end), dinner)) Add(windows, day, piece);
             }
         }
@@ -160,7 +191,9 @@ public static class StudyRoutine
                     foreach (var piece in Subtract(lunchFree, dinner)) Add(windows, day, piece);
             }
         }
-        return new(windows.OrderBy(x => x.Day).ThenBy(x => x.StartMinute).ToArray(), budgets.OrderBy(x => x.Day).ToArray());
+        var orderedBudgets = budgets.OrderBy(x => x.Day).ToArray();
+        return new(windows.OrderBy(x => x.Day).ThenBy(x => x.StartMinute).ToArray(), orderedBudgets,
+            orderedBudgets.Select(x => x.Day).Where(day => windows.All(x => x.Day != day)).ToArray());
     }
 
     private static IEnumerable<(int Start, int End, bool Morning)> WeekdayPieces(StudyRoutineAnswers a)
@@ -203,10 +236,11 @@ public static class StudyRoutine
         return minute;
     }
 
-    private static int Minutes(int? value, string missing, string field)
+    private static int Minutes(int? value, int limit, string missing, string field)
     {
         if (value is not { } minutes) throw Invalid(missing);
         if (minutes < 60 || minutes > 600 || minutes % 30 != 0) throw Invalid($"{field} 1 ile 10 saat arasında, yarım saatlik adımlarla olmalı.");
+        if (minutes > limit) throw Invalid($"{field} en çok {limit / 60} saat olabilir.");
         return minutes;
     }
 
