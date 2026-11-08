@@ -225,7 +225,7 @@ public sealed class StudyRoutinePostgresTests
         await using (var db = new CoachingDbContext(pg.Options))
         {
             var export = await new CoachingDataExportRepository(db).ExportStudentDataAsync(student, DateTimeOffset.UtcNow, default);
-            Assert.Equal("1.12", export.SchemaVersion);
+            Assert.Equal("1.13", export.SchemaVersion);
             Assert.NotNull(export.StudyRoutine);
             Assert.Equal(StudySchoolShift.Morning, export.StudyRoutine.Answers.SchoolShift);
             Assert.Equal(Derived(Morning()), export.StudyRoutine.Windows.Select(x => (x.Day, x.StartMinute, x.EndMinute)));
@@ -234,8 +234,8 @@ public sealed class StudyRoutinePostgresTests
         }
 
         var id = Guid.NewGuid(); var eventId = Guid.NewGuid(); var now = DateTime.UtcNow;
-        await using (var db = new CoachingDbContext(pg.Options))   // the free hours and the routine
-            Assert.Equal(2, (await new CoachingErasureAssessmentService(db, TimeProvider.System).AssessAsync(new(eventId, id, student, now, true, PersonalDataScope.Coaching), default)).StudyPlanningRecordCount);
+        await using (var db = new CoachingDbContext(pg.Options))   // the free hours, the routine and its plan preferences (Paket H4a)
+            Assert.Equal(3, (await new CoachingErasureAssessmentService(db, TimeProvider.System).AssessAsync(new(eventId, id, student, now, true, PersonalDataScope.Coaching), default)).StudyPlanningRecordCount);
         await using (var db = new CoachingDbContext(pg.Options))
             await new CoachingErasureExecutionService(db, new NoAttachments(), TimeProvider.System).ExecuteAsync(new(eventId, id, student, now, PersonalDataScope.Coaching), default);
         await using (var db = new CoachingDbContext(pg.Options))
@@ -394,6 +394,162 @@ public sealed class StudyRoutinePostgresTests
         Assert.True(await TableExists(pg.Db));
         Assert.Empty(await pg.Db.Database.GetPendingMigrationsAsync());
     }
+
+    // ---- Paket H4a (H4b review): plan preferences (exam focus K6 and tempo) that never touch the free hours ----
+
+    private static CoachingStudyPlanPreferencesService Preferences(CoachingDbContext db, CurriculumManagementTests.Actor user, Guid? readable = null,
+        ICoachingAdminScopeAuthorization? scope = null) =>
+        new(db, new CoachingAccessPolicy(user), new CoachingStudyPlanAccess(new CoachingAccessPolicy(user), new Identity(readable ?? Guid.Empty),
+            scope ?? new CurriculumManagementTests.Scope()));
+
+    private static async Task<(int Version, string Windows)> Hours(CurriculumPostgresTests.Pg pg, Guid student)
+    {
+        await using var db = new CoachingDbContext(pg.Options);
+        var hours = await db.StudyAvailability.AsNoTracking().SingleAsync(x => x.StudentId == student);
+        return (hours.Version, string.Join(",", hours.Windows.Select(x => $"{x.Day}{x.StartMinute}-{x.EndMinute}")));
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task PlanPreferencesAreSavedWithoutTouchingTheFreeHours()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var user = pg.Data.User; user.Roles = ["Student"]; var student = user.UserId!.Value;
+        pg.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student), StudentLearningContext.Create(student, 2026, LearningPurpose.Yks, 2027, "SAY", null));
+        // Hand-made free hours and no routine: the usual case.
+        await new CoachingStudyAvailabilityService(pg.Db, new CoachingAccessPolicy(user)).ReplaceAsync(new(null, null, [new(DayOfWeek.Monday, 1080, 1200)]));
+        var before = await Hours(pg, student);
+
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var empty = await Preferences(db, user).GetAsync();
+            Assert.Equal(((StudyExamFocus?)null, (StudyTempo?)null, (int?)null), (empty.ExamFocus, empty.Tempo, empty.Version));
+        }
+        StudyPlanPreferencesView saved;
+        await using (var db = new CoachingDbContext(pg.Options)) saved = await Preferences(db, user).ReplaceAsync(new(StudyExamFocus.Ayt, StudyTempo.Intense));
+        Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Intense), (saved.ExamFocus!.Value, saved.Tempo!.Value));
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var read = Assert.IsType<OkObjectResult>(await new StudyPlanPreferencesController(Preferences(db, user)).Get());
+            var view = (StudyPlanPreferencesView)read.Value!.GetType().GetProperty("data")!.GetValue(read.Value)!;
+            Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Intense), (view.ExamFocus!.Value, view.Tempo!.Value));
+            Assert.False(await db.Set<StudyRoutineProfile>().AnyAsync());
+        }
+        Assert.Equal(before, await Hours(pg, student));
+        // A second save replaces both values (null clears); the free hours stay as they are.
+        await using (var db = new CoachingDbContext(pg.Options)) saved = await Preferences(db, user).ReplaceAsync(new(null, StudyTempo.Balanced));
+        Assert.Equal(((StudyExamFocus?)null, (StudyTempo?)StudyTempo.Balanced), (saved.ExamFocus, saved.Tempo));
+        Assert.Equal(before, await Hours(pg, student));
+        await using (var db = new CoachingDbContext(pg.Options)) Assert.Equal(1, await db.Set<StudyPlanPreferences>().CountAsync());
+
+        // Unknown names are refused; a focus for a student who does not prepare for YKS is cleared without an error.
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var api = new StudyPlanPreferencesController(Preferences(db, user));
+            Assert.Equal("Tempo Rahat, Dengeli ya da Yoğun olabilir.", Message(Assert.IsType<BadRequestObjectResult>(await api.Replace(new(null, (StudyTempo)9))).Value));
+            Assert.Equal("TYT ve AYT ağırlığını seç.", Message(Assert.IsType<BadRequestObjectResult>(await api.Replace(new((StudyExamFocus)9, null))).Value));
+        }
+        await pg.Db.Database.ExecuteSqlRawAsync("UPDATE coaching.student_learning_contexts SET \"Purpose\" = {0} WHERE \"StudentUserId\" = {1}", (int)LearningPurpose.Lgs, student);
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var lgs = await Preferences(db, user).ReplaceAsync(new(StudyExamFocus.Tyt, StudyTempo.Relaxed));
+            Assert.Equal(((StudyExamFocus?)null, (StudyTempo?)StudyTempo.Relaxed), (lgs.ExamFocus, lgs.Tempo));
+        }
+        // The student route is hers only and rate-limited; the staff and admin routes only read.
+        Assert.Equal("Student", Assert.Single(typeof(StudyPlanPreferencesController).GetCustomAttributes(typeof(AuthorizeAttribute), true).Cast<AuthorizeAttribute>()).Roles);
+        Assert.Equal("study-planning-write", Assert.Single(typeof(StudyPlanPreferencesController).GetMethod(nameof(StudyPlanPreferencesController.Replace))!
+            .GetCustomAttributes(typeof(Microsoft.AspNetCore.RateLimiting.EnableRateLimitingAttribute), true).Cast<Microsoft.AspNetCore.RateLimiting.EnableRateLimitingAttribute>()).PolicyName);
+        Assert.All(typeof(CoachingStaffStudyPlanPreferencesController).GetMethods().SelectMany(x => x.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute), true))
+            .Cast<Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute>(), x => Assert.Equal(new[] { "GET" }, x.HttpMethods));
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task ARoutineAndThePlanPreferencesStayInStep()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var user = pg.Data.User; user.Roles = ["Student"]; var student = user.UserId!.Value;
+        pg.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student), StudentLearningContext.Create(student, 2026, LearningPurpose.Yks, 2027, "SAY", null));
+        await pg.Db.SaveChangesAsync();
+        // Saving the routine saves its focus and tempo as the plan preferences.
+        await Service(pg.Db, user).ReplaceAsync(new(null, null, Morning() with { ExamFocus = StudyExamFocus.Tyt, Tempo = StudyTempo.Balanced }));
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var prefs = await Preferences(db, user).GetAsync();
+            Assert.Equal((StudyExamFocus.Tyt, StudyTempo.Balanced), (prefs.ExamFocus!.Value, prefs.Tempo!.Value));
+        }
+        var hours = await Hours(pg, student);
+        // Saving the preferences changes what the routine shows, but not the routine's version or the free hours.
+        await using (var db = new CoachingDbContext(pg.Options)) await Preferences(db, user).ReplaceAsync(new(StudyExamFocus.Ayt, StudyTempo.Intense));
+        StudyRoutineView routine;
+        await using (var db = new CoachingDbContext(pg.Options)) routine = (await Service(db, user).GetAsync())!;
+        Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Intense, 0, true), (routine.Answers.ExamFocus!.Value, routine.Answers.Tempo!.Value, routine.Version, routine.AvailabilityMatches));
+        Assert.Equal(hours, await Hours(pg, student));
+        // Saving the routine again as it was read keeps them; a new tempo in the routine is the new preference.
+        await using (var db = new CoachingDbContext(pg.Options)) await Service(db, user).ReplaceAsync(new(0, hours.Version, routine.Answers));
+        await using (var db = new CoachingDbContext(pg.Options)) Assert.Equal(StudyTempo.Intense, (await Preferences(db, user).GetAsync()).Tempo);
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var current = (await Service(db, user).GetAsync())!;
+            await Service(db, user).ReplaceAsync(new(current.Version, current.CurrentAvailabilityVersion, current.Answers with { Tempo = StudyTempo.Relaxed }));
+        }
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var prefs = await Preferences(db, user).GetAsync();
+            Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Relaxed), (prefs.ExamFocus!.Value, prefs.Tempo!.Value));
+        }
+
+        // Teachers with study access, institution administrators of her institution and the global admin read them; nobody else.
+        var teacher = new CurriculumManagementTests.Actor { Roles = ["Teacher"] };
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            Assert.Equal(StudyTempo.Relaxed, (await Preferences(db, teacher, readable: student).GetForStudentAsync(student)).Tempo);
+            var ok = Assert.IsType<OkObjectResult>(await new CoachingStaffStudyPlanPreferencesController(Preferences(db, teacher, readable: student)).Get(student));
+            Assert.NotNull(ok.Value);
+            Assert.Equal(403, Assert.IsType<ObjectResult>(await new CoachingStaffStudyPlanPreferencesController(Preferences(db, teacher)).Get(student)).StatusCode);
+            Assert.Equal("Authorization.Forbidden", (await Assert.ThrowsAsync<BusinessRuleException>(() => Preferences(db, teacher, readable: student).ReplaceAsync(new(null, StudyTempo.Intense)))).Code);
+            Assert.Equal(StudyTempo.Relaxed, (await new CoachingAdminStudyReader(db, new CurriculumManagementTests.Scope()).PlanPreferencesAsync(student, default)).Tempo);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => new CoachingAdminStudyReader(db, new CurriculumManagementTests.Scope { Global = false }).PlanPreferencesAsync(student, default));
+        }
+
+        // Exported and erased with the student's coaching data.
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var export = await new CoachingDataExportRepository(db).ExportStudentDataAsync(student, DateTimeOffset.UtcNow, default);
+            Assert.Equal("1.13", export.SchemaVersion);
+            Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Relaxed), (export.StudyPlanPreferences!.ExamFocus!.Value, export.StudyPlanPreferences.Tempo!.Value));
+            Assert.Equal(StudyTempo.Relaxed, export.StudyRoutine!.Answers.Tempo);
+        }
+        var id = Guid.NewGuid(); var eventId = Guid.NewGuid(); var now = DateTime.UtcNow;
+        // The exact count with the preferences is checked in TheRoutineIsExportedAndErasedWithTheStudentsCoachingData (no learning setup there).
+        await using (var db = new CoachingDbContext(pg.Options))
+            Assert.True((await new CoachingErasureAssessmentService(db, TimeProvider.System).AssessAsync(new(eventId, id, student, now, true, PersonalDataScope.Coaching), default)).StudyPlanningRecordCount >= 3);
+        await using (var db = new CoachingDbContext(pg.Options))
+            await new CoachingErasureExecutionService(db, new NoAttachments(), TimeProvider.System).ExecuteAsync(new(eventId, id, student, now, PersonalDataScope.Coaching), default);
+        await using (var db = new CoachingDbContext(pg.Options)) Assert.False(await db.Set<StudyPlanPreferences>().AnyAsync(x => x.StudentId == student));
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task PlanPreferencesMigrationAddsTheTableAndRollsBack()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create(Current);
+        Assert.False(await PreferencesTableExists(pg.Db));
+        await pg.Db.Database.MigrateAsync();
+        Assert.False(pg.Db.Database.HasPendingModelChanges());
+        Assert.True(await PreferencesTableExists(pg.Db));
+        var student = Guid.NewGuid();
+        var row = StudyPlanPreferences.Create(student); row.Replace("Tyt", "Intense"); pg.Db.Add(row); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
+        pg.Db.Add(StudyPlanPreferences.Create(student));
+        await Assert.ThrowsAnyAsync<DbUpdateException>(() => pg.Db.SaveChangesAsync()); pg.Db.ChangeTracker.Clear();
+        await Assert.ThrowsAnyAsync<Exception>(() => pg.Db.Database.ExecuteSqlRawAsync("UPDATE coaching.study_plan_preferences SET \"Tempo\" = 'Fast'"));
+        await Assert.ThrowsAnyAsync<Exception>(() => pg.Db.Database.ExecuteSqlRawAsync("UPDATE coaching.study_plan_preferences SET \"ExamFocus\" = 'Lgs'"));
+        await pg.Db.GetService<IMigrator>().MigrateAsync(Current);
+        Assert.False(await PreferencesTableExists(pg.Db));
+        Assert.True(await TableExists(pg.Db));
+        await pg.Db.Database.MigrateAsync();
+        Assert.Empty(await pg.Db.Database.GetPendingMigrationsAsync());
+    }
+
+    private static Task<bool> PreferencesTableExists(CoachingDbContext db) => db.Database.SqlQueryRaw<bool>(
+        "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='coaching' AND table_name='study_plan_preferences') AS \"Value\"").SingleAsync();
 
     private static string Message(object? body) => (string)body!.GetType().GetProperty("message")!.GetValue(body)!;
 

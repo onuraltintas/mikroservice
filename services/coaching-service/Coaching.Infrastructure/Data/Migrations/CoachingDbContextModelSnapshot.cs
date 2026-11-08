@@ -4306,6 +4306,52 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyPlanPreferences", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExamFocus")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Tempo")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId")
+                        .IsUnique();
+
+                    b.ToTable("study_plan_preferences", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_study_plan_preferences_exam_focus", "\"ExamFocus\" IS NULL OR \"ExamFocus\" IN ('Tyt', 'Balanced', 'Ayt')");
+
+                            t.HasCheckConstraint("ck_study_plan_preferences_tempo", "\"Tempo\" IS NULL OR \"Tempo\" IN ('Relaxed', 'Balanced', 'Intense')");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudyRoutineProfile", b =>
                 {
                     b.Property<Guid>("Id")

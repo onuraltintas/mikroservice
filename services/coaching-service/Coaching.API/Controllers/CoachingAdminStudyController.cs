@@ -17,6 +17,9 @@ public sealed class CoachingAdminStudyController(CoachingAdminStudyReader reader
     public Task<IActionResult> Availability(Guid studentId, CancellationToken ct) => Execute(async () => await reader.AvailabilityAsync(studentId, ct));
     [HttpGet("routine")]
     public Task<IActionResult> Routine(Guid studentId, CancellationToken ct) => Execute(async () => await reader.RoutineAsync(studentId, ct));
+    /// <summary>Paket H4a: the plan preferences (exam focus and tempo), read only.</summary>
+    [HttpGet("plan-preferences")]
+    public Task<IActionResult> PlanPreferences(Guid studentId, CancellationToken ct) => Execute(async () => await reader.PlanPreferencesAsync(studentId, ct));
     [HttpGet("plans")]
     public Task<IActionResult> Plans(Guid studentId, CancellationToken ct, int pageNumber = 1, int pageSize = 25, StudyPlanStatus? status = null, string? search = null)
         => Execute(async () => await reader.PlansAsync(studentId, pageNumber, pageSize, status, search, ct));
