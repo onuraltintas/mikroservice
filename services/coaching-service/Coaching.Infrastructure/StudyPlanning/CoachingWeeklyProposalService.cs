@@ -37,6 +37,8 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         Dictionary<Guid,LearningLessonView> Choices,StudentCoursePreference[] Chosen,DateOnly Today,Dictionary<Guid,(int Work,int Topics)> Work,
         bool Middle,string? Focus,int Limit,IReadOnlyDictionary<DayOfWeek,int>? Budgets)
     {
+        /// <summary>Re-review of PR #132: the plan end per exam list, read once per request (it depends only on student, exams and today).</summary>
+        public Dictionary<string,CoachingWeeklyOutcomePlanService.PlanEnd> Ends{get;}=new(StringComparer.Ordinal);
         /// <summary>
         /// The engine's input when the need is spread over today → <paramref name="periodEnd"/>: each lesson's work and reviews in that
         /// period divided by the times the rarest study weekday (one that may hold study) comes in it.
@@ -119,7 +121,12 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
     {
         var fill=mode==WeeklyProposalMode.Fill;
         var (end,result)=await WeeklyProposalEngine.SettleAsync(s.Codes(fill,s.Chosen.Select(x=>x.LessonId)),
-            codes=>plans.EndAsync(student,codes.ToArray(),s.Today,ct),
+            async codes=>
+            {
+                var key=string.Join('\n',codes.Order(StringComparer.Ordinal));
+                if(!s.Ends.TryGetValue(key,out var planEnd))s.Ends[key]=planEnd=await plans.EndAsync(student,codes.ToArray(),s.Today,ct);
+                return planEnd;
+            },
             planEnd=>WeeklyProposalEngine.Propose(s.Input(WeeklyProposalEngine.PeriodEnd(finishBy,planEnd.End)??planEnd.End,mode)),
             proposal=>s.Codes(fill,proposal.Slots.Select(x=>x.LessonId).Distinct()));
         return (end.End,result);
@@ -170,8 +177,11 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         foreach(var (tempo,finishBy) in new (StudyTempo Tempo,DateOnly FinishBy)[]{(StudyTempo.Relaxed,planEnd),(StudyTempo.Balanced,After(.85m)),(StudyTempo.Intense,After(.70m))}
                     .DistinctBy(x=>x.FinishBy))
         {
-            var result=(await Run(student,s,request.Mode,finishBy,ct)).Result;
-            options.Add(new(tempo,finishBy,result.NeededMinutes,result.FreeMinutes+result.Lessons.Sum(x=>x.ExistingMinutes),result.ShortageMinutes==0));
+            var (end,result)=await Run(student,s,request.Mode,finishBy,ct);
+            // Re-review of PR #132: the option's date is the period end this proposal uses (and echoes); equal dates merge into the most relaxed.
+            var used=WeeklyProposalEngine.PeriodEnd(finishBy,end)!.Value;
+            if(options.Any(x=>x.FinishBy==used))continue;
+            options.Add(new(tempo,used,result.NeededMinutes,result.FreeMinutes+result.Lessons.Sum(x=>x.ExistingMinutes),result.ShortageMinutes==0));
         }
         return new(planEnd,options);
     }

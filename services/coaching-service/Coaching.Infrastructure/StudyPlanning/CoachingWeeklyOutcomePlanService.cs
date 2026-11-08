@@ -161,23 +161,29 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     }
 
     /// <summary>
-    /// Paket H4a: the focus topics must be topics of the weekly draft's lessons in the student's own catalog (as the plan reads it:
-    /// her track, active topics in active units, a sub-topic only under an active parent; review of PR #132). A chosen parent topic
-    /// brings its sub-topics of that catalog (the plan works on sub-topics).
+    /// Paket H4a: the focus topics must be topics of the weekly draft's lessons in the student's own catalog, as the plan reads it (her
+    /// track, active topics in active units, a sub-topic only under an active parent; review of PR #132). A chosen id is either such a
+    /// leaf topic, or an active parent topic (in an active unit of a weekly lesson) with at least one such sub-topic: track scopes sit on
+    /// the sub-topics only (re-review of PR #132). A parent brings its sub-topics of that catalog (the plan works on sub-topics).
     /// </summary>
     private async Task<HashSet<Guid>> FocusTopicsAsync(IReadOnlyList<Guid>? wanted,StudentLearningContext? context,Guid[] lessonIds,bool staffView,CancellationToken ct)
     {
         if(wanted is null||wanted.Count==0)return [];
         var ids=wanted.ToArray();
-        var eligible=from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
+        var leaves=from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
             where Enumerable.Contains(lessonIds,t.LessonId)&&t.IsActive&&u.IsActive&&u.LessonId==t.LessonId
+                &&!db.StudyCatalogTopics.Any(c=>c.ParentId==t.Id)
                 &&(t.ParentId==null||db.StudyCatalogTopics.Any(p=>p.Id==t.ParentId&&p.IsActive))
             select t;
-        var found=await eligible.Where(x=>Enumerable.Contains(ids,x.Id)).Select(x=>x.Id).ToArrayAsync(ct);
-        if(found.Length!=ids.Length)throw new ArgumentException(staffView?"Öne alınacak konular öğrencinin haftalık düzenindeki derslerden olmalı."
-            :"Öne almak istediğin konular haftalık düzenindeki derslerden olmalı.");
-        var children=await eligible.Where(x=>x.ParentId!=null&&Enumerable.Contains(found,x.ParentId.Value)).Select(x=>x.Id).ToArrayAsync(ct);
-        return [..found,..children];
+        var chosenLeaves=await leaves.Where(x=>Enumerable.Contains(ids,x.Id)).Select(x=>x.Id).ToArrayAsync(ct);
+        var children=await leaves.Where(x=>x.ParentId!=null&&Enumerable.Contains(ids,x.ParentId.Value)).Select(x=>new{x.Id,Parent=x.ParentId!.Value}).ToArrayAsync(ct);
+        var parents=await (from t in db.StudyCatalogTopics.AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
+            where Enumerable.Contains(ids,t.Id)&&Enumerable.Contains(lessonIds,t.LessonId)&&t.IsActive&&u.IsActive&&u.LessonId==t.LessonId
+            select t.Id).ToArrayAsync(ct);
+        var validParents=parents.Where(x=>children.Any(c=>c.Parent==x)).ToHashSet();
+        if(ids.Any(x=>!chosenLeaves.Contains(x)&&!validParents.Contains(x)))throw new ArgumentException(staffView
+            ?"Öne alınacak konular öğrencinin haftalık düzenindeki derslerden olmalı.":"Öne almak istediğin konular haftalık düzenindeki derslerden olmalı.");
+        return [..chosenLeaves,..children.Where(x=>validParents.Contains(x.Parent)).Select(x=>x.Id)];
     }
 
     /// <summary>
