@@ -60,6 +60,8 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 
 /* Paket H5: the note after new study times leave weekly cards outside them. */
 .notice.warning { background: var(--ui-warning-soft); color: var(--ui-text); border-color: var(--ui-warning); }
-.notice.warning p { margin: 0 0 .75rem; }
+.outside-status:empty { margin: 0; }
+.notice.warning { margin-bottom: .5rem; }
+.outside-actions { margin-bottom: 1rem; align-items: center; }
 .link-button { display: inline-flex; align-items: center; min-height: 44px; padding: .65rem .9rem; border-radius: .5rem; background: var(--ui-brand); color: var(--ui-brand-contrast); font-size: .9rem; font-weight: 600; text-decoration: none; }
 .link-button:focus-visible { outline: 2px solid var(--coaching-focus); outline-offset: 3px; }

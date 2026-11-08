@@ -116,10 +116,11 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   splitText(){
     const task=this.selected()?.tasks.find(t=>t.id===this.calendarForm?.taskId);if(!task)return '';
     const [[a,b],[c,d]]=splitRanges(task);
-    return `Bu çalışma iki parçaya bölünecek: ${clock(a)}–${clock(b)} ve ${clock(c)}–${clock(d)}. Sonra istediğin parçayı sürükleyebilirsin.`;
+    const next=this.staffStudentId?'Parçalar ayrı ayrı taşınabilir.':'Sonra istediğin parçayı sürükleyebilirsin.';
+    return `Bu çalışma iki parçaya bölünecek: ${clock(a)}–${clock(b)} ve ${clock(c)}–${clock(d)}. ${next}`;
   }
   /** Paket H5: where the work came from, for the Planım rows. */
-  sourceBadge(task:StudyTask){return taskSourceBadge(task,!this.staffStudentId);}
+  sourceBadge(task:StudyTask){return taskSourceBadge(task);}
   readonly sourceTone=taskSourceTone;
   calendarTaskOptions(){return this.selected()?.tasks.filter(t=>this.calendarForm?.taskIds.includes(t.id))??[];}
   calendarDurationLocked(){const task=this.selected()?.tasks.find(t=>t.id===this.calendarForm?.taskId);return !!task?.outcomes?.length;}

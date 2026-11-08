@@ -77,10 +77,12 @@ export class StudyPlanCalendarComponent implements OnChanges {
   }
   private smoothScroll(){return typeof window!=='undefined'&&typeof window.matchMedia==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
   /** Paket H5: where each card's work came from (usually one badge). */
+  private badgeCache=new WeakMap<PlanCalendarBlock,{label:string;tone:ReturnType<typeof taskSourceTone>}[]>();
   badges(block:PlanCalendarBlock){
+    let badges=this.badgeCache.get(block);if(badges)return badges;
     const seen=new Map<string,ReturnType<typeof taskSourceTone>>();
-    for(const task of block.tasks){const label=taskSourceBadge(task,this.student);if(label&&!seen.has(label))seen.set(label,taskSourceTone(task));}
-    return [...seen].map(([label,tone])=>({label,tone}));
+    for(const task of block.tasks){const label=taskSourceBadge(task);if(label&&!seen.has(label))seen.set(label,taskSourceTone(task));}
+    badges=[...seen].map(([label,tone])=>({label,tone}));this.badgeCache.set(block,badges);return badges;
   }
   splittable(block:PlanCalendarBlock){return this.writable()&&block.tasks.some(canSplitTask);}
   adjacent(step:number){const dates=[...this.byDate.keys()],key=dateKey(this.anchor());return step>0?dates.find(d=>d>key):dates.filter(d=>d<key).at(-1);}

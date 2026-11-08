@@ -1,13 +1,13 @@
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal, output } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Input, OnInit, ViewChild, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability, StudyDay, StudyWindow } from '../../../core/services/coaching-study-planning.service';
 import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
-import { slotsOutsideAvailability } from './weekly-calendar';
+import { cardsOutsideAvailability } from './weekly-availability';
 
 interface AvailabilityRow { day: StudyDay; start: string; end: string; endOfDay: boolean }
 
@@ -26,6 +26,10 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   private readonly weekly = inject(CoachingWeeklyDraftService);
   /** Paket H5: how many weekly cards the last saved study times leave outside (0: nothing to say). The cards are never changed here. */
   readonly outsideCards = signal(0);
+  /** Paket H5: false where the editor is embedded in the plan wizard, which shows its own guidance. */
+  @Input() showOutsideNotice = true;
+  @ViewChild('successNotice') private successNotice?: ElementRef<HTMLElement>;
+  @ViewChild('heading') private heading?: ElementRef<HTMLElement>;
   private lastSaved: StudyAvailability | null = null;
   readonly loading = signal(false);
   readonly saving = signal(false);
@@ -143,12 +147,14 @@ export class StudentStudyAvailabilityComponent implements OnInit {
         error: error => this.showError(error, 'Çalışma saatleri kaydedilemedi. Değişikliklerin ekranda korundu.') });
   }
 
-  dismissOutside() { this.outsideCards.set(0); }
+  /** Paket H5: focus moves to the saved message (or the heading), so it does not fall to the page when the buttons go. */
+  dismissOutside() { this.outsideCards.set(0); (this.successNotice ?? this.heading)?.nativeElement.focus(); }
 
   /** Paket H5: counts the weekly cards outside the new study times. A failure only means there is nothing to say. */
   private checkWeeklyCards(windows: StudyWindow[]) {
+    if (!this.showOutsideNotice) return;
     this.weekly.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: page => this.outsideCards.set(slotsOutsideAvailability(page.draft?.slots ?? [], windows).size),
+      next: page => this.outsideCards.set(cardsOutsideAvailability(page.draft?.slots ?? [], windows).length),
       error: () => this.outsideCards.set(0)
     });
   }

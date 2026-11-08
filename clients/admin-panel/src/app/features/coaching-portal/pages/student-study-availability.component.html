@@ -1,16 +1,17 @@
 <section class="study-plans" aria-labelledby="availability-title">
-  <header class="page-heading"><div><p class="eyebrow">Haftalık çalışma ritmin</p><h1 id="availability-title">Çalışma saatlerim</h1>
+  <header class="page-heading"><div><p class="eyebrow">Haftalık çalışma ritmin</p><h1 id="availability-title" #heading tabindex="-1">Çalışma saatlerim</h1>
     <p>Ders çalışabileceğin gün ve saatleri belirle. Bu ayarlar mevcut planını kendiliğinden değiştirmez.</p></div>
     <span class="badge" aria-live="polite">Haftalık {{ weeklyMinutes() }} dakika</span></header>
   @if (error()) { <p role="alert" class="notice error" id="availability-error">{{ error() }}</p> }
-  @if (success()) { <p role="status" class="notice success">{{ success() }}</p> }
-  <!-- Paket H5: the weekly cards are not changed; the student chooses a new proposal or keeps them. -->
-  @if (outsideCards()) {
-    <div class="notice warning" role="status" data-testid="weekly-outside-notice">
-      <p>Haftalık düzeninde {{ outsideCards() }} kart yeni saatlerinin dışında kaldı.</p>
-      <div class="actions"><a class="link-button" routerLink="/coaching-portal/plan/wizard">Yeniden öner</a>
+  @if (success()) { <p role="status" class="notice success" #successNotice tabindex="-1" data-testid="availability-success">{{ success() }}</p> }
+  <!-- Paket H5: the saved weekly cards are not changed; the student chooses a new proposal or keeps them. One live region carries the
+       text; the actions are outside it. -->
+  @if (showOutsideNotice) {
+    <p role="status" class="outside-status" [class.notice]="!!outsideCards()" [class.warning]="!!outsideCards()" data-testid="weekly-outside-status">@if (outsideCards()) {Kayıtlı haftalık düzeninde {{ outsideCards() }} kart yeni saatlerinin dışında kaldı.}</p>
+    @if (outsideCards()) {
+      <div class="actions outside-actions" data-testid="weekly-outside-actions"><a class="link-button" routerLink="/coaching-portal/plan/wizard" [queryParams]="{ yeniden: 'oner' }">Yeniden öner</a>
         <button type="button" class="secondary" (click)="dismissOutside()">Olduğu gibi bırak</button></div>
-    </div>
+    }
   }
   @if (copyNote(); as note) { <p role="status" class="notice" data-testid="copy-note">{{ note }}</p> }
   @if (loading()) { <p role="status">Çalışma saatleri yükleniyor…</p> }

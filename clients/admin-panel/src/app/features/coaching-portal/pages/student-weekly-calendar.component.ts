@@ -7,7 +7,8 @@ import {CdkTrapFocus} from '@angular/cdk/a11y';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CoachingWeeklyDraftService,WeeklyLesson} from '../../../core/services/coaching-weekly-draft.service';
 import {CoachingStudyPlanningService} from '../../../core/services/coaching-study-planning.service';
-import {AvailabilityWindow,CalendarView,DEFAULT_MAX_DAY_MINUTES,WeeklySlot,Weekday,calendarDays,clock,slotError,slotsOutsideAvailability,weekday,weekDays} from './weekly-calendar';
+import {CalendarView,DEFAULT_MAX_DAY_MINUTES,WeeklySlot,Weekday,calendarDays,clock,slotError,weekday,weekDays} from './weekly-calendar';
+import {AvailabilityWindow,cardsOutsideAvailability} from './weekly-availability';
 
 interface Gesture {id:number;slot:WeeklySlot;mode:'move'|'top'|'bottom';startX:number;startY:number;offset:number;moved:boolean}
 @Component({selector:'app-student-weekly-calendar',standalone:true,imports:[CommonModule,FormsModule,RouterLink,CdkTrapFocus],
@@ -23,8 +24,8 @@ export class StudentWeeklyCalendarComponent implements OnInit {
   private readonly planning=inject(CoachingStudyPlanningService);
   /** Paket H5: the saved study times; [] when none are saved, undefined while unknown (then nothing is marked). */
   readonly availability=signal<AvailabilityWindow[]|undefined>(undefined);
-  /** Paket H5 (K4: warn, allow): the cards not fully inside a saved study time. Saving stays allowed. */
-  readonly outside=computed(()=>{const windows=this.availability();return windows?.length?slotsOutsideAvailability(this.slots(),windows):new Set<string>();});
+  /** Paket H5 (K4: warn, allow): the cards not fully inside a saved study time. The marks and the count read the same slots. Saving stays allowed. */
+  readonly outside=computed(()=>{const windows=this.availability();return new Set(windows?.length?cardsOutsideAvailability(this.slots(),windows).map(s=>s.id):[]);});
   readonly outsideCount=computed(()=>this.outside().size);
   readonly outsideLabel='Müsait saatlerinin dışında';
   isOutside(slot:WeeklySlot){return this.outside().has(slot.id);}

@@ -51,13 +51,14 @@ export function calendarFocusDate(blocks:PlanCalendarBlock[],today:string):strin
 }
 
 /**
- * Paket H5: work that "İki parçaya böl" can split: timed, at least an hour, nothing recorded on it, not a continuation or skipped,
+ * Paket H5: work that "İki parçaya böl" can split: timed, whole half hours of at least an hour (so both pieces are at least 30
+ * minutes and multiples of 30), nothing recorded on it, not a continuation or skipped,
  * and either chosen by the plan engine or added by hand (a version 1 plan task would show its halves as one card again).
- * The server also refuses work bound to a weekly decision.
+ * The server applies the same rules and also refuses work bound to a weekly decision.
  */
 export function canSplitTask(task:StudyTask):boolean{
   return !task.isCompleted&&task.actualMinutes==null&&!task.realizationHistory?.length&&!task.predecessorTaskId&&!task.skippedAt
-    &&task.plannedStartMinute!=null&&task.plannedMinutes>=60&&(!!task.planKind||!task.topicId);
+    &&task.plannedStartMinute!=null&&task.plannedMinutes>=60&&task.plannedMinutes%30===0&&(!!task.planKind||!task.topicId);
 }
 /** Paket H5: the two halves of a split, as the server makes them: half the minutes rounded up to a half hour, then the rest. */
 export function splitRanges(task:StudyTask):[[number,number],[number,number]]{
@@ -65,11 +66,14 @@ export function splitRanges(task:StudyTask):[[number,number],[number,number]]{
   return [[start,start+first],[start+first,start+task.plannedMinutes]];
 }
 const sourceLabels:Record<string,string>={Learn:'Yeni konu',Review:'Tekrar',Refresh:'Kısa tekrar',Spaced:'Aralıklı tekrar'};
-/** Paket H5: where a task came from, from the plan engine's decision; a calendar task added by hand is the student's own. */
-export function taskSourceBadge(task:StudyTask,student=true):string|null{
+/**
+ * Paket H5: where a task came from, from the plan engine's decision. A calendar task added by hand is "Elle eklenen": who added it
+ * (the student or a teacher) is not stored, so the label does not claim it.
+ */
+export function taskSourceBadge(task:StudyTask):string|null{
   if(task.planKind)return sourceLabels[task.planKind]??null;
-  const own=!!task.weeklyLessonId&&!task.topicId&&!task.outcomes?.length&&!task.sourceName&&!task.predecessorTaskId;
-  return own?(student?'Senin eklediğin':'Elle eklenen'):null;
+  const manual=!!task.weeklyLessonId&&!task.topicId&&!task.outcomes?.length&&!task.sourceName&&!task.predecessorTaskId;
+  return manual?'Elle eklenen':null;
 }
 /** Paket H5: the badge colour, in the coaching status chip tones. */
 export function taskSourceTone(task:StudyTask):'brand'|'accent'|'info'|'neutral'{

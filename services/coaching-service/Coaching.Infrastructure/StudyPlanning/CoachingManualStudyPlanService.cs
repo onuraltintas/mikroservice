@@ -54,7 +54,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     /// Paket H5: one timed task becomes two consecutive tasks with the same title, lesson and plan decision. The first gets half
     /// the minutes rounded up to a half hour; the second starts where the first ends. Outcome allocations are divided by minutes in
     /// catalog order, so the plan's outcome minutes (and the completed-outcome credit, which counts each task once) stay the same.
-    /// Only untouched work can be split: no realization, no continuation, no weekly decision.
+    /// Only untouched work can be split: no realization, no continuation, no weekly decision; both pieces are whole half hours.
     /// </summary>
     private Task<ManualStudyPlanView> SplitCalendarCoreAsync(Guid id,Guid taskId,int expectedVersion,CancellationToken ct,Guid? targetStudent=null)
         => LockedAsync(async student=>
@@ -65,10 +65,13 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 ??throw new BusinessRuleException("StudyPlanning.NotFound","Çalışma bulunamadı.");
             if(task.IsCompleted||task.ActualMinutes.HasValue||task.RealizationHistoryJson!="[]"||task.PredecessorTaskId.HasValue)
                 throw Conflict("Gerçekleşme kaydı bulunan çalışma bölünemez.");
-            if(task.SkippedAt.HasValue)throw Conflict("Atlanan çalışma bölünemez. Önce çalışmayı yeni bir saate taşı.");
+            if(task.SkippedAt.HasValue)throw Conflict(targetStudent.HasValue?"Atlanan çalışma bölünemez. Önce çalışma yeni bir saate taşınmalı.":"Atlanan çalışma bölünemez. Önce çalışmayı yeni bir saate taşı.");
             if(await db.Set<WeeklyDecision>().AnyAsync(x=>x.StudyTaskId==taskId,ct))throw Conflict("Bu çalışma bir karara bağlı; bölünemez.");
             if(task.PlannedStartMinute is not {} start)throw Conflict("Saati belirtilmemiş çalışma bölünemez.");
-            if(task.PlannedMinutes<60)throw Conflict("En az 60 dakikalık çalışma iki parçaya bölünebilir.");
+            // Review of PR 134: both pieces are at least 30 minutes and multiples of 30 (60→30+30, 90→60+30, 120→60+60).
+            if(task.PlannedMinutes<60||task.PlannedMinutes%30!=0)throw Conflict("Her parça en az 30 dakika olmalı; bu çalışma bölünemez.");
+            // A version 1 plan task (a topic but no plan decision) is shown joined with its neighbours; its halves could not be moved apart.
+            if(task.TopicId.HasValue&&task.PlanKind is null)throw Conflict("Bu çalışma bölünemez; parçaları takvimde ayrı gösterilemez.");
             if(await db.StudyPlanTasks.CountAsync(x=>x.RevisionId==id,ct)>=10000)throw Conflict("Planın çalışma sınırına ulaşıldı.");
             var total=task.PlannedMinutes;var first=(total+1)/2;first=(first+29)/30*30;var rest=total-first;
             int? questions=task.PlannedQuestions is {} q?(int)Math.Round(q*(double)first/total,MidpointRounding.AwayFromZero):null;
