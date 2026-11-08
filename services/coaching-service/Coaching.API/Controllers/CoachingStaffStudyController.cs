@@ -33,11 +33,13 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         Ok(new{success=true,data=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct)}));
 
     /// <summary>Paket H2: the student's weekly proposal, as she sees it (read access, like the weekly draft).</summary>
-    [HttpPost("weekly-draft/proposal"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    /// <remarks>Paket H2 review: a student without saved study times can get a proposal from the teacher's answers (windows), never saved.</remarks>
+    [HttpPost("weekly-draft/proposal"),RequestSizeLimit(16384),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> WeeklyProposal(Guid studentId,WeeklyProposalRequest request,[FromServices] IWeeklyProposalService proposals,CancellationToken ct)=>Respond(async()=>
     {
         try{return Ok(new{success=true,data=await proposals.ProposeForStudentAsync(studentId,request,ct)});}
-        catch(KeyNotFoundException e){return NotFound(new{success=false,message=e.Message});}
+        catch(KeyNotFoundException){return NotFound(new{success=false,message="Öğrenci henüz çalışabileceği saatleri kaydetmemiş."});}
+        catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
     });
 
     [HttpGet("learning-setup")]

@@ -9,14 +9,19 @@ public enum WeeklyProposalMode { Fill, Replace }
 public sealed record WeeklyProposalWindow(DayOfWeek Day, int StartMinute, int EndMinute);
 /// <summary>NeedMinutes: the lesson's weekly need (its curriculum work and spaced reviews spread over the weeks until the plan ends).</summary>
 public sealed record WeeklyProposalLesson(Guid LessonId, string Name, string? ExamCode, int NeedMinutes, int Priority = 3, bool Hard = false);
-/// <summary>SessionsBeforeBreak: 1 for middle school (a break after every session), 2 for everyone else (K1).</summary>
+/// <summary>
+/// SessionsBeforeBreak: 1 for middle school (a break after every session), 2 for everyone else (K1). DayOccurrences: how many times each
+/// weekday comes before the plan ends; a weekday that does not come gets no session (null: every weekday comes).
+/// </summary>
 public sealed record WeeklyProposalInput(IReadOnlyList<WeeklyProposalWindow> Windows, IReadOnlyList<WeeklyDraftSlot> Existing,
-    IReadOnlyList<WeeklyProposalLesson> Lessons, int SessionsBeforeBreak, int MaxDayMinutes, string? ExamFocus, WeeklyProposalMode Mode);
+    IReadOnlyList<WeeklyProposalLesson> Lessons, int SessionsBeforeBreak, int MaxDayMinutes, string? ExamFocus, WeeklyProposalMode Mode,
+    IReadOnlyDictionary<DayOfWeek, int>? DayOccurrences = null);
 public sealed record WeeklyProposedSlot(Guid LessonId, DayOfWeek Day, int StartMinute, int DurationMinutes);
 /// <summary>NeededMinutes: the unweighted weekly need rounded up to 30 minutes. NoTime: neither a saved nor a proposed card.</summary>
 public sealed record WeeklyProposalLessonResult(Guid LessonId, string Name, int ExistingMinutes, int ProposedMinutes, int NeededMinutes, bool NoTime);
+/// <summary>CoveredMinutes: Σ min(needed, saved + proposed), what the week covers of the need; ShortageMinutes = NeededMinutes − CoveredMinutes.</summary>
 public sealed record WeeklyProposalResult(IReadOnlyList<WeeklyProposedSlot> Slots, IReadOnlyList<WeeklyProposalLessonResult> Lessons,
-    int FreeMinutes, int NeededMinutes, int ShortageMinutes);
+    int FreeMinutes, int NeededMinutes, int ShortageMinutes, int CoveredMinutes);
 
 /// <summary>
 /// Paket H2: the need-based weekly proposal. Hours go to the chosen lessons by their weekly need (weighted by priority and, for YKS,
@@ -34,6 +39,25 @@ public static class WeeklyProposalEngine
     private static readonly Regex ExamSuffix = new(@"^(.*\S)\s*\([^()]*\)\s*$", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
     public static int SessionsBeforeBreak(bool middleSchool) => middleSchool ? 1 : 2;
+
+    /// <summary>The spaced reviews (one per interval of <see cref="WeeklyPlanEngine.SpacedIntervalDays"/>) that fall inside a plan of this many days.</summary>
+    public static int ReviewsWithin(int days) => WeeklyPlanEngine.SpacedIntervalDays.Count(x => x < days);
+
+    /// <summary>
+    /// A lesson's weekly need: its remaining work plus one <see cref="WeeklyPlanEngine.SpacedMinutes"/> review per finished topic for each
+    /// interval inside the plan, divided by the times the least frequent study weekday still comes before the plan ends
+    /// (<paramref name="timesPerWeekday"/>, at least 1). A weekly hour on such a day gives the plan at least that many hours, so a week
+    /// without shortage fits the annual plan. Near the exam (under a week) every weekday comes once and the need is the whole work.
+    /// </summary>
+    public static int WeeklyNeed(int workMinutes, int finishedTopics, int days, int timesPerWeekday) =>
+        (int)Math.Ceiling((Math.Max(0, workMinutes) + Math.Max(0, finishedTopics) * ReviewsWithin(days) * WeeklyPlanEngine.SpacedMinutes) / (double)Math.Max(1, timesPerWeekday));
+
+    /// <summary>How many times each weekday comes from <paramref name="today"/> to <paramref name="end"/>, both included.</summary>
+    public static IReadOnlyDictionary<DayOfWeek, int> Occurrences(DateOnly today, DateOnly end)
+    {
+        var days = Math.Max(0, end.DayNumber - today.DayNumber + 1);
+        return Week.ToDictionary(day => day, day => Enumerable.Range(0, days).Count(i => today.AddDays(i).DayOfWeek == day));
+    }
 
     /// <summary>Priority 1 is the highest; 3 is the default.</summary>
     public static decimal PriorityFactor(int priority) => priority switch { 1 => 1.3m, 2 => 1.15m, 4 => .9m, 5 => .8m, _ => 1m };
@@ -60,26 +84,26 @@ public static class WeeklyProposalEngine
         var fill = input.Mode == WeeklyProposalMode.Fill;
         var existing = fill ? input.Existing.Where(x => x is not null).ToArray() : [];
         var lessons = input.Lessons.Where(x => x is not null).DistinctBy(x => x.LessonId).ToArray();
-        var sessions = FreeSessions(input.Windows, existing, input.SessionsBeforeBreak, input.MaxDayMinutes);
+        var sessions = FreeSessions(input.Windows.Where(x => x is not null && input.DayOccurrences?.GetValueOrDefault(x.Day) != 0).ToArray(),
+            existing, input.SessionsBeforeBreak, input.MaxDayMinutes);
         var plans = lessons.Select(lesson => Plan.For(lesson, existing.Where(x => x.LessonId == lesson.LessonId).Sum(x => x.DurationMinutes), input.ExamFocus)).ToArray();
         var counts = Allocate(plans, sessions.Count);
-        var total = counts.Values.Sum();
-        var chosen = total >= sessions.Count ? sessions : Spread(sessions, total);
-        var placed = Place(chosen, sessions, plans, counts, existing);
+        var placed = Place(sessions, plans, counts, existing);
         var results = plans.Select(plan =>
         {
             var proposed = placed.Where(x => x.LessonId == plan.Lesson.LessonId).Sum(x => x.DurationMinutes);
             return new WeeklyProposalLessonResult(plan.Lesson.LessonId, plan.Lesson.Name, plan.Existing, proposed, plan.Needed, plan.Existing + proposed == 0);
         }).ToArray();
-        var shortage = results.Sum(x => Math.Max(0, x.NeededMinutes - x.ExistingMinutes - x.ProposedMinutes));
-        return new(placed, results, sessions.Count * SessionMinutes, results.Sum(x => x.NeededMinutes), shortage);
+        var needed = results.Sum(x => x.NeededMinutes);
+        var covered = results.Sum(x => Math.Min(x.NeededMinutes, x.ExistingMinutes + x.ProposedMinutes));
+        return new(placed, results, sessions.Count * SessionMinutes, needed, needed - covered, covered);
     }
 
     /// <summary>
     /// Per lesson: Weighted = need × priority factor × exam focus. The lesson wants ceil(max(need, weighted) ÷ 60) sessions (at least one);
     /// it needs ceil(need ÷ 60) (at least one). In Fill mode its saved minutes count first.
     /// </summary>
-    private sealed record Plan(WeeklyProposalLesson Lesson, int Existing, decimal Weighted, int Needed, int NeedNew, int WantNew)
+    private sealed record Plan(WeeklyProposalLesson Lesson, int Existing, int Need, decimal Weighted, int Needed, int NeedNew, int WantNew)
     {
         public static Plan For(WeeklyProposalLesson lesson, int existing, string? focus)
         {
@@ -89,16 +113,17 @@ public static class WeeklyProposalEngine
             var needTotal = Math.Max(1, (int)Math.Ceiling(need / (double)SessionMinutes));
             var wantTotal = Math.Max(needTotal, (int)Math.Ceiling(weighted / SessionMinutes));
             int New(int sessions) => Math.Max(0, (int)Math.Ceiling((sessions * SessionMinutes - existing) / (double)SessionMinutes));
-            return new(lesson with { Priority = priority }, existing, weighted, (int)Math.Ceiling(need / 30d) * 30, New(needTotal), New(wantTotal));
+            return new(lesson with { Priority = priority }, existing, need, weighted, (int)Math.Ceiling(need / 30d) * 30, New(needTotal), New(wantTotal));
         }
         /// <summary>How long the lesson would take with this many sessions: the larger, the later it finishes.</summary>
         public decimal Load(int sessions) => Weighted / (Existing / (decimal)SessionMinutes + sessions);
     }
 
     /// <summary>
-    /// When every lesson's wanted sessions fit, each gets them. Otherwise every lesson still needing time gets one (or, with fewer sessions
-    /// than such lessons, the ones with the largest weighted need do), then each remaining session goes to the lesson that would finish
-    /// latest: first up to its need, then up to its wanted sessions.
+    /// When every lesson's wanted sessions fit, each gets them. Otherwise every lesson with work still needing time gets one (or, with
+    /// fewer sessions than such lessons, the ones with the largest weighted need do), then each remaining session goes to the lesson that
+    /// would finish latest, up to its need. Only then a lesson without work left gets its one hour, and the rest go up to the wanted
+    /// sessions.
     /// </summary>
     private static Dictionary<Guid, int> Allocate(IReadOnlyList<Plan> plans, int capacity)
     {
@@ -108,20 +133,20 @@ public static class WeeklyProposalEngine
             foreach (var plan in plans) counts[plan.Lesson.LessonId] = plan.WantNew;
             return counts;
         }
-        var needing = plans.Where(x => x.NeedNew > 0).OrderByDescending(x => x.Weighted).ThenBy(x => x.Lesson.LessonId).ToArray();
-        if (needing.Length >= capacity)
+        var needing = plans.Where(x => x.NeedNew > 0 && x.Need > 0).OrderByDescending(x => x.Weighted).ThenBy(x => x.Lesson.LessonId).ToArray();
+        foreach (var plan in needing.Take(capacity)) counts[plan.Lesson.LessonId] = 1;
+        var left = Math.Max(0, capacity - needing.Length);
+        void Fill(Func<Plan, bool> who, Func<Plan, int> cap)
         {
-            foreach (var plan in needing.Take(capacity)) counts[plan.Lesson.LessonId] = 1;
-            return counts;
-        }
-        foreach (var plan in needing) counts[plan.Lesson.LessonId] = 1;
-        var left = capacity - needing.Length;
-        foreach (var cap in new Func<Plan, int>[] { x => x.NeedNew, x => x.WantNew })
-            while (left > 0 && plans.Where(x => counts[x.Lesson.LessonId] < cap(x)).OrderByDescending(x => x.Load(counts[x.Lesson.LessonId]))
-                       .ThenBy(x => x.Lesson.LessonId).FirstOrDefault() is { } latest)
+            while (left > 0 && plans.Where(x => who(x) && counts[x.Lesson.LessonId] < cap(x))
+                       .OrderByDescending(x => x.Load(counts[x.Lesson.LessonId])).ThenBy(x => x.Lesson.Priority).ThenBy(x => x.Lesson.LessonId).FirstOrDefault() is { } latest)
             {
                 counts[latest.Lesson.LessonId]++; left--;
             }
+        }
+        Fill(x => x.Need > 0, x => x.NeedNew);
+        Fill(x => x.Need == 0, x => x.NeedNew);
+        Fill(_ => true, x => x.WantNew);
         return counts;
     }
 
@@ -166,54 +191,47 @@ public static class WeeklyProposalEngine
         return end - start;
     }
 
-    /// <summary>The first free session of every day, then the second of every day, and so on, until <paramref name="count"/> are chosen.</summary>
-    private static List<(DayOfWeek Day, int Start)> Spread(IReadOnlyList<(DayOfWeek Day, int Start)> sessions, int count)
-    {
-        var byDay = Week.Select(day => sessions.Where(x => x.Day == day).OrderBy(x => x.Start).ToArray()).ToArray();
-        var chosen = new List<(DayOfWeek, int)>();
-        for (var round = 0; chosen.Count < count && byDay.Any(x => x.Length > round); round++)
-            foreach (var day in byDay)
-                if (day.Length > round && chosen.Count < count) chosen.Add(day[round]);
-        return chosen;
-    }
-
     /// <summary>
-    /// Goes through the chosen sessions in day and time order. A lesson of the same name family as the card right before or after is
-    /// never placed; a lesson already on that day comes only when no other lesson is left; the day's first session goes to a priority-1
-    /// or hard lesson; otherwise the lesson with the most sessions left, then the lesson id. Sessions a lesson could not take are tried
-    /// again in the free sessions left unchosen.
+    /// Places each lesson's sessions, the priority-1 and hard lessons first, then the lesson with the most sessions left (then by id).
+    /// A lesson takes the free session on the day that carries the least study (saved cards included) where it is not yet and where no
+    /// card of its name family comes right before or after; a priority-1 or hard lesson prefers the day's first study time. Only when no
+    /// such session is left may a lesson come a second time on a day (another lesson of its family still never comes right next to it;
+    /// the same lesson may, as a longer study block, only when nothing else is left).
     /// </summary>
-    private static List<WeeklyProposedSlot> Place(IReadOnlyList<(DayOfWeek Day, int Start)> chosen, IReadOnlyList<(DayOfWeek Day, int Start)> all,
-        IReadOnlyList<Plan> plans, Dictionary<Guid, int> counts, IReadOnlyList<WeeklyDraftSlot> existing)
+    private static List<WeeklyProposedSlot> Place(IReadOnlyList<(DayOfWeek Day, int Start)> sessions, IReadOnlyList<Plan> plans,
+        Dictionary<Guid, int> counts, IReadOnlyList<WeeklyDraftSlot> existing)
     {
         var left = new Dictionary<Guid, int>(counts);
-        var byId = plans.ToDictionary(x => x.Lesson.LessonId);
         var families = plans.ToDictionary(x => x.Lesson.LessonId, x => Family(x.Lesson.Name));
-        var existingCards = existing.Select(x => (x.LessonId, x.Day, From: x.StartMinute, To: x.StartMinute + x.DurationMinutes, Family: Family(x.LessonName))).ToArray();
+        var cards = existing.Select(x => (x.LessonId, x.Day, From: x.StartMinute, To: x.StartMinute + x.DurationMinutes, Family: Family(x.LessonName))).ToList();
+        var free = sessions.ToList();
         var placed = new List<WeeklyProposedSlot>();
-        var used = new HashSet<(DayOfWeek, int)>();
-        void Pass(IEnumerable<(DayOfWeek Day, int Start)> sessions)
-        {
-            foreach (var (day, start) in sessions.OrderBy(x => DayIndex(x.Day)).ThenBy(x => x.Start))
+        foreach (var strict in new[] { true, false })
+            while (true)
             {
-                if (used.Contains((day, start)) || left.Values.All(x => x == 0)) continue;
-                var end = start + SessionMinutes;
-                var cards = existingCards.Select(x => (x.LessonId, x.Day, x.From, x.To, x.Family))
-                    .Concat(placed.Select(x => (x.LessonId, x.Day, From: x.StartMinute, To: x.StartMinute + x.DurationMinutes, Family: families[x.LessonId])))
-                    .Where(x => x.Day == day).ToArray();
-                var neighbours = cards.Where(x => x.To == start || x.From == end).Select(x => x.Family).ToHashSet();
-                var today = cards.Select(x => x.LessonId).ToHashSet();
-                var first = !placed.Any(x => x.Day == day && x.StartMinute < start);
-                var pick = left.Where(x => x.Value > 0 && !neighbours.Contains(families[x.Key])).Select(x => byId[x.Key])
-                    .OrderBy(x => today.Contains(x.Lesson.LessonId) ? 1 : 0)
-                    .ThenBy(x => first && (x.Lesson.Priority == 1 || x.Lesson.Hard) ? 0 : 1)
-                    .ThenByDescending(x => left[x.Lesson.LessonId]).ThenBy(x => x.Lesson.LessonId).FirstOrDefault();
-                if (pick is null) continue;
-                placed.Add(new(pick.Lesson.LessonId, day, start, SessionMinutes)); used.Add((day, start)); left[pick.Lesson.LessonId]--;
+                var done = false;
+                foreach (var plan in plans.Where(x => left[x.Lesson.LessonId] > 0).OrderBy(x => x.Lesson.Priority == 1 || x.Lesson.Hard ? 0 : 1)
+                             .ThenByDescending(x => left[x.Lesson.LessonId]).ThenBy(x => x.Lesson.LessonId))
+                {
+                    var id = plan.Lesson.LessonId; var family = families[id]; var opener = plan.Lesson.Priority == 1 || plan.Lesson.Hard;
+                    bool Next(DayOfWeek day, int start, Func<(Guid LessonId, DayOfWeek Day, int From, int To, string Family), bool> card) =>
+                        cards.Any(c => c.Day == day && (c.To == start || c.From == start + SessionMinutes) && card(c));
+                    var pick = free.Where(s => !Next(s.Day, s.Start, c => c.Family == family && c.LessonId != id)
+                            && (!strict || !cards.Any(c => c.Day == s.Day && c.LessonId == id)))
+                        .OrderBy(s => cards.Count(c => c.Day == s.Day && c.LessonId == id))
+                        .ThenBy(s => Next(s.Day, s.Start, c => c.LessonId == id) ? 1 : 0)
+                        .ThenBy(s => cards.Where(c => c.Day == s.Day).Sum(c => c.To - c.From))
+                        .ThenBy(s => opener && !cards.Any(c => c.Day == s.Day && c.From < s.Start) ? 0 : 1)
+                        .ThenBy(s => DayIndex(s.Day)).ThenBy(s => s.Start)
+                        .Select(s => ((DayOfWeek Day, int Start)?)s).FirstOrDefault();
+                    if (pick is not { } session) continue;
+                    free.Remove(session); left[id]--;
+                    placed.Add(new(id, session.Day, session.Start, SessionMinutes));
+                    cards.Add((id, session.Day, session.Start, session.Start + SessionMinutes, family));
+                    done = true; break;
+                }
+                if (!done) break;
             }
-        }
-        Pass(chosen);
-        if (left.Values.Any(x => x > 0)) Pass(all);
         return placed.OrderBy(x => DayIndex(x.Day)).ThenBy(x => x.StartMinute).ToList();
     }
 }

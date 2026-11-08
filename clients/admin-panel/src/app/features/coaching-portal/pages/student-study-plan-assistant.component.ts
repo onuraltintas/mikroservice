@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-import { CoachingWeeklyDraftService, WeeklyExamFocus, WeeklyProposal, WeeklyProposalMode } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingWeeklyDraftService, WeeklyExamFocus, WeeklyProposal, WeeklyProposalMode, WeeklyProposalWindow } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingLearningSetupService, LearningCatalog, LearningContext, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
@@ -81,6 +81,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly clock = clock;
 
   ngOnInit() {
+    // Review of PR #130: the teacher reads about the student in third person.
+    if (this.staffStudentId) this.messages.set([{ role: 'assistant', content: 'Merhaba! Öğrencinin çalışma saatlerinden haftalık ders düzeni önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
     this.loadAvailability();
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
@@ -131,7 +133,11 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   availabilitySaved() { this.editingAvailability.set(false); this.clearProposal(); this.loadAvailability(); }
   /** Paket H2: the proposal is made from saved study times; a teacher cannot give them for the student. */
   canPropose() { return !this.busy() && !this.proposing() && !this.savingAvailability() && !this.availabilityLoading() && !this.availabilityLoadError() && !!this.lessons().length
-    && (this.savedWindows().length > 0 || !this.staffStudentId && this.selectedDays().length > 0); }
+    && (this.savedWindows().length > 0 || this.selectedDays().length > 0); }
+  /** Review of PR #130: the YKS question is asked only where a proposal can be made. */
+  showExamFocus() { return this.isYks() && !this.editingAvailability() && !!this.lessons().length && !this.availabilityLoadError(); }
+  /** Review of PR #130: a proposal made for another focus is dropped, so the shown one always matches the choice. */
+  setExamFocus(value: WeeklyExamFocus) { if (this.examFocus() === value) return; this.examFocus.set(value); this.clearProposal(); }
   isYks() { return this.learningContext()?.purpose === 'Yks'; }
 
   availableTopicLessons() {
@@ -215,13 +221,14 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     if (!this.canPropose() || this.editingAvailability()) return;
     if (this.topicDirty()) { this.topicError.set('Öneri oluşturmadan önce konu durumlarını kaydet.'); return; }
     if (this.savedWindows().length) { this.requestProposal('Fill'); return; }
-    if (this.staffStudentId) return;
     const [hours, minutes] = this.startTime().split(':').map(Number);
     const startMinute = hours * 60 + minutes;
     if (!Number.isInteger(startMinute) || startMinute % 30 !== 0 || startMinute + this.minutesPerDay() > 1440) {
       this.error.set('Başlangıç saati :00 veya :30 olmalı ve çalışma süresi gece yarısını geçmemeli.'); return;
     }
     const windows: StudyWindow[] = this.selectedDays().map(day => ({ day, startMinute, endMinute: startMinute + this.minutesPerDay() }));
+    // Review of PR #130: a teacher's answers make the proposal only; the student's study times stay hers (never saved).
+    if (this.staffStudentId) { this.requestProposal('Fill', windows); return; }
     this.savingAvailability.set(true); this.error.set('');
     this.planning.saveAvailability({ expectedVersion: this.availability()?.version ?? null, timeZoneId: 'Europe/Istanbul', windows })
       .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.savingAvailability.set(false))).subscribe({
@@ -244,9 +251,10 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     this.requestProposal('Replace');
   }
 
-  private requestProposal(mode: WeeklyProposalMode) {
+  private requestProposal(mode: WeeklyProposalMode, windows?: WeeklyProposalWindow[]) {
     this.proposing.set(true); this.error.set(''); this.saved.set(false);
-    this.weekly.proposal(mode, this.isYks() ? this.examFocus() : null, this.staffStudentId ?? undefined)
+    const focus = this.isYks() ? this.examFocus() : null, student = this.staffStudentId ?? undefined;
+    (windows ? this.weekly.proposal(mode, focus, student, windows) : this.weekly.proposal(mode, focus, student))
       .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.proposing.set(false))).subscribe({
         next: view => this.showProposal(view),
         error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık öneri hazırlanamadı. Yeniden deneyebilirsin.')
@@ -263,10 +271,26 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     const dayCount = new Set(view.slots.map(slot => slot.day)).size;
     const short = view.shortageMinutes > 0 ? (this.staffStudentId ? ' Seçilen saatler öğrencinin bütün derslerine yetmiyor; ayrıntıyı önerinin altında görebilirsin.'
       : ' Saatlerin bütün derslerine yetmiyor; ayrıntıyı önerinin altında görebilirsin.') : '';
-    const kept = view.mode === 'Fill' ? ' Mevcut taslağındaki dolu saatleri korudum;' : ' Haftanı baştan hazırladım;';
+    const staff = !!this.staffStudentId;
+    const kept = view.mode === 'Fill' ? (staff ? ' Öğrencinin taslağındaki dolu saatleri korudum;' : ' Mevcut taslağındaki dolu saatleri korudum;')
+      : (staff ? ' Öğrencinin haftasını baştan hazırladım;' : ' Haftanı baştan hazırladım;');
     this.messages.update(items => [...items, { role: 'assistant', content: view.slots.length
       ? `${dayCount} gün için ${view.slots.length} ders saati önerdim. Her ders bir saat; aralarda mola var.${kept} öneriyi kaydetmeden önce inceleyebilirsin.${short}`
-      : `Çalışma saatlerinde boş yer bulamadım. Çalışma saatlerini değiştirip yeniden deneyebilirsin.${short}` }]);
+      : `${this.emptyText(view)}${short}` }]);
+  }
+
+  /** Review of PR #130: why a proposal has no new hour: no chosen course, enough time already, or no free time. */
+  emptyReason(view: WeeklyProposal): 'courses' | 'enough' | 'space' {
+    return !view.lessons.length ? 'courses' : view.shortageMinutes === 0 ? 'enough' : 'space';
+  }
+  emptyText(view: WeeklyProposal) {
+    const staff = !!this.staffStudentId;
+    switch (this.emptyReason(view)) {
+      case 'courses': return staff ? 'Öğrenci henüz çalışacağı dersleri seçmemiş; öneri seçilen derslere göre hazırlanır.'
+        : 'Önce Derslerim\'de çalışacağın dersleri seç; öneri seçtiğin derslere göre hazırlanır.';
+      case 'enough': return staff ? 'Öğrencinin haftalık düzeni derslerine yetiyor; eklenecek saat yok.' : 'Haftalık düzenin derslerine yetiyor; eklenecek saat yok.';
+      default: return staff ? 'Öğrencinin çalışma saatlerinde boş yer bulamadım.' : 'Çalışma saatlerinde boş yer bulamadım. Çalışma saatlerini değiştirip yeniden deneyebilirsin.';
+    }
   }
 
   /** The proposal grouped by day, Monday first. */
@@ -277,12 +301,13 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   }
   /** "haftada 1,5 saat". */
   hours(minutes: number) { return (Math.round(minutes / 30) / 2).toLocaleString('tr-TR'); }
-  plannedMinutes(view: WeeklyProposal) { return view.lessons.reduce((sum, x) => sum + x.existingMinutes + x.proposedMinutes, 0); }
   lessonsWithoutTime(view: WeeklyProposal) { return view.lessons.filter(x => x.noTime).map(x => x.lessonName).join(', '); }
 
   applyProposal() {
     const view = this.proposalView();
     if (this.busy() || !view || !view.slots.length) return;
+    // Review of PR #130: the proposal belongs to the weekly draft it was made from; a draft changed elsewhere asks for a new one.
+    if ((view.draftVersion ?? null) !== this.version) { this.draftChanged(); return; }
     // Fill adds the proposal to the saved cards; Replace saves only the proposal (the student asked for a new week).
     const replace = view.mode === 'Replace';
     const next = replace ? view.slots : [...this.slots(), ...view.slots];
@@ -293,10 +318,19 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     this.busy.set(true); this.error.set('');
     this.weekly.save(this.version, this.timeZoneId, next, this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.busy.set(false))).subscribe({
       next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.clearProposal(); this.savedReplaced.set(replace); this.saved.set(true); this.focusAfter('saved'); },
-      error: e => this.error.set(e?.error?.message ?? 'Haftalık taslak kaydedilemedi. Yeniden deneyebilirsin.')
+      error: e => { if (e?.status === 409) this.draftChanged(); else this.error.set(e?.error?.message ?? 'Haftalık taslak kaydedilemedi. Yeniden deneyebilirsin.'); }
     });
   }
   readonly savedReplaced = signal(false);
+
+  /** Reloads the weekly draft that changed elsewhere and asks for a fresh proposal. */
+  private draftChanged() {
+    this.clearProposal();
+    this.error.set(this.staffStudentId ? 'Öğrencinin haftalık düzeni başka bir yerde değişti; öneriyi yenile.' : 'Haftalık düzenin başka bir yerde değişti; öneriyi yenile.');
+    this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+      next: page => { this.slots.set(page.draft?.slots ?? []); this.version = page.draft?.version ?? null; this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul'; }
+    });
+  }
 
   /** "Öneriyi kaldır": the proposal goes away and the focus returns to "Haftalık öneri oluştur". */
   removeProposal() { this.clearProposal(); this.focusAfter('propose'); }

@@ -148,20 +148,17 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     }
 
     /// <summary>
-    /// Paket H2: each lesson's weekly need in minutes for the weekly proposal: its curriculum work after shaping (version 2) and completed
-    /// credits, plus an estimate of the spaced reviews (one <see cref="WeeklyPlanEngine.SpacedMinutes"/> review per finished topic for each
-    /// interval shorter than the plan), spread over the days until the plan ends: ceil(minutes × 7 ÷ days).
+    /// Paket H2: each lesson's remaining work for the weekly proposal (its curriculum work after shaping (version 2) and completed credits)
+    /// and the topics it will finish (each gets spaced reviews); <see cref="WeeklyProposalEngine.WeeklyNeed"/> turns them into a weekly need.
     /// </summary>
-    internal async Task<Dictionary<Guid,int>> WeeklyNeedAsync(Guid student,StudentLearningContext? context,Guid[] lessonIds,IReadOnlyDictionary<Guid,LearningLessonView> choices,
-        int days,CancellationToken ct)
+    internal async Task<Dictionary<Guid,(int Work,int Topics)>> LessonWorkAsync(Guid student,StudentLearningContext? context,Guid[] lessonIds,
+        IReadOnlyDictionary<Guid,LearningLessonView> choices,CancellationToken ct)
     {
         var curriculum=await CurriculumAsync(student,context,lessonIds,choices,true,[],ct);
-        var reviews=WeeklyPlanEngine.SpacedIntervalDays.Count(x=>x<days);
         return lessonIds.Distinct().ToDictionary(id=>id,id=>
         {
             var outcomes=curriculum.OriginalWork.FirstOrDefault(x=>x.LessonId==id)?.Outcomes??[];
-            var topics=outcomes.Where(x=>x.Minutes>0&&x.Kind is "Learn" or "Review").Select(x=>x.TopicId).Distinct().Count();
-            return (int)Math.Ceiling((outcomes.Sum(x=>x.Minutes)+topics*reviews*WeeklyPlanEngine.SpacedMinutes)*7d/Math.Max(1,days));
+            return (outcomes.Sum(x=>x.Minutes),outcomes.Where(x=>x.Minutes>0&&x.Kind is "Learn" or "Review").Select(x=>x.TopicId).Distinct().Count());
         });
     }
 

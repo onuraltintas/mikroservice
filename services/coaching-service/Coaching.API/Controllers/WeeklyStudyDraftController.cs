@@ -16,11 +16,12 @@ public sealed class WeeklyStudyDraftController(IWeeklyStudyDraftService drafts):
     [HttpPut,RequestSizeLimit(128*1024),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Save(WeeklyDraftInput r,CancellationToken ct)=>Respond(async()=>Ok(new{success=true,data=await drafts.SaveAsync(r,ct)}));
     /// <summary>Paket H2: a need-based weekly proposal from the saved availability; nothing is saved.</summary>
-    [HttpPost("proposal"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    [HttpPost("proposal"),RequestSizeLimit(16384),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Proposal(WeeklyProposalRequest r,[FromServices] IWeeklyProposalService proposals,CancellationToken ct)=>Respond(async()=>
     {
         try{return Ok(new{success=true,data=await proposals.ProposeAsync(r,ct)});}
-        catch(KeyNotFoundException e){return NotFound(new{message=e.Message});}
+        catch(KeyNotFoundException e){return NotFound(new{success=false,message=e.Message});}
+        catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
     });
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {
