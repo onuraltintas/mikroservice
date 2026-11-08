@@ -171,8 +171,10 @@ public sealed class WeeklyPlanEngineServiceTests
         Assert.NotEqual(plain.Fingerprint, focused.Fingerprint);
         // An empty list is the same as none.
         Assert.Equal(old.Id, (await service.PreviewAsync(Input with { FocusTopicIds = [] }, default)).Schedule.Tasks[0].Outcome.TopicId);
-        // The saved plan is the previewed one.
-        var created = await service.CreateAsync(new("Odaklı plan", focused.Request, focused.Fingerprint), default);
+        // When time is short the focus topic still leads, and the saved plan is the previewed one.
+        var shortened = await service.PreviewAsync(Input with { FocusTopicIds = [later.Id], PrioritizeWhenShort = true }, default);
+        Assert.Equal(later.Id, shortened.Schedule.Tasks[0].Outcome.TopicId);
+        var created = await service.CreateAsync(new("Odaklı plan", shortened.Request, shortened.Fingerprint), default);
         Assert.Equal(later.Id, (await f.Db.StudyPlanTasks.Where(x => x.RevisionId == created.Id).OrderBy(x => x.PlannedDate).ThenBy(x => x.PlannedStartMinute).FirstAsync()).TopicId);
 
         const string NotWeekly = "Öne almak istediğin konular haftalık düzenindeki derslerden olmalı.";
@@ -186,7 +188,7 @@ public sealed class WeeklyPlanEngineServiceTests
         // The teacher's preview: the same order; the messages speak about the student.
         f.User.UserId = Guid.NewGuid(); f.User.Roles = ["Teacher"]; var access = new Coaching.Application.Authorization.CoachingAccessPolicy(f.User);
         var staff = new Coaching.Infrastructure.StudyPlanning.CoachingWeeklyOutcomePlanService(f.Db, access, new WeeklyStudyDraftTests.Catalog(f.Db), TimeProvider.System,
-            new Coaching.Infrastructure.StudyPlanning.CoachingStudyPlanAccess(access, new WeeklyStudyDraftTests.Teaching(student), f.Scope));
+            new Coaching.Application.Authorization.CoachingStudyPlanAccess(access, new WeeklyStudyDraftTests.Teaching(student), f.Scope));
         var teacher = await staff.PreviewForStudentAsync(student, Input with { FocusTopicIds = [later.Id] }, default);
         Assert.Equal(later.Id, teacher.Schedule.Tasks[0].Outcome.TopicId);
         Assert.Equal("Öne alınacak konular öğrencinin haftalık düzenindeki derslerden olmalı.",

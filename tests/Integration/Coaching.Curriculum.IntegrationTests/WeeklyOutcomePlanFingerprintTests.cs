@@ -14,7 +14,7 @@ public sealed class WeeklyOutcomePlanFingerprintTests
 {
     private const string EngineOneOnMain = "e7c37d8b58cd37375e95dee65f01cb8cfdcbbba75f7c7f35b63aade86a615642";
     private const string EngineTwoOnMain = "239755fb05f2a8dc8e26f169dc6fca257af21cabfa0eb0c855be3b29e13f166b";
-    private const string EngineTwoWithFocus = "to be recorded";
+    private const string EngineTwoWithFocus = "13923c739d07dd2f38e087cc0920a5e89ab5a7aeb7dbc825e918a9cfc95baf9a";
 
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider { public override DateTimeOffset GetUtcNow() => now; }
     private static Guid Id(int n) => new($"0000000a-0000-0000-0000-{n:D12}");
@@ -67,7 +67,7 @@ public sealed class WeeklyOutcomePlanFingerprintTests
         Assert.Equal((EngineOneOnMain, EngineTwoOnMain), (one.Fingerprint, two.Fingerprint));
         // Paket H4a: a request with focus topics has its own fingerprint (recorded when the focus was added); without them it is unchanged.
         var focused = await service.PreviewAsync(new(new(2027, 5, 24), new(2027, 6, 1), version, true, WeeklyPlanEngine.CurrentVersion) { FocusTopicIds = [second.Id] }, default);
-        Assert.Equal(EngineTwoWithFocus, focused.Fingerprint);
+        Assert.True(EngineTwoWithFocus == focused.Fingerprint, $"Fingerprint with focus topics: {focused.Fingerprint}");
         var empty = await service.PreviewAsync(new(new(2027, 5, 24), new(2027, 6, 1), version, true, WeeklyPlanEngine.CurrentVersion) { FocusTopicIds = [] }, default);
         Assert.Equal(EngineTwoOnMain, empty.Fingerprint);   // an empty list is the same as none
     }
