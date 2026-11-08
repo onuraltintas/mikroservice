@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { vi } from 'vitest';
@@ -7,9 +7,9 @@ import { StudentWeeklyCalendarComponent } from './student-weekly-calendar.compon
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
 
 @Component({selector:'app-student-weekly-calendar',standalone:true,template:'<input aria-label="Ders notu">'})
-class CalendarStub {}
+class CalendarStub {loadAvailability=vi.fn();}
 @Component({selector:'app-student-study-availability',standalone:true,template:'<input aria-label="Saat notu">'})
-class HoursStub {}
+class HoursStub {readonly saved=output<void>();}
 
 describe('weekly routine tabs', () => {
   beforeEach(() => {
@@ -44,5 +44,14 @@ describe('weekly routine tabs', () => {
     fixture.componentInstance.calendar = {canLeavePage:vi.fn().mockResolvedValue(true)} as unknown as StudentWeeklyCalendarComponent;
     fixture.componentInstance.hours = {canLeavePage:vi.fn().mockResolvedValue(false)} as unknown as StudentStudyAvailabilityComponent;
     expect(await fixture.componentInstance.canLeavePage()).toBe(false);
+  });
+  // Paket H5: new study times mark the weekly cards outside them again.
+  it('refreshes the weekly calendar marks after the study times are saved', () => {
+    const fixture = TestBed.createComponent(StudentStudyRoutineComponent); fixture.detectChanges();
+    const calendar = fixture.debugElement.query(x => x.componentInstance instanceof CalendarStub).componentInstance as CalendarStub;
+    const hours = fixture.debugElement.query(x => x.componentInstance instanceof HoursStub).componentInstance as HoursStub;
+    expect(calendar.loadAvailability).not.toHaveBeenCalled();
+    hours.saved.emit();
+    expect(calendar.loadAvailability).toHaveBeenCalledTimes(1);
   });
 });

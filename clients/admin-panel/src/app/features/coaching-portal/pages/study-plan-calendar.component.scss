@@ -24,3 +24,7 @@
 
 .period-title{margin:14px 0}
 .task-status{min-height:0;padding:0 2px;font-size:8px}.timed-block.short .task-status{display:block}
+
+/* Paket H5: the source badge (the coaching status chip) kept small inside calendar cards. */
+.plan-calendar :is(.timed-block,.month-block,.untimed-block) cs-status-chip.source-badge{display:inline-flex;min-height:0;margin:1px 0;padding:0 6px;font-size:11px;line-height:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.plan-calendar .timed-block.short cs-status-chip.source-badge{display:none}

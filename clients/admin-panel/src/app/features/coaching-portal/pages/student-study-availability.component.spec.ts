@@ -3,21 +3,70 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
+import { provideRouter } from '@angular/router';
+import { CoachingWeeklyDraftService, WeeklyDraftPage } from '../../../core/services/coaching-weekly-draft.service';
+import type { WeeklySlot } from './weekly-calendar';
 
 describe('StudentStudyAvailabilityComponent', () => {
   const preferences: StudyAvailability = { version: 3, timeZoneId: 'Europe/Istanbul', windows: [
     { day: 'Monday', startMinute: 480, endMinute: 540 }
   ] };
-  async function setup(missing = false) {
+  const card = (id: string, day: WeeklySlot['day'], startMinute: number): WeeklySlot => ({ id, lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day, startMinute, durationMinutes: 60 });
+  async function setup(missing = false, slots: WeeklySlot[] = [card('inside', 'Monday', 480)]) {
     const service = {
       getAvailability: vi.fn(() => missing ? throwError(() => ({ status: 404 })) : of(preferences)),
       saveAvailability: vi.fn(() => of({ ...preferences, version: 4 }))
     };
-    TestBed.configureTestingModule({ imports: [StudentStudyAvailabilityComponent], providers: [{ provide: CoachingStudyPlanningService, useValue: service }] });
+    const weekly = { get: vi.fn(() => of<WeeklyDraftPage>({ draft: { version: 2, timeZoneId: 'Europe/Istanbul', slots }, lessons: [] })) };
+    TestBed.configureTestingModule({ imports: [StudentStudyAvailabilityComponent], providers: [provideRouter([]), { provide: CoachingStudyPlanningService, useValue: service }, { provide: CoachingWeeklyDraftService, useValue: weekly }] });
     const fixture = TestBed.createComponent(StudentStudyAvailabilityComponent);
     fixture.detectChanges(); await fixture.whenStable();
-    return { fixture, component: fixture.componentInstance, service };
+    return { fixture, component: fixture.componentInstance, service, weekly };
   }
+  // Paket H5: after new study times are saved, say how many saved weekly cards are now outside them; the cards are not changed.
+  it('says how many weekly cards are outside the new times and offers a new proposal or leaving them', async () => {
+    const { fixture, component, service, weekly } = await setup(false, [card('inside', 'Monday', 480), card('a', 'Monday', 1080), card('b', 'Friday', 600)]);
+    const el = fixture.nativeElement as HTMLElement;
+    // One live region is always there; the actions are outside it.
+    const status = el.querySelector('[data-testid="weekly-outside-status"]') as HTMLElement;
+    expect(status.getAttribute('role')).toBe('status'); expect(status.textContent?.trim()).toBe('');
+    service.saveAvailability.mockReturnValue(of({ ...preferences, version: 4 }));
+    expect(weekly.get).not.toHaveBeenCalled();
+    component.save(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.get).toHaveBeenCalledTimes(1);
+    expect(el.querySelector('[data-testid="weekly-outside-status"]')).toBe(status);
+    expect(status.textContent?.trim()).toBe('Kayıtlı haftalık düzeninde 2 kart yeni saatlerinin dışında kaldı.');
+    const actions = el.querySelector('[data-testid="weekly-outside-actions"]') as HTMLElement;
+    expect(status.contains(actions)).toBe(false); expect(status.querySelector('a,button')).toBeNull();
+    const again = Array.from(actions.querySelectorAll('a')).find(x => x.textContent?.trim() === 'Yeniden öner')!;
+    expect(again.getAttribute('href')).toBe('/coaching-portal/plan/wizard?yeniden=oner');
+    const keep = Array.from(actions.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Olduğu gibi bırak')!;
+    keep.focus(); keep.click(); fixture.detectChanges(); await fixture.whenStable();
+    expect(el.querySelector('[data-testid="weekly-outside-actions"]')).toBeNull(); expect(status.textContent?.trim()).toBe('');
+    // Focus does not fall to the page: it moves to the saved message.
+    const saved = el.querySelector('[data-testid="availability-success"]') as HTMLElement;
+    expect(saved.textContent).toContain('Çalışma saatlerin kaydedildi.'); expect(document.activeElement).toBe(saved);
+  });
+  it('shows nothing about the weekly cards when all fit, none are saved or they cannot be read', async () => {
+    const { fixture, component, weekly } = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    const text = () => el.querySelector('[data-testid="weekly-outside-status"]')!.textContent?.trim();
+    component.save(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.get).toHaveBeenCalledTimes(1); expect(text()).toBe(''); expect(el.querySelector('[data-testid="weekly-outside-actions"]')).toBeNull();
+    weekly.get.mockReturnValue(of<WeeklyDraftPage>({ draft: null, lessons: [] })); component.save(); fixture.detectChanges();
+    expect(text()).toBe('');
+    weekly.get.mockReturnValue(throwError(() => ({ status: 503 }))); component.save(); fixture.detectChanges();
+    expect(text()).toBe(''); expect(component.error()).toBeNull();
+    expect(el.textContent).toContain('Çalışma saatlerin kaydedildi.');
+  });
+  // Paket H5 review: inside the wizard the editor does not show the notice (the wizard sets showOutsideNotice to false).
+  it('does not look at the weekly cards when the notice is turned off', async () => {
+    const { fixture, component, weekly } = await setup(false, [card('a', 'Monday', 1080)]);
+    fixture.componentRef.setInput('showOutsideNotice', false); fixture.detectChanges();
+    component.save(); fixture.detectChanges(); await fixture.whenStable();
+    expect(weekly.get).not.toHaveBeenCalled(); expect(fixture.nativeElement.querySelector('[data-testid="weekly-outside-status"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Çalışma saatlerin kaydedildi.');
+  });
   it('loads preferences, shows weekly minutes and saves the loaded version', async () => {
     const { component, service } = await setup();
     expect(component.weeklyMinutes()).toBe(60);

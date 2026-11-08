@@ -77,7 +77,7 @@ import { CoachingDatePipe } from '../coaching-labels';
           @if (calendar(); as view) {
             <p>{{view.message}}</p><p>{{view.previousDeadline ? 'Plan bitişi' : 'Tekrar ufku'}}: {{view.previousDeadline || 'Belirtilmemiş'}} → {{view.proposedDeadline}}.</p>
             <p>Tamamlanan ve sabitlenen çalışmalar korunacak; mevcut çalışmaların gün ve saatleri değişmeyecek.</p>
-            @if (calendarPlan(); as plan) { <p>Takvimde “Öneri” yazan kartlar eklenecek tekrarlardır. Diğer kartlar mevcut çalışmalardır.</p><app-study-plan-calendar [plan]="plan" [editable]="false" /> }
+            @if (calendarPlan(); as plan) { <p>Takvimde “Öneri” yazan kartlar eklenecek tekrarlardır. Diğer kartlar mevcut çalışmalardır.</p><app-study-plan-calendar [plan]="plan" [editable]="false" [student]="!staffStudentId" /> }
             @for (slot of view.slots; track slot.topicId + slot.date + slot.startMinute) { <p>{{ slot.date | coachingDate }} {{time(slot.startMinute)}}–{{time(slot.startMinute + slot.minutes)}} · {{slot.lessonName}} / {{slot.topicName}} · {{slot.minutes}} dk tekrar</p> }
             <div class="table"><table><thead><tr><th>Ders</th><th>Önceki son çalışma</th><th>Önerilen son çalışma</th><th>Ek süre</th></tr></thead><tbody>@for (impact of view.impact; track impact.lessonName) { <tr><th>{{impact.lessonName}}</th><td>{{impact.previousFinish || 'Planlanmamış'}}</td><td>{{impact.proposedFinish}}</td><td>{{impact.addedMinutes}} dk</td></tr> }</tbody></table></div>
             @for (item of view.unscheduled; track item.topicId) { <p class="error">{{topicName(item.topicId)}}: {{item.minutes}} dk sığmadı. Kısmi uygulama yapılmayacak.</p> }

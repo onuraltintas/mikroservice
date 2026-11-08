@@ -78,6 +78,7 @@ public sealed class CoachingManualStudyPlanApiTests
     {
         public Task<ManualStudyPlanView> SaveCalendarTaskAsync(Guid id,Guid? taskId,CalendarTaskSaveInput request,CancellationToken ct=default)=>Result();
         public Task<ManualStudyPlanView> DeleteCalendarTaskAsync(Guid id,Guid taskId,int expectedVersion,CancellationToken ct=default)=>Result();
+        public Task<ManualStudyPlanView> SplitCalendarTaskAsync(Guid id,Guid taskId,int expectedVersion,CancellationToken ct=default)=>Result();
         public Task<ManualStudyPlanView> SetRemainingScopeAsync(Guid id,Guid taskId,StudyRemainingScopeInput request,CancellationToken ct=default)=>Result();
         public Task<ManualStudyPlanView> RecordRealizationAsync(Guid id,Guid taskId,StudyRealizationInput request,bool correction,CancellationToken ct=default)=>Result();
         public Exception? Failure { get; init; }

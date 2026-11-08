@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { StudyTask } from '../../../core/services/coaching-study-planning.service';
 import { clock } from './weekly-calendar';
+import { CsStatusChipComponent } from '../ui';
 
 /**
  * T4 (31.10.2026): one study task as a single compact row on Planım. The row opens the task's details; the round
@@ -9,10 +10,11 @@ import { clock } from './weekly-calendar';
 @Component({
   selector: 'app-plan-task-row',
   standalone: true,
+  imports: [CsStatusChipComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<div class="row" [class.done]="task().isCompleted" [class.late]="overdue()" [style.--lesson]="color() || 'var(--ui-brand)'">
-    <button type="button" class="main" (click)="opened.emit()" [attr.aria-label]="task().title + ', ayrıntıları aç'">
-      <span class="lesson">{{ task().lessonName || 'Çalışma' }}</span>
+    <button type="button" class="main" (click)="opened.emit()" [attr.aria-label]="task().title + (badge() ? ', ' + badge() : '') + ', ayrıntıları aç'">
+      <span class="lesson">{{ task().lessonName || 'Çalışma' }}@if (badge(); as label) { <cs-status-chip class="source" [label]="label" [tone]="badgeTone()" /> }</span>
       <span class="title">{{ task().title }}</span>
       <span class="meta">{{ timeText() }} · {{ task().plannedMinutes }} dk @if (task().plannedQuestions) { · {{ task().plannedQuestions }} soru }</span>
       @if (overdue()) { <span class="flag late-flag">Gecikti</span> }
@@ -37,6 +39,7 @@ import { clock } from './weekly-calendar';
     .lesson{color:var(--lesson);font-size:var(--coaching-text-sm);font-weight:700}
     .title{font-size:var(--coaching-text-body);font-weight:650;line-height:1.35;overflow-wrap:anywhere}
     .meta{color:var(--ui-text-muted);font-size:var(--coaching-text-sm)}
+    .source{margin-left:6px;vertical-align:middle}
     .flag{justify-self:start;margin-top:4px;padding:2px 8px;border-radius:var(--coaching-radius-pill);background:var(--ui-warning-soft);color:var(--ui-text);font-size:12px;font-weight:700}
     .late-flag{background:var(--ui-danger-soft);color:var(--ui-danger)}
     .act{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -54,6 +57,9 @@ export class PlanTaskRowComponent {
   readonly canComplete = input(false);
   readonly justCompleted = input(false);
   readonly busy = input(false);
+  /** Paket H5: where the work came from ("Yeni konu", "Tekrar", … or the student's own). */
+  readonly badge = input<string | null>(null);
+  readonly badgeTone = input<'brand' | 'accent' | 'info' | 'neutral'>('neutral');
   readonly opened = output<void>();
   readonly completed = output<void>();
   readonly undone = output<void>();

@@ -2,3 +2,8 @@
 .weekly-page .time-cell,.weekly-page .slot-card button,.weekly-page .month-date,.weekly-page .month-slot{min-height:0}
 .gesture-status{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);z-index:50;pointer-events:none;border-radius:8px;box-shadow:var(--coaching-card-shadow)}
 .slot-card .resize{left:auto;right:2px;width:20px}.slot-card .resize span{width:12px}.slot-card .slot-content{padding:3px 24px 3px 6px}.slot-content strong{line-height:14px;flex-shrink:0}.slot-content span{line-height:12px;flex-shrink:0}
+/* Paket H5 (K4): a card outside the saved study times keeps its colour and gets a dashed warning edge and a short note. */
+.slot-card.outside{border-left:3px dashed var(--ui-warning);box-shadow:inset 0 0 0 1px var(--ui-warning),var(--coaching-card-shadow)}
+.month-slot.outside{box-shadow:inset 3px 0 0 var(--ui-warning)}
+.slot-content .outside-mark{font-weight:700;color:var(--ui-text)}
+.availability-notice a{color:inherit;text-decoration:underline}.availability-notice.outside{background:var(--ui-warning-soft);color:var(--ui-text)}

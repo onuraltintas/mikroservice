@@ -4,12 +4,14 @@ import {FormsModule} from '@angular/forms';
 import {lessonColors} from './study-plan-colors';
 import {StudyPlan} from '../../../core/services/coaching-study-planning.service';
 import {CalendarView,calendarDays,clock} from './weekly-calendar';
-import {CalendarMove,PlanCalendarBlock,calendarBlocks,calendarDate,calendarFocusDate,calendarMoveError,calendarTaskOverdue,calendarToday,dateKey} from './study-plan-calendar';
+import {CalendarMove,PlanCalendarBlock,calendarBlocks,calendarDate,calendarFocusDate,calendarMoveError,calendarTaskOverdue,calendarToday,canSplitTask,dateKey,taskSourceBadge,taskSourceTone} from './study-plan-calendar';
+import {CsStatusChipComponent} from '../ui';
 
 import { CoachingDatePipe } from '../coaching-labels';
-export interface CalendarAction {kind:'add'|'edit'|'delete'|'complete';taskIds:string[];date:string;startMinute:number}
+/** Paket H5: 'split' divides one task of the card into two halves (the page asks first). */
+export interface CalendarAction {kind:'add'|'edit'|'delete'|'complete'|'split';taskIds:string[];date:string;startMinute:number}
 
-@Component({selector:'app-study-plan-calendar',standalone:true,imports:[CoachingDatePipe, CommonModule,FormsModule],templateUrl:'./study-plan-calendar.component.html',styleUrl:'./study-plan-calendar.component.scss'})
+@Component({selector:'app-study-plan-calendar',standalone:true,imports:[CoachingDatePipe, CommonModule,FormsModule,CsStatusChipComponent],templateUrl:'./study-plan-calendar.component.html',styleUrl:'./study-plan-calendar.component.scss'})
 export class StudyPlanCalendarComponent implements OnChanges {
   @Input({required:true}) plan!:StudyPlan;
   @Input() disabled=false;
@@ -33,13 +35,23 @@ export class StudyPlanCalendarComponent implements OnChanges {
   readonly views=[{id:'day' as const,label:'Gün'},{id:'week' as const,label:'Hafta'},{id:'month' as const,label:'Ay'}];
   readonly hours=Array.from({length:24},(_,i)=>i);readonly weekLabels=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
   get zone(){return this.plan.weeklySource?.timeZoneId??'Europe/Istanbul';}
-  @ViewChild('scroller') set scroller(value:ElementRef<HTMLElement>|undefined){this.scrollerElement=value?.nativeElement;if(value)this.focusHours();}
+  /**
+   * Paket H5: the hours are scrolled only on opening and on navigation. When they are drawn again (for example while a change is
+   * saved), the new scroller keeps the position of the old one instead of jumping.
+   */
+  private lastScrollTop:number|null=null;private initialScroll=false;
+  @ViewChild('scroller') set scroller(value:ElementRef<HTMLElement>|undefined){
+    const next=value?.nativeElement;
+    if(this.scrollerElement&&this.scrollerElement!==next)this.lastScrollTop=this.scrollerElement.scrollTop;
+    if(next&&next!==this.scrollerElement&&this.lastScrollTop!==null)next.scrollTop=this.lastScrollTop;
+    this.scrollerElement=next;
+  }
   ngOnChanges(changes:SimpleChanges){
     this.cancelMove();this.closeMenu();
     if(!changes['plan'])return;
     this.colors=lessonColors(this.plan.tasks);this.blocks=calendarBlocks(this.plan.tasks);this.byDate=new Map();
     for(const block of this.blocks){const list=this.byDate.get(block.date)??[];list.push(block);this.byDate.set(block.date,list);}
-    if(this.currentId!==this.plan.id){this.currentId=this.plan.id;this.focusPage=true;this.focusWork();}
+    if(this.currentId!==this.plan.id){this.currentId=this.plan.id;this.focusPage=true;this.openOnToday();}
   }
   rows(day:Date){return this.byDate.get(dateKey(day))??[];}
   timed(day:Date){return this.rows(day).filter(b=>b.startMinute!==null);}
@@ -53,6 +65,26 @@ export class StudyPlanCalendarComponent implements OnChanges {
   goToDate(value:string){if(value){this.anchor.set(calendarDate(value));this.focusHours();}}
   today(){this.goToDate(calendarToday(this.zone));}
   focusWork(){this.goToDate(calendarFocusDate(this.blocks,calendarToday(this.zone)));}
+  /**
+   * Paket H5: a day or week view opens on today when today's day or week has work, and scrolls to the first work of today (or of
+   * the visible days when today has none). Otherwise it opens on the nearest work, as before. Only this first scroll is animated,
+   * and not when reduced motion is asked for.
+   */
+  private openOnToday(){
+    this.initialScroll=true;this.lastScrollTop=null;const today=calendarToday(this.zone);
+    if(this.view()!=='month'&&calendarDays(calendarDate(today),this.view()).some(day=>this.byDate.has(dateKey(day))))this.goToDate(today);
+    else this.focusWork();
+  }
+  private smoothScroll(){return typeof window!=='undefined'&&typeof window.matchMedia==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
+  /** Paket H5: where each card's work came from (usually one badge). */
+  private badgeCache=new WeakMap<PlanCalendarBlock,{label:string;tone:ReturnType<typeof taskSourceTone>}[]>();
+  badges(block:PlanCalendarBlock){
+    let badges=this.badgeCache.get(block);if(badges)return badges;
+    const seen=new Map<string,ReturnType<typeof taskSourceTone>>();
+    for(const task of block.tasks){const label=taskSourceBadge(task);if(label&&!seen.has(label))seen.set(label,taskSourceTone(task));}
+    badges=[...seen].map(([label,tone])=>({label,tone}));this.badgeCache.set(block,badges);return badges;
+  }
+  splittable(block:PlanCalendarBlock){return this.writable()&&block.tasks.some(canSplitTask);}
   adjacent(step:number){const dates=[...this.byDate.keys()],key=dateKey(this.anchor());return step>0?dates.find(d=>d>key):dates.filter(d=>d<key).at(-1);}
   occupied(step:number){const value=this.adjacent(step);if(value)this.goToDate(value);}
   navigate(step:number){
@@ -103,7 +135,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
   action(kind:CalendarAction['kind']){
     const m=this.menu;if(!m)return;
     if(!this.writable()||kind!=='add'&&!m.block||kind==='complete'&&(!this.student||this.plan.status!=='Active'))return;
-    const ids=m.block?.tasks.filter(t=>!t.isCompleted).map(t=>t.id)??[];
+    const ids=m.block?.tasks.filter(t=>kind==='split'?canSplitTask(t):!t.isCompleted).map(t=>t.id)??[];
     if(kind!=='add'&&!ids.length)return;
     this.closeMenu();this.calendarAction.emit({kind,taskIds:kind==='add'?[]:ids,date:m.date,startMinute:m.startMinute});
   }
@@ -111,7 +143,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
   menuMove(){const b=this.menu?.block;this.closeMenu();if(b&&this.canMove(b)){this.moveForm={id:b.id,date:b.date,time:clock(b.startMinute!)};afterNextRender(()=>{const field=this.host.nativeElement.querySelector<HTMLElement>('.move-form select');field?.focus();field?.scrollIntoView?.({block:'nearest'});},{injector:this.injector});}}
   @HostListener('document:click',['$event']) outsideMenu(event:MouseEvent){if(!(event.target as HTMLElement).closest('.calendar-context-menu'))this.closeMenu();}
   range(block:PlanCalendarBlock){return block.startMinute===null?'Saati belirtilmemiş':`${clock(block.startMinute)}–${clock(block.startMinute+block.minutes)}`;}
-  label(block:PlanCalendarBlock){return `${block.lesson} · ${this.dayTitle(calendarDate(block.date))} · ${this.range(block)} · ${block.minutes} dk · ${block.tasks.length} çalışma · ${this.status(block)}`;}
+  label(block:PlanCalendarBlock){const badges=this.badges(block).map(b=>b.label).join(', ');return `${block.lesson} · ${this.dayTitle(calendarDate(block.date))} · ${this.range(block)} · ${block.minutes} dk · ${block.tasks.length} çalışma · ${this.status(block)}${badges?' · '+badges:''}`;}
   select(block:PlanCalendarBlock){if(this.suppressClick){this.suppressClick=false;return;}this.taskSelected.emit(block.tasks.map(t=>t.id));}
   canMove(block:PlanCalendarBlock){return this.editable&&!this.disabled&&this.plan.status!=='Archived'&&block.startMinute!==null&&!block.tasks.some(t=>t.isCompleted);}
   movable(){return this.blocks.filter(b=>this.canMove(b));}
@@ -152,15 +184,17 @@ export class StudyPlanCalendarComponent implements OnChanges {
   @HostListener('document:keydown.escape') escapeMove(){this.cancelMove();this.closeMenu(true);this.moveForm=null;this.moveError.set('');}
   showDay(){this.taskSelected.emit(this.rows(this.anchor()).flatMap(b=>b.tasks.map(t=>t.id)));}
   private focusHours(){afterNextRender(()=>{
+    const smooth=this.initialScroll&&this.smoothScroll();this.initialScroll=false;
     const anchorStarts=this.timed(this.anchor()).map(b=>b.startMinute!);
     const starts=anchorStarts.length?anchorStarts:this.days().flatMap(d=>this.timed(d).map(b=>b.startMinute!));
-    if(this.scrollerElement)this.scrollerElement.scrollTop=starts.length?Math.max(0,Math.min(...starts)-30)*this.pixelsPerMinute:480*this.pixelsPerMinute;
+    const top=starts.length?Math.max(0,Math.min(...starts)-30)*this.pixelsPerMinute:480*this.pixelsPerMinute;
+    if(this.scrollerElement){if(smooth&&typeof this.scrollerElement.scrollTo==='function')this.scrollerElement.scrollTo({top,behavior:'smooth'});else this.scrollerElement.scrollTop=top;}
     for(const element of this.host.nativeElement.querySelectorAll<HTMLElement>('.time-scroller,.untimed-wrap')){
       const timed=element.classList.contains('time-scroller'),dates=this.days().filter(d=>(timed?this.timed(d):this.untimed(d)).length);
       const day=dates.find(d=>dateKey(d)===dateKey(this.anchor()))??dates[0];
       const column=day?element.querySelector<HTMLElement>(`[data-date="${dateKey(day)}"]`):null;
       if(column)element.scrollLeft=Math.max(0,element.scrollLeft+column.getBoundingClientRect().left-element.getBoundingClientRect().left-44);
     }
-    if(this.focusPage){this.focusPage=false;this.host.nativeElement.scrollIntoView?.({block:'start'});}
+    if(this.focusPage){this.focusPage=false;this.host.nativeElement.scrollIntoView?.({block:'start',behavior:smooth?'smooth':'auto'});}
   },{injector:this.injector});}
 }

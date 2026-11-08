@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { StudyPlanCalendarComponent } from './study-plan-calendar.component';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
@@ -42,6 +44,8 @@ describe('PracticeAdaptationComponent', () => {
         const advice=component.data()!.advice[0];expect(advice.examIds).toHaveLength(3);
         await component.choose(advice);component.apply();expect(service.apply).not.toHaveBeenCalled();
         component.preview();fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.querySelector('app-study-plan-calendar')).toBeTruthy();
+        // Paket H5 review: a teacher never sees badges addressed to the student.
+        expect(fixture.debugElement.query(By.directive(StudyPlanCalendarComponent)).componentInstance.student).toBe(role!=='teacher');
         component.apply();expect(service.apply).not.toHaveBeenCalled();
         component.approved=true;component.apply();
         expect(service.apply).toHaveBeenCalledExactlyOnceWith(studentId,'plan-v1',expect.objectContaining({examCode:code,source:advice.source}),true);
