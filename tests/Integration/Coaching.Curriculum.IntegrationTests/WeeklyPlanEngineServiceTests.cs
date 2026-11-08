@@ -145,6 +145,55 @@ public sealed class WeeklyPlanEngineServiceTests
         Assert.Single(await f.Db.StudyPlanTasks.Where(x => x.RevisionId == created.Id).ToArrayAsync());
     }
 
+    // Paket H4a: "Önemli konulara odaklan": the chosen topics go first within their lesson; they must be topics of the weekly lessons.
+    [Fact]
+    public async Task FocusTopicsGoFirstWithinTheirLesson_AndMustBelongToTheWeeklyLessons()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var service = await WeeklyOutcomePlanTests.Seed(f);
+        var student = f.User.UserId!.Value;
+        var old = await f.Db.StudyCatalogTopics.SingleAsync(); var existing = await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        var later = StudyCatalogTopic.Create("test", "focus", old.LessonId, old.UnitId, "Üslü sayılar", null, 5); later.SetActive(true);
+        var outcome = StudyCatalogOutcome.Create(existing.EditionId, existing.OfficialTopicId, "M.TEST.F", "Üslü sayılar kazanımı", "", 73, 5);
+        var estimate = OutcomeDurationEstimate.Create(outcome.Id, 1, 10, 10, 10, "ReviewedStudy", "Medium", "Test süresi", f.User.UserId); estimate.Publish();
+        var mapping = StudyCatalogTopicOutcome.Create(later.Id, outcome.Id, "Test eşleştirmesi"); mapping.Review(true, "Test eşleştirmesi", student);
+        var passive = StudyCatalogTopic.Create("test", "passive", old.LessonId, old.UnitId, "Kapalı konu", null, 6);
+        var turkish = StudyCatalogLesson.Create("test", "focus-turkish", "Türkçe", 8, "LGS"); turkish.SetActive(true);
+        var turkishUnit = StudyCatalogUnit.Create("test", "focus-turkish-unit", turkish.Id, "Türkçe", 1); turkishUnit.SetActive(true);
+        var turkishTopic = StudyCatalogTopic.Create("test", "focus-turkish-topic", turkish.Id, turkishUnit.Id, "Paragraf", null, 1); turkishTopic.SetActive(true);
+        f.Db.AddRange(later, outcome, estimate, mapping, passive, turkish, turkishUnit, turkishTopic); await f.Db.SaveChangesAsync();
+
+        var plain = await service.PreviewAsync(Input, default);
+        Assert.Equal(old.Id, plain.Schedule.Tasks[0].Outcome.TopicId);
+        Assert.Null(plain.Request.FocusTopicIds);
+        var focused = await service.PreviewAsync(Input with { FocusTopicIds = [later.Id, later.Id] }, default);
+        Assert.Equal(later.Id, focused.Schedule.Tasks[0].Outcome.TopicId);
+        Assert.StartsWith("Öne almak istediğin konu", focused.Schedule.Tasks[0].Reason);
+        Assert.NotEqual(plain.Fingerprint, focused.Fingerprint);
+        // An empty list is the same as none.
+        Assert.Equal(old.Id, (await service.PreviewAsync(Input with { FocusTopicIds = [] }, default)).Schedule.Tasks[0].Outcome.TopicId);
+        // The saved plan is the previewed one.
+        var created = await service.CreateAsync(new("Odaklı plan", focused.Request, focused.Fingerprint), default);
+        Assert.Equal(later.Id, (await f.Db.StudyPlanTasks.Where(x => x.RevisionId == created.Id).OrderBy(x => x.PlannedDate).ThenBy(x => x.PlannedStartMinute).FirstAsync()).TopicId);
+
+        const string NotWeekly = "Öne almak istediğin konular haftalık düzenindeki derslerden olmalı.";
+        foreach (var wrong in new[] { Guid.NewGuid(), passive.Id, turkishTopic.Id, Guid.Empty })
+            Assert.Equal(NotWeekly, (await Assert.ThrowsAsync<ArgumentException>(() => service.PreviewAsync(Input with { FocusTopicIds = [later.Id, wrong] }, default))).Message);
+        var many = Input with { FocusTopicIds = [.. Enumerable.Range(0, 51).Select(_ => Guid.NewGuid())] };
+        Assert.Equal("En çok 50 konuyu öne alabilirsin.", (await Assert.ThrowsAsync<ArgumentException>(() => service.PreviewAsync(many, default))).Message);
+        var api = new Coaching.API.Controllers.WeeklyOutcomePlansController(service);
+        Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(await api.Preview(Input with { FocusTopicIds = [turkishTopic.Id] }, default));
+
+        // The teacher's preview: the same order; the messages speak about the student.
+        f.User.UserId = Guid.NewGuid(); f.User.Roles = ["Teacher"]; var access = new Coaching.Application.Authorization.CoachingAccessPolicy(f.User);
+        var staff = new Coaching.Infrastructure.StudyPlanning.CoachingWeeklyOutcomePlanService(f.Db, access, new WeeklyStudyDraftTests.Catalog(f.Db), TimeProvider.System,
+            new Coaching.Infrastructure.StudyPlanning.CoachingStudyPlanAccess(access, new WeeklyStudyDraftTests.Teaching(student), f.Scope));
+        var teacher = await staff.PreviewForStudentAsync(student, Input with { FocusTopicIds = [later.Id] }, default);
+        Assert.Equal(later.Id, teacher.Schedule.Tasks[0].Outcome.TopicId);
+        Assert.Equal("Öne alınacak konular öğrencinin haftalık düzenindeki derslerden olmalı.",
+            (await Assert.ThrowsAsync<ArgumentException>(() => staff.PreviewForStudentAsync(student, Input with { FocusTopicIds = [turkishTopic.Id] }, default))).Message);
+        Assert.Equal("En çok 50 konu öne alınabilir.", (await Assert.ThrowsAsync<ArgumentException>(() => staff.PreviewForStudentAsync(student, many, default))).Message);
+    }
+
     [Fact]
     public void YieldWeightIsBetweenOneAndFive()
     {
