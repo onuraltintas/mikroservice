@@ -1,15 +1,15 @@
 import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, ElementRef, EventEmitter, Injector, Input, OnInit, Output, ViewChild, afterNextRender, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, EventEmitter, Injector, Input, OnInit, Output, ViewChild, afterNextRender, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { CoachingWeeklyDraftService, WeeklyExamFocus, WeeklyProposal, WeeklyProposalMode, WeeklyProposalWindow } from '../../../core/services/coaching-weekly-draft.service';
-import { CoachingLearningSetupService, LearningCatalog, LearningContext, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
+import { CoachingLearningSetupService, LearningContext, RETIRED_PURPOSE_NOTICE, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
-import { clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
+import { DEFAULT_MAX_DAY_MINUTES, clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingStudyPlanningService, StudyAvailability, StudyWindow } from '../../../core/services/coaching-study-planning.service';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
@@ -32,7 +32,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   @ViewChild('proposalTitle') private proposalTitle?: ElementRef<HTMLElement>;
   @ViewChild('proposeButton') private proposeButton?: ElementRef<HTMLElement>;
   @ViewChild('savedNotice') private savedNotice?: ElementRef<HTMLElement>;
-  readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Çalışma saatlerinden sana haftalık ders düzeni önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
+  readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Çalışma saatlerinden sana haftalık düzen önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
   readonly proposal = signal<WeeklySlot[]>([]);
   /** Paket H2: the server's proposal with each lesson's weekly hours and what the chosen lessons still lack. */
   readonly proposalView = signal<WeeklyProposal | null>(null);
@@ -42,6 +42,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly examFocusChoices: { value: WeeklyExamFocus; label: string }[] = [
     { value: 'tyt', label: 'TYT ağırlıklı' }, { value: 'balanced', label: 'Dengeli' }, { value: 'ayt', label: 'AYT ağırlıklı' }];
   private readonly toaster = inject(ToasterService);
+  /** Review of PR 129 (K5): the student's daily limit from the server (the teacher view reads the student's). */
+  private maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
   readonly selectedDays = signal<Weekday[]>([]);
   readonly startTime = signal('18:00');
   readonly minutesPerDay = signal<30 | 60 | 90 | 120>(60);
@@ -67,14 +69,11 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   /** Paket D review (L6): the saved exam does not fit the grade; topic saves still work, the student is asked to choose again. */
   readonly purposeNotForEducation = signal(false);
   readonly retiredPurposeNotice = RETIRED_PURPOSE_NOTICE;
-  readonly catalog = signal<LearningCatalog | null>(null);
-  readonly topicLessonId = signal('');
-  readonly topicLoading = signal(false);
-  readonly topicSaving = signal(false);
-  readonly topicError = signal('');
-  readonly topicSaved = signal(false);
-  readonly topicStatuses = signal<Map<string, TopicDeclaration>>(new Map());
-  readonly topicPage = signal(1);
+  /** Paket H1 (P8): the topics marked "Çalıştım" in Başlangıç durumum (edited there, not in the wizard). */
+  readonly studiedTopicCount = computed(() => (this.learningContext()?.topicStates ?? []).filter(x => x.declaredStatus === 'Studied').length);
+  readonly learningError = signal('');
+  /** Review of PR 129: the study preferences were read (a student without them is sent to Çalışma tercihlerim). */
+  readonly learningLoaded = signal(false);
   version: number | null = null;
   timeZoneId = 'Europe/Istanbul';
   readonly weekDays = weekDays;
@@ -82,28 +81,26 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
 
   ngOnInit() {
     // Review of PR 130: the teacher reads about the student in third person.
-    if (this.staffStudentId) this.messages.set([{ role: 'assistant', content: 'Merhaba! Öğrencinin çalışma saatlerinden haftalık ders düzeni önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
+    if (this.staffStudentId) this.messages.set([{ role: 'assistant', content: 'Merhaba! Öğrencinin çalışma saatlerinden haftalık düzen önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
     this.loadAvailability();
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
-        this.lessons.set(page.lessons);
+        this.lessons.set(page.lessons); this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES;
         this.slots.set(page.draft?.slots ?? []);
         this.version = page.draft?.version ?? null;
         this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul';
         this.busy.set(false);
         if (!page.lessons.length) this.error.set(this.staffStudentId ? 'Bu öğrenci henüz eğitim bağlamını tamamlamamış. Önce öğrenci kurulumunu tamamla.' : 'Önce çalışma düzeninden ders seçmelisin.');
       },
-      error: () => { this.busy.set(false); this.error.set('Haftalık ders düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
+      error: () => { this.busy.set(false); this.error.set('Haftalık düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
     });
     (this.staffStudentId ? this.learningSetup.getForStudent(this.staffStudentId) : this.learningSetup.get()).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: view => {
-        const context = view.context; this.learningContext.set(context);
+        const context = view.context; this.learningContext.set(context); this.learningLoaded.set(true);
         this.purposeRetired.set(!!view.purposeRetired || isRetiredPurpose(context?.purpose));
         this.purposeNotForEducation.set(!!view.purposeNotForEducation);
-        this.topicStatuses.set(new Map((context?.topicStates ?? []).map(x => [x.topicId, x.declaredStatus])));
-        if (context && !this.purposeRetired()) this.loadLearningCatalog();
       },
-      error: () => this.topicError.set('Konu durumları yüklenemedi. Çalışma düzeni kurulumunu kontrol et.')
+      error: () => this.learningError.set(this.staffStudentId ? 'Öğrencinin çalışma tercihleri yüklenemedi.' : 'Çalışma tercihlerin yüklenemedi. Sayfayı yenileyip tekrar dene.')
     });
   }
 
@@ -140,67 +137,6 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   setExamFocus(value: WeeklyExamFocus) { if (this.examFocus() === value) return; this.examFocus.set(value); this.clearProposal(); }
   isYks() { return this.learningContext()?.purpose === 'Yks'; }
 
-  availableTopicLessons() {
-    const context = this.learningContext(); const catalog = this.catalog();
-    if (!context || !catalog) return [];
-    const selected = new Set(context.coursePreferences.map(x => x.lessonId.toLowerCase()));
-    return catalog.lessons.filter(x => selected.has(x.id.toLowerCase()));
-  }
-
-  private loadLearningCatalog() {
-    this.topicLoading.set(true); this.topicError.set('');
-    (this.staffStudentId ? this.learningSetup.catalogForStudent(this.staffStudentId, null, 1) : this.learningSetup.catalog(null, 1)).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.topicLoading.set(false))).subscribe({
-      next: value => {
-        this.catalog.set(value);
-        const selected = this.learningContext()?.coursePreferences.find(x => value.lessons.some(l => l.id.toLowerCase() === x.lessonId.toLowerCase()));
-        if (selected) { this.topicLessonId.set(selected.lessonId); this.topicLoading.set(false); this.loadTopicCatalog(1); }
-      },
-      error: () => this.topicError.set('Ders kataloğu yüklenemedi. Çalışma düzeni kurulumunu kontrol et.')
-    });
-  }
-
-  loadTopicCatalog(page = 1) {
-    const lessonId = this.topicLessonId(); if (!lessonId || this.topicLoading()) return;
-    this.topicLoading.set(true); this.topicError.set('');
-    (this.staffStudentId ? this.learningSetup.catalogForStudent(this.staffStudentId, lessonId, page) : this.learningSetup.catalog(lessonId, page)).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.topicLoading.set(false))).subscribe({
-      next: value => { this.catalog.set(value); this.topicPage.set(page); },
-      error: () => this.topicError.set('Ders konuları yüklenemedi. Tekrar deneyebilirsin.')
-    });
-  }
-
-  selectTopicLesson(lessonId: string) {
-    this.topicLessonId.set(lessonId); this.catalog.set(null); this.topicPage.set(1); this.loadTopicCatalog(1);
-  }
-
-  topicStatus(topicId: string): TopicDeclaration | '' { return this.topicStatuses().get(topicId) ?? ''; }
-  topicDirty() {
-    const saved = this.learningContext()?.topicStates ?? []; const current = this.topicStatuses();
-    return saved.length !== current.size || saved.some(x => current.get(x.topicId) !== x.declaredStatus);
-  }
-  setTopicStatus(topicId: string, status: TopicDeclaration | '') {
-    const next = new Map(this.topicStatuses());
-    if (status) next.set(topicId, status); else next.delete(topicId);
-    this.topicStatuses.set(next); this.topicSaved.set(false); this.topicError.set('');
-  }
-
-  saveTopicStatuses() {
-    const context = this.learningContext(); if (!context || this.topicSaving()) return;
-    const current = new Map(this.topicStatuses());
-    const request = { expectedVersion: context.version, academicYearStart: context.academicYearStart, purpose: context.purpose,
-      targetExamYear: context.targetExamYear, primaryScoreType: context.primaryScoreType, foreignLanguage: context.foreignLanguage,
-      courses: context.coursePreferences, topics: [...current].map(([topicId, declaredStatus]) => ({ topicId, declaredStatus })),
-      startingStatusReviewed: context.startingStatusReviewed, targetExamSessionId: context.targetExamSessionId ?? null };
-    this.topicSaving.set(true); this.topicError.set('');
-    this.learningSetup.save(request).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.topicSaving.set(false))).subscribe({
-      next: view => {
-        const updated = view.context; this.learningContext.set(updated);
-        this.topicStatuses.set(new Map((updated?.topicStates ?? []).map(x => [x.topicId, x.declaredStatus])));
-        this.topicSaved.set(true);
-      },
-      error: e => this.topicError.set(e?.status === 409 ? 'Kurulum başka bir oturumda değişti. Sayfayı yenileyip tekrar dene.' : e?.error?.message ?? 'Konu durumları kaydedilemedi.')
-    });
-  }
-
   toggleDay(day: Weekday) {
     const selected = new Set(this.selectedDays());
     selected.has(day) ? selected.delete(day) : selected.add(day);
@@ -219,7 +155,6 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
    */
   createProposal() {
     if (!this.canPropose() || this.editingAvailability()) return;
-    if (this.topicDirty()) { this.topicError.set('Öneri oluşturmadan önce konu durumlarını kaydet.'); return; }
     if (this.savedWindows().length) { this.requestProposal('Fill'); return; }
     const [hours, minutes] = this.startTime().split(':').map(Number);
     const startMinute = hours * 60 + minutes;
@@ -244,7 +179,6 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   /** Paket H2: "Haftanı baştan öner": a whole new week; the saved one is replaced only when the proposal is applied. */
   async replaceWeek() {
     if (!this.canPropose() || this.editingAvailability() || !this.slots().length || !this.savedWindows().length) return;
-    if (this.topicDirty()) { this.topicError.set('Öneri oluşturmadan önce konu durumlarını kaydet.'); return; }
     if (!await this.toaster.confirm(this.staffStudentId
       ? 'Öğrencinin mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.'
       : 'Mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.')) return;
@@ -312,7 +246,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     const replace = view.mode === 'Replace';
     const next = replace ? view.slots : [...this.slots(), ...view.slots];
     for (const slot of view.slots) {
-      const issue = slotError(slot, next);
+      const issue = slotError(slot, next, { max: this.maxDayMinutes, saved: this.slots(), staff: !!this.staffStudentId });
       if (issue) { this.error.set(issue); return; }
     }
     this.busy.set(true); this.error.set('');
@@ -343,12 +277,10 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
 
   continueToAnnualReview() {
     if (this.busy() || !this.slots().length || this.proposalView()) return;
-    if (this.topicDirty()) { this.topicError.set('Yıllık önizlemeye geçmeden önce konu durumlarını kaydet.'); return; }
     this.annualReview.set(true);
   }
 
   dayName(day: string) { return this.weekDays.find(x => x.value === day)?.label ?? day; }
-  ceil(value: number) { return Math.ceil(value); }
   @ViewChild(StudentAutomaticPlanComponent) private topicPlan?: StudentAutomaticPlanComponent;
   async canLeavePage() { return this.annualReview() ? (await this.annualPlan?.canLeavePage() ?? true) : !this.busy() && !this.savingAvailability() && (await this.hoursEditor?.canLeavePage() ?? true) && (await this.topicPlan?.canLeavePage() ?? true); }
   onPlanCreated(id: string) { this.planCreated.emit(id); }

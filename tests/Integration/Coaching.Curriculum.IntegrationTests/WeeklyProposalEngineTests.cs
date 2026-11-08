@@ -300,4 +300,16 @@ public sealed class WeeklyProposalEngineTests
         var result = Propose([Window(DayOfWeek.Monday, 960, 1080)], Enumerable.Range(1, 3).Select(n => Lesson(n, 600)), existing: saved);
         Assert.Equal(new[] { 960 }, Starts(result, DayOfWeek.Monday));
     }
+
+    // Merge of Paket H1: the daily limit counts saved cards; a day already at or over the limit gets nothing (a draft saved above the
+    // limit before Paket H1 keeps its cards).
+    [Fact]
+    public void ADayAtOrOverTheLimitGetsNoNewHour()
+    {
+        var full = Enumerable.Range(0, 8).Select(i => Card(9, DayOfWeek.Monday, 480 + i * 60)).ToArray();
+        var over = Enumerable.Range(0, 9).Select(i => Card(9, DayOfWeek.Tuesday, 420 + i * 60)).ToArray();
+        var result = Propose([Window(DayOfWeek.Monday, 0, 1440), Window(DayOfWeek.Tuesday, 0, 1440), Window(DayOfWeek.Wednesday, 1020, 1080)],
+            [Lesson(1, 600)], existing: [.. full, .. over]);
+        Assert.Equal(DayOfWeek.Wednesday, Assert.Single(result.Slots).Day);
+    }
 }

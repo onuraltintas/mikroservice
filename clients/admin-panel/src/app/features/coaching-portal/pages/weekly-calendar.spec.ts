@@ -9,6 +9,32 @@ describe('weekly calendar rules',()=>{
     expect(slotError({...a,startMinute:1410,durationMinutes:60},[])).not.toBe('');
     expect(slotError({...a,startMinute:1410,durationMinutes:30},[])).toBe('');
   });
+  // Paket H1 (K5, 08.11.2026): a day of the weekly routine holds at most 8 hours (10 for graduates; the server sends the limit).
+  it('limits the study of one day',()=>{
+    const monday=Array.from({length:8},(_,i)=>({...a,id:'m'+i,startMinute:480+i*60}));
+    const extra={...a,id:'x',startMinute:1200,durationMinutes:30};
+    expect(slotError(extra,[...monday,extra])).toBe('Pazartesi günü için en çok 8 saat çalışma koyabilirsin.');
+    expect(slotError(extra,[...monday,extra],{max:480})).toBe('Pazartesi günü için en çok 8 saat çalışma koyabilirsin.');
+    expect(slotError(extra,[...monday,extra],{max:480,staff:true})).toBe('Pazartesi günü için en çok 8 saat çalışma konabilir.');
+    expect(slotError(extra,[...monday,extra],{max:600})).toBe('');
+    expect(slotError(monday[0],monday)).toBe('');
+    expect(slotError({...extra,day:'Tuesday'},[...monday,{...extra,day:'Tuesday'}])).toBe('');
+    const ten=Array.from({length:10},(_,i)=>({...a,id:'t'+i,startMinute:420+i*60}));
+    expect(slotError(extra,[...ten,extra],{max:600})).toBe('Pazartesi günü için en çok 10 saat çalışma koyabilirsin.');
+  });
+  // Review of PR 129: a day saved above the limit stays editable; it may not rise above its saved total.
+  it('keeps a day saved above the limit editable without letting it grow',()=>{
+    const ten=Array.from({length:10},(_,i)=>({...a,id:'t'+i,startMinute:420+i*60}));
+    const saved=ten;
+    expect(slotError(ten[0],ten,{max:480,saved})).toBe('');
+    const nine=ten.slice(1);
+    expect(slotError(nine[0],nine,{max:480,saved})).toBe('');
+    const moved={...ten[0],startMinute:1080,durationMinutes:30};const lower=[moved,...ten.slice(1)];
+    expect(slotError(moved,lower,{max:480,saved})).toBe('');
+    const extra={...a,id:'x',startMinute:1200,durationMinutes:30};
+    expect(slotError(extra,[...ten,extra],{max:480,saved})).toBe('Pazartesi günü için en çok 8 saat çalışma koyabilirsin.');
+    expect(slotError({...extra,day:'Tuesday'},[...ten,{...extra,day:'Tuesday'}],{max:480,saved})).toBe('');
+  });
   it('projects the same weekly template across month and year boundaries without UTC shifts',()=>{
     expect(mondayOf(new Date(2027,0,3)).getFullYear()).toBe(2026);
     expect(calendarDays(new Date(2027,0,3),'week').length).toBe(7);

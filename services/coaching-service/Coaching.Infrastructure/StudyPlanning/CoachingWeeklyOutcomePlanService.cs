@@ -79,11 +79,15 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         // G2 review (M2): an estimated exam date sets the default end only; it is no limit.
         if(window.ExamDate is {} examDate&&window.EndDateSource!="Estimated"&&request.EndDate>=examDate)
             throw new ArgumentException($"Plan sınav gününden önce bitmeli. En geç {examDate.AddDays(-1):dd.MM.yyyy} tarihini seçin.");
-        var choices=(staffAccess is not null && access.CurrentUserId != student
+        var staffView=staffAccess is not null && access.CurrentUserId != student;
+        var choices=(staffView
             ? await setup.GetCatalogForStudentAsync(student,null,1,ct)
             : await setup.GetCatalogAsync(null,1,ct)).Lessons.ToDictionary(x=>x.Id);
         var lessonIds=draft.Slots.Select(x=>x.LessonId).Distinct().OrderBy(x=>x).ToArray();
-        if(lessonIds.Any(x=>!choices.ContainsKey(x)))throw Conflict("Takvimde artık kullanılamayan ders var. Haftalık taslağı güncelleyin.");
+        // Paket H1 (P10): the lessons no longer chosen are named by the names saved with the weekly cards (review of PR #129: own code).
+        var notChosen=draft.Slots.Where(x=>!choices.ContainsKey(x.LessonId)).GroupBy(x=>x.LessonId).Select(x=>new WeeklyUnscheduledLesson(x.Key,x.First().LessonName))
+            .OrderBy(x=>x.LessonName,StringComparer.Create(Turkish,false)).ToArray();
+        if(notChosen.Length>0)throw WeeklyLessonsNotChosen.Create(notChosen,staffView);
         var context=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
         var active=await db.StudyPlanRevisions.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student&&x.IsActive,ct);
         var sources=await CoachingStudyContinuation.SourcesAsync(db,student,ct);
@@ -340,5 +344,6 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         return PracticeAdaptationCalculator.Calculate(evidence).SelectMany(x=>x.Topics).Select(x=>x.TopicId).ToHashSet();
     }
     private static BusinessRuleException Forbidden()=>new("Authorization.Forbidden","Öğretmen erişimi doğrulanamadı.");
+    private static readonly System.Globalization.CultureInfo Turkish=System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
     private static BusinessRuleException Conflict(string message)=>new("StudyPlanning.Conflict",message);
 }

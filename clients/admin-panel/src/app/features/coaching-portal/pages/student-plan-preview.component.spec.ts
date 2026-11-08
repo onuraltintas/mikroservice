@@ -17,7 +17,7 @@ describe('StudentPlanPreviewComponent', () => {
   const lessons = [{ id: 'math', name: 'Matematik', examCode: 'LGS', gradeNumber: 8 }, { id: 'science', name: 'Fen Bilimleri', examCode: 'LGS', gradeNumber: 8 }];
   const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
   const saved: WeeklySlot[] = [{ id: 'old', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Friday', startMinute: 1080, durationMinutes: 60 }];
-  const request = { startDate: '2030-11-04', endDate: '2031-06-01', expectedWeeklyDraftVersion: 1, reuseFreedSlots: false };
+  const request = { startDate: '2030-11-04', endDate: '2031-06-01', expectedWeeklyDraftVersion: 1, reuseFreedSlots: true };
   const card = (id: string, lessonId: string, lessonName: string, startMinute: number): WeeklySlot =>
     ({ id, lessonId, lessonName, examCode: 'LGS', day: 'Monday', startMinute, durationMinutes: 60 });
   const proposalOf = (cards: WeeklySlot[], noTime: string[] = []): WeeklyProposal => ({ mode: 'Replace', examFocus: null, slots: cards,

@@ -5,7 +5,7 @@
 <section class="study-plans assistant-page" aria-labelledby="assistant-title">
   <header class="page-heading">
     <div><p class="eyebrow">{{ staffStudentId ? 'ÖĞRENCİ İÇİN PLAN SİHİRBAZI' : 'PLAN SİHİRBAZI' }}</p><h1 id="assistant-title">{{ staffStudentId ? 'Öğrenci için plan hazırla' : 'Planını adım adım hazırla' }}</h1>
-      <p>{{ staffStudentId ? 'Öğrencinin çalışma saatlerini, kazanımlarını ve haftalık taslağını kullanarak plan önerisi hazırla.' : 'Çalışma saatlerinden haftalık ders düzenini önizle ve kendin onayla.' }}</p></div>
+      <p>{{ staffStudentId ? 'Öğrencinin çalışma saatlerini, kazanımlarını ve haftalık taslağını kullanarak plan önerisi hazırla.' : 'Çalışma saatlerinden haftalık düzenini önizle ve kendin onayla.' }}</p></div>
     @if (!staffStudentId) { <a routerLink="/coaching-portal/plan/weekly">Takvimde kendim düzenle ↗</a> }
   </header>
   <div class="assistant-layout">
@@ -51,9 +51,8 @@
           </section>
           @if (editingAvailability()) { <app-student-study-availability (saved)="availabilitySaved()" /> }
           @else {
-            @if (topicDirty()) { <p class="muted">Öneri oluşturmadan önce konu durumlarını kaydet.</p> }
-            <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">{{ proposing() ? 'Öneri hazırlanıyor…' : 'Haftalık öneri oluştur' }}</button>
-            @if (slots().length) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="!canPropose() || topicDirty()">Haftanı baştan öner</button> }
+            <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose()">{{ proposing() ? 'Öneri hazırlanıyor…' : 'Haftalık öneri oluştur' }}</button>
+            @if (slots().length) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="!canPropose()">Haftanı baştan öner</button> }
           }
         } @else {
           @if (staffStudentId) { <p class="notice" role="status" data-testid="staff-no-availability">Öğrenci henüz çalışabileceği saatleri kaydetmemiş. Öneri için öğrencinin çalışabileceği saatleri burada seçebilirsin; bu saatler öğrencinin çalışma saatlerine kaydedilmez.</p> }
@@ -72,8 +71,7 @@
               <option [ngValue]="90">1,5 saat</option><option [ngValue]="120">2 saat</option>
             </select>
             @if (!staffStudentId) { <p class="muted">Bu saatler çalışma saatlerin olarak kaydedilir; Çalışma tercihlerimde de görürsün.</p> }
-            @if (topicDirty()) { <p class="muted">Öneri oluşturmadan önce konu durumlarını kaydet.</p> }
-            <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">{{ savingAvailability() ? 'Kaydediliyor…' : 'Haftalık öneri oluştur' }}</button>
+            <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose()">{{ savingAvailability() ? 'Kaydediliyor…' : 'Haftalık öneri oluştur' }}</button>
           </fieldset>
         }
       </div>
@@ -127,43 +125,21 @@
           }
         }
       </div>
-      <section class="topic-statuses" aria-labelledby="topic-status-title">
-        <h2 id="topic-status-title">Daha önce çalıştığın konular</h2>
-        @if (purposeRetired()) {
-          <p class="muted">@if (staffStudentId) { Öğrenci sınavını seçtikten sonra konular burada görünür. } @else { Sınavını seçtikten sonra konuların burada görünür. }</p>
-        } @else if (!learningContext()) {
-          @if(staffStudentId){<p class="muted">Öğrencinin eğitim bağlamını tamamlaması gerekiyor.</p>}@else{<p class="muted">Derslerini seçmek için önce <a routerLink="/coaching-portal/account/settings">çalışma düzenini tamamla</a>.</p>}
-        } @else {
-          <p class="muted">“Çalıştım” seçtiklerin yeni yıllık plan önizlemesinden çıkar. “Tekrar etmek istiyorum” ve boş bıraktıkların plana dahil kalır. Bu işlem mevcut planları değiştirmez.</p>
-          <label for="topic-lesson">Ders</label>
-          <select id="topic-lesson" [ngModel]="topicLessonId()" (ngModelChange)="selectTopicLesson($event)" [disabled]="topicLoading() || topicSaving()">
-            @for (lesson of availableTopicLessons(); track lesson.id) { <option [value]="lesson.id">{{ lesson.name }}</option> }
-          </select>
-          @if (topicLoading()) { <p role="status" class="muted">Konular yükleniyor…</p> }
-          @if (catalog(); as topicsPage) {
-            <div class="topic-list">
-              @for (topic of topicsPage.topics.items; track topic.id) {
-                <div class="topic-row">
-                  <div><strong>{{ topic.name }}</strong><small>{{ topic.unitName }}</small></div>
-                  <label class="sr-only" [for]="'topic-status-' + topic.id">{{ topic.name }} durumu</label>
-                  <select [id]="'topic-status-' + topic.id" [ngModel]="topicStatus(topic.id)" (ngModelChange)="setTopicStatus(topic.id, $event)" [disabled]="topicSaving() || !!staffStudentId">
-                    <option value="">Belirtmedim</option><option value="NotStudied">Henüz çalışmadım</option>
-                    <option value="Studied">Çalıştım</option><option value="NeedsReview">Tekrar etmek istiyorum</option>
-                  </select>
-                </div>
-              } @empty { <p class="muted">Bu ders için gösterilecek aktif konu yok.</p> }
-            </div>
-            @if (topicsPage.topics.totalCount > topicsPage.topics.pageSize) {
-              <div class="topic-pages"><button type="button" class="secondary" (click)="loadTopicCatalog(topicPage() - 1)" [disabled]="topicPage() <= 1 || topicLoading()">Önceki</button>
-                <span>{{ topicPage() }} / {{ ceil(topicsPage.topics.totalCount / topicsPage.topics.pageSize) }}</span>
-                <button type="button" class="secondary" (click)="loadTopicCatalog(topicPage() + 1)" [disabled]="topicPage() * topicsPage.topics.pageSize >= topicsPage.topics.totalCount || topicLoading()">Sonraki</button></div>
-            }
-            @if (!staffStudentId) { <button type="button" (click)="saveTopicStatuses()" [disabled]="topicSaving()">{{ topicSaving() ? 'Kaydediliyor…' : 'Konu durumlarını kaydet' }}</button> }
+      <!-- Paket H1 (P8): the topics are marked in Başlangıç durumum (Çalışma tercihlerim); the wizard only counts them. -->
+      @if (learningContext() && !purposeRetired()) {
+        <p class="starting-status" data-testid="starting-status">
+          @if (staffStudentId) {
+            Öğrenci “Başlangıç durumum” bölümünde {{ studiedTopicCount() }} konuyu “Çalıştım” olarak işaretledi.
+          } @else {
+            @if (studiedTopicCount()) { “Başlangıç durumum” bölümünde <strong>{{ studiedTopicCount() }} konuyu</strong> “Çalıştım” olarak işaretledin. }
+            @else { “Başlangıç durumum” bölümünde henüz “Çalıştım” olarak işaretlediğin konu yok. }
+            <a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'baslangic', donus: 'sihirbaz' }">Başlangıç durumunu düzenle</a>
           }
-          @if (topicError()) { <p class="notice error" role="alert">{{ topicError() }}</p> }
-          @if (topicSaved()) { <p class="notice success" role="status">Konu durumların kaydedildi. İstersen bir konuyu tekrar planına almak için durumunu değiştirebilirsin.</p> }
-        }
-      </section>
+        </p>
+      } @else if (!learningContext() && !staffStudentId && learningLoaded()) {
+        <p class="starting-status" data-testid="preferences-missing">Planını hazırlamak için önce çalışma tercihlerini tamamla. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
+      }
+      @if (learningError()) { <p class="notice error" role="alert">{{ learningError() }}</p> }
       <h2>Haftalık düzen</h2>
       @if (busy()) { <p role="status">Mevcut düzen yükleniyor…</p> }
       @else {
@@ -173,8 +149,7 @@
           @for (slot of slots(); track slot.id) { <p class="slot-line">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
         } @else { <p class="muted">Henüz kaydedilmiş haftalık düzen yok.</p> }
         @if (slots().length) {
-          @if (topicDirty()) { <p class="muted">Önce konu durumlarını kaydet, sonra yıllık plan önizlemesine geç.</p> }
-          <button type="button" (click)="continueToAnnualReview()" [disabled]="busy() || topicDirty() || !!proposalView()">Yıllık plan önizlemesine geç →</button>
+          <button type="button" (click)="continueToAnnualReview()" [disabled]="busy() || !!proposalView()">Yıllık plan önizlemesine geç →</button>
         }
         @if (saved() && !staffStudentId) { <a class="calendar-link" routerLink="/coaching-portal/plan/weekly">Haftalık takvimi aç →</a> }
       }

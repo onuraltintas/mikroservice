@@ -14,14 +14,14 @@ public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachi
     {
         var student=Require();var draft=await db.Set<WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student,ct);
         var lessons=(await setup.GetCatalogAsync(null,1,ct)).Lessons;
-        return new(draft is null ? null : View(draft),lessons);
+        return new(draft is null ? null : View(draft),lessons){MaxDayMinutes=await DayLimit(student,ct)};
     }
     public async Task<WeeklyDraftPage> GetForStudentAsync(Guid student,CancellationToken ct)
     {
         if(staffAccess is null)throw Forbidden();await staffAccess.RequireAsync(student,ct);
         var draft=await db.Set<WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student,ct);
         var lessons=(await setup.GetCatalogForStudentAsync(student,null,1,ct)).Lessons;
-        return new(draft is null?null:View(draft),lessons);
+        return new(draft is null?null:View(draft),lessons){MaxDayMinutes=await DayLimit(student,ct)};
     }
     public Task<WeeklyDraftView> SaveAsync(WeeklyDraftInput r,CancellationToken ct)
     {
@@ -61,12 +61,29 @@ public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachi
         var draft=await db.Set<WeeklyStudyDraft>().SingleOrDefaultAsync(x=>x.StudentId==student,ct);
         if(draft is not null) await db.Entry(draft).ReloadAsync(ct);
         if(draft is null ? r.ExpectedVersion.HasValue : r.ExpectedVersion!=draft.Version) throw Conflict();
+        // Paket H1 (K5): a day may hold at most the student's daily limit. Review of PR #129: a day saved above it stays editable;
+        // it may not rise above max(limit, its saved total). A new draft has saved totals of 0.
+        var limit=await DayLimit(student,ct);
+        var savedTotals=(draft?.Slots??[]).GroupBy(x=>x.Day).ToDictionary(x=>x.Key,x=>x.Sum(s=>(long)s.DurationMinutes));
+        var full=candidate.Slots.GroupBy(x=>x.Day)
+            .Where(x=>x.Sum(s=>(long)s.DurationMinutes)>Math.Max(limit,savedTotals.GetValueOrDefault(x.Key))).Select(x=>x.Key)
+            .OrderBy(x=>((int)x+6)%7).ToArray();
+        if(full.Length>0)throw new StudyPlanValidationException(staff
+            ?$"{DayName(full[0])} günü için en çok {limit/60} saat çalışma konabilir."
+            :$"{DayName(full[0])} günü için en çok {limit/60} saat çalışma koyabilirsin.");
         if(draft is null) db.Add(draft=candidate);else draft.Replace(candidate.TimeZoneId,candidate.Slots);
         try { await db.SaveChangesAsync(ct); }
         catch(ConcurrencyException) { db.Entry(draft).State=EntityState.Detached;throw Conflict(); }
         catch(DbUpdateException e) when(e.InnerException is PostgresException {SqlState:"23505"}) { db.Entry(draft).State=EntityState.Detached;throw Conflict(); }
         return View(draft);
     }
+    private async Task<int> DayLimit(Guid student,CancellationToken ct)=>WeeklyDayLimit.For(await db.CoachingStudentProfiles.AsNoTracking()
+        .Where(x=>x.UserId==student).Select(x=>(Coaching.Domain.Profiles.CoachingEducationStatus?)x.EducationStatus).FirstOrDefaultAsync(ct));
+    private static string DayName(DayOfWeek day)=>day switch
+    {
+        DayOfWeek.Monday=>"Pazartesi",DayOfWeek.Tuesday=>"Salı",DayOfWeek.Wednesday=>"Çarşamba",DayOfWeek.Thursday=>"Perşembe",
+        DayOfWeek.Friday=>"Cuma",DayOfWeek.Saturday=>"Cumartesi",_=>"Pazar"
+    };
     private Guid Require()=>access.CurrentUserId is {} id && access.IsCurrentStudent(id) ? id : throw new BusinessRuleException("Authorization.Forbidden","Yalnız kendi öğrenci hesabınızla kullanabilirsiniz.");
     private static BusinessRuleException Forbidden()=>new("Authorization.Forbidden","Öğretmen erişimi doğrulanamadı.");
     private static BusinessRuleException Conflict()=>new("StudyPlanning.Conflict","Haftalık taslak başka bir işlemde değişti. Değişikliklerinizi kontrol edip taslağı yeniden yükleyin.");

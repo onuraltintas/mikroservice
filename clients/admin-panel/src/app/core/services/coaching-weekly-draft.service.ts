@@ -6,7 +6,8 @@ import type {WeeklySlot} from '../../features/coaching-portal/pages/weekly-calen
 
 export interface WeeklyLesson {id:string;name:string;examCode:string|null;gradeNumber:number|null;topicCount?:number}
 export interface WeeklyDraft {version:number;timeZoneId:string;slots:WeeklySlot[]}
-export interface WeeklyDraftPage {draft:WeeklyDraft|null;lessons:WeeklyLesson[]}
+/** Paket H1 (K5): maxDayMinutes is the most study one day of the weekly routine may hold for this student. */
+export interface WeeklyDraftPage {draft:WeeklyDraft|null;lessons:WeeklyLesson[];maxDayMinutes?:number}
 /** Paket H2: Fill keeps the saved cards and proposes only in free time; Replace proposes the whole week. */
 export type WeeklyProposalMode='Fill'|'Replace';
 /** Paket H2 (K6): which YKS exam the week leans to. */

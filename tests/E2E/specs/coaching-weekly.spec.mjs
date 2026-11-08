@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {studentShell} from '../support/coaching-student-shell.mjs';
 const math='33333333-3333-4333-8333-333333333331',turkish='33333333-3333-4333-8333-333333333332';
 const lessons=[{id:math,name:'Matematik',examCode:'LGS',gradeNumber:8},{id:turkish,name:'Türkçe',examCode:'LGS',gradeNumber:8}];
 const token=()=>{const e=x=>Buffer.from(JSON.stringify(x)).toString('base64url');return `${e({alg:'HS256'})}.${e({sub:'b8a09753-f3ea-44d8-a444-cf49577b4a01',role:'Student',platform_product:'coaching',given_name:'Test',family_name:'Öğrenci',exp:Math.floor(Date.now()/1000)+900})}.fixture`;};
@@ -7,6 +8,7 @@ async function fixture(context){
   await context.route('**/api/**',async route=>{
     const req=route.request(),path=new URL(req.url()).pathname;const ok=data=>route.fulfill({json:{success:true,data}});
     if(path.endsWith('/auth/refresh-token'))return route.fulfill({json:{accessToken:token(),expiresInMinutes:15,tokenType:'Bearer'}});
+    const shell=studentShell(route,path);if(shell)return shell;
     if(path.endsWith('/profiles/me'))return ok({student:{educationStatus:'Student',gradeLevel:8,isActive:true},memberships:[]});
     if(path.endsWith('/weekly-draft')){
       if(req.method()==='GET')return ok({draft,lessons});
@@ -51,6 +53,10 @@ test('right click adds a lesson, resizing frees the other half hour and both sav
 test('saved evening cards open in the visible time range without manual scrolling',async({context,page})=>{
   const f=await fixture(context);f.setDraft({version:0,timeZoneId:'Europe/Istanbul',slots:[{id:'saved',lessonId:math,lessonName:'Matematik',examCode:'LGS',day:'Monday',startMinute:1080,durationMinutes:60}]});
   await page.goto('/coaching-portal/plan/weekly');await expect(card(page,'Matematik')).toHaveCount(1);
+  // Paket H1: the free hours come first in the steps; the daily limit is shown up front and the footer names the yearly preview.
+  await expect(page.getByRole('navigation',{name:'Planı düzenleme adımları'}).locator('ol.steps a')).toHaveText([/Boş saatlerin/,/Haftalık düzenin/,/Planını oluştur/]);
+  await expect(page.locator('.calendar-help')).toContainText('Bir güne en çok 8 saat çalışma koyabilirsin.');
+  await expect(page.getByTestId('weekly-preview-link')).toHaveText('Yıllık plan önizlemesine geç →');
   await expect.poll(()=>page.locator('.time-scroller').evaluate(el=>Math.abs(el.scrollTop-17.5*72))).toBeLessThanOrEqual(10);
   const bounds=await card(page,'Matematik').boundingBox(),viewport=await page.locator('.time-scroller').boundingBox();
   expect(bounds.y).toBeGreaterThanOrEqual(viewport.y);expect(bounds.y+bounds.height).toBeLessThanOrEqual(viewport.y+viewport.height);

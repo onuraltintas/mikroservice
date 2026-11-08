@@ -30,7 +30,11 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
 
     [HttpPut("weekly-draft"),Authorize(Roles="Teacher"),RequestSizeLimit(65536),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> SaveWeeklyDraft(Guid studentId,WeeklyDraftInput request,CancellationToken ct)=>Respond(async()=>
-        Ok(new{success=true,data=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct)}));
+    {
+        // Paket H1 (K5): the teacher sees which day is over the daily limit; any other invalid input keeps the generic message.
+        try{return Ok(new{success=true,data=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct)});}
+        catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
+    });
 
     /// <summary>Paket H2: the student's weekly proposal, as she sees it (read access, like the weekly draft).</summary>
     /// <remarks>Paket H2 review: a student without saved study times can get a proposal from the teacher's answers (windows), never saved.</remarks>
@@ -165,6 +169,8 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         { return NotFound(new { success = false, message = ex.Message, code = ex.Code }); }
         catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.Conflict")
         { return Conflict(new { success = false, message = ex.Message, code = ex.Code }); }
+        catch (BusinessRuleException ex) when (ex.Code == WeeklyLessonsNotChosen.Code)
+        { return Conflict(new { success = false, message = ex.Message, code = ex.Code, lessons = WeeklyLessonsNotChosen.Lessons(ex) }); }
         catch (BusinessRuleException ex) when (ex.Code is "StudyPlanning.ReportLimit" or "StudyPlanning.GoalReportLimit")
         { return UnprocessableEntity(new { success = false, message = ex.Message, code = ex.Code }); }
         catch (ConcurrencyException)

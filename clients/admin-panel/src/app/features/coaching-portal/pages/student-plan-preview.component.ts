@@ -112,7 +112,7 @@ export class StudentPlanPreviewComponent implements OnInit {
     this.saving.set(true); this.error.set('');
     this.weekly.save(this.version, 'Europe/Istanbul', this.proposal()).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.saving.set(false))).subscribe({
       next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.rebuilding.set(false); this.propose(); },
-      error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık ders düzenin kaydedilemedi. Yeniden deneyebilirsin.')
+      error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık düzenin kaydedilemedi. Yeniden deneyebilirsin.')
     });
   }
 
