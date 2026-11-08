@@ -9,7 +9,7 @@
           @if (slots().length && !rebuilding() && hasAvailability()) { <button type="button" class="secondary" (click)="newProposal()">Yeni öneri oluştur</button> }</div></div>
     }
   </div>
-  @if (loading()) { <p role="status" class="muted">Plan önizlemesi hazırlanıyor…</p> }
+  @if (loading() || proposing()) { <p role="status" class="muted">Plan önizlemesi hazırlanıyor…</p> }
   @else if (slots().length && !rebuilding()) {
     <h3>Haftalık ders düzenin · {{ slots().length }} ders saati</h3>
     @for (slot of slots(); track slot.id) { <p class="slot-line">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
@@ -36,7 +36,7 @@
         <p class="notice" role="status">Önizleme için Derslerim adımında çalışacağın dersleri seç.</p>
         <button type="button" (click)="editCourses.emit()">Derslerimi seç</button>
       } @else {
-        <p class="notice">Seçtiğin dersler için müsaitliğinde ders saati oluşturulamadı. Müsaitliğine en az 30 dakikalık bir aralık ekle ya da takvimde kendin düzenle.</p>
+        <p class="notice">Seçtiğin dersler için müsaitliğinde ders saati oluşturulamadı. Müsaitliğine en az bir saatlik bir aralık ekle ya da takvimde kendin düzenle.</p>
         <a routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a>
       }
     }

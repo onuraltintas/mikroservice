@@ -26,9 +26,18 @@
         @else { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p> }
       }
       @if (error() && !(purposeRetired() && !lessons().length)) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Çalışma düzenini tamamla →</a> }</p> }
-      @if (saved()) { <p class="notice success" role="status" tabindex="-1" #savedNotice>Öneri haftalık taslağına eklendi. İstersen takvimde inceleyip düzenleyebilirsin.</p> }
+      @if (saved()) { <p class="notice success" role="status" tabindex="-1" #savedNotice>{{ savedReplaced() ? 'Yeni haftalık düzen kaydedildi.' : 'Öneri haftalık taslağına eklendi.' }} İstersen takvimde inceleyip düzenleyebilirsin.</p> }
       <!-- E6 #29: the study times are given once (Çalışma tercihlerim › Müsaitliğim); the wizard uses the saved ones. -->
       <div class="composer wizard-form">
+        <!-- Paket H2 (K6): a YKS student chooses which exam this period leans to (kept on this page for now). -->
+        @if (isYks() && !editingAvailability()) {
+          <fieldset class="focus-options" data-testid="exam-focus" [disabled]="proposing()">
+            <legend>{{ staffStudentId ? 'Bu dönem öğrencinin hangi sınava ağırlık vermesini istersin?' : 'Bu dönem hangi sınava ağırlık verelim?' }}</legend>
+            @for (choice of examFocusChoices; track choice.value) {
+              <label><input type="radio" name="exam-focus" [value]="choice.value" [checked]="examFocus() === choice.value" (change)="examFocus.set(choice.value)" /> {{ choice.label }}</label>
+            }
+          </fieldset>
+        }
         @if (availabilityLoadError()) { <p class="notice error" role="alert" data-testid="availability-load-error">{{ availabilityLoadError() }} <button type="button" class="secondary" (click)="loadAvailability()" [disabled]="availabilityLoading()">Yeniden dene</button></p> }
         @else if (availabilityLoading() && !availability()) { <p role="status" class="muted">{{ staffStudentId ? 'Öğrencinin çalışma saatleri yükleniyor…' : 'Çalışma saatlerin yükleniyor…' }}</p> }
         @else if (savedWindows().length) {
@@ -43,10 +52,13 @@
           @if (editingAvailability()) { <app-student-study-availability (saved)="availabilitySaved()" /> }
           @else {
             @if (topicDirty()) { <p class="muted">Öneri oluşturmadan önce konu durumlarını kaydet.</p> }
-            <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">Haftalık öneri oluştur</button>
+            <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">{{ proposing() ? 'Öneri hazırlanıyor…' : 'Haftalık öneri oluştur' }}</button>
+            @if (slots().length) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="!canPropose() || topicDirty()">Haftanı baştan öner</button> }
           }
+        } @else if (staffStudentId) {
+          <p class="notice" role="status" data-testid="staff-no-availability">Öğrenci henüz çalışabileceği saatleri kaydetmemiş. Öğrenci saatlerini kaydedince haftalık öneri hazırlanabilir.</p>
         } @else {
-          <fieldset [disabled]="busy() || savingAvailability() || !lessons().length">
+          <fieldset [disabled]="busy() || savingAvailability() || proposing() || !lessons().length">
             <legend>1. Hangi günler çalışabilirsin?</legend>
             <div class="day-options">
               @for (day of weekDays; track day.value) {
@@ -60,7 +72,7 @@
               <option [ngValue]="30">30 dakika</option><option [ngValue]="60">1 saat</option>
               <option [ngValue]="90">1,5 saat</option><option [ngValue]="120">2 saat</option>
             </select>
-            @if (!staffStudentId) { <p class="muted">Bu saatler çalışma saatlerin olarak kaydedilir; Çalışma tercihlerimde de görürsün.</p> }
+            <p class="muted">Bu saatler çalışma saatlerin olarak kaydedilir; Çalışma tercihlerimde de görürsün.</p>
             @if (topicDirty()) { <p class="muted">Öneri oluşturmadan önce konu durumlarını kaydet.</p> }
             <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose() || topicDirty()">{{ savingAvailability() ? 'Kaydediliyor…' : 'Haftalık öneri oluştur' }}</button>
           </fieldset>
@@ -70,19 +82,47 @@
 
     <aside class="panel review-panel" aria-label="Haftalık taslak ve sihirbaz önerisi">
       <!-- Paket F #37: the proposal comes first (right after "Haftalık öneri oluştur" on a phone) and takes the focus. -->
-      @if (proposal().length) {
+      @if (proposalView(); as view) {
         <section class="proposal" data-testid="wizard-proposal" aria-labelledby="wizard-proposal-title">
           <h2 id="wizard-proposal-title" tabindex="-1" #proposalTitle>Öneriyi incele</h2>
-          @for (slot of proposal(); track slot.id) { <p class="slot-line proposed">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
-          <button type="button" (click)="applyProposal()" [disabled]="busy()">Bu saatleri taslağa ekle</button>
+          @if (view.mode === 'Replace') { <p class="muted">Kaydedersen bu öneri {{ staffStudentId ? 'öğrencinin' : 'senin' }} mevcut haftalık düzeninin yerine geçer.</p> }
+          @for (day of proposalDays(); track day.label) {
+            <div class="proposal-day" data-testid="proposal-day"><h3>{{ day.label }}</h3>
+              @for (slot of day.slots; track slot.id) { <p class="slot-line proposed">{{ clock(slot.startMinute) }}–{{ clock(slot.startMinute + slot.durationMinutes) }} · {{ slot.lessonName }}</p> }
+            </div>
+          } @empty { <p class="muted">Çalışma saatlerinde yeni ders saati için boş yer kalmadı.</p> }
+          <h3>Derslerine ayrılan süre</h3>
+          <ul class="lesson-hours" data-testid="proposal-lessons">
+            @for (lesson of view.lessons; track lesson.lessonId) {
+              <li>{{ lesson.lessonName }} · @if (lesson.noTime) { <strong>saat verilemedi</strong> } @else { haftada {{ hours(lesson.existingMinutes + lesson.proposedMinutes) }} saat }</li>
+            }
+          </ul>
+          @if (view.slots.length) {
+            <button type="button" (click)="applyProposal()" [disabled]="busy()">{{ view.mode === 'Replace' ? 'Bu düzeni kaydet' : 'Bu saatleri taslağa ekle' }}</button>
+          }
           <button type="button" class="secondary" (click)="removeProposal()" [disabled]="busy()">Öneriyi kaldır</button>
         </section>
       }
       <!-- Review of PR 126: one live container that is always there; its content changes with the proposal. -->
-      <div role="status" data-testid="unplaced-status">
-        @if (unplaced().length && !editingAvailability()) {
-          <div class="notice" data-testid="unplaced-notice"><p>{{ noTimeNotice(unplaced(), !!staffStudentId) }}</p>
-            @if (!staffStudentId && savedWindows().length) { <button type="button" class="secondary" (click)="changeAvailability()">Müsaitliğime saat ekle</button> }</div>
+      <div role="status" data-testid="shortage-status">
+        @if (proposalView(); as view) {
+          @if (view.shortageMinutes > 0 && !editingAvailability()) {
+            <div class="notice" data-testid="shortage-notice">
+              @if (staffStudentId) {
+                <p>Seçilen saatler öğrencinin derslerine yetmiyor. Bütün derslerine yetişmesi için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(plannedMinutes(view)) }} saat</strong> var.</p>
+              } @else {
+                <p>Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(plannedMinutes(view)) }} saat</strong> var.</p>
+              }
+              @if (lessonsWithoutTime(view)) { <p data-testid="no-time-lessons">Saat verilemeyen dersler: {{ lessonsWithoutTime(view) }}.</p> }
+              <div class="actions">
+                @if (!staffStudentId) {
+                  <button type="button" class="secondary" (click)="changeAvailability()">Müsait saatlerime ekle</button>
+                  <a routerLink="/coaching-portal/account/settings">Ders çıkar</a>
+                }
+                @if (view.slots.length) { <button type="button" class="secondary" (click)="applyProposal()" [disabled]="busy()">Bu önerilerle devam et</button> }
+              </div>
+            </div>
+          }
         }
       </div>
       <section class="topic-statuses" aria-labelledby="topic-status-title">
@@ -132,7 +172,7 @@
         } @else { <p class="muted">Henüz kaydedilmiş haftalık düzen yok.</p> }
         @if (slots().length) {
           @if (topicDirty()) { <p class="muted">Önce konu durumlarını kaydet, sonra yıllık plan önizlemesine geç.</p> }
-          <button type="button" (click)="continueToAnnualReview()" [disabled]="busy() || topicDirty() || proposal().length > 0">Yıllık plan önizlemesine geç →</button>
+          <button type="button" (click)="continueToAnnualReview()" [disabled]="busy() || topicDirty() || !!proposalView()">Yıllık plan önizlemesine geç →</button>
         }
         @if (saved() && !staffStudentId) { <a class="calendar-link" routerLink="/coaching-portal/plan/weekly">Haftalık takvimi aç →</a> }
       }

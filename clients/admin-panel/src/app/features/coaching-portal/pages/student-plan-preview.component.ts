@@ -3,16 +3,15 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { catchError, finalize, forkJoin, of, throwError } from 'rxjs';
+import { Subscription, catchError, finalize, forkJoin, of, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
-import { CoachingWeeklyDraftService, WeeklyCourseRank, WeeklyLesson } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingWeeklyDraftService, WeeklyLesson } from '../../../core/services/coaching-weekly-draft.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
-import { StudyPlanWizardLesson, createProposalFromWindows, lessonsWithoutTime, noTimeNotice, rankedWizardLessons } from './study-plan-wizard';
 import { WeeklySlot, clock, weekDays } from './weekly-calendar';
 
 /**
  * E6 #29 (live test 06.11): "Plan önizlemesi" in Çalışma tercihlerim. It shows the draft itself: the weekly lessons made
- * from the saved availability with the plan wizard's rules, and once they are saved, the wizard's annual preview, which
+ * from the saved availability (Paket H2: the server's need-based proposal, the plan wizard's), and once they are saved, the wizard's annual preview, which
  * creates the draft that is published on Planım ("Planı yayımla"). Nothing is saved without the student's click.
  */
 @Component({
@@ -42,13 +41,13 @@ export class StudentPlanPreviewComponent implements OnInit {
   readonly availability = signal<StudyAvailability | null>(null);
   readonly slots = signal<WeeklySlot[]>([]);
   readonly proposal = signal<WeeklySlot[]>([]);
-  /** Paket G #41: the chosen courses that got no hour in the proposal, the most important first. */
-  readonly unplaced = signal<StudyPlanWizardLesson[]>([]);
-  readonly noTimeNotice = noTimeNotice;
+  /** Paket G #41: the chosen courses that got no hour in the proposal (or in the saved week). */
+  readonly unplaced = signal<string[]>([]);
+  readonly proposing = signal(false);
+  private request?: Subscription;
   /** Review of PR 126: a new proposal for a saved week; it replaces the saved week only when the student saves it. */
   readonly rebuilding = signal(false);
   private lessons: WeeklyLesson[] = [];
-  private courses: WeeklyCourseRank[] = [];
   private version: number | null = null;
   readonly clock = clock;
 
@@ -61,7 +60,7 @@ export class StudentPlanPreviewComponent implements OnInit {
       availability: this.planning.getAvailability().pipe(catchError(e => e?.status === 404 ? of(null) : throwError(() => e)))
     }).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading.set(false))).subscribe({
       next: ({ page, availability }) => {
-        this.lessons = page.lessons; this.courses = page.courses ?? []; this.version = page.draft?.version ?? null;
+        this.lessons = page.lessons; this.version = page.draft?.version ?? null;
         this.slots.set(page.draft?.slots ?? []); this.availability.set(availability ?? null);
         this.loaded = true; this.propose();
       },
@@ -74,13 +73,25 @@ export class StudentPlanPreviewComponent implements OnInit {
     const chosen = new Set(this.chosenIds.map(id => id.toLowerCase()));
     const lessons = this.lessons.filter(lesson => chosen.has(lesson.id.toLowerCase()));
     this.chosenLessons.set(lessons);
-    const ranked = rankedWizardLessons(lessons, this.courses);
+    this.request?.unsubscribe(); this.proposing.set(false);
     const fresh = !this.slots().length || this.rebuilding();
-    const proposal = fresh ? createProposalFromWindows(this.availability()?.windows ?? [], ranked, []) : [];
-    this.proposal.set(proposal);
-    // Review of PR 126: a saved week also names the chosen courses it leaves without time.
-    this.unplaced.set(fresh && !this.hasAvailability() ? [] : lessonsWithoutTime(ranked, fresh ? [] : this.slots(), proposal));
+    if (!fresh) {
+      // Review of PR 126: a saved week also names the chosen courses it leaves without time.
+      const covered = new Set(this.slots().map(slot => slot.lessonId.toLowerCase()));
+      this.proposal.set([]); this.unplaced.set(lessons.filter(lesson => !covered.has(lesson.id.toLowerCase())).map(lesson => lesson.name));
+      return;
+    }
+    this.proposal.set([]); this.unplaced.set([]);
+    if (!this.hasAvailability() || !lessons.length) return;
+    // Paket H2: a whole new week from the server (by each course's need), saved only on the student's click.
+    this.proposing.set(true);
+    this.request = this.weekly.proposal('Replace', null).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.proposing.set(false))).subscribe({
+      next: view => { this.proposal.set(view.slots); this.unplaced.set(view.lessons.filter(lesson => lesson.noTime).map(lesson => lesson.lessonName)); },
+      error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık öneri hazırlanamadı. Yeniden deneyebilirsin.')
+    });
   }
+
+  noTimeNotice(names: string[]) { return names.length ? `Şu dersler için saat kalmadı: ${names.join(', ')}. Müsaitliğine saat ekle ya da ders sayısını azalt.` : ''; }
 
   /** Review of PR 126: "Yeni öneri oluştur" for a saved week, from the saved availability; nothing is saved yet. */
   newProposal() { this.rebuilding.set(true); this.error.set(''); this.propose(); }
