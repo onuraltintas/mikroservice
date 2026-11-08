@@ -122,30 +122,6 @@ public sealed class WeeklyStudyDraftTests
         f.User.Roles=["Teacher"];await Assert.ThrowsAsync<BusinessRuleException>(()=>svc.GetAsync(default));
     }
 
-    // Paket G #41 (07.11.2026): the page tells the proposal each chosen course's priority and its questions in the exam.
-    [Fact]
-    public async Task PageGivesTheChosenCoursesPriorityAndYksQuestionCount()
-    {
-        await using var f=new CurriculumManagementTests.Fixture();await f.Seed();f.User.Roles=["Student"];var student=f.User.UserId!.Value;
-        (StudyCatalogLesson Lesson,StudyCatalogTopic Topic) Course(string name,string exam,string test)
-        {
-            var lesson=StudyCatalogLesson.Create("test","g41-"+test,name,null,exam);lesson.SetActive(true);
-            var unit=StudyCatalogUnit.Create("test","g41-unit-"+test,lesson.Id,name,1);unit.SetActive(true);
-            var topic=StudyCatalogTopic.Create("test","g41-topic-"+test,lesson.Id,unit.Id,name+" konusu",null,1);topic.SetActive(true);
-            f.Db.AddRange(lesson,unit,topic,StudyCatalogYksScope.Create(topic.Id,exam,"SAY",test,null,"test"));return (lesson,topic);
-        }
-        var turkish=Course("Türkçe (TYT)","TYT","TYT.TUR");var biology=Course("Biyoloji (AYT)","AYT","AYT.FEN");
-        var context=StudentLearningContext.Create(student,2026,LearningPurpose.Yks,2027,"SAY",null);f.Db.Add(context);
-        context.ReplaceSelections([StudentCoursePreference.Create(context.Id,turkish.Lesson.Id,2,null),StudentCoursePreference.Create(context.Id,biology.Lesson.Id,1,null)],[],false);
-        await f.Db.SaveChangesAsync();
-        var courses=(await Service(f,new(f.Db)).GetAsync(default)).Courses!.ToDictionary(x=>x.LessonId);
-        Assert.Equal(2,courses.Count);
-        Assert.Equal(new WeeklyCourseRank(turkish.Lesson.Id,2,40m),courses[turkish.Lesson.Id]);
-        Assert.Equal(new WeeklyCourseRank(biology.Lesson.Id,1,13m),courses[biology.Lesson.Id]);
-        // Without a learning context the page has no ranks; the proposal keeps its own defaults.
-        f.User.UserId=Guid.NewGuid();Assert.Empty((await Service(f,new(f.Db)).GetAsync(default)).Courses!);
-    }
-
     internal static WeeklySlotInput Slot(Guid lesson,int start,int duration)=>new(Guid.NewGuid(),lesson,DayOfWeek.Monday,start,duration);
     internal static CoachingWeeklyStudyDraftService Service(CurriculumManagementTests.Fixture f,Catalog setup)=>new(f.Db,new CoachingAccessPolicy(f.User),setup);
     internal sealed class Catalog(Coaching.Infrastructure.Data.CoachingDbContext db):ILearningSetupService

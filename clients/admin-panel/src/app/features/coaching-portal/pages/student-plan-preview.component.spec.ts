@@ -23,7 +23,7 @@ describe('StudentPlanPreviewComponent', () => {
   const proposalOf = (cards: WeeklySlot[], noTime: string[] = []): WeeklyProposal => ({ mode: 'Replace', examFocus: null, slots: cards,
     lessons: lessons.map(x => ({ lessonId: x.id, lessonName: x.name, examCode: 'LGS', existingMinutes: 0, proposedMinutes: cards.filter(c => c.lessonId === x.id).length * 60,
       neededMinutes: 60, noTime: noTime.includes(x.id) })), freeMinutes: 120, neededMinutes: 120, shortageMinutes: noTime.length * 60, maxDayMinutes: 480,
-    weeksUntilEnd: 30, endDate: '2031-06-01', middleSchool: true });
+    weeksUntilEnd: 30, endDate: '2031-06-01', middleSchool: true, coveredMinutes: 120 - noTime.length * 60, draftVersion: null });
   const twoHours = proposalOf([card('p1', 'science', 'Fen Bilimleri', 1020), card('p2', 'math', 'Matematik', 1080)]);
   async function setup(availability: StudyAvailability | null, slots: WeeklySlot[] = [], proposal: WeeklyProposal = twoHours) {
     const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 1, timeZoneId: 'Europe/Istanbul', slots } : null, lessons })),

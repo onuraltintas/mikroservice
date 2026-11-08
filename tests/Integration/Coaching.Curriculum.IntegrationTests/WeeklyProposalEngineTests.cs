@@ -179,4 +179,125 @@ public sealed class WeeklyProposalEngineTests
         Assert.Equal(first.Slots, second.Slots);
         Assert.Equal(first.Lessons.OrderBy(x => x.LessonId), second.Lessons.OrderBy(x => x.LessonId));
     }
+
+    // Review of PR #130 (1a): a course with a saved card on Monday gets its next hour on the free Tuesday, not on Monday again.
+    [Fact]
+    public void ACourseWithASavedCardGoesToAnotherDay()
+    {
+        var saved = new[] { Card(1, DayOfWeek.Monday, 960) };
+        var result = Propose([Window(DayOfWeek.Monday, 1080, 1140), Window(DayOfWeek.Tuesday, 1080, 1140)], [Lesson(1, 120)], existing: saved);
+        var slot = Assert.Single(result.Slots);
+        Assert.Equal((DayOfWeek.Tuesday, 1080), (slot.Day, slot.StartMinute));
+    }
+
+    // Review of PR #130 (1b): the second Matematik (AYT) hour goes to the free Wednesday, not twice on Monday; Tuesday's only hour
+    // would follow the saved Matematik (TYT) card.
+    [Fact]
+    public void TheSecondHourGoesToAFreeDayBeforeTheSameDayAgain()
+    {
+        var saved = new[] { Card(1, DayOfWeek.Tuesday, 960, name: "Matematik (TYT)") };
+        var result = Propose([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Monday, 1140, 1200), Window(DayOfWeek.Tuesday, 1020, 1080),
+            Window(DayOfWeek.Wednesday, 1020, 1080)], [Lesson(2, 120, name: "Matematik (AYT)", exam: "AYT")], existing: saved);
+        Assert.Equal(new[] { (DayOfWeek.Monday, 1020), (DayOfWeek.Wednesday, 1020) }, result.Slots.Select(x => (x.Day, x.StartMinute)));
+    }
+
+    [Fact]
+    public void TheLeastLoadedDaysComeFirstCountingSavedCards_ASecondHourOnADayOnlyWhenNoDayIsLeft()
+    {
+        // Monday and Tuesday already hold saved study; the two new hours go to Wednesday and Thursday.
+        var saved = new[] { Card(9, DayOfWeek.Monday, 900), Card(9, DayOfWeek.Tuesday, 900) };
+        var windows = Weekdays.Take(4).Select(day => Window(day, 1020, 1080)).ToArray();
+        var spread = Propose(windows, [Lesson(1, 60), Lesson(2, 60)], existing: saved);
+        Assert.Equal(new[] { DayOfWeek.Wednesday, DayOfWeek.Thursday }, spread.Slots.Select(x => x.Day));
+        // One day only: the course comes twice rather than losing time.
+        var oneDay = Propose([Window(DayOfWeek.Friday, 960, 1260)], [Lesson(1, 120)]);
+        Assert.Equal(2, oneDay.Slots.Count);
+    }
+
+    // Review of PR #130 (6): a day whose saved cards come before the free hour has no "first session" left.
+    [Fact]
+    public void TheFirstSessionOfTheDayCountsSavedCards()
+    {
+        var saved = new[] { Card(9, DayOfWeek.Monday, 900), Card(9, DayOfWeek.Tuesday, 1200) };
+        var result = Propose([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Tuesday, 1080, 1140)],
+            [Lesson(1, 60), Lesson(2, 60, priority: 1)], existing: saved);
+        Assert.Equal(Id(2), result.Slots.Single(x => x.Day == DayOfWeek.Tuesday).LessonId);
+        Assert.Equal(Id(1), result.Slots.Single(x => x.Day == DayOfWeek.Monday).LessonId);
+    }
+
+    // Review of PR #130 (2): a course without work left gets its hour only after the courses with work reach their need.
+    [Fact]
+    public void ACourseWithoutWorkWaitsUntilTheOthersHaveTheirNeed()
+    {
+        var windows = new[] { Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Tuesday, 1020, 1080), Window(DayOfWeek.Wednesday, 1020, 1080) };
+        var lessons = new[] { Lesson(1, 120), Lesson(2, 0) };
+        var tight = Propose(windows.Take(2), lessons);
+        Assert.Equal((120, 0, true), (tight.Lessons[0].ProposedMinutes, tight.Lessons[1].ProposedMinutes, tight.Lessons[1].NoTime));
+        Assert.Equal((0, 120, 120), (tight.ShortageMinutes, tight.CoveredMinutes, tight.NeededMinutes));
+        var enough = Propose(windows, lessons);
+        Assert.Equal((120, 60), (enough.Lessons[0].ProposedMinutes, enough.Lessons[1].ProposedMinutes));
+    }
+
+    // Review of PR #130 (2): "şu an" is what the week covers of the need, so it never reaches the need while there is a shortage.
+    [Fact]
+    public void CoveredMinutesCountOnlyUpToEachCoursesNeed()
+    {
+        // One course has three saved hours for a one-hour need, the other has none for two: 3 hours planned for 3 needed, yet
+        // only 1 hour of the need is covered.
+        var saved = new[] { Card(1, DayOfWeek.Monday, 900), Card(1, DayOfWeek.Tuesday, 900), Card(1, DayOfWeek.Wednesday, 900) };
+        var result = Propose([], [Lesson(1, 60), Lesson(2, 120)], existing: saved);
+        Assert.Equal((180, 120, 60), (result.NeededMinutes, result.ShortageMinutes, result.CoveredMinutes));
+        Assert.Equal(result.NeededMinutes - result.ShortageMinutes, result.CoveredMinutes);
+        Assert.True(result.Lessons.Sum(x => x.ExistingMinutes + x.ProposedMinutes) >= result.NeededMinutes);
+    }
+
+    // Review of PR #130 (3): close to the exam the weekly need is the remaining work, never work × 7.
+    [Theory]
+    [InlineData(1, 0)]
+    [InlineData(2, 1)]
+    [InlineData(3, 1)]
+    [InlineData(4, 1)]
+    [InlineData(5, 1)]
+    [InlineData(6, 1)]
+    public void UnderAWeekTheNeedIsTheRemainingWork(int days, int reviews)
+    {
+        Assert.Equal(reviews, WeeklyProposalEngine.ReviewsWithin(days));
+        Assert.Equal(300 + 2 * reviews * WeeklyPlanEngine.SpacedMinutes, WeeklyProposalEngine.WeeklyNeed(300, 2, days, 1));
+    }
+
+    [Fact]
+    public void TheNeedIsSpreadOverTheTimesTheLeastFrequentStudyDayComes()
+    {
+        Assert.Equal(90, WeeklyProposalEngine.WeeklyNeed(300, 2, 30, 4)); // (300 + 2 topics × 2 reviews (1 and 7 days) × 15) ÷ 4
+        var occurrences = WeeklyProposalEngine.Occurrences(new DateOnly(2027, 5, 24), new DateOnly(2027, 6, 1)); // Monday to the next Tuesday
+        Assert.Equal((2, 2, 1, 1), (occurrences[DayOfWeek.Monday], occurrences[DayOfWeek.Tuesday], occurrences[DayOfWeek.Wednesday], occurrences[DayOfWeek.Sunday]));
+        // A weekday that does not come before the end gets no session.
+        var lessons = new[] { Lesson(1, 600) };
+        var shortWeek = WeeklyProposalEngine.Propose(new([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Friday, 1020, 1080)], [], lessons, 2,
+            WeeklyDayLimit.SchoolMinutes, null, WeeklyProposalMode.Fill, WeeklyProposalEngine.Occurrences(new DateOnly(2027, 5, 24), new DateOnly(2027, 5, 26))));
+        Assert.Equal(DayOfWeek.Monday, Assert.Single(shortWeek.Slots).Day);
+    }
+
+    [Fact]
+    public void TheLastHourOfTheDayIsUsed_AndTouchingOrOverlappingWindowsAreOneStretch()
+    {
+        var late = Propose([Window(DayOfWeek.Monday, 1380, 1440)], [Lesson(1, 60)]);
+        Assert.Equal(1380, Assert.Single(late.Slots).StartMinute);
+        var lessons = Enumerable.Range(1, 4).Select(n => Lesson(n, 600)).ToArray();
+        // 17:00–18:00 and 18:00–19:00 touch: two hours in a row, then a break is needed (19:00–20:00 in a third window stays a run of 3).
+        var touching = Propose([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Monday, 1080, 1140), Window(DayOfWeek.Monday, 1140, 1200)], lessons);
+        Assert.Equal(new[] { 1020, 1080 }, Starts(touching, DayOfWeek.Monday));
+        var overlapping = Propose([Window(DayOfWeek.Monday, 1020, 1110), Window(DayOfWeek.Monday, 1050, 1140)], lessons, middle: true);
+        Assert.Equal(new[] { 1020 }, Starts(overlapping, DayOfWeek.Monday));
+        Assert.Equal(new[] { 1020, 1080 }, Starts(Propose([Window(DayOfWeek.Monday, 1020, 1110), Window(DayOfWeek.Monday, 1050, 1140)], lessons), DayOfWeek.Monday));
+    }
+
+    [Fact]
+    public void ASavedCardOutsideTheWindowsStillCountsTowardTheRun()
+    {
+        // 16:00–18:00 free, a saved card 18:00–19:00 outside any window: 17:00 would make three hours in a row.
+        var saved = new[] { Card(9, DayOfWeek.Monday, 1080) };
+        var result = Propose([Window(DayOfWeek.Monday, 960, 1080)], Enumerable.Range(1, 3).Select(n => Lesson(n, 600)), existing: saved);
+        Assert.Equal(new[] { 960 }, Starts(result, DayOfWeek.Monday));
+    }
 }

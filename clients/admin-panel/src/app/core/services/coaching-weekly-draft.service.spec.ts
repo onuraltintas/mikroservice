@@ -33,6 +33,11 @@ describe('weekly draft API',()=>{
     service.proposal('Replace',null,'student-1').subscribe();
     const staff=http.expectOne('/api/coaching/staff/students/student-1/study/weekly-draft/proposal');
     expect(staff.request.method).toBe('POST');expect(staff.request.body).toEqual({mode:'Replace',examFocus:null});
-    staff.flush({data:{mode:'Replace',slots:[]}});http.verify();
+    staff.flush({data:{mode:'Replace',slots:[]}});
+    // Review of PR #130 (13): a teacher's answers for a student without study times go with the request.
+    service.proposal('Fill',null,'student-1',[{day:'Monday',startMinute:1020,endMinute:1140}]).subscribe();
+    const answered=http.expectOne('/api/coaching/staff/students/student-1/study/weekly-draft/proposal');
+    expect(answered.request.body).toEqual({mode:'Fill',examFocus:null,windows:[{day:'Monday',startMinute:1020,endMinute:1140}]});
+    answered.flush({data:{mode:'Fill',slots:[]}});http.verify();
   });
 });
