@@ -34,7 +34,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
     { tempo: 'Intense', finishBy: '2027-04-01', neededWeeklyMinutes: 960, capacityWeeklyMinutes: 900, fits: false }];
 
   interface Opts { yks?: boolean; routine?: StudyRoutineView | null; availability?: StudyAvailability | null; staff?: string | null; active?: boolean; adim?: string;
-    tempo?: WeeklyTempoOption[]; availabilityError?: boolean; cards?: boolean; noContext?: boolean; purposeNotForEducation?: boolean; }
+    tempo?: WeeklyTempoOption[]; availabilityError?: boolean; cards?: boolean; yeniden?: boolean; noContext?: boolean; purposeNotForEducation?: boolean; }
   async function setup(o: Opts = {}) {
     const ctx = o.yks ? yksContext : context;
     const weekly = { get: vi.fn((_s?: string) => of({ draft: o.cards ? { version: 1, timeZoneId: 'Europe/Istanbul', slots: [{ id: 's', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Monday' as const, startMinute: 900, durationMinutes: 60 }] } : null, lessons: o.yks ? yksLessons : lessons, maxDayMinutes: 480 })), save: vi.fn(),
@@ -53,7 +53,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
       { provide: CoachingWeeklyDraftService, useValue: weekly }, { provide: CoachingLearningSetupService, useValue: learning },
       { provide: CoachingWeeklyOutcomePlanService, useValue: engine }, { provide: CoachingStudyPlanningService, useValue: planning },
       { provide: CoachingStudyRoutineService, useValue: routines },
-      ...(o.adim ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({ adim: o.adim }) } } }] : [])] });
+      ...(o.adim || o.yeniden ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(o.yeniden ? { yeniden: 'oner' } : { adim: o.adim! }) } } }] : [])] });
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(StudentStudyPlanAssistantComponent); fixture.componentInstance.staffStudentId = o.staff ?? null;
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
@@ -209,6 +209,14 @@ describe('StudentStudyPlanAssistantComponent', () => {
     const { el, weekly } = await setup({ adim: 'ozet', active: true, routine: routineOf({ ...answers, tempo: 'Balanced' }), availability: hours });
     expect(title(el)).toBe('Özet');
     expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-05-12');
+  });
+
+  it('opens the summary with a whole new week for H5\'s "Yeniden öner" (?yeniden=oner), after a confirmation', async () => {
+    const { el, weekly } = await setup({ adim: undefined, yeniden: true, cards: true, routine: routineOf(answers), availability: hours, active: true });
+    expect(title(el)).toBe('Özet');
+    expect(weekly.tempoOptions).toHaveBeenCalledWith(null, undefined, undefined, 'Replace');
+    expect(TestBed.inject(ToasterService).confirm).toHaveBeenCalled();
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-06-13');
   });
 
   it('"Saat ekle" in the summary opens the questions and returns to the summary after saving', async () => {

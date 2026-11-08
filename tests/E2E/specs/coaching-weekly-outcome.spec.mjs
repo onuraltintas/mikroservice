@@ -43,7 +43,8 @@ async function fixture(page,{active=false,routine=null}={}){
         {lessonId:turkish,lessonName:'Türkçe',examCode:'LGS',existingMinutes:0,proposedMinutes:60,neededMinutes:90,noTime:false}],freeMinutes:120,neededMinutes:150,shortageMinutes:30,coveredMinutes:120,
         maxDayMinutes:480,weeksUntilEnd:30,endDate:'2027-06-19',middleSchool:true,draftVersion:draftVersion,finishBy:body.finishBy??null});}
     if(path.endsWith('/weekly-draft')){
-      if(req.method()==='PUT'){const body=req.postDataJSON();writes.push({path,body});draftVersion++;slots=body.slots.map(x=>({...x,lessonName:lessons.find(l=>l.id===x.lessonId).name,examCode:'LGS'}));}
+      if(req.method()==='PUT'){const body=req.postDataJSON();writes.push({path,body});draftVersion++;slots=body.slots.map(x=>({...x,lessonName:lessons.find(l=>l.id===x.lessonId).name,examCode:'LGS'}));
+        return ok({version:draftVersion,timeZoneId:'Europe/Istanbul',slots});}
       return ok({draft:{version:draftVersion,timeZoneId:'Europe/Istanbul',slots},lessons,maxDayMinutes:480});}
     if(path.endsWith('/weekly-outcome-plans/options'))return ok({startDate:'2026-11-09',endDate:'2027-06-19',weeklyDraftVersion:draftVersion,timeZoneId:'Europe/Istanbul',exams:[{name:'LGS',date:'2027-06-20'}]});
     if(path.endsWith('/weekly-outcome-plans/preview')){const body=req.postDataJSON();previews.push(body);return ok(preview(body));}
@@ -74,7 +75,7 @@ test('the old preview address opens the Özet step; the week, each course and th
   await expect(page.getByTestId('wizard-progress')).toHaveText('Adım 4 / 4');
   // The draft has cards: Fill mode, ending on the first (relaxed) tempo's date.
   expect(f.proposals[0]).toEqual({mode:'Fill',examFocus:null,finishBy:'2027-06-19'});
-  await expect(page.getByTestId('proposal-day')).toHaveText(['Pazartesi18:00–19:00 · Matematik','Salı18:00–19:00 · Türkçe Yeni']);
+  await expect(page.getByTestId('proposal-day')).toHaveText([/Pazartesi\s*18:00–19:00 · Matematik/,/Salı\s*18:00–19:00 · Türkçe\s*Yeni/]);
   await expect(page.getByTestId('shortage-notice')).toContainText('haftada yaklaşık 2,5 saat gerekiyor');
   await page.screenshot({path:`../../artifacts/weekly-outcome-week-${test.info().project.name}.png`,fullPage:false});
   await page.getByRole('button',{name:'Bu haftayla devam et',exact:true}).click();
@@ -119,7 +120,7 @@ test('a new student goes through every step: hours, courses, tempo and summary',
   await page.getByRole('radio',{name:/Dengeli/}).check();
   await page.getByRole('button',{name:'Devam',exact:true}).click();
   await expect(heading(page,'Özet')).toBeVisible();
-  expect(f.proposals.at(-1).finishBy).toBe('2027-05-20');
+  await expect.poll(()=>f.proposals.at(-1)?.finishBy).toBe('2027-05-20');
   // "Önemli konulara odaklan" after the week is kept.
   await page.getByRole('button',{name:'Bu haftayla devam et',exact:true}).click();
   await page.getByRole('button',{name:'Önemli konulara odaklan',exact:true}).click();

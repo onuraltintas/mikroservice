@@ -30,7 +30,7 @@ describe('WizardSummaryStepComponent', () => {
       lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 600, scheduledMinutes: 600, remainingMinutes: 0, finishDate: '2027-04-20', extraWeeklyMinutes: 0 },
         { lessonId: 'tur', lessonName: 'Türkçe', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 900, scheduledMinutes: 810, remainingMinutes: 90, finishDate: null, extraWeeklyMinutes: 30 }] }, ...over });
 
-  async function setup(opts: { slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string } = {}) {
+  async function setup(opts: { slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean } = {}) {
     const slots = opts.slots ?? [saved];
     const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 3, timeZoneId: 'Europe/Istanbul', slots } : null, lessons: [], maxDayMinutes: 480 })),
       save: vi.fn((_v: number | null, _tz: string, next: WeeklySlot[]) => of({ version: 4, timeZoneId: 'Europe/Istanbul', slots: next })),
@@ -50,7 +50,7 @@ describe('WizardSummaryStepComponent', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(WizardSummaryStepComponent), c = fixture.componentInstance;
     c.staffStudentId = opts.staff ? 'student-1' : null; c.finishBy = opts.finishBy === undefined ? '2027-05-12' : opts.finishBy; c.context = context;
-    c.windows = opts.windows ?? null; c.tempoNote = opts.tempoNote ?? '';
+    c.windows = opts.windows ?? null; c.tempoNote = opts.tempoNote ?? ''; c.replaceOnOpen = !!opts.replaceOnOpen;
     const events = { addHours: vi.fn(), planCreated: vi.fn(), contextSaved: vi.fn() };
     c.addHours.subscribe(events.addHours); c.planCreated.subscribe(events.planCreated); c.contextSaved.subscribe(events.contextSaved);
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
@@ -79,6 +79,15 @@ describe('WizardSummaryStepComponent', () => {
     const { el, weekly } = await setup({ slots: [] });
     expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-05-12');
     expect(button(el, 'Haftanı baştan öner')).toBeUndefined();
+  });
+
+  it('opens with "Haftanı baştan öner" when asked (?yeniden=oner), and keeps the week when the student says no', async () => {
+    const { weekly } = await setup({ replaceOnOpen: true });
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-05-12');
+    TestBed.resetTestingModule();
+    TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(false), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
+    const no = await setup({ replaceOnOpen: true });
+    expect(no.weekly.proposal).toHaveBeenCalledWith('Fill', null, undefined, undefined, '2027-05-12');
   });
 
   it('"Haftanı baştan öner" proposes the whole week again only after a confirmation', async () => {
