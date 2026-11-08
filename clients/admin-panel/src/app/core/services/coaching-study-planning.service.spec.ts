@@ -9,7 +9,10 @@ describe('CoachingStudyPlanningService', () => {
     const input={expectedVersion:7,title:'Tekrar',plannedDate:'2027-01-04',startMinute:1080,plannedMinutes:30,lessonId:'math'};
     service.saveCalendarTask('p',null,input).subscribe();const add=http.expectOne('/api/coaching/study-planning/plans/p/tasks');expect(add.request.method).toBe('POST');expect(add.request.body).toEqual(input);add.flush({data:{}});
     service.saveCalendarTask('p','t',input,'s').subscribe();const edit=http.expectOne('/api/coaching/staff/students/s/study/plans/p/tasks/t');expect(edit.request.method).toBe('PUT');expect(edit.request.body).toEqual(input);edit.flush({data:{}});
-    service.deleteCalendarTask('p','t',8,'s').subscribe();const remove=http.expectOne('/api/coaching/staff/students/s/study/plans/p/tasks/t');expect(remove.request.method).toBe('DELETE');expect(remove.request.body).toEqual({expectedVersion:8});remove.flush({data:{}});http.verify();
+    service.deleteCalendarTask('p','t',8,'s').subscribe();const remove=http.expectOne('/api/coaching/staff/students/s/study/plans/p/tasks/t');expect(remove.request.method).toBe('DELETE');expect(remove.request.body).toEqual({expectedVersion:8});remove.flush({data:{}});
+    // Paket H5: split a task into two halves.
+    service.splitCalendarTask('p','t',9).subscribe();const split=http.expectOne('/api/coaching/study-planning/plans/p/tasks/t/split');expect(split.request.method).toBe('POST');expect(split.request.body).toEqual({expectedVersion:9});split.flush({data:{}});
+    service.splitCalendarTask('p','t',9,'s').subscribe();http.expectOne('/api/coaching/staff/students/s/study/plans/p/tasks/t/split').flush({data:{}});http.verify();
   });
   it('searches topics and previews without sending an owner or creating a plan', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });

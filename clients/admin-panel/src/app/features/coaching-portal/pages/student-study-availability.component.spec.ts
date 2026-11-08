@@ -3,21 +3,54 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
+import { provideRouter } from '@angular/router';
+import { CoachingWeeklyDraftService, WeeklyDraftPage } from '../../../core/services/coaching-weekly-draft.service';
+import type { WeeklySlot } from './weekly-calendar';
 
 describe('StudentStudyAvailabilityComponent', () => {
   const preferences: StudyAvailability = { version: 3, timeZoneId: 'Europe/Istanbul', windows: [
     { day: 'Monday', startMinute: 480, endMinute: 540 }
   ] };
-  async function setup(missing = false) {
+  const card = (id: string, day: WeeklySlot['day'], startMinute: number): WeeklySlot => ({ id, lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day, startMinute, durationMinutes: 60 });
+  async function setup(missing = false, slots: WeeklySlot[] = [card('inside', 'Monday', 480)]) {
     const service = {
       getAvailability: vi.fn(() => missing ? throwError(() => ({ status: 404 })) : of(preferences)),
       saveAvailability: vi.fn(() => of({ ...preferences, version: 4 }))
     };
-    TestBed.configureTestingModule({ imports: [StudentStudyAvailabilityComponent], providers: [{ provide: CoachingStudyPlanningService, useValue: service }] });
+    const weekly = { get: vi.fn(() => of<WeeklyDraftPage>({ draft: { version: 2, timeZoneId: 'Europe/Istanbul', slots }, lessons: [] })) };
+    TestBed.configureTestingModule({ imports: [StudentStudyAvailabilityComponent], providers: [provideRouter([]), { provide: CoachingStudyPlanningService, useValue: service }, { provide: CoachingWeeklyDraftService, useValue: weekly }] });
     const fixture = TestBed.createComponent(StudentStudyAvailabilityComponent);
     fixture.detectChanges(); await fixture.whenStable();
-    return { fixture, component: fixture.componentInstance, service };
+    return { fixture, component: fixture.componentInstance, service, weekly };
   }
+  // Paket H5: after new study times are saved, say how many weekly cards are now outside them; the cards are not changed.
+  it('says how many weekly cards are outside the new times and offers a new proposal or leaving them', async () => {
+    const { fixture, component, service, weekly } = await setup(false, [card('inside', 'Monday', 480), card('a', 'Monday', 1080), card('b', 'Friday', 600)]);
+    const el = fixture.nativeElement as HTMLElement;
+    service.saveAvailability.mockReturnValue(of({ ...preferences, version: 4 }));
+    expect(weekly.get).not.toHaveBeenCalled();
+    component.save(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.get).toHaveBeenCalledTimes(1);
+    const notice = el.querySelector('[data-testid="weekly-outside-notice"]') as HTMLElement;
+    expect(notice.textContent).toContain('Haftalık düzeninde 2 kart yeni saatlerinin dışında kaldı.');
+    const again = Array.from(notice.querySelectorAll('a')).find(x => x.textContent?.trim() === 'Yeniden öner')!;
+    expect(again.getAttribute('href')).toBe('/coaching-portal/plan/wizard');
+    const keep = Array.from(notice.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Olduğu gibi bırak')!;
+    keep.click(); fixture.detectChanges();
+    expect(el.querySelector('[data-testid="weekly-outside-notice"]')).toBeNull();
+    expect(el.textContent).toContain('Çalışma saatlerin kaydedildi.');
+  });
+  it('shows nothing about the weekly cards when all fit, none are saved or they cannot be read', async () => {
+    const { fixture, component, weekly } = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    component.save(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.get).toHaveBeenCalledTimes(1); expect(el.querySelector('[data-testid="weekly-outside-notice"]')).toBeNull();
+    weekly.get.mockReturnValue(of<WeeklyDraftPage>({ draft: null, lessons: [] })); component.save(); fixture.detectChanges();
+    expect(el.querySelector('[data-testid="weekly-outside-notice"]')).toBeNull();
+    weekly.get.mockReturnValue(throwError(() => ({ status: 503 }))); component.save(); fixture.detectChanges();
+    expect(el.querySelector('[data-testid="weekly-outside-notice"]')).toBeNull(); expect(component.error()).toBeNull();
+    expect(el.textContent).toContain('Çalışma saatlerin kaydedildi.');
+  });
   it('loads preferences, shows weekly minutes and saves the loaded version', async () => {
     const { component, service } = await setup();
     expect(component.weeklyMinutes()).toBe(60);

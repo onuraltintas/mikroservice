@@ -56,6 +56,7 @@ describe('StudentStudyPlansComponent', () => {
       recordRealization:vi.fn(()=>of({...active,version:5})),
       complete: vi.fn(() => of({ ...active, version: 5 })), reschedule: vi.fn(() => of({ ...active, version: 5 })),
       saveCalendarTask:vi.fn(()=>of({...active,version:5})),deleteCalendarTask:vi.fn(()=>of({...active,version:5})),
+      splitCalendarTask:vi.fn(()=>of({...active,version:5})),
       archive: vi.fn(() => of({ ...active, status: 'Archived' as const, version: 5 }))
     };
     const router = { navigate: vi.fn(() => Promise.resolve(true)) };
@@ -171,6 +172,35 @@ describe('StudentStudyPlansComponent', () => {
     expect(service.complete).toHaveBeenCalledWith('plan','task',4,24,0);
     component.staffStudentId='student';await component.calendarCommand({kind:'complete',taskIds:['task'],date:'2026-10-06',startMinute:540});
     expect(component.calendarForm).toBeNull();
+  });
+  // Paket H5: "İki parçaya böl" says the two times first, then calls the server and shows the returned plan.
+  it('splits a study into two halves after saying their times',async()=>{
+    const {component,service,fixture}=await setup();
+    const hour={...active.tasks[0],plannedMinutes:60,plannedStartMinute:1080,weeklyLessonId:'math',lessonName:'Matematik',planKind:'Learn',topicId:'topic'};
+    component.selected.set({...active,tasks:[hour]});
+    await component.calendarCommand({kind:'split',taskIds:['task'],date:'2026-10-06',startMinute:1080});fixture.detectChanges();
+    const dialog=fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog.querySelector('h2')?.textContent?.trim()).toBe('Çalışmayı ikiye böl');
+    expect(dialog.textContent).toContain('Bu çalışma iki parçaya bölünecek: 18:00–18:30 ve 18:30–19:00. Sonra istediğin parçayı sürükleyebilirsin.');
+    expect(service.splitCalendarTask).not.toHaveBeenCalled();
+    const confirm=Array.from(dialog.querySelectorAll('button')).find(b=>b.textContent?.trim()==='İki parçaya böl') as HTMLButtonElement;
+    confirm.click();fixture.detectChanges();await fixture.whenStable();
+    expect(service.splitCalendarTask).toHaveBeenCalledWith('plan','task',4);expect(component.calendarForm).toBeNull();
+    expect(component.selected()?.version).toBe(5);expect(component.success()).toBe('Çalışma iki parçaya bölündü.');
+    component.selected.set({...active,tasks:[{...hour,plannedMinutes:30}]});
+    await component.calendarCommand({kind:'split',taskIds:['task'],date:'2026-10-06',startMinute:1080});expect(component.calendarForm).toBeNull();
+    component.staffStudentId='student';component.selected.set({...active,tasks:[hour]});
+    await component.calendarCommand({kind:'split',taskIds:['task'],date:'2026-10-06',startMinute:1080});await component.saveCalendarForm();
+    expect(service.splitCalendarTask).toHaveBeenLastCalledWith('plan','task',4,'student');
+  });
+  // Paket H5: the Planım row names where the work came from.
+  it('shows the source badge on the Planım rows and in their names',async()=>{
+    const {component,service,fixture}=await setup();
+    service.get.mockReturnValue(of({...active,tasks:[{...active.tasks[0],planKind:'Review',topicId:'topic',weeklyLessonId:'math',plannedStartMinute:1080}]}));
+    await component.open('plan');fixture.detectChanges();await fixture.whenStable();fixture.detectChanges();
+    const row=fixture.nativeElement.querySelector('app-plan-task-row') as HTMLElement;
+    expect(row.querySelector('cs-status-chip')?.textContent?.trim()).toBe('Tekrar');
+    expect(row.querySelector('button.main')?.getAttribute('aria-label')).toBe('Matematik, Tekrar, ayrıntıları aç');
   });
   it('removes only the selected pending study after central confirmation and blocks readonly actions',async()=>{
     const {component,service}=await setup();await component.calendarCommand({kind:'delete',taskIds:['task'],date:'2026-10-06',startMinute:540});

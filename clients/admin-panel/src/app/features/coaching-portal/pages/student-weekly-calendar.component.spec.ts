@@ -3,16 +3,52 @@ import {TestBed} from '@angular/core/testing';
 import {provideRouter} from '@angular/router';
 import {of,Subject,throwError} from 'rxjs';
 import {CoachingWeeklyDraftService,WeeklyDraft} from '../../../core/services/coaching-weekly-draft.service';
+import {CoachingStudyPlanningService,StudyAvailability} from '../../../core/services/coaching-study-planning.service';
 import {StudentWeeklyCalendarComponent} from './student-weekly-calendar.component';
 
 describe('weekly draft calendar',()=>{
   const lesson={id:'math',name:'Matematik',examCode:'LGS',gradeNumber:8};
   const slot={id:'one',lessonId:'math',lessonName:'Matematik',examCode:'LGS',day:'Monday' as const,startMinute:1080,durationMinutes:60};
-  async function setup(draft:WeeklyDraft|null=null,maxDayMinutes?:number){
+  async function setup(draft:WeeklyDraft|null=null,maxDayMinutes?:number,availability:StudyAvailability|null=null){
     const service={get:vi.fn<CoachingWeeklyDraftService['get']>(()=>of({draft,lessons:[lesson],...(maxDayMinutes?{maxDayMinutes}:{})})),save:vi.fn<CoachingWeeklyDraftService['save']>(()=>of({version:1,timeZoneId:'Europe/Istanbul',slots:[slot]}))};
-    TestBed.configureTestingModule({imports:[StudentWeeklyCalendarComponent],providers:[provideRouter([]),{provide:CoachingWeeklyDraftService,useValue:service}]});
-    const fixture=TestBed.createComponent(StudentWeeklyCalendarComponent);fixture.detectChanges(); await fixture.whenStable();return{fixture,c:fixture.componentInstance,service};
+    const planning={getAvailability:vi.fn(()=>of(availability))};
+    TestBed.configureTestingModule({imports:[StudentWeeklyCalendarComponent],providers:[provideRouter([]),{provide:CoachingWeeklyDraftService,useValue:service},{provide:CoachingStudyPlanningService,useValue:planning}]});
+    const fixture=TestBed.createComponent(StudentWeeklyCalendarComponent);fixture.detectChanges(); await fixture.whenStable();return{fixture,c:fixture.componentInstance,service,planning};
   }
+  // Paket H5 (K4: warn, allow): cards outside the saved study times are marked and named above the calendar; saving still works.
+  it('marks the cards outside the study times, names how many and still saves',async ()=>{
+    const hours:StudyAvailability={version:2,timeZoneId:'Europe/Istanbul',windows:[{day:'Monday',startMinute:1080,endMinute:1140}]};
+    const week={version:3,timeZoneId:'Europe/Istanbul',slots:[slot,{...slot,id:'two',startMinute:1200},{...slot,id:'three',day:'Tuesday' as const},{...slot,id:'four',day:'Wednesday' as const,durationMinutes:30}]};
+    const{fixture,c,service,planning}=await setup(week,undefined,hours);
+    c.anchor.set(new Date(2026,9,19));c.changeView('week');fixture.detectChanges();await fixture.whenStable();
+    const el=fixture.nativeElement as HTMLElement;expect(planning.getAvailability).toHaveBeenCalledTimes(1);
+    const notice=el.querySelector('[data-testid="availability-notice"]') as HTMLElement;
+    expect(notice.textContent?.replace(/\s+/g,' ').trim()).toBe('3 ders kartın müsait saatlerinin dışında. İstersen müsait saatlerini güncelle ya da kartları taşı.');
+    expect(notice.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan/hours');
+    const outside=Array.from(el.querySelectorAll('.slot-card.outside'),x=>x.getAttribute('data-slot-id'));expect(outside.sort()).toEqual(['four','three','two']);
+    expect(el.querySelector('[data-slot-id="one"]')!.classList.contains('outside')).toBe(false);
+    const card=el.querySelector('[data-slot-id="two"] .slot-content') as HTMLElement;
+    expect(card.getAttribute('aria-label')).toContain('Müsait saatlerinin dışında');expect(card.textContent).toContain('Müsait saatlerinin dışında');
+    expect(el.querySelector('[data-slot-id="one"] .slot-content')!.getAttribute('aria-label')).not.toContain('Müsait saatlerinin dışında');
+    // Removing a card outside updates the count; saving is allowed with cards outside.
+    c.edit(week.slots[1]);c.remove();fixture.detectChanges();
+    expect(c.outsideCount()).toBe(2);c.save();expect(service.save).toHaveBeenCalledTimes(1);expect(c.error()).toBe('');
+    c.changeView('month');fixture.detectChanges();await fixture.whenStable();
+    expect(el.querySelector('.month-slot.outside')?.getAttribute('aria-label')).toContain('Müsait saatlerinin dışında');
+  });
+  it('asks for study times instead of marking cards when none are saved',async ()=>{
+    const{fixture}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
+    const el=fixture.nativeElement as HTMLElement;const notice=el.querySelector('[data-testid="availability-notice"]') as HTMLElement;
+    expect(notice.textContent?.replace(/\s+/g,' ').trim()).toBe('Müsait saatlerini kaydedersen dışarıda kalan kartları gösteririm.');
+    expect(notice.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan/hours');expect(el.querySelector('.slot-card.outside')).toBeNull();
+  });
+  it('shows no availability marks when the study times cannot be loaded and refreshes them on request',async ()=>{
+    const{fixture,c,planning}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
+    planning.getAvailability.mockReturnValue(throwError(()=>({status:503})));c.loadAvailability();fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="availability-notice"]')).toBeNull();expect(c.error()).toBe('');
+    planning.getAvailability.mockReturnValue(of({version:1,timeZoneId:'Europe/Istanbul',windows:[{day:'Sunday',startMinute:0,endMinute:60}]}));c.loadAvailability();fixture.detectChanges();
+    expect(c.outsideCount()).toBe(1);expect((fixture.nativeElement.querySelector('[data-testid="availability-notice"]') as HTMLElement).textContent).toContain('1 ders kartın');
+  });
   it('opens three views and a separate draft with a link to existing plans',async ()=>{
     const{fixture,c,service}=await setup();expect(service.get).toHaveBeenCalledTimes(1);expect(c.slots()).toEqual([]);
     expect(fixture.nativeElement.querySelectorAll('.view-switch button')).toHaveLength(3);
