@@ -4306,6 +4306,56 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyRoutineProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AnswersJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("AvailabilityVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId")
+                        .IsUnique();
+
+                    b.ToTable("study_routine_profiles", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_study_routine_answers_object", "jsonb_typeof(\"AnswersJson\") = 'object'");
+
+                            t.HasCheckConstraint("ck_study_routine_availability_version", "\"AvailabilityVersion\" >= 0");
+
+                            t.HasCheckConstraint("ck_study_routine_schema_version", "\"SchemaVersion\" >= 1");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.TargetCatalogEntry", b =>
                 {
                     b.Property<Guid>("Id")
