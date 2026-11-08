@@ -4,22 +4,31 @@ import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
-import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingWeeklyDraftService, WeeklyProposal } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingWeeklyOutcomePlanService } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { StudentPlanPreviewComponent } from './student-plan-preview.component';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 import { WeeklySlot } from './weekly-calendar';
 
 // E6 #29 (live test 06.11): "Plan önizlemesi" in Çalışma tercihlerim shows the draft itself, built from the saved availability
-// with the plan wizard's rules and its annual preview, instead of a bare link to the wizard.
+// with the plan wizard's rules and its annual preview, instead of a bare link to the wizard. Paket H2: the weekly lessons are the
+// server's need-based proposal (a whole new week, "Replace").
 describe('StudentPlanPreviewComponent', () => {
   const lessons = [{ id: 'math', name: 'Matematik', examCode: 'LGS', gradeNumber: 8 }, { id: 'science', name: 'Fen Bilimleri', examCode: 'LGS', gradeNumber: 8 }];
   const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
   const saved: WeeklySlot[] = [{ id: 'old', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Friday', startMinute: 1080, durationMinutes: 60 }];
   const request = { startDate: '2030-11-04', endDate: '2031-06-01', expectedWeeklyDraftVersion: 1, reuseFreedSlots: false };
-  async function setup(availability: StudyAvailability | null, slots: WeeklySlot[] = [], courses?: { lessonId: string; priority: number; examQuestions: number | null }[]) {
-    const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 1, timeZoneId: 'Europe/Istanbul', slots } : null, lessons, courses })),
-      save: vi.fn((_version: number | null, zone: string, next: WeeklySlot[]) => of({ version: 1, timeZoneId: zone, slots: next })) };
+  const card = (id: string, lessonId: string, lessonName: string, startMinute: number): WeeklySlot =>
+    ({ id, lessonId, lessonName, examCode: 'LGS', day: 'Monday', startMinute, durationMinutes: 60 });
+  const proposalOf = (cards: WeeklySlot[], noTime: string[] = []): WeeklyProposal => ({ mode: 'Replace', examFocus: null, slots: cards,
+    lessons: lessons.map(x => ({ lessonId: x.id, lessonName: x.name, examCode: 'LGS', existingMinutes: 0, proposedMinutes: cards.filter(c => c.lessonId === x.id).length * 60,
+      neededMinutes: 60, noTime: noTime.includes(x.id) })), freeMinutes: 120, neededMinutes: 120, shortageMinutes: noTime.length * 60, maxDayMinutes: 480,
+    weeksUntilEnd: 30, endDate: '2031-06-01', middleSchool: true });
+  const twoHours = proposalOf([card('p1', 'science', 'Fen Bilimleri', 1020), card('p2', 'math', 'Matematik', 1080)]);
+  async function setup(availability: StudyAvailability | null, slots: WeeklySlot[] = [], proposal: WeeklyProposal = twoHours) {
+    const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 1, timeZoneId: 'Europe/Istanbul', slots } : null, lessons })),
+      save: vi.fn((_version: number | null, zone: string, next: WeeklySlot[]) => of({ version: 1, timeZoneId: zone, slots: next })),
+      proposal: vi.fn(() => of(proposal)) };
     const planning = { getAvailability: vi.fn(() => of(availability)) };
     const engine = { options: vi.fn(() => of({ startDate: '2030-11-04', endDate: '2031-06-01', weeklyDraftVersion: 1, timeZoneId: 'Europe/Istanbul', exams: [] })),
       preview: vi.fn(() => of({ request, timeZoneId: 'Europe/Istanbul', fingerprint: 'f', canCreate: true, protectedTaskCount: 0, issues: [],
@@ -37,8 +46,9 @@ describe('StudentPlanPreviewComponent', () => {
   }
   const button = (el: HTMLElement, name: string) => Array.from(el.querySelectorAll('button')).find(x => x.textContent?.trim() === name) as HTMLButtonElement | undefined;
 
-  it('previews the weekly lessons from the saved availability with the wizard rules', async () => {
+  it('previews the weekly lessons the server proposes from the saved availability', async () => {
     const { el, weekly } = await setup(mondayEvening);
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null);
     expect(el.textContent).toContain('Pazartesi 17:00–19:00');
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
     expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Matematik (60 dk)']);
@@ -47,10 +57,10 @@ describe('StudentPlanPreviewComponent', () => {
     expect(el.querySelector('[data-testid="unplaced-notice"]')).toBeNull();
   });
 
-  // Paket G #41 (live 07.11): the proposal follows the student's priority and tells which courses got no time.
-  it('gives the hours by priority and names the courses without time, with the way to Müsaitliğim', async () => {
+  // Paket G #41 (live 07.11): the proposal tells which courses got no time.
+  it('names the courses the proposal leaves without time, with the way to Müsaitliğim', async () => {
     const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1080 }] };
-    const { component, el } = await setup(oneHour, [], [{ lessonId: 'math', priority: 3, examQuestions: 20 }, { lessonId: 'science', priority: 1, examQuestions: 20 }]);
+    const { component, el } = await setup(oneHour, [], proposalOf([card('p1', 'science', 'Fen Bilimleri', 1020)], ['math']));
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
     expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)']);
     const notice = el.querySelector('[data-testid="unplaced-notice"]');
@@ -87,13 +97,6 @@ describe('StudentPlanPreviewComponent', () => {
     expect(weekly.save).toHaveBeenCalledWith(1, 'Europe/Istanbul', [expect.objectContaining({ lessonId: 'science' }), expect.objectContaining({ lessonId: 'math' })]);
   });
 
-  it('without a priority from the page the exam weight and then the name decide', async () => {
-    const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1080 }] };
-    const { el } = await setup(oneHour);
-    expect(el.querySelector('[data-testid="preview-slot"]')?.textContent).toContain('Fen Bilimleri');
-    expect(el.querySelector('[data-testid="unplaced-notice"]')?.textContent).toContain('Matematik');
-  });
-
   it('saves the previewed weekly lessons only on request and then shows the plan draft preview', async () => {
     const { fixture, el, weekly, engine } = await setup(mondayEvening);
     button(el, 'Bu düzeni kaydet ve planı önizle')!.click();
@@ -107,7 +110,8 @@ describe('StudentPlanPreviewComponent', () => {
   });
 
   it('shows the plan draft preview directly when weekly lessons are saved, with the way to publish', async () => {
-    const { fixture, el, engine, navigate } = await setup(mondayEvening, saved);
+    const { fixture, el, engine, navigate, weekly } = await setup(mondayEvening, saved);
+    expect(weekly.proposal).not.toHaveBeenCalled();
     expect(engine.options).toHaveBeenCalledOnce();
     expect(engine.preview).toHaveBeenCalledOnce();
     expect(el.textContent).toContain('Cuma · 18:00 · Matematik (60 dk)');
@@ -139,11 +143,21 @@ describe('StudentPlanPreviewComponent', () => {
     expect(courses).toHaveBeenCalledOnce();
   });
 
-  it('follows a change of the chosen courses', async () => {
-    const { fixture, el } = await setup(mondayEvening);
+  it('asks for a new proposal when the chosen courses change', async () => {
+    const { fixture, el, weekly } = await setup(mondayEvening);
+    weekly.proposal.mockReturnValueOnce(of(proposalOf([card('p3', 'science', 'Fen Bilimleri', 1020), card('p4', 'science', 'Fen Bilimleri', 1110)])));
     fixture.componentRef.setInput('lessonIds', ['science']); fixture.detectChanges();
+    expect(weekly.proposal).toHaveBeenCalledTimes(2);
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
-    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Fen Bilimleri (60 dk)']);
+    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:30 · Fen Bilimleri (60 dk)']);
+  });
+
+  it('shows the message when the proposal cannot be made', async () => {
+    const { fixture, el, weekly } = await setup(mondayEvening, saved);
+    weekly.proposal.mockReturnValueOnce(throwError(() => ({ status: 404, error: { message: 'Önce müsait saatlerini kaydet.' } })));
+    button(el, 'Yeni öneri oluştur')!.click(); fixture.detectChanges();
+    expect(el.textContent).toContain('Önce müsait saatlerini kaydet.');
+    expect(el.querySelectorAll('[data-testid="preview-slot"]')).toHaveLength(0);
   });
 
   it('keeps the proposal and shows the error when the weekly lessons cannot be saved', async () => {

@@ -21,4 +21,18 @@ describe('weekly draft API',()=>{
     const save=http.expectOne(r=>r.method==='PUT');expect(save.request.url).toBe('/api/coaching/staff/students/student-1/study/weekly-draft');
     save.flush({data:{version:3,timeZoneId:'Europe/Istanbul',slots:[]}});http.verify();
   });
+
+  // Paket H2: the proposal is the server's; the teacher asks for the student's.
+  it('asks the server for a weekly proposal for the student or, for a teacher, for the chosen student',()=>{
+    TestBed.configureTestingModule({providers:[provideHttpClient(),provideHttpClientTesting()]});
+    const service=TestBed.inject(CoachingWeeklyDraftService),http=TestBed.inject(HttpTestingController);let loaded:unknown;
+    service.proposal('Fill','tyt').subscribe(value=>loaded=value);
+    const own=http.expectOne(r=>r.method==='POST'&&r.url.endsWith('/coaching/study-planning/weekly-draft/proposal'));
+    expect(own.request.body).toEqual({mode:'Fill',examFocus:'tyt'});
+    own.flush({data:{mode:'Fill',slots:[]}});expect(loaded).toEqual({mode:'Fill',slots:[]});
+    service.proposal('Replace',null,'student-1').subscribe();
+    const staff=http.expectOne('/api/coaching/staff/students/student-1/study/weekly-draft/proposal');
+    expect(staff.request.method).toBe('POST');expect(staff.request.body).toEqual({mode:'Replace',examFocus:null});
+    staff.flush({data:{mode:'Replace',slots:[]}});http.verify();
+  });
 });
