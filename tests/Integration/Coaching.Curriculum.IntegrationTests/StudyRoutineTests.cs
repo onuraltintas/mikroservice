@@ -35,6 +35,26 @@ public sealed class StudyRoutineTests
     private static string Rejected(StudyRoutineAnswers? answers, bool yks = false, CoachingEducationStatus? education = null) =>
         Assert.Throws<StudyPlanValidationException>(() => StudyRoutine.Validate(answers, yks, education)).Message;
 
+    // Paket H4a: the wizard's tempo (Rahat / Dengeli / Yoğun) is one of the answers; none means Rahat.
+    [Fact]
+    public void TheTempoIsKeptAndNoTempoMeansRelaxed()
+    {
+        Assert.Null(Valid(Morning()).Tempo);
+        Assert.Equal(StudyTempo.Relaxed, StudyRoutine.TempoOf(Valid(Morning())));
+        foreach (var tempo in new[] { StudyTempo.Relaxed, StudyTempo.Balanced, StudyTempo.Intense })
+        {
+            Assert.Equal(tempo, Valid(Morning() with { Tempo = tempo }).Tempo);
+            Assert.Equal(tempo, StudyRoutine.TempoOf(Morning() with { Tempo = tempo }));
+        }
+        Assert.Equal("Tempo Rahat, Dengeli ya da Yoğun olabilir.", Rejected(Morning() with { Tempo = (StudyTempo)7 }));
+        // Stored by name; answers saved before the tempo existed read as no tempo.
+        var json = new JsonSerializerOptions { Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } };
+        Assert.Contains("\"Tempo\":\"Intense\"", JsonSerializer.Serialize(Morning() with { Tempo = StudyTempo.Intense }, json));
+        var old = JsonSerializer.Serialize(Morning(), json).Replace(",\"Tempo\":null", "");
+        Assert.DoesNotContain("Tempo", old);
+        Assert.Null(JsonSerializer.Deserialize<StudyRoutineAnswers>(old, json)!.Tempo);
+    }
+
     [Fact]
     public void MorningAndFullDayStudyFromAfterSchoolToTheLatestEndWithoutDinner()
     {

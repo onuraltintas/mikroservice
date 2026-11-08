@@ -373,4 +373,56 @@ public sealed class WeeklyProposalEngineTests
         var (stable, made) = await WeeklyProposalEngine.SettleAsync<string, string>(["A"], codes => Task.FromResult(codes[0]), planEnd => planEnd, _ => ["A"]);
         Assert.Equal(("A", "A"), (stable, made));
     }
+
+    // Paket H4a: a matching routine's day budgets cap each day at min(budget, daily limit); a day without a budget gets nothing.
+    [Fact]
+    public void DayBudgetsCapEachDay_ADayWithoutABudgetGetsNothing()
+    {
+        var week = WeeklyProposalEngine.Week.Select(day => Window(day, 900, 1380)).ToArray();
+        var lessons = Enumerable.Range(1, 6).Select(n => Lesson(n, 900)).ToArray();
+        var budgets = new Dictionary<DayOfWeek, int> { [DayOfWeek.Monday] = 60, [DayOfWeek.Tuesday] = 150, [DayOfWeek.Saturday] = 600 };
+        var result = WeeklyProposalEngine.Propose(new(week, [], lessons, 2, 240, null, WeeklyProposalMode.Replace, null, budgets));
+        int Minutes(DayOfWeek day) => result.Slots.Where(x => x.Day == day).Sum(x => x.DurationMinutes);
+        // Monday 60; Tuesday 150 leaves two hours (a 30-minute rest stays empty); Saturday min(600, 240); no other day.
+        Assert.Equal((60, 120, 240), (Minutes(DayOfWeek.Monday), Minutes(DayOfWeek.Tuesday), Minutes(DayOfWeek.Saturday)));
+        Assert.Equal(new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Saturday }, result.Slots.Select(x => x.Day).Distinct());
+        Assert.Equal(420, result.FreeMinutes);
+        // A saved card counts toward its day's budget.
+        var fill = WeeklyProposalEngine.Propose(new(week, [Card(1, DayOfWeek.Tuesday, 900, 90)], lessons, 2, 240, null, WeeklyProposalMode.Fill, null, budgets));
+        Assert.Equal(60, fill.Slots.Where(x => x.Day == DayOfWeek.Tuesday).Sum(x => x.DurationMinutes));
+        // Without budgets nothing changes.
+        Assert.Equal(7 * 240, WeeklyProposalEngine.Propose(new(week, [], lessons, 2, 240, null, WeeklyProposalMode.Replace)).FreeMinutes);
+        // The guarantees still hold under budgets: a lesson once a day while another day is free, breaks, and the limits.
+        AssertWeekRules(result, budgets, 240);
+    }
+
+    // Paket H4a: the weekly capacity of the tempo options: free sessions plus the saved minutes inside the free hours, within the day caps.
+    [Fact]
+    public void CapacityIsTheFreeSessionsPlusTheSavedMinutesInsideTheFreeHoursWithinTheDayCaps()
+    {
+        var windows = new[] { Window(DayOfWeek.Monday, 1020, 1200), Window(DayOfWeek.Tuesday, 1020, 1200) };
+        var saved = new[] { Card(1, DayOfWeek.Monday, 1080, 30), Card(2, DayOfWeek.Wednesday, 1080, 60) };
+        // Monday: 17:00 (a 90-minute run with the saved card) and 19:00 (18:30 would make a longer run) + 30 saved; Tuesday: 17:00,
+        // 18:00; the Wednesday card lies outside the free hours.
+        Assert.Equal(120 + 30 + 120, WeeklyProposalEngine.CapacityMinutes(new(windows, saved, [Lesson(1, 600)], 2, 480, null, WeeklyProposalMode.Fill)));
+        // With budgets: Monday 60 holds the saved 30 minutes and no session; Tuesday has no budget.
+        var budgets = new Dictionary<DayOfWeek, int> { [DayOfWeek.Monday] = 60 };
+        Assert.Equal(30, WeeklyProposalEngine.CapacityMinutes(new(windows, saved, [Lesson(1, 600)], 2, 480, null, WeeklyProposalMode.Fill, null, budgets)));
+        // The mode does not matter: the saved cards are what the student already has.
+        Assert.Equal(270, WeeklyProposalEngine.CapacityMinutes(new(windows, saved, [], 2, 480, null, WeeklyProposalMode.Replace)));
+    }
+
+    private static void AssertWeekRules(WeeklyProposalResult result, IReadOnlyDictionary<DayOfWeek, int> budgets, int limit)
+    {
+        foreach (var day in result.Slots.GroupBy(x => x.Day))
+        {
+            Assert.True(day.Sum(x => x.DurationMinutes) <= Math.Min(limit, budgets.GetValueOrDefault(day.Key)));
+            var starts = day.Select(x => x.StartMinute).Order().ToArray();
+            for (var i = 2; i < starts.Length; i++) Assert.False(starts[i] - starts[i - 2] == 120, "three hours in a row");
+        }
+        var days = result.Slots.Select(x => x.Day).Distinct().ToArray();
+        foreach (var lesson in result.Slots.GroupBy(x => x.LessonId))
+            if (lesson.GroupBy(x => x.Day).Any(x => x.Count() > 1))
+                Assert.True(days.All(day => lesson.Any(x => x.Day == day)), "a lesson came twice on a day while another study day was free of it");
+    }
 }

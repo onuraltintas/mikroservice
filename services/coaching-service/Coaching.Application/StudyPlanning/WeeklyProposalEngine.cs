@@ -12,10 +12,12 @@ public sealed record WeeklyProposalLesson(Guid LessonId, string Name, string? Ex
 /// <summary>
 /// SessionsBeforeBreak: 1 for middle school (a break after every session), 2 for everyone else (K1). DayOccurrences: how many times each
 /// weekday comes before the plan ends; a weekday that does not come gets no session (null: every weekday comes).
+/// DayBudgets (Paket H4a): the day budgets of a routine profile that still matches the free hours; a day then holds at most
+/// min(budget, MaxDayMinutes), and a day without a budget gets no session (null: only MaxDayMinutes).
 /// </summary>
 public sealed record WeeklyProposalInput(IReadOnlyList<WeeklyProposalWindow> Windows, IReadOnlyList<WeeklyDraftSlot> Existing,
     IReadOnlyList<WeeklyProposalLesson> Lessons, int SessionsBeforeBreak, int MaxDayMinutes, string? ExamFocus, WeeklyProposalMode Mode,
-    IReadOnlyDictionary<DayOfWeek, int>? DayOccurrences = null);
+    IReadOnlyDictionary<DayOfWeek, int>? DayOccurrences = null, IReadOnlyDictionary<DayOfWeek, int>? DayBudgets = null);
 public sealed record WeeklyProposedSlot(Guid LessonId, DayOfWeek Day, int StartMinute, int DurationMinutes);
 /// <summary>NeededMinutes: the unweighted weekly need rounded up to 30 minutes. NoTime: neither a saved nor a proposed card.</summary>
 public sealed record WeeklyProposalLessonResult(Guid LessonId, string Name, int ExistingMinutes, int ProposedMinutes, int NeededMinutes, bool NoTime);
@@ -102,8 +104,7 @@ public static class WeeklyProposalEngine
         var fill = input.Mode == WeeklyProposalMode.Fill;
         var existing = fill ? input.Existing.Where(x => x is not null).ToArray() : [];
         var lessons = input.Lessons.Where(x => x is not null).DistinctBy(x => x.LessonId).ToArray();
-        var sessions = FreeSessions(input.Windows.Where(x => x is not null && input.DayOccurrences?.GetValueOrDefault(x.Day) != 0).ToArray(),
-            existing, input.SessionsBeforeBreak, input.MaxDayMinutes);
+        var sessions = FreeSessions(Studied(input), existing, input.SessionsBeforeBreak, day => DayCap(input, day));
         // A saved card on a weekday that no longer comes before the plan ends gives the lesson no time (it still occupies its hour).
         var counted = existing.Where(x => input.DayOccurrences?.GetValueOrDefault(x.Day) != 0).ToArray();
         var plans = lessons.Select(lesson => Plan.For(lesson, counted.Where(x => x.LessonId == lesson.LessonId).Sum(x => x.DurationMinutes), input.ExamFocus)).ToArray();
@@ -118,6 +119,35 @@ public static class WeeklyProposalEngine
         var covered = results.Sum(x => Math.Min(x.NeededMinutes, x.ExistingMinutes + x.ProposedMinutes));
         return new(placed, results, sessions.Count * SessionMinutes, needed, needed - covered, covered);
     }
+
+    /// <summary>
+    /// Paket H4a: the week's capacity for the tempo options: the free sessions next to the saved cards (as in Fill) plus the saved minutes
+    /// inside the free hours, each day within its cap (the daily limit, or the day budget). The mode and the lessons do not matter.
+    /// </summary>
+    public static int CapacityMinutes(WeeklyProposalInput input)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        if (input.Windows is null || input.Existing is null || input.SessionsBeforeBreak < 1) throw new ArgumentException("Haftalık öneri bilgilerini kontrol edin.");
+        var windows = Studied(input);
+        var existing = input.Existing.Where(x => x is not null).ToArray();
+        var free = FreeSessions(windows, existing, input.SessionsBeforeBreak, day => DayCap(input, day)).Count * SessionMinutes;
+        var saved = Week.Sum(day =>
+        {
+            var spans = windows.Where(x => x.Day == day).ToArray();
+            var inside = existing.Where(x => x.Day == day).Sum(card => spans.Sum(w =>
+                Math.Max(0, Math.Min(card.StartMinute + card.DurationMinutes, w.EndMinute) - Math.Max(card.StartMinute, w.StartMinute))));
+            return Math.Min(inside, Math.Max(0, DayCap(input, day)));
+        });
+        return free + saved;
+    }
+
+    /// <summary>The windows on weekdays that still come before the plan ends (saved and teacher windows never overlap).</summary>
+    private static WeeklyProposalWindow[] Studied(WeeklyProposalInput input) =>
+        input.Windows.Where(x => x is not null && input.DayOccurrences?.GetValueOrDefault(x.Day) != 0).ToArray();
+
+    /// <summary>The most a day may hold: the daily limit, or with day budgets min(budget, limit) and nothing on a day without one.</summary>
+    private static int DayCap(WeeklyProposalInput input, DayOfWeek day) =>
+        input.DayBudgets is null ? input.MaxDayMinutes : Math.Min(input.MaxDayMinutes, input.DayBudgets.GetValueOrDefault(day));
 
     /// <summary>
     /// Per lesson: Weighted = need × priority factor × exam focus. The lesson wants ceil(max(need, weighted) ÷ 60) sessions (at least one);
@@ -179,11 +209,11 @@ public static class WeeklyProposalEngine
 
     /// <summary>
     /// Every 60-minute session that fits: on :00/:30 inside the availability windows, clear of saved cards, never making a run of
-    /// study (saved or proposed, back to back) longer than <paramref name="sessionsBeforeBreak"/> hours, and within the daily limit.
+    /// study (saved or proposed, back to back) longer than <paramref name="sessionsBeforeBreak"/> hours, and within the day's cap.
     /// A piece of free time shorter than an hour stays empty.
     /// </summary>
     private static List<(DayOfWeek Day, int Start)> FreeSessions(IReadOnlyList<WeeklyProposalWindow> windows, IReadOnlyList<WeeklyDraftSlot> existing,
-        int sessionsBeforeBreak, int maxDayMinutes)
+        int sessionsBeforeBreak, Func<DayOfWeek, int> dayCap)
     {
         var result = new List<(DayOfWeek, int)>();
         var longestRun = sessionsBeforeBreak * SessionMinutes;
@@ -191,6 +221,7 @@ public static class WeeklyProposalEngine
         {
             var busy = existing.Where(x => x.Day == day).Select(x => (From: x.StartMinute, To: x.StartMinute + x.DurationMinutes)).ToList();
             var used = busy.Sum(x => x.To - x.From);
+            var maxDayMinutes = dayCap(day);
             var spans = windows.Where(x => x is not null && x.Day == day)
                 .Select(x => (From: Math.Max(0, x.StartMinute), To: Math.Min(1440, x.EndMinute))).Where(x => x.To > x.From).OrderBy(x => x.From).ToList();
             var merged = new List<(int From, int To)>();

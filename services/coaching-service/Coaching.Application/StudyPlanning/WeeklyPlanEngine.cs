@@ -16,6 +16,9 @@ public static class WeeklyPlanEngine
 
     public sealed record LessonPreference(int Priority, int? Difficulty);
 
+    /// <summary>Paket H4a: the reason of a topic the student chose to bring forward.</summary>
+    public const string FocusReason = "Öne almak istediğin konu";
+
     /// <summary>A self-reported difficulty of 1 (easy) shortens learning time, 5 (hard) stretches it.</summary>
     public static decimal DifficultyFactor(int? difficulty) => difficulty switch
     {
@@ -34,8 +37,10 @@ public static class WeeklyPlanEngine
         IReadOnlyList<WeeklyLessonWork> lessons,
         IReadOnlyDictionary<Guid, DeclaredTopicStatus> topicStates,
         IReadOnlyDictionary<Guid, LessonPreference> preferences,
-        IReadOnlySet<Guid> examErrorTopics)
+        IReadOnlySet<Guid> examErrorTopics,
+        IReadOnlySet<Guid>? focusTopics = null)
     {
+        focusTopics ??= new HashSet<Guid>();
         return lessons.Select(lesson =>
         {
             var preference = preferences.GetValueOrDefault(lesson.LessonId);
@@ -43,6 +48,7 @@ public static class WeeklyPlanEngine
             var outcomes = lesson.Outcomes.Select(outcome =>
             {
                 var reasons = new List<string>();
+                if (focusTopics.Contains(outcome.TopicId)) reasons.Add(FocusReason);
                 if (examErrorTopics.Contains(outcome.TopicId)) reasons.Add("Son denemelerde bu konuda hata oranın yüksek; öne alındı");
                 var status = topicStates.TryGetValue(outcome.TopicId, out var declared) ? declared : DeclaredTopicStatus.NotStudied;
                 string kind; int minutes;
@@ -69,17 +75,21 @@ public static class WeeklyPlanEngine
             return lesson with
             {
                 Priority = preference?.Priority ?? 3,
-                Outcomes = OrderTopics(outcomes, topic => examErrorTopics.Contains(topic) ? 0 : 1)
+                Outcomes = OrderTopics(outcomes, topic => focusTopics.Contains(topic) ? -1 : examErrorTopics.Contains(topic) ? 0 : 1)
             };
         }).ToArray();
     }
 
-    /// <summary>For lessons that do not fit before the end date, exam-error and high-yield topics go first.</summary>
+    /// <summary>
+    /// For lessons that do not fit before the end date, exam-error and high-yield topics go first (after the topics the student wants
+    /// first, Paket H4a).
+    /// </summary>
     public static IReadOnlyList<WeeklyLessonWork> PrioritizeByYield(
         IReadOnlyList<WeeklyLessonWork> lessons,
         IReadOnlyCollection<Guid> shortLessons,
         IReadOnlyDictionary<Guid, int> yieldWeights,
-        IReadOnlySet<Guid> examErrorTopics)
+        IReadOnlySet<Guid> examErrorTopics,
+        IReadOnlySet<Guid>? focusTopics = null)
     {
         int Weight(Guid topic) => yieldWeights.TryGetValue(topic, out var weight) ? weight : 3;
         return lessons.Select(lesson =>
@@ -88,7 +98,7 @@ public static class WeeklyPlanEngine
             var outcomes = lesson.Outcomes.Select(outcome => Weight(outcome.TopicId) >= 4
                 ? outcome with { Reason = Join("Sınavda sık çıkan konu; süre yetmediği için öne alındı", outcome.Reason) }
                 : outcome).ToArray();
-            return lesson with { Outcomes = OrderTopics(outcomes, topic => (examErrorTopics.Contains(topic) ? 0 : 10) + (5 - Weight(topic))) };
+            return lesson with { Outcomes = OrderTopics(outcomes, topic => (focusTopics?.Contains(topic) == true ? -100 : 0) + (examErrorTopics.Contains(topic) ? 0 : 10) + (5 - Weight(topic))) };
         }).ToArray();
     }
 

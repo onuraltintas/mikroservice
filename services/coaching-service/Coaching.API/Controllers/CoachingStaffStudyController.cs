@@ -46,6 +46,15 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
     });
 
+    /// <summary>Paket H4a: the student's tempo options, as she sees them; the teacher's answers (windows) only without saved study times.</summary>
+    [HttpPost("weekly-draft/tempo-options"),RequestSizeLimit(16384),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> WeeklyTempoOptions(Guid studentId,WeeklyTempoOptionsRequest request,[FromServices] IWeeklyProposalService proposals,CancellationToken ct)=>Respond(async()=>
+    {
+        try{return Ok(new{success=true,data=await proposals.TempoOptionsForStudentAsync(studentId,request,ct)});}
+        catch(StudyAvailabilityMissingException){return NotFound(new{success=false,message="Öğrenci henüz çalışabileceği saatleri kaydetmemiş."});}
+        catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
+    });
+
     [HttpGet("learning-setup")]
     public Task<IActionResult> LearningSetup(Guid studentId,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await learningSetup.GetForStudentAsync(studentId,ct)}));

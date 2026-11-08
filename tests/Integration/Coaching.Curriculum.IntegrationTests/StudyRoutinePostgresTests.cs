@@ -256,6 +256,27 @@ public sealed class StudyRoutinePostgresTests
         }
     }
 
+    // Paket H4a: the tempo is saved with the answers (no new column) and returned.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TheTempoIsSavedAndReturned()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var user = pg.Data.User; user.Roles = ["Student"]; var student = user.UserId!.Value;
+        pg.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student), StudentLearningContext.Create(student, 2026, LearningPurpose.Lgs, 2027, null, null));
+        await pg.Db.SaveChangesAsync();
+        Assert.Equal(StudyTempo.Balanced, (await Service(pg.Db, user).ReplaceAsync(new(null, null, Morning() with { Tempo = StudyTempo.Balanced }))).Answers.Tempo);
+        await using (var db = new CoachingDbContext(pg.Options)) Assert.Equal(StudyTempo.Balanced, (await Service(db, user).GetAsync())!.Answers.Tempo);
+        Assert.Contains("\"Tempo\": \"Balanced\"", (await Stored(pg, student)).Answers);
+        StudyRoutineView cleared;
+        await using (var db = new CoachingDbContext(pg.Options)) cleared = await Service(db, user).ReplaceAsync(new(0, 0, Morning()));
+        Assert.Null(cleared.Answers.Tempo);
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var bad = await new StudyRoutineController(Service(db, user)).Replace(new(1, 1, Morning() with { Tempo = (StudyTempo)9 }));
+            Assert.Equal("Tempo Rahat, Dengeli ya da Yoğun olabilir.", Message(Assert.IsType<BadRequestObjectResult>(bad).Value));
+        }
+    }
+
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task AFocusLeftFromYksDoesNotBlockSavingAndIsHidden()
     {

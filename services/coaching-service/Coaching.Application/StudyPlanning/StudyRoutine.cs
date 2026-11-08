@@ -12,10 +12,14 @@ public enum StudyWeekendDays { Both, Saturday, Sunday, None }
 /// <summary>H3, user decision K6: a YKS student's TYT/AYT weighting (used by the weekly proposal).</summary>
 public enum StudyExamFocus { Tyt, Balanced, Ayt }
 
+/// <summary>Paket H4a: the wizard's tempo (Rahat, Dengeli, Yoğun): how early the student wants to finish before the plan end.</summary>
+public enum StudyTempo { Relaxed, Balanced, Intense }
+
 /// <summary>
 /// H3 (user decision K2): the answers to the "günlük düzen" questions, saved as the student's study routine profile.
 /// Every time is a minute of the day on the Europe/Istanbul wall clock (0–1440) on a full or half hour.
 /// BusyDaysOff: the student cannot study at all on her busy days (kurs, etüt, antrenman); otherwise BusyStart says from when she can.
+/// Tempo (Paket H4a): the tempo she chose in the wizard; none means Relaxed. Answers saved before it existed have none.
 /// </summary>
 public sealed record StudyRoutineAnswers(
     StudySchoolShift? SchoolShift,
@@ -36,7 +40,8 @@ public sealed record StudyRoutineAnswers(
     int? WeekendStart,
     int? WeekendEnd,
     int? WeekendMinutes,
-    StudyExamFocus? ExamFocus);
+    StudyExamFocus? ExamFocus,
+    StudyTempo? Tempo = null);
 
 /// <summary>The most a day should get from the weekly proposal (H4 caps a day at min(budget, daily limit)).</summary>
 public sealed record StudyDayBudget(DayOfWeek Day, int Minutes);
@@ -144,15 +149,20 @@ public static class StudyRoutine
         var focus = answers.ExamFocus;
         if (focus is { } chosen && !Enum.IsDefined(chosen)) throw Invalid("TYT ve AYT ağırlığını seç.");
         if (!preparesForYks) focus = null;
+        if (answers.Tempo is { } tempo && !Enum.IsDefined(tempo)) throw Invalid("Tempo Rahat, Dengeli ya da Yoğun olabilir.");
 
         var valid = new StudyRoutineAnswers(shift, schoolStart, schoolEnd, afterSchool, latestEnd, morningStudy, morningStart, dayStart,
-            dinnerStart, dinnerEnd, busyDays, busyDaysOff, busyStart, weekdayMinutes, weekend, weekendStart, weekendEnd, weekendMinutes, focus);
+            dinnerStart, dinnerEnd, busyDays, busyDaysOff, busyStart, weekdayMinutes, weekend, weekendStart, weekendEnd, weekendMinutes, focus,
+            answers.Tempo);
         var windows = ToWindows(valid).Windows;
         if (windows.Count == 0) throw Invalid(NoWindowMessage);
         if (weekend != StudyWeekendDays.None && !windows.Any(x => x.Day is DayOfWeek.Saturday or DayOfWeek.Sunday))
             throw Invalid(NoWeekendWindowMessage);
         return valid;
     }
+
+    /// <summary>Paket H4a: the tempo the answers ask for; none is Relaxed.</summary>
+    public static StudyTempo TempoOf(StudyRoutineAnswers? answers) => answers?.Tempo ?? StudyTempo.Relaxed;
 
     /// <summary>
     /// Turns (validated) answers into sorted, non-overlapping windows of at least <see cref="MinimumWindowMinutes"/> minutes and

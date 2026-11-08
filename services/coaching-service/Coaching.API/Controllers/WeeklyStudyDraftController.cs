@@ -23,6 +23,14 @@ public sealed class WeeklyStudyDraftController(IWeeklyStudyDraftService drafts):
         catch(KeyNotFoundException e){return NotFound(new{success=false,message=e.Message});}
         catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
     });
+    /// <summary>Paket H4a: the wizard's tempo options (Rahat / Dengeli / Yoğun) from the saved availability; nothing is saved.</summary>
+    [HttpPost("tempo-options"),RequestSizeLimit(16384),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> TempoOptions(WeeklyTempoOptionsRequest r,[FromServices] IWeeklyProposalService proposals,CancellationToken ct)=>Respond(async()=>
+    {
+        try{return Ok(new{success=true,data=await proposals.TempoOptionsAsync(r,ct)});}
+        catch(KeyNotFoundException e){return NotFound(new{success=false,message=e.Message});}
+        catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
+    });
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {
         try{return await action();}
