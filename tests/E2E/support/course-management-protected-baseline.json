@@ -867,7 +867,7 @@
     "services/coaching-service/Coaching.API/Controllers/CoachingRosterController.cs": "adbd8c1212fc0a4bad8ee47fa5f64d1206fdfab0ee03c28e1165df7428e3501a",
     "services/coaching-service/Coaching.API/Controllers/CoachingSalesController.cs": "50cfda7bf150577fbb4925741b17be517229c40ce6afef4ac0b0175619873413",
     "services/coaching-service/Coaching.API/Controllers/CoachingScoreEstimateController.cs": "16d36c815ceed11f231e624e1a0b30226596e32d1fb6b3dd90d90066970064b1",
-    "services/coaching-service/Coaching.API/Controllers/CoachingStaffStudyController.cs": "972f71bb155dad0e513cef00d29f37f7c381cfcc3ad0f0e703cabe841ba7a0dc",
+    "services/coaching-service/Coaching.API/Controllers/CoachingStaffStudyController.cs": "e3f4125cc72b50382fef45cfd3fd3f4217b9081ef6674e1a8d844b628460fc86",
     "services/coaching-service/Coaching.API/Controllers/CoachingStudentExamOverviewController.cs": "bce4cf783001b6060ee97872c2815f3fdbc0b85d2bcc865d08168d64cd987917",
     "services/coaching-service/Coaching.API/Controllers/CoachingStudentLinksController.cs": "4c3849ee70d2d89f1da55635b95da59442e06bcecc1176dd7c0e6340d04abce5",
     "services/coaching-service/Coaching.API/Controllers/CoachingStudentOnboardingController.cs": "6ff82ff77e5c03d467583c93005405d295024211249147fcf700c737a6199595",
@@ -1056,7 +1056,7 @@
     "services/coaching-service/Coaching.Application/StudyPlanning/IStudyRoutineService.cs": "c563e17d0e6f736d1dce2b38299e5d819c8945737bfc7c80997fd84563bbda97",
     "services/coaching-service/Coaching.Application/StudyPlanning/IStudyTopicSearchService.cs": "25c70fc8eb1ee5c7b1ce749b74f4cc849c5c631232864df491d4681ecb5d1a79",
     "services/coaching-service/Coaching.Application/StudyPlanning/IWeeklyOutcomePlanService.cs": "2f00d8b86205d6a537aadebb9f3d608e1ec25e1b77219a8b154becf7c3509df8",
-    "services/coaching-service/Coaching.Application/StudyPlanning/IWeeklyProposalService.cs": "abede6b377a424d5b8eaaf98e1f4e89868bdbe48ce7ec7c1afa4d0da84418490",
+    "services/coaching-service/Coaching.Application/StudyPlanning/IWeeklyProposalService.cs": "84c76650f66b01c0da410810cc8a6ffb414dd965a7defc3befb797c730d2cbf7",
     "services/coaching-service/Coaching.Application/StudyPlanning/IWeeklyStudyDraftService.cs": "fecb1140ef44cc2ec1ad2be2209aace78faa990821a34590825f8eca024b3897",
     "services/coaching-service/Coaching.Application/StudyPlanning/LearningCourseException.cs": "26c7c78b11f268f058d9ebf5f2b9d830290d021a0400b06866e23c7f09071cb4",
     "services/coaching-service/Coaching.Application/StudyPlanning/OutcomeScopeBudget.cs": "0bfe623b506539e4809a47504ed41ccd1901c431a61623f4a4baafeba55e4c33",
@@ -1073,8 +1073,8 @@
     "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyDecisionWorkModels.cs": "71966f533a21a65b1b60ae99d89e6026031d2f895a9a30106f6f0e0e5218d8c0",
     "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyLessonsNotChosen.cs": "fa5f60d79def2a407ee3fea9e9cfb5a0c833c5d06fd634066421c5f147fa1cf3",
     "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyOutcomeScheduler.cs": "d78afee6a76b0132810db90b899cf15b2e1c149e9acc1c710f1285be1a6b0eb5",
-    "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyPlanEngine.cs": "738d83a5342e998a8dd6adaf262fdcf710e49733e54dffda4ceee2cccda97720",
-    "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyProposalEngine.cs": "36e06d70e121aad359add4eedcd764ded052d403a6cd05f56e4e4263cdf859c6",
+    "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyPlanEngine.cs": "44b959986254ec6787af2badbaeb5899c0765498e45b8ae96dcfaae375c7e39c",
+    "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyProposalEngine.cs": "2add60e6a1ebf3b9a8b407d693318138b08968e0c6e496417f57502e90ad5911",
     "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyReviewModels.cs": "7972b1d26d25491081be53db2c7abef11a338ad9b77ae1b3ef1961afdd278d4c",
     "services/coaching-service/Coaching.Application/Subscriptions/CoachingInstitutionSubscriptionContracts.cs": "91b45a54e4bc7535aba9f50956ea5d0117db40f08900f3d6645302b66027be16",
     "services/coaching-service/Coaching.Application/Subscriptions/CoachingManagementRules.cs": "7acb3381ff6fbe15b562e515c73c0f8ff3938f9f851a52c4730f9ec6a36e768f",
@@ -1453,8 +1453,8 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyWorkReports.cs": "4476d0bf862bed3ab75395597d884db462753bd130bdf798daa16a13e9fb55c9",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingTopicSearchService.cs": "be7561a459a46cc7d1ca233b6ef0f87e2e277748ce0b71a794fcd0b260a66833",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyDecisionWork.cs": "4f81ad88ab164b61de95a697b824e4a5e9ff862877df72d5f47e39a3a857f0a8",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs": "31239b4856436f02cdc60e9616e5cc7780fcd497282363a425a48b7f2d85ad85",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyProposalService.cs": "004d2e38bec920078cbb1da2f9490d98f8617fee6e19f13b926892e2f340fe70",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs": "5a598462edccc707c8882e988b9e7ce2828b8238b79aaaa0961980053d0f769e",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyProposalService.cs": "0b27b31b891b7d94c6efcc4e665597f2dcaa05cd092ee7b360b6018e7fda6a34",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyResults.cs": "51264de209aed66dd1d3a7f1c40020bd26b97ab7f4efec63835dee64a5a65702",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyReviewService.cs": "f71e816976547070daa5ebaf4298d6e6b5ebdfdc2f0c3307a6a1e7f154a54544",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyStudyDraftService.cs": "15163353093c13402e5aeb98dcc49522b7e65f379c926441281d7f3ec39771d1",
@@ -2714,7 +2714,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "Paket H4b and merging H4a",
+    "purpose": "merging the H4a review fixes into H4b",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2762,7 +2762,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "44ed9417",
+    "previousBaselineCommit": "1e43ad0e",
     "removedSincePreviousBaseline": []
   }
 }
