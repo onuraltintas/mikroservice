@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {studentShell} from '../support/coaching-student-shell.mjs';
 const math='33333333-3333-4333-8333-333333333331',turkish='33333333-3333-4333-8333-333333333332';
 const lessons=[{id:math,name:'Matematik',examCode:'LGS',gradeNumber:8},{id:turkish,name:'Türkçe',examCode:'LGS',gradeNumber:8}];
 const token=()=>{const e=x=>Buffer.from(JSON.stringify(x)).toString('base64url');return`${e({alg:'HS256'})}.${e({sub:'b8a09753-f3ea-44d8-a444-cf49577b4a01',role:'Student',platform_product:'coaching',given_name:'Test',family_name:'Öğrenci',exp:Math.floor(Date.now()/1000)+900})}.fixture`;};
@@ -16,6 +17,7 @@ async function fixture(context){
   await context.route('**/api/**',async route=>{
     const req=route.request(),path=new URL(req.url()).pathname;const ok=data=>route.fulfill({json:{success:true,data}});
     if(path.endsWith('/auth/refresh-token'))return route.fulfill({json:{accessToken:token(),expiresInMinutes:15,tokenType:'Bearer'}});
+    const shell=studentShell(route,path);if(shell)return shell;
     if(path.endsWith('/profiles/me'))return ok({student:{educationStatus:'Student',gradeLevel:8,isActive:true},memberships:[]});
     if(path.endsWith('/weekly-draft')){expect(req.method()).toBe('GET');return ok({draft,lessons});}
     if(path.endsWith('/weekly-outcome-plans/options'))return ok({startDate:'2027-05-24',endDate:'2027-06-01',weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[{name:'LGS',date:'2027-06-20'}]});
