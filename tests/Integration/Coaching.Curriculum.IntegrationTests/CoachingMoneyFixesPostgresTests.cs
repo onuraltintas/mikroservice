@@ -318,7 +318,7 @@ public sealed class CoachingMoneyFixesPostgresTests
 
         var export = await new CoachingDataExportRepository(f.Db).ExportStudentDataAsync(student, DateTimeOffset.UtcNow, default);
 
-        Assert.Equal("1.11", export.SchemaVersion);
+        Assert.Equal("1.12", export.SchemaVersion);
         var exported = Assert.Single(export.BankTransfers!);
         Assert.Equal((1200m, "K1EXPORT", 100m, CoachingSalesDocumentTexts.Version, "Requested", "Deneme gerekçesi", 365),
             (exported.ListPrice, exported.CouponCode, exported.DiscountAmount, exported.SalesContractVersion, exported.WithdrawalStatus,

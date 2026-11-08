@@ -27,6 +27,15 @@ public sealed class CoachingAdminStudyReader(CoachingDbContext db, ICoachingAdmi
         return row is null ? null : new(row.Version, row.TimeZoneId,
             row.Windows.Select(x => new StudyWindowInput(x.Day, x.StartMinute, x.EndMinute)).ToArray());
     }
+    /// <summary>H3: the routine answers next to the free hours (read only).</summary>
+    public async Task<StudyRoutineView?> RoutineAsync(Guid student, CancellationToken ct)
+    {
+        await RequireAsync(student, ct);
+        var routine = await db.Set<StudyRoutineProfile>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == student, ct);
+        if (routine is null) return null;
+        var hours = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == student, ct);
+        return CoachingStudyRoutineService.View(routine, hours, await CoachingStudyRoutineService.PreparesForYksAsync(db, student, ct));
+    }
     public async Task<AdminStudyPlanPage> PlansAsync(Guid student, int pageNumber, int pageSize, StudyPlanStatus? status, string? search, CancellationToken ct)
     {
         await RequireAsync(student, ct);

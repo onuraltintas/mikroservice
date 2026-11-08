@@ -264,7 +264,7 @@ public sealed class CoachingMessagingTests
 
         var export = await new CoachingDataExportRepository(s.F.Db).ExportStudentDataAsync(s.Student, DateTimeOffset.UtcNow, default);
 
-        export.SchemaVersion.Should().Be("1.11");
+        export.SchemaVersion.Should().Be("1.12");
         var conversation = export.Conversations.Should().ContainSingle().Subject;
         (conversation.Id, conversation.TeacherUserId).Should().Be((own.Id, s.Teacher));
         conversation.Messages.Should().ContainSingle(x => x.Body == "Benim mesajım" && x.SenderUserId == s.Student);
