@@ -60,16 +60,22 @@ test('The plan wizard has one name and one entry point', async () => {
   const setup = await read(`${portal}/pages/student-learning-setup.component.html`);
   assert.doesNotMatch(setup, /<app-student-automatic-plan/, 'the setup page links to the wizard instead of hosting a second one');
   const wizard = await read(`${portal}/pages/student-study-plan-assistant.component.html`);
-  assert.match(wizard, /<app-student-automatic-plan/, 'the topic-based plan lives inside the wizard');
+  // Paket H4 (K3): "Konulardan plan" is gone; the summary offers "Şu konuları öne al" instead.
+  assert.doesNotMatch(wizard, /<app-student-automatic-plan|Konulardan plan/, 'no second, topic-based plan in the wizard');
+  const summary = await read(`${portal}/pages/wizard-summary-step.component.html`);
+  assert.match(summary, /Şu konuları öne al/, 'the summary moves chosen topics forward');
+  // The old preview address leads to the wizard's Özet step.
+  assert.match(routes, /path: 'preview'[\s\S]{0,200}adim: 'ozet'/, 'plan/preview redirects to the summary step');
 });
 
 // E6 #29 (live test 06.11): the study times are asked in Çalışma tercihlerim only; the wizard and the setup preview reuse them.
 test('Availability is asked in one place and the setup page previews the plan', async () => {
   const wizard = await read(`${portal}/pages/student-study-plan-assistant.component.html`);
-  assert.match(wizard, /<app-student-study-availability/, 'Değiştir opens the same availability editor');
   assert.doesNotMatch(wizard, /Yapay zekâ servisine|kurallı olarak değerlendirilir|privacy-note/, 'no technical note in the wizard');
-  const wizardCode = await read(`${portal}/pages/student-study-plan-assistant.component.ts`);
-  assert.match(wizardCode, /saveAvailability\(/, 'the wizard answers are saved as the availability');
+  // Paket H4: the wizard's questions are the routine (H3), which writes the same free hours as Çalışma tercihlerim.
+  const hours = await read(`${portal}/pages/wizard-hours-step.component.ts`);
+  assert.match(hours, /routines\.save\(/, 'the wizard answers are saved as the routine, which writes the free hours');
+  const wizardCode = await read(`${portal}/pages/wizard-summary-step.component.ts`);
   const setup = await read(`${portal}/pages/student-learning-setup.component.html`);
   assert.match(setup, /<app-student-plan-preview/, 'Plan önizlemesi shows the draft itself');
   const preview = await read(`${portal}/pages/student-plan-preview.component.ts`);

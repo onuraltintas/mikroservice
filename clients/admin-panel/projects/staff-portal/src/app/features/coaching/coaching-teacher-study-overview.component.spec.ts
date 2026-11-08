@@ -43,6 +43,8 @@ describe('teacher study overview',()=>{
     http.expectOne(r=>r.url.endsWith('/coaching/staff/students/student-42/study/weekly-draft')).flush({data:{draft:null,lessons:[]}});
     http.expectOne(r=>r.url.endsWith('/coaching/staff/students/student-42/study/learning-setup')).flush({data:{context:null,nextStep:'Profile',isReady:false,missingFields:[],warnings:[]}});
     http.expectOne(r=>r.url.endsWith('/coaching/staff/students/student-42/study/availability')).flush(null,{status:404,statusText:'Not Found'});
+    // Paket H4: the wizard also reads the student's routine (read only for a teacher).
+    http.expectOne(r=>r.url.endsWith('/coaching/staff/students/student-42/study/routine')).flush({success:true,data:null});
     f.detectChanges();expect(f.nativeElement.querySelectorAll('a[href*="/coaching-portal"]').length).toBe(0);
     http.verify();
   });

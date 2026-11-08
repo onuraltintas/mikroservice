@@ -87,7 +87,7 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   await expect(studyReport.getByText(/Puan hedefine erişim: %88.9/)).toBeVisible();
 });
 
-test('student links a school target and publishes an automatic topic plan within saved capacity', async ({ page }) => {
+test('student links a school target and publishes a topic plan within saved capacity', async ({ page }) => {
   const student = randomUUID();
   await page.route('**/api/auth/refresh-token', route => route.fulfill({ status: 200, contentType: 'application/json',
     body: JSON.stringify({ accessToken: planningToken(student), tokenType: 'Bearer', expiresInMinutes: 15 }) }));
@@ -119,22 +119,24 @@ test('student links a school target and publishes an automatic topic plan within
   await page.getByRole('button', { name: 'Çalışma saatlerini kaydet', exact: true }).click();
   // F2 (#27): no "Yeniden yükle" after a successful load; the save confirms itself.
   await expect(page.getByText('Çalışma saatlerin kaydedildi.', { exact: false }).first()).toBeVisible();
-  await page.goto('/coaching-portal/plan/wizard');
-  await page.getByLabel('Konu, ders veya ünite', { exact: true }).fill('E2E Kesirler');
-  await page.getByRole('combobox', { name: 'Sınıf', exact: true }).selectOption({ label: '8' });
-  await page.getByRole('button', { name: 'Konuları ara', exact: true }).click();
-  await page.getByRole('button', { name: 'Konu ekle', exact: true }).click();
-  await page.getByLabel('E2E Kesirler çalışma süresi', { exact: true }).fill('30');
-  await page.getByLabel('Başlangıç tarihi', { exact: true }).fill('2026-10-02');
-  await page.getByLabel('Plan süresi (gün)', { exact: true }).fill('1');
-  await page.getByRole('button', { name: 'Önizleme oluştur', exact: true }).click();
-  await expect(page.getByText(/Yeni çalışmalar: 30 dk/)).toBeVisible();
+  // Paket H4 (K3): "Konulardan plan" left the student wizard; the topic plan endpoints stay, so the draft is made through them here
+  // and published on Planım as before.
+  const api = 'http://127.0.0.1:5006/api/coaching/study-planning';
+  const topics = await page.request.get(`${api}/topics?search=${encodeURIComponent('E2E Kesirler')}&gradeNumber=8&pageNumber=1&pageSize=20`, { headers: auth });
+  expect(topics.ok(), await topics.text()).toBeTruthy();
+  const topic = (await topics.json()).data.items.find(x => x.name === 'E2E Kesirler');
+  expect(topic).toBeTruthy();
+  const hours = (await (await page.request.get(`${api}/availability`, { headers: auth })).json()).data;
+  const request = { startDate: '2026-10-02', days: 1, expectedAvailabilityVersion: hours.version, topics: [{ topicId: topic.id, requiredMinutes: 30 }] };
+  const previewed = await page.request.post(`${api}/automatic-preview`, { headers: auth, data: request });
+  expect(previewed.ok(), await previewed.text()).toBeTruthy();
+  const preview = (await previewed.json()).data;
+  expect(preview.schedule.scheduledMinutes).toBe(30);
   const title = `Automatic browser ${randomUUID()}`;
-  await page.getByLabel('Plan başlığı', { exact: true }).fill(title);
-  await page.getByLabel('Önizlemeyi kontrol ettim; taslak olarak kaydetmeyi onaylıyorum.').check();
-  await page.getByRole('button', { name: 'Taslağı kaydet', exact: true }).click();
-  await expect(page.getByText(`${title} taslak olarak kaydedildi. Henüz yayımlanmadı.`, { exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Çalışma planlarımı aç', exact: true }).click();
+  const draft = await page.request.post(`${api}/automatic-drafts`, { headers: { ...auth, 'Idempotency-Key': randomUUID() }, data: { title, preview: request,
+    expectedActiveRevisionId: preview.activeRevisionId, expectedActiveRevisionVersion: preview.activeRevisionVersion, expectedEvidenceFingerprint: preview.evidenceFingerprint } });
+  expect(draft.ok(), await draft.text()).toBeTruthy();
+  await page.goto('/coaching-portal/plan');
   await page.getByRole('button', { name: new RegExp(title) }).click();
   await page.getByLabel('Planımı kontrol ettim, yayımlamayı onaylıyorum.').check();
   await page.getByRole('button', { name: 'Planı yayımla', exact: true }).click();

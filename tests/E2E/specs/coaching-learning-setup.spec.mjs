@@ -15,7 +15,7 @@ const onboarding = { status: 'Completed', nextStep: 7, savedSteps: [1, 2, 3, 4, 
 async function fixtures(context) {
   // F2: the education is chosen on Profilim (or in the first-login wizard); this student is an 8th grader.
   let profile = { version: 1, educationStatus: 'Student', gradeLevel: 8, isActive: true, shareProgressWithTeachers: true };
-  let learning = null; let hours = null; const previews = [];
+  let learning = null; let hours = null; const saves = [];
   const next = () => profile.educationStatus.toLowerCase() === 'unknown' ? 'Profile' : !learning ? 'Purpose'
     : !hours?.windows.length ? 'Availability' : !learning.coursePreferences.length ? 'Courses' : !learning.startingStatusReviewed ? 'Starting' : 'Preview';
   const view = () => ({ context: learning, nextStep: next(), isReady: next() === 'Preview', missingFields: next() === 'Preview' ? [] : [next()], warnings: [] });
@@ -34,15 +34,15 @@ async function fixtures(context) {
     if (path.endsWith('/setup/catalog')) return respond({ curriculum: { id: 'curriculum', name: 'Test ders programı', versionLabel: 'v1' }, lessons: [lesson],
       topics: { items: url.searchParams.get('lessonId') ? [{ id: 'topic-1', lessonId: lesson.id, name: 'Doğal sayılar', lessonName: 'Matematik', unitName: 'Sayılar', estimatedMinutes: 30, gradeNumber: 12, examCode: null }] : [], totalCount: 1, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] });
     if (path.endsWith('/setup')) {
-      if (request.method() === 'PUT') { const r = request.postDataJSON(); learning = { ...r, id: 'context', version: (learning?.version ?? -1) + 1, coursePreferences: r.courses, topicStates: r.topics, curriculumVersionId: 'curriculum' }; }
+      if (request.method() === 'PUT') { const r = request.postDataJSON(); saves.push(r); learning = { ...r, id: 'context', version: (learning?.version ?? -1) + 1, coursePreferences: r.courses, topicStates: r.topics, curriculumVersionId: 'curriculum' }; }
       return respond(view());
     }
     if (path.endsWith('/availability')) { if (request.method() === 'PUT') hours = { ...request.postDataJSON(), version: (hours?.version ?? -1) + 1 }; return respond(hours); }
-    if (path.endsWith('/automatic-preview')) {
-      const r = request.postDataJSON(); previews.push(r);
-      return respond({ availabilityVersion: hours.version, timeZoneId: 'Europe/Istanbul', activeRevisionId: 'existing', activeRevisionVersion: 1, protectedTasks: [],
-        schedule: { tasks: [{ topicId: 'topic-1', plannedDate: r.startDate, plannedMinutes: 30 }], unscheduledTopics: [], availableMinutes: 60, scheduledMinutes: 30, unscheduledMinutes: 0, unusedMinutes: 30 } });
-    }
+    // Paket H3/H4: no routine yet; the wizard's tempo options.
+    if (path.endsWith('/routine')) return route.fulfill({ status: 404, json: { success: false, code: 'StudyPlanning.RoutineMissing' } });
+    if (path.endsWith('/weekly-draft/tempo-options')) return respond({ planEnd: '2027-06-13', options: [
+      { tempo: 'Relaxed', finishBy: '2027-06-13', neededWeeklyMinutes: 60, capacityWeeklyMinutes: 60, fits: true },
+      { tempo: 'Intense', finishBy: '2027-03-01', neededWeeklyMinutes: 120, capacityWeeklyMinutes: 60, fits: false }] });
     if (path.endsWith('/weekly-draft')) return respond({ draft: null, lessons: [lesson] });
     // Paket H2: the plan preview asks the server for the weekly proposal.
     if (path.endsWith('/weekly-draft/proposal')) return respond({ mode: 'Replace', examFocus: null, slots: [{ id: 'proposal-1', lessonId: 'lesson-1', lessonName: 'Matematik', examCode: 'LGS', day: 'Monday', startMinute: 1080, durationMinutes: 60 }],
@@ -53,11 +53,11 @@ async function fixtures(context) {
     if (path.includes('assignments')) return respond({ items: [], totalCount: 0, pageNumber: 1, pageSize: 5 });
     return respond([]);
   });
-  return { previews };
+  return { saves };
 }
 
 test('student resumes setup after reload and previews a plan from selected courses', async ({ page, context }) => {
-  const { previews } = await fixtures(context);
+  const { saves } = await fixtures(context);
   await page.goto('/coaching-portal/account/settings');
   await expect(page.getByRole('heading', { name: 'Çalışma tercihlerim', exact: true })).toBeVisible();
   await expect(page.getByLabel('Okul adı (isteğe bağlı)')).toHaveCount(0);
@@ -81,19 +81,23 @@ test('student resumes setup after reload and previews a plan from selected cours
   // F2 (#28): no "gözden geçirdim" box; saving the step is the confirmation.
   await expect(page.getByRole('checkbox', { name: 'Başlangıç bilgilerimi gözden geçirdim.' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Kaydet ve önizlemeye geç', exact: true }).click();
-  // T3: the ready setup hands over to the plan wizard (Planım › Plan sihirbazı), where the topic preview now lives.
+  // T3: the ready setup hands over to the plan wizard (Planım › Plan sihirbazı).
   await expect(page.getByText('Bilgilerin hazır.', { exact: false })).toBeVisible();
   await page.getByRole('link', { name: 'Plan sihirbazını aç', exact: true }).click();
   await expect(page).toHaveURL(/\/coaching-portal\/plan\/wizard$/);
-  await page.getByRole('button', { name: 'Konulardan plan hazırla', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Seçtiğim ders', exact: true }).selectOption('lesson-1');
-  await page.getByRole('button', { name: 'Konuları ara', exact: true }).click();
-  await page.getByRole('button', { name: 'Konu ekle', exact: true }).click();
-  await page.getByLabel('Başlangıç tarihi', { exact: true }).fill('2026-10-19');
-  await page.getByRole('button', { name: 'Önizleme oluştur', exact: true }).click();
-  await expect(page.getByText(/Yeni çalışmalar: 30 dk/)).toBeVisible();
-  expect(previews).toHaveLength(1); expect(previews[0].expectedLearningContextVersion).toBe(2);
-  await expect(page.getByText('Henüz kaydedilmedi', { exact: false })).toBeVisible();
+  // Paket H4: the student has an active plan, so the wizard asks what to change; "Planı baştan kur" runs every step, starting with
+  // the saved hours (no routine yet).
+  await expect(page.getByRole('heading', { name: 'Planında neyi değiştirmek istiyorsun?', exact: true })).toBeVisible();
+  await expect(page.getByText('Konulardan plan', { exact: false })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Planı baştan kur', exact: true }).click();
+  await expect(page.getByTestId('wizard-progress')).toHaveText('Adım 1 / 4');
+  await page.getByRole('button', { name: 'Bu saatlerle devam', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Derslerin', exact: true })).toBeVisible();
+  await page.getByRole('radio', { name: 'Zor', exact: true }).check();
+  await page.getByRole('button', { name: 'Devam', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Tempo', exact: true })).toBeVisible();
+  expect(saves.at(-1).courses).toEqual([{ lessonId: 'lesson-1', priority: 3, selfReportedDifficulty: 4 }]);
+  expect(saves.at(-1).expectedVersion).toBe(2);
   await page.screenshot({ path: `../../artifacts/coaching-learning-setup-tests/preview-${test.info().project.name}.png`, fullPage: true });
 });
 
