@@ -342,7 +342,9 @@ public sealed class WeeklyProposalServiceTests
             var proposal = await propose(new(mode, FinishBy: option.FinishBy));
             Assert.Equal((proposal.NeededMinutes, proposal.ShortageMinutes == 0, proposal.FreeMinutes + proposal.Lessons.Sum(x => x.ExistingMinutes)),
                 (option.NeededWeeklyMinutes, option.Fits, option.CapacityWeeklyMinutes));
-            Assert.Equal(WeeklyProposalEngine.PeriodEnd(option.FinishBy, proposal.EndDate), proposal.FinishBy);
+            // Re-review of PR #132: the option's date is the period end the proposal uses and echoes.
+            Assert.Equal(option.FinishBy, proposal.FinishBy);
+            Assert.True(option.FinishBy <= proposal.EndDate);
         }
     }
     private static async Task FarExam(CurriculumManagementTests.Fixture f)
@@ -473,10 +475,12 @@ public sealed class WeeklyProposalServiceTests
         draft.Replace(draft.TimeZoneId, [new(Guid.NewGuid(), world.Math.Id, "Matematik", "LGS", DayOfWeek.Monday, 1260, 60),   // outside the study times
             new(Guid.NewGuid(), world.Math.Id, "Matematik", "LGS", DayOfWeek.Tuesday, 1020, 60),
             new(Guid.NewGuid(), world.Math.Id, "Matematik", "LGS", DayOfWeek.Wednesday, 1020, 60),                            // beyond Matematik's 30
-            new(Guid.NewGuid(), Guid.NewGuid(), "Fizik", "LGS", DayOfWeek.Thursday, 1020, 60)]);                                 // no longer chosen
+            new(Guid.NewGuid(), Guid.NewGuid(), "Fizik", "LGS", DayOfWeek.Thursday, 1020, 30)]);                                 // no longer chosen
         await f.Db.SaveChangesAsync();
         var view = await Proposals(f).TempoOptionsAsync(new(), default);
-        // No free hour is left; the 180 saved Matematik minutes count (Fizik's do not), yet Türkçe gets no time, so nothing fits.
+        // No free hour is left (Thursday's half hour after Fizik is too short); the 180 saved Matematik minutes count, the Monday hour outside
+        // the study times included, Fizik's 30 do not (counting the saved minutes inside the study times would give 60 + 60 + 30 = 150);
+        // Türkçe gets no time, so nothing fits.
         Assert.All(view.Options, x => Assert.Equal((180, false), (x.CapacityWeeklyMinutes, x.Fits)));
         Assert.All(view.Options, x => Assert.True(x.NeededWeeklyMinutes <= x.CapacityWeeklyMinutes));
         await AssertTheProposalAgrees(view, r => Proposals(f).ProposeAsync(r, default));
