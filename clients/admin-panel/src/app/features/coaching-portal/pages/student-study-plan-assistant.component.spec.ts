@@ -386,7 +386,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
       expect(component.proposal().map(x => [x.day, x.startMinute])).toEqual([['Tuesday', 1080]]);
     });
 
-    // Review of PR #130 (13): a teacher answers the quick questions for a student without study times: a proposal, never a save.
+    // Review of PR 130 (13): a teacher answers the quick questions for a student without study times: a proposal, never a save.
     it('a teacher answers the questions for a student without study times: a proposal, never a save', async () => {
       const { fixture, component, planning, weekly } = await setup({}, null, 'student-1');
       expect(text(fixture)).toContain('Öğrenci henüz çalışabileceği saatleri kaydetmemiş.');
@@ -395,7 +395,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
       expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, 'student-1', [{ day: 'Wednesday', startMinute: 1080, endMinute: 1200 }]);
       expect(planning.saveAvailability).not.toHaveBeenCalled();
       expect(component.proposal()).toHaveLength(1);
-      // Review of PR #130 (9): the teacher reads about the student in third person.
+      // Review of PR 130 (9): the teacher reads about the student in third person.
       expect(component.messages()[0].content).toContain('Öğrencinin çalışma saatlerinden');
       expect(component.messages().at(-1)!.content).toContain('Öğrencinin taslağındaki dolu saatleri korudum');
     });
@@ -423,7 +423,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
     });
   });
 
-  // Review of PR #130 (4): an empty proposal says why.
+  // Review of PR 130 (4): an empty proposal says why.
   describe('an empty proposal', () => {
     const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
     it('says the week already has enough time for every course', async () => {
@@ -450,7 +450,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
     });
   });
 
-  // Review of PR #130 (11): a proposal made for another exam focus is not kept; the question is hidden when nothing can be proposed.
+  // Review of PR 130 (11): a proposal made for another exam focus is not kept; the question is hidden when nothing can be proposed.
   it('drops the shown proposal when the exam focus changes and hides the question without courses', async () => {
     const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
     const { fixture, component } = await setup({ context: { ...context, purpose: 'Yks' } }, mondayEvening);
@@ -464,7 +464,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="exam-focus"]')).toBeNull();
   });
 
-  // Review of PR #130 (12): a proposal made from an older weekly draft is not applied over a newer one.
+  // Review of PR 130 (12): a proposal made from an older weekly draft is not applied over a newer one.
   describe('a weekly draft changed elsewhere', () => {
     const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
     it('asks for a new proposal when the proposal was made from another draft version', async () => {

@@ -81,7 +81,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly clock = clock;
 
   ngOnInit() {
-    // Review of PR #130: the teacher reads about the student in third person.
+    // Review of PR 130: the teacher reads about the student in third person.
     if (this.staffStudentId) this.messages.set([{ role: 'assistant', content: 'Merhaba! Öğrencinin çalışma saatlerinden haftalık ders düzeni önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
     this.loadAvailability();
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
@@ -134,9 +134,9 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   /** Paket H2: the proposal is made from saved study times; a teacher cannot give them for the student. */
   canPropose() { return !this.busy() && !this.proposing() && !this.savingAvailability() && !this.availabilityLoading() && !this.availabilityLoadError() && !!this.lessons().length
     && (this.savedWindows().length > 0 || this.selectedDays().length > 0); }
-  /** Review of PR #130: the YKS question is asked only where a proposal can be made. */
+  /** Review of PR 130: the YKS question is asked only where a proposal can be made. */
   showExamFocus() { return this.isYks() && !this.editingAvailability() && !!this.lessons().length && !this.availabilityLoadError(); }
-  /** Review of PR #130: a proposal made for another focus is dropped, so the shown one always matches the choice. */
+  /** Review of PR 130: a proposal made for another focus is dropped, so the shown one always matches the choice. */
   setExamFocus(value: WeeklyExamFocus) { if (this.examFocus() === value) return; this.examFocus.set(value); this.clearProposal(); }
   isYks() { return this.learningContext()?.purpose === 'Yks'; }
 
@@ -227,7 +227,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
       this.error.set('Başlangıç saati :00 veya :30 olmalı ve çalışma süresi gece yarısını geçmemeli.'); return;
     }
     const windows: StudyWindow[] = this.selectedDays().map(day => ({ day, startMinute, endMinute: startMinute + this.minutesPerDay() }));
-    // Review of PR #130: a teacher's answers make the proposal only; the student's study times stay hers (never saved).
+    // Review of PR 130: a teacher's answers make the proposal only; the student's study times stay hers (never saved).
     if (this.staffStudentId) { this.requestProposal('Fill', windows); return; }
     this.savingAvailability.set(true); this.error.set('');
     this.planning.saveAvailability({ expectedVersion: this.availability()?.version ?? null, timeZoneId: 'Europe/Istanbul', windows })
@@ -279,7 +279,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
       : `${this.emptyText(view)}${short}` }]);
   }
 
-  /** Review of PR #130: why a proposal has no new hour: no chosen course, enough time already, or no free time. */
+  /** Review of PR 130: why a proposal has no new hour: no chosen course, enough time already, or no free time. */
   emptyReason(view: WeeklyProposal): 'courses' | 'enough' | 'space' {
     return !view.lessons.length ? 'courses' : view.shortageMinutes === 0 ? 'enough' : 'space';
   }
@@ -306,7 +306,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   applyProposal() {
     const view = this.proposalView();
     if (this.busy() || !view || !view.slots.length) return;
-    // Review of PR #130: the proposal belongs to the weekly draft it was made from; a draft changed elsewhere asks for a new one.
+    // Review of PR 130: the proposal belongs to the weekly draft it was made from; a draft changed elsewhere asks for a new one.
     if ((view.draftVersion ?? null) !== this.version) { this.draftChanged(); return; }
     // Fill adds the proposal to the saved cards; Replace saves only the proposal (the student asked for a new week).
     const replace = view.mode === 'Replace';
