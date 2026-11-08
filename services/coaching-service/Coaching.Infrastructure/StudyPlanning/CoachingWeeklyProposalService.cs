@@ -173,16 +173,12 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
             if(date<s.Today.AddDays(MinimumFinishDays))date=s.Today.AddDays(MinimumFinishDays);
             return date>planEnd?planEnd:date;
         }
-        var options=new List<WeeklyTempoOption>();
-        foreach(var (tempo,finishBy) in new (StudyTempo Tempo,DateOnly FinishBy)[]{(StudyTempo.Relaxed,planEnd),(StudyTempo.Balanced,After(.85m)),(StudyTempo.Intense,After(.70m))}
-                    .DistinctBy(x=>x.FinishBy))
-        {
-            var (end,result)=await Run(student,s,request.Mode,finishBy,ct);
-            // Re-review of PR #132: the option's date is the period end this proposal uses (and echoes); equal dates merge into the most relaxed.
-            var used=WeeklyProposalEngine.PeriodEnd(finishBy,end)!.Value;
-            if(options.Any(x=>x.FinishBy==used))continue;
-            options.Add(new(tempo,used,result.NeededMinutes,result.FreeMinutes+result.Lessons.Sum(x=>x.ExistingMinutes),result.ShortageMinutes==0));
-        }
+        var wanted=new (StudyTempo Tempo,DateOnly FinishBy)[]{(StudyTempo.Relaxed,planEnd),(StudyTempo.Balanced,After(.85m)),(StudyTempo.Intense,After(.70m))};
+        // Third review of PR #132: each option is the proposal for its final date (re-run when the settled end cuts the period short).
+        var settled=await WeeklyProposalEngine.TempoDatesAsync(wanted,s.Today.AddDays(MinimumFinishDays),planEnd,
+            async date=>await Run(student,s,request.Mode,date,ct));
+        var options=settled.Select(x=>new WeeklyTempoOption(x.Tag,x.FinishBy,x.Result.NeededMinutes,
+            x.Result.FreeMinutes+x.Result.Lessons.Sum(l=>l.ExistingMinutes),x.Result.ShortageMinutes==0)).ToArray();
         return new(planEnd,options);
     }
 

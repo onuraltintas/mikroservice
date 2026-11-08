@@ -126,6 +126,36 @@ public static class WeeklyProposalEngine
     /// </summary>
     public static DateOnly? PeriodEnd(DateOnly? finishBy, DateOnly planEnd) => finishBy is { } date ? (date < planEnd ? date : planEnd) : null;
 
+    /// <summary>
+    /// Paket H4a (third review of PR #132): settles each wanted tempo date on the date its proposal really uses. <paramref name="run"/>
+    /// makes the proposal for a date and returns its settled plan end; when <see cref="PeriodEnd"/> of the two is earlier than the date
+    /// (with several exams a short period can drop a lesson and its exam), the proposal is made again for that date, at most
+    /// <paramref name="attempts"/> times. A date that does not settle, or settles on a day the proposal would refuse (before
+    /// <paramref name="earliest"/> and not the plan end), is left out; dates that end up equal are merged into the first (most relaxed)
+    /// one. Each result is the run for its final date, so it is exactly the proposal the wizard gets for that date.
+    /// </summary>
+    public static async Task<IReadOnlyList<(T Tag, DateOnly FinishBy, TResult Result)>> TempoDatesAsync<T, TResult>(
+        IEnumerable<(T Tag, DateOnly FinishBy)> wanted, DateOnly earliest, DateOnly planEnd, Func<DateOnly, Task<(DateOnly End, TResult Result)>> run,
+        int attempts = 3)
+    {
+        var options = new List<(T Tag, DateOnly FinishBy, TResult Result)>();
+        foreach (var (tag, finishBy) in wanted)
+        {
+            var date = finishBy;
+            (DateOnly Date, TResult Result)? settled = null;
+            for (var attempt = 1; attempt <= Math.Max(1, attempts); attempt++)
+            {
+                var (end, result) = await run(date);
+                var used = PeriodEnd(date, end)!.Value;
+                if (used == date) { settled = (date, result); break; }
+                if (used < earliest && used != planEnd) break;
+                date = used;
+            }
+            if (settled is { } done && options.All(x => x.FinishBy != done.Date)) options.Add((tag, done.Date, done.Result));
+        }
+        return options;
+    }
+
     /// <summary>The windows on weekdays that still come before the plan ends (saved and teacher windows never overlap).</summary>
     private static WeeklyProposalWindow[] Studied(WeeklyProposalInput input) =>
         input.Windows.Where(x => x is not null && input.DayOccurrences?.GetValueOrDefault(x.Day) != 0).ToArray();
