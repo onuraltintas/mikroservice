@@ -6,16 +6,17 @@ import { CoachingWeeklyDraftService } from '../../../core/services/coaching-week
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 
 const root = '/coaching-portal/plan';
+// Paket H1 (08.11.2026): the free hours come first; the weekly routine places the lessons into them.
 const STEPS = [
-  { label: 'Ders düzenin', path: `${root}/weekly`, hint: 'Okul ve kurs derslerini haftaya yerleştir.' },
-  { label: 'Boş saatlerin', path: `${root}/hours`, hint: 'Çalışabileceğin saatleri işaretle.' },
+  { label: 'Boş saatlerin', path: `${root}/hours`, hint: 'Hangi gün hangi saatlerde çalışabileceğini işaretle.' },
+  { label: 'Haftalık düzenin', path: `${root}/weekly`, hint: 'Bu saatlerde hangi derse çalışacağını yerleştir. Okul derslerini değil, kendi çalışma saatlerini gir.' },
   { label: 'Planını oluştur', path: `${root}/wizard`, also: [`${root}/preview`], hint: 'Tarihleri seç, planını gözden geçir ve yayımla.' }
 ] as const;
 
 /**
- * T4 (31.10.2026): "Planı düzenle" is one flow in three steps over the existing pages — weekly lessons, free hours,
- * then the plan wizard (or the weekly preview). It only navigates; each page keeps its own saving and validation.
- * Paket F #37: a step is shown as done only when its data exists (lessons in the weekly draft, saved free hours), read again on
+ * T4 (31.10.2026): "Planı düzenle" is one flow in three steps over the existing pages — free hours, weekly lessons (Paket H1:
+ * in this order), then the plan wizard (or the weekly preview). It only navigates; each page keeps its own saving and validation.
+ * Paket F #37: a step is shown as done only when its data exists (saved free hours, lessons in the weekly draft), read again on
  * every step change; an unknown state (loading, failed) is not done. The last step has no "done" state of its own.
  */
 @Component({
@@ -72,7 +73,7 @@ export class StudentPlanEditStepsComponent {
   private readonly planning = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly state = signal<{ lessons: boolean; hours: boolean }>({ lessons: false, hours: false });
-  readonly done = computed(() => [this.state().lessons, this.state().hours, false]);
+  readonly done = computed(() => [this.state().hours, this.state().lessons, false]);
   private request?: Subscription;
 
   constructor() {

@@ -5,7 +5,8 @@ namespace Coaching.Application.StudyPlanning;
 
 // Roadmap O7: EngineVersion 2 applies the rule-based engine (WeeklyPlanEngine); 1 keeps the earlier behaviour for old clients.
 // PrioritizeWhenShort lets a plan that does not fit be saved with exam-error and high-yield topics first.
-public sealed record WeeklyOutcomePlanRequest(DateOnly StartDate,DateOnly EndDate,[property:JsonRequired] int ExpectedWeeklyDraftVersion,bool ReuseFreedSlots=false,
+// Paket H1 (08.11.2026): ReuseFreedSlots is on unless the request turns it off.
+public sealed record WeeklyOutcomePlanRequest(DateOnly StartDate,DateOnly EndDate,[property:JsonRequired] int ExpectedWeeklyDraftVersion,bool ReuseFreedSlots=true,
     int EngineVersion=1,bool PrioritizeWhenShort=false);
 public sealed record WeeklyExamDateRequest(DateOnly? ExamDate);
 public sealed record WeeklyLeftOutTopic(Guid LessonId,string LessonName,Guid TopicId,string TopicName,int Minutes);

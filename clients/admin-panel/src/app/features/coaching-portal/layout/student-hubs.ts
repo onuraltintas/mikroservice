@@ -10,8 +10,8 @@ const root = '/coaching-portal';
 export const STUDENT_HUBS: Record<'plan' | 'growth' | 'settings' | 'payments', StudentHub> = {
   plan: { label: 'Planım', tabs: [
     { label: 'Planım', path: `${root}/plan`, exact: true },
-    // T4: lessons, free hours and the wizard are the steps of one editing flow (see StudentPlanEditStepsComponent).
-    { label: 'Planı düzenle', path: `${root}/plan/weekly`, match: [`${root}/plan/hours`, `${root}/plan/wizard`, `${root}/plan/preview`] }
+    // T4: free hours, lessons and the wizard are the steps of one editing flow (see StudentPlanEditStepsComponent); Paket H1: it opens on the free hours.
+    { label: 'Planı düzenle', path: `${root}/plan/hours`, match: [`${root}/plan/weekly`, `${root}/plan/wizard`, `${root}/plan/preview`] }
   ] },
   growth: { label: 'Gelişimim', tabs: [
     { label: 'Denemeler', path: `${root}/growth/exams` },

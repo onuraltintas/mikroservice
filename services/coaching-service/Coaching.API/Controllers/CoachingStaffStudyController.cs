@@ -30,7 +30,11 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
 
     [HttpPut("weekly-draft"),Authorize(Roles="Teacher"),RequestSizeLimit(65536),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> SaveWeeklyDraft(Guid studentId,WeeklyDraftInput request,CancellationToken ct)=>Respond(async()=>
-        Ok(new{success=true,data=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct)}));
+    {
+        // Paket H1 (K5): the teacher sees which day is over the daily limit (the draft's own Turkish validation message).
+        try{return Ok(new{success=true,data=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct)});}
+        catch(ArgumentException e)when(e is not ArgumentNullException&&e.ParamName is null){return BadRequest(new{success=false,message=e.Message});}
+    });
 
     [HttpGet("learning-setup")]
     public Task<IActionResult> LearningSetup(Guid studentId,CancellationToken ct)=>Respond(async()=>

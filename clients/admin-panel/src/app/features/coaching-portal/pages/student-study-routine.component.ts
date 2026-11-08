@@ -8,10 +8,10 @@ import { StudentStudyAvailabilityComponent } from './student-study-availability.
   imports: [StudentWeeklyCalendarComponent, StudentStudyAvailabilityComponent],
   template: `
     <nav class="routine-tabs actions" aria-label="Haftalık düzen bölümleri">
-      <button type="button" [attr.aria-pressed]="tab === 'calendar'" (click)="tab = 'calendar'">Haftalık ders düzenim</button>
       <button type="button" [attr.aria-pressed]="tab === 'hours'" (click)="tab = 'hours'">Müsait saatlerim</button>
+      <button type="button" [attr.aria-pressed]="tab === 'calendar'" (click)="tab = 'calendar'">Haftalık ders düzenim</button>
     </nav>
-    <p>Müsait saatlerin ne zaman çalışabileceğini, haftalık ders düzenin bu saatlerde hangi derslere çalışacağını belirler.</p>
+    <p>Müsait saatlerin ne zaman çalışabileceğini, haftalık düzenin bu saatlerde hangi derse çalışacağını belirler.</p>
     <div [hidden]="tab !== 'calendar'"><app-student-weekly-calendar /></div>
     <div [hidden]="tab !== 'hours'"><app-student-study-availability /></div>
   `,

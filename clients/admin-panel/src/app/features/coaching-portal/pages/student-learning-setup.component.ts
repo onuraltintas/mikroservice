@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, firstValueFrom } from 'rxjs';
 import { CoachingLearningSetupService, ExamLearningPurpose, LearningCatalog, LearningCourse, LearningLesson, LearningExamSession, LearningSetupImpact, LearningSetupUpdate, LearningSetupView, LearningTopic, RETIRED_PURPOSE_NOTICE, TopicDeclaration, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 
@@ -36,6 +36,8 @@ export class StudentLearningSetupComponent implements OnInit {
   private readonly planning = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject(ElementRef<HTMLElement>);
+  /** Paket H1 (08.11.2026): ?adim=baslangic (the plan wizard's "Başlangıç durumunu düzenle") opens Başlangıç durumum once. */
+  private openStarting = inject(ActivatedRoute, { optional: true })?.snapshot?.queryParamMap?.get('adim') === 'baslangic';
   readonly apiUrl = environment.apiUrl;
   readonly state = signal<LearningSetupView | null>(null); readonly step = signal('Purpose');
   readonly loading = signal(false); readonly saving = signal(false); readonly ready = signal(false);
@@ -87,7 +89,13 @@ export class StudentLearningSetupComponent implements OnInit {
     this.cancelImpact();
     this.loading.set(true); this.ready.set(false); this.error.set(null);
     this.service.get().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
-      next: state => { this.apply(state); this.ready.set(true); this.step.set(state.nextStep === 'Catalog' ? 'Courses' : state.nextStep); if (this.step() === 'Courses' || this.step() === 'Starting') this.loadCatalog(); },
+      next: state => {
+        this.apply(state); this.ready.set(true); this.step.set(state.nextStep === 'Catalog' ? 'Courses' : state.nextStep);
+        // The step opens only when its tab could be opened (a saved, current exam); otherwise the page starts where the server says.
+        if (this.openStarting && state.context && !this.purposeRetired() && !state.purposeNotForEducation) this.step.set('Starting');
+        this.openStarting = false;
+        if (this.step() === 'Courses' || this.step() === 'Starting') this.loadCatalog();
+      },
       error: e => { if (e?.status === 404) this.step.set('Profile'); this.error.set(e?.status === 404 ? 'Koçluk profilin henüz hazırlanmadı. Profilim sayfasından profilini oluşturabilirsin.' : 'Kurulum bilgileri yüklenemedi. Yeniden dene.'); }
     });
   }

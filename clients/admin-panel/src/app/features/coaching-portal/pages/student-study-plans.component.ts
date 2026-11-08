@@ -60,7 +60,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   setListFilter(value:'all'|'today'|'pending'|'overdue'|'completed'){this.taskFilter=value;this.taskPage=1;}
   readonly listDays=signal(14);
   get remainingLabel(){return this.staffStudentId?'Yalnız kalan kapsamı kaydet':'Yalnız kalan işi kaydet';}
-  openEditFlow(){void this.router?.navigate(['/coaching-portal/plan/weekly']);}
+  /** Paket H1: "Planını oluştur" opens the plan wizard, as on the home page. */
+  openEditFlow(){void this.router?.navigate(['/coaching-portal/plan/wizard']);}
   openTask(id:string){this.sheetTaskId.set(id);}
   closeTask(){this.sheetTaskId.set(null);this.completionError.set(null);}
   canQuickComplete(task:StudyTask){return this.selected()?.status==='Active'&&!this.readOnly&&!task.isCompleted;}

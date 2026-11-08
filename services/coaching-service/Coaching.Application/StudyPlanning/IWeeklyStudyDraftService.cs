@@ -11,7 +11,11 @@ public sealed record WeeklyDraftView(int Version,string TimeZoneId,IReadOnlyList
 /// course has in her exam (<see cref="ExamQuestionWeights"/>; null when the catalog does not tell).
 /// </summary>
 public sealed record WeeklyCourseRank(Guid LessonId,int Priority,decimal? ExamQuestions);
-public sealed record WeeklyDraftPage(WeeklyDraftView? Draft,IReadOnlyList<LearningLessonView> Lessons,IReadOnlyList<WeeklyCourseRank>? Courses=null);
+public sealed record WeeklyDraftPage(WeeklyDraftView? Draft,IReadOnlyList<LearningLessonView> Lessons,IReadOnlyList<WeeklyCourseRank>? Courses=null)
+{
+    /// <summary>Paket H1 (K5): the most study one day of the weekly routine may hold for this student (<see cref="WeeklyDayLimit"/>).</summary>
+    public int MaxDayMinutes { get; init; } = WeeklyDayLimit.SchoolMinutes;
+}
 public interface IWeeklyStudyDraftService
 {
     Task<WeeklyDraftPage> GetAsync(CancellationToken ct);

@@ -77,7 +77,9 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             ? await setup.GetCatalogForStudentAsync(student,null,1,ct)
             : await setup.GetCatalogAsync(null,1,ct)).Lessons.ToDictionary(x=>x.Id);
         var lessonIds=draft.Slots.Select(x=>x.LessonId).Distinct().OrderBy(x=>x).ToArray();
-        if(lessonIds.Any(x=>!choices.ContainsKey(x)))throw Conflict("Takvimde artık kullanılamayan ders var. Haftalık taslağı güncelleyin.");
+        // Paket H1 (P10): the lessons no longer chosen are named by the names saved with the weekly cards.
+        var notChosen=draft.Slots.Where(x=>!choices.ContainsKey(x.LessonId)).Select(x=>x.LessonName).Distinct().Order(StringComparer.Create(Turkish,false)).ToArray();
+        if(notChosen.Length>0)throw Conflict($"Haftalık düzeninde artık seçili olmayan dersler var: {string.Join(", ",notChosen)}. Bu dersleri haftalık düzeninden kaldırıp yeniden önizle.");
         var context=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
         var year=context?.AcademicYearStart??(clock.GetUtcNow().Month>=9?clock.GetUtcNow().Year:clock.GetUtcNow().Year-1);
         var catalogTopics=await (from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
@@ -292,5 +294,6 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         return PracticeAdaptationCalculator.Calculate(evidence).SelectMany(x=>x.Topics).Select(x=>x.TopicId).ToHashSet();
     }
     private static BusinessRuleException Forbidden()=>new("Authorization.Forbidden","Öğretmen erişimi doğrulanamadı.");
+    private static readonly System.Globalization.CultureInfo Turkish=System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
     private static BusinessRuleException Conflict(string message)=>new("StudyPlanning.Conflict",message);
 }

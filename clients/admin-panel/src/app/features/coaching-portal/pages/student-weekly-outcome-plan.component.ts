@@ -28,9 +28,11 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
     :`${names} için haftalık düzeninde ders saati yok; bu dersler plana hiç girmez. Haftalık takvimine bu dersler için saat ekleyip yeniden önizleyebilirsin.`;}
   readonly totalMinutes=computed(()=>(this.preview()?.schedule.tasks.reduce((sum,x)=>sum+x.minutes,0)??0)+(this.preview()?.protectedTasks?.reduce((sum,x)=>sum+x.minutes,0)??0));
   readonly kindLabel=weeklyPlanKindLabel;readonly savingExamDate=signal(false);
-  // Roadmap O7: the rule-based engine (version 2) is always used by this screen.
+  /** Paket H1 (P10): the server names the weekly lessons no longer chosen; a student gets the way to her weekly routine. */
+  notChosenLessons(){return !this.studentId&&this.error().startsWith(NOT_CHOSEN_LESSONS);}
+  // Roadmap O7: the rule-based engine (version 2) is always used by this screen. Paket H1: the freed hours are used by default.
   readonly engineVersion=2;prioritizeWhenShort=false;examDateInput='';
-  startDate='';endDate='';reuseFreedSlots=false;title='Haftalık derslerimden çalışma planım';confirmed=false;private defaultEnd=true;
+  startDate='';endDate='';reuseFreedSlots=true;title='Haftalık derslerimden çalışma planım';confirmed=false;private defaultEnd=true;
   ngOnInit(){this.load();}
   busy(){return this.loading()||this.generating()||this.saving()||this.savingExamDate();}
   canLeavePage(){return !this.busy();}
@@ -82,6 +84,9 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   filter(value:string){this.lessonFilter.set(value);this.page.set(1);}
   private readonly feedback = coachingFeedback(undefined, this.error);
 }
+
+/** Paket H1 (P10): the start of the server's message about weekly lessons that are no longer chosen. */
+const NOT_CHOSEN_LESSONS='Haftalık düzeninde artık seçili olmayan dersler var';
 
 function dayBefore(date:string):string{
   const [y,m,d]=date.split('-').map(Number);const day=new Date(Date.UTC(y,m-1,d-1));

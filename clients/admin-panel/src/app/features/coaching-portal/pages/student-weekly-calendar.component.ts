@@ -6,7 +6,7 @@ import {RouterLink} from '@angular/router';
 import {CdkTrapFocus} from '@angular/cdk/a11y';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CoachingWeeklyDraftService,WeeklyLesson} from '../../../core/services/coaching-weekly-draft.service';
-import {CalendarView,WeeklySlot,Weekday,calendarDays,clock,slotError,weekday,weekDays} from './weekly-calendar';
+import {CalendarView,DEFAULT_MAX_DAY_MINUTES,WeeklySlot,Weekday,calendarDays,clock,slotError,weekday,weekDays} from './weekly-calendar';
 
 interface Gesture {id:number;slot:WeeklySlot;mode:'move'|'top'|'bottom';startX:number;startY:number;offset:number;moved:boolean}
 @Component({selector:'app-student-weekly-calendar',standalone:true,imports:[CommonModule,FormsModule,RouterLink,CdkTrapFocus],
@@ -20,6 +20,8 @@ export class StudentWeeklyCalendarComponent implements OnInit {
   readonly weeklyMinutes=computed(()=>this.slots().reduce((sum,s)=>sum+s.durationMinutes,0));
   readonly displayed=computed(()=>this.preview()?this.slots().map(s=>s.id===this.preview()!.id?this.preview()!:s):this.slots());
   readonly weekDays=weekDays;readonly clock=clock;readonly weekday=weekday;readonly minutes=Array.from({length:48},(_,i)=>i*30);readonly views=[{id:'day' as const,label:'Gün'},{id:'week' as const,label:'Hafta'},{id:'month' as const,label:'Ay'}];
+  /** Paket H1 (K5): the student's daily limit, from the server (8 hours when it does not say). */
+  maxDayMinutes=DEFAULT_MAX_DAY_MINUTES;
   timeZoneId='Europe/Istanbul';version:number|null=null;private initial='';private gesture:Gesture|null=null;private suppressClick=false;
   menu:{x:number;y:number;date:Date;minute:number}|null=null;
   form:{id:string;lessonId:string;day:Weekday;start:string;duration:number}|null=null;formError='';
@@ -40,7 +42,7 @@ export class StudentWeeklyCalendarComponent implements OnInit {
     if(this.dirty()&&(!discard||!await this.toaster.confirm('Kaydedilmemiş haftalık düzeni bırakıp kaydedileni yüklemek istiyor musun?')))return;
     this.loading.set(true);this.error.set('');this.menu=null;this.form=null;
     this.service.get().pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r=>{
-      this.lessons.set(r.lessons);this.slots.set(r.draft?.slots??[]);this.version=r.draft?.version??null;this.timeZoneId=r.draft?.timeZoneId??'Europe/Istanbul';
+      this.lessons.set(r.lessons);this.maxDayMinutes=r.maxDayMinutes??DEFAULT_MAX_DAY_MINUTES;this.slots.set(r.draft?.slots??[]);this.version=r.draft?.version??null;this.timeZoneId=r.draft?.timeZoneId??'Europe/Istanbul';
       this.initial=this.snapshot();this.ready.set(true);this.conflict.set(false);this.loading.set(false);this.today();
       if(this.view()==='day'&&this.slots().length&&!this.rows(this.anchor()).length){
         const current=this.anchor();
@@ -50,7 +52,7 @@ export class StudentWeeklyCalendarComponent implements OnInit {
   }
   save(){
     if(!this.ready()||this.busy()||!this.dirty()||this.conflict()||this.gesture||this.form)return;
-    const invalid=this.slots().map(s=>slotError(s,this.slots())).find(Boolean);
+    const invalid=this.slots().map(s=>slotError(s,this.slots(),this.maxDayMinutes)).find(Boolean);
     if(invalid){this.error.set(invalid);return;}
     this.saving.set(true);this.error.set('');this.message.set('');this.menu=null;
     this.service.save(this.version,this.timeZoneId,this.slots()).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r=>{
@@ -86,7 +88,7 @@ export class StudentWeeklyCalendarComponent implements OnInit {
     const [hour,minute]=f.start.split(':').map(Number);
     if(hour>23||minute>59){this.formError='Geçerli bir başlangıç saati seç.';return;}
     const candidate:WeeklySlot={id:f.id,lessonId:f.lessonId,lessonName:lesson.name,examCode:lesson.examCode,day:f.day,startMinute:hour*60+minute,durationMinutes:Number(f.duration)};
-    this.formError=slotError(candidate,this.slots());if(this.formError)return;
+    this.formError=slotError(candidate,this.slots(),this.maxDayMinutes);if(this.formError)return;
     this.slots.update(rows=>[...rows.filter(s=>s.id!==candidate.id),candidate]);this.form=null;this.message.set('');this.error.set('');
   }
   remove(){if(!this.form||this.busy())return;const id=this.form.id;this.slots.update(rows=>rows.filter(s=>s.id!==id));this.form=null;this.message.set('');}
@@ -117,12 +119,12 @@ export class StudentWeeklyCalendarComponent implements OnInit {
     const g=this.gesture;if(!g||e.pointerId!==g.id)return;
     const candidate=this.preview();this.gesture=null;this.preview.set(null);if(!g.moved)return;this.suppressClick=true;
     if(!candidate){this.error.set('Kartı takvimde uygun bir saate bırak.');return;}
-    const error=slotError(candidate,this.slots());if(error){this.error.set(error);return;}
+    const error=slotError(candidate,this.slots(),this.maxDayMinutes);if(error){this.error.set(error);return;}
     this.slots.update(rows=>rows.map(s=>s.id===candidate.id?candidate:s));this.error.set('');this.message.set('');
   }
   @HostListener('document:pointercancel') cancelGesture(){this.gesture=null;this.preview.set(null);}
   @HostListener('document:keydown.escape') escape(){this.cancelGesture();this.menu=null;this.form=null;}
-  previewError(){return this.preview()?slotError(this.preview()!,this.slots()):'';}
+  previewError(){return this.preview()?slotError(this.preview()!,this.slots(),this.maxDayMinutes):'';}
   monthDay(d:Date){this.escape();this.anchor.set(d);this.view.set('day');}
   async canLeavePage(){return !this.saving()&&(!this.dirty()&&!this.form||await this.toaster.confirm('Kaydedilmemiş haftalık düzeni bırakarak ayrılmak istiyor musun?'));}
   private readonly feedback = coachingFeedback(this.message, this.error);
