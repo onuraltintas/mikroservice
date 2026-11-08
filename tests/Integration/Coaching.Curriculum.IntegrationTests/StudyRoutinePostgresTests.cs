@@ -267,9 +267,10 @@ public sealed class StudyRoutinePostgresTests
         Assert.Equal(StudyTempo.Balanced, (await Service(pg.Db, user).ReplaceAsync(new(null, null, Morning() with { Tempo = StudyTempo.Balanced }))).Answers.Tempo);
         await using (var db = new CoachingDbContext(pg.Options)) Assert.Equal(StudyTempo.Balanced, (await Service(db, user).GetAsync())!.Answers.Tempo);
         Assert.Contains("\"Tempo\": \"Balanced\"", (await Stored(pg, student)).Answers);
-        StudyRoutineView cleared;
-        await using (var db = new CoachingDbContext(pg.Options)) cleared = await Service(db, user).ReplaceAsync(new(0, 0, Morning()));
-        Assert.Null(cleared.Answers.Tempo);
+        // Saved again without a tempo, the saved tempo stays (review of 48f12c23: only the plan preferences clear it).
+        StudyRoutineView kept;
+        await using (var db = new CoachingDbContext(pg.Options)) kept = await Service(db, user).ReplaceAsync(new(0, 0, Morning()));
+        Assert.Equal(StudyTempo.Balanced, kept.Answers.Tempo);
         await using (var db = new CoachingDbContext(pg.Options))
         {
             var bad = await new StudyRoutineController(Service(db, user)).Replace(new(1, 1, Morning() with { Tempo = (StudyTempo)9 }));
