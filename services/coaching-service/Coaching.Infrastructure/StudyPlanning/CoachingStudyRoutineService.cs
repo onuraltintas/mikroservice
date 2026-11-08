@@ -67,9 +67,12 @@ public sealed class CoachingStudyRoutineService(CoachingDbContext db, ICoachingA
                 db.Add(profile);
             }
             profile.Replace(answersJson, availability.Version);
+            // Paket H4a: the routine's focus and tempo are the plan preferences (their single source), saved with it.
+            var preferences = await db.Set<StudyPlanPreferences>().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
+            CoachingStudyPlanPreferencesService.Apply(db, studentId, preferences, answers.ExamFocus, answers.Tempo);
             await SaveAsync(RoutineConflict, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return View(profile, availability, yks);
+            return View(profile, availability, yks, await db.Set<StudyPlanPreferences>().SingleAsync(x => x.StudentId == studentId, cancellationToken));
         });
     }
 
@@ -85,17 +88,25 @@ public sealed class CoachingStudyRoutineService(CoachingDbContext db, ICoachingA
         var profile = await db.Set<StudyRoutineProfile>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         if (profile is null) return null;
         var availability = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
-        return View(profile, availability, await PreparesForYksAsync(db, studentId, cancellationToken));
+        return View(profile, availability, await PreparesForYksAsync(db, studentId, cancellationToken),
+            await CoachingStudyPlanPreferencesService.RowAsync(db, studentId, cancellationToken));
     }
 
     internal static async Task<bool> PreparesForYksAsync(CoachingDbContext db, Guid studentId, CancellationToken cancellationToken) =>
         await db.StudentLearningContexts.AsNoTracking().AnyAsync(x => x.StudentUserId == studentId && x.Purpose == LearningPurpose.Yks, cancellationToken);
 
-    /// <summary>Also used by the coaching data export and the admin reader. Throws <see cref="JsonException"/> on unreadable answers.</summary>
-    public static StudyRoutineView View(StudyRoutineProfile profile, StudyAvailability? availability, bool preparesForYks)
+    /// <summary>
+    /// Also used by the coaching data export and the admin reader. Throws <see cref="JsonException"/> on unreadable answers. Paket H4a:
+    /// the exam focus and tempo shown are the plan preferences (<paramref name="preferences"/>), their single source; answers saved
+    /// before the preferences existed show their own.
+    /// </summary>
+    public static StudyRoutineView View(StudyRoutineProfile profile, StudyAvailability? availability, bool preparesForYks,
+        StudyPlanPreferences? preferences = null)
     {
         var answers = JsonSerializer.Deserialize<StudyRoutineAnswers>(profile.AnswersJson, Json)
             ?? throw new JsonException("Stored routine answers are empty.");
+        if (preferences is not null)
+            answers = answers with { ExamFocus = CoachingStudyPlanPreferencesService.Focus(preferences), Tempo = CoachingStudyPlanPreferencesService.Tempo(preferences) };
         if (!preparesForYks && answers.ExamFocus is not null) answers = answers with { ExamFocus = null };
         var derived = StudyRoutine.ToWindows(answers);
         return new StudyRoutineView(profile.Version, profile.SchemaVersion, answers,

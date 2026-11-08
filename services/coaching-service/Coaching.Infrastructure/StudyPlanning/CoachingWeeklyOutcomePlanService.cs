@@ -335,7 +335,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             var prepared=await Prepare(request.Preview,student,ct);var preview=prepared.Preview;
             if(preview.Fingerprint!=request.Fingerprint)throw Conflict("Haftalık taslak, kazanımlar, süreler veya mevcut çalışmalar değişti. Yeniden önizleyin.");
             if(!preview.CanCreate)throw new ArgumentException("Bütün dersler tarihe sığmalı ve kazanım/süre eksikleri giderilmelidir. Önizlemedeki seçeneklerle planı yeniden hazırlayın.");
-            if(await db.StudyPlanRevisions.AnyAsync(x=>x.StudentId==student&&x.Status==StudyPlanStatus.Draft,ct))throw Conflict("Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.");
+            if(await db.StudyPlanRevisions.AnyAsync(x=>x.StudentId==student&&x.Status==StudyPlanStatus.Draft,ct))throw new BusinessRuleException(WeeklyOutcomePlanCodes.DraftExists,"Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.");
             revision.SetWeeklySource(prepared.Source);var tasks=new List<StudyPlanTask>();var links=new List<StudyPlanTaskOutcome>();
             var v2=request.Preview.EngineVersion==WeeklyPlanEngine.CurrentVersion;
             foreach(var slice in preview.Schedule.Tasks)

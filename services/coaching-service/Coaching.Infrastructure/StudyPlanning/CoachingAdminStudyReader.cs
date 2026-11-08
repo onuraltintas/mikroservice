@@ -34,7 +34,14 @@ public sealed class CoachingAdminStudyReader(CoachingDbContext db, ICoachingAdmi
         var routine = await db.Set<StudyRoutineProfile>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == student, ct);
         if (routine is null) return null;
         var hours = await db.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == student, ct);
-        return CoachingStudyRoutineService.View(routine, hours, await CoachingStudyRoutineService.PreparesForYksAsync(db, student, ct));
+        return CoachingStudyRoutineService.View(routine, hours, await CoachingStudyRoutineService.PreparesForYksAsync(db, student, ct),
+            await CoachingStudyPlanPreferencesService.RowAsync(db, student, ct));
+    }
+    /// <summary>Paket H4a: the plan preferences (exam focus and tempo), read only.</summary>
+    public async Task<StudyPlanPreferencesView> PlanPreferencesAsync(Guid student, CancellationToken ct)
+    {
+        await RequireAsync(student, ct);
+        return await CoachingStudyPlanPreferencesService.ReadAsync(db, student, ct);
     }
     public async Task<AdminStudyPlanPage> PlansAsync(Guid student, int pageNumber, int pageSize, StudyPlanStatus? status, string? search, CancellationToken ct)
     {

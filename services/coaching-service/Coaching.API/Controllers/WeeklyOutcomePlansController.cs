@@ -24,6 +24,7 @@ public sealed class WeeklyOutcomePlansController(IWeeklyOutcomePlanService servi
         try{return await action();}
         catch(BusinessRuleException e)when(e.Code.StartsWith("Authorization.",StringComparison.Ordinal)){return StatusCode(403,new{message=e.Message});}
         catch(BusinessRuleException e)when(e.Code=="StudyPlanning.Conflict"){return Conflict(new{message=e.Message});}
+        catch(BusinessRuleException e)when(e.Code==WeeklyOutcomePlanCodes.DraftExists){return Conflict(new{message=e.Message,code=e.Code});}
         catch(BusinessRuleException e)when(e.Code==WeeklyLessonsNotChosen.Code){return Conflict(new{message=e.Message,code=e.Code,lessons=WeeklyLessonsNotChosen.Lessons(e)});}
         catch(KeyNotFoundException e){return NotFound(new{message=e.Message});}
         catch(ArgumentException e){return BadRequest(new{message=e.Message});}

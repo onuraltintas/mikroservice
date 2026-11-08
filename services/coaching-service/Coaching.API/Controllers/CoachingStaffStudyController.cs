@@ -176,7 +176,7 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         { return StatusCode(403, new { success = false, message = ex.Message, code = ex.Code }); }
         catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.NotFound")
         { return NotFound(new { success = false, message = ex.Message, code = ex.Code }); }
-        catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.Conflict")
+        catch (BusinessRuleException ex) when (ex.Code is "StudyPlanning.Conflict" or WeeklyOutcomePlanCodes.DraftExists)
         { return Conflict(new { success = false, message = ex.Message, code = ex.Code }); }
         catch (BusinessRuleException ex) when (ex.Code == WeeklyLessonsNotChosen.Code)
         { return Conflict(new { success = false, message = ex.Message, code = ex.Code, lessons = WeeklyLessonsNotChosen.Lessons(ex) }); }

@@ -31,6 +31,12 @@ public sealed record WeeklyOutcomePlanPreview(WeeklyOutcomePlanRequest Request,s
 /// <summary>Paket G #41: a chosen course (Derslerim) with no lesson in the weekly draft; the yearly plan cannot include it.</summary>
 public sealed record WeeklyUnscheduledLesson(Guid LessonId,string LessonName);
 public sealed record WeeklyOutcomePlanCreated(Guid Id,int Version);
+/// <summary>Paket H4a (H4b review): the error codes of a plan creation the client reads.</summary>
+public static class WeeklyOutcomePlanCodes
+{
+    /// <summary>409: a plan draft is still open; it must be published or archived first.</summary>
+    public const string DraftExists="StudyPlanning.DraftExists";
+}
 public interface IWeeklyOutcomePlanService
 {
     Task<WeeklyOutcomePlanOptions> OptionsAsync(CancellationToken ct);
