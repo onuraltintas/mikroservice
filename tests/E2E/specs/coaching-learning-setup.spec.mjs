@@ -44,6 +44,10 @@ async function fixtures(context) {
         schedule: { tasks: [{ topicId: 'topic-1', plannedDate: r.startDate, plannedMinutes: 30 }], unscheduledTopics: [], availableMinutes: 60, scheduledMinutes: 30, unscheduledMinutes: 0, unusedMinutes: 30 } });
     }
     if (path.endsWith('/weekly-draft')) return respond({ draft: null, lessons: [lesson] });
+    // Paket H2: the plan preview asks the server for the weekly proposal.
+    if (path.endsWith('/weekly-draft/proposal')) return respond({ mode: 'Replace', examFocus: null, slots: [{ id: 'proposal-1', lessonId: 'lesson-1', lessonName: 'Matematik', examCode: 'LGS', day: 'Monday', startMinute: 1080, durationMinutes: 60 }],
+      lessons: [{ lessonId: 'lesson-1', lessonName: 'Matematik', examCode: 'LGS', existingMinutes: 0, proposedMinutes: 60, neededMinutes: 60, noTime: false }],
+      freeMinutes: 60, neededMinutes: 60, shortageMinutes: 0, maxDayMinutes: 480, weeksUntilEnd: 30, endDate: '2027-06-01', middleSchool: true });
     if (path.endsWith('/plans/existing')) return respond({ id: 'existing', version: 1, title: 'Mevcut koç planı', status: 'Active', tasks: [{ id: 'old-task', title: 'Önceki çalışma', plannedDate: '2026-10-19', plannedMinutes: 30, isPinned: false, isCompleted: true, actualMinutes: 25 }] });
     if (path.endsWith('/plans')) return respond({ items: [{ id: 'existing', version: 1, title: 'Mevcut koç planı', status: 'Active' }], totalCount: 1, pageNumber: 1, pageSize: 20 });
     if (path.includes('assignments')) return respond({ items: [], totalCount: 0, pageNumber: 1, pageSize: 5 });
