@@ -108,6 +108,7 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var hours = await context.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var availability = hours is null ? null : new Coaching.Application.StudyPlanning.StudyAvailabilityView(hours.Version, hours.TimeZoneId,
             hours.Windows.Select(x => new Coaching.Application.StudyPlanning.StudyWindowInput(x.Day, x.StartMinute, x.EndMinute)).ToArray());
+        var routine = await context.Set<Coaching.Domain.Entities.StudyRoutineProfile>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var weeklyDraft = await context.Set<Coaching.Domain.Entities.WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var reminders = await context.CoachingReminderReceipts.AsNoTracking().Where(x => x.RecipientUserId == studentId)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
@@ -174,13 +175,14 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var primaryGoal = await context.Set<Coaching.Domain.Entities.StudentPrimaryGoal>().AsNoTracking()
             .Where(x => x.StudentId == studentId).Select(x => (Guid?)x.GoalId).SingleOrDefaultAsync(cancellationToken);
         return new CoachingDataExportDto(
-            "1.11", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments,
+            "1.12", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments,
             await context.StudentLearningContexts.AsNoTracking().Include(x => x.CoursePreferences).Include(x => x.TopicStates)
                 .SingleOrDefaultAsync(x => x.StudentUserId == studentId, cancellationToken),
             weeklyDraft is null ? null : Coaching.Infrastructure.StudyPlanning.CoachingWeeklyStudyDraftService.View(weeklyDraft),
             await context.Set<Coaching.Domain.Entities.WeeklyReflection>().AsNoTracking().Where(x => x.StudentId == studentId).OrderBy(x => x.WeekStart).ToArrayAsync(cancellationToken),
             await context.Set<Coaching.Domain.Entities.WeeklyDecision>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId || x.ResponsibleTeacherId == studentId).OrderBy(x => x.DueOn).ThenBy(x => x.Id).ToArrayAsync(cancellationToken),
             await context.Set<Coaching.Domain.Entities.WeeklyReflectionReview>().AsNoTracking().Where(x => x.StudentId == studentId || x.TeacherId == studentId).OrderBy(x => x.CreatedAt).ToArrayAsync(cancellationToken),
-            subscriptions, seats, transfers, payments, conversations, primaryGoal, trials, periods, invoices);
+            subscriptions, seats, transfers, payments, conversations, primaryGoal, trials, periods, invoices,
+            routine is null ? null : Coaching.Infrastructure.StudyPlanning.CoachingStudyRoutineService.View(routine, hours));
     }
 }

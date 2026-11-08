@@ -37,7 +37,9 @@ public sealed record CoachingDataExportDto(
     Guid? PrimaryGoalId = null,
     IReadOnlyList<CoachingDataTrialDto>? Trials = null,
     IReadOnlyList<CoachingDataSubscriptionPeriodDto>? SubscriptionPeriods = null,
-    IReadOnlyList<CoachingDataInvoiceDto>? Invoices = null)
+    IReadOnlyList<CoachingDataInvoiceDto>? Invoices = null,
+    // Schema 1.12 (H3): the study routine answers and the windows they give.
+    Coaching.Application.StudyPlanning.StudyRoutineView? StudyRoutine = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);

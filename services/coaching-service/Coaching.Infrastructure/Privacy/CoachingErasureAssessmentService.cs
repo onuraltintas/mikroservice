@@ -55,6 +55,7 @@ public sealed class CoachingErasureAssessmentService(
             + await context.StudyPlanRevisions.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.StudyPlanTasks.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.StudyAvailability.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
+            + await context.Set<StudyRoutineProfile>().CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.Set<WeeklyStudyDraft>().CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.Set<WeeklyReflectionReview>().CountAsync(x => x.StudentId == message.SubjectUserId || x.TeacherId == message.SubjectUserId, cancellationToken)
             + await context.Set<WeeklyReflection>().CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
