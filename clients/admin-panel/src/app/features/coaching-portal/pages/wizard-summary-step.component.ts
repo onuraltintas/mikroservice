@@ -44,6 +44,8 @@ export class WizardSummaryStepComponent implements OnInit {
   @Input() tempoNote = '';
   @Input() context: LearningContext | null = null;
   @Input() canGoBack = true;
+  /** H5's "Yeniden öner" (?yeniden=oner): open with "Haftanı baştan öner" (after the usual confirmation). */
+  @Input() replaceOnOpen = false;
   @Output() addHours = new EventEmitter<void>();
   @Output() planCreated = new EventEmitter<string>();
   @Output() contextSaved = new EventEmitter<LearningSetupView>();
@@ -108,10 +110,21 @@ export class WizardSummaryStepComponent implements OnInit {
       next: page => {
         this.slots.set(page.draft?.slots ?? []); this.version = page.draft?.version ?? null;
         this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul'; this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES;
-        if (propose) { this.initialMode = this.slots().length ? 'Fill' : 'Replace'; this.propose(this.initialMode); }
+        if (!propose) return;
+        this.initialMode = this.slots().length ? 'Fill' : 'Replace';
+        if (this.replaceOnOpen && this.slots().length) { void this.openWithReplace(); return; }
+        this.propose(this.initialMode);
       },
       error: () => this.error.set(this.staffStudentId ? 'Öğrencinin haftalık düzeni yüklenemedi. Yeniden deneyebilirsin.' : 'Haftalık düzenin yüklenemedi. Yeniden deneyebilirsin.')
     });
+  }
+  private async openWithReplace() {
+    if (await this.confirmReplace()) { this.initialMode = 'Replace'; this.propose('Replace'); } else this.propose(this.initialMode);
+  }
+  private confirmReplace() {
+    return this.toaster.confirm(this.staffStudentId
+      ? 'Öğrencinin mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.'
+      : 'Mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.');
   }
   retry() { this.publishIssue.set(null); this.preview.set(null); this.proposal.set(null); this.loadDraft(true); }
 
@@ -132,9 +145,7 @@ export class WizardSummaryStepComponent implements OnInit {
   /** "Haftanı baştan öner": a whole new week; the saved one is replaced only when it is kept. */
   async replaceWeek() {
     if (this.busy() || !this.slots().length) return;
-    if (!await this.toaster.confirm(this.staffStudentId
-      ? 'Öğrencinin mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.'
-      : 'Mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.')) return;
+    if (!await this.confirmReplace()) return;
     this.propose('Replace');
   }
 

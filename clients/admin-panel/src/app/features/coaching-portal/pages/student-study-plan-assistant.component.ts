@@ -70,6 +70,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   private hoursLoaded = false;
   /** The summary proposes Fill when the weekly draft has cards, Replace when empty; the tempo options are asked the same way. */
   private draftHasCards = false;
+  replaceOnOpen = false;
   private planChecked = false;
   /** Paket H1 (P8): the topics marked "Çalıştım" in Başlangıç durumum (edited there, not in the wizard). */
   readonly studiedTopicCount = computed(() => (this.learningContext()?.topicStates ?? []).filter(x => x.declaredStatus === 'Studied').length);
@@ -163,8 +164,11 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   /** Once everything is read: the edit question for a student with an active plan, the summary for ?adim=ozet, else step 1. */
   private start() {
     if (this.step() !== null || !this.ready() || !this.planChecked) return;
-    const summary = this.route?.snapshot?.queryParamMap?.get('adim') === 'ozet';
-    if (summary) { this.flow.set(this.fullFlow()); this.go('summary'); return; }
+    const query = this.route?.snapshot?.queryParamMap;
+    // H5's "Yeniden öner" after the free hours changed: the summary proposes the whole week again (after a confirmation).
+    this.replaceOnOpen = query?.get('yeniden') === 'oner';
+    if (this.replaceOnOpen) this.draftHasCards = false;
+    if (query?.get('adim') === 'ozet' || this.replaceOnOpen) { this.flow.set(this.fullFlow()); this.go('summary'); return; }
     if (!this.staffStudentId && this.hasActivePlan()) { this.step.set('menu'); return; }
     this.flow.set(this.fullFlow()); this.go('hours');
   }
@@ -185,6 +189,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
 
   private go(step: WizardStep, direction: 1 | -1 = 1) {
     this.stepError.set('');
+    // "Yeniden öner" is asked once, on the first summary.
+    if (step !== 'summary') this.replaceOnOpen = false;
     if (step === 'tempo' || (step === 'summary' && !this.tempoOptions())) { this.loadTempo(step, direction); return; }
     this.step.set(step);
     // Paket F #37: the new step takes the focus.

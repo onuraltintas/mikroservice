@@ -110,7 +110,7 @@
         }
         @case ('summary') {
           <app-wizard-summary-step [staffStudentId]="staffStudentId" [examFocus]="isYks() ? examFocus() : null" [finishBy]="finishBy()" [windows]="staffWindows()"
-            [tempoNote]="tempoNote()" [context]="learningContext()" [canGoBack]="canGoBack()"
+            [tempoNote]="tempoNote()" [context]="learningContext()" [canGoBack]="canGoBack()" [replaceOnOpen]="replaceOnOpen"
             (addHours)="addHours()" (planCreated)="onPlanCreated($event)" (contextSaved)="contextSaved($event)" (back)="previous()" />
         }
       }
