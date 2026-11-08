@@ -67,11 +67,11 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     public Task<IActionResult> OutcomeOptions(Guid studentId,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await outcomePlans.OptionsForStudentAsync(studentId,ct)}));
 
-    [HttpPost("weekly-outcome-plans/preview"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    [HttpPost("weekly-outcome-plans/preview"),RequestSizeLimit(8192),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> OutcomePreview(Guid studentId,WeeklyOutcomePlanRequest request,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await outcomePlans.PreviewForStudentAsync(studentId,request,ct)}));
 
-    [HttpPost("weekly-outcome-plans/drafts"),Authorize(Roles="Teacher"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    [HttpPost("weekly-outcome-plans/drafts"),Authorize(Roles="Teacher"),RequestSizeLimit(8192),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> CreateOutcomeDraft(Guid studentId,WeeklyOutcomePlanSave request,CancellationToken ct)=>Respond(async()=>
     {var created=await outcomePlans.CreateForStudentAsync(studentId,request,ct);return CreatedAtAction(nameof(Get),new{studentId,id=created.Id},new{success=true,data=created});});
 

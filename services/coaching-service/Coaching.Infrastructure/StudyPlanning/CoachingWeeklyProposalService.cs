@@ -58,8 +58,6 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         public string[] Codes(bool fill,IEnumerable<Guid> lessons)=>(fill?Existing.Select(x=>Choices.TryGetValue(x.LessonId,out var lesson)?lesson.ExamCode:x.ExamCode):[])
             .Concat(lessons.Select(x=>Choices[x].ExamCode))
             .OfType<string>().Distinct().Order(StringComparer.Ordinal).ToArray();
-        /// <summary>Paket H4a: the exams of the saved cards and the chosen lessons: the plan end the tempo options and finishBy use.</summary>
-        public string[] AllCodes=>Codes(true,Chosen.Select(x=>x.LessonId));
     }
 
     private async Task<Setup> Load(Guid student,string? examFocus,IReadOnlyList<StudyWindowInput>? teacherWindows,bool staff,CancellationToken ct)
@@ -112,17 +110,30 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         catch(System.Text.Json.JsonException){return null;}
     }
 
+    /// <summary>
+    /// The proposal for a mode and an optional finishBy: the plan end settles on the exams of the week that results (Paket H2 review) and
+    /// the need is spread until <see cref="WeeklyProposalEngine.PeriodEnd"/>. The proposal and the tempo options both use it, so an
+    /// option is exactly what the wizard gets when it asks for it.
+    /// </summary>
+    private async Task<(DateOnly End,WeeklyProposalResult Result)> Run(Guid student,Setup s,WeeklyProposalMode mode,DateOnly? finishBy,CancellationToken ct)
+    {
+        var fill=mode==WeeklyProposalMode.Fill;
+        var (end,result)=await WeeklyProposalEngine.SettleAsync(s.Codes(fill,s.Chosen.Select(x=>x.LessonId)),
+            codes=>plans.EndAsync(student,codes.ToArray(),s.Today,ct),
+            planEnd=>WeeklyProposalEngine.Propose(s.Input(WeeklyProposalEngine.PeriodEnd(finishBy,planEnd.End)??planEnd.End,mode)),
+            proposal=>s.Codes(fill,proposal.Slots.Select(x=>x.LessonId).Distinct()));
+        return (end.End,result);
+    }
+
     private async Task<WeeklyProposalView> Propose(Guid student,WeeklyProposalRequest request,bool staff,CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if(!Enum.IsDefined(request.Mode))throw new StudyPlanValidationException(staff?"Öneri türünü kontrol edin.":"Öneri türünü kontrol et.");
+        CheckMode(request.Mode,staff);
         var s=await Load(student,request.ExamFocus,request.Windows,staff,ct);
         var fill=request.Mode==WeeklyProposalMode.Fill;
-        if(request.FinishBy is {} finishBy)CheckFinishBy(finishBy,s.Today,(await plans.EndAsync(student,s.AllCodes,s.Today,ct)).End,staff);
-        var (end,result)=await WeeklyProposalEngine.SettleAsync(s.Codes(fill,s.Chosen.Select(x=>x.LessonId)),
-            codes=>plans.EndAsync(student,codes.ToArray(),s.Today,ct),
-            planEnd=>WeeklyProposalEngine.Propose(s.Input(request.FinishBy is {} until&&until<planEnd.End?until:planEnd.End,request.Mode)),
-            proposal=>s.Codes(fill,proposal.Slots.Select(x=>x.LessonId).Distinct()));
+        // Review of PR #132 (S4): finishBy is checked against the plan end this mode gives without it (the tempo options' plan end).
+        if(request.FinishBy is {} finishBy)CheckFinishBy(finishBy,s.Today,(await Run(student,s,request.Mode,null,ct)).End,staff);
+        var (end,result)=await Run(student,s,request.Mode,request.FinishBy,ct);
         var slots=result.Slots.Select(x=>new WeeklyDraftSlot(Guid.NewGuid(),x.LessonId,s.Choices[x.LessonId].Name,s.Choices[x.LessonId].ExamCode,
             x.Day,x.StartMinute,x.DurationMinutes)).ToArray();
         // The applied proposal must pass the weekly draft's own checks (30/60-minute cards on the half hour, no overlap). A failure here
@@ -131,21 +142,23 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         catch(ArgumentException e){throw new InvalidOperationException("The weekly proposal broke the weekly draft rules.",e);}
         var lessons=result.Lessons.Select(x=>new WeeklyProposalLessonView(x.LessonId,x.Name,s.Choices[x.LessonId].ExamCode,x.ExistingMinutes,x.ProposedMinutes,
             x.NeededMinutes,x.NoTime)).OrderBy(x=>x.LessonName,TurkishOrder).ThenBy(x=>x.LessonId).ToArray();
-        var span=end.End.DayNumber-s.Today.DayNumber+1;
+        var span=end.DayNumber-s.Today.DayNumber+1;
         return new(request.Mode,s.Focus,slots,lessons,result.FreeMinutes,result.NeededMinutes,result.ShortageMinutes,s.Limit,
-            Math.Max(1,(int)Math.Ceiling(span/7d)),end.End,s.Middle,result.CoveredMinutes,s.Draft?.Version,request.FinishBy);
+            Math.Max(1,(int)Math.Ceiling(span/7d)),end,s.Middle,result.CoveredMinutes,s.Draft?.Version,WeeklyProposalEngine.PeriodEnd(request.FinishBy,end));
     }
 
     /// <summary>
-    /// Paket H4a: the tempo step. Relaxed ends at the plan end, Balanced after 85 % and Intense after 70 % of the days until it (each at
-    /// least today + 6 and never after the plan end); options that end on the same day are merged into the most relaxed one. The need is
-    /// the proposal's own (its NeededMinutes with that finishBy); nothing is saved.
+    /// Paket H4a: the tempo step. Relaxed ends at the plan end (the one the proposal in this mode settles on), Balanced after 85 % and
+    /// Intense after 70 % of the days until it (each at least today + 6 and never after the plan end); options that end on the same day
+    /// are merged into the most relaxed one. Review of PR #132 (B1, S4): each option is the proposal with its finishBy and the mode:
+    /// its need, the minutes it counts (free sessions + saved minutes it counts) and whether it has no shortage. Nothing is saved.
     /// </summary>
     private async Task<WeeklyTempoOptionsView> Tempo(Guid student,WeeklyTempoOptionsRequest request,bool staff,CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
+        CheckMode(request.Mode,staff);
         var s=await Load(student,request.ExamFocus,request.Windows,staff,ct);
-        var planEnd=(await plans.EndAsync(student,s.AllCodes,s.Today,ct)).End;
+        var planEnd=(await Run(student,s,request.Mode,null,ct)).End;
         var days=planEnd.DayNumber-s.Today.DayNumber;
         DateOnly After(decimal share)
         {
@@ -153,26 +166,33 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
             if(date<s.Today.AddDays(MinimumFinishDays))date=s.Today.AddDays(MinimumFinishDays);
             return date>planEnd?planEnd:date;
         }
-        var options=new (StudyTempo Tempo,DateOnly FinishBy)[]{(StudyTempo.Relaxed,planEnd),(StudyTempo.Balanced,After(.85m)),(StudyTempo.Intense,After(.70m))}
-            .DistinctBy(x=>x.FinishBy)
-            .Select(x=>
-            {
-                var input=s.Input(x.FinishBy,WeeklyProposalMode.Fill);
-                var needed=WeeklyProposalEngine.Propose(input).NeededMinutes;var capacity=WeeklyProposalEngine.CapacityMinutes(input);
-                return new WeeklyTempoOption(x.Tempo,x.FinishBy,needed,capacity,needed<=capacity);
-            }).ToArray();
+        var options=new List<WeeklyTempoOption>();
+        foreach(var (tempo,finishBy) in new (StudyTempo Tempo,DateOnly FinishBy)[]{(StudyTempo.Relaxed,planEnd),(StudyTempo.Balanced,After(.85m)),(StudyTempo.Intense,After(.70m))}
+                    .DistinctBy(x=>x.FinishBy))
+        {
+            var result=(await Run(student,s,request.Mode,finishBy,ct)).Result;
+            options.Add(new(tempo,finishBy,result.NeededMinutes,result.FreeMinutes+result.Lessons.Sum(x=>x.ExistingMinutes),result.ShortageMinutes==0));
+        }
         return new(planEnd,options);
     }
 
-    /// <summary>Paket H4a: a finishBy is the plan end, or a day at least <see cref="MinimumFinishDays"/> days away and not after the plan end.</summary>
+    private static void CheckMode(WeeklyProposalMode mode,bool staff)
+    {
+        if(!Enum.IsDefined(mode))throw new StudyPlanValidationException(staff?"Öneri türünü kontrol edin.":"Öneri türünü kontrol et.");
+    }
+
+    /// <summary>
+    /// Paket H4a: a finishBy is the plan end, or a day at least <see cref="MinimumFinishDays"/> days away and not after the plan end. A day
+    /// after the plan end gets the message with the latest date, also when the plan end is closer than today + 6 (review of PR #132).
+    /// </summary>
     public const int MinimumFinishDays=6;
     private static void CheckFinishBy(DateOnly finishBy,DateOnly today,DateOnly planEnd,bool staff)
     {
         if(finishBy==planEnd)return;
-        if(finishBy<today.AddDays(MinimumFinishDays))throw new StudyPlanValidationException("Bitiş tarihi bugünden en az 6 gün sonra olmalı.");
         if(finishBy>planEnd)throw new StudyPlanValidationException(staff
             ?$"Bitiş tarihi en geç {planEnd:dd.MM.yyyy} olabilir; öğrencinin planı o gün bitiyor."
             :$"Bitiş tarihi en geç {planEnd:dd.MM.yyyy} olabilir; planın o gün bitiyor.");
+        if(finishBy<today.AddDays(MinimumFinishDays))throw new StudyPlanValidationException("Bitiş tarihi bugünden en az 6 gün sonra olmalı.");
     }
 
     /// <summary>At most 50 windows inside the day that do not overlap (the rules of a saved availability).</summary>
