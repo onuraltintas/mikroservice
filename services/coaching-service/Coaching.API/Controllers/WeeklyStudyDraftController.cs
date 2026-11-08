@@ -15,6 +15,13 @@ public sealed class WeeklyStudyDraftController(IWeeklyStudyDraftService drafts):
     public Task<IActionResult> Get(CancellationToken ct)=>Respond(async()=>Ok(new{success=true,data=await drafts.GetAsync(ct)}));
     [HttpPut,RequestSizeLimit(128*1024),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Save(WeeklyDraftInput r,CancellationToken ct)=>Respond(async()=>Ok(new{success=true,data=await drafts.SaveAsync(r,ct)}));
+    /// <summary>Paket H2: a need-based weekly proposal from the saved availability; nothing is saved.</summary>
+    [HttpPost("proposal"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> Proposal(WeeklyProposalRequest r,[FromServices] IWeeklyProposalService proposals,CancellationToken ct)=>Respond(async()=>
+    {
+        try{return Ok(new{success=true,data=await proposals.ProposeAsync(r,ct)});}
+        catch(KeyNotFoundException e){return NotFound(new{message=e.Message});}
+    });
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {
         try{return await action();}

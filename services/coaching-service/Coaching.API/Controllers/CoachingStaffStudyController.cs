@@ -32,6 +32,14 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     public Task<IActionResult> SaveWeeklyDraft(Guid studentId,WeeklyDraftInput request,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct)}));
 
+    /// <summary>Paket H2: the student's weekly proposal, as she sees it (read access, like the weekly draft).</summary>
+    [HttpPost("weekly-draft/proposal"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> WeeklyProposal(Guid studentId,WeeklyProposalRequest request,[FromServices] IWeeklyProposalService proposals,CancellationToken ct)=>Respond(async()=>
+    {
+        try{return Ok(new{success=true,data=await proposals.ProposeForStudentAsync(studentId,request,ct)});}
+        catch(KeyNotFoundException e){return NotFound(new{success=false,message=e.Message});}
+    });
+
     [HttpGet("learning-setup")]
     public Task<IActionResult> LearningSetup(Guid studentId,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await learningSetup.GetForStudentAsync(studentId,ct)}));
