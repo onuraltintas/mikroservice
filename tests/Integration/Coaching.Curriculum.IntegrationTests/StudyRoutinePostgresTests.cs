@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Coaching.Curriculum.IntegrationTests;
@@ -31,8 +32,15 @@ public sealed class StudyRoutinePostgresTests
     private static StudyRoutineAnswers Morning() => StudyRoutineTests.Morning();
     private static StudyRoutineAnswers NoSchool() => Morning() with { SchoolShift = StudySchoolShift.NoSchool, DayStart = 540, Weekend = StudyWeekendDays.None };
 
-    private static CoachingStudyRoutineService Service(CoachingDbContext db, CurriculumManagementTests.Actor user, Guid? readable = null) =>
-        new(db, new CoachingAccessPolicy(user), new CoachingStudyPlanAccess(new CoachingAccessPolicy(user), new Identity(readable ?? Guid.Empty), new CurriculumManagementTests.Scope()));
+    private const string AvailabilityChanged = "Çalışma saatlerin başka bir yerde değişti; yeniden yükle.", RoutineChanged = "Günlük düzenin başka bir yerde değişti; yeniden yükle.";
+
+    private static CoachingStudyRoutineService Service(CoachingDbContext db, CurriculumManagementTests.Actor user, Guid? readable = null,
+        ICoachingAdminScopeAuthorization? scope = null, bool sharing = true) =>
+        new(db, new CoachingAccessPolicy(user), new CoachingStudyPlanAccess(new CoachingAccessPolicy(user), new Identity(readable ?? Guid.Empty, sharing),
+            scope ?? new CurriculumManagementTests.Scope()));
+
+    private static CoachingDbContext Intercepted(CurriculumPostgresTests.Pg pg, int saveCall, Func<Task> action) =>
+        new(new DbContextOptionsBuilder<CoachingDbContext>(pg.Options).AddInterceptors(new BeforeSave(saveCall, action)).Options);
 
     private static async Task<(DayOfWeek, int, int)[]> StoredWindows(CurriculumPostgresTests.Pg pg, Guid student)
     {
@@ -43,8 +51,19 @@ public sealed class StudyRoutinePostgresTests
     private static (DayOfWeek, int, int)[] Derived(StudyRoutineAnswers answers) =>
         StudyRoutine.ToWindows(StudyRoutine.Validate(answers, true)).Windows.Select(x => (x.Day, x.StartMinute, x.EndMinute)).ToArray();
 
-    private static async Task Conflict(Func<Task> action) =>
-        Assert.Equal("StudyPlanning.Conflict", (await Assert.ThrowsAsync<BusinessRuleException>(action)).Code);
+    private static async Task Conflict(Func<Task> action, string message)
+    {
+        var error = await Assert.ThrowsAsync<BusinessRuleException>(action);
+        Assert.Equal(("StudyPlanning.Conflict", message), (error.Code, error.Message));
+    }
+
+    private static async Task<(int Version, int AvailabilityVersion, int StoredAvailabilityVersion, string Answers)> Stored(CurriculumPostgresTests.Pg pg, Guid student)
+    {
+        await using var db = new CoachingDbContext(pg.Options);
+        var profile = await db.Set<StudyRoutineProfile>().AsNoTracking().SingleAsync(x => x.StudentId == student);
+        var hours = await db.StudyAvailability.AsNoTracking().SingleAsync(x => x.StudentId == student);
+        return (profile.Version, profile.AvailabilityVersion, hours.Version, profile.AnswersJson);
+    }
 
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task SavingTheRoutineReplacesTheFreeHoursAndChecksBothVersions()
@@ -68,10 +87,10 @@ public sealed class StudyRoutinePostgresTests
         // A stale routine version or a stale (missing) availability version is refused and changes nothing.
         await using (var db = new CoachingDbContext(pg.Options))
         {
-            await Conflict(() => Service(db, user).ReplaceAsync(new(null, 0, NoSchool())));
-            await Conflict(() => Service(db, user).ReplaceAsync(new(0, null, NoSchool())));
-            await Conflict(() => Service(db, user).ReplaceAsync(new(1, 0, NoSchool())));
-            await Conflict(() => Service(db, user).ReplaceAsync(new(0, 1, NoSchool())));
+            await Conflict(() => Service(db, user).ReplaceAsync(new(null, 0, NoSchool())), RoutineChanged);
+            await Conflict(() => Service(db, user).ReplaceAsync(new(0, null, NoSchool())), AvailabilityChanged);
+            await Conflict(() => Service(db, user).ReplaceAsync(new(1, 0, NoSchool())), RoutineChanged);
+            await Conflict(() => Service(db, user).ReplaceAsync(new(0, 1, NoSchool())), AvailabilityChanged);
         }
         Assert.Equal(Derived(Morning()), await StoredWindows(pg, student));
         var refused = await new StudyRoutineController(Service(new CoachingDbContext(pg.Options), user)).Replace(new(5, 0, NoSchool()));
@@ -94,7 +113,7 @@ public sealed class StudyRoutinePostgresTests
         Assert.Equal((1, 1, 2, false), (read.Version, read.AvailabilityVersion, read.CurrentAvailabilityVersion!.Value, read.AvailabilityMatches));
         Assert.Equal(Derived(NoSchool()), read.Windows.Select(x => (x.Day, x.StartMinute, x.EndMinute)));   // the answers' windows, not the hand edit
 
-        await using (var db = new CoachingDbContext(pg.Options)) await Conflict(() => Service(db, user).ReplaceAsync(new(1, 1, Morning())));
+        await using (var db = new CoachingDbContext(pg.Options)) await Conflict(() => Service(db, user).ReplaceAsync(new(1, 1, Morning())), AvailabilityChanged);
         await using (var db = new CoachingDbContext(pg.Options))
         {
             var again = await Service(db, user).ReplaceAsync(new(1, 2, Morning()));
@@ -107,6 +126,9 @@ public sealed class StudyRoutinePostgresTests
             Assert.Equal((3, "Europe/Istanbul"), (hours.Version, hours.TimeZoneId));
             Assert.Equal(1, await db.Set<StudyRoutineProfile>().CountAsync());
         }
+        // The profile holds the availability version that was actually saved.
+        var stored = await Stored(pg, student);
+        Assert.Equal((2, 3, 3), (stored.Version, stored.AvailabilityVersion, stored.StoredAvailabilityVersion));
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
@@ -116,20 +138,26 @@ public sealed class StudyRoutinePostgresTests
         var user = pg.Data.User; user.Roles = ["Student"]; var student = user.UserId!.Value;
         await new CoachingStudyAvailabilityService(pg.Db, new CoachingAccessPolicy(user)).ReplaceAsync(new(null, null, [new(DayOfWeek.Monday, 1080, 1200)]));
 
-        await using (var db = new CoachingDbContext(pg.Options)) await Conflict(() => Service(db, user).ReplaceAsync(new(null, null, Morning())));
-        // ExamFocus is for YKS only: without a YKS purpose it is refused with a sentence for the student (400).
+        await using (var db = new CoachingDbContext(pg.Options)) await Conflict(() => Service(db, user).ReplaceAsync(new(null, null, Morning())), AvailabilityChanged);
+        // Invalid answers are a 400 with the sentence for the student, and nothing changes.
         var controller = new StudyRoutineController(Service(new CoachingDbContext(pg.Options), user));
-        var bad = Assert.IsType<BadRequestObjectResult>(await controller.Replace(new(null, 0, Morning() with { ExamFocus = StudyExamFocus.Ayt })));
-        Assert.Contains("yalnız YKS", Message(bad.Value));
         Assert.Contains("en az 3 saat", Message(Assert.IsType<BadRequestObjectResult>(
             await controller.Replace(new(null, 0, Morning() with { SchoolEnd = 600 }))).Value));
-        await using (var db = new CoachingDbContext(pg.Options))
+        // Answers that leave no window: after school 18:00 until 19:00 with dinner 18:00–19:00; every weekday off; both without a weekend.
+        foreach (var empty in new[]
         {
-            db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student), StudentLearningContext.Create(student, 2026, LearningPurpose.Lgs, 2027, null, null));
-            await db.SaveChangesAsync();
-            await Assert.ThrowsAsync<StudyPlanValidationException>(() => Service(db, user).ReplaceAsync(new(null, 0, Morning() with { ExamFocus = StudyExamFocus.Balanced })));
-        }
+            Morning() with { SchoolEnd = 1020, AfterSchoolStart = 1080, LatestEnd = 1140, DinnerStart = 1080, DinnerEnd = 1140, Weekend = StudyWeekendDays.None },
+            Morning() with { BusyDays = [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday], BusyDaysOff = true, Weekend = StudyWeekendDays.None },
+        })
+            Assert.Equal(StudyRoutine.NoWindowMessage, Message(Assert.IsType<BadRequestObjectResult>(await controller.Replace(new(null, 0, empty))).Value));
+        // Decision: a chosen weekend with only the lunch hour is refused on its own.
+        Assert.Equal(StudyRoutine.NoWeekendWindowMessage, Message(Assert.IsType<BadRequestObjectResult>(
+            await controller.Replace(new(null, 0, Morning() with { WeekendStart = 780, WeekendEnd = 840 }))).Value));
+        // A missing busy start can be answered.
+        Assert.Equal("Kurs olan günlerde kaçtan sonra çalışabileceğini seç.", Message(Assert.IsType<BadRequestObjectResult>(
+            await controller.Replace(new(null, 0, Morning() with { BusyDays = [DayOfWeek.Monday] }))).Value));
         Assert.Equal(new[] { (DayOfWeek.Monday, 1080, 1200) }, await StoredWindows(pg, student));
+        await using (var db = new CoachingDbContext(pg.Options)) Assert.False(await db.Set<StudyRoutineProfile>().AnyAsync());
 
         await using (var db = new CoachingDbContext(pg.Options))
         {
@@ -171,6 +199,17 @@ public sealed class StudyRoutinePostgresTests
             .Cast<Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute>(), x => Assert.Equal(new[] { "GET" }, x.HttpMethods));
         Assert.Equal("study-planning-write", Assert.Single(typeof(StudyRoutineController).GetMethod(nameof(StudyRoutineController.Replace))!
             .GetCustomAttributes(typeof(Microsoft.AspNetCore.RateLimiting.EnableRateLimitingAttribute), true).Cast<Microsoft.AspNetCore.RateLimiting.EnableRateLimitingAttribute>()).PolicyName);
+        Assert.NotNull(typeof(StudyRoutineController).GetMethod(nameof(StudyRoutineController.Replace))!
+            .GetCustomAttributes(typeof(RequestSizeLimitAttribute), true).SingleOrDefault());
+        // The student turned sharing with teachers off: the teacher's read is forbidden.
+        Assert.Equal("Authorization.Forbidden", (await Assert.ThrowsAsync<BusinessRuleException>(() => Service(db, teacher, student, sharing: false).GetForStudentAsync(student))).Code);
+        // An institution administrator reads students in her institution only.
+        var admin = new CurriculumManagementTests.Actor { Roles = ["InstitutionAdmin"] };
+        Assert.NotNull(await Service(db, admin, scope: new Institution(student)).GetForStudentAsync(student));
+        Assert.Equal("Authorization.Forbidden", (await Assert.ThrowsAsync<BusinessRuleException>(() => Service(db, admin, scope: new Institution(Guid.NewGuid())).GetForStudentAsync(student))).Code);
+        // The global admin screen shows the routine next to the free hours (read only).
+        Assert.True((await new CoachingAdminStudyReader(db, new CurriculumManagementTests.Scope()).RoutineAsync(student, default))!.AvailabilityMatches);
+        await Assert.ThrowsAsync<BusinessRuleException>(() => new CoachingAdminStudyReader(db, new CurriculumManagementTests.Scope { Global = false }).RoutineAsync(student, default));
         Assert.Equal(Derived(Morning()), await StoredWindows(pg, student));
     }
 
@@ -206,6 +245,106 @@ public sealed class StudyRoutinePostgresTests
             Assert.True(await db.StudyAvailability.AnyAsync(x => x.StudentId == other.UserId!.Value));
             Assert.True(await db.Set<StudyRoutineProfile>().AnyAsync(x => x.StudentId == other.UserId!.Value));
         }
+        // A stored row that can no longer be read is exported as it is instead of failing the export.
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            await db.Database.ExecuteSqlRawAsync("UPDATE coaching.study_routine_profiles SET \"AnswersJson\" = {0}::jsonb WHERE \"StudentId\" = {1}", "{\"SchoolShift\": \"Evening\"}", other.UserId!.Value);
+            var export = await new CoachingDataExportRepository(db).ExportStudentDataAsync(other.UserId!.Value, DateTimeOffset.UtcNow, default);
+            Assert.Null(export.StudyRoutine);
+            Assert.Contains("Evening", export.StudyRoutineUnreadableAnswersJson);
+            Assert.NotNull(export.StudyAvailability);
+        }
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task AFocusLeftFromYksDoesNotBlockSavingAndIsHidden()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var user = pg.Data.User; user.Roles = ["Student"]; var student = user.UserId!.Value;
+        pg.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student), StudentLearningContext.Create(student, 2026, LearningPurpose.Yks, 2027, "SAY", null));
+        await pg.Db.SaveChangesAsync();
+        var answers = Morning() with { ExamFocus = StudyExamFocus.Tyt };
+        Assert.Equal(StudyExamFocus.Tyt, (await Service(pg.Db, user).ReplaceAsync(new(null, null, answers))).Answers.ExamFocus);
+
+        // The student changes her exam to LGS: the saved focus is no longer shown, and saving the same answers again works.
+        await pg.Db.Database.ExecuteSqlRawAsync("UPDATE coaching.student_learning_contexts SET \"Purpose\" = {0} WHERE \"StudentUserId\" = {1}", (int)LearningPurpose.Lgs, student);
+        await using (var db = new CoachingDbContext(pg.Options)) Assert.Null((await Service(db, user).GetAsync())!.Answers.ExamFocus);
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var ok = Assert.IsType<OkObjectResult>(await new StudyRoutineController(Service(db, user)).Replace(new(0, 0, answers)));
+            Assert.NotNull(ok.Value);
+        }
+        var stored = await Stored(pg, student);
+        Assert.Equal(1, stored.Version);
+        Assert.Contains("\"ExamFocus\": null", stored.Answers);
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task EditsBetweenReadingAndSavingAreConflictsAndRollBack()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var user = pg.Data.User; user.Roles = ["Student"]; var student = user.UserId!.Value;
+        await Service(pg.Db, user).ReplaceAsync(new(null, null, Morning()));
+        (DayOfWeek, int, int)[] handEdit = [(DayOfWeek.Monday, 1080, 1200)];
+
+        // The free hours are edited by hand in another tab after the routine save read them: 409, nothing of the routine saved.
+        await using (var db = Intercepted(pg, 1, async () =>
+        {
+            await using var other = new CoachingDbContext(pg.Options);
+            await new CoachingStudyAvailabilityService(other, new CoachingAccessPolicy(user)).ReplaceAsync(new(0, null, [new(DayOfWeek.Monday, 1080, 1200)]));
+        }))
+            await Conflict(() => Service(db, user).ReplaceAsync(new(0, 0, NoSchool())), AvailabilityChanged);
+        var stored = await Stored(pg, student);
+        Assert.Equal((0, 0, 1), (stored.Version, stored.AvailabilityVersion, stored.StoredAvailabilityVersion));
+        Assert.Contains("\"Morning\"", stored.Answers);
+        Assert.Equal(handEdit, await StoredWindows(pg, student));
+
+        // The routine changes in another tab after the free hours were written in this save: 409, and the free hours roll back.
+        await using (var db = Intercepted(pg, 2, async () =>
+        {
+            await using var other = new CoachingDbContext(pg.Options);
+            await other.Database.ExecuteSqlRawAsync("UPDATE coaching.study_routine_profiles SET \"Version\" = \"Version\" + 1 WHERE \"StudentId\" = {0}", student);
+        }))
+            await Conflict(() => Service(db, user).ReplaceAsync(new(0, 1, NoSchool())), RoutineChanged);
+        stored = await Stored(pg, student);
+        Assert.Equal((1, 0, 1), (stored.Version, stored.AvailabilityVersion, stored.StoredAvailabilityVersion));
+        Assert.Equal(handEdit, await StoredWindows(pg, student));
+
+        await using (var db = new CoachingDbContext(pg.Options))
+            Assert.True((await Service(db, user).ReplaceAsync(new(1, 1, NoSchool()))).AvailabilityMatches);
+        stored = await Stored(pg, student);
+        Assert.Equal((2, 2, 2), (stored.Version, stored.AvailabilityVersion, stored.StoredAvailabilityVersion));
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TwoFirstSavesAtOnceGiveAConflictNotAnError()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var user = pg.Data.User; user.Roles = ["Student"]; var student = user.UserId!.Value;
+
+        // Another tab creates the free hours first.
+        await using (var db = Intercepted(pg, 1, async () =>
+        {
+            await using var other = new CoachingDbContext(pg.Options);
+            await new CoachingStudyAvailabilityService(other, new CoachingAccessPolicy(user)).ReplaceAsync(new(null, null, [new(DayOfWeek.Monday, 1080, 1200)]));
+        }))
+        {
+            var result = Assert.IsType<ConflictObjectResult>(await new StudyRoutineController(Service(db, user)).Replace(new(null, null, Morning())));
+            Assert.Equal(AvailabilityChanged, Message(result.Value));
+        }
+        // Another tab creates the routine first, after this save wrote the free hours: those roll back.
+        await using (var db = Intercepted(pg, 2, async () =>
+        {
+            await using var other = new CoachingDbContext(pg.Options);
+            var first = StudyRoutineProfile.Create(student); first.Replace("{}", 0); other.Add(first); await other.SaveChangesAsync();
+        }))
+        {
+            var result = Assert.IsType<ConflictObjectResult>(await new StudyRoutineController(Service(db, user)).Replace(new(null, 0, Morning())));
+            Assert.Equal(RoutineChanged, Message(result.Value));
+        }
+        Assert.Equal(new[] { (DayOfWeek.Monday, 1080, 1200) }, await StoredWindows(pg, student));
+        await using (var db = new CoachingDbContext(pg.Options))
+            Assert.Equal(0, (await db.StudyAvailability.AsNoTracking().SingleAsync(x => x.StudentId == student)).Version);
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
@@ -240,12 +379,30 @@ public sealed class StudyRoutinePostgresTests
     private static Task<bool> TableExists(CoachingDbContext db) => db.Database.SqlQueryRaw<bool>(
         "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='coaching' AND table_name='study_routine_profiles') AS \"Value\"").SingleAsync();
 
-    private sealed class Identity(Guid student) : ICoachingIdentityAuthorizationClient
+    // Teacher study access: the teaching relationship with one student, and her "share progress with teachers" setting.
+    private sealed class Identity(Guid student, bool sharing = true) : ICoachingIdentityAuthorizationClient
     {
         public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid id, CancellationToken ct) => Task.FromResult<CoachingAdminAccessScope?>(null);
         public Task<Guid?> AuthorizeTeacherTargetsAsync(Guid teacher, IReadOnlyCollection<Guid> ids, Guid? institution, bool admin, CancellationToken ct)
             => student != Guid.Empty && ids.All(x => x == student) ? Task.FromResult(institution) : throw new BusinessRuleException("Authorization.Forbidden", "Denied");
+        public Task<Guid?> AuthorizeTeacherStudyAccessAsync(Guid teacher, IReadOnlyCollection<Guid> ids, CancellationToken ct)
+            => sharing ? AuthorizeTeacherTargetsAsync(teacher, ids, null, false, ct) : throw new BusinessRuleException("Authorization.Forbidden", "Öğrenci ilerlemesini paylaşmıyor.");
         public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewer, IReadOnlyCollection<Guid> ids, CancellationToken ct) => Task.FromResult(ids);
+    }
+
+    private sealed class Institution(Guid student) : ICoachingAdminScopeAuthorization
+    {
+        public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken ct) => Task.FromResult(new CoachingAdminScope(false, Guid.NewGuid(), [student]));
+    }
+
+    private sealed class BeforeSave(int call, Func<Task> action) : SaveChangesInterceptor
+    {
+        private int calls;
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (++calls == call) await action();
+            return result;
+        }
     }
 
     private sealed class NoAttachments : IAssignmentAttachmentStorage
