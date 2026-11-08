@@ -22,7 +22,19 @@
     <p role="status" class="muted">{{ staffStudentId ? 'Öğrencinin bilgileri yükleniyor…' : 'Bilgilerin yükleniyor…' }}</p>
   }
 
-  @if (step() === 'menu') {
+  <!-- Review of PR 135 (S5): a tempo that could not be read is shown where the student is, with a retry. -->
+  @if (tempoError() && step() !== 'tempo') { <p class="notice error" role="alert" data-testid="tempo-error">{{ tempoError() }} <button type="button" class="secondary" (click)="retryTempo()" [disabled]="tempoLoading()">Yeniden dene</button></p> }
+
+  @if (step() === 'draft') {
+    <section class="panel wizard-panel" data-testid="pending-draft" aria-labelledby="draft-title">
+      <h2 id="draft-title" tabindex="-1" #stepTitle>Bekleyen bir plan taslağın var</h2>
+      <p>“{{ pendingDraft()?.title }}” henüz yayımlanmadı. Önce onu açıp yayımlayabilir ya da yeni bir plan hazırlayabilirsin; yeni planı yayımlamak için o taslağı yayımlaman ya da kaldırman gerekir.</p>
+      <div class="step-actions">
+        <button type="button" class="secondary" (click)="continueWithoutDraft()">Yine de yeni plan hazırla</button>
+        <a class="button-link primary-link" routerLink="/coaching-portal/plan" [queryParams]="{ plan: pendingDraft()?.id }">Bekleyen taslağını aç / yayımla</a>
+      </div>
+    </section>
+  } @else if (step() === 'menu') {
     <section class="panel wizard-panel" data-testid="edit-menu" aria-labelledby="edit-title">
       <h2 id="edit-title" tabindex="-1" #stepTitle>Planında neyi değiştirmek istiyorsun?</h2>
       <p class="muted">Seçtiğin bölümü şu anki değerlerinle açarım; sonra özetini görürsün.</p>
@@ -37,16 +49,16 @@
     <section class="panel wizard-panel" aria-labelledby="step-title">
       <nav class="wizard-progress" aria-label="Sihirbaz adımları">
         <ol>@for (item of visibleFlow(); track item; let i = $index) {
-          <li [attr.aria-current]="item === current ? 'step' : null" [class.done]="i < stepIndex()">{{ titleOf(item) }}</li>
+          <li [attr.aria-current]="item === current ? 'step' : null" [class.done]="i < stepIndex()">{{ titleOf(item) }}@if (i < stepIndex()) {<span class="sr-only"> (tamamlandı)</span>}</li>
         }</ol>
       </nav>
-      <p class="eyebrow" data-testid="wizard-progress">{{ progressText() }}</p>
+      @if (progressText()) { <p class="eyebrow" data-testid="wizard-progress">{{ progressText() }}</p> }
       <h2 id="step-title" tabindex="-1" #stepTitle>{{ titleOf(current) }}</h2>
-      <p class="sr-only" aria-live="polite">{{ progressText() }}: {{ titleOf(current) }}</p>
       @if (stepError()) { <p class="notice error" role="alert" data-testid="step-error">{{ stepError() }}</p> }
       @switch (current) {
         @case ('hours') {
-          <app-wizard-hours-step [staffStudentId]="staffStudentId" [routine]="routine()" [availability]="availability()" [yks]="isYks()" [limit]="maxDayMinutes"
+          <app-wizard-hours-step [staffStudentId]="staffStudentId" [routine]="routine()" [availability]="availability()" [yks]="isYks()" [allowNoSchool]="allowNoSchool()" [limit]="maxDayMinutes"
+            [examFocus]="isYks() ? toRoutineFocus() : null" [tempo]="tempo()" [disabled]="tempoLoading()"
             [startWithQuestions]="hoursWithQuestions()" [canGoBack]="canGoBack()" (done)="hoursDone($event)" (routineSaved)="routineSaved($event)" (reload)="loadHours()" (back)="previous()" />
         }
         @case ('courses') {
@@ -71,47 +83,48 @@
             <div class="chips stacked" role="radiogroup" aria-labelledby="focus-question">
               <p id="focus-question" class="question-text">{{ staffStudentId ? 'Bu dönem öğrencinin hangi sınava ağırlık vermesini istersin?' : 'Bu dönem hangi sınava ağırlık verelim?' }}</p>
               @for (choice of examFocusChoices; track choice.value) {
-                <label class="chip"><input type="radio" name="exam-focus" [value]="choice.value" [checked]="examFocus() === choice.value" (change)="setExamFocus(choice.value)" [disabled]="savingRoutine()" />
+                <label class="chip"><input type="radio" name="exam-focus" [value]="choice.value" [checked]="examFocus() === choice.value" (change)="setExamFocus(choice.value)" [disabled]="savingPreferences()" />
                   <span><strong>{{ choice.label }}</strong> <small>{{ choice.hint }}</small></span></label>
               }
             </div>
             <div class="step-actions">
-              @if (canGoBack()) { <button type="button" class="secondary" (click)="previous()" [disabled]="savingRoutine()">Geri</button> }
-              <button type="button" (click)="focusNext()" [disabled]="savingRoutine()">{{ savingRoutine() ? 'Kaydediliyor…' : 'Devam' }}</button>
+              @if (canGoBack()) { <button type="button" class="secondary" (click)="previous()" [disabled]="savingPreferences()">Geri</button> }
+              <button type="button" (click)="focusNext()" [disabled]="savingPreferences()">{{ savingPreferences() ? 'Kaydediliyor…' : 'Devam' }}</button>
             </div>
           </div>
         }
         @case ('tempo') {
           <div class="wizard-step" data-testid="tempo-step">
             @if (tempoLoading()) { <p role="status" class="muted">Tempo seçenekleri hesaplanıyor…</p> }
-            @if (tempoError()) { <p class="notice error" role="alert">{{ tempoError() }} <button type="button" class="secondary" (click)="retryTempo()">Yeniden dene</button></p> }
+            @if (tempoError()) { <p class="notice error" role="alert" data-testid="tempo-error">{{ tempoError() }} <button type="button" class="secondary" (click)="retryTempo()" [disabled]="tempoLoading()">Yeniden dene</button></p> }
+            @if (tempoReplaced()) { <p class="notice" role="status" data-testid="tempo-replaced">{{ staffStudentId ? 'Öğrencinin kayıtlı temposu artık sınav tarihine uymuyor; en yakın tempo seçildi.' : 'Kayıtlı temponun bitiş tarihi artık uygun değil; sana en yakın tempoyu seçtim.' }}</p> }
             @if (tempoOptions(); as options) {
               <div class="tempo-cards" role="radiogroup" aria-labelledby="tempo-question">
                 <p id="tempo-question" class="question-text">{{ staffStudentId ? 'Öğrenci konuları ne zaman bitirsin?' : 'Konuları ne zaman bitirmek istersin?' }}</p>
                 @for (option of options; track option.tempo) {
                   <label class="tempo-card" [class.selected]="tempo() === option.tempo" data-testid="tempo-option">
-                    <input type="radio" name="tempo" [checked]="tempo() === option.tempo" (change)="tempo.set(option.tempo)" [disabled]="savingRoutine()" />
+                    <input type="radio" name="tempo" [checked]="tempo() === option.tempo" (change)="tempo.set(option.tempo)" [disabled]="savingPreferences()" />
                     <span class="tempo-body">
                       <strong>{{ tempoText[option.tempo].name }}</strong>
                       <span>{{ tempoText[option.tempo].meaning }}</span>
                       <span>Bitiş: {{ dayMonth(option.finishBy) }}</span>
                       <span>Haftada yaklaşık {{ hours(option.neededWeeklyMinutes) }} saat gerekiyor</span>
-                      @if (!option.fits) { <span class="warning">{{ staffStudentId ? 'Öğrencinin saatleri buna yetmiyor' : 'Saatlerin buna yetmiyor' }} (haftada {{ hours(option.capacityWeeklyMinutes) }} saat)</span> }
+                      @if (!option.fits) { <span class="warning">{{ fitText(option) }}</span> }
                     </span>
                   </label>
                 }
               </div>
             }
             <div class="step-actions">
-              @if (canGoBack()) { <button type="button" class="secondary" (click)="previous()" [disabled]="savingRoutine()">Geri</button> }
-              <button type="button" (click)="tempoNext()" [disabled]="savingRoutine() || tempoLoading() || !tempo()">{{ savingRoutine() ? 'Kaydediliyor…' : 'Devam' }}</button>
+              @if (canGoBack()) { <button type="button" class="secondary" (click)="previous()" [disabled]="savingPreferences()">Geri</button> }
+              <button type="button" (click)="tempoNext()" [disabled]="savingPreferences() || tempoLoading() || !tempo()">{{ savingPreferences() ? 'Kaydediliyor…' : 'Devam' }}</button>
             </div>
           </div>
         }
         @case ('summary') {
-          <app-wizard-summary-step [staffStudentId]="staffStudentId" [examFocus]="isYks() ? examFocus() : null" [finishBy]="finishBy()" [windows]="staffWindows()"
-            [tempoNote]="tempoNote()" [context]="learningContext()" [canGoBack]="canGoBack()" [replaceOnOpen]="replaceOnOpen"
-            (addHours)="addHours()" (planCreated)="onPlanCreated($event)" (contextSaved)="contextSaved($event)" (back)="previous()" />
+          <app-wizard-summary-step [staffStudentId]="staffStudentId" [examFocus]="isYks() ? examFocus() : null" [finishBy]="finishBy()" [finishByMode]="tempoMode()" [tempo]="tempo()"
+            [windows]="staffWindows()" [tempoNote]="tempoNote()" [context]="learningContext()" [canGoBack]="canGoBack()" [replaceOnOpen]="replaceOnOpen" [choices]="summaryChoices"
+            (addHours)="addHours()" (planCreated)="onPlanCreated($event)" (contextSaved)="contextSaved($event)" (draftSaved)="draftSaved($event)" (back)="previous()" />
         }
       }
     </section>

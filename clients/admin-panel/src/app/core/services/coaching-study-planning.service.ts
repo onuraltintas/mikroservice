@@ -52,16 +52,6 @@ export interface GoalTarget { goalId: string; version: number; targetSchoolId: s
   examMismatch?: boolean }
 export interface StudyTopic { id: string; lessonId?: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
 export interface PublishedStudyOutcome { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; totalMinutes: number; editionCode: string; officialLessonPeriods: number | null; sourceKind?: 'Official' | 'ExamSkill' }
-export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null; outcomes?: { outcomeId: string; estimateId: string; requiredMinutes: number | null }[] }[]; expectedLearningContextVersion?: number }
-export interface AutomaticStudyDraftRequest { title: string; preview: AutomaticStudyRequest; expectedActiveRevisionId: string | null; expectedActiveRevisionVersion: number | null;expectedEvidenceFingerprint?:string }
-export interface AutomaticStudyPreview {
-  evidenceFingerprint?:string;completedOutcomeMinutes?:number;
-  availabilityVersion: number; timeZoneId: string; activeRevisionId: string | null; activeRevisionVersion: number | null;
-  protectedTasks: { taskId: string; plannedDate: string; title: string; plannedMinutes: number; isPinned: boolean; isCompleted: boolean }[];
-  schedule: { tasks: { topicId: string; plannedDate: string; plannedMinutes: number }[];
-    unscheduledTopics: { topicId: string; remainingMinutes: number }[];
-    availableMinutes: number; scheduledMinutes: number; unscheduledMinutes: number; unusedMinutes: number };
-}
 
 export interface CalendarTaskSave {expectedVersion:number;title:string;plannedDate:string;startMinute:number;plannedMinutes:number;lessonId:string|null}
 
@@ -86,12 +76,6 @@ export class CoachingStudyPlanningService {
   }
   getTopicOutcomes(topicId: string) {
     return this.http.get<ApiResult<PublishedStudyOutcome[]>>(`${environment.apiUrl}/coaching/study-planning/topics/${encodeURIComponent(topicId)}/outcomes`).pipe(map(r => r.data));
-  }
-  previewAutomatic(request: AutomaticStudyRequest) {
-    return this.http.post<ApiResult<AutomaticStudyPreview>>(`${environment.apiUrl}/coaching/study-planning/automatic-preview`, request).pipe(map(result => result.data));
-  }
-  saveAutomaticDraft(request: AutomaticStudyDraftRequest) {
-    return this.http.post<ApiResult<StudyPlan>>(`${environment.apiUrl}/coaching/study-planning/automatic-drafts`, request).pipe(map(result => result.data));
   }
 
   getPrimaryGoal() { return this.http.get<ApiResult<{goalId:string|null;version:number|null}>>(`${environment.apiUrl}/coaching/study-planning/primary-goal`).pipe(map(x=>x.data)); }

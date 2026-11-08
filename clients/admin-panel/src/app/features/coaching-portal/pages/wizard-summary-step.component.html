@@ -6,7 +6,7 @@
   @if (proposal(); as view) {
     <section class="proposal" data-testid="wizard-proposal" aria-labelledby="wizard-proposal-title">
       <h3 id="wizard-proposal-title" tabindex="-1" #proposalTitle>{{ staffStudentId ? 'Öğrencinin haftası' : 'Haftan' }}</h3>
-      @if (view.mode === 'Replace' && view.slots.length && slots().length) { <p class="muted">Devam edersen bu hafta {{ staffStudentId ? 'öğrencinin' : 'senin' }} mevcut haftalık düzeninin yerine geçer.</p> }
+      @if (view.mode === 'Replace' && view.slots.length && slots().length) { <p class="muted">{{ staffStudentId ? 'Bu düzen, öğrencinin mevcut haftalık düzeninin yerine geçer.' : 'Bu düzen, mevcut haftalık düzeninin yerine geçer.' }}</p> }
       @for (day of weekView(); track day.label) {
         <div class="proposal-day" data-testid="proposal-day"><h4>{{ day.label }}</h4>
           @for (item of day.items; track item.slot.id) {
@@ -31,7 +31,7 @@
       </div>
     </section>
   }
-  <!-- Review of PR 126: one live container that is always there; its content changes with the proposal. -->
+  <!-- Review of PR 126: one live container that is always there; its text changes with the proposal (the actions sit outside it). -->
   <div role="status" data-testid="shortage-status">
     @if (proposal(); as view) {
       @if (view.shortageMinutes > 0) {
@@ -42,17 +42,21 @@
             <p>Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(savedCoveredMinutes(view)) }} saat</strong> var. Bu öneriyle <strong>{{ hours(view.coveredMinutes) }} saat</strong> olur.</p>
           }
           @if (lessonsWithoutTime(view)) { <p data-testid="no-time-lessons">Saat verilemeyen dersler: {{ lessonsWithoutTime(view) }}.</p> }
-          <div class="actions">
-            @if (!staffStudentId) {
-              <button type="button" class="secondary" (click)="addHours.emit()">Saat ekle</button>
-              <a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'dersler', donus: 'sihirbaz' }">Ders çıkar</a>
-            }
-            @if (view.slots.length) { <button type="button" class="secondary" (click)="keepWeek()" [disabled]="busy()">Önemli derslerle devam et</button> }
-          </div>
         </div>
       }
     }
   </div>
+  @if (proposal(); as view) {
+    @if (view.shortageMinutes > 0) {
+      <div class="actions" data-testid="shortage-actions">
+        @if (!staffStudentId) {
+          <button type="button" class="secondary" (click)="addHours.emit()">Saat ekle</button>
+          <a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'dersler', donus: 'sihirbaz' }">Ders çıkar</a>
+        }
+        @if (view.slots.length) { <button type="button" class="secondary" (click)="keepWeek()" [disabled]="busy()">Önemli derslerle devam et</button> }
+      </div>
+    }
+  }
 
   @if (previewing()) { <p role="status" class="muted">Yıllık plan hesaplanıyor…</p> }
   @if (previewError()) {
@@ -83,47 +87,51 @@
                   <button type="button" class="secondary" (click)="addHours.emit()" [disabled]="busy()">Saat ekle</button>
                   <button type="button" class="secondary" (click)="raiseCourse(lesson.lessonId)" [disabled]="busy()">{{ savingPriority() === lesson.lessonId ? 'Öne alınıyor…' : 'Bu dersi öne al' }}</button>
                 }
-                @if (!prioritizeWhenShort()) { <button type="button" class="secondary" data-testid="prioritize-short" (click)="focusImportant()" [disabled]="busy()">Önemli konulara odaklan</button> }
+                @if (!choices.prioritizeWhenShort()) { <button type="button" class="secondary" data-testid="prioritize-short" (click)="focusImportant()" [disabled]="busy()">Önemli konulara odaklan</button> }
               </div>
             }
           </li>
         }
       </ul>
-      <p class="muted">Bitirdiğin konular 1, 7 ve 30 gün sonra kısa tekrarla hatırlatılır (aralıklı tekrar).@if (prioritizeWhenShort()) { Süre yetmediği için önemli konular öne alındı; sığmayanlar dışarıda kaldı. }</p>
-      @if (p.unscheduledLessons?.length) { <p class="notice" data-testid="unscheduled-lessons">{{ unscheduledNames() }} için {{ staffStudentId ? 'öğrencinin' : '' }} haftalık düzende saat yok; bu dersler plana girmez.</p> }
+      <p class="muted">{{ staffStudentId ? 'Bitirdiği konular 1, 7 ve 30 gün sonra kısa tekrarla hatırlatılır (aralıklı tekrar).' : 'Bitirdiğin konular 1, 7 ve 30 gün sonra kısa tekrarla hatırlatılır (aralıklı tekrar).' }}</p>
+      @if (choices.prioritizeWhenShort()) {
+        <p class="notice" data-testid="prioritized">Süre yetmediği için önemli konular öne alındı; sığmayanlar dışarıda kaldı.
+          <button type="button" class="secondary small" (click)="planAllTopics()" [disabled]="busy()">Bütün konuları planla</button></p>
+      }
+      @if (p.unscheduledLessons?.length) { <p class="notice" data-testid="unscheduled-lessons">{{ unscheduledNames() }} için {{ staffStudentId ? 'öğrencinin haftalık düzeninde' : 'haftalık düzeninde' }} saat yok; bu dersler plana girmez.</p> }
       @if (p.issues.length) {
-        <div class="notice error" data-testid="plan-issues"><p>Bu derslerin süre bilgisi eksik; eksikler giderilmeden plan oluşturulamaz.</p>
+        <div class="notice error" data-testid="plan-issues"><p>{{ staffStudentId ? 'Bu derslerin süre bilgisi eksik; eksikler giderilmeden öğrencinin planı oluşturulamaz.' : 'Bu derslerin süre bilgisi eksik; eksikler giderilmeden planın oluşturulamaz.' }}</p>
           <ul>@for (issue of p.issues; track $index) { <li><strong>{{ issue.lessonName }}</strong> — {{ issue.message }}</li> }</ul></div>
       }
 
       <section class="focus-topics" aria-labelledby="focus-topics-title" data-testid="focus-topics">
         <h4 id="focus-topics-title">Şu konuları öne al</h4>
         <p class="muted">{{ staffStudentId ? 'Seçtiğin konular kendi dersinde önce planlanır.' : 'Seçtiğin konular kendi dersinde önce planlanır; örneğin okulda işlenen ya da sınavda zorlandığın konular.' }} En çok {{ maxTopics }} konu.</p>
-        @if (focusTopics().length) {
+        @if (choices.focusTopics().length) {
           <ul class="chosen-topics" aria-label="Öne alınacak konular">
-            @for (topic of focusTopics(); track topic.topicId) {
+            @for (topic of choices.focusTopics(); track topic.topicId) {
               <li>{{ topic.lessonName }} · {{ topic.topicName }} <button type="button" class="secondary small" (click)="removeTopic(topic.topicId)" [attr.aria-label]="topic.topicName + ' konusunu kaldır'">Kaldır</button></li>
             }
           </ul>
         }
-        @if (!pickerOpen()) { <button type="button" class="secondary" (click)="openPicker()" [disabled]="busy()">Konu seç</button> }
+        @if (!choices.pickerOpen()) { <button type="button" class="secondary" (click)="openPicker()" [disabled]="busy()">Konu seç</button> }
         @else {
           <div class="topic-picker">
             <label for="focus-lesson">Ders</label>
-            <select id="focus-lesson" [ngModel]="pickerLesson()" (ngModelChange)="chooseLesson($event)">
+            <select id="focus-lesson" [ngModel]="choices.pickerLesson()" (ngModelChange)="chooseLesson($event)">
               @for (lesson of lessons(); track lesson.lessonId) { <option [value]="lesson.lessonId">{{ lesson.lessonName }}</option> }
             </select>
             <label for="focus-search">Konu ara</label>
-            <input id="focus-search" type="search" [ngModel]="pickerSearch()" (ngModelChange)="pickerSearch.set($event)" autocomplete="off" />
-            @if (pickerError()) { <p class="notice error" role="alert">{{ pickerError() }} <button type="button" class="secondary" (click)="loadTopics()">Yeniden dene</button></p> }
-            <ul class="topic-list" aria-label="Konular" aria-live="polite">
+            <input id="focus-search" type="search" [ngModel]="choices.pickerSearch()" (ngModelChange)="choices.pickerSearch.set($event)" autocomplete="off" aria-describedby="focus-count" />
+            @if (pickerError()) { <p class="notice error" role="alert">{{ pickerError() }} <button type="button" class="secondary" (click)="retryTopics()">Yeniden dene</button></p> }
+            <p id="focus-count" class="muted" role="status">{{ pickerLoading() ? 'Konular yükleniyor…' : filteredTopics().length + ' konu' }}</p>
+            <ul class="topic-list" aria-label="Konular">
               @for (topic of filteredTopics(); track topic.id) {
                 <li><span>{{ topic.name }} <small>{{ topic.unitName }}</small></span>
-                  <button type="button" class="secondary small" (click)="addTopic(topic)" [disabled]="chosen(topic.id) || focusTopics().length >= maxTopics" [attr.aria-label]="topic.name + ' konusunu öne al'">{{ chosen(topic.id) ? 'Seçildi' : 'Öne al' }}</button></li>
-              } @empty { <li class="muted">{{ pickerLoading() ? 'Konular yükleniyor…' : 'Bu aramaya uyan konu yok.' }}</li> }
+                  <button type="button" class="secondary small" (click)="addTopic(topic)" [disabled]="chosen(topic.id) || choices.focusTopics().length >= maxTopics" [attr.aria-label]="topic.name + ' konusunu öne al'">{{ chosen(topic.id) ? 'Seçildi' : 'Öne al' }}</button></li>
+              } @empty { @if (!pickerLoading()) { <li class="muted">Bu aramaya uyan konu yok.</li> } }
             </ul>
-            @if (pickerTopics().length < pickerTotal()) { <button type="button" class="secondary" (click)="moreTopics()" [disabled]="pickerLoading()">Daha fazla konu</button> }
-            @if (focusTopics().length >= maxTopics) { <p class="muted" role="status">En çok {{ maxTopics }} konu seçebilirsin.</p> }
+            @if (choices.focusTopics().length >= maxTopics) { <p class="muted" role="status">En çok {{ maxTopics }} konu seçebilirsin.</p> }
           </div>
         }
         @if (topicsChanged()) { <button type="button" data-testid="focus-preview" (click)="runPreview()" [disabled]="busy()">Bu konularla yeniden hesapla</button> }
@@ -135,8 +143,8 @@
     <div class="notice error" role="alert" data-testid="publish-issue"><p>{{ issue.message }}</p>
       <div class="actions">
         @if (issue.stale) { <button type="button" class="secondary" (click)="retry()" [disabled]="busy()">Yeniden hesapla</button> }
-        @if (!staffStudentId && (issue.draftExists || issue.createdId)) {
-          <a routerLink="/coaching-portal/plan" [queryParams]="issue.createdId ? { plan: issue.createdId } : {}">Planım'ı aç</a>
+        @if (!staffStudentId && (issue.draftExists || created())) {
+          <a routerLink="/coaching-portal/plan" [queryParams]="created() ? { plan: created()!.id } : {}">Planım'ı aç</a>
         }
       </div>
     </div>
@@ -147,7 +155,7 @@
     @if (!staffStudentId) { <a class="button-link secondary" routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a> }
     @if (preview()) {
       <button type="button" data-testid="publish-plan" (click)="publish()" [disabled]="!canPublish()">
-        {{ publishing() ? (staffStudentId ? 'Oluşturuluyor…' : 'Yayımlanıyor…') : (staffStudentId ? 'Planı oluştur' : 'Planımı yayımla') }}</button>
+        {{ publishing() ? (staffStudentId ? 'Oluşturuluyor…' : 'Yayımlanıyor…') : (staffStudentId ? 'Planı oluştur' : created() ? 'Yeniden yayımla' : 'Planımı yayımla') }}</button>
     }
   </div>
   @if (staffStudentId && preview()) { <p class="muted">Plan, öğrencinin taslağı olarak kaydedilir; yayımlamadan önce plan ekranında inceleyebilirsin.</p> }

@@ -51,7 +51,7 @@
         </div>
       </div>
     }
-    <footer class="calendar-footer"><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button><button type="button" data-testid="weekly-preview-link" class="primary" routerLink="/coaching-portal/plan/preview" [disabled]="busy()||dirty()||version===null||!slots().length||!!form">Yıllık plan önizlemesine geç →</button></footer>
+    <footer class="calendar-footer"><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button><button type="button" data-testid="weekly-preview-link" class="primary" routerLink="/coaching-portal/plan/preview" [disabled]="busy()||dirty()||version===null||!slots().length||!!form">Planının özetine geç →</button></footer>
     <p class="muted">Önce haftalık taslağını kaydet. Sonra kazanımların ders saatlerine ve hedef tarihine nasıl yerleşeceğini önizleyebilirsin.</p>
   }
 </section>

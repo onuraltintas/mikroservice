@@ -1,6 +1,6 @@
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, ElementRef, Input, OnInit, ViewChild, inject, signal, output } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Input, OnInit, PendingTasks, ViewChild, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -24,6 +24,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly weekly = inject(CoachingWeeklyDraftService);
+  private readonly pendingTasks = inject(PendingTasks);
   /** Paket H5: how many weekly cards the last saved study times leave outside (0: nothing to say). The cards are never changed here. */
   readonly outsideCards = signal(0);
   /** Paket H5: false where the editor is embedded in the plan wizard, which shows its own guidance. */
@@ -154,7 +155,12 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   private checkWeeklyCards(windows: StudyWindow[]) {
     if (!this.showOutsideNotice) return;
     this.weekly.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: page => this.outsideCards.set(cardsOutsideAvailability(page.draft?.slots ?? [], windows).length),
+      next: page => {
+        // H5 verification: the text is cleared and set again on the next tick, so the same count after another save is read out again.
+        const count = cardsOutsideAvailability(page.draft?.slots ?? [], windows).length, done = this.pendingTasks.add();
+        this.outsideCards.set(0);
+        setTimeout(() => { this.outsideCards.set(count); done(); });
+      },
       error: () => this.outsideCards.set(0)
     });
   }

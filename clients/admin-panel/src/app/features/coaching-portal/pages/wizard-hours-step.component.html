@@ -7,12 +7,11 @@
         <h4>{{ staffStudentId ? 'Çalışabileceği saatler' : 'Çalışabileceğin saatler' }}</h4>
         <ul data-testid="routine-windows">@for (line of routineWindowLines(); track line.day) { <li>{{ line.day }}: {{ line.text }}</li> }</ul>
         @if (routine?.daysWithoutWindows?.length) { <p class="notice" role="status">{{ emptyDays(routine!.daysWithoutWindows) }} {{ staffStudentId ? 'için çalışma saati kalmıyor.' : 'için çalışma saatin kalmıyor; istersen cevaplarını değiştir.' }}</p> }
-        @if (staffStudentId && !routine?.availabilityMatches) { <p class="muted">Öğrenci saatlerini sonradan elle değiştirmiş; öneri öğrencinin kayıtlı saatlerine göre hazırlanır.</p> }
       </section>
       <div class="step-actions">
         @if (canGoBack) { <button type="button" class="secondary" (click)="back.emit()">Geri</button> }
-        @if (staffStudentId) { <button type="button" (click)="confirm()">Devam</button> }
-        @else { <button type="button" class="secondary" (click)="change()">Değiştir</button><button type="button" (click)="confirm()">Doğru, devam</button> }
+        @if (staffStudentId) { <button type="button" (click)="confirm()" [disabled]="disabled">Devam</button> }
+        @else { <button type="button" class="secondary" (click)="change()" [disabled]="disabled">Değiştir</button><button type="button" (click)="confirm()" [disabled]="disabled">Doğru, devam</button> }
       </div>
     }
     @case ('availability') {
@@ -20,11 +19,17 @@
         <h3 id="wizard-availability-title">{{ staffStudentId ? 'Öğrencinin çalışma saatleri' : 'Kayıtlı çalışma saatlerin' }}</h3>
         <ul>@for (line of availabilityLines(); track line.day) { <li>{{ line.day }}: {{ line.text }}</li> }</ul>
         @if (!staffStudentId) { <p class="muted">İstersen birkaç soruyu cevaplayarak saatlerini yeniden belirleyebilirsin; okul, yemek ve kurs saatlerin hesaba katılır.</p> }
+        @if (staffStudentId && routine) {
+          <details data-testid="routine-background"><summary>Öğrencinin günlük düzen cevapları</summary>
+            <p class="muted">Öğrenci saatlerini sonradan elle değiştirmiş; öneri yukarıdaki kayıtlı saatlere göre hazırlanır.</p>
+            <dl class="summary-list">@for (line of summaryLines(); track line.label) { <div><dt>{{ line.label }}</dt><dd>{{ line.text }}</dd></div> }</dl>
+          </details>
+        }
       </section>
       <div class="step-actions">
         @if (canGoBack) { <button type="button" class="secondary" (click)="back.emit()">Geri</button> }
-        @if (staffStudentId) { <button type="button" (click)="confirm()">Devam</button> }
-        @else { <button type="button" class="secondary" (click)="change()">Soruları cevapla</button><button type="button" (click)="confirm()">Bu saatlerle devam</button> }
+        @if (staffStudentId) { <button type="button" (click)="confirm()" [disabled]="disabled">Devam</button> }
+        @else { <button type="button" class="secondary" (click)="change()" [disabled]="disabled">Soruları cevapla</button><button type="button" (click)="confirm()" [disabled]="disabled">Bu saatlerle devam</button> }
       </div>
     }
     @case ('staff-questions') {
@@ -57,7 +62,7 @@
         @switch (question()) {
           @case ('shift') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Okula nasıl gidiyorsun?</h3>
-            <div class="chips stacked" role="radiogroup" aria-labelledby="question-title" [attr.aria-describedby]="issue() ? 'question-issue' : null">
+            <div class="chips stacked" role="radiogroup" aria-labelledby="question-title" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null">
               @for (choice of shifts(); track choice.value) {
                 <label class="chip"><input type="radio" name="shift" [checked]="answers().schoolShift === choice.value" (change)="chooseShift(choice.value)" /> <span><strong>{{ choice.label }}</strong> <small>{{ choice.hint }}</small></span></label>
               }
@@ -67,20 +72,20 @@
             <h3 id="question-title" tabindex="-1" #questionTitle>Okulun kaçta başlayıp kaçta bitiyor?</h3>
             <div class="range-picker">
               <label for="school-start">Giriş</label>
-              <select id="school-start" [ngModel]="answers().schoolStart" (ngModelChange)="setTime('schoolStart', $event)">@for (m of choices('schoolStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="school-start" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().schoolStart" (ngModelChange)="setTime('schoolStart', $event)">@for (m of choices('schoolStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
               <label for="school-end">Çıkış</label>
-              <select id="school-end" [ngModel]="answers().schoolEnd" (ngModelChange)="setTime('schoolEnd', $event)">@for (m of choices('schoolEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="school-end" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().schoolEnd" (ngModelChange)="setTime('schoolEnd', $event)">@for (m of choices('schoolEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
             </div>
           }
           @case ('morning') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Sabah okuldan önce çalışır mısın?</h3>
-            <div class="chips" role="radiogroup" aria-labelledby="question-title">
+            <div class="chips" role="radiogroup" aria-labelledby="question-title" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null">
               <label class="chip"><input type="radio" name="morning" [checked]="answers().morningStudy" (change)="set('morningStudy', true)" /> Evet</label>
               <label class="chip"><input type="radio" name="morning" [checked]="!answers().morningStudy" (change)="set('morningStudy', false)" /> Hayır</label>
             </div>
             @if (answers().morningStudy) {
               <label for="morning-start">Sabah kaçta başlarsın?</label>
-              <select id="morning-start" [ngModel]="answers().morningStart" (ngModelChange)="setTime('morningStart', $event)">@for (m of choices('morningStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="morning-start" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().morningStart" (ngModelChange)="setTime('morningStart', $event)">@for (m of choices('morningStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
               <p class="muted">Sabah çalışman okuldan 1,5 saat önce biter.</p>
             }
           }
@@ -88,18 +93,18 @@
             <h3 id="question-title" tabindex="-1" #questionTitle>Okuldan sonra kaçta başlayıp en geç kaça kadar çalışabilirsin?</h3>
             <div class="range-picker">
               <label for="after-start">Başlama</label>
-              <select id="after-start" [ngModel]="answers().afterSchoolStart" (ngModelChange)="setTime('afterSchoolStart', $event)">@for (m of choices('afterSchoolStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="after-start" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().afterSchoolStart" (ngModelChange)="setTime('afterSchoolStart', $event)">@for (m of choices('afterSchoolStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
               <label for="latest-end">En geç</label>
-              <select id="latest-end" [ngModel]="answers().latestEnd" (ngModelChange)="setTime('latestEnd', $event)">@for (m of choices('latestEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="latest-end" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().latestEnd" (ngModelChange)="setTime('latestEnd', $event)">@for (m of choices('latestEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
             </div>
           }
           @case ('day') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Güne kaçta başlayıp en geç kaça kadar çalışabilirsin?</h3>
             <div class="range-picker">
               <label for="day-start">Başlama</label>
-              <select id="day-start" [ngModel]="answers().dayStart" (ngModelChange)="setTime('dayStart', $event)">@for (m of choices('dayStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="day-start" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().dayStart" (ngModelChange)="setTime('dayStart', $event)">@for (m of choices('dayStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
               <label for="latest-end">En geç</label>
-              <select id="latest-end" [ngModel]="answers().latestEnd" (ngModelChange)="setTime('latestEnd', $event)">@for (m of choices('latestEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="latest-end" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().latestEnd" (ngModelChange)="setTime('latestEnd', $event)">@for (m of choices('latestEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
             </div>
             <p class="muted">12:30–14:00 öğle arası olarak boş bırakılır.</p>
           }
@@ -107,15 +112,15 @@
             <h3 id="question-title" tabindex="-1" #questionTitle>Akşam yemeği hangi saatler arasında?</h3>
             <div class="range-picker">
               <label for="dinner-start">Başlama</label>
-              <select id="dinner-start" [ngModel]="answers().dinnerStart" (ngModelChange)="setTime('dinnerStart', $event)">@for (m of choices('dinnerStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="dinner-start" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().dinnerStart" (ngModelChange)="setTime('dinnerStart', $event)">@for (m of choices('dinnerStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
               <label for="dinner-end">Bitiş</label>
-              <select id="dinner-end" [ngModel]="answers().dinnerEnd" (ngModelChange)="setTime('dinnerEnd', $event)">@for (m of choices('dinnerEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="dinner-end" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().dinnerEnd" (ngModelChange)="setTime('dinnerEnd', $event)">@for (m of choices('dinnerEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
             </div>
             <p class="muted">Bu saatlere çalışma konmaz.</p>
           }
           @case ('busy') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Kurs, etüt ya da antrenman olan günlerin var mı?</h3>
-            <div class="day-options" role="group" aria-labelledby="question-title">
+            <div class="day-options" role="group" aria-labelledby="question-title" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null">
               @for (day of weekdayChoices; track day.value) {
                 <button type="button" class="secondary" [attr.aria-pressed]="answers().busyDays.includes(day.value)" [class.selected]="answers().busyDays.includes(day.value)" (click)="toggleBusy(day.value)">{{ day.label }}</button>
               }
@@ -124,23 +129,23 @@
           }
           @case ('busyStart') {
             <h3 id="question-title" tabindex="-1" #questionTitle>O günler ne zaman çalışabilirsin?</h3>
-            <div class="chips stacked" role="radiogroup" aria-labelledby="question-title">
+            <div class="chips stacked" role="radiogroup" aria-labelledby="question-title" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null">
               <label class="chip"><input type="radio" name="busy-off" [checked]="!answers().busyDaysOff" (change)="set('busyDaysOff', false)" /> Kaçtan sonra çalışabileceğimi seçeyim</label>
               <label class="chip"><input type="radio" name="busy-off" [checked]="answers().busyDaysOff" (change)="set('busyDaysOff', true)" /> O günler çalışamam</label>
             </div>
             @if (!answers().busyDaysOff) {
               <label for="busy-start">O günler kaçtan sonra?</label>
-              <select id="busy-start" [ngModel]="answers().busyStart" (ngModelChange)="setTime('busyStart', $event)">@for (m of choices('busyStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="busy-start" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().busyStart" (ngModelChange)="setTime('busyStart', $event)">@for (m of choices('busyStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
             }
           }
           @case ('weekday') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Hafta içi günde toplam ne kadar çalışmak istersin?</h3>
             <label for="weekday-minutes">Günlük süre</label>
-            <select id="weekday-minutes" [ngModel]="answers().weekdayMinutes" (ngModelChange)="set('weekdayMinutes', +$event)">@for (m of minutes(); track m) { <option [ngValue]="m">{{ hoursText(m) }}</option> }</select>
+            <select id="weekday-minutes" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().weekdayMinutes" (ngModelChange)="set('weekdayMinutes', +$event)">@for (m of minutes(); track m) { <option [ngValue]="m">{{ hoursText(m) }}</option> }</select>
           }
           @case ('weekend') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Hafta sonu çalışır mısın?</h3>
-            <div class="chips stacked" role="radiogroup" aria-labelledby="question-title">
+            <div class="chips stacked" role="radiogroup" aria-labelledby="question-title" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null">
               @for (choice of weekendChoices; track choice.value) {
                 <label class="chip"><input type="radio" name="weekend" [checked]="answers().weekend === choice.value" (change)="chooseWeekend(choice.value)" /> {{ choice.label }}</label>
               }
@@ -150,16 +155,16 @@
             <h3 id="question-title" tabindex="-1" #questionTitle>Hafta sonu hangi saatler arasında çalışabilirsin?</h3>
             <div class="range-picker">
               <label for="weekend-start">Başlama</label>
-              <select id="weekend-start" [ngModel]="answers().weekendStart" (ngModelChange)="setTime('weekendStart', $event)">@for (m of choices('weekendStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="weekend-start" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().weekendStart" (ngModelChange)="setTime('weekendStart', $event)">@for (m of choices('weekendStart'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
               <label for="weekend-end">En geç</label>
-              <select id="weekend-end" [ngModel]="answers().weekendEnd" (ngModelChange)="setTime('weekendEnd', $event)">@for (m of choices('weekendEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
+              <select id="weekend-end" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().weekendEnd" (ngModelChange)="setTime('weekendEnd', $event)">@for (m of choices('weekendEnd'); track m) { <option [ngValue]="m">{{ time(m) }}</option> }</select>
             </div>
             <p class="muted">13:00–14:00 öğle arası ve akşam yemeğin boş bırakılır.</p>
           }
           @case ('weekendMinutes') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Hafta sonu günde toplam ne kadar çalışmak istersin?</h3>
             <label for="weekend-minutes">Günlük süre</label>
-            <select id="weekend-minutes" [ngModel]="answers().weekendMinutes" (ngModelChange)="set('weekendMinutes', +$event)">@for (m of minutes(); track m) { <option [ngValue]="m">{{ hoursText(m) }}</option> }</select>
+            <select id="weekend-minutes" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().weekendMinutes" (ngModelChange)="set('weekendMinutes', +$event)">@for (m of minutes(); track m) { <option [ngValue]="m">{{ hoursText(m) }}</option> }</select>
           }
           @case ('review') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Çalışma saatlerin şöyle olacak</h3>

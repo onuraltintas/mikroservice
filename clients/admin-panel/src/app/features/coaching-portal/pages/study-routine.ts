@@ -150,10 +150,11 @@ function minutesIssue(value: number | null, limit: number, missing: string, fiel
 }
 
 /** The question a server sentence belongs to, so it is shown next to that question. */
-export function questionForMessage(message: string): RoutineQuestion {
+export function questionForMessage(message: string, shift: StudySchoolShift | null = null): RoutineQuestion {
   const rules: [RegExp, RoutineQuestion][] = [
     [/Okul düzen/, 'shift'], [/Okuldan sonra|okul çıkışından/, 'after'], [/okulun .*başlamalı|Okulun/, 'school'], [/^Sabah/, 'morning'],
-    [/Güne/, 'day'], [/En geç/, 'after'], [/Akşam yemeğ/, 'dinner'], [/Kurs olan günlerde/, 'busyStart'], [/Kurs, etüt/, 'busy'],
+    // Review of PR 135 (S13): the latest end is asked with the day's start for a student who does not go to school.
+    [/Güne/, 'day'], [/En geç/, shift === 'NoSchool' ? 'day' : 'after'], [/Akşam yemeğ/, 'dinner'], [/Kurs olan günlerde/, 'busyStart'], [/Kurs, etüt/, 'busy'],
     [/Hafta içi/, 'weekday'], [/Hafta sonu günde|Hafta sonu günlük/, 'weekendMinutes'], [/Hafta sonu hangi/, 'weekend'], [/Hafta sonu/, 'weekendHours']];
   return rules.find(([pattern]) => pattern.test(message))?.[1] ?? 'review';
 }

@@ -3,6 +3,7 @@ import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, inject, 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingLearningSetupService, LearningContext, LearningCourse, LearningSetupUpdate, LearningSetupView } from '../../../core/services/coaching-learning-setup.service';
 import { WeeklyLesson } from '../../../core/services/coaching-weekly-draft.service';
 
@@ -42,6 +43,7 @@ export class WizardCoursesStepComponent implements OnChanges {
   @Input() canGoBack = true;
   private readonly learning = inject(CoachingLearningSetupService);
   private readonly destroy = inject(DestroyRef);
+  private readonly toaster = inject(ToasterService);
   readonly priorities = PRIORITY_CHOICES;
   readonly difficulties = DIFFICULTY_CHOICES;
   readonly groups = signal<{ name: string; rows: CourseRow[] }[]>([]);
@@ -85,6 +87,9 @@ export class WizardCoursesStepComponent implements OnChanges {
     });
   }
   busy() { return this.saving(); }
+  /** Review of PR 135: unsaved choices are not dropped silently. */
+  async canLeave() { return !this.dirty() || await this.toaster.confirm('Ders seçimlerindeki değişiklikleri kaydetmedin. Kaydetmeden çıkmak istiyor musun?', { confirmText: 'Kaydetmeden çık', cancelText: 'Vazgeç' }); }
+  async goBack() { if (this.saving() || !await this.canLeave()) return; this.changed.set({}); this.back.emit(); }
 
   /** "Devam": saves only when something changed (with the version), then the next step. */
   next() {

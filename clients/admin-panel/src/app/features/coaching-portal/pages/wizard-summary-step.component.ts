@@ -3,9 +3,10 @@ import { Component, DestroyRef, ElementRef, EventEmitter, Injector, Input, OnIni
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { finalize, switchMap } from 'rxjs';
-import { CoachingLearningSetupService, LearningContext, LearningSetupView } from '../../../core/services/coaching-learning-setup.service';
+import { EMPTY, Observable, Subject, catchError, expand, finalize, map, of, reduce, switchMap, tap } from 'rxjs';
+import { CoachingLearningSetupService, LearningCatalog, LearningContext, LearningSetupView } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudyPlanningService, StudyTopic } from '../../../core/services/coaching-study-planning.service';
+import { StudyTempo } from '../../../core/services/coaching-study-routine.service';
 import { CoachingWeeklyDraftService, WeeklyExamFocus, WeeklyProposal, WeeklyProposalMode, WeeklyProposalWindow } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingWeeklyOutcomePlanService, WeeklyOutcomeOptions, WeeklyOutcomePreview, WeeklyOutcomeRequest } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -14,15 +15,34 @@ import { DEFAULT_MAX_DAY_MINUTES, WeeklySlot, clock, slotError, weekDays } from 
 
 /** Paket H1 (P10): the server's code for weekly lessons that are no longer chosen. */
 const LESSONS_NOT_CHOSEN = 'StudyPlanning.LessonsNotChosen';
+/** H4 contract item 7: the server's code for "a plan draft is already open". */
+export const DRAFT_EXISTS = 'StudyPlanning.DraftExists';
+export function isDraftExists(e: { status?: number; error?: { code?: string } } | null | undefined) {
+  return e?.status === 409 && e.error?.code === DRAFT_EXISTS;
+}
 /** Paket H4 (K3): the most topics the student may move forward at once (the server refuses more). */
 export const MAX_FOCUS_TOPICS = 50;
+/** The most catalog pages the topic picker reads for one lesson. */
+const MAX_TOPIC_PAGES = 20;
 export const PLAN_TITLE = 'Haftalık derslerimden çalışma planım';
 const longDate = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', timeZone: 'UTC' });
 /** "12 Mayıs". */
 export function dayMonth(iso: string | null | undefined) { if (!iso) return ''; const [y, m, d] = iso.split('-').map(Number); return longDate.format(new Date(Date.UTC(y, m - 1, d))); }
 
-interface FocusTopic { topicId: string; topicName: string; lessonName: string }
-interface PublishIssue { message: string; draftExists?: boolean; stale?: boolean; createdId?: string }
+export interface FocusTopic { topicId: string; topicName: string; lessonName: string }
+interface PublishIssue { message: string; draftExists?: boolean; stale?: boolean }
+
+/**
+ * Review of PR 135 (S4): the summary's own choices live with the wizard, so Geri, "Saat ekle" and "Bu dersi öne al" keep them
+ * (the summary step is created again each time it opens).
+ */
+export class SummaryChoices {
+  readonly focusTopics = signal<FocusTopic[]>([]);
+  readonly prioritizeWhenShort = signal(false);
+  readonly pickerOpen = signal(false);
+  readonly pickerLesson = signal('');
+  readonly pickerSearch = signal('');
+}
 
 /**
  * Paket H4, step 5 "Özet". The server proposes the week (Fill when the weekly draft has cards, Replace when it is empty, with the
@@ -37,7 +57,12 @@ interface PublishIssue { message: string; draftExists?: boolean; stale?: boolean
 export class WizardSummaryStepComponent implements OnInit {
   @Input() staffStudentId: string | null = null;
   @Input() examFocus: WeeklyExamFocus | null = null;
+  /** The chosen tempo's finish date, computed for `finishByMode`. */
   @Input() finishBy: string | null = null;
+  /** The proposal mode the wizard's tempo options (and so `finishBy`) were computed for. */
+  @Input() finishByMode: WeeklyProposalMode = 'Fill';
+  /** The chosen tempo's name: a proposal in the other mode asks that mode's options and keeps the same tempo. */
+  @Input() tempo: StudyTempo | null = null;
   /** A teacher's quick answers for a student without study times (a proposal only, never saved). */
   @Input() windows: WeeklyProposalWindow[] | null = null;
   /** "Sınavına kadar tek tempo var…" when the tempo step was skipped. */
@@ -46,9 +71,12 @@ export class WizardSummaryStepComponent implements OnInit {
   @Input() canGoBack = true;
   /** H5's "Yeniden öner" (?yeniden=oner): open with "Haftanı baştan öner" (after the usual confirmation). */
   @Input() replaceOnOpen = false;
+  @Input() choices = new SummaryChoices();
   @Output() addHours = new EventEmitter<void>();
   @Output() planCreated = new EventEmitter<string>();
   @Output() contextSaved = new EventEmitter<LearningSetupView>();
+  /** Review of PR 135 (S1): the weekly draft was saved or reloaded; true when it has cards (the next proposal is Fill). */
+  @Output() draftSaved = new EventEmitter<boolean>();
   @Output() back = new EventEmitter<void>();
   @ViewChild('proposalTitle') private proposalTitle?: ElementRef<HTMLElement>;
   @ViewChild('previewTitle') private previewTitle?: ElementRef<HTMLElement>;
@@ -69,6 +97,8 @@ export class WizardSummaryStepComponent implements OnInit {
   private maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
   /** Fill when the draft had cards as the step opened, Replace when it was empty; "Bu dersi öne al" proposes the same way again. */
   private initialMode: WeeklyProposalMode = 'Replace';
+  /** The finish date the shown proposal was made for (it may come from the other mode's tempo options). */
+  private usedFinishBy: string | null = null;
   readonly loading = signal(true);
   readonly proposing = signal(false);
   readonly applying = signal(false);
@@ -80,36 +110,38 @@ export class WizardSummaryStepComponent implements OnInit {
   readonly previewing = signal(false);
   readonly previewError = signal('');
   readonly notChosen = signal<{ lessonId: string; lessonName: string }[]>([]);
-  readonly prioritizeWhenShort = signal(false);
   readonly savingPriority = signal<string | null>(null);
-  // "Şu konuları öne al".
-  readonly focusTopics = signal<FocusTopic[]>([]);
-  readonly pickerOpen = signal(false);
-  readonly pickerLesson = signal('');
-  readonly pickerSearch = signal('');
+  // "Şu konuları öne al" (the topics of the chosen lesson; all of its catalog pages).
   readonly pickerTopics = signal<StudyTopic[]>([]);
-  readonly pickerTotal = signal(0);
   readonly pickerLoading = signal(false);
   readonly pickerError = signal('');
-  private pickerPage = 1;
+  private readonly lesson$ = new Subject<string>();
   readonly filteredTopics = computed(() => {
-    const term = this.pickerSearch().trim().toLocaleLowerCase('tr-TR');
+    const term = this.choices.pickerSearch().trim().toLocaleLowerCase('tr-TR');
     return this.pickerTopics().filter(x => !term || x.name.toLocaleLowerCase('tr-TR').includes(term) || (x.unitName ?? '').toLocaleLowerCase('tr-TR').includes(term));
   });
   // Publishing.
   readonly publishing = signal(false);
   readonly publishIssue = signal<PublishIssue | null>(null);
+  /** Review of PR 135 (S2): the plan created before publishing failed; "Yeniden yayımla" publishes it, never creates another. */
+  readonly created = signal<{ id: string; version: number } | null>(null);
 
-  ngOnInit() { this.loadDraft(true); }
+  ngOnInit() {
+    // S10: one lesson's topics at a time; a late answer for a lesson no longer chosen is dropped.
+    this.lesson$.pipe(switchMap(lessonId => this.allTopics(lessonId)), takeUntilDestroyed(this.destroy)).subscribe();
+    this.loadDraft(true);
+    if (this.choices.pickerOpen() && this.choices.pickerLesson()) this.lesson$.next(this.choices.pickerLesson());
+  }
 
   busy() { return this.loading() || this.proposing() || this.applying() || this.previewing() || this.publishing() || !!this.savingPriority(); }
+  /** Something chosen here would be lost by leaving the page (the chosen topics). */
+  hasChoices() { return this.choices.focusTopics().length > 0; }
 
   private loadDraft(propose: boolean) {
     this.loading.set(true); this.error.set('');
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading.set(false))).subscribe({
       next: page => {
-        this.slots.set(page.draft?.slots ?? []); this.version = page.draft?.version ?? null;
-        this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul'; this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES;
+        this.applyPage(page.draft); this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES;
         if (!propose) return;
         this.initialMode = this.slots().length ? 'Fill' : 'Replace';
         if (this.replaceOnOpen && this.slots().length) { void this.openWithReplace(); return; }
@@ -117,6 +149,10 @@ export class WizardSummaryStepComponent implements OnInit {
       },
       error: () => this.error.set(this.staffStudentId ? 'Öğrencinin haftalık düzeni yüklenemedi. Yeniden deneyebilirsin.' : 'Haftalık düzenin yüklenemedi. Yeniden deneyebilirsin.')
     });
+  }
+  private applyPage(draft: { version: number; timeZoneId: string; slots: WeeklySlot[] } | null) {
+    this.slots.set(draft?.slots ?? []); this.version = draft?.version ?? null;
+    if (draft?.timeZoneId) this.timeZoneId = draft.timeZoneId;
   }
   private async openWithReplace() {
     if (await this.confirmReplace()) { this.initialMode = 'Replace'; this.propose('Replace'); } else this.propose(this.initialMode);
@@ -128,11 +164,22 @@ export class WizardSummaryStepComponent implements OnInit {
   }
   retry() { this.publishIssue.set(null); this.preview.set(null); this.proposal.set(null); this.loadDraft(true); }
 
+  /**
+   * Review of PR 135 (S1): the finish date for a proposal in this mode. The wizard's tempo options belong to one mode; a proposal in
+   * the other (for example "Haftanı baştan öner" on a week with cards) asks that mode's options and keeps the same tempo.
+   */
+  private finishFor(mode: WeeklyProposalMode): Observable<string | null> {
+    if (mode === this.finishByMode || !this.finishBy) return of(this.finishBy);
+    return this.weekly.tempoOptions(this.examFocus, this.staffStudentId ?? undefined, this.windows ?? undefined, mode).pipe(
+      map(result => { const list = result.options ?? []; return (list.find(x => x.tempo === this.tempo) ?? list[0])?.finishBy ?? null; }));
+  }
+
   /** The server's proposal; an empty one with saved cards goes straight on to the yearly preview. */
   propose(mode: WeeklyProposalMode) {
     this.proposing.set(true); this.error.set(''); this.preview.set(null); this.publishIssue.set(null);
-    this.weekly.proposal(mode, this.examFocus, this.staffStudentId ?? undefined, this.windows ?? undefined, this.finishBy)
-      .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.proposing.set(false))).subscribe({
+    this.finishFor(mode).pipe(
+      switchMap(finishBy => { this.usedFinishBy = finishBy; return this.weekly.proposal(mode, this.examFocus, this.staffStudentId ?? undefined, this.windows ?? undefined, finishBy); }),
+      takeUntilDestroyed(this.destroy), finalize(() => this.proposing.set(false))).subscribe({
         next: view => {
           this.proposal.set(view);
           if (!view.slots.length && this.slots().length) { this.runPreview(); return; }
@@ -169,8 +216,6 @@ export class WizardSummaryStepComponent implements OnInit {
     if (view.shortageMinutes === 0) return staff ? 'Öğrencinin haftalık düzeni derslerine yetiyor; eklenecek saat yok.' : 'Haftalık düzenin derslerine yetiyor; eklenecek saat yok.';
     return staff ? 'Öğrencinin çalışma saatlerinde boş yer bulamadım.' : 'Çalışma saatlerinde boş yer bulamadım. Saat ekleyip yeniden deneyebilirsin.';
   }
-  /** The week can go on to the yearly preview: new cards to keep, or saved cards without new ones. */
-  canKeepWeek() { const view = this.proposal(); return !!view && (view.slots.length > 0 || this.slots().length > 0); }
 
   /** "Bu haftayla devam et": the proposal is saved into the weekly draft (H2 version check, H1 day limits), then the yearly preview. */
   keepWeek() {
@@ -185,17 +230,21 @@ export class WizardSummaryStepComponent implements OnInit {
     }
     this.applying.set(true); this.error.set('');
     this.weekly.save(this.version, this.timeZoneId, next, this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.applying.set(false))).subscribe({
-      next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.proposal.set({ ...view, mode: 'Fill', slots: [] }); this.runPreview(); },
+      next: draft => {
+        this.applyPage(draft); this.draftSaved.emit(draft.slots.length > 0);
+        this.proposal.set({ ...view, mode: 'Fill', slots: [] }); this.runPreview();
+      },
       error: e => { if (e?.status === 409) this.draftChanged(); else this.error.set(e?.error?.message ?? 'Haftalık düzen kaydedilemedi. Yeniden deneyebilirsin.'); }
     });
   }
   private draftChanged() {
     this.proposal.set(null);
-    this.error.set(this.staffStudentId ? 'Öğrencinin haftalık düzeni başka bir yerde değişti; öneriyi yeniledim.' : 'Haftalık düzenin başka bir yerde değişti; öneriyi yeniledim.');
-    const message = this.error();
+    const message = this.staffStudentId ? 'Öğrencinin haftalık düzeni başka bir yerde değişti; güncel hâlini yükleyip öneriyi yeniledim.'
+      : 'Haftalık düzenin başka bir yerde değişti; güncel hâlini yükleyip öneriyi yeniledim.';
+    this.error.set(message);
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
-        this.slots.set(page.draft?.slots ?? []); this.version = page.draft?.version ?? null; this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul';
+        this.applyPage(page.draft); this.draftSaved.emit(this.slots().length > 0);
         this.propose(this.slots().length ? 'Fill' : 'Replace'); this.error.set(message);
       }
     });
@@ -204,14 +253,15 @@ export class WizardSummaryStepComponent implements OnInit {
   // --- The yearly preview -----------------------------------------------------------------------------------------------------
   private request(options: WeeklyOutcomeOptions): WeeklyOutcomeRequest {
     // The tempo's finish date ends the plan; without one (or before the start) the plan ends on the server's default.
-    const end = this.finishBy && this.finishBy >= options.startDate ? this.finishBy : options.endDate;
-    const topics = this.focusTopics().map(x => x.topicId);
+    const finishBy = this.usedFinishBy ?? this.finishBy;
+    const end = finishBy && finishBy >= options.startDate ? finishBy : options.endDate;
+    const topics = this.choices.focusTopics().map(x => x.topicId);
     return { startDate: options.startDate, endDate: end, expectedWeeklyDraftVersion: options.weeklyDraftVersion, reuseFreedSlots: true, engineVersion: 2,
-      prioritizeWhenShort: this.prioritizeWhenShort(), ...(topics.length ? { focusTopicIds: topics } : {}) };
+      prioritizeWhenShort: this.choices.prioritizeWhenShort(), ...(topics.length ? { focusTopicIds: topics } : {}) };
   }
   runPreview() {
     const student = this.staffStudentId ?? undefined;
-    this.previewing.set(true); this.previewError.set(''); this.notChosen.set([]); this.preview.set(null); this.publishIssue.set(null);
+    this.previewing.set(true); this.previewError.set(''); this.notChosen.set([]); this.preview.set(null); this.publishIssue.set(null); this.created.set(null);
     this.engine.options(student).pipe(takeUntilDestroyed(this.destroy), switchMap(options => { this.options.set(options); return this.engine.preview(this.request(options), student); }),
       finalize(() => this.previewing.set(false))).subscribe({
       next: preview => { this.preview.set(preview); this.focus(() => this.previewTitle); },
@@ -231,7 +281,7 @@ export class WizardSummaryStepComponent implements OnInit {
     this.applying.set(true);
     this.weekly.save(this.version, this.timeZoneId, this.slots().filter(x => !ids.has(x.lessonId.toLowerCase())), this.staffStudentId ?? undefined)
       .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.applying.set(false))).subscribe({
-        next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.runPreview(); },
+        next: draft => { this.applyPage(draft); this.draftSaved.emit(draft.slots.length > 0); this.runPreview(); },
         error: e => { if (e?.status === 409) this.draftChanged(); else this.previewError.set(e?.error?.message ?? 'Haftalık düzen kaydedilemedi. Yeniden deneyebilirsin.'); }
       });
   }
@@ -241,11 +291,12 @@ export class WizardSummaryStepComponent implements OnInit {
   leftOut(lessonId: string) { return (this.preview()?.leftOutTopics ?? []).filter(x => x.lessonId.toLowerCase() === lessonId.toLowerCase()); }
   leftOutNames(lessonId: string) { const topics = this.leftOut(lessonId); return topics.slice(0, 3).map(x => x.topicName).join(', ') + (topics.length > 3 ? '…' : ''); }
   spacedCount(lessonId: string) { return (this.preview()?.schedule.tasks ?? []).filter(x => x.lessonId === lessonId && x.kind === 'Spaced').length; }
-  anyLate() { return this.lessons().some(x => this.late(x)) || !!this.preview()?.unscheduledLessons?.length; }
   unscheduledNames() { return (this.preview()?.unscheduledLessons ?? []).map(x => x.lessonName).join(', '); }
 
   /** "Önemli konulara odaklan": the important topics first, what does not fit is left out. */
-  focusImportant() { if (this.busy()) return; this.prioritizeWhenShort.set(true); this.runPreview(); }
+  focusImportant() { if (this.busy()) return; this.choices.prioritizeWhenShort.set(true); this.runPreview(); }
+  /** Review of PR 135 (S4): its undo, "Bütün konuları planla". */
+  planAllTopics() { if (this.busy()) return; this.choices.prioritizeWhenShort.set(false); this.runPreview(); }
   /** "Bu dersi öne al": the course's priority becomes Yüksek, then the week is proposed and previewed again. */
   raiseCourse(lessonId: string) {
     const context = this.context;
@@ -253,7 +304,7 @@ export class WizardSummaryStepComponent implements OnInit {
     const courses = context.coursePreferences.map(x => x.lessonId.toLowerCase() === lessonId.toLowerCase() ? { ...x, priority: 1 } : { ...x });
     this.savingPriority.set(lessonId); this.previewError.set('');
     this.learning.save(learningUpdate(context, courses)).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.savingPriority.set(null))).subscribe({
-      next: view => { this.context = view.context; this.contextSaved.emit(view); this.propose(this.initialMode === 'Replace' ? 'Replace' : 'Fill'); },
+      next: view => { this.context = view.context; this.contextSaved.emit(view); this.propose(this.initialMode); },
       error: e => this.previewError.set(e?.status === 409 ? 'Derslerin başka bir yerde değişti; sayfayı yenileyip yeniden dene.'
         : typeof e?.error?.message === 'string' ? e.error.message : 'Dersin öne alınamadı. Yeniden deneyebilirsin.')
     });
@@ -261,67 +312,61 @@ export class WizardSummaryStepComponent implements OnInit {
 
   // --- "Şu konuları öne al" -------------------------------------------------------------------------------------------------
   openPicker() {
-    this.pickerOpen.set(true);
-    if (!this.pickerLesson() && this.lessons().length) this.chooseLesson(this.lessons()[0].lessonId);
+    this.choices.pickerOpen.set(true);
+    const lesson = this.choices.pickerLesson() || this.lessons()[0]?.lessonId;
+    if (lesson) this.chooseLesson(lesson);
   }
-  chooseLesson(lessonId: string) {
-    this.pickerLesson.set(lessonId); this.pickerTopics.set([]); this.pickerTotal.set(0); this.pickerPage = 1; this.loadTopics();
+  chooseLesson(lessonId: string) { this.choices.pickerLesson.set(lessonId); this.lesson$.next(lessonId); }
+  retryTopics() { const lesson = this.choices.pickerLesson(); if (lesson) this.lesson$.next(lesson); }
+  /** S10: the catalog has no search, so every page of the lesson is read before the search filters it. */
+  private allTopics(lessonId: string) {
+    this.pickerTopics.set([]); this.pickerLoading.set(true); this.pickerError.set('');
+    const page = (n: number) => this.staffStudentId ? this.learning.catalogForStudent(this.staffStudentId, lessonId, n) : this.learning.catalog(lessonId, n);
+    return page(1).pipe(
+      expand((c: LearningCatalog) => c.topics.pageNumber < MAX_TOPIC_PAGES && c.topics.pageNumber * c.topics.pageSize < c.topics.totalCount ? page(c.topics.pageNumber + 1) : EMPTY),
+      reduce((all: StudyTopic[], c: LearningCatalog) => [...all, ...c.topics.items.filter(x => !all.some(y => y.id === x.id))], []),
+      tap(topics => { this.pickerTopics.set(topics); this.pickerLoading.set(false); }),
+      catchError(() => { this.pickerLoading.set(false); this.pickerError.set('Konular yüklenemedi. Yeniden deneyebilirsin.'); return EMPTY; }));
   }
-  loadTopics() {
-    const lessonId = this.pickerLesson(); if (!lessonId) return;
-    this.pickerLoading.set(true); this.pickerError.set('');
-    (this.staffStudentId ? this.learning.catalogForStudent(this.staffStudentId, lessonId, this.pickerPage) : this.learning.catalog(lessonId, this.pickerPage))
-      .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.pickerLoading.set(false))).subscribe({
-        next: catalog => { this.pickerTopics.update(list => [...list, ...catalog.topics.items.filter(x => !list.some(y => y.id === x.id))]); this.pickerTotal.set(catalog.topics.totalCount); },
-        error: () => this.pickerError.set('Konular yüklenemedi. Yeniden deneyebilirsin.')
-      });
-  }
-  moreTopics() { if (this.pickerLoading() || this.pickerTopics().length >= this.pickerTotal()) return; this.pickerPage++; this.loadTopics(); }
-  chosen(topicId: string) { return this.focusTopics().some(x => x.topicId === topicId); }
+  chosen(topicId: string) { return this.choices.focusTopics().some(x => x.topicId === topicId); }
   addTopic(topic: StudyTopic) {
-    if (this.chosen(topic.id) || this.focusTopics().length >= MAX_FOCUS_TOPICS) return;
-    const lesson = this.lessons().find(x => x.lessonId === this.pickerLesson());
-    this.focusTopics.update(list => [...list, { topicId: topic.id, topicName: topic.name, lessonName: lesson?.lessonName ?? topic.lessonName }]);
+    if (this.chosen(topic.id) || this.choices.focusTopics().length >= MAX_FOCUS_TOPICS) return;
+    const lesson = this.lessons().find(x => x.lessonId === this.choices.pickerLesson());
+    this.choices.focusTopics.update(list => [...list, { topicId: topic.id, topicName: topic.name, lessonName: lesson?.lessonName ?? topic.lessonName }]);
   }
-  removeTopic(topicId: string) { this.focusTopics.update(list => list.filter(x => x.topicId !== topicId)); }
+  removeTopic(topicId: string) { this.choices.focusTopics.update(list => list.filter(x => x.topicId !== topicId)); }
   readonly maxTopics = MAX_FOCUS_TOPICS;
-  /** The chosen topics differ from the ones the shown preview was made with. */
+  /** The chosen topics differ from the ones the shown preview was made with (the server echoes them sorted). */
   topicsChanged() {
     const sent = this.preview()?.request.focusTopicIds ?? [];
-    const now = this.focusTopics().map(x => x.topicId);
+    const now = this.choices.focusTopics().map(x => x.topicId);
     return sent.length !== now.length || now.some(id => !sent.includes(id));
   }
 
   // --- Publish ----------------------------------------------------------------------------------------------------------------
-  canPublish() { const p = this.preview(); return !!p?.canCreate && !this.busy() && !this.topicsChanged(); }
+  canPublish() { const p = this.preview(); return !!p?.canCreate && !this.busy() && !this.topicsChanged() && !this.publishIssue()?.stale; }
   /**
    * Student: confirm, create the plan from the checked preview (its fingerprint), publish it with its version, then Planım.
-   * Teacher: create the draft only, as the teacher flow always did.
+   * Teacher: create the draft only, as the teacher flow always did. After a failed publish only the publish is tried again.
    */
   async publish() {
     const p = this.preview();
     if (!p || !this.canPublish()) return;
-    const staff = !!this.staffStudentId;
+    const staff = !!this.staffStudentId, created = this.created();
     if (!staff && !await this.toaster.confirm('Yayımlarsan bugünden sonraki çalışmaların bu plana göre değişir. Tamamladığın çalışmalar korunur.',
       { confirmText: 'Yayımla', cancelText: 'Vazgeç' })) return;
     this.publishing.set(true); this.publishIssue.set(null);
+    if (created && !staff) { this.publishCreated(created); return; }
     this.engine.create({ title: PLAN_TITLE, preview: p.request, fingerprint: p.fingerprint }, this.staffStudentId ?? undefined)
       .pipe(takeUntilDestroyed(this.destroy)).subscribe({
-        next: created => {
-          if (staff) { this.publishing.set(false); this.planCreated.emit(created.id); return; }
-          this.planning.publish(created.id, created.version).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.publishing.set(false))).subscribe({
-            next: () => {
-              this.toaster.success('Planın yayımlandı. Bugünden sonraki çalışmaların yeni planına göre.');
-              void this.router.navigate(['/coaching-portal/plan'], { queryParams: { plan: created.id } });
-            },
-            error: e => this.publishIssue.set({ createdId: created.id,
-              message: `Planın taslak olarak kaydedildi ama yayımlanamadı. ${typeof e?.error?.message === 'string' ? e.error.message : 'Planım\'dan yeniden deneyebilirsin.'}` })
-          });
+        next: plan => {
+          if (staff) { this.publishing.set(false); this.planCreated.emit(plan.id); return; }
+          this.created.set({ id: plan.id, version: plan.version }); this.publishCreated(plan);
         },
         error: e => {
           this.publishing.set(false);
           const message = typeof e?.error?.message === 'string' ? e.error.message : '';
-          if (e?.status === 409 && /mevcut (plan )?taslağ/i.test(message)) {
+          if (isDraftExists(e)) {
             this.publishIssue.set({ draftExists: true, message: staff ? 'Öğrencinin bekleyen bir plan taslağı var. Önce o taslağın yayımlanması ya da kaldırılması gerekiyor.'
               : 'Bekleyen bir plan taslağın var. Önce Planım\'da o taslağı yayımla ya da kaldır.' });
             return;
@@ -330,6 +375,16 @@ export class WizardSummaryStepComponent implements OnInit {
           this.publishIssue.set({ message: message || 'Plan kaydedilemedi. Yeniden deneyebilirsin.' });
         }
       });
+  }
+  private publishCreated(plan: { id: string; version: number }) {
+    this.planning.publish(plan.id, plan.version).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.publishing.set(false))).subscribe({
+      next: () => {
+        this.toaster.success('Planın yayımlandı. Bugünden sonraki çalışmaların yeni planına göre.');
+        void this.router.navigate(['/coaching-portal/plan'], { queryParams: { plan: plan.id } });
+      },
+      error: e => this.publishIssue.set({
+        message: `Planın taslak olarak kaydedildi ama yayımlanamadı. ${typeof e?.error?.message === 'string' ? e.error.message : 'Yeniden yayımlamayı deneyebilirsin.'}` })
+    });
   }
 
   private focus(target: () => ElementRef<HTMLElement> | undefined) {

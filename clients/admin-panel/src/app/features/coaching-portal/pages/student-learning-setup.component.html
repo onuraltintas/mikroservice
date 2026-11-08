@@ -73,7 +73,8 @@
     </form>
   }
   @if (ready() && step() === 'Availability') {
-    <app-student-study-availability (saved)="afterHoursSaved()" />
+    <!-- H5 verification: no weekly cards to flag during the setup. -->
+    <app-student-study-availability [showOutsideNotice]="false" (saved)="afterHoursSaved()" />
   }
   @if (ready() && (step() === 'Courses' || step() === 'Starting')) {
     <section class="panel"><h2>{{ step() === 'Courses' ? 'Çalışacağım dersler' : 'Başlangıç durumum' }}</h2>

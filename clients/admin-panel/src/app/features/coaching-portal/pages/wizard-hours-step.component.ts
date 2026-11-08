@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { StudyAvailability, StudyDay, StudyWindow } from '../../../core/services/coaching-study-planning.service';
-import { CoachingStudyRoutineService, StudyRoutineAnswers, StudyRoutineView, StudySchoolShift, StudyWeekendDays } from '../../../core/services/coaching-study-routine.service';
+import { CoachingStudyRoutineService, StudyRoutineAnswers, StudyRoutineExamFocus, StudyRoutineView, StudySchoolShift, StudyTempo, StudyWeekendDays } from '../../../core/services/coaching-study-routine.service';
 import { WeeklyProposalWindow } from '../../../core/services/coaching-weekly-draft.service';
 import {
   RoutineQuestion, SHIFT_CHOICES, WEEKDAY_CHOICES, WEEKEND_CHOICES, defaultRoutineAnswers, hoursText, minuteChoices, questionForMessage, questionIssue,
@@ -27,8 +27,15 @@ export class WizardHoursStepComponent implements OnInit {
   @Input() staffStudentId: string | null = null;
   @Input() routine: StudyRoutineView | null = null;
   @Input() availability: StudyAvailability | null = null;
-  /** "Okula gitmiyorum" is offered to a YKS student only. */
+  /** "Okula gitmiyorum" is offered to every student but a middle-school one (graduates, open education). */
+  @Input() allowNoSchool = true;
+  /** YKS: a YKS student starts with three hours a weekday. */
   @Input() yks = false;
+  /** Review of PR 135 (S6): the wizard's current exam focus and tempo, kept in the routine when the answers are saved. */
+  @Input() examFocus: StudyRoutineExamFocus | null = null;
+  @Input() tempo: StudyTempo | null = null;
+  /** While the wizard reads the tempo options, the summary's buttons wait. */
+  @Input() disabled = false;
   /** K5: the most one day may hold (480, or 600 for a graduate), from the weekly draft page. */
   @Input() limit = 480;
   /** Edit mode and "Saat ekle": the questions open at once, with the saved answers. */
@@ -53,7 +60,7 @@ export class WizardHoursStepComponent implements OnInit {
   readonly saving = signal(false);
   readonly error = signal('');
   readonly preview = computed(() => routineWindows(this.answers()));
-  readonly shifts = computed(() => SHIFT_CHOICES.filter(x => x.value !== 'NoSchool' || this.yks || this.answers().schoolShift === 'NoSchool'));
+  readonly shifts = computed(() => SHIFT_CHOICES.filter(x => x.value !== 'NoSchool' || this.allowNoSchool || this.answers().schoolShift === 'NoSchool'));
   readonly weekendChoices = WEEKEND_CHOICES;
   readonly weekdayChoices = WEEKDAY_CHOICES;
   readonly time = time;
@@ -68,7 +75,8 @@ export class WizardHoursStepComponent implements OnInit {
 
   ngOnInit() {
     const routine = this.routine, windows = this.availability?.windows ?? [];
-    if (this.staffStudentId) { this.mode.set(routine ? 'summary' : windows.length ? 'availability' : 'staff-questions'); return; }
+    // Review of PR 135 (S7): a routine the student overrode by hand is background only; her saved hours are what counts.
+    if (this.staffStudentId) { this.mode.set(routine?.availabilityMatches ? 'summary' : windows.length ? 'availability' : routine ? 'summary' : 'staff-questions'); return; }
     if (routine) this.answers.set({ ...defaultRoutineAnswers(this.yks), ...routine.answers, busyDays: [...(routine.answers.busyDays ?? [])] });
     else this.answers.set(defaultRoutineAnswers(this.yks));
     if (this.startWithQuestions) { this.openedFrom = null; this.mode.set('questions'); return; }
@@ -82,20 +90,24 @@ export class WizardHoursStepComponent implements OnInit {
   emptyDays(days: string[]) { return days.map(day => weekDays.find(x => x.value === day)?.label ?? day).join(', '); }
 
   /** "Doğru, devam" / "Bu saatlerle devam" (and the teacher's "Devam"). */
-  confirm() { this.done.emit(null); }
+  confirm() { if (!this.disabled) this.done.emit(null); }
   /** "Değiştir" / "Soruları cevapla": the questions with the saved answers (or the usual ones). */
-  change() { this.openedFrom = this.mode(); this.index.set(0); this.issue.set(null); this.error.set(''); this.mode.set('questions'); this.focusQuestion(); }
+  change() { if (this.disabled) return; this.openedFrom = this.mode(); this.index.set(0); this.issue.set(null); this.error.set(''); this.mode.set('questions'); this.focusQuestion(); }
 
   // --- The questions -------------------------------------------------------------------------------------------------------
   progress() { return `Soru ${this.index() + 1} / ${this.questions().length}`; }
+  /** An answer changed and was not saved yet (the wizard asks before leaving). */
+  readonly dirty = signal(false);
+  /** The current question's refusal, for aria-describedby / aria-invalid on its controls. */
+  invalid() { return this.issue()?.question === this.question(); }
   set<K extends keyof StudyRoutineAnswers>(key: K, value: StudyRoutineAnswers[K]) {
-    this.answers.update(a => ({ ...a, [key]: value }));
+    this.answers.update(a => ({ ...a, [key]: value })); this.dirty.set(true);
     if (this.issue()?.question === this.question()) this.issue.set(null);
   }
   setTime(key: 'schoolStart' | 'schoolEnd' | 'afterSchoolStart' | 'latestEnd' | 'morningStart' | 'dayStart' | 'dinnerStart' | 'dinnerEnd' | 'busyStart' | 'weekendStart' | 'weekendEnd', value: string | number) {
     this.set(key, Number(value));
   }
-  chooseShift(shift: StudySchoolShift) { this.answers.update(a => withShift(a, shift)); this.issue.set(null); }
+  chooseShift(shift: StudySchoolShift) { this.answers.update(a => withShift(a, shift)); this.dirty.set(true); this.issue.set(null); }
   chooseWeekend(value: StudyWeekendDays) { this.set('weekend', value); }
   toggleBusy(day: StudyDay) {
     const days = new Set(this.answers().busyDays);
@@ -114,7 +126,7 @@ export class WizardHoursStepComponent implements OnInit {
     if (this.saving()) return;
     this.issue.set(null); this.error.set('');
     if (this.index() > 0) { this.index.update(i => i - 1); this.focusQuestion(); return; }
-    if (this.openedFrom) { this.mode.set(this.openedFrom); this.openedFrom = null; return; }
+    if (this.openedFrom) { this.mode.set(this.openedFrom); this.openedFrom = null; this.dirty.set(false); return; }
     this.back.emit();
   }
   canGoBackFromQuestions() { return this.index() > 0 || !!this.openedFrom || this.canGoBack; }
@@ -130,17 +142,18 @@ export class WizardHoursStepComponent implements OnInit {
   private save() {
     const routine = this.routine, a = this.answers();
     // The exam focus and tempo chosen in their own steps stay as they are.
-    const answers: StudyRoutineAnswers = { ...a, examFocus: routine?.answers.examFocus ?? a.examFocus ?? null, tempo: routine?.answers.tempo ?? a.tempo ?? null };
+    // Review of PR 135 (S6): the wizard's current focus and tempo, never the routine's older answers.
+    const answers: StudyRoutineAnswers = { ...a, examFocus: this.examFocus, tempo: this.tempo };
     this.saving.set(true); this.error.set('');
     this.routines.save({ expectedVersion: routine?.version ?? null, expectedAvailabilityVersion: this.availability?.version ?? routine?.currentAvailabilityVersion ?? null, answers })
       .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.saving.set(false))).subscribe({
-        next: view => { this.routineSaved.emit(view); this.done.emit(null); },
+        next: view => { this.dirty.set(false); this.routineSaved.emit(view); this.done.emit(null); },
         error: e => {
           const message = typeof e?.error?.message === 'string' ? e.error.message : '';
-          if (e?.status === 409) { this.error.set(message || 'Çalışma saatlerin başka bir yerde değişti; yeniden yükledim.'); this.reload.emit(); return; }
+          if (e?.status === 409) { this.error.set('Çalışma saatlerin başka bir yerde değişti; güncel hâlini yeniden yükledim. Cevaplarını kontrol edip yeniden kaydet.'); this.reload.emit(); return; }
           if (e?.status === 400 && message) {
             // The server's sentence goes next to the question it is about.
-            const question = questionForMessage(message), at = this.questions().indexOf(question);
+            const question = questionForMessage(message, this.answers().schoolShift), at = this.questions().indexOf(question);
             if (at >= 0) { this.index.set(at); this.issue.set({ question, message }); this.focusQuestion(); return; }
           }
           this.error.set(message || 'Çalışma saatlerin kaydedilemedi. Yeniden deneyebilirsin.');
