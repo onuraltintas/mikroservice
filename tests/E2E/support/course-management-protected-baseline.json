@@ -1453,8 +1453,8 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyWorkReports.cs": "4476d0bf862bed3ab75395597d884db462753bd130bdf798daa16a13e9fb55c9",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingTopicSearchService.cs": "be7561a459a46cc7d1ca233b6ef0f87e2e277748ce0b71a794fcd0b260a66833",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyDecisionWork.cs": "4f81ad88ab164b61de95a697b824e4a5e9ff862877df72d5f47e39a3a857f0a8",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs": "5a598462edccc707c8882e988b9e7ce2828b8238b79aaaa0961980053d0f769e",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyProposalService.cs": "0b27b31b891b7d94c6efcc4e665597f2dcaa05cd092ee7b360b6018e7fda6a34",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs": "7c0a0a7af34be6751930ff86fb0ca3c906689ea0d18d3f433ca801e53bd4bba8",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyProposalService.cs": "9859fa227a57c97ac37b535bd97fd7d0a19002c8cf8ab146b8e1cbbb29277732",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyResults.cs": "51264de209aed66dd1d3a7f1c40020bd26b97ab7f4efec63835dee64a5a65702",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyReviewService.cs": "f71e816976547070daa5ebaf4298d6e6b5ebdfdc2f0c3307a6a1e7f154a54544",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyStudyDraftService.cs": "15163353093c13402e5aeb98dcc49522b7e65f379c926441281d7f3ec39771d1",
@@ -2714,7 +2714,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "Paket H4a review fixes",
+    "purpose": "Paket H4a re-review fixes",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2762,7 +2762,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "44ed9417",
+    "previousBaselineCommit": "1e43ad0e",
     "removedSincePreviousBaseline": []
   }
 }
