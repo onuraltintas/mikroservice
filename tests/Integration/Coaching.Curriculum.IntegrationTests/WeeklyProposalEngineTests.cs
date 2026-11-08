@@ -405,6 +405,31 @@ public sealed class WeeklyProposalEngineTests
         Assert.Null(WeeklyProposalEngine.PeriodEnd(null, new DateOnly(2027, 6, 12)));
     }
 
+    // Third review of PR #132: a tempo date is settled on the date its proposal really uses; dates that change are run again (at most
+    // three times), an unstable one or one the proposal endpoint would refuse is left out, and equal final dates merge into the first.
+    [Fact]
+    public async Task TempoDatesSettleOnTheDateTheProposalUses_ThenMerge()
+    {
+        DateOnly D(int day) => new(2027, 6, day);
+        var runs = new List<DateOnly>();
+        // The proposal for a date works until the settled end the fake gives for it.
+        var ends = new Dictionary<DateOnly, DateOnly> { [D(20)] = D(15), [D(15)] = D(15), [D(17)] = D(17), [D(12)] = D(10), [D(10)] = D(9), [D(9)] = D(8), [D(8)] = D(8) };
+        Task<(DateOnly End, string Result)> Run(DateOnly date) { runs.Add(date); return Task.FromResult((ends[date], "run " + date.Day)); }
+
+        // Relaxed (20) settles on 15, the date of Balanced: Balanced merges into Relaxed, whose numbers are the run for 15.
+        var merged = await WeeklyProposalEngine.TempoDatesAsync(new[] { ("Relaxed", D(20)), ("Balanced", D(15)), ("Intense", D(17)) }, D(7), D(20), Run);
+        Assert.Equal(new[] { ("Relaxed", D(15), "run 15"), ("Intense", D(17), "run 17") }, merged);
+        // 12 → 10 → 9 → 8 does not settle within three runs and is left out; nothing below the earliest allowed date is run.
+        runs.Clear();
+        Assert.Empty(await WeeklyProposalEngine.TempoDatesAsync(new[] { ("Intense", D(12)) }, D(7), D(20), Run));
+        Assert.Equal(new[] { D(12), D(10), D(9) }, runs);
+        runs.Clear();
+        Assert.Empty(await WeeklyProposalEngine.TempoDatesAsync(new[] { ("Intense", D(12)) }, D(11), D(20), Run));
+        Assert.Equal(new[] { D(12) }, runs);
+        // The plan end itself is always allowed, even below the earliest date.
+        Assert.Equal(new[] { ("Relaxed", D(8), "run 8") }, await WeeklyProposalEngine.TempoDatesAsync(new[] { ("Relaxed", D(8)) }, D(11), D(8), Run));
+    }
+
     private static void AssertWeekRules(WeeklyProposalResult result, IReadOnlyDictionary<DayOfWeek, int> budgets, int limit)
     {
         foreach (var day in result.Slots.GroupBy(x => x.Day))
