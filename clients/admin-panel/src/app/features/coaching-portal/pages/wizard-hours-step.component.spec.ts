@@ -17,12 +17,13 @@ describe('WizardHoursStepComponent', () => {
   };
   const hours: StudyAvailability = { version: 6, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
   async function setup(opts: { routine?: StudyRoutineView | null; availability?: StudyAvailability | null; staff?: boolean; yks?: boolean; limit?: number; questions?: boolean;
-    save?: ReturnType<typeof vi.fn> } = {}) {
+    save?: ReturnType<typeof vi.fn>; allowNoSchool?: boolean; examFocus?: 'Tyt' | 'Balanced' | 'Ayt' | null; tempo?: 'Relaxed' | 'Balanced' | 'Intense' | null; disabled?: boolean } = {}) {
     const save = opts.save ?? vi.fn((u: StudyRoutineUpdate) => of(routineOf(u.answers)));
     TestBed.configureTestingModule({ imports: [WizardHoursStepComponent], providers: [{ provide: CoachingStudyRoutineService, useValue: { save } }] });
     const fixture = TestBed.createComponent(WizardHoursStepComponent), c = fixture.componentInstance;
     c.routine = opts.routine ?? null; c.availability = opts.availability ?? null; c.staffStudentId = opts.staff ? 'student-1' : null;
-    c.yks = !!opts.yks; c.limit = opts.limit ?? 480; c.startWithQuestions = !!opts.questions;
+    c.yks = !!opts.yks; c.limit = opts.limit ?? 480; c.startWithQuestions = !!opts.questions; c.allowNoSchool = opts.allowNoSchool ?? !!opts.yks;
+    c.examFocus = opts.examFocus ?? null; c.tempo = opts.tempo ?? null; c.disabled = !!opts.disabled;
     const done = vi.fn(), saved = vi.fn(), reload = vi.fn();
     c.done.subscribe(done); c.routineSaved.subscribe(saved); c.reload.subscribe(reload);
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
@@ -60,13 +61,13 @@ describe('WizardHoursStepComponent', () => {
     expect(done).toHaveBeenCalledWith(null);
   });
 
-  it('asks the questions at once when there are no hours, one per screen, and offers "Okula gitmiyorum" only for YKS', async () => {
+  it('asks the questions at once when there are no hours, one per screen, and offers "Okula gitmiyorum" only when allowed', async () => {
     const { el } = await setup();
     expect(el.querySelector('[data-testid="routine-question"]')?.getAttribute('data-question')).toBe('shift');
     expect(text(el.querySelector('.eyebrow'))).toBe('Soru 1 / 9');
     expect(el.querySelectorAll('[role=radiogroup] input[type=radio]').length).toBe(3);
     TestBed.resetTestingModule();
-    const yks = await setup({ yks: true });
+    const yks = await setup({ allowNoSchool: true });
     expect(text(yks.el.querySelector('[role=radiogroup]'))).toContain('Okula gitmiyorum');
   });
 
@@ -101,13 +102,21 @@ describe('WizardHoursStepComponent', () => {
     expect(saved).toHaveBeenCalled(); expect(done).toHaveBeenCalledWith(null);
   });
 
-  it('opens the questions with the saved answers and keeps the exam focus and tempo when saving', async () => {
-    const { c, el, fixture, save } = await setup({ routine: routineOf(answers), availability: hours, questions: true });
+  // Review of PR 135 (S6): the wizard's current focus and tempo are what the routine keeps, not the old saved ones.
+  it('opens the questions with the saved answers and saves the wizard\'s current exam focus and tempo', async () => {
+    const { c, el, fixture, save } = await setup({ routine: routineOf(answers), availability: hours, questions: true, examFocus: 'Ayt', tempo: 'Intense' });
     expect(c.question()).toBe('shift');
     expect((el.querySelectorAll('[role=radiogroup] input')[0] as HTMLInputElement).checked).toBe(true);
     c.index.set(c.questions().indexOf('review')); fixture.detectChanges();
     c.next();
-    expect(save).toHaveBeenCalledWith({ expectedVersion: 4, expectedAvailabilityVersion: 6, answers: expect.objectContaining({ examFocus: 'Tyt', tempo: 'Balanced', busyDays: ['Wednesday'] }) });
+    expect(save).toHaveBeenCalledWith({ expectedVersion: 4, expectedAvailabilityVersion: 6, answers: expect.objectContaining({ examFocus: 'Ayt', tempo: 'Intense', busyDays: ['Wednesday'] }) });
+  });
+
+  // H4a review: the routine save carries the wizard's current focus and tempo (here none), never the routine's older answers.
+  it('never sends the routine\'s older focus or tempo', async () => {
+    const { c, fixture, save } = await setup({ routine: routineOf(answers), availability: hours, questions: true });
+    c.index.set(c.questions().indexOf('review')); fixture.detectChanges(); c.next();
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({ answers: expect.objectContaining({ examFocus: null, tempo: null }) }));
   });
 
   it('shows a refused answer next to its question', async () => {
@@ -116,6 +125,11 @@ describe('WizardHoursStepComponent', () => {
     c.index.set(c.questions().indexOf('review')); c.next(); fixture.detectChanges();
     expect(c.question()).toBe('weekendHours');
     expect(text(el.querySelector('[data-testid="question-issue"]'))).toBe('Hafta sonu başlama saatin 07:00 ya da daha geç olmalı.');
+    // S12: every control of the question names the message and is marked invalid.
+    for (const id of ['weekend-start', 'weekend-end']) {
+      const control = el.querySelector('#' + id)!;
+      expect(control.getAttribute('aria-describedby')).toBe('question-issue'); expect(control.getAttribute('aria-invalid')).toBe('true');
+    }
   });
 
   it('reloads after a conflict and shows the server\'s message', async () => {
@@ -123,7 +137,7 @@ describe('WizardHoursStepComponent', () => {
     const { c, el, fixture, reload, done } = await setup({ routine: routineOf(answers), availability: hours, questions: true, save });
     c.index.set(c.questions().indexOf('review')); c.next(); fixture.detectChanges();
     expect(reload).toHaveBeenCalled(); expect(done).not.toHaveBeenCalled();
-    expect(text(el.querySelector('.notice.error'))).toBe('Çalışma saatlerin başka bir yerde değişti; yeniden yükle.');
+    expect(text(el.querySelector('.notice.error'))).toBe('Çalışma saatlerin başka bir yerde değişti; güncel hâlini yeniden yükledim. Cevaplarını kontrol edip yeniden kaydet.');
   });
 
   it('offers up to 10 hours a day to a graduate', async () => {
@@ -140,6 +154,29 @@ describe('WizardHoursStepComponent', () => {
     expect(button(el, 'Değiştir')).toBeUndefined();
     button(el, 'Devam')!.click();
     expect(done).toHaveBeenCalledWith(null); expect(save).not.toHaveBeenCalled();
+  });
+
+  // Review of PR 135 (S7): a routine the student overrode by hand is background; the teacher sees her saved hours.
+  it('shows a teacher the saved hours when the routine no longer matches them, with the answers as background', async () => {
+    const { el } = await setup({ routine: routineOf(answers, false), availability: hours, staff: true });
+    expect(el.querySelector('[data-testid="routine-summary"]')).toBeNull();
+    expect([...el.querySelectorAll('[data-testid="wizard-availability"] > ul li')].map(text)).toEqual(['Pazartesi: 17:00–19:00']);
+    const background = el.querySelector('[data-testid="routine-background"]')!;
+    expect(text(background)).toContain('Öğrenci saatlerini sonradan elle değiştirmiş');
+    expect(text(background)).toContain('Sabahçı, 08:00–14:00');
+  });
+
+  it('waits while the wizard reads the tempo options', async () => {
+    const { el, done } = await setup({ routine: routineOf(answers), availability: hours, disabled: true });
+    expect(button(el, 'Doğru, devam')!.disabled).toBe(true); expect(button(el, 'Değiştir')!.disabled).toBe(true);
+    button(el, 'Doğru, devam')!.click(); expect(done).not.toHaveBeenCalled();
+  });
+
+  it('tracks unsaved answers', async () => {
+    const { el, fixture, c } = await setup();
+    expect(c.dirty()).toBe(false);
+    (el.querySelectorAll('[role=radiogroup] input')[0] as HTMLInputElement).click(); fixture.detectChanges();
+    expect(c.dirty()).toBe(true);
   });
 
   it('asks a teacher the quick questions for a student without hours and sends them as windows, never saved', async () => {

@@ -82,7 +82,7 @@ describe('weekly draft calendar',()=>{
   it('names the footer button after the yearly preview it opens',async ()=>{
     const{fixture}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
     const button=fixture.nativeElement.querySelector('[data-testid="weekly-preview-link"]') as HTMLElement;
-    expect(button.textContent?.trim()).toBe('Yıllık plan önizlemesine geç →');
+    expect(button.textContent?.trim()).toBe('Planının özetine geç →');
   });
   it('opens saved evening cards instead of empty morning hours and preserves scroll while editing',async ()=>{
     const{fixture,c}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});

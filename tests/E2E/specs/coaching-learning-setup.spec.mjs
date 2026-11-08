@@ -39,6 +39,7 @@ async function fixtures(context) {
     }
     if (path.endsWith('/availability')) { if (request.method() === 'PUT') hours = { ...request.postDataJSON(), version: (hours?.version ?? -1) + 1 }; return respond(hours); }
     // Paket H3/H4: no routine yet; the wizard's tempo options.
+    if (path.endsWith('/plan-preferences')) return respond({ examFocus: null, tempo: null, version: null, updatedAt: null });
     if (path.endsWith('/routine')) return route.fulfill({ status: 404, json: { success: false, code: 'StudyPlanning.RoutineMissing' } });
     if (path.endsWith('/weekly-draft/tempo-options')) return respond({ planEnd: '2027-06-13', options: [
       { tempo: 'Relaxed', finishBy: '2027-06-13', neededWeeklyMinutes: 60, capacityWeeklyMinutes: 60, fits: true },

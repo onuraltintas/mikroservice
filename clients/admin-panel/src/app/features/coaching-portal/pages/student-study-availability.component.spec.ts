@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { CoachingWeeklyDraftService, WeeklyDraftPage } from '../../../core/services/coaching-weekly-draft.service';
 import type { WeeklySlot } from './weekly-calendar';
 
@@ -66,6 +66,27 @@ describe('StudentStudyAvailabilityComponent', () => {
     component.save(); fixture.detectChanges(); await fixture.whenStable();
     expect(weekly.get).not.toHaveBeenCalled(); expect(fixture.nativeElement.querySelector('[data-testid="weekly-outside-status"]')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Çalışma saatlerin kaydedildi.');
+  });
+  // H5 verification: the same count after another save empties the live region first, so a screen reader reads it again.
+  it('clears the notice before showing the same count again', async () => {
+    const { fixture, component } = await setup(false, [card('a', 'Monday', 1080)]);
+    const status = () => (fixture.nativeElement as HTMLElement).querySelector('[data-testid="weekly-outside-status"]')!.textContent?.trim();
+    component.save(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(status()).toBe('Kayıtlı haftalık düzeninde 1 kart yeni saatlerinin dışında kaldı.');
+    component.save(); fixture.detectChanges();
+    expect(status()).toBe('');
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(status()).toBe('Kayıtlı haftalık düzeninde 1 kart yeni saatlerinin dışında kaldı.');
+  });
+  // H5 verification: "Yeniden öner" lands on the wizard's ?yeniden=oner path.
+  it('follows "Yeniden öner" to the plan wizard with yeniden=oner', async () => {
+    const { fixture, component } = await setup(false, [card('a', 'Monday', 1080)]);
+    const router = TestBed.inject(Router);
+    router.resetConfig([{ path: 'coaching-portal/plan/wizard', children: [] }, { path: '**', children: [] }]);
+    component.save(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const link = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a')).find(x => x.textContent?.trim() === 'Yeniden öner')!;
+    link.click(); await fixture.whenStable();
+    expect(router.url).toBe('/coaching-portal/plan/wizard?yeniden=oner');
   });
   it('loads preferences, shows weekly minutes and saves the loaded version', async () => {
     const { component, service } = await setup();

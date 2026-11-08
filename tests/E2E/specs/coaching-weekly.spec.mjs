@@ -54,9 +54,9 @@ test('saved evening cards open in the visible time range without manual scrollin
   const f=await fixture(context);f.setDraft({version:0,timeZoneId:'Europe/Istanbul',slots:[{id:'saved',lessonId:math,lessonName:'Matematik',examCode:'LGS',day:'Monday',startMinute:1080,durationMinutes:60}]});
   await page.goto('/coaching-portal/plan/weekly');await expect(card(page,'Matematik')).toHaveCount(1);
   // Paket H1: the free hours come first in the steps; the daily limit is shown up front and the footer names the yearly preview.
-  await expect(page.getByRole('navigation',{name:'Planı düzenleme adımları'}).locator('ol.steps a')).toHaveText([/Boş saatlerin/,/Haftalık düzenin/,/Planını oluştur/]);
+  await expect(page.getByRole('navigation',{name:'Planı düzenleme adımları'}).locator('ol.steps a')).toHaveText([/Boş saatlerin/,/Haftalık düzenin/]);
   await expect(page.locator('.calendar-help')).toContainText('Bir güne en çok 8 saat çalışma koyabilirsin.');
-  await expect(page.getByTestId('weekly-preview-link')).toHaveText('Yıllık plan önizlemesine geç →');
+  await expect(page.getByTestId('weekly-preview-link')).toHaveText('Planının özetine geç →');
   await expect.poll(()=>page.locator('.time-scroller').evaluate(el=>Math.abs(el.scrollTop-17.5*72))).toBeLessThanOrEqual(10);
   const bounds=await card(page,'Matematik').boundingBox(),viewport=await page.locator('.time-scroller').boundingBox();
   expect(bounds.y).toBeGreaterThanOrEqual(viewport.y);expect(bounds.y+bounds.height).toBeLessThanOrEqual(viewport.y+viewport.height);

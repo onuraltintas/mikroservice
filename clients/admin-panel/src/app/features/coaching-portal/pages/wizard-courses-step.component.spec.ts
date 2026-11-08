@@ -1,3 +1,4 @@
+import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -14,13 +15,16 @@ describe('WizardCoursesStepComponent', () => {
   const lessons = [{ id: 'tyt-mat', name: 'TYT Matematik', examCode: 'TYT', gradeNumber: null }, { id: 'ayt-mat', name: 'AYT Matematik', examCode: 'AYT', gradeNumber: null },
     { id: 'ayt-fiz', name: 'AYT Fizik', examCode: 'AYT', gradeNumber: null }];
   async function setup(staff = false, save = vi.fn((_: unknown) => of({ context: { ...context, version: 8 }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] }))) {
-    TestBed.configureTestingModule({ imports: [WizardCoursesStepComponent], providers: [provideRouter([]), { provide: CoachingLearningSetupService, useValue: { save } }] });
+    const toaster = { confirm: vi.fn().mockResolvedValue(false) };
+    TestBed.configureTestingModule({ imports: [WizardCoursesStepComponent], providers: [provideRouter([]), { provide: CoachingLearningSetupService, useValue: { save } },
+      { provide: ToasterService, useValue: toaster }] });
     const fixture = TestBed.createComponent(WizardCoursesStepComponent), c = fixture.componentInstance;
     c.context = context; c.lessons = lessons; c.staffStudentId = staff ? 'student-1' : null; c.ngOnChanges();
     const done = vi.fn(), saved = vi.fn(), reload = vi.fn();
     c.done.subscribe(done); c.saved.subscribe(saved); c.reload.subscribe(reload);
     fixture.detectChanges();
-    return { fixture, c, el: fixture.nativeElement as HTMLElement, save, done, saved, reload };
+    const back = vi.fn(); c.back.subscribe(back);
+    return { fixture, c, el: fixture.nativeElement as HTMLElement, save, done, saved, reload, back, toaster };
   }
   const radio = (el: HTMLElement, group: string, label: string) =>
     [...[...el.querySelectorAll('fieldset')].find(f => f.querySelector('legend')?.textContent?.trim() === group)!
@@ -75,6 +79,23 @@ describe('WizardCoursesStepComponent', () => {
     const rows = [...el.querySelectorAll('[data-testid="course-row"]')];
     expect(rows[2].querySelector('.field-error')?.textContent).toBe('Bu ders seçilemez.');
     expect(rows[0].querySelector('.field-error')).toBeNull();
+    // S12: both choices of the row name the message and are marked invalid.
+    for (const fieldset of rows[2].querySelectorAll('fieldset')) {
+      expect(fieldset.getAttribute('aria-invalid')).toBe('true'); expect(fieldset.getAttribute('aria-describedby')).toBe('course-error-ayt-fiz');
+    }
+    expect(rows[2].querySelector('#course-error-ayt-fiz')).toBeTruthy();
+    expect(rows[0].querySelector('fieldset')?.getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('asks before Geri drops unsaved choices', async () => {
+    const { el, fixture, c, back, toaster } = await setup();
+    c.canGoBack = true; fixture.detectChanges();
+    radio(el, 'AYT Fizik önceliği', 'Normal').click(); fixture.detectChanges();
+    await c.goBack();
+    expect(toaster.confirm).toHaveBeenCalled(); expect(back).not.toHaveBeenCalled();
+    toaster.confirm.mockResolvedValueOnce(true);
+    await c.goBack();
+    expect(back).toHaveBeenCalled(); expect(c.dirty()).toBe(false);
   });
 
   it('lets a teacher only read the choices, in third person', async () => {

@@ -25,16 +25,18 @@ describe('Planı düzenle steps (T4)', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  // Paket H1 (08.11.2026): the free hours come first; the weekly routine places lessons into them.
-  it('shows three ordered steps and marks the current one', async () => {
+  // Paket H1 (08.11.2026): the free hours come first. Review of PR 135 (S8): two steps over the calendar pages; the wizard has its own.
+  it('shows two ordered steps and marks the current one', async () => {
     const el = await at('/coaching-portal/plan/weekly');
     const steps = [...el.querySelectorAll('ol.steps a')];
-    expect(steps.map(a => a.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['1 Boş saatlerin', '2 Haftalık düzenin', '3 Planını oluştur']);
-    expect(steps.map(a => a.getAttribute('href'))).toEqual(['/coaching-portal/plan/hours', '/coaching-portal/plan/weekly', '/coaching-portal/plan/wizard']);
+    expect(steps.map(a => a.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['1 Boş saatlerin', '2 Haftalık düzenin']);
+    expect(steps.map(a => a.getAttribute('href'))).toEqual(['/coaching-portal/plan/hours', '/coaching-portal/plan/weekly']);
     expect(steps[1].getAttribute('aria-current')).toBe('step');
     expect(el.querySelector('a.prev')?.getAttribute('href')).toBe('/coaching-portal/plan/hours');
-    expect(el.querySelector('a.next')?.getAttribute('href')).toBe('/coaching-portal/plan/wizard');
-    expect(el.querySelector('.hint')?.textContent).toBe('Bu saatlerde hangi derse çalışacağını yerleştir. Okul derslerini değil, kendi çalışma saatlerini gir.');
+    // The last step leads on to the wizard's summary.
+    expect(el.querySelector('a.next')?.getAttribute('href')).toBe('/coaching-portal/plan/wizard?adim=ozet');
+    expect(el.querySelector('a.next')?.textContent?.trim()).toBe('Planının özetine geç');
+    expect(el.querySelector('.hint')?.textContent).toBe('Bu saatlerde hangi derse çalışacağını yerleştir. Okul derslerini değil, kendi çalışma saatlerini gir. Bitince planının özetine geç.');
   });
 
   it('starts with the free hours', async () => {
@@ -46,26 +48,26 @@ describe('Planı düzenle steps (T4)', () => {
     expect(el.textContent).not.toContain('Okul ve kurs derslerini');
   });
 
-  it('treats the plan preview as the last step and offers the way back to the plan', async () => {
-    const el = await at('/coaching-portal/plan/preview');
-    expect(el.querySelector('ol.steps [aria-current=step]')?.textContent).toContain('Planını oluştur');
-    expect(el.querySelector('a.next')?.getAttribute('href')).toBe('/coaching-portal/plan');
+  it('is not shown on the plan wizard or the old preview address (the wizard shows its own steps)', async () => {
+    expect((await at('/coaching-portal/plan/wizard')).querySelector('ol.steps')).toBeNull();
+    TestBed.resetTestingModule();
+    expect((await at('/coaching-portal/plan/preview')).querySelector('ol.steps')).toBeNull();
   });
 
-  // Paket F #37: steps 1–2 showed as done on the wizard while the weekly draft was empty.
+  // Paket F #37: a step is done only when its data exists.
   it('marks a step done only when its data exists, not because a later step is open', async () => {
     const done = (el: HTMLElement) => [...el.querySelectorAll('ol.steps li')].map(li => li.classList.contains('done'));
-    expect(done(await at('/coaching-portal/plan/wizard'))).toEqual([false, false, false]);
+    expect(done(await at('/coaching-portal/plan/hours'))).toEqual([false, false]);
     TestBed.resetTestingModule();
-    expect(done(await at('/coaching-portal/plan/wizard', { windows: [window] }))).toEqual([true, false, false]);
+    expect(done(await at('/coaching-portal/plan/hours', { windows: [window] }))).toEqual([true, false]);
     TestBed.resetTestingModule();
-    expect(done(await at('/coaching-portal/plan/wizard', { slots: [slot] }))).toEqual([false, true, false]);
+    expect(done(await at('/coaching-portal/plan/hours', { slots: [slot] }))).toEqual([false, true]);
     TestBed.resetTestingModule();
     const both = await at('/coaching-portal/plan/weekly', { slots: [slot], windows: [window] });
-    expect(done(both)).toEqual([true, true, false]);
+    expect(done(both)).toEqual([true, true]);
     expect(both.querySelector('ol.steps li.done a')?.getAttribute('aria-label')).toContain('tamamlandı');
     TestBed.resetTestingModule();
-    expect(done(await at('/coaching-portal/plan/wizard', { slots: 'error', windows: [] }))).toEqual([false, false, false]);
+    expect(done(await at('/coaching-portal/plan/weekly', { slots: 'error', windows: [] }))).toEqual([false, false]);
   });
 
   it('stays hidden on the plan itself', async () => {
@@ -76,8 +78,8 @@ describe('Planı düzenle steps (T4)', () => {
   it('gives the plan hub two tabs: the plan and its editing flow', () => {
     expect(STUDENT_HUBS.plan.tabs.map(tab => tab.label)).toEqual(['Planım', 'Planı düzenle']);
     const edit = STUDENT_HUBS.plan.tabs[1];
-    // Paket H1: "Planı düzenle" opens the first step, the free hours.
-    expect(edit.path).toBe('/coaching-portal/plan/hours');
-    expect(edit.match).toEqual(['/coaching-portal/plan/weekly', '/coaching-portal/plan/wizard', '/coaching-portal/plan/preview']);
+    // Review of PR 135 (S8): "Planı düzenle" opens the plan wizard; the calendar pages belong to the same tab.
+    expect(edit.path).toBe('/coaching-portal/plan/wizard');
+    expect(edit.match).toEqual(['/coaching-portal/plan/hours', '/coaching-portal/plan/weekly', '/coaching-portal/plan/preview']);
   });
 });

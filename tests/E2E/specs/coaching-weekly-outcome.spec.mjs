@@ -10,7 +10,7 @@ const context={id:'context',version:4,academicYearStart:2026,purpose:'Lgs',targe
 const tempos=[{tempo:'Relaxed',finishBy:'2027-06-19',neededWeeklyMinutes:60,capacityWeeklyMinutes:120,fits:true},{tempo:'Balanced',finishBy:'2027-05-20',neededWeeklyMinutes:90,capacityWeeklyMinutes:120,fits:true},
   {tempo:'Intense',finishBy:'2027-04-15',neededWeeklyMinutes:150,capacityWeeklyMinutes:120,fits:false}];
 async function fixture(page,{active=false,routine=null}={}){
-  const writes=[],previews=[],proposals=[];let missing=false,conflict=null,generated=null,draftVersion=2;
+  const writes=[],previews=[],proposals=[];let missing=false,conflict=null,conflictCode=null,generated=null,draftVersion=2;let prefs={examFocus:null,tempo:null,version:null,updatedAt:null};
   const old={id:'old-plan',version:7,title:'Mevcut çalışma planım',status:'Active',tasks:[{id:'old-work',title:'Önceki çalışmam',plannedDate:'2026-10-16',plannedMinutes:30,isCompleted:true,isPinned:false,actualMinutes:25,actualQuestions:0}]};
   let slots=[{id:'one',lessonId:math,lessonName:'Matematik',examCode:'LGS',day:'Monday',startMinute:1080,durationMinutes:60}];
   const proposed={id:'p1',lessonId:turkish,lessonName:'Türkçe',examCode:'LGS',day:'Tuesday',startMinute:1080,durationMinutes:60};
@@ -35,6 +35,8 @@ async function fixture(page,{active=false,routine=null}={}){
     if(path.endsWith('/setup/catalog'))return ok({curriculum:null,lessons:[],missingDurationCount:0,warnings:[],topics:{totalCount:2,pageNumber:1,pageSize:50,items:[
       {id:'paragraf',lessonId:turkish,name:'Paragraf',lessonName:'Türkçe',unitName:'Okuma',gradeNumber:8,examCode:'LGS',estimatedMinutes:120},
       {id:'fiil',lessonId:turkish,name:'Fiilimsiler',lessonName:'Türkçe',unitName:'Dil bilgisi',gradeNumber:8,examCode:'LGS',estimatedMinutes:60}]}});
+    // H4 contract item 6: the plan preferences (PUT replaces both values).
+    if(path.endsWith('/plan-preferences')){if(req.method()==='PUT')prefs={...req.postDataJSON(),version:(prefs.version??0)+1,updatedAt:null};return ok(prefs);}
     if(path.endsWith('/routine'))return routine?ok(routine):route.fulfill({status:404,json:{success:false,code:'StudyPlanning.RoutineMissing'}});
     if(path.endsWith('/availability'))return ok({version:3,timeZoneId:'Europe/Istanbul',windows:[{day:'Monday',startMinute:1080,endMinute:1200},{day:'Tuesday',startMinute:1080,endMinute:1200}]});
     if(path.endsWith('/weekly-draft/tempo-options'))return ok({planEnd:'2027-06-19',options:tempos});
@@ -49,7 +51,7 @@ async function fixture(page,{active=false,routine=null}={}){
     if(path.endsWith('/weekly-outcome-plans/options'))return ok({startDate:'2026-11-09',endDate:'2027-06-19',weeklyDraftVersion:draftVersion,timeZoneId:'Europe/Istanbul',exams:[{name:'LGS',date:'2027-06-20'}]});
     if(path.endsWith('/weekly-outcome-plans/preview')){const body=req.postDataJSON();previews.push(body);return ok(preview(body));}
     if(path.endsWith('/weekly-outcome-plans/drafts')){
-      const body=req.postDataJSON();writes.push({path,body});if(conflict)return route.fulfill({status:409,json:{message:conflict}});
+      const body=req.postDataJSON();writes.push({path,body});if(conflict)return route.fulfill({status:409,json:{message:conflict,...(conflictCode?{code:conflictCode}:{})}});
       expect(body.fingerprint).toBe('a'.repeat(64));
       generated={id:'generated',version:0,title:body.title,status:'Draft',weeklySource:{draftVersion,learningContextVersion:4,...body.preview,timeZoneId:'Europe/Istanbul'},
         tasks:preview(body.preview).schedule.tasks.map((x,i)=>({id:'new-'+i,title:x.outcome.topicName,plannedDate:x.date,plannedMinutes:x.minutes,plannedStartMinute:x.startMinute,lessonName:x.lessonName,topicId:null,isPinned:false,isCompleted:false,actualMinutes:null,outcomes:[]}))};
@@ -62,7 +64,7 @@ async function fixture(page,{active=false,routine=null}={}){
       return ok({items,totalCount:items.length,pageNumber:1,pageSize:20});}
     if(req.method()!=='GET')writes.push({path});return ok([]);
   });
-  return{writes,previews,proposals,setMissing:v=>missing=v,setConflict:v=>conflict=v};
+  return{writes,previews,proposals,setMissing:v=>missing=v,setConflict:(v,code=null)=>{conflict=v;conflictCode=code;},prefs:()=>prefs};
 }
 const heading=(page,name)=>page.getByRole('heading',{name,exact:true});
 
@@ -121,6 +123,8 @@ test('a new student goes through every step: hours, courses, tempo and summary',
   await page.getByRole('button',{name:'Devam',exact:true}).click();
   await expect(heading(page,'Özet')).toBeVisible();
   await expect.poll(()=>f.proposals.at(-1)?.finishBy).toBe('2027-05-20');
+  // The confirmed tempo is kept in the plan preferences, both values sent.
+  expect(f.prefs()).toMatchObject({examFocus:null,tempo:'Balanced'});
   // "Önemli konulara odaklan" after the week is kept.
   await page.getByRole('button',{name:'Bu haftayla devam et',exact:true}).click();
   await page.getByRole('button',{name:'Önemli konulara odaklan',exact:true}).click();
@@ -136,7 +140,7 @@ test('missing durations block publishing; an existing draft and changed sources 
   await page.getByRole('button',{name:'Bu haftayla devam et',exact:true}).click();
   await expect(page.getByTestId('plan-issues')).toContainText('Onaylı kazanım çalışma süresi eksik.');
   await expect(page.getByRole('button',{name:'Planımı yayımla',exact:true})).toBeDisabled();
-  f.setMissing(false);f.setConflict('Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.');
+  f.setMissing(false);f.setConflict('Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.','StudyPlanning.DraftExists');
   await page.getByRole('button',{name:'Önemli konulara odaklan',exact:true}).click();
   await page.getByRole('button',{name:'Planımı yayımla',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:'Yayımla',exact:true}).click();
   await expect(page.getByTestId('publish-issue')).toContainText('Bekleyen bir plan taslağın var.');

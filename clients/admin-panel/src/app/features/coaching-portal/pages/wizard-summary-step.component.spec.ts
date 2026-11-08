@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
-import { CoachingLearningSetupService, LearningContext } from '../../../core/services/coaching-learning-setup.service';
+import { Subject, of, throwError } from 'rxjs';
+import { CoachingLearningSetupService, LearningCatalog, LearningContext } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 import { CoachingWeeklyDraftService, WeeklyProposal, WeeklyProposalMode } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingWeeklyOutcomePlanService, WeeklyOutcomePreview, WeeklyOutcomeRequest } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { WizardSummaryStepComponent } from './wizard-summary-step.component';
+import { SummaryChoices, WizardSummaryStepComponent } from './wizard-summary-step.component';
 import { WeeklySlot } from './weekly-calendar';
 
 // Paket H4, step 5 "Özet": the proposed week, the yearly preview with its fixes, "Şu konuları öne al", and publishing.
@@ -30,11 +30,14 @@ describe('WizardSummaryStepComponent', () => {
       lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 600, scheduledMinutes: 600, remainingMinutes: 0, finishDate: '2027-04-20', extraWeeklyMinutes: 0 },
         { lessonId: 'tur', lessonName: 'Türkçe', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 900, scheduledMinutes: 810, remainingMinutes: 90, finishDate: null, extraWeeklyMinutes: 30 }] }, ...over });
 
-  async function setup(opts: { slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean } = {}) {
+  async function setup(opts: { slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean; tempo?: 'Relaxed' | 'Balanced' | 'Intense'; choices?: SummaryChoices } = {}) {
     const slots = opts.slots ?? [saved];
     const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 3, timeZoneId: 'Europe/Istanbul', slots } : null, lessons: [], maxDayMinutes: 480 })),
       save: vi.fn((_v: number | null, _tz: string, next: WeeklySlot[]) => of({ version: 4, timeZoneId: 'Europe/Istanbul', slots: next })),
-      proposal: vi.fn((mode: WeeklyProposalMode, ..._rest: unknown[]) => of(proposalOf(mode, [tuesday], { draftVersion: slots.length ? 3 : null }))) };
+      proposal: vi.fn((mode: WeeklyProposalMode, ..._rest: unknown[]) => of(proposalOf(mode, [tuesday], { draftVersion: slots.length ? 3 : null }))),
+      // Replace-mode options (the wizard's own options are for the draft's mode).
+      tempoOptions: vi.fn((..._a: unknown[]) => of({ planEnd: '2027-06-20', options: [{ tempo: 'Relaxed', finishBy: '2027-06-20', neededWeeklyMinutes: 60, capacityWeeklyMinutes: 120, fits: true },
+        { tempo: 'Balanced', finishBy: '2027-05-15', neededWeeklyMinutes: 90, capacityWeeklyMinutes: 120, fits: true }] })) };
     const engine = { options: vi.fn(() => of({ startDate: '2026-11-09', endDate: '2027-06-13', weeklyDraftVersion: 4, timeZoneId: 'Europe/Istanbul', exams: [] })),
       preview: vi.fn((request: WeeklyOutcomeRequest, _s?: string) => of(previewOf(request))), create: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 1 })) };
     const planning = { publish: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 2, title: 'x', status: 'Active', tasks: [] })) };
@@ -51,8 +54,9 @@ describe('WizardSummaryStepComponent', () => {
     const fixture = TestBed.createComponent(WizardSummaryStepComponent), c = fixture.componentInstance;
     c.staffStudentId = opts.staff ? 'student-1' : null; c.finishBy = opts.finishBy === undefined ? '2027-05-12' : opts.finishBy; c.context = context;
     c.windows = opts.windows ?? null; c.tempoNote = opts.tempoNote ?? ''; c.replaceOnOpen = !!opts.replaceOnOpen;
-    const events = { addHours: vi.fn(), planCreated: vi.fn(), contextSaved: vi.fn() };
-    c.addHours.subscribe(events.addHours); c.planCreated.subscribe(events.planCreated); c.contextSaved.subscribe(events.contextSaved);
+    c.finishByMode = slots.length ? 'Fill' : 'Replace'; c.tempo = opts.tempo ?? 'Balanced'; if (opts.choices) c.choices = opts.choices;
+    const events = { addHours: vi.fn(), planCreated: vi.fn(), contextSaved: vi.fn(), draftSaved: vi.fn() };
+    c.addHours.subscribe(events.addHours); c.planCreated.subscribe(events.planCreated); c.contextSaved.subscribe(events.contextSaved); c.draftSaved.subscribe(events.draftSaved);
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     return { fixture, c, el: fixture.nativeElement as HTMLElement, weekly, engine, planning, learning, navigate, events,
       toaster: TestBed.inject(ToasterService) as unknown as { confirm: ReturnType<typeof vi.fn>; success: ReturnType<typeof vi.fn> } };
@@ -83,7 +87,9 @@ describe('WizardSummaryStepComponent', () => {
 
   it('opens with "Haftanı baştan öner" when asked (?yeniden=oner), and keeps the week when the student says no', async () => {
     const { weekly } = await setup({ replaceOnOpen: true });
-    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-05-12');
+    // S1: a Replace on a week with cards asks the Replace options and keeps the tempo (Dengeli).
+    expect(weekly.tempoOptions).toHaveBeenCalledWith(null, undefined, undefined, 'Replace');
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-05-15');
     TestBed.resetTestingModule();
     TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(false), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
     const no = await setup({ replaceOnOpen: true });
@@ -96,14 +102,15 @@ describe('WizardSummaryStepComponent', () => {
     button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable();
     expect(weekly.proposal).toHaveBeenCalledTimes(1);
     button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
-    expect(weekly.proposal).toHaveBeenLastCalledWith('Replace', null, undefined, undefined, '2027-05-12');
-    expect(text(el)).toContain('mevcut haftalık düzeninin yerine geçer');
+    expect(weekly.proposal).toHaveBeenLastCalledWith('Replace', null, undefined, undefined, '2027-05-15');
+    expect(text(el)).toContain('Bu düzen, mevcut haftalık düzeninin yerine geçer.');
   });
 
   it('saves the kept week with its version, then previews the year to the tempo\'s finish date and shows each course', async () => {
-    const { el, fixture, weekly, engine } = await setup();
+    const { el, fixture, weekly, engine, events } = await setup();
     await keep(fixture);
     expect(weekly.save).toHaveBeenCalledWith(3, 'Europe/Istanbul', [saved, tuesday], undefined);
+    expect(events.draftSaved).toHaveBeenCalledWith(true);
     expect(engine.preview).toHaveBeenCalledWith({ startDate: '2026-11-09', endDate: '2027-05-12', expectedWeeklyDraftVersion: 4, reuseFreedSlots: true, engineVersion: 2,
       prioritizeWhenShort: false }, undefined);
     const rows = [...el.querySelectorAll('[data-testid="course-finish"] li')];
@@ -162,12 +169,15 @@ describe('WizardSummaryStepComponent', () => {
     button(el, 'Konu seç')!.click(); fixture.detectChanges();
     expect(learning.catalog).toHaveBeenCalledWith('math', 1);
     c.chooseLesson('tur'); fixture.detectChanges();
-    expect(learning.catalog).toHaveBeenLastCalledWith('tur', 1);
-    c.pickerSearch.set('para'); fixture.detectChanges();
+    // S10: every page of the lesson is read before the search filters it.
+    expect(learning.catalog).toHaveBeenCalledWith('tur', 1); expect(learning.catalog).toHaveBeenLastCalledWith('tur', 2);
+    expect(text(el.querySelector('#focus-count'))).toBe('3 konu');
+    c.choices.pickerSearch.set('ögeler'); fixture.detectChanges();
+    expect([...el.querySelectorAll('.topic-list li')].map(text)).toEqual(['Cümlenin ögeleri Dil bilgisi Öne al']);
+    c.choices.pickerSearch.set('para'); fixture.detectChanges();
     expect([...el.querySelectorAll('.topic-list li')].map(text)).toEqual(['Paragraf Okuma Öne al']);
     (el.querySelector('[aria-label="Paragraf konusunu öne al"]') as HTMLButtonElement).click(); fixture.detectChanges();
-    c.pickerSearch.set(''); button(el, 'Daha fazla konu')!.click(); fixture.detectChanges();
-    expect(learning.catalog).toHaveBeenLastCalledWith('tur', 2);
+    c.choices.pickerSearch.set(''); fixture.detectChanges();
     (el.querySelector('[aria-label="Cümlenin ögeleri konusunu öne al"]') as HTMLButtonElement).click(); fixture.detectChanges();
     expect([...el.querySelectorAll('.chosen-topics li')].map(text)).toEqual(['Türkçe · Paragraf Kaldır', 'Türkçe · Cümlenin ögeleri Kaldır']);
     // The plan cannot be published from a preview made without the chosen topics.
@@ -181,7 +191,7 @@ describe('WizardSummaryStepComponent', () => {
   it('chooses at most 50 topics', async () => {
     const { c } = await setup();
     for (let i = 0; i < 55; i++) c.addTopic({ id: 't' + i, name: 'Konu ' + i, lessonName: 'Türkçe', unitName: '', gradeNumber: null, examCode: null, estimatedMinutes: null });
-    expect(c.focusTopics()).toHaveLength(50);
+    expect(c.choices.focusTopics()).toHaveLength(50);
   });
 
   it('"Planımı yayımla" asks first, creates the plan from the checked preview, publishes it and opens Planım', async () => {
@@ -202,7 +212,7 @@ describe('WizardSummaryStepComponent', () => {
   it('offers Planım when a draft already exists', async () => {
     const { el, fixture, engine, planning } = await setup();
     await keep(fixture);
-    engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.' } })));
+    engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { code: 'StudyPlanning.DraftExists', message: 'Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.' } })));
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
     const issue = el.querySelector('[data-testid="publish-issue"]')!;
     expect(text(issue)).toContain('Bekleyen bir plan taslağın var.');
@@ -210,17 +220,78 @@ describe('WizardSummaryStepComponent', () => {
     expect(planning.publish).not.toHaveBeenCalled();
   });
 
-  it('asks to recompute when the plan\'s sources changed, and names the saved draft when publishing fails', async () => {
-    const { el, fixture, engine, planning } = await setup();
+  it('asks to recompute when the plan\'s sources changed, and blocks publishing until it is', async () => {
+    const { el, fixture, engine } = await setup();
     await keep(fixture);
     engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Haftalık taslak, kazanımlar, süreler veya mevcut çalışmalar değişti. Yeniden önizleyin.' } })));
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
     expect(button(el, 'Yeniden hesapla')).toBeTruthy();
+    expect((el.querySelector('[data-testid="publish-plan"]') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  // Review of PR 135 (S2): a created plan whose publish failed is published again, never created twice.
+  it('names the saved draft when publishing fails and "Yeniden yayımla" only publishes it', async () => {
+    const { el, fixture, engine, planning, navigate } = await setup();
+    await keep(fixture);
     planning.publish.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'Aktif plan değişti.' } })));
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
     const issue = el.querySelector('[data-testid="publish-issue"]')!;
     expect(text(issue)).toContain('Planın taslak olarak kaydedildi ama yayımlanamadı. Aktif plan değişti.');
     expect(issue.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan?plan=new-plan');
+    button(el, 'Yeniden yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(engine.create).toHaveBeenCalledTimes(1);
+    expect(planning.publish).toHaveBeenCalledTimes(2); expect(planning.publish).toHaveBeenLastCalledWith('new-plan', 1);
+    expect(navigate).toHaveBeenCalledWith(['/coaching-portal/plan'], { queryParams: { plan: 'new-plan' } });
+  });
+
+  // Contract item 7: only the code counts; another 409 with a similar sentence is a changed source.
+  it('recognises a pending draft by the server\'s DraftExists code only', async () => {
+    const { el, fixture, engine } = await setup();
+    await keep(fixture);
+    engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.' } })));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(text(el.querySelector('[data-testid="publish-issue"]'))).not.toContain('Bekleyen bir plan taslağın var.');
+    expect(button(el, 'Yeniden hesapla')).toBeTruthy();
+  });
+
+  // Review of PR 135 (S4): the choices belong to the wizard, so a new summary keeps them; "Önemli konulara odaklan" can be undone.
+  it('keeps the chosen topics and the important-topics choice across a new summary, and undoes the latter', async () => {
+    const choices = new SummaryChoices();
+    const first = await setup({ choices });
+    await keep(first.fixture);
+    first.c.addTopic({ id: 'paragraf', name: 'Paragraf', lessonName: 'Türkçe', unitName: '', gradeNumber: null, examCode: null, estimatedMinutes: null });
+    button(first.el, 'Önemli konulara odaklan')!.click(); await first.fixture.whenStable();
+    TestBed.resetTestingModule(); TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
+    const again = await setup({ choices });
+    await keep(again.fixture);
+    expect(again.engine.preview).toHaveBeenLastCalledWith(expect.objectContaining({ prioritizeWhenShort: true, focusTopicIds: ['paragraf'] }), undefined);
+    expect(text(again.el.querySelector('.chosen-topics'))).toContain('Paragraf');
+    button(again.el, 'Bütün konuları planla')!.click(); await again.fixture.whenStable(); again.fixture.detectChanges();
+    expect(again.engine.preview).toHaveBeenLastCalledWith(expect.objectContaining({ prioritizeWhenShort: false }), undefined);
+    expect(button(again.el, 'Önemli konulara odaklan')).toBeTruthy();
+  });
+
+  // S10: an answer for a lesson no longer chosen is dropped.
+  it('ignores a late topic list of a lesson the student left', async () => {
+    const { fixture, el, c, learning } = await setup();
+    await keep(fixture);
+    const slow = new Subject<LearningCatalog>();
+    learning.catalog.mockReturnValueOnce(slow as never);
+    c.choices.pickerOpen.set(true); c.chooseLesson('math'); c.chooseLesson('tur'); fixture.detectChanges();
+    slow.next({ curriculum: null, lessons: [], missingDurationCount: 0, warnings: [], topics: { totalCount: 1, pageNumber: 1, pageSize: 50,
+      items: [{ id: 'carpan', name: 'Çarpanlar', lessonName: 'Matematik', unitName: '', gradeNumber: 8, examCode: 'LGS', estimatedMinutes: 60 }] } });
+    fixture.detectChanges();
+    expect(c.pickerTopics().map(x => x.id)).toEqual(['paragraf', 'fiil', 'cumle']);
+    expect(text(el.querySelector('.topic-list'))).not.toContain('Çarpanlar');
+  });
+
+  // S1: a saved or reloaded draft tells the wizard whether the next proposal is Fill or Replace.
+  it('tells the wizard when the weekly draft was saved, removed from or reloaded', async () => {
+    const { fixture, c, weekly, events } = await setup({ slots: [] });
+    weekly.proposal.mockReturnValueOnce(of(proposalOf('Fill', [tuesday], { draftVersion: 9 })));
+    c.propose('Replace'); fixture.detectChanges();
+    await keep(fixture);
+    expect(events.draftSaved).toHaveBeenCalledWith(false);
   });
 
   it('names the lessons no longer chosen and removes them from the week after a confirmation', async () => {

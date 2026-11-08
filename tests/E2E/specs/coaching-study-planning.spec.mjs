@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { planningToken } from '../support/coaching-planning-session.mjs';
+import { studentShell } from '../support/coaching-student-shell.mjs';
 
 test('real API enforces authentication, product scope, role and student ownership', async ({ request }) => {
   const url = 'http://127.0.0.1:5006/api/coaching/study-planning/plans';
@@ -87,7 +88,7 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   await expect(studyReport.getByText(/Puan hedefine erişim: %88.9/)).toBeVisible();
 });
 
-test('student links a school target and publishes a topic plan within saved capacity', async ({ page }) => {
+test('student links a school target and publishes a plan through the wizard within saved capacity', async ({ page }) => {
   const student = randomUUID();
   await page.route('**/api/auth/refresh-token', route => route.fulfill({ status: 200, contentType: 'application/json',
     body: JSON.stringify({ accessToken: planningToken(student), tokenType: 'Bearer', expiresInMinutes: 15 }) }));
@@ -119,31 +120,42 @@ test('student links a school target and publishes a topic plan within saved capa
   await page.getByRole('button', { name: 'Çalışma saatlerini kaydet', exact: true }).click();
   // F2 (#27): no "Yeniden yükle" after a successful load; the save confirms itself.
   await expect(page.getByText('Çalışma saatlerin kaydedildi.', { exact: false }).first()).toBeVisible();
-  // Paket H4 (K3): "Konulardan plan" left the student wizard; the topic plan endpoints stay, so the draft is made through them here
-  // and published on Planım as before.
+  // Review of PR 135 (S16): the plan is made through the wizard, as a student does: the saved hours, the courses, the tempo, the
+  // summary, then "Planımı yayımla". The shell calls (first-login state, navigation, unread count) come from the shared helper.
+  await page.route('**/api/**', route => studentShell(route, new URL(route.request().url()).pathname) ?? route.fallback());
   const api = 'http://127.0.0.1:5006/api/coaching/study-planning';
   const topics = await page.request.get(`${api}/topics?search=${encodeURIComponent('E2E Kesirler')}&gradeNumber=8&pageNumber=1&pageSize=20`, { headers: auth });
   expect(topics.ok(), await topics.text()).toBeTruthy();
   const topic = (await topics.json()).data.items.find(x => x.name === 'E2E Kesirler');
-  expect(topic).toBeTruthy();
-  const hours = (await (await page.request.get(`${api}/availability`, { headers: auth })).json()).data;
-  const request = { startDate: '2026-10-02', days: 1, expectedAvailabilityVersion: hours.version, topics: [{ topicId: topic.id, requiredMinutes: 30 }] };
-  const previewed = await page.request.post(`${api}/automatic-preview`, { headers: auth, data: request });
-  expect(previewed.ok(), await previewed.text()).toBeTruthy();
-  const preview = (await previewed.json()).data;
-  expect(preview.schedule.scheduledMinutes).toBe(30);
-  const title = `Automatic browser ${randomUUID()}`;
-  const draft = await page.request.post(`${api}/automatic-drafts`, { headers: { ...auth, 'Idempotency-Key': randomUUID() }, data: { title, preview: request,
-    expectedActiveRevisionId: preview.activeRevisionId, expectedActiveRevisionVersion: preview.activeRevisionVersion, expectedEvidenceFingerprint: preview.evidenceFingerprint } });
-  expect(draft.ok(), await draft.text()).toBeTruthy();
-  await page.goto('/coaching-portal/plan');
-  await page.getByRole('button', { name: new RegExp(title) }).click();
-  await page.getByLabel('Planımı kontrol ettim, yayımlamayı onaylıyorum.').check();
-  await page.getByRole('button', { name: 'Planı yayımla', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'E2E Kesirler', exact: true })).toBeVisible();
-  const report = await page.request.get('http://127.0.0.1:5006/api/coaching/study-planning/reports?fromDate=2026-10-02&toDate=2026-10-02', { headers });
+  expect(topic?.lessonId, 'the seeded E2E Kesirler topic names its lesson').toBeTruthy();
+  // The wizard plans the chosen courses: choose the topic's lesson (as Çalışma tercihlerim does).
+  const setupSaved = await page.request.put(`${api}/setup`, { headers: auth, data: { expectedVersion: null, academicYearStart: 2026, purpose: 'Lgs', targetExamYear: 2027,
+    primaryScoreType: null, foreignLanguage: null, targetExamSessionId: null, courses: [{ lessonId: topic.lessonId, priority: 3, selfReportedDifficulty: null }], topics: [],
+    startingStatusReviewed: true } });
+  expect(setupSaved.ok(), await setupSaved.text()).toBeTruthy();
+  await page.goto('/coaching-portal/plan/wizard');
+  await expect(page.getByRole('heading', { name: 'Saatlerin', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Bu saatlerle devam', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Derslerin', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Devam', exact: true }).click();
+  // The tempo step is skipped when only one tempo fits; otherwise the preselected one is kept.
+  const summary = page.getByRole('heading', { name: 'Özet', exact: true });
+  await expect(summary.or(page.getByRole('heading', { name: 'Tempo', exact: true }))).toBeVisible();
+  if (!await summary.isVisible()) await page.getByRole('button', { name: 'Devam', exact: true }).click();
+  await expect(summary).toBeVisible();
+  await page.getByRole('button', { name: 'Bu haftayla devam et', exact: true }).click();
+  await expect(page.getByTestId('course-finish')).toBeVisible();
+  await page.getByRole('button', { name: 'Planımı yayımla', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Yayımla', exact: true }).click();
+  await expect(page).toHaveURL(/\/coaching-portal\/plan\?plan=/);
+  const plans = await page.request.get(`${api}/plans?status=Active&pageNumber=1&pageSize=20`, { headers: auth });
+  const active = (await plans.json()).data.items;
+  expect(active).toHaveLength(1);
+  const plan = (await (await page.request.get(`${api}/plans/${active[0].id}`, { headers: auth })).json()).data;
+  expect(plan.tasks.length).toBeGreaterThan(0);
+  const first = plan.tasks.map(x => x.plannedDate).sort()[0];
+  const report = await page.request.get(`${api}/reports?fromDate=${first}&toDate=${first}`, { headers });
   const data = (await report.json()).data;
-  expect(data).toMatchObject({ scheduledTasks: 1, completedTasks: 0, plannedMinutes: 30, actualMinutes: null });
-  expect(data.topics[0].topicName).toBe('E2E Kesirler');
+  expect(data.scheduledTasks).toBeGreaterThan(0); expect(data.completedTasks).toBe(0);
   expect(data.goals[0].scoreAssessment).toMatchObject({ reason: 'ScoreTargetNotConfigured', comparisons: [] });
 });

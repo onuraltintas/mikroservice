@@ -71,6 +71,9 @@ describe('study routine questions (Paket H4)', () => {
     expect(questionForMessage('Öğlenciysen okul çıkışından en az 1 saat sonrasını seç.')).toBe('after');
     expect(questionForMessage('Akşam yemeğin 17:00 ile 23:00 arasında olmalı.')).toBe('dinner');
     expect(questionForMessage('Bu cevaplarla en az 1 saatlik bir çalışma aralığı kalmıyor; …')).toBe('review');
+    // Review of PR 135 (S13): for a student who does not go to school, the latest end is on the day question.
+    expect(questionForMessage('En geç çalışma saatin 18:00 ile 24:00 arasında olmalı.')).toBe('after');
+    expect(questionForMessage('En geç çalışma saatin 18:00 ile 24:00 arasında olmalı.', 'NoSchool')).toBe('day');
   });
 
   it('summarises the answers plainly, in third person for a teacher', () => {
