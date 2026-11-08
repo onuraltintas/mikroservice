@@ -148,7 +148,7 @@ describe('weekly outcome plan preview',()=>{
     c.generatePreview();expect(service.preview).toHaveBeenLastCalledWith(expect.objectContaining({reuseFreedSlots:false}),undefined);
   });
   // Paket H1 (P10): the server names the lessons no longer chosen; the student gets the way to her weekly routine.
-  // Review of PR #129: matched by the code (not the text), and it is not a stale preview.
+  // Review of PR 129: matched by the code (not the text), and it is not a stale preview.
   const notChosen={status:409,error:{code:'StudyPlanning.LessonsNotChosen',message:'Haftalık düzeninde artık seçili olmayan dersler var: Fizik (AYT), Kimya (AYT). Bu dersleri haftalık düzeninden kaldırıp yeniden önizle.',
     lessons:[{lessonId:'fiz',lessonName:'Fizik (AYT)'},{lessonId:'kim',lessonName:'Kimya (AYT)'}]}};
   it('offers the weekly routine and one-click removal when lessons no longer chosen stop the preview',async ()=>{

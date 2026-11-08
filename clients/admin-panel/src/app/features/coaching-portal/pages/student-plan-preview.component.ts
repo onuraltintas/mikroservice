@@ -50,7 +50,7 @@ export class StudentPlanPreviewComponent implements OnInit {
   private lessons: WeeklyLesson[] = [];
   private courses: WeeklyCourseRank[] = [];
   private version: number | null = null;
-  /** Review of PR #129 (K5): the student's daily limit from the server; the proposal fills a day only up to it. */
+  /** Review of PR 129 (K5): the student's daily limit from the server; the proposal fills a day only up to it. */
   private maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
   readonly clock = clock;
 

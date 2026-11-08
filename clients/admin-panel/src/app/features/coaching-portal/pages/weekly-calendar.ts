@@ -16,7 +16,7 @@ export function calendarDays(anchor:Date,view:CalendarView):Date[]{
 /** Paket H1 (K5): the daily limit when the server does not send one (8 hours). */
 export const DEFAULT_MAX_DAY_MINUTES=480;
 /**
- * Paket H1 (K5): `max` is the student's daily limit from the server (the weekly draft page). Review of PR #129: `saved` is the saved
+ * Paket H1 (K5): `max` is the student's daily limit from the server (the weekly draft page). Review of PR 129: `saved` is the saved
  * draft; a day saved above the limit stays editable and may not rise above its saved total. `staff` gives the teacher's wording.
  */
 export interface DayLimit {max:number;saved?:WeeklySlot[];staff?:boolean}

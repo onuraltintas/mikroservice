@@ -22,7 +22,7 @@ describe('weekly calendar rules',()=>{
     const ten=Array.from({length:10},(_,i)=>({...a,id:'t'+i,startMinute:420+i*60}));
     expect(slotError(extra,[...ten,extra],{max:600})).toBe('Pazartesi günü için en çok 10 saat çalışma koyabilirsin.');
   });
-  // Review of PR #129: a day saved above the limit stays editable; it may not rise above its saved total.
+  // Review of PR 129: a day saved above the limit stays editable; it may not rise above its saved total.
   it('keeps a day saved above the limit editable without letting it grow',()=>{
     const ten=Array.from({length:10},(_,i)=>({...a,id:'t'+i,startMinute:420+i*60}));
     const saved=ten;

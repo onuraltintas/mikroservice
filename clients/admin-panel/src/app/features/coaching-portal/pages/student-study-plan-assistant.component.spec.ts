@@ -110,7 +110,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
     expect(note.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
   });
 
-  // Review of PR #129: without a learning context the student is sent to Çalışma tercihlerim (the old link of the topic list).
+  // Review of PR 129: without a learning context the student is sent to Çalışma tercihlerim (the old link of the topic list).
   it('asks a student without study preferences to complete them first', async () => {
     const { fixture } = await setup({ context: null });
     const el = fixture.nativeElement as HTMLElement;
@@ -120,7 +120,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
     expect(line.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/account/settings');
   });
 
-  // Review of PR #129 (K5): a long free day is proposed only up to the daily limit, so the proposal can be saved.
+  // Review of PR 129 (K5): a long free day is proposed only up to the daily limit, so the proposal can be saved.
   it('proposes at most the daily limit on a long free day and saves it', async () => {
     const saturday: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Saturday', startMinute: 540, endMinute: 1260 }] };
     const minutes = (slots: { durationMinutes: number }[]) => slots.reduce((sum, x) => sum + x.durationMinutes, 0);

@@ -47,7 +47,7 @@ describe('StudentPlanPreviewComponent', () => {
     expect(el.querySelector('[data-testid="unplaced-notice"]')).toBeNull();
   });
 
-  // Review of PR #129 (K5): a long free day is proposed only up to the daily limit sent by the server.
+  // Review of PR 129 (K5): a long free day is proposed only up to the daily limit sent by the server.
   it('proposes at most the daily limit on a long free day', async () => {
     const saturday: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Saturday', startMinute: 540, endMinute: 1260 }] };
     const minutes = (slots: WeeklySlot[]) => slots.reduce((sum, x) => sum + x.durationMinutes, 0);

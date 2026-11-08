@@ -22,7 +22,7 @@ export class StudentWeeklyCalendarComponent implements OnInit {
   readonly weekDays=weekDays;readonly clock=clock;readonly weekday=weekday;readonly minutes=Array.from({length:48},(_,i)=>i*30);readonly views=[{id:'day' as const,label:'Gün'},{id:'week' as const,label:'Hafta'},{id:'month' as const,label:'Ay'}];
   /** Paket H1 (K5): the student's daily limit, from the server (8 hours when it does not say). */
   maxDayMinutes=DEFAULT_MAX_DAY_MINUTES;
-  /** Review of PR #129: the saved week; a day saved above the limit stays editable but may not grow. */
+  /** Review of PR 129: the saved week; a day saved above the limit stays editable but may not grow. */
   private savedSlots:WeeklySlot[]=[];
   private limit(){return {max:this.maxDayMinutes,saved:this.savedSlots};}
   dayLimitHelp(){return `Bir güne en çok ${Math.floor(this.maxDayMinutes/60)} saat çalışma koyabilirsin.`;}

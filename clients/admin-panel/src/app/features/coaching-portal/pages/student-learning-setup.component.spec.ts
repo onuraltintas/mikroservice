@@ -119,7 +119,7 @@ describe('StudentLearningSetupComponent', () => {
     const none = await setup(empty, '/?adim=baslangic');
     expect(none.component.step()).toBe('Purpose');
   });
-  // Review of PR #129: opened from the plan wizard (?donus=sihirbaz), Başlangıç durumum and Plan önizlemesi lead back to it.
+  // Review of PR 129: opened from the plan wizard (?donus=sihirbaz), Başlangıç durumum and Plan önizlemesi lead back to it.
   it('offers the way back to the plan wizard only when it was opened from there', async () => {
     const ready = { ...empty, context, nextStep: 'Preview', isReady: true, missingFields: [] };
     const back = (fixture: { nativeElement: HTMLElement }) => fixture.nativeElement.querySelector('[data-testid="back-to-wizard"]') as HTMLAnchorElement | null;

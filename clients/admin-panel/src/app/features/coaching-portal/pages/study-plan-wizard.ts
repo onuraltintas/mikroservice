@@ -23,7 +23,7 @@ export interface StudyPlanWindow { day: string; startMinute: number; endMinute: 
  * E6 #29: the weekly proposal is made from the saved availability, so the student gives her study times once.
  * The rules are the wizard's: 60-minute cards (30 when only half an hour is left) on the half hour, Monday first,
  * and saved cards are never moved. Paket G #41: the courses take the hours in the order of {@link rankLessons}.
- * Review of PR #129 (K5): a day is filled only until its saved and proposed cards reach `maxDayMinutes`.
+ * Review of PR 129 (K5): a day is filled only until its saved and proposed cards reach `maxDayMinutes`.
  */
 export function createProposalFromWindows(windows: StudyPlanWindow[], lessons: StudyPlanWizardLesson[], existing: WeeklySlot[],
   maxDayMinutes = DEFAULT_MAX_DAY_MINUTES): WeeklySlot[] {

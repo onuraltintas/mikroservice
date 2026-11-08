@@ -32,7 +32,7 @@ describe('weekly draft calendar',()=>{
     graduate.c.add(new Date(2027,0,4),1200);graduate.c.apply();
     expect(graduate.c.formError).toBe('');expect(graduate.c.slots()).toHaveLength(9);
   });
-  // Review of PR #129: a day saved above the limit stays editable and can be saved; it may not grow.
+  // Review of PR 129: a day saved above the limit stays editable and can be saved; it may not grow.
   it('keeps a saved day above the limit editable',async ()=>{
     const ten=Array.from({length:10},(_,i)=>({...slot,id:'m'+i,startMinute:420+i*60}));
     const{c,service}=await setup({version:3,timeZoneId:'Europe/Istanbul',slots:ten});

@@ -38,7 +38,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly unplaced = signal<StudyPlanWizardLesson[]>([]);
   readonly noTimeNotice = noTimeNotice;
   private courseRanks: WeeklyCourseRank[] = [];
-  /** Review of PR #129 (K5): the student's daily limit from the server (the teacher view reads the student's). */
+  /** Review of PR 129 (K5): the student's daily limit from the server (the teacher view reads the student's). */
   private maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
   readonly selectedDays = signal<Weekday[]>([]);
   readonly startTime = signal('18:00');
@@ -68,7 +68,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   /** Paket H1 (P8): the topics marked "Çalıştım" in Başlangıç durumum (edited there, not in the wizard). */
   readonly studiedTopicCount = computed(() => (this.learningContext()?.topicStates ?? []).filter(x => x.declaredStatus === 'Studied').length);
   readonly learningError = signal('');
-  /** Review of PR #129: the study preferences were read (a student without them is sent to Çalışma tercihlerim). */
+  /** Review of PR 129: the study preferences were read (a student without them is sent to Çalışma tercihlerim). */
   readonly learningLoaded = signal(false);
   version: number | null = null;
   timeZoneId = 'Europe/Istanbul';

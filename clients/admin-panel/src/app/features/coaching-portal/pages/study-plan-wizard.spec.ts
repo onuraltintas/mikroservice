@@ -158,7 +158,7 @@ describe('createStudyPlanProposal', () => {
       });
     });
 
-    // Review of PR #129 (K5): a long free day is filled only up to the daily limit, counting the saved cards of that day.
+    // Review of PR 129 (K5): a long free day is filled only up to the daily limit, counting the saved cards of that day.
     it('stops filling a day at the daily limit', () => {
       const saturday = [{ day: 'Saturday', startMinute: 540, endMinute: 1260 }];
       const minutes = (slots: WeeklySlot[]) => slots.reduce((sum, x) => sum + x.durationMinutes, 0);

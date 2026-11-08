@@ -31,12 +31,12 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   readonly totalMinutes=computed(()=>(this.preview()?.schedule.tasks.reduce((sum,x)=>sum+x.minutes,0)??0)+(this.preview()?.protectedTasks?.reduce((sum,x)=>sum+x.minutes,0)??0));
   readonly kindLabel=weeklyPlanKindLabel;readonly savingExamDate=signal(false);
   /**
-   * Paket H1 (P10): the weekly lessons that are no longer chosen and stop the preview (review of PR #129: from the code
+   * Paket H1 (P10): the weekly lessons that are no longer chosen and stop the preview (review of PR 129: from the code
    * StudyPlanning.LessonsNotChosen and its lessons). A student gets the way to her weekly routine and one-click removal.
    */
   readonly notChosen=signal<{lessonId:string;lessonName:string}[]>([]);
   notChosenLessons(){return !this.studentId&&this.notChosen().length>0;}
-  /** Review of PR #129: "Bu dersleri haftalık düzenimden kaldır" — confirm, remove their cards from the saved week, preview again. */
+  /** Review of PR 129: "Bu dersleri haftalık düzenimden kaldır" — confirm, remove their cards from the saved week, preview again. */
   async removeNotChosenLessons(){
     const lessons=this.notChosen();if(this.studentId||!lessons.length||this.busy())return;
     const names=lessons.map(x=>x.lessonName);
@@ -103,7 +103,7 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
       .subscribe({next:r=>this.studentId?this.planCreated.emit(r.id):void this.router.navigate(['/coaching-portal/plan'],{queryParams:{plan:r.id}}),error:e=>this.fail(e,'Plan taslağı kaydedilemedi. Yeniden deneyebilirsin.')});
   }
   private fail(e:{status?:number;error?:{message?:string;code?:string;lessons?:{lessonId:string;lessonName:string}[]}},fallback:string){
-    // Review of PR #129: lessons no longer chosen are not a stale preview; the week has to change first.
+    // Review of PR 129: lessons no longer chosen are not a stale preview; the week has to change first.
     const notChosen=e.status===409&&e.error?.code===LESSONS_NOT_CHOSEN?e.error.lessons??[]:[];this.notChosen.set(notChosen);
     if(e.status===409&&e.error?.code!==LESSONS_NOT_CHOSEN){this.stale.set(true);this.confirmed=false;}this.error.set(e.error?.message??fallback);}
   filter(value:string){this.lessonFilter.set(value);this.page.set(1);}

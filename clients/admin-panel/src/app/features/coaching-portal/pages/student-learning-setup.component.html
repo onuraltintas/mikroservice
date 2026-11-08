@@ -17,7 +17,7 @@
     <nav class="actions" aria-label="Kurulum adımları">@for (item of steps; track item.id) {
       <button type="button" class="secondary" [attr.aria-current]="step() === item.id ? 'step' : null" [disabled]="saving() || loading() || catalogLoading() || (item.id !== 'Profile' && item.id !== 'Purpose' && (!state()?.context || purposeRetired()))" (click)="goTo(item.id)">{{ item.label }}</button>
     }</nav>
-    <!-- Review of PR #129: opened from the plan wizard (?donus=sihirbaz); Başlangıç durumum and Plan önizlemesi lead back to it. -->
+    <!-- Review of PR 129: opened from the plan wizard (?donus=sihirbaz); Başlangıç durumum and Plan önizlemesi lead back to it. -->
     @if (backToWizard && (step() === 'Starting' || step() === 'Preview')) { <p><a data-testid="back-to-wizard" routerLink="/coaching-portal/plan/wizard">Plan sihirbazına dön</a></p> }
   }
   <!-- E3 #14 / F2 #27: the education is edited on Profilim only; a short link instead of a second form. -->
