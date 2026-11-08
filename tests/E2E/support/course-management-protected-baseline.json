@@ -1456,7 +1456,7 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyContinuation.cs": "2937dd59c713e08eef2914ba77a2cd9ccfc47532584edd67bdf561ec30717d49",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyPlanPreferencesService.cs": "e09a3bd61b2fb4622bc42cf50926dbc7d5186e4407b9c2e54f957296536a85c1",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyProgressReconciliation.cs": "470d6efab1dc52ca5f0d1a11727c1e526f2443997d1058d4ee466d7b9641015d",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyRoutineService.cs": "556ed2a13cf4d34adf0d19e26539bf290f8be061007360dd2a6f0f6ce724a39a",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyRoutineService.cs": "6d196b0c6f16cd84fd624d8469628101839d846974e0a02bda647f557f9a6faa",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyWorkReports.cs": "4476d0bf862bed3ab75395597d884db462753bd130bdf798daa16a13e9fb55c9",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingTopicSearchService.cs": "be7561a459a46cc7d1ca233b6ef0f87e2e277748ce0b71a794fcd0b260a66833",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingWeeklyDecisionWork.cs": "4f81ad88ab164b61de95a697b824e4a5e9ff862877df72d5f47e39a3a857f0a8",
@@ -2721,7 +2721,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "Paket H4a plan preferences and tempo option dates",
+    "purpose": "Paket H4a routine keeps plan preferences",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2769,7 +2769,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "583457b6",
+    "previousBaselineCommit": "48f12c23",
     "removedSincePreviousBaseline": []
   }
 }
