@@ -158,6 +158,20 @@ describe('createStudyPlanProposal', () => {
       });
     });
 
+    // Review of PR #129 (K5): a long free day is filled only up to the daily limit, counting the saved cards of that day.
+    it('stops filling a day at the daily limit', () => {
+      const saturday = [{ day: 'Saturday', startMinute: 540, endMinute: 1260 }];
+      const minutes = (slots: WeeklySlot[]) => slots.reduce((sum, x) => sum + x.durationMinutes, 0);
+      expect(minutes(createProposalFromWindows(saturday, lessons, []))).toBe(480);
+      expect(minutes(createProposalFromWindows(saturday, lessons, [], 480))).toBe(480);
+      expect(minutes(createProposalFromWindows(saturday, lessons, [], 600))).toBe(600);
+      const saved: WeeklySlot[] = [{ id: 's', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Saturday', startMinute: 1290, durationMinutes: 60 },
+        { id: 't', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Saturday', startMinute: 1350, durationMinutes: 30 }];
+      expect(minutes(createProposalFromWindows(saturday, lessons, saved, 480))).toBe(390);
+      const full: WeeklySlot[] = Array.from({ length: 9 }, (_, i) => ({ id: 'f' + i, lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Sunday' as const, startMinute: 360 + i * 60, durationMinutes: 60 }));
+      expect(createProposalFromWindows([{ day: 'Sunday', startMinute: 1080, endMinute: 1200 }], lessons, full, 480)).toEqual([]);
+    });
+
     it('returns nothing without windows or lessons', () => {
       expect(createProposalFromWindows([], lessons, [])).toEqual([]);
       expect(createProposalFromWindows([{ day: 'Monday', startMinute: 1020, endMinute: 1140 }], [], [])).toEqual([]);

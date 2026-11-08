@@ -119,6 +119,27 @@ describe('StudentLearningSetupComponent', () => {
     const none = await setup(empty, '/?adim=baslangic');
     expect(none.component.step()).toBe('Purpose');
   });
+  // Review of PR #129: opened from the plan wizard (?donus=sihirbaz), Başlangıç durumum and Plan önizlemesi lead back to it.
+  it('offers the way back to the plan wizard only when it was opened from there', async () => {
+    const ready = { ...empty, context, nextStep: 'Preview', isReady: true, missingFields: [] };
+    const back = (fixture: { nativeElement: HTMLElement }) => fixture.nativeElement.querySelector('[data-testid="back-to-wizard"]') as HTMLAnchorElement | null;
+    const opened = await setup(ready, '/?adim=baslangic&donus=sihirbaz');
+    opened.fixture.detectChanges();
+    expect(back(opened.fixture)?.getAttribute('href')).toBe('/coaching-portal/plan/wizard');
+    expect(back(opened.fixture)?.textContent?.trim()).toBe('Plan sihirbazına dön');
+    await opened.component.goTo('Preview'); opened.fixture.detectChanges();
+    expect(back(opened.fixture)).not.toBeNull();
+    await opened.component.goTo('Courses'); opened.fixture.detectChanges();
+    expect(back(opened.fixture)).toBeNull();
+    TestBed.resetTestingModule();
+    const unknown = await setup(ready, '/?adim=baslangic&donus=baska');
+    unknown.fixture.detectChanges();
+    expect(back(unknown.fixture)).toBeNull();
+    TestBed.resetTestingModule();
+    const plain = await setup(ready, '/?adim=baslangic');
+    plain.fixture.detectChanges();
+    expect(back(plain.fixture)).toBeNull();
+  });
   it('lets the student record and clear topic declarations across paginated topics', async () => {
     const { component, service } = await setup({ ...empty, context, nextStep: 'Starting' });
     component.selectedLesson = 'lesson'; component.loadCatalog(2);

@@ -17,8 +17,8 @@ describe('StudentPlanPreviewComponent', () => {
   const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
   const saved: WeeklySlot[] = [{ id: 'old', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Friday', startMinute: 1080, durationMinutes: 60 }];
   const request = { startDate: '2030-11-04', endDate: '2031-06-01', expectedWeeklyDraftVersion: 1, reuseFreedSlots: true };
-  async function setup(availability: StudyAvailability | null, slots: WeeklySlot[] = [], courses?: { lessonId: string; priority: number; examQuestions: number | null }[]) {
-    const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 1, timeZoneId: 'Europe/Istanbul', slots } : null, lessons, courses })),
+  async function setup(availability: StudyAvailability | null, slots: WeeklySlot[] = [], courses?: { lessonId: string; priority: number; examQuestions: number | null }[], maxDayMinutes?: number) {
+    const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 1, timeZoneId: 'Europe/Istanbul', slots } : null, lessons, courses, maxDayMinutes })),
       save: vi.fn((_version: number | null, zone: string, next: WeeklySlot[]) => of({ version: 1, timeZoneId: zone, slots: next })) };
     const planning = { getAvailability: vi.fn(() => of(availability)) };
     const engine = { options: vi.fn(() => of({ startDate: '2030-11-04', endDate: '2031-06-01', weeklyDraftVersion: 1, timeZoneId: 'Europe/Istanbul', exams: [] })),
@@ -45,6 +45,19 @@ describe('StudentPlanPreviewComponent', () => {
     expect(el.querySelector('a[href="/coaching-portal/plan/weekly"]')?.textContent).toContain('Takvimde düzenle');
     expect(weekly.save).not.toHaveBeenCalled();
     expect(el.querySelector('[data-testid="unplaced-notice"]')).toBeNull();
+  });
+
+  // Review of PR #129 (K5): a long free day is proposed only up to the daily limit sent by the server.
+  it('proposes at most the daily limit on a long free day', async () => {
+    const saturday: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Saturday', startMinute: 540, endMinute: 1260 }] };
+    const minutes = (slots: WeeklySlot[]) => slots.reduce((sum, x) => sum + x.durationMinutes, 0);
+    const school = await setup(saturday);
+    expect(minutes(school.component.proposal())).toBe(480);
+    school.component.saveWeek();
+    expect(school.weekly.save).toHaveBeenCalledOnce();
+    TestBed.resetTestingModule();
+    const graduate = await setup(saturday, [], undefined, 600);
+    expect(minutes(graduate.component.proposal())).toBe(600);
   });
 
   // Paket G #41 (live 07.11): the proposal follows the student's priority and tells which courses got no time.

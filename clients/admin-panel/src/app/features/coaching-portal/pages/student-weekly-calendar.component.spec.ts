@@ -20,15 +20,32 @@ describe('weekly draft calendar',()=>{
     c.changeView('month');fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.querySelector('.month-grid')).not.toBeNull();expect(c.dirty()).toBe(false);
   });
   // Paket H1 (K5): the daily limit comes from the server (10 hours for a graduate); without it the calendar uses 8 hours.
-  it('refuses a card that takes a day over the limit sent by the server',async ()=>{
+  it('refuses a card that takes a day over the limit sent by the server and says the limit up front',async ()=>{
     const day=Array.from({length:8},(_,i)=>({...slot,id:'m'+i,startMinute:480+i*60}));
     const school=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:day});
+    expect((school.fixture.nativeElement.querySelector('.calendar-help') as HTMLElement).textContent).toContain('Bir güne en çok 8 saat çalışma koyabilirsin.');
     school.c.add(new Date(2027,0,4),1200);school.c.apply();
-    expect(school.c.formError).toBe('Pazartesi günü haftalık düzende 8 saatten fazla çalışma olamaz.');
+    expect(school.c.formError).toBe('Pazartesi günü için en çok 8 saat çalışma koyabilirsin.');
     TestBed.resetTestingModule();
     const graduate=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:day},600);
+    expect((graduate.fixture.nativeElement.querySelector('.calendar-help') as HTMLElement).textContent).toContain('Bir güne en çok 10 saat çalışma koyabilirsin.');
     graduate.c.add(new Date(2027,0,4),1200);graduate.c.apply();
     expect(graduate.c.formError).toBe('');expect(graduate.c.slots()).toHaveLength(9);
+  });
+  // Review of PR #129: a day saved above the limit stays editable and can be saved; it may not grow.
+  it('keeps a saved day above the limit editable',async ()=>{
+    const ten=Array.from({length:10},(_,i)=>({...slot,id:'m'+i,startMinute:420+i*60}));
+    const{c,service}=await setup({version:3,timeZoneId:'Europe/Istanbul',slots:ten});
+    c.add(new Date(2027,0,5),1080);c.apply();expect(c.formError).toBe('');
+    c.edit(ten[9]);c.remove();expect(c.slots().filter(x=>x.day==='Monday')).toHaveLength(9);
+    c.add(new Date(2027,0,4),1020);c.apply();expect(c.formError).toBe('');
+    c.add(new Date(2027,0,4),1260);c.apply();expect(c.formError).toBe('Pazartesi günü için en çok 8 saat çalışma koyabilirsin.');
+    c.escape();c.save();expect(service.save).toHaveBeenCalledTimes(1);expect(c.error()).toBe('');
+  });
+  it('names the footer button after the yearly preview it opens',async ()=>{
+    const{fixture}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
+    const button=fixture.nativeElement.querySelector('[data-testid="weekly-preview-link"]') as HTMLElement;
+    expect(button.textContent?.trim()).toBe('Yıllık plan önizlemesine geç →');
   });
   it('opens saved evening cards instead of empty morning hours and preserves scroll while editing',async ()=>{
     const{fixture,c}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});

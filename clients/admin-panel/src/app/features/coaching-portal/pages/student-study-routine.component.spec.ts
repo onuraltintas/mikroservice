@@ -31,7 +31,7 @@ describe('weekly routine tabs', () => {
   it('puts Müsait saatlerim first and explains the two in that order, keeping the tab each route opens', () => {
     const fixture = TestBed.createComponent(StudentStudyRoutineComponent); fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
-    expect(Array.from(el.querySelectorAll('nav button')).map(b => b.textContent?.trim())).toEqual(['Müsait saatlerim', 'Haftalık ders düzenim']);
+    expect(Array.from(el.querySelectorAll('nav button')).map(b => b.textContent?.trim())).toEqual(['Müsait saatlerim', 'Haftalık düzenim']);
     expect(el.querySelector('p')?.textContent?.trim()).toBe('Müsait saatlerin ne zaman çalışabileceğini, haftalık düzenin bu saatlerde hangi derse çalışacağını belirler.');
     expect(fixture.componentInstance.tab).toBe('calendar');
     TestBed.resetTestingModule();

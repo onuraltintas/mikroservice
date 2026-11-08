@@ -156,8 +156,8 @@ public sealed class WeeklyStudyDraftTests
         var eight=Day(lesson,DayOfWeek.Monday,480,8);
         var saved=await svc.SaveAsync(new(null,"Europe/Istanbul",[..eight,..Day(lesson,DayOfWeek.Tuesday,480,8)]),default);
         Assert.Equal(16,saved.Slots.Count);
-        var over=await Assert.ThrowsAsync<ArgumentException>(()=>svc.SaveAsync(new(saved.Version,"Europe/Istanbul",[..eight,Slot(lesson,1200,30)]),default));
-        Assert.Equal("Pazartesi günü haftalık düzende 8 saatten fazla çalışma olamaz.",over.Message);
+        var over=await Assert.ThrowsAsync<StudyPlanValidationException>(()=>svc.SaveAsync(new(saved.Version,"Europe/Istanbul",[..eight,Slot(lesson,1200,30)]),default));
+        Assert.Equal("Pazartesi günü için en çok 8 saat çalışma koyabilirsin.",over.Message);
         Assert.Equal(16,(await svc.GetAsync(default)).Draft!.Slots.Count);
         Assert.IsType<BadRequestObjectResult>(await new WeeklyStudyDraftController(svc).Save(new(saved.Version,"Europe/Istanbul",[..eight,Slot(lesson,1200,30)]),default));
         // A graduate (lise or university) gets 10 hours; a university student keeps 8.
@@ -169,27 +169,34 @@ public sealed class WeeklyStudyDraftTests
         Assert.Equal(600,(await svc.GetAsync(default)).MaxDayMinutes);
         var ten=Day(lesson,DayOfWeek.Monday,420,10);
         saved=await svc.SaveAsync(new(saved.Version,"Europe/Istanbul",ten),default);Assert.Equal(10,saved.Slots.Count);
-        var graduateOver=await Assert.ThrowsAsync<ArgumentException>(()=>svc.SaveAsync(new(saved.Version,"Europe/Istanbul",[..ten,Slot(lesson,1080,30)]),default));
-        Assert.Equal("Pazartesi günü haftalık düzende 10 saatten fazla çalışma olamaz.",graduateOver.Message);
+        var graduateOver=await Assert.ThrowsAsync<StudyPlanValidationException>(()=>svc.SaveAsync(new(saved.Version,"Europe/Istanbul",[..ten,Slot(lesson,1080,30)]),default));
+        Assert.Equal("Pazartesi günü için en çok 10 saat çalışma koyabilirsin.",graduateOver.Message);
         Assert.Equal(600,WeeklyDayLimit.For(Coaching.Domain.Profiles.CoachingEducationStatus.UniversityGraduate));
         Assert.Equal(480,WeeklyDayLimit.For(null));Assert.Equal(480,WeeklyDayLimit.For(Coaching.Domain.Profiles.CoachingEducationStatus.Student));
     }
 
+    // Review of PR #129: a draft saved above the limit stays editable; a day may not rise above max(limit, its saved total).
     [Fact]
-    public async Task ADraftAlreadyOverTheLimitStillLoads_AndOnlyASaveThatLeavesADayOverItIsRejected()
+    public async Task ADraftAlreadyOverTheLimitStaysEditable_AndADayNeverRisesAboveItsSavedTotal()
     {
         await using var f=new CurriculumManagementTests.Fixture();await f.Seed();f.User.Roles=["Student"];
         var lesson=await f.Db.StudyCatalogLessons.SingleAsync();var student=f.User.UserId!.Value;
         var old=WeeklyStudyDraft.Create(student);
-        old.Replace("Europe/Istanbul",Enumerable.Range(0,9).Select(i=>new WeeklyDraftSlot(Guid.NewGuid(),lesson.Id,lesson.Name,lesson.ExamCode,DayOfWeek.Friday,420+i*60,60)).ToArray());
+        old.Replace("Europe/Istanbul",Enumerable.Range(0,10).Select(i=>new WeeklyDraftSlot(Guid.NewGuid(),lesson.Id,lesson.Name,lesson.ExamCode,DayOfWeek.Friday,420+i*60,60)).ToArray());
         f.Db.Add(old);await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
         var svc=Service(f,new(f.Db));var page=await svc.GetAsync(default);
-        Assert.Equal(9,page.Draft!.Slots.Count);
-        var kept=page.Draft.Slots.Select(x=>new WeeklySlotInput(x.Id,x.LessonId,x.Day,x.StartMinute,x.DurationMinutes)).ToArray();
-        var unchanged=await Assert.ThrowsAsync<ArgumentException>(()=>svc.SaveAsync(new(page.Draft.Version,"Europe/Istanbul",kept),default));
-        Assert.Equal("Cuma günü haftalık düzende 8 saatten fazla çalışma olamaz.",unchanged.Message);
-        var fixedDraft=await svc.SaveAsync(new(page.Draft.Version,"Europe/Istanbul",kept[..8]),default);
-        Assert.Equal(8,fixedDraft.Slots.Count);
+        Assert.Equal(10,page.Draft!.Slots.Count);
+        var friday=page.Draft.Slots.Select(x=>new WeeklySlotInput(x.Id,x.LessonId,x.Day,x.StartMinute,x.DurationMinutes)).ToArray();
+        // Another day is edited while Friday stays 2 hours over.
+        var edited=await svc.SaveAsync(new(page.Draft.Version,"Europe/Istanbul",[..friday,..Day(lesson.Id,DayOfWeek.Monday,1080,2)]),default);
+        Assert.Equal(12,edited.Slots.Count);
+        // Friday may go down by one hour…
+        var lower=await svc.SaveAsync(new(edited.Version,"Europe/Istanbul",friday[..9]),default);
+        Assert.Equal(9,lower.Slots.Count);
+        // …but never up again above the limit and its saved total.
+        var raised=await Assert.ThrowsAsync<StudyPlanValidationException>(()=>svc.SaveAsync(new(lower.Version,"Europe/Istanbul",friday),default));
+        Assert.Equal("Cuma günü için en çok 8 saat çalışma koyabilirsin.",raised.Message);
+        Assert.Equal(9,(await svc.GetAsync(default)).Draft!.Slots.Count);
     }
 
     [Fact]
@@ -202,17 +209,37 @@ public sealed class WeeklyStudyDraftTests
         Assert.Equal(480,(await svc.GetForStudentAsync(student,default)).MaxDayMinutes);
         var eight=Day(lesson,DayOfWeek.Sunday,480,8);
         var saved=await svc.SaveForStudentAsync(student,new(null,"Europe/Istanbul",eight),default);
-        var over=await Assert.ThrowsAsync<ArgumentException>(()=>svc.SaveForStudentAsync(student,new(saved.Version,"Europe/Istanbul",[..eight,Slot(lesson,1200,30) with {Day=DayOfWeek.Sunday}]),default));
-        Assert.Equal("Pazar günü haftalık düzende 8 saatten fazla çalışma olamaz.",over.Message);
+        var over=await Assert.ThrowsAsync<StudyPlanValidationException>(()=>svc.SaveForStudentAsync(student,new(saved.Version,"Europe/Istanbul",[..eight,Slot(lesson,1200,30) with {Day=DayOfWeek.Sunday}]),default));
+        Assert.Equal("Pazar günü için en çok 8 saat çalışma konabilir.",over.Message);
         var profile=Coaching.Domain.Profiles.CoachingStudentProfile.Create(student);
         profile.UpdateEducation(Coaching.Domain.Profiles.CoachingEducationStatus.UniversityGraduate,null,null,null,null,null,null,2020);
         f.Db.Add(profile);await f.Db.SaveChangesAsync();
         Assert.Equal(600,(await svc.GetForStudentAsync(student,default)).MaxDayMinutes);
         Assert.Equal(9,(await svc.SaveForStudentAsync(student,new(saved.Version,"Europe/Istanbul",[..eight,Slot(lesson,1200,30) with {Day=DayOfWeek.Sunday}]),default)).Slots.Count);
     }
+    // Review of PR #129: the teacher endpoint shows the daily-limit message; any other invalid input keeps the generic message.
+    [Fact]
+    public void TheTeacherEndpointPassesOnlyTheDailyLimitMessage()
+    {
+        var student=Guid.NewGuid();
+        IActionResult Save(Exception error)=>new CoachingStaffStudyController(null!,null!,null!,null!,null!,new Failing(error),null!,null!)
+            .SaveWeeklyDraft(student,new(null,null,[]),default).GetAwaiter().GetResult();
+        var limit=Assert.IsType<BadRequestObjectResult>(Save(new StudyPlanValidationException("Pazar günü için en çok 8 saat çalışma konabilir.")));
+        Assert.Equal("Pazar günü için en çok 8 saat çalışma konabilir.",Message(limit.Value));
+        var other=Assert.IsType<BadRequestObjectResult>(Save(new ArgumentException("İç ayrıntı")));
+        Assert.Equal("Öğrenci, tarih, plan ve süre alanlarını kontrol edin.",Message(other.Value));
+    }
+    internal static string? Message(object? body)=>body?.GetType().GetProperty("message")?.GetValue(body) as string;
+    private sealed class Failing(Exception error):IWeeklyStudyDraftService
+    {
+        public Task<WeeklyDraftPage> GetAsync(CancellationToken ct)=>throw error;
+        public Task<WeeklyDraftView> SaveAsync(WeeklyDraftInput request,CancellationToken ct)=>throw error;
+        public Task<WeeklyDraftPage> GetForStudentAsync(Guid studentId,CancellationToken ct)=>throw error;
+        public Task<WeeklyDraftView> SaveForStudentAsync(Guid studentId,WeeklyDraftInput request,CancellationToken ct)=>throw error;
+    }
     private static WeeklySlotInput[] Day(Guid lesson,DayOfWeek day,int start,int hours)=>
         Enumerable.Range(0,hours).Select(i=>new WeeklySlotInput(Guid.NewGuid(),lesson,day,start+i*60,60)).ToArray();
-    private sealed class Teaching(Guid student):Coaching.Application.Interfaces.ICoachingIdentityAuthorizationClient
+    internal sealed class Teaching(Guid student):Coaching.Application.Interfaces.ICoachingIdentityAuthorizationClient
     {
         public Task<Coaching.Application.Interfaces.CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid id,CancellationToken ct)=>Task.FromResult<Coaching.Application.Interfaces.CoachingAdminAccessScope?>(null);
         public Task<Guid?> AuthorizeTeacherTargetsAsync(Guid teacher,IReadOnlyCollection<Guid> ids,Guid? institution,bool admin,CancellationToken ct)

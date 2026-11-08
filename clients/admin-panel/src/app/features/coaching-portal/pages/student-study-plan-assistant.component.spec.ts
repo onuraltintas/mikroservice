@@ -19,7 +19,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
     coursePreferences: [{ lessonId: 'math', priority: 2, selfReportedDifficulty: 3 }],
     topicStates: [{ topicId: 'previous-topic', declaredStatus: 'Studied' as const }], startingStatusReviewed: true };
   async function setup(over: Record<string, unknown> = {}, availability: StudyAvailability | null = null, staffStudentId: string | null = null,
-    page: { lessons: typeof lessons; courses?: { lessonId: string; priority: number; examQuestions: number | null }[] } = { lessons }) {
+    page: { lessons: typeof lessons; courses?: { lessonId: string; priority: number; examQuestions: number | null }[]; maxDayMinutes?: number } = { lessons }) {
     const planning = { getAvailability: vi.fn((_studentId?: string | null) => of(availability)),
       saveAvailability: vi.fn((update: StudyAvailabilityUpdate) => of<StudyAvailability>({ version: (update.expectedVersion ?? 0) + 1, timeZoneId: 'Europe/Istanbul', windows: update.windows })) };
     const weekly = { get: vi.fn(() => of({ draft: saved, ...page })), save: vi.fn(() => of({ ...saved, version: 4 })) };
@@ -78,10 +78,10 @@ describe('StudentStudyPlanAssistantComponent', () => {
     const { fixture, learning } = await setup({ context: two });
     const el = fixture.nativeElement as HTMLElement;
     const line = el.querySelector('[data-testid="starting-status"]') as HTMLElement;
-    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Başlangıç durumunda 2 konuyu çalıştım olarak işaretledin. Başlangıç durumunu düzenle');
+    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('“Başlangıç durumum” bölümünde 2 konuyu “Çalıştım” olarak işaretledin. Başlangıç durumunu düzenle');
     expect(line.querySelector('strong')?.textContent).toBe('2 konuyu');
     const link = line.querySelector('a') as HTMLAnchorElement;
-    expect(link.getAttribute('href')).toBe('/coaching-portal/account/settings?adim=baslangic');
+    expect(link.getAttribute('href')).toBe('/coaching-portal/account/settings?adim=baslangic&donus=sihirbaz');
     expect(link.textContent?.trim()).toBe('Başlangıç durumunu düzenle');
     expect(el.textContent).not.toContain('Daha önce çalıştığın konular');
     expect(el.textContent).not.toContain('Konu durumlarını kaydet');
@@ -92,13 +92,13 @@ describe('StudentStudyPlanAssistantComponent', () => {
   it('says when no topic is marked yet', async () => {
     const { fixture } = await setup({ context: { ...context, topicStates: [] } });
     const line = fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement;
-    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Başlangıç durumunda henüz konu işaretlemedin. Başlangıç durumunu düzenle');
+    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('“Başlangıç durumum” bölümünde henüz “Çalıştım” olarak işaretlediğin konu yok. Başlangıç durumunu düzenle');
   });
 
   it('tells a teacher the count in third person, without the link', async () => {
     const { fixture, learning } = await setup({}, null, 'student-1');
     const line = fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement;
-    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Öğrenci başlangıç durumunda 1 konuyu çalıştım olarak işaretledi.');
+    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Öğrenci “Başlangıç durumum” bölümünde 1 konuyu “Çalıştım” olarak işaretledi.');
     expect(line.querySelector('a')).toBeNull();
     expect(learning.catalogForStudent).not.toHaveBeenCalled();
   });
@@ -108,6 +108,39 @@ describe('StudentStudyPlanAssistantComponent', () => {
     const note = fixture.nativeElement.querySelector('[data-testid="grade-purpose"]') as HTMLElement;
     expect(note.textContent).toContain('Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle.');
     expect(note.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
+  });
+
+  // Review of PR #129: without a learning context the student is sent to Çalışma tercihlerim (the old link of the topic list).
+  it('asks a student without study preferences to complete them first', async () => {
+    const { fixture } = await setup({ context: null });
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="starting-status"]')).toBeNull();
+    const line = el.querySelector('[data-testid="preferences-missing"]') as HTMLElement;
+    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Planını hazırlamak için önce çalışma tercihlerini tamamla. Çalışma tercihlerim');
+    expect(line.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/account/settings');
+  });
+
+  // Review of PR #129 (K5): a long free day is proposed only up to the daily limit, so the proposal can be saved.
+  it('proposes at most the daily limit on a long free day and saves it', async () => {
+    const saturday: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Saturday', startMinute: 540, endMinute: 1260 }] };
+    const minutes = (slots: { durationMinutes: number }[]) => slots.reduce((sum, x) => sum + x.durationMinutes, 0);
+    const school = await setup({}, saturday);
+    school.component.createProposal();
+    expect(minutes(school.component.proposal())).toBe(480);
+    school.component.applyProposal();
+    expect(school.component.error()).toBe('');expect(school.weekly.save).toHaveBeenCalledOnce();
+    TestBed.resetTestingModule();
+    const graduate = await setup({}, saturday, null, { lessons, maxDayMinutes: 600 });
+    graduate.component.createProposal();
+    expect(minutes(graduate.component.proposal())).toBe(600);
+    graduate.component.applyProposal();
+    expect(graduate.component.error()).toBe('');expect(graduate.weekly.save).toHaveBeenCalledOnce();
+    TestBed.resetTestingModule();
+    const teacher = await setup({}, saturday, 'student-1', { lessons, maxDayMinutes: 600 });
+    teacher.component.createProposal();
+    expect(minutes(teacher.component.proposal())).toBe(600);
+    teacher.component.applyProposal();
+    expect(teacher.weekly.save).toHaveBeenCalledWith(3, 'Europe/Istanbul', expect.any(Array), 'student-1');
   });
 
   it('creates a proposal and opens the yearly preview without a topic step in between', async () => {
