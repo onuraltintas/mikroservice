@@ -123,6 +123,31 @@ public sealed class WeeklyOutcomePlanTests
         f.Db.Add(weekly);f.Db.Add(Coaching.Domain.Profiles.CoachingStudentProfile.Create(f.User.UserId.Value));f.Db.Add(StudentLearningContext.Create(f.User.UserId.Value,2026,LearningPurpose.Lgs,2027,null,null));await f.Db.SaveChangesAsync();
         return new(f.Db,new CoachingAccessPolicy(f.User),new WeeklyStudyDraftTests.Catalog(f.Db),TimeProvider.System);
     }
+    // Paket H1 (P10, 08.11.2026): the preview names the weekly lessons that are no longer chosen, once each, in Turkish order.
+    [Fact]
+    public async Task PreviewNamesTheWeeklyLessonsNoLongerChosen()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);
+        var weekly=await f.Db.Set<WeeklyStudyDraft>().SingleAsync();Guid kimya=Guid.NewGuid(),fizik=Guid.NewGuid(),cevre=Guid.NewGuid();
+        weekly.Replace(weekly.TimeZoneId,[..weekly.Slots,new(Guid.NewGuid(),kimya,"Kimya (AYT)","AYT",DayOfWeek.Tuesday,1080,60),
+            new(Guid.NewGuid(),fizik,"Fizik (AYT)","AYT",DayOfWeek.Wednesday,1080,60),new(Guid.NewGuid(),kimya,"Kimya (AYT)","AYT",DayOfWeek.Thursday,1080,60),
+            new(Guid.NewGuid(),cevre,"Çevre ve İnsan",null,DayOfWeek.Friday,1080,30)]);
+        await f.Db.SaveChangesAsync();
+        var error=await Assert.ThrowsAsync<BusinessRuleException>(()=>service.PreviewAsync(Input with {ExpectedWeeklyDraftVersion=weekly.Version},default));
+        Assert.Equal("StudyPlanning.Conflict",error.Code);
+        Assert.Equal("Haftalık düzeninde artık seçili olmayan dersler var: Çevre ve İnsan, Fizik (AYT), Kimya (AYT). Bu dersleri haftalık düzeninden kaldırıp yeniden önizle.",error.Message);
+        var api=new Coaching.API.Controllers.WeeklyOutcomePlansController(service);
+        Assert.IsType<Microsoft.AspNetCore.Mvc.ConflictObjectResult>(await api.Preview(Input with {ExpectedWeeklyDraftVersion=weekly.Version},default));
+    }
+    // Paket H1 (08.11.2026): the freed hours of a finished lesson go to the remaining lessons unless the request turns it off.
+    [Fact]
+    public void TheFreedHoursAreUsedUnlessTheRequestSaysOtherwise()
+    {
+        Assert.True(new WeeklyOutcomePlanRequest(new(2027,5,24),new(2027,6,1),1).ReuseFreedSlots);
+        var web=new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        Assert.True(JsonSerializer.Deserialize<WeeklyOutcomePlanRequest>("""{"startDate":"2027-05-24","endDate":"2027-06-01","expectedWeeklyDraftVersion":1}""",web)!.ReuseFreedSlots);
+        Assert.False(JsonSerializer.Deserialize<WeeklyOutcomePlanRequest>("""{"startDate":"2027-05-24","endDate":"2027-06-01","expectedWeeklyDraftVersion":1,"reuseFreedSlots":false}""",web)!.ReuseFreedSlots);
+    }
     // Paket G #41 (07.11.2026): a chosen course without a weekly lesson is named, not silently left out of the yearly plan.
     [Fact]
     public async Task PreviewNamesChosenCoursesWithoutAWeeklyLesson()

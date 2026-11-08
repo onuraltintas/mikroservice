@@ -6,7 +6,7 @@ import {CoachingWeeklyOutcomePlanService} from '../../../core/services/coaching-
 import {StudentWeeklyOutcomePlanComponent} from './student-weekly-outcome-plan.component';
 
 describe('weekly outcome plan preview',()=>{
-  const request={startDate:'2027-05-24',endDate:'2027-06-01',expectedWeeklyDraftVersion:2,reuseFreedSlots:false,engineVersion:2,prioritizeWhenShort:false};
+  const request={startDate:'2027-05-24',endDate:'2027-06-01',expectedWeeklyDraftVersion:2,reuseFreedSlots:true,engineVersion:2,prioritizeWhenShort:false};
   const short={request,timeZoneId:'Europe/Istanbul',fingerprint:'abc',canCreate:false,protectedTaskCount:0,issues:[],schedule:{tasks:[],freeMinutes:0,recommendedEndDate:'2027-06-07',lessons:[{lessonId:'math',lessonName:'Matematik',outcomeCount:3,weeklyMinutes:30,requiredMinutes:80,scheduledMinutes:60,remainingMinutes:20,finishDate:'2027-06-07',extraWeeklyMinutes:30}]}};
   async function setup(studentId?:string){const service={options:vi.fn(()=>of({startDate:request.startDate,endDate:request.endDate,weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[]})),preview:vi.fn(()=>of(short)),create:vi.fn(()=>of({id:'new',version:0})),setExamDate:vi.fn((date:string|null)=>of({startDate:request.startDate,endDate:date?'2027-06-19':'2027-06-12',weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[],examDate:date??'2027-06-13',endDateSource:date?'Student':'Catalog',catalogExamDate:'2027-06-13'}))};TestBed.configureTestingModule({imports:[StudentWeeklyOutcomePlanComponent],providers:[provideRouter([]),{provide:CoachingWeeklyOutcomePlanService,useValue:service}]});vi.spyOn(TestBed.inject(Router),'navigate').mockResolvedValue(true);const fixture=TestBed.createComponent(StudentWeeklyOutcomePlanComponent);fixture.componentRef.setInput('studentId',studentId);fixture.detectChanges(); await fixture.whenStable();return{fixture,c:fixture.componentInstance,service};}
   it('shows the default June deadline and course finish detail without writing a plan',async ()=>{
@@ -131,6 +131,37 @@ describe('weekly outcome plan preview',()=>{
     expect(fixture.nativeElement.querySelector('#date-rules').textContent).toContain('tahmini olduğundan bitişi sınırlamaz');
     c.saveExamDate('2028-06-20');fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Tahmini tarihe dön (17.06.2028)');
+  });
+  // Paket H1 (08.11.2026): the freed hours go to the remaining lessons unless the student turns it off.
+  it('uses the freed hours by default and keeps the choice to turn it off',async ()=>{
+    const{fixture,c,service}=await setup();fixture.detectChanges();
+    const box=fixture.nativeElement.querySelector('input[name="reuse"]') as HTMLInputElement;await fixture.whenStable();
+    expect(c.reuseFreedSlots).toBe(true);expect(box.checked).toBe(true);
+    c.generatePreview();expect(service.preview).toHaveBeenLastCalledWith(expect.objectContaining({reuseFreedSlots:true}),undefined);
+    fixture.detectChanges();expect(fixture.nativeElement.textContent).not.toContain('Erken biten derslerin saatlerini kullan');
+    box.click();fixture.detectChanges();await fixture.whenStable();expect(c.reuseFreedSlots).toBe(false);
+    c.generatePreview();expect(service.preview).toHaveBeenLastCalledWith(expect.objectContaining({reuseFreedSlots:false}),undefined);
+  });
+  // Paket H1 (P10): the server names the lessons no longer chosen; the student gets the way to her weekly routine.
+  it('offers the weekly routine when lessons no longer chosen stop the preview',async ()=>{
+    const message='Haftalık düzeninde artık seçili olmayan dersler var: Fizik (AYT), Kimya (AYT). Bu dersleri haftalık düzeninden kaldırıp yeniden önizle.';
+    const{fixture,c,service}=await setup();service.preview.mockReturnValue(throwError(()=>({status:409,error:{message}})) as any);
+    c.generatePreview();fixture.detectChanges();
+    const alert=fixture.nativeElement.querySelector('[role="alert"]') as HTMLElement;
+    expect(alert.textContent).toContain(message);
+    const link=alert.querySelector('a[href="/coaching-portal/plan/weekly"]') as HTMLAnchorElement;
+    expect(link.textContent?.trim()).toBe('Haftalık düzenini aç');
+    // Any other conflict has no such link.
+    service.preview.mockReturnValue(throwError(()=>({status:409,error:{message:'Haftalık taslak boş veya değişmiş.'}})) as any);
+    c.generatePreview();fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"] a')).toBeNull();
+  });
+  it('shows a teacher only the message about lessons no longer chosen',async ()=>{
+    const message='Haftalık düzeninde artık seçili olmayan dersler var: Fizik (AYT). Bu dersleri haftalık düzeninden kaldırıp yeniden önizle.';
+    const{fixture,c,service}=await setup('student-42');service.preview.mockReturnValue(throwError(()=>({status:409,error:{message}})) as any);
+    c.generatePreview();fixture.detectChanges();
+    const alert=fixture.nativeElement.querySelector('[role="alert"]') as HTMLElement;
+    expect(alert.textContent).toContain(message);expect(alert.querySelector('a')).toBeNull();
   });
   it('keeps the exam date control off the teacher view',async ()=>{
     const{fixture,c,service}=await setup('student-42');

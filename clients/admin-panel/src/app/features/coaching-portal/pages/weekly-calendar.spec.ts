@@ -9,6 +9,18 @@ describe('weekly calendar rules',()=>{
     expect(slotError({...a,startMinute:1410,durationMinutes:60},[])).not.toBe('');
     expect(slotError({...a,startMinute:1410,durationMinutes:30},[])).toBe('');
   });
+  // Paket H1 (K5, 08.11.2026): a day of the weekly routine holds at most 8 hours (10 for graduates; the server sends the limit).
+  it('limits the study of one day',()=>{
+    const monday=Array.from({length:8},(_,i)=>({...a,id:'m'+i,startMinute:480+i*60}));
+    const extra={...a,id:'x',startMinute:1200,durationMinutes:30};
+    expect(slotError(extra,[...monday,extra])).toBe('Pazartesi günü haftalık düzende 8 saatten fazla çalışma olamaz.');
+    expect(slotError(extra,[...monday,extra],480)).toBe('Pazartesi günü haftalık düzende 8 saatten fazla çalışma olamaz.');
+    expect(slotError(extra,[...monday,extra],600)).toBe('');
+    expect(slotError(monday[0],monday)).toBe('');
+    expect(slotError({...extra,day:'Tuesday'},[...monday,{...extra,day:'Tuesday'}])).toBe('');
+    const ten=Array.from({length:10},(_,i)=>({...a,id:'t'+i,startMinute:420+i*60}));
+    expect(slotError(extra,[...ten,extra],600)).toBe('Pazartesi günü haftalık düzende 10 saatten fazla çalışma olamaz.');
+  });
   it('projects the same weekly template across month and year boundaries without UTC shifts',()=>{
     expect(mondayOf(new Date(2027,0,3)).getFullYear()).toBe(2026);
     expect(calendarDays(new Date(2027,0,3),'week').length).toBe(7);

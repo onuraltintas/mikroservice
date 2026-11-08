@@ -2,7 +2,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { StudentLearningSetupComponent } from './student-learning-setup.component';
 import { StudentPlanPreviewComponent } from './student-plan-preview.component';
@@ -16,13 +16,14 @@ describe('StudentLearningSetupComponent', () => {
   beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-11-07T10:00:00Z')); });
   afterEach(() => vi.useRealTimers());
   const empty: LearningSetupView = { context: null, nextStep: 'Purpose', isReady: false, missingFields: ['Purpose'], warnings: [] };
-  async function setup(view = empty) {
+  async function setup(view = empty, url: string | null = null) {
     const service = { get: vi.fn(() => of(view)), save: vi.fn((_request: LearningSetupUpdate) => of(view)),
       impact: vi.fn((_request: { purpose: string; primaryScoreType: string | null; foreignLanguage: string | null }) =>
         of<LearningSetupImpact>({ removedTargets: [], teacherGoalMismatch: false, diplomaGradeRemoved: null })),
       catalog: vi.fn((_lessonId?: string | null, _page?: number) => of({ curriculum: null, lessons: [], topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: ['Katalog hazırlanıyor.'] } as LearningCatalog)) };
     const planning = { getAvailability: vi.fn(() => of(null)), getTopicOutcomes: vi.fn(() => of([{ outcomeId: 'outcome-1', code: 'MAT.8.1.1', name: 'Çarpanları belirler', estimateId: 'estimate-1', estimateNumber: 1, learningMinutes: 20, practiceMinutes: 10, checkMinutes: 5, totalMinutes: 35, editionCode: 'MEB-2026', officialLessonPeriods: null, sourceKind: 'Official' as const }])) };
     TestBed.configureTestingModule({ imports: [StudentLearningSetupComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: CoachingLearningSetupService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: planning }] });
+    if (url) await TestBed.inject(Router).navigateByUrl(url);
     const fixture = TestBed.createComponent(StudentLearningSetupComponent); fixture.detectChanges(); await fixture.whenStable();
     return { fixture, component: fixture.componentInstance, service, planning };
   }
@@ -101,6 +102,22 @@ describe('StudentLearningSetupComponent', () => {
     component.courses[0].priority = 2; component.changed(); component.saveCourses();
     expect(service.save.mock.calls[0][0]).toMatchObject({ expectedVersion: 3, courses: [{ lessonId: 'lesson', priority: 2 }] });
     expect(component.step()).toBe('Starting');
+  });
+  // Paket H1 (08.11.2026): the plan wizard's "Başlangıç durumunu düzenle" opens this page on Başlangıç durumum.
+  it('opens Başlangıç durumum from ?adim=baslangic and ignores other values', async () => {
+    const opened = await setup({ ...empty, context, nextStep: 'Preview', isReady: true, missingFields: [] }, '/?adim=baslangic');
+    expect(opened.component.step()).toBe('Starting');
+    expect(opened.service.catalog).toHaveBeenCalled();
+    TestBed.resetTestingModule();
+    const unknown = await setup({ ...empty, context, nextStep: 'Preview', isReady: true, missingFields: [] }, '/?adim=baska');
+    expect(unknown.component.step()).toBe('Preview');
+    TestBed.resetTestingModule();
+    const plain = await setup({ ...empty, context, nextStep: 'Preview', isReady: true, missingFields: [] });
+    expect(plain.component.step()).toBe('Preview');
+    // Without a saved exam the step cannot open; the page starts where the server says.
+    TestBed.resetTestingModule();
+    const none = await setup(empty, '/?adim=baslangic');
+    expect(none.component.step()).toBe('Purpose');
   });
   it('lets the student record and clear topic declarations across paginated topics', async () => {
     const { component, service } = await setup({ ...empty, context, nextStep: 'Starting' });

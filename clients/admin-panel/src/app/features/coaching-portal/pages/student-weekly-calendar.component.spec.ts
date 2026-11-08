@@ -8,8 +8,8 @@ import {StudentWeeklyCalendarComponent} from './student-weekly-calendar.componen
 describe('weekly draft calendar',()=>{
   const lesson={id:'math',name:'Matematik',examCode:'LGS',gradeNumber:8};
   const slot={id:'one',lessonId:'math',lessonName:'Matematik',examCode:'LGS',day:'Monday' as const,startMinute:1080,durationMinutes:60};
-  async function setup(draft:WeeklyDraft|null=null){
-    const service={get:vi.fn<CoachingWeeklyDraftService['get']>(()=>of({draft,lessons:[lesson]})),save:vi.fn<CoachingWeeklyDraftService['save']>(()=>of({version:1,timeZoneId:'Europe/Istanbul',slots:[slot]}))};
+  async function setup(draft:WeeklyDraft|null=null,maxDayMinutes?:number){
+    const service={get:vi.fn<CoachingWeeklyDraftService['get']>(()=>of({draft,lessons:[lesson],...(maxDayMinutes?{maxDayMinutes}:{})})),save:vi.fn<CoachingWeeklyDraftService['save']>(()=>of({version:1,timeZoneId:'Europe/Istanbul',slots:[slot]}))};
     TestBed.configureTestingModule({imports:[StudentWeeklyCalendarComponent],providers:[provideRouter([]),{provide:CoachingWeeklyDraftService,useValue:service}]});
     const fixture=TestBed.createComponent(StudentWeeklyCalendarComponent);fixture.detectChanges(); await fixture.whenStable();return{fixture,c:fixture.componentInstance,service};
   }
@@ -18,6 +18,17 @@ describe('weekly draft calendar',()=>{
     expect(fixture.nativeElement.querySelectorAll('.view-switch button')).toHaveLength(3);
     expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/plan"]')).not.toBeNull();
     c.changeView('month');fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.querySelector('.month-grid')).not.toBeNull();expect(c.dirty()).toBe(false);
+  });
+  // Paket H1 (K5): the daily limit comes from the server (10 hours for a graduate); without it the calendar uses 8 hours.
+  it('refuses a card that takes a day over the limit sent by the server',async ()=>{
+    const day=Array.from({length:8},(_,i)=>({...slot,id:'m'+i,startMinute:480+i*60}));
+    const school=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:day});
+    school.c.add(new Date(2027,0,4),1200);school.c.apply();
+    expect(school.c.formError).toBe('Pazartesi günü haftalık düzende 8 saatten fazla çalışma olamaz.');
+    TestBed.resetTestingModule();
+    const graduate=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:day},600);
+    graduate.c.add(new Date(2027,0,4),1200);graduate.c.apply();
+    expect(graduate.c.formError).toBe('');expect(graduate.c.slots()).toHaveLength(9);
   });
   it('opens saved evening cards instead of empty morning hours and preserves scroll while editing',async ()=>{
     const{fixture,c}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});

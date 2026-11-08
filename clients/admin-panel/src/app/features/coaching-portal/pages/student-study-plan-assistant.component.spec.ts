@@ -29,7 +29,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
         topics: { items: lessonId ? [{ id: 'topic-2', name: 'Oran', lessonName: 'Matematik', unitName: 'Sayılar', gradeNumber: 8, examCode: 'LGS', estimatedMinutes: 30 }] : [], totalCount: 1, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] })),
       save: vi.fn(() => of({ context: { ...context, version: 9, topicStates: [...context.topicStates, { topicId: 'topic-2', declaredStatus: 'Studied' as const }] }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })) };
     const engine = { options: vi.fn(() => of({ startDate: '2027-05-24', endDate: '2027-06-01', weeklyDraftVersion: 3, timeZoneId: 'Europe/Istanbul', exams: [] })),
-      preview: vi.fn(() => of({ request: { startDate: '2027-05-24', endDate: '2027-06-01', expectedWeeklyDraftVersion: 3, reuseFreedSlots: false },
+      preview: vi.fn(() => of({ request: { startDate: '2027-05-24', endDate: '2027-06-01', expectedWeeklyDraftVersion: 3, reuseFreedSlots: true },
         timeZoneId: 'Europe/Istanbul', fingerprint: 'fingerprint', canCreate: false, protectedTaskCount: 0, issues: [],
         schedule: { tasks: [], freeMinutes: 0, recommendedEndDate: '2027-06-07', lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3,
           weeklyMinutes: 30, requiredMinutes: 80, scheduledMinutes: 60, remainingMinutes: 20, finishDate: '2027-06-07', extraWeeklyMinutes: 30 }] } })),
@@ -71,19 +71,36 @@ describe('StudentStudyPlanAssistantComponent', () => {
     ], undefined);
   });
 
-  it('loads topics from selected courses and saves a completed status without dropping earlier topic states', async () => {
-    const { fixture, component, learning } = await setup(); fixture.detectChanges(); await fixture.whenStable();
-    expect(learning.catalog).toHaveBeenCalledWith(null, 1);
-    expect(learning.catalog).toHaveBeenCalledWith('math', 1);
-    expect(fixture.nativeElement.textContent).toContain('Oran');
-    component.setTopicStatus('topic-2', 'Studied'); component.saveTopicStatuses();
-    expect(learning.save).toHaveBeenCalledWith(expect.objectContaining({
-      expectedVersion: 8, courses: context.coursePreferences,
-      topics: [{ topicId: 'previous-topic', declaredStatus: 'Studied' }, { topicId: 'topic-2', declaredStatus: 'Studied' }],
-      startingStatusReviewed: true
-    }));
-    expect(component.topicSaved()).toBe(true);
-    expect(component.topicDirty()).toBe(false);
+  // Paket H1 (P8, 08.11.2026): the topic list is gone; one line counts the topics marked in Başlangıç durumum and links there.
+  it('counts the studied topics of Başlangıç durumum and links there instead of listing topics', async () => {
+    const two = { ...context, topicStates: [{ topicId: 'a', declaredStatus: 'Studied' as const }, { topicId: 'b', declaredStatus: 'NeedsReview' as const },
+      { topicId: 'c', declaredStatus: 'Studied' as const }] };
+    const { fixture, learning } = await setup({ context: two });
+    const el = fixture.nativeElement as HTMLElement;
+    const line = el.querySelector('[data-testid="starting-status"]') as HTMLElement;
+    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Başlangıç durumunda 2 konuyu çalıştım olarak işaretledin. Başlangıç durumunu düzenle');
+    expect(line.querySelector('strong')?.textContent).toBe('2 konuyu');
+    const link = line.querySelector('a') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/coaching-portal/account/settings?adim=baslangic');
+    expect(link.textContent?.trim()).toBe('Başlangıç durumunu düzenle');
+    expect(el.textContent).not.toContain('Daha önce çalıştığın konular');
+    expect(el.textContent).not.toContain('Konu durumlarını kaydet');
+    expect(el.querySelector('#topic-lesson')).toBeNull();
+    expect(learning.catalog).not.toHaveBeenCalled();
+  });
+
+  it('says when no topic is marked yet', async () => {
+    const { fixture } = await setup({ context: { ...context, topicStates: [] } });
+    const line = fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement;
+    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Başlangıç durumunda henüz konu işaretlemedin. Başlangıç durumunu düzenle');
+  });
+
+  it('tells a teacher the count in third person, without the link', async () => {
+    const { fixture, learning } = await setup({}, null, 'student-1');
+    const line = fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement;
+    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Öğrenci başlangıç durumunda 1 konuyu çalıştım olarak işaretledi.');
+    expect(line.querySelector('a')).toBeNull();
+    expect(learning.catalogForStudent).not.toHaveBeenCalled();
   });
 
   it('asks to update the exam when it no longer fits the grade, without blocking topic saves (review L6)', async () => {
@@ -93,11 +110,12 @@ describe('StudentStudyPlanAssistantComponent', () => {
     expect(note.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
   });
 
-  it('requires changed topic states to be saved before creating a proposal', async () => {
+  it('creates a proposal and opens the yearly preview without a topic step in between', async () => {
     const { component } = await setup();
-    component.toggleDay('Monday'); component.setTopicStatus('math-topic', 'Studied'); component.createProposal();
-    expect(component.proposal()).toHaveLength(0);
-    expect(component.topicError()).toContain('kaydet');
+    component.toggleDay('Monday'); component.createProposal();
+    expect(component.proposal()).toHaveLength(1);
+    component.removeProposal(); component.continueToAnnualReview();
+    expect(component.annualReview()).toBe(true);
   });
 
   it('opens the annual engine as the wizard final step and shows course finish and capacity options', async () => {
@@ -115,7 +133,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
 
   it('sends the checked annual preview to the engine to create its draft', async () => {
     const { fixture, component, engine } = await setup();
-    const request = { startDate: '2027-05-24', endDate: '2027-06-01', expectedWeeklyDraftVersion: 3, reuseFreedSlots: false };
+    const request = { startDate: '2027-05-24', endDate: '2027-06-01', expectedWeeklyDraftVersion: 3, reuseFreedSlots: true };
     engine.preview.mockReturnValue(of({ request, timeZoneId: 'Europe/Istanbul', fingerprint: 'ready-fingerprint', canCreate: true,
       protectedTaskCount: 0, issues: [], schedule: { tasks: [], freeMinutes: 0, recommendedEndDate: '2027-05-31', lessons: [{ lessonId: 'math',
         lessonName: 'Matematik', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 60, scheduledMinutes: 60, remainingMinutes: 0,
@@ -128,7 +146,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
 
   // E6 #29 (live test 06.11): availability is asked in one place; the wizard uses the saved one and saves to the same record.
   // Paket F #37: the proposal appeared ~650 px lower, under "Daha önce çalıştığın konular", and the page did not move.
-  it('shows the proposal above the topics and moves the focus to it', async () => {
+  it('shows the proposal above the starting status line and moves the focus to it', async () => {
     // Review of PR 122: an own property on HTMLElement.prototype is removed again (it would shadow other specs' Element mocks).
     const own = Object.prototype.hasOwnProperty.call(HTMLElement.prototype, 'scrollIntoView'); const original = HTMLElement.prototype.scrollIntoView;
     const scroll = vi.fn(); HTMLElement.prototype.scrollIntoView = scroll;
@@ -139,7 +157,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
       const el = fixture.nativeElement as HTMLElement;
       const proposal = el.querySelector('[data-testid="wizard-proposal"]') as HTMLElement;
       expect(proposal).toBeTruthy();
-      const topics = el.querySelector('.topic-statuses') as HTMLElement;
+      const topics = el.querySelector('[data-testid="starting-status"]') as HTMLElement;
       expect(proposal.compareDocumentPosition(topics) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       for (const label of ['Bu saatleri taslağa ekle', 'Öneriyi kaldır'])
         expect(Array.from(proposal.querySelectorAll('button')).some(b => b.textContent?.trim() === label), label).toBe(true);
