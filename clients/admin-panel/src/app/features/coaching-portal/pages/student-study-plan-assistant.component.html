@@ -90,8 +90,8 @@
             <div class="proposal-day" data-testid="proposal-day"><h3>{{ day.label }}</h3>
               @for (slot of day.slots; track slot.id) { <p class="slot-line proposed">{{ clock(slot.startMinute) }}–{{ clock(slot.startMinute + slot.durationMinutes) }} · {{ slot.lessonName }}</p> }
             </div>
-          } @empty { <p class="muted">Çalışma saatlerinde yeni ders saati için boş yer kalmadı.</p> }
-          <h3>Derslerine ayrılan süre</h3>
+          } @empty { <p class="muted">Müsait saatlerde yeni ders saati için boş yer kalmadı.</p> }
+          <h3>Derslere ayrılan süre</h3>
           <ul class="lesson-hours" data-testid="proposal-lessons">
             @for (lesson of view.lessons; track lesson.lessonId) {
               <li>{{ lesson.lessonName }} · @if (lesson.noTime) { <strong>saat verilemedi</strong> } @else { haftada {{ hours(lesson.existingMinutes + lesson.proposedMinutes) }} saat }</li>
