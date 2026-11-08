@@ -73,7 +73,9 @@ test('Availability is asked in one place and the setup page previews the plan', 
   const setup = await read(`${portal}/pages/student-learning-setup.component.html`);
   assert.match(setup, /<app-student-plan-preview/, 'Plan önizlemesi shows the draft itself');
   const preview = await read(`${portal}/pages/student-plan-preview.component.ts`);
-  assert.match(preview, /createProposalFromWindows/, 'the preview uses the wizard rules');
+  // Paket H2: the wizard and the preview use the same need-based proposal from the server.
+  assert.match(preview, /weekly\.proposal\(/, 'the preview uses the wizard\'s proposal');
+  assert.match(wizardCode, /weekly\.proposal\(/, 'the wizard proposes on the server');
 });
 
 test('Student links stay inside the app instead of reloading the page', async () => {
