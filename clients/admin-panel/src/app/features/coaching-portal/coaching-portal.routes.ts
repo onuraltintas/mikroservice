@@ -20,13 +20,12 @@ const hub = (name: string) => () => import('./layout/student-hub.component').the
  * T2 (31.10.2026): the old student addresses lead to their new place in the six-item menu. String redirects keep the
  * query string, and `:feeId` is carried over, so e-mail, notification and bookmark links keep working.
  */
-export const LEGACY_STUDENT_REDIRECTS: Route[] = [
+export const LEGACY_STUDENT_REDIRECTS: Route[] = [...[
   ['study-plans', 'plan'],
   ['automatic-plan', 'plan/wizard'],
   ['study-plan-assistant', 'plan/wizard'],
   ['weekly-plan', 'plan/weekly'],
   ['study-availability', 'plan/hours'],
-  ['weekly-plan-preview', 'plan/preview'],
   ['goals', 'growth/goals'],
   ['progress', 'growth/week'],
   ['exam-results', 'growth/exams'],
@@ -42,7 +41,12 @@ export const LEGACY_STUDENT_REDIRECTS: Route[] = [
   redirectTo: ({ params, queryParams, fragment }) => inject(Router).createUrlTree(
     ['/coaching-portal', ...to.split('/').map(part => part.startsWith(':') ? params[part.slice(1)] : part)],
     { queryParams, fragment: fragment ?? undefined })
-}));
+} as Route)), {
+  // Paket H4: the old yearly preview page is the wizard's Özet step (one absolute redirect, the query string kept).
+  path: 'weekly-plan-preview', pathMatch: 'full',
+  redirectTo: ({ queryParams, fragment }) => inject(Router).createUrlTree(['/coaching-portal/plan/wizard'],
+    { queryParams: { ...queryParams, adim: 'ozet' }, fragment: fragment ?? undefined })
+}];
 
 export const COACHING_PORTAL_ROUTES: Routes = [
   ...LEGACY_STUDENT_REDIRECTS,
@@ -73,10 +77,11 @@ export const COACHING_PORTAL_ROUTES: Routes = [
         path: 'wizard', canDeactivate: [async (component: StudentStudyPlanAssistantComponent) => await component.canLeavePage()],
         loadComponent: () => import('./pages/student-study-plan-assistant.component').then(m => m.StudentStudyPlanAssistantComponent)
       },
+      // Paket H4: the yearly preview is the wizard's Özet step now; the old address (and its links) lead there.
       {
-        path: 'preview',
-        canDeactivate: [async (component: import('./pages/student-weekly-outcome-plan.component').StudentWeeklyOutcomePlanComponent) => await component.canLeavePage()],
-        loadComponent: () => import('./pages/student-weekly-outcome-plan.component').then(m => m.StudentWeeklyOutcomePlanComponent)
+        path: 'preview', pathMatch: 'full',
+        redirectTo: ({ queryParams, fragment }) => inject(Router).createUrlTree(['/coaching-portal/plan/wizard'],
+          { queryParams: { ...queryParams, adim: 'ozet' }, fragment: fragment ?? undefined })
       }
     ]
   },

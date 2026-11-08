@@ -4,7 +4,9 @@ import {map} from 'rxjs';
 import {environment} from '../../../environments/environment';
 
 /** Roadmap O7: engineVersion 2 applies the rule-based plan engine; prioritizeWhenShort saves a plan that does not fit, important topics first. */
-export interface WeeklyOutcomeRequest {startDate:string;endDate:string;expectedWeeklyDraftVersion:number;reuseFreedSlots:boolean;engineVersion?:number;prioritizeWhenShort?:boolean}
+export interface WeeklyOutcomeRequest {startDate:string;endDate:string;expectedWeeklyDraftVersion:number;reuseFreedSlots:boolean;engineVersion?:number;prioritizeWhenShort?:boolean;
+  /** Paket H4 (K3): up to 50 topics of the weekly lessons that go first within their lesson. */
+  focusTopicIds?:string[]}
 export type WeeklyPlanKind='Learn'|'Review'|'Refresh'|'Spaced';
 export const weeklyPlanKindLabels:Record<string,string>={Learn:'Yeni konu',Review:'Tekrar',Refresh:'Kısa tekrar',Spaced:'Aralıklı tekrar'};
 export function weeklyPlanKindLabel(kind?:string|null){return (kind&&weeklyPlanKindLabels[kind])||'Çalışma';}

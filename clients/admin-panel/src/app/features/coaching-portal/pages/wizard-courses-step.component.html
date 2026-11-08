@@ -1,0 +1,38 @@
+<div class="wizard-step" data-testid="courses-step">
+  <p class="muted">{{ staffStudentId ? 'Öğrencinin seçtiği dersler ve her birine verdiği önem. Bunları yalnız öğrenci değiştirebilir.' : 'Hangi derse daha çok zaman ayıralım? Önemli ve zor bulduğun derslere daha çok saat düşer.' }}</p>
+  @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
+  @for (group of groups(); track group.name) {
+    <section class="course-group" [attr.aria-label]="showGroupNames() ? group.name + ' dersleri' : null">
+      @if (showGroupNames()) { <h3>{{ group.name }}</h3> }
+      @for (row of group.rows; track row.lessonId) {
+        <div class="course-row" data-testid="course-row">
+          <strong class="course-name">{{ row.name }}</strong>
+          @if (staffStudentId) {
+            <p class="muted">Öncelik: {{ priorityLabel(rowPriority(row)) }} · Zorluk: {{ difficultyLabel(rowDifficulty(row)) }}</p>
+          } @else {
+            <fieldset class="chips" [disabled]="saving()" [attr.aria-invalid]="errorFor(row) ? 'true' : null">
+              <legend>{{ row.name }} önceliği</legend>
+              @for (choice of priorities; track choice.value) {
+                <label class="chip"><input type="radio" [name]="'priority-' + row.lessonId" [checked]="rowPriority(row) === choice.value" (change)="setPriority(row, choice.value)" /> {{ choice.label }}</label>
+              }
+            </fieldset>
+            <fieldset class="chips" [disabled]="saving()">
+              <legend>{{ row.name }} zorluğu</legend>
+              @for (choice of difficulties; track choice.value) {
+                <label class="chip"><input type="radio" [name]="'difficulty-' + row.lessonId" [checked]="rowDifficulty(row) === choice.value" (change)="setDifficulty(row, choice.value)" /> {{ choice.label }}</label>
+              }
+            </fieldset>
+            @if (errorFor(row); as message) { <p class="field-error" role="alert">{{ message }}</p> }
+          }
+        </div>
+      }
+    </section>
+  } @empty {
+    <p class="notice" role="status">{{ staffStudentId ? 'Öğrenci henüz ders seçmemiş.' : 'Henüz ders seçmedin.' }}</p>
+  }
+  @if (!staffStudentId) { <p><a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'dersler', donus: 'sihirbaz' }">Ders ekle/çıkar</a></p> }
+  <div class="step-actions">
+    @if (canGoBack) { <button type="button" class="secondary" (click)="back.emit()" [disabled]="saving()">Geri</button> }
+    <button type="button" data-testid="courses-next" (click)="next()" [disabled]="saving()">{{ saving() ? 'Kaydediliyor…' : 'Devam' }}</button>
+  </div>
+</div>

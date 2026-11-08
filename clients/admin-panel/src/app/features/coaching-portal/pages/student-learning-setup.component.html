@@ -160,7 +160,7 @@
       <p class="notice success">Bilgilerin hazır. Mevcut planın, yeni taslağı yayımlayana kadar korunur.</p>
       <!-- E6 #29: the draft preview itself (from the saved availability), not only a link to the wizard. -->
       <app-student-plan-preview [lessonIds]="courseIds()" (editAvailability)="goTo('Availability')" (editCourses)="goTo('Courses')" />
-      <p class="muted">Konuları tek tek seçerek plan hazırlamak istersen: <a routerLink="/coaching-portal/plan/wizard">Plan sihirbazını aç</a></p>
+      <p class="muted">Tempo seçip planını adım adım kurmak istersen: <a routerLink="/coaching-portal/plan/wizard">Plan sihirbazını aç</a></p>
     } @else { <p class="notice">Önizleme için eksik adımları tamamla.</p><button type="button" (click)="load()">Eksik adıma devam et</button> }
   }
 </section>
