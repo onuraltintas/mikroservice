@@ -9,7 +9,7 @@ import { CoachingWeeklyDraftService, WeeklyCourseRank } from '../../../core/serv
 import { CoachingLearningSetupService, LearningContext, RETIRED_PURPOSE_NOTICE, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
-import { clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
+import { DEFAULT_MAX_DAY_MINUTES, clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
 import { StudyPlanWizardLesson, createProposalFromWindows, lessonsWithoutTime, noTimeNotice, rankedWizardLessons } from './study-plan-wizard';
 import { CoachingStudyPlanningService, StudyAvailability, StudyWindow } from '../../../core/services/coaching-study-planning.service';
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
@@ -32,12 +32,14 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   @ViewChild('proposalTitle') private proposalTitle?: ElementRef<HTMLElement>;
   @ViewChild('proposeButton') private proposeButton?: ElementRef<HTMLElement>;
   @ViewChild('savedNotice') private savedNotice?: ElementRef<HTMLElement>;
-  readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Çalışma saatlerinden sana haftalık ders düzeni önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
+  readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Çalışma saatlerinden sana haftalık düzen önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
   readonly proposal = signal<WeeklySlot[]>([]);
   /** Paket G #41: the chosen courses left without an hour by the last proposal (and the saved week), the most important first. */
   readonly unplaced = signal<StudyPlanWizardLesson[]>([]);
   readonly noTimeNotice = noTimeNotice;
   private courseRanks: WeeklyCourseRank[] = [];
+  /** Review of PR #129 (K5): the student's daily limit from the server (the teacher view reads the student's). */
+  private maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
   readonly selectedDays = signal<Weekday[]>([]);
   readonly startTime = signal('18:00');
   readonly minutesPerDay = signal<30 | 60 | 90 | 120>(60);
@@ -66,6 +68,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   /** Paket H1 (P8): the topics marked "Çalıştım" in Başlangıç durumum (edited there, not in the wizard). */
   readonly studiedTopicCount = computed(() => (this.learningContext()?.topicStates ?? []).filter(x => x.declaredStatus === 'Studied').length);
   readonly learningError = signal('');
+  /** Review of PR #129: the study preferences were read (a student without them is sent to Çalışma tercihlerim). */
+  readonly learningLoaded = signal(false);
   version: number | null = null;
   timeZoneId = 'Europe/Istanbul';
   readonly weekDays = weekDays;
@@ -75,18 +79,18 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     this.loadAvailability();
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
-        this.lessons.set(page.lessons); this.courseRanks = page.courses ?? [];
+        this.lessons.set(page.lessons); this.courseRanks = page.courses ?? []; this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES;
         this.slots.set(page.draft?.slots ?? []);
         this.version = page.draft?.version ?? null;
         this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul';
         this.busy.set(false);
         if (!page.lessons.length) this.error.set(this.staffStudentId ? 'Bu öğrenci henüz eğitim bağlamını tamamlamamış. Önce öğrenci kurulumunu tamamla.' : 'Önce çalışma düzeninden ders seçmelisin.');
       },
-      error: () => { this.busy.set(false); this.error.set('Haftalık ders düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
+      error: () => { this.busy.set(false); this.error.set('Haftalık düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
     });
     (this.staffStudentId ? this.learningSetup.getForStudent(this.staffStudentId) : this.learningSetup.get()).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: view => {
-        const context = view.context; this.learningContext.set(context);
+        const context = view.context; this.learningContext.set(context); this.learningLoaded.set(true);
         this.purposeRetired.set(!!view.purposeRetired || isRetiredPurpose(context?.purpose));
         this.purposeNotForEducation.set(!!view.purposeNotForEducation);
       },
@@ -161,7 +165,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   private propose(windows: StudyWindow[]) {
     const selected = new Set((this.learningContext()?.coursePreferences ?? []).map(x => x.lessonId.toLowerCase()));
     const lessons = rankedWizardLessons(this.lessons().filter(x => selected.has(x.id.toLowerCase())), this.courseRanks);
-    const proposal = createProposalFromWindows(windows, lessons, this.slots());
+    const proposal = createProposalFromWindows(windows, lessons, this.slots(), this.maxDayMinutes);
     // Paket G #41: the courses without time are named in a notice under the proposal (with the way to Müsaitliğim).
     const missingLessons = lessonsWithoutTime(lessons, this.slots(), proposal);
     // Review of PR 126: the courses are named once, in the notice; the chat message only points to it.
@@ -183,7 +187,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     if (this.busy() || !this.proposal().length) return;
     const merged = [...this.slots(), ...this.proposal()];
     for (const slot of this.proposal()) {
-      const issue = slotError(slot, merged);
+      const issue = slotError(slot, merged, { max: this.maxDayMinutes, saved: this.slots(), staff: !!this.staffStudentId });
       if (issue) { this.error.set(issue); return; }
     }
     this.busy.set(true); this.error.set('');

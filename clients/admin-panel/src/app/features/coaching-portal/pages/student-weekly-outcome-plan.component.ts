@@ -1,11 +1,12 @@
-import { coachingFeedback } from '../coaching-feedback';
+import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import {CommonModule} from '@angular/common';
 import {Component,DestroyRef,EventEmitter,Input,OnInit,Output,computed,inject,signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router,RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {finalize} from 'rxjs';
+import {finalize,switchMap} from 'rxjs';
 import {CoachingWeeklyOutcomePlanService,WeeklyOutcomeOptions,WeeklyOutcomePreview,WeeklyOutcomeRequest,weeklyPlanKindLabel} from '../../../core/services/coaching-weekly-outcome-plan.service';
+import {CoachingWeeklyDraftService} from '../../../core/services/coaching-weekly-draft.service';
 import {clock} from './weekly-calendar';
 
 @Component({selector:'app-student-weekly-outcome-plan',standalone:true,imports:[CommonModule,FormsModule,RouterLink],templateUrl:'./student-weekly-outcome-plan.component.html',styleUrl:'./student-weekly-outcome-plan.component.scss'})
@@ -15,6 +16,7 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   @Input() autoPreview=false;
   @Output() planCreated=new EventEmitter<string>();
   private readonly service=inject(CoachingWeeklyOutcomePlanService);private readonly destroy=inject(DestroyRef);private readonly router=inject(Router);
+  private readonly weekly=inject(CoachingWeeklyDraftService);private readonly toaster=coachingToaster();
   readonly options=signal<WeeklyOutcomeOptions|null>(null);readonly preview=signal<WeeklyOutcomePreview|null>(null);readonly loading=signal(false);readonly generating=signal(false);readonly saving=signal(false);readonly stale=signal(false);readonly error=signal('');
   readonly lessonFilter=signal('');readonly page=signal(1);readonly pageSize=25;readonly clock=clock;
   readonly filteredTasks=computed(()=>this.preview()?.schedule.tasks.filter(x=>!this.lessonFilter()||x.lessonId===this.lessonFilter())??[]);
@@ -28,8 +30,28 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
     :`${names} için haftalık düzeninde ders saati yok; bu dersler plana hiç girmez. Haftalık takvimine bu dersler için saat ekleyip yeniden önizleyebilirsin.`;}
   readonly totalMinutes=computed(()=>(this.preview()?.schedule.tasks.reduce((sum,x)=>sum+x.minutes,0)??0)+(this.preview()?.protectedTasks?.reduce((sum,x)=>sum+x.minutes,0)??0));
   readonly kindLabel=weeklyPlanKindLabel;readonly savingExamDate=signal(false);
-  /** Paket H1 (P10): the server names the weekly lessons no longer chosen; a student gets the way to her weekly routine. */
-  notChosenLessons(){return !this.studentId&&this.error().startsWith(NOT_CHOSEN_LESSONS);}
+  /**
+   * Paket H1 (P10): the weekly lessons that are no longer chosen and stop the preview (review of PR #129: from the code
+   * StudyPlanning.LessonsNotChosen and its lessons). A student gets the way to her weekly routine and one-click removal.
+   */
+  readonly notChosen=signal<{lessonId:string;lessonName:string}[]>([]);
+  notChosenLessons(){return !this.studentId&&this.notChosen().length>0;}
+  /** Review of PR #129: "Bu dersleri haftalık düzenimden kaldır" — confirm, remove their cards from the saved week, preview again. */
+  async removeNotChosenLessons(){
+    const lessons=this.notChosen();if(this.studentId||!lessons.length||this.busy())return;
+    const names=lessons.map(x=>x.lessonName);
+    const list=names.length>1?`${names.slice(0,-1).join(', ')} ve ${names.at(-1)} dersleri`:`${names[0]} dersi`;
+    if(!await this.toaster.confirm(`${list} haftalık düzeninden kaldırılacak. Devam edelim mi?`,{confirmText:'Kaldır',cancelText:'Vazgeç'}))return;
+    const ids=new Set(lessons.map(x=>x.lessonId.toLowerCase()));
+    this.saving.set(true);this.error.set('');
+    this.weekly.get().pipe(takeUntilDestroyed(this.destroy),switchMap(page=>{
+      const draft=page.draft;if(!draft)throw {status:409};
+      return this.weekly.save(draft.version,draft.timeZoneId,draft.slots.filter(x=>!ids.has(x.lessonId.toLowerCase())));
+    }),finalize(()=>this.saving.set(false))).subscribe({
+      next:saved=>{this.saving.set(false);const opt=this.options();this.notChosen.set([]);if(opt)this.options.set({...opt,weeklyDraftVersion:saved.version});this.stale.set(false);this.generatePreview();},
+      error:e=>this.fail(e,'Haftalık düzenin kaydedilemedi. Yeniden deneyebilirsin.')
+    });
+  }
   // Roadmap O7: the rule-based engine (version 2) is always used by this screen. Paket H1: the freed hours are used by default.
   readonly engineVersion=2;prioritizeWhenShort=false;examDateInput='';
   startDate='';endDate='';reuseFreedSlots=true;title='Haftalık derslerimden çalışma planım';confirmed=false;private defaultEnd=true;
@@ -39,7 +61,7 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   load(){if(this.busy())return;this.loading.set(true);this.error.set('');let loaded=false;this.service.options(this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>{this.loading.set(false);if(loaded&&this.autoPreview&&!this.preview())this.generatePreview();})).subscribe({next:r=>{loaded=true;
     if(!this.options()){this.startDate=r.startDate;this.endDate=r.endDate;}this.options.set(r);this.examDateInput=r.examDate??'';this.changed();this.stale.set(false);
   },error:e=>this.fail(e,'Haftalık taslak yüklenemedi. Önce takvimini kaydet.')} );}
-  changed(){this.preview.set(null);this.confirmed=false;this.page.set(1);this.lessonFilter.set('');this.error.set('');}
+  changed(){this.preview.set(null);this.confirmed=false;this.page.set(1);this.lessonFilter.set('');this.error.set('');this.notChosen.set([]);}
   startChanged(){if(this.defaultEnd&&!this.options()?.examDate&&/^\d{4}-\d{2}-\d{2}$/.test(this.startDate)){const [y,m,d]=this.startDate.split('-').map(Number);this.endDate=`${m<6||m===6&&d===1?y:y+1}-06-01`;}this.changed();}
   endChanged(){this.defaultEnd=false;this.changed();}
   private request():WeeklyOutcomeRequest{return{startDate:this.startDate,endDate:this.endDate,expectedWeeklyDraftVersion:this.options()!.weeklyDraftVersion,reuseFreedSlots:this.reuseFreedSlots,engineVersion:this.engineVersion,prioritizeWhenShort:this.prioritizeWhenShort};}
@@ -55,7 +77,7 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   prioritizeAndPreview(){if(this.busy())return;this.prioritizeWhenShort=true;this.generatePreview();}
   generatePreview(){
     if(this.busy()||!this.options())return;if(!this.startDate||!this.endDate||this.endDate<this.startDate){this.error.set('Başlangıç ve bitiş tarihlerini kontrol et.');return;}const dateIssue=this.dateIssue();if(dateIssue){this.error.set(dateIssue);return;}
-    this.generating.set(true);this.error.set('');this.confirmed=false;this.preview.set(null);this.stale.set(false);
+    this.generating.set(true);this.error.set('');this.notChosen.set([]);this.confirmed=false;this.preview.set(null);this.stale.set(false);
     this.service.preview(this.request(),this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.generating.set(false))).subscribe({next:r=>{this.preview.set(r);this.page.set(1);this.lessonFilter.set('');},error:e=>this.fail(e,'Önizleme hazırlanamadı.')});
   }
   /** T4: K4 date rules shown on the fields — start from today, finish at the latest on the day before the exam. */
@@ -80,13 +102,16 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
     this.saving.set(true);this.error.set('');this.service.create({title:this.title.trim(),preview:p.request,fingerprint:p.fingerprint},this.studentId).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving.set(false)))
       .subscribe({next:r=>this.studentId?this.planCreated.emit(r.id):void this.router.navigate(['/coaching-portal/plan'],{queryParams:{plan:r.id}}),error:e=>this.fail(e,'Plan taslağı kaydedilemedi. Yeniden deneyebilirsin.')});
   }
-  private fail(e:{status?:number;error?:{message?:string}},fallback:string){if(e.status===409){this.stale.set(true);this.confirmed=false;}this.error.set(e.error?.message??fallback);}
+  private fail(e:{status?:number;error?:{message?:string;code?:string;lessons?:{lessonId:string;lessonName:string}[]}},fallback:string){
+    // Review of PR #129: lessons no longer chosen are not a stale preview; the week has to change first.
+    const notChosen=e.status===409&&e.error?.code===LESSONS_NOT_CHOSEN?e.error.lessons??[]:[];this.notChosen.set(notChosen);
+    if(e.status===409&&e.error?.code!==LESSONS_NOT_CHOSEN){this.stale.set(true);this.confirmed=false;}this.error.set(e.error?.message??fallback);}
   filter(value:string){this.lessonFilter.set(value);this.page.set(1);}
   private readonly feedback = coachingFeedback(undefined, this.error);
 }
 
-/** Paket H1 (P10): the start of the server's message about weekly lessons that are no longer chosen. */
-const NOT_CHOSEN_LESSONS='Haftalık düzeninde artık seçili olmayan dersler var';
+/** Paket H1 (P10): the server's code for weekly lessons that are no longer chosen. */
+const LESSONS_NOT_CHOSEN='StudyPlanning.LessonsNotChosen';
 
 function dayBefore(date:string):string{
   const [y,m,d]=date.split('-').map(Number);const day=new Date(Date.UTC(y,m-1,d-1));

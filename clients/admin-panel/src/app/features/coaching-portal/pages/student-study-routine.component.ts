@@ -9,7 +9,7 @@ import { StudentStudyAvailabilityComponent } from './student-study-availability.
   template: `
     <nav class="routine-tabs actions" aria-label="Haftalık düzen bölümleri">
       <button type="button" [attr.aria-pressed]="tab === 'hours'" (click)="tab = 'hours'">Müsait saatlerim</button>
-      <button type="button" [attr.aria-pressed]="tab === 'calendar'" (click)="tab = 'calendar'">Haftalık ders düzenim</button>
+      <button type="button" [attr.aria-pressed]="tab === 'calendar'" (click)="tab = 'calendar'">Haftalık düzenim</button>
     </nav>
     <p>Müsait saatlerin ne zaman çalışabileceğini, haftalık düzenin bu saatlerde hangi derse çalışacağını belirler.</p>
     <div [hidden]="tab !== 'calendar'"><app-student-weekly-calendar /></div>

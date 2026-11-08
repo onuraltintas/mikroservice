@@ -15,11 +15,20 @@ export function calendarDays(anchor:Date,view:CalendarView):Date[]{
 }
 /** Paket H1 (K5): the daily limit when the server does not send one (8 hours). */
 export const DEFAULT_MAX_DAY_MINUTES=480;
-/** Paket H1 (K5): `maxDayMinutes` is the student's daily limit from the server (the weekly draft page). */
-export function slotError(s:WeeklySlot,slots:WeeklySlot[],maxDayMinutes=DEFAULT_MAX_DAY_MINUTES):string{
+/**
+ * Paket H1 (K5): `max` is the student's daily limit from the server (the weekly draft page). Review of PR #129: `saved` is the saved
+ * draft; a day saved above the limit stays editable and may not rise above its saved total. `staff` gives the teacher's wording.
+ */
+export interface DayLimit {max:number;saved?:WeeklySlot[];staff?:boolean}
+const dayMinutes=(slots:WeeklySlot[],day:Weekday)=>slots.filter(x=>x.day===day).reduce((sum,x)=>sum+x.durationMinutes,0);
+export function dayLimitError(day:Weekday,limit:DayLimit){
+  const name=weekDays.find(d=>d.value===day)?.label??day;const hours=Math.floor(limit.max/60);
+  return limit.staff?`${name} günü için en çok ${hours} saat çalışma konabilir.`:`${name} günü için en çok ${hours} saat çalışma koyabilirsin.`;
+}
+export function slotError(s:WeeklySlot,slots:WeeklySlot[],limit:DayLimit={max:DEFAULT_MAX_DAY_MINUTES}):string{
   if(!s.lessonId || !weekDays.some(d=>d.value===s.day))return 'Ders ve gün seç.';
   if(!Number.isInteger(s.startMinute)||s.startMinute<0||s.startMinute%30||![30,60].includes(s.durationMinutes)||s.startMinute+s.durationMinutes>1440)return 'Başlangıç :00 veya :30; süre 30 veya 60 dakika olmalı. Kart günün dışına çıkamaz.';
   if(slots.some(x=>x.id!==s.id&&x.day===s.day&&s.startMinute<x.startMinute+x.durationMinutes&&s.startMinute+s.durationMinutes>x.startMinute))return 'Bu saat başka bir dersle çakışıyor.';
-  const day=slots.filter(x=>x.id!==s.id&&x.day===s.day).reduce((sum,x)=>sum+x.durationMinutes,s.durationMinutes);
-  return day>maxDayMinutes?`${weekDays.find(d=>d.value===s.day)!.label} günü haftalık düzende ${Math.floor(maxDayMinutes/60)} saatten fazla çalışma olamaz.`:'';
+  const day=dayMinutes(slots.filter(x=>x.id!==s.id),s.day)+s.durationMinutes;
+  return day>Math.max(limit.max,dayMinutes(limit.saved??[],s.day))?dayLimitError(s.day,limit):'';
 }

@@ -73,13 +73,15 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         // G2 review (M2): an estimated exam date sets the default end only; it is no limit.
         if(window.ExamDate is {} examDate&&window.EndDateSource!="Estimated"&&request.EndDate>=examDate)
             throw new ArgumentException($"Plan sınav gününden önce bitmeli. En geç {examDate.AddDays(-1):dd.MM.yyyy} tarihini seçin.");
-        var choices=(staffAccess is not null && access.CurrentUserId != student
+        var staffView=staffAccess is not null && access.CurrentUserId != student;
+        var choices=(staffView
             ? await setup.GetCatalogForStudentAsync(student,null,1,ct)
             : await setup.GetCatalogAsync(null,1,ct)).Lessons.ToDictionary(x=>x.Id);
         var lessonIds=draft.Slots.Select(x=>x.LessonId).Distinct().OrderBy(x=>x).ToArray();
-        // Paket H1 (P10): the lessons no longer chosen are named by the names saved with the weekly cards.
-        var notChosen=draft.Slots.Where(x=>!choices.ContainsKey(x.LessonId)).Select(x=>x.LessonName).Distinct().Order(StringComparer.Create(Turkish,false)).ToArray();
-        if(notChosen.Length>0)throw Conflict($"Haftalık düzeninde artık seçili olmayan dersler var: {string.Join(", ",notChosen)}. Bu dersleri haftalık düzeninden kaldırıp yeniden önizle.");
+        // Paket H1 (P10): the lessons no longer chosen are named by the names saved with the weekly cards (review of PR #129: own code).
+        var notChosen=draft.Slots.Where(x=>!choices.ContainsKey(x.LessonId)).GroupBy(x=>x.LessonId).Select(x=>new WeeklyUnscheduledLesson(x.Key,x.First().LessonName))
+            .OrderBy(x=>x.LessonName,StringComparer.Create(Turkish,false)).ToArray();
+        if(notChosen.Length>0)throw WeeklyLessonsNotChosen.Create(notChosen,staffView);
         var context=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
         var year=context?.AcademicYearStart??(clock.GetUtcNow().Month>=9?clock.GetUtcNow().Year:clock.GetUtcNow().Year-1);
         var catalogTopics=await (from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id

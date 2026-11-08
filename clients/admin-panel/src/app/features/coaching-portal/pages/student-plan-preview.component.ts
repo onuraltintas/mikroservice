@@ -8,7 +8,7 @@ import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/s
 import { CoachingWeeklyDraftService, WeeklyCourseRank, WeeklyLesson } from '../../../core/services/coaching-weekly-draft.service';
 import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
 import { StudyPlanWizardLesson, createProposalFromWindows, lessonsWithoutTime, noTimeNotice, rankedWizardLessons } from './study-plan-wizard';
-import { WeeklySlot, clock, weekDays } from './weekly-calendar';
+import { DEFAULT_MAX_DAY_MINUTES, WeeklySlot, clock, weekDays } from './weekly-calendar';
 
 /**
  * E6 #29 (live test 06.11): "Plan önizlemesi" in Çalışma tercihlerim. It shows the draft itself: the weekly lessons made
@@ -50,6 +50,8 @@ export class StudentPlanPreviewComponent implements OnInit {
   private lessons: WeeklyLesson[] = [];
   private courses: WeeklyCourseRank[] = [];
   private version: number | null = null;
+  /** Review of PR #129 (K5): the student's daily limit from the server; the proposal fills a day only up to it. */
+  private maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
   readonly clock = clock;
 
   ngOnInit() { this.load(); }
@@ -62,6 +64,7 @@ export class StudentPlanPreviewComponent implements OnInit {
     }).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading.set(false))).subscribe({
       next: ({ page, availability }) => {
         this.lessons = page.lessons; this.courses = page.courses ?? []; this.version = page.draft?.version ?? null;
+        this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES;
         this.slots.set(page.draft?.slots ?? []); this.availability.set(availability ?? null);
         this.loaded = true; this.propose();
       },
@@ -76,7 +79,7 @@ export class StudentPlanPreviewComponent implements OnInit {
     this.chosenLessons.set(lessons);
     const ranked = rankedWizardLessons(lessons, this.courses);
     const fresh = !this.slots().length || this.rebuilding();
-    const proposal = fresh ? createProposalFromWindows(this.availability()?.windows ?? [], ranked, []) : [];
+    const proposal = fresh ? createProposalFromWindows(this.availability()?.windows ?? [], ranked, [], this.maxDayMinutes) : [];
     this.proposal.set(proposal);
     // Review of PR 126: a saved week also names the chosen courses it leaves without time.
     this.unplaced.set(fresh && !this.hasAvailability() ? [] : lessonsWithoutTime(ranked, fresh ? [] : this.slots(), proposal));

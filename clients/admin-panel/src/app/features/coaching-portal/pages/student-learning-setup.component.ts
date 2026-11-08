@@ -37,7 +37,10 @@ export class StudentLearningSetupComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject(ElementRef<HTMLElement>);
   /** Paket H1 (08.11.2026): ?adim=baslangic (the plan wizard's "Başlangıç durumunu düzenle") opens Başlangıç durumum once. */
-  private openStarting = inject(ActivatedRoute, { optional: true })?.snapshot?.queryParamMap?.get('adim') === 'baslangic';
+  private readonly query = inject(ActivatedRoute, { optional: true })?.snapshot?.queryParamMap;
+  private openStarting = this.query?.get('adim') === 'baslangic';
+  /** Review of PR #129: ?donus=sihirbaz (only this value) shows "Plan sihirbazına dön" on Başlangıç durumum and Plan önizlemesi. */
+  readonly backToWizard = this.query?.get('donus') === 'sihirbaz';
   readonly apiUrl = environment.apiUrl;
   readonly state = signal<LearningSetupView | null>(null); readonly step = signal('Purpose');
   readonly loading = signal(false); readonly saving = signal(false); readonly ready = signal(false);

@@ -60,14 +60,19 @@ public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachi
         var candidate=WeeklyStudyDraft.Create(student);
         var zone=Coaching.Domain.CoachingTime.ZoneId; // E3 #34: a zone sent by the client is ignored
         candidate.Replace(zone,r.Slots.Select(x=>new WeeklyDraftSlot(x.Id,x.LessonId,choices[x.LessonId].Name,choices[x.LessonId].ExamCode,x.Day,x.StartMinute,x.DurationMinutes)).ToArray());
-        // Paket H1 (K5): a save may not leave a day above the student's daily limit; a saved draft above it still loads.
-        var limit=await DayLimit(student,ct);
-        var full=candidate.Slots.GroupBy(x=>x.Day).Where(x=>x.Sum(s=>(long)s.DurationMinutes)>limit).Select(x=>x.Key)
-            .OrderBy(x=>((int)x+6)%7).ToArray();
-        if(full.Length>0)throw new ArgumentException($"{DayName(full[0])} günü haftalık düzende {limit/60} saatten fazla çalışma olamaz.");
         var draft=await db.Set<WeeklyStudyDraft>().SingleOrDefaultAsync(x=>x.StudentId==student,ct);
         if(draft is not null) await db.Entry(draft).ReloadAsync(ct);
         if(draft is null ? r.ExpectedVersion.HasValue : r.ExpectedVersion!=draft.Version) throw Conflict();
+        // Paket H1 (K5): a day may hold at most the student's daily limit. Review of PR #129: a day saved above it stays editable;
+        // it may not rise above max(limit, its saved total). A new draft has saved totals of 0.
+        var limit=await DayLimit(student,ct);
+        var savedTotals=(draft?.Slots??[]).GroupBy(x=>x.Day).ToDictionary(x=>x.Key,x=>x.Sum(s=>(long)s.DurationMinutes));
+        var full=candidate.Slots.GroupBy(x=>x.Day)
+            .Where(x=>x.Sum(s=>(long)s.DurationMinutes)>Math.Max(limit,savedTotals.GetValueOrDefault(x.Key))).Select(x=>x.Key)
+            .OrderBy(x=>((int)x+6)%7).ToArray();
+        if(full.Length>0)throw new StudyPlanValidationException(staff
+            ?$"{DayName(full[0])} günü için en çok {limit/60} saat çalışma konabilir."
+            :$"{DayName(full[0])} günü için en çok {limit/60} saat çalışma koyabilirsin.");
         if(draft is null) db.Add(draft=candidate);else draft.Replace(candidate.TimeZoneId,candidate.Slots);
         try { await db.SaveChangesAsync(ct); }
         catch(ConcurrencyException) { db.Entry(draft).State=EntityState.Detached;throw Conflict(); }

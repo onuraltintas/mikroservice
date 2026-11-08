@@ -5,7 +5,7 @@
 <section class="study-plans assistant-page" aria-labelledby="assistant-title">
   <header class="page-heading">
     <div><p class="eyebrow">{{ staffStudentId ? 'ÖĞRENCİ İÇİN PLAN SİHİRBAZI' : 'PLAN SİHİRBAZI' }}</p><h1 id="assistant-title">{{ staffStudentId ? 'Öğrenci için plan hazırla' : 'Planını adım adım hazırla' }}</h1>
-      <p>{{ staffStudentId ? 'Öğrencinin çalışma saatlerini, kazanımlarını ve haftalık taslağını kullanarak plan önerisi hazırla.' : 'Çalışma saatlerinden haftalık ders düzenini önizle ve kendin onayla.' }}</p></div>
+      <p>{{ staffStudentId ? 'Öğrencinin çalışma saatlerini, kazanımlarını ve haftalık taslağını kullanarak plan önerisi hazırla.' : 'Çalışma saatlerinden haftalık düzenini önizle ve kendin onayla.' }}</p></div>
     @if (!staffStudentId) { <a routerLink="/coaching-portal/plan/weekly">Takvimde kendim düzenle ↗</a> }
   </header>
   <div class="assistant-layout">
@@ -87,14 +87,15 @@
       @if (learningContext() && !purposeRetired()) {
         <p class="starting-status" data-testid="starting-status">
           @if (staffStudentId) {
-            @if (studiedTopicCount()) { Öğrenci başlangıç durumunda <strong>{{ studiedTopicCount() }} konuyu</strong> çalıştım olarak işaretledi. }
-            @else { Öğrenci başlangıç durumunda henüz konu işaretlemedi. }
+            Öğrenci “Başlangıç durumum” bölümünde {{ studiedTopicCount() }} konuyu “Çalıştım” olarak işaretledi.
           } @else {
-            @if (studiedTopicCount()) { Başlangıç durumunda <strong>{{ studiedTopicCount() }} konuyu</strong> çalıştım olarak işaretledin. }
-            @else { Başlangıç durumunda henüz konu işaretlemedin. }
-            <a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'baslangic' }">Başlangıç durumunu düzenle</a>
+            @if (studiedTopicCount()) { “Başlangıç durumum” bölümünde <strong>{{ studiedTopicCount() }} konuyu</strong> “Çalıştım” olarak işaretledin. }
+            @else { “Başlangıç durumum” bölümünde henüz “Çalıştım” olarak işaretlediğin konu yok. }
+            <a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'baslangic', donus: 'sihirbaz' }">Başlangıç durumunu düzenle</a>
           }
         </p>
+      } @else if (!learningContext() && !staffStudentId && learningLoaded()) {
+        <p class="starting-status" data-testid="preferences-missing">Planını hazırlamak için önce çalışma tercihlerini tamamla. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
       }
       @if (learningError()) { <p class="notice error" role="alert">{{ learningError() }}</p> }
       <h2>Haftalık düzen</h2>

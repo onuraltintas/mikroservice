@@ -1,6 +1,6 @@
 <section class="outcome-page" aria-labelledby="outcome-plan-title">
   <header><div><p class="eyebrow">HAFTALIK RİTMİNDEN YILLIK PLANA</p><h1 id="outcome-plan-title">Çalışma planını önizle</h1><p>Kazanımları kaydettiğin ders saatlerine yerleştir, bitişleri karşılaştır ve sonra taslağını oluştur.</p></div>@if(!studentId){<a routerLink="/coaching-portal/plan/weekly">← Haftalık takvimim</a><a routerLink="/coaching-portal/plan">Mevcut planlarım →</a>}</header>
-  @if(error()){<p role="alert" class="notice error">{{ error() }}@if(notChosenLessons()){ <a routerLink="/coaching-portal/plan/weekly">Haftalık düzenini aç</a>}</p>}
+  @if(error()){<p role="alert" class="notice error">{{ error() }}@if(notChosenLessons()){ <a routerLink="/coaching-portal/plan/weekly">Haftalık düzenini aç</a> <button type="button" class="secondary" (click)="removeNotChosenLessons()" [disabled]="busy()">Bu dersleri haftalık düzenimden kaldır</button>}</p>}
   @if(loading()){<p role="status">Kayıtlı haftan yükleniyor…</p>}
   @if(!options()&&!loading()){<button type="button" (click)="load()">Yeniden dene</button>}
   @if(options();as opt){
