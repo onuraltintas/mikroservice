@@ -86,7 +86,7 @@ export class StudentPlanPreviewComponent implements OnInit {
     // Paket H2: a whole new week from the server (by each course's need), saved only on the student's click.
     this.proposing.set(true);
     this.request = this.weekly.proposal('Replace', null).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.proposing.set(false))).subscribe({
-      next: view => { this.proposal.set(view.slots); this.unplaced.set(view.lessons.filter(lesson => lesson.noTime).map(lesson => lesson.lessonName)); },
+      next: view => { this.proposal.set(view?.slots ?? []); this.unplaced.set((view?.lessons ?? []).filter(lesson => lesson.noTime).map(lesson => lesson.lessonName)); },
       error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık öneri hazırlanamadı. Yeniden deneyebilirsin.')
     });
   }
