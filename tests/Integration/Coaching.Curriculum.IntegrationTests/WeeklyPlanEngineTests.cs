@@ -70,6 +70,9 @@ public sealed class WeeklyPlanEngineTests
         // A focus topic that is also an exam-error topic keeps both reasons.
         var both = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid> { focus }, new HashSet<Guid> { focus });
         Assert.StartsWith("Öne almak istediğin konu · Son denemelerde", both[0].Outcomes[0].Reason);
+        // A teacher's choice says so (review of PR #132, S2).
+        var teacher = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid>(), new HashSet<Guid> { focus }, WeeklyPlanEngine.TeacherFocusReason);
+        Assert.Equal("Öğretmeninin öne aldığı konu", teacher[0].Outcomes[0].Reason);
         // When time is short, high-yield topics follow the focus topics.
         var shortened = WeeklyPlanEngine.PrioritizeByYield(shaped, [Math], new Dictionary<Guid, int> { [first] = 5 }, new HashSet<Guid> { weak }, new HashSet<Guid> { focus });
         Assert.Equal(new[] { focus, focus, weak, first }, shortened[0].Outcomes.Select(x => x.TopicId));

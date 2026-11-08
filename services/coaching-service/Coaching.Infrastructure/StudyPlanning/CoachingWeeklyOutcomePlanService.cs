@@ -72,9 +72,12 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         if(request.EngineVersion is not (1 or WeeklyPlanEngine.CurrentVersion))throw new ArgumentException("Bilinmeyen plan motoru sürümü.");
         var v2=request.EngineVersion==WeeklyPlanEngine.CurrentVersion;
         var staffView=staffAccess is not null && access.CurrentUserId != student;
-        // Paket H4a: the focus topics, each once in the order sent; an empty list is none (so its fingerprint is the one without).
-        var focusIds=request.FocusTopicIds?.Distinct().ToArray();
+        // Paket H4a: the focus topics, each once and sorted (their order changes nothing); an empty list is none (so its fingerprint is
+        // the one without). Only engine version 2 brings topics forward (review of PR #132).
+        var focusIds=request.FocusTopicIds?.Distinct().Order().ToArray();
         if(focusIds is {Length:>50})throw new ArgumentException(staffView?"En çok 50 konu öne alınabilir.":"En çok 50 konuyu öne alabilirsin.");
+        if(focusIds is {Length:>0}&&!v2)throw new ArgumentException(staffView?"Öğrencinin konularını öne almak için yeni plan motoru gerekiyor."
+            :"Konuları öne almak için yeni plan motoru gerekiyor.");
         request=request with {FocusTopicIds=focusIds is {Length:>0}?focusIds:null};
         var draft=await Draft(student,ct);
         if(request.ExpectedWeeklyDraftVersion<0||request.ExpectedWeeklyDraftVersion!=draft.Version||draft.Slots.Count==0)throw Conflict("Haftalık taslak boş veya değişmiş. Takvimi yeniden yükleyin.");
@@ -101,8 +104,9 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             draft.Slots.Select(x=>(x.Day,x.StartMinute,x.StartMinute+x.DurationMinutes,(Guid?)x.LessonId)).ToArray());
         var pending=protectedTasks.Where(x=>!x.IsCompleted).ToDictionary(x=>x.Id);
         var pendingIds=pending.Keys.ToArray();var pinnedLinks=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(pendingIds,x.TaskId)).OrderBy(x=>x.TaskId).ThenBy(x=>x.OutcomeId).ToArrayAsync(ct);
-        var focusTopics=await FocusTopicsAsync(request.FocusTopicIds,lessonIds,staffView,ct);
-        var curriculum=await CurriculumAsync(student,context,lessonIds,choices,v2,pinnedLinks.Select(x=>x.EstimateId),ct,focusTopics);
+        var focusTopics=await FocusTopicsAsync(request.FocusTopicIds,context,lessonIds,staffView,ct);
+        var curriculum=await CurriculumAsync(student,context,lessonIds,choices,v2,pinnedLinks.Select(x=>x.EstimateId),ct,focusTopics,
+            staffView?WeeklyPlanEngine.TeacherFocusReason:WeeklyPlanEngine.FocusReason);
         var (topicStates,preferences,examErrorTopics,issues,originalWork)=(curriculum.TopicStates,curriculum.Preferences,curriculum.ExamErrorTopics,curriculum.Issues,curriculum.OriginalWork);
         var completedLinks=curriculum.CompletedLinks;void Credit(StudyPlanTask task,StudyPlanTaskOutcome link,List<(Guid LessonId,DateOnly Date,int Minutes)>? scheduledCredits)=>curriculum.Credit(task,link,scheduledCredits);
         var credits=new List<(Guid LessonId,DateOnly Date,int Minutes)>();
@@ -157,19 +161,22 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     }
 
     /// <summary>
-    /// Paket H4a: the focus topics must be active topics of the weekly draft's lessons; a chosen parent topic brings its active sub-topics
-    /// (the plan works on sub-topics).
+    /// Paket H4a: the focus topics must be topics of the weekly draft's lessons in the student's own catalog (as the plan reads it:
+    /// her track, active topics in active units, a sub-topic only under an active parent; review of PR #132). A chosen parent topic
+    /// brings its sub-topics of that catalog (the plan works on sub-topics).
     /// </summary>
-    private async Task<HashSet<Guid>> FocusTopicsAsync(IReadOnlyList<Guid>? wanted,Guid[] lessonIds,bool staffView,CancellationToken ct)
+    private async Task<HashSet<Guid>> FocusTopicsAsync(IReadOnlyList<Guid>? wanted,StudentLearningContext? context,Guid[] lessonIds,bool staffView,CancellationToken ct)
     {
         if(wanted is null||wanted.Count==0)return [];
         var ids=wanted.ToArray();
-        var found=await db.StudyCatalogTopics.AsNoTracking().Where(x=>Enumerable.Contains(ids,x.Id)&&x.IsActive&&Enumerable.Contains(lessonIds,x.LessonId))
-            .Select(x=>x.Id).ToArrayAsync(ct);
+        var eligible=from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
+            where Enumerable.Contains(lessonIds,t.LessonId)&&t.IsActive&&u.IsActive&&u.LessonId==t.LessonId
+                &&(t.ParentId==null||db.StudyCatalogTopics.Any(p=>p.Id==t.ParentId&&p.IsActive))
+            select t;
+        var found=await eligible.Where(x=>Enumerable.Contains(ids,x.Id)).Select(x=>x.Id).ToArrayAsync(ct);
         if(found.Length!=ids.Length)throw new ArgumentException(staffView?"Öne alınacak konular öğrencinin haftalık düzenindeki derslerden olmalı."
             :"Öne almak istediğin konular haftalık düzenindeki derslerden olmalı.");
-        var children=await db.StudyCatalogTopics.AsNoTracking().Where(x=>x.ParentId!=null&&Enumerable.Contains(found,x.ParentId.Value)&&x.IsActive)
-            .Select(x=>x.Id).ToArrayAsync(ct);
+        var children=await eligible.Where(x=>x.ParentId!=null&&Enumerable.Contains(found,x.ParentId.Value)).Select(x=>x.Id).ToArrayAsync(ct);
         return [..found,..children];
     }
 
@@ -194,7 +201,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     /// pinned work the preview places as well (they only widen the lookup of versions with topic shares).
     /// </summary>
     private async Task<CurriculumWork> CurriculumAsync(Guid student,StudentLearningContext? context,Guid[] lessonIds,IReadOnlyDictionary<Guid,LearningLessonView> choices,
-        bool v2,IEnumerable<Guid> pinnedEstimates,CancellationToken ct,IReadOnlySet<Guid>? focusTopics=null)
+        bool v2,IEnumerable<Guid> pinnedEstimates,CancellationToken ct,IReadOnlySet<Guid>? focusTopics=null,string focusReason=WeeklyPlanEngine.FocusReason)
     {
         var year=context?.AcademicYearStart??(clock.GetUtcNow().Month>=9?clock.GetUtcNow().Year:clock.GetUtcNow().Year-1);
         var catalogTopics=await (from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
@@ -258,7 +265,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var preferences=context is null?new Dictionary<Guid,WeeklyPlanEngine.LessonPreference>():await db.StudentCoursePreferences.AsNoTracking()
             .Where(x=>x.ContextId==context.Id).ToDictionaryAsync(x=>x.LessonId,x=>new WeeklyPlanEngine.LessonPreference(x.Priority,x.SelfReportedDifficulty),ct);
         var examErrorTopics=v2?await ExamErrorTopicsAsync(student,ct):new HashSet<Guid>();
-        if(v2)work=WeeklyPlanEngine.Shape(work,topicStates,preferences,examErrorTopics,focusTopics).ToList();
+        if(v2)work=WeeklyPlanEngine.Shape(work,topicStates,preferences,examErrorTopics,focusTopics,focusReason).ToList();
         var relevantOutcomeIds=work.SelectMany(x=>x.Outcomes).Select(x=>x.OutcomeId).Distinct().ToArray();
         var completedLinks=await CoachingCompletedOutcomeCredits.ReadAsync(db,student,relevantOutcomeIds,ct);
         var evidenceVersions=completedLinks.Select(x=>x.Link.EstimateId).Concat(pinnedEstimates).Distinct().ToArray();

@@ -121,25 +121,10 @@ public static class WeeklyProposalEngine
     }
 
     /// <summary>
-    /// Paket H4a: the week's capacity for the tempo options: the free sessions next to the saved cards (as in Fill) plus the saved minutes
-    /// inside the free hours, each day within its cap (the daily limit, or the day budget). The mode and the lessons do not matter.
+    /// Paket H4a (review of PR #132, S5): the end of the period the weekly need is spread over: the earlier of finishBy and the settled plan
+    /// end (null without a finishBy, when the period is the plan itself).
     /// </summary>
-    public static int CapacityMinutes(WeeklyProposalInput input)
-    {
-        ArgumentNullException.ThrowIfNull(input);
-        if (input.Windows is null || input.Existing is null || input.SessionsBeforeBreak < 1) throw new ArgumentException("Haftalık öneri bilgilerini kontrol edin.");
-        var windows = Studied(input);
-        var existing = input.Existing.Where(x => x is not null).ToArray();
-        var free = FreeSessions(windows, existing, input.SessionsBeforeBreak, day => DayCap(input, day)).Count * SessionMinutes;
-        var saved = Week.Sum(day =>
-        {
-            var spans = windows.Where(x => x.Day == day).ToArray();
-            var inside = existing.Where(x => x.Day == day).Sum(card => spans.Sum(w =>
-                Math.Max(0, Math.Min(card.StartMinute + card.DurationMinutes, w.EndMinute) - Math.Max(card.StartMinute, w.StartMinute))));
-            return Math.Min(inside, Math.Max(0, DayCap(input, day)));
-        });
-        return free + saved;
-    }
+    public static DateOnly? PeriodEnd(DateOnly? finishBy, DateOnly planEnd) => finishBy is { } date ? (date < planEnd ? date : planEnd) : null;
 
     /// <summary>The windows on weekdays that still come before the plan ends (saved and teacher windows never overlap).</summary>
     private static WeeklyProposalWindow[] Studied(WeeklyProposalInput input) =>

@@ -330,6 +330,28 @@ public sealed class WeeklyProposalServiceTests
         (view.Lessons.Single(x => x.LessonId == world.Math.Id).NeededMinutes, view.Lessons.Single(x => x.LessonId == world.Turkish.Id).NeededMinutes);
     private static Coaching.API.Controllers.WeeklyStudyDraftController StudentApi(CurriculumManagementTests.Fixture f) => new(WeeklyStudyDraftTests.Service(f, new(f.Db)));
 
+    /// <summary>
+    /// Review of PR #132 (B1, S4): every tempo option is the proposal the wizard will apply with that finishBy and mode: the same need,
+    /// fits exactly when that proposal has no shortage, and the capacity is what it counts (free sessions + the saved minutes it counts).
+    /// </summary>
+    private static async Task AssertTheProposalAgrees(WeeklyTempoOptionsView view, Func<WeeklyProposalRequest, Task<WeeklyProposalView>> propose,
+        WeeklyProposalMode mode = WeeklyProposalMode.Fill)
+    {
+        foreach (var option in view.Options)
+        {
+            var proposal = await propose(new(mode, FinishBy: option.FinishBy));
+            Assert.Equal((proposal.NeededMinutes, proposal.ShortageMinutes == 0, proposal.FreeMinutes + proposal.Lessons.Sum(x => x.ExistingMinutes)),
+                (option.NeededWeeklyMinutes, option.Fits, option.CapacityWeeklyMinutes));
+            Assert.Equal(WeeklyProposalEngine.PeriodEnd(option.FinishBy, proposal.EndDate), proposal.FinishBy);
+        }
+    }
+    private static async Task FarExam(CurriculumManagementTests.Fixture f)
+    {
+        (await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "LGS")).ReplaceSessions([new(null, new DateOnly(2027, 8, 2), "2027", null, null)]);
+        var context = await f.Db.StudentLearningContexts.SingleAsync(); f.Db.Entry(context).Property(x => x.TargetExamYear).CurrentValue = null;
+        await f.Db.SaveChangesAsync();
+    }
+
     // finishBy: the weekly need is spread over today → finishBy (the times each study weekday still comes and the reviews inside it);
     // the plan end stays where it is and the date used is echoed.
     [Fact]
@@ -373,6 +395,9 @@ public sealed class WeeklyProposalServiceTests
         // Near the end, when today + 6 is after the plan end, the plan end itself is still accepted (it changes nothing).
         Assert.Equal(new DateOnly(2027, 6, 1), (await Proposals(f, now: Now.AddDays(5)).ProposeAsync(new(FinishBy: new DateOnly(2027, 6, 1)), default)).FinishBy);
         await Assert.ThrowsAsync<StudyPlanValidationException>(() => Proposals(f, now: Now.AddDays(5)).ProposeAsync(new(FinishBy: new DateOnly(2027, 5, 31)), default));
+        // After the plan end and before today + 6 at once: the message names the latest date (review of PR #132).
+        Assert.Equal("Bitiş tarihi en geç 01.06.2027 olabilir; planın o gün bitiyor.",
+            (await Assert.ThrowsAsync<StudyPlanValidationException>(() => Proposals(f, now: Now.AddDays(5)).ProposeAsync(new(FinishBy: new DateOnly(2027, 6, 2)), default))).Message);
 
         // The teacher reads about the student in the third person.
         var staff = await BecomeTeacher(f, world);
@@ -387,10 +412,7 @@ public sealed class WeeklyProposalServiceTests
     [Fact]
     public async Task TempoOptionsGiveThreeEndDatesWithTheirWeeklyNeedAndCapacity()
     {
-        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
-        (await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "LGS")).ReplaceSessions([new(null, new DateOnly(2027, 8, 2), "2027", null, null)]);
-        var context = await f.Db.StudentLearningContexts.SingleAsync(); f.Db.Entry(context).Property(x => x.TargetExamYear).CurrentValue = null;
-        await f.Db.SaveChangesAsync();
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f); await FarExam(f);
         var draftBefore = await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync();
 
         var view = await Proposals(f).TempoOptionsAsync(new(), default);
@@ -403,23 +425,24 @@ public sealed class WeeklyProposalServiceTests
         Assert.Equal(new[] { 60, 60, 90 }, view.Options.Select(x => x.NeededWeeklyMinutes));
         // Middle school, 17:00–20:00 on weekdays: two sessions a day, but Monday's saved 18:00 card leaves only 19:00: 9 × 60 + 30 saved.
         Assert.All(view.Options, x => Assert.Equal((570, true), (x.CapacityWeeklyMinutes, x.Fits)));
-        // The need is the proposal's own need for the same period; nothing is saved.
-        foreach (var option in view.Options)
-            Assert.Equal(option.NeededWeeklyMinutes, (await Proposals(f).ProposeAsync(new(FinishBy: option.FinishBy), default)).NeededMinutes);
+        // Each option is the proposal for its finishBy; nothing is saved.
+        await AssertTheProposalAgrees(view, r => Proposals(f).ProposeAsync(r, default));
         var draftAfter = await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync();
         Assert.Equal((draftBefore.Version, draftBefore.Slots.Count), (draftAfter.Version, draftAfter.Slots.Count));
 
-        // One free hour a week (Monday) and no saved cards: Rahat and Dengeli fit, Yoğun does not.
+        // One free hour a week (Monday) and no saved cards. 60 needed minutes and 60 free ones, but in hour sessions one of the two
+        // lessons gets no time: no option fits (review of PR #132, B1).
         (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]);
         f.Db.Remove(await f.Db.Set<WeeklyStudyDraft>().SingleAsync()); await f.Db.SaveChangesAsync();
         var tight = await Proposals(f).TempoOptionsAsync(new(), default);
-        Assert.Equal(new[] { (60, 60, true), (60, 60, true), (90, 60, false) }, tight.Options.Select(x => (x.NeededWeeklyMinutes, x.CapacityWeeklyMinutes, x.Fits)));
+        Assert.Equal(new[] { (60, 60, false), (60, 60, false), (90, 60, false) }, tight.Options.Select(x => (x.NeededWeeklyMinutes, x.CapacityWeeklyMinutes, x.Fits)));
+        await AssertTheProposalAgrees(tight, r => Proposals(f).ProposeAsync(r, default));
 
         // The API sends the names and dates the wizard reads.
         var ok = Assert.IsType<OkObjectResult>(await StudentApi(f).TempoOptions(new(), Proposals(f), default));
         var json = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web); Coaching.API.CoachingApiJson.Configure(json);
         var text = System.Text.Json.JsonSerializer.Serialize(Body(ok, "data"), json);
-        Assert.StartsWith("{\"planEnd\":\"2027-08-01\",\"options\":[{\"tempo\":\"Relaxed\",\"finishBy\":\"2027-08-01\",\"neededWeeklyMinutes\":60,\"capacityWeeklyMinutes\":60,\"fits\":true}", text);
+        Assert.StartsWith("{\"planEnd\":\"2027-08-01\",\"options\":[{\"tempo\":\"Relaxed\",\"finishBy\":\"2027-08-01\",\"neededWeeklyMinutes\":60,\"capacityWeeklyMinutes\":60,\"fits\":false}", text);
     }
 
     [Theory]
@@ -435,6 +458,65 @@ public sealed class WeeklyProposalServiceTests
         Assert.Equal(tempos, view.Options.Select(x => x.Tempo));
         Assert.Equal(days, view.Options.Select(x => x.FinishBy.Day));
         Assert.All(view.Options, x => Assert.True(x.FinishBy <= view.PlanEnd));
+        await AssertTheProposalAgrees(view, r => Proposals(f, now: Now.AddDays(daysLater)).ProposeAsync(r, default));
+    }
+
+    // Review of PR #132 (B1): saved cards count as the proposal counts them: a card outside the study times still counts for its lesson,
+    // a card of a lesson no longer chosen does not, and minutes beyond a lesson's need do not help another lesson.
+    [Fact]
+    public async Task SavedCardsCountForTheTempoOptionsAsTheProposalCountsThem()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f); await FarExam(f);
+        (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows([.. new[] { DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday }
+            .Select(day => new StudyAvailabilityWindow(day, 1020, 1080))]);
+        var draft = await f.Db.Set<WeeklyStudyDraft>().SingleAsync();
+        draft.Replace(draft.TimeZoneId, [new(Guid.NewGuid(), world.Math.Id, "Matematik", "LGS", DayOfWeek.Monday, 1260, 60),   // outside the study times
+            new(Guid.NewGuid(), world.Math.Id, "Matematik", "LGS", DayOfWeek.Tuesday, 1020, 60),
+            new(Guid.NewGuid(), world.Math.Id, "Matematik", "LGS", DayOfWeek.Wednesday, 1020, 60),                            // beyond Matematik's 30
+            new(Guid.NewGuid(), Guid.NewGuid(), "Fizik", "LGS", DayOfWeek.Thursday, 1020, 60)]);                                 // no longer chosen
+        await f.Db.SaveChangesAsync();
+        var view = await Proposals(f).TempoOptionsAsync(new(), default);
+        // No free hour is left; the 180 saved Matematik minutes count (Fizik's do not), yet Türkçe gets no time, so nothing fits.
+        Assert.All(view.Options, x => Assert.Equal((180, false), (x.CapacityWeeklyMinutes, x.Fits)));
+        Assert.All(view.Options, x => Assert.True(x.NeededWeeklyMinutes <= x.CapacityWeeklyMinutes));
+        await AssertTheProposalAgrees(view, r => Proposals(f).ProposeAsync(r, default));
+        // Replace mode starts from an empty week: three free hours, both lessons get time.
+        var replace = await Proposals(f).TempoOptionsAsync(new(Mode: WeeklyProposalMode.Replace), default);
+        Assert.All(replace.Options, x => Assert.Equal((180, true), (x.CapacityWeeklyMinutes, x.Fits)));
+        await AssertTheProposalAgrees(replace, r => Proposals(f).ProposeAsync(r, default), WeeklyProposalMode.Replace);
+    }
+
+    // Review of PR #132 (S4): the options use the proposal's own plan end for the mode asked, also when settling changes it.
+    [Fact]
+    public async Task TempoOptionsSettleThePlanEndLikeTheProposalInEachMode()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
+        var chemistry = StudyCatalogLesson.Create("test", "h4-chemistry", "Kimya", null, "TYT"); chemistry.SetActive(true); f.Db.Add(chemistry);
+        (await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "TYT")).ReplaceSessions([new(null, new DateOnly(2027, 5, 30), "2027", null, null)]);
+        (await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "LGS")).ReplaceSessions([new(null, new DateOnly(2027, 6, 13), "2027", null, null)]);
+        var context = await f.Db.StudentLearningContexts.Include(x => x.CoursePreferences).SingleAsync();
+        f.Db.Entry(context).Property(x => x.TargetExamYear).CurrentValue = null;
+        context.ReplaceSelections([.. context.CoursePreferences, StudentCoursePreference.Create(context.Id, chemistry.Id, 3, null)], [], false);
+        (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]);
+        var draft = await f.Db.Set<WeeklyStudyDraft>().SingleAsync();
+        draft.Replace(draft.TimeZoneId, [new(Guid.NewGuid(), chemistry.Id, "Kimya", "TYT", DayOfWeek.Tuesday, 1080, 30)]);
+        await f.Db.SaveChangesAsync();
+
+        // Replace: the proposed week has LGS lessons only, so the plan ends on 12 June (the chosen lessons alone would end it on 29 May).
+        var replace = await Proposals(f).TempoOptionsAsync(new(Mode: WeeklyProposalMode.Replace), default);
+        Assert.Equal(new DateOnly(2027, 6, 12), replace.PlanEnd);
+        Assert.Equal(new[] { new DateOnly(2027, 6, 12), new DateOnly(2027, 6, 9), new DateOnly(2027, 6, 6) }, replace.Options.Select(x => x.FinishBy));
+        Assert.Equal(replace.PlanEnd, (await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace), default)).EndDate);
+        await AssertTheProposalAgrees(replace, r => Proposals(f).ProposeAsync(r, default), WeeklyProposalMode.Replace);
+        // Fill keeps the TYT card: the plan ends on 29 May, so only Rahat is left.
+        var fill = await Proposals(f).TempoOptionsAsync(new(), default);
+        Assert.Equal((new DateOnly(2027, 5, 29), StudyTempo.Relaxed), (fill.PlanEnd, Assert.Single(fill.Options).Tempo));
+        await AssertTheProposalAgrees(fill, r => Proposals(f).ProposeAsync(r, default));
+        // A finishBy up to the Replace plan end is valid there; Fill refuses it with its own latest date.
+        Assert.Equal(new DateOnly(2027, 6, 9), (await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, FinishBy: new DateOnly(2027, 6, 9)), default)).FinishBy);
+        Assert.Equal("Bitiş tarihi en geç 29.05.2027 olabilir; planın o gün bitiyor.",
+            (await Assert.ThrowsAsync<StudyPlanValidationException>(() => Proposals(f).ProposeAsync(new(FinishBy: new DateOnly(2027, 6, 9)), default))).Message);
+        await Assert.ThrowsAsync<StudyPlanValidationException>(() => Proposals(f).TempoOptionsAsync(new(Mode: (WeeklyProposalMode)5), default));
     }
 
     // Day budgets: with a routine profile whose free hours are still the ones it wrote, each day holds at most its budget (and the
@@ -460,7 +542,9 @@ public sealed class WeeklyProposalServiceTests
         var fill = await Proposals(f).ProposeAsync(new(), default);
         Assert.DoesNotContain(fill.Slots, x => x.Day is DayOfWeek.Monday or DayOfWeek.Wednesday);
         // The tempo options count the same: Tuesday, Thursday and Friday an hour each + Monday's saved 30 minutes.
-        Assert.All((await Proposals(f).TempoOptionsAsync(new(), default)).Options, x => Assert.Equal(210, x.CapacityWeeklyMinutes));
+        var budgeted = await Proposals(f).TempoOptionsAsync(new(), default);
+        Assert.All(budgeted.Options, x => Assert.Equal(210, x.CapacityWeeklyMinutes));
+        await AssertTheProposalAgrees(budgeted, r => Proposals(f).ProposeAsync(r, default));
         // The teacher sees the same proposal.
         var staff = await BecomeTeacher(f, world);
         Assert.Equal(capped.Slots.Select(x => (x.LessonId, x.Day, x.StartMinute)),
@@ -494,6 +578,7 @@ public sealed class WeeklyProposalServiceTests
         var view = (WeeklyTempoOptionsView)Body(answered, "data")!;
         Assert.Equal(3, view.Options.Count);
         Assert.All(view.Options, x => Assert.Equal(90, x.CapacityWeeklyMinutes));
+        await AssertTheProposalAgrees(view, r => Proposals(f, staff).ProposeForStudentAsync(world.Student, r with { Windows = [new(DayOfWeek.Monday, 1020, 1140), new(DayOfWeek.Tuesday, 1020, 1140)] }, default));
         Assert.Empty(await f.Db.StudyAvailability.ToArrayAsync());
         await Assert.ThrowsAsync<BusinessRuleException>(() => Proposals(f, staff).TempoOptionsForStudentAsync(Guid.NewGuid(), new(), default));
         await Assert.ThrowsAsync<BusinessRuleException>(() => Proposals(f, staff).TempoOptionsAsync(new(), default));
@@ -503,6 +588,6 @@ public sealed class WeeklyProposalServiceTests
         var both = await api.WeeklyTempoOptions(world.Student, new(Windows: [new(DayOfWeek.Monday, 1020, 1140)]), Proposals(f, staff), default);
         Assert.Equal("Öğrencinin kayıtlı çalışma saatleri var; öneri bu saatlerden hazırlanır.", Body(Assert.IsType<BadRequestObjectResult>(both), "message"));
         Assert.All(((WeeklyTempoOptionsView)Body(Assert.IsType<OkObjectResult>(await api.WeeklyTempoOptions(world.Student, new(), Proposals(f, staff), default)), "data")!).Options,
-            x => Assert.Equal(60, x.CapacityWeeklyMinutes));
+            x => Assert.Equal(90, x.CapacityWeeklyMinutes));   // Friday's hour + Monday's saved card, which still counts outside the study times
     }
 }

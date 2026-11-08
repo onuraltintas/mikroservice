@@ -16,18 +16,24 @@ public sealed record WeeklyProposalLessonView(Guid LessonId, string LessonName, 
 /// Paket H2: a weekly proposal; nothing is saved. Slots are the proposed cards only (in Fill mode the saved cards stay as they are).
 /// FreeMinutes: the free study time of the week; CoveredMinutes: Σ min(needed, saved + proposed); ShortageMinutes = NeededMinutes −
 /// CoveredMinutes. DraftVersion: the weekly draft the proposal was made from (null: none yet). EndDate: where the annual plan ends once
-/// the proposal is applied. FinishBy (Paket H4a): the request's FinishBy (null when none was given).
+/// the proposal is applied. FinishBy (Paket H4a): the end of the period the need was spread over, min(the request's FinishBy, EndDate)
+/// (null when none was given).
 /// </summary>
 public sealed record WeeklyProposalView(WeeklyProposalMode Mode, string? ExamFocus, IReadOnlyList<WeeklyDraftSlot> Slots,
     IReadOnlyList<WeeklyProposalLessonView> Lessons, int FreeMinutes, int NeededMinutes, int ShortageMinutes,
     int MaxDayMinutes, int WeeksUntilEnd, DateOnly EndDate, bool MiddleSchool, int CoveredMinutes = 0, int? DraftVersion = null,
     DateOnly? FinishBy = null);
 
-/// <summary>Paket H4a: the tempo step of the wizard. ExamFocus and Windows as in <see cref="WeeklyProposalRequest"/>.</summary>
-public sealed record WeeklyTempoOptionsRequest(string? ExamFocus = null, IReadOnlyList<StudyWindowInput>? Windows = null);
 /// <summary>
-/// Paket H4a: one tempo. NeededWeeklyMinutes: the proposal's NeededMinutes with this FinishBy; CapacityWeeklyMinutes: the free and saved
-/// weekly study minutes within the study times and the day caps; Fits: NeededWeeklyMinutes ≤ CapacityWeeklyMinutes.
+/// Paket H4a: the tempo step of the wizard. ExamFocus, Windows and Mode as in <see cref="WeeklyProposalRequest"/>; each option is the
+/// proposal the wizard will ask for with that mode and the option's FinishBy.
+/// </summary>
+public sealed record WeeklyTempoOptionsRequest(string? ExamFocus = null, IReadOnlyList<StudyWindowInput>? Windows = null,
+    WeeklyProposalMode Mode = WeeklyProposalMode.Fill);
+/// <summary>
+/// Paket H4a (review of PR #132): one tempo, as the proposal with this FinishBy and the request's mode gives it. NeededWeeklyMinutes: its
+/// NeededMinutes; CapacityWeeklyMinutes: the minutes it counts (FreeMinutes + the saved minutes it counts, Σ ExistingMinutes);
+/// Fits: it has no shortage (every lesson gets its need, in hour sessions).
 /// </summary>
 public sealed record WeeklyTempoOption(StudyTempo Tempo, DateOnly FinishBy, int NeededWeeklyMinutes, int CapacityWeeklyMinutes, bool Fits);
 /// <summary>

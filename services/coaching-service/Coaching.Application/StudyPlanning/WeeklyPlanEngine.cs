@@ -18,6 +18,8 @@ public static class WeeklyPlanEngine
 
     /// <summary>Paket H4a: the reason of a topic the student chose to bring forward.</summary>
     public const string FocusReason = "Öne almak istediğin konu";
+    /// <summary>Paket H4a (review of PR #132): the reason when her teacher brought the topic forward.</summary>
+    public const string TeacherFocusReason = "Öğretmeninin öne aldığı konu";
 
     /// <summary>A self-reported difficulty of 1 (easy) shortens learning time, 5 (hard) stretches it.</summary>
     public static decimal DifficultyFactor(int? difficulty) => difficulty switch
@@ -38,7 +40,8 @@ public static class WeeklyPlanEngine
         IReadOnlyDictionary<Guid, DeclaredTopicStatus> topicStates,
         IReadOnlyDictionary<Guid, LessonPreference> preferences,
         IReadOnlySet<Guid> examErrorTopics,
-        IReadOnlySet<Guid>? focusTopics = null)
+        IReadOnlySet<Guid>? focusTopics = null,
+        string focusReason = FocusReason)
     {
         focusTopics ??= new HashSet<Guid>();
         return lessons.Select(lesson =>
@@ -48,7 +51,7 @@ public static class WeeklyPlanEngine
             var outcomes = lesson.Outcomes.Select(outcome =>
             {
                 var reasons = new List<string>();
-                if (focusTopics.Contains(outcome.TopicId)) reasons.Add(FocusReason);
+                if (focusTopics.Contains(outcome.TopicId)) reasons.Add(focusReason);
                 if (examErrorTopics.Contains(outcome.TopicId)) reasons.Add("Son denemelerde bu konuda hata oranın yüksek; öne alındı");
                 var status = topicStates.TryGetValue(outcome.TopicId, out var declared) ? declared : DeclaredTopicStatus.NotStudied;
                 string kind; int minutes;

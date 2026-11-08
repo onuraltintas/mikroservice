@@ -396,20 +396,13 @@ public sealed class WeeklyProposalEngineTests
         AssertWeekRules(result, budgets, 240);
     }
 
-    // Paket H4a: the weekly capacity of the tempo options: free sessions plus the saved minutes inside the free hours, within the day caps.
+    // Review of PR #132 (S5): the proposal works on (and echoes) the earlier of finishBy and the settled plan end.
     [Fact]
-    public void CapacityIsTheFreeSessionsPlusTheSavedMinutesInsideTheFreeHoursWithinTheDayCaps()
+    public void ThePeriodEndsAtTheEarlierOfFinishByAndThePlanEnd()
     {
-        var windows = new[] { Window(DayOfWeek.Monday, 1020, 1200), Window(DayOfWeek.Tuesday, 1020, 1200) };
-        var saved = new[] { Card(1, DayOfWeek.Monday, 1080, 30), Card(2, DayOfWeek.Wednesday, 1080, 60) };
-        // Monday: 17:00 (a 90-minute run with the saved card) and 19:00 (18:30 would make a longer run) + 30 saved; Tuesday: 17:00,
-        // 18:00; the Wednesday card lies outside the free hours.
-        Assert.Equal(120 + 30 + 120, WeeklyProposalEngine.CapacityMinutes(new(windows, saved, [Lesson(1, 600)], 2, 480, null, WeeklyProposalMode.Fill)));
-        // With budgets: Monday 60 holds the saved 30 minutes and no session; Tuesday has no budget.
-        var budgets = new Dictionary<DayOfWeek, int> { [DayOfWeek.Monday] = 60 };
-        Assert.Equal(30, WeeklyProposalEngine.CapacityMinutes(new(windows, saved, [Lesson(1, 600)], 2, 480, null, WeeklyProposalMode.Fill, null, budgets)));
-        // The mode does not matter: the saved cards are what the student already has.
-        Assert.Equal(270, WeeklyProposalEngine.CapacityMinutes(new(windows, saved, [], 2, 480, null, WeeklyProposalMode.Replace)));
+        Assert.Equal(new DateOnly(2027, 5, 29), WeeklyProposalEngine.PeriodEnd(new DateOnly(2027, 6, 9), new DateOnly(2027, 5, 29)));
+        Assert.Equal(new DateOnly(2027, 6, 9), WeeklyProposalEngine.PeriodEnd(new DateOnly(2027, 6, 9), new DateOnly(2027, 6, 12)));
+        Assert.Null(WeeklyProposalEngine.PeriodEnd(null, new DateOnly(2027, 6, 12)));
     }
 
     private static void AssertWeekRules(WeeklyProposalResult result, IReadOnlyDictionary<DayOfWeek, int> budgets, int limit)
