@@ -182,6 +182,10 @@ public sealed class WeeklyPlanEngineServiceTests
             Assert.Equal(NotWeekly, (await Assert.ThrowsAsync<ArgumentException>(() => service.PreviewAsync(Input with { FocusTopicIds = [later.Id, wrong] }, default))).Message);
         var many = Input with { FocusTopicIds = [.. Enumerable.Range(0, 51).Select(_ => Guid.NewGuid())] };
         Assert.Equal("En çok 50 konuyu öne alabilirsin.", (await Assert.ThrowsAsync<ArgumentException>(() => service.PreviewAsync(many, default))).Message);
+        // Review of PR #132 (S1): engine version 1 cannot bring topics forward.
+        Assert.Equal("Konuları öne almak için yeni plan motoru gerekiyor.",
+            (await Assert.ThrowsAsync<ArgumentException>(() => service.PreviewAsync(Input with { EngineVersion = 1, FocusTopicIds = [later.Id] }, default))).Message);
+        Assert.Empty((await service.PreviewAsync(Input with { EngineVersion = 1, FocusTopicIds = [] }, default)).Schedule.Tasks.Where(x => x.Reason?.Contains("Öne") == true));
         var api = new Coaching.API.Controllers.WeeklyOutcomePlansController(service);
         Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(await api.Preview(Input with { FocusTopicIds = [turkishTopic.Id] }, default));
 
@@ -191,9 +195,93 @@ public sealed class WeeklyPlanEngineServiceTests
             new Coaching.Application.Authorization.CoachingStudyPlanAccess(access, new WeeklyStudyDraftTests.Teaching(student), f.Scope));
         var teacher = await staff.PreviewForStudentAsync(student, Input with { FocusTopicIds = [later.Id] }, default);
         Assert.Equal(later.Id, teacher.Schedule.Tasks[0].Outcome.TopicId);
+        // Review of PR #132 (S2): the student reads that her teacher brought the topic forward.
+        Assert.StartsWith("Öğretmeninin öne aldığı konu", teacher.Schedule.Tasks[0].Reason);
+        Assert.Equal("Öğrencinin konularını öne almak için yeni plan motoru gerekiyor.",
+            (await Assert.ThrowsAsync<ArgumentException>(() => staff.PreviewForStudentAsync(student, Input with { EngineVersion = 1, FocusTopicIds = [later.Id] }, default))).Message);
         Assert.Equal("Öne alınacak konular öğrencinin haftalık düzenindeki derslerden olmalı.",
             (await Assert.ThrowsAsync<ArgumentException>(() => staff.PreviewForStudentAsync(student, Input with { FocusTopicIds = [turkishTopic.Id] }, default))).Message);
         Assert.Equal("En çok 50 konu öne alınabilir.", (await Assert.ThrowsAsync<ArgumentException>(() => staff.PreviewForStudentAsync(student, many, default))).Message);
+    }
+
+    // Review of PR #132 (S3): focus topics are checked against the student's own catalog (the topics the plan can use): a parent brings
+    // its active sub-topics, a sub-topic needs an active parent, and a topic outside her track is refused. The order of the ids does not
+    // change the fingerprint.
+    [Fact]
+    public async Task FocusTopicsComeFromTheStudentsOwnCatalog()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var service = await WeeklyOutcomePlanTests.Seed(f);
+        var student = f.User.UserId!.Value;
+        var old = await f.Db.StudyCatalogTopics.SingleAsync(); var existing = await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        StudyCatalogTopic Topic(string key, string name, int order, Guid? parent = null, bool active = true)
+        {
+            var topic = StudyCatalogTopic.Create("test", key, old.LessonId, old.UnitId, name, parent, order); if (active) topic.SetActive(true); f.Db.Add(topic); return topic;
+        }
+        void Map(StudyCatalogTopic topic, string code)
+        {
+            var outcome = StudyCatalogOutcome.Create(existing.EditionId, existing.OfficialTopicId, code, code + " kazanımı", "", 73, 9);
+            var estimate = OutcomeDurationEstimate.Create(outcome.Id, 1, 10, 10, 10, "ReviewedStudy", "Medium", "Test süresi", f.User.UserId); estimate.Publish();
+            var mapping = StudyCatalogTopicOutcome.Create(topic.Id, outcome.Id, "Test eşleştirmesi"); mapping.Review(true, "Test eşleştirmesi", student);
+            f.Db.AddRange(outcome, estimate, mapping);
+        }
+        var parent = Topic("parent", "Üslü ifadeler", 5);
+        var child = Topic("child", "Üslü ifadelerde işlemler", 1, parent.Id); Map(child, "M.CHILD");
+        var closedChild = Topic("closed-child", "Kapalı alt konu", 2, parent.Id, active: false); Map(closedChild, "M.CLOSED");
+        var closedParent = Topic("closed-parent", "Kapalı ana konu", 6, active: false);
+        var orphan = Topic("orphan", "Ana konusu kapalı", 1, closedParent.Id); Map(orphan, "M.ORPHAN");
+        await f.Db.SaveChangesAsync();
+
+        var focused = await service.PreviewAsync(Input with { FocusTopicIds = [parent.Id] }, default);
+        Assert.Equal(child.Id, focused.Schedule.Tasks[0].Outcome.TopicId);
+        Assert.StartsWith("Öne almak istediğin konu", focused.Schedule.Tasks[0].Reason);
+        Assert.DoesNotContain(focused.Schedule.Tasks, x => x.Outcome.TopicId == closedChild.Id);
+        const string NotWeekly = "Öne almak istediğin konular haftalık düzenindeki derslerden olmalı.";
+        foreach (var wrong in new[] { orphan.Id, closedChild.Id })
+            Assert.Equal(NotWeekly, (await Assert.ThrowsAsync<ArgumentException>(() => service.PreviewAsync(Input with { FocusTopicIds = [wrong] }, default))).Message);
+        // The order of the ids does not change the fingerprint.
+        Assert.Equal((await service.PreviewAsync(Input with { FocusTopicIds = [child.Id, old.Id] }, default)).Fingerprint,
+            (await service.PreviewAsync(Input with { FocusTopicIds = [old.Id, child.Id] }, default)).Fingerprint);
+
+        // A YKS (SAY) student: a topic of another track (EA only) is not in her catalog.
+        var context = await f.Db.StudentLearningContexts.SingleAsync(); context.SetScope(2026, LearningPurpose.Yks, 2027, "SAY", null);
+        f.Db.AddRange(StudyCatalogYksScope.Create(old.Id, "TYT", "SAY", "TYT.MAT", null, "H4 testi"), StudyCatalogYksScope.Create(child.Id, "TYT", "EA", "TYT.MAT", null, "H4 testi"));
+        await f.Db.SaveChangesAsync();
+        Assert.Equal(NotWeekly, (await Assert.ThrowsAsync<ArgumentException>(() => service.PreviewAsync(Input with { FocusTopicIds = [child.Id] }, default))).Message);
+        await service.PreviewAsync(Input with { FocusTopicIds = [old.Id] }, default);
+    }
+
+    // Review of PR #132: a teacher can send 50 focus topics (the staff preview and create take up to 8 KB).
+    [Fact]
+    public async Task ATeacherCreatesAPlanWithFiftyFocusTopics()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); await WeeklyOutcomePlanTests.Seed(f);
+        var student = f.User.UserId!.Value;
+        var old = await f.Db.StudyCatalogTopics.SingleAsync(); var existing = await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        var outcome = StudyCatalogOutcome.Create(existing.EditionId, existing.OfficialTopicId, "M.FIFTY", "Ortak kazanım", "", 73, 9);
+        var estimate = OutcomeDurationEstimate.Create(outcome.Id, 1, 10, 10, 10, "ReviewedStudy", "Medium", "Test süresi", f.User.UserId); estimate.Publish();
+        f.Db.AddRange(outcome, estimate);
+        var topics = Enumerable.Range(1, 50).Select(n =>
+        {
+            var topic = StudyCatalogTopic.Create("test", $"fifty-{n}", old.LessonId, old.UnitId, $"Konu {n}", null, 10 + n); topic.SetActive(true);
+            var mapping = StudyCatalogTopicOutcome.Create(topic.Id, outcome.Id, "Test eşleştirmesi"); mapping.Review(true, "Test eşleştirmesi", student);
+            f.Db.AddRange(topic, mapping); return topic.Id;
+        }).ToArray();
+        await f.Db.SaveChangesAsync();
+        f.User.UserId = Guid.NewGuid(); f.User.Roles = ["Teacher"]; var access = new Coaching.Application.Authorization.CoachingAccessPolicy(f.User);
+        var staff = new Coaching.Infrastructure.StudyPlanning.CoachingWeeklyOutcomePlanService(f.Db, access, new WeeklyStudyDraftTests.Catalog(f.Db), TimeProvider.System,
+            new Coaching.Application.Authorization.CoachingStudyPlanAccess(access, new WeeklyStudyDraftTests.Teaching(student), f.Scope));
+        var api = new Coaching.API.Controllers.CoachingStaffStudyController(null!, null!, null!, null!, null!, null!, null!, staff);
+        var request = Input with { FocusTopicIds = topics, PrioritizeWhenShort = true };
+        var body = Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(await api.OutcomePreview(student, request, default)).Value!;
+        var preview = (WeeklyOutcomePlanPreview)body.GetType().GetProperty("data")!.GetValue(body)!;
+        Assert.Equal(50, preview.Request.FocusTopicIds!.Count);
+        var save = new WeeklyOutcomePlanSave("Öğretmenin odaklı planı", request, preview.Fingerprint);
+        var json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(save, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+        Assert.InRange(json.Length, 2048, 8192);
+        Assert.IsType<Microsoft.AspNetCore.Mvc.CreatedAtActionResult>(await api.CreateOutcomeDraft(student, save, default));
+        foreach (var name in new[] { nameof(api.OutcomePreview), nameof(api.CreateOutcomeDraft) })
+            Assert.Equal(8192, ((Microsoft.AspNetCore.Http.Metadata.IRequestSizeLimitMetadata)typeof(Coaching.API.Controllers.CoachingStaffStudyController).GetMethod(name)!
+                .GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute), false).Single()).MaxRequestBodySize);
     }
 
     [Fact]
