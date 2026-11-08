@@ -46,7 +46,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   private maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
   readonly selectedDays = signal<Weekday[]>([]);
   readonly startTime = signal('18:00');
-  readonly minutesPerDay = signal<30 | 60 | 90 | 120>(60);
+  /** Final review of PR 130: a proposal is made of one-hour sessions, so a study day has at least an hour. */
+  readonly minutesPerDay = signal<60 | 90 | 120>(60);
   readonly annualReview = signal(false);
   /** E6 #29: the availability saved in Çalışma tercihlerim (one record); the wizard asks only when there is none. */
   readonly availability = signal<StudyAvailability | null>(null);
@@ -145,7 +146,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   }
 
   setMinutesPerDay(value: number) {
-    if ([30, 60, 90, 120].includes(value)) this.minutesPerDay.set(value as 30 | 60 | 90 | 120);
+    if ([60, 90, 120].includes(value)) this.minutesPerDay.set(value as 60 | 90 | 120);
   }
 
   /**
@@ -235,6 +236,13 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   }
   /** "haftada 1,5 saat". */
   hours(minutes: number) { return (Math.round(minutes / 30) / 2).toLocaleString('tr-TR'); }
+  /** Final review of PR 130: only a proposal with new hours waits to be applied; an empty one does not block the yearly preview. */
+  proposalPending() { return !!this.proposalView()?.slots.length; }
+  /** "şu an": what the saved week covers of each course's need (the saved cards only, before the proposal is applied). */
+  savedCoveredMinutes(view: WeeklyProposal) {
+    return view.lessons.reduce((sum, lesson) => sum + Math.min(lesson.neededMinutes, this.slots()
+      .filter(slot => slot.lessonId.toLowerCase() === lesson.lessonId.toLowerCase()).reduce((total, slot) => total + slot.durationMinutes, 0)), 0);
+  }
   lessonsWithoutTime(view: WeeklyProposal) { return view.lessons.filter(x => x.noTime).map(x => x.lessonName).join(', '); }
 
   applyProposal() {
@@ -276,7 +284,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   }
 
   continueToAnnualReview() {
-    if (this.busy() || !this.slots().length || this.proposalView()) return;
+    if (this.busy() || !this.slots().length || this.proposalPending()) return;
     this.annualReview.set(true);
   }
 

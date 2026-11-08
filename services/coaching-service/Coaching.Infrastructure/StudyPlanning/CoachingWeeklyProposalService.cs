@@ -29,7 +29,7 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
     private async Task<WeeklyProposalView> Propose(Guid student,WeeklyProposalRequest request,bool staff,CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if(!Enum.IsDefined(request.Mode))throw new StudyPlanValidationException("Öneri türünü kontrol et.");
+        if(!Enum.IsDefined(request.Mode))throw new StudyPlanValidationException(staff?"Öneri türünü kontrol edin.":"Öneri türünü kontrol et.");
         var focus=request.ExamFocus?.Trim().ToLowerInvariant() switch
         {
             null or ""=>null, "tyt"=>"tyt", "balanced"=>"balanced", "ayt"=>"ayt",
@@ -46,7 +46,7 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         }
         // Paket H2 review: a teacher's answers for a student without study times are used once and never saved.
         else if(staff&&request.Windows is {Count:>0})windows=TeacherWindows(request.Windows);
-        else throw new KeyNotFoundException("Önce müsait saatlerini kaydet.");
+        else throw new StudyAvailabilityMissingException();
         var draft=await db.Set<WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student,ct);
         var fill=request.Mode==WeeklyProposalMode.Fill;
         var existing=draft?.Slots??[];
@@ -67,23 +67,19 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         string[] Codes(IEnumerable<Guid> lessons)=>(fill?existing.Select(x=>choices.TryGetValue(x.LessonId,out var lesson)?lesson.ExamCode:x.ExamCode):[])
             .Concat(lessons.Select(x=>choices[x].ExamCode))
             .OfType<string>().Distinct().Order(StringComparer.Ordinal).ToArray();
-        var codes=Codes(chosen.Select(x=>x.LessonId));
-        CoachingWeeklyOutcomePlanService.PlanEnd end;WeeklyProposalResult result;var attempts=0;
-        while(true)
-        {
-            end=await plans.EndAsync(student,codes,today,ct);
-            var days=end.End.DayNumber-today.DayNumber+1;
-            var occurrences=WeeklyProposalEngine.Occurrences(today,end.End);
-            var times=windows.Select(x=>occurrences[x.Day]).Where(x=>x>0).DefaultIfEmpty(1).Min();
-            result=WeeklyProposalEngine.Propose(new(windows,existing,
-                chosen.Select(x=>new WeeklyProposalLesson(x.LessonId,choices[x.LessonId].Name,choices[x.LessonId].ExamCode,
-                    WeeklyProposalEngine.WeeklyNeed(work[x.LessonId].Work,work[x.LessonId].Topics,days,times),x.Priority,x.SelfReportedDifficulty>=4)).ToArray(),
-                WeeklyProposalEngine.SessionsBeforeBreak(middle),limit,focus,request.Mode,occurrences));
-            var applied=Codes(result.Slots.Select(x=>x.LessonId).Distinct());
-            if(applied.SequenceEqual(codes))break;
-            codes=applied;
-            if(++attempts>=3){end=await plans.EndAsync(student,codes,today,ct);break;}
-        }
+        var (end,result)=await WeeklyProposalEngine.SettleAsync(Codes(chosen.Select(x=>x.LessonId)),
+            codes=>plans.EndAsync(student,codes.ToArray(),today,ct),
+            planEnd=>
+            {
+                var days=planEnd.End.DayNumber-today.DayNumber+1;
+                var occurrences=WeeklyProposalEngine.Occurrences(today,planEnd.End);
+                var times=windows.Select(x=>occurrences[x.Day]).Where(x=>x>0).DefaultIfEmpty(1).Min();
+                return WeeklyProposalEngine.Propose(new(windows,existing,
+                    chosen.Select(x=>new WeeklyProposalLesson(x.LessonId,choices[x.LessonId].Name,choices[x.LessonId].ExamCode,
+                        WeeklyProposalEngine.WeeklyNeed(work[x.LessonId].Work,work[x.LessonId].Topics,days,times),x.Priority,x.SelfReportedDifficulty>=4)).ToArray(),
+                    WeeklyProposalEngine.SessionsBeforeBreak(middle),limit,focus,request.Mode,occurrences));
+            },
+            proposal=>Codes(proposal.Slots.Select(x=>x.LessonId).Distinct()));
         var slots=result.Slots.Select(x=>new WeeklyDraftSlot(Guid.NewGuid(),x.LessonId,choices[x.LessonId].Name,choices[x.LessonId].ExamCode,
             x.Day,x.StartMinute,x.DurationMinutes)).ToArray();
         // The applied proposal must pass the weekly draft's own checks (30/60-minute cards on the half hour, no overlap). A failure here
@@ -100,7 +96,7 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
     /// <summary>At most 50 windows inside the day that do not overlap (the rules of a saved availability).</summary>
     private static WeeklyProposalWindow[] TeacherWindows(IReadOnlyList<StudyWindowInput> input)
     {
-        const string message="Çalışma saatlerini kontrol et: en çok 50 aralık olabilir; aralıklar gün içinde kalmalı ve birbiriyle çakışmamalı.";
+        const string message="Çalışma saatlerini kontrol edin: en çok 50 aralık olabilir; aralıklar gün içinde kalmalı ve birbiriyle çakışmamalı.";
         if(input.Count>50||input.Any(x=>x is null))throw new StudyPlanValidationException(message);
         StudyAvailabilityWindow[] valid;
         try{valid=input.Select(x=>new StudyAvailabilityWindow(x.Day,x.StartMinute,x.EndMinute)).ToArray();}

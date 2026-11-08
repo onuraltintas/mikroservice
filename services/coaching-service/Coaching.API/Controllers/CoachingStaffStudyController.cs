@@ -42,7 +42,7 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     public Task<IActionResult> WeeklyProposal(Guid studentId,WeeklyProposalRequest request,[FromServices] IWeeklyProposalService proposals,CancellationToken ct)=>Respond(async()=>
     {
         try{return Ok(new{success=true,data=await proposals.ProposeForStudentAsync(studentId,request,ct)});}
-        catch(KeyNotFoundException){return NotFound(new{success=false,message="Öğrenci henüz çalışabileceği saatleri kaydetmemiş."});}
+        catch(StudyAvailabilityMissingException){return NotFound(new{success=false,message="Öğrenci henüz çalışabileceği saatleri kaydetmemiş."});}
         catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
     });
 

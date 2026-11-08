@@ -76,6 +76,24 @@ public static class WeeklyProposalEngine
         return (match.Success ? match.Groups[1].Value : text).Trim().ToLower(Turkish);
     }
 
+    /// <summary>
+    /// The plan end depends on the exams of the week that will be applied, and the proposal on the end. Proposes with the end of the
+    /// given exams until the proposed week has the same exams (at most <paramref name="attempts"/> times) and returns the end together
+    /// with the proposal made with it, so the two always belong together.
+    /// </summary>
+    public static async Task<(TEnd End, TResult Result)> SettleAsync<TEnd, TResult>(IReadOnlyList<string> codes, Func<IReadOnlyList<string>, Task<TEnd>> end,
+        Func<TEnd, TResult> propose, Func<TResult, IReadOnlyList<string>> applied, int attempts = 3)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            var planEnd = await end(codes);
+            var result = propose(planEnd);
+            var next = applied(result);
+            if (next.SequenceEqual(codes) || attempt >= Math.Max(1, attempts)) return (planEnd, result);
+            codes = next;
+        }
+    }
+
     public static WeeklyProposalResult Propose(WeeklyProposalInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
@@ -86,7 +104,9 @@ public static class WeeklyProposalEngine
         var lessons = input.Lessons.Where(x => x is not null).DistinctBy(x => x.LessonId).ToArray();
         var sessions = FreeSessions(input.Windows.Where(x => x is not null && input.DayOccurrences?.GetValueOrDefault(x.Day) != 0).ToArray(),
             existing, input.SessionsBeforeBreak, input.MaxDayMinutes);
-        var plans = lessons.Select(lesson => Plan.For(lesson, existing.Where(x => x.LessonId == lesson.LessonId).Sum(x => x.DurationMinutes), input.ExamFocus)).ToArray();
+        // A saved card on a weekday that no longer comes before the plan ends gives the lesson no time (it still occupies its hour).
+        var counted = existing.Where(x => input.DayOccurrences?.GetValueOrDefault(x.Day) != 0).ToArray();
+        var plans = lessons.Select(lesson => Plan.For(lesson, counted.Where(x => x.LessonId == lesson.LessonId).Sum(x => x.DurationMinutes), input.ExamFocus)).ToArray();
         var counts = Allocate(plans, sessions.Count);
         var placed = Place(sessions, plans, counts, existing);
         var results = plans.Select(plan =>
@@ -116,7 +136,12 @@ public static class WeeklyProposalEngine
             return new(lesson with { Priority = priority }, existing, need, weighted, (int)Math.Ceiling(need / 30d) * 30, New(needTotal), New(wantTotal));
         }
         /// <summary>How long the lesson would take with this many sessions: the larger, the later it finishes.</summary>
-        public decimal Load(int sessions) => Weighted / (Existing / (decimal)SessionMinutes + sessions);
+        /// <remarks>A lesson with neither saved time nor sessions yet has not started: it comes first (no division by zero).</remarks>
+        public decimal Load(int sessions)
+        {
+            var hours = Existing / (decimal)SessionMinutes + sessions;
+            return hours == 0 ? decimal.MaxValue : Weighted / hours;
+        }
     }
 
     /// <summary>
@@ -195,8 +220,8 @@ public static class WeeklyProposalEngine
     /// Places each lesson's sessions, the priority-1 and hard lessons first, then the lesson with the most sessions left (then by id).
     /// A lesson takes the free session on the day that carries the least study (saved cards included) where it is not yet and where no
     /// card of its name family comes right before or after; a priority-1 or hard lesson prefers the day's first study time. Only when no
-    /// such session is left may a lesson come a second time on a day (another lesson of its family still never comes right next to it;
-    /// the same lesson may, as a longer study block, only when nothing else is left).
+    /// such session is left may a lesson come a second time on a day (the same lesson may then form a longer block), and only when an
+    /// hour would otherwise stay empty may a lesson of the same name family come right next to it.
     /// </summary>
     private static List<WeeklyProposedSlot> Place(IReadOnlyList<(DayOfWeek Day, int Start)> sessions, IReadOnlyList<Plan> plans,
         Dictionary<Guid, int> counts, IReadOnlyList<WeeklyDraftSlot> existing)
@@ -206,7 +231,8 @@ public static class WeeklyProposalEngine
         var cards = existing.Select(x => (x.LessonId, x.Day, From: x.StartMinute, To: x.StartMinute + x.DurationMinutes, Family: Family(x.LessonName))).ToList();
         var free = sessions.ToList();
         var placed = new List<WeeklyProposedSlot>();
-        foreach (var strict in new[] { true, false })
+        // Stage 0: a new day and no namesake next to it; 1: the same day again; 2: before an hour is dropped, a namesake next to it too.
+        foreach (var stage in new[] { 0, 1, 2 })
             while (true)
             {
                 var done = false;
@@ -216,10 +242,11 @@ public static class WeeklyProposalEngine
                     var id = plan.Lesson.LessonId; var family = families[id]; var opener = plan.Lesson.Priority == 1 || plan.Lesson.Hard;
                     bool Next(DayOfWeek day, int start, Func<(Guid LessonId, DayOfWeek Day, int From, int To, string Family), bool> card) =>
                         cards.Any(c => c.Day == day && (c.To == start || c.From == start + SessionMinutes) && card(c));
-                    var pick = free.Where(s => !Next(s.Day, s.Start, c => c.Family == family && c.LessonId != id)
-                            && (!strict || !cards.Any(c => c.Day == s.Day && c.LessonId == id)))
+                    var pick = free.Where(s => (stage == 2 || !Next(s.Day, s.Start, c => c.Family == family && c.LessonId != id))
+                            && (stage > 0 || !cards.Any(c => c.Day == s.Day && c.LessonId == id)))
                         .OrderBy(s => cards.Count(c => c.Day == s.Day && c.LessonId == id))
                         .ThenBy(s => Next(s.Day, s.Start, c => c.LessonId == id) ? 1 : 0)
+                        .ThenBy(s => Next(s.Day, s.Start, c => c.Family == family && c.LessonId != id) ? 1 : 0)
                         .ThenBy(s => cards.Where(c => c.Day == s.Day).Sum(c => c.To - c.From))
                         .ThenBy(s => opener && !cards.Any(c => c.Day == s.Day && c.From < s.Start) ? 0 : 1)
                         .ThenBy(s => DayIndex(s.Day)).ThenBy(s => s.Start)

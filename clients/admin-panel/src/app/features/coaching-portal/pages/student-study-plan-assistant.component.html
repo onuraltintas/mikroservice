@@ -52,7 +52,7 @@
           @if (editingAvailability()) { <app-student-study-availability (saved)="availabilitySaved()" /> }
           @else {
             <button type="button" #proposeButton (click)="createProposal()" [disabled]="!canPropose()">{{ proposing() ? 'Öneri hazırlanıyor…' : 'Haftalık öneri oluştur' }}</button>
-            @if (slots().length) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="!canPropose()">Haftanı baştan öner</button> }
+            @if (slots().length) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="!canPropose()">{{ staffStudentId ? 'Haftayı baştan öner' : 'Haftanı baştan öner' }}</button> }
           }
         } @else {
           @if (staffStudentId) { <p class="notice" role="status" data-testid="staff-no-availability">Öğrenci henüz çalışabileceği saatleri kaydetmemiş. Öneri için öğrencinin çalışabileceği saatleri burada seçebilirsin; bu saatler öğrencinin çalışma saatlerine kaydedilmez.</p> }
@@ -67,7 +67,7 @@
             <input id="wizard-start-time" type="time" step="1800" [ngModel]="startTime()" (ngModelChange)="startTime.set($event)" />
             <label for="wizard-daily-minutes">{{ staffStudentId ? '3. Her seçili günde ayıracağı süre' : '3. Her seçili günde ayıracağın süre' }}</label>
             <select id="wizard-daily-minutes" [ngModel]="minutesPerDay()" (ngModelChange)="setMinutesPerDay(+$event)">
-              <option [ngValue]="30">30 dakika</option><option [ngValue]="60">1 saat</option>
+              <option [ngValue]="60">1 saat</option>
               <option [ngValue]="90">1,5 saat</option><option [ngValue]="120">2 saat</option>
             </select>
             @if (!staffStudentId) { <p class="muted">Bu saatler çalışma saatlerin olarak kaydedilir; Çalışma tercihlerimde de görürsün.</p> }
@@ -89,7 +89,7 @@
             </div>
           } @empty {
             <p class="muted" data-testid="proposal-empty">{{ emptyText(view) }}</p>
-            @if (emptyReason(view) === 'courses' && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Derslerimi seç</a> }
+            @if (emptyReason(view) === 'courses' && !staffStudentId) { <a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'dersler', donus: 'sihirbaz' }">Derslerimi seç</a> }
           }
           <h3>Derslere ayrılan süre</h3>
           <ul class="lesson-hours" data-testid="proposal-lessons">
@@ -109,15 +109,15 @@
           @if (view.shortageMinutes > 0 && !editingAvailability()) {
             <div class="notice" data-testid="shortage-notice">
               @if (staffStudentId) {
-                <p>Seçilen saatler öğrencinin derslerine yetmiyor. Bütün derslerine yetişmesi için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(view.coveredMinutes) }} saat</strong> var.</p>
+                <p>Seçilen saatler öğrencinin derslerine yetmiyor. Bütün derslerine yetişmesi için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(savedCoveredMinutes(view)) }} saat</strong> var. Bu öneriyle <strong>{{ hours(view.coveredMinutes) }} saat</strong> olur.</p>
               } @else {
-                <p>Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(view.coveredMinutes) }} saat</strong> var.</p>
+                <p>Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(savedCoveredMinutes(view)) }} saat</strong> var. Bu öneriyle <strong>{{ hours(view.coveredMinutes) }} saat</strong> olur.</p>
               }
               @if (lessonsWithoutTime(view)) { <p data-testid="no-time-lessons">Saat verilemeyen dersler: {{ lessonsWithoutTime(view) }}.</p> }
               <div class="actions">
                 @if (!staffStudentId) {
                   <button type="button" class="secondary" (click)="changeAvailability()">Müsait saatlerime ekle</button>
-                  <a routerLink="/coaching-portal/account/settings">Ders çıkar</a>
+                  <a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'dersler', donus: 'sihirbaz' }">Ders çıkar</a>
                 }
                 @if (view.slots.length) { <button type="button" class="secondary" (click)="applyProposal()" [disabled]="busy()">Bu önerilerle devam et</button> }
               </div>
@@ -129,7 +129,8 @@
       @if (learningContext() && !purposeRetired()) {
         <p class="starting-status" data-testid="starting-status">
           @if (staffStudentId) {
-            Öğrenci “Başlangıç durumum” bölümünde {{ studiedTopicCount() }} konuyu “Çalıştım” olarak işaretledi.
+            @if (studiedTopicCount()) { Öğrenci “Başlangıç durumum” bölümünde {{ studiedTopicCount() }} konuyu “Çalıştım” olarak işaretledi. }
+            @else { Öğrenci “Başlangıç durumum” bölümünde henüz “Çalıştım” olarak işaretlediği konu yok. }
           } @else {
             @if (studiedTopicCount()) { “Başlangıç durumum” bölümünde <strong>{{ studiedTopicCount() }} konuyu</strong> “Çalıştım” olarak işaretledin. }
             @else { “Başlangıç durumum” bölümünde henüz “Çalıştım” olarak işaretlediğin konu yok. }
@@ -149,7 +150,7 @@
           @for (slot of slots(); track slot.id) { <p class="slot-line">{{ dayName(slot.day) }} · {{ clock(slot.startMinute) }} · {{ slot.lessonName }} ({{ slot.durationMinutes }} dk)</p> }
         } @else { <p class="muted">Henüz kaydedilmiş haftalık düzen yok.</p> }
         @if (slots().length) {
-          <button type="button" (click)="continueToAnnualReview()" [disabled]="busy() || !!proposalView()">Yıllık plan önizlemesine geç →</button>
+          <button type="button" (click)="continueToAnnualReview()" [disabled]="busy() || proposalPending()">Yıllık plan önizlemesine geç →</button>
         }
         @if (saved() && !staffStudentId) { <a class="calendar-link" routerLink="/coaching-portal/plan/weekly">Haftalık takvimi aç →</a> }
       }

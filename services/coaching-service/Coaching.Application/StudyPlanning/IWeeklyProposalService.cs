@@ -20,6 +20,9 @@ public sealed record WeeklyProposalView(WeeklyProposalMode Mode, string? ExamFoc
     IReadOnlyList<WeeklyProposalLessonView> Lessons, int FreeMinutes, int NeededMinutes, int ShortageMinutes,
     int MaxDayMinutes, int WeeksUntilEnd, DateOnly EndDate, bool MiddleSchool, int CoveredMinutes = 0, int? DraftVersion = null);
 
+/// <summary>Paket H2: the student has no saved study times (and a teacher gave none); the endpoints answer 404 with their own wording.</summary>
+public sealed class StudyAvailabilityMissingException() : KeyNotFoundException("Önce müsait saatlerini kaydet.");
+
 public interface IWeeklyProposalService
 {
     Task<WeeklyProposalView> ProposeAsync(WeeklyProposalRequest request, CancellationToken ct);
