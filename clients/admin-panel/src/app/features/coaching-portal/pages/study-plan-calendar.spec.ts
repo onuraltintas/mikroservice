@@ -40,16 +40,19 @@ describe('dated study plan calendar',()=>{
   it('splits only timed, untouched work of at least an hour into a rounded first half and the rest',()=>{
     const work={...task('w','2027-01-04',1080,60),planKind:'Learn',topicId:'topic'};
     expect(canSplitTask(work)).toBe(true);expect(splitRanges(work)).toEqual([[1080,1110],[1110,1140]]);
-    expect(splitRanges({...work,plannedMinutes:75})).toEqual([[1080,1140],[1140,1155]]);
+    expect(splitRanges({...work,plannedMinutes:90})).toEqual([[1080,1140],[1140,1170]]);
     expect(splitRanges({...work,plannedMinutes:120})).toEqual([[1080,1140],[1140,1200]]);
     expect(canSplitTask({...task('own','2027-01-04',1080,60)})).toBe(true);
-    for(const blocked of [{plannedMinutes:45},{plannedStartMinute:null},{isCompleted:true},{actualMinutes:10},{predecessorTaskId:'p'},{skippedAt:'2027-01-05T00:00:00Z'},
+    // Paket H5 review: each half must be at least 30 minutes and a multiple of 30.
+    expect(canSplitTask({...work,plannedMinutes:90})).toBe(true);expect(canSplitTask({...work,plannedMinutes:150})).toBe(true);
+    for(const blocked of [{plannedMinutes:45},{plannedMinutes:61},{plannedMinutes:75},{plannedMinutes:89},{plannedStartMinute:null},{isCompleted:true},{actualMinutes:10},{predecessorTaskId:'p'},{skippedAt:'2027-01-05T00:00:00Z'},
       {realizationHistory:[{at:'x'} as never]},{planKind:null}])expect(canSplitTask({...work,...blocked})).toBe(false);
   });
   it('names where each task came from',()=>{
     const base=task('k','2027-01-04',1080);
     expect(['Learn','Review','Refresh','Spaced'].map(planKind=>taskSourceBadge({...base,planKind,topicId:'t'}))).toEqual(['Yeni konu','Tekrar','Kısa tekrar','Aralıklı tekrar']);
-    expect(taskSourceBadge(base)).toBe('Senin eklediğin');expect(taskSourceBadge(base,false)).toBe('Elle eklenen');
+    // Paket H5 review: who added a task is not stored, so the label is neutral for everyone.
+    expect(taskSourceBadge(base)).toBe('Elle eklenen');
     expect(taskSourceBadge({...base,topicId:'t'})).toBeNull();expect(taskSourceBadge({...base,sourceName:'DenemeTekrar:x'})).toBeNull();
     expect(taskSourceBadge({...base,weeklyLessonId:null})).toBeNull();expect(taskSourceBadge({...base,planKind:'Other'})).toBeNull();
     expect(taskSourceBadge({...base,predecessorTaskId:'p'})).toBeNull();

@@ -75,30 +75,39 @@ public sealed class CalendarTaskSplitTests
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var topic=await f.Seed();
         var revision=await f.Db.StudyPlanRevisions.SingleAsync();var service=Student(f,revision.StudentId);
-        var seeded=await f.Db.Set<StudyPlanTaskOutcome>().SingleAsync();
-        var task=StudyPlanTask.Create(revision,new(2026,10,20),"Çarpanlar",60,topic.Id);task.SetWeeklyPlacement(topic.LessonId,"Matematik",1080);
-        var link=StudyPlanTaskOutcome.Create(task.Id,seeded.OutcomeId,seeded.EstimateId,60,"Catalog");
-        f.Db.AddRange(task,link);await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
+        var seeded=await f.Db.Set<StudyPlanTaskOutcome>().SingleAsync();var estimate=await f.Db.Set<OutcomeDurationEstimate>().SingleAsync();
+        // Only the split work credits the outcome (60 minutes in its estimate).
+        f.Db.Remove(seeded);
+        var task=StudyPlanTask.Create(revision,new(2026,10,20),"Çarpanlar",60,topic.Id);task.SetWeeklyPlacement(topic.LessonId,"Matematik",1080);task.SetPlanDecision("Learn",null);
+        f.Db.AddRange(task,StudyPlanTaskOutcome.Create(task.Id,seeded.OutcomeId,seeded.EstimateId,60,"Catalog"));
+        var hours=StudyAvailability.Create(revision.StudentId,"Europe/Istanbul");hours.ReplacePreferences("Europe/Istanbul",[new(DayOfWeek.Monday,600,900)]);f.Db.Add(hours);
+        await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
+        var input=new AutomaticStudyPreviewRequest(new(2026,10,26),1,hours.Version,[new(topic.Id,null,[new(seeded.OutcomeId,estimate.Id)])]);
+        var preview=new CoachingAutomaticStudyPlanPreviewService(f.Db,new CoachingAccessPolicy(f.User));
+        Assert.Equal(0,(await preview.PreviewAsync(input)).CompletedOutcomeMinutes);
         var split=await service.SplitCalendarTaskAsync(revision.Id,task.Id,revision.Version);
         var other=split.Tasks.Single(x=>x.PlannedDate==new DateOnly(2026,10,20)&&x.Id!=task.Id);
         Assert.Equal(new[]{30,30},split.Tasks.Where(x=>x.PlannedDate==new DateOnly(2026,10,20)).OrderBy(x=>x.PlannedStartMinute).Select(x=>x.Outcomes!.Single().AllocatedMinutes).ToArray());
         var done=await service.CompleteTaskAsync(revision.Id,task.Id,split.Version,30);
+        Assert.Equal(30,(await preview.PreviewAsync(input)).CompletedOutcomeMinutes);
         await service.CompleteTaskAsync(revision.Id,other.Id,done.Version,30);
-        var credits=await f.Db.StudyPlanTasks.AsNoTracking().Where(x=>x.IsCompleted&&x.PlannedDate==new DateOnly(2026,10,20))
-            .Join(f.Db.Set<StudyPlanTaskOutcome>().AsNoTracking(),x=>x.Id,x=>x.TaskId,(t,l)=>new{Root=t.OriginalTaskId??t.Id,l.OutcomeId,l.AllocatedMinutes}).ToArrayAsync();
-        // Completed-outcome credit counts one allocation per (task chain, outcome): both halves count, 60 minutes in total.
-        Assert.Equal(2,credits.DistinctBy(x=>(x.Root,x.OutcomeId)).Count());Assert.Equal(60,credits.Sum(x=>x.AllocatedMinutes));
+        // The completed-outcome credit counts each half once: together they cover the whole outcome.
+        Assert.Equal(60,(await preview.PreviewAsync(input)).CompletedOutcomeMinutes);
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
-    public async Task SplitsAStudentsOwnTaskInADraftAndRoundsTheFirstHalfToHalfHours()
+    public async Task SplitsAStudentsOwnTaskInADraftOnlyIntoHalfHourPieces()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;await f.Seed();
         var student=(await f.Db.StudyPlanRevisions.SingleAsync()).StudentId;var service=Student(f,student);
-        var draft=await service.CreateDraftAsync(new("Taslak",[new(new(2027,1,8),"Soru çözümü",75,null,false,PlannedStartMinute:1080)]));
-        var split=await service.SplitCalendarTaskAsync(draft.Id,draft.Tasks[0].Id,draft.Version);
-        Assert.Equal(new[]{(1080,60),(1140,15)},split.Tasks.OrderBy(x=>x.PlannedStartMinute).Select(x=>(x.PlannedStartMinute!.Value,x.PlannedMinutes)).ToArray());
-        Assert.All(split.Tasks,x=>{Assert.Equal("Soru çözümü",x.Title);Assert.Null(x.PlanKind);Assert.Null(x.WeeklyLessonId);Assert.Empty(x.Outcomes!);});
+        var draft=await service.CreateDraftAsync(new("Taslak",[new(new(2027,1,8),"Soru çözümü",75,null,false,PlannedStartMinute:1080),new(new(2027,1,9),"Soru çözümü",90,null,false,PlannedStartMinute:1080)]));
+        // Each half must be at least 30 minutes and a multiple of 30: 75 minutes cannot be split.
+        var odd=await Assert.ThrowsAsync<BusinessRuleException>(()=>service.SplitCalendarTaskAsync(draft.Id,draft.Tasks.Single(x=>x.PlannedMinutes==75).Id,draft.Version));
+        Assert.Equal("StudyPlanning.Conflict",odd.Code);Assert.Equal("Her parça en az 30 dakika olmalı; bu çalışma bölünemez.",odd.Message);
+        var split=await service.SplitCalendarTaskAsync(draft.Id,draft.Tasks.Single(x=>x.PlannedMinutes==90).Id,draft.Version);
+        var halves=split.Tasks.Where(x=>x.PlannedDate==new DateOnly(2027,1,9)).OrderBy(x=>x.PlannedStartMinute).ToArray();
+        Assert.Equal(new[]{(1080,60),(1140,30)},halves.Select(x=>(x.PlannedStartMinute!.Value,x.PlannedMinutes)).ToArray());
+        Assert.All(halves,x=>{Assert.Equal("Soru çözümü",x.Title);Assert.Null(x.PlanKind);Assert.Null(x.WeeklyLessonId);Assert.Empty(x.Outcomes!);});
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
@@ -109,17 +118,25 @@ public sealed class CalendarTaskSplitTests
         StudyPlanTask Timed(string title,int minutes,int start){var t=StudyPlanTask.Create(revision,new(2027,1,4),title,minutes);t.SetWeeklyPlacement(topic.LessonId,"Matematik",start);return t;}
         var shortTask=Timed("Kısa",45,480);var untimed=StudyPlanTask.Create(revision,new(2027,1,4),"Saatsiz",60);
         var partial=Timed("Kısmi",60,600);var linked=Timed("Kararlı",60,720);var skipped=Timed("Atlanan",60,840);var ok=Timed("Bölünebilir",60,960);
-        f.Db.AddRange(shortTask,untimed,partial,linked,skipped,ok);await f.Db.SaveChangesAsync();
+        // A version 1 plan task (a topic but no plan decision) would show its halves as one card again, so it is refused too.
+        var legacy=StudyPlanTask.Create(revision,new(2027,1,4),"Eski plan",60,topic.Id);legacy.SetWeeklyPlacement(topic.LessonId,"Matematik",1200);
+        var odd=Timed("Yetmiş beş",75,1290);
+        f.Db.AddRange(shortTask,untimed,partial,linked,skipped,ok,legacy,odd);await f.Db.SaveChangesAsync();
         partial.RecordRealization(20,null,false,revision.StudentId,remainingMinutes:40,workedOn:new(2026,10,19));skipped.Skip();
         var decision=WeeklyDecision.Create(Guid.NewGuid(),revision.StudentId,Guid.NewGuid(),new(2027,1,4));decision.Edit("Takip","",new(2027,1,11),"Planned",DateTime.UtcNow);decision.LinkWork(linked.Id,null,DateTime.UtcNow);
         f.Db.Add(decision);await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
         var completed=(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync(x=>x.IsCompleted)).Id;
-        foreach(var id in new[]{shortTask.Id,untimed.Id,partial.Id,linked.Id,skipped.Id,completed})
+        foreach(var id in new[]{shortTask.Id,untimed.Id,partial.Id,linked.Id,skipped.Id,completed,legacy.Id,odd.Id})
             Assert.Equal("StudyPlanning.Conflict",(await Assert.ThrowsAsync<BusinessRuleException>(()=>service.SplitCalendarTaskAsync(revision.Id,id,revision.Version))).Code);
+        async Task<string> Refusal(Guid id)=>(await Assert.ThrowsAsync<BusinessRuleException>(()=>service.SplitCalendarTaskAsync(revision.Id,id,revision.Version))).Message;
+        Assert.Equal("Her parça en az 30 dakika olmalı; bu çalışma bölünemez.",await Refusal(shortTask.Id));
+        Assert.Equal("Her parça en az 30 dakika olmalı; bu çalışma bölünemez.",await Refusal(odd.Id));
+        Assert.Equal("Bu çalışma bölünemez; parçaları takvimde ayrı gösterilemez.",await Refusal(legacy.Id));
+        Assert.Equal("Atlanan çalışma bölünemez. Önce çalışmayı yeni bir saate taşı.",await Refusal(skipped.Id));
         Assert.Equal("StudyPlanning.NotFound",(await Assert.ThrowsAsync<BusinessRuleException>(()=>service.SplitCalendarTaskAsync(revision.Id,Guid.NewGuid(),revision.Version))).Code);
         Assert.Equal("StudyPlanning.Conflict",(await Assert.ThrowsAsync<BusinessRuleException>(()=>service.SplitCalendarTaskAsync(revision.Id,ok.Id,revision.Version+1))).Code);
-        Assert.Equal(7,await f.Db.StudyPlanTasks.CountAsync());Assert.Equal(revision.Version,(await f.Db.StudyPlanRevisions.AsNoTracking().SingleAsync()).Version);
-        var split=await service.SplitCalendarTaskAsync(revision.Id,ok.Id,revision.Version);Assert.Equal(8,split.Tasks.Count);
+        Assert.Equal(9,await f.Db.StudyPlanTasks.CountAsync());Assert.Equal(revision.Version,(await f.Db.StudyPlanRevisions.AsNoTracking().SingleAsync()).Version);
+        var split=await service.SplitCalendarTaskAsync(revision.Id,ok.Id,revision.Version);Assert.Equal(10,split.Tasks.Count);
         // The same request again carries the old version.
         await Assert.ThrowsAsync<BusinessRuleException>(()=>service.SplitCalendarTaskAsync(revision.Id,ok.Id,revision.Version));
         // Another student cannot split it; an archived plan cannot change.
@@ -144,7 +161,14 @@ public sealed class CalendarTaskSplitTests
         var notice=Assert.Single(publisher.Messages.OfType<StudyPlanUpdatedEvent>());Assert.Equal(student,notice.StudentId);
         Assert.Contains("Matematik",notice.ChangeDescription);Assert.Contains("18:00–18:30",notice.ChangeDescription);Assert.Contains("18:30–19:00",notice.ChangeDescription);
         var draft=await service.CreateForStudentAsync(student,new("Taslak",[new(new(2027,1,8),"Türkçe",60,null,false,PlannedStartMinute:1080)]));
-        await service.SplitCalendarForStudentAsync(student,draft.Id,draft.Tasks[0].Id,draft.Version);Assert.Single(publisher.Messages);
+        var afterDraft=await service.SplitCalendarForStudentAsync(student,draft.Id,draft.Tasks[0].Id,draft.Version);Assert.Single(publisher.Messages);
+        // The teacher gets the same neutral rule and a third-person variant for skipped work.
+        var tracked=await f.Db.StudyPlanTasks.SingleAsync(x=>x.RevisionId==plan.Id&&x.PlannedStartMinute==1080&&x.PlannedDate==new DateOnly(2027,1,5));tracked.Skip();
+        var odd=StudyPlanTask.Create(await f.Db.StudyPlanRevisions.SingleAsync(x=>x.Id==plan.Id),new(2027,1,6),"Fen",75);odd.Schedule(odd.PlannedDate,1080);f.Db.Add(odd);await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
+        var now=(await service.GetForStudentAsync(student,plan.Id))!;
+        Assert.Equal("Atlanan çalışma bölünemez. Önce çalışma yeni bir saate taşınmalı.",(await Assert.ThrowsAsync<BusinessRuleException>(()=>service.SplitCalendarForStudentAsync(student,plan.Id,tracked.Id,now.Version))).Message);
+        Assert.Equal("Her parça en az 30 dakika olmalı; bu çalışma bölünemez.",(await Assert.ThrowsAsync<BusinessRuleException>(()=>service.SplitCalendarForStudentAsync(student,plan.Id,odd.Id,now.Version))).Message);
+        Assert.Equal(2,afterDraft.Tasks.Count);
         // The staff endpoint is a teacher write, like the other calendar edits.
         var method=typeof(CoachingStaffStudyController).GetMethod(nameof(CoachingStaffStudyController.SplitCalendarTask))!;
         Assert.Contains(method.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute),false).Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>(),x=>x.Roles=="Teacher");

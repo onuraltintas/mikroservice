@@ -40,7 +40,7 @@ describe('weekly draft calendar',()=>{
   it('asks for study times instead of marking cards when none are saved',async ()=>{
     const{fixture}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
     const el=fixture.nativeElement as HTMLElement;const notice=el.querySelector('[data-testid="availability-notice"]') as HTMLElement;
-    expect(notice.textContent?.replace(/\s+/g,' ').trim()).toBe('Müsait saatlerini kaydedersen dışarıda kalan kartları gösteririm.');
+    expect(notice.textContent?.replace(/\s+/g,' ').trim()).toBe('Müsait saatlerini kaydedersen dışarıda kalan kartlar burada işaretlenir.');
     expect(notice.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan/hours');expect(el.querySelector('.slot-card.outside')).toBeNull();
   });
   it('shows no availability marks when the study times cannot be loaded and refreshes them on request',async ()=>{

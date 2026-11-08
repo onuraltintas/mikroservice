@@ -116,8 +116,10 @@ describe('saved study plan calendar',()=>{
   it('shows the source badge on calendar cards and in their names',async()=>{
     const {f,c}=await setup({...plan,tasks:[{...task('spaced','2027-01-04',1080),planKind:'Spaced',topicId:'topic'},{...task('own','2027-01-04',1200),weeklyLessonId:'science',lessonName:'Fen Bilimleri'}]});
     const cards=Array.from(f.nativeElement.querySelectorAll('.timed-block') as NodeListOf<HTMLElement>);
-    expect(cards.map(x=>x.querySelector('cs-status-chip')?.textContent?.trim())).toEqual(['Aralıklı tekrar','Senin eklediğin']);
-    expect(cards[0].getAttribute('aria-label')).toContain('Aralıklı tekrar');expect(cards[1].getAttribute('aria-label')).toContain('Senin eklediğin');
+    expect(cards.map(x=>x.querySelector('cs-status-chip')?.textContent?.trim())).toEqual(['Aralıklı tekrar','Elle eklenen']);
+    expect(cards[0].getAttribute('aria-label')).toContain('Aralıklı tekrar');expect(cards[1].getAttribute('aria-label')).toContain('Elle eklenen');
+    // Paket H5 review: the badges of a card are worked out once per plan.
+    const block=c.days().flatMap(d=>c.rows(d))[0];expect(c.badges(block)).toBe(c.badges(block));
     f.componentRef.setInput('student',false);f.detectChanges();
     expect((f.nativeElement.querySelectorAll('.timed-block')[1] as HTMLElement).getAttribute('aria-label')).toContain('Elle eklenen');
     c.changeView('month');f.detectChanges();await f.whenStable();

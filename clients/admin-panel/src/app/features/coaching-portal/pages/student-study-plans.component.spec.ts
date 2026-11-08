@@ -189,8 +189,13 @@ describe('StudentStudyPlansComponent', () => {
     expect(component.selected()?.version).toBe(5);expect(component.success()).toBe('Çalışma iki parçaya bölündü.');
     component.selected.set({...active,tasks:[{...hour,plannedMinutes:30}]});
     await component.calendarCommand({kind:'split',taskIds:['task'],date:'2026-10-06',startMinute:1080});expect(component.calendarForm).toBeNull();
+    // Paket H5 review: 75 minutes would leave a piece under 30 minutes.
+    component.selected.set({...active,tasks:[{...hour,plannedMinutes:75}]});
+    await component.calendarCommand({kind:'split',taskIds:['task'],date:'2026-10-06',startMinute:1080});expect(component.calendarForm).toBeNull();
     component.staffStudentId='student';component.selected.set({...active,tasks:[hour]});
-    await component.calendarCommand({kind:'split',taskIds:['task'],date:'2026-10-06',startMinute:1080});await component.saveCalendarForm();
+    await component.calendarCommand({kind:'split',taskIds:['task'],date:'2026-10-06',startMinute:1080});
+    expect(component.splitText()).toBe('Bu çalışma iki parçaya bölünecek: 18:00–18:30 ve 18:30–19:00. Parçalar ayrı ayrı taşınabilir.');
+    await component.saveCalendarForm();
     expect(service.splitCalendarTask).toHaveBeenLastCalledWith('plan','task',4,'student');
   });
   // Paket H5: the Planım row names where the work came from.
