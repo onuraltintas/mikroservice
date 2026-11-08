@@ -21,7 +21,7 @@ async function fixture(context){
   });
   return{writes,getDraft:()=>draft,setDraft:value=>draft=value,setConflict:value=>conflict=value,active};
 }
-async function open(page){await page.goto('/coaching-portal/plan/weekly');await expect(page.getByRole('heading',{name:'Haftalık programım',exact:true})).toBeVisible();await page.getByRole('button',{name:'Hafta',exact:true}).click();}
+async function open(page){await page.goto('/coaching-portal/plan/weekly');await expect(page.getByRole('heading',{name:'Haftalık düzenim',exact:true})).toBeVisible();await page.getByRole('button',{name:'Hafta',exact:true}).click();}
 async function add(page,lesson=math,start='18:00',duration='60'){
   await page.getByRole('button',{name:'+ Ders ekle',exact:true}).click();const dialog=page.getByRole('dialog');await dialog.getByLabel('Ders',{exact:true}).selectOption(lesson);await dialog.getByLabel('Gün',{exact:true}).selectOption('Monday');await dialog.getByLabel('Başlangıç',{exact:true}).fill(start);await dialog.getByLabel('Süre',{exact:true}).selectOption({label:duration==='30'?'30 dakika':'1 saat (60 dakika)'});await dialog.getByRole('button',{name:'Dersi ekle',exact:true}).click();await expect(dialog).toHaveCount(0);
 }

@@ -138,7 +138,7 @@ public sealed class WeeklyProposalServiceTests
     public async Task WithoutAvailabilityTheStudentIsAskedForHerHours_AnEmptyDraftIsFine()
     {
         await using var f = new CurriculumManagementTests.Fixture(); await Seed(f, availability: false);
-        var missing = await Assert.ThrowsAsync<KeyNotFoundException>(() => Proposals(f).ProposeAsync(new(), default));
+        var missing = await Assert.ThrowsAsync<StudyAvailabilityMissingException>(() => Proposals(f).ProposeAsync(new(), default));
         Assert.Equal("Önce müsait saatlerini kaydet.", missing.Message);
         var api = new Coaching.API.Controllers.WeeklyStudyDraftController(WeeklyStudyDraftTests.Service(f, new(f.Db)));
         var notFound = Assert.IsType<NotFoundObjectResult>(await api.Proposal(new(), Proposals(f), default));
@@ -232,7 +232,7 @@ public sealed class WeeklyProposalServiceTests
         {
             var bad = await api.WeeklyProposal(world.Student, new(Windows: wrong), Proposals(f, staff), default);
             Assert.IsType<BadRequestObjectResult>(bad);
-            Assert.Equal("Çalışma saatlerini kontrol et: en çok 50 aralık olabilir; aralıklar gün içinde kalmalı ve birbiriyle çakışmamalı.", Body(bad, "message"));
+            Assert.Equal("Çalışma saatlerini kontrol edin: en çok 50 aralık olabilir; aralıklar gün içinde kalmalı ve birbiriyle çakışmamalı.", Body(bad, "message"));
         }
         var answered = Assert.IsType<OkObjectResult>(await api.WeeklyProposal(world.Student, new(Windows: [new(DayOfWeek.Monday, 1020, 1140), new(DayOfWeek.Tuesday, 1020, 1140)]), Proposals(f, staff), default));
         Assert.NotEmpty(((WeeklyProposalView)Body(answered, "data")!).Slots);
@@ -303,5 +303,22 @@ public sealed class WeeklyProposalServiceTests
         var proposal = await Proposals(f, now: Now.AddDays(8)).ProposeAsync(new(WeeklyProposalMode.Replace), default);
         Assert.Equal(1, proposal.WeeksUntilEnd);
         Assert.Equal((30, 180), (proposal.Lessons.Single(x => x.LessonId == world.Math.Id).NeededMinutes, proposal.Lessons.Single(x => x.LessonId == world.Turkish.Id).NeededMinutes));
+    }
+
+    // Final review of PR 130 (10): only missing study times get the teacher's "no study times" message.
+    [Fact]
+    public async Task OnlyMissingStudyTimesGetTheTeachersStudyTimesMessage()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f, availability: false);
+        var staff = await BecomeTeacher(f, world); var api = StaffApi(f, staff);
+        var missing = await api.WeeklyProposal(world.Student, new(), Proposals(f, staff), default);
+        Assert.Equal("Öğrenci henüz çalışabileceği saatleri kaydetmemiş.", Body(missing, "message"));
+        var other = await api.WeeklyProposal(world.Student, new(), new Throwing(new KeyNotFoundException("Başka bir kayıt yok.")), default);
+        Assert.IsType<NotFoundResult>(other);
+    }
+    private sealed class Throwing(Exception error) : IWeeklyProposalService
+    {
+        public Task<WeeklyProposalView> ProposeAsync(WeeklyProposalRequest request, CancellationToken ct) => throw error;
+        public Task<WeeklyProposalView> ProposeForStudentAsync(Guid studentId, WeeklyProposalRequest request, CancellationToken ct) => throw error;
     }
 }

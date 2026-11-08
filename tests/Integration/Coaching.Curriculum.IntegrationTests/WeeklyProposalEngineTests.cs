@@ -312,4 +312,65 @@ public sealed class WeeklyProposalEngineTests
             [Lesson(1, 600)], existing: [.. full, .. over]);
         Assert.Equal(DayOfWeek.Wednesday, Assert.Single(result.Slots).Day);
     }
+
+    // Final review of PR 130 (1): a lesson without work and without saved time used to divide by zero in the shortage branch.
+    [Fact]
+    public void ALessonWithoutWorkOrSavedTimeDoesNotBreakTheShortageBranch()
+    {
+        var result = Propose([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Tuesday, 1020, 1080)], [Lesson(1, 60, priority: 1), Lesson(2, 0)]);
+        Assert.Equal(2, result.Slots.Count);
+        Assert.Equal(0, result.ShortageMinutes);
+    }
+
+    [Fact]
+    public void SmallRandomWeeksNeverThrowAndKeepTheRules()
+    {
+        var random = new Random(130);
+        for (var run = 0; run < 400; run++)
+        {
+            var lessons = Enumerable.Range(1, random.Next(1, 6)).Select(n => Lesson(n, random.Next(0, 4) * 60 + random.Next(0, 2) * 30, random.Next(1, 6),
+                random.Next(2) == 0, random.Next(3) == 0 ? "Matematik (TYT)" : random.Next(2) == 0 ? "Matematik (AYT)" : null)).ToArray();
+            var windows = Enumerable.Range(0, random.Next(0, 5)).Select(_ => { var start = random.Next(0, 44) * 30; return Window(WeeklyProposalEngine.Week[random.Next(7)], start, Math.Min(1440, start + random.Next(1, 8) * 30)); }).ToArray();
+            var saved = Enumerable.Range(0, random.Next(0, 3)).Select(i => Card(random.Next(1, 7), WeeklyProposalEngine.Week[random.Next(7)], 60 * (8 + i * 3))).ToArray();
+            var mode = random.Next(2) == 0 ? WeeklyProposalMode.Fill : WeeklyProposalMode.Replace;
+            var result = WeeklyProposalEngine.Propose(new(windows, saved, lessons, random.Next(1, 3), random.Next(2) == 0 ? 480 : 600,
+                new[] { null, "tyt", "balanced", "ayt" }[random.Next(4)], mode));
+            Assert.All(result.Slots, x => Assert.True(x.DurationMinutes == 60 && x.StartMinute % 30 == 0 && x.StartMinute + 60 <= 1440));
+            Assert.Equal(result.NeededMinutes - result.CoveredMinutes, result.ShortageMinutes);
+            Assert.True(result.ShortageMinutes >= 0);
+        }
+    }
+
+    // Final review of PR 130 (2): before an hour stays empty, a lesson may come right after its namesake.
+    [Fact]
+    public void NamesakesComeBackToBackRatherThanLeavingAnHourEmpty()
+    {
+        var result = Propose([Window(DayOfWeek.Monday, 960, 1080)], [Lesson(1, 60, name: "Matematik (TYT)", exam: "TYT"), Lesson(2, 60, name: "Matematik (AYT)", exam: "AYT")]);
+        Assert.Equal(2, result.Slots.Count);
+        Assert.Equal(0, result.ShortageMinutes);
+    }
+
+    // Final review of PR 130 (8): a saved card on a weekday that does not come before the end gives no time.
+    [Fact]
+    public void SavedCardsOnWeekdaysThatNoLongerComeDoNotCount()
+    {
+        var saved = new[] { Card(1, DayOfWeek.Friday, 1020) };
+        var monToWed = WeeklyProposalEngine.Occurrences(new DateOnly(2027, 5, 24), new DateOnly(2027, 5, 26));
+        var result = WeeklyProposalEngine.Propose(new([Window(DayOfWeek.Monday, 1020, 1080)], saved, [Lesson(1, 60)], 2, 480, null, WeeklyProposalMode.Fill, monToWed));
+        Assert.Equal((0, 60, 60, 0), (result.Lessons[0].ExistingMinutes, result.Lessons[0].ProposedMinutes, result.CoveredMinutes, result.ShortageMinutes));
+        Assert.Equal(DayOfWeek.Monday, Assert.Single(result.Slots).Day);
+    }
+
+    // Final review of PR 130 (7): when the exams keep changing, the end returned is the one the returned proposal was made with.
+    [Fact]
+    public async Task TheEndReturnedIsTheOneTheProposalWasMadeWith()
+    {
+        var ends = new List<string>();
+        var (end, result) = await WeeklyProposalEngine.SettleAsync<string, string>(["A"], codes => { ends.Add(codes[0]); return Task.FromResult(codes[0]); },
+            planEnd => "proposal for " + planEnd, proposal => [proposal.EndsWith('A') ? "B" : "A"]);
+        Assert.Equal(3, ends.Count);
+        Assert.Equal("proposal for " + end, result);
+        var (stable, made) = await WeeklyProposalEngine.SettleAsync<string, string>(["A"], codes => Task.FromResult(codes[0]), planEnd => planEnd, _ => ["A"]);
+        Assert.Equal(("A", "A"), (stable, made));
+    }
 }

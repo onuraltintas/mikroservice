@@ -144,6 +144,10 @@ describe('StudentStudyPlanAssistantComponent', () => {
     const { fixture, learning } = await setup({}, null, 'student-1');
     const line = fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement;
     expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Öğrenci “Başlangıç durumum” bölümünde 1 konuyu “Çalıştım” olarak işaretledi.');
+    TestBed.resetTestingModule();
+    const none = await setup({ context: { ...context, topicStates: [] } }, null, 'student-1');
+    expect((none.fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement).textContent?.replace(/\s+/g, ' ').trim())
+      .toBe('Öğrenci “Başlangıç durumum” bölümünde henüz “Çalıştım” olarak işaretlediği konu yok.');
     expect(line.querySelector('a')).toBeNull();
     expect(learning.catalogForStudent).not.toHaveBeenCalled();
   });
@@ -336,10 +340,12 @@ describe('StudentStudyPlanAssistantComponent', () => {
       expect(status.getAttribute('role')).toBe('status'); expect(status.textContent?.trim()).toBe('');
       component.createProposal(); fixture.detectChanges();
       const notice = status.querySelector('[data-testid="shortage-notice"]') as HTMLElement;
-      expect(notice.textContent?.replace(/\s+/g, ' ')).toContain('Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık 10 saat gerekiyor; şu an 1,5 saat var.');
+      expect(notice.textContent?.replace(/\s+/g, ' ')).toContain('Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık 10 saat gerekiyor; şu an 0,5 saat var. Bu öneriyle 1,5 saat olur.');
       expect(notice.textContent).toContain('Saat verilemeyen dersler: Türkçe, Din Kültürü ve Ahlak Bilgisi.');
       expect(component.messages().at(-1)!.content).toContain('bütün derslerine yetmiyor');
-      expect(notice.querySelector('a[href="/coaching-portal/account/settings"]')?.textContent?.trim()).toBe('Ders çıkar');
+      await fixture.whenStable(); fixture.detectChanges();
+      const remove = (Array.from(notice.querySelectorAll('a')) as HTMLAnchorElement[]).find(x => x.textContent?.trim() === 'Ders çıkar')!;
+      expect(remove.getAttribute('href')).toBe('/coaching-portal/account/settings?adim=dersler&donus=sihirbaz');
       const button = (name: string) => (Array.from(notice.querySelectorAll('button')) as HTMLButtonElement[]).find(x => x.textContent?.trim() === name)!;
       button('Bu önerilerle devam et').click();
       expect(weekly.save).toHaveBeenCalledWith(3, 'Europe/Istanbul', [saved.slots[0], tuesday], undefined);
@@ -360,7 +366,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
       component.createProposal(); fixture.detectChanges();
       expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, 'student-1');
       const notice = fixture.nativeElement.querySelector('[data-testid="shortage-notice"]') as HTMLElement;
-      expect(notice.textContent?.replace(/\s+/g, ' ')).toContain('Seçilen saatler öğrencinin derslerine yetmiyor. Bütün derslerine yetişmesi için haftada yaklaşık 3 saat gerekiyor; şu an 1,5 saat var.');
+      expect(notice.textContent?.replace(/\s+/g, ' ')).toContain('Seçilen saatler öğrencinin derslerine yetmiyor. Bütün derslerine yetişmesi için haftada yaklaşık 3 saat gerekiyor; şu an 0,5 saat var. Bu öneriyle 1,5 saat olur.');
       expect(notice.textContent).toContain('Saat verilemeyen dersler: Türkçe.');
       expect((Array.from(notice.querySelectorAll('button')) as HTMLButtonElement[]).map(x => x.textContent?.trim())).toEqual(['Bu önerilerle devam et']);
       expect(notice.querySelector('a')).toBeNull();
@@ -481,6 +487,11 @@ describe('StudentStudyPlanAssistantComponent', () => {
       component.createProposal(); fixture.detectChanges();
       expect(component.messages().at(-1)!.content).toBe('Haftalık düzenin derslerine yetiyor; eklenecek saat yok.');
       expect((fixture.nativeElement.querySelector('[data-testid="proposal-empty"]') as HTMLElement).textContent).toContain('eklenecek saat yok');
+      // Final review of PR 130 (4): an empty proposal does not hold back the yearly preview.
+      const next = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]).find(x => x.textContent?.includes('Yıllık plan önizlemesine geç'))!;
+      expect(next.disabled).toBe(false);
+      component.continueToAnnualReview();
+      expect(component.annualReview()).toBe(true);
       expect(fixture.nativeElement.textContent).not.toContain('boş yer bulamadım');
     });
     it('sends the student to Derslerim when no course is chosen', async () => {
@@ -489,7 +500,9 @@ describe('StudentStudyPlanAssistantComponent', () => {
       component.createProposal(); fixture.detectChanges();
       expect(component.messages().at(-1)!.content).toContain('Derslerim');
       const empty = fixture.nativeElement.querySelector('[data-testid="wizard-proposal"]') as HTMLElement;
-      expect(empty.querySelector('a[href="/coaching-portal/account/settings"]')?.textContent).toContain('Derslerimi seç');
+      await fixture.whenStable(); fixture.detectChanges();
+      const choose = (Array.from(empty.querySelectorAll('a')) as HTMLAnchorElement[]).find(x => x.textContent?.trim() === 'Derslerimi seç')!;
+      expect(choose.getAttribute('href')).toBe('/coaching-portal/account/settings?adim=dersler&donus=sihirbaz');
     });
     it('says there is no free time only when time really lacks', async () => {
       const { component, weekly } = await setup({}, mondayEvening);
@@ -539,6 +552,34 @@ describe('StudentStudyPlanAssistantComponent', () => {
         expect(component.version).toBe(7);
         expect(component.proposalView()).toBeNull();
       });
+  });
+
+  // Final review of PR 130 (5): the teacher reads "Haftayı baştan öner" with a third-person confirmation.
+  it('shows the teacher "Haftayı baştan öner" and asks in third person', async () => {
+    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
+    const { fixture } = await setup({}, mondayEvening, 'student-1');
+    const toaster = TestBed.inject(ToasterService) as unknown as { confirm: ReturnType<typeof vi.fn> };
+    const button = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]).find(x => x.textContent?.trim() === 'Haftayı baştan öner')!;
+    expect(button).toBeTruthy();
+    expect(fixture.nativeElement.textContent).not.toContain('Haftanı baştan öner');
+    button.click(); await fixture.whenStable();
+    expect(toaster.confirm).toHaveBeenCalledWith('Öğrencinin mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.');
+  });
+
+  // Final review of PR 130 (3): a proposal is made of one-hour sessions; the quick question starts at one hour.
+  it('offers a study day of at least one hour', async () => {
+    const { fixture, component } = await setup();
+    const options = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('#wizard-daily-minutes option')).map(x => x.textContent?.trim());
+    expect(options).toEqual(['1 saat', '1,5 saat', '2 saat']);
+    component.setMinutesPerDay(30);
+    expect(component.minutesPerDay()).toBe(60);
+  });
+
+  it('holds the yearly preview back only while a proposal with new hours waits', async () => {
+    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
+    const { component } = await setup({}, mondayEvening);
+    component.createProposal(); component.continueToAnnualReview();
+    expect(component.annualReview()).toBe(false);
   });
 });
 
