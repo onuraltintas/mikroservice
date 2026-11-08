@@ -76,7 +76,8 @@ describe('saved study plan calendar',()=>{
     const value={...plan,tasks:[
       {...task('late',date,600),lessonName:'Matematik'},
       {...task('partial-a',date,660),weeklyLessonId:'science',lessonName:'Fen Bilimleri',isCompleted:true,actualMinutes:25},
-      {...task('partial-b',date,690),weeklyLessonId:'science',lessonName:'Fen Bilimleri'},
+      // Paket H5: pieces of one lesson are different work (equal neighbours would be the halves of a split, shown apart).
+      {...task('partial-b',date,690),weeklyLessonId:'science',lessonName:'Fen Bilimleri',title:'Maddenin halleri'},
       {...task('complete',date,750),weeklyLessonId:'english',lessonName:'İngilizce',isCompleted:true,actualMinutes:30}
     ]};
     const {f,c}=await setup(value);c.changeView('day');c.goToDate(date);f.detectChanges();await f.whenStable();

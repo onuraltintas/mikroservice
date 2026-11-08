@@ -45,6 +45,56 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         => DeleteCalendarCoreAsync(id,taskId,expectedVersion,ct);
     public Task<ManualStudyPlanView> DeleteCalendarForStudentAsync(Guid student,Guid id,Guid taskId,int expectedVersion,CancellationToken ct=default)
         => DeleteCalendarCoreAsync(id,taskId,expectedVersion,ct,student);
+    public Task<ManualStudyPlanView> SplitCalendarTaskAsync(Guid id,Guid taskId,int expectedVersion,CancellationToken ct=default)
+        => SplitCalendarCoreAsync(id,taskId,expectedVersion,ct);
+    public Task<ManualStudyPlanView> SplitCalendarForStudentAsync(Guid student,Guid id,Guid taskId,int expectedVersion,CancellationToken ct=default)
+        => SplitCalendarCoreAsync(id,taskId,expectedVersion,ct,student);
+
+    /// <summary>
+    /// Paket H5: one timed task becomes two consecutive tasks with the same title, lesson and plan decision. The first gets half
+    /// the minutes rounded up to a half hour; the second starts where the first ends. Outcome allocations are divided by minutes in
+    /// catalog order, so the plan's outcome minutes (and the completed-outcome credit, which counts each task once) stay the same.
+    /// Only untouched work can be split: no realization, no continuation, no weekly decision.
+    /// </summary>
+    private Task<ManualStudyPlanView> SplitCalendarCoreAsync(Guid id,Guid taskId,int expectedVersion,CancellationToken ct,Guid? targetStudent=null)
+        => LockedAsync(async student=>
+        {
+            var revision=await OwnedAsync(id,student,expectedVersion,ct);
+            if(revision.Status==StudyPlanStatus.Archived)throw Conflict("Geçmiş plan değiştirilemez.");
+            var task=await db.StudyPlanTasks.SingleOrDefaultAsync(x=>x.Id==taskId&&x.RevisionId==id&&x.StudentId==student,ct)
+                ??throw new BusinessRuleException("StudyPlanning.NotFound","Çalışma bulunamadı.");
+            if(task.IsCompleted||task.ActualMinutes.HasValue||task.RealizationHistoryJson!="[]"||task.PredecessorTaskId.HasValue)
+                throw Conflict("Gerçekleşme kaydı bulunan çalışma bölünemez.");
+            if(task.SkippedAt.HasValue)throw Conflict("Atlanan çalışma bölünemez. Önce çalışmayı yeni bir saate taşı.");
+            if(await db.Set<WeeklyDecision>().AnyAsync(x=>x.StudyTaskId==taskId,ct))throw Conflict("Bu çalışma bir karara bağlı; bölünemez.");
+            if(task.PlannedStartMinute is not {} start)throw Conflict("Saati belirtilmemiş çalışma bölünemez.");
+            if(task.PlannedMinutes<60)throw Conflict("En az 60 dakikalık çalışma iki parçaya bölünebilir.");
+            if(await db.StudyPlanTasks.CountAsync(x=>x.RevisionId==id,ct)>=10000)throw Conflict("Planın çalışma sınırına ulaşıldı.");
+            var total=task.PlannedMinutes;var first=(total+1)/2;first=(first+29)/30*30;var rest=total-first;
+            int? questions=task.PlannedQuestions is {} q?(int)Math.Round(q*(double)first/total,MidpointRounding.AwayFromZero):null;
+            var second=StudyPlanTask.Create(revision,task.PlannedDate,task.Title,rest,task.TopicId,task.IsPinned,task.SourceName,task.PlannedQuestions-questions);
+            if(task.WeeklyLessonId is {} lesson)second.SetWeeklyPlacement(lesson,task.LessonNameSnapshot!,start+first);
+            else second.Schedule(task.PlannedDate,start+first);
+            if(task.PlanKind is {} kind)second.SetPlanDecision(kind,task.PlanReason);
+            task.CorrectPlanning(task.Title,task.PlannedDate,first);
+            if(questions!=task.PlannedQuestions)task.CorrectPlannedQuestions(questions);
+            db.StudyPlanTasks.Add(second);
+            var links=await (from link in db.Set<StudyPlanTaskOutcome>() join outcome in db.Set<StudyCatalogOutcome>() on link.OutcomeId equals outcome.Id
+                where link.TaskId==task.Id orderby outcome.DisplayOrder,link.OutcomeId select link).ToArrayAsync(ct);
+            var linked=links.Sum(x=>x.AllocatedMinutes);
+            // The boundary is at the first half's share of the linked minutes (the same minute when the links fill the task).
+            var boundary=(int)Math.Round(linked*(double)first/total,MidpointRounding.AwayFromZero);var used=0;
+            foreach(var link in links)
+            {
+                if(used>=boundary){db.Add(link.CopyTo(second.Id,link.AllocatedMinutes));db.Remove(link);}
+                else if(used+link.AllocatedMinutes>boundary)db.Add(link.SplitTo(second.Id,boundary-used));
+                used+=link.AllocatedMinutes;
+            }
+            revision.RecordScheduleChange();
+            if(targetStudent.HasValue&&revision.Status==StudyPlanStatus.Active)
+                await NotifyPlanChangedAsync(revision,FormattableString.Invariant($"{task.LessonNameSnapshot??task.Title}: {task.PlannedDate:dd.MM.yyyy} çalışması iki parçaya bölündü: {start/60:00}:{start%60:00}–{(start+first)/60:00}:{(start+first)%60:00} ve {(start+first)/60:00}:{(start+first)%60:00}–{(start+total)/60:00}:{(start+total)%60:00}."),ct);
+            await db.SaveChangesAsync(ct);return await ViewAsync(revision,ct);
+        },ct,targetStudent,true);
 
     private Task<ManualStudyPlanView> SaveCalendarCoreAsync(Guid id,Guid? taskId,CalendarTaskSaveInput request,CancellationToken ct,Guid? targetStudent=null)
         => LockedAsync(async student=>

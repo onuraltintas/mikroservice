@@ -177,6 +177,10 @@ export class CoachingStudyPlanningService {
   deleteCalendarTask(id:string,taskId:string,expectedVersion:number,studentId:string|null=null){
     return this.http.delete<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}`,{body:{expectedVersion}}).pipe(map(r=>r.data));
   }
+  /** Paket H5: splits a timed, untouched task of at least an hour into two consecutive halves. */
+  splitCalendarTask(id:string,taskId:string,expectedVersion:number,studentId:string|null=null){
+    return this.http.post<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/split`,{expectedVersion}).pipe(map(r=>r.data));
+  }
   teacherOverview(fromDate:string,toDate:string,pageNumber=1,search=''){
     const params=new HttpParams().set('fromDate',fromDate).set('toDate',toDate).set('pageNumber',pageNumber).set('pageSize',25).set('search',search.trim());
     return this.http.get<TeacherStudyOverview>(`${environment.apiUrl}/coaching/teachers/me/study-overview`,{params});

@@ -3,15 +3,18 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability, StudyDay, StudyWindow } from '../../../core/services/coaching-study-planning.service';
+import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
+import { slotsOutsideAvailability } from './weekly-calendar';
 
 interface AvailabilityRow { day: StudyDay; start: string; end: string; endOfDay: boolean }
 
 @Component({
   selector: 'app-student-study-availability',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './student-study-availability.component.html',
   styleUrl: './student-study-plans.component.scss'
 })
@@ -20,6 +23,9 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   readonly saved = output<void>();
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly weekly = inject(CoachingWeeklyDraftService);
+  /** Paket H5: how many weekly cards the last saved study times leave outside (0: nothing to say). The cards are never changed here. */
+  readonly outsideCards = signal(0);
   private lastSaved: StudyAvailability | null = null;
   readonly loading = signal(false);
   readonly saving = signal(false);
@@ -126,15 +132,25 @@ export class StudentStudyAvailabilityComponent implements OnInit {
   /** E4 #24: every attempt clears the previous message; a refused row is marked next to its field (the form is novalidate). */
   save() {
     if (!this.ready() || this.saving() || this.loading()) return;
-    this.error.set(null); this.success.set(null); this.invalidField.set(null); this.copyNote.set(null);
+    this.error.set(null); this.success.set(null); this.invalidField.set(null); this.copyNote.set(null); this.outsideCards.set(0);
     let windows: StudyWindow[];
     try { windows = this.validatedWindows(); }
     catch (error) { this.error.set(`Çalışma saatlerin kaydedilmedi. ${error instanceof Error ? error.message : 'Çalışma saatlerini kontrol et.'}`); return; }
     this.saving.set(true);
     this.service.saveAvailability({ expectedVersion: this.version, timeZoneId: this.timeZoneId, windows })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
-      .subscribe({ next: preferences => { this.apply(preferences); this.success.set('Çalışma saatlerin kaydedildi. Aktif planın değişmedi.'); this.saved.emit(); },
+      .subscribe({ next: preferences => { this.apply(preferences); this.success.set('Çalışma saatlerin kaydedildi. Aktif planın değişmedi.'); this.saved.emit(); this.checkWeeklyCards(preferences.windows); },
         error: error => this.showError(error, 'Çalışma saatleri kaydedilemedi. Değişikliklerin ekranda korundu.') });
+  }
+
+  dismissOutside() { this.outsideCards.set(0); }
+
+  /** Paket H5: counts the weekly cards outside the new study times. A failure only means there is nothing to say. */
+  private checkWeeklyCards(windows: StudyWindow[]) {
+    this.weekly.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: page => this.outsideCards.set(slotsOutsideAvailability(page.draft?.slots ?? [], windows).size),
+      error: () => this.outsideCards.set(0)
+    });
   }
 
   async canLeavePage() {

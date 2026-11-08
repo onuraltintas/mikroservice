@@ -32,9 +32,10 @@ describe('weekly draft calendar',()=>{
     expect(el.querySelector('[data-slot-id="one"] .slot-content')!.getAttribute('aria-label')).not.toContain('Müsait saatlerinin dışında');
     // Removing a card outside updates the count; saving is allowed with cards outside.
     c.edit(week.slots[1]);c.remove();fixture.detectChanges();
-    expect(c.outsideCount()).toBe(2);c.save();expect(service.save).toHaveBeenCalledTimes(1);expect(c.error()).toBe('');
+    expect(c.outsideCount()).toBe(2);
     c.changeView('month');fixture.detectChanges();await fixture.whenStable();
     expect(el.querySelector('.month-slot.outside')?.getAttribute('aria-label')).toContain('Müsait saatlerinin dışında');
+    c.save();expect(service.save).toHaveBeenCalledTimes(1);expect(c.error()).toBe('');
   });
   it('asks for study times instead of marking cards when none are saved',async ()=>{
     const{fixture}=await setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});

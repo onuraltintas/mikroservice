@@ -12,7 +12,7 @@ import {CoachingLearningSetupService,LearningLesson} from '../../../core/service
 import {lessonColors,lessonKey} from './study-plan-colors';
 import {computed} from '@angular/core';
 import {CalendarAction,StudyPlanCalendarComponent} from './study-plan-calendar.component';
-import {CalendarMove,calendarTaskOverdue} from './study-plan-calendar';
+import {CalendarMove,calendarTaskOverdue,canSplitTask,splitRanges,taskSourceBadge,taskSourceTone} from './study-plan-calendar';
 import {effect} from '@angular/core';
 import {PlanTaskRowComponent} from './plan-task-row.component';
 import {CsBottomSheetComponent,CsSegmentedTabsComponent,CsTabOption} from '../ui';
@@ -93,7 +93,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   calendarLessons:LearningLesson[]=[];calendarLessonsLoading=false;
   async calendarCommand(action:CalendarAction){
     const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived'||action.kind==='complete'&&(!!this.staffStudentId||plan.status!=='Active'))return;
-    const tasks=plan.tasks.filter(t=>action.taskIds.includes(t.id)&&!t.isCompleted),task=tasks[0];
+    const tasks=plan.tasks.filter(t=>action.taskIds.includes(t.id)&&(action.kind==='split'?canSplitTask(t):!t.isCompleted)),task=tasks[0];
     if(action.kind!=='add'&&!task)return;
     this.calendarForm={kind:action.kind,taskId:task?.id??null,taskIds:tasks.map(t=>t.id),date:action.date,time:clock(action.startMinute),title:'',minutes:30,lessonId:null,actualMinutes:30,actualQuestions:null};
     this.error.set(null);if(task)this.chooseCalendarTask(task.id);
@@ -112,6 +112,15 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     const task=this.selected()?.tasks.find(t=>t.id===id),form=this.calendarForm;if(!task||!form)return;
     Object.assign(form,{taskId:id,date:task.plannedDate,time:clock(task.plannedStartMinute??540),title:task.title,minutes:task.plannedMinutes,lessonId:task.weeklyLessonId??null,actualMinutes:this.actualMinutes[id]??task.plannedMinutes,actualQuestions:this.actualQuestions[id]??null});
   }
+  /** Paket H5: the confirmation names the two halves before the task is split. */
+  splitText(){
+    const task=this.selected()?.tasks.find(t=>t.id===this.calendarForm?.taskId);if(!task)return '';
+    const [[a,b],[c,d]]=splitRanges(task);
+    return `Bu çalışma iki parçaya bölünecek: ${clock(a)}–${clock(b)} ve ${clock(c)}–${clock(d)}. Sonra istediğin parçayı sürükleyebilirsin.`;
+  }
+  /** Paket H5: where the work came from, for the Planım rows. */
+  sourceBadge(task:StudyTask){return taskSourceBadge(task,!this.staffStudentId);}
+  readonly sourceTone=taskSourceTone;
   calendarTaskOptions(){return this.selected()?.tasks.filter(t=>this.calendarForm?.taskIds.includes(t.id))??[];}
   calendarDurationLocked(){const task=this.selected()?.tasks.find(t=>t.id===this.calendarForm?.taskId);return !!task?.outcomes?.length;}
   closeCalendarForm(){if(this.busy())return;this.calendarForm=null;}
@@ -131,6 +140,10 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       if(form.workedOn)this.workDates[task.id]=form.workedOn;
       this.complete(task,form.actualMinutes,form.actualQuestions);
       return;
+    }
+    if(form.kind==='split'){
+      if(!task||!canSplitTask(task))return;
+      this.mutate(this.service.splitCalendarTask(plan.id,task.id,plan.version,...this.studentArgument),'Çalışma iki parçaya bölündü.');return;
     }
     if(form.kind==='delete'){
       if(!task||task.isCompleted)return;

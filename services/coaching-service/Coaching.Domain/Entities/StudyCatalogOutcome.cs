@@ -202,4 +202,21 @@ public sealed class StudyPlanTaskOutcome
             || origin is not ("Catalog" or "StudentOverride")) throw new ArgumentException("Plan kazanım süresi geçersiz.");
         return new() { TaskId = task, OutcomeId = outcome, EstimateId = estimate, AllocatedMinutes = minutes, Origin = origin };
     }
+
+    /// <summary>Paket H5: the same allocation (outcome, estimate, origin and text) on another task, with the given minutes.</summary>
+    public StudyPlanTaskOutcome CopyTo(Guid task, int minutes)
+    {
+        var copy = Create(task, OutcomeId, EstimateId, minutes, Origin);
+        copy.CodeSnapshot = CodeSnapshot; copy.NameSnapshot = NameSnapshot;
+        return copy;
+    }
+
+    /// <summary>Paket H5: a split task keeps <paramref name="keep"/> minutes of this allocation; the rest moves to the second half.</summary>
+    public StudyPlanTaskOutcome SplitTo(Guid task, int keep)
+    {
+        if (task == TaskId || keep < 1 || keep >= AllocatedMinutes) throw new ArgumentException("Plan kazanım süresi geçersiz.");
+        var rest = CopyTo(task, AllocatedMinutes - keep);
+        AllocatedMinutes = keep;
+        return rest;
+    }
 }

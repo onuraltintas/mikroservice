@@ -56,8 +56,8 @@ public sealed class CalendarTaskSplitTests
             Assert.False(x.IsCompleted);Assert.Null(x.OriginalTaskId);Assert.Null(x.PredecessorTaskId);});
         Assert.Equal(30,halves.Sum(x=>x.PlannedQuestions));Assert.Equal(20,halves[0].PlannedQuestions);
         // The first half keeps the first outcome minutes; the link crossing the boundary is divided; estimates are kept.
-        Assert.Equal([("M.8.1.1.1",50),("M.8.1.1.2",10)],halves[0].Outcomes!.Select(x=>(x.Code,x.AllocatedMinutes)).ToArray());
-        Assert.Equal([("M.8.1.1.2",30)],halves[1].Outcomes!.Select(x=>(x.Code,x.AllocatedMinutes)).ToArray());
+        Assert.Equal(new[]{("M.8.1.1.1",50),("M.8.1.1.2",10)},halves[0].Outcomes!.Select(x=>(x.Code,x.AllocatedMinutes)).ToArray());
+        Assert.Equal(new[]{("M.8.1.1.2",30)},halves[1].Outcomes!.Select(x=>(x.Code,x.AllocatedMinutes)).ToArray());
         var links=await f.Db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>x.TaskId==task.Id||x.TaskId==halves[1].Id).ToArrayAsync();
         Assert.Equal(90,links.Sum(x=>x.AllocatedMinutes));
         Assert.All(links.Where(x=>x.OutcomeId==second.Id),x=>{Assert.Equal(estimate.Id,x.EstimateId);Assert.Equal("İkinci",x.NameSnapshot);Assert.Equal("Catalog",x.Origin);});
@@ -81,7 +81,7 @@ public sealed class CalendarTaskSplitTests
         f.Db.AddRange(task,link);await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
         var split=await service.SplitCalendarTaskAsync(revision.Id,task.Id,revision.Version);
         var other=split.Tasks.Single(x=>x.PlannedDate==new DateOnly(2026,10,20)&&x.Id!=task.Id);
-        Assert.Equal([30,30],split.Tasks.Where(x=>x.PlannedDate==new DateOnly(2026,10,20)).OrderBy(x=>x.PlannedStartMinute).Select(x=>x.Outcomes!.Single().AllocatedMinutes).ToArray());
+        Assert.Equal(new[]{30,30},split.Tasks.Where(x=>x.PlannedDate==new DateOnly(2026,10,20)).OrderBy(x=>x.PlannedStartMinute).Select(x=>x.Outcomes!.Single().AllocatedMinutes).ToArray());
         var done=await service.CompleteTaskAsync(revision.Id,task.Id,split.Version,30);
         await service.CompleteTaskAsync(revision.Id,other.Id,done.Version,30);
         var credits=await f.Db.StudyPlanTasks.AsNoTracking().Where(x=>x.IsCompleted&&x.PlannedDate==new DateOnly(2026,10,20))
@@ -97,7 +97,7 @@ public sealed class CalendarTaskSplitTests
         var student=(await f.Db.StudyPlanRevisions.SingleAsync()).StudentId;var service=Student(f,student);
         var draft=await service.CreateDraftAsync(new("Taslak",[new(new(2027,1,8),"Soru çözümü",75,null,false,PlannedStartMinute:1080)]));
         var split=await service.SplitCalendarTaskAsync(draft.Id,draft.Tasks[0].Id,draft.Version);
-        Assert.Equal([(1080,60),(1140,15)],split.Tasks.OrderBy(x=>x.PlannedStartMinute).Select(x=>(x.PlannedStartMinute!.Value,x.PlannedMinutes)).ToArray());
+        Assert.Equal(new[]{(1080,60),(1140,15)},split.Tasks.OrderBy(x=>x.PlannedStartMinute).Select(x=>(x.PlannedStartMinute!.Value,x.PlannedMinutes)).ToArray());
         Assert.All(split.Tasks,x=>{Assert.Equal("Soru çözümü",x.Title);Assert.Null(x.PlanKind);Assert.Null(x.WeeklyLessonId);Assert.Empty(x.Outcomes!);});
     }
 

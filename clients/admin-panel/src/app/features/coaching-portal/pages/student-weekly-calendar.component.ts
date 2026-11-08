@@ -6,7 +6,8 @@ import {RouterLink} from '@angular/router';
 import {CdkTrapFocus} from '@angular/cdk/a11y';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CoachingWeeklyDraftService,WeeklyLesson} from '../../../core/services/coaching-weekly-draft.service';
-import {CalendarView,DEFAULT_MAX_DAY_MINUTES,WeeklySlot,Weekday,calendarDays,clock,slotError,weekday,weekDays} from './weekly-calendar';
+import {CoachingStudyPlanningService} from '../../../core/services/coaching-study-planning.service';
+import {AvailabilityWindow,CalendarView,DEFAULT_MAX_DAY_MINUTES,WeeklySlot,Weekday,calendarDays,clock,slotError,slotsOutsideAvailability,weekday,weekDays} from './weekly-calendar';
 
 interface Gesture {id:number;slot:WeeklySlot;mode:'move'|'top'|'bottom';startX:number;startY:number;offset:number;moved:boolean}
 @Component({selector:'app-student-weekly-calendar',standalone:true,imports:[CommonModule,FormsModule,RouterLink,CdkTrapFocus],
@@ -19,6 +20,18 @@ export class StudentWeeklyCalendarComponent implements OnInit {
   readonly preview=signal<WeeklySlot|null>(null);readonly days=computed(()=>calendarDays(this.anchor(),this.view()));
   readonly weeklyMinutes=computed(()=>this.slots().reduce((sum,s)=>sum+s.durationMinutes,0));
   readonly displayed=computed(()=>this.preview()?this.slots().map(s=>s.id===this.preview()!.id?this.preview()!:s):this.slots());
+  private readonly planning=inject(CoachingStudyPlanningService);
+  /** Paket H5: the saved study times; [] when none are saved, undefined while unknown (then nothing is marked). */
+  readonly availability=signal<AvailabilityWindow[]|undefined>(undefined);
+  /** Paket H5 (K4: warn, allow): the cards not fully inside a saved study time. Saving stays allowed. */
+  readonly outside=computed(()=>{const windows=this.availability();return windows?.length?slotsOutsideAvailability(this.slots(),windows):new Set<string>();});
+  readonly outsideCount=computed(()=>this.outside().size);
+  readonly outsideLabel='Müsait saatlerinin dışında';
+  isOutside(slot:WeeklySlot){return this.outside().has(slot.id);}
+  loadAvailability(){
+    this.planning.getAvailability().pipe(takeUntilDestroyed(this.destroy)).subscribe({next:a=>this.availability.set(a?.windows??[]),
+      error:(e:{status?:number})=>this.availability.set(e?.status===404?[]:undefined)});
+  }
   readonly weekDays=weekDays;readonly clock=clock;readonly weekday=weekday;readonly minutes=Array.from({length:48},(_,i)=>i*30);readonly views=[{id:'day' as const,label:'Gün'},{id:'week' as const,label:'Hafta'},{id:'month' as const,label:'Ay'}];
   /** Paket H1 (K5): the student's daily limit, from the server (8 hours when it does not say). */
   maxDayMinutes=DEFAULT_MAX_DAY_MINUTES;
@@ -37,7 +50,7 @@ export class StudentWeeklyCalendarComponent implements OnInit {
       value.nativeElement.scrollTop=(starts.length?Math.max(0,Math.min(...starts)-30):480)*72/60;
     }
   }
-  async ngOnInit(){if(typeof window!=='undefined'&&window.innerWidth<680)this.view.set('day');await this.load();}
+  async ngOnInit(){if(typeof window!=='undefined'&&window.innerWidth<680)this.view.set('day');this.loadAvailability();await this.load();}
   private snapshot(){return JSON.stringify({timeZoneId:this.timeZoneId,slots:this.slots()});}
   dirty(){return this.ready()&&this.snapshot()!==this.initial;}
   busy(){return this.loading()||this.saving();}

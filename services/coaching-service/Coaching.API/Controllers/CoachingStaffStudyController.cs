@@ -155,6 +155,10 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     [HttpDelete("plans/{id:guid}/tasks/{taskId:guid}"),Authorize(Roles="Teacher"),RequestSizeLimit(1024),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> DeleteCalendarTask(Guid studentId,Guid id,Guid taskId,[FromBody] StudyPlanPublishInput request,CancellationToken ct)
         =>Respond(async()=>Ok(new{success=true,data=await plans.DeleteCalendarForStudentAsync(studentId,id,taskId,request.ExpectedVersion,ct)}));
+    /// <summary>Paket H5: the teacher splits a task, with the same access as the other calendar edits.</summary>
+    [HttpPost("plans/{id:guid}/tasks/{taskId:guid}/split"),Authorize(Roles="Teacher"),RequestSizeLimit(1024),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> SplitCalendarTask(Guid studentId,Guid id,Guid taskId,[FromBody] StudyPlanPublishInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new{success=true,data=await plans.SplitCalendarForStudentAsync(studentId,id,taskId,request.ExpectedVersion,ct)}));
 
     [HttpPut("plans/{id:guid}/tasks/{taskId:guid}/remaining-scope"),Authorize(Roles="Teacher"),RequestSizeLimit(4096)]
     public Task<IActionResult> RemainingScope(Guid studentId,Guid id,Guid taskId,StudyRemainingScopeInput request,CancellationToken ct)

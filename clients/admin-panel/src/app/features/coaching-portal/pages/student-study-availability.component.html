@@ -4,6 +4,14 @@
     <span class="badge" aria-live="polite">Haftalık {{ weeklyMinutes() }} dakika</span></header>
   @if (error()) { <p role="alert" class="notice error" id="availability-error">{{ error() }}</p> }
   @if (success()) { <p role="status" class="notice success">{{ success() }}</p> }
+  <!-- Paket H5: the weekly cards are not changed; the student chooses a new proposal or keeps them. -->
+  @if (outsideCards()) {
+    <div class="notice warning" role="status" data-testid="weekly-outside-notice">
+      <p>Haftalık düzeninde {{ outsideCards() }} kart yeni saatlerinin dışında kaldı.</p>
+      <div class="actions"><a class="link-button" routerLink="/coaching-portal/plan/wizard">Yeniden öner</a>
+        <button type="button" class="secondary" (click)="dismissOutside()">Olduğu gibi bırak</button></div>
+    </div>
+  }
   @if (copyNote(); as note) { <p role="status" class="notice" data-testid="copy-note">{{ note }}</p> }
   @if (loading()) { <p role="status">Çalışma saatleri yükleniyor…</p> }
   <div class="panel">

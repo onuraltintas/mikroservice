@@ -3,7 +3,8 @@ import {TestBed} from '@angular/core/testing';
 import {calendarMoveError,calendarBlocks} from './study-plan-calendar';
 import {StudyPlanCalendarComponent} from './study-plan-calendar.component';
 import {StudyPlan,StudyTask} from '../../../core/services/coaching-study-planning.service';
-const task=(id:string,start:number,minutes=30):StudyTask=>({id,title:'Matematik',plannedDate:'2027-01-04',plannedStartMinute:start,plannedMinutes:minutes,lessonName:'Matematik',weeklyLessonId:'math',topicId:null,isPinned:false,isCompleted:false,actualMinutes:null,completedAt:null});
+// Paket H5: each piece of a lesson is different work (equal neighbours would be the halves of a split, shown as two cards).
+const task=(id:string,start:number,minutes=30):StudyTask=>({id,title:`Matematik ${id}`,plannedDate:'2027-01-04',plannedStartMinute:start,plannedMinutes:minutes,lessonName:'Matematik',weeklyLessonId:'math',topicId:null,isPinned:false,isCompleted:false,actualMinutes:null,completedAt:null});
 describe('annual calendar movement',()=>{
   const tasks=[task('a',1080,15),task('b',1095,45),{...task('c',570),plannedDate:'2027-01-05'}];
   it('validates the entire merged block, completed work, overlap, day end and adjacent placement',()=>{
