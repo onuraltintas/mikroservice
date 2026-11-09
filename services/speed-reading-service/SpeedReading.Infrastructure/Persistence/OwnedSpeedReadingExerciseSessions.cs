@@ -654,6 +654,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             .SingleOrDefaultAsync(item => item.SessionId == session.Id, cancellationToken);
         if (existingResult is not null)
             return ToResult(existingResult, session, state);
+        // A timed-out or abandoned attempt cannot be completed; ExerciseSession.Complete would throw (HTTP 500).
+        if (session.Status is not (OwnedExerciseSessionStatus.Active or OwnedExerciseSessionStatus.Paused))
+            throw ClosedSession();
 
         if (IsTargetHunt(state))
         {
@@ -1274,6 +1277,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var state = DeserializeState(session.SessionDataJson);
         if (IsEngineType(state.EngineType, "exam_simulation"))
             throw new BusinessRuleException("ExerciseSession.ExamCannotPause", "Süreli paragraf testi duraklatılamaz.");
+        if (!CanChangePause(session, OwnedExerciseSessionStatus.Paused))
+            return;
         session.Pause(now);
         if (IsFocusExercise(state) && state.FocusStartTime.HasValue)
             state.FocusPausedAt = now;
@@ -1328,11 +1333,30 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Pause and resume only move an open attempt. A repeated request, or one for an attempt that already finished (a late
+    /// tap on a screen that still showed it running), changes nothing; a timed-out or abandoned attempt answers a business
+    /// error. ExerciseSession.Pause and Resume throw InvalidOperationException (HTTP 500) for all of these.
+    /// </summary>
+    private static bool CanChangePause(ExerciseSession session, OwnedExerciseSessionStatus target)
+    {
+        if (session.Status == target || session.Status == OwnedExerciseSessionStatus.Completed)
+            return false;
+        if (session.Status is not (OwnedExerciseSessionStatus.Active or OwnedExerciseSessionStatus.Paused))
+            throw ClosedSession();
+        return true;
+    }
+
+    private static BusinessRuleException ClosedSession() =>
+        new("ExerciseSession.NotActive", "Bu alıştırma artık açık değil. Lütfen yeniden başla.");
+
     public async Task ResumeAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
+        if (!CanChangePause(session, OwnedExerciseSessionStatus.Active))
+            return;
         session.Resume(now);
         if (state.FocusPausedAt.HasValue)
         {
