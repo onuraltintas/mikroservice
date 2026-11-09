@@ -750,4 +750,63 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       expect(t.el.querySelector('[data-testid="ob-copy-status"]')!.textContent).toContain('Kodu seçip kopyalayabilirsin.');
     });
   });
+
+  // Paket H6 (09.11.2026): a student who knows the programme but not its score type finds it by the programme's name.
+  describe('H6: the score type by programme', () => {
+    const fields = `${base}/options/programs/fields`;
+    const twelfth = { ...stepTwo, gradeLevel: 12, purpose: 'Yks' as const, targetExamSessionId: null, targetExamYear: null };
+    const wait = (ms = 400) => new Promise(r => setTimeout(r, ms));
+    async function find(t: Awaited<ReturnType<typeof render>>, search: string, rows: { name: string; scoreType: string }[]) {
+      await t.click('Emin değil misin? Bölümüne göre bulalım');
+      const box = t.el.querySelector('[data-current] input[type="search"]') as HTMLInputElement;
+      box.value = search; box.dispatchEvent(new Event('input')); await wait(); await t.settle();
+      t.http.expectOne(r => r.url === fields && r.params.get('search') === search).flush({ data: rows }); await t.settle();
+    }
+
+    it('below the score type question, a programme sets the field and says why', async () => {
+      const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks'] }, twelfth));
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('yksField');
+      const toggle = t.button('Emin değil misin? Bölümüne göre bulalım');
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      await find(t, 'bilgisayar', [{ name: 'Bilgisayar Mühendisliği', scoreType: 'SAY' }, { name: 'Bilgisayar Mühendisliği', scoreType: 'EA' }]);
+      expect(t.button('Bilgisayar Mühendisliği · Eşit Ağırlık')).toBeTruthy();
+      await t.click('Bilgisayar Mühendisliği · Sayısal');
+      expect(t.el.querySelector('[data-question="yksField"] .ob-me')!.textContent).toContain('Sayısal');
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('session');
+      const note = t.el.querySelector('[data-testid="ob-field-note"]')!;
+      expect(note.getAttribute('role')).toBe('status');
+      expect(note.textContent!.trim()).toBe('Bu bölüm Sayısal puanla öğrenci alıyor; puan türün Sayısal olarak seçildi.');
+      // The note goes with the next answer.
+      await t.click('2028 · tarih henüz açıklanmadı');
+      expect(t.el.querySelector('[data-testid="ob-field-note"]')).toBeNull();
+      t.http.expectNone(r => r.url === fields);
+    });
+
+    it('a new field from a programme clears the answers that depend on it, as a changed answer does; YDT asks the language as usual', async () => {
+      const dil = { ...twelfth, primaryScoreType: 'DIL', foreignLanguage: 'English', targetExamYear: 2027, diplomaGrade: 85 };
+      const t = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2], allowedPurposes: ['Yks'] }, dil));
+      expect(t.el.querySelector('[data-question="language"]')).not.toBeNull();
+      (t.el.querySelector('[data-question="yksField"] .ob-me button') as HTMLElement).click(); await t.settle();
+      await find(t, 'hukuk', [{ name: 'Hukuk', scoreType: 'EA' }]);
+      await t.click('Hukuk · Eşit Ağırlık');
+      expect(t.el.querySelector('[data-question="yksField"] .ob-me')!.textContent).toContain('Eşit Ağırlık');
+      expect(t.el.querySelector('[data-question="language"]')).toBeNull();
+      // The diploma grade depends on the field: it is asked again; the session does not and stays.
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('diploma');
+      expect(t.el.querySelector('[data-question="session"] .ob-me')).not.toBeNull();
+
+      (t.el.querySelector('[data-question="yksField"] .ob-me button') as HTMLElement).click(); await t.settle();
+      await find(t, 'ingilizce', [{ name: 'İngilizce Öğretmenliği', scoreType: 'YDT' }]);
+      await t.click('İngilizce Öğretmenliği · Dil');
+      expect(t.el.querySelector('[data-question="yksField"] .ob-me')!.textContent).toContain('Dil');
+      expect(t.el.querySelector('[data-question="language"] .ob-me')!.textContent).toContain('İngilizce');
+      expect(t.el.querySelector('[data-testid="ob-field-note"]')!.textContent).toContain('Bu bölüm Dil puanla öğrenci alıyor; puan türün Dil olarak seçildi.');
+    });
+
+    it('is not offered for the target score type question', async () => {
+      const t = await render(view({ status: 'InProgress', nextStep: 3, savedSteps: [1, 2], allowedPurposes: ['Yks'] }, { ...twelfth, primaryScoreType: 'SAY', targetExamYear: 2027, diplomaGrade: 85 }));
+      expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
+      expect(t.button('Emin değil misin? Bölümüne göre bulalım')).toBeUndefined();
+    });
+  });
 });
