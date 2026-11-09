@@ -379,6 +379,8 @@ export class WizardSummaryStepComponent implements OnInit {
   private publishCreated(plan: { id: string; version: number }) {
     this.planning.publish(plan.id, plan.version).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.publishing.set(false))).subscribe({
       next: () => {
+        // The plan used the chosen topics: nothing is left for the leave guard to ask about.
+        this.choices.focusTopics.set([]);
         this.toaster.success('Planın yayımlandı. Bugünden sonraki çalışmaların yeni planına göre.');
         void this.router.navigate(['/coaching-portal/plan'], { queryParams: { plan: plan.id } });
       },
