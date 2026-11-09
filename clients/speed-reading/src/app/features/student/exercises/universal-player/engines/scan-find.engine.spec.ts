@@ -429,4 +429,25 @@ describe('ScanFindEngine', () => {
     expect(engine.state.currentStep).toBe(1);
     expect(engine.getWords()[0].found).toBeTrue();
   });
+
+  it('exposes what the search instruction needs: mode, questions, rounds and the time limit', () => {
+    const words = new ScanFindEngine();
+    words.initialize({ scanningRounds: [
+      { textContent: 'okul kitap', targets: ['okul', 'kitap'] },
+      { textContent: 'deniz bulut', targets: ['deniz'] }
+    ], timeLimitSeconds: 60 } as any, callbacks(() => undefined));
+    expect(words.isFindAny()).toBeFalse();
+    expect(words.hasTaskPrompts()).toBeFalse();
+    expect(words.getRoundInfo()).toEqual({ current: 1, total: 2 });
+    expect(words.getTimeLimitSeconds()).toBe(60);
+
+    const questions = new ScanFindEngine();
+    questions.initialize({ serverAuthoritative: true, scanningFindAny: true, scanningRounds: [
+      { textContent: 'Derya 24 okul', targets: ['derya'], targetLabels: { derya: 'Kim hazırladı?' } }
+    ] } as any, callbacks(() => undefined));
+    expect(questions.isFindAny()).toBeTrue();
+    expect(questions.hasTaskPrompts()).toBeTrue();
+    expect(questions.getRoundInfo()).toEqual({ current: 1, total: 1 });
+  });
 });
+

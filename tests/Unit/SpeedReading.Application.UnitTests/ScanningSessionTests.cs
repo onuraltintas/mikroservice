@@ -101,6 +101,63 @@ public sealed class ScanningSessionTests
         result.XpGained.Should().Be(0);
     }
 
+    // A search that ends without a single tap is a finished attempt with score 0. The player could still send a
+    // pause or resume for it (its copy of the state still showed the running search), which answered HTTP 500.
+    [Fact]
+    public async Task A_no_answer_finish_is_saved_and_a_late_pause_or_resume_is_harmless()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        await Expire(db);
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_timeout" })).IsCompleted.Should().BeTrue();
+        var result = await service.CompleteAsync(student, started.SessionId, new() { QuestionAnswers = [] });
+        result.Score.Should().Be(0);
+        result.MeasurementStatus.Should().Be("Measured");
+
+        var pause = () => service.PauseAsync(student, started.SessionId);
+        await pause.Should().NotThrowAsync();
+        var resume = () => service.ResumeAsync(student, started.SessionId);
+        await resume.Should().NotThrowAsync();
+        var session = await db.ExerciseSessions.SingleAsync();
+        session.Status.Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Completed);
+        (await service.CompleteAsync(student, started.SessionId, new())).Score.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Pause_and_resume_are_idempotent_while_the_search_runs()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        await service.PauseAsync(student, started.SessionId);
+        var pauseAgain = () => service.PauseAsync(student, started.SessionId);
+        await pauseAgain.Should().NotThrowAsync();
+        await service.ResumeAsync(student, started.SessionId);
+        var resumeAgain = () => service.ResumeAsync(student, started.SessionId);
+        await resumeAgain.Should().NotThrowAsync();
+        (await db.ExerciseSessions.SingleAsync()).Status.Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Active);
+    }
+
+    // Shared by every exercise type: a session that already timed out or was abandoned answers a business error (4xx),
+    // not an InvalidOperationException (HTTP 500).
+    [Fact]
+    public async Task A_closed_session_answers_a_business_error_for_complete_pause_and_resume()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        var session = await db.ExerciseSessions.SingleAsync();
+        session.MarkTimedOut(DateTime.UtcNow);
+        await db.SaveChangesAsync();
+        var complete = () => service.CompleteAsync(student, started.SessionId, new());
+        await complete.Should().ThrowAsync<BusinessRuleException>();
+        var pause = () => service.PauseAsync(student, started.SessionId);
+        await pause.Should().ThrowAsync<BusinessRuleException>();
+        var resume = () => service.ResumeAsync(student, started.SessionId);
+        await resume.Should().ThrowAsync<BusinessRuleException>();
+    }
+
     private static async Task Expire(OwnedSpeedReadingDbContext db)
     {
         var session = await db.ExerciseSessions.SingleAsync();

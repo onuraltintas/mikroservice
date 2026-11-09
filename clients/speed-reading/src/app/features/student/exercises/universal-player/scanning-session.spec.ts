@@ -27,4 +27,33 @@ describe('Scanning server pause synchronization', () => {
     await player.togglePause();
     expect(player.sessionService.resumeSession).toHaveBeenCalledWith('scan-session');
   });
+
+  // The search had already ended (here with no answer) but the player's copy still showed it running: the exit and
+  // pause buttons must not pause the finished session on the server, which answered HTTP 500.
+  it('does not pause or resume the session once the search has ended', async () => {
+    const player: any = Object.create(ExercisePlayerComponent.prototype);
+    player.engineState = { isRunning: true, isPaused: false, isCompleted: false };
+    player.engine = { engineType: 'scan_find', state: { isRunning: false, isPaused: false, isCompleted: true },
+      pause: jasmine.createSpy('pause'), resume: jasmine.createSpy('resume') };
+    player.exercisePhase = 'completed';
+    player.sessionId = 'scan-session';
+    player.actionQueue = Promise.resolve();
+    player.cdr = { detectChanges: () => undefined };
+    player.isTachistoscopeMode = () => false;
+    player.shouldTrackReading = () => false;
+    player.isFixationMode = () => false;
+    player.isSaccadeMode = () => false;
+    player.isPreviewSession = () => false;
+    player.navigateBack = jasmine.createSpy('navigateBack');
+    player.sessionService = { pauseSession: jasmine.createSpy().and.returnValue(of({})),
+      resumeSession: jasmine.createSpy().and.returnValue(of({})) };
+    await player.togglePause();
+    await player.goBack();
+    expect(player.sessionService.pauseSession).not.toHaveBeenCalled();
+    expect(player.sessionService.resumeSession).not.toHaveBeenCalled();
+    expect(player.engine.pause).not.toHaveBeenCalled();
+    expect(player.showExitConfirm).toBeFalsy();
+    expect(player.navigateBack).toHaveBeenCalled();
+  });
 });
+
