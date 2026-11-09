@@ -40,9 +40,9 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     // Önlisans programmes are not listed: the student is told which answer fits them.
     expect(panel!.textContent).toContain('Yalnız TYT (önlisans)');
     // Escape closes it and gives the focus back to the button.
-    t.box().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); await t.settle();
+    t.box().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); await t.settle(); await new Promise(r => setTimeout(r)); await t.settle();
     expect(t.toggle().getAttribute('aria-expanded')).toBe('false');
-    expect(document.activeElement === t.toggle() || !t.fixture.nativeElement.isConnected).toBe(true);
+    expect(document.activeElement).toBe(t.toggle());
   });
 
   it('searches after a pause, groups by name with readable score types and emits the chosen field', async () => {

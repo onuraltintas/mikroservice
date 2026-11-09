@@ -27,6 +27,9 @@ async function fixtures(context) {
     // Paket C: the first-login wizard is finished, so the guard lets the student into the panel (shape as in coaching-goal-editor.spec.mjs).
     if (path.endsWith('/students/me/onboarding')) return respond(onboarding);
     // The shell's own calls on load.
+    // Paket H6: "Bölümüne göre bulalım" lists programme names with their score types.
+    if (path.endsWith('/students/me/onboarding/options/programs/fields'))
+      return respond(url.searchParams.get('search') === 'hukuk' ? [{ name: 'Hukuk', scoreType: 'EA' }, { name: 'Hukuk', scoreType: 'SAY' }] : []);
     if (path.endsWith('/profiles/me/navigation')) return respond({ showAssignments: true, showSessions: true, showFees: true });
     if (path.endsWith('/messages/unread-count')) return route.fulfill({ json: { count: 0 } });
     if (path.endsWith('/profiles/me/student')) { profile = { ...profile, ...request.postDataJSON(), version: profile.version + 1 }; return respond(profile); }
@@ -113,4 +116,25 @@ test('incomplete setup leaves the existing active plan accessible', async ({ pag
   await page.getByRole('tab', { name: 'Liste', exact: true }).click();
   await page.getByRole('button', { name: 'Önceki çalışma, ayrıntıları aç', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Önceki çalışma' }).getByText(/Tamamlandı · 25 dk/)).toBeVisible();
+});
+
+// Paket H6 (09.11.2026): a student who knows the programme but not its score type finds it next to the score type question.
+test('the score type can be found by the programme name and only sets the form field', async ({ page, context }) => {
+  const { saves } = await fixtures(context);
+  await page.goto('/coaching-portal/account/settings');
+  await page.getByRole('combobox', { name: 'Hangi sınava hazırlanıyorsun?', exact: true }).selectOption('Yks');
+  const helper = page.getByRole('button', { name: 'Emin değil misin? Bölümüne göre bulalım', exact: true });
+  await expect(helper).toHaveAttribute('aria-expanded', 'false');
+  await helper.press('Enter');
+  await expect(helper).toHaveAttribute('aria-expanded', 'true');
+  const search = page.getByRole('searchbox', { name: 'Bölüm adı', exact: true });
+  await expect(search).toBeFocused();
+  await search.fill('hukuk');
+  await expect(page.getByRole('button', { name: 'Hukuk · Sayısal', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Hukuk · Eşit Ağırlık', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Hangi puan türüyle yerleşmek istiyorsun?', exact: true })).toHaveValue('EA');
+  await expect(page.getByText('Bu bölüm Eşit Ağırlık puanla öğrenci alıyor; puan türün Eşit Ağırlık olarak seçildi.')).toBeVisible();
+  await expect(helper).toHaveAttribute('aria-expanded', 'false');
+  await expect(helper).toBeFocused();
+  expect(saves).toHaveLength(0);
 });

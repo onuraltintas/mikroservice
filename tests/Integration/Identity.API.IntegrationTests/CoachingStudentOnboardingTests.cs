@@ -306,8 +306,8 @@ public sealed class CoachingStudentOnboardingTests
             new OnboardingProgramField("Bilgisayar Mühendisliği", "SAY"), new OnboardingProgramField("Bilgisayar ve Öğretim Teknolojileri Öğretmenliği", "SAY"));
         // Turkish letters and case do not matter; every word must be in the name.
         (await s.Service.ProgramFieldsAsync("BILGISAYAR muh", default)).Should().Equal(new OnboardingProgramField("Bilgisayar Mühendisliği", "SAY"));
-        // One name with two score types is listed once per score type.
-        (await s.Service.ProgramFieldsAsync("isletme", default)).Should().Equal(new OnboardingProgramField("İşletme", "EA"), new OnboardingProgramField("İşletme", "SAY"));
+        // One name with two score types is listed once per score type (in the wizard's order: Sayısal, Eşit Ağırlık, Sözel, Dil).
+        (await s.Service.ProgramFieldsAsync("isletme", default)).Should().Equal(new OnboardingProgramField("İşletme", "SAY"), new OnboardingProgramField("İşletme", "EA"));
         (await s.Service.ProgramFieldsAsync("ingilizce", default)).Should().Equal(new OnboardingProgramField("İngilizce Öğretmenliği", "YDT"));
         (await s.Service.ProgramFieldsAsync("hukuk", default)).Should().Equal(new OnboardingProgramField("Hukuk", "EA"));
         // Too short to search: nothing (not the whole catalog).

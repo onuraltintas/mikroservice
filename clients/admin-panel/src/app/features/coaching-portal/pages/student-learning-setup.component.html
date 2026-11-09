@@ -38,6 +38,8 @@
         @if (purpose === 'Yks') {
           <label>Hangi puan türüyle yerleşmek istiyorsun?<select name="scoreType" [(ngModel)]="primaryScoreType" (ngModelChange)="changed()">@for (field of yksFields; track field.value) { <option [value]="field.value">{{ field.label }}</option> }</select></label>
           @if (primaryScoreType === 'DIL') { <label>YDT'de hangi dile gireceksin?<select name="language" required [(ngModel)]="foreignLanguage" (ngModelChange)="changed()" [attr.aria-invalid]="invalid('language')" [attr.aria-describedby]="describedBy('language')"><option value="">Seç</option><option value="English">İngilizce</option></select>@if (fieldError('language'); as message) { <small class="field-error" id="setup-language-error">{{ message }}</small> }</label> }
+          <!-- Paket H6: the score type from the programme the student wants (only sets the field above). -->
+          <div class="wide"><app-score-type-finder (chosen)="chooseByProgram($event)" />@if (fieldNote(); as note) { <p class="field-note" role="status" data-testid="setup-field-note">{{ note }}</p> }</div>
         }
         @if (purpose === 'Ags') {
           <label class="wide">ÖABT'de hangi alandasın?<select name="oabtField" aria-describedby="oabt-field-help" [(ngModel)]="oabtField" (ngModelChange)="changed()">
