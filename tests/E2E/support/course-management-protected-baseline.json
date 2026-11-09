@@ -405,8 +405,8 @@
     "clients/speed-reading/src/app/features/legacy-staff-redirect.component.ts": "2984d6462c4f13619fb91be34df44e9408d14bfb714dc2d3c37e4b60e01101a9",
     "clients/speed-reading/src/app/features/legal/cookies/cookies.component.html": "a9adcc57b3f8962710f04c8771f8dcf01349322482bfd483d84011725e34d5cc",
     "clients/speed-reading/src/app/features/legal/cookies/cookies.component.scss": "ad55c6cbbca920c9f756192677d5dd98db1215c697a8487af4ee5d21781f34c5",
-    "clients/speed-reading/src/app/features/legal/cookies/cookies.component.spec.ts": "b6c510dd81f0a92556569614a6a36997fe6432009863ce0a15b359c2fb761146",
-    "clients/speed-reading/src/app/features/legal/cookies/cookies.component.ts": "3106b29243cdbf5369e221f63b27b0ba5054bac34b6aadb121a4b857cc82159f",
+    "clients/speed-reading/src/app/features/legal/cookies/cookies.component.spec.ts": "39ce190284dedbc749a5309a3b03fd02b5a4afdc895e1eba6c17c06efc0f8403",
+    "clients/speed-reading/src/app/features/legal/cookies/cookies.component.ts": "d5fe4b6ba4c6147d05af4ffbfdbe5a12a9165dd7a1016e8b9b784ab2332060e6",
     "clients/speed-reading/src/app/features/legal/kvkk/kvkk.component.html": "6db7ee72ed8cd254191f0e41aa90b83b993a973942c277162d54f89df575e45b",
     "clients/speed-reading/src/app/features/legal/kvkk/kvkk.component.scss": "76f1ced144a705aaf604ff6dff87753e3196cc53aebc54edad4083cc733d320e",
     "clients/speed-reading/src/app/features/legal/kvkk/kvkk.component.ts": "e52d645c7345ea79a696ec65fa77bf5417bdfb1e5f020087393576d0ac42a89c",
@@ -2722,7 +2722,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "speed-reading cookie policy SEO",
+    "purpose": "speed-reading cookie canonical restore",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2770,7 +2770,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "30c7a34a",
+    "previousBaselineCommit": "68ea3b76",
     "removedSincePreviousBaseline": []
   }
 }
