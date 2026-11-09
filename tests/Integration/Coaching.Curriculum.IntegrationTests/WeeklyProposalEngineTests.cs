@@ -530,4 +530,54 @@ public sealed class WeeklyProposalEngineTests
         var replace = Propose(Weekdays.Select(day => Window(day, 1020, 1080)), lessons, focus: "balanced", mode: WeeklyProposalMode.Replace, existing: saved);
         Assert.Equal(new[] { "Fizik (AYT)", "Kimya (AYT)", "Matematik (AYT)", "Matematik (TYT)", "Türkçe (TYT)" }, Chosen(replace));
     }
+
+    // Review of PR #136 (4): the difficulty weight changes the ranking and the surplus hours, never the need or the shortage.
+    [Fact]
+    public void TheDifficultyWeightLeavesTheNeedAndTheShortageAlone()
+    {
+        foreach (var hours in new[] { 1, 3, 10 })
+        {
+            var windows = WeeklyProposalEngine.Week.Take(hours).Select(day => Window(day, 1020, 1080));
+            var plain = Propose(windows, [Lesson(1, 90), Lesson(2, 120), Lesson(3, 45)]);
+            var hard = Propose(windows, [Lesson(1, 90, hard: true), Lesson(2, 120), Lesson(3, 45, hard: true)]);
+            Assert.Equal((plain.NeededMinutes, plain.ShortageMinutes, plain.FreeMinutes), (hard.NeededMinutes, hard.ShortageMinutes, hard.FreeMinutes));
+            Assert.Equal(plain.Lessons.Select(x => x.NeededMinutes), hard.Lessons.Select(x => x.NeededMinutes));
+        }
+    }
+
+    [Fact]
+    public void WithTimeToSpareAHardLessonWantsHalfAgainItsNeed()
+    {
+        var week = WeeklyProposalEngine.Week.Select(day => Window(day, 1020, 1260));
+        // Need 120: two sessions; hard: 120 × 1.5 = 180, three sessions. The need (and so the shortage) stays 120.
+        var plain = Propose(week, [Lesson(1, 120)]).Lessons.Single();
+        var hard = Propose(week, [Lesson(1, 120, hard: true)]).Lessons.Single();
+        Assert.Equal((120, 120), (plain.ProposedMinutes, plain.NeededMinutes));
+        Assert.Equal((180, 120), (hard.ProposedMinutes, hard.NeededMinutes));
+        // With priority 1 too: 120 × 1.3 × 1.5 = 234 → four sessions.
+        Assert.Equal(240, Propose(week, [Lesson(1, 120, priority: 1, hard: true)]).Lessons.Single().ProposedMinutes);
+    }
+
+    // Review of PR #136 (1): a lesson without time counts for "the week by need" only when the Replace week gives it time and it
+    // still has a need.
+    [Fact]
+    public void RebuildGainsAreTheLessonsWithANeedThatOnlyReplaceGivesTime()
+    {
+        var hour = new[] { Window(DayOfWeek.Monday, 1020, 1080) };
+        var lessons = new[] { Lesson(1, 60), Lesson(2, 210) };
+        var legacy = Propose(hour, lessons, existing: [Card(1, DayOfWeek.Monday, 1020)]);
+        var replace = Propose(hour, lessons, mode: WeeklyProposalMode.Replace);
+        Assert.Equal(new[] { Id(2) }, WeeklyProposalEngine.RebuildGains(legacy, replace));
+        var byNeed = Propose(hour, lessons, existing: [Card(2, DayOfWeek.Monday, 1020)]);
+        Assert.Empty(WeeklyProposalEngine.RebuildGains(byNeed, replace));
+
+        // Lesson 2 has nothing left to study: Replace gives it the spare hour, but that is no reason to rebuild the week.
+        var two = new[] { Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Tuesday, 1020, 1080) };
+        var done = new[] { Lesson(1, 60), Lesson(2, 0) };
+        var fill = Propose(two, done, existing: [Card(1, DayOfWeek.Monday, 1020), Card(1, DayOfWeek.Tuesday, 1020)]);
+        var again = Propose(two, done, mode: WeeklyProposalMode.Replace);
+        Assert.True(fill.Lessons.Single(x => x.LessonId == Id(2)).NoTime);
+        Assert.Equal(60, again.Lessons.Single(x => x.LessonId == Id(2)).ProposedMinutes);
+        Assert.Empty(WeeklyProposalEngine.RebuildGains(fill, again));
+    }
 }

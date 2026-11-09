@@ -640,4 +640,46 @@ public sealed class WeeklyProposalServiceTests
         Assert.All(((WeeklyTempoOptionsView)Body(Assert.IsType<OkObjectResult>(await api.WeeklyTempoOptions(world.Student, new(), Proposals(f, staff), default)), "data")!).Options,
             x => Assert.Equal(90, x.CapacityWeeklyMinutes));   // Friday's hour + Monday's saved card, which still counts outside the study times
     }
+
+    // Review of PR #136 (1): in Fill mode the proposal says whether proposing the whole week again (Replace, same inputs and finishBy)
+    // would give time to a lesson that has none now, and names those lessons. One free hour a week: Türkçe (210) needs it more than
+    // Matematik (60).
+    private static async Task<WeeklyProposalView> OneHourWithSaved(CurriculumManagementTests.Fixture f, StudyCatalogLesson saved, WeeklyProposalMode mode = WeeklyProposalMode.Fill)
+    {
+        (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]);
+        var draft = await f.Db.Set<WeeklyStudyDraft>().SingleAsync();
+        draft.Replace(draft.TimeZoneId, [new(Guid.NewGuid(), saved.Id, saved.Name, saved.ExamCode, DayOfWeek.Monday, 1020, 60)]);
+        await f.Db.SaveChangesAsync();
+        return await Proposals(f).ProposeAsync(new(mode), default);
+    }
+
+    [Fact]
+    public async Task AWeekSavedInAnotherOrderSaysTheWeekByNeedWouldGiveTimeToTheLessonsWithout()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
+        var legacy = await OneHourWithSaved(f, world.Math);
+        Assert.Empty(legacy.Slots);
+        Assert.True(legacy.Lessons.Single(x => x.LessonId == world.Turkish.Id).NoTime);
+        Assert.True(legacy.RebuildWouldHelp);
+        Assert.Equal(new[] { world.Turkish.Id }, legacy.RebuildLessonIds);
+        // The teacher gets the same answer.
+        var staff = await BecomeTeacher(f, world);
+        var teacher = await Proposals(f, staff).ProposeForStudentAsync(world.Student, new(), default);
+        Assert.Equal((true, new[] { world.Turkish.Id }), (teacher.RebuildWouldHelp, teacher.RebuildLessonIds.ToArray()));
+    }
+
+    [Fact]
+    public async Task AWeekAlreadyByNeedDoesNotOfferTheWeekAgain_AndReplaceNeverDoes()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
+        var kept = await OneHourWithSaved(f, world.Turkish);
+        Assert.True(kept.Lessons.Single(x => x.LessonId == world.Math.Id).NoTime);
+        Assert.False(kept.RebuildWouldHelp);
+        Assert.Empty(kept.RebuildLessonIds);
+
+        var replace = await OneHourWithSaved(f, world.Math, WeeklyProposalMode.Replace);
+        Assert.True(replace.Lessons.Single(x => x.LessonId == world.Math.Id).NoTime);
+        Assert.False(replace.RebuildWouldHelp);
+        Assert.Empty(replace.RebuildLessonIds);
+    }
 }
