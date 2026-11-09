@@ -200,11 +200,13 @@ describe('WizardSummaryStepComponent', () => {
   // Review of PR #136 (3): a plan created before a failed publish belongs to the old week. After a new proposal it is not published
   // again silently: publishing creates the new plan, and the server's pending draft answer points to Planım.
   it('does not publish the plan of the old week after a new proposal; the pending draft is named', async () => {
-    const { el, c, fixture, engine, planning } = await setup();
+    const { el, c, fixture, engine, planning, weekly } = await setup();
     await keep(fixture);
     planning.publish.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'Aktif plan değişti.' } })));
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
     expect(c.created()).not.toBeNull();
+    // The new proposal is made from the kept draft (version 4) and adds a Wednesday hour.
+    weekly.proposal.mockReturnValueOnce(of(proposalOf('Fill', [{ ...tuesday, id: 'p2', day: 'Wednesday' }], { draftVersion: 4 })));
     c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
     await keep(fixture);
     expect(button(el, 'Yeniden yayımla')).toBeUndefined();

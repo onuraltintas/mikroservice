@@ -17,12 +17,17 @@ public sealed record WeeklyProposalLessonView(Guid LessonId, string LessonName, 
 /// FreeMinutes: the free study time of the week; CoveredMinutes: Σ min(needed, saved + proposed); ShortageMinutes = NeededMinutes −
 /// CoveredMinutes. DraftVersion: the weekly draft the proposal was made from (null: none yet). EndDate: where the annual plan ends once
 /// the proposal is applied. FinishBy (Paket H4a): the end of the period the need was spread over, min(the request's FinishBy, EndDate)
-/// (null when none was given).
+/// (null when none was given). RebuildWouldHelp (review of PR #136): in Fill mode, a whole new week (Replace, same inputs and FinishBy)
+/// would give time to the lessons in RebuildLessonIds, which have a need but no time now; always false (and empty) in Replace mode.
 /// </summary>
 public sealed record WeeklyProposalView(WeeklyProposalMode Mode, string? ExamFocus, IReadOnlyList<WeeklyDraftSlot> Slots,
     IReadOnlyList<WeeklyProposalLessonView> Lessons, int FreeMinutes, int NeededMinutes, int ShortageMinutes,
     int MaxDayMinutes, int WeeksUntilEnd, DateOnly EndDate, bool MiddleSchool, int CoveredMinutes = 0, int? DraftVersion = null,
-    DateOnly? FinishBy = null);
+    DateOnly? FinishBy = null)
+{
+    public bool RebuildWouldHelp => RebuildLessonIds.Count > 0;
+    public IReadOnlyList<Guid> RebuildLessonIds { get; init; } = [];
+}
 
 /// <summary>
 /// Paket H4a: the tempo step of the wizard. ExamFocus, Windows and Mode as in <see cref="WeeklyProposalRequest"/>; each option is the

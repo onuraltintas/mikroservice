@@ -665,7 +665,8 @@ public sealed class WeeklyProposalServiceTests
         // The teacher gets the same answer.
         var staff = await BecomeTeacher(f, world);
         var teacher = await Proposals(f, staff).ProposeForStudentAsync(world.Student, new(), default);
-        Assert.Equal((true, new[] { world.Turkish.Id }), (teacher.RebuildWouldHelp, teacher.RebuildLessonIds.ToArray()));
+        Assert.True(teacher.RebuildWouldHelp);
+        Assert.Equal(new[] { world.Turkish.Id }, teacher.RebuildLessonIds);
     }
 
     [Fact]

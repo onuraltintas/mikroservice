@@ -18,7 +18,9 @@ export interface WeeklyProposalLesson {lessonId:string;lessonName:string;examCod
 export interface WeeklyProposal {mode:WeeklyProposalMode;examFocus:WeeklyExamFocus|null;slots:WeeklySlot[];lessons:WeeklyProposalLesson[];freeMinutes:number;
   neededMinutes:number;shortageMinutes:number;coveredMinutes:number;maxDayMinutes:number;weeksUntilEnd:number;endDate:string;middleSchool:boolean;draftVersion:number|null;
   /** Paket H4: the finish date the need was computed for (null when none was given). */
-  finishBy?:string|null}
+  finishBy?:string|null;
+  /** Review of PR #136: Fill only: a whole new week (Replace) would give time to these lessons, which have a need but no time now. */
+  rebuildWouldHelp?:boolean;rebuildLessonIds?:string[]}
 /** Paket H4: one tempo with its finish date, the weekly minutes it needs and the weekly minutes the student has. */
 export interface WeeklyTempoOption {tempo:'Relaxed'|'Balanced'|'Intense';finishBy:string;neededWeeklyMinutes:number;capacityWeeklyMinutes:number;fits:boolean}
 export interface WeeklyTempoOptions {planEnd:string;options:WeeklyTempoOption[]}

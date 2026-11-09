@@ -32,9 +32,9 @@
       @if (rebuildSuggested(view)) {
         <div class="notice" data-testid="rebuild-notice">
           @if (staffStudentId) {
-            <p>Öğrencinin haftalık düzeni daha önce kurulmuş; {{ lessonsWithoutTime(view) }} saat almıyor. İstersen haftayı derslerin ihtiyacına göre yeniden önerebilirsin.</p>
+            <p>Öğrencinin haftalık düzeni daha önce kurulmuş; {{ rebuildNames(view) }} saat almıyor. İstersen haftayı derslerin ihtiyacına göre yeniden önerebilirsin.</p>
           } @else {
-            <p>Haftalık düzenin daha önce kurulmuş; {{ lessonsWithoutTime(view) }} saat almıyor. İstersen haftanı derslerin ihtiyacına göre yeniden önerelim.</p>
+            <p>Haftalık düzenin daha önce kurulmuş; {{ rebuildNames(view) }} saat almıyor. İstersen haftanı derslerin ihtiyacına göre yeniden önerelim.</p>
           }
           <button type="button" (click)="replaceWeek()" [disabled]="busy()">{{ staffStudentId ? 'Haftayı ihtiyaca göre yeniden öner' : 'Haftanı ihtiyaca göre yeniden öner' }}</button>
         </div>
@@ -159,7 +159,7 @@
       <div class="actions">
         @if (issue.stale) { <button type="button" class="secondary" (click)="retry()" [disabled]="busy()">Yeniden hesapla</button> }
         @if (!staffStudentId && (issue.draftExists || created())) {
-          <a routerLink="/coaching-portal/plan" [queryParams]="created() ? { plan: created()!.id } : {}">Planım'ı aç</a>
+          <a routerLink="/coaching-portal/plan" [queryParams]="created() ? { plan: created()!.id } : staleDraftId() ? { plan: staleDraftId() } : {}">Planım'ı aç</a>
         }
       </div>
     </div>

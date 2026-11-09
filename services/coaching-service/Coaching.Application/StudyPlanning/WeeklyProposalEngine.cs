@@ -124,6 +124,18 @@ public static class WeeklyProposalEngine
     }
 
     /// <summary>
+    /// Review of PR #136: the lessons a whole new week (<paramref name="replace"/>, made from the same inputs) would give time to that
+    /// have a need but no time in the <paramref name="fill"/> week (its saved cards and proposal). Empty: proposing the week again does
+    /// not help any lesson without time.
+    /// </summary>
+    public static IReadOnlyList<Guid> RebuildGains(WeeklyProposalResult fill, WeeklyProposalResult replace)
+    {
+        ArgumentNullException.ThrowIfNull(fill); ArgumentNullException.ThrowIfNull(replace);
+        var gets = replace.Lessons.Where(x => x.ProposedMinutes > 0).Select(x => x.LessonId).ToHashSet();
+        return fill.Lessons.Where(x => x.NoTime && x.NeededMinutes > 0 && gets.Contains(x.LessonId)).Select(x => x.LessonId).ToArray();
+    }
+
+    /// <summary>
     /// Paket H4a (review of PR #132, S5): the end of the period the weekly need is spread over: the earlier of finishBy and the settled plan
     /// end (null without a finishBy, when the period is the plan itself).
     /// </summary>
