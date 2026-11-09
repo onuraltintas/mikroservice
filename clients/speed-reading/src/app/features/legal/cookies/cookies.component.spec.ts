@@ -60,6 +60,11 @@ describe('CookiesComponent', () => {
     expect(canonicalHref()).not.toBe(`${window.location.origin}/`);
   });
 
+  it('restores the previous canonical when the page is left', () => {
+    fixture.destroy();
+    expect(canonicalHref()).toBe(`${window.location.origin}/`);
+  });
+
   it('loads the public cookie policy from the shared legal-pages slug', () => {
     const legalPages = TestBed.inject(PlatformLegalPagesService) as unknown as { getPage: jasmine.Spy };
     expect(legalPages.getPage).toHaveBeenCalledOnceWith('cookies');
