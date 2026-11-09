@@ -7,7 +7,7 @@ import { CoachingWeeklyDraftService, WeeklyProposal, WeeklyProposalMode } from '
 import { CoachingWeeklyOutcomePlanService, WeeklyOutcomePreview, WeeklyOutcomeRequest } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { SummaryChoices, WizardSummaryStepComponent } from './wizard-summary-step.component';
-import { WeeklySlot } from './weekly-calendar';
+import { WeeklySlot, Weekday } from './weekly-calendar';
 
 // Paket H4, step 5 "Özet": the proposed week, the yearly preview with its fixes, "Şu konuları öne al", and publishing.
 describe('WizardSummaryStepComponent', () => {
@@ -30,11 +30,11 @@ describe('WizardSummaryStepComponent', () => {
       lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 600, scheduledMinutes: 600, remainingMinutes: 0, finishDate: '2027-04-20', extraWeeklyMinutes: 0 },
         { lessonId: 'tur', lessonName: 'Türkçe', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 900, scheduledMinutes: 810, remainingMinutes: 90, finishDate: null, extraWeeklyMinutes: 30 }] }, ...over });
 
-  async function setup(opts: { slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean; tempo?: 'Relaxed' | 'Balanced' | 'Intense'; choices?: SummaryChoices } = {}) {
+  async function setup(opts: { proposal?: (mode: WeeklyProposalMode) => WeeklyProposal; slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean; tempo?: 'Relaxed' | 'Balanced' | 'Intense'; choices?: SummaryChoices } = {}) {
     const slots = opts.slots ?? [saved];
     const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 3, timeZoneId: 'Europe/Istanbul', slots } : null, lessons: [], maxDayMinutes: 480 })),
       save: vi.fn((_v: number | null, _tz: string, next: WeeklySlot[]) => of({ version: 4, timeZoneId: 'Europe/Istanbul', slots: next })),
-      proposal: vi.fn((mode: WeeklyProposalMode, ..._rest: unknown[]) => of(proposalOf(mode, [tuesday], { draftVersion: slots.length ? 3 : null }))),
+      proposal: vi.fn((mode: WeeklyProposalMode, ..._rest: unknown[]) => of(opts.proposal?.(mode) ?? proposalOf(mode, [tuesday], { draftVersion: slots.length ? 3 : null }))),
       // Replace-mode options (the wizard's own options are for the draft's mode).
       tempoOptions: vi.fn((..._a: unknown[]) => of({ planEnd: '2027-06-20', options: [{ tempo: 'Relaxed', finishBy: '2027-06-20', neededWeeklyMinutes: 60, capacityWeeklyMinutes: 120, fits: true },
         { tempo: 'Balanced', finishBy: '2027-05-15', neededWeeklyMinutes: 90, capacityWeeklyMinutes: 120, fits: true }] })) };
@@ -105,6 +105,62 @@ describe('WizardSummaryStepComponent', () => {
     button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
     expect(weekly.proposal).toHaveBeenLastCalledWith('Replace', null, undefined, undefined, '2027-05-15');
     expect(text(el)).toContain('Bu düzen, mevcut haftalık düzeninin yerine geçer.');
+  });
+
+  // Live case (09.11): a week saved by the wizard before Paket H2 (courses in name order) fills all five hours. The Fill proposal is
+  // empty, so the summary goes straight on to the yearly preview; the student must still be able to have the week made by need.
+  describe('a saved week that leaves lessons without time', () => {
+    const yks = ['Biyoloji (AYT)', 'Biyoloji (TYT)', 'Coğrafya (TYT)', 'Din Kültürü (TYT)', 'Felsefe (TYT/AYT)', 'Fizik (AYT)', 'Fizik (TYT)', 'Kimya (AYT)',
+      'Kimya (TYT)', 'Matematik (AYT)', 'Matematik (TYT)', 'Tarih (TYT)', 'Türkçe (TYT)'];
+    const days: Weekday[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const old: WeeklySlot[] = yks.slice(0, 5).map((name, i) => ({ id: `old-${i}`, lessonId: `l${i}`, lessonName: name, examCode: name.includes('AYT)') ? 'AYT' : 'TYT',
+      day: days[i], startMinute: 1020, durationMinutes: 60 }));
+    const live = (mode: WeeklyProposalMode): WeeklyProposal => mode === 'Fill'
+      ? proposalOf('Fill', [], { lessons: yks.map((name, i) => ({ lessonId: `l${i}`, lessonName: name, examCode: 'TYT', existingMinutes: i < 5 ? 60 : 0, proposedMinutes: 0,
+          neededMinutes: name === 'Matematik (TYT)' ? 540 : 120, noTime: i >= 5 })), freeMinutes: 0, neededMinutes: 2_100, shortageMinutes: 1_800, coveredMinutes: 300 })
+      : proposalOf('Replace', [{ ...tuesday, lessonId: 'l10', lessonName: 'Matematik (TYT)' }], { shortageMinutes: 0 });
+    const without = 'Fizik (AYT), Fizik (TYT), Kimya (AYT), Kimya (TYT), Matematik (AYT), Matematik (TYT), Tarih (TYT), Türkçe (TYT)';
+
+    it('names the lessons without time and offers the week by need, even after the yearly preview opened', async () => {
+      const { el, engine } = await setup({ slots: old, proposal: live });
+      expect(engine.preview).toHaveBeenCalled();
+      expect(text(el.querySelector('[data-testid="rebuild-notice"]'))).toBe(`Haftalık düzenin daha önce kurulmuş; ${without} saat almıyor. `
+        + 'İstersen haftanı derslerin ihtiyacına göre yeniden önerelim. Haftanı ihtiyaca göre yeniden öner');
+      expect(button(el, 'Haftanı ihtiyaca göre yeniden öner')).toBeDefined();
+      expect(button(el, 'Haftanı baştan öner')).toBeUndefined();   // one way to do it, not two
+    });
+
+    it('proposes the whole week in Replace mode with the Replace tempo date, only after a confirmation', async () => {
+      const { el, weekly, toaster, fixture } = await setup({ slots: old, proposal: live });
+      toaster.confirm.mockResolvedValueOnce(false);
+      button(el, 'Haftanı ihtiyaca göre yeniden öner')!.click(); await fixture.whenStable();
+      expect(toaster.confirm).toHaveBeenCalledWith('Mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.');
+      expect(weekly.proposal).toHaveBeenCalledTimes(1);
+      button(el, 'Haftanı ihtiyaca göre yeniden öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
+      expect(weekly.tempoOptions).toHaveBeenCalledWith(null, undefined, undefined, 'Replace');
+      expect(weekly.proposal).toHaveBeenLastCalledWith('Replace', null, undefined, undefined, '2027-05-15');
+      expect(el.querySelector('[data-testid="rebuild-notice"]')).toBeNull();
+      expect(text(el)).toContain('Bu düzen, mevcut haftalık düzeninin yerine geçer.');
+    });
+
+    it('tells the teacher in the third person', async () => {
+      const { el } = await setup({ slots: old, proposal: live, staff: true });
+      expect(text(el.querySelector('[data-testid="rebuild-notice"]'))).toBe(`Öğrencinin haftalık düzeni daha önce kurulmuş; ${without} saat almıyor. `
+        + 'İstersen haftayı derslerin ihtiyacına göre yeniden önerebilirsin. Haftayı ihtiyaca göre yeniden öner');
+    });
+
+    it('is not shown when every lesson has time, nor for an empty week, nor once the shown week was kept', async () => {
+      expect((await setup()).el.querySelector('[data-testid="rebuild-notice"]')).toBeNull();
+      TestBed.resetTestingModule();
+      expect((await setup({ slots: [], proposal: mode => ({ ...live('Fill'), mode }) })).el.querySelector('[data-testid="rebuild-notice"]')).toBeNull();
+      TestBed.resetTestingModule();
+      // "Önemli derslerle devam et": the kept week was proposed by need, so it is not offered again.
+      const shortage = (mode: WeeklyProposalMode) => ({ ...live('Fill'), mode, slots: [tuesday] });
+      const { el, fixture } = await setup({ slots: [saved], proposal: shortage });
+      expect(el.querySelector('[data-testid="rebuild-notice"]')).not.toBeNull();
+      button(el, 'Önemli derslerle devam et')!.click(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+      expect(el.querySelector('[data-testid="rebuild-notice"]')).toBeNull();
+    });
   });
 
   it('saves the kept week with its version, then previews the year to the tempo\'s finish date and shows each course', async () => {
