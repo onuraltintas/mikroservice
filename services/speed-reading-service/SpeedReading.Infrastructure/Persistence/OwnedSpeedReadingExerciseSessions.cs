@@ -22,6 +22,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 {
     private const string TimeoutAnswer = "__timeout__";
     private const int MaxCompletionConflictRetries = 2;
+    private const int MaxPauseConflictRetries = 1;
     private const int MaxActionConflictRetries = 2;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly HashSet<string> ReadingExerciseTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -1270,7 +1271,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         return stats;
     }
 
-    public async Task PauseAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default)
+    public Task PauseAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        PauseAsync(studentId, sessionId, cancellationToken, retry: 0);
+
+    private async Task PauseAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken, int retry)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         var now = DateTime.UtcNow;
@@ -1297,7 +1301,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsValidatedFixation(state) && state.FixationPresentedAt.HasValue)
             state.FixationPausedAt = now;
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException) when (retry < MaxPauseConflictRetries)
+        {
+            // A completion, time-out or abandon committed first (a tap while the last action was in flight).
+            db.ChangeTracker.Clear();
+            await PauseAsync(studentId, sessionId, cancellationToken, retry + 1);
+        }
     }
 
     public async Task DiscardIncompleteAsync(
@@ -1350,7 +1363,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     private static BusinessRuleException ClosedSession() =>
         new("ExerciseSession.NotActive", "Bu alıştırma artık açık değil. Lütfen yeniden başla.");
 
-    public async Task ResumeAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default)
+    public Task ResumeAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        ResumeAsync(studentId, sessionId, cancellationToken, retry: 0);
+
+    private async Task ResumeAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken, int retry)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         var now = DateTime.UtcNow;
@@ -1383,7 +1399,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.ReadingPausedAt = null;
         }
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException) when (retry < MaxPauseConflictRetries)
+        {
+            db.ChangeTracker.Clear();
+            await ResumeAsync(studentId, sessionId, cancellationToken, retry + 1);
+        }
     }
 
     public async Task<ExerciseSessionProgress> GetProgressAsync(
