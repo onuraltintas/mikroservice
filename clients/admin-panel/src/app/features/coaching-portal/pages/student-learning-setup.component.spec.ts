@@ -1,7 +1,8 @@
+import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { StudentLearningSetupComponent } from './student-learning-setup.component';
@@ -476,6 +477,17 @@ describe('StudentLearningSetupComponent', () => {
     all.click(); u.fixture.detectChanges();
     expect(u.component.courses.map(x => x.lessonId)).toEqual(['tyt-tr', 'ayt-mat', 'tyt-mat']);
     expect(all.disabled).toBe(true); expect(u.component.dirty).toBe(true);
+  });
+
+  // H5 verification: the setup has no weekly cards worth flagging, so the embedded hours editor shows no outside-hours notice.
+  it('embeds the hours editor without the outside-hours notice and without reading the weekly draft', async () => {
+    const t = await setup({ ...yksView, nextStep: 'Availability' });
+    t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
+    const editor = t.fixture.debugElement.query(By.directive(StudentStudyAvailabilityComponent));
+    expect(editor).toBeTruthy();
+    expect(editor.componentInstance.showOutsideNotice).toBe(false);
+    expect((t.fixture.nativeElement as HTMLElement).querySelector('[data-testid="weekly-outside-status"]')).toBeNull();
+    TestBed.inject(HttpTestingController).expectNone(r => r.url.includes('weekly-draft'));
   });
 
   it('#28: unsaved suggestions are dropped when the student moves to another step', async () => {

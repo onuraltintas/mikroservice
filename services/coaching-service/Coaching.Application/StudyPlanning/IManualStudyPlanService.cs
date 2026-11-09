@@ -51,6 +51,8 @@ public interface IManualStudyPlanService
     Task<ManualStudyPlanView> RecordRealizationAsync(Guid id, Guid taskId, StudyRealizationInput request, bool correction, CancellationToken ct = default);
     Task<ManualStudyPlanView> SaveCalendarTaskAsync(Guid id, Guid? taskId, CalendarTaskSaveInput request, CancellationToken ct = default);
     Task<ManualStudyPlanView> DeleteCalendarTaskAsync(Guid id, Guid taskId, int expectedVersion, CancellationToken ct = default);
+    /// <summary>Paket H5: splits a timed, untouched task of at least an hour into two consecutive halves.</summary>
+    Task<ManualStudyPlanView> SplitCalendarTaskAsync(Guid id, Guid taskId, int expectedVersion, CancellationToken ct = default);
     Task<StudyPlanPage> ListAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default);

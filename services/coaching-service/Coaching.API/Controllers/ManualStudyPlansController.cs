@@ -113,6 +113,10 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
     [HttpDelete("{id:guid}/tasks/{taskId:guid}"),RequestSizeLimit(1024),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> DeleteCalendarTask(Guid id,Guid taskId,[FromBody] StudyPlanPublishInput request,CancellationToken ct)
         =>Respond(async()=>Ok(new{success=true,data=await plans.DeleteCalendarTaskAsync(id,taskId,request.ExpectedVersion,ct)}));
+    /// <summary>Paket H5: splits a timed, untouched task of at least an hour into two consecutive halves.</summary>
+    [HttpPost("{id:guid}/tasks/{taskId:guid}/split"),RequestSizeLimit(1024),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> SplitCalendarTask(Guid id,Guid taskId,[FromBody] StudyPlanPublishInput request,CancellationToken ct)
+        =>Respond(async()=>Ok(new{success=true,data=await plans.SplitCalendarTaskAsync(id,taskId,request.ExpectedVersion,ct)}));
 
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {

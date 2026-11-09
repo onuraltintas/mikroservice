@@ -9,26 +9,18 @@ describe('CoachingStudyPlanningService', () => {
     const input={expectedVersion:7,title:'Tekrar',plannedDate:'2027-01-04',startMinute:1080,plannedMinutes:30,lessonId:'math'};
     service.saveCalendarTask('p',null,input).subscribe();const add=http.expectOne('/api/coaching/study-planning/plans/p/tasks');expect(add.request.method).toBe('POST');expect(add.request.body).toEqual(input);add.flush({data:{}});
     service.saveCalendarTask('p','t',input,'s').subscribe();const edit=http.expectOne('/api/coaching/staff/students/s/study/plans/p/tasks/t');expect(edit.request.method).toBe('PUT');expect(edit.request.body).toEqual(input);edit.flush({data:{}});
-    service.deleteCalendarTask('p','t',8,'s').subscribe();const remove=http.expectOne('/api/coaching/staff/students/s/study/plans/p/tasks/t');expect(remove.request.method).toBe('DELETE');expect(remove.request.body).toEqual({expectedVersion:8});remove.flush({data:{}});http.verify();
+    service.deleteCalendarTask('p','t',8,'s').subscribe();const remove=http.expectOne('/api/coaching/staff/students/s/study/plans/p/tasks/t');expect(remove.request.method).toBe('DELETE');expect(remove.request.body).toEqual({expectedVersion:8});remove.flush({data:{}});
+    // Paket H5: split a task into two halves.
+    service.splitCalendarTask('p','t',9).subscribe();const split=http.expectOne('/api/coaching/study-planning/plans/p/tasks/t/split');expect(split.request.method).toBe('POST');expect(split.request.body).toEqual({expectedVersion:9});split.flush({data:{}});
+    service.splitCalendarTask('p','t',9,'s').subscribe();http.expectOne('/api/coaching/staff/students/s/study/plans/p/tasks/t/split').flush({data:{}});http.verify();
   });
-  it('searches topics and previews without sending an owner or creating a plan', () => {
+  it('searches topics without sending an owner', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const service = TestBed.inject(CoachingStudyPlanningService);
     const http = TestBed.inject(HttpTestingController);
     service.searchTopics(' math ', 8, 'LGS', 2).subscribe();
     http.expectOne('/api/coaching/study-planning/topics?search=math&pageNumber=2&pageSize=20&gradeNumber=8&examCode=LGS')
       .flush({ success: true, data: { items: [], totalCount: 0, pageNumber: 2, pageSize: 20 } });
-    const input = { startDate: '2026-10-05', days: 7, expectedAvailabilityVersion: 3, topics: [{ topicId: 'topic', requiredMinutes: 30 }] };
-    service.previewAutomatic(input).subscribe();
-    const request = http.expectOne('/api/coaching/study-planning/automatic-preview');
-    expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual(input);
-    request.flush({ success: true, data: {} });
-    service.saveAutomaticDraft({ title: 'Plan', preview: input, expectedActiveRevisionId: null, expectedActiveRevisionVersion: null }).subscribe();
-    const save = http.expectOne('/api/coaching/study-planning/automatic-drafts');
-    expect(save.request.body.expectedActiveRevisionId).toBeNull();
-    expect(save.request.body.preview).toEqual(input);
-    save.flush({ success: true, data: {} });
     http.verify();
   });
   it('saves only the selected verified goal target and version', () => {

@@ -15,7 +15,6 @@ const expected: Record<string, string> = {
   'study-plan-assistant': 'plan/wizard',
   'weekly-plan': 'plan/weekly',
   'study-availability': 'plan/hours',
-  'weekly-plan-preview': 'plan/preview',
   'goals': 'growth/goals',
   'progress': 'growth/week',
   'exam-results': 'growth/exams',
@@ -24,7 +23,9 @@ const expected: Record<string, string> = {
   'settings': 'account/settings',
   'subscription': 'account/payments',
   'finance': 'account/payments',
-  'finance/:feeId': 'account/payments/fees/:feeId'
+  'finance/:feeId': 'account/payments/fees/:feeId',
+  // Paket H4: the yearly preview is the wizard's Özet step.
+  'weekly-plan-preview': 'plan/wizard?adim=ozet'
 };
 
 function routerWith(routes: Route[]) {
@@ -84,11 +85,20 @@ describe('student route redirects', () => {
 
   it('keeps the unsaved-change guards on the moved pages', () => {
     const child = (parent: string, path: string) => COACHING_PORTAL_ROUTES.find(r => r.path === parent)!.children!.find(c => c.path === path)!;
-    for (const [parent, path] of [['plan', ''], ['plan', 'weekly'], ['plan', 'hours'], ['plan', 'wizard'], ['plan', 'preview'],
+    for (const [parent, path] of [['plan', ''], ['plan', 'weekly'], ['plan', 'hours'], ['plan', 'wizard'],
       ['growth', 'exams'], ['growth', 'goals'], ['growth', 'week'], ['account/settings', ''], ['account/settings', 'profile']]) {
       expect(child(parent, path).canDeactivate?.length, `${parent}/${path}`).toBe(1);
     }
     expect(child('plan', 'hours').data?.['initialTab']).toBe('hours');
+  });
+
+  // Paket H4: the old yearly preview page leads to the wizard's Özet step, keeping the query string.
+  it('sends plan/preview to the wizard\'s Özet step', async () => {
+    const preview = COACHING_PORTAL_ROUTES.find(r => r.path === 'plan')!.children!.find(c => c.path === 'preview')!;
+    expect(preview.loadComponent).toBeUndefined();
+    const router = routerWith([{ path: 'plan', children: [preview, { path: '**', component: Blank }] }, { path: '**', component: Blank }]);
+    await router.navigateByUrl('/coaching-portal/plan/preview?plan=p1');
+    expect(router.url).toBe('/coaching-portal/plan/wizard?plan=p1&adim=ozet');
   });
 
   it('describes each hub with tabs that point inside it', () => {

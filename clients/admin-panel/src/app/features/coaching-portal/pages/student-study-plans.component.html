@@ -126,7 +126,7 @@
 </ng-template>
 
 <ng-template #taskRow let-task>
-  <app-plan-task-row [task]="task" [color]="taskColor(task)" [overdue]="isOverdue(task)" [canComplete]="canQuickComplete(task)" [justCompleted]="lastCompletedId() === task.id" [busy]="busy()"
+  <app-plan-task-row [task]="task" [color]="taskColor(task)" [badge]="sourceBadge(task)" [badgeTone]="sourceTone(task)" [overdue]="isOverdue(task)" [canComplete]="canQuickComplete(task)" [justCompleted]="lastCompletedId() === task.id" [busy]="busy()"
     (opened)="openTask(task.id)" (completed)="quickComplete(task)" (undone)="undoComplete(task)" />
 </ng-template>
 
@@ -262,7 +262,7 @@
 @if(calendarForm;as form){
   <div class="calendar-dialog-backdrop">
     <section #taskDialog class="calendar-dialog" role="dialog" aria-modal="true" aria-labelledby="calendar-dialog-title" (keydown)="calendarDialogKey($event)">
-      <div class="dialog-heading"><h2 id="calendar-dialog-title">{{ form.kind==='add'?'Çalışma ekle':form.kind==='edit'?'Çalışmayı düzenle':form.kind==='complete'?'Çalışmayı tamamla':'Çalışmayı sil' }}</h2><button type="button" class="secondary" aria-label="Pencereyi kapat" (click)="closeCalendarForm()" [disabled]="busy()">✕</button></div>
+      <div class="dialog-heading"><h2 id="calendar-dialog-title">{{ form.kind==='add'?'Çalışma ekle':form.kind==='edit'?'Çalışmayı düzenle':form.kind==='complete'?'Çalışmayı tamamla':form.kind==='split'?'Çalışmayı ikiye böl':'Çalışmayı sil' }}</h2><button type="button" class="secondary" aria-label="Pencereyi kapat" (click)="closeCalendarForm()" [disabled]="busy()">✕</button></div>
       @if(form.taskIds.length>1){<label>İşlem yapılacak çalışma<select [ngModel]="form.taskId" (ngModelChange)="chooseCalendarTask($event)" [disabled]="busy()">@for(task of calendarTaskOptions();track task.id){<option [value]="task.id">{{ task.title }} · {{ task.plannedMinutes }} dk</option>}</select></label><p class="muted">Karttaki her kazanım ayrı bir çalışmadır. İşlem yalnız seçtiğin çalışmaya uygulanır.</p>}
       @if(form.kind==='add'||form.kind==='edit'){
         @if(form.kind==='add'){<label>Ders<select [(ngModel)]="form.lessonId" [disabled]="busy()||calendarLessonsLoading"><option [ngValue]="null">{{ calendarLessonsLoading?'Dersler yükleniyor…':'Ders seç' }}</option>@for(lesson of calendarLessons;track lesson.id){<option [value]="lesson.id">{{ lesson.name }}</option>}</select></label>}
@@ -273,9 +273,10 @@
       }@else if(form.kind==='complete'){
         <h3>{{ form.title }}</h3><div class="fields"><label>Fiili çalışma günü<input type="date" [ngModel]="form.workedOn ?? today" (ngModelChange)="form.workedOn=$event" [max]="today" [disabled]="busy()"></label><label>Gerçek çalışma süresi (dk)<input type="number" [(ngModel)]="form.actualMinutes" min="1" max="1440" [disabled]="busy()"></label><label>Çözülen soru (isteğe bağlı)<input type="number" [(ngModel)]="form.actualQuestions" min="0" max="100000" [disabled]="busy()"></label></div>
         @if(completionError()){<p role="alert" class="notice error">{{ completionError()?.message }}</p>}
+      }@else if(form.kind==='split'){<p data-testid="split-text">{{ splitText() }}</p>
       }@else{<p>“{{ form.title }}” adlı bekleyen çalışma kaldırılacak. Tamamlanmış çalışmalar silinmez.</p>}
       @if(error()){<p role="alert" class="notice error">{{ error() }}</p>}
-      <div class="actions"><button type="button" (click)="saveCalendarForm()" [disabled]="busy()||calendarLessonsLoading">{{ busy()?'Kaydediliyor…':form.kind==='complete'?'Tamamlandı olarak kaydet':form.kind==='delete'?'Silmeyi onayla':'Kaydet' }}</button><button type="button" class="secondary" (click)="closeCalendarForm()" [disabled]="busy()">Vazgeç</button></div>
+      <div class="actions"><button type="button" (click)="saveCalendarForm()" [disabled]="busy()||calendarLessonsLoading">{{ busy()?'Kaydediliyor…':form.kind==='complete'?'Tamamlandı olarak kaydet':form.kind==='delete'?'Silmeyi onayla':form.kind==='split'?'İki parçaya böl':'Kaydet' }}</button><button type="button" class="secondary" (click)="closeCalendarForm()" [disabled]="busy()">Vazgeç</button></div>
     </section>
   </div>
 }

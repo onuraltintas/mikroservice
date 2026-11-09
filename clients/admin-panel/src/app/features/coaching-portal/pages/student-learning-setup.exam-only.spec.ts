@@ -5,6 +5,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { StudentLearningSetupComponent } from './student-learning-setup.component';
 import { StudentStudyPlanAssistantComponent } from './student-study-plan-assistant.component';
+import { CoachingStudyRoutineService } from '../../../core/services/coaching-study-routine.service';
 import { CoachingLearningSetupService, LearningCatalog, LearningContext, LearningSetupUpdate, LearningSetupView, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 import { CoachingWeeklyDraftService } from '../../../core/services/coaching-weekly-draft.service';
@@ -92,7 +93,8 @@ describe('KM8 exam-only study purposes: plan wizard', () => {
     const engine = { options: vi.fn(() => of({ startDate: '2027-05-24', endDate: '2027-06-01', weeklyDraftVersion: 0, timeZoneId: 'Europe/Istanbul', exams: [] })) };
     TestBed.configureTestingModule({ imports: [StudentStudyPlanAssistantComponent], providers: [provideRouter([]),
       { provide: CoachingWeeklyDraftService, useValue: weekly }, { provide: CoachingLearningSetupService, useValue: learning },
-      { provide: CoachingWeeklyOutcomePlanService, useValue: engine }, { provide: CoachingStudyPlanningService, useValue: { getAvailability: vi.fn(() => of(null)) } }] });
+      { provide: CoachingWeeklyOutcomePlanService, useValue: engine }, { provide: CoachingStudyPlanningService, useValue: { getAvailability: vi.fn(() => of(null)), list: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 })) } },
+      { provide: CoachingStudyRoutineService, useValue: { get: vi.fn(() => of(null)), save: vi.fn() } }] });
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(StudentStudyPlanAssistantComponent);
     if (staff) fixture.componentInstance.staffStudentId = 'student-1';

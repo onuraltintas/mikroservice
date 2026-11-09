@@ -40,4 +40,22 @@ describe('weekly draft API',()=>{
     expect(answered.request.body).toEqual({mode:'Fill',examFocus:null,windows:[{day:'Monday',startMinute:1020,endMinute:1140}]});
     answered.flush({data:{mode:'Fill',slots:[]}});http.verify();
   });
+  // Paket H4: the tempo's finish date goes with the proposal; the tempo options are asked the same way.
+  it('sends finishBy only when given and asks for the tempo options of the student or the chosen student',()=>{
+    TestBed.configureTestingModule({providers:[provideHttpClient(),provideHttpClientTesting()]});
+    const service=TestBed.inject(CoachingWeeklyDraftService),http=TestBed.inject(HttpTestingController);
+    service.proposal('Fill','ayt',undefined,undefined,'2027-05-12').subscribe();
+    const own=http.expectOne('/api/coaching/study-planning/weekly-draft/proposal');
+    expect(own.request.body).toEqual({mode:'Fill',examFocus:'ayt',finishBy:'2027-05-12'});own.flush({data:{}});
+    service.proposal('Replace',null,undefined,undefined,null).subscribe();
+    const none=http.expectOne('/api/coaching/study-planning/weekly-draft/proposal');
+    expect(none.request.body).toEqual({mode:'Replace',examFocus:null});none.flush({data:{}});
+    let options:unknown;service.tempoOptions('tyt',undefined,undefined,'Replace').subscribe(x=>options=x);
+    const tempo=http.expectOne(r=>r.method==='POST'&&r.url==='/api/coaching/study-planning/weekly-draft/tempo-options');
+    expect(tempo.request.body).toEqual({examFocus:'tyt',mode:'Replace'});tempo.flush({data:{planEnd:'2027-06-13',options:[]}});
+    expect(options).toEqual({planEnd:'2027-06-13',options:[]});
+    service.tempoOptions(null,'student-1',[{day:'Monday',startMinute:1020,endMinute:1140}]).subscribe();
+    const staff=http.expectOne('/api/coaching/staff/students/student-1/study/weekly-draft/tempo-options');
+    expect(staff.request.body).toEqual({examFocus:null,mode:'Fill',windows:[{day:'Monday',startMinute:1020,endMinute:1140}]});staff.flush({data:{}});http.verify();
+  });
 });

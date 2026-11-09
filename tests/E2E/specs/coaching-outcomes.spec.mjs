@@ -9,8 +9,12 @@ const token = role => {
 const outcome = { outcomeId: 'outcome', code: 'M.8.1.1.1', name: 'Çarpanları bulur', estimateId: 'estimate-2', estimateNumber: 2,
   learningMinutes: 20, practiceMinutes: 30, checkMinutes: 10, totalMinutes: 60, editionCode: 'meb-2018', officialLessonPeriods: 10 };
 
-test('student selects reviewed outcomes, overrides time and saves and completes work', async ({ context, page }) => {
-  let plan = null; let previewRequest; const completed = [];
+// Paket H4 (K3): "Konulardan plan" left the wizard. The old address still opens the wizard, and a topic plan saved earlier (its server
+// endpoints stay) is still published and completed on Planım with its outcomes.
+test('the old topic-plan address opens the wizard; a saved topic draft is published and completed with its outcomes', async ({ context, page }) => {
+  const completed = [];
+  let plan = { id: 'pilot', version: 1, title: 'LGS kazanım pilotu', status: 'Draft', tasks: [{ id: 'work', plannedDate: '2026-10-19', title: 'Çarpanlar ve Katlar', plannedMinutes: 35, isCompleted: false, isPinned: false,
+    outcomes: [{ ...outcome, allocatedMinutes: 35, origin: 'StudentOverride' }] }] };
   await context.route('**/api/**', async route => {
     const request = route.request(); const path = new URL(request.url()).pathname;
     const respond = data => route.fulfill({ json: { success: true, data } });
@@ -19,42 +23,18 @@ test('student selects reviewed outcomes, overrides time and saves and completes 
     if (path.endsWith('/profiles/me')) return respond({ student: { educationStatus: 'Student', gradeLevel: 8, isActive: true }, memberships: [] });
     if (path.endsWith('/weekly-draft')) return respond({ draft: null, lessons: [] });
     if (path.endsWith('/availability')) return respond({ version: 1, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] });
-    if (path.endsWith('/topics')) return respond({ items: [{ id: 'topic', name: 'Çarpanlar ve Katlar', lessonName: 'Matematik', unitName: 'LGS', examCode: 'LGS', gradeNumber: null, estimatedMinutes: null }], totalCount: 1, pageNumber: 1, pageSize: 20 });
-    if (path.endsWith('/topics/topic/outcomes')) return respond([outcome]);
-    if (path.endsWith('/automatic-preview')) {
-      previewRequest = request.postDataJSON();
-      return respond({ availabilityVersion: 1, timeZoneId: 'Europe/Istanbul', activeRevisionId: null, activeRevisionVersion: null, protectedTasks: [],
-        schedule: { tasks: [{ topicId: 'topic', plannedDate: '2026-10-19', plannedMinutes: 35 }], unscheduledTopics: [], scheduledMinutes: 35, unusedMinutes: 85, unscheduledMinutes: 0 } });
-    }
-    if (path.endsWith('/automatic-drafts')) {
-      const r = request.postDataJSON(); expect(r.preview.topics).toEqual(previewRequest.topics);
-      plan = { id: 'pilot', version: 1, title: r.title, status: 'Draft', tasks: [{ id: 'work', plannedDate: '2026-10-19', title: 'Çarpanlar ve Katlar', plannedMinutes: 35, isCompleted: false, isPinned: false,
-        outcomes: [{ ...outcome, allocatedMinutes: 35, origin: 'StudentOverride' }] }] }; return respond(plan);
-    }
+    if (path.endsWith('/routine')) return route.fulfill({ status: 404, json: { success: false, code: 'StudyPlanning.RoutineMissing' } });
     if (path.endsWith('/plans/pilot/publish')) { plan = { ...plan, status: 'Active', version: 2 }; return respond(plan); }
     if (path.endsWith('/completion')) { completed.push(request.postDataJSON()); plan = { ...plan, version: 3, tasks: [{ ...plan.tasks[0], isCompleted: true, actualMinutes: 32, actualQuestions: 12, completedAt: '2026-10-19T15:00:00Z' }] }; return respond(plan); }
     if (path.endsWith('/plans/pilot')) return respond(plan);
     if (path.endsWith('/plans')) return respond({ items: plan ? [plan] : [], totalCount: plan ? 1 : 0, pageNumber: 1, pageSize: 20 });
     return respond([]);
   });
-  // T3: the old automatic-plan address leads to Planım › Plan sihirbazı; topic planning sits behind "Konulardan plan hazırla".
   await page.goto('/coaching-portal/automatic-plan');
   await expect(page).toHaveURL(/\/coaching-portal\/plan\/wizard$/);
-  await page.getByRole('button', { name: 'Konulardan plan hazırla', exact: true }).click();
-  await page.getByRole('button', { name: 'Konuları ara', exact: true }).click();
-  await page.getByRole('button', { name: 'Konu ekle', exact: true }).click();
-  await page.getByRole('button', { name: 'Kazanım önerilerini yükle', exact: true }).click();
-  await expect(page.getByText('20 dk öğrenme', { exact: false })).toBeVisible();
-  await page.getByLabel('Bu kazanıma ayıracağım dakika').fill('35');
-  await page.getByLabel('Başlangıç tarihi', { exact: true }).fill('2026-10-19');
-  await page.getByRole('button', { name: 'Önizleme oluştur', exact: true }).click();
-  await expect(page.getByText(/Yeni çalışmalar: 35 dk/)).toBeVisible();
-  expect(previewRequest.topics[0].outcomes).toEqual([{ outcomeId: 'outcome', estimateId: 'estimate-2', requiredMinutes: 35 }]);
-  await page.getByLabel('Plan başlığı', { exact: true }).fill('LGS kazanım pilotu');
-  await page.getByRole('checkbox', { name: /Önizlemeyi kontrol ettim/ }).check();
-  await page.getByRole('button', { name: 'Taslağı kaydet', exact: true }).click();
-  await expect(page.getByText(/taslak olarak kaydedildi/)).toBeVisible();
-  await page.getByRole('link', { name: 'Çalışma planlarımı aç', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Planını adım adım hazırla', exact: true })).toBeVisible();
+  await expect(page.getByText('Konulardan plan', { exact: false })).toHaveCount(0);
+  await page.goto('/coaching-portal/plan');
   // T4: with no active plan Planım offers the saved plans under "Kayıtlı planlarım"; a draft opens in its editor and is published there.
   await page.getByText('Kayıtlı planlarım', { exact: true }).click();
   await page.getByRole('button', { name: /LGS kazanım pilotu/ }).click();

@@ -1,586 +1,507 @@
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { NEVER, of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
-import { provideRouter, Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
-import { CoachingWeeklyDraftService, WeeklyProposal, WeeklyProposalMode } from '../../../core/services/coaching-weekly-draft.service';
-import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
+import { WizardHoursStepComponent } from './wizard-hours-step.component';
+import { WizardSummaryStepComponent } from './wizard-summary-step.component';
+import { CoachingWeeklyDraftService, WeeklyProposalMode, WeeklyTempoOption } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingLearningSetupService, LearningContext } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingWeeklyOutcomePlanService } from '../../../core/services/coaching-weekly-outcome-plan.service';
-import { CoachingStudyPlanningService, StudyAvailability, StudyAvailabilityUpdate } from '../../../core/services/coaching-study-planning.service';
-import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
+import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
+import { CoachingStudyRoutineService, StudyRoutineAnswers, StudyRoutineUpdate, StudyRoutineView } from '../../../core/services/coaching-study-routine.service';
+import { CoachingPlanPreferencesService, StudyPlanPreferences } from '../../../core/services/coaching-plan-preferences.service';
 import { StudentStudyPlanAssistantComponent } from './student-study-plan-assistant.component';
-import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
-import { WeeklySlot } from './weekly-calendar';
+import { routineWindows } from './study-routine';
 
+// Paket H4: the plan wizard is one flow of steps with "Adım 2 / 5", Geri and Devam, and an edit question for an active plan.
 describe('StudentStudyPlanAssistantComponent', () => {
   const lessons = [{ id: 'math', name: 'Matematik', examCode: 'LGS', gradeNumber: 8 }];
-  const saved = { version: 3, timeZoneId: 'Europe/Istanbul', slots: [{ id: 'old', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Friday', startMinute: 1080, durationMinutes: 30 }] };
-  const context = { id: 'context', version: 8, academicYearStart: 2026, purpose: 'Lgs' as const, targetExamYear: 2027,
-    primaryScoreType: null, foreignLanguage: null, curriculumVersionId: 'curriculum',
-    coursePreferences: [{ lessonId: 'math', priority: 2, selfReportedDifficulty: 3 }],
-    topicStates: [{ topicId: 'previous-topic', declaredStatus: 'Studied' as const }], startingStatusReviewed: true };
-  // Paket H2: the proposal is the server's; these are its answers.
-  const tuesday: WeeklySlot = { id: 'p1', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Tuesday', startMinute: 1080, durationMinutes: 60 };
-  const proposalOf = (slots: WeeklySlot[], over: Partial<WeeklyProposal> = {}): WeeklyProposal => ({ mode: 'Fill', examFocus: null, slots,
-    lessons: [{ lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', existingMinutes: 30, proposedMinutes: slots.length * 60, neededMinutes: 90, noTime: false }],
-    freeMinutes: 120, neededMinutes: 90, shortageMinutes: 0, coveredMinutes: 90, maxDayMinutes: 480, weeksUntilEnd: 30, endDate: '2027-06-13', middleSchool: true,
-    draftVersion: 3, ...over });
-  async function setup(over: Record<string, unknown> = {}, availability: StudyAvailability | null = null, staffStudentId: string | null = null,
-    page: { lessons: typeof lessons; maxDayMinutes?: number } = { lessons }) {
-    const planning = { getAvailability: vi.fn((_studentId?: string | null) => of(availability)),
-      saveAvailability: vi.fn((update: StudyAvailabilityUpdate) => of<StudyAvailability>({ version: (update.expectedVersion ?? 0) + 1, timeZoneId: 'Europe/Istanbul', windows: update.windows })) };
-    const weekly = { get: vi.fn(() => of({ draft: saved, ...page })), save: vi.fn(() => of({ ...saved, version: 4 })),
-      proposal: vi.fn((mode: WeeklyProposalMode, _focus: string | null, _studentId?: string, _windows?: unknown) => of(proposalOf([tuesday], { mode }))) };
-    const view = () => of({ context, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [], ...over });
-    const learning = { get: vi.fn(view), getForStudent: vi.fn(view), catalogForStudent: vi.fn(() => of({ curriculum: null, lessons: [], topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] })),
-      catalog: vi.fn((lessonId: string | null) => of({ curriculum: null, lessons: [{ id: 'math', name: 'Matematik', gradeNumber: 8, examCode: 'LGS', topicCount: 1, missingDurationCount: 0 }],
-        topics: { items: lessonId ? [{ id: 'topic-2', name: 'Oran', lessonName: 'Matematik', unitName: 'Sayılar', gradeNumber: 8, examCode: 'LGS', estimatedMinutes: 30 }] : [], totalCount: 1, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: [] })),
-      save: vi.fn(() => of({ context: { ...context, version: 9, topicStates: [...context.topicStates, { topicId: 'topic-2', declaredStatus: 'Studied' as const }] }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })) };
-    const engine = { options: vi.fn(() => of({ startDate: '2027-05-24', endDate: '2027-06-01', weeklyDraftVersion: 3, timeZoneId: 'Europe/Istanbul', exams: [] })),
-      preview: vi.fn(() => of({ request: { startDate: '2027-05-24', endDate: '2027-06-01', expectedWeeklyDraftVersion: 3, reuseFreedSlots: true },
-        timeZoneId: 'Europe/Istanbul', fingerprint: 'fingerprint', canCreate: false, protectedTaskCount: 0, issues: [],
-        schedule: { tasks: [], freeMinutes: 0, recommendedEndDate: '2027-06-07', lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3,
-          weeklyMinutes: 30, requiredMinutes: 80, scheduledMinutes: 60, remainingMinutes: 20, finishDate: '2027-06-07', extraWeeklyMinutes: 30 }] } })),
-      create: vi.fn(() => of({ id: 'draft', version: 1 })) };
-    TestBed.configureTestingModule({ imports: [StudentStudyPlanAssistantComponent], providers: [
-      provideRouter([]),
-      { provide: CoachingWeeklyDraftService, useValue: weekly },
-      { provide: CoachingLearningSetupService, useValue: learning }, { provide: CoachingWeeklyOutcomePlanService, useValue: engine },
-      { provide: CoachingStudyPlanningService, useValue: planning }
-    ] });
+  const yksLessons = [{ id: 'tyt-mat', name: 'TYT Matematik', examCode: 'TYT', gradeNumber: null }, { id: 'ayt-mat', name: 'AYT Matematik', examCode: 'AYT', gradeNumber: null }];
+  const context: LearningContext = { id: 'context', version: 8, academicYearStart: 2026, purpose: 'Lgs', targetExamYear: 2027, primaryScoreType: null, foreignLanguage: null,
+    curriculumVersionId: 'curriculum', coursePreferences: [{ lessonId: 'math', priority: 2, selfReportedDifficulty: 3 }],
+    topicStates: [{ topicId: 'previous-topic', declaredStatus: 'Studied' }], startingStatusReviewed: true };
+  const yksContext: LearningContext = { ...context, purpose: 'Yks', primaryScoreType: 'SAY', coursePreferences: [{ lessonId: 'tyt-mat', priority: 3, selfReportedDifficulty: null },
+    { lessonId: 'ayt-mat', priority: 3, selfReportedDifficulty: null }] };
+  const answers: StudyRoutineAnswers = { schoolShift: 'Morning', schoolStart: 480, schoolEnd: 840, afterSchoolStart: 900, latestEnd: 1320, morningStudy: false, morningStart: null,
+    dayStart: null, dinnerStart: 1140, dinnerEnd: 1200, busyDays: [], busyDaysOff: false, busyStart: null, weekdayMinutes: 180, weekend: 'None', weekendStart: null,
+    weekendEnd: null, weekendMinutes: null, examFocus: null };
+  const routineOf = (a: StudyRoutineAnswers, matches = true): StudyRoutineView => {
+    const w = routineWindows(a);
+    return { version: 2, schemaVersion: 1, answers: a, windows: w.windows, dayBudgets: w.budgets, daysWithoutWindows: [], availabilityVersion: 5, currentAvailabilityVersion: 5,
+      availabilityMatches: matches, updatedAt: null };
+  };
+  const hours: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 900, endMinute: 1140 }] };
+  const three: WeeklyTempoOption[] = [
+    { tempo: 'Relaxed', finishBy: '2027-06-13', neededWeeklyMinutes: 300, capacityWeeklyMinutes: 900, fits: true },
+    { tempo: 'Balanced', finishBy: '2027-05-12', neededWeeklyMinutes: 360, capacityWeeklyMinutes: 900, fits: true },
+    { tempo: 'Intense', finishBy: '2027-04-01', neededWeeklyMinutes: 960, capacityWeeklyMinutes: 900, fits: false }];
+  const card = { id: 's', lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', day: 'Monday' as const, startMinute: 900, durationMinutes: 60 };
+
+  interface Opts { yks?: boolean; routine?: StudyRoutineView | null; availability?: StudyAvailability | null; staff?: string | null; active?: boolean; activeEnd?: string;
+    draft?: boolean; adim?: string; tempo?: WeeklyTempoOption[]; availabilityError?: boolean; cards?: boolean; yeniden?: boolean; noContext?: boolean;
+    purposeNotForEducation?: boolean; prefs?: StudyPlanPreferences | null; shortage?: boolean; education?: { educationStatus: string; gradeLevel: number | null } }
+  async function setup(o: Opts = {}) {
+    const ctx = o.yks ? yksContext : context;
+    const weekly = { get: vi.fn((_s?: string) => of({ draft: o.cards ? { version: 1, timeZoneId: 'Europe/Istanbul', slots: [card] } : null, lessons: o.yks ? yksLessons : lessons, maxDayMinutes: 480 })),
+      save: vi.fn(),
+      proposal: vi.fn((mode: WeeklyProposalMode, ..._r: unknown[]) => of({ mode, examFocus: null, slots: o.shortage ? [{ ...card, id: 'p1', day: 'Tuesday' as const }] : [],
+        lessons: o.shortage ? [{ lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', existingMinutes: 0, proposedMinutes: 60, neededMinutes: 120, noTime: false }] : [],
+        freeMinutes: 60, neededMinutes: o.shortage ? 120 : 0, shortageMinutes: o.shortage ? 60 : 0, coveredMinutes: 60, maxDayMinutes: 480, weeksUntilEnd: 20,
+        endDate: '2027-06-13', middleSchool: true, draftVersion: o.cards ? 1 : null })),
+      tempoOptions: vi.fn((..._a: unknown[]) => of({ planEnd: '2027-06-13', options: o.tempo ?? three })) };
+    const view = () => of({ context: o.noContext ? null : ctx, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [], purposeNotForEducation: o.purposeNotForEducation,
+      educationStatus: o.education?.educationStatus ?? (o.yks ? 'Student' : 'Student'), gradeLevel: o.education ? o.education.gradeLevel : (o.yks ? 11 : 8) });
+    const learning = { get: vi.fn(view), getForStudent: vi.fn((_s: string) => view()), save: vi.fn((_r: unknown) => of({ context: { ...ctx, version: 9 }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })),
+      catalog: vi.fn(), catalogForStudent: vi.fn() };
+    const engine = { options: vi.fn(() => of({ startDate: '2026-11-09', endDate: '2027-06-13', weeklyDraftVersion: 1, timeZoneId: 'Europe/Istanbul', exams: [] })), preview: vi.fn(), create: vi.fn() };
+    const planning = { getAvailability: vi.fn((_s?: string | null) => o.availabilityError ? throwError(() => ({ status: 500 })) : of(o.availability ?? null)),
+      list: vi.fn((_p: number, status?: string) => of({ items: status === 'Active' && o.active ? [{ id: 'p', version: 1, title: 'Plan', status: 'Active' }]
+        : status === 'Draft' && o.draft ? [{ id: 'd', version: 1, title: 'Bekleyen planım', status: 'Draft' }] : [], totalCount: 0, pageNumber: 1, pageSize: 20 })),
+      get: vi.fn((..._a: unknown[]) => of({ id: 'p', version: 1, title: 'Plan', status: 'Active', tasks: [], weeklySource: o.activeEnd ? { endDate: o.activeEnd } : null })),
+      publish: vi.fn() };
+    const routines = { get: vi.fn((_s?: string | null) => of(o.routine ?? null)), save: vi.fn((u: StudyRoutineUpdate) => of({ ...routineOf(u.answers), version: 3 })) };
+    const prefs = { get: vi.fn((_s?: string | null) => of(o.prefs ?? null)), save: vi.fn((u: StudyPlanPreferences) => of({ ...u, version: 1, updatedAt: null })) };
+    TestBed.configureTestingModule({ imports: [StudentStudyPlanAssistantComponent], providers: [provideRouter([]),
+      { provide: CoachingWeeklyDraftService, useValue: weekly }, { provide: CoachingLearningSetupService, useValue: learning },
+      { provide: CoachingWeeklyOutcomePlanService, useValue: engine }, { provide: CoachingStudyPlanningService, useValue: planning },
+      { provide: CoachingStudyRoutineService, useValue: routines }, { provide: CoachingPlanPreferencesService, useValue: prefs },
+      ...(o.adim || o.yeniden ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(o.yeniden ? { yeniden: 'oner' } : { adim: o.adim! }) } } }] : [])] });
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    const fixture = TestBed.createComponent(StudentStudyPlanAssistantComponent); fixture.componentInstance.staffStudentId = staffStudentId;
+    const fixture = TestBed.createComponent(StudentStudyPlanAssistantComponent); fixture.componentInstance.staffStudentId = o.staff ?? null;
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
-    return { fixture, component: fixture.componentInstance, weekly, learning, engine, planning };
+    return { fixture, c: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, weekly, learning, engine, planning, routines, prefs,
+      toaster: TestBed.inject(ToasterService) as unknown as { confirm: ReturnType<typeof vi.fn> } };
+  }
+  const words = (el: Element | null) => {
+    if (!el) return undefined;
+    const parts: string[] = [], walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) parts.push(walker.currentNode.textContent ?? '');
+    return parts.join(' ').replace(/\s+/g, ' ').trim();
+  };
+  const button = (el: HTMLElement, text: string) => [...el.querySelectorAll('button')].find(x => words(x) === text) as HTMLButtonElement | undefined;
+  const progress = (el: HTMLElement) => el.querySelector('[data-testid="wizard-progress"]')?.textContent?.trim();
+  const title = (el: HTMLElement) => el.querySelector('#step-title')?.textContent?.trim();
+  const pills = (el: HTMLElement) => [...el.querySelectorAll('.wizard-progress li')].map(words);
+  async function settle(fixture: { detectChanges(): void; whenStable(): Promise<unknown> }) { fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges(); }
+  async function click(fixture: { detectChanges(): void; whenStable(): Promise<unknown>; nativeElement: HTMLElement }, text: string) {
+    const target = button(fixture.nativeElement, text);
+    if (!target) throw new Error(`no button "${text}"`);
+    target.click(); await settle(fixture);
   }
 
-  it('keeps generated slots as a review proposal until the student explicitly applies them', async () => {
-    const { fixture, component, weekly } = await setup();
-    component.toggleDay('Tuesday'); component.createProposal(); fixture.detectChanges(); await fixture.whenStable();
-    expect(fixture.nativeElement.textContent).toContain('Öneriyi incele');
-    expect(weekly.save).not.toHaveBeenCalled();
-    expect(component.proposal()).toHaveLength(1);
+  it('starts a new student on the questions of step 1 with the progress and the step list', async () => {
+    const { el } = await setup();
+    expect(progress(el)).toBe('Adım 1 / 4');
+    expect(title(el)).toBe('Saatlerin');
+    expect(pills(el)).toEqual(['Saatlerin', 'Derslerin', 'Tempo', 'Özet']);
+    expect(el.querySelector('.wizard-progress [aria-current=step]')?.textContent?.trim()).toBe('Saatlerin');
+    expect(el.querySelector('[data-testid="routine-question"]')?.getAttribute('data-question')).toBe('shift');
+    // The step is announced once, by the focused heading (no second live region).
+    expect(el.querySelector('.wizard-panel [aria-live]')).toBeNull();
+    expect(document.activeElement?.id).toBe('step-title');
   });
 
-  it('preserves saved slots and only saves the non-conflicting proposal on explicit apply', async () => {
-    const { component, weekly } = await setup();
-    component.toggleDay('Tuesday'); component.createProposal(); component.applyProposal();
-    expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, undefined);
-    expect(weekly.save).toHaveBeenCalledWith(3, 'Europe/Istanbul', [
-      saved.slots[0], expect.objectContaining({ lessonId: 'math', day: 'Tuesday', startMinute: 1080, durationMinutes: 60 })
-    ], undefined);
-    expect(component.saved()).toBe(true);
+  it('adds the exam weight step for YKS (five steps)', async () => {
+    const { el } = await setup({ yks: true, routine: routineOf(answers), availability: hours });
+    expect(progress(el)).toBe('Adım 1 / 5');
+    expect(pills(el)).toEqual(['Saatlerin', 'Derslerin', 'Sınav ağırlığı', 'Tempo', 'Özet']);
   });
 
-  // Paket H2: "Haftanı baştan öner" asks first, then the applied proposal replaces the saved week.
-  it('proposes the whole week again only after a confirmation and saves only the new cards', async () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    const { fixture, component, weekly } = await setup({}, mondayEvening);
-    const toaster = TestBed.inject(ToasterService) as unknown as { confirm: ReturnType<typeof vi.fn> };
-    const again = () => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(x => x.textContent?.trim() === 'Haftanı baştan öner') as HTMLButtonElement;
-    toaster.confirm.mockResolvedValueOnce(false);
-    again().click(); await fixture.whenStable();
-    expect(toaster.confirm).toHaveBeenCalledWith('Mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.');
-    expect(weekly.proposal).not.toHaveBeenCalled();
-    await component.replaceWeek(); fixture.detectChanges();
-    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined);
-    expect(fixture.nativeElement.textContent).toContain('mevcut haftalık düzeninin yerine geçer');
-    expect(weekly.save).not.toHaveBeenCalled();
-    component.applyProposal();
-    expect(weekly.save).toHaveBeenCalledWith(3, 'Europe/Istanbul', [tuesday], undefined);
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Yeni haftalık düzen kaydedildi.');
+  it('offers "Okula gitmiyorum" to everyone but a middle-school student', async () => {
+    const shift = async (o: Opts) => { const { el } = await setup(o); const text = words(el.querySelector('[role=radiogroup]')); TestBed.resetTestingModule(); return text; };
+    expect(await shift({})).not.toContain('Okula gitmiyorum');
+    TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
+    expect(await shift({ yks: true })).toContain('Okula gitmiyorum');
+    TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
+    expect(await shift({ yks: true, education: { educationStatus: 'HighSchoolGraduate', gradeLevel: null } })).toContain('Okula gitmiyorum');
   });
 
-  it('offers "Haftanı baştan öner" only when the weekly draft has cards', async () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    const { fixture, component } = await setup({}, mondayEvening);
-    const has = () => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).some(x => x.textContent?.trim() === 'Haftanı baştan öner');
-    expect(has()).toBe(true);
-    component.slots.set([]); fixture.detectChanges();
-    expect(has()).toBe(false);
-  });
-
-  it('shows the proposed cards by day and each course\'s weekly hours', async () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    const { fixture, component, weekly } = await setup({}, mondayEvening);
-    weekly.proposal.mockReturnValueOnce(of(proposalOf([{ ...tuesday, id: 'a', day: 'Monday', startMinute: 1020 }, tuesday, { ...tuesday, id: 'c', lessonId: 'tur', lessonName: 'Türkçe', startMinute: 1170 }],
-      { lessons: [{ lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', existingMinutes: 30, proposedMinutes: 120, neededMinutes: 150, noTime: false },
-        { lessonId: 'tur', lessonName: 'Türkçe', examCode: 'LGS', existingMinutes: 0, proposedMinutes: 60, neededMinutes: 60, noTime: false }] })));
-    component.createProposal(); fixture.detectChanges();
-    const days = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="proposal-day"]'))
-      .map(x => Array.from(x.children).map(child => child.textContent?.replace(/\s+/g, ' ').trim()).join(' '));
-    expect(days).toEqual(['Pazartesi 17:00–18:00 · Matematik', 'Salı 18:00–19:00 · Matematik 19:30–20:30 · Türkçe']);
-    const hours = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="proposal-lessons"] li')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
-    expect(hours).toEqual(['Matematik · haftada 2,5 saat', 'Türkçe · haftada 1 saat']);
-    expect(fixture.nativeElement.querySelector('[data-testid="shortage-notice"]')).toBeNull();
-  });
-
-  // Paket H1 (P8, 08.11.2026): the topic list is gone; one line counts the topics marked in Başlangıç durumum and links there.
-  it('counts the studied topics of Başlangıç durumum and links there instead of listing topics', async () => {
-    const two = { ...context, topicStates: [{ topicId: 'a', declaredStatus: 'Studied' as const }, { topicId: 'b', declaredStatus: 'NeedsReview' as const },
-      { topicId: 'c', declaredStatus: 'Studied' as const }] };
-    const { fixture, learning } = await setup({ context: two });
-    const el = fixture.nativeElement as HTMLElement;
+  it('goes step by step with Geri and Devam and keeps the tempo in the plan preferences, never in the routine', async () => {
+    const { fixture, el, weekly, routines, prefs } = await setup({ routine: routineOf(answers), availability: hours });
+    expect(el.querySelector('[data-testid="routine-summary"]')).toBeTruthy();
+    await click(fixture, 'Doğru, devam');
+    expect(progress(el)).toBe('Adım 2 / 4'); expect(title(el)).toBe('Derslerin');
+    expect(pills(el)[0]).toBe('Saatlerin (tamamlandı)');
+    // Paket H1 (P8): the Başlangıç durumum line sits with the courses.
     const line = el.querySelector('[data-testid="starting-status"]') as HTMLElement;
-    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('“Başlangıç durumum” bölümünde 2 konuyu “Çalıştım” olarak işaretledin. Başlangıç durumunu düzenle');
-    expect(line.querySelector('strong')?.textContent).toBe('2 konuyu');
-    const link = line.querySelector('a') as HTMLAnchorElement;
-    expect(link.getAttribute('href')).toBe('/coaching-portal/account/settings?adim=baslangic&donus=sihirbaz');
-    expect(link.textContent?.trim()).toBe('Başlangıç durumunu düzenle');
-    expect(el.textContent).not.toContain('Daha önce çalıştığın konular');
-    expect(el.textContent).not.toContain('Konu durumlarını kaydet');
-    expect(el.querySelector('#topic-lesson')).toBeNull();
-    expect(learning.catalog).not.toHaveBeenCalled();
+    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('“Başlangıç durumum” bölümünde 1 konuyu “Çalıştım” olarak işaretledin. Başlangıç durumunu düzenle');
+    await click(fixture, 'Geri');
+    expect(title(el)).toBe('Saatlerin');
+    await click(fixture, 'Doğru, devam'); await click(fixture, 'Devam');
+    expect(progress(el)).toBe('Adım 3 / 4'); expect(title(el)).toBe('Tempo');
+    expect(weekly.tempoOptions).toHaveBeenCalledWith(null, undefined, undefined, 'Replace');
+    const cards = [...el.querySelectorAll('[data-testid="tempo-option"]')].map(words);
+    expect(cards[0]).toBe('Rahat Konular sınava kadar yayılır. Bitiş: 13 Haziran Haftada yaklaşık 5 saat gerekiyor');
+    expect(cards[1]).toBe('Dengeli Sona tekrar için zaman kalır. Bitiş: 12 Mayıs Haftada yaklaşık 6 saat gerekiyor');
+    // S9: the plain reason a tempo does not fit.
+    expect(cards[2]).toBe('Yoğun Konuları erken bitirip tekrara geçersin. Bitiş: 1 Nisan Haftada yaklaşık 16 saat gerekiyor Haftada 15 saatin var; bu tempo 16 saat istiyor.');
+    (el.querySelectorAll('[data-testid="tempo-option"] input')[1] as HTMLInputElement).click(); fixture.detectChanges();
+    await click(fixture, 'Devam');
+    expect(prefs.save).toHaveBeenCalledWith({ examFocus: null, tempo: 'Balanced' });
+    expect(routines.save).not.toHaveBeenCalled();
+    expect(progress(el)).toBe('Adım 4 / 4'); expect(title(el)).toBe('Özet');
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-05-12');
   });
 
-  it('says when no topic is marked yet', async () => {
-    const { fixture } = await setup({ context: { ...context, topicStates: [] } });
-    const line = fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement;
-    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('“Başlangıç durumum” bölümünde henüz “Çalıştım” olarak işaretlediğin konu yok. Başlangıç durumunu düzenle');
-  });
-
-  it('tells a teacher the count in third person, without the link', async () => {
-    const { fixture, learning } = await setup({}, null, 'student-1');
-    const line = fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement;
-    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Öğrenci “Başlangıç durumum” bölümünde 1 konuyu “Çalıştım” olarak işaretledi.');
+  it('says when the hours are enough in total but not once spread over the days, in third person for a teacher', async () => {
+    const spread: WeeklyTempoOption[] = [three[0], { ...three[2], neededWeeklyMinutes: 600, capacityWeeklyMinutes: 900 }];
+    const { fixture, el } = await setup({ routine: routineOf(answers), availability: hours, tempo: spread });
+    await click(fixture, 'Doğru, devam'); await click(fixture, 'Devam');
+    expect(words(el.querySelectorAll('[data-testid="tempo-option"]')[1])).toContain('Saatlerin günlere dağılınca bu tempoya yetmiyor.');
     TestBed.resetTestingModule();
-    const none = await setup({ context: { ...context, topicStates: [] } }, null, 'student-1');
-    expect((none.fixture.nativeElement.querySelector('[data-testid="starting-status"]') as HTMLElement).textContent?.replace(/\s+/g, ' ').trim())
-      .toBe('Öğrenci “Başlangıç durumum” bölümünde henüz “Çalıştım” olarak işaretlediği konu yok.');
-    expect(line.querySelector('a')).toBeNull();
-    expect(learning.catalogForStudent).not.toHaveBeenCalled();
+    TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
+    const staff = await setup({ staff: 'student-1', routine: routineOf(answers), availability: hours });
+    await click(staff.fixture, 'Devam'); await click(staff.fixture, 'Devam');
+    expect(words(staff.el.querySelectorAll('[data-testid="tempo-option"]')[2])).toContain('Öğrencinin haftada 15 saati var; bu tempo 16 saat istiyor.');
   });
 
-  it('asks to update the exam when it no longer fits the grade, without blocking topic saves (review L6)', async () => {
-    const { fixture } = await setup({ isReady: false, missingFields: ['Purpose'], purposeNotForEducation: true });
-    const note = fixture.nativeElement.querySelector('[data-testid="grade-purpose"]') as HTMLElement;
-    expect(note.textContent).toContain('Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle.');
-    expect(note.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
+  it('asks the tempo options in the mode the summary will use (Fill when the week has cards)', async () => {
+    const { fixture, weekly } = await setup({ routine: routineOf(answers), availability: hours, cards: true });
+    await click(fixture, 'Doğru, devam'); await click(fixture, 'Devam');
+    expect(weekly.tempoOptions).toHaveBeenCalledWith(null, undefined, undefined, 'Fill');
   });
 
-  // Review of PR 129: without a learning context the student is sent to Çalışma tercihlerim (the old link of the topic list).
+  it('keeps the tempo in the plan preferences even when the free hours were edited by hand', async () => {
+    const { fixture, c, routines, weekly, prefs } = await setup({ routine: routineOf(answers, false), availability: hours });
+    await click(fixture, 'Bu saatlerle devam'); await click(fixture, 'Devam');
+    c.tempo.set('Intense'); await click(fixture, 'Devam');
+    expect(prefs.save).toHaveBeenCalledWith({ examFocus: null, tempo: 'Intense' });
+    expect(routines.save).not.toHaveBeenCalled();
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-04-01');
+  });
+
+  it('preselects the saved tempo, else the one ending closest to the active plan', async () => {
+    const saved = await setup({ routine: routineOf(answers), availability: hours, prefs: { examFocus: null, tempo: 'Intense' } });
+    await click(saved.fixture, 'Doğru, devam'); await click(saved.fixture, 'Devam');
+    expect(saved.c.tempo()).toBe('Intense');
+    TestBed.resetTestingModule();
+    TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
+    const closest = await setup({ routine: routineOf(answers), availability: hours, active: true, activeEnd: '2027-05-10' });
+    closest.c.edit('tempo'); await settle(closest.fixture);
+    expect(closest.c.tempo()).toBe('Balanced');
+    expect((closest.el.querySelectorAll('[data-testid="tempo-option"] input')[1] as HTMLInputElement).checked).toBe(true);
+  });
+
+  // H4a: options whose dates do not settle are dropped; a saved tempo that is gone falls back to the closest date, with a note.
+  it('falls back to the closest tempo when the saved one is no longer offered, and says so', async () => {
+    const { fixture, el, c } = await setup({ routine: routineOf(answers), availability: hours, tempo: [three[0], three[1]], prefs: { examFocus: null, tempo: 'Intense' },
+      active: true, activeEnd: '2027-05-20' });
+    c.edit('tempo'); await settle(fixture);
+    expect(c.tempo()).toBe('Balanced');
+    expect(el.querySelector('[data-testid="tempo-replaced"]')?.textContent).toContain('Kayıtlı temponun bitiş tarihi artık uygun değil');
+  });
+
+  it('reads the stored focus and tempo from the plan preferences, and a teacher reads the student\'s', async () => {
+    const own = await setup({ yks: true, routine: routineOf(answers), availability: hours, prefs: { examFocus: 'Ayt', tempo: 'Balanced' } });
+    expect(own.prefs.get).toHaveBeenCalledWith(null);
+    expect(own.c.examFocus()).toBe('ayt'); expect(own.c.tempo()).toBe('Balanced');
+    TestBed.resetTestingModule();
+    TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
+    const staff = await setup({ staff: 'student-1', yks: true, routine: routineOf(answers), availability: hours, prefs: { examFocus: 'Tyt', tempo: null } });
+    expect(staff.prefs.get).toHaveBeenCalledWith('student-1');
+    expect(staff.c.examFocus()).toBe('tyt');
+  });
+
+  // H4a review: the dates may be in any order and Relaxed may be missing; each option keeps its own date and name.
+  it('uses each option\'s own date and name when the options are out of order or Relaxed is missing', async () => {
+    const odd: WeeklyTempoOption[] = [{ tempo: 'Intense', finishBy: '2027-05-30', neededWeeklyMinutes: 420, capacityWeeklyMinutes: 900, fits: true },
+      { tempo: 'Balanced', finishBy: '2027-04-10', neededWeeklyMinutes: 480, capacityWeeklyMinutes: 900, fits: true }];
+    const { fixture, el, c, weekly } = await setup({ routine: routineOf(answers), availability: hours, tempo: odd, active: true, activeEnd: '2027-04-01' });
+    c.edit('tempo'); await settle(fixture);
+    expect([...el.querySelectorAll('[data-testid="tempo-option"]')].map(x => words(x)?.split(' Haftada')[0]))
+      .toEqual(['Yoğun Konuları erken bitirip tekrara geçersin. Bitiş: 30 Mayıs', 'Dengeli Sona tekrar için zaman kalır. Bitiş: 10 Nisan']);
+    // The closest to the active plan's end (1 April) is Dengeli, even though it is listed second.
+    expect(c.tempo()).toBe('Balanced');
+    await click(fixture, 'Devam');
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-04-10');
+  });
+
+  it('tries a racing preferences save once more', async () => {
+    const { fixture, c, prefs } = await setup({ routine: routineOf(answers), availability: hours, active: true });
+    prefs.save.mockReturnValueOnce(throwError(() => ({ status: 409, error: { code: 'StudyPlanning.Conflict', message: 'x' } })));
+    c.edit('tempo'); await settle(fixture);
+    c.tempo.set('Intense'); await click(fixture, 'Devam');
+    expect(prefs.save).toHaveBeenCalledTimes(2);
+    expect(c.step()).toBe('summary');
+  });
+
+  it('skips the tempo step when only one tempo comes back and says so in the summary', async () => {
+    const { fixture, el } = await setup({ routine: routineOf(answers), availability: hours, tempo: [three[0]] });
+    await click(fixture, 'Doğru, devam'); await click(fixture, 'Devam');
+    expect(title(el)).toBe('Özet'); expect(progress(el)).toBe('Adım 3 / 3');
+    expect(el.querySelector('[data-testid="tempo-note"]')?.textContent?.trim()).toBe('Sınavına kadar tek bir tempo uygun: Rahat, bitiş 13 Haziran.');
+    await click(fixture, 'Geri');
+    expect(title(el)).toBe('Derslerin');
+  });
+
+  it('asks a YKS student the exam weight, keeps it in the plan preferences and sends it to the tempo options', async () => {
+    const { fixture, el, routines, weekly, prefs } = await setup({ yks: true, routine: routineOf(answers), availability: hours });
+    await click(fixture, 'Doğru, devam'); await click(fixture, 'Devam');
+    expect(title(el)).toBe('Sınav ağırlığı');
+    expect(el.textContent).toContain('Bu dönem hangi sınava ağırlık verelim?');
+    (el.querySelectorAll('[data-testid="exam-focus"] input')[2] as HTMLInputElement).click(); fixture.detectChanges();
+    await click(fixture, 'Devam');
+    expect(prefs.save).toHaveBeenCalledWith({ examFocus: 'Ayt', tempo: null });
+    expect(routines.save).not.toHaveBeenCalled();
+    expect(weekly.tempoOptions).toHaveBeenCalledWith('ayt', undefined, undefined, 'Replace');
+  });
+
+  it('starts from the saved exam weight and shows a failed save next to the step', async () => {
+    const { fixture, el, c, prefs } = await setup({ yks: true, routine: routineOf({ ...answers, examFocus: 'Tyt' }), availability: hours });
+    expect(c.examFocus()).toBe('tyt');
+    prefs.save.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'TYT ve AYT ağırlığını seç.' } })));
+    await click(fixture, 'Doğru, devam'); await click(fixture, 'Devam');
+    c.setExamFocus('balanced'); await click(fixture, 'Devam');
+    expect(el.querySelector('[data-testid="step-error"]')?.textContent).toBe('TYT ve AYT ağırlığını seç.');
+    expect(title(el)).toBe('Sınav ağırlığı');
+  });
+
+  // S5: a tempo that cannot be read stops the way to the summary, with a retry where the student is.
+  it('stays on the step with a retry when the tempo options cannot be read, and proposes nothing', async () => {
+    const { fixture, el, c, weekly } = await setup({ active: true, routine: routineOf(answers), availability: hours });
+    weekly.tempoOptions.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    c.edit('courses'); await settle(fixture);
+    await click(fixture, 'Devam');
+    expect(title(el)).toBe('Derslerin');
+    expect(el.querySelector('[data-testid="tempo-error"]')?.textContent).toContain('Tempo seçenekleri hazırlanamadı.');
+    expect(weekly.proposal).not.toHaveBeenCalled();
+    await click(fixture, 'Yeniden dene');
+    expect(title(el)).toBe('Özet');
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-06-13');
+  });
+
+  // S14: other hours after a reload mean other tempo options.
+  it('reads the tempo options again when reloaded hours differ', async () => {
+    const { fixture, c, planning, weekly } = await setup({ routine: routineOf(answers), availability: hours });
+    await click(fixture, 'Doğru, devam'); await click(fixture, 'Devam');
+    expect(weekly.tempoOptions).toHaveBeenCalledTimes(1);
+    planning.getAvailability.mockReturnValue(of({ ...hours, version: 6, windows: [{ day: 'Tuesday', startMinute: 900, endMinute: 1140 }] }));
+    c.loadHours(); await settle(fixture);
+    expect(weekly.tempoOptions).toHaveBeenCalledTimes(2);
+  });
+
+  describe('edit mode', () => {
+    it('asks what to change when there is an active plan', async () => {
+      const { el } = await setup({ active: true, routine: routineOf(answers), availability: hours });
+      expect(el.querySelector('#edit-title')?.textContent).toBe('Planında neyi değiştirmek istiyorsun?');
+      expect(document.activeElement?.id).toBe('edit-title');
+      expect(['Saatlerim Okul, yemek, kurs ve çalışma saatlerin', 'Derslerim Derslerinin önceliği ve zorluğu', 'Tempo Konuları ne zaman bitireceğin']
+        .map(x => !!button(el, x))).toEqual([true, true, true]);
+      expect(button(el, 'Planı baştan kur')).toBeTruthy();
+    });
+
+    it('"Saatlerim" opens the questions with the saved answers; Geri returns to the question with the focus on it', async () => {
+      const { fixture, el, c } = await setup({ active: true, routine: routineOf(answers), availability: hours });
+      c.edit('hours'); await settle(fixture);
+      expect(progress(el)).toBe('Adım 1 / 2');
+      expect(el.querySelector('[data-testid="routine-question"]')?.getAttribute('data-question')).toBe('shift');
+      expect((el.querySelectorAll('[data-testid="routine-question"] input')[0] as HTMLInputElement).checked).toBe(true);
+      await click(fixture, 'Geri');
+      expect(el.querySelector('[data-testid="edit-menu"]')).toBeTruthy();
+      expect(document.activeElement?.id).toBe('edit-title');
+    });
+
+    it('"Derslerim" opens the courses, then the summary', async () => {
+      const { fixture, el, c } = await setup({ active: true, routine: routineOf(answers), availability: hours });
+      c.edit('courses'); await settle(fixture);
+      expect(progress(el)).toBe('Adım 1 / 2'); expect(title(el)).toBe('Derslerin');
+      await click(fixture, 'Devam');
+      expect(title(el)).toBe('Özet'); expect(progress(el)).toBe('Adım 2 / 2');
+    });
+
+    it('"Tempo" opens the tempo with the saved choice selected; "Planı baştan kur" runs every step', async () => {
+      const { fixture, el, c } = await setup({ active: true, routine: routineOf(answers), availability: hours, prefs: { examFocus: null, tempo: 'Intense' } });
+      c.edit('tempo'); await settle(fixture);
+      expect(title(el)).toBe('Tempo'); expect(progress(el)).toBe('Adım 1 / 2');
+      expect((el.querySelectorAll('[data-testid="tempo-option"] input')[2] as HTMLInputElement).checked).toBe(true);
+      await click(fixture, 'Geri');
+      await click(fixture, 'Planı baştan kur');
+      expect(progress(el)).toBe('Adım 1 / 4');
+    });
+  });
+
+  // S3: "Saat ekle" can be left with Geri, and leaves no flag behind.
+  it('"Saat ekle" opens the questions, Geri returns to the summary, and a save also returns there', async () => {
+    const { fixture, el, c, routines } = await setup({ active: true, shortage: true, routine: routineOf(answers), availability: hours });
+    c.edit('courses'); await settle(fixture);
+    await click(fixture, 'Devam');
+    expect(title(el)).toBe('Özet');
+    await click(fixture, 'Saat ekle');
+    expect(title(el)).toBe('Saatlerin');
+    expect(el.querySelector('[data-testid="routine-question"]')?.getAttribute('data-question')).toBe('shift');
+    await click(fixture, 'Geri');
+    expect(title(el)).toBe('Özet'); expect(document.activeElement?.id).toBe('step-title');
+    // Save the answers this time: straight back to the summary.
+    await click(fixture, 'Saat ekle');
+    for (let i = 0; i < 7; i++) await click(fixture, 'Devam');
+    await click(fixture, 'Kaydet ve devam');
+    expect(routines.save).toHaveBeenCalledTimes(1);
+    expect(title(el)).toBe('Özet');
+    // Re-review (2): the hours step left the flow with the detour; back to the menu through the courses, then the whole plan.
+    expect(pills(el)).toEqual(['Derslerin (tamamlandı)', 'Özet']);
+    await click(fixture, 'Geri'); expect(title(el)).toBe('Derslerin');
+    await click(fixture, 'Geri'); expect(el.querySelector('[data-testid="edit-menu"]')).toBeTruthy();
+    await click(fixture, 'Planı baştan kur');
+    await click(fixture, 'Doğru, devam');
+    expect(title(el)).toBe('Derslerin');
+  });
+
+  it('"Saat ekle" from the tempo edit leaves no hours step behind (Geri reaches the menu)', async () => {
+    const { fixture, el, c } = await setup({ active: true, shortage: true, routine: routineOf(answers), availability: hours });
+    c.edit('tempo'); await settle(fixture);
+    await click(fixture, 'Devam');
+    expect(title(el)).toBe('Özet');
+    await click(fixture, 'Saat ekle');
+    expect(pills(el)).toEqual(['Saatlerin', 'Tempo', 'Özet']);
+    await click(fixture, 'Geri');
+    expect(title(el)).toBe('Özet'); expect(pills(el)).toEqual(['Tempo (tamamlandı)', 'Özet']);
+    await click(fixture, 'Geri'); expect(title(el)).toBe('Tempo');
+    await click(fixture, 'Geri'); expect(el.querySelector('[data-testid="edit-menu"]')).toBeTruthy();
+  });
+
+  // Re-review (5): a routine save sends only what the student confirmed; the server keeps saved values for null.
+  it('saves the routine with null focus and tempo until the student confirms them', async () => {
+    const { fixture, c, routines } = await setup({ yks: true, active: true, routine: routineOf(answers), availability: hours });
+    expect(c.examFocus()).toBe('balanced');
+    c.edit('hours'); await settle(fixture);
+    const hoursStep = fixture.debugElement.query(By.directive(WizardHoursStepComponent)).componentInstance as WizardHoursStepComponent;
+    hoursStep.index.set(hoursStep.questions().indexOf('review')); hoursStep.next(); await settle(fixture);
+    expect(routines.save).toHaveBeenCalledWith(expect.objectContaining({ answers: expect.objectContaining({ examFocus: null, tempo: null }) }));
+  });
+
+  it('saves the routine with the confirmed focus and tempo after the student confirmed them', async () => {
+    const { fixture, c, routines } = await setup({ yks: true, active: true, shortage: true, routine: routineOf(answers), availability: hours });
+    c.edit('tempo'); await settle(fixture);
+    c.setExamFocus('ayt'); await click(fixture, 'Devam');
+    c.tempo.set('Intense'); await click(fixture, 'Devam');
+    await click(fixture, 'Saat ekle');
+    const hoursStep = fixture.debugElement.query(By.directive(WizardHoursStepComponent)).componentInstance as WizardHoursStepComponent;
+    hoursStep.index.set(hoursStep.questions().indexOf('review')); hoursStep.next(); await settle(fixture);
+    expect(routines.save).toHaveBeenCalledWith(expect.objectContaining({ answers: expect.objectContaining({ examFocus: 'Ayt', tempo: 'Intense' }) }));
+  });
+
+  // Re-review (7): a read in progress does not stop the student from leaving.
+  it('lets the student leave while the summary is only reading', async () => {
+    const { fixture, c, weekly } = await setup({ adim: 'ozet', routine: routineOf(answers), availability: hours });
+    weekly.proposal.mockReturnValue(NEVER as never);
+    (fixture.debugElement.query(By.directive(WizardSummaryStepComponent)).componentInstance as WizardSummaryStepComponent).propose('Fill');
+    expect(await c.canLeavePage()).toBe(true);
+  });
+
+  it('opens the Özet step directly for the old preview address (?adim=ozet)', async () => {
+    const { el, weekly } = await setup({ adim: 'ozet', active: true, routine: routineOf(answers), availability: hours, prefs: { examFocus: null, tempo: 'Balanced' } });
+    expect(title(el)).toBe('Özet');
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-05-12');
+  });
+
+  // S1: "Yeniden öner" asks the Replace options for the same tempo; declining keeps the Fill proposal with the wizard's own options.
+  it('opens the summary with a whole new week for H5\'s "Yeniden öner" (?yeniden=oner), after a confirmation', async () => {
+    const { el, weekly, toaster } = await setup({ yeniden: true, cards: true, routine: routineOf(answers), availability: hours, active: true });
+    expect(title(el)).toBe('Özet');
+    expect(weekly.tempoOptions).toHaveBeenCalledWith(null, undefined, undefined, 'Fill');
+    expect(toaster.confirm).toHaveBeenCalled();
+    expect(weekly.tempoOptions).toHaveBeenLastCalledWith(null, undefined, undefined, 'Replace');
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-06-13');
+  });
+
+  it('keeps the week when "Yeniden öner" is declined: a Fill proposal with the wizard\'s own options', async () => {
+    TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(false), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } });
+    const { weekly } = await setup({ yeniden: true, cards: true, routine: routineOf(answers), availability: hours });
+    expect(weekly.tempoOptions).toHaveBeenCalledTimes(1);
+    expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, undefined, undefined, '2027-06-13');
+  });
+
+  // S1: once the summary saved cards into an empty draft, the tempo options are read again in Fill mode.
+  it('reads the tempo options in Fill mode after the summary saved the week (Geri from Özet)', async () => {
+    const { fixture, el, c, weekly } = await setup({ routine: routineOf(answers), availability: hours });
+    await click(fixture, 'Doğru, devam'); await click(fixture, 'Devam'); await click(fixture, 'Devam');
+    expect(title(el)).toBe('Özet');
+    expect(weekly.tempoOptions).toHaveBeenLastCalledWith(null, undefined, undefined, 'Replace');
+    c.draftSaved(true);
+    await click(fixture, 'Geri');
+    expect(title(el)).toBe('Tempo');
+    expect(weekly.tempoOptions).toHaveBeenLastCalledWith(null, undefined, undefined, 'Fill');
+  });
+
+  // S15: a pending draft is offered before the flow.
+  it('offers a pending draft first, then lets the student start a new plan', async () => {
+    const { fixture, el } = await setup({ draft: true, routine: routineOf(answers), availability: hours });
+    const panel = el.querySelector('[data-testid="pending-draft"]')!;
+    expect(words(panel)).toContain('“Bekleyen planım” henüz yayımlanmadı.');
+    expect(panel.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan?plan=d');
+    expect(panel.querySelector('a')?.textContent?.trim()).toBe('Bekleyen taslağını aç / yayımla');
+    expect(document.activeElement?.id).toBe('draft-title');
+    await click(fixture, 'Yine de yeni plan hazırla');
+    expect(title(el)).toBe('Saatlerin');
+  });
+
+  it('asks before leaving with chosen topics that were not used', async () => {
+    const { c, toaster } = await setup({ routine: routineOf(answers), availability: hours });
+    expect(await c.canLeavePage()).toBe(true);
+    c.summaryChoices.focusTopics.set([{ topicId: 't', topicName: 'Paragraf', lessonName: 'Türkçe' }]);
+    toaster.confirm.mockResolvedValueOnce(false);
+    expect(await c.canLeavePage()).toBe(false);
+  });
+
+  describe('teacher view', () => {
+    it('shows the routine read only, third person, and never saves it', async () => {
+      const { fixture, el, routines, weekly, learning, planning, prefs } = await setup({ staff: 'student-1', routine: routineOf(answers), availability: hours });
+      expect(el.querySelector('h1')?.textContent).toBe('Öğrenci için plan hazırla');
+      expect(routines.get).toHaveBeenCalledWith('student-1'); expect(learning.getForStudent).toHaveBeenCalledWith('student-1');
+      expect(planning.list).not.toHaveBeenCalled();
+      expect(title(el)).toBe('Öğrencinin saatleri');
+      expect(button(el, 'Değiştir')).toBeUndefined();
+      await click(fixture, 'Devam'); expect(title(el)).toBe('Öğrencinin dersleri');
+      await click(fixture, 'Devam'); expect(el.textContent).toContain('Öğrenci konuları ne zaman bitirsin?');
+      await click(fixture, 'Devam');
+      expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, 'student-1', undefined, '2027-06-13');
+      expect(routines.save).not.toHaveBeenCalled(); expect(prefs.save).not.toHaveBeenCalled();
+      expect(el.querySelectorAll('a[href*="/coaching-portal"]').length).toBe(0);
+    });
+
+    it('sends the quick answers as windows to the tempo options and the proposal for a student without hours', async () => {
+      const { fixture, el, weekly } = await setup({ staff: 'student-1' });
+      button(el, 'Salı')!.click(); await click(fixture, 'Devam');
+      await click(fixture, 'Devam');
+      const windows = [{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }];
+      expect(weekly.tempoOptions).toHaveBeenCalledWith(null, 'student-1', windows, 'Replace');
+      await click(fixture, 'Devam');
+      expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, 'student-1', windows, '2027-06-13');
+    });
+
+    it('tells the teacher the count of studied topics in third person, without the link', async () => {
+      const { fixture, el } = await setup({ staff: 'student-1', routine: routineOf(answers) });
+      await click(fixture, 'Devam');
+      const line = el.querySelector('[data-testid="starting-status"]') as HTMLElement;
+      expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Öğrenci “Başlangıç durumum” bölümünde 1 konuyu “Çalıştım” olarak işaretledi.');
+      expect(line.querySelector('a')).toBeNull();
+    });
+  });
+
+  it('asks to retry a failed load of the hours instead of asking the questions', async () => {
+    const { el } = await setup({ availabilityError: true });
+    expect(el.querySelector('[data-testid="availability-load-error"]')?.textContent).toContain('Çalışma saatlerin yüklenemedi.');
+    expect(el.querySelector('[data-testid="routine-question"]')).toBeNull();
+  });
+
   it('asks a student without study preferences to complete them first', async () => {
-    const { fixture } = await setup({ context: null });
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('[data-testid="starting-status"]')).toBeNull();
-    const line = el.querySelector('[data-testid="preferences-missing"]') as HTMLElement;
-    expect(line.textContent?.replace(/\s+/g, ' ').trim()).toBe('Planını hazırlamak için önce çalışma tercihlerini tamamla. Çalışma tercihlerim');
-    expect(line.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/account/settings');
+    const { el } = await setup({ noContext: true });
+    expect(el.querySelector('[data-testid="preferences-missing"]')?.textContent).toContain('önce çalışma tercihlerini tamamla');
+    expect(el.querySelector('[data-testid="routine-question"]')).toBeNull();
   });
 
-  // Review of PR 129 (K5): the server proposes a day only up to the student's limit; applying checks it against the limit the
-  // weekly draft page sends (8 hours, 10 for a graduate), for the student and for the teacher.
-  it('applies a proposal up to the daily limit of the weekly draft page and stops one above it', async () => {
-    const saturday: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Saturday', startMinute: 480, endMinute: 1260 }] };
-    const tenHours = Array.from({ length: 10 }, (_, i): WeeklySlot => ({ ...tuesday, id: `s${i}`, day: 'Saturday', startMinute: 480 + i * 60 }));
-    const school = await setup({}, saturday);
-    school.weekly.proposal.mockReturnValueOnce(of(proposalOf(tenHours)));
-    school.component.createProposal(); school.component.applyProposal();
-    expect(school.component.error()).not.toBe(''); expect(school.weekly.save).not.toHaveBeenCalled();
-    TestBed.resetTestingModule();
-    const graduate = await setup({}, saturday, null, { lessons, maxDayMinutes: 600 });
-    graduate.weekly.proposal.mockReturnValueOnce(of(proposalOf(tenHours)));
-    graduate.component.createProposal(); graduate.component.applyProposal();
-    expect(graduate.component.error()).toBe(''); expect(graduate.weekly.save).toHaveBeenCalledOnce();
-    TestBed.resetTestingModule();
-    const teacher = await setup({}, saturday, 'student-1', { lessons, maxDayMinutes: 600 });
-    teacher.weekly.proposal.mockReturnValueOnce(of(proposalOf(tenHours)));
-    teacher.component.createProposal(); teacher.component.applyProposal();
-    expect(teacher.weekly.save).toHaveBeenCalledWith(3, 'Europe/Istanbul', expect.any(Array), 'student-1');
+  it('asks to update the exam when it no longer fits the grade', async () => {
+    const { el } = await setup({ purposeNotForEducation: true });
+    expect(el.querySelector('[data-testid="grade-purpose"]')?.textContent).toContain('Seçili sınavın eğitim durumuna ya da sınıfına uymuyor');
   });
 
-  it('creates a proposal and opens the yearly preview without a topic step in between', async () => {
-    const { component } = await setup();
-    component.toggleDay('Monday'); component.createProposal();
-    expect(component.proposal()).toHaveLength(1);
-    component.removeProposal(); component.continueToAnnualReview();
-    expect(component.annualReview()).toBe(true);
-  });
-
-  it('opens the annual engine as the wizard final step and shows course finish and capacity options', async () => {
-    const { fixture, component, engine } = await setup();
-    component.continueToAnnualReview(); fixture.detectChanges(); await fixture.whenStable();
-    expect(engine.options).toHaveBeenCalledOnce();
-    expect(fixture.nativeElement.textContent).toContain('Çalışma planını önizle');
-    const enginePage = fixture.debugElement.query(By.directive(StudentWeeklyOutcomePlanComponent)).componentInstance as StudentWeeklyOutcomePlanComponent;
-    enginePage.generatePreview(); fixture.detectChanges(); await fixture.whenStable();
-    expect(engine.preview).toHaveBeenCalledOnce();
-    expect(fixture.nativeElement.textContent).toContain('Matematik');
-    expect(fixture.nativeElement.textContent).toContain('20 dk eksik');
-    expect(fixture.nativeElement.textContent).toContain('07.06.2027 tarihine uzat ve önizle');
-  });
-
-  it('sends the checked annual preview to the engine to create its draft', async () => {
-    const { fixture, component, engine } = await setup();
-    const request = { startDate: '2027-05-24', endDate: '2027-06-01', expectedWeeklyDraftVersion: 3, reuseFreedSlots: true };
-    engine.preview.mockReturnValue(of({ request, timeZoneId: 'Europe/Istanbul', fingerprint: 'ready-fingerprint', canCreate: true,
-      protectedTaskCount: 0, issues: [], schedule: { tasks: [], freeMinutes: 0, recommendedEndDate: '2027-05-31', lessons: [{ lessonId: 'math',
-        lessonName: 'Matematik', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 60, scheduledMinutes: 60, remainingMinutes: 0,
-        finishDate: '2027-05-31', extraWeeklyMinutes: 0 }] } }));
-    component.continueToAnnualReview(); fixture.detectChanges(); await fixture.whenStable();
-    const enginePage = fixture.debugElement.query(By.directive(StudentWeeklyOutcomePlanComponent)).componentInstance as StudentWeeklyOutcomePlanComponent;
-    enginePage.generatePreview(); enginePage.confirmed = true; enginePage.save();
-    expect(engine.create).toHaveBeenCalledWith({ title: 'Haftalık derslerimden çalışma planım', preview: request, fingerprint: 'ready-fingerprint' }, undefined);
-  });
-
-  // E6 #29 (live test 06.11): availability is asked in one place; the wizard uses the saved one and saves to the same record.
-  // Paket F #37: the proposal appeared ~650 px lower, under "Daha önce çalıştığın konular", and the page did not move.
-  it('shows the proposal above the starting status line and moves the focus to it', async () => {
-    // Review of PR 122: an own property on HTMLElement.prototype is removed again (it would shadow other specs' Element mocks).
-    const own = Object.prototype.hasOwnProperty.call(HTMLElement.prototype, 'scrollIntoView'); const original = HTMLElement.prototype.scrollIntoView;
-    const scroll = vi.fn(); HTMLElement.prototype.scrollIntoView = scroll;
-    try {
-      const { fixture, component } = await setup();
-      component.toggleDay('Tuesday'); component.createProposal(); fixture.detectChanges(); await fixture.whenStable();
-      await new Promise(r => setTimeout(r)); fixture.detectChanges();
-      const el = fixture.nativeElement as HTMLElement;
-      const proposal = el.querySelector('[data-testid="wizard-proposal"]') as HTMLElement;
-      expect(proposal).toBeTruthy();
-      const topics = el.querySelector('[data-testid="starting-status"]') as HTMLElement;
-      expect(proposal.compareDocumentPosition(topics) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      for (const label of ['Bu saatleri taslağa ekle', 'Öneriyi kaldır'])
-        expect(Array.from(proposal.querySelectorAll('button')).some(b => b.textContent?.trim() === label), label).toBe(true);
-      const heading = proposal.querySelector('h2') as HTMLElement;
-      expect(heading.textContent).toContain('Öneriyi incele');
-      expect(document.activeElement).toBe(heading);
-      expect(scroll).toHaveBeenCalled();
-      (Array.from(proposal.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Öneriyi kaldır') as HTMLElement).click();
-      fixture.detectChanges();
-      expect(el.querySelector('[data-testid="wizard-proposal"]')).toBeNull();
-    } finally { if (own) HTMLElement.prototype.scrollIntoView = original; else delete (HTMLElement.prototype as { scrollIntoView?: unknown }).scrollIntoView; }
-  });
-
-  // Review of PR 122: the focus does not fall to the page when the proposal block goes away.
-  it('after "Öneriyi kaldır" the focus returns to "Haftalık öneri oluştur"', async () => {
-    const { fixture, component } = await setup();
-    component.toggleDay('Tuesday'); component.createProposal(); fixture.detectChanges(); await fixture.whenStable();
-    const el = fixture.nativeElement as HTMLElement;
-    (Array.from(el.querySelectorAll('[data-testid="wizard-proposal"] button')).find(b => b.textContent?.trim() === 'Öneriyi kaldır') as HTMLElement).click();
-    fixture.detectChanges(); await fixture.whenStable(); await new Promise(r => setTimeout(r)); fixture.detectChanges();
-    expect((document.activeElement as HTMLElement | null)?.textContent?.trim()).toBe('Haftalık öneri oluştur');
-  });
-
-  it('after "Bu saatleri taslağa ekle" the focus moves to the success status', async () => {
-    const { fixture, component } = await setup();
-    component.toggleDay('Tuesday'); component.createProposal(); fixture.detectChanges(); await fixture.whenStable();
-    const el = fixture.nativeElement as HTMLElement;
-    (Array.from(el.querySelectorAll('[data-testid="wizard-proposal"] button')).find(b => b.textContent?.trim() === 'Bu saatleri taslağa ekle') as HTMLElement).click();
-    fixture.detectChanges(); await fixture.whenStable(); await new Promise(r => setTimeout(r)); fixture.detectChanges();
-    expect((document.activeElement as HTMLElement | null)?.textContent).toContain('Öneri haftalık taslağına eklendi');
-  });
-
-  describe('availability from Çalışma tercihlerim', () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    const text = (fixture: { nativeElement: HTMLElement }) => fixture.nativeElement.textContent ?? '';
-
-    it('skips the day/start/duration questions when availability is saved and shows it with Değiştir', async () => {
-      const { fixture, planning } = await setup({}, mondayEvening);
-      expect(planning.getAvailability).toHaveBeenCalled();
-      const summary = fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement;
-      expect(summary.textContent).toContain('Pazartesi 17:00–19:00');
-      expect(text(fixture)).not.toContain('Hangi günler çalışabilirsin');
-      expect(fixture.nativeElement.querySelector('#wizard-start-time')).toBeNull();
-      const change = Array.from(summary.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Değiştir');
-      expect(change).toBeTruthy();
-    });
-
-    it('plans from the saved availability without asking again or saving a copy', async () => {
-      const { component, planning, weekly } = await setup({}, mondayEvening);
-      component.createProposal();
-      expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, undefined);
-      expect(component.proposal().map(x => [x.day, x.startMinute, x.durationMinutes])).toEqual([['Tuesday', 1080, 60]]);
-      expect(planning.saveAvailability).not.toHaveBeenCalled();
-    });
-
-    // Paket H2 (K6): a YKS student chooses the exam focus before the proposal; Dengeli by default.
-    it('asks a YKS student which exam to lean to and sends the choice', async () => {
-      const { fixture, component, weekly } = await setup({ context: { ...context, purpose: 'Yks' } }, mondayEvening);
-      const focus = fixture.nativeElement.querySelector('[data-testid="exam-focus"]') as HTMLElement;
-      expect(focus.textContent).toContain('Bu dönem hangi sınava ağırlık verelim?');
-      const radios = Array.from(focus.querySelectorAll('input')) as HTMLInputElement[];
-      expect(radios.map(x => x.parentElement?.textContent?.trim())).toEqual(['TYT ağırlıklı', 'Dengeli', 'AYT ağırlıklı']);
-      expect(radios[1].checked).toBe(true);
-      component.createProposal();
-      expect(weekly.proposal).toHaveBeenLastCalledWith('Fill', 'balanced', undefined);
-      radios[0].click(); fixture.detectChanges(); component.removeProposal();
-      component.createProposal();
-      expect(weekly.proposal).toHaveBeenLastCalledWith('Fill', 'tyt', undefined);
-    });
-
-    it('does not ask an LGS student about the exam focus', async () => {
-      const { fixture } = await setup({}, mondayEvening);
-      expect(fixture.nativeElement.querySelector('[data-testid="exam-focus"]')).toBeNull();
-    });
-
-    it('Değiştir opens the same availability editor as Çalışma tercihlerim and reloads it after saving', async () => {
-      const { fixture, component, planning } = await setup({}, mondayEvening);
-      (Array.from(fixture.nativeElement.querySelectorAll('[data-testid="wizard-availability"] button') as NodeListOf<HTMLButtonElement>).find(x => x.textContent?.trim() === 'Değiştir'))!.click();
-      fixture.detectChanges(); await fixture.whenStable();
-      const editor = fixture.debugElement.query(By.directive(StudentStudyAvailabilityComponent));
-      expect(editor).toBeTruthy();
-      const calls = planning.getAvailability.mock.calls.length;
-      planning.getAvailability.mockReturnValue(of({ ...mondayEvening, version: 6, windows: [{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }] }));
-      (editor.componentInstance as StudentStudyAvailabilityComponent).saved.emit();
-      fixture.detectChanges(); await fixture.whenStable();
-      expect(planning.getAvailability.mock.calls.length).toBeGreaterThan(calls);
-      expect(fixture.debugElement.query(By.directive(StudentStudyAvailabilityComponent))).toBeNull();
-      expect(component.availability()?.windows).toEqual([{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }]);
-      expect((fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement).textContent).toContain('Salı 18:00–19:00');
-    });
-
-    // Paket H2 (acceptance): with too few hours no course is silently left out; the student is told the hours she needs.
-    it('tells how many hours the courses need, names the courses without time and offers the three ways on', async () => {
-      const { fixture, component, weekly } = await setup({}, mondayEvening);
-      weekly.proposal.mockReturnValueOnce(of(proposalOf([tuesday], { shortageMinutes: 510, neededMinutes: 600, coveredMinutes: 90, lessons: [
-        { lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', existingMinutes: 30, proposedMinutes: 60, neededMinutes: 240, noTime: false },
-        { lessonId: 'tur', lessonName: 'Türkçe', examCode: 'LGS', existingMinutes: 0, proposedMinutes: 0, neededMinutes: 180, noTime: true },
-        { lessonId: 'din', lessonName: 'Din Kültürü ve Ahlak Bilgisi', examCode: 'LGS', existingMinutes: 0, proposedMinutes: 0, neededMinutes: 180, noTime: true }] })));
-      const status = fixture.nativeElement.querySelector('[data-testid="shortage-status"]') as HTMLElement;
-      expect(status.getAttribute('role')).toBe('status'); expect(status.textContent?.trim()).toBe('');
-      component.createProposal(); fixture.detectChanges();
-      const notice = status.querySelector('[data-testid="shortage-notice"]') as HTMLElement;
-      expect(notice.textContent?.replace(/\s+/g, ' ')).toContain('Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık 10 saat gerekiyor; şu an 0,5 saat var. Bu öneriyle 1,5 saat olur.');
-      expect(notice.textContent).toContain('Saat verilemeyen dersler: Türkçe, Din Kültürü ve Ahlak Bilgisi.');
-      expect(component.messages().at(-1)!.content).toContain('bütün derslerine yetmiyor');
-      await fixture.whenStable(); fixture.detectChanges();
-      const remove = (Array.from(notice.querySelectorAll('a')) as HTMLAnchorElement[]).find(x => x.textContent?.trim() === 'Ders çıkar')!;
-      expect(remove.getAttribute('href')).toBe('/coaching-portal/account/settings?adim=dersler&donus=sihirbaz');
-      const button = (name: string) => (Array.from(notice.querySelectorAll('button')) as HTMLButtonElement[]).find(x => x.textContent?.trim() === name)!;
-      button('Bu önerilerle devam et').click();
-      expect(weekly.save).toHaveBeenCalledWith(3, 'Europe/Istanbul', [saved.slots[0], tuesday], undefined);
-      weekly.proposal.mockReturnValueOnce(of(proposalOf([tuesday], { shortageMinutes: 420, draftVersion: 4 })));
-      component.createProposal(); fixture.detectChanges();
-      (Array.from(status.querySelectorAll('button')) as HTMLButtonElement[]).find(x => x.textContent?.trim() === 'Müsait saatlerime ekle')!.click();
-      fixture.detectChanges(); await fixture.whenStable();
-      expect(fixture.debugElement.query(By.directive(StudentStudyAvailabilityComponent))).toBeTruthy();
-      expect(fixture.nativeElement.querySelector('[data-testid="shortage-notice"]')).toBeNull();
-      expect(fixture.nativeElement.querySelector('[data-testid="wizard-proposal"]')).toBeNull();
-    });
-
-    it('a teacher sees the same shortage in third person, without the availability and course actions', async () => {
-      const { fixture, component, weekly } = await setup({}, mondayEvening, 'student-1');
-      weekly.proposal.mockReturnValueOnce(of(proposalOf([tuesday], { shortageMinutes: 90, neededMinutes: 180, coveredMinutes: 90, lessons: [
-        { lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', existingMinutes: 30, proposedMinutes: 60, neededMinutes: 90, noTime: false },
-        { lessonId: 'tur', lessonName: 'Türkçe', examCode: 'LGS', existingMinutes: 0, proposedMinutes: 0, neededMinutes: 90, noTime: true }] })));
-      component.createProposal(); fixture.detectChanges();
-      expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, 'student-1');
-      const notice = fixture.nativeElement.querySelector('[data-testid="shortage-notice"]') as HTMLElement;
-      expect(notice.textContent?.replace(/\s+/g, ' ')).toContain('Seçilen saatler öğrencinin derslerine yetmiyor. Bütün derslerine yetişmesi için haftada yaklaşık 3 saat gerekiyor; şu an 0,5 saat var. Bu öneriyle 1,5 saat olur.');
-      expect(notice.textContent).toContain('Saat verilemeyen dersler: Türkçe.');
-      expect((Array.from(notice.querySelectorAll('button')) as HTMLButtonElement[]).map(x => x.textContent?.trim())).toEqual(['Bu önerilerle devam et']);
-      expect(notice.querySelector('a')).toBeNull();
-    });
-
-    it('without saved availability asks once and saves the answer as the availability before proposing', async () => {
-      const { fixture, component, planning, weekly } = await setup();
-      expect(text(fixture)).toContain('Hangi günler çalışabilirsin');
-      component.toggleDay('Tuesday'); component.startTime.set('18:00'); component.setMinutesPerDay(60); component.createProposal();
-      expect(planning.saveAvailability).toHaveBeenCalledWith({ expectedVersion: null, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }] });
-      expect(component.availability()?.version).toBe(1);
-      expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, undefined);
-      expect(component.proposal().map(x => [x.day, x.startMinute, x.durationMinutes])).toEqual([['Tuesday', 1080, 60]]);
-      fixture.detectChanges(); await fixture.whenStable();
-      expect((fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement).textContent).toContain('Salı 18:00–19:00');
-    });
-
-    it('keeps the answers and shows the error when the availability cannot be saved', async () => {
-      const { component, planning } = await setup();
-      planning.saveAvailability.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Çalışma saatlerin başka bir oturumda değişti.' } })));
-      component.toggleDay('Tuesday'); component.createProposal();
-      expect(component.error()).toContain('başka bir oturumda');
-      expect(component.proposal()).toEqual([]);
-      expect(component.selectedDays()).toEqual(['Tuesday']);
-    });
-
-    it('a teacher sees the student availability and never saves it', async () => {
-      const { fixture, component, planning } = await setup({}, mondayEvening, 'student-1');
-      expect(planning.getAvailability).toHaveBeenCalledWith('student-1');
-      const summary = fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement;
-      expect(summary.textContent).toContain('Pazartesi 17:00–19:00');
-      expect(Array.from(summary.querySelectorAll('button')).some(x => x.textContent?.trim() === 'Değiştir')).toBe(false);
-      component.createProposal();
-      expect(component.proposal()).toHaveLength(1);
-      expect(planning.saveAvailability).not.toHaveBeenCalled();
-    });
-
-    // E6 review: a failed load never shows the questions (a save would send expectedVersion null and always get a 409).
-    it('a failed availability load asks to retry instead of asking the questions', async () => {
-      const { fixture, component, planning } = await setup({}, mondayEvening);
-      planning.getAvailability.mockReturnValueOnce(throwError(() => ({ status: 500 })));
-      component.availability.set(null); component.loadAvailability(); fixture.detectChanges(); await fixture.whenStable();
-      expect(text(fixture)).toContain('Çalışma saatlerin yüklenemedi');
-      expect(text(fixture)).not.toContain('Hangi günler çalışabilirsin');
-      expect(component.canPropose()).toBe(false);
-      (Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(x => x.textContent?.trim() === 'Yeniden dene'))!.click();
-      fixture.detectChanges(); await fixture.whenStable();
-      expect((fixture.nativeElement.querySelector('[data-testid="wizard-availability"]') as HTMLElement).textContent).toContain('Pazartesi 17:00–19:00');
-    });
-
-    it('reloads the availability after a 409 on save', async () => {
-      const { component, planning } = await setup();
-      planning.saveAvailability.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Başka bir oturumda değişti.' } })));
-      planning.getAvailability.mockReturnValue(of(mondayEvening));
-      const calls = planning.getAvailability.mock.calls.length;
-      component.toggleDay('Tuesday'); component.createProposal();
-      expect(planning.getAvailability.mock.calls.length).toBe(calls + 1);
-      expect(component.availability()?.version).toBe(5);
-    });
-
-    it('does not propose from the old windows while the saved availability reloads', async () => {
-      const { component, planning, weekly } = await setup({}, mondayEvening);
-      const pending = new Subject<StudyAvailability>();
-      planning.getAvailability.mockReturnValueOnce(pending);
-      component.availabilitySaved();
-      expect(component.canPropose()).toBe(false);
-      component.createProposal();
-      expect(component.proposal()).toEqual([]);
-      pending.next({ ...mondayEvening, version: 6, windows: [{ day: 'Tuesday', startMinute: 1080, endMinute: 1140 }] }); pending.complete();
-      component.createProposal();
-      expect(weekly.proposal).toHaveBeenCalledOnce();
-      expect(component.proposal().map(x => [x.day, x.startMinute])).toEqual([['Tuesday', 1080]]);
-    });
-
-    // Review of PR 130 (13): a teacher answers the quick questions for a student without study times: a proposal, never a save.
-    it('a teacher answers the questions for a student without study times: a proposal, never a save', async () => {
-      const { fixture, component, planning, weekly } = await setup({}, null, 'student-1');
-      expect(text(fixture)).toContain('Öğrenci henüz çalışabileceği saatleri kaydetmemiş.');
-      expect(text(fixture)).toContain('Öğrenci hangi günler çalışabilir?');
-      component.toggleDay('Wednesday'); component.startTime.set('18:00'); component.setMinutesPerDay(120); component.createProposal();
-      expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, 'student-1', [{ day: 'Wednesday', startMinute: 1080, endMinute: 1200 }]);
-      expect(planning.saveAvailability).not.toHaveBeenCalled();
-      expect(component.proposal()).toHaveLength(1);
-      // Review of PR 130 (9): the teacher reads about the student in third person.
-      expect(component.messages()[0].content).toContain('Öğrencinin çalışma saatlerinden');
-      expect(component.messages().at(-1)!.content).toContain('Öğrencinin taslağındaki dolu saatleri korudum');
-    });
-
-    it('shows the server message when the proposal cannot be made', async () => {
-      const { component, weekly } = await setup({}, mondayEvening);
-      weekly.proposal.mockReturnValueOnce(throwError(() => ({ status: 404, error: { message: 'Önce müsait saatlerini kaydet.' } })));
-      component.createProposal();
-      expect(component.error()).toBe('Önce müsait saatlerini kaydet.');
-      expect(component.proposalView()).toBeNull();
-    });
-
-    it('a teacher sees that the student availability could not be loaded', async () => {
-      const { fixture, component, planning } = await setup({}, null, 'student-1');
-      planning.getAvailability.mockReturnValueOnce(throwError(() => ({ status: 500 })));
-      component.loadAvailability(); fixture.detectChanges();
-      expect(text(fixture)).toContain('Öğrencinin çalışma saatleri yüklenemedi');
-    });
-
-    it('shows no technical note about rules or AI services', async () => {
-      const { fixture } = await setup({}, mondayEvening);
-      expect(fixture.nativeElement.querySelector('.privacy-note')).toBeNull();
-      expect(text(fixture)).not.toContain('Yapay zekâ servisine');
-      expect(text(fixture)).not.toContain('kurallı olarak değerlendirilir');
-    });
-  });
-
-  // Review of PR 130 (4): an empty proposal says why.
-  describe('an empty proposal', () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    it('says the week already has enough time for every course', async () => {
-      const { fixture, component, weekly } = await setup({}, mondayEvening);
-      weekly.proposal.mockReturnValueOnce(of(proposalOf([], { lessons: [{ lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', existingMinutes: 120, proposedMinutes: 0, neededMinutes: 90, noTime: false }] })));
-      component.createProposal(); fixture.detectChanges();
-      expect(component.messages().at(-1)!.content).toBe('Haftalık düzenin derslerine yetiyor; eklenecek saat yok.');
-      expect((fixture.nativeElement.querySelector('[data-testid="proposal-empty"]') as HTMLElement).textContent).toContain('eklenecek saat yok');
-      // Final review of PR 130 (4): an empty proposal does not hold back the yearly preview.
-      const next = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]).find(x => x.textContent?.includes('Yıllık plan önizlemesine geç'))!;
-      expect(next.disabled).toBe(false);
-      component.continueToAnnualReview();
-      expect(component.annualReview()).toBe(true);
-      expect(fixture.nativeElement.textContent).not.toContain('boş yer bulamadım');
-    });
-    it('sends the student to Derslerim when no course is chosen', async () => {
-      const { fixture, component, weekly } = await setup({}, mondayEvening);
-      weekly.proposal.mockReturnValueOnce(of(proposalOf([], { lessons: [], neededMinutes: 0, coveredMinutes: 0 })));
-      component.createProposal(); fixture.detectChanges();
-      expect(component.messages().at(-1)!.content).toContain('Derslerim');
-      const empty = fixture.nativeElement.querySelector('[data-testid="wizard-proposal"]') as HTMLElement;
-      await fixture.whenStable(); fixture.detectChanges();
-      const choose = (Array.from(empty.querySelectorAll('a')) as HTMLAnchorElement[]).find(x => x.textContent?.trim() === 'Derslerimi seç')!;
-      expect(choose.getAttribute('href')).toBe('/coaching-portal/account/settings?adim=dersler&donus=sihirbaz');
-    });
-    it('says there is no free time only when time really lacks', async () => {
-      const { component, weekly } = await setup({}, mondayEvening);
-      weekly.proposal.mockReturnValueOnce(of(proposalOf([], { shortageMinutes: 90, coveredMinutes: 0 })));
-      component.createProposal();
-      expect(component.messages().at(-1)!.content).toContain('boş yer bulamadım');
-    });
-  });
-
-  // Review of PR 130 (11): a proposal made for another exam focus is not kept; the question is hidden when nothing can be proposed.
-  it('drops the shown proposal when the exam focus changes and hides the question without courses', async () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    const { fixture, component } = await setup({ context: { ...context, purpose: 'Yks' } }, mondayEvening);
-    component.createProposal(); fixture.detectChanges();
-    expect(component.proposalView()).not.toBeNull();
-    (fixture.nativeElement.querySelectorAll('[data-testid="exam-focus"] input')[2] as HTMLInputElement).click(); fixture.detectChanges();
-    expect(component.examFocus()).toBe('ayt');
-    expect(component.proposalView()).toBeNull();
-    expect(fixture.nativeElement.querySelector('[data-testid="wizard-proposal"]')).toBeNull();
-    component.lessons.set([]); fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="exam-focus"]')).toBeNull();
-  });
-
-  // Review of PR 130 (12): a proposal made from an older weekly draft is not applied over a newer one.
-  describe('a weekly draft changed elsewhere', () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    it('asks for a new proposal when the proposal was made from another draft version', async () => {
-      const { component, weekly } = await setup({}, mondayEvening);
-      weekly.proposal.mockReturnValueOnce(of(proposalOf([tuesday], { draftVersion: 2 })));
-      component.createProposal(); const loads = weekly.get.mock.calls.length;
-      component.applyProposal();
-      expect(weekly.save).not.toHaveBeenCalled();
-      expect(component.error()).toBe('Haftalık düzenin başka bir yerde değişti; öneriyi yenile.');
-      expect(weekly.get.mock.calls.length).toBe(loads + 1);
-      expect(component.proposalView()).toBeNull();
-    });
-    for (const mode of ['Fill', 'Replace'] as const)
-      it(`reloads the draft and asks for a new proposal after a conflict on save (${mode})`, async () => {
-        const { component, weekly } = await setup({}, mondayEvening, 'student-1');
-        weekly.save.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Haftalık taslak başka bir işlemde değişti.' } })));
-        weekly.get.mockReturnValue(of({ draft: { ...saved, version: 7 }, lessons }));
-        if (mode === 'Fill') component.createProposal(); else await component.replaceWeek();
-        expect(component.proposalView()?.mode).toBe(mode);
-        component.applyProposal();
-        expect(weekly.save).toHaveBeenCalledOnce();
-        expect(component.error()).toBe('Öğrencinin haftalık düzeni başka bir yerde değişti; öneriyi yenile.');
-        expect(component.version).toBe(7);
-        expect(component.proposalView()).toBeNull();
-      });
-  });
-
-  // Final review of PR 130 (5): the teacher reads "Haftayı baştan öner" with a third-person confirmation.
-  it('shows the teacher "Haftayı baştan öner" and asks in third person', async () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    const { fixture } = await setup({}, mondayEvening, 'student-1');
-    const toaster = TestBed.inject(ToasterService) as unknown as { confirm: ReturnType<typeof vi.fn> };
-    const button = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]).find(x => x.textContent?.trim() === 'Haftayı baştan öner')!;
-    expect(button).toBeTruthy();
-    expect(fixture.nativeElement.textContent).not.toContain('Haftanı baştan öner');
-    button.click(); await fixture.whenStable();
-    expect(toaster.confirm).toHaveBeenCalledWith('Öğrencinin mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.');
-  });
-
-  // Final review of PR 130 (3): a proposal is made of one-hour sessions; the quick question starts at one hour.
-  it('offers a study day of at least one hour', async () => {
-    const { fixture, component } = await setup();
-    const options = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('#wizard-daily-minutes option')).map(x => x.textContent?.trim());
-    expect(options).toEqual(['1 saat', '1,5 saat', '2 saat']);
-    component.setMinutesPerDay(30);
-    expect(component.minutesPerDay()).toBe(60);
-  });
-
-  it('holds the yearly preview back only while a proposal with new hours waits', async () => {
-    const mondayEvening: StudyAvailability = { version: 5, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
-    const { component } = await setup({}, mondayEvening);
-    component.createProposal(); component.continueToAnnualReview();
-    expect(component.annualReview()).toBe(false);
+  it('no longer offers the topic-based plan and shows no technical note', async () => {
+    const { el } = await setup({ routine: routineOf(answers), availability: hours });
+    expect(el.textContent).not.toContain('Konulardan plan');
+    expect(el.querySelector('app-student-automatic-plan')).toBeNull();
+    expect(el.textContent).not.toMatch(/Yapay zekâ|kurallı olarak değerlendirilir/);
   });
 });
 
-beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });
+beforeEach(() => { TestBed.overrideProvider(ToasterService, { useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } }); });

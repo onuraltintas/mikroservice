@@ -342,6 +342,14 @@ public sealed class StudyPlanTask : AggregateRoot
         PlannedDate=plannedDate; PlannedStartMinute=startMinute; SkippedAt=null; UpdatedAt=DateTime.UtcNow;
     }
 
+    /// <summary>Paket H5: the first half of a split task keeps its share of the planned questions.</summary>
+    public void CorrectPlannedQuestions(int? plannedQuestions)
+    {
+        if (IsCompleted) throw new InvalidOperationException("Completed work cannot be corrected.");
+        if (plannedQuestions is < 0 or > 100000) throw new ArgumentOutOfRangeException(nameof(plannedQuestions));
+        PlannedQuestions = plannedQuestions; UpdatedAt = DateTime.UtcNow;
+    }
+
     public void CorrectPlanning(string title, DateOnly plannedDate, int plannedMinutes)
     {
         if (IsCompleted) throw new InvalidOperationException("Completed work cannot be corrected.");

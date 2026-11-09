@@ -1,297 +1,395 @@
 import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, EventEmitter, Injector, Input, OnInit, Output, ViewChild, afterNextRender, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
-import { CoachingWeeklyDraftService, WeeklyExamFocus, WeeklyProposal, WeeklyProposalMode, WeeklyProposalWindow } from '../../../core/services/coaching-weekly-draft.service';
-import { CoachingLearningSetupService, LearningContext, RETIRED_PURPOSE_NOTICE, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
-import { StudentWeeklyOutcomePlanComponent } from './student-weekly-outcome-plan.component';
-import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
-import { DEFAULT_MAX_DAY_MINUTES, clock, slotError, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
+import { catchError, finalize, forkJoin, map, of, switchMap, throwError } from 'rxjs';
+import { CoachingWeeklyDraftService, WeeklyExamFocus, WeeklyLesson, WeeklyProposalMode, WeeklyProposalWindow, WeeklyTempoOption } from '../../../core/services/coaching-weekly-draft.service';
+import { CoachingLearningSetupService, LearningContext, LearningSetupView, RETIRED_PURPOSE_NOTICE, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
+import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
+import { CoachingStudyRoutineService, StudyRoutineExamFocus, StudyRoutineView, StudyTempo } from '../../../core/services/coaching-study-routine.service';
+import { CoachingPlanPreferencesService, StudyPlanPreferences } from '../../../core/services/coaching-plan-preferences.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { CoachingStudyPlanningService, StudyAvailability, StudyWindow } from '../../../core/services/coaching-study-planning.service';
-import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
+import { DEFAULT_MAX_DAY_MINUTES } from './weekly-calendar';
+import { WizardHoursStepComponent } from './wizard-hours-step.component';
+import { WizardCoursesStepComponent } from './wizard-courses-step.component';
+import { SummaryChoices, WizardSummaryStepComponent, dayMonth } from './wizard-summary-step.component';
 
+export type WizardStep = 'hours' | 'courses' | 'focus' | 'tempo' | 'summary';
+const STEP_TITLES: Record<WizardStep, string> = { hours: 'Saatlerin', courses: 'Derslerin', focus: 'Sınav ağırlığı', tempo: 'Tempo', summary: 'Özet' };
+const STAFF_STEP_TITLES: Record<WizardStep, string> = { hours: 'Öğrencinin saatleri', courses: 'Öğrencinin dersleri', focus: 'Sınav ağırlığı', tempo: 'Tempo', summary: 'Özet' };
+const TO_ROUTINE_FOCUS: Record<WeeklyExamFocus, StudyRoutineExamFocus> = { tyt: 'Tyt', balanced: 'Balanced', ayt: 'Ayt' };
+const FROM_ROUTINE_FOCUS: Record<StudyRoutineExamFocus, WeeklyExamFocus> = { Tyt: 'tyt', Balanced: 'balanced', Ayt: 'ayt' };
+export const TEMPO_TEXT: Record<StudyTempo, { name: string; meaning: string }> = {
+  Relaxed: { name: 'Rahat', meaning: 'Konular sınava kadar yayılır.' },
+  Balanced: { name: 'Dengeli', meaning: 'Sona tekrar için zaman kalır.' },
+  Intense: { name: 'Yoğun', meaning: 'Konuları erken bitirip tekrara geçersin.' }
+};
+const dayNumber = (iso: string) => { const [y, m, d] = iso.split('-').map(Number); return Date.UTC(y, m - 1, d) / 86400000; };
+
+/**
+ * Paket H4: the plan wizard is one flow — 1. Saatlerin, 2. Derslerin, 3. Sınav ağırlığı (YKS), 4. Tempo, 5. Özet — with "Adım 2 / 5"
+ * and Geri / Devam on every step. A student with an active plan is first asked what to change (Saatlerim / Derslerim / Tempo, or the
+ * whole plan again); one with a pending draft is offered that draft first. The teacher view (staffStudentId) has the same steps: the
+ * routine and the courses are read only, and the plan is created as the student's draft, as before.
+ */
 @Component({
   selector: 'app-student-study-plan-assistant', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, StudentWeeklyOutcomePlanComponent, StudentAutomaticPlanComponent, StudentStudyAvailabilityComponent], templateUrl: './student-study-plan-assistant.component.html',
-  styleUrl: './student-study-plan-assistant.component.scss'
+  imports: [CommonModule, RouterLink, WizardHoursStepComponent, WizardCoursesStepComponent, WizardSummaryStepComponent],
+  templateUrl: './student-study-plan-assistant.component.html', styleUrl: './student-study-plan-assistant.component.scss'
 })
 export class StudentStudyPlanAssistantComponent implements OnInit {
   @Input() staffStudentId: string | null = null;
   @Output() planCreated = new EventEmitter<string>();
-  @ViewChild(StudentWeeklyOutcomePlanComponent) private annualPlan?: StudentWeeklyOutcomePlanComponent;
+  @ViewChild(WizardHoursStepComponent) private hoursStep?: WizardHoursStepComponent;
+  @ViewChild(WizardCoursesStepComponent) private coursesStep?: WizardCoursesStepComponent;
+  @ViewChild(WizardSummaryStepComponent) private summaryStep?: WizardSummaryStepComponent;
+  @ViewChild('stepTitle') private stepTitle?: ElementRef<HTMLElement>;
   private readonly weekly = inject(CoachingWeeklyDraftService);
   private readonly learningSetup = inject(CoachingLearningSetupService);
   private readonly planning = inject(CoachingStudyPlanningService);
-  @ViewChild(StudentStudyAvailabilityComponent) private hoursEditor?: StudentStudyAvailabilityComponent;
+  private readonly routines = inject(CoachingStudyRoutineService);
+  private readonly preferences = inject(CoachingPlanPreferencesService);
+  private readonly toaster = inject(ToasterService);
+  private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly destroy = inject(DestroyRef);
   private readonly injector = inject(Injector);
-  @ViewChild('proposalTitle') private proposalTitle?: ElementRef<HTMLElement>;
-  @ViewChild('proposeButton') private proposeButton?: ElementRef<HTMLElement>;
-  @ViewChild('savedNotice') private savedNotice?: ElementRef<HTMLElement>;
-  readonly messages = signal<{ role: 'assistant'; content: string }[]>([{ role: 'assistant', content: 'Merhaba! Çalışma saatlerinden sana haftalık düzen önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
-  readonly proposal = signal<WeeklySlot[]>([]);
-  /** Paket H2: the server's proposal with each lesson's weekly hours and what the chosen lessons still lack. */
-  readonly proposalView = signal<WeeklyProposal | null>(null);
-  readonly proposing = signal(false);
-  /** Paket H2 (K6): a YKS student's choice for this period; kept here until it has its own place in her preferences. */
-  readonly examFocus = signal<WeeklyExamFocus>('balanced');
-  readonly examFocusChoices: { value: WeeklyExamFocus; label: string }[] = [
-    { value: 'tyt', label: 'TYT ağırlıklı' }, { value: 'balanced', label: 'Dengeli' }, { value: 'ayt', label: 'AYT ağırlıklı' }];
-  private readonly toaster = inject(ToasterService);
-  /** Review of PR 129 (K5): the student's daily limit from the server (the teacher view reads the student's). */
-  private maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
-  readonly selectedDays = signal<Weekday[]>([]);
-  readonly startTime = signal('18:00');
-  /** Final review of PR 130: a proposal is made of one-hour sessions, so a study day has at least an hour. */
-  readonly minutesPerDay = signal<60 | 90 | 120>(60);
-  readonly annualReview = signal(false);
-  /** E6 #29: the availability saved in Çalışma tercihlerim (one record); the wizard asks only when there is none. */
+
+  // What the wizard reads.
+  readonly busy = signal(true);
+  readonly error = signal('');
+  readonly lessons = signal<WeeklyLesson[]>([]);
+  maxDayMinutes = DEFAULT_MAX_DAY_MINUTES;
+  readonly learningContext = signal<LearningContext | null>(null);
+  readonly learningView = signal<LearningSetupView | null>(null);
+  readonly learningLoaded = signal(false);
+  readonly learningError = signal('');
+  readonly purposeRetired = signal(false);
+  readonly purposeNotForEducation = signal(false);
+  readonly retiredPurposeNotice = RETIRED_PURPOSE_NOTICE;
   readonly availability = signal<StudyAvailability | null>(null);
+  readonly routine = signal<StudyRoutineView | null>(null);
   readonly availabilityLoading = signal(false);
   /** E6 review: a failed load (not 404) is retried, never answered with the questions (a save would only get a 409). */
   readonly availabilityLoadError = signal('');
-  /** Değiştir: the same availability editor as Çalışma tercihlerim, inside the wizard. */
-  readonly editingAvailability = signal(false);
-  readonly savingAvailability = signal(false);
-  /** Roadmap O1: the topic-based plan is part of the one plan wizard. */
-  readonly topicPlanOpen = signal(false);
-  readonly busy = signal(true);
-  readonly error = signal('');
-  readonly saved = signal(false);
-  readonly lessons = signal<{ id: string; name: string; examCode: string | null; topicCount?: number }[]>([]);
-  readonly slots = signal<WeeklySlot[]>([]);
-  readonly learningContext = signal<LearningContext | null>(null);
-  /** KM8: the saved study purpose (School, General, Undecided) is retired; the student has to choose an exam first. */
-  readonly purposeRetired = signal(false);
-  /** Paket D review (L6): the saved exam does not fit the grade; topic saves still work, the student is asked to choose again. */
-  readonly purposeNotForEducation = signal(false);
-  readonly retiredPurposeNotice = RETIRED_PURPOSE_NOTICE;
+  readonly hasActivePlan = signal(false);
+  /** Review of PR 135 (S6): the active plan's end, for the tempo preselected when none is saved. */
+  private activePlanEnd: string | null = null;
+  /** Review of PR 135 (S15): a draft plan waiting to be published. */
+  readonly pendingDraft = signal<{ id: string; title: string } | null>(null);
+  private hoursLoaded = false;
+  private plansChecked = false;
+  private prefsLoaded = false;
+  private stored: StudyPlanPreferences = { examFocus: null, tempo: null };
   /** Paket H1 (P8): the topics marked "Çalıştım" in Başlangıç durumum (edited there, not in the wizard). */
   readonly studiedTopicCount = computed(() => (this.learningContext()?.topicStates ?? []).filter(x => x.declaredStatus === 'Studied').length);
-  readonly learningError = signal('');
-  /** Review of PR 129: the study preferences were read (a student without them is sent to Çalışma tercihlerim). */
-  readonly learningLoaded = signal(false);
-  version: number | null = null;
-  timeZoneId = 'Europe/Istanbul';
-  readonly weekDays = weekDays;
-  readonly clock = clock;
+  /** "Okula gitmiyorum" for everyone but a middle-school student (the server stays permissive). */
+  readonly allowNoSchool = computed(() => {
+    const view = this.learningView();
+    const middle = view?.educationStatus === 'Student' && view.gradeLevel != null && view.gradeLevel <= 8;
+    return !middle && this.learningContext()?.purpose !== 'Lgs';
+  });
+
+  // The flow.
+  readonly step = signal<WizardStep | 'menu' | 'draft' | null>(null);
+  /** The open step (null on the edit question, the pending draft or while loading). */
+  readonly currentStep = computed(() => { const step = this.step(); return step && step !== 'menu' && step !== 'draft' ? step : null; });
+  readonly flow = signal<WizardStep[]>([]);
+  readonly tempoSkipped = signal(false);
+  readonly visibleFlow = computed(() => this.flow().filter(x => x !== 'tempo' || !this.tempoSkipped()));
+  readonly stepError = signal('');
+  readonly savingPreferences = signal(false);
+  /** Edit mode "Saatlerim" and the summary's "Saat ekle" open the questions with the saved answers. */
+  readonly hoursWithQuestions = signal(false);
+  /** "Saat ekle" returns to the summary once the hours are saved (or with Geri). */
+  readonly returnToSummary = signal(false);
+  /** Re-review (2): "Saat ekle" put the hours step into a flow that had none; it leaves again with the detour. */
+  private hoursAdded = false;
+  private editing = false;
+  /** A teacher's quick answers for a student without study times (sent as windows, never saved). */
+  readonly staffWindows = signal<WeeklyProposalWindow[] | null>(null);
+  /** Review of PR 135 (S4): the summary's choices, kept while the steps change. */
+  readonly summaryChoices = new SummaryChoices();
+  /** H5's "Yeniden öner" (?yeniden=oner): the first summary proposes the whole week again, after a confirmation. */
+  replaceOnOpen = false;
+  // Step 3 and 4.
+  readonly examFocus = signal<WeeklyExamFocus>('balanced');
+  readonly examFocusChoices: { value: WeeklyExamFocus; label: string; hint: string }[] = [
+    { value: 'tyt', label: 'TYT ağırlıklı', hint: 'TYT derslerine daha çok saat düşer.' },
+    { value: 'balanced', label: 'Dengeli', hint: 'TYT ve AYT dersleri ihtiyaca göre paylaşılır.' },
+    { value: 'ayt', label: 'AYT ağırlıklı', hint: 'AYT derslerine daha çok saat düşer.' }];
+  /** Review of PR 135 (S1): the weekly draft has cards (the summary proposes Fill), kept current by the summary. */
+  private draftHasCards = false;
+  /** The mode the tempo options were read for (the summary's finishBy belongs to it). */
+  readonly tempoMode = signal<WeeklyProposalMode>('Fill');
+  readonly tempoOptions = signal<WeeklyTempoOption[] | null>(null);
+  readonly tempoLoading = signal(false);
+  readonly tempoError = signal('');
+  /** The saved tempo is no longer offered; the closest one was chosen instead. */
+  readonly tempoReplaced = signal(false);
+  readonly tempo = signal<StudyTempo | null>(null);
+  readonly tempoText = TEMPO_TEXT;
+  readonly dayMonth = dayMonth;
+  readonly chosenTempo = computed(() => { const list = this.tempoOptions() ?? []; return list.find(x => x.tempo === this.tempo()) ?? list[0] ?? null; });
+  readonly finishBy = computed(() => this.chosenTempo()?.finishBy ?? null);
 
   ngOnInit() {
-    // Review of PR 130: the teacher reads about the student in third person.
-    if (this.staffStudentId) this.messages.set([{ role: 'assistant', content: 'Merhaba! Öğrencinin çalışma saatlerinden haftalık düzen önerisi hazırlayayım; kaydetmeden önce inceleyebilirsin.' }]);
-    this.loadAvailability();
+    // A teacher is never asked what to change; set before the loads, which may answer at once.
+    if (this.staffStudentId) this.plansChecked = true;
+    this.loadPage();
+    this.loadLearning();
+    this.loadHours();
+    this.preferences.get(this.staffStudentId).pipe(takeUntilDestroyed(this.destroy)).subscribe(prefs => {
+      if (prefs) this.stored = { examFocus: prefs.examFocus ?? null, tempo: prefs.tempo ?? null };
+      this.prefsLoaded = true; this.applyStored(); this.start();
+    });
+    if (!this.staffStudentId) this.checkPlans();
+  }
+
+  /** The active plan (edit mode, its end for the tempo) and a pending draft (offered first). */
+  private checkPlans() {
+    const none = { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 };
+    forkJoin({
+      active: this.planning.list(1, 'Active').pipe(catchError(() => of(none))),
+      drafts: this.planning.list(1, 'Draft').pipe(catchError(() => of(none)))
+    }).pipe(switchMap(({ active, drafts }) => {
+      const plan = active.items.find(x => x.status === 'Active'), draft = drafts.items.find(x => x.status === 'Draft');
+      this.hasActivePlan.set(!!plan); this.pendingDraft.set(draft ? { id: draft.id, title: draft.title } : null);
+      return plan ? this.planning.get(plan.id).pipe(map(full => full.weeklySource?.endDate ?? null), catchError(() => of(null))) : of(null);
+    }), takeUntilDestroyed(this.destroy)).subscribe(end => { this.activePlanEnd = end; this.plansChecked = true; this.start(); });
+  }
+
+  private loadPage() {
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
-        this.lessons.set(page.lessons); this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES;
-        this.slots.set(page.draft?.slots ?? []);
-        this.version = page.draft?.version ?? null;
-        this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul';
-        this.busy.set(false);
+        this.lessons.set(page.lessons); this.draftHasCards = !!page.draft?.slots.length; this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES; this.busy.set(false);
         if (!page.lessons.length) this.error.set(this.staffStudentId ? 'Bu öğrenci henüz eğitim bağlamını tamamlamamış. Önce öğrenci kurulumunu tamamla.' : 'Önce çalışma düzeninden ders seçmelisin.');
+        this.start();
       },
-      error: () => { this.busy.set(false); this.error.set('Haftalık düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
+      error: () => { this.busy.set(false); this.error.set(this.staffStudentId ? 'Öğrencinin haftalık düzeni yüklenemedi. Yeniden deneyebilirsin.' : 'Haftalık düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
     });
+  }
+  loadLearning() {
     (this.staffStudentId ? this.learningSetup.getForStudent(this.staffStudentId) : this.learningSetup.get()).pipe(takeUntilDestroyed(this.destroy)).subscribe({
-      next: view => {
-        const context = view.context; this.learningContext.set(context); this.learningLoaded.set(true);
-        this.purposeRetired.set(!!view.purposeRetired || isRetiredPurpose(context?.purpose));
-        this.purposeNotForEducation.set(!!view.purposeNotForEducation);
-      },
+      next: view => { this.applyLearning(view); this.learningLoaded.set(true); this.start(); },
       error: () => this.learningError.set(this.staffStudentId ? 'Öğrencinin çalışma tercihleri yüklenemedi.' : 'Çalışma tercihlerin yüklenemedi. Sayfayı yenileyip tekrar dene.')
     });
   }
-
-  loadAvailability() {
+  applyLearning(view: LearningSetupView) {
+    this.learningView.set(view); this.learningContext.set(view.context);
+    this.purposeRetired.set(!!view.purposeRetired || isRetiredPurpose(view.context?.purpose));
+    this.purposeNotForEducation.set(!!view.purposeNotForEducation);
+  }
+  /** The free hours and the routine, read together; 404s mean "none yet". */
+  loadHours() {
     this.availabilityLoading.set(true); this.availabilityLoadError.set('');
-    this.planning.getAvailability(this.staffStudentId).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.availabilityLoading.set(false))).subscribe({
-      next: value => this.availability.set(value ?? null),
-      error: e => {
-        if (e?.status === 404) { this.availability.set(null); return; }
-        this.availabilityLoadError.set(this.staffStudentId ? 'Öğrencinin çalışma saatleri yüklenemedi.' : 'Çalışma saatlerin yüklenemedi.');
-      }
+    const before = JSON.stringify(this.availability()?.windows ?? null);
+    forkJoin({
+      availability: this.planning.getAvailability(this.staffStudentId).pipe(catchError(e => e?.status === 404 ? of(null) : throwError(() => e))),
+      routine: this.routines.get(this.staffStudentId)
+    }).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.availabilityLoading.set(false))).subscribe({
+      next: ({ availability, routine }) => {
+        const reloaded = this.hoursLoaded;
+        this.availability.set(availability ?? null); this.routine.set(routine);
+        this.hoursLoaded = true;
+        if (!reloaded) { this.applyStored(); this.start(); return; }
+        // Review of PR 135 (S14): other hours change the tempo options; the tempo step reads them again.
+        if (JSON.stringify(availability?.windows ?? null) !== before) { this.tempoOptions.set(null); if (this.step() === 'tempo') this.loadTempo('tempo', 1); }
+      },
+      error: () => this.availabilityLoadError.set(this.staffStudentId ? 'Öğrencinin çalışma saatleri yüklenemedi.' : 'Çalışma saatlerin yüklenemedi.')
     });
   }
+  /** S6: the saved exam focus and tempo (plan preferences, else the routine's older answers). */
+  private applyStored() {
+    if (!this.prefsLoaded || !this.hoursLoaded) return;
+    const routine = this.routine()?.answers;
+    this.stored = { examFocus: this.stored.examFocus ?? routine?.examFocus ?? null, tempo: this.stored.tempo ?? routine?.tempo ?? null };
+    if (this.stored.examFocus) this.examFocus.set(FROM_ROUTINE_FOCUS[this.stored.examFocus]);
+    if (this.stored.tempo) this.tempo.set(this.stored.tempo);
+  }
 
-  /** E6 #29: the saved study times; empty when the student has not given any yet. */
-  savedWindows(): StudyWindow[] { return this.availability()?.windows ?? []; }
-  availabilityLines() {
-    return [...this.savedWindows()].sort((a, b) => this.dayOrder(a.day) - this.dayOrder(b.day) || a.startMinute - b.startMinute)
-      .map(window => `${this.dayName(window.day)} ${clock(window.startMinute)}–${window.endMinute === 1440 ? '24:00' : clock(window.endMinute)}`);
-  }
-  private dayOrder(day: string) { return this.weekDays.findIndex(x => x.value === day); }
-  async changeAvailability() {
-    if (this.staffStudentId) return;
-    if (this.editingAvailability()) { if (await (this.hoursEditor?.canLeavePage() ?? true)) this.editingAvailability.set(false); return; }
-    this.clearProposal(); this.editingAvailability.set(true);
-  }
-  availabilitySaved() { this.editingAvailability.set(false); this.clearProposal(); this.loadAvailability(); }
-  /** Paket H2: the proposal is made from saved study times; a teacher cannot give them for the student. */
-  canPropose() { return !this.busy() && !this.proposing() && !this.savingAvailability() && !this.availabilityLoading() && !this.availabilityLoadError() && !!this.lessons().length
-    && (this.savedWindows().length > 0 || this.selectedDays().length > 0); }
-  /** Review of PR 130: the YKS question is asked only where a proposal can be made. */
-  showExamFocus() { return this.isYks() && !this.editingAvailability() && !!this.lessons().length && !this.availabilityLoadError(); }
-  /** Review of PR 130: a proposal made for another focus is dropped, so the shown one always matches the choice. */
-  setExamFocus(value: WeeklyExamFocus) { if (this.examFocus() === value) return; this.examFocus.set(value); this.clearProposal(); }
   isYks() { return this.learningContext()?.purpose === 'Yks'; }
+  /** The steps can start: preferences are usable, courses are chosen and the hours were read. */
+  ready() {
+    return !this.busy() && !!this.lessons().length && this.learningLoaded() && !!this.learningContext() && !this.purposeRetired() && this.hoursLoaded && this.prefsLoaded;
+  }
+  private fullFlow(): WizardStep[] { return ['hours', 'courses', ...(this.isYks() ? ['focus' as const] : []), 'tempo', 'summary']; }
+  private mode(): WeeklyProposalMode { return this.draftHasCards ? 'Fill' : 'Replace'; }
 
-  toggleDay(day: Weekday) {
-    const selected = new Set(this.selectedDays());
-    selected.has(day) ? selected.delete(day) : selected.add(day);
-    this.selectedDays.set(this.weekDays.map(x => x.value).filter(x => selected.has(x)));
-    this.saved.set(false);
+  /** Once everything is read: a pending draft first, then the summary for ?adim=ozet / ?yeniden=oner, the edit question, or step 1. */
+  private start(skipDraft = false) {
+    if ((this.step() !== null && !skipDraft) || !this.ready() || !this.plansChecked) return;
+    if (!skipDraft && !this.staffStudentId && this.pendingDraft()) { this.step.set('draft'); this.focusTitle(); return; }
+    const query = this.route?.snapshot?.queryParamMap;
+    this.replaceOnOpen = query?.get('yeniden') === 'oner';
+    if (query?.get('adim') === 'ozet' || this.replaceOnOpen) { this.flow.set(this.fullFlow()); this.go('summary'); return; }
+    if (!this.staffStudentId && this.hasActivePlan()) { this.toMenu(); return; }
+    this.flow.set(this.fullFlow()); this.go('hours');
+  }
+  /** S15: "Yine de yeni plan hazırla". */
+  continueWithoutDraft() { this.start(true); }
+
+  /** "Planında neyi değiştirmek istiyorsun?": each choice opens its own steps with the current values, then the summary. */
+  edit(choice: 'hours' | 'courses' | 'tempo' | 'all') {
+    this.editing = choice !== 'all'; this.endHoursDetour();
+    if (choice === 'all') { this.flow.set(this.fullFlow()); this.hoursWithQuestions.set(false); this.go('hours'); return; }
+    if (choice === 'hours') { this.flow.set(['hours', 'summary']); this.hoursWithQuestions.set(!!this.routine()); this.go('hours'); return; }
+    if (choice === 'courses') { this.flow.set(['courses', 'summary']); this.go('courses'); return; }
+    this.flow.set([...(this.isYks() ? ['focus' as const] : []), 'tempo', 'summary']); this.go(this.isYks() ? 'focus' : 'tempo');
+  }
+  private toMenu() { this.editing = false; this.endHoursDetour(); this.hoursWithQuestions.set(false); this.step.set('menu'); this.focusTitle(); }
+  /** The "Saat ekle" detour ends: no return flag, and the hours step leaves a flow it was only added to. */
+  private endHoursDetour() {
+    this.returnToSummary.set(false);
+    if (this.hoursAdded) { this.hoursAdded = false; this.flow.update(flow => flow.filter(x => x !== 'hours')); }
   }
 
-  setMinutesPerDay(value: number) {
-    if ([60, 90, 120].includes(value)) this.minutesPerDay.set(value as 60 | 90 | 120);
+  stepIndex() { const step = this.currentStep(); return step ? this.visibleFlow().indexOf(step) : -1; }
+  progressText() { const at = this.stepIndex(); return at >= 0 ? `Adım ${at + 1} / ${this.visibleFlow().length}` : ''; }
+  titleOf(step: WizardStep) { return (this.staffStudentId ? STAFF_STEP_TITLES : STEP_TITLES)[step]; }
+  canGoBack() { return this.stepIndex() > 0 || (this.editing && !this.staffStudentId) || (this.currentStep() === 'hours' && this.returnToSummary()); }
+
+  private go(step: WizardStep, direction: 1 | -1 = 1) {
+    this.stepError.set('');
+    // "Yeniden öner" is asked once, on the first summary.
+    if (step !== 'summary') this.replaceOnOpen = false;
+    // The tempo options belong to one proposal mode; read them again when the weekly draft changed.
+    if (step === 'tempo' || (step === 'summary' && (!this.tempoOptions() || this.tempoMode() !== this.mode()))) { this.loadTempo(step, direction); return; }
+    this.step.set(step); this.focusTitle();
+  }
+  /** Paket F #37 / review S11: the new step's (or the menu's) heading takes the focus. */
+  private focusTitle() { afterNextRender(() => this.stepTitle?.nativeElement.focus(), { injector: this.injector }); }
+  next() {
+    const step = this.currentStep(); if (!step) return;
+    if (step === 'hours' && this.returnToSummary()) { this.endHoursDetour(); this.hoursWithQuestions.set(false); this.go('summary'); return; }
+    const flow = this.flow(), at = flow.indexOf(step);
+    if (at >= 0 && at < flow.length - 1) this.go(flow[at + 1]);
+  }
+  previous() {
+    const step = this.currentStep(); if (!step) return;
+    // S3: "Saat ekle" can be left with Geri, straight back to the summary.
+    if (step === 'hours' && this.returnToSummary()) { this.endHoursDetour(); this.hoursWithQuestions.set(false); this.go('summary', -1); return; }
+    const flow = this.visibleFlow(), at = flow.indexOf(step);
+    if (at > 0) { this.go(flow[at - 1], -1); return; }
+    if (this.editing && !this.staffStudentId) this.toMenu();
   }
 
-  /**
-   * E6 #29: with saved study times the proposal uses them; otherwise the student's answers (days, start, duration)
-   * are saved as her availability first — the same record as Çalışma tercihlerim, never a second copy.
-   * Paket H2: the proposal itself comes from the server (Fill: the saved cards stay, only free time is used).
-   */
-  createProposal() {
-    if (!this.canPropose() || this.editingAvailability()) return;
-    if (this.savedWindows().length) { this.requestProposal('Fill'); return; }
-    const [hours, minutes] = this.startTime().split(':').map(Number);
-    const startMinute = hours * 60 + minutes;
-    if (!Number.isInteger(startMinute) || startMinute % 30 !== 0 || startMinute + this.minutesPerDay() > 1440) {
-      this.error.set('Başlangıç saati :00 veya :30 olmalı ve çalışma süresi gece yarısını geçmemeli.'); return;
-    }
-    const windows: StudyWindow[] = this.selectedDays().map(day => ({ day, startMinute, endMinute: startMinute + this.minutesPerDay() }));
-    // Review of PR 130: a teacher's answers make the proposal only; the student's study times stay hers (never saved).
-    if (this.staffStudentId) { this.requestProposal('Fill', windows); return; }
-    this.savingAvailability.set(true); this.error.set('');
-    this.planning.saveAvailability({ expectedVersion: this.availability()?.version ?? null, timeZoneId: 'Europe/Istanbul', windows })
-      .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.savingAvailability.set(false))).subscribe({
-        next: saved => { this.availability.set(saved); this.requestProposal('Fill'); },
+  // --- Step 1 ---------------------------------------------------------------------------------------------------------------
+  hoursDone(windows: WeeklyProposalWindow[] | null) { if (this.staffStudentId) this.staffWindows.set(windows); this.tempoOptions.set(null); this.next(); }
+  routineSaved(view: StudyRoutineView) {
+    this.routine.set(view);
+    // Contract item 6: PUT routine saved its focus and tempo as the plan preferences.
+    this.stored = { examFocus: view.answers.examFocus ?? null, tempo: view.answers.tempo ?? null };
+    // The routine wrote the free hours; they are the routine's windows now (in the free hours' own time zone).
+    this.availability.set({ version: view.currentAvailabilityVersion ?? view.availabilityVersion, timeZoneId: this.availability()?.timeZoneId ?? 'Europe/Istanbul', windows: view.windows });
+  }
+
+  // --- Step 2 ---------------------------------------------------------------------------------------------------------------
+  coursesSaved(view: LearningSetupView) { this.applyLearning(view); this.tempoOptions.set(null); }
+
+  toRoutineFocus() { return TO_ROUTINE_FOCUS[this.examFocus()]; }
+  /** Re-review (5): only what the student confirmed (or saved before) goes with a routine save; null keeps the saved value. */
+  confirmedFocus() { return this.isYks() ? this.stored.examFocus : null; }
+  confirmedTempo() { return this.stored.tempo; }
+  // --- Step 3 (YKS) ---------------------------------------------------------------------------------------------------------
+  setExamFocus(value: WeeklyExamFocus) { if (this.examFocus() !== value) { this.examFocus.set(value); this.tempoOptions.set(null); } }
+  /** S6: the confirmed choice is kept in the plan preferences (never through the routine, so the free hours stay as they are). */
+  focusNext() { this.savePreferences({ examFocus: TO_ROUTINE_FOCUS[this.examFocus()] }); }
+
+  // --- Step 4 ---------------------------------------------------------------------------------------------------------------
+  /** Tempo options for the current focus, hours and proposal mode; one option skips the step (the summary says so). */
+  private loadTempo(target: WizardStep, direction: 1 | -1) {
+    this.tempoLoading.set(true); this.tempoError.set('');
+    if (target === 'tempo') this.step.set('tempo');
+    const focus = this.isYks() ? this.examFocus() : null, mode = this.mode();
+    this.weekly.tempoOptions(focus, this.staffStudentId ?? undefined, this.staffWindows() ?? undefined, mode)
+      .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.tempoLoading.set(false))).subscribe({
+        next: result => {
+          const options = result.options ?? [];
+          this.tempoOptions.set(options); this.tempoMode.set(mode);
+          if (!options.some(x => x.tempo === this.tempo())) this.tempo.set(this.preselect(options));
+          this.tempoSkipped.set(options.length <= 1);
+          if (target === 'tempo' && options.length <= 1) {
+            // Only one tempo fits: on to the summary (or, going back, to the step before the tempo).
+            const flow = this.flow(), at = flow.indexOf('tempo');
+            if (direction === 1) { this.go('summary'); return; }
+            if (at > 0) { this.go(flow[at - 1], -1); return; }
+            this.toMenu(); return;
+          }
+          this.step.set(target); this.focusTitle();
+        },
         error: e => {
-          this.error.set(`Çalışma saatlerin kaydedilmedi. ${typeof e?.error?.message === 'string' ? e.error.message : 'Yeniden deneyebilirsin.'}`);
-          // E6 review: another session saved study times; load them so the next attempt uses the current record.
-          if (e?.status === 409) this.loadAvailability();
+          // S5: the error stays where the student is; the summary is not opened (or proposed) without a tempo.
+          this.tempoError.set(typeof e?.error?.message === 'string' ? e.error.message : 'Tempo seçenekleri hazırlanamadı. Yeniden deneyebilirsin.');
+          this.retryTarget = { target, direction };
         }
       });
   }
-
-  /** Paket H2: "Haftanı baştan öner": a whole new week; the saved one is replaced only when the proposal is applied. */
-  async replaceWeek() {
-    if (!this.canPropose() || this.editingAvailability() || !this.slots().length || !this.savedWindows().length) return;
-    if (!await this.toaster.confirm(this.staffStudentId
-      ? 'Öğrencinin mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.'
-      : 'Mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.')) return;
-    this.requestProposal('Replace');
+  private retryTarget: { target: WizardStep; direction: 1 | -1 } | null = null;
+  retryTempo() { const r = this.retryTarget ?? { target: 'tempo' as WizardStep, direction: 1 as const }; this.retryTarget = null; this.loadTempo(r.target, r.direction); }
+  /**
+   * S6: the saved tempo, else the one ending closest to the active plan's end, else the most relaxed. A saved tempo the server no
+   * longer offers (its date does not settle) falls back the same way, and the tempo step says so.
+   */
+  private preselect(options: WeeklyTempoOption[]): StudyTempo | null {
+    this.tempoReplaced.set(false);
+    if (this.stored.tempo && options.some(x => x.tempo === this.stored.tempo)) return this.stored.tempo;
+    if (this.stored.tempo && options.length) this.tempoReplaced.set(true);
+    const end = this.activePlanEnd;
+    if (end && options.length) return [...options].sort((a, b) => Math.abs(dayNumber(a.finishBy) - dayNumber(end)) - Math.abs(dayNumber(b.finishBy) - dayNumber(end)))[0].tempo;
+    return options[0]?.tempo ?? null;
   }
-
-  private requestProposal(mode: WeeklyProposalMode, windows?: WeeklyProposalWindow[]) {
-    this.proposing.set(true); this.error.set(''); this.saved.set(false);
-    const focus = this.isYks() ? this.examFocus() : null, student = this.staffStudentId ?? undefined;
-    (windows ? this.weekly.proposal(mode, focus, student, windows) : this.weekly.proposal(mode, focus, student))
-      .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.proposing.set(false))).subscribe({
-        next: view => this.showProposal(view),
-        error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık öneri hazırlanamadı. Yeniden deneyebilirsin.')
-      });
+  tempoNote() {
+    const only = this.tempoSkipped() ? this.chosenTempo() : null;
+    if (!only) return '';
+    return `${this.staffStudentId ? 'Öğrencinin sınavına' : 'Sınavına'} kadar tek bir tempo uygun: ${TEMPO_TEXT[only.tempo].name}, bitiş ${dayMonth(only.finishBy)}.`;
   }
-
-  private showProposal(view: WeeklyProposal) {
-    this.proposalView.set(view); this.proposal.set(view.slots);
-    // Paket F #37: bring the new proposal into view and move the focus to it.
-    afterNextRender(() => {
-      const title = this.proposalTitle?.nativeElement;
-      title?.scrollIntoView?.({ block: 'start' }); title?.focus({ preventScroll: true });
-    }, { injector: this.injector });
-    const dayCount = new Set(view.slots.map(slot => slot.day)).size;
-    const short = view.shortageMinutes > 0 ? (this.staffStudentId ? ' Seçilen saatler öğrencinin bütün derslerine yetmiyor; ayrıntıyı önerinin altında görebilirsin.'
-      : ' Saatlerin bütün derslerine yetmiyor; ayrıntıyı önerinin altında görebilirsin.') : '';
-    const staff = !!this.staffStudentId;
-    const kept = view.mode === 'Fill' ? (staff ? ' Öğrencinin taslağındaki dolu saatleri korudum;' : ' Mevcut taslağındaki dolu saatleri korudum;')
-      : (staff ? ' Öğrencinin haftasını baştan hazırladım;' : ' Haftanı baştan hazırladım;');
-    this.messages.update(items => [...items, { role: 'assistant', content: view.slots.length
-      ? `${dayCount} gün için ${view.slots.length} ders saati önerdim. Her ders bir saat; aralarda mola var.${kept} öneriyi kaydetmeden önce inceleyebilirsin.${short}`
-      : `${this.emptyText(view)}${short}` }]);
-  }
-
-  /** Review of PR 130: why a proposal has no new hour: no chosen course, enough time already, or no free time. */
-  emptyReason(view: WeeklyProposal): 'courses' | 'enough' | 'space' {
-    return !view.lessons.length ? 'courses' : view.shortageMinutes === 0 ? 'enough' : 'space';
-  }
-  emptyText(view: WeeklyProposal) {
-    const staff = !!this.staffStudentId;
-    switch (this.emptyReason(view)) {
-      case 'courses': return staff ? 'Öğrenci henüz çalışacağı dersleri seçmemiş; öneri seçilen derslere göre hazırlanır.'
-        : 'Önce Derslerim\'de çalışacağın dersleri seç; öneri seçtiğin derslere göre hazırlanır.';
-      case 'enough': return staff ? 'Öğrencinin haftalık düzeni derslerine yetiyor; eklenecek saat yok.' : 'Haftalık düzenin derslerine yetiyor; eklenecek saat yok.';
-      default: return staff ? 'Öğrencinin çalışma saatlerinde boş yer bulamadım.' : 'Çalışma saatlerinde boş yer bulamadım. Çalışma saatlerini değiştirip yeniden deneyebilirsin.';
-    }
-  }
-
-  /** The proposal grouped by day, Monday first. */
-  proposalDays() {
-    const slots = this.proposal();
-    return this.weekDays.map(day => ({ label: day.label, slots: slots.filter(x => x.day === day.value).sort((a, b) => a.startMinute - b.startMinute) }))
-      .filter(day => day.slots.length);
-  }
-  /** "haftada 1,5 saat". */
   hours(minutes: number) { return (Math.round(minutes / 30) / 2).toLocaleString('tr-TR'); }
-  /** Final review of PR 130: only a proposal with new hours waits to be applied; an empty one does not block the yearly preview. */
-  proposalPending() { return !!this.proposalView()?.slots.length; }
-  /** "şu an": what the saved week covers of each course's need (the saved cards only, before the proposal is applied). */
-  savedCoveredMinutes(view: WeeklyProposal) {
-    return view.lessons.reduce((sum, lesson) => sum + Math.min(lesson.neededMinutes, this.slots()
-      .filter(slot => slot.lessonId.toLowerCase() === lesson.lessonId.toLowerCase()).reduce((total, slot) => total + slot.durationMinutes, 0)), 0);
+  /** Review of PR 135 (S9): why a tempo does not fit, plainly. */
+  fitText(option: WeeklyTempoOption) {
+    const staff = !!this.staffStudentId;
+    if (option.neededWeeklyMinutes <= option.capacityWeeklyMinutes)
+      return staff ? 'Öğrencinin saatleri günlere dağılınca bu tempoya yetmiyor.' : 'Saatlerin günlere dağılınca bu tempoya yetmiyor.';
+    return staff ? `Öğrencinin haftada ${this.hours(option.capacityWeeklyMinutes)} saati var; bu tempo ${this.hours(option.neededWeeklyMinutes)} saat istiyor.`
+      : `Haftada ${this.hours(option.capacityWeeklyMinutes)} saatin var; bu tempo ${this.hours(option.neededWeeklyMinutes)} saat istiyor.`;
   }
-  lessonsWithoutTime(view: WeeklyProposal) { return view.lessons.filter(x => x.noTime).map(x => x.lessonName).join(', '); }
+  tempoNext() { const chosen = this.tempo(); if (chosen) this.savePreferences({ tempo: chosen }); }
 
-  applyProposal() {
-    const view = this.proposalView();
-    if (this.busy() || !view || !view.slots.length) return;
-    // Review of PR 130: the proposal belongs to the weekly draft it was made from; a draft changed elsewhere asks for a new one.
-    if ((view.draftVersion ?? null) !== this.version) { this.draftChanged(); return; }
-    // Fill adds the proposal to the saved cards; Replace saves only the proposal (the student asked for a new week).
-    const replace = view.mode === 'Replace';
-    const next = replace ? view.slots : [...this.slots(), ...view.slots];
-    for (const slot of view.slots) {
-      const issue = slotError(slot, next, { max: this.maxDayMinutes, saved: this.slots(), staff: !!this.staffStudentId });
-      if (issue) { this.error.set(issue); return; }
-    }
-    this.busy.set(true); this.error.set('');
-    this.weekly.save(this.version, this.timeZoneId, next, this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.busy.set(false))).subscribe({
-      next: draft => { this.version = draft.version; this.slots.set(draft.slots); this.clearProposal(); this.savedReplaced.set(replace); this.saved.set(true); this.focusAfter('saved'); },
-      error: e => { if (e?.status === 409) this.draftChanged(); else this.error.set(e?.error?.message ?? 'Haftalık taslak kaydedilemedi. Yeniden deneyebilirsin.'); }
-    });
-  }
-  readonly savedReplaced = signal(false);
-
-  /** Reloads the weekly draft that changed elsewhere and asks for a fresh proposal. */
-  private draftChanged() {
-    this.clearProposal();
-    this.error.set(this.staffStudentId ? 'Öğrencinin haftalık düzeni başka bir yerde değişti; öneriyi yenile.' : 'Haftalık düzenin başka bir yerde değişti; öneriyi yenile.');
-    this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
-      next: page => { this.slots.set(page.draft?.slots ?? []); this.version = page.draft?.version ?? null; this.timeZoneId = page.draft?.timeZoneId ?? 'Europe/Istanbul'; }
+  /**
+   * S6: a student's confirmed focus or tempo goes to the plan preferences; a teacher's stays on this page. PUT replaces both values,
+   * so the other one is sent as it is now.
+   */
+  private savePreferences(patch: Partial<StudyPlanPreferences>) {
+    const body = { examFocus: this.isYks() ? this.stored.examFocus : null, tempo: this.stored.tempo, ...patch };
+    if (this.staffStudentId || (body.examFocus === this.stored.examFocus && body.tempo === this.stored.tempo)) { this.next(); return; }
+    this.savingPreferences.set(true); this.stepError.set('');
+    const update = { examFocus: body.examFocus ?? null, tempo: body.tempo ?? null };
+    // A first save can race with another one (409 StudyPlanning.Conflict); it is tried once more.
+    this.preferences.save(update).pipe(catchError(e => e?.status === 409 && e?.error?.code === 'StudyPlanning.Conflict' ? this.preferences.save(update) : throwError(() => e)),
+      takeUntilDestroyed(this.destroy), finalize(() => this.savingPreferences.set(false))).subscribe({
+      next: saved => { this.stored = { examFocus: saved.examFocus ?? null, tempo: saved.tempo ?? null }; this.next(); },
+      error: e => this.stepError.set(typeof e?.error?.message === 'string' ? e.error.message : 'Seçimin kaydedilemedi. Yeniden deneyebilirsin.')
     });
   }
 
-  /** "Öneriyi kaldır": the proposal goes away and the focus returns to "Haftalık öneri oluştur". */
-  removeProposal() { this.clearProposal(); this.focusAfter('propose'); }
-  private clearProposal() { this.proposal.set([]); this.proposalView.set(null); }
-
-  /** Review of PR 122: when the proposal block disappears the focus moves on, not to the page. */
-  private focusAfter(target: 'saved' | 'propose') {
-    afterNextRender(() => (target === 'saved' ? this.savedNotice : this.proposeButton)?.nativeElement.focus(), { injector: this.injector });
+  // --- Step 5 ---------------------------------------------------------------------------------------------------------------
+  /** "Saat ekle": step 1's change, then straight back to the summary (Geri returns there too). */
+  addHours() {
+    if (!this.flow().includes('hours')) { this.hoursAdded = true; this.flow.update(flow => ['hours', ...flow]); }
+    this.returnToSummary.set(true); this.hoursWithQuestions.set(!this.staffStudentId); this.go('hours');
   }
-
-  continueToAnnualReview() {
-    if (this.busy() || !this.slots().length || this.proposalPending()) return;
-    this.annualReview.set(true);
-  }
-
-  dayName(day: string) { return this.weekDays.find(x => x.value === day)?.label ?? day; }
-  @ViewChild(StudentAutomaticPlanComponent) private topicPlan?: StudentAutomaticPlanComponent;
-  async canLeavePage() { return this.annualReview() ? (await this.annualPlan?.canLeavePage() ?? true) : !this.busy() && !this.savingAvailability() && (await this.hoursEditor?.canLeavePage() ?? true) && (await this.topicPlan?.canLeavePage() ?? true); }
+  /** S1: the summary saved (or reloaded) the weekly draft; the next tempo options follow its mode. */
+  draftSaved(hasCards: boolean) { this.draftHasCards = hasCards; }
+  contextSaved(view: LearningSetupView) { this.applyLearning(view); }
   onPlanCreated(id: string) { this.planCreated.emit(id); }
+
+  /** Unsaved answers, course choices or chosen topics are not dropped without asking. */
+  async canLeavePage() {
+    // Re-review (7): only a write keeps the student here; the summary's reads are dropped when it goes away.
+    if (this.savingPreferences() || (this.hoursStep?.busy() ?? false) || (this.coursesStep?.busy() ?? false) || (this.summaryStep?.writing() ?? false)) return false;
+    const unsaved = (this.hoursStep?.dirty() ?? false) || (this.coursesStep?.dirty() ?? false) || this.summaryChoices.focusTopics().length > 0;
+    return !unsaved || await this.toaster.confirm('Sihirbazda kaydetmediğin seçimler var. Çıkarsan kaybolur. Çıkmak istiyor musun?', { confirmText: 'Çık', cancelText: 'Vazgeç' });
+  }
 
   private readonly feedback = coachingFeedback(undefined, this.error);
 }

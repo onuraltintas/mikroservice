@@ -7,17 +7,19 @@ import { CoachingStudyPlanningService } from '../../../core/services/coaching-st
 
 const root = '/coaching-portal/plan';
 // Paket H1 (08.11.2026): the free hours come first; the weekly routine places the lessons into them.
+// Review of PR 135 (S8): the plan wizard has its own steps, so this helper covers the two calendar pages only and leads on to the wizard.
 const STEPS = [
   { label: 'Boş saatlerin', path: `${root}/hours`, hint: 'Hangi gün hangi saatlerde çalışabileceğini işaretle.' },
-  { label: 'Haftalık düzenin', path: `${root}/weekly`, hint: 'Bu saatlerde hangi derse çalışacağını yerleştir. Okul derslerini değil, kendi çalışma saatlerini gir.' },
-  { label: 'Planını oluştur', path: `${root}/wizard`, also: [`${root}/preview`], hint: 'Tarihleri seç, planını gözden geçir ve yayımla.' }
+  { label: 'Haftalık düzenin', path: `${root}/weekly`, hint: 'Bu saatlerde hangi derse çalışacağını yerleştir. Okul derslerini değil, kendi çalışma saatlerini gir. Bitince planının özetine geç.' }
 ] as const;
+const WIZARD = `${root}/wizard`;
 
 /**
- * T4 (31.10.2026): "Planı düzenle" is one flow in three steps over the existing pages — free hours, weekly lessons (Paket H1:
- * in this order), then the plan wizard (or the weekly preview). It only navigates; each page keeps its own saving and validation.
+ * T4 (31.10.2026): the steps over the calendar pages — free hours, then weekly lessons (Paket H1: in this order). Review of PR 135
+ * (S8): the plan wizard shows its own steps, so this helper is not shown there; its last step leads to the wizard's summary.
+ * It only navigates; each page keeps its own saving and validation.
  * Paket F #37: a step is shown as done only when its data exists (saved free hours, lessons in the weekly draft), read again on
- * every step change; an unknown state (loading, failed) is not done. The last step has no "done" state of its own.
+ * every step change; an unknown state (loading, failed) is not done.
  */
 @Component({
   selector: 'app-student-plan-edit-steps',
@@ -38,14 +40,14 @@ const STEPS = [
         <div class="moves">
           @if (current() > 0) { <a class="prev" [routerLink]="steps[current() - 1].path">Geri</a> }
           @if (current() < steps.length - 1) { <a class="next" [routerLink]="steps[current() + 1].path">Sonraki adım</a> }
-          @else { <a class="next" routerLink="/coaching-portal/plan">Planıma dön</a> }
+          @else { <a class="next" [routerLink]="wizard" [queryParams]="{ adim: 'ozet' }">Planının özetine geç</a> }
         </div>
       </div>
     </nav>
   }`,
   styles: [`:host{display:block}
     .edit-steps{margin:0 0 var(--coaching-space-6);padding:var(--coaching-space-4);border:1px solid var(--ui-border);border-radius:var(--coaching-radius-card);background:var(--ui-surface)}
-    .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--coaching-space-2);margin:0;padding:0;list-style:none;counter-reset:none}
+    .steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--coaching-space-2);margin:0;padding:0;list-style:none;counter-reset:none}
     li{position:relative}
     li a{display:flex;align-items:center;gap:var(--coaching-space-2);min-height:44px;padding:0 var(--coaching-space-3);border-radius:var(--coaching-radius-control);color:var(--ui-text-muted);font-size:var(--coaching-text-sm);font-weight:650;text-decoration:none}
     li a:focus-visible,.moves a:focus-visible{outline:3px solid var(--coaching-focus);outline-offset:2px}
@@ -59,21 +61,22 @@ const STEPS = [
     .moves a{display:inline-flex;align-items:center;min-height:44px;padding:0 var(--coaching-space-4);border-radius:var(--coaching-radius-pill);font-weight:700;text-decoration:none}
     .prev{border:1px solid var(--ui-border);color:var(--ui-text)}
     .next{background:var(--ui-brand);color:var(--ui-brand-contrast)}
-    @media (max-width:560px){.steps{grid-template-columns:1fr 1fr 1fr}li a{flex-direction:column;justify-content:center;gap:4px;min-height:60px;padding:var(--coaching-space-2);text-align:center;font-size:12px}.foot{flex-direction:column;align-items:stretch}.moves a{flex:1;justify-content:center}}`]
+    @media (max-width:560px){.steps{grid-template-columns:1fr 1fr}li a{flex-direction:column;justify-content:center;gap:4px;min-height:60px;padding:var(--coaching-space-2);text-align:center;font-size:12px}.foot{flex-direction:column;align-items:stretch}.moves a{flex:1;justify-content:center}}`]
 })
 export class StudentPlanEditStepsComponent {
   readonly steps = STEPS;
+  readonly wizard = WIZARD;
   private readonly router = inject(Router);
   private readonly url = toSignal(this.router.events.pipe(filter(e => e instanceof NavigationEnd), map(() => this.router.url), startWith(this.router.url)), { initialValue: '' });
   readonly current = computed(() => {
     const path = this.url().split(/[?#]/)[0];
-    return STEPS.findIndex(step => path === step.path || ('also' in step && step.also.some(other => path === other)));
+    return STEPS.findIndex(step => path === step.path);
   });
   private readonly weekly = inject(CoachingWeeklyDraftService);
   private readonly planning = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly state = signal<{ lessons: boolean; hours: boolean }>({ lessons: false, hours: false });
-  readonly done = computed(() => [this.state().hours, this.state().lessons, false]);
+  readonly done = computed(() => [this.state().hours, this.state().lessons]);
   private request?: Subscription;
 
   constructor() {
