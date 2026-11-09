@@ -496,6 +496,8 @@ export class ScanFindEngine implements BaseEngine {
             }
         };
 
+        // The player holds a copy of this state, so it must see isRunning=false or the text stays above the result.
+        this.callbacks.onStateChange({ ...this.state });
         this.callbacks.onComplete(result);
     }
 
