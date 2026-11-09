@@ -58,7 +58,7 @@
       @switch (current) {
         @case ('hours') {
           <app-wizard-hours-step [staffStudentId]="staffStudentId" [routine]="routine()" [availability]="availability()" [yks]="isYks()" [allowNoSchool]="allowNoSchool()" [limit]="maxDayMinutes"
-            [examFocus]="isYks() ? toRoutineFocus() : null" [tempo]="tempo()" [disabled]="tempoLoading()"
+            [examFocus]="confirmedFocus()" [tempo]="confirmedTempo()" [disabled]="tempoLoading()"
             [startWithQuestions]="hoursWithQuestions()" [canGoBack]="canGoBack()" (done)="hoursDone($event)" (routineSaved)="routineSaved($event)" (reload)="loadHours()" (back)="previous()" />
         }
         @case ('courses') {

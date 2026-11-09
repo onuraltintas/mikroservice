@@ -45,7 +45,7 @@ export function withShift(answers: StudyRoutineAnswers, shift: StudySchoolShift)
     morningStudy: false, morningStart: shift === 'Afternoon' ? 540 : null };
 }
 
-/** The questions in order for these answers; "Okula gitmiyorum" is offered only to a YKS student. */
+/** The questions in order for these answers ("Okula gitmiyorum" is offered by the hours step to everyone but a middle-school student). */
 export function routineQuestions(a: StudyRoutineAnswers): RoutineQuestion[] {
   const list: RoutineQuestion[] = ['shift'];
   if (a.schoolShift && a.schoolShift !== 'NoSchool') list.push('school');

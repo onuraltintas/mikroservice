@@ -29,7 +29,7 @@ const longDate = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long
 /** "12 Mayıs". */
 export function dayMonth(iso: string | null | undefined) { if (!iso) return ''; const [y, m, d] = iso.split('-').map(Number); return longDate.format(new Date(Date.UTC(y, m - 1, d))); }
 
-export interface FocusTopic { topicId: string; topicName: string; lessonName: string }
+export interface FocusTopic { topicId: string; topicName: string; lessonName: string; lessonId?: string }
 interface PublishIssue { message: string; draftExists?: boolean; stale?: boolean }
 
 /**
@@ -134,6 +134,10 @@ export class WizardSummaryStepComponent implements OnInit {
   }
 
   busy() { return this.loading() || this.proposing() || this.applying() || this.previewing() || this.publishing() || !!this.savingPriority(); }
+  /** Re-review (7): only a write keeps the student on the page; reads are dropped when the step goes away. */
+  writing() { return this.applying() || this.publishing() || !!this.savingPriority(); }
+  /** Re-review F1: chosen topics whose lesson left the weekly draft, removed before the preview, with a short note. */
+  readonly droppedTopics = signal('');
   /** Something chosen here would be lost by leaving the page (the chosen topics). */
   hasChoices() { return this.choices.focusTopics().length > 0; }
 
@@ -261,7 +265,9 @@ export class WizardSummaryStepComponent implements OnInit {
   }
   runPreview() {
     const student = this.staffStudentId ?? undefined;
-    this.previewing.set(true); this.previewError.set(''); this.notChosen.set([]); this.preview.set(null); this.publishIssue.set(null); this.created.set(null);
+    this.pruneTopics();
+    // Re-review (3): a plan created before a failed publish is kept, so "Yeniden yayımla" still publishes it (no second create).
+    this.previewing.set(true); this.previewError.set(''); this.notChosen.set([]); this.preview.set(null); this.publishIssue.set(null);
     this.engine.options(student).pipe(takeUntilDestroyed(this.destroy), switchMap(options => { this.options.set(options); return this.engine.preview(this.request(options), student); }),
       finalize(() => this.previewing.set(false))).subscribe({
       next: preview => { this.preview.set(preview); this.focus(() => this.previewTitle); },
@@ -284,6 +290,20 @@ export class WizardSummaryStepComponent implements OnInit {
         next: draft => { this.applyPage(draft); this.draftSaved.emit(draft.slots.length > 0); this.runPreview(); },
         error: e => { if (e?.status === 409) this.draftChanged(); else this.previewError.set(e?.error?.message ?? 'Haftalık düzen kaydedilemedi. Yeniden deneyebilirsin.'); }
       });
+  }
+
+  /**
+   * Re-review F1: the server refuses topics of a lesson that is not in the weekly draft (for example after "Haftanı baştan öner"),
+   * so those topics are dropped before the preview and the student is told which lesson they belonged to.
+   */
+  private pruneTopics() {
+    const lessons = new Set(this.slots().map(x => x.lessonId.toLowerCase()));
+    const gone = this.choices.focusTopics().filter(x => x.lessonId && !lessons.has(x.lessonId.toLowerCase()));
+    if (!gone.length) return;
+    this.choices.focusTopics.update(list => list.filter(x => !gone.includes(x)));
+    const names = [...new Set(gone.map(x => x.lessonName))];
+    const lessonText = names.length > 1 ? `${names.slice(0, -1).join(', ')} ve ${names.at(-1)} dersleri` : `${names[0]} dersi`;
+    this.droppedTopics.set(`${lessonText} ${this.staffStudentId ? 'öğrencinin haftalık düzeninden' : 'haftalık düzeninden'} çıktığı için ${gone.length} konu öne alınanlardan kaldırıldı.`);
   }
 
   lessons() { return this.preview()?.schedule.lessons ?? []; }
@@ -332,7 +352,9 @@ export class WizardSummaryStepComponent implements OnInit {
   addTopic(topic: StudyTopic) {
     if (this.chosen(topic.id) || this.choices.focusTopics().length >= MAX_FOCUS_TOPICS) return;
     const lesson = this.lessons().find(x => x.lessonId === this.choices.pickerLesson());
-    this.choices.focusTopics.update(list => [...list, { topicId: topic.id, topicName: topic.name, lessonName: lesson?.lessonName ?? topic.lessonName }]);
+    this.choices.focusTopics.update(list => [...list, { topicId: topic.id, topicName: topic.name, lessonName: lesson?.lessonName ?? topic.lessonName,
+      lessonId: lesson?.lessonId ?? topic.lessonId ?? this.choices.pickerLesson() }]);
+    this.droppedTopics.set('');
   }
   removeTopic(topicId: string) { this.choices.focusTopics.update(list => list.filter(x => x.topicId !== topicId)); }
   readonly maxTopics = MAX_FOCUS_TOPICS;
@@ -384,8 +406,25 @@ export class WizardSummaryStepComponent implements OnInit {
         this.toaster.success('Planın yayımlandı. Bugünden sonraki çalışmaların yeni planına göre.');
         void this.router.navigate(['/coaching-portal/plan'], { queryParams: { plan: plan.id } });
       },
-      error: e => this.publishIssue.set({
-        message: `Planın taslak olarak kaydedildi ama yayımlanamadı. ${typeof e?.error?.message === 'string' ? e.error.message : 'Yeniden yayımlamayı deneyebilirsin.'}` })
+      error: e => {
+        if (e?.status === 409) { this.reloadCreated(plan.id); return; }
+        this.publishIssue.set({ message: `Planın taslak olarak kaydedildi ama yayımlanamadı. ${typeof e?.error?.message === 'string' ? e.error.message : 'Yeniden yayımlamayı deneyebilirsin.'}` });
+      }
+    });
+  }
+  /**
+   * Re-review (3): a publish conflict means the saved draft changed (its version); it is read again, so "Yeniden yayımla" sends the
+   * current version. A draft that is already active counts as published.
+   */
+  private reloadCreated(id: string) {
+    this.publishing.set(true);
+    this.planning.get(id).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.publishing.set(false))).subscribe({
+      next: plan => {
+        if (plan.status === 'Active') { this.choices.focusTopics.set([]); void this.router.navigate(['/coaching-portal/plan'], { queryParams: { plan: id } }); return; }
+        this.created.set({ id, version: plan.version });
+        this.publishIssue.set({ message: 'Kaydedilen plan taslağın başka bir yerde değişti; güncel hâlini yükledim. Yeniden yayımlayabilirsin.' });
+      },
+      error: () => this.publishIssue.set({ stale: true, message: 'Kaydedilen plan taslağın okunamadı. Planım\'dan kontrol edebilirsin.' })
     });
   }
 

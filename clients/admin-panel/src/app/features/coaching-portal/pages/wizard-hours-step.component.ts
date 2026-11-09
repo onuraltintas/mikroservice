@@ -76,7 +76,8 @@ export class WizardHoursStepComponent implements OnInit {
   ngOnInit() {
     const routine = this.routine, windows = this.availability?.windows ?? [];
     // Review of PR 135 (S7): a routine the student overrode by hand is background only; her saved hours are what counts.
-    if (this.staffStudentId) { this.mode.set(routine?.availabilityMatches ? 'summary' : windows.length ? 'availability' : routine ? 'summary' : 'staff-questions'); return; }
+    // Re-review (4): an overridden routine without saved hours shows the empty saved hours, not the routine's windows.
+    if (this.staffStudentId) { this.mode.set(routine?.availabilityMatches ? 'summary' : windows.length || routine ? 'availability' : 'staff-questions'); return; }
     if (routine) this.answers.set({ ...defaultRoutineAnswers(this.yks), ...routine.answers, busyDays: [...(routine.answers.busyDays ?? [])] });
     else this.answers.set(defaultRoutineAnswers(this.yks));
     if (this.startWithQuestions) { this.openedFrom = null; this.mode.set('questions'); return; }

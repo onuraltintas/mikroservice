@@ -18,6 +18,7 @@
       <section class="availability-summary" data-testid="wizard-availability" aria-labelledby="wizard-availability-title">
         <h3 id="wizard-availability-title">{{ staffStudentId ? 'Öğrencinin çalışma saatleri' : 'Kayıtlı çalışma saatlerin' }}</h3>
         <ul>@for (line of availabilityLines(); track line.day) { <li>{{ line.day }}: {{ line.text }}</li> }</ul>
+        @if (staffStudentId && !availabilityLines().length) { <p class="muted" data-testid="no-saved-hours">Öğrencinin kayıtlı boş saati yok.</p> }
         @if (!staffStudentId) { <p class="muted">İstersen birkaç soruyu cevaplayarak saatlerini yeniden belirleyebilirsin; okul, yemek ve kurs saatlerin hesaba katılır.</p> }
         @if (staffStudentId && routine) {
           <details data-testid="routine-background"><summary>Öğrencinin günlük düzen cevapları</summary>

@@ -104,38 +104,43 @@
           <ul>@for (issue of p.issues; track $index) { <li><strong>{{ issue.lessonName }}</strong> — {{ issue.message }}</li> }</ul></div>
       }
 
-      <section class="focus-topics" aria-labelledby="focus-topics-title" data-testid="focus-topics">
-        <h4 id="focus-topics-title">Şu konuları öne al</h4>
-        <p class="muted">{{ staffStudentId ? 'Seçtiğin konular kendi dersinde önce planlanır.' : 'Seçtiğin konular kendi dersinde önce planlanır; örneğin okulda işlenen ya da sınavda zorlandığın konular.' }} En çok {{ maxTopics }} konu.</p>
-        @if (choices.focusTopics().length) {
-          <ul class="chosen-topics" aria-label="Öne alınacak konular">
-            @for (topic of choices.focusTopics(); track topic.topicId) {
-              <li>{{ topic.lessonName }} · {{ topic.topicName }} <button type="button" class="secondary small" (click)="removeTopic(topic.topicId)" [attr.aria-label]="topic.topicName + ' konusunu kaldır'">Kaldır</button></li>
-            }
+    </section>
+  }
+
+  <!-- Re-review F1: the chosen topics (with Kaldır) stay visible even when no preview could be made. -->
+  @if (droppedTopics()) { <p class="notice" role="status" data-testid="dropped-topics">{{ droppedTopics() }}</p> }
+  @if (preview() || choices.focusTopics().length) {
+    <section class="focus-topics" aria-labelledby="focus-topics-title" data-testid="focus-topics">
+      <h4 id="focus-topics-title">Şu konuları öne al</h4>
+      <p class="muted">{{ staffStudentId ? 'Seçtiğin konular kendi dersinde önce planlanır.' : 'Seçtiğin konular kendi dersinde önce planlanır; örneğin okulda işlenen ya da sınavda zorlandığın konular.' }} En çok {{ maxTopics }} konu.</p>
+      @if (choices.focusTopics().length) {
+        <ul class="chosen-topics" aria-label="Öne alınacak konular">
+          @for (topic of choices.focusTopics(); track topic.topicId) {
+            <li>{{ topic.lessonName }} · {{ topic.topicName }} <button type="button" class="secondary small" (click)="removeTopic(topic.topicId)" [attr.aria-label]="topic.topicName + ' konusunu kaldır'">Kaldır</button></li>
+          }
+        </ul>
+      }
+      @if (preview() && !choices.pickerOpen()) { <button type="button" class="secondary" (click)="openPicker()" [disabled]="busy()">Konu seç</button>
+      } @else if (preview()) {
+        <div class="topic-picker">
+          <label for="focus-lesson">Ders</label>
+          <select id="focus-lesson" [ngModel]="choices.pickerLesson()" (ngModelChange)="chooseLesson($event)">
+            @for (lesson of lessons(); track lesson.lessonId) { <option [value]="lesson.lessonId">{{ lesson.lessonName }}</option> }
+          </select>
+          <label for="focus-search">Konu ara</label>
+          <input id="focus-search" type="search" [ngModel]="choices.pickerSearch()" (ngModelChange)="choices.pickerSearch.set($event)" autocomplete="off" aria-describedby="focus-count" />
+          @if (pickerError()) { <p class="notice error" role="alert">{{ pickerError() }} <button type="button" class="secondary" (click)="retryTopics()">Yeniden dene</button></p> }
+          <p id="focus-count" class="muted" role="status">{{ pickerLoading() ? 'Konular yükleniyor…' : filteredTopics().length + ' konu' }}</p>
+          <ul class="topic-list" aria-label="Konular">
+            @for (topic of filteredTopics(); track topic.id) {
+              <li><span>{{ topic.name }} <small>{{ topic.unitName }}</small></span>
+                <button type="button" class="secondary small" (click)="addTopic(topic)" [disabled]="chosen(topic.id) || choices.focusTopics().length >= maxTopics" [attr.aria-label]="topic.name + ' konusunu öne al'">{{ chosen(topic.id) ? 'Seçildi' : 'Öne al' }}</button></li>
+            } @empty { @if (!pickerLoading()) { <li class="muted">Bu aramaya uyan konu yok.</li> } }
           </ul>
-        }
-        @if (!choices.pickerOpen()) { <button type="button" class="secondary" (click)="openPicker()" [disabled]="busy()">Konu seç</button> }
-        @else {
-          <div class="topic-picker">
-            <label for="focus-lesson">Ders</label>
-            <select id="focus-lesson" [ngModel]="choices.pickerLesson()" (ngModelChange)="chooseLesson($event)">
-              @for (lesson of lessons(); track lesson.lessonId) { <option [value]="lesson.lessonId">{{ lesson.lessonName }}</option> }
-            </select>
-            <label for="focus-search">Konu ara</label>
-            <input id="focus-search" type="search" [ngModel]="choices.pickerSearch()" (ngModelChange)="choices.pickerSearch.set($event)" autocomplete="off" aria-describedby="focus-count" />
-            @if (pickerError()) { <p class="notice error" role="alert">{{ pickerError() }} <button type="button" class="secondary" (click)="retryTopics()">Yeniden dene</button></p> }
-            <p id="focus-count" class="muted" role="status">{{ pickerLoading() ? 'Konular yükleniyor…' : filteredTopics().length + ' konu' }}</p>
-            <ul class="topic-list" aria-label="Konular">
-              @for (topic of filteredTopics(); track topic.id) {
-                <li><span>{{ topic.name }} <small>{{ topic.unitName }}</small></span>
-                  <button type="button" class="secondary small" (click)="addTopic(topic)" [disabled]="chosen(topic.id) || choices.focusTopics().length >= maxTopics" [attr.aria-label]="topic.name + ' konusunu öne al'">{{ chosen(topic.id) ? 'Seçildi' : 'Öne al' }}</button></li>
-              } @empty { @if (!pickerLoading()) { <li class="muted">Bu aramaya uyan konu yok.</li> } }
-            </ul>
-            @if (choices.focusTopics().length >= maxTopics) { <p class="muted" role="status">En çok {{ maxTopics }} konu seçebilirsin.</p> }
-          </div>
-        }
-        @if (topicsChanged()) { <button type="button" data-testid="focus-preview" (click)="runPreview()" [disabled]="busy()">Bu konularla yeniden hesapla</button> }
-      </section>
+          @if (choices.focusTopics().length >= maxTopics) { <p class="muted" role="status">En çok {{ maxTopics }} konu seçebilirsin.</p> }
+        </div>
+      }
+      @if (topicsChanged() && slots().length) { <button type="button" data-testid="focus-preview" (click)="runPreview()" [disabled]="busy()">Bu konularla yeniden hesapla</button> }
     </section>
   }
 

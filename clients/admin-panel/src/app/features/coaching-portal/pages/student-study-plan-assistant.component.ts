@@ -103,6 +103,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   readonly hoursWithQuestions = signal(false);
   /** "Saat ekle" returns to the summary once the hours are saved (or with Geri). */
   readonly returnToSummary = signal(false);
+  /** Re-review (2): "Saat ekle" put the hours step into a flow that had none; it leaves again with the detour. */
+  private hoursAdded = false;
   private editing = false;
   /** A teacher's quick answers for a student without study times (sent as windows, never saved). */
   readonly staffWindows = signal<WeeklyProposalWindow[] | null>(null);
@@ -229,13 +231,18 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
 
   /** "Planında neyi değiştirmek istiyorsun?": each choice opens its own steps with the current values, then the summary. */
   edit(choice: 'hours' | 'courses' | 'tempo' | 'all') {
-    this.editing = choice !== 'all'; this.returnToSummary.set(false);
+    this.editing = choice !== 'all'; this.endHoursDetour();
     if (choice === 'all') { this.flow.set(this.fullFlow()); this.hoursWithQuestions.set(false); this.go('hours'); return; }
     if (choice === 'hours') { this.flow.set(['hours', 'summary']); this.hoursWithQuestions.set(!!this.routine()); this.go('hours'); return; }
     if (choice === 'courses') { this.flow.set(['courses', 'summary']); this.go('courses'); return; }
     this.flow.set([...(this.isYks() ? ['focus' as const] : []), 'tempo', 'summary']); this.go(this.isYks() ? 'focus' : 'tempo');
   }
-  private toMenu() { this.editing = false; this.returnToSummary.set(false); this.hoursWithQuestions.set(false); this.step.set('menu'); this.focusTitle(); }
+  private toMenu() { this.editing = false; this.endHoursDetour(); this.hoursWithQuestions.set(false); this.step.set('menu'); this.focusTitle(); }
+  /** The "Saat ekle" detour ends: no return flag, and the hours step leaves a flow it was only added to. */
+  private endHoursDetour() {
+    this.returnToSummary.set(false);
+    if (this.hoursAdded) { this.hoursAdded = false; this.flow.update(flow => flow.filter(x => x !== 'hours')); }
+  }
 
   stepIndex() { const step = this.currentStep(); return step ? this.visibleFlow().indexOf(step) : -1; }
   progressText() { const at = this.stepIndex(); return at >= 0 ? `Adım ${at + 1} / ${this.visibleFlow().length}` : ''; }
@@ -254,14 +261,14 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   private focusTitle() { afterNextRender(() => this.stepTitle?.nativeElement.focus(), { injector: this.injector }); }
   next() {
     const step = this.currentStep(); if (!step) return;
-    if (step === 'hours' && this.returnToSummary()) { this.returnToSummary.set(false); this.hoursWithQuestions.set(false); this.go('summary'); return; }
+    if (step === 'hours' && this.returnToSummary()) { this.endHoursDetour(); this.hoursWithQuestions.set(false); this.go('summary'); return; }
     const flow = this.flow(), at = flow.indexOf(step);
     if (at >= 0 && at < flow.length - 1) this.go(flow[at + 1]);
   }
   previous() {
     const step = this.currentStep(); if (!step) return;
     // S3: "Saat ekle" can be left with Geri, straight back to the summary.
-    if (step === 'hours' && this.returnToSummary()) { this.returnToSummary.set(false); this.hoursWithQuestions.set(false); this.go('summary', -1); return; }
+    if (step === 'hours' && this.returnToSummary()) { this.endHoursDetour(); this.hoursWithQuestions.set(false); this.go('summary', -1); return; }
     const flow = this.visibleFlow(), at = flow.indexOf(step);
     if (at > 0) { this.go(flow[at - 1], -1); return; }
     if (this.editing && !this.staffStudentId) this.toMenu();
@@ -281,6 +288,9 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   coursesSaved(view: LearningSetupView) { this.applyLearning(view); this.tempoOptions.set(null); }
 
   toRoutineFocus() { return TO_ROUTINE_FOCUS[this.examFocus()]; }
+  /** Re-review (5): only what the student confirmed (or saved before) goes with a routine save; null keeps the saved value. */
+  confirmedFocus() { return this.isYks() ? this.stored.examFocus : null; }
+  confirmedTempo() { return this.stored.tempo; }
   // --- Step 3 (YKS) ---------------------------------------------------------------------------------------------------------
   setExamFocus(value: WeeklyExamFocus) { if (this.examFocus() !== value) { this.examFocus.set(value); this.tempoOptions.set(null); } }
   /** S6: the confirmed choice is kept in the plan preferences (never through the routine, so the free hours stay as they are). */
@@ -365,7 +375,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   // --- Step 5 ---------------------------------------------------------------------------------------------------------------
   /** "Saat ekle": step 1's change, then straight back to the summary (Geri returns there too). */
   addHours() {
-    if (!this.flow().includes('hours')) this.flow.update(flow => ['hours', ...flow]);
+    if (!this.flow().includes('hours')) { this.hoursAdded = true; this.flow.update(flow => ['hours', ...flow]); }
     this.returnToSummary.set(true); this.hoursWithQuestions.set(!this.staffStudentId); this.go('hours');
   }
   /** S1: the summary saved (or reloaded) the weekly draft; the next tempo options follow its mode. */
@@ -375,7 +385,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
 
   /** Unsaved answers, course choices or chosen topics are not dropped without asking. */
   async canLeavePage() {
-    if (this.savingPreferences() || (this.hoursStep?.busy() ?? false) || (this.coursesStep?.busy() ?? false) || (this.summaryStep?.busy() ?? false)) return false;
+    // Re-review (7): only a write keeps the student here; the summary's reads are dropped when it goes away.
+    if (this.savingPreferences() || (this.hoursStep?.busy() ?? false) || (this.coursesStep?.busy() ?? false) || (this.summaryStep?.writing() ?? false)) return false;
     const unsaved = (this.hoursStep?.dirty() ?? false) || (this.coursesStep?.dirty() ?? false) || this.summaryChoices.focusTopics().length > 0;
     return !unsaved || await this.toaster.confirm('Sihirbazda kaydetmediğin seçimler var. Çıkarsan kaybolur. Çıkmak istiyor musun?', { confirmText: 'Çık', cancelText: 'Vazgeç' });
   }
