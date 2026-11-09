@@ -73,6 +73,17 @@ test('a first lesson on Sunday stays horizontally visible in a narrow week',asyn
   const f=await fixture(context),tasks=f.getAnnual().tasks;f.getAnnual().tasks=[...tasks.slice(0,2).map(t=>({...t,plannedDate:'2027-01-10'})),{...tasks[0],id:'done',plannedDate:'2027-01-04',plannedStartMinute:480,isCompleted:true,actualMinutes:25,actualQuestions:0,completedAt:'2026-10-16T10:00:00Z'}];await open(page);
   await expect(calendar(page).locator('.day-track[data-date="2027-01-10"] .timed-block').first()).toBeInViewport({ratio:.95});expect(f.writes).toHaveLength(0);
 });
+// Paket H5: when today is among the shown days and has a study, the calendar ends on today's first study (after the usual focus).
+test('opens on today\'s first study when today is in the shown week',async({context,page})=>{
+  await page.clock.setFixedTime(new Date('2027-01-06T05:00:00Z'));
+  const f=await fixture(context,'Active'),tasks=f.getAnnual().tasks;
+  f.getAnnual().tasks=[{...tasks[0],id:'today',plannedDate:'2027-01-06',plannedStartMinute:600,plannedMinutes:30,isCompleted:true,actualMinutes:30,actualQuestions:0,completedAt:'2027-01-06T07:30:00Z'},{...tasks[0],id:'later',plannedDate:'2027-01-08',plannedStartMinute:1200,plannedMinutes:30}];
+  await open(page);const grid=calendar(page);
+  // On the phone the day view shows the next open work, so today is not shown and the usual focus stays.
+  const mobile=test.info().project.name==='mobile',start=mobile?1200:600;
+  await expect.poll(()=>grid.getByTestId('plan-time-scroller').evaluate((el,top)=>Math.abs(el.scrollTop-Math.min(top,el.scrollHeight-el.clientHeight)),(start-30)*pixelsPerMinute)).toBeLessThanOrEqual(1);
+  await expect(grid.locator(`.day-track[data-date="${mobile?'2027-01-08':'2027-01-06'}"] .timed-block`).first()).toBeInViewport({ratio:.95});expect(f.writes).toHaveLength(0);
+});
 test('calendar details reuse completion and rescheduling endpoints and preserve other unsaved inputs',async({context,page})=>{
   const f=await fixture(context,'Active');await open(page);await calendar(page).locator('.timed-block').filter({hasText:'Matematik'}).first().click();await expect(selectedRows(page)).toHaveCount(2);
   // The sheet shows one task at a time, so the unsaved inputs of Konu b must survive closing its sheet and completing Konu a.

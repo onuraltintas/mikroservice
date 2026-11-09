@@ -51,7 +51,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
     if(!changes['plan'])return;
     this.colors=lessonColors(this.plan.tasks);this.blocks=calendarBlocks(this.plan.tasks);this.byDate=new Map();
     for(const block of this.blocks){const list=this.byDate.get(block.date)??[];list.push(block);this.byDate.set(block.date,list);}
-    if(this.currentId!==this.plan.id){this.currentId=this.plan.id;this.focusPage=true;this.openOnToday();}
+    if(this.currentId!==this.plan.id){this.currentId=this.plan.id;this.focusPage=true;this.lastScrollTop=null;this.initialScroll=true;this.focusWork();}
   }
   rows(day:Date){return this.byDate.get(dateKey(day))??[];}
   timed(day:Date){return this.rows(day).filter(b=>b.startMinute!==null);}
@@ -66,14 +66,19 @@ export class StudyPlanCalendarComponent implements OnChanges {
   today(){this.goToDate(calendarToday(this.zone));}
   focusWork(){this.goToDate(calendarFocusDate(this.blocks,calendarToday(this.zone)));}
   /**
-   * Paket H5: a day or week view opens on today when today's day or week has work, and scrolls to the first work of today (or of
-   * the visible days when today has none). Otherwise it opens on the nearest work, as before. Only this first scroll is animated,
-   * and not when reduced motion is asked for.
+   * Paket H5: on opening, after the usual focus (nearest open work, its earliest hour, its day in view) has run, and only when today
+   * is among the shown days and has a timed study, one more scroll brings today's first study into view. It is smooth unless
+   * reduced motion is asked for, and it starts last, so it never races the usual focus (PC run 09.11.2026).
    */
-  private openOnToday(){
-    this.initialScroll=true;this.lastScrollTop=null;const today=calendarToday(this.zone);
-    if(this.view()!=='month'&&calendarDays(calendarDate(today),this.view()).some(day=>this.byDate.has(dateKey(day))))this.goToDate(today);
-    else this.focusWork();
+  private scrollToToday(){
+    const scroller=this.scrollerElement;if(!scroller||this.view()==='month')return;
+    const today=calendarToday(this.zone),day=this.days().find(d=>dateKey(d)===today);if(!day)return;
+    const starts=this.timed(day).map(b=>b.startMinute!);if(!starts.length)return;
+    const top=Math.max(0,Math.min(...starts)-30)*this.pixelsPerMinute,column=scroller.querySelector<HTMLElement>(`[data-date="${today}"]`);
+    const left=column?Math.max(0,scroller.scrollLeft+column.getBoundingClientRect().left-scroller.getBoundingClientRect().left-44):scroller.scrollLeft;
+    if(top===scroller.scrollTop&&left===scroller.scrollLeft)return;
+    if(this.smoothScroll()&&typeof scroller.scrollTo==='function')scroller.scrollTo({top,left,behavior:'smooth'});
+    else{scroller.scrollTop=top;scroller.scrollLeft=left;}
   }
   private smoothScroll(){return typeof window!=='undefined'&&typeof window.matchMedia==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
   /** Paket H5: where each card's work came from (usually one badge). */
@@ -184,17 +189,18 @@ export class StudyPlanCalendarComponent implements OnChanges {
   @HostListener('document:keydown.escape') escapeMove(){this.cancelMove();this.closeMenu(true);this.moveForm=null;this.moveError.set('');}
   showDay(){this.taskSelected.emit(this.rows(this.anchor()).flatMap(b=>b.tasks.map(t=>t.id)));}
   private focusHours(){afterNextRender(()=>{
-    const smooth=this.initialScroll&&this.smoothScroll();this.initialScroll=false;
+    const initial=this.initialScroll;this.initialScroll=false;
     const anchorStarts=this.timed(this.anchor()).map(b=>b.startMinute!);
     const starts=anchorStarts.length?anchorStarts:this.days().flatMap(d=>this.timed(d).map(b=>b.startMinute!));
     const top=starts.length?Math.max(0,Math.min(...starts)-30)*this.pixelsPerMinute:480*this.pixelsPerMinute;
-    if(this.scrollerElement){if(smooth&&typeof this.scrollerElement.scrollTo==='function')this.scrollerElement.scrollTo({top,behavior:'smooth'});else this.scrollerElement.scrollTop=top;}
+    if(this.scrollerElement)this.scrollerElement.scrollTop=top;
     for(const element of this.host.nativeElement.querySelectorAll<HTMLElement>('.time-scroller,.untimed-wrap')){
       const timed=element.classList.contains('time-scroller'),dates=this.days().filter(d=>(timed?this.timed(d):this.untimed(d)).length);
       const day=dates.find(d=>dateKey(d)===dateKey(this.anchor()))??dates[0];
       const column=day?element.querySelector<HTMLElement>(`[data-date="${dateKey(day)}"]`):null;
       if(column)element.scrollLeft=Math.max(0,element.scrollLeft+column.getBoundingClientRect().left-element.getBoundingClientRect().left-44);
     }
-    if(this.focusPage){this.focusPage=false;this.host.nativeElement.scrollIntoView?.({block:'start',behavior:smooth?'smooth':'auto'});}
+    if(this.focusPage){this.focusPage=false;this.host.nativeElement.scrollIntoView?.({block:'start'});}
+    if(initial)this.scrollToToday();
   },{injector:this.injector});}
 }
