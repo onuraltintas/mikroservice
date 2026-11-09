@@ -1076,7 +1076,7 @@
     "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyLessonsNotChosen.cs": "fa5f60d79def2a407ee3fea9e9cfb5a0c833c5d06fd634066421c5f147fa1cf3",
     "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyOutcomeScheduler.cs": "d78afee6a76b0132810db90b899cf15b2e1c149e9acc1c710f1285be1a6b0eb5",
     "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyPlanEngine.cs": "44b959986254ec6787af2badbaeb5899c0765498e45b8ae96dcfaae375c7e39c",
-    "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyProposalEngine.cs": "530f7e4b7e890b357e686780cca1aa8f8c28bee14768bd6c6f6c72763c376611",
+    "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyProposalEngine.cs": "8c0ac472ef0204c4caea51a9ccd3a6e73a7ac60c38440db12809b6a59a8b45a2",
     "services/coaching-service/Coaching.Application/StudyPlanning/WeeklyReviewModels.cs": "7972b1d26d25491081be53db2c7abef11a338ad9b77ae1b3ef1961afdd278d4c",
     "services/coaching-service/Coaching.Application/Subscriptions/CoachingInstitutionSubscriptionContracts.cs": "91b45a54e4bc7535aba9f50956ea5d0117db40f08900f3d6645302b66027be16",
     "services/coaching-service/Coaching.Application/Subscriptions/CoachingManagementRules.cs": "7acb3381ff6fbe15b562e515c73c0f8ff3938f9f851a52c4730f9ec6a36e768f",
@@ -2721,7 +2721,7 @@
   "baselineCommit": "07db9772",
   "snapshotContext": {
     "updatedAt": "2026-10-26",
-    "purpose": "merging the final H4a head into H4b",
+    "purpose": "the weekly proposal's difficulty weight",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2769,7 +2769,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "b56c4eb2",
+    "previousBaselineCommit": "68060584",
     "removedSincePreviousBaseline": []
   }
 }
