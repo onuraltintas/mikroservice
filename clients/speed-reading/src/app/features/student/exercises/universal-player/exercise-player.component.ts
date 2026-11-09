@@ -2044,6 +2044,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
     if (this.isPauseTransitionPending) return;
+    if (this.hasEngineFinished()) return;
     if (this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer()) return;
     if (this.engine?.engineType === 'target_hunt' && (this.engine as TargetHuntEngine).isAwaitingServer()) return;
     if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'target_hunt' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
@@ -2129,13 +2130,22 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.startSession();
   }
 
+  /**
+   * The engine already ended the attempt (it may be saving its result) while the player's copy of its state can still
+   * show it running. Pausing or resuming a finished session on the server failed with HTTP 500.
+   */
+  private hasEngineFinished(): boolean {
+    return this.engine?.state?.isCompleted === true && this.exercisePhase !== 'questions';
+  }
+
   async goBack(): Promise<void> {
+    const finished = this.engineState.isCompleted || this.hasEngineFinished();
     const hasIncompleteSession = !!this.sessionId
       && this.sessionId !== 'preview-mode'
       && !this.isPreviewSession()
-      && !this.engineState.isCompleted;
+      && !finished;
     if (this.isDiscardingSession) return;
-    if ((this.engineState.isRunning && !this.engineState.isCompleted) || hasIncompleteSession) {
+    if ((this.engineState.isRunning && !finished) || hasIncompleteSession) {
       if (this.isPauseTransitionPending) return;
       if (this.engineState.isRunning && !this.engineState.isPaused) {
         if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') {
@@ -4235,6 +4245,45 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return Array.from(targets);
     }
     return [];
+  }
+
+  private get asScanFind(): ScanFindEngine | null {
+    return this.engine?.engineType === 'scan_find' ? this.engine as ScanFindEngine : null;
+  }
+
+  /** The sentence above the text; the targets of the round follow it as chips. */
+  getScanInstruction(): string {
+    const scan = this.asScanFind;
+    if (scan?.hasTaskPrompts()) return 'Aşağıdaki metinde soruların cevabını bul ve cevaba dokun:';
+    return scan?.isFindAny()
+      ? 'Aşağıdaki metinde bu kelimelerden birini bul ve üzerine dokun:'
+      : 'Aşağıdaki metinde şu kelimeleri bul ve üzerine dokun:';
+  }
+
+  getScanInstructionHint(): string {
+    const scan = this.asScanFind;
+    if (!scan) return '';
+    const round = scan.getRoundInfo();
+    return [
+      round.total > 1 ? `Tur ${round.current} / ${round.total}.` : '',
+      scan.isFindAny() ? 'Süre bitmeden birini bul.' : 'Süre bitmeden hepsini bul.',
+      'Yanlış dokunuş puanı düşürür.'
+    ].filter(Boolean).join(' ');
+  }
+
+  /** The start card: what the student will see and do, the number of targets and the time limit. */
+  getScanReadyDescription(): string {
+    const scan = this.asScanFind;
+    if (!scan) return '';
+    const task = scan.hasTaskPrompts()
+      ? 'Başladığında bir metin ve sorular görünecek. Her sorunun cevabı metinde bir kelime. Metni baştan sona okumadan gözlerinle tara, soruların cevabını bul ve cevaba dokun.'
+      : `Başladığında bir metin ve aranacak kelimeler görünecek. Metni baştan sona okumadan gözlerinle tara, ${
+        scan.isFindAny() ? 'kelimelerden birini' : 'kelimeleri'} bul ve üzerine dokun.`;
+    const limit = scan.getTimeLimitSeconds();
+    const amount = scan.isFindAny() ? 'Her turda bir hedef bulman yeterli' : `Toplam ${scan.state.totalSteps} hedef var`;
+    const time = limit > 0 && limit < 3600 ? `, süre ${limit} saniye.` : '.';
+    return `${task} ${amount}${time} Yanlış dokunuş puanı düşürür. Hedefleri bulduğunda egzersiz kendiliğinden biter; `
+      + 'süre dolarsa bulduklarına göre puan alırsın.';
   }
 
   getScanTargetLabel(target: string): string {

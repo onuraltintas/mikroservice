@@ -55,6 +55,9 @@
                     Süre dolarsa sorulara geçilir; çalışma eksik sayılır ve kayıtlı oturumda program/ödev ilerlemesi verilmez.
                     Soruları cevaplama süresi inceleme sınırına dahil değildir. Okuma hızı ölçülmez.
                 </p>
+                <p class="description scan-find-ready" *ngIf="engine.engineType === 'scan_find'">
+                    {{ getScanReadyDescription() }}
+                </p>
                 <ng-container *ngIf="engine.engineType === 'target_hunt' && asTargetHunt as hunt">
                     <p class="description">
                         Ekranda satır satır harfler var. Süre bitmeden her
@@ -730,14 +733,14 @@
             </button>
         </div>
 
-        <!-- Target Words Panel - Show words to find -->
-        <div class="scan-targets-panel">
-            <div class="targets-header">
-                <span class="material-icons">search</span>
-                <span>Metinde bu hedefleri bul:</span>
-            </div>
-            <div class="targets-list">
-                <span *ngFor="let target of getScanTargets()" class="target-word"
+        <!-- Instruction above the text: what to do, the targets of this round, the time and the round -->
+        <section class="scan-targets-panel" aria-labelledby="scan-instruction-title">
+            <h2 class="targets-header" id="scan-instruction-title">
+                <span class="material-icons" aria-hidden="true">search</span>
+                <span>{{ getScanInstruction() }}</span>
+            </h2>
+            <ul class="targets-list" aria-label="Aranan hedefler">
+                <li *ngFor="let target of getScanTargets()" class="target-word"
                     [class.found]="isScanTargetFound(target)">
                     <span class="target-label">{{ getScanTargetLabel(target) }}</span>
                     <svg *ngIf="isScanTargetFound(target)" class="found-icon" viewBox="0 0 24 24"
@@ -745,9 +748,10 @@
                         <path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="3"
                             stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                </span>
-            </div>
-        </div>
+                </li>
+            </ul>
+            <p class="scan-instruction-hint">{{ getScanInstructionHint() }}</p>
+        </section>
 
         <div class="scan-text-area" [style.font-size.px]="getScanFontSize()" [class.paused]="engineState.isPaused">
             <span *ngFor="let word of getScanWords(); let i = index; trackBy: trackByIdx" (click)="onScanWordClick(i)"

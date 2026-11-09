@@ -259,6 +259,25 @@ export class ScanFindEngine implements BaseEngine {
             ? this.targetLabels[target] : target;
     }
 
+    /** True when any one target finishes the round; otherwise every target must be found. */
+    isFindAny(): boolean {
+        return this.config.targets?.mode === 'find_any';
+    }
+
+    /** True when the targets are shown as questions whose answer is a word in the text. */
+    hasTaskPrompts(): boolean {
+        return this.targetWords.some(target => this.getTargetLabel(target) !== target);
+    }
+
+    getRoundInfo(): { current: number; total: number } {
+        const total = Math.max(1, this.config.scanningRounds?.length || 1);
+        return { current: Math.min(total, this.currentRoundIndex + 1), total };
+    }
+
+    getTimeLimitSeconds(): number {
+        return this.config.timeLimitSeconds ?? 0;
+    }
+
     getFontSizePx(): number {
         const sizes: Record<string, number> = { small: 16, medium: 20, large: 28, xlarge: 36 };
         const value = String(this.config.visuals?.fontSize ?? 'medium');
