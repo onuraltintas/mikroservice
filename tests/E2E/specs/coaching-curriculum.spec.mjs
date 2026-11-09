@@ -14,7 +14,8 @@ async function catalog(context){
   const writes=[]; let conflict=false;
   const document=n=>{
     const parent=nodes.find(x=>x.id===n.parentId); const path=parent?document(parent).path+' / '+n.name:n.name;
-    return {...n,path,mappings:n.kind==='outcomes'&&parent?[{topicId:parent.id,path:document(parent).path,isApproved:n.id==='outcome',evidence:'Konu kapsamını inceleyin.'}]:[]};
+    const examDate=n.kind==='exams'&&n.sessions?.length?n.sessions.map(x=>x.date).sort()[0]:null;
+    return {...n,path,...(n.kind==='exams'?{examDate}:{}),mappings:n.kind==='outcomes'&&parent?[{topicId:parent.id,path:document(parent).path,isApproved:n.id==='outcome',evidence:'Konu kapsamını inceleyin.'}]:[]};
   };
   await context.route('**/api/**',async route=>{
     const req=route.request(),url=new URL(req.url()),path=url.pathname,method=req.method(),body=method==='GET'?null:req.postDataJSON();
@@ -33,7 +34,7 @@ async function catalog(context){
       const [kind,id,action,estimateId,estimateAction]=path.slice(prefix.length).split('/');
       let n=nodes.find(x=>x.id===id&&x.kind===kind);
       if(method==='GET')return respond(document(n));
-      writes.push({kind,id,action,body});
+      writes.push({kind,id,action,body});if(body?.sessions)body.sessions=body.sessions.map((x,i)=>({...x,id:x.id??`session-${writes.length}-${i}`}));
       if(method==='POST'&&!id){const owner=nodes.find(x=>x.id===body.parentId);n=node(kind,'created-'+writes.length,body.name,body.parentId||null,owner?.kind||null,{...body,isActive:!['lessons','units','topics'].includes(kind),canDelete:true,blockers:[]});nodes.push(n);return respond(document(n));}
       if(method==='DELETE'&&!action){nodes.splice(nodes.indexOf(n),1);return respond({deleted:true});}
       if(method==='POST'&&action==='move'){
@@ -86,21 +87,27 @@ test('exam tabs support dynamic exam creation, edit, lesson attachment and autom
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
 
-test('exam date can be created, reopened, changed and cleared as an optional calendar date',async({context,page})=>{
+// KM1 (2d49ff10): an exam has dated sessions instead of a single optional exam date; the list shows the next session.
+test('exam sessions can be added, reopened, changed and removed with the next session shown in the list',async({context,page})=>{
   const f=await catalog(context);await page.goto('/dashboard/coaching/curriculum');
   await create(page,'Sınav türü','Tarihli sınav');await page.getByLabel('Sınav kodu',{exact:true}).fill('DATE');
+  await page.getByRole('button',{name:'Oturum ekle',exact:true}).click();await page.getByLabel('Oturum adı',{exact:true}).fill('2027/1');
   await page.getByLabel('Sınav tarihi',{exact:true}).fill('2027-06-20');await save(page);
-  expect(f.nodes.find(x=>x.code==='DATE').examDate).toBe('2027-06-20');
+  expect(f.nodes.find(x=>x.code==='DATE').sessions).toMatchObject([{date:'2027-06-20',label:'2027/1'}]);
   await page.getByRole('button',{name:'Kapat',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true})).toContainText('Sıradaki oturum 20.06.2027');
   await page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true}).click();
   await expect(page.getByLabel('Sınav tarihi',{exact:true})).toHaveValue('2027-06-20');
-  await page.getByLabel('Sınav tarihi',{exact:true}).fill('2027-06-27');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Sınav tarihini güncelle');
+  await page.getByLabel('Sınav tarihi',{exact:true}).fill('2027-06-27');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Oturum tarihini güncelle');
   await page.getByRole('button',{name:'Değişiklikleri kaydet',exact:true}).click();await expect(page.getByText('Kayıt kaydedildi.',{exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true})).toContainText('27.06.2027');
-  await page.getByLabel('Sınav tarihi',{exact:true}).fill('');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Tarihi daha sonra belirle');
+  const kept=f.nodes.find(x=>x.code==='DATE').sessions[0];expect(kept.date).toBe('2027-06-27');
+  expect(f.writes.at(-1).body.sessions[0].id).toBe(kept.id);
+  await expect(page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true})).toContainText('Sıradaki oturum 27.06.2027');
+  await page.getByRole('button',{name:'2027/1 oturumunu kaldır',exact:true}).click();await page.getByRole('dialog',{name:'Oturumu kaldır'}).getByRole('button',{name:'Evet, kaldır',exact:true}).click();
+  await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Oturumu daha sonra belirle');
   await page.getByRole('button',{name:'Değişiklikleri kaydet',exact:true}).click();await expect(page.getByText('Kayıt kaydedildi.',{exact:true})).toBeVisible();
-  expect(f.nodes.find(x=>x.code==='DATE').examDate).toBeNull();
-  await expect(page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true})).toContainText('Tarih belirtilmedi');
+  expect(f.nodes.find(x=>x.code==='DATE').sessions).toEqual([]);
+  await expect(page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true})).toContainText('Oturum belirtilmedi');
 });
 
 test('subtopic edit move and safe deletion keep old usage visible',async({context,page})=>{
@@ -111,7 +118,11 @@ test('subtopic edit move and safe deletion keep old usage visible',async({contex
   await page.getByText('Güvenli silme',{exact:true}).click();await expect(page.getByText('1 çalışma kaydı',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Kalıcı sil',exact:true})).toBeDisabled();
   await page.getByText('Başka konuma taşı',{exact:true}).click();await page.getByRole('button',{name:'Hedefleri ara',exact:true}).click();await page.getByLabel('Hedef konum',{exact:true}).selectOption('target-unit');
   await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Konuyu yeni üniteye taşı');await page.getByLabel('Hedefi ve geçmiş planların korunacağını kontrol ettim.',{exact:true}).check();
-  await page.getByRole('button',{name:'Seçilen konuma taşı',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'Taşıma tamamlandı.'})).toBeVisible();expect(f.nodes.find(x=>x.id==='child').isActive).toBe(false);
+  // KM7b: the move asks once more; a record used by plans is copied to the new place and the old one stays passive.
+  await page.getByRole('button',{name:'Seçilen konuma taşı',exact:true}).click();await page.getByRole('dialog',{name:'Taşıma'}).getByRole('button',{name:'Taşı',exact:true}).click();
+  await expect(page.getByRole('status').filter({hasText:'yeni konumda kopyası oluşturuldu; eski kayıt pasife alındı ve eski planlar korundu.'})).toBeVisible();
+  expect(f.writes.find(x=>x.action==='move')).toMatchObject({kind:'topics',id:'child',body:{destinationId:'target-unit',reason:'Konuyu yeni üniteye taşı'}});
+  expect(f.nodes.find(x=>x.id==='child').isActive).toBe(false);await expect(page.locator('.hierarchy-current')).toContainText('Geometri / EBOB ve EKOK');
 });
 
 test('outcome durations show simple inputs with collapsible history and preserved used duration',async({context,page})=>{

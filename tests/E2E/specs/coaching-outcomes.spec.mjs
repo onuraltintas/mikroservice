@@ -82,14 +82,17 @@ test('administrator previews a draft package and must supply an import reason', 
     if (path.includes('/catalog/lessons')) return respond({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
     return respond([]);
   });
-  await page.goto('/dashboard/coaching/catalog');
-  await page.getByText('Kazanımlar ve süre incelemesi', { exact: true }).click();
-  await page.getByText('Kazanım paketi aktar', { exact: true }).click();
-  await page.getByLabel('Paket JSON', { exact: true }).fill('{"code":"pilot"}');
-  await page.getByRole('button', { name: 'Aktarımı önizle', exact: true }).click();
-  await expect(page.getByText(/52 kazanım · 13 eşleşen konu/)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Taslakları aktar', exact: true })).toBeDisabled();
-  await page.getByLabel('İşlem gerekçesi', { exact: true }).fill('LGS pilot kontrolü');
-  await page.getByRole('button', { name: 'Taslakları aktar', exact: true }).click();
+  // KM7b (ca53dc34): outcome packages moved from the Katalog page to Müfredat Yönetimi › Aktarım ve sürümler.
+  await page.goto('/dashboard/coaching/curriculum');
+  await page.getByRole('tab', { name: 'Aktarım ve sürümler', exact: true }).click();
+  await page.getByText('Kazanım paketleri ve süre incelemesi', { exact: true }).click();
+  const outcomes = page.locator('app-coaching-outcomes');
+  await outcomes.getByText('Kazanım paketi aktar', { exact: true }).click();
+  await outcomes.getByLabel('Paket JSON', { exact: true }).fill('{"code":"pilot"}');
+  await outcomes.getByRole('button', { name: 'Aktarımı önizle', exact: true }).click();
+  await expect(outcomes.getByText(/52 kazanım · 13 eşleşen konu/)).toBeVisible();
+  await expect(outcomes.getByRole('button', { name: 'Taslakları aktar', exact: true })).toBeDisabled();
+  await outcomes.getByLabel('İşlem gerekçesi', { exact: true }).fill('LGS pilot kontrolü');
+  await outcomes.getByRole('button', { name: 'Taslakları aktar', exact: true }).click();
   await expect.poll(() => imports.length).toBe(1); expect(imports[0].fingerprint).toBe('reviewed');
 });
