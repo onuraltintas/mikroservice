@@ -55,5 +55,51 @@ describe('Scanning server pause synchronization', () => {
     expect(player.showExitConfirm).toBeFalsy();
     expect(player.navigateBack).toHaveBeenCalled();
   });
+
+  function pausablePlayer(engine: any, phase: 'reading' | 'questions' | 'completed' = 'reading'): any {
+    const player: any = Object.create(ExercisePlayerComponent.prototype);
+    player.engineState = { isRunning: true, isPaused: false, isCompleted: false };
+    player.engine = engine;
+    player.exercisePhase = phase;
+    player.sessionId = 'scan-session';
+    player.actionQueue = Promise.resolve();
+    player.cdr = { detectChanges: () => undefined };
+    player.isTachistoscopeMode = () => false;
+    player.shouldTrackReading = () => false;
+    player.isFixationMode = () => false;
+    player.isSaccadeMode = () => false;
+    player.sessionService = { pauseSession: jasmine.createSpy().and.returnValue(of({})),
+      resumeSession: jasmine.createSpy().and.returnValue(of({})) };
+    return player;
+  }
+
+  // The tap lands while scan_timeout is in flight; its answer ends the search before the pause would be sent.
+  it('does not pause the session when the search ends while the pause waits for pending actions', async () => {
+    const engine: any = { engineType: 'scan_find', state: { isRunning: true, isPaused: false, isCompleted: false },
+      pause: jasmine.createSpy('pause'), resume: jasmine.createSpy('resume') };
+    const player = pausablePlayer(engine);
+    player.actionQueue = Promise.resolve().then(() => { engine.state = { isRunning: false, isPaused: true, isCompleted: true }; });
+    await player.togglePause();
+    expect(player.sessionService.pauseSession).not.toHaveBeenCalled();
+    expect(player.isPauseTransitionPending).toBeFalse();
+  });
+
+  it('still pauses a reading whose questions are being answered', async () => {
+    const engine: any = { engineType: 'reading_comprehension', state: { isRunning: false, isPaused: false, isCompleted: true },
+      pause: jasmine.createSpy('pause'), resume: jasmine.createSpy('resume') };
+    const player = pausablePlayer(engine, 'questions');
+    player.shouldTrackReading = () => true;
+    await player.togglePause();
+    expect(player.sessionService.pauseSession).toHaveBeenCalledWith('scan-session');
+  });
+
+  it('shows the Turkish detail of a business error, not its English title', () => {
+    const player: any = Object.create(ExercisePlayerComponent.prototype);
+    expect(player.getActionValidationErrorMessage({ status: 400, error: {
+      title: 'Business Rule Violation', detail: 'Bu alıştırma artık açık değil. Lütfen yeniden başla.',
+      code: 'ExerciseSession.NotActive' } })).toBe('Bu alıştırma artık açık değil. Lütfen yeniden başla.');
+    expect(player.getActionValidationErrorMessage({ status: 500, error: { title: 'Internal Server Error' } }))
+      .toBe('Egzersiz doğrulaması alınamadı. Bağlantını kontrol edip tekrar dene.');
+  });
 });
 

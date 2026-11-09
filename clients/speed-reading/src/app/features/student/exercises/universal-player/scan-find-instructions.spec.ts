@@ -75,11 +75,45 @@ describe('scan and find instructions', () => {
     expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Süre bitmeden birini bul.');
   });
 
-  it('explains the task on the start card before the search begins', () => {
+  it('explains the task on the start card in at most two short sentences', () => {
     const element = render(words, false);
-    const text = element.querySelector('.scan-find-ready')!.textContent!;
-    expect(text).toContain('kelimeleri bul ve üzerine dokun');
-    expect(text).toContain('Toplam 2 hedef var, süre 60 saniye.');
-    expect(text).toContain('Yanlış dokunuş puanı düşürür.');
+    const text = element.querySelector('.scan-find-ready')!.textContent!.trim();
+    expect(text).toContain('kelimeleri bul ve üzerine dokun.');
+    expect(text).toContain('Toplam 2 hedef, süre 60 saniye; yanlış dokunuş puanı düşürür.');
+    expect(text.split(/[.!?](\s|$)/).filter(part => part.trim().length > 0).length).toBeLessThanOrEqual(2);
+  });
+
+  it('names any time limit the server sent and leaves the time out when none was sent', () => {
+    const long = render({ ...words, timeLimitSeconds: 3600 }, false).querySelector('.scan-find-ready')!.textContent!;
+    expect(long).toContain('süre 60 dakika');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [ExercisePlayerComponent],
+      providers: [AuthService, ExerciseProgramService, ExerciseService, ExerciseSessionService,
+        LearningPathService, StudentProgramService, ToasterService, ReviewService, Router, ActivatedRoute]
+        .map(provide => ({ provide, useValue: {} }))
+    });
+    const element = render({ scanningRounds: words.scanningRounds }, true);
+    expect(element.querySelector('.scan-instruction-hint')!.textContent).not.toContain('Süre');
+    expect(element.querySelector('.scan-instruction-hint')!.textContent).toContain('Yanlış dokunuş puanı düşürür.');
+  });
+
+  it('asks for one answer when the targets are questions and any one is enough', () => {
+    const element = render({ serverAuthoritative: true, scanningFindAny: true, timeLimitSeconds: 45, scanningRounds: [
+      { textContent: 'Derya 24 okul', targets: ['derya', '24'], targetLabels: { derya: 'Kim?', '24': 'Kaç kişi?' } }
+    ] }, true);
+    const panel = element.querySelector('.scan-targets-panel')!;
+    expect(panel.querySelector('h2')!.textContent).toContain('Aşağıdaki metinde sorulardan birinin cevabını bul ve cevaba dokun:');
+    expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Süre bitmeden birinin cevabını bul.');
+  });
+
+  it('puts the instruction heading under a page heading with the exercise name', () => {
+    const element = render(words, true);
+    const container = element.querySelector('.scan-find-container')!;
+    const headings = Array.from(container.querySelectorAll('h1, h2')).map(item => item.tagName);
+    expect(headings).toEqual(['H1', 'H2']);
+    const title = container.querySelector('h1')!;
+    expect(title.classList).toContain('sr-only');
+    expect(title.textContent).toContain('Sözcüğü Bul');
   });
 });
