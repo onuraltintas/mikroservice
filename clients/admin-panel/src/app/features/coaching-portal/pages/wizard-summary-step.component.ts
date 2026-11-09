@@ -186,19 +186,25 @@ export class WizardSummaryStepComponent implements OnInit {
   /** The server's proposal; an empty one with saved cards goes straight on to the yearly preview. */
   propose(mode: WeeklyProposalMode) {
     this.proposing.set(true); this.error.set(''); this.preview.set(null); this.publishIssue.set(null);
-    const made = this.created(); if (made) { this.staleDraftId.set(made.id); this.created.set(null); }
+    this.dropCreated();
     this.finishFor(mode).pipe(
       switchMap(finishBy => { this.usedFinishBy = finishBy; return this.weekly.proposal(mode, this.examFocus, this.staffStudentId ?? undefined, this.windows ?? undefined, finishBy); }),
       takeUntilDestroyed(this.destroy), finalize(() => this.proposing.set(false))).subscribe({
         next: view => {
           this.proposal.set(view);
-          if (!view.slots.length && this.slots().length) { this.runPreview(); return; }
+          // Re-review of PR 136 (1): nothing new on a saved week: the saved week is the one shown, so a re-proposal is a Fill.
+          if (!view.slots.length && this.slots().length) { this.initialMode = 'Fill'; this.runPreview(); return; }
           // Paket F #37: the new content takes the focus.
           this.focus(() => this.proposalTitle);
         },
         error: e => this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'Haftalık öneri hazırlanamadı. Yeniden deneyebilirsin.')
       });
   }
+  /**
+   * Review of PR 136 (3): a plan created for an earlier week or preview (its publish failed) is not published from a new one. Publishing
+   * creates the new plan; the server's pending draft answer names the old one, and Planım opens on it.
+   */
+  private dropCreated() { const made = this.created(); if (made) { this.staleDraftId.set(made.id); this.created.set(null); } }
   /** "Haftanı baştan öner": a whole new week; the saved one is replaced only when it is kept. */
   async replaceWeek() {
     if (this.busy() || !this.slots().length) return;
@@ -276,7 +282,9 @@ export class WizardSummaryStepComponent implements OnInit {
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
         this.applyPage(page.draft); this.draftSaved.emit(this.slots().length > 0);
-        this.propose(this.slots().length ? 'Fill' : 'Replace'); this.error.set(message);
+        // Re-review of PR 136 (1): the reloaded week is the one shown; a later re-proposal must not replace it unasked.
+        this.initialMode = this.slots().length ? 'Fill' : 'Replace';
+        this.propose(this.initialMode); this.error.set(message);
       }
     });
   }
@@ -293,7 +301,9 @@ export class WizardSummaryStepComponent implements OnInit {
   runPreview() {
     const student = this.staffStudentId ?? undefined;
     this.pruneTopics();
-    // Re-review (3): a plan created before a failed publish is kept, so "Yeniden yayımla" still publishes it (no second create).
+    // Re-review of PR 136 (2): a new preview is a new plan (other topics, "Önemli konulara odaklan"); the plan created before a failed
+    // publish is never published from it.
+    this.dropCreated();
     this.previewing.set(true); this.previewError.set(''); this.notChosen.set([]); this.preview.set(null); this.publishIssue.set(null);
     this.engine.options(student).pipe(takeUntilDestroyed(this.destroy), switchMap(options => { this.options.set(options); return this.engine.preview(this.request(options), student); }),
       finalize(() => this.previewing.set(false))).subscribe({
