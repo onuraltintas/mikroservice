@@ -126,26 +126,42 @@ describe('saved study plan calendar',()=>{
     expect(f.nativeElement.querySelector('.month-block cs-status-chip')?.textContent?.trim()).toBe('Aralıklı tekrar');
   });
   // Paket H5: the calendar opens on today and its first work; with nothing today, on the first work of the visible days.
+  // Paket H5 fix (PC run 09.11.2026): the existing focus (nearest work, its earliest hour, its day in view) always runs first and
+  // instantly. Only when today is in the shown days and has a study does one extra scroll to today's first study follow it.
   describe('opening on today',()=>{
-    let reduce=false;const scrollTo=vi.fn(function(this:HTMLElement,options:ScrollToOptions){this.scrollTop=options.top??0;});const intoView=vi.fn();
+    // Like a browser, a smooth scroll does not move the scroller at once; it is only recorded here.
+    let reduce=false;const scrollTo=vi.fn();const intoView=vi.fn();
     beforeEach(()=>{reduce=false;scrollTo.mockClear();intoView.mockClear();
       Object.defineProperty(HTMLElement.prototype,'scrollTo',{configurable:true,value:scrollTo});Object.defineProperty(HTMLElement.prototype,'scrollIntoView',{configurable:true,value:intoView});
       vi.stubGlobal('matchMedia',(query:string)=>({matches:query.includes('reduce')&&reduce,media:query,addEventListener:()=>{},removeEventListener:()=>{}}));});
     afterEach(()=>{delete (HTMLElement.prototype as {scrollTo?:unknown}).scrollTo;delete (HTMLElement.prototype as {scrollIntoView?:unknown}).scrollIntoView;vi.unstubAllGlobals();});
     const week=(done=false)=>({...plan,status:'Active' as const,tasks:[{...task('today','2027-01-05',480),isCompleted:done,actualMinutes:done?30:null},task('later','2027-01-07',600),task('next-week','2027-01-12',420)]});
-    it('opens today even when its work is done and scrolls smoothly to its first work',async()=>{
+    it('keeps the existing focus untouched when today is outside the shown days',async()=>{
+      const {f,c}=await setup();
+      expect(c.dateKey(c.anchor())).toBe('2027-01-04');
+      expect((f.nativeElement.querySelector('.time-scroller') as HTMLElement).scrollTop).toBe(2100);
+      expect(scrollTo).not.toHaveBeenCalled();expect(intoView).toHaveBeenCalledWith({block:'start'});
+    });
+    it('after the existing focus, scrolls smoothly to today\'s first study when today is shown',async()=>{
       vi.setSystemTime(new Date('2027-01-05T06:00:00Z'));
       const {f,c}=await setup(week(true));
-      expect(c.dateKey(c.anchor())).toBe('2027-01-05');
-      expect(scrollTo).toHaveBeenCalledWith({top:900,behavior:'smooth'});expect((f.nativeElement.querySelector('.time-scroller') as HTMLElement).scrollTop).toBe(900);
-      expect(intoView).toHaveBeenCalledWith({block:'start',behavior:'smooth'});
+      const scroller=f.nativeElement.querySelector('.time-scroller') as HTMLElement;
+      // The existing focus still chooses the nearest open work and its hours …
+      expect(c.dateKey(c.anchor())).toBe('2027-01-07');expect(scroller.scrollTop).toBe(1140);
+      // … then one smooth scroll to today's 08:00 study follows, keeping the horizontal position.
+      expect(scrollTo).toHaveBeenCalledTimes(1);expect(scrollTo).toHaveBeenCalledWith({top:900,left:scroller.scrollLeft,behavior:'smooth'});
+      expect(scrollTo.mock.invocationCallOrder[0]).toBeGreaterThan(intoView.mock.invocationCallOrder[0]);
     });
-    it('uses the first work of the visible week when today has none and does not animate for reduced motion',async()=>{
-      reduce=true;vi.setSystemTime(new Date('2027-01-06T06:00:00Z'));
+    it('jumps without animation for reduced motion',async()=>{
+      reduce=true;vi.setSystemTime(new Date('2027-01-05T06:00:00Z'));
+      const {f}=await setup(week(true));
+      expect(scrollTo).not.toHaveBeenCalled();expect((f.nativeElement.querySelector('.time-scroller') as HTMLElement).scrollTop).toBe(900);
+    });
+    it('keeps the existing focus when today is shown but has no study',async()=>{
+      vi.setSystemTime(new Date('2027-01-06T06:00:00Z'));
       const {f,c}=await setup(week());
-      expect(c.dateKey(c.anchor())).toBe('2027-01-06');expect(scrollTo).not.toHaveBeenCalled();
-      expect((f.nativeElement.querySelector('.time-scroller') as HTMLElement).scrollTop).toBe(900);
-      expect(intoView).toHaveBeenCalledWith({block:'start',behavior:'auto'});
+      expect(c.dateKey(c.anchor())).toBe('2027-01-07');expect((f.nativeElement.querySelector('.time-scroller') as HTMLElement).scrollTop).toBe(1140);
+      expect(scrollTo).not.toHaveBeenCalled();
     });
     it('does not scroll again on later renders, even when the hours are drawn again',async()=>{
       vi.setSystemTime(new Date('2027-01-05T06:00:00Z'));
