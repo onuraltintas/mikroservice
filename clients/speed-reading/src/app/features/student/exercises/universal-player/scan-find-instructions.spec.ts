@@ -68,7 +68,7 @@ describe('scan and find instructions', () => {
   });
 
   it('asks for one target when any of them is enough', () => {
-    const element = render({ serverAuthoritative: true, scanningFindAny: true,
+    const element = render({ serverAuthoritative: true, scanningFindAny: true, timeLimitSeconds: 90,
       scanningRounds: [{ textContent: 'okul kitap', targets: ['okul', 'kitap'] }] }, true);
     const panel = element.querySelector('.scan-targets-panel')!;
     expect(panel.querySelector('h2')!.textContent).toContain('Aşağıdaki metinde bu kelimelerden birini bul ve üzerine dokun:');

@@ -65,6 +65,7 @@ import {
 } from '../../../../core/models/exercise-session.model';
 import { toCompleteSessionRequest } from '../../../../core/services/exercise-session-completion';
 import { completionLevelToast } from './completion-toasts';
+import { getErrorMessage } from '../../../../core/utils/error-message';
 
 interface ExerciseData {
   id: string;
@@ -1867,12 +1868,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     throw lastError;
   }
 
+  /** The Turkish ProblemDetails `detail` (not its English `title`); server errors get the fallback. */
   private getActionValidationErrorMessage(error: unknown): string {
-    const response = (error as any)?.error;
-    const message = response?.message || response?.title || (error as any)?.message;
-    return typeof message === 'string' && message.trim()
-      ? message
-      : 'Egzersiz doğrulaması alınamadı. Lütfen bağlantınızı kontrol edip tekrar deneyin.';
+    return getErrorMessage(error, 'Egzersiz doğrulaması alınamadı. Bağlantını kontrol edip tekrar dene.', { voice: 'sen' });
   }
 
   private waitForPendingActions(onFinished: () => void): void {
@@ -2055,6 +2053,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.tachistoscopeFeedback = null;
       try {
         await this.actionQueue;
+        // The last pending action (e.g. scan_timeout) may have ended the attempt meanwhile.
+        if (this.hasEngineFinished()) return;
         await firstValueFrom(resuming
           ? this.sessionService.resumeSession(this.sessionId)
           : this.sessionService.pauseSession(this.sessionId));
@@ -4254,7 +4254,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   /** The sentence above the text; the targets of the round follow it as chips. */
   getScanInstruction(): string {
     const scan = this.asScanFind;
-    if (scan?.hasTaskPrompts()) return 'Aşağıdaki metinde soruların cevabını bul ve cevaba dokun:';
+    if (scan?.hasTaskPrompts()) {
+      return scan.isFindAny()
+        ? 'Aşağıdaki metinde sorulardan birinin cevabını bul ve cevaba dokun:'
+        : 'Aşağıdaki metinde soruların cevabını bul ve cevaba dokun:';
+    }
     return scan?.isFindAny()
       ? 'Aşağıdaki metinde bu kelimelerden birini bul ve üzerine dokun:'
       : 'Aşağıdaki metinde şu kelimeleri bul ve üzerine dokun:';
@@ -4264,26 +4268,37 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const scan = this.asScanFind;
     if (!scan) return '';
     const round = scan.getRoundInfo();
+    const goal = scan.hasTaskPrompts()
+      ? (scan.isFindAny() ? 'birinin cevabını' : 'hepsinin cevabını')
+      : (scan.isFindAny() ? 'birini' : 'hepsini');
     return [
       round.total > 1 ? `Tur ${round.current} / ${round.total}.` : '',
-      scan.isFindAny() ? 'Süre bitmeden birini bul.' : 'Süre bitmeden hepsini bul.',
+      scan.getTimeLimitSeconds() !== null ? `Süre bitmeden ${goal} bul.` : '',
       'Yanlış dokunuş puanı düşürür.'
     ].filter(Boolean).join(' ');
   }
 
-  /** The start card: what the student will see and do, the number of targets and the time limit. */
+  /** The start card in two short sentences: the task, then the targets, the time and the wrong-tap rule. */
   getScanReadyDescription(): string {
     const scan = this.asScanFind;
     if (!scan) return '';
-    const task = scan.hasTaskPrompts()
-      ? 'Başladığında bir metin ve sorular görünecek. Her sorunun cevabı metinde bir kelime. Metni baştan sona okumadan gözlerinle tara, soruların cevabını bul ve cevaba dokun.'
-      : `Başladığında bir metin ve aranacak kelimeler görünecek. Metni baştan sona okumadan gözlerinle tara, ${
-        scan.isFindAny() ? 'kelimelerden birini' : 'kelimeleri'} bul ve üzerine dokun.`;
+    const goal = scan.hasTaskPrompts()
+      ? (scan.isFindAny() ? 'sorulardan birinin cevabını bul ve cevaba dokun' : 'soruların cevabını bul ve cevaba dokun')
+      : (scan.isFindAny() ? 'verilen kelimelerden birini bul ve üzerine dokun' : 'verilen kelimeleri bul ve üzerine dokun');
     const limit = scan.getTimeLimitSeconds();
-    const amount = scan.isFindAny() ? 'Her turda bir hedef bulman yeterli' : `Toplam ${scan.state.totalSteps} hedef var`;
-    const time = limit > 0 && limit < 3600 ? `, süre ${limit} saniye.` : '.';
-    return `${task} ${amount}${time} Yanlış dokunuş puanı düşürür. Hedefleri bulduğunda egzersiz kendiliğinden biter; `
-      + 'süre dolarsa bulduklarına göre puan alırsın.';
+    const facts = [
+      scan.isFindAny() ? '' : `Toplam ${scan.state.totalSteps} hedef`,
+      limit !== null ? `süre ${this.formatScanLimit(limit)}` : ''
+    ].filter(Boolean).join(', ');
+    const rule = facts ? `${facts}; yanlış dokunuş puanı düşürür.` : 'Yanlış dokunuş puanı düşürür.';
+    return `Metni okumadan gözlerinle tara, ${goal}. ${rule.charAt(0).toLocaleUpperCase('tr-TR')}${rule.slice(1)}`;
+  }
+
+  private formatScanLimit(seconds: number): string {
+    if (seconds < 120) return `${seconds} saniye`;
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return rest ? `${minutes} dakika ${rest} saniye` : `${minutes} dakika`;
   }
 
   getScanTargetLabel(target: string): string {

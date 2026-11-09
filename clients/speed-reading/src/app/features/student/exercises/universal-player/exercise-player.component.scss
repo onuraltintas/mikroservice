@@ -2727,8 +2727,9 @@
 }
 
 /* Scan Targets Panel - Shows which words to find */
+// Darker shades of the speed-reading purple: white text reaches WCAG AA (heading 7.9:1, hint 6.9:1, chips 4.9:1).
 .scan-targets-panel {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4338ca 0%, #553c9a 100%);
     padding: 16px 24px;
     margin-bottom: 16px;
     border-radius: 12px;
@@ -2787,9 +2788,9 @@
         }
 
         &.found {
-            background: #2ecc71;
-            border-color: #27ae60;
-            opacity: 0.8;
+            // White on #1b7a43 is 5.4:1; the check icon and the strike-through keep it readable without colour.
+            background: #1b7a43;
+            border-color: #14532d;
             .target-label {
                 text-decoration: line-through;
             }

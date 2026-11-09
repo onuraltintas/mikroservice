@@ -717,6 +717,7 @@
     <!-- Exercise Running - Scan & Find -->
     <div *ngIf="engine && engineState.isRunning && engine.engineType === 'scan_find'"
         class="game-container scan-find-container">
+        <h1 class="sr-only">{{ exercise?.title || 'Tarama ve bulma' }}</h1>
         <div class="game-header">
             <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
                 <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
