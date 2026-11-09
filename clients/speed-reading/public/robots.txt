@@ -13,6 +13,9 @@ Disallow: /editor/
 
 # API endpoints
 Disallow: /api/
+# /legal/cookies loads its public policy text from this single endpoint.
+# Longest match wins, so only this exact path is crawlable under /api/.
+Allow: /api/platform/legal-pages/cookies$
 
 # Statik dosyalar
 Disallow: /*.json$
