@@ -109,7 +109,7 @@ describe('WizardSummaryStepComponent', () => {
 
   // Live case (09.11): a week saved by the wizard before Paket H2 (courses in name order) fills all five hours. The Fill proposal is
   // empty, so the summary goes straight on to the yearly preview; the student must still be able to have the week made by need.
-  // Review of PR #136 (1, 2): the server says whether the week by need would help (rebuildWouldHelp) and for which lessons.
+  // Review of PR 136 (1, 2): the server says whether the week by need would help (rebuildWouldHelp) and for which lessons.
   describe('a saved week that leaves lessons without time', () => {
     const yks = ['Biyoloji (AYT)', 'Biyoloji (TYT)', 'Coğrafya (TYT)', 'Din Kültürü (TYT)', 'Felsefe (TYT/AYT)', 'Fizik (AYT)', 'Fizik (TYT)', 'Kimya (AYT)',
       'Kimya (TYT)', 'Matematik (AYT)', 'Matematik (TYT)', 'Tarih (TYT)', 'Türkçe (TYT)'];
@@ -177,7 +177,7 @@ describe('WizardSummaryStepComponent', () => {
     });
   });
 
-  // Review of PR #136 (1): the mode of the next proposal follows the week. A Replace that is not kept yet stays Replace; once a week is
+  // Review of PR 136 (1): the mode of the next proposal follows the week. A Replace that is not kept yet stays Replace; once a week is
   // kept, "Bu dersi öne al" proposes in Fill mode around it (never replacing the week just kept).
   it('"Haftanı baştan öner" then "Bu dersi öne al" proposes in Replace mode; after keeping it proposes in Fill mode', async () => {
     const { el, c, weekly, fixture } = await setup();
@@ -197,7 +197,7 @@ describe('WizardSummaryStepComponent', () => {
     expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
   });
 
-  // Review of PR #136 (3): a plan created before a failed publish belongs to the old week. After a new proposal it is not published
+  // Review of PR 136 (3): a plan created before a failed publish belongs to the old week. After a new proposal it is not published
   // again silently: publishing creates the new plan, and the server's pending draft answer points to Planım.
   it('does not publish the plan of the old week after a new proposal; the pending draft is named', async () => {
     const { el, c, fixture, engine, planning, weekly } = await setup();

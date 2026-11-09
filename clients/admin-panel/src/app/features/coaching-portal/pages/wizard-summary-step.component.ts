@@ -126,7 +126,7 @@ export class WizardSummaryStepComponent implements OnInit {
   /** Review of PR 135 (S2): the plan created before publishing failed; "Yeniden yayımla" publishes it, never creates another. */
   readonly created = signal<{ id: string; version: number } | null>(null);
   /**
-   * Review of PR #136 (3): a plan created for an earlier week (its publish failed) is not published after a new proposal. Publishing
+   * Review of PR 136 (3): a plan created for an earlier week (its publish failed) is not published after a new proposal. Publishing
    * creates the plan of the new week; the server then names the pending draft, and Planım opens on it.
    */
   readonly staleDraftId = signal<string | null>(null);
@@ -203,7 +203,7 @@ export class WizardSummaryStepComponent implements OnInit {
   async replaceWeek() {
     if (this.busy() || !this.slots().length) return;
     if (!await this.confirmReplace()) return;
-    // Review of PR #136: until the new week is kept, a re-proposal ("Bu dersi öne al", a changed draft) stays a Replace.
+    // Review of PR 136: until the new week is kept, a re-proposal ("Bu dersi öne al", a changed draft) stays a Replace.
     this.initialMode = 'Replace'; this.propose('Replace');
   }
 
@@ -223,7 +223,7 @@ export class WizardSummaryStepComponent implements OnInit {
   /**
    * Live case (09.11): a saved week (for example one made before the need-based proposal) leaves lessons without time. Fill keeps the
    * saved cards, so the summary offers the whole week again by need ("Haftanı baştan öner" with its confirmation), also once the yearly
-   * preview is open. Review of PR #136: only when the server says the week by need gives time to some of those lessons.
+   * preview is open. Review of PR 136: only when the server says the week by need gives time to some of those lessons.
    */
   rebuildSuggested(view: WeeklyProposal) { return view.mode === 'Fill' && !!view.rebuildWouldHelp && this.slots().length > 0 && this.rebuildLessons(view).length > 0; }
   /** The lessons the week by need would give time to, the largest need first. */
@@ -232,7 +232,7 @@ export class WizardSummaryStepComponent implements OnInit {
     return view.lessons.filter(x => ids.has(x.lessonId.toLowerCase()))
       .sort((a, b) => b.neededMinutes - a.neededMinutes || a.lessonName.localeCompare(b.lessonName, 'tr'));
   }
-  /** Review of PR #136 (2): up to three names, then how many more ("A, B, C ve 5 ders daha"); a short list with "ve" before the last. */
+  /** Review of PR 136 (2): up to three names, then how many more ("A, B, C ve 5 ders daha"); a short list with "ve" before the last. */
   rebuildNames(view: WeeklyProposal) {
     const names = this.rebuildLessons(view).map(x => x.lessonName);
     if (names.length > 3) return `${names.slice(0, 3).join(', ')} ve ${names.length - 3} ders daha`;
@@ -261,7 +261,7 @@ export class WizardSummaryStepComponent implements OnInit {
     this.weekly.save(this.version, this.timeZoneId, next, this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.applying.set(false))).subscribe({
       next: draft => {
         this.applyPage(draft); this.draftSaved.emit(draft.slots.length > 0);
-        // Review of PR #136: the kept week is the new saved week; the next proposal (Fill around it) asks the server again.
+        // Review of PR 136: the kept week is the new saved week; the next proposal (Fill around it) asks the server again.
         this.initialMode = this.slots().length ? 'Fill' : 'Replace';
         this.proposal.set({ ...view, mode: 'Fill', slots: [], rebuildWouldHelp: false, rebuildLessonIds: [] }); this.runPreview();
       },
