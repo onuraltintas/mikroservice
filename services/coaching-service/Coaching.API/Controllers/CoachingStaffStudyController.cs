@@ -46,6 +46,15 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
     });
 
+    /// <summary>Paket H4a: the student's tempo options, as she sees them; the teacher's answers (windows) only without saved study times.</summary>
+    [HttpPost("weekly-draft/tempo-options"),RequestSizeLimit(16384),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> WeeklyTempoOptions(Guid studentId,WeeklyTempoOptionsRequest request,[FromServices] IWeeklyProposalService proposals,CancellationToken ct)=>Respond(async()=>
+    {
+        try{return Ok(new{success=true,data=await proposals.TempoOptionsForStudentAsync(studentId,request,ct)});}
+        catch(StudyAvailabilityMissingException){return NotFound(new{success=false,message="Öğrenci henüz çalışabileceği saatleri kaydetmemiş."});}
+        catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
+    });
+
     [HttpGet("learning-setup")]
     public Task<IActionResult> LearningSetup(Guid studentId,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await learningSetup.GetForStudentAsync(studentId,ct)}));
@@ -58,11 +67,11 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     public Task<IActionResult> OutcomeOptions(Guid studentId,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await outcomePlans.OptionsForStudentAsync(studentId,ct)}));
 
-    [HttpPost("weekly-outcome-plans/preview"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    [HttpPost("weekly-outcome-plans/preview"),RequestSizeLimit(8192),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> OutcomePreview(Guid studentId,WeeklyOutcomePlanRequest request,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=await outcomePlans.PreviewForStudentAsync(studentId,request,ct)}));
 
-    [HttpPost("weekly-outcome-plans/drafts"),Authorize(Roles="Teacher"),RequestSizeLimit(4096),EnableRateLimiting("study-planning-write")]
+    [HttpPost("weekly-outcome-plans/drafts"),Authorize(Roles="Teacher"),RequestSizeLimit(8192),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> CreateOutcomeDraft(Guid studentId,WeeklyOutcomePlanSave request,CancellationToken ct)=>Respond(async()=>
     {var created=await outcomePlans.CreateForStudentAsync(studentId,request,ct);return CreatedAtAction(nameof(Get),new{studentId,id=created.Id},new{success=true,data=created});});
 
@@ -167,7 +176,7 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         { return StatusCode(403, new { success = false, message = ex.Message, code = ex.Code }); }
         catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.NotFound")
         { return NotFound(new { success = false, message = ex.Message, code = ex.Code }); }
-        catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.Conflict")
+        catch (BusinessRuleException ex) when (ex.Code is "StudyPlanning.Conflict" or WeeklyOutcomePlanCodes.DraftExists)
         { return Conflict(new { success = false, message = ex.Message, code = ex.Code }); }
         catch (BusinessRuleException ex) when (ex.Code == WeeklyLessonsNotChosen.Code)
         { return Conflict(new { success = false, message = ex.Message, code = ex.Code, lessons = WeeklyLessonsNotChosen.Lessons(ex) }); }

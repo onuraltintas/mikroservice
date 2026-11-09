@@ -71,6 +71,14 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         ArgumentNullException.ThrowIfNull(request);
         if(request.EngineVersion is not (1 or WeeklyPlanEngine.CurrentVersion))throw new ArgumentException("Bilinmeyen plan motoru sürümü.");
         var v2=request.EngineVersion==WeeklyPlanEngine.CurrentVersion;
+        var staffView=staffAccess is not null && access.CurrentUserId != student;
+        // Paket H4a: the focus topics, each once and sorted (their order changes nothing); an empty list is none (so its fingerprint is
+        // the one without). Only engine version 2 brings topics forward (review of PR #132).
+        var focusIds=request.FocusTopicIds?.Distinct().Order().ToArray();
+        if(focusIds is {Length:>50})throw new ArgumentException(staffView?"En çok 50 konu öne alınabilir.":"En çok 50 konuyu öne alabilirsin.");
+        if(focusIds is {Length:>0}&&!v2)throw new ArgumentException(staffView?"Öğrencinin konularını öne almak için yeni plan motoru gerekiyor."
+            :"Konuları öne almak için yeni plan motoru gerekiyor.");
+        request=request with {FocusTopicIds=focusIds is {Length:>0}?focusIds:null};
         var draft=await Draft(student,ct);
         if(request.ExpectedWeeklyDraftVersion<0||request.ExpectedWeeklyDraftVersion!=draft.Version||draft.Slots.Count==0)throw Conflict("Haftalık taslak boş veya değişmiş. Takvimi yeniden yükleyin.");
         // K4 (31.10.2026): the plan starts no earlier than the student's today and ends before the exam day.
@@ -79,7 +87,6 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         // G2 review (M2): an estimated exam date sets the default end only; it is no limit.
         if(window.ExamDate is {} examDate&&window.EndDateSource!="Estimated"&&request.EndDate>=examDate)
             throw new ArgumentException($"Plan sınav gününden önce bitmeli. En geç {examDate.AddDays(-1):dd.MM.yyyy} tarihini seçin.");
-        var staffView=staffAccess is not null && access.CurrentUserId != student;
         var choices=(staffView
             ? await setup.GetCatalogForStudentAsync(student,null,1,ct)
             : await setup.GetCatalogAsync(null,1,ct)).Lessons.ToDictionary(x=>x.Id);
@@ -97,7 +104,9 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             draft.Slots.Select(x=>(x.Day,x.StartMinute,x.StartMinute+x.DurationMinutes,(Guid?)x.LessonId)).ToArray());
         var pending=protectedTasks.Where(x=>!x.IsCompleted).ToDictionary(x=>x.Id);
         var pendingIds=pending.Keys.ToArray();var pinnedLinks=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(pendingIds,x.TaskId)).OrderBy(x=>x.TaskId).ThenBy(x=>x.OutcomeId).ToArrayAsync(ct);
-        var curriculum=await CurriculumAsync(student,context,lessonIds,choices,v2,pinnedLinks.Select(x=>x.EstimateId),ct);
+        var focusTopics=await FocusTopicsAsync(request.FocusTopicIds,context,lessonIds,staffView,ct);
+        var curriculum=await CurriculumAsync(student,context,lessonIds,choices,v2,pinnedLinks.Select(x=>x.EstimateId),ct,focusTopics,
+            staffView?WeeklyPlanEngine.TeacherFocusReason:WeeklyPlanEngine.FocusReason);
         var (topicStates,preferences,examErrorTopics,issues,originalWork)=(curriculum.TopicStates,curriculum.Preferences,curriculum.ExamErrorTopics,curriculum.Issues,curriculum.OriginalWork);
         var completedLinks=curriculum.CompletedLinks;void Credit(StudyPlanTask task,StudyPlanTaskOutcome link,List<(Guid LessonId,DateOnly Date,int Minutes)>? scheduledCredits)=>curriculum.Credit(task,link,scheduledCredits);
         var credits=new List<(Guid LessonId,DateOnly Date,int Minutes)>();
@@ -119,7 +128,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         {
             var planned=work.SelectMany(x=>x.Outcomes).Select(x=>x.TopicId).Distinct().ToArray();
             yieldWeights=await db.StudyCatalogTopics.AsNoTracking().Where(x=>Enumerable.Contains(planned,x.Id)).ToDictionaryAsync(x=>x.Id,x=>x.YieldWeight,ct);
-            work=WeeklyPlanEngine.PrioritizeByYield(work,shortLessons,yieldWeights,examErrorTopics).ToList();
+            work=WeeklyPlanEngine.PrioritizeByYield(work,shortLessons,yieldWeights,examErrorTopics,focusTopics).ToList();
             schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,blocked,rules);
         }
         var placedMinutes=schedule.Tasks.Where(x=>x.Kind!="Spaced").GroupBy(x=>(x.Outcome.TopicId,x.Outcome.OutcomeId)).ToDictionary(x=>x.Key,x=>x.Sum(t=>t.Minutes));
@@ -152,6 +161,32 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     }
 
     /// <summary>
+    /// Paket H4a: the focus topics must be topics of the weekly draft's lessons in the student's own catalog, as the plan reads it (her
+    /// track, active topics in active units, a sub-topic only under an active parent; review of PR #132). A chosen id is either such a
+    /// leaf topic, or an active parent topic (in an active unit of a weekly lesson) with at least one such sub-topic: track scopes sit on
+    /// the sub-topics only (re-review of PR #132). A parent brings its sub-topics of that catalog (the plan works on sub-topics).
+    /// </summary>
+    private async Task<HashSet<Guid>> FocusTopicsAsync(IReadOnlyList<Guid>? wanted,StudentLearningContext? context,Guid[] lessonIds,bool staffView,CancellationToken ct)
+    {
+        if(wanted is null||wanted.Count==0)return [];
+        var ids=wanted.ToArray();
+        var leaves=from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
+            where Enumerable.Contains(lessonIds,t.LessonId)&&t.IsActive&&u.IsActive&&u.LessonId==t.LessonId
+                &&!db.StudyCatalogTopics.Any(c=>c.ParentId==t.Id)
+                &&(t.ParentId==null||db.StudyCatalogTopics.Any(p=>p.Id==t.ParentId&&p.IsActive))
+            select t;
+        var chosenLeaves=await leaves.Where(x=>Enumerable.Contains(ids,x.Id)).Select(x=>x.Id).ToArrayAsync(ct);
+        var children=await leaves.Where(x=>x.ParentId!=null&&Enumerable.Contains(ids,x.ParentId.Value)).Select(x=>new{x.Id,Parent=x.ParentId!.Value}).ToArrayAsync(ct);
+        var parents=await (from t in db.StudyCatalogTopics.AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
+            where Enumerable.Contains(ids,t.Id)&&Enumerable.Contains(lessonIds,t.LessonId)&&t.IsActive&&u.IsActive&&u.LessonId==t.LessonId
+            select t.Id).ToArrayAsync(ct);
+        var validParents=parents.Where(x=>children.Any(c=>c.Parent==x)).ToHashSet();
+        if(ids.Any(x=>!chosenLeaves.Contains(x)&&!validParents.Contains(x)))throw new ArgumentException(staffView
+            ?"Öne alınacak konular öğrencinin haftalık düzenindeki derslerden olmalı.":"Öne almak istediğin konular haftalık düzenindeki derslerden olmalı.");
+        return [..chosenLeaves,..children.Where(x=>validParents.Contains(x.Parent)).Select(x=>x.Id)];
+    }
+
+    /// <summary>
     /// Paket H2: each lesson's remaining work for the weekly proposal (its curriculum work after shaping (version 2) and completed credits)
     /// and the topics it will finish (each gets spaced reviews); <see cref="WeeklyProposalEngine.WeeklyNeed"/> turns them into a weekly need.
     /// </summary>
@@ -172,7 +207,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     /// pinned work the preview places as well (they only widen the lookup of versions with topic shares).
     /// </summary>
     private async Task<CurriculumWork> CurriculumAsync(Guid student,StudentLearningContext? context,Guid[] lessonIds,IReadOnlyDictionary<Guid,LearningLessonView> choices,
-        bool v2,IEnumerable<Guid> pinnedEstimates,CancellationToken ct)
+        bool v2,IEnumerable<Guid> pinnedEstimates,CancellationToken ct,IReadOnlySet<Guid>? focusTopics=null,string focusReason=WeeklyPlanEngine.FocusReason)
     {
         var year=context?.AcademicYearStart??(clock.GetUtcNow().Month>=9?clock.GetUtcNow().Year:clock.GetUtcNow().Year-1);
         var catalogTopics=await (from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
@@ -236,7 +271,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var preferences=context is null?new Dictionary<Guid,WeeklyPlanEngine.LessonPreference>():await db.StudentCoursePreferences.AsNoTracking()
             .Where(x=>x.ContextId==context.Id).ToDictionaryAsync(x=>x.LessonId,x=>new WeeklyPlanEngine.LessonPreference(x.Priority,x.SelfReportedDifficulty),ct);
         var examErrorTopics=v2?await ExamErrorTopicsAsync(student,ct):new HashSet<Guid>();
-        if(v2)work=WeeklyPlanEngine.Shape(work,topicStates,preferences,examErrorTopics).ToList();
+        if(v2)work=WeeklyPlanEngine.Shape(work,topicStates,preferences,examErrorTopics,focusTopics,focusReason).ToList();
         var relevantOutcomeIds=work.SelectMany(x=>x.Outcomes).Select(x=>x.OutcomeId).Distinct().ToArray();
         var completedLinks=await CoachingCompletedOutcomeCredits.ReadAsync(db,student,relevantOutcomeIds,ct);
         var evidenceVersions=completedLinks.Select(x=>x.Link.EstimateId).Concat(pinnedEstimates).Distinct().ToArray();
@@ -300,7 +335,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             var prepared=await Prepare(request.Preview,student,ct);var preview=prepared.Preview;
             if(preview.Fingerprint!=request.Fingerprint)throw Conflict("Haftalık taslak, kazanımlar, süreler veya mevcut çalışmalar değişti. Yeniden önizleyin.");
             if(!preview.CanCreate)throw new ArgumentException("Bütün dersler tarihe sığmalı ve kazanım/süre eksikleri giderilmelidir. Önizlemedeki seçeneklerle planı yeniden hazırlayın.");
-            if(await db.StudyPlanRevisions.AnyAsync(x=>x.StudentId==student&&x.Status==StudyPlanStatus.Draft,ct))throw Conflict("Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.");
+            if(await db.StudyPlanRevisions.AnyAsync(x=>x.StudentId==student&&x.Status==StudyPlanStatus.Draft,ct))throw new BusinessRuleException(WeeklyOutcomePlanCodes.DraftExists,"Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.");
             revision.SetWeeklySource(prepared.Source);var tasks=new List<StudyPlanTask>();var links=new List<StudyPlanTaskOutcome>();
             var v2=request.Preview.EngineVersion==WeeklyPlanEngine.CurrentVersion;
             foreach(var slice in preview.Schedule.Tasks)

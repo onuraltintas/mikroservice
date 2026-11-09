@@ -373,4 +373,74 @@ public sealed class WeeklyProposalEngineTests
         var (stable, made) = await WeeklyProposalEngine.SettleAsync<string, string>(["A"], codes => Task.FromResult(codes[0]), planEnd => planEnd, _ => ["A"]);
         Assert.Equal(("A", "A"), (stable, made));
     }
+
+    // Paket H4a: a matching routine's day budgets cap each day at min(budget, daily limit); a day without a budget gets nothing.
+    [Fact]
+    public void DayBudgetsCapEachDay_ADayWithoutABudgetGetsNothing()
+    {
+        var week = WeeklyProposalEngine.Week.Select(day => Window(day, 900, 1380)).ToArray();
+        var lessons = Enumerable.Range(1, 6).Select(n => Lesson(n, 900)).ToArray();
+        var budgets = new Dictionary<DayOfWeek, int> { [DayOfWeek.Monday] = 60, [DayOfWeek.Tuesday] = 150, [DayOfWeek.Saturday] = 600 };
+        var result = WeeklyProposalEngine.Propose(new(week, [], lessons, 2, 240, null, WeeklyProposalMode.Replace, null, budgets));
+        int Minutes(DayOfWeek day) => result.Slots.Where(x => x.Day == day).Sum(x => x.DurationMinutes);
+        // Monday 60; Tuesday 150 leaves two hours (a 30-minute rest stays empty); Saturday min(600, 240); no other day.
+        Assert.Equal((60, 120, 240), (Minutes(DayOfWeek.Monday), Minutes(DayOfWeek.Tuesday), Minutes(DayOfWeek.Saturday)));
+        Assert.Equal(new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Saturday }, result.Slots.Select(x => x.Day).Distinct());
+        Assert.Equal(420, result.FreeMinutes);
+        // A saved card counts toward its day's budget.
+        var fill = WeeklyProposalEngine.Propose(new(week, [Card(1, DayOfWeek.Tuesday, 900, 90)], lessons, 2, 240, null, WeeklyProposalMode.Fill, null, budgets));
+        Assert.Equal(60, fill.Slots.Where(x => x.Day == DayOfWeek.Tuesday).Sum(x => x.DurationMinutes));
+        // Without budgets nothing changes.
+        Assert.Equal(7 * 240, WeeklyProposalEngine.Propose(new(week, [], lessons, 2, 240, null, WeeklyProposalMode.Replace)).FreeMinutes);
+        // The guarantees still hold under budgets: a lesson once a day while another day is free, breaks, and the limits.
+        AssertWeekRules(result, budgets, 240);
+    }
+
+    // Review of PR #132 (S5): the proposal works on (and echoes) the earlier of finishBy and the settled plan end.
+    [Fact]
+    public void ThePeriodEndsAtTheEarlierOfFinishByAndThePlanEnd()
+    {
+        Assert.Equal(new DateOnly(2027, 5, 29), WeeklyProposalEngine.PeriodEnd(new DateOnly(2027, 6, 9), new DateOnly(2027, 5, 29)));
+        Assert.Equal(new DateOnly(2027, 6, 9), WeeklyProposalEngine.PeriodEnd(new DateOnly(2027, 6, 9), new DateOnly(2027, 6, 12)));
+        Assert.Null(WeeklyProposalEngine.PeriodEnd(null, new DateOnly(2027, 6, 12)));
+    }
+
+    // Third review of PR #132: a tempo date is settled on the date its proposal really uses; dates that change are run again (at most
+    // three times), an unstable one or one the proposal endpoint would refuse is left out, and equal final dates merge into the first.
+    [Fact]
+    public async Task TempoDatesSettleOnTheDateTheProposalUses_ThenMerge()
+    {
+        DateOnly D(int day) => new(2027, 6, day);
+        var runs = new List<DateOnly>();
+        // The proposal for a date works until the settled end the fake gives for it.
+        var ends = new Dictionary<DateOnly, DateOnly> { [D(20)] = D(15), [D(15)] = D(15), [D(17)] = D(17), [D(12)] = D(10), [D(10)] = D(9), [D(9)] = D(8), [D(8)] = D(8) };
+        Task<(DateOnly End, string Result)> Run(DateOnly date) { runs.Add(date); return Task.FromResult((ends[date], "run " + date.Day)); }
+
+        // Relaxed (20) settles on 15, the date of Balanced: Balanced merges into Relaxed, whose numbers are the run for 15.
+        var merged = await WeeklyProposalEngine.TempoDatesAsync(new[] { ("Relaxed", D(20)), ("Balanced", D(15)), ("Intense", D(17)) }, D(7), D(20), Run);
+        Assert.Equal(new[] { ("Relaxed", D(15), "run 15"), ("Intense", D(17), "run 17") }, merged);
+        // 12 → 10 → 9 → 8 does not settle within three runs and is left out; nothing below the earliest allowed date is run.
+        runs.Clear();
+        Assert.Empty(await WeeklyProposalEngine.TempoDatesAsync(new[] { ("Intense", D(12)) }, D(7), D(20), Run));
+        Assert.Equal(new[] { D(12), D(10), D(9) }, runs);
+        runs.Clear();
+        Assert.Empty(await WeeklyProposalEngine.TempoDatesAsync(new[] { ("Intense", D(12)) }, D(11), D(20), Run));
+        Assert.Equal(new[] { D(12) }, runs);
+        // The plan end itself is always allowed, even below the earliest date.
+        Assert.Equal(new[] { ("Relaxed", D(8), "run 8") }, await WeeklyProposalEngine.TempoDatesAsync(new[] { ("Relaxed", D(8)) }, D(11), D(8), Run));
+    }
+
+    private static void AssertWeekRules(WeeklyProposalResult result, IReadOnlyDictionary<DayOfWeek, int> budgets, int limit)
+    {
+        foreach (var day in result.Slots.GroupBy(x => x.Day))
+        {
+            Assert.True(day.Sum(x => x.DurationMinutes) <= Math.Min(limit, budgets.GetValueOrDefault(day.Key)));
+            var starts = day.Select(x => x.StartMinute).Order().ToArray();
+            for (var i = 2; i < starts.Length; i++) Assert.False(starts[i] - starts[i - 2] == 120, "three hours in a row");
+        }
+        var days = result.Slots.Select(x => x.Day).Distinct().ToArray();
+        foreach (var lesson in result.Slots.GroupBy(x => x.LessonId))
+            if (lesson.GroupBy(x => x.Day).Any(x => x.Count() > 1))
+                Assert.True(days.All(day => lesson.Any(x => x.Day == day)), "a lesson came twice on a day while another study day was free of it");
+    }
 }

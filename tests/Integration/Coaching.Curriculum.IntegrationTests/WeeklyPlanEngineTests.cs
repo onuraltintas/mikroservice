@@ -49,6 +49,35 @@ public sealed class WeeklyPlanEngineTests
         Assert.All(shaped.Single().Outcomes.Where(x => x.TopicId == weak), x => Assert.Contains("deneme", x.Reason));
     }
 
+    // Paket H4a: the topics the student wants first ("Önemli konulara odaklan") lead their lesson, before the exam-error topics.
+    [Fact]
+    public void FocusTopicsLeadTheirLessonBeforeExamErrors_AlsoWhenTimeIsShort()
+    {
+        Guid first = Guid.NewGuid(), weak = Guid.NewGuid(), focus = Guid.NewGuid(), turkish = Guid.NewGuid();
+        WeeklyLessonWork[] lessons = [Lesson(Math, Outcome(first, "A", 30), Outcome(weak, "B", 30), Outcome(focus, "C1", 30), Outcome(focus, "C2", 30)),
+            Lesson(Turkish, Outcome(turkish, "T", 30))];
+        var none = new Dictionary<Guid, DeclaredTopicStatus>(); var preferences = new Dictionary<Guid, WeeklyPlanEngine.LessonPreference>();
+        var shaped = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid> { weak }, new HashSet<Guid> { focus });
+        Assert.Equal(new[] { focus, focus, weak, first }, shaped[0].Outcomes.Select(x => x.TopicId));
+        Assert.All(shaped[0].Outcomes.Take(2), x => Assert.Equal("Öne almak istediğin konu", x.Reason));
+        Assert.DoesNotContain(shaped[0].Outcomes.Skip(2), x => x.Reason!.Contains("Öne almak"));
+        Assert.Equal("Müfredat sırasındaki yeni konu", shaped[1].Outcomes.Single().Reason);
+        // No focus: exactly as before.
+        var plain = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid> { weak });
+        var empty = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid> { weak }, new HashSet<Guid>());
+        Assert.Equal(plain.SelectMany(x => x.Outcomes), empty.SelectMany(x => x.Outcomes));
+        Assert.Equal(new[] { weak, first, focus, focus }, plain[0].Outcomes.Select(x => x.TopicId));
+        // A focus topic that is also an exam-error topic keeps both reasons.
+        var both = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid> { focus }, new HashSet<Guid> { focus });
+        Assert.StartsWith("Öne almak istediğin konu · Son denemelerde", both[0].Outcomes[0].Reason);
+        // A teacher's choice says so (review of PR #132, S2).
+        var teacher = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid>(), new HashSet<Guid> { focus }, WeeklyPlanEngine.TeacherFocusReason);
+        Assert.Equal("Öğretmeninin öne aldığı konu", teacher[0].Outcomes[0].Reason);
+        // When time is short, high-yield topics follow the focus topics.
+        var shortened = WeeklyPlanEngine.PrioritizeByYield(shaped, [Math], new Dictionary<Guid, int> { [first] = 5 }, new HashSet<Guid> { weak }, new HashSet<Guid> { focus });
+        Assert.Equal(new[] { focus, focus, weak, first }, shortened[0].Outcomes.Select(x => x.TopicId));
+    }
+
     [Fact]
     public void HighYieldTopicsLeadWhenTimeIsShort()
     {

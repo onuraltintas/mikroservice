@@ -132,6 +132,8 @@ public sealed class CoachingErasureExecutionService(
         var practiceApprovals = await context.Set<IdempotencyRecord>().Where(x => x.Scope == "coaching.practice-review.apply"
             && Enumerable.Contains(planIds, x.ResourceId)).ToListAsync(cancellationToken);
         var studyAvailability = await context.StudyAvailability.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var studyRoutines = await context.Set<StudyRoutineProfile>().Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var planPreferences = await context.Set<StudyPlanPreferences>().Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var weeklyDrafts = await context.Set<WeeklyStudyDraft>().Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var weeklyReflectionReviews = await context.Set<WeeklyReflectionReview>().Where(x => x.StudentId == message.SubjectUserId || x.TeacherId == message.SubjectUserId).ToListAsync(cancellationToken);
         var weeklyReflections = await context.Set<WeeklyReflection>().Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
@@ -179,7 +181,7 @@ public sealed class CoachingErasureExecutionService(
         var deletedRecordCount = learningContexts.Sum(x => 1 + x.CoursePreferences.Count + x.TopicStates.Count) + ownedAssignments.Count + ownedMembers.Count + ownedStudents.Count + ownedTeachers.Count + ownedInvites.Count + attachments.Count
             + assignmentStudents.Count
             + examResults.Count
-            + studentExams.Count + studyTasks.Count + studyPlans.Count + practiceApprovals.Count + studyAvailability.Count + weeklyDrafts.Count + weeklyReflectionReviews.Count + weeklyReflections.Count + weeklyDecisions.Count + decisionWorkRequests.Count + studyMessages.Count + reminders.Count + financeCount
+            + studentExams.Count + studyTasks.Count + studyPlans.Count + practiceApprovals.Count + studyAvailability.Count + studyRoutines.Count + planPreferences.Count + weeklyDrafts.Count + weeklyReflectionReviews.Count + weeklyReflections.Count + weeklyDecisions.Count + decisionWorkRequests.Count + studyMessages.Count + reminders.Count + financeCount
             + goals.Count + primaryGoals.Count
             + attendances.Count
             + acknowledgements.Count
@@ -201,6 +203,8 @@ public sealed class CoachingErasureExecutionService(
         context.StudyPlanRevisions.RemoveRange(studyPlans);
         context.RemoveRange(practiceApprovals);
         context.StudyAvailability.RemoveRange(studyAvailability);
+        context.RemoveRange(studyRoutines);
+        context.RemoveRange(planPreferences);
         context.RemoveRange(weeklyDrafts);
         context.RemoveRange(weeklyReflectionReviews);
         context.RemoveRange(weeklyReflections);
