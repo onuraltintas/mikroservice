@@ -40,7 +40,8 @@ describe('WizardSummaryStepComponent', () => {
         { tempo: 'Balanced', finishBy: '2027-05-15', neededWeeklyMinutes: 90, capacityWeeklyMinutes: 120, fits: true }] })) };
     const engine = { options: vi.fn(() => of({ startDate: '2026-11-09', endDate: '2027-06-13', weeklyDraftVersion: 4, timeZoneId: 'Europe/Istanbul', exams: [] })),
       preview: vi.fn((request: WeeklyOutcomeRequest, _s?: string) => of(previewOf(request))), create: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 1 })) };
-    const planning = { publish: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 2, title: 'x', status: 'Active', tasks: [] })) };
+    const planning = { publish: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 2, title: 'x', status: 'Active', tasks: [] })),
+      get: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 1, title: 'x', status: 'Draft', tasks: [] })) };
     const learning = { save: vi.fn((_r: unknown) => of({ context: { ...context, version: 6 }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })),
       catalog: vi.fn((_l: string | null, page = 1) => of({ curriculum: null, lessons: [], missingDurationCount: 0, warnings: [], topics: { totalCount: 3, pageNumber: page, pageSize: 2,
         items: page === 1 ? [{ id: 'paragraf', name: 'Paragraf', lessonName: 'Türkçe', unitName: 'Okuma', gradeNumber: 8, examCode: 'LGS', estimatedMinutes: 90 },
@@ -218,6 +219,68 @@ describe('WizardSummaryStepComponent', () => {
     c.runPreview(); await fixture.whenStable(); fixture.detectChanges();
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable();
     expect(choices.focusTopics()).toEqual([]);
+  });
+
+  // Re-review F1: a chosen topic whose lesson left the weekly draft made every preview fail with 400 and hid the Kaldır buttons.
+  it('drops chosen topics whose lesson left the week before the preview, and says so', async () => {
+    const choices = new SummaryChoices();
+    choices.focusTopics.set([{ topicId: 'paragraf', topicName: 'Paragraf', lessonName: 'Türkçe', lessonId: 'tur' }, { topicId: 'carpan', topicName: 'Çarpanlar', lessonName: 'Matematik', lessonId: 'math' }]);
+    const { el, fixture, engine, weekly } = await setup({ choices });
+    // The server refuses topics of a lesson outside the weekly draft (as CoachingWeeklyOutcomePlanService does).
+    engine.preview.mockImplementation((request: WeeklyOutcomeRequest) => (request.focusTopicIds ?? []).includes('paragraf')
+      ? throwError(() => ({ status: 400, error: { message: 'Öne almak istediğin konular haftalık düzenindeki derslerden olmalı.' } })) : of(previewOf(request)));
+    // The week keeps only Matematik: the proposal adds nothing, so the preview runs on the saved week.
+    weekly.proposal.mockReturnValueOnce(of(proposalOf('Fill', [])));
+    fixture.componentInstance.propose('Fill'); await fixture.whenStable(); fixture.detectChanges();
+    expect(engine.preview).toHaveBeenLastCalledWith(expect.objectContaining({ focusTopicIds: ['carpan'] }), undefined);
+    expect(el.querySelector('[data-testid="preview-error"]')).toBeNull();
+    expect(text(el.querySelector('[data-testid="dropped-topics"]'))).toBe('Türkçe dersi haftalık düzeninden çıktığı için 1 konu öne alınanlardan kaldırıldı.');
+    expect(choices.focusTopics().map(x => x.topicId)).toEqual(['carpan']);
+  });
+
+  it('keeps the chosen topics and their Kaldır buttons visible when the preview fails', async () => {
+    const choices = new SummaryChoices();
+    choices.focusTopics.set([{ topicId: 'carpan', topicName: 'Çarpanlar', lessonName: 'Matematik', lessonId: 'math' }]);
+    const { el, fixture, engine } = await setup({ choices });
+    engine.preview.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'Konular uygun değil.' } })));
+    await keep(fixture);
+    expect(el.querySelector('[data-testid="preview-error"]')).toBeTruthy();
+    const remove = el.querySelector('[aria-label="Çarpanlar konusunu kaldır"]') as HTMLButtonElement;
+    expect(remove).toBeTruthy();
+    remove.click(); fixture.detectChanges();
+    expect(choices.focusTopics()).toEqual([]);
+  });
+
+  // Re-review (3): a publish conflict reads the saved draft's version again; a later preview keeps the created plan.
+  it('reads the created plan again after a publish conflict and never creates it twice', async () => {
+    const { el, fixture, engine, planning } = await setup();
+    await keep(fixture);
+    planning.publish.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'Plan değişti.' } })));
+    planning.get.mockReturnValueOnce(of({ id: 'new-plan', version: 3, title: 'x', status: 'Draft', tasks: [] }));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(planning.get).toHaveBeenCalledWith('new-plan');
+    expect(text(el.querySelector('[data-testid="publish-issue"]'))).toContain('güncel hâlini yükledim');
+    // Another preview (for example "Önemli konulara odaklan") keeps the created plan.
+    button(el, 'Önemli konulara odaklan')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    button(el, 'Yeniden yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(engine.create).toHaveBeenCalledTimes(1);
+    expect(planning.publish).toHaveBeenLastCalledWith('new-plan', 3);
+  });
+
+  it('counts a created plan that is already active as published', async () => {
+    const { el, fixture, planning, navigate } = await setup();
+    await keep(fixture);
+    planning.publish.mockReturnValueOnce(throwError(() => ({ status: 409, error: { message: 'x' } })));
+    planning.get.mockReturnValueOnce(of({ id: 'new-plan', version: 2, title: 'x', status: 'Active', tasks: [] }));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable();
+    expect(navigate).toHaveBeenCalledWith(['/coaching-portal/plan'], { queryParams: { plan: 'new-plan' } });
+  });
+
+  // Re-review (7): reads do not keep the student; writes do.
+  it('reports only writes as keeping the student on the page', async () => {
+    const { c } = await setup();
+    c.previewing.set(true); expect(c.writing()).toBe(false);
+    c.applying.set(true); expect(c.writing()).toBe(true);
   });
 
   it('offers Planım when a draft already exists', async () => {

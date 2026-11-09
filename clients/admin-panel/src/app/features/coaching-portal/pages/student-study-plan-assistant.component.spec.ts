@@ -1,7 +1,10 @@
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
+import { By } from '@angular/platform-browser';
+import { WizardHoursStepComponent } from './wizard-hours-step.component';
+import { WizardSummaryStepComponent } from './wizard-summary-step.component';
 import { CoachingWeeklyDraftService, WeeklyProposalMode, WeeklyTempoOption } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingLearningSetupService, LearningContext } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingWeeklyOutcomePlanService } from '../../../core/services/coaching-weekly-outcome-plan.service';
@@ -335,13 +338,55 @@ describe('StudentStudyPlanAssistantComponent', () => {
     await click(fixture, 'Kaydet ve devam');
     expect(routines.save).toHaveBeenCalledTimes(1);
     expect(title(el)).toBe('Özet');
-    // Back to the menu through the steps, then the whole plan: Devam on the hours goes to the courses.
+    // Re-review (2): the hours step left the flow with the detour; back to the menu through the courses, then the whole plan.
+    expect(pills(el)).toEqual(['Derslerin (tamamlandı)', 'Özet']);
     await click(fixture, 'Geri'); expect(title(el)).toBe('Derslerin');
-    await click(fixture, 'Geri'); expect(title(el)).toBe('Saatlerin');
     await click(fixture, 'Geri'); expect(el.querySelector('[data-testid="edit-menu"]')).toBeTruthy();
     await click(fixture, 'Planı baştan kur');
     await click(fixture, 'Doğru, devam');
     expect(title(el)).toBe('Derslerin');
+  });
+
+  it('"Saat ekle" from the tempo edit leaves no hours step behind (Geri reaches the menu)', async () => {
+    const { fixture, el, c } = await setup({ active: true, shortage: true, routine: routineOf(answers), availability: hours });
+    c.edit('tempo'); await settle(fixture);
+    await click(fixture, 'Devam');
+    expect(title(el)).toBe('Özet');
+    await click(fixture, 'Saat ekle');
+    expect(pills(el)).toEqual(['Saatlerin', 'Tempo', 'Özet']);
+    await click(fixture, 'Geri');
+    expect(title(el)).toBe('Özet'); expect(pills(el)).toEqual(['Tempo (tamamlandı)', 'Özet']);
+    await click(fixture, 'Geri'); expect(title(el)).toBe('Tempo');
+    await click(fixture, 'Geri'); expect(el.querySelector('[data-testid="edit-menu"]')).toBeTruthy();
+  });
+
+  // Re-review (5): a routine save sends only what the student confirmed; the server keeps saved values for null.
+  it('saves the routine with null focus and tempo until the student confirms them', async () => {
+    const { fixture, c, routines } = await setup({ yks: true, active: true, routine: routineOf(answers), availability: hours });
+    expect(c.examFocus()).toBe('balanced');
+    c.edit('hours'); await settle(fixture);
+    const hoursStep = fixture.debugElement.query(By.directive(WizardHoursStepComponent)).componentInstance as WizardHoursStepComponent;
+    hoursStep.index.set(hoursStep.questions().indexOf('review')); hoursStep.next(); await settle(fixture);
+    expect(routines.save).toHaveBeenCalledWith(expect.objectContaining({ answers: expect.objectContaining({ examFocus: null, tempo: null }) }));
+  });
+
+  it('saves the routine with the confirmed focus and tempo after the student confirmed them', async () => {
+    const { fixture, c, routines } = await setup({ yks: true, active: true, shortage: true, routine: routineOf(answers), availability: hours });
+    c.edit('tempo'); await settle(fixture);
+    c.setExamFocus('ayt'); await click(fixture, 'Devam');
+    c.tempo.set('Intense'); await click(fixture, 'Devam');
+    await click(fixture, 'Saat ekle');
+    const hoursStep = fixture.debugElement.query(By.directive(WizardHoursStepComponent)).componentInstance as WizardHoursStepComponent;
+    hoursStep.index.set(hoursStep.questions().indexOf('review')); hoursStep.next(); await settle(fixture);
+    expect(routines.save).toHaveBeenCalledWith(expect.objectContaining({ answers: expect.objectContaining({ examFocus: 'Ayt', tempo: 'Intense' }) }));
+  });
+
+  // Re-review (7): a read in progress does not stop the student from leaving.
+  it('lets the student leave while the summary is only reading', async () => {
+    const { fixture, c, weekly } = await setup({ adim: 'ozet', routine: routineOf(answers), availability: hours });
+    weekly.proposal.mockReturnValue(NEVER as never);
+    (fixture.debugElement.query(By.directive(WizardSummaryStepComponent)).componentInstance as WizardSummaryStepComponent).propose('Fill');
+    expect(await c.canLeavePage()).toBe(true);
   });
 
   it('opens the Özet step directly for the old preview address (?adim=ozet)', async () => {

@@ -166,6 +166,15 @@ describe('WizardHoursStepComponent', () => {
     expect(text(background)).toContain('Sabahçı, 08:00–14:00');
   });
 
+  // Re-review (4): no saved hours and an overridden routine: the empty saved hours, not the routine's windows.
+  it('shows a teacher that the student has no saved hours when the routine no longer matches', async () => {
+    const { el } = await setup({ routine: routineOf(answers, false), staff: true });
+    expect(el.querySelector('[data-testid="routine-summary"]')).toBeNull();
+    expect(text(el.querySelector('[data-testid="no-saved-hours"]'))).toBe('Öğrencinin kayıtlı boş saati yok.');
+    expect(el.querySelectorAll('[data-testid="wizard-availability"] > ul li').length).toBe(0);
+    expect(el.querySelector('[data-testid="routine-background"]')).toBeTruthy();
+  });
+
   it('waits while the wizard reads the tempo options', async () => {
     const { el, done } = await setup({ routine: routineOf(answers), availability: hours, disabled: true });
     expect(button(el, 'Doğru, devam')!.disabled).toBe(true); expect(button(el, 'Değiştir')!.disabled).toBe(true);

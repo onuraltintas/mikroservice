@@ -140,7 +140,8 @@ test('student links a school target and publishes a plan through the wizard with
   await page.getByRole('button', { name: 'Devam', exact: true }).click();
   // The tempo step is skipped when only one tempo fits; otherwise the preselected one is kept.
   const summary = page.getByRole('heading', { name: 'Özet', exact: true });
-  await expect(summary.or(page.getByRole('heading', { name: 'Tempo', exact: true }))).toBeVisible();
+  // Re-review (6): the Tempo heading shows while the options load; a single option then skips to Özet. Wait for the cards or Özet.
+  await expect(summary.or(page.getByTestId('tempo-option').first())).toBeVisible();
   if (!await summary.isVisible()) await page.getByRole('button', { name: 'Devam', exact: true }).click();
   await expect(summary).toBeVisible();
   await page.getByRole('button', { name: 'Bu haftayla devam et', exact: true }).click();
