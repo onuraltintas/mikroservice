@@ -209,6 +209,17 @@ describe('WizardSummaryStepComponent', () => {
     expect(navigate).toHaveBeenCalledWith(['/coaching-portal/plan'], { queryParams: { plan: 'new-plan' } });
   });
 
+  // The published plan used the chosen topics, so leaving for Planım does not ask about them.
+  it('clears the chosen topics once the plan is published', async () => {
+    const choices = new SummaryChoices();
+    const { el, fixture, c } = await setup({ choices });
+    await keep(fixture);
+    c.addTopic({ id: 'paragraf', name: 'Paragraf', lessonName: 'Türkçe', unitName: '', gradeNumber: null, examCode: null, estimatedMinutes: null });
+    c.runPreview(); await fixture.whenStable(); fixture.detectChanges();
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable();
+    expect(choices.focusTopics()).toEqual([]);
+  });
+
   it('offers Planım when a draft already exists', async () => {
     const { el, fixture, engine, planning } = await setup();
     await keep(fixture);

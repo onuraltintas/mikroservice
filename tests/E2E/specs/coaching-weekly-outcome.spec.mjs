@@ -117,7 +117,7 @@ test('a new student goes through every step: hours, courses, tempo and summary',
   await page.screenshot({path:`../../artifacts/weekly-outcome-step2-${test.info().project.name}.png`,fullPage:false});
   await page.getByRole('button',{name:'Devam',exact:true}).click();
   await expect(heading(page,'Tempo')).toBeVisible();
-  await expect(page.getByTestId('tempo-option').nth(2)).toContainText('Saatlerin buna yetmiyor');
+  await expect(page.getByTestId('tempo-option').nth(2)).toContainText('Haftada 2 saatin var; bu tempo 2,5 saat istiyor.');
   await page.screenshot({path:`../../artifacts/weekly-outcome-step3-${test.info().project.name}.png`,fullPage:false});
   await page.getByRole('radio',{name:/Dengeli/}).check();
   await page.getByRole('button',{name:'Devam',exact:true}).click();
