@@ -443,4 +443,91 @@ public sealed class WeeklyProposalEngineTests
             if (lesson.GroupBy(x => x.Day).Any(x => x.Count() > 1))
                 Assert.True(days.All(day => lesson.Any(x => x.Day == day)), "a lesson came twice on a day while another study day was free of it");
     }
+    // Live case (09.11, main f96ca0bb): a YKS student, focus Dengeli, all 13 lessons at priority Normal and difficulty Normal, five free
+    // hours (Mon–Fri 17:00–18:00). The proposal gave the five hours to the alphabetically first lessons. The ids below run in name order
+    // as well (Id(1) is the alphabetically first lesson), so neither the name nor the id may decide who gets an hour.
+    private static readonly (string Name, string Exam, int Need)[] Yks =
+    [
+        ("Biyoloji (AYT)", "AYT", 70), ("Biyoloji (TYT)", "TYT", 55), ("Coğrafya (TYT)", "TYT", 45), ("Din Kültürü (TYT)", "TYT", 30),
+        ("Felsefe (TYT/AYT)", "TYT", 40), ("Fizik (AYT)", "AYT", 120), ("Fizik (TYT)", "TYT", 90), ("Kimya (AYT)", "AYT", 110),
+        ("Kimya (TYT)", "TYT", 80), ("Matematik (AYT)", "AYT", 210), ("Matematik (TYT)", "TYT", 240), ("Tarih (TYT)", "TYT", 60),
+        ("Türkçe (TYT)", "TYT", 150),
+    ];
+    private static WeeklyProposalLesson[] YksLessons(Func<int, int>? id = null, Func<int, int, int>? need = null, Func<int, int>? priority = null,
+        Func<int, bool>? hard = null) =>
+        Yks.Select((x, i) => new WeeklyProposalLesson(Id((id ?? (n => n))(i + 1)), x.Name, x.Exam, (need ?? ((_, n) => n))(i, x.Need),
+            (priority ?? (_ => 3))(i), (hard ?? (_ => false))(i))).ToArray();
+    private static string[] Chosen(WeeklyProposalResult result) => result.Lessons.Where(x => !x.NoTime).Select(x => x.Name).Order(StringComparer.Ordinal).ToArray();
+    private static WeeklyProposalResult FiveHours(IEnumerable<WeeklyProposalLesson> lessons, string? focus = "balanced", WeeklyProposalMode mode = WeeklyProposalMode.Replace) =>
+        Propose(Weekdays.Select(day => Window(day, 1020, 1080)), lessons, focus: focus, mode: mode);
+
+    [Theory]
+    [InlineData(WeeklyProposalMode.Replace)]
+    [InlineData(WeeklyProposalMode.Fill)]
+    public void FiveHoursForThirteenYksLessons_GoToTheFiveLargestNeeds_NotTheFirstNames(WeeklyProposalMode mode)
+    {
+        var top = new[] { "Fizik (AYT)", "Kimya (AYT)", "Matematik (AYT)", "Matematik (TYT)", "Türkçe (TYT)" };
+        // Ids in name order, in reverse name order, and shuffled: the same five lessons each time.
+        foreach (var id in new Func<int, int>[] { n => n, n => 14 - n, n => (n * 5) % 13 + 1 })
+        {
+            var result = FiveHours(YksLessons(id), mode: mode);
+            Assert.Equal(5, result.Slots.Count);
+            Assert.Equal(5, result.Slots.Select(x => x.LessonId).Distinct().Count());
+            Assert.Equal(top, Chosen(result));
+            // The alphabetically first lessons have the smallest needs and stay without time; they are named, not dropped.
+            Assert.True(result.Lessons.Single(x => x.Name == "Din Kültürü (TYT)").NoTime);
+            Assert.True(result.Lessons.Single(x => x.Name == "Biyoloji (AYT)").NoTime);
+            Assert.Equal(8, result.Lessons.Count(x => x.NoTime));
+        }
+    }
+
+    [Fact]
+    public void FiveHoursForThirteenYksLessons_TheAlphabeticallyFirstLessonWithTheSmallestNeedNeverWins()
+    {
+        // Biyoloji (AYT), first by name and by id, now has the smallest need of all.
+        var result = FiveHours(YksLessons(need: (i, n) => i == 0 ? 15 : n));
+        Assert.True(result.Lessons.Single(x => x.Name == "Biyoloji (AYT)").NoTime);
+        Assert.False(result.Lessons.Single(x => x.Name == "Matematik (TYT)").NoTime);
+        Assert.Equal(new[] { "Fizik (AYT)", "Kimya (AYT)", "Matematik (AYT)", "Matematik (TYT)", "Türkçe (TYT)" }, Chosen(result));
+    }
+
+    [Fact]
+    public void UnderShortageThePriorityTheDifficultyAndTheExamFocusChangeWhichLessonsGetTheHours()
+    {
+        // Priority 1 (×1.3) lifts Fizik (TYT) 90 → 117 above Kimya (AYT) 110.
+        var priority = FiveHours(YksLessons(priority: i => Yks[i].Name == "Fizik (TYT)" ? 1 : 3));
+        Assert.Equal(new[] { "Fizik (AYT)", "Fizik (TYT)", "Matematik (AYT)", "Matematik (TYT)", "Türkçe (TYT)" }, Chosen(priority));
+
+        // A hard lesson (×1.5, plan H2): Fizik (TYT) 90 → 135, above Fizik (AYT) 120 and Kimya (AYT) 110.
+        var hard = FiveHours(YksLessons(hard: i => Yks[i].Name == "Fizik (TYT)"));
+        Assert.Equal(new[] { "Fizik (AYT)", "Fizik (TYT)", "Matematik (AYT)", "Matematik (TYT)", "Türkçe (TYT)" }, Chosen(hard));
+        // Without the weight, the hard lesson's own need (90) stays below Kimya (AYT) 110.
+        Assert.True(FiveHours(YksLessons()).Lessons.Single(x => x.Name == "Fizik (TYT)").NoTime);
+
+        // TYT first (×1.3 TYT, ×0.75 AYT): Fizik (TYT) 117, Kimya (TYT) 104 and Türkçe 195 pass Fizik (AYT) 90 and Kimya (AYT) 82.5.
+        var tyt = FiveHours(YksLessons(), focus: "tyt");
+        Assert.Equal(new[] { "Fizik (TYT)", "Kimya (TYT)", "Matematik (AYT)", "Matematik (TYT)", "Türkçe (TYT)" }, Chosen(tyt));
+
+        // AYT first (×1.3 AYT, ×0.75 TYT), Biyoloji (AYT) at 90: its 117 passes Türkçe (TYT) 150 → 112.5.
+        var ayt = FiveHours(YksLessons(need: (i, n) => Yks[i].Name == "Biyoloji (AYT)" ? 90 : n), focus: "ayt");
+        Assert.Equal(new[] { "Biyoloji (AYT)", "Fizik (AYT)", "Kimya (AYT)", "Matematik (AYT)", "Matematik (TYT)" }, Chosen(ayt));
+    }
+
+    // The live week above was not made by this engine: before Paket H2 the wizard ranked the courses by priority and then by name and
+    // saved that week. Fill keeps saved cards (plan H2, item 4), so with no free hour left it proposes nothing and names the lessons
+    // without time; Replace ("Haftanı baştan öner") gives the five hours by need.
+    [Fact]
+    public void ASavedWeekInNameOrderIsKeptByFill_ReplaceGivesTheHoursByNeed()
+    {
+        var lessons = YksLessons();
+        var saved = Weekdays.Select((day, i) => Card(i + 1, day, 1020, name: Yks[i].Name)).ToArray();
+        var fill = Propose(Weekdays.Select(day => Window(day, 1020, 1080)), lessons, focus: "balanced", existing: saved);
+        Assert.Empty(fill.Slots);
+        Assert.Equal(Yks.Take(5).Select(x => x.Name).Order(StringComparer.Ordinal), Chosen(fill));
+        Assert.True(fill.Lessons.Single(x => x.Name == "Matematik (TYT)").NoTime);
+        Assert.True(fill.ShortageMinutes > 0);
+
+        var replace = Propose(Weekdays.Select(day => Window(day, 1020, 1080)), lessons, focus: "balanced", mode: WeeklyProposalMode.Replace, existing: saved);
+        Assert.Equal(new[] { "Fizik (AYT)", "Kimya (AYT)", "Matematik (AYT)", "Matematik (TYT)", "Türkçe (TYT)" }, Chosen(replace));
+    }
 }
