@@ -17,6 +17,16 @@ describe('StudentStudyPlansComponent', () => {
     expect(fixture.nativeElement.querySelector('details.plan-menu .plan-picker')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.plan-picker').open).toBe(false);
   });
+  // Paket H1 (08.11.2026): every "Planını oluştur" opens the plan wizard, as on the home page.
+  it('sends "Planını oluştur" on the empty plan to the plan wizard', async () => {
+    const { component, fixture, router } = await setup();
+    component.selected.set(null); fixture.detectChanges();
+    const empty = fixture.nativeElement.querySelector('.plan-empty') as HTMLElement;
+    expect(empty.textContent).toContain('Boş saatlerini ve haftalık düzenini gir');
+    expect(empty.textContent).not.toContain('Ders düzenini');
+    (Array.from(empty.querySelectorAll('button')) as HTMLButtonElement[]).find(b => b.textContent?.trim() === 'Planını oluştur')!.click();
+    expect(router.navigate).toHaveBeenCalledWith(['/coaching-portal/plan/wizard']);
+  });
   it('finds the existing draft while the default active filter hides it', async () => {
     const { component, service } = await setup();
     const draft = { ...active, id: 'existing-draft', status: 'Draft' as const };

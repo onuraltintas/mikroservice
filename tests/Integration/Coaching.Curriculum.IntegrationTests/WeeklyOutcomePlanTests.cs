@@ -123,6 +123,46 @@ public sealed class WeeklyOutcomePlanTests
         f.Db.Add(weekly);f.Db.Add(Coaching.Domain.Profiles.CoachingStudentProfile.Create(f.User.UserId.Value));f.Db.Add(StudentLearningContext.Create(f.User.UserId.Value,2026,LearningPurpose.Lgs,2027,null,null));await f.Db.SaveChangesAsync();
         return new(f.Db,new CoachingAccessPolicy(f.User),new WeeklyStudyDraftTests.Catalog(f.Db),TimeProvider.System);
     }
+    // Paket H1 (P10, 08.11.2026): the preview names the weekly lessons that are no longer chosen, once each, in Turkish order.
+    // Review of PR #129: a dedicated code with the lessons in the body; the teacher reads it in third person.
+    [Fact]
+    public async Task PreviewNamesTheWeeklyLessonsNoLongerChosen()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var student=f.User.UserId!.Value;
+        var weekly=await f.Db.Set<WeeklyStudyDraft>().SingleAsync();Guid kimya=Guid.NewGuid(),fizik=Guid.NewGuid(),cevre=Guid.NewGuid();
+        weekly.Replace(weekly.TimeZoneId,[..weekly.Slots,new(Guid.NewGuid(),kimya,"Kimya (AYT)","AYT",DayOfWeek.Tuesday,1080,60),
+            new(Guid.NewGuid(),fizik,"Fizik (AYT)","AYT",DayOfWeek.Wednesday,1080,60),new(Guid.NewGuid(),kimya,"Kimya (AYT)","AYT",DayOfWeek.Thursday,1080,60),
+            new(Guid.NewGuid(),cevre,"Çevre ve İnsan",null,DayOfWeek.Friday,1080,30)]);
+        await f.Db.SaveChangesAsync();var input=Input with {ExpectedWeeklyDraftVersion=weekly.Version};
+        var error=await Assert.ThrowsAsync<BusinessRuleException>(()=>service.PreviewAsync(input,default));
+        Assert.Equal(WeeklyLessonsNotChosen.Code,error.Code);Assert.Equal("StudyPlanning.LessonsNotChosen",error.Code);
+        Assert.Equal("Haftalık düzeninde artık seçili olmayan dersler var: Çevre ve İnsan, Fizik (AYT), Kimya (AYT). Bu dersleri haftalık düzeninden kaldırıp yeniden önizle.",error.Message);
+        WeeklyUnscheduledLesson[] lessons=[new(cevre,"Çevre ve İnsan"),new(fizik,"Fizik (AYT)"),new(kimya,"Kimya (AYT)")];
+        Assert.Equal(lessons,WeeklyLessonsNotChosen.Lessons(error));
+        var api=new Coaching.API.Controllers.WeeklyOutcomePlansController(service);
+        var conflict=Assert.IsType<Microsoft.AspNetCore.Mvc.ConflictObjectResult>(await api.Preview(input,default));
+        Assert.Equal(WeeklyLessonsNotChosen.Code,Body(conflict.Value,"code"));Assert.Equal(lessons,Body(conflict.Value,"lessons"));
+        // The teacher path: third person, the same code and lessons.
+        var teacher=Guid.NewGuid();f.User.UserId=teacher;f.User.Roles=["Teacher"];var access=new CoachingAccessPolicy(f.User);
+        var staff=new CoachingWeeklyOutcomePlanService(f.Db,access,new WeeklyStudyDraftTests.Catalog(f.Db),TimeProvider.System,
+            new CoachingStudyPlanAccess(access,new WeeklyStudyDraftTests.Teaching(student),f.Scope));
+        var staffError=await Assert.ThrowsAsync<BusinessRuleException>(()=>staff.PreviewForStudentAsync(student,input,default));
+        Assert.Equal("Öğrencinin haftalık düzeninde artık seçili olmayan dersler var: Çevre ve İnsan, Fizik (AYT), Kimya (AYT). Bu derslerin haftalık düzenden kaldırılması gerekiyor.",staffError.Message);
+        var staffApi=new Coaching.API.Controllers.CoachingStaffStudyController(null!,null!,null!,null!,null!,null!,null!,staff);
+        var staffConflict=Assert.IsType<Microsoft.AspNetCore.Mvc.ConflictObjectResult>(await staffApi.OutcomePreview(student,input,default));
+        Assert.Equal(WeeklyLessonsNotChosen.Code,Body(staffConflict.Value,"code"));Assert.Equal(lessons,Body(staffConflict.Value,"lessons"));
+        Assert.Equal(staffError.Message,Body(staffConflict.Value,"message"));
+    }
+    private static object? Body(object? body,string name)=>body?.GetType().GetProperty(name)?.GetValue(body) is var v&&v is IEnumerable<WeeklyUnscheduledLesson> list?list.ToArray():v;
+    // Paket H1 (08.11.2026): the freed hours of a finished lesson go to the remaining lessons unless the request turns it off.
+    [Fact]
+    public void TheFreedHoursAreUsedUnlessTheRequestSaysOtherwise()
+    {
+        Assert.True(new WeeklyOutcomePlanRequest(new(2027,5,24),new(2027,6,1),1).ReuseFreedSlots);
+        var web=new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        Assert.True(JsonSerializer.Deserialize<WeeklyOutcomePlanRequest>("""{"startDate":"2027-05-24","endDate":"2027-06-01","expectedWeeklyDraftVersion":1}""",web)!.ReuseFreedSlots);
+        Assert.False(JsonSerializer.Deserialize<WeeklyOutcomePlanRequest>("""{"startDate":"2027-05-24","endDate":"2027-06-01","expectedWeeklyDraftVersion":1,"reuseFreedSlots":false}""",web)!.ReuseFreedSlots);
+    }
     // Paket G #41 (07.11.2026): a chosen course without a weekly lesson is named, not silently left out of the yearly plan.
     [Fact]
     public async Task PreviewNamesChosenCoursesWithoutAWeeklyLesson()

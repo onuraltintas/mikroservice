@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {studentShell} from '../support/coaching-student-shell.mjs';
 test.beforeEach(async({page})=>{await page.clock.setFixedTime(new Date('2026-10-17T12:00:00Z'));});
 const token=()=>{const e=x=>Buffer.from(JSON.stringify(x)).toString('base64url');return`${e({alg:'HS256'})}.${e({sub:'b8a09753-f3ea-44d8-a444-cf49577b4a01',role:'Student',platform_product:'coaching',exp:Math.floor(Date.now()/1000)+900})}.fixture`;};
 async function fixture(context,status='Draft'){
@@ -8,6 +9,7 @@ async function fixture(context,status='Draft'){
   await context.route('**/api/**',async route=>{
     const req=route.request(),path=new URL(req.url()).pathname,ok=data=>route.fulfill({json:{success:true,data}});
     if(path.endsWith('/auth/refresh-token'))return route.fulfill({json:{accessToken:token(),expiresInMinutes:15,tokenType:'Bearer'}});
+    const shell=studentShell(route,path);if(shell)return shell;
     if(path.endsWith('/profiles/me'))return ok({student:{educationStatus:'Student',gradeLevel:8,isActive:true},memberships:[]});
     if(path.endsWith('/plans/annual'))return ok(annual);
     if(path.endsWith('/plans/old'))return ok(old);

@@ -21,11 +21,23 @@ describe('weekly routine tabs', () => {
     const input = fixture.nativeElement.querySelector('input[aria-label="Ders notu"]') as HTMLInputElement;
     input.value = 'Kaydedilmemiş ders';
     const buttons = fixture.nativeElement.querySelectorAll('button');
-    buttons[1].click(); fixture.detectChanges();
-    expect(input.closest('[hidden]')).not.toBeNull();
     buttons[0].click(); fixture.detectChanges();
+    expect(input.closest('[hidden]')).not.toBeNull();
+    buttons[1].click(); fixture.detectChanges();
     expect(input.value).toBe('Kaydedilmemiş ders');
     expect(input.closest('[hidden]')).toBeNull();
+  });
+  // Paket H1 (08.11.2026): the free hours come first, as in the steps of "Planı düzenle".
+  it('puts Müsait saatlerim first and explains the two in that order, keeping the tab each route opens', () => {
+    const fixture = TestBed.createComponent(StudentStudyRoutineComponent); fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(Array.from(el.querySelectorAll('nav button')).map(b => b.textContent?.trim())).toEqual(['Müsait saatlerim', 'Haftalık düzenim']);
+    expect(el.querySelector('p')?.textContent?.trim()).toBe('Müsait saatlerin ne zaman çalışabileceğini, haftalık düzenin bu saatlerde hangi derse çalışacağını belirler.');
+    expect(fixture.componentInstance.tab).toBe('calendar');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({imports:[StudentStudyRoutineComponent],providers:[{provide:ActivatedRoute,useValue:{snapshot:{data:{initialTab:'hours'}}}}]});
+    TestBed.overrideComponent(StudentStudyRoutineComponent, {set:{imports:[CalendarStub,HoursStub]}});
+    expect(TestBed.createComponent(StudentStudyRoutineComponent).componentInstance.tab).toBe('hours');
   });
   it('does not leave while either child rejects leaving', async () => {
     const fixture = TestBed.createComponent(StudentStudyRoutineComponent); fixture.detectChanges();

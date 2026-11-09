@@ -1,6 +1,6 @@
 import { isDevMode } from '@angular/core';
 import type { WeeklyCourseRank, WeeklyLesson } from '../../../core/services/coaching-weekly-draft.service';
-import { WeeklySlot, Weekday, weekDays } from './weekly-calendar';
+import { DEFAULT_MAX_DAY_MINUTES, WeeklySlot, Weekday, weekDays } from './weekly-calendar';
 
 /**
  * Paket G #41: priority is the student's (Derslerim › Öncelik, 1 highest, 3 by default); examQuestions is the course's question
@@ -23,8 +23,10 @@ export interface StudyPlanWindow { day: string; startMinute: number; endMinute: 
  * E6 #29: the weekly proposal is made from the saved availability, so the student gives her study times once.
  * The rules are the wizard's: 60-minute cards (30 when only half an hour is left) on the half hour, Monday first,
  * and saved cards are never moved. Paket G #41: the courses take the hours in the order of {@link rankLessons}.
+ * Review of PR 129 (K5): a day is filled only until its saved and proposed cards reach `maxDayMinutes`.
  */
-export function createProposalFromWindows(windows: StudyPlanWindow[], lessons: StudyPlanWizardLesson[], existing: WeeklySlot[]): WeeklySlot[] {
+export function createProposalFromWindows(windows: StudyPlanWindow[], lessons: StudyPlanWizardLesson[], existing: WeeklySlot[],
+  maxDayMinutes = DEFAULT_MAX_DAY_MINUTES): WeeklySlot[] {
   if (!windows.length || !lessons.length) return [];
   const order = weekDays.map(day => day.value as string);
   const ordered = windows.filter(window => order.includes(window.day))
@@ -36,8 +38,10 @@ export function createProposalFromWindows(windows: StudyPlanWindow[], lessons: S
   for (const { day, startMinute, endMinute } of ordered) {
     let minute = startMinute;
     while (minute + 30 <= endMinute) {
+      const left = maxDayMinutes - [...existing, ...proposal].filter(slot => slot.day === day).reduce((sum, slot) => sum + slot.durationMinutes, 0);
+      if (left < 30) break;
       if (overlaps(day, minute, 30, existing) || overlaps(day, minute, 30, proposal)) { minute += 30; continue; }
-      const durationMinutes = minute + 60 <= endMinute && !overlaps(day, minute, 60, existing) && !overlaps(day, minute, 60, proposal) ? 60 : 30;
+      const durationMinutes = left >= 60 && minute + 60 <= endMinute && !overlaps(day, minute, 60, existing) && !overlaps(day, minute, 60, proposal) ? 60 : 30;
       const lesson = orderedLessons[lessonIndex++ % orderedLessons.length];
       proposal.push({ id: crypto.randomUUID(), lessonId: lesson.id, lessonName: lesson.name,
         examCode: lesson.examCode, day, startMinute: minute, durationMinutes });

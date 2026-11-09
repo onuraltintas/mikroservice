@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {studentShell} from '../support/coaching-student-shell.mjs';
 const math='33333333-3333-4333-8333-333333333331',turkish='33333333-3333-4333-8333-333333333332';
 const lessons=[{id:math,name:'Matematik',examCode:'LGS',gradeNumber:8},{id:turkish,name:'Türkçe',examCode:'LGS',gradeNumber:8}];
 const token=()=>{const e=x=>Buffer.from(JSON.stringify(x)).toString('base64url');return`${e({alg:'HS256'})}.${e({sub:'b8a09753-f3ea-44d8-a444-cf49577b4a01',role:'Student',platform_product:'coaching',given_name:'Test',family_name:'Öğrenci',exp:Math.floor(Date.now()/1000)+900})}.fixture`;};
@@ -16,6 +17,7 @@ async function fixture(context){
   await context.route('**/api/**',async route=>{
     const req=route.request(),path=new URL(req.url()).pathname;const ok=data=>route.fulfill({json:{success:true,data}});
     if(path.endsWith('/auth/refresh-token'))return route.fulfill({json:{accessToken:token(),expiresInMinutes:15,tokenType:'Bearer'}});
+    const shell=studentShell(route,path);if(shell)return shell;
     if(path.endsWith('/profiles/me'))return ok({student:{educationStatus:'Student',gradeLevel:8,isActive:true},memberships:[]});
     if(path.endsWith('/weekly-draft')){expect(req.method()).toBe('GET');return ok({draft,lessons});}
     if(path.endsWith('/weekly-outcome-plans/options'))return ok({startDate:'2027-05-24',endDate:'2027-06-01',weeklyDraftVersion:2,timeZoneId:'Europe/Istanbul',exams:[{name:'LGS',date:'2027-06-20'}]});
@@ -31,7 +33,7 @@ async function fixture(context){
     if(req.method()!=='GET')writes.push({path});return ok([]);
   });return{writes,old,setMissing:value=>missing=value,setConflict:value=>conflict=value};
 }
-async function open(page){await page.goto('/coaching-portal/plan/weekly');await page.getByTestId('weekly-preview-link').click();await expect(page.getByRole('heading',{name:'Çalışma planını önizle',exact:true})).toBeVisible();await expect(page.getByLabel('Hedef bitiş tarihi',{exact:true})).toHaveValue('2027-06-01');await page.getByRole('button',{name:'Önizleme oluştur',exact:true}).click();await expect(page.getByRole('heading',{name:'Dersler ne zaman bitecek?',exact:true})).toBeVisible();}
+async function open(page){await page.goto('/coaching-portal/plan/weekly');await page.getByTestId('weekly-preview-link').click();await expect(page.getByRole('heading',{name:'Çalışma planını önizle',exact:true})).toBeVisible();await expect(page.getByLabel('Hedef bitiş tarihi',{exact:true})).toHaveValue('2027-06-01');/* Paket H1: the freed hours are used by default; these cases start without them. */const reuse=page.getByRole('checkbox',{name:'Erken biten derslerin boşalan saatlerini kalan derslere aktar.',exact:true});await expect(reuse).toBeChecked();await reuse.uncheck();await page.getByRole('button',{name:'Önizleme oluştur',exact:true}).click();await expect(page.getByRole('heading',{name:'Dersler ne zaman bitecek?',exact:true})).toBeVisible();}
 async function create(page){await page.getByRole('checkbox',{name:'Tarihleri, ders bitişlerini ve süreleri kontrol ettim.',exact:true}).check();await page.getByRole('button',{name:'Çalışma planı taslağını oluştur',exact:true}).click();
   // T4: the new draft opens on Planım (?plan=…) as its status line instead of a page heading.
   await expect(page).toHaveURL(/\/coaching-portal\/plan\?plan=generated$/);await expect(page.locator('.plan-head .plan-status')).toContainText('Haftalık derslerimden çalışma planım');await expect(page.locator('.plan-head .plan-status')).toContainText('Taslak');}

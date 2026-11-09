@@ -8,7 +8,8 @@ export interface WeeklyLesson {id:string;name:string;examCode:string|null;gradeN
 export interface WeeklyDraft {version:number;timeZoneId:string;slots:WeeklySlot[]}
 /** Paket G #41: a chosen course's priority (1 highest) and its question count in the exam (null when not known). */
 export interface WeeklyCourseRank {lessonId:string;priority:number;examQuestions:number|null}
-export interface WeeklyDraftPage {draft:WeeklyDraft|null;lessons:WeeklyLesson[];courses?:WeeklyCourseRank[]|null}
+/** Paket H1 (K5): maxDayMinutes is the most study one day of the weekly routine may hold for this student. */
+export interface WeeklyDraftPage {draft:WeeklyDraft|null;lessons:WeeklyLesson[];courses?:WeeklyCourseRank[]|null;maxDayMinutes?:number}
 @Injectable({providedIn:'root'})
 export class CoachingWeeklyDraftService {
   private readonly http=inject(HttpClient);private readonly url=`${environment.apiUrl}/coaching/study-planning/weekly-draft`;
