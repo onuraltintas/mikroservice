@@ -67,9 +67,12 @@ public sealed class CoachingStudyRoutineService(CoachingDbContext db, ICoachingA
                 db.Add(profile);
             }
             profile.Replace(answersJson, availability.Version);
-            // Paket H4a: the routine's focus and tempo are the plan preferences (their single source), saved with it.
+            // Paket H4a: the routine's focus and tempo are the plan preferences (their single source), saved with it. A missing value
+            // (a first save, or a page with stale values) keeps the saved one; only the preferences endpoint clears a value.
             var preferences = await db.Set<StudyPlanPreferences>().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
-            CoachingStudyPlanPreferencesService.Apply(db, studentId, preferences, answers.ExamFocus, answers.Tempo);
+            CoachingStudyPlanPreferencesService.Apply(db, studentId, preferences,
+                answers.ExamFocus ?? (preferences is null ? null : CoachingStudyPlanPreferencesService.Focus(preferences)),
+                answers.Tempo ?? (preferences is null ? null : CoachingStudyPlanPreferencesService.Tempo(preferences)));
             await SaveAsync(RoutineConflict, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return View(profile, availability, yks, await db.Set<StudyPlanPreferences>().SingleAsync(x => x.StudentId == studentId, cancellationToken));

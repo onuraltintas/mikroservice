@@ -267,9 +267,10 @@ public sealed class StudyRoutinePostgresTests
         Assert.Equal(StudyTempo.Balanced, (await Service(pg.Db, user).ReplaceAsync(new(null, null, Morning() with { Tempo = StudyTempo.Balanced }))).Answers.Tempo);
         await using (var db = new CoachingDbContext(pg.Options)) Assert.Equal(StudyTempo.Balanced, (await Service(db, user).GetAsync())!.Answers.Tempo);
         Assert.Contains("\"Tempo\": \"Balanced\"", (await Stored(pg, student)).Answers);
-        StudyRoutineView cleared;
-        await using (var db = new CoachingDbContext(pg.Options)) cleared = await Service(db, user).ReplaceAsync(new(0, 0, Morning()));
-        Assert.Null(cleared.Answers.Tempo);
+        // Saved again without a tempo, the saved tempo stays (review of 48f12c23: only the plan preferences clear it).
+        StudyRoutineView kept;
+        await using (var db = new CoachingDbContext(pg.Options)) kept = await Service(db, user).ReplaceAsync(new(0, 0, Morning()));
+        Assert.Equal(StudyTempo.Balanced, kept.Answers.Tempo);
         await using (var db = new CoachingDbContext(pg.Options))
         {
             var bad = await new StudyRoutineController(Service(db, user)).Replace(new(1, 1, Morning() with { Tempo = (StudyTempo)9 }));
@@ -525,6 +526,42 @@ public sealed class StudyRoutinePostgresTests
         await using (var db = new CoachingDbContext(pg.Options))
             await new CoachingErasureExecutionService(db, new NoAttachments(), TimeProvider.System).ExecuteAsync(new(eventId, id, student, now, PersonalDataScope.Coaching), default);
         await using (var db = new CoachingDbContext(pg.Options)) Assert.False(await db.Set<StudyPlanPreferences>().AnyAsync(x => x.StudentId == student));
+    }
+
+    // Review of 48f12c23: a routine saved without a focus or tempo (a first save, or stale values) keeps the saved preferences; only a
+    // value overwrites them, and clearing goes through the preferences.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task ARoutineWithoutFocusOrTempoKeepsTheSavedPreferences()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var user = pg.Data.User; user.Roles = ["Student"]; var student = user.UserId!.Value;
+        pg.Db.AddRange(Coaching.Domain.Profiles.CoachingStudentProfile.Create(student), StudentLearningContext.Create(student, 2026, LearningPurpose.Yks, 2027, "SAY", null));
+        await pg.Db.SaveChangesAsync();
+        await using (var db = new CoachingDbContext(pg.Options)) await Preferences(db, user).ReplaceAsync(new(StudyExamFocus.Ayt, StudyTempo.Intense));
+
+        // The first routine save has neither value: the preferences stay and the routine shows them.
+        StudyRoutineView first;
+        await using (var db = new CoachingDbContext(pg.Options)) first = await Service(db, user).ReplaceAsync(new(null, null, Morning()));
+        Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Intense), (first.Answers.ExamFocus!.Value, first.Answers.Tempo!.Value));
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var prefs = await Preferences(db, user).GetAsync();
+            Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Intense), (prefs.ExamFocus!.Value, prefs.Tempo!.Value));
+        }
+        // A value overwrites only its own field.
+        await using (var db = new CoachingDbContext(pg.Options)) await Service(db, user).ReplaceAsync(new(first.Version, first.CurrentAvailabilityVersion, Morning() with { Tempo = StudyTempo.Relaxed }));
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var prefs = await Preferences(db, user).GetAsync();
+            Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Relaxed), (prefs.ExamFocus!.Value, prefs.Tempo!.Value));
+        }
+        // Clearing is done through the preferences.
+        await using (var db = new CoachingDbContext(pg.Options)) await Preferences(db, user).ReplaceAsync(new(null, null));
+        await using (var db = new CoachingDbContext(pg.Options))
+        {
+            var routine = (await Service(db, user).GetAsync())!;
+            Assert.Equal(((StudyExamFocus?)null, (StudyTempo?)null), (routine.Answers.ExamFocus, routine.Answers.Tempo));
+        }
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
