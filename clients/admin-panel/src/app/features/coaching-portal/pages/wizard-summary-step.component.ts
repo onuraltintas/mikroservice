@@ -103,6 +103,8 @@ export class WizardSummaryStepComponent implements OnInit {
   readonly proposing = signal(false);
   readonly applying = signal(false);
   readonly proposal = signal<WeeklyProposal | null>(null);
+  /** The shown proposal is the week the wizard has just kept (no longer the server's answer for the saved week). */
+  private readonly keptWeek = signal(false);
   readonly error = signal('');
   // The yearly preview.
   readonly options = signal<WeeklyOutcomeOptions | null>(null);
@@ -185,7 +187,7 @@ export class WizardSummaryStepComponent implements OnInit {
       switchMap(finishBy => { this.usedFinishBy = finishBy; return this.weekly.proposal(mode, this.examFocus, this.staffStudentId ?? undefined, this.windows ?? undefined, finishBy); }),
       takeUntilDestroyed(this.destroy), finalize(() => this.proposing.set(false))).subscribe({
         next: view => {
-          this.proposal.set(view);
+          this.proposal.set(view); this.keptWeek.set(false);
           if (!view.slots.length && this.slots().length) { this.runPreview(); return; }
           // Paket F #37: the new content takes the focus.
           this.focus(() => this.proposalTitle);
@@ -213,6 +215,12 @@ export class WizardSummaryStepComponent implements OnInit {
     return view.lessons.reduce((sum, lesson) => sum + Math.min(lesson.neededMinutes, this.slots()
       .filter(slot => slot.lessonId.toLowerCase() === lesson.lessonId.toLowerCase()).reduce((total, slot) => total + slot.durationMinutes, 0)), 0);
   }
+  /**
+   * Live case (09.11): a saved week (for example one made before the need-based proposal) leaves lessons without time. Fill keeps the
+   * saved cards, so the summary offers the whole week again by need ("Haftanı baştan öner" with its confirmation), also once the yearly
+   * preview is open. Not for the week the wizard has just kept.
+   */
+  rebuildSuggested(view: WeeklyProposal) { return view.mode === 'Fill' && !this.keptWeek() && this.slots().length > 0 && view.lessons.some(x => x.noTime); }
   lessonsWithoutTime(view: WeeklyProposal) { return view.lessons.filter(x => x.noTime).map(x => x.lessonName).join(', '); }
   emptyText(view: WeeklyProposal) {
     const staff = !!this.staffStudentId;
@@ -236,7 +244,7 @@ export class WizardSummaryStepComponent implements OnInit {
     this.weekly.save(this.version, this.timeZoneId, next, this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.applying.set(false))).subscribe({
       next: draft => {
         this.applyPage(draft); this.draftSaved.emit(draft.slots.length > 0);
-        this.proposal.set({ ...view, mode: 'Fill', slots: [] }); this.runPreview();
+        this.proposal.set({ ...view, mode: 'Fill', slots: [] }); this.keptWeek.set(true); this.runPreview();
       },
       error: e => { if (e?.status === 409) this.draftChanged(); else this.error.set(e?.error?.message ?? 'Haftalık düzen kaydedilemedi. Yeniden deneyebilirsin.'); }
     });
