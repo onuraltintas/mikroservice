@@ -94,6 +94,58 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     expect(t.el.querySelector('[role="alert"]')).toBeNull();
     expect(t.rows()).toEqual(['Hukuk · Eşit Ağırlık']);
   });
+  // PR #137 review: separators alone or one-letter words are not a search (the server would list nothing either).
+  it('sends nothing without a word of two letters and says so', async () => {
+    const t = await render();
+    t.toggle().click(); await t.settle();
+    for (const text of ['..', '()', '--', 'a.', 'a b']) {
+      await t.type(text); await wait(); await t.settle();
+      t.http.expectNone(r => r.url === url);
+      expect(t.el.querySelector('[role="status"]')!.textContent, text).toContain('en az 2 harf');
+    }
+    await t.type('a. hu'); await wait(); await t.settle();
+    t.http.expectOne(r => r.url === url && r.params.get('search') === 'a. hu').flush({ data: [] });
+  });
+
+  // PR #137 review: the same term typed again after a short or empty box is searched again.
+  it('searches again for the same term typed after clearing the box', async () => {
+    const t = await render();
+    t.toggle().click(); await t.settle();
+    await t.type('hukuk'); await wait(); await t.settle();
+    t.http.expectOne(r => r.url === url).flush({ data: [{ name: 'Hukuk', scoreType: 'EA' }] }); await t.settle();
+    expect(t.rows()).toEqual(['Hukuk · Eşit Ağırlık']);
+    await t.type(''); await t.type('hukuk'); await wait(); await t.settle();
+    t.http.expectOne(r => r.url === url && r.params.get('search') === 'hukuk').flush({ data: [{ name: 'Hukuk', scoreType: 'EA' }] }); await t.settle();
+    expect(t.box().value).toBe('hukuk');
+    expect(t.rows()).toEqual(['Hukuk · Eşit Ağırlık']);
+  });
+
+  // PR #137 review: reopening starts over (no rows of the last search under an empty box), even with a search still running.
+  it('starts over when it is opened again', async () => {
+    const t = await render();
+    t.toggle().click(); await t.settle();
+    await t.type('hukuk'); await wait(); await t.settle();
+    t.http.expectOne(r => r.url === url).flush({ data: [{ name: 'Hukuk', scoreType: 'EA' }] }); await t.settle();
+    await t.type('isletme'); await wait(); await t.settle();
+    const late = t.http.expectOne(r => r.url === url && r.params.get('search') === 'isletme');
+    t.toggle().click(); await t.settle();
+    t.toggle().click(); await t.settle();
+    expect(late.cancelled).toBe(true);
+    expect(t.box().value).toBe('');
+    expect(t.rows()).toEqual([]);
+    expect(t.el.querySelector('[role="status"]')!.textContent).toContain('Bölümünün adını yaz');
+  });
+
+  it('closes with Escape on "Yeniden dene" too', async () => {
+    const t = await render();
+    t.toggle().click(); await t.settle();
+    await t.type('hukuk'); await wait(); await t.settle();
+    t.http.expectOne(r => r.url === url).flush({ message: 'x' }, { status: 500, statusText: 'Server Error' }); await t.settle();
+    const retry = Array.from(t.el.querySelectorAll('button')).find(x => x.textContent!.trim() === 'Yeniden dene') as HTMLElement;
+    retry.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); await t.settle(); await new Promise(r => setTimeout(r)); await t.settle();
+    expect(t.toggle().getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(t.toggle());
+  });
 });
 
 describe('score type of a programme (Paket H6)', () => {

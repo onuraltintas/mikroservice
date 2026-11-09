@@ -320,6 +320,37 @@ public sealed class CoachingStudentOnboardingTests
         await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.ProgramFieldsAsync("hukuk", default));
     }
 
+    [Theory]
+    [InlineData("..")]
+    [InlineData("()")]
+    [InlineData("--")]
+    [InlineData("a.")]
+    [InlineData("a b")]
+    [InlineData(" - / ")]
+    public async Task H6_ASearchWithoutAWordOfTwoLettersListsNothing(string search)
+    {
+        // PR #137 review: separators alone leave no word, and no word would filter nothing (the first 20 names of the catalogue).
+        await using var s = await Setup.CreateAsync();
+        (await s.Service.ProgramFieldsAsync(search, default)).Should().BeEmpty();
+        // One word of two letters is enough, whatever else is typed.
+        (await s.Service.ProgramFieldsAsync("a. bilgisayar mü", default)).Should().Equal(new OnboardingProgramField("Bilgisayar Mühendisliği", "SAY"));
+    }
+
+    [Fact]
+    public async Task H6_OlderCatalogueYearsAndInactiveProgrammesAreNotListed()
+    {
+        await using var s = await Setup.CreateAsync();
+        var older = TargetUniversityProgram.Create("9001", "Ankara Üniversitesi", "Arkeoloji", "Fakülte", "Bachelor", "SOZ");
+        older.UpdateDetails(new("9001", "Ankara Üniversitesi", "Arkeoloji", "SOZ", "ANKARA", null, "Devlet", "Bachelor", null, null, null, null, 50, 50, 300, 300, 200000, null),
+            2025, 2025, null, "https://yokatlas.yok.gov.tr");
+        older.SetActive(true);
+        var inactive = TargetUniversityProgram.Create("9002", "Ankara Üniversitesi", "Arkeoloji ve Sanat Tarihi", "Fakülte", "Bachelor", "SOZ");
+        inactive.UpdateDetails(new("9002", "Ankara Üniversitesi", "Arkeoloji ve Sanat Tarihi", "SOZ", "ANKARA", null, "Devlet", "Bachelor", null, null, null, null, 50, 50, 300, 300, 200000, null),
+            2026, 2026, null, "https://yokatlas.yok.gov.tr");
+        s.F.Db.AddRange(older, inactive); await s.F.Db.SaveChangesAsync();
+        (await s.Service.ProgramFieldsAsync("arkeoloji", default)).Should().BeEmpty();
+    }
+
     [Fact]
     public void H6_TheProgrammeFieldSearchIsOpenToAStudentWithoutASubscriptionAndRateLimited()
     {
