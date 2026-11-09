@@ -64,6 +64,9 @@ public static class WeeklyProposalEngine
     /// <summary>Priority 1 is the highest; 3 is the default.</summary>
     public static decimal PriorityFactor(int priority) => priority switch { 1 => 1.3m, 2 => 1.15m, 4 => .9m, 5 => .8m, _ => 1m };
 
+    /// <summary>Plan H2: a lesson the student finds hard weighs ×1.5 (as in MEBİ's apportion), on top of its longer study time.</summary>
+    public static decimal DifficultyWeight(bool hard) => hard ? 1.5m : 1m;
+
     /// <summary>K6: the YKS exam the student puts first gets ×1.3, the other ×0.75; "balanced" or none changes nothing.</summary>
     public static decimal FocusFactor(string? focus, string? examCode) => (focus?.Trim().ToLowerInvariant(), examCode?.Trim().ToUpperInvariant()) switch
     {
@@ -121,6 +124,18 @@ public static class WeeklyProposalEngine
     }
 
     /// <summary>
+    /// Review of PR #136: the lessons a whole new week (<paramref name="replace"/>, made from the same inputs) would give time to that
+    /// have a need but no time in the <paramref name="fill"/> week (its saved cards and proposal). Empty: proposing the week again does
+    /// not help any lesson without time.
+    /// </summary>
+    public static IReadOnlyList<Guid> RebuildGains(WeeklyProposalResult fill, WeeklyProposalResult replace)
+    {
+        ArgumentNullException.ThrowIfNull(fill); ArgumentNullException.ThrowIfNull(replace);
+        var gets = replace.Lessons.Where(x => x.ProposedMinutes > 0).Select(x => x.LessonId).ToHashSet();
+        return fill.Lessons.Where(x => x.NoTime && x.NeededMinutes > 0 && gets.Contains(x.LessonId)).Select(x => x.LessonId).ToArray();
+    }
+
+    /// <summary>
     /// Paket H4a (review of PR #132, S5): the end of the period the weekly need is spread over: the earlier of finishBy and the settled plan
     /// end (null without a finishBy, when the period is the plan itself).
     /// </summary>
@@ -165,7 +180,7 @@ public static class WeeklyProposalEngine
         input.DayBudgets is null ? input.MaxDayMinutes : Math.Min(input.MaxDayMinutes, input.DayBudgets.GetValueOrDefault(day));
 
     /// <summary>
-    /// Per lesson: Weighted = need × priority factor × exam focus. The lesson wants ceil(max(need, weighted) ÷ 60) sessions (at least one);
+    /// Per lesson: Weighted = need × priority factor × difficulty weight × exam focus. The lesson wants ceil(max(need, weighted) ÷ 60) sessions (at least one);
     /// it needs ceil(need ÷ 60) (at least one). In Fill mode its saved minutes count first.
     /// </summary>
     private sealed record Plan(WeeklyProposalLesson Lesson, int Existing, int Need, decimal Weighted, int Needed, int NeedNew, int WantNew)
@@ -174,7 +189,7 @@ public static class WeeklyProposalEngine
         {
             var need = Math.Max(0, lesson.NeedMinutes);
             var priority = lesson.Priority is >= 1 and <= 5 ? lesson.Priority : 3;
-            var weighted = need * PriorityFactor(priority) * FocusFactor(focus, lesson.ExamCode);
+            var weighted = need * PriorityFactor(priority) * DifficultyWeight(lesson.Hard) * FocusFactor(focus, lesson.ExamCode);
             var needTotal = Math.Max(1, (int)Math.Ceiling(need / (double)SessionMinutes));
             var wantTotal = Math.Max(needTotal, (int)Math.Ceiling(weighted / SessionMinutes));
             int New(int sessions) => Math.Max(0, (int)Math.Ceiling((sessions * SessionMinutes - existing) / (double)SessionMinutes));
@@ -191,7 +206,7 @@ public static class WeeklyProposalEngine
 
     /// <summary>
     /// When every lesson's wanted sessions fit, each gets them. Otherwise every lesson with work still needing time gets one (or, with
-    /// fewer sessions than such lessons, the ones with the largest weighted need do), then each remaining session goes to the lesson that
+    /// fewer sessions than such lessons, the ones with the largest weighted need do; names never decide, ids only break exact ties), then each remaining session goes to the lesson that
     /// would finish latest, up to its need. Only then a lesson without work left gets its one hour, and the rest go up to the wanted
     /// sessions.
     /// </summary>

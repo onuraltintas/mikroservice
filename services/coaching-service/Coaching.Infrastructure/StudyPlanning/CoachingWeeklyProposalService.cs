@@ -141,6 +141,10 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         // Review of PR #132 (S4): finishBy is checked against the plan end this mode gives without it (the tempo options' plan end).
         if(request.FinishBy is {} finishBy)CheckFinishBy(finishBy,s.Today,(await Run(student,s,request.Mode,null,ct)).End,staff);
         var (end,result)=await Run(student,s,request.Mode,request.FinishBy,ct);
+        // Review of PR #136: would a whole new week give time to a lesson that has none now (a week saved in another order)?
+        IReadOnlyList<Guid> gains=[];
+        if(fill&&result.Lessons.Any(x=>x.NoTime&&x.NeededMinutes>0))
+            gains=WeeklyProposalEngine.RebuildGains(result,(await Run(student,s,WeeklyProposalMode.Replace,request.FinishBy,ct)).Result);
         var slots=result.Slots.Select(x=>new WeeklyDraftSlot(Guid.NewGuid(),x.LessonId,s.Choices[x.LessonId].Name,s.Choices[x.LessonId].ExamCode,
             x.Day,x.StartMinute,x.DurationMinutes)).ToArray();
         // The applied proposal must pass the weekly draft's own checks (30/60-minute cards on the half hour, no overlap). A failure here
@@ -151,7 +155,8 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
             x.NeededMinutes,x.NoTime)).OrderBy(x=>x.LessonName,TurkishOrder).ThenBy(x=>x.LessonId).ToArray();
         var span=end.DayNumber-s.Today.DayNumber+1;
         return new(request.Mode,s.Focus,slots,lessons,result.FreeMinutes,result.NeededMinutes,result.ShortageMinutes,s.Limit,
-            Math.Max(1,(int)Math.Ceiling(span/7d)),end,s.Middle,result.CoveredMinutes,s.Draft?.Version,WeeklyProposalEngine.PeriodEnd(request.FinishBy,end));
+            Math.Max(1,(int)Math.Ceiling(span/7d)),end,s.Middle,result.CoveredMinutes,s.Draft?.Version,WeeklyProposalEngine.PeriodEnd(request.FinishBy,end))
+            {RebuildLessonIds=lessons.Select(x=>x.LessonId).Where(gains.Contains).ToArray()};
     }
 
     /// <summary>

@@ -7,7 +7,7 @@ import { CoachingWeeklyDraftService, WeeklyProposal, WeeklyProposalMode } from '
 import { CoachingWeeklyOutcomePlanService, WeeklyOutcomePreview, WeeklyOutcomeRequest } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { SummaryChoices, WizardSummaryStepComponent } from './wizard-summary-step.component';
-import { WeeklySlot } from './weekly-calendar';
+import { WeeklySlot, Weekday } from './weekly-calendar';
 
 // Paket H4, step 5 "Özet": the proposed week, the yearly preview with its fixes, "Şu konuları öne al", and publishing.
 describe('WizardSummaryStepComponent', () => {
@@ -30,11 +30,11 @@ describe('WizardSummaryStepComponent', () => {
       lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 600, scheduledMinutes: 600, remainingMinutes: 0, finishDate: '2027-04-20', extraWeeklyMinutes: 0 },
         { lessonId: 'tur', lessonName: 'Türkçe', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 900, scheduledMinutes: 810, remainingMinutes: 90, finishDate: null, extraWeeklyMinutes: 30 }] }, ...over });
 
-  async function setup(opts: { slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean; tempo?: 'Relaxed' | 'Balanced' | 'Intense'; choices?: SummaryChoices } = {}) {
+  async function setup(opts: { proposal?: (mode: WeeklyProposalMode) => WeeklyProposal; slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean; tempo?: 'Relaxed' | 'Balanced' | 'Intense'; choices?: SummaryChoices } = {}) {
     const slots = opts.slots ?? [saved];
     const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 3, timeZoneId: 'Europe/Istanbul', slots } : null, lessons: [], maxDayMinutes: 480 })),
       save: vi.fn((_v: number | null, _tz: string, next: WeeklySlot[]) => of({ version: 4, timeZoneId: 'Europe/Istanbul', slots: next })),
-      proposal: vi.fn((mode: WeeklyProposalMode, ..._rest: unknown[]) => of(proposalOf(mode, [tuesday], { draftVersion: slots.length ? 3 : null }))),
+      proposal: vi.fn((mode: WeeklyProposalMode, ..._rest: unknown[]) => of(opts.proposal?.(mode) ?? proposalOf(mode, [tuesday], { draftVersion: slots.length ? 3 : null }))),
       // Replace-mode options (the wizard's own options are for the draft's mode).
       tempoOptions: vi.fn((..._a: unknown[]) => of({ planEnd: '2027-06-20', options: [{ tempo: 'Relaxed', finishBy: '2027-06-20', neededWeeklyMinutes: 60, capacityWeeklyMinutes: 120, fits: true },
         { tempo: 'Balanced', finishBy: '2027-05-15', neededWeeklyMinutes: 90, capacityWeeklyMinutes: 120, fits: true }] })) };
@@ -105,6 +105,118 @@ describe('WizardSummaryStepComponent', () => {
     button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
     expect(weekly.proposal).toHaveBeenLastCalledWith('Replace', null, undefined, undefined, '2027-05-15');
     expect(text(el)).toContain('Bu düzen, mevcut haftalık düzeninin yerine geçer.');
+  });
+
+  // Live case (09.11): a week saved by the wizard before Paket H2 (courses in name order) fills all five hours. The Fill proposal is
+  // empty, so the summary goes straight on to the yearly preview; the student must still be able to have the week made by need.
+  // Review of PR 136 (1, 2): the server says whether the week by need would help (rebuildWouldHelp) and for which lessons.
+  describe('a saved week that leaves lessons without time', () => {
+    const yks = ['Biyoloji (AYT)', 'Biyoloji (TYT)', 'Coğrafya (TYT)', 'Din Kültürü (TYT)', 'Felsefe (TYT/AYT)', 'Fizik (AYT)', 'Fizik (TYT)', 'Kimya (AYT)',
+      'Kimya (TYT)', 'Matematik (AYT)', 'Matematik (TYT)', 'Tarih (TYT)', 'Türkçe (TYT)'];
+    const need: Record<string, number> = { 'Matematik (TYT)': 540, 'Türkçe (TYT)': 300, 'Fizik (TYT)': 240 };
+    const days: Weekday[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const old: WeeklySlot[] = yks.slice(0, 5).map((name, i) => ({ id: `old-${i}`, lessonId: `l${i}`, lessonName: name, examCode: name.includes('AYT)') ? 'AYT' : 'TYT',
+      day: days[i], startMinute: 1020, durationMinutes: 60 }));
+    const gaining = yks.map((_, i) => `l${i}`).slice(5);
+    const live = (mode: WeeklyProposalMode, over: Partial<WeeklyProposal> = {}): WeeklyProposal => mode === 'Fill'
+      ? proposalOf('Fill', [], { lessons: yks.map((name, i) => ({ lessonId: `l${i}`, lessonName: name, examCode: 'TYT', existingMinutes: i < 5 ? 60 : 0, proposedMinutes: 0,
+          neededMinutes: need[name] ?? 120, noTime: i >= 5 })), freeMinutes: 0, neededMinutes: 2_520, shortageMinutes: 2_220, coveredMinutes: 300,
+          rebuildWouldHelp: true, rebuildLessonIds: gaining, ...over })
+      : proposalOf('Replace', [{ ...tuesday, lessonId: 'l10', lessonName: 'Matematik (TYT)' }], { shortageMinutes: 0, rebuildWouldHelp: false, rebuildLessonIds: [] });
+    const notice = (el: HTMLElement) => text(el.querySelector('[data-testid="rebuild-notice"]'));
+
+    it('names the lessons that would get time, the largest needs first, and offers the week by need after the yearly preview opened', async () => {
+      const { el, engine } = await setup({ slots: old, proposal: live });
+      expect(engine.preview).toHaveBeenCalled();
+      expect(notice(el)).toBe('Haftalık düzenin daha önce kurulmuş; Matematik (TYT), Türkçe (TYT), Fizik (TYT) ve 5 ders daha saat almıyor. '
+        + 'İstersen haftanı derslerin ihtiyacına göre yeniden önerelim. Haftanı ihtiyaca göre yeniden öner');
+      expect(button(el, 'Haftanı baştan öner')).toBeUndefined();   // one way to do it, not two
+    });
+
+    it('lists a short list in full with "ve" before the last lesson', async () => {
+      const two = await setup({ slots: old, proposal: mode => live(mode, { rebuildLessonIds: ['l12', 'l10'] }) });
+      expect(notice(two.el)).toContain('kurulmuş; Matematik (TYT) ve Türkçe (TYT) saat almıyor.');
+      TestBed.resetTestingModule();
+      const four = await setup({ slots: old, proposal: mode => live(mode, { rebuildLessonIds: ['l5', 'l6', 'l10', 'l12'] }) });
+      expect(notice(four.el)).toContain('kurulmuş; Matematik (TYT), Türkçe (TYT), Fizik (TYT) ve 1 ders daha saat almıyor.');
+    });
+
+    it('proposes the whole week in Replace mode with the Replace tempo date, only after a confirmation', async () => {
+      const { el, weekly, toaster, fixture } = await setup({ slots: old, proposal: live });
+      toaster.confirm.mockResolvedValueOnce(false);
+      button(el, 'Haftanı ihtiyaca göre yeniden öner')!.click(); await fixture.whenStable();
+      expect(toaster.confirm).toHaveBeenCalledWith('Mevcut haftalık düzeninin yerine yeni bir düzen önerilecek. Kaydetmeden önce inceleyebilirsin.');
+      expect(weekly.proposal).toHaveBeenCalledTimes(1);
+      button(el, 'Haftanı ihtiyaca göre yeniden öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
+      expect(weekly.tempoOptions).toHaveBeenCalledWith(null, undefined, undefined, 'Replace');
+      expect(weekly.proposal).toHaveBeenLastCalledWith('Replace', null, undefined, undefined, '2027-05-15');
+      expect(el.querySelector('[data-testid="rebuild-notice"]')).toBeNull();
+      expect(text(el)).toContain('Bu düzen, mevcut haftalık düzeninin yerine geçer.');
+    });
+
+    it('tells the teacher in the third person', async () => {
+      const { el } = await setup({ slots: old, proposal: live, staff: true });
+      expect(notice(el)).toBe('Öğrencinin haftalık düzeni daha önce kurulmuş; Matematik (TYT), Türkçe (TYT), Fizik (TYT) ve 5 ders daha saat almıyor. '
+        + 'İstersen haftayı derslerin ihtiyacına göre yeniden önerebilirsin. Haftayı ihtiyaca göre yeniden öner');
+    });
+
+    it('is not shown on reopening a week already made by need: the server says the week by need gives the same', async () => {
+      const { el } = await setup({ slots: old, proposal: mode => live(mode, { rebuildWouldHelp: false, rebuildLessonIds: [] }) });
+      expect(el.querySelector('[data-testid="shortage-notice"]')).not.toBeNull();   // the lessons without time are still named there
+      expect(el.querySelector('[data-testid="rebuild-notice"]')).toBeNull();
+    });
+
+    it('is not shown for a Replace proposal, nor once the shown week was kept', async () => {
+      expect((await setup({ slots: [], proposal: mode => ({ ...live('Fill'), mode }) })).el.querySelector('[data-testid="rebuild-notice"]')).toBeNull();
+      TestBed.resetTestingModule();
+      // "Önemli derslerle devam et": the kept week is a new one; the next proposal asks the server again.
+      const { el, fixture } = await setup({ slots: [saved], proposal: mode => ({ ...live('Fill'), mode, slots: [tuesday] }) });
+      expect(el.querySelector('[data-testid="rebuild-notice"]')).not.toBeNull();
+      button(el, 'Önemli derslerle devam et')!.click(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+      expect(el.querySelector('[data-testid="rebuild-notice"]')).toBeNull();
+    });
+  });
+
+  // Review of PR 136 (1): the mode of the next proposal follows the week. A Replace that is not kept yet stays Replace; once a week is
+  // kept, "Bu dersi öne al" proposes in Fill mode around it (never replacing the week just kept).
+  it('"Haftanı baştan öner" then "Bu dersi öne al" proposes in Replace mode; after keeping it proposes in Fill mode', async () => {
+    const { el, c, weekly, fixture } = await setup();
+    button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Replace');
+    await keep(fixture);
+    c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
+  });
+
+  it('after keeping a first week (empty draft), "Bu dersi öne al" proposes in Fill mode', async () => {
+    const { c, weekly, fixture } = await setup({ slots: [] });
+    expect(weekly.proposal).toHaveBeenCalledWith('Replace', null, undefined, undefined, '2027-05-12');
+    await keep(fixture);
+    c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
+  });
+
+  // Review of PR 136 (3): a plan created before a failed publish belongs to the old week. After a new proposal it is not published
+  // again silently: publishing creates the new plan, and the server's pending draft answer points to Planım.
+  it('does not publish the plan of the old week after a new proposal; the pending draft is named', async () => {
+    const { el, c, fixture, engine, planning, weekly } = await setup();
+    await keep(fixture);
+    planning.publish.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'Aktif plan değişti.' } })));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(c.created()).not.toBeNull();
+    // The new proposal is made from the kept draft (version 4) and adds a Wednesday hour.
+    weekly.proposal.mockReturnValueOnce(of(proposalOf('Fill', [{ ...tuesday, id: 'p2', day: 'Wednesday' }], { draftVersion: 4 })));
+    c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
+    await keep(fixture);
+    expect(button(el, 'Yeniden yayımla')).toBeUndefined();
+    engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { code: 'StudyPlanning.DraftExists', message: 'Bekleyen taslak.' } })));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(planning.publish).toHaveBeenCalledTimes(1);
+    expect(engine.create).toHaveBeenCalledTimes(2);
+    const issue = el.querySelector('[data-testid="publish-issue"]')!;
+    expect(text(issue)).toContain('Bekleyen bir plan taslağın var. Önce Planım\'da o taslağı yayımla ya da kaldır.');
+    expect(issue.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan?plan=new-plan');
   });
 
   it('saves the kept week with its version, then previews the year to the tempo\'s finish date and shows each course', async () => {
@@ -260,11 +372,57 @@ describe('WizardSummaryStepComponent', () => {
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
     expect(planning.get).toHaveBeenCalledWith('new-plan');
     expect(text(el.querySelector('[data-testid="publish-issue"]'))).toContain('güncel hâlini yükledim');
-    // Another preview (for example "Önemli konulara odaklan") keeps the created plan.
-    button(el, 'Önemli konulara odaklan')!.click(); await fixture.whenStable(); fixture.detectChanges();
     button(el, 'Yeniden yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
     expect(engine.create).toHaveBeenCalledTimes(1);
     expect(planning.publish).toHaveBeenLastCalledWith('new-plan', 3);
+  });
+
+  // Re-review of PR 136 (2): a changed preview (other topics, "Önemli konulara odaklan") is a new plan; the plan created before a failed
+  // publish is never published from it. Publishing creates the new plan and the server's pending draft answer opens Planım on the old one.
+  it.each([
+    ['"Önemli konulara odaklan"', async (el: HTMLElement) => { button(el, 'Önemli konulara odaklan')!.click(); }],
+    ['a new topic and "Bu konularla yeniden hesapla"', async (el: HTMLElement, c: WizardSummaryStepComponent, fixture: { detectChanges(): void }) => {
+      c.addTopic({ id: 'paragraf', name: 'Paragraf', lessonName: 'Türkçe', unitName: '', gradeNumber: null, examCode: null, estimatedMinutes: null });
+      fixture.detectChanges(); button(el, 'Bu konularla yeniden hesapla')!.click(); }]
+  ] as const)('does not publish the plan of the old preview after %s', async (_name, change) => {
+    const { el, c, fixture, engine, planning } = await setup();
+    await keep(fixture);
+    planning.publish.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'Aktif plan değişti.' } })));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(button(el, 'Yeniden yayımla')).toBeDefined();
+    await change(el, c, fixture); await fixture.whenStable(); fixture.detectChanges();
+    expect(button(el, 'Yeniden yayımla')).toBeUndefined();
+    engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { code: 'StudyPlanning.DraftExists', message: 'Bekleyen taslak.' } })));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(planning.publish).toHaveBeenCalledTimes(1);
+    expect(engine.create).toHaveBeenCalledTimes(2);
+    const issue = el.querySelector('[data-testid="publish-issue"]')!;
+    expect(text(issue)).toContain('Bekleyen bir plan taslağın var.');
+    expect(issue.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan?plan=new-plan');
+  });
+
+  // Re-review of PR 136 (1): once the week shown is the saved one again, "Bu dersi öne al" proposes in Fill mode, never a Replace
+  // without a confirmation.
+  it('after "Haftanı baştan öner", a changed draft (409 on keep) and its empty Fill proposal, "Bu dersi öne al" proposes in Fill mode', async () => {
+    const { el, c, weekly, engine, fixture } = await setup();
+    button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Replace');
+    weekly.save.mockReturnValueOnce(throwError(() => ({ status: 409 })));
+    weekly.proposal.mockReturnValueOnce(of(proposalOf('Fill', [])));
+    await keep(fixture);
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
+    expect(engine.preview).toHaveBeenCalled();
+    c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
+  });
+
+  it('after a Replace proposal that comes back empty on a saved week, "Bu dersi öne al" proposes in Fill mode', async () => {
+    const { el, c, weekly, engine, fixture } = await setup({ proposal: mode => proposalOf(mode, mode === 'Replace' ? [] : [tuesday]) });
+    button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Replace');
+    expect(engine.preview).toHaveBeenCalled();   // nothing new: the saved week goes on to the yearly preview
+    c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
   });
 
   it('counts a created plan that is already active as published', async () => {

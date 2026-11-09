@@ -27,8 +27,18 @@
       }
       <div class="actions">
         @if (view.slots.length) { <button type="button" data-testid="keep-week" (click)="keepWeek()" [disabled]="busy()">{{ applying() ? 'Kaydediliyor…' : 'Bu haftayla devam et' }}</button> }
-        @if (slots().length && !preview()) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="busy()">{{ staffStudentId ? 'Haftayı baştan öner' : 'Haftanı baştan öner' }}</button> }
+        @if (slots().length && !preview() && !rebuildSuggested(view)) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="busy()">{{ staffStudentId ? 'Haftayı baştan öner' : 'Haftanı baştan öner' }}</button> }
       </div>
+      @if (rebuildSuggested(view)) {
+        <div class="notice" data-testid="rebuild-notice">
+          @if (staffStudentId) {
+            <p>Öğrencinin haftalık düzeni daha önce kurulmuş; {{ rebuildNames(view) }} saat almıyor. İstersen haftayı derslerin ihtiyacına göre yeniden önerebilirsin.</p>
+          } @else {
+            <p>Haftalık düzenin daha önce kurulmuş; {{ rebuildNames(view) }} saat almıyor. İstersen haftanı derslerin ihtiyacına göre yeniden önerelim.</p>
+          }
+          <button type="button" (click)="replaceWeek()" [disabled]="busy()">{{ staffStudentId ? 'Haftayı ihtiyaca göre yeniden öner' : 'Haftanı ihtiyaca göre yeniden öner' }}</button>
+        </div>
+      }
     </section>
   }
   <!-- Review of PR 126: one live container that is always there; its text changes with the proposal (the actions sit outside it). -->
@@ -149,7 +159,7 @@
       <div class="actions">
         @if (issue.stale) { <button type="button" class="secondary" (click)="retry()" [disabled]="busy()">Yeniden hesapla</button> }
         @if (!staffStudentId && (issue.draftExists || created())) {
-          <a routerLink="/coaching-portal/plan" [queryParams]="created() ? { plan: created()!.id } : {}">Planım'ı aç</a>
+          <a routerLink="/coaching-portal/plan" [queryParams]="created() ? { plan: created()!.id } : staleDraftId() ? { plan: staleDraftId() } : {}">Planım'ı aç</a>
         }
       </div>
     </div>
