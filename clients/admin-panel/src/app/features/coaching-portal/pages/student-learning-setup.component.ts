@@ -39,6 +39,8 @@ export class StudentLearningSetupComponent implements OnInit {
   /** Paket H1 (08.11.2026): ?adim=baslangic (the plan wizard's "Başlangıç durumunu düzenle") opens Başlangıç durumum once. */
   private readonly query = inject(ActivatedRoute, { optional: true })?.snapshot?.queryParamMap;
   private openStarting = this.query?.get('adim') === 'baslangic';
+  /** Paket H2 (final review of PR 130): ?adim=dersler (the wizard's "Ders çıkar" and "Derslerimi seç") opens Derslerim once. */
+  private openCourses = this.query?.get('adim') === 'dersler';
   /** Review of PR 129: ?donus=sihirbaz (only this value) shows "Plan sihirbazına dön" on Başlangıç durumum and Plan önizlemesi. */
   readonly backToWizard = this.query?.get('donus') === 'sihirbaz';
   readonly apiUrl = environment.apiUrl;
@@ -95,8 +97,9 @@ export class StudentLearningSetupComponent implements OnInit {
       next: state => {
         this.apply(state); this.ready.set(true); this.step.set(state.nextStep === 'Catalog' ? 'Courses' : state.nextStep);
         // The step opens only when its tab could be opened (a saved, current exam); otherwise the page starts where the server says.
-        if (this.openStarting && state.context && !this.purposeRetired() && !state.purposeNotForEducation) this.step.set('Starting');
-        this.openStarting = false;
+        if ((this.openStarting || this.openCourses) && state.context && !this.purposeRetired() && !state.purposeNotForEducation)
+          this.step.set(this.openStarting ? 'Starting' : 'Courses');
+        this.openStarting = false; this.openCourses = false;
         if (this.step() === 'Courses' || this.step() === 'Starting') this.loadCatalog();
       },
       error: e => { if (e?.status === 404) this.step.set('Profile'); this.error.set(e?.status === 404 ? 'Koçluk profilin henüz hazırlanmadı. Profilim sayfasından profilini oluşturabilirsin.' : 'Kurulum bilgileri yüklenemedi. Yeniden dene.'); }

@@ -29,21 +29,27 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var rows=await db.Set<StudyCatalogExam>().AsNoTracking().Include(x=>x.Sessions).Where(x=>Enumerable.Contains(codes,x.Code)&&x.IsActive).OrderBy(x=>x.Code).ToArrayAsync(ct);
         // KM1: each exam shows its next session (else its latest one), as the single date used to.
         var exams=rows.Select(x=>new WeeklyExamReference(x.Name,x.NextSessionDate(today))).ToArray();
+        var end=await EndAsync(student,codes.OfType<string>().ToArray(),today,ct);
+        return new(today,end.End,draft.Version,draft.TimeZoneId,exams,end.ExamDate,end.Source,end.CatalogDate){CatalogExamDateEstimated=end.CatalogEstimated};
+    }
+    /// <summary>Paket H2: where the plan ends for these exams; the annual preview (its options) and the weekly proposal share it.</summary>
+    internal sealed record PlanEnd(DateOnly End,DateOnly? ExamDate,string Source,DateOnly? CatalogDate,bool CatalogEstimated);
+    internal async Task<PlanEnd> EndAsync(Guid student,string[] codeList,DateOnly today,CancellationToken ct)
+    {
         // Roadmap O7: the plan ends the day before the exam: the student's own date, then (KM1) the session the student chose,
         // (G2 #40) the year they chose (an estimated date while the catalog has no session for it), else the admin's nearest session.
-        var codeList=codes.OfType<string>().ToArray();
         var fallback=await CoachingExamSessions.ForStudentAsync(db,student,codeList,today,ct,includeOwnDate:false);
         var target=await CoachingExamSessions.ForStudentAsync(db,student,codeList,today,ct);
         // The date her own date replaces ("Resmî tarihe dön"): a chosen session keeps the nearest catalog date as before.
         var catalog=fallback?.Source=="Session"?await CoachingExamSessions.NextCatalogAsync(db,codeList,today,ct):fallback;
-        var catalogDate=catalog?.Date;
         // G2 review (M2): an estimate with nothing in the catalog behind it is not used: the plan keeps the default 1 June end.
         if(target is {Guessed:true})target=null;
-        if(catalog is {Guessed:true})catalog=null;catalogDate=catalog?.Date;
+        if(catalog is {Guessed:true})catalog=null;
         var (examDate,source)=target is null?((DateOnly?)null,"Default"):((DateOnly?)target.Date,target.Source);
         var end=examDate is {} date?(date.AddDays(-1)<today?today:date.AddDays(-1)):WeeklyOutcomeScheduler.DefaultEnd(today);
-        return new(today,end,draft.Version,draft.TimeZoneId,exams,examDate,source,catalogDate){CatalogExamDateEstimated=catalog?.Source=="Estimated"};
+        return new(end,examDate,source,catalog?.Date,catalog?.Source=="Estimated");
     }
+    internal DateOnly TodayInTurkey()=>Today(Coaching.Domain.CoachingTime.ZoneId);
     private DateOnly Today(string zoneId)=>DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(),TimeZoneInfo.FindSystemTimeZoneById(zoneId)).DateTime);
 
     public async Task<WeeklyOutcomePlanOptions> SetExamDateAsync(WeeklyExamDateRequest request,CancellationToken ct)
@@ -83,6 +89,91 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             .OrderBy(x=>x.LessonName,StringComparer.Create(Turkish,false)).ToArray();
         if(notChosen.Length>0)throw WeeklyLessonsNotChosen.Create(notChosen,staffView);
         var context=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
+        var active=await db.StudyPlanRevisions.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student&&x.IsActive,ct);
+        var sources=await CoachingStudyContinuation.SourcesAsync(db,student,ct);
+        var completed=active is null?[]:await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&x.IsCompleted).ToArrayAsync(ct);
+        var protectedTasks=sources.Concat(completed).OrderBy(x=>x.Id).ToArray();
+        var placements=CoachingStudyContinuation.Place(sources,request.StartDate,request.EndDate,
+            draft.Slots.Select(x=>(x.Day,x.StartMinute,x.StartMinute+x.DurationMinutes,(Guid?)x.LessonId)).ToArray());
+        var pending=protectedTasks.Where(x=>!x.IsCompleted).ToDictionary(x=>x.Id);
+        var pendingIds=pending.Keys.ToArray();var pinnedLinks=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(pendingIds,x.TaskId)).OrderBy(x=>x.TaskId).ThenBy(x=>x.OutcomeId).ToArrayAsync(ct);
+        var curriculum=await CurriculumAsync(student,context,lessonIds,choices,v2,pinnedLinks.Select(x=>x.EstimateId),ct);
+        var (topicStates,preferences,examErrorTopics,issues,originalWork)=(curriculum.TopicStates,curriculum.Preferences,curriculum.ExamErrorTopics,curriculum.Issues,curriculum.OriginalWork);
+        var completedLinks=curriculum.CompletedLinks;void Credit(StudyPlanTask task,StudyPlanTaskOutcome link,List<(Guid LessonId,DateOnly Date,int Minutes)>? scheduledCredits)=>curriculum.Credit(task,link,scheduledCredits);
+        var credits=new List<(Guid LessonId,DateOnly Date,int Minutes)>();
+        foreach(var placement in placements)
+        {
+            var coverage=new List<(Guid LessonId,DateOnly Date,int Minutes)>();
+            foreach(var link in pinnedLinks.Where(x=>x.TaskId==placement.Source.Id))Credit(placement.Source,link,coverage);
+            var groups=coverage.GroupBy(x=>x.LessonId).ToArray();var total=coverage.Sum(x=>x.Minutes);var creditedMinutes=Math.Min(placement.Minutes,total);var left=creditedMinutes;
+            for(var i=0;i<groups.Length;i++) {var minutes=i==groups.Length-1?left:(int)((long)creditedMinutes*groups[i].Sum(x=>x.Minutes)/total);left-=minutes;
+                credits.Add((groups[i].Key,placement.Date,minutes));}
+        }
+        var work=curriculum.Work;
+        var blocked=placements.Select(x=>new WeeklyBlockedTime(x.Date,x.Start,x.Minutes))
+            .Concat(completed.Select(x=>new WeeklyBlockedTime(x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes))).ToArray();
+        var rules=v2?WeeklyPlanEngine.Rules:null;
+        var schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,blocked,rules);
+        var yieldWeights=new Dictionary<Guid,int>();
+        if(v2&&request.PrioritizeWhenShort&&schedule.Lessons.Where(x=>x.RemainingMinutes>0).Select(x=>x.LessonId).ToArray() is {Length:>0} shortLessons)
+        {
+            var planned=work.SelectMany(x=>x.Outcomes).Select(x=>x.TopicId).Distinct().ToArray();
+            yieldWeights=await db.StudyCatalogTopics.AsNoTracking().Where(x=>Enumerable.Contains(planned,x.Id)).ToDictionaryAsync(x=>x.Id,x=>x.YieldWeight,ct);
+            work=WeeklyPlanEngine.PrioritizeByYield(work,shortLessons,yieldWeights,examErrorTopics).ToList();
+            schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,blocked,rules);
+        }
+        var placedMinutes=schedule.Tasks.Where(x=>x.Kind!="Spaced").GroupBy(x=>(x.Outcome.TopicId,x.Outcome.OutcomeId)).ToDictionary(x=>x.Key,x=>x.Sum(t=>t.Minutes));
+        var leftOut=!v2?null:work.SelectMany(lesson=>lesson.Outcomes.Select(outcome=>(lesson,outcome)))
+            .Select(x=>(x.lesson,x.outcome,Left:x.outcome.Minutes-placedMinutes.GetValueOrDefault((x.outcome.TopicId,x.outcome.OutcomeId))))
+            .Where(x=>x.Left>0).GroupBy(x=>(x.lesson.LessonId,x.lesson.LessonName,x.outcome.TopicId,x.outcome.TopicName))
+            .Select(x=>new WeeklyLeftOutTopic(x.Key.LessonId,x.Key.LessonName,x.Key.TopicId,x.Key.TopicName,x.Sum(y=>y.Left))).ToArray();
+        var summaries=schedule.Lessons.Select(summary=>{
+            var original=originalWork.Single(x=>x.LessonId==summary.LessonId);var ownCredits=credits.Where(x=>x.LessonId==summary.LessonId).ToArray();
+            var required=work.Single(x=>x.LessonId==summary.LessonId).Outcomes.Sum(x=>x.Minutes)+ownCredits.Sum(x=>x.Minutes);var scheduled=summary.ScheduledMinutes+ownCredits.Where(x=>x.Date<=request.EndDate).Sum(x=>x.Minutes);
+            var lastCredit=ownCredits.Length==0?(DateOnly?)null:ownCredits.Max(x=>x.Date);var finish=summary.RequiredMinutes==0?lastCredit:summary.FinishDate;
+            if(finish.HasValue&&lastCredit>finish)finish=lastCredit;
+            var weeks=Math.Max(1,(int)Math.Ceiling((request.EndDate.DayNumber-request.StartDate.DayNumber+1)/7d));
+            return summary with {OutcomeCount=original.Outcomes.Select(x=>x.OutcomeId).Distinct().Count(),RequiredMinutes=required,ScheduledMinutes=scheduled,RemainingMinutes=required-scheduled,FinishDate=finish,ExtraWeeklyMinutes=(int)Math.Ceiling((required-scheduled)/(weeks*30d))*30};
+        }).ToArray();
+        schedule=schedule with {Lessons=summaries,RecommendedEndDate=summaries.All(x=>x.FinishDate.HasValue)?summaries.Max(x=>x.FinishDate):null};
+        var fingerprint=Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new{request,draft.Version,draft.TimeZoneId,Slots=draft.Slots,originalWork,work,issues,ContextVersion=context?.Version,Rules=new{topicStates=topicStates.OrderBy(x=>x.Key).ToArray(),preferences=preferences.OrderBy(x=>x.Key).ToArray(),examErrorTopics=examErrorTopics.Order().ToArray(),yieldWeights=yieldWeights.OrderBy(x=>x.Key).ToArray()},ActiveId=active?.Id,ActiveVersion=active?.Version,pinnedLinks,
+            Completed=completedLinks.Select(x=>new{x.Task.Id,x.Task.Version,x.Task.OriginalTaskId,x.Task.TopicId,x.Link.OutcomeId,x.Link.EstimateId,x.Link.AllocatedMinutes}),
+            Protected=protectedTasks.Select(x=>new{x.Id,x.Version,x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes,x.IsCompleted,x.IsPinned,x.RemainingMinutes,x.RemainingQuestions}),Placements=placements.Select(x=>new{x.Source.Id,x.Date,x.Start,x.Minutes})})));
+        // Paket G #41: chosen courses without a weekly lesson get no time at all; they are named next to the courses that do not fit.
+        var unscheduled=context is null?[]:(await db.StudentCoursePreferences.AsNoTracking().Where(x=>x.ContextId==context.Id&&x.IsIncluded)
+                .Select(x=>x.LessonId).ToArrayAsync(ct))
+            .Where(x=>choices.ContainsKey(x)&&!lessonIds.Contains(x)).Select(x=>new WeeklyUnscheduledLesson(x,choices[x].Name))
+            .OrderBy(x=>x.LessonName,StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"),false)).ThenBy(x=>x.LessonId).ToArray();
+        // Roadmap O7: with PrioritizeWhenShort a plan that does not fit may be saved; the left-out topics are listed.
+        var fits=schedule.Lessons.All(x=>x.RemainingMinutes==0)||v2&&request.PrioritizeWhenShort;
+        var canCreate=issues.Count==0&&schedule.Tasks.Count+pending.Count>0&&fits&&schedule.Tasks.Count+pending.Count<=10000;
+        return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,placements.Select(x=>new WeeklyProtectedTask(x.Date,x.Start,x.Source.Title,x.Minutes)).ToArray(),leftOut,unscheduled),
+            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId),protectedTasks,pinnedLinks,placements);
+    }
+
+    /// <summary>
+    /// Paket H2: each lesson's remaining work for the weekly proposal (its curriculum work after shaping (version 2) and completed credits)
+    /// and the topics it will finish (each gets spaced reviews); <see cref="WeeklyProposalEngine.WeeklyNeed"/> turns them into a weekly need.
+    /// </summary>
+    internal async Task<Dictionary<Guid,(int Work,int Topics)>> LessonWorkAsync(Guid student,StudentLearningContext? context,Guid[] lessonIds,
+        IReadOnlyDictionary<Guid,LearningLessonView> choices,CancellationToken ct)
+    {
+        var curriculum=await CurriculumAsync(student,context,lessonIds,choices,true,[],ct);
+        return lessonIds.Distinct().ToDictionary(id=>id,id=>
+        {
+            var outcomes=curriculum.OriginalWork.FirstOrDefault(x=>x.LessonId==id)?.Outcomes??[];
+            return (outcomes.Sum(x=>x.Minutes),outcomes.Where(x=>x.Minutes>0&&x.Kind is "Learn" or "Review").Select(x=>x.TopicId).Distinct().Count());
+        });
+    }
+
+    /// <summary>
+    /// Paket H2: the curriculum work of these lessons after the engine's shaping (version 2) and the credits of completed work.
+    /// The annual preview and the weekly proposal use the same numbers. <paramref name="pinnedEstimates"/>: the duration versions of
+    /// pinned work the preview places as well (they only widen the lookup of versions with topic shares).
+    /// </summary>
+    private async Task<CurriculumWork> CurriculumAsync(Guid student,StudentLearningContext? context,Guid[] lessonIds,IReadOnlyDictionary<Guid,LearningLessonView> choices,
+        bool v2,IEnumerable<Guid> pinnedEstimates,CancellationToken ct)
+    {
         var year=context?.AcademicYearStart??(clock.GetUtcNow().Month>=9?clock.GetUtcNow().Year:clock.GetUtcNow().Year-1);
         var catalogTopics=await (from t in YksCatalogEligibility.Topics(db,context).AsNoTracking() join u in db.StudyCatalogUnits on t.UnitId equals u.Id
             join r in Catalogs.CatalogUnitOrder.Ranks(db) on u.Id equals r.UnitId // G5 (#42): units in curriculum order
@@ -146,92 +237,49 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             .Where(x=>x.ContextId==context.Id).ToDictionaryAsync(x=>x.LessonId,x=>new WeeklyPlanEngine.LessonPreference(x.Priority,x.SelfReportedDifficulty),ct);
         var examErrorTopics=v2?await ExamErrorTopicsAsync(student,ct):new HashSet<Guid>();
         if(v2)work=WeeklyPlanEngine.Shape(work,topicStates,preferences,examErrorTopics).ToList();
-        var active=await db.StudyPlanRevisions.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student&&x.IsActive,ct);
-        var sources=await CoachingStudyContinuation.SourcesAsync(db,student,ct);
-        var completed=active is null?[]:await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&x.IsCompleted).ToArrayAsync(ct);
-        var protectedTasks=sources.Concat(completed).OrderBy(x=>x.Id).ToArray();
-        var placements=CoachingStudyContinuation.Place(sources,request.StartDate,request.EndDate,
-            draft.Slots.Select(x=>(x.Day,x.StartMinute,x.StartMinute+x.DurationMinutes,(Guid?)x.LessonId)).ToArray());
-        var pending=protectedTasks.Where(x=>!x.IsCompleted).ToDictionary(x=>x.Id);
-        var pendingIds=pending.Keys.ToArray();var pinnedLinks=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(pendingIds,x.TaskId)).OrderBy(x=>x.TaskId).ThenBy(x=>x.OutcomeId).ToArrayAsync(ct);
-        // Completed allocations are durable evidence across all published revisions.
-        // ActualMinutes measures effort, not how much curriculum the completed task covered.
         var relevantOutcomeIds=work.SelectMany(x=>x.Outcomes).Select(x=>x.OutcomeId).Distinct().ToArray();
         var completedLinks=await CoachingCompletedOutcomeCredits.ReadAsync(db,student,relevantOutcomeIds,ct);
-        var evidenceVersions=completedLinks.Select(x=>x.Link.EstimateId).Concat(pinnedLinks.Select(x=>x.EstimateId)).Distinct().ToArray();
+        var evidenceVersions=completedLinks.Select(x=>x.Link.EstimateId).Concat(pinnedEstimates).Distinct().ToArray();
         var scopedVersions=(await db.Set<StudyCatalogTopicOutcomeShare>().Where(x=>Enumerable.Contains(evidenceVersions,x.EstimateId))
             .Select(x=>x.EstimateId).Distinct().ToArrayAsync(ct)).ToHashSet();
-        var catalogWork=work.ToArray();
-        var remaining=catalogWork.SelectMany(x=>x.Outcomes).ToDictionary(x=>(x.TopicId,x.OutcomeId),x=>x.Minutes);
-        void Credit(StudyPlanTask task,StudyPlanTaskOutcome link,List<(Guid LessonId,DateOnly Date,int Minutes)>? scheduledCredits)
+        var curriculum=new CurriculumWork(work.ToArray(),scopedVersions,topicStates,preferences,examErrorTopics,issues,completedLinks);
+        // A carried task has one logical identity even when it exists in several revisions.
+        foreach(var evidence in completedLinks.DistinctBy(x=>(x.Task.OriginalTaskId??x.Task.Id,x.Link.OutcomeId)))
+            curriculum.Credit(evidence.Task,evidence.Link,null);
+        // Roadmap O7: a studied topic stays as a short refresh even when earlier completed work covered its curriculum.
+        foreach(var refresh in curriculum.CatalogWork.SelectMany(x=>x.Outcomes).Where(x=>x.Kind=="Refresh"))curriculum.Remaining[(refresh.TopicId,refresh.OutcomeId)]=refresh.Minutes;
+        curriculum.OriginalWork=curriculum.CatalogWork.Select(lesson=>lesson with {Outcomes=lesson.Outcomes
+            .Select(outcome=>outcome with {Minutes=curriculum.Remaining[(outcome.TopicId,outcome.OutcomeId)]}).ToArray()}).ToArray();
+        return curriculum;
+    }
+
+    private sealed class CurriculumWork(WeeklyLessonWork[] catalogWork,HashSet<Guid> scopedVersions,Dictionary<Guid,DeclaredTopicStatus> topicStates,
+        Dictionary<Guid,WeeklyPlanEngine.LessonPreference> preferences,HashSet<Guid> examErrorTopics,List<WeeklyLessonIssue> issues,CoachingCompletedOutcomeCredits.Evidence[] completedLinks)
+    {
+        public WeeklyLessonWork[] CatalogWork{get;}=catalogWork;
+        public Dictionary<(Guid TopicId,Guid OutcomeId),int> Remaining{get;}=catalogWork.SelectMany(x=>x.Outcomes).ToDictionary(x=>(x.TopicId,x.OutcomeId),x=>x.Minutes);
+        public Dictionary<Guid,DeclaredTopicStatus> TopicStates{get;}=topicStates;
+        public Dictionary<Guid,WeeklyPlanEngine.LessonPreference> Preferences{get;}=preferences;
+        public HashSet<Guid> ExamErrorTopics{get;}=examErrorTopics;
+        public List<WeeklyLessonIssue> Issues{get;}=issues;
+        public CoachingCompletedOutcomeCredits.Evidence[] CompletedLinks{get;}=completedLinks;
+        /// <summary>The catalog work after completed credits (and with every refresh kept).</summary>
+        public WeeklyLessonWork[] OriginalWork{get;set;}=[];
+        /// <summary>The live remaining work: the preview credits pinned work on top of <see cref="OriginalWork"/>.</summary>
+        public List<WeeklyLessonWork> Work=>OriginalWork.Select(lesson=>lesson with {Outcomes=lesson.Outcomes
+            .Select(outcome=>outcome with {Minutes=Remaining[(outcome.TopicId,outcome.OutcomeId)]}).Where(x=>x.Minutes>0).ToArray()}).ToList();
+        public void Credit(StudyPlanTask task,StudyPlanTaskOutcome link,List<(Guid LessonId,DateOnly Date,int Minutes)>? scheduledCredits)
         {
             var left=link.AllocatedMinutes;
-            foreach(var lesson in catalogWork)
+            foreach(var lesson in CatalogWork)
                 foreach(var outcome in lesson.Outcomes.Where(x=>x.OutcomeId==link.OutcomeId
                     &&(!scopedVersions.Contains(link.EstimateId)||x.TopicId==task.TopicId)).OrderByDescending(x=>x.TopicId==task.TopicId))
                 {
-                    var key=(outcome.TopicId,outcome.OutcomeId);var minutes=Math.Min(left,remaining[key]);
+                    var key=(outcome.TopicId,outcome.OutcomeId);var minutes=Math.Min(left,Remaining[key]);
                     if(minutes>0)scheduledCredits?.Add((lesson.LessonId,task.PlannedDate,minutes));
-                    remaining[key]-=minutes;left-=minutes;
+                    Remaining[key]-=minutes;left-=minutes;
                 }
         }
-        // A carried task has one logical identity even when it exists in several revisions.
-        foreach(var evidence in completedLinks.DistinctBy(x=>(x.Task.OriginalTaskId??x.Task.Id,x.Link.OutcomeId)))
-            Credit(evidence.Task,evidence.Link,null);
-        // Roadmap O7: a studied topic stays as a short refresh even when earlier completed work covered its curriculum.
-        foreach(var refresh in catalogWork.SelectMany(x=>x.Outcomes).Where(x=>x.Kind=="Refresh"))remaining[(refresh.TopicId,refresh.OutcomeId)]=refresh.Minutes;
-        var originalWork=catalogWork.Select(lesson=>lesson with {Outcomes=lesson.Outcomes
-            .Select(outcome=>outcome with {Minutes=remaining[(outcome.TopicId,outcome.OutcomeId)]}).ToArray()}).ToArray();
-        var credits=new List<(Guid LessonId,DateOnly Date,int Minutes)>();
-        foreach(var placement in placements)
-        {
-            var coverage=new List<(Guid LessonId,DateOnly Date,int Minutes)>();
-            foreach(var link in pinnedLinks.Where(x=>x.TaskId==placement.Source.Id))Credit(placement.Source,link,coverage);
-            var groups=coverage.GroupBy(x=>x.LessonId).ToArray();var total=coverage.Sum(x=>x.Minutes);var creditedMinutes=Math.Min(placement.Minutes,total);var left=creditedMinutes;
-            for(var i=0;i<groups.Length;i++) {var minutes=i==groups.Length-1?left:(int)((long)creditedMinutes*groups[i].Sum(x=>x.Minutes)/total);left-=minutes;
-                credits.Add((groups[i].Key,placement.Date,minutes));}
-        }
-        work=originalWork.Select(lesson=>lesson with {Outcomes=lesson.Outcomes
-            .Select(outcome=>outcome with {Minutes=remaining[(outcome.TopicId,outcome.OutcomeId)]}).Where(x=>x.Minutes>0).ToArray()}).ToList();
-        var blocked=placements.Select(x=>new WeeklyBlockedTime(x.Date,x.Start,x.Minutes))
-            .Concat(completed.Select(x=>new WeeklyBlockedTime(x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes))).ToArray();
-        var rules=v2?WeeklyPlanEngine.Rules:null;
-        var schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,blocked,rules);
-        var yieldWeights=new Dictionary<Guid,int>();
-        if(v2&&request.PrioritizeWhenShort&&schedule.Lessons.Where(x=>x.RemainingMinutes>0).Select(x=>x.LessonId).ToArray() is {Length:>0} shortLessons)
-        {
-            var planned=work.SelectMany(x=>x.Outcomes).Select(x=>x.TopicId).Distinct().ToArray();
-            yieldWeights=await db.StudyCatalogTopics.AsNoTracking().Where(x=>Enumerable.Contains(planned,x.Id)).ToDictionaryAsync(x=>x.Id,x=>x.YieldWeight,ct);
-            work=WeeklyPlanEngine.PrioritizeByYield(work,shortLessons,yieldWeights,examErrorTopics).ToList();
-            schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,blocked,rules);
-        }
-        var placedMinutes=schedule.Tasks.Where(x=>x.Kind!="Spaced").GroupBy(x=>(x.Outcome.TopicId,x.Outcome.OutcomeId)).ToDictionary(x=>x.Key,x=>x.Sum(t=>t.Minutes));
-        var leftOut=!v2?null:work.SelectMany(lesson=>lesson.Outcomes.Select(outcome=>(lesson,outcome)))
-            .Select(x=>(x.lesson,x.outcome,Left:x.outcome.Minutes-placedMinutes.GetValueOrDefault((x.outcome.TopicId,x.outcome.OutcomeId))))
-            .Where(x=>x.Left>0).GroupBy(x=>(x.lesson.LessonId,x.lesson.LessonName,x.outcome.TopicId,x.outcome.TopicName))
-            .Select(x=>new WeeklyLeftOutTopic(x.Key.LessonId,x.Key.LessonName,x.Key.TopicId,x.Key.TopicName,x.Sum(y=>y.Left))).ToArray();
-        var summaries=schedule.Lessons.Select(summary=>{
-            var original=originalWork.Single(x=>x.LessonId==summary.LessonId);var ownCredits=credits.Where(x=>x.LessonId==summary.LessonId).ToArray();
-            var required=work.Single(x=>x.LessonId==summary.LessonId).Outcomes.Sum(x=>x.Minutes)+ownCredits.Sum(x=>x.Minutes);var scheduled=summary.ScheduledMinutes+ownCredits.Where(x=>x.Date<=request.EndDate).Sum(x=>x.Minutes);
-            var lastCredit=ownCredits.Length==0?(DateOnly?)null:ownCredits.Max(x=>x.Date);var finish=summary.RequiredMinutes==0?lastCredit:summary.FinishDate;
-            if(finish.HasValue&&lastCredit>finish)finish=lastCredit;
-            var weeks=Math.Max(1,(int)Math.Ceiling((request.EndDate.DayNumber-request.StartDate.DayNumber+1)/7d));
-            return summary with {OutcomeCount=original.Outcomes.Select(x=>x.OutcomeId).Distinct().Count(),RequiredMinutes=required,ScheduledMinutes=scheduled,RemainingMinutes=required-scheduled,FinishDate=finish,ExtraWeeklyMinutes=(int)Math.Ceiling((required-scheduled)/(weeks*30d))*30};
-        }).ToArray();
-        schedule=schedule with {Lessons=summaries,RecommendedEndDate=summaries.All(x=>x.FinishDate.HasValue)?summaries.Max(x=>x.FinishDate):null};
-        var fingerprint=Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new{request,draft.Version,draft.TimeZoneId,Slots=draft.Slots,originalWork,work,issues,ContextVersion=context?.Version,Rules=new{topicStates=topicStates.OrderBy(x=>x.Key).ToArray(),preferences=preferences.OrderBy(x=>x.Key).ToArray(),examErrorTopics=examErrorTopics.Order().ToArray(),yieldWeights=yieldWeights.OrderBy(x=>x.Key).ToArray()},ActiveId=active?.Id,ActiveVersion=active?.Version,pinnedLinks,
-            Completed=completedLinks.Select(x=>new{x.Task.Id,x.Task.Version,x.Task.OriginalTaskId,x.Task.TopicId,x.Link.OutcomeId,x.Link.EstimateId,x.Link.AllocatedMinutes}),
-            Protected=protectedTasks.Select(x=>new{x.Id,x.Version,x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes,x.IsCompleted,x.IsPinned,x.RemainingMinutes,x.RemainingQuestions}),Placements=placements.Select(x=>new{x.Source.Id,x.Date,x.Start,x.Minutes})})));
-        // Paket G #41: chosen courses without a weekly lesson get no time at all; they are named next to the courses that do not fit.
-        var unscheduled=context is null?[]:(await db.StudentCoursePreferences.AsNoTracking().Where(x=>x.ContextId==context.Id&&x.IsIncluded)
-                .Select(x=>x.LessonId).ToArrayAsync(ct))
-            .Where(x=>choices.ContainsKey(x)&&!lessonIds.Contains(x)).Select(x=>new WeeklyUnscheduledLesson(x,choices[x].Name))
-            .OrderBy(x=>x.LessonName,StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"),false)).ThenBy(x=>x.LessonId).ToArray();
-        // Roadmap O7: with PrioritizeWhenShort a plan that does not fit may be saved; the left-out topics are listed.
-        var fits=schedule.Lessons.All(x=>x.RemainingMinutes==0)||v2&&request.PrioritizeWhenShort;
-        var canCreate=issues.Count==0&&schedule.Tasks.Count+pending.Count>0&&fits&&schedule.Tasks.Count+pending.Count<=10000;
-        return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,placements.Select(x=>new WeeklyProtectedTask(x.Date,x.Start,x.Source.Title,x.Minutes)).ToArray(),leftOut,unscheduled),
-            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId),protectedTasks,pinnedLinks,placements);
     }
 
     public Task<WeeklyOutcomePlanCreated> CreateAsync(WeeklyOutcomePlanSave request,CancellationToken ct)

@@ -6,12 +6,7 @@ public sealed record WeeklySlotInput(Guid Id, Guid LessonId, DayOfWeek Day, int 
 /// <summary>E3 #34: TimeZoneId is ignored (the draft is always in Europe/Istanbul); older clients still send it.</summary>
 public sealed record WeeklyDraftInput(int? ExpectedVersion,string? TimeZoneId,IReadOnlyList<WeeklySlotInput> Slots);
 public sealed record WeeklyDraftView(int Version,string TimeZoneId,IReadOnlyList<WeeklyDraftSlot> Slots);
-/// <summary>
-/// Paket G #41: a chosen course's order in the weekly proposal: the student's priority (1 highest) first, then the questions the
-/// course has in her exam (<see cref="ExamQuestionWeights"/>; null when the catalog does not tell).
-/// </summary>
-public sealed record WeeklyCourseRank(Guid LessonId,int Priority,decimal? ExamQuestions);
-public sealed record WeeklyDraftPage(WeeklyDraftView? Draft,IReadOnlyList<LearningLessonView> Lessons,IReadOnlyList<WeeklyCourseRank>? Courses=null)
+public sealed record WeeklyDraftPage(WeeklyDraftView? Draft,IReadOnlyList<LearningLessonView> Lessons)
 {
     /// <summary>Paket H1 (K5): the most study one day of the weekly routine may hold for this student (<see cref="WeeklyDayLimit"/>).</summary>
     public int MaxDayMinutes { get; init; } = WeeklyDayLimit.SchoolMinutes;

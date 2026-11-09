@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { studentShell } from '../support/coaching-student-shell.mjs';
 
 const token = role => {
   const encode = x => Buffer.from(JSON.stringify(x)).toString('base64url');
@@ -14,6 +15,7 @@ test('student selects reviewed outcomes, overrides time and saves and completes 
     const request = route.request(); const path = new URL(request.url()).pathname;
     const respond = data => route.fulfill({ json: { success: true, data } });
     if (path.endsWith('/auth/refresh-token')) return route.fulfill({ json: { accessToken: token('Student'), tokenType: 'Bearer', expiresInMinutes: 15 } });
+    const shell = studentShell(route, path); if (shell) return shell;
     if (path.endsWith('/profiles/me')) return respond({ student: { educationStatus: 'Student', gradeLevel: 8, isActive: true }, memberships: [] });
     if (path.endsWith('/weekly-draft')) return respond({ draft: null, lessons: [] });
     if (path.endsWith('/availability')) return respond({ version: 1, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] });

@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {studentShell} from '../support/coaching-student-shell.mjs';
 // On phones the tables stack: each cell's accessible name starts with its column label, so match the value at the end.
 const cell=(scope,value)=>scope.getByRole('cell',{name:new RegExp('(^|\\s)'+value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$')});
 // The teacher sections are tabs on wide screens and a "Öğretmen bölümleri" select on phones.
@@ -14,6 +15,7 @@ async function fixture(browser,empty=false){
   async function context(role){const c=await browser.newContext({viewport:test.info().project.use.viewport,isMobile:test.info().project.use.isMobile,hasTouch:test.info().project.use.hasTouch,timezoneId:'Europe/Istanbul'});contexts.push(c);
     await c.route('**/api/**',async route=>{const req=route.request(),path=new URL(req.url()).pathname,body=req.method()==='GET'?null:req.postDataJSON(),ok=data=>route.fulfill({json:{success:true,data}}),bare=data=>route.fulfill({json:data});
       if(path.endsWith('/auth/refresh-token'))return bare({accessToken:token(role),expiresInMinutes:60,tokenType:'Bearer'});
+      const shell=studentShell(route,path);if(shell)return shell;
       if(path.endsWith('/auth/staff-session/products'))return bare([{product:'coaching',roles:[role]}]);
       if(path.endsWith('/profiles/me'))return ok({student:{educationStatus:'Student',gradeLevel:8,isActive:true},memberships:[]});
       if(path.endsWith('/teachers/me/students'))return bare({items:[],totalCount:0,pageNumber:1,pageSize:25});

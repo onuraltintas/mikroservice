@@ -1,0 +1,324 @@
+using Coaching.Application.Authorization;
+using Coaching.Application.Interfaces;
+using Coaching.Application.StudyPlanning;
+using Coaching.Domain.Entities;
+using Coaching.Domain.Profiles;
+using Coaching.Infrastructure.StudyPlanning;
+using EduPlatform.Shared.Kernel.Exceptions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace Coaching.Curriculum.IntegrationTests;
+
+// Paket H2: the weekly proposal endpoint: saved availability, weekly draft, chosen lessons and their weekly need (the annual preview's numbers).
+public sealed class WeeklyProposalServiceTests
+{
+    // Monday 24 May 2027, 09:00 in Istanbul; the fixture's LGS has no session, so the plan ends on 1 June (9 days).
+    private static readonly DateTimeOffset Now = new(2027, 5, 24, 6, 0, 0, TimeSpan.Zero);
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider { public override DateTimeOffset GetUtcNow() => now; }
+    private sealed class Identity(Guid student) : ICoachingIdentityAuthorizationClient
+    {
+        public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid id, CancellationToken ct) => Task.FromResult<CoachingAdminAccessScope?>(null);
+        public Task<Guid?> AuthorizeTeacherTargetsAsync(Guid teacher, IReadOnlyCollection<Guid> ids, Guid? institution, bool admin, CancellationToken ct)
+            => ids.All(x => x == student) ? Task.FromResult(institution) : throw new BusinessRuleException("Authorization.Forbidden", "Denied");
+        public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewer, IReadOnlyCollection<Guid> ids, CancellationToken ct) => Task.FromResult(ids);
+    }
+
+    private sealed record World(Guid Student, StudyCatalogLesson Math, StudyCatalogLesson Turkish, StudyCatalogTopic TurkishTopic);
+
+    /// <summary>Matematik keeps 30 minutes of work after the seeded completed task; Türkçe has 180. Both are chosen (Derslerim).</summary>
+    private static async Task<World> Seed(CurriculumManagementTests.Fixture f, bool availability = true)
+    {
+        await WeeklyOutcomePlanTests.Seed(f);
+        var student = f.User.UserId!.Value; var math = await f.Db.StudyCatalogLessons.SingleAsync();
+        var turkish = StudyCatalogLesson.Create("test", "h2-turkish", "Türkçe", 8, "LGS"); turkish.SetActive(true);
+        var unit = StudyCatalogUnit.Create("test", "h2-turkish-unit", turkish.Id, "Türkçe", 1); unit.SetActive(true);
+        var topic = StudyCatalogTopic.Create("test", "h2-turkish-topic", turkish.Id, unit.Id, "Paragraf", null, 1); topic.SetActive(true);
+        var edition = OfficialCurriculumEdition.Create("test-h2-2026", "LGS", 8, "Türkçe", 2026, 2026, "https://meb.gov.tr/test", new string('c', 64), "https://meb.gov.tr/test");
+        var official = OfficialCurriculumTopic.Create(edition.Id, "T.H2", "Paragraf", 1, 1);
+        var outcome = StudyCatalogOutcome.Create(edition.Id, official.Id, "T.H2.1", "Paragraf kazanımı", "", 1, 1);
+        var estimate = OutcomeDurationEstimate.Create(outcome.Id, 1, 60, 60, 60, "ReviewedStudy", "Medium", "H2 test süresi", f.User.UserId); estimate.Publish();
+        var mapping = StudyCatalogTopicOutcome.Create(topic.Id, outcome.Id, "H2 eşleştirmesi"); mapping.Review(true, "H2 eşleştirmesi", student);
+        f.Db.AddRange(turkish, unit, topic, edition, official, outcome, estimate, mapping);
+        var context = await f.Db.StudentLearningContexts.Include(x => x.CoursePreferences).SingleAsync();
+        context.ReplaceSelections([StudentCoursePreference.Create(context.Id, math.Id, 3, null), StudentCoursePreference.Create(context.Id, turkish.Id, 3, null)], [], false);
+        if (availability)
+        {
+            var hours = StudyAvailability.Create(student);
+            hours.ReplaceWindows(new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday }
+                .Select(day => new StudyAvailabilityWindow(day, 1020, 1200)));
+            f.Db.Add(hours);
+        }
+        await f.Db.SaveChangesAsync();
+        return new(student, math, turkish, topic);
+    }
+    private static CoachingWeeklyProposalService Proposals(CurriculumManagementTests.Fixture f, CoachingStudyPlanAccess? staff = null, DateTimeOffset? now = null) =>
+        new(f.Db, new CoachingAccessPolicy(f.User), new WeeklyStudyDraftTests.Catalog(f.Db), new FixedClock(now ?? Now), staff);
+    private static CoachingWeeklyOutcomePlanService Plans(CurriculumManagementTests.Fixture f, DateTimeOffset? now = null) =>
+        new(f.Db, new CoachingAccessPolicy(f.User), new WeeklyStudyDraftTests.Catalog(f.Db), new FixedClock(now ?? Now));
+    private static object? Body(IActionResult result, string name) { var value = ((ObjectResult)result).Value!; return value.GetType().GetProperty(name)!.GetValue(value); }
+    private static Coaching.API.Controllers.CoachingStaffStudyController StaffApi(CurriculumManagementTests.Fixture f, CoachingStudyPlanAccess staff) =>
+        new(null!, null!, staff, f.Db, null!, null!, null!, null!);
+    private static async Task<CoachingStudyPlanAccess> BecomeTeacher(CurriculumManagementTests.Fixture f, World world)
+    {
+        f.User.Roles = ["Teacher"]; f.User.UserId = Guid.NewGuid(); await Task.CompletedTask;
+        return new(new CoachingAccessPolicy(f.User), new Identity(world.Student), f.Scope);
+    }
+    private static async Task Apply(CurriculumManagementTests.Fixture f, WeeklyProposalView proposal)
+    {
+        var drafts = WeeklyStudyDraftTests.Service(f, new(f.Db));
+        var draft = await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync();
+        var kept = proposal.Mode == WeeklyProposalMode.Fill ? draft?.Slots ?? [] : [];
+        await drafts.SaveAsync(new(draft?.Version, null, kept.Concat(proposal.Slots).Select(x => new WeeklySlotInput(x.Id, x.LessonId, x.Day, x.StartMinute, x.DurationMinutes)).ToArray()), default);
+    }
+
+    [Fact]
+    public async Task ReplaceProposesTheNeededHoursForEveryChosenLesson_AndTheAppliedWeekFitsTheAnnualPreview()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); await ProposeApplyAndPreview(f);
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TheAppliedProposalFitsTheAnnualPreviewOnPostgres()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create(); await ProposeApplyAndPreview(pg.Data);
+    }
+
+    private static async Task ProposeApplyAndPreview(CurriculumManagementTests.Fixture f)
+    {
+        var world = await Seed(f); var before = await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync();
+        var proposal = await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace), default);
+
+        Assert.Equal((new DateOnly(2027, 6, 1), 2, WeeklyDayLimit.SchoolMinutes, true), (proposal.EndDate, proposal.WeeksUntilEnd, proposal.MaxDayMinutes, proposal.MiddleSchool));
+        // Weekly need = (work + 15 × reviews before the end) ÷ the times the rarest study weekday comes (Wednesday to Friday come once
+        // in these 9 days): Matematik 30 + 2 × 15 = 60, Türkçe 180 + 2 × 15 = 210.
+        var math = proposal.Lessons.Single(x => x.LessonId == world.Math.Id); var turkish = proposal.Lessons.Single(x => x.LessonId == world.Turkish.Id);
+        Assert.Equal((0, 60, 60, false), (math.ExistingMinutes, math.ProposedMinutes, math.NeededMinutes, math.NoTime));
+        Assert.Equal((0, 240, 210), (turkish.ExistingMinutes, turkish.ProposedMinutes, turkish.NeededMinutes));
+        Assert.Equal((270, 270), (proposal.NeededMinutes, proposal.CoveredMinutes));
+        Assert.Equal(before.Version, proposal.DraftVersion);
+        Assert.Equal(0, proposal.ShortageMinutes);
+        Assert.Equal(new[] { "Matematik", "Türkçe" }, proposal.Lessons.Select(x => x.LessonName));
+        Assert.All(proposal.Slots, x => Assert.Equal(60, x.DurationMinutes));
+        // Middle school: a break after every session, so 17:00 and 18:30 each weekday; the needed sessions are spread over the days.
+        Assert.Equal(10 * 60, proposal.FreeMinutes);
+        Assert.Equal(5, proposal.Slots.Select(x => x.Day).Distinct().Count());
+        Assert.All(proposal.Slots.GroupBy(x => x.Day), day => Assert.Single(day));
+
+        // Applying it: the weekly draft is replaced with the proposal and the annual preview (engine 2, freed hours reused) fits.
+        var drafts = WeeklyStudyDraftTests.Service(f, new(f.Db));
+        var draft = await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync();
+        var saved = await drafts.SaveAsync(new(draft.Version, null, proposal.Slots.Select(x => new WeeklySlotInput(x.Id, x.LessonId, x.Day, x.StartMinute, x.DurationMinutes)).ToArray()), default);
+        var preview = await Plans(f).PreviewAsync(new(new(2027, 5, 24), proposal.EndDate, saved.Version, true, WeeklyPlanEngine.CurrentVersion), default);
+        Assert.True(preview.CanCreate);
+        Assert.Equal(2, preview.Schedule.Lessons.Count);
+        Assert.All(preview.Schedule.Lessons, x => Assert.Equal(0, x.RemainingMinutes));
+        Assert.Empty(preview.UnscheduledLessons!);
+    }
+
+    [Fact]
+    public async Task FillKeepsTheSavedCardsAndProposesOnlyInFreeTime_NothingIsSaved()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
+        var before = await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync();
+        var proposal = await Proposals(f).ProposeAsync(new(), default);
+
+        Assert.Equal(WeeklyProposalMode.Fill, proposal.Mode);
+        // The saved 30-minute Matematik card (Monday 18:00) stays; Matematik still needs one hour, so it gets one more session.
+        var math = proposal.Lessons.Single(x => x.LessonId == world.Math.Id);
+        Assert.Equal((30, 60), (math.ExistingMinutes, math.ProposedMinutes));
+        Assert.DoesNotContain(proposal.Slots, x => x.Day == DayOfWeek.Monday && x.StartMinute < 1110 && x.StartMinute + 60 > 1080);
+        // Monday: 17:00 would touch the saved card without a break; only 19:00 fits.
+        Assert.All(proposal.Slots.Where(x => x.Day == DayOfWeek.Monday), x => Assert.Equal(1140, x.StartMinute));
+        var after = await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync();
+        Assert.Equal((before.Version, before.Slots.Count), (after.Version, after.Slots.Count));
+    }
+
+    [Fact]
+    public async Task WithoutAvailabilityTheStudentIsAskedForHerHours_AnEmptyDraftIsFine()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); await Seed(f, availability: false);
+        var missing = await Assert.ThrowsAsync<StudyAvailabilityMissingException>(() => Proposals(f).ProposeAsync(new(), default));
+        Assert.Equal("Önce müsait saatlerini kaydet.", missing.Message);
+        var api = new Coaching.API.Controllers.WeeklyStudyDraftController(WeeklyStudyDraftTests.Service(f, new(f.Db)));
+        var notFound = Assert.IsType<NotFoundObjectResult>(await api.Proposal(new(), Proposals(f), default));
+        Assert.Equal("Önce müsait saatlerini kaydet.", notFound.Value!.GetType().GetProperty("message")!.GetValue(notFound.Value));
+
+        var hours = StudyAvailability.Create(f.User.UserId!.Value); hours.ReplaceWindows([new(DayOfWeek.Saturday, 600, 780)]); f.Db.Add(hours);
+        f.Db.Remove(await f.Db.Set<WeeklyStudyDraft>().SingleAsync()); await f.Db.SaveChangesAsync();
+        var proposal = await Proposals(f).ProposeAsync(new(), default);
+        // Middle school: 10:00 and, after a 30-minute break, 11:30; both chosen lessons get an hour.
+        Assert.Equal(new[] { 600, 690 }, proposal.Slots.Select(x => x.StartMinute));
+        Assert.All(proposal.Lessons, x => Assert.Equal(0, x.ExistingMinutes));
+        Assert.IsType<OkObjectResult>(await api.Proposal(new(WeeklyProposalMode.Replace), Proposals(f), default));
+        await Assert.ThrowsAsync<StudyPlanValidationException>(() => Proposals(f).ProposeAsync(new(ExamFocus: "lgs"), default));
+    }
+
+    [Fact]
+    public async Task TheTeacherSeesTheSameProposal()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
+        var own = await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace), default);
+        f.User.Roles = ["Teacher"]; f.User.UserId = Guid.NewGuid();
+        var staff = new CoachingStudyPlanAccess(new CoachingAccessPolicy(f.User), new Identity(world.Student), f.Scope);
+        var teacher = await Proposals(f, staff).ProposeForStudentAsync(world.Student, new(WeeklyProposalMode.Replace), default);
+        Assert.Equal(own.Lessons, teacher.Lessons);
+        Assert.Equal(own.Slots.Select(x => (x.LessonId, x.Day, x.StartMinute)), teacher.Slots.Select(x => (x.LessonId, x.Day, x.StartMinute)));
+        await Assert.ThrowsAsync<BusinessRuleException>(() => Proposals(f, staff).ProposeForStudentAsync(Guid.NewGuid(), new(), default));
+        await Assert.ThrowsAsync<BusinessRuleException>(() => Proposals(f).ProposeForStudentAsync(world.Student, new(), default));
+        await Assert.ThrowsAsync<BusinessRuleException>(() => Proposals(f, staff).ProposeAsync(new(), default));
+    }
+
+    [Fact]
+    public async Task AYksStudentChoosesTheExamFocus_AGraduateGetsTenHoursADayAndABreakEveryTwoSessions()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
+        // A lise graduate preparing for YKS (SAY): Matematik becomes a TYT lesson, Türkçe an AYT lesson she says she has studied
+        // (a short refresh: 45 minutes, so its weekly need is below Matematik's 60).
+        foreach (var (lesson, exam, test) in new[] { (world.Math, "TYT", "TYT.MAT"), (world.Turkish, "AYT", "AYT.EDB") })
+        {
+            f.Db.Entry(lesson).Property(x => x.ExamCode).CurrentValue = exam;
+            var topic = await f.Db.StudyCatalogTopics.SingleAsync(x => x.LessonId == lesson.Id && !f.Db.StudyCatalogTopics.Any(c => c.ParentId == x.Id));
+            f.Db.Add(StudyCatalogYksScope.Create(topic.Id, exam, "SAY", test, null, "H2 testi"));
+            var edition = await f.Db.Set<OfficialCurriculumEdition>().SingleAsync(x => x.SubjectName == lesson.Name);
+            f.Db.Add(OfficialCurriculumLessonBinding.Create(edition.Id, lesson.Id));
+        }
+        var context = await f.Db.StudentLearningContexts.Include(x => x.CoursePreferences).SingleAsync(); context.SetScope(2026, LearningPurpose.Yks, 2027, "SAY", null);
+        context.ReplaceSelections(context.CoursePreferences, [StudentTopicState.Create(context.Id, world.TurkishTopic.Id, DeclaredTopicStatus.Studied, world.Student)], true);
+        var profile = await f.Db.CoachingStudentProfiles.SingleAsync(); profile.UpdateEducation(CoachingEducationStatus.HighSchoolGraduate, null, null, null, null, null, null, null);
+        var hours = await f.Db.StudyAvailability.SingleAsync(); hours.ReplaceWindows([new(DayOfWeek.Monday, 1020, 1200)]);
+        await f.Db.SaveChangesAsync();
+        int Minutes(WeeklyProposalView view, StudyCatalogLesson lesson) => view.Lessons.Single(x => x.LessonId == lesson.Id).ProposedMinutes;
+
+        var balanced = await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, "balanced"), default);
+        Assert.Equal((WeeklyDayLimit.GraduateMinutes, false, "balanced"), (balanced.MaxDayMinutes, balanced.MiddleSchool, balanced.ExamFocus));
+        // 17:00–20:00 with a break after two sessions: 17:00 and 18:00 (19:00 would be a third hour in a row).
+        Assert.Equal(new[] { 1020, 1080 }, balanced.Slots.Select(x => x.StartMinute));
+        Assert.Equal((60, 60), (Minutes(balanced, world.Math), Minutes(balanced, world.Turkish)));
+
+        // One free hour: the larger weighted need gets it; "ayt" puts the AYT lesson first (K6: ×1.3 and ×0.75).
+        hours.ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]); await f.Db.SaveChangesAsync();
+        async Task<Guid> OnlyLesson(string focus) => Assert.Single((await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, focus), default)).Slots).LessonId;
+        Assert.Equal(world.Math.Id, await OnlyLesson("balanced"));
+        Assert.Equal(world.Math.Id, await OnlyLesson("tyt"));
+        Assert.Equal(world.Turkish.Id, await OnlyLesson("ayt"));
+        var shortage = await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, "ayt"), default);
+        Assert.True(shortage.ShortageMinutes > 0);
+        Assert.True(shortage.Lessons.Single(x => x.LessonId == world.Math.Id).NoTime);
+
+        // A student who does not prepare for YKS has no exam focus.
+        context.SetScope(2026, LearningPurpose.Lgs, 2027, null, null); await f.Db.SaveChangesAsync();
+        Assert.Null((await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, "tyt"), default)).ExamFocus);
+    }
+
+    // Review of PR #130 (5, 13): a teacher may answer the quick questions for a student without study times; they are never saved.
+    [Fact]
+    public async Task ATeacherProposesFromHerAnswersForAStudentWithoutStudyTimes_NothingIsSaved()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f, availability: false);
+        var studentApi = new Coaching.API.Controllers.WeeklyStudyDraftController(WeeklyStudyDraftTests.Service(f, new(f.Db)));
+        // The student's own request has no answers: her saved study times are used, and a 404 has the same shape as the teacher's.
+        var mine = await studentApi.Proposal(new(), Proposals(f), default);
+        Assert.Equal((404, (object?)false, (object?)"Önce müsait saatlerini kaydet."), (((ObjectResult)mine).StatusCode, Body(mine, "success"), Body(mine, "message")));
+        var sent = await studentApi.Proposal(new(Windows: [new(DayOfWeek.Monday, 1020, 1140)]), Proposals(f), default);
+        Assert.IsType<BadRequestObjectResult>(sent); Assert.Equal(false, Body(sent, "success"));
+        await Assert.ThrowsAsync<StudyPlanValidationException>(() => Proposals(f).ProposeAsync(new(Windows: [new(DayOfWeek.Monday, 1020, 1140)]), default));
+
+        var staff = await BecomeTeacher(f, world); var api = StaffApi(f, staff);
+        var none = await api.WeeklyProposal(world.Student, new(), Proposals(f, staff), default);
+        Assert.Equal((404, (object?)false, (object?)"Öğrenci henüz çalışabileceği saatleri kaydetmemiş."), (((ObjectResult)none).StatusCode, Body(none, "success"), Body(none, "message")));
+        foreach (var wrong in new StudyWindowInput[][] { [new(DayOfWeek.Monday, 1020, 1140), new(DayOfWeek.Monday, 1080, 1200)], [new(DayOfWeek.Monday, 1020, 1500)],
+                     Enumerable.Range(0, 51).Select(i => new StudyWindowInput(DayOfWeek.Monday, i * 20, i * 20 + 10)).ToArray() })
+        {
+            var bad = await api.WeeklyProposal(world.Student, new(Windows: wrong), Proposals(f, staff), default);
+            Assert.IsType<BadRequestObjectResult>(bad);
+            Assert.Equal("Çalışma saatlerini kontrol edin: en çok 50 aralık olabilir; aralıklar gün içinde kalmalı ve birbiriyle çakışmamalı.", Body(bad, "message"));
+        }
+        var answered = Assert.IsType<OkObjectResult>(await api.WeeklyProposal(world.Student, new(Windows: [new(DayOfWeek.Monday, 1020, 1140), new(DayOfWeek.Tuesday, 1020, 1140)]), Proposals(f, staff), default));
+        Assert.NotEmpty(((WeeklyProposalView)Body(answered, "data")!).Slots);
+        Assert.Empty(await f.Db.StudyAvailability.ToArrayAsync());
+
+        // With saved study times the teacher's answers are not used.
+        var hours = StudyAvailability.Create(world.Student); hours.ReplaceWindows([new(DayOfWeek.Friday, 1020, 1140)]); f.Db.Add(hours); await f.Db.SaveChangesAsync();
+        var both = await api.WeeklyProposal(world.Student, new(Windows: [new(DayOfWeek.Monday, 1020, 1140)]), Proposals(f, staff), default);
+        Assert.Equal("Öğrencinin kayıtlı çalışma saatleri var; öneri bu saatlerden hazırlanır.", Body(Assert.IsType<BadRequestObjectResult>(both), "message"));
+        Assert.All(((WeeklyProposalView)Body(await api.WeeklyProposal(world.Student, new(), Proposals(f, staff), default), "data")!).Slots, x => Assert.Equal(DayOfWeek.Friday, x.Day));
+    }
+
+    // Review of PR #130 (7): the plan ends where the annual preview will end it after the proposal is applied: Replace looks at the
+    // proposed courses only (not the old cards), Fill also at the kept cards, and a course left without time does not count.
+    [Theory]
+    [InlineData(WeeklyProposalMode.Replace, 2027, 6, 12)]
+    [InlineData(WeeklyProposalMode.Fill, 2027, 5, 29)]
+    public async Task ThePlanEndIsTheOneTheAppliedWeekGets(WeeklyProposalMode mode, int year, int month, int day)
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
+        var chemistry = StudyCatalogLesson.Create("test", "h2-chemistry", "Kimya", null, "TYT"); chemistry.SetActive(true); f.Db.Add(chemistry);
+        (await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "TYT")).ReplaceSessions([new(null, new DateOnly(2027, 5, 30), "2027", null, null)]);
+        (await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "LGS")).ReplaceSessions([new(null, new DateOnly(2027, 6, 13), "2027", null, null)]);
+        var context = await f.Db.StudentLearningContexts.Include(x => x.CoursePreferences).SingleAsync();
+        f.Db.Entry(context).Property(x => x.TargetExamYear).CurrentValue = null;
+        context.ReplaceSelections([.. context.CoursePreferences, StudentCoursePreference.Create(context.Id, chemistry.Id, 3, null)], [], false);
+        // One free hour a week (Türkçe takes it); the saved draft has a Kimya (TYT) card on Tuesday.
+        (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]);
+        var draft = await f.Db.Set<WeeklyStudyDraft>().SingleAsync();
+        draft.Replace(draft.TimeZoneId, [new(Guid.NewGuid(), chemistry.Id, "Kimya", "TYT", DayOfWeek.Tuesday, 1080, 30)]);
+        await f.Db.SaveChangesAsync();
+
+        var proposal = await Proposals(f).ProposeAsync(new(mode), default);
+        Assert.Equal(world.Turkish.Id, Assert.Single(proposal.Slots).LessonId);
+        Assert.True(proposal.Lessons.Single(x => x.LessonId == world.Math.Id).NoTime);
+        Assert.Equal(new DateOnly(year, month, day), proposal.EndDate);
+        await Apply(f, proposal);
+        Assert.Equal(proposal.EndDate, (await Plans(f).OptionsAsync(default)).EndDate);
+    }
+
+    // Review of PR #130 (14): a week without shortage fits the annual preview, also when some weekdays come fewer times before the end.
+    [Theory]
+    [InlineData(0)]
+    [InlineData(3)]
+    [InlineData(5)]
+    [InlineData(8)]
+    public async Task AWeekWithoutShortageFitsTheAnnualPreview(int daysLater)
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); await Seed(f);
+        (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows(WeeklyProposalEngine.Week.Select(day => new StudyAvailabilityWindow(day, 480, 1320)));
+        await f.Db.SaveChangesAsync();
+        var now = Now.AddDays(daysLater); var today = DateOnly.FromDateTime(now.UtcDateTime);
+        var proposal = await Proposals(f, now: now).ProposeAsync(new(WeeklyProposalMode.Replace), default);
+        Assert.Equal(0, proposal.ShortageMinutes);
+        Assert.Equal(proposal.NeededMinutes, proposal.CoveredMinutes);
+        await Apply(f, proposal);
+        var version = (await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync()).Version;
+        var preview = await Plans(f, now).PreviewAsync(new(today, proposal.EndDate, version, true, WeeklyPlanEngine.CurrentVersion), default);
+        Assert.True(preview.CanCreate);
+        Assert.All(preview.Schedule.Lessons, x => Assert.Equal(0, x.RemainingMinutes));
+    }
+
+    // Review of PR #130 (3): a day before the exam the need is the remaining work, not seven times it.
+    [Fact]
+    public async Task OneDayBeforeTheEndTheNeedIsTheRemainingWork()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
+        var proposal = await Proposals(f, now: Now.AddDays(8)).ProposeAsync(new(WeeklyProposalMode.Replace), default);
+        Assert.Equal(1, proposal.WeeksUntilEnd);
+        Assert.Equal((30, 180), (proposal.Lessons.Single(x => x.LessonId == world.Math.Id).NeededMinutes, proposal.Lessons.Single(x => x.LessonId == world.Turkish.Id).NeededMinutes));
+    }
+
+    // Final review of PR 130 (10): only missing study times get the teacher's "no study times" message.
+    [Fact]
+    public async Task OnlyMissingStudyTimesGetTheTeachersStudyTimesMessage()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f, availability: false);
+        var staff = await BecomeTeacher(f, world); var api = StaffApi(f, staff);
+        var missing = await api.WeeklyProposal(world.Student, new(), Proposals(f, staff), default);
+        Assert.Equal("Öğrenci henüz çalışabileceği saatleri kaydetmemiş.", Body(missing, "message"));
+        var other = await api.WeeklyProposal(world.Student, new(), new Throwing(new KeyNotFoundException("Başka bir kayıt yok.")), default);
+        Assert.IsType<NotFoundResult>(other);
+    }
+    private sealed class Throwing(Exception error) : IWeeklyProposalService
+    {
+        public Task<WeeklyProposalView> ProposeAsync(WeeklyProposalRequest request, CancellationToken ct) => throw error;
+        public Task<WeeklyProposalView> ProposeForStudentAsync(Guid studentId, WeeklyProposalRequest request, CancellationToken ct) => throw error;
+    }
+}

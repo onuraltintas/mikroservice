@@ -119,6 +119,18 @@ describe('StudentLearningSetupComponent', () => {
     const none = await setup(empty, '/?adim=baslangic');
     expect(none.component.step()).toBe('Purpose');
   });
+  // Final review of PR 130: the wizard's "Ders çıkar" and "Derslerimi seç" open Derslerim with the way back.
+  it('opens Derslerim from ?adim=dersler with the way back to the wizard, under the same conditions', async () => {
+    const ready = { ...empty, context, nextStep: 'Preview', isReady: true, missingFields: [] };
+    const opened = await setup(ready, '/?adim=dersler&donus=sihirbaz');
+    opened.fixture.detectChanges();
+    expect(opened.component.step()).toBe('Courses');
+    expect(opened.service.catalog).toHaveBeenCalled();
+    expect((opened.fixture.nativeElement.querySelector('[data-testid="back-to-wizard"]') as HTMLAnchorElement).textContent?.trim()).toBe('Plan sihirbazına dön');
+    TestBed.resetTestingModule();
+    const none = await setup(empty, '/?adim=dersler');
+    expect(none.component.step()).toBe('Purpose');
+  });
   // Review of PR 129: opened from the plan wizard (?donus=sihirbaz), Başlangıç durumum and Plan önizlemesi lead back to it.
   it('offers the way back to the plan wizard only when it was opened from there', async () => {
     const ready = { ...empty, context, nextStep: 'Preview', isReady: true, missingFields: [] };
@@ -130,6 +142,8 @@ describe('StudentLearningSetupComponent', () => {
     await opened.component.goTo('Preview'); opened.fixture.detectChanges();
     expect(back(opened.fixture)).not.toBeNull();
     await opened.component.goTo('Courses'); opened.fixture.detectChanges();
+    expect(back(opened.fixture)).not.toBeNull();
+    await opened.component.goTo('Purpose'); opened.fixture.detectChanges();
     expect(back(opened.fixture)).toBeNull();
     TestBed.resetTestingModule();
     const unknown = await setup(ready, '/?adim=baslangic&donus=baska');

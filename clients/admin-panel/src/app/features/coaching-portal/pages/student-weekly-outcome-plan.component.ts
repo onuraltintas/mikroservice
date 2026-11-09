@@ -32,24 +32,26 @@ export class StudentWeeklyOutcomePlanComponent implements OnInit {
   readonly kindLabel=weeklyPlanKindLabel;readonly savingExamDate=signal(false);
   /**
    * Paket H1 (P10): the weekly lessons that are no longer chosen and stop the preview (review of PR 129: from the code
-   * StudyPlanning.LessonsNotChosen and its lessons). A student gets the way to her weekly routine and one-click removal.
+   * StudyPlanning.LessonsNotChosen and its lessons). A student gets the way to her weekly routine and one-click removal; a teacher
+   * (final review of PR 130) the removal from the student's weekly routine.
    */
   readonly notChosen=signal<{lessonId:string;lessonName:string}[]>([]);
-  notChosenLessons(){return !this.studentId&&this.notChosen().length>0;}
+  notChosenLessons(){return this.notChosen().length>0;}
   /** Review of PR 129: "Bu dersleri haftalık düzenimden kaldır" — confirm, remove their cards from the saved week, preview again. */
   async removeNotChosenLessons(){
-    const lessons=this.notChosen();if(this.studentId||!lessons.length||this.busy())return;
+    const lessons=this.notChosen();if(!lessons.length||this.busy())return;const student=this.studentId;
     const names=lessons.map(x=>x.lessonName);
     const list=names.length>1?`${names.slice(0,-1).join(', ')} ve ${names.at(-1)} dersleri`:`${names[0]} dersi`;
-    if(!await this.toaster.confirm(`${list} haftalık düzeninden kaldırılacak. Devam edelim mi?`,{confirmText:'Kaldır',cancelText:'Vazgeç'}))return;
+    if(!await this.toaster.confirm(student?`${list} öğrencinin haftalık düzeninden kaldırılacak. Devam edilsin mi?`:`${list} haftalık düzeninden kaldırılacak. Devam edelim mi?`,{confirmText:'Kaldır',cancelText:'Vazgeç'}))return;
     const ids=new Set(lessons.map(x=>x.lessonId.toLowerCase()));
     this.saving.set(true);this.error.set('');
-    this.weekly.get().pipe(takeUntilDestroyed(this.destroy),switchMap(page=>{
+    (student?this.weekly.get(student):this.weekly.get()).pipe(takeUntilDestroyed(this.destroy),switchMap(page=>{
       const draft=page.draft;if(!draft)throw {status:409};
-      return this.weekly.save(draft.version,draft.timeZoneId,draft.slots.filter(x=>!ids.has(x.lessonId.toLowerCase())));
+      const kept=draft.slots.filter(x=>!ids.has(x.lessonId.toLowerCase()));
+      return student?this.weekly.save(draft.version,draft.timeZoneId,kept,student):this.weekly.save(draft.version,draft.timeZoneId,kept);
     }),finalize(()=>this.saving.set(false))).subscribe({
       next:saved=>{this.saving.set(false);const opt=this.options();this.notChosen.set([]);if(opt)this.options.set({...opt,weeklyDraftVersion:saved.version});this.stale.set(false);this.generatePreview();},
-      error:e=>this.fail(e,'Haftalık düzenin kaydedilemedi. Yeniden deneyebilirsin.')
+      error:e=>this.fail(e,student?'Öğrencinin haftalık düzeni kaydedilemedi. Yeniden deneyebilirsin.':'Haftalık düzenin kaydedilemedi. Yeniden deneyebilirsin.')
     });
   }
   // Roadmap O7: the rule-based engine (version 2) is always used by this screen. Paket H1: the freed hours are used by default.
