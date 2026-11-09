@@ -372,11 +372,57 @@ describe('WizardSummaryStepComponent', () => {
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
     expect(planning.get).toHaveBeenCalledWith('new-plan');
     expect(text(el.querySelector('[data-testid="publish-issue"]'))).toContain('güncel hâlini yükledim');
-    // Another preview (for example "Önemli konulara odaklan") keeps the created plan.
-    button(el, 'Önemli konulara odaklan')!.click(); await fixture.whenStable(); fixture.detectChanges();
     button(el, 'Yeniden yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
     expect(engine.create).toHaveBeenCalledTimes(1);
     expect(planning.publish).toHaveBeenLastCalledWith('new-plan', 3);
+  });
+
+  // Re-review of PR 136 (2): a changed preview (other topics, "Önemli konulara odaklan") is a new plan; the plan created before a failed
+  // publish is never published from it. Publishing creates the new plan and the server's pending draft answer opens Planım on the old one.
+  it.each([
+    ['"Önemli konulara odaklan"', async (el: HTMLElement) => { button(el, 'Önemli konulara odaklan')!.click(); }],
+    ['a new topic and "Bu konularla yeniden hesapla"', async (el: HTMLElement, c: WizardSummaryStepComponent, fixture: { detectChanges(): void }) => {
+      c.addTopic({ id: 'paragraf', name: 'Paragraf', lessonName: 'Türkçe', unitName: '', gradeNumber: null, examCode: null, estimatedMinutes: null });
+      fixture.detectChanges(); button(el, 'Bu konularla yeniden hesapla')!.click(); }]
+  ] as const)('does not publish the plan of the old preview after %s', async (_name, change) => {
+    const { el, c, fixture, engine, planning } = await setup();
+    await keep(fixture);
+    planning.publish.mockReturnValueOnce(throwError(() => ({ status: 400, error: { message: 'Aktif plan değişti.' } })));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(button(el, 'Yeniden yayımla')).toBeDefined();
+    await change(el, c, fixture); await fixture.whenStable(); fixture.detectChanges();
+    expect(button(el, 'Yeniden yayımla')).toBeUndefined();
+    engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { code: 'StudyPlanning.DraftExists', message: 'Bekleyen taslak.' } })));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(planning.publish).toHaveBeenCalledTimes(1);
+    expect(engine.create).toHaveBeenCalledTimes(2);
+    const issue = el.querySelector('[data-testid="publish-issue"]')!;
+    expect(text(issue)).toContain('Bekleyen bir plan taslağın var.');
+    expect(issue.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan?plan=new-plan');
+  });
+
+  // Re-review of PR 136 (1): once the week shown is the saved one again, "Bu dersi öne al" proposes in Fill mode, never a Replace
+  // without a confirmation.
+  it('after "Haftanı baştan öner", a changed draft (409 on keep) and its empty Fill proposal, "Bu dersi öne al" proposes in Fill mode', async () => {
+    const { el, c, weekly, engine, fixture } = await setup();
+    button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Replace');
+    weekly.save.mockReturnValueOnce(throwError(() => ({ status: 409 })));
+    weekly.proposal.mockReturnValueOnce(of(proposalOf('Fill', [])));
+    await keep(fixture);
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
+    expect(engine.preview).toHaveBeenCalled();
+    c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
+  });
+
+  it('after a Replace proposal that comes back empty on a saved week, "Bu dersi öne al" proposes in Fill mode', async () => {
+    const { el, c, weekly, engine, fixture } = await setup({ proposal: mode => proposalOf(mode, mode === 'Replace' ? [] : [tuesday]) });
+    button(el, 'Haftanı baştan öner')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Replace');
+    expect(engine.preview).toHaveBeenCalled();   // nothing new: the saved week goes on to the yearly preview
+    c.raiseCourse('tur'); await fixture.whenStable(); fixture.detectChanges();
+    expect(weekly.proposal.mock.calls.at(-1)?.[0]).toBe('Fill');
   });
 
   it('counts a created plan that is already active as published', async () => {
