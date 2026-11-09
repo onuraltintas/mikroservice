@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
@@ -18,7 +18,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
     templateUrl: './cookies.component.html',
     styleUrls: ['./cookies.component.scss']
 })
-export class CookiesComponent {
+export class CookiesComponent implements OnInit, OnDestroy {
     private readonly legalPages = inject(PlatformLegalPagesService);
     private readonly seo = inject(SeoService);
     currentDate = new Date();
@@ -27,9 +27,11 @@ export class CookiesComponent {
     loading = true;
     error = false;
     noDocument = true;
+    private previousCanonical: string | null = null;
 
     ngOnInit(): void {
         // index.html ships the home page as the default canonical; this page is its own document.
+        this.previousCanonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
         this.seo.setCanonicalUrl(`${window.location.origin}/legal/cookies`);
         this.legalPages.getPage('cookies').pipe(finalize(() => this.loading = false)).subscribe({
             next: page => {
@@ -43,6 +45,11 @@ export class CookiesComponent {
                 this.error = response.status !== 404;
             }
         });
+    }
+
+    ngOnDestroy(): void {
+        // Pages without their own canonical must not keep this page's URL after in-app navigation.
+        this.seo.setCanonicalUrl(this.previousCanonical || 'https://masterhizliokuma.com/');
     }
 
 }
