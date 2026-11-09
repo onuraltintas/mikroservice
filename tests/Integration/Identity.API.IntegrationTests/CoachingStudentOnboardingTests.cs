@@ -339,16 +339,22 @@ public sealed class CoachingStudentOnboardingTests
     [Fact]
     public async Task H6_OlderCatalogueYearsAndInactiveProgrammesAreNotListed()
     {
+        // The newest catalogue year in use is the one listed (as in the wizard's other lists): with a 2027 import, the 2026 rows are older.
         await using var s = await Setup.CreateAsync();
-        var older = TargetUniversityProgram.Create("9001", "Ankara Üniversitesi", "Arkeoloji", "Fakülte", "Bachelor", "SOZ");
-        older.UpdateDetails(new("9001", "Ankara Üniversitesi", "Arkeoloji", "SOZ", "ANKARA", null, "Devlet", "Bachelor", null, null, null, null, 50, 50, 300, 300, 200000, null),
-            2025, 2025, null, "https://yokatlas.yok.gov.tr");
-        older.SetActive(true);
-        var inactive = TargetUniversityProgram.Create("9002", "Ankara Üniversitesi", "Arkeoloji ve Sanat Tarihi", "Fakülte", "Bachelor", "SOZ");
-        inactive.UpdateDetails(new("9002", "Ankara Üniversitesi", "Arkeoloji ve Sanat Tarihi", "SOZ", "ANKARA", null, "Devlet", "Bachelor", null, null, null, null, 50, 50, 300, 300, 200000, null),
-            2026, 2026, null, "https://yokatlas.yok.gov.tr");
-        s.F.Db.AddRange(older, inactive); await s.F.Db.SaveChangesAsync();
+        TargetUniversityProgram Add(string code, string name, int year, bool active)
+        {
+            var program = TargetUniversityProgram.Create(code, "Ankara Üniversitesi", name, "Fakülte", "Bachelor", "SOZ");
+            program.UpdateDetails(new(code, "Ankara Üniversitesi", name, "SOZ", "ANKARA", null, "Devlet", "Bachelor", null, null, null, null, 50, 50, 300, 300, 200000, null),
+                year, year, null, "https://yokatlas.yok.gov.tr");
+            program.SetActive(active); s.F.Db.Add(program); return program;
+        }
+        Add("9001", "Antropoloji", 2027, true);
+        Add("9002", "Arkeoloji ve Sanat Tarihi", 2027, false);
+        Add("9003", "Arkeoloji", 2026, true);
+        await s.F.Db.SaveChangesAsync();
+        (await s.Service.ProgramFieldsAsync("antropoloji", default)).Should().Equal(new OnboardingProgramField("Antropoloji", "SOZ"));
         (await s.Service.ProgramFieldsAsync("arkeoloji", default)).Should().BeEmpty();
+        (await s.Service.ProgramFieldsAsync("hukuk", default)).Should().BeEmpty("the 2026 catalogue is older now");
     }
 
     [Fact]

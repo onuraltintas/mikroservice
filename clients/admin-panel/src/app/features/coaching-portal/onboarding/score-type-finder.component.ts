@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, inject, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, Subject, catchError, debounce, distinctUntilChanged, map, merge, of, startWith, switchMap, timer } from 'rxjs';
+import { Observable, Subject, catchError, debounce, map, merge, of, startWith, switchMap, timer } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Choice, yksFieldOf } from './onboarding-model';
 
@@ -17,6 +17,8 @@ const MIN_LETTERS = 2;
 /** The most rows the server sends (it lists the closest names first). */
 const LIMIT = 20;
 let nextId = 0;
+/** PR 137 review: the server's word separators (TurkishSearch); a search needs one word of at least two letters. */
+export function searchable(term: string): boolean { return term.split(/[\s()\-/.,']+/).some(word => word.length >= MIN_LETTERS); }
 
 /**
  * Paket H6 (09.11.2026): "Emin değil misin? Bölümüne göre bulalım". A student who knows the programme they want but not its score
@@ -40,7 +42,7 @@ let nextId = 0;
           <small class="stf-hint" [id]="id + '-hint'">Önlisans bölümleri puan türüne bakmaz, TYT puanıyla öğrenci alır. Onlar için “Yalnız TYT (önlisans)”u seç.</small>
           <p class="stf-status" [id]="id + '-status'" role="status" aria-live="polite">{{ status() }}</p>
           @if (state().kind === 'error') {
-            <div class="stf-error" role="alert"><span>Bölümler yüklenemedi.</span> <button type="button" class="stf-retry" (click)="retry()">Yeniden dene</button></div>
+            <div class="stf-error" role="alert"><span>Bölümler yüklenemedi.</span> <button type="button" class="stf-retry" (click)="retry()" (keydown.escape)="close($event)">Yeniden dene</button></div>
           }
           @if (rows().length) {
             <ul class="stf-list" aria-label="Bulunan bölümler">
@@ -82,6 +84,8 @@ export class ScoreTypeFinderComponent implements OnInit {
   readonly state = signal<SearchState>({ kind: 'idle' });
   private readonly typed = new Subject<string>();
   private readonly retried = new Subject<string>();
+  /** Reopening starts over at once (and drops a search still running). */
+  private readonly resets = new Subject<string>();
   private term = '';
 
   rows(): Row[] { const state = this.state(); return state.kind === 'done' ? state.rows : []; }
@@ -99,12 +103,16 @@ export class ScoreTypeFinderComponent implements OnInit {
 
   ngOnInit() {
     // debounce with a timer, not debounceTime: the pause does not depend on the clock (pages that fix the date in tests).
-    merge(this.typed.pipe(debounce(() => timer(300)), map(x => x.trim()), distinctUntilChanged()), this.retried)
+    // PR 137 review: no distinctUntilChanged: the same term typed again after a cleared box is searched again.
+    // A reset also drops a pause still waiting (the typed stream starts over).
+    const typed = this.resets.pipe(startWith(''), switchMap(() => this.typed.pipe(debounce(() => timer(300)), map(x => x.trim()))));
+    merge(typed, this.retried, this.resets)
       .pipe(switchMap(term => this.search(term)), takeUntilDestroyed(this.destroyRef))
       .subscribe(state => this.state.set(state));
   }
 
   setOpen(open: boolean) {
+    if (open) { this.term = ''; this.state.set({ kind: 'idle' }); this.resets.next(''); }
     this.open.set(open);
     if (open) setTimeout(() => (this.host.nativeElement.querySelector('input[type="search"]') as HTMLInputElement | null)?.focus());
   }
@@ -116,7 +124,7 @@ export class ScoreTypeFinderComponent implements OnInit {
   type(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     // Typing shows the short-search note at once; the request waits for a pause (switchMap drops an older answer).
-    if (value.trim().length < MIN_LETTERS) this.state.set({ kind: value.trim() ? 'short' : 'idle' });
+    if (!searchable(value.trim())) this.state.set({ kind: value.trim() ? 'short' : 'idle' });
     this.typed.next(value);
   }
   retry() { this.retried.next(this.term); }
@@ -129,7 +137,7 @@ export class ScoreTypeFinderComponent implements OnInit {
 
   private search(term: string): Observable<SearchState> {
     this.term = term;
-    if (term.length < MIN_LETTERS) return of<SearchState>({ kind: term ? 'short' : 'idle' });
+    if (!searchable(term)) return of<SearchState>({ kind: term ? 'short' : 'idle' });
     return this.http.get<{ data: ProgramField[] }>(this.url, { params: new HttpParams().set('search', term) }).pipe(
       map(r => ({ kind: 'done' as const, rows: rowsOf(r.data ?? []) })),
       catchError(() => of<SearchState>({ kind: 'error' })),

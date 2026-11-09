@@ -482,16 +482,17 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
     /// Paket H6 (09.11.2026): "Emin değil misin? Bölümüne göre bulalım": the score types of the undergraduate programmes whose name has
     /// every word searched, across the country (no level, city or university). One entry per name and score type; the parenthesised
     /// variants of a name ("(İngilizce)", "(Burslu)") are the same programme. Önlisans programmes (TYT) are not listed. A search
-    /// shorter than two letters lists nothing.
+    /// without a word of at least two letters lists nothing.
     /// </summary>
     public async Task<IReadOnlyList<OnboardingProgramField>> ProgramFieldsAsync(string? search, CancellationToken ct)
     {
         await RequireListAccessAsync(ct);
-        if (Search(search) is null || TurkishSearch.Fold(search!.Trim()).Length < 2) return [];
+        // PR 137 review: words, not characters: separators alone ("..", "--") leave no word, and no word would filter nothing.
+        IReadOnlyList<string> words = Search(search) is null ? [] : TurkishSearch.Words(search);
+        if (!words.Any(x => x.Length >= 2)) return [];
         var query = (await Programs("Bachelor", null, ct)).Where(x => x.ScoreType == "SAY" || x.ScoreType == "EA" || x.ScoreType == "SOZ" || x.ScoreType == "YDT")
             .WhereEveryWord(search, x => x.Name);
         var rows = await query.Select(x => new { x.Name, ScoreType = x.ScoreType! }).Distinct().ToListAsync(ct);
-        var words = TurkishSearch.Words(search);
         string BaseName(string name) { var text = name.Trim(); while (Variant.IsMatch(text)) text = Variant.Replace(text, ""); return text.Length > 0 ? text : name.Trim(); }
         return rows.Select(x => new OnboardingProgramField(BaseName(x.Name), x.ScoreType))
             // A word found only in a variant ("ingilizce" in "Bilgisayar Mühendisliği (İngilizce)") does not list the programme.

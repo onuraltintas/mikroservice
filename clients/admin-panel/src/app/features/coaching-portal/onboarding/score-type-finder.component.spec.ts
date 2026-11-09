@@ -94,7 +94,7 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     expect(t.el.querySelector('[role="alert"]')).toBeNull();
     expect(t.rows()).toEqual(['Hukuk · Eşit Ağırlık']);
   });
-  // PR #137 review: separators alone or one-letter words are not a search (the server would list nothing either).
+  // PR 137 review: separators alone or one-letter words are not a search (the server would list nothing either).
   it('sends nothing without a word of two letters and says so', async () => {
     const t = await render();
     t.toggle().click(); await t.settle();
@@ -107,7 +107,7 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     t.http.expectOne(r => r.url === url && r.params.get('search') === 'a. hu').flush({ data: [] });
   });
 
-  // PR #137 review: the same term typed again after a short or empty box is searched again.
+  // PR 137 review: the same term typed again after a short or empty box is searched again.
   it('searches again for the same term typed after clearing the box', async () => {
     const t = await render();
     t.toggle().click(); await t.settle();
@@ -120,7 +120,7 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     expect(t.rows()).toEqual(['Hukuk · Eşit Ağırlık']);
   });
 
-  // PR #137 review: reopening starts over (no rows of the last search under an empty box), even with a search still running.
+  // PR 137 review: reopening starts over (no rows of the last search under an empty box), even with a search still running.
   it('starts over when it is opened again', async () => {
     const t = await render();
     t.toggle().click(); await t.settle();
