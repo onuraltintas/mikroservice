@@ -45,6 +45,18 @@ export const PURPOSES: Choice[] = [
 export const YKS_FIELDS: Choice[] = [
   { value: 'SAY', label: 'Sayısal' }, { value: 'EA', label: 'Eşit Ağırlık' }, { value: 'SOZ', label: 'Sözel' },
   { value: 'DIL', label: 'Dil' }, { value: 'TYT', label: 'Yalnız TYT (önlisans)' }];
+/**
+ * Paket H6 (09.11.2026): the wizard's field for a catalogue score type ("YDT" is Dil, which asks the language next); a TYT
+ * (önlisans) programme or an unknown type has none.
+ */
+export function yksFieldOf(scoreType: string | null | undefined): Choice | null {
+  const key = (scoreType ?? '').trim().toLocaleUpperCase('tr');
+  const value = key === 'YDT' || key === 'DİL' || key === 'DIL' ? 'DIL' : key === 'SÖZ' || key === 'SOZ' ? 'SOZ' : key === 'SAY' || key === 'EA' ? key : null;
+  const field = value ? YKS_FIELDS.find(x => x.value === value) : undefined;
+  return field ? { value: field.value, label: field.label } : null;
+}
+/** Paket H6: what the student is told after picking a programme in "Bölümüne göre bulalım". */
+export function fieldFoundNote(field: Choice): string { return `Bu bölüm ${field.label} puanla öğrenci alıyor; puan türün ${field.label} olarak seçildi.`; }
 /** E3 #14: "Şu an durumun ne?" (the grade is asked next, for ortaokul and lise students only). */
 export const STAGES: Choice[] = EDUCATION_STAGES.map(x => ({ value: x.value, label: x.label }));
 const gradeChoices = (stage: EducationStage | '') => gradesFor(stage).map(grade => ({ value: String(grade), label: `${grade}. sınıf` }));

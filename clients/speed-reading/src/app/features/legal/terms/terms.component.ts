@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
@@ -9,6 +9,7 @@ import { finalize } from 'rxjs';
 import { PlatformLegalPagesService } from '../../../core/services/platform-legal-pages.service';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
 import { FooterComponent } from '../../../shared/components/footer/footer';
+import { LegalPageSeo } from '../legal-page-seo';
 
 @Component({
   selector: 'app-terms',
@@ -17,8 +18,10 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
   templateUrl: './terms.component.html',
   styleUrls: ['./terms.component.scss']
 })
-export class TermsComponent {
+export class TermsComponent implements OnInit, OnDestroy {
   private readonly legalPages = inject(PlatformLegalPagesService);
+  private readonly legalSeo = inject(LegalPageSeo);
+  private restoreSeo?: () => void;
   currentDate = new Date();
   content: string = '';
   title = 'Kullanım Koşulları';
@@ -27,6 +30,11 @@ export class TermsComponent {
   noDocument = true;
 
   ngOnInit(): void {
+    this.restoreSeo = this.legalSeo.apply({
+      path: '/legal/terms',
+      heading: 'Kullanım Koşulları',
+      description: "Master Hızlı Okuma hizmetinin kullanımına ilişkin hesap, egzersiz, abonelik ve içerik koşullarını açıklar."
+    });
     this.legalPages.getPage('speed-reading-terms').pipe(finalize(() => this.loading = false)).subscribe({
       next: page => {
         if (page?.isPublished && page.content?.trim()) {
@@ -39,5 +47,9 @@ export class TermsComponent {
         this.error = response.status !== 404;
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.restoreSeo?.();
   }
 }

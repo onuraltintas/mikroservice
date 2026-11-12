@@ -288,6 +288,89 @@ public sealed class CoachingStudentOnboardingTests
     }
 
     [Fact]
+    public async Task H6_AProgrammeNameFindsItsScoreTypesAcrossTheCountry()
+    {
+        // Paket H6 (09.11.2026): "Emin değil misin? Bölümüne göre bulalım": a student who knows the programme but not its score type
+        // searches by name only (no level, city or university); one entry per name and score type, undergraduate programmes only.
+        await using var s = await Setup.CreateAsync();
+        s.Program("1101", "İstanbul Üniversitesi", "Bilgisayar Mühendisliği (İngilizce)", "Bachelor", "SAY", "İSTANBUL", 500, 5000);
+        s.Program("1102", "Ankara Üniversitesi", "Bilgisayar ve Öğretim Teknolojileri Öğretmenliği", "Bachelor", "SAY", "ANKARA", 300, 300000);
+        s.Program("1103", "İstanbul Üniversitesi", "İşletme", "Bachelor", "EA", "İSTANBUL", 400, 80000);
+        s.Program("1104", "Ankara Üniversitesi", "İşletme", "Bachelor", "SAY", "ANKARA", 380, 150000);
+        s.Program("1105", "Ankara Üniversitesi", "İngilizce Öğretmenliği", "Bachelor", "YDT", "ANKARA", 420, 9000);
+        s.Program("1106", "Girne Üniversitesi", "Bilgisayar Mühendisliği (KKTC Uyruklu)", "Bachelor", "EA", "KIBRIS", 200, 900000);
+        await s.F.Db.SaveChangesAsync();
+
+        // The parenthesised variants are one programme; "Bilgisayar Programcılığı" (önlisans, TYT) is not offered.
+        (await s.Service.ProgramFieldsAsync("bilgisayar", default)).Should().Equal(
+            new OnboardingProgramField("Bilgisayar Mühendisliği", "SAY"), new OnboardingProgramField("Bilgisayar ve Öğretim Teknolojileri Öğretmenliği", "SAY"));
+        // Turkish letters and case do not matter; every word must be in the name.
+        (await s.Service.ProgramFieldsAsync("BILGISAYAR muh", default)).Should().Equal(new OnboardingProgramField("Bilgisayar Mühendisliği", "SAY"));
+        // One name with two score types is listed once per score type (in the wizard's order: Sayısal, Eşit Ağırlık, Sözel, Dil).
+        (await s.Service.ProgramFieldsAsync("isletme", default)).Should().Equal(new OnboardingProgramField("İşletme", "SAY"), new OnboardingProgramField("İşletme", "EA"));
+        (await s.Service.ProgramFieldsAsync("ingilizce", default)).Should().Equal(new OnboardingProgramField("İngilizce Öğretmenliği", "YDT"));
+        (await s.Service.ProgramFieldsAsync("hukuk", default)).Should().Equal(new OnboardingProgramField("Hukuk", "EA"));
+        // Too short to search: nothing (not the whole catalog).
+        (await s.Service.ProgramFieldsAsync(" b ", default)).Should().BeEmpty();
+        (await s.Service.ProgramFieldsAsync(null, default)).Should().BeEmpty();
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => s.Service.ProgramFieldsAsync(new string('a', 101), default));
+
+        // A student who has not started the wizard may search; another role may not.
+        s.F.Actor.UserId = s.F.AddAccount("Teacher"); s.F.Actor.Roles = ["Teacher"];
+        await Assert.ThrowsAsync<BusinessRuleException>(() => s.Service.ProgramFieldsAsync("hukuk", default));
+    }
+
+    [Theory]
+    [InlineData("..")]
+    [InlineData("()")]
+    [InlineData("--")]
+    [InlineData("a.")]
+    [InlineData("a b")]
+    [InlineData(" - / ")]
+    public async Task H6_ASearchWithoutAWordOfTwoLettersListsNothing(string search)
+    {
+        // PR #137 review: separators alone leave no word, and no word would filter nothing (the first 20 names of the catalogue).
+        await using var s = await Setup.CreateAsync();
+        (await s.Service.ProgramFieldsAsync(search, default)).Should().BeEmpty();
+        // One word of two letters is enough, whatever else is typed.
+        (await s.Service.ProgramFieldsAsync("a. bilgisayar mü", default)).Should().Equal(new OnboardingProgramField("Bilgisayar Mühendisliği", "SAY"));
+    }
+
+    [Fact]
+    public async Task H6_OlderCatalogueYearsAndInactiveProgrammesAreNotListed()
+    {
+        // The newest catalogue year in use is the one listed (as in the wizard's other lists): with a 2027 import, the 2026 rows are older.
+        await using var s = await Setup.CreateAsync();
+        TargetUniversityProgram Add(string code, string name, int year, bool active)
+        {
+            var program = TargetUniversityProgram.Create(code, "Ankara Üniversitesi", name, "Fakülte", "Bachelor", "SOZ");
+            program.UpdateDetails(new(code, "Ankara Üniversitesi", name, "SOZ", "ANKARA", null, "Devlet", "Bachelor", null, null, null, null, 50, 50, 300, 300, 200000, null),
+                year, year, null, "https://yokatlas.yok.gov.tr");
+            program.SetActive(active); s.F.Db.Add(program); return program;
+        }
+        Add("9001", "Antropoloji", 2027, true);
+        Add("9002", "Arkeoloji ve Sanat Tarihi", 2027, false);
+        Add("9003", "Arkeoloji", 2026, true);
+        await s.F.Db.SaveChangesAsync();
+        (await s.Service.ProgramFieldsAsync("antropoloji", default)).Should().Equal(new OnboardingProgramField("Antropoloji", "SOZ"));
+        (await s.Service.ProgramFieldsAsync("arkeoloji", default)).Should().BeEmpty();
+        (await s.Service.ProgramFieldsAsync("hukuk", default)).Should().BeEmpty("the 2026 catalogue is older now");
+    }
+
+    [Fact]
+    public void H6_TheProgrammeFieldSearchIsOpenToAStudentWithoutASubscriptionAndRateLimited()
+    {
+        // The wizard comes before the subscription: the route sits under api/coaching/students like the other option lists.
+        Coaching.Application.Subscriptions.CoachingSubscriptionAccessRules
+            .RequiresSubscription("/api/coaching/students/me/onboarding/options/programs/fields").Should().BeFalse();
+        var method = typeof(Coaching.API.Controllers.CoachingStudentOnboardingController).GetMethod("ProgramFields")!;
+        method.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpGetAttribute), false).Cast<Microsoft.AspNetCore.Mvc.HttpGetAttribute>()
+            .Single().Template.Should().Be("options/programs/fields");
+        method.GetCustomAttributes(typeof(Microsoft.AspNetCore.RateLimiting.EnableRateLimitingAttribute), false)
+            .Cast<Microsoft.AspNetCore.RateLimiting.EnableRateLimitingAttribute>().Single().PolicyName.Should().Be("target-catalog-search");
+    }
+
+    [Fact]
     public async Task OnlyAnActiveStudentCanUseTheWizard()
     {
         await using var s = await Setup.CreateAsync();

@@ -13,6 +13,13 @@ Disallow: /editor/
 
 # API endpoints
 Disallow: /api/
+# The /legal/cookies, /legal/privacy, /legal/kvkk and /legal/terms pages load
+# their public policy text from these exact endpoints. Longest match wins, so
+# only these paths are crawlable under /api/.
+Allow: /api/platform/legal-pages/cookies$
+Allow: /api/platform/legal-pages/privacy$
+Allow: /api/platform/legal-pages/kvkk$
+Allow: /api/platform/legal-pages/speed-reading-terms$
 
 # Statik dosyalar
 Disallow: /*.json$

@@ -290,6 +290,47 @@ describe('StudentLearningSetupComponent', () => {
     expect(t.service.save).not.toHaveBeenCalled();
   });
 
+  // Paket H6 (09.11.2026): "Emin değil misin? Bölümüne göre bulalım" next to the score type: a programme only sets the field in the form.
+  it('H6: a programme found by name sets the score type in the form; saving keeps the usual check of the goal', async () => {
+    const t = await purposeForm();
+    const http = TestBed.inject(HttpTestingController);
+    const fields = '/api/coaching/students/me/onboarding/options/programs/fields';
+    const find = async (search: string, rows: { name: string; scoreType: string }[]) => {
+      const toggle = Array.from(t.el.querySelectorAll('button')).find(x => x.textContent?.trim() === 'Emin değil misin? Bölümüne göre bulalım') as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      toggle.click(); await t.settle();
+      const box = t.el.querySelector('input[type="search"]') as HTMLInputElement;
+      // Enter in the search box does not submit the form.
+      const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }); box.dispatchEvent(enter);
+      expect(enter.defaultPrevented).toBe(true);
+      box.value = search; box.dispatchEvent(new Event('input')); await new Promise(r => setTimeout(r, 400)); await t.settle();
+      http.expectOne(r => r.url === fields && r.params.get('search') === search).flush({ data: rows }); await t.settle();
+    };
+    await find('hukuk', [{ name: 'Hukuk', scoreType: 'EA' }]);
+    await t.click('Hukuk · Eşit Ağırlık');
+    expect(t.component.primaryScoreType).toBe('EA');
+    expect((t.el.querySelector('select[name="scoreType"]') as HTMLSelectElement).value).toBe('EA');
+    expect(t.el.querySelector('[data-testid="setup-field-note"]')!.textContent!.trim()).toBe('Bu bölüm Eşit Ağırlık puanla öğrenci alıyor; puan türün Eşit Ağırlık olarak seçildi.');
+    expect(t.el.querySelector('[data-testid="setup-field-note"]')!.getAttribute('role')).toBe('status');
+    expect(t.service.save).not.toHaveBeenCalled(); expect(t.service.impact).not.toHaveBeenCalled();
+
+    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
+    await t.submit();
+    expect(t.service.impact).toHaveBeenCalledWith({ purpose: 'Yks', primaryScoreType: 'EA', foreignLanguage: null });
+    expect(t.el.querySelector('[data-testid="target-impact"]')!.textContent).toContain('bu puan türüne uymuyor');
+    expect(t.service.save).not.toHaveBeenCalled();
+
+    // A YDT programme sets Dil (the only language, English, comes with it); a choice in the list removes the note.
+    await find('ingilizce', [{ name: 'İngilizce Öğretmenliği', scoreType: 'YDT' }]);
+    await t.click('İngilizce Öğretmenliği · Dil');
+    expect(t.el.querySelector('[data-testid="target-impact"]')).toBeNull();
+    expect([t.component.primaryScoreType, t.component.foreignLanguage]).toEqual(['DIL', 'English']);
+    const field = t.el.querySelector('select[name="scoreType"]') as HTMLSelectElement;
+    field.value = 'SOZ'; field.dispatchEvent(new Event('change')); await t.settle();
+    expect(t.el.querySelector('[data-testid="setup-field-note"]')).toBeNull();
+    http.verify();
+  });
+
   it('review: an API without the impact check (404) still saves', async () => {
     const t = await purposeForm();
     t.service.impact.mockReturnValue(throwError(() => ({ status: 404 })));
