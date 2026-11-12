@@ -11,10 +11,11 @@ import { coachingDate } from '../coaching-labels';
 import { CoachingParentService, ParentLinkCode, ParentLinkCodeStatus } from '../parent/coaching-parent.service';
 import { NotificationPreference, NotificationPreferencesApi } from '../../../../../shared/notification-preferences.component';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
+import { ScoreTypeFound, ScoreTypeFinderComponent } from './score-type-finder.component';
 import {
   Answer, Answers, Choice, FlowContext, Question, QuestionId, STEP_COUNT, TARGET_QUESTIONS, STEP_TITLES, StepNumber, autoAnswer, change, currentStep, examRequest,
   emailAnswer, formatScore, inviteAnswer, nextQuestion, parentAnswer, parentCodeNote, staleParentCode, personalRequest, prefill, questions, signature, stepComplete, stepQuestions,
-  purposeOf, sessionAnswerLabel, summary, targetRequest, withoutUnfitPurpose, TYPED_SCHOOL_MAX, typedSchoolAnswer, typedSchoolError
+  purposeOf, sessionAnswerLabel, summary, targetRequest, withoutUnfitPurpose, TYPED_SCHOOL_MAX, typedSchoolAnswer, typedSchoolError, fieldFoundNote
 } from './onboarding-model';
 import { CopyResult, copyMessage, copyText } from '../copy-text';
 import { birthDateError, shiftYears } from '../birth-date';
@@ -35,7 +36,7 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 @Component({
   selector: 'app-student-onboarding',
   standalone: true,
-  imports: [RouterLink, OnboardingComboboxComponent],
+  imports: [RouterLink, OnboardingComboboxComponent, ScoreTypeFinderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './student-onboarding.component.html',
   styleUrl: './student-onboarding.component.scss'
@@ -130,6 +131,8 @@ export class StudentOnboardingComponent implements OnInit {
   readonly typingSchool = signal(false);
   readonly typedSchoolMax = TYPED_SCHOOL_MAX;
   draftSchool = '';
+  /** Paket H6: "Bu bölüm Sayısal puanla öğrenci alıyor; …" after a programme picked the score type (until the next answer). */
+  readonly fieldNote = signal<string | null>(null);
   /** G5 (#45): the result of "Kopyala" for the parent code. */
   readonly copyStatus = signal<string | null>(null);
   private interacted = false;
@@ -170,7 +173,7 @@ export class StudentOnboardingComponent implements OnInit {
   answer(question: Question, answer: Answer) {
     if (this.busy()) return;
     this.interacted = true;
-    this.invalid.set(null);
+    this.invalid.set(null); this.fieldNote.set(null);
     this.answers.update(current => ({ ...change(current, question.id), [question.id]: answer }));
     void this.settle();
   }
@@ -180,6 +183,15 @@ export class StudentOnboardingComponent implements OnInit {
     if (question.id === 'targetMode' && choice.value === 'none' && this.mode() === 'target' && saved && saved.value !== 'none'
       && !await this.toaster.confirm(`Mevcut hedefin silinecek: ${saved.label}. Devam edilsin mi?`, { confirmText: 'Hedefimi sil', cancelText: 'Vazgeç' })) return;
     this.answer(question, { value: choice.value, label: question.id === 'session' ? sessionAnswerLabel(choice.label) : choice.label });
+  }
+  /**
+   * Paket H6: "Bölümüne göre bulalım" answers the score type question with the programme's field, as a tap on that button would
+   * (the answers that depend on it are cleared; Dil asks the language next).
+   */
+  chooseByProgram(question: Question, found: ScoreTypeFound) {
+    if (this.busy() || question.id !== 'yksField') return;
+    this.answer(question, { value: found.field.value, label: found.field.label });
+    this.fieldNote.set(fieldFoundNote(found.field));
   }
   skip(question: Question) { this.answer(question, { value: null, label: question.skipLabel ?? 'Geç' }); }
   pickCombo(question: Question, option: ComboOption) { this.answer(question, { value: option.value, label: option.label, data: option.data }); }
@@ -214,7 +226,7 @@ export class StudentOnboardingComponent implements OnInit {
   /** "Değiştir": the answer and only the answers that depend on it are asked again. */
   edit(id: QuestionId) {
     if (this.busy()) return;
-    this.error.set(null); this.invalid.set(null); this.done.set(null); this.saved$.set(null); this.interacted = true;
+    this.error.set(null); this.invalid.set(null); this.done.set(null); this.saved$.set(null); this.fieldNote.set(null); this.interacted = true;
     this.answers.update(current => change(current, id));
     void this.settle();
   }

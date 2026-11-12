@@ -16,7 +16,8 @@ import { StudentStudyAvailabilityComponent } from './student-study-availability.
 import { StudentPlanPreviewComponent } from './student-plan-preview.component';
 import { environment } from '../../../../environments/environment';
 import { CoachingStudyPlanningService, PublishedStudyOutcome, StudyTopic } from '../../../core/services/coaching-study-planning.service';
-import { PURPOSES, YKS_FIELDS } from '../onboarding/onboarding-model';
+import { PURPOSES, YKS_FIELDS, fieldFoundNote } from '../onboarding/onboarding-model';
+import { ScoreTypeFinderComponent, ScoreTypeFound } from '../onboarding/score-type-finder.component';
 import { currentAcademicYear, stageOf } from '../coaching-education';
 import { EXAM_CATALOG_CODES, ExamTimeChoice, examTimeChoices, examTimeQuestion } from '../exam-time-choices';
 
@@ -27,7 +28,7 @@ const LESSON_GROUPS: Record<string, { order: number; label: string }> = {
 
 @Component({
   selector: 'app-student-learning-setup', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, StudentStudyAvailabilityComponent, StudentPlanPreviewComponent],
+  imports: [CommonModule, FormsModule, RouterLink, StudentStudyAvailabilityComponent, StudentPlanPreviewComponent, ScoreTypeFinderComponent],
   templateUrl: './student-learning-setup.component.html', styleUrl: './student-study-plans.component.scss'
 })
 export class StudentLearningSetupComponent implements OnInit {
@@ -128,7 +129,20 @@ export class StudentLearningSetupComponent implements OnInit {
     if (step === 'Courses' || step === 'Starting') this.loadCatalog();
   }
   /** E4 review: any change drops a pending confirmation, so "Evet, kaydet" never saves a choice that was not shown. */
-  changed() { this.dirty = true; this.cancelImpact(); }
+  changed() { this.dirty = true; this.cancelImpact(); this.fieldNote.set(null); }
+  /** Paket H6: "Bu bölüm … puanla öğrenci alıyor; …" after a programme set the score type (until the form changes again). */
+  readonly fieldNote = signal<string | null>(null);
+  /**
+   * Paket H6: "Bölümüne göre bulalım" only sets the score type in the form; saving goes through the usual check of the goal.
+   * Dil needs a language and English is the only one, so it comes with it.
+   */
+  chooseByProgram(found: ScoreTypeFound) {
+    if (this.saving()) return;
+    this.primaryScoreType = found.field.value;
+    if (found.field.value === 'DIL' && !this.foreignLanguage) this.foreignLanguage = 'English';
+    this.changed();
+    this.fieldNote.set(fieldFoundNote(found.field));
+  }
   examPurpose() { return !!this.purpose; }
   /** KM8: the saved purpose can no longer be chosen; only Profile and Purpose stay open until an exam is saved. */
   purposeRetired() { const state = this.state(); return !!state?.purposeRetired || isRetiredPurpose(state?.context?.purpose); }
