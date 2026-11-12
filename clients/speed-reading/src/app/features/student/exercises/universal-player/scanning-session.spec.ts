@@ -99,7 +99,12 @@ describe('Scanning server pause synchronization', () => {
       title: 'Business Rule Violation', detail: 'Bu alıştırma artık açık değil. Lütfen yeniden başla.',
       code: 'ExerciseSession.NotActive' } })).toBe('Bu alıştırma artık açık değil. Lütfen yeniden başla.');
     expect(player.getActionValidationErrorMessage({ status: 500, error: { title: 'Internal Server Error' } }))
-      .toBe('Egzersiz doğrulaması alınamadı. Bağlantını kontrol edip tekrar dene.');
+      .toBe('Egzersiz doğrulaması alınamadı. Bağlantınızı kontrol edip tekrar deneyin.');
+    // Generic client messages use the formal "siz" form too; server text is shown as sent.
+    expect(player.getActionValidationErrorMessage({ status: 0 }))
+      .toBe('Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.');
+    expect(player.getActionValidationErrorMessage({ name: 'TimeoutError' }))
+      .toBe('İstek zaman aşımına uğradı. Bağlantınızı kontrol edip tekrar deneyin.');
   });
 });
 

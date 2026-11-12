@@ -47,10 +47,10 @@ describe('scan and find instructions', () => {
     const element = render(words, true);
     const panel = element.querySelector('.scan-targets-panel')!;
     const heading = panel.querySelector('h2')!;
-    expect(heading.textContent).toContain('Aşağıdaki metinde şu kelimeleri bul ve üzerine dokun:');
+    expect(heading.textContent).toContain('Aşağıdaki metinde şu kelimeleri bulun ve üzerine dokunun:');
     const chips = Array.from(panel.querySelectorAll('li.target-word')).map(chip => chip.textContent!.trim());
     expect(chips).toEqual(['okul', 'kitap']);
-    expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Süre bitmeden hepsini bul.');
+    expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Süre bitmeden hepsini bulun.');
     // The instruction comes before the text it describes.
     const text = element.querySelector('.scan-text-area')!;
     expect(panel.compareDocumentPosition(text) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -62,7 +62,7 @@ describe('scan and find instructions', () => {
       { textContent: 'deniz bulut', targets: ['deniz'] }
     ] }, true);
     const panel = element.querySelector('.scan-targets-panel')!;
-    expect(panel.querySelector('h2')!.textContent).toContain('Aşağıdaki metinde soruların cevabını bul ve cevaba dokun:');
+    expect(panel.querySelector('h2')!.textContent).toContain('Aşağıdaki metinde soruların cevabını bulun ve cevaba dokunun:');
     expect(panel.querySelector('li.target-word')!.textContent).toContain('Etkinliği kim hazırladı?');
     expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Tur 1 / 2');
   });
@@ -71,15 +71,16 @@ describe('scan and find instructions', () => {
     const element = render({ serverAuthoritative: true, scanningFindAny: true, timeLimitSeconds: 90,
       scanningRounds: [{ textContent: 'okul kitap', targets: ['okul', 'kitap'] }] }, true);
     const panel = element.querySelector('.scan-targets-panel')!;
-    expect(panel.querySelector('h2')!.textContent).toContain('Aşağıdaki metinde bu kelimelerden birini bul ve üzerine dokun:');
-    expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Süre bitmeden birini bul.');
+    expect(panel.querySelector('h2')!.textContent).toContain('Aşağıdaki metinde bu kelimelerden birini bulun ve üzerine dokunun:');
+    expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Süre bitmeden birini bulun.');
   });
 
   it('explains the task on the start card in at most two short sentences', () => {
     const element = render(words, false);
     const text = element.querySelector('.scan-find-ready')!.textContent!.trim();
-    expect(text).toContain('kelimeleri bul ve üzerine dokun.');
+    expect(text).toContain('kelimeleri bulun ve üzerine dokunun.');
     expect(text).toContain('Toplam 2 hedef, süre 1 dakika; yanlış dokunuş puanı düşürür.');
+    expect(text).toContain('Metni okumadan gözlerinizle tarayın,');
     expect(text.split(/[.!?](\s|$)/).filter(part => part.trim().length > 0).length).toBeLessThanOrEqual(2);
   });
 
@@ -103,8 +104,8 @@ describe('scan and find instructions', () => {
       { textContent: 'Derya 24 okul', targets: ['derya', '24'], targetLabels: { derya: 'Kim?', '24': 'Kaç kişi?' } }
     ] }, true);
     const panel = element.querySelector('.scan-targets-panel')!;
-    expect(panel.querySelector('h2')!.textContent).toContain('Aşağıdaki metinde sorulardan birinin cevabını bul ve cevaba dokun:');
-    expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Süre bitmeden birinin cevabını bul.');
+    expect(panel.querySelector('h2')!.textContent).toContain('Aşağıdaki metinde sorulardan birinin cevabını bulun ve cevaba dokunun:');
+    expect(panel.querySelector('.scan-instruction-hint')!.textContent).toContain('Süre bitmeden birinin cevabını bulun.');
   });
 
   it('puts the instruction heading under a page heading with the exercise name', () => {
