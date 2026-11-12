@@ -95,6 +95,43 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
             seeded.Add(new(tAssessment.Id, "Tachistoscope", age, 1, false));
             seeded.Add(new(vAssessment.Id, "VisualExpansion", age, 1, false));
         }
+        // Extra shapes and production surprises, all at Genç (age 1). Each entry: config, whether rounds change,
+        // whether distances change, and whether the server reads the distances from where a session can show them.
+        var skipRounds = new HashSet<Guid>();
+        var skipDistances = new HashSet<Guid>();
+        var noSessionDistances = new HashSet<Guid>();
+        void Extra(string type, int level, string config, bool rounds, bool distances, bool sessionDistances = true)
+        {
+            var exercise = Exercise.Create("Ek", type, config, level, actor, type == "Tachistoscope" ? tachistoscope.Id : visual.Id,
+                targetAgeGroupId: ageIds[1]);
+            db.Exercises.Add(exercise);
+            seeded.Add(new(exercise.Id, type, 1, level, true));
+            if (!rounds) skipRounds.Add(exercise.Id);
+            if (!distances) skipDistances.Add(exercise.Id);
+            if (!sessionDistances) noSessionDistances.Add(exercise.Id);
+        }
+        string R(int level) => OldVisualExpansion[1][level - 1].ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string T(int level) => OldTarget[1][level - 1].ToString(System.Globalization.CultureInfo.InvariantCulture);
+        // Root expansion only: the server ignores it while engineConfig is an object, but it is still a location to update.
+        Extra("VisualExpansion", 1, $$$"""{"rounds":{{{R(1)}}},"expansion":{"startDegrees":8,"targetDegrees":{{{T(1)}}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal"},"difficultyLevel":1}""", true, true, sessionDistances: false);
+        // engineConfig.expansion only, and both expansion objects.
+        Extra("VisualExpansion", 2, $$$"""{"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","rounds":{{{R(2)}}},"expansion":{"startDegrees":8,"targetDegrees":{{{T(2)}}}}},"difficultyLevel":2}""", true, true);
+        Extra("VisualExpansion", 3, $$$"""{"rounds":{{{R(3)}}},"expansion":{"startDegrees":8,"targetDegrees":{{{T(3)}}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","expansion":{"startDegrees":8,"targetDegrees":{{{T(3)}}}}},"difficultyLevel":3}""", true, true);
+        // engineConfig.expansion still old while engineConfig already holds the new values: distances skipped.
+        Extra("VisualExpansion", 4, $$$"""{"rounds":{{{R(4)}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","startDegrees":{{{NewStart[1][3]}}},"targetDegrees":{{{NewTarget[1][3]}}},"expansion":{"startDegrees":8,"targetDegrees":{{{T(4)}}}}},"difficultyLevel":4}""", true, false);
+        // Conflicting rounds (root old, engineConfig 99): rounds skipped, distances change.
+        Extra("VisualExpansion", 5, $$$"""{"rounds":{{{R(5)}}},"startDegrees":8,"targetDegrees":{{{T(5)}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","rounds":99},"difficultyLevel":5}""", false, true);
+        // Round overrides, exact and in another case: rounds skipped, distances change.
+        Extra("VisualExpansion", 1, $$$"""{"rounds":{{{R(1)}}},"totalSteps":12,"startDegrees":8,"targetDegrees":{{{T(1)}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal"},"difficultyLevel":1}""", false, true);
+        Extra("VisualExpansion", 2, $$$"""{"rounds":{{{R(2)}}},"startDegrees":8,"targetDegrees":{{{T(2)}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","TotalSteps":12},"difficultyLevel":2}""", false, true);
+        Extra("Tachistoscope", 1, $$$"""{"engineType":"text_stream","engineConfig":{"mode":"tachistoscope","totalStimuli":12,"content":{"type":"number","count":{{{OldTachistoscope[1][0]}}}}},"difficultyLevel":1}""", false, false);
+        Extra("Tachistoscope", 2, $$$"""{"TotalStimuli":12,"engineType":"text_stream","engineConfig":{"mode":"tachistoscope","content":{"type":"number","count":{{{OldTachistoscope[1][1]}}}}},"difficultyLevel":2}""", false, false);
+        Extra("Tachistoscope", 3, $$$"""{"engineType":"text_stream","engineConfig":{"mode":"tachistoscope","content":{"type":"number","Count":12,"count":{{{OldTachistoscope[1][2]}}}}},"difficultyLevel":3}""", false, false);
+        // The runtime reads keys case-insensitively: a key in another case skips the setting it affects.
+        Extra("VisualExpansion", 3, $$$"""{"rounds":{{{R(3)}}},"startDegrees":8,"targetDegrees":{{{T(3)}}},"engineType":"visual_expansion","EngineConfig":{"expansion":{"startDegrees":8,"targetDegrees":{{{T(3)}}}}},"difficultyLevel":3}""", false, false);
+        Extra("VisualExpansion", 4, $$$"""{"rounds":{{{R(4)}}},"startDegrees":8,"targetDegrees":{{{T(4)}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","Expansion":{"startDegrees":8,"targetDegrees":{{{T(4)}}}}},"difficultyLevel":4}""", true, false);
+        Extra("VisualExpansion", 5, $$$"""{"rounds":{{{R(5)}}},"StartDegrees":8,"startDegrees":8,"targetDegrees":{{{T(5)}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal"},"difficultyLevel":5}""", true, false);
+
         var deleted = Exercise.Create("Kısa Gösterimde Tanıma", "Tachistoscope", TachistoscopeConfig(25, 1), 1, actor,
             tachistoscope.Id, targetAgeGroupId: ageIds[1]);
         deleted.Delete(actor, DateTime.UtcNow);
@@ -102,7 +139,7 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
         await db.SaveChangesAsync();
 
         Guid Normal(string type, int age, int level) =>
-            seeded.Single(item => item.Normal && item.Type == type && item.Age == age && item.Level == level).Id;
+            seeded.First(item => item.Normal && item.Type == type && item.Age == age && item.Level == level).Id;
         // Production may differ from the report. Each case keeps the other (independent) change.
         var unexpectedRounds = Normal("VisualExpansion", 3, 2);   // rounds 52: distances still change
         var unexpectedStart = Normal("VisualExpansion", 1, 3);    // start 9: rounds still change
@@ -112,12 +149,13 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
         await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{startDegrees}', '9') WHERE id = @id", unexpectedStart);
         await Execute("UPDATE speed_reading.exercises SET configuration_json = configuration_json || '{\"visualExpansionStartDegrees\":8}' WHERE id = @id", unexpectedAlias);
         await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{engineConfig,targetDegrees}', '25') WHERE id = @id", conflictingTarget);
-        bool RoundsChange(Seeded item) => item.Normal && item.Id != unexpectedRounds;
-        bool DistancesChange(Seeded item) => item.Normal && item.Type == "VisualExpansion"
-            && item.Id != unexpectedStart && item.Id != unexpectedAlias && item.Id != conflictingTarget;
+        skipRounds.Add(unexpectedRounds);
+        skipDistances.UnionWith([unexpectedStart, unexpectedAlias, conflictingTarget]);
+        bool RoundsChange(Seeded item) => item.Normal && !skipRounds.Contains(item.Id);
+        bool DistancesChange(Seeded item) => item.Normal && item.Type == "VisualExpansion" && !skipDistances.Contains(item.Id);
 
         var before = await Snapshot();
-        Assert.Equal(49, before.Count);
+        Assert.Equal(seeded.Count + 1, before.Count);
 
         await db.Database.GetService<IMigrator>().MigrateAsync(Target);
         var afterUp = await Snapshot();
@@ -150,7 +188,7 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
             var started = await service.StartAsync(student, new() { ExerciseId = item.Id });
             startedIds[item.Id] = started.SessionId;
             if (RoundsChange(item)) Assert.Equal(NewRounds[item.Age][item.Level - 1], started.TotalSteps);
-            if (!DistancesChange(item)) continue;
+            if (!DistancesChange(item) || noSessionDistances.Contains(item.Id)) continue;
             Assert.Equal(NewStart[item.Age][item.Level - 1], started.InitialData.GetProperty("visualExpansionStartDegrees").GetInt32());
             Assert.Equal(NewStart[item.Age][item.Level - 1], started.InitialData.GetProperty("visualExpansionCurrentDegrees").GetInt32());
             Assert.Equal(NewTarget[item.Age][item.Level - 1], started.InitialData.GetProperty("visualExpansionTargetDegrees").GetInt32());
@@ -203,7 +241,7 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
         foreach (var item in seeded.Where(item => RoundsChange(item)))
             Assert.Equal(NewRounds[item.Age][item.Level - 1],
                 (await db.ExerciseSessions.AsNoTracking().SingleAsync(session => session.Id == startedIds[item.Id])).TotalSteps);
-        foreach (var item in seeded.Where(item => DistancesChange(item)))
+        foreach (var item in seeded.Where(item => DistancesChange(item) && !noSessionDistances.Contains(item.Id)))
         {
             var state = JsonNode.Parse((await db.ExerciseSessions.AsNoTracking()
                 .SingleAsync(session => session.Id == startedIds[item.Id])).SessionDataJson)!;
@@ -238,23 +276,57 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
         _ => $$$"""{"rounds":{{{rounds}}},"startDegrees":{{{start}}},"targetDegrees":{{{target}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","displayDurationMs":1100,"startDegrees":{{{start}}},"targetDegrees":{{{target}}},"content":{"stimulusType":"letter"}},"difficultyLevel":{{{level}}}}"""
     };
 
+    // Applies a change to every exact (camelCase) location that is present.
     private static JsonNode Expected(JsonNode original, Seeded item, int? rounds, (int Start, int Target)? distances)
     {
         var copy = original.DeepClone();
-        var engine = copy["engineConfig"]!.AsObject();
+        static JsonObject? Child(JsonNode? node, string name) => node is JsonObject obj && obj[name] is JsonObject child ? child : null;
+        var root = copy.AsObject();
+        var engine = Child(root, "engineConfig");
         if (rounds is { } count)
         {
-            if (item.Type == "Tachistoscope") engine["content"]!["count"] = count;
-            if (copy.AsObject().ContainsKey("rounds")) copy["rounds"] = count;
-            if (engine.ContainsKey("rounds")) engine["rounds"] = count;
+            if (item.Type == "Tachistoscope") Child(engine, "content")!["count"] = count;
+            else
+                foreach (var holder in new[] { root, engine })
+                    if (holder?.ContainsKey("rounds") == true) holder["rounds"] = count;
         }
         if (distances is { } d)
-            foreach (var holder in new[] { copy.AsObject(), engine })
+            foreach (var holder in new[] { root, Child(root, "expansion"), engine, Child(engine, "expansion") })
             {
+                if (holder is null) continue;
                 if (holder.ContainsKey("startDegrees")) holder["startDegrees"] = d.Start;
                 if (holder.ContainsKey("targetDegrees")) holder["targetDegrees"] = d.Target;
             }
         return copy;
+    }
+
+    [Fact]
+    public async Task Age_band_with_two_active_groups_of_the_same_minimum_age_is_skipped()
+    {
+        await using var db = Open();
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.GetService<IMigrator>().MigrateAsync(Previous);
+        var actor = Guid.NewGuid();
+        var first = Guid.NewGuid();
+        db.AgeGroupConfigurations.Add(AgeGroupConfiguration.Create(first, "Çocuk", "Çocuk", 9, 12, 100, 150, 300, 70, 20, 1, 1, true, null, actor, DateTime.UtcNow));
+        db.AgeGroupConfigurations.Add(AgeGroupConfiguration.Create(Guid.NewGuid(), "Çocuk 2", "Çocuk 2", 9, 11, 100, 150, 300, 70, 20, 1, 2, true, null, actor, DateTime.UtcNow));
+        var tachistoscope = ExerciseType.Create(Guid.NewGuid(), "Tachistoscope", "Takistoskop", "text_stream");
+        var visual = ExerciseType.Create(Guid.NewGuid(), "VisualExpansion", "Görsel Genişleme", "visual_expansion");
+        db.ExerciseTypes.AddRange(tachistoscope, visual);
+        db.Exercises.AddRange(
+            Exercise.Create("Kısa Gösterimde Tanıma", "Tachistoscope", TachistoscopeConfig(20, 1), 1, actor, tachistoscope.Id, targetAgeGroupId: first),
+            Exercise.Create("Çevredeki Harfler", "VisualExpansion", VisualConfig(0, 30, 8, 16, 1), 1, actor, visual.Id, targetAgeGroupId: first));
+        await db.SaveChangesAsync();
+        var before = await Snapshot();
+        Assert.Equal(2, before.Count);
+
+        await db.Database.GetService<IMigrator>().MigrateAsync(Target);
+        var after = await Snapshot();
+        foreach (var (id, row) in before)
+        {
+            Assert.True(JsonNode.DeepEquals(row.Config, after[id].Config));
+            Assert.Equal(row.Version, after[id].Version);
+        }
     }
 
     private async Task<Dictionary<Guid, (JsonNode Config, int Version, string? UpdatedBy)>> Snapshot()
