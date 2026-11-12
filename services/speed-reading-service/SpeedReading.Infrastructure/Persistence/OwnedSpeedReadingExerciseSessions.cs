@@ -22,6 +22,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 {
     private const string TimeoutAnswer = "__timeout__";
     private const int MaxCompletionConflictRetries = 2;
+    private const int MaxPauseConflictRetries = 1;
     private const int MaxActionConflictRetries = 2;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly HashSet<string> ReadingExerciseTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -654,6 +655,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             .SingleOrDefaultAsync(item => item.SessionId == session.Id, cancellationToken);
         if (existingResult is not null)
             return ToResult(existingResult, session, state);
+        // A timed-out or abandoned attempt cannot be completed; ExerciseSession.Complete would throw (HTTP 500).
+        if (session.Status is not (OwnedExerciseSessionStatus.Active or OwnedExerciseSessionStatus.Paused))
+            throw ClosedSession();
 
         if (IsTargetHunt(state))
         {
@@ -1267,13 +1271,18 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         return stats;
     }
 
-    public async Task PauseAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default)
+    public Task PauseAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        PauseAsync(studentId, sessionId, cancellationToken, retry: 0);
+
+    private async Task PauseAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken, int retry)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
         if (IsEngineType(state.EngineType, "exam_simulation"))
             throw new BusinessRuleException("ExerciseSession.ExamCannotPause", "Süreli paragraf testi duraklatılamaz.");
+        if (!CanChangePause(session, OwnedExerciseSessionStatus.Paused))
+            return;
         session.Pause(now);
         if (IsFocusExercise(state) && state.FocusStartTime.HasValue)
             state.FocusPausedAt = now;
@@ -1292,7 +1301,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsValidatedFixation(state) && state.FixationPresentedAt.HasValue)
             state.FixationPausedAt = now;
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException) when (retry < MaxPauseConflictRetries)
+        {
+            // A completion, time-out or abandon committed first (a tap while the last action was in flight).
+            db.ChangeTracker.Clear();
+            await PauseAsync(studentId, sessionId, cancellationToken, retry + 1);
+        }
     }
 
     public async Task DiscardIncompleteAsync(
@@ -1328,11 +1346,33 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task ResumeAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Pause and resume only move an open attempt. A repeated request, or one for an attempt that already finished (a late
+    /// tap on a screen that still showed it running), changes nothing; a timed-out or abandoned attempt answers a business
+    /// error. ExerciseSession.Pause and Resume throw InvalidOperationException (HTTP 500) for all of these.
+    /// </summary>
+    private static bool CanChangePause(ExerciseSession session, OwnedExerciseSessionStatus target)
+    {
+        if (session.Status == target || session.Status == OwnedExerciseSessionStatus.Completed)
+            return false;
+        if (session.Status is not (OwnedExerciseSessionStatus.Active or OwnedExerciseSessionStatus.Paused))
+            throw ClosedSession();
+        return true;
+    }
+
+    private static BusinessRuleException ClosedSession() =>
+        new("ExerciseSession.NotActive", "Bu alıştırma artık açık değil. Lütfen yeniden başla.");
+
+    public Task ResumeAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        ResumeAsync(studentId, sessionId, cancellationToken, retry: 0);
+
+    private async Task ResumeAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken, int retry)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
+        if (!CanChangePause(session, OwnedExerciseSessionStatus.Active))
+            return;
         session.Resume(now);
         if (state.FocusPausedAt.HasValue)
         {
@@ -1359,7 +1399,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.ReadingPausedAt = null;
         }
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException) when (retry < MaxPauseConflictRetries)
+        {
+            db.ChangeTracker.Clear();
+            await ResumeAsync(studentId, sessionId, cancellationToken, retry + 1);
+        }
     }
 
     public async Task<ExerciseSessionProgress> GetProgressAsync(

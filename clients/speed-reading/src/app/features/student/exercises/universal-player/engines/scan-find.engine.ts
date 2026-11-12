@@ -81,6 +81,8 @@ export class ScanFindEngine implements BaseEngine {
     private awaitingServer = false;
     private serverStarted = false;
     private timedOut = false;
+    /** The session (or the catalog) set a time limit; without one the engine only keeps a one-hour guard. */
+    private timeLimitSent = false;
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
         this.config = { ...config } as ScanFindConfig;
@@ -89,6 +91,9 @@ export class ScanFindEngine implements BaseEngine {
             mode: config['scanningFindAny'] === true ? 'find_any' : 'find_all'
         };
         this.callbacks = callbacks;
+        const timing = recordOrEmpty(config['timing']);
+        this.timeLimitSent = [config['timeLimitSeconds'], config['timeLimit'], timing['timeLimitSec']]
+            .some(value => typeof value === 'number' && value > 0);
         this.normalizeConfig();
         if (!this.config['serverAuthoritative'] && this.config['targetCount']) {
             for (const round of this.config.scanningRounds || []) {
@@ -257,6 +262,26 @@ export class ScanFindEngine implements BaseEngine {
     getTargetLabel(target: string): string {
         return Object.hasOwn(this.targetLabels, target) && typeof this.targetLabels[target] === 'string'
             ? this.targetLabels[target] : target;
+    }
+
+    /** True when any one target finishes the round; otherwise every target must be found. */
+    isFindAny(): boolean {
+        return this.config.targets?.mode === 'find_any';
+    }
+
+    /** True when the targets are shown as questions whose answer is a word in the text. */
+    hasTaskPrompts(): boolean {
+        return this.targetWords.some(target => this.getTargetLabel(target) !== target);
+    }
+
+    getRoundInfo(): { current: number; total: number } {
+        const total = Math.max(1, this.config.scanningRounds?.length || 1);
+        return { current: Math.min(total, this.currentRoundIndex + 1), total };
+    }
+
+    /** The time limit that was sent, or null when none was (the one-hour guard is not shown as a limit). */
+    getTimeLimitSeconds(): number | null {
+        return this.timeLimitSent ? this.config.timeLimitSeconds ?? null : null;
     }
 
     getFontSizePx(): number {
@@ -496,6 +521,8 @@ export class ScanFindEngine implements BaseEngine {
             }
         };
 
+        // The player holds a copy of this state, so it must see isRunning=false or the text stays above the result.
+        this.callbacks.onStateChange({ ...this.state });
         this.callbacks.onComplete(result);
     }
 

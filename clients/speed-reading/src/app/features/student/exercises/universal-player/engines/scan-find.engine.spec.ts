@@ -66,6 +66,37 @@ describe('ScanFindEngine', () => {
     engine.destroy();
   }));
 
+  it('tells the player it stopped running when the server confirms the last target', () => {
+    const events: string[] = [];
+    const actions: Array<{ action: string; [key: string]: unknown }> = [];
+    let lastState: { isRunning: boolean; isCompleted: boolean } | undefined;
+    const engine = new ScanFindEngine();
+    engine.initialize({ serverAuthoritative: true, content: { text: 'ışık' }, targets: { words: ['ışık'] } }, {
+      ...callbacks(() => events.push('complete')),
+      onAction: action => actions.push(action as { action: string }),
+      onStateChange: state => { lastState = state; events.push('state'); }
+    });
+    engine.start();
+    const round = { textContent: 'ışık', targets: ['ışık'], foundTargets: [] as string[] };
+    engine.reconcileServerResponse(actions[0], {
+      isValid: true, isCompleted: false,
+      feedbackData: { scanningRounds: [round], currentRoundIndex: 0, totalSteps: 1, correctCount: 0, incorrectCount: 0 }
+    });
+    engine.handleWordClick(0);
+    events.length = 0;
+    engine.reconcileServerResponse(actions[1], {
+      isValid: true, isCompleted: true,
+      feedbackData: {
+        scanningRounds: [{ ...round, foundTargets: ['ışık'] }], currentRoundIndex: 0, totalSteps: 1,
+        correctCount: 1, incorrectCount: 0, searchTimeMs: 250
+      }
+    });
+    expect(events).toEqual(['state', 'complete']);
+    expect(lastState?.isRunning).toBeFalse();
+    expect(lastState?.isCompleted).toBeTrue();
+    engine.destroy();
+  });
+
   it('does not count repeated target occurrences twice', () => {
     const engine = new ScanFindEngine();
     engine.initialize({ content: { text: 'okul okul kitap' }, targets: { words: ['okul', 'kitap'] } }, callbacks(() => undefined));
@@ -398,4 +429,25 @@ describe('ScanFindEngine', () => {
     expect(engine.state.currentStep).toBe(1);
     expect(engine.getWords()[0].found).toBeTrue();
   });
+
+  it('exposes what the search instruction needs: mode, questions, rounds and the time limit', () => {
+    const words = new ScanFindEngine();
+    words.initialize({ scanningRounds: [
+      { textContent: 'okul kitap', targets: ['okul', 'kitap'] },
+      { textContent: 'deniz bulut', targets: ['deniz'] }
+    ], timeLimitSeconds: 60 } as any, callbacks(() => undefined));
+    expect(words.isFindAny()).toBeFalse();
+    expect(words.hasTaskPrompts()).toBeFalse();
+    expect(words.getRoundInfo()).toEqual({ current: 1, total: 2 });
+    expect(words.getTimeLimitSeconds()).toBe(60);
+
+    const questions = new ScanFindEngine();
+    questions.initialize({ serverAuthoritative: true, scanningFindAny: true, scanningRounds: [
+      { textContent: 'Derya 24 okul', targets: ['derya'], targetLabels: { derya: 'Kim hazırladı?' } }
+    ] } as any, callbacks(() => undefined));
+    expect(questions.isFindAny()).toBeTrue();
+    expect(questions.hasTaskPrompts()).toBeTrue();
+    expect(questions.getRoundInfo()).toEqual({ current: 1, total: 1 });
+  });
 });
+

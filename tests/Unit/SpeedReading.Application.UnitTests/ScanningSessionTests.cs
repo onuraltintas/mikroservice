@@ -101,6 +101,147 @@ public sealed class ScanningSessionTests
         result.XpGained.Should().Be(0);
     }
 
+    // A search that ends without a single tap is a finished attempt with score 0. The player could still send a
+    // pause or resume for it (its copy of the state still showed the running search), which answered HTTP 500.
+    [Fact]
+    public async Task A_no_answer_finish_is_saved_and_a_late_pause_or_resume_is_harmless()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        await Expire(db);
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_timeout" })).IsCompleted.Should().BeTrue();
+        var result = await service.CompleteAsync(student, started.SessionId, new() { QuestionAnswers = [] });
+        result.Score.Should().Be(0);
+        result.MeasurementStatus.Should().Be("Measured");
+
+        var pause = () => service.PauseAsync(student, started.SessionId);
+        await pause.Should().NotThrowAsync();
+        var resume = () => service.ResumeAsync(student, started.SessionId);
+        await resume.Should().NotThrowAsync();
+        var session = await db.ExerciseSessions.SingleAsync();
+        session.Status.Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Completed);
+        (await service.CompleteAsync(student, started.SessionId, new())).Score.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Pause_and_resume_are_idempotent_while_the_search_runs()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        await service.PauseAsync(student, started.SessionId);
+        var pauseAgain = () => service.PauseAsync(student, started.SessionId);
+        await pauseAgain.Should().NotThrowAsync();
+        await service.ResumeAsync(student, started.SessionId);
+        var resumeAgain = () => service.ResumeAsync(student, started.SessionId);
+        await resumeAgain.Should().NotThrowAsync();
+        (await db.ExerciseSessions.SingleAsync()).Status.Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Active);
+    }
+
+    // Shared by every exercise type: a session that already timed out or was abandoned answers a business error (4xx),
+    // not an InvalidOperationException (HTTP 500).
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_closed_session_answers_a_business_error_for_complete_pause_and_resume(bool abandoned)
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        var session = await db.ExerciseSessions.SingleAsync();
+        if (abandoned) session.Abandon(DateTime.UtcNow);
+        else session.MarkTimedOut(DateTime.UtcNow);
+        await db.SaveChangesAsync();
+        var complete = () => service.CompleteAsync(student, started.SessionId, new());
+        await complete.Should().ThrowAsync<BusinessRuleException>().Where(error => error.Code == "ExerciseSession.NotActive");
+        var pause = () => service.PauseAsync(student, started.SessionId);
+        await pause.Should().ThrowAsync<BusinessRuleException>().Where(error => error.Code == "ExerciseSession.NotActive");
+        var resume = () => service.ResumeAsync(student, started.SessionId);
+        await resume.Should().ThrowAsync<BusinessRuleException>().Where(error => error.Code == "ExerciseSession.NotActive");
+    }
+
+    [Fact]
+    public async Task Pause_and_resume_of_a_completed_session_change_nothing()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        await Expire(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_timeout" });
+        await service.CompleteAsync(student, started.SessionId, new());
+        var before = await db.ExerciseSessions.AsNoTracking().SingleAsync();
+        await service.PauseAsync(student, started.SessionId);
+        await service.ResumeAsync(student, started.SessionId);
+        db.ChangeTracker.Clear();
+        var after = await db.ExerciseSessions.AsNoTracking().SingleAsync();
+        after.Status.Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Completed);
+        after.UpdatedAt.Should().Be(before.UpdatedAt);
+        after.EndTime.Should().Be(before.EndTime);
+        after.TotalPausedSeconds.Should().Be(before.TotalPausedSeconds);
+        after.SessionDataJson.Should().Be(before.SessionDataJson);
+    }
+
+    // The student taps pause or close while scan_timeout is in flight and /complete (or a time-out) commits first:
+    // pause and resume retry once on the concurrency conflict and then see the closed session.
+    [Theory]
+    [InlineData(true, "complete")]
+    [InlineData(false, "complete")]
+    [InlineData(true, "timeout")]
+    [InlineData(false, "abandon")]
+    public async Task Pause_and_resume_retry_when_the_session_closes_concurrently(bool pause, string closedBy)
+    {
+        var root = new Microsoft.EntityFrameworkCore.Storage.InMemoryDatabaseRoot();
+        var name = Guid.NewGuid().ToString();
+        var interceptor = new CloseSessionBeforeSave(() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseInMemoryDatabase(name, root).Options), closedBy);
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseInMemoryDatabase(name, root).AddInterceptors(interceptor).Options);
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        if (!pause) await service.PauseAsync(student, started.SessionId);
+        db.ChangeTracker.Clear();
+        interceptor.Armed = true;
+        var change = () => pause ? service.PauseAsync(student, started.SessionId) : service.ResumeAsync(student, started.SessionId);
+        if (closedBy == "complete") await change.Should().NotThrowAsync();
+        else await change.Should().ThrowAsync<BusinessRuleException>().Where(error => error.Code == "ExerciseSession.NotActive");
+        interceptor.Fired.Should().BeTrue();
+        db.ChangeTracker.Clear();
+        (await db.ExerciseSessions.AsNoTracking().SingleAsync()).Status.Should().Be(closedBy switch
+        {
+            "complete" => SpeedReading.Domain.Sessions.ExerciseSessionStatus.Completed,
+            "timeout" => SpeedReading.Domain.Sessions.ExerciseSessionStatus.Timeout,
+            _ => SpeedReading.Domain.Sessions.ExerciseSessionStatus.Abandoned
+        });
+    }
+
+    private sealed class CloseSessionBeforeSave(Func<OwnedSpeedReadingDbContext> other, string closedBy)
+        : Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesInterceptor
+    {
+        public bool Armed { get; set; }
+        public bool Fired { get; private set; }
+
+        public override async ValueTask<Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int>> SavingChangesAsync(
+            Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData eventData,
+            Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (Armed)
+            {
+                Armed = false;
+                Fired = true;
+                await using var concurrent = other();
+                var session = await concurrent.ExerciseSessions.SingleAsync(cancellationToken);
+                await Task.Delay(5, cancellationToken);
+                if (closedBy == "complete") session.Complete(DateTime.UtcNow);
+                else if (closedBy == "timeout") session.MarkTimedOut(DateTime.UtcNow);
+                else session.Abandon(DateTime.UtcNow);
+                await concurrent.SaveChangesAsync(cancellationToken);
+            }
+            return result;
+        }
+    }
+
     private static async Task Expire(OwnedSpeedReadingDbContext db)
     {
         var session = await db.ExerciseSessions.SingleAsync();

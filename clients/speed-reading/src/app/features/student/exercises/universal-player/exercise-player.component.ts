@@ -65,6 +65,7 @@ import {
 } from '../../../../core/models/exercise-session.model';
 import { toCompleteSessionRequest } from '../../../../core/services/exercise-session-completion';
 import { completionLevelToast } from './completion-toasts';
+import { getErrorMessage } from '../../../../core/utils/error-message';
 
 interface ExerciseData {
   id: string;
@@ -1867,12 +1868,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     throw lastError;
   }
 
+  /** The Turkish ProblemDetails `detail` (not its English `title`); server errors get the fallback. */
   private getActionValidationErrorMessage(error: unknown): string {
-    const response = (error as any)?.error;
-    const message = response?.message || response?.title || (error as any)?.message;
-    return typeof message === 'string' && message.trim()
-      ? message
-      : 'Egzersiz doğrulaması alınamadı. Lütfen bağlantınızı kontrol edip tekrar deneyin.';
+    return getErrorMessage(error, 'Egzersiz doğrulaması alınamadı. Bağlantını kontrol edip tekrar dene.', { voice: 'sen' });
   }
 
   private waitForPendingActions(onFinished: () => void): void {
@@ -2044,6 +2042,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
     if (this.isPauseTransitionPending) return;
+    if (this.hasEngineFinished()) return;
     if (this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer()) return;
     if (this.engine?.engineType === 'target_hunt' && (this.engine as TargetHuntEngine).isAwaitingServer()) return;
     if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'target_hunt' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
@@ -2054,6 +2053,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.tachistoscopeFeedback = null;
       try {
         await this.actionQueue;
+        // The last pending action (e.g. scan_timeout) may have ended the attempt meanwhile.
+        if (this.hasEngineFinished()) return;
         await firstValueFrom(resuming
           ? this.sessionService.resumeSession(this.sessionId)
           : this.sessionService.pauseSession(this.sessionId));
@@ -2129,13 +2130,22 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.startSession();
   }
 
+  /**
+   * The engine already ended the attempt (it may be saving its result) while the player's copy of its state can still
+   * show it running. Pausing or resuming a finished session on the server failed with HTTP 500.
+   */
+  private hasEngineFinished(): boolean {
+    return this.engine?.state?.isCompleted === true && this.exercisePhase !== 'questions';
+  }
+
   async goBack(): Promise<void> {
+    const finished = this.engineState.isCompleted || this.hasEngineFinished();
     const hasIncompleteSession = !!this.sessionId
       && this.sessionId !== 'preview-mode'
       && !this.isPreviewSession()
-      && !this.engineState.isCompleted;
+      && !finished;
     if (this.isDiscardingSession) return;
-    if ((this.engineState.isRunning && !this.engineState.isCompleted) || hasIncompleteSession) {
+    if ((this.engineState.isRunning && !finished) || hasIncompleteSession) {
       if (this.isPauseTransitionPending) return;
       if (this.engineState.isRunning && !this.engineState.isPaused) {
         if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') {
@@ -4235,6 +4245,61 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return Array.from(targets);
     }
     return [];
+  }
+
+  private get asScanFind(): ScanFindEngine | null {
+    return this.engine?.engineType === 'scan_find' ? this.engine as ScanFindEngine : null;
+  }
+
+  /** The sentence above the text; the targets of the round follow it as chips. */
+  getScanInstruction(): string {
+    const scan = this.asScanFind;
+    if (scan?.hasTaskPrompts()) {
+      return scan.isFindAny()
+        ? 'Aşağıdaki metinde sorulardan birinin cevabını bul ve cevaba dokun:'
+        : 'Aşağıdaki metinde soruların cevabını bul ve cevaba dokun:';
+    }
+    return scan?.isFindAny()
+      ? 'Aşağıdaki metinde bu kelimelerden birini bul ve üzerine dokun:'
+      : 'Aşağıdaki metinde şu kelimeleri bul ve üzerine dokun:';
+  }
+
+  getScanInstructionHint(): string {
+    const scan = this.asScanFind;
+    if (!scan) return '';
+    const round = scan.getRoundInfo();
+    const goal = scan.hasTaskPrompts()
+      ? (scan.isFindAny() ? 'birinin cevabını' : 'hepsinin cevabını')
+      : (scan.isFindAny() ? 'birini' : 'hepsini');
+    return [
+      round.total > 1 ? `Tur ${round.current} / ${round.total}.` : '',
+      scan.getTimeLimitSeconds() !== null ? `Süre bitmeden ${goal} bul.` : '',
+      'Yanlış dokunuş puanı düşürür.'
+    ].filter(Boolean).join(' ');
+  }
+
+  /** The start card in two short sentences: the task, then the targets, the time and the wrong-tap rule. */
+  getScanReadyDescription(): string {
+    const scan = this.asScanFind;
+    if (!scan) return '';
+    const goal = scan.hasTaskPrompts()
+      ? (scan.isFindAny() ? 'sorulardan birinin cevabını bul ve cevaba dokun' : 'soruların cevabını bul ve cevaba dokun')
+      : (scan.isFindAny() ? 'verilen kelimelerden birini bul ve üzerine dokun' : 'verilen kelimeleri bul ve üzerine dokun');
+    const limit = scan.getTimeLimitSeconds();
+    const facts = [
+      scan.isFindAny() ? '' : `Toplam ${scan.state.totalSteps} hedef`,
+      limit !== null ? `süre ${this.formatScanLimit(limit)}` : ''
+    ].filter(Boolean).join(', ');
+    const rule = facts ? `${facts}; yanlış dokunuş puanı düşürür.` : 'Yanlış dokunuş puanı düşürür.';
+    return `Metni okumadan gözlerinle tara, ${goal}. ${rule.charAt(0).toLocaleUpperCase('tr-TR')}${rule.slice(1)}`;
+  }
+
+  /** "45 saniye", "1 dakika", "1 dakika 30 saniye", "60 dakika". */
+  private formatScanLimit(seconds: number): string {
+    if (seconds < 60) return `${seconds} saniye`;
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return rest ? `${minutes} dakika ${rest} saniye` : `${minutes} dakika`;
   }
 
   getScanTargetLabel(target: string): string {
