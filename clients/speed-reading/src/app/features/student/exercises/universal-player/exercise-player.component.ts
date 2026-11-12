@@ -4294,8 +4294,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return `Metni okumadan gözlerinle tara, ${goal}. ${rule.charAt(0).toLocaleUpperCase('tr-TR')}${rule.slice(1)}`;
   }
 
+  /** "45 saniye", "1 dakika", "1 dakika 30 saniye", "60 dakika". */
   private formatScanLimit(seconds: number): string {
-    if (seconds < 120) return `${seconds} saniye`;
+    if (seconds < 60) return `${seconds} saniye`;
     const minutes = Math.floor(seconds / 60);
     const rest = seconds % 60;
     return rest ? `${minutes} dakika ${rest} saniye` : `${minutes} dakika`;
