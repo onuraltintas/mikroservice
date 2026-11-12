@@ -10,7 +10,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef,
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { firstValueFrom, Subject, takeUntil } from 'rxjs';
+import { firstValueFrom, Subject, Subscription, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { canUseStaffTraining } from '../../../../core/guards/staff-training.guard';
 import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
@@ -479,6 +479,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private autoPauseNotSynced = false;
   /** The automatic pause that is waiting for the server; a request that was given up on no longer matches it. */
   private autoPauseInFlight: object | null = null;
+  /** Its request to the server, kept so that it can be cancelled when the player stops waiting. */
+  private autoPauseRequest: Subscription | null = null;
   /** How long an automatic pause may wait for the server before the player stops waiting. */
   private static readonly AUTO_PAUSE_SYNC_TIMEOUT_MS = 8000;
   private readonly actionFailureState = createActionFailureState();
@@ -2126,7 +2128,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   onPageShow(event: PageTransitionEvent): void {
     if (!event?.persisted) return;
     if (this.isPauseTransitionPending) {
-      this.autoPauseInFlight = null;
+      this.abandonAutoPause();
       this.isPauseTransitionPending = false;
       if (this.engineState?.isPaused && this.usesServerPause()) this.autoPauseNotSynced = true;
     }
@@ -2206,7 +2208,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       // A hidden or closing page may never get an answer (cancelled request, frozen page). The wait is bounded so
       // that the pause and back buttons cannot stay blocked.
       const synced = await Promise.race([
-        this.reportAutoPause(),
+        this.reportAutoPause(attempt),
         new Promise<'timeout'>(resolve => {
           timer = setTimeout(() => resolve('timeout'), ExercisePlayerComponent.AUTO_PAUSE_SYNC_TIMEOUT_MS);
         })
@@ -2216,19 +2218,37 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       if (attempt === this.autoPauseInFlight) this.autoPauseNotSynced = true;
     } finally {
       if (timer !== undefined) clearTimeout(timer);
-      // Given up on meanwhile (page restored from the back-forward cache): leave the current state alone.
+      // Given up on meanwhile (page restored from the back-forward cache, new attempt): leave the current state alone.
       if (attempt === this.autoPauseInFlight) {
-        this.autoPauseInFlight = null;
+        // After a timeout this also cancels the request and retires the attempt, so nothing is sent later.
+        this.abandonAutoPause();
         this.isPauseTransitionPending = false;
         this.cdr.detectChanges();
       }
     }
   }
 
-  private async reportAutoPause(): Promise<'synced'> {
+  /**
+   * Sends the pause once the pending exercise steps are done. An attempt that was given up on in the meantime
+   * (timeout, restored page, new attempt) sends nothing: a late pause could land after the student's resume and
+   * leave the server paused under a running exercise.
+   */
+  private async reportAutoPause(attempt: object): Promise<'synced' | 'skipped'> {
     await this.actionQueue;
-    if (!this.hasEngineFinished()) await firstValueFrom(this.sessionService.pauseSession(this.sessionId!));
+    if (attempt !== this.autoPauseInFlight || this.hasEngineFinished()) return 'skipped';
+    await new Promise<void>((resolve, reject) => {
+      const request = this.sessionService.pauseSession(this.sessionId!)
+        .subscribe({ next: () => resolve(), error: reject, complete: () => resolve() });
+      if (attempt === this.autoPauseInFlight && !request.closed) this.autoPauseRequest = request;
+    });
     return 'synced';
+  }
+
+  /** Stops waiting for the automatic pause in flight and cancels its request. */
+  private abandonAutoPause(): void {
+    this.autoPauseInFlight = null;
+    this.autoPauseRequest?.unsubscribe();
+    this.autoPauseRequest = null;
   }
 
   resetExercise(): void {
@@ -2265,7 +2285,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.backendSessionConfig = null;
     this.autoPausedWhileHidden = false;
     this.autoPauseNotSynced = false;
-    this.autoPauseInFlight = null;
+    // A pause of the previous attempt may still be in flight; the new attempt starts unblocked.
+    this.abandonAutoPause();
+    this.isPauseTransitionPending = false;
 
     // Reset engine state
     this.engineState = {
