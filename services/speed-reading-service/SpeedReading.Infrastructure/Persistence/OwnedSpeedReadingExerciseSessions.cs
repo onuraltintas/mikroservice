@@ -4108,6 +4108,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             sanitized["questions"] = JsonSerializer.SerializeToNode(state.Questions, JsonOptions);
             sanitized["answers"] = JsonSerializer.SerializeToNode(state.Answers, JsonOptions);
         }
+        // The player reads the visual expansion round count from "rounds". Send the session's own count so a
+        // session that started before a catalog change still finishes with the rounds the server expects.
+        if (IsVisualExpansionExercise(state)) sanitized["rounds"] = state.TotalSteps;
         if (IsVisualExpansionExercise(state) && state.VisualExpansionProtocolVersion is not (1 or 2))
         {
             sanitized.Remove("visualExpansionRoundResults");
