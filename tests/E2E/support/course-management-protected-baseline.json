@@ -1841,7 +1841,7 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261029160000_ExerciseResultGamificationXp.cs": "533a5542e380604ca26ff3f740deff24b61d021903506e5147831506a1f61d1a",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261029170000_ReadingSessionRejected.Designer.cs": "12a5e14134266f6f8df496f173f3bc7a1e30acb6cbe9d5bce94f016949cf2bbf",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261029170000_ReadingSessionRejected.cs": "86555b64178080438d969a76bc6269382ef710e0e0224e7557dc4ca322f11ab5",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261112100000_UpdateTachistoscopeAndVisualExpansionRoundCounts.cs": "2ec26fe413e0f0fcf95c3c989735bf0c3214b6c5e7567c9eb47ec6bf3ac80217",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261112100000_UpdateRoundCountsAndVisualExpansionDistances.cs": "4e16a2345116d4d35c11009d598d6eaec3df6aa1a993ca4ade084def7b40a89a",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/OwnedSpeedReadingDbContextModelSnapshot.cs": "46930b01f768a6efa2e206d19cda668b4eb55ab0c7258bf8bb48c311b5a453b7",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedContentMutationIdempotency.cs": "8ed1813019f1afc8360511289775aec6a9c4d35b8f90447e06faac7eac93b361",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedExerciseTaxonomyBootstrap.cs": "ce9bcd8c1a8a8fadfda31a83f2b758bf6ebcb45f719e600f43f24314b71a4d2c",
@@ -2725,7 +2725,7 @@
   },
   "baselineCommit": "07db9772",
   "snapshotContext": {
-    "purpose": "speed-reading round counts",
+    "purpose": "speed-reading round counts and distances",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2773,7 +2773,9 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "81fff027",
-    "removedSincePreviousBaseline": []
+    "previousBaselineCommit": "3f83870a",
+    "removedSincePreviousBaseline": [
+      "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261112100000_UpdateTachistoscopeAndVisualExpansionRoundCounts.cs"
+    ]
   }
 }
