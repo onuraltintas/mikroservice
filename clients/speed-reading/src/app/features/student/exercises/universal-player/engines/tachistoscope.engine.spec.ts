@@ -144,6 +144,24 @@ describe('Tachistoscope runtime', () => {
       engine.destroy();
     }));
   }
+  it('previews with everyday words only: none excluded, no acronyms, lengths 3–10 covered', () => {
+    const excluded = ['Bej', 'Endişeli', 'Korkmuş', 'Kızgın', 'Mat', 'Çirkin', 'Abonelik', 'Adapte', 'Akor', 'Akım', 'Alegori',
+      'Analog', 'Antivirüs', 'Arp', 'Banner', 'Beğeni', 'Blog', 'Bluetooth', 'Captcha', 'Diatonik', 'Dize', 'Domain', 'Dram',
+      'Drone', 'Emoji', 'Epik', 'GIF', 'Global', 'Hashtag', 'Hikaye', 'Influencer', 'Kafiye', 'Kaos', 'Kaygı', 'Kriz', 'Laptop',
+      'Link', 'Lirik', 'Lokal', 'Miraz', 'Mısra', 'Nazım', 'Nesir', 'Not', 'Ping', 'Podcast', 'Prestige', 'Redif', 'Reels',
+      'Router', 'Sansür', 'Savaş', 'Scooter', 'Ses', 'Siber', 'Spam', 'Takipçi', 'Teşbih', 'Ton', 'Tweet', 'URL', 'USB',
+      'Uyak', 'Viral', 'VPN', 'WiFi', 'Wiki', 'Özçekim'].map(word => word.toLocaleLowerCase('tr-TR'));
+    // Abstract or technical terms the old preview list held; difficulty comes from time and length, not vocabulary.
+    const unfamiliar = ['konsantrasyon', 'motivasyon', 'verimlilik', 'strateji', 'refleks', 'sinir', 'algı', 'kavram', 'paragraf', 'süreç'];
+    const words: string[] = (TextStreamEngine as any).WORD_POOL;
+    expect(excluded.length).toBe(68);
+    for (const word of words) {
+      expect(excluded).not.toContain(word.toLocaleLowerCase('tr-TR'));
+      expect(unfamiliar).not.toContain(word);
+      expect(word).toMatch(/^[a-zçğıöşü]+$/);
+    }
+    for (let length = 3; length <= 10; length++) expect(words.some(word => word.length === length)).withContext(`length ${length}`).toBeTrue();
+  });
   it('reports the server content type of a word session', () => {
     const { engine } = create({ serverAuthoritative: true, content: { type: 'number' },
       tachistoscope: { count: 3, round: 0, contentType: 'word', displayDurationMs: 480 } });

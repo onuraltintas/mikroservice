@@ -48,6 +48,29 @@ public sealed class TachistoscopeSettingsTests
     }
 
     [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(5)]
+    public void The_vocabulary_level_cap_accepts_one_to_five(int level)
+    {
+        var config = "{\"engineType\":\"text_stream\",\"engineConfig\":{\"content\":{\"type\":\"word\",\"maxVocabularyLevel\":" + level + "}}}";
+        ExerciseConfigurationRules.ValidateActiveConfiguration(config, "text_stream");
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("6")]
+    [InlineData("-1")]
+    [InlineData("2.5")]
+    [InlineData("\"2\"")]
+    [InlineData("null")]
+    public void The_vocabulary_level_cap_rejects_other_values(string value)
+    {
+        var config = "{\"engineType\":\"text_stream\",\"engineConfig\":{\"content\":{\"type\":\"word\",\"maxVocabularyLevel\":" + value + "}}}";
+        Assert.Throws<ArgumentException>(() => ExerciseConfigurationRules.ValidateActiveConfiguration(config, "text_stream"));
+    }
+
+    [Theory]
     [InlineData("{\"content\":{\"type\":\"number\",\"length\":13}}")]
     [InlineData("{\"content\":{\"type\":\"letter\"},\"adaptive\":{\"maxLength\":13}}")]
     [InlineData("{\"content\":{\"type\":\"phrase\",\"length\":31}}")]

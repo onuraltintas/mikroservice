@@ -122,7 +122,9 @@ public sealed class TachistoscopeWordsMigrationPostgresTests(PostgresFixture pos
             "jsonb_set(configuration_json, '{engineConfig,Words}', '[\"kalem\"]')",
             "jsonb_set(configuration_json, '{engineConfig,stimuli}', '[\"1234\"]')",
             "configuration_json || '{\"EngineConfig\":{}}'",
-            "configuration_json || '{\"Timing\":{\"durationMs\":1300}}'"
+            "configuration_json || '{\"Timing\":{\"durationMs\":1300}}'",
+            "jsonb_set(configuration_json, '{engineConfig,content,maxVocabularyLevel}', '3')",
+            "jsonb_set(configuration_json, '{engineConfig,content,MaxVocabularyLevel}', '2')"
         };
         var variantIds = new List<Guid>();
         foreach (var variant in variants)
@@ -155,6 +157,9 @@ public sealed class TachistoscopeWordsMigrationPostgresTests(PostgresFixture pos
             Assert.True(JsonNode.DeepEquals(expected, config), $"{item.Age}/{item.Level}: {config.ToJsonString()}");
             Assert.Equal(before[item.Id].Version + 1, version);
             Assert.Equal("system:tachistoscope-words-2026-11", updatedBy);
+            var cap = config["engineConfig"]!["content"]!["maxVocabularyLevel"];
+            if (item.Level <= 2) Assert.Null(cap);
+            else Assert.Equal(2, cap!.GetValue<int>());
             // Rounds, interval, duration bounds and adaptation stay as they were.
             foreach (var path in new[] { "count", "interval", "minDuration", "maxDuration", "enabled", "mode" })
                 Assert.True(JsonNode.DeepEquals(Key(before[item.Id].Config, path), Key(config, path)), $"{item.Age}/{item.Level} {path}");
@@ -181,11 +186,21 @@ public sealed class TachistoscopeWordsMigrationPostgresTests(PostgresFixture pos
         var edited = seeded.Single(item => item is { Age: 0, Level: 5, Normal: true }).Id;
         await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{engineConfig,content,length}', '9') WHERE id = @id", edited);
 
+        // A raised vocabulary cap is an admin edit too: Down leaves that row alone.
+        var capEdited = seeded.Single(item => item is { Age: 1, Level: 3, Normal: true }).Id;
+        await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{engineConfig,content,maxVocabularyLevel}', '3') WHERE id = @id", capEdited);
+
         await db.Database.GetService<IMigrator>().MigrateAsync(previous);
         var afterDown = await Snapshot();
         foreach (var item in seeded)
         {
             var (config, version, updatedBy) = afterDown[item.Id];
+            if (item.Id == capEdited)
+            {
+                Assert.Equal("word", config["engineConfig"]!["content"]!["type"]!.GetValue<string>());
+                Assert.Equal(3, config["engineConfig"]!["content"]!["maxVocabularyLevel"]!.GetValue<int>());
+                continue;
+            }
             if (item.Id == edited)
             {
                 Assert.Equal("phrase", config["engineConfig"]!["content"]!["type"]!.GetValue<string>());
@@ -200,6 +215,7 @@ public sealed class TachistoscopeWordsMigrationPostgresTests(PostgresFixture pos
             }
             Assert.Equal(before[item.Id].Version + 2, version);
             Assert.Equal("system:tachistoscope-words-2026-11-rollback", updatedBy);
+            Assert.False(config["engineConfig"]!["content"]!.AsObject().ContainsKey("maxVocabularyLevel"));
         }
 
         // Down is idempotent too.
@@ -235,6 +251,8 @@ public sealed class TachistoscopeWordsMigrationPostgresTests(PostgresFixture pos
         copy["engineConfig"]!["timing"]!["durationMs"] = setting.Duration;
         copy["engineConfig"]!["adaptive"]!["minLength"] = setting.Min;
         copy["engineConfig"]!["adaptive"]!["maxLength"] = setting.Max;
+        // Word and phrase pools use everyday vocabulary only; number rows never get the key.
+        if (setting.Type != "number") copy["engineConfig"]!["content"]!["maxVocabularyLevel"] = 2;
         return copy;
     }
 
