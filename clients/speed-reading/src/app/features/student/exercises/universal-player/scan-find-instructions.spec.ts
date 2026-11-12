@@ -79,7 +79,7 @@ describe('scan and find instructions', () => {
     const element = render(words, false);
     const text = element.querySelector('.scan-find-ready')!.textContent!.trim();
     expect(text).toContain('kelimeleri bul ve üzerine dokun.');
-    expect(text).toContain('Toplam 2 hedef, süre 60 saniye; yanlış dokunuş puanı düşürür.');
+    expect(text).toContain('Toplam 2 hedef, süre 1 dakika; yanlış dokunuş puanı düşürür.');
     expect(text.split(/[.!?](\s|$)/).filter(part => part.trim().length > 0).length).toBeLessThanOrEqual(2);
   });
 
@@ -116,4 +116,19 @@ describe('scan and find instructions', () => {
     expect(title.classList).toContain('sr-only');
     expect(title.textContent).toContain('Sözcüğü Bul');
   });
+
+  it('names the time limit in minutes and seconds', () => {
+    const player: any = Object.create(ExercisePlayerComponent.prototype);
+    const cases: Array<[number, string]> = [
+      [45, '45 saniye'], [60, '1 dakika'], [90, '1 dakika 30 saniye'], [110, '1 dakika 50 saniye'],
+      [120, '2 dakika'], [150, '2 dakika 30 saniye'], [3600, '60 dakika']
+    ];
+    expect(cases.map(([seconds]) => player.formatScanLimit(seconds))).toEqual(cases.map(([, text]) => text));
+  });
+
+  it('uses the same wording for the limit on the start card', () => {
+    const text = render({ ...words, timeLimitSeconds: 110 }, false).querySelector('.scan-find-ready')!.textContent!;
+    expect(text).toContain('süre 1 dakika 50 saniye;');
+  });
 });
+
