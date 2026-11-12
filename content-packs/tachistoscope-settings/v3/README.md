@@ -11,7 +11,7 @@ süre sınırları (`minDurationMs`/`maxDurationMs`) değişmez.
 ## İçerik türü
 
 - Seviye 1–2: sayı (basamak sayısı ve sınırları değişmedi).
-- Seviye 3–4: kelime (`vocabulary_items`, seviye ≤ egzersiz seviyesi, yaş etiketi boş ya da öğrencinin yaşı).
+- Seviye 3–4: kelime (`vocabulary_items`, yalnız seviye 1–2 günlük kelimeler, yaş etiketi boş ya da öğrencinin yaşı; aşağıdaki kelime listesine bakın).
 - Seviye 5: iki kelimelik kelime grubu. Kelimeler her oturumda rastgele eşleştirilir; eşleştirme
   oturumda saklanan bir tohumla sabittir (alfabetik komşu çiftler kullanılmaz).
 
@@ -69,7 +69,7 @@ Birbirinden bağımsız **üç** cevaplık bloklar değerlendirilir (v2: beş):
 - Süre üst sınırdaysa başarısız blokta uzunluk bir azalır ve süre başlangıca döner.
 - Süre ve uzunluk aynı blokta birlikte zorlaştırılmaz; her şey sınırlar içinde kalır. Eksik son blok uyarlama yapmaz.
 
-Cevaplarda büyük-küçük harf ve fazla boşluk fark etmez (Türkçe küçük harfe çevrilerek karşılaştırılır).
+Cevaplarda büyük-küçük harf, fazla boşluk ve düzeltme işareti (â, î, û) fark etmez (Türkçe küçük harfe çevrilerek karşılaştırılır).
 
 ## Geri alma
 

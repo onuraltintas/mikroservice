@@ -1871,7 +1871,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   /** The Turkish ProblemDetails `detail` (not its English `title`); server errors get the fallback. */
   private getActionValidationErrorMessage(error: unknown): string {
-    return getErrorMessage(error, 'Egzersiz doğrulaması alınamadı. Bağlantını kontrol edip tekrar dene.', { voice: 'sen' });
+    return getErrorMessage(error, 'Egzersiz doğrulaması alınamadı. Bağlantınızı kontrol edip tekrar deneyin.', { voice: 'siz' });
   }
 
   private waitForPendingActions(onFinished: () => void): void {
@@ -4279,12 +4279,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const scan = this.asScanFind;
     if (scan?.hasTaskPrompts()) {
       return scan.isFindAny()
-        ? 'Aşağıdaki metinde sorulardan birinin cevabını bul ve cevaba dokun:'
-        : 'Aşağıdaki metinde soruların cevabını bul ve cevaba dokun:';
+        ? 'Aşağıdaki metinde sorulardan birinin cevabını bulun ve cevaba dokunun:'
+        : 'Aşağıdaki metinde soruların cevabını bulun ve cevaba dokunun:';
     }
     return scan?.isFindAny()
-      ? 'Aşağıdaki metinde bu kelimelerden birini bul ve üzerine dokun:'
-      : 'Aşağıdaki metinde şu kelimeleri bul ve üzerine dokun:';
+      ? 'Aşağıdaki metinde bu kelimelerden birini bulun ve üzerine dokunun:'
+      : 'Aşağıdaki metinde şu kelimeleri bulun ve üzerine dokunun:';
   }
 
   getScanInstructionHint(): string {
@@ -4296,7 +4296,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       : (scan.isFindAny() ? 'birini' : 'hepsini');
     return [
       round.total > 1 ? `Tur ${round.current} / ${round.total}.` : '',
-      scan.getTimeLimitSeconds() !== null ? `Süre bitmeden ${goal} bul.` : '',
+      scan.getTimeLimitSeconds() !== null ? `Süre bitmeden ${goal} bulun.` : '',
       'Yanlış dokunuş puanı düşürür.'
     ].filter(Boolean).join(' ');
   }
@@ -4306,15 +4306,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const scan = this.asScanFind;
     if (!scan) return '';
     const goal = scan.hasTaskPrompts()
-      ? (scan.isFindAny() ? 'sorulardan birinin cevabını bul ve cevaba dokun' : 'soruların cevabını bul ve cevaba dokun')
-      : (scan.isFindAny() ? 'verilen kelimelerden birini bul ve üzerine dokun' : 'verilen kelimeleri bul ve üzerine dokun');
+      ? (scan.isFindAny() ? 'sorulardan birinin cevabını bulun ve cevaba dokunun' : 'soruların cevabını bulun ve cevaba dokunun')
+      : (scan.isFindAny() ? 'verilen kelimelerden birini bulun ve üzerine dokunun' : 'verilen kelimeleri bulun ve üzerine dokunun');
     const limit = scan.getTimeLimitSeconds();
     const facts = [
       scan.isFindAny() ? '' : `Toplam ${scan.state.totalSteps} hedef`,
       limit !== null ? `süre ${this.formatScanLimit(limit)}` : ''
     ].filter(Boolean).join(', ');
     const rule = facts ? `${facts}; yanlış dokunuş puanı düşürür.` : 'Yanlış dokunuş puanı düşürür.';
-    return `Metni okumadan gözlerinle tara, ${goal}. ${rule.charAt(0).toLocaleUpperCase('tr-TR')}${rule.slice(1)}`;
+    return `Metni okumadan gözlerinizle tarayın, ${goal}. ${rule.charAt(0).toLocaleUpperCase('tr-TR')}${rule.slice(1)}`;
   }
 
   /** "45 saniye", "1 dakika", "1 dakika 30 saniye", "60 dakika". */
