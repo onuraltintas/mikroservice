@@ -237,6 +237,8 @@ builder.Services.AddMassTransit(configurator =>
     });
 });
 builder.Services.AddHostedService<SpeedReadingIdempotencyCleanupWorker>();
+// Closes exercise sessions that were left open for a day (decision 12.11.2026).
+builder.Services.AddHostedService<SpeedReadingStaleSessionWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
 
