@@ -809,7 +809,9 @@ export class TextStreamEngine implements BaseEngine {
      * Compare normalized Turkish answers without treating typos as correct.
      */
     private calculateSimilarity(answer1: string, answer2: string): boolean {
-        const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').normalize('NFC').toLocaleLowerCase('tr-TR');
+        // Mirrors TachistoscopeState.Normalize: â, î, û (as in "kâğıt") count as a, i, u.
+        const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').normalize('NFC').toLocaleLowerCase('tr-TR')
+            .replace(/â/g, 'a').replace(/î/g, 'i').replace(/û/g, 'u');
         return normalize(answer1) === normalize(answer2);
     }
 
@@ -897,7 +899,7 @@ export class TextStreamEngine implements BaseEngine {
     /** Stimulus kind shown to the student: number, letter, word or phrase (assessments always use numbers). */
     getContentType(): 'number' | 'letter' | 'word' | 'phrase' {
         if (this.assessmentProtocol?.version === 2) return 'number';
-        const type = this.serverContentType || String(this.config.content?.type || 'word').toLowerCase();
+        const type = this.serverContentType || String(this.config?.content?.type || 'word').toLowerCase();
         return type === 'number' || type === 'letter' || type === 'phrase' ? type : 'word';
     }
 

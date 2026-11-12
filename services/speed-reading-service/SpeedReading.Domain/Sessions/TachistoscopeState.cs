@@ -104,8 +104,11 @@ public sealed class TachistoscopeState
         TargetLength = Math.Clamp(TargetLength, Math.Min(MinTargetLength, MaxTargetLength), MaxTargetLength);
     }
 
+    // Turkish lower case with collapsed whitespace; the circumflex letters â, î, û (as in "kâğıt") count as a, i, u
+    // because students often type them without the mark. The player preview mirrors this.
     private static string Normalize(string value) => string.Join(' ', value.Trim().Split((char[]?)null,
-        StringSplitOptions.RemoveEmptyEntries)).Normalize().ToLower(CultureInfo.GetCultureInfo("tr-TR"));
+            StringSplitOptions.RemoveEmptyEntries)).Normalize().ToLower(CultureInfo.GetCultureInfo("tr-TR"))
+        .Replace('â', 'a').Replace('î', 'i').Replace('û', 'u');
 }
 
 public sealed record TachistoscopeTrial(string Stimulus, string UserAnswer, bool IsCorrect, int ResponseTimeMs, int DisplayDurationMs, bool IsPractice = false);

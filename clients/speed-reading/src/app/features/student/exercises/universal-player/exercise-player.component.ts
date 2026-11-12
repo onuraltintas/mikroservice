@@ -35,6 +35,7 @@ import { AdaptiveFluencyEngine, AdaptiveFluencyStageFeedback } from './engines/a
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './engines/base-engine.interface';
 import { GridInteractionEngine } from './engines/grid-interaction.engine';
 import { TextStreamEngine } from './engines/text-stream.engine';
+import { TACHISTOSCOPE_COPY, TachistoscopeContentType } from './tachistoscope-copy';
 import { TextFadeEngine } from './engines/text-fade.engine';
 import { WordHighlightEngine } from './engines/word-highlight.engine';
 import { ReadingComprehensionEngine } from './engines/reading-comprehension.engine';
@@ -3343,27 +3344,20 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   /** number, letter, word or phrase: the server session's type when there is one, else the catalogue's. */
-  getTachistoscopeContentType(): 'number' | 'letter' | 'word' | 'phrase' {
+  getTachistoscopeContentType(): TachistoscopeContentType {
     return (this.engine as TextStreamEngine)?.getContentType?.() ?? 'number';
   }
 
-  /** What the student types, in the accusative ("... yaz"). */
-  private getTachistoscopeAnswerNoun(): string {
-    return { number: 'sayıyı', letter: 'harfleri', word: 'kelimeyi', phrase: 'kelime grubunu' }[this.getTachistoscopeContentType()];
-  }
-
   getTachistoscopeContentLabel(): string {
-    return { number: 'Sayı', letter: 'Harf', word: 'Kelime', phrase: 'Kelime grubu (iki kelime)' }[this.getTachistoscopeContentType()];
+    return TACHISTOSCOPE_COPY.contentLabel[this.getTachistoscopeContentType()];
   }
 
   getTachistoscopeInstruction(): string {
-    const type = this.getTachistoscopeContentType();
-    const instruction = `Ekranda kısa süre görünen ${this.getTachistoscopeAnswerNoun()} yaz.`;
-    return type === 'word' || type === 'phrase' ? `${instruction} Büyük-küçük harf fark etmez.` : instruction;
+    return TACHISTOSCOPE_COPY.instruction(this.getTachistoscopeContentType());
   }
 
   getTachistoscopeAnswerPrompt(): string {
-    return `Gördüğün ${this.getTachistoscopeAnswerNoun()} yaz`;
+    return TACHISTOSCOPE_COPY.answerPrompt(this.getTachistoscopeContentType());
   }
 
   /** Numeric keypad only for numbers; words and phrases need the full keyboard (Turkish letters, space). */

@@ -45,6 +45,34 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
     protected override void Down(MigrationBuilder migrationBuilder) =>
         migrationBuilder.Sql(BuildSql(forward: false));
 
+    // Every key that decides the content, length or duration, lower-cased, per holder object.
+    private static readonly string[] GuardedKeys =
+    [
+        "engineConfig", "content", "timing", "adaptive", "type", "length", "durationMs", "minLength", "maxLength",
+        "displayDurationMs", "intervalMs", "source", "items", "stimuli", "words", "chunks"
+    ];
+
+    // Only these exact spellings may appear in each holder; any other case variant of a guarded key,
+    // displayDurationMs in any case, and custom content (source/items/stimuli/words/chunks) skip the row.
+    private static readonly (string Holder, string[] Exact)[] KeyHolders =
+    [
+        ("{}", ["engineConfig"]),
+        ("{engineConfig}", ["content", "timing", "adaptive", "type", "length", "durationMs", "minLength", "maxLength"]),
+        ("{engineConfig,content}", ["type", "length", "durationMs", "minLength", "maxLength", "intervalMs"]),
+        ("{engineConfig,timing}", ["type", "length", "durationMs", "minLength", "maxLength", "intervalMs"]),
+        ("{engineConfig,adaptive}", ["type", "length", "durationMs", "minLength", "maxLength", "intervalMs"])
+    ];
+
+    private static string NoKeyVariants()
+    {
+        static string Array(IEnumerable<string> values) => "ARRAY[" + string.Join(", ", values.Select(value => $"'{value}'")) + "]::text[]";
+        var keys = Array(GuardedKeys.Select(key => key.ToLowerInvariant()));
+        return string.Join("\n              AND ", KeyHolders.Select(rule =>
+            $"NOT EXISTS (SELECT 1 FROM jsonb_object_keys(CASE WHEN jsonb_typeof(e.configuration_json #> '{rule.Holder}') = 'object' "
+            + $"THEN e.configuration_json #> '{rule.Holder}' ELSE '{{}}'::jsonb END) AS k(name) "
+            + $"WHERE lower(k.name) = ANY({keys}) AND NOT k.name = ANY({Array(rule.Exact)}))"));
+    }
+
     private static string BuildSql(bool forward)
     {
         var values = string.Join(",\n            ", Changes.SelectMany(change => Enumerable.Range(1, 5).Select(level =>
@@ -56,9 +84,10 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
         })));
         var actor = forward ? Actor : Actor + "-rollback";
         var direction = forward ? "up" : "down";
-        // The session reads engineConfig.displayDurationMs before timing.durationMs, and the catalog validator
-        // requires root and engineConfig values to agree, so rows that also carry a duration or length elsewhere
-        // are skipped: changing only the engineConfig keys would not change (or would invalidate) them.
+        // The session reads engineConfig.displayDurationMs before timing.durationMs, the catalog validator
+        // requires root and engineConfig values to agree, and server and player read keys case-insensitively.
+        // Rows that carry a duration or length elsewhere, another spelling of a key, or custom content are
+        // skipped: changing only the camelCase engineConfig keys would not change (or would invalidate) them.
         var plan = $$"""
             SELECT e.id, c.to_type, c.to_length, c.to_duration, c.to_min_length, c.to_max_length
             FROM (VALUES
@@ -82,8 +111,7 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
               AND (e.configuration_json #> '{engineConfig,timing,durationMs}') = to_jsonb(c.from_duration)
               AND (e.configuration_json #> '{engineConfig,adaptive,minLength}') = to_jsonb(c.from_min_length)
               AND (e.configuration_json #> '{engineConfig,adaptive,maxLength}') = to_jsonb(c.from_max_length)
-              AND NOT COALESCE((e.configuration_json -> 'engineConfig') ?| ARRAY['displayDurationMs', 'intervalMs'], false)
-              AND NOT COALESCE(e.configuration_json ?| ARRAY['displayDurationMs', 'intervalMs', 'timing', 'content', 'adaptive'], false)
+              AND {{NoKeyVariants()}}
             """;
         return $$"""
             DO $tachistoscope_words$
