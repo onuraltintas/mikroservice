@@ -1,5 +1,5 @@
 import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
-import { NEVER, of, throwError } from 'rxjs';
+import { NEVER, Observable, of, throwError } from 'rxjs';
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 /**
@@ -308,4 +308,78 @@ describe('auto-pause when the page is hidden', () => {
     expect(manual.sessionService.pauseSession).toHaveBeenCalledBefore(manual.sessionService.resumeSession);
     expect(manual.engineState.isPaused).toBeFalse();
   });
+  it('does not send a late pause after it gave up waiting for a stuck exercise step', fakeAsync(() => {
+    const value = player();
+    const calls: string[] = [];
+    let releaseStep: () => void = () => undefined;
+    value.actionQueue = new Promise<void>(resolve => releaseStep = resolve);
+    value.sessionService.pauseSession.and.callFake(() => { calls.push('pause'); return of({}); });
+    value.sessionService.resumeSession.and.callFake(() => { calls.push('resume'); return of({}); });
+    value.onVisibilityChange();
+    flushMicrotasks();
+    tick(8000);
+    flushMicrotasks();
+    expect(value.isPauseTransitionPending).toBeFalse();
+
+    // The student returns and resumes; the stuck step settles in the meantime.
+    void value.togglePause();
+    releaseStep();
+    flushMicrotasks();
+
+    // One pause (reported by the resume) and one resume: the abandoned attempt sends nothing after the resume.
+    expect(calls).toEqual(['pause', 'resume']);
+    expect(value.engineState.isPaused).toBeFalse();
+  }));
+
+  it('cancels the pause request when it stops waiting for it', fakeAsync(() => {
+    const value = player();
+    let cancelled = 0;
+    value.sessionService.pauseSession.and.returnValue(new Observable(() => () => { cancelled++; }));
+    value.onVisibilityChange();
+    flushMicrotasks();
+    expect(cancelled).toBe(0);
+    tick(8000);
+    flushMicrotasks();
+    expect(cancelled).toBe(1);
+    expect(value.isPauseTransitionPending).toBeFalse();
+  }));
+
+  it('cancels the pause request when the page comes back from the back-forward cache', fakeAsync(() => {
+    visibility.and.returnValue('visible');
+    const value = player();
+    let cancelled = 0;
+    value.sessionService.pauseSession.and.returnValue(new Observable(() => () => { cancelled++; }));
+    value.onPageHide();
+    flushMicrotasks();
+    value.onPageShow({ persisted: true } as PageTransitionEvent);
+    expect(cancelled).toBe(1);
+    tick(8000);
+    flushMicrotasks();
+    expect(cancelled).toBe(1);
+  }));
+
+  it('starts a new attempt without a pending pause transition', fakeAsync(() => {
+    const value = player();
+    let cancelled = 0;
+    value.sessionService.pauseSession.and.returnValue(new Observable(() => () => { cancelled++; }));
+    value.engine.destroy = () => undefined;
+    value.startSession = jasmine.createSpy('startSession');
+    spyOn(window, 'scrollTo');
+    value.clickedCells = new Set(); value.correctCells = new Set(); value.wrongCells = new Set();
+    value.onVisibilityChange();
+    flushMicrotasks();
+    expect(value.isPauseTransitionPending).toBeTrue();
+
+    value.resetExercise();
+
+    expect(value.isPauseTransitionPending).toBeFalse();
+    expect(cancelled).toBe(1);
+    expect(value.startSession).toHaveBeenCalledTimes(1);
+    // The abandoned attempt neither marks the new session nor touches a later transition.
+    value.isPauseTransitionPending = true;
+    tick(8000);
+    flushMicrotasks();
+    expect(value.isPauseTransitionPending).toBeTrue();
+    expect(value.autoPauseNotSynced).toBeFalse();
+  }));
 });
