@@ -45,6 +45,7 @@
             <p>{{ question.prompt }}</p>
             <small class="ob-why">{{ question.reason }}</small>
           </div>
+          @if (fieldNote(); as note) { <p class="ob-note" role="status" data-testid="ob-field-note">{{ note }}</p> }
           <div class="ob-input" [attr.aria-label]="question.prompt" role="group">
             @switch (question.kind) {
               @case ('date') {
@@ -58,6 +59,8 @@
                     <button type="button" class="ob-chip" [disabled]="busy()" (click)="choose(question, choice)">{{ choice.label }}</button>
                   } @empty { <p role="status">Seçenekler yükleniyor…</p> }
                 </div>
+                <!-- Paket H6: the score type from the programme the student wants. -->
+                @if (question.id === 'yksField') { <app-score-type-finder (chosen)="chooseByProgram(question, $event)" /> }
               }
               @case ('combobox') {
                 @if (question.id === 'ownSchool' && typingSchool()) {

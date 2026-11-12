@@ -53,6 +53,10 @@ public sealed class CoachingStudentOnboardingController(CoachingStudentOnboardin
     public Task<IActionResult> Universities([FromQuery] string? programType, [FromQuery] string? scoreType, [FromQuery] string? city, [FromQuery] string? search,
         CancellationToken ct) => Run(() => onboarding.UniversitiesAsync(programType, scoreType, city, search, ct));
 
+    /// <summary>Paket H6: programme names with their score types, searched by name only (the score type question's helper).</summary>
+    [HttpGet("options/programs/fields"), EnableRateLimiting("target-catalog-search")]
+    public Task<IActionResult> ProgramFields([FromQuery] string? search, CancellationToken ct) => Run(() => onboarding.ProgramFieldsAsync(search, ct));
+
     [HttpGet("options/programs"), EnableRateLimiting("target-catalog-search")]
     public Task<IActionResult> Programs([FromQuery] string? programType, [FromQuery] string? scoreType, [FromQuery] string? city, [FromQuery] string? university,
         [FromQuery] string? search, [FromQuery] int page = 1, CancellationToken ct = default) =>
