@@ -301,8 +301,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     var upgradedState = await CreateSessionStateAsync(request.ExerciseId, exerciseTypeName,
                         exerciseEngineType, difficultyLevel, configurationJson, null, assessmentSnapshot,
                         true, request.CustomData, profileAgeGroupId, studentId, token);
+                    var restartedAt = DateTime.UtcNow;
+                    upgradedState.LastActivityAt = restartedAt;
                     legacySession.RestartForVerification(upgradedState.TotalSteps, upgradedState.TimeLimitSeconds,
-                        JsonSerializer.Serialize(upgradedState, JsonOptions), DateTime.UtcNow);
+                        JsonSerializer.Serialize(upgradedState, JsonOptions), restartedAt);
                     await db.SaveChangesAsync(token);
                     if (startTransaction is not null) await startTransaction.CommitAsync(token);
                     return new StartExerciseSessionResponse(legacySession.Id, legacySession.ExerciseId, exerciseTypeName,
@@ -469,6 +471,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 studentId,
                 token);
             var now = DateTime.UtcNow;
+            state.LastActivityAt = now;
             var session = ExerciseSession.Start(
                 studentId,
                 request.ExerciseId,
@@ -540,6 +543,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (session.Status != OwnedExerciseSessionStatus.Active)
             throw new BusinessRuleException("ExerciseSession.NotActive", "Bu alıştırma artık açık değil. Lütfen yeniden başla.");
 
+        ObserveActivity(session, state, now);
         var actionName = request.Action?.Trim().ToLowerInvariant();
         var response = IsTargetHunt(state)
             ? ValidateTargetHunt(session, state, request, now)
@@ -783,6 +787,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 throw IncompleteSession("Kelime egzersizindeki bir kelime artık kullanılamıyor. Egzersizi yeniden başlatın.");
         }
 
+        ObserveActivity(session, state, now);
         session.Complete(now);
 
         if (state.ReadingPausedAt.HasValue)
@@ -795,13 +800,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.ReadingPausedAt = null;
         }
 
+        // Idle time beyond the cap is not study time; it is subtracted like paused time.
         var pausedReadingSeconds = state.ReadingStartTime.HasValue
-            ? state.ReadingPausedSeconds
-            : GetTimingPausedSeconds(session, state);
+            ? state.ReadingPausedSeconds + IdleSeconds(state.ReadingIdleExcessMilliseconds)
+            : GetTimingPausedSeconds(session, state) + IdleSeconds(state.IdleExcessMilliseconds);
         var timeSpent = IsTargetHunt(state) ? Math.Max(0, (int)Math.Round(state.TargetHuntElapsedMs / 1000d))
             : IsErrorAnalysis(state) ? Math.Max(0, (int)Math.Round(state.ErrorAnalysisElapsedMs / 1000d))
             : IsFocusExercise(state) && state.FocusStartTime.HasValue
-            ? Math.Max(0, (int)Math.Round(((now - state.FocusStartTime.Value).TotalMilliseconds - state.FocusPausedMilliseconds) / 1000d))
+            ? Math.Max(0, (int)Math.Round(((now - state.FocusStartTime.Value).TotalMilliseconds - state.FocusPausedMilliseconds
+                - state.FocusIdleExcessMilliseconds) / 1000d))
             : IsScanning(state) && state.ScanningElapsedMs.HasValue
             ? Math.Max(0, (int)Math.Round(state.ScanningElapsedMs.Value / 1000d))
             : SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
@@ -1283,6 +1290,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             throw new BusinessRuleException("ExerciseSession.ExamCannotPause", "Süreli paragraf testi duraklatılamaz.");
         if (!CanChangePause(session, OwnedExerciseSessionStatus.Paused))
             return;
+        ObserveActivity(session, state, now);
         session.Pause(now);
         if (IsFocusExercise(state) && state.FocusStartTime.HasValue)
             state.FocusPausedAt = now;
@@ -1373,6 +1381,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var state = DeserializeState(session.SessionDataJson);
         if (!CanChangePause(session, OwnedExerciseSessionStatus.Active))
             return;
+        ObserveActivity(session, state, now);
         session.Resume(now);
         if (state.FocusPausedAt.HasValue)
         {
@@ -2237,6 +2246,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
         }
         EnsureTimingStarted(session, state, now);
+        // Without an explicit start the reading phase is the whole timed session, idle time included.
+        if (!state.ReadingStartTime.HasValue)
+            state.ReadingIdleExcessMilliseconds = state.IdleExcessMilliseconds;
         state.ReadingStartTime ??= state.TimingStartedAt ?? now;
         if (!state.ReadingEndTime.HasValue)
         {
@@ -2279,7 +2291,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             now,
             state.ReadingStartTime,
             state.ReadingEndTime,
-            state.ReadingPausedSeconds);
+            state.ReadingPausedSeconds + IdleSeconds(state.ReadingIdleExcessMilliseconds));
         var wpm = CalculateReadingWpm(state, seconds);
         var message = wpm.HasValue
             ? "Okuma tamamlandı! Hızınız: " + wpm.Value + " WPM."
@@ -3369,6 +3381,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         state.TimingStartedAt = now.ToUniversalTime();
         state.TimingPausedSecondsBeforeStart = Math.Max(0, session.TotalPausedSeconds);
+        // Idle time before the session clock started lies outside the measured time.
+        state.IdleExcessMilliseconds = 0;
     }
 
     private static int GetTimingPausedSeconds(ExerciseSession session, SessionState state) =>
@@ -3388,7 +3402,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (state.ComprehensionMode == "learning" || !SupportsServerReadingMeasurement(state)) return null;
         var seconds = state.ReadingPausedMilliseconds.HasValue
             ? (decimal)Math.Max(0, (state.ReadingEndTime!.Value - state.ReadingStartTime!.Value).TotalMilliseconds
-                - state.ReadingPausedMilliseconds.Value) / 1000m
+                - state.ReadingPausedMilliseconds.Value - state.ReadingIdleExcessMilliseconds) / 1000m
             : fallbackSeconds;
         return SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(state.WordCount, seconds);
     }
@@ -4380,6 +4394,14 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public bool TimingStartsOnAction { get; set; }
         public DateTime? TimingStartedAt { get; set; }
         public int TimingPausedSecondsBeforeStart { get; set; }
+        /// <summary>The last exercise step, pause, resume or completion the server saw for this session.</summary>
+        public DateTime? LastActivityAt { get; set; }
+        /// <summary>Idle time beyond the cap since the session clock started; not counted as study time.</summary>
+        public long IdleExcessMilliseconds { get; set; }
+        /// <summary>The part of it that fell into the open reading phase; not counted in the reading time or speed.</summary>
+        public long ReadingIdleExcessMilliseconds { get; set; }
+        /// <summary>The part of it that fell into a running focus exercise.</summary>
+        public long FocusIdleExcessMilliseconds { get; set; }
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
         public bool ReadingIncomplete { get; set; }

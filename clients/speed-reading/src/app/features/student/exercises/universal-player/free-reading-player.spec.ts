@@ -37,6 +37,13 @@ describe('free reading player', () => {
     expect(player.getFreeReadingResultTimeMs()).toBe(30000);
     player.resultSaveStatus='preview'; expect(player.getFreeReadingResultTimeMs()).toBe(10000);
   });
+  it('leaves idle time beyond the server cap out of the shown reading time', () => {
+    const player=Object.create(ExercisePlayerComponent.prototype) as any;
+    player.resultSaveStatus='saved';
+    player.sessionResult={ detailedResults:{ readingStartTime:'2026-11-12T10:00:00Z',readingEndTime:'2026-11-12T10:20:00Z',
+      readingPausedMilliseconds:0,readingIdleExcessMilliseconds:900000 } };
+    expect(player.getFreeReadingResultTimeMs()).toBe(300000);
+  });
   it('routes completion, font size and scrolling to the free reading engine', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'free_reading', getFontSize: () => 'large', completeReading: jasmine.createSpy(), handleInput: jasmine.createSpy() };

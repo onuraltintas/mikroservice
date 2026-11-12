@@ -72,6 +72,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingPersonalDataExport, SpeedReadingPersonalDataExportService>();
         services.AddScoped<SpeedReadingFinancialRetentionProcessor>();
         services.AddScoped<SpeedReadingDataRetentionProcessor>();
+        services.AddScoped<SpeedReadingStaleSessionProcessor>();
         services.AddSingleton(TimeProvider.System);
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);

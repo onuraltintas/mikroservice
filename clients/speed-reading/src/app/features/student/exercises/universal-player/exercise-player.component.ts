@@ -473,6 +473,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private actionQueue: Promise<void> = Promise.resolve();
   isPauseTransitionPending = false;
   private restoredTachistoscopePaused = false;
+  /** The page was hidden while the exercise ran, so it paused itself; the student is told once on return. */
+  private autoPausedWhileHidden = false;
+  /** An automatic pause did not reach the server (offline, closing tab); it is reported before the resume. */
+  private autoPauseNotSynced = false;
   private readonly actionFailureState = createActionFailureState();
   questionSubmissionPending = false;
 
@@ -2046,7 +2050,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (this.hasEngineFinished()) return;
     if (this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer()) return;
     if (this.engine?.engineType === 'target_hunt' && (this.engine as TargetHuntEngine).isAwaitingServer()) return;
-    if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'target_hunt' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
+    if (this.usesServerPause()) {
       this.isPauseTransitionPending = true;
       const resuming = this.engineState.isPaused;
       if (!resuming) this.engine?.pause();
@@ -2056,9 +2060,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         await this.actionQueue;
         // The last pending action (e.g. scan_timeout) may have ended the attempt meanwhile.
         if (this.hasEngineFinished()) return;
+        if (resuming && this.autoPauseNotSynced) {
+          // The server never saw the automatic pause. Report it first, so that it closes the open round
+          // (a Takistoskop stimulus is not shown twice) exactly as a manual pause does.
+          await firstValueFrom(this.sessionService.pauseSession(this.sessionId!));
+          this.autoPauseNotSynced = false;
+        }
         await firstValueFrom(resuming
-          ? this.sessionService.resumeSession(this.sessionId)
-          : this.sessionService.pauseSession(this.sessionId));
+          ? this.sessionService.resumeSession(this.sessionId!)
+          : this.sessionService.pauseSession(this.sessionId!));
         if (resuming) this.engine?.resume();
       } catch (error) {
         this.engine?.stop();
@@ -2073,6 +2083,106 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.engine?.resume();
     } else {
       this.engine?.pause();
+    }
+  }
+
+  /** These engines keep their clock on the server, so a pause has to be reported there as well. */
+  private usesServerPause(): boolean {
+    return (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode()
+      || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'target_hunt'
+      || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion')
+      && !!this.sessionId && this.sessionId !== 'preview-mode';
+  }
+
+  /**
+   * Decision 12.11.2026: time away from the page is not study time. A running exercise pauses itself when its
+   * page is hidden (another tab, a minimised window, a locked phone) or is being closed. It never resumes by
+   * itself: the student finds it paused and continues with the usual button.
+   */
+  @HostListener('document:visibilitychange')
+  onVisibilityChange(): void {
+    if (document.visibilityState === 'hidden') {
+      void this.autoPauseForHiddenPage();
+      return;
+    }
+    if (!this.autoPausedWhileHidden) return;
+    this.autoPausedWhileHidden = false;
+    if (this.engineState?.isPaused && !this.hasEngineFinished()) {
+      this.showToast('Sekmeden ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
+      this.cdr.detectChanges();
+    }
+  }
+
+  @HostListener('window:pagehide')
+  onPageHide(): void {
+    void this.autoPauseForHiddenPage();
+  }
+
+  /**
+   * Only where the student could have paused by hand: the screen in front of them has a pause control.
+   * The timed paragraph test cannot be paused, an assessment is left to its own protocol, and the attention
+   * stream follows the server clock without a server pause. For those the server-side idle cap is the safeguard.
+   */
+  private canAutoPause(): boolean {
+    const engine = this.engine;
+    if (!engine || !this.engineState?.isRunning || this.engineState.isPaused || this.engineState.isCompleted) return false;
+    if (this.isPauseTransitionPending || this.isAssessmentMode || this.result || this.hasEngineFinished()) return false;
+    if (engine.state?.isCompleted || engine.state?.isPaused) return false;
+    switch (engine.engineType) {
+      case 'grid_interaction':
+      case 'motion_path':
+      case 'text_stream':
+      case 'text_fade':
+      case 'visual_expansion':
+      case 'scan_find':
+        return true;
+      case 'visualization':
+        return ['scene', 'questions'].includes(this.getVisualizationPhase());
+      case 'target_hunt':
+        return !(engine as TargetHuntEngine).isAwaitingServer();
+      case 'error_analysis':
+        return this.getErrorAnalysisPhase() === 'active' && !(engine as ErrorAnalysisEngine).isAwaitingServer();
+      case 'word_highlight':
+      case 'reading_comprehension':
+      case 'free_reading':
+      case 'adaptive_fluency':
+      case 'skimming':
+        return this.exercisePhase === 'reading';
+      case 'regression_reduction':
+        return this.getRegressionPhase() === 'reading';
+      case 'subvocalization_reduction':
+        return this.getSubvocPhase() === 'reading';
+      default:
+        // exam_simulation, focus, attention_training, vocabulary_builder and anything new.
+        return false;
+    }
+  }
+
+  /**
+   * The same steps as a manual pause, with one difference: when the pause cannot reach the server (offline, or
+   * the page is closing) the exercise stays paused instead of being stopped with an error. The server then
+   * counts at most five minutes for the time away, and the pause is reported before the exercise resumes.
+   */
+  private async autoPauseForHiddenPage(): Promise<void> {
+    if (!this.canAutoPause()) return;
+    this.autoPausedWhileHidden = true;
+    if (!this.usesServerPause()) {
+      this.engine?.pause();
+      return;
+    }
+    this.isPauseTransitionPending = true;
+    this.engine?.pause();
+    this.tachistoscopeAnswer = '';
+    this.tachistoscopeFeedback = null;
+    try {
+      await this.actionQueue;
+      if (this.hasEngineFinished()) return;
+      await firstValueFrom(this.sessionService.pauseSession(this.sessionId!));
+    } catch {
+      this.autoPauseNotSynced = true;
+    } finally {
+      this.isPauseTransitionPending = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -2108,6 +2218,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.expansionAnswers = [];
     this.sessionId = null;
     this.backendSessionConfig = null;
+    this.autoPausedWhileHidden = false;
+    this.autoPauseNotSynced = false;
 
     // Reset engine state
     this.engineState = {
@@ -3609,7 +3721,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       const details = this.sessionResult?.detailedResults;
       const start = Date.parse(details?.readingStartTime);
       const end = Date.parse(details?.readingEndTime);
-      const paused = Number(details?.readingPausedMilliseconds ?? (details?.readingPausedSeconds ?? 0) * 1000);
+      // Idle time beyond the server's five-minute cap is not reading time either.
+      const paused = Number(details?.readingPausedMilliseconds ?? (details?.readingPausedSeconds ?? 0) * 1000)
+        + Number(details?.readingIdleExcessMilliseconds ?? 0);
       return Number.isFinite(start) && Number.isFinite(end) && Number.isFinite(paused)
         ? Math.max(0, end - start - paused) : (this.sessionResult?.timeSpentSeconds ?? 0) * 1000;
     }
