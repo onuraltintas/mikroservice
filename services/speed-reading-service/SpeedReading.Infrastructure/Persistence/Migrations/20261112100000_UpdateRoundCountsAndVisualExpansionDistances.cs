@@ -47,14 +47,23 @@ public sealed class UpdateRoundCountsAndVisualExpansionDistances : Migration
     private static readonly string[] TargetPaths =
         ["{engineConfig,expansion,targetDegrees}", "{engineConfig,targetDegrees}", "{expansion,targetDegrees}", "{targetDegrees}"];
 
-    // Keys that override the round key, and distance aliases the player would prefer over the server's values.
-    private const string TachistoscopeRoundOverrides = "ARRAY['totalStimuli', 'totalWords']";
-    private const string VisualRoundOverrides = "ARRAY['totalSteps', 'itemCount']";
-    private const string DistanceAliases =
-        "ARRAY['VisualExpansionStartDegrees', 'visualExpansionStartDegrees', 'StartDegrees', "
-        + "'VisualExpansionTargetDegrees', 'visualExpansionTargetDegrees', 'TargetDegrees', "
-        + "'VisualExpansionCurrentDegrees', 'visualExpansionCurrentDegrees']";
-    private static readonly string[] DistanceAliasHolders = ["{}", "{engineConfig}", "{expansion}", "{engineConfig,expansion}"];
+    // The runtime matches keys case-insensitively (ReadProperty/ReadObject/ReadPositiveInt), so a setting is skipped
+    // when any object it is read from holds a key whose lower-case form is listed but which is not the exact
+    // camelCase key the migration writes (for example "EngineConfig", "Expansion", "StartDegrees"), or holds an
+    // override in any case (totalStimuli/totalWords, totalSteps/itemCount) or a player-read distance alias.
+    private static readonly (string[] Holders, string[] Keys, string[] Exact) TachistoscopeRoundKeys = (
+        ["{}", "{engineConfig}", "{engineConfig,content}"],
+        ["engineConfig", "content", "count", "totalStimuli", "totalWords"],
+        ["engineConfig", "content", "count"]);
+    private static readonly (string[] Holders, string[] Keys, string[] Exact) VisualRoundKeys = (
+        ["{}", "{engineConfig}"],
+        ["engineConfig", "rounds", "totalSteps", "itemCount"],
+        ["engineConfig", "rounds"]);
+    private static readonly (string[] Holders, string[] Keys, string[] Exact) DistanceKeys = (
+        ["{}", "{engineConfig}", "{expansion}", "{engineConfig,expansion}"],
+        ["engineConfig", "expansion", "startDegrees", "targetDegrees",
+            "visualExpansionStartDegrees", "visualExpansionTargetDegrees", "visualExpansionCurrentDegrees"],
+        ["engineConfig", "expansion", "startDegrees", "targetDegrees"]);
 
     protected override void Up(MigrationBuilder migrationBuilder) =>
         migrationBuilder.Sql(BuildSql(forward: true));
@@ -83,16 +92,16 @@ public sealed class UpdateRoundCountsAndVisualExpansionDistances : Migration
         var roundsGuard = $"""
             CASE x.type_name
                 WHEN 'Tachistoscope' THEN {AllEqual(TachistoscopeRoundPaths, "x.from_rounds")}
-                    AND {NoKeys(["{engineConfig}", "{}"], TachistoscopeRoundOverrides)}
+                    AND {NoKeyVariants(TachistoscopeRoundKeys)}
                 ELSE {AllEqual(VisualRoundPaths, "x.from_rounds")}
-                    AND {NoKeys(["{engineConfig}", "{}"], VisualRoundOverrides)}
+                    AND {NoKeyVariants(VisualRoundKeys)}
             END
             """;
         var distanceGuard = $"""
             x.type_name = 'VisualExpansion'
                 AND {AllEqual(StartPaths, "x.from_start")}
                 AND {AllEqual(TargetPaths, "x.from_target")}
-                AND {NoKeys(DistanceAliasHolders, DistanceAliases)}
+                AND {NoKeyVariants(DistanceKeys)}
             """;
         static string Paths(string[] paths) => "ARRAY[" + string.Join(", ", paths.Select(path => $"'{path}'")) + "]";
 
@@ -189,6 +198,14 @@ public sealed class UpdateRoundCountsAndVisualExpansionDistances : Migration
         $"COALESCE({string.Join(", ", paths.Select(path => $"x.cfg #> '{path}'"))}) = to_jsonb({expected})"
         + string.Concat(paths.Select(path => $" AND COALESCE(x.cfg #> '{path}', to_jsonb({expected})) = to_jsonb({expected})"));
 
-    private static string NoKeys(string[] holders, string keys) =>
-        string.Join(" AND ", holders.Select(holder => $"NOT COALESCE((x.cfg #> '{holder}') ?| {keys}, false)"));
+    private static string NoKeyVariants((string[] Holders, string[] Keys, string[] Exact) rule)
+    {
+        static string Array(IEnumerable<string> values) => "ARRAY[" + string.Join(", ", values.Select(value => $"'{value}'")) + "]::text[]";
+        var keys = Array(rule.Keys.Select(key => key.ToLowerInvariant()));
+        var exact = Array(rule.Exact);
+        return string.Join("\n                    AND ", rule.Holders.Select(holder =>
+            $"NOT EXISTS (SELECT 1 FROM jsonb_object_keys(CASE WHEN jsonb_typeof(x.cfg #> '{holder}') = 'object' "
+            + $"THEN x.cfg #> '{holder}' ELSE '{{}}'::jsonb END) AS k(name) "
+            + $"WHERE lower(k.name) = ANY({keys}) AND NOT k.name = ANY({exact}))"));
+    }
 }
