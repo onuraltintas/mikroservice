@@ -1,6 +1,10 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Shared.IntegrationTests.Fixtures;
 using SpeedReading.Application.Configuration;
 using SpeedReading.Domain.Catalog;
@@ -99,6 +103,83 @@ public sealed class StaleSessionCleanupPostgresTests(PostgresFixture postgres) :
         Assert.All(others, item => Assert.Equal(ExerciseSessionStatus.Abandoned, rows[item.Id].Status));
     }
 
+    [Fact]
+    public async Task The_open_session_index_is_created_and_removed_by_its_migration()
+    {
+        await Reset();
+        await using var db = Open();
+        var definition = await IndexDefinition(db);
+        Assert.NotNull(definition);
+        Assert.Contains("(start_time, id)", definition);
+        Assert.Contains("assessment_attempt_id IS NULL", definition);
+        Assert.Contains("status", definition);
+
+        var migrator = db.GetInfrastructure().GetRequiredService<IMigrator>();
+        await migrator.MigrateAsync("20261112120000_TachistoscopeWordsAndShorterDurations");
+        Assert.Null(await IndexDefinition(db));
+        await migrator.MigrateAsync();
+        Assert.NotNull(await IndexDefinition(db));
+        Assert.False(db.Database.HasPendingModelChanges());
+    }
+
+    [Fact]
+    public async Task The_clean_up_query_reads_the_open_session_index()
+    {
+        var exerciseId = await Reset();
+        var start = Now.AddDays(-30);
+        await using (var seed = Open())
+        {
+            // Mostly finished sessions, as in production; a few hundred are still open.
+            for (var index = 0; index < 6_000; index++)
+            {
+                var open = index % 20 == 0;
+                seed.ExerciseSessions.Add(Session(exerciseId,
+                    open ? (index % 40 == 0 ? ExerciseSessionStatus.Active : ExerciseSessionStatus.Paused) : ExerciseSessionStatus.Completed,
+                    start.AddMinutes(index), lastActivity: start.AddMinutes(index + 2),
+                    pausedAt: open && index % 40 != 0 ? start.AddMinutes(index + 2) : null,
+                    endTime: open ? null : start.AddMinutes(index + 3)));
+            }
+            await seed.SaveChangesAsync();
+            await seed.Database.ExecuteSqlRawAsync("ANALYZE speed_reading.exercise_sessions");
+        }
+
+        var capture = new CaptureSelect();
+        await using var db = Open(capture);
+        await using (var transaction = await db.Database.BeginTransactionAsync())
+        {
+            // Capture the worker's own statement, then undo what the run closed.
+            await Processor(db).RunAsync(CancellationToken.None);
+            await transaction.RollbackAsync();
+        }
+        Assert.NotNull(capture.Sql);
+        Assert.Contains("LIMIT", capture.Sql);
+
+        var connection = (NpgsqlConnection)db.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open) await connection.OpenAsync();
+        await using var explain = new NpgsqlCommand("EXPLAIN " + capture.Sql, connection);
+        foreach (var (name, value) in capture.Parameters)
+            explain.Parameters.AddWithValue(name, value);
+        var plan = new List<string>();
+        await using (var reader = await explain.ExecuteReaderAsync())
+            while (await reader.ReadAsync()) plan.Add(reader.GetString(0));
+        var text = string.Join(Environment.NewLine, plan);
+        Console.WriteLine("STALE-QUERY-SQL: " + capture.Sql.ReplaceLineEndings(" "));
+        Console.WriteLine("STALE-QUERY-PLAN:" + Environment.NewLine + text);
+
+        Assert.Contains("ix_exercise_sessions_open", text);
+        Assert.DoesNotContain("Seq Scan", text);
+        Assert.DoesNotContain("Sort", text);
+    }
+
+    private static async Task<string?> IndexDefinition(OwnedSpeedReadingDbContext db)
+    {
+        var connection = (NpgsqlConnection)db.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open) await connection.OpenAsync();
+        await using var command = new NpgsqlCommand(
+            "SELECT indexdef FROM pg_indexes WHERE schemaname = 'speed_reading' AND indexname = 'ix_exercise_sessions_open'", connection);
+        return (string?)await command.ExecuteScalarAsync();
+    }
+
     private async Task<Guid> Reset()
     {
         await using var db = Open();
@@ -113,7 +194,7 @@ public sealed class StaleSessionCleanupPostgresTests(PostgresFixture postgres) :
     }
 
     private static SpeedReadingStaleSessionProcessor Processor(OwnedSpeedReadingDbContext db) =>
-        new(db, new FixedClock(Now), new SpeedReadingServiceOptions());
+        new(db, new FixedClock(Now), new SpeedReadingServiceOptions()) { BatchDelay = TimeSpan.Zero };
 
     private static ExerciseSession Session(
         Guid exerciseId,
@@ -134,6 +215,25 @@ public sealed class StaleSessionCleanupPostgresTests(PostgresFixture postgres) :
     private sealed class FixedClock(DateTime now) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => new(now);
+    }
+
+    private sealed class CaptureSelect : DbCommandInterceptor
+    {
+        public string? Sql { get; private set; }
+        public List<(string Name, object Value)> Parameters { get; } = [];
+
+        public override ValueTask<InterceptionResult<System.Data.Common.DbDataReader>> ReaderExecutingAsync(
+            System.Data.Common.DbCommand command, CommandEventData eventData,
+            InterceptionResult<System.Data.Common.DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            if (Sql is null && command.CommandText.Contains("exercise_sessions") && command.CommandText.Contains("LIMIT"))
+            {
+                Sql = command.CommandText;
+                foreach (System.Data.Common.DbParameter parameter in command.Parameters)
+                    Parameters.Add((parameter.ParameterName, parameter.Value!));
+            }
+            return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+        }
     }
 
     private sealed class BeforeFirstSave(Func<Task> action) : SaveChangesInterceptor

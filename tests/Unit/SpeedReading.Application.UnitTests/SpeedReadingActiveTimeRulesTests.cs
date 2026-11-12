@@ -67,6 +67,16 @@ public sealed class SpeedReadingActiveTimeRulesTests
             .Should().Be(expected);
     }
 
+    [Theory]
+    [InlineData(0, 300)]
+    [InlineData(120, 300)]
+    [InlineData(400, 400)]
+    public void A_focus_stream_that_runs_by_itself_for_longer_than_the_cap_counts_in_full(int streamSeconds, int expected)
+    {
+        SpeedReadingActiveTimeRules.ResolveGapCapSeconds(false, 0, 0, 0, 0, focusStreamSeconds: streamSeconds)
+            .Should().Be(expected);
+    }
+
     [Fact]
     public void An_abandoned_active_session_ends_one_cap_after_its_last_activity()
     {

@@ -1,4 +1,5 @@
-import { of, throwError } from 'rxjs';
+import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
+import { NEVER, of, throwError } from 'rxjs';
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 /**
@@ -157,7 +158,7 @@ describe('auto-pause when the page is hidden', () => {
     expect(value.engineState.isPaused).toBeTrue();
     expect(value.engine.resume).not.toHaveBeenCalled();
     expect(value.sessionService.resumeSession).not.toHaveBeenCalled();
-    expect(value.showToast).toHaveBeenCalledOnceWith('Sekmeden ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
+    expect(value.showToast).toHaveBeenCalledOnceWith('Ekrandan ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
 
     value.onVisibilityChange();
     expect(value.showToast).toHaveBeenCalledTimes(1);
@@ -198,5 +199,107 @@ describe('auto-pause when the page is hidden', () => {
     await value.togglePause();
     await value.togglePause();
     expect(calls).toEqual(['pause', 'resume', 'pause', 'resume']);
+  });
+  it('reports a missed Takistoskop pause before resuming, so the round is presented again', async () => {
+    const value = player('text_stream');
+    const calls: string[] = [];
+    value.isTachistoscopeMode = () => true;
+    value.sessionService.pauseSession.and.returnValue(throwError(() => new Error('offline')));
+    value.onPageHide();
+    await settle();
+    expect(value.engineState.isPaused).toBeTrue();
+    expect(value.engine.stop).not.toHaveBeenCalled();
+
+    value.sessionService.pauseSession.and.callFake(() => { calls.push('pause'); return of({}); });
+    value.sessionService.resumeSession.and.callFake(() => { calls.push('resume'); return of({}); });
+    value.engine.resume.and.callFake(() => { calls.push('engine'); value.engineState = { ...value.engineState, isPaused: false }; });
+    await value.togglePause();
+
+    // The server pause discards the open presentation; only then does the engine ask for the next stimulus.
+    expect(calls).toEqual(['pause', 'resume', 'engine']);
+  });
+
+  it('does not stay in a pause transition when the pause request never settles', fakeAsync(() => {
+    const value = player();
+    value.sessionService.pauseSession.and.returnValue(NEVER);
+    value.onVisibilityChange();
+    flushMicrotasks();
+    expect(value.isPauseTransitionPending).toBeTrue();
+    expect(value.engineState.isPaused).toBeTrue();
+
+    tick(8000);
+    flushMicrotasks();
+
+    expect(value.isPauseTransitionPending).toBeFalse();
+    expect(value.engineState.isPaused).toBeTrue();
+    expect(value.engine.stop).not.toHaveBeenCalled();
+    expect(value.error).toBeNull();
+
+    const calls: string[] = [];
+    value.sessionService.pauseSession.and.callFake(() => { calls.push('pause'); return of({}); });
+    value.sessionService.resumeSession.and.callFake(() => { calls.push('resume'); return of({}); });
+    void value.togglePause();
+    flushMicrotasks();
+    expect(calls).toEqual(['pause', 'resume']);
+    expect(value.engineState.isPaused).toBeFalse();
+  }));
+
+  it('does not stay in a pause transition when a pending exercise step never settles', fakeAsync(() => {
+    const value = player();
+    value.actionQueue = new Promise<void>(() => undefined);
+    value.onVisibilityChange();
+    flushMicrotasks();
+    tick(8000);
+    flushMicrotasks();
+    expect(value.isPauseTransitionPending).toBeFalse();
+    expect(value.engineState.isPaused).toBeTrue();
+    expect(value.sessionService.pauseSession).not.toHaveBeenCalled();
+  }));
+
+  it('reconciles a page restored from the back-forward cache: paused, unblocked and explained', fakeAsync(() => {
+    visibility.and.returnValue('visible');
+    const value = player();
+    value.sessionService.pauseSession.and.returnValue(NEVER);
+    value.onPageHide();
+    flushMicrotasks();
+    expect(value.isPauseTransitionPending).toBeTrue();
+
+    value.onPageShow({ persisted: true } as PageTransitionEvent);
+
+    expect(value.isPauseTransitionPending).toBeFalse();
+    expect(value.engineState.isPaused).toBeTrue();
+    expect(value.showToast).toHaveBeenCalledOnceWith('Ekrandan ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
+
+    // The abandoned request must not disturb a later transition, and the toast is not repeated.
+    value.isPauseTransitionPending = true;
+    tick(8000);
+    flushMicrotasks();
+    expect(value.isPauseTransitionPending).toBeTrue();
+    value.isPauseTransitionPending = false;
+    value.onVisibilityChange();
+    expect(value.showToast).toHaveBeenCalledTimes(1);
+
+    const calls: string[] = [];
+    value.sessionService.pauseSession.and.callFake(() => { calls.push('pause'); return of({}); });
+    value.sessionService.resumeSession.and.callFake(() => { calls.push('resume'); return of({}); });
+    void value.togglePause();
+    flushMicrotasks();
+    expect(calls).toEqual(['pause', 'resume']);
+  }));
+
+  it('ignores an ordinary page load and a restore without an automatic pause', async () => {
+    visibility.and.returnValue('visible');
+    const value = player();
+    value.onPageShow({ persisted: false } as PageTransitionEvent);
+    value.onPageShow({ persisted: true } as PageTransitionEvent);
+    await settle();
+    expect(value.showToast).not.toHaveBeenCalled();
+    expect(value.engine.pause).not.toHaveBeenCalled();
+    expect(value.engineState.isPaused).toBeFalse();
+
+    const manual = player();
+    manual.isPauseTransitionPending = true; // a manual pause is in flight
+    manual.onPageShow({ persisted: true } as PageTransitionEvent);
+    expect(manual.isPauseTransitionPending).toBeTrue();
   });
 });

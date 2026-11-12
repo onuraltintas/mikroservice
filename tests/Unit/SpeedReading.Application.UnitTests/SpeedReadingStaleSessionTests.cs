@@ -130,6 +130,45 @@ public sealed class SpeedReadingStaleSessionTests
     }
 
     [Fact]
+    public async Task One_run_closes_a_limited_number_of_batches_and_the_next_run_continues()
+    {
+        await using var db = Context();
+        var perRun = SpeedReading.Infrastructure.SpeedReadingStaleSessionProcessor.BatchSize
+            * SpeedReading.Infrastructure.SpeedReadingStaleSessionProcessor.MaxBatchesPerRun;
+        perRun.Should().Be(2_000);
+        for (var index = 0; index < perRun + 50; index++)
+            db.ExerciseSessions.Add(Session(ExerciseSessionStatus.Active, Now.AddDays(-3).AddSeconds(index), lastActivity: Now.AddDays(-3).AddSeconds(index)));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        (await Processor(db).RunAsync(CancellationToken.None)).Should().Be(perRun);
+        (await db.ExerciseSessions.CountAsync(item => item.Status == ExerciseSessionStatus.Active)).Should().Be(50);
+        (await Processor(db).RunAsync(CancellationToken.None)).Should().Be(50);
+        (await Processor(db).RunAsync(CancellationToken.None)).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Batches_are_spaced_out()
+    {
+        await using var db = Context();
+        for (var index = 0; index < SpeedReading.Infrastructure.SpeedReadingStaleSessionProcessor.BatchSize * 2 + 1; index++)
+            db.ExerciseSessions.Add(Session(ExerciseSessionStatus.Active, Now.AddDays(-3), lastActivity: Now.AddDays(-3)));
+        await db.SaveChangesAsync();
+        var processor = new SpeedReading.Infrastructure.SpeedReadingStaleSessionProcessor(db, new FixedClock(Now), new SpeedReadingServiceOptions())
+        {
+            BatchDelay = TimeSpan.FromMilliseconds(150)
+        };
+        new SpeedReading.Infrastructure.SpeedReadingStaleSessionProcessor(db, new FixedClock(Now), new SpeedReadingServiceOptions())
+            .BatchDelay.Should().BeGreaterThan(TimeSpan.Zero);
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        await processor.RunAsync(CancellationToken.None);
+
+        // Three batches, two pauses between them.
+        watch.Elapsed.Should().BeGreaterThan(TimeSpan.FromMilliseconds(250));
+    }
+
+    [Fact]
     public async Task The_threshold_is_configurable()
     {
         await using var db = Context();
@@ -169,7 +208,7 @@ public sealed class SpeedReadingStaleSessionTests
     }
 
     private static SpeedReading.Infrastructure.SpeedReadingStaleSessionProcessor Processor(OwnedSpeedReadingDbContext db, int staleSessionHours = 24) =>
-        new(db, new FixedClock(Now), new SpeedReadingServiceOptions { StaleSessionHours = staleSessionHours });
+        new(db, new FixedClock(Now), new SpeedReadingServiceOptions { StaleSessionHours = staleSessionHours }) { BatchDelay = TimeSpan.Zero };
 
     private static ExerciseSession Session(
         ExerciseSessionStatus status,

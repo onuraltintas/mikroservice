@@ -249,6 +249,123 @@ public sealed class SpeedReadingActiveTimeSessionTests
         (await db.ExerciseSessions.SingleAsync()).Status.Should().Be(ExerciseSessionStatus.Timeout);
     }
 
+    [Fact]
+    public async Task A_focus_exercise_left_idle_counts_the_cap()
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var service = Service(db); var id = await StartFocus(db, service, user, totalSteps: 3);
+
+        (await service.ValidateActionAsync(user, id, new() { Action = "focus_start" })).IsValid.Should().BeTrue();
+        await Rewind(db, id, 1_000);
+        (await service.ValidateActionAsync(user, id, new() { Action = "complete" })).IsValid.Should().BeTrue();
+        var result = await service.CompleteAsync(user, id, new());
+
+        result.TimeSpentSeconds.Should().BeInRange(300, 301);
+        (await State(db, id))["focusIdleExcessMilliseconds"]!.GetValue<long>().Should().BeInRange(700_000, 701_000);
+    }
+
+    [Fact]
+    public async Task A_focus_exercise_within_the_cap_keeps_its_own_time()
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var service = Service(db); var id = await StartFocus(db, service, user, totalSteps: 3);
+
+        await service.ValidateActionAsync(user, id, new() { Action = "focus_start" });
+        await Rewind(db, id, 40);
+        (await service.ValidateActionAsync(user, id, new() { Action = "complete" })).IsValid.Should().BeTrue();
+
+        (await service.CompleteAsync(user, id, new())).TimeSpentSeconds.Should().BeInRange(40, 41);
+    }
+
+    [Fact]
+    public async Task The_focus_clock_stops_when_the_exercise_is_finished()
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var service = Service(db); var id = await StartFocus(db, service, user, totalSteps: 3);
+
+        await service.ValidateActionAsync(user, id, new() { Action = "focus_start" });
+        await Rewind(db, id, 4);
+        (await service.ValidateActionAsync(user, id, new() { Action = "complete" })).IsValid.Should().BeTrue();
+        // The result is saved two hours after the exercise ended.
+        await Rewind(db, id, 7_200);
+
+        (await service.CompleteAsync(user, id, new())).TimeSpentSeconds.Should().BeInRange(4, 5);
+    }
+
+    [Fact]
+    public async Task A_focus_stream_that_runs_longer_than_the_cap_without_taps_keeps_its_time()
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var service = Service(db); var id = await StartFocus(db, service, user, totalSteps: 400);
+
+        await service.ValidateActionAsync(user, id, new() { Action = "focus_start" });
+        await Rewind(db, id, 400);
+        (await service.ValidateActionAsync(user, id, new() { Action = "complete" })).IsValid.Should().BeTrue();
+
+        // 400 one-second stimuli: the run itself takes 400 seconds, with no step in between.
+        (await service.CompleteAsync(user, id, new())).TimeSpentSeconds.Should().BeInRange(400, 401);
+        (await State(db, id))["focusIdleExcessMilliseconds"]!.GetValue<long>().Should().Be(0);
+    }
+
+    [Fact]
+    public async Task A_session_from_before_this_change_is_capped_when_it_is_completed()
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var service = Service(db); var id = await StartTachistoscope(db, service, user);
+        for (var round = 0; round < 3; round++) await Round(db, service, user, id, round);
+
+        // Such a session has no activity point in its state; the row's last update is the fallback.
+        await Rewind(db, id, 7_200, legacy: true);
+        var result = await service.CompleteAsync(user, id, new()
+        {
+            CustomData = new() { ["score"] = JsonSerializer.SerializeToElement(100) }
+        });
+
+        result.TimeSpentSeconds.Should().BeInRange(306, 308);
+    }
+
+    [Fact]
+    public async Task A_session_from_before_this_change_is_capped_on_its_next_step()
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var service = Service(db); var id = await StartTachistoscope(db, service, user);
+        await Round(db, service, user, id, 0);
+        await Rewind(db, id, 7_200, legacy: true);
+        await Round(db, service, user, id, 1);
+        await Round(db, service, user, id, 2);
+
+        (await service.CompleteAsync(user, id, new())).TimeSpentSeconds.Should().BeInRange(306, 308);
+    }
+
+    [Fact]
+    public async Task A_pause_reported_after_the_stimulus_was_shown_gives_a_new_stimulus_on_resume()
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var service = Service(db); var id = await StartTachistoscope(db, service, user);
+
+        var shown = await service.ValidateActionAsync(user, id, new() { Action = "tachistoscope_present", Index = 0 });
+        // The automatic pause did not reach the server; the player reports it just before it resumes.
+        await service.PauseAsync(user, id);
+        await service.ResumeAsync(user, id);
+        var again = await service.ValidateActionAsync(user, id, new() { Action = "tachistoscope_present", Index = 0 });
+
+        again.IsValid.Should().BeTrue();
+        again.FeedbackData!.Value.GetProperty("round").GetInt32().Should().Be(0);
+        again.FeedbackData!.Value.GetProperty("stimulus").GetString()
+            .Should().NotBe(shown.FeedbackData!.Value.GetProperty("stimulus").GetString());
+    }
+
+    private static async Task<Guid> StartFocus(OwnedSpeedReadingDbContext db, ISpeedReadingExerciseSessions service, Guid user, int totalSteps)
+    {
+        var type = ExerciseType.Create(Guid.NewGuid(), "Focus", "Odaklanma", "focus");
+        var exercise = Exercise.Create("Odaklanma", "focus",
+            $$"""{"engineType":"focus","engineConfig":{"mode":"position","nLevel":1,"speedMs":1000,"totalSteps":{{totalSteps}},"gridSize":3}}""", 3, user, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
+        var started = await service.StartAsync(user, new() { ExerciseId = exercise.Id });
+        started.TotalSteps.Should().Be(totalSteps);
+        return started.SessionId;
+    }
+
     private static async Task<Guid> StartTachistoscope(OwnedSpeedReadingDbContext db, ISpeedReadingExerciseSessions service, Guid user)
     {
         var type = ExerciseType.Create(Guid.NewGuid(), "Tachistoscope", "Takistoskop", "text_stream");
@@ -274,13 +391,15 @@ public sealed class SpeedReadingActiveTimeSessionTests
     }
 
     /// <summary>Moves every clock of the open session back, as if that much time had passed since its last activity.</summary>
-    private static async Task Rewind(OwnedSpeedReadingDbContext db, Guid id, double seconds)
+    private static async Task Rewind(OwnedSpeedReadingDbContext db, Guid id, double seconds, bool legacy = false)
     {
         db.ChangeTracker.Clear();
         var session = await db.ExerciseSessions.SingleAsync(item => item.Id == id);
         var state = JsonNode.Parse(session.SessionDataJson)!.AsObject();
-        foreach (var key in new[] { "timingStartedAt", "lastActivityAt", "readingStartTime", "readingEndTime", "readingPausedAt" })
+        foreach (var key in new[] { "timingStartedAt", "lastActivityAt", "readingStartTime", "readingEndTime", "readingPausedAt",
+            "focusStartTime", "focusEndTime", "focusPresentedAt", "focusPausedAt" })
             Shift(state, key, seconds);
+        if (legacy) state.Remove("lastActivityAt");
         if (state["tachistoscope"] is JsonObject tachistoscope) Shift(tachistoscope, "presentedAt", seconds);
         session.SetState(state.ToJsonString(), session.CustomDataJson);
         foreach (var name in new[] { nameof(ExerciseSession.StartTime), nameof(ExerciseSession.PausedAt) })
@@ -288,6 +407,9 @@ public sealed class SpeedReadingActiveTimeSessionTests
             var property = typeof(ExerciseSession).GetProperty(name)!;
             if (property.GetValue(session) is DateTime value) property.SetValue(session, value.AddSeconds(-seconds));
         }
+        // SetState stamps the row; a session from before this change only has that stamp to go by.
+        if (legacy)
+            typeof(ExerciseSession).GetProperty(nameof(ExerciseSession.UpdatedAt))!.SetValue(session, DateTime.UtcNow.AddSeconds(-seconds));
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
     }
