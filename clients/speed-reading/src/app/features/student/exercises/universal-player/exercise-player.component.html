@@ -55,6 +55,9 @@
                     Süre dolarsa sorulara geçilir; çalışma eksik sayılır ve kayıtlı oturumda program/ödev ilerlemesi verilmez.
                     Soruları cevaplama süresi inceleme sınırına dahil değildir. Okuma hızı ölçülmez.
                 </p>
+                <p class="description tachistoscope-ready" *ngIf="isTachistoscopeMode()">
+                    {{ getTachistoscopeInstruction() }}
+                </p>
                 <p class="description scan-find-ready" *ngIf="engine.engineType === 'scan_find'">
                     {{ getScanReadyDescription() }}
                 </p>
@@ -127,7 +130,11 @@
                     <div class="detail-item">
                         <span class="label">Mod:</span>
                         <span class="value">{{ parsedConfig?.engineConfig?.['mode'] === 'rsvp' ? 'RSVP Hızlı Okuma' :
-                            'Takistostop' }}</span>
+                            'Takistoskop' }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="isTachistoscopeMode()">
+                        <span class="label">İçerik:</span>
+                        <span class="value">{{ getTachistoscopeContentLabel() }}</span>
                     </div>
 
                     <!-- Duration (if available) or Stimulus Count -->
@@ -403,11 +410,13 @@
 
             <!-- Answer Input Area -->
             <div *ngIf="isWaitingForAnswer()" class="answer-area">
-                <div class="answer-prompt">Ne gördünüz?</div>
+                <div class="answer-prompt">{{ getTachistoscopeAnswerPrompt() }}</div>
                 <div class="answer-input-wrapper">
                     <input type="text" class="answer-input" [(ngModel)]="tachistoscopeAnswer"
-                        (keydown.enter)="submitTachistoscopeAnswer()" placeholder="Gördüğünüzü yazın..." autofocus
-                        #answerInput autocomplete="off" autocorrect="off" spellcheck="false">
+                        (keydown.enter)="submitTachistoscopeAnswer()" [attr.placeholder]="getTachistoscopeAnswerPrompt() + '…'" autofocus
+                        #answerInput autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" lang="tr"
+                        enterkeyhint="send" [attr.inputmode]="getTachistoscopeInputMode()"
+                        [attr.aria-label]="getTachistoscopeAnswerPrompt()">
                     <button class="submit-btn" (click)="submitTachistoscopeAnswer()">
                         <span class="material-icons">send</span>
                     </button>

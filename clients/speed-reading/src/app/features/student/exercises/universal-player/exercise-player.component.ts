@@ -3342,6 +3342,35 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.cdr.detectChanges();
   }
 
+  /** number, letter, word or phrase: the server session's type when there is one, else the catalogue's. */
+  getTachistoscopeContentType(): 'number' | 'letter' | 'word' | 'phrase' {
+    return (this.engine as TextStreamEngine)?.getContentType?.() ?? 'number';
+  }
+
+  /** What the student types, in the accusative ("... yaz"). */
+  private getTachistoscopeAnswerNoun(): string {
+    return { number: 'sayıyı', letter: 'harfleri', word: 'kelimeyi', phrase: 'kelime grubunu' }[this.getTachistoscopeContentType()];
+  }
+
+  getTachistoscopeContentLabel(): string {
+    return { number: 'Sayı', letter: 'Harf', word: 'Kelime', phrase: 'Kelime grubu (iki kelime)' }[this.getTachistoscopeContentType()];
+  }
+
+  getTachistoscopeInstruction(): string {
+    const type = this.getTachistoscopeContentType();
+    const instruction = `Ekranda kısa süre görünen ${this.getTachistoscopeAnswerNoun()} yaz.`;
+    return type === 'word' || type === 'phrase' ? `${instruction} Büyük-küçük harf fark etmez.` : instruction;
+  }
+
+  getTachistoscopeAnswerPrompt(): string {
+    return `Gördüğün ${this.getTachistoscopeAnswerNoun()} yaz`;
+  }
+
+  /** Numeric keypad only for numbers; words and phrases need the full keyboard (Turkish letters, space). */
+  getTachistoscopeInputMode(): 'numeric' | 'text' {
+    return this.getTachistoscopeContentType() === 'number' ? 'numeric' : 'text';
+  }
+
   isTachistoscopeMode(): boolean {
     return this.engine?.engineType === 'text_stream'
       && (this.exercise?.exerciseTypeName?.toLowerCase() === 'tachistoscope'

@@ -114,6 +114,10 @@ export class TextStreamEngine implements BaseEngine {
     private initialTargetLength = 3;
     private minTargetLength = 1;
     private maxTargetLength = 12;
+    private serverContentType = '';
+    private phraseLengthRange = { min: 0, max: 0 };
+    /** Answers per adaptation block; mirrors TachistoscopeState.AdaptationBlockSize on the server. */
+    static readonly ADAPTATION_BLOCK_SIZE = 3;
 
     // Fallback word pools (used only if no backend data)
     private static readonly WORD_POOL = [
@@ -220,6 +224,11 @@ export class TextStreamEngine implements BaseEngine {
         const initialLength = this.config.content.type === 'letter' ? level
             : this.config.content.type === 'number' ? level + 2 : level * 2 + 1;
         this.targetLength = boundedInteger(content['length'], initialLength, 1, 100);
+        this.serverContentType = this.serverAuthoritative && typeof serverState['contentType'] === 'string'
+            ? String(serverState['contentType']).toLowerCase() : '';
+        const phraseMinimum = boundedInteger(adaptive['minlength'], this.targetLength, 1, 100);
+        this.phraseLengthRange = { min: phraseMinimum,
+            max: Math.max(phraseMinimum, boundedInteger(adaptive['maxlength'], this.targetLength, 1, 100)) };
         this.generateStimuli();
         const hasPool = this.contentPool.length > 0
             && (this.config.content.source === 'custom' || !['number', 'letter'].includes(this.config.content.type));
@@ -312,8 +321,49 @@ export class TextStreamEngine implements BaseEngine {
         }
         this.stimuli = this.stimuli.slice(0, count);
         this.contentPool = type === 'phrase'
-            ? TextStreamEngine.WORD_POOL.map((word, index) => word + ' ' + TextStreamEngine.WORD_POOL[(index + 1) % TextStreamEngine.WORD_POOL.length])
+            ? TextStreamEngine.buildPhrasePool(TextStreamEngine.WORD_POOL, this.phraseLengthRange.min, this.phraseLengthRange.max)
             : [...TextStreamEngine.WORD_POOL];
+    }
+
+    /**
+     * Random two-word phrases for the local preview, mirroring TachistoscopeContent.BuildPhrasePool on the
+     * server: words are paired at random (not with their list neighbour) and each length in the adaptive
+     * range gets its own share of pairs. Built once per run, so the pool stays the same during the preview.
+     */
+    static buildPhrasePool(words: readonly string[], minLength: number, maxLength: number, random: () => number = Math.random): string[] {
+        const distinct = [...new Set(words.map(word => word.trim()).filter(Boolean))].sort();
+        if (distinct.length < 2) return [];
+        const pick = (length: number) => Math.floor(random() * length);
+        const shuffled = [...distinct];
+        for (let index = shuffled.length - 1; index > 0; index--) {
+            const swap = pick(index + 1);
+            [shuffled[index], shuffled[swap]] = [shuffled[swap], shuffled[index]];
+        }
+        const phrases: string[] = [];
+        const seen = new Set<string>();
+        const add = (first: string, second: string) => {
+            if (first.toLocaleLowerCase('tr-TR') === second.toLocaleLowerCase('tr-TR')) return false;
+            const phrase = first + ' ' + second;
+            if (seen.has(phrase)) return false;
+            seen.add(phrase); phrases.push(phrase);
+            return true;
+        };
+        for (let index = 0; index < Math.min(300, shuffled.length); index++) add(shuffled[index], shuffled[(index + 1) % shuffled.length]);
+        const byLength = new Map<number, string[]>();
+        for (const word of shuffled) byLength.set(word.length, [...(byLength.get(word.length) ?? []), word]);
+        for (let length = Math.max(3, minLength); length <= maxLength; length++) {
+            const combinations = [...byLength.keys()].filter(first => byLength.has(length - 1 - first))
+                .sort((a, b) => a - b).map(first => [first, length - 1 - first]);
+            if (!combinations.length) continue;
+            let count = phrases.filter(phrase => phrase.length === length).length;
+            for (let attempt = 0; count < 24 && attempt < 24 * 20; attempt++) {
+                const [first, second] = combinations[pick(combinations.length)];
+                const firstWords = byLength.get(first)!;
+                const secondWords = byLength.get(second)!;
+                if (add(firstWords[pick(firstWords.length)], secondWords[pick(secondWords.length)])) count++;
+            }
+        }
+        return phrases;
     }
 
     private shuffleArray<T>(array: T[]): T[] {
@@ -712,7 +762,7 @@ export class TextStreamEngine implements BaseEngine {
         this.state.score = this.state.accuracy;
 
         // Adaptive speed adjustment
-        if (this.config.adaptive?.enabled && this.trials.length % 5 === 0) this.adjustSpeed();
+        if (this.config.adaptive?.enabled && !isPractice && this.trials.length % TextStreamEngine.ADAPTATION_BLOCK_SIZE === 0) this.adjustSpeed();
 
         this.isWaitingForAnswer = false;
 
@@ -730,24 +780,29 @@ export class TextStreamEngine implements BaseEngine {
     }
 
     /**
-     * Adaptive speed adjustment based on recent performance
+     * Same rule as TachistoscopeState.Record on the server (used for local previews only; server sessions
+     * take duration and length from the server): independent blocks of three answers, 3/3 correct shortens
+     * the display by 15 %, 2/3 keeps it, 0–1 lengthens it by 15 %. At a duration bound the length changes
+     * instead and the duration returns to its start, so one block never makes both harder.
      */
     private adjustSpeed(): void {
-        const recentTrials = this.trials.slice(-5);
-        const recentCorrect = recentTrials.filter(t => t.isCorrect).length;
+        const block = TextStreamEngine.ADAPTATION_BLOCK_SIZE;
+        const recentCorrect = this.trials.slice(-block).filter(t => t.isCorrect).length;
         const minDuration = this.config.adaptive?.minDurationMs || 50;
-        const maxDuration = this.config.adaptive?.maxDurationMs || 1000;
-        if (recentCorrect >= 4) {
+        const maxDuration = Math.max(minDuration, this.config.adaptive?.maxDurationMs || 1000);
+        if (recentCorrect === block) {
             if (this.currentDurationMs <= minDuration && this.targetLength < this.maxTargetLength) {
                 this.targetLength++;
                 this.currentDurationMs = Math.max(minDuration, Math.min(maxDuration, this.initialDurationMs));
-            } else this.currentDurationMs = Math.max(minDuration, Math.round(this.currentDurationMs * .9));
-        } else if (recentCorrect <= 2) {
+            } else this.currentDurationMs = Math.max(minDuration, Math.round(this.currentDurationMs * .85));
+        } else if (recentCorrect <= 1) {
             if (this.currentDurationMs >= maxDuration && this.targetLength > this.minTargetLength) {
                 this.targetLength--;
                 this.currentDurationMs = Math.max(minDuration, Math.min(maxDuration, this.initialDurationMs));
-            } else this.currentDurationMs = Math.min(maxDuration, Math.round(this.currentDurationMs * 1.1));
+            } else this.currentDurationMs = Math.min(maxDuration, Math.round(this.currentDurationMs * 1.15));
         }
+        this.currentDurationMs = Math.max(minDuration, Math.min(maxDuration, this.currentDurationMs));
+        this.targetLength = Math.max(Math.min(this.minTargetLength, this.maxTargetLength), Math.min(this.maxTargetLength, this.targetLength));
     }
 
     /**
@@ -837,6 +892,13 @@ export class TextStreamEngine implements BaseEngine {
 
     getFontSize(): string {
         return this.config.visuals?.fontSize || 'large';
+    }
+
+    /** Stimulus kind shown to the student: number, letter, word or phrase (assessments always use numbers). */
+    getContentType(): 'number' | 'letter' | 'word' | 'phrase' {
+        if (this.assessmentProtocol?.version === 2) return 'number';
+        const type = this.serverContentType || String(this.config.content?.type || 'word').toLowerCase();
+        return type === 'number' || type === 'letter' || type === 'phrase' ? type : 'word';
     }
 
     getMode(): string {

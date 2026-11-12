@@ -46,7 +46,9 @@ public sealed class StudentReadingPersistenceTests
                 new ExerciseActionRequest { Action = "tachistoscope_present", Index = round });
             var data = presentation.FeedbackData!.Value;
             Assert.True(presentation.IsValid);
-            Assert.Equal(round < 5 ? 500 : 450, data.GetProperty("displayDurationMs").GetInt32());
+            // Three-trial blocks: 3/3 correct (rounds 0-2) shortens by 15 %, the block resumed across the
+            // reload (rounds 3-5, 2/3 correct) keeps it, 0/3 (rounds 6-8) lengthens it; round 9 is an incomplete block.
+            Assert.Equal(round < 3 ? 500 : round < 9 ? 425 : 489, data.GetProperty("displayDurationMs").GetInt32());
             var stimulus = data.GetProperty("stimulus").GetString()!;
             Assert.Equal(3, stimulus.Length);
             var session = await context.ExerciseSessions.SingleAsync();
@@ -64,8 +66,10 @@ public sealed class StudentReadingPersistenceTests
         Assert.Null(result.RawWPM);
         var trials = result.DetailedResults.GetProperty("tachistoscope").GetProperty("trials");
         Assert.Equal(10, trials.GetArrayLength());
-        Assert.Equal(500, trials[4].GetProperty("displayDurationMs").GetInt32());
-        Assert.Equal(450, trials[5].GetProperty("displayDurationMs").GetInt32());
+        Assert.Equal(500, trials[2].GetProperty("displayDurationMs").GetInt32());
+        Assert.Equal(425, trials[3].GetProperty("displayDurationMs").GetInt32());
+        Assert.Equal(425, trials[8].GetProperty("displayDurationMs").GetInt32());
+        Assert.Equal(489, trials[9].GetProperty("displayDurationMs").GetInt32());
         Assert.Equal(1, await context.ExerciseSessionResults.CountAsync());
     }
     [Fact]

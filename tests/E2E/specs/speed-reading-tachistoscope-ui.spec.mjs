@@ -66,7 +66,7 @@ test(`adaptive child ${scenario.label} keeps digit count fixed and completes wit
     await page.clock.runFor(1);
     await expect(page.locator('.stimulus-display')).toHaveCount(0);
     await page.locator('.answer-input').fill(stimulus); await page.locator('.submit-btn').click();
-    if ((round + 1) % 5 === 0) duration = Math.max(75, Math.round(duration * .9));
+    if ((round + 1) % 3 === 0) duration = Math.max(75, Math.round(duration * .85)); // three-answer blocks, 3/3 correct
     if (round < scenario.rounds - 1) await page.clock.runFor(1050); // 750ms feedback + 300ms fixation.
   }
   await page.clock.runFor(600);
