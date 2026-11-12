@@ -11,6 +11,7 @@ import { ReviewService } from '../../../../services/review.service';
 import { ExercisePlayerComponent } from './exercise-player.component';
 import { EngineCallbacks } from './engines/base-engine.interface';
 import { TextStreamEngine } from './engines/text-stream.engine';
+import { TACHISTOSCOPE_COPY } from './tachistoscope-copy';
 
 const noop: EngineCallbacks = {
   onStart: () => undefined, onPause: () => undefined, onResume: () => undefined, onComplete: () => undefined,
@@ -71,6 +72,15 @@ describe('Tachistoscope copy and answer input per content type', () => {
       expect(input.getAttribute('placeholder')).toContain(prompt);
     });
   }
+
+  it('keeps every student-facing tachistoscope string in one copy module', () => {
+    for (const [type, instruction, prompt] of cases) {
+      const kind = type as 'number' | 'word' | 'phrase' | 'letter';
+      expect(TACHISTOSCOPE_COPY.instruction(kind)).toContain(instruction);
+      expect(TACHISTOSCOPE_COPY.answerPrompt(kind)).toBe(prompt);
+    }
+    expect(TACHISTOSCOPE_COPY.contentLabel.phrase).toContain('Kelime grubu');
+  });
 
   it('takes the content type from the server session over the catalogue configuration', () => {
     const ready = render({ serverAuthoritative: true, content: { type: 'number', count: 3 },

@@ -106,10 +106,39 @@ public sealed class TachistoscopeWordsMigrationPostgresTests(PostgresFixture pos
         await Execute("UPDATE speed_reading.exercises SET configuration_json = configuration_json #- '{engineConfig,adaptive,minLength}' #- '{engineConfig,adaptive,maxLength}' WHERE id = @id", withoutBounds);
         var overridden = seeded.Single(item => item is { Age: 1, Level: 5, Normal: true }).Id;
         await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{engineConfig,displayDurationMs}', '600') WHERE id = @id", overridden);
-        var skipped = new[] { editedDuration, withoutBounds, overridden };
+        // The runtime reads keys case-insensitively, so any other spelling of a changed or overriding key,
+        // a duration override in any case and custom content (any case) keep the row out of the migration.
+        var variants = new[]
+        {
+            "jsonb_set(configuration_json, '{engineConfig,DisplayDurationMs}', '1300')",
+            "jsonb_set(configuration_json, '{engineConfig,IntervalMs}', '1300')",
+            "jsonb_set(configuration_json, '{engineConfig,timing,displayDurationMs}', '1300')",
+            "jsonb_set(configuration_json, '{engineConfig,Content}', configuration_json #> '{engineConfig,content}')",
+            "jsonb_set(configuration_json, '{engineConfig,timing,DurationMs}', '1300')",
+            "jsonb_set(configuration_json, '{engineConfig,adaptive,MaxLength}', '5')",
+            "jsonb_set(configuration_json, '{engineConfig,content,Type}', '\"number\"')",
+            "jsonb_set(configuration_json, '{engineConfig,content,source}', '\"custom\"')",
+            "jsonb_set(configuration_json, '{engineConfig,content,Items}', '[\"1234\"]')",
+            "jsonb_set(configuration_json, '{engineConfig,Words}', '[\"kalem\"]')",
+            "jsonb_set(configuration_json, '{engineConfig,stimuli}', '[\"1234\"]')",
+            "configuration_json || '{\"EngineConfig\":{}}'",
+            "configuration_json || '{\"Timing\":{\"durationMs\":1300}}'"
+        };
+        var variantIds = new List<Guid>();
+        foreach (var variant in variants)
+        {
+            var exercise = Exercise.Create("Kısa Gösterimde Tanıma", "Tachistoscope", Config(Old[0][2], AgeGroups[0], 30, 3), 3, actor,
+                type.Id, targetAgeGroupId: ageIds[0]);
+            db.Exercises.Add(exercise);
+            await db.SaveChangesAsync();
+            await Execute($"UPDATE speed_reading.exercises SET configuration_json = {variant} WHERE id = @id", exercise.Id);
+            seeded.Add(new(exercise.Id, 0, 3, true));
+            variantIds.Add(exercise.Id);
+        }
+        var skipped = new[] { editedDuration, withoutBounds, overridden }.Concat(variantIds).ToArray();
 
         var before = await Snapshot();
-        Assert.Equal(25, before.Count);
+        Assert.Equal(25 + variants.Length, before.Count);
 
         await db.Database.GetService<IMigrator>().MigrateAsync(Target);
         var afterUp = await Snapshot();

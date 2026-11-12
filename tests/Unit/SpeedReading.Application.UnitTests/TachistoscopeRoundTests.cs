@@ -91,4 +91,30 @@ public sealed class TachistoscopeRoundTests
         var state = new TachistoscopeState { TargetLength = 4, LastStimulus = "masa", Pool = ["bir", "masa", "kapı", "kalem"] };
         state.SelectStimulus().Should().Be("kapı");
     }
+
+    [Theory]
+    [InlineData("kâğıt", "kağıt")]
+    [InlineData("KÂĞIT", "kağıt")]
+    [InlineData("kağıt", "kâğıt")]
+    [InlineData("hâlâ", "hala")]
+    [InlineData("millî", "milli")]
+    [InlineData("Îlan", "ilan")]
+    [InlineData("mahkûm", "mahkum")]
+    [InlineData("ÛMİT", "umit")]
+    [InlineData("kâğıt  kalem", "kağıt kalem")]
+    public void Circumflex_letters_match_their_plain_form(string stimulus, string answer)
+    {
+        var state = new TachistoscopeState { AdaptiveEnabled = false };
+        state.Record(stimulus, answer, 100).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("kağıt", "kagıt")]
+    [InlineData("ılık", "ilik")]
+    [InlineData("kâğıt", "kâğit")]
+    public void Other_letters_still_have_to_match_exactly(string stimulus, string answer)
+    {
+        var state = new TachistoscopeState { AdaptiveEnabled = false };
+        state.Record(stimulus, answer, 100).Should().BeFalse();
+    }
 }

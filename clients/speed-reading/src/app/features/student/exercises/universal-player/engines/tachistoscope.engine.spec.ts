@@ -130,6 +130,20 @@ describe('Tachistoscope runtime', () => {
     expect(engine.getContentType()).toBe('phrase');
     engine.destroy();
   });
+  for (const [stimulus, answer, correct] of [['kâğıt', 'kağıt', true], ['kâğıt', 'KAĞIT', true], ['hâlâ', 'hala', true],
+    ['millî', 'milli', true], ['mahkûm', 'mahkum', true], ['Îlan', 'ilan', true], ['kağıt', 'kâğıt', true],
+    ['kağıt', 'kagıt', false], ['ılık', 'ilik', false]] as const) {
+    it(`treats "${answer}" as ${correct ? 'correct' : 'wrong'} for "${stimulus}" in a preview`, fakeAsync(() => {
+      const { engine } = create({ content: { type: 'word', source: 'custom', items: [stimulus], count: 1 } });
+      engine.start();
+      expect(engine.getCurrentStimulus()).toBe(stimulus);
+      tick(engine.getCurrentDuration());
+      engine.handleInput({ answer });
+      expect(engine.getLastTrialResult()?.isCorrect).toBe(correct);
+      tick(600);
+      engine.destroy();
+    }));
+  }
   it('reports the server content type of a word session', () => {
     const { engine } = create({ serverAuthoritative: true, content: { type: 'number' },
       tachistoscope: { count: 3, round: 0, contentType: 'word', displayDurationMs: 480 } });
