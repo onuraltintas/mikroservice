@@ -145,22 +145,26 @@ describe('Tachistoscope runtime', () => {
     }));
   }
   it('previews with everyday words only: none excluded, no acronyms, lengths 3–10 covered', () => {
+    // As TachistoscopeWordExclusions on the server: Turkish lower case, then dotless ı counts as i ("gif" = "GIF").
+    const fold = (word: string) => word.toLocaleLowerCase('tr-TR').replace(/ı/g, 'i');
     const excluded = ['Bej', 'Endişeli', 'Korkmuş', 'Kızgın', 'Mat', 'Çirkin', 'Abonelik', 'Adapte', 'Akor', 'Akım', 'Alegori',
       'Analog', 'Antivirüs', 'Arp', 'Banner', 'Beğeni', 'Blog', 'Bluetooth', 'Captcha', 'Diatonik', 'Dize', 'Domain', 'Dram',
       'Drone', 'Emoji', 'Epik', 'GIF', 'Global', 'Hashtag', 'Hikaye', 'Influencer', 'Kafiye', 'Kaos', 'Kaygı', 'Kriz', 'Laptop',
       'Link', 'Lirik', 'Lokal', 'Miraz', 'Mısra', 'Nazım', 'Nesir', 'Not', 'Ping', 'Podcast', 'Prestige', 'Redif', 'Reels',
       'Router', 'Sansür', 'Savaş', 'Scooter', 'Ses', 'Siber', 'Spam', 'Takipçi', 'Teşbih', 'Ton', 'Tweet', 'URL', 'USB',
-      'Uyak', 'Viral', 'VPN', 'WiFi', 'Wiki', 'Özçekim'].map(word => word.toLocaleLowerCase('tr-TR'));
+      'Uyak', 'Viral', 'VPN', 'WiFi', 'Wiki', 'Özçekim'].map(fold);
     // Abstract or technical terms the old preview list held; difficulty comes from time and length, not vocabulary.
     const unfamiliar = ['konsantrasyon', 'motivasyon', 'verimlilik', 'strateji', 'refleks', 'sinir', 'algı', 'kavram', 'paragraf', 'süreç'];
     const words: string[] = (TextStreamEngine as any).WORD_POOL;
     expect(excluded.length).toBe(68);
     for (const word of words) {
-      expect(excluded).not.toContain(word.toLocaleLowerCase('tr-TR'));
+      expect(excluded).not.toContain(fold(word));
       expect(unfamiliar).not.toContain(word);
       expect(word).toMatch(/^[a-zçğıöşü]+$/);
     }
-    for (let length = 3; length <= 10; length++) expect(words.some(word => word.length === length)).withContext(`length ${length}`).toBeTrue();
+    expect(new Set(words).size).toBe(words.length);
+    for (let length = 3; length <= 10; length++)
+      expect(words.filter(word => word.length === length).length).withContext(`length ${length}`).toBeGreaterThanOrEqual(5);
   });
   it('reports the server content type of a word session', () => {
     const { engine } = create({ serverAuthoritative: true, content: { type: 'number' },

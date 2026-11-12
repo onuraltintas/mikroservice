@@ -92,6 +92,15 @@ public sealed class TachistoscopeWordListTests
     [InlineData("iPhone", true)]
     [InlineData("TikTok", true)]
     [InlineData("YouTube", true)]
+    [InlineData("gif", true)]
+    [InlineData("Gif", true)]
+    [InlineData("influencer", true)]
+    [InlineData("İnfluencer", true)]
+    [InlineData("wifi", true)]
+    [InlineData("wıfı", true)]
+    [InlineData("vıral", true)]
+    [InlineData("kizgin", true)]
+    [InlineData("hikâye", false)]
     [InlineData("Kalem", false)]
     [InlineData("kalem", false)]
     [InlineData("İstanbul", false)]
@@ -107,5 +116,39 @@ public sealed class TachistoscopeWordListTests
         TachistoscopeWordExclusions.Words.Should().HaveCount(68);
         TachistoscopeWordExclusions.Words.Should().Contain(["Bej", "Hikaye", "Özçekim", "Savaş", "VPN"]);
         TachistoscopeWordExclusions.Words.Should().NotContain("Hikâye");
+    }
+
+    [Fact]
+    public void The_fallback_pool_holds_everyday_words_of_two_to_ten_letters()
+    {
+        var words = TachistoscopeContent.DefaultWords;
+        words.Should().OnlyHaveUniqueItems();
+        words.Should().OnlyContain(word => word.All(char.IsLetter) && word == word.ToLower(System.Globalization.CultureInfo.GetCultureInfo("tr-TR")));
+        words.Should().OnlyContain(word => !TachistoscopeWordExclusions.IsExcluded(word));
+        words.Should().NotContain(["motivasyon", "konsantrasyon", "verimlilik", "sürdürülebilirlik", "değerlendirme",
+            "odaklanma", "araştırma", "geliştirmek", "zihin", "anlam", "dikkat", "düşünce"]);
+        for (var length = 2; length <= 10; length++)
+            words.Count(word => word.Length == length).Should().BeGreaterThanOrEqualTo(3, $"length {length}");
+        words.Max(word => word.Length).Should().Be(10);
+    }
+
+    [Fact]
+    public async Task An_empty_vocabulary_falls_back_to_the_everyday_pool()
+    {
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var actor = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Tachistoscope", "Takistoskop", "text_stream");
+        var exercise = Exercise.Create("Kısa Gösterimde Tanıma", "Tachistoscope", Config("word", 6, 4, 8, 2), 5, actor, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+        await db.SaveChangesAsync();
+        var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(owned,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var started = await service.StartAsync(Guid.NewGuid(), new() { ExerciseId = exercise.Id });
+        var session = await db.ExerciseSessions.AsNoTracking().SingleAsync(item => item.Id == started.SessionId);
+        var state = JsonDocument.Parse(session.SessionDataJson).RootElement.GetProperty("tachistoscope");
+        state.GetProperty("source").GetString().Should().Be("default_pool");
+        state.GetProperty("pool").EnumerateArray().Select(item => item.GetString()!).Should().Equal(TachistoscopeContent.DefaultWords);
     }
 }
