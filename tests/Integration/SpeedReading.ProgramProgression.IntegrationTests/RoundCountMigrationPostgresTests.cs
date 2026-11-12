@@ -14,14 +14,16 @@ using SpeedReading.Infrastructure.Persistence;
 namespace SpeedReading.ProgramProgression.IntegrationTests;
 
 /// <summary>
-/// The November 2026 round-count data migration changes only the round key of the 40 normal
-/// Tachistoscope / VisualExpansion exercises, only when the row still holds the reviewed old value,
-/// and its Down restores the old values with the same guard.
+/// The November 2026 data migration sets the approved round counts of the 40 normal Tachistoscope /
+/// VisualExpansion exercises and the start/target distances of the 20 normal VisualExpansion exercises.
+/// Rounds and distances are guarded independently: each changes only while every location of it still
+/// holds the reviewed old value. Down restores the old values with the same guard.
 /// </summary>
 public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
 {
     private const string Previous = "20261029170000_ReadingSessionRejected";
-    private const string Target = "20261112100000_UpdateTachistoscopeAndVisualExpansionRoundCounts";
+    private const string Target = "20261112100000_UpdateRoundCountsAndVisualExpansionDistances";
+    private const string Actor = "system:rounds-distances-2026-11";
 
     private static readonly (string Name, int MinAge, int? MaxAge)[] AgeGroups =
         [("Çocuk", 9, 12), ("Genç", 13, 16), ("Genç Yetişkin", 17, 21), ("Yetişkin", 22, null)];
@@ -32,6 +34,13 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
         [[30, 35, 40, 45, 50], [35, 40, 45, 50, 55], [40, 45, 50, 55, 60], [45, 50, 55, 60, 65]];
     private static readonly int[][] NewRounds =
         [[15, 19, 23, 26, 30], [20, 24, 28, 31, 35], [20, 24, 28, 31, 35], [20, 25, 30, 35, 40]];
+    private const int OldStart = 8;
+    private static readonly int[][] OldTarget =
+        [[16, 18, 20, 22, 24], [18, 20, 22, 24, 26], [18, 20, 22, 24, 26], [18, 20, 22, 24, 26]];
+    private static readonly int[][] NewStart =
+        [[11, 14, 17, 20, 23], [11, 15, 19, 23, 27], [11, 15, 19, 23, 27], [11, 15, 19, 23, 27]];
+    private static readonly int[][] NewTarget =
+        [[21, 27, 33, 38, 44], [25, 32, 39, 45, 52], [25, 32, 39, 45, 52], [25, 33, 40, 48, 55]];
 
     private OwnedSpeedReadingDbContext Open() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseNpgsql(postgres.ConnectionString, builder => builder.MigrationsHistoryTable("__ef_migrations_history", "speed_reading"))
@@ -40,7 +49,7 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
     private sealed record Seeded(Guid Id, string Type, int Age, int Level, bool Normal);
 
     [Fact]
-    public async Task Up_changes_only_guarded_normal_rounds_and_down_restores_them()
+    public async Task Up_changes_only_guarded_rounds_and_distances_and_down_restores_them()
     {
         await using var db = Open();
         await db.Database.EnsureDeletedAsync();
@@ -67,10 +76,9 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
                 var t = Exercise.Create("Kısa Gösterimde Tanıma", "Tachistoscope",
                     TachistoscopeConfig(OldTachistoscope[age][level - 1], level), level, actor, tachistoscope.Id,
                     targetAgeGroupId: ageIds[age]);
-                // Production keeps the rounds at the root; the repository content pack keeps them in engineConfig.
                 var v = Exercise.Create("Çevredeki Harfler", "VisualExpansion",
-                    VisualConfig(OldVisualExpansion[age][level - 1], level, nested: age == 0), level, actor, visual.Id,
-                    targetAgeGroupId: ageIds[age]);
+                    VisualConfig(age, OldVisualExpansion[age][level - 1], OldStart, OldTarget[age][level - 1], level),
+                    level, actor, visual.Id, targetAgeGroupId: ageIds[age]);
                 db.Exercises.AddRange(t, v);
                 seeded.Add(new(t.Id, "Tachistoscope", age, level, true));
                 seeded.Add(new(v.Id, "VisualExpansion", age, level, true));
@@ -80,8 +88,8 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
                 1, actor, tachistoscope.Id, targetAgeGroupId: ageIds[age], isAssessmentOnly: true);
             // Two VisualExpansion assessments are recognised only by their protocol, two only by the flag.
             var vAssessment = Exercise.Create("Seviye Tespit", "VisualExpansion", age % 2 == 0
-                    ? $$$"""{"rounds":{{{OldVisualExpansion[age][0]}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","assessmentProtocol":{"version":2}},"difficultyLevel":1}"""
-                    : VisualConfig(OldVisualExpansion[age][0], 1, nested: false),
+                    ? $$$"""{"rounds":{{{OldVisualExpansion[age][0]}}},"startDegrees":8,"targetDegrees":{{{OldTarget[age][0]}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","assessmentProtocol":{"version":2}},"difficultyLevel":1}"""
+                    : VisualConfig(age, OldVisualExpansion[age][0], OldStart, OldTarget[age][0], 1),
                 1, actor, visual.Id, targetAgeGroupId: ageIds[age], isAssessmentOnly: age % 2 == 1);
             db.Exercises.AddRange(tAssessment, vAssessment);
             seeded.Add(new(tAssessment.Id, "Tachistoscope", age, 1, false));
@@ -93,9 +101,20 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
         db.Exercises.Add(deleted);
         await db.SaveChangesAsync();
 
-        // Production differs here: the adult level-2 VisualExpansion exercise no longer holds the reviewed value.
-        var unexpected = seeded.Single(item => item is { Type: "VisualExpansion", Age: 3, Level: 2, Normal: true }).Id;
-        await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{rounds}', '52') WHERE id = @id", unexpected);
+        Guid Normal(string type, int age, int level) =>
+            seeded.Single(item => item.Normal && item.Type == type && item.Age == age && item.Level == level).Id;
+        // Production may differ from the report. Each case keeps the other (independent) change.
+        var unexpectedRounds = Normal("VisualExpansion", 3, 2);   // rounds 52: distances still change
+        var unexpectedStart = Normal("VisualExpansion", 1, 3);    // start 9: rounds still change
+        var unexpectedAlias = Normal("VisualExpansion", 2, 4);    // an alias the player would read: rounds still change
+        var conflictingTarget = Normal("VisualExpansion", 3, 4);  // root and engineConfig targets differ
+        await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{rounds}', '52') WHERE id = @id", unexpectedRounds);
+        await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{startDegrees}', '9') WHERE id = @id", unexpectedStart);
+        await Execute("UPDATE speed_reading.exercises SET configuration_json = configuration_json || '{\"visualExpansionStartDegrees\":8}' WHERE id = @id", unexpectedAlias);
+        await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{engineConfig,targetDegrees}', '25') WHERE id = @id", conflictingTarget);
+        bool RoundsChange(Seeded item) => item.Normal && item.Id != unexpectedRounds;
+        bool DistancesChange(Seeded item) => item.Normal && item.Type == "VisualExpansion"
+            && item.Id != unexpectedStart && item.Id != unexpectedAlias && item.Id != conflictingTarget;
 
         var before = await Snapshot();
         Assert.Equal(49, before.Count);
@@ -105,31 +124,36 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
         foreach (var item in seeded)
         {
             var (config, version, updatedBy) = afterUp[item.Id];
-            if (!item.Normal || item.Id == unexpected)
+            var expected = Expected(before[item.Id].Config, item,
+                RoundsChange(item) ? NewRounds[item.Age][item.Level - 1] : null,
+                DistancesChange(item) ? (NewStart[item.Age][item.Level - 1], NewTarget[item.Age][item.Level - 1]) : null);
+            Assert.True(JsonNode.DeepEquals(expected, config), $"{item.Type} {item.Age}/{item.Level}: {config.ToJsonString()}");
+            if (!RoundsChange(item) && !DistancesChange(item))
             {
-                Assert.True(JsonNode.DeepEquals(before[item.Id].Config, config), $"{item.Type} {item.Age}/{item.Level} must not change");
                 Assert.Equal(before[item.Id].Version, version);
                 continue;
             }
-            Assert.True(JsonNode.DeepEquals(WithRounds(before[item.Id].Config, item, NewRounds[item.Age][item.Level - 1]), config),
-                $"{item.Type} {item.Age}/{item.Level}: {config.ToJsonString()}");
-            Assert.Equal(before[item.Id].Version + 1, version);
-            Assert.Equal("system:round-counts-2026-11", updatedBy);
+            Assert.Equal(before[item.Id].Version + 1, version); // once per row, even when both change
+            Assert.Equal(Actor, updatedBy);
         }
         Assert.True(JsonNode.DeepEquals(before[deleted.Id].Config, afterUp[deleted.Id].Config));
 
-        // New sessions use the new count for both engines.
+        // New sessions use the new count and distances.
         db.ChangeTracker.Clear();
         var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
         var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(owned,
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
         var student = Guid.NewGuid();
         var startedIds = new Dictionary<Guid, Guid>();
-        foreach (var item in seeded.Where(item => item.Normal && item.Id != unexpected))
+        foreach (var item in seeded.Where(item => item.Normal))
         {
             var started = await service.StartAsync(student, new() { ExerciseId = item.Id });
-            Assert.Equal(NewRounds[item.Age][item.Level - 1], started.TotalSteps);
             startedIds[item.Id] = started.SessionId;
+            if (RoundsChange(item)) Assert.Equal(NewRounds[item.Age][item.Level - 1], started.TotalSteps);
+            if (!DistancesChange(item)) continue;
+            Assert.Equal(NewStart[item.Age][item.Level - 1], started.InitialData.GetProperty("visualExpansionStartDegrees").GetInt32());
+            Assert.Equal(NewStart[item.Age][item.Level - 1], started.InitialData.GetProperty("visualExpansionCurrentDegrees").GetInt32());
+            Assert.Equal(NewTarget[item.Age][item.Level - 1], started.InitialData.GetProperty("visualExpansionTargetDegrees").GetInt32());
         }
 
         // Up is idempotent: a second run changes nothing, not even the audit columns.
@@ -141,39 +165,50 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
             Assert.Equal(row.Version, afterSecondUp[id].Version);
         }
 
-        // An admin edit after the release is not overwritten by Down.
-        var edited = seeded.Single(item => item is { Type: "Tachistoscope", Age: 0, Level: 1, Normal: true }).Id;
-        await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{engineConfig,content,count}', '99') WHERE id = @id", edited);
+        // Admin edits after the release are not overwritten by Down.
+        var editedCount = Normal("Tachistoscope", 0, 1);
+        var editedTarget = Normal("VisualExpansion", 0, 2);
+        await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{engineConfig,content,count}', '99') WHERE id = @id", editedCount);
+        await Execute("UPDATE speed_reading.exercises SET configuration_json = jsonb_set(configuration_json, '{engineConfig,targetDegrees}', '30') WHERE id = @id", editedTarget);
 
         await db.Database.GetService<IMigrator>().MigrateAsync(Previous);
         var afterDown = await Snapshot();
         foreach (var item in seeded)
         {
             var (config, version, updatedBy) = afterDown[item.Id];
-            if (item.Id == edited)
+            if (item.Id == editedCount)
             {
                 Assert.Equal(99, config["engineConfig"]!["content"]!["count"]!.GetValue<int>());
                 continue;
             }
-            Assert.True(JsonNode.DeepEquals(before[item.Id].Config, config), $"{item.Type} {item.Age}/{item.Level}: {config.ToJsonString()}");
-            if (!item.Normal || item.Id == unexpected)
+            var expected = item.Id == editedTarget
+                ? Expected(before[item.Id].Config, item, null, (NewStart[0][1], 30))
+                : before[item.Id].Config;
+            Assert.True(JsonNode.DeepEquals(expected, config), $"{item.Type} {item.Age}/{item.Level}: {config.ToJsonString()}");
+            if (!RoundsChange(item) && !DistancesChange(item))
             {
                 Assert.Equal(before[item.Id].Version, version);
                 continue;
             }
             Assert.Equal(before[item.Id].Version + 2, version);
-            Assert.Equal("system:round-counts-2026-11-rollback", updatedBy);
+            Assert.Equal(Actor + "-rollback", updatedBy);
         }
 
-        // Down is idempotent too, and sessions that already started keep their own step count.
+        // Down is idempotent too, and sessions that already started keep their own settings.
         await RunMigrationSql(db, up: false);
         var afterSecondDown = await Snapshot();
         foreach (var (id, row) in afterDown)
             Assert.Equal(row.Version, afterSecondDown[id].Version);
         db.ChangeTracker.Clear();
-        foreach (var item in seeded.Where(item => startedIds.ContainsKey(item.Id)))
+        foreach (var item in seeded.Where(item => RoundsChange(item)))
             Assert.Equal(NewRounds[item.Age][item.Level - 1],
                 (await db.ExerciseSessions.AsNoTracking().SingleAsync(session => session.Id == startedIds[item.Id])).TotalSteps);
+        foreach (var item in seeded.Where(item => DistancesChange(item)))
+        {
+            var state = JsonNode.Parse((await db.ExerciseSessions.AsNoTracking()
+                .SingleAsync(session => session.Id == startedIds[item.Id])).SessionDataJson)!;
+            Assert.Equal(NewTarget[item.Age][item.Level - 1], state["visualExpansionTargetDegrees"]!.GetValue<int>());
+        }
     }
 
     [Fact]
@@ -193,16 +228,32 @@ public sealed class RoundCountMigrationPostgresTests(PostgresFixture postgres) :
     private static string TachistoscopeConfig(int count, int level) =>
         $$$"""{"engineType":"text_stream","engineConfig":{"mode":"tachistoscope","content":{"type":"number","count":{{{count}}},"length":3},"timing":{"durationMs":1500,"intervalMs":750},"adaptive":{"enabled":true,"minLength":3,"maxLength":5,"minDurationMs":400,"maxDurationMs":2000}},"difficultyLevel":{{{level}}}}""";
 
-    private static string VisualConfig(int rounds, int level, bool nested) => nested
-        ? $$$"""{"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","rounds":{{{rounds}}},"displayDurationMs":1200,"startDegrees":8,"targetDegrees":16,"content":{"stimulusType":"letter"}},"difficultyLevel":{{{level}}}}"""
-        : $$$"""{"rounds":{{{rounds}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","displayDurationMs":1100,"startDegrees":8,"targetDegrees":18,"content":{"stimulusType":"letter"}},"difficultyLevel":{{{level}}}}""";
+    // Four shapes: the repository content pack (everything in engineConfig), the production report (everything
+    // at the root), rounds at the root with distances in engineConfig, and distances in both places.
+    private static string VisualConfig(int age, int rounds, int start, int target, int level) => age switch
+    {
+        0 => $$$"""{"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","rounds":{{{rounds}}},"displayDurationMs":1200,"startDegrees":{{{start}}},"targetDegrees":{{{target}}},"content":{"stimulusType":"letter"}},"difficultyLevel":{{{level}}}}""",
+        1 => $$$"""{"rounds":{{{rounds}}},"startDegrees":{{{start}}},"targetDegrees":{{{target}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","displayDurationMs":1100,"content":{"stimulusType":"letter"}},"difficultyLevel":{{{level}}}}""",
+        2 => $$$"""{"rounds":{{{rounds}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","displayDurationMs":1100,"startDegrees":{{{start}}},"targetDegrees":{{{target}}},"content":{"stimulusType":"letter"}},"difficultyLevel":{{{level}}}}""",
+        _ => $$$"""{"rounds":{{{rounds}}},"startDegrees":{{{start}}},"targetDegrees":{{{target}}},"engineType":"visual_expansion","engineConfig":{"mode":"horizontal","displayDurationMs":1100,"startDegrees":{{{start}}},"targetDegrees":{{{target}}},"content":{"stimulusType":"letter"}},"difficultyLevel":{{{level}}}}"""
+    };
 
-    private static JsonNode WithRounds(JsonNode original, Seeded item, int rounds)
+    private static JsonNode Expected(JsonNode original, Seeded item, int? rounds, (int Start, int Target)? distances)
     {
         var copy = original.DeepClone();
-        if (item.Type == "Tachistoscope") copy["engineConfig"]!["content"]!["count"] = rounds;
-        else if (item.Age == 0) copy["engineConfig"]!["rounds"] = rounds;
-        else copy["rounds"] = rounds;
+        var engine = copy["engineConfig"]!.AsObject();
+        if (rounds is { } count)
+        {
+            if (item.Type == "Tachistoscope") engine["content"]!["count"] = count;
+            if (copy.AsObject().ContainsKey("rounds")) copy["rounds"] = count;
+            if (engine.ContainsKey("rounds")) engine["rounds"] = count;
+        }
+        if (distances is { } d)
+            foreach (var holder in new[] { copy.AsObject(), engine })
+            {
+                if (holder.ContainsKey("startDegrees")) holder["startDegrees"] = d.Start;
+                if (holder.ContainsKey("targetDegrees")) holder["targetDegrees"] = d.Target;
+            }
         return copy;
     }
 
