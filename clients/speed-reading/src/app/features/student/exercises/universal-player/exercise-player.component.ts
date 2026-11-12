@@ -477,6 +477,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private autoPausedWhileHidden = false;
   /** An automatic pause did not reach the server (offline, closing tab); it is reported before the resume. */
   private autoPauseNotSynced = false;
+  /** The automatic pause that is waiting for the server; a request that was given up on no longer matches it. */
+  private autoPauseInFlight: object | null = null;
+  /** How long an automatic pause may wait for the server before the player stops waiting. */
+  private static readonly AUTO_PAUSE_SYNC_TIMEOUT_MS = 8000;
   private readonly actionFailureState = createActionFailureState();
   questionSubmissionPending = false;
 
@@ -2105,17 +2109,39 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       void this.autoPauseForHiddenPage();
       return;
     }
-    if (!this.autoPausedWhileHidden) return;
-    this.autoPausedWhileHidden = false;
-    if (this.engineState?.isPaused && !this.hasEngineFinished()) {
-      this.showToast('Sekmeden ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
-      this.cdr.detectChanges();
-    }
+    this.announceAutoPause();
   }
 
   @HostListener('window:pagehide')
   onPageHide(): void {
     void this.autoPauseForHiddenPage();
+  }
+
+  /**
+   * A page restored from the back-forward cache was frozen in between: a pause request that was in flight may
+   * never settle. Stop waiting for it, keep the exercise paused, and report the pause again before the resume
+   * (the server ignores a pause it already has).
+   */
+  @HostListener('window:pageshow', ['$event'])
+  onPageShow(event: PageTransitionEvent): void {
+    if (!event?.persisted) return;
+    if (this.isPauseTransitionPending) {
+      this.autoPauseInFlight = null;
+      this.isPauseTransitionPending = false;
+      if (this.engineState?.isPaused && this.usesServerPause()) this.autoPauseNotSynced = true;
+    }
+    this.announceAutoPause();
+    this.cdr.detectChanges();
+  }
+
+  /** Tells the student once, on return, why the exercise is paused. */
+  private announceAutoPause(): void {
+    if (!this.autoPausedWhileHidden) return;
+    this.autoPausedWhileHidden = false;
+    if (this.engineState?.isPaused && !this.hasEngineFinished()) {
+      this.showToast('Ekrandan ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
+      this.cdr.detectChanges();
+    }
   }
 
   /**
@@ -2170,20 +2196,39 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.engine?.pause();
       return;
     }
+    const attempt = this.autoPauseInFlight = {};
     this.isPauseTransitionPending = true;
     this.engine?.pause();
     this.tachistoscopeAnswer = '';
     this.tachistoscopeFeedback = null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      await this.actionQueue;
-      if (this.hasEngineFinished()) return;
-      await firstValueFrom(this.sessionService.pauseSession(this.sessionId!));
+      // A hidden or closing page may never get an answer (cancelled request, frozen page). The wait is bounded so
+      // that the pause and back buttons cannot stay blocked.
+      const synced = await Promise.race([
+        this.reportAutoPause(),
+        new Promise<'timeout'>(resolve => {
+          timer = setTimeout(() => resolve('timeout'), ExercisePlayerComponent.AUTO_PAUSE_SYNC_TIMEOUT_MS);
+        })
+      ]);
+      if (synced === 'timeout' && attempt === this.autoPauseInFlight) this.autoPauseNotSynced = true;
     } catch {
-      this.autoPauseNotSynced = true;
+      if (attempt === this.autoPauseInFlight) this.autoPauseNotSynced = true;
     } finally {
-      this.isPauseTransitionPending = false;
-      this.cdr.detectChanges();
+      if (timer !== undefined) clearTimeout(timer);
+      // Given up on meanwhile (page restored from the back-forward cache): leave the current state alone.
+      if (attempt === this.autoPauseInFlight) {
+        this.autoPauseInFlight = null;
+        this.isPauseTransitionPending = false;
+        this.cdr.detectChanges();
+      }
     }
+  }
+
+  private async reportAutoPause(): Promise<'synced'> {
+    await this.actionQueue;
+    if (!this.hasEngineFinished()) await firstValueFrom(this.sessionService.pauseSession(this.sessionId!));
+    return 'synced';
   }
 
   resetExercise(): void {
@@ -2220,6 +2265,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.backendSessionConfig = null;
     this.autoPausedWhileHidden = false;
     this.autoPauseNotSynced = false;
+    this.autoPauseInFlight = null;
 
     // Reset engine state
     this.engineState = {

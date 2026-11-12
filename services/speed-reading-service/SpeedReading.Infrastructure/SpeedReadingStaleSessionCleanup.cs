@@ -27,13 +27,22 @@ public sealed class SpeedReadingStaleSessionProcessor(
 {
     public const int BatchSize = 100;
 
+    /// <summary>One hourly run closes at most this many batches; a backlog is worked off over the next runs.</summary>
+    public const int MaxBatchesPerRun = 20;
+
+    /// <summary>A short rest between two batches, so a backlog does not load the database in one burst.</summary>
+    public TimeSpan BatchDelay { get; init; } = TimeSpan.FromMilliseconds(500);
+
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var cutoff = now.AddHours(-Math.Max(1, options.StaleSessionHours));
         var abandoned = 0;
-        while (!cancellationToken.IsCancellationRequested)
+        for (var round = 0; round < MaxBatchesPerRun && !cancellationToken.IsCancellationRequested; round++)
         {
+            if (round > 0 && BatchDelay > TimeSpan.Zero)
+                await Task.Delay(BatchDelay, cancellationToken);
+
             // updated_at is the row's concurrency token and changes with every save, so a row that was not
             // updated since the cut-off saw no activity since then. A closed session leaves this filter, so every
             // round reads the oldest sessions that are still open.
@@ -41,6 +50,7 @@ public sealed class SpeedReadingStaleSessionProcessor(
                 .Where(item => (item.Status == ExerciseSessionStatus.Active || item.Status == ExerciseSessionStatus.Paused)
                     && item.AssessmentAttemptId == null
                     && (item.UpdatedAt ?? item.StartTime) < cutoff)
+                // ix_exercise_sessions_open covers this filter and order: (start_time, id) over open, non-assessment rows.
                 .OrderBy(item => item.StartTime).ThenBy(item => item.Id)
                 .Take(BatchSize)
                 .ToListAsync(cancellationToken);

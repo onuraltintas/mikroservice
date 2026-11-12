@@ -1344,6 +1344,10 @@ public sealed class OwnedSpeedReadingDbContext(
                 .HasDatabaseName("ux_exercise_sessions_assessment_exercise")
                 .IsUnique()
                 .HasFilter("assessment_attempt_id IS NOT NULL");
+            // The hourly stale-session clean-up reads the oldest open, non-assessment sessions (1 Active, 2 Paused).
+            entity.HasIndex(item => new { item.StartTime, item.Id })
+                .HasDatabaseName("ix_exercise_sessions_open")
+                .HasFilter("status IN (1, 2) AND assessment_attempt_id IS NULL");
             entity.HasOne<Exercise>()
                 .WithMany()
                 .HasForeignKey(item => item.ExerciseId)

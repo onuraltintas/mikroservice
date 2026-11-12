@@ -586,6 +586,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             };
 
         PersistSessionAnswers(session);
+        StopFocusClock(state, now);
 
         // Start the server clock only after an action was understood. A wrong
         // grid attempt still counts as a real attempt and therefore starts it.
@@ -646,6 +647,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (request.IsAssessmentMode != isAssessmentSession)
             throw new BusinessRuleException("ExerciseSession.AssessmentModeMismatch", "Bu oturum değerlendirme türüyle uyuşmuyor. Lütfen sayfayı yenile.");
         var state = DeserializeState(session.SessionDataJson);
+        // A session from before the activity point existed falls back to the row's last update. Read it now:
+        // the steps below (custom data, answers) stamp the row before the activity is observed.
+        state.LastActivityAt ??= session.UpdatedAt ?? session.StartTime;
         var now = DateTime.UtcNow;
         if (IsTimedOut(session, state, now))
         {
@@ -807,8 +811,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var timeSpent = IsTargetHunt(state) ? Math.Max(0, (int)Math.Round(state.TargetHuntElapsedMs / 1000d))
             : IsErrorAnalysis(state) ? Math.Max(0, (int)Math.Round(state.ErrorAnalysisElapsedMs / 1000d))
             : IsFocusExercise(state) && state.FocusStartTime.HasValue
-            ? Math.Max(0, (int)Math.Round(((now - state.FocusStartTime.Value).TotalMilliseconds - state.FocusPausedMilliseconds
-                - state.FocusIdleExcessMilliseconds) / 1000d))
+            ? Math.Max(0, (int)Math.Round((((state.FocusEndTime ?? now) - state.FocusStartTime.Value).TotalMilliseconds
+                - state.FocusPausedMilliseconds - state.FocusIdleExcessMilliseconds) / 1000d))
             : IsScanning(state) && state.ScanningElapsedMs.HasValue
             ? Math.Max(0, (int)Math.Round(state.ScanningElapsedMs.Value / 1000d))
             : SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
@@ -1292,7 +1296,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             return;
         ObserveActivity(session, state, now);
         session.Pause(now);
-        if (IsFocusExercise(state) && state.FocusStartTime.HasValue)
+        if (IsFocusExercise(state) && IsFocusClockRunning(state))
             state.FocusPausedAt = now;
         if (state.Tachistoscope is { } tachistoscope)
         {
@@ -4402,6 +4406,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public long ReadingIdleExcessMilliseconds { get; set; }
         /// <summary>The part of it that fell into a running focus exercise.</summary>
         public long FocusIdleExcessMilliseconds { get; set; }
+        /// <summary>When the focus exercise was finished; its recorded time ends here.</summary>
+        public DateTime? FocusEndTime { get; set; }
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
         public bool ReadingIncomplete { get; set; }

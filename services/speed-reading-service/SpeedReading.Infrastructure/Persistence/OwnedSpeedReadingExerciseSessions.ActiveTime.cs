@@ -32,13 +32,27 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
                 state.IdleExcessMilliseconds += idle;
                 if (IsReadingPhaseOpen(state))
                     state.ReadingIdleExcessMilliseconds += idle;
-                if (state.FocusStartTime.HasValue && !state.FocusCompleted)
+                if (IsFocusClockRunning(state))
                     state.FocusIdleExcessMilliseconds += idle;
             }
         }
 
         if (!state.LastActivityAt.HasValue || state.LastActivityAt.Value < utcNow)
             state.LastActivityAt = utcNow;
+    }
+
+    /// <summary>The focus clock runs from focus_start until the exercise is finished (see StopFocusClock).</summary>
+    private static bool IsFocusClockRunning(SessionState state) =>
+        state.FocusStartTime.HasValue && !state.FocusEndTime.HasValue;
+
+    /// <summary>
+    /// The recorded focus time ends when the exercise is finished, not when its result is saved: the result may be
+    /// saved much later (a lost connection, a tab left on the last screen).
+    /// </summary>
+    private static void StopFocusClock(SessionState state, DateTime now)
+    {
+        if (state.FocusCompleted && IsFocusClockRunning(state))
+            state.FocusEndTime = now.ToUniversalTime();
     }
 
     private static bool IsReadingPhaseOpen(SessionState state) =>
@@ -50,7 +64,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
             Math.Max(state.WordCount, state.AdaptiveStageStartedAt.HasValue ? state.AdaptiveTransferWordCount : 0),
             state.ReadingMinimumMs,
             state.ReadingMaximumMs,
-            state.TrackingDurationSeconds);
+            state.TrackingDurationSeconds,
+            IsFocusExercise(state) && IsFocusClockRunning(state)
+                ? (int)Math.Ceiling(Math.Max(0L, (long)state.TotalSteps * state.FocusSpeedMs) / 1000d)
+                : 0);
 
     private static int IdleSeconds(long idleMilliseconds) =>
         (int)Math.Round(Math.Max(0, idleMilliseconds) / 1000d);

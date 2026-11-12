@@ -20,16 +20,18 @@ public static class SpeedReadingActiveTimeRules
     /// <summary>
     /// The cap for one stretch. It is never shorter than a single step may legitimately take: while a text is open,
     /// the configured reading limit, a paced display's own running time and the time a slow reader needs for the
-    /// text; for an eye-tracking run, its configured duration.
+    /// text; for an eye-tracking run, its configured duration; for a running focus stream, the time the stream
+    /// itself takes (it can be watched to the end without a single tap).
     /// </summary>
     public static int ResolveGapCapSeconds(
         bool readingPhaseOpen,
         int wordCount,
         int readingMinimumMs,
         int readingMaximumMs,
-        int trackingDurationSeconds)
+        int trackingDurationSeconds,
+        int focusStreamSeconds = 0)
     {
-        var cap = Math.Max(MaxActiveGapSeconds, trackingDurationSeconds);
+        var cap = Math.Max(MaxActiveGapSeconds, Math.Max(trackingDurationSeconds, focusStreamSeconds));
         if (!readingPhaseOpen)
             return cap;
 

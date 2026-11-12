@@ -122,8 +122,15 @@ public sealed class StaleSessionCleanupPostgresTests(PostgresFixture postgres) :
         Assert.False(db.Database.HasPendingModelChanges());
     }
 
-    [Fact]
-    public async Task The_clean_up_query_reads_the_open_session_index()
+    /// <summary>
+    /// With few open sessions (the normal state) the planner reads the small partial index and sorts those rows;
+    /// with a backlog it walks the index in (start_time, id) order and stops at the batch size, without a sort.
+    /// It never scans the whole table.
+    /// </summary>
+    [Theory]
+    [InlineData(20, false)]
+    [InlineData(2, true)]
+    public async Task The_clean_up_query_reads_the_open_session_index(int openEvery, bool backlog)
     {
         var exerciseId = await Reset();
         var start = Now.AddDays(-30);
@@ -132,11 +139,12 @@ public sealed class StaleSessionCleanupPostgresTests(PostgresFixture postgres) :
             // Mostly finished sessions, as in production; a few hundred are still open.
             for (var index = 0; index < 6_000; index++)
             {
-                var open = index % 20 == 0;
+                var open = index % openEvery == 0;
+                var paused = open && index % (openEvery * 2) != 0;
                 seed.ExerciseSessions.Add(Session(exerciseId,
-                    open ? (index % 40 == 0 ? ExerciseSessionStatus.Active : ExerciseSessionStatus.Paused) : ExerciseSessionStatus.Completed,
+                    !open ? ExerciseSessionStatus.Completed : paused ? ExerciseSessionStatus.Paused : ExerciseSessionStatus.Active,
                     start.AddMinutes(index), lastActivity: start.AddMinutes(index + 2),
-                    pausedAt: open && index % 40 != 0 ? start.AddMinutes(index + 2) : null,
+                    pausedAt: paused ? start.AddMinutes(index + 2) : null,
                     endTime: open ? null : start.AddMinutes(index + 3)));
             }
             await seed.SaveChangesAsync();
@@ -164,11 +172,15 @@ public sealed class StaleSessionCleanupPostgresTests(PostgresFixture postgres) :
             while (await reader.ReadAsync()) plan.Add(reader.GetString(0));
         var text = string.Join(Environment.NewLine, plan);
         Console.WriteLine("STALE-QUERY-SQL: " + capture.Sql.ReplaceLineEndings(" "));
-        Console.WriteLine("STALE-QUERY-PLAN:" + Environment.NewLine + text);
+        Console.WriteLine($"STALE-QUERY-PLAN (1 of {openEvery} sessions open):" + Environment.NewLine + text);
 
         Assert.Contains("ix_exercise_sessions_open", text);
         Assert.DoesNotContain("Seq Scan", text);
-        Assert.DoesNotContain("Sort", text);
+        if (backlog)
+        {
+            Assert.Contains("Index Scan using ix_exercise_sessions_open", text);
+            Assert.DoesNotContain("Sort", text);
+        }
     }
 
     private static async Task<string?> IndexDefinition(OwnedSpeedReadingDbContext db)

@@ -3360,6 +3360,10 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ux_exercise_sessions_assessment_exercise")
                         .HasFilter("assessment_attempt_id IS NOT NULL");
 
+                    b.HasIndex("StartTime", "Id")
+                        .HasDatabaseName("ix_exercise_sessions_open")
+                        .HasFilter("status IN (1, 2) AND assessment_attempt_id IS NULL");
+
                     b.HasIndex("StudentId", "Status");
 
                     b.HasIndex("StudentId", "ExerciseId", "Status");

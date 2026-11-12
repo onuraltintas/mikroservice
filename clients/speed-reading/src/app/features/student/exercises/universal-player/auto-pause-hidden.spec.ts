@@ -46,7 +46,7 @@ describe('auto-pause when the page is hidden', () => {
   }
 
   async function settle(): Promise<void> {
-    for (let turn = 0; turn < 5; turn++) await Promise.resolve();
+    for (let turn = 0; turn < 20; turn++) await Promise.resolve();
   }
 
   it('pauses a running, pausable exercise on the server and in the engine', async () => {
@@ -297,9 +297,15 @@ describe('auto-pause when the page is hidden', () => {
     expect(value.engine.pause).not.toHaveBeenCalled();
     expect(value.engineState.isPaused).toBeFalse();
 
+    // A manual pause that was in flight when the page was frozen is given up on in the same way.
     const manual = player();
-    manual.isPauseTransitionPending = true; // a manual pause is in flight
+    manual.isPauseTransitionPending = true;
+    manual.engineState = { ...manual.engineState, isPaused: true };
     manual.onPageShow({ persisted: true } as PageTransitionEvent);
-    expect(manual.isPauseTransitionPending).toBeTrue();
+    expect(manual.isPauseTransitionPending).toBeFalse();
+    expect(manual.showToast).not.toHaveBeenCalled();
+    await manual.togglePause();
+    expect(manual.sessionService.pauseSession).toHaveBeenCalledBefore(manual.sessionService.resumeSession);
+    expect(manual.engineState.isPaused).toBeFalse();
   });
 });
