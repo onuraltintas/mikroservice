@@ -7,9 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { finalize } from 'rxjs';
 import { PlatformLegalPagesService } from '../../../core/services/platform-legal-pages.service';
-import { SeoService } from '../../../core/services/seo.service';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
 import { FooterComponent } from '../../../shared/components/footer/footer';
+import { LegalPageSeo } from '../legal-page-seo';
 
 @Component({
     selector: 'app-cookies',
@@ -20,19 +20,21 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
 })
 export class CookiesComponent implements OnInit, OnDestroy {
     private readonly legalPages = inject(PlatformLegalPagesService);
-    private readonly seo = inject(SeoService);
+    private readonly legalSeo = inject(LegalPageSeo);
     currentDate = new Date();
     content: string = '';
     title = 'Çerez Politikası';
     loading = true;
     error = false;
     noDocument = true;
-    private previousCanonical: string | null = null;
+    private restoreSeo?: () => void;
 
     ngOnInit(): void {
-        // index.html ships the home page as the default canonical; this page is its own document.
-        this.previousCanonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
-        this.seo.setCanonicalUrl(`${window.location.origin}/legal/cookies`);
+        this.restoreSeo = this.legalSeo.apply({
+            path: '/legal/cookies',
+            heading: 'Çerez Politikası',
+            description: "Master Hızlı Okuma'da çerezlerin ve benzeri tarayıcı teknolojilerinin hangi amaçlarla kullanıldığını ve çerez tercihlerinin nasıl yönetilebileceğini açıklar."
+        });
         this.legalPages.getPage('cookies').pipe(finalize(() => this.loading = false)).subscribe({
             next: page => {
                 if (page?.isPublished && page.content?.trim()) {
@@ -48,8 +50,7 @@ export class CookiesComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        // Pages without their own canonical must not keep this page's URL after in-app navigation.
-        this.seo.setCanonicalUrl(this.previousCanonical || 'https://masterhizliokuma.com/');
+        this.restoreSeo?.();
     }
 
 }
