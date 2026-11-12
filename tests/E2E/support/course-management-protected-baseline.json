@@ -173,7 +173,7 @@
     "clients/speed-reading/public/icons/icon-72x72.png": "eaf1af0ed115345d558609b32d44b42e77c8380711667d1a7d013f09253abaf0",
     "clients/speed-reading/public/icons/icon-96x96.png": "69df10ee4742febf5a66c1639cd411a18c00b9516bf6261d95d55fcc7e22c16f",
     "clients/speed-reading/public/manifest.webmanifest": "31e44a22a9ae0be9efe96dbb0fc3b189a7e07941abcd9ecbacdc54a81696f640",
-    "clients/speed-reading/public/robots.txt": "49094d2e1c395f2571693a5f432d2b0a945e0e8e0745611bf049fd8328c6d26a",
+    "clients/speed-reading/public/robots.txt": "6ca6f1eed16671ef5fd7670cae65455fc7639cf73a41c2ce5cc1366faf41ab55",
     "clients/speed-reading/public/sitemap.xml": "7f8be7e07923742250981ed5015c2cbcee3e89db9e2ce80b527a447b476aeadb",
     "clients/speed-reading/sitemap-README.md": "f04cc3a4d1561e237ea2b4f3f005de62887dadec82feb133004f6a4f2cbb455b",
     "clients/speed-reading/src/app/app.config.ts": "e1755ba2a2615cec67a4c70882f378d698741e833f925857ca07b23ff5b54437",
@@ -405,18 +405,21 @@
     "clients/speed-reading/src/app/features/legacy-staff-redirect.component.ts": "2984d6462c4f13619fb91be34df44e9408d14bfb714dc2d3c37e4b60e01101a9",
     "clients/speed-reading/src/app/features/legal/cookies/cookies.component.html": "a9adcc57b3f8962710f04c8771f8dcf01349322482bfd483d84011725e34d5cc",
     "clients/speed-reading/src/app/features/legal/cookies/cookies.component.scss": "ad55c6cbbca920c9f756192677d5dd98db1215c697a8487af4ee5d21781f34c5",
-    "clients/speed-reading/src/app/features/legal/cookies/cookies.component.ts": "35d72025877d551f60790ec7c9fe0f4e1f6a071a78fad2f4efe7319f637fdea1",
+    "clients/speed-reading/src/app/features/legal/cookies/cookies.component.spec.ts": "39ce190284dedbc749a5309a3b03fd02b5a4afdc895e1eba6c17c06efc0f8403",
+    "clients/speed-reading/src/app/features/legal/cookies/cookies.component.ts": "68c8f3ed1d8d50f40bab7c37f290c5b7a8e9ef7c53a30901a813ce95dbd078a5",
     "clients/speed-reading/src/app/features/legal/kvkk/kvkk.component.html": "6db7ee72ed8cd254191f0e41aa90b83b993a973942c277162d54f89df575e45b",
     "clients/speed-reading/src/app/features/legal/kvkk/kvkk.component.scss": "76f1ced144a705aaf604ff6dff87753e3196cc53aebc54edad4083cc733d320e",
-    "clients/speed-reading/src/app/features/legal/kvkk/kvkk.component.ts": "e52d645c7345ea79a696ec65fa77bf5417bdfb1e5f020087393576d0ac42a89c",
+    "clients/speed-reading/src/app/features/legal/kvkk/kvkk.component.ts": "b5cfc402bb148be0fab21eb606a2e72312ac5c75e05bdb07c702caf42b4bf112",
+    "clients/speed-reading/src/app/features/legal/legal-page-seo.ts": "05e29e64158fa18d7e40b2935f6ff2737d684441019df8a24de8fedd6fd1e5bf",
+    "clients/speed-reading/src/app/features/legal/legal-pages-seo.spec.ts": "377722081c967df52d416736f2cac72dab9a9f1ed1c6f46debe208ef6601a9e9",
     "clients/speed-reading/src/app/features/legal/platform-legal-page.component.spec.ts": "1b5df3c619bf0ebf77c8b0514000de563bab246c3c39a15b56024ec14423e3d2",
     "clients/speed-reading/src/app/features/legal/platform-legal-page.component.ts": "430cd006048e2ff49ef72e2aad7441da693154d8e24b119781ecb3c7b2bb4382",
     "clients/speed-reading/src/app/features/legal/privacy/privacy.component.html": "b1fd7d6e66a0c7775020276daed340b1496a7a97365c834cd3fcefebe6c13ca8",
     "clients/speed-reading/src/app/features/legal/privacy/privacy.component.scss": "52b7d0e182451eadf7a14f989a3c3360050497d13a2fb077f22e2c6bbec0195e",
-    "clients/speed-reading/src/app/features/legal/privacy/privacy.component.ts": "02a895ab5c62daa23ed879e8c741985bb63a013df9936139ce20e0bcc185c739",
+    "clients/speed-reading/src/app/features/legal/privacy/privacy.component.ts": "6df9d8ea5e5f99f9fef3ab1dfec59ff76ee50912b7f90ad5acd5158447ca3935",
     "clients/speed-reading/src/app/features/legal/terms/terms.component.html": "7300a34913c8d71f883f95fbae27b509c6bff9d1335cbb84caffbbbc5cc0a2f7",
     "clients/speed-reading/src/app/features/legal/terms/terms.component.scss": "2346a42364ba64071efae7349338210cfd0c5d343ac1a02b06dadf125fd459d2",
-    "clients/speed-reading/src/app/features/legal/terms/terms.component.ts": "9c32061c8cb965271e098a8f6bcf5c63f253f8abb295ab5dbfc9b6afadec9b43",
+    "clients/speed-reading/src/app/features/legal/terms/terms.component.ts": "732ba00689fe71d901d5138593d90d7111f0fc917984cf005f0445fc81a1c580",
     "clients/speed-reading/src/app/features/newsletter/unsubscribe/unsubscribe.component.html": "462d403afc57447a5b47d825ac35e00fca163aedb61ee4d36bdd7b1d7ef7ab62",
     "clients/speed-reading/src/app/features/newsletter/unsubscribe/unsubscribe.component.ts": "1ab2806169b2b94c6d6e3e5d72d11b7619f151c3f2215fc7a65d708f1c0ccef9",
     "clients/speed-reading/src/app/features/notifications/notification-preferences.component.html": "60d18906ab685305913e865281a9a8d190ec82c3cd31e755bff0241f6c76211b",
@@ -2720,8 +2723,7 @@
   },
   "baselineCommit": "07db9772",
   "snapshotContext": {
-    "updatedAt": "2026-10-26",
-    "purpose": "H6 review fixes",
+    "purpose": "the legal pages SEO merged with H6",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2769,7 +2771,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "a831282f",
+    "previousBaselineCommit": "98d9b92d",
     "removedSincePreviousBaseline": []
   }
 }
