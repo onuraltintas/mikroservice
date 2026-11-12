@@ -3268,12 +3268,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
         else if (type is "word" or "phrase")
         {
+            // content.maxVocabularyLevel keeps the pool to everyday words whatever the exercise level:
+            // difficulty comes from display time and length, not from vocabulary difficulty.
+            var vocabularyLevel = Math.Min(level, Math.Clamp(ReadPositiveInt(content, "maxVocabularyLevel") ?? level, 1, 5));
             var words = await db.VocabularyItems.AsNoTracking()
-                .Where(item => !item.IsDeleted && item.DifficultyLevel <= level
+                .Where(item => !item.IsDeleted && item.DifficultyLevel <= vocabularyLevel
                     && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId))
                 .OrderBy(item => item.Word).Select(item => item.Word).Take(MaxTachistoscopeVocabulary).ToListAsync(cancellationToken);
             state.Pool = words.Select(word => word.Trim()).Where(word => word.Length is >= 2 and <= 20
-                && word.All(char.IsLetter)).Distinct().ToArray();
+                && word.All(char.IsLetter) && !TachistoscopeWordExclusions.IsExcluded(word)).Distinct().ToArray();
             state.Source = state.Pool.Length > 0 ? "vocabulary_items" : "default_pool";
             if (state.Pool.Length == 0)
                 state.Pool = ["su", "ev", "bir", "göz", "yol", "masa", "kapı", "okul", "ağaç", "kitap", "kalem", "zihin",

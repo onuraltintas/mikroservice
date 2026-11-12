@@ -17,6 +17,29 @@ süre sınırları (`minDurationMs`/`maxDurationMs`) değişmez.
 
 Uzunluk harf sayısıdır; kelime grubunda aradaki boşluk da sayılır.
 
+## Takistoskop kelime listesi (günlük kelimeler)
+
+Takistoskop tanıdık kelimelerin hızlı tanınmasını çalıştırır; zorluk kelimenin zorluğundan değil,
+gösterim süresinden ve uzunluktan gelir. Bu yüzden kelime ve kelime grubu havuzları:
+
+- egzersiz seviyesi 3, 4 veya 5 olsa da yalnız **seviye 1–2** kelimelerini kullanır
+  (`engineConfig.content.maxVocabularyLevel = 2`; geçiş bu anahtarı yalnız 12 kelime/kelime grubu
+  satırına yazar, sayı satırlarına yazmaz, geri alma adımı siler; değer 1–5 arası tam sayı olmalıdır,
+  anahtar yoksa eski davranış sürer: seviye ≤ egzersiz seviyesi);
+- yalnız Takistoskop için tanımlı 68 kelimelik dışlama listesini (`TachistoscopeWordExclusions`)
+  kelimelerde ve kelime grubu parçalarında uygular: Bej, Endişeli, Korkmuş, Kızgın, Mat, Çirkin, Abonelik,
+  Adapte, Akor, Akım, Alegori, Analog, Antivirüs, Arp, Banner, Beğeni, Blog, Bluetooth, Captcha, Diatonik,
+  Dize, Domain, Dram, Drone, Emoji, Epik, GIF, Global, Hashtag, Hikaye, Influencer, Kafiye, Kaos, Kaygı,
+  Kriz, Laptop, Link, Lirik, Lokal, Miraz, Mısra, Nazım, Nesir, Not, Ping, Podcast, Prestige, Redif, Reels,
+  Router, Sansür, Savaş, Scooter, Ses, Siber, Spam, Takipçi, Teşbih, Ton, Tweet, URL, USB, Uyak, Viral,
+  VPN, WiFi, Wiki, Özçekim. Karşılaştırma Türkçe küçük harfle ve bütün kelimeyle yapılır; düzeltme işareti
+  korunur, yani "Hikaye" dışlanır, "Hikâye" kalır;
+- ilk harften sonra büyük harf içeren her kelimeyi (kısaltmalar, karışık yazımlı marka adları) dışlar.
+
+Kelime Hazinesi bu kuraldan etkilenmez. Canlı havuzda 1161 farklı harf-yalnız kelimenin 614'ü kalır
+(uzunluğa göre 2:5, 3:20, 4:61, 5:154, 6:119, 7:95, 8:79, 9:44, 10:25, 11:7, 12:4, 13:1); tüm kelime
+aralıkları (3–10) karşılanır. Personel önizlemesi uygulamadaki gündelik kelime listesini kullanır.
+
 ## Başlangıç uzunluğu / başlangıç gösterim süresi (ms) — eski → yeni
 
 | Yaş grubu | Seviye 1 | Seviye 2 | Seviye 3 | Seviye 4 | Seviye 5 |

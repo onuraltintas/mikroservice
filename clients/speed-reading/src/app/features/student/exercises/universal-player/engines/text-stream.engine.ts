@@ -119,16 +119,18 @@ export class TextStreamEngine implements BaseEngine {
     /** Answers per adaptation block; mirrors TachistoscopeState.AdaptationBlockSize on the server. */
     static readonly ADAPTATION_BLOCK_SIZE = 3;
 
-    // Fallback word pools (used only if no backend data)
+    // Fallback word pool for the local staff preview (no backend data). Everyday words only, as on the server
+    // (vocabulary levels 1–2 without TachistoscopeWordExclusions): Takistoskop measures quick recognition of
+    // familiar words; difficulty comes from display time and length. Lengths 2–10 cover the phrase ranges.
     private static readonly WORD_POOL = [
-        'kitap', 'okuma', 'hızlı', 'anlama', 'öğrenme', 'bilgi', 'düşünce', 'kavram',
-        'metin', 'sayfa', 'kelime', 'cümle', 'paragraf', 'başlık', 'içerik', 'anlam',
-        'zihin', 'beyin', 'hafıza', 'dikkat', 'odaklanma', 'konsantrasyon', 'pratik',
-        'gelişim', 'ilerleme', 'başarı', 'hedef', 'motivasyon', 'azim', 'çalışma',
-        'zaman', 'hız', 'verimlilik', 'teknik', 'yöntem', 'strateji', 'plan', 'sistem',
-        'görsel', 'algı', 'tepki', 'refleks', 'sinir', 'bağlantı', 'işlem', 'süreç',
-        'kalem', 'defter', 'masa', 'sandalye', 'pencere', 'kapı', 'duvar', 'tavan',
-        'elma', 'armut', 'portakal', 'muz', 'çilek', 'kiraz', 'üzüm', 'erik'
+        'ev', 'su', 'el', 'ay', 'göz', 'yol', 'kuş', 'süt', 'top', 'kar', 'gül', 'bal', 'saç',
+        'masa', 'kapı', 'okul', 'elma', 'kedi', 'oyun', 'gemi', 'uçak', 'inek', 'tren', 'üzüm',
+        'kalem', 'kitap', 'deniz', 'ekmek', 'araba', 'bulut', 'güneş', 'orman', 'armut', 'kiraz', 'çilek', 'limon',
+        'bahçe', 'çiçek', 'sokak', 'komşu', 'pazar', 'balık', 'tavuk', 'koyun', 'köprü',
+        'yağmur', 'defter', 'tavşan', 'mutfak', 'yastık', 'karpuz', 'kardeş',
+        'pencere', 'kelebek', 'arkadaş', 'domates', 'patates', 'çamaşır', 'şemsiye',
+        'sandalye', 'portakal', 'öğretmen', 'bisiklet', 'salıncak', 'kahvaltı', 'ayakkabı',
+        'battaniye', 'buzdolabı', 'televizyon'
     ];
 
     private static readonly NUMBER_POOL = [

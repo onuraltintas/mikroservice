@@ -500,6 +500,9 @@ public static class ExerciseConfigurationRules
         {
             ValidateOptionalIntRange(content.Value, "count", 1, 500, "Metin akışı uyaran sayısı");
             ValidateOptionalIntRange(content.Value, "length", 1, MaxTachistoscopeTextLength, "Takistoskop başlangıç uzunluğu");
+            if (TryGetProperty(content.Value, "maxVocabularyLevel") is { } vocabularyLevel
+                && (vocabularyLevel.ValueKind != JsonValueKind.Number || !vocabularyLevel.TryGetInt32(out var cap) || cap is < 1 or > 5))
+                throw new ArgumentException("Takistoskop kelime seviyesi üst sınırı 1 ile 5 arasında bir tam sayı olmalıdır.");
             ValidateOptionalStringArray(content.Value, "items", 500, 1_000, "Metin akışı özel içeriği");
         }
 

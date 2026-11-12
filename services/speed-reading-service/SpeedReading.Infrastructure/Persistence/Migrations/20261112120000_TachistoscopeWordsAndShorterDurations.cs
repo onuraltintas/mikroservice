@@ -9,7 +9,7 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations;
 /// Tachistoscope settings of the 20 normal exercises. Levels 1–2 keep numbers, levels 3–4 show words and
 /// level 5 two-word phrases; every start display duration is about 20 % shorter. Only
 /// <c>content.type</c>, <c>content.length</c>, <c>timing.durationMs</c> and <c>adaptive.minLength/maxLength</c>
-/// change; the round count (<c>content.count</c>, see 20261112100000), interval and duration bounds stay as they are.
+/// change, and the 12 word/phrase rows get <c>content.maxVocabularyLevel = 2</c> (everyday words only); the round count (<c>content.count</c>, see 20261112100000), interval and duration bounds stay as they are.
 /// A row changes only when all five keys still hold the reviewed previous values, so the migration is
 /// idempotent, leaves unexpected production values and assessment exercises alone and is a no-op on
 /// databases without the catalog. Down restores the previous values with the same guard.
@@ -49,7 +49,7 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
     private static readonly string[] GuardedKeys =
     [
         "engineConfig", "content", "timing", "adaptive", "type", "length", "durationMs", "minLength", "maxLength",
-        "displayDurationMs", "intervalMs", "source", "items", "stimuli", "words", "chunks"
+        "displayDurationMs", "intervalMs", "source", "items", "stimuli", "words", "chunks", "maxVocabularyLevel"
     ];
 
     // Only these exact spellings may appear in each holder; any other case variant of a guarded key,
@@ -58,10 +58,14 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
     [
         ("{}", ["engineConfig"]),
         ("{engineConfig}", ["content", "timing", "adaptive", "type", "length", "durationMs", "minLength", "maxLength"]),
-        ("{engineConfig,content}", ["type", "length", "durationMs", "minLength", "maxLength", "intervalMs"]),
+        ("{engineConfig,content}", ["type", "length", "durationMs", "minLength", "maxLength", "intervalMs", "maxVocabularyLevel"]),
         ("{engineConfig,timing}", ["type", "length", "durationMs", "minLength", "maxLength", "intervalMs"]),
         ("{engineConfig,adaptive}", ["type", "length", "durationMs", "minLength", "maxLength", "intervalMs"])
     ];
+
+    // Word and phrase pools use everyday vocabulary only (levels 1–2): Takistoskop measures quick recognition of
+    // familiar words; difficulty comes from display time and length. Number rows never carry the key.
+    private static string VocabularyCap(Setting setting) => setting.Type is "word" or "phrase" ? "2" : "NULL::integer";
 
     private static string NoKeyVariants()
     {
@@ -80,7 +84,7 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
             var from = (forward ? change.Previous : change.Approved)[level - 1];
             var to = (forward ? change.Approved : change.Previous)[level - 1];
             return string.Create(CultureInfo.InvariantCulture,
-                $"({change.MinAge}, {level}, '{from.Type}', {from.Length}, {from.DurationMs}, {from.MinLength}, {from.MaxLength}, '{to.Type}', {to.Length}, {to.DurationMs}, {to.MinLength}, {to.MaxLength})");
+                $"({change.MinAge}, {level}, '{from.Type}', {from.Length}, {from.DurationMs}, {from.MinLength}, {from.MaxLength}, {VocabularyCap(from)}, '{to.Type}', {to.Length}, {to.DurationMs}, {to.MinLength}, {to.MaxLength}, {VocabularyCap(to)})");
         })));
         var actor = forward ? Actor : Actor + "-rollback";
         var direction = forward ? "up" : "down";
@@ -89,11 +93,11 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
         // Rows that carry a duration or length elsewhere, another spelling of a key, or custom content are
         // skipped: changing only the camelCase engineConfig keys would not change (or would invalidate) them.
         var plan = $$"""
-            SELECT e.id, c.to_type, c.to_length, c.to_duration, c.to_min_length, c.to_max_length
+            SELECT e.id, c.to_type, c.to_length, c.to_duration, c.to_min_length, c.to_max_length, c.to_vocabulary_level
             FROM (VALUES
                         {{values}}
                  ) AS c(min_age, difficulty_level, from_type, from_length, from_duration, from_min_length, from_max_length,
-                        to_type, to_length, to_duration, to_min_length, to_max_length)
+                        from_vocabulary_level, to_type, to_length, to_duration, to_min_length, to_max_length, to_vocabulary_level)
             JOIN speed_reading.exercise_types AS t ON t.name = 'Tachistoscope'
             JOIN speed_reading.age_group_configurations AS g ON g."MinAge" = c.min_age AND NOT g."IsDeleted"
             JOIN speed_reading.exercises AS e
@@ -111,6 +115,7 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
               AND (e.configuration_json #> '{engineConfig,timing,durationMs}') = to_jsonb(c.from_duration)
               AND (e.configuration_json #> '{engineConfig,adaptive,minLength}') = to_jsonb(c.from_min_length)
               AND (e.configuration_json #> '{engineConfig,adaptive,maxLength}') = to_jsonb(c.from_max_length)
+              AND (e.configuration_json #> '{engineConfig,content,maxVocabularyLevel}') IS NOT DISTINCT FROM to_jsonb(c.from_vocabulary_level)
               AND {{NoKeyVariants()}}
             """;
         return $$"""
@@ -128,13 +133,17 @@ public sealed class TachistoscopeWordsAndShorterDurations : Migration
                 RAISE NOTICE 'Tachistoscope words and durations ({{direction}}): % exercise(s) hold the expected values and will change.', planned;
 
                 UPDATE speed_reading.exercises AS e
-                SET configuration_json =
-                        jsonb_set(jsonb_set(jsonb_set(jsonb_set(jsonb_set(e.configuration_json,
-                            '{engineConfig,content,type}', to_jsonb(plan.to_type), false),
-                            '{engineConfig,content,length}', to_jsonb(plan.to_length), false),
-                            '{engineConfig,timing,durationMs}', to_jsonb(plan.to_duration), false),
-                            '{engineConfig,adaptive,minLength}', to_jsonb(plan.to_min_length), false),
-                            '{engineConfig,adaptive,maxLength}', to_jsonb(plan.to_max_length), false),
+                SET configuration_json = (
+                        SELECT CASE WHEN plan.to_vocabulary_level IS NULL
+                                    THEN step.config #- '{engineConfig,content,maxVocabularyLevel}'
+                                    ELSE jsonb_set(step.config, '{engineConfig,content,maxVocabularyLevel}', to_jsonb(plan.to_vocabulary_level), true) END
+                        FROM (SELECT
+                            jsonb_set(jsonb_set(jsonb_set(jsonb_set(jsonb_set(e.configuration_json,
+                                '{engineConfig,content,type}', to_jsonb(plan.to_type), false),
+                                '{engineConfig,content,length}', to_jsonb(plan.to_length), false),
+                                '{engineConfig,timing,durationMs}', to_jsonb(plan.to_duration), false),
+                                '{engineConfig,adaptive,minLength}', to_jsonb(plan.to_min_length), false),
+                                '{engineConfig,adaptive,maxLength}', to_jsonb(plan.to_max_length), false) AS config) AS step),
                     updated_at = now(),
                     updated_by = '{{actor}}',
                     version = e.version + 1
