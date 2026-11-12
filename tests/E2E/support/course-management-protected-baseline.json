@@ -1841,6 +1841,7 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261029160000_ExerciseResultGamificationXp.cs": "533a5542e380604ca26ff3f740deff24b61d021903506e5147831506a1f61d1a",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261029170000_ReadingSessionRejected.Designer.cs": "12a5e14134266f6f8df496f173f3bc7a1e30acb6cbe9d5bce94f016949cf2bbf",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261029170000_ReadingSessionRejected.cs": "86555b64178080438d969a76bc6269382ef710e0e0224e7557dc4ca322f11ab5",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261112100000_UpdateRoundCountsAndVisualExpansionDistances.cs": "6cb3dc808aca367238ce89cde5700b423b9fb76959fa06bb166303b1a95d40e3",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/OwnedSpeedReadingDbContextModelSnapshot.cs": "46930b01f768a6efa2e206d19cda668b4eb55ab0c7258bf8bb48c311b5a453b7",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedContentMutationIdempotency.cs": "8ed1813019f1afc8360511289775aec6a9c4d35b8f90447e06faac7eac93b361",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedExerciseTaxonomyBootstrap.cs": "ce9bcd8c1a8a8fadfda31a83f2b758bf6ebcb45f719e600f43f24314b71a4d2c",
@@ -1869,7 +1870,7 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingExerciseSessions.Scanning.cs": "d3f43ed2ea918fa945c8d367093d47603071e1da14fdb5d91e658fd3245102c9",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingExerciseSessions.Skimming.cs": "56dbe3e22f7c8c004063293aad3728d59ee5857dbd831f1d69deb50c4492e521",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingExerciseSessions.TargetHunt.cs": "71c08042e48357e31cde8ac8c0da612c50a868201572abe14abd70f604699f19",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingExerciseSessions.cs": "036ab84d53fdf57f495cb632b4d5722f95fff66dec6be06f7ad361c845d7bd6c",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingExerciseSessions.cs": "b5efc41f34927e06df6e35250768f5bbf824c965ed1660b9cf409ea92a280be3",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingGamification.cs": "dc9dfd90b740951b8876e74c1fb8dea9352d0f402eddab834ec04e967701adce",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingGamificationAdminWriter.cs": "ea6ff5d7800cf4038d857e6f74ec3a5920aaf38378915c28c7ca49502e15632e",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingGamificationRecalculation.cs": "0aa84ffff74e0948ea81a9f64658f8a921b76d6a91275f2d3b5f93bc221e7ba7",
@@ -2724,7 +2725,7 @@
   },
   "baselineCommit": "07db9772",
   "snapshotContext": {
-    "purpose": "scan-find merged with H6 and the legal pages SEO",
+    "purpose": "speed-reading case-insensitive migration guard",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2772,7 +2773,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "bb967325",
+    "previousBaselineCommit": "8529e211",
     "removedSincePreviousBaseline": []
   }
 }
