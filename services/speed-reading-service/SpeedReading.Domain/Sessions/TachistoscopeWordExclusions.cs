@@ -6,7 +6,7 @@ namespace SpeedReading.Domain.Sessions;
 /// Words Takistoskop never shows (approved November 2026), only for Takistoskop: Kelime Hazinesi keeps them.
 /// Takistoskop measures quick recognition of familiar words, so its pools leave out emotion/colour words that
 /// read as judgements, literary and music terms, internet and technology jargon, and loanwords. Matching is by
-/// whole word after Turkish lower case, without folding the circumflex, so "Hikaye" does not drop "Hikâye".
+/// whole word after Turkish lower case with ı read as i, without folding the circumflex, so "Hikaye" does not drop "Hikâye".
 /// Any word with an upper-case letter after the first one (acronyms such as USB, brand terms such as WiFi)
 /// is dropped as well, also when new ones are added to the vocabulary later.
 /// </summary>
@@ -31,5 +31,7 @@ public static class TachistoscopeWordExclusions
         return trimmed.Skip(1).Any(char.IsUpper) || Normalized.Contains(Normalize(trimmed));
     }
 
-    private static string Normalize(string word) => word.Trim().Normalize().ToLower(Turkish);
+    // Dotless ı counts as i here (not in answers): tr-TR lower case turns "GIF" into "gıf", which would
+    // otherwise miss a vocabulary row spelled "gif" or "Gif". The circumflex is kept on purpose.
+    private static string Normalize(string word) => word.Trim().Normalize().ToLower(Turkish).Replace('ı', 'i');
 }

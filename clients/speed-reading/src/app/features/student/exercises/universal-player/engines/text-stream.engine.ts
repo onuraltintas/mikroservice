@@ -129,8 +129,9 @@ export class TextStreamEngine implements BaseEngine {
         'bahçe', 'çiçek', 'sokak', 'komşu', 'pazar', 'balık', 'tavuk', 'koyun', 'köprü',
         'yağmur', 'defter', 'tavşan', 'mutfak', 'yastık', 'karpuz', 'kardeş',
         'pencere', 'kelebek', 'arkadaş', 'domates', 'patates', 'çamaşır', 'şemsiye',
-        'sandalye', 'portakal', 'öğretmen', 'bisiklet', 'salıncak', 'kahvaltı', 'ayakkabı',
-        'battaniye', 'buzdolabı', 'televizyon'
+        'sandalye', 'portakal', 'öğretmen', 'bisiklet', 'salıncak', 'kahvaltı', 'ayakkabı', 'çikolata', 'dondurma',
+        'battaniye', 'buzdolabı', 'kütüphane', 'salatalık', 'gökkuşağı', 'kırtasiye', 'çaydanlık',
+        'televizyon', 'helikopter', 'bilgisayar', 'kaplumbağa', 'kahverengi', 'karnabahar'
     ];
 
     private static readonly NUMBER_POOL = [

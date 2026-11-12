@@ -3278,10 +3278,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.Pool = words.Select(word => word.Trim()).Where(word => word.Length is >= 2 and <= 20
                 && word.All(char.IsLetter) && !TachistoscopeWordExclusions.IsExcluded(word)).Distinct().ToArray();
             state.Source = state.Pool.Length > 0 ? "vocabulary_items" : "default_pool";
-            if (state.Pool.Length == 0)
-                state.Pool = ["su", "ev", "bir", "göz", "yol", "masa", "kapı", "okul", "ağaç", "kitap", "kalem", "zihin",
-                    "anlam", "dikkat", "kelime", "görsel", "öğrenme", "çalışma", "düşünce", "başlangıç", "verimlilik",
-                    "odaklanma", "araştırma", "motivasyon", "geliştirmek", "değerlendirme", "konsantrasyon", "sürdürülebilirlik"];
+            if (state.Pool.Length == 0) state.Pool = [.. TachistoscopeContent.DefaultWords];
             if (type == "phrase")
             {
                 // Random pairs fixed for this session by a stored seed; every length in the adaptive range is covered.
