@@ -8,6 +8,8 @@ public sealed class TachistoscopeState
     public string ContentType { get; set; } = "word";
     public string Source { get; set; } = "default_pool";
     public string[] Pool { get; set; } = [];
+    /// <summary>Seed of the session's phrase pairing (null when the pool is not generated from pairs).</summary>
+    public int? ContentSeed { get; set; }
     public int Round { get; set; }
     public int Count { get; set; } = 20;
     public int DisplayDurationMs { get; set; } = 500;
@@ -64,33 +66,49 @@ public sealed class TachistoscopeState
         LastStimulus = stimulus;
         ConsecutiveCorrect = correct ? ConsecutiveCorrect + 1 : 0;
         if (AssessmentProtocol is not null) DisplayDurationMs = AssessmentProtocol.ValueAt(Round);
-        else if (AdaptiveEnabled && Trials.Count % 5 == 0)
+        else if (AdaptiveEnabled && !Trials[^1].IsPractice)
         {
-            var correctCount = Trials.TakeLast(5).Count(trial => trial.IsCorrect);
-            if (correctCount >= 4)
-            {
-                if (DisplayDurationMs <= MinDurationMs && TargetLength < MaxTargetLength)
-                {
-                    TargetLength++;
-                    DisplayDurationMs = Math.Clamp(InitialDurationMs, MinDurationMs, MaxDurationMs);
-                }
-                else DisplayDurationMs = Math.Max(MinDurationMs, (int)Math.Round(DisplayDurationMs * .9, MidpointRounding.AwayFromZero));
-            }
-            else if (correctCount <= 2)
-            {
-                if (DisplayDurationMs >= MaxDurationMs && TargetLength > MinTargetLength)
-                {
-                    TargetLength--;
-                    DisplayDurationMs = Math.Clamp(InitialDurationMs, MinDurationMs, MaxDurationMs);
-                }
-                else DisplayDurationMs = Math.Min(MaxDurationMs, (int)Math.Round(DisplayDurationMs * 1.1, MidpointRounding.AwayFromZero));
-            }
+            // Independent blocks of three scored trials; an incomplete final block changes nothing.
+            var scored = Trials.Where(trial => !trial.IsPractice).ToList();
+            if (scored.Count % AdaptationBlockSize == 0)
+                Adapt(scored.TakeLast(AdaptationBlockSize).Count(trial => trial.IsCorrect));
         }
         return correct;
     }
 
+    public const int AdaptationBlockSize = 3;
+
+    // 3/3 correct: 15 % shorter; 2/3: unchanged; 0–1: 15 % longer. At a duration bound the length changes
+    // instead and the duration returns to its start, so one block never makes both harder.
+    private void Adapt(int correctCount)
+    {
+        if (correctCount == AdaptationBlockSize)
+        {
+            if (DisplayDurationMs <= MinDurationMs && TargetLength < MaxTargetLength)
+            {
+                TargetLength++;
+                DisplayDurationMs = Math.Clamp(InitialDurationMs, MinDurationMs, MaxDurationMs);
+            }
+            else DisplayDurationMs = Math.Max(MinDurationMs, (int)Math.Round(DisplayDurationMs * .85, MidpointRounding.AwayFromZero));
+        }
+        else if (correctCount <= 1)
+        {
+            if (DisplayDurationMs >= MaxDurationMs && TargetLength > MinTargetLength)
+            {
+                TargetLength--;
+                DisplayDurationMs = Math.Clamp(InitialDurationMs, MinDurationMs, MaxDurationMs);
+            }
+            else DisplayDurationMs = Math.Min(MaxDurationMs, (int)Math.Round(DisplayDurationMs * 1.15, MidpointRounding.AwayFromZero));
+        }
+        DisplayDurationMs = Math.Clamp(DisplayDurationMs, MinDurationMs, Math.Max(MinDurationMs, MaxDurationMs));
+        TargetLength = Math.Clamp(TargetLength, Math.Min(MinTargetLength, MaxTargetLength), MaxTargetLength);
+    }
+
+    // Turkish lower case with collapsed whitespace; the circumflex letters â, î, û (as in "kâğıt") count as a, i, u
+    // because students often type them without the mark. The player preview mirrors this.
     private static string Normalize(string value) => string.Join(' ', value.Trim().Split((char[]?)null,
-        StringSplitOptions.RemoveEmptyEntries)).Normalize().ToLower(CultureInfo.GetCultureInfo("tr-TR"));
+            StringSplitOptions.RemoveEmptyEntries)).Normalize().ToLower(CultureInfo.GetCultureInfo("tr-TR"))
+        .Replace('â', 'a').Replace('î', 'i').Replace('û', 'u');
 }
 
 public sealed record TachistoscopeTrial(string Stimulus, string UserAnswer, bool IsCorrect, int ResponseTimeMs, int DisplayDurationMs, bool IsPractice = false);

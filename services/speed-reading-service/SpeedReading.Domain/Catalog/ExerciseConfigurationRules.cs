@@ -472,6 +472,9 @@ public static class ExerciseConfigurationRules
             throw new ArgumentException($"{displayName} en fazla {maximumLength} öğe içermelidir.");
     }
 
+    private const int MaxTachistoscopeSymbolLength = 12;
+    private const int MaxTachistoscopeTextLength = 30;
+
     private static void ValidateTextStreamConfiguration(JsonElement config)
     {
         foreach (var name in new[] { "timing", "content", "visuals", "adaptive" })
@@ -496,15 +499,18 @@ public static class ExerciseConfigurationRules
         if (content.HasValue)
         {
             ValidateOptionalIntRange(content.Value, "count", 1, 500, "Metin akışı uyaran sayısı");
-            ValidateOptionalIntRange(content.Value, "length", 1, 12, "Takistoskop başlangıç uzunluğu");
+            ValidateOptionalIntRange(content.Value, "length", 1, MaxTachistoscopeTextLength, "Takistoskop başlangıç uzunluğu");
+            if (TryGetProperty(content.Value, "maxVocabularyLevel") is { } vocabularyLevel
+                && (vocabularyLevel.ValueKind != JsonValueKind.Number || !vocabularyLevel.TryGetInt32(out var cap) || cap is < 1 or > 5))
+                throw new ArgumentException("Takistoskop kelime seviyesi üst sınırı 1 ile 5 arasında bir tam sayı olmalıdır.");
             ValidateOptionalStringArray(content.Value, "items", 500, 1_000, "Metin akışı özel içeriği");
         }
 
         var adaptive = TryGetObject(config, "adaptive");
         if (adaptive.HasValue)
         {
-            ValidateOptionalIntRange(adaptive.Value, "minLength", 1, 12, "Takistoskop minimum uzunluğu");
-            ValidateOptionalIntRange(adaptive.Value, "maxLength", 1, 12, "Takistoskop maksimum uzunluğu");
+            ValidateOptionalIntRange(adaptive.Value, "minLength", 1, MaxTachistoscopeTextLength, "Takistoskop minimum uzunluğu");
+            ValidateOptionalIntRange(adaptive.Value, "maxLength", 1, MaxTachistoscopeTextLength, "Takistoskop maksimum uzunluğu");
             ValidateOptionalIntRange(adaptive.Value, "minDurationMs", 50, 5_000, "Adaptif minimum gösterim süresi");
             ValidateOptionalIntRange(adaptive.Value, "maxDurationMs", 50, 5_000, "Adaptif maksimum gösterim süresi");
             var minimum = ReadOptionalInt(adaptive.Value, "minDurationMs");
@@ -994,10 +1000,21 @@ public static class ExerciseConfigurationRules
         ValidateConsistentValues(lengths, "Takistoskop başlangıç uzunluğu");
         ValidateConsistentValues(minimumLengths, "Takistoskop minimum uzunluğu");
         ValidateConsistentValues(maximumLengths, "Takistoskop maksimum uzunluğu");
+        // Generated digits and letters stay at most 12 long; words and two-word phrases may be longer.
+        var types = new List<string>();
+        if (nested.HasValue && TryGetObject(nested.Value, "content") is { } nestedContent
+            && TryGetProperty(nestedContent, "type") is { ValueKind: JsonValueKind.String } nestedType)
+            types.Add(nestedType.GetString()!.Trim().ToLowerInvariant());
+        if (TryGetObject(root, "content") is { } rootContent
+            && TryGetProperty(rootContent, "type") is { ValueKind: JsonValueKind.String } rootType)
+            types.Add(rootType.GetString()!.Trim().ToLowerInvariant());
+        var limit = types.FirstOrDefault() is "word" or "phrase" ? MaxTachistoscopeTextLength : MaxTachistoscopeSymbolLength;
         var minLength = minimumLengths.Count > 0 ? minimumLengths[0] : 1;
-        var maxLength = maximumLengths.Count > 0 ? maximumLengths[0] : 12;
-        if (minLength > maxLength || lengths.Any(length => length < minLength || length > maxLength))
-            throw new ArgumentException("Takistoskop uzunlukları minimum/maksimum sınırlarına uygun olmalıdır.");
+        var maxLength = maximumLengths.Count > 0 ? maximumLengths[0] : limit;
+        if (minLength > maxLength || maxLength > limit || lengths.Any(length => length < minLength || length > maxLength))
+            throw new ArgumentException(limit == MaxTachistoscopeSymbolLength
+                ? "Takistoskop uzunlukları minimum/maksimum sınırlarına uygun olmalı; sayı ve harflerde en fazla 12 olabilir."
+                : "Takistoskop uzunlukları minimum/maksimum sınırlarına uygun olmalı; kelimelerde en fazla 30 olabilir.");
     }
 
     private static int CountTextStreamContentSources(JsonElement config)

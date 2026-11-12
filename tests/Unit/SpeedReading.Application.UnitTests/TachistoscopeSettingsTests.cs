@@ -37,6 +37,52 @@ public sealed class TachistoscopeSettingsTests
     }
 
     [Theory]
+    [InlineData("{\"content\":{\"type\":\"phrase\",\"length\":12},\"adaptive\":{\"minLength\":10,\"maxLength\":16}}")]
+    [InlineData("{\"content\":{\"type\":\"phrase\",\"length\":11},\"adaptive\":{\"minLength\":9,\"maxLength\":14}}")]
+    [InlineData("{\"content\":{\"type\":\"word\",\"length\":7},\"adaptive\":{\"minLength\":6,\"maxLength\":10}}")]
+    [InlineData("{\"content\":{\"type\":\"phrase\",\"length\":30}}")]
+    public void Word_and_phrase_lengths_may_exceed_the_digit_limit(string settings)
+    {
+        var config = "{\"engineType\":\"text_stream\",\"engineConfig\":" + settings + "}";
+        ExerciseConfigurationRules.ValidateActiveConfiguration(config, "text_stream");
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(5)]
+    public void The_vocabulary_level_cap_accepts_one_to_five(int level)
+    {
+        var config = "{\"engineType\":\"text_stream\",\"engineConfig\":{\"content\":{\"type\":\"word\",\"maxVocabularyLevel\":" + level + "}}}";
+        ExerciseConfigurationRules.ValidateActiveConfiguration(config, "text_stream");
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("6")]
+    [InlineData("-1")]
+    [InlineData("2.5")]
+    [InlineData("\"2\"")]
+    [InlineData("null")]
+    public void The_vocabulary_level_cap_rejects_other_values(string value)
+    {
+        var config = "{\"engineType\":\"text_stream\",\"engineConfig\":{\"content\":{\"type\":\"word\",\"maxVocabularyLevel\":" + value + "}}}";
+        Assert.Throws<ArgumentException>(() => ExerciseConfigurationRules.ValidateActiveConfiguration(config, "text_stream"));
+    }
+
+    [Theory]
+    [InlineData("{\"content\":{\"type\":\"number\",\"length\":13}}")]
+    [InlineData("{\"content\":{\"type\":\"letter\"},\"adaptive\":{\"maxLength\":13}}")]
+    [InlineData("{\"content\":{\"type\":\"phrase\",\"length\":31}}")]
+    [InlineData("{\"content\":{\"type\":\"phrase\"},\"adaptive\":{\"maxLength\":31}}")]
+    [InlineData("{\"content\":{\"type\":\"phrase\",\"length\":17},\"adaptive\":{\"minLength\":10,\"maxLength\":16}}")]
+    public void Lengths_beyond_the_content_type_limit_are_rejected(string settings)
+    {
+        var config = "{\"engineType\":\"text_stream\",\"engineConfig\":" + settings + "}";
+        Assert.Throws<ArgumentException>(() => ExerciseConfigurationRules.ValidateActiveConfiguration(config, "text_stream"));
+    }
+
+    [Theory]
     [InlineData("{\"content\":{\"length\":3},\"engineConfig\":{\"content\":{\"length\":4}}}")]
     [InlineData("{\"adaptive\":{\"minLength\":5},\"engineConfig\":{\"adaptive\":{\"maxLength\":3}}}")]
     public void Conflicting_cross_layer_length_settings_are_rejected(string settings)
@@ -74,14 +120,16 @@ public sealed class TachistoscopeSettingsTests
         var state = new TachistoscopeState { MinTargetLength = 3, MaxTargetLength = 5,
             TargetLength = 4, MinDurationMs = 400, MaxDurationMs = 2000,
             DisplayDurationMs = 400, InitialDurationMs = 1100 };
-        for (var i = 0; i < 5; i++) state.Record("1234", "1234", 100);
+        for (var i = 0; i < 2; i++) state.Record("1234", "1234", 100);
+        Assert.Equal(4, state.TargetLength);
+        state.Record("1234", "1234", 100);
         Assert.Equal(5, state.TargetLength);
         Assert.Equal(1100, state.DisplayDurationMs);
-        Assert.Equal(400, state.Trials[4].DisplayDurationMs);
+        Assert.Equal(400, state.Trials[2].DisplayDurationMs);
         state.DisplayDurationMs = 2000;
-        for (var i = 0; i < 5; i++) state.Record("12345", "wrong", 100);
+        for (var i = 0; i < 3; i++) state.Record("12345", "wrong", 100);
         Assert.Equal(4, state.TargetLength);
         Assert.Equal(1100, state.DisplayDurationMs);
-        Assert.Equal(2000, state.Trials[9].DisplayDurationMs);
+        Assert.Equal(2000, state.Trials[5].DisplayDurationMs);
     }
 }

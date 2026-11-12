@@ -3228,6 +3228,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         session.SetProcessedActions(cache.ToJsonString());
     }
 
+    // The whole level-5 vocabulary (about 1,300 words in production) must fit: an alphabetical cut would drop late letters.
+    private const int MaxTachistoscopeVocabulary = 3000;
+
     private async Task<TachistoscopeState> CreateTachistoscopeAsync(JsonElement config, int difficulty,
         Guid? ageGroupId, CancellationToken cancellationToken)
     {
@@ -3265,19 +3268,27 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
         else if (type is "word" or "phrase")
         {
+            // content.maxVocabularyLevel keeps the pool to everyday words whatever the exercise level:
+            // difficulty comes from display time and length, not from vocabulary difficulty.
+            var vocabularyLevel = Math.Min(level, Math.Clamp(ReadPositiveInt(content, "maxVocabularyLevel") ?? level, 1, 5));
             var words = await db.VocabularyItems.AsNoTracking()
-                .Where(item => !item.IsDeleted && item.DifficultyLevel <= level
+                .Where(item => !item.IsDeleted && item.DifficultyLevel <= vocabularyLevel
                     && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId))
-                .OrderBy(item => item.Word).Select(item => item.Word).Take(1000).ToListAsync(cancellationToken);
+                .OrderBy(item => item.Word).Select(item => item.Word).Take(MaxTachistoscopeVocabulary).ToListAsync(cancellationToken);
             state.Pool = words.Select(word => word.Trim()).Where(word => word.Length is >= 2 and <= 20
-                && word.All(char.IsLetter)).Distinct().ToArray();
+                && word.All(char.IsLetter) && !TachistoscopeWordExclusions.IsExcluded(word)).Distinct().ToArray();
             state.Source = state.Pool.Length > 0 ? "vocabulary_items" : "default_pool";
-            if (state.Pool.Length == 0)
-                state.Pool = ["su", "ev", "bir", "göz", "yol", "masa", "kapı", "okul", "ağaç", "kitap", "kalem", "zihin",
-                    "anlam", "dikkat", "kelime", "görsel", "öğrenme", "çalışma", "düşünce", "başlangıç", "verimlilik",
-                    "odaklanma", "araştırma", "motivasyon", "geliştirmek", "değerlendirme", "konsantrasyon", "sürdürülebilirlik"];
+            if (state.Pool.Length == 0) state.Pool = [.. TachistoscopeContent.DefaultWords];
             if (type == "phrase")
-                state.Pool = state.Pool.Select((word, index) => word + " " + state.Pool[(index + 1) % state.Pool.Length]).ToArray();
+            {
+                // Random pairs fixed for this session by a stored seed; every length in the adaptive range is covered.
+                var phraseLength = state.TargetLength;
+                var minimum = ReadPositiveInt(adaptive, "minLength") ?? phraseLength;
+                var maximum = Math.Max(minimum, ReadPositiveInt(adaptive, "maxLength") ?? phraseLength);
+                state.ContentSeed = Random.Shared.Next();
+                var phrases = TachistoscopeContent.BuildPhrasePool(state.Pool, state.ContentSeed.Value, minimum, maximum);
+                state.Pool = phrases.Length > 0 ? phrases : state.Pool;
+            }
         }
         if (state.Pool.Length > 0)
             state.TargetLength = Math.Clamp(state.TargetLength, state.Pool.Min(word => word.Length), state.Pool.Max(word => word.Length));

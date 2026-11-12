@@ -35,6 +35,7 @@ import { AdaptiveFluencyEngine, AdaptiveFluencyStageFeedback } from './engines/a
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './engines/base-engine.interface';
 import { GridInteractionEngine } from './engines/grid-interaction.engine';
 import { TextStreamEngine } from './engines/text-stream.engine';
+import { TACHISTOSCOPE_COPY, TachistoscopeContentType } from './tachistoscope-copy';
 import { TextFadeEngine } from './engines/text-fade.engine';
 import { WordHighlightEngine } from './engines/word-highlight.engine';
 import { ReadingComprehensionEngine } from './engines/reading-comprehension.engine';
@@ -1870,7 +1871,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   /** The Turkish ProblemDetails `detail` (not its English `title`); server errors get the fallback. */
   private getActionValidationErrorMessage(error: unknown): string {
-    return getErrorMessage(error, 'Egzersiz doğrulaması alınamadı. Bağlantını kontrol edip tekrar dene.', { voice: 'sen' });
+    return getErrorMessage(error, 'Egzersiz doğrulaması alınamadı. Bağlantınızı kontrol edip tekrar deneyin.', { voice: 'siz' });
   }
 
   private waitForPendingActions(onFinished: () => void): void {
@@ -3342,6 +3343,28 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.cdr.detectChanges();
   }
 
+  /** number, letter, word or phrase: the server session's type when there is one, else the catalogue's. */
+  getTachistoscopeContentType(): TachistoscopeContentType {
+    return (this.engine as TextStreamEngine)?.getContentType?.() ?? 'number';
+  }
+
+  getTachistoscopeContentLabel(): string {
+    return TACHISTOSCOPE_COPY.contentLabel[this.getTachistoscopeContentType()];
+  }
+
+  getTachistoscopeInstruction(): string {
+    return TACHISTOSCOPE_COPY.instruction(this.getTachistoscopeContentType());
+  }
+
+  getTachistoscopeAnswerPrompt(): string {
+    return TACHISTOSCOPE_COPY.answerPrompt(this.getTachistoscopeContentType());
+  }
+
+  /** Numeric keypad only for numbers; words and phrases need the full keyboard (Turkish letters, space). */
+  getTachistoscopeInputMode(): 'numeric' | 'text' {
+    return this.getTachistoscopeContentType() === 'number' ? 'numeric' : 'text';
+  }
+
   isTachistoscopeMode(): boolean {
     return this.engine?.engineType === 'text_stream'
       && (this.exercise?.exerciseTypeName?.toLowerCase() === 'tachistoscope'
@@ -4256,12 +4279,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const scan = this.asScanFind;
     if (scan?.hasTaskPrompts()) {
       return scan.isFindAny()
-        ? 'Aşağıdaki metinde sorulardan birinin cevabını bul ve cevaba dokun:'
-        : 'Aşağıdaki metinde soruların cevabını bul ve cevaba dokun:';
+        ? 'Aşağıdaki metinde sorulardan birinin cevabını bulun ve cevaba dokunun:'
+        : 'Aşağıdaki metinde soruların cevabını bulun ve cevaba dokunun:';
     }
     return scan?.isFindAny()
-      ? 'Aşağıdaki metinde bu kelimelerden birini bul ve üzerine dokun:'
-      : 'Aşağıdaki metinde şu kelimeleri bul ve üzerine dokun:';
+      ? 'Aşağıdaki metinde bu kelimelerden birini bulun ve üzerine dokunun:'
+      : 'Aşağıdaki metinde şu kelimeleri bulun ve üzerine dokunun:';
   }
 
   getScanInstructionHint(): string {
@@ -4273,7 +4296,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       : (scan.isFindAny() ? 'birini' : 'hepsini');
     return [
       round.total > 1 ? `Tur ${round.current} / ${round.total}.` : '',
-      scan.getTimeLimitSeconds() !== null ? `Süre bitmeden ${goal} bul.` : '',
+      scan.getTimeLimitSeconds() !== null ? `Süre bitmeden ${goal} bulun.` : '',
       'Yanlış dokunuş puanı düşürür.'
     ].filter(Boolean).join(' ');
   }
@@ -4283,15 +4306,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const scan = this.asScanFind;
     if (!scan) return '';
     const goal = scan.hasTaskPrompts()
-      ? (scan.isFindAny() ? 'sorulardan birinin cevabını bul ve cevaba dokun' : 'soruların cevabını bul ve cevaba dokun')
-      : (scan.isFindAny() ? 'verilen kelimelerden birini bul ve üzerine dokun' : 'verilen kelimeleri bul ve üzerine dokun');
+      ? (scan.isFindAny() ? 'sorulardan birinin cevabını bulun ve cevaba dokunun' : 'soruların cevabını bulun ve cevaba dokunun')
+      : (scan.isFindAny() ? 'verilen kelimelerden birini bulun ve üzerine dokunun' : 'verilen kelimeleri bulun ve üzerine dokunun');
     const limit = scan.getTimeLimitSeconds();
     const facts = [
       scan.isFindAny() ? '' : `Toplam ${scan.state.totalSteps} hedef`,
       limit !== null ? `süre ${this.formatScanLimit(limit)}` : ''
     ].filter(Boolean).join(', ');
     const rule = facts ? `${facts}; yanlış dokunuş puanı düşürür.` : 'Yanlış dokunuş puanı düşürür.';
-    return `Metni okumadan gözlerinle tara, ${goal}. ${rule.charAt(0).toLocaleUpperCase('tr-TR')}${rule.slice(1)}`;
+    return `Metni okumadan gözlerinizle tarayın, ${goal}. ${rule.charAt(0).toLocaleUpperCase('tr-TR')}${rule.slice(1)}`;
   }
 
   /** "45 saniye", "1 dakika", "1 dakika 30 saniye", "60 dakika". */

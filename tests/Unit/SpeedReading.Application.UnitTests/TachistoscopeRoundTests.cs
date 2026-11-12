@@ -41,31 +41,27 @@ public sealed class TachistoscopeRoundTests
     }
 
     [Fact]
-    public void Adaptation_waits_for_a_complete_five_trial_block_and_changes_only_duration()
+    public void Adaptation_waits_for_a_complete_three_trial_block_and_changes_only_duration()
     {
         var state = new TachistoscopeState { DisplayDurationMs = 500, TargetLength = 3, Pool = ["bir", "masa", "kalem"] };
         state.Record("bir", "bir", 100);
-        state.Record("bir", "yanlış", 100);
-        state.Record("bir", "bir", 100);
-        state.TargetLength.Should().Be(3);
         state.Record("bir", "bir", 100);
         state.TargetLength.Should().Be(3);
         state.DisplayDurationMs.Should().Be(500);
         state.Record("bir", "bir", 100);
         state.TargetLength.Should().Be(3);
-        state.DisplayDurationMs.Should().Be(450);
+        state.DisplayDurationMs.Should().Be(425);
     }
 
     [Theory]
-    [InlineData(0, 550)]
-    [InlineData(2, 550)]
-    [InlineData(3, 500)]
-    [InlineData(4, 450)]
-    [InlineData(5, 450)]
+    [InlineData(0, 575)]
+    [InlineData(1, 575)]
+    [InlineData(2, 500)]
+    [InlineData(3, 425)]
     public void Completed_blocks_adjust_duration_from_accuracy(int correctCount, int expectedDuration)
     {
         var state = new TachistoscopeState { DisplayDurationMs = 500, InitialDurationMs = 500, TargetLength = 3 };
-        for (var i = 0; i < 5; i++) state.Record("123", i < correctCount ? "123" : "wrong", 100);
+        for (var i = 0; i < 3; i++) state.Record("123", i < correctCount ? "123" : "wrong", 100);
         state.DisplayDurationMs.Should().Be(expectedDuration);
         state.TargetLength.Should().Be(3);
     }
@@ -74,7 +70,7 @@ public sealed class TachistoscopeRoundTests
     public void Final_partial_block_does_not_change_settings()
     {
         var state = new TachistoscopeState { DisplayDurationMs = 500, TargetLength = 3 };
-        for (var i = 0; i < 4; i++) state.Record("123", "123", 100);
+        for (var i = 0; i < 2; i++) state.Record("123", "123", 100);
         state.DisplayDurationMs.Should().Be(500);
         state.TargetLength.Should().Be(3);
     }
@@ -94,5 +90,31 @@ public sealed class TachistoscopeRoundTests
     {
         var state = new TachistoscopeState { TargetLength = 4, LastStimulus = "masa", Pool = ["bir", "masa", "kapı", "kalem"] };
         state.SelectStimulus().Should().Be("kapı");
+    }
+
+    [Theory]
+    [InlineData("kâğıt", "kağıt")]
+    [InlineData("KÂĞIT", "kağıt")]
+    [InlineData("kağıt", "kâğıt")]
+    [InlineData("hâlâ", "hala")]
+    [InlineData("millî", "milli")]
+    [InlineData("Îlan", "ilan")]
+    [InlineData("mahkûm", "mahkum")]
+    [InlineData("ÛMİT", "umit")]
+    [InlineData("kâğıt  kalem", "kağıt kalem")]
+    public void Circumflex_letters_match_their_plain_form(string stimulus, string answer)
+    {
+        var state = new TachistoscopeState { AdaptiveEnabled = false };
+        state.Record(stimulus, answer, 100).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("kağıt", "kagıt")]
+    [InlineData("ılık", "ilik")]
+    [InlineData("kâğıt", "kâğit")]
+    public void Other_letters_still_have_to_match_exactly(string stimulus, string answer)
+    {
+        var state = new TachistoscopeState { AdaptiveEnabled = false };
+        state.Record(stimulus, answer, 100).Should().BeFalse();
     }
 }
