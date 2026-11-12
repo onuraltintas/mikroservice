@@ -627,7 +627,7 @@
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-action-queue.ts": "3d002aa57bec17e5c95b1bdaf6c9ae2d3dc471ca6ac5f49681dc53264b6de472",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.html": "4e73700acde3d5f671f243a648f499402da66d6b1bcde3f024a26786e24dbfa4",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.scss": "2d0e658bb9ae699cb8fcba175d9644f15162db9d94ccdcbdc5360430b56a267f",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.ts": "d29e6626019736992619252711104c4446188685db5b413c000eee576ae503a7",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-player.component.ts": "b84b622ebae8bdc96a36fb64710033c911c9a7d529ebd9ad99dcd1a6e46b21c0",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/exercise-preview-role.spec.ts": "6b042fcfaa60487736a38b0d68836717397a3cd270b27049a3144aa1566f7f65",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-answer-input.spec.ts": "f651cd09cfd52050b93b684f6bb244ee3185ac5a3f3ed7dbda265c4ad83dc1b3",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/expansion-answer-input.ts": "f434cc2872cd0f0eea36f6fa9975647d285f050ff9602f4b032c14e16a868f5d",
@@ -648,7 +648,7 @@
     "clients/speed-reading/src/app/features/student/exercises/universal-player/result-display.ts": "971f0357bace24d49c10574dfbc7f285e67236dcdf41c9378b4ab901d9d98f94",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/rsvp-player.spec.ts": "69fbe5b7a2bff2ef85e81f265241c1b2a16b8a67c15a79c87bbf61f4afe3f400",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/saccade-player.spec.ts": "3aec11c627f36eca3f1f41cda1f7d62e65458a067b998360c5eb2dc729bf7419",
-    "clients/speed-reading/src/app/features/student/exercises/universal-player/scan-find-instructions.spec.ts": "839fc3e2f5bf60223800478258c2c0fd2b27fe02fe63e503749407aa13bc27c9",
+    "clients/speed-reading/src/app/features/student/exercises/universal-player/scan-find-instructions.spec.ts": "ad05b7e8f639cca888b389fdd0f2fbfab0d3fbf301411440a645369bcb0657c4",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/scanning-session.spec.ts": "1e11ff5e2a0d4af99a48c66f577c5292d192923595776efc3eae366e590b696a",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/schulte-settings.spec.ts": "a5f97b2cc79ebcdbab98271dd0dbbcadb568303be4fb408745cc4dd8e23419a6",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/schulte-settings.ts": "f1417c6777c5b28fd0fd7289fe13835d0e27b3ee2db6b0ca2b43479dbbb7f988",
@@ -2721,8 +2721,7 @@
   },
   "baselineCommit": "07db9772",
   "snapshotContext": {
-    "updatedAt": "2026-10-26",
-    "purpose": "the scan-find review fixes",
+    "purpose": "the scan-find time wording",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
@@ -2770,7 +2769,7 @@
       "clients/speed-reading/src/app/shared/layouts/base-layout/base-layout.component.ts"
     ],
     "excludedFromThisRelease": "Pre-existing auth/google/error/login/register working-tree changes are captured for source protection only and excluded from isolated release payloads. Only the separately tested CAPTCHA/email error classification fix from login.component.ts is included in the frontend follow-up.",
-    "previousBaselineCommit": "51e8b3a7",
+    "previousBaselineCommit": "f3472ff4",
     "removedSincePreviousBaseline": []
   }
 }
