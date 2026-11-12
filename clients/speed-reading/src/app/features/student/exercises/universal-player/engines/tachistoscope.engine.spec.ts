@@ -33,12 +33,13 @@ describe('Tachistoscope runtime', () => {
     expect(engine.getCurrentDuration()).toBe(400);
     engine.destroy();
   });
-  for (const [correctCount, duration] of [[0, 550], [2, 550], [3, 500], [4, 450], [5, 450]]) {
-    it(`adapts a preview block with ${correctCount} correct answers to ${duration} ms`, fakeAsync(() => {
+  for (const [correctCount, duration] of [[0, 575], [1, 575], [2, 500], [3, 425]]) {
+    it(`adapts a three-answer preview block with ${correctCount} correct answers to ${duration} ms`, fakeAsync(() => {
       const { engine } = create({ content: { type: 'number', length: 3, count: 6 },
         timing: { durationMs: 500 }, adaptive: { enabled: true, minLength: 3, maxLength: 5 } });
       engine.start();
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 3; i++) {
+        expect(engine.getCurrentDuration()).toBe(500);
         tick(engine.getCurrentDuration());
         engine.handleInput({ answer: i < correctCount ? engine.getCurrentStimulus() : 'wrong' }); tick(600);
       }
@@ -54,22 +55,26 @@ describe('Tachistoscope runtime', () => {
         timing: { durationMs: 500 }, adaptive: { enabled: true, minLength: minimum, maxLength: maximum, minDurationMs: 400, maxDurationMs: 600 } });
       engine.start();
       const answerBlock = (correct: boolean) => {
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 3; i++) {
           tick(engine.getCurrentDuration());
           engine.handleInput({ answer: correct ? engine.getCurrentStimulus() : 'wrong' }); tick(600);
         }
       };
-      for (let block = 0; block < 3; block++) answerBlock(true);
+      answerBlock(true);
+      expect(engine.getCurrentDuration()).toBe(425);
+      answerBlock(true);
       expect(engine.getCurrentDuration()).toBe(400);
       answerBlock(true);
       expect(engine.getCurrentStimulus().length).toBe(maximum);
       expect(engine.getCurrentDuration()).toBe(500);
-      for (let block = 0; block < 3; block++) answerBlock(true);
+      for (let block = 0; block < 2; block++) answerBlock(true);
       expect(engine.getCurrentDuration()).toBe(400);
       answerBlock(true);
       expect(engine.getCurrentStimulus().length).toBe(maximum);
       expect(engine.getCurrentDuration()).toBe(400);
-      for (let block = 0; block < 5; block++) answerBlock(false);
+      answerBlock(false);
+      expect(engine.getCurrentDuration()).toBe(460);
+      for (let block = 0; block < 2; block++) answerBlock(false);
       expect(engine.getCurrentDuration()).toBe(600);
       answerBlock(false);
       expect(engine.getCurrentStimulus().length).toBe(maximum - 1);
@@ -80,6 +85,57 @@ describe('Tachistoscope runtime', () => {
       engine.destroy();
     }));
   }
+  it('keeps duration on a 2/3 block and ignores an incomplete final block', fakeAsync(() => {
+    const { engine } = create({ content: { type: 'number', length: 3, count: 5 },
+      timing: { durationMs: 500 }, adaptive: { enabled: true, minLength: 3, maxLength: 5 } });
+    engine.start();
+    for (const correct of [true, false, true]) {
+      tick(engine.getCurrentDuration());
+      engine.handleInput({ answer: correct ? engine.getCurrentStimulus() : 'wrong' }); tick(600);
+    }
+    expect(engine.getCurrentDuration()).toBe(500);
+    for (let i = 0; i < 2; i++) {
+      tick(engine.getCurrentDuration());
+      engine.handleInput({ answer: engine.getCurrentStimulus() }); tick(600);
+    }
+    expect(engine.getCurrentDuration()).toBe(500);
+    engine.destroy();
+  }));
+  it('pairs preview phrases randomly instead of with their list neighbour', () => {
+    const words: string[] = (TextStreamEngine as any).WORD_POOL;
+    const neighbours = new Set(words.map((word, index) => word + ' ' + words[(index + 1) % words.length]));
+    let adjacent = 0;
+    let total = 0;
+    for (let run = 0; run < 5; run++) {
+      const { engine } = create({ content: { type: 'phrase', count: 3 }, adaptive: { enabled: false } });
+      const pool: string[] = (engine as any).contentPool;
+      expect(pool.length).toBeGreaterThan(20);
+      for (const phrase of pool) {
+        const [first, second] = phrase.split(' ');
+        expect(words).toContain(first);
+        expect(words).toContain(second);
+        expect(first).not.toBe(second);
+        total++;
+        if (neighbours.has(phrase)) adjacent++;
+      }
+      engine.destroy();
+    }
+    expect(adjacent / total).toBeLessThan(0.1);
+  });
+  it('builds local preview phrases near the configured length', () => {
+    const { engine } = create({ content: { type: 'phrase', length: 10, count: 3 }, adaptive: { enabled: true, minLength: 8, maxLength: 12 } });
+    engine.start();
+    expect(engine.getCurrentStimulus().split(' ').length).toBe(2);
+    expect(Math.abs(engine.getCurrentStimulus().length - 10)).toBeLessThanOrEqual(1);
+    expect(engine.getContentType()).toBe('phrase');
+    engine.destroy();
+  });
+  it('reports the server content type of a word session', () => {
+    const { engine } = create({ serverAuthoritative: true, content: { type: 'number' },
+      tachistoscope: { count: 3, round: 0, contentType: 'word', displayDurationMs: 480 } });
+    expect(engine.getContentType()).toBe('word');
+    engine.destroy();
+  });
   it('prefers unused equally sized preview words', () => {
     const { engine } = create({ Words: ['bir', 'iki', 'ses'], adaptive: { enabled: false } });
     const runtime = engine as any;
@@ -145,7 +201,7 @@ describe('Tachistoscope runtime', () => {
     engine.destroy();
   });
 
-  it('waits for five answers and adjusts duration without also increasing length', fakeAsync(() => {
+  it('waits for three answers and adjusts duration without also increasing length', fakeAsync(() => {
     const { engine } = create({ Words: ['bir', 'iki', 'masa', 'kapı', 'kalem'],
       DisplayDurationMs: 500, content: { count: 6 }, adaptive: { enabled: true } });
     engine.start();
@@ -156,12 +212,10 @@ describe('Tachistoscope runtime', () => {
     }
     expect(engine.getCurrentDuration()).toBe(500);
     expect(engine.getCurrentStimulus().length).toBe(3);
-    for (let round = 2; round < 5; round++) {
-      tick(engine.getCurrentDuration());
-      engine.handleInput({ answer: engine.getCurrentStimulus() });
-      tick(600);
-    }
-    expect(engine.getCurrentDuration()).toBe(450);
+    tick(engine.getCurrentDuration());
+    engine.handleInput({ answer: engine.getCurrentStimulus() });
+    tick(600);
+    expect(engine.getCurrentDuration()).toBe(425);
     expect(engine.getCurrentStimulus().length).toBe(3);
     engine.destroy();
   }));
