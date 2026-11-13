@@ -108,6 +108,42 @@ describe('O10 sales (shared buyer components)', () => {
     });
   });
 
+  // Live test 13.11.2026 (Paket I1).
+  describe('checkout: seller details and messages', () => {
+    function checkout(sellerReady: boolean) {
+      const fixture = TestBed.createComponent(CoachingCheckoutComponent);
+      fixture.componentInstance.api = api; fixture.componentInstance.price = 1000; fixture.componentInstance.planId = 'plan-1';
+      fixture.componentInstance.sellerReady = sellerReady;
+      fixture.detectChanges();
+      return { fixture, component: fixture.componentInstance, element: fixture.nativeElement as HTMLElement };
+    }
+
+    it('takes no notice while the seller details are missing', async () => {
+      const { component, element } = checkout(false);
+      expect(element.querySelector('[data-testid="seller-not-ready"]')?.textContent).toContain('Satıcı bilgileri henüz tamamlanmadığı');
+      expect(element.querySelector('[data-testid="open-sales-documents"]')).toBeNull();
+      await component.openDocuments();
+      http.expectNone(request => request.url.endsWith('/sales-documents'));
+      expect(component.accepted()).toBe(false);
+    });
+
+    it('tells the buyer where the acceptance box appears', () => {
+      const { element } = checkout(true);
+      expect(element.querySelector('[data-testid="seller-not-ready"]')).toBeNull();
+      expect(element.querySelector('[data-testid="sales-documents-hint"]')?.textContent).toContain('onay kutusu metinlerin altında çıkar');
+    });
+
+    it('shows why a discount code was refused when the server answers with a problem document', async () => {
+      const { fixture, component, element } = checkout(true);
+      component.couponInput = 'ESKI-KOD';
+      const applying = component.applyCoupon();
+      http.expectOne(request => request.url.endsWith('/coupons/ESKI-KOD'))
+        .flush({ title: 'Invalid Argument', detail: 'Bu indirim kodunun süresi dolmuş.' }, { status: 400, statusText: 'Bad Request' });
+      await applying; fixture.detectChanges();
+      expect(element.textContent).toContain('Bu indirim kodunun süresi dolmuş.');
+    });
+  });
+
   describe('my payments', () => {
     const payment = (overrides: Partial<CoachingBuyerPayment> = {}): CoachingBuyerPayment => ({
       id: 'pay-1', transferId: 'tr-1', planName: 'Öğrenci planı', amount: 800, currency: 'TRY', status: 'Completed', createdAt: '2026-10-20T10:00:00Z',
@@ -122,6 +158,19 @@ describe('O10 sales (shared buyer components)', () => {
       await flushMicrotasks(); fixture.detectChanges();
       return { fixture, component: fixture.componentInstance };
     }
+
+    it('shows why a withdrawal was rejected, a cancelled payment, and promises the full refund', async () => {
+      const { fixture, component } = await payments([
+        payment({ id: 'pay-r', withdrawalStatus: 'Rejected', withdrawalReviewNote: 'Süre içinde değil' }),
+        payment({ id: 'pay-c', status: 'Cancelled', invoiceNumber: null, withdrawUntil: null })]);
+      const element = fixture.nativeElement as HTMLElement;
+      expect(element.querySelector('[data-testid="withdrawal-note-pay-r"]')?.textContent).toContain('Süre içinde değil');
+      expect(element.querySelector('[data-testid="payment-cancelled-pay-c"]')?.textContent).toContain('Ödeme iptal edildi');
+      expect(element.querySelector('[data-testid="payment-cancelled-pay-r"]')).toBeNull();
+      component.startWithdrawal(component.payments()[0]); fixture.detectChanges();
+      expect(element.textContent).toContain('ödenen tutarın tamamı 14 gün içinde');
+      expect(element.textContent).not.toContain('düşülerek');
+    });
 
     it('lists payments with the discount and the invoice download', async () => {
       const save = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:x');

@@ -309,7 +309,7 @@ public sealed class CoachingSubscriptionService(
         if (replay is not null)
         {
             EnsureIdempotencyMatches(replay, requestHash);
-            return await GetBankTransferSummaryAsync(replay.ResourceId, userId, cancellationToken);
+            return ForBuyer(await GetBankTransferSummaryAsync(replay.ResourceId, userId, cancellationToken));
         }
 
         var settings = await GetPublicSettingsAsync(cancellationToken);
@@ -367,10 +367,10 @@ public sealed class CoachingSubscriptionService(
                 var concurrent = await GetIdempotencyRecordAsync(TransferCreateIdempotencyScope, key, cancellationToken);
                 if (concurrent is null) throw;
                 EnsureIdempotencyMatches(concurrent, requestHash);
-                return await GetBankTransferSummaryAsync(concurrent.ResourceId, userId, cancellationToken);
+                return ForBuyer(await GetBankTransferSummaryAsync(concurrent.ResourceId, userId, cancellationToken));
             }
 
-            return await GetBankTransferSummaryAsync(existingReference.Id, userId, cancellationToken);
+            return ForBuyer(await GetBankTransferSummaryAsync(existingReference.Id, userId, cancellationToken));
         }
 
         var existing = await db.CoachingBankTransferRequests
@@ -445,7 +445,7 @@ public sealed class CoachingSubscriptionService(
             var concurrent = await GetIdempotencyRecordAsync(TransferCreateIdempotencyScope, key, cancellationToken);
             if (concurrent is null) throw;
             EnsureIdempotencyMatches(concurrent, requestHash);
-            return await GetBankTransferSummaryAsync(concurrent.ResourceId, userId, cancellationToken);
+            return ForBuyer(await GetBankTransferSummaryAsync(concurrent.ResourceId, userId, cancellationToken));
         }
         catch (DbUpdateException exception) when (IsSerializationFailure(exception) || IsBankTransferReferenceConflict(exception))
         {
@@ -454,10 +454,10 @@ public sealed class CoachingSubscriptionService(
             var concurrent = await db.CoachingBankTransferRequests.AsNoTracking()
                 .SingleOrDefaultAsync(item => item.UserId == userId && item.PaymentReference == reference
                     && (item.Status == "Pending" || item.Status == "Approved"), cancellationToken);
-            return concurrent is null ? null : await GetBankTransferSummaryAsync(concurrent.Id, userId, cancellationToken);
+            return concurrent is null ? null : ForBuyer(await GetBankTransferSummaryAsync(concurrent.Id, userId, cancellationToken));
         }
 
-        return await GetBankTransferSummaryAsync(requestEntity, cancellationToken);
+        return ForBuyer(await GetBankTransferSummaryAsync(requestEntity, cancellationToken));
     }
 
     public async Task<IReadOnlyList<CoachingBankTransferRequestSummary>> GetMyBankTransferRequestsAsync(
@@ -469,7 +469,7 @@ public sealed class CoachingSubscriptionService(
                           where request.UserId == userId
                           orderby request.CreatedAt descending
                           select new { request, plan }).ToListAsync(cancellationToken);
-        return rows.Select(row => ToTransferSummary(row.request, row.plan)).ToArray();
+        return rows.Select(row => ForBuyer(ToTransferSummary(row.request, row.plan))!).ToArray();
     }
 
     /// <summary>The payer fixes a typo in a notice that nobody has reviewed yet.</summary>
@@ -495,7 +495,7 @@ public sealed class CoachingSubscriptionService(
         {
             throw new BusinessRuleException("Subscription.TransferReferenceUsed", "Bu işlem referansıyla daha önce ödeme bildirimi gönderdin.");
         }
-        return await GetBankTransferSummaryAsync(transfer, cancellationToken);
+        return ForBuyer(await GetBankTransferSummaryAsync(transfer, cancellationToken));
     }
 
     /// <summary>The payer takes back a notice sent by mistake; a new notice can then be sent for the same plan.</summary>
@@ -505,7 +505,7 @@ public sealed class CoachingSubscriptionService(
         var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(item => item.Id == id
             && (item.UserId == userId || item.SubmittedByUserId == userId), cancellationToken);
         if (transfer is null) return null;
-        if (transfer.Status == "Withdrawn") return await GetBankTransferSummaryAsync(transfer, cancellationToken);
+        if (transfer.Status == "Withdrawn") return ForBuyer(await GetBankTransferSummaryAsync(transfer, cancellationToken));
         RequirePending(transfer);
         transfer.Status = "Withdrawn";
         transfer.UpdatedAt = DateTime.UtcNow;
@@ -515,7 +515,7 @@ public sealed class CoachingSubscriptionService(
         {
             throw new BusinessRuleException("Subscription.TransferNotPending", "Ödeme bildirimi bu sırada incelendi; güncel durumu kontrol et.");
         }
-        return await GetBankTransferSummaryAsync(transfer, cancellationToken);
+        return ForBuyer(await GetBankTransferSummaryAsync(transfer, cancellationToken));
     }
 
     private static void RequirePending(CoachingBankTransferRequest transfer)
@@ -2005,7 +2005,34 @@ public sealed class CoachingSubscriptionService(
             settings.PaymentInstructions,
             settings.BankTransferEnabled,
             isPublic,
-            settings.UpdatedAt);
+            settings.UpdatedAt,
+            new[] { settings.SellerTitle, settings.SellerAddress, settings.SellerTaxOffice, settings.SellerTaxNumber, settings.SellerEmail,
+                settings.SellerPhone }.All(value => !string.IsNullOrWhiteSpace(value)));
+    }
+
+    /// <summary>
+    /// What the payer (or the parent who paid) reads about a notice. Live test 13.11.2026: the payer saw the admin's bank
+    /// check note and the cancellation trail with the admin's id. A rejection's reason and a cancellation's reason are
+    /// written for the payer (both are also e-mailed); an approval's note is the admin's own.
+    /// </summary>
+    internal static CoachingBankTransferRequestSummary? ForBuyer(CoachingBankTransferRequestSummary? summary) => summary is null ? null
+        : summary with
+        {
+            ReviewedBy = null,
+            ReviewNote = summary.Status switch
+            {
+                "Rejected" => summary.ReviewNote,
+                "Cancelled" => CancellationReason(summary.ReviewNote),
+                _ => null
+            }
+        };
+
+    private static string? CancellationReason(string? reviewNote)
+    {
+        if (string.IsNullOrWhiteSpace(reviewNote)) return null;
+        var match = System.Text.RegularExpressions.Regex.Match(reviewNote, @"İptal \(\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC, [0-9a-fA-F-]{36}\): (?<reason>.*)$",
+            System.Text.RegularExpressions.RegexOptions.Singleline);
+        return match.Success ? match.Groups["reason"].Value.Trim() : null;
     }
 
     private static CoachingBankTransferRequestSummary ToTransferSummary(

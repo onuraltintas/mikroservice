@@ -100,7 +100,7 @@ import {
             <label>Ödeme referansı<input name="paymentReference" [(ngModel)]="paymentReference" required maxlength="120" autocomplete="off" /></label>
             <label>Ödeyen adı<input name="payerName" [(ngModel)]="payerName" maxlength="200" autocomplete="name" /></label>
             <label>Not<textarea name="paymentNote" [(ngModel)]="paymentNote" maxlength="1000" rows="2"></textarea></label>
-            <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId" [price]="selectedPlan?.price ?? 0" [currency]="settings()?.currency || 'TRY'" [formal]="true" (choiceChange)="checkout = $event" />
+            <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId" [price]="selectedPlan?.price ?? 0" [currency]="settings()?.currency || 'TRY'" [formal]="true" [sellerReady]="settings()?.sellerInfoComplete !== false" (choiceChange)="checkout = $event" />
             <button type="submit" [disabled]="savingRequest() || !selectedPlanId || selectedPlan?.isContactOnly || !paymentReference.trim() || !settings()?.bankTransferEnabled || !checkout.acceptSalesContract">{{ savingRequest() ? 'Gönderiliyor…' : 'Ödeme bildirimi gönder' }}</button>
           </form>
         } @else {

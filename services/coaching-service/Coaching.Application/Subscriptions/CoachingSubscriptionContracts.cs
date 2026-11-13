@@ -117,7 +117,10 @@ public sealed record CoachingSubscriptionSettingsSummary(
     string? PaymentInstructions,
     bool BankTransferEnabled,
     bool IsPubliclyAvailable,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    /// <summary>The seller's title, address, tax office and number, e-mail and phone are all entered (live test 13.11.2026:
+    /// the contract was shown with "[… girilmedi]"); the payment screens do not take a notice until they are.</summary>
+    bool SellerInfoComplete = false);
 
 public sealed record CoachingSubscriptionSettingsRequest(
     bool RequireActiveSubscription,

@@ -248,10 +248,10 @@ export class CoachingSubscriptionsComponent implements OnInit {
   }
 
   async reviewRequest(request: CoachingBankTransferRequest, status: 'Approved' | 'Rejected') {
-    const actionText = status === 'Approved' ? 'onaylayıp aboneliği aç' : 'reddet';
-    if (!await this.toaster.confirm(`${request.userName} kullanıcısının ${request.amount} ${request.currency} tutarlı bildirimi ${actionText}?`, { title: 'EFT bildirimini incele' })) return;
+    const question = status === 'Approved' ? 'onaylansın ve abonelik açılsın mı?' : 'reddedilsin mi?';
+    if (!await this.toaster.confirm(`${request.userName} adına gönderilen ${request.amount} ${request.currency} tutarlı ödeme bildirimi ${question}`, { title: 'EFT bildirimini incele' })) return;
     const reviewNote = await this.toaster.prompt(
-      status === 'Rejected' ? 'Kullanıcının göreceği ret gerekçesini yazın.' : 'Banka kontrol notu (isteğe bağlı)',
+      status === 'Rejected' ? 'Kullanıcının göreceği ret gerekçesini yazın.' : 'Banka kontrol notu (isteğe bağlı; yalnız yöneticiler görür)',
       '',
       { title: status === 'Rejected' ? 'Ret gerekçesi' : 'İnceleme notu' });
     if (reviewNote === null) return;
@@ -263,8 +263,8 @@ export class CoachingSubscriptionsComponent implements OnInit {
   // A wrongly approved payment: access granted by it ends; the transfer and payment stay as a cancelled record.
   async cancelApprovedRequest(request: CoachingBankTransferRequest) {
     if (request.status !== 'Approved') return;
-    if (!await this.toaster.confirm(`${request.userName} kullanıcısının ${request.amount} ${request.currency} tutarlı onaylı ödemesi iptal edilsin mi? Bu ödemeyle açılan erişim sona erer; kayıt iz olarak kalır.`, { title: 'Onayı iptal et' })) return;
-    const reason = await this.toaster.prompt('İptal gerekçesini yazın (en az 5 karakter).', '', { title: 'İptal gerekçesi' });
+    if (!await this.toaster.confirm(`${request.userName} adına onaylanan ${request.amount} ${request.currency} tutarlı ödeme iptal edilsin mi? Bu ödemeyle açılan erişim sona erer; kayıt iz olarak kalır.`, { title: 'Onayı iptal et' })) return;
+    const reason = await this.toaster.prompt('İptal gerekçesini yazın (en az 5 karakter). Gerekçe alıcıya bildirilir.', '', { title: 'İptal gerekçesi' });
     if (reason === null) return;
     if (reason.trim().length < 5) { this.toaster.warning('İptal gerekçesi en az 5 karakter olmalıdır.'); return; }
     try { await firstValueFrom(this.service.cancelApprovedTransferRequest(request.id, reason.trim())); this.toaster.success('Ödeme onayı iptal edildi.'); this.loadRequests(); this.loadSubscriptions(); }

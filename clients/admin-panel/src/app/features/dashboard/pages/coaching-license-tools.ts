@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { CoachingChurnRow, CoachingLicenseRow, CoachingManagementService } from '../../../core/services/coaching-management.service';
+import { InstitutionService } from '../../../core/services/institution.service';
 
 const AUDIENCES: Record<string, string> = { Individual: 'Bireysel', Teacher: 'Öğretmen', Institution: 'Kurum' };
 
@@ -68,7 +69,7 @@ export class CoachingLicenseEditComponent implements OnChanges {
           <h3 class="font-semibold">{{ list.title }}</h3>
           <table class="data-table" [attr.data-testid]="'licenses-' + list.window"><thead><tr><th>Sahip</th><th>Plan</th><th>Bitiş</th><th>Kalan gün</th><th>Koltuk</th><th></th></tr></thead><tbody>
             @for (row of rows()[list.window]; track row.id) {
-              <tr><td>{{ row.ownerName || row.ownerEmail || row.institutionId || row.userId }}<div class="muted">{{ audience(row.audience) }}</div></td><td>{{ row.planName }}</td>
+              <tr><td>{{ owner(row) }}<div class="muted">{{ audience(row.audience) }}</div></td><td>{{ row.planName }}</td>
                 <td>{{ row.endDate | date:'dd.MM.yyyy' }}</td><td [class.warn]="row.daysLeft <= 7">{{ row.daysLeft }}</td>
                 <td>{{ row.seatCapacity === null ? '—' : row.assignedSeats + ' / ' + row.seatCapacity }}</td>
                 <td><button type="button" class="secondary" (click)="editing.set(editing() === row.id ? null : row.id)">Düzenle</button></td></tr>
@@ -105,6 +106,8 @@ export class CoachingLicenseEditComponent implements OnChanges {
 })
 export class CoachingLicenseToolsComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
+  private readonly institutionService = inject(InstitutionService);
+  private readonly institutions = signal<Record<string, string>>({});
   readonly lists = [{ window: 'ending' as const, title: '30 gün içinde bitecek lisanslar' }, { window: 'ended' as const, title: 'Son 30 günde biten lisanslar' }];
   readonly rows = signal<Record<'ending' | 'ended', CoachingLicenseRow[]>>({ ending: [], ended: [] });
   readonly churn = signal<CoachingChurnRow[]>([]);
@@ -113,9 +116,21 @@ export class CoachingLicenseToolsComponent implements OnInit {
   readonly exporting = signal(false);
   exportFrom = ''; exportTo = '';
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.institutionService.getAll(1, 100, '', true).subscribe({
+      next: result => this.institutions.set(Object.fromEntries((result.items ?? []).map(item => [item.id, item.name]))),
+      error: () => undefined
+    });
+  }
 
   audience(value: string): string { return AUDIENCES[value] ?? value; }
+  /** Live test 13.11.2026: a license without a stored name showed its owner as a raw id. */
+  owner(row: CoachingLicenseRow): string {
+    if (row.ownerName || row.ownerEmail) return row.ownerName || row.ownerEmail || '';
+    if (row.institutionId) return this.institutions()[row.institutionId] ?? 'Kurum lisansı';
+    return 'Adı kayıtlı olmayan kullanıcı';
+  }
   hasChurn(): boolean { return this.churn().some(row => row.ended > 0); }
 
   load(): void {

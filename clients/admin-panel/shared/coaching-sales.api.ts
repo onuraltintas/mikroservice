@@ -9,6 +9,8 @@ export interface CoachingBuyerPayment {
   id: string; transferId: string | null; planName: string; amount: number; currency: string; status: string; createdAt: string;
   listPrice: number | null; couponCode: string | null; discountAmount: number; invoiceNumber: string | null; invoiceIssuedOn: string | null;
   withdrawalStatus: string | null; withdrawUntil: string | null; hasSalesDocuments: boolean;
+  /** Why a withdrawal was rejected, in the admin's words for the buyer. */
+  withdrawalReviewNote?: string | null;
 }
 
 /** What the checkout adds to a bank-transfer notice. */
@@ -58,6 +60,8 @@ export class CoachingSalesApi {
 }
 
 export function coachingErrorMessage(response: unknown, fallback: string): string {
-  const message = (response as { error?: { message?: unknown } } | null)?.error?.message;
-  return typeof message === 'string' && message.trim() ? message : fallback;
+  // The API answers a refused request with { message } and an invalid one with a problem document's { detail }.
+  const body = (response as { error?: { message?: unknown; detail?: unknown } } | null)?.error;
+  for (const message of [body?.message, body?.detail]) if (typeof message === 'string' && message.trim()) return message;
+  return fallback;
 }

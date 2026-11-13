@@ -112,9 +112,11 @@ export interface CoachingSubscriptionSettings {
   bankTransferEnabled: boolean;
   isPubliclyAvailable: boolean;
   updatedAt: string | null;
+  /** False while the seller details printed on the sales documents are missing; no payment notice is taken then. */
+  sellerInfoComplete?: boolean;
 }
 
-export type CoachingSubscriptionSettingsRequest = Omit<CoachingSubscriptionSettings, 'isPubliclyAvailable' | 'updatedAt'>;
+export type CoachingSubscriptionSettingsRequest = Omit<CoachingSubscriptionSettings, 'isPubliclyAvailable' | 'updatedAt' | 'sellerInfoComplete'>;
 
 export interface CoachingSubscription {
   id: string;

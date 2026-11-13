@@ -17,7 +17,7 @@ public sealed record CoachingSalesTerms(CoachingSubscriptionSettings Seller, str
 /// </summary>
 public static class CoachingSalesDocumentTexts
 {
-    public const string Version = "2026-10-31";
+    public const string Version = "2026-11-13";
     private static readonly CultureInfo Turkish = new("tr-TR");
 
     public static CoachingSalesDocuments Render(CoachingSalesTerms terms)
@@ -63,8 +63,8 @@ public static class CoachingSalesDocumentTexts
             5. Cayma hakkı
             Alıcı, ödemenin onaylandığı günden başlayarak 14 gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Talep, platformdaki
             "Ödemelerim" bölümünden ya da satıcının e-posta adresine yazılı olarak iletilir. Cayma halinde ödenen tutar, talebin satıcıya
-            ulaştığı günden başlayarak en geç 14 gün içinde alıcının ödeme yaptığı hesaba iade edilir. Cayma süresi içinde hizmetin
-            kullanıldığı günlere düşen tutar iadeden düşülebilir.
+            ulaştığı günden başlayarak en geç 14 gün içinde alıcının ödeme yaptığı hesaba iade edilir. İade, ödenen tutarın tamamıdır;
+            hizmetin kullanıldığı günler için kesinti yapılmaz.
 
             6. Şikâyet ve itiraz
             Alıcı şikâyetlerini satıcının iletişim bilgilerine iletebilir; ayrıca ilgili mevzuat sınırları içinde Tüketici Hakem Heyetine
@@ -100,8 +100,8 @@ public static class CoachingSalesDocumentTexts
             Madde 5 – Cayma hakkı
             Alıcı, ödemenin onaylandığı günden başlayarak 14 gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Talep platformdaki
             "Ödemelerim" bölümünden ya da satıcının e-posta adresine yazılı olarak iletilir. Satıcı, talebin kendisine ulaştığı günden
-            başlayarak en geç 14 gün içinde bedeli alıcının ödeme yaptığı hesaba iade eder. Cayma süresi içinde hizmetin kullanıldığı günlere
-            düşen tutar iadeden düşülebilir. Cayma onaylandığında abonelik sona erer.
+            başlayarak en geç 14 gün içinde bedelin tamamını alıcının ödeme yaptığı hesaba iade eder; hizmetin kullanıldığı günler için
+            kesinti yapılmaz. Cayma onaylandığında abonelik sona erer.
 
             Madde 6 – Fatura
             Fatura, ödemenin onaylanmasından sonra satıcı tarafından düzenlenir ve platformdaki "Ödemelerim" bölümünden indirilebilir.

@@ -120,6 +120,9 @@ describe('CoachingSalesComponent (O10)', () => {
     const note = fixture.nativeElement.querySelector('[data-testid="documents-note"]').textContent;
     expect(note).toContain('esas metinlerdir');
     expect(note).not.toMatch(/taslak|avukat/);
+    // Live test 13.11.2026: all seller details were empty on live and nothing said so.
+    const missing = fixture.nativeElement.querySelector('[data-testid="seller-missing"]').textContent as string;
+    expect(missing).toContain('unvan'); expect(missing).toContain('telefon'); expect(missing).not.toContain('MERSİS');
     component.seller = { ...component.seller, title: '  Eduİvme Eğitim Ltd. Şti. ', taxNumber: '1234567890', email: '' };
     const saving = component.saveSeller();
     const request = http.expectOne(r => r.method === 'PUT' && r.url.endsWith('/sales/seller'));
@@ -136,10 +139,16 @@ describe('CoachingSalesComponent (O10)', () => {
     expect(component.pendingWithdrawals()).toBe(2);
     expect(fixture.nativeElement.querySelector('[data-testid="sales-tab-withdrawals"]').textContent).toContain('(2)');
 
+    // Live test 13.11.2026: the approval asks for an optional refund note; leaving it empty still approves.
+    toaster.prompt.mockResolvedValueOnce(null);
+    await component.reviewWithdrawal(component.withdrawals()[0], true);
+    http.expectNone('/api/coaching-admin/sales/withdrawals/t1/review');
+    toaster.prompt.mockResolvedValueOnce('  ');
     const approving = component.reviewWithdrawal(component.withdrawals()[0], true);
     await flush();
     const approve = http.expectOne('/api/coaching-admin/sales/withdrawals/t1/review');
     expect(approve.request.body).toEqual({ approve: true, note: null });
+    expect(toaster.prompt).toHaveBeenLastCalledWith(expect.stringContaining('İade notu'), '', { title: 'İade notu' });
     approve.flush({ success: true });
     await flush();
     http.expectOne('/api/coaching-admin/sales/withdrawals').flush({ data: [{ ...pending('t1'), withdrawalStatus: 'Approved' }, pending('t2')] });

@@ -22,7 +22,7 @@ public sealed class CoachingSalesController(CoachingSalesService sales) : Contro
     public async Task<IActionResult> StartTrial([FromBody] CoachingTrialRequest request, CancellationToken ct)
     {
         var role = User.IsInRole("Teacher") && request.Audience == "Teacher" ? "Teacher" : User.IsInRole("Student") ? "Student" : "Teacher";
-        return Ok(new { success = true, data = await sales.StartTrialAsync(UserId, Name, Email, role, request.PlanId, ct), message = "Ücretsiz deneme başladı." });
+        return Ok(new { success = true, data = await sales.StartTrialAsync(UserId, await NameAsync(ct), Email, role, request.PlanId, ct), message = "Ücretsiz deneme başladı." });
     }
 
     [HttpGet("coupons/{code}")]
@@ -32,7 +32,7 @@ public sealed class CoachingSalesController(CoachingSalesService sales) : Contro
 
     [HttpGet("sales-documents")]
     public async Task<IActionResult> Documents([FromQuery] Guid planId, [FromQuery] string? couponCode, CancellationToken ct) =>
-        Ok(new { success = true, data = await sales.RenderDocumentsAsync(UserId, Name ?? "Koçluk kullanıcısı", Email, planId, couponCode, ct) });
+        Ok(new { success = true, data = await sales.RenderDocumentsAsync(UserId, await NameAsync(ct) ?? "Koçluk kullanıcısı", Email, planId, couponCode, ct) });
 
     [HttpGet("my-bank-transfer-requests/{id:guid}/sales-documents")]
     public async Task<IActionResult> AcceptedDocuments(Guid id, CancellationToken ct)
@@ -67,8 +67,7 @@ public sealed class CoachingSalesController(CoachingSalesService sales) : Contro
 
     private Guid UserId => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"), out var id)
         ? id : throw new BusinessRuleException("Authorization.Forbidden", "Oturum açın.");
-    private string? Name => User.FindFirstValue(ClaimTypes.Name)
-        ?? string.Join(' ', new[] { User.FindFirstValue(ClaimTypes.GivenName), User.FindFirstValue(ClaimTypes.Surname) }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    private Task<string?> NameAsync(CancellationToken ct) => CoachingBuyerName.ResolveAsync(HttpContext, UserId, ct);
     private string? Email => User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
 }
 
