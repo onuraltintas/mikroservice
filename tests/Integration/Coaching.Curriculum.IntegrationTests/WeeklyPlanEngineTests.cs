@@ -110,7 +110,7 @@ public sealed class WeeklyPlanEngineTests
         var spaced = result.Tasks.Where(x => x.Kind == "Spaced").ToArray();
         // Paket I2: one review, +7 days (next Monday).
         Assert.Equal(new[] { Start.AddDays(7) }, spaced.Select(x => x.Date));
-        Assert.Equal((10, new[] { 7 }), (WeeklyPlanEngine.SpacedMinutes, WeeklyPlanEngine.SpacedIntervalDays.ToArray()));
+        Assert.Equal(10, WeeklyPlanEngine.SpacedMinutes); Assert.Equal(new[] { 7 }, WeeklyPlanEngine.SpacedIntervalDays);
         Assert.All(spaced, x => Assert.Equal(WeeklyPlanEngine.SpacedMinutes, x.Minutes));
         Assert.All(spaced, x => Assert.Contains("Aralıklı tekrar", x.Reason));
         Assert.All(result.Tasks, x => Assert.NotNull(x.PlannedQuestions));

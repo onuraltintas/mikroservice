@@ -170,11 +170,11 @@ public sealed class WeeklyProposalServiceTests
     }
 
     [Fact]
-    public async Task AYksStudentChoosesTheExamFocus_AGraduateGetsTenHoursADayAndABreakEveryTwoSessions()
+    public async Task AYksStudentChoosesTheExamFocus_AGraduateGetsTenHoursADay()
     {
         await using var f = new CurriculumManagementTests.Fixture(); var world = await Seed(f);
         // A lise graduate preparing for YKS (SAY): Matematik becomes a TYT lesson, Türkçe an AYT lesson she says she has studied
-        // (a short refresh: 45 minutes, so its weekly need is below Matematik's 60).
+        // (a short refresh: 45 minutes; Matematik needs 30 + one 10-minute review).
         foreach (var (lesson, exam, test) in new[] { (world.Math, "TYT", "TYT.MAT"), (world.Turkish, "AYT", "AYT.EDB") })
         {
             f.Db.Entry(lesson).Property(x => x.ExamCode).CurrentValue = exam;
@@ -192,14 +192,14 @@ public sealed class WeeklyProposalServiceTests
 
         var balanced = await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, "balanced"), default);
         Assert.Equal((WeeklyDayLimit.GraduateMinutes, false, "balanced"), (balanced.MaxDayMinutes, balanced.MiddleSchool, balanced.ExamFocus));
-        // 17:00–20:00 with a break after two sessions: 17:00 and 18:00 (19:00 would be a third hour in a row).
+        // 17:00–20:00: each lesson needs one session, 17:00 and 18:00.
         Assert.Equal(new[] { 1020, 1080 }, balanced.Slots.Select(x => x.StartMinute));
         Assert.Equal((60, 60), (Minutes(balanced, world.Math), Minutes(balanced, world.Turkish)));
 
         // One free hour: the larger weighted need gets it; "ayt" puts the AYT lesson first (K6: ×1.3 and ×0.75).
         hours.ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]); await f.Db.SaveChangesAsync();
         async Task<Guid> OnlyLesson(string focus) => Assert.Single((await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, focus), default)).Slots).LessonId;
-        Assert.Equal(world.Math.Id, await OnlyLesson("balanced"));
+        Assert.Equal(world.Turkish.Id, await OnlyLesson("balanced")); // 45 against 40 (Paket I2; it was 45 against 60 with three reviews)
         Assert.Equal(world.Math.Id, await OnlyLesson("tyt"));
         Assert.Equal(world.Turkish.Id, await OnlyLesson("ayt"));
         var shortage = await Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, "ayt"), default);
@@ -364,7 +364,7 @@ public sealed class WeeklyProposalServiceTests
         await f.Db.SaveChangesAsync();
         Task<WeeklyProposalView> Propose(DateOnly? finishBy) => Proposals(f).ProposeAsync(new(WeeklyProposalMode.Replace, FinishBy: finishBy), default);
 
-        // Until the plan end (Tuesday 1 June) Monday and Tuesday come twice: (30 + 2 × 15) ÷ 2 → 30, (180 + 2 × 15) ÷ 2 → 120.
+        // Until the plan end (Tuesday 1 June) Monday and Tuesday come twice: (30 + 10) ÷ 2 → 30, (180 + 10) ÷ 2 → 120.
         var plain = await Propose(null);
         Assert.Null(plain.FinishBy);
         Assert.Equal((30, 120), Need(plain, world));
@@ -374,9 +374,9 @@ public sealed class WeeklyProposalServiceTests
         var monday = await Propose(new DateOnly(2027, 5, 31));
         Assert.Equal((new DateOnly(2027, 5, 31), (60, 210)), (monday.FinishBy, Need(monday, world)));
         Assert.True(monday.NeededMinutes > plain.NeededMinutes);
-        // Until Sunday 30 May (today + 6) the 7-day review no longer falls inside: 30 + 15 → 60, 180 + 15 → 210.
+        // Until Sunday 30 May (today + 6) the 7-day review no longer falls inside: 30 and 180 (Paket I2: it is the only review).
         var sunday = await Propose(new DateOnly(2027, 5, 30));
-        Assert.Equal((new DateOnly(2027, 5, 30), (60, 210)), (sunday.FinishBy, Need(sunday, world)));
+        Assert.Equal((new DateOnly(2027, 5, 30), (30, 180)), (sunday.FinishBy, Need(sunday, world)));
         Assert.Equal((new DateOnly(2027, 6, 1), 2), (sunday.EndDate, sunday.WeeksUntilEnd));
         var ok = Assert.IsType<OkObjectResult>(await StudentApi(f).Proposal(new(WeeklyProposalMode.Replace, FinishBy: new DateOnly(2027, 5, 30)), Proposals(f), default));
         Assert.Equal(new DateOnly(2027, 5, 30), ((WeeklyProposalView)Body(ok, "data")!).FinishBy);
@@ -422,9 +422,9 @@ public sealed class WeeklyProposalServiceTests
         Assert.Equal(new DateOnly(2027, 8, 1), view.PlanEnd);
         Assert.Equal(new[] { (StudyTempo.Relaxed, new DateOnly(2027, 8, 1)), (StudyTempo.Balanced, new DateOnly(2027, 7, 22)), (StudyTempo.Intense, new DateOnly(2027, 7, 11)) },
             view.Options.Select(x => (x.Tempo, x.FinishBy)));
-        // Rahat: every weekday comes 10 times: (30 + 3 × 15) ÷ 10 → 30 and (180 + 45) ÷ 10 → 30. Dengeli: Friday comes 8 times → 30 + 30.
-        // Yoğun: 7 times → 30 + 60.
-        Assert.Equal(new[] { 60, 60, 90 }, view.Options.Select(x => x.NeededWeeklyMinutes));
+        // Rahat: every weekday comes 10 times: (30 + 10) ÷ 10 → 30 and (180 + 10) ÷ 10 → 30. Dengeli: Friday comes 8 times → 30 + 30.
+        // Yoğun: 7 times → 30 + 30 (Paket I2: one 10-minute review; three 15-minute ones made it 30 + 60).
+        Assert.Equal(new[] { 60, 60, 60 }, view.Options.Select(x => x.NeededWeeklyMinutes));
         // Middle school, 17:00–20:00 on weekdays: two sessions a day, but Monday's saved 18:00 card leaves only 19:00: 9 × 60 + 30 saved.
         Assert.All(view.Options, x => Assert.Equal((570, true), (x.CapacityWeeklyMinutes, x.Fits)));
         // Each option is the proposal for its finishBy; nothing is saved.
@@ -437,7 +437,7 @@ public sealed class WeeklyProposalServiceTests
         (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows([new(DayOfWeek.Monday, 1020, 1080)]);
         f.Db.Remove(await f.Db.Set<WeeklyStudyDraft>().SingleAsync()); await f.Db.SaveChangesAsync();
         var tight = await Proposals(f).TempoOptionsAsync(new(), default);
-        Assert.Equal(new[] { (60, 60, false), (60, 60, false), (90, 60, false) }, tight.Options.Select(x => (x.NeededWeeklyMinutes, x.CapacityWeeklyMinutes, x.Fits)));
+        Assert.Equal(new[] { (60, 60, false), (60, 60, false), (60, 60, false) }, tight.Options.Select(x => (x.NeededWeeklyMinutes, x.CapacityWeeklyMinutes, x.Fits)));
         await AssertTheProposalAgrees(tight, r => Proposals(f).ProposeAsync(r, default));
 
         // The API sends the names and dates the wizard reads.
@@ -514,9 +514,9 @@ public sealed class WeeklyProposalServiceTests
             }
             return lesson;
         }
-        // Geometri (AYT, exam 2 June): 4 topics of 15 minutes. Kimya (TYT, exam 30 May): 1 topic of 120 minutes. One free hour on Sunday.
-        var geometry = Lesson("h4-geometry", "Geometri", "AYT", 4, 5);
-        var chemistry = Lesson("h4-chem", "Kimya", "TYT", 1, 40);
+        // Geometri (AYT, exam 2 June): 4 topics of 30 minutes. Kimya (TYT, exam 30 May): 1 topic of 126 minutes. One free hour on Sunday.
+        var geometry = Lesson("h4-geometry", "Geometri", "AYT", 4, 10);
+        var chemistry = Lesson("h4-chem", "Kimya", "TYT", 1, 42);
         (await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "TYT")).ReplaceSessions([new(null, new DateOnly(2027, 5, 30), "2027", null, null)]);
         (await f.Db.Set<StudyCatalogExam>().SingleAsync(x => x.Code == "AYT")).ReplaceSessions([new(null, new DateOnly(2027, 6, 2), "2027", null, null)]);
         var context = await f.Db.StudentLearningContexts.Include(x => x.CoursePreferences).SingleAsync();
@@ -525,8 +525,8 @@ public sealed class WeeklyProposalServiceTests
         (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows([new(DayOfWeek.Sunday, 600, 660)]);
         await f.Db.SaveChangesAsync();
 
-        // Until 31 May or 1 June (two reviews) Geometri needs more (60 + 4 × 30 = 180 against 120 + 30) and takes Sunday: the plan ends
-        // on 1 June. Until 30 May (one review) Kimya needs more (135 against 120); its exam ends the plan on 29 May, before Sunday, so
+        // Until 31 May or 1 June (the 7-day review falls inside) Geometri needs more (120 + 4 × 10 = 160 against 126 + 10) and takes
+        // Sunday: the plan ends on 1 June. Until 30 May (no review) Kimya needs more (126 against 120); its exam ends the plan on 29 May, before Sunday, so
         // the proposal for 30 May works until 29 May, a day the proposal endpoint refuses: Yoğun is left out.
         var view = await Proposals(f).TempoOptionsAsync(new(Mode: WeeklyProposalMode.Replace), default);
         Assert.Equal(new DateOnly(2027, 6, 1), view.PlanEnd);

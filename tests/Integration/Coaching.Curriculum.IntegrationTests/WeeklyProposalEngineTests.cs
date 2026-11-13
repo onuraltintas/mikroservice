@@ -120,7 +120,7 @@ public sealed class WeeklyProposalEngineTests
         var fill = Propose([Window(DayOfWeek.Monday, 1020, 1200)], [lessons[1], Lesson(4, 60)], existing: saved);
         Assert.Equal(2, fill.Slots.Count);
         Assert.Equal(Id(4), fill.Slots.Single(x => x.StartMinute == 1020).LessonId);
-        Assert.Equal(Id(2), fill.Slots.Single(x => x.StartMinute == 1110).LessonId);
+        Assert.Equal(Id(2), fill.Slots.Single(x => x.StartMinute == 1080).LessonId); // Paket I2: the third hour in a row, after another lesson
     }
 
     [Fact]
@@ -294,10 +294,10 @@ public sealed class WeeklyProposalEngineTests
     [Fact]
     public void ASavedCardOutsideTheWindowsStillCountsTowardTheRun()
     {
-        // 16:00–18:00 free, a saved card 18:00–19:00 outside any window: 17:00 would make three hours in a row.
+        // 15:00–18:00 free, a saved card 18:00–19:00 outside any window: 17:00 would make four hours in a row (Paket I2: three may).
         var saved = new[] { Card(9, DayOfWeek.Monday, 1080) };
-        var result = Propose([Window(DayOfWeek.Monday, 960, 1080)], Enumerable.Range(1, 3).Select(n => Lesson(n, 600)), existing: saved);
-        Assert.Equal(new[] { 960 }, Starts(result, DayOfWeek.Monday));
+        var result = Propose([Window(DayOfWeek.Monday, 900, 1080)], Enumerable.Range(1, 4).Select(n => Lesson(n, 600)), existing: saved);
+        Assert.Equal(new[] { 900, 960 }, Starts(result, DayOfWeek.Monday));
     }
 
     // Merge of Paket H1: the daily limit counts saved cards; a day already at or over the limit gets nothing (a draft saved above the
