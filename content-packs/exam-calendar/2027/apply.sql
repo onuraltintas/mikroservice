@@ -1,7 +1,7 @@
 -- KM1 exam calendar 2027 (01.11.2026): the coaching catalog exams TYT, AYT, YDT, LGS, AGS, ÖABT, YDS and YÖKDİL and their
 -- 2027 sessions from the ÖSYM 2027 exam calendar announced on 28.10.2026
--- (https://dokuman.osym.gov.tr/web/2026/10/osym-2027-yili-sinav-takvimi-7d09wi-28090734.pdf). LGS 2027 is not announced yet
--- (MEB): the exam is kept, without a session.
+-- (https://dokuman.osym.gov.tr/web/2026/10/osym-2027-yili-sinav-takvimi-7d09wi-28090734.pdf). LGS 2027 (13.11.2026): the central
+-- exam is on 13.06.2027 in MEB's "2027 Yılı Sınav Uygulama Takvimi"; MEB has not announced an application window, so it is empty.
 --
 -- Exams that are missing are added PASSIVE (IsActive = false): the team reviews and activates them in the admin panel
 -- ("Ders ve Müfredat Yönetimi" > Sınav türleri). Existing exams keep their name and status. Sessions are upserted by
@@ -35,10 +35,11 @@ INSERT INTO km1_calendar_exams VALUES
     ('YDS',    'f0ca1000-0000-4000-8000-000000000008', 'Yabancı Dil Bilgisi Seviye Tespit Sınavı', 7),
     ('YOKDIL', 'f0ca1000-0000-4000-8000-000000000009', 'Yükseköğretim Kurumları Yabancı Dil Sınavı', 8);
 
--- (exam, label, exam day, application start, application end) from the ÖSYM 2027 calendar.
+-- (exam, label, exam day, application start, application end) from the ÖSYM 2027 calendar; LGS from the MEB 2027 calendar.
 CREATE TEMP TABLE km1_calendar_sessions (code varchar(10), label varchar(100), date date, application_start date, application_end date,
     PRIMARY KEY (code, label)) ON COMMIT DROP;
 INSERT INTO km1_calendar_sessions VALUES
+    ('LGS',    '2027',   DATE '2027-06-13', NULL, NULL),
     ('TYT',    '2027',   DATE '2027-06-19', DATE '2027-02-04', DATE '2027-03-02'),
     ('AYT',    '2027',   DATE '2027-06-20', DATE '2027-02-04', DATE '2027-03-02'),
     ('YDT',    '2027',   DATE '2027-06-20', DATE '2027-02-04', DATE '2027-03-02'),
