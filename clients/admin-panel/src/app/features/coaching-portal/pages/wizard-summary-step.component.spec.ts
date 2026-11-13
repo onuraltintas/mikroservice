@@ -295,6 +295,8 @@ describe('WizardSummaryStepComponent', () => {
     expect([...el.querySelectorAll('.chosen-topics li')].map(text)).toEqual(['Türkçe · Paragraf Kaldır', 'Türkçe · Cümlenin ögeleri Kaldır']);
     // The plan cannot be published from a preview made without the chosen topics.
     expect((el.querySelector('[data-testid="publish-plan"]') as HTMLButtonElement).disabled).toBe(true);
+    // Live test 13.11.2026: the disabled button says why.
+    expect(text(el.querySelector('[data-testid="publish-blocked"]'))).toContain('Bu konularla yeniden hesapla');
     (el.querySelector('[aria-label="Cümlenin ögeleri konusunu kaldır"]') as HTMLButtonElement).click(); fixture.detectChanges();
     (el.querySelector('[data-testid="focus-preview"]') as HTMLButtonElement).click(); await fixture.whenStable(); fixture.detectChanges();
     expect(engine.preview).toHaveBeenLastCalledWith(expect.objectContaining({ focusTopicIds: ['paragraf'] }), undefined);
@@ -452,6 +454,18 @@ describe('WizardSummaryStepComponent', () => {
     expect(planning.publish).not.toHaveBeenCalled();
   });
 
+  // Live test 13.11.2026: "Planımı yayımla" was disabled without a word when a lesson did not fit.
+  it('says why the plan cannot be published and which button makes it publishable', async () => {
+    const { el, fixture } = await setup();
+    await keep(fixture);
+    const c = fixture.componentInstance;
+    expect(el.querySelector('[data-testid="publish-blocked"]')).toBeNull();
+    const p = c.preview()!;
+    c.preview.set({ ...p, canCreate: false, schedule: { ...p.schedule, lessons: p.schedule.lessons.map((lesson, n) => n ? lesson : { ...lesson, remainingMinutes: 120 }) } });
+    fixture.detectChanges();
+    expect((el.querySelector('[data-testid="publish-plan"]') as HTMLButtonElement).disabled).toBe(true);
+    expect(text(el.querySelector('[data-testid="publish-blocked"]'))).toContain('Önemli konulara odaklan');
+  });
   it('asks to recompute when the plan\'s sources changed, and blocks publishing until it is', async () => {
     const { el, fixture, engine } = await setup();
     await keep(fixture);

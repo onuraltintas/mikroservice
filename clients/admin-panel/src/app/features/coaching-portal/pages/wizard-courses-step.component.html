@@ -28,7 +28,7 @@
       }
     </section>
   } @empty {
-    <p class="notice" role="status">{{ staffStudentId ? 'Öğrenci henüz ders seçmemiş.' : 'Henüz ders seçmedin.' }}</p>
+    <p class="notice" role="status">{{ staffStudentId ? 'Öğrenci henüz ders seçmemiş.' : 'Henüz ders seçmedin. Aşağıdaki "Ders ekle/çıkar" bağlantısına bas: alanına göre önerilen dersler seçili gelir, kaydedince plana eklenir.' }}</p>
   }
   @if (!staffStudentId) { <p><a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'dersler', donus: 'sihirbaz' }">Ders ekle/çıkar</a></p> }
   <div class="step-actions">

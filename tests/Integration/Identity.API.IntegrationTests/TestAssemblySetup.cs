@@ -16,4 +16,8 @@ internal static class TestAssemblySetup
         var wanted = Math.Max(64, Environment.ProcessorCount * 8);
         ThreadPool.SetMinThreads(Math.Max(worker, wanted), Math.Max(io, wanted));
     }
+
+    /// <summary>The suite's study plans are written against the catalog minutes; Paket I2's planning share is pinned to 1.</summary>
+    [ModuleInitializer]
+    internal static void PlanTheCatalogMinutes() => Coaching.Application.StudyPlanning.WeeklyPlanEngine.ContentFactor = 1m;
 }
