@@ -12,8 +12,8 @@
 --   * privacy, kvkk, coaching-terms, speed-reading-terms and cookies lose the test-period wording and get the title without
 --     "yetişkin test dönemi";
 --   * test-participation ("Test katılım sınırları") is unpublished (not archived: it can be published again in the admin panel);
---   * age (user decision): Koçluk is for users of 13 and over; in every product a paid subscription is bought by someone over 18
---     (a parent or legal representative for a minor). Hızlı Okuma states no minimum age (it has a child programme);
+--   * age (user decision 13.11.2026): no minimum age, every age group may use the products; in every product a paid subscription
+--     is bought by someone over 18 (a parent or legal representative for a minor);
 --   * the sentences saying the transfer documents and the retention schedule are not completed yet are removed (user decision);
 --   * the payment data a bank-transfer purchase processes, the free trial and the GA4 consent banner are named.
 -- Everything else is kept word for word; tests/E2E/final-legal-texts.contract.test.mjs proves that against the published files.
@@ -33,7 +33,7 @@ INSERT INTO final_legal VALUES
 
 İşletmeci: ONAL YAZILIM OTOMASYON EĞİTİM DANIŞMANLIK SAN. TİC. LTD. ŞTİ. Vergi dairesi YOZGAT; vergi no 6421076848; MERSİS 0642107684800001. Adres: Karatepe Mah. Şehit Bayram Karataş Cad. Bulvar 1071 Sitesi, Merkez/Yozgat. İletişim: info@onalotomasyon.com, 0505 707 20 05.
 
-Bu politika Eduİvme, Koçluk ve Hızlı Okuma hizmetlerinin öğrenci, veli, öğretmen ve kurum kullanıcıları içindir. Koçluk hizmeti 13 yaş ve üzeri kullanıcılara yöneliktir. Bütün hizmetlerde ücretli aboneliği 18 yaşını doldurmuş kişi satın alır; 18 yaşından küçük kullanıcı adına sözleşmeyi velisi ya da yasal temsilcisi kurar ve ödemeyi o yapar. Ödeme ekranındaki yaş beyanı kimlik ya da yaş doğrulaması değildir. Sağlık verisi veya hizmetle ilgisi olmayan üçüncü kişilerin özel bilgileri girilmemelidir.
+Bu politika Eduİvme, Koçluk ve Hızlı Okuma hizmetlerinin öğrenci, veli, öğretmen ve kurum kullanıcıları içindir. Bütün hizmetlerde ücretli aboneliği 18 yaşını doldurmuş kişi satın alır; 18 yaşından küçük kullanıcı adına sözleşmeyi velisi ya da yasal temsilcisi kurar ve ödemeyi o yapar. Ödeme ekranındaki yaş beyanı kimlik ya da yaş doğrulaması değildir. Sağlık verisi veya hizmetle ilgisi olmayan üçüncü kişilerin özel bilgileri girilmemelidir.
 
 Ad-soyad, e-posta, profil/rol, davet ve hesap bilgileri; kullanım, güvenlik, destek kayıtları ile kullanıcının ödev, hedef, plan, seans, deneme ve egzersiz/okuma sonuçları hizmeti sunmak, yetkileri yönetmek ve güvenliği sağlamak için işlenir. Ücretli abonelikte plan, havale/EFT bildirimi, onaylanan sözleşme metinleri ve fatura kayıtları aboneliği ve ödemeyi yürütmek için işlenir; kart bilgisi alınmaz. Kimlik doğrulama ortak Identity altyapısında, ürün profilleri ve sonuçları ilgili ürün veri alanlarında yönetilir. Öğretmen, kurum ya da veli bağlantısı kurduğunuzda ilgili yetkili kullanıcılar rol, atama ve bağlantı kapsamındaki bilgileri görebilir.
 
@@ -46,7 +46,7 @@ Bülten/pazarlama izni hesabın şartı değildir. KVKK hakları ve başvuru usu
 
 Veri sorumlusu ONAL YAZILIM OTOMASYON EĞİTİM DANIŞMANLIK SAN. TİC. LTD. ŞTİ.; vergi dairesi YOZGAT, vergi no 6421076848, MERSİS 0642107684800001. Adres: Karatepe Mah. Şehit Bayram Karataş Cad. Bulvar 1071 Sitesi, Merkez/Yozgat. İletişim info@onalotomasyon.com; telefon 0505 707 20 05.
 
-Kapsam: Eduİvme, Koçluk ve Hızlı Okuma hizmetlerinin öğrenci, veli, öğretmen ve kurum kullanıcıları. Koçluk hizmeti 13 yaş ve üzeri kullanıcılara yöneliktir. Bütün hizmetlerde ücretli aboneliği 18 yaşını doldurmuş kişi satın alır; 18 yaşından küçük kullanıcı adına sözleşmeyi velisi ya da yasal temsilcisi kurar ve ödemeyi o yapar. Sağlık verisi gibi özel nitelikli kişisel veriler ve hizmetle ilgisi olmayan üçüncü kişilere ait bilgiler girilmemelidir.
+Kapsam: Eduİvme, Koçluk ve Hızlı Okuma hizmetlerinin öğrenci, veli, öğretmen ve kurum kullanıcıları. Bütün hizmetlerde ücretli aboneliği 18 yaşını doldurmuş kişi satın alır; 18 yaşından küçük kullanıcı adına sözleşmeyi velisi ya da yasal temsilcisi kurar ve ödemeyi o yapar. Sağlık verisi gibi özel nitelikli kişisel veriler ve hizmetle ilgisi olmayan üçüncü kişilere ait bilgiler girilmemelidir.
 
 Hesap ve iletişim, profil/rol, kurum, öğretmen ve veli bağlantıları, kullanıcının hizmet kullanımı ve sonuçları (hedef, ödev, seans, deneme, plan, egzersiz ve okuma sonuçları), güvenlik ve destek verileri işlenebilir. Ücretli abonelikte plan, havale/EFT bildirimi (ödeme referansı, gönderen adı ve yüklenirse dekont), onaylanan ön bilgilendirme formu ile mesafeli satış sözleşmesi, cayma talebi ve fatura kayıtları da işlenir. Kayıt, kullanıcı ve ödeme formları, Google giriş seçildiğinde kimlik doğrulaması, davetler, hizmet içi işlemler, destek yazışmaları ve teknik kayıtlar aracılığıyla elektronik ortamda toplanır.
 
@@ -63,7 +63,7 @@ KVKK m.11 kapsamında işleme olup olmadığını öğrenme, bilgi isteme, amac�
 
 İşletmeci ONAL YAZILIM OTOMASYON EĞİTİM DANIŞMANLIK SAN. TİC. LTD. ŞTİ.; vergi dairesi YOZGAT, vergi no 6421076848, MERSİS 0642107684800001. Adres Karatepe Mah. Şehit Bayram Karataş Cad. Bulvar 1071 Sitesi, Merkez/Yozgat. İletişim info@onalotomasyon.com, 0505 707 20 05.
 
-Koçluk 13 yaş ve üzeri öğrencilere, velilere, öğretmenlere ve kurumlara yöneliktir. Ücretli aboneliği 18 yaşını doldurmuş kişi satın alır; 18 yaşından küçük öğrenci adına sözleşmeyi velisi ya da yasal temsilcisi kurar ve ödemeyi o yapar. Ödeme ekranındaki yaş beyanı kimlik ya da yaş doğrulaması değildir.
+Koçluk öğrencilere, velilere, öğretmenlere ve kurumlara yöneliktir. Ücretli aboneliği 18 yaşını doldurmuş kişi satın alır; 18 yaşından küçük öğrenci adına sözleşmeyi velisi ya da yasal temsilcisi kurar ve ödemeyi o yapar. Ödeme ekranındaki yaş beyanı kimlik ya da yaş doğrulaması değildir.
 
 Koçluk dijital hedef, ödev, seans kayıtları, sınav/gelişim raporları ve öğretmen/kurum yönetim araçları sunar. Birebir öğretmen görüşmesi, danışmanlık veya sağlık hizmeti bu platform araçlarının kapsamına dahil değildir. Ücretli abonelik banka havalesi/EFT ile satın alınır. Ödeme bildiriminden önce plan, toplam fiyat ve süre gösterilir; ön bilgilendirme formu ve mesafeli satış sözleşmesi sunulur ve alıcının onayı alınır. Abonelik ödemenin onaylanmasıyla başlar ve kendiliğinden yenilenmez. Bir planda ücretsiz deneme tanımlıysa hesap başına bir kez kullanılabilir ve kendiliğinden ücretli aboneliğe dönüşmez. Cayma ve iade, mesafeli satış sözleşmesindeki koşullarla ve kanuni haklar saklı kalarak uygulanır.
 

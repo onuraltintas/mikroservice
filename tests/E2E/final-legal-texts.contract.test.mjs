@@ -5,8 +5,8 @@ import test from 'node:test';
 
 // Final legal texts (user decision 13.11.2026): the six pages published on 01.10.2026 for an adult test period become the texts in
 // force. docs/legal/publish-final-legal-20261113.sql rewrites five of them without the test-period wording and unpublishes
-// "Test katılım sınırları". User decisions of the same day: Koçluk is for users of 13 and over and a paid subscription is bought by
-// someone over 18; the "not completed yet" sentences about transfer documents and the retention schedule are removed.
+// "Test katılım sınırları". User decisions of the same day: no minimum age (every age group may use the products) and a paid
+// subscription is bought by someone over 18; the "not completed yet" sentences about transfer documents and the retention schedule are removed.
 // The coaching sales documents (pre-information form, distance-sales contract) are approved as they are: no draft note any more.
 // Not run on the server by this change: publishing needs the user's go-ahead.
 const read = path => readFile(new URL(`../../${path}`, import.meta.url), 'utf8');
@@ -41,16 +41,15 @@ test('no test-period wording is left', () => {
   }
 });
 
-test('age: coaching from 13, a subscription is bought by an adult; speed reading names no minimum age', () => {
+test('age: no minimum age anywhere; a subscription is bought by an adult', () => {
   const adult = /Ücretli aboneliği 18 yaşını doldurmuş kişi satın alır|ücretli aboneliği 18 yaşını doldurmuş kişi satın alır/;
   for (const slug of ['privacy', 'kvkk', 'coaching-terms', 'speed-reading-terms']) {
     assert.match(final.get(slug).content, adult, slug);
     assert.match(final.get(slug).content, /velisi ya da yasal temsilcisi kurar ve ödemeyi o yapar/, slug);
   }
-  for (const slug of ['privacy', 'kvkk']) assert.match(final.get(slug).content, /Koçluk hizmeti 13 yaş ve üzeri kullanıcılara yöneliktir\./, slug);
-  assert.match(final.get('coaching-terms').content, /Koçluk 13 yaş ve üzeri öğrencilere, velilere, öğretmenlere ve kurumlara yöneliktir\./);
-  // Hızlı Okuma has a child programme: its terms set no minimum age.
-  assert.doesNotMatch(final.get('speed-reading-terms').content, /13 yaş/);
+  // The first-login wizard is open to grades 5-12 and Hızlı Okuma has a child programme: no text sets a minimum age.
+  for (const slug of slugs) assert.doesNotMatch(final.get(slug).content, /13 yaş|yaş ve üzeri|en az \d+ yaş/, slug);
+  assert.match(final.get('coaching-terms').content, /Koçluk öğrencilere, velilere, öğretmenlere ve kurumlara yöneliktir\./);
   // The checkout declaration is not an age check and the texts say so.
   for (const slug of ['privacy', 'coaching-terms', 'speed-reading-terms'])
     assert.match(final.get(slug).content, /Ödeme ekranındaki yaş beyanı kimlik ya da yaş doğrulaması değildir\./, slug);
