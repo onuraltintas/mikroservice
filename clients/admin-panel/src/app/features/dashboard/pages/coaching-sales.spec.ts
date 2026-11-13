@@ -112,12 +112,14 @@ describe('CoachingSalesComponent (O10)', () => {
     expect(component.coupons()[0].isActive).toBe(false);
   });
 
-  it('shows the lawyer note and saves the seller details', async () => {
+  it('says the documents are the approved texts and saves the seller details', async () => {
     const { fixture, component } = await setup();
     component.select('seller');
     http.expectOne('/api/coaching-admin/sales/seller').flush({ data: { title: null, address: null, taxOffice: null, taxNumber: null, mersisNumber: null, email: null, phone: null } });
     await flush(); fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="lawyer-note"]').textContent).toContain('avukata');
+    const note = fixture.nativeElement.querySelector('[data-testid="documents-note"]').textContent;
+    expect(note).toContain('esas metinlerdir');
+    expect(note).not.toMatch(/taslak|avukat/);
     component.seller = { ...component.seller, title: '  Eduİvme Eğitim Ltd. Şti. ', taxNumber: '1234567890', email: '' };
     const saving = component.saveSeller();
     const request = http.expectOne(r => r.method === 'PUT' && r.url.endsWith('/sales/seller'));

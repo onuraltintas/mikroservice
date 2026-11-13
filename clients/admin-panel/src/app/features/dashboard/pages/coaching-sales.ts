@@ -153,7 +153,7 @@ type SalesTab = 'coupons' | 'seller' | 'withdrawals' | 'seats' | 'invoices';
       @case ('seller') {
         <section aria-labelledby="seller-heading">
           <h2 id="seller-heading" class="mb-3 font-semibold">Satıcı bilgileri</h2>
-          <p class="note" data-testid="lawyer-note">Ön bilgilendirme formu ve mesafeli satış sözleşmesi metinleri <strong>taslaktır</strong>. Satışa açmadan önce bir avukata kontrol ettirin.
+          <p class="note" data-testid="documents-note">Ön bilgilendirme formu ve mesafeli satış sözleşmesi metinleri onaylanmış <strong>esas metinlerdir</strong>.
             Buraya girdiğiniz bilgiler, alıcıya gösterilen belgelerde satıcı olarak yer alır; boş alanlar belgede "girilmedi" diye görünür.</p>
           <form (ngSubmit)="saveSeller()">
             <div class="grid">
