@@ -18,7 +18,9 @@ describe('Course Management admin entry points', () => {
     expect(route?.loadComponent).toBeTypeOf('function');
   });
 
-  it('shows the Course Management navigation item only to SystemAdmins', () => {
+  // Live test 13.11.2026 (Paket I5): the entry opened a page of errors while the Course Management routes are closed at
+  // the gateway, so nobody gets it in the menu; the route itself stays for SystemAdmins.
+  it('keeps the Course Management navigation item out of the menu until the product is opened', () => {
     const profile = signal<{ roles: string[]; permissions: string[] }>({ roles: ['InstitutionAdmin'], permissions: [] });
     TestBed.configureTestingModule({
       imports: [SidebarComponent],
@@ -34,6 +36,6 @@ describe('Course Management admin entry points', () => {
 
     expect(hasCourseManagement()).toBe(false);
     profile.set({ roles: ['SystemAdmin'], permissions: [] });
-    expect(hasCourseManagement()).toBe(true);
+    expect(hasCourseManagement()).toBe(false);
   });
 });
