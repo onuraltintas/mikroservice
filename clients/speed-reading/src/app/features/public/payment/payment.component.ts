@@ -50,7 +50,6 @@ export class PaymentComponent implements OnInit {
   paymentReference = '';
   payerName = '';
   note = '';
-  adultPayerDeclaration = false;
 
   ngOnInit(): void {
     const requestedPlanId = this.route.snapshot.queryParamMap.get('plan');
@@ -119,10 +118,6 @@ export class PaymentComponent implements OnInit {
       this.error.set('Banka işlem referansını girin.');
       return;
     }
-    if (!this.adultPayerDeclaration) {
-      this.error.set('Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.');
-      return;
-    }
 
     this.submitting.set(true);
     this.error.set(null);
@@ -131,8 +126,7 @@ export class PaymentComponent implements OnInit {
       planId: plan.id,
       paymentReference: this.paymentReference.trim(),
       payerName: this.payerName.trim() || null,
-      note: this.note.trim() || null,
-      adultPayerDeclaration: this.adultPayerDeclaration
+      note: this.note.trim() || null
     }).subscribe({
       next: request => {
         this.requests.update(items => [request, ...items.filter(item => item.id !== request.id)]);
@@ -140,7 +134,6 @@ export class PaymentComponent implements OnInit {
         this.paymentReference = '';
         this.payerName = '';
         this.note = '';
-        this.adultPayerDeclaration = false;
         this.submitting.set(false);
       },
       error: error => {

@@ -9,7 +9,7 @@ import {
 /**
  * Roadmap O10: the part of a bank-transfer checkout that is the same for students, parents and teachers — an optional
  * discount code and the pre-information form and distance-sales contract the buyer must open and accept before paying.
- * The documents are drafts filled by the server; what the buyer accepted is stored with the notice.
+ * The documents are the approved texts, filled by the server; what the buyer accepted is stored with the notice.
  */
 @Component({
   selector: 'edu-coaching-checkout', standalone: true, imports: [FormsModule],

@@ -41,11 +41,11 @@ describe('CoachingParentService', () => {
     http.expectOne('/api/coaching/subscriptions/children/child%2F1/access').flush({ data: { hasAccess: true } });
     service.getTransfers('child/1').subscribe(rows => expect(rows).toEqual([]));
     http.expectOne('/api/coaching/subscriptions/children/child%2F1/bank-transfer-requests').flush({ data: [] });
-    service.sendTransfer('child/1', { planId: 'plan-1', paymentReference: ' EFT-1 ', payerName: ' Ayşe ', note: ' ', adultPayerDeclaration: true }).subscribe();
+    service.sendTransfer('child/1', { planId: 'plan-1', paymentReference: ' EFT-1 ', payerName: ' Ayşe ', note: ' ' }).subscribe();
     const send = http.expectOne('/api/coaching/subscriptions/children/child%2F1/bank-transfer-requests');
     expect(send.request.method).toBe('POST');
     expect(send.request.headers.get('Idempotency-Key')).toMatch(/^[A-Za-z0-9._~-]{16,128}$/);
-    expect(send.request.body).toEqual({ planId: 'plan-1', paymentReference: 'EFT-1', payerName: 'Ayşe', note: null, adultPayerDeclaration: true });
+    expect(send.request.body).toEqual({ planId: 'plan-1', paymentReference: 'EFT-1', payerName: 'Ayşe', note: null });
     send.flush({ data: { id: 'transfer-1' } });
   });
 

@@ -9,23 +9,12 @@ import { CoachingManagementService, CoachingSubscriptionPlan } from '../../../co
 import { CoachingSubscriptionComponent } from './coaching-subscription.component';
 
 describe('CoachingSubscriptionComponent', () => {
-  it('does not submit a payment without an explicit adult payer declaration', async () => {
-    const fixture = setup();
-    fixture.detectChanges(); await fixture.whenStable();
-    fixture.componentInstance.selectedPlanId.set('individual-plan');
-    fixture.componentInstance.paymentReference = 'EFT-123';
-    await fixture.componentInstance.submitRequest();
-    const service = TestBed.inject(CoachingManagementService);
-    expect(service.createMyCoachingBankTransferRequest).not.toHaveBeenCalled();
-    expect(fixture.componentInstance.error()).toContain('18 yaş');
-  });
   it('does not submit a payment before the sales documents are accepted (O10)', async () => {
     const fixture = setup();
     fixture.detectChanges(); await fixture.whenStable();
     const component = fixture.componentInstance;
     component.selectedPlanId.set('individual-plan');
     component.paymentReference = 'EFT-123';
-    component.adultPayerDeclaration = true;
     await component.submitRequest();
     expect(TestBed.inject(CoachingManagementService).createMyCoachingBankTransferRequest).not.toHaveBeenCalled();
     expect(component.error()).toContain('mesafeli satış sözleşmesini');
@@ -85,7 +74,6 @@ describe('CoachingSubscriptionComponent', () => {
     component.paymentReference = '  EFT-2026-01  ';
     component.payerName = '  Ada Öğrenci  ';
     component.note = '  Mart dönemi  ';
-    component.adultPayerDeclaration = true;
     component.checkout = { couponCode: 'YAZ-2026', acceptSalesContract: true };
 
     await component.submitRequest();
@@ -94,12 +82,13 @@ describe('CoachingSubscriptionComponent', () => {
       createMyCoachingBankTransferRequest: ReturnType<typeof vi.fn>;
     };
     expect(service.createMyCoachingBankTransferRequest).toHaveBeenCalledWith({
-      planId: 'individual-plan', paymentReference: 'EFT-2026-01', payerName: 'Ada Öğrenci', note: 'Mart dönemi', adultPayerDeclaration: true,
+      planId: 'individual-plan', paymentReference: 'EFT-2026-01', payerName: 'Ada Öğrenci', note: 'Mart dönemi',
       couponCode: 'YAZ-2026', acceptSalesContract: true
     });
     expect(component.requests()[0].id).toBe('request-1');
     expect(component.success()).toContain('incelemeye alındı');
-    expect(component.adultPayerDeclaration).toBe(false);
+    // 13.11.2026: no adult payer declaration is asked or sent any more.
+    expect(fixture.nativeElement.querySelector('input[name="adultPayerDeclaration"]')).toBeNull();
   });
 
   it('explains why the student was sent here when a learning page needed a subscription', async () => {

@@ -127,13 +127,8 @@ describe('CoachingTeacherSubscriptionComponent', () => {
     await fixture.whenStable();
     fixture.componentInstance.paymentReference = ' EFT-77 ';
     fixture.componentInstance.payerName = ' Ada Teacher ';
-    await fixture.componentInstance.submitRequest();
-    expect(subscriptionService.createBankTransferRequest).not.toHaveBeenCalled();
-    const checkbox = fixture.nativeElement.querySelector('input[name="adultPayerDeclaration"]') as HTMLInputElement;
-    expect(checkbox).not.toBeNull();
-    expect(checkbox.checked).toBe(false);
-    checkbox.click();
-    fixture.detectChanges();
+    // 13.11.2026: no adult payer declaration is asked or sent any more.
+    expect(fixture.nativeElement.querySelector('input[name="adultPayerDeclaration"]')).toBeNull();
     await fixture.componentInstance.submitRequest();
     expect(subscriptionService.createBankTransferRequest).not.toHaveBeenCalled();
     expect(fixture.componentInstance.error()).toContain('mesafeli satış sözleşmesini');
@@ -142,7 +137,7 @@ describe('CoachingTeacherSubscriptionComponent', () => {
     await fixture.componentInstance.submitRequest();
 
     expect(subscriptionService.createBankTransferRequest).toHaveBeenCalledWith({
-      planId: 'teacher-plan', paymentReference: ' EFT-77 ', payerName: ' Ada Teacher ', note: '', adultPayerDeclaration: true,
+      planId: 'teacher-plan', paymentReference: ' EFT-77 ', payerName: ' Ada Teacher ', note: '',
       couponCode: 'OGRETMEN-10', acceptSalesContract: true
     });
     expect(fixture.componentInstance.success()).toContain('Ödeme bildiriminiz alındı');

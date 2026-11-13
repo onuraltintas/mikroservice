@@ -31,13 +31,10 @@ describe('PaymentComponent adult payer declaration', () => {
     component.selectedPlanId.set('plan-1');
     component.settings.set({ bankName: 'Bank' } as never);
     component.paymentReference = ' EFT-123 ';
+    // 13.11.2026: no adult payer declaration is asked or sent any more.
     component.submitBankTransferRequest();
-    expect(submit).not.toHaveBeenCalled();
-    expect(component.error()).toContain('18 yaş');
-    Object.assign(component, { adultPayerDeclaration: true });
-    component.submitBankTransferRequest();
-    expect(submit).toHaveBeenCalledWith({ planId: 'plan-1', paymentReference: 'EFT-123', payerName: null, note: null, adultPayerDeclaration: true });
-    expect((component as unknown as { adultPayerDeclaration: boolean }).adultPayerDeclaration).toBe(false);
+    expect(submit).toHaveBeenCalledWith({ planId: 'plan-1', paymentReference: 'EFT-123', payerName: null, note: null });
+    expect(component.error()).toBeNull();
   });
 });
 
@@ -125,7 +122,6 @@ describe('PaymentComponent signed-in EFT flow', () => {
     const { component, subscriptions } = setup(true);
     component.ngOnInit();
     component.paymentReference = 'EFT-123';
-    component.adultPayerDeclaration = true;
     subscriptions.createBankTransferPaymentRequest.and.returnValue(throwError(() => ({ error: { message: 'Yeniden deneyin.' } })));
     component.submitBankTransferRequest();
     expect(component.error()).toBe('Yeniden deneyin.');

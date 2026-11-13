@@ -514,7 +514,7 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   adultPayerLabel(request: Pick<SpeedReadingBankTransferRequest, 'adultPayerDeclarationVersion' | 'adultPayerDeclaredAt'>): string {
     return request.adultPayerDeclarationVersion && request.adultPayerDeclaredAt
       ? `18+ ödeme beyanı · sürüm ${request.adultPayerDeclarationVersion} (yaş doğrulaması değildir)`
-      : 'Yetişkin beyanı kaydı yok (eski talep)';
+      : 'Yetişkin beyanı yok';
   }
 
   private loadRequest<T>(request: import('rxjs').Observable<T>, apply: (value: T) => void): void {

@@ -31,12 +31,12 @@ public sealed class SpeedReadingAdultPayerPostgresTests(PostgresFixture postgres
             var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Legacy.LegacySpeedReadingSubscription")!;
             var service = (ISpeedReadingSubscription)Activator.CreateInstance(serviceType,
                 BindingFlags.Instance | BindingFlags.NonPublic, null, [db, db, null, null, new Directory(user)], null)!;
-            var request = new CreateBankTransferPaymentRequest(plan, "EFT-ADULT-01", "Adult", null, true);
-            Assert.Null(await service.CreateBankTransferPaymentRequestAsync(user, request with { AdultPayerDeclaration = false }, "adult-denied-key-0001"));
+            // 13.11.2026: a request without the declaration is accepted and records no declaration.
+            var request = new CreateBankTransferPaymentRequest(plan, "EFT-ADULT-01", "Adult", null);
             var created = await service.CreateBankTransferPaymentRequestAsync(user, request, "adult-create-key-0001");
             Assert.NotNull(created);
-            Assert.Equal(1, created.AdultPayerDeclarationVersion);
-            Assert.InRange(created.AdultPayerDeclaredAt!.Value, now, DateTime.UtcNow);
+            Assert.Null(created.AdultPayerDeclarationVersion);
+            Assert.Null(created.AdultPayerDeclaredAt);
             db.ChangeTracker.Clear();
             var persisted = Assert.Single(await service.GetMyBankTransferPaymentRequestsAsync(user));
             var replay = await service.CreateBankTransferPaymentRequestAsync(user, request, "adult-create-key-0001");

@@ -46,8 +46,7 @@ test('signed-in user can view the selected plans bank details and EFT form', asy
   await page.goto('/odeme?plan=plan-1');
   await expect(page.locator('.bank-details')).toContainText('Test bankası');
   await expect(page.locator('input[name="paymentReference"]')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Ödeme talebini ilet', exact: true })).toBeDisabled();
-  await page.locator('input[name="adultPayerDeclaration"]').check();
+  await expect(page.locator('input[name="adultPayerDeclaration"]')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Ödeme talebini ilet', exact: true })).toBeEnabled();
   expect(new URL(page.url()).searchParams.get('plan')).toBe('plan-1');
   expect(banks).toHaveLength(1);

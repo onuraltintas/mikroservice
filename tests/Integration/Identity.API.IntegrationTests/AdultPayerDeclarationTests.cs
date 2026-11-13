@@ -37,12 +37,12 @@ public sealed class AdultPayerDeclarationTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void BothPaymentContractsRequireExplicitAdultDeclaration(bool accepted)
+    public void BothPaymentContractsAcceptARequestWithOrWithoutAnAdultDeclaration(bool accepted)
     {
         foreach (var type in new[] { typeof(CoachingBankTransferRequestCreate), typeof(CreateBankTransferPaymentRequest) })
         {
             var property = type.GetProperty("AdultPayerDeclaration");
-            property.Should().NotBeNull("payment requests must explicitly carry the payer declaration");
+            property.Should().NotBeNull("an older client may still send the declaration");
             // O10 added optional parameters (discount code, contract acceptance); fill them so only the declaration varies.
             var parameters = type.GetConstructors().Single().GetParameters();
             var arguments = parameters.Select((parameter, index) => index switch
@@ -57,7 +57,8 @@ public sealed class AdultPayerDeclarationTests
             using var provider = services.BuildServiceProvider();
             var context = new ActionContext { HttpContext = new DefaultHttpContext { RequestServices = provider } };
             provider.GetRequiredService<IObjectModelValidator>().Validate(context, null, string.Empty, request);
-            context.ModelState.IsValid.Should().Be(accepted);
+            // 13.11.2026: the declaration is no longer required.
+            context.ModelState.IsValid.Should().BeTrue();
         }
     }
 }

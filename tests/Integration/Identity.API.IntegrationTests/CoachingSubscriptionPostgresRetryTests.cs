@@ -59,20 +59,16 @@ public sealed class CoachingSubscriptionPostgresRetryTests(PostgresFixture postg
             switch (operation)
             {
                 case "create-transfer":
-                    var request = new CoachingBankTransferRequestCreate(individualPlan.Id, "POSTGRES-CREATE", "Test", null, true, AcceptSalesContract: true);
-                    var denied = await service.CreateBankTransferRequestAsync(user, "Test", "test@example.invalid", request with { AdultPayerDeclaration = false }, "postgres-denied-key-01");
-                    denied.Should().BeNull();
-                    var before = DateTime.UtcNow;
+                    // 13.11.2026: a request without the adult payer declaration is accepted and records no declaration.
+                    var request = new CoachingBankTransferRequestCreate(individualPlan.Id, "POSTGRES-CREATE", "Test", null, AcceptSalesContract: true);
                     var created = await service.CreateBankTransferRequestAsync(user, "Test", "test@example.invalid", request, "postgres-create-key-01");
                     created.Should().NotBeNull();
                     var replay = await service.CreateBankTransferRequestAsync(user, "Test", "test@example.invalid", request, "postgres-create-key-01");
                     replay!.Id.Should().Be(created!.Id);
                     (await db.CoachingBankTransferRequests.CountAsync()).Should().Be(1);
                     var evidence = await db.CoachingBankTransferRequests.AsNoTracking().SingleAsync();
-                    evidence.AdultPayerDeclarationVersion.Should().Be(1);
-                    evidence.AdultPayerDeclaredAt.Should().NotBeNull();
-                    evidence.AdultPayerDeclaredAt!.Value.Should().BeOnOrAfter(before);
-                    evidence.AdultPayerDeclaredAt.Value.Should().BeOnOrBefore(DateTime.UtcNow);
+                    evidence.AdultPayerDeclarationVersion.Should().BeNull();
+                    evidence.AdultPayerDeclaredAt.Should().BeNull();
                     break;
                 case "review-transfer":
                     var reviewed = await service.ReviewBankTransferRequestAsync(transfer.Id, new("Approved", null), actor, "postgres-review-key-01");

@@ -94,7 +94,7 @@ public sealed record CoachingBankTransferRequestCreate(
     string PaymentReference,
     string? PayerName,
     string? Note,
-    [System.ComponentModel.DataAnnotations.Range(typeof(bool), "true", "true", ErrorMessage = "Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.")]
+    /// <summary>No longer asked (user decision 13.11.2026): kept so an older client that still sends it is accepted; when sent it is recorded.</summary>
     bool AdultPayerDeclaration = false,
     /// <summary>Roadmap O10: an optional discount code.</summary>
     string? CouponCode = null,

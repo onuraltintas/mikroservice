@@ -12,7 +12,7 @@ public sealed record CoachingSalesTerms(CoachingSubscriptionSettings Seller, str
 
 /// <summary>
 /// Roadmap O10: the pre-information form and the distance-sales contract shown before a bank-transfer purchase, after the
-/// Mesafeli Sözleşmeler Yönetmeliği. These are DRAFTS prepared for the platform; a lawyer should review them before use.
+/// Mesafeli Sözleşmeler Yönetmeliği. The wording was approved as the text in force (user decision 13.11.2026); it is no longer a draft.
 /// A new wording must get a new <see cref="Version"/>; what a buyer accepted is kept with their transfer.
 /// </summary>
 public static class CoachingSalesDocumentTexts

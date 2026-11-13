@@ -107,7 +107,8 @@ public sealed class ExamSessionsPostgresTests
         Assert.Contains(first, x => x.StartsWith("before: exams 5", StringComparison.Ordinal));
         Assert.Contains(first, x => x.StartsWith("after: exams 9", StringComparison.Ordinal));
         Assert.Equal(
-            "AGS:2027:2027-05-08:2027-03-19:2027-03-29,AYT:2027:2027-06-20:2027-02-04:2027-03-02,OABT:2027:2027-05-09:2027-03-19:2027-03-29,"
+            "AGS:2027:2027-05-08:2027-03-19:2027-03-29,AYT:2027:2027-06-20:2027-02-04:2027-03-02,LGS:2027:2027-06-13:-:-,"
+            + "OABT:2027:2027-05-09:2027-03-19:2027-03-29,"
             + "TYT:2027:2027-06-19:2027-02-04:2027-03-02,YDS:2027/1:2027-03-28:2027-02-03:2027-02-11,YDS:2027/2:2027-11-21:2027-10-05:2027-10-13,"
             + "YDT:2027:2027-06-20:2027-02-04:2027-03-02,YOKDIL:2027/1:2027-02-28:2027-01-12:2027-01-20,YOKDIL:2027/2:2027-07-25:2027-06-08:2027-06-16",
             await Sessions(pg));
@@ -115,7 +116,7 @@ public sealed class ExamSessionsPostgresTests
             (await Scalar(pg, "SELECT string_agg(\"Code\" || ':' || \"IsActive\", ',') FROM coaching.study_catalog_exams")).Split(',').Order().ToArray());
         var snapshot = await Sessions(pg);
         var second = await Run(pg, apply);
-        Assert.Contains(second, x => x.StartsWith("before: exams 9, 2027 sessions 9", StringComparison.Ordinal));
+        Assert.Contains(second, x => x.StartsWith("before: exams 9, 2027 sessions 10", StringComparison.Ordinal));
         Assert.Equal(snapshot, await Sessions(pg));
         Assert.Contains(await Run(pg, verify), x => x.StartsWith("ok:", StringComparison.Ordinal));
 
