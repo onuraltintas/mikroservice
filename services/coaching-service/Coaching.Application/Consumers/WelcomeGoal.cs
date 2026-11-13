@@ -16,7 +16,7 @@ internal static class WelcomeGoal
     {
         if (await goals.HasSystemGoalAsync(studentId, Title, ct)) return false;
         var goal = AcademicGoal.Create(studentId: studentId, title: Title, category: GoalCategory.StudyHabits, setByTeacherId: null);
-        goal.UpdateDetails(description: "Platforma hoşgeldin! İlk adım olarak profil bilgilerini doldur ve kendine uygun bir koç aramaya başla.");
+        goal.UpdateDetails(description: "Platforma hoş geldin! İlk adım olarak profil bilgilerini doldur ve çalışma planını kur. Öğretmenin ya da kurumun seni davet ederse daveti bildirimlerinden kabul edebilirsin.");
         goal.SetTarget(targetDate: DateTime.UtcNow.AddDays(7), targetScore: null);
         await goals.AddAsync(goal, ct);
         await unitOfWork.SaveChangesAsync(ct);

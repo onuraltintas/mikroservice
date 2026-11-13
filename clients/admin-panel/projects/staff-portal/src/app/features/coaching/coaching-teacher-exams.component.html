@@ -128,7 +128,10 @@
   </section>
 
   @if (selectedExam(); as exam) {
-    <section class="panel results-panel" aria-labelledby="exam-results-title">
+    <section class="panel results-panel" aria-labelledby="exam-results-title" data-testid="exam-results-panel">
+      @if (isFutureExam(exam)) {
+        <p class="notice" role="status" data-testid="future-exam-warning">Bu sınavın tarihi henüz gelmedi. Girdiğiniz sonuçlar, sınav tarihi gelene kadar öğrenciye görünmez; sınav yapıldıysa tarihini düzeltin.</p>
+      }
       <div class="panel-heading">
         <div>
           <p class="eyebrow">{{ examTypeLabel(exam.examType) }}</p>

@@ -24,7 +24,7 @@ import { CoachingStudentNavigationService } from '../../../core/services/coachin
 
 /** The reminder e-mails the wizard offers (roadmap O8 categories); the defaults are the student's current settings. */
 export const ONBOARDING_EMAIL_CATEGORIES = ['StudyPlan', 'AssignmentReminders', 'Sessions'];
-interface Invitation { id: string; inviterEmail: string | null; message: string | null; type?: string }
+interface Invitation { id: string; inviterEmail: string | null; inviterName?: string | null; message: string | null; type?: string }
 const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 
 /**

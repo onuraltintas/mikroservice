@@ -20,10 +20,22 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         return await Send(actor, email, role, institution, teacherUserId, true, message, ct);
     }
 
+    public const string TeacherInviteNeedsInstitutionMember =
+        "Bu öğrenci kurumunuzun öğrencisi değil. Önce kurum yöneticinizin öğrenciyi kuruma davet etmesi gerekir; öğrenci kuruma katıldıktan sonra davetinizi gönderebilirsiniz.";
+
     public async Task<CoachingInvitation> SendTeacherAsync(Guid actor, string email, string? message, CancellationToken ct)
     {
         var institution = await TeacherInstitution(actor, ct);
         await RequireTeacher(actor, institution, ct);
+        // Live test 13.11.2026 (decision 4): an institution's teacher could invite a student outside the institution, and the
+        // student could never accept ("Davet mevcut kurum üyeliğinizle uyuşmuyor"). The teacher is told before anything is sent.
+        if (institution is { } own)
+        {
+            var student = string.IsNullOrWhiteSpace(email) ? null : await accounts.FindByEmailAsync(email.Trim(), ct);
+            if (student is null || !await db.CoachingInstitutionMemberships.AnyAsync(x => x.UserId == student.UserId
+                    && x.InstitutionId == own && x.Role == CoachingMemberRole.Student && x.IsActive, ct))
+                throw CoachingProfileStore.Conflict(TeacherInviteNeedsInstitutionMember);
+        }
         return await Send(actor, email, "Student", institution, actor, false, message, ct);
     }
 

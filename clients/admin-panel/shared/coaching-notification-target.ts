@@ -22,6 +22,9 @@ const labels: Record<string, string> = {
   AssignmentSubmitted: 'Ödev teslim edildi', AssignmentGraded: 'Ödev değerlendirildi',
   WeeklyReflectionSaved: 'Haftalık değerlendirme kaydedildi', WeeklyDecisionCreated: 'Yeni haftalık karar', WeeklyDecisionUpdated: 'Haftalık karar güncellendi',
   CoachingMessage: 'Yeni mesaj', ParentWeeklySummary: 'Haftalık özet',
+  // Live test 13.11.2026: these were shown as their English codes.
+  Invitation: 'Davet', GoalCreated: 'Yeni hedef', GoalUpdated: 'Hedef güncellendi', GoalCompleted: 'Hedef tamamlandı', Account: 'Hesap',
+  SessionScheduled: 'Yeni koçluk seansı', SessionCancelled: 'Seans iptal edildi', SubscriptionExpiring: 'Abonelik bitiyor', SubscriptionExpired: 'Abonelik bitti',
   ParentLinkRequested: 'Veli bağlantı isteği', ParentLinkApproved: 'Veli bağlantısı onaylandı', ParentLinkRevoked: 'Veli bağlantısı kaldırıldı'
 };
 
