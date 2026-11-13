@@ -58,7 +58,6 @@ const money = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
             <label>Ödemeyi yapan<input [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" /></label>
             <label>Not<input [(ngModel)]="note" name="note" maxlength="1000" /></label>
             <div class="cp-span"><edu-coaching-checkout [api]="sales" [planId]="planId" [price]="selectedPlanPrice()" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" /></div>
-            <label class="cp-check cp-span"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum.</label>
             <button type="submit" class="cp-primary cp-span" [disabled]="sending() || !checkout.acceptSalesContract">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
           </form>
         }
@@ -104,7 +103,6 @@ export class ParentPaymentsComponent implements OnInit {
   paymentReference = '';
   payerName = '';
   note = '';
-  adultPayerDeclaration = false;
   /** Roadmap O10: discount code and contract acceptance from the checkout. */
   checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
   readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
@@ -135,16 +133,15 @@ export class ParentPaymentsComponent implements OnInit {
   async sendTransfer(): Promise<void> {
     const reference = this.paymentReference.trim();
     if (!this.planId || !reference) { this.error.set('Plan ve banka işlem referansı gerekli.'); return; }
-    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunu beyan etmen gerekir.'); return; }
     if (!this.checkout.acceptSalesContract) { this.error.set('Ödeme bildiriminden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini açıp onaylaman gerekir.'); return; }
     this.sending.set(true); this.error.set(null); this.success.set(null);
     try {
       const sent = await firstValueFrom(this.service.sendTransfer(this.studentId(), {
         planId: this.planId, paymentReference: reference, payerName: this.payerName.trim() || null, note: this.note.trim() || null,
-        adultPayerDeclaration: true, couponCode: this.checkout.couponCode, acceptSalesContract: true
+        couponCode: this.checkout.couponCode, acceptSalesContract: true
       }));
       this.transfers.update(items => [sent, ...items.filter(item => item.id !== sent.id)]);
-      this.paymentReference = ''; this.note = ''; this.adultPayerDeclaration = false; this.checkoutForm()?.reset();
+      this.paymentReference = ''; this.note = ''; this.checkoutForm()?.reset();
       this.success.set(`Ödeme bildirimin incelemeye alındı. Onaylanınca ${this.possessiveName()} erişimi açılır.`);
     } catch (response) {
       this.error.set(apiMessage(response, 'Ödeme bildirimi gönderilemedi.'));

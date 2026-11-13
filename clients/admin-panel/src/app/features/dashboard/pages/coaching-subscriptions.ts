@@ -377,7 +377,7 @@ export class CoachingSubscriptionsComponent implements OnInit {
   adultPayerLabel(request: Pick<CoachingBankTransferRequest, 'adultPayerDeclarationVersion' | 'adultPayerDeclaredAt'>): string {
     return request.adultPayerDeclarationVersion && request.adultPayerDeclaredAt
       ? `18+ ödeme beyanı · sürüm ${request.adultPayerDeclarationVersion} (yaş doğrulaması değildir)`
-      : 'Yetişkin beyanı kaydı yok (eski talep)';
+      : 'Yetişkin beyanı yok';
   }
   institutionName(id: string | null) { return this.institutions().find(institution => institution.id === id)?.name ?? ''; }
   async changeSeat(seat: CoachingSubscriptionSeat) {

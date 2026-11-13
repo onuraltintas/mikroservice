@@ -166,7 +166,6 @@ export interface CoachingBankTransferRequestCreate {
   paymentReference: string;
   payerName: string | null;
   note: string | null;
-  adultPayerDeclaration: boolean;
   /** Roadmap O10: an optional discount code and the accepted pre-information form and distance-sales contract. */
   couponCode?: string | null;
   acceptSalesContract?: boolean;

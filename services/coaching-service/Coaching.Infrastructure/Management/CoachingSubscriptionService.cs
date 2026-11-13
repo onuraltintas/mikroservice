@@ -283,7 +283,6 @@ public sealed class CoachingSubscriptionService(
         Guid? submittedBy = null,
         string? submitterName = null)
     {
-        if (!request.AdultPayerDeclaration) return null;
         var key = ValidateIdempotencyKey(userId, idempotencyKey);
         var reference = NormalizePaymentReference(request.PaymentReference);
         var payerName = NormalizeOptional(request.PayerName, 200);
@@ -422,8 +421,8 @@ public sealed class CoachingSubscriptionService(
             PaymentReference = reference,
             PayerName = payerName ?? submitterName,
             Note = note,
-            AdultPayerDeclarationVersion = 1,
-            AdultPayerDeclaredAt = DateTime.UtcNow
+            AdultPayerDeclarationVersion = request.AdultPayerDeclaration ? 1 : null,
+            AdultPayerDeclaredAt = request.AdultPayerDeclaration ? DateTime.UtcNow : null
         };
         db.CoachingBankTransferRequests.Add(requestEntity);
         await NoticeAsync(null, null, CoachingSubscriptionNoticeKinds.TransferSubmitted, plan.Audience, plan.Name, null,

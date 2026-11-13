@@ -268,10 +268,7 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         (await subscriptions.UpdateSettingsAsync(settings, actorId, "settings-idempotency-key-0001"))
             .BankTransferEnabled.Should().BeTrue();
 
-        var createRequest = new CoachingBankTransferRequestCreate(planId!.Value, "eft 2026-01", "Ada Öğrenci", null, true, AcceptSalesContract: true);
-        var denied = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
-            createRequest with { AdultPayerDeclaration = false }, "create-denied-key-0001");
-        denied.Should().BeNull();
+        var createRequest = new CoachingBankTransferRequestCreate(planId!.Value, "eft 2026-01", "Ada Öğrenci", null, AcceptSalesContract: true);
         var first = await subscriptions.CreateBankTransferRequestAsync(
             userId, "Ada Öğrenci", "ada@example.test", createRequest, "create-idempotency-key-0001");
         var retry = await subscriptions.CreateBankTransferRequestAsync(
@@ -279,8 +276,9 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
         first!.Id.Should().Be(retry!.Id);
         first.PaymentReference.Should().Be("EFT-2026-01");
         var evidence = await db.CoachingBankTransferRequests.AsNoTracking().SingleAsync();
-        evidence.AdultPayerDeclarationVersion.Should().Be(1);
-        evidence.AdultPayerDeclaredAt.Should().NotBeNull();
+        // 13.11.2026: no adult payer declaration is asked, so none is recorded.
+        evidence.AdultPayerDeclarationVersion.Should().BeNull();
+        evidence.AdultPayerDeclaredAt.Should().BeNull();
 
         var sameReference = await subscriptions.CreateBankTransferRequestAsync(
             userId, "Ada Öğrenci", "ada@example.test",

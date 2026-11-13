@@ -89,8 +89,7 @@ import {
               <label>Ödemeyi yapan kişi (isteğe bağlı)<input [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" /></label>
               <label>Not (isteğe bağlı)<textarea [(ngModel)]="note" name="paymentNote" maxlength="1000" rows="3"></textarea></label>
               <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId()" [price]="selectedPlan()?.price ?? 0" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" />
-              <label class="check"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" required />Ödemeyi yapan kişi olarak 18 yaşından büyük olduğumu beyan ediyorum. Bu bir yaş doğrulaması değildir.</label>
-              <button class="cs-button-primary" type="submit" [disabled]="submitting() || !settings() || !adultPayerDeclaration || !checkout.acceptSalesContract">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
+              <button class="cs-button-primary" type="submit" [disabled]="submitting() || !settings() || !checkout.acceptSalesContract">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
               <p class="muted">Bu sayfa kart bilgisi istemez.</p>
             </form>
           </div>
@@ -142,7 +141,6 @@ export class CoachingSubscriptionComponent implements OnInit {
   paymentReference = '';
   payerName = '';
   note = '';
-  adultPayerDeclaration = false;
   /** Roadmap O10: discount code and contract acceptance from the checkout. */
   checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
   readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
@@ -180,7 +178,6 @@ export class CoachingSubscriptionComponent implements OnInit {
     const reference = this.paymentReference.trim();
     if (!plan || plan.isContactOnly || !this.settings()) { this.error.set('Ödeme bildirimi için satışa açık plan ve yayınlanmış banka bilgisi gereklidir.'); return; }
     if (!reference || reference.length > 120) { this.error.set('Banka işlem referansını 1–120 karakter arasında gir.'); return; }
-    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunu beyan etmeniz gerekir.'); return; }
     if (!this.checkout.acceptSalesContract) { this.error.set('Ödeme bildiriminden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini açıp onaylaman gerekir.'); return; }
 
     this.submitting.set(true);
@@ -191,7 +188,6 @@ export class CoachingSubscriptionComponent implements OnInit {
       paymentReference: reference,
       payerName: this.payerName.trim() || null,
       note: this.note.trim() || null,
-      adultPayerDeclaration: this.adultPayerDeclaration,
       couponCode: this.checkout.couponCode,
       acceptSalesContract: this.checkout.acceptSalesContract
     }).subscribe({
@@ -203,7 +199,6 @@ export class CoachingSubscriptionComponent implements OnInit {
         this.paymentReference = '';
         this.payerName = '';
         this.note = '';
-        this.adultPayerDeclaration = false;
         this.checkoutForm()?.reset();
         this.submitting.set(false);
       },

@@ -33,12 +33,12 @@ describe('CoachingTeacherSubscriptionService', () => {
 
   it('creates a teacher-specific bank transfer request with normalized reference text', () => {
     let completed = false;
-    service.createBankTransferRequest({ planId: 'teacher-plan', paymentReference: '  EFT-123  ', payerName: ' Teacher ', note: '  ', adultPayerDeclaration: true })
+    service.createBankTransferRequest({ planId: 'teacher-plan', paymentReference: '  EFT-123  ', payerName: ' Teacher ', note: '  ' })
       .subscribe(() => completed = true);
     const request = http.expectOne('/api/coaching/subscriptions/teacher-bank-transfer-requests');
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('Idempotency-Key')).toMatch(/^[A-Za-z0-9._~-]{16,128}$/);
-    expect(request.request.body).toEqual({ planId: 'teacher-plan', paymentReference: 'EFT-123', payerName: 'Teacher', note: null, adultPayerDeclaration: true });
+    expect(request.request.body).toEqual({ planId: 'teacher-plan', paymentReference: 'EFT-123', payerName: 'Teacher', note: null });
     request.flush({ data: { id: 'request-1' } });
     expect(completed).toBe(true);
   });

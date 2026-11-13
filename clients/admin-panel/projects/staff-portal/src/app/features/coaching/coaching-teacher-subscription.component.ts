@@ -101,8 +101,7 @@ import {
             <label>Ödeyen adı<input name="payerName" [(ngModel)]="payerName" maxlength="200" autocomplete="name" /></label>
             <label>Not<textarea name="paymentNote" [(ngModel)]="paymentNote" maxlength="1000" rows="2"></textarea></label>
             <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId" [price]="selectedPlan?.price ?? 0" [currency]="settings()?.currency || 'TRY'" [formal]="true" (choiceChange)="checkout = $event" />
-            <label><input type="checkbox" name="adultPayerDeclaration" [(ngModel)]="adultPayerDeclaration" required />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum. Bu beyan yaş doğrulaması değildir.</label>
-            <button type="submit" [disabled]="savingRequest() || !selectedPlanId || selectedPlan?.isContactOnly || !paymentReference.trim() || !settings()?.bankTransferEnabled || !adultPayerDeclaration || !checkout.acceptSalesContract">{{ savingRequest() ? 'Gönderiliyor…' : 'Ödeme bildirimi gönder' }}</button>
+            <button type="submit" [disabled]="savingRequest() || !selectedPlanId || selectedPlan?.isContactOnly || !paymentReference.trim() || !settings()?.bankTransferEnabled || !checkout.acceptSalesContract">{{ savingRequest() ? 'Gönderiliyor…' : 'Ödeme bildirimi gönder' }}</button>
           </form>
         } @else {
           <p class="muted">Havale / EFT bilgileri şu anda yayımlanmıyor; ödeme bildirimi gönderilemez.</p>
@@ -187,7 +186,6 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
   paymentReference = '';
   payerName = '';
   paymentNote = '';
-  adultPayerDeclaration = false;
   /** Roadmap O10: discount code and contract acceptance from the checkout. */
   checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
   readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
@@ -260,7 +258,6 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
 
   async submitRequest(): Promise<void> {
     if (!this.selectedPlanId || this.selectedPlan?.isContactOnly || !this.paymentReference.trim() || !this.settings()?.bankTransferEnabled || this.savingRequest()) return;
-    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.'); return; }
     if (!this.checkout.acceptSalesContract) { this.error.set('Ödeme bildiriminden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini açıp onaylamanız gerekir.'); return; }
     this.savingRequest.set(true);
     this.error.set(null);
@@ -271,14 +268,12 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
         paymentReference: this.paymentReference,
         payerName: this.payerName,
         note: this.paymentNote,
-        adultPayerDeclaration: this.adultPayerDeclaration,
         couponCode: this.checkout.couponCode,
         acceptSalesContract: this.checkout.acceptSalesContract
       }));
       this.paymentReference = '';
       this.payerName = '';
       this.paymentNote = '';
-      this.adultPayerDeclaration = false;
       this.checkoutForm()?.reset();
       this.success.set('Ödeme bildiriminiz alındı. Onay sonrasında öğretmen planınız etkinleşir.');
       this.subscriptions.getMyBankTransferRequests().subscribe({ next: requests => this.requests.set(requests) });

@@ -264,18 +264,16 @@ describe('ParentPaymentsComponent', () => {
     expect(text).toContain('YKS paketi'); expect(text).toContain('1.500');
   });
 
-  it('sends a transfer notice only with the adult payer declaration and the contract', async () => {
+  it('sends a transfer notice only with the contract, without an adult payer declaration', async () => {
     const service = parentServiceMock({ getAccess: noSubscription(true),
       sendTransfer: vi.fn(() => of({ id: 'transfer-1', status: 'Pending', paymentReference: 'EFT-VELI-1', plan: { name: 'Bireysel yıllık' } })) });
     const fixture = setup(service); const component = fixture.componentInstance;
     component.planId = 'plan-1'; component.paymentReference = ' EFT-VELI-1 '; component.payerName = 'Ayşe Veli';
     await component.sendTransfer();
-    expect(service.sendTransfer).not.toHaveBeenCalled(); expect(component.error()).toContain('18 yaş');
-    component.adultPayerDeclaration = true; await component.sendTransfer();
     expect(service.sendTransfer).not.toHaveBeenCalled(); expect(component.error()).toContain('mesafeli satış sözleşmesini');
     component.checkout = { couponCode: 'VELI-10', acceptSalesContract: true }; await component.sendTransfer();
     expect(service.sendTransfer).toHaveBeenCalledWith('child-1', { planId: 'plan-1', paymentReference: 'EFT-VELI-1', payerName: 'Ayşe Veli', note: null,
-      adultPayerDeclaration: true, couponCode: 'VELI-10', acceptSalesContract: true });
+      couponCode: 'VELI-10', acceptSalesContract: true });
     expect(component.transfers()[0].id).toBe('transfer-1');
   });
 
