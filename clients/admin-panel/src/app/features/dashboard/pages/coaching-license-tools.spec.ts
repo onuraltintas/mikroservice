@@ -12,13 +12,15 @@ describe('Coaching license tools', () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
+  const institutions = () => http.expectOne(r => /institutions/i.test(r.url) && r.params.get('isActive') === 'true');
 
   const row = { id: 'l1', audience: 'Institution', planName: 'Kurum yıllık', ownerName: 'Merkez', ownerEmail: null, userId: null, institutionId: 'i1',
     status: 'Active', startDate: '2026-01-01T00:00:00Z', endDate: '2026-11-20T20:59:00Z', daysLeft: 5, seatCapacity: 10, assignedSeats: 4 };
 
   it('lists ending and ended licenses and shows the churn by audience', () => {
     const fixture = TestBed.createComponent(CoachingLicenseToolsComponent); fixture.detectChanges();
-    http.expectOne(r => r.url.endsWith('/window') && r.params.get('window') === 'ending').flush({ data: [row] });
+    institutions().flush({ items: [{ id: 'i2', name: 'Güney Kurs' }] });
+    http.expectOne(r => r.url.endsWith('/window') && r.params.get('window') === 'ending').flush({ data: [row, { ...row, id: 'l2', ownerName: null, institutionId: 'i2' }, { ...row, id: 'l3', ownerName: null, institutionId: null, userId: 'aaaaaaaa-0000-0000-0000-000000000001' }] });
     http.expectOne(r => r.url.endsWith('/window') && r.params.get('window') === 'ended').flush({ data: [] });
     http.expectOne(r => r.url.endsWith('/churn')).flush({ data: [
       { month: '2026-09', audience: 'Individual', ended: 2, renewed: 1, notRenewed: 1, pending: 0, churnRate: 50 },
@@ -27,6 +29,9 @@ describe('Coaching license tools', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('[data-testid="licenses-ending"]')?.textContent).toContain('Merkez');
     expect(element.querySelector('[data-testid="licenses-ending"]')?.textContent).toContain('4 / 10');
+    // Live test 13.11.2026: a license without a stored name showed its owner as a raw id.
+    const ending = element.querySelector('[data-testid="licenses-ending"]')!.textContent!;
+    expect(ending).toContain('Güney Kurs'); expect(ending).toContain('Adı kayıtlı olmayan kullanıcı'); expect(ending).not.toContain('aaaaaaaa-0000');
     expect(element.querySelector('[data-testid="licenses-ended"]')?.textContent).toContain('Kayıt yok');
     const churn = element.querySelector('[data-testid="churn"]')!.textContent!;
     expect(churn).toContain('Bireysel'); expect(churn).toContain('%50'); expect(churn).not.toContain('Kurum');
@@ -53,6 +58,7 @@ describe('Coaching license tools', () => {
 
   it('downloads the payments as an Excel file for the chosen days', async () => {
     const fixture = TestBed.createComponent(CoachingLicenseToolsComponent); fixture.detectChanges();
+    institutions().flush({ items: [] });
     http.match(r => r.url.endsWith('/window') || r.url.endsWith('/churn')).forEach(r => r.flush({ data: [] }));
     const component = fixture.componentInstance; component.exportFrom = '2026-11-01'; component.exportTo = '2026-11-30';
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:x'); vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);

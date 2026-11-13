@@ -154,11 +154,15 @@ test('it is published like the earlier legal texts and changes only the texts', 
     assert.doesNotMatch(sql, forbidden);
 });
 
-test('the sales documents are the approved texts: no draft note, same wording version', async () => {
+test('the sales documents are the approved texts: no draft note, full refund on withdrawal', async () => {
   const documents = await read('services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesDocuments.cs');
   assert.doesNotMatch(documents, /DRAFTS|a lawyer should review/);
-  // The wording did not change, so the version buyers already accepted stays.
-  assert.match(documents, /public const string Version = "2026-10-31";/);
+  // 13.11.2026 decision: a withdrawal refunds the whole amount. The wording changed, so the version did too; what a
+  // buyer accepted earlier stays stored with their notice.
+  assert.match(documents, /public const string Version = "2026-11-13";/);
+  assert.doesNotMatch(documents, /iadeden düşülebilir/);
+  assert.match(documents, /İade, ödenen tutarın tamamıdır;/);
+  assert.match(documents, /bedelin tamamını alıcının ödeme yaptığı hesaba iade eder;/);
   const admin = await read('clients/admin-panel/src/app/features/dashboard/pages/coaching-sales.ts');
   assert.doesNotMatch(admin, /taslaktır|avukata/);
   assert.match(admin, /data-testid="documents-note">[^<]*onaylanmış <strong>esas metinlerdir<\/strong>/);

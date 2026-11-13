@@ -57,7 +57,7 @@ const money = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
             <label>Banka işlem referansı<input [(ngModel)]="paymentReference" name="paymentReference" maxlength="120" required autocomplete="off" /></label>
             <label>Ödemeyi yapan<input [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" /></label>
             <label>Not<input [(ngModel)]="note" name="note" maxlength="1000" /></label>
-            <div class="cp-span"><edu-coaching-checkout [api]="sales" [planId]="planId" [price]="selectedPlanPrice()" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" /></div>
+            <div class="cp-span"><edu-coaching-checkout [api]="sales" [planId]="planId" [price]="selectedPlanPrice()" [currency]="settings()?.currency || 'TRY'" [sellerReady]="settings()?.sellerInfoComplete !== false" (choiceChange)="checkout = $event" /></div>
             <button type="submit" class="cp-primary cp-span" [disabled]="sending() || !checkout.acceptSalesContract">{{ sending() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
           </form>
         }

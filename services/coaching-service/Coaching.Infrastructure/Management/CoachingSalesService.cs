@@ -20,7 +20,7 @@ public sealed record CoachingWithdrawalSummary(Guid TransferId, string UserName,
 public sealed record CoachingInvoiceSummary(Guid Id, Guid PaymentId, string InvoiceNumber, DateOnly IssuedOn, string FileName, long SizeBytes);
 public sealed record CoachingBuyerPayment(Guid Id, Guid? TransferId, string PlanName, decimal Amount, string Currency, string Status, DateTime CreatedAt,
     decimal? ListPrice, string? CouponCode, decimal DiscountAmount, string? InvoiceNumber, DateOnly? InvoiceIssuedOn, string? WithdrawalStatus,
-    DateTime? WithdrawUntil, bool HasSalesDocuments);
+    DateTime? WithdrawUntil, bool HasSalesDocuments, string? WithdrawalReviewNote = null);
 
 /// <summary>An invoice PDF opened for download; the caller disposes it.</summary>
 public sealed class CoachingInvoiceFile(Stream content, string fileName) : IAsyncDisposable
@@ -39,6 +39,7 @@ public sealed class CoachingSalesService(CoachingDbContext db, ICoachingSubscrip
     IAssignmentAttachmentScanner scanner, TimeProvider clock)
 {
     public const int WithdrawalDays = 14;
+    public const string ApprovedWithdrawalNote = "Cayma onaylandı; ödenen tutarın tamamı iade edilecek.";
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
 
@@ -200,8 +201,11 @@ public sealed class CoachingSalesService(CoachingDbContext db, ICoachingSubscrip
     /// <summary>Approving cancels the payment and ends the access it gave (the refund is made by bank); rejecting needs a reason.</summary>
     public async Task ReviewWithdrawalAsync(Guid actor, Guid transferId, bool approve, string? note, CancellationToken ct)
     {
+        // Live test 13.11.2026: the panel sent no note with an approval and every approval failed. Only a rejection needs
+        // the admin's words; an approval without a note gets the standard sentence. The buyer reads either one.
         var text = Optional(note, 500);
-        if (text is null) throw new ArgumentException("Cayma kararı için bir not yazın (iade tarihi ya da ret gerekçesi).");
+        if (text is null && !approve) throw new ArgumentException("Cayma talebini reddetmek için gerekçe yazın.");
+        text ??= ApprovedWithdrawalNote;
         var transfer = await db.CoachingBankTransferRequests.SingleOrDefaultAsync(x => x.Id == transferId && x.WithdrawalStatus == "Requested", ct)
             ?? throw new KeyNotFoundException();
         if (approve)
@@ -233,7 +237,9 @@ public sealed class CoachingSalesService(CoachingDbContext db, ICoachingSubscrip
             x.payment.Status, x.payment.CreatedAt, x.transfer?.ListPrice, x.transfer?.CouponCode, x.transfer?.DiscountAmount ?? 0,
             x.invoice?.InvoiceNumber, x.invoice?.IssuedOn, x.transfer?.WithdrawalStatus,
             x.transfer is { Status: "Approved", ReviewedAt: { } approved } && x.transfer.WithdrawalStatus is null or "Rejected" ? approved.AddDays(WithdrawalDays) : null,
-            x.transfer?.SalesDocumentsJson is not null)).ToArray();
+            x.transfer?.SalesDocumentsJson is not null,
+            // The buyer reads why a withdrawal was rejected; an approval's note reaches them as the cancellation's reason.
+            x.transfer?.WithdrawalStatus == "Rejected" ? x.transfer.WithdrawalReviewNote : null)).ToArray();
     }
 
     public async Task<CoachingInvoiceSummary> AttachInvoiceAsync(Guid actor, Guid paymentId, string invoiceNumber, DateOnly issuedOn, string fileName,

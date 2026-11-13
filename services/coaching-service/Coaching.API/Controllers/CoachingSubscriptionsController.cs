@@ -63,9 +63,7 @@ public sealed class CoachingSubscriptionsController(
         if (!TryGetActor(out var userId)) return Unauthorized();
         var captchaError = await ValidatePaymentCaptchaAsync(cancellationToken);
         if (captchaError is not null) return captchaError;
-        var userName = User.FindFirstValue(ClaimTypes.Name)
-            ?? string.Join(' ', new[] { User.FindFirstValue(ClaimTypes.GivenName), User.FindFirstValue(ClaimTypes.Surname) }
-                .Where(value => !string.IsNullOrWhiteSpace(value)));
+        var userName = await Coaching.API.Security.CoachingBuyerName.ResolveAsync(HttpContext, userId, cancellationToken);
         var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
         var result = await subscriptions.CreateBankTransferRequestAsync(userId, userName, userEmail, request, idempotencyKey ?? string.Empty, cancellationToken);
         return result is null
@@ -106,9 +104,7 @@ public sealed class CoachingSubscriptionsController(
         if (!TryGetActor(out var parentId)) return Unauthorized();
         var captchaError = await ValidatePaymentCaptchaAsync(cancellationToken);
         if (captchaError is not null) return captchaError;
-        var parentName = User.FindFirstValue(ClaimTypes.Name)
-            ?? string.Join(' ', new[] { User.FindFirstValue(ClaimTypes.GivenName), User.FindFirstValue(ClaimTypes.Surname) }
-                .Where(value => !string.IsNullOrWhiteSpace(value)));
+        var parentName = await Coaching.API.Security.CoachingBuyerName.ResolveAsync(HttpContext, parentId, cancellationToken);
         var parentEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
         var child = (await accounts.GetAccountsAsync([studentId], cancellationToken)).SingleOrDefault(x => x.UserId == studentId);
         var result = child is null ? null : await subscriptions.CreateChildBankTransferRequestAsync(parentId, parentName, parentEmail, studentId,
@@ -162,9 +158,7 @@ public sealed class CoachingSubscriptionsController(
         if (!TryGetActor(out var userId)) return Unauthorized();
         var captchaError = await ValidatePaymentCaptchaAsync(cancellationToken);
         if (captchaError is not null) return captchaError;
-        var userName = User.FindFirstValue(ClaimTypes.Name)
-            ?? string.Join(' ', new[] { User.FindFirstValue(ClaimTypes.GivenName), User.FindFirstValue(ClaimTypes.Surname) }
-                .Where(value => !string.IsNullOrWhiteSpace(value)));
+        var userName = await Coaching.API.Security.CoachingBuyerName.ResolveAsync(HttpContext, userId, cancellationToken);
         var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
         var result = await subscriptions.CreateTeacherBankTransferRequestAsync(userId, userName, userEmail, request, idempotencyKey ?? string.Empty, cancellationToken);
         return result is null

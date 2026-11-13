@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -153,6 +153,9 @@ type SalesTab = 'coupons' | 'seller' | 'withdrawals' | 'seats' | 'invoices';
       @case ('seller') {
         <section aria-labelledby="seller-heading">
           <h2 id="seller-heading" class="mb-3 font-semibold">Satıcı bilgileri</h2>
+          @if (sellerLoaded() && sellerMissing().length) {
+            <p class="note" role="alert" data-testid="seller-missing">Eksik satıcı bilgisi: {{ sellerMissing().join(', ') }}. Bunlar girilmeden ödeme ekranları ödeme bildirimi almaz.</p>
+          }
           <p class="note" data-testid="documents-note">Ön bilgilendirme formu ve mesafeli satış sözleşmesi metinleri onaylanmış <strong>esas metinlerdir</strong>.
             Buraya girdiğiniz bilgiler, alıcıya gösterilen belgelerde satıcı olarak yer alır; boş alanlar belgede "girilmedi" diye görünür.</p>
           <form (ngSubmit)="saveSeller()">
@@ -172,7 +175,7 @@ type SalesTab = 'coupons' | 'seller' | 'withdrawals' | 'seats' | 'invoices';
       @case ('withdrawals') {
         <section aria-labelledby="withdrawals-heading">
           <h2 id="withdrawals-heading" class="mb-3 font-semibold">Cayma talepleri</h2>
-          <p class="muted mb-2">Onaylanan caymada abonelik hemen sona erer. İadeyi, kullanılan günleri düşerek 14 gün içinde alıcının ödeme yaptığı hesaba siz yaparsınız.</p>
+          <p class="muted mb-2">Onaylanan caymada abonelik hemen sona erer. Ödenen tutarın tamamını, kesinti yapmadan 14 gün içinde alıcının ödeme yaptığı hesaba siz iade edersiniz.</p>
           <table><thead><tr><th>Alıcı</th><th>Plan / tutar</th><th>Talep</th><th>Durum</th><th></th></tr></thead><tbody>
             @for (item of withdrawals(); track item.transferId) {
               <tr [attr.data-testid]="'withdrawal-' + item.transferId"><td><strong>{{ item.userName }}</strong><div class="muted">{{ item.userEmail }}</div></td>
@@ -262,6 +265,15 @@ export class CoachingSalesComponent implements OnInit {
   couponUntil = '';
 
   seller: CoachingSellerInfo = { title: null, address: null, taxOffice: null, taxNumber: null, mersisNumber: null, email: null, phone: null };
+  /** The seller details as saved: the payment screens take no notice while a required one is missing. */
+  readonly savedSeller = signal<CoachingSellerInfo | null>(null);
+  readonly sellerLoaded = signal(false);
+  readonly sellerMissing = computed(() => {
+    const saved = this.savedSeller();
+    const required: [keyof CoachingSellerInfo, string][] = [['title', 'unvan'], ['address', 'adres'], ['taxOffice', 'vergi dairesi'],
+      ['taxNumber', 'vergi / TC kimlik no'], ['email', 'e-posta'], ['phone', 'telefon']];
+    return required.filter(([key]) => !saved?.[key]?.trim()).map(([, label]) => label);
+  });
 
   readonly withdrawals = signal<CoachingWithdrawal[]>([]);
   readonly pendingWithdrawals = signal(0);
@@ -352,7 +364,7 @@ export class CoachingSalesComponent implements OnInit {
   // ---- Seller ------------------------------------------------------------------------------------------------------
 
   async loadSeller(): Promise<void> {
-    try { this.seller = { ...await firstValueFrom(this.api.seller()) }; }
+    try { this.seller = { ...await firstValueFrom(this.api.seller()) }; this.savedSeller.set({ ...this.seller }); this.sellerLoaded.set(true); }
     catch { this.error.set('Satıcı bilgileri yüklenemedi.'); }
   }
 
@@ -360,7 +372,7 @@ export class CoachingSalesComponent implements OnInit {
     const clean = (value: string | null) => value?.trim() || null;
     const request: CoachingSellerInfo = { title: clean(this.seller.title), address: clean(this.seller.address), taxOffice: clean(this.seller.taxOffice),
       taxNumber: clean(this.seller.taxNumber), mersisNumber: clean(this.seller.mersisNumber), email: clean(this.seller.email), phone: clean(this.seller.phone) };
-    await this.run(async () => { this.seller = { ...await firstValueFrom(this.api.saveSeller(request)) }; return 'Satıcı bilgileri kaydedildi. Yeni ödemelerin belgelerinde kullanılır.'; },
+    await this.run(async () => { this.seller = { ...await firstValueFrom(this.api.saveSeller(request)) }; this.savedSeller.set({ ...this.seller }); this.sellerLoaded.set(true); return 'Satıcı bilgileri kaydedildi. Yeni ödemelerin belgelerinde kullanılır.'; },
       'Satıcı bilgileri kaydedilemedi.');
   }
 
@@ -380,9 +392,14 @@ export class CoachingSalesComponent implements OnInit {
   async reviewWithdrawal(item: CoachingWithdrawal, approve: boolean): Promise<void> {
     let note: string | null = null;
     if (approve) {
-      if (!await this.toaster.confirm(`${item.userName} için cayma onaylansın mı? ${item.planName} aboneliği hemen sona erer; ${coachingMoney(item.amount)} ${item.currency} iadeyi 14 gün içinde siz yaparsınız.`)) return;
+      if (!await this.toaster.confirm(`${item.userName} için cayma onaylansın mı? ${item.planName} aboneliği hemen sona erer; ${coachingMoney(item.amount)} ${item.currency} tutarın tamamını 14 gün içinde siz iade edersiniz.`, { title: 'Caymayı onayla' })) return;
+      // Live test 13.11.2026: no note was asked and the server refused every approval. The note is optional; the buyer
+      // reads it as the reason the payment was cancelled.
+      const refundNote = await this.toaster.prompt('İade notu (isteğe bağlı; alıcıya bildirilir). Örnek: iadenin yapılacağı tarih.', '', { title: 'İade notu' });
+      if (refundNote === null) return;
+      note = refundNote.trim() || null;
     } else {
-      note = (await this.toaster.prompt('Ret gerekçesi (alıcıya gösterilir)', ''))?.trim() || null;
+      note = (await this.toaster.prompt('Ret gerekçesi (alıcıya gösterilir)', '', { title: 'Ret gerekçesi' }))?.trim() || null;
       if (!note) { this.error.set('Cayma talebini reddetmek için gerekçe yazın.'); return; }
     }
     await this.run(async () => {

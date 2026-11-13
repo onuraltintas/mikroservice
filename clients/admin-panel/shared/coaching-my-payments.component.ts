@@ -43,10 +43,14 @@ import { CoachingBuyerPayment, CoachingSalesApi, coachingMoney, CoachingSalesDoc
             <span class="muted">{{ payment.createdAt | date:'dd.MM.yyyy' }}</span>
           </div>
           @if (withdrawalLabel(payment); as label) { <span class="tag" [attr.data-testid]="'withdrawal-status-' + payment.id">{{ label }}</span> }
+          @if (payment.withdrawalStatus === 'Rejected' && payment.withdrawalReviewNote) {
+            <p class="muted" [attr.data-testid]="'withdrawal-note-' + payment.id">Gerekçe: {{ payment.withdrawalReviewNote }}</p>
+          }
+          @if (cancelled(payment)) { <span class="tag" [attr.data-testid]="'payment-cancelled-' + payment.id">Ödeme iptal edildi</span> }
           <div class="actions">
             @if (payment.invoiceNumber) {
               <button type="button" [attr.data-testid]="'invoice-' + payment.id" [disabled]="busyId() === payment.id" (click)="downloadInvoice(payment)">Fatura {{ payment.invoiceNumber }} indir</button>
-            } @else { <span class="muted">Fatura henüz eklenmedi.</span> }
+            } @else if (payment.status !== 'Cancelled') { <span class="muted">Fatura henüz eklenmedi.</span> }
             @if (payment.hasSalesDocuments && payment.transferId) {
               <button type="button" [attr.data-testid]="'documents-' + payment.id" (click)="toggleDocuments(payment)">{{ openDocumentsId() === payment.id ? 'Sözleşmeleri gizle' : 'Kabul edilen sözleşmeler' }}</button>
             }
@@ -62,7 +66,7 @@ import { CoachingBuyerPayment, CoachingSalesApi, coachingMoney, CoachingSalesDoc
           @if (withdrawingId() === payment.id) {
             <form (ngSubmit)="submitWithdrawal(payment)">
               <label class="muted">Gerekçe (isteğe bağlı)<textarea name="withdrawalReason" [(ngModel)]="withdrawalReason" maxlength="500" rows="2"></textarea></label>
-              <p class="muted">Onaylandığında abonelik sona erer ve ödenen tutar, kullanılan günler düşülerek 14 gün içinde iade edilir.</p>
+              <p class="muted">Onaylandığında abonelik sona erer ve ödenen tutarın tamamı 14 gün içinde ödemenin yapıldığı hesaba iade edilir.</p>
               <div class="actions"><button type="submit" data-testid="confirm-withdrawal" [disabled]="busyId() === payment.id">Cayma talebi gönder</button><button type="button" (click)="withdrawingId.set(null)">Vazgeç</button></div>
             </form>
           }
@@ -97,6 +101,8 @@ export class CoachingMyPaymentsComponent implements OnInit {
   }
 
   withdrawalLabel(payment: CoachingBuyerPayment): string | null { return coachingWithdrawalLabel(payment.withdrawalStatus); }
+  /** Cancelled by the seller for another reason than an approved withdrawal (that one has its own label). */
+  cancelled(payment: CoachingBuyerPayment): boolean { return payment.status === 'Cancelled' && payment.withdrawalStatus !== 'Approved'; }
 
   canWithdraw(payment: CoachingBuyerPayment): boolean {
     // The server only sets the deadline while a withdrawal is possible (approved, none pending, within 14 days).

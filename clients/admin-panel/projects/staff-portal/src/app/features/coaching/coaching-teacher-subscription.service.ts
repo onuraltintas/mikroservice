@@ -28,6 +28,8 @@ export interface CoachingTeacherBankTransferSettings {
   paymentInstructions: string | null;
   bankTransferEnabled: boolean;
   isPubliclyAvailable: boolean;
+  /** False while the seller details printed on the sales documents are missing; no payment notice is taken then. */
+  sellerInfoComplete?: boolean;
 }
 
 export interface CoachingTeacherBankTransferRequest {

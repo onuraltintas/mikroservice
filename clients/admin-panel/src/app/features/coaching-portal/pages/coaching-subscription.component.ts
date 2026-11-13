@@ -88,7 +88,7 @@ import {
               <label>Banka işlem referansı<input [(ngModel)]="paymentReference" name="paymentReference" maxlength="120" required autocomplete="off" /></label>
               <label>Ödemeyi yapan kişi (isteğe bağlı)<input [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" /></label>
               <label>Not (isteğe bağlı)<textarea [(ngModel)]="note" name="paymentNote" maxlength="1000" rows="3"></textarea></label>
-              <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId()" [price]="selectedPlan()?.price ?? 0" [currency]="settings()?.currency || 'TRY'" (choiceChange)="checkout = $event" />
+              <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId()" [price]="selectedPlan()?.price ?? 0" [currency]="settings()?.currency || 'TRY'" [sellerReady]="settings()?.sellerInfoComplete !== false" (choiceChange)="checkout = $event" />
               <button class="cs-button-primary" type="submit" [disabled]="submitting() || !settings() || !checkout.acceptSalesContract">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
               <p class="muted">Bu sayfa kart bilgisi istemez.</p>
             </form>
@@ -98,7 +98,7 @@ import {
           @for (request of requests(); track request.id) {
             <li class="request">
               <span><strong>{{ request.plan.name }}</strong><small>{{ request.paymentReference }}, {{ request.createdAt | date:'d.MM.yyyy HH:mm' }}@if (request.couponCode) {, {{ request.couponCode }} ile {{ money(request.discountAmount) }} {{ request.currency }} indirim}</small>
-                @if (request.reviewNote) {<small>İnceleme notu: {{ request.reviewNote }}</small>}</span>
+                @if (request.reviewNote) {<small>Gerekçe: {{ request.reviewNote }}</small>}</span>
               <span class="request-actions"><cs-status-chip [label]="statusLabel(request.status)" [tone]="request.status === 'Approved' ? 'success' : request.status === 'Pending' ? 'warning' : 'neutral'" />
                 @if (request.status === 'Pending' && editingRequestId() !== request.id) {
                   <button type="button" class="cs-button-ghost" [attr.data-testid]="'edit-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="startEdit(request)">Düzelt</button>

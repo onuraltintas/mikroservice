@@ -53,8 +53,10 @@ import {
     </div>
 
     <div class="box">
-      @if (!documents()) {
-        <p class="muted">Ödemeden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini {{ formal ? 'okumanız' : 'okuman' }} gerekir.</p>
+      @if (!sellerReady) {
+        <p class="err" role="alert" data-testid="seller-not-ready">Satıcı bilgileri henüz tamamlanmadığı için şu an ödeme bildirimi alınamıyor. Lütfen daha sonra yeniden {{ formal ? 'deneyin' : 'dene' }}.</p>
+      } @else if (!documents()) {
+        <p class="muted" data-testid="sales-documents-hint">Ödeme bildirimini göndermeden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini {{ formal ? 'açıp onaylamanız' : 'açıp onaylaman' }} gerekir. "Sözleşmeleri görüntüle" düğmesine {{ formal ? 'basın' : 'bas' }}; onay kutusu metinlerin altında çıkar.</p>
         <button type="button" data-testid="open-sales-documents" [disabled]="loadingDocuments() || !planIdValue" (click)="openDocuments()">{{ loadingDocuments() ? 'Hazırlanıyor…' : 'Sözleşmeleri görüntüle' }}</button>
         @if (documentsError()) { <p class="err" role="alert">{{ documentsError() }}</p> }
       } @else {
@@ -72,6 +74,8 @@ export class CoachingCheckoutComponent {
   @Input() currency = 'TRY';
   /** Staff and institution pages speak with "siz", student pages with "sen". */
   @Input() formal = false;
+  /** False while the seller details are missing: the documents would be printed with gaps, so none is offered. */
+  @Input() sellerReady = true;
   @Input() set planId(value: string | null | undefined) {
     if (value === this.planIdValue) return;
     this.planIdValue = value ?? null;
@@ -111,7 +115,7 @@ export class CoachingCheckoutComponent {
   }
 
   async openDocuments(): Promise<void> {
-    if (!this.planIdValue || this.loadingDocuments()) return;
+    if (!this.planIdValue || this.loadingDocuments() || !this.sellerReady) return;
     this.loadingDocuments.set(true); this.documentsError.set(null);
     try { this.documents.set(await firstValueFrom(this.api.documents(this.planIdValue, this.quote()?.code ?? null))); }
     catch (response) { this.documentsError.set(coachingErrorMessage(response, 'Sözleşme metinleri yüklenemedi.')); }

@@ -130,6 +130,37 @@ public sealed partial class CoachingCmsAndSubscriptionServiceTests
             .Code.Should().Be("Sales.WithdrawalPeriodOver");
     }
 
+    /// <summary>Live test 13.11.2026: every approval failed (the panel sent no note) and the buyer read the admin's notes.</summary>
+    [Fact]
+    public async Task AWithdrawalIsApprovedWithoutANoteAndTheBuyerNeverReadsTheAdminsOwnNotes()
+    {
+        await using var s = await SalesSetup.CreateAsync();
+        var plan = (await s.Subscriptions.CreatePlanAsync(Plan("buyer-view", "Bireysel yıllık", "Individual", 1200m, null), s.Admin))!.Value;
+        var created = await s.Subscriptions.CreateBankTransferRequestAsync(s.User, "Ada Yılmaz", "ada@example.test",
+            new CoachingBankTransferRequestCreate(plan, "EFT-BUYER-VIEW-1", "Ada", null, true, null, AcceptSalesContract: true), "buyer-view-create-01");
+        await s.Subscriptions.ReviewBankTransferRequestAsync(created!.Id, new("Approved", "Banka hareketi 12.11 tarihinde görüldü"), s.Admin, "buyer-view-review-01");
+
+        var approved = (await s.Subscriptions.GetMyBankTransferRequestsAsync(s.User)).Single();
+        approved.Status.Should().Be("Approved");
+        approved.ReviewNote.Should().BeNull("the bank check note is the admin's own");
+        approved.ReviewedBy.Should().BeNull();
+
+        await s.Sales.RequestWithdrawalAsync(s.User, created.Id, "Vazgeçtim", default);
+        await s.Sales.ReviewWithdrawalAsync(s.Admin, created.Id, false, "Süre içinde değil", default);
+        (await s.Sales.ListMyPaymentsAsync(s.User, default)).Single().WithdrawalReviewNote.Should().Be("Süre içinde değil",
+            "the buyer is told why the withdrawal was rejected");
+
+        await s.Sales.RequestWithdrawalAsync(s.User, created.Id, "Yine de vazgeçtim", default);
+        await s.Sales.ReviewWithdrawalAsync(s.Admin, created.Id, true, null, default);
+
+        var row = await s.Db.CoachingBankTransferRequests.AsNoTracking().SingleAsync();
+        (row.Status, row.WithdrawalStatus, row.WithdrawalReviewNote).Should().Be(("Cancelled", "Approved", CoachingSalesService.ApprovedWithdrawalNote));
+        var cancelled = (await s.Subscriptions.GetMyBankTransferRequestsAsync(s.User)).Single();
+        cancelled.ReviewNote.Should().Be("Cayma: " + CoachingSalesService.ApprovedWithdrawalNote, "only the cancellation's reason is the buyer's to read");
+        row.ReviewNote.Should().Contain(s.Admin.ToString()).And.Contain("Banka hareketi", "the admin's trail is kept for the admin");
+        (await s.Sales.ListMyPaymentsAsync(s.User, default)).Single().WithdrawalReviewNote.Should().BeNull();
+    }
+
     [Fact]
     public async Task AnInvoiceIsRecordedForAPaymentAndOnlyItsBuyerDownloadsIt()
     {
