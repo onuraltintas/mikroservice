@@ -103,7 +103,7 @@
           </li>
         }
       </ul>
-      <p class="muted">{{ staffStudentId ? 'Bitirdiği konular 1, 7 ve 30 gün sonra kısa tekrarla hatırlatılır (aralıklı tekrar).' : 'Bitirdiğin konular 1, 7 ve 30 gün sonra kısa tekrarla hatırlatılır (aralıklı tekrar).' }}</p>
+      <p class="muted">{{ staffStudentId ? 'Bitirdiği her konu bir hafta sonra 10 dakikalık kısa bir tekrarla hatırlatılır (aralıklı tekrar).' : 'Bitirdiğin her konu bir hafta sonra 10 dakikalık kısa bir tekrarla hatırlatılır (aralıklı tekrar).' }}</p>
       @if (choices.prioritizeWhenShort()) {
         <p class="notice" data-testid="prioritized">Süre yetmediği için önemli konular öne alındı; sığmayanlar dışarıda kaldı.
           <button type="button" class="secondary small" (click)="planAllTopics()" [disabled]="busy()">Bütün konuları planla</button></p>
@@ -173,5 +173,6 @@
         {{ publishing() ? (staffStudentId ? 'Oluşturuluyor…' : 'Yayımlanıyor…') : (staffStudentId ? 'Planı oluştur' : created() ? 'Yeniden yayımla' : 'Planımı yayımla') }}</button>
     }
   </div>
+  @if (publishBlockedReason(); as reason) { <p class="notice" role="status" data-testid="publish-blocked">{{ reason }}</p> }
   @if (staffStudentId && preview()) { <p class="muted">Plan, öğrencinin taslağı olarak kaydedilir; yayımlamadan önce plan ekranında inceleyebilirsin.</p> }
 </div>

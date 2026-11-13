@@ -19,12 +19,11 @@ public sealed class WeeklyPlanEngineServiceTests
         var learn = Assert.Single(preview.Schedule.Tasks.Where(x => x.Kind == "Learn"));
         Assert.Equal(new DateOnly(2027, 5, 24), learn.Date);
         var spaced = preview.Schedule.Tasks.Where(x => x.Kind == "Spaced").ToArray();
-        Assert.Equal(2, spaced.Length); // +1 and +7 days, both in the next Monday hour.
-        Assert.All(spaced, x => Assert.Equal(new DateOnly(2027, 5, 31), x.Date));
+        Assert.Equal(new DateOnly(2027, 5, 31), Assert.Single(spaced).Date); // Paket I2: one review, +7 days, in the next Monday hour.
 
         var created = await service.CreateAsync(new("Kurallı plan", Input, preview.Fingerprint), default);
         var tasks = await f.Db.StudyPlanTasks.Where(x => x.RevisionId == created.Id).OrderBy(x => x.PlannedDate).ThenBy(x => x.PlannedStartMinute).ToArrayAsync();
-        Assert.Equal(new[] { "Learn", "Spaced", "Spaced" }, tasks.Select(x => x.PlanKind));
+        Assert.Equal(new[] { "Learn", "Spaced" }, tasks.Select(x => x.PlanKind));
         Assert.All(tasks, x => Assert.False(string.IsNullOrWhiteSpace(x.PlanReason)));
         Assert.All(tasks, x => Assert.NotNull(x.PlannedQuestions));
         var ids = tasks.Select(x => x.Id).ToArray();

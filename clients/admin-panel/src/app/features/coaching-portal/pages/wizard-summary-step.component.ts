@@ -405,6 +405,24 @@ export class WizardSummaryStepComponent implements OnInit {
   // --- Publish ----------------------------------------------------------------------------------------------------------------
   canPublish() { const p = this.preview(); return !!p?.canCreate && !this.busy() && !this.topicsChanged() && !this.publishIssue()?.stale; }
   /**
+   * Live test 13.11.2026: the publish button was disabled without a word. Why it is, and what the reader can do about it
+   * (nothing while the page is working: the button says so itself).
+   */
+  publishBlockedReason(): string | null {
+    const p = this.preview();
+    if (!p || this.busy() || this.canPublish()) return null;
+    const you = !this.staffStudentId;
+    if (this.topicsChanged()) return you ? 'Konu seçimin değişti. Yayımlamadan önce "Bu konularla yeniden hesapla" düğmesine bas.'
+      : 'Konu seçimi değişti. Oluşturmadan önce "Bu konularla yeniden hesapla" düğmesine basın.';
+    if (this.publishIssue()?.stale) return null;
+    if (p.issues.length) return you ? 'Yukarıdaki sorunlar giderilmeden plan yayımlanamıyor.' : 'Yukarıdaki sorunlar giderilmeden plan oluşturulamıyor.';
+    if (p.schedule.lessons.some(lesson => lesson.remainingMinutes > 0))
+      return you
+        ? 'Bazı derslerin sınava kadar bitmiyor, bu yüzden plan yayımlanamıyor. Yetişmeyen dersin altındaki "Önemli konulara odaklan" düğmesine basarsan sığmayan konular dışarıda kalır ve planını yayımlayabilirsin; istersen "Saat ekle" ile haftana saat de ekleyebilirsin.'
+        : 'Bazı dersler sınava kadar bitmiyor, bu yüzden plan oluşturulamıyor. Yetişmeyen dersin altındaki "Önemli konulara odaklan" ile sığmayan konular dışarıda bırakılabilir ya da haftaya saat eklenebilir.';
+    return you ? 'Bu plan şu an yayımlanamıyor. Haftanı ya da derslerini değiştirip yeniden dene.' : 'Bu plan şu an oluşturulamıyor.';
+  }
+  /**
    * Student: confirm, create the plan from the checked preview (its fingerprint), publish it with its version, then Planım.
    * Teacher: create the draft only, as the teacher flow always did. After a failed publish only the publish is tried again.
    */

@@ -10,7 +10,7 @@ public sealed record WeeklyProposalWindow(DayOfWeek Day, int StartMinute, int En
 /// <summary>NeedMinutes: the lesson's weekly need (its curriculum work and spaced reviews spread over the weeks until the plan ends).</summary>
 public sealed record WeeklyProposalLesson(Guid LessonId, string Name, string? ExamCode, int NeedMinutes, int Priority = 3, bool Hard = false);
 /// <summary>
-/// SessionsBeforeBreak: 1 for middle school (a break after every session), 2 for everyone else (K1). DayOccurrences: how many times each
+/// SessionsBeforeBreak: 1 for middle school (a break after every session), 3 for everyone else (K1, Paket I2). DayOccurrences: how many times each
 /// weekday comes before the plan ends; a weekday that does not come gets no session (null: every weekday comes).
 /// DayBudgets (Paket H4a): the day budgets of a routine profile that still matches the free hours; a day then holds at most
 /// min(budget, MaxDayMinutes), and a day without a budget gets no session (null: only MaxDayMinutes).
@@ -40,7 +40,9 @@ public static class WeeklyProposalEngine
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
     private static readonly Regex ExamSuffix = new(@"^(.*\S)\s*\([^()]*\)\s*$", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
-    public static int SessionsBeforeBreak(bool middleSchool) => middleSchool ? 1 : 2;
+    // Paket I2 (user decision 13.11.2026): outside middle school three sessions may follow each other, so a three-hour
+    // window holds three (it held two and an unused hour); the short breaks are inside the sessions.
+    public static int SessionsBeforeBreak(bool middleSchool) => middleSchool ? 1 : 3;
 
     /// <summary>The spaced reviews (one per interval of <see cref="WeeklyPlanEngine.SpacedIntervalDays"/>) that fall inside a plan of this many days.</summary>
     public static int ReviewsWithin(int days) => WeeklyPlanEngine.SpacedIntervalDays.Count(x => x < days);

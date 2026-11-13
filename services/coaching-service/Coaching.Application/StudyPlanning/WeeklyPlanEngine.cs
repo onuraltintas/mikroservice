@@ -10,8 +10,21 @@ namespace Coaching.Application.StudyPlanning;
 public static class WeeklyPlanEngine
 {
     public const int CurrentVersion = 2;
-    public const int SpacedMinutes = 15;
-    public static readonly IReadOnlyList<int> SpacedIntervalDays = [1, 7, 30];
+    // Paket I2 (user decision 13.11.2026): one 10-minute review a week after a topic is finished. Three 15-minute reviews
+    // (1, 7 and 30 days) added 45 minutes to every topic: 18.9 of the 46.5 weekly hours of a SAY student on live.
+    public const int SpacedMinutes = 10;
+    public static readonly IReadOnlyList<int> SpacedIntervalDays = [7];
+    /// <summary>
+    /// Paket I2 (user decision 13.11.2026, "konu sürelerini %25 kısalt"): the planner plans a catalog duration at this share.
+    /// The curriculum records keep their reviewed minutes; only what the plan asks of the student changes. Settable so that
+    /// tests written against the catalog minutes pin it to 1.
+    /// </summary>
+    public static decimal ContentFactor { get; set; } = DefaultContentFactor;
+    public const decimal DefaultContentFactor = .75m;
+    /// <summary>The minutes the plan gives a catalog duration: at least 5, none for none.</summary>
+    public static int PlanMinutes(int catalogMinutes) => PlanMinutes(catalogMinutes, ContentFactor);
+    public static int PlanMinutes(int catalogMinutes, decimal factor) =>
+        catalogMinutes <= 0 ? 0 : Math.Max(5, (int)Math.Round(catalogMinutes * factor, MidpointRounding.AwayFromZero));
     public static WeeklyPlanRules Rules { get; } = new(SpacedIntervalDays, SpacedMinutes);
 
     public sealed record LessonPreference(int Priority, int? Difficulty);

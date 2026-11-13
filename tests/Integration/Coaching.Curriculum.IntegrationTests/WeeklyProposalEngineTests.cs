@@ -53,16 +53,16 @@ public sealed class WeeklyProposalEngineTests
     }
 
     [Fact]
-    public void BreakAfterEverySessionInMiddleSchool_AndAfterTwoSessionsOtherwise()
+    public void BreakAfterEverySessionInMiddleSchool_AndAfterThreeSessionsOtherwise()
     {
         var lessons = Enumerable.Range(1, 6).Select(n => Lesson(n, 600)).ToArray();
         var evening = new[] { Window(DayOfWeek.Monday, 1020, 1260) }; // 17:00–21:00
-        Assert.Equal(new[] { 1020, 1080, 1170 }, Starts(Propose(evening, lessons), DayOfWeek.Monday));
+        Assert.Equal(new[] { 1020, 1080, 1140 }, Starts(Propose(evening, lessons), DayOfWeek.Monday)); // Paket I2: three in a row
         Assert.Equal(new[] { 1020, 1110, 1200 }, Starts(Propose(evening, lessons, middle: true), DayOfWeek.Monday));
 
         // A saved card right before the window counts toward the run of study.
         var saved = new[] { Card(9, DayOfWeek.Monday, 960) };
-        Assert.Equal(new[] { 1020, 1110, 1170 }, Starts(Propose(evening, lessons, existing: saved), DayOfWeek.Monday));
+        Assert.Equal(new[] { 1020, 1080, 1170 }, Starts(Propose(evening, lessons, existing: saved), DayOfWeek.Monday));
         Assert.Equal(new[] { 1050, 1140 }, Starts(Propose(evening, lessons, middle: true, existing: saved), DayOfWeek.Monday));
     }
 
@@ -120,7 +120,7 @@ public sealed class WeeklyProposalEngineTests
         var fill = Propose([Window(DayOfWeek.Monday, 1020, 1200)], [lessons[1], Lesson(4, 60)], existing: saved);
         Assert.Equal(2, fill.Slots.Count);
         Assert.Equal(Id(4), fill.Slots.Single(x => x.StartMinute == 1020).LessonId);
-        Assert.Equal(Id(2), fill.Slots.Single(x => x.StartMinute == 1110).LessonId);
+        Assert.Equal(Id(2), fill.Slots.Single(x => x.StartMinute == 1080).LessonId); // Paket I2: the third hour in a row, after another lesson
     }
 
     [Fact]
@@ -254,11 +254,10 @@ public sealed class WeeklyProposalEngineTests
     // Review of PR #130 (3): close to the exam the weekly need is the remaining work, never work × 7.
     [Theory]
     [InlineData(1, 0)]
-    [InlineData(2, 1)]
-    [InlineData(3, 1)]
-    [InlineData(4, 1)]
-    [InlineData(5, 1)]
-    [InlineData(6, 1)]
+    [InlineData(2, 0)]
+    [InlineData(6, 0)]
+    [InlineData(7, 0)]
+    [InlineData(8, 1)]
     public void UnderAWeekTheNeedIsTheRemainingWork(int days, int reviews)
     {
         Assert.Equal(reviews, WeeklyProposalEngine.ReviewsWithin(days));
@@ -268,7 +267,7 @@ public sealed class WeeklyProposalEngineTests
     [Fact]
     public void TheNeedIsSpreadOverTheTimesTheLeastFrequentStudyDayComes()
     {
-        Assert.Equal(90, WeeklyProposalEngine.WeeklyNeed(300, 2, 30, 4)); // (300 + 2 topics × 2 reviews (1 and 7 days) × 15) ÷ 4
+        Assert.Equal(80, WeeklyProposalEngine.WeeklyNeed(300, 2, 30, 4)); // (300 + 2 topics × 1 review (7 days) × 10) ÷ 4
         var occurrences = WeeklyProposalEngine.Occurrences(new DateOnly(2027, 5, 24), new DateOnly(2027, 6, 1)); // Monday to the next Tuesday
         Assert.Equal((2, 2, 1, 1), (occurrences[DayOfWeek.Monday], occurrences[DayOfWeek.Tuesday], occurrences[DayOfWeek.Wednesday], occurrences[DayOfWeek.Sunday]));
         // A weekday that does not come before the end gets no session.
@@ -284,9 +283,9 @@ public sealed class WeeklyProposalEngineTests
         var late = Propose([Window(DayOfWeek.Monday, 1380, 1440)], [Lesson(1, 60)]);
         Assert.Equal(1380, Assert.Single(late.Slots).StartMinute);
         var lessons = Enumerable.Range(1, 4).Select(n => Lesson(n, 600)).ToArray();
-        // 17:00–18:00 and 18:00–19:00 touch: two hours in a row, then a break is needed (19:00–20:00 in a third window stays a run of 3).
+        // Three touching windows are one three-hour stretch: three hours in a row (Paket I2).
         var touching = Propose([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Monday, 1080, 1140), Window(DayOfWeek.Monday, 1140, 1200)], lessons);
-        Assert.Equal(new[] { 1020, 1080 }, Starts(touching, DayOfWeek.Monday));
+        Assert.Equal(new[] { 1020, 1080, 1140 }, Starts(touching, DayOfWeek.Monday));
         var overlapping = Propose([Window(DayOfWeek.Monday, 1020, 1110), Window(DayOfWeek.Monday, 1050, 1140)], lessons, middle: true);
         Assert.Equal(new[] { 1020 }, Starts(overlapping, DayOfWeek.Monday));
         Assert.Equal(new[] { 1020, 1080 }, Starts(Propose([Window(DayOfWeek.Monday, 1020, 1110), Window(DayOfWeek.Monday, 1050, 1140)], lessons), DayOfWeek.Monday));
@@ -295,10 +294,10 @@ public sealed class WeeklyProposalEngineTests
     [Fact]
     public void ASavedCardOutsideTheWindowsStillCountsTowardTheRun()
     {
-        // 16:00–18:00 free, a saved card 18:00–19:00 outside any window: 17:00 would make three hours in a row.
+        // 15:00–18:00 free, a saved card 18:00–19:00 outside any window: 17:00 would make four hours in a row (Paket I2: three may).
         var saved = new[] { Card(9, DayOfWeek.Monday, 1080) };
-        var result = Propose([Window(DayOfWeek.Monday, 960, 1080)], Enumerable.Range(1, 3).Select(n => Lesson(n, 600)), existing: saved);
-        Assert.Equal(new[] { 960 }, Starts(result, DayOfWeek.Monday));
+        var result = Propose([Window(DayOfWeek.Monday, 900, 1080)], Enumerable.Range(1, 4).Select(n => Lesson(n, 600)), existing: saved);
+        Assert.Equal(new[] { 900, 960 }, Starts(result, DayOfWeek.Monday));
     }
 
     // Merge of Paket H1: the daily limit counts saved cards; a day already at or over the limit gets nothing (a draft saved above the

@@ -108,15 +108,30 @@ public sealed class WeeklyPlanEngineTests
         var learn = Assert.Single(result.Tasks.Where(x => x.Kind == "Learn"));
         Assert.Equal((Start, 1080, 30), (learn.Date, learn.StartMinute, learn.Minutes));
         var spaced = result.Tasks.Where(x => x.Kind == "Spaced").ToArray();
-        // +1 day (Tuesday), +7 days (next Monday) and +30 days (first Math hour on or after 23 June).
-        Assert.Equal(new[] { Start.AddDays(1), Start.AddDays(7), new DateOnly(2027, 6, 28) }, spaced.Select(x => x.Date));
+        // Paket I2: one review, +7 days (next Monday).
+        Assert.Equal(new[] { Start.AddDays(7) }, spaced.Select(x => x.Date));
+        Assert.Equal(10, WeeklyPlanEngine.SpacedMinutes); Assert.Equal(new[] { 7 }, WeeklyPlanEngine.SpacedIntervalDays);
         Assert.All(spaced, x => Assert.Equal(WeeklyPlanEngine.SpacedMinutes, x.Minutes));
         Assert.All(spaced, x => Assert.Contains("Aralıklı tekrar", x.Reason));
         Assert.All(result.Tasks, x => Assert.NotNull(x.PlannedQuestions));
         var summary = Assert.Single(result.Lessons);
         Assert.Equal(30, summary.RequiredMinutes); Assert.Equal(30, summary.ScheduledMinutes); Assert.Equal(Start, summary.FinishDate);
         var shortRange = WeeklyOutcomeScheduler.Build(Start, Start.AddDays(3), slots, [Lesson(Math, Outcome(topic, "Konu", 30))], false, [], WeeklyPlanEngine.Rules);
-        Assert.Equal(new[] { Start.AddDays(1) }, shortRange.Tasks.Where(x => x.Kind == "Spaced").Select(x => x.Date));
+        Assert.Empty(shortRange.Tasks.Where(x => x.Kind == "Spaced"));
+    }
+
+    // Paket I2 (user decision 13.11.2026): the plan asks for 75 % of a catalog duration; the suite itself runs with 1.
+    [Theory]
+    [InlineData(60, 45)]
+    [InlineData(23, 17)]
+    [InlineData(90, 68)]
+    [InlineData(4, 5)]
+    [InlineData(0, 0)]
+    public void ThePlanAsksForAShareOfTheCatalogMinutes(int catalog, int planned)
+    {
+        Assert.Equal(.75m, WeeklyPlanEngine.DefaultContentFactor);
+        Assert.Equal(planned, WeeklyPlanEngine.PlanMinutes(catalog, WeeklyPlanEngine.DefaultContentFactor));
+        Assert.Equal(60, WeeklyPlanEngine.PlanMinutes(60, 1m));
     }
 
     [Fact]

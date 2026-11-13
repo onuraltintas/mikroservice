@@ -260,9 +260,11 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
                     if(row.RequiresShare&&row.Share is null){issues.Add(new(lessonId,lesson.Name,topic.Topic.Name+": kapsam süre payı eksik."));continue;}
                     if(seen.Add((row.Outcome.Id,row.Share is null?Guid.Empty:topic.Topic.Id)))
                     {
-                        var total=row.Share?.TotalMinutes??row.Estimate.TotalMinutes;var practice=row.Share?.PracticeMinutes??row.Estimate.PracticeMinutes;
+                        var catalogTotal=row.Share?.TotalMinutes??row.Estimate.TotalMinutes;var practice=row.Share?.PracticeMinutes??row.Estimate.PracticeMinutes;
+                        // Paket I2: the plan asks for a share of the catalog duration (WeeklyPlanEngine.ContentFactor); the practice share is of the catalog's.
+                        var total=WeeklyPlanEngine.PlanMinutes(catalogTotal);
                         outcomes.Add(new(topic.Topic.Id,topic.Topic.Name,row.Outcome.Id,row.Outcome.Code,row.Outcome.Name,row.Estimate.Id,row.Estimate.Number,
-                            total,row.Share is not null,PracticeShare:total>0?Math.Round(practice/(double)total,3):0));
+                            total,row.Share is not null,PracticeShare:catalogTotal>0?Math.Round(practice/(double)catalogTotal,3):0));
                     }
                 }
             }
