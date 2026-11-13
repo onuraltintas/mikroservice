@@ -1415,7 +1415,7 @@
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingNewsletterService.cs": "50f0a545615ed7627973bc5ca69bdab60306cb3ac62264bf248e7b3ac2262d79",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentChildService.cs": "c1afa6907c98d5203749c4f87a80c0799e5078be21c900e7d7e6a8d547380839",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingParentWeeklySummary.cs": "f7a5fc88f0aaad16904e7ea6c165a073e4b8cc9a15be2f79d4be76a35b7b45b3",
-    "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesDocuments.cs": "facfa2ace568d6d5200d52ef100199b21f1478010d65660308b9dfcbc51f8efc",
+    "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesDocuments.cs": "041e9482806611808d559c4c7c56a36f53bf58d2a050d647e371580ccf8350cd",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesService.cs": "4d2be80288a3b040dbc37913a335e95c73d746d753be7f5c447901b3f0bec207",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingScoreEstimateService.cs": "726ba31cb79edc3191250caae9ae35bfba909aed91e23b7c6c2f60e1789191af",
     "services/coaching-service/Coaching.Infrastructure/Management/CoachingSeatRequestService.cs": "e6ec4915aa62d629cc4bdc4cc48ce6ae0e987a5cdb93945d753144393294c963",
@@ -2736,7 +2736,7 @@
   },
   "baselineCommit": "07db9772",
   "snapshotContext": {
-    "purpose": "accurate speed-reading exercise time: abandoned auto-pause",
+    "purpose": "LGS 2027 session; final legal texts and approved sales documents",
     "authorizedDeletionManifest": "artifacts/speed-reading-cleanup-20261015/deletion-manifest.json",
     "authorizedRemovedFiles": [
       "clients/speed-reading/src/app/core/services/coaching-agreement.service.spec.ts",
