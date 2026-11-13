@@ -57,6 +57,9 @@ export class CoachingPortalLayoutComponent {
   @ViewChild('bellToggle') private bellToggle?: ElementRef<HTMLButtonElement>;
   readonly isStudent = computed(() => this.views.current() === 'Student');
   // Roadmap Y7: a parent who is not also a student sees the parent panel menu.
+  /** Paket I3: this browser signed in with another account while this tab stayed open. */
+  readonly otherAccount = computed(() => this.authService.otherAccountSignedIn?.() ?? false);
+  reloadPage(): void { globalThis.location?.reload(); }
   readonly isParent = computed(() => !!this.user()?.roles?.includes('Parent') && !this.user()?.roles?.includes('Student'));
   /** V4: Çocuklarım (with the child pages), Mesajlar and Bildirimler, each with its unread count. */
   readonly parentLinks = computed<PortalLink[]>(() => [

@@ -40,3 +40,17 @@ test('screens say what happened', async () => {
   assert.match(await read(app + 'features/coaching-portal/pages/coaching-finance.component.html'), /Öğrencilerinizle olan koçluk ücretlerini/);
   assert.doesNotMatch(await read('services/coaching-service/Coaching.Application/Consumers/WelcomeGoal.cs'), /koç aramaya/);
 });
+
+test('sessions, the staff portal locale and the other-account warning', async () => {
+  const sessions = await read(app + 'features/coaching-portal/pages/coaching-sessions.component.ts');
+  assert.match(sessions, /session\.status !== 'Cancelled' && new Date\(session\.startTime\)/);
+  assert.match(sessions, /orderedSessions\(\)/);
+  const staff = await read('clients/admin-panel/projects/staff-portal/src/app/app.config.ts');
+  assert.match(staff, /registerLocaleData\(localeTr\)/);
+  assert.match(staff, /provide: LOCALE_ID, useValue: 'tr'/);
+  const auth = await read(app + 'core/auth/auth.service.ts');
+  assert.match(auth, /new BroadcastChannel\('eduivme-session'\)/);
+  // User decision 14.11.2026: the tab warns; it neither signs out nor navigates.
+  const layout = await read(app + 'features/coaching-portal/layout/coaching-portal-layout.component.html');
+  assert.match(layout, /data-testid="other-account-warning"/);
+});

@@ -45,3 +45,8 @@
 }
 @media (prefers-reduced-motion: reduce) { .coaching-shell *, .coaching-shell *::before, .coaching-shell *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
+
+// Paket I3: another account signed in on this browser.
+.coaching-other-account { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
+  padding: .7rem 1rem; background: #fef3c7; color: #78350f; border-bottom: 1px solid #f59e0b; font-size: .9rem; grid-column: 1 / -1;
+  button { border: 1px solid #b45309; border-radius: .5rem; background: #fff; color: #78350f; padding: .35rem .8rem; font-weight: 600; cursor: pointer; } }
