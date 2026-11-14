@@ -284,6 +284,8 @@ jobs:
             project: services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
           - name: course-management
             project: services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
+          - name: billing
+            project: services/billing-service/Billing.API/Billing.API.csproj
           - name: gateway
             project: services/api-gateway/EduPlatform.Gateway.csproj
     steps:
@@ -395,6 +397,35 @@ jobs:
         with:
           name: gateway-test-results
           path: tests/Unit/EduPlatform.Gateway.UnitTests/TestResults/
+          if-no-files-found: warn
+
+  billing-tests:
+    name: Billing rules, PostgreSQL catalog and host tests
+    runs-on: ubuntu-latest
+    needs: [source-safety, dotnet]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Billing test project
+        run: dotnet restore tests/Integration/Billing.IntegrationTests/Billing.IntegrationTests.csproj
+
+      - name: Run Billing tests
+        run: >-
+          dotnet test tests/Integration/Billing.IntegrationTests/Billing.IntegrationTests.csproj
+          --configuration Release --no-restore --logger "trx;LogFileName=billing-tests.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: billing-test-results
+          path: tests/Integration/Billing.IntegrationTests/TestResults/
           if-no-files-found: warn
 
   course-management-messaging-integration:
@@ -599,6 +630,7 @@ jobs:
           dotnet restore services/notification-service/Notification.API/Notification.API.csproj
           dotnet restore services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
           dotnet restore services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
+          dotnet restore services/billing-service/Billing.API/Billing.API.csproj
 
       - name: Fail when EF models have unapplied changes
         shell: bash
@@ -625,6 +657,10 @@ jobs:
           "$ef" migrations has-pending-model-changes \
             --project services/course-management-service/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj \
             --startup-project services/course-management-service/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj \
+            --configuration Release
+          "$ef" migrations has-pending-model-changes \
+            --project services/billing-service/Billing.Infrastructure/Billing.Infrastructure.csproj \
+            --startup-project services/billing-service/Billing.Infrastructure/Billing.Infrastructure.csproj \
             --configuration Release
 
   gateway-smoke:
@@ -829,6 +865,7 @@ jobs:
             services/notification-service/Notification.API/Notification.API.csproj
             services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
             services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
+            services/billing-service/Billing.API/Billing.API.csproj
             services/api-gateway/EduPlatform.Gateway.csproj
           )
           for project in "${projects[@]}"; do
@@ -845,7 +882,7 @@ jobs:
   container-build:
     name: Container build (${{ matrix.name }})
     runs-on: ubuntu-latest
-    needs: [dotnet, tests, course-management-postgres-smoke, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend, coaching-development-regression]
+    needs: [dotnet, tests, course-management-postgres-smoke, billing-tests, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend, coaching-development-regression]
     strategy:
       fail-fast: false
       matrix:
