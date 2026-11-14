@@ -39,7 +39,8 @@ describe('WizardSummaryStepComponent', () => {
       tempoOptions: vi.fn((..._a: unknown[]) => of({ planEnd: '2027-06-20', options: [{ tempo: 'Relaxed', finishBy: '2027-06-20', neededWeeklyMinutes: 60, capacityWeeklyMinutes: 120, fits: true },
         { tempo: 'Balanced', finishBy: '2027-05-15', neededWeeklyMinutes: 90, capacityWeeklyMinutes: 120, fits: true }] })) };
     const engine = { options: vi.fn(() => of({ startDate: '2026-11-09', endDate: '2027-06-13', weeklyDraftVersion: 4, timeZoneId: 'Europe/Istanbul', exams: [] })),
-      preview: vi.fn((request: WeeklyOutcomeRequest, _s?: string) => of(previewOf(request))), create: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 1 })) };
+      preview: vi.fn((request: WeeklyOutcomeRequest, _s?: string) => of(previewOf(request))),
+      focusEstimate: vi.fn((request: WeeklyOutcomeRequest, _s?: string) => of(previewOf({ ...request, prioritizeWhenShort: true }))), create: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 1 })) };
     const planning = { publish: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 2, title: 'x', status: 'Active', tasks: [] })),
       get: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 1, title: 'x', status: 'Draft', tasks: [] })) };
     const learning = { save: vi.fn((_r: unknown) => of({ context: { ...context, version: 6 }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })),
@@ -257,6 +258,45 @@ describe('WizardSummaryStepComponent', () => {
     // 900 review minutes over the 27 weeks from 9 November to 12 May: about half an hour a week.
     expect(text(el.querySelector('[data-testid="review-cost"]'))).toContain('Aralıklı tekrarlar haftada yaklaşık 0,5 saat tutuyor');
     expect(el.querySelector('[data-testid="focus-hint"]')).not.toBeNull();
+  });
+
+  // Paket I6 (user decision 14.11.2026).
+  it('"Saat ekle" carries the weekday minutes that close the shortage', async () => {
+    const short = (mode: WeeklyProposalMode) => proposalOf(mode, [tuesday], { neededMinutes: 420, shortageMinutes: 240, coveredMinutes: 180 });
+    const { el, events, fixture } = await setup({ proposal: short });
+    button(el, 'Saat ekle')!.click();
+    expect(events.addHours).toHaveBeenLastCalledWith(60);   // 240 minutes over five weekdays, up to the half hour
+    await keep(fixture);
+    // A course that does not finish: its own extra weekly need (30 minutes) over the weekdays.
+    (el.querySelector('[data-testid="late-fixes"] button') as HTMLButtonElement).click();
+    expect(events.addHours).toHaveBeenLastCalledWith(30);
+  });
+
+  it('says before the choice what "Önemli konulara odaklan" would leave out, asked only while a course does not finish', async () => {
+    const { el, fixture, engine } = await setup();
+    engine.focusEstimate.mockImplementation((request: WeeklyOutcomeRequest) => { const p = previewOf(request); return of({ ...p,
+      leftOutTopics: [{ lessonId: 'tur', lessonName: 'Türkçe', topicId: 'a', topicName: 'A', minutes: 30 }, { lessonId: 'TUR', lessonName: 'Türkçe', topicId: 'b', topicName: 'B', minutes: 30 }],
+      schedule: { ...p.schedule, lessons: p.schedule.lessons.map(x => ({ ...x, remainingMinutes: 0 })) } }); });
+    await keep(fixture);
+    expect(engine.focusEstimate).toHaveBeenCalledOnce();
+    expect(engine.focusEstimate).toHaveBeenCalledWith(expect.objectContaining({ endDate: '2027-05-12', prioritizeWhenShort: false }), undefined);
+    expect(text(el.querySelector('[data-testid="focus-hint"]'))).toContain('“Önemli konulara odaklan” dersen 1 derste 2 konu dışarıda kalır; gerisi yetişir.');
+  });
+
+  it('asks for no estimate when every course finishes, and keeps the plain hint when the estimate fails', async () => {
+    const fine = await setup();
+    fine.engine.preview.mockImplementation((request: WeeklyOutcomeRequest) => { const p = previewOf(request, { leftOutTopics: [] });
+      return of({ ...p, schedule: { ...p.schedule, lessons: p.schedule.lessons.map(x => ({ ...x, remainingMinutes: 0 })) } }); });
+    await keep(fine.fixture);
+    expect(fine.engine.focusEstimate).not.toHaveBeenCalled();
+    expect(fine.el.querySelector('[data-testid="focus-hint"]')).toBeNull();
+
+    TestBed.resetTestingModule();
+    const failing = await setup();
+    failing.engine.focusEstimate.mockReturnValue(throwError(() => ({ status: 500 })));
+    await keep(failing.fixture);
+    expect(text(failing.el.querySelector('[data-testid="focus-hint"]'))).toContain('dersen sığmayan konular dışarıda kalır');
+    expect(failing.el.querySelector('[data-testid="preview-error"]')?.textContent ?? '').toBe('');
   });
 
   it('says that no review is planned when the student chose none', async () => {

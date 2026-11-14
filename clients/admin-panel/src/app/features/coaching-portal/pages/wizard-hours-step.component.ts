@@ -41,6 +41,32 @@ export class WizardHoursStepComponent implements OnInit {
   /** Edit mode and "Saat ekle": the questions open at once, with the saved answers. */
   @Input() startWithQuestions = false;
   @Input() canGoBack = false;
+  /**
+   * Paket I6 (user decision 14.11.2026), "Saat ekle": the minutes to add to each weekday so that the courses fit. The questions open
+   * on the weekday time with the sum chosen (never past the day limit); the student may change it. Nothing is saved until "Devam".
+   */
+  @Input() addWeekdayMinutes = 0;
+  readonly added = signal<{ from: number; to: number; weekendMinutes: number } | null>(null);
+  private applyExtra() {
+    const extra = this.addWeekdayMinutes, from = this.answers().weekdayMinutes;
+    if (!(extra > 0) || from === null) return;
+    const to = Math.min(this.limit, from + extra);
+    if (to > from) { this.answers.update(a => ({ ...a, weekdayMinutes: to })); this.dirty.set(true); }
+    // What the day limit keeps out of the weekdays is named for the weekend (five weekdays' worth).
+    this.added.set({ from, to: Math.max(from, to), weekendMinutes: (from + extra - Math.max(from, to)) * 5 });
+    const at = this.questions().indexOf('weekday'); if (at >= 0) { this.index.set(at); this.openedAt = at; }
+  }
+  /** The question "Saat ekle" opened on: "Geri" there leaves the questions (back to the summary) instead of walking the earlier ones. */
+  private openedAt = 0;
+  /** "Diğer soruları da gör": the questions from the first one (for example to study later in the evening). */
+  fromTheStart() { if (this.saving()) return; this.openedAt = 0; this.index.set(0); this.issue.set(null); this.focusQuestion(); }
+  showFromTheStart() { return this.openedAt > 0 && this.index() === this.openedAt; }
+  addedText() {
+    const a = this.added(); if (!a) return '';
+    const weekend = a.weekendMinutes > 0 ? ` Kalan yaklaşık ${hoursText(a.weekendMinutes)} için hafta sonuna süre ekleyebilirsin.` : '';
+    return a.to > a.from ? `Derslerine yetişmen için günlük süreni ${hoursText(a.from)} yerine ${hoursText(a.to)} olarak seçtim; istersen değiştir.${weekend}`
+      : `Hafta içi günlük süren zaten en yüksek değerde.${weekend}`;
+  }
   @Output() done = new EventEmitter<WeeklyProposalWindow[] | null>();
   @Output() routineSaved = new EventEmitter<StudyRoutineView>();
   @Output() reload = new EventEmitter<void>();
@@ -80,7 +106,7 @@ export class WizardHoursStepComponent implements OnInit {
     if (this.staffStudentId) { this.mode.set(routine?.availabilityMatches ? 'summary' : windows.length || routine ? 'availability' : 'staff-questions'); return; }
     if (routine) this.answers.set({ ...defaultRoutineAnswers(this.yks), ...routine.answers, busyDays: [...(routine.answers.busyDays ?? [])] });
     else this.answers.set(defaultRoutineAnswers(this.yks));
-    if (this.startWithQuestions) { this.openedFrom = null; this.mode.set('questions'); return; }
+    if (this.startWithQuestions) { this.openedFrom = null; this.mode.set('questions'); this.applyExtra(); return; }
     this.mode.set(routine?.availabilityMatches ? 'summary' : windows.length ? 'availability' : 'questions');
   }
 
@@ -126,11 +152,11 @@ export class WizardHoursStepComponent implements OnInit {
   previous() {
     if (this.saving()) return;
     this.issue.set(null); this.error.set('');
-    if (this.index() > 0) { this.index.update(i => i - 1); this.focusQuestion(); return; }
+    if (this.index() > this.openedAt) { this.index.update(i => i - 1); this.focusQuestion(); return; }
     if (this.openedFrom) { this.mode.set(this.openedFrom); this.openedFrom = null; this.dirty.set(false); return; }
     this.back.emit();
   }
-  canGoBackFromQuestions() { return this.index() > 0 || !!this.openedFrom || this.canGoBack; }
+  canGoBackFromQuestions() { return this.index() > this.openedAt || !!this.openedFrom || this.canGoBack; }
   /** "Devam": the answer is checked as the server would; the last screen saves. */
   next() {
     if (this.saving()) return;

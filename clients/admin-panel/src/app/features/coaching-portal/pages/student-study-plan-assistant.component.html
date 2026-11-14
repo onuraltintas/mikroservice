@@ -59,7 +59,7 @@
         @case ('hours') {
           <app-wizard-hours-step [staffStudentId]="staffStudentId" [routine]="routine()" [availability]="availability()" [yks]="isYks()" [allowNoSchool]="allowNoSchool()" [limit]="maxDayMinutes"
             [examFocus]="confirmedFocus()" [tempo]="confirmedTempo()" [disabled]="tempoLoading()"
-            [startWithQuestions]="hoursWithQuestions()" [canGoBack]="canGoBack()" (done)="hoursDone($event)" (routineSaved)="routineSaved($event)" (reload)="loadHours()" (back)="previous()" />
+            [startWithQuestions]="hoursWithQuestions()" [addWeekdayMinutes]="extraWeekday()" [canGoBack]="canGoBack()" (done)="hoursDone($event)" (routineSaved)="routineSaved($event)" (reload)="loadHours()" (back)="previous()" />
         }
         @case ('courses') {
           <app-wizard-courses-step [staffStudentId]="staffStudentId" [context]="learningContext()" [lessons]="lessons()" [canGoBack]="canGoBack()"
@@ -126,7 +126,7 @@
         @case ('summary') {
           <app-wizard-summary-step [staffStudentId]="staffStudentId" [reviewDays]="reviewDays()" [examFocus]="isYks() ? examFocus() : null" [finishBy]="finishBy()" [finishByMode]="tempoMode()" [tempo]="tempo()"
             [windows]="staffWindows()" [tempoNote]="tempoNote()" [context]="learningContext()" [canGoBack]="canGoBack()" [replaceOnOpen]="replaceOnOpen" [choices]="summaryChoices"
-            (addHours)="addHours()" (changeReviews)="changeReviews()" (planCreated)="onPlanCreated($event)" (contextSaved)="contextSaved($event)" (draftSaved)="draftSaved($event)" (back)="previous()" />
+            (addHours)="addHours($event)" (changeReviews)="changeReviews()" (planCreated)="onPlanCreated($event)" (contextSaved)="contextSaved($event)" (draftSaved)="draftSaved($event)" (back)="previous()" />
         }
       }
     </section>
