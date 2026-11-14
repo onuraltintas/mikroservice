@@ -69,7 +69,7 @@ public static class SpeedReadingSalesDocumentTexts
         var price = $"Ödenecek toplam tutar {terms.Amount.ToString("N2", Turkish)} {terms.Currency} (vergiler dahil).";
         var date = SpeedReadingReportCalendar.LocalTime(terms.Date).ToString("dd.MM.yyyy", Turkish);
         var instructions = string.IsNullOrWhiteSpace(terms.PaymentInstructions) ? string.Empty : " " + terms.PaymentInstructions.Trim();
-        const string withdrawalPlace = "Ödeme talepleriniz";
+        const string withdrawalPlace = "Aboneliğim";
 
         var preInformation = string.Join("\n",
             "ÖN BİLGİLENDİRME FORMU",
@@ -90,7 +90,7 @@ public static class SpeedReadingSalesDocumentTexts
             "Ödeme onaylanmadan hizmet başlamaz. Abonelik kendiliğinden yenilenmez ve otomatik ödeme alınmaz.",
             "",
             "5. Cayma hakkı",
-            $"Alıcı, ödemenin onaylandığı günden başlayarak {WithdrawalDays} gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Talep, platformdaki \"{withdrawalPlace}\" bölümünden ya da satıcının e-posta adresine yazılı olarak iletilir. Cayma halinde ödenen tutar, talebin satıcıya ulaştığı günden başlayarak en geç {WithdrawalDays} gün içinde alıcının ödeme yaptığı hesaba iade edilir. İade, ödenen tutarın tamamıdır; hizmetin kullanıldığı günler için kesinti yapılmaz.",
+            $"Alıcı, ödemenin onaylandığı günden başlayarak {WithdrawalDays} gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Talep, platformdaki \"{withdrawalPlace}\" sayfasından ya da satıcının e-posta adresine yazılı olarak iletilir. Cayma halinde ödenen tutar, talebin satıcıya ulaştığı günden başlayarak en geç {WithdrawalDays} gün içinde alıcının ödeme yaptığı hesaba iade edilir. İade, ödenen tutarın tamamıdır; hizmetin kullanıldığı günler için kesinti yapılmaz.",
             "",
             "6. Şikâyet ve itiraz",
             "Alıcı şikâyetlerini satıcının iletişim bilgilerine iletebilir; ayrıca ilgili mevzuat sınırları içinde Tüketici Hakem Heyetine ya da Tüketici Mahkemesine başvurabilir.");
@@ -117,10 +117,10 @@ public static class SpeedReadingSalesDocumentTexts
             $"Abonelik, ödemenin onaylandığı gün başlar ve {terms.DurationDays} gün sürer. Süren bir abonelik bitmeden yapılan yenilemede yeni dönem, mevcut dönemin bittiği gün başlar ve {terms.DurationDays} gün sürer. Satıcı hizmeti platform üzerinden sunar; bakım ve zorunlu kesintiler dışında erişimi açık tutar. Okuma hızı ve anlama sonuçları kullanıcıya, metne ve cihaza göre değişir; belirli bir sonuç taahhüt edilmez.",
             "",
             "Madde 5 – Cayma hakkı",
-            $"Alıcı, ödemenin onaylandığı günden başlayarak {WithdrawalDays} gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Talep platformdaki \"{withdrawalPlace}\" bölümünden ya da satıcının e-posta adresine yazılı olarak iletilir. Satıcı, talebin kendisine ulaştığı günden başlayarak en geç {WithdrawalDays} gün içinde bedelin tamamını alıcının ödeme yaptığı hesaba iade eder; hizmetin kullanıldığı günler için kesinti yapılmaz. Cayma onaylandığında abonelik sona erer.",
+            $"Alıcı, ödemenin onaylandığı günden başlayarak {WithdrawalDays} gün içinde gerekçe göstermeden cayma hakkını kullanabilir. Talep platformdaki \"{withdrawalPlace}\" sayfasından ya da satıcının e-posta adresine yazılı olarak iletilir. Satıcı, talebin kendisine ulaştığı günden başlayarak en geç {WithdrawalDays} gün içinde bedelin tamamını alıcının ödeme yaptığı hesaba iade eder; hizmetin kullanıldığı günler için kesinti yapılmaz. Cayma onaylandığında abonelik sona erer.",
             "",
             "Madde 6 – Fatura",
-            "Fatura, ödemenin onaylanmasından sonra satıcı tarafından düzenlenir ve alıcının kayıtlı e-posta adresine gönderilir.",
+            $"Fatura, ödemenin onaylanmasından sonra satıcı tarafından düzenlenir ve alıcı tarafından platformdaki \"{withdrawalPlace}\" sayfasından indirilebilir.",
             "",
             "Madde 7 – Kişisel veriler",
             "Alıcının kişisel verileri, platformun aydınlatma metni ve 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında işlenir.",
@@ -146,4 +146,17 @@ public interface ISpeedReadingSales
     Task<SpeedReadingSalesDocuments?> GetAcceptedAsync(Guid userId, Guid requestId, CancellationToken cancellationToken = default);
     Task<BankTransferPaymentRequestSummary?> RequestWithdrawalAsync(Guid userId, Guid requestId, string? reason, CancellationToken cancellationToken = default);
     Task<BankTransferPaymentRequestSummary?> ReviewWithdrawalAsync(Guid requestId, ReviewBankTransferWithdrawalRequest request, Guid actorId, CancellationToken cancellationToken = default);
+    /// <summary>Records the manually issued invoice (a PDF) of an approved payment; null when the payment is unknown.</summary>
+    Task<BankTransferPaymentRequestSummary?> AttachInvoiceAsync(Guid actorId, Guid requestId, string invoiceNumber, DateOnly issuedOn, string fileName, Stream content, CancellationToken cancellationToken = default);
+    Task<BankTransferPaymentRequestSummary?> RemoveInvoiceAsync(Guid requestId, CancellationToken cancellationToken = default);
+    /// <summary>The invoice of one of the viewer's payments, or of any payment for an admin; null when there is none.</summary>
+    Task<SpeedReadingInvoiceFile?> OpenInvoiceAsync(Guid viewerId, Guid requestId, bool asAdmin, CancellationToken cancellationToken = default);
+}
+
+public sealed record SpeedReadingInvoiceFile(byte[] Content, string FileName);
+
+/// <summary>Sends the expiry reminders of individual subscriptions; returns how many notices were staged.</summary>
+public interface ISpeedReadingSubscriptionLifecycle
+{
+    Task<int> ProcessAsync(CancellationToken cancellationToken = default);
 }

@@ -47,6 +47,7 @@ public static class NotificationReceiveEndpoints
         new("coaching-weekly-decision-changed", typeof(WeeklyDecisionChangedConsumer)),
         new("coaching-reminder-due", typeof(CoachingReminderDueConsumer)),
         new("coaching-subscription-notice", typeof(CoachingSubscriptionNoticeConsumer)),
+        new("speed-reading-subscription-notice", typeof(SpeedReadingSubscriptionNoticeConsumer)),
         new("coaching-teacher-link-ended", typeof(CoachingTeacherLinkEndedConsumer)),
         new("coaching-message-received", typeof(CoachingMessageReceivedConsumer)),
         new("coaching-parent-weekly-summary", typeof(CoachingParentWeeklySummaryConsumer)),

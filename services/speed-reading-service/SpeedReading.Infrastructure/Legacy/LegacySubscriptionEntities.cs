@@ -135,6 +135,9 @@ internal sealed class LegacyBankTransferPaymentRequest
     public string? WithdrawalReviewNote { get; set; }
     public DateTime? WithdrawalReviewedAt { get; set; }
     public Guid? WithdrawalReviewedBy { get; set; }
+    /// <summary>Copied from the invoice record so lists need no join; null while no invoice is recorded.</summary>
+    public string? InvoiceNumber { get; set; }
+    public DateOnly? InvoiceIssuedOn { get; set; }
     public int? AdultPayerDeclarationVersion { get; set; }
     public DateTime? AdultPayerDeclaredAt { get; set; }
     public Guid Id { get; set; }
@@ -154,4 +157,29 @@ internal sealed class LegacyBankTransferPaymentRequest
     public string? ReviewNote { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+/// <summary>Billing parity (14.11.2026): the manually issued invoice (PDF) of an approved bank-transfer payment.</summary>
+internal sealed class LegacySubscriptionInvoice
+{
+    public Guid Id { get; set; }
+    public Guid PaymentRequestId { get; set; }
+    public string InvoiceNumber { get; set; } = string.Empty;
+    public DateOnly IssuedOn { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public byte[] Content { get; set; } = [];
+    public long SizeBytes { get; set; }
+    public string Sha256 { get; set; } = string.Empty;
+    public Guid CreatedBy { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>Billing parity (14.11.2026): one row per expiry reminder sent, so no reminder goes out twice.</summary>
+internal sealed class LegacySubscriptionNoticeReceipt
+{
+    public Guid Id { get; set; }
+    public Guid SubscriptionId { get; set; }
+    /// <summary>"7d", "1d" or "expired", with the end date it was sent for (an extended subscription is reminded again).</summary>
+    public string Stage { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
 }

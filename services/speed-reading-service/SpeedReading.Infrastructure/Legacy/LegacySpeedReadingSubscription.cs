@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using EduPlatform.Shared.Contracts.Reporting;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
+using EduPlatform.Shared.Contracts.Events.SpeedReading;
 using SpeedReading.Application.Subscription;
 using SpeedReading.Infrastructure.Payments;
 using SpeedReading.Infrastructure.Persistence;
@@ -25,6 +26,8 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
     private readonly ISpeedReadingPaymentProvider paymentProvider;
     private readonly IyzicoOptions iyzicoOptions;
     private readonly ISpeedReadingUserDirectory userDirectory;
+    /// <summary>Billing parity (14.11.2026): tells the payer and the admin; null where nothing is sent (older tests).</summary>
+    internal ISpeedReadingSubscriptionNotices? Notices { get; init; }
 
     internal LegacySpeedReadingSubscription(
         ISpeedReadingDataContext db,
@@ -469,6 +472,9 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             UpdatedAt = now
         };
         db.BankTransferPaymentRequests.Add(paymentRequest);
+        if (Notices is not null)
+            await Notices.StageAsync(new(null, null, SpeedReadingSubscriptionNoticeKinds.TransferSubmitted, planRow.Plan.Name, null,
+                paymentRequest.PaymentReference, now), cancellationToken);
         OwnedContentMutationIdempotency.Add(ownedDb, BankTransferRequestScope, key, requestHash, paymentRequest.Id, now);
         var concurrent = await OwnedContentMutationIdempotency.SaveAsync(ownedDb, BankTransferRequestScope, key, cancellationToken);
         if (concurrent is not null)
@@ -584,6 +590,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         row.paymentRequest.ReviewedAt = now;
         row.paymentRequest.ReviewNote = reviewNote;
         row.paymentRequest.UpdatedAt = now;
+        DateTime? accessEndsAt = null;
         if (string.Equals(targetStatus, BankTransferPaymentRules.ApprovedStatus, StringComparison.OrdinalIgnoreCase))
         {
             var subscriptionNote = $"Bank transfer payment {row.paymentRequest.Id:N}";
@@ -617,6 +624,15 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
                 db.UserSubscriptions.Add(subscription);
             }
             row.paymentRequest.SubscriptionId = subscription.Id;
+            accessEndsAt = subscription.EndDate;
+        }
+
+        if (Notices is not null)
+        {
+            var approved = row.paymentRequest.Status == BankTransferPaymentRules.ApprovedStatus;
+            await Notices.StageAsync(new(row.paymentRequest.UserId, row.paymentRequest.UserEmail,
+                approved ? SpeedReadingSubscriptionNoticeKinds.TransferApproved : SpeedReadingSubscriptionNoticeKinds.TransferRejected,
+                row.plan.Name, accessEndsAt, approved ? null : reviewNote, now), cancellationToken);
         }
 
         OwnedContentMutationIdempotency.Add(ownedDb, BankTransferReviewScope, key, requestHash, id, now);
@@ -1512,7 +1528,9 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             paymentRequest.WithdrawalReviewedAt,
             string.Equals(paymentRequest.Status, BankTransferPaymentRules.ApprovedStatus, StringComparison.Ordinal) && paymentRequest.ReviewedAt is { } approvedAt
                 ? approvedAt.AddDays(SpeedReadingSalesDocumentTexts.WithdrawalDays)
-                : null);
+                : null,
+            paymentRequest.InvoiceNumber,
+            paymentRequest.InvoiceIssuedOn);
 
     private static string? NormalizeRequired(string? value, int maxLength)
     {

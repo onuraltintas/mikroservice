@@ -237,6 +237,8 @@ builder.Services.AddMassTransit(configurator =>
     });
 });
 builder.Services.AddHostedService<SpeedReadingIdempotencyCleanupWorker>();
+// Billing parity (14.11.2026): expiry reminders of individual subscriptions, as in Koçluk.
+builder.Services.AddHostedService<SpeedReading.Infrastructure.Legacy.SpeedReadingSubscriptionLifecycleWorker>();
 // Closes exercise sessions that were left open for a day (decision 12.11.2026).
 builder.Services.AddHostedService<SpeedReadingStaleSessionWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);

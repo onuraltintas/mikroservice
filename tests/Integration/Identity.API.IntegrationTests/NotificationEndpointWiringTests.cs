@@ -103,7 +103,9 @@ public sealed class NotificationEndpointWiringTests
             ["coaching-assignment-updated", "coaching-exam-updated", "coaching-exam-result-updated",
              "coaching-session-updated", "coaching-goal-updated", "notification-realtime", "user-password-setup-requested", "coaching-subscription-notice", "coaching-assignment-cancelled", "coaching-teacher-link-ended", "coaching-parent-weekly-summary", "coaching-message-received", "invitation-accepted", "identity-parent-link-changed",
              // E5 (#22): the e-mail change link to the new address and the notice to the old one.
-             "user-email-change-requested", "user-email-changed"],
+             "user-email-change-requested", "user-email-changed",
+             // Hızlı Okuma billing parity (14.11.2026): payment, withdrawal and expiry e-mails.
+             "speed-reading-subscription-notice"],
             "five update notifications were registered without a queue; realtime pushes now run after commit; " +
             "the password-setup e-mail no longer rides on user-created");
     }

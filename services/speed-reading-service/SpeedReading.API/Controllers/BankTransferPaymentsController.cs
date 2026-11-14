@@ -155,6 +155,50 @@ public sealed class BankTransferPaymentsController(
         return result is null ? NotFound() : Ok(new { success = true, data = result, message = "Withdrawal reviewed" });
     }
 
+    // ---- Billing parity (14.11.2026): the invoice of an approved payment ----
+
+    /// <summary>Records a manually issued invoice: the raw PDF is the body; number, date and file name come in the query.</summary>
+    [HttpPost("requests/{id:guid}/invoice")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
+    [RequestSizeLimit(10 * 1024 * 1024 + 65_536)]
+    public async Task<IActionResult> AttachInvoice(Guid id, [FromQuery] string invoiceNumber, [FromQuery] DateOnly issuedOn,
+        [FromQuery] string fileName, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId)) return Unauthorized();
+        var result = await sales.AttachInvoiceAsync(actorId, id, invoiceNumber, issuedOn, fileName, Request.Body, cancellationToken);
+        return result is null ? NotFound() : Ok(new { success = true, data = result, message = "Invoice recorded" });
+    }
+
+    [HttpDelete("requests/{id:guid}/invoice")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
+    public async Task<IActionResult> RemoveInvoice(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await sales.RemoveInvoiceAsync(id, cancellationToken);
+        return result is null ? NotFound() : Ok(new { success = true, data = result, message = "Invoice removed" });
+    }
+
+    [HttpGet("requests/{id:guid}/invoice/admin")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
+    public async Task<IActionResult> AdminInvoice(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId)) return Unauthorized();
+        var file = await sales.OpenInvoiceAsync(actorId, id, asAdmin: true, cancellationToken);
+        return file is null ? NotFound() : File(file.Content, "application/pdf", file.FileName);
+    }
+
+    /// <summary>The buyer's own invoice.</summary>
+    [HttpGet("requests/{id:guid}/invoice")]
+    [Authorize]
+    public async Task<IActionResult> Invoice(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        var file = await sales.OpenInvoiceAsync(userId, id, asAdmin: false, cancellationToken);
+        return file is null ? NotFound() : File(file.Content, "application/pdf", file.FileName);
+    }
+
     [HttpGet("requests/my")]
     [Authorize]
     public async Task<IActionResult> GetMyRequests(CancellationToken cancellationToken = default)
