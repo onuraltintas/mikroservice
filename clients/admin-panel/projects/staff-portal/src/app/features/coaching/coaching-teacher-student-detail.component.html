@@ -39,18 +39,18 @@
         <article class="summary-card assignment-card">
           <span class="summary-index">01 · ÖDEV</span>
           <strong>{{ summary.submittedAssignments }} / {{ summary.totalAssignments }} teslim</strong>
-          <small>{{ summary.gradedAssignments }} değerlendirildi@if (summary.averageAssignmentPercentage != null) { <span> · ort. %{{ summary.averageAssignmentPercentage }}</span> }</small>
+          <small>{{ summary.gradedAssignments }} değerlendirildi@if (summary.averageAssignmentPercentage != null) { <span> · ort. %{{ summary.averageAssignmentPercentage | number:'1.0-1' }}</span> }</small>
         </article>
         <article class="summary-card exam-card">
           <span class="summary-index">02 · SINAV</span>
           <strong>{{ summary.totalExams }} öğretmen/kurum sınavı</strong>
-          <small>Ortalama: {{ summary.averageExamPercentage == null ? '—' : '%' + summary.averageExamPercentage }}</small>
+          <small>Ortalama: {{ summary.averageExamPercentage == null ? '—' : '%' + (summary.averageExamPercentage | number:'1.0-1') }}</small>
           <small data-testid="exam-card-note">Öğrencinin kendi girdiği denemeler aşağıda listelenir; bu sayıya ve ortalamaya girmez.</small>
         </article>
         <article class="summary-card goal-card">
           <span class="summary-index">03 · HEDEF</span>
           <strong>{{ summary.completedGoals }} / {{ summary.totalGoals }} tamamlandı</strong>
-          <small>Ortalama ilerleme: %{{ summary.averageGoalProgress }}</small>
+          <small>Ortalama ilerleme: %{{ summary.averageGoalProgress | number:'1.0-1' }}</small>
         </article>
         <article class="summary-card session-card">
           <span class="summary-index">04 · SEANS</span>
@@ -124,7 +124,7 @@
             <div class="history-item-copy">
               <h4>{{ item.title }}</h4>
               @if (item.netSummary; as net) {
-                <p><strong>{{net.name}} · {{net.net | number:'1.2-2'}} net</strong> · {{item.source === 'StudentReported' ? 'Öğrenci beyanı' : 'Öğretmen kaydı'}}</p>
+                <p><strong>{{net.name}} · {{net.net | number:'1.2-2'}} net</strong> · {{item.source === 'StudentReported' ? 'Öğrenci beyanı' : 'Öğretmen ya da kurum kaydı'}}</p>
                 <details><summary>Ders netleri</summary>@for (section of net.sections; track section.sectionCode) {
                   <p>{{section.name}}: {{section.net | number:'1.2-2'}} net ({{section.correct}} doğru / {{section.wrong}} yanlış / {{section.empty}} boş)</p>
                 }</details>

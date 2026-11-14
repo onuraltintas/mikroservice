@@ -3,6 +3,16 @@
   @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
   @if (loading() || (proposing() && !proposal())) { <p role="status" class="muted">{{ staffStudentId ? 'Öğrencinin haftası hazırlanıyor…' : 'Haftan hazırlanıyor…' }}</p> }
 
+  <!-- Paket J (user decision 14.11.2026): a saved week that no longer suits the hours or the need is named; the choice is the student's. -->
+  @if (savedWeekIssues(); as issues) {
+    @if (issues.length) {
+      <div class="notice" data-testid="saved-week-notice">
+        @for (issue of issues; track issue) { <p>{{ issue }}</p> }
+        <p>{{ staffStudentId ? 'İstersen haftayı ihtiyaca göre yeniden önerebilirsin; kaydetmeden önce incelersin.' : 'İstersen haftanı ihtiyaca göre yeniden önereyim; kaydetmeden önce incelersin.' }}</p>
+        <button type="button" (click)="replaceWeek()" [disabled]="busy()">{{ staffStudentId ? 'Haftayı ihtiyaca göre yeniden öner' : 'Haftanı ihtiyaca göre yeniden öner' }}</button>
+      </div>
+    }
+  }
   @if (proposal(); as view) {
     <section class="proposal" data-testid="wizard-proposal" aria-labelledby="wizard-proposal-title">
       <h3 id="wizard-proposal-title" tabindex="-1" #proposalTitle>{{ staffStudentId ? 'Öğrencinin haftası' : 'Haftan' }}</h3>
@@ -27,7 +37,7 @@
       }
       <div class="actions">
         @if (view.slots.length) { <button type="button" data-testid="keep-week" (click)="keepWeek()" [disabled]="busy()">{{ applying() ? 'Kaydediliyor…' : 'Bu haftayla devam et' }}</button> }
-        @if (slots().length && !preview() && !rebuildSuggested(view)) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="busy()">{{ staffStudentId ? 'Haftayı baştan öner' : 'Haftanı baştan öner' }}</button> }
+        @if (slots().length && !rebuildSuggested(view) && !savedWeekIssues().length) { <button type="button" class="secondary" (click)="replaceWeek()" [disabled]="busy()">{{ staffStudentId ? 'Haftayı baştan öner' : 'Haftanı baştan öner' }}</button> }
       </div>
       @if (rebuildSuggested(view)) {
         <div class="notice" data-testid="rebuild-notice">
@@ -47,9 +57,9 @@
       @if (view.shortageMinutes > 0) {
         <div class="notice" data-testid="shortage-notice">
           @if (staffStudentId) {
-            <p>Seçilen saatler öğrencinin derslerine yetmiyor. Bütün derslerine yetişmesi için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(savedCoveredMinutes(view)) }} saat</strong> var. Bu öneriyle <strong>{{ hours(view.coveredMinutes) }} saat</strong> olur.</p>
+            <p>Öğrencinin haftası ihtiyacından yaklaşık <strong>{{ hours(view.shortageMinutes) }} saat</strong> dar: bütün dersleri için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor, bu öneriyle <strong>{{ hours(view.coveredMinutes) }} saat</strong> olur. Derslerin sınava yetişip yetişmediğini yıllık planda görürsün.</p>
           } @else {
-            <p>Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(savedCoveredMinutes(view)) }} saat</strong> var. Bu öneriyle <strong>{{ hours(view.coveredMinutes) }} saat</strong> olur.</p>
+            <p>Haftan ihtiyacından yaklaşık <strong>{{ hours(view.shortageMinutes) }} saat</strong> dar: bütün derslerin için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor, bu öneriyle <strong>{{ hours(view.coveredMinutes) }} saat</strong> olur. Derslerinin sınava yetişip yetişmediğini yıllık planda görürsün.</p>
           }
           @if (lessonsWithoutTime(view)) { <p data-testid="no-time-lessons">Saat verilemeyen dersler: {{ lessonsWithoutTime(view) }}.</p> }
           <!-- Paket I5: ready ways to close the shortage, each with its amount. -->

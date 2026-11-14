@@ -79,9 +79,9 @@ export const routes: Routes = [
         pathMatch: 'full'
     },
 
-    // 404 Redirect
+    // Unknown address: its own page (no server-side redirect to /dashboard, which the Coaching site does not serve).
     {
         path: '**',
-        redirectTo: 'dashboard'
+        loadComponent: () => import('./features/not-found/not-found.component').then(m => m.NotFoundComponent)
     }
 ];

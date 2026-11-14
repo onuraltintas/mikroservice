@@ -36,8 +36,10 @@
         }
       </nav>
 
-      @defer (when !auth.products().some(hasCourseAccess)) {
-        <staff-course-management-enrollment />
+      @if (courseManagementOffered) {
+        @defer (when !auth.products().some(hasCourseAccess)) {
+          <staff-course-management-enrollment />
+        }
       }
 
       <div class="sidebar-bottom">
@@ -243,9 +245,11 @@
             <button type="button" [class.selected]="selectedProduct === 'speed-reading'" [attr.aria-pressed]="selectedProduct === 'speed-reading'" (click)="selectedProduct = 'speed-reading'">
               <span class="selector-mark reading-mark">H</span><span><strong>Hızlı Okuma</strong><small>Öğretmen · Kurum</small></span>
             </button>
-            <button type="button" [class.selected]="selectedProduct === 'course-management'" [attr.aria-pressed]="selectedProduct === 'course-management'" (click)="selectedProduct = 'course-management'">
-              <span class="selector-mark">D</span><span><strong>Kurs Yönetimi</strong><small>Yetkili pilot hesaplar</small></span>
-            </button>
+            @if (courseManagementOffered) {
+              <button type="button" [class.selected]="selectedProduct === 'course-management'" [attr.aria-pressed]="selectedProduct === 'course-management'" (click)="selectedProduct = 'course-management'">
+                <span class="selector-mark">D</span><span><strong>Kurs Yönetimi</strong><small>Yetkili pilot hesaplar</small></span>
+              </button>
+            }
           </div>
 
           <form class="login-form" (ngSubmit)="submitLogin()">
@@ -257,6 +261,7 @@
               <input id="remember-me" name="rememberMe" type="checkbox" [(ngModel)]="rememberMe">
               <span>Bu cihazda oturumu açık tut</span>
             </label>
+            @if (auth.notStaffAccount() && !errorMessage) { <div class="form-error" role="status" data-testid="not-staff-account">Bu tarayıcıda açık olan hesap personel hesabı değil; o hesabın oturumuna dokunulmadı. Öğretmen ya da kurum hesabınızla giriş yapabilirsiniz.</div> }
             @if (errorMessage) { <div class="form-error" role="alert">{{ errorMessage }}</div> }
             <button class="submit-button" type="submit" [disabled]="isSubmitting || !email.trim() || !password">
               {{ isSubmitting ? 'Güvenli giriş yapılıyor…' : 'Personel olarak giriş yap' }}

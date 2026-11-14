@@ -75,7 +75,7 @@
     </div>
 
     <div class="session-list">
-      @for (session of sessions(); track session.id) {
+      @for (session of orderedSessions(); track session.id) {
         <article class="session-card">
           <header class="session-card-heading">
             <div>
@@ -98,7 +98,7 @@
             </div>
           }
 
-          @if (session.meetingLink) {
+          @if (session.meetingLink && session.status !== 'Cancelled') {
             <a class="meeting-link" [href]="session.meetingLink" target="_blank" rel="noopener noreferrer">Online görüşmeye katıl →</a>
           }
 

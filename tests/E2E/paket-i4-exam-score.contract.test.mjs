@@ -30,7 +30,7 @@ test('a plan task leaves its empty fields out of the answer', async () => {
 test('the exam editor fits two and three digit counts, and the record actions stand apart', async () => {
   const pages = 'clients/admin-panel/src/app/features/coaching-portal/pages/';
   const editor = await read(pages + 'practice-exam-editor.component.ts');
-  assert.match(editor, /td input \{ width:4\.75rem; min-width:4\.75rem; padding:\.5rem \.25rem; text-align:center;/);
+  assert.match(editor, /td input \{ width:4\.25rem; min-width:4\.25rem; padding:\.5rem \.25rem !important; text-align:center;/);
   assert.match(editor, /::-webkit-inner-spin-button \{ -webkit-appearance:none;/);
   assert.match(await read(pages + 'student-exam-results.component.html'), /class="actions record-actions"/);
   assert.match(await read(pages + 'student-study-plans.component.scss'), /\.record-actions \{ margin-top: 1\.5rem; padding-top: 1rem; border-top:/);

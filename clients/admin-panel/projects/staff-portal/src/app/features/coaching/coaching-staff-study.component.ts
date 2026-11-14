@@ -4,13 +4,14 @@ import { Component, DestroyRef, Input, OnChanges, ViewChild, inject, signal } fr
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, finalize } from 'rxjs';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../../../../src/app/core/services/coaching-study-planning.service';
+import { StudentStudyPlanAssistantComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-plan-assistant.component';
 import { StudentStudyPlansComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-plans.component';
 import { StudentStudyReportComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-report.component';
 import { PracticeProgressComponent } from '../../../../../../src/app/features/coaching-portal/pages/practice-progress.component';
 
 @Component({
   selector: 'staff-coaching-study', standalone: true,
-  imports: [CommonModule, StudentStudyPlansComponent, StudentStudyReportComponent, PracticeProgressComponent],
+  imports: [CommonModule, StudentStudyPlanAssistantComponent, StudentStudyPlansComponent, StudentStudyReportComponent, PracticeProgressComponent],
   styles: [':host { display: block; min-width: 0; } section { min-width: 0; }'],
   template: `
     <section aria-label="Öğrencinin haftalık koçluk planı" class="space-y-5">
@@ -26,7 +27,15 @@ import { PracticeProgressComponent } from '../../../../../../src/app/features/co
         <ul>@for (window of hours.windows; track $index) { <li>{{ day(window.day) }} · {{ time(window.startMinute) }}–{{ time(window.endMinute) }}</li> }</ul>
         @if (!hours.windows.length) { <p>Öğrenci henüz çalışma saati belirlememiş.</p> }
       } @else if (!loading()) { <p>Öğrenci henüz çalışma saati belirlememiş.</p> }
-      <app-student-study-plans [staffStudentId]="studentId" [readOnly]="readOnly" />
+      <!-- Live test 14.11.2026: the wizard was reachable only from "Çalışma takibi"; a teacher reading the report looked for it here. -->
+      @if (wizardMode()) {
+        <button type="button" (click)="closeWizard()">Plan listesine dön</button>
+        @defer (on immediate) { <app-student-study-plan-assistant #wizard [staffStudentId]="studentId" (planCreated)="wizardMode.set(false)" /> }
+        @placeholder { <p role="status">Plan sihirbazı hazırlanıyor…</p> }
+      } @else {
+        @if (!readOnly) { <button type="button" data-testid="report-open-wizard" (click)="wizardMode.set(true)">Sihirbazla otomatik plan hazırla</button> }
+        <app-student-study-plans [staffStudentId]="studentId" [readOnly]="readOnly" />
+      }
       }
       </div>
       <app-student-study-report developmentReport [staffStudentId]="studentId" [autoWeekly]="briefOnly" />
@@ -40,7 +49,13 @@ export class CoachingStaffStudyComponent implements OnChanges {
   @ViewChild(StudentStudyPlansComponent) private editor?: StudentStudyPlansComponent;
   @ViewChild(StudentStudyReportComponent) private report?: StudentStudyReportComponent;
   @ViewChild(PracticeProgressComponent) private practice?: PracticeProgressComponent;
-  async canLeavePage(): Promise<boolean> { return (await this.editor?.canLeavePage() ?? true) && (await this.practice?.canLeavePage() ?? true); }
+  @ViewChild('wizard') private assistant?: StudentStudyPlanAssistantComponent;
+  readonly wizardMode = signal(false);
+  async closeWizard(): Promise<void> { if (await this.assistant?.canLeavePage() ?? true) this.wizardMode.set(false); }
+  async canLeavePage(): Promise<boolean> {
+    if (this.wizardMode()) return await this.assistant?.canLeavePage() ?? true;
+    return (await this.editor?.canLeavePage() ?? true) && (await this.practice?.canLeavePage() ?? true);
+  }
   refreshPlan(): void {
     this.editor?.refreshAfterExternalChange();
     this.report?.load();

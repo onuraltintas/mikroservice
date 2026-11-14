@@ -71,7 +71,7 @@ export class WizardSummaryStepComponent implements OnInit {
   @Input() reviewDays: number[] = [];
   reviewNote() {
     const days = this.reviewDays, who = this.staffStudentId ? 'Öğrencinin bitirdiği' : 'Bitirdiğin';
-    if (!days.length) return this.staffStudentId ? 'Öğrenci aralıklı tekrar seçmedi; plana tekrar konmaz.' : 'Aralıklı tekrar seçmedin; plana tekrar konmaz. İstersen “Tekrar” adımından ekleyebilirsin.';
+    if (!days.length) return this.staffStudentId ? 'Öğrenci aralıklı tekrar seçmedi; plana tekrar konmaz.' : 'Aralıklı tekrar seçmedin; plana tekrar konmaz. İstersen Tempo adımından ekleyebilirsin.';
     const list = days.length === 1 ? `${days[0]}` : `${days.slice(0, -1).join(', ')} ve ${days[days.length - 1]}`;
     return `${who} her konu ${list} gün sonra 10 dakikalık kısa bir tekrarla hatırlatılır (aralıklı tekrar).`;
   }
@@ -271,13 +271,36 @@ export class WizardSummaryStepComponent implements OnInit {
       ? `Öğrenci hafta içi her gün yaklaşık ${weekday} saat daha ya da hafta sonu toplam ${weekend} saat eklerse bütün derslerine yetişir.`
       : `Hafta içi her gün yaklaşık ${weekday} saat daha ya da hafta sonu toplam ${weekend} saat eklersen bütün derslerine yetişirsin.`;
   }
+  /** Paket J: the daily study time of each day (the routine's budgets); empty when not known. */
+  @Input() dayBudgets: { day: string; minutes: number }[] = [];
+  /**
+   * Paket J (user decision 14.11.2026, "uyar ve öner"): a saved week is kept as it is, also when it no longer suits the student: more
+   * lessons on a day than her daily time, or clearly more hours than her courses need (lighter rules, fewer courses). The summary says
+   * so and offers the week by need; nothing changes by itself. Two hours of slack are not worth a word.
+   */
+  savedWeekIssues(): string[] {
+    const view = this.proposal(), saved = this.slots();
+    if (!view || view.mode !== 'Fill' || !saved.length) return [];
+    const staff = !!this.staffStudentId, issues: string[] = [];
+    const used = (day: string) => saved.filter(x => x.day === day).reduce((sum, x) => sum + x.durationMinutes, 0);
+    const over = this.dayBudgets.filter(x => used(x.day) > x.minutes);
+    if (over.length) {
+      const first = over[0], label = weekDays.find(x => x.value === first.day)?.label ?? first.day;
+      const more = over.length > 1 ? ` ${over.length - 1} gün daha böyle.` : '';
+      issues.push(`${label} günü ${this.hours(used(first.day))} saat ders var; ${staff ? 'öğrencinin günlük süresi' : 'günlük süren'} ${this.hours(first.minutes)} saat.${more}`);
+    }
+    const total = saved.reduce((sum, x) => sum + x.durationMinutes, 0);
+    if (view.shortageMinutes === 0 && total - view.neededMinutes >= 120)
+      issues.push(`${staff ? 'Öğrencinin kayıtlı haftası' : 'Kayıtlı haftan'} ${this.hours(total)} saat; ${staff ? 'dersleri' : 'derslerin'} için haftada yaklaşık ${this.hours(view.neededMinutes)} saat yetiyor.`);
+    return issues;
+  }
   /** Paket I6: the extra minutes on each of the five weekdays that close a weekly shortage, rounded up to half an hour. */
   weekdayExtra(weeklyMinutes: number) { return weeklyMinutes > 0 ? Math.ceil(weeklyMinutes / 5 / 30) * 30 : 0; }
   /**
    * Paket I6 (user decision 14.11.2026): what "Önemli konulara odaklan" would leave out, known before it is chosen. Asked in the
    * background only when the shown plan has a course that does not finish; null while not known (or not needed).
    */
-  readonly focusEstimate = signal<{ leftOut: number; lessons: number; stillLate: number } | null>(null);
+  readonly focusEstimate = signal<{ leftOut: number; lessons: number; canCreate: boolean } | null>(null);
   private estimateRun = 0;
   private estimateFocus(request: WeeklyOutcomeRequest, student: string | undefined) {
     const run = ++this.estimateRun; this.focusEstimate.set(null);
@@ -286,8 +309,9 @@ export class WizardSummaryStepComponent implements OnInit {
       next: p => {
         if (run !== this.estimateRun) return;
         const out = p.leftOutTopics ?? [];
-        this.focusEstimate.set({ leftOut: out.length, lessons: new Set(out.map(x => x.lessonId.toLowerCase())).size,
-          stillLate: p.schedule.lessons.filter(x => x.remainingMinutes > 0).length });
+        // Live test 14.11.2026: a lesson whose topics are left out still reports remaining minutes, so "x ders yetişmez" was said of a
+        // plan that may be published. Whether the focused plan may be created is the server's own answer.
+        this.focusEstimate.set({ leftOut: out.length, lessons: new Set(out.map(x => x.lessonId.toLowerCase())).size, canCreate: p.canCreate });
       },
       // The estimate is a help; without it the button still works and shows the result.
       error: () => undefined
@@ -297,7 +321,7 @@ export class WizardSummaryStepComponent implements OnInit {
     const e = this.focusEstimate();
     if (!e) return '“Önemli konulara odaklan” dersen sığmayan konular dışarıda kalır; hangileri olduğunu burada görürsün ve istersen geri alırsın.';
     const out = e.leftOut ? `${e.lessons} derste ${e.leftOut} konu dışarıda kalır` : 'hiçbir konu dışarıda kalmaz';
-    const rest = e.stillLate ? `yine de ${e.stillLate} ders yetişmez` : 'gerisi yetişir';
+    const rest = e.canCreate ? (this.staffStudentId ? 'plan o hâliyle yayımlanabilir' : 'planını o hâliyle yayımlayabilirsin') : 'plan yine de yayımlanamaz (başka bir eksik var)';
     return `“Önemli konulara odaklan” dersen ${out}; ${rest}. Hangileri olduğunu burada görürsün ve istersen geri alırsın.`;
   }
   /** The lesson that lacks the most weekly time. */

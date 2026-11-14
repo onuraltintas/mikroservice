@@ -213,13 +213,18 @@ export class StaffAuthService {
     const refreshed = await this.refreshSession();
     if (!refreshed) return;
 
+    // Paket J (user decision 14.11.2026): the browser's session may belong to a student or a parent of the same site (one cookie).
+    // The portal then only forgets it for itself: revoking it would sign that person out of their own panel without a word.
     try {
       await this.loadStaffProducts();
-      if (this._products().length === 0) await this.logout();
+      if (this._products().length === 0) { this.clearSession(); this._notStaffAccount.set(true); }
     } catch {
-      await this.logout();
+      this.clearSession();
     }
   }
+  private readonly _notStaffAccount = signal(false);
+  /** The session found when the portal opened is not a staff account (a student's or parent's); the login form says so. */
+  readonly notStaffAccount = this._notStaffAccount.asReadonly();
 
   async refreshSession(): Promise<boolean> {
     if (this.refreshPromise) return this.refreshPromise;

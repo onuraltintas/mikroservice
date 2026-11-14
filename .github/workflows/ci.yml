@@ -87,6 +87,7 @@ jobs:
           node --test tests/E2E/paket-i4-exam-score.contract.test.mjs
           node --test tests/E2E/paket-i5-plan-choices.contract.test.mjs
           node --test tests/E2E/paket-i6-shortage-help.contract.test.mjs
+          node --test tests/E2E/paket-j1-screens.contract.test.mjs
           node --test tests/E2E/coaching-student-mobile.contract.test.mjs
           node --test tests/E2E/support/litespeed-signalr-routing.test.mjs
 

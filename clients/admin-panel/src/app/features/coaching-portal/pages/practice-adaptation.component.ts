@@ -199,7 +199,7 @@ export class PracticeAdaptationComponent implements OnChanges {
   private async discard() { return !this.dirty || await this.toaster.confirm('Kaydedilmemiş konu analizini bırakmak istiyor musun?'); }
   async canLeavePage() { return !this.saving() && await this.discard(); }
   canRefresh() { return !this.saving() && !this.dirty; }
-  source(value: string) { return value === 'StudentReported' ? 'Öğrenci beyanı' : 'Öğretmen kaydı'; }
+  source(value: string) { return value === 'StudentReported' ? 'Öğrenci beyanı' : 'Öğretmen ya da kurum kaydı'; }
   time(minute: number) { return `${Math.floor(minute / 60).toString().padStart(2, '0')}:${(minute % 60).toString().padStart(2, '0')}`; }
   activity(reason: string | null) { return reason === 'Time' ? 'süreli soru çözümü' : reason === 'Calculation' ? 'işlem ve dikkat çalışması' : reason === 'Interpretation' ? 'yorumlama çalışması' : 'konu tekrarı ve kontrol soruları'; }
   private readonly feedback = coachingFeedback(this.success, this.error);
